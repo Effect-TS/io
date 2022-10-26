@@ -65,17 +65,6 @@ export const Interruption: RuntimeFlag = internal.Interruption
 export const CurrentFiber: RuntimeFlag = internal.CurrentFiber
 
 /**
- * The op log flag determines whether or not the Effect runtime system will
- * attempt to log all operations of the Effect runtime. Use of this flag will
- * negatively impact performance and generate massive volumes of ultra-fine
- * debug logs. Only recommended for debugging.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const OpLog: RuntimeFlag = internal.OpLog
-
-/**
  * The op supervision flag determines whether or not the Effect runtime system
  * will supervise all operations of the Effect runtime. Use of this flag will
  * negatively impact performance, but is required for some operations, such as
@@ -204,17 +193,6 @@ export const interruption = (self: RuntimeFlags): boolean => {
  */
 export const currentFiber = (self: RuntimeFlags): boolean => {
   return isEnabled(CurrentFiber)(self)
-}
-
-/**
- * Returns `true` if the `OpLog` `RuntimeFlag` is enabled, `false`
- * otherwise.
- *
- * @since 1.0.0
- * @category getters
- */
-export const opLog = (self: RuntimeFlags): boolean => {
-  return isEnabled(OpLog)(self)
 }
 
 /**

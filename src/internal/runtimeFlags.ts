@@ -15,29 +15,25 @@ export const Interruption: RuntimeFlag = 1 << 0 as RuntimeFlag
 export const CurrentFiber: RuntimeFlag = 1 << 1 as RuntimeFlag
 
 /** @internal */
-export const OpLog: RuntimeFlag = 1 << 2 as RuntimeFlag
+export const OpSupervision: RuntimeFlag = 1 << 2 as RuntimeFlag
 
 /** @internal */
-export const OpSupervision: RuntimeFlag = 1 << 3 as RuntimeFlag
+export const RuntimeMetrics: RuntimeFlag = 1 << 3 as RuntimeFlag
 
 /** @internal */
-export const RuntimeMetrics: RuntimeFlag = 1 << 4 as RuntimeFlag
+export const FiberRoots: RuntimeFlag = 1 << 4 as RuntimeFlag
 
 /** @internal */
-export const FiberRoots: RuntimeFlag = 1 << 5 as RuntimeFlag
+export const WindDown: RuntimeFlag = 1 << 5 as RuntimeFlag
 
 /** @internal */
-export const WindDown: RuntimeFlag = 1 << 6 as RuntimeFlag
-
-/** @internal */
-export const CooperativeYielding: RuntimeFlag = 1 << 7 as RuntimeFlag
+export const CooperativeYielding: RuntimeFlag = 1 << 6 as RuntimeFlag
 
 /** @internal */
 export const allFlags: ReadonlyArray<RuntimeFlag> = [
   None,
   Interruption,
   CurrentFiber,
-  OpLog,
   OpSupervision,
   RuntimeMetrics,
   FiberRoots,
