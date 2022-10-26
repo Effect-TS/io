@@ -57,7 +57,6 @@ export default function effectPlugin(
 
         const traceVisitor = (node: ts.Node): ts.Node => {
           const visited = ts.visitEachChild(node, traceVisitor, ctx)
-
           if (ts.isCallExpression(visited)) {
             let shouldEmbedTrace = false
             const signature = checker.getResolvedSignature(visited)
@@ -99,23 +98,32 @@ export default function effectPlugin(
           return visited
         }
 
+        const findSource = (node: ts.Node): ts.SourceFile => {
+          while (!ts.isSourceFile(node)) {
+            node = node.parent
+          }
+          return node
+        }
+
         const optimizeVisitor = (node: ts.Node): ts.Node => {
           const visited = ts.visitEachChild(node, optimizeVisitor, ctx)
           if (ts.isCallExpression(visited) && visited.arguments.length > 0) {
             const signature = checker.getResolvedSignature(visited)
-            if (signature) {
-              const declaration = signature.getDeclaration()
-              if (declaration.getSourceFile().fileName.includes("@fp-ts/data/Function")) {
-                if (declaration.name?.getText() === "pipe") {
-                  let expr = visited.arguments[0]
-                  for (let i = 1; i < visited.arguments.length; i++) {
-                    expr = ctx.factory.createCallExpression(visited.arguments[i], [], [expr])
-                  }
-                  return expr
+            const declaration = signature?.declaration
+            if (
+              declaration && !ts.isJSDocSignature(declaration) &&
+              findSource(declaration).fileName.includes("@fp-ts/data/Function")
+            ) {
+              if (declaration.name?.getText() === "pipe") {
+                let expr = ts.visitNode(visited.arguments[0], optimizeVisitor)
+                for (let i = 1; i < visited.arguments.length; i++) {
+                  expr = ctx.factory.createCallExpression(
+                    ts.visitNode(visited.arguments[i], optimizeVisitor),
+                    [],
+                    [expr]
+                  )
                 }
-                if (declaration.name?.getText() === "identity") {
-                  return visited.arguments[0]
-                }
+                return expr
               }
             }
           }
