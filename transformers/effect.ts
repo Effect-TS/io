@@ -1,3 +1,4 @@
+import { createFilter } from "@rollup/pluginutils"
 import ts from "typescript"
 
 class RefCounted<A> {
@@ -12,8 +13,16 @@ class RefCounted<A> {
   }
 }
 
-export default function callTrace(_: ts.Program) {
-  const checker = _.getTypeChecker()
+export default function effectPlugin(
+  program: ts.Program,
+  options?: {
+    trace?: { include?: Array<string>; exclude?: Array<string> }
+    optimize?: { include?: Array<string>; exclude?: Array<string> }
+  }
+) {
+  const checker = program.getTypeChecker()
+  const traceFilter = createFilter(options?.trace?.include, options?.trace?.exclude)
+  const optimizeFilter = createFilter(options?.optimize?.include, options?.optimize?.exclude)
   return {
     before(ctx: ts.TransformationContext) {
       return (sourceFile: ts.SourceFile) => {
@@ -46,8 +55,8 @@ export default function callTrace(_: ts.Program) {
           }
         }
 
-        const visitor = (node: ts.Node): ts.Node => {
-          const visited = ts.visitEachChild(node, visitor, ctx)
+        const traceVisitor = (node: ts.Node): ts.Node => {
+          const visited = ts.visitEachChild(node, traceVisitor, ctx)
 
           if (ts.isCallExpression(visited)) {
             let shouldEmbedTrace = false
@@ -90,7 +99,38 @@ export default function callTrace(_: ts.Program) {
           return visited
         }
 
-        const visited = ts.visitNode(sourceFile, visitor)
+        const optimizeVisitor = (node: ts.Node): ts.Node => {
+          const visited = ts.visitEachChild(node, optimizeVisitor, ctx)
+          if (ts.isCallExpression(visited) && visited.arguments.length > 0) {
+            const signature = checker.getResolvedSignature(visited)
+            if (signature) {
+              const declaration = signature.getDeclaration()
+              if (declaration.getSourceFile().fileName.includes("@fp-ts/data/Function")) {
+                if (declaration.name?.getText() === "pipe") {
+                  let expr = visited.arguments[0]
+                  for (let i = 1; i < visited.arguments.length; i++) {
+                    expr = ctx.factory.createCallExpression(visited.arguments[i], [], [expr])
+                  }
+                  return expr
+                }
+                if (declaration.name?.getText() === "identity") {
+                  return visited.arguments[0]
+                }
+              }
+            }
+          }
+          return visited
+        }
+
+        let visited = sourceFile
+
+        if (optimizeFilter(sourceFile.fileName)) {
+          visited = ts.visitNode(visited, optimizeVisitor)
+        }
+
+        if (traceFilter(sourceFile.fileName)) {
+          visited = ts.visitNode(visited, traceVisitor)
+        }
 
         const statements: Array<ts.Statement> = []
 
