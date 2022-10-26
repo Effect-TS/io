@@ -116,7 +116,7 @@ export interface OnSuccessAndFailure extends
 export interface Async extends
   Op<"Async", {
     readonly register: (resume: (effect: Primitive) => void) => void
-    readonly blockingOn: FiberId.Id
+    readonly blockingOn: FiberId.FiberId
   }>
 {}
 
@@ -130,7 +130,7 @@ export interface Sync extends
 /** @internal */
 export const async = <R, E, A>(
   register: (callback: (_: Effect.Effect<R, E, A>) => void) => void,
-  blockingOn: FiberId.Id = FiberId.None
+  blockingOn: FiberId.FiberId = FiberId.None
 ): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
   return primitive("Async", {

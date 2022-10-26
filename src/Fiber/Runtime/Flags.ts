@@ -11,7 +11,7 @@ import * as internal from "@effect/io/internal/runtimeFlags"
  * they affect the behavior and performance of application code.
  *
  * @since 1.0.0
- * @category model
+ * @category models
  */
 export type RuntimeFlags = number & {
   readonly RuntimeFlags: unique symbol
@@ -22,7 +22,7 @@ export type RuntimeFlags = number & {
  * of the Effect runtime.
  *
  * @since 1.0.0
- * @category model
+ * @category models
  */
 export type RuntimeFlag = number & {
   readonly RuntimeFlag: unique symbol

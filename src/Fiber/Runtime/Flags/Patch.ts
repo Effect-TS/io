@@ -6,7 +6,7 @@ import * as internal from "@effect/io/internal/runtimeFlags"
 
 /**
  * @since 1.0.0
- * @category model
+ * @category models
  */
 export type RuntimeFlagsPatch = number & {
   readonly RuntimeFlagsPatch: unique symbol
