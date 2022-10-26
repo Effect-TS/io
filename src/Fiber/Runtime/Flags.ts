@@ -2,6 +2,9 @@
  * @since 1.0.0
  */
 
+import * as Patch from "@effect/io/Fiber/Runtime/Flags/Patch"
+import * as internal from "@effect/io/internal/runtimeFlags"
+
 /**
  * Represents a set of `RuntimeFlag`s. `RuntimeFlag`s affect the operation of
  * the Effect runtime system. They are exposed to application-level code because
@@ -39,7 +42,7 @@ export const make = (...flags: ReadonlyArray<RuntimeFlag>): RuntimeFlags => {
  * @since 1.0.0
  * @category constructors
  */
-export const None: RuntimeFlag = 0 as RuntimeFlag
+export const None: RuntimeFlag = internal.None
 
 /**
  * The interruption flag determines whether or not the Effect runtime system will
@@ -48,7 +51,7 @@ export const None: RuntimeFlag = 0 as RuntimeFlag
  * @since 1.0.0
  * @category constructors
  */
-export const Interruption: RuntimeFlag = 1 << 0 as RuntimeFlag
+export const Interruption: RuntimeFlag = internal.Interruption
 
 /**
  * The current fiber flag determines whether or not the Effect runtime system
@@ -59,7 +62,7 @@ export const Interruption: RuntimeFlag = 1 << 0 as RuntimeFlag
  * @since 1.0.0
  * @category constructors
  */
-export const CurrentFiber: RuntimeFlag = 1 << 1 as RuntimeFlag
+export const CurrentFiber: RuntimeFlag = internal.CurrentFiber
 
 /**
  * The op log flag determines whether or not the Effect runtime system will
@@ -70,7 +73,7 @@ export const CurrentFiber: RuntimeFlag = 1 << 1 as RuntimeFlag
  * @since 1.0.0
  * @category constructors
  */
-export const OpLog: RuntimeFlag = 1 << 2 as RuntimeFlag
+export const OpLog: RuntimeFlag = internal.OpLog
 
 /**
  * The op supervision flag determines whether or not the Effect runtime system
@@ -81,7 +84,7 @@ export const OpLog: RuntimeFlag = 1 << 2 as RuntimeFlag
  * @since 1.0.0
  * @category constructors
  */
-export const OpSupervision: RuntimeFlag = 1 << 3 as RuntimeFlag
+export const OpSupervision: RuntimeFlag = internal.OpSupervision
 
 /**
  * The runtime metrics flag determines whether or not the Effect runtime system
@@ -93,7 +96,7 @@ export const OpSupervision: RuntimeFlag = 1 << 3 as RuntimeFlag
  * @since 1.0.0
  * @category constructors
  */
-export const RuntimeMetrics: RuntimeFlag = 1 << 4 as RuntimeFlag
+export const RuntimeMetrics: RuntimeFlag = internal.RuntimeMetrics
 
 /**
  * The fiber roots flag determines whether or not the Effect runtime system will
@@ -103,7 +106,7 @@ export const RuntimeMetrics: RuntimeFlag = 1 << 4 as RuntimeFlag
  * @since 1.0.0
  * @category constructors
  */
-export const FiberRoots: RuntimeFlag = 1 << 5 as RuntimeFlag
+export const FiberRoots: RuntimeFlag = internal.FiberRoots
 
 /**
  * The wind down flag determines whether the Effect runtime system will execute
@@ -114,7 +117,7 @@ export const FiberRoots: RuntimeFlag = 1 << 5 as RuntimeFlag
  * @since 1.0.0
  * @category constructors
  */
-export const WindDown: RuntimeFlag = 1 << 6 as RuntimeFlag
+export const WindDown: RuntimeFlag = internal.WindDown
 
 /**
  * The cooperative yielding flag determines whether the Effect runtime will
@@ -123,7 +126,47 @@ export const WindDown: RuntimeFlag = 1 << 6 as RuntimeFlag
  * @since 1.0.0
  * @category constructors
  */
-export const CooperativeYielding: RuntimeFlag = 1 << 7 as RuntimeFlag
+export const CooperativeYielding: RuntimeFlag = internal.CooperativeYielding
+
+/**
+ * Enables the specified `RuntimeFlag`.
+ *
+ * @since 1.0.0
+ * @category mutations
+ */
+export const enable = (flag: RuntimeFlag) => {
+  return (self: RuntimeFlags): RuntimeFlags => (self | flag) as RuntimeFlags
+}
+
+/**
+ * Enables all of the `RuntimeFlag`s in the specified set of `RuntimeFlags`.
+ *
+ * @since 1.0.0
+ * @category mutations
+ */
+export const enableAll = (flags: RuntimeFlags) => {
+  return (self: RuntimeFlags): RuntimeFlags => (self | flags) as RuntimeFlags
+}
+
+/**
+ * Disables the specified `RuntimeFlag`.
+ *
+ * @since 1.0.0
+ * @category mutations
+ */
+export const disable = (flag: RuntimeFlag) => {
+  return (self: RuntimeFlags): RuntimeFlags => (self & ~flag) as RuntimeFlags
+}
+
+/**
+ * Disables all of the `RuntimeFlag`s in the specified set of `RuntimeFlags`.
+ *
+ * @since 1.0.0
+ * @category mutations
+ */
+export const disableAll = (flags: RuntimeFlags) => {
+  return (self: RuntimeFlags): RuntimeFlags => (self & ~flags) as RuntimeFlags
+}
 
 /**
  * Returns `true` if the specified `RuntimeFlag` is enabled, `false` otherwise.
@@ -131,9 +174,15 @@ export const CooperativeYielding: RuntimeFlag = 1 << 7 as RuntimeFlag
  * @since 1.0.0
  * @category elements
  */
-export function isEnabled(flag: RuntimeFlag) {
-  return (self: RuntimeFlags): boolean => (self & flag) !== 0
-}
+export const isEnabled = internal.isEnabled
+
+/**
+ * Returns `true` if the specified `RuntimeFlag` is disabled, `false` otherwise.
+ *
+ * @since 1.0.0
+ * @category elements
+ */
+export const isDisabled = internal.isDisabled
 
 /**
  * Returns `true` if the `Interruption` `RuntimeFlag` is enabled, `false`
@@ -142,6 +191,140 @@ export function isEnabled(flag: RuntimeFlag) {
  * @since 1.0.0
  * @category getters
  */
-export function interruption(self: RuntimeFlags): boolean {
+export const interruption = (self: RuntimeFlags): boolean => {
   return isEnabled(Interruption)(self)
 }
+
+/**
+ * Returns `true` if the `CurrentFiber` `RuntimeFlag` is enabled, `false`
+ * otherwise.
+ *
+ * @since 1.0.0
+ * @category getters
+ */
+export const currentFiber = (self: RuntimeFlags): boolean => {
+  return isEnabled(CurrentFiber)(self)
+}
+
+/**
+ * Returns `true` if the `OpLog` `RuntimeFlag` is enabled, `false`
+ * otherwise.
+ *
+ * @since 1.0.0
+ * @category getters
+ */
+export const opLog = (self: RuntimeFlags): boolean => {
+  return isEnabled(OpLog)(self)
+}
+
+/**
+ * Returns `true` if the `OpSupervision` `RuntimeFlag` is enabled, `false`
+ * otherwise.
+ *
+ * @since 1.0.0
+ * @category getters
+ */
+export const opSupervision = (self: RuntimeFlags): boolean => {
+  return isEnabled(OpSupervision)(self)
+}
+
+/**
+ * Returns `true` if the `RuntimeMetrics` `RuntimeFlag` is enabled, `false`
+ * otherwise.
+ *
+ * @since 1.0.0
+ * @category getters
+ */
+export const runtimeMetrics = (self: RuntimeFlags): boolean => {
+  return isEnabled(RuntimeMetrics)(self)
+}
+
+/**
+ * Returns `true` if the `FiberRoots` `RuntimeFlag` is enabled, `false`
+ * otherwise.
+ *
+ * @since 1.0.0
+ * @category getters
+ */
+export const fiberRoots = (self: RuntimeFlags): boolean => {
+  return isEnabled(FiberRoots)(self)
+}
+
+/**
+ * Returns `true` if the `WindDown` `RuntimeFlag` is enabled, `false`
+ * otherwise.
+ *
+ * @since 1.0.0
+ * @category getters
+ */
+export const windDown = (self: RuntimeFlags): boolean => {
+  return isEnabled(WindDown)(self)
+}
+
+/**
+ * Returns `true` if the `CooperativeYielding` `RuntimeFlag` is enabled, `false`
+ * otherwise.
+ *
+ * @since 1.0.0
+ * @category getters
+ */
+export const cooperativeYielding = (self: RuntimeFlags): boolean => {
+  return isEnabled(CooperativeYielding)(self)
+}
+
+/**
+ * Returns true only if the `Interruption` flag is **enabled** and the
+ * `WindDown` flag is **disabled**.
+ *
+ * A fiber is said to be interruptible if interruption is enabled and the fiber
+ * is not in its wind-down phase, in which it takes care of cleanup activities
+ * related to fiber shutdown.
+ *
+ * @since 1.0.0
+ * @category getters
+ */
+export const interruptible = (self: RuntimeFlags): boolean => {
+  return interruption(self) && !windDown(self)
+}
+
+/**
+ * Creates a `RuntimeFlagsPatch` which describes the difference between `self`
+ * and `that`.
+ *
+ * @since 1.0.0
+ * @category diffing
+ */
+export const diff = (that: RuntimeFlags) => {
+  return (self: RuntimeFlags): Patch.RuntimeFlagsPatch => Patch.make(self ^ that, self)
+}
+
+/**
+ * Patches a set of `RuntimeFlag`s with a `RuntimeFlagsPatch`, returning the
+ * patched set of `RuntimeFlag`s.
+ *
+ * @since 1.0.0
+ * @category mutations
+ */
+export const patch = (patch: Patch.RuntimeFlagsPatch) => {
+  return (self: RuntimeFlags): RuntimeFlags =>
+    (
+      (self & (~internal.active(patch) | internal.enabled(patch))) |
+      (internal.active(patch) & internal.enabled(patch))
+    ) as RuntimeFlags
+}
+
+/**
+ * Converts the provided `RuntimeFlags` into a `ReadonlySet<number>`.
+ *
+ * @category conversions
+ * @since 1.0.0
+ */
+export const toSet = internal.toSet
+
+/**
+ * Converts the provided `RuntimeFlags` into a `string`.
+ *
+ * @category conversions
+ * @since 1.0.0
+ */
+export const render = internal.render
