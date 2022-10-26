@@ -13,16 +13,27 @@ class RefCounted<A> {
   }
 }
 
+declare module "typescript" {
+  export interface ImportSpecifier {
+    used?: number
+  }
+  export interface NamespaceImport {
+    used?: number
+  }
+}
+
 export default function effectPlugin(
   program: ts.Program,
   options?: {
     trace?: { include?: Array<string>; exclude?: Array<string> }
     optimize?: { include?: Array<string>; exclude?: Array<string> }
+    removeUnusedImports?: boolean
   }
 ) {
   const checker = program.getTypeChecker()
   const traceFilter = createFilter(options?.trace?.include, options?.trace?.exclude)
   const optimizeFilter = createFilter(options?.optimize?.include, options?.optimize?.exclude)
+  const removeUnusedImports = options?.removeUnusedImports ?? true
   return {
     before(ctx: ts.TransformationContext) {
       return (sourceFile: ts.SourceFile) => {
@@ -130,6 +141,30 @@ export default function effectPlugin(
           return visited
         }
 
+        const usedImportsVisitor = (node: ts.Node): ts.Node => {
+          if (ts.isImportDeclaration(node) && node.importClause) {
+            if (node.importClause.namedBindings && ts.isNamedImports(node.importClause.namedBindings)) {
+              node.importClause.namedBindings.elements.forEach((specifier) => {
+                specifier.used = 1
+              })
+            } else if (
+              node.importClause.namedBindings && ts.isNamespaceImport(node.importClause.namedBindings)
+            ) {
+              node.importClause.namedBindings.used = 1
+            }
+          } else if (
+            ts.isIdentifier(node) && node.parent && !ts.isImportSpecifier(node.parent) &&
+            !ts.isNamespaceImport(node.parent)
+          ) {
+            checker.getSymbolAtLocation(node)?.declarations?.forEach((d) => {
+              if (ts.isImportSpecifier(d) || ts.isNamespaceImport(d)) {
+                d.used = (d.used ?? 1) + 1
+              }
+            })
+          }
+          return ts.visitEachChild(node, usedImportsVisitor, ctx)
+        }
+
         let visited = sourceFile
 
         if (optimizeFilter(sourceFile.fileName)) {
@@ -138,6 +173,10 @@ export default function effectPlugin(
 
         if (traceFilter(sourceFile.fileName)) {
           visited = ts.visitNode(visited, traceVisitor)
+        }
+
+        if (removeUnusedImports) {
+          visited = ts.visitNode(visited, usedImportsVisitor)
         }
 
         const statements: Array<ts.Statement> = []
@@ -177,7 +216,25 @@ export default function effectPlugin(
 
         return ctx.factory.updateSourceFile(
           visited,
-          statements,
+          statements.filter((statement) => {
+            if (!removeUnusedImports) {
+              return true
+            }
+            if (ts.isImportDeclaration(statement) && statement.importClause) {
+              if (statement.importClause.namedBindings && ts.isNamedImports(statement.importClause.namedBindings)) {
+                if (statement.importClause.namedBindings.elements.every((specifier) => specifier.used === 0)) {
+                  return false
+                }
+              } else if (
+                statement.importClause.namedBindings && ts.isNamespaceImport(statement.importClause.namedBindings)
+              ) {
+                if (statement.importClause.namedBindings.used === 0) {
+                  return false
+                }
+              }
+            }
+            return true
+          }),
           visited.isDeclarationFile,
           visited.referencedFiles,
           visited.typeReferenceDirectives,
