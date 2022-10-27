@@ -92,7 +92,7 @@ export const isFiberId = internal.isFiberId
  * Combine two `FiberId`s.
  *
  * @since 1.0.0
- * @category mutations
+ * @category constructors
  */
 export const combine = internal.combine
 
