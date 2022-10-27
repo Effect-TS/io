@@ -6,6 +6,8 @@ import type * as FiberRuntime from "@effect/io/Fiber/Runtime"
 import * as FiberRuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import * as FiberRuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
 import type * as FiberStatus from "@effect/io/Fiber/Status"
+import type * as FiberRef from "@effect/io/FiberRef"
+import type * as LogLevel from "@effect/io/Logger/Level"
 import * as Equal from "@fp-ts/data/Equal"
 import type { LazyArg } from "@fp-ts/data/Function"
 
@@ -330,3 +332,10 @@ export const yieldNow: () => Effect.Effect<never, never, void> = () => {
 
 /** @internal */
 export const traced = (trace: string | undefined) => <R, E, A>(self: Effect.Effect<R, E, A>) => self.traced(trace)
+
+/**
+ * @tsplus static effect/core/io/FiberRef.Ops currentLogLevel
+ * @category fiberRefs
+ * @since 1.0.0
+ */
+export declare const currentLogLevel: FiberRef.FiberRef<LogLevel.LogLevel> // TODO

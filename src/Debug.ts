@@ -1,7 +1,7 @@
 /**
  * @since 1.0.0
  */
-import type { Level } from "@effect/io/Logger/Level"
+import type { LogLevel } from "@effect/io/Logger/Level"
 
 /**
  * @since 1.0.0
@@ -11,7 +11,7 @@ export interface Debug {
   /**
    * Overrides the default log level filter for loggers such as console.
    */
-  logLevelOverride: Level | undefined
+  logLevelOverride: LogLevel | undefined
   /**
    * When specified it will be used to collect call traces at runtime.
    *
