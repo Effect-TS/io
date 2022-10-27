@@ -7,7 +7,7 @@ import type { Option } from "@fp-ts/data/Option"
  * @since 1.0.0
  * @category symbols
  */
-export const SpanTypeId = Symbol.for("@effect/io/SpanTracer/Span")
+export const SpanTypeId = Symbol.for("@effect/io/Tracer/Span")
 
 /**
  * @since 1.0.0

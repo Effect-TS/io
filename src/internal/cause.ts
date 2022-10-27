@@ -3,7 +3,7 @@ import * as Debug from "@effect/io/Debug"
 import * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRuntime from "@effect/io/internal/runtime"
 import { Stack } from "@effect/io/internal/stack"
-import * as SpanTracer from "@effect/io/SpanTracer"
+import * as Tracer from "@effect/io/Tracer"
 import * as Doc from "@effect/printer/Doc"
 import * as Optimize from "@effect/printer/Optimize"
 import * as Render from "@effect/printer/Render"
@@ -37,113 +37,19 @@ const variance = {
 }
 
 /** @internal */
-class Empty implements Cause.Empty {
-  readonly _tag = "Empty"
-  readonly [CauseTypeId] = variance;
-  [Equal.symbolHash](): number {
+const proto = {
+  [CauseTypeId]: variance,
+  [Equal.symbolHash](this: Cause.Cause<any>): number {
     return pipe(
       Equal.hash(CauseSymbolKey),
       Equal.hashCombine(Equal.hash(flattenCause(this)))
     )
-  }
-  [Equal.symbolEqual](that: unknown): boolean {
-    return isCause(that) && causeEquals(this, that)
-  }
-}
-
-/** @internal */
-class Fail<E> implements Cause.Fail<E> {
-  readonly _tag = "Fail"
-  readonly [CauseTypeId] = variance
-  constructor(readonly error: E) {}
-  [Equal.symbolHash](): number {
+  },
+  [Equal.symbolHash](this: Cause.Cause<any>): number {
     return pipe(
       Equal.hash(CauseSymbolKey),
       Equal.hashCombine(Equal.hash(flattenCause(this)))
     )
-  }
-  [Equal.symbolEqual](that: unknown): boolean {
-    return isCause(that) && causeEquals(this, that)
-  }
-}
-
-/** @internal */
-class Die implements Cause.Die {
-  readonly _tag = "Die"
-  readonly [CauseTypeId] = variance
-  constructor(readonly defect: unknown) {}
-  [Equal.symbolHash](): number {
-    return pipe(
-      Equal.hash(CauseSymbolKey),
-      Equal.hashCombine(Equal.hash(flattenCause(this)))
-    )
-  }
-  [Equal.symbolEqual](that: unknown): boolean {
-    return isCause(that) && causeEquals(this, that)
-  }
-}
-
-/** @internal */
-class Interrupt implements Cause.Interrupt {
-  readonly _tag = "Interrupt"
-  readonly [CauseTypeId] = variance
-  constructor(readonly fiberId: FiberId.FiberId) {}
-  [Equal.symbolHash](): number {
-    return pipe(
-      Equal.hash(CauseSymbolKey),
-      Equal.hashCombine(Equal.hash(flattenCause(this)))
-    )
-  }
-  [Equal.symbolEqual](that: unknown): boolean {
-    return isCause(that) && causeEquals(this, that)
-  }
-}
-
-/** @internal */
-class Annotated<E> implements Cause.Annotated<E> {
-  readonly _tag = "Annotated"
-  readonly [CauseTypeId] = variance
-  constructor(readonly cause: Cause.Cause<E>, readonly annotation: unknown) {}
-  [Equal.symbolHash](): number {
-    return pipe(
-      Equal.hash(CauseSymbolKey),
-      Equal.hashCombine(Equal.hash(flattenCause(this)))
-    )
-  }
-  [Equal.symbolEqual](that: unknown): boolean {
-    return isCause(that) && causeEquals(this, that)
-  }
-}
-
-/** @internal */
-class Parallel<E> implements Cause.Parallel<E> {
-  readonly _tag = "Parallel"
-  readonly [CauseTypeId] = variance
-  constructor(readonly left: Cause.Cause<E>, readonly right: Cause.Cause<E>) {}
-  [Equal.symbolHash](): number {
-    return pipe(
-      Equal.hash(CauseSymbolKey),
-      Equal.hashCombine(Equal.hash(flattenCause(this)))
-    )
-  }
-  [Equal.symbolEqual](that: unknown): boolean {
-    return isCause(that) && causeEquals(this, that)
-  }
-}
-
-/** @internal */
-class Sequential<E> implements Cause.Sequential<E> {
-  readonly _tag = "Sequential"
-  readonly [CauseTypeId] = variance
-  constructor(readonly left: Cause.Cause<E>, readonly right: Cause.Cause<E>) {}
-  [Equal.symbolHash](): number {
-    return pipe(
-      Equal.hash(CauseSymbolKey),
-      Equal.hashCombine(Equal.hash(flattenCause(this)))
-    )
-  }
-  [Equal.symbolEqual](that: unknown): boolean {
-    return isCause(that) && causeEquals(this, that)
   }
 }
 
@@ -152,36 +58,61 @@ class Sequential<E> implements Cause.Sequential<E> {
 // -----------------------------------------------------------------------------
 
 /** @internal */
-export const empty: Cause.Cause<never> = new Empty()
+export const empty: Cause.Cause<never> = (() => {
+  const o = Object.create(proto)
+  o._tag = "Empty"
+  return o
+})()
 
 /** @internal */
 export const fail = <E>(error: E): Cause.Cause<E> => {
-  return new Fail(error)
+  const o = Object.create(proto)
+  o._tag = "Fail"
+  o.error = error
+  return o
 }
 
 /** @internal */
 export const die = (defect: unknown): Cause.Cause<never> => {
-  return new Die(defect)
+  const o = Object.create(proto)
+  o._tag = "Die"
+  o.defect = defect
+  return o
 }
 
 /** @internal */
 export const interrupt = (fiberId: FiberId.FiberId): Cause.Cause<never> => {
-  return new Interrupt(fiberId)
+  const o = Object.create(proto)
+  o._tag = "Interrupt"
+  o.fiberId = fiberId
+  return o
 }
 
 /** @internal */
 export const annotated = <E>(cause: Cause.Cause<E>, annotation: unknown): Cause.Cause<E> => {
-  return new Annotated(cause, annotation)
+  const o = Object.create(proto)
+  o._tag = "Annotated"
+  o.cause = cause
+  o.annotation = annotation
+  return o
 }
 
 /** @internal */
 export const parallel = <E>(left: Cause.Cause<E>, right: Cause.Cause<E>): Cause.Cause<E> => {
-  return new Parallel(left, right)
+  const o = Object.create(proto)
+  o._tag = "Parallel"
+  o.left = left
+  o.right = right
+  return o
 }
 
 /** @internal */
 export const sequential = <E>(left: Cause.Cause<E>, right: Cause.Cause<E>): Cause.Cause<E> => {
-  return new Sequential(left, right)
+  const o = Object.create(proto)
+  o._tag = "Sequential"
+  o.left = left
+  o.right = right
+  return o
 }
 
 // -----------------------------------------------------------------------------
@@ -359,12 +290,12 @@ export const keepDefects = <E>(self: Cause.Cause<E>): Option.Option<Cause.Cause<
   return match<Option.Option<Cause.Cause<never>>, E>(
     Option.none,
     () => Option.none,
-    (defect) => Option.some(new Die(defect)),
+    (defect) => Option.some(die(defect)),
     () => Option.none,
-    (option, annotation) => pipe(option, Option.map((cause) => new Annotated(cause, annotation))),
+    (option, annotation) => pipe(option, Option.map((cause) => annotated(cause, annotation))),
     (left, right) => {
       if (Option.isSome(left) && Option.isSome(right)) {
-        return Option.some(new Sequential(left.value, right.value))
+        return Option.some(sequential(left.value, right.value))
       }
       if (Option.isSome(left) && Option.isNone(right)) {
         return Option.some(left.value)
@@ -376,7 +307,7 @@ export const keepDefects = <E>(self: Cause.Cause<E>): Option.Option<Cause.Cause<
     },
     (left, right) => {
       if (Option.isSome(left) && Option.isSome(right)) {
-        return Option.some(new Parallel(left.value, right.value))
+        return Option.some(parallel(left.value, right.value))
       }
       if (Option.isSome(left) && Option.isNone(right)) {
         return Option.some(left.value)
@@ -393,17 +324,17 @@ export const keepDefects = <E>(self: Cause.Cause<E>): Option.Option<Cause.Cause<
 export const linearize = <E>(self: Cause.Cause<E>): HashSet.HashSet<Cause.Cause<E>> => {
   return match<HashSet.HashSet<Cause.Cause<E>>, E>(
     HashSet.empty(),
-    (error) => HashSet.make(new Fail(error)),
-    (defect) => HashSet.make(new Die(defect)),
-    (fiberId) => HashSet.make(new Interrupt(fiberId)),
-    (set, annotation) => pipe(set, HashSet.map((cause) => new Annotated(cause, annotation))),
+    (error) => HashSet.make(fail(error)),
+    (defect) => HashSet.make(die(defect)),
+    (fiberId) => HashSet.make(interrupt(fiberId)),
+    (set, annotation) => pipe(set, HashSet.map((cause) => annotated(cause, annotation))),
     (leftSet, rightSet) =>
       pipe(
         leftSet,
         HashSet.flatMap((leftCause) =>
           pipe(
             rightSet,
-            HashSet.map((rightCause) => new Sequential(leftCause, rightCause))
+            HashSet.map((rightCause) => sequential(leftCause, rightCause))
           )
         )
       ),
@@ -413,7 +344,7 @@ export const linearize = <E>(self: Cause.Cause<E>): HashSet.HashSet<Cause.Cause<
         HashSet.flatMap((leftCause) =>
           pipe(
             rightSet,
-            HashSet.map((rightCause) => new Parallel(leftCause, rightCause))
+            HashSet.map((rightCause) => parallel(leftCause, rightCause))
           )
         )
       )
@@ -425,11 +356,11 @@ export const stripFailures = <E>(self: Cause.Cause<E>): Cause.Cause<never> => {
   return match<Cause.Cause<never>, E>(
     empty,
     () => empty,
-    (defect) => new Die(defect),
-    (fiberId) => new Interrupt(fiberId),
-    (cause, annotation) => new Annotated(cause, annotation),
-    (left, right) => new Sequential(left, right),
-    (left, right) => new Parallel(left, right)
+    (defect) => die(defect),
+    (fiberId) => interrupt(fiberId),
+    (cause, annotation) => annotated(cause, annotation),
+    (left, right) => sequential(left, right),
+    (left, right) => parallel(left, right)
   )(self)
 }
 
@@ -438,16 +369,16 @@ export const stripSomeDefects = (pf: (defect: unknown) => Option.Option<unknown>
   return <E>(self: Cause.Cause<E>): Option.Option<Cause.Cause<E>> => {
     return match<Option.Option<Cause.Cause<E>>, E>(
       Option.some(empty),
-      (error) => Option.some(new Fail(error)),
+      (error) => Option.some(fail(error)),
       (defect) => {
         const option = pf(defect)
-        return Option.isSome(option) ? Option.none : Option.some(new Die(defect))
+        return Option.isSome(option) ? Option.none : Option.some(die(defect))
       },
-      (fiberId) => Option.some(new Interrupt(fiberId)),
-      (option, annotation) => pipe(option, Option.map((cause) => new Annotated(cause, annotation))),
+      (fiberId) => Option.some(interrupt(fiberId)),
+      (option, annotation) => pipe(option, Option.map((cause) => annotated(cause, annotation))),
       (left, right) => {
         if (Option.isSome(left) && Option.isSome(right)) {
-          return Option.some(new Sequential(left.value, right.value))
+          return Option.some(sequential(left.value, right.value))
         }
         if (Option.isSome(left) && Option.isNone(right)) {
           return Option.some(left.value)
@@ -459,7 +390,7 @@ export const stripSomeDefects = (pf: (defect: unknown) => Option.Option<unknown>
       },
       (left, right) => {
         if (Option.isSome(left) && Option.isSome(right)) {
-          return Option.some(new Parallel(left.value, right.value))
+          return Option.some(parallel(left.value, right.value))
         }
         if (Option.isSome(left) && Option.isNone(right)) {
           return Option.some(left.value)
@@ -481,7 +412,7 @@ export const stripSomeDefects = (pf: (defect: unknown) => Option.Option<unknown>
 export const as = <E1>(error: E1) => {
   return <E>(self: Cause.Cause<E>): Cause.Cause<E1> => {
     if (self._tag === "Fail") {
-      return new Fail(error)
+      return fail(error)
     }
     return self as Cause.Cause<E1>
   }
@@ -491,7 +422,7 @@ export const as = <E1>(error: E1) => {
 export const map = <E, E1>(f: (e: E) => E1) => {
   return (self: Cause.Cause<E>): Cause.Cause<E1> => {
     if (self._tag === "Fail") {
-      return new Fail(f(self.error))
+      return fail(f(self.error))
     }
     return self as Cause.Cause<E1>
   }
@@ -723,13 +654,13 @@ const evaluateCause = (
 ): readonly [HashSet.HashSet<unknown>, List.List<Cause.Cause<unknown>>] => {
   let cause: Cause.Cause<unknown> | undefined = self
   let stack: Stack<Cause.Cause<unknown>> | undefined = undefined
-  let parallel = HashSet.empty<unknown>()
-  let sequential = List.empty<Cause.Cause<unknown>>()
+  let _parallel = HashSet.empty<unknown>()
+  let _sequential = List.empty<Cause.Cause<unknown>>()
   while (cause !== undefined) {
     switch (cause._tag) {
       case "Empty": {
         if (stack === undefined) {
-          return [parallel, sequential]
+          return [_parallel, _sequential]
         }
         cause = stack.value
         stack = stack.previous
@@ -737,27 +668,27 @@ const evaluateCause = (
       }
       case "Fail": {
         if (stack === undefined) {
-          return [pipe(parallel, HashSet.add(cause.error)), sequential]
+          return [pipe(_parallel, HashSet.add(cause.error)), _sequential]
         }
-        parallel = pipe(parallel, HashSet.add(cause.error))
+        _parallel = pipe(_parallel, HashSet.add(cause.error))
         cause = stack.value
         stack = stack.previous
         break
       }
       case "Die": {
         if (stack === undefined) {
-          return [pipe(parallel, HashSet.add(cause.defect)), sequential]
+          return [pipe(_parallel, HashSet.add(cause.defect)), _sequential]
         }
-        parallel = pipe(parallel, HashSet.add(cause.defect))
+        _parallel = pipe(_parallel, HashSet.add(cause.defect))
         cause = stack.value
         stack = stack.previous
         break
       }
       case "Interrupt": {
         if (stack === undefined) {
-          return [pipe(parallel, HashSet.add(cause.fiberId as unknown)), sequential]
+          return [pipe(_parallel, HashSet.add(cause.fiberId as unknown)), _sequential]
         }
-        parallel = pipe(parallel, HashSet.add(cause.fiberId as unknown))
+        _parallel = pipe(_parallel, HashSet.add(cause.fiberId as unknown))
         cause = stack.value
         stack = stack.previous
         break
@@ -773,22 +704,22 @@ const evaluateCause = (
             break
           }
           case "Sequential": {
-            cause = new Sequential(cause.left.left, new Sequential(cause.left.right, cause.right))
+            cause = sequential(cause.left.left, sequential(cause.left.right, cause.right))
             break
           }
           case "Parallel": {
-            cause = new Parallel(
-              new Sequential(cause.left.left, cause.right),
-              new Sequential(cause.left.right, cause.right)
+            cause = parallel(
+              sequential(cause.left.left, cause.right),
+              sequential(cause.left.right, cause.right)
             )
             break
           }
           case "Annotated": {
-            cause = new Sequential(cause.left.cause, cause.right)
+            cause = sequential(cause.left.cause, cause.right)
             break
           }
           default: {
-            sequential = pipe(sequential, List.prepend(cause.right))
+            _sequential = pipe(_sequential, List.prepend(cause.right))
             cause = cause.left
             break
           }
@@ -836,14 +767,14 @@ const FilterCauseReducer = <E>(
   predicate: Predicate<Cause.Cause<E>>
 ): Cause.Cause.Reducer<unknown, E, Cause.Cause<E>> => ({
   emptyCase: () => empty,
-  failCase: (_, error) => new Fail(error),
-  dieCase: (_, defect) => new Die(defect),
-  interruptCase: (_, fiberId) => new Interrupt(fiberId),
-  annotatedCase: (_, cause, annotation) => new Annotated(cause, annotation),
+  failCase: (_, error) => fail(error),
+  dieCase: (_, defect) => die(defect),
+  interruptCase: (_, fiberId) => interrupt(fiberId),
+  annotatedCase: (_, cause, annotation) => annotated(cause, annotation),
   sequentialCase: (_, left, right) => {
     if (predicate(left)) {
       if (predicate(right)) {
-        return new Sequential(left, right)
+        return sequential(left, right)
       }
       return left
     }
@@ -855,7 +786,7 @@ const FilterCauseReducer = <E>(
   parallelCase: (_, left, right) => {
     if (predicate(left)) {
       if (predicate(right)) {
-        return new Parallel(left, right)
+        return parallel(left, right)
       }
       return left
     }
@@ -1192,7 +1123,7 @@ const times = <A>(value: A, n: number): ReadonlyArray<A> => {
 }
 
 /** @internal */
-const spanToLines = (span: SpanTracer.Span, renderer: Cause.Cause.Renderer<any>): ReadonlyArray<Doc.Doc<never>> => {
+const spanToLines = (span: Tracer.Span, renderer: Cause.Cause.Renderer<any>): ReadonlyArray<Doc.Doc<never>> => {
   const lines: Array<Doc.Doc<never>> = []
   let current = Option.some(span)
   while (Option.isSome(current) && lines.length < renderer.renderSpanDepth) {
@@ -1228,7 +1159,7 @@ const stackToLines = (stack: StackAnnotation, renderer: Cause.Cause.Renderer<any
 
 /** @internal */
 const renderSpan = (
-  span: Option.Option<SpanTracer.Span>,
+  span: Option.Option<Tracer.Span>,
   renderer: Cause.Cause.Renderer<any>
 ): ReadonlyArray<Doc.Doc<never>> => {
   if (!renderer.renderSpan || Option.isNone(span)) {
@@ -1286,7 +1217,7 @@ const renderExecution = (
 /** @internal */
 const renderFail = (
   error: ReadonlyArray<Doc.Doc<never>>,
-  span: Option.Option<SpanTracer.Span>,
+  span: Option.Option<Tracer.Span>,
   stack: Option.Option<StackAnnotation>,
   renderer: Cause.Cause.Renderer<any>
 ): SequentialSegment => {
@@ -1306,7 +1237,7 @@ const renderFail = (
 /** @internal */
 const renderDie = (
   error: ReadonlyArray<Doc.Doc<never>>,
-  span: Option.Option<SpanTracer.Span>,
+  span: Option.Option<Tracer.Span>,
   stack: Option.Option<StackAnnotation>,
   renderer: Cause.Cause.Renderer<any>
 ): SequentialSegment => {
@@ -1326,7 +1257,7 @@ const renderDie = (
 /** @internal */
 const renderInterrupt = (
   fiberId: FiberId.FiberId,
-  span: Option.Option<SpanTracer.Span>,
+  span: Option.Option<Tracer.Span>,
   stack: Option.Option<StackAnnotation>,
   renderer: Cause.Cause.Renderer<any>
 ): SequentialSegment => {
@@ -1402,7 +1333,7 @@ const format = (segment: Segment): ReadonlyArray<Doc.Doc<never>> => {
 const linearSegments = <E>(
   cause: Cause.Cause<E>,
   renderer: Cause.Cause.Renderer<E>,
-  span: Option.Option<SpanTracer.Span>,
+  span: Option.Option<Tracer.Span>,
   stack: Option.Option<StackAnnotation>
 ): SafeEval.SafeEval<ReadonlyArray<Step>> => {
   switch (cause._tag) {
@@ -1428,7 +1359,7 @@ const linearSegments = <E>(
 const parallelSegments = <E>(
   cause: Cause.Cause<E>,
   renderer: Cause.Cause.Renderer<E>,
-  span: Option.Option<SpanTracer.Span>,
+  span: Option.Option<Tracer.Span>,
   stack: Option.Option<StackAnnotation>
 ): SafeEval.SafeEval<ReadonlyArray<SequentialSegment>> => {
   switch (cause._tag) {
@@ -1454,7 +1385,7 @@ const parallelSegments = <E>(
 const causeToSequential = <E>(
   cause: Cause.Cause<E>,
   renderer: Cause.Cause.Renderer<E>,
-  span: Option.Option<SpanTracer.Span>,
+  span: Option.Option<Tracer.Span>,
   stack: Option.Option<StackAnnotation>
 ): SafeEval.SafeEval<SequentialSegment> => {
   switch (cause._tag) {
@@ -1500,7 +1431,7 @@ const causeToSequential = <E>(
     }
     case "Annotated": {
       const annotation = cause.annotation
-      if (SpanTracer.isSpan(annotation)) {
+      if (Tracer.isSpan(annotation)) {
         return SafeEval.suspend(() =>
           causeToSequential(
             cause.cause,
