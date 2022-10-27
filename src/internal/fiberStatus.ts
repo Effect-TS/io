@@ -12,7 +12,7 @@ export const FiberStatusTypeId: FiberStatus.FiberStatusTypeId = Symbol.for(
 ) as FiberStatus.FiberStatusTypeId
 
 /** @internal */
-class Done implements Equal.Equal {
+class Done implements FiberStatus.Done {
   readonly [FiberStatusTypeId]: FiberStatus.FiberStatusTypeId = FiberStatusTypeId
   readonly _tag = "Done";
   [Equal.symbolHash](): number {
@@ -27,7 +27,7 @@ class Done implements Equal.Equal {
 }
 
 /** @internal */
-class Running implements Equal.Equal {
+class Running implements FiberStatus.Running {
   readonly [FiberStatusTypeId]: FiberStatus.FiberStatusTypeId = FiberStatusTypeId
   readonly _tag = "Running"
   constructor(readonly runtimeFlags: RuntimeFlags) {}
@@ -48,7 +48,7 @@ class Running implements Equal.Equal {
 }
 
 /** @internal */
-class Suspended implements Equal.Equal {
+class Suspended implements FiberStatus.Suspended {
   readonly [FiberStatusTypeId]: FiberStatus.FiberStatusTypeId = FiberStatusTypeId
   readonly _tag = "Suspended"
   constructor(
