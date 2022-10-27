@@ -1,5 +1,5 @@
-import { getCallTrace } from "@effect/io/CallTrace"
 import type * as Cause from "@effect/io/Cause"
+import { getCallTrace } from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRuntime from "@effect/io/Fiber/Runtime"
