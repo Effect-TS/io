@@ -189,7 +189,7 @@ export default function effectPlugin(
               undefined,
               ctx.factory.createNamespaceImport(tracer.get)
             ),
-            ctx.factory.createStringLiteral("@effect/io/CallTrace")
+            ctx.factory.createStringLiteral("@effect/io/Debug")
           ))
         }
 
