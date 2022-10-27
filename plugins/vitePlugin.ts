@@ -84,6 +84,7 @@ function tsPlugin(options?: { include?: Array<string>; exclude?: Array<string> }
           }
           const semantic = services.getSemanticDiagnostics(id)
           if (semantic.length > 0) {
+            services.cleanupSemanticCache()
             throw new Error(semantic[0].messageText.toString())
           }
           const out = services.getEmitOutput(id).outputFiles
