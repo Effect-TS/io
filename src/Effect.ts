@@ -54,7 +54,7 @@ export const fail = _Effect.fail
 /**
  * @macro traced
  * @since 1.0.0
- * @category alternatives
+ * @category error handling
  */
 export const catchAllCause = _Effect.catchAllCause
 
@@ -68,7 +68,7 @@ export const flatMap = _Effect.flatMap
 /**
  * @macro traced
  * @since 1.0.0
- * @category sequencing
+ * @category error handling
  */
 export const foldCauseEffect = _Effect.foldCauseEffect
 
@@ -89,7 +89,7 @@ export const sync = _Effect.sync
 /**
  * @macro traced
  * @since 1.0.0
- * @category constructors
+ * @category runtime
  */
 export const updateRuntimeFlags = _Effect.updateRuntimeFlags
 
@@ -131,14 +131,14 @@ export const whileLoop = _Effect.whileLoop
 /**
  * @macro traced
  * @since 1.0.0
- * @category interruption
+ * @category runtime
  */
 export const withRuntimeFlags = _Effect.withRuntimeFlags
 
 /**
  * @macro traced
  * @since 1.0.0
- * @category interruption
+ * @category runtime
  */
 export const withFiberRuntime = _Effect.withFiberRuntime
 
