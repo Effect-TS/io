@@ -130,7 +130,7 @@ export interface Sync extends
 /** @internal */
 export const async = <R, E, A>(
   register: (callback: (_: Effect.Effect<R, E, A>) => void) => void,
-  blockingOn: FiberId.FiberId = FiberId.None
+  blockingOn: FiberId.FiberId = FiberId.none
 ): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
   return primitive("Async", {
