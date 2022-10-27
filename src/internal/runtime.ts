@@ -29,6 +29,14 @@ export type Primitive =
   | Yield
 
 /** @internal */
+export type Continuation =
+  | OnSuccess
+  | OnSuccessAndFailure
+  | OnFailure
+  | While
+// | RevertFlags
+
+/** @internal */
 export const primitive = <Tag extends Primitive["_tag"]>(
   tag: Tag,
   body: Extract<Primitive, { _tag: Tag }>["body"],
