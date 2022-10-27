@@ -42,7 +42,7 @@
       "@effect/io/examples/*": ["./examples/*"],
       "@effect/io/*": ["./src/*"]
     },
-    "plugins": [{ "transform": "./transformers/effect.ts" }]
+    "plugins": [{ "transform": "./plugins/tsPlugin.ts" }]
   },
   "include": [],
   "exclude": ["node_modules", "build", "lib"]

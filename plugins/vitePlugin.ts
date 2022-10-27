@@ -1,20 +1,12 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-/* eslint-disable no-undef */
-const { createFilter } = require("@rollup/pluginutils")
-const path = require("path")
-const fs = require("fs")
-const ts = require("typescript")
+import { createFilter } from "@rollup/pluginutils"
+import fs from "fs"
+import path from "path"
+import ts from "typescript"
+import type * as V from "vite"
 
-/**
- * @typedef { import('@rollup/pluginutils').FilterPattern} FilterPattern
- * @typedef { { include?: FilterPattern, exclude?: FilterPattern, babelPlugins?: any[] } } CommonOptions
- */
+function tsPlugin(options?: { include?: Array<string>; exclude?: Array<string> }): V.Plugin {
+  const filter = createFilter(options?.include, options?.exclude)
 
-/**
- * @param {import('@vue/babel-plugin-jsx').VueJSXPluginOptions & CommonOptions} options
- * @returns {import('vite').Plugin}
- */
-function tsPlugin(options = {}) {
   const configPath = ts.findConfigFile(
     "./",
     ts.sys.fileExists,
@@ -22,14 +14,14 @@ function tsPlugin(options = {}) {
   )
 
   if (!configPath) {
-    throw new Error("Could not find a valid \"tsconfig.json\".")
+    throw new Error("Could not find a valid \"tsconfig.test.json\".")
   }
 
   const files = {}
   const registry = ts.createDocumentRegistry()
 
   const initTS = () => {
-    const config = JSON.parse(fs.readFileSync(configPath))
+    const config = JSON.parse(fs.readFileSync(configPath).toString())
 
     Object.assign(config.compilerOptions, {
       sourceMap: false,
@@ -56,7 +48,7 @@ function tsPlugin(options = {}) {
       }
     })
 
-    const servicesHost = {
+    const servicesHost: ts.LanguageServiceHost = {
       getScriptFileNames: () => tsconfig.fileNames,
       getScriptVersion: (fileName) => files[fileName] && files[fileName].version.toString(),
       getScriptSnapshot: (fileName) => {
@@ -69,7 +61,7 @@ function tsPlugin(options = {}) {
       getCompilationSettings: () => tsconfig.options,
       getDefaultLibFileName: (options) => ts.getDefaultLibFilePath(options),
       fileExists: (fileName) => fs.existsSync(fileName),
-      readFile: (fileName) => fs.readFileSync(fileName)
+      readFile: (fileName) => fs.readFileSync(fileName).toString()
     }
 
     return ts.createLanguageService(servicesHost, registry)
@@ -79,30 +71,27 @@ function tsPlugin(options = {}) {
 
   return {
     name: "ts-plugin",
-
     transform(code, id) {
-      const {
-        exclude = /\.esbuild\./,
-        include = /\.(jsx|tsx?)$/
-      } = options
-
-      const filter = createFilter(include, exclude)
-
       if (filter(id)) {
         if (/\.tsx?/.test(id)) {
-          if (typeof services.getProgram().getSourceFile(id) === "undefined") {
+          if (typeof services.getProgram()?.getSourceFile(id) === "undefined") {
             services = initTS()
           }
           files[id].version++
-          try {
-            const emit = services.getEmitOutput(id)
-            if (emit.diagnostics?.[0]) throw new Error(diagnostics[0].messageText)
-            code = emit.outputFiles[0].text
-          } catch {
-            //
+          const syntactic = services.getSyntacticDiagnostics(id)
+          if (syntactic.length > 0) {
+            throw new Error(syntactic[0].messageText.toString())
           }
+          const semantic = services.getSemanticDiagnostics(id)
+          if (semantic.length > 0) {
+            throw new Error(semantic[0].messageText.toString())
+          }
+          const out = services.getEmitOutput(id).outputFiles
+          if (out.length === 0) {
+            throw new Error("typescript output files is empty")
+          }
+          code = out[0].text
         }
-
         return {
           code
         }
@@ -111,5 +100,4 @@ function tsPlugin(options = {}) {
   }
 }
 
-module.exports = tsPlugin
-tsPlugin.default = tsPlugin
+export { tsPlugin }
