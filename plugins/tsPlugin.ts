@@ -47,7 +47,7 @@ export default function effectPlugin(
         function getOriginal(node: ts.Node): ts.Node {
           let current = node
           while ("original" in current) {
-            current = current["original"]
+            current = current["original"] as ts.Node
           }
           return current
         }
