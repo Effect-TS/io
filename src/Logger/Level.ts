@@ -1,9 +1,8 @@
 /**
  * @since 1.0.0
  */
-import type { Effect } from "@effect/io/Effect"
-import * as FiberRef from "@effect/io/FiberRef"
-import * as FiberRuntime from "@effect/io/internal/runtime"
+import type * as Effect from "@effect/io/Effect"
+import * as _runtime from "@effect/io/internal/runtime"
 import * as order from "@fp-ts/core/typeclass/Order"
 import { pipe } from "@fp-ts/data/Function"
 import * as number from "@fp-ts/data/Number"
@@ -205,8 +204,8 @@ export const None: LogLevel = {
  * @since 1.0.0
  * @category mutations
  */
-export const locally = (self: LogLevel): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A> => {
-  return FiberRef.locally(self)(FiberRuntime.currentLogLevel)
+export const locally = (self: LogLevel): <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A> => {
+  return _runtime.locallyFiberRef(self)(_runtime.currentLogLevel)
 }
 
 /**

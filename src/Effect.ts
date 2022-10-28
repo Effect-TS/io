@@ -102,6 +102,12 @@ export const succeed = internal.succeed
 export const sync = internal.sync
 
 /**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const suspendSucceed = internal.suspendSucceed
+
+/**
  * @macro traced
  * @since 1.0.0
  * @category runtime
@@ -166,6 +172,18 @@ export const yieldNow = internal.yieldNow
 
 /**
  * @since 1.0.0
+ * @category constructors
+ */
+export const unit = internal.unit
+
+/**
+ * @since 1.0.0
  * @category tracing
  */
 export const traced = internal.traced
+
+/**
+ * @since 1.0.0
+ * @category getters
+ */
+export const exit = internal.exit
