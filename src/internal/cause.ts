@@ -162,7 +162,7 @@ export const isParallelType = <E>(self: Cause.Cause<E>): self is Cause.Parallel<
 
 /** @internal */
 export const size = <E>(self: Cause.Cause<E>): number => {
-  return reduceWithContext(void 0, SizeCauseReducer)(self)
+  return reduceWithContext(undefined, SizeCauseReducer)(self)
 }
 
 /** @internal */
@@ -204,7 +204,7 @@ export const isInterrupted = <E>(self: Cause.Cause<E>): boolean => {
 
 /** @internal */
 export const isInterruptedOnly = <E>(self: Cause.Cause<E>): boolean => {
-  return reduceWithContext(void 0, IsInterruptedOnlyCauseReducer)(self)
+  return reduceWithContext(undefined, IsInterruptedOnlyCauseReducer)(self)
 }
 
 /** @internal */
@@ -632,7 +632,7 @@ export const find = <E, Z>(pf: (cause: Cause.Cause<E>) => Option.Option<Z>) => {
 /** @internal */
 export const filter = <E>(predicate: Predicate<Cause.Cause<E>>) => {
   return (self: Cause.Cause<E>): Cause.Cause<E> => {
-    return reduceWithContext(void 0, FilterCauseReducer(predicate))(self)
+    return reduceWithContext(undefined, FilterCauseReducer(predicate))(self)
   }
 }
 
@@ -822,16 +822,18 @@ export const match = <Z, E>(
   annotatedCase: (value: Z, annotation: unknown) => Z,
   sequentialCase: (left: Z, right: Z) => Z,
   parallelCase: (left: Z, right: Z) => Z
-): (self: Cause.Cause<E>) => Z => {
-  return reduceWithContext(void 0, {
-    emptyCase: () => emptyCase,
-    failCase: (_, error) => failCase(error),
-    dieCase: (_, defect) => dieCase(defect),
-    interruptCase: (_, fiberId) => interruptCase(fiberId),
-    annotatedCase: (_, value, annotation) => annotatedCase(value, annotation),
-    sequentialCase: (_, left, right) => sequentialCase(left, right),
-    parallelCase: (_, left, right) => parallelCase(left, right)
-  })
+) => {
+  return (self: Cause.Cause<E>): Z => {
+    return reduceWithContext(void 0, {
+      emptyCase: () => emptyCase,
+      failCase: (_, error: E) => failCase(error),
+      dieCase: (_, defect) => dieCase(defect),
+      interruptCase: (_, fiberId) => interruptCase(fiberId),
+      annotatedCase: (_, value, annotation) => annotatedCase(value, annotation),
+      sequentialCase: (_, left, right) => sequentialCase(left, right),
+      parallelCase: (_, left, right) => parallelCase(left, right)
+    })(self)
+  }
 }
 
 /** @internal */
@@ -904,7 +906,7 @@ export const reduceWithContext = <C, E, Z>(context: C, reducer: Cause.Cause.Redu
           break
         }
         case "Annotated": {
-          input = new Stack(cause.cause, input)
+          input = new Stack(cause.cause, input.previous)
           output = new Stack(
             Either.left({ _tag: "AnnotatedCase", annotation: cause.annotation }),
             output
@@ -912,12 +914,12 @@ export const reduceWithContext = <C, E, Z>(context: C, reducer: Cause.Cause.Redu
           break
         }
         case "Sequential": {
-          input = new Stack(cause.left, new Stack(cause.right, input))
+          input = new Stack(cause.left, new Stack(cause.right, input.previous))
           output = new Stack(Either.left({ _tag: "SequentialCase" }), output)
           break
         }
         case "Parallel": {
-          input = new Stack(cause.left, new Stack(cause.right, input))
+          input = new Stack(cause.left, new Stack(cause.right, input.previous))
           output = new Stack(Either.left({ _tag: "ParallelCase" }), output)
           break
         }
@@ -957,6 +959,7 @@ export const reduceWithContext = <C, E, Z>(context: C, reducer: Cause.Cause.Redu
           break
         }
       }
+      output = output.previous
     }
     if (accumulator === undefined) {
       throw new Error("BUG: Cause.reduceWithContext - please report an issue at https://github.com/Effect-TS/io/issues")
