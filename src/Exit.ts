@@ -3,7 +3,7 @@
  */
 import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
-import * as _runtime from "@effect/io/internal/runtime"
+import * as internal from "@effect/io/internal/exit"
 
 /**
  * @since 1.0.0
@@ -18,7 +18,7 @@ export type Exit<E, A> = Failure<E> | Success<A>
 export interface Failure<E> extends Effect.Effect<never, E, never> {
   readonly _tag: "Failure"
   readonly body: {
-    readonly error: E
+    readonly error: Cause.Cause<E>
   }
 }
 
@@ -35,12 +35,24 @@ export interface Success<A> extends Effect.Effect<never, never, A> {
 
 /**
  * @since 1.0.0
- * @category constructors
+ * @category refinements
  */
-export const succeed: <A>(value: A) => Exit<never, A> = _runtime.succeed as any
+export const isExit = internal.isExit
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const failCause: <E>(error: Cause.Cause<E>) => Exit<E, never> = _runtime.failCause as any
+export const succeed = internal.succeed
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const failCause = internal.failCause
+
+/**
+ * @since 1.0.0
+ * @category folding
+ */
+export const match = internal.match

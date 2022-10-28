@@ -138,6 +138,11 @@ export interface Sync extends
 {}
 
 /** @internal */
+export const isEffect = (u: unknown): u is Effect.Effect<unknown, unknown, unknown> => {
+  return typeof u === "object" && u != null && EffectTypeId in u
+}
+
+/** @internal */
 export const async = <R, E, A>(
   register: (callback: (_: Effect.Effect<R, E, A>) => void) => void,
   blockingOn: FiberId.FiberId = FiberId.none

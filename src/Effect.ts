@@ -39,6 +39,12 @@ export interface Variance<R, E, A> {
 }
 
 /**
+ * @since 1.0.0
+ * @category refinements
+ */
+export const isEffect = internal.isEffect
+
+/**
  * @macro traced
  * @since 1.0.0
  * @category constructors
