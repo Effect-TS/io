@@ -1,7 +1,6 @@
 /**
  * @since 1.0.0
  */
-import * as Cause from "@effect/io/Cause"
 import * as internal from "@effect/io/internal/runtime"
 import type { Equal } from "@fp-ts/data/Equal"
 
@@ -52,12 +51,11 @@ export const isEffect = internal.isEffect
 export const async = internal.async
 
 /**
+ * @macro traced
  * @since 1.0.0
  * @category constructors
  */
-export const fail = <E>(error: E): Effect<never, E, never> => {
-  return internal.failCause(Cause.fail(error))
-}
+export const fail = internal.fail
 
 /**
  * @macro traced
@@ -102,6 +100,7 @@ export const succeed = internal.succeed
 export const sync = internal.sync
 
 /**
+ * @macro traced
  * @since 1.0.0
  * @category constructors
  */
@@ -171,6 +170,7 @@ export const withFiberRuntime = internal.withFiberRuntime
 export const yieldNow = internal.yieldNow
 
 /**
+ * @macro traced
  * @since 1.0.0
  * @category constructors
  */
@@ -183,6 +183,7 @@ export const unit = internal.unit
 export const traced = internal.traced
 
 /**
+ * @macro traced
  * @since 1.0.0
  * @category getters
  */
