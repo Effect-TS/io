@@ -1,6 +1,7 @@
 /**
  * @since 1.0.0
  */
+import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
 import * as _runtime from "@effect/io/internal/runtime"
 
@@ -42,4 +43,4 @@ export const succeed: <A>(value: A) => Exit<never, A> = _runtime.succeed as any
  * @since 1.0.0
  * @category constructors
  */
-export const fail: <E>(error: E) => Exit<E, never> = _runtime.fail as any
+export const fail: <E>(error: Cause.Cause<E>) => Exit<E, never> = _runtime.failCause as any

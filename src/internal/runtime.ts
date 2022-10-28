@@ -68,7 +68,7 @@ export class Op<Tag extends string, Body = void> implements Effect.Effect<never,
 export interface Success extends Op<"Success", { readonly value: unknown }> {}
 
 /** @internal */
-export interface Failure extends Op<"Failure", { readonly error: unknown }> {}
+export interface Failure extends Op<"Failure", { readonly cause: Cause.Cause<unknown> }> {}
 
 /** @internal */
 export interface Yield extends Op<"Yield"> {}
@@ -151,9 +151,9 @@ export const async = <R, E, A>(
 }
 
 /** @internal */
-export const fail = <E>(error: E): Effect.Effect<never, E, never> => {
+export const failCause = <E>(cause: Cause.Cause<E>): Effect.Effect<never, E, never> => {
   const trace = getCallTrace()
-  return primitive("Failure", { error }, trace)
+  return primitive("Failure", { cause }, trace)
 }
 
 /** @internal */
