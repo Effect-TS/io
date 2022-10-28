@@ -95,7 +95,7 @@ export const annotated = <E>(cause: Cause.Cause<E>, annotation: unknown): Cause.
 }
 
 /** @internal */
-export const parallel = <E>(left: Cause.Cause<E>, right: Cause.Cause<E>): Cause.Cause<E> => {
+export const parallel = <E, E2>(left: Cause.Cause<E>, right: Cause.Cause<E2>): Cause.Cause<E | E2> => {
   const o = Object.create(proto)
   o._tag = "Parallel"
   o.left = left
@@ -104,7 +104,7 @@ export const parallel = <E>(left: Cause.Cause<E>, right: Cause.Cause<E>): Cause.
 }
 
 /** @internal */
-export const sequential = <E>(left: Cause.Cause<E>, right: Cause.Cause<E>): Cause.Cause<E> => {
+export const sequential = <E, E2>(left: Cause.Cause<E>, right: Cause.Cause<E2>): Cause.Cause<E | E2> => {
   const o = Object.create(proto)
   o._tag = "Sequential"
   o.left = left
