@@ -175,6 +175,12 @@ export const failCause = <E>(cause: Cause.Cause<E>): Effect.Effect<never, E, nev
 }
 
 /** @internal */
+export const fail = <E>(error: E): Effect.Effect<never, E, never> => {
+  const trace = getCallTrace()
+  return failCause(Cause.fail(error)).traced(trace)
+}
+
+/** @internal */
 export const catchAllCause = <E, R2, E2, A2>(
   f: (cause: Cause.Cause<E>) => Effect.Effect<R2, E2, A2>
 ) => {
@@ -206,11 +212,17 @@ export const flatMap = <A, R1, E1, B>(f: (a: A) => Effect.Effect<R1, E1, B>) => 
 export const foldCause = <E, A2, A, A3>(
   onFailure: (cause: Cause.Cause<E>) => A2,
   onSuccess: (a: A) => A3
-): <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, A2 | A3> => {
-  return foldCauseEffect(
-    (cause) => succeed(onFailure(cause)),
-    (a) => succeed(onSuccess(a))
-  )
+) => {
+  const trace = getCallTrace()
+  return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, A2 | A3> => {
+    return pipe(
+      self,
+      foldCauseEffect(
+        (cause) => succeed(onFailure(cause)),
+        (a) => succeed(onSuccess(a))
+      )
+    ).traced(trace)
+  }
 }
 
 /** @internal */
@@ -251,7 +263,8 @@ export const sync = <A>(evaluate: () => A): Effect.Effect<never, never, A> => {
 export const suspendSucceed = <R, E, A>(
   effect: () => Effect.Effect<R, E, A>
 ): Effect.Effect<R, E, A> => {
-  return pipe(sync(effect), flatMap(identity))
+  const trace = getCallTrace()
+  return pipe(sync(effect), flatMap(identity)).traced(trace)
 }
 
 /** @internal */
@@ -375,37 +388,49 @@ export const yieldNow: () => Effect.Effect<never, never, void> = () => {
 }
 
 /** @internal */
-export const unit: () => Effect.Effect<never, never, void> = () => succeed(undefined)
+export const unit: () => Effect.Effect<never, never, void> = () => {
+  const trace = getCallTrace()
+  return succeed(undefined).traced(trace)
+}
 
 /** @internal */
 export const traced = (trace: string | undefined) => <R, E, A>(self: Effect.Effect<R, E, A>) => self.traced(trace)
 
 /** @internal */
 export const exit = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Exit.Exit<E, A>> => {
-  return pipe(self, foldCause(failCause, succeed)) as Effect.Effect<R, never, Exit.Exit<E, A>>
+  const trace = getCallTrace()
+  return pipe(self, foldCause(failCause, succeed)).traced(trace) as Effect.Effect<R, never, Exit.Exit<E, A>>
 }
 
 /** @internal */
-export const scope = () => service(Scope.Tag)
+export const scope = () => {
+  const trace = getCallTrace()
+  return service(Scope.Tag).traced(trace)
+}
 
 /** @internal */
 export const environment = <R>(): Effect.Effect<R, never, Context.Context<R>> => {
-  return suspendSucceed(() => getFiberRef(currentEnvironment) as Effect.Effect<never, never, Context.Context<R>>)
+  const trace = getCallTrace()
+  return suspendSucceed(
+    () => getFiberRef(currentEnvironment) as Effect.Effect<never, never, Context.Context<R>>
+  ).traced(trace)
 }
 
 /** @internal */
 export const provideEnvironment = <R>(environment: Context.Context<R>) => {
+  const trace = getCallTrace()
   return <E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<never, E, A> => {
     return pipe(
       self as Effect.Effect<never, E, A>,
       pipe(currentEnvironment, locallyFiberRef(environment as Context.Context<never>))
-    )
+    ).traced(trace)
   }
 }
 
 /** @internal */
 export const service = <T>(tag: Context.Tag<T>): Effect.Effect<T, never, T> => {
-  return serviceWithEffect(tag, succeed)
+  const trace = getCallTrace()
+  return serviceWithEffect(tag, succeed).traced(trace)
 }
 
 /** @internal */
@@ -413,32 +438,36 @@ export const serviceWithEffect = <T, R, E, A>(
   tag: Context.Tag<T>,
   f: (a: T) => Effect.Effect<R, E, A>
 ): Effect.Effect<R | T, E, A> => {
+  const trace = getCallTrace()
   return suspendSucceed(() =>
     pipe(
       getFiberRef(currentEnvironment),
       flatMap((env) => f(pipe(env, Context.unsafeGet(tag))))
     )
-  )
+  ).traced(trace)
 }
 
 /** @internal */
 export const as = <B>(value: B) => {
+  const trace = getCallTrace()
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, B> => {
-    return pipe(self, flatMap(() => succeed(value)))
+    return pipe(self, flatMap(() => succeed(value))).traced(trace)
   }
 }
 
 /** @internal */
 export const map = <A, B>(f: (a: A) => B) => {
+  const trace = getCallTrace()
   return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, B> => {
-    return pipe(self, flatMap((a) => sync(() => f(a))))
+    return pipe(self, flatMap((a) => sync(() => f(a)))).traced(trace)
   }
 }
 
 /** @internal */
 export const tap = <A, R2, E2, X>(f: (a: A) => Effect.Effect<R2, E2, X>) => {
+  const trace = getCallTrace()
   return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, A> => {
-    return pipe(self, flatMap((a: A) => pipe(f(a), as(a))))
+    return pipe(self, flatMap((a: A) => pipe(f(a), as(a)))).traced(trace)
   }
 }
 
@@ -446,6 +475,7 @@ export const tap = <A, R2, E2, X>(f: (a: A) => Effect.Effect<R2, E2, X>) => {
 export const addFinalizerExit = <R, X>(
   finalizer: (exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R, never, X>
 ): Effect.Effect<R | Scope.Scope, never, void> => {
+  const trace = getCallTrace()
   return pipe(
     environment<R | Scope.Scope>(),
     flatMap((environment) =>
@@ -454,7 +484,7 @@ export const addFinalizerExit = <R, X>(
         flatMap(Scope.addFinalizerExit((exit) => pipe(finalizer(exit), provideEnvironment(environment))))
       )
     )
-  )
+  ).traced(trace)
 }
 
 /** @internal */
@@ -462,7 +492,8 @@ export const acquireRelease = <R, E, A, R2, X>(
   acquire: Effect.Effect<R, E, A>,
   release: (a: A) => Effect.Effect<R2, never, X>
 ): Effect.Effect<R | R2 | Scope.Scope, E, A> => {
-  return acquireReleaseExit(acquire, (a, _) => release(a))
+  const trace = getCallTrace()
+  return acquireReleaseExit(acquire, (a, _) => release(a)).traced(trace)
 }
 
 /** @internal */
@@ -470,7 +501,8 @@ export const acquireReleaseExit = <R, E, A, R2, X>(
   acquire: Effect.Effect<R, E, A>,
   release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>
 ): Effect.Effect<R | R2 | Scope.Scope, E, A> => {
-  return pipe(acquire, tap((a) => addFinalizerExit((exit) => release(a, exit))), uninterruptible)
+  const trace = getCallTrace()
+  return pipe(acquire, tap((a) => addFinalizerExit((exit) => release(a, exit))), uninterruptible).traced(trace)
 }
 
 /** @internal */
@@ -479,7 +511,8 @@ export const acquireUseRelease = <R, E, A, R2, E2, A2, R3, X>(
   use: (a: A) => Effect.Effect<R2, E2, A2>,
   release: (a: A) => Effect.Effect<R3, never, X>
 ): Effect.Effect<R | R2 | R3, E | E2, A2> => {
-  return acquireUseReleaseExit(acquire, use, (a, _) => release(a))
+  const trace = getCallTrace()
+  return acquireUseReleaseExit(acquire, use, (a, _) => release(a)).traced(trace)
 }
 
 /** @internal */
@@ -488,6 +521,7 @@ export const acquireUseReleaseExit = <R, E, A, R2, E2, A2, R3, X>(
   use: (a: A) => Effect.Effect<R2, E2, A2>,
   release: (a: A, exit: Exit.Exit<E2, A2>) => Effect.Effect<R3, never, X>
 ): Effect.Effect<R | R2 | R3, E | E2, A2> => {
+  const trace = getCallTrace()
   return uninterruptibleMask((restore) =>
     pipe(
       acquire,
@@ -516,34 +550,38 @@ export const acquireUseReleaseExit = <R, E, A, R2, E2, A2, R3, X>(
         )
       )
     )
-  )
+  ).traced(trace)
 }
 
 /** @internal */
 export const zip = <R2, E2, A2>(that: Effect.Effect<R2, E2, A2>) => {
+  const trace = getCallTrace()
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, readonly [A, A2]> => {
-    return pipe(self, flatMap((a) => pipe(that, map((b) => [a, b] as const))))
+    return pipe(self, flatMap((a) => pipe(that, map((b) => [a, b] as const)))).traced(trace)
   }
 }
 
 /** @internal */
 export const zipLeft = <R2, E2, A2>(that: Effect.Effect<R2, E2, A2>) => {
+  const trace = getCallTrace()
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, A> => {
-    return pipe(self, flatMap((a) => pipe(that, as(a))))
+    return pipe(self, flatMap((a) => pipe(that, as(a)))).traced(trace)
   }
 }
 
 /** @internal */
 export const zipRight = <R2, E2, A2>(that: Effect.Effect<R2, E2, A2>) => {
+  const trace = getCallTrace()
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, A2> => {
-    return pipe(self, flatMap(() => that))
+    return pipe(self, flatMap(() => that)).traced(trace)
   }
 }
 
 /** @internal */
 export const zipWith = <R2, E2, A2, A, B>(that: Effect.Effect<R2, E2, A2>, f: (a: A, b: A2) => B) => {
+  const trace = getCallTrace()
   return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, B> => {
-    return pipe(self, flatMap((a) => pipe(that, map((b) => f(a, b)))))
+    return pipe(self, flatMap((a) => pipe(that, map((b) => f(a, b))))).traced(trace)
   }
 }
 
