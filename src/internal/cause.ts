@@ -557,7 +557,7 @@ const flattenCauseLoop = (
 
 /** @internal */
 export const squash = <E>(self: Cause.Cause<E>): unknown => {
-  return squashWith((error) => error instanceof Error)(self)
+  return squashWith(identity)(self)
 }
 
 /** @internal */
