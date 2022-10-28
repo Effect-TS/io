@@ -1,5 +1,5 @@
 import * as Cause from "@effect/io/Cause"
-import { getCallTrace } from "@effect/io/Debug"
+import { getCallTrace, runtimeDebug } from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
 import * as FiberId from "@effect/io/Fiber/Id"
@@ -65,7 +65,7 @@ export const proto = {
     return Equal.hashRandom(this)
   },
   traced(this: Effect.Effect<never, never, never>, trace: string | undefined): Effect.Effect<never, never, never> {
-    if (trace === this["trace"]) {
+    if (!runtimeDebug.traceEnabled || trace === this["trace"]) {
       return this
     }
     const fresh = Object.create(proto)
