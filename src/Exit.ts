@@ -277,41 +277,63 @@ export const matchEffect = internal.matchEffect
 // export const forEachEffect = internal.forEachEffect
 
 /**
+ * Sequentially zips the this result with the specified result or else returns
+ * the failed `Cause<E | E2>`.
+ *
  * @since 1.0.0
  * @category zipping
  */
 export const zip = internal.zip
 
 /**
+ * Sequentially zips the this result with the specified result discarding the
+ * second element of the tuple or else returns the failed `Cause<E | E2>`.
+ *
  * @since 1.0.0
  * @category zipping
  */
 export const zipLeft = internal.zipLeft
 
 /**
+ * Sequentially zips the this result with the specified result discarding the
+ * first element of the tuple or else returns the failed `Cause<E | E2>`.
+ *
  * @since 1.0.0
  * @category zipping
  */
 export const zipRight = internal.zipRight
 
 /**
+ * Parallelly zips the this result with the specified result or else returns
+ * the failed `Cause<E | E2>`.
+ *
  * @since 1.0.0
  * @category zipping
  */
 export const zipPar = internal.zipPar
+
 /**
+ * Parallelly zips the this result with the specified result discarding the
+ * second element of the tuple or else returns the failed `Cause<E | E2>`.
+ *
  * @since 1.0.0
  * @category zipping
  */
 export const zipParLeft = internal.zipParLeft
 
 /**
+ * Parallelly zips the this result with the specified result discarding the
+ * first element of the tuple or else returns the failed `Cause<E | E2>`.
+ *
  * @since 1.0.0
  * @category zipping
  */
 export const zipParRight = internal.zipParRight
 
 /**
+ * Zips this exit together with that exit using the specified combination
+ * functions.
+ *
  * @since 1.0.0
  * @category zipping
  */
