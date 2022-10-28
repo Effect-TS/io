@@ -204,9 +204,8 @@ export const None: LogLevel = {
  * @since 1.0.0
  * @category mutations
  */
-export const locally = (self: LogLevel): <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A> => {
-  return _runtime.locallyFiberRef(self)(_runtime.currentLogLevel)
-}
+export const locally = (self: LogLevel): <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A> =>
+  _runtime.locallyFiberRef(self)(_runtime.currentLogLevel)
 
 /**
  * @since 1.0.0
@@ -221,9 +220,7 @@ export const Order = pipe(
  * @since 1.0.0
  * @category ordering
  */
-export const lessThan = order.lessThan(
-  Order
-)
+export const lessThan = order.lessThan(Order)
 
 /**
  * @since 1.0.0
