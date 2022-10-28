@@ -43,4 +43,4 @@ export const succeed: <A>(value: A) => Exit<never, A> = _runtime.succeed as any
  * @since 1.0.0
  * @category constructors
  */
-export const fail: <E>(error: Cause.Cause<E>) => Exit<E, never> = _runtime.failCause as any
+export const failCause: <E>(error: Cause.Cause<E>) => Exit<E, never> = _runtime.failCause as any
