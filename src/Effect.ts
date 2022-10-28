@@ -1,14 +1,15 @@
 /**
  * @since 1.0.0
  */
-import * as _Effect from "@effect/io/internal/runtime"
+import * as Cause from "@effect/io/Cause"
+import * as internal from "@effect/io/internal/runtime"
 import type { Equal } from "@fp-ts/data/Equal"
 
 /**
  * @since 1.0.0
  * @category symbols
  */
-export const EffectTypeId: unique symbol = _Effect.EffectTypeId
+export const EffectTypeId: unique symbol = internal.EffectTypeId
 
 /**
  * @since 1.0.0
@@ -42,115 +43,123 @@ export interface Variance<R, E, A> {
  * @since 1.0.0
  * @category constructors
  */
-export const async = _Effect.async
+export const async = internal.async
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const fail = <E>(error: E): Effect<never, E, never> => {
+  return internal.failCause(Cause.fail(error))
+}
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category constructors
  */
-export const fail = _Effect.fail
+export const failCause = internal.failCause
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category error handling
  */
-export const catchAllCause = _Effect.catchAllCause
+export const catchAllCause = internal.catchAllCause
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category sequencing
  */
-export const flatMap = _Effect.flatMap
+export const flatMap = internal.flatMap
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category error handling
  */
-export const foldCauseEffect = _Effect.foldCauseEffect
+export const foldCauseEffect = internal.foldCauseEffect
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category constructors
  */
-export const succeed = _Effect.succeed
+export const succeed = internal.succeed
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category constructors
  */
-export const sync = _Effect.sync
+export const sync = internal.sync
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category runtime
  */
-export const updateRuntimeFlags = _Effect.updateRuntimeFlags
+export const updateRuntimeFlags = internal.updateRuntimeFlags
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category interruption
  */
-export const interruptible = _Effect.interruptible
+export const interruptible = internal.interruptible
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category interruption
  */
-export const interruptibleMask = _Effect.interruptibleMask
+export const interruptibleMask = internal.interruptibleMask
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category interruption
  */
-export const uninterruptible = _Effect.uninterruptible
+export const uninterruptible = internal.uninterruptible
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category interruption
  */
-export const uninterruptibleMask = _Effect.uninterruptibleMask
+export const uninterruptibleMask = internal.uninterruptibleMask
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category constructors
  */
-export const whileLoop = _Effect.whileLoop
+export const whileLoop = internal.whileLoop
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category runtime
  */
-export const withRuntimeFlags = _Effect.withRuntimeFlags
+export const withRuntimeFlags = internal.withRuntimeFlags
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category runtime
  */
-export const withFiberRuntime = _Effect.withFiberRuntime
+export const withFiberRuntime = internal.withFiberRuntime
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category constructors
  */
-export const yieldNow = _Effect.yieldNow
+export const yieldNow = internal.yieldNow
 
 /**
  * @since 1.0.0
  * @category tracing
  */
-export const traced = _Effect.traced
+export const traced = internal.traced
