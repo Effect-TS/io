@@ -65,7 +65,7 @@ export const collectAllPar = <E, A>(
 }
 
 /** @internal */
-export const unit: () => Exit.Exit<never, void> = () => succeed(undefined)
+export const unit: () => Exit.Exit<never, void> = _runtime.unit as any
 
 /** @internal */
 export const fromEither = <E, A>(either: Either.Either<E, A>): Exit.Exit<E, A> => {
@@ -287,22 +287,19 @@ export const matchEffect = <E, A, R1, E1, A1, R2, E2, A2>(
   }
 }
 
-// TODO: implement after `Effect.exit`
-// /** @internal */
-// export const forEachEffect = <A, R, E1, B>(
-//   f: (a: A) => Effect.Effect<R, E1, B>
-// ) => {
-//   return <E>(self: Exit.Exit<E, A>): Effect.Effect<R, never, Exit.Exit<E | E1, B>> => {
-//     switch (self._tag) {
-//       case "Failure": {
-//         return _runtime.succeed(failCause(self.body.cause))
-//       }
-//       case "Success": {
-//         return f(self.body.value)
-//       }
-//     }
-//   }
-// }
+/** @internal */
+export const forEachEffect = <A, R, E1, B>(f: (a: A) => Effect.Effect<R, E1, B>) => {
+  return <E>(self: Exit.Exit<E, A>): Effect.Effect<R, never, Exit.Exit<E | E1, B>> => {
+    switch (self._tag) {
+      case "Failure": {
+        return _runtime.succeed(failCause(self.body.cause))
+      }
+      case "Success": {
+        return _runtime.exit(f(self.body.value))
+      }
+    }
+  }
+}
 
 /** @internal */
 export const zip = <E2, A2>(that: Exit.Exit<E2, A2>): <E, A>(
