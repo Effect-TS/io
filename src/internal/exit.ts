@@ -26,7 +26,9 @@ export const isSuccess = <E, A>(self: Exit.Exit<E, A>): self is Exit.Success<A> 
 }
 
 /** @internal */
-export const succeed: <A>(value: A) => Exit.Exit<never, A> = _runtime.succeed as any
+export const succeed = <A>(value: A): Exit.Exit<never, A> => {
+  return _runtime.primitive("Success", { value }, void 0) as any
+}
 
 /** @internal */
 export const fail = <E>(error: E): Exit.Exit<E, never> => {
@@ -34,7 +36,9 @@ export const fail = <E>(error: E): Exit.Exit<E, never> => {
 }
 
 /** @internal */
-export const failCause: <E>(cause: Cause.Cause<E>) => Exit.Exit<E, never> = _runtime.failCause as any
+export const failCause = <E>(cause: Cause.Cause<E>): Exit.Exit<E, never> => {
+  return _runtime.primitive("Failure", { cause }, void 0) as any
+}
 
 /** @internal */
 export const die = (defect: unknown): Exit.Exit<never, never> => {
@@ -61,7 +65,7 @@ export const collectAllPar = <E, A>(
 }
 
 /** @internal */
-export const unit: Exit.Exit<never, void> = succeed(undefined)
+export const unit: () => Exit.Exit<never, void> = () => succeed(undefined)
 
 /** @internal */
 export const fromEither = <E, A>(either: Either.Either<E, A>): Exit.Exit<E, A> => {
