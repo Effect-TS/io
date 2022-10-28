@@ -64,7 +64,10 @@ export const proto = {
   [Equal.symbolHash](this: {}) {
     return Equal.hashRandom(this)
   },
-  traced(this: {}, trace: string | undefined): Effect.Effect<never, never, never> {
+  traced(this: Effect.Effect<never, never, never>, trace: string | undefined): Effect.Effect<never, never, never> {
+    if (trace === this["trace"]) {
+      return this
+    }
     const fresh = Object.create(proto)
     Object.assign(fresh, this)
     fresh.trace = trace
