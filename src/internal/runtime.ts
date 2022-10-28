@@ -49,13 +49,6 @@ export type Continuation =
   | While
 // | RevertFlags
 
-/** @internal */
-export const primitive = <Tag extends Primitive["_tag"]>(
-  tag: Tag,
-  body: Extract<Primitive, { _tag: Tag }>["body"],
-  trace: string | undefined
-): Effect.Effect<never, never, never> => new Op(tag, body, trace)
-
 const effectVariance = {
   _R: (_: never) => _,
   _E: (_: never) => _,
@@ -63,18 +56,26 @@ const effectVariance = {
 }
 
 /** @internal */
-export class Op<Tag extends string, Body = void> implements Effect.Effect<never, never, never> {
-  readonly [EffectTypeId] = effectVariance
-  constructor(readonly _tag: Tag, readonly body: Body, readonly trace?: string) {}
-  [Equal.symbolEqual](that: unknown) {
+export const proto = {
+  [EffectTypeId]: effectVariance,
+  [Equal.symbolEqual](this: {}, that: unknown) {
     return this === that
-  }
-  [Equal.symbolHash]() {
+  },
+  [Equal.symbolHash](this: {}) {
     return Equal.hashRandom(this)
+  },
+  traced(this: {}, trace: string | undefined): Effect.Effect<never, never, never> {
+    const fresh = Object.create(proto)
+    Object.assign(fresh, this)
+    fresh.trace = trace
+    return fresh
   }
-  traced(trace: string | undefined): Effect.Effect<never, never, never> {
-    return new Op(this._tag, this.body, trace)
-  }
+}
+
+/** @internal */
+export type Op<Tag extends string, Body = {}> = Effect.Effect<never, never, never> & Body & {
+  readonly _tag: Tag
+  readonly trace?: string
 }
 
 /** @internal */
@@ -161,17 +162,22 @@ export const async = <R, E, A>(
   blockingOn: FiberId.FiberId = FiberId.none
 ): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
-  return primitive("Async", {
-    /* @ts-expect-error*/
-    register,
-    blockingOn
-  }, trace)
+  const effect = Object.create(proto)
+  effect._tag = "Async"
+  effect.register = register
+  effect.blockingOn = blockingOn
+  effect.trace = trace
+  return effect
 }
 
 /** @internal */
 export const failCause = <E>(cause: Cause.Cause<E>): Effect.Effect<never, E, never> => {
   const trace = getCallTrace()
-  return primitive("Failure", { cause }, trace)
+  const effect = Object.create(proto)
+  effect._tag = "Failure"
+  effect.cause = cause
+  effect.trace = trace
+  return effect
 }
 
 /** @internal */
@@ -186,12 +192,12 @@ export const catchAllCause = <E, R2, E2, A2>(
 ) => {
   const trace = getCallTrace()
   return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E2, A | A2> => {
-    return primitive("OnFailure", {
-      /** @ts-expect-error */
-      first: self,
-      /** @ts-expect-error */
-      failK: f
-    }, trace)
+    const effect = Object.create(proto)
+    effect._tag = "OnFailure"
+    effect.first = self
+    effect.failK = f
+    effect.trace = trace
+    return effect
   }
 }
 
@@ -199,12 +205,12 @@ export const catchAllCause = <E, R2, E2, A2>(
 export const flatMap = <A, R1, E1, B>(f: (a: A) => Effect.Effect<R1, E1, B>) => {
   const trace = getCallTrace()
   return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1, E | E1, B> => {
-    return primitive("OnSuccess", {
-      /** @ts-expect-error */
-      first: self,
-      /** @ts-expect-error */
-      successK: f
-    }, trace)
+    const effect = Object.create(proto)
+    effect._tag = "OnSuccess"
+    effect.first = self
+    effect.successK = f
+    effect.trace = trace
+    return effect
   }
 }
 
@@ -214,15 +220,14 @@ export const foldCause = <E, A2, A, A3>(
   onSuccess: (a: A) => A3
 ) => {
   const trace = getCallTrace()
-  return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, A2 | A3> => {
-    return pipe(
+  return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, A2 | A3> =>
+    pipe(
       self,
       foldCauseEffect(
         (cause) => succeed(onFailure(cause)),
         (a) => succeed(onSuccess(a))
       )
     ).traced(trace)
-  }
 }
 
 /** @internal */
@@ -236,27 +241,34 @@ export const foldCauseEffect = <E, A, R2, E2, A2, R3, E3, A3>(
     E2 | E3,
     A2 | A3
   > => {
-    return primitive("OnSuccessAndFailure", {
-      /** @ts-expect-error */
-      first: self,
-      /** @ts-expect-error */
-      failK: onFailure,
-      /** @ts-expect-error */
-      successK: onSuccess
-    }, trace)
+    const effect = Object.create(proto)
+    effect._tag = "OnSuccessAndFailure"
+    effect.first = self
+    effect.failK = onFailure
+    effect.successK = onSuccess
+    effect.trace = trace
+    return effect
   }
 }
 
 /** @internal */
 export const succeed = <A>(value: A): Effect.Effect<never, never, A> => {
   const trace = getCallTrace()
-  return primitive("Success", { value }, trace)
+  const effect = Object.create(proto)
+  effect._tag = "Success"
+  effect.success = value
+  effect.trace = trace
+  return effect
 }
 
 /** @internal */
 export const sync = <A>(evaluate: () => A): Effect.Effect<never, never, A> => {
   const trace = getCallTrace()
-  return primitive("Sync", { evaluate }, trace)
+  const effect = Object.create(proto)
+  effect._tag = "Sync"
+  effect.evaluate = evaluate
+  effect.trace = trace
+  return effect
 }
 
 /** @internal */
@@ -272,7 +284,11 @@ export const updateRuntimeFlags = (
   patch: FiberRuntimeFlagsPatch.RuntimeFlagsPatch
 ): Effect.Effect<never, never, void> => {
   const trace = getCallTrace()
-  return primitive("UpdateRuntimeFlags", { update: patch }, trace)
+  const effect = Object.create(proto)
+  effect._tag = "UpdateRuntimeFlags"
+  effect.update = patch
+  effect.trace = trace
+  return effect
 }
 
 /** @internal */
@@ -280,11 +296,12 @@ export const interruptible = <R, E, A>(
   self: Effect.Effect<R, E, A>
 ): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
-  return primitive("UpdateRuntimeFlags", {
-    update: FiberRuntimeFlagsPatch.enable(FiberRuntimeFlags.Interruption),
-    /** @ts-expect-errord */
-    scope: () => self
-  }, trace)
+  const effect = Object.create(proto)
+  effect._tag = "UpdateRuntimeFlags"
+  effect.update = FiberRuntimeFlagsPatch.enable(FiberRuntimeFlags.Interruption)
+  effect.scope = () => self
+  effect.trace = trace
+  return effect
 }
 
 /** @internal */
@@ -292,11 +309,12 @@ export const uninterruptible = <R, E, A>(
   self: Effect.Effect<R, E, A>
 ): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
-  return primitive("UpdateRuntimeFlags", {
-    update: FiberRuntimeFlagsPatch.disable(FiberRuntimeFlags.Interruption),
-    /** @ts-expect-errord */
-    scope: () => self
-  }, trace)
+  const effect = Object.create(proto)
+  effect._tag = "UpdateRuntimeFlags"
+  effect.update = FiberRuntimeFlagsPatch.disable(FiberRuntimeFlags.Interruption)
+  effect.scope = () => self
+  effect.trace = trace
+  return effect
 }
 
 /** @internal */
@@ -308,14 +326,15 @@ export const uninterruptibleMask = <R, E, A>(
   ) => Effect.Effect<R, E, A>
 ): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
-  return primitive("UpdateRuntimeFlags", {
-    update: FiberRuntimeFlagsPatch.disable(FiberRuntimeFlags.Interruption),
-    /** @ts-expect-error */
-    scope: (oldFlags) =>
-      FiberRuntimeFlags.interruption(oldFlags)
-        ? f(interruptible)
-        : f(uninterruptible)
-  }, trace)
+  const effect = Object.create(proto)
+  effect._tag = "UpdateRuntimeFlags"
+  effect.update = FiberRuntimeFlagsPatch.disable(FiberRuntimeFlags.Interruption)
+  effect.scope = (oldFlags: FiberRuntimeFlags.RuntimeFlags) =>
+    FiberRuntimeFlags.interruption(oldFlags)
+      ? f(interruptible)
+      : f(uninterruptible)
+  effect.trace = trace
+  return effect
 }
 
 /** @internal */
@@ -327,14 +346,15 @@ export const interruptibleMask = <R, E, A>(
   ) => Effect.Effect<R, E, A>
 ): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
-  return primitive("UpdateRuntimeFlags", {
-    update: FiberRuntimeFlagsPatch.enable(FiberRuntimeFlags.Interruption),
-    /** @ts-expect-error */
-    scope: (oldFlags) =>
-      FiberRuntimeFlags.interruption(oldFlags)
-        ? f(interruptible)
-        : f(uninterruptible)
-  }, trace)
+  const effect = Object.create(proto)
+  effect._tag = "UpdateRuntimeFlags"
+  effect.update = FiberRuntimeFlagsPatch.enable(FiberRuntimeFlags.Interruption)
+  effect.scope = (oldFlags: FiberRuntimeFlags.RuntimeFlags) =>
+    FiberRuntimeFlags.interruption(oldFlags)
+      ? f(interruptible)
+      : f(uninterruptible)
+  effect.trace = trace
+  return effect
 }
 
 /** @internal */
@@ -343,11 +363,12 @@ export const withRuntimeFlags = (
 ) => {
   const trace = getCallTrace()
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-    return primitive("UpdateRuntimeFlags", {
-      update,
-      /** @ts-expect-error */
-      scope: () => self
-    }, trace)
+    const effect = Object.create(proto)
+    effect._tag = "UpdateRuntimeFlags"
+    effect.update = update
+    effect.scope = () => self
+    effect.trace = trace
+    return effect
   }
 }
 
@@ -358,13 +379,13 @@ export const whileLoop = <R, E, A>(
   process: (a: A) => void
 ): Effect.Effect<R, E, void> => {
   const trace = getCallTrace()
-  return primitive("While", {
-    check,
-    /* @ts-expect-error*/
-    body,
-    /* @ts-expect-error*/
-    process
-  }, trace)
+  const effect = Object.create(proto)
+  effect._tag = "While"
+  effect.check = check
+  effect.body = body
+  effect.process = process
+  effect.trace = trace
+  return effect
 }
 
 /** @internal */
@@ -375,16 +396,20 @@ export const withFiberRuntime = <R, E, A>(
   ) => Effect.Effect<R, E, A>
 ): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
-  return primitive("WithRuntime", {
-    /** @ts-expect-error */
-    withRuntime
-  }, trace)
+  const effect = Object.create(proto)
+  effect._tag = "WithRuntime"
+  effect.withRuntime = withRuntime
+  effect.trace = trace
+  return effect
 }
 
 /** @internal */
 export const yieldNow: () => Effect.Effect<never, never, void> = () => {
   const trace = getCallTrace()
-  return primitive("Yield", void 0, trace)
+  const effect = Object.create(proto)
+  effect._tag = "Yield"
+  effect.trace = trace
+  return effect
 }
 
 /** @internal */
