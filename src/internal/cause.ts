@@ -577,7 +577,7 @@ export const squashWith = <E>(f: (error: E) => unknown) => {
         return pipe(
           defects(self),
           List.head,
-          Option.getOrElse(new InterruptedException())
+          Option.match(() => new InterruptedException(), identity)
         )
       }
       case "Some": {
@@ -978,12 +978,9 @@ export const InterruptedExceptionTypeId: Cause.InterruptedExceptionTypeId = Symb
 ) as Cause.InterruptedExceptionTypeId
 
 /** @internal */
-export class InterruptedException extends Error implements Cause.Cause.InterruptedException {
+export class InterruptedException implements Cause.Cause.InterruptedException {
   readonly [InterruptedExceptionTypeId]: Cause.InterruptedExceptionTypeId = InterruptedExceptionTypeId
-  constructor(message?: string) {
-    super(message)
-    this.name = "InterruptedException"
-  }
+  constructor(readonly message?: string) {}
 }
 
 /** @internal */

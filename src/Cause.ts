@@ -138,8 +138,9 @@ export declare namespace Cause {
    * @since 1.0.0
    * @category models
    */
-  export interface InterruptedException extends Error {
+  export interface InterruptedException {
     readonly [InterruptedExceptionTypeId]: InterruptedExceptionTypeId
+    readonly message?: string
   }
 }
 
