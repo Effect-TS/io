@@ -27,7 +27,10 @@ export const isSuccess = <E, A>(self: Exit.Exit<E, A>): self is Exit.Success<A> 
 
 /** @internal */
 export const succeed = <A>(value: A): Exit.Exit<never, A> => {
-  return _runtime.primitive("Success", { value }, void 0) as any
+  const effect = Object.create(_runtime.proto)
+  effect._tag = "Success"
+  effect.success = value
+  return effect
 }
 
 /** @internal */
@@ -37,7 +40,10 @@ export const fail = <E>(error: E): Exit.Exit<E, never> => {
 
 /** @internal */
 export const failCause = <E>(cause: Cause.Cause<E>): Exit.Exit<E, never> => {
-  return _runtime.primitive("Failure", { cause }, void 0) as any
+  const effect = Object.create(_runtime.proto)
+  effect._tag = "Failure"
+  effect.cause = cause
+  return effect
 }
 
 /** @internal */
