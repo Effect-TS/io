@@ -54,7 +54,26 @@ export type Continuation =
   | OnSuccessAndFailure
   | OnFailure
   | While
+// TODO
 // | RevertFlags
+
+/** @internal */
+export type OpCodes = typeof OpCodes
+
+/** @internal */
+export const OpCodes = {
+  Async: 0,
+  Failure: 1,
+  OnFailure: 2,
+  OnSuccess: 3,
+  OnSuccessAndFailure: 4,
+  Success: 5,
+  Sync: 6,
+  UpdateRuntimeFlags: 7,
+  While: 8,
+  WithRuntime: 9,
+  Yield: 10
+} as const
 
 const effectVariance = {
   _R: (_: never) => _,
@@ -83,23 +102,68 @@ export const proto = {
 }
 
 /** @internal */
-export type Op<Tag extends string, Body = {}> = Effect.Effect<never, never, never> & Body & {
-  readonly _tag: Tag
+export type Op<OpCode extends number, Body = {}> = Effect.Effect<never, never, never> & Body & {
+  readonly op: OpCode
   readonly trace?: string
 }
 
 /** @internal */
-export interface Success extends Op<"Success", { readonly value: unknown }> {}
+export interface Async extends
+  Op<OpCodes["Async"], {
+    readonly register: (resume: (effect: Primitive) => void) => void
+    readonly blockingOn: FiberId.FiberId
+  }>
+{}
 
 /** @internal */
-export interface Failure extends Op<"Failure", { readonly cause: Cause.Cause<unknown> }> {}
+export interface Failure extends Op<OpCodes["Failure"], { readonly cause: Cause.Cause<unknown> }> {}
 
 /** @internal */
-export interface Yield extends Op<"Yield"> {}
+export interface OnFailure extends
+  Op<OpCodes["OnFailure"], {
+    readonly first: Primitive
+    readonly failK: (a: Cause.Cause<unknown>) => Primitive
+  }>
+{}
+
+/** @internal */
+export interface OnSuccess extends
+  Op<OpCodes["OnSuccess"], {
+    readonly first: Primitive
+    readonly successK: (a: unknown) => Primitive
+  }>
+{}
+
+/** @internal */
+export interface OnSuccessAndFailure extends
+  Op<OpCodes["OnSuccessAndFailure"], {
+    readonly first: Primitive
+    readonly failK: (a: Cause.Cause<unknown>) => Primitive
+    readonly successK: (a: unknown) => Primitive
+  }>
+{}
+
+/** @internal */
+export interface Success extends Op<OpCodes["Success"], { readonly value: unknown }> {}
+
+/** @internal */
+export interface Sync extends
+  Op<OpCodes["Sync"], {
+    readonly evaluate: () => unknown
+  }>
+{}
+
+/** @internal */
+export interface UpdateRuntimeFlags extends
+  Op<OpCodes["UpdateRuntimeFlags"], {
+    readonly update: FiberRuntimeFlagsPatch.RuntimeFlagsPatch
+    readonly scope?: (oldRuntimeFlags: FiberRuntimeFlags.RuntimeFlags) => Primitive
+  }>
+{}
 
 /** @internal */
 export interface While extends
-  Op<"While", {
+  Op<OpCodes["While"], {
     readonly check: () => boolean
     readonly body: () => Primitive
     readonly process: (a: unknown) => void
@@ -108,58 +172,13 @@ export interface While extends
 
 /** @internal */
 export interface WithRuntime extends
-  Op<"WithRuntime", {
+  Op<OpCodes["WithRuntime"], {
     readonly withRuntime: (fiber: FiberRuntime.Runtime<unknown, unknown>, status: FiberStatus.Running) => Primitive
   }>
 {}
 
 /** @internal */
-export interface UpdateRuntimeFlags extends
-  Op<"UpdateRuntimeFlags", {
-    readonly update: FiberRuntimeFlagsPatch.RuntimeFlagsPatch
-    readonly scope?: (oldRuntimeFlags: FiberRuntimeFlags.RuntimeFlags) => Primitive
-  }>
-{}
-
-/** @internal */
-export interface OnFailure extends
-  Op<"OnFailure", {
-    readonly first: Primitive
-    readonly failK: (a: Cause.Cause<unknown>) => Primitive
-  }>
-{}
-
-/** @internal */
-export interface OnSuccess extends
-  Op<"OnSuccess", {
-    readonly first: Primitive
-    readonly successK: (a: unknown) => Primitive
-  }>
-{}
-
-/** @internal */
-export interface OnSuccessAndFailure extends
-  Op<"OnSuccessAndFailure", {
-    readonly first: Primitive
-    readonly failK: (a: Cause.Cause<unknown>) => Primitive
-    readonly successK: (a: unknown) => Primitive
-  }>
-{}
-
-/** @internal */
-export interface Async extends
-  Op<"Async", {
-    readonly register: (resume: (effect: Primitive) => void) => void
-    readonly blockingOn: FiberId.FiberId
-  }>
-{}
-
-/** @internal */
-export interface Sync extends
-  Op<"Sync", {
-    readonly evaluate: () => unknown
-  }>
-{}
+export interface Yield extends Op<OpCodes["Yield"]> {}
 
 /** @internal */
 export const isEffect = (u: unknown): u is Effect.Effect<unknown, unknown, unknown> => {
@@ -173,7 +192,7 @@ export const async = <R, E, A>(
 ): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
   const effect = Object.create(proto)
-  effect._tag = "Async"
+  effect.op = OpCodes.Async
   effect.register = register
   effect.blockingOn = blockingOn
   effect.trace = trace
@@ -184,7 +203,7 @@ export const async = <R, E, A>(
 export const failCause = <E>(cause: Cause.Cause<E>): Effect.Effect<never, E, never> => {
   const trace = getCallTrace()
   const effect = Object.create(proto)
-  effect._tag = "Failure"
+  effect.op = OpCodes.Failure
   effect.cause = cause
   effect.trace = trace
   return effect
@@ -203,7 +222,7 @@ export const catchAllCause = <E, R2, E2, A2>(
   const trace = getCallTrace()
   return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E2, A | A2> => {
     const effect = Object.create(proto)
-    effect._tag = "OnFailure"
+    effect.op = OpCodes.OnFailure
     effect.first = self
     effect.failK = f
     effect.trace = trace
@@ -216,7 +235,7 @@ export const flatMap = <A, R1, E1, B>(f: (a: A) => Effect.Effect<R1, E1, B>) => 
   const trace = getCallTrace()
   return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1, E | E1, B> => {
     const effect = Object.create(proto)
-    effect._tag = "OnSuccess"
+    effect.op = OpCodes.Success
     effect.first = self
     effect.successK = f
     effect.trace = trace
@@ -252,7 +271,7 @@ export const foldCauseEffect = <E, A, R2, E2, A2, R3, E3, A3>(
     A2 | A3
   > => {
     const effect = Object.create(proto)
-    effect._tag = "OnSuccessAndFailure"
+    effect.op = OpCodes.OnSuccessAndFailure
     effect.first = self
     effect.failK = onFailure
     effect.successK = onSuccess
@@ -265,7 +284,7 @@ export const foldCauseEffect = <E, A, R2, E2, A2, R3, E3, A3>(
 export const succeed = <A>(value: A): Effect.Effect<never, never, A> => {
   const trace = getCallTrace()
   const effect = Object.create(proto)
-  effect._tag = "Success"
+  effect.op = OpCodes.Success
   effect.success = value
   effect.trace = trace
   return effect
@@ -275,7 +294,7 @@ export const succeed = <A>(value: A): Effect.Effect<never, never, A> => {
 export const sync = <A>(evaluate: () => A): Effect.Effect<never, never, A> => {
   const trace = getCallTrace()
   const effect = Object.create(proto)
-  effect._tag = "Sync"
+  effect.op = OpCodes.Sync
   effect.evaluate = evaluate
   effect.trace = trace
   return effect
@@ -295,7 +314,7 @@ export const updateRuntimeFlags = (
 ): Effect.Effect<never, never, void> => {
   const trace = getCallTrace()
   const effect = Object.create(proto)
-  effect._tag = "UpdateRuntimeFlags"
+  effect.op = OpCodes.UpdateRuntimeFlags
   effect.update = patch
   effect.trace = trace
   return effect
@@ -307,7 +326,7 @@ export const interruptible = <R, E, A>(
 ): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
   const effect = Object.create(proto)
-  effect._tag = "UpdateRuntimeFlags"
+  effect.op = OpCodes.UpdateRuntimeFlags
   effect.update = FiberRuntimeFlagsPatch.enable(FiberRuntimeFlags.Interruption)
   effect.scope = () => self
   effect.trace = trace
@@ -320,7 +339,7 @@ export const uninterruptible = <R, E, A>(
 ): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
   const effect = Object.create(proto)
-  effect._tag = "UpdateRuntimeFlags"
+  effect.op = OpCodes.UpdateRuntimeFlags
   effect.update = FiberRuntimeFlagsPatch.disable(FiberRuntimeFlags.Interruption)
   effect.scope = () => self
   effect.trace = trace
@@ -337,7 +356,7 @@ export const uninterruptibleMask = <R, E, A>(
 ): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
   const effect = Object.create(proto)
-  effect._tag = "UpdateRuntimeFlags"
+  effect.op = OpCodes.UpdateRuntimeFlags
   effect.update = FiberRuntimeFlagsPatch.disable(FiberRuntimeFlags.Interruption)
   effect.scope = (oldFlags: FiberRuntimeFlags.RuntimeFlags) =>
     FiberRuntimeFlags.interruption(oldFlags)
@@ -357,7 +376,7 @@ export const interruptibleMask = <R, E, A>(
 ): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
   const effect = Object.create(proto)
-  effect._tag = "UpdateRuntimeFlags"
+  effect.op = OpCodes.UpdateRuntimeFlags
   effect.update = FiberRuntimeFlagsPatch.enable(FiberRuntimeFlags.Interruption)
   effect.scope = (oldFlags: FiberRuntimeFlags.RuntimeFlags) =>
     FiberRuntimeFlags.interruption(oldFlags)
@@ -374,7 +393,7 @@ export const withRuntimeFlags = (
   const trace = getCallTrace()
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
     const effect = Object.create(proto)
-    effect._tag = "UpdateRuntimeFlags"
+    effect.op = OpCodes.UpdateRuntimeFlags
     effect.update = update
     effect.scope = () => self
     effect.trace = trace
@@ -390,7 +409,7 @@ export const whileLoop = <R, E, A>(
 ): Effect.Effect<R, E, void> => {
   const trace = getCallTrace()
   const effect = Object.create(proto)
-  effect._tag = "While"
+  effect.op = OpCodes.While
   effect.check = check
   effect.body = body
   effect.process = process
@@ -407,7 +426,7 @@ export const withFiberRuntime = <R, E, A>(
 ): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
   const effect = Object.create(proto)
-  effect._tag = "WithRuntime"
+  effect.op = OpCodes.WithRuntime
   effect.withRuntime = withRuntime
   effect.trace = trace
   return effect
@@ -417,7 +436,7 @@ export const withFiberRuntime = <R, E, A>(
 export const yieldNow: () => Effect.Effect<never, never, void> = () => {
   const trace = getCallTrace()
   const effect = Object.create(proto)
-  effect._tag = "Yield"
+  effect.op = OpCodes.Yield
   effect.trace = trace
   return effect
 }
@@ -595,11 +614,11 @@ export const acquireUseReleaseExit = <R, E, A, R2, E2, A2, R3, X>(
               suspendSucceed(() => release(a, exit)),
               foldCauseEffect(
                 (cause) => {
-                  switch (exit._tag) {
-                    case "Failure": {
+                  switch (exit.op) {
+                    case OpCodes.Failure: {
                       return failCause(Cause.parallel(exit.body.cause, cause))
                     }
-                    case "Success": {
+                    case OpCodes.Success: {
                       return failCause(cause)
                     }
                   }

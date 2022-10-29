@@ -1137,19 +1137,19 @@ const spanToLines = (span: Tracer.Span, renderer: Cause.Cause.Renderer<any>): Re
 /** @internal */
 const stackToLines = (stack: StackAnnotation, renderer: Cause.Cause.Renderer<any>): ReadonlyArray<Doc.Doc<never>> => {
   const lines: Array<Doc.Doc<never>> = []
-  let current = Option.fromNullable(stack.stack)
-  while (Option.isSome(current) && lines.length < renderer.renderStackDepth) {
-    switch (current.value.value._tag) {
-      case "OnSuccess":
-      case "OnFailure":
-      case "OnSuccessAndFailure": {
-        if (current.value.value.trace) {
-          lines.push(Doc.text(current.value.value.trace))
+  let current = stack.stack
+  while (current !== undefined && lines.length < renderer.renderStackDepth) {
+    switch (current.value.op) {
+      case 2: // OnFailure
+      case 3: // OnSuccess
+      case 4: { // OnSuccessAndFailure
+        if (current.value.trace) {
+          lines.push(Doc.text(current.value.trace))
         }
         break
       }
     }
-    current = Option.fromNullable(current.value?.previous)
+    current = current.previous
   }
   return lines
 }

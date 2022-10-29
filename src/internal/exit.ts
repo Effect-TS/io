@@ -11,24 +11,25 @@ import type { Predicate } from "@fp-ts/data/Predicate"
 
 /** @internal */
 export const isExit = (u: unknown): u is Exit.Exit<unknown, unknown> => {
-  return _runtime.isEffect(u) && "_tag" in u &&
-    (u["_tag"] === "Success" || u["_tag"] === "Failure")
+  return _runtime.isEffect(u) &&
+    "op" in u &&
+    (u["op"] === _runtime.OpCodes.Failure || u["op"] === _runtime.OpCodes.Success)
 }
 
 /** @internal */
 export const isFailure = <E, A>(self: Exit.Exit<E, A>): self is Exit.Failure<E> => {
-  return self._tag === "Failure"
+  return self.op === _runtime.OpCodes.Failure
 }
 
 /** @internal */
 export const isSuccess = <E, A>(self: Exit.Exit<E, A>): self is Exit.Success<A> => {
-  return self._tag === "Success"
+  return self.op === _runtime.OpCodes.Success
 }
 
 /** @internal */
 export const succeed = <A>(value: A): Exit.Exit<never, A> => {
   const effect = Object.create(_runtime.proto)
-  effect._tag = "Success"
+  effect._tag = _runtime.OpCodes.Success
   effect.success = value
   return effect
 }
@@ -41,7 +42,7 @@ export const fail = <E>(error: E): Exit.Exit<E, never> => {
 /** @internal */
 export const failCause = <E>(cause: Cause.Cause<E>): Exit.Exit<E, never> => {
   const effect = Object.create(_runtime.proto)
-  effect._tag = "Failure"
+  effect._tag = _runtime.OpCodes.Failure
   effect.cause = cause
   return effect
 }
@@ -99,11 +100,11 @@ export const fromOption = <A>(option: Option.Option<A>): Exit.Exit<void, A> => {
 
 /** @internal */
 export const isInterrupted = <E, A>(self: Exit.Exit<E, A>): boolean => {
-  switch (self._tag) {
-    case "Failure": {
+  switch (self.op) {
+    case _runtime.OpCodes.Failure: {
       return Cause.isInterrupted(self.body.cause)
     }
-    case "Success": {
+    case _runtime.OpCodes.Success: {
       return false
     }
   }
@@ -111,11 +112,11 @@ export const isInterrupted = <E, A>(self: Exit.Exit<E, A>): boolean => {
 
 /** @internal */
 export const causeOption = <E, A>(self: Exit.Exit<E, A>): Option.Option<Cause.Cause<E>> => {
-  switch (self._tag) {
-    case "Failure": {
+  switch (self.op) {
+    case _runtime.OpCodes.Failure: {
       return Option.some(self.body.cause)
     }
-    case "Success": {
+    case _runtime.OpCodes.Success: {
       return Option.none
     }
   }
@@ -124,11 +125,11 @@ export const causeOption = <E, A>(self: Exit.Exit<E, A>): Option.Option<Cause.Ca
 /** @internal */
 export const getOrElse = <E, A>(orElse: (cause: Cause.Cause<E>) => A) => {
   return (self: Exit.Exit<E, A>): A => {
-    switch (self._tag) {
-      case "Failure": {
+    switch (self.op) {
+      case _runtime.OpCodes.Failure: {
         return orElse(self.body.cause)
       }
-      case "Success": {
+      case _runtime.OpCodes.Success: {
         return self.body.value
       }
     }
@@ -138,11 +139,11 @@ export const getOrElse = <E, A>(orElse: (cause: Cause.Cause<E>) => A) => {
 /** @internal */
 export const exists = <A>(predicate: Predicate<A>) => {
   return <E>(self: Exit.Exit<E, A>): boolean => {
-    switch (self._tag) {
-      case "Failure": {
+    switch (self.op) {
+      case _runtime.OpCodes.Failure: {
         return false
       }
-      case "Success": {
+      case _runtime.OpCodes.Success: {
         return predicate(self.body.value)
       }
     }
@@ -152,11 +153,11 @@ export const exists = <A>(predicate: Predicate<A>) => {
 /** @internal */
 export function as<A1>(value: A1) {
   return <E, A>(self: Exit.Exit<E, A>): Exit.Exit<E, A1> => {
-    switch (self._tag) {
-      case "Failure": {
+    switch (self.op) {
+      case _runtime.OpCodes.Failure: {
         return self
       }
-      case "Success": {
+      case _runtime.OpCodes.Success: {
         return succeed(value)
       }
     }
@@ -166,11 +167,11 @@ export function as<A1>(value: A1) {
 /** @internal */
 export const map = <A, B>(f: (a: A) => B) => {
   return <E>(self: Exit.Exit<E, A>): Exit.Exit<E, B> => {
-    switch (self._tag) {
-      case "Failure": {
+    switch (self.op) {
+      case _runtime.OpCodes.Failure: {
         return self
       }
-      case "Success": {
+      case _runtime.OpCodes.Success: {
         return succeed(f(self.body.value))
       }
     }
@@ -183,11 +184,11 @@ export const mapBoth = <E, A, E1, A1>(
   onSuccess: (a: A) => A1
 ) => {
   return (self: Exit.Exit<E, A>): Exit.Exit<E1, A1> => {
-    switch (self._tag) {
-      case "Failure": {
+    switch (self.op) {
+      case _runtime.OpCodes.Failure: {
         return failCause(pipe(self.body.cause, Cause.map(onFailure)))
       }
-      case "Success": {
+      case _runtime.OpCodes.Success: {
         return succeed(onSuccess(self.body.value))
       }
     }
@@ -197,11 +198,11 @@ export const mapBoth = <E, A, E1, A1>(
 /** @internal */
 export const mapError = <E, E1>(f: (e: E) => E1) => {
   return <A>(self: Exit.Exit<E, A>): Exit.Exit<E1, A> => {
-    switch (self._tag) {
-      case "Failure": {
+    switch (self.op) {
+      case _runtime.OpCodes.Failure: {
         return failCause(pipe(self.body.cause, Cause.map(f)))
       }
-      case "Success": {
+      case _runtime.OpCodes.Success: {
         return self
       }
     }
@@ -211,11 +212,11 @@ export const mapError = <E, E1>(f: (e: E) => E1) => {
 /** @internal */
 export const mapErrorCause = <E, E1>(f: (cause: Cause.Cause<E>) => Cause.Cause<E1>) => {
   return <A>(self: Exit.Exit<E, A>): Exit.Exit<E1, A> => {
-    switch (self._tag) {
-      case "Failure": {
+    switch (self.op) {
+      case _runtime.OpCodes.Failure: {
         return failCause(f(self.body.cause))
       }
-      case "Success": {
+      case _runtime.OpCodes.Success: {
         return self
       }
     }
@@ -225,11 +226,11 @@ export const mapErrorCause = <E, E1>(f: (cause: Cause.Cause<E>) => Cause.Cause<E
 /** @internal */
 export const flatMap = <A, E1, A1>(f: (a: A) => Exit.Exit<E1, A1>) => {
   return <E>(self: Exit.Exit<E, A>): Exit.Exit<E | E1, A1> => {
-    switch (self._tag) {
-      case "Failure": {
+    switch (self.op) {
+      case _runtime.OpCodes.Failure: {
         return self
       }
-      case "Success": {
+      case _runtime.OpCodes.Success: {
         return f(self.body.value)
       }
     }
@@ -241,11 +242,11 @@ export const flatMapEffect = <E, A, R, E1, A1>(
   f: (a: A) => Effect.Effect<R, E1, Exit.Exit<E, A1>>
 ) => {
   return (self: Exit.Exit<E, A>): Effect.Effect<R, E1, Exit.Exit<E, A1>> => {
-    switch (self._tag) {
-      case "Failure": {
+    switch (self.op) {
+      case _runtime.OpCodes.Failure: {
         return _runtime.succeed(self)
       }
-      case "Success": {
+      case _runtime.OpCodes.Success: {
         return f(self.body.value)
       }
     }
@@ -265,11 +266,11 @@ export const match = <E, A, Z>(
   onSuccess: (a: A) => Z
 ) => {
   return (self: Exit.Exit<E, A>): Z => {
-    switch (self._tag) {
-      case "Failure": {
+    switch (self.op) {
+      case _runtime.OpCodes.Failure: {
         return onFailure(self.body.cause)
       }
-      case "Success": {
+      case _runtime.OpCodes.Success: {
         return onSuccess(self.body.value)
       }
     }
@@ -282,11 +283,11 @@ export const matchEffect = <E, A, R1, E1, A1, R2, E2, A2>(
   onSuccess: (a: A) => Effect.Effect<R2, E2, A2>
 ) => {
   return (self: Exit.Exit<E, A>): Effect.Effect<R1 | R2, E1 | E2, A1 | A2> => {
-    switch (self._tag) {
-      case "Failure": {
+    switch (self.op) {
+      case _runtime.OpCodes.Failure: {
         return onFailure(self.body.cause)
       }
-      case "Success": {
+      case _runtime.OpCodes.Success: {
         return onSuccess(self.body.value)
       }
     }
@@ -296,11 +297,11 @@ export const matchEffect = <E, A, R1, E1, A1, R2, E2, A2>(
 /** @internal */
 export const forEachEffect = <A, R, E1, B>(f: (a: A) => Effect.Effect<R, E1, B>) => {
   return <E>(self: Exit.Exit<E, A>): Effect.Effect<R, never, Exit.Exit<E | E1, B>> => {
-    switch (self._tag) {
-      case "Failure": {
+    switch (self.op) {
+      case _runtime.OpCodes.Failure: {
         return _runtime.succeed(failCause(self.body.cause))
       }
-      case "Success": {
+      case _runtime.OpCodes.Success: {
         return _runtime.exit(f(self.body.value))
       }
     }
@@ -356,23 +357,23 @@ export const zipWith = <E, E1, A, B, C>(
   g: (c: Cause.Cause<E>, c1: Cause.Cause<E1>) => Cause.Cause<E | E1>
 ) => {
   return (self: Exit.Exit<E, A>): Exit.Exit<E | E1, C> => {
-    switch (self._tag) {
-      case "Failure": {
-        switch (that._tag) {
-          case "Success": {
+    switch (self.op) {
+      case _runtime.OpCodes.Failure: {
+        switch (that.op) {
+          case _runtime.OpCodes.Success: {
             return self
           }
-          case "Failure": {
+          case _runtime.OpCodes.Failure: {
             return failCause(g(self.body.cause, that.body.cause))
           }
         }
       }
-      case "Success": {
-        switch (that._tag) {
-          case "Success": {
+      case _runtime.OpCodes.Success: {
+        switch (that.op) {
+          case _runtime.OpCodes.Success: {
             return succeed(f(self.body.value, that.body.value))
           }
-          case "Failure": {
+          case _runtime.OpCodes.Failure: {
             return that
           }
         }
