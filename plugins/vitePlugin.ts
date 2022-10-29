@@ -20,6 +20,9 @@ function tsPlugin(options?: { include?: Array<string>; exclude?: Array<string> }
   const files = {}
   const registry = ts.createDocumentRegistry()
 
+  let services: ts.LanguageService
+  let program: ts.Program
+
   const initTS = () => {
     const config = JSON.parse(fs.readFileSync(configPath).toString())
 
@@ -64,28 +67,85 @@ function tsPlugin(options?: { include?: Array<string>; exclude?: Array<string> }
       readFile: (fileName) => fs.readFileSync(fileName).toString()
     }
 
-    return ts.createLanguageService(servicesHost, registry)
+    services = ts.createLanguageService(servicesHost, registry)
+    program = services.getProgram()!
   }
 
-  let services = initTS()
+  initTS()
 
   return {
     name: "ts-plugin",
+    // Vitest Specific Watch
+    configureServer(dev) {
+      dev.watcher.on("all", (event, path) => {
+        if (filter(path)) {
+          if (/\.tsx?/.test(path)) {
+            switch (event) {
+              case "add": {
+                if (!program.getSourceFile(path)) {
+                  initTS()
+                }
+                break
+              }
+              case "change": {
+                if (!program.getSourceFile(path)) {
+                  initTS()
+                } else {
+                  files[path].version = files[path].version + 1
+                }
+                break
+              }
+              case "unlink": {
+                if (program.getSourceFile(path)) {
+                  initTS()
+                }
+                break
+              }
+            }
+          }
+        }
+      })
+    },
+    // Rollup Generic Watch
+    watchChange(id, change) {
+      if (filter(id)) {
+        if (/\.tsx?/.test(id)) {
+          switch (change.event) {
+            case "create": {
+              if (!program.getSourceFile(id)) {
+                initTS()
+              }
+              break
+            }
+            case "update": {
+              if (!program.getSourceFile(id)) {
+                initTS()
+              } else {
+                files[id].version = files[id].version + 1
+              }
+              break
+            }
+            case "delete": {
+              if (program.getSourceFile(id)) {
+                initTS()
+              }
+              break
+            }
+          }
+        }
+      }
+    },
     transform(code, id) {
       if (filter(id)) {
         if (/\.tsx?/.test(id)) {
-          if (typeof services.getProgram()?.getSourceFile(id) === "undefined") {
-            services = initTS()
-          }
-          files[id].version++
           const syntactic = services.getSyntacticDiagnostics(id)
           if (syntactic.length > 0) {
-            throw new Error(syntactic[0].messageText.toString())
+            throw new Error(syntactic.map((_) => ts.flattenDiagnosticMessageText(_.messageText, "\n")).join("\n"))
           }
           const semantic = services.getSemanticDiagnostics(id)
+          services.cleanupSemanticCache()
           if (semantic.length > 0) {
-            services.cleanupSemanticCache()
-            throw new Error(semantic[0].messageText.toString())
+            throw new Error(semantic.map((_) => ts.flattenDiagnosticMessageText(_.messageText, "\n")).join("\n"))
           }
           const out = services.getEmitOutput(id).outputFiles
           if (out.length === 0) {
