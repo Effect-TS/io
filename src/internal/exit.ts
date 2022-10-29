@@ -29,7 +29,7 @@ export const isSuccess = <E, A>(self: Exit.Exit<E, A>): self is Exit.Success<A> 
 /** @internal */
 export const succeed = <A>(value: A): Exit.Exit<never, A> => {
   const effect = Object.create(_runtime.proto)
-  effect._tag = _runtime.OpCodes.Success
+  effect.op = _runtime.OpCodes.Success
   effect.success = value
   return effect
 }
@@ -42,7 +42,7 @@ export const fail = <E>(error: E): Exit.Exit<E, never> => {
 /** @internal */
 export const failCause = <E>(cause: Cause.Cause<E>): Exit.Exit<E, never> => {
   const effect = Object.create(_runtime.proto)
-  effect._tag = _runtime.OpCodes.Failure
+  effect.op = _runtime.OpCodes.Failure
   effect.cause = cause
   return effect
 }
