@@ -1113,6 +1113,14 @@ export const refModifySome = <A, B>(fallback: B, f: (a: A) => Option.Option<read
 export const refUpdate = <A>(f: (a: A) => A) => (self: Ref.Ref<A>) => self.modify((a): [void, A] => [void 0, f(a)])
 
 /** @internal */
+export const refUpdateAndGet = <A>(f: (a: A) => A) =>
+  (self: Ref.Ref<A>) =>
+    self.modify((a): [A, A] => {
+      const b = f(a)
+      return [b, b]
+    })
+
+/** @internal */
 export const refUpdateSome = <A>(f: (a: A) => Option.Option<A>) =>
   (self: Ref.Ref<A>) => self.modify((a): [void, A] => [void 0, pipe(f(a), Option.match(() => a, (b) => b))])
 
