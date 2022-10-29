@@ -98,19 +98,25 @@ export const setAndGet = runtime.refSetAndGet
 export const unsafeMake = runtime.refUnsafeMake
 
 /**
- * @category unsafe
+ * @category mutations
  * @since 1.0.0
  */
 export const update = runtime.refUpdate
 
 /**
- * @category unsafe
+ * @category mutations
+ * @since 1.0.0
+ */
+export const updateAndGet = runtime.refUpdateAndGet
+
+/**
+ * @category mutations
  * @since 1.0.0
  */
 export const updateSome = runtime.refUpdateSome
 
 /**
- * @category unsafe
+ * @category mutations
  * @since 1.0.0
  */
 export const updateSomeAndGet = runtime.refUpdateSomeAndGet
