@@ -1,7 +1,7 @@
 import * as Cause from "@effect/io/Cause"
 import { getCallTrace, runtimeDebug } from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
-import type * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
+import * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
 import type * as Exit from "@effect/io/Exit"
 import * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRuntime from "@effect/io/Fiber/Runtime"
@@ -10,22 +10,25 @@ import * as FiberRuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
 import type * as FiberStatus from "@effect/io/Fiber/Status"
 import type * as FiberRef from "@effect/io/FiberRef"
 import type * as LogLevel from "@effect/io/Logger/Level"
+import type * as Ref from "@effect/io/Ref"
 import type * as Scope from "@effect/io/Scope"
+import * as Order from "@fp-ts/core/typeclass/Order"
+import type * as Chunk from "@fp-ts/data/Chunk"
 import * as Context from "@fp-ts/data/Context"
 import * as Differ from "@fp-ts/data/Differ"
 import * as ContextPatch from "@fp-ts/data/Differ/ContextPatch"
 import * as HashSetPatch from "@fp-ts/data/Differ/HashSetPatch"
+import type * as Either from "@fp-ts/data/Either"
 import * as Equal from "@fp-ts/data/Equal"
 import type { LazyArg } from "@fp-ts/data/Function"
 import { identity, pipe } from "@fp-ts/data/Function"
 import type * as HashSet from "@fp-ts/data/HashSet"
+import * as List from "@fp-ts/data/List"
 import * as MutableRef from "@fp-ts/data/mutable/MutableRef"
+import * as Number from "@fp-ts/data/Number"
 import * as Option from "@fp-ts/data/Option"
-
-// -----------------------------------------------------------------------------
-// Ref
-// -----------------------------------------------------------------------------
-import type * as Ref from "@effect/io/Ref"
+import type { Predicate } from "@fp-ts/data/Predicate"
+import * as SortedMap from "@fp-ts/data/SortedMap"
 
 // -----------------------------------------------------------------------------
 // Effect
@@ -244,6 +247,30 @@ export const flatMap = <A, R1, E1, B>(f: (a: A) => Effect.Effect<R1, E1, B>) => 
 }
 
 /** @internal */
+export const flatten = <R, E, R1, E1, A>(self: Effect.Effect<R, E, Effect.Effect<R1, E1, A>>) => {
+  const trace = getCallTrace()
+  return pipe(self, flatMap(identity)).traced(trace)
+}
+
+// TODO(Mike): do.
+/** @interface */
+export declare const forEach: <A, R, E, B>(
+  f: (a: A) => Effect.Effect<R, E, B>
+) => (self: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<B>>
+
+// TODO(Mike): do.
+/** @interface */
+export declare const forEachPar: <A, R, E, B>(
+  f: (a: A) => Effect.Effect<R, E, B>
+) => (self: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<B>>
+
+// TODO(Mike): do.
+/** @interface */
+export declare const withParallelism: (
+  fibers: number
+) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+
+/** @internal */
 export const foldCause = <E, A2, A, A3>(
   onFailure: (cause: Cause.Cause<E>) => A2,
   onSuccess: (a: A) => A3
@@ -457,6 +484,10 @@ export const exit = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, ne
 }
 
 /** @internal */
+export const done = <E, A>(exit: Exit.Exit<E, A>): Effect.Effect<never, E, A> =>
+  exit.op === OpCodes.Failure ? failCause(exit.body.cause) : succeed(exit.body.value)
+
+/** @internal */
 export const onExit = <E, A, R2, X>(cleanup: (exit: Exit.Exit<E, A>) => Effect.Effect<R2, never, X>) => {
   const trace = getCallTrace()
   return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E, A> =>
@@ -534,6 +565,9 @@ export const as = <B>(value: B) => {
     return pipe(self, flatMap(() => succeed(value))).traced(trace)
   }
 }
+
+/** @internal */
+export const asUnit = <R, E, A>(self: Effect.Effect<R, E, A>) => as<void>(void 0)(self)
 
 /** @internal */
 export const map = <A, B>(f: (a: A) => B) => {
@@ -956,7 +990,8 @@ export const scopeExtend = <R, E, A>(effect: Effect.Effect<R, E, A>) =>
     )
 
 /** @internal */
-export const scopeFork = (self: Scope.Scope): Effect.Effect<never, never, Scope.Scope.Closeable> => self.fork
+export const scopeFork = (strategy: ExecutionStrategy.ExecutionStrategy) =>
+  (self: Scope.Scope): Effect.Effect<never, never, Scope.Scope.Closeable> => self.fork(strategy)
 
 /** @internal */
 export const scopeUse = <R, E, A>(effect: Effect.Effect<R, E, A>) =>
@@ -968,9 +1003,32 @@ export const scopeUse = <R, E, A>(effect: Effect.Effect<R, E, A>) =>
     )
 
 /** @internal */
-export declare const scopeMake: (
+export const scopeMake: (
   executionStrategy?: ExecutionStrategy.ExecutionStrategy
-) => Effect.Effect<never, never, Scope.Scope.Closeable>
+) => Effect.Effect<never, never, Scope.Scope.Closeable> = (strategy = ExecutionStrategy.sequential) =>
+  pipe(
+    releaseMapMake(),
+    map((rm): Scope.Scope.Closeable => ({
+      [ScopeTypeId]: ScopeTypeId,
+      [CloseableScopeTypeId]: CloseableScopeTypeId,
+      fork: (strategy) =>
+        uninterruptible(
+          pipe(
+            scopeMake(strategy),
+            flatMap((scope) =>
+              pipe(
+                rm,
+                releaseMapAdd((exit) => scope.close(exit)),
+                tap((fin) => scope.addFinalizerExit(fin)),
+                map(() => scope)
+              )
+            )
+          )
+        ),
+      close: (exit) => asUnit(releaseMapReleaseAll(strategy, exit)(rm)),
+      addFinalizerExit: (fin) => asUnit(releaseMapAdd(fin)(rm))
+    }))
+  )
 
 /** @internal */
 export const ScopeTypeId: Scope.ScopeTypeId = Symbol.for("@effect/io/Scope") as Scope.ScopeTypeId
@@ -1061,3 +1119,637 @@ export const refUpdateSome = <A>(f: (a: A) => Option.Option<A>) =>
 /** @internal */
 export const refUpdateSomeAndGet = <A>(f: (a: A) => Option.Option<A>) =>
   (self: Ref.Ref<A>) => self.modify((a): [A, A] => pipe(f(a), Option.match(() => [a, a], (b) => [b, b])))
+
+// -----------------------------------------------------------------------------
+// ReleaseMap
+// -----------------------------------------------------------------------------
+
+/** @internal */
+export type ReleaseMapState = {
+  readonly _tag: "Exited"
+  readonly nextKey: number
+  readonly exit: Exit.Exit<unknown, unknown>
+  readonly update: (finalizer: Scope.Scope.Finalizer) => Scope.Scope.Finalizer
+} | {
+  readonly _tag: "Running"
+  readonly nextKey: number
+  readonly finalizers: SortedMap.SortedMap<number, Scope.Scope.Finalizer>
+  readonly update: (finalizer: Scope.Scope.Finalizer) => Scope.Scope.Finalizer
+}
+
+/** @internal */
+export interface ReleaseMap {
+  readonly stateRef: Ref.Ref<ReleaseMapState>
+}
+
+/** @internal */
+export const releaseMapAdd = (finalizer: Scope.Scope.Finalizer) =>
+  (self: ReleaseMap) =>
+    pipe(
+      self,
+      releaseMapAddIfOpen(finalizer),
+      map(Option.match(
+        (): Scope.Scope.Finalizer => () => unit(),
+        (key): Scope.Scope.Finalizer => (exit) => releaseMapRelease(key, exit)(self)
+      ))
+    )
+
+/** @internal */
+export const releaseMapRelease = (key: number, exit: Exit.Exit<unknown, unknown>) =>
+  (self: ReleaseMap) =>
+    pipe(
+      self.stateRef,
+      refModify((state): [Effect.Effect<never, never, void>, ReleaseMapState] => {
+        switch (state._tag) {
+          case "Exited": {
+            return [unit(), state]
+          }
+          case "Running": {
+            return [
+              pipe(
+                state.finalizers,
+                SortedMap.get(key),
+                Option.match(() => unit(), (fin) => state.update(fin)(exit))
+              ),
+              {
+                ...state,
+                finalizers: pipe(state.finalizers, SortedMap.remove(key))
+              }
+            ]
+          }
+        }
+      }),
+      flatten
+    )
+
+/** @internal */
+export const releaseMapReleaseAll = (
+  strategy: ExecutionStrategy.ExecutionStrategy,
+  exit0: Exit.Exit<unknown, unknown>
+) =>
+  (self: ReleaseMap) =>
+    pipe(
+      self.stateRef,
+      refModify((state): [Effect.Effect<never, never, void>, ReleaseMapState] => {
+        switch (state._tag) {
+          case "Exited": {
+            return [unit(), state]
+          }
+          case "Running": {
+            return [
+              strategy._tag === "Sequential" ?
+                pipe(
+                  state.finalizers,
+                  forEach(([_, fin]) => exit(state.update(fin)(exit0))),
+                  flatMap((results) =>
+                    pipe(
+                      results,
+                      exitCollectAll,
+                      Option.map(exitAsUnit),
+                      Option.getOrElse(exitUnit()),
+                      done
+                    )
+                  )
+                ) :
+                strategy._tag === "Parallel" ?
+                pipe(
+                  state.finalizers,
+                  forEachPar(([_, fin]) => exit(state.update(fin)(exit0))),
+                  flatMap((results) =>
+                    pipe(
+                      results,
+                      exitCollectAllPar,
+                      Option.map(exitAsUnit),
+                      Option.getOrElse(exitUnit()),
+                      done
+                    )
+                  )
+                ) :
+                pipe(
+                  state.finalizers,
+                  forEachPar(([_, fin]) => exit(state.update(fin)(exit0))),
+                  flatMap((results) =>
+                    pipe(
+                      results,
+                      exitCollectAllPar,
+                      Option.map(exitAsUnit),
+                      Option.getOrElse(exitUnit()),
+                      done
+                    )
+                  ),
+                  withParallelism(strategy.n)
+                ),
+              { _tag: "Exited", nextKey: state.nextKey, exit: exit0, update: state.update }
+            ]
+          }
+        }
+      }),
+      flatten
+    )
+
+/** @internal */
+export const releaseMapAddIfOpen = (finalizer: Scope.Scope.Finalizer) =>
+  (self: ReleaseMap) =>
+    pipe(
+      self.stateRef,
+      refModify((state): [Effect.Effect<never, never, Option.Option<number>>, ReleaseMapState] => {
+        switch (state._tag) {
+          case "Exited": {
+            return [
+              as(Option.none)(finalizer(state.exit)),
+              {
+                _tag: "Exited",
+                exit: state.exit,
+                nextKey: state.nextKey + 1,
+                update: state.update
+              }
+            ]
+          }
+          case "Running": {
+            return [
+              succeed(Option.some(state.nextKey)),
+              {
+                _tag: "Running",
+                finalizers: pipe(state.finalizers, SortedMap.set(state.nextKey, finalizer)),
+                nextKey: state.nextKey + 1,
+                update: state.update
+              }
+            ]
+          }
+        }
+      }),
+      flatten
+    )
+
+/** @internal */
+export const releaseMapGet = (key: number) =>
+  (self: ReleaseMap) =>
+    pipe(
+      self.stateRef,
+      refGet,
+      map((state): Option.Option<Scope.Scope.Finalizer> =>
+        state._tag === "Exited" ? Option.none : SortedMap.get(key)(state.finalizers)
+      )
+    )
+
+/** @internal */
+export const releaseMapReplace = (key: number, finalizer: Scope.Scope.Finalizer) =>
+  (self: ReleaseMap) =>
+    pipe(
+      self.stateRef,
+      refModify((state): [Effect.Effect<never, never, Option.Option<Scope.Scope.Finalizer>>, ReleaseMapState] => {
+        switch (state._tag) {
+          case "Exited": {
+            return [
+              as(Option.none)(finalizer(state.exit)),
+              {
+                _tag: "Exited",
+                exit: state.exit,
+                nextKey: state.nextKey,
+                update: state.update
+              }
+            ]
+          }
+          case "Running": {
+            return [
+              succeed(SortedMap.get(key)(state.finalizers)),
+              {
+                _tag: "Running",
+                finalizers: pipe(state.finalizers, SortedMap.set(state.nextKey, finalizer)),
+                nextKey: state.nextKey,
+                update: state.update
+              }
+            ]
+          }
+        }
+      }),
+      flatten
+    )
+
+/** @internal */
+export const releaseMapRemove = (key: number) =>
+  (self: ReleaseMap) =>
+    pipe(
+      self.stateRef,
+      refModify((state): [Option.Option<Scope.Scope.Finalizer>, ReleaseMapState] =>
+        state._tag === "Exited" ?
+          [Option.none, state] :
+          [SortedMap.get(key)(state.finalizers), { ...state, finalizers: SortedMap.remove(key)(state.finalizers) }]
+      )
+    )
+
+const releaseMapInitialState: ReleaseMapState = {
+  _tag: "Running",
+  nextKey: 0,
+  finalizers: SortedMap.empty(Order.reverse(Number.Order)),
+  update: identity
+}
+
+export const releaseMapMake = () =>
+  pipe(
+    refMake<ReleaseMapState>(releaseMapInitialState),
+    map((stateRef): ReleaseMap => ({ stateRef }))
+  )
+
+// -----------------------------------------------------------------------------
+// Exit
+// -----------------------------------------------------------------------------
+
+/** @internal */
+export const exitIsExit = (u: unknown): u is Exit.Exit<unknown, unknown> => {
+  return isEffect(u) && "_tag" in u &&
+    (u["_tag"] === "Success" || u["_tag"] === "Failure")
+}
+
+/** @internal */
+export const exitIsFailure = <E, A>(self: Exit.Exit<E, A>): self is Exit.Failure<E> => {
+  return self.op === OpCodes.Failure
+}
+
+/** @internal */
+export const exitIsSuccess = <E, A>(self: Exit.Exit<E, A>): self is Exit.Success<A> => {
+  return self.op === OpCodes.Success
+}
+
+/** @internal */
+export const exitSucceed = <A>(value: A): Exit.Exit<never, A> => {
+  const effect = Object.create(proto)
+  effect._tag = "Success"
+  effect.success = value
+  return effect
+}
+
+/** @internal */
+export const exitFail = <E>(error: E): Exit.Exit<E, never> => {
+  return exitFailCause(Cause.fail(error))
+}
+
+/** @internal */
+export const exitFailCause = <E>(cause: Cause.Cause<E>): Exit.Exit<E, never> => {
+  const effect = Object.create(proto)
+  effect._tag = "Failure"
+  effect.cause = cause
+  return effect
+}
+
+/** @internal */
+export const exitDie = (defect: unknown): Exit.Exit<never, never> => {
+  return exitFailCause(Cause.die(defect))
+}
+
+/** @internal */
+export const exitInterrupt = (fiberId: FiberId.FiberId): Exit.Exit<never, never> => {
+  return exitFailCause(Cause.interrupt(fiberId))
+}
+
+/** @internal */
+export const exitFromEither = <E, A>(either: Either.Either<E, A>): Exit.Exit<E, A> => {
+  switch (either._tag) {
+    case "Left": {
+      return exitFail(either.left)
+    }
+    case "Right": {
+      return exitSucceed(either.right)
+    }
+  }
+}
+
+/** @internal */
+export const exitFromOption = <A>(option: Option.Option<A>): Exit.Exit<void, A> => {
+  switch (option._tag) {
+    case "None": {
+      return exitFail(undefined)
+    }
+    case "Some": {
+      return exitSucceed(option.value)
+    }
+  }
+}
+
+/** @internal */
+export const exitIsInterrupted = <E, A>(self: Exit.Exit<E, A>): boolean => {
+  switch (self.op) {
+    case OpCodes.Failure: {
+      return Cause.isInterrupted(self.body.cause)
+    }
+    case OpCodes.Success: {
+      return false
+    }
+  }
+}
+
+/** @internal */
+export const exitCauseOption = <E, A>(self: Exit.Exit<E, A>): Option.Option<Cause.Cause<E>> => {
+  switch (self.op) {
+    case OpCodes.Failure: {
+      return Option.some(self.body.cause)
+    }
+    case OpCodes.Success: {
+      return Option.none
+    }
+  }
+}
+
+/** @internal */
+export const exitGetOrElse = <E, A>(orElse: (cause: Cause.Cause<E>) => A) => {
+  return (self: Exit.Exit<E, A>): A => {
+    switch (self.op) {
+      case OpCodes.Failure: {
+        return orElse(self.body.cause)
+      }
+      case OpCodes.Success: {
+        return self.body.value
+      }
+    }
+  }
+}
+
+/** @internal */
+export const exitExists = <A>(predicate: Predicate<A>) => {
+  return <E>(self: Exit.Exit<E, A>): boolean => {
+    switch (self.op) {
+      case OpCodes.Failure: {
+        return false
+      }
+      case OpCodes.Success: {
+        return predicate(self.body.value)
+      }
+    }
+  }
+}
+
+/** @internal */
+export const exitAs = <A1>(value: A1) =>
+  <E, A>(self: Exit.Exit<E, A>): Exit.Exit<E, A1> => {
+    switch (self.op) {
+      case OpCodes.Failure: {
+        return self
+      }
+      case OpCodes.Success: {
+        return exitSucceed(value)
+      }
+    }
+  }
+
+/** @internal */
+export const exitAsUnit = <E, A>(self: Exit.Exit<E, A>): Exit.Exit<E, void> => exitAs(void 0)(self)
+
+/** @internal */
+export const exitMap = <A, B>(f: (a: A) => B) => {
+  return <E>(self: Exit.Exit<E, A>): Exit.Exit<E, B> => {
+    switch (self.op) {
+      case OpCodes.Failure: {
+        return self
+      }
+      case OpCodes.Success: {
+        return exitSucceed(f(self.body.value))
+      }
+    }
+  }
+}
+
+/** @internal */
+export const exitMapBoth = <E, A, E1, A1>(
+  onFailure: (e: E) => E1,
+  onSuccess: (a: A) => A1
+) => {
+  return (self: Exit.Exit<E, A>): Exit.Exit<E1, A1> => {
+    switch (self.op) {
+      case OpCodes.Failure: {
+        return exitFailCause(pipe(self.body.cause, Cause.map(onFailure)))
+      }
+      case OpCodes.Success: {
+        return exitSucceed(onSuccess(self.body.value))
+      }
+    }
+  }
+}
+
+/** @internal */
+export const exitMapError = <E, E1>(f: (e: E) => E1) => {
+  return <A>(self: Exit.Exit<E, A>): Exit.Exit<E1, A> => {
+    switch (self.op) {
+      case OpCodes.Failure: {
+        return exitFailCause(pipe(self.body.cause, Cause.map(f)))
+      }
+      case OpCodes.Success: {
+        return self
+      }
+    }
+  }
+}
+
+/** @internal */
+export const exitMapErrorCause = <E, E1>(f: (cause: Cause.Cause<E>) => Cause.Cause<E1>) => {
+  return <A>(self: Exit.Exit<E, A>): Exit.Exit<E1, A> => {
+    switch (self.op) {
+      case OpCodes.Failure: {
+        return exitFailCause(f(self.body.cause))
+      }
+      case OpCodes.Success: {
+        return self
+      }
+    }
+  }
+}
+
+/** @internal */
+export const exitFlatMap = <A, E1, A1>(f: (a: A) => Exit.Exit<E1, A1>) => {
+  return <E>(self: Exit.Exit<E, A>): Exit.Exit<E | E1, A1> => {
+    switch (self.op) {
+      case OpCodes.Failure: {
+        return self
+      }
+      case OpCodes.Success: {
+        return f(self.body.value)
+      }
+    }
+  }
+}
+
+/** @internal */
+export const exitFlatMapEffect = <E, A, R, E1, A1>(
+  f: (a: A) => Effect.Effect<R, E1, Exit.Exit<E, A1>>
+) => {
+  return (self: Exit.Exit<E, A>): Effect.Effect<R, E1, Exit.Exit<E, A1>> => {
+    switch (self.op) {
+      case OpCodes.Failure: {
+        return succeed(self)
+      }
+      case OpCodes.Success: {
+        return f(self.body.value)
+      }
+    }
+  }
+}
+
+/** @internal */
+export const exitFlatten = <E, E1, A>(
+  self: Exit.Exit<E, Exit.Exit<E1, A>>
+): Exit.Exit<E | E1, A> => {
+  return pipe(self, exitFlatMap(identity))
+}
+
+/** @internal */
+export const exitMatch = <E, A, Z>(
+  onFailure: (cause: Cause.Cause<E>) => Z,
+  onSuccess: (a: A) => Z
+) => {
+  return (self: Exit.Exit<E, A>): Z => {
+    switch (self.op) {
+      case OpCodes.Failure: {
+        return onFailure(self.body.cause)
+      }
+      case OpCodes.Success: {
+        return onSuccess(self.body.value)
+      }
+    }
+  }
+}
+
+/** @internal */
+export const exitMatchEffect = <E, A, R1, E1, A1, R2, E2, A2>(
+  onFailure: (cause: Cause.Cause<E>) => Effect.Effect<R1, E1, A1>,
+  onSuccess: (a: A) => Effect.Effect<R2, E2, A2>
+) => {
+  return (self: Exit.Exit<E, A>): Effect.Effect<R1 | R2, E1 | E2, A1 | A2> => {
+    switch (self.op) {
+      case OpCodes.Failure: {
+        return onFailure(self.body.cause)
+      }
+      case OpCodes.Success: {
+        return onSuccess(self.body.value)
+      }
+    }
+  }
+}
+
+/** @internal */
+export const exitForEachEffect = <A, R, E1, B>(f: (a: A) => Effect.Effect<R, E1, B>) => {
+  return <E>(self: Exit.Exit<E, A>): Effect.Effect<R, never, Exit.Exit<E | E1, B>> => {
+    switch (self.op) {
+      case OpCodes.Failure: {
+        return succeed(exitFailCause(self.body.cause))
+      }
+      case OpCodes.Success: {
+        return exit(f(self.body.value))
+      }
+    }
+  }
+}
+
+/** @internal */
+export const exitZip = <E2, A2>(that: Exit.Exit<E2, A2>): <E, A>(
+  self: Exit.Exit<E, A>
+) => Exit.Exit<E | E2, readonly [A, A2]> => {
+  return exitZipWith(that, (a, a2) => [a, a2] as const, Cause.sequential)
+}
+
+/** @internal */
+export const exitZipLeft = <E2, A2>(that: Exit.Exit<E2, A2>): <E, A>(
+  self: Exit.Exit<E, A>
+) => Exit.Exit<E | E2, A> => {
+  return exitZipWith(that, (a, _) => a, Cause.sequential)
+}
+
+/** @internal */
+export const exitZipRight = <E2, A2>(that: Exit.Exit<E2, A2>): <E, A>(
+  self: Exit.Exit<E, A>
+) => Exit.Exit<E | E2, A2> => {
+  return exitZipWith(that, (_, a2) => a2, Cause.sequential)
+}
+
+/** @internal */
+export const exitZipPar = <E2, A2>(that: Exit.Exit<E2, A2>): <E, A>(
+  self: Exit.Exit<E, A>
+) => Exit.Exit<E | E2, readonly [A, A2]> => {
+  return exitZipWith(that, (a, a2) => [a, a2] as const, Cause.parallel)
+}
+
+/** @internal */
+export const exitZipParLeft = <E2, A2>(that: Exit.Exit<E2, A2>): <E, A>(
+  self: Exit.Exit<E, A>
+) => Exit.Exit<E | E2, A> => {
+  return exitZipWith(that, (a, _) => a, Cause.parallel)
+}
+
+/** @internal */
+export const exitZipParRight = <E2, A2>(that: Exit.Exit<E2, A2>): <E, A>(
+  self: Exit.Exit<E, A>
+) => Exit.Exit<E | E2, A2> => {
+  return exitZipWith(that, (_, a2) => a2, Cause.parallel)
+}
+
+/** @internal */
+export const exitZipWith = <E, E1, A, B, C>(
+  that: Exit.Exit<E1, B>,
+  f: (a: A, b: B) => C,
+  g: (c: Cause.Cause<E>, c1: Cause.Cause<E1>) => Cause.Cause<E | E1>
+) => {
+  return (self: Exit.Exit<E, A>): Exit.Exit<E | E1, C> => {
+    switch (self.op) {
+      case OpCodes.Failure: {
+        switch (that.op) {
+          case OpCodes.Success: {
+            return self
+          }
+          case OpCodes.Failure: {
+            return exitFailCause(g(self.body.cause, that.body.cause))
+          }
+        }
+      }
+      case OpCodes.Success: {
+        switch (that.op) {
+          case OpCodes.Success: {
+            return exitSucceed(f(self.body.value, that.body.value))
+          }
+          case OpCodes.Failure: {
+            return that
+          }
+        }
+      }
+    }
+  }
+}
+
+/** @internal */
+export const exitCollectAll = <E, A>(
+  exits: Iterable<Exit.Exit<E, A>>
+): Option.Option<Exit.Exit<E, List.List<A>>> => {
+  return exitCollectAllInternal(exits, Cause.sequential)
+}
+
+/** @internal */
+export const exitCollectAllPar = <E, A>(
+  exits: Iterable<Exit.Exit<E, A>>
+): Option.Option<Exit.Exit<E, List.List<A>>> => {
+  return exitCollectAllInternal(exits, Cause.parallel)
+}
+
+/** @internal */
+export const exitUnit: () => Exit.Exit<never, void> = unit as any
+
+/** @internal */
+const exitCollectAllInternal = <E, A>(
+  exits: Iterable<Exit.Exit<E, A>>,
+  combineCauses: (causeA: Cause.Cause<E>, causeB: Cause.Cause<E>) => Cause.Cause<E>
+): Option.Option<Exit.Exit<E, List.List<A>>> => {
+  const list = List.fromIterable(exits)
+  if (List.isNil(list)) {
+    return Option.none
+  }
+  return pipe(
+    list.tail,
+    List.reduce(pipe(list.head, exitMap(List.of)), (accumulator, current) =>
+      pipe(
+        accumulator,
+        exitZipWith(
+          current,
+          (list, value) => pipe(list, List.prepend(value)),
+          combineCauses
+        )
+      )),
+    exitMap(List.reverse),
+    Option.some
+  )
+}

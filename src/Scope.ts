@@ -3,6 +3,7 @@
  */
 
 import type * as Effect from "@effect/io/Effect"
+import type { ExecutionStrategy } from "@effect/io/ExecutionStrategy"
 import type * as Exit from "@effect/io/Exit"
 import * as runtime from "@effect/io/internal/runtime"
 import type * as Context from "@fp-ts/data/Context"
@@ -39,7 +40,7 @@ export interface Scope {
   readonly [ScopeTypeId]: ScopeTypeId
 
   /** @internal */
-  readonly fork: Effect.Effect<never, never, Scope.Closeable>
+  readonly fork: (strategy: ExecutionStrategy) => Effect.Effect<never, never, Scope.Closeable>
   /** @internal */
   readonly addFinalizerExit: (finalizer: Scope.Finalizer) => Effect.Effect<never, never, void>
 }
