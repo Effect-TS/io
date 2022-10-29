@@ -11,7 +11,7 @@ import type * as Context from "@fp-ts/data/Context"
  * @since 1.0.0
  * @category symbols
  */
-export const ScopeTypeId: unique symbol = 0 as any
+export const ScopeTypeId: unique symbol = runtime.ScopeTypeId
 
 /**
  * @since 1.0.0
@@ -23,7 +23,7 @@ export type ScopeTypeId = typeof ScopeTypeId
  * @since 1.0.0
  * @category symbols
  */
-export const CloseableScopeTypeId: unique symbol = 0 as any
+export const CloseableScopeTypeId: unique symbol = runtime.CloseableScopeTypeId
 
 /**
  * @since 1.0.0
