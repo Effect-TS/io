@@ -90,6 +90,34 @@ export const flatMap = internal.flatMap
 /**
  * @macro traced
  * @since 1.0.0
+ * @category sequencing
+ */
+export const flatten = internal.flatten
+
+/**
+ * @macro traced
+ * @since 1.0.0
+ * @category folding
+ */
+export const forEach = internal.forEach
+
+/**
+ * @macro traced
+ * @since 1.0.0
+ * @category folding
+ */
+export const forEachPar = internal.forEachPar
+
+/**
+ * @macro traced
+ * @since 1.0.0
+ * @category concurrency
+ */
+export const withParallelism = internal.withParallelism
+
+/**
+ * @macro traced
+ * @since 1.0.0
  * @category error handling
  */
 export const foldCauseEffect = internal.foldCauseEffect
@@ -99,7 +127,7 @@ export const foldCauseEffect = internal.foldCauseEffect
  * or is interrupted.
  *
  * @macro traced
- * @category mutations
+ * @category finalization
  * @since 1.0.0
  */
 export const onExit = internal.onExit
