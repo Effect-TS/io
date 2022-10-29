@@ -1,6 +1,7 @@
 import * as Cause from "@effect/io/Cause"
 import { getCallTrace, runtimeDebug } from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
+import type * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
 import type * as Exit from "@effect/io/Exit"
 import * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRuntime from "@effect/io/Fiber/Runtime"
@@ -9,7 +10,7 @@ import * as FiberRuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
 import type * as FiberStatus from "@effect/io/Fiber/Status"
 import type * as FiberRef from "@effect/io/FiberRef"
 import type * as LogLevel from "@effect/io/Logger/Level"
-import * as Scope from "@effect/io/Scope"
+import type * as Scope from "@effect/io/Scope"
 import * as Context from "@fp-ts/data/Context"
 import * as Differ from "@fp-ts/data/Differ"
 import * as ContextPatch from "@fp-ts/data/Differ/ContextPatch"
@@ -431,9 +432,20 @@ export const exit = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, ne
 }
 
 /** @internal */
+export const onExit = <E, A, R2, X>(cleanup: (exit: Exit.Exit<E, A>) => Effect.Effect<R2, never, X>) => {
+  const trace = getCallTrace()
+  return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E, A> =>
+    acquireUseReleaseExit(
+      unit(),
+      () => self,
+      (_, exit) => cleanup(exit)
+    ).traced(trace)
+}
+
+/** @internal */
 export const scope = () => {
   const trace = getCallTrace()
-  return service(Scope.Tag).traced(trace)
+  return service(scopeTag).traced(trace)
 }
 
 /** @internal */
@@ -445,6 +457,14 @@ export const environment = <R>(): Effect.Effect<R, never, Context.Context<R>> =>
 }
 
 /** @internal */
+export const environmentWithEffect = <R, R0, E, A>(
+  f: (context: Context.Context<R0>) => Effect.Effect<R, E, A>
+): Effect.Effect<R | R0, E, A> => {
+  const trace = getCallTrace()
+  return pipe(environment<R0>(), flatMap(f)).traced(trace)
+}
+
+/** @internal */
 export const provideEnvironment = <R>(environment: Context.Context<R>) => {
   const trace = getCallTrace()
   return <E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<never, E, A> => {
@@ -453,6 +473,13 @@ export const provideEnvironment = <R>(environment: Context.Context<R>) => {
       pipe(currentEnvironment, locallyFiberRef(environment as Context.Context<never>))
     ).traced(trace)
   }
+}
+
+/** @internal */
+export const provideSomeEnvironment = <R0, R>(f: (context: Context.Context<R0>) => Context.Context<R>) => {
+  const trace = getCallTrace()
+  return <E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R0, E, A> =>
+    environmentWithEffect((context: Context.Context<R0>) => pipe(self, provideEnvironment(f(context)))).traced(trace)
 }
 
 /** @internal */
@@ -509,7 +536,7 @@ export const addFinalizerExit = <R, X>(
     flatMap((environment) =>
       pipe(
         scope(),
-        flatMap(Scope.addFinalizerExit((exit) => pipe(finalizer(exit), provideEnvironment(environment))))
+        flatMap(scopeAddFinalizerExit((exit) => pipe(finalizer(exit), provideEnvironment(environment))))
       )
     )
   ).traced(trace)
@@ -869,3 +896,53 @@ export const currentLogLevel: FiberRef.FiberRef<LogLevel.LogLevel> = unsafeMakeF
   label: "INFO",
   ordinal: 20000
 })
+
+// -----------------------------------------------------------------------------
+// Scope
+// -----------------------------------------------------------------------------
+
+/** @internal */
+export const scopeTag = Context.Tag<Scope.Scope>()
+
+/** @internal */
+export const scopeAddFinalizer = (finalizer: Effect.Effect<never, never, unknown>) =>
+  (self: Scope.Scope): Effect.Effect<never, never, void> => self.addFinalizerExit(() => finalizer)
+
+/** @internal */
+export const scopeAddFinalizerExit = (finalizer: Scope.Scope.Finalizer) =>
+  (self: Scope.Scope): Effect.Effect<never, never, void> => self.addFinalizerExit(finalizer)
+
+/** @internal */
+export const scopeClose = (exit: Exit.Exit<unknown, unknown>) =>
+  (self: Scope.Scope.Closeable): Effect.Effect<never, never, void> => self.close(exit)
+
+/** @internal */
+export const scopeExtend = <R, E, A>(effect: Effect.Effect<R, E, A>) =>
+  (self: Scope.Scope): Effect.Effect<Exclude<R, Scope.Scope>, E, A> =>
+    pipe(
+      effect,
+      provideSomeEnvironment<Exclude<R, Scope.Scope>, R>(
+        // @ts-expect-error
+        Context.merge(pipe(
+          Context.empty(),
+          Context.add(scopeTag)(self)
+        ))
+      )
+    )
+
+/** @internal */
+export const scopeFork = (self: Scope.Scope): Effect.Effect<never, never, Scope.Scope.Closeable> => self.fork
+
+/** @internal */
+export const scopeUse = <R, E, A>(effect: Effect.Effect<R, E, A>) =>
+  (self: Scope.Scope.Closeable): Effect.Effect<Exclude<R, Scope.Scope>, E, A> =>
+    pipe(
+      self,
+      scopeExtend(effect),
+      onExit((exit) => self.close(exit))
+    )
+
+/** @internal */
+export declare const scopeMake: (
+  executionStrategy?: ExecutionStrategy.ExecutionStrategy
+) => Effect.Effect<never, never, Scope.Scope.Closeable>
