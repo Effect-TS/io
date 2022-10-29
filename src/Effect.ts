@@ -53,6 +53,22 @@ export const async = internal.async
 /**
  * @macro traced
  * @since 1.0.0
+ * @category error handling
+ */
+export const catchAllCause = internal.catchAllCause
+
+/**
+ * Effectually accesses the environment of the effect.
+ *
+ * @macro traced
+ * @category environment
+ * @since 1.0.0
+ */
+export const environmentWithEffect = internal.environmentWithEffect
+
+/**
+ * @macro traced
+ * @since 1.0.0
  * @category constructors
  */
 export const fail = internal.fail
@@ -67,13 +83,6 @@ export const failCause = internal.failCause
 /**
  * @macro traced
  * @since 1.0.0
- * @category error handling
- */
-export const catchAllCause = internal.catchAllCause
-
-/**
- * @macro traced
- * @since 1.0.0
  * @category sequencing
  */
 export const flatMap = internal.flatMap
@@ -84,6 +93,36 @@ export const flatMap = internal.flatMap
  * @category error handling
  */
 export const foldCauseEffect = internal.foldCauseEffect
+
+/**
+ * Ensures that a cleanup functions runs, whether this effect succeeds, fails,
+ * or is interrupted.
+ *
+ * @macro traced
+ * @category mutations
+ * @since 1.0.0
+ */
+export const onExit = internal.onExit
+
+/**
+ * Provides some of the environment required to run this effect,
+ * leaving the remainder `R0`.
+ *
+ * @macro traced
+ * @category environment
+ * @since 1.0.0
+ */
+export const provideSomeEnvironment = internal.provideSomeEnvironment
+
+/**
+ * Provides the effect with its required environment, which eliminates its
+ * dependency on `R`.
+ *
+ * @macro traced
+ * @category environment
+ * @since 1.0.0
+ */
+export const provideEnvironment = internal.provideEnvironment
 
 /**
  * @macro traced
