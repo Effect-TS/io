@@ -1,3 +1,6 @@
+/**
+ * @since 1.0.0
+ */
 import type * as Effect from "@effect/io/Effect"
 import * as runtime from "@effect/io/internal/runtime"
 
