@@ -25,10 +25,11 @@ export type Exit<E, A> = Failure<E> | Success<A>
  * @category models
  */
 export interface Failure<E> extends Effect.Effect<never, E, never> {
-  readonly op: internal.OpCodes["Failure"]
   readonly body: {
     readonly cause: Cause.Cause<E>
   }
+  /** @internal */
+  readonly op: internal.OpCodes["Failure"]
 }
 
 /**
@@ -39,10 +40,11 @@ export interface Failure<E> extends Effect.Effect<never, E, never> {
  * @category models
  */
 export interface Success<A> extends Effect.Effect<never, never, A> {
-  readonly op: internal.OpCodes["Success"]
   readonly body: {
     readonly value: A
   }
+  /** @internal */
+  readonly op: internal.OpCodes["Success"]
 }
 
 /**
