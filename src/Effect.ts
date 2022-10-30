@@ -1,14 +1,14 @@
 /**
  * @since 1.0.0
  */
-import * as internal from "@effect/io/internal/runtime"
+import * as core from "@effect/io/internal/core"
 import type { Equal } from "@fp-ts/data/Equal"
 
 /**
  * @since 1.0.0
  * @category symbols
  */
-export const EffectTypeId: unique symbol = internal.EffectTypeId
+export const EffectTypeId: unique symbol = core.EffectTypeId
 
 /**
  * @since 1.0.0
@@ -41,21 +41,21 @@ export interface Variance<R, E, A> {
  * @since 1.0.0
  * @category refinements
  */
-export const isEffect = internal.isEffect
+export const isEffect = core.isEffect
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category constructors
  */
-export const async = internal.async
+export const async = core.async
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category error handling
  */
-export const catchAllCause = internal.catchAllCause
+export const catchAllCause = core.catchAllCause
 
 /**
  * Effectually accesses the environment of the effect.
@@ -64,63 +64,63 @@ export const catchAllCause = internal.catchAllCause
  * @category environment
  * @since 1.0.0
  */
-export const environmentWithEffect = internal.environmentWithEffect
+export const environmentWithEffect = core.environmentWithEffect
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category constructors
  */
-export const fail = internal.fail
+export const fail = core.fail
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category constructors
  */
-export const failCause = internal.failCause
+export const failCause = core.failCause
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category sequencing
  */
-export const flatMap = internal.flatMap
+export const flatMap = core.flatMap
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category sequencing
  */
-export const flatten = internal.flatten
+export const flatten = core.flatten
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category folding
  */
-export const forEach = internal.forEach
+export const forEach = core.forEach
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category folding
  */
-export const forEachPar = internal.forEachPar
+export const forEachPar = core.forEachPar
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category concurrency
  */
-export const withParallelism = internal.withParallelism
+export const withParallelism = core.withParallelism
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category error handling
  */
-export const foldCauseEffect = internal.foldCauseEffect
+export const foldCauseEffect = core.foldCauseEffect
 
 /**
  * Ensures that a cleanup functions runs, whether this effect succeeds, fails,
@@ -130,7 +130,7 @@ export const foldCauseEffect = internal.foldCauseEffect
  * @category finalization
  * @since 1.0.0
  */
-export const onExit = internal.onExit
+export const onExit = core.onExit
 
 /**
  * Provides some of the environment required to run this effect,
@@ -140,7 +140,7 @@ export const onExit = internal.onExit
  * @category environment
  * @since 1.0.0
  */
-export const provideSomeEnvironment = internal.provideSomeEnvironment
+export const provideSomeEnvironment = core.provideSomeEnvironment
 
 /**
  * Provides the effect with its required environment, which eliminates its
@@ -150,108 +150,108 @@ export const provideSomeEnvironment = internal.provideSomeEnvironment
  * @category environment
  * @since 1.0.0
  */
-export const provideEnvironment = internal.provideEnvironment
+export const provideEnvironment = core.provideEnvironment
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category constructors
  */
-export const succeed = internal.succeed
+export const succeed = core.succeed
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category constructors
  */
-export const sync = internal.sync
+export const sync = core.sync
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category constructors
  */
-export const suspendSucceed = internal.suspendSucceed
+export const suspendSucceed = core.suspendSucceed
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category runtime
  */
-export const updateRuntimeFlags = internal.updateRuntimeFlags
+export const updateRuntimeFlags = core.updateRuntimeFlags
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category interruption
  */
-export const interruptible = internal.interruptible
+export const interruptible = core.interruptible
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category interruption
  */
-export const interruptibleMask = internal.interruptibleMask
+export const interruptibleMask = core.interruptibleMask
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category interruption
  */
-export const uninterruptible = internal.uninterruptible
+export const uninterruptible = core.uninterruptible
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category interruption
  */
-export const uninterruptibleMask = internal.uninterruptibleMask
+export const uninterruptibleMask = core.uninterruptibleMask
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category constructors
  */
-export const whileLoop = internal.whileLoop
+export const whileLoop = core.whileLoop
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category runtime
  */
-export const withRuntimeFlags = internal.withRuntimeFlags
+export const withRuntimeFlags = core.withRuntimeFlags
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category runtime
  */
-export const withFiberRuntime = internal.withFiberRuntime
+export const withFiberRuntime = core.withFiberRuntime
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category constructors
  */
-export const yieldNow = internal.yieldNow
+export const yieldNow = core.yieldNow
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category constructors
  */
-export const unit = internal.unit
+export const unit = core.unit
 
 /**
  * @since 1.0.0
  * @category tracing
  */
-export const traced = internal.traced
+export const traced = core.traced
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category getters
  */
-export const exit = internal.exit
+export const exit = core.exit

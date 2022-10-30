@@ -3,7 +3,7 @@
  */
 import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
-import * as internal from "@effect/io/internal/runtime"
+import * as core from "@effect/io/internal/core"
 import type * as OpCodes from "@effect/io/internal/runtime/opCodes"
 
 /**
@@ -54,7 +54,7 @@ export interface Success<A> extends Effect.Effect<never, never, A> {
  * @since 1.0.0
  * @category refinements
  */
-export const isExit = internal.exitIsExit
+export const isExit = core.exitIsExit
 
 /**
  * Returns `true` if the specified `Exit` is a `Failure`, `false` otherwise.
@@ -62,7 +62,7 @@ export const isExit = internal.exitIsExit
  * @since 1.0.0
  * @category refinements
  */
-export const isFailure = internal.exitIsFailure
+export const isFailure = core.exitIsFailure
 
 /**
  * Returns `true` if the specified `Exit` is a `Success`, `false` otherwise.
@@ -70,7 +70,7 @@ export const isFailure = internal.exitIsFailure
  * @since 1.0.0
  * @category refinements
  */
-export const isSuccess = internal.exitIsSuccess
+export const isSuccess = core.exitIsSuccess
 
 /**
  * Constructs a new `Exit.Success` containing the specified value of type `A`.
@@ -78,7 +78,7 @@ export const isSuccess = internal.exitIsSuccess
  * @since 1.0.0
  * @category constructors
  */
-export const succeed = internal.exitSucceed
+export const succeed = core.exitSucceed
 
 /**
  * Constructs a new `Exit.Failure` from the specified recoverable error of type
@@ -87,7 +87,7 @@ export const succeed = internal.exitSucceed
  * @since 1.0.0
  * @category constructors
  */
-export const fail = internal.exitFail
+export const fail = core.exitFail
 
 /**
  * Constructs a new `Exit.Failure` from the specified `Cause` of type `E`.
@@ -95,7 +95,7 @@ export const fail = internal.exitFail
  * @since 1.0.0
  * @category constructors
  */
-export const failCause = internal.exitFailCause
+export const failCause = core.exitFailCause
 
 /**
  * Constructs a new `Exit.Failure` from the specified unrecoverable defect.
@@ -103,7 +103,7 @@ export const failCause = internal.exitFailCause
  * @since 1.0.0
  * @category constructors
  */
-export const die = internal.exitDie
+export const die = core.exitDie
 
 /**
  * Constructs a new `Exit.Failure` from the specified `FiberId` indicating that
@@ -112,7 +112,7 @@ export const die = internal.exitDie
  * @since 1.0.0
  * @category constructors
  */
-export const interrupt = internal.exitInterrupt
+export const interrupt = core.exitInterrupt
 
 /**
  * Collects all of the specified exit values into a `Some<Exit<E, List<A>>>`. If
@@ -123,7 +123,7 @@ export const interrupt = internal.exitInterrupt
  * @since 1.0.0
  * @category constructors
  */
-export const collectAll = internal.exitCollectAll
+export const collectAll = core.exitCollectAll
 
 /**
  * Collects all of the specified exit values into a `Some<Exit<E, List<A>>>`. If
@@ -134,7 +134,7 @@ export const collectAll = internal.exitCollectAll
  * @since 1.0.0
  * @category constructors
  */
-export const collectAllPar = internal.exitCollectAllPar
+export const collectAllPar = core.exitCollectAllPar
 
 /**
  * Represents an `Exit` which succeeds with `undefined`.
@@ -142,7 +142,7 @@ export const collectAllPar = internal.exitCollectAllPar
  * @since 1.0.0
  * @category constructors
  */
-export const unit = internal.exitUnit
+export const unit = core.exitUnit
 
 /**
  * Converts an `Either<E, A>` into an `Exit<E, A>`.
@@ -150,7 +150,7 @@ export const unit = internal.exitUnit
  * @since 1.0.0
  * @category conversions
  */
-export const fromEither = internal.exitFromEither
+export const fromEither = core.exitFromEither
 
 /**
  * Converts an `Option<A>` into an `Exit<void, A>`.
@@ -158,7 +158,7 @@ export const fromEither = internal.exitFromEither
  * @since 1.0.0
  * @category conversions
  */
-export const fromOption = internal.exitFromOption
+export const fromOption = core.exitFromOption
 
 /**
  * Returns `true` if the specified exit is a `Failure` **and** the `Cause` of
@@ -167,7 +167,7 @@ export const fromOption = internal.exitFromOption
  * @since 1.0.0
  * @category getters
  */
-export const isInterrupted = internal.exitIsInterrupted
+export const isInterrupted = core.exitIsInterrupted
 
 /**
  * Returns a `Some<Cause<E>>` if the specified exit is a `Failure`, `None`
@@ -176,7 +176,7 @@ export const isInterrupted = internal.exitIsInterrupted
  * @since 1.0.0
  * @category getters
  */
-export const causeOption = internal.exitCauseOption
+export const causeOption = core.exitCauseOption
 
 /**
  * Returns the `A` if specified exit is a `Success`, otherwise returns the
@@ -186,7 +186,7 @@ export const causeOption = internal.exitCauseOption
  * @since 1.0.0
  * @category getters
  */
-export const getOrElse = internal.exitGetOrElse
+export const getOrElse = core.exitGetOrElse
 
 /**
  * Executes the predicate on the value of the specified exit if it is a
@@ -195,7 +195,7 @@ export const getOrElse = internal.exitGetOrElse
  * @since 1.0.0
  * @category elements
  */
-export const exists = internal.exitExists
+export const exists = core.exitExists
 
 /**
  * Maps the `Success` value of the specified exit to the provided constant
@@ -204,7 +204,7 @@ export const exists = internal.exitExists
  * @since 1.0.0
  * @category mapping
  */
-export const as = internal.exitAs
+export const as = core.exitAs
 
 /**
  * Maps the `Success` value of the specified exit to a void.
@@ -212,7 +212,7 @@ export const as = internal.exitAs
  * @since 1.0.0
  * @category mapping
  */
-export const asUnit = internal.exitAsUnit
+export const asUnit = core.exitAsUnit
 
 /**
  * Maps over the `Success` value of the specified exit using the provided
@@ -221,7 +221,7 @@ export const asUnit = internal.exitAsUnit
  * @since 1.0.0
  * @category mapping
  */
-export const map = internal.exitMap
+export const map = core.exitMap
 
 /**
  * Maps over the `Success` and `Failure` cases of the specified exit using the
@@ -230,7 +230,7 @@ export const map = internal.exitMap
  * @since 1.0.0
  * @category mapping
  */
-export const mapBoth = internal.exitMapBoth
+export const mapBoth = core.exitMapBoth
 
 /**
  * Maps over the error contained in the `Failure` of the specified exit using
@@ -239,7 +239,7 @@ export const mapBoth = internal.exitMapBoth
  * @since 1.0.0
  * @category mapping
  */
-export const mapError = internal.exitMapError
+export const mapError = core.exitMapError
 
 /**
  * Maps over the `Cause` contained in the `Failure` of the specified exit using
@@ -248,37 +248,37 @@ export const mapError = internal.exitMapError
  * @since 1.0.0
  * @category mapping
  */
-export const mapErrorCause = internal.exitMapErrorCause
+export const mapErrorCause = core.exitMapErrorCause
 
 /**
  * @since 1.0.0
  * @category sequencing
  */
-export const flatMap = internal.exitFlatMap
+export const flatMap = core.exitFlatMap
 
 /**
  * @since 1.0.0
  * @category sequencing
  */
-export const flatMapEffect = internal.exitFlatMapEffect
+export const flatMapEffect = core.exitFlatMapEffect
 
 /**
  * @since 1.0.0
  * @category sequencing
  */
-export const flatten = internal.exitFlatten
+export const flatten = core.exitFlatten
 
 /**
  * @since 1.0.0
  * @category folding
  */
-export const match = internal.exitMatch
+export const match = core.exitMatch
 
 /**
  * @since 1.0.0
  * @category folding
  */
-export const matchEffect = internal.exitMatchEffect
+export const matchEffect = core.exitMatchEffect
 
 // TODO: implement after `Effect.exit`
 // /**
@@ -294,7 +294,7 @@ export const matchEffect = internal.exitMatchEffect
  * @since 1.0.0
  * @category zipping
  */
-export const zip = internal.exitZip
+export const zip = core.exitZip
 
 /**
  * Sequentially zips the this result with the specified result discarding the
@@ -303,7 +303,7 @@ export const zip = internal.exitZip
  * @since 1.0.0
  * @category zipping
  */
-export const zipLeft = internal.exitZipLeft
+export const zipLeft = core.exitZipLeft
 
 /**
  * Sequentially zips the this result with the specified result discarding the
@@ -312,7 +312,7 @@ export const zipLeft = internal.exitZipLeft
  * @since 1.0.0
  * @category zipping
  */
-export const zipRight = internal.exitZipRight
+export const zipRight = core.exitZipRight
 
 /**
  * Parallelly zips the this result with the specified result or else returns
@@ -321,7 +321,7 @@ export const zipRight = internal.exitZipRight
  * @since 1.0.0
  * @category zipping
  */
-export const zipPar = internal.exitZipPar
+export const zipPar = core.exitZipPar
 
 /**
  * Parallelly zips the this result with the specified result discarding the
@@ -330,7 +330,7 @@ export const zipPar = internal.exitZipPar
  * @since 1.0.0
  * @category zipping
  */
-export const zipParLeft = internal.exitZipParLeft
+export const zipParLeft = core.exitZipParLeft
 
 /**
  * Parallelly zips the this result with the specified result discarding the
@@ -339,7 +339,7 @@ export const zipParLeft = internal.exitZipParLeft
  * @since 1.0.0
  * @category zipping
  */
-export const zipParRight = internal.exitZipParRight
+export const zipParRight = core.exitZipParRight
 
 /**
  * Zips this exit together with that exit using the specified combination
@@ -348,4 +348,4 @@ export const zipParRight = internal.exitZipParRight
  * @since 1.0.0
  * @category zipping
  */
-export const zipWith = internal.exitZipWith
+export const zipWith = core.exitZipWith
