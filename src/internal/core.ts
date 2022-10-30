@@ -11,9 +11,7 @@ import type * as FiberStatus from "@effect/io/Fiber/Status"
 import type * as FiberRef from "@effect/io/FiberRef"
 import * as OpCodes from "@effect/io/internal/runtime/opCodes"
 import type * as LogLevel from "@effect/io/Logger/Level"
-import type * as Ref from "@effect/io/Ref"
 import type * as Scope from "@effect/io/Scope"
-import * as Order from "@fp-ts/core/typeclass/Order"
 import type * as Chunk from "@fp-ts/data/Chunk"
 import * as Context from "@fp-ts/data/Context"
 import * as Differ from "@fp-ts/data/Differ"
@@ -25,11 +23,8 @@ import type { LazyArg } from "@fp-ts/data/Function"
 import { identity, pipe } from "@fp-ts/data/Function"
 import type * as HashSet from "@fp-ts/data/HashSet"
 import * as List from "@fp-ts/data/List"
-import * as MutableRef from "@fp-ts/data/mutable/MutableRef"
-import * as Number from "@fp-ts/data/Number"
 import * as Option from "@fp-ts/data/Option"
 import type { Predicate } from "@fp-ts/data/Predicate"
-import * as SortedMap from "@fp-ts/data/SortedMap"
 
 // -----------------------------------------------------------------------------
 // Effect
@@ -1021,116 +1016,25 @@ export const CloseableScopeTypeId: Scope.CloseableScopeTypeId = Symbol.for(
 ) as Scope.CloseableScopeTypeId
 
 // -----------------------------------------------------------------------------
-// Ref
-// -----------------------------------------------------------------------------
-
-/** @internal */
-export const RefTypeId: Ref.RefTypeId = Symbol.for("@effect/io/Ref") as Ref.RefTypeId
-
-/** @internal */
-const refVariance = {
-  _A: (_: never) => _
-}
-
-/** @internal */
-export const refUnsafeMake = <A>(value: A): Ref.Ref<A> => {
-  const ref = MutableRef.make(value)
-  return {
-    [RefTypeId]: refVariance,
-    modify: (f) =>
-      sync(() => {
-        const [b, a] = f(MutableRef.get(ref))
-        if ((b as unknown) !== (a as unknown)) {
-          MutableRef.set(a)(ref)
-        }
-        return b
-      })
-  }
-}
-
-/** @internal */
-export const refMake = <A>(value: A) => sync(() => refUnsafeMake(value))
-
-/** @internal */
-export const refGet = <A>(self: Ref.Ref<A>) => self.modify((a) => [a, a])
-
-/** @internal */
-export const refSet = <A>(value: A) => (self: Ref.Ref<A>) => self.modify((): [void, A] => [void 0, value])
-
-/** @internal */
-export const refGetAndSet = <A>(value: A) => (self: Ref.Ref<A>) => self.modify((a): [A, A] => [a, value])
-
-/** @internal */
-export const refGetAndUpdate = <A>(f: (a: A) => A) => (self: Ref.Ref<A>) => self.modify((a): [A, A] => [a, f(a)])
-
-/** @internal */
-export const refGetAndUpdateSome = <A>(f: (a: A) => Option.Option<A>) =>
-  (self: Ref.Ref<A>) =>
-    self.modify((a): [A, A] =>
-      pipe(
-        f(a),
-        Option.match(() => [a, a], (b) => [a, b])
-      )
-    )
-
-/** @internal */
-export const refSetAndGet = <A>(value: A) => (self: Ref.Ref<A>) => self.modify((): [A, A] => [value, value])
-
-/** @internal */
-export const refModify = <A, B>(f: (a: A) => readonly [B, A]) => (self: Ref.Ref<A>) => self.modify(f)
-
-/** @internal */
-export const refModifySome = <A, B>(fallback: B, f: (a: A) => Option.Option<readonly [B, A]>) =>
-  (self: Ref.Ref<A>) =>
-    self.modify((a) =>
-      pipe(
-        f(a),
-        Option.match(
-          () => [fallback, a],
-          (b) => b
-        )
-      )
-    )
-
-/** @internal */
-export const refUpdate = <A>(f: (a: A) => A) => (self: Ref.Ref<A>) => self.modify((a): [void, A] => [void 0, f(a)])
-
-/** @internal */
-export const refUpdateAndGet = <A>(f: (a: A) => A) =>
-  (self: Ref.Ref<A>) =>
-    self.modify((a): [A, A] => {
-      const b = f(a)
-      return [b, b]
-    })
-
-/** @internal */
-export const refUpdateSome = <A>(f: (a: A) => Option.Option<A>) =>
-  (self: Ref.Ref<A>) => self.modify((a): [void, A] => [void 0, pipe(f(a), Option.match(() => a, (b) => b))])
-
-/** @internal */
-export const refUpdateSomeAndGet = <A>(f: (a: A) => Option.Option<A>) =>
-  (self: Ref.Ref<A>) => self.modify((a): [A, A] => pipe(f(a), Option.match(() => [a, a], (b) => [b, b])))
-
-// -----------------------------------------------------------------------------
 // ReleaseMap
 // -----------------------------------------------------------------------------
 
 /** @internal */
 export type ReleaseMapState = {
-  readonly _tag: "Exited"
-  readonly nextKey: number
-  readonly exit: Exit.Exit<unknown, unknown>
-  readonly update: (finalizer: Scope.Scope.Finalizer) => Scope.Scope.Finalizer
+  _tag: "Exited"
+  nextKey: number
+  exit: Exit.Exit<unknown, unknown>
+  update: (finalizer: Scope.Scope.Finalizer) => Scope.Scope.Finalizer
 } | {
-  readonly _tag: "Running"
-  readonly nextKey: number
-  readonly finalizers: SortedMap.SortedMap<number, Scope.Scope.Finalizer>
-  readonly update: (finalizer: Scope.Scope.Finalizer) => Scope.Scope.Finalizer
+  _tag: "Running"
+  nextKey: number
+  finalizers: Map<number, Scope.Scope.Finalizer>
+  update: (finalizer: Scope.Scope.Finalizer) => Scope.Scope.Finalizer
 }
 
 /** @internal */
 export interface ReleaseMap {
-  readonly stateRef: Ref.Ref<ReleaseMapState>
+  state: ReleaseMapState
 }
 
 /** @internal */
@@ -1148,30 +1052,21 @@ export const releaseMapAdd = (finalizer: Scope.Scope.Finalizer) =>
 /** @internal */
 export const releaseMapRelease = (key: number, exit: Exit.Exit<unknown, unknown>) =>
   (self: ReleaseMap) =>
-    pipe(
-      self.stateRef,
-      refModify((state): [Effect.Effect<never, never, void>, ReleaseMapState] => {
-        switch (state._tag) {
-          case "Exited": {
-            return [unit(), state]
-          }
-          case "Running": {
-            return [
-              pipe(
-                state.finalizers,
-                SortedMap.get(key),
-                Option.match(() => unit(), (fin) => state.update(fin)(exit))
-              ),
-              {
-                ...state,
-                finalizers: pipe(state.finalizers, SortedMap.remove(key))
-              }
-            ]
-          }
+    suspendSucceed(() => {
+      switch (self.state._tag) {
+        case "Exited": {
+          return unit()
         }
-      }),
-      flatten
-    )
+        case "Running": {
+          const finalizer = self.state.finalizers.get(key)
+          self.state.finalizers.delete(key)
+          if (finalizer) {
+            return self.state.update(finalizer)(exit)
+          }
+          return unit()
+        }
+      }
+    })
 
 /** @internal */
 export const releaseMapReleaseAll = (
@@ -1179,168 +1074,127 @@ export const releaseMapReleaseAll = (
   exit0: Exit.Exit<unknown, unknown>
 ) =>
   (self: ReleaseMap) =>
-    pipe(
-      self.stateRef,
-      refModify((state): [Effect.Effect<never, never, void>, ReleaseMapState] => {
-        switch (state._tag) {
-          case "Exited": {
-            return [unit(), state]
-          }
-          case "Running": {
-            return [
-              strategy._tag === "Sequential" ?
-                pipe(
-                  state.finalizers,
-                  forEach(([_, fin]) => exit(state.update(fin)(exit0))),
-                  flatMap((results) =>
-                    pipe(
-                      results,
-                      exitCollectAll,
-                      Option.map(exitAsUnit),
-                      Option.getOrElse(exitUnit()),
-                      done
-                    )
-                  )
-                ) :
-                strategy._tag === "Parallel" ?
-                pipe(
-                  state.finalizers,
-                  forEachPar(([_, fin]) => exit(state.update(fin)(exit0))),
-                  flatMap((results) =>
-                    pipe(
-                      results,
-                      exitCollectAllPar,
-                      Option.map(exitAsUnit),
-                      Option.getOrElse(exitUnit()),
-                      done
-                    )
-                  )
-                ) :
-                pipe(
-                  state.finalizers,
-                  forEachPar(([_, fin]) => exit(state.update(fin)(exit0))),
-                  flatMap((results) =>
-                    pipe(
-                      results,
-                      exitCollectAllPar,
-                      Option.map(exitAsUnit),
-                      Option.getOrElse(exitUnit()),
-                      done
-                    )
-                  ),
-                  withParallelism(strategy.n)
-                ),
-              { _tag: "Exited", nextKey: state.nextKey, exit: exit0, update: state.update }
-            ]
-          }
+    suspendSucceed(() => {
+      switch (self.state._tag) {
+        case "Exited": {
+          return unit()
         }
-      }),
-      flatten
-    )
+        case "Running": {
+          const finalizersMap = self.state.finalizers
+          const finalizers = Array.from(finalizersMap.keys()).sort((a, b) => b - a).map((key) =>
+            finalizersMap.get(key)!
+          )
+          const update = self.state.update
+          self.state = { _tag: "Exited", nextKey: self.state.nextKey, exit: exit0, update: self.state.update }
+          return strategy._tag === "Sequential" ?
+            pipe(
+              finalizers,
+              forEach((fin) => exit(update(fin)(exit0))),
+              flatMap((results) =>
+                pipe(
+                  results,
+                  exitCollectAll,
+                  Option.map(exitAsUnit),
+                  Option.getOrElse(exitUnit()),
+                  done
+                )
+              )
+            ) :
+            strategy._tag === "Parallel" ?
+            pipe(
+              finalizers,
+              forEachPar((fin) => exit(update(fin)(exit0))),
+              flatMap((results) =>
+                pipe(
+                  results,
+                  exitCollectAllPar,
+                  Option.map(exitAsUnit),
+                  Option.getOrElse(exitUnit()),
+                  done
+                )
+              )
+            ) :
+            pipe(
+              finalizers,
+              forEachPar((fin) => exit(update(fin)(exit0))),
+              flatMap((results) =>
+                pipe(
+                  results,
+                  exitCollectAllPar,
+                  Option.map(exitAsUnit),
+                  Option.getOrElse(exitUnit()),
+                  done
+                )
+              ),
+              withParallelism(strategy.n)
+            )
+        }
+      }
+    })
 
 /** @internal */
 export const releaseMapAddIfOpen = (finalizer: Scope.Scope.Finalizer) =>
   (self: ReleaseMap) =>
-    pipe(
-      self.stateRef,
-      refModify((state): [Effect.Effect<never, never, Option.Option<number>>, ReleaseMapState] => {
-        switch (state._tag) {
-          case "Exited": {
-            return [
-              as(Option.none)(finalizer(state.exit)),
-              {
-                _tag: "Exited",
-                exit: state.exit,
-                nextKey: state.nextKey + 1,
-                update: state.update
-              }
-            ]
-          }
-          case "Running": {
-            return [
-              succeed(Option.some(state.nextKey)),
-              {
-                _tag: "Running",
-                finalizers: pipe(state.finalizers, SortedMap.set(state.nextKey, finalizer)),
-                nextKey: state.nextKey + 1,
-                update: state.update
-              }
-            ]
-          }
+    suspendSucceed(() => {
+      switch (self.state._tag) {
+        case "Exited": {
+          self.state.nextKey += 1
+          return as(Option.none)(finalizer(self.state.exit))
         }
-      }),
-      flatten
-    )
+        case "Running": {
+          const key = self.state.nextKey
+          self.state.finalizers.set(key, finalizer)
+          self.state.nextKey += 1
+          return succeed(Option.some(key))
+        }
+      }
+    })
 
 /** @internal */
 export const releaseMapGet = (key: number) =>
   (self: ReleaseMap) =>
-    pipe(
-      self.stateRef,
-      refGet,
-      map((state): Option.Option<Scope.Scope.Finalizer> =>
-        state._tag === "Exited" ? Option.none : SortedMap.get(key)(state.finalizers)
-      )
+    sync((): Option.Option<Scope.Scope.Finalizer> =>
+      self.state._tag === "Running" ? Option.fromNullable(self.state.finalizers.get(key)) : Option.none
     )
 
 /** @internal */
 export const releaseMapReplace = (key: number, finalizer: Scope.Scope.Finalizer) =>
   (self: ReleaseMap) =>
-    pipe(
-      self.stateRef,
-      refModify((state): [Effect.Effect<never, never, Option.Option<Scope.Scope.Finalizer>>, ReleaseMapState] => {
-        switch (state._tag) {
-          case "Exited": {
-            return [
-              as(Option.none)(finalizer(state.exit)),
-              {
-                _tag: "Exited",
-                exit: state.exit,
-                nextKey: state.nextKey,
-                update: state.update
-              }
-            ]
-          }
-          case "Running": {
-            return [
-              succeed(SortedMap.get(key)(state.finalizers)),
-              {
-                _tag: "Running",
-                finalizers: pipe(state.finalizers, SortedMap.set(state.nextKey, finalizer)),
-                nextKey: state.nextKey,
-                update: state.update
-              }
-            ]
-          }
+    suspendSucceed(() => {
+      switch (self.state._tag) {
+        case "Exited": {
+          return as(Option.none)(finalizer(self.state.exit))
         }
-      }),
-      flatten
-    )
+        case "Running": {
+          const fin = Option.fromNullable(self.state.finalizers.get(key))
+          self.state.finalizers.set(key, finalizer)
+          return succeed(fin)
+        }
+      }
+    })
 
 /** @internal */
 export const releaseMapRemove = (key: number) =>
-  (self: ReleaseMap) =>
-    pipe(
-      self.stateRef,
-      refModify((state): [Option.Option<Scope.Scope.Finalizer>, ReleaseMapState] =>
-        state._tag === "Exited" ?
-          [Option.none, state] :
-          [SortedMap.get(key)(state.finalizers), { ...state, finalizers: SortedMap.remove(key)(state.finalizers) }]
-      )
-    )
+  (self: ReleaseMap): Effect.Effect<never, never, Option.Option<Scope.Scope.Finalizer>> =>
+    sync(() => {
+      if (self.state._tag === "Exited") {
+        return Option.none
+      }
+      const fin = Option.fromNullable(self.state.finalizers.get(key))
+      self.state.finalizers.delete(key)
+      return fin
+    })
 
-const releaseMapInitialState: ReleaseMapState = {
-  _tag: "Running",
-  nextKey: 0,
-  finalizers: SortedMap.empty(Order.reverse(Number.Order)),
-  update: identity
-}
-
+/** @internal */
 export const releaseMapMake = () =>
-  pipe(
-    refMake<ReleaseMapState>(releaseMapInitialState),
-    map((stateRef): ReleaseMap => ({ stateRef }))
-  )
+  sync((): ReleaseMap => ({
+    state: {
+      _tag: "Running",
+      nextKey: 0,
+      finalizers: new Map(),
+      update: identity
+    }
+  }))
 
 // -----------------------------------------------------------------------------
 // Exit

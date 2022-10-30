@@ -2,13 +2,13 @@
  * @since 1.0.0
  */
 import type * as Effect from "@effect/io/Effect"
-import * as core from "@effect/io/internal/core"
+import * as ref from "@effect/io/internal/ref"
 
 /**
  * @since 1.0.0
  * @category symbols
  */
-export const RefTypeId: unique symbol = core.RefTypeId
+export const RefTypeId: unique symbol = ref.RefTypeId
 
 /**
  * @since 1.0.0
@@ -41,82 +41,82 @@ export namespace Ref {
  * @category constructors
  * @since 1.0.0
  */
-export const make = core.refMake
+export const make = ref.refMake
 
 /**
  * @category getters
  * @since 1.0.0
  */
-export const get = core.refGet
+export const get = ref.refGet
 
 /**
  * @category mutations
  * @since 1.0.0
  */
-export const getAndSet = core.refGetAndSet
+export const getAndSet = ref.refGetAndSet
 
 /**
  * @category mutations
  * @since 1.0.0
  */
-export const getAndUpdate = core.refGetAndUpdate
+export const getAndUpdate = ref.refGetAndUpdate
 
 /**
  * @category mutations
  * @since 1.0.0
  */
-export const getAndUpdateSome = core.refGetAndUpdateSome
+export const getAndUpdateSome = ref.refGetAndUpdateSome
 
 /**
  * @category mutations
  * @since 1.0.0
  */
-export const modify = core.refModify
+export const modify = ref.refModify
 
 /**
  * @category mutations
  * @since 1.0.0
  */
-export const modifySome = core.refModifySome
+export const modifySome = ref.refModifySome
 
 /**
  * @category mutations
  * @since 1.0.0
  */
-export const set = core.refSet
+export const set = ref.refSet
 
 /**
  * @category mutations
  * @since 1.0.0
  */
-export const setAndGet = core.refSetAndGet
+export const setAndGet = ref.refSetAndGet
 
 /**
  * @category unsafe
  * @since 1.0.0
  */
-export const unsafeMake = core.refUnsafeMake
+export const unsafeMake = ref.refUnsafeMake
 
 /**
  * @category mutations
  * @since 1.0.0
  */
-export const update = core.refUpdate
+export const update = ref.refUpdate
 
 /**
  * @category mutations
  * @since 1.0.0
  */
-export const updateAndGet = core.refUpdateAndGet
+export const updateAndGet = ref.refUpdateAndGet
 
 /**
  * @category mutations
  * @since 1.0.0
  */
-export const updateSome = core.refUpdateSome
+export const updateSome = ref.refUpdateSome
 
 /**
  * @category mutations
  * @since 1.0.0
  */
-export const updateSomeAndGet = core.refUpdateSomeAndGet
+export const updateSomeAndGet = ref.refUpdateSomeAndGet
