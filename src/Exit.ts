@@ -4,6 +4,7 @@
 import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
 import * as internal from "@effect/io/internal/runtime"
+import type * as OpCodes from "@effect/io/internal/runtime/opCodes"
 
 /**
  * An `Exit<E, A>` describes the result of a executing an `Effect` workflow.
@@ -29,7 +30,7 @@ export interface Failure<E> extends Effect.Effect<never, E, never> {
     readonly cause: Cause.Cause<E>
   }
   /** @internal */
-  readonly op: internal.OpCodes["Failure"]
+  readonly op: OpCodes.OP_FAILURE
 }
 
 /**
@@ -44,7 +45,7 @@ export interface Success<A> extends Effect.Effect<never, never, A> {
     readonly value: A
   }
   /** @internal */
-  readonly op: internal.OpCodes["Success"]
+  readonly op: OpCodes.OP_SUCCESS
 }
 
 /**
