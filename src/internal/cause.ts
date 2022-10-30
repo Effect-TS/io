@@ -2,6 +2,7 @@ import type * as Cause from "@effect/io/Cause"
 import * as Debug from "@effect/io/Debug"
 import * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRuntime from "@effect/io/internal/runtime"
+import * as OpCodes from "@effect/io/internal/runtime/opCodes"
 import { Stack } from "@effect/io/internal/stack"
 import * as Tracer from "@effect/io/Tracer"
 import * as Doc from "@effect/printer/Doc"
@@ -1140,9 +1141,9 @@ const stackToLines = (stack: StackAnnotation, renderer: Cause.Cause.Renderer<any
   let current = stack.stack
   while (current !== undefined && lines.length < renderer.renderStackDepth) {
     switch (current.value.op) {
-      case 2: // OnFailure
-      case 3: // OnSuccess
-      case 4: { // OnSuccessAndFailure
+      case OpCodes.OP_ON_FAILURE:
+      case OpCodes.OP_ON_SUCCESS:
+      case OpCodes.OP_ON_SUCCESS_AND_FAILURE: {
         if (current.value.trace) {
           lines.push(Doc.text(current.value.trace))
         }
