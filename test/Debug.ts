@@ -1,7 +1,7 @@
 import "./Debug.init"
 
 import * as Effect from "@effect/io/Effect"
-import type { Yield } from "@effect/io/internal/runtime"
+import type { Yield } from "@effect/io/internal/core"
 
 describe("Debug", () => {
   it("should include call trace", () => {

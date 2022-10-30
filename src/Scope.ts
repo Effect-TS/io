@@ -5,14 +5,14 @@
 import type * as Effect from "@effect/io/Effect"
 import type { ExecutionStrategy } from "@effect/io/ExecutionStrategy"
 import type * as Exit from "@effect/io/Exit"
-import * as runtime from "@effect/io/internal/runtime"
+import * as core from "@effect/io/internal/core"
 import type * as Context from "@fp-ts/data/Context"
 
 /**
  * @since 1.0.0
  * @category symbols
  */
-export const ScopeTypeId: unique symbol = runtime.ScopeTypeId
+export const ScopeTypeId: unique symbol = core.ScopeTypeId
 
 /**
  * @since 1.0.0
@@ -24,7 +24,7 @@ export type ScopeTypeId = typeof ScopeTypeId
  * @since 1.0.0
  * @category symbols
  */
-export const CloseableScopeTypeId: unique symbol = runtime.CloseableScopeTypeId
+export const CloseableScopeTypeId: unique symbol = core.CloseableScopeTypeId
 
 /**
  * @since 1.0.0
@@ -60,7 +60,7 @@ export interface CloseableScope extends Scope {
  * @since 1.0.0
  * @category environment
  */
-export const Tag: Context.Tag<Scope> = runtime.scopeTag
+export const Tag: Context.Tag<Scope> = core.scopeTag
 
 /**
  * @since 1.0.0
@@ -85,7 +85,7 @@ export declare namespace Scope {
  * @since 1.0.0
  * @category mutations
  */
-export const addFinalizer = runtime.scopeAddFinalizer
+export const addFinalizer = core.scopeAddFinalizer
 
 /**
  * A simplified version of `addFinalizerWith` when the `finalizer` does not
@@ -94,7 +94,7 @@ export const addFinalizer = runtime.scopeAddFinalizer
  * @since 1.0.0
  * @category mutations
  */
-export const addFinalizerExit = runtime.scopeAddFinalizerExit
+export const addFinalizerExit = core.scopeAddFinalizerExit
 
 /**
  * Closes a scope with the specified exit value, running all finalizers that
@@ -103,7 +103,7 @@ export const addFinalizerExit = runtime.scopeAddFinalizerExit
  * @category destructors
  * @since 1.0.0
  */
-export const close = runtime.scopeClose
+export const close = core.scopeClose
 
 /**
  * Extends the scope of an `Effect` workflow that needs a scope into this
@@ -114,7 +114,7 @@ export const close = runtime.scopeClose
  * @category mutations
  * @since 1.0.0
  */
-export const extend = runtime.scopeExtend
+export const extend = core.scopeExtend
 
 /**
  * Forks a new scope that is a child of this scope. The child scope will
@@ -123,7 +123,7 @@ export const extend = runtime.scopeExtend
  * @category forking
  * @since 1.0.0
  */
-export const fork = runtime.scopeFork
+export const fork = core.scopeFork
 
 /**
  * Uses the scope by providing it to an `Effect` workflow that needs a scope,
@@ -134,7 +134,7 @@ export const fork = runtime.scopeFork
  * @category destructors
  * @since 1.0.0
  */
-export const use = runtime.scopeUse
+export const use = core.scopeUse
 
 /**
  * Creates a Scope where Finalizers will run according to the `ExecutionStrategy`.
@@ -144,4 +144,4 @@ export const use = runtime.scopeUse
  * @category constructors
  * @since 1.0.0
  */
-export const make = runtime.scopeMake
+export const make = core.scopeMake

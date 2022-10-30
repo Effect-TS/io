@@ -1,13 +1,13 @@
 /**
  * @since 1.0.0
  */
-import * as internal from "@effect/io/internal/runtime"
+import * as core from "@effect/io/internal/core"
 
 /**
  * @since 1.0.0
  * @category symbols
  */
-export const FiberRefTypeId: unique symbol = internal.FiberRefTypeId
+export const FiberRefTypeId: unique symbol = core.FiberRefTypeId
 
 /**
  * @since 1.0.0
@@ -48,81 +48,81 @@ export interface Variance<A> {
  * @since 1.0.0
  * @category constructors
  */
-export const make = internal.makeFiberRef
+export const make = core.makeFiberRef
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const makeWith = internal.makeWithFiberRef
+export const makeWith = core.makeWithFiberRef
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const makeEnvironment = internal.makeEnvironmentFiberRef
+export const makeEnvironment = core.makeEnvironmentFiberRef
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const unsafeMake = internal.unsafeMakeFiberRef
+export const unsafeMake = core.unsafeMakeFiberRef
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const unsafeMakeHashSet = internal.unsafeMakeHashSetFiberRef
+export const unsafeMakeHashSet = core.unsafeMakeHashSetFiberRef
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const unsafeMakeEnvironment = internal.unsafeMakeEnvironmentFiberRef
+export const unsafeMakeEnvironment = core.unsafeMakeEnvironmentFiberRef
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const unsafeMakePatch = internal.unsafeMakePatchFiberRef
+export const unsafeMakePatch = core.unsafeMakePatchFiberRef
 
 /**
  * @since 1.0.0
  * @category getters
  */
-export const get = internal.getFiberRef
+export const get = core.getFiberRef
 
 /**
  * @since 1.0.0
  * @category mutations
  */
-export const getAndSet = internal.getAndSetFiberRef
+export const getAndSet = core.getAndSetFiberRef
 
 /**
  * @since 1.0.0
  * @category mutations
  */
-export const getAndUpdate = internal.getAndUpdateFiberRef
+export const getAndUpdate = core.getAndUpdateFiberRef
 
 /**
  * @since 1.0.0
  * @category mutations
  */
-export const getAndUpdateSome = internal.getAndUpdateSomeFiberRef
+export const getAndUpdateSome = core.getAndUpdateSomeFiberRef
 
 /**
  * @since 1.0.0
  * @category mutations
  */
-export const getWith = internal.getWithFiberRef
+export const getWith = core.getWithFiberRef
 
 /**
  * @since 1.0.0
  * @category mutations
  */
-export const set = internal.setFiberRef
+export const set = core.setFiberRef
 
-const _delete = internal.deleteFiberRef
+const _delete = core.deleteFiberRef
 export {
   /**
    * @since 1.0.0
@@ -135,76 +135,76 @@ export {
  * @since 1.0.0
  * @category mutations
  */
-export const reset = internal.resetFiberRef
+export const reset = core.resetFiberRef
 
 /**
  * @since 1.0.0
  * @category mutations
  */
-export const modify = internal.modifyFiberRef
+export const modify = core.modifyFiberRef
 
 /**
  * @since 1.0.0
  * @category mutations
  */
-export const modifySomeFiberRef = internal.modifySomeFiberRef
+export const modifySomeFiberRef = core.modifySomeFiberRef
 
 /**
  * @since 1.0.0
  * @category mutations
  */
-export const update = internal.updateFiberRef
+export const update = core.updateFiberRef
 
 /**
  * @since 1.0.0
  * @category mutations
  */
-export const updateSome = internal.updateSomeFiberRef
+export const updateSome = core.updateSomeFiberRef
 
 /**
  * @since 1.0.0
  * @category mutations
  */
-export const updateAndGet = internal.updateAndGetFiberRef
+export const updateAndGet = core.updateAndGetFiberRef
 
 /**
  * @since 1.0.0
  * @category mutations
  */
-export const updateSomeAndGet = internal.updateSomeAndGetFiberRef
+export const updateSomeAndGet = core.updateSomeAndGetFiberRef
 
 /**
  * @since 1.0.0
  * @category mutations
  */
-export const locally = internal.locallyFiberRef
+export const locally = core.locallyFiberRef
 
 /**
  * @since 1.0.0
  * @category mutations
  */
-export const locallyWith = internal.locallyWithFiberRef
+export const locallyWith = core.locallyWithFiberRef
 
 /**
  * @since 1.0.0
  * @category mutations
  */
-export const locallyScoped = internal.locallyScopedFiberRef
+export const locallyScoped = core.locallyScopedFiberRef
 
 /**
  * @since 1.0.0
  * @category mutations
  */
-export const locallyScopedWith = internal.locallyScopedFiberRef
+export const locallyScopedWith = core.locallyScopedFiberRef
 
 /**
  * @since 1.0.0
  * @category fiberRefs
  */
-export const currentEnvironment = internal.currentEnvironment
+export const currentEnvironment = core.currentEnvironment
 
 /**
  * @since 1.0.0
  * @category fiberRefs
  */
-export const currentLogLevel = internal.currentLogLevel
+export const currentLogLevel = core.currentLogLevel

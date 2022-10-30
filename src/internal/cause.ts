@@ -1,7 +1,7 @@
 import type * as Cause from "@effect/io/Cause"
 import * as Debug from "@effect/io/Debug"
 import * as FiberId from "@effect/io/Fiber/Id"
-import type * as FiberRuntime from "@effect/io/internal/runtime"
+import type * as core from "@effect/io/internal/core"
 import * as OpCodes from "@effect/io/internal/runtime/opCodes"
 import { Stack } from "@effect/io/internal/stack"
 import * as Tracer from "@effect/io/Tracer"
@@ -1002,7 +1002,7 @@ export const StackAnnotationTypeId: Cause.StackAnnotationTypeId = Symbol.for(
 export class StackAnnotation implements Cause.Cause.StackAnnotation {
   readonly [StackAnnotationTypeId]: Cause.StackAnnotationTypeId = StackAnnotationTypeId
   constructor(
-    readonly stack: Stack<FiberRuntime.Continuation> | undefined,
+    readonly stack: Stack<core.Continuation> | undefined,
     readonly execution: Chunk.Chunk<string> | undefined
   ) {}
 }

@@ -23,7 +23,7 @@
  */
 import type { FiberId } from "@effect/io/Fiber/Id"
 import * as internal from "@effect/io/internal/cause"
-import type { Continuation } from "@effect/io/internal/runtime"
+import type { Continuation } from "@effect/io/internal/core"
 import type { Stack } from "@effect/io/internal/stack"
 import type { Chunk } from "@fp-ts/data/Chunk"
 import type { Equal } from "@fp-ts/data/Equal"
