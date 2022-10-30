@@ -69,13 +69,7 @@ export type STMRetryExceptionTypeId = typeof STMRetryExceptionTypeId
  * @since 1.0.0
  * @category symbols
  */
-export interface STM<R, E, A> extends Effect.Effect<R, E, A> {
-  readonly [STMTypeId]: {
-    readonly _R: (_: never) => R
-    readonly _E: (_: never) => E
-    readonly _A: (_: never) => A
-  }
-}
+export interface STM<R, E, A> extends Variance<R, E, A>, Effect.Effect<R, E, A> {}
 
 /**
  * @since 1.0.0
