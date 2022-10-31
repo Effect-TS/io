@@ -1809,9 +1809,9 @@ export const unsafeDoneDeferred = <E, A>(effect: Effect.Effect<never, E, A>) => 
     const state = MutableRef.get(self.state)
     if (state.op === deferred.OP_STATE_PENDING) {
       pipe(self.state, MutableRef.set(deferred.done(effect)))
-      Array.from(state.joiners).reverse().forEach((f) => {
-        f(effect)
-      })
+      for (let i = state.joiners.length - 1; i >= 0; i--) {
+        state.joiners[i](effect)
+      }
     }
   }
 }
