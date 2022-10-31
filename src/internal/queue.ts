@@ -47,169 +47,30 @@ const dequeueVariance = {
 }
 
 /** @internal */
-export const isQueue = (u: unknown): u is Queue.Queue<unknown> => {
-  return isEnqueue(u) || isDequeue(u)
-}
-
-/** @internal */
-export const isEnqueue = (u: unknown): u is Queue.Enqueue<unknown> => {
-  return typeof u === "object" && u != null && EnqueueTypeId in u
-}
-
-/** @internal */
-export const isDequeue = (u: unknown): u is Queue.Dequeue<unknown> => {
-  return typeof u === "object" && u != null && DequeueTypeId in u
-}
-
-/** @internal */
-export const bounded = <A>(
-  requestedCapacity: number
-): Effect.Effect<never, never, Queue.Queue<A>> => {
-  return pipe(
-    core.sync(() => MutableQueue.bounded<A>(requestedCapacity)),
-    core.flatMap((queue) => make(queue, backPressureStrategy()))
-  )
-}
-
-/** @internal */
-export const dropping = <A>(
-  requestedCapacity: number
-): Effect.Effect<never, never, Queue.Queue<A>> => {
-  return pipe(
-    core.sync(() => MutableQueue.bounded<A>(requestedCapacity)),
-    core.flatMap((queue) => make(queue, droppingStrategy))
-  )
-}
-
-/** @internal */
-export const sliding = <A>(
-  requestedCapacity: number
-): Effect.Effect<never, never, Queue.Queue<A>> => {
-  return pipe(
-    core.sync(() => MutableQueue.bounded<A>(requestedCapacity)),
-    core.flatMap((queue) => make(queue, slidingStrategy))
-  )
-}
-
-/** @internal */
-export const unbounded = <A>(): Effect.Effect<never, never, Queue.Queue<A>> => {
-  return pipe(
-    core.sync(() => MutableQueue.unbounded<A>()),
-    core.flatMap((queue) => make(queue, droppingStrategy))
-  )
-}
-
-/** @internal */
-const unsafeMake = <A>(
-  queue: MutableQueue.MutableQueue<A>,
-  takers: MutableQueue.MutableQueue<Deferred.Deferred<never, A>>,
-  shutdownHook: Deferred.Deferred<never, void>,
-  shutdownFlag: MutableRef.MutableRef<boolean>,
-  strategy: Queue.Strategy<A>
-): Queue.Queue<A> => {
-  return {
-    [EnqueueTypeId]: enqueueVariance,
-    [DequeueTypeId]: dequeueVariance,
-    queue,
-    takers,
-    shutdownHook,
-    shutdownFlag,
-    strategy
-  }
-}
-
-/** @internal */
-const make = <A>(
-  queue: MutableQueue.MutableQueue<A>,
-  strategy: Queue.Strategy<A>
-): Effect.Effect<never, never, Queue.Queue<A>> => {
-  return pipe(
-    core.makeDeferred<never, void>(),
-    core.map((deferred) =>
-      unsafeMake(
-        queue,
-        MutableQueue.unbounded(),
-        deferred,
-        MutableRef.make(false),
-        strategy
-      )
-    )
-  )
-}
-
-/** @internal */
-export const capacity = <A>(self: Queue.Queue<A>): number => {
-  return MutableQueue.capacity(self.queue)
-}
-
-/** @internal */
-export const size = <A>(self: Queue.Queue<A>): Effect.Effect<never, never, number> => {
-  return core.suspendSucceed(() =>
-    MutableRef.get(self.shutdownFlag)
-      ? core.interrupt()
-      : core.succeed(
-        MutableQueue.length(self.queue) -
-          MutableQueue.length(self.takers) +
-          surplusSize(self.strategy as StrategyPrimitive)
-      )
-  )
-}
-
-/** @internal */
-export const isFull = <A>(self: Queue.Queue<A>): Effect.Effect<never, never, boolean> => {
-  return pipe(size(self), core.map((size) => size === capacity(self)))
-}
-
-/** @internal */
-export const isEmpty = <A>(self: Queue.Queue<A>): Effect.Effect<never, never, boolean> => {
-  return pipe(size(self), core.map((size) => size === 0))
-}
-
-/** @internal */
-export const isShutdown = <A>(self: Queue.Queue<A>): Effect.Effect<never, never, boolean> => {
-  return core.sync(() => MutableRef.get(self.shutdownFlag))
-}
-
-/** @internal */
-export const awaitShutdown = <A>(self: Queue.Queue<A>): Effect.Effect<never, never, void> => {
-  return core.awaitDeferred(self.shutdownHook)
-}
-
-/** @internal */
-export const shutdown = <A>(self: Queue.Queue<A>): Effect.Effect<never, never, void> => {
-  return pipe(
-    core.withFiberRuntime<never, never, void>((state) => {
-      pipe(self.shutdownFlag, MutableRef.set(true))
-      return pipe(
-        core.whenEffect(
-          pipe(self.shutdownHook, core.succeedDeferred(undefined as void)),
-          pipe(
-            core.forEachParDiscard(
-              unsafePollAll(self.takers),
-              // TODO(Max): remove cast to any
-              core.interruptAsDeferred((state as any).id as FiberId.FiberId)
-            ),
-            core.zipRight(strategyShutdown(self.strategy as StrategyPrimitive))
-          )
-        ),
-        core.map(() => undefined as void)
-      )
-    }),
-    core.uninterruptible
-  )
-}
-
-/** @internal */
-export const offer = <A>(value: A) => {
-  return (self: Queue.Enqueue<A>): Effect.Effect<never, never, boolean> => {
+class QueueImpl<A> implements Queue.Queue<A> {
+  readonly [EnqueueTypeId] = enqueueVariance
+  readonly [DequeueTypeId] = dequeueVariance
+  constructor(
+    /** @internal */
+    readonly queue: MutableQueue.MutableQueue<A>,
+    /** @internal */
+    readonly takers: MutableQueue.MutableQueue<Deferred.Deferred<never, A>>,
+    /** @internal */
+    readonly shutdownHook: Deferred.Deferred<never, void>,
+    /** @internal */
+    readonly shutdownFlag: MutableRef.MutableRef<boolean>,
+    /** @internal */
+    readonly strategy: Queue.Strategy<A>
+  ) {}
+  offer(this: QueueImpl<A>, value: A): Effect.Effect<never, never, boolean> {
     return core.suspendSucceed(() => {
-      if (MutableRef.get(self.shutdownFlag)) {
+      if (MutableRef.get(this.shutdownFlag)) {
         return core.interrupt()
       }
       let noRemaining: boolean
-      if (MutableQueue.isEmpty(self.queue)) {
+      if (MutableQueue.isEmpty(this.queue)) {
         const taker = pipe(
-          self.takers,
+          this.takers,
           MutableQueue.poll(MutableQueue.EmptyMutableQueue)
         )
         if (taker !== MutableQueue.EmptyMutableQueue) {
@@ -225,35 +86,21 @@ export const offer = <A>(value: A) => {
         return core.succeed(true)
       }
       // Not enough takers, offer to the queue
-      const succeeded = pipe(self.queue, MutableQueue.offer(value))
-      unsafeCompleteTakers(
-        self.strategy as StrategyPrimitive,
-        self.queue,
-        self.takers as MutableQueue.MutableQueue<Deferred.Deferred<never, unknown>>
-      )
+      const succeeded = pipe(this.queue, MutableQueue.offer(value))
+      unsafeCompleteTakers(this.strategy, this.queue, this.takers)
       return succeeded
         ? core.succeed(true)
-        : handleSurplus(
-          self.strategy as StrategyPrimitive,
-          [value],
-          self.queue,
-          self.takers as MutableQueue.MutableQueue<Deferred.Deferred<never, unknown>>,
-          self.shutdownFlag
-        )
+        : this.strategy.handleSurplus([value], this.queue, this.takers, this.shutdownFlag)
     })
   }
-}
-
-/** @internal */
-export const offerAll = <A>(as: Iterable<A>) => {
-  return (self: Queue.Enqueue<A>): Effect.Effect<never, never, boolean> => {
+  offerAll(this: QueueImpl<A>, iterable: Iterable<A>): Effect.Effect<never, never, boolean> {
     return core.suspendSucceed(() => {
-      if (MutableRef.get(self.shutdownFlag)) {
+      if (MutableRef.get(this.shutdownFlag)) {
         return core.interrupt()
       }
-      const values = ReadonlyArray.fromIterable(as)
-      const pTakers = MutableQueue.isEmpty(self.queue)
-        ? ReadonlyArray.fromIterable(unsafePollN(self.takers, values.length))
+      const values = ReadonlyArray.fromIterable(iterable)
+      const pTakers = MutableQueue.isEmpty(this.queue)
+        ? ReadonlyArray.fromIterable(unsafePollN(this.takers, values.length))
         : ReadonlyArray.empty
       const [forTakers, remaining] = pipe(values, ReadonlyArray.splitAt(pTakers.length))
       for (let i = 0; i < pTakers.length; i++) {
@@ -265,116 +112,68 @@ export const offerAll = <A>(as: Iterable<A>) => {
         return core.succeed(true)
       }
       // Not enough takers, offer to the queue
-      const surplus = unsafeOfferAll(self.queue, remaining)
-      unsafeCompleteTakers(
-        self.strategy as StrategyPrimitive,
-        self.queue,
-        self.takers as MutableQueue.MutableQueue<Deferred.Deferred<never, unknown>>
-      )
+      const surplus = unsafeOfferAll(this.queue, remaining)
+      unsafeCompleteTakers(this.strategy, this.queue, this.takers)
       return List.isNil(surplus)
         ? core.succeed(true)
-        : handleSurplus(
-          self.strategy as StrategyPrimitive,
-          surplus,
-          self.queue,
-          self.takers as MutableQueue.MutableQueue<Deferred.Deferred<never, unknown>>,
-          self.shutdownFlag
-        )
+        : this.strategy.handleSurplus(surplus, this.queue, this.takers, this.shutdownFlag)
     })
   }
-}
-
-/** @internal */
-export const poll = <A>(self: Queue.Dequeue<A>): Effect.Effect<never, never, Option.Option<A>> => {
-  return pipe(self, takeUpTo(1), core.map(Chunk.head))
-}
-
-/** @internal */
-export const take = <A>(self: Queue.Dequeue<A>): Effect.Effect<never, never, A> => {
-  return core.withFiberRuntime((state) => {
-    if (MutableRef.get(self.shutdownFlag)) {
-      return core.interrupt()
-    }
-    const item = pipe(self.queue, MutableQueue.poll(MutableQueue.EmptyMutableQueue))
-    if (item !== MutableQueue.EmptyMutableQueue) {
-      unsafeOnQueueEmptySpace(
-        self.strategy as StrategyPrimitive,
-        self.queue,
-        self.takers as MutableQueue.MutableQueue<Deferred.Deferred<never, unknown>>
-      )
-      return core.succeed(item)
-    } else {
-      // Add the deferred to takers, then:
-      // - Try to take again in case a value was added since
-      // - Wait for the deferred to be completed
-      // - Clean up resources in case of interruption
-      // TODO(Max): remove cast to any
-      const deferred = core.unsafeMakeDeferred<never, A>((state as any).id)
-      return pipe(
-        core.suspendSucceed(() => {
-          pipe(self.takers, MutableQueue.offer(deferred))
-          unsafeCompleteTakers(
-            self.strategy as StrategyPrimitive,
-            self.queue,
-            self.takers as MutableQueue.MutableQueue<Deferred.Deferred<never, unknown>>
-          )
-          return MutableRef.get(self.shutdownFlag) ? core.interrupt() : core.awaitDeferred(deferred)
-        }),
-        core.onInterrupt(() => {
-          return core.sync(() => unsafeRemove(self.takers, deferred))
-        })
-      )
-    }
-  })
-}
-
-/** @internal */
-export const takeAll = <A>(self: Queue.Dequeue<A>): Effect.Effect<never, never, Chunk.Chunk<A>> => {
-  return core.suspendSucceed(() =>
-    MutableRef.get(self.shutdownFlag)
-      ? core.interrupt()
-      : core.sync(() => {
-        const as = unsafePollAll(self.queue)
-        unsafeOnQueueEmptySpace(
-          self.strategy as StrategyPrimitive,
-          self.queue,
-          self.takers as MutableQueue.MutableQueue<Deferred.Deferred<never, unknown>>
+  take(this: QueueImpl<A>): Effect.Effect<never, never, A> {
+    return core.withFiberRuntime((state) => {
+      if (MutableRef.get(this.shutdownFlag)) {
+        return core.interrupt()
+      }
+      const item = pipe(this.queue, MutableQueue.poll(MutableQueue.EmptyMutableQueue))
+      if (item !== MutableQueue.EmptyMutableQueue) {
+        this.strategy.unsafeOnQueueEmptySpace(this.queue, this.takers)
+        return core.succeed(item)
+      } else {
+        // Add the deferred to takers, then:
+        // - Try to take again in case a value was added since
+        // - Wait for the deferred to be completed
+        // - Clean up resources in case of interruption
+        // TODO(Max): remove cast to any
+        const deferred = core.unsafeMakeDeferred<never, A>((state as any).id)
+        return pipe(
+          core.suspendSucceed(() => {
+            pipe(this.takers, MutableQueue.offer(deferred))
+            unsafeCompleteTakers(this.strategy, this.queue, this.takers)
+            return MutableRef.get(this.shutdownFlag) ?
+              core.interrupt() :
+              core.awaitDeferred(deferred)
+          }),
+          core.onInterrupt(() => {
+            return core.sync(() => unsafeRemove(this.takers, deferred))
+          })
         )
-        return Chunk.fromIterable(as)
-      })
-  )
-}
-
-/** @internal */
-export const takeUpTo = (max: number) => {
-  return <A>(self: Queue.Dequeue<A>): Effect.Effect<never, never, Chunk.Chunk<A>> => {
+      }
+    })
+  }
+  takeAll(this: QueueImpl<A>): Effect.Effect<never, never, Chunk.Chunk<A>> {
     return core.suspendSucceed(() =>
-      MutableRef.get(self.shutdownFlag)
+      MutableRef.get(this.shutdownFlag)
         ? core.interrupt()
         : core.sync(() => {
-          const as = unsafePollN(self.queue, max)
-          unsafeOnQueueEmptySpace(
-            self.strategy as StrategyPrimitive,
-            self.queue,
-            self.takers as MutableQueue.MutableQueue<Deferred.Deferred<never, unknown>>
-          )
-          return Chunk.fromIterable(as)
+          const values = unsafePollAll(this.queue)
+          this.strategy.unsafeOnQueueEmptySpace(this.queue, this.takers)
+          return Chunk.fromIterable(values)
         })
     )
   }
-}
-
-/** @internal */
-export const takeBetween = (min: number, max: number) => {
-  return <A>(self: Queue.Dequeue<A>): Effect.Effect<never, never, Chunk.Chunk<A>> => {
-    return core.suspendSucceed(() => takeRemainderLoop(self, min, max, Chunk.empty))
+  takeUpTo(this: QueueImpl<A>, max: number): Effect.Effect<never, never, Chunk.Chunk<A>> {
+    return core.suspendSucceed(() =>
+      MutableRef.get(this.shutdownFlag)
+        ? core.interrupt()
+        : core.sync(() => {
+          const values = unsafePollN(this.queue, max)
+          this.strategy.unsafeOnQueueEmptySpace(this.queue, this.takers)
+          return Chunk.fromIterable(values)
+        })
+    )
   }
-}
-
-/** @internal */
-export const takeN = (n: number) => {
-  return <A>(self: Queue.Dequeue<A>): Effect.Effect<never, never, Chunk.Chunk<A>> => {
-    return takeBetween(n, n)(self)
+  takeBetween(this: QueueImpl<A>, min: number, max: number): Effect.Effect<never, never, Chunk.Chunk<A>> {
+    return core.suspendSucceed(() => takeRemainderLoop(this, min, max, Chunk.empty))
   }
 }
 
@@ -414,230 +213,377 @@ const takeRemainderLoop = <A>(
   )
 }
 
+/** @internal */
+export const isQueue = (u: unknown): u is Queue.Queue<unknown> => {
+  return isEnqueue(u) && isDequeue(u)
+}
+
+/** @internal */
+export const isEnqueue = (u: unknown): u is Queue.Enqueue<unknown> => {
+  return typeof u === "object" && u != null && EnqueueTypeId in u
+}
+
+/** @internal */
+export const isDequeue = (u: unknown): u is Queue.Dequeue<unknown> => {
+  return typeof u === "object" && u != null && DequeueTypeId in u
+}
+
+/** @internal */
+export const bounded = <A>(
+  requestedCapacity: number
+): Effect.Effect<never, never, Queue.Queue<A>> => {
+  return pipe(
+    core.sync(() => MutableQueue.bounded<A>(requestedCapacity)),
+    core.flatMap((queue) => make(queue, backPressureStrategy()))
+  )
+}
+
+/** @internal */
+export const dropping = <A>(
+  requestedCapacity: number
+): Effect.Effect<never, never, Queue.Queue<A>> => {
+  return pipe(
+    core.sync(() => MutableQueue.bounded<A>(requestedCapacity)),
+    core.flatMap((queue) => make(queue, droppingStrategy()))
+  )
+}
+
+/** @internal */
+export const sliding = <A>(
+  requestedCapacity: number
+): Effect.Effect<never, never, Queue.Queue<A>> => {
+  return pipe(
+    core.sync(() => MutableQueue.bounded<A>(requestedCapacity)),
+    core.flatMap((queue) => make(queue, slidingStrategy()))
+  )
+}
+
+/** @internal */
+export const unbounded = <A>(): Effect.Effect<never, never, Queue.Queue<A>> => {
+  return pipe(
+    core.sync(() => MutableQueue.unbounded<A>()),
+    core.flatMap((queue) => make(queue, droppingStrategy()))
+  )
+}
+
+/** @internal */
+const unsafeMake = <A>(
+  queue: MutableQueue.MutableQueue<A>,
+  takers: MutableQueue.MutableQueue<Deferred.Deferred<never, A>>,
+  shutdownHook: Deferred.Deferred<never, void>,
+  shutdownFlag: MutableRef.MutableRef<boolean>,
+  strategy: Queue.Strategy<A>
+): Queue.Queue<A> => {
+  return new QueueImpl(queue, takers, shutdownHook, shutdownFlag, strategy)
+}
+
+/** @internal */
+const make = <A>(
+  queue: MutableQueue.MutableQueue<A>,
+  strategy: Queue.Strategy<A>
+): Effect.Effect<never, never, Queue.Queue<A>> => {
+  return pipe(
+    core.makeDeferred<never, void>(),
+    core.map((deferred) =>
+      unsafeMake(
+        queue,
+        MutableQueue.unbounded(),
+        deferred,
+        MutableRef.make(false),
+        strategy
+      )
+    )
+  )
+}
+
+/** @internal */
+export const capacity = <A>(self: Queue.Queue<A>): number => {
+  return MutableQueue.capacity(self.queue)
+}
+
+/** @internal */
+export const size = <A>(self: Queue.Queue<A>): Effect.Effect<never, never, number> => {
+  return core.suspendSucceed(() =>
+    MutableRef.get(self.shutdownFlag)
+      ? core.interrupt()
+      : core.succeed(
+        MutableQueue.length(self.queue) -
+          MutableQueue.length(self.takers) +
+          self.strategy.surplusSize
+      )
+  )
+}
+
+/** @internal */
+export const isFull = <A>(self: Queue.Queue<A>): Effect.Effect<never, never, boolean> => {
+  return pipe(size(self), core.map((size) => size === capacity(self)))
+}
+
+/** @internal */
+export const isEmpty = <A>(self: Queue.Queue<A>): Effect.Effect<never, never, boolean> => {
+  return pipe(size(self), core.map((size) => size === 0))
+}
+
+/** @internal */
+export const isShutdown = <A>(self: Queue.Queue<A>): Effect.Effect<never, never, boolean> => {
+  return core.sync(() => MutableRef.get(self.shutdownFlag))
+}
+
+/** @internal */
+export const awaitShutdown = <A>(self: Queue.Queue<A>): Effect.Effect<never, never, void> => {
+  return core.awaitDeferred(self.shutdownHook)
+}
+
+/** @internal */
+export const shutdown = <A>(self: Queue.Queue<A>): Effect.Effect<never, never, void> => {
+  return pipe(
+    core.withFiberRuntime<never, never, void>((state) => {
+      pipe(self.shutdownFlag, MutableRef.set(true))
+      return pipe(
+        core.whenEffect(
+          pipe(self.shutdownHook, core.succeedDeferred(undefined as void)),
+          pipe(
+            core.forEachParDiscard(
+              unsafePollAll(self.takers),
+              // TODO(Max): remove cast to any
+              core.interruptAsDeferred((state as any).id as FiberId.FiberId)
+            ),
+            core.zipRight(self.strategy.shutdown)
+          )
+        ),
+        core.map(() => undefined as void)
+      )
+    }),
+    core.uninterruptible
+  )
+}
+
+/** @internal */
+export const offer = <A>(value: A) => {
+  return (self: Queue.Enqueue<A>): Effect.Effect<never, never, boolean> => self.offer(value)
+}
+
+/** @internal */
+export const offerAll = <A>(iterable: Iterable<A>) => {
+  return (self: Queue.Enqueue<A>): Effect.Effect<never, never, boolean> => self.offerAll(iterable)
+}
+
+/** @internal */
+export const poll = <A>(self: Queue.Dequeue<A>): Effect.Effect<never, never, Option.Option<A>> => {
+  return pipe(self.takeUpTo(1), core.map(Chunk.head))
+}
+
+/** @internal */
+export const take = <A>(self: Queue.Dequeue<A>): Effect.Effect<never, never, A> => {
+  return self.take()
+}
+
+/** @internal */
+export const takeAll = <A>(self: Queue.Dequeue<A>): Effect.Effect<never, never, Chunk.Chunk<A>> => {
+  return self.takeAll()
+}
+
+/** @internal */
+export const takeUpTo = (max: number) => {
+  return <A>(self: Queue.Dequeue<A>): Effect.Effect<never, never, Chunk.Chunk<A>> => {
+    return self.takeUpTo(max)
+  }
+}
+
+/** @internal */
+export const takeBetween = (min: number, max: number) => {
+  return <A>(self: Queue.Dequeue<A>): Effect.Effect<never, never, Chunk.Chunk<A>> => {
+    return self.takeBetween(min, max)
+  }
+}
+
+/** @internal */
+export const takeN = (n: number) => {
+  return <A>(self: Queue.Dequeue<A>): Effect.Effect<never, never, Chunk.Chunk<A>> => {
+    return self.takeBetween(n, n)
+  }
+}
+
 // -----------------------------------------------------------------------------
 // Strategy
 // -----------------------------------------------------------------------------
 
 /** @internal */
-export type StrategyPrimitive = BackPressureStrategy | DroppingStrategy | SlidingStrategy
-
-/** @internal */
-export type StrategyOp<OpCode extends number, Body = {}> = Queue.Strategy<never> & Body & {
-  readonly op: OpCode
-  readonly trace?: string
+export const backPressureStrategy = <A>(): Queue.Strategy<A> => {
+  return new BackPressureStrategy()
 }
 
 /** @internal */
-export const OP_BACKPRESSURE_STRATEGY = 0 as const
+export const droppingStrategy = <A>(): Queue.Strategy<A> => {
+  return new DroppingStrategy()
+}
 
 /** @internal */
-export type OP_BACKPRESSURE_STRATEGY = typeof OP_BACKPRESSURE_STRATEGY
+export const slidingStrategy = <A>(): Queue.Strategy<A> => {
+  return new SlidingStrategy()
+}
 
 /** @internal */
-export const OP_DROPPING_STRATEGY = 1 as const
+class BackPressureStrategy<A> implements Queue.Strategy<A> {
+  readonly [QueueStrategyTypeId] = queueStrategyVariance
 
-/** @internal */
-export type OP_DROPPING_STRATEGY = typeof OP_DROPPING_STRATEGY
+  readonly putters = MutableQueue.unbounded<readonly [unknown, Deferred.Deferred<never, boolean>, boolean]>()
 
-/** @internal */
-export const OP_SLIDING_STRATEGY = 2 as const
-
-/** @internal */
-export type OP_SLIDING_STRATEGY = typeof OP_SLIDING_STRATEGY
-
-/** @internal */
-export interface BackPressureStrategy extends
-  StrategyOp<OP_BACKPRESSURE_STRATEGY, {
-    /**
-     * - `A` is an item to add
-     * - `Deferred<never, boolean>` is the deferred completing the whole `offerAll`
-     * - `boolean` indicates if it's the last item to offer (deferred should be
-     *    completed once this item is added)
-     */
-    readonly putters: MutableQueue.MutableQueue<readonly [unknown, Deferred.Deferred<never, boolean>, boolean]>
-  }>
-{}
-
-/** @internal */
-export interface DroppingStrategy extends StrategyOp<OP_DROPPING_STRATEGY, {}> {}
-
-/** @internal */
-export interface SlidingStrategy extends StrategyOp<OP_SLIDING_STRATEGY, {}> {}
-
-/** @internal */
-const backPressureStrategy = (): StrategyPrimitive => {
-  return {
-    [QueueStrategyTypeId]: queueStrategyVariance,
-    op: OP_BACKPRESSURE_STRATEGY,
-    putters: MutableQueue.unbounded()
+  get surplusSize(): number {
+    return MutableQueue.length(this.putters)
   }
-}
 
-/** @internal */
-const droppingStrategy: StrategyPrimitive = {
-  [QueueStrategyTypeId]: queueStrategyVariance,
-  op: OP_DROPPING_STRATEGY
-}
-
-/** @internal */
-const slidingStrategy: StrategyPrimitive = {
-  [QueueStrategyTypeId]: queueStrategyVariance,
-  op: OP_SLIDING_STRATEGY
-}
-
-/** @internal */
-const handleSurplus = (
-  strategy: StrategyPrimitive,
-  as: Iterable<unknown>,
-  queue: MutableQueue.MutableQueue<unknown>,
-  takers: MutableQueue.MutableQueue<Deferred.Deferred<never, unknown>>,
-  isShutdown: MutableRef.MutableRef<boolean>
-): Effect.Effect<never, never, boolean> => {
-  switch (strategy.op) {
-    case OP_BACKPRESSURE_STRATEGY: {
-      return core.withFiberRuntime((state) => {
-        // TODO(Max): remove case to any
-        const deferred = core.unsafeMakeDeferred<never, boolean>((state as any).id)
-        return pipe(
-          core.suspendSucceed(() => {
-            unsafeBackPressureOffer(strategy, as, deferred)
-            unsafeOnBackPressureQueueEmptySpace(strategy, queue, takers)
-            unsafeCompleteTakers(strategy, queue, takers)
-            return MutableRef.get(isShutdown) ? core.interrupt() : core.awaitDeferred(deferred)
-          }),
-          core.onInterrupt(() => core.sync(() => unsafeBackPressureRemove(strategy, deferred)))
-        )
-      })
-    }
-    case OP_DROPPING_STRATEGY: {
-      return core.succeed(false)
-    }
-    case OP_SLIDING_STRATEGY: {
-      return core.sync(() => {
-        unsafeSlidingOffer(queue, as)
-        unsafeCompleteTakers(strategy, queue, takers)
-        return true
-      })
-    }
-  }
-}
-
-/** @internal */
-const unsafeOnQueueEmptySpace = (
-  strategy: StrategyPrimitive,
-  queue: MutableQueue.MutableQueue<unknown>,
-  takers: MutableQueue.MutableQueue<Deferred.Deferred<never, unknown>>
-): void => {
-  switch (strategy.op) {
-    case OP_BACKPRESSURE_STRATEGY: {
-      return unsafeOnBackPressureQueueEmptySpace(strategy, queue, takers)
-    }
-    case OP_DROPPING_STRATEGY:
-    case OP_SLIDING_STRATEGY: {
-      return
-    }
-  }
-}
-
-/** @internal */
-const surplusSize = (strategy: StrategyPrimitive): number => {
-  switch (strategy.op) {
-    case OP_BACKPRESSURE_STRATEGY: {
-      return MutableQueue.length(strategy.putters)
-    }
-    case OP_DROPPING_STRATEGY:
-    case OP_SLIDING_STRATEGY: {
-      return 0
-    }
-  }
-}
-
-/** @internal */
-const strategyShutdown = (strategy: StrategyPrimitive): Effect.Effect<never, never, void> => {
-  switch (strategy.op) {
-    case OP_BACKPRESSURE_STRATEGY: {
-      return pipe(
-        core.fiberId(),
-        core.flatMap((fiberId) =>
-          pipe(
-            core.sync(() => unsafePollAll(strategy.putters)),
-            core.flatMap(core.forEachPar(([_, deferred, isLastItem]) =>
-              isLastItem ? pipe(deferred, core.interruptAsDeferred(fiberId)) : core.unit()
-            ))
-          )
+  get shutdown(): Effect.Effect<never, never, void> {
+    return pipe(
+      core.fiberId(),
+      core.flatMap((fiberId) =>
+        pipe(
+          core.sync(() => unsafePollAll(this.putters)),
+          core.flatMap(core.forEachPar(([_, deferred, isLastItem]) =>
+            isLastItem ? pipe(deferred, core.interruptAsDeferred(fiberId)) : core.unit()
+          ))
         )
       )
-    }
-    case OP_DROPPING_STRATEGY:
-    case OP_SLIDING_STRATEGY: {
-      return core.unit()
-    }
+    )
   }
-}
 
-/** @internal */
-const unsafeBackPressureOffer = (
-  strategy: BackPressureStrategy,
-  as: Iterable<unknown>,
-  deferred: Deferred.Deferred<never, boolean>
-): void => {
-  const iterator = as[Symbol.iterator]()
-  let next: IteratorResult<unknown>
-  while (!(next = iterator.next()).done) {
-    const value = next.value
-    next = iterator.next()
-    if (next.done) {
-      pipe(strategy.putters, MutableQueue.offer([value, deferred, true as boolean] as const))
-    } else {
-      pipe(strategy.putters, MutableQueue.offer([value, deferred, false as boolean] as const))
-    }
+  handleSurplus(
+    iterable: Iterable<A>,
+    queue: MutableQueue.MutableQueue<A>,
+    takers: MutableQueue.MutableQueue<Deferred.Deferred<never, A>>,
+    isShutdown: MutableRef.MutableRef<boolean>
+  ): Effect.Effect<never, never, boolean> {
+    return core.withFiberRuntime((state) => {
+      // TODO(Max): remove case to any
+      const deferred = core.unsafeMakeDeferred<never, boolean>((state as any).id)
+      return pipe(
+        core.suspendSucceed(() => {
+          this.unsafeOffer(iterable, deferred)
+          this.unsafeOnQueueEmptySpace(queue, takers)
+          unsafeCompleteTakers(this, queue, takers)
+          return MutableRef.get(isShutdown) ? core.interrupt() : core.awaitDeferred(deferred)
+        }),
+        core.onInterrupt(() => core.sync(() => this.unsafeRemove(deferred)))
+      )
+    })
   }
-}
 
-const unsafeBackPressureRemove = (
-  strategy: BackPressureStrategy,
-  deferred: Deferred.Deferred<never, boolean>
-): void => {
-  unsafeOfferAll(
-    strategy.putters,
-    pipe(unsafePollAll(strategy.putters), List.filter(([, _]) => _ !== deferred))
-  )
-}
-
-/** @internal */
-const unsafeOnBackPressureQueueEmptySpace = (
-  strategy: BackPressureStrategy,
-  queue: MutableQueue.MutableQueue<unknown>,
-  takers: MutableQueue.MutableQueue<Deferred.Deferred<never, unknown>>
-): void => {
-  let keepPolling = true
-  while (keepPolling && !MutableQueue.isFull(queue)) {
-    const putter = pipe(strategy.putters, MutableQueue.poll(MutableQueue.EmptyMutableQueue))
-    if (putter !== MutableQueue.EmptyMutableQueue) {
-      const offered = pipe(queue, MutableQueue.offer(putter[0]))
-      if (offered && putter[2]) {
-        unsafeCompleteDeferred(putter[1], true)
-      } else if (!offered) {
-        unsafeOfferAll(strategy.putters, pipe(unsafePollAll(strategy.putters), List.prepend(putter)))
+  unsafeOnQueueEmptySpace(
+    queue: MutableQueue.MutableQueue<A>,
+    takers: MutableQueue.MutableQueue<Deferred.Deferred<never, A>>
+  ): void {
+    let keepPolling = true
+    while (keepPolling && !MutableQueue.isFull(queue)) {
+      const putter = pipe(this.putters, MutableQueue.poll(MutableQueue.EmptyMutableQueue))
+      if (putter !== MutableQueue.EmptyMutableQueue) {
+        const offered = pipe(queue, MutableQueue.offer(putter[0]))
+        if (offered && putter[2]) {
+          unsafeCompleteDeferred(putter[1], true)
+        } else if (!offered) {
+          unsafeOfferAll(this.putters, pipe(unsafePollAll(this.putters), List.prepend(putter)))
+        }
+        unsafeCompleteTakers(this, queue, takers)
+      } else {
+        keepPolling = false
       }
-      unsafeCompleteTakers(strategy, queue, takers)
-    } else {
-      keepPolling = false
     }
+  }
+
+  unsafeOffer(iterable: Iterable<A>, deferred: Deferred.Deferred<never, boolean>): void {
+    const iterator = iterable[Symbol.iterator]()
+    let next: IteratorResult<unknown>
+    while (!(next = iterator.next()).done) {
+      const value = next.value
+      next = iterator.next()
+      if (next.done) {
+        pipe(this.putters, MutableQueue.offer([value, deferred, true as boolean] as const))
+      } else {
+        pipe(this.putters, MutableQueue.offer([value, deferred, false as boolean] as const))
+      }
+    }
+  }
+
+  unsafeRemove(deferred: Deferred.Deferred<never, boolean>): void {
+    unsafeOfferAll(
+      this.putters,
+      pipe(unsafePollAll(this.putters), List.filter(([, _]) => _ !== deferred))
+    )
   }
 }
 
-const unsafeSlidingOffer = <A>(queue: MutableQueue.MutableQueue<A>, as: Iterable<A>) => {
-  const iterator = as[Symbol.iterator]()
-  let next: IteratorResult<A>
-  let offering = true
-  while (!(next = iterator.next()).done && offering) {
-    if (MutableQueue.capacity(queue) === 0) {
-      return
+/** @internal */
+class DroppingStrategy<A> implements Queue.Strategy<A> {
+  readonly [QueueStrategyTypeId] = queueStrategyVariance
+
+  get surplusSize(): number {
+    return 0
+  }
+
+  get shutdown(): Effect.Effect<never, never, void> {
+    return core.unit()
+  }
+
+  handleSurplus(
+    _iterable: Iterable<A>,
+    _queue: MutableQueue.MutableQueue<A>,
+    _takers: MutableQueue.MutableQueue<Deferred.Deferred<never, A>>,
+    _isShutdown: MutableRef.MutableRef<boolean>
+  ): Effect.Effect<never, never, boolean> {
+    return core.succeed(false)
+  }
+
+  unsafeOnQueueEmptySpace(
+    _queue: MutableQueue.MutableQueue<A>,
+    _takers: MutableQueue.MutableQueue<Deferred.Deferred<never, A>>
+  ): void {
+    //
+  }
+}
+
+/** @internal */
+class SlidingStrategy<A> implements Queue.Strategy<A> {
+  readonly [QueueStrategyTypeId] = queueStrategyVariance
+
+  get surplusSize(): number {
+    return 0
+  }
+
+  get shutdown(): Effect.Effect<never, never, void> {
+    return core.unit()
+  }
+
+  handleSurplus(
+    iterable: Iterable<A>,
+    queue: MutableQueue.MutableQueue<A>,
+    takers: MutableQueue.MutableQueue<Deferred.Deferred<never, A>>,
+    _isShutdown: MutableRef.MutableRef<boolean>
+  ): Effect.Effect<never, never, boolean> {
+    return core.sync(() => {
+      this.unsafeOffer(queue, iterable)
+      unsafeCompleteTakers(this, queue, takers)
+      return true
+    })
+  }
+
+  unsafeOnQueueEmptySpace(
+    _queue: MutableQueue.MutableQueue<A>,
+    _takers: MutableQueue.MutableQueue<Deferred.Deferred<never, A>>
+  ): void {
+    //
+  }
+
+  unsafeOffer(queue: MutableQueue.MutableQueue<A>, iterable: Iterable<A>) {
+    const iterator = iterable[Symbol.iterator]()
+    let next: IteratorResult<A>
+    let offering = true
+    while (!(next = iterator.next()).done && offering) {
+      if (MutableQueue.capacity(queue) === 0) {
+        return
+      }
+      // Poll 1 and retry
+      pipe(queue, MutableQueue.poll(MutableQueue.EmptyMutableQueue))
+      offering = pipe(queue, MutableQueue.offer(next.value))
     }
-    // Poll 1 and retry
-    pipe(queue, MutableQueue.poll(MutableQueue.EmptyMutableQueue))
-    offering = pipe(queue, MutableQueue.offer(next.value))
   }
 }
 
@@ -670,10 +616,10 @@ export const unsafeRemove = <A>(queue: MutableQueue.MutableQueue<A>, a: A): void
 }
 
 /** @internal */
-export const unsafeCompleteTakers = (
-  strategy: StrategyPrimitive,
-  queue: MutableQueue.MutableQueue<unknown>,
-  takers: MutableQueue.MutableQueue<Deferred.Deferred<never, unknown>>
+export const unsafeCompleteTakers = <A>(
+  strategy: Queue.Strategy<A>,
+  queue: MutableQueue.MutableQueue<A>,
+  takers: MutableQueue.MutableQueue<Deferred.Deferred<never, A>>
 ): void => {
   // Check both a taker and an item are in the queue, starting with the taker
   let keepPolling = true
@@ -683,7 +629,7 @@ export const unsafeCompleteTakers = (
       const element = pipe(queue, MutableQueue.poll(MutableQueue.EmptyMutableQueue))
       if (element !== MutableQueue.EmptyMutableQueue) {
         unsafeCompleteDeferred(taker, element)
-        unsafeOnQueueEmptySpace(strategy, queue, takers)
+        strategy.unsafeOnQueueEmptySpace(queue, takers)
       } else {
         unsafeOfferAll(takers, pipe(unsafePollAll(takers), List.prepend(taker)))
       }

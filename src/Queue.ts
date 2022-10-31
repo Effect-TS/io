@@ -2,7 +2,9 @@
  * @since 1.0.0
  */
 import type * as Deferred from "@effect/io/Deferred"
+import type * as Effect from "@effect/io/Effect"
 import * as internal from "@effect/io/internal/queue"
+import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as MutableQueue from "@fp-ts/data/mutable/MutableQueue"
 import type * as MutableRef from "@fp-ts/data/mutable/MutableRef"
 
@@ -42,8 +44,11 @@ export const QueueStrategyTypeId: unique symbol = internal.QueueStrategyTypeId
  */
 export type QueueStrategyTypeId = typeof QueueStrategyTypeId
 
-/** @internal */
-interface InternalQueueProperties<A> {
+/**
+ * @since 1.0.0
+ * @category models
+ */
+export interface Queue<A> extends Enqueue<A>, Dequeue<A> {
   /** @internal */
   readonly queue: MutableQueue.MutableQueue<A>
   /** @internal */
@@ -60,25 +65,91 @@ interface InternalQueueProperties<A> {
  * @since 1.0.0
  * @category models
  */
-export interface Queue<A> extends Enqueue<A>, Dequeue<A> {}
+export interface Enqueue<A> extends Queue.EnqueueVariance<A> {
+  /**
+   * Places one value in the queue.
+   */
+  offer(value: A): Effect.Effect<never, never, boolean>
+  /**
+   * For Bounded Queue: uses the `BackPressure` Strategy, places the values in
+   * the queue and always returns true. If the queue has reached capacity, then
+   * the fiber performing the `offerAll` will be suspended until there is room
+   * in the queue.
+   *
+   * For Unbounded Queue: Places all values in the queue and returns true.
+   *
+   * For Sliding Queue: uses `Sliding` Strategy If there is room in the queue,
+   * it places the values otherwise it removes the old elements and enqueues the
+   * new ones. Always returns true.
+   *
+   * For Dropping Queue: uses `Dropping` Strategy, It places the values in the
+   * queue but if there is no room it will not enqueue them and return false.
+   */
+  offerAll(iterable: Iterable<A>): Effect.Effect<never, never, boolean>
+}
 
 /**
  * @since 1.0.0
  * @category models
  */
-export interface Enqueue<A> extends InternalQueueProperties<A>, Queue.EnqueueVariance<A> {}
+export interface Dequeue<A> extends Queue.DequeueVariance<A> {
+  /**
+   * Takes the oldest value in the queue. If the queue is empty, this will return
+   * a computation that resumes when an item has been added to the queue.
+   */
+  take(): Effect.Effect<never, never, A>
+  /**
+   * Takes all the values in the queue and returns the values. If the queue is
+   * empty returns an empty collection.
+   */
+  takeAll(): Effect.Effect<never, never, Chunk.Chunk<A>>
+  /**
+   * Takes up to max number of values from the queue.
+   */
+  takeUpTo(max: number): Effect.Effect<never, never, Chunk.Chunk<A>>
+  /**
+   * Takes a number of elements from the queue between the specified minimum and
+   * maximum. If there are fewer than the minimum number of elements available,
+   * suspends until at least the minimum number of elements have been collected.
+   */
+  takeBetween(min: number, max: number): Effect.Effect<never, never, Chunk.Chunk<A>>
+}
 
 /**
  * @since 1.0.0
  * @category models
  */
-export interface Dequeue<A> extends InternalQueueProperties<A>, Queue.DequeueVariance<A> {}
-
-/**
- * @since 1.0.0
- * @category models
- */
-export interface Strategy<A> extends Queue.StrategyVariance<A> {}
+export interface Strategy<A> extends Queue.StrategyVariance<A> {
+  /**
+   * Returns the number of surplus values that were unable to be added to the
+   * `Queue`
+   */
+  get surplusSize(): number
+  /**
+   * Determines how the `Queue.Strategy` should shut down when the `Queue` is
+   * shut down.
+   */
+  get shutdown(): Effect.Effect<never, never, void>
+  /**
+   * Determines the behavior of the `Queue.Strategy` when there are surplus
+   * values that could not be added to the `Queue` following an `offer`
+   * operation.
+   */
+  handleSurplus(
+    iterable: Iterable<A>,
+    queue: MutableQueue.MutableQueue<A>,
+    takers: MutableQueue.MutableQueue<Deferred.Deferred<never, A>>,
+    isShutdown: MutableRef.MutableRef<boolean>
+  ): Effect.Effect<never, never, boolean>
+  /**
+   * Determines the behavior of the `Queue.Strategy` when the `Queue` has empty
+   * slots following a `take` operation.
+   */
+  unsafeOnQueueEmptySpace(
+    queue: MutableQueue.MutableQueue<A>,
+    takers: MutableQueue.MutableQueue<Deferred.Deferred<never, A>>
+  ): void
+}
 
 /**
  * @since 1.0.0
@@ -138,6 +209,24 @@ export const isDequeue = internal.isDequeue
  * @category refinements
  */
 export const isEnqueue = internal.isEnqueue
+
+/**
+ * @since 1.0.0
+ * @category strategies
+ */
+export const backPressureStrategy = internal.backPressureStrategy
+
+/**
+ * @since 1.0.0
+ * @category strategies
+ */
+export const droppingStrategy = internal.droppingStrategy
+
+/**
+ * @since 1.0.0
+ * @category strategies
+ */
+export const slidingStrategy = internal.slidingStrategy
 
 /**
  * Makes a new bounded `Queue`. When the capacity of the queue is reached, any
@@ -291,8 +380,8 @@ export const offerAll = internal.offerAll
 export const poll = internal.poll
 
 /**
- * Removes the oldest value in the queue. If the queue is empty, this will
- * return a computation that resumes when an item has been added to the queue.
+ * Takes the oldest value in the queue. If the queue is empty, this will return
+ * a computation that resumes when an item has been added to the queue.
  *
  * @since 1.0.0
  * @category mutations
@@ -300,7 +389,7 @@ export const poll = internal.poll
 export const take = internal.take
 
 /**
- * Removes all the values in the queue and returns the values. If the queue is
+ * Takes all the values in the queue and returns the values. If the queue is
  * empty returns an empty collection.
  *
  * @since 1.0.0
