@@ -1,5 +1,4 @@
 import type * as FiberId from "@effect/io/Fiber/Id"
-import type * as TExit from "@effect/io/STM/TExit"
 import * as Equal from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
 
@@ -7,64 +6,120 @@ import { pipe } from "@fp-ts/data/Function"
 const TExitSymbolKey = "@effect/io/TExit"
 
 /** @internal */
-export const TExitTypeId: TExit.TExitTypeId = Symbol.for(
-  TExitSymbolKey
-) as TExit.TExitTypeId
+export const TExitTypeId = Symbol.for(TExitSymbolKey)
 
 /** @internal */
-export const OP_FAIL: TExit.OP_FAIL = 0 as const
+export type TExitTypeId = typeof TExitTypeId
 
 /** @internal */
-export const OP_DIE: TExit.OP_DIE = 1 as const
+export type TExit<E, A> = Fail<E> | Die | Interrupt | Succeed<A> | Retry
 
 /** @internal */
-export const OP_INTERRUPT: TExit.OP_INTERRUPT = 2 as const
+export interface Variance<E, A> {
+  readonly [TExitTypeId]: {
+    readonly _E: (_: never) => E
+    readonly _A: (_: never) => A
+  }
+}
 
 /** @internal */
-export const OP_SUCCEED: TExit.OP_SUCCEED = 3 as const
-
-/** @internal */
-export const OP_RETRY: TExit.OP_RETRY = 4 as const
-
-/** @internal */
-export const tExitVariance = {
+const variance = {
   _E: (_: never) => _,
   _A: (_: never) => _
 }
 
 /** @internal */
-export const isTExit = (u: unknown): u is TExit.TExit<unknown, unknown> => {
+export const OP_FAIL = 0 as const
+
+/** @internal */
+export type OP_FAIL = typeof OP_FAIL
+
+/** @internal */
+export const OP_DIE = 1 as const
+
+/** @internal */
+export type OP_DIE = typeof OP_DIE
+
+/** @internal */
+export const OP_INTERRUPT = 2 as const
+
+/** @internal */
+export type OP_INTERRUPT = typeof OP_INTERRUPT
+
+/** @internal */
+export const OP_SUCCEED = 3 as const
+
+/** @internal */
+export type OP_SUCCEED = typeof OP_SUCCEED
+
+/** @internal */
+export const OP_RETRY = 4 as const
+
+/** @internal */
+export type OP_RETRY = typeof OP_RETRY
+
+/** @internal */
+export interface Fail<E> extends Variance<E, never>, Equal.Equal {
+  readonly op: OP_FAIL
+  readonly error: E
+}
+
+/** @internal */
+export interface Die extends Variance<never, never>, Equal.Equal {
+  readonly op: OP_DIE
+  readonly defect: unknown
+}
+
+/** @internal */
+export interface Interrupt extends Variance<never, never>, Equal.Equal {
+  readonly op: OP_INTERRUPT
+  readonly fiberId: FiberId.FiberId
+}
+
+/** @internal */
+export interface Succeed<A> extends Variance<never, A>, Equal.Equal {
+  readonly op: OP_SUCCEED
+  readonly value: A
+}
+
+/** @internal */
+export interface Retry extends Variance<never, never>, Equal.Equal {
+  readonly op: OP_RETRY
+}
+
+/** @internal */
+export const isTExit = (u: unknown): u is TExit<unknown, unknown> => {
   return typeof u === "object" && u != null && TExitTypeId in u
 }
 
 /** @internal */
-export const isFail = <E, A>(self: TExit.TExit<E, A>): self is TExit.Fail<E> => {
+export const isFail = <E, A>(self: TExit<E, A>): self is Fail<E> => {
   return self.op === OP_FAIL
 }
 
 /** @internal */
-export const isDie = <E, A>(self: TExit.TExit<E, A>): self is TExit.Die => {
+export const isDie = <E, A>(self: TExit<E, A>): self is Die => {
   return self.op === OP_DIE
 }
 
 /** @internal */
-export const isInterrupt = <E, A>(self: TExit.TExit<E, A>): self is TExit.Interrupt => {
+export const isInterrupt = <E, A>(self: TExit<E, A>): self is Interrupt => {
   return self.op === OP_INTERRUPT
 }
 
 /** @internal */
-export const isSuccess = <E, A>(self: TExit.TExit<E, A>): self is TExit.Succeed<A> => {
+export const isSuccess = <E, A>(self: TExit<E, A>): self is Succeed<A> => {
   return self.op === OP_SUCCEED
 }
 
 /** @internal */
-export const isRetry = <E, A>(self: TExit.TExit<E, A>): self is TExit.Retry => {
+export const isRetry = <E, A>(self: TExit<E, A>): self is Retry => {
   return self.op === OP_RETRY
 }
 
 /** @internal */
-export const fail = <E>(error: E): TExit.TExit<E, never> => ({
-  [TExitTypeId]: tExitVariance,
+export const fail = <E>(error: E): TExit<E, never> => ({
+  [TExitTypeId]: variance,
   op: OP_FAIL,
   error,
   [Equal.symbolHash](): number {
@@ -80,8 +135,8 @@ export const fail = <E>(error: E): TExit.TExit<E, never> => ({
 })
 
 /** @internal */
-export const die = (defect: unknown): TExit.TExit<never, never> => ({
-  [TExitTypeId]: tExitVariance,
+export const die = (defect: unknown): TExit<never, never> => ({
+  [TExitTypeId]: variance,
   op: OP_DIE,
   defect,
   [Equal.symbolHash](): number {
@@ -97,8 +152,8 @@ export const die = (defect: unknown): TExit.TExit<never, never> => ({
 })
 
 /** @internal */
-export const interrupt = (fiberId: FiberId.FiberId): TExit.TExit<never, never> => ({
-  [TExitTypeId]: tExitVariance,
+export const interrupt = (fiberId: FiberId.FiberId): TExit<never, never> => ({
+  [TExitTypeId]: variance,
   op: OP_INTERRUPT,
   fiberId,
   [Equal.symbolHash](): number {
@@ -114,8 +169,8 @@ export const interrupt = (fiberId: FiberId.FiberId): TExit.TExit<never, never> =
 })
 
 /** @internal */
-export const succeed = <A>(value: A): TExit.TExit<never, A> => ({
-  [TExitTypeId]: tExitVariance,
+export const succeed = <A>(value: A): TExit<never, A> => ({
+  [TExitTypeId]: variance,
   op: OP_SUCCEED,
   value,
   [Equal.symbolHash](): number {
@@ -134,8 +189,8 @@ export const succeed = <A>(value: A): TExit.TExit<never, A> => ({
 const retryHash = Equal.hashRandom({ OP_RETRY })
 
 /** @internal */
-export const retry: TExit.TExit<never, never> = ({
-  [TExitTypeId]: tExitVariance,
+export const retry: TExit<never, never> = ({
+  [TExitTypeId]: variance,
   op: OP_RETRY,
   [Equal.symbolHash](): number {
     return pipe(
@@ -150,4 +205,4 @@ export const retry: TExit.TExit<never, never> = ({
 })
 
 /** @internal */
-export const unit = (): TExit.TExit<never, void> => succeed(undefined)
+export const unit = (): TExit<never, void> => succeed(undefined)
