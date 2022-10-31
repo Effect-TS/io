@@ -1936,4 +1936,3 @@ const interruptDeferredJoiner = <E, A>(
     }
   })
 }
-
