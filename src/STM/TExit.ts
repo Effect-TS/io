@@ -1,3 +1,6 @@
+/**
+ * @since 1.0.0
+ */
 import type * as FiberId from "@effect/io/Fiber/Id"
 import * as internal from "@effect/io/internal/stm/tExit"
 import type * as Equal from "@fp-ts/data/Equal"
