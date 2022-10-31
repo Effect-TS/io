@@ -1,5 +1,6 @@
 import * as Cause from "@effect/io/Cause"
 import { getCallTrace, runtimeDebug } from "@effect/io/Debug"
+import type * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
 import * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
 import type * as Exit from "@effect/io/Exit"
@@ -9,6 +10,7 @@ import * as FiberRuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import * as FiberRuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
 import type * as FiberStatus from "@effect/io/Fiber/Status"
 import type * as FiberRef from "@effect/io/FiberRef"
+import * as deferred from "@effect/io/internal/deferred"
 import * as OpCodes from "@effect/io/internal/opCodes/effect"
 import * as Scheduler from "@effect/io/internal/scheduler"
 import type * as LogLevel from "@effect/io/Logger/Level"
@@ -18,12 +20,13 @@ import * as Context from "@fp-ts/data/Context"
 import * as Differ from "@fp-ts/data/Differ"
 import * as ContextPatch from "@fp-ts/data/Differ/ContextPatch"
 import * as HashSetPatch from "@fp-ts/data/Differ/HashSetPatch"
-import type * as Either from "@fp-ts/data/Either"
+import * as Either from "@fp-ts/data/Either"
 import * as Equal from "@fp-ts/data/Equal"
 import type { LazyArg } from "@fp-ts/data/Function"
 import { identity, pipe } from "@fp-ts/data/Function"
 import type * as HashSet from "@fp-ts/data/HashSet"
 import * as List from "@fp-ts/data/List"
+import * as MutableRef from "@fp-ts/data/mutable/MutableRef"
 import * as Option from "@fp-ts/data/Option"
 import type { Predicate } from "@fp-ts/data/Predicate"
 
@@ -185,6 +188,41 @@ export const async = <R, E, A>(
 }
 
 /** @internal */
+export const asyncInterrupt = <R, E, A>(
+  register: (
+    callback: (_: Effect.Effect<R, E, A>) => void
+  ) => Either.Either<Effect.Effect<R, never, void>, Effect.Effect<R, E, A>>
+): Effect.Effect<R, E, A> => {
+  return asyncInterruptBlockingOn(register, FiberId.none)
+}
+
+/** @internal */
+export const asyncInterruptBlockingOn = <R, E, A>(
+  register: (
+    callback: (effect: Effect.Effect<R, E, A>) => void
+  ) => Either.Either<Effect.Effect<R, never, void>, Effect.Effect<R, E, A>>,
+  blockingOn: FiberId.FiberId
+): Effect.Effect<R, E, A> => {
+  return suspendSucceed(() => {
+    let cancelerRef: Effect.Effect<R, never, void> = unit()
+    return pipe(
+      async<R, E, A>(
+        (resume) => {
+          const result = register(resume)
+          if (Either.isRight(result)) {
+            resume(result.right)
+          } else {
+            cancelerRef = result.left
+          }
+        },
+        blockingOn
+      ),
+      onInterrupt(() => cancelerRef)
+    )
+  })
+}
+
+/** @internal */
 export const failCause = <E>(cause: Cause.Cause<E>): Effect.Effect<never, E, never> => {
   const trace = getCallTrace()
   const effect = Object.create(proto)
@@ -195,9 +233,33 @@ export const failCause = <E>(cause: Cause.Cause<E>): Effect.Effect<never, E, nev
 }
 
 /** @internal */
+export function failCauseSync<E>(evaluate: () => Cause.Cause<E>): Effect.Effect<never, E, never> {
+  const trace = getCallTrace()
+  return pipe(sync(evaluate), flatMap(failCause)).traced(trace)
+}
+
+/** @internal */
 export const fail = <E>(error: E): Effect.Effect<never, E, never> => {
   const trace = getCallTrace()
   return failCause(Cause.fail(error)).traced(trace)
+}
+
+/** @internal */
+export const failSync = <E>(evaluate: () => E): Effect.Effect<never, E, never> => {
+  const trace = getCallTrace()
+  return failCauseSync(() => Cause.fail(evaluate())).traced(trace)
+}
+
+/** @internal */
+export const die = (defect: unknown): Effect.Effect<never, never, never> => {
+  const trace = getCallTrace()
+  return failCause(Cause.die(defect)).traced(trace)
+}
+
+/** @internal */
+export const dieSync = (evaluate: () => unknown): Effect.Effect<never, never, never> => {
+  const trace = getCallTrace()
+  return failCauseSync(() => Cause.die(evaluate())).traced(trace)
 }
 
 /** @internal */
@@ -396,6 +458,68 @@ export const interruptibleMask = <R, E, A>(
 }
 
 /** @internal */
+export const interrupt = (): Effect.Effect<never, never, never> => {
+  return pipe(fiberId(), flatMap((fiberId) => interruptAs(fiberId)))
+}
+
+/** @internal */
+export const interruptAs = (fiberId: FiberId.FiberId): Effect.Effect<never, never, never> => {
+  return failCause(Cause.interrupt(fiberId))
+}
+
+/** @internal */
+export const onInterrupt = <R2, X>(
+  cleanup: (interruptors: HashSet.HashSet<FiberId.FiberId>) => Effect.Effect<R2, never, X>
+) => {
+  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E, A> =>
+    uninterruptibleMask((restore) =>
+      pipe(
+        restore(self),
+        foldCauseEffect(
+          (cause) =>
+            Cause.isInterrupted(cause)
+              ? pipe(cleanup(Cause.interruptors(cause)), zipRight(failCause(cause)))
+              : failCause(cause),
+          succeed
+        )
+      )
+    )
+}
+
+export const onInterruptPolymorphic = <R2, E2, X>(
+  cleanup: (interruptors: HashSet.HashSet<FiberId.FiberId>) => Effect.Effect<R2, E2, X>
+) => {
+  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, A> =>
+    uninterruptibleMask((restore) =>
+      pipe(
+        restore(self),
+        foldCauseEffect(
+          (cause) =>
+            Cause.isInterrupted(cause)
+              ? pipe(
+                cleanup(Cause.interruptors(cause)),
+                foldCauseEffect(
+                  failCause,
+                  () => failCause(cause)
+                )
+              )
+              : failCause(cause),
+          succeed
+        )
+      )
+    )
+}
+
+/** @internal */
+export const intoDeferred = <E, A>(deferred: Deferred.Deferred<E, A>) => {
+  return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, boolean> => {
+    return uninterruptibleMask((restore) =>
+      pipe(restore(self), exit, flatMap((exit) => pipe(deferred, doneDeferred(exit))))
+    )
+  }
+}
+
+/** @internal */
 export const withRuntimeFlags = (
   update: FiberRuntimeFlagsPatch.RuntimeFlagsPatch
 ) => {
@@ -463,6 +587,12 @@ export const traced = (trace: string | undefined) => <R, E, A>(self: Effect.Effe
 export const exit = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Exit.Exit<E, A>> => {
   const trace = getCallTrace()
   return pipe(self, foldCause(failCause, succeed)).traced(trace) as Effect.Effect<R, never, Exit.Exit<E, A>>
+}
+
+/** @internal */
+export const fiberId = (): Effect.Effect<never, never, FiberId.FiberId> => {
+  // TODO(Max): remove cast to any
+  return withFiberRuntime((state) => succeed((state as any).id))
 }
 
 /** @internal */
@@ -1605,3 +1735,205 @@ const exitCollectAllInternal = <E, A>(
     Option.some
   )
 }
+
+// -----------------------------------------------------------------------------
+// Deferred
+// -----------------------------------------------------------------------------
+
+/** @internal */
+export const unsafeMakeDeferred = <E, A>(fiberId: FiberId.FiberId): Deferred.Deferred<E, A> => {
+  return {
+    [deferred.DeferredTypeId]: deferred.variance,
+    state: MutableRef.make(deferred.pending([])),
+    blockingOn: fiberId
+  }
+}
+
+/** @internal */
+export const makeDeferred = <E, A>(): Effect.Effect<never, never, Deferred.Deferred<E, A>> => {
+  return pipe(fiberId(), flatMap((id) => makeAsDeferred(id)))
+}
+
+/** @internal */
+export const makeAsDeferred = <E, A>(
+  fiberId: FiberId.FiberId
+): Effect.Effect<never, never, Deferred.Deferred<E, A>> => {
+  return sync(() => unsafeMakeDeferred(fiberId))
+}
+
+/** @internal */
+export const succeedDeferred = <A>(value: A) => {
+  return <E>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
+    return pipe(self, completeWithDeferred(succeed(value) as Effect.Effect<never, E, A>))
+  }
+}
+
+/** @internal */
+export const syncDeferred = <A>(evaluate: () => A) => {
+  return <E>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
+    return pipe(self, completeWithDeferred(sync(evaluate) as Effect.Effect<never, E, A>))
+  }
+}
+
+/** @internal */
+export const failDeferred = <E>(error: E) => {
+  return <A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
+    return pipe(self, completeWithDeferred(fail(error) as Effect.Effect<never, E, A>))
+  }
+}
+
+/** @internal */
+export const failSyncDeferred = <E>(evaluate: () => E) => {
+  return <A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
+    return pipe(self, completeWithDeferred(failSync(evaluate) as Effect.Effect<never, E, A>))
+  }
+}
+
+/** @internal */
+export const failCauseDeferred = <E>(cause: Cause.Cause<E>) => {
+  return <A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
+    return pipe(self, completeWithDeferred(failCause(cause) as Effect.Effect<never, E, A>))
+  }
+}
+
+/** @internal */
+export const failCauseSyncDeferred = <E>(evaluate: () => Cause.Cause<E>) => {
+  return <A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
+    return pipe(self, completeWithDeferred(failCauseSync(evaluate) as Effect.Effect<never, E, A>))
+  }
+}
+
+/** @internal */
+export const dieDeferred = (defect: unknown) => {
+  return <E, A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
+    return pipe(self, completeWithDeferred(die(defect) as Effect.Effect<never, E, A>))
+  }
+}
+
+/** @internal */
+export const dieSyncDeferred = (evaluate: () => unknown) => {
+  return <E, A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
+    return pipe(self, completeWithDeferred(dieSync(evaluate) as Effect.Effect<never, E, A>))
+  }
+}
+
+/** @internal */
+export const doneDeferred = <E, A>(exit: Exit.Exit<E, A>) => {
+  return (self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
+    return pipe(self, completeWithDeferred(done(exit)))
+  }
+}
+
+/** @internal */
+export const unsafeDoneDeferred = <E, A>(effect: Effect.Effect<never, E, A>) => {
+  return (self: Deferred.Deferred<E, A>): void => {
+    const state = MutableRef.get(self.state)
+    if (state.op === deferred.OP_STATE_PENDING) {
+      pipe(self.state, MutableRef.set(deferred.done(effect)))
+      Array.from(state.joiners).reverse().forEach((f) => {
+        f(effect)
+      })
+    }
+  }
+}
+
+/** @internal */
+export const interruptDeferred = <E, A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
+  return pipe(
+    fiberId(),
+    flatMap((fiberId) => pipe(self, completeWithDeferred(interruptAs(fiberId) as Effect.Effect<never, E, A>)))
+  )
+}
+
+/** @internal */
+export const interruptAsDeferred = (fiberId: FiberId.FiberId) => {
+  return <E, A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
+    return pipe(self, completeWithDeferred(interruptAs(fiberId) as Effect.Effect<never, E, A>))
+  }
+}
+
+/** @internal */
+export const awaitDeferred = <E, A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, E, A> => {
+  return asyncInterruptBlockingOn((k) => {
+    const state = MutableRef.get(self.state)
+    switch (state.op) {
+      case deferred.OP_STATE_DONE: {
+        return Either.right(state.effect)
+      }
+      case deferred.OP_STATE_PENDING: {
+        pipe(
+          self.state,
+          MutableRef.set(deferred.pending([k, ...state.joiners]))
+        )
+        return Either.left(interruptDeferredJoiner(self, k))
+      }
+    }
+  }, self.blockingOn)
+}
+
+/** @internal */
+export const completeDeferred = <E, A>(effect: Effect.Effect<never, E, A>) => {
+  return (self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
+    return pipe(effect, intoDeferred(self))
+  }
+}
+
+/** @internal */
+export const completeWithDeferred = <E, A>(effect: Effect.Effect<never, E, A>) => {
+  return (self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
+    return sync(() => {
+      const state = MutableRef.get(self.state)
+      switch (state.op) {
+        case deferred.OP_STATE_DONE: {
+          return false
+        }
+        case deferred.OP_STATE_PENDING: {
+          pipe(self.state, MutableRef.set(deferred.done(effect)))
+          state.joiners.forEach((f) => {
+            f(effect)
+          })
+          return true
+        }
+      }
+    })
+  }
+}
+
+/** @internal */
+export const isDoneDeferred = <E, A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
+  return sync(() => MutableRef.get(self.state).op === deferred.OP_STATE_DONE)
+}
+
+/** @internal */
+export const pollDeferred = <E, A>(
+  self: Deferred.Deferred<E, A>
+): Effect.Effect<never, never, Option.Option<Effect.Effect<never, E, A>>> => {
+  return sync(() => {
+    const state = MutableRef.get(self.state)
+    switch (state.op) {
+      case deferred.OP_STATE_DONE: {
+        return Option.some(state.effect)
+      }
+      case deferred.OP_STATE_PENDING: {
+        return Option.none
+      }
+    }
+  })
+}
+
+/** @internal */
+const interruptDeferredJoiner = <E, A>(
+  self: Deferred.Deferred<E, A>,
+  joiner: (effect: Effect.Effect<never, E, A>) => void
+): Effect.Effect<never, never, void> => {
+  return sync(() => {
+    const state = MutableRef.get(self.state)
+    if (state.op === deferred.OP_STATE_PENDING) {
+      pipe(
+        self.state,
+        MutableRef.set(deferred.pending(state.joiners.filter((j) => j !== joiner)))
+      )
+    }
+  })
+}
+
