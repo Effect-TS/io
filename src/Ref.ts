@@ -1,14 +1,18 @@
 /**
  * @since 1.0.0
  */
-import type * as Effect from "@effect/io/Effect"
-import * as ref from "@effect/io/internal/ref"
+import * as internal from "@effect/io/internal/ref"
+import type * as Journal from "@effect/io/internal/stm/journal"
+import type * as TxnId from "@effect/io/internal/stm/txnId"
+import type * as Versioned from "@effect/io/internal/stm/versioned"
+import type * as HashMap from "@fp-ts/data/HashMap"
+import type * as MutableRef from "@fp-ts/data/mutable/MutableRef"
 
 /**
  * @since 1.0.0
  * @category symbols
  */
-export const RefTypeId: unique symbol = ref.RefTypeId
+export const RefTypeId: unique symbol = internal.RefTypeId
 
 /**
  * @since 1.0.0
@@ -22,7 +26,9 @@ export type RefTypeId = typeof RefTypeId
  */
 export interface Ref<A> extends Ref.Variance<A> {
   /** @internal */
-  modify<B>(f: (a: A) => readonly [B, A]): Effect.Effect<never, never, B>
+  readonly todos: MutableRef.MutableRef<HashMap.HashMap<TxnId.TxnId, Journal.Todo>>
+  /** @internal */
+  versioned: Versioned.Versioned<A>
 }
 
 /**
@@ -38,85 +44,97 @@ export namespace Ref {
 }
 
 /**
- * @category constructors
  * @since 1.0.0
- */
-export const make = ref.refMake
-
-/**
- * @category getters
- * @since 1.0.0
- */
-export const get = ref.refGet
-
-/**
- * @category mutations
- * @since 1.0.0
- */
-export const getAndSet = ref.refGetAndSet
-
-/**
- * @category mutations
- * @since 1.0.0
- */
-export const getAndUpdate = ref.refGetAndUpdate
-
-/**
- * @category mutations
- * @since 1.0.0
- */
-export const getAndUpdateSome = ref.refGetAndUpdateSome
-
-/**
- * @category mutations
- * @since 1.0.0
- */
-export const modify = ref.refModify
-
-/**
- * @category mutations
- * @since 1.0.0
- */
-export const modifySome = ref.refModifySome
-
-/**
- * @category mutations
- * @since 1.0.0
- */
-export const set = ref.refSet
-
-/**
- * @category mutations
- * @since 1.0.0
- */
-export const setAndGet = ref.refSetAndGet
-
-/**
  * @category unsafe
- * @since 1.0.0
  */
-export const unsafeMake = ref.refUnsafeMake
+export const unsafeMake = internal.unsafeMake
+
+/**
+ * @since 1.0.0
+ * @category unsafe
+ */
+export const unsafeGet = internal.unsafeGet
+
+/**
+ * @since 1.0.0
+ * @category unsafe
+ */
+export const unsafeSet = internal.unsafeSet
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const make = internal.make
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const makeCommit = internal.makeCommit
+
+/**
+ * @since 1.0.0
+ * @category getters
+ */
+export const get = internal.get
+
+/**
+ * @since 1.0.0
+ * @category mutations
+ */
+export const getAndSet = internal.getAndSet
+
+/**
+ * @since 1.0.0
+ * @category mutations
+ */
+export const getAndUpdate = internal.getAndUpdate
+
+/**
+ * @since 1.0.0
+ * @category mutations
+ */
+export const getAndUpdateSome = internal.getAndUpdateSome
+
+/**
+ * @since 1.0.0
+ * @category mutations
+ */
+export const set = internal.set
+
+/**
+ * @since 1.0.0
+ * @category mutations
+ */
+export const modify = internal.modify
+
+/**
+ * @since 1.0.0
+ * @category mutations
+ */
+export const modifySome = internal.modifySome
 
 /**
  * @category mutations
  * @since 1.0.0
  */
-export const update = ref.refUpdate
+export const update = internal.update
 
 /**
  * @category mutations
  * @since 1.0.0
  */
-export const updateAndGet = ref.refUpdateAndGet
+export const updateAndGet = internal.updateAndGet
 
 /**
  * @category mutations
  * @since 1.0.0
  */
-export const updateSome = ref.refUpdateSome
+export const updateSome = internal.updateSome
 
 /**
  * @category mutations
  * @since 1.0.0
  */
-export const updateSomeAndGet = ref.refUpdateSomeAndGet
+export const updateSomeAndGet = internal.updateSomeAndGet
