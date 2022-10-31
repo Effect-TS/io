@@ -1,9 +1,6 @@
 import * as Entry from "@effect/io/internal/stm/entry"
 import type * as TxnId from "@effect/io/internal/stm/txnId"
 import type * as Ref from "@effect/io/STM/Ref"
-import { pipe } from "@fp-ts/data/Function"
-import * as HashMap from "@fp-ts/data/HashMap"
-import * as MutableRef from "@fp-ts/data/mutable/MutableRef"
 
 /** @internal */
 export type Journal = Map<Ref.Ref<unknown>, Entry.Entry>
@@ -31,8 +28,6 @@ export const JournalAnalysisReadOnly = 2 as const
 
 /** @internal */
 export type JournalAnalysisReadOnly = typeof JournalAnalysisReadOnly
-
-const emptyTodoMap: HashMap.HashMap<TxnId.TxnId, Todo> = HashMap.empty()
 
 /** @internal */
 export const prepareResetJournal = (journal: Journal): () => unknown => {
@@ -81,19 +76,19 @@ export const analyzeJournal = (journal: Journal): JournalAnalysis => {
 export const collectTodos = (journal: Journal): Map<TxnId.TxnId, Todo> => {
   const allTodos: Map<TxnId.TxnId, Todo> = new Map()
   for (const [, entry] of journal) {
-    const todos = MutableRef.get(entry.ref.todos)
-    for (const todo of todos) {
+    for (const todo of entry.ref.todos) {
       allTodos.set(todo[0], todo[1])
     }
-    pipe(entry.ref.todos, MutableRef.set(emptyTodoMap))
+    entry.ref.todos = new Map()
   }
   return allTodos
 }
 
 /** @internal */
 export const execTodos = (todos: Map<TxnId.TxnId, Todo>) => {
-  for (const todo of todos) {
-    todo[1]()
+  const todoKeys = Array.from(todos.keys()).sort()
+  for (const todo of todoKeys) {
+    todos.get(todo)![1]()
   }
 }
 
@@ -105,10 +100,8 @@ export const addTodo = (
 ): boolean => {
   let added = false
   for (const [, entry] of journal) {
-    const oldTodo = MutableRef.get(entry.ref.todos)
-    if (!pipe(oldTodo, HashMap.has(txnId))) {
-      const newTodo = pipe(oldTodo, HashMap.set(txnId, todoEffect))
-      pipe(entry.ref.todos, MutableRef.set(newTodo))
+    if (!entry.ref.todos.has(txnId)) {
+      entry.ref.todos.set(txnId, todoEffect)
       added = true
     }
   }

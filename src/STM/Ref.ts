@@ -5,8 +5,7 @@ import * as internal from "@effect/io/internal/ref"
 import type * as Journal from "@effect/io/internal/stm/journal"
 import type * as TxnId from "@effect/io/internal/stm/txnId"
 import type * as Versioned from "@effect/io/internal/stm/versioned"
-import type * as HashMap from "@fp-ts/data/HashMap"
-import type * as MutableRef from "@fp-ts/data/mutable/MutableRef"
+import type * as STM from "@effect/io/STM"
 
 /**
  * @since 1.0.0
@@ -24,9 +23,21 @@ export type RefTypeId = typeof RefTypeId
  * @since 1.0.0
  * @category models
  */
+export interface RefConstructor {
+  new<A>(value: A): Ref<A>
+}
+
+/**
+ * @since 1.0.0
+ * @category models
+ */
 export interface Ref<A> extends Ref.Variance<A> {
+  /**
+   * Note: the method is unbound, exposed only for potential extensions.
+   */
+  modify<B>(f: (a: A) => readonly [B, A]): STM.STM<never, never, B>
   /** @internal */
-  readonly todos: MutableRef.MutableRef<HashMap.HashMap<TxnId.TxnId, Journal.Todo>>
+  todos: Map<TxnId.TxnId, Journal.Todo>
   /** @internal */
   versioned: Versioned.Versioned<A>
 }
@@ -47,31 +58,13 @@ export namespace Ref {
  * @since 1.0.0
  * @category unsafe
  */
-export const unsafeMake = internal.unsafeMake
-
-/**
- * @since 1.0.0
- * @category unsafe
- */
-export const unsafeGet = internal.unsafeGet
-
-/**
- * @since 1.0.0
- * @category unsafe
- */
-export const unsafeSet = internal.unsafeSet
+export const UnsafeRef: RefConstructor = internal.RefImpl
 
 /**
  * @since 1.0.0
  * @category constructors
  */
 export const make = internal.make
-
-/**
- * @since 1.0.0
- * @category constructors
- */
-export const makeCommit = internal.makeCommit
 
 /**
  * @since 1.0.0

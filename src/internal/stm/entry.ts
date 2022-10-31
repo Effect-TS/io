@@ -31,7 +31,7 @@ export const unsafeSet = (self: Entry, value: unknown): void => {
 
 /** @internal */
 export const commit = (self: Entry): void => {
-  self.ref.versioned = Versioned.make(self.newValue)
+  self.ref.versioned = new Versioned.Versioned(self.newValue)
 }
 
 /** @internal */
