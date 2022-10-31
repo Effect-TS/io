@@ -1,9 +1,9 @@
 import * as internal from "@effect/io/internal/stm"
+import type * as STM from "@effect/io/internal/stm"
 import * as Entry from "@effect/io/internal/stm/entry"
 import type * as Journal from "@effect/io/internal/stm/journal"
 import type * as TxnId from "@effect/io/internal/stm/txnId"
 import * as Versioned from "@effect/io/internal/stm/versioned"
-import type * as STM from "@effect/io/STM"
 import { pipe } from "@fp-ts/data/Function"
 import * as Option from "@fp-ts/data/Option"
 

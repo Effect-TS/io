@@ -13,15 +13,27 @@ import * as Journal from "@effect/io/internal/stm/journal"
 import * as STMState from "@effect/io/internal/stm/state"
 import * as TryCommit from "@effect/io/internal/stm/tryCommit"
 import * as TxnId from "@effect/io/internal/stm/txnId"
-import type * as STM from "@effect/io/STM"
 import type * as Context from "@fp-ts/data/Context"
 import * as Either from "@fp-ts/data/Either"
 import * as Equal from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
 import * as MutableRef from "@fp-ts/data/mutable/MutableRef"
 
-/** @internal */
-export const STMTypeId: STM.STMTypeId = Symbol.for("@effect/io/STM") as STM.STMTypeId
+export const STMTypeId = Symbol.for("@effect/stm/STM")
+
+export type STMTypeId = typeof STMTypeId
+
+export interface STM<R, E, A> extends STM.Variance<R, E, A>, Effect.Effect<R, E, A> {}
+
+export declare namespace STM {
+  export interface Variance<R, E, A> {
+    readonly [STMTypeId]: {
+      readonly _R: (_: never) => R
+      readonly _E: (_: never) => E
+      readonly _A: (_: never) => A
+    }
+  }
+}
 
 export type Primitive =
   | STMEffect
@@ -32,26 +44,22 @@ export type Primitive =
   | STMSucceed
   | STMSucceedNow
 
-/** @internal */
 const stmVariance = {
   _R: (_: never) => _,
   _E: (_: never) => _,
   _A: (_: never) => _
 }
 
-/** @internal */
 const proto = Object.assign({}, core.proto, {
   [STMTypeId]: stmVariance,
   op: EffectOpCodes.OP_COMMIT
 })
 
-/** @internal */
-type STMOp<OpCode extends number, Body = {}> = STM.STM<never, never, never> & Body & {
+type STMOp<OpCode extends number, Body = {}> = STM<never, never, never> & Body & {
   readonly op: EffectOpCodes.OP_COMMIT
   readonly opSTM: OpCode
 }
 
-/** @internal */
 interface STMEffect extends
   STMOp<STMOpCodes.OP_EFFECT, {
     readonly evaluate: (
@@ -62,40 +70,35 @@ interface STMEffect extends
   }>
 {}
 
-/** @internal */
 interface STMOnFailure extends
   STMOp<STMOpCodes.OP_ON_FAILURE, {
-    readonly first: STM.STM<unknown, unknown, unknown>
-    readonly failK: (error: unknown) => STM.STM<unknown, unknown, unknown>
+    readonly first: STM<unknown, unknown, unknown>
+    readonly failK: (error: unknown) => STM<unknown, unknown, unknown>
   }>
 {}
 
-/** @internal */
 interface STMOnRetry extends
   STMOp<STMOpCodes.OP_ON_RETRY, {
     readonly opSTM: STMOpCodes.OP_ON_RETRY
-    readonly first: STM.STM<unknown, unknown, unknown>
-    readonly retryK: () => STM.STM<unknown, unknown, unknown>
+    readonly first: STM<unknown, unknown, unknown>
+    readonly retryK: () => STM<unknown, unknown, unknown>
   }>
 {}
 
-/** @internal */
 interface STMOnSuccess extends
   STMOp<STMOpCodes.OP_ON_SUCCESS, {
-    readonly first: STM.STM<unknown, unknown, unknown>
-    readonly successK: (a: unknown) => STM.STM<unknown, unknown, unknown>
+    readonly first: STM<unknown, unknown, unknown>
+    readonly successK: (a: unknown) => STM<unknown, unknown, unknown>
   }>
 {}
 
-/** @internal */
 interface STMProvide extends
   STMOp<STMOpCodes.OP_PROVIDE, {
-    readonly stm: STM.STM<unknown, unknown, unknown>
+    readonly stm: STM<unknown, unknown, unknown>
     readonly provide: (context: Context.Context<unknown>) => Context.Context<unknown>
   }>
 {}
 
-/** @internal */
 interface STMSucceed extends
   STMOp<STMOpCodes.OP_SUCCEED, {
     readonly opSTM: STMOpCodes.OP_SUCCEED
@@ -103,7 +106,6 @@ interface STMSucceed extends
   }>
 {}
 
-/** @internal */
 interface STMSucceedNow extends
   STMOp<STMOpCodes.OP_SUCCEED_NOW, {
     readonly opSTM: STMOpCodes.OP_SUCCEED_NOW
@@ -111,73 +113,78 @@ interface STMSucceedNow extends
   }>
 {}
 
-/** @internal */
-export const STMFailExceptionTypeId: STM.STMFailExceptionTypeId = Symbol.for(
-  "@effect/io/STM/FailException"
-) as STM.STMFailExceptionTypeId
+export const STMFailExceptionTypeId = Symbol.for("@effect/stm/STM/FailException")
 
-/** @internal */
-export class STMFailException<E> implements STM.STMFailException<E> {
-  readonly [STMFailExceptionTypeId]: STM.STMFailExceptionTypeId = STMFailExceptionTypeId
+export type STMFailExceptionTypeId = typeof STMFailExceptionTypeId
+
+export interface STMFailException<E> {
+  readonly [STMFailExceptionTypeId]: STMFailExceptionTypeId
+  readonly error: E
+}
+
+export class STMFailException<E> implements STMFailException<E> {
+  readonly [STMFailExceptionTypeId]: STMFailExceptionTypeId = STMFailExceptionTypeId
   constructor(readonly error: E) {}
 }
 
-/** @internal */
-export const isFailException = (u: unknown): u is STM.STMFailException<unknown> => {
+export const isFailException = (u: unknown): u is STMFailException<unknown> => {
   return typeof u === "object" && u != null && STMFailExceptionTypeId in u
 }
 
-/** @internal */
-export const STMDieExceptionTypeId: STM.STMDieExceptionTypeId = Symbol.for(
-  "@effect/io/STM/DieException"
-) as STM.STMDieExceptionTypeId
+export const STMDieExceptionTypeId = Symbol.for("@effect/stm/STM/DieException")
 
-/** @internal */
-export class STMDieException implements STM.STMDieException {
-  readonly [STMDieExceptionTypeId]: STM.STMDieExceptionTypeId = STMDieExceptionTypeId
+export type STMDieExceptionTypeId = typeof STMDieExceptionTypeId
+
+export interface STMDieException {
+  readonly [STMDieExceptionTypeId]: STMDieExceptionTypeId
+  readonly defect: unknown
+}
+
+export class STMDieException implements STMDieException {
+  readonly [STMDieExceptionTypeId]: STMDieExceptionTypeId = STMDieExceptionTypeId
   constructor(readonly defect: unknown) {}
 }
 
-/** @internal */
-export const isDieException = (u: unknown): u is STM.STMDieException => {
+export const isDieException = (u: unknown): u is STMDieException => {
   return typeof u === "object" && u != null && STMDieExceptionTypeId in u
 }
 
-/** @internal */
-export const STMInterruptExceptionTypeId: STM.STMInterruptExceptionTypeId = Symbol.for(
-  "@effect/io/STM/InterruptException"
-) as STM.STMInterruptExceptionTypeId
+export const STMInterruptExceptionTypeId = Symbol.for("@effect/stm/STM/InterruptException")
 
-/** @internal */
-export class STMInterruptException implements STM.STMInterruptException {
-  readonly [STMInterruptExceptionTypeId]: STM.STMInterruptExceptionTypeId = STMInterruptExceptionTypeId
+export type STMInterruptExceptionTypeId = typeof STMInterruptExceptionTypeId
+
+export interface STMInterruptException {
+  readonly [STMInterruptExceptionTypeId]: STMInterruptExceptionTypeId
+  readonly fiberId: FiberId.FiberId
+}
+export class STMInterruptException implements STMInterruptException {
+  readonly [STMInterruptExceptionTypeId]: STMInterruptExceptionTypeId = STMInterruptExceptionTypeId
   constructor(readonly fiberId: FiberId.FiberId) {}
 }
 
-/** @internal */
-export const isInterruptException = (u: unknown): u is STM.STMInterruptException => {
+export const isInterruptException = (u: unknown): u is STMInterruptException => {
   return typeof u === "object" && u != null && STMInterruptExceptionTypeId in u
 }
 
-/** @internal */
-export const STMRetryExceptionTypeId: STM.STMRetryExceptionTypeId = Symbol.for(
-  "@effect/io/STM/RetryException"
-) as STM.STMRetryExceptionTypeId
+export const STMRetryExceptionTypeId = Symbol.for("@effect/stm/STM/RetryException")
 
-/** @internal */
-export class STMRetryException {
-  readonly [STMRetryExceptionTypeId]: STM.STMRetryExceptionTypeId = STMRetryExceptionTypeId
+export type STMRetryExceptionTypeId = typeof STMRetryExceptionTypeId
+
+export interface STMRetryException {
+  readonly [STMRetryExceptionTypeId]: STMRetryExceptionTypeId
 }
 
-/** @internal */
-export const isRetryException = (u: unknown): u is STM.STMRetryException => {
+export class STMRetryException {
+  readonly [STMRetryExceptionTypeId]: STMRetryExceptionTypeId = STMRetryExceptionTypeId
+}
+
+export const isRetryException = (u: unknown): u is STMRetryException => {
   return typeof u === "object" && u != null && STMRetryExceptionTypeId in u
 }
 
-/** @internal */
 export function effect<R, A>(
   f: (journal: Journal.Journal, fiberId: FiberId.FiberId, context: Context.Context<R>) => A
-): STM.STM<R, never, A> {
+): STM<R, never, A> {
   const trace = getCallTrace()
   const stm = Object.create(proto)
   stm.opSTM = STMOpCodes.OP_EFFECT
@@ -186,36 +193,31 @@ export function effect<R, A>(
   return stm
 }
 
-/** @internal */
-export const fail = <E>(error: E): STM.STM<never, E, never> => {
+export const fail = <E>(error: E): STM<never, E, never> => {
   return effect(() => {
     throw new STMFailException(error)
   })
 }
 
-/** @internal */
-export const die = (defect: unknown): STM.STM<never, never, never> => {
+export const die = (defect: unknown): STM<never, never, never> => {
   return effect(() => {
     throw new STMDieException(defect)
   })
 }
 
-/** @internal */
-export const interrupt = (): STM.STM<never, never, never> => {
+export const interrupt = (): STM<never, never, never> => {
   return effect((_, fiberId) => {
     throw new STMInterruptException(fiberId)
   })
 }
 
-/** @internal */
-export const retry = (): STM.STM<never, never, never> => {
+export const retry = (): STM<never, never, never> => {
   return effect(() => {
     throw new STMRetryException()
   })
 }
 
-/** @internal */
-export const succeed = <A>(value: A): STM.STM<never, never, A> => {
+export const succeed = <A>(value: A): STM<never, never, A> => {
   const trace = getCallTrace()
   const stm = Object.create(proto)
   stm.opSTM = STMOpCodes.OP_SUCCEED_NOW
@@ -224,8 +226,7 @@ export const succeed = <A>(value: A): STM.STM<never, never, A> => {
   return stm
 }
 
-/** @internal */
-export const sync = <A>(evaluate: () => A): STM.STM<never, never, A> => {
+export const sync = <A>(evaluate: () => A): STM<never, never, A> => {
   const trace = getCallTrace()
   const stm = Object.create(proto)
   stm.opSTM = STMOpCodes.OP_SUCCEED
@@ -234,10 +235,9 @@ export const sync = <A>(evaluate: () => A): STM.STM<never, never, A> => {
   return stm
 }
 
-/** @internal */
-export const catchAll = <E, R1, E1, B>(f: (e: E) => STM.STM<R1, E1, B>) => {
+export const catchAll = <E, R1, E1, B>(f: (e: E) => STM<R1, E1, B>) => {
   const trace = getCallTrace()
-  return <R, A>(self: STM.STM<R, E, A>): STM.STM<R | R1, E1, A | B> => {
+  return <R, A>(self: STM<R, E, A>): STM<R | R1, E1, A | B> => {
     const stm = Object.create(proto)
     stm.opSTM = STMOpCodes.OP_ON_FAILURE
     stm.first = self
@@ -247,10 +247,9 @@ export const catchAll = <E, R1, E1, B>(f: (e: E) => STM.STM<R1, E1, B>) => {
   }
 }
 
-/** @internal */
-export const orTry = <R1, E1, A1>(that: () => STM.STM<R1, E1, A1>) => {
+export const orTry = <R1, E1, A1>(that: () => STM<R1, E1, A1>) => {
   const trace = getCallTrace()
-  return <R, E, A>(self: STM.STM<R, E, A>): STM.STM<R | R1, E | E1, A | A1> => {
+  return <R, E, A>(self: STM<R, E, A>): STM<R | R1, E | E1, A | A1> => {
     const stm = Object.create(proto)
     stm.opSTM = STMOpCodes.OP_ON_RETRY
     stm.first = self
@@ -260,10 +259,9 @@ export const orTry = <R1, E1, A1>(that: () => STM.STM<R1, E1, A1>) => {
   }
 }
 
-/** @internal */
-export const flatMap = <A, R1, E1, A2>(f: (a: A) => STM.STM<R1, E1, A2>) => {
+export const flatMap = <A, R1, E1, A2>(f: (a: A) => STM<R1, E1, A2>) => {
   const trace = getCallTrace()
-  return <R, E>(self: STM.STM<R, E, A>): STM.STM<R1 | R, E | E1, A2> => {
+  return <R, E>(self: STM<R, E, A>): STM<R1 | R, E | E1, A2> => {
     const stm = Object.create(proto)
     stm.opSTM = STMOpCodes.OP_ON_SUCCESS
     stm.first = self
@@ -273,10 +271,9 @@ export const flatMap = <A, R1, E1, A2>(f: (a: A) => STM.STM<R1, E1, A2>) => {
   }
 }
 
-/** @internal */
 export const provideSomeEnvironment = <R0, R>(f: (context: Context.Context<R0>) => Context.Context<R>) => {
   const trace = getCallTrace()
-  return <E, A>(self: STM.STM<R, E, A>): STM.STM<R0, E, A> => {
+  return <E, A>(self: STM<R, E, A>): STM<R0, E, A> => {
     const stm = Object.create(proto)
     stm.opSTM = STMOpCodes.OP_PROVIDE
     stm.stm = self
@@ -286,24 +283,22 @@ export const provideSomeEnvironment = <R0, R>(f: (context: Context.Context<R0>) 
   }
 }
 
-/** @internal */
 export const map = <A, B>(f: (a: A) => B) => {
-  return <R, E>(self: STM.STM<R, E, A>): STM.STM<R, E, B> => {
+  return <R, E>(self: STM<R, E, A>): STM<R, E, B> => {
     return pipe(self, flatMap((a) => sync(() => f(a))))
   }
 }
 
-/** @internal */
 export const foldSTM = <E, R1, E1, A1, A, R2, E2, A2>(
-  onFailure: (e: E) => STM.STM<R1, E1, A1>,
-  onSuccess: (a: A) => STM.STM<R2, E2, A2>
+  onFailure: (e: E) => STM<R1, E1, A1>,
+  onSuccess: (a: A) => STM<R2, E2, A2>
 ) => {
-  return <R>(self: STM.STM<R, E, A>): STM.STM<R | R1 | R2, E1 | E2, A1 | A2> => {
+  return <R>(self: STM<R, E, A>): STM<R | R1 | R2, E1 | E2, A1 | A2> => {
     return pipe(
       self,
       map(Either.right),
       catchAll((e) => pipe(onFailure(e), map(Either.left))),
-      flatMap((either): STM.STM<R | R1 | R2, E1 | E2, A1 | A2> => {
+      flatMap((either): STM<R | R1 | R2, E1 | E2, A1 | A2> => {
         switch (either._tag) {
           case "Left": {
             return succeed(either.left)
@@ -317,9 +312,8 @@ export const foldSTM = <E, R1, E1, A1, A, R2, E2, A2>(
   }
 }
 
-/** @internal */
-export const ensuring = <R1, B>(finalizer: STM.STM<R1, never, B>) => {
-  return <R, E, A>(self: STM.STM<R, E, A>): STM.STM<R | R1, E, A> =>
+export const ensuring = <R1, B>(finalizer: STM<R1, never, B>) => {
+  return <R, E, A>(self: STM<R, E, A>): STM<R | R1, E, A> =>
     pipe(
       self,
       foldSTM(
@@ -329,36 +323,31 @@ export const ensuring = <R1, B>(finalizer: STM.STM<R1, never, B>) => {
     )
 }
 
-/** @internal */
-export const zip = <R1, E1, A1>(that: STM.STM<R1, E1, A1>) => {
-  return <R, E, A>(self: STM.STM<R, E, A>): STM.STM<R | R1, E | E1, readonly [A, A1]> => {
+export const zip = <R1, E1, A1>(that: STM<R1, E1, A1>) => {
+  return <R, E, A>(self: STM<R, E, A>): STM<R | R1, E | E1, readonly [A, A1]> => {
     return pipe(self, zipWith(that, (a, a1) => [a, a1]))
   }
 }
 
-/** @internal */
-export const zipLeft = <R1, E1, A1>(that: STM.STM<R1, E1, A1>) => {
-  return <R, E, A>(self: STM.STM<R, E, A>): STM.STM<R | R1, E | E1, A> => {
+export const zipLeft = <R1, E1, A1>(that: STM<R1, E1, A1>) => {
+  return <R, E, A>(self: STM<R, E, A>): STM<R | R1, E | E1, A> => {
     return pipe(self, flatMap((a) => pipe(that, map(() => a))))
   }
 }
 
-/** @internal */
-export const zipRight = <R1, E1, A1>(that: STM.STM<R1, E1, A1>) => {
-  return <R, E, A>(self: STM.STM<R, E, A>): STM.STM<R | R1, E | E1, A1> => {
+export const zipRight = <R1, E1, A1>(that: STM<R1, E1, A1>) => {
+  return <R, E, A>(self: STM<R, E, A>): STM<R | R1, E | E1, A1> => {
     return pipe(self, flatMap(() => that))
   }
 }
 
-/** @internal */
-export const zipWith = <R1, E1, A1, A, A2>(that: STM.STM<R1, E1, A1>, f: (a: A, b: A1) => A2) => {
-  return <R, E>(self: STM.STM<R, E, A>): STM.STM<R1 | R, E | E1, A2> => {
+export const zipWith = <R1, E1, A1, A, A2>(that: STM<R1, E1, A1>, f: (a: A, b: A1) => A2) => {
+  return <R, E>(self: STM<R, E, A>): STM<R1 | R, E | E1, A2> => {
     return pipe(self, flatMap((a) => pipe(that, map((b) => f(a, b)))))
   }
 }
 
-/** @internal */
-export const commit = <R, E, A>(self: STM.STM<R, E, A>): Effect.Effect<R, E, A> => {
+export const commit = <R, E, A>(self: STM<R, E, A>): Effect.Effect<R, E, A> => {
   return core.withFiberRuntime((state) => {
     // TODO(Max): remove cast to any!
     const fiberId = (state as any).id
@@ -395,17 +384,15 @@ export const commit = <R, E, A>(self: STM.STM<R, E, A>): Effect.Effect<R, E, A> 
   })
 }
 
-/** @internal */
 type Continuation = STMOnFailure | STMOnSuccess | STMOnRetry
 
-/** @internal */
 export class STMDriver<R, E, A> {
   private yieldOpCount = 2048
   private contStack: Stack<Continuation> | undefined
   private envStack: Stack<Context.Context<unknown>>
 
   constructor(
-    readonly self: STM.STM<R, E, A>,
+    readonly self: STM<R, E, A>,
     readonly journal: Journal.Journal,
     readonly fiberId: FiberId.FiberId,
     r0: Context.Context<R>
@@ -568,10 +555,9 @@ export class STMDriver<R, E, A> {
   }
 }
 
-/** @internal */
 const tryCommit = <R, E, A>(
   fiberId: FiberId.FiberId,
-  stm: STM.STM<R, E, A>,
+  stm: STM<R, E, A>,
   state: MutableRef.MutableRef<STMState.STMState<E, A>>,
   env: Context.Context<R>,
   scheduler: Scheduler.Scheduler
@@ -606,10 +592,9 @@ const tryCommit = <R, E, A>(
   }
 }
 
-/** @internal */
 const tryCommitSync = <R, E, A>(
   fiberId: FiberId.FiberId,
-  stm: STM.STM<R, E, A>,
+  stm: STM<R, E, A>,
   env: Context.Context<R>,
   scheduler: Scheduler.Scheduler
 ): TryCommit.TryCommit<E, A> => {
@@ -644,11 +629,10 @@ const tryCommitSync = <R, E, A>(
   }
 }
 
-/** @internal */
 const tryCommitAsync = <R, E, A>(
   journal: Journal.Journal | undefined,
   fiberId: FiberId.FiberId,
-  stm: STM.STM<R, E, A>,
+  stm: STM<R, E, A>,
   txnId: TxnId.TxnId,
   state: MutableRef.MutableRef<STMState.STMState<E, A>>,
   context: Context.Context<R>,
@@ -685,7 +669,6 @@ const tryCommitAsync = <R, E, A>(
   }
 }
 
-/** @internal */
 const completeTodos = <E, A>(
   exit: Exit.Exit<E, A>,
   journal: Journal.Journal,
@@ -698,7 +681,6 @@ const completeTodos = <E, A>(
   return TryCommit.done(exit)
 }
 
-/** @internal */
 const completeTryCommit = <R, E, A>(
   exit: Exit.Exit<E, A>,
   k: (effect: Effect.Effect<R, E, A>) => unknown
@@ -706,10 +688,9 @@ const completeTryCommit = <R, E, A>(
   k(core.done(exit))
 }
 
-/** @internal */
 const suspendTryCommit = <R, E, A>(
   fiberId: FiberId.FiberId,
-  stm: STM.STM<R, E, A>,
+  stm: STM<R, E, A>,
   txnId: TxnId.TxnId,
   state: MutableRef.MutableRef<STMState.STMState<E, A>>,
   context: Context.Context<R>,
