@@ -1,18 +1,16 @@
-export const VersionedSym = Symbol.for("@effect/core/stm/STM/Versioned")
-export type VersionedSym = typeof VersionedSym
+/** @internal */
+export const VersionedTypeId = Symbol.for("@effect/io/STM/Versioned")
 
-/**
- * @tsplus type effect/core/stm/STM/Versioned
- * @tsplus companion effect/core/stm/STM/Versioned.Ops
- */
+/** @internal */
+export type VersionedTypeId = typeof VersionedTypeId
+
+/** @internal */
 export class Versioned<A> {
-  readonly [VersionedSym]: VersionedSym = VersionedSym
+  readonly [VersionedTypeId]: VersionedTypeId = VersionedTypeId
   constructor(readonly value: A) {}
 }
 
-/**
- * @tsplus static effect/core/stm/STM/Versioned.Ops __call
- */
+/** @internal */
 export function make<A>(value: A): Versioned<A> {
   return new Versioned(value)
 }
