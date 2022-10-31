@@ -190,19 +190,11 @@ export const async = <R, E, A>(
 /** @internal */
 export const asyncInterrupt = <R, E, A>(
   register: (
-    callback: (_: Effect.Effect<R, E, A>) => void
-  ) => Either.Either<Effect.Effect<R, never, void>, Effect.Effect<R, E, A>>
-): Effect.Effect<R, E, A> => {
-  return asyncInterruptBlockingOn(register, FiberId.none)
-}
-
-/** @internal */
-export const asyncInterruptBlockingOn = <R, E, A>(
-  register: (
     callback: (effect: Effect.Effect<R, E, A>) => void
   ) => Either.Either<Effect.Effect<R, never, void>, Effect.Effect<R, E, A>>,
-  blockingOn: FiberId.FiberId
+  blockingOn: FiberId.FiberId = FiberId.none
 ): Effect.Effect<R, E, A> => {
+  const trace = getCallTrace()
   return suspendSucceed(() => {
     let cancelerRef: Effect.Effect<R, never, void> = unit()
     return pipe(
@@ -219,7 +211,7 @@ export const asyncInterruptBlockingOn = <R, E, A>(
       ),
       onInterrupt(() => cancelerRef)
     )
-  })
+  }).traced(trace)
 }
 
 /** @internal */
@@ -301,6 +293,12 @@ export const flatten = <R, E, R1, E1, A>(self: Effect.Effect<R, E, Effect.Effect
 export declare const forEach: <A, R, E, B>(
   f: (a: A) => Effect.Effect<R, E, B>
 ) => (self: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<B>>
+
+// TODO(Mike): do.
+/** @internal */
+export declare const forEachDiscard: <A, R, E, B>(
+  f: (a: A) => Effect.Effect<R, E, B>
+) => (self: Iterable<A>) => Effect.Effect<R, E, void>
 
 // TODO(Mike): do.
 /** @internal */
@@ -466,18 +464,21 @@ export const interruptibleMask = <R, E, A>(
 
 /** @internal */
 export const interrupt = (): Effect.Effect<never, never, never> => {
-  return pipe(fiberId(), flatMap((fiberId) => interruptAs(fiberId)))
+  const trace = getCallTrace()
+  return pipe(fiberId(), flatMap((fiberId) => interruptAs(fiberId))).traced(trace)
 }
 
 /** @internal */
 export const interruptAs = (fiberId: FiberId.FiberId): Effect.Effect<never, never, never> => {
-  return failCause(Cause.interrupt(fiberId))
+  const trace = getCallTrace()
+  return failCause(Cause.interrupt(fiberId)).traced(trace)
 }
 
 /** @internal */
 export const onInterrupt = <R2, X>(
   cleanup: (interruptors: HashSet.HashSet<FiberId.FiberId>) => Effect.Effect<R2, never, X>
 ) => {
+  const trace = getCallTrace()
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E, A> =>
     uninterruptibleMask((restore) =>
       pipe(
@@ -490,40 +491,16 @@ export const onInterrupt = <R2, X>(
           succeed
         )
       )
-    )
-}
-
-export const onInterruptPolymorphic = <R2, E2, X>(
-  cleanup: (interruptors: HashSet.HashSet<FiberId.FiberId>) => Effect.Effect<R2, E2, X>
-) => {
-  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, A> =>
-    uninterruptibleMask((restore) =>
-      pipe(
-        restore(self),
-        foldCauseEffect(
-          (cause) =>
-            Cause.isInterrupted(cause)
-              ? pipe(
-                cleanup(Cause.interruptors(cause)),
-                foldCauseEffect(
-                  failCause,
-                  () => failCause(cause)
-                )
-              )
-              : failCause(cause),
-          succeed
-        )
-      )
-    )
+    ).traced(trace)
 }
 
 /** @internal */
 export const intoDeferred = <E, A>(deferred: Deferred.Deferred<E, A>) => {
-  return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, boolean> => {
-    return uninterruptibleMask((restore) =>
-      pipe(restore(self), exit, flatMap((exit) => pipe(deferred, doneDeferred(exit))))
-    )
-  }
+  const trace = getCallTrace()
+  return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, boolean> =>
+    uninterruptibleMask(
+      (restore) => pipe(restore(self), exit, flatMap((exit) => pipe(deferred, doneDeferred(exit))))
+    ).traced(trace)
 }
 
 /** @internal */
@@ -598,19 +575,23 @@ export const exit = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, ne
 
 /** @internal */
 export const fiberId = (): Effect.Effect<never, never, FiberId.FiberId> => {
-  // TODO(Max): remove cast to any
-  return withFiberRuntime((state) => succeed((state as any).id))
+  const trace = getCallTrace()
+  return withFiberRuntime<never, never, FiberId.FiberId>(
+    (state) => succeed(state.id)
+  ).traced(trace)
 }
 
 /** @internal */
-export const done = <E, A>(exit: Exit.Exit<E, A>): Effect.Effect<never, E, A> =>
-  exit.op === OpCodes.OP_FAILURE ? failCause(exit.cause) : succeed(exit.value)
+export const done = <E, A>(exit: Exit.Exit<E, A>): Effect.Effect<never, E, A> => {
+  const trace = getCallTrace()
+  return exit.op === OpCodes.OP_FAILURE ? failCause(exit.cause).traced(trace) : succeed(exit.value).traced(trace)
+}
 
 /** @internal */
 export const onExit = <E, A, R2, X>(cleanup: (exit: Exit.Exit<E, A>) => Effect.Effect<R2, never, X>) => {
   const trace = getCallTrace()
   return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E, A> =>
-    acquireUseReleaseExit(
+    acquireUseRelease(
       unit(),
       () => self,
       (_, exit) => cleanup(exit)
@@ -725,23 +706,15 @@ export const whenEffect = <R, E, R1, E1, A>(
   predicate: Effect.Effect<R, E, boolean>,
   effect: Effect.Effect<R1, E1, A>
 ): Effect.Effect<R | R1, E | E1, Option.Option<A>> => {
+  const trace = getCallTrace()
   return pipe(
     suspendSucceed(() => predicate),
     flatMap((b) => b ? pipe(effect, map(Option.some)) : pipe(effect, map(() => Option.none)))
-  )
+  ).traced(trace)
 }
 
 /** @internal */
 export const acquireRelease = <R, E, A, R2, X>(
-  acquire: Effect.Effect<R, E, A>,
-  release: (a: A) => Effect.Effect<R2, never, X>
-): Effect.Effect<R | R2 | Scope.Scope, E, A> => {
-  const trace = getCallTrace()
-  return acquireReleaseExit(acquire, (a, _) => release(a)).traced(trace)
-}
-
-/** @internal */
-export const acquireReleaseExit = <R, E, A, R2, X>(
   acquire: Effect.Effect<R, E, A>,
   release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>
 ): Effect.Effect<R | R2 | Scope.Scope, E, A> => {
@@ -751,16 +724,6 @@ export const acquireReleaseExit = <R, E, A, R2, X>(
 
 /** @internal */
 export const acquireUseRelease = <R, E, A, R2, E2, A2, R3, X>(
-  acquire: Effect.Effect<R, E, A>,
-  use: (a: A) => Effect.Effect<R2, E2, A2>,
-  release: (a: A) => Effect.Effect<R3, never, X>
-): Effect.Effect<R | R2 | R3, E | E2, A2> => {
-  const trace = getCallTrace()
-  return acquireUseReleaseExit(acquire, use, (a, _) => release(a)).traced(trace)
-}
-
-/** @internal */
-export const acquireUseReleaseExit = <R, E, A, R2, E2, A2, R3, X>(
   acquire: Effect.Effect<R, E, A>,
   use: (a: A) => Effect.Effect<R2, E2, A2>,
   release: (a: A, exit: Exit.Exit<E2, A2>) => Effect.Effect<R3, never, X>
@@ -888,8 +851,7 @@ export const setFiberRef = <A>(value: A) => {
 
 /** @internal */
 export const deleteFiberRef = <A>(self: FiberRef.FiberRef<A>): Effect.Effect<never, never, void> => {
-  // TODO: PLEASE REMOVE THE CAST HERE TO `any`
-  return withFiberRuntime((state: any) => {
+  return withFiberRuntime((state) => {
     state.deleteFiberRef(self)
     return unit()
   })
@@ -903,10 +865,9 @@ export const resetFiberRef = <A>(self: FiberRef.FiberRef<A>): Effect.Effect<neve
 /** @internal */
 export const modifyFiberRef = <A, B>(f: (a: A) => readonly [B, A]) => {
   return (self: FiberRef.FiberRef<A>): Effect.Effect<never, never, B> => {
-    // TODO: PLEASE REMOVE THE CAST HERE TO `any`
-    return withFiberRuntime((state: any) => {
+    return withFiberRuntime((state) => {
       const [b, a] = f(state.getFiberRef(self) as A)
-      state.setFiberRef(this, a)
+      state.setFiberRef(self, a)
       return succeed(b)
     })
   }
@@ -1872,7 +1833,7 @@ export const interruptAsDeferred = (fiberId: FiberId.FiberId) => {
 
 /** @internal */
 export const awaitDeferred = <E, A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, E, A> => {
-  return asyncInterruptBlockingOn((k) => {
+  return asyncInterrupt((k) => {
     const state = MutableRef.get(self.state)
     switch (state.op) {
       case deferred.OP_STATE_DONE: {
