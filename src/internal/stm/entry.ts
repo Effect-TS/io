@@ -1,5 +1,5 @@
+import type * as Ref from "@effect/io/internal/stm/ref"
 import * as Versioned from "@effect/io/internal/stm/versioned"
-import type * as Ref from "@effect/io/STM/Ref"
 
 /** @internal */
 export interface Entry {

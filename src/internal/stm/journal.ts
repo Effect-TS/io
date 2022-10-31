@@ -1,6 +1,6 @@
 import * as Entry from "@effect/io/internal/stm/entry"
+import type * as Ref from "@effect/io/internal/stm/ref"
 import type * as TxnId from "@effect/io/internal/stm/txnId"
-import type * as Ref from "@effect/io/STM/Ref"
 
 /** @internal */
 export type Journal = Map<Ref.Ref<unknown>, Entry.Entry>
