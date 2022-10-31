@@ -1,5 +1,5 @@
 import * as Exit from "@effect/io/Exit"
-import * as TExit from "@effect/io/STM/TExit"
+import * as TExit from "@effect/io/internal/stm/tExit"
 import * as Equal from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
 

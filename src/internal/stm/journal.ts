@@ -1,6 +1,6 @@
 import * as Entry from "@effect/io/internal/stm/entry"
 import type * as TxnId from "@effect/io/internal/stm/txnId"
-import type * as Ref from "@effect/io/Ref"
+import type * as Ref from "@effect/io/STM/Ref"
 import { pipe } from "@fp-ts/data/Function"
 import * as HashMap from "@fp-ts/data/HashMap"
 import * as MutableRef from "@fp-ts/data/mutable/MutableRef"
