@@ -8,9 +8,9 @@ import * as STMOpCodes from "@effect/io/internal/opCodes/stm"
 import type * as Scheduler from "@effect/io/internal/scheduler"
 import { Stack } from "@effect/io/internal/stack"
 import * as Entry from "@effect/io/internal/stm/entry"
+import * as TExit from "@effect/io/internal/stm/exit"
 import * as Journal from "@effect/io/internal/stm/journal"
 import * as STMState from "@effect/io/internal/stm/state"
-import * as TExit from "@effect/io/internal/stm/tExit"
 import * as TryCommit from "@effect/io/internal/stm/tryCommit"
 import * as TxnId from "@effect/io/internal/stm/txnId"
 import type * as STM from "@effect/io/STM"
@@ -432,9 +432,9 @@ export class STMDriver<R, E, A> {
     return result
   }
 
-  run(): TExit.TExit<E, A> {
+  run(): TExit.Exit<E, A> {
     let curr = this.self as Primitive | undefined
-    let exit: TExit.TExit<unknown, unknown> | undefined = undefined
+    let exit: TExit.Exit<unknown, unknown> | undefined = undefined
     let opCount = 0
 
     while (exit === undefined && curr !== undefined) {
@@ -564,7 +564,7 @@ export class STMDriver<R, E, A> {
       }
     }
 
-    return exit as TExit.TExit<E, A>
+    return exit as TExit.Exit<E, A>
   }
 }
 

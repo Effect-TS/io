@@ -1,5 +1,5 @@
 import * as Exit from "@effect/io/Exit"
-import * as TExit from "@effect/io/internal/stm/tExit"
+import * as TExit from "@effect/io/internal/stm/exit"
 import * as Equal from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
 
@@ -120,7 +120,7 @@ export const running: STMState<never, never> = {
 }
 
 /** @internal */
-export const fromTExit = <E, A>(tExit: TExit.TExit<E, A>): STMState<E, A> => {
+export const fromTExit = <E, A>(tExit: TExit.Exit<E, A>): STMState<E, A> => {
   switch (tExit.op) {
     case TExit.OP_FAIL: {
       return done(Exit.fail(tExit.error))
