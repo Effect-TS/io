@@ -297,16 +297,23 @@ export const flatten = <R, E, R1, E1, A>(self: Effect.Effect<R, E, Effect.Effect
 }
 
 // TODO(Mike): do.
-/** @interface */
+/** @internal */
 export declare const forEach: <A, R, E, B>(
   f: (a: A) => Effect.Effect<R, E, B>
 ) => (self: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<B>>
 
 // TODO(Mike): do.
-/** @interface */
+/** @internal */
 export declare const forEachPar: <A, R, E, B>(
   f: (a: A) => Effect.Effect<R, E, B>
 ) => (self: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<B>>
+
+// TODO(Mike): do.
+/** @internal */
+export declare const forEachParDiscard: <R, E, A, X>(
+  as: Iterable<A>,
+  f: (a: A) => Effect.Effect<R, E, X>
+) => Effect.Effect<R, E, void>
 
 // TODO(Mike): do.
 /** @interface */
@@ -711,6 +718,17 @@ export const addFinalizerExit = <R, X>(
       )
     )
   ).traced(trace)
+}
+
+/** @internal */
+export const whenEffect = <R, E, R1, E1, A>(
+  predicate: Effect.Effect<R, E, boolean>,
+  effect: Effect.Effect<R1, E1, A>
+): Effect.Effect<R | R1, E | E1, Option.Option<A>> => {
+  return pipe(
+    suspendSucceed(() => predicate),
+    flatMap((b) => b ? pipe(effect, map(Option.some)) : pipe(effect, map(() => Option.none)))
+  )
 }
 
 /** @internal */
