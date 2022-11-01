@@ -309,15 +309,26 @@ export declare const forEachPar: <A, R, E, B>(
 // TODO(Mike): do.
 /** @internal */
 export declare const forEachParDiscard: <R, E, A, X>(
-  as: Iterable<A>,
   f: (a: A) => Effect.Effect<R, E, X>
-) => Effect.Effect<R, E, void>
+) => (self: Iterable<A>) => Effect.Effect<R, E, void>
 
-// TODO(Mike): do.
-/** @interface */
-export declare const withParallelism: (
-  fibers: number
-) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+/** @internal */
+export const withParallelism = (parallelism: number) => {
+  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
+    const trace = getCallTrace()
+    return suspendSucceed(
+      () => pipe(self, locallyFiberRef(Option.some(parallelism))(currentParallelism))
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+export const withParallelismUnbounded = <R, E, A>(self: Effect.Effect<R, E, A>) => {
+  const trace = getCallTrace()
+  return suspendSucceed(
+    () => pipe(self, locallyFiberRef(Option.none as Option.Option<number>)(currentParallelism))
+  ).traced(trace)
+}
 
 /** @internal */
 export const foldCause = <E, A2, A, A3>(
@@ -1054,6 +1065,11 @@ export const currentLogLevel: FiberRef.FiberRef<LogLevel.LogLevel> = unsafeMakeF
 export const currentScheduler: FiberRef.FiberRef<Scheduler.Scheduler> = unsafeMakeFiberRef(Scheduler.defaultScheduler)
 
 /** @internal */
+export const currentParallelism: FiberRef.FiberRef<Option.Option<number>> = unsafeMakeFiberRef<Option.Option<number>>(
+  Option.none
+)
+
+/** @internal */
 export const interruptedCause: FiberRef.FiberRef<Cause.Cause<never>> = unsafeMakeFiberRef(
   Cause.empty,
   () => Cause.empty,
@@ -1212,7 +1228,7 @@ export const releaseMapReleaseAll = (
           )
           const update = self.state.update
           self.state = { _tag: "Exited", nextKey: self.state.nextKey, exit: exit0, update: self.state.update }
-          return strategy._tag === "Sequential" ?
+          return ExecutionStrategy.isSequential(strategy) ?
             pipe(
               finalizers,
               forEach((fin) => exit(update(fin)(exit0))),
@@ -1226,7 +1242,7 @@ export const releaseMapReleaseAll = (
                 )
               )
             ) :
-            strategy._tag === "Parallel" ?
+            ExecutionStrategy.isParallel(strategy) ?
             pipe(
               finalizers,
               forEachPar((fin) => exit(update(fin)(exit0))),
@@ -1252,7 +1268,7 @@ export const releaseMapReleaseAll = (
                   done
                 )
               ),
-              withParallelism(strategy.n)
+              withParallelism(strategy.parallelism)
             )
         }
       }

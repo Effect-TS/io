@@ -124,7 +124,7 @@ export const acquireRelease = core.acquireRelease
  * interruptible.
  *
  * Since the `acquire` effect could be interrupted after partially acquiring
- * resources, the `release` effect is not allowed to* access the resource
+ * resources, the `release` effect is not allowed to access the resource
  * produced by `acquire` and must independently determine what finalization,
  * if any, needs to be performed (e.g. by examining in memory state).
  *
@@ -490,6 +490,96 @@ export const clockWith = effect.clockWith
 export const collect = effect.collect
 
 /**
+ * Evaluate each effect in the structure from left to right, and collect the
+ * results. For a parallel version, see `collectAllPar`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const collectAll = effect.collectAll
+
+/**
+ * Evaluate each effect in the structure from left to right, and discard the
+ * results. For a parallel version, see `collectAllParDiscard`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const collectAllDiscard = effect.collectAllDiscard
+
+/**
+ * Evaluate each effect in the structure in parallel, and collect the results.
+ * For a sequential version, see `collectAll`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const collectAllPar = effect.collectAllPar
+
+/**
+ * Evaluate each effect in the structure in parallel, and discard the results.
+ * For a sequential version, see `collectAllDiscard`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const collectAllParDiscard = effect.collectAllParDiscard
+
+/**
+ * Evaluate each effect in the structure with `collectAll`, and collect the
+ * results with given partial function.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const collectAllWith = effect.collectAllWith
+
+/**
+ * Evaluate each effect in the structure with `collectAllPar`, and collect
+ * the results with given partial function.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const collectAllWithPar = effect.collectAllWithPar
+
+/**
+ * Returns a filtered, mapped subset of the elements of the iterable based on a
+ * partial function.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const collectAllWithEffect = effect.collectAllWithEffect
+
+/**
+ * Evaluate and run each effect in the structure and collect the results,
+ * discarding results from failed effects.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const collectAllSuccesses = effect.collectAllSuccesses
+
+/**
+ * Evaluate and run each effect in the structure in parallel and collect the
+ * results, discarding results from failed effects.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const collectAllSuccessesPar = effect.collectAllSuccessesPar
+
+/**
  * Collects the first element of the `Collection<A?` for which the effectual
  * function `f` returns `Some`.
  *
@@ -722,6 +812,27 @@ export const environmentWithEffect = core.environmentWithEffect
 export const eventually = effect.eventually
 
 /**
+ * Determines whether any element of the `Iterable<A>` satisfies the effectual
+ * predicate `f`, working sequentially.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const exists = effect.exists
+
+/**
+ * Determines whether any element of the `Iterable<A>` satisfies the effectual
+ * predicate `f`, working in parallel. Interrupts all effects on any failure or
+ * finding an element that satisfies the predicate.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const existsPar = effect.existsPar
+
+/**
  * @macro traced
  * @since 1.0.0
  * @category utilities
@@ -766,6 +877,102 @@ export const fiberId = core.fiberId
 /**
  * @macro traced
  * @since 1.0.0
+ * @category constructors
+ */
+export const fiberIdWith = effect.fiberIdWith
+
+/**
+ * Filters the collection using the specified effectful predicate.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category filtering
+ */
+export const filter = effect.filter
+
+/**
+ * Filters the collection in parallel using the specified effectual predicate.
+ * See `filter` for a sequential version of it.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category filtering
+ */
+export const filterPar = effect.filterPar
+
+/**
+ * Filters the collection using the specified effectual predicate, removing
+ * all elements that satisfy the predicate.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category filtering
+ */
+export const filterNot = effect.filterNot
+
+/**
+ * Filters the collection in parallel using the specified effectual predicate.
+ * See `filterNot` for a sequential version.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category filtering
+ */
+export const filterNotPar = effect.filterNotPar
+
+/**
+ * Filter the specified effect with the provided function, dying with specified
+ * defect if the predicate fails.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category filtering
+ */
+export const filterOrDie = effect.filterOrDie
+
+/**
+ * Filter the specified effect with the provided function, dying with specified
+ * message if the predicate fails.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category filtering
+ */
+export const filterOrDieMessage = effect.filterOrDieMessage
+
+/**
+ * Filters the specified effect with the provided function returning the value
+ * of the effect if it is successful, otherwise returns the value of `orElse`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category filtering
+ */
+export const filterOrElse = effect.filterOrElse
+
+/**
+ * Filters the specified effect with the provided function returning the value
+ * of the effect if it is successful, otherwise returns the value of `orElse`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category filtering
+ */
+export const filterOrElseWith = effect.filterOrElseWith
+
+/**
+ * Filter the specified effect with the provided function, failing with specified
+ * error if the predicate fails.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category filtering
+ */
+export const filterOrFail = effect.filterOrFail
+
+/**
+ * @macro traced
+ * @since 1.0.0
  * @category sequencing
  */
 export const flatMap = core.flatMap
@@ -780,30 +987,52 @@ export const flatten = core.flatten
 /**
  * @macro traced
  * @since 1.0.0
- * @category folding
+ * @category constructors
  */
 export const forEach = core.forEach
 
 /**
  * @macro traced
  * @since 1.0.0
- * @category folding
+ * @category constructors
  */
 export const forEachDiscard = core.forEachDiscard
 
 /**
+ * Same as `forEach`, except that the function `f` is supplied
+ * a second argument that corresponds to the index (starting from 0)
+ * of the current element being iterated over.
+ *
  * @macro traced
  * @since 1.0.0
- * @category folding
+ * @category traversing
+ */
+export const forEachWithIndex = effect.forEachWithIndex
+
+/**
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
  */
 export const forEachPar = core.forEachPar
 
 /**
  * @macro traced
  * @since 1.0.0
- * @category folding
+ * @category constructors
  */
 export const forEachParDiscard = core.forEachParDiscard
+
+/**
+ * Same as `forEachPar`, except that the function `f` is supplied
+ * a second argument that corresponds to the index (starting from 0)
+ * of the current element being iterated over.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const forEachParWithIndex = effect.forEachParWithIndex
 
 /**
  * @macro traced
@@ -832,6 +1061,15 @@ export const foldEffect = effect.foldEffect
  * @category conversions
  */
 export const fromEither = effect.fromEither
+
+/**
+ * Runs `onTrue` if the result of `self` is `true` and `onFalse` otherwise.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const ifEffect = effect.ifEffect
 
 /**
  * @macro traced
@@ -1089,6 +1327,16 @@ export const withFiberRuntime = core.withFiberRuntime
  * @category concurrency
  */
 export const withParallelism = core.withParallelism
+
+/**
+ * Runs the specified effect with an unbounded maximum number of fibers for
+ * parallel operations.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category aspects
+ */
+export const withParallelismUnbounded = core.withParallelismUnbounded
 
 /**
  * @macro traced
