@@ -342,8 +342,8 @@ export const shutdown = <A>(self: Queue.Queue<A>): Effect.Effect<never, never, v
         core.whenEffect(
           pipe(self.shutdownHook, core.succeedDeferred(undefined as void)),
           pipe(
+            unsafePollAll(self.takers),
             core.forEachParDiscard(
-              unsafePollAll(self.takers),
               core.interruptAsDeferred(state.id as FiberId.FiberId)
             ),
             core.zipRight(self.strategy.shutdown)
