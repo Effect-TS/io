@@ -974,6 +974,22 @@ export const reduceWithContext = <C, E, Z>(context: C, reducer: Cause.CauseReduc
 // -----------------------------------------------------------------------------
 
 /** @internal */
+export const RuntimeExceptionTypeId: Cause.RuntimeExceptionTypeId = Symbol.for(
+  "@effect/io/Cause/errors/RuntimeException"
+) as Cause.RuntimeExceptionTypeId
+
+/** @internal */
+export class RuntimeException implements Cause.RuntimeException {
+  readonly [RuntimeExceptionTypeId]: Cause.RuntimeExceptionTypeId = RuntimeExceptionTypeId
+  constructor(readonly message?: string) {}
+}
+
+/** @internal */
+export const isRuntimeException = (u: unknown): u is Cause.RuntimeException => {
+  return typeof u === "object" && u != null && RuntimeExceptionTypeId in u
+}
+
+/** @internal */
 export const InterruptedExceptionTypeId: Cause.InterruptedExceptionTypeId = Symbol.for(
   "@effect/io/Cause/errors/InterruptedException"
 ) as Cause.InterruptedExceptionTypeId

@@ -1,7 +1,8 @@
 import { IllegalArgumentException } from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal/core"
-import * as effect from "@effect/io/internal/effect"
+import * as acquireReleaseInterruptible from "@effect/io/internal/effect/acquireReleaseInterruptible"
+import * as ensuring from "@effect/io/internal/effect/ensuring"
 import * as STM from "@effect/io/internal/stm"
 import * as Ref from "@effect/io/internal/stm/ref"
 import type * as Scope from "@effect/io/Scope"
@@ -92,7 +93,7 @@ export const withPermits = (permits: number) => {
           core.zipRight(
             pipe(
               restore(self),
-              effect.ensuring(STM.commit(releaseN(permits)(semaphore)))
+              ensuring.ensuring(STM.commit(releaseN(permits)(semaphore)))
             )
           )
         )
@@ -109,7 +110,7 @@ export const withPermitScoped = (self: Semaphore.Semaphore): Effect.Effect<Scope
 /** @internal */
 export const withPermitsScoped = (permits: number) => {
   return (self: Semaphore.Semaphore): Effect.Effect<Scope.Scope, never, void> =>
-    effect.acquireReleaseInterruptible(
+    acquireReleaseInterruptible.acquireReleaseInterruptible(
       pipe(self, acquireN(permits), STM.commit),
       () => pipe(self, releaseN(permits), STM.commit)
     )

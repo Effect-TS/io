@@ -44,6 +44,18 @@ export type CauseTypeId = typeof CauseTypeId
  * @since 1.0.0
  * @category symbols
  */
+export const RuntimeExceptionTypeId: unique symbol = internal.RuntimeExceptionTypeId
+
+/**
+ * @since 1.0.0
+ * @category symbols
+ */
+export type RuntimeExceptionTypeId = typeof RuntimeExceptionTypeId
+
+/**
+ * @since 1.0.0
+ * @category symbols
+ */
 export const InterruptedExceptionTypeId: unique symbol = internal.InterruptedExceptionTypeId
 
 /**
@@ -157,6 +169,17 @@ export interface CauseRenderer<E = unknown> {
   readonly renderStackDepth: number
   readonly renderError: (error: E) => ReadonlyArray<string>
   readonly renderUnknown: (error: unknown) => ReadonlyArray<string>
+}
+
+/**
+ * Represents a generic checked exception which occurs at runtime.
+ *
+ * @since 1.0.0
+ * @category models
+ */
+export interface RuntimeException {
+  readonly [RuntimeExceptionTypeId]: RuntimeExceptionTypeId
+  readonly message?: string
 }
 
 /**
