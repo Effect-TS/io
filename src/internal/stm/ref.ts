@@ -119,3 +119,17 @@ const getOrMakeEntry = <A>(self: Ref<A>, journal: Journal.Journal): Entry.Entry 
   journal.set(self, entry)
   return entry
 }
+
+export const unsafeGet = (journal: Journal.Journal) => {
+  return <A>(self: Ref<A>): A => {
+    return Entry.unsafeGet(getOrMakeEntry(self, journal)) as A
+  }
+}
+
+export const unsafeSet = <A>(value: A, journal: Journal.Journal) => {
+  return (self: Ref<A>): void => {
+    const entry = getOrMakeEntry(self, journal)
+    Entry.unsafeSet(entry, value)
+    return undefined
+  }
+}
