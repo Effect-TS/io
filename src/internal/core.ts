@@ -667,7 +667,10 @@ export const as = <B>(value: B) => {
 }
 
 /** @internal */
-export const asUnit = <R, E, A>(self: Effect.Effect<R, E, A>) => as<void>(void 0)(self)
+export const asUnit = <R, E, A>(self: Effect.Effect<R, E, A>) => {
+  const trace = getCallTrace()
+  return pipe(self, as<void>(void 0)).traced(trace)
+}
 
 /** @internal */
 export const map = <A, B>(f: (a: A) => B) => {
