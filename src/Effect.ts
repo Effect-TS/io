@@ -1,7 +1,6 @@
 /**
  * @since 1.0.0
  */
-import type { Cause } from "@effect/io/Cause"
 import * as core from "@effect/io/internal/core"
 import * as effect from "@effect/io/internal/effect"
 import type { Equal } from "@fp-ts/data/Equal"
@@ -20,33 +19,11 @@ export type EffectTypeId = typeof EffectTypeId
 
 /**
  * @since 1.0.0
- * @category symbols
- */
-export const EffectErrorTypeId: unique symbol = effect.EffectErrorTypeId
-
-/**
- * @since 1.0.0
- * @category symbols
- */
-export type EffectErrorTypeId = typeof EffectErrorTypeId
-
-/**
- * @since 1.0.0
  * @category models
  */
 export interface Effect<R, E, A> extends Effect.Variance<R, E, A>, Equal {
   /** @internal */
   traced(trace: string | undefined): Effect<R, E, A>
-}
-
-/**
- * @since 1.0.0
- * @category models
- */
-export interface EffectError<E> {
-  readonly [EffectErrorTypeId]: EffectErrorTypeId
-  readonly _tag: "EffectError"
-  readonly cause: Cause<E>
 }
 
 /**
@@ -64,12 +41,6 @@ export declare namespace Effect {
       readonly _A: (_: never) => A
     }
   }
-
-  /**
-   * @since 1.0.0
-   * @category models
-   */
-  export type Error<E> = EffectError<E>
 }
 
 /**
@@ -79,14 +50,6 @@ export declare namespace Effect {
  * @category refinements
  */
 export const isEffect = core.isEffect
-
-/**
- * Returns `true` if the specified value is an `EffectError`, `false` otherwise.
- *
- * @since 1.0.0
- * @category refinements
- */
-export const isEffectError = effect.isEffectError
 
 /**
  * Constructs a new `EffectError`.
