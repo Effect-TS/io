@@ -686,7 +686,7 @@ export const tap = <A, R2, E2, X>(f: (a: A) => Effect.Effect<R2, E2, X>) => {
 }
 
 /** @internal */
-export const addFinalizerExit = <R, X>(
+export const addFinalizer = <R, X>(
   finalizer: (exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R, never, X>
 ): Effect.Effect<R | Scope.Scope, never, void> => {
   const trace = getCallTrace()
@@ -719,7 +719,7 @@ export const acquireRelease = <R, E, A, R2, X>(
   release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>
 ): Effect.Effect<R | R2 | Scope.Scope, E, A> => {
   const trace = getCallTrace()
-  return pipe(acquire, tap((a) => addFinalizerExit((exit) => release(a, exit))), uninterruptible).traced(trace)
+  return pipe(acquire, tap((a) => addFinalizer((exit) => release(a, exit))), uninterruptible).traced(trace)
 }
 
 /** @internal */
@@ -1049,6 +1049,13 @@ export const currentLogLevel: FiberRef.FiberRef<LogLevel.LogLevel> = unsafeMakeF
 
 /** @internal */
 export const currentScheduler: FiberRef.FiberRef<Scheduler.Scheduler> = unsafeMakeFiberRef(Scheduler.defaultScheduler)
+
+/** @internal */
+export const interruptedCause: FiberRef.FiberRef<Cause.Cause<never>> = unsafeMakeFiberRef(
+  Cause.empty,
+  () => Cause.empty,
+  (parent) => parent
+)
 
 // -----------------------------------------------------------------------------
 // Scope
