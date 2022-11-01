@@ -169,7 +169,7 @@ export const acquireRelease = core.acquireRelease
  *
  * @macro traced
  * @since 1.0.0
- * @category acquire/release
+ * @category constructors
  */
 export const acquireReleaseInterruptible = effect.acquireReleaseInterruptible
 
