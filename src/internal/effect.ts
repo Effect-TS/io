@@ -200,12 +200,11 @@ export const descriptorWith = <R, E, A>(
   f: (descriptor: Fiber.Fiber.Descriptor) => Effect.Effect<R, E, A>
 ): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
-  // TODO(Max): remove cast to any
   return core.withFiberRuntime((state, status) => {
     return f({
-      id: (state as any).id as any,
+      id: state.id,
       status,
-      interruptors: Cause.interruptors((state as any).getFiberRef(core.interruptedCause))
+      interruptors: Cause.interruptors(state.getFiberRef(core.interruptedCause))
     })
   }).traced(trace) as Effect.Effect<R, E, A>
 }
