@@ -165,8 +165,10 @@ export const acquireReleaseInterruptible = effect.acquireReleaseInterruptible
 export const acquireUseRelease = core.acquireUseRelease
 
 /**
- * Makes an explicit check to see if the fiber has been interrupted, and if
- * so, performs self-interruption
+ * Makes an explicit check to see if any fibers are attempting to interrupt the
+ * current fiber, and if so, performs self-interruption.
+ *
+ * Note that this allows for interruption to occur in uninterruptible regions.
  *
  * @macro traced
  * @since 1.0.0
