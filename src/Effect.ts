@@ -358,12 +358,116 @@ export const cached = effect.cached
  */
 export const cachedInvalidate = effect.cachedInvalidate
 
+const _catch = effect._catch
+export {
+  /**
+   * Recovers from specified error.
+   *
+   * @macro traced
+   * @since 1.0.0
+   * @category error handling
+   */
+  _catch as catch
+}
+
 /**
+ * Recovers from all recoverable errors.
+ *
+ * **Note**: that `Effect.catchAll` will not recover from unrecoverable defects. To
+ * recover from both recoverable and unrecoverable errors use
+ * `Effect.catchAllCause`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category error handling
+ */
+export const catchAll = effect.catchAll
+
+/**
+ * Recovers from both recoverable and unrecoverable errors.
+ *
+ * See `absorb`, `sandbox`, `mapErrorCause` for other functions that can
+ * recover from defects.
+ *
  * @macro traced
  * @since 1.0.0
  * @category error handling
  */
 export const catchAllCause = core.catchAllCause
+
+/**
+ * Recovers from all defects with provided function.
+ *
+ * **WARNING**: There is no sensible way to recover from defects. This
+ * method should be used only at the boundary between Effect and an external
+ * system, to transmit information on a defect for diagnostic or explanatory
+ * purposes.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category error handling
+ */
+export const catchAllDefect = effect.catchAllDefect
+
+/**
+ * Recovers from some or all of the error cases.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category error handling
+ */
+export const catchSome = effect.catchSome
+
+/**
+ * Recovers from some or all of the error cases with provided cause.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category error handling
+ */
+export const catchSomeCause = effect.catchSomeCause
+
+/**
+ * Recovers from some or all of the defects with provided partial function.
+ *
+ * **WARNING**: There is no sensible way to recover from defects. This
+ * method should be used only at the boundary between Effect and an external
+ * system, to transmit information on a defect for diagnostic or explanatory
+ * purposes.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category error handling
+ */
+export const catchSomeDefect = effect.catchSomeDefect
+
+/**
+ * Recovers from specified tagged error.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category error handling
+ */
+export const catchTag = effect.catchTag
+
+/**
+ * Returns an effect that succeeds with the cause of failure of this effect,
+ * or `Cause.empty` if the effect did succeed.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category error handling
+ */
+export const cause = effect.cause
+
+/**
+ * Retreives the `Clock` service from the environment.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category environment
+ */
+export const clock = effect.clock
 
 /**
  * Retreives the `Clock` service from the environment and provides it to the
@@ -374,6 +478,78 @@ export const catchAllCause = core.catchAllCause
  * @category constructors
  */
 export const clockWith = effect.clockWith
+
+/**
+ * Evaluate each effect in the structure from left to right, collecting the
+ * the successful values and discarding the empty cases. For a parallel version, see `collectPar`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const collect = effect.collect
+
+/**
+ * Collects the first element of the `Collection<A?` for which the effectual
+ * function `f` returns `Some`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const collectFirst = effect.collectFirst
+
+/**
+ * Evaluate each effect in the structure in parallel, collecting the successful
+ * values and discarding the empty cases.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const collectPar = effect.collectPar
+
+/**
+ * Transforms all elements of the chunk for as long as the specified partial
+ * function is defined.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const collectWhile = effect.collectWhile
+
+/**
+ * Evaluate the predicate, return the given `A` as success if predicate returns
+ * true, and the given `E` as error otherwise
+ *
+ * For effectful conditionals, see `ifEffect`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const cond = effect.cond
+
+/**
+ * Fail with the specifed `error` if the supplied partial function does not
+ * match, otherwise continue with the returned value.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category error handling
+ */
+export const continueOrFail = effect.continueOrFail
+
+/**
+ * Fail with the specifed `error` if the supplied partial function does not
+ * match, otherwise continue with the returned value.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category error handling
+ */
+export const continueOrFailEffect = effect.continueOrFailEffect
 
 /**
  * Constructs an effect with information about the current `Fiber`.
@@ -401,6 +577,13 @@ export const descriptorWith = effect.descriptorWith
 export const die = core.die
 
 /**
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const dieMessage = effect.dieMessage
+
+/**
  * Returns an effect that dies with a `RuntimeException` having the specified
  * text message. This method can be used for terminating a fiber because a
  * defect has been detected in the code.
@@ -418,6 +601,31 @@ export const die = core.die
 export const dieSync = core.dieSync
 
 /**
+ * Binds an effectful value in a `do` scope
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category do notation
+ */
+export const bind = effect.bind
+
+/**
+ * Like bind for values
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category do notation
+ */
+export const bindValue = effect.bindValue
+
+/**
+ * @macro traced
+ * @since 1.0.0
+ * @category do notation
+ */
+export const Do = effect.Do
+
+/**
  * @macro traced
  * @since 1.0.0
  * @category constructors
@@ -425,20 +633,20 @@ export const dieSync = core.dieSync
 export const done = core.done
 
 /**
- * Effectually accesses the environment of the effect.
+ * Returns an effect whose failure and success have been lifted into an
+ * `Either`. The resulting effect cannot fail, because the failure case has
+ * been exposed as part of the `Either` success case.
+ *
+ * This method is useful for recovering from effects that may fail.
+ *
+ * The error parameter of the returned `Effect` is `never`, since it is
+ * guaranteed the effect does not model failure.
  *
  * @macro traced
  * @since 1.0.0
- * @category environment
+ * @category conversions
  */
-export const environmentWithEffect = core.environmentWithEffect
-
-/**
- * @macro traced
- * @since 1.0.0
- * @category environment
- */
-export const environment = core.environment
+export const either = effect.either
 
 /**
  * Returns an effect that, if this effect _starts_ execution, then the
@@ -456,6 +664,62 @@ export const environment = core.environment
  * @category finalization
  */
 export const ensuring = circular.ensuring
+
+/**
+ * Acts on the children of this fiber (collected into a single fiber),
+ * guaranteeing the specified callback will be invoked, whether or not this
+ * effect succeeds.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category finalization
+ */
+export const ensuringChild = effect.ensuringChild
+
+/**
+ * Acts on the children of this fiber, guaranteeing the specified callback
+ * will be invoked, whether or not this effect succeeds.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category finalization
+ */
+export const ensuringChildren = effect.ensuringChildren
+
+/**
+ * @macro traced
+ * @since 1.0.0
+ * @category environment
+ */
+export const environment = core.environment
+
+/**
+ * Accesses the environment of the effect.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category environment
+ */
+export const environmentWith = effect.environmentWith
+
+/**
+ * Effectually accesses the environment of the effect.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category environment
+ */
+export const environmentWithEffect = core.environmentWithEffect
+
+/**
+ * Returns an effect that ignores errors and runs repeatedly until it
+ * eventually succeeds.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const eventually = effect.eventually
 
 /**
  * @macro traced
@@ -638,6 +902,16 @@ export const onExit = core.onExit
 export const onInterrupt = core.onInterrupt
 
 /**
+ * Executes this effect and returns its value, if it succeeds, but otherwise
+ * executes the specified effect.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category alternatives
+ */
+export const orElse = effect.orElse
+
+/**
  * Provides the effect with its required environment, which eliminates its
  * dependency on `R`.
  *
@@ -726,6 +1000,22 @@ export const sync = core.sync
 export const tap = core.tap
 
 /**
+ * @since 1.0.0
+ * @category tracing
+ */
+export const traced = core.traced
+
+/**
+ * Executed `that` in case `self` fails with a `Cause` that doesn't contain
+ * defects, executes `success` in case of successes
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category alternatives
+ */
+export const tryOrElse = effect.tryOrElse
+
+/**
  * @macro traced
  * @since 1.0.0
  * @category interruption
@@ -745,6 +1035,25 @@ export const uninterruptibleMask = core.uninterruptibleMask
  * @category constructors
  */
 export const unit = core.unit
+
+/**
+ * Takes some fiber failures and converts them into errors, using the specified
+ * function to convert the `E` into an `E1 | E2`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category error handling
+ */
+export const unrefineWith = effect.unrefineWith
+
+/**
+ * Converts an option on errors into an option on values.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const unsome = effect.unsome
 
 /**
  * @macro traced
@@ -794,12 +1103,6 @@ export const withRuntimeFlags = core.withRuntimeFlags
  * @category constructors
  */
 export const yieldNow = core.yieldNow
-
-/**
- * @since 1.0.0
- * @category tracing
- */
-export const traced = core.traced
 
 /**
  * @macro traced
