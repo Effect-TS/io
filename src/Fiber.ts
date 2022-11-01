@@ -14,6 +14,11 @@ export interface Fiber<E, A> extends TODO<[E, A]> {}
 /**
  * @since 1.0.0
  */
+export interface RuntimeFiber<E, A> extends TODO<[E, A]> {}
+
+/**
+ * @since 1.0.0
+ */
 export declare namespace Fiber {
   /**
    * A record containing information about a [[Fiber]].
