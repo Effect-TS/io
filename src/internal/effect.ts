@@ -1,11 +1,16 @@
 import * as Cause from "@effect/io/Cause"
+import * as Clock from "@effect/io/Clock"
 import { getCallTrace } from "@effect/io/Debug"
+import * as DefaultServices from "@effect/io/DefaultServices"
+import type * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
-import type * as Exit from "@effect/io/Exit"
 import type * as Fiber from "@effect/io/Fiber"
 import * as FiberId from "@effect/io/Fiber/Id"
+import { RuntimeException } from "@effect/io/internal/cause"
 import * as core from "@effect/io/internal/core"
-import type * as Scope from "@effect/io/Scope"
+import * as Synchronized from "@effect/io/Ref/Synchronized"
+import * as Context from "@fp-ts/data/Context"
+import type * as Duration from "@fp-ts/data/Duration"
 import * as Either from "@fp-ts/data/Either"
 import { identity, pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
@@ -60,15 +65,6 @@ export const absorbWith = <E>(f: (e: E) => unknown) => {
       foldEffect((cause) => core.fail(pipe(cause, Cause.squashWith(f))), core.succeed)
     ).traced(trace)
   }
-}
-
-/** @internal */
-export const acquireReleaseInterruptible = <R, E, A, R2, X>(
-  acquire: Effect.Effect<R, E, A>,
-  release: (exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>
-): Effect.Effect<R | R2 | Scope.Scope, E, A> => {
-  const trace = getCallTrace()
-  return pipe(acquire, ensuring(core.addFinalizer(release))).traced(trace)
 }
 
 /** @internal */
@@ -170,14 +166,7 @@ export const asyncOption = <R, E, A>(
   ).traced(trace)
 }
 
-/**
- * Imports a synchronous side-effect into a pure `Effect` value, translating any
- * thrown exceptions into typed failed effects creating with `Effect.fail`.
- *
- * @tsplus static effect/core/io/Effect.Ops attempt
- * @category constructors
- * @since 1.0.0
- */
+/** @internal */
 export const attempt = <A>(evaluate: () => A): Effect.Effect<never, unknown, A> => {
   const trace = getCallTrace()
   return core.sync(() => {
@@ -187,6 +176,108 @@ export const attempt = <A>(evaluate: () => A): Effect.Effect<never, unknown, A> 
       throw makeEffectError(Cause.fail(error))
     }
   }).traced(trace)
+}
+
+// TODO(Max): implement after Fiber
+/** @internal */
+export declare const awaitAllChildren: <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+
+/** @internal */
+export function cached(timeToLive: Duration.Duration) {
+  const trace = getCallTrace()
+  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Effect.Effect<never, E, A>> => {
+    return pipe(self, cachedInvalidate(timeToLive), core.map((tuple) => tuple[0])).traced(trace)
+  }
+}
+
+/** @internal */
+export const cachedInvalidate = (timeToLive: Duration.Duration) => {
+  const trace = getCallTrace()
+  return <R, E, A>(
+    self: Effect.Effect<R, E, A>
+  ): Effect.Effect<R, never, readonly [Effect.Effect<never, E, A>, Effect.Effect<never, never, void>]> => {
+    return pipe(
+      core.environment<R>(),
+      core.flatMap((env) =>
+        pipe(
+          Synchronized.make<Option.Option<readonly [number, Deferred.Deferred<E, A>]>>(Option.none),
+          core.map((cache) =>
+            [
+              pipe(getCachedValue(self, timeToLive, cache), core.provideEnvironment(env)),
+              invalidateCache(cache)
+            ] as const
+          )
+        )
+      )
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+const computeCachedValue = <R, E, A>(
+  self: Effect.Effect<R, E, A>,
+  timeToLive: Duration.Duration,
+  start: number
+): Effect.Effect<R, never, Option.Option<readonly [number, Deferred.Deferred<E, A>]>> => {
+  return pipe(
+    core.makeDeferred<E, A>(),
+    core.tap((deferred) => pipe(self, core.intoDeferred(deferred))),
+    core.map((deferred) => Option.some([start + timeToLive.millis, deferred] as const))
+  )
+}
+
+/** @internal */
+const getCachedValue = <R, E, A>(
+  self: Effect.Effect<R, E, A>,
+  timeToLive: Duration.Duration,
+  cache: Synchronized.Synchronized<Option.Option<readonly [number, Deferred.Deferred<E, A>]>>
+): Effect.Effect<R, E, A> => {
+  return core.uninterruptibleMask<R, E, A>((restore) =>
+    pipe(
+      clockWith((clock) => clock.currentTimeMillis),
+      core.flatMap((time) =>
+        pipe(
+          cache,
+          Synchronized.updateSomeAndGetEffect((option) => {
+            switch (option._tag) {
+              case "None": {
+                return Option.some(computeCachedValue(self, timeToLive, time))
+              }
+              case "Some": {
+                const [end] = option.value
+                return end - time <= 0
+                  ? Option.some(computeCachedValue(self, timeToLive, time))
+                  : Option.none
+              }
+            }
+          })
+        )
+      ),
+      core.flatMap((option) =>
+        Option.isNone(option) ?
+          dieMessage(
+            "BUG: Effect.cachedInvalidate - please report an issue at https://github.com/Effect-TS/io/issues"
+          ) :
+          restore(core.awaitDeferred(option.value[1]))
+      )
+    )
+  )
+}
+
+/** @internal */
+const invalidateCache = <E, A>(
+  cache: Synchronized.Synchronized<Option.Option<readonly [number, Deferred.Deferred<E, A>]>>
+): Effect.Effect<never, never, void> => {
+  return pipe(cache, Synchronized.set(Option.none as Option.Option<readonly [number, Deferred.Deferred<E, A>]>))
+}
+
+/** @internal */
+export const clockWith = <R, E, A>(f: (clock: Clock.Clock) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
+  const trace = getCallTrace()
+  return pipe(
+    DefaultServices.currentServices,
+    core.getWithFiberRef((services) => f(pipe(services, Context.get(Clock.Tag))))
+  ).traced(trace)
 }
 
 /** @internal */
@@ -210,25 +301,8 @@ export const descriptorWith = <R, E, A>(
 }
 
 /** @internal */
-export const ensuring = <R1, X>(finalizer: Effect.Effect<R1, never, X>) => {
-  const trace = getCallTrace()
-  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1, E, A> =>
-    core.uninterruptibleMask((restore) =>
-      pipe(
-        restore(self),
-        core.foldCauseEffect(
-          (cause1) =>
-            pipe(
-              finalizer,
-              core.foldCauseEffect(
-                (cause2) => core.failCause(Cause.sequential(cause1, cause2)),
-                () => core.failCause(cause1)
-              )
-            ),
-          (a) => pipe(finalizer, core.as(a))
-        )
-      )
-    ).traced(trace)
+export const dieMessage = (message: string): Effect.Effect<never, never, never> => {
+  return core.failCauseSync(() => Cause.die(new RuntimeException(message)))
 }
 
 /** @internal */
@@ -301,4 +375,10 @@ export const sandbox = <R, E, A>(
 ): Effect.Effect<R, Cause.Cause<E>, A> => {
   const trace = getCallTrace()
   return pipe(self, core.foldCauseEffect(core.fail, core.succeed)).traced(trace)
+}
+
+/** @internal */
+export const sleep = (duration: Duration.Duration): Effect.Effect<never, never, void> => {
+  const trace = getCallTrace()
+  return clockWith((clock) => clock.sleep(duration)).traced(trace)
 }

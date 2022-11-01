@@ -3,6 +3,7 @@
  */
 import * as core from "@effect/io/internal/core"
 import * as effect from "@effect/io/internal/effect"
+import * as circular from "@effect/io/internal/effect/index"
 import type { Equal } from "@fp-ts/data/Equal"
 
 /**
@@ -134,7 +135,7 @@ export const acquireRelease = core.acquireRelease
  * @since 1.0.0
  * @category constructors
  */
-export const acquireReleaseInterruptible = effect.acquireReleaseInterruptible
+export const acquireReleaseInterruptible = circular.acquireReleaseInterruptible
 
 /**
  * When this effect represents acquisition of a resource (for example, opening
@@ -316,11 +317,63 @@ export const asyncOption = effect.asyncOption
 export const asyncInterrupt = core.asyncInterrupt
 
 /**
+ * Imports a synchronous side-effect into a pure `Effect` value, translating any
+ * thrown exceptions into typed failed effects creating with `Effect.fail`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const attempt = effect.attempt
+
+/**
+ * Returns a new effect that will not succeed with its value before first
+ * waiting for the end of all child fibers forked by the effect.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const awaitAllChildren = effect.awaitAllChildren
+
+/**
+ * Returns an effect that, if evaluated, will return the cached result of this
+ * effect. Cached results will expire after `timeToLive` duration.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const cached = effect.cached
+
+/**
+ * Returns an effect that, if evaluated, will return the cached result of this
+ * effect. Cached results will expire after `timeToLive` duration. In
+ * addition, returns an effect that can be used to invalidate the current
+ * cached value before the `timeToLive` duration expires.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const cachedInvalidate = effect.cachedInvalidate
+
+/**
  * @macro traced
  * @since 1.0.0
  * @category error handling
  */
 export const catchAllCause = core.catchAllCause
+
+/**
+ * Retreives the `Clock` service from the environment and provides it to the
+ * specified effectful function.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const clockWith = effect.clockWith
 
 /**
  * Constructs an effect with information about the current `Fiber`.
@@ -345,14 +398,17 @@ export const descriptorWith = effect.descriptorWith
  * @since 1.0.0
  * @category constructors
  */
-export const done = core.done
+export const die = core.die
 
 /**
+ * Returns an effect that dies with a `RuntimeException` having the specified
+ * text message. This method can be used for terminating a fiber because a
+ * defect has been detected in the code.
+ *
  * @macro traced
  * @since 1.0.0
  * @category constructors
  */
-export const die = core.die
 
 /**
  * @macro traced
@@ -360,6 +416,13 @@ export const die = core.die
  * @category constructors
  */
 export const dieSync = core.dieSync
+
+/**
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const done = core.done
 
 /**
  * Effectually accesses the environment of the effect.
@@ -392,7 +455,14 @@ export const environment = core.environment
  * @since 1.0.0
  * @category finalization
  */
-export const ensuring = effect.ensuring
+export const ensuring = circular.ensuring
+
+/**
+ * @macro traced
+ * @since 1.0.0
+ * @category utilities
+ */
+export const exit = core.exit
 
 /**
  * @macro traced
@@ -421,6 +491,13 @@ export const failCause = core.failCause
  * @category constructors
  */
 export const failCauseSync = core.failCauseSync
+
+/**
+ * @macro traced
+ * @since 1.0.0
+ * @category utilities
+ */
+export const fiberId = core.fiberId
 
 /**
  * @macro traced
@@ -495,6 +572,41 @@ export const fromEither = effect.fromEither
 /**
  * @macro traced
  * @since 1.0.0
+ * @category interruption
+ */
+export const interrupt = core.interrupt
+
+/**
+ * @macro traced
+ * @since 1.0.0
+ * @category interruption
+ */
+export const interruptAs = core.interruptAs
+
+/**
+ * @macro traced
+ * @since 1.0.0
+ * @category interruption
+ */
+export const interruptible = core.interruptible
+
+/**
+ * @macro traced
+ * @since 1.0.0
+ * @category interruption
+ */
+export const interruptibleMask = core.interruptibleMask
+
+/**
+ * @macro traced
+ * @since 1.0.0
+ * @category utilities
+ */
+export const intoDeferred = core.intoDeferred
+
+/**
+ * @macro traced
+ * @since 1.0.0
  * @category mapping
  */
 export const map = core.map
@@ -507,6 +619,23 @@ export const map = core.map
  * @category mapping
  */
 export const mapError = effect.mapError
+
+/**
+ * Ensures that a cleanup functions runs, whether this effect succeeds, fails,
+ * or is interrupted.
+ *
+ * @macro traced
+ * @category finalization
+ * @since 1.0.0
+ */
+export const onExit = core.onExit
+
+/**
+ * @macro traced
+ * @since 1.0.0
+ * @category finalization
+ */
+export const onInterrupt = core.onInterrupt
 
 /**
  * Provides the effect with its required environment, which eliminates its
@@ -559,6 +688,16 @@ export const service = core.service
 export const serviceWithEffect = core.serviceWithEffect
 
 /**
+ * Returns an effect that suspends for the specified duration. This method is
+ * asynchronous, and does not actually block the fiber executing the effect.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const sleep = effect.sleep
+
+/**
  * @macro traced
  * @since 1.0.0
  * @category constructors
@@ -578,34 +717,6 @@ export const suspendSucceed = core.suspendSucceed
  * @category constructors
  */
 export const sync = core.sync
-
-/**
- * @macro traced
- * @since 1.0.0
- * @category runtime
- */
-export const updateRuntimeFlags = core.updateRuntimeFlags
-
-/**
- * @macro traced
- * @since 1.0.0
- * @category interruption
- */
-export const interruptible = core.interruptible
-
-/**
- * @macro traced
- * @since 1.0.0
- * @category interruption
- */
-export const interruptibleMask = core.interruptibleMask
-
-/**
- * @macro traced
- * @since 1.0.0
- * @category utilities
- */
-export const intoDeferred = core.intoDeferred
 
 /**
  * @macro traced
@@ -631,33 +742,16 @@ export const uninterruptibleMask = core.uninterruptibleMask
 /**
  * @macro traced
  * @since 1.0.0
- * @category interruption
+ * @category constructors
  */
-export const interrupt = core.interrupt
+export const unit = core.unit
 
 /**
  * @macro traced
  * @since 1.0.0
- * @category interruption
+ * @category runtime
  */
-export const interruptAs = core.interruptAs
-
-/**
- * Ensures that a cleanup functions runs, whether this effect succeeds, fails,
- * or is interrupted.
- *
- * @macro traced
- * @category finalization
- * @since 1.0.0
- */
-export const onExit = core.onExit
-
-/**
- * @macro traced
- * @since 1.0.0
- * @category finalization
- */
-export const onInterrupt = core.onInterrupt
+export const updateRuntimeFlags = core.updateRuntimeFlags
 
 /**
  * @macro traced
@@ -702,31 +796,10 @@ export const withRuntimeFlags = core.withRuntimeFlags
 export const yieldNow = core.yieldNow
 
 /**
- * @macro traced
- * @since 1.0.0
- * @category constructors
- */
-export const unit = core.unit
-
-/**
  * @since 1.0.0
  * @category tracing
  */
 export const traced = core.traced
-
-/**
- * @macro traced
- * @since 1.0.0
- * @category utilities
- */
-export const exit = core.exit
-
-/**
- * @macro traced
- * @since 1.0.0
- * @category utilities
- */
-export const fiberId = core.fiberId
 
 /**
  * @macro traced
