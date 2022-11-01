@@ -21,7 +21,9 @@ export type RefTypeId = typeof RefTypeId
  * @category models
  */
 export interface Ref<A> extends Ref.Variance<A> {
-  /** @internal */
+  /**
+   * @macro traced
+   */
   modify<B>(f: (a: A) => readonly [B, A]): Effect.Effect<never, never, B>
 }
 

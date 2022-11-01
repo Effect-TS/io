@@ -22,7 +22,9 @@ export type SynchronizedTypeId = typeof SynchronizedTypeId
  * @category models
  */
 export interface Synchronized<A> extends Synchronized.Variance<A>, Ref.Ref<A> {
-  /** @internal */
+  /**
+   * @macro traced
+   */
   modifyEffect<R, E, B>(f: (a: A) => Effect.Effect<R, E, readonly [B, A]>): Effect.Effect<R, E, B>
 }
 
