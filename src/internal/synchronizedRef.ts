@@ -29,17 +29,19 @@ export const unsafeMake = <A>(value: A): Synchronized.Synchronized<A> => {
     [SynchronizedTypeId]: synchronizedVariance,
     [_ref.RefTypeId]: _ref.refVariance,
     modify: <B>(f: (a: A) => readonly [B, A]): Effect.Effect<never, never, B> => {
-      return ref.modify(f)
+      const trace = getCallTrace()
+      return ref.modify(f).traced(trace)
     },
     modifyEffect: <R, E, B>(
       f: (a: A) => Effect.Effect<R, E, readonly [B, A]>
     ): Effect.Effect<R, E, B> => {
+      const trace = getCallTrace()
       return pipe(
         _ref.get(ref),
         core.flatMap(f),
         core.flatMap(([b, a]) => pipe(ref, _ref.set(a), core.as(b))),
         Semaphore.withPermit(semaphore)
-      )
+      ).traced(trace)
     }
   }
 }

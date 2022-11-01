@@ -19,14 +19,16 @@ export const unsafeMake = <A>(value: A): Ref.Ref<A> => {
   const ref = MutableRef.make(value)
   return {
     [RefTypeId]: refVariance,
-    modify: (f) =>
-      core.sync(() => {
+    modify: (f) => {
+      const trace = getCallTrace()
+      return core.sync(() => {
         const [b, a] = f(MutableRef.get(ref))
         if ((b as unknown) !== (a as unknown)) {
           MutableRef.set(a)(ref)
         }
         return b
-      })
+      }).traced(trace)
+    }
   }
 }
 
