@@ -739,7 +739,7 @@ const evaluateCause = (
 // -----------------------------------------------------------------------------
 
 /** @internal */
-const SizeCauseReducer: Cause.Cause.Reducer<unknown, unknown, number> = {
+const SizeCauseReducer: Cause.CauseReducer<unknown, unknown, number> = {
   emptyCase: () => 0,
   failCase: () => 1,
   dieCase: () => 1,
@@ -750,7 +750,7 @@ const SizeCauseReducer: Cause.Cause.Reducer<unknown, unknown, number> = {
 }
 
 /** @internal */
-const IsInterruptedOnlyCauseReducer: Cause.Cause.Reducer<unknown, unknown, boolean> = {
+const IsInterruptedOnlyCauseReducer: Cause.CauseReducer<unknown, unknown, boolean> = {
   emptyCase: constTrue,
   failCase: constFalse,
   dieCase: constFalse,
@@ -763,7 +763,7 @@ const IsInterruptedOnlyCauseReducer: Cause.Cause.Reducer<unknown, unknown, boole
 /** @internal */
 const FilterCauseReducer = <E>(
   predicate: Predicate<Cause.Cause<E>>
-): Cause.Cause.Reducer<unknown, E, Cause.Cause<E>> => ({
+): Cause.CauseReducer<unknown, E, Cause.Cause<E>> => ({
   emptyCase: () => empty,
   failCase: (_, error) => fail(error),
   dieCase: (_, defect) => die(defect),
@@ -879,7 +879,7 @@ export const reduce = <Z, E>(
 }
 
 /** @internal */
-export const reduceWithContext = <C, E, Z>(context: C, reducer: Cause.Cause.Reducer<C, E, Z>) => {
+export const reduceWithContext = <C, E, Z>(context: C, reducer: Cause.CauseReducer<C, E, Z>) => {
   return (self: Cause.Cause<E>): Z => {
     let input: Stack<Cause.Cause<E>> | undefined = new Stack(self)
     let output: Stack<Either.Either<CauseCase, Z>> | undefined = undefined
@@ -970,7 +970,7 @@ export const reduceWithContext = <C, E, Z>(context: C, reducer: Cause.Cause.Redu
 }
 
 // -----------------------------------------------------------------------------
-// Reducing
+// Errors
 // -----------------------------------------------------------------------------
 
 /** @internal */
@@ -979,14 +979,30 @@ export const InterruptedExceptionTypeId: Cause.InterruptedExceptionTypeId = Symb
 ) as Cause.InterruptedExceptionTypeId
 
 /** @internal */
-export class InterruptedException implements Cause.Cause.InterruptedException {
+export class InterruptedException implements Cause.InterruptedException {
   readonly [InterruptedExceptionTypeId]: Cause.InterruptedExceptionTypeId = InterruptedExceptionTypeId
   constructor(readonly message?: string) {}
 }
 
 /** @internal */
-export const isInterruptedException = (u: unknown): u is Cause.Cause.InterruptedException => {
-  return u instanceof Error && InterruptedExceptionTypeId in u && u.name === "InterruptedException"
+export const isInterruptedException = (u: unknown): u is Cause.InterruptedException => {
+  return typeof u === "object" && u != null && InterruptedExceptionTypeId in u
+}
+
+/** @internal */
+export const IllegalArgumentExceptionTypeId: Cause.IllegalArgumentExceptionTypeId = Symbol.for(
+  "@effect/io/Cause/errors/IllegalArgument"
+) as Cause.IllegalArgumentExceptionTypeId
+
+/** @internal */
+export class IllegalArgumentException implements Cause.IllegalArgumentException {
+  readonly [IllegalArgumentExceptionTypeId]: Cause.IllegalArgumentExceptionTypeId = IllegalArgumentExceptionTypeId
+  constructor(readonly message?: string) {}
+}
+
+/** @internal */
+export const isIllegalArgumentException = (u: unknown): u is Cause.IllegalArgumentException => {
+  return typeof u === "object" && u != null && IllegalArgumentExceptionTypeId in u
 }
 
 // -----------------------------------------------------------------------------
@@ -1121,7 +1137,7 @@ const times = <A>(value: A, n: number): ReadonlyArray<A> => {
 }
 
 /** @internal */
-const spanToLines = (span: Tracer.Span, renderer: Cause.Cause.Renderer<any>): ReadonlyArray<Doc.Doc<never>> => {
+const spanToLines = (span: Tracer.Span, renderer: Cause.CauseRenderer<any>): ReadonlyArray<Doc.Doc<never>> => {
   const lines: Array<Doc.Doc<never>> = []
   let current = Option.some(span)
   while (Option.isSome(current) && lines.length < renderer.renderSpanDepth) {
@@ -1136,7 +1152,7 @@ const spanToLines = (span: Tracer.Span, renderer: Cause.Cause.Renderer<any>): Re
 }
 
 /** @internal */
-const stackToLines = (stack: StackAnnotation, renderer: Cause.Cause.Renderer<any>): ReadonlyArray<Doc.Doc<never>> => {
+const stackToLines = (stack: StackAnnotation, renderer: Cause.CauseRenderer<any>): ReadonlyArray<Doc.Doc<never>> => {
   const lines: Array<Doc.Doc<never>> = []
   let current = stack.stack
   while (current !== undefined && lines.length < renderer.renderStackDepth) {
@@ -1158,7 +1174,7 @@ const stackToLines = (stack: StackAnnotation, renderer: Cause.Cause.Renderer<any
 /** @internal */
 const renderSpan = (
   span: Option.Option<Tracer.Span>,
-  renderer: Cause.Cause.Renderer<any>
+  renderer: Cause.CauseRenderer<any>
 ): ReadonlyArray<Doc.Doc<never>> => {
   if (!renderer.renderSpan || Option.isNone(span)) {
     return []
@@ -1175,7 +1191,7 @@ const renderSpan = (
 /** @internal */
 const renderStack = (
   span: Option.Option<StackAnnotation>,
-  renderer: Cause.Cause.Renderer<any>
+  renderer: Cause.CauseRenderer<any>
 ): ReadonlyArray<Doc.Doc<never>> => {
   if (!renderer.renderStack || Option.isNone(span)) {
     return []
@@ -1192,7 +1208,7 @@ const renderStack = (
 /** @internal */
 const renderExecution = (
   span: Option.Option<StackAnnotation>,
-  renderer: Cause.Cause.Renderer<any>
+  renderer: Cause.CauseRenderer<any>
 ): ReadonlyArray<Doc.Doc<never>> => {
   if (!renderer.renderExecution || Option.isNone(span)) {
     return []
@@ -1217,7 +1233,7 @@ const renderFail = (
   error: ReadonlyArray<Doc.Doc<never>>,
   span: Option.Option<Tracer.Span>,
   stack: Option.Option<StackAnnotation>,
-  renderer: Cause.Cause.Renderer<any>
+  renderer: Cause.CauseRenderer<any>
 ): SequentialSegment => {
   return SequentialSegment([
     FailureSegment([
@@ -1237,7 +1253,7 @@ const renderDie = (
   error: ReadonlyArray<Doc.Doc<never>>,
   span: Option.Option<Tracer.Span>,
   stack: Option.Option<StackAnnotation>,
-  renderer: Cause.Cause.Renderer<any>
+  renderer: Cause.CauseRenderer<any>
 ): SequentialSegment => {
   return SequentialSegment([
     FailureSegment([
@@ -1257,7 +1273,7 @@ const renderInterrupt = (
   fiberId: FiberId.FiberId,
   span: Option.Option<Tracer.Span>,
   stack: Option.Option<StackAnnotation>,
-  renderer: Cause.Cause.Renderer<any>
+  renderer: Cause.CauseRenderer<any>
 ): SequentialSegment => {
   const ids = Array.from(FiberId.ids(fiberId)).map((id) => `#${id}`).join(", ")
   return SequentialSegment([
@@ -1330,7 +1346,7 @@ const format = (segment: Segment): ReadonlyArray<Doc.Doc<never>> => {
 /** @internal */
 const linearSegments = <E>(
   cause: Cause.Cause<E>,
-  renderer: Cause.Cause.Renderer<E>,
+  renderer: Cause.CauseRenderer<E>,
   span: Option.Option<Tracer.Span>,
   stack: Option.Option<StackAnnotation>
 ): SafeEval.SafeEval<ReadonlyArray<Step>> => {
@@ -1356,7 +1372,7 @@ const linearSegments = <E>(
 /** @internal */
 const parallelSegments = <E>(
   cause: Cause.Cause<E>,
-  renderer: Cause.Cause.Renderer<E>,
+  renderer: Cause.CauseRenderer<E>,
   span: Option.Option<Tracer.Span>,
   stack: Option.Option<StackAnnotation>
 ): SafeEval.SafeEval<ReadonlyArray<SequentialSegment>> => {
@@ -1382,7 +1398,7 @@ const parallelSegments = <E>(
 /** @internal */
 const causeToSequential = <E>(
   cause: Cause.Cause<E>,
-  renderer: Cause.Cause.Renderer<E>,
+  renderer: Cause.CauseRenderer<E>,
   span: Option.Option<Tracer.Span>,
   stack: Option.Option<StackAnnotation>
 ): SafeEval.SafeEval<SequentialSegment> => {
@@ -1460,7 +1476,7 @@ const defaultErrorToLines = (error: unknown) => {
 }
 
 /** @internal */
-export const defaultRenderer: Cause.Cause.Renderer = {
+export const defaultRenderer: Cause.CauseRenderer = {
   lineWidth: 80,
   ribbonFraction: 1,
   renderSpan: Debug.runtimeDebug.traceSpanEnabledInCause,
@@ -1476,7 +1492,7 @@ export const defaultRenderer: Cause.Cause.Renderer = {
 /** @internal */
 const prettyDocuments = <E>(
   cause: Cause.Cause<E>,
-  renderer: Cause.Cause.Renderer<E>
+  renderer: Cause.CauseRenderer<E>
 ): SafeEval.SafeEval<ReadonlyArray<Doc.Doc<never>>> => {
   return pipe(
     causeToSequential(cause, renderer, Option.none, Option.none),
@@ -1497,7 +1513,7 @@ const prettyDocuments = <E>(
 /** @internal */
 const prettySafe = <E>(
   cause: Cause.Cause<E>,
-  renderer: Cause.Cause.Renderer<E>
+  renderer: Cause.CauseRenderer<E>
 ): SafeEval.SafeEval<string> => {
   return pipe(
     prettyDocuments(cause, renderer),
@@ -1518,6 +1534,6 @@ const prettySafe = <E>(
 }
 
 /** @internal */
-export const pretty = <E>(renderer: Cause.Cause.Renderer<E> = defaultRenderer) => {
+export const pretty = <E>(renderer: Cause.CauseRenderer<E> = defaultRenderer) => {
   return (self: Cause.Cause<E>): string => SafeEval.execute(prettySafe(self, renderer))
 }

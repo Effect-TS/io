@@ -56,6 +56,18 @@ export type InterruptedExceptionTypeId = typeof InterruptedExceptionTypeId
  * @since 1.0.0
  * @category symbols
  */
+export const IllegalArgumentExceptionTypeId: unique symbol = internal.IllegalArgumentExceptionTypeId
+
+/**
+ * @since 1.0.0
+ * @category symbols
+ */
+export type IllegalArgumentExceptionTypeId = typeof IllegalArgumentExceptionTypeId
+
+/**
+ * @since 1.0.0
+ * @category symbols
+ */
 export const StackAnnotationTypeId: unique symbol = internal.StackAnnotationTypeId
 
 /**
@@ -90,68 +102,84 @@ export type Cause<E> =
  */
 export declare namespace Cause {
   /**
-   * Represents a set of methods that can be used to reduce a `Cause<E>` to a
-   * specified value of type `Z` with access to a context of type `C`.
-   *
    * @since 1.0.0
    * @category models
    */
-  export interface Reducer<C, E, Z> {
-    readonly emptyCase: (context: C) => Z
-    readonly failCase: (context: C, error: E) => Z
-    readonly dieCase: (context: C, defect: unknown) => Z
-    readonly interruptCase: (context: C, fiberId: FiberId) => Z
-    readonly annotatedCase: (context: C, value: Z, annotation: unknown) => Z
-    readonly sequentialCase: (context: C, left: Z, right: Z) => Z
-    readonly parallelCase: (context: C, left: Z, right: Z) => Z
+  export interface Variance<E> {
+    readonly [CauseTypeId]: {
+      readonly _E: (_: never) => E
+    }
   }
 
+  /**
+   * @since 1.0.0
+   * @category models
+   */
   export interface StackAnnotation {
     readonly [StackAnnotationTypeId]: StackAnnotationTypeId
     readonly stack: Stack<Continuation> | undefined
     readonly execution: Chunk<string> | undefined
   }
-
-  /**
-   * Represents the configuration parameters and methods required to pretty-
-   * print a `Cause`.
-   *
-   * @since 1.0.0
-   * @category rendering
-   */
-  export interface Renderer<E = unknown> {
-    readonly lineWidth: number
-    readonly ribbonFraction: number
-    readonly renderSpan: boolean
-    readonly renderExecution: boolean
-    readonly renderStack: boolean
-    readonly renderSpanDepth: number
-    readonly renderExecutionDepth: number
-    readonly renderStackDepth: number
-    readonly renderError: (error: E) => ReadonlyArray<string>
-    readonly renderUnknown: (error: unknown) => ReadonlyArray<string>
-  }
-
-  /**
-   * Represents a checked exception which occurs when a `Fiber` is interrupted.
-   *
-   * @since 1.0.0
-   * @category models
-   */
-  export interface InterruptedException {
-    readonly [InterruptedExceptionTypeId]: InterruptedExceptionTypeId
-    readonly message?: string
-  }
 }
 
 /**
+ * Represents a set of methods that can be used to reduce a `Cause<E>` to a
+ * specified value of type `Z` with access to a context of type `C`.
+ *
  * @since 1.0.0
  * @category models
  */
-export interface Variance<E> {
-  readonly [CauseTypeId]: {
-    readonly _E: (_: never) => E
-  }
+export interface CauseReducer<C, E, Z> {
+  readonly emptyCase: (context: C) => Z
+  readonly failCase: (context: C, error: E) => Z
+  readonly dieCase: (context: C, defect: unknown) => Z
+  readonly interruptCase: (context: C, fiberId: FiberId) => Z
+  readonly annotatedCase: (context: C, value: Z, annotation: unknown) => Z
+  readonly sequentialCase: (context: C, left: Z, right: Z) => Z
+  readonly parallelCase: (context: C, left: Z, right: Z) => Z
+}
+
+/**
+ * Represents the configuration parameters and methods required to pretty-
+ * print a `Cause`.
+ *
+ * @since 1.0.0
+ * @category rendering
+ */
+export interface CauseRenderer<E = unknown> {
+  readonly lineWidth: number
+  readonly ribbonFraction: number
+  readonly renderSpan: boolean
+  readonly renderExecution: boolean
+  readonly renderStack: boolean
+  readonly renderSpanDepth: number
+  readonly renderExecutionDepth: number
+  readonly renderStackDepth: number
+  readonly renderError: (error: E) => ReadonlyArray<string>
+  readonly renderUnknown: (error: unknown) => ReadonlyArray<string>
+}
+
+/**
+ * Represents a checked exception which occurs when a `Fiber` is interrupted.
+ *
+ * @since 1.0.0
+ * @category models
+ */
+export interface InterruptedException {
+  readonly [InterruptedExceptionTypeId]: InterruptedExceptionTypeId
+  readonly message?: string
+}
+
+/**
+ * Represents a checked exception which occurs when an invalid argument is
+ * provided to a method.
+ *
+ * @since 1.0.0
+ * @category models
+ */
+export interface IllegalArgumentException {
+  readonly [IllegalArgumentExceptionTypeId]: IllegalArgumentExceptionTypeId
+  readonly message?: string
 }
 
 /**
@@ -160,7 +188,7 @@ export interface Variance<E> {
  * @since 1.0.0
  * @category models
  */
-export interface Empty extends Variance<never>, Equal {
+export interface Empty extends Cause.Variance<never>, Equal {
   readonly _tag: "Empty"
 }
 
@@ -171,7 +199,7 @@ export interface Empty extends Variance<never>, Equal {
  * @since 1.0.0
  * @category models
  */
-export interface Fail<E> extends Variance<E>, Equal {
+export interface Fail<E> extends Cause.Variance<E>, Equal {
   readonly _tag: "Fail"
   readonly error: E
 }
@@ -184,7 +212,7 @@ export interface Fail<E> extends Variance<E>, Equal {
  * @since 1.0.0
  * @category models
  */
-export interface Die extends Variance<never>, Equal {
+export interface Die extends Cause.Variance<never>, Equal {
   readonly _tag: "Die"
   readonly defect: unknown
 }
@@ -196,7 +224,7 @@ export interface Die extends Variance<never>, Equal {
  * @since 1.0.0
  * @category models
  */
-export interface Interrupt extends Variance<never>, Equal {
+export interface Interrupt extends Cause.Variance<never>, Equal {
   readonly _tag: "Interrupt"
   readonly fiberId: FiberId
 }
@@ -210,7 +238,7 @@ export interface Interrupt extends Variance<never>, Equal {
  * @since 1.0.0
  * @category models
  */
-export interface Annotated<E> extends Variance<E>, Equal {
+export interface Annotated<E> extends Cause.Variance<E>, Equal {
   readonly _tag: "Annotated"
   readonly cause: Cause<E>
   readonly annotation: unknown
@@ -229,7 +257,7 @@ export interface Annotated<E> extends Variance<E>, Equal {
  * @since 1.0.0
  * @category models
  */
-export interface Parallel<E> extends Variance<E>, Equal {
+export interface Parallel<E> extends Cause.Variance<E>, Equal {
   readonly _tag: "Parallel"
   readonly left: Cause<E>
   readonly right: Cause<E>
@@ -247,7 +275,7 @@ export interface Parallel<E> extends Variance<E>, Equal {
  * @since 1.0.0
  * @category models
  */
-export interface Sequential<E> extends Variance<E>, Equal {
+export interface Sequential<E> extends Cause.Variance<E>, Equal {
   readonly _tag: "Sequential"
   readonly left: Cause<E>
   readonly right: Cause<E>
@@ -644,6 +672,24 @@ export const InterruptedException = internal.InterruptedException
  * @category refinements
  */
 export const isInterruptedException = internal.isInterruptedException
+
+/**
+ * Represents a checked exception which occurs when an invalid argument is
+ * provided to a method.
+ *
+ * @since 1.0.0
+ * @category errors
+ */
+export const IllegalArgumentException = internal.IllegalArgumentException
+
+/**
+ * Returns `true` if the specified value is an `IllegalArgumentException`, `false`
+ * otherwise.
+
+ * @since 1.0.0
+ * @category refinements
+ */
+export const isIllegalArgumentException = internal.isIllegalArgumentException
 
 /**
  * The default `Cause.Renderer`.
