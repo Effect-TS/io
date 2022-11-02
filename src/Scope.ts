@@ -42,7 +42,7 @@ export interface Scope {
   /** @internal */
   readonly fork: (strategy: ExecutionStrategy) => Effect.Effect<never, never, Scope.Closeable>
   /** @internal */
-  readonly addFinalizerExit: (finalizer: Scope.Finalizer) => Effect.Effect<never, never, void>
+  readonly addFinalizer: (finalizer: Scope.Finalizer) => Effect.Effect<never, never, void>
 }
 
 /**

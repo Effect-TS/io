@@ -4,10 +4,12 @@ import type * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
 import * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
 import type * as Exit from "@effect/io/Exit"
+import type * as Fiber from "@effect/io/Fiber"
 import * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRuntime from "@effect/io/Fiber/Runtime"
-import * as FiberRuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
-import * as FiberRuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
+import * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
+import * as RuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
+import * as FiberScope from "@effect/io/Fiber/Scope"
 import type * as FiberStatus from "@effect/io/Fiber/Status"
 import type * as FiberRef from "@effect/io/FiberRef"
 import * as deferred from "@effect/io/internal/deferred"
@@ -144,8 +146,8 @@ export interface Sync extends
 /** @internal */
 export interface UpdateRuntimeFlags extends
   Op<OpCodes.OP_UPDATE_RUNTIME_FLAGS, {
-    readonly update: FiberRuntimeFlagsPatch.RuntimeFlagsPatch
-    readonly scope?: (oldRuntimeFlags: FiberRuntimeFlags.RuntimeFlags) => Primitive
+    readonly update: RuntimeFlagsPatch.RuntimeFlagsPatch
+    readonly scope?: (oldRuntimeFlags: RuntimeFlags.RuntimeFlags) => Primitive
   }>
 {}
 
@@ -397,7 +399,7 @@ export const suspendSucceed = <R, E, A>(
 
 /** @internal */
 export const updateRuntimeFlags = (
-  patch: FiberRuntimeFlagsPatch.RuntimeFlagsPatch
+  patch: RuntimeFlagsPatch.RuntimeFlagsPatch
 ): Effect.Effect<never, never, void> => {
   const trace = getCallTrace()
   const effect = Object.create(proto)
@@ -414,7 +416,7 @@ export const interruptible = <R, E, A>(
   const trace = getCallTrace()
   const effect = Object.create(proto)
   effect.op = OpCodes.OP_UPDATE_RUNTIME_FLAGS
-  effect.update = FiberRuntimeFlagsPatch.enable(FiberRuntimeFlags.Interruption)
+  effect.update = RuntimeFlagsPatch.enable(RuntimeFlags.Interruption)
   effect.scope = () => self
   effect.trace = trace
   return effect
@@ -427,7 +429,7 @@ export const uninterruptible = <R, E, A>(
   const trace = getCallTrace()
   const effect = Object.create(proto)
   effect.op = OpCodes.OP_UPDATE_RUNTIME_FLAGS
-  effect.update = FiberRuntimeFlagsPatch.disable(FiberRuntimeFlags.Interruption)
+  effect.update = RuntimeFlagsPatch.disable(RuntimeFlags.Interruption)
   effect.scope = () => self
   effect.trace = trace
   return effect
@@ -444,9 +446,9 @@ export const uninterruptibleMask = <R, E, A>(
   const trace = getCallTrace()
   const effect = Object.create(proto)
   effect.op = OpCodes.OP_UPDATE_RUNTIME_FLAGS
-  effect.update = FiberRuntimeFlagsPatch.disable(FiberRuntimeFlags.Interruption)
-  effect.scope = (oldFlags: FiberRuntimeFlags.RuntimeFlags) =>
-    FiberRuntimeFlags.interruption(oldFlags)
+  effect.update = RuntimeFlagsPatch.disable(RuntimeFlags.Interruption)
+  effect.scope = (oldFlags: RuntimeFlags.RuntimeFlags) =>
+    RuntimeFlags.interruption(oldFlags)
       ? f(interruptible)
       : f(uninterruptible)
   effect.trace = trace
@@ -464,9 +466,9 @@ export const interruptibleMask = <R, E, A>(
   const trace = getCallTrace()
   const effect = Object.create(proto)
   effect.op = OpCodes.OP_UPDATE_RUNTIME_FLAGS
-  effect.update = FiberRuntimeFlagsPatch.enable(FiberRuntimeFlags.Interruption)
-  effect.scope = (oldFlags: FiberRuntimeFlags.RuntimeFlags) =>
-    FiberRuntimeFlags.interruption(oldFlags)
+  effect.update = RuntimeFlagsPatch.enable(RuntimeFlags.Interruption)
+  effect.scope = (oldFlags: RuntimeFlags.RuntimeFlags) =>
+    RuntimeFlags.interruption(oldFlags)
       ? f(interruptible)
       : f(uninterruptible)
   effect.trace = trace
@@ -516,7 +518,7 @@ export const intoDeferred = <E, A>(deferred: Deferred.Deferred<E, A>) => {
 
 /** @internal */
 export const withRuntimeFlags = (
-  update: FiberRuntimeFlagsPatch.RuntimeFlagsPatch
+  update: RuntimeFlagsPatch.RuntimeFlagsPatch
 ) => {
   const trace = getCallTrace()
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
@@ -599,6 +601,36 @@ export const done = <E, A>(exit: Exit.Exit<E, A>): Effect.Effect<never, E, A> =>
 }
 
 /** @internal */
+export const daemonChildren = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
+  const trace = getCallTrace()
+  return pipe(self, pipe(forkScopeOverride, locallyFiberRef(Option.some(FiberScope.globalScope)))).traced(trace)
+}
+
+// TODO(Mike): do.
+/** @internal */
+export declare const unsafeFork: <R, E, A, E2, B>(
+  effect: Effect.Effect<R, E, A>,
+  parentFiber: FiberRuntime.Runtime<E2, B>,
+  parentRuntimeFlags: RuntimeFlags.RuntimeFlags
+) => Fiber.RuntimeFiber<E, A>
+
+/** @internal */
+export const fork = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>> => {
+  const trace = getCallTrace()
+  return withFiberRuntime<R, never, Fiber.RuntimeFiber<E, A>>((state, status) =>
+    succeed(unsafeFork(self, state, status.runtimeFlags))
+  ).traced(trace)
+}
+
+/** @internal */
+export const forkDaemon = <R, E, A>(
+  self: Effect.Effect<R, E, A>
+): Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>> => {
+  const trace = getCallTrace()
+  return daemonChildren(fork(self)).traced(trace)
+}
+
+/** @internal */
 export const onExit = <E, A, R2, X>(cleanup: (exit: Exit.Exit<E, A>) => Effect.Effect<R2, never, X>) => {
   const trace = getCallTrace()
   return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E, A> =>
@@ -613,6 +645,14 @@ export const onExit = <E, A, R2, X>(cleanup: (exit: Exit.Exit<E, A>) => Effect.E
 export const scope = () => {
   const trace = getCallTrace()
   return service(scopeTag).traced(trace)
+}
+
+/** @internal */
+export const scopeWith = <R, E, A>(
+  f: (scope: Scope.Scope) => Effect.Effect<R, E, A>
+): Effect.Effect<R | Scope.Scope, E, A> => {
+  const trace = getCallTrace()
+  return serviceWithEffect(scopeTag, f).traced(trace)
 }
 
 /** @internal */
@@ -1070,6 +1110,12 @@ export const currentParallelism: FiberRef.FiberRef<Option.Option<number>> = unsa
 )
 
 /** @internal */
+export const forkScopeOverride: FiberRef.FiberRef<Option.Option<FiberScope.FiberScope>> = unsafeMakeFiberRef(
+  Option.none,
+  () => Option.none as Option.Option<FiberScope.FiberScope>
+)
+
+/** @internal */
 export const interruptedCause: FiberRef.FiberRef<Cause.Cause<never>> = unsafeMakeFiberRef(
   Cause.empty,
   () => Cause.empty,
@@ -1085,11 +1131,11 @@ export const scopeTag = Context.Tag<Scope.Scope>()
 
 /** @internal */
 export const scopeAddFinalizer = (finalizer: Effect.Effect<never, never, unknown>) =>
-  (self: Scope.Scope): Effect.Effect<never, never, void> => self.addFinalizerExit(() => finalizer)
+  (self: Scope.Scope): Effect.Effect<never, never, void> => self.addFinalizer(() => finalizer)
 
 /** @internal */
 export const scopeAddFinalizerExit = (finalizer: Scope.Scope.Finalizer) =>
-  (self: Scope.Scope): Effect.Effect<never, never, void> => self.addFinalizerExit(finalizer)
+  (self: Scope.Scope): Effect.Effect<never, never, void> => self.addFinalizer(finalizer)
 
 /** @internal */
 export const scopeClose = (exit: Exit.Exit<unknown, unknown>) =>
@@ -1139,14 +1185,14 @@ export const scopeMake: (
               pipe(
                 rm,
                 releaseMapAdd((exit) => scope.close(exit)),
-                tap((fin) => scope.addFinalizerExit(fin)),
+                tap((fin) => scope.addFinalizer(fin)),
                 map(() => scope)
               )
             )
           )
         ),
       close: (exit) => asUnit(releaseMapReleaseAll(strategy, exit)(rm)),
-      addFinalizerExit: (fin) => asUnit(releaseMapAdd(fin)(rm))
+      addFinalizer: (fin) => asUnit(releaseMapAdd(fin)(rm))
     }))
   )
 

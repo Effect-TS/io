@@ -1021,6 +1021,21 @@ export const isIllegalArgumentException = (u: unknown): u is Cause.IllegalArgume
   return typeof u === "object" && u != null && IllegalArgumentExceptionTypeId in u
 }
 
+/** @internal */
+export const NoSuchElementExceptionTypeId: Cause.NoSuchElementExceptionTypeId = Symbol.for(
+  "@effect/io/Cause/errors/NoSuchElement"
+) as Cause.NoSuchElementExceptionTypeId
+
+/** @internal */
+export class NoSuchElementException implements Cause.NoSuchElementException {
+  readonly [NoSuchElementExceptionTypeId]: Cause.NoSuchElementExceptionTypeId = NoSuchElementExceptionTypeId
+  constructor(readonly message?: string) {}
+}
+
+/** @internal */
+export const isNoSuchElementException = (u: unknown): u is Cause.NoSuchElementException => {
+  return typeof u === "object" && u != null && NoSuchElementExceptionTypeId in u
+}
 // -----------------------------------------------------------------------------
 // Stack Annotations
 // -----------------------------------------------------------------------------
