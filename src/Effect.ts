@@ -2135,6 +2135,171 @@ export const raceFirst = effect.raceFirst
 export const raceWith = effect.raceWith
 
 /**
+ * Retreives the `Random` service from the environment.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const random = effect.random
+
+/**
+ * Retreives the `Random` service from the environment and uses it to run the
+ * specified workflow.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const randomWith = effect.randomWith
+
+/**
+ * Folds an `Iterable<A>` using an effectual function f, working sequentially
+ * from left to right.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category folding
+ */
+export const reduce = effect.reduce
+
+/**
+ * Reduces an `Iterable<Effect<R, E, A>>` to a single effect, working
+ * sequentially.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category folding
+ */
+export const reduceAll = effect.reduceAll
+
+/**
+ * Reduces an `Iterable<Effect<R, E, A>>` to a single effect, working in
+ * parallel.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category folding
+ */
+export const reduceAllPar = effect.reduceAllPar
+
+/**
+ * Folds an `Iterable<A>` using an effectual function f, working sequentially from left to right.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category folding
+ */
+export const reduceRight = effect.reduceRight
+
+/**
+ * Folds over the elements in this chunk from the left, stopping the fold early
+ * when the predicate is not satisfied.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category folding
+ */
+export const reduceWhile = effect.reduceWhile
+
+/**
+ * Keeps some of the errors, and terminates the fiber with the rest
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const refineOrDie = effect.refineOrDie
+
+/**
+ * Keeps some of the errors, and terminates the fiber with the rest, using
+ * the specified function to convert the `E` into a defect.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const refineOrDieWith = effect.refineOrDieWith
+
+/**
+ * Fail with the returned value if the `PartialFunction` matches, otherwise
+ * continue with our held value.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const reject = effect.reject
+
+/**
+ * Continue with the returned computation if the `PartialFunction` matches,
+ * translating the successful match into a failure, otherwise continue with
+ * our held value.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const rejectEffect = effect.rejectEffect
+
+/**
+ * Replicates the given effect `n` times.
+ *
+ * @since 1.0.0
+ * @category mutations
+ */
+export const replicate = effect.replicate
+
+/**
+ * Performs this effect the specified number of times and collects the
+ * results.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const replicateEffect = effect.replicateEffect
+
+/**
+ * Performs this effect the specified number of times, discarding the
+ * results.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const replicateEffectDiscard = effect.replicateEffectDiscard
+
+/**
+ * Unearth the unchecked failure of the effect (opposite of `orDie`).
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const resurrect = effect.resurrect
+
+/**
+ * "Zooms in" on the value in the `Right` side of an `Either`, moving the
+ * possibility that the value is a `Left` to the error channel.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category getters
+ */
+export const right = effect.right
+
+/**
+ * Performs the specified operation while "zoomed in" on the `Right` case of an
+ * `Either`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category getters
+ */
+export const rightWith = effect.rightWith
+
+/**
  * Exposes the full `Cause` of failure for the specified effect.
  *
  * @macro traced
@@ -2267,6 +2432,16 @@ export const unit = core.unit
  * @category error handling
  */
 export const unrefineWith = effect.unrefineWith
+
+/**
+ * Converts a `Effect<R, Either<B, E>, A>` into a `Effect<R, E, Either<B, A>>`.
+ * The inverse of `right`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const unright = effect.unright
 
 /**
  * Converts an option on errors into an option on values.

@@ -14,6 +14,7 @@ import * as OpCodes from "@effect/io/internal/opCodes/effect"
 import type { MergeRecord } from "@effect/io/internal/types"
 import * as LogLevel from "@effect/io/Logger/Level"
 import * as LogSpan from "@effect/io/Logger/Span"
+import * as Random from "@effect/io/Random"
 import * as Ref from "@effect/io/Ref"
 import * as Synchronized from "@effect/io/Ref/Synchronized"
 import * as Scope from "@effect/io/Scope"
@@ -29,6 +30,12 @@ import * as MutableRef from "@fp-ts/data/mutable/MutableRef"
 import * as Option from "@fp-ts/data/Option"
 import type { Predicate } from "@fp-ts/data/Predicate"
 import type { Refinement } from "@fp-ts/data/Refinement"
+
+// TODO:
+// - [ ] delay family
+// - [ ] repeat family
+// - [ ] retry family
+// - [ ] schedule family
 
 /** @internal */
 const EffectErrorSymbolKey = "@effect/io/Effect/Error"
@@ -2421,6 +2428,228 @@ export const raceWith = <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
 }
 
 /** @internal */
+export const random = (): Effect.Effect<never, never, Random.Random> => {
+  const trace = getCallTrace()
+  return randomWith(core.succeed).traced(trace)
+}
+
+/** @internal */
+export const randomWith = Random.randomWith
+
+/** @internal */
+export const reduce = <Z, A, R, E>(zero: Z, f: (z: Z, a: A) => Effect.Effect<R, E, Z>) => {
+  const trace = getCallTrace()
+  return (elements: Iterable<A>): Effect.Effect<R, E, Z> => {
+    return Array.from(elements).reduce(
+      (acc, el) => pipe(acc, core.flatMap((a) => f(a, el))),
+      core.succeed(zero) as Effect.Effect<R, E, Z>
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+export const reduceAll = <R, E, A>(zero: Effect.Effect<R, E, A>, f: (acc: A, a: A) => A) => {
+  const trace = getCallTrace()
+  return (elements: Iterable<Effect.Effect<R, E, A>>): Effect.Effect<R, E, A> => {
+    return Array.from(elements).reduce((acc, a) => pipe(acc, core.zipWith(a, f)), zero).traced(trace)
+  }
+}
+
+/** @internal */
+export const reduceAllPar = <R, E, A>(
+  zero: Effect.Effect<R, E, A>,
+  f: (acc: A, a: A) => A
+) => {
+  const trace = getCallTrace()
+  return (elements: Iterable<Effect.Effect<R, E, A>>): Effect.Effect<R, E, A> => {
+    return core.suspendSucceed(() =>
+      pipe(
+        [zero, ...Array.from(elements)],
+        mergeAllPar(
+          Option.none as Option.Option<A>,
+          (acc, elem) => {
+            switch (acc._tag) {
+              case "None": {
+                return Option.some(elem)
+              }
+              case "Some": {
+                return Option.some(f(acc.value, elem))
+              }
+            }
+          }
+        ),
+        core.map((option) => {
+          switch (option._tag) {
+            case "None": {
+              throw new Error(
+                "BUG: Effect.reduceAllPar - please report an issue at https://github.com/Effect-TS/io/issues"
+              )
+            }
+            case "Some": {
+              return option.value
+            }
+          }
+        })
+      )
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+export const reduceRight = <A, Z, R, E>(zero: Z, f: (a: A, z: Z) => Effect.Effect<R, E, Z>) => {
+  const trace = getCallTrace()
+  return (elements: Iterable<A>): Effect.Effect<R, E, Z> => {
+    return Array.from(elements).reduceRight(
+      (acc, el) => pipe(acc, core.flatMap((a) => f(el, a))),
+      core.succeed(zero) as Effect.Effect<R, E, Z>
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+export const reduceWhile = <A, R, E, Z>(
+  zero: Z,
+  p: Predicate<Z>,
+  f: (s: Z, a: A) => Effect.Effect<R, E, Z>
+) => {
+  const trace = getCallTrace()
+  return (elements: Iterable<A>): Effect.Effect<R, E, Z> => {
+    const iterator = elements[Symbol.iterator]()
+    let next: IteratorResult<A, any>
+    let acc: Effect.Effect<R, E, Z> = core.succeed(zero)
+    while (!(next = iterator.next()).done) {
+      acc = pipe(acc, core.flatMap((z) => f(z, next.value)))
+    }
+    return acc.traced(trace)
+  }
+}
+
+/** @internal */
+export const refineOrDie = <E, E1>(pf: (e: E) => Option.Option<E1>) => {
+  const trace = getCallTrace()
+  return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E1, A> => {
+    return pipe(self, refineOrDieWith(pf, identity)).traced(trace)
+  }
+}
+
+/** @internal */
+export const reject = <A, E1>(pf: (a: A) => Option.Option<E1>) => {
+  const trace = getCallTrace()
+  return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E | E1, A> => {
+    return pipe(self, rejectEffect((a) => pipe(pf(a), Option.map(core.fail)))).traced(trace)
+  }
+}
+
+/** @internal */
+export const rejectEffect = <A, R1, E1>(pf: (a: A) => Option.Option<Effect.Effect<R1, E1, E1>>) => {
+  const trace = getCallTrace()
+  return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1, E | E1, A> => {
+    return pipe(
+      self,
+      core.flatMap((a) => {
+        const option = pf(a)
+        switch (option._tag) {
+          case "None": {
+            return core.succeed(a)
+          }
+          case "Some": {
+            return pipe(option.value, core.flatMap(core.fail))
+          }
+        }
+      })
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+export const refineOrDieWith = <E, E1>(
+  pf: (e: E) => Option.Option<E1>,
+  f: (e: E) => unknown
+) => {
+  const trace = getCallTrace()
+  return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E1, A> => {
+    return pipe(
+      self,
+      catchAll((e) => {
+        const option = pf(e)
+        switch (option._tag) {
+          case "None": {
+            return core.die(f(e))
+          }
+          case "Some": {
+            return core.fail(option.value)
+          }
+        }
+      })
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+export const replicate = (n: number) => {
+  return <R, E, A>(self: Effect.Effect<R, E, A>): Chunk.Chunk<Effect.Effect<R, E, A>> => {
+    return Chunk.unsafeFromArray(Array.from({ length: n - 1 }, () => self))
+  }
+}
+
+/** @internal */
+export const replicateEffect = (n: number) => {
+  const trace = getCallTrace()
+  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, Chunk.Chunk<A>> => {
+    return collectAll(replicate(n)(self)).traced(trace)
+  }
+}
+
+/** @internal */
+export const replicateEffectDiscard = (n: number) => {
+  const trace = getCallTrace()
+  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, void> => {
+    return collectAllDiscard(replicate(n)(self)).traced(trace)
+  }
+}
+
+/** @internal */
+export const resurrect = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, unknown, A> => {
+  const trace = getCallTrace()
+  return pipe(self, unrefineWith(Option.some, identity)).traced(trace)
+}
+
+/** @internal */
+export const right = <R, E, A, B>(
+  self: Effect.Effect<R, E, Either.Either<A, B>>
+): Effect.Effect<R, Either.Either<A, E>, B> => {
+  const trace = getCallTrace()
+  return pipe(
+    self,
+    foldEffect(
+      (e) => core.fail(Either.right(e)),
+      (either) => {
+        switch (either._tag) {
+          case "Left": {
+            return core.fail(Either.left(either.left))
+          }
+          case "Right": {
+            return core.succeed(either.right)
+          }
+        }
+      }
+    )
+  ).traced(trace)
+}
+
+/** @internal */
+export const rightWith = <R, E, A, A1, B, B1, R1, E1>(
+  f: (effect: Effect.Effect<R, Either.Either<A, E>, B>) => Effect.Effect<R1, Either.Either<A1, E1>, B1>
+) => {
+  const trace = getCallTrace()
+  return (
+    self: Effect.Effect<R, E, Either.Either<A, B>>
+  ): Effect.Effect<R | R1, E | E1, Either.Either<A1, B1>> => {
+    return core.suspendSucceed(() => unright(f(right(self)))).traced(trace)
+  }
+}
+
+/** @internal */
 export const sandbox = <R, E, A>(
   self: Effect.Effect<R, E, A>
 ): Effect.Effect<R, Cause.Cause<E>, A> => {
@@ -2497,6 +2726,29 @@ export const unrefineWith = <E, E1, E2>(
       )
     ).traced(trace)
   }
+}
+
+/** @internal */
+export const unright = <R, B, E, A>(
+  self: Effect.Effect<R, Either.Either<B, E>, A>
+): Effect.Effect<R, E, Either.Either<B, A>> => {
+  const trace = getCallTrace()
+  return pipe(
+    self,
+    foldEffect(
+      (either) => {
+        switch (either._tag) {
+          case "Left": {
+            return core.succeed(Either.left(either.left))
+          }
+          case "Right": {
+            return core.fail(either.right)
+          }
+        }
+      },
+      (a) => core.succeed(Either.right(a))
+    )
+  ).traced(trace)
 }
 
 /** @internal */

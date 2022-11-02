@@ -4,6 +4,9 @@ import type * as DefaultServices from "@effect/io/DefaultServices"
 import type * as Effect from "@effect/io/Effect"
 import * as clock from "@effect/io/internal/clock"
 import * as core from "@effect/io/internal/core"
+import * as random from "@effect/io/internal/random"
+import type * as Random from "@effect/io/Random"
+import type * as Chunk from "@fp-ts/data/Chunk"
 import * as Context from "@fp-ts/data/Context"
 import type * as Duration from "@fp-ts/data/Duration"
 import { pipe } from "@fp-ts/data/Function"
@@ -11,9 +14,8 @@ import { pipe } from "@fp-ts/data/Function"
 /** @internal */
 export const liveServices: Context.Context<DefaultServices.DefaultServices> = pipe(
   Context.empty(),
-  Context.add(clock.clockTag)(clock.make())
-  // TODO(Max): implement after Random
-  // Context.add(Random.Tag)(Random.default)
+  Context.add(clock.clockTag)(clock.make()),
+  Context.add(random.randomTag)(random.make((Math.random() * 4294967296) >>> 0))
 )
 
 /**
@@ -24,7 +26,7 @@ export const liveServices: Context.Context<DefaultServices.DefaultServices> = pi
  */
 export const currentServices = core.unsafeMakeEnvironmentFiberRef(liveServices)
 
-// circular
+// circular with Clock
 
 /** @internal */
 export const currentTimeMillis = (): Effect.Effect<never, never, number> => {
@@ -45,4 +47,51 @@ export const clockWith = <R, E, A>(f: (clock: Clock.Clock) => Effect.Effect<R, E
     currentServices,
     core.getWithFiberRef((services) => f(pipe(services, Context.get(clock.clockTag))))
   ).traced(trace)
+}
+
+// circular with Random
+
+/** @internal */
+export const randomWith = <R, E, A>(f: (random: Random.Random) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
+  const trace = getCallTrace()
+  return pipe(
+    currentServices,
+    core.getWithFiberRef((services) => f(pipe(services, Context.get(random.randomTag))))
+  ).traced(trace)
+}
+
+/** @internal */
+export const next = (): Effect.Effect<never, never, number> => {
+  const trace = getCallTrace()
+  return randomWith((random) => random.next).traced(trace)
+}
+
+/** @internal */
+export const nextInt = (): Effect.Effect<never, never, number> => {
+  const trace = getCallTrace()
+  return randomWith((random) => random.nextInt).traced(trace)
+}
+
+/** @internal */
+export const nextBoolean = (): Effect.Effect<never, never, boolean> => {
+  const trace = getCallTrace()
+  return randomWith((random) => random.nextBoolean).traced(trace)
+}
+
+/** @internal */
+export const nextRange = (min: number, max: number): Effect.Effect<never, never, number> => {
+  const trace = getCallTrace()
+  return randomWith((random) => random.nextRange(min, max)).traced(trace)
+}
+
+/** @internal */
+export const nextIntBetween = (min: number, max: number): Effect.Effect<never, never, number> => {
+  const trace = getCallTrace()
+  return randomWith((random) => random.nextIntBetween(min, max)).traced(trace)
+}
+
+/** @internal */
+export const shuffle = <A>(elements: Iterable<A>): Effect.Effect<never, never, Chunk.Chunk<A>> => {
+  const trace = getCallTrace()
+  return randomWith((random) => random.shuffle(elements)).traced(trace)
 }
