@@ -207,7 +207,19 @@ export const currentEnvironment = core.currentEnvironment
  * @since 1.0.0
  * @category fiberRefs
  */
+export const currentLogAnnotations = core.currentLogAnnotations
+
+/**
+ * @since 1.0.0
+ * @category fiberRefs
+ */
 export const currentLogLevel = core.currentLogLevel
+
+/**
+ * @since 1.0.0
+ * @category fiberRefs
+ */
+export const currentLogSpan = core.currentLogSpan
 
 /**
  * @since 1.0.0

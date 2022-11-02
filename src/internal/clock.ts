@@ -2,6 +2,7 @@ import type * as Clock from "@effect/io/Clock"
 import { getCallTrace } from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal/core"
+import * as Context from "@fp-ts/data/Context"
 import type * as Duration from "@fp-ts/data/Duration"
 import * as Either from "@fp-ts/data/Either"
 import { constFalse } from "@fp-ts/data/Function"
@@ -13,6 +14,9 @@ const ClockSymbolKey = "@effect/io/Clock"
 export const ClockTypeId: Clock.ClockTypeId = Symbol.for(
   ClockSymbolKey
 ) as Clock.ClockTypeId
+
+/** @internal */
+export const clockTag: Context.Tag<Clock.Clock> = Context.Tag()
 
 /** @internal */
 export const MAX_TIMER_MILLIS = 2 ** 31 - 1

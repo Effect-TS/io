@@ -16,6 +16,7 @@ import * as deferred from "@effect/io/internal/deferred"
 import * as OpCodes from "@effect/io/internal/opCodes/effect"
 import * as Scheduler from "@effect/io/internal/scheduler"
 import type * as LogLevel from "@effect/io/Logger/Level"
+import type * as LogSpan from "@effect/io/Logger/Span"
 import type * as Scope from "@effect/io/Scope"
 import type * as Chunk from "@fp-ts/data/Chunk"
 import * as Context from "@fp-ts/data/Context"
@@ -1094,12 +1095,22 @@ export const currentEnvironment: FiberRef.FiberRef<Context.Context<never>> = uns
 )
 
 /** @internal */
+export const currentLogAnnotations: FiberRef.FiberRef<ReadonlyMap<string, string>> = unsafeMakeFiberRef(
+  new Map() as ReadonlyMap<string, string>
+)
+
+/** @internal */
 export const currentLogLevel: FiberRef.FiberRef<LogLevel.LogLevel> = unsafeMakeFiberRef<LogLevel.LogLevel>({
   _tag: "Info",
   syslog: 6,
   label: "INFO",
   ordinal: 20000
 })
+
+/** @internal */
+export const currentLogSpan: FiberRef.FiberRef<List.List<LogSpan.LogSpan>> = unsafeMakeFiberRef(
+  List.empty<LogSpan.LogSpan>()
+)
 
 /** @internal */
 export const currentScheduler: FiberRef.FiberRef<Scheduler.Scheduler> = unsafeMakeFiberRef(Scheduler.defaultScheduler)
