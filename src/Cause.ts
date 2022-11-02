@@ -80,6 +80,18 @@ export type IllegalArgumentExceptionTypeId = typeof IllegalArgumentExceptionType
  * @since 1.0.0
  * @category symbols
  */
+export const NoSuchElementExceptionTypeId: unique symbol = internal.NoSuchElementExceptionTypeId
+
+/**
+ * @since 1.0.0
+ * @category symbols
+ */
+export type NoSuchElementExceptionTypeId = typeof NoSuchElementExceptionTypeId
+
+/**
+ * @since 1.0.0
+ * @category symbols
+ */
 export const StackAnnotationTypeId: unique symbol = internal.StackAnnotationTypeId
 
 /**
@@ -202,6 +214,18 @@ export interface InterruptedException {
  */
 export interface IllegalArgumentException {
   readonly [IllegalArgumentExceptionTypeId]: IllegalArgumentExceptionTypeId
+  readonly message?: string
+}
+
+/**
+ * Represents a checked exception which occurs when an expected element was
+ * unable to be found.
+ *
+ * @since 1.0.0
+ * @category models
+ */
+export interface NoSuchElementException {
+  readonly [NoSuchElementExceptionTypeId]: NoSuchElementExceptionTypeId
   readonly message?: string
 }
 
@@ -713,6 +737,24 @@ export const IllegalArgumentException = internal.IllegalArgumentException
  * @category refinements
  */
 export const isIllegalArgumentException = internal.isIllegalArgumentException
+
+/**
+ * Represents a checked exception which occurs when an expected element was
+ * unable to be found.
+ *
+ * @since 1.0.0
+ * @category errors
+ */
+export const NoSuchElementException = internal.NoSuchElementException
+
+/**
+  * Returns `true` if the specified value is an `IllegalArgumentException`, `false`
+  * otherwise.
+
+  * @since 1.0.0
+  * @category refinements
+  */
+export const isNoSuchElementException = internal.isNoSuchElementException
 
 /**
  * The default `Cause.Renderer`.

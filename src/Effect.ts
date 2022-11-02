@@ -225,7 +225,7 @@ export const asRightError = effect.asRightError
 /**
  * Maps the success value of this effect to a `Some` value.
  *
- * @tsplus getter effect/core/io/Effect asSome
+ * @macro traced
  * @category mapping
  * @since 1.0.0
  */
@@ -234,7 +234,7 @@ export const asSome = effect.asSome
 /**
  * Maps the error value of this effect to a `Some` value.
  *
- * @tsplus getter effect/core/io/Effect asSome
+ * @macro traced
  * @category mapping
  * @since 1.0.0
  */
@@ -642,6 +642,16 @@ export const continueOrFail = effect.continueOrFail
 export const continueOrFailEffect = effect.continueOrFailEffect
 
 /**
+ * Returns a new workflow that will not supervise any fibers forked by this
+ * workflow.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category supervision
+ */
+export const daemonChildren = core.daemonChildren
+
+/**
  * Constructs an effect with information about the current `Fiber`.
  *
  * @macro traced
@@ -971,6 +981,25 @@ export const filterOrElseWith = effect.filterOrElseWith
 export const filterOrFail = effect.filterOrFail
 
 /**
+ * Returns the first element that satisfies the effectful predicate.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category elements
+ */
+export const find = effect.find
+
+/**
+ * Returns an effect that runs this effect and in case of failure, runs each
+ * of the specified effects in order until one of them succeeds.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category elements
+ */
+export const firstSuccessOf = effect.firstSuccessOf
+
+/**
  * @macro traced
  * @since 1.0.0
  * @category sequencing
@@ -983,6 +1012,97 @@ export const flatMap = core.flatMap
  * @category sequencing
  */
 export const flatten = core.flatten
+
+/**
+ * Unwraps the optional error, defaulting to the provided value.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category sequencing
+ */
+export const flattenErrorOption = effect.flattenErrorOption
+
+/**
+ * Returns an effect that swaps the error/success cases. This allows you to
+ * use all methods on the error channel, possibly before flipping back.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const flip = effect.flip
+
+/**
+ * Swaps the error/value parameters, applies the function `f` and flips the
+ * parameters back
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const flipWith = effect.flipWith
+
+/**
+ * Folds over the failure value or the success value to yield an effect that
+ * does not fail, but succeeds with the value returned by the left or right
+ * function passed to `fold`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category folding
+ */
+export const fold = effect.fold
+
+/**
+ * @macro traced
+ * @since 1.0.0
+ * @category error handling
+ */
+export const foldCause = core.foldCause
+
+/**
+ * @macro traced
+ * @since 1.0.0
+ * @category error handling
+ */
+export const foldCauseEffect = core.foldCauseEffect
+
+/**
+ * @macro traced
+ * @since 1.0.0
+ * @category error handling
+ */
+export const foldEffect = effect.foldEffect
+
+/**
+ * Determines whether all elements of the `Collection<A>` satisfies the effectual
+ * predicate `f`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category elements
+ */
+export const forAll = effect.forAll
+
+/**
+ * Returns a new effect that will pass the success value of this effect to the
+ * provided callback. If this effect fails, then the failure will be ignored.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category elements
+ */
+export const forEachEffect = effect.forEachEffect
+
+/**
+ * Applies the function `f` if the argument is non-empty and returns the
+ * results in a new `Option<B>`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category elements
+ */
+export const forEachOption = effect.forEachOption
 
 /**
  * @macro traced
@@ -1035,32 +1155,206 @@ export const forEachParDiscard = core.forEachParDiscard
 export const forEachParWithIndex = effect.forEachParWithIndex
 
 /**
+ * Repeats this effect forever (until the first error).
+ *
  * @macro traced
  * @since 1.0.0
- * @category error handling
+ * @category mutations
  */
-export const foldCause = core.foldCause
+export const forever = effect.forever
 
 /**
+ * Returns an effect that forks this effect into its own separate fiber,
+ * returning the fiber immediately, without waiting for it to begin executing
+ * the effect.
+ *
+ * You can use the `fork` method whenever you want to execute an effect in a
+ * new fiber, concurrently and without "blocking" the fiber executing other
+ * effects. Using fibers can be tricky, so instead of using this method
+ * directly, consider other higher-level methods, such as `raceWith`,
+ * `zipPar`, and so forth.
+ *
+ * The fiber returned by this method has methods to interrupt the fiber and to
+ * wait for it to finish executing the effect. See `Fiber` for more
+ * information.
+ *
+ * Whenever you use this method to launch a new fiber, the new fiber is
+ * attached to the parent fiber's scope. This means when the parent fiber
+ * terminates, the child fiber will be terminated as well, ensuring that no
+ * fibers leak. This behavior is called "auto supervision", and if this
+ * behavior is not desired, you may use the `forkDaemon` or `forkIn` methods.
+ *
  * @macro traced
  * @since 1.0.0
- * @category error handling
+ * @category supervision
  */
-export const foldCauseEffect = core.foldCauseEffect
+export const fork = core.fork
 
 /**
+ * Forks the effect into a new fiber attached to the global scope. Because the
+ * new fiber is attached to the global scope, when the fiber executing the
+ * returned effect terminates, the forked fiber will continue running.
+ *
  * @macro traced
  * @since 1.0.0
- * @category error handling
+ * @category supervision
  */
-export const foldEffect = effect.foldEffect
+export const forkDaemon = core.forkDaemon
 
 /**
+ * Returns an effect that forks all of the specified values, and returns a
+ * composite fiber that produces a list of their results, in order.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category supervision
+ */
+export const forkAll = effect.forkAll
+
+/**
+ * Returns an effect that forks all of the specified values, and returns a
+ * composite fiber that produces unit. This version is faster than `forkAll`
+ * in cases where the results of the forked fibers are not needed.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category supervision
+ */
+export const forkAllDiscard = effect.forkAllDiscard
+
+/**
+ * Forks the effect in the specified scope. The fiber will be interrupted
+ * when the scope is closed.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category supervision
+ */
+export const forkIn = effect.forkIn
+
+/**
+ * Forks the fiber in a `Scope`, interrupting it when the scope is closed.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category supervision
+ */
+export const forkScoped = effect.forkScoped
+
+/**
+ * Like fork but handles an error with the provided handler.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category supervision
+ */
+export const forkWithErrorHandler = effect.forkWithErrorHandler
+
+/**
+ * Lifts an `Either<E, A>` into an `Effect<never, E, A>`.
+ *
  * @macro traced
  * @since 1.0.0
  * @category conversions
  */
 export const fromEither = effect.fromEither
+
+/**
+ * Lifts an `Either<Cause<E>, A>` into an `Effect<never, E, A>`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category conversions
+ */
+export const fromEitherCause = effect.fromEitherCause
+
+/**
+ * Creates an `Effect` value that represents the exit value of the specified
+ * fiber.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category conversions
+ */
+export const fromFiber = effect.fromFiber
+
+/**
+ * Creates an `Effect` value that represents the exit value of the specified
+ * fiber.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category conversions
+ */
+export const fromFiberEffect = effect.fromFiberEffect
+
+/**
+ * Lifts an `Option` into an `Effect` but preserves the error as an option in
+ * the error channel, making it easier to compose in some scenarios.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category conversions
+ */
+export const fromOption = effect.fromOption
+
+/**
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const gen = effect.gen
+
+// TODO(Mike/Max): implement after FiberRefs
+// /**
+//  * Returns a collection of all `FiberRef` values for the fiber running this
+//  * effect.
+//  *
+//  * @macro traced
+//  * @since 1.0.0
+//  * @category fiberRefs
+//  */
+// export const getFiberRefs = effect.getFiberRefs
+
+/**
+ * Lifts an `Option` into an `Effect`, if the option is not defined it fails
+ * with `NoSuchElementException`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category conversions
+ */
+export const getOrFail = effect.getOrFail
+
+/**
+ * Lifts an `Option` into a `IO`, if the option is not defined it fails with
+ * `void`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category conversions
+ */
+export const getOrFailDiscard = effect.getOrFailDiscard
+
+/**
+ * Lifts an `Maybe` into an `Effect`. If the option is not defined, fail with
+ * the specified `e` value.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category conversions
+ */
+export const getOrFailWith = effect.getOrFailWith
+
+/**
+ * Returns a successful effect with the head of the collection if the collection
+ * is non-empty, or fails with the error `None` if the collection is empty.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const head = effect.head
 
 /**
  * Runs `onTrue` if the result of `self` is `true` and `onFalse` otherwise.
@@ -1070,6 +1364,15 @@ export const fromEither = effect.fromEither
  * @category constructors
  */
 export const ifEffect = effect.ifEffect
+
+/**
+ * Returns a new effect that ignores the success or failure of this effect.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const ignore = effect.ignore
 
 /**
  * @macro traced
@@ -1121,6 +1424,16 @@ export const map = core.map
  * @category mapping
  */
 export const mapError = effect.mapError
+
+/**
+ * Runs the specified effect if this effect fails, providing the error to the
+ * effect if it exists. The provided effect will not be interrupted.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const onError = effect.onError
 
 /**
  * Ensures that a cleanup functions runs, whether this effect succeeds, fails,
@@ -1184,6 +1497,15 @@ export const sandbox = effect.sandbox
  * @category environment
  */
 export const scope = core.scope
+
+/**
+ * Accesses the current scope and uses it to perform the specified effect.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category scoping
+ */
+export const scopeWith = core.scopeWith
 
 /**
  * @macro traced

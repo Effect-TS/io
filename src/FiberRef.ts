@@ -208,3 +208,27 @@ export const currentEnvironment = core.currentEnvironment
  * @category fiberRefs
  */
 export const currentLogLevel = core.currentLogLevel
+
+/**
+ * @since 1.0.0
+ * @category fiberRefs
+ */
+export const currentScheduler = core.currentScheduler
+
+/**
+ * @since 1.0.0
+ * @category fiberRefs
+ */
+export const currentParallelism = core.currentParallelism
+
+/**
+ * @since 1.0.0
+ * @category fiberRefs
+ */
+export const forkScopeOverride = core.forkScopeOverride
+
+/**
+ * @since 1.0.0
+ * @category fiberRefs
+ */
+export const interruptedCause = core.interruptedCause
