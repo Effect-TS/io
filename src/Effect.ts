@@ -701,6 +701,25 @@ export const dieMessage = effect.dieMessage
 export const dieSync = core.dieSync
 
 /**
+ * Returns an effect whose interruption will be disconnected from the
+ * fiber's own interruption, being performed in the background without
+ * slowing down the fiber's interruption.
+ *
+ * This method is useful to create "fast interrupting" effects. For
+ * example, if you call this on a bracketed effect, then even if the
+ * effect is "stuck" in acquire or release, its interruption will return
+ * immediately, while the acquire / release are performed in the
+ * background.
+ *
+ * See timeout and race for other applications.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category interruption
+ */
+export const disconnect = effect.disconnect
+
+/**
  * Binds an effectful value in a `do` scope
  *
  * @macro traced
@@ -1608,11 +1627,70 @@ export const logAnnotate = effect.logAnnotate
 export const logAnnotations = effect.logAnnotations
 
 /**
+ * Loops with the specified effectual function, collecting the results into a
+ * list. The moral equivalent of:
+ *
+ * @example
+ * let s  = initial
+ * let as = [] as readonly A[]
+ *
+ * while (cont(s)) {
+ *   as = [body(s), ...as]
+ *   s  = inc(s)
+ * }
+ *
+ * A.reverse(as)
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const loop = effect.loop
+
+/**
+ * Loops with the specified effectual function purely for its effects. The
+ * moral equivalent of:
+ *
+ * @example
+ * var s = initial
+ *
+ * while (cont(s)) {
+ *   body(s)
+ *   s = inc(s)
+ * }
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const loopDiscard = effect.loopDiscard
+
+/**
  * @macro traced
  * @since 1.0.0
  * @category mapping
  */
 export const map = core.map
+
+/**
+ * Statefully and effectfully maps over the elements of this chunk to produce
+ * new elements.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mapping
+ */
+export const mapAccum = effect.mapAccum
+
+/**
+ * Returns an effect whose failure and success channels have been mapped by
+ * the specified pair of functions, `f` and `g`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mapping
+ */
+export const mapBoth = effect.mapBoth
 
 /**
  * Returns an effect with its error channel mapped using the specified function.
@@ -1622,6 +1700,149 @@ export const map = core.map
  * @category mapping
  */
 export const mapError = effect.mapError
+
+/**
+ * Returns an effect with its full cause of failure mapped using the specified
+ * function. This can be used to transform errors while preserving the
+ * original structure of `Cause`.
+ *
+ * See `absorb`, `sandbox`, `catchAllCause` for other functions for dealing
+ * with defects.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mapping
+ */
+export const mapErrorCause = effect.mapErrorCause
+
+/**
+ * Returns an effect whose success is mapped by the specified side effecting
+ * `f` function, translating any thrown exceptions into typed failed effects.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mapping
+ */
+export const mapTryCatch = effect.mapTryCatch
+
+/**
+ * Returns an effect that, if evaluated, will return the lazily computed
+ * result of this effect.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const memoize = effect.memoize
+
+/**
+ * Returns a memoized version of the specified effectual function.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const memoizeF = effect.memoizeF
+
+/**
+ * Returns a new effect where the error channel has been merged into the
+ * success channel to their common combined type.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const merge = effect.merge
+
+/**
+ * Merges an `Iterable<Effect<R, E, A>>` to a single effect, working
+ * sequentially.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const mergeAll = effect.mergeAll
+
+/**
+ * Merges an `Iterable<Effect<R, E, A>>` to a single effect, working in
+ * parallel.
+ *
+ * Due to the parallel nature of this combinator, `f` must be both:
+ * - commutative: `f(a, b) == f(b, a)`
+ * - associative: `f(a, f(b, c)) == f(f(a, b), c)`
+ *
+ * It's unsafe to execute side effects inside `f`, as `f` may be executed
+ * more than once for some of `in` elements during effect execution.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const mergeAllPar = effect.mergeAllPar
+
+/**
+ * Returns a new effect where boolean value of this effect is negated.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mapping
+ */
+export const negate = effect.negate
+
+/**
+ * Returns a effect that will never produce anything. The moral equivalent of
+ * `while(true) {}`, only without the wasted CPU cycles.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const never = effect.never
+
+/**
+ * Requires the option produced by this value to be `None`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const none = effect.none
+
+/**
+ * Lifts an `Option` into a `Effect`. If the option is empty it succeeds with
+ * `void`. If the option is defined it fails with the content.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const noneOrFail = effect.noneOrFail
+
+/**
+ * Lifts an `Option` into a `Effect`. If the option is empty it succeeds with
+ * `undefined`. If the option is defined it fails with an error computed by
+ * the specified function.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const noneOrFailWith = effect.noneOrFailWith
+
+/**
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const onDone = effect.onDone
+
+/**
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const onDoneCause = effect.onDoneCause
 
 /**
  * Runs the specified effect if this effect fails, providing the error to the
@@ -1651,6 +1872,55 @@ export const onExit = core.onExit
 export const onInterrupt = core.onInterrupt
 
 /**
+ * Returns an effect that will be executed at most once, even if it is
+ * evaluated multiple times.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const once = effect.once
+
+/**
+ * Executes this effect, skipping the error but returning optionally the
+ * success.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const option = effect.option
+
+/**
+ * Translates effect failure into death of the fiber, making all failures
+ * unchecked and not a part of the type of the effect.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category alternatives
+ */
+export const orDie = effect.orDie
+
+/**
+ * Converts all failures to unchecked exceptions.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category alternatives
+ */
+export const orDieKeep = effect.orDieKeep
+
+/**
+ * Keeps none of the errors, and terminates the fiber with them, using the
+ * specified function to convert the `E` into a `Throwable`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category alternatives
+ */
+export const orDieWith = effect.orDieWith
+
+/**
  * Executes this effect and returns its value, if it succeeds, but otherwise
  * executes the specified effect.
  *
@@ -1659,6 +1929,63 @@ export const onInterrupt = core.onInterrupt
  * @category alternatives
  */
 export const orElse = effect.orElse
+
+/**
+ * Returns an effect that will produce the value of this effect, unless it
+ * fails, in which case, it will produce the value of the specified effect.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category alternatives
+ */
+export const orElseEither = effect.orElseEither
+
+/**
+ * Returns an effect that will produce the value of this effect, unless it
+ * fails with the `None` value, in which case it will produce the value of
+ * the specified effect.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category alternatives
+ */
+export const orElseOptional = effect.orElseOptional
+
+/**
+ * Executes this effect and returns its value, if it succeeds, but
+ * otherwise succeeds with the specified value.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category alternatives
+ */
+export const orElseSucceed = effect.orElseSucceed
+
+/**
+ * Executes this effect and returns its value, if it succeeds, but otherwise
+ * fails with the specified error.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category alternatives
+ */
+export const orElseFail = effect.orElseFail
+
+/**
+ * Exposes all parallel errors in a single call.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const parallelErrors = effect.parallelErrors
+
+/**
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const parallelFinalizers = effect.parallelFinalizers
 
 /**
  * Provides the effect with its required environment, which eliminates its
@@ -1670,6 +1997,36 @@ export const orElse = effect.orElse
  */
 export const provideEnvironment = core.provideEnvironment
 
+// TODO(Max): after Layer
+// /**
+//  * Provides a layer to the effect, which translates it to another level.
+//  *
+//  * @macro traced
+//  * @since 1.0.0
+//  * @category environment
+//  */
+// export const provideLayer = effect.provideLayer
+
+/**
+ * Provides the effect with the single service it requires. If the effect
+ * requires more than one service use `provideEnvironment` instead.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category environment
+ */
+export const provideService = effect.provideService
+
+/**
+ * Provides the effect with the single service it requires. If the effect
+ * requires more than one service use `provideEnvironment` instead.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category environment
+ */
+export const provideServiceEffect = effect.provideServiceEffect
+
 /**
  * Provides some of the environment required to run this effect,
  * leaving the remainder `R0`.
@@ -1679,6 +2036,101 @@ export const provideEnvironment = core.provideEnvironment
  * @category environment
  */
 export const provideSomeEnvironment = core.provideSomeEnvironment
+
+// TODO(Max): after Layer
+// /**
+//  * Splits the environment into two parts, providing one part using the
+//  * specified layer and leaving the remainder `R0`.
+//  *
+//  * @macro traced
+//  * @since 1.0.0
+//  * @category environment
+//  */
+// export const provideSomeLayer = effect.provideSomeLayer
+
+/**
+ * Returns an effect that races this effect with the specified effect,
+ * returning the first successful `A` from the faster side. If one effect
+ * succeeds, the other will be interrupted. If neither succeeds, then the
+ * effect will fail with some error.
+ *
+ * Note that both effects are disconnected before being raced. This means that
+ * interruption of the loser will always be performed in the background. If this
+ * behavior is not desired, you can use `Effect.raceWith`, which will not
+ * disconnect or interrupt losers.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const race = effect.race
+
+/**
+ * Returns an effect that races this effect with the specified effect,
+ * returning the first successful `A` from the faster side. If one effect
+ * succeeds, the other will be interrupted. If neither succeeds, then the
+ * effect will fail with some error.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const raceAwait = effect.raceAwait
+
+/**
+ * Returns an effect that races this effect with the specified effect,
+ * yielding the first result to succeed. If neither effect succeeds, then the
+ * composed effect will fail with some error.
+ *
+ * WARNING: The raced effect will safely interrupt the "loser", but will not
+ * resume until the loser has been cleanly terminated.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const raceEither = effect.raceEither
+
+/**
+ * Forks this effect and the specified effect into their own fibers, and races
+ * them, calling one of two specified callbacks depending on which fiber wins
+ * the race. This method does not interrupt, join, or otherwise do anything
+ * with the fibers. It can be considered a low-level building block for
+ * higher-level operators like `race`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const raceFibersWith = effect.raceFibersWith
+
+/**
+ * Returns an effect that races this effect with the specified effect,
+ * yielding the first result to complete, whether by success or failure. If
+ * neither effect completes, then the composed effect will not complete.
+ *
+ * WARNING: The raced effect will safely interrupt the "loser", but will not
+ * resume until the loser has been cleanly terminated. If early return is
+ * desired, then instead of performing `l raceFirst r`, perform
+ * `l.disconnect raceFirst r.disconnect`, which disconnects left and right
+ * interrupt signal, allowing a fast return, with interruption performed
+ * in the background.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const raceFirst = effect.raceFirst
+
+/**
+ * Returns an effect that races this effect with the specified effect, calling
+ * the specified finisher as soon as one result or the other has been computed.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const raceWith = effect.raceWith
 
 /**
  * Exposes the full `Cause` of failure for the specified effect.
@@ -1762,6 +2214,16 @@ export const tap = core.tap
  * @category tracing
  */
 export const traced = core.traced
+
+/**
+ * Imports a synchronous side-effect into a pure value, translating any
+ * thrown exceptions into typed failed effects.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const tryCatch = effect.tryCatch
 
 /**
  * Executed `that` in case `self` fails with a `Cause` that doesn't contain
