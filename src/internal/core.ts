@@ -615,6 +615,14 @@ export declare const unsafeFork: <R, E, A, E2, B>(
   parentRuntimeFlags: RuntimeFlags.RuntimeFlags
 ) => Fiber.RuntimeFiber<E, A>
 
+// TODO(Mike): do.
+/** @internal */
+export declare const unsafeForkUnstarted: <R, E, A, E2, B>(
+  effect: Effect.Effect<R, E, A>,
+  parentFiber: FiberRuntime.Runtime<E2, B>,
+  parentRuntimeFlags: RuntimeFlags.RuntimeFlags
+) => Fiber.RuntimeFiber<E, A>
+
 /** @internal */
 export const fork = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>> => {
   const trace = getCallTrace()

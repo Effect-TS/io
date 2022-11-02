@@ -8,20 +8,24 @@ import * as Exit from "@effect/io/Exit"
 import * as Fiber from "@effect/io/Fiber"
 import * as FiberId from "@effect/io/Fiber/Id"
 import { RuntimeException } from "@effect/io/internal/cause"
+import * as internalClock from "@effect/io/internal/clock"
 import * as core from "@effect/io/internal/core"
+import * as OpCodes from "@effect/io/internal/opCodes/effect"
 import type { MergeRecord } from "@effect/io/internal/types"
 import * as LogLevel from "@effect/io/Logger/Level"
 import * as LogSpan from "@effect/io/Logger/Span"
+import * as Ref from "@effect/io/Ref"
 import * as Synchronized from "@effect/io/Ref/Synchronized"
-import type * as Scope from "@effect/io/Scope"
+import * as Scope from "@effect/io/Scope"
 import * as Chunk from "@fp-ts/data/Chunk"
-import type * as Context from "@fp-ts/data/Context"
+import * as Context from "@fp-ts/data/Context"
 import type * as Duration from "@fp-ts/data/Duration"
 import * as Either from "@fp-ts/data/Either"
 import * as Equal from "@fp-ts/data/Equal"
 import { constVoid, identity, pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
 import * as List from "@fp-ts/data/List"
+import * as MutableRef from "@fp-ts/data/mutable/MutableRef"
 import * as Option from "@fp-ts/data/Option"
 import type { Predicate } from "@fp-ts/data/Predicate"
 import type { Refinement } from "@fp-ts/data/Refinement"
@@ -645,6 +649,29 @@ export const descriptorWith = <R, E, A>(
 /** @internal */
 export const dieMessage = (message: string): Effect.Effect<never, never, never> => {
   return core.failCauseSync(() => Cause.die(new RuntimeException(message)))
+}
+
+/** @internal */
+export const disconnect = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
+  const trace = getCallTrace()
+  return core.uninterruptibleMask((restore) =>
+    pipe(
+      core.fiberId(),
+      core.flatMap((fiberId) =>
+        pipe(
+          restore(self),
+          core.forkDaemon,
+          core.flatMap((fiber) =>
+            pipe(
+              Fiber.join(fiber),
+              core.interruptible,
+              core.onInterrupt(() => pipe(fiber, Fiber.interruptAsFork(fiberId)))
+            )
+          )
+        )
+      )
+    )
+  ).traced(trace)
 }
 
 /** @internal */
@@ -1715,6 +1742,98 @@ export const logAnnotations = (): Effect.Effect<never, never, ReadonlyMap<string
 }
 
 /** @internal */
+export const loop = <Z, R, E, A>(
+  initial: Z,
+  cont: (z: Z) => boolean,
+  inc: (z: Z) => Z,
+  body: (z: Z) => Effect.Effect<R, E, A>
+): Effect.Effect<R, E, Chunk.Chunk<A>> => {
+  const trace = getCallTrace()
+  return pipe(loopInternal(initial, cont, inc, body), core.map(Chunk.fromIterable)).traced(trace)
+}
+
+/** @internal */
+const loopInternal = <Z, R, E, A>(
+  initial: Z,
+  cont: (z: Z) => boolean,
+  inc: (z: Z) => Z,
+  body: (z: Z) => Effect.Effect<R, E, A>
+): Effect.Effect<R, E, List.List<A>> => {
+  return core.suspendSucceed(() => {
+    return cont(initial)
+      ? pipe(
+        body(initial),
+        core.flatMap((a) =>
+          pipe(
+            loopInternal(inc(initial), cont, inc, body),
+            core.map(List.prepend(a))
+          )
+        )
+      )
+      : core.sync(() => List.empty())
+  })
+}
+
+/** @internal */
+export const loopDiscard = <Z, R, E, X>(
+  initial: Z,
+  cont: (z: Z) => boolean,
+  inc: (z: Z) => Z,
+  body: (z: Z) => Effect.Effect<R, E, X>
+): Effect.Effect<R, E, void> => {
+  const trace = getCallTrace()
+  return core.suspendSucceed(() => {
+    return cont(initial)
+      ? pipe(body(initial), core.flatMap(() => loopDiscard(inc(initial), cont, inc, body)))
+      : core.unit()
+  }).traced(trace)
+}
+
+/** @internal */
+export const mapAccum = <A, B, R, E, Z>(
+  elements: Iterable<A>,
+  zero: Z,
+  f: (z: Z, a: A) => Effect.Effect<R, E, readonly [Z, B]>
+): Effect.Effect<R, E, readonly [Z, Chunk.Chunk<B>]> => {
+  const trace = getCallTrace()
+  return core.suspendSucceed(() => {
+    const iterator = elements[Symbol.iterator]()
+    const builder: Array<B> = []
+    let result: Effect.Effect<R, E, Z> = core.succeed(zero)
+    let next: IteratorResult<A, any>
+    while (!(next = iterator.next()).done) {
+      result = pipe(
+        result,
+        core.flatMap((state) =>
+          pipe(
+            f(state, next.value),
+            core.map(([z, b]) => {
+              builder.push(b)
+              return z
+            })
+          )
+        )
+      )
+    }
+    return pipe(result, core.map((z) => [z, Chunk.fromIterable(builder)] as const))
+  }).traced(trace)
+}
+
+/** @internal */
+export const mapBoth = <E, A, E2, A2>(f: (e: E) => E2, g: (a: A) => A2) => {
+  const trace = getCallTrace()
+  return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E2, A2> => {
+    return pipe(
+      self,
+      foldEffect(
+        (e) => core.failSync(() => f(e)),
+        (a) => core.sync(() => g(a))
+      )
+    ).traced(trace)
+  }
+}
+
+/** @internal */
 export const mapError = <E, E2>(f: (e: E) => E2) => {
   const trace = getCallTrace()
   return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E2, A> => {
@@ -1739,6 +1858,202 @@ export const mapError = <E, E2>(f: (e: E) => E2) => {
 }
 
 /** @internal */
+export const mapErrorCause = <E, E2>(f: (cause: Cause.Cause<E>) => Cause.Cause<E2>) => {
+  const trace = getCallTrace()
+  return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E2, A> => {
+    return pipe(
+      self,
+      core.foldCauseEffect((c) => core.failCauseSync(() => f(c)), core.succeed)
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+export const mapTryCatch = <A, B, E1>(f: (a: A) => B, onThrow: (u: unknown) => E1) => {
+  const trace = getCallTrace()
+  return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E | E1, B> => {
+    return pipe(self, core.flatMap((a) => tryCatch(() => f(a), onThrow))).traced(trace)
+  }
+}
+
+/** @internal */
+export const memoize = <R, E, A>(
+  self: Effect.Effect<R, E, A>
+): Effect.Effect<never, never, Effect.Effect<R, E, A>> => {
+  const trace = getCallTrace()
+  return pipe(
+    core.makeDeferred<E, A>(),
+    core.flatMap((deferred) =>
+      pipe(
+        self,
+        core.intoDeferred(deferred),
+        once,
+        core.map(core.zipRight(core.awaitDeferred(deferred)))
+      )
+    )
+  ).traced(trace)
+}
+
+/** @internal */
+export const memoizeF = <R, E, A, B>(
+  f: (a: A) => Effect.Effect<R, E, B>
+): Effect.Effect<never, never, (a: A) => Effect.Effect<R, E, B>> => {
+  const trace = getCallTrace()
+  return pipe(
+    Synchronized.make(new Map<A, Deferred.Deferred<E, B>>()),
+    core.map((ref) =>
+      (a: A) =>
+        pipe(
+          ref,
+          Synchronized.modifyEffect((map) => {
+            const result = map.get(a)
+            if (result === undefined) {
+              return pipe(
+                core.makeDeferred<E, B>(),
+                core.tap((deferred) => pipe(f(a), core.intoDeferred(deferred), core.fork)),
+                core.map((deferred) => [deferred, map.set(a, deferred)] as const)
+              )
+            }
+            return core.succeed([result, map] as const)
+          }),
+          core.flatMap(core.awaitDeferred)
+        )
+    )
+  ).traced(trace)
+}
+
+/** @internal */
+export const merge = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, E | A> => {
+  const trace = getCallTrace()
+  return pipe(self, foldEffect((e) => core.succeed(e), core.succeed)).traced(trace)
+}
+
+/** @internal */
+export const mergeAll = <Z, A>(zero: Z, f: (z: Z, a: A) => Z) => {
+  const trace = getCallTrace()
+  return <R, E>(elements: Iterable<Effect.Effect<R, E, A>>): Effect.Effect<R, E, Z> => {
+    return Array.from(elements).reduce(
+      (acc, a) => pipe(acc, core.zipWith(a, f)),
+      core.succeed(zero) as Effect.Effect<R, E, Z>
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+export const mergeAllPar = <Z, A>(zero: Z, f: (z: Z, a: A) => Z) => {
+  const trace = getCallTrace()
+  return <R, E>(elements: Iterable<Effect.Effect<R, E, A>>): Effect.Effect<R, E, Z> => {
+    return pipe(
+      Ref.make(zero),
+      core.flatMap((acc) =>
+        pipe(
+          elements,
+          core.forEachParDiscard(core.flatMap((a) => pipe(acc, Ref.update((b) => f(b, a))))),
+          core.flatMap(() => Ref.get(acc))
+        )
+      )
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+export const negate = <R, E>(self: Effect.Effect<R, E, boolean>): Effect.Effect<R, E, boolean> => {
+  const trace = getCallTrace()
+  return pipe(self, core.map((b) => !b)).traced(trace)
+}
+
+/** @internal */
+export const never = (): Effect.Effect<never, never, never> => {
+  const trace = getCallTrace()
+  return core.asyncInterrupt<never, never, never>(() => {
+    const interval = setInterval(() => {
+      //
+    }, internalClock.MAX_TIMER_MILLIS)
+    return Either.left(core.sync(() => clearInterval(interval)))
+  }).traced(trace)
+}
+
+/** @internal */
+export const none = <R, E, A>(
+  self: Effect.Effect<R, E, Option.Option<A>>
+): Effect.Effect<R, Option.Option<E>, void> => {
+  const trace = getCallTrace()
+  return pipe(
+    self,
+    foldEffect(
+      (e) => core.fail(Option.some(e)),
+      (option) => {
+        switch (option._tag) {
+          case "None": {
+            return core.unit()
+          }
+          case "Some": {
+            return core.fail(Option.none)
+          }
+        }
+      }
+    )
+  ).traced(trace)
+}
+
+/** @internal */
+export const noneOrFail = <E>(option: Option.Option<E>): Effect.Effect<never, E, void> => {
+  const trace = getCallTrace()
+  return flip(getOrFailDiscard(option)).traced(trace)
+}
+
+/** @internal */
+export const noneOrFailWith = <E, A>(
+  option: Option.Option<A>,
+  f: (a: A) => E
+): Effect.Effect<never, E, void> => {
+  const trace = getCallTrace()
+  return pipe(flip(getOrFailDiscard(option)), mapError(f)).traced(trace)
+}
+
+/** @internal */
+export function onDone<E, A, R1, X1, R2, X2>(
+  onError: (e: E) => Effect.Effect<R1, never, X1>,
+  onSuccess: (a: A) => Effect.Effect<R2, never, X2>
+) {
+  const trace = getCallTrace()
+  return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1 | R2, never, void> => {
+    return core.uninterruptibleMask((restore) =>
+      pipe(
+        restore(self),
+        foldEffect(
+          (e) => restore(onError(e)),
+          (a) => restore(onSuccess(a))
+        ),
+        core.forkDaemon,
+        core.asUnit
+      )
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+export function onDoneCause<E, A, R1, X1, R2, X2>(
+  onCause: (cause: Cause.Cause<E>) => Effect.Effect<R1, never, X1>,
+  onSuccess: (a: A) => Effect.Effect<R2, never, X2>
+) {
+  const trace = getCallTrace()
+  return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1 | R2, never, void> => {
+    return core.uninterruptibleMask((restore) =>
+      pipe(
+        restore(self),
+        core.foldCauseEffect(
+          (c) => restore(onCause(c)),
+          (a) => restore(onSuccess(a))
+        ),
+        core.forkDaemon,
+        core.asUnit
+      )
+    ).traced(trace)
+  }
+}
+
+/** @internal */
 export const onError = <E, R2, X>(cleanup: (cause: Cause.Cause<E>) => Effect.Effect<R2, never, X>) => {
   const trace = getCallTrace()
   return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E, A> => {
@@ -1755,10 +2070,353 @@ export const onError = <E, R2, X>(cleanup: (cause: Cause.Cause<E>) => Effect.Eff
 }
 
 /** @internal */
+export const once = <R, E, A>(
+  self: Effect.Effect<R, E, A>
+): Effect.Effect<never, never, Effect.Effect<R, E, void>> => {
+  const trace = getCallTrace()
+  return pipe(
+    Ref.make(true),
+    core.map((ref) => pipe(core.whenEffect(pipe(ref, Ref.getAndSet(false)), self), core.asUnit))
+  ).traced(trace)
+}
+
+/** @internal */
+export const option = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Option.Option<A>> => {
+  const trace = getCallTrace()
+  return pipe(
+    self,
+    foldEffect(
+      () => core.succeed(Option.none),
+      (a) => core.succeed(Option.some(a))
+    )
+  ).traced(trace)
+}
+
+/** @internal */
+export const orDie = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, A> => {
+  const trace = getCallTrace()
+  return pipe(self, orDieWith(identity)).traced(trace)
+}
+
+/** @internal */
+export const orDieKeep = <R, E, A>(self: Effect.Effect<R, E, A>) => {
+  const trace = getCallTrace()
+  return pipe(
+    self,
+    core.foldCauseEffect(
+      (cause) => core.failCause(pipe(cause, Cause.flatMap(Cause.die))),
+      core.succeed
+    )
+  ).traced(trace)
+}
+
+/** @internal */
+export const orDieWith = <E>(f: (e: E) => unknown) => {
+  const trace = getCallTrace()
+  return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, A> => {
+    return pipe(self, foldEffect((e) => core.die(f(e)), core.succeed)).traced(trace)
+  }
+}
+
+/** @internal */
 export const orElse = <R2, E2, A2>(that: () => Effect.Effect<R2, E2, A2>) => {
   const trace = getCallTrace()
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E2, A | A2> => {
     return pipe(self, tryOrElse(that, core.succeed)).traced(trace)
+  }
+}
+
+/** @internal */
+export const orElseEither = <R2, E2, A2>(that: () => Effect.Effect<R2, E2, A2>) => {
+  const trace = getCallTrace()
+  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E2, Either.Either<A, A2>> => {
+    return pipe(
+      self,
+      tryOrElse(
+        () => pipe(that(), core.map(Either.right)),
+        (a) => core.succeed(Either.left(a))
+      )
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+export const orElseFail = <E2>(evaluate: () => E2) => {
+  const trace = getCallTrace()
+  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E2, A> => {
+    return pipe(self, orElse(() => core.failSync(evaluate))).traced(trace)
+  }
+}
+
+/** @internal */
+export const orElseOptional = <R, E, A, R2, E2, A2>(
+  that: () => Effect.Effect<R2, Option.Option<E2>, A2>
+) => {
+  const trace = getCallTrace()
+  return (
+    self: Effect.Effect<R, Option.Option<E>, A>
+  ): Effect.Effect<R | R2, Option.Option<E | E2>, A | A2> => {
+    return pipe(
+      self,
+      catchAll((option) => {
+        switch (option._tag) {
+          case "None": {
+            return that()
+          }
+          case "Some": {
+            return core.fail(Option.some<E | E2>(option.value))
+          }
+        }
+      })
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+export const orElseSucceed = <A2>(evaluate: () => A2) => {
+  const trace = getCallTrace()
+  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A | A2> => {
+    return pipe(self, orElse(() => core.sync(evaluate))).traced(trace)
+  }
+}
+
+/** @internal */
+export const parallelErrors = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, Chunk.Chunk<E>, A> => {
+  const trace = getCallTrace()
+  return pipe(
+    self,
+    core.foldCauseEffect((cause) => {
+      const errors = Chunk.fromIterable(Cause.failures(cause))
+      return errors.length === 0
+        ? core.failCause(cause as Cause.Cause<never>)
+        : core.fail(errors)
+    }, core.succeed)
+  ).traced(trace)
+}
+
+/** @internal */
+export const parallelFinalizers = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | Scope.Scope, E, A> => {
+  const trace = getCallTrace()
+  return pipe(
+    core.scope(),
+    core.flatMap((outerScope) =>
+      pipe(
+        Scope.make(ExecutionStrategy.parallel),
+        core.flatMap((innerScope) =>
+          pipe(
+            outerScope,
+            Scope.addFinalizerExit((exit) => pipe(innerScope, Scope.close(exit))),
+            core.zipRight(pipe(innerScope, Scope.extend(self)))
+          )
+        )
+      )
+    )
+  ).traced(trace)
+}
+
+// TODO(Max): after Layer
+// /**
+//  * Provides a layer to the effect, which translates it to another level.
+//  *
+//  * @tsplus static effect/core/io/Effect.Aspects provideLayer
+//  * @tsplus pipeable effect/core/io/Effect provideLayer
+//  * @category environment
+//  * @since 1.0.0
+//  */
+//  export const provideLayer = <R, E, A>(layer: Layer.Layer<R, E, A>) => {
+//   const trace = getCallTrace()
+//   return <E1, A1>(self: Effect.Effect<A, E1, A1>): Effect.Effect<R, E | E1, A1> => {
+//     return core.acquireUseRelease(
+//       Scope.make(),
+//       (scope) => pipe(
+//         layer,
+//         Layer.buildWithScope(scope),
+//         core.flatMap((r) => pipe(self, core.provideEnvironment(r)))
+//       ),
+//       (scope, exit) => pipe(scope, Scope.close(exit))
+//     ).traced(trace)
+//   }
+// }
+
+/** @internal */
+export const provideService = <T>(tag: Context.Tag<T>, resource: T) => {
+  const trace = getCallTrace()
+  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<Exclude<R, T>, E, A> => {
+    return pipe(self, provideServiceEffect(tag, core.succeed(resource))).traced(trace)
+  }
+}
+
+/** @internal */
+export const provideServiceEffect = <T, R1, E1>(tag: Context.Tag<T>, effect: Effect.Effect<R1, E1, T>) => {
+  const trace = getCallTrace()
+  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R1 | Exclude<R, T>, E | E1, A> => {
+    return core.environmentWithEffect((env: Context.Context<R1 | Exclude<R, T>>) =>
+      pipe(
+        effect,
+        core.flatMap((service) =>
+          pipe(self, core.provideEnvironment(pipe(env, Context.add(tag)(service)) as Context.Context<R | R1>))
+        )
+      )
+    ).traced(trace)
+  }
+}
+
+// TODO(Max): after Layer
+// /** @internal */
+//  export const provideSomeLayer = <R1, E1, A1>(layer: Layer.Layer<R1, E1, A1>) => {
+//   const trace = getCallTrace()
+//   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R1 | Exclude<R, A1>, E | E1, A> => {
+//     // @ts-expect-error
+//     return pipe(
+//       self,
+//       provideLayer(pipe(Layer.environment<Exclude<R, A1>>(), Layer.merge(layer)))
+//     ).traced(trace)
+//   }
+// }
+
+/** @internal */
+export const race = <R2, E2, A2>(that: Effect.Effect<R2, E2, A2>) => {
+  const trace = getCallTrace()
+  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, A | A2> => {
+    return pipe(disconnect(self), raceAwait(disconnect(that))).traced(trace)
+  }
+}
+
+/** @internal */
+export const raceAwait = <R2, E2, A2>(that: Effect.Effect<R2, E2, A2>) => {
+  const trace = getCallTrace()
+  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, A | A2> => {
+    return core.withFiberRuntime<R | R2, E | E2, A | A2>((state) =>
+      pipe(
+        self,
+        raceWith(
+          that,
+          (exit, right) =>
+            pipe(
+              exit,
+              Exit.matchEffect(
+                (cause1) => pipe(Fiber.join(right), mapErrorCause((cause2) => Cause.parallel(cause1, cause2))),
+                (a) => pipe(right, Fiber.interruptAsWith(state.id), core.as(a))
+              )
+            ),
+          (exit, left) =>
+            pipe(
+              exit,
+              Exit.matchEffect(
+                (cause2) => pipe(Fiber.join(left), mapErrorCause((cause1) => Cause.parallel(cause1, cause2))),
+                (a) => pipe(left, Fiber.interruptAsWith(state.id), core.as(a))
+              )
+            )
+        )
+      )
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+export const raceEither = <R2, E2, A2>(that: Effect.Effect<R2, E2, A2>) => {
+  const trace = getCallTrace()
+  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, Either.Either<A, A2>> => {
+    return pipe(self, core.map(Either.left), race(pipe(that, core.map(Either.right)))).traced(trace)
+  }
+}
+
+/** @internal */
+export const raceFirst = <R2, E2, A2>(that: Effect.Effect<R2, E2, A2>) => {
+  const trace = getCallTrace()
+  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E2 | E, A2 | A> => {
+    return pipe(
+      core.exit(self),
+      race(core.exit(that)),
+      (effect: Effect.Effect<R | R2, never, Exit.Exit<E | E2, A | A2>>) => core.flatten(effect)
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+export const raceFibersWith = <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
+  that: Effect.Effect<R1, E1, A1>,
+  selfWins: (winner: Fiber.Fiber<E, A>, loser: Fiber.Fiber<E1, A1>) => Effect.Effect<R2, E2, A2>,
+  thatWins: (winner: Fiber.Fiber<E1, A1>, loser: Fiber.Fiber<E, A>) => Effect.Effect<R3, E3, A3>
+) => {
+  const trace = getCallTrace()
+  return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<
+    R | R1 | R2 | R3,
+    E2 | E3,
+    A2 | A3
+  > => {
+    return core.withFiberRuntime<R | R1 | R2 | R3, E2 | E3, A2 | A3>((parentState, parentStatus) => {
+      const parentRuntimeFlags = parentStatus.runtimeFlags
+      const raceIndicator = MutableRef.make(true)
+      const leftFiber = core.unsafeForkUnstarted(self, parentState, parentRuntimeFlags)
+      const rightFiber = core.unsafeForkUnstarted(that, parentState, parentRuntimeFlags)
+      leftFiber.setFiberRef(core.forkScopeOverride, Option.some(parentState.scope))
+      rightFiber.setFiberRef(core.forkScopeOverride, Option.some(parentState.scope))
+      return core.async((cb) => {
+        leftFiber.addObserver(() => completeRace(leftFiber, rightFiber, selfWins, raceIndicator, cb))
+        rightFiber.addObserver(() => completeRace(rightFiber, leftFiber, thatWins, raceIndicator, cb))
+        leftFiber.startFork(self)
+        rightFiber.startFork(that)
+      }, FiberId.combineAll(HashSet.from([leftFiber.id, rightFiber.id])))
+    }).traced(trace)
+  }
+}
+
+/** @internal */
+const completeRace = <R, R1, R2, E2, A2, R3, E3, A3>(
+  winner: Fiber.Fiber<any, any>,
+  loser: Fiber.Fiber<any, any>,
+  cont: (winner: Fiber.Fiber<any, any>, loser: Fiber.Fiber<any, any>) => Effect.Effect<any, any, any>,
+  ab: MutableRef.MutableRef<boolean>,
+  cb: (_: Effect.Effect<R | R1 | R2 | R3, E2 | E3, A2 | A3>) => void
+): void => {
+  if (pipe(ab, MutableRef.compareAndSet(true, false))) {
+    cb(cont(winner, loser))
+  }
+}
+
+/** @internal */
+export const raceWith = <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
+  that: Effect.Effect<R1, E1, A1>,
+  leftDone: (exit: Exit.Exit<E, A>, fiber: Fiber.Fiber<E1, A1>) => Effect.Effect<R2, E2, A2>,
+  rightDone: (exit: Exit.Exit<E1, A1>, fiber: Fiber.Fiber<E, A>) => Effect.Effect<R3, E3, A3>
+) => {
+  const trace = getCallTrace()
+  return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1 | R2 | R3, E2 | E3, A2 | A3> => {
+    return pipe(
+      self,
+      raceFibersWith(
+        that,
+        (winner, loser) =>
+          pipe(
+            Fiber.await(winner),
+            core.flatMap((exit) => {
+              switch (exit.op) {
+                case OpCodes.OP_SUCCESS: {
+                  return pipe(Fiber.inheritAll(winner), core.flatMap(() => leftDone(exit, loser)))
+                }
+                case OpCodes.OP_FAILURE: {
+                  return leftDone(exit, loser)
+                }
+              }
+            })
+          ),
+        (winner, loser) =>
+          pipe(
+            Fiber.await(winner),
+            core.flatMap((exit) => {
+              switch (exit.op) {
+                case OpCodes.OP_SUCCESS: {
+                  return pipe(Fiber.inheritAll(winner), core.flatMap(() => rightDone(exit, loser)))
+                }
+                case OpCodes.OP_FAILURE: {
+                  return rightDone(exit, loser)
+                }
+              }
+            })
+          )
+      )
+    ).traced(trace)
   }
 }
 
@@ -1772,6 +2430,21 @@ export const sandbox = <R, E, A>(
 
 /** @internal */
 export const sleep = Clock.sleep
+
+/** @internal */
+export const tryCatch = <E, A>(
+  attempt: () => A,
+  onThrow: (u: unknown) => E
+): Effect.Effect<never, E, A> => {
+  const trace = getCallTrace()
+  return core.sync(() => {
+    try {
+      return attempt()
+    } catch (error) {
+      throw makeEffectError(Cause.fail(onThrow(error)))
+    }
+  }).traced(trace)
+}
 
 /** @internal */
 export const tryOrElse = <R2, E2, A2, A, R3, E3, A3>(

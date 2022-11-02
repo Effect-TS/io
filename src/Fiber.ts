@@ -4,6 +4,7 @@
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
 import type * as FiberId from "@effect/io/Fiber/Id"
+import type * as FiberRuntime from "@effect/io/Fiber/Runtime"
 import type * as FiberStatus from "@effect/io/Fiber/Status"
 import type { TODO } from "@effect/io/internal/todo"
 import type * as Chunk from "@fp-ts/data/Chunk"
@@ -19,7 +20,7 @@ export interface Fiber<E, A> extends TODO<[E, A]> {
 /**
  * @since 1.0.0
  */
-export interface RuntimeFiber<E, A> extends Fiber<E, A> {}
+export type RuntimeFiber<E, A> = FiberRuntime.Runtime<E, A>
 
 /**
  * @since 1.0.0
@@ -48,9 +49,44 @@ export declare namespace Fiber {
 }
 
 // TODO(Max/Mike): do.
+declare const _await: <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, Exit.Exit<E, A>>
+export {
+  /**
+   * @since 1.0.0
+   */
+  _await as await
+}
+
 /**
  * @since 1.0.0
  */
 export declare const collectAll: <E, A>(fibers: Iterable<Fiber<E, A>>) => Fiber<E, Chunk.Chunk<A>>
 
+/**
+ * @since 1.0.0
+ */
+export declare const inheritAll: <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, void>
+
+/**
+ * @since 1.0.0
+ */
 export declare const interrupt: <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, Exit.Exit<E, A>>
+
+/**
+ * @since 1.0.0
+ */
+export declare const interruptAsFork: (
+  fiberId: FiberId.FiberId
+) => <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, void>
+
+/**
+ * @since 1.0.0
+ */
+export declare const interruptAsWith: (
+  fiberId: FiberId.FiberId
+) => <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, Exit.Exit<E, A>>
+
+/**
+ * @since 1.0.0
+ */
+export declare const join: <E, A>(self: Fiber<E, A>) => Effect.Effect<never, E, A>
