@@ -1,7 +1,6 @@
 import * as Cause from "@effect/io/Cause"
 import * as Clock from "@effect/io/Clock"
 import { getCallTrace } from "@effect/io/Debug"
-import * as DefaultServices from "@effect/io/DefaultServices"
 import type * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
 import * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
@@ -11,10 +10,12 @@ import * as FiberId from "@effect/io/Fiber/Id"
 import { RuntimeException } from "@effect/io/internal/cause"
 import * as core from "@effect/io/internal/core"
 import type { MergeRecord } from "@effect/io/internal/types"
+import * as LogLevel from "@effect/io/Logger/Level"
+import * as LogSpan from "@effect/io/Logger/Span"
 import * as Synchronized from "@effect/io/Ref/Synchronized"
 import type * as Scope from "@effect/io/Scope"
 import * as Chunk from "@fp-ts/data/Chunk"
-import * as Context from "@fp-ts/data/Context"
+import type * as Context from "@fp-ts/data/Context"
 import type * as Duration from "@fp-ts/data/Duration"
 import * as Either from "@fp-ts/data/Either"
 import * as Equal from "@fp-ts/data/Equal"
@@ -403,13 +404,7 @@ export const cause = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, n
 export const clock = (): Effect.Effect<never, never, Clock.Clock> => clockWith(core.succeed)
 
 /** @internal */
-export const clockWith = <R, E, A>(f: (clock: Clock.Clock) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-  const trace = getCallTrace()
-  return pipe(
-    DefaultServices.currentServices,
-    core.getWithFiberRef((services) => f(pipe(services, Context.get(Clock.Tag))))
-  ).traced(trace)
-}
+export const clockWith = Clock.clockWith
 
 /** @internal */
 export const collect = <A, R, E, B>(f: (a: A) => Effect.Effect<R, Option.Option<E>, B>) => {
@@ -1469,6 +1464,257 @@ export const ignore = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, 
 }
 
 /** @internal */
+const someFatal = Option.some(LogLevel.Fatal)
+/** @internal */
+const someError = Option.some(LogLevel.Error)
+/** @internal */
+const someWarning = Option.some(LogLevel.Warning)
+/** @internal */
+const someTrace = Option.some(LogLevel.Trace)
+/** @internal */
+const someInfo = Option.some(LogLevel.Info)
+/** @internal */
+const someDebug = Option.some(LogLevel.Debug)
+
+/** @internal */
+export const log = (message: string): Effect.Effect<never, never, void> => {
+  const trace = getCallTrace()
+  return core.withFiberRuntime<never, never, void>((fiberState) => {
+    fiberState.log(message, Cause.empty, Option.none)
+    return core.unit()
+  }).traced(trace)
+}
+
+/** @internal */
+export const logDebug = (message: string): Effect.Effect<never, never, void> => {
+  const trace = getCallTrace()
+  return core.withFiberRuntime<never, never, void>((fiberState) => {
+    fiberState.log(message, Cause.empty, someDebug)
+    return core.unit()
+  }).traced(trace)
+}
+
+/** @internal */
+export function logDebugCause<E>(cause: Cause.Cause<E>): Effect.Effect<never, never, void> {
+  const trace = getCallTrace()
+  return core.withFiberRuntime<never, never, void>((fiberState) => {
+    fiberState.log("", cause, someDebug)
+    return core.unit()
+  }).traced(trace)
+}
+
+/** @internal */
+export const logDebugCauseMessage = <E>(
+  message: string,
+  cause: Cause.Cause<E>
+): Effect.Effect<never, never, void> => {
+  const trace = getCallTrace()
+  return core.withFiberRuntime<never, never, void>((fiberState) => {
+    fiberState.log(message, cause, someDebug)
+    return core.unit()
+  }).traced(trace)
+}
+
+/** @internal */
+export const logError = (message: string): Effect.Effect<never, never, void> => {
+  const trace = getCallTrace()
+  return core.withFiberRuntime<never, never, void>((fiberState) => {
+    fiberState.log(message, Cause.empty, someError)
+    return core.unit()
+  }).traced(trace)
+}
+
+/** @internal */
+export const logErrorCause = <E>(cause: Cause.Cause<E>): Effect.Effect<never, never, void> => {
+  const trace = getCallTrace()
+  return core.withFiberRuntime<never, never, void>((fiberState) => {
+    fiberState.log("", cause, someError)
+    return core.unit()
+  }).traced(trace)
+}
+
+/** @internal */
+export const logErrorCauseMessage = <E>(
+  message: string,
+  cause: Cause.Cause<E>
+): Effect.Effect<never, never, void> => {
+  const trace = getCallTrace()
+  return core.withFiberRuntime<never, never, void>((fiberState) => {
+    fiberState.log(message, cause, someError)
+    return core.unit()
+  }).traced(trace)
+}
+
+/** @internal */
+export const logFatal = (message: string): Effect.Effect<never, never, void> => {
+  const trace = getCallTrace()
+  return core.withFiberRuntime<never, never, void>((fiberState) => {
+    fiberState.log(message, Cause.empty, someFatal)
+    return core.unit()
+  }).traced(trace)
+}
+
+/** @internal */
+export const logFatalCause = <E>(cause: Cause.Cause<E>): Effect.Effect<never, never, void> => {
+  const trace = getCallTrace()
+  return core.withFiberRuntime<never, never, void>((fiberState) => {
+    fiberState.log("", cause, someFatal)
+    return core.unit()
+  }).traced(trace)
+}
+
+/** @internal */
+export function logFatalCauseMessage<E>(
+  message: string,
+  cause: Cause.Cause<E>
+): Effect.Effect<never, never, void> {
+  const trace = getCallTrace()
+  return core.withFiberRuntime<never, never, void>((fiberState) => {
+    fiberState.log(message, cause, someFatal)
+    return core.unit()
+  }).traced(trace)
+}
+
+/** @internal */
+export const logInfo = (message: string): Effect.Effect<never, never, void> => {
+  const trace = getCallTrace()
+  return core.withFiberRuntime<never, never, void>((fiberState) => {
+    fiberState.log(message, Cause.empty, someInfo)
+    return core.unit()
+  }).traced(trace)
+}
+
+/** @internal */
+export const logInfoCause = <E>(cause: Cause.Cause<E>): Effect.Effect<never, never, void> => {
+  const trace = getCallTrace()
+  return core.withFiberRuntime<never, never, void>((fiberState) => {
+    fiberState.log("", cause, someInfo)
+    return core.unit()
+  }).traced(trace)
+}
+
+/** @internal */
+export const logInfoCauseMessage = <E>(
+  message: string,
+  cause: Cause.Cause<E>
+): Effect.Effect<never, never, void> => {
+  const trace = getCallTrace()
+  return core.withFiberRuntime<never, never, void>((fiberState) => {
+    fiberState.log(message, cause, someInfo)
+    return core.unit()
+  }).traced(trace)
+}
+
+/** @internal */
+export const logWarning = (message: string): Effect.Effect<never, never, void> => {
+  const trace = getCallTrace()
+  return core.withFiberRuntime<never, never, void>((fiberState) => {
+    fiberState.log(message, Cause.empty, someWarning)
+    return core.unit()
+  }).traced(trace)
+}
+
+/** @internal */
+export const logWarningCause = <E>(cause: Cause.Cause<E>): Effect.Effect<never, never, void> => {
+  const trace = getCallTrace()
+  return core.withFiberRuntime<never, never, void>((fiberState) => {
+    fiberState.log("", cause, someWarning)
+    return core.unit()
+  }).traced(trace)
+}
+
+/** @internal */
+export const logWarningCauseMessage = <E>(
+  message: string,
+  cause: Cause.Cause<E>
+): Effect.Effect<never, never, void> => {
+  const trace = getCallTrace()
+  return core.withFiberRuntime<never, never, void>((fiberState) => {
+    fiberState.log(message, cause, someWarning)
+    return core.unit()
+  }).traced(trace)
+}
+
+/** @internal */
+export function logTrace(message: string): Effect.Effect<never, never, void> {
+  const trace = getCallTrace()
+  return core.withFiberRuntime<never, never, void>((fiberState) => {
+    fiberState.log(message, Cause.empty, someTrace)
+    return core.unit()
+  }).traced(trace)
+}
+
+/** @internal */
+export const logTraceCause = <E>(cause: Cause.Cause<E>): Effect.Effect<never, never, void> => {
+  const trace = getCallTrace()
+  return core.withFiberRuntime<never, never, void>((fiberState) => {
+    fiberState.log("", cause, someTrace)
+    return core.unit()
+  }).traced(trace)
+}
+
+/** @internal */
+export const logTraceCauseMessage = <E>(
+  message: string,
+  cause: Cause.Cause<E>
+): Effect.Effect<never, never, void> => {
+  const trace = getCallTrace()
+  return core.withFiberRuntime<never, never, void>((fiberState) => {
+    fiberState.log(message, cause, someTrace)
+    return core.unit()
+  }).traced(trace)
+}
+
+/** @internal */
+export const logSpan = (label: string) => {
+  const trace = getCallTrace()
+  return <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
+    return pipe(
+      core.getFiberRef(core.currentLogSpan),
+      core.flatMap((stack) =>
+        pipe(
+          Clock.currentTimeMillis(),
+          core.flatMap((now) =>
+            core.suspendSucceed(() => {
+              const logSpan = LogSpan.make(label, now)
+              return core.locallyFiberRef(
+                pipe(stack, List.prepend(logSpan)) as List.List<LogSpan.LogSpan>
+              )(core.currentLogSpan)(effect)
+            })
+          )
+        )
+      )
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+export const logAnnotate = (key: string, value: string) => {
+  const trace = getCallTrace()
+  return <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
+    return pipe(
+      core.getFiberRef(core.currentLogAnnotations),
+      core.flatMap((annotations) =>
+        core.suspendSucceed(() =>
+          pipe(
+            effect,
+            core.locallyFiberRef(
+              (annotations as Map<string, string>).set(key, value) as ReadonlyMap<string, string>
+            )(core.currentLogAnnotations)
+          )
+        )
+      )
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+export const logAnnotations = (): Effect.Effect<never, never, ReadonlyMap<string, string>> => {
+  const trace = getCallTrace()
+  return core.getFiberRef(core.currentLogAnnotations).traced(trace)
+}
+
+/** @internal */
 export const mapError = <E, E2>(f: (e: E) => E2) => {
   const trace = getCallTrace()
   return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E2, A> => {
@@ -1525,10 +1771,7 @@ export const sandbox = <R, E, A>(
 }
 
 /** @internal */
-export const sleep = (duration: Duration.Duration): Effect.Effect<never, never, void> => {
-  const trace = getCallTrace()
-  return clockWith((clock) => clock.sleep(duration)).traced(trace)
-}
+export const sleep = Clock.sleep
 
 /** @internal */
 export const tryOrElse = <R2, E2, A2, A, R3, E3, A3>(

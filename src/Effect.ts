@@ -1410,6 +1410,204 @@ export const interruptibleMask = core.interruptibleMask
 export const intoDeferred = core.intoDeferred
 
 /**
+ * Logs the specified message at the current log level.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category logging
+ */
+export const log = effect.log
+
+/**
+ * Logs the specified message at the debug log level.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category logging
+ */
+export const logDebug = effect.logDebug
+
+/**
+ * Logs the specified cause at the debug log level.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category logging
+ */
+export const logDebugCause = effect.logDebugCause
+
+/**
+ * Logs the specified message and cause at the debug log level.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category logging
+ */
+export const logDebugCauseMessage = effect.logDebugCauseMessage
+
+/**
+ * Logs the specified message at the error log level.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category logging
+ */
+export const logError = effect.logError
+
+/**
+ * Logs the specified cause at the error log level.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category logging
+ */
+export const logErrorCause = effect.logErrorCause
+
+/**
+ * Logs the specified message and cause at the error log level.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category logging
+ */
+export const logErrorCauseMessage = effect.logErrorCauseMessage
+
+/**
+ * Logs the specified message at the fatal log level.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category logging
+ */
+export const logFatal = effect.logFatal
+
+/**
+ * Logs the specified cause at the fatal log level.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category logging
+ */
+export const logFatalCause = effect.logFatalCause
+
+/**
+ * Logs the specified message and cause at the fatal log level.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category logging
+ */
+export const logFatalCauseMessage = effect.logFatalCauseMessage
+
+/**
+ * Logs the specified message at the informational log level.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category logging
+ */
+export const logInfo = effect.logInfo
+
+/**
+ * Logs the specified cause at the informational log level.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category logging
+ */
+export const logInfoCause = effect.logInfoCause
+
+/**
+ * Logs the specified message and cause at the informational log level.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category logging
+ */
+export const logInfoCauseMessage = effect.logInfoCauseMessage
+
+/**
+ * Logs the specified message at the warning log level.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category logging
+ */
+export const logWarning = effect.logWarning
+
+/**
+ * Logs the specified cause at the warning log level.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category logging
+ */
+export const logWarningCause = effect.logWarningCause
+
+/**
+ * Logs the specified message and cause at the warning log level.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category logging
+ */
+export const logWarningCauseMessage = effect.logWarningCauseMessage
+
+/**
+ * Logs the specified message at the trace log level.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category logging
+ */
+export const logTrace = effect.logTrace
+
+/**
+ * Logs the specified cause at the trace log level.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category logging
+ */
+export const logTraceCause = effect.logTraceCause
+
+/**
+ * Logs the specified message and cause at the trace log level.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category logging
+ */
+export const logTraceCauseMessage = effect.logTraceCauseMessage
+
+/**
+ * Adjusts the label for the current logging span.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category logging
+ */
+export const logSpan = effect.logSpan
+
+/**
+ * Annotates each log in this effect with the specified log annotation.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category logging
+ */
+export const logAnnotate = effect.logAnnotate
+
+/**
+ * Retrieves the log annotations associated with the current scope.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category logging
+ */
+export const logAnnotations = effect.logAnnotations
+
+/**
  * @macro traced
  * @since 1.0.0
  * @category mapping

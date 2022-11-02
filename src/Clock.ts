@@ -3,7 +3,8 @@
  */
 import type * as Effect from "@effect/io/Effect"
 import * as internal from "@effect/io/internal/clock"
-import * as Context from "@fp-ts/data/Context"
+import * as defaultServices from "@effect/io/internal/defaultServices"
+import type * as Context from "@fp-ts/data/Context"
 import type * as Duration from "@fp-ts/data/Duration"
 
 /**
@@ -79,6 +80,24 @@ export const make = internal.make
 
 /**
  * @since 1.0.0
+ * @category constructors
+ */
+export const sleep = defaultServices.sleep
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const currentTimeMillis = defaultServices.currentTimeMillis
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const clockWith = defaultServices.clockWith
+
+/**
+ * @since 1.0.0
  * @category environment
  */
-export const Tag: Context.Tag<Clock> = Context.Tag()
+export const Tag: Context.Tag<Clock> = internal.clockTag
