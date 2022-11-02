@@ -3,12 +3,13 @@
  */
 import type * as Clock from "@effect/io/Clock"
 import * as internal from "@effect/io/internal/defaultServices"
+import type * as Random from "@effect/io/Random"
 
 /**
  * @since 1.0.0
  * @category models
  */
-export type DefaultServices = Clock.Clock /* | Random */
+export type DefaultServices = Clock.Clock | Random.Random
 
 /**
  * @since 1.0.0
