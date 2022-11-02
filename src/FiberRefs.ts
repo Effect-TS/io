@@ -1,3 +1,6 @@
+/**
+ * @since 1.0.0
+ */
 import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRef from "@effect/io/FiberRef"
 import * as internal from "@effect/io/internal/fiberRefs"
