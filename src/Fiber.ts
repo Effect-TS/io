@@ -49,13 +49,7 @@ export declare namespace Fiber {
 }
 
 // TODO(Max/Mike): do.
-declare const _await: <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, Exit.Exit<E, A>>
-export {
-  /**
-   * @since 1.0.0
-   */
-  _await as await
-}
+export declare const await: <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, Exit.Exit<E, A>>
 
 /**
  * @since 1.0.0

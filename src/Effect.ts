@@ -1630,7 +1630,7 @@ export const logAnnotations = effect.logAnnotations
  * Loops with the specified effectual function, collecting the results into a
  * list. The moral equivalent of:
  *
- * @example
+ * ```ts
  * let s  = initial
  * let as = [] as readonly A[]
  *
@@ -1640,6 +1640,7 @@ export const logAnnotations = effect.logAnnotations
  * }
  *
  * A.reverse(as)
+ * ```
  *
  * @macro traced
  * @since 1.0.0
@@ -1651,13 +1652,14 @@ export const loop = effect.loop
  * Loops with the specified effectual function purely for its effects. The
  * moral equivalent of:
  *
- * @example
- * var s = initial
+ * ```ts
+ * let s = initial
  *
  * while (cont(s)) {
  *   body(s)
  *   s = inc(s)
  * }
+ * ```
  *
  * @macro traced
  * @since 1.0.0
