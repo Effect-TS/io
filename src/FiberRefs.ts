@@ -45,8 +45,8 @@ export interface FiberRefs {
  * specified fiber id. This will perform diffing and merging to ensure
  * preservation of maximum information from both child and parent refs.
  *
- * @category utilities
  * @since 1.0.0
+ * @category utilities
  */
 export const joinAs = internal.joinAs
 
@@ -55,37 +55,45 @@ export const joinAs = internal.joinAs
  * will potentially modify the value of the fiber refs, as determined by the
  * individual fiber refs that make up the collection.
  *
- * @category utilities
  * @since 1.0.0
+ * @category utilities
  */
 export const forkAs = internal.forkAs
 
 /**
  * Returns a set of each `FiberRef` in this collection.
  *
- * @category utilities
  * @since 1.0.0
+ * @category utilities
  */
 export const fiberRefs = internal.fiberRefs
 
 /**
  * Set each ref to either its value or its default.
  *
- * @category utilities
  * @since 1.0.0
+ * @category mutations
  */
 export const setAll = internal.setAll
 
 const delete_ = internal.delete
 
-export { delete_ as delete }
+export {
+  /**
+   * Deletes the specified `FiberRef` from the `FibterRefs`.
+   *
+   * @since 1.0.0
+   * @category mutations
+   */
+  delete_ as delete
+}
 
 /**
  * Gets the value of the specified `FiberRef` in this collection of `FiberRef`
  * values if it exists or `None` otherwise.
  *
- * @category utilities
  * @since 1.0.0
+ * @category utilities
  */
 export const get = internal.get
 
@@ -93,15 +101,15 @@ export const get = internal.get
  * Gets the value of the specified `FiberRef` in this collection of `FiberRef`
  * values if it exists or the `initial` value of the `FiberRef` otherwise.
  *
- * @category utilities
  * @since 1.0.0
+ * @category utilities
  */
 export const getOrDefault = internal.getOrDefault
 
 /**
  * Updates the value of the specified `FiberRef` using the provided `FiberId`
  *
- * @category utilities
  * @since 1.0.0
+ * @category mutations
  */
 export const updateAs = internal.updateAs
