@@ -276,12 +276,11 @@ export const match = core.exitMatch
  */
 export const matchEffect = core.exitMatchEffect
 
-// TODO: implement after `Effect.exit`
-// /**
-//  * @since 1.0.0
-//  * @category traversing
-//  */
-// export const forEachEffect = internal.forEachEffect
+/**
+ * @since 1.0.0
+ * @category traversing
+ */
+export const forEachEffect = core.exitForEachEffect
 
 /**
  * Sequentially zips the this result with the specified result or else returns

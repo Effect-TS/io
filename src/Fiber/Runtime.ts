@@ -5,7 +5,6 @@ import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
 import type * as Fiber from "@effect/io/Fiber"
-import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberScope from "@effect/io/Fiber/Scope"
 import type * as FiberRef from "@effect/io/FiberRef"
 import type { TODO } from "@effect/io/internal/todo"
@@ -15,8 +14,7 @@ import type * as Option from "@fp-ts/data/Option"
 /**
  * @since 1.0.0
  */
-export interface Runtime<E, A> extends Fiber.Fiber<E, A> {
-  id: FiberId.FiberId
+export interface Runtime<E, A> extends Fiber.RuntimeFiber<E, A> {
   scope: FiberScope.FiberScope
   log(
     message: string,

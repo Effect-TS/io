@@ -1,32 +1,25 @@
 import * as Cause from "@effect/io/Cause"
 import * as Clock from "@effect/io/Clock"
 import { getCallTrace } from "@effect/io/Debug"
-import type * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
 import * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
 import * as Exit from "@effect/io/Exit"
-import * as Fiber from "@effect/io/Fiber"
+import type * as Fiber from "@effect/io/Fiber"
 import * as FiberId from "@effect/io/Fiber/Id"
 import { RuntimeException } from "@effect/io/internal/cause"
-import * as internalClock from "@effect/io/internal/clock"
 import * as core from "@effect/io/internal/core"
-import * as OpCodes from "@effect/io/internal/opCodes/effect"
 import type { MergeRecord } from "@effect/io/internal/types"
 import * as LogLevel from "@effect/io/Logger/Level"
 import * as LogSpan from "@effect/io/Logger/Span"
 import * as Random from "@effect/io/Random"
 import * as Ref from "@effect/io/Ref"
-import * as Synchronized from "@effect/io/Ref/Synchronized"
 import * as Scope from "@effect/io/Scope"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Context from "@fp-ts/data/Context"
-import type * as Duration from "@fp-ts/data/Duration"
 import * as Either from "@fp-ts/data/Either"
-import * as Equal from "@fp-ts/data/Equal"
 import { constVoid, identity, pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
 import * as List from "@fp-ts/data/List"
-import * as MutableRef from "@fp-ts/data/mutable/MutableRef"
 import * as Option from "@fp-ts/data/Option"
 import type { Predicate } from "@fp-ts/data/Predicate"
 import type { Refinement } from "@fp-ts/data/Refinement"
@@ -202,95 +195,6 @@ export const attempt = <A>(evaluate: () => A): Effect.Effect<never, unknown, A> 
 // TODO(Max): implement after Fiber
 /** @internal */
 export declare const awaitAllChildren: <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
-
-/** @internal */
-export function cached(timeToLive: Duration.Duration) {
-  const trace = getCallTrace()
-  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Effect.Effect<never, E, A>> => {
-    return pipe(self, cachedInvalidate(timeToLive), core.map((tuple) => tuple[0])).traced(trace)
-  }
-}
-
-/** @internal */
-export const cachedInvalidate = (timeToLive: Duration.Duration) => {
-  const trace = getCallTrace()
-  return <R, E, A>(
-    self: Effect.Effect<R, E, A>
-  ): Effect.Effect<R, never, readonly [Effect.Effect<never, E, A>, Effect.Effect<never, never, void>]> => {
-    return pipe(
-      core.environment<R>(),
-      core.flatMap((env) =>
-        pipe(
-          Synchronized.make<Option.Option<readonly [number, Deferred.Deferred<E, A>]>>(Option.none),
-          core.map((cache) =>
-            [
-              pipe(getCachedValue(self, timeToLive, cache), core.provideEnvironment(env)),
-              invalidateCache(cache)
-            ] as const
-          )
-        )
-      )
-    ).traced(trace)
-  }
-}
-
-/** @internal */
-const computeCachedValue = <R, E, A>(
-  self: Effect.Effect<R, E, A>,
-  timeToLive: Duration.Duration,
-  start: number
-): Effect.Effect<R, never, Option.Option<readonly [number, Deferred.Deferred<E, A>]>> => {
-  return pipe(
-    core.makeDeferred<E, A>(),
-    core.tap((deferred) => pipe(self, core.intoDeferred(deferred))),
-    core.map((deferred) => Option.some([start + timeToLive.millis, deferred] as const))
-  )
-}
-
-/** @internal */
-const getCachedValue = <R, E, A>(
-  self: Effect.Effect<R, E, A>,
-  timeToLive: Duration.Duration,
-  cache: Synchronized.Synchronized<Option.Option<readonly [number, Deferred.Deferred<E, A>]>>
-): Effect.Effect<R, E, A> => {
-  return core.uninterruptibleMask<R, E, A>((restore) =>
-    pipe(
-      clockWith((clock) => clock.currentTimeMillis),
-      core.flatMap((time) =>
-        pipe(
-          cache,
-          Synchronized.updateSomeAndGetEffect((option) => {
-            switch (option._tag) {
-              case "None": {
-                return Option.some(computeCachedValue(self, timeToLive, time))
-              }
-              case "Some": {
-                const [end] = option.value
-                return end - time <= 0
-                  ? Option.some(computeCachedValue(self, timeToLive, time))
-                  : Option.none
-              }
-            }
-          })
-        )
-      ),
-      core.flatMap((option) =>
-        Option.isNone(option) ?
-          dieMessage(
-            "BUG: Effect.cachedInvalidate - please report an issue at https://github.com/Effect-TS/io/issues"
-          ) :
-          restore(core.awaitDeferred(option.value[1]))
-      )
-    )
-  )
-}
-
-/** @internal */
-const invalidateCache = <E, A>(
-  cache: Synchronized.Synchronized<Option.Option<readonly [number, Deferred.Deferred<E, A>]>>
-): Effect.Effect<never, never, void> => {
-  return pipe(cache, Synchronized.set(Option.none as Option.Option<readonly [number, Deferred.Deferred<E, A>]>))
-}
 
 /** @internal */
 export const _catch = <N extends keyof E, K extends E[N] & string, E, R1, E1, A1>(
@@ -659,29 +563,6 @@ export const dieMessage = (message: string): Effect.Effect<never, never, never> 
 }
 
 /** @internal */
-export const disconnect = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-  const trace = getCallTrace()
-  return core.uninterruptibleMask((restore) =>
-    pipe(
-      core.fiberId(),
-      core.flatMap((fiberId) =>
-        pipe(
-          restore(self),
-          core.forkDaemon,
-          core.flatMap((fiber) =>
-            pipe(
-              Fiber.join(fiber),
-              core.interruptible,
-              core.onInterrupt(() => pipe(fiber, Fiber.interruptAsFork(fiberId)))
-            )
-          )
-        )
-      )
-    )
-  ).traced(trace)
-}
-
-/** @internal */
 export const Do = (): Effect.Effect<never, never, {}> => {
   const trace = getCallTrace()
   return core.succeed({}).traced(trace)
@@ -861,16 +742,6 @@ export const existsPar = <R, E, A>(f: (a: A) => Effect.Effect<R, E, boolean>) =>
 export const eventually = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, A> => {
   const trace = getCallTrace()
   return pipe(self, orElse(() => pipe(core.yieldNow(), core.flatMap(() => eventually(self))))).traced(trace)
-}
-
-/** @internal */
-export const fiberIdWith = <R, E, A>(
-  f: (descriptor: FiberId.Runtime) => Effect.Effect<R, E, A>
-): Effect.Effect<R, E, A> => {
-  const trace = getCallTrace()
-  return core.withFiberRuntime<R, E, A>(
-    (state) => f(state.id as FiberId.Runtime)
-  ).traced(trace)
 }
 
 /** @internal */
@@ -1262,63 +1133,11 @@ export const forever = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R,
 }
 
 /** @internal */
-export const forkAll = <R, E, A>(
-  effects: Iterable<Effect.Effect<R, E, A>>
-): Effect.Effect<R, never, Fiber.Fiber<E, Chunk.Chunk<A>>> => {
-  const trace = getCallTrace()
-  return pipe(effects, core.forEach(core.fork), core.map(Fiber.collectAll)).traced(trace)
-}
-
-/** @internal */
 export const forkAllDiscard = <R, E, A>(
   effects: Iterable<Effect.Effect<R, E, A>>
 ): Effect.Effect<R, never, void> => {
   const trace = getCallTrace()
   return pipe(effects, core.forEachDiscard(core.fork)).traced(trace)
-}
-
-/** @internal */
-export const forkIn = (scope: Scope.Scope) => {
-  const trace = getCallTrace()
-  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>> => {
-    return core.uninterruptibleMask((restore) =>
-      pipe(
-        restore(self),
-        core.forkDaemon,
-        core.tap((fiber) => scope.addFinalizer(() => Fiber.interrupt(fiber)))
-      )
-    ).traced(trace)
-  }
-}
-
-/** @internal */
-export const forkScoped = <R, E, A>(
-  self: Effect.Effect<R, E, A>
-): Effect.Effect<R | Scope.Scope, never, Fiber.RuntimeFiber<E, A>> => {
-  const trace = getCallTrace()
-  return core.uninterruptibleMask((restore) =>
-    core.scopeWith((scope) =>
-      pipe(
-        scope.fork(ExecutionStrategy.sequential),
-        core.flatMap((child) =>
-          pipe(
-            restore(self),
-            core.onExit((e) => child.close(e)),
-            core.forkDaemon,
-            core.tap((fiber) =>
-              child.addFinalizer(() =>
-                fiberIdWith((fiberId) =>
-                  Equal.equals(fiberId, fiber.id) ?
-                    core.unit() :
-                    Fiber.interrupt(fiber)
-                )
-              )
-            )
-          )
-        )
-      )
-    )
-  ).traced(trace)
 }
 
 /** @internal */
@@ -1902,34 +1721,6 @@ export const memoize = <R, E, A>(
 }
 
 /** @internal */
-export const memoizeF = <R, E, A, B>(
-  f: (a: A) => Effect.Effect<R, E, B>
-): Effect.Effect<never, never, (a: A) => Effect.Effect<R, E, B>> => {
-  const trace = getCallTrace()
-  return pipe(
-    Synchronized.make(new Map<A, Deferred.Deferred<E, B>>()),
-    core.map((ref) =>
-      (a: A) =>
-        pipe(
-          ref,
-          Synchronized.modifyEffect((map) => {
-            const result = map.get(a)
-            if (result === undefined) {
-              return pipe(
-                core.makeDeferred<E, B>(),
-                core.tap((deferred) => pipe(f(a), core.intoDeferred(deferred), core.fork)),
-                core.map((deferred) => [deferred, map.set(a, deferred)] as const)
-              )
-            }
-            return core.succeed([result, map] as const)
-          }),
-          core.flatMap(core.awaitDeferred)
-        )
-    )
-  ).traced(trace)
-}
-
-/** @internal */
 export const merge = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, E | A> => {
   const trace = getCallTrace()
   return pipe(self, foldEffect((e) => core.succeed(e), core.succeed)).traced(trace)
@@ -1967,17 +1758,6 @@ export const mergeAllPar = <Z, A>(zero: Z, f: (z: Z, a: A) => Z) => {
 export const negate = <R, E>(self: Effect.Effect<R, E, boolean>): Effect.Effect<R, E, boolean> => {
   const trace = getCallTrace()
   return pipe(self, core.map((b) => !b)).traced(trace)
-}
-
-/** @internal */
-export const never = (): Effect.Effect<never, never, never> => {
-  const trace = getCallTrace()
-  return core.asyncInterrupt<never, never, never>(() => {
-    const interval = setInterval(() => {
-      //
-    }, internalClock.MAX_TIMER_MILLIS)
-    return Either.left(core.sync(() => clearInterval(interval)))
-  }).traced(trace)
 }
 
 /** @internal */
@@ -2282,152 +2062,6 @@ export const provideServiceEffect = <T, R1, E1>(tag: Context.Tag<T>, effect: Eff
 // }
 
 /** @internal */
-export const race = <R2, E2, A2>(that: Effect.Effect<R2, E2, A2>) => {
-  const trace = getCallTrace()
-  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, A | A2> => {
-    return pipe(disconnect(self), raceAwait(disconnect(that))).traced(trace)
-  }
-}
-
-/** @internal */
-export const raceAwait = <R2, E2, A2>(that: Effect.Effect<R2, E2, A2>) => {
-  const trace = getCallTrace()
-  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, A | A2> => {
-    return core.withFiberRuntime<R | R2, E | E2, A | A2>((state) =>
-      pipe(
-        self,
-        raceWith(
-          that,
-          (exit, right) =>
-            pipe(
-              exit,
-              Exit.matchEffect(
-                (cause1) => pipe(Fiber.join(right), mapErrorCause((cause2) => Cause.parallel(cause1, cause2))),
-                (a) => pipe(right, Fiber.interruptAsWith(state.id), core.as(a))
-              )
-            ),
-          (exit, left) =>
-            pipe(
-              exit,
-              Exit.matchEffect(
-                (cause2) => pipe(Fiber.join(left), mapErrorCause((cause1) => Cause.parallel(cause1, cause2))),
-                (a) => pipe(left, Fiber.interruptAsWith(state.id), core.as(a))
-              )
-            )
-        )
-      )
-    ).traced(trace)
-  }
-}
-
-/** @internal */
-export const raceEither = <R2, E2, A2>(that: Effect.Effect<R2, E2, A2>) => {
-  const trace = getCallTrace()
-  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, Either.Either<A, A2>> => {
-    return pipe(self, core.map(Either.left), race(pipe(that, core.map(Either.right)))).traced(trace)
-  }
-}
-
-/** @internal */
-export const raceFirst = <R2, E2, A2>(that: Effect.Effect<R2, E2, A2>) => {
-  const trace = getCallTrace()
-  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E2 | E, A2 | A> => {
-    return pipe(
-      core.exit(self),
-      race(core.exit(that)),
-      (effect: Effect.Effect<R | R2, never, Exit.Exit<E | E2, A | A2>>) => core.flatten(effect)
-    ).traced(trace)
-  }
-}
-
-/** @internal */
-export const raceFibersWith = <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
-  that: Effect.Effect<R1, E1, A1>,
-  selfWins: (winner: Fiber.Fiber<E, A>, loser: Fiber.Fiber<E1, A1>) => Effect.Effect<R2, E2, A2>,
-  thatWins: (winner: Fiber.Fiber<E1, A1>, loser: Fiber.Fiber<E, A>) => Effect.Effect<R3, E3, A3>
-) => {
-  const trace = getCallTrace()
-  return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<
-    R | R1 | R2 | R3,
-    E2 | E3,
-    A2 | A3
-  > => {
-    return core.withFiberRuntime<R | R1 | R2 | R3, E2 | E3, A2 | A3>((parentState, parentStatus) => {
-      const parentRuntimeFlags = parentStatus.runtimeFlags
-      const raceIndicator = MutableRef.make(true)
-      const leftFiber = core.unsafeForkUnstarted(self, parentState, parentRuntimeFlags)
-      const rightFiber = core.unsafeForkUnstarted(that, parentState, parentRuntimeFlags)
-      leftFiber.setFiberRef(core.forkScopeOverride, Option.some(parentState.scope))
-      rightFiber.setFiberRef(core.forkScopeOverride, Option.some(parentState.scope))
-      return core.async((cb) => {
-        leftFiber.addObserver(() => completeRace(leftFiber, rightFiber, selfWins, raceIndicator, cb))
-        rightFiber.addObserver(() => completeRace(rightFiber, leftFiber, thatWins, raceIndicator, cb))
-        leftFiber.startFork(self)
-        rightFiber.startFork(that)
-      }, FiberId.combineAll(HashSet.from([leftFiber.id, rightFiber.id])))
-    }).traced(trace)
-  }
-}
-
-/** @internal */
-const completeRace = <R, R1, R2, E2, A2, R3, E3, A3>(
-  winner: Fiber.Fiber<any, any>,
-  loser: Fiber.Fiber<any, any>,
-  cont: (winner: Fiber.Fiber<any, any>, loser: Fiber.Fiber<any, any>) => Effect.Effect<any, any, any>,
-  ab: MutableRef.MutableRef<boolean>,
-  cb: (_: Effect.Effect<R | R1 | R2 | R3, E2 | E3, A2 | A3>) => void
-): void => {
-  if (pipe(ab, MutableRef.compareAndSet(true, false))) {
-    cb(cont(winner, loser))
-  }
-}
-
-/** @internal */
-export const raceWith = <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
-  that: Effect.Effect<R1, E1, A1>,
-  leftDone: (exit: Exit.Exit<E, A>, fiber: Fiber.Fiber<E1, A1>) => Effect.Effect<R2, E2, A2>,
-  rightDone: (exit: Exit.Exit<E1, A1>, fiber: Fiber.Fiber<E, A>) => Effect.Effect<R3, E3, A3>
-) => {
-  const trace = getCallTrace()
-  return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1 | R2 | R3, E2 | E3, A2 | A3> => {
-    return pipe(
-      self,
-      raceFibersWith(
-        that,
-        (winner, loser) =>
-          pipe(
-            Fiber.await(winner),
-            core.flatMap((exit) => {
-              switch (exit.op) {
-                case OpCodes.OP_SUCCESS: {
-                  return pipe(Fiber.inheritAll(winner), core.flatMap(() => leftDone(exit, loser)))
-                }
-                case OpCodes.OP_FAILURE: {
-                  return leftDone(exit, loser)
-                }
-              }
-            })
-          ),
-        (winner, loser) =>
-          pipe(
-            Fiber.await(winner),
-            core.flatMap((exit) => {
-              switch (exit.op) {
-                case OpCodes.OP_SUCCESS: {
-                  return pipe(Fiber.inheritAll(winner), core.flatMap(() => rightDone(exit, loser)))
-                }
-                case OpCodes.OP_FAILURE: {
-                  return rightDone(exit, loser)
-                }
-              }
-            })
-          )
-      )
-    ).traced(trace)
-  }
-}
-
-/** @internal */
 export const random = (): Effect.Effect<never, never, Random.Random> => {
   const trace = getCallTrace()
   return randomWith(core.succeed).traced(trace)
@@ -2659,6 +2293,18 @@ export const sandbox = <R, E, A>(
 
 /** @internal */
 export const sleep = Clock.sleep
+
+/** @internal */
+export const transplant = <R, E, A>(
+  f: (grafter: <R2, E2, A2>(effect: Effect.Effect<R2, E2, A2>) => Effect.Effect<R2, E2, A2>) => Effect.Effect<R, E, A>
+): Effect.Effect<R, E, A> => {
+  const trace = getCallTrace()
+  return core.withFiberRuntime<R, E, A>((state) => {
+    const scopeOverride = state.getFiberRef(core.forkScopeOverride)
+    const scope = pipe(scopeOverride, Option.getOrElse(state.scope))
+    return f(pipe(core.forkScopeOverride, core.locallyFiberRef(Option.some(scope))))
+  }).traced(trace)
+}
 
 /** @internal */
 export const tryCatch = <E, A>(

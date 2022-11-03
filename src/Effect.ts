@@ -3,7 +3,7 @@
  */
 import * as core from "@effect/io/internal/core"
 import * as effect from "@effect/io/internal/effect"
-import * as circular from "@effect/io/internal/effect/index"
+import * as circular from "@effect/io/internal/effect/circular"
 import type { Equal } from "@fp-ts/data/Equal"
 
 /**
@@ -717,7 +717,7 @@ export const dieSync = core.dieSync
  * @since 1.0.0
  * @category interruption
  */
-export const disconnect = effect.disconnect
+export const disconnect = circular.disconnect
 
 /**
  * Binds an effectful value in a `do` scope
@@ -908,7 +908,7 @@ export const fiberId = core.fiberId
  * @since 1.0.0
  * @category constructors
  */
-export const fiberIdWith = effect.fiberIdWith
+export const fiberIdWith = core.fiberIdWith
 
 /**
  * Filters the collection using the specified effectful predicate.
@@ -1228,7 +1228,7 @@ export const forkDaemon = core.forkDaemon
  * @since 1.0.0
  * @category supervision
  */
-export const forkAll = effect.forkAll
+export const forkAll = circular.forkAll
 
 /**
  * Returns an effect that forks all of the specified values, and returns a
@@ -1249,7 +1249,7 @@ export const forkAllDiscard = effect.forkAllDiscard
  * @since 1.0.0
  * @category supervision
  */
-export const forkIn = effect.forkIn
+export const forkIn = circular.forkIn
 
 /**
  * Forks the fiber in a `Scope`, interrupting it when the scope is closed.
@@ -1258,7 +1258,7 @@ export const forkIn = effect.forkIn
  * @since 1.0.0
  * @category supervision
  */
-export const forkScoped = effect.forkScoped
+export const forkScoped = circular.forkScoped
 
 /**
  * Like fork but handles an error with the provided handler.
@@ -1800,7 +1800,7 @@ export const negate = effect.negate
  * @since 1.0.0
  * @category constructors
  */
-export const never = effect.never
+export const never = core.never
 
 /**
  * Requires the option produced by this value to be `None`.
@@ -2065,7 +2065,7 @@ export const provideSomeEnvironment = core.provideSomeEnvironment
  * @since 1.0.0
  * @category mutations
  */
-export const race = effect.race
+export const race = circular.race
 
 /**
  * Returns an effect that races this effect with the specified effect,
@@ -2077,7 +2077,7 @@ export const race = effect.race
  * @since 1.0.0
  * @category mutations
  */
-export const raceAwait = effect.raceAwait
+export const raceAwait = circular.raceAwait
 
 /**
  * Returns an effect that races this effect with the specified effect,
@@ -2091,7 +2091,7 @@ export const raceAwait = effect.raceAwait
  * @since 1.0.0
  * @category mutations
  */
-export const raceEither = effect.raceEither
+export const raceEither = circular.raceEither
 
 /**
  * Forks this effect and the specified effect into their own fibers, and races
@@ -2104,7 +2104,7 @@ export const raceEither = effect.raceEither
  * @since 1.0.0
  * @category mutations
  */
-export const raceFibersWith = effect.raceFibersWith
+export const raceFibersWith = circular.raceFibersWith
 
 /**
  * Returns an effect that races this effect with the specified effect,
@@ -2122,7 +2122,7 @@ export const raceFibersWith = effect.raceFibersWith
  * @since 1.0.0
  * @category mutations
  */
-export const raceFirst = effect.raceFirst
+export const raceFirst = circular.raceFirst
 
 /**
  * Returns an effect that races this effect with the specified effect, calling
@@ -2132,7 +2132,7 @@ export const raceFirst = effect.raceFirst
  * @since 1.0.0
  * @category mutations
  */
-export const raceWith = effect.raceWith
+export const raceWith = circular.raceWith
 
 /**
  * Retreives the `Random` service from the environment.
@@ -2383,6 +2383,20 @@ export const tap = core.tap
 export const traced = core.traced
 
 /**
+ * Transplants specified effects so that when those effects fork other
+ * effects, the forked effects will be governed by the scope of the fiber that
+ * executes this effect.
+ *
+ * This can be used to "graft" deep grandchildren onto a higher-level scope,
+ * effectively extending their lifespans into the parent scope.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const transplant = effect.transplant
+
+/**
  * Imports a synchronous side-effect into a pure value, translating any
  * thrown exceptions into typed failed effects.
  *
@@ -2538,3 +2552,44 @@ export const zipRight = core.zipRight
  * @category products
  */
 export const zipWith = core.zipWith
+
+/**
+ * Zips this effect and that effect in parallel.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category zipping
+ */
+export const zipPar = circular.zipPar
+
+/**
+ * Returns an effect that executes both this effect and the specified effect,
+ * in parallel, returning result of that effect. If either side fails,
+ * then the other side will be interrupted.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category zipping
+ */
+export const zipParLeft = circular.zipParLeft
+
+/**
+ * Returns an effect that executes both this effect and the specified effect,
+ * in parallel, returning result of the provided effect. If either side fails,
+ * then the other side will be interrupted.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category zipping
+ */
+export const zipParRight = circular.zipParRight
+
+/**
+ * Sequentially zips this effect with the specified effect using the
+ * specified combiner function.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category zipping
+ */
+export const zipWithPar = circular.zipWithPar

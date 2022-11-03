@@ -2,55 +2,9 @@ import { getCallTrace } from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal/core"
 import * as _ref from "@effect/io/internal/ref"
-import * as Option from "@fp-ts/data/Option"
-// import type * as Ref from "@effect/io/Ref"
 import type * as Synchronized from "@effect/io/Ref/Synchronized"
-import * as Semaphore from "@effect/io/Semaphore"
 import { pipe } from "@fp-ts/data/Function"
-
-/** @internal */
-const SynchronizedSymbolKey = "@effect/io/Ref/Synchronized"
-
-/** @internal */
-export const SynchronizedTypeId: Synchronized.SynchronizedTypeId = Symbol.for(
-  SynchronizedSymbolKey
-) as Synchronized.SynchronizedTypeId
-
-/** @internal */
-const synchronizedVariance = {
-  _A: (_: never) => _
-}
-
-/** @internal */
-export const unsafeMake = <A>(value: A): Synchronized.Synchronized<A> => {
-  const ref = _ref.unsafeMake(value)
-  const semaphore = Semaphore.unsafeMake(1)
-  return {
-    [SynchronizedTypeId]: synchronizedVariance,
-    [_ref.RefTypeId]: _ref.refVariance,
-    modify: <B>(f: (a: A) => readonly [B, A]): Effect.Effect<never, never, B> => {
-      const trace = getCallTrace()
-      return ref.modify(f).traced(trace)
-    },
-    modifyEffect: <R, E, B>(
-      f: (a: A) => Effect.Effect<R, E, readonly [B, A]>
-    ): Effect.Effect<R, E, B> => {
-      const trace = getCallTrace()
-      return pipe(
-        _ref.get(ref),
-        core.flatMap(f),
-        core.flatMap(([b, a]) => pipe(ref, _ref.set(a), core.as(b))),
-        Semaphore.withPermit(semaphore)
-      ).traced(trace)
-    }
-  }
-}
-
-/** @internal */
-export const make = <A>(value: A): Effect.Effect<never, never, Synchronized.Synchronized<A>> => {
-  const trace = getCallTrace()
-  return core.sync(() => unsafeMake(value)).traced(trace)
-}
+import * as Option from "@fp-ts/data/Option"
 
 /** @internal */
 export const get: <A>(self: Synchronized.Synchronized<A>) => Effect.Effect<never, never, A> = _ref.get
@@ -188,21 +142,3 @@ export const updateSomeEffect = <A, R, E>(pf: (a: A) => Option.Option<Effect.Eff
 export const updateSomeAndGet: <A>(
   f: (a: A) => Option.Option<A>
 ) => (self: Synchronized.Synchronized<A>) => Effect.Effect<never, never, A> = _ref.updateSomeAndGet
-
-/** @internal */
-export const updateSomeAndGetEffect = <A, R, E>(pf: (a: A) => Option.Option<Effect.Effect<R, E, A>>) => {
-  const trace = getCallTrace()
-  return (self: Synchronized.Synchronized<A>): Effect.Effect<R, E, A> => {
-    return self.modifyEffect((value) => {
-      const result = pf(value)
-      switch (result._tag) {
-        case "None": {
-          return core.succeed([value, value] as const)
-        }
-        case "Some": {
-          return pipe(result.value, core.map((a) => [a, a] as const))
-        }
-      }
-    }).traced(trace)
-  }
-}
