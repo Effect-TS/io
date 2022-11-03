@@ -48,13 +48,13 @@ export type ScheduleTypeId = typeof ScheduleTypeId
  */
 export interface Schedule<Env, In, Out> extends Schedule.Variance<Env, In, Out> {
   /** @internal */
-  readonly initial: unknown
+  readonly initial: any
   /** @internal */
   readonly step: (
     now: number,
     input: In,
-    state: unknown
-  ) => Effect.Effect<Env, never, readonly [unknown, Out, ScheduleDecision.ScheduleDecision]>
+    state: any
+  ) => Effect.Effect<Env, never, readonly [any, Out, ScheduleDecision.ScheduleDecision]>
 }
 
 /**
@@ -67,9 +67,9 @@ export declare namespace Schedule {
    */
   export interface Variance<Env, In, Out> {
     readonly [ScheduleTypeId]: {
-      _Env: (_: never) => Env
-      _In: (_: In) => void
-      _Out: (_: never) => Out
+      readonly _Env: (_: never) => Env
+      readonly _In: (_: In) => void
+      readonly _Out: (_: never) => Out
     }
   }
 }
