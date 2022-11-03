@@ -31,17 +31,17 @@ export interface Clock {
   /**
    * Unsafely returns the current time in milliseconds.
    */
-  get unsafeCurrentTimeMillis(): number
+  unsafeCurrentTimeMillis(): number
   /**
    * Returns the current time in milliseconds.
    * @macro traced
    */
-  get currentTimeMillis(): Effect.Effect<never, never, number>
+  currentTimeMillis(): Effect.Effect<never, never, number>
   /**
    * Returns the scheduler for the `Clock`.
    * @macro traced
    */
-  get scheduler(): Effect.Effect<never, never, ClockScheduler>
+  scheduler(): Effect.Effect<never, never, ClockScheduler>
   /**
    * Asynchronously sleeps for the specified duration.
    * @macro traced

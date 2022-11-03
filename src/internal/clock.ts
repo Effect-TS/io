@@ -44,17 +44,21 @@ export const globalClockScheduler: Clock.ClockScheduler = {
 /** @internal */
 class ClockImpl implements Clock.Clock {
   readonly [ClockTypeId]: Clock.ClockTypeId = ClockTypeId
-  get unsafeCurrentTimeMillis(): number {
+
+  unsafeCurrentTimeMillis(): number {
     return new Date().getTime()
   }
-  get currentTimeMillis(): Effect.Effect<never, never, number> {
+
+  currentTimeMillis(): Effect.Effect<never, never, number> {
     const trace = getCallTrace()
-    return core.sync(() => this.unsafeCurrentTimeMillis).traced(trace)
+    return core.sync(() => this.unsafeCurrentTimeMillis()).traced(trace)
   }
-  get scheduler(): Effect.Effect<never, never, Clock.ClockScheduler> {
+
+  scheduler(): Effect.Effect<never, never, Clock.ClockScheduler> {
     const trace = getCallTrace()
     return core.succeed(globalClockScheduler).traced(trace)
   }
+
   sleep(duration: Duration.Duration): Effect.Effect<never, never, void> {
     const trace = getCallTrace()
     return core.asyncInterrupt<never, never, void>((cb) => {

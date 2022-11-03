@@ -28,24 +28,24 @@ class RandomImpl implements Random.Random {
     this.PRNG = new PCGRandom.PCGRandom(seed)
   }
 
-  get next(): Effect.Effect<never, never, number> {
+  next(): Effect.Effect<never, never, number> {
     const trace = getCallTrace()
     return core.sync(() => this.PRNG.number()).traced(trace)
   }
 
-  get nextBoolean(): Effect.Effect<never, never, boolean> {
+  nextBoolean(): Effect.Effect<never, never, boolean> {
     const trace = getCallTrace()
-    return pipe(this.next, core.map((n) => n > 0.5)).traced(trace)
+    return pipe(this.next(), core.map((n) => n > 0.5)).traced(trace)
   }
 
-  get nextInt(): Effect.Effect<never, never, number> {
+  nextInt(): Effect.Effect<never, never, number> {
     const trace = getCallTrace()
     return core.sync(() => this.PRNG.integer(Number.MAX_SAFE_INTEGER)).traced(trace)
   }
 
   nextRange(min: number, max: number): Effect.Effect<never, never, number> {
     const trace = getCallTrace()
-    return pipe(this.next, core.map((n) => (max - min) * n + min)).traced(trace)
+    return pipe(this.next(), core.map((n) => (max - min) * n + min)).traced(trace)
   }
 
   nextIntBetween(min: number, max: number): Effect.Effect<never, never, number> {

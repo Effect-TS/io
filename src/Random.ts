@@ -28,17 +28,17 @@ export interface Random {
    * Returns the next numeric value from the pseudo-random number generator.
    * @macro traced
    */
-  get next(): Effect.Effect<never, never, number>
+  next(): Effect.Effect<never, never, number>
   /**
    * Returns the next boolean value from the pseudo-random number generator.
    * @macro traced
    */
-  get nextBoolean(): Effect.Effect<never, never, boolean>
+  nextBoolean(): Effect.Effect<never, never, boolean>
   /**
    * Returns the next integer value from the pseudo-random number generator.
    * @macro traced
    */
-  get nextInt(): Effect.Effect<never, never, number>
+  nextInt(): Effect.Effect<never, never, number>
   /**
    * Returns the next numeric value in the specified range from the
    * pseudo-random number generator.
