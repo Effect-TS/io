@@ -1,6 +1,7 @@
 /**
  * @since 1.0.0
  */
+import * as circular from "@effect/io/internal/effect/circular"
 import * as internal from "@effect/io/internal/semaphore"
 import type { Ref } from "@effect/io/internal/stm/ref"
 
@@ -8,7 +9,7 @@ import type { Ref } from "@effect/io/internal/stm/ref"
  * @since 1.0.0
  * @category symbols
  */
-export const SemaphoreTypeId: unique symbol = internal.SemaphoreTypeId
+export const SemaphoreTypeId: unique symbol = circular.SemaphoreTypeId
 
 /**
  * @since 1.0.0
@@ -82,7 +83,7 @@ export const acquire = internal.acquire
  * @since 1.0.0
  * @category mutations
  */
-export const acquireN = internal.acquireN
+export const acquireN = circular.acquireN
 
 /**
  * Releases a single permit back to the `Semaphore`.
@@ -98,7 +99,7 @@ export const release = internal.release
  * @since 1.0.0
  * @category mutations
  */
-export const releaseN = internal.releaseN
+export const releaseN = circular.releaseN
 
 /**
  * Executes the specified effect, acquiring a permit immediately before the
@@ -119,7 +120,7 @@ export const withPermit = internal.withPermit
  * @since 1.0.0
  * @category permits
  */
-export const withPermits = internal.withPermits
+export const withPermits = circular.withPermits
 
 /**
  * Returns a scoped effect that describes acquiring a permit as the `acquire`
@@ -137,7 +138,7 @@ export const withPermitScoped = internal.withPermitScoped
  * @since 1.0.0
  * @category permits
  */
-export const withPermitsScoped = internal.withPermitsScoped
+export const withPermitsScoped = circular.withPermitsScoped
 
 /**
  * Unsafely creates a new `Semaphore`.
@@ -145,4 +146,4 @@ export const withPermitsScoped = internal.withPermitsScoped
  * @since 1.0.0
  * @category unsafe
  */
-export const unsafeMake = internal.unsafeMake
+export const unsafeMake = circular.unsafeMakeSemaphore

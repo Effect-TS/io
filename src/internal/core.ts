@@ -596,6 +596,16 @@ export const fiberId = (): Effect.Effect<never, never, FiberId.FiberId> => {
 }
 
 /** @internal */
+export const fiberIdWith = <R, E, A>(
+  f: (descriptor: FiberId.Runtime) => Effect.Effect<R, E, A>
+): Effect.Effect<R, E, A> => {
+  const trace = getCallTrace()
+  return withFiberRuntime<R, E, A>(
+    (state) => f(state.id as FiberId.Runtime)
+  ).traced(trace)
+}
+
+/** @internal */
 export const done = <E, A>(exit: Exit.Exit<E, A>): Effect.Effect<never, E, A> => {
   const trace = getCallTrace()
   return exit.op === OpCodes.OP_FAILURE ? failCause(exit.cause).traced(trace) : succeed(exit.value).traced(trace)
@@ -613,7 +623,7 @@ export declare const unsafeFork: <R, E, A, E2, B>(
   effect: Effect.Effect<R, E, A>,
   parentFiber: FiberRuntime.Runtime<E2, B>,
   parentRuntimeFlags: RuntimeFlags.RuntimeFlags
-) => Fiber.RuntimeFiber<E, A>
+) => FiberRuntime.Runtime<E, A>
 
 // TODO(Mike): do.
 /** @internal */
@@ -621,7 +631,7 @@ export declare const unsafeForkUnstarted: <R, E, A, E2, B>(
   effect: Effect.Effect<R, E, A>,
   parentFiber: FiberRuntime.Runtime<E2, B>,
   parentRuntimeFlags: RuntimeFlags.RuntimeFlags
-) => Fiber.RuntimeFiber<E, A>
+) => FiberRuntime.Runtime<E, A>
 
 /** @internal */
 export const fork = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>> => {
@@ -637,6 +647,17 @@ export const forkDaemon = <R, E, A>(
 ): Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>> => {
   const trace = getCallTrace()
   return daemonChildren(fork(self)).traced(trace)
+}
+
+/** @internal */
+export const never = (): Effect.Effect<never, never, never> => {
+  const trace = getCallTrace()
+  return asyncInterrupt<never, never, never>(() => {
+    const interval = setInterval(() => {
+      //
+    }, 2 ** 31 - 1)
+    return Either.left(sync(() => clearInterval(interval)))
+  }).traced(trace)
 }
 
 /** @internal */

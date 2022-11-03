@@ -2,6 +2,7 @@
  * @since 1.0.0
  */
 import type * as Effect from "@effect/io/Effect"
+import * as circular from "@effect/io/internal/effect/circular"
 import * as internal from "@effect/io/internal/synchronizedRef"
 import type * as Ref from "@effect/io/Ref"
 
@@ -9,7 +10,7 @@ import type * as Ref from "@effect/io/Ref"
  * @since 1.0.0
  * @category symbols
  */
-export const SynchronizedTypeId: unique symbol = internal.SynchronizedTypeId
+export const SynchronizedTypeId: unique symbol = circular.SynchronizedTypeId
 
 /**
  * @since 1.0.0
@@ -48,7 +49,7 @@ export declare namespace Synchronized {
  * @since 1.0.0
  * @category constructors
  */
-export const make = internal.make
+export const make = circular.makeSynchronized
 
 /**
  * @macro traced
@@ -181,10 +182,10 @@ export const updateSomeAndGet = internal.updateSomeAndGet
  * @since 1.0.0
  * @category mutations
  */
-export const updateSomeAndGetEffect = internal.updateSomeAndGetEffect
+export const updateSomeAndGetEffect = circular.updateSomeAndGetEffectSynchronized
 
 /**
  * @since 1.0.0
  * @category unsafe
  */
-export const unsafeMake = internal.unsafeMake
+export const unsafeMake = circular.unsafeMakeSynchronized
