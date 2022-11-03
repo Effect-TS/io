@@ -47,7 +47,7 @@ class Local implements FiberScope.FiberScope {
 
 /** @internal */
 export const unsafeMake = (fiber: FiberRuntime.Runtime<any, any>): FiberScope.FiberScope => {
-  return new Local(fiber.id, fiber)
+  return new Local(fiber.id(), fiber)
 }
 
 /** @internal */

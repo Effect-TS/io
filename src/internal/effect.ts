@@ -550,7 +550,7 @@ export const descriptorWith = <R, E, A>(
   const trace = getCallTrace()
   return core.withFiberRuntime((state, status) => {
     return f({
-      id: state.id,
+      id: state.id(),
       status,
       interruptors: Cause.interruptors(state.getFiberRef(core.interruptedCause))
     })

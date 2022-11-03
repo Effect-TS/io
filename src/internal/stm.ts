@@ -349,7 +349,7 @@ export const zipWith = <R1, E1, A1, A, A2>(that: STM<R1, E1, A1>, f: (a: A, b: A
 
 export const commit = <R, E, A>(self: STM<R, E, A>): Effect.Effect<R, E, A> => {
   return core.withFiberRuntime((state) => {
-    const fiberId = state.id
+    const fiberId = state.id()
     const env = state.getFiberRef(core.currentEnvironment) as Context.Context<R>
     const scheduler = state.getFiberRef(core.currentScheduler)
     const commitResult = tryCommitSync(fiberId, self, env, scheduler)
