@@ -87,7 +87,7 @@ const getCachedValue = <R, E, A>(
 ): Effect.Effect<R, E, A> => {
   return core.uninterruptibleMask<R, E, A>((restore) =>
     pipe(
-      effect.clockWith((clock) => clock.currentTimeMillis),
+      effect.clockWith((clock) => clock.currentTimeMillis()),
       core.flatMap((time) =>
         pipe(
           cache,

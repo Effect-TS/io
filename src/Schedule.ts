@@ -73,3 +73,22 @@ export declare namespace Schedule {
     }
   }
 }
+
+/**
+ * Constructs a new `Schedule` with the specified `initial` state and the
+ * specified `step` function.
+ *
+ * @since 1.0.0
+ * @category constructors
+ */
+export const makeWithState = internal.makeWithState
+
+/**
+ * Returns a new schedule that combines this schedule with the specified
+ * schedule, continuing as long as both schedules want to continue and merging
+ * the next intervals according to the specified merge function.
+ *
+ * @since 1.0.0
+ * @category mutations
+ */
+export const intersectWith = internal.intersectWith

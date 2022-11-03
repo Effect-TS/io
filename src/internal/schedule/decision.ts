@@ -36,3 +36,13 @@ export const continueWith = (interval: Interval.Interval): ScheduleDecision.Sche
 export const done: ScheduleDecision.ScheduleDecision = {
   op: OP_DONE
 }
+
+/** @internal */
+export const isContinue = (self: ScheduleDecision.ScheduleDecision): self is ScheduleDecision.Continue => {
+  return self.op === OP_CONTINUE
+}
+
+/** @internal */
+export const isDone = (self: ScheduleDecision.ScheduleDecision): self is ScheduleDecision.Done => {
+  return self.op === OP_DONE
+}

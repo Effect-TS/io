@@ -47,3 +47,15 @@ export const continueWith = internal.continueWith
  * @category constructors
  */
 export const done = internal.done
+
+/**
+ * @since 1.0.0
+ * @category refinements
+ */
+export const isContinue = internal.isContinue
+
+/**
+ * @since 1.0.0
+ * @category refinements
+ */
+export const isDone = internal.isDone
