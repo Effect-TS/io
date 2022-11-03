@@ -1,6 +1,5 @@
 import type * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
-import type * as FiberId from "@effect/io/Fiber/Id"
 import * as core from "@effect/io/internal/core"
 import type * as Queue from "@effect/io/Queue"
 import * as Chunk from "@fp-ts/data/Chunk"
@@ -133,7 +132,7 @@ class QueueImpl<A> implements Queue.Queue<A> {
         // - Try to take again in case a value was added since
         // - Wait for the deferred to be completed
         // - Clean up resources in case of interruption
-        const deferred = core.unsafeMakeDeferred<never, A>(state.id)
+        const deferred = core.unsafeMakeDeferred<never, A>(state.id())
         return pipe(
           core.suspendSucceed(() => {
             pipe(this.takers, MutableQueue.offer(deferred))
@@ -344,7 +343,7 @@ export const shutdown = <A>(self: Queue.Queue<A>): Effect.Effect<never, never, v
           pipe(
             unsafePollAll(self.takers),
             core.forEachParDiscard(
-              core.interruptAsDeferred(state.id as FiberId.FiberId)
+              core.interruptAsDeferred(state.id())
             ),
             core.zipRight(self.strategy.shutdown)
           )
@@ -452,7 +451,7 @@ class BackPressureStrategy<A> implements Queue.Strategy<A> {
     isShutdown: MutableRef.MutableRef<boolean>
   ): Effect.Effect<never, never, boolean> {
     return core.withFiberRuntime((state) => {
-      const deferred = core.unsafeMakeDeferred<never, boolean>(state.id)
+      const deferred = core.unsafeMakeDeferred<never, boolean>(state.id())
       return pipe(
         core.suspendSucceed(() => {
           this.unsafeOffer(iterable, deferred)

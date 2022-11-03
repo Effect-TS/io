@@ -591,7 +591,7 @@ export const exit = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, ne
 export const fiberId = (): Effect.Effect<never, never, FiberId.FiberId> => {
   const trace = getCallTrace()
   return withFiberRuntime<never, never, FiberId.FiberId>(
-    (state) => succeed(state.id)
+    (state) => succeed(state.id())
   ).traced(trace)
 }
 
@@ -601,7 +601,7 @@ export const fiberIdWith = <R, E, A>(
 ): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
   return withFiberRuntime<R, E, A>(
-    (state) => f(state.id as FiberId.Runtime)
+    (state) => f(state.id())
   ).traced(trace)
 }
 

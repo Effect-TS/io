@@ -51,34 +51,34 @@ export interface Fiber<E, A> extends Fiber.Variance<E, A> {
   /**
    * The identity of the fiber.
    */
-  get id(): FiberId.FiberId
+  id(): FiberId.FiberId
 
   /**
    * Awaits the fiber, which suspends the awaiting fiber until the result of the
    * fiber has been determined.
    * @macro traced
    */
-  get await(): Effect.Effect<never, never, Exit.Exit<E, A>>
+  await(): Effect.Effect<never, never, Exit.Exit<E, A>>
 
   /**
    * Retrieves the immediate children of the fiber.
    * @macro traced
    */
-  get children(): Effect.Effect<never, never, Chunk.Chunk<Fiber.Runtime<any, any>>>
+  children(): Effect.Effect<never, never, Chunk.Chunk<Fiber.Runtime<any, any>>>
 
   /**
    * Inherits values from all `FiberRef` instances into current fiber. This
    * will resume immediately.
    * @macro traced
    */
-  get inheritAll(): Effect.Effect<never, never, void>
+  inheritAll(): Effect.Effect<never, never, void>
 
   /**
    * Tentatively observes the fiber, but returns immediately if it is not
    * already done.
    * @macro traced
    */
-  get poll(): Effect.Effect<never, never, Option.Option<Exit.Exit<E, A>>>
+  poll(): Effect.Effect<never, never, Option.Option<Exit.Exit<E, A>>>
 
   /**
    * In the background, interrupts the fiber as if interrupted from the
@@ -100,13 +100,13 @@ export interface RuntimeFiber<E, A> extends Fiber<E, A>, Fiber.RuntimeVariance<E
   /**
    * The identity of the fiber.
    */
-  get id(): FiberId.Runtime
+  id(): FiberId.Runtime
 
   /**
    * The status of the fiber.
    * @macro traced
    */
-  get status(): Effect.Effect<never, never, FiberStatus.FiberStatus>
+  status(): Effect.Effect<never, never, FiberStatus.FiberStatus>
 }
 
 /**
@@ -490,6 +490,15 @@ export const roots = internal.roots
  * @category destructors
  */
 export const scoped = internal.scoped
+
+/**
+ * Returns the `FiberStatus` of a `RuntimeFiber`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category destructors
+ */
+export const status = internal.status
 
 /**
  * Returns a fiber that has already succeeded with the specified value.

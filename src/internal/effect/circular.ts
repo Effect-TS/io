@@ -275,7 +275,7 @@ export const raceAwait = <R2, E2, A2>(that: Effect.Effect<R2, E2, A2>) => {
                     internalFiber.join(right),
                     effect.mapErrorCause((cause2) => Cause.parallel(cause1, cause2))
                   ),
-                (a) => pipe(right, internalFiber.interruptWith(state.id), core.as(a))
+                (a) => pipe(right, internalFiber.interruptWith(state.id()), core.as(a))
               )
             ),
           (exit, left) =>
@@ -287,7 +287,7 @@ export const raceAwait = <R2, E2, A2>(that: Effect.Effect<R2, E2, A2>) => {
                     internalFiber.join(left),
                     effect.mapErrorCause((cause1) => Cause.parallel(cause1, cause2))
                   ),
-                (a) => pipe(left, internalFiber.interruptWith(state.id), core.as(a))
+                (a) => pipe(left, internalFiber.interruptWith(state.id()), core.as(a))
               )
             )
         )
@@ -340,7 +340,7 @@ export const raceFibersWith = <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
         rightFiber.addObserver(() => completeRace(rightFiber, leftFiber, thatWins, raceIndicator, cb))
         leftFiber.startFork(self)
         rightFiber.startFork(that)
-      }, FiberId.combineAll(HashSet.from([leftFiber.id, rightFiber.id])))
+      }, FiberId.combineAll(HashSet.from([leftFiber.id(), rightFiber.id()])))
     }).traced(trace)
   }
 }
@@ -372,11 +372,11 @@ export const raceWith = <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
         that,
         (winner, loser) =>
           pipe(
-            winner.await,
+            winner.await(),
             core.flatMap((exit) => {
               switch (exit.op) {
                 case OpCodes.OP_SUCCESS: {
-                  return pipe(internalFiber.inheritAll(winner), core.flatMap(() => leftDone(exit, loser)))
+                  return pipe(winner.inheritAll(), core.flatMap(() => leftDone(exit, loser)))
                 }
                 case OpCodes.OP_FAILURE: {
                   return leftDone(exit, loser)
@@ -386,11 +386,11 @@ export const raceWith = <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
           ),
         (winner, loser) =>
           pipe(
-            winner.await,
+            winner.await(),
             core.flatMap((exit) => {
               switch (exit.op) {
                 case OpCodes.OP_SUCCESS: {
-                  return pipe(internalFiber.inheritAll(winner), core.flatMap(() => rightDone(exit, loser)))
+                  return pipe(winner.inheritAll(), core.flatMap(() => rightDone(exit, loser)))
                 }
                 case OpCodes.OP_FAILURE: {
                   return rightDone(exit, loser)
@@ -461,7 +461,7 @@ const coordinateZipWithPar = <E, E1, B, X, Y>(
   loser: Fiber.Fiber<E1, Y>
 ): Effect.Effect<never, E | E1, B> => {
   return pipe(
-    winner.await,
+    winner.await(),
     core.flatMap(Exit.match(
       (winnerCause) =>
         pipe(
@@ -477,13 +477,13 @@ const coordinateZipWithPar = <E, E1, B, X, Y>(
         ),
       (a) =>
         pipe(
-          loser.await,
+          loser.await(),
           core.flatMap(Exit.match<E | E1, Y, Effect.Effect<never, E | E1, B>>(
             core.failCause,
             (b) =>
               pipe(
-                winner.inheritAll,
-                core.zipRight(loser.inheritAll),
+                winner.inheritAll(),
+                core.zipRight(loser.inheritAll()),
                 core.zipRight(core.sync(() => f(a, b)))
               )
           ))
@@ -662,26 +662,46 @@ export const zipRightFiber = <E2, A2>(that: Fiber.Fiber<E2, A2>) => {
 export const zipWithFiber = <E2, A, B, C>(that: Fiber.Fiber<E2, B>, f: (a: A, b: B) => C) => {
   return <E>(self: Fiber.Fiber<E, A>): Fiber.Fiber<E | E2, C> => ({
     [internalFiber.FiberTypeId]: internalFiber.fiberVariance,
-    id: pipe(self.id, FiberId.getOrElse(that.id)),
-    await: pipe(self.await, core.flatten, zipWithPar(core.flatten(that.await), f), core.exit),
-    children: self.children,
-    inheritAll: pipe(that.inheritAll, core.zipRight(self.inheritAll)),
-    poll: pipe(
-      self.poll,
-      core.zipWith(
-        that.poll,
-        (optionA, optionB) =>
-          pipe(
-            optionA,
-            Option.flatMap((exitA) =>
-              pipe(
-                optionB,
-                Option.map((exitB) => pipe(exitA, Exit.zipWith(exitB, f, Cause.parallel)))
+    id: () => pipe(self.id(), FiberId.getOrElse(that.id())),
+    await: () => {
+      const trace = getCallTrace()
+      return pipe(
+        self.await(),
+        core.flatten,
+        zipWithPar(core.flatten(that.await()), f),
+        core.exit
+      ).traced(trace)
+    },
+    children: () => {
+      const trace = getCallTrace()
+      return self.children().traced(trace)
+    },
+    inheritAll: () => {
+      const trace = getCallTrace()
+      return pipe(that.inheritAll(), core.zipRight(self.inheritAll())).traced(trace)
+    },
+    poll: () => {
+      const trace = getCallTrace()
+      return pipe(
+        self.poll(),
+        core.zipWith(
+          that.poll(),
+          (optionA, optionB) =>
+            pipe(
+              optionA,
+              Option.flatMap((exitA) =>
+                pipe(
+                  optionB,
+                  Option.map((exitB) => pipe(exitA, Exit.zipWith(exitB, f, Cause.parallel)))
+                )
               )
             )
-          )
-      )
-    ),
-    interruptWithFork: (id) => pipe(self.interruptWithFork(id), core.zipRight(that.interruptWithFork(id)))
+        )
+      ).traced(trace)
+    },
+    interruptWithFork: (id) => {
+      const trace = getCallTrace()
+      return pipe(self.interruptWithFork(id), core.zipRight(that.interruptWithFork(id))).traced(trace)
+    }
   })
 }
