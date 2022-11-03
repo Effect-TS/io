@@ -496,7 +496,7 @@ export const scoped = internal.scoped
  *
  * @macro traced
  * @since 1.0.0
- * @category destructors
+ * @category getters
  */
 export const status = internal.status
 

@@ -31,7 +31,7 @@ export const currentServices = core.unsafeMakeEnvironmentFiberRef(liveServices)
 /** @internal */
 export const currentTimeMillis = (): Effect.Effect<never, never, number> => {
   const trace = getCallTrace()
-  return clockWith((clock) => clock.currentTimeMillis).traced(trace)
+  return clockWith((clock) => clock.currentTimeMillis()).traced(trace)
 }
 
 /** @internal */
@@ -63,19 +63,19 @@ export const randomWith = <R, E, A>(f: (random: Random.Random) => Effect.Effect<
 /** @internal */
 export const next = (): Effect.Effect<never, never, number> => {
   const trace = getCallTrace()
-  return randomWith((random) => random.next).traced(trace)
+  return randomWith((random) => random.next()).traced(trace)
 }
 
 /** @internal */
 export const nextInt = (): Effect.Effect<never, never, number> => {
   const trace = getCallTrace()
-  return randomWith((random) => random.nextInt).traced(trace)
+  return randomWith((random) => random.nextInt()).traced(trace)
 }
 
 /** @internal */
 export const nextBoolean = (): Effect.Effect<never, never, boolean> => {
   const trace = getCallTrace()
-  return randomWith((random) => random.nextBoolean).traced(trace)
+  return randomWith((random) => random.nextBoolean()).traced(trace)
 }
 
 /** @internal */
