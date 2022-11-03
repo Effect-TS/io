@@ -344,7 +344,7 @@ export const awaitAllChildren = effect.awaitAllChildren
  * @since 1.0.0
  * @category mutations
  */
-export const cached = effect.cached
+export const cached = circular.cached
 
 /**
  * Returns an effect that, if evaluated, will return the cached result of this
@@ -356,7 +356,7 @@ export const cached = effect.cached
  * @since 1.0.0
  * @category mutations
  */
-export const cachedInvalidate = effect.cachedInvalidate
+export const cachedInvalidate = circular.cachedInvalidate
 
 const _catch = effect._catch
 export {
@@ -1744,7 +1744,7 @@ export const memoize = effect.memoize
  * @since 1.0.0
  * @category constructors
  */
-export const memoizeF = effect.memoizeF
+export const memoizeF = circular.memoizeF
 
 /**
  * Returns a new effect where the error channel has been merged into the
