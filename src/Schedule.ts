@@ -66,8 +66,10 @@ export declare namespace Schedule {
    * @category models
    */
   export interface Variance<Env, In, Out> {
-    _Env: (_: never) => Env
-    _In: (_: In) => void
-    _Out: (_: never) => Out
+    readonly [ScheduleTypeId]: {
+      _Env: (_: never) => Env
+      _In: (_: In) => void
+      _Out: (_: never) => Out
+    }
   }
 }
