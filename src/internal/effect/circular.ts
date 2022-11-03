@@ -22,6 +22,7 @@ import * as Either from "@fp-ts/data/Either"
 import * as Equal from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
+import * as MutableHashMap from "@fp-ts/data/mutable/MutableHashMap"
 import * as MutableRef from "@fp-ts/data/mutable/MutableRef"
 import * as Option from "@fp-ts/data/Option"
 
@@ -221,25 +222,26 @@ export const forkScoped = <R, E, A>(
 }
 
 /** @internal */
-export const memoizeF = <R, E, A, B>(
+export const memoizeFunction = <R, E, A, B>(
   f: (a: A) => Effect.Effect<R, E, B>
 ): Effect.Effect<never, never, (a: A) => Effect.Effect<R, E, B>> => {
   const trace = getCallTrace()
   return pipe(
-    makeSynchronized(new Map<A, Deferred.Deferred<E, B>>()),
+    core.sync(() => MutableHashMap.empty<A, Deferred.Deferred<E, B>>()),
+    core.flatMap(makeSynchronized),
     core.map((ref) =>
       (a: A) =>
         pipe(
           ref.modifyEffect((map) => {
-            const result = map.get(a)
-            if (result === undefined) {
+            const result = pipe(map, MutableHashMap.get(a))
+            if (Option.isNone(result)) {
               return pipe(
                 core.makeDeferred<E, B>(),
                 core.tap((deferred) => pipe(f(a), core.intoDeferred(deferred), core.fork)),
-                core.map((deferred) => [deferred, map.set(a, deferred)] as const)
+                core.map((deferred) => [deferred, pipe(map, MutableHashMap.set(a, deferred))] as const)
               )
             }
-            return core.succeed([result, map] as const)
+            return core.succeed([result.value, map] as const)
           }),
           core.flatMap(core.awaitDeferred)
         )

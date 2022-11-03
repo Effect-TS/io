@@ -1744,7 +1744,7 @@ export const memoize = effect.memoize
  * @since 1.0.0
  * @category constructors
  */
-export const memoizeF = circular.memoizeF
+export const memoizeFunction = circular.memoizeFunction
 
 /**
  * Returns a new effect where the error channel has been merged into the
