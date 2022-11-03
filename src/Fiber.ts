@@ -125,15 +125,15 @@ export declare namespace Fiber {
    */
   export interface Variance<E, A> {
     readonly [FiberTypeId]: {
-      _E: (_: never) => E
-      _A: (_: never) => A
+      readonly _E: (_: never) => E
+      readonly _A: (_: never) => A
     }
   }
 
   export interface RuntimeVariance<E, A> {
     readonly [RuntimeFiberTypeId]: {
-      _E: (_: never) => E
-      _A: (_: never) => A
+      readonly _E: (_: never) => E
+      readonly _A: (_: never) => A
     }
   }
 
