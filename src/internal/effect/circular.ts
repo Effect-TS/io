@@ -185,7 +185,7 @@ export const forkIn = (scope: Scope.Scope) => {
       pipe(
         restore(self),
         core.forkDaemon,
-        core.tap((fiber) => scope.addFinalizer(() => internalFiber.interrupt(fiber)))
+        core.tap((fiber) => scope.addFinalizer(() => core.asUnit(internalFiber.interrupt(fiber))))
       )
     ).traced(trace)
   }
@@ -210,7 +210,7 @@ export const forkScoped = <R, E, A>(
                 core.fiberIdWith((fiberId) =>
                   Equal.equals(fiberId, fiber.id) ?
                     core.unit() :
-                    internalFiber.interrupt(fiber)
+                    core.asUnit(internalFiber.interrupt(fiber))
                 )
               )
             )

@@ -1213,11 +1213,8 @@ export const fromOption = <A>(option: Option.Option<A>): Effect.Effect<never, Op
  * Inspired by https://github.com/tusharmath/qio/pull/22 (revised)
  * @internal
  */
-export const gen = <
-  Eff extends Effect.Effect<any, any, any>,
-  AEff
->(
-  f: (adapter: <A>(tag: Context.Tag<A>) => Effect.Effect<A, never, A>) => Generator<Eff, AEff, any>
+export const gen = <Eff extends Effect.Effect<any, any, any>, AEff>(
+  f: () => Generator<Eff, AEff, any>
 ): Effect.Effect<
   [Eff] extends [Effect.Effect<infer R, any, any>] ? R : never,
   [Eff] extends [Effect.Effect<any, infer E, any>] ? E : never,
@@ -1225,7 +1222,7 @@ export const gen = <
 > => {
   const trace = getCallTrace()
   return core.suspendSucceed(() => {
-    const iterator = f(core.service)
+    const iterator = f()
     const state = iterator.next()
     const run = (
       state: IteratorYieldResult<Eff> | IteratorReturnResult<AEff>
@@ -1233,7 +1230,7 @@ export const gen = <
       (state.done ?
         core.succeed(state.value) :
         pipe(
-          state.value as unknown as Effect.Effect<any, any, any>,
+          state.value,
           core.flatMap((val: any) => run(iterator.next(val)))
         )).traced(trace)
     return run(state)

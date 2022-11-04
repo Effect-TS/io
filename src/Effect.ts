@@ -25,7 +25,6 @@ export type EffectTypeId = typeof EffectTypeId
 export interface Effect<R, E, A> extends Effect.Variance<R, E, A>, Equal {
   /** @internal */
   traced(trace: string | undefined): Effect<R, E, A>
-  [Symbol.iterator](): Generator<Effect<R, E, A>, A, any>
 }
 
 /**
@@ -37,6 +36,8 @@ export declare namespace Effect {
    * @category models
    */
   export interface Variance<R, E, A> {
+    [Symbol.iterator](): Generator<Effect.Variance<R, E, A>, A>
+
     readonly [EffectTypeId]: {
       readonly _R: (_: never) => R
       readonly _E: (_: never) => E
