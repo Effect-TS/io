@@ -1064,7 +1064,7 @@ export const forEachWithIndex = <A, R, E, B>(f: (a: A, i: number) => Effect.Effe
             })
           )
         ),
-        core.map(() => Chunk.fromIterable(acc))
+        core.map(() => Chunk.unsafeFromArray(acc))
       )
     }).traced(trace)
   }
@@ -1090,7 +1090,7 @@ export const forEachParWithIndex = <R, E, A, B>(f: (a: A, i: number) => Effect.E
                   )
                 )
             ),
-            core.map(() => Chunk.fromIterable(array))
+            core.map(() => Chunk.unsafeFromArray(array))
           )
         )
       )
@@ -1638,7 +1638,7 @@ export const mapAccum = <A, B, R, E, Z>(
         )
       )
     }
-    return pipe(result, core.map((z) => [z, Chunk.fromIterable(builder)] as const))
+    return pipe(result, core.map((z) => [z, Chunk.unsafeFromArray(builder)] as const))
   }).traced(trace)
 }
 
