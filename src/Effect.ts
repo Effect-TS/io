@@ -25,6 +25,7 @@ export type EffectTypeId = typeof EffectTypeId
 export interface Effect<R, E, A> extends Effect.Variance<R, E, A>, Equal {
   /** @internal */
   traced(trace: string | undefined): Effect<R, E, A>
+  [Symbol.iterator](): Generator<Effect<R, E, A>, A, any>
 }
 
 /**

@@ -15,6 +15,7 @@ import type * as FiberRef from "@effect/io/FiberRef"
 import * as deferred from "@effect/io/internal/deferred"
 import * as OpCodes from "@effect/io/internal/opCodes/effect"
 import * as Scheduler from "@effect/io/internal/scheduler"
+import * as SingleShotGen from "@effect/io/internal/singleShotGen"
 import type * as LogLevel from "@effect/io/Logger/Level"
 import type * as LogSpan from "@effect/io/Logger/Span"
 import type * as Scope from "@effect/io/Scope"
@@ -87,6 +88,9 @@ export const proto = {
     Object.assign(fresh, this)
     fresh.trace = trace
     return fresh
+  },
+  [Symbol.iterator]() {
+    return new SingleShotGen.SingleShotGen(this)
   }
 }
 
@@ -779,7 +783,13 @@ export const addFinalizer = <R, X>(
     flatMap((environment) =>
       pipe(
         scope(),
-        flatMap(scopeAddFinalizerExit((exit) => pipe(finalizer(exit), provideEnvironment(environment))))
+        flatMap(scopeAddFinalizerExit((exit) =>
+          pipe(
+            finalizer(exit),
+            provideEnvironment(environment),
+            asUnit
+          )
+        ))
       )
     )
   ).traced(trace)
@@ -1171,7 +1181,7 @@ export const scopeTag = Context.Tag<Scope.Scope>()
 
 /** @internal */
 export const scopeAddFinalizer = (finalizer: Effect.Effect<never, never, unknown>) =>
-  (self: Scope.Scope): Effect.Effect<never, never, void> => self.addFinalizer(() => finalizer)
+  (self: Scope.Scope): Effect.Effect<never, never, void> => self.addFinalizer(() => asUnit(finalizer))
 
 /** @internal */
 export const scopeAddFinalizerExit = (finalizer: Scope.Scope.Finalizer) =>
