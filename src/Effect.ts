@@ -336,7 +336,7 @@ export const attempt = effect.attempt
  * @since 1.0.0
  * @category mutations
  */
-export const awaitAllChildren = effect.awaitAllChildren
+export const awaitAllChildren = circular.awaitAllChildren
 
 /**
  * Returns an effect that, if evaluated, will return the cached result of this
@@ -795,7 +795,7 @@ export const ensuring = circular.ensuring
  * @since 1.0.0
  * @category finalization
  */
-export const ensuringChild = effect.ensuringChild
+export const ensuringChild = circular.ensuringChild
 
 /**
  * Acts on the children of this fiber, guaranteeing the specified callback
@@ -805,7 +805,7 @@ export const ensuringChild = effect.ensuringChild
  * @since 1.0.0
  * @category finalization
  */
-export const ensuringChildren = effect.ensuringChildren
+export const ensuringChildren = circular.ensuringChildren
 
 /**
  * @macro traced
@@ -1297,7 +1297,7 @@ export const fromEitherCause = effect.fromEitherCause
  * @since 1.0.0
  * @category conversions
  */
-export const fromFiber = effect.fromFiber
+export const fromFiber = circular.fromFiber
 
 /**
  * Creates an `Effect` value that represents the exit value of the specified
@@ -1307,7 +1307,7 @@ export const fromFiber = effect.fromFiber
  * @since 1.0.0
  * @category conversions
  */
-export const fromFiberEffect = effect.fromFiberEffect
+export const fromFiberEffect = circular.fromFiberEffect
 
 /**
  * Lifts an `Option` into an `Effect` but preserves the error as an option in
@@ -1326,16 +1326,15 @@ export const fromOption = effect.fromOption
  */
 export const gen = effect.gen
 
-// TODO(Mike/Max): implement after FiberRefs
-// /**
-//  * Returns a collection of all `FiberRef` values for the fiber running this
-//  * effect.
-//  *
-//  * @macro traced
-//  * @since 1.0.0
-//  * @category fiberRefs
-//  */
-// export const getFiberRefs = effect.getFiberRefs
+/**
+ * Returns a collection of all `FiberRef` values for the fiber running this
+ * effect.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const getFiberRefs = effect.getFiberRefs
 
 /**
  * Lifts an `Option` into an `Effect`, if the option is not defined it fails
@@ -2356,6 +2355,16 @@ export const sleep = effect.sleep
  * @category constructors
  */
 export const succeed = core.succeed
+
+/**
+ * Returns an effect with the behavior of this one, but where all child fibers
+ * forked in the effect are reported to the specified supervisor.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const supervised = circular.supervised
 
 /**
  * @macro traced
