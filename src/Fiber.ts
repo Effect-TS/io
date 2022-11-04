@@ -5,6 +5,7 @@ import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberStatus from "@effect/io/Fiber/Status"
+import * as core from "@effect/io/internal/core"
 import * as circular from "@effect/io/internal/effect/circular"
 import * as internal from "@effect/io/internal/fiber"
 import type * as Chunk from "@fp-ts/data/Chunk"
@@ -313,7 +314,7 @@ export const inheritAll = internal.inheritAll
  * @since 1.0.0
  * @category interruption
  */
-export const interrupt = internal.interrupt
+export const interrupt = core.interruptFiber
 
 /**
  * Interrupts the fiber as if interrupted from the specified fiber. If the
@@ -324,7 +325,7 @@ export const interrupt = internal.interrupt
  * @since 1.0.0
  * @category interruption
  */
-export const interruptWith = internal.interruptWith
+export const interruptWith = core.interruptWithFiber
 
 /**
  * Interrupts the fiber as if interrupted from the specified fiber. If the

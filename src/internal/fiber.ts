@@ -220,12 +220,6 @@ export const inheritAll = <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<never, 
 }
 
 /** @internal */
-export const interrupt = <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<never, never, Exit.Exit<E, A>> => {
-  const trace = getCallTrace()
-  return pipe(core.fiberId(), core.flatMap((fiberId) => pipe(self, interruptWith(fiberId)))).traced(trace)
-}
-
-/** @internal */
 export const interruptAll = (
   fibers: Iterable<Fiber.Fiber<any, any>>
 ): Effect.Effect<never, never, void> => {
@@ -245,14 +239,6 @@ export const interruptAllWith = (fiberId: FiberId.FiberId) => {
 }
 
 /** @internal */
-export const interruptWith = (fiberId: FiberId.FiberId) => {
-  const trace = getCallTrace()
-  return <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<never, never, Exit.Exit<E, A>> => {
-    return pipe(self.interruptWithFork(fiberId), core.flatMap(() => self.await())).traced(trace)
-  }
-}
-
-/** @internal */
 export const interruptWithFork = (fiberId: FiberId.FiberId) => {
   const trace = getCallTrace()
   return <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<never, never, void> => {
@@ -263,7 +249,7 @@ export const interruptWithFork = (fiberId: FiberId.FiberId) => {
 /** @internal */
 export const interruptFork = <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<never, never, void> => {
   const trace = getCallTrace()
-  return pipe(interrupt(self), core.forkDaemon, core.asUnit).traced(trace)
+  return pipe(core.interruptFiber(self), core.forkDaemon, core.asUnit).traced(trace)
 }
 
 /** @internal */
@@ -426,8 +412,8 @@ export const orElse = <E2, A2>(that: Fiber.Fiber<E2, A2>) => {
       const trace = getCallTrace()
       return pipe(
         self,
-        interruptWith(id),
-        core.zipRight(pipe(that, interruptWith(id))),
+        core.interruptWithFiber(id),
+        core.zipRight(pipe(that, core.interruptWithFiber(id))),
         core.asUnit
       ).traced(trace)
     }
@@ -528,7 +514,7 @@ export const roots = (): Effect.Effect<never, never, Chunk.Chunk<Fiber.RuntimeFi
 /** @internal */
 export const scoped = <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<Scope.Scope, never, Fiber.Fiber<E, A>> => {
   const trace = getCallTrace()
-  return core.acquireRelease(core.succeed(self), interrupt).traced(trace)
+  return core.acquireRelease(core.succeed(self), core.interruptFiber).traced(trace)
 }
 
 /** @internal */
