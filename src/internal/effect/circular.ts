@@ -185,7 +185,7 @@ export const forkIn = (scope: Scope.Scope) => {
       pipe(
         restore(self),
         core.forkDaemon,
-        core.tap((fiber) => scope.addFinalizer(() => core.asUnit(internalFiber.interrupt(fiber))))
+        core.tap((fiber) => scope.addFinalizer(() => core.asUnit(core.interruptFiber(fiber))))
       )
     ).traced(trace)
   }
@@ -210,7 +210,7 @@ export const forkScoped = <R, E, A>(
                 core.fiberIdWith((fiberId) =>
                   Equal.equals(fiberId, fiber.id) ?
                     core.unit() :
-                    core.asUnit(internalFiber.interrupt(fiber))
+                    core.asUnit(core.interruptFiber(fiber))
                 )
               )
             )
@@ -275,7 +275,7 @@ export const raceAwait = <R2, E2, A2>(that: Effect.Effect<R2, E2, A2>) => {
                     internalFiber.join(right),
                     effect.mapErrorCause((cause2) => Cause.parallel(cause1, cause2))
                   ),
-                (a) => pipe(right, internalFiber.interruptWith(state.id()), core.as(a))
+                (a) => pipe(right, core.interruptWithFiber(state.id()), core.as(a))
               )
             ),
           (exit, left) =>
@@ -287,7 +287,7 @@ export const raceAwait = <R2, E2, A2>(that: Effect.Effect<R2, E2, A2>) => {
                     internalFiber.join(left),
                     effect.mapErrorCause((cause1) => Cause.parallel(cause1, cause2))
                   ),
-                (a) => pipe(left, internalFiber.interruptWith(state.id()), core.as(a))
+                (a) => pipe(left, core.interruptWithFiber(state.id()), core.as(a))
               )
             )
         )
@@ -436,7 +436,7 @@ export const zipWithPar = <R2, E2, A2, A, B>(
   return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, B> => {
     const g = (b: A2, a: A) => f(a, b)
     return core.uninterruptibleMask((restore) =>
-      effect.transplant((graft) =>
+      core.transplant((graft) =>
         core.fiberIdWith((fiberId) =>
           pipe(
             graft(restore(self)),
@@ -466,7 +466,7 @@ const coordinateZipWithPar = <E, E1, B, X, Y>(
       (winnerCause) =>
         pipe(
           loser,
-          internalFiber.interruptWith(fiberId),
+          core.interruptWithFiber(fiberId),
           core.flatMap(Exit.match(
             (loserCause) =>
               leftWinner ?
