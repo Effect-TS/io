@@ -2,6 +2,7 @@
  * @since 1.0.0
  */
 import * as core from "@effect/io/internal/core"
+import * as effect from "@effect/io/internal/effect"
 
 /**
  * @since 1.0.0
@@ -79,6 +80,12 @@ export const unsafeMakeHashSet = core.unsafeMakeHashSetFiberRef
  * @category constructors
  */
 export const unsafeMakeEnvironment = core.unsafeMakeEnvironmentFiberRef
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const unsafeMakeSupervisor = effect.unsafeMakeSupervisorFiberRef
 
 /**
  * @since 1.0.0
@@ -232,6 +239,12 @@ export const currentScheduler = core.currentScheduler
  * @category fiberRefs
  */
 export const currentParallelism = core.currentParallelism
+
+/**
+ * @since 1.0.0
+ * @category fiberRefs
+ */
+export const currentSupervisor = effect.currentSupervisor
 
 /**
  * @since 1.0.0

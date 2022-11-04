@@ -6,14 +6,18 @@ import * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
 import * as Exit from "@effect/io/Exit"
 import type * as Fiber from "@effect/io/Fiber"
 import * as FiberId from "@effect/io/Fiber/Id"
+import type * as FiberRef from "@effect/io/FiberRef"
+import type * as FiberRefs from "@effect/io/FiberRefs"
 import { RuntimeException } from "@effect/io/internal/cause"
 import * as core from "@effect/io/internal/core"
+import * as SupervisorPatch from "@effect/io/internal/supervisor/patch"
 import type { MergeRecord } from "@effect/io/internal/types"
 import * as LogLevel from "@effect/io/Logger/Level"
 import * as LogSpan from "@effect/io/Logger/Span"
 import * as Random from "@effect/io/Random"
 import * as Ref from "@effect/io/Ref"
 import * as Scope from "@effect/io/Scope"
+import * as Supervisor from "@effect/io/Supervisor"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Context from "@fp-ts/data/Context"
 import * as Either from "@fp-ts/data/Either"
@@ -191,10 +195,6 @@ export const attempt = <A>(evaluate: () => A): Effect.Effect<never, unknown, A> 
     }
   }).traced(trace)
 }
-
-// TODO(Max): implement after Fiber
-/** @internal */
-export declare const awaitAllChildren: <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
 
 /** @internal */
 export const _catch = <N extends keyof E, K extends E[N] & string, E, R1, E1, A1>(
@@ -681,18 +681,6 @@ export const either = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, 
     )
   ).traced(trace)
 }
-
-// TODO(Max): after implementing fiber
-/** @internal */
-export declare const ensuringChild: <R2, X>(
-  f: (fiber: Fiber.Fiber<any, Chunk.Chunk<unknown>>) => Effect.Effect<R2, never, X>
-) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E, A>
-
-// TODO(Max): after implementing fiber
-/** @internal */
-export declare const ensuringChildren: <R1, X>(
-  children: (fibers: Chunk.Chunk<Fiber.RuntimeFiber<any, any>>) => Effect.Effect<R1, never, X>
-) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E, A>
 
 /** @internal */
 export const environmentWith = <R, A>(f: (context: Context.Context<R>) => A): Effect.Effect<R, never, A> => {
@@ -1188,14 +1176,6 @@ export const fromEitherCause = <E, A>(either: Either.Either<Cause.Cause<E>, A>):
   }
 }
 
-// TODO(Mike/Max): do.
-/** @internal */
-export declare const fromFiber: <E, A>(fiber: Fiber.Fiber<E, A>) => Effect.Effect<never, E, A>
-
-// TODO(Mike/Max): do.
-/** @internal */
-export declare const fromFiberEffect: <R, E, A>(fiber: Effect.Effect<R, E, Fiber.Fiber<E, A>>) => Effect.Effect<R, E, A>
-
 /** @internal */
 export const fromOption = <A>(option: Option.Option<A>): Effect.Effect<never, Option.Option<never>, A> => {
   const trace = getCallTrace()
@@ -1237,11 +1217,13 @@ export const gen = <Eff extends Effect.Effect<any, any, any>, AEff>(
   }).traced(trace)
 }
 
-// TODO(Mike/Max): implement after FiberRefs
-// export const getFiberRefs = (): Effect.Effect<never, never, FiberRefs> => {
-//   const trace = getCallTrace()
-//   return core.withFiberRuntime((state) => core.succeed(state.getFiberRefs)).traced(trace)
-// }
+/** @internal */
+export const getFiberRefs = (): Effect.Effect<never, never, FiberRefs.FiberRefs> => {
+  const trace = getCallTrace()
+  return core.withFiberRuntime<never, never, FiberRefs.FiberRefs>(
+    (state) => core.succeed(state.getFiberRefs())
+  ).traced(trace)
+}
 
 /** @internal */
 export const getOrFail = <A>(
@@ -2404,3 +2386,21 @@ export const unsome = <R, E, A>(
     )
   ).traced(trace)
 }
+
+// circular
+
+/** @internal */
+export const unsafeMakeSupervisorFiberRef = (
+  initial: Supervisor.Supervisor<any>
+): FiberRef.FiberRef<Supervisor.Supervisor<any>> => {
+  return core.unsafeMakePatchFiberRef(
+    initial,
+    SupervisorPatch.differ,
+    SupervisorPatch.empty
+  )
+}
+
+/** @internal */
+export const currentSupervisor: FiberRef.FiberRef<Supervisor.Supervisor<any>> = unsafeMakeSupervisorFiberRef(
+  Supervisor.none
+)

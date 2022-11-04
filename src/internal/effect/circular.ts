@@ -16,6 +16,7 @@ import * as internalTRef from "@effect/io/internal/stm/ref"
 import type * as Synchronized from "@effect/io/Ref/Synchronized"
 import type * as Scope from "@effect/io/Scope"
 import type * as Semaphore from "@effect/io/Semaphore"
+import * as Supervisor from "@effect/io/Supervisor"
 import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as Duration from "@fp-ts/data/Duration"
 import * as Either from "@fp-ts/data/Either"
@@ -33,6 +34,11 @@ export const acquireReleaseInterruptible = <R, E, A, R2, X>(
 ): Effect.Effect<R | R2 | Scope.Scope, E, A> => {
   const trace = getCallTrace()
   return pipe(acquire, ensuring(core.addFinalizer(release))).traced(trace)
+}
+
+/** @internal */
+export const awaitAllChildren = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
+  return pipe(self, ensuringChildren(internalFiber.awaitAll))
 }
 
 /** @internal */
@@ -170,6 +176,38 @@ export const ensuring = <R1, X>(finalizer: Effect.Effect<R1, never, X>) => {
 }
 
 /** @internal */
+export const ensuringChild = <R2, X>(
+  f: (fiber: Fiber.Fiber<any, Chunk.Chunk<unknown>>) => Effect.Effect<R2, never, X>
+) => {
+  const trace = getCallTrace()
+  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E, A> => {
+    return pipe(
+      self,
+      ensuringChildren((children) => f(internalFiber.collectAll(children)))
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+export const ensuringChildren = <R1, X>(
+  children: (fibers: Chunk.Chunk<Fiber.RuntimeFiber<any, any>>) => Effect.Effect<R1, never, X>
+) => {
+  const trace = getCallTrace()
+  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1, E, A> => {
+    return pipe(
+      Supervisor.track(),
+      core.flatMap((supervisor) =>
+        pipe(
+          self,
+          supervised(supervisor),
+          ensuring(pipe(supervisor.value(), core.flatMap(children)))
+        )
+      )
+    ).traced(trace)
+  }
+}
+
+/** @internal */
 export const forkAll = <R, E, A>(
   effects: Iterable<Effect.Effect<R, E, A>>
 ): Effect.Effect<R, never, Fiber.Fiber<E, Chunk.Chunk<A>>> => {
@@ -219,6 +257,18 @@ export const forkScoped = <R, E, A>(
       )
     )
   ).traced(trace)
+}
+
+/** @internal */
+export const fromFiber = <E, A>(fiber: Fiber.Fiber<E, A>): Effect.Effect<never, E, A> => {
+  const trace = getCallTrace()
+  return internalFiber.join(fiber).traced(trace)
+}
+
+/** @internal */
+export const fromFiberEffect = <R, E, A>(fiber: Effect.Effect<R, E, Fiber.Fiber<E, A>>): Effect.Effect<R, E, A> => {
+  const trace = getCallTrace()
+  return core.suspendSucceed(() => pipe(fiber, core.flatMap(internalFiber.join))).traced(trace)
 }
 
 /** @internal */
@@ -400,6 +450,15 @@ export const raceWith = <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
           )
       )
     ).traced(trace)
+  }
+}
+
+/** @internal */
+export const supervised = <X>(supervisor: Supervisor.Supervisor<X>) => {
+  const trace = getCallTrace()
+  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
+    const supervise = pipe(effect.currentSupervisor, core.locallyWithFiberRef((s) => s.zip(supervisor)))
+    return supervise(self).traced(trace)
   }
 }
 
