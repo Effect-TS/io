@@ -2292,18 +2292,6 @@ export const sandbox = <R, E, A>(
 export const sleep = Clock.sleep
 
 /** @internal */
-export const transplant = <R, E, A>(
-  f: (grafter: <R2, E2, A2>(effect: Effect.Effect<R2, E2, A2>) => Effect.Effect<R2, E2, A2>) => Effect.Effect<R, E, A>
-): Effect.Effect<R, E, A> => {
-  const trace = getCallTrace()
-  return core.withFiberRuntime<R, E, A>((state) => {
-    const scopeOverride = state.getFiberRef(core.forkScopeOverride)
-    const scope = pipe(scopeOverride, Option.getOrElse(state.scope))
-    return f(pipe(core.forkScopeOverride, core.locallyFiberRef(Option.some(scope))))
-  }).traced(trace)
-}
-
-/** @internal */
 export const tryCatch = <E, A>(
   attempt: () => A,
   onThrow: (u: unknown) => E

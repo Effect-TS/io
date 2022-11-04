@@ -2396,7 +2396,7 @@ export const traced = core.traced
  * @since 1.0.0
  * @category mutations
  */
-export const transplant = effect.transplant
+export const transplant = core.transplant
 
 /**
  * Imports a synchronous side-effect into a pure value, translating any

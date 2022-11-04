@@ -19,7 +19,7 @@ import * as SingleShotGen from "@effect/io/internal/singleShotGen"
 import type * as LogLevel from "@effect/io/Logger/Level"
 import type * as LogSpan from "@effect/io/Logger/Span"
 import type * as Scope from "@effect/io/Scope"
-import type * as Chunk from "@fp-ts/data/Chunk"
+import * as Chunk from "@fp-ts/data/Chunk"
 import * as Context from "@fp-ts/data/Context"
 import * as Differ from "@fp-ts/data/Differ"
 import * as ContextPatch from "@fp-ts/data/Differ/ContextPatch"
@@ -295,29 +295,211 @@ export const flatten = <R, E, R1, E1, A>(self: Effect.Effect<R, E, Effect.Effect
   return pipe(self, flatMap(identity)).traced(trace)
 }
 
-// TODO(Mike): do.
 /** @internal */
-export declare const forEach: <A, R, E, B>(
+export const forEach = <A, R, E, B>(
   f: (a: A) => Effect.Effect<R, E, B>
-) => (self: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<B>>
+) => {
+  const trace = getCallTrace()
+  return (self: Iterable<A>): Effect.Effect<R, E, Chunk.Chunk<B>> =>
+    suspendSucceed(() => {
+      const arr = Array.from(self)
+      const ret = new Array(arr.length)
+      let i = 0
 
-// TODO(Mike): do.
+      return pipe(
+        whileLoop(
+          () => i < arr.length,
+          () => f(arr[i++]),
+          (b) => {
+            ret[i] = b
+          }
+        ),
+        as(Chunk.unsafeFromArray(ret))
+      )
+    }).traced(trace)
+}
+
 /** @internal */
-export declare const forEachDiscard: <A, R, E, B>(
+export const forEachDiscard = <A, R, E, B>(
   f: (a: A) => Effect.Effect<R, E, B>
-) => (self: Iterable<A>) => Effect.Effect<R, E, void>
+) => {
+  const trace = getCallTrace()
+  return (self: Iterable<A>): Effect.Effect<R, E, void> =>
+    suspendSucceed(() => {
+      const arr = Array.from(self)
+      let i = 0
 
-// TODO(Mike): do.
+      return whileLoop(
+        () => i < arr.length,
+        () => f(arr[i++]),
+        () => {
+          //
+        }
+      )
+    }).traced(trace)
+}
+
 /** @internal */
-export declare const forEachPar: <A, R, E, B>(
+export const forEachPar = <A, R, E, B>(
   f: (a: A) => Effect.Effect<R, E, B>
-) => (self: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<B>>
+) => {
+  const trace = getCallTrace()
+  return (self: Iterable<A>): Effect.Effect<R, E, Chunk.Chunk<B>> =>
+    pipe(
+      currentParallelism,
+      getWithFiberRef(
+        (o) => o._tag === "None" ? foreachParUnbounded(f)(self) : forEachParN(o.value, f)(self)
+      )
+    ).traced(trace)
+}
 
-// TODO(Mike): do.
 /** @internal */
-export declare const forEachParDiscard: <R, E, A, X>(
-  f: (a: A) => Effect.Effect<R, E, X>
-) => (self: Iterable<A>) => Effect.Effect<R, E, void>
+export const forEachParDiscard = <A, R, E, _>(
+  f: (a: A) => Effect.Effect<R, E, _>
+) => {
+  const trace = getCallTrace()
+  return (self: Iterable<A>): Effect.Effect<R, E, void> =>
+    pipe(
+      currentParallelism,
+      getWithFiberRef(
+        (o) => o._tag === "None" ? forEachParUnboundedDiscard(f)(self) : forEachParNDiscard(o.value, f)(self)
+      )
+    ).traced(trace)
+}
+
+/** @internal */
+const foreachParUnbounded = <A, R, E, B>(
+  f: (a: A) => Effect.Effect<R, E, B>
+) => {
+  const trace = getCallTrace()
+  return (self: Iterable<A>): Effect.Effect<R, E, Chunk.Chunk<B>> =>
+    suspendSucceed(() => {
+      const as = Array.from(self).map((v, i) => [v, i] as const)
+      const array = new Array<B>(as.length)
+      const fn = ([a, i]: readonly [A, number]) => pipe(f(a), map((b) => array[i] = b))
+      return pipe(as, forEachParUnboundedDiscard(fn), zipRight(succeed(Chunk.unsafeFromArray(array))))
+    }).traced(trace)
+}
+
+/** @internal */
+const forEachParUnboundedDiscard = <R, E, A, X>(f: (a: A) => Effect.Effect<R, E, X>) => {
+  const trace = getCallTrace()
+  return (self: Iterable<A>): Effect.Effect<R, E, void> =>
+    suspendSucceed(() => {
+      const as = Array.from(self)
+      const size = as.length
+      if (size === 0) {
+        return unit()
+      } else if (size === 1) {
+        return asUnit(f(as[0]))
+      }
+      return uninterruptibleMask((restore) => {
+        const promise = unsafeMakeDeferred<void, void>(FiberId.none)
+        let ref = 0
+        const process = transplant((graft) => {
+          return pipe(
+            as,
+            forEach((a) =>
+              pipe(
+                graft(pipe(
+                  restore(suspendSucceed(() => f(a))),
+                  foldCauseEffect(
+                    (cause) => pipe(promise, failDeferred<void>(void 0), zipRight(failCause(cause))),
+                    () => {
+                      if (ref + 1 === size) {
+                        pipe(promise, unsafeDoneDeferred(unit() as Effect.Effect<never, void, void>))
+                      } else {
+                        ref = ref + 1
+                      }
+                      return unit()
+                    }
+                  )
+                )),
+                forkDaemon
+              )
+            )
+          )
+        })
+        return pipe(
+          process,
+          flatMap((fibers) =>
+            pipe(
+              restore(awaitDeferred(promise)),
+              foldCauseEffect(
+                (cause) =>
+                  pipe(
+                    fibers,
+                    foreachParUnbounded(interruptFiber),
+                    flatMap(
+                      (exits) => {
+                        const exit = exitCollectAllPar(exits)
+                        if (exit._tag === "Some" && exitIsFailure(exit.value)) {
+                          return failCause(Cause.parallel(Cause.stripFailures(cause), exit.value.cause))
+                        } else {
+                          return failCause(Cause.stripFailures(cause))
+                        }
+                      }
+                    )
+                  ),
+                () => pipe(fibers, forEachDiscard((f) => f.inheritAll()))
+              )
+            )
+          )
+        )
+      })
+    }).traced(trace)
+}
+
+const forEachParN = <A, R, E, B>(
+  n: number,
+  f: (a: A) => Effect.Effect<R, E, B>
+) => {
+  const trace = getCallTrace()
+  return (self: Iterable<A>): Effect.Effect<R, E, Chunk.Chunk<B>> =>
+    suspendSucceed(() => {
+      const as = Array.from(self).map((v, i) => [v, i] as const)
+      const array = new Array<B>(as.length)
+      const fn = ([a, i]: readonly [A, number]) => pipe(f(a), map((b) => array[i] = b))
+      return pipe(as, forEachParNDiscard(n, fn), zipRight(succeed(Chunk.unsafeFromArray(array))))
+    }).traced(trace)
+}
+
+/** @internal */
+const forEachParNDiscard = <A, R, E, _>(
+  n: number,
+  f: (a: A) => Effect.Effect<R, E, _>
+) => {
+  const trace = getCallTrace()
+  return (self: Iterable<A>): Effect.Effect<R, E, void> =>
+    suspendSucceed(() => {
+      const iterator = self[Symbol.iterator]()
+
+      const worker: Effect.Effect<R, E, void> = pipe(
+        sync(() => iterator.next()),
+        flatMap((next) => next.done ? unit() : pipe(asUnit(f(next.value)), flatMap(() => worker)))
+      )
+
+      const effects: Array<Effect.Effect<R, E, void>> = []
+
+      for (let i = 0; i < n; i++) {
+        effects.push(worker)
+      }
+
+      return pipe(effects, forEachParUnboundedDiscard(identity))
+    }).traced(trace)
+}
+
+/** @internal */
+export const transplant = <R, E, A>(
+  f: (grafter: <R2, E2, A2>(effect: Effect.Effect<R2, E2, A2>) => Effect.Effect<R2, E2, A2>) => Effect.Effect<R, E, A>
+): Effect.Effect<R, E, A> => {
+  const trace = getCallTrace()
+  return withFiberRuntime<R, E, A>((state) => {
+    const scopeOverride = state.getFiberRef(forkScopeOverride)
+    const scope = pipe(scopeOverride, Option.getOrElse(state.scope))
+    return f(pipe(forkScopeOverride, locallyFiberRef(Option.some(scope))))
+  }).traced(trace)
+}
 
 /** @internal */
 export const withParallelism = (parallelism: number) => {
@@ -883,6 +1065,27 @@ export const zipWith = <R2, E2, A2, A, B>(that: Effect.Effect<R2, E2, A2>, f: (a
   const trace = getCallTrace()
   return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, B> => {
     return pipe(self, flatMap((a) => pipe(that, map((b) => f(a, b))))).traced(trace)
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Fiber
+// -----------------------------------------------------------------------------
+
+/** @internal */
+export const interruptFiber = <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<never, never, Exit.Exit<E, A>> => {
+  const trace = getCallTrace()
+  return pipe(
+    fiberId(),
+    flatMap((fiberId) => pipe(self, interruptWithFiber(fiberId)))
+  ).traced(trace)
+}
+
+/** @internal */
+export const interruptWithFiber = (fiberId: FiberId.FiberId) => {
+  const trace = getCallTrace()
+  return <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<never, never, Exit.Exit<E, A>> => {
+    return pipe(self.interruptWithFork(fiberId), flatMap(() => self.await())).traced(trace)
   }
 }
 
