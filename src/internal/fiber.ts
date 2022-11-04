@@ -424,7 +424,12 @@ export const orElse = <E2, A2>(that: Fiber.Fiber<E2, A2>) => {
     },
     interruptWithFork: (id) => {
       const trace = getCallTrace()
-      return pipe(self, interruptWith(id), core.zipRight(pipe(that, interruptWith(id)))).traced(trace)
+      return pipe(
+        self,
+        interruptWith(id),
+        core.zipRight(pipe(that, interruptWith(id))),
+        core.asUnit
+      ).traced(trace)
     }
   })
 }

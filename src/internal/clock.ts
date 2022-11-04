@@ -63,7 +63,7 @@ class ClockImpl implements Clock.Clock {
     const trace = getCallTrace()
     return core.asyncInterrupt<never, never, void>((cb) => {
       const canceler = globalClockScheduler.unsafeSchedule(() => cb(core.unit()), duration)
-      return Either.left(core.sync(canceler))
+      return Either.left(core.asUnit(core.sync(canceler)))
     }).traced(trace)
   }
 }

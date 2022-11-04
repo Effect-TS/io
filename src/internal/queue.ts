@@ -436,8 +436,8 @@ class BackPressureStrategy<A> implements Queue.Strategy<A> {
       core.flatMap((fiberId) =>
         pipe(
           core.sync(() => unsafePollAll(this.putters)),
-          core.flatMap(core.forEachPar(([_, deferred, isLastItem]) =>
-            isLastItem ? pipe(deferred, core.interruptAsDeferred(fiberId)) : core.unit()
+          core.flatMap(core.forEachParDiscard(([_, deferred, isLastItem]) =>
+            isLastItem ? pipe(deferred, core.interruptAsDeferred(fiberId), core.asUnit) : core.unit()
           ))
         )
       )
