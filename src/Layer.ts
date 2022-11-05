@@ -461,12 +461,6 @@ export const tapError = internal.tapError
 export const toRuntime = internal.toRuntime
 
 /**
- * @since 1.0.0
- * @category destructors
- */
-export const withScope = internal.withScope
-
-/**
  * Combines this layer the specified layer, producing a new layer that has the
  * inputs of both, and the outputs of both combined using the specified
  * function.
