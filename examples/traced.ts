@@ -4,7 +4,12 @@ import { runtimeDebug } from "@effect/io/Debug"
 runtimeDebug.traceEnabled = true
 
 // Rest
-import * as E from "@effect/io/Effect"
-import * as F from "@fp-ts/data/Function"
+import * as Effect from "@effect/io/Effect"
+import { pipe } from "@fp-ts/data/Function"
 
-console.log(F.pipe(E.succeed(0), E.flatMap((n) => E.succeed(n + 1))))
+Effect.unsafeRunWith(
+  pipe(Effect.succeed(0), Effect.flatMap((n) => Effect.succeed(n + 1))),
+  (exit) => {
+    console.log(exit)
+  }
+)

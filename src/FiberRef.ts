@@ -3,6 +3,7 @@
  */
 import * as core from "@effect/io/internal/core"
 import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
+import * as logger from "@effect/io/internal/logger"
 
 /**
  * @since 1.0.0
@@ -215,6 +216,12 @@ export const currentEnvironment = core.currentEnvironment
  * @category fiberRefs
  */
 export const currentLogAnnotations = core.currentLogAnnotations
+
+/**
+ * @since 1.0.0
+ * @category fiberRefs
+ */
+export const currentLoggers = logger.currentLoggers
 
 /**
  * @since 1.0.0
