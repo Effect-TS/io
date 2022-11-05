@@ -9,7 +9,7 @@ Effect.unsafeRunWith(
     Effect.flatMap((msg) => Effect.log(msg)),
     Effect.provideSomeLayer(Logger.console())
   ),
-  (_exit) => {
-    console.log("Exit", _exit)
+  (exit) => {
+    console.log(exit)
   }
 )

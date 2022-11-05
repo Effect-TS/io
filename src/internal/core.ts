@@ -338,13 +338,12 @@ export const forEach = <A, R, E, B>(
       const arr = Array.from(self)
       const ret = new Array(arr.length)
       let i = 0
-
       return pipe(
         whileLoop(
           () => i < arr.length,
-          () => f(arr[i++]),
+          () => f(arr[i]),
           (b) => {
-            ret[i] = b
+            ret[i++] = b
           }
         ),
         as(Chunk.unsafeFromArray(ret))
@@ -1676,8 +1675,6 @@ export const exitZipWith = <E, E1, A, B, C>(
   g: (c: Cause.Cause<E>, c1: Cause.Cause<E1>) => Cause.Cause<E | E1>
 ) => {
   return (self: Exit.Exit<E, A>): Exit.Exit<E | E1, C> => {
-    console.log(self)
-    console.log(that)
     switch (self.op) {
       case OpCodes.OP_FAILURE: {
         switch (that.op) {
