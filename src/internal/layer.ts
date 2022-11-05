@@ -303,9 +303,9 @@ const makeMemoMap = (): Effect.Effect<never, never, MemoMap> => {
 }
 
 /** @internal */
-export function build<RIn, E, ROut>(
+export const build = <RIn, E, ROut>(
   self: Layer.Layer<RIn, E, ROut>
-): Effect.Effect<RIn | Scope.Scope, E, Context.Context<ROut>> {
+): Effect.Effect<RIn | Scope.Scope, E, Context.Context<ROut>> => {
   const trace = getCallTrace()
   return core.serviceWithEffect(Scope.Tag)(
     (scope) => pipe(self, buildWithScope(scope))
