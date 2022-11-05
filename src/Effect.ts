@@ -4,6 +4,8 @@
 import * as core from "@effect/io/internal/core"
 import * as effect from "@effect/io/internal/effect"
 import * as circular from "@effect/io/internal/effect/circular"
+import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
+import * as _runtime from "@effect/io/internal/runtime"
 import type { Equal } from "@fp-ts/data/Equal"
 
 /**
@@ -60,7 +62,7 @@ export const isEffect = core.isEffect
  * @since 1.0.0
  * @category constructors
  */
-export const makeEffectError = effect.makeEffectError
+export const makeEffectError = core.makeEffectError
 
 /**
  * Adds a finalizer to the scope of this effect. The finalizer is guaranteed
@@ -71,7 +73,7 @@ export const makeEffectError = effect.makeEffectError
  * @since 1.0.0
  * @category finalization
  */
-export const addFinalizer = core.addFinalizer
+export const addFinalizer = fiberRuntime.addFinalizer
 
 /**
  * Submerges the error case of an `Either` into an `Effect`. The inverse
@@ -119,7 +121,7 @@ export const absorbWith = effect.absorbWith
  * @since 1.0.0
  * @category constructors
  */
-export const acquireRelease = core.acquireRelease
+export const acquireRelease = fiberRuntime.acquireRelease
 
 /**
  * A variant of `acquireRelease` that allows the `acquire` effect to be
@@ -267,18 +269,17 @@ export const asUnit = core.asUnit
  */
 export const async = core.async
 
-// TODO(Max): after runtime
-// /**
-//  * Converts an asynchronous, callback-style API into an `Effect`, which will
-//  * be executed asynchronously.
-//  *
-//  * With this variant, the registration function may return a an `Effect`.
-//  *
-//  * @macro traced
-//  * @since 1.0.0
-//  * @category constructors
-//  */
-// export const asyncEffect = effect.asyncEffect
+/**
+ * Converts an asynchronous, callback-style API into an `Effect`, which will
+ * be executed asynchronously.
+ *
+ * With this variant, the registration function may return a an `Effect`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const asyncEffect = _runtime.asyncEffect
 
 /**
  * Imports an asynchronous effect into a pure `Effect` value, possibly returning
@@ -489,7 +490,7 @@ export const clockWith = effect.clockWith
  * @since 1.0.0
  * @category constructors
  */
-export const collect = effect.collect
+export const collect = fiberRuntime.collect
 
 /**
  * Evaluate each effect in the structure from left to right, and collect the
@@ -519,7 +520,7 @@ export const collectAllDiscard = effect.collectAllDiscard
  * @since 1.0.0
  * @category constructors
  */
-export const collectAllPar = effect.collectAllPar
+export const collectAllPar = fiberRuntime.collectAllPar
 
 /**
  * Evaluate each effect in the structure in parallel, and discard the results.
@@ -529,7 +530,7 @@ export const collectAllPar = effect.collectAllPar
  * @since 1.0.0
  * @category constructors
  */
-export const collectAllParDiscard = effect.collectAllParDiscard
+export const collectAllParDiscard = fiberRuntime.collectAllParDiscard
 
 /**
  * Evaluate each effect in the structure with `collectAll`, and collect the
@@ -549,7 +550,7 @@ export const collectAllWith = effect.collectAllWith
  * @since 1.0.0
  * @category constructors
  */
-export const collectAllWithPar = effect.collectAllWithPar
+export const collectAllWithPar = fiberRuntime.collectAllWithPar
 
 /**
  * Returns a filtered, mapped subset of the elements of the iterable based on a
@@ -579,7 +580,7 @@ export const collectAllSuccesses = effect.collectAllSuccesses
  * @since 1.0.0
  * @category constructors
  */
-export const collectAllSuccessesPar = effect.collectAllSuccessesPar
+export const collectAllSuccessesPar = fiberRuntime.collectAllSuccessesPar
 
 /**
  * Collects the first element of the `Collection<A?` for which the effectual
@@ -599,7 +600,7 @@ export const collectFirst = effect.collectFirst
  * @since 1.0.0
  * @category constructors
  */
-export const collectPar = effect.collectPar
+export const collectPar = fiberRuntime.collectPar
 
 /**
  * Transforms all elements of the chunk for as long as the specified partial
@@ -651,7 +652,7 @@ export const continueOrFailEffect = effect.continueOrFailEffect
  * @since 1.0.0
  * @category supervision
  */
-export const daemonChildren = core.daemonChildren
+export const daemonChildren = fiberRuntime.daemonChildren
 
 /**
  * Constructs an effect with information about the current `Fiber`.
@@ -861,7 +862,7 @@ export const exists = effect.exists
  * @since 1.0.0
  * @category constructors
  */
-export const existsPar = effect.existsPar
+export const existsPar = fiberRuntime.existsPar
 
 /**
  * @macro traced
@@ -929,7 +930,7 @@ export const filter = effect.filter
  * @since 1.0.0
  * @category filtering
  */
-export const filterPar = effect.filterPar
+export const filterPar = fiberRuntime.filterPar
 
 /**
  * Filters the collection using the specified effectual predicate, removing
@@ -949,7 +950,7 @@ export const filterNot = effect.filterNot
  * @since 1.0.0
  * @category filtering
  */
-export const filterNotPar = effect.filterNotPar
+export const filterNotPar = fiberRuntime.filterNotPar
 
 /**
  * Filter the specified effect with the provided function, dying with specified
@@ -1093,7 +1094,7 @@ export const foldCauseEffect = core.foldCauseEffect
  * @since 1.0.0
  * @category error handling
  */
-export const foldEffect = effect.foldEffect
+export const foldEffect = core.foldEffect
 
 /**
  * Determines whether all elements of the `Collection<A>` satisfies the effectual
@@ -1140,6 +1141,16 @@ export const forEach = core.forEach
 export const forEachDiscard = core.forEachDiscard
 
 /**
+ * Applies the function `f` to each element of the `Collection<A>` and returns
+ * the result in a new `Chunk<B>` using the specified execution strategy.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const forEachExec = fiberRuntime.forEachExec
+
+/**
  * Same as `forEach`, except that the function `f` is supplied
  * a second argument that corresponds to the index (starting from 0)
  * of the current element being iterated over.
@@ -1155,14 +1166,14 @@ export const forEachWithIndex = effect.forEachWithIndex
  * @since 1.0.0
  * @category constructors
  */
-export const forEachPar = core.forEachPar
+export const forEachPar = fiberRuntime.forEachPar
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category constructors
  */
-export const forEachParDiscard = core.forEachParDiscard
+export const forEachParDiscard = fiberRuntime.forEachParDiscard
 
 /**
  * Same as `forEachPar`, except that the function `f` is supplied
@@ -1173,7 +1184,7 @@ export const forEachParDiscard = core.forEachParDiscard
  * @since 1.0.0
  * @category constructors
  */
-export const forEachParWithIndex = effect.forEachParWithIndex
+export const forEachParWithIndex = fiberRuntime.forEachParWithIndex
 
 /**
  * Repeats this effect forever (until the first error).
@@ -1209,7 +1220,7 @@ export const forever = effect.forever
  * @since 1.0.0
  * @category supervision
  */
-export const fork = core.fork
+export const fork = fiberRuntime.fork
 
 /**
  * Forks the effect into a new fiber attached to the global scope. Because the
@@ -1220,7 +1231,7 @@ export const fork = core.fork
  * @since 1.0.0
  * @category supervision
  */
-export const forkDaemon = core.forkDaemon
+export const forkDaemon = fiberRuntime.forkDaemon
 
 /**
  * Returns an effect that forks all of the specified values, and returns a
@@ -1241,7 +1252,7 @@ export const forkAll = circular.forkAll
  * @since 1.0.0
  * @category supervision
  */
-export const forkAllDiscard = effect.forkAllDiscard
+export const forkAllDiscard = fiberRuntime.forkAllDiscard
 
 /**
  * Forks the effect in the specified scope. The fiber will be interrupted
@@ -1269,7 +1280,7 @@ export const forkScoped = circular.forkScoped
  * @since 1.0.0
  * @category supervision
  */
-export const forkWithErrorHandler = effect.forkWithErrorHandler
+export const forkWithErrorHandler = fiberRuntime.forkWithErrorHandler
 
 /**
  * Lifts an `Either<E, A>` into an `Effect<never, E, A>`.
@@ -1383,7 +1394,7 @@ export const head = effect.head
  * @since 1.0.0
  * @category constructors
  */
-export const ifEffect = effect.ifEffect
+export const ifEffect = core.ifEffect
 
 /**
  * Returns a new effect that ignores the success or failure of this effect.
@@ -1782,7 +1793,7 @@ export const mergeAll = effect.mergeAll
  * @since 1.0.0
  * @category constructors
  */
-export const mergeAllPar = effect.mergeAllPar
+export const mergeAllPar = fiberRuntime.mergeAllPar
 
 /**
  * Returns a new effect where boolean value of this effect is negated.
@@ -1838,14 +1849,14 @@ export const noneOrFailWith = effect.noneOrFailWith
  * @since 1.0.0
  * @category mutations
  */
-export const onDone = effect.onDone
+export const onDone = fiberRuntime.onDone
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const onDoneCause = effect.onDoneCause
+export const onDoneCause = fiberRuntime.onDoneCause
 
 /**
  * Runs the specified effect if this effect fails, providing the error to the
@@ -1855,7 +1866,7 @@ export const onDoneCause = effect.onDoneCause
  * @since 1.0.0
  * @category mutations
  */
-export const onError = effect.onError
+export const onError = core.onError
 
 /**
  * Ensures that a cleanup functions runs, whether this effect succeeds, fails,
@@ -1988,7 +1999,7 @@ export const parallelErrors = effect.parallelErrors
  * @since 1.0.0
  * @category mutations
  */
-export const parallelFinalizers = effect.parallelFinalizers
+export const parallelFinalizers = fiberRuntime.parallelFinalizers
 
 /**
  * Provides the effect with its required environment, which eliminates its
@@ -2182,7 +2193,7 @@ export const reduceAll = effect.reduceAll
  * @since 1.0.0
  * @category folding
  */
-export const reduceAllPar = effect.reduceAllPar
+export const reduceAllPar = fiberRuntime.reduceAllPar
 
 /**
  * Folds an `Iterable<A>` using an effectual function f, working sequentially from left to right.
@@ -2301,6 +2312,16 @@ export const right = effect.right
 export const rightWith = effect.rightWith
 
 /**
+ * Returns an effect that accesses the runtime, which can be used to
+ * (unsafely) execute tasks. This is useful for integration with legacy code
+ * that must call back into Effect code.
+ *
+ * @since 1.0.0
+ * @category constructors
+ */
+export const runtime = _runtime.runtime
+
+/**
  * Exposes the full `Cause` of failure for the specified effect.
  *
  * @macro traced
@@ -2314,7 +2335,7 @@ export const sandbox = effect.sandbox
  * @since 1.0.0
  * @category environment
  */
-export const scope = core.scope
+export const scope = fiberRuntime.scope
 
 /**
  * Accesses the current scope and uses it to perform the specified effect.
@@ -2323,7 +2344,7 @@ export const scope = core.scope
  * @since 1.0.0
  * @category scoping
  */
-export const scopeWith = core.scopeWith
+export const scopeWith = fiberRuntime.scopeWith
 
 /**
  * @macro traced
@@ -2469,13 +2490,61 @@ export const unrefineWith = effect.unrefineWith
 export const unright = effect.unright
 
 /**
+ * @since 1.0.0
+ * @category execution
+ */
+export const unsafeRunAsync = _runtime.unsafeRunAsync
+
+/**
+ * @since 1.0.0
+ * @category execution
+ */
+export const unsafeRunAsyncWith = _runtime.unsafeRunAsyncWith
+
+/**
+ * Runs an `Effect` workflow, returning a `Promise` which resolves with the
+ * result of the workflow or rejects with an error.
+ *
+ * @since 1.0.0
+ * @category execution
+ */
+export const unsafeRunPromise = _runtime.unsafeRunPromise
+
+/**
+ * Runs an `Effect` workflow, returning a `Promise` which resolves with the
+ * `Exit` value of the workflow.
+ *
+ * @since 1.0.0
+ * @category execution
+ */
+export const unsafeRunPromiseExit = _runtime.unsafeRunPromiseExit
+
+/**
+ * @since 1.0.0
+ * @category execution
+ */
+export const unsafeRunSync = _runtime.unsafeRunSync
+
+/**
+ * @since 1.0.0
+ * @category execution
+ */
+export const unsafeRunSyncExit = _runtime.unsafeRunSyncExit
+
+/**
+ * @since 1.0.0
+ * @category execution
+ */
+export const unsafeRunWith = _runtime.unsafeRunWith
+
+/**
  * Converts an option on errors into an option on values.
  *
  * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const unsome = effect.unsome
+export const unsome = fiberRuntime.unsome
 
 /**
  * @macro traced
@@ -2497,13 +2566,6 @@ export const whileLoop = core.whileLoop
  * @category constructors
  */
 export const whenEffect = core.whenEffect
-
-/**
- * @macro traced
- * @since 1.0.0
- * @category runtime
- */
-export const withFiberRuntime = core.withFiberRuntime
 
 /**
  * @macro traced

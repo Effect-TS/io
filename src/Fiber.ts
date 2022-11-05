@@ -4,10 +4,14 @@
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
 import type * as FiberId from "@effect/io/Fiber/Id"
+import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import type * as FiberStatus from "@effect/io/Fiber/Status"
+import type * as FiberRef from "@effect/io/FiberRef"
+import type * as FiberRefs from "@effect/io/FiberRefs"
 import * as core from "@effect/io/internal/core"
 import * as circular from "@effect/io/internal/effect/circular"
 import * as internal from "@effect/io/internal/fiber"
+import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
 import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as HashSet from "@fp-ts/data/HashSet"
 import type * as Option from "@fp-ts/data/Option"
@@ -108,6 +112,44 @@ export interface RuntimeFiber<E, A> extends Fiber<E, A>, Fiber.RuntimeVariance<E
    * @macro traced
    */
   status(): Effect.Effect<never, never, FiberStatus.FiberStatus>
+
+  /**
+   * Returns the current `RuntimeFlags` the fiber is running with.
+   *
+   * @macro traced
+   */
+  runtimeFlags(): Effect.Effect<never, never, RuntimeFlags.RuntimeFlags>
+
+  /**
+   * Adds an observer to the list of observers.
+   *
+   * **NOTE**: This method must be invoked by the fiber itself.
+   */
+  unsafeAddObserver(observer: (exit: Exit.Exit<E, A>) => void): void
+
+  /**
+   * Removes the specified observer from the list of observers that will be
+   * notified when the fiber exits.
+   *
+   * **NOTE**: This method must be invoked by the fiber itself.
+   */
+  unsafeRemoveObserver(observer: (exit: Exit.Exit<E, A>) => void): void
+
+  /**
+   * Deletes the specified fiber ref.
+   *
+   * **NOTE**: This method must be invoked by the fiber itself.
+   */
+  unsafeDeleteFiberRef<X>(fiberRef: FiberRef.FiberRef<X>): void
+
+  /**
+   * Retrieves all fiber refs of the fiber.
+   *
+   * **NOTE**: This method is safe to invoke on any fiber, but if not invoked
+   * on this fiber, then values derived from the fiber's state (including the
+   * log annotations and log level) may not be up-to-date.
+   */
+  unsafeGetFiberRefs(): FiberRefs.FiberRefs
 }
 
 /**
@@ -226,7 +268,7 @@ export {
  * @since 1.0.0
  * @category destructors
  */
-export const awaitAll = internal.awaitAll
+export const awaitAll = fiberRuntime.awaitAll
 
 /**
  * Retrieves the immediate children of the fiber.
@@ -245,7 +287,7 @@ export const children = internal.children
  * @since 1.0.0
  * @category constructors
  */
-export const collectAll = internal.collectAll
+export const collectAll = fiberRuntime.collectAll
 
 /**
  * A fiber that is done with the specified `Exit` value.
@@ -366,7 +408,7 @@ export const interruptAllWith = internal.interruptAllWith
  * @since 1.0.0
  * @category interruption
  */
-export const interruptFork = internal.interruptFork
+export const interruptFork = fiberRuntime.interruptFork
 
 /**
  * Joins the fiber, which suspends the joining fiber until the result of the
@@ -390,7 +432,7 @@ export const join = internal.join
  * @since 1.0.0
  * @category destructors
  */
-export const joinAll = internal.joinAll
+export const joinAll = fiberRuntime.joinAll
 
 /**
  * Maps over the value the Fiber computes.
@@ -490,7 +532,7 @@ export const roots = internal.roots
  * @since 1.0.0
  * @category destructors
  */
-export const scoped = internal.scoped
+export const scoped = fiberRuntime.scoped
 
 /**
  * Returns the `FiberStatus` of a `RuntimeFiber`.

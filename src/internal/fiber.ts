@@ -1,4 +1,4 @@
-import * as Cause from "@effect/io/Cause"
+import type * as Cause from "@effect/io/Cause"
 import * as Clock from "@effect/io/Clock"
 import { getCallTrace } from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
@@ -9,7 +9,6 @@ import * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import type * as FiberStatus from "@effect/io/Fiber/Status"
 import * as core from "@effect/io/internal/core"
 import * as fiberScope from "@effect/io/internal/fiberScope"
-import type * as Scope from "@effect/io/Scope"
 import * as order from "@fp-ts/core/typeclass/Order"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Either from "@fp-ts/data/Either"
@@ -68,84 +67,11 @@ export const _await = <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<never, neve
 }
 
 /** @internal */
-export const awaitAll = (
-  fibers: Iterable<Fiber.Fiber<any, any>>
-): Effect.Effect<never, never, void> => {
-  const trace = getCallTrace()
-  return pipe(_await(collectAll(fibers)), core.asUnit).traced(trace)
-}
-
-/** @internal */
 export const children = <E, A>(
   self: Fiber.Fiber<E, A>
 ): Effect.Effect<never, never, Chunk.Chunk<Fiber.RuntimeFiber<any, any>>> => {
   const trace = getCallTrace()
   return self.children().traced(trace)
-}
-
-/** @internal */
-export function collectAll<E, A>(fibers: Iterable<Fiber.Fiber<E, A>>): Fiber.Fiber<E, Chunk.Chunk<A>> {
-  return {
-    [FiberTypeId]: fiberVariance,
-    id: () => Array.from(fibers).reduce((id, fiber) => pipe(id, FiberId.combine(fiber.id())), FiberId.none),
-    await: () => {
-      const trace = getCallTrace()
-      return pipe(fibers, core.forEachPar((fiber) => core.flatten(fiber.await())), core.exit).traced(trace)
-    },
-    children: () => {
-      const trace = getCallTrace()
-      return pipe(fibers, core.forEachPar((fiber) => fiber.children()), core.map(Chunk.flatten)).traced(trace)
-    },
-    inheritAll: () => {
-      const trace = getCallTrace()
-      return pipe(fibers, core.forEachDiscard((fiber) => fiber.inheritAll())).traced(trace)
-    },
-    poll: () => {
-      const trace = getCallTrace()
-      return pipe(
-        fibers,
-        core.forEach((fiber) => fiber.poll()),
-        core.map(
-          Chunk.reduceRight(
-            Option.some<Exit.Exit<E, Chunk.Chunk<A>>>(Exit.succeed(Chunk.empty)),
-            (optionA, optionB) => {
-              switch (optionA._tag) {
-                case "None": {
-                  return Option.none
-                }
-                case "Some": {
-                  switch (optionB._tag) {
-                    case "None": {
-                      return Option.none
-                    }
-                    case "Some": {
-                      return Option.some(
-                        pipe(
-                          optionA.value,
-                          Exit.zipWith(
-                            optionB.value,
-                            (a, chunk) => pipe(chunk, Chunk.prepend(a)),
-                            Cause.parallel
-                          )
-                        )
-                      )
-                    }
-                  }
-                }
-              }
-            }
-          )
-        )
-      ).traced(trace)
-    },
-    interruptWithFork: (fiberId) => {
-      const trace = getCallTrace()
-      return pipe(
-        fibers,
-        core.forEachDiscard((fiber) => fiber.interruptWithFork(fiberId))
-      ).traced(trace)
-    }
-  }
 }
 
 /** @internal */
@@ -247,21 +173,9 @@ export const interruptWithFork = (fiberId: FiberId.FiberId) => {
 }
 
 /** @internal */
-export const interruptFork = <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<never, never, void> => {
-  const trace = getCallTrace()
-  return pipe(core.interruptFiber(self), core.forkDaemon, core.asUnit).traced(trace)
-}
-
-/** @internal */
 export const join = <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<never, E, A> => {
   const trace = getCallTrace()
   return pipe(self.await(), core.flatten, core.zipLeft(self.inheritAll())).traced(trace)
-}
-
-/** @internal */
-export const joinAll = <E, A>(fibers: Iterable<Fiber.Fiber<E, A>>): Effect.Effect<never, E, void> => {
-  const trace = getCallTrace()
-  return pipe(collectAll(fibers), join, core.asUnit).traced(trace)
 }
 
 /** @internal */
@@ -509,12 +423,6 @@ export const pretty = <E, A>(self: Fiber.RuntimeFiber<E, A>): Effect.Effect<neve
 export const roots = (): Effect.Effect<never, never, Chunk.Chunk<Fiber.RuntimeFiber<any, any>>> => {
   const trace = getCallTrace()
   return core.sync(() => Chunk.fromIterable(fiberScope._roots)).traced(trace)
-}
-
-/** @internal */
-export const scoped = <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<Scope.Scope, never, Fiber.Fiber<E, A>> => {
-  const trace = getCallTrace()
-  return core.acquireRelease(core.succeed(self), core.interruptFiber).traced(trace)
 }
 
 /** @internal */
