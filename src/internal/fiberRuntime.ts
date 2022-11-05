@@ -14,6 +14,7 @@ import * as core from "@effect/io/internal/core"
 import * as internalFiber from "@effect/io/internal/fiber"
 import * as FiberMessage from "@effect/io/internal/fiberMessage"
 import * as FiberRefs from "@effect/io/internal/fiberRefs"
+import * as internalLogger from "@effect/io/internal/logger"
 import * as OpCodes from "@effect/io/internal/opCodes/effect"
 import { Stack } from "@effect/io/internal/stack"
 import * as SupervisorPatch from "@effect/io/internal/supervisor/patch"
@@ -25,6 +26,7 @@ import * as Chunk from "@fp-ts/data/Chunk"
 import * as Context from "@fp-ts/data/Context"
 import * as Either from "@fp-ts/data/Either"
 import { identity, pipe } from "@fp-ts/data/Function"
+import * as HashSet from "@fp-ts/data/HashSet"
 import * as List from "@fp-ts/data/List"
 import * as MutableQueue from "@fp-ts/data/mutable/MutableQueue"
 import * as MutableRef from "@fp-ts/data/mutable/MutableRef"
@@ -102,7 +104,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    * The identity of the fiber.
    */
   id(): FiberId.Runtime {
-    throw new Error("Method not implemented.")
+    return this._fiberId
   }
 
   /**
@@ -618,29 +620,27 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   }
 
   getLoggers() {
-    // TODO(Max): after Logger
-    // return this.getFiberRef(core.currentLoggers)
+    return this.getFiberRef(internalLogger.currentLoggers)
   }
 
   log(
-    _message: string,
-    _cause: Cause.Cause<any>,
-    _overrideLogLevel: Option.Option<LogLevel.LogLevel>
+    message: string,
+    cause: Cause.Cause<any>,
+    overrideLogLevel: Option.Option<LogLevel.LogLevel>
   ): void {
-    // const logLevel = Option.isSome(overrideLogLevel) ?
-    //   overrideLogLevel.value :
-    //   this.getFiberRef(core.currentLogLevel)
-    // const spans = this.getFiberRef(core.currentLogSpan)
-    // const annotations = this.getFiberRef(core.currentLogAnnotations)
-    // TODO(Max): after Logger
-    // const loggers = this.getLoggers()
-    // const contextMap = this.getFiberRefs()
-    // pipe(
-    //   loggers,
-    //   HashSet.forEach((logger) => {
-    //     logger.apply(this.id, logLevel, message, cause, contextMap, spans, annotations)
-    //   })
-    // )
+    const logLevel = Option.isSome(overrideLogLevel) ?
+      overrideLogLevel.value :
+      this.getFiberRef(core.currentLogLevel)
+    const spans = this.getFiberRef(core.currentLogSpan)
+    const annotations = this.getFiberRef(core.currentLogAnnotations)
+    const loggers = this.getLoggers()
+    const contextMap = this.unsafeGetFiberRefs()
+    pipe(
+      loggers,
+      HashSet.forEach((logger) => {
+        logger.log(this.id(), logLevel, message, cause, contextMap, spans, annotations)
+      })
+    )
   }
 
   /**
@@ -1593,7 +1593,14 @@ export const scopeWith = <R, E, A>(
   f: (scope: Scope.Scope) => Effect.Effect<R, E, A>
 ): Effect.Effect<R | Scope.Scope, E, A> => {
   const trace = getCallTrace()
-  return core.serviceWithEffect(scopeTag, f).traced(trace)
+  return core.serviceWithEffect(scopeTag)(f).traced(trace)
+}
+
+/** @internal */
+export const scopedEffect = <R, E, A>(
+  effect: Effect.Effect<R, E, A>
+): Effect.Effect<Exclude<R, Scope.Scope>, E, A> => {
+  return pipe(scopeMake(), core.flatMap(scopeUse(effect)))
 }
 
 /** @internal */
@@ -1861,7 +1868,7 @@ export function collectAll<E, A>(fibers: Iterable<Fiber.Fiber<E, A>>): Fiber.Fib
         core.map(
           Chunk.reduceRight(
             Option.some<Exit.Exit<E, Chunk.Chunk<A>>>(Exit.succeed(Chunk.empty)),
-            (optionA, optionB) => {
+            (optionB, optionA) => {
               switch (optionA._tag) {
                 case "None": {
                   return Option.none

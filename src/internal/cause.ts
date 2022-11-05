@@ -14,7 +14,6 @@ import * as Equal from "@fp-ts/data/Equal"
 import { constFalse, constTrue, identity, pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
 import * as List from "@fp-ts/data/List"
-import * as NonEmptyReadonlyArray from "@fp-ts/data/NonEmptyReadonlyArray"
 import * as Option from "@fp-ts/data/Option"
 import type { Predicate } from "@fp-ts/data/Predicate"
 import * as ReadonlyArray from "@fp-ts/data/ReadonlyArray"
@@ -1330,8 +1329,8 @@ const prefixBlock = (
   prefix2: Doc.Doc<never>
 ): ReadonlyArray<Doc.Doc<never>> => {
   if (ReadonlyArray.isNonEmpty(values)) {
-    const head = NonEmptyReadonlyArray.head(values)
-    const tail = NonEmptyReadonlyArray.tail(values)
+    const head = values[0]
+    const tail = values.slice(1)
     const init = Doc.cat(head)(prefix1)
     const rest = tail.map((value) => Doc.cat(value)(prefix2))
     return [init, ...rest]

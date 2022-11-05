@@ -5,6 +5,7 @@ import * as core from "@effect/io/internal/core"
 import * as effect from "@effect/io/internal/effect"
 import * as circular from "@effect/io/internal/effect/circular"
 import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
+import * as layer from "@effect/io/internal/layer"
 import * as _runtime from "@effect/io/internal/runtime"
 import type { Equal } from "@fp-ts/data/Equal"
 
@@ -1406,6 +1407,26 @@ export const ifEffect = core.ifEffect
 export const ignore = effect.ignore
 
 /**
+ * Returns a new effect that ignores the success or failure of this effect,
+ * but which also logs failures at the Debug level, just in case the failure
+ * turns out to be important.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const ignoreLogged = effect.ignoreLogged
+
+/**
+ * Inherits values from all `FiberRef` instances into current fiber.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const inheritFiberRefs = effect.inheritFiberRefs
+
+/**
  * @macro traced
  * @since 1.0.0
  * @category interruption
@@ -2011,7 +2032,6 @@ export const parallelFinalizers = fiberRuntime.parallelFinalizers
  */
 export const provideEnvironment = core.provideEnvironment
 
-// TODO(Max): after Layer
 // /**
 //  * Provides a layer to the effect, which translates it to another level.
 //  *
@@ -2019,7 +2039,7 @@ export const provideEnvironment = core.provideEnvironment
 //  * @since 1.0.0
 //  * @category environment
 //  */
-// export const provideLayer = effect.provideLayer
+export const provideLayer = layer.provideLayer
 
 /**
  * Provides the effect with the single service it requires. If the effect
@@ -2051,16 +2071,15 @@ export const provideServiceEffect = effect.provideServiceEffect
  */
 export const provideSomeEnvironment = core.provideSomeEnvironment
 
-// TODO(Max): after Layer
-// /**
-//  * Splits the environment into two parts, providing one part using the
-//  * specified layer and leaving the remainder `R0`.
-//  *
-//  * @macro traced
-//  * @since 1.0.0
-//  * @category environment
-//  */
-// export const provideSomeLayer = effect.provideSomeLayer
+/**
+ * Splits the environment into two parts, providing one part using the
+ * specified layer and leaving the remainder `R0`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category environment
+ */
+export const provideSomeLayer = layer.provideSomeLayer
 
 /**
  * Returns an effect that races this effect with the specified effect,
@@ -2347,6 +2366,18 @@ export const scope = fiberRuntime.scope
 export const scopeWith = fiberRuntime.scopeWith
 
 /**
+ * Scopes all resources uses in this workflow to the lifetime of the workflow,
+ * ensuring that their finalizers are run as soon as this workflow completes
+ * execution, whether by success, failure, or interruption.
+ *
+ * @since 1.0.0
+ * @category environment
+ */
+export const scoped = fiberRuntime.scopedEffect
+
+/**
+ * Extracts the specified service from the environment of the effect.
+ *
  * @macro traced
  * @since 1.0.0
  * @category environment
@@ -2354,6 +2385,17 @@ export const scopeWith = fiberRuntime.scopeWith
 export const service = core.service
 
 /**
+ * Accesses the specified service in the environment of the effect.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category environment
+ */
+export const serviceWith = core.serviceWith
+
+/**
+ * Effectfully accesses the specified service in the environment of the effect.
+ *
  * @macro traced
  * @since 1.0.0
  * @category environment
@@ -2545,6 +2587,16 @@ export const unsafeRunWith = _runtime.unsafeRunWith
  * @category mutations
  */
 export const unsome = fiberRuntime.unsome
+
+/**
+ * Updates the `FiberRef` values for the fiber running this effect using the
+ * specified function.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const updateFiberRefs = effect.updateFiberRefs
 
 /**
  * @macro traced

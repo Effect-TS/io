@@ -1,10 +1,8 @@
 import * as Cause from "@effect/io/Cause"
-import { runtimeDebug } from "@effect/io/Debug"
 import * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRef from "@effect/io/FiberRef"
 import * as FiberRefs from "@effect/io/FiberRefs"
 import * as core from "@effect/io/internal/core"
-import type * as Layer from "@effect/io/Layer"
 import type * as Logger from "@effect/io/Logger"
 import * as LogLevel from "@effect/io/Logger/Level"
 import * as LogSpan from "@effect/io/Logger/Span"
@@ -105,20 +103,6 @@ export const consoleLogger = (): Logger.Logger<string, void> => {
     map((message) => globalThis.console.log(message))
   )
 }
-
-/** @internal */
-export const console = (
-  minLevel: LogLevel.LogLevel = LogLevel.Info
-): Layer.Layer<never, never, Logger.Logger<string, void>> => {
-  const newMin = runtimeDebug.logLevelOverride ?
-    runtimeDebug.logLevelOverride :
-    minLevel
-  return layer(pipe(consoleLogger(), filterLogLevel(LogLevel.greaterThanEqual(newMin)), map(constVoid)))
-}
-
-// TODO(Max): after Layer
-/** @internal */
-export declare const layer: <B>(logger: Logger.Logger<string, B>) => Layer.Layer<never, never, Logger.Logger<string, B>>
 
 /** @internal */
 export function contramap<Message, Message2>(f: (message: Message2) => Message) {
