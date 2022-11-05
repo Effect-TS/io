@@ -799,21 +799,27 @@ export const provideSomeEnvironment = <R0, R>(f: (context: Context.Context<R0>) 
 /** @internal */
 export const service = <T>(tag: Context.Tag<T>): Effect.Effect<T, never, T> => {
   const trace = getCallTrace()
-  return serviceWithEffect(tag, succeed).traced(trace)
+  return serviceWithEffect(tag)(succeed).traced(trace)
 }
 
 /** @internal */
-export const serviceWithEffect = <T, R, E, A>(
-  tag: Context.Tag<T>,
-  f: (a: T) => Effect.Effect<R, E, A>
-): Effect.Effect<R | T, E, A> => {
-  const trace = getCallTrace()
-  return suspendSucceed(() =>
-    pipe(
-      getFiberRef(currentEnvironment),
-      flatMap((env) => f(pipe(env, Context.unsafeGet(tag))))
-    )
-  ).traced(trace)
+export const serviceWith = <T>(tag: Context.Tag<T>) => {
+  return <A>(f: (a: T) => A): Effect.Effect<T, never, A> => {
+    return serviceWithEffect(tag)((a) => sync(() => f(a)))
+  }
+}
+
+/** @internal */
+export const serviceWithEffect = <T>(tag: Context.Tag<T>) => {
+  return <R, E, A>(f: (a: T) => Effect.Effect<R, E, A>): Effect.Effect<R | T, E, A> => {
+    const trace = getCallTrace()
+    return suspendSucceed(() =>
+      pipe(
+        getFiberRef(currentEnvironment),
+        flatMap((env) => f(pipe(env, Context.unsafeGet(tag))))
+      )
+    ).traced(trace)
+  }
 }
 
 /** @internal */
@@ -1670,6 +1676,8 @@ export const exitZipWith = <E, E1, A, B, C>(
   g: (c: Cause.Cause<E>, c1: Cause.Cause<E1>) => Cause.Cause<E | E1>
 ) => {
   return (self: Exit.Exit<E, A>): Exit.Exit<E | E1, C> => {
+    console.log(self)
+    console.log(that)
     switch (self.op) {
       case OpCodes.OP_FAILURE: {
         switch (that.op) {

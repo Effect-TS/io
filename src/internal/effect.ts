@@ -5,7 +5,7 @@ import type * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import type * as Fiber from "@effect/io/Fiber"
 import * as FiberId from "@effect/io/Fiber/Id"
-import type * as FiberRefs from "@effect/io/FiberRefs"
+import * as FiberRefs from "@effect/io/FiberRefs"
 import { RuntimeException } from "@effect/io/internal/cause"
 import * as core from "@effect/io/internal/core"
 import type { MergeRecord } from "@effect/io/internal/types"
@@ -1018,6 +1018,29 @@ export const ignore = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, 
 }
 
 /** @internal */
+export function ignoreLogged<R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, void> {
+  const trace = getCallTrace()
+  return pipe(
+    self,
+    core.foldCauseEffect(
+      (cause) =>
+        logDebugCauseMessage(
+          "An error was silently ignored because it is not anticipated to be useful",
+          cause
+        ),
+      () => core.unit()
+    )
+  ).traced(trace)
+}
+
+/** @internal */
+export const inheritFiberRefs = (childFiberRefs: FiberRefs.FiberRefs) => {
+  return updateFiberRefs((parentFiberId, parentFiberRefs) =>
+    pipe(parentFiberRefs, FiberRefs.joinAs(parentFiberId, childFiberRefs))
+  )
+}
+
+/** @internal */
 const someFatal = Option.some(LogLevel.Fatal)
 /** @internal */
 const someError = Option.some(LogLevel.Error)
@@ -1607,30 +1630,6 @@ export const parallelErrors = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Ef
   ).traced(trace)
 }
 
-// TODO(Max): after Layer
-// /**
-//  * Provides a layer to the effect, which translates it to another level.
-//  *
-//  * @tsplus static effect/core/io/Effect.Aspects provideLayer
-//  * @tsplus pipeable effect/core/io/Effect provideLayer
-//  * @category environment
-//  * @since 1.0.0
-//  */
-//  export const provideLayer = <R, E, A>(layer: Layer.Layer<R, E, A>) => {
-//   const trace = getCallTrace()
-//   return <E1, A1>(self: Effect.Effect<A, E1, A1>): Effect.Effect<R, E | E1, A1> => {
-//     return core.acquireUseRelease(
-//       Scope.make(),
-//       (scope) => pipe(
-//         layer,
-//         Layer.buildWithScope(scope),
-//         core.flatMap((r) => pipe(self, core.provideEnvironment(r)))
-//       ),
-//       (scope, exit) => pipe(scope, Scope.close(exit))
-//     ).traced(trace)
-//   }
-// }
-
 /** @internal */
 export const provideService = <T>(tag: Context.Tag<T>, resource: T) => {
   const trace = getCallTrace()
@@ -1653,19 +1652,6 @@ export const provideServiceEffect = <T, R1, E1>(tag: Context.Tag<T>, effect: Eff
     ).traced(trace)
   }
 }
-
-// TODO(Max): after Layer
-// /** @internal */
-//  export const provideSomeLayer = <R1, E1, A1>(layer: Layer.Layer<R1, E1, A1>) => {
-//   const trace = getCallTrace()
-//   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R1 | Exclude<R, A1>, E | E1, A> => {
-//     // @ts-expect-error
-//     return pipe(
-//       self,
-//       provideLayer(pipe(Layer.environment<Exclude<R, A1>>(), Layer.merge(layer)))
-//     ).traced(trace)
-//   }
-// }
 
 /** @internal */
 export const random = (): Effect.Effect<never, never, Random.Random> => {
@@ -1949,4 +1935,14 @@ export const unright = <R, B, E, A>(
       (a) => core.succeed(Either.right(a))
     )
   ).traced(trace)
+}
+
+/** @internal */
+export const updateFiberRefs = (
+  f: (fiberId: FiberId.Runtime, fiberRefs: FiberRefs.FiberRefs) => FiberRefs.FiberRefs
+): Effect.Effect<never, never, void> => {
+  return core.withFiberRuntime((state) => {
+    state.setFiberRefs(f(state.id(), state.unsafeGetFiberRefs()))
+    return core.unit()
+  })
 }

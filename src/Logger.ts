@@ -4,6 +4,7 @@
 import type * as Cause from "@effect/io/Cause"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRefs from "@effect/io/FiberRefs"
+import * as circular from "@effect/io/internal/layer/circular"
 import * as internal from "@effect/io/internal/logger"
 import type * as LogLevel from "@effect/io/Logger/Level"
 import type * as LogSpan from "@effect/io/Logger/Span"
@@ -69,7 +70,7 @@ export const defaultLogger = internal.defaultLogger
  * @since 1.0.0
  * @category environment
  */
-export const console = internal.console
+export const console = circular.consoleLoggerLayer
 
 /**
  * @since 1.0.0
@@ -90,7 +91,7 @@ export const filterLogLevel = internal.filterLogLevel
  * @since 1.0.0
  * @category environment
  */
-export const layer = internal.layer
+export const layer = circular.loggerLayer
 
 /**
  * @since 1.0.0
