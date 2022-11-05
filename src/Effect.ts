@@ -2032,13 +2032,13 @@ export const parallelFinalizers = fiberRuntime.parallelFinalizers
  */
 export const provideEnvironment = core.provideEnvironment
 
-// /**
-//  * Provides a layer to the effect, which translates it to another level.
-//  *
-//  * @macro traced
-//  * @since 1.0.0
-//  * @category environment
-//  */
+/**
+ * Provides a layer to the effect, which translates it to another level.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category environment
+ */
 export const provideLayer = layer.provideLayer
 
 /**
