@@ -113,7 +113,7 @@ export const console = (
   const newMin = runtimeDebug.logLevelOverride ?
     runtimeDebug.logLevelOverride :
     minLevel
-  return layer(pipe(consoleLogger(), filterLogLevel(LogLevel.greaterThanEqual(newMin))))
+  return layer(pipe(consoleLogger(), filterLogLevel(LogLevel.greaterThanEqual(newMin)), map(constVoid)))
 }
 
 // TODO(Max): after Layer
