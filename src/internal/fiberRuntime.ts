@@ -1669,14 +1669,14 @@ export const releaseMapReleaseAll = (
             pipe(
               finalizers,
               core.forEach((fin) => core.exit(update(fin)(exit0))),
-              core.flatMap((results) => {
-                return pipe(
+              core.flatMap((results) =>
+                pipe(
                   core.exitCollectAll(results),
                   Option.map(core.exitAsUnit),
                   Option.getOrElse(core.exitUnit()),
                   core.done
                 )
-              })
+              )
             ) :
             ExecutionStrategy.isParallel(strategy) ?
             pipe(
