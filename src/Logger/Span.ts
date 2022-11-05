@@ -17,3 +17,9 @@ export interface LogSpan {
  * @category constructors
  */
 export const make = internal.make
+
+/**
+ * @since 1.0.0
+ * @category destructors
+ */
+export const render = internal.render

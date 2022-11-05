@@ -201,6 +201,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   ask<Z>(
     f: (runtime: FiberRuntime<any, any>, status: FiberStatus.FiberStatus) => Z
   ): Effect.Effect<never, never, Z> {
+    const trace = getCallTrace()
     return core.suspendSucceed(() => {
       const deferred = core.unsafeMakeDeferred<never, Z>(this._fiberId)
       this.tell(
@@ -209,13 +210,13 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
         })
       )
       return core.awaitDeferred(deferred)
-    })
+    }).traced(trace)
   }
 
   /**
    * Adds a message to be processed by the fiber on the fiber.
    */
-  tell(message: FiberMessage.FiberMessage) {
+  tell(message: FiberMessage.FiberMessage): void {
     pipe(
       this._queue,
       MutableQueue.offer(message)
@@ -227,6 +228,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   }
 
   await(): Effect.Effect<never, never, Exit.Exit<E, A>> {
+    const trace = getCallTrace()
     return core.asyncInterrupt<never, never, Exit.Exit<E, A>>((resume) => {
       const cb = (exit: Exit.Exit<E, A>) => resume(Exit.succeed(exit))
       this.tell(
@@ -245,10 +247,11 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
           })
         )
       ))
-    }, this.id())
+    }, this.id()).traced(trace)
   }
 
   inheritAll(): Effect.Effect<never, never, void> {
+    const trace = getCallTrace()
     return core.withFiberRuntime<never, never, void>((parentFiber, parentStatus) => {
       const parentFiberId = parentFiber.id()
       const parentFiberRefs = parentFiber.unsafeGetFiberRefs()
@@ -275,7 +278,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
           )
         )
       )
-    })
+    }).traced(trace)
   }
 
   /**
@@ -305,7 +308,8 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    * @macro traced
    */
   interruptWithFork(fiberId: FiberId.FiberId): Effect.Effect<never, never, void> {
-    return core.sync(() => this.tell(FiberMessage.interruptSignal(Cause.interrupt(fiberId))))
+    const trace = getCallTrace()
+    return core.sync(() => this.tell(FiberMessage.interruptSignal(Cause.interrupt(fiberId)))).traced(trace)
   }
 
   /**
@@ -1358,6 +1362,7 @@ const forEachParNDiscard = <A, R, E, _>(n: number, f: (a: A) => Effect.Effect<R,
 
 /** @internal */
 export const forEachParWithIndex = <R, E, A, B>(f: (a: A, i: number) => Effect.Effect<R, E, B>) => {
+  const trace = getCallTrace()
   return (elements: Iterable<A>): Effect.Effect<R, E, Chunk.Chunk<B>> => {
     return core.suspendSucceed(() =>
       pipe(
@@ -1380,7 +1385,7 @@ export const forEachParWithIndex = <R, E, A, B>(f: (a: A, i: number) => Effect.E
           )
         )
       )
-    )
+    ).traced(trace)
   }
 }
 
