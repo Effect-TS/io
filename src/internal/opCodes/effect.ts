@@ -69,3 +69,9 @@ export type OP_YIELD = typeof OP_YIELD
 
 /** @internal */
 export const OP_YIELD = 11 as const
+
+/** @internal */
+export type OP_REVERT_FLAGS = typeof OP_REVERT_FLAGS
+
+/** @internal */
+export const OP_REVERT_FLAGS = 12 as const

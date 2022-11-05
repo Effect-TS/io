@@ -6,7 +6,7 @@
  */
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
-import type * as FiberRuntime from "@effect/io/Fiber/Runtime"
+import type * as Fiber from "@effect/io/Fiber"
 import * as internal from "@effect/io/internal/supervisor"
 import type * as Context from "@fp-ts/data/Context"
 import type * as Option from "@fp-ts/data/Option"
@@ -42,29 +42,29 @@ export interface Supervisor<T> extends Supervisor.Variance<T> {
   onStart<R, E, A>(
     context: Context.Context<R>,
     effect: Effect.Effect<R, E, A>,
-    parent: Option.Option<FiberRuntime.Runtime<any, any>>,
-    fiber: FiberRuntime.Runtime<E, A>
+    parent: Option.Option<Fiber.RuntimeFiber<any, any>>,
+    fiber: Fiber.RuntimeFiber<E, A>
   ): void
 
   /**
    * Supervises the end of a `Fiber`.
    */
-  onEnd<E, A>(value: Exit.Exit<E, A>, fiber: FiberRuntime.Runtime<E, A>): void
+  onEnd<E, A>(value: Exit.Exit<E, A>, fiber: Fiber.RuntimeFiber<E, A>): void
 
   /**
    * Supervises the execution of an `Effect` by a `Fiber`.
    */
-  onEffect<E, A>(fiber: FiberRuntime.Runtime<E, A>, effect: Effect.Effect<any, any, any>): void
+  onEffect<E, A>(fiber: Fiber.RuntimeFiber<E, A>, effect: Effect.Effect<any, any, any>): void
 
   /**
    * Supervises the suspension of a computation running within a `Fiber`.
    */
-  onSuspend<E, A>(fiber: FiberRuntime.Runtime<E, A>): void
+  onSuspend<E, A>(fiber: Fiber.RuntimeFiber<E, A>): void
 
   /**
    * Supervises the resumption of a computation running within a `Fiber`.
    */
-  onResume<E, A>(fiber: FiberRuntime.Runtime<E, A>): void
+  onResume<E, A>(fiber: Fiber.RuntimeFiber<E, A>): void
 
   /**
    * Maps this supervisor to another one, which has the same effect, but whose

@@ -2,7 +2,7 @@
  * @since 1.0.0
  */
 import * as core from "@effect/io/internal/core"
-import * as effect from "@effect/io/internal/effect"
+import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
 
 /**
  * @since 1.0.0
@@ -49,19 +49,19 @@ export interface Variance<A> {
  * @since 1.0.0
  * @category constructors
  */
-export const make = core.makeFiberRef
+export const make = fiberRuntime.makeFiberRef
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const makeWith = core.makeWithFiberRef
+export const makeWith = fiberRuntime.makeWithFiberRef
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const makeEnvironment = core.makeEnvironmentFiberRef
+export const makeEnvironment = fiberRuntime.makeEnvironmentFiberRef
 
 /**
  * @since 1.0.0
@@ -85,7 +85,7 @@ export const unsafeMakeEnvironment = core.unsafeMakeEnvironmentFiberRef
  * @since 1.0.0
  * @category constructors
  */
-export const unsafeMakeSupervisor = effect.unsafeMakeSupervisorFiberRef
+export const unsafeMakeSupervisor = fiberRuntime.unsafeMakeSupervisorFiberRef
 
 /**
  * @since 1.0.0
@@ -196,13 +196,13 @@ export const locallyWith = core.locallyWithFiberRef
  * @since 1.0.0
  * @category mutations
  */
-export const locallyScoped = core.locallyScopedFiberRef
+export const locallyScoped = fiberRuntime.locallyScopedFiberRef
 
 /**
  * @since 1.0.0
  * @category mutations
  */
-export const locallyScopedWith = core.locallyScopedFiberRef
+export const locallyScopedWith = fiberRuntime.locallyScopedFiberRef
 
 /**
  * @since 1.0.0
@@ -244,7 +244,7 @@ export const currentParallelism = core.currentParallelism
  * @since 1.0.0
  * @category fiberRefs
  */
-export const currentSupervisor = effect.currentSupervisor
+export const currentSupervisor = fiberRuntime.currentSupervisor
 
 /**
  * @since 1.0.0

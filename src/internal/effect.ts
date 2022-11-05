@@ -2,22 +2,17 @@ import * as Cause from "@effect/io/Cause"
 import * as Clock from "@effect/io/Clock"
 import { getCallTrace } from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
-import * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
 import * as Exit from "@effect/io/Exit"
 import type * as Fiber from "@effect/io/Fiber"
 import * as FiberId from "@effect/io/Fiber/Id"
-import type * as FiberRef from "@effect/io/FiberRef"
 import type * as FiberRefs from "@effect/io/FiberRefs"
 import { RuntimeException } from "@effect/io/internal/cause"
 import * as core from "@effect/io/internal/core"
-import * as SupervisorPatch from "@effect/io/internal/supervisor/patch"
 import type { MergeRecord } from "@effect/io/internal/types"
 import * as LogLevel from "@effect/io/Logger/Level"
 import * as LogSpan from "@effect/io/Logger/Span"
 import * as Random from "@effect/io/Random"
 import * as Ref from "@effect/io/Ref"
-import * as Scope from "@effect/io/Scope"
-import * as Supervisor from "@effect/io/Supervisor"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Context from "@fp-ts/data/Context"
 import * as Either from "@fp-ts/data/Either"
@@ -33,34 +28,6 @@ import type { Refinement } from "@fp-ts/data/Refinement"
 // - [ ] repeat family
 // - [ ] retry family
 // - [ ] schedule family
-
-/** @internal */
-const EffectErrorSymbolKey = "@effect/io/Effect/Error"
-
-/** @internal */
-export const EffectErrorTypeId = Symbol.for(EffectErrorSymbolKey)
-
-/** @internal */
-export type EffectErrorTypeId = typeof EffectErrorTypeId
-
-/** @internal */
-export interface EffectError<E> {
-  readonly [EffectErrorTypeId]: EffectErrorTypeId
-  readonly _tag: "EffectError"
-  readonly cause: Cause.Cause<E>
-}
-
-/** @internal */
-export const isEffectError = (u: unknown): u is EffectError<unknown> => {
-  return typeof u === "object" && u != null && EffectErrorTypeId in u
-}
-
-/** @internal */
-export const makeEffectError = <E>(cause: Cause.Cause<E>): EffectError<E> => ({
-  [EffectErrorTypeId]: EffectErrorTypeId,
-  _tag: "EffectError",
-  cause
-})
 
 /** @internal */
 export const absolve = <R, E, A>(self: Effect.Effect<R, E, Either.Either<E, A>>): Effect.Effect<R, E, A> => {
@@ -80,7 +47,7 @@ export const absorbWith = <E>(f: (e: E) => unknown) => {
   return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, unknown, A> => {
     return pipe(
       sandbox(self),
-      foldEffect((cause) => core.fail(pipe(cause, Cause.squashWith(f))), core.succeed)
+      core.foldEffect((cause) => core.fail(pipe(cause, Cause.squashWith(f))), core.succeed)
     ).traced(trace)
   }
 }
@@ -132,36 +99,6 @@ export const asSomeError = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effec
   return pipe(self, mapError(Option.some)).traced(trace)
 }
 
-// TODO(Max): after runtime
-/** @internal */
-// export const asyncEffect = <R, E, A, R2, E2, X>(
-//   register: (callback: (_: Effect.Effect<R, E, A>) => void) => Effect.Effect<R2, E2, X>
-// ): Effect.Effect<R | R2, E | E2, A> => {
-//   const trace = getCallTrace()
-//   return pipe(
-//     core.makeDeferred<E | E2, A>(),
-//     core.flatMap((deferred) =>
-//       pipe(
-//         runtime<R | R2>(),
-//         core.flatMap((runtime) =>
-//           core.uninterruptibleMask((restore) =>
-//             pipe(
-//               restore(
-//                 pipe(
-//                   register((cb) => runtime.unsafeRunAsync(pipe(cb, core.intoDeferred(deferred)))),
-//                   core.catchAllCause((cause) => pipe(deferred, core.failCauseDeferred(cause as Cause.Cause<E | E2>)))
-//                 )
-//               ),
-//               fork,
-//               core.zipRight(core.awaitDeferred(deferred))
-//             )
-//           )
-//         )
-//       )
-//     )
-//   ).traced(trace)
-// }
-
 /** @internal */
 export const asyncOption = <R, E, A>(
   register: (callback: (_: Effect.Effect<R, E, A>) => void) => Option.Option<Effect.Effect<R, E, A>>,
@@ -191,7 +128,7 @@ export const attempt = <A>(evaluate: () => A): Effect.Effect<never, unknown, A> 
     try {
       return evaluate()
     } catch (error) {
-      throw makeEffectError(Cause.fail(error))
+      throw core.makeEffectError(Cause.fail(error))
     }
   }).traced(trace)
 }
@@ -220,7 +157,7 @@ export const _catch = <N extends keyof E, K extends E[N] & string, E, R1, E1, A1
 export const catchAll = <E, R2, E2, A2>(f: (e: E) => Effect.Effect<R2, E2, A2>) => {
   const trace = getCallTrace()
   return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R2 | R, E2, A2 | A> => {
-    return pipe(self, foldEffect(f, core.succeed)).traced(trace)
+    return pipe(self, core.foldEffect(f, core.succeed)).traced(trace)
   }
 }
 
@@ -322,14 +259,6 @@ export const clock = (): Effect.Effect<never, never, Clock.Clock> => clockWith(c
 export const clockWith = Clock.clockWith
 
 /** @internal */
-export const collect = <A, R, E, B>(f: (a: A) => Effect.Effect<R, Option.Option<E>, B>) => {
-  return (elements: Iterable<A>): Effect.Effect<R, E, Chunk.Chunk<B>> => {
-    const trace = getCallTrace()
-    return pipe(elements, core.forEach((a) => unsome(f(a))), core.map(Chunk.compact)).traced(trace)
-  }
-}
-
-/** @internal */
 export const collectAll = <R, E, A>(
   effects: Iterable<Effect.Effect<R, E, A>>
 ): Effect.Effect<R, E, Chunk.Chunk<A>> => {
@@ -346,42 +275,10 @@ export const collectAllDiscard = <R, E, A>(
 }
 
 /** @internal */
-export const collectPar = <A, R, E, B>(f: (a: A) => Effect.Effect<R, Option.Option<E>, B>) => {
-  const trace = getCallTrace()
-  return (elements: Iterable<A>): Effect.Effect<R, E, Chunk.Chunk<B>> => {
-    return pipe(elements, core.forEachPar((a) => unsome(f(a))), core.map(Chunk.compact)).traced(trace)
-  }
-}
-
-/** @internal */
-export const collectAllPar = <R, E, A>(
-  effects: Iterable<Effect.Effect<R, E, A>>
-): Effect.Effect<R, E, Chunk.Chunk<A>> => {
-  const trace = getCallTrace()
-  return pipe(effects, core.forEachPar(identity)).traced(trace)
-}
-
-/** @internal */
-export const collectAllParDiscard = <R, E, A>(
-  effects: Iterable<Effect.Effect<R, E, A>>
-): Effect.Effect<R, E, void> => {
-  const trace = getCallTrace()
-  return pipe(effects, core.forEachParDiscard(identity)).traced(trace)
-}
-
-/** @internal */
 export const collectAllWith = <A, B>(pf: (a: A) => Option.Option<B>) => {
   const trace = getCallTrace()
   return <R, E>(elements: Iterable<Effect.Effect<R, E, A>>): Effect.Effect<R, E, Chunk.Chunk<B>> => {
     return pipe(collectAll(elements), core.map(Chunk.filterMap(pf))).traced(trace)
-  }
-}
-
-/** @internal */
-export const collectAllWithPar = <A, B>(pf: (a: A) => Option.Option<B>) => {
-  const trace = getCallTrace()
-  return <R, E>(elements: Iterable<Effect.Effect<R, E, A>>): Effect.Effect<R, E, Chunk.Chunk<B>> => {
-    return pipe(collectAllPar(elements), core.map(Chunk.filterMap(pf))).traced(trace)
   }
 }
 
@@ -426,17 +323,6 @@ export const collectAllSuccesses = <R, E, A>(
   return pipe(
     Array.from(as).map(core.exit),
     collectAllWith((exit) => (Exit.isSuccess(exit) ? Option.some(exit.value) : Option.none))
-  ).traced(trace)
-}
-
-/** @internal */
-export const collectAllSuccessesPar = <R, E, A>(
-  elements: Iterable<Effect.Effect<R, E, A>>
-): Effect.Effect<R, never, Chunk.Chunk<A>> => {
-  const trace = getCallTrace()
-  return pipe(
-    Array.from(elements).map(core.exit),
-    collectAllWithPar((exit) => (Exit.isSuccess(exit) ? Option.some(exit.value) : Option.none))
   ).traced(trace)
 }
 
@@ -675,7 +561,7 @@ export const either = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, 
   const trace = getCallTrace()
   return pipe(
     self,
-    foldEffect(
+    core.foldEffect(
       (e) => core.succeed(Either.left(e)),
       (a) => core.succeed(Either.right(a))
     )
@@ -709,24 +595,6 @@ const existsLoop = <R, E, A>(
 }
 
 /** @internal */
-const _existsParFound = Symbol("@effect/io/Effect/existsPar/found")
-
-/** @internal */
-export const existsPar = <R, E, A>(f: (a: A) => Effect.Effect<R, E, boolean>) => {
-  const trace = getCallTrace()
-  return (elements: Iterable<A>): Effect.Effect<R, E, boolean> => {
-    return pipe(
-      elements,
-      core.forEachPar((a) => pipe(f(a), ifEffect(core.fail(_existsParFound), core.unit()))),
-      foldEffect(
-        (e) => e === _existsParFound ? core.succeed(true) : core.fail(e),
-        () => core.succeed(false)
-      )
-    ).traced(trace)
-  }
-}
-
-/** @internal */
 export const eventually = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, A> => {
   const trace = getCallTrace()
   return pipe(self, orElse(() => pipe(core.yieldNow(), core.flatMap(() => eventually(self))))).traced(trace)
@@ -756,30 +624,10 @@ export const filter = <A, R, E>(f: (a: A) => Effect.Effect<R, E, boolean>) => {
 }
 
 /** @internal */
-export const filterPar = <A, R, E>(f: (a: A) => Effect.Effect<R, E, boolean>) => {
-  const trace = getCallTrace()
-  return (elements: Iterable<A>): Effect.Effect<R, E, Chunk.Chunk<A>> => {
-    return pipe(
-      elements,
-      core.forEachPar((a) => pipe(f(a), core.map((b) => (b ? Option.some(a) : Option.none)))),
-      core.map(Chunk.compact)
-    ).traced(trace)
-  }
-}
-
-/** @internal */
 export const filterNot = <A, R, E>(f: (a: A) => Effect.Effect<R, E, boolean>) => {
   const trace = getCallTrace()
   return (elements: Iterable<A>): Effect.Effect<R, E, Chunk.Chunk<A>> => {
     return pipe(elements, filter((a) => pipe(f(a), core.map((b) => !b)))).traced(trace)
-  }
-}
-
-/** @internal */
-export const filterNotPar = <A, R, E>(f: (a: A) => Effect.Effect<R, E, boolean>) => {
-  const trace = getCallTrace()
-  return (elements: Iterable<A>): Effect.Effect<R, E, Chunk.Chunk<A>> => {
-    return pipe(elements, filterPar((a) => pipe(f(a), core.map((b) => !b)))).traced(trace)
   }
 }
 
@@ -931,7 +779,7 @@ export const flattenErrorOption = <E1>(fallback: E1) => {
 /** @internal */
 export const flip = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, A, E> => {
   const trace = getCallTrace()
-  return pipe(self, foldEffect(core.succeed, core.fail)).traced(trace)
+  return pipe(self, core.foldEffect(core.succeed, core.fail)).traced(trace)
 }
 
 /** @Internal */
@@ -948,36 +796,9 @@ export function fold<E, A, A2, A3>(onFailure: (error: E) => A2, onSuccess: (valu
   return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, A2 | A3> => {
     return pipe(
       self,
-      foldEffect(
+      core.foldEffect(
         (e) => core.succeed(onFailure(e)),
         (a) => core.succeed(onSuccess(a))
-      )
-    ).traced(trace)
-  }
-}
-
-/** @internal */
-export const foldEffect = <E, A, R2, E2, A2, R3, E3, A3>(
-  onFailure: (e: E) => Effect.Effect<R2, E2, A2>,
-  onSuccess: (a: A) => Effect.Effect<R3, E3, A3>
-) => {
-  const trace = getCallTrace()
-  return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2 | R3, E2 | E3, A2 | A3> => {
-    return pipe(
-      self,
-      core.foldCauseEffect(
-        (cause) => {
-          const either = Cause.failureOrCause(cause)
-          switch (either._tag) {
-            case "Left": {
-              return onFailure(either.left)
-            }
-            case "Right": {
-              return core.failCause(either.right)
-            }
-          }
-        },
-        onSuccess
       )
     ).traced(trace)
   }
@@ -1059,95 +880,10 @@ export const forEachWithIndex = <A, R, E, B>(f: (a: A, i: number) => Effect.Effe
 }
 
 /** @internal */
-export const forEachParWithIndex = <R, E, A, B>(f: (a: A, i: number) => Effect.Effect<R, E, B>) => {
-  return (elements: Iterable<A>): Effect.Effect<R, E, Chunk.Chunk<B>> => {
-    return core.suspendSucceed(() =>
-      pipe(
-        core.sync<Array<B>>(() => []),
-        core.flatMap((array) =>
-          pipe(
-            Array.from(elements).map((a, i) => [a, i] as [A, number]),
-            core.forEachParDiscard(
-              ([a, i]) =>
-                pipe(
-                  core.suspendSucceed(() => f(a, i)),
-                  core.flatMap((b) =>
-                    core.sync(() => {
-                      array[i] = b
-                    })
-                  )
-                )
-            ),
-            core.map(() => Chunk.unsafeFromArray(array))
-          )
-        )
-      )
-    )
-  }
-}
-
-/**
- * Applies the function `f` to each element of the `Collection<A>` and returns
- * the result in a new `Chunk<B>` using the specified execution strategy.
- *
- * @macro traced
- * @since 1.0.0
- * @category constructors
- */
-export const forEachExec = <R, E, A, B>(
-  f: (a: A) => Effect.Effect<R, E, B>,
-  strategy: ExecutionStrategy.ExecutionStrategy
-) => {
-  const trace = getCallTrace()
-  return (elements: Iterable<A>): Effect.Effect<R, E, Chunk.Chunk<B>> => {
-    return core.suspendSucceed(() =>
-      pipe(
-        strategy,
-        ExecutionStrategy.match(
-          () => pipe(elements, core.forEach(f)),
-          () => pipe(elements, core.forEachPar(f), core.withParallelismUnbounded),
-          (parallelism) => pipe(elements, core.forEachPar(f), core.withParallelism(parallelism))
-        )
-      )
-    ).traced(trace)
-  }
-}
-
-/** @internal */
 export const forever = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, never> => {
   const trace = getCallTrace()
   const loop: Effect.Effect<R, E, never> = pipe(self, core.flatMap(() => core.yieldNow()), core.flatMap(() => loop))
   return loop.traced(trace)
-}
-
-/** @internal */
-export const forkAllDiscard = <R, E, A>(
-  effects: Iterable<Effect.Effect<R, E, A>>
-): Effect.Effect<R, never, void> => {
-  const trace = getCallTrace()
-  return pipe(effects, core.forEachDiscard(core.fork)).traced(trace)
-}
-
-/** @internal */
-export const forkWithErrorHandler = <E, X>(handler: (e: E) => Effect.Effect<never, never, X>) => {
-  const trace = getCallTrace()
-  return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>> => {
-    return pipe(
-      self,
-      onError((cause) => {
-        const either = Cause.failureOrCause(cause)
-        switch (either._tag) {
-          case "Left": {
-            return handler(either.left)
-          }
-          case "Right": {
-            return core.failCause(either.right)
-          }
-        }
-      }),
-      core.fork
-    ).traced(trace)
-  }
 }
 
 /** @internal */
@@ -1221,7 +957,7 @@ export const gen = <Eff extends Effect.Effect<any, any, any>, AEff>(
 export const getFiberRefs = (): Effect.Effect<never, never, FiberRefs.FiberRefs> => {
   const trace = getCallTrace()
   return core.withFiberRuntime<never, never, FiberRefs.FiberRefs>(
-    (state) => core.succeed(state.getFiberRefs())
+    (state) => core.succeed(state.unsafeGetFiberRefs())
   ).traced(trace)
 }
 
@@ -1261,7 +997,7 @@ export const head = <R, E, A>(
   const trace = getCallTrace()
   return pipe(
     self,
-    foldEffect(
+    core.foldEffect(
       (e) => core.fail(Option.some(e)),
       (as) => {
         const iterator = as[Symbol.iterator]()
@@ -1273,20 +1009,6 @@ export const head = <R, E, A>(
       }
     )
   ).traced(trace)
-}
-
-/** @internal */
-export const ifEffect = <R1, R2, E1, E2, A, A1>(
-  onTrue: Effect.Effect<R1, E1, A>,
-  onFalse: Effect.Effect<R2, E2, A1>
-) => {
-  const trace = getCallTrace()
-  return <R, E>(self: Effect.Effect<R, E, boolean>): Effect.Effect<R | R1 | R2, E | E1 | E2, A | A1> => {
-    return pipe(
-      self,
-      core.flatMap((b): Effect.Effect<R1 | R2, E1 | E2, A | A1> => (b ? onTrue : onFalse))
-    ).traced(trace)
-  }
 }
 
 /** @internal */
@@ -1630,7 +1352,7 @@ export const mapBoth = <E, A, E2, A2>(f: (e: E) => E2, g: (a: A) => A2) => {
   return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E2, A2> => {
     return pipe(
       self,
-      foldEffect(
+      core.foldEffect(
         (e) => core.failSync(() => f(e)),
         (a) => core.sync(() => g(a))
       )
@@ -1702,7 +1424,7 @@ export const memoize = <R, E, A>(
 /** @internal */
 export const merge = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, E | A> => {
   const trace = getCallTrace()
-  return pipe(self, foldEffect((e) => core.succeed(e), core.succeed)).traced(trace)
+  return pipe(self, core.foldEffect((e) => core.succeed(e), core.succeed)).traced(trace)
 }
 
 /** @internal */
@@ -1712,23 +1434,6 @@ export const mergeAll = <Z, A>(zero: Z, f: (z: Z, a: A) => Z) => {
     return Array.from(elements).reduce(
       (acc, a) => pipe(acc, core.zipWith(a, f)),
       core.succeed(zero) as Effect.Effect<R, E, Z>
-    ).traced(trace)
-  }
-}
-
-/** @internal */
-export const mergeAllPar = <Z, A>(zero: Z, f: (z: Z, a: A) => Z) => {
-  const trace = getCallTrace()
-  return <R, E>(elements: Iterable<Effect.Effect<R, E, A>>): Effect.Effect<R, E, Z> => {
-    return pipe(
-      Ref.make(zero),
-      core.flatMap((acc) =>
-        pipe(
-          elements,
-          core.forEachParDiscard(core.flatMap((a) => pipe(acc, Ref.update((b) => f(b, a))))),
-          core.flatMap(() => Ref.get(acc))
-        )
-      )
     ).traced(trace)
   }
 }
@@ -1746,7 +1451,7 @@ export const none = <R, E, A>(
   const trace = getCallTrace()
   return pipe(
     self,
-    foldEffect(
+    core.foldEffect(
       (e) => core.fail(Option.some(e)),
       (option) => {
         switch (option._tag) {
@@ -1778,64 +1483,6 @@ export const noneOrFailWith = <E, A>(
 }
 
 /** @internal */
-export function onDone<E, A, R1, X1, R2, X2>(
-  onError: (e: E) => Effect.Effect<R1, never, X1>,
-  onSuccess: (a: A) => Effect.Effect<R2, never, X2>
-) {
-  const trace = getCallTrace()
-  return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1 | R2, never, void> => {
-    return core.uninterruptibleMask((restore) =>
-      pipe(
-        restore(self),
-        foldEffect(
-          (e) => restore(onError(e)),
-          (a) => restore(onSuccess(a))
-        ),
-        core.forkDaemon,
-        core.asUnit
-      )
-    ).traced(trace)
-  }
-}
-
-/** @internal */
-export function onDoneCause<E, A, R1, X1, R2, X2>(
-  onCause: (cause: Cause.Cause<E>) => Effect.Effect<R1, never, X1>,
-  onSuccess: (a: A) => Effect.Effect<R2, never, X2>
-) {
-  const trace = getCallTrace()
-  return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1 | R2, never, void> => {
-    return core.uninterruptibleMask((restore) =>
-      pipe(
-        restore(self),
-        core.foldCauseEffect(
-          (c) => restore(onCause(c)),
-          (a) => restore(onSuccess(a))
-        ),
-        core.forkDaemon,
-        core.asUnit
-      )
-    ).traced(trace)
-  }
-}
-
-/** @internal */
-export const onError = <E, R2, X>(cleanup: (cause: Cause.Cause<E>) => Effect.Effect<R2, never, X>) => {
-  const trace = getCallTrace()
-  return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E, A> => {
-    return pipe(
-      self,
-      core.onExit(
-        (exit): Effect.Effect<R2, never, X | void> =>
-          Exit.isSuccess(exit) ?
-            core.unit() :
-            cleanup(exit.cause)
-      )
-    ).traced(trace)
-  }
-}
-
-/** @internal */
 export const once = <R, E, A>(
   self: Effect.Effect<R, E, A>
 ): Effect.Effect<never, never, Effect.Effect<R, E, void>> => {
@@ -1851,7 +1498,7 @@ export const option = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, 
   const trace = getCallTrace()
   return pipe(
     self,
-    foldEffect(
+    core.foldEffect(
       () => core.succeed(Option.none),
       (a) => core.succeed(Option.some(a))
     )
@@ -1880,7 +1527,7 @@ export const orDieKeep = <R, E, A>(self: Effect.Effect<R, E, A>) => {
 export const orDieWith = <E>(f: (e: E) => unknown) => {
   const trace = getCallTrace()
   return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, A> => {
-    return pipe(self, foldEffect((e) => core.die(f(e)), core.succeed)).traced(trace)
+    return pipe(self, core.foldEffect((e) => core.die(f(e)), core.succeed)).traced(trace)
   }
 }
 
@@ -1957,26 +1604,6 @@ export const parallelErrors = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Ef
         ? core.failCause(cause as Cause.Cause<never>)
         : core.fail(errors)
     }, core.succeed)
-  ).traced(trace)
-}
-
-/** @internal */
-export const parallelFinalizers = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | Scope.Scope, E, A> => {
-  const trace = getCallTrace()
-  return pipe(
-    core.scope(),
-    core.flatMap((outerScope) =>
-      pipe(
-        Scope.make(ExecutionStrategy.parallel),
-        core.flatMap((innerScope) =>
-          pipe(
-            outerScope,
-            Scope.addFinalizerExit((exit) => pipe(innerScope, Scope.close(exit))),
-            core.zipRight(pipe(innerScope, Scope.extend(self)))
-          )
-        )
-      )
-    )
   ).traced(trace)
 }
 
@@ -2065,46 +1692,6 @@ export const reduceAll = <R, E, A>(zero: Effect.Effect<R, E, A>, f: (acc: A, a: 
   const trace = getCallTrace()
   return (elements: Iterable<Effect.Effect<R, E, A>>): Effect.Effect<R, E, A> => {
     return Array.from(elements).reduce((acc, a) => pipe(acc, core.zipWith(a, f)), zero).traced(trace)
-  }
-}
-
-/** @internal */
-export const reduceAllPar = <R, E, A>(
-  zero: Effect.Effect<R, E, A>,
-  f: (acc: A, a: A) => A
-) => {
-  const trace = getCallTrace()
-  return (elements: Iterable<Effect.Effect<R, E, A>>): Effect.Effect<R, E, A> => {
-    return core.suspendSucceed(() =>
-      pipe(
-        [zero, ...Array.from(elements)],
-        mergeAllPar(
-          Option.none as Option.Option<A>,
-          (acc, elem) => {
-            switch (acc._tag) {
-              case "None": {
-                return Option.some(elem)
-              }
-              case "Some": {
-                return Option.some(f(acc.value, elem))
-              }
-            }
-          }
-        ),
-        core.map((option) => {
-          switch (option._tag) {
-            case "None": {
-              throw new Error(
-                "BUG: Effect.reduceAllPar - please report an issue at https://github.com/Effect-TS/io/issues"
-              )
-            }
-            case "Some": {
-              return option.value
-            }
-          }
-        })
-      )
-    ).traced(trace)
   }
 }
 
@@ -2234,7 +1821,7 @@ export const right = <R, E, A, B>(
   const trace = getCallTrace()
   return pipe(
     self,
-    foldEffect(
+    core.foldEffect(
       (e) => core.fail(Either.right(e)),
       (either) => {
         switch (either._tag) {
@@ -2283,7 +1870,7 @@ export const tryCatch = <E, A>(
     try {
       return attempt()
     } catch (error) {
-      throw makeEffectError(Cause.fail(onThrow(error)))
+      throw core.makeEffectError(Cause.fail(onThrow(error)))
     }
   }).traced(trace)
 }
@@ -2348,7 +1935,7 @@ export const unright = <R, B, E, A>(
   const trace = getCallTrace()
   return pipe(
     self,
-    foldEffect(
+    core.foldEffect(
       (either) => {
         switch (either._tag) {
           case "Left": {
@@ -2363,44 +1950,3 @@ export const unright = <R, B, E, A>(
     )
   ).traced(trace)
 }
-
-/** @internal */
-export const unsome = <R, E, A>(
-  self: Effect.Effect<R, Option.Option<E>, A>
-): Effect.Effect<R, E, Option.Option<A>> => {
-  const trace = getCallTrace()
-  return pipe(
-    self,
-    foldEffect(
-      (option) => {
-        switch (option._tag) {
-          case "None": {
-            return core.succeed(Option.none)
-          }
-          case "Some": {
-            return core.fail(option.value)
-          }
-        }
-      },
-      (a) => core.succeed(Option.some(a))
-    )
-  ).traced(trace)
-}
-
-// circular
-
-/** @internal */
-export const unsafeMakeSupervisorFiberRef = (
-  initial: Supervisor.Supervisor<any>
-): FiberRef.FiberRef<Supervisor.Supervisor<any>> => {
-  return core.unsafeMakePatchFiberRef(
-    initial,
-    SupervisorPatch.differ,
-    SupervisorPatch.empty
-  )
-}
-
-/** @internal */
-export const currentSupervisor: FiberRef.FiberRef<Supervisor.Supervisor<any>> = unsafeMakeSupervisorFiberRef(
-  Supervisor.none
-)

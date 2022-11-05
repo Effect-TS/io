@@ -2,17 +2,17 @@ import * as Cause from "@effect/io/Cause"
 import { getCallTrace, runtimeDebug } from "@effect/io/Debug"
 import type * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
-import * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
+import type * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
 import type * as Exit from "@effect/io/Exit"
 import type * as Fiber from "@effect/io/Fiber"
 import * as FiberId from "@effect/io/Fiber/Id"
-import type * as FiberRuntime from "@effect/io/Fiber/Runtime"
 import * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import * as RuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
-import * as FiberScope from "@effect/io/Fiber/Scope"
+import type * as FiberScope from "@effect/io/Fiber/Scope"
 import type * as FiberStatus from "@effect/io/Fiber/Status"
 import type * as FiberRef from "@effect/io/FiberRef"
 import * as deferred from "@effect/io/internal/deferred"
+import type * as FiberRuntime from "@effect/io/internal/fiberRuntime"
 import * as OpCodes from "@effect/io/internal/opCodes/effect"
 import * as Scheduler from "@effect/io/internal/scheduler"
 import * as SingleShotGen from "@effect/io/internal/singleShotGen"
@@ -39,6 +39,34 @@ import type { Predicate } from "@fp-ts/data/Predicate"
 // -----------------------------------------------------------------------------
 
 /** @internal */
+const EffectErrorSymbolKey = "@effect/io/Effect/Error"
+
+/** @internal */
+export const EffectErrorTypeId = Symbol.for(EffectErrorSymbolKey)
+
+/** @internal */
+export type EffectErrorTypeId = typeof EffectErrorTypeId
+
+/** @internal */
+export interface EffectError<E> {
+  readonly [EffectErrorTypeId]: EffectErrorTypeId
+  readonly _tag: "EffectError"
+  readonly cause: Cause.Cause<E>
+}
+
+/** @internal */
+export const isEffectError = (u: unknown): u is EffectError<unknown> => {
+  return typeof u === "object" && u != null && EffectErrorTypeId in u
+}
+
+/** @internal */
+export const makeEffectError = <E>(cause: Cause.Cause<E>): EffectError<E> => ({
+  [EffectErrorTypeId]: EffectErrorTypeId,
+  _tag: "EffectError",
+  cause
+})
+
+/** @internal */
 export const EffectTypeId: Effect.EffectTypeId = Symbol.for("@effect/io/Effect") as Effect.EffectTypeId
 
 /** @internal */
@@ -62,8 +90,13 @@ export type Continuation =
   | OnSuccessAndFailure
   | OnFailure
   | While
-// TODO
-// | RevertFlags
+  | RevertFlags
+
+/** @internal */
+export class RevertFlags {
+  readonly op = OpCodes.OP_REVERT_FLAGS
+  constructor(readonly patch: RuntimeFlagsPatch.RuntimeFlagsPatch) {}
+}
 
 const effectVariance = {
   _R: (_: never) => _,
@@ -168,7 +201,7 @@ export interface While extends
 /** @internal */
 export interface WithRuntime extends
   Op<OpCodes.OP_WITH_RUNTIME, {
-    readonly withRuntime: (fiber: FiberRuntime.Runtime<unknown, unknown>, status: FiberStatus.Running) => Primitive
+    readonly withRuntime: (fiber: FiberRuntime.FiberRuntime<unknown, unknown>, status: FiberStatus.Running) => Primitive
   }>
 {}
 
@@ -281,7 +314,7 @@ export const flatMap = <A, R1, E1, B>(f: (a: A) => Effect.Effect<R1, E1, B>) => 
   const trace = getCallTrace()
   return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1, E | E1, B> => {
     const effect = Object.create(proto)
-    effect.op = OpCodes.OP_SUCCESS
+    effect.op = OpCodes.OP_ON_SUCCESS
     effect.first = self
     effect.successK = f
     effect.trace = trace
@@ -340,163 +373,13 @@ export const forEachDiscard = <A, R, E, B>(
 }
 
 /** @internal */
-export const forEachPar = <A, R, E, B>(
-  f: (a: A) => Effect.Effect<R, E, B>
-) => {
-  const trace = getCallTrace()
-  return (self: Iterable<A>): Effect.Effect<R, E, Chunk.Chunk<B>> =>
-    pipe(
-      currentParallelism,
-      getWithFiberRef(
-        (o) => o._tag === "None" ? foreachParUnbounded(f)(self) : forEachParN(o.value, f)(self)
-      )
-    ).traced(trace)
-}
-
-/** @internal */
-export const forEachParDiscard = <A, R, E, _>(
-  f: (a: A) => Effect.Effect<R, E, _>
-) => {
-  const trace = getCallTrace()
-  return (self: Iterable<A>): Effect.Effect<R, E, void> =>
-    pipe(
-      currentParallelism,
-      getWithFiberRef(
-        (o) => o._tag === "None" ? forEachParUnboundedDiscard(f)(self) : forEachParNDiscard(o.value, f)(self)
-      )
-    ).traced(trace)
-}
-
-/** @internal */
-const foreachParUnbounded = <A, R, E, B>(
-  f: (a: A) => Effect.Effect<R, E, B>
-) => {
-  const trace = getCallTrace()
-  return (self: Iterable<A>): Effect.Effect<R, E, Chunk.Chunk<B>> =>
-    suspendSucceed(() => {
-      const as = Array.from(self).map((v, i) => [v, i] as const)
-      const array = new Array<B>(as.length)
-      const fn = ([a, i]: readonly [A, number]) => pipe(f(a), map((b) => array[i] = b))
-      return pipe(as, forEachParUnboundedDiscard(fn), zipRight(succeed(Chunk.unsafeFromArray(array))))
-    }).traced(trace)
-}
-
-/** @internal */
-const forEachParUnboundedDiscard = <R, E, A, X>(f: (a: A) => Effect.Effect<R, E, X>) => {
-  const trace = getCallTrace()
-  return (self: Iterable<A>): Effect.Effect<R, E, void> =>
-    suspendSucceed(() => {
-      const as = Array.from(self)
-      const size = as.length
-      if (size === 0) {
-        return unit()
-      } else if (size === 1) {
-        return asUnit(f(as[0]))
-      }
-      return uninterruptibleMask((restore) => {
-        const promise = unsafeMakeDeferred<void, void>(FiberId.none)
-        let ref = 0
-        const process = transplant((graft) => {
-          return pipe(
-            as,
-            forEach((a) =>
-              pipe(
-                graft(pipe(
-                  restore(suspendSucceed(() => f(a))),
-                  foldCauseEffect(
-                    (cause) => pipe(promise, failDeferred<void>(void 0), zipRight(failCause(cause))),
-                    () => {
-                      if (ref + 1 === size) {
-                        pipe(promise, unsafeDoneDeferred(unit() as Effect.Effect<never, void, void>))
-                      } else {
-                        ref = ref + 1
-                      }
-                      return unit()
-                    }
-                  )
-                )),
-                forkDaemon
-              )
-            )
-          )
-        })
-        return pipe(
-          process,
-          flatMap((fibers) =>
-            pipe(
-              restore(awaitDeferred(promise)),
-              foldCauseEffect(
-                (cause) =>
-                  pipe(
-                    fibers,
-                    foreachParUnbounded(interruptFiber),
-                    flatMap(
-                      (exits) => {
-                        const exit = exitCollectAllPar(exits)
-                        if (exit._tag === "Some" && exitIsFailure(exit.value)) {
-                          return failCause(Cause.parallel(Cause.stripFailures(cause), exit.value.cause))
-                        } else {
-                          return failCause(Cause.stripFailures(cause))
-                        }
-                      }
-                    )
-                  ),
-                () => pipe(fibers, forEachDiscard((f) => f.inheritAll()))
-              )
-            )
-          )
-        )
-      })
-    }).traced(trace)
-}
-
-const forEachParN = <A, R, E, B>(
-  n: number,
-  f: (a: A) => Effect.Effect<R, E, B>
-) => {
-  const trace = getCallTrace()
-  return (self: Iterable<A>): Effect.Effect<R, E, Chunk.Chunk<B>> =>
-    suspendSucceed(() => {
-      const as = Array.from(self).map((v, i) => [v, i] as const)
-      const array = new Array<B>(as.length)
-      const fn = ([a, i]: readonly [A, number]) => pipe(f(a), map((b) => array[i] = b))
-      return pipe(as, forEachParNDiscard(n, fn), zipRight(succeed(Chunk.unsafeFromArray(array))))
-    }).traced(trace)
-}
-
-/** @internal */
-const forEachParNDiscard = <A, R, E, _>(
-  n: number,
-  f: (a: A) => Effect.Effect<R, E, _>
-) => {
-  const trace = getCallTrace()
-  return (self: Iterable<A>): Effect.Effect<R, E, void> =>
-    suspendSucceed(() => {
-      const iterator = self[Symbol.iterator]()
-
-      const worker: Effect.Effect<R, E, void> = pipe(
-        sync(() => iterator.next()),
-        flatMap((next) => next.done ? unit() : pipe(asUnit(f(next.value)), flatMap(() => worker)))
-      )
-
-      const effects: Array<Effect.Effect<R, E, void>> = []
-
-      for (let i = 0; i < n; i++) {
-        effects.push(worker)
-      }
-
-      return pipe(effects, forEachParUnboundedDiscard(identity))
-    }).traced(trace)
-}
-
-/** @internal */
 export const transplant = <R, E, A>(
   f: (grafter: <R2, E2, A2>(effect: Effect.Effect<R2, E2, A2>) => Effect.Effect<R2, E2, A2>) => Effect.Effect<R, E, A>
 ): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
   return withFiberRuntime<R, E, A>((state) => {
     const scopeOverride = state.getFiberRef(forkScopeOverride)
-    const scope = pipe(scopeOverride, Option.getOrElse(state.scope))
+    const scope = pipe(scopeOverride, Option.getOrElse(state.scope()))
     return f(pipe(forkScopeOverride, locallyFiberRef(Option.some(scope))))
   }).traced(trace)
 }
@@ -536,6 +419,33 @@ export const foldCause = <E, A2, A, A3>(
 }
 
 /** @internal */
+export const foldEffect = <E, A, R2, E2, A2, R3, E3, A3>(
+  onFailure: (e: E) => Effect.Effect<R2, E2, A2>,
+  onSuccess: (a: A) => Effect.Effect<R3, E3, A3>
+) => {
+  const trace = getCallTrace()
+  return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2 | R3, E2 | E3, A2 | A3> => {
+    return pipe(
+      self,
+      foldCauseEffect(
+        (cause) => {
+          const either = Cause.failureOrCause(cause)
+          switch (either._tag) {
+            case "Left": {
+              return onFailure(either.left)
+            }
+            case "Right": {
+              return failCause(either.right)
+            }
+          }
+        },
+        onSuccess
+      )
+    ).traced(trace)
+  }
+}
+
+/** @internal */
 export const foldCauseEffect = <E, A, R2, E2, A2, R3, E3, A3>(
   onFailure: (cause: Cause.Cause<E>) => Effect.Effect<R2, E2, A2>,
   onSuccess: (a: A) => Effect.Effect<R3, E3, A3>
@@ -561,7 +471,7 @@ export const succeed = <A>(value: A): Effect.Effect<never, never, A> => {
   const trace = getCallTrace()
   const effect = Object.create(proto)
   effect.op = OpCodes.OP_SUCCESS
-  effect.success = value
+  effect.value = value
   effect.trace = trace
   return effect
 }
@@ -695,6 +605,20 @@ export const onInterrupt = <R2, X>(
 }
 
 /** @internal */
+export const ifEffect = <R1, R2, E1, E2, A, A1>(
+  onTrue: Effect.Effect<R1, E1, A>,
+  onFalse: Effect.Effect<R2, E2, A1>
+) => {
+  const trace = getCallTrace()
+  return <R, E>(self: Effect.Effect<R, E, boolean>): Effect.Effect<R | R1 | R2, E | E1 | E2, A | A1> => {
+    return pipe(
+      self,
+      flatMap((b): Effect.Effect<R1 | R2, E1 | E2, A | A1> => (b ? onTrue : onFalse))
+    ).traced(trace)
+  }
+}
+
+/** @internal */
 export const intoDeferred = <E, A>(deferred: Deferred.Deferred<E, A>) => {
   const trace = getCallTrace()
   return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, boolean> =>
@@ -734,10 +658,13 @@ export const whileLoop = <R, E, A>(
   return effect
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const withFiberRuntime = <R, E, A>(
   withRuntime: (
-    fiber: FiberRuntime.Runtime<E, A>,
+    fiber: FiberRuntime.FiberRuntime<E, A>,
     status: FiberStatus.Running
   ) => Effect.Effect<R, E, A>
 ): Effect.Effect<R, E, A> => {
@@ -798,44 +725,6 @@ export const done = <E, A>(exit: Exit.Exit<E, A>): Effect.Effect<never, E, A> =>
 }
 
 /** @internal */
-export const daemonChildren = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-  const trace = getCallTrace()
-  return pipe(self, pipe(forkScopeOverride, locallyFiberRef(Option.some(FiberScope.globalScope)))).traced(trace)
-}
-
-// TODO(Mike): do.
-/** @internal */
-export declare const unsafeFork: <R, E, A, E2, B>(
-  effect: Effect.Effect<R, E, A>,
-  parentFiber: FiberRuntime.Runtime<E2, B>,
-  parentRuntimeFlags: RuntimeFlags.RuntimeFlags
-) => FiberRuntime.Runtime<E, A>
-
-// TODO(Mike): do.
-/** @internal */
-export declare const unsafeForkUnstarted: <R, E, A, E2, B>(
-  effect: Effect.Effect<R, E, A>,
-  parentFiber: FiberRuntime.Runtime<E2, B>,
-  parentRuntimeFlags: RuntimeFlags.RuntimeFlags
-) => FiberRuntime.Runtime<E, A>
-
-/** @internal */
-export const fork = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>> => {
-  const trace = getCallTrace()
-  return withFiberRuntime<R, never, Fiber.RuntimeFiber<E, A>>((state, status) =>
-    succeed(unsafeFork(self, state, status.runtimeFlags))
-  ).traced(trace)
-}
-
-/** @internal */
-export const forkDaemon = <R, E, A>(
-  self: Effect.Effect<R, E, A>
-): Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>> => {
-  const trace = getCallTrace()
-  return daemonChildren(fork(self)).traced(trace)
-}
-
-/** @internal */
 export const never = (): Effect.Effect<never, never, never> => {
   const trace = getCallTrace()
   return asyncInterrupt<never, never, never>(() => {
@@ -847,6 +736,22 @@ export const never = (): Effect.Effect<never, never, never> => {
 }
 
 /** @internal */
+export const onError = <E, R2, X>(cleanup: (cause: Cause.Cause<E>) => Effect.Effect<R2, never, X>) => {
+  const trace = getCallTrace()
+  return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E, A> => {
+    return pipe(
+      self,
+      onExit(
+        (exit): Effect.Effect<R2, never, X | void> =>
+          exitIsSuccess(exit) ?
+            unit() :
+            cleanup(exit.cause)
+      )
+    ).traced(trace)
+  }
+}
+
+/** @internal */
 export const onExit = <E, A, R2, X>(cleanup: (exit: Exit.Exit<E, A>) => Effect.Effect<R2, never, X>) => {
   const trace = getCallTrace()
   return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E, A> =>
@@ -855,20 +760,6 @@ export const onExit = <E, A, R2, X>(cleanup: (exit: Exit.Exit<E, A>) => Effect.E
       () => self,
       (_, exit) => cleanup(exit)
     ).traced(trace)
-}
-
-/** @internal */
-export const scope = () => {
-  const trace = getCallTrace()
-  return service(scopeTag).traced(trace)
-}
-
-/** @internal */
-export const scopeWith = <R, E, A>(
-  f: (scope: Scope.Scope) => Effect.Effect<R, E, A>
-): Effect.Effect<R | Scope.Scope, E, A> => {
-  const trace = getCallTrace()
-  return serviceWithEffect(scopeTag, f).traced(trace)
 }
 
 /** @internal */
@@ -956,28 +847,6 @@ export const tap = <A, R2, E2, X>(f: (a: A) => Effect.Effect<R2, E2, X>) => {
 }
 
 /** @internal */
-export const addFinalizer = <R, X>(
-  finalizer: (exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R, never, X>
-): Effect.Effect<R | Scope.Scope, never, void> => {
-  const trace = getCallTrace()
-  return pipe(
-    environment<R | Scope.Scope>(),
-    flatMap((environment) =>
-      pipe(
-        scope(),
-        flatMap(scopeAddFinalizerExit((exit) =>
-          pipe(
-            finalizer(exit),
-            provideEnvironment(environment),
-            asUnit
-          )
-        ))
-      )
-    )
-  ).traced(trace)
-}
-
-/** @internal */
 export const whenEffect = <R, E, R1, E1, A>(
   predicate: Effect.Effect<R, E, boolean>,
   effect: Effect.Effect<R1, E1, A>
@@ -987,15 +856,6 @@ export const whenEffect = <R, E, R1, E1, A>(
     suspendSucceed(() => predicate),
     flatMap((b) => b ? pipe(effect, map(Option.some)) : pipe(effect, map(() => Option.none)))
   ).traced(trace)
-}
-
-/** @internal */
-export const acquireRelease = <R, E, A, R2, X>(
-  acquire: Effect.Effect<R, E, A>,
-  release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>
-): Effect.Effect<R | R2 | Scope.Scope, E, A> => {
-  const trace = getCallTrace()
-  return pipe(acquire, tap((a) => addFinalizer((exit) => release(a, exit))), uninterruptible).traced(trace)
 }
 
 /** @internal */
@@ -1149,7 +1009,7 @@ export const setFiberRef = <A>(value: A) => {
 /** @internal */
 export const deleteFiberRef = <A>(self: FiberRef.FiberRef<A>): Effect.Effect<never, never, void> => {
   return withFiberRuntime((state) => {
-    state.deleteFiberRef(self)
+    state.unsafeDeleteFiberRef(self)
     return unit()
   })
 }
@@ -1231,52 +1091,6 @@ export const locallyWithFiberRef = <A>(f: (a: A) => A) => {
       return pipe(self, getWithFiberRef((a) => pipe(use, pipe(self, locallyFiberRef(f(a))))))
     }
   }
-}
-
-/** @internal */
-export const locallyScopedFiberRef = <A>(value: A) => {
-  return (self: FiberRef.FiberRef<A>): Effect.Effect<Scope.Scope, never, void> => {
-    return pipe(
-      acquireRelease(
-        pipe(getFiberRef(self), flatMap((oldValue) => pipe(self, setFiberRef(value), as(oldValue)))),
-        (oldValue) => pipe(self, setFiberRef(oldValue))
-      ),
-      as(void 0)
-    )
-  }
-}
-
-/** @internal */
-export const locallyScopedWithFiberRef = <A>(f: (a: A) => A) => {
-  return (self: FiberRef.FiberRef<A>): Effect.Effect<Scope.Scope, never, void> => {
-    return pipe(self, getWithFiberRef((a) => pipe(self, locallyScopedFiberRef(f(a)))))
-  }
-}
-
-/** @internal */
-export const makeFiberRef = <A>(
-  initial: A,
-  fork: (a: A) => A = identity,
-  join: (left: A, right: A) => A = (_, a) => a
-): Effect.Effect<Scope.Scope, never, FiberRef.FiberRef<A>> => {
-  return makeWithFiberRef(() => unsafeMakeFiberRef(initial, fork, join))
-}
-
-/** @internal */
-export const makeWithFiberRef = <Value>(
-  ref: () => FiberRef.FiberRef<Value>
-): Effect.Effect<Scope.Scope, never, FiberRef.FiberRef<Value>> => {
-  return acquireRelease(
-    pipe(sync(ref), tap(updateFiberRef(identity))),
-    deleteFiberRef
-  )
-}
-
-/** @internal */
-export const makeEnvironmentFiberRef = <A>(
-  initial: Context.Context<A>
-): Effect.Effect<Scope.Scope, never, FiberRef.FiberRef<Context.Context<A>>> => {
-  return makeWithFiberRef(() => unsafeMakeEnvironmentFiberRef(initial))
 }
 
 /** @internal */
@@ -1380,7 +1194,12 @@ export const interruptedCause: FiberRef.FiberRef<Cause.Cause<never>> = unsafeMak
 // -----------------------------------------------------------------------------
 
 /** @internal */
-export const scopeTag = Context.Tag<Scope.Scope>()
+export const ScopeTypeId: Scope.ScopeTypeId = Symbol.for("@effect/io/Scope") as Scope.ScopeTypeId
+
+/** @internal */
+export const CloseableScopeTypeId: Scope.CloseableScopeTypeId = Symbol.for(
+  "@effect/io/CloseableScope"
+) as Scope.CloseableScopeTypeId
 
 /** @internal */
 export const scopeAddFinalizer = (finalizer: Effect.Effect<never, never, unknown>) =>
@@ -1395,66 +1214,8 @@ export const scopeClose = (exit: Exit.Exit<unknown, unknown>) =>
   (self: Scope.Scope.Closeable): Effect.Effect<never, never, void> => self.close(exit)
 
 /** @internal */
-export const scopeExtend = <R, E, A>(effect: Effect.Effect<R, E, A>) =>
-  (self: Scope.Scope): Effect.Effect<Exclude<R, Scope.Scope>, E, A> =>
-    pipe(
-      effect,
-      provideSomeEnvironment<Exclude<R, Scope.Scope>, R>(
-        // @ts-expect-error
-        Context.merge(pipe(
-          Context.empty(),
-          Context.add(scopeTag)(self)
-        ))
-      )
-    )
-
-/** @internal */
 export const scopeFork = (strategy: ExecutionStrategy.ExecutionStrategy) =>
   (self: Scope.Scope): Effect.Effect<never, never, Scope.Scope.Closeable> => self.fork(strategy)
-
-/** @internal */
-export const scopeUse = <R, E, A>(effect: Effect.Effect<R, E, A>) =>
-  (self: Scope.Scope.Closeable): Effect.Effect<Exclude<R, Scope.Scope>, E, A> =>
-    pipe(
-      self,
-      scopeExtend(effect),
-      onExit((exit) => self.close(exit))
-    )
-
-/** @internal */
-export const scopeMake: (
-  executionStrategy?: ExecutionStrategy.ExecutionStrategy
-) => Effect.Effect<never, never, Scope.Scope.Closeable> = (strategy = ExecutionStrategy.sequential) =>
-  pipe(
-    releaseMapMake(),
-    map((rm): Scope.Scope.Closeable => ({
-      [ScopeTypeId]: ScopeTypeId,
-      [CloseableScopeTypeId]: CloseableScopeTypeId,
-      fork: (strategy) =>
-        uninterruptible(
-          pipe(
-            scopeMake(strategy),
-            flatMap((scope) =>
-              pipe(
-                rm,
-                releaseMapAdd((exit) => scope.close(exit)),
-                tap((fin) => scope.addFinalizer(fin)),
-                map(() => scope)
-              )
-            )
-          )
-        ),
-      close: (exit) => asUnit(releaseMapReleaseAll(strategy, exit)(rm)),
-      addFinalizer: (fin) => asUnit(releaseMapAdd(fin)(rm))
-    }))
-  )
-
-/** @internal */
-export const ScopeTypeId: Scope.ScopeTypeId = Symbol.for("@effect/io/Scope") as Scope.ScopeTypeId
-/** @internal */
-export const CloseableScopeTypeId: Scope.CloseableScopeTypeId = Symbol.for(
-  "@effect/io/CloseableScope"
-) as Scope.CloseableScopeTypeId
 
 // -----------------------------------------------------------------------------
 // ReleaseMap
@@ -1505,70 +1266,6 @@ export const releaseMapRelease = (key: number, exit: Exit.Exit<unknown, unknown>
             return self.state.update(finalizer)(exit)
           }
           return unit()
-        }
-      }
-    })
-
-/** @internal */
-export const releaseMapReleaseAll = (
-  strategy: ExecutionStrategy.ExecutionStrategy,
-  exit0: Exit.Exit<unknown, unknown>
-) =>
-  (self: ReleaseMap) =>
-    suspendSucceed(() => {
-      switch (self.state._tag) {
-        case "Exited": {
-          return unit()
-        }
-        case "Running": {
-          const finalizersMap = self.state.finalizers
-          const finalizers = Array.from(finalizersMap.keys()).sort((a, b) => b - a).map((key) =>
-            finalizersMap.get(key)!
-          )
-          const update = self.state.update
-          self.state = { _tag: "Exited", nextKey: self.state.nextKey, exit: exit0, update: self.state.update }
-          return ExecutionStrategy.isSequential(strategy) ?
-            pipe(
-              finalizers,
-              forEach((fin) => exit(update(fin)(exit0))),
-              flatMap((results) =>
-                pipe(
-                  results,
-                  exitCollectAll,
-                  Option.map(exitAsUnit),
-                  Option.getOrElse(exitUnit()),
-                  done
-                )
-              )
-            ) :
-            ExecutionStrategy.isParallel(strategy) ?
-            pipe(
-              finalizers,
-              forEachPar((fin) => exit(update(fin)(exit0))),
-              flatMap((results) =>
-                pipe(
-                  results,
-                  exitCollectAllPar,
-                  Option.map(exitAsUnit),
-                  Option.getOrElse(exitUnit()),
-                  done
-                )
-              )
-            ) :
-            pipe(
-              finalizers,
-              forEachPar((fin) => exit(update(fin)(exit0))),
-              flatMap((results) =>
-                pipe(
-                  results,
-                  exitCollectAllPar,
-                  Option.map(exitAsUnit),
-                  Option.getOrElse(exitUnit()),
-                  done
-                )
-              ),
-              withParallelism(strategy.parallelism)
-            )
         }
       }
     })
@@ -1661,7 +1358,7 @@ export const exitIsSuccess = <E, A>(self: Exit.Exit<E, A>): self is Exit.Success
 export const exitSucceed = <A>(value: A): Exit.Exit<never, A> => {
   const effect = Object.create(proto)
   effect.op = OpCodes.OP_SUCCESS
-  effect.success = value
+  effect.value = value
   return effect
 }
 

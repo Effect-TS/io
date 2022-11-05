@@ -1,5 +1,5 @@
 import type * as FiberId from "@effect/io/Fiber/Id"
-import * as FiberRef from "@effect/io/FiberRef"
+import type * as FiberRef from "@effect/io/FiberRef"
 import type * as ext from "@effect/io/FiberRefs"
 import * as core from "@effect/io/internal/core"
 import * as Equal from "@fp-ts/data/Equal"
@@ -142,7 +142,7 @@ export const setAll = (self: ext.FiberRefs) =>
     self,
     fiberRefs,
     core.forEachDiscard(
-      (fiberRef) => pipe(fiberRef, FiberRef.set(getOrDefault(fiberRef)(self)))
+      (fiberRef) => pipe(fiberRef, core.setFiberRef(getOrDefault(fiberRef)(self)))
     )
   )
 

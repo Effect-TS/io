@@ -9,6 +9,7 @@ import * as FiberId from "@effect/io/Fiber/Id"
 import * as core from "@effect/io/internal/core"
 import * as effect from "@effect/io/internal/effect"
 import * as internalFiber from "@effect/io/internal/fiber"
+import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
 import * as OpCodes from "@effect/io/internal/opCodes/effect"
 import * as internalRef from "@effect/io/internal/ref"
 import * as STM from "@effect/io/internal/stm"
@@ -33,12 +34,12 @@ export const acquireReleaseInterruptible = <R, E, A, R2, X>(
   release: (exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>
 ): Effect.Effect<R | R2 | Scope.Scope, E, A> => {
   const trace = getCallTrace()
-  return pipe(acquire, ensuring(core.addFinalizer(release))).traced(trace)
+  return pipe(acquire, ensuring(fiberRuntime.addFinalizer(release))).traced(trace)
 }
 
 /** @internal */
 export const awaitAllChildren = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-  return pipe(self, ensuringChildren(internalFiber.awaitAll))
+  return pipe(self, ensuringChildren(fiberRuntime.awaitAll))
 }
 
 /** @internal */
@@ -139,7 +140,7 @@ export const disconnect = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect
       core.flatMap((fiberId) =>
         pipe(
           restore(self),
-          core.forkDaemon,
+          fiberRuntime.forkDaemon,
           core.flatMap((fiber) =>
             pipe(
               internalFiber.join(fiber),
@@ -183,7 +184,7 @@ export const ensuringChild = <R2, X>(
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E, A> => {
     return pipe(
       self,
-      ensuringChildren((children) => f(internalFiber.collectAll(children)))
+      ensuringChildren((children) => f(fiberRuntime.collectAll(children)))
     ).traced(trace)
   }
 }
@@ -212,7 +213,7 @@ export const forkAll = <R, E, A>(
   effects: Iterable<Effect.Effect<R, E, A>>
 ): Effect.Effect<R, never, Fiber.Fiber<E, Chunk.Chunk<A>>> => {
   const trace = getCallTrace()
-  return pipe(effects, core.forEach(core.fork), core.map(internalFiber.collectAll)).traced(trace)
+  return pipe(effects, core.forEach(fiberRuntime.fork), core.map(fiberRuntime.collectAll)).traced(trace)
 }
 
 /** @internal */
@@ -222,7 +223,7 @@ export const forkIn = (scope: Scope.Scope) => {
     return core.uninterruptibleMask((restore) =>
       pipe(
         restore(self),
-        core.forkDaemon,
+        fiberRuntime.forkDaemon,
         core.tap((fiber) => scope.addFinalizer(() => core.asUnit(core.interruptFiber(fiber))))
       )
     ).traced(trace)
@@ -235,14 +236,14 @@ export const forkScoped = <R, E, A>(
 ): Effect.Effect<R | Scope.Scope, never, Fiber.RuntimeFiber<E, A>> => {
   const trace = getCallTrace()
   return core.uninterruptibleMask((restore) =>
-    core.scopeWith((scope) =>
+    fiberRuntime.scopeWith((scope) =>
       pipe(
         scope.fork(ExecutionStrategy.sequential),
         core.flatMap((child) =>
           pipe(
             restore(self),
             core.onExit((e) => child.close(e)),
-            core.forkDaemon,
+            fiberRuntime.forkDaemon,
             core.tap((fiber) =>
               child.addFinalizer(() =>
                 core.fiberIdWith((fiberId) =>
@@ -287,7 +288,7 @@ export const memoizeFunction = <R, E, A, B>(
             if (Option.isNone(result)) {
               return pipe(
                 core.makeDeferred<E, B>(),
-                core.tap((deferred) => pipe(f(a), core.intoDeferred(deferred), core.fork)),
+                core.tap((deferred) => pipe(f(a), core.intoDeferred(deferred), fiberRuntime.fork)),
                 core.map((deferred) => [deferred, pipe(map, MutableHashMap.set(a, deferred))] as const)
               )
             }
@@ -381,13 +382,13 @@ export const raceFibersWith = <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
     return core.withFiberRuntime<R | R1 | R2 | R3, E2 | E3, A2 | A3>((parentState, parentStatus) => {
       const parentRuntimeFlags = parentStatus.runtimeFlags
       const raceIndicator = MutableRef.make(true)
-      const leftFiber = core.unsafeForkUnstarted(self, parentState, parentRuntimeFlags)
-      const rightFiber = core.unsafeForkUnstarted(that, parentState, parentRuntimeFlags)
-      leftFiber.setFiberRef(core.forkScopeOverride, Option.some(parentState.scope))
-      rightFiber.setFiberRef(core.forkScopeOverride, Option.some(parentState.scope))
+      const leftFiber = fiberRuntime.unsafeForkUnstarted(self, parentState, parentRuntimeFlags)
+      const rightFiber = fiberRuntime.unsafeForkUnstarted(that, parentState, parentRuntimeFlags)
+      leftFiber.setFiberRef(core.forkScopeOverride, Option.some(parentState.scope()))
+      rightFiber.setFiberRef(core.forkScopeOverride, Option.some(parentState.scope()))
       return core.async((cb) => {
-        leftFiber.addObserver(() => completeRace(leftFiber, rightFiber, selfWins, raceIndicator, cb))
-        rightFiber.addObserver(() => completeRace(rightFiber, leftFiber, thatWins, raceIndicator, cb))
+        leftFiber.unsafeAddObserver(() => completeRace(leftFiber, rightFiber, selfWins, raceIndicator, cb))
+        rightFiber.unsafeAddObserver(() => completeRace(rightFiber, leftFiber, thatWins, raceIndicator, cb))
         leftFiber.startFork(self)
         rightFiber.startFork(that)
       }, FiberId.combineAll(HashSet.from([leftFiber.id(), rightFiber.id()])))
@@ -457,7 +458,7 @@ export const raceWith = <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
 export const supervised = <X>(supervisor: Supervisor.Supervisor<X>) => {
   const trace = getCallTrace()
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-    const supervise = pipe(effect.currentSupervisor, core.locallyWithFiberRef((s) => s.zip(supervisor)))
+    const supervise = pipe(fiberRuntime.currentSupervisor, core.locallyWithFiberRef((s) => s.zip(supervisor)))
     return supervise(self).traced(trace)
   }
 }

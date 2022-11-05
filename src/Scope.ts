@@ -6,6 +6,7 @@ import type * as Effect from "@effect/io/Effect"
 import type { ExecutionStrategy } from "@effect/io/ExecutionStrategy"
 import type * as Exit from "@effect/io/Exit"
 import * as core from "@effect/io/internal/core"
+import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
 import type * as Context from "@fp-ts/data/Context"
 
 /**
@@ -60,7 +61,7 @@ export interface CloseableScope extends Scope {
  * @since 1.0.0
  * @category environment
  */
-export const Tag: Context.Tag<Scope> = core.scopeTag
+export const Tag: Context.Tag<Scope> = fiberRuntime.scopeTag
 
 /**
  * @since 1.0.0
@@ -114,7 +115,7 @@ export const close = core.scopeClose
  * @category mutations
  * @since 1.0.0
  */
-export const extend = core.scopeExtend
+export const extend = fiberRuntime.scopeExtend
 
 /**
  * Forks a new scope that is a child of this scope. The child scope will
@@ -134,7 +135,7 @@ export const fork = core.scopeFork
  * @category destructors
  * @since 1.0.0
  */
-export const use = core.scopeUse
+export const use = fiberRuntime.scopeUse
 
 /**
  * Creates a Scope where Finalizers will run according to the `ExecutionStrategy`.
@@ -144,4 +145,4 @@ export const use = core.scopeUse
  * @category constructors
  * @since 1.0.0
  */
-export const make = core.scopeMake
+export const make = fiberRuntime.scopeMake

@@ -1,0 +1,1915 @@
+import * as Cause from "@effect/io/Cause"
+import { getCallTrace } from "@effect/io/Debug"
+import type * as Effect from "@effect/io/Effect"
+import * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
+import * as Exit from "@effect/io/Exit"
+import type * as Fiber from "@effect/io/Fiber"
+import * as FiberId from "@effect/io/Fiber/Id"
+import * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
+import * as RuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
+import * as FiberScope from "@effect/io/Fiber/Scope"
+import * as FiberStatus from "@effect/io/Fiber/Status"
+import type * as FiberRef from "@effect/io/FiberRef"
+import * as core from "@effect/io/internal/core"
+import * as internalFiber from "@effect/io/internal/fiber"
+import * as FiberMessage from "@effect/io/internal/fiberMessage"
+import * as FiberRefs from "@effect/io/internal/fiberRefs"
+import * as OpCodes from "@effect/io/internal/opCodes/effect"
+import { Stack } from "@effect/io/internal/stack"
+import * as SupervisorPatch from "@effect/io/internal/supervisor/patch"
+import type * as LogLevel from "@effect/io/Logger/Level"
+import * as Ref from "@effect/io/Ref"
+import type * as Scope from "@effect/io/Scope"
+import * as Supervisor from "@effect/io/Supervisor"
+import * as Chunk from "@fp-ts/data/Chunk"
+import * as Context from "@fp-ts/data/Context"
+import * as Either from "@fp-ts/data/Either"
+import { identity, pipe } from "@fp-ts/data/Function"
+import * as List from "@fp-ts/data/List"
+import * as MutableQueue from "@fp-ts/data/mutable/MutableQueue"
+import * as MutableRef from "@fp-ts/data/mutable/MutableRef"
+import * as Option from "@fp-ts/data/Option"
+
+/** @internal */
+type EvaluationSignal = EvaluationSignalContinue | EvaluationSignalDone | EvaluationSignalYieldNow
+
+/** @internal */
+const EvaluationSignalContinue = 0 as const
+
+/** @internal */
+type EvaluationSignalContinue = typeof EvaluationSignalContinue
+
+/** @internal */
+const EvaluationSignalDone = 1 as const
+
+/** @internal */
+type EvaluationSignalDone = typeof EvaluationSignalDone
+
+/** @internal */
+const EvaluationSignalYieldNow = 2 as const
+
+/** @internal */
+type EvaluationSignalYieldNow = typeof EvaluationSignalYieldNow
+
+/** @internal */
+export const runtimeFiberVariance = {
+  _E: (_: never) => _,
+  _A: (_: never) => _
+}
+
+const absurd = (_: never): never => {
+  throw new Error(`BUG: FiberRuntime - ${_} - please report an issue at https://github.com/Effect-TS/io/issues`)
+}
+
+/**
+ * @since 1.0.0
+ * @category references
+ */
+export const currentFiber = MutableRef.make<FiberRuntime<any, any> | null>(null)
+
+/** @internal */
+export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
+  readonly [internalFiber.FiberTypeId] = internalFiber.fiberVariance
+
+  readonly [internalFiber.RuntimeFiberTypeId] = runtimeFiberVariance
+
+  private _fiberRefs: FiberRefs.FiberRefs
+  private _fiberId: FiberId.Runtime
+  private _runtimeFlags: RuntimeFlags.RuntimeFlags
+  constructor(
+    fiberId: FiberId.Runtime,
+    fiberRefs0: FiberRefs.FiberRefs,
+    runtimeFlags0: RuntimeFlags.RuntimeFlags
+  ) {
+    this._runtimeFlags = runtimeFlags0
+    this._fiberId = fiberId
+    this._fiberRefs = fiberRefs0
+    if (pipe(runtimeFlags0, RuntimeFlags.isEnabled(RuntimeFlags.RuntimeMetrics))) {
+      // TODO(Max): after Metrics
+      // fibersStarted.unsafeUpdate(1, HashSet.empty())
+    }
+  }
+  private _queue = MutableQueue.unbounded<FiberMessage.FiberMessage>()
+  private _children: Set<FiberRuntime<any, any>> | null = null
+  private _observers = List.empty<(exit: Exit.Exit<E, A>) => void>()
+  private _running = false
+  private _stack: Stack<core.Continuation> | undefined = void 0
+  private _asyncInterruptor: ((effect: Effect.Effect<any, any, any>) => any) | null = null
+  private _asyncBlockingOn: FiberId.FiberId | null = null
+  private _exitValue: Exit.Exit<E, A> | null = null
+
+  /**
+   * The identity of the fiber.
+   */
+  id(): FiberId.Runtime {
+    throw new Error("Method not implemented.")
+  }
+
+  /**
+   * The status of the fiber.
+   *
+   * @macro traced
+   */
+  status(): Effect.Effect<never, never, FiberStatus.FiberStatus> {
+    const trace = getCallTrace()
+    return this.ask((_, status) => status).traced(trace)
+  }
+
+  /**
+   * Gets the fiber runtime flags.
+   *
+   * @macro traced
+   */
+  runtimeFlags(): Effect.Effect<never, never, RuntimeFlags.RuntimeFlags> {
+    const trace = getCallTrace()
+    return this.ask((state, status) => {
+      if (status._tag === "Done") {
+        return state._runtimeFlags
+      }
+      return status.runtimeFlags
+    }).traced(trace)
+  }
+
+  /**
+   * Returns the current `FiberScope` for the fiber.
+   */
+  scope(): FiberScope.FiberScope {
+    return FiberScope.unsafeMake(this)
+  }
+
+  /**
+   * Retrieves the immediate children of the fiber.
+   *
+   * @macro traced
+   */
+  children(): Effect.Effect<never, never, Chunk.Chunk<Fiber.RuntimeFiber<any, any>>> {
+    return this.ask((fiber) => Chunk.fromIterable(fiber.getChildren()))
+  }
+
+  /**
+   * Gets the fiber's set of children.
+   */
+  getChildren(): Set<FiberRuntime<any, any>> {
+    if (this._children === null) {
+      this._children = new Set()
+    }
+    return this._children!
+  }
+
+  /**
+   * Retrieves the current supervisor the fiber uses for supervising effects.
+   *
+   * **NOTE**: This method is safe to invoke on any fiber, but if not invoked
+   * on this fiber, then values derived from the fiber's state (including the
+   * log annotations and log level) may not be up-to-date.
+   */
+  getSupervisor() {
+    return this.getFiberRef(currentSupervisor)
+  }
+
+  /**
+   * Retrieves the interrupted cause of the fiber, which will be `Cause.empty`
+   * if the fiber has not been interrupted.
+   *
+   * **NOTE**: This method is safe to invoke on any fiber, but if not invoked
+   * on this fiber, then values derived from the fiber's state (including the
+   * log annotations and log level) may not be up-to-date.
+   */
+  getInterruptedCause() {
+    return this.getFiberRef(core.interruptedCause)
+  }
+
+  /**
+   * Retrieves the whole set of fiber refs.
+   *
+   * @macro traced
+   */
+  fiberRefs(): Effect.Effect<never, never, FiberRefs.FiberRefs> {
+    const trace = getCallTrace()
+    return this.ask((fiber) => fiber.unsafeGetFiberRefs()).traced(trace)
+  }
+
+  /**
+   * Returns an effect that will contain information computed from the fiber
+   * state and status while running on the fiber.
+   *
+   * This allows the outside world to interact safely with mutable fiber state
+   * without locks or immutable data.
+   *
+   * @macro traced
+   */
+  ask<Z>(
+    f: (runtime: FiberRuntime<any, any>, status: FiberStatus.FiberStatus) => Z
+  ): Effect.Effect<never, never, Z> {
+    return core.suspendSucceed(() => {
+      const deferred = core.unsafeMakeDeferred<never, Z>(this._fiberId)
+      this.tell(
+        FiberMessage.stateful((fiber, status) => {
+          pipe(deferred, core.unsafeDoneDeferred(core.sync(() => f(fiber, status))))
+        })
+      )
+      return core.awaitDeferred(deferred)
+    })
+  }
+
+  /**
+   * Adds a message to be processed by the fiber on the fiber.
+   */
+  tell(message: FiberMessage.FiberMessage) {
+    pipe(
+      this._queue,
+      MutableQueue.offer(message)
+    )
+    if (!this._running) {
+      this._running = true
+      this.drainQueueLaterOnExecutor()
+    }
+  }
+
+  await(): Effect.Effect<never, never, Exit.Exit<E, A>> {
+    return core.asyncInterrupt<never, never, Exit.Exit<E, A>>((resume) => {
+      const cb = (exit: Exit.Exit<E, A>) => resume(Exit.succeed(exit))
+      this.tell(
+        FiberMessage.stateful((fiber, _) => {
+          if (fiber._exitValue !== null) {
+            cb(this._exitValue!)
+          } else {
+            fiber.unsafeAddObserver(cb)
+          }
+        })
+      )
+      return Either.left(core.sync(() =>
+        this.tell(
+          FiberMessage.stateful((fiber, _) => {
+            fiber.unsafeRemoveObserver(cb)
+          })
+        )
+      ))
+    }, this.id())
+  }
+
+  inheritAll(): Effect.Effect<never, never, void> {
+    return core.withFiberRuntime<never, never, void>((parentFiber, parentStatus) => {
+      const parentFiberId = parentFiber.id()
+      const parentFiberRefs = parentFiber.unsafeGetFiberRefs()
+      const parentRuntimeFlags = parentStatus.runtimeFlags
+      const childFiberRefs = this.unsafeGetFiberRefs()
+
+      const updatedFiberRefs = pipe(
+        parentFiberRefs,
+        FiberRefs.joinAs(parentFiberId, childFiberRefs)
+      )
+
+      parentFiber.setFiberRefs(updatedFiberRefs)
+
+      return pipe(
+        this.runtimeFlags(),
+        core.flatMap((childRuntimeFlags) =>
+          core.updateRuntimeFlags(
+            pipe(
+              parentRuntimeFlags,
+              RuntimeFlags.diff(childRuntimeFlags),
+              RuntimeFlagsPatch.exclude(RuntimeFlags.WindDown),
+              RuntimeFlagsPatch.exclude(RuntimeFlags.Interruption)
+            )
+          )
+        )
+      )
+    })
+  }
+
+  /**
+   * Tentatively observes the fiber, but returns immediately if it is not
+   * already done.
+   *
+   * @macro trace
+   */
+  poll(): Effect.Effect<never, never, Option.Option<Exit.Exit<E, A>>> {
+    const trace = getCallTrace()
+    return core.sync(() => Option.fromNullable(this._exitValue)).traced(trace)
+  }
+
+  /**
+   * Unsafely observes the fiber, but returns immediately if it is not
+   * already done.
+   */
+  unsafePoll(): Exit.Exit<E, A> | null {
+    return this._exitValue
+  }
+
+  /**
+   * In the background, interrupts the fiber as if interrupted from the
+   * specified fiber. If the fiber has already exited, the returned effect will
+   * resume immediately. Otherwise, the effect will resume when the fiber exits.
+   *
+   * @macro traced
+   */
+  interruptWithFork(fiberId: FiberId.FiberId): Effect.Effect<never, never, void> {
+    return core.sync(() => this.tell(FiberMessage.interruptSignal(Cause.interrupt(fiberId))))
+  }
+
+  /**
+   * Adds an observer to the list of observers.
+   *
+   * **NOTE**: This method must be invoked by the fiber itself.
+   */
+  unsafeAddObserver(observer: (exit: Exit.Exit<E, A>) => void): void {
+    if (this._exitValue !== null) {
+      observer(this._exitValue!)
+    } else {
+      this._observers = List.cons(observer, this._observers)
+    }
+  }
+
+  /**
+   * Removes the specified observer from the list of observers that will be
+   * notified when the fiber exits.
+   *
+   * **NOTE**: This method must be invoked by the fiber itself.
+   */
+  unsafeRemoveObserver(observer: (exit: Exit.Exit<E, A>) => void): void {
+    this._observers = pipe(this._observers, List.filter((o) => o !== observer))
+  }
+  /**
+   * Retrieves all fiber refs of the fiber.
+   *
+   * **NOTE**: This method is safe to invoke on any fiber, but if not invoked
+   * on this fiber, then values derived from the fiber's state (including the
+   * log annotations and log level) may not be up-to-date.
+   */
+  unsafeGetFiberRefs(): FiberRefs.FiberRefs {
+    return this._fiberRefs
+  }
+
+  /**
+   * Deletes the specified fiber ref.
+   *
+   * **NOTE**: This method must be invoked by the fiber itself.
+   */
+  unsafeDeleteFiberRef<X>(fiberRef: FiberRef.FiberRef<X>): void {
+    this._fiberRefs = pipe(this._fiberRefs, FiberRefs.delete(fiberRef))
+  }
+
+  /**
+   * Retrieves the state of the fiber ref, or else its initial value.
+   *
+   * **NOTE**: This method is safe to invoke on any fiber, but if not invoked
+   * on this fiber, then values derived from the fiber's state (including the
+   * log annotations and log level) may not be up-to-date.
+   */
+  getFiberRef<X>(fiberRef: FiberRef.FiberRef<X>): X {
+    return pipe(this._fiberRefs, FiberRefs.getOrDefault(fiberRef))
+  }
+
+  /**
+   * Sets the fiber ref to the specified value.
+   *
+   * **NOTE**: This method must be invoked by the fiber itself.
+   */
+  setFiberRef<X>(fiberRef: FiberRef.FiberRef<X>, value: X): void {
+    this._fiberRefs = pipe(this._fiberRefs, FiberRefs.updateAs(this.id(), fiberRef, value))
+  }
+
+  /**
+   * Wholesale replaces all fiber refs of this fiber.
+   *
+   * **NOTE**: This method must be invoked by the fiber itself.
+   */
+  setFiberRefs(fiberRefs: FiberRefs.FiberRefs): void {
+    this._fiberRefs = fiberRefs
+  }
+
+  /**
+   * Adds a reference to the specified fiber inside the children set.
+   *
+   * **NOTE**: This method must be invoked by the fiber itself.
+   */
+  addChild(child: FiberRuntime<any, any>) {
+    this.getChildren().add(child)
+  }
+
+  /**
+   * Removes a reference to the specified fiber inside the children set.
+   *
+   * **NOTE**: This method must be invoked by the fiber itself.
+   */
+  removeChild(child: FiberRuntime<any, any>) {
+    this.getChildren().delete(child)
+  }
+
+  /**
+   * On the current thread, executes all messages in the fiber's inbox. This
+   * method may return before all work is done, in the event the fiber executes
+   * an asynchronous operation.
+   *
+   * **NOTE**: This method must be invoked by the fiber itself.
+   */
+  drainQueueOnCurrentThread() {
+    let recurse = true
+    while (recurse) {
+      let evaluationSignal: EvaluationSignal = EvaluationSignalContinue
+      if (pipe(this._runtimeFlags, RuntimeFlags.isEnabled(RuntimeFlags.CurrentFiber))) {
+        pipe(currentFiber, MutableRef.set(this as FiberRuntime<any, any> | null))
+      }
+      try {
+        while (evaluationSignal === EvaluationSignalContinue) {
+          evaluationSignal = MutableQueue.isEmpty(this._queue) ?
+            EvaluationSignalDone :
+            this.evaluateMessageWhileSuspended(pipe(this._queue, MutableQueue.poll(null))!)
+        }
+      } finally {
+        this._running = false
+        if (pipe(this._runtimeFlags, RuntimeFlags.isEnabled(RuntimeFlags.CurrentFiber))) {
+          pipe(currentFiber, MutableRef.set(null as FiberRuntime<any, any> | null))
+        }
+      }
+      // Maybe someone added something to the queue between us checking, and us
+      // giving up the drain. If so, we need to restart the draining, but only
+      // if we beat everyone else to the restart:
+      if (!MutableQueue.isEmpty(this._queue) && !this._running) {
+        this._running = true
+        if (evaluationSignal === EvaluationSignalYieldNow) {
+          this.drainQueueLaterOnExecutor()
+          recurse = false
+        } else {
+          recurse = true
+        }
+      } else {
+        recurse = false
+      }
+    }
+  }
+
+  /**
+   * Schedules the execution of all messages in the fiber's inbox.
+   *
+   * This method will return immediately after the scheduling
+   * operation is completed, but potentially before such messages have been
+   * executed.
+   *
+   * **NOTE**: This method must be invoked by the fiber itself.
+   */
+  drainQueueLaterOnExecutor() {
+    this.getFiberRef(core.currentScheduler).scheduleTask(this.run)
+  }
+
+  /**
+   * Drains the fiber's message queue while the fiber is actively running,
+   * returning the next effect to execute, which may be the input effect if no
+   * additional effect needs to be executed.
+   *
+   * **NOTE**: This method must be invoked by the fiber itself.
+   */
+  drainQueueWhileRunning(
+    runtimeFlags: RuntimeFlags.RuntimeFlags,
+    cur0: Effect.Effect<any, any, any>
+  ) {
+    let cur = cur0
+    while (!MutableQueue.isEmpty(this._queue)) {
+      const message = pipe(this._queue, MutableQueue.poll(void 0))!
+      switch (message.op) {
+        case FiberMessage.OP_INTERRUPT_SIGNAL: {
+          this.processNewInterruptSignal(message.cause)
+          cur = RuntimeFlags.interruptible(runtimeFlags) ? Exit.failCause(message.cause) : cur
+          break
+        }
+        case FiberMessage.OP_RESUME: {
+          throw new Error("It is illegal to have multiple concurrent run loops in a single fiber")
+        }
+        case FiberMessage.OP_STATEFUL: {
+          message.onFiber(this, FiberStatus.running(runtimeFlags))
+          break
+        }
+        case FiberMessage.OP_YIELD_NOW: {
+          const oldCur = cur
+          cur = pipe(core.yieldNow(), core.flatMap(() => oldCur))
+          break
+        }
+        default: {
+          absurd(message)
+        }
+      }
+    }
+    return cur
+  }
+
+  /**
+   * Determines if the fiber is interrupted.
+   *
+   * **NOTE**: This method is safe to invoke on any fiber, but if not invoked
+   * on this fiber, then values derived from the fiber's state (including the
+   * log annotations and log level) may not be up-to-date.
+   */
+  isInterrupted(): boolean {
+    return !Cause.isEmpty(this.getFiberRef(core.interruptedCause))
+  }
+
+  /**
+   * Adds an interruptor to the set of interruptors that are interrupting this
+   * fiber.
+   *
+   * **NOTE**: This method must be invoked by the fiber itself.
+   */
+  addInterruptedCause(cause: Cause.Cause<never>) {
+    const oldSC = this.getFiberRef(core.interruptedCause)
+    this.setFiberRef(core.interruptedCause, Cause.sequential(oldSC, cause))
+  }
+
+  /**
+   * Processes a new incoming interrupt signal.
+   *
+   * **NOTE**: This method must be invoked by the fiber itself.
+   */
+  processNewInterruptSignal(cause: Cause.Cause<never>): void {
+    this.addInterruptedCause(cause)
+    this.sendInterruptSignalToAllChildren()
+  }
+
+  /**
+   * Interrupts all children of the current fiber, returning an effect that will
+   * await the exit of the children. This method will return null if the fiber
+   * has no children.
+   *
+   * **NOTE**: This method must be invoked by the fiber itself.
+   */
+  sendInterruptSignalToAllChildren(): boolean {
+    if (this._children === null || this._children.size === 0) {
+      return false
+    }
+    let told = false
+    this._children.forEach((next) => {
+      next.tell(FiberMessage.interruptSignal(Cause.interrupt(this.id())))
+      told = true
+    })
+    return told
+  }
+
+  /**
+   * Interrupts all children of the current fiber, returning an effect that will
+   * await the exit of the children. This method will return null if the fiber
+   * has no children.
+   *
+   * **NOTE**: This method must be invoked by the fiber itself.
+   */
+  interruptAllChildren() {
+    if (this.sendInterruptSignalToAllChildren()) {
+      const it = this._children!.values()
+      this._children = null
+      let isDone = false
+      const body = () => {
+        const next = it.next()
+        if (!next.done) {
+          return core.asUnit(next.value.await())
+        } else {
+          return core.sync(() => {
+            isDone = true
+          })
+        }
+      }
+      return core.whileLoop(
+        () => !isDone,
+        () => body(),
+        () => {
+          //
+        }
+      )
+    }
+    return null
+  }
+
+  reportExitValue(exit: Exit.Exit<E, A>) {
+    if (pipe(this._runtimeFlags, RuntimeFlags.isEnabled(RuntimeFlags.RuntimeMetrics))) {
+      // TODO(Max): after Metrics
+      switch (exit.op) {
+        case OpCodes.OP_SUCCESS: {
+          // fiberSuccesses.unsafeUpdate(1, HashSet.empty())
+          break
+        }
+        case OpCodes.OP_FAILURE: {
+          // fiberFailures.unsafeUpdate(1, HashSet.empty())
+          break
+        }
+      }
+    }
+  }
+
+  setExitValue(exit: Exit.Exit<E, A>) {
+    this._exitValue = exit
+
+    if (pipe(this._runtimeFlags, RuntimeFlags.isEnabled(RuntimeFlags.RuntimeMetrics))) {
+      // TODO(Max): after Metrics
+      // const startTimeMillis = this.id().startTimeMillis
+      // const endTimeMillis = new Date().getTime()
+      // fiberLifetimes.unsafeUpdate((endTimeMillis - startTimeMillis) / 1000.0, HashSet.empty())
+    }
+
+    this.reportExitValue(exit)
+
+    pipe(
+      this._observers,
+      List.forEach((observer) => {
+        observer(exit)
+      })
+    )
+  }
+
+  getLoggers() {
+    // TODO(Max): after Logger
+    // return this.getFiberRef(core.currentLoggers)
+  }
+
+  log(
+    _message: string,
+    _cause: Cause.Cause<any>,
+    _overrideLogLevel: Option.Option<LogLevel.LogLevel>
+  ): void {
+    // const logLevel = Option.isSome(overrideLogLevel) ?
+    //   overrideLogLevel.value :
+    //   this.getFiberRef(core.currentLogLevel)
+    // const spans = this.getFiberRef(core.currentLogSpan)
+    // const annotations = this.getFiberRef(core.currentLogAnnotations)
+    // TODO(Max): after Logger
+    // const loggers = this.getLoggers()
+    // const contextMap = this.getFiberRefs()
+    // pipe(
+    //   loggers,
+    //   HashSet.forEach((logger) => {
+    //     logger.apply(this.id, logLevel, message, cause, contextMap, spans, annotations)
+    //   })
+    // )
+  }
+
+  /**
+   * Evaluates a single message on the current thread, while the fiber is
+   * suspended. This method should only be called while evaluation of the
+   * fiber's effect is suspended due to an asynchronous operation.
+   *
+   * **NOTE**: This method must be invoked by the fiber itself.
+   */
+  evaluateMessageWhileSuspended(message: FiberMessage.FiberMessage): EvaluationSignal {
+    switch (message.op) {
+      case FiberMessage.OP_YIELD_NOW: {
+        return EvaluationSignalYieldNow
+      }
+      case FiberMessage.OP_INTERRUPT_SIGNAL: {
+        this.processNewInterruptSignal(message.cause)
+        if (this._asyncInterruptor) {
+          this._asyncInterruptor(Exit.failCause(message.cause))
+          this._asyncInterruptor = null
+        }
+        return EvaluationSignalContinue
+      }
+      case FiberMessage.OP_RESUME: {
+        this._asyncInterruptor = null
+        this._asyncBlockingOn = null
+        this.evaluateEffect(message.effect)
+        return EvaluationSignalContinue
+      }
+      case FiberMessage.OP_STATEFUL: {
+        message.onFiber(
+          this,
+          this._exitValue !== null ?
+            FiberStatus.done :
+            FiberStatus.suspended(this._runtimeFlags, this._asyncBlockingOn!)
+        )
+        return EvaluationSignalContinue
+      }
+      default: {
+        return absurd(message)
+      }
+    }
+  }
+
+  /**
+   * Evaluates an effect until completion, potentially asynchronously.
+   *
+   * **NOTE**: This method must be invoked by the fiber itself.
+   */
+  evaluateEffect(effect0: Effect.Effect<any, any, any>) {
+    this.getSupervisor().onResume(this)
+    try {
+      let effect: Effect.Effect<any, any, any> | null =
+        RuntimeFlags.interruptible(this._runtimeFlags) && this.isInterrupted() ?
+          Exit.failCause(this.getInterruptedCause()) :
+          effect0
+      while (effect !== null) {
+        try {
+          const exit = this.runLoop(effect)
+          this._runtimeFlags = pipe(this._runtimeFlags, RuntimeFlags.enable(RuntimeFlags.WindDown))
+          const interruption = this.interruptAllChildren()
+          if (interruption !== null) {
+            effect = pipe(interruption, core.flatMap(() => exit))
+          } else {
+            if (MutableQueue.isEmpty(this._queue)) {
+              // No more messages to process, so we will allow the fiber to end life:
+              this.setExitValue(exit)
+            } else {
+              // There are messages, possibly added by the final op executed by
+              // the fiber. To be safe, we should execute those now before we
+              // allow the fiber to end life:
+              this.tell(FiberMessage.resume(exit))
+            }
+            effect = null
+          }
+        } catch (e) {
+          if (core.isEffect(e)) {
+            if ((e as core.Primitive).op === OpCodes.OP_YIELD) {
+              if (RuntimeFlags.cooperativeYielding(this._runtimeFlags)) {
+                this.tell(FiberMessage.yieldNow)
+                this.tell(FiberMessage.resume(core.unit()))
+                effect = null
+              } else {
+                effect = core.unit()
+              }
+            } else if ((e as core.Primitive).op === OpCodes.OP_ASYNC) {
+              // Terminate this evaluation, async resumption will continue evaluation:
+              effect = null
+            }
+          } else {
+            throw e
+          }
+        }
+      }
+    } finally {
+      this.getSupervisor().onSuspend(this)
+    }
+  }
+
+  /**
+   * Begins execution of the effect associated with this fiber on the current
+   * thread. This can be called to "kick off" execution of a fiber after it has
+   * been created, in hopes that the effect can be executed synchronously.
+   *
+   * This is not the normal way of starting a fiber, but it is useful when the
+   * express goal of executing the fiber is to synchronously produce its exit.
+   */
+  start<R>(effect: Effect.Effect<R, E, A>): void {
+    if (!this._running) {
+      try {
+        this._running = true
+        this.evaluateEffect(effect)
+      } finally {
+        this._running = false
+        // Because we're special casing `start`, we have to be responsible
+        // for spinning up the fiber if there were new messages added to
+        // the queue between the completion of the effect and the transition
+        // to the not running state.
+        if (!MutableQueue.isEmpty(this._queue)) {
+          this.drainQueueLaterOnExecutor()
+        }
+      }
+    } else {
+      this.tell(FiberMessage.resume(effect))
+    }
+  }
+
+  /**
+   * Begins execution of the effect associated with this fiber on in the
+   * background, and on the correct thread pool. This can be called to "kick
+   * off" execution of a fiber after it has been created, in hopes that the
+   * effect can be executed synchronously.
+   */
+  startFork<R>(effect: Effect.Effect<R, E, A>): void {
+    this.tell(FiberMessage.resume(effect))
+  }
+
+  /**
+   * Takes the current runtime flags, patches them to return the new runtime
+   * flags, and then makes any changes necessary to fiber state based on the
+   * specified patch.
+   *
+   * **NOTE**: This method must be invoked by the fiber itself.
+   */
+  patchRuntimeFlags(oldRuntimeFlags: RuntimeFlags.RuntimeFlags, patch: RuntimeFlagsPatch.RuntimeFlagsPatch) {
+    const newRuntimeFlags = pipe(oldRuntimeFlags, RuntimeFlags.patch(patch))
+    if (pipe(patch, RuntimeFlagsPatch.isEnabled(RuntimeFlags.CurrentFiber))) {
+      pipe(currentFiber, MutableRef.set(this as FiberRuntime<any, any> | null))
+    } else if (pipe(patch, RuntimeFlagsPatch.isDisabled(RuntimeFlags.CurrentFiber))) {
+      pipe(currentFiber, MutableRef.set(null as FiberRuntime<any, any> | null))
+    }
+    this._runtimeFlags = newRuntimeFlags
+    return newRuntimeFlags
+  }
+
+  /**
+   * Initiates an asynchronous operation, by building a callback that will
+   * resume execution, and then feeding that callback to the registration
+   * function, handling error cases and repeated resumptions appropriately.
+   *
+   * **NOTE**: This method must be invoked by the fiber itself.
+   */
+  initiateAsync(
+    runtimeFlags: RuntimeFlags.RuntimeFlags,
+    asyncRegister: (resume: (effect: Effect.Effect<any, any, any>) => void) => void
+  ) {
+    let alreadyCalled = false
+    const callback = (effect: Effect.Effect<any, any, any>) => {
+      if (!alreadyCalled) {
+        alreadyCalled = true
+        this.tell(FiberMessage.resume(effect))
+      }
+    }
+    if (RuntimeFlags.interruptible(runtimeFlags)) {
+      this._asyncInterruptor = callback
+    }
+    try {
+      asyncRegister(callback)
+    } catch (e) {
+      callback(core.failCause(Cause.die(e)))
+    }
+  }
+
+  getNextSuccessCont() {
+    while (this._stack !== undefined) {
+      const frame = this._stack.value
+      this._stack = this._stack.previous
+      if (frame.op !== OpCodes.OP_ON_FAILURE) {
+        return frame
+      }
+    }
+  }
+
+  getNextFailCont() {
+    while (this._stack !== undefined) {
+      const frame = this._stack.value
+      this._stack = this._stack.previous
+      if (frame.op !== OpCodes.OP_ON_SUCCESS && frame.op !== OpCodes.OP_WHILE) {
+        return frame
+      }
+    }
+  }
+
+  /**
+   * The main run-loop for evaluating effects.
+   *
+   * **NOTE**: This method must be invoked by the fiber itself.
+   */
+  runLoop(effect0: Effect.Effect<any, any, any>): Exit.Exit<any, any> {
+    let cur = effect0
+    let ops = 0
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      if (RuntimeFlags.opSupervision(this._runtimeFlags)) {
+        this.getSupervisor().onEffect(this, cur)
+      }
+      cur = this.drainQueueWhileRunning(this._runtimeFlags, cur)
+      ops += 1
+      if (ops >= 2048) {
+        ops = 0
+        const oldCur = cur
+        cur = pipe(core.yieldNow(), core.flatMap(() => oldCur))
+      }
+      try {
+        const op = cur as core.Primitive
+        switch (op.op) {
+          case OpCodes.OP_SYNC: {
+            const value = op.evaluate()
+            const cont = this.getNextSuccessCont()
+            if (cont !== undefined) {
+              switch (cont.op) {
+                case OpCodes.OP_ON_SUCCESS:
+                case OpCodes.OP_ON_SUCCESS_AND_FAILURE: {
+                  cur = cont.successK(value)
+                  break
+                }
+                case OpCodes.OP_REVERT_FLAGS: {
+                  this.patchRuntimeFlags(this._runtimeFlags, cont.patch)
+                  if (RuntimeFlags.interruptible(this._runtimeFlags) && this.isInterrupted()) {
+                    cur = Exit.failCause(this.getInterruptedCause())
+                  } else {
+                    cur = core.succeed(value)
+                  }
+                  break
+                }
+                case OpCodes.OP_WHILE: {
+                  cont.process(value)
+                  if (cont.check()) {
+                    this._stack = new Stack(cont, this._stack)
+                    cur = cont.body()
+                  } else {
+                    cur = core.unit()
+                  }
+                  break
+                }
+                default: {
+                  absurd(cont)
+                }
+              }
+            } else {
+              return Exit.succeed(value)
+            }
+            break
+          }
+          case OpCodes.OP_SUCCESS: {
+            const oldCur = op
+            const cont = this.getNextSuccessCont()
+            if (cont !== undefined) {
+              switch (cont.op) {
+                case OpCodes.OP_ON_SUCCESS:
+                case OpCodes.OP_ON_SUCCESS_AND_FAILURE: {
+                  cur = cont.successK(oldCur.value)
+                  break
+                }
+                case OpCodes.OP_REVERT_FLAGS: {
+                  this.patchRuntimeFlags(this._runtimeFlags, cont.patch)
+                  if (RuntimeFlags.interruptible(this._runtimeFlags) && this.isInterrupted()) {
+                    cur = Exit.failCause(this.getInterruptedCause())
+                  }
+                  break
+                }
+                case OpCodes.OP_WHILE: {
+                  cont.process(oldCur.value)
+                  if (cont.check()) {
+                    this._stack = new Stack(cont, this._stack)
+                    cur = cont.body()
+                  } else {
+                    cur = core.unit()
+                  }
+                  break
+                }
+                default: {
+                  absurd(cont)
+                }
+              }
+            } else {
+              return oldCur
+            }
+            break
+          }
+          case OpCodes.OP_FAILURE: {
+            const oldCur = op
+            const cont = this.getNextFailCont()
+            if (cont !== undefined) {
+              switch (cont.op) {
+                case OpCodes.OP_ON_FAILURE:
+                case OpCodes.OP_ON_SUCCESS_AND_FAILURE: {
+                  if (!(RuntimeFlags.interruptible(this._runtimeFlags) && this.isInterrupted())) {
+                    cur = cont.failK(oldCur.cause)
+                  } else {
+                    cur = core.failCause(Cause.stripFailures(oldCur.cause))
+                  }
+                  break
+                }
+                case OpCodes.OP_REVERT_FLAGS: {
+                  this.patchRuntimeFlags(this._runtimeFlags, cont.patch)
+                  if (RuntimeFlags.interruptible(this._runtimeFlags) && this.isInterrupted()) {
+                    cur = Exit.failCause(Cause.sequential(oldCur.cause, this.getInterruptedCause()))
+                  }
+                  break
+                }
+                default: {
+                  absurd(cont)
+                }
+              }
+            } else {
+              return oldCur
+            }
+            break
+          }
+          case OpCodes.OP_WITH_RUNTIME: {
+            cur = op.withRuntime(
+              this as FiberRuntime<unknown, unknown>,
+              FiberStatus.running(this._runtimeFlags) as FiberStatus.Running
+            )
+            break
+          }
+          case OpCodes.OP_UPDATE_RUNTIME_FLAGS: {
+            if (op.scope !== undefined) {
+              const updateFlags = op.update
+              const oldRuntimeFlags = this._runtimeFlags
+              const newRuntimeFlags = pipe(oldRuntimeFlags, RuntimeFlags.patch(updateFlags))
+              if (newRuntimeFlags === oldRuntimeFlags) {
+                cur = op.scope(oldRuntimeFlags)
+              } else {
+                if (RuntimeFlags.interruptible(newRuntimeFlags) && this.isInterrupted()) {
+                  cur = Exit.failCause(this.getInterruptedCause())
+                } else {
+                  this.patchRuntimeFlags(this._runtimeFlags, updateFlags)
+                  const revertFlags = pipe(newRuntimeFlags, RuntimeFlags.diff(oldRuntimeFlags))
+                  this._stack = new Stack(new core.RevertFlags(revertFlags), this._stack)
+                  cur = op.scope(oldRuntimeFlags)
+                }
+              }
+            } else {
+              this.patchRuntimeFlags(this._runtimeFlags, op.update)
+              cur = core.unit()
+            }
+            break
+          }
+          case OpCodes.OP_ON_SUCCESS:
+          case OpCodes.OP_ON_FAILURE:
+          case OpCodes.OP_ON_SUCCESS_AND_FAILURE: {
+            this._stack = new Stack(op, this._stack)
+            cur = op.first
+            break
+          }
+          case OpCodes.OP_ASYNC: {
+            this._asyncBlockingOn = op.blockingOn
+            this.initiateAsync(this._runtimeFlags, op.register)
+            throw op
+          }
+          case OpCodes.OP_YIELD: {
+            throw op
+          }
+          case OpCodes.OP_WHILE: {
+            const check = op.check
+            const body = op.body
+            if (check()) {
+              cur = body()
+              this._stack = new Stack(op, this._stack)
+            } else {
+              cur = core.unit()
+            }
+            break
+          }
+          case OpCodes.OP_COMMIT: {
+            cur = op.commit
+            break
+          }
+          default: {
+            absurd(op)
+          }
+        }
+      } catch (e) {
+        if (core.isEffect(e)) {
+          if (
+            (e as core.Primitive).op === OpCodes.OP_YIELD ||
+            (e as core.Primitive).op === OpCodes.OP_ASYNC
+          ) {
+            throw e
+          }
+        } else {
+          if (core.isEffectError(e)) {
+            cur = core.failCause(e.cause)
+          } else {
+            cur = core.failCause(Cause.die(e))
+          }
+        }
+      }
+    }
+  }
+
+  run = () => {
+    this.drainQueueOnCurrentThread()
+  }
+}
+
+// circular with Effect
+
+/** @internal */
+export const acquireRelease = <R, E, A, R2, X>(
+  acquire: Effect.Effect<R, E, A>,
+  release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>
+): Effect.Effect<R | R2 | Scope.Scope, E, A> => {
+  const trace = getCallTrace()
+  return pipe(
+    acquire,
+    core.tap((a) => addFinalizer((exit) => release(a, exit))),
+    core.uninterruptible
+  ).traced(trace)
+}
+
+/** @internal */
+export const addFinalizer = <R, X>(
+  finalizer: (exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R, never, X>
+): Effect.Effect<R | Scope.Scope, never, void> => {
+  const trace = getCallTrace()
+  return pipe(
+    core.environment<R | Scope.Scope>(),
+    core.flatMap((environment) =>
+      pipe(
+        scope(),
+        core.flatMap((scope) =>
+          scope.addFinalizer((exit) =>
+            pipe(
+              finalizer(exit),
+              core.provideEnvironment(environment),
+              core.asUnit
+            )
+          )
+        )
+      )
+    )
+  ).traced(trace)
+}
+
+/** @internal */
+export const collect = <A, R, E, B>(f: (a: A) => Effect.Effect<R, Option.Option<E>, B>) => {
+  return (elements: Iterable<A>): Effect.Effect<R, E, Chunk.Chunk<B>> => {
+    const trace = getCallTrace()
+    return pipe(elements, core.forEach((a) => unsome(f(a))), core.map(Chunk.compact)).traced(trace)
+  }
+}
+
+/** @internal */
+export const collectPar = <A, R, E, B>(f: (a: A) => Effect.Effect<R, Option.Option<E>, B>) => {
+  const trace = getCallTrace()
+  return (elements: Iterable<A>): Effect.Effect<R, E, Chunk.Chunk<B>> => {
+    return pipe(elements, forEachPar((a) => unsome(f(a))), core.map(Chunk.compact)).traced(trace)
+  }
+}
+
+/** @internal */
+export const collectAllPar = <R, E, A>(
+  effects: Iterable<Effect.Effect<R, E, A>>
+): Effect.Effect<R, E, Chunk.Chunk<A>> => {
+  const trace = getCallTrace()
+  return pipe(effects, forEachPar(identity)).traced(trace)
+}
+
+/** @internal */
+export const collectAllParDiscard = <R, E, A>(
+  effects: Iterable<Effect.Effect<R, E, A>>
+): Effect.Effect<R, E, void> => {
+  const trace = getCallTrace()
+  return pipe(effects, forEachParDiscard(identity)).traced(trace)
+}
+
+/** @internal */
+export const collectAllSuccessesPar = <R, E, A>(
+  elements: Iterable<Effect.Effect<R, E, A>>
+): Effect.Effect<R, never, Chunk.Chunk<A>> => {
+  const trace = getCallTrace()
+  return pipe(
+    Array.from(elements).map(core.exit),
+    collectAllWithPar((exit) => (Exit.isSuccess(exit) ? Option.some(exit.value) : Option.none))
+  ).traced(trace)
+}
+
+/** @internal */
+export const collectAllWithPar = <A, B>(pf: (a: A) => Option.Option<B>) => {
+  const trace = getCallTrace()
+  return <R, E>(elements: Iterable<Effect.Effect<R, E, A>>): Effect.Effect<R, E, Chunk.Chunk<B>> => {
+    return pipe(collectAllPar(elements), core.map(Chunk.filterMap(pf))).traced(trace)
+  }
+}
+
+/** @internal */
+export const daemonChildren = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
+  const trace = getCallTrace()
+  const forkScope = pipe(core.forkScopeOverride, core.locallyFiberRef(Option.some(FiberScope.globalScope)))
+  return forkScope(self).traced(trace)
+}
+
+/** @internal */
+const _existsParFound = Symbol("@effect/io/Effect/existsPar/found")
+
+/** @internal */
+export const existsPar = <R, E, A>(f: (a: A) => Effect.Effect<R, E, boolean>) => {
+  const trace = getCallTrace()
+  return (elements: Iterable<A>): Effect.Effect<R, E, boolean> => {
+    return pipe(
+      elements,
+      forEachPar((a) => pipe(f(a), core.ifEffect(core.fail(_existsParFound), core.unit()))),
+      core.foldEffect(
+        (e) => e === _existsParFound ? core.succeed(true) : core.fail(e),
+        () => core.succeed(false)
+      )
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+export const filterPar = <A, R, E>(f: (a: A) => Effect.Effect<R, E, boolean>) => {
+  const trace = getCallTrace()
+  return (elements: Iterable<A>): Effect.Effect<R, E, Chunk.Chunk<A>> => {
+    return pipe(
+      elements,
+      forEachPar((a) => pipe(f(a), core.map((b) => (b ? Option.some(a) : Option.none)))),
+      core.map(Chunk.compact)
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+export const filterNotPar = <A, R, E>(f: (a: A) => Effect.Effect<R, E, boolean>) => {
+  const trace = getCallTrace()
+  return (elements: Iterable<A>): Effect.Effect<R, E, Chunk.Chunk<A>> => {
+    return pipe(elements, filterPar((a) => pipe(f(a), core.map((b) => !b)))).traced(trace)
+  }
+}
+
+/** @internal */
+export const forEachExec = <R, E, A, B>(
+  f: (a: A) => Effect.Effect<R, E, B>,
+  strategy: ExecutionStrategy.ExecutionStrategy
+) => {
+  const trace = getCallTrace()
+  return (elements: Iterable<A>): Effect.Effect<R, E, Chunk.Chunk<B>> => {
+    return core.suspendSucceed(() =>
+      pipe(
+        strategy,
+        ExecutionStrategy.match(
+          () => pipe(elements, core.forEach(f)),
+          () => pipe(elements, forEachPar(f), core.withParallelismUnbounded),
+          (parallelism) => pipe(elements, forEachPar(f), core.withParallelism(parallelism))
+        )
+      )
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+export const forEachPar = <A, R, E, B>(
+  f: (a: A) => Effect.Effect<R, E, B>
+) => {
+  const trace = getCallTrace()
+  return (self: Iterable<A>): Effect.Effect<R, E, Chunk.Chunk<B>> =>
+    pipe(
+      core.currentParallelism,
+      core.getWithFiberRef(
+        (o) => o._tag === "None" ? forEachParUnbounded(f)(self) : forEachParN(o.value, f)(self)
+      )
+    ).traced(trace)
+}
+
+/** @internal */
+export const forEachParDiscard = <A, R, E, _>(
+  f: (a: A) => Effect.Effect<R, E, _>
+) => {
+  const trace = getCallTrace()
+  return (self: Iterable<A>): Effect.Effect<R, E, void> =>
+    pipe(
+      core.currentParallelism,
+      core.getWithFiberRef(
+        (o) => o._tag === "None" ? forEachParUnboundedDiscard(f)(self) : forEachParNDiscard(o.value, f)(self)
+      )
+    ).traced(trace)
+}
+
+/** @internal */
+const forEachParUnbounded = <A, R, E, B>(
+  f: (a: A) => Effect.Effect<R, E, B>
+) => {
+  const trace = getCallTrace()
+  return (self: Iterable<A>): Effect.Effect<R, E, Chunk.Chunk<B>> =>
+    core.suspendSucceed(() => {
+      const as = Array.from(self).map((v, i) => [v, i] as const)
+      const array = new Array<B>(as.length)
+      const fn = ([a, i]: readonly [A, number]) => pipe(f(a), core.map((b) => array[i] = b))
+      return pipe(as, forEachParUnboundedDiscard(fn), core.zipRight(core.succeed(Chunk.unsafeFromArray(array))))
+    }).traced(trace)
+}
+
+/** @internal */
+const forEachParUnboundedDiscard = <R, E, A, _>(f: (a: A) => Effect.Effect<R, E, _>) => {
+  const trace = getCallTrace()
+  return (self: Iterable<A>): Effect.Effect<R, E, void> =>
+    core.suspendSucceed(() => {
+      const as = Array.from(self)
+      const size = as.length
+      if (size === 0) {
+        return core.unit()
+      } else if (size === 1) {
+        return core.asUnit(f(as[0]))
+      }
+      return core.uninterruptibleMask((restore) => {
+        const deferred = core.unsafeMakeDeferred<void, void>(FiberId.none)
+        let ref = 0
+        const process = core.transplant((graft) => {
+          return pipe(
+            as,
+            core.forEach((a) =>
+              pipe(
+                graft(pipe(
+                  restore(core.suspendSucceed(() => f(a))),
+                  core.foldCauseEffect(
+                    (cause) => pipe(deferred, core.failDeferred<void>(void 0), core.zipRight(core.failCause(cause))),
+                    () => {
+                      if (ref + 1 === size) {
+                        pipe(deferred, core.unsafeDoneDeferred(core.unit() as Effect.Effect<never, void, void>))
+                      } else {
+                        ref = ref + 1
+                      }
+                      return core.unit()
+                    }
+                  )
+                )),
+                forkDaemon
+              )
+            )
+          )
+        })
+        return pipe(
+          process,
+          core.flatMap((fibers) =>
+            pipe(
+              restore(core.awaitDeferred(deferred)),
+              core.foldCauseEffect(
+                (cause) =>
+                  pipe(
+                    fibers,
+                    forEachParUnbounded(core.interruptFiber),
+                    core.flatMap(
+                      (exits) => {
+                        const exit = core.exitCollectAllPar(exits)
+                        if (exit._tag === "Some" && core.exitIsFailure(exit.value)) {
+                          return core.failCause(Cause.parallel(Cause.stripFailures(cause), exit.value.cause))
+                        } else {
+                          return core.failCause(Cause.stripFailures(cause))
+                        }
+                      }
+                    )
+                  ),
+                () => pipe(fibers, core.forEachDiscard((f) => f.inheritAll()))
+              )
+            )
+          )
+        )
+      })
+    }).traced(trace)
+}
+
+const forEachParN = <A, R, E, B>(
+  n: number,
+  f: (a: A) => Effect.Effect<R, E, B>
+) => {
+  const trace = getCallTrace()
+  return (self: Iterable<A>): Effect.Effect<R, E, Chunk.Chunk<B>> =>
+    core.suspendSucceed(() => {
+      const as = Array.from(self).map((v, i) => [v, i] as const)
+      const array = new Array<B>(as.length)
+      const fn = ([a, i]: readonly [A, number]) => pipe(f(a), core.map((b) => array[i] = b))
+      return pipe(as, forEachParNDiscard(n, fn), core.zipRight(core.succeed(Chunk.unsafeFromArray(array))))
+    }).traced(trace)
+}
+
+/** @internal */
+const forEachParNDiscard = <A, R, E, _>(n: number, f: (a: A) => Effect.Effect<R, E, _>) => {
+  const trace = getCallTrace()
+  return (self: Iterable<A>): Effect.Effect<R, E, void> =>
+    core.suspendSucceed(() => {
+      const iterator = self[Symbol.iterator]()
+
+      const worker: Effect.Effect<R, E, void> = pipe(
+        core.sync(() => iterator.next()),
+        core.flatMap((next) => next.done ? core.unit() : pipe(core.asUnit(f(next.value)), core.flatMap(() => worker)))
+      )
+
+      const effects: Array<Effect.Effect<R, E, void>> = []
+
+      for (let i = 0; i < n; i++) {
+        effects.push(worker)
+      }
+
+      return pipe(effects, forEachParUnboundedDiscard(identity))
+    }).traced(trace)
+}
+
+/** @internal */
+export const forEachParWithIndex = <R, E, A, B>(f: (a: A, i: number) => Effect.Effect<R, E, B>) => {
+  return (elements: Iterable<A>): Effect.Effect<R, E, Chunk.Chunk<B>> => {
+    return core.suspendSucceed(() =>
+      pipe(
+        core.sync<Array<B>>(() => []),
+        core.flatMap((array) =>
+          pipe(
+            Array.from(elements).map((a, i) => [a, i] as [A, number]),
+            forEachParDiscard(
+              ([a, i]) =>
+                pipe(
+                  core.suspendSucceed(() => f(a, i)),
+                  core.flatMap((b) =>
+                    core.sync(() => {
+                      array[i] = b
+                    })
+                  )
+                )
+            ),
+            core.map(() => Chunk.unsafeFromArray(array))
+          )
+        )
+      )
+    )
+  }
+}
+
+/** @internal */
+export const fork = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>> => {
+  const trace = getCallTrace()
+  return core.withFiberRuntime<R, never, Fiber.RuntimeFiber<E, A>>((state, status) =>
+    core.succeed(unsafeFork(self, state, status.runtimeFlags))
+  ).traced(trace)
+}
+
+/** @internal */
+export const forkAllDiscard = <R, E, A>(
+  effects: Iterable<Effect.Effect<R, E, A>>
+): Effect.Effect<R, never, void> => {
+  const trace = getCallTrace()
+  return pipe(effects, core.forEachDiscard(fork)).traced(trace)
+}
+
+/** @internal */
+export const forkDaemon = <R, E, A>(
+  self: Effect.Effect<R, E, A>
+): Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>> => {
+  const trace = getCallTrace()
+  return daemonChildren(fork(self)).traced(trace)
+}
+
+/** @internal */
+export const forkWithErrorHandler = <E, X>(handler: (e: E) => Effect.Effect<never, never, X>) => {
+  const trace = getCallTrace()
+  return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>> => {
+    return pipe(
+      self,
+      core.onError((cause) => {
+        const either = Cause.failureOrCause(cause)
+        switch (either._tag) {
+          case "Left": {
+            return handler(either.left)
+          }
+          case "Right": {
+            return core.failCause(either.right)
+          }
+        }
+      }),
+      fork
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+export const unsafeFork = <R, E, A, E2, B>(
+  effect: Effect.Effect<R, E, A>,
+  parentFiber: FiberRuntime<E2, B>,
+  parentRuntimeFlags: RuntimeFlags.RuntimeFlags
+): FiberRuntime<E, A> => {
+  const childFiber = unsafeForkUnstarted(effect, parentFiber, parentRuntimeFlags)
+  childFiber.start(effect)
+  return childFiber
+}
+
+/** @internal */
+export const unsafeForkUnstarted = <R, E, A, E2, B>(
+  effect: Effect.Effect<R, E, A>,
+  parentFiber: FiberRuntime<E2, B>,
+  parentRuntimeFlags: RuntimeFlags.RuntimeFlags
+): FiberRuntime<E, A> => {
+  const childId = FiberId.unsafeMake()
+  const parentFiberRefs = parentFiber.unsafeGetFiberRefs()
+  const childFiberRefs = pipe(parentFiberRefs, FiberRefs.forkAs(childId))
+  const childFiber = new FiberRuntime<E, A>(childId, childFiberRefs, parentRuntimeFlags)
+  const childEnvironment = pipe(
+    childFiberRefs,
+    FiberRefs.getOrDefault(
+      core.currentEnvironment as unknown as FiberRef.FiberRef<Context.Context<R>>
+    )
+  )
+  const supervisor = childFiber.getSupervisor()
+
+  supervisor.onStart(
+    childEnvironment,
+    effect,
+    Option.some(parentFiber),
+    childFiber
+  )
+
+  childFiber.unsafeAddObserver((exit) => supervisor.onEnd(exit, childFiber))
+
+  const parentScope = pipe(
+    parentFiber.getFiberRef(core.forkScopeOverride),
+    Option.getOrElse(parentFiber.scope())
+  )
+
+  parentScope.add(parentRuntimeFlags, childFiber)
+
+  return childFiber
+}
+
+/** @internal */
+export const mergeAllPar = <Z, A>(zero: Z, f: (z: Z, a: A) => Z) => {
+  const trace = getCallTrace()
+  return <R, E>(elements: Iterable<Effect.Effect<R, E, A>>): Effect.Effect<R, E, Z> => {
+    return pipe(
+      Ref.make(zero),
+      core.flatMap((acc) =>
+        pipe(
+          elements,
+          forEachParDiscard(core.flatMap((a) => pipe(acc, Ref.update((b) => f(b, a))))),
+          core.flatMap(() => Ref.get(acc))
+        )
+      )
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+export function onDone<E, A, R1, X1, R2, X2>(
+  onError: (e: E) => Effect.Effect<R1, never, X1>,
+  onSuccess: (a: A) => Effect.Effect<R2, never, X2>
+) {
+  const trace = getCallTrace()
+  return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1 | R2, never, void> => {
+    return core.uninterruptibleMask((restore) =>
+      pipe(
+        restore(self),
+        core.foldEffect(
+          (e) => restore(onError(e)),
+          (a) => restore(onSuccess(a))
+        ),
+        forkDaemon,
+        core.asUnit
+      )
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+export function onDoneCause<E, A, R1, X1, R2, X2>(
+  onCause: (cause: Cause.Cause<E>) => Effect.Effect<R1, never, X1>,
+  onSuccess: (a: A) => Effect.Effect<R2, never, X2>
+) {
+  const trace = getCallTrace()
+  return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1 | R2, never, void> => {
+    return core.uninterruptibleMask((restore) =>
+      pipe(
+        restore(self),
+        core.foldCauseEffect(
+          (c) => restore(onCause(c)),
+          (a) => restore(onSuccess(a))
+        ),
+        forkDaemon,
+        core.asUnit
+      )
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+export const reduceAllPar = <R, E, A>(
+  zero: Effect.Effect<R, E, A>,
+  f: (acc: A, a: A) => A
+) => {
+  const trace = getCallTrace()
+  return (elements: Iterable<Effect.Effect<R, E, A>>): Effect.Effect<R, E, A> => {
+    return core.suspendSucceed(() =>
+      pipe(
+        [zero, ...Array.from(elements)],
+        mergeAllPar(
+          Option.none as Option.Option<A>,
+          (acc, elem) => {
+            switch (acc._tag) {
+              case "None": {
+                return Option.some(elem)
+              }
+              case "Some": {
+                return Option.some(f(acc.value, elem))
+              }
+            }
+          }
+        ),
+        core.map((option) => {
+          switch (option._tag) {
+            case "None": {
+              throw new Error(
+                "BUG: Effect.reduceAllPar - please report an issue at https://github.com/Effect-TS/io/issues"
+              )
+            }
+            case "Some": {
+              return option.value
+            }
+          }
+        })
+      )
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+export const scope = () => {
+  const trace = getCallTrace()
+  return core.service(scopeTag).traced(trace)
+}
+
+/** @internal */
+export const scopeWith = <R, E, A>(
+  f: (scope: Scope.Scope) => Effect.Effect<R, E, A>
+): Effect.Effect<R | Scope.Scope, E, A> => {
+  const trace = getCallTrace()
+  return core.serviceWithEffect(scopeTag, f).traced(trace)
+}
+
+/** @internal */
+export const parallelFinalizers = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | Scope.Scope, E, A> => {
+  const trace = getCallTrace()
+  return pipe(
+    scope(),
+    core.flatMap((outerScope) =>
+      pipe(
+        scopeMake(ExecutionStrategy.parallel),
+        core.flatMap((innerScope) =>
+          pipe(
+            outerScope.addFinalizer((exit) => innerScope.close(exit)),
+            core.zipRight(pipe(innerScope, scopeExtend(self)))
+          )
+        )
+      )
+    )
+  ).traced(trace)
+}
+
+/** @internal */
+export const unsome = <R, E, A>(
+  self: Effect.Effect<R, Option.Option<E>, A>
+): Effect.Effect<R, E, Option.Option<A>> => {
+  const trace = getCallTrace()
+  return pipe(
+    self,
+    core.foldEffect(
+      (option) => {
+        switch (option._tag) {
+          case "None": {
+            return core.succeed(Option.none)
+          }
+          case "Some": {
+            return core.fail(option.value)
+          }
+        }
+      },
+      (a) => core.succeed(Option.some(a))
+    )
+  ).traced(trace)
+}
+
+// circular with ReleaseMap
+
+/** @internal */
+export const releaseMapReleaseAll = (
+  strategy: ExecutionStrategy.ExecutionStrategy,
+  exit0: Exit.Exit<unknown, unknown>
+) =>
+  (self: core.ReleaseMap) =>
+    core.suspendSucceed(() => {
+      switch (self.state._tag) {
+        case "Exited": {
+          return core.unit()
+        }
+        case "Running": {
+          const finalizersMap = self.state.finalizers
+          const finalizers = Array.from(finalizersMap.keys()).sort((a, b) => b - a).map((key) =>
+            finalizersMap.get(key)!
+          )
+          const update = self.state.update
+          self.state = { _tag: "Exited", nextKey: self.state.nextKey, exit: exit0, update: self.state.update }
+          return ExecutionStrategy.isSequential(strategy) ?
+            pipe(
+              finalizers,
+              core.forEach((fin) => core.exit(update(fin)(exit0))),
+              core.flatMap((results) =>
+                pipe(
+                  core.exitCollectAll(results),
+                  Option.map(core.exitAsUnit),
+                  Option.getOrElse(core.exitUnit()),
+                  core.done
+                )
+              )
+            ) :
+            ExecutionStrategy.isParallel(strategy) ?
+            pipe(
+              finalizers,
+              forEachPar((fin) => core.exit(update(fin)(exit0))),
+              core.flatMap((results) =>
+                pipe(
+                  core.exitCollectAllPar(results),
+                  Option.map(core.exitAsUnit),
+                  Option.getOrElse(core.exitUnit()),
+                  core.done
+                )
+              )
+            ) :
+            pipe(
+              finalizers,
+              forEachPar((fin) => core.exit(update(fin)(exit0))),
+              core.flatMap((results) =>
+                pipe(
+                  core.exitCollectAllPar(results),
+                  Option.map(core.exitAsUnit),
+                  Option.getOrElse(core.exitUnit()),
+                  core.done
+                )
+              ),
+              core.withParallelism(strategy.parallelism)
+            )
+        }
+      }
+    })
+
+// circular with Scope
+
+/** @internal */
+export const scopeTag = Context.Tag<Scope.Scope>()
+
+/** @internal */
+export const scopeMake: (
+  executionStrategy?: ExecutionStrategy.ExecutionStrategy
+) => Effect.Effect<never, never, Scope.Scope.Closeable> = (strategy = ExecutionStrategy.sequential) =>
+  pipe(
+    core.releaseMapMake(),
+    core.map((rm): Scope.Scope.Closeable => ({
+      [core.ScopeTypeId]: core.ScopeTypeId,
+      [core.CloseableScopeTypeId]: core.CloseableScopeTypeId,
+      fork: (strategy) =>
+        core.uninterruptible(
+          pipe(
+            scopeMake(strategy),
+            core.flatMap((scope) =>
+              pipe(
+                rm,
+                core.releaseMapAdd((exit) => scope.close(exit)),
+                core.tap((fin) => scope.addFinalizer(fin)),
+                core.map(() => scope)
+              )
+            )
+          )
+        ),
+      close: (exit) => core.asUnit(releaseMapReleaseAll(strategy, exit)(rm)),
+      addFinalizer: (fin) => core.asUnit(core.releaseMapAdd(fin)(rm))
+    }))
+  )
+
+/** @internal */
+export const scopeExtend = <R, E, A>(effect: Effect.Effect<R, E, A>) =>
+  (self: Scope.Scope): Effect.Effect<Exclude<R, Scope.Scope>, E, A> =>
+    pipe(
+      effect,
+      core.provideSomeEnvironment<Exclude<R, Scope.Scope>, R>(
+        // @ts-expect-error
+        Context.merge(pipe(
+          Context.empty(),
+          Context.add(scopeTag)(self)
+        ))
+      )
+    )
+
+/** @internal */
+export const scopeUse = <R, E, A>(effect: Effect.Effect<R, E, A>) =>
+  (self: Scope.Scope.Closeable): Effect.Effect<Exclude<R, Scope.Scope>, E, A> =>
+    pipe(
+      self,
+      scopeExtend(effect),
+      core.onExit((exit) => self.close(exit))
+    )
+
+// circular with Supervisor
+
+/** @internal */
+export const unsafeMakeSupervisorFiberRef = (
+  initial: Supervisor.Supervisor<any>
+): FiberRef.FiberRef<Supervisor.Supervisor<any>> => {
+  return core.unsafeMakePatchFiberRef(
+    initial,
+    SupervisorPatch.differ,
+    SupervisorPatch.empty
+  )
+}
+
+// circular with FiberRef
+
+/** @internal */
+export const locallyScopedFiberRef = <A>(value: A) => {
+  return (self: FiberRef.FiberRef<A>): Effect.Effect<Scope.Scope, never, void> => {
+    return pipe(
+      acquireRelease(
+        pipe(
+          core.getFiberRef(self),
+          core.flatMap((oldValue) => pipe(self, core.setFiberRef(value), core.as(oldValue)))
+        ),
+        (oldValue) => pipe(self, core.setFiberRef(oldValue))
+      ),
+      core.asUnit
+    )
+  }
+}
+
+/** @internal */
+export const locallyScopedWithFiberRef = <A>(f: (a: A) => A) => {
+  return (self: FiberRef.FiberRef<A>): Effect.Effect<Scope.Scope, never, void> => {
+    return pipe(self, core.getWithFiberRef((a) => pipe(self, locallyScopedFiberRef(f(a)))))
+  }
+}
+
+/** @internal */
+export const makeFiberRef = <A>(
+  initial: A,
+  fork: (a: A) => A = identity,
+  join: (left: A, right: A) => A = (_, a) => a
+): Effect.Effect<Scope.Scope, never, FiberRef.FiberRef<A>> => {
+  return makeWithFiberRef(() => core.unsafeMakeFiberRef(initial, fork, join))
+}
+
+/** @internal */
+export const makeWithFiberRef = <Value>(
+  ref: () => FiberRef.FiberRef<Value>
+): Effect.Effect<Scope.Scope, never, FiberRef.FiberRef<Value>> => {
+  return acquireRelease(
+    pipe(core.sync(ref), core.tap(core.updateFiberRef(identity))),
+    core.deleteFiberRef
+  )
+}
+
+/** @internal */
+export const makeEnvironmentFiberRef = <A>(
+  initial: Context.Context<A>
+): Effect.Effect<Scope.Scope, never, FiberRef.FiberRef<Context.Context<A>>> => {
+  return makeWithFiberRef(() => core.unsafeMakeEnvironmentFiberRef(initial))
+}
+
+/** @internal */
+export const currentSupervisor: FiberRef.FiberRef<Supervisor.Supervisor<any>> = unsafeMakeSupervisorFiberRef(
+  Supervisor.none
+)
+
+// circular with Fiber
+
+/** @internal */
+export const awaitAll = (
+  fibers: Iterable<Fiber.Fiber<any, any>>
+): Effect.Effect<never, never, void> => {
+  const trace = getCallTrace()
+  return pipe(internalFiber._await(collectAll(fibers)), core.asUnit).traced(trace)
+}
+
+/** @internal */
+export function collectAll<E, A>(fibers: Iterable<Fiber.Fiber<E, A>>): Fiber.Fiber<E, Chunk.Chunk<A>> {
+  return {
+    [internalFiber.FiberTypeId]: internalFiber.fiberVariance,
+    id: () => Array.from(fibers).reduce((id, fiber) => pipe(id, FiberId.combine(fiber.id())), FiberId.none),
+    await: () => {
+      const trace = getCallTrace()
+      return pipe(fibers, forEachPar((fiber) => core.flatten(fiber.await())), core.exit).traced(trace)
+    },
+    children: () => {
+      const trace = getCallTrace()
+      return pipe(fibers, forEachPar((fiber) => fiber.children()), core.map(Chunk.flatten)).traced(trace)
+    },
+    inheritAll: () => {
+      const trace = getCallTrace()
+      return pipe(fibers, core.forEachDiscard((fiber) => fiber.inheritAll())).traced(trace)
+    },
+    poll: () => {
+      const trace = getCallTrace()
+      return pipe(
+        fibers,
+        core.forEach((fiber) => fiber.poll()),
+        core.map(
+          Chunk.reduceRight(
+            Option.some<Exit.Exit<E, Chunk.Chunk<A>>>(Exit.succeed(Chunk.empty)),
+            (optionA, optionB) => {
+              switch (optionA._tag) {
+                case "None": {
+                  return Option.none
+                }
+                case "Some": {
+                  switch (optionB._tag) {
+                    case "None": {
+                      return Option.none
+                    }
+                    case "Some": {
+                      return Option.some(
+                        pipe(
+                          optionA.value,
+                          Exit.zipWith(
+                            optionB.value,
+                            (a, chunk) => pipe(chunk, Chunk.prepend(a)),
+                            Cause.parallel
+                          )
+                        )
+                      )
+                    }
+                  }
+                }
+              }
+            }
+          )
+        )
+      ).traced(trace)
+    },
+    interruptWithFork: (fiberId) => {
+      const trace = getCallTrace()
+      return pipe(
+        fibers,
+        core.forEachDiscard((fiber) => fiber.interruptWithFork(fiberId))
+      ).traced(trace)
+    }
+  }
+}
+
+/** @internal */
+export const interruptFork = <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<never, never, void> => {
+  const trace = getCallTrace()
+  return pipe(core.interruptFiber(self), forkDaemon, core.asUnit).traced(trace)
+}
+
+/** @internal */
+export const joinAll = <E, A>(fibers: Iterable<Fiber.Fiber<E, A>>): Effect.Effect<never, E, void> => {
+  const trace = getCallTrace()
+  return pipe(collectAll(fibers), internalFiber.join, core.asUnit).traced(trace)
+}
+
+/** @internal */
+export const scoped = <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<Scope.Scope, never, Fiber.Fiber<E, A>> => {
+  const trace = getCallTrace()
+  return acquireRelease(core.succeed(self), core.interruptFiber).traced(trace)
+}

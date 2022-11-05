@@ -1,6 +1,7 @@
 import type * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal/core"
+import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
 import type * as Queue from "@effect/io/Queue"
 import * as Chunk from "@fp-ts/data/Chunk"
 import { pipe } from "@fp-ts/data/Function"
@@ -342,7 +343,7 @@ export const shutdown = <A>(self: Queue.Queue<A>): Effect.Effect<never, never, v
           pipe(self.shutdownHook, core.succeedDeferred(undefined as void)),
           pipe(
             unsafePollAll(self.takers),
-            core.forEachParDiscard(
+            fiberRuntime.forEachParDiscard(
               core.interruptAsDeferred(state.id())
             ),
             core.zipRight(self.strategy.shutdown)
@@ -436,7 +437,7 @@ class BackPressureStrategy<A> implements Queue.Strategy<A> {
       core.flatMap((fiberId) =>
         pipe(
           core.sync(() => unsafePollAll(this.putters)),
-          core.flatMap(core.forEachParDiscard(([_, deferred, isLastItem]) =>
+          core.flatMap(fiberRuntime.forEachParDiscard(([_, deferred, isLastItem]) =>
             isLastItem ? pipe(deferred, core.interruptAsDeferred(fiberId), core.asUnit) : core.unit()
           ))
         )
