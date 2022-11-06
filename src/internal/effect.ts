@@ -929,7 +929,7 @@ export const fromOption = <A>(option: Option.Option<A>): Effect.Effect<never, Op
  * Inspired by https://github.com/tusharmath/qio/pull/22 (revised)
  * @internal
  */
-export const gen = <Eff extends Effect.Effect<any, any, any>, AEff>(
+export const gen = <Eff extends Effect.Effect.Variance<any, any, any>, AEff>(
   f: () => Generator<Eff, AEff, any>
 ): Effect.Effect<
   [Eff] extends [Effect.Effect<infer R, any, any>] ? R : never,
@@ -946,7 +946,7 @@ export const gen = <Eff extends Effect.Effect<any, any, any>, AEff>(
       (state.done ?
         core.succeed(state.value) :
         pipe(
-          state.value,
+          state.value as unknown as Effect.Effect<any, any, any>,
           core.flatMap((val: any) => run(iterator.next(val)))
         )).traced(trace)
     return run(state)
