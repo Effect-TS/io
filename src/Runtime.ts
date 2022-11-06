@@ -3,8 +3,8 @@
  */
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
+import type * as Fiber from "@effect/io/Fiber"
 import type * as FiberId from "@effect/io/Fiber/Id"
-import type * as FiberRuntime from "@effect/io/internal/fiberRuntime"
 import * as internal from "@effect/io/internal/runtime"
 
 /**
@@ -13,7 +13,7 @@ import * as internal from "@effect/io/internal/runtime"
  */
 export interface AsyncFiber<E, A> {
   readonly _tag: "AsyncFiber"
-  readonly fiber: FiberRuntime.FiberRuntime<E, A>
+  readonly fiber: Fiber.RuntimeFiber<E, A>
 }
 
 /**
@@ -21,7 +21,7 @@ export interface AsyncFiber<E, A> {
  * @category models
  */
 export interface Runtime<R> {
-  unsafeFork: <E, A>(effect: Effect.Effect<R, E, A>) => FiberRuntime.FiberRuntime<E, A>
+  unsafeFork: <E, A>(effect: Effect.Effect<R, E, A>) => Fiber.RuntimeFiber<E, A>
 
   unsafeRunWith: <E, A>(
     effect: Effect.Effect<R, E, A>,
@@ -83,3 +83,9 @@ export const defaultRuntime = internal.defaultRuntime
  * @category constructors
  */
 export const defaultRuntimeFlags = internal.defaultRuntimeFlags
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const make = internal.make
