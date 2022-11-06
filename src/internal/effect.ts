@@ -932,8 +932,8 @@ export const fromOption = <A>(option: Option.Option<A>): Effect.Effect<never, Op
 export const gen = <Eff extends Effect.Effect.Variance<any, any, any>, AEff>(
   f: () => Generator<Eff, AEff, any>
 ): Effect.Effect<
-  [Eff] extends [never] ? never : [Eff] extends [Effect.Effect<infer R, any, any>] ? R : never,
-  [Eff] extends [never] ? never : [Eff] extends [Effect.Effect<any, infer E, any>] ? E : never,
+  [Eff] extends [never] ? never : [Eff] extends [Effect.Effect.Variance<infer R, any, any>] ? R : never,
+  [Eff] extends [never] ? never : [Eff] extends [Effect.Effect.Variance<any, infer E, any>] ? E : never,
   AEff
 > => {
   const trace = getCallTrace()
