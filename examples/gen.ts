@@ -10,6 +10,4 @@ const program = pipe(
   Effect.provideSomeLayer(Logger.console())
 )
 
-Effect.unsafeRunWith(program, (exit) => {
-  console.log(exit)
-})
+Effect.unsafeFork(program)

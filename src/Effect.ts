@@ -2541,6 +2541,12 @@ export const unsafeRunAsync = _runtime.unsafeRunAsync
  * @since 1.0.0
  * @category execution
  */
+export const unsafeFork = _runtime.unsafeFork
+
+/**
+ * @since 1.0.0
+ * @category execution
+ */
 export const unsafeRunAsyncWith = _runtime.unsafeRunAsyncWith
 
 /**

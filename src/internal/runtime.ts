@@ -241,6 +241,9 @@ export const unsafeRunPromise = defaultRuntime.unsafeRunPromise
 export const unsafeRunAsync = defaultRuntime.unsafeRunAsync
 
 /** @internal */
+export const unsafeFork = defaultRuntime.unsafeFork
+
+/** @internal */
 export const unsafeRunAsyncWith = defaultRuntime.unsafeRunAsyncWith
 
 /** @internal */
