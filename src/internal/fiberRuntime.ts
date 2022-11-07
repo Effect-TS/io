@@ -18,6 +18,7 @@ import * as internalLogger from "@effect/io/internal/logger"
 import * as OpCodes from "@effect/io/internal/opCodes/effect"
 import { Stack } from "@effect/io/internal/stack"
 import * as SupervisorPatch from "@effect/io/internal/supervisor/patch"
+import type { EnforceNonEmptyRecord, TupleA } from "@effect/io/internal/types"
 import type * as LogLevel from "@effect/io/Logger/Level"
 import * as Ref from "@effect/io/Ref"
 import type * as Scope from "@effect/io/Scope"
@@ -155,7 +156,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     if (this._children === null) {
       this._children = new Set()
     }
-    return this._children!
+    return this._children
   }
 
   /**
@@ -657,7 +658,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
       }
       case FiberMessage.OP_INTERRUPT_SIGNAL: {
         this.processNewInterruptSignal(message.cause)
-        if (this._asyncInterruptor) {
+        if (this._asyncInterruptor !== null) {
           this._asyncInterruptor(Exit.failCause(message.cause))
           this._asyncInterruptor = null
         }
@@ -978,7 +979,10 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
             break
           }
           case OpCodes.OP_UPDATE_RUNTIME_FLAGS: {
-            if (op.scope !== undefined) {
+            if (op.scope === undefined) {
+              this.patchRuntimeFlags(this._runtimeFlags, op.update)
+              cur = core.unit()
+            } else {
               const updateFlags = op.update
               const oldRuntimeFlags = this._runtimeFlags
               const newRuntimeFlags = pipe(oldRuntimeFlags, RuntimeFlags.patch(updateFlags))
@@ -994,9 +998,6 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
                   cur = op.scope(oldRuntimeFlags)
                 }
               }
-            } else {
-              this.patchRuntimeFlags(this._runtimeFlags, op.update)
-              cur = core.unit()
             }
             break
           }
@@ -1583,6 +1584,25 @@ export const reduceAllPar = <R, E, A>(
 }
 
 /** @internal */
+export const parallelFinalizers = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | Scope.Scope, E, A> => {
+  const trace = getCallTrace()
+  return pipe(
+    scope(),
+    core.flatMap((outerScope) =>
+      pipe(
+        scopeMake(ExecutionStrategy.parallel),
+        core.flatMap((innerScope) =>
+          pipe(
+            outerScope.addFinalizer((exit) => innerScope.close(exit)),
+            core.zipRight(pipe(innerScope, scopeExtend(self)))
+          )
+        )
+      )
+    )
+  ).traced(trace)
+}
+
+/** @internal */
 export const scope = () => {
   const trace = getCallTrace()
   return core.service(scopeTag).traced(trace)
@@ -1604,22 +1624,71 @@ export const scopedEffect = <R, E, A>(
 }
 
 /** @internal */
-export const parallelFinalizers = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | Scope.Scope, E, A> => {
+export const some = <R, E, A>(
+  self: Effect.Effect<R, E, Option.Option<A>>
+): Effect.Effect<R, Option.Option<E>, A> => {
   const trace = getCallTrace()
   return pipe(
-    scope(),
-    core.flatMap((outerScope) =>
-      pipe(
-        scopeMake(ExecutionStrategy.parallel),
-        core.flatMap((innerScope) =>
-          pipe(
-            outerScope.addFinalizer((exit) => innerScope.close(exit)),
-            core.zipRight(pipe(innerScope, scopeExtend(self)))
-          )
-        )
-      )
+    self,
+    core.foldEffect(
+      (e) => core.fail(Option.some(e)),
+      (option) => {
+        switch (option._tag) {
+          case "None": {
+            return core.fail(Option.none)
+          }
+          case "Some": {
+            return core.succeed(option.value)
+          }
+        }
+      }
     )
   ).traced(trace)
+}
+
+/** @internal */
+export const someWith = <R, E, A, R1, E1, A1>(
+  f: (effect: Effect.Effect<R, Option.Option<E>, A>) => Effect.Effect<R1, Option.Option<E1>, A1>
+) => {
+  const trace = getCallTrace()
+  return (self: Effect.Effect<R, E, Option.Option<A>>): Effect.Effect<R | R1, E | E1, Option.Option<A1>> => {
+    return core.suspendSucceed(() => unsome(f(some(self)))).traced(trace)
+  }
+}
+
+/** @internal */
+export function structPar<NER extends Record<string, Effect.Effect<any, any, any>>>(
+  r: EnforceNonEmptyRecord<NER> | Record<string, Effect.Effect<any, any, any>>
+): Effect.Effect<
+  [NER[keyof NER]] extends [{ [core.EffectTypeId]: { _R: (_: never) => infer R } }] ? R : never,
+  [NER[keyof NER]] extends [{ [core.EffectTypeId]: { _E: (_: never) => infer E } }] ? E : never,
+  {
+    [K in keyof NER]: [NER[K]] extends [{ [core.EffectTypeId]: { _A: (_: never) => infer A } }] ? A : never
+  }
+> {
+  const trace = getCallTrace()
+  return pipe(
+    Object.entries(r),
+    forEachPar(([_, e]) => pipe(e, core.map((a) => [_, a] as const))),
+    core.map((values) => {
+      const res = {}
+      for (const [k, v] of values) {
+        res[k] = v
+      }
+      return res
+    })
+  ).traced(trace) as any
+}
+
+/** @internal */
+export const tuplePar = <T extends [Effect.Effect<any, any, any>, ...Array<Effect.Effect<any, any, any>>]>(
+  ...t: T
+): Effect.Effect<
+  [T[number]] extends [{ [core.EffectTypeId]: { _R: (_: never) => infer R } }] ? R : never,
+  [T[number]] extends [{ [core.EffectTypeId]: { _E: (_: never) => infer E } }] ? E : never,
+  TupleA<T>
+> => {
+  return pipe(collectAllPar(t), core.map(Chunk.toReadonlyArray)) as any
 }
 
 /** @internal */

@@ -114,6 +114,13 @@ export const update = internal.update
  * @since 1.0.0
  * @category mutations
  */
+export const updateAndGet = internal.updateAndGet
+
+/**
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
 export const updateSome = internal.updateSome
 
 /**

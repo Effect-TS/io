@@ -22,8 +22,9 @@ export const unsafeMake = <A>(value: A): Ref.Ref<A> => {
     modify: (f) => {
       const trace = getCallTrace()
       return core.sync(() => {
-        const [b, a] = f(MutableRef.get(ref))
-        if ((b as unknown) !== (a as unknown)) {
+        const current = MutableRef.get(ref)
+        const [b, a] = f(current)
+        if ((current as unknown) !== (a as unknown)) {
           MutableRef.set(a)(ref)
         }
         return b
@@ -125,6 +126,17 @@ export const update = <A>(f: (a: A) => A) => {
   const trace = getCallTrace()
   return (self: Ref.Ref<A>) => {
     return self.modify((a): [void, A] => [void 0, f(a)]).traced(trace)
+  }
+}
+
+/** @internal */
+export const updateAndGet = <A>(f: (a: A) => A) => {
+  const trace = getCallTrace()
+  return (self: Ref.Ref<A>): Effect.Effect<never, never, A> => {
+    return self.modify((a): [A, A] => {
+      const result = f(a)
+      return [result, result]
+    }).traced(trace)
   }
 }
 

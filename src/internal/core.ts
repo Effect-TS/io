@@ -501,6 +501,7 @@ export const updateRuntimeFlags = (
   const effect = Object.create(proto)
   effect.op = OpCodes.OP_UPDATE_RUNTIME_FLAGS
   effect.update = patch
+  effect.scope = undefined
   effect.trace = trace
   return effect
 }
@@ -1749,7 +1750,7 @@ const exitCollectAllInternal = <E, A>(
 /** @internal */
 export const unsafeMakeDeferred = <E, A>(fiberId: FiberId.FiberId): Deferred.Deferred<E, A> => {
   return {
-    [deferred.DeferredTypeId]: deferred.variance,
+    [deferred.DeferredTypeId]: deferred.deferredVariance,
     state: MutableRef.make(deferred.pending([])),
     blockingOn: fiberId
   }
@@ -1895,9 +1896,9 @@ export const completeWithDeferred = <E, A>(effect: Effect.Effect<never, E, A>) =
         }
         case deferred.OP_STATE_PENDING: {
           pipe(self.state, MutableRef.set(deferred.done(effect)))
-          state.joiners.forEach((f) => {
-            f(effect)
-          })
+          for (let i = 0; i < state.joiners.length; i++) {
+            state.joiners[i](effect)
+          }
           return true
         }
       }

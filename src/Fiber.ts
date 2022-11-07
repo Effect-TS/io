@@ -359,6 +359,14 @@ export const inheritAll = internal.inheritAll
 export const interrupt = core.interruptFiber
 
 /**
+ * Constructrs a `Fiber` that is already interrupted.
+ *
+ * @since 1.0.0
+ * @category constructors
+ */
+export const interrupted = internal.interrupted
+
+/**
  * Interrupts the fiber as if interrupted from the specified fiber. If the
  * fiber has already exited, the returned effect will resume immediately.
  * Otherwise, the effect will resume when the fiber exits.

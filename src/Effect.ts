@@ -7,6 +7,7 @@ import * as circular from "@effect/io/internal/effect/circular"
 import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
 import * as layer from "@effect/io/internal/layer"
 import * as _runtime from "@effect/io/internal/runtime"
+import type { NonEmptyArrayEffect, TupleA } from "@effect/io/internal/types"
 import type { Equal } from "@fp-ts/data/Equal"
 
 /**
@@ -2403,6 +2404,16 @@ export const serviceWith = core.serviceWith
 export const serviceWithEffect = core.serviceWithEffect
 
 /**
+ * Sets the `FiberRef` values for the fiber running this effect to the values
+ * in the specified collection of `FiberRef` values.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const setFiberRefs = effect.setFiberRefs
+
+/**
  * Returns an effect that suspends for the specified duration. This method is
  * asynchronous, and does not actually block the fiber executing the effect.
  *
@@ -2411,6 +2422,75 @@ export const serviceWithEffect = core.serviceWithEffect
  * @category constructors
  */
 export const sleep = effect.sleep
+
+/**
+ * Converts an option on values into an option on errors.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const some = fiberRuntime.some
+
+/**
+ * Extracts the optional value, or returns the given 'orElse'.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const someOrElse = effect.someOrElse
+
+/**
+ * Extracts the optional value, or executes the given 'orElse' effect.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const someOrElseEffect = effect.someOrElseEffect
+
+/**
+ * Extracts the optional value, or fails with the given error 'e'.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const someOrFail = effect.someOrFail
+
+/**
+ * Extracts the optional value, or fails with a `NoSuchElementException`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const someOrFailException = effect.someOrFailException
+
+/**
+ * Perfoms the specified operation while "zoomed in" on the `Some` case of an
+ * `Option`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const someWith = fiberRuntime.someWith
+
+/**
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const struct = effect.struct
+
+/**
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const structPar = fiberRuntime.structPar
 
 /**
  * @macro traced
@@ -2489,6 +2569,28 @@ export const tryCatch = effect.tryCatch
  * @category alternatives
  */
 export const tryOrElse = effect.tryOrElse
+
+/**
+ * Like `forEach` + `identity` with a tuple type.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const tuple = effect.tuple
+
+/**
+ * Like tuple but parallel, same as `forEachPar` + `identity` with a tuple type.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const tuplePar: <T extends NonEmptyArrayEffect>(...t: T) => Effect<
+  [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R : never,
+  [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E : never,
+  TupleA<T>
+> = fiberRuntime.tuplePar
 
 /**
  * @macro traced
