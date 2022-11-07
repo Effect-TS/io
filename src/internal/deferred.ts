@@ -5,10 +5,12 @@ import type * as Effect from "@effect/io/Effect"
 const DeferredSymbolKey = "@effect/io/Deferred"
 
 /** @internal */
-export const DeferredTypeId: Deferred.DeferredTypeId = Symbol.for(DeferredSymbolKey) as Deferred.DeferredTypeId
+export const DeferredTypeId: Deferred.DeferredTypeId = Symbol.for(
+  DeferredSymbolKey
+) as Deferred.DeferredTypeId
 
 /** @internal */
-export const variance = {
+export const deferredVariance = {
   _E: (_: never) => _,
   _A: (_: never) => _
 }

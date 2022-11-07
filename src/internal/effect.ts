@@ -8,7 +8,7 @@ import * as FiberId from "@effect/io/Fiber/Id"
 import * as FiberRefs from "@effect/io/FiberRefs"
 import { RuntimeException } from "@effect/io/internal/cause"
 import * as core from "@effect/io/internal/core"
-import type { MergeRecord } from "@effect/io/internal/types"
+import type { EnforceNonEmptyRecord, MergeRecord, NonEmptyArrayEffect, TupleA } from "@effect/io/internal/types"
 import * as LogLevel from "@effect/io/Logger/Level"
 import * as LogSpan from "@effect/io/Logger/Span"
 import * as Random from "@effect/io/Random"
@@ -1844,7 +1844,96 @@ export const sandbox = <R, E, A>(
 }
 
 /** @internal */
+export const setFiberRefs = (fiberRefs: FiberRefs.FiberRefs): Effect.Effect<never, never, void> => {
+  const trace = getCallTrace()
+  return core.suspendSucceed(() => FiberRefs.setAll(fiberRefs)).traced(trace)
+}
+
+/** @internal */
 export const sleep = Clock.sleep
+
+/** @internal */
+export const someOrElse = <B>(orElse: () => B) => {
+  const trace = getCallTrace()
+  return <R, E, A>(self: Effect.Effect<R, E, Option.Option<A>>): Effect.Effect<R, E, A | B> => {
+    return pipe(
+      self,
+      core.map((option) => {
+        switch (option._tag) {
+          case "None": {
+            return orElse()
+          }
+          case "Some": {
+            return option.value
+          }
+        }
+      })
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+export const someOrElseEffect = <R2, E2, A2>(orElse: () => Effect.Effect<R2, E2, A2>) => {
+  const trace = getCallTrace()
+  return <R, E, A>(self: Effect.Effect<R, E, Option.Option<A>>): Effect.Effect<R | R2, E | E2, A | A2> => {
+    return pipe(
+      self as Effect.Effect<R, E, Option.Option<A | A2>>,
+      core.flatMap((option) => pipe(option, Option.map(core.succeed), Option.getOrElse(orElse())))
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+export const someOrFail = <E2>(orFail: () => E2) => {
+  const trace = getCallTrace()
+  return <R, E, A>(self: Effect.Effect<R, E, Option.Option<A>>): Effect.Effect<R, E | E2, A> => {
+    return pipe(
+      self,
+      core.flatMap((option) => {
+        switch (option._tag) {
+          case "None": {
+            return pipe(core.sync(orFail), core.flatMap(core.fail))
+          }
+          case "Some": {
+            return core.succeed(option.value)
+          }
+        }
+      })
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+export const someOrFailException = <R, E, A>(
+  self: Effect.Effect<R, E, Option.Option<A>>
+): Effect.Effect<R, E | Cause.NoSuchElementException, A> => {
+  const trace = getCallTrace()
+  return pipe(self, someOrFail(() => new Cause.NoSuchElementException())).traced(trace)
+}
+
+/** @internal */
+export function struct<NER extends Record<string, Effect.Effect<any, any, any>>>(
+  r: EnforceNonEmptyRecord<NER> | Record<string, Effect.Effect<any, any, any>>
+): Effect.Effect<
+  [NER[keyof NER]] extends [{ [core.EffectTypeId]: { _R: (_: never) => infer R } }] ? R : never,
+  [NER[keyof NER]] extends [{ [core.EffectTypeId]: { _E: (_: never) => infer E } }] ? E : never,
+  {
+    [K in keyof NER]: [NER[K]] extends [{ [core.EffectTypeId]: { _A: (_: never) => infer A } }] ? A : never
+  }
+> {
+  const trace = getCallTrace()
+  return pipe(
+    Object.entries(r),
+    core.forEach(([_, e]) => pipe(e, core.map((a) => [_, a] as const))),
+    core.map((values) => {
+      const res = {}
+      for (const [k, v] of values) {
+        res[k] = v
+      }
+      return res
+    })
+  ).traced(trace) as any
+}
 
 /** @internal */
 export const tryCatch = <E, A>(
@@ -1886,6 +1975,18 @@ export const tryOrElse = <R2, E2, A2, A, R3, E3, A3>(
       )
     ).traced(trace)
   }
+}
+
+/** @internal */
+export function tuple<T extends NonEmptyArrayEffect>(
+  ...t: T
+): Effect.Effect<
+  [T[number]] extends [{ [core.EffectTypeId]: { _R: (_: never) => infer R } }] ? R : never,
+  [T[number]] extends [{ [core.EffectTypeId]: { _E: (_: never) => infer E } }] ? E : never,
+  TupleA<T>
+> {
+  const trace = getCallTrace()
+  return pipe(collectAll(t), core.map(Chunk.toReadonlyArray)).traced(trace) as any
 }
 
 /** @internal */

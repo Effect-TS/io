@@ -146,6 +146,11 @@ export const inheritAll = <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<never, 
 }
 
 /** @internal */
+export const interrupted = (fiberId: FiberId.FiberId): Fiber.Fiber<never, never> => {
+  return done(Exit.interrupt(fiberId))
+}
+
+/** @internal */
 export const interruptAll = (
   fibers: Iterable<Fiber.Fiber<any, any>>
 ): Effect.Effect<never, never, void> => {
