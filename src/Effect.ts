@@ -7,6 +7,7 @@ import * as circular from "@effect/io/internal/effect/circular"
 import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
 import * as layer from "@effect/io/internal/layer"
 import * as _runtime from "@effect/io/internal/runtime"
+import * as schedule from "@effect/io/internal/schedule"
 import type { NonEmptyArrayEffect, TupleA } from "@effect/io/internal/types"
 import type { Equal } from "@fp-ts/data/Equal"
 
@@ -2286,6 +2287,19 @@ export const reject = effect.reject
 export const rejectEffect = effect.rejectEffect
 
 /**
+ * Returns a new effect that repeats this effect according to the specified
+ * schedule or until the first failure. Scheduled recurrences are in addition
+ * to the first execution, so that `io.repeat(Schedule.once)` yields an effect
+ * that executes `io`, and then if that succeeds, executes `io` an additional
+ * time.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const repeat = schedule.repeat_Effect
+
+/**
  * Returns a new effect that repeats this effect the specified number of times
  * or until the first failure. Repeats are in addition to the first execution,
  * so that `io.repeatN(1)` yields an effect that executes `io`, and then if
@@ -2296,6 +2310,96 @@ export const rejectEffect = effect.rejectEffect
  * @category mutations
  */
 export const repeatN = effect.repeatN
+
+/**
+ * Returns a new effect that repeats this effect according to the specified
+ * schedule or until the first failure, at which point, the failure value and
+ * schedule output are passed to the specified handler.
+ *
+ * Scheduled recurrences are in addition to the first execution, so that
+ * `pipe(effect, Effect.repeat(Schedule.once()))` yields an effect that executes
+ * `effect`, and then if that succeeds, executes `effect` an additional time.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const repeatOrElse = schedule.repeatOrElse_Effect
+
+/**
+ * Returns a new effect that repeats this effect according to the specified
+ * schedule or until the first failure, at which point, the failure value and
+ * schedule output are passed to the specified handler.
+ *
+ * Scheduled recurrences are in addition to the first execution, so that
+ * `pipe(effect, Effect.repeat(Schedule.once()))` yields an effect that executes
+ * `effect`, and then if that succeeds, executes `effect` an additional time.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const repeatOrElseEither = schedule.repeatOrElseEither_Effect
+
+/**
+ * Repeats this effect until its value satisfies the specified predicate or
+ * until the first failure.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const repeatUntil = schedule.repeatUntil_Effect
+
+/**
+ * Repeats this effect until its value satisfies the specified effectful
+ * predicate or until the first failure.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const repeatUntilEffect = schedule.repeatUntilEffect_Effect
+
+/**
+ * Repeats this effect until its value is equal to the specified value or
+ * until the first failure.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const repeatUntilEquals = schedule.repeatUntilEquals_Effect
+
+/**
+ * Repeats this effect while its value satisfies the specified effectful
+ * predicate or until the first failure.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const repeatWhile = schedule.repeatWhile_Effect
+
+/**
+ * Repeats this effect while its value satisfies the specified effectful
+ * predicate or until the first failure.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const repeatWhileEffect = schedule.repeatWhileEffect_Effect
+
+/**
+ * Repeats this effect for as long as its value is equal to the specified
+ * value or until the first failure.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const repeatWhileEquals = schedule.repeatWhileEquals_Effect
 
 /**
  * Replicates the given effect `n` times.

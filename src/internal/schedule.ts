@@ -1,7 +1,7 @@
 import * as Cause from "@effect/io/Cause"
 import * as Clock from "@effect/io/Clock"
 import { getCallTrace } from "@effect/io/Debug"
-import * as Effect from "@effect/io/Effect"
+import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal/core"
 import * as effect from "@effect/io/internal/effect"
 import * as Random from "@effect/io/Random"
@@ -279,7 +279,7 @@ export const bothInOut = <Env2, In2, Out2>(that: Schedule.Schedule<Env2, In2, Ou
 /** @internal */
 export const check = <In, Out>(test: (input: In, output: Out) => boolean) => {
   return <Env>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env, In, Out> => {
-    return pipe(self, checkEffect((input, out) => Effect.sync(() => test(input, out))))
+    return pipe(self, checkEffect((input, out) => core.sync(() => test(input, out))))
   }
 }
 
@@ -294,7 +294,7 @@ export const checkEffect = <In, Out, Env2>(
         self.step(now, input, state),
         core.flatMap(([state, out, decision]) => {
           if (ScheduleDecision.isDone(decision)) {
-            return Effect.succeed([state, out, ScheduleDecision.done] as const)
+            return core.succeed([state, out, ScheduleDecision.done] as const)
           }
           return pipe(
             test(input, out),
@@ -447,7 +447,7 @@ export const dayOfMonth = (day: number): Schedule.Schedule<never, unknown, numbe
     (now, _, state) => {
       const trace = getCallTrace()
       if (!Number.isInteger(day) || day < 1 || 31 < day) {
-        return Effect.dieSync(() =>
+        return core.dieSync(() =>
           new Cause.IllegalArgumentException(
             `Invalid argument in: dayOfMonth(${day}). Must be in range 1...31`
           )
@@ -477,7 +477,7 @@ export const dayOfWeek = (day: number): Schedule.Schedule<never, unknown, number
     (now, _, state) => {
       const trace = getCallTrace()
       if (!Number.isInteger(day) || day < 1 || 7 < day) {
-        return Effect.dieSync(() =>
+        return core.dieSync(() =>
           new Cause.IllegalArgumentException(
             `Invalid argument in: dayOfWeek(${day}). Must be in range 1 (Monday)...7 (Sunday)`
           )
@@ -811,7 +811,7 @@ export const hourOfDay = (hour: number): Schedule.Schedule<never, unknown, numbe
     (now, _, state) => {
       const trace = getCallTrace()
       if (!Number.isInteger(hour) || hour < 0 || 23 < hour) {
-        return Effect.dieSync(() =>
+        return core.dieSync(() =>
           new Cause.IllegalArgumentException(
             `Invalid argument in: hourOfDay(${hour}). Must be in range 0...23`
           )
@@ -1061,7 +1061,7 @@ export const minuteOfHour = (minute: number): Schedule.Schedule<never, unknown, 
     (now, _, state) => {
       const trace = getCallTrace()
       if (!Number.isInteger(minute) || minute < 0 || 59 < minute) {
-        return Effect.dieSync(() =>
+        return core.dieSync(() =>
           new Cause.IllegalArgumentException(
             `Invalid argument in: minuteOfHour(${minute}). Must be in range 0...59`
           )
@@ -1407,7 +1407,7 @@ const runLoop = <Env, In, Out>(
   acc: List.List<Out>
 ): Effect.Effect<Env, never, List.List<Out>> => {
   if (List.isNil(inputs)) {
-    return Effect.succeed(acc)
+    return core.succeed(acc)
   }
   const input = inputs.head
   const nextInputs = inputs.tail
@@ -1435,7 +1435,7 @@ export const secondOfMinute = (second: number): Schedule.Schedule<never, unknown
     (now, _, state) => {
       const trace = getCallTrace()
       if (!Number.isInteger(second) || second < 0 || 59 < second) {
-        return Effect.dieSync(() =>
+        return core.dieSync(() =>
           new Cause.IllegalArgumentException(
             `Invalid argument in: secondOfMinute(${second}). Must be in range 0...59`
           )
@@ -1904,4 +1904,134 @@ export const findNextMonth = (now: number, day: number, months: number): number 
     return tmp3.setMonth(tmp3.getMonth() + months)
   }
   return findNextMonth(now, day, months + 1)
+}
+
+// circular with Effect
+
+/** @internal */
+export const repeat_Effect = <R1, A, B>(schedule: Schedule.Schedule<R1, A, B>) => {
+  const trace = getCallTrace()
+  return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1, E, B> => {
+    return pipe(self, repeatOrElse_Effect(schedule, (e, _) => core.fail(e))).traced(trace)
+  }
+}
+
+/** @internal */
+export const repeatOrElse_Effect = <R2, A, B, E, R3, E2>(
+  schedule: Schedule.Schedule<R2, A, B>,
+  orElse: (error: E, option: Option.Option<B>) => Effect.Effect<R3, E2, B>
+) => {
+  const trace = getCallTrace()
+  return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2 | R3, E2, B> => {
+    return pipe(
+      self,
+      repeatOrElseEither_Effect(schedule, orElse),
+      core.map(Either.toUnion)
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+export const repeatOrElseEither_Effect = <R2, A, B, E, R3, E2, C>(
+  schedule: Schedule.Schedule<R2, A, B>,
+  orElse: (error: E, option: Option.Option<B>) => Effect.Effect<R3, E2, C>
+): <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2 | R3, E2, Either.Either<C, B>> => {
+  const trace = getCallTrace()
+  return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2 | R3, E2, Either.Either<C, B>> => {
+    return pipe(
+      driver(schedule),
+      core.flatMap((driver) =>
+        pipe(
+          self,
+          core.foldEffect(
+            (error) => pipe(orElse(error, Option.none), core.map(Either.left)),
+            (value) => repeatOrElseEitherEffectLoop(self, driver, orElse, value)
+          )
+        )
+      )
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+const repeatOrElseEitherEffectLoop = <R, E, A, R1, B, R2, E2, C>(
+  self: Effect.Effect<R, E, A>,
+  driver: Schedule.ScheduleDriver<R1, A, B>,
+  orElse: (error: E, option: Option.Option<B>) => Effect.Effect<R2, E2, C>,
+  value: A
+): Effect.Effect<R | R1 | R2, E2, Either.Either<C, B>> => {
+  return pipe(
+    driver.next(value),
+    core.foldEffect(
+      () => pipe(effect.orDie(driver.last()), core.map(Either.right)),
+      (b) =>
+        pipe(
+          self,
+          core.foldEffect(
+            (error) => pipe(orElse(error, Option.some(b)), core.map(Either.left)),
+            (value) => repeatOrElseEitherEffectLoop(self, driver, orElse, value)
+          )
+        )
+    )
+  )
+}
+
+/** @internal */
+export const repeatUntil_Effect = <A>(f: Predicate<A>) => {
+  const trace = getCallTrace()
+  return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
+    return pipe(self, repeatUntilEffect_Effect((a) => core.sync(() => f(a)))).traced(trace)
+  }
+}
+
+/** @internal */
+export const repeatUntilEffect_Effect = <A, R2>(f: (a: A) => Effect.Effect<R2, never, boolean>) => {
+  const trace = getCallTrace()
+  return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E, A> => {
+    return pipe(
+      self,
+      core.flatMap((a) =>
+        pipe(
+          f(a),
+          core.flatMap((result) =>
+            result ?
+              core.succeed(a) :
+              pipe(core.yieldNow(), core.zipRight(pipe(self, repeatUntilEffect_Effect(f))))
+          )
+        )
+      )
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+export const repeatUntilEquals_Effect = <A>(value: A) => {
+  const trace = getCallTrace()
+  return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
+    return pipe(self, repeatUntil_Effect((a) => Equal.equals(a, value))).traced(trace)
+  }
+}
+
+/** @internal */
+export const repeatWhile_Effect = <A>(f: Predicate<A>) => {
+  const trace = getCallTrace()
+  return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
+    return pipe(self, repeatWhileEffect_Effect((a) => core.sync(() => f(a)))).traced(trace)
+  }
+}
+
+/** @internal */
+export const repeatWhileEffect_Effect = <R1, A>(f: (a: A) => Effect.Effect<R1, never, boolean>) => {
+  const trace = getCallTrace()
+  return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1, E, A> => {
+    return pipe(self, repeatUntilEffect_Effect((a) => effect.negate(f(a)))).traced(trace)
+  }
+}
+
+/** @internal */
+export const repeatWhileEquals_Effect = <A>(value: A) => {
+  const trace = getCallTrace()
+  return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
+    return pipe(self, repeatWhile_Effect((a) => Equal.equals(a, value))).traced(trace)
+  }
 }
