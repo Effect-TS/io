@@ -1,6 +1,6 @@
 import * as Effect from "@effect/io/Effect"
 import * as Ref from "@effect/io/Ref"
-import * as it from "@effect/io/test/extend"
+import * as it from "@effect/io/test/utils/extend"
 import { pipe } from "@fp-ts/data/Function"
 import * as Option from "@fp-ts/data/Option"
 import { assert } from "vitest"

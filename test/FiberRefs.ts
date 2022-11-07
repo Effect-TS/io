@@ -3,7 +3,7 @@ import * as Fiber from "@effect/io/Fiber"
 import * as FiberRef from "@effect/io/FiberRef"
 import type * as FiberRefs from "@effect/io/FiberRefs"
 import * as Queue from "@effect/io/Queue"
-import * as it from "@effect/io/test/extend"
+import * as it from "@effect/io/test/utils/extend"
 import { pipe } from "@fp-ts/data/Function"
 
 describe.concurrent("FiberRefs", () => {

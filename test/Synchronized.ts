@@ -1,9 +1,7 @@
-// import * as Deferred from "@effect/io/Deferred"
 import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
-// import * as Fiber from "@effect/io/Fiber"
 import * as Synchronized from "@effect/io/Ref/Synchronized"
-import * as it from "@effect/io/test/extend"
+import * as it from "@effect/io/test/utils/extend"
 import { pipe } from "@fp-ts/data/Function"
 import * as Option from "@fp-ts/data/Option"
 

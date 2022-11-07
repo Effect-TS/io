@@ -2,7 +2,7 @@ import * as Deferred from "@effect/io/Deferred"
 import * as Effect from "@effect/io/Effect"
 import * as Ref from "@effect/io/Ref"
 import type * as Scope from "@effect/io/Scope"
-import * as it from "@effect/io/test/extend"
+import * as it from "@effect/io/test/utils/extend"
 import { pipe } from "@fp-ts/data/Function"
 
 type Action = Acquire | Use | Release
