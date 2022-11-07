@@ -5,6 +5,7 @@ import * as Exit from "@effect/io/Exit"
 import * as Fiber from "@effect/io/Fiber"
 import * as FiberId from "@effect/io/Fiber/Id"
 import * as FiberRef from "@effect/io/FiberRef"
+// import * as Queue from "@effect/io/Queue"
 import * as it from "@effect/io/test/extend"
 import { withLatch } from "@effect/io/test/util"
 import { constVoid, pipe } from "@fp-ts/data/Function"
@@ -150,55 +151,59 @@ describe.concurrent("Fiber", () => {
     }))
 
   // it.effect("if one composed fiber fails then all must fail - shard example", () =>
-  //   function shard<R, E, A>(
-  //     queue: Queue<A>,
-  //     n: number,
-  //     worker: (a: A) => Effect<R, E, void>
-  //   ): Effect<R, E, void> {
-  //     const worker1 = queue.take.flatMap((a) => worker(a).uninterruptible).forever
-  //     return Effect.forkAll(Chunk.fill(n, () => worker1))
-  //       .flatMap((fiber) => fiber.join)
-  //       .zipRight(Effect.never)
-  //   }
-
-  //   const program = Effect.Do()
-  //     .bind("queue", () => Queue.unbounded<number>())
-  //     .tap(({ queue }) => queue.offerAll(Chunk.range(1, 100)))
-  //     .bindValue(
-  //       "worker",
-  //       ({ queue }) => (n: number) => n === 100 ? Effect.fail("fail") : queue.offer(n).unit
-  //     )
-  //     .bind("exit", ({ queue, worker }) => shard(queue, 4, worker).exit)
-  //     .tap(({ queue }) => queue.shutdown)
-  //     .map(({ exit }) => exit)
-
-  //   const result = await program.unsafeRunPromise()
-
-  //   assert.isTrue(result.isFailure())
-  // )
+  //   Effect.gen(function*() {
+  //     const shard = <R, E, A>(
+  //       queue: Queue.Queue<A>,
+  //       n: number,
+  //       worker: (a: A) => Effect.Effect<R, E, void>
+  //     ): Effect.Effect<R, E, void> => {
+  //       const worker1 = pipe(
+  //         Queue.take(queue),
+  //         Effect.flatMap((a) => Effect.uninterruptible(worker(a))),
+  //         Effect.forever
+  //       )
+  //       return pipe(
+  //         Effect.forkAll(Array.from({ length: n }, () => worker1)),
+  //         Effect.flatMap(Fiber.join),
+  //         Effect.zipRight(Effect.never())
+  //       )
+  //     }
+  //     const queue = yield* Queue.unbounded<number>()
+  //     yield* pipe(queue, Queue.offerAll([...Array(100).slice(1).keys()]))
+  //     const worker = (n: number): Effect.Effect<never, string, void> => {
+  //       return n === 100 ?
+  //         Effect.fail("fail") :
+  //         pipe(queue, Queue.offer(n), Effect.asUnit)
+  //     }
+  //     const result = yield* pipe(shard(queue, 4, worker), Effect.exit)
+  //     yield* Queue.shutdown(queue)
+  //     assert.isTrue(Exit.isFailure(result)
+  //   }))
 
   // it.effect("grandparent interruption is propagated to grandchild despite parent termination", () =>
-  //   const program = Effect.Do()
-  //     .bind("latch1", () => Deferred.make<never, void>())
-  //     .bind("latch2", () => Deferred.make<never, void>())
-  //     .bindValue(
-  //       "c",
-  //       ({ latch2 }) => Effect.never.interruptible.onInterrupt(() => latch2.succeed(undefined))
+  //   Effect.gen(function*() {
+  //     const latch1 = yield* Deferred.make<never, void>()
+  //     const latch2 = yield* Deferred.make<never, void>()
+  //     const c = pipe(
+  //       Effect.never(),
+  //       Effect.interruptible,
+  //       Effect.onInterrupt(() => pipe(latch2, Deferred.succeed<void>(void 0)))
   //     )
-  //     .bindValue("a", ({ c, latch1 }) =>
-  //       latch1
-  //         .succeed(undefined)
-  //         .zipRight(c.fork.fork)
-  //         .uninterruptible
-  //         .zipRight(Effect.never))
-  //     .bind("fiber", ({ a }) => a.fork)
-  //     .tap(({ latch1 }) => latch1.await)
-  //     .tap(({ fiber }) => fiber.interrupt)
-  //     .tap(({ latch2 }) => latch2.await)
-  //     .exit
-
-  //   const result = await program.unsafeRunPromise()
-
-  //   assert.isTrue(result.isSuccess())
-  // )
+  //     const a = pipe(
+  //       latch1,
+  //       Deferred.succeed<void>(void 0),
+  //       Effect.zipRight(Effect.fork(Effect.fork(c))),
+  //       Effect.uninterruptible,
+  //       Effect.zipRight(Effect.never())
+  //     )
+  //     const result = yield* pipe(
+  //       Effect.fork(a),
+  //       Effect.tap(() => Deferred.await(latch1)),
+  //       Effect.tap((fiber) => Fiber.interrupt(fiber)),
+  //       Effect.tap(() => Deferred.await(latch2)),
+  //       Effect.exit
+  //     )
+  //     console.log(result)
+  //     assert.isTrue(result.isSuccess())
+  //   }))
 })

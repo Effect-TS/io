@@ -155,7 +155,7 @@ export const modify = core.modifyFiberRef
  * @since 1.0.0
  * @category mutations
  */
-export const modifySomeFiberRef = core.modifySomeFiberRef
+export const modifySome = core.modifySomeFiberRef
 
 /**
  * @since 1.0.0

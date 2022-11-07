@@ -1,5 +1,6 @@
 import * as Cause from "@effect/io/Cause"
 import { getCallTrace } from "@effect/io/Debug"
+import * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
 import * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
 import * as Exit from "@effect/io/Exit"
@@ -1540,6 +1541,125 @@ export function onDoneCause<E, A, R1, X1, R2, X2>(
         core.asUnit
       )
     ).traced(trace)
+  }
+}
+
+/** @internal */
+export const raceAll = <R1, E1, A1>(effects: Iterable<Effect.Effect<R1, E1, A1>>) => {
+  const trace = getCallTrace()
+  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1, E | E1, A | A1> => {
+    const inheritAll = (res: readonly [A | A1, Fiber.Fiber<E | E1, A | A1>]) =>
+      pipe(
+        internalFiber.inheritAll(res[1]),
+        core.as(res[0])
+      )
+    return pipe(
+      core.sync(() => Chunk.fromIterable(effects)),
+      core.flatMap((effects) =>
+        pipe(
+          core.makeDeferred<E | E1, readonly [A | A1, Fiber.Fiber<E | E1, A | A1>]>(),
+          core.flatMap((done) =>
+            pipe(
+              Ref.make(effects.length),
+              core.flatMap((fails) =>
+                core.uninterruptibleMask<R | R1, E | E1, A | A1>((restore) =>
+                  pipe(
+                    fork(core.interruptible(self)),
+                    core.flatMap((head) =>
+                      pipe(
+                        effects,
+                        core.forEach((effect) => fork(core.interruptible(effect))),
+                        core.map((tail) =>
+                          pipe(tail, Chunk.prepend(head)) as Chunk.Chunk<Fiber.RuntimeFiber<E | E1, A | A1>>
+                        ),
+                        core.tap((fibers) =>
+                          pipe(
+                            fibers,
+                            Chunk.reduce(core.unit(), (effect, fiber) =>
+                              pipe(
+                                effect,
+                                core.zipRight(
+                                  pipe(
+                                    internalFiber._await(fiber),
+                                    core.flatMap(raceAllArbiter(fibers, fiber, done, fails)),
+                                    fork,
+                                    core.asUnit
+                                  )
+                                )
+                              ))
+                          )
+                        ),
+                        core.flatMap((fibers) =>
+                          pipe(
+                            restore(pipe(Deferred.await(done), core.flatMap(inheritAll))),
+                            core.onInterrupt(() =>
+                              pipe(
+                                fibers,
+                                Chunk.reduce(
+                                  core.unit(),
+                                  (effect, fiber) => pipe(effect, core.zipLeft(core.interruptFiber(fiber)))
+                                )
+                              )
+                            )
+                          )
+                        )
+                      )
+                    )
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    ).traced(trace)
+  }
+}
+
+const raceAllArbiter = <E, E1, A, A1>(
+  fibers: Chunk.Chunk<Fiber.Fiber<E | E1, A | A1>>,
+  winner: Fiber.Fiber<E | E1, A | A1>,
+  deferred: Deferred.Deferred<E | E1, readonly [A | A1, Fiber.Fiber<E | E1, A | A1>]>,
+  fails: Ref.Ref<number>
+) => {
+  return (exit: Exit.Exit<E | E1, A | A1>): Effect.Effect<never, never, void> => {
+    return pipe(
+      exit,
+      core.exitMatchEffect(
+        (cause) =>
+          pipe(
+            fails,
+            Ref.modify((fails) =>
+              [
+                fails === 0 ?
+                  pipe(deferred, core.failCauseDeferred<E | E1>(cause), core.asUnit) :
+                  core.unit(),
+                fails - 1
+              ] as const
+            ),
+            core.flatten
+          ),
+        (value): Effect.Effect<never, never, void> =>
+          pipe(
+            deferred,
+            core.succeedDeferred([value, winner] as const),
+            core.flatMap((set) =>
+              set ?
+                pipe(
+                  fibers,
+                  Chunk.reduce(
+                    core.unit(),
+                    (effect, fiber) =>
+                      fiber === winner ?
+                        effect :
+                        pipe(effect, core.zipLeft(core.interruptFiber(fiber)))
+                  )
+                ) :
+                core.unit()
+            )
+          )
+      )
+    )
   }
 }
 

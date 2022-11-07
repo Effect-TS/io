@@ -1772,6 +1772,25 @@ export const refineOrDieWith = <E, E1>(
 }
 
 /** @internal */
+export const repeatN = (n: number) => {
+  const trace = getCallTrace()
+  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
+    return core.suspendSucceed(() => repeatNLoop(self, n)).traced(trace)
+  }
+}
+
+const repeatNLoop = <R, E, A>(self: Effect.Effect<R, E, A>, n: number): Effect.Effect<R, E, A> => {
+  return pipe(
+    self,
+    core.flatMap((a) =>
+      n <= 0 ?
+        core.succeed(a) :
+        pipe(core.yieldNow(), core.zipRight(repeatNLoop(self, n - 1)))
+    )
+  )
+}
+
+/** @internal */
 export const replicate = (n: number) => {
   return <R, E, A>(self: Effect.Effect<R, E, A>): Chunk.Chunk<Effect.Effect<R, E, A>> => {
     return Chunk.unsafeFromArray(Array.from({ length: n - 1 }, () => self))

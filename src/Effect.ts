@@ -2100,6 +2100,17 @@ export const provideSomeLayer = layer.provideSomeLayer
 export const race = circular.race
 
 /**
+ * Returns an effect that races this effect with all the specified effects,
+ * yielding the value of the first effect to succeed with a value. Losers of
+ * the race will be interrupted immediately
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const raceAll = fiberRuntime.raceAll
+
+/**
  * Returns an effect that races this effect with the specified effect,
  * returning the first successful `A` from the faster side. If one effect
  * succeeds, the other will be interrupted. If neither succeeds, then the
@@ -2273,6 +2284,18 @@ export const reject = effect.reject
  * @category mutations
  */
 export const rejectEffect = effect.rejectEffect
+
+/**
+ * Returns a new effect that repeats this effect the specified number of times
+ * or until the first failure. Repeats are in addition to the first execution,
+ * so that `io.repeatN(1)` yields an effect that executes `io`, and then if
+ * that succeeds, executes `io` an additional time.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const repeatN = effect.repeatN
 
 /**
  * Replicates the given effect `n` times.
