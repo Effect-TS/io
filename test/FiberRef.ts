@@ -255,7 +255,7 @@ describe.concurrent("FiberRef", () => {
 
   it.scoped("the value of all fibers in inherited when running many effects with collectAllPar", () =>
     Effect.gen(function*() {
-      const n = 10_000
+      const n = 1_000
       const fiberRef = yield* FiberRef.make(0, constant(0), (a, b) => a + b)
       yield* Effect.collectAllPar(Array.from({ length: n }, () => pipe(fiberRef, FiberRef.update((n) => n + 1))))
       const result = yield* FiberRef.get(fiberRef)

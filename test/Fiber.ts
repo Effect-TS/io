@@ -103,7 +103,7 @@ describe.concurrent("Fiber", () => {
   //         Effect.acquireUseRelease(
   //           pipe(release, Effect.zipRight(Effect.unit())),
   //           () => Effect.never(),
-  //           () => pipe(ref, Ref.set(true))
+  //           (_, __) => pipe(ref, Ref.set(true))
   //         ),
   //         Effect.fork
   //       )
@@ -149,6 +149,7 @@ describe.concurrent("Fiber", () => {
       assert.deepStrictEqual(result, Exit.unit())
     }))
 
+  // TODO(Mike/Max): times out
   // it.effect("if one composed fiber fails then all must fail - shard example", () =>
   //   Effect.gen(function*() {
   //     const shard = <R, E, A>(
@@ -176,9 +177,10 @@ describe.concurrent("Fiber", () => {
   //     }
   //     const result = yield* pipe(shard(queue, 4, worker), Effect.exit)
   //     yield* Queue.shutdown(queue)
-  //     assert.isTrue(Exit.isFailure(result)
+  //     assert.isTrue(Exit.isFailure(result))
   //   }))
 
+  // TODO(Mike/Max): times out
   // it.effect("grandparent interruption is propagated to grandchild despite parent termination", () =>
   //   Effect.gen(function*() {
   //     const latch1 = yield* Deferred.make<never, void>()
@@ -202,7 +204,6 @@ describe.concurrent("Fiber", () => {
   //       Effect.tap(() => Deferred.await(latch2)),
   //       Effect.exit
   //     )
-  //     console.log(result)
-  //     assert.isTrue(result.isSuccess())
+  //     assert.isTrue(Exit.isSuccess(result))
   //   }))
 })
