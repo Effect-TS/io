@@ -544,10 +544,11 @@ export const uninterruptibleMask = <R, E, A>(
   const effect = Object.create(proto)
   effect.op = OpCodes.OP_UPDATE_RUNTIME_FLAGS
   effect.update = RuntimeFlagsPatch.disable(RuntimeFlags.Interruption)
-  effect.scope = (oldFlags: RuntimeFlags.RuntimeFlags) =>
-    RuntimeFlags.interruption(oldFlags)
+  effect.scope = (oldFlags: RuntimeFlags.RuntimeFlags) => {
+    return RuntimeFlags.interruption(oldFlags)
       ? f(interruptible)
       : f(uninterruptible)
+  }
   effect.trace = trace
   return effect
 }
@@ -622,9 +623,13 @@ export const ifEffect = <R1, R2, E1, E2, A, A1>(
 export const intoDeferred = <E, A>(deferred: Deferred.Deferred<E, A>) => {
   const trace = getCallTrace()
   return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, boolean> =>
-    uninterruptibleMask(
-      (restore) => pipe(restore(self), exit, flatMap((exit) => pipe(deferred, doneDeferred(exit))))
-    ).traced(trace)
+    uninterruptibleMask((restore) => {
+      return pipe(
+        restore(self),
+        exit,
+        flatMap((exit) => pipe(deferred, doneDeferred(exit)))
+      )
+    }).traced(trace)
 }
 
 /** @internal */

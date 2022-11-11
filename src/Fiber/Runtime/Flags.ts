@@ -2,8 +2,9 @@
  * @since 1.0.0
  */
 
-import * as Patch from "@effect/io/Fiber/Runtime/Flags/Patch"
+import * as RuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
 import * as internal from "@effect/io/internal/runtimeFlags"
+import * as runtimeFlagsPatch from "@effect/io/internal/runtimeFlagsPatch"
 
 /**
  * Represents a set of `RuntimeFlag`s. `RuntimeFlag`s affect the operation of
@@ -116,6 +117,12 @@ export const WindDown: RuntimeFlag = internal.WindDown
  * @category constructors
  */
 export const CooperativeYielding: RuntimeFlag = internal.CooperativeYielding
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const none = make(None)
 
 /**
  * Enables the specified `RuntimeFlag`.
@@ -273,7 +280,9 @@ export const interruptible = (self: RuntimeFlags): boolean => {
  * @category diffing
  */
 export const diff = (that: RuntimeFlags) => {
-  return (self: RuntimeFlags): Patch.RuntimeFlagsPatch => Patch.make(self ^ that, self)
+  return (self: RuntimeFlags): RuntimeFlagsPatch.RuntimeFlagsPatch => {
+    return RuntimeFlagsPatch.make(self ^ that, that)
+  }
 }
 
 /**
@@ -283,12 +292,13 @@ export const diff = (that: RuntimeFlags) => {
  * @since 1.0.0
  * @category mutations
  */
-export const patch = (patch: Patch.RuntimeFlagsPatch) => {
-  return (self: RuntimeFlags): RuntimeFlags =>
-    (
-      (self & (~internal.active(patch) | internal.enabled(patch))) |
-      (internal.active(patch) & internal.enabled(patch))
+export const patch = (patch: RuntimeFlagsPatch.RuntimeFlagsPatch) => {
+  return (self: RuntimeFlags): RuntimeFlags => {
+    return (
+      (self & (runtimeFlagsPatch.invert(runtimeFlagsPatch.active(patch)) | runtimeFlagsPatch.enabled(patch))) |
+      (runtimeFlagsPatch.active(patch) & runtimeFlagsPatch.enabled(patch))
     ) as RuntimeFlags
+  }
 }
 
 /**

@@ -1,36 +1,33 @@
-import type { RuntimeFlag, RuntimeFlags } from "@effect/io/Fiber/Runtime/Flags"
-import type { RuntimeFlagsPatch } from "@effect/io/Fiber/Runtime/Flags/Patch"
-
-// -----------------------------------------------------------------------------
-// RuntimeFlags
-// -----------------------------------------------------------------------------
+import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
+import type * as RuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
+import * as runtimeFlagsPatch from "@effect/io/internal/runtimeFlagsPatch"
 
 /** @internal */
-export const None: RuntimeFlag = 0 as RuntimeFlag
+export const None: RuntimeFlags.RuntimeFlag = 0 as RuntimeFlags.RuntimeFlag
 
 /** @internal */
-export const Interruption: RuntimeFlag = 1 << 0 as RuntimeFlag
+export const Interruption: RuntimeFlags.RuntimeFlag = 1 << 0 as RuntimeFlags.RuntimeFlag
 
 /** @internal */
-export const CurrentFiber: RuntimeFlag = 1 << 1 as RuntimeFlag
+export const CurrentFiber: RuntimeFlags.RuntimeFlag = 1 << 1 as RuntimeFlags.RuntimeFlag
 
 /** @internal */
-export const OpSupervision: RuntimeFlag = 1 << 2 as RuntimeFlag
+export const OpSupervision: RuntimeFlags.RuntimeFlag = 1 << 2 as RuntimeFlags.RuntimeFlag
 
 /** @internal */
-export const RuntimeMetrics: RuntimeFlag = 1 << 3 as RuntimeFlag
+export const RuntimeMetrics: RuntimeFlags.RuntimeFlag = 1 << 3 as RuntimeFlags.RuntimeFlag
 
 /** @internal */
-export const FiberRoots: RuntimeFlag = 1 << 4 as RuntimeFlag
+export const FiberRoots: RuntimeFlags.RuntimeFlag = 1 << 4 as RuntimeFlags.RuntimeFlag
 
 /** @internal */
-export const WindDown: RuntimeFlag = 1 << 5 as RuntimeFlag
+export const WindDown: RuntimeFlags.RuntimeFlag = 1 << 5 as RuntimeFlags.RuntimeFlag
 
 /** @internal */
-export const CooperativeYielding: RuntimeFlag = 1 << 6 as RuntimeFlag
+export const CooperativeYielding: RuntimeFlags.RuntimeFlag = 1 << 6 as RuntimeFlags.RuntimeFlag
 
 /** @internal */
-export const allFlags: ReadonlyArray<RuntimeFlag> = [
+export const allFlags: ReadonlyArray<RuntimeFlags.RuntimeFlag> = [
   None,
   Interruption,
   CurrentFiber,
@@ -42,77 +39,55 @@ export const allFlags: ReadonlyArray<RuntimeFlag> = [
 ]
 
 /** @internal */
-export const isEnabled = (flag: RuntimeFlag) => {
-  return (self: RuntimeFlags): boolean => (self & flag) !== 0
+export const isEnabled = (flag: RuntimeFlags.RuntimeFlag) => {
+  return (self: RuntimeFlags.RuntimeFlags): boolean => (self & flag) !== 0
 }
 
 /** @internal */
-export const isDisabled = (flag: RuntimeFlag) => {
-  return (self: RuntimeFlags): boolean => !isEnabled(flag)(self)
+export const isDisabled = (flag: RuntimeFlags.RuntimeFlag) => {
+  return (self: RuntimeFlags.RuntimeFlags): boolean => !isEnabled(flag)(self)
 }
 
 /** @internal */
-export const toSet = (self: RuntimeFlags): ReadonlySet<RuntimeFlag> => {
+export const toSet = (self: RuntimeFlags.RuntimeFlags): ReadonlySet<RuntimeFlags.RuntimeFlag> => {
   return new Set(allFlags.filter((flag) => isEnabled(flag)(self)))
 }
 
 /** @internal */
-export const render = (self: RuntimeFlags): string => {
+export const render = (self: RuntimeFlags.RuntimeFlags): string => {
   const active: Array<string> = []
-  Object.entries(allFlags).forEach(([s, f]) => {
-    if (isEnabled(f)(self)) {
-      active.push(s)
+  allFlags.forEach((flag) => {
+    if (isEnabled(flag)(self)) {
+      active.push(`${flag}`)
     }
   })
-  return `(${active.join(",")})`
+  return `RuntimeFlags(${active.join(", ")})`
 }
 
-// -----------------------------------------------------------------------------
-// RuntimeFlagsPatch
-// -----------------------------------------------------------------------------
+// circular with RuntimeFlagsPatch
 
 /** @internal */
-const base = (0xffffffff | 0)
-
-/** @internal */
-export const active = (self: RuntimeFlagsPatch): number => {
-  return (self >> 0) & base
+export const enabledSet = (self: RuntimeFlagsPatch.RuntimeFlagsPatch): ReadonlySet<RuntimeFlags.RuntimeFlag> => {
+  return toSet((runtimeFlagsPatch.active(self) & runtimeFlagsPatch.enabled(self)) as RuntimeFlags.RuntimeFlags)
 }
 
 /** @internal */
-export const enabled = (self: RuntimeFlagsPatch): number => {
-  return (self >> 16) & base
-}
-
-/**
- * Returns a `ReadonlySet<number>` containing the `RuntimeFlags` described as
- * enabled by the specified `RuntimeFlagsPatch`.
- *
- * @category getters
- * @since 1.0.0
- */
-export const enabledSet = (self: RuntimeFlagsPatch): ReadonlySet<RuntimeFlag> => {
-  return toSet((active(self) & enabled(self)) as RuntimeFlags)
-}
-
-/**
- * Returns a `ReadonlySet<number>` containing the `RuntimeFlags` described as
- * disabled by the specified `RuntimeFlagsPatch`.
- *
- * @since 1.0.0
- * @category getters
- */
-export const disabledSet = (self: RuntimeFlagsPatch): ReadonlySet<RuntimeFlag> => {
-  return toSet((active(self) & ~enabled(self)) as RuntimeFlags)
-}
-
-const renderFlag = (a: RuntimeFlag): string => {
-  return allFlags.find((b) => a === b)![0]
+export const disabledSet = (self: RuntimeFlagsPatch.RuntimeFlagsPatch): ReadonlySet<RuntimeFlags.RuntimeFlag> => {
+  return toSet((runtimeFlagsPatch.active(self) & ~runtimeFlagsPatch.enabled(self)) as RuntimeFlags.RuntimeFlags)
 }
 
 /** @internal */
-export const renderPatch = (self: RuntimeFlagsPatch): string => {
-  const enabledS = `(${Array.from(enabledSet(self)).map(renderFlag).join(", ")})`
-  const disabledS = `(${Array.from(disabledSet(self)).map(renderFlag).join(", ")})`
-  return `RuntimeFlags.Patch(enabled = ${enabledS}, disabled = ${disabledS})`
+const renderFlag = (a: RuntimeFlags.RuntimeFlag): string => {
+  return `${allFlags.find((b) => a === b)!}`
+}
+
+/** @internal */
+export const renderPatch = (self: RuntimeFlagsPatch.RuntimeFlagsPatch): string => {
+  const enabled = Array.from(enabledSet(self))
+    .map((flag) => renderFlag(flag))
+    .join(", ")
+  const disabled = Array.from(disabledSet(self))
+    .map((flag) => renderFlag(flag))
+    .join(", ")
+  return `RuntimeFlagsPatch(enabled = (${enabled}), disabled = (${disabled}))`
 }

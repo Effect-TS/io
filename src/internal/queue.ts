@@ -150,15 +150,15 @@ class QueueImpl<A> implements Queue.Queue<A> {
     })
   }
   takeAll(this: QueueImpl<A>): Effect.Effect<never, never, Chunk.Chunk<A>> {
-    return core.suspendSucceed(() =>
-      MutableRef.get(this.shutdownFlag)
+    return core.suspendSucceed(() => {
+      return MutableRef.get(this.shutdownFlag)
         ? core.interrupt()
         : core.sync(() => {
           const values = unsafePollAll(this.queue)
           this.strategy.unsafeOnQueueEmptySpace(this.queue, this.takers)
           return Chunk.fromIterable(values)
         })
-    )
+    })
   }
   takeUpTo(this: QueueImpl<A>, max: number): Effect.Effect<never, never, Chunk.Chunk<A>> {
     return core.suspendSucceed(() =>
@@ -340,7 +340,7 @@ export const shutdown = <A>(self: Queue.Queue<A>): Effect.Effect<never, never, v
       pipe(self.shutdownFlag, MutableRef.set(true))
       return pipe(
         core.whenEffect(
-          pipe(self.shutdownHook, core.succeedDeferred(undefined as void)),
+          pipe(self.shutdownHook, core.succeedDeferred<void>(void 0)),
           pipe(
             unsafePollAll(self.takers),
             fiberRuntime.forEachParDiscard(
@@ -349,7 +349,7 @@ export const shutdown = <A>(self: Queue.Queue<A>): Effect.Effect<never, never, v
             core.zipRight(self.strategy.shutdown)
           )
         ),
-        core.map(() => undefined as void)
+        core.asUnit
       )
     }),
     core.uninterruptible
@@ -425,7 +425,7 @@ export const slidingStrategy = <A>(): Queue.Strategy<A> => {
 class BackPressureStrategy<A> implements Queue.Strategy<A> {
   readonly [QueueStrategyTypeId] = queueStrategyVariance
 
-  readonly putters = MutableQueue.unbounded<readonly [unknown, Deferred.Deferred<never, boolean>, boolean]>()
+  readonly putters = MutableQueue.unbounded<readonly [A, Deferred.Deferred<never, boolean>, boolean]>()
 
   get surplusSize(): number {
     return MutableQueue.length(this.putters)
@@ -472,7 +472,9 @@ class BackPressureStrategy<A> implements Queue.Strategy<A> {
     let keepPolling = true
     while (keepPolling && !MutableQueue.isFull(queue)) {
       const putter = pipe(this.putters, MutableQueue.poll(MutableQueue.EmptyMutableQueue))
-      if (putter !== MutableQueue.EmptyMutableQueue) {
+      if (putter === MutableQueue.EmptyMutableQueue) {
+        keepPolling = false
+      } else {
         const offered = pipe(queue, MutableQueue.offer(putter[0]))
         if (offered && putter[2]) {
           unsafeCompleteDeferred(putter[1], true)
@@ -480,21 +482,22 @@ class BackPressureStrategy<A> implements Queue.Strategy<A> {
           unsafeOfferAll(this.putters, pipe(unsafePollAll(this.putters), List.prepend(putter)))
         }
         unsafeCompleteTakers(this, queue, takers)
-      } else {
-        keepPolling = false
       }
     }
   }
 
   unsafeOffer(iterable: Iterable<A>, deferred: Deferred.Deferred<never, boolean>): void {
     const iterator = iterable[Symbol.iterator]()
-    let next: IteratorResult<unknown>
-    while (!(next = iterator.next()).done) {
-      const value = next.value
-      next = iterator.next()
-      if (next.done) {
-        pipe(this.putters, MutableQueue.offer([value, deferred, true as boolean] as const))
-      } else {
+    let next: IteratorResult<A> = iterator.next()
+    if (!next.done) {
+      // eslint-disable-next-line no-constant-condition
+      while (1) {
+        const value = next.value
+        next = iterator.next()
+        if (next.done) {
+          pipe(this.putters, MutableQueue.offer([value, deferred, true as boolean] as const))
+          break
+        }
         pipe(this.putters, MutableQueue.offer([value, deferred, false as boolean] as const))
       }
     }
