@@ -1,18 +1,22 @@
-import * as Cause from "@effect/io/Cause"
 import * as Deferred from "@effect/io/Deferred"
 import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import * as Fiber from "@effect/io/Fiber"
 import * as FiberId from "@effect/io/Fiber/Id"
+import * as FiberStatus from "@effect/io/Fiber/Status"
 import * as FiberRef from "@effect/io/FiberRef"
+import * as Queue from "@effect/io/Queue"
+import * as Ref from "@effect/io/Ref"
 import * as it from "@effect/io/test/utils/extend"
 import { withLatch } from "@effect/io/test/utils/latch"
-import { constVoid, pipe } from "@fp-ts/data/Function"
-import * as List from "@fp-ts/data/List"
+import * as Chunk from "@fp-ts/data/Chunk"
+import { constVoid, identity, pipe } from "@fp-ts/data/Function"
+import * as HashSet from "@fp-ts/data/HashSet"
 import * as Option from "@fp-ts/data/Option"
 
 const initial = "initial"
 const update = "update"
+const fibers = Array.from({ length: 10_000 }, Fiber.unit)
 
 describe.concurrent("Fiber", () => {
   it.effect("should track blockingOn in await", () =>
@@ -28,6 +32,18 @@ describe.concurrent("Fiber", () => {
         Effect.eventually
       )
       assert.deepStrictEqual(blockingOn, Fiber.id(fiber1))
+    }))
+
+  it.effect("should track blockingOn in race", () =>
+    Effect.gen(function*() {
+      const fiber = yield* pipe(Effect.never(), Effect.race(Effect.never()), Effect.fork)
+      const blockingOn = yield* pipe(
+        Fiber.status(fiber),
+        Effect.continueOrFail(void 0 as void, (status) =>
+          FiberStatus.isSuspended(status) ? Option.some(status.blockingOn) : Option.none),
+        Effect.eventually
+      )
+      assert.strictEqual(HashSet.size(FiberId.toSet(blockingOn)), 2)
     }))
 
   it.scoped("inheritLocals works for Fiber created using map", () =>
@@ -94,116 +110,140 @@ describe.concurrent("Fiber", () => {
       assert.deepStrictEqual(result, Exit.interrupt(fiberId))
     }))
 
-  // TODO(Mike/Max): bug with finalization
-  // it.effect("scoped should create a new Fiber and scope it", () =>
-  //   Effect.gen(function*() {
-  //     const ref = yield* Ref.make(false)
-  //     const fiber = yield* withLatch((release) =>
-  //       pipe(
-  //         Effect.acquireUseRelease(
-  //           pipe(release, Effect.zipRight(Effect.unit())),
-  //           () => Effect.never(),
-  //           (_, __) => pipe(ref, Ref.set(true))
-  //         ),
-  //         Effect.fork
-  //       )
-  //     )
-  //     yield* Effect.scoped(Fiber.scoped(fiber))
-  //     yield* Fiber.await(fiber)
-  //     const result = yield* Ref.get(ref)
-  //     assert.isTrue(result)
-  //   }))
-
-  it.effect("if one composed fiber fails then all must fail - await", () =>
+  it.effect("scoped should create a new Fiber and scope it", () =>
     Effect.gen(function*() {
-      const result = yield* pipe(Fiber.fail("fail"), Fiber.zip(Fiber.never()), Fiber.await)
-      if (Exit.isFailure(result)) {
-        assert.deepStrictEqual(Cause.failures(result.cause), List.of("fail"))
-      } else {
-        assert.fail("The received Exit value was expected to be a Failure")
-      }
-    }))
-
-  it.effect("if one composed fiber fails then all must fail - join", () =>
-    Effect.gen(function*() {
-      const result = yield* pipe(
-        Fiber.fail("fail"),
-        Fiber.zip(Fiber.never()),
-        Fiber.join,
-        Effect.exit
+      const ref = yield* Ref.make(false)
+      const fiber = yield* withLatch((release) =>
+        pipe(
+          Effect.acquireUseRelease(
+            pipe(release, Effect.zipRight(Effect.unit())),
+            () => Effect.never(),
+            (_, __) => pipe(ref, Ref.set(true))
+          ),
+          Effect.fork
+        )
       )
-      if (Exit.isFailure(result)) {
-        assert.deepStrictEqual(Cause.failures(result.cause), List.of("fail"))
-      } else {
-        assert.fail("The received Exit value was expected to be a Failure")
-      }
+      yield* Effect.scoped(Fiber.scoped(fiber))
+      yield* Fiber.await(fiber)
+      const result = yield* Ref.get(ref)
+      assert.isTrue(result)
     }))
 
-  it.effect("if one composed fiber fails then all must fail - awaitAll", () =>
+  it.effect("shard example", () =>
     Effect.gen(function*() {
-      const fibers = [
-        Fiber.fail("fail"),
-        ...Array.from({ length: 100 }, () => Fiber.never())
-      ]
-      const result = yield* pipe(Fiber.awaitAll(fibers), Effect.exit)
-      assert.deepStrictEqual(result, Exit.unit())
+      const shard = <R, E, A>(
+        queue: Queue.Queue<A>,
+        n: number,
+        worker: (a: A) => Effect.Effect<R, E, void>
+      ): Effect.Effect<R, E, never> => {
+        const worker1 = pipe(
+          Queue.take(queue),
+          Effect.flatMap((a) => Effect.uninterruptible(worker(a))),
+          Effect.forever
+        )
+        return pipe(
+          Effect.forkAll(Array.from({ length: n }, () => worker1)),
+          Effect.flatMap(Fiber.join),
+          Effect.zipRight(Effect.never())
+        )
+      }
+      const worker = (n: number) => {
+        if (n === 100) {
+          return pipe(
+            Queue.shutdown(queue),
+            Effect.zipRight(Effect.fail("fail"))
+          )
+        }
+        return pipe(queue, Queue.offer(n), Effect.asUnit)
+      }
+      const queue = yield* Queue.unbounded<number>()
+      yield* pipe(queue, Queue.offerAll(Array.from(Array(100), (_, i) => i + 1)))
+      const result = yield* Effect.exit(shard(queue, 4, worker))
+      yield* Queue.shutdown(queue)
+      assert.isTrue(Exit.isFailure(result))
     }))
 
-  // TODO(Mike/Max): times out
-  // it.effect("if one composed fiber fails then all must fail - shard example", () =>
-  //   Effect.gen(function*() {
-  //     const shard = <R, E, A>(
-  //       queue: Queue.Queue<A>,
-  //       n: number,
-  //       worker: (a: A) => Effect.Effect<R, E, void>
-  //     ): Effect.Effect<R, E, void> => {
-  //       const worker1 = pipe(
-  //         Queue.take(queue),
-  //         Effect.flatMap((a) => Effect.uninterruptible(worker(a))),
-  //         Effect.forever
-  //       )
-  //       return pipe(
-  //         Effect.forkAll(Array.from({ length: n }, () => worker1)),
-  //         Effect.flatMap(Fiber.join),
-  //         Effect.zipRight(Effect.never())
-  //       )
-  //     }
-  //     const queue = yield* Queue.unbounded<number>()
-  //     yield* pipe(queue, Queue.offerAll([...Array(100).slice(1).keys()]))
-  //     const worker = (n: number): Effect.Effect<never, string, void> => {
-  //       return n === 100 ?
-  //         Effect.fail("fail") :
-  //         pipe(queue, Queue.offer(n), Effect.asUnit)
-  //     }
-  //     const result = yield* pipe(shard(queue, 4, worker), Effect.exit)
-  //     yield* Queue.shutdown(queue)
-  //     assert.isTrue(Exit.isFailure(result))
-  //   }))
+  it.effect("child becoming interruptible is interrupted due to auto-supervision of uninterruptible parent", () =>
+    Effect.gen(function*() {
+      const latch = yield* Deferred.make<never, void>()
+      const child = pipe(
+        Effect.interruptible(Effect.never()),
+        Effect.onInterrupt(() => pipe(latch, Deferred.succeed<void>(void 0))),
+        Effect.fork
+      )
+      yield* Effect.uninterruptible(Effect.fork(child))
+      const result = yield* Deferred.await(latch)
+      assert.isUndefined(result)
+    }))
 
-  // TODO(Mike/Max): times out
-  // it.effect("grandparent interruption is propagated to grandchild despite parent termination", () =>
-  //   Effect.gen(function*() {
-  //     const latch1 = yield* Deferred.make<never, void>()
-  //     const latch2 = yield* Deferred.make<never, void>()
-  //     const c = pipe(
-  //       Effect.never(),
-  //       Effect.interruptible,
-  //       Effect.onInterrupt(() => pipe(latch2, Deferred.succeed<void>(void 0)))
-  //     )
-  //     const a = pipe(
-  //       latch1,
-  //       Deferred.succeed<void>(void 0),
-  //       Effect.zipRight(Effect.fork(Effect.fork(c))),
-  //       Effect.uninterruptible,
-  //       Effect.zipRight(Effect.never())
-  //     )
-  //     const result = yield* pipe(
-  //       Effect.fork(a),
-  //       Effect.tap(() => Deferred.await(latch1)),
-  //       Effect.tap((fiber) => Fiber.interrupt(fiber)),
-  //       Effect.tap(() => Deferred.await(latch2)),
-  //       Effect.exit
-  //     )
-  //     assert.isTrue(Exit.isSuccess(result))
-  //   }))
+  it.effect("dual roots", () =>
+    Effect.gen(function*() {
+      const rootContains = (fiber: Fiber.RuntimeFiber<any, any>): Effect.Effect<never, never, boolean> => {
+        return pipe(Fiber.roots(), Effect.map(Chunk.elem(fiber)))
+      }
+      const fiber1 = yield* Effect.forkDaemon(Effect.never())
+      const fiber2 = yield* Effect.forkDaemon(Effect.never())
+      yield* pipe(
+        rootContains(fiber1),
+        Effect.flatMap((a) => a ? rootContains(fiber2) : Effect.succeed(false)),
+        Effect.repeatUntil(identity)
+      )
+      const result = yield* pipe(
+        Fiber.interrupt(fiber1),
+        Effect.zipRight(Fiber.interrupt(fiber2))
+      )
+      assert.isTrue(Exit.isInterrupted(result))
+    }))
+
+  it.effect("interruptAll interrupts fibers in parallel", () =>
+    Effect.gen(function*() {
+      const deferred1 = yield* Deferred.make<never, void>()
+      const deferred2 = yield* Deferred.make<never, void>()
+      const fiber1 = yield* pipe(
+        deferred1,
+        Deferred.succeed<void>(void 0),
+        Effect.zipRight(Effect.never()),
+        Effect.forkDaemon
+      )
+      const fiber2 = yield* pipe(
+        deferred2,
+        Deferred.succeed<void>(void 0),
+        Effect.zipRight(Fiber.await(fiber1)),
+        Effect.uninterruptible,
+        Effect.forkDaemon
+      )
+      yield* Deferred.await(deferred1)
+      yield* Deferred.await(deferred2)
+      yield* Fiber.interruptAll([fiber2, fiber1])
+      const result = yield* Fiber.await(fiber2)
+      assert.isTrue(Exit.isInterrupted(result))
+    }))
+
+  it.effect("await does not return until all fibers have completed execution", () =>
+    Effect.gen(function*() {
+      const ref = yield* Ref.make(0)
+      const fiber = yield* Effect.forkAll(Array.from({ length: 100 }, () => pipe(ref, Ref.set(10))))
+      yield* Fiber.interrupt(fiber)
+      yield* pipe(ref, Ref.set(-1))
+      const result = yield* Ref.get(ref)
+      assert.strictEqual(result, -1)
+    }))
+
+  it.effect("awaitAll - stack safety", () =>
+    Effect.gen(function*() {
+      const result = yield* Fiber.awaitAll(fibers)
+      assert.isUndefined(result)
+    }), 10_000)
+
+  it.effect("joinAll - stack safety", () =>
+    Effect.gen(function*() {
+      const result = yield* Fiber.joinAll(fibers)
+      assert.isUndefined(result)
+    }), 10_000)
+
+  it.effect("collectAll - stack safety", () =>
+    Effect.gen(function*() {
+      const result = yield* pipe(Fiber.join(Fiber.collectAll(fibers)), Effect.asUnit)
+      assert.isUndefined(result)
+    }), 10_000)
 })

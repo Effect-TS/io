@@ -79,3 +79,29 @@ export const suspended = internal.suspended
  * @category refinements
  */
 export const isFiberStatus = internal.isFiberStatus
+
+/**
+ * Returns `true` if the specified `FiberStatus` is `Done`, `false` otherwise.
+ *
+ * @since 1.0.0
+ * @category refinements
+ */
+export const isDone = internal.isDone
+
+/**
+ * Returns `true` if the specified `FiberStatus` is `Running`, `false`
+ * otherwise.
+ *
+ * @since 1.0.0
+ * @category refinements
+ */
+export const isRunning = internal.isRunning
+
+/**
+ * Returns `true` if the specified `FiberStatus` is `Suspended`, `false`
+ * otherwise.
+ *
+ * @since 1.0.0
+ * @category refinements
+ */
+export const isSuspended = internal.isSuspended

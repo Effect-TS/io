@@ -3,7 +3,6 @@
  */
 import * as internal from "@effect/io/internal/fiberId"
 import type { Equal } from "@fp-ts/data/Equal"
-import type { HashSet } from "@fp-ts/data/HashSet"
 
 /**
  * @since 1.0.0
@@ -50,7 +49,8 @@ export interface Runtime extends Equal {
 export interface Composite extends Equal {
   readonly [FiberIdTypeId]: FiberIdTypeId
   readonly _tag: "Composite"
-  readonly fiberIds: HashSet<Runtime>
+  readonly left: FiberId
+  readonly right: FiberId
 }
 
 /**
@@ -152,3 +152,11 @@ export const threadName = internal.threadName
  * @category destructors
  */
 export const toOption = internal.toOption
+
+/**
+ * Convert a `FiberId` into a `HashSet<FiberId>`.
+ *
+ * @since 1.0.0
+ * @category destructors
+ */
+export const toSet = internal.toSet

@@ -8,16 +8,18 @@ export type API = TestAPI<{}>
 
 export const it: API = V.it
 
-export const effect = <E, A>(name: string, self: () => Effect.Effect<never, E, A>) => {
+export const effect = <E, A>(name: string, self: () => Effect.Effect<never, E, A>, timeout = 5_000) => {
   return it(
     name,
-    () => pipe(Effect.suspendSucceed(self), Effect.unsafeRunPromise)
+    () => pipe(Effect.suspendSucceed(self), Effect.unsafeRunPromise),
+    timeout
   )
 }
 
-export const scoped = <E, A>(name: string, self: () => Effect.Effect<Scope.Scope, E, A>) => {
+export const scoped = <E, A>(name: string, self: () => Effect.Effect<Scope.Scope, E, A>, timeout = 5_000) => {
   return it(
     name,
-    () => pipe(Effect.suspendSucceed(self), Effect.scoped, Effect.unsafeRunPromise)
+    () => pipe(Effect.suspendSucceed(self), Effect.scoped, Effect.unsafeRunPromise),
+    timeout
   )
 }

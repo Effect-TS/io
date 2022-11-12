@@ -315,12 +315,12 @@ export const size = <A>(self: Queue.Queue<A>): Effect.Effect<never, never, numbe
 
 /** @internal */
 export const isFull = <A>(self: Queue.Queue<A>): Effect.Effect<never, never, boolean> => {
-  return pipe(size(self), core.map((size) => size === capacity(self)))
+  return pipe(size(self), core.map((size) => size >= capacity(self)))
 }
 
 /** @internal */
 export const isEmpty = <A>(self: Queue.Queue<A>): Effect.Effect<never, never, boolean> => {
-  return pipe(size(self), core.map((size) => size === 0))
+  return pipe(size(self), core.map((size) => size <= 0))
 }
 
 /** @internal */
