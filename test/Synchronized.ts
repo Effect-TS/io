@@ -1,5 +1,7 @@
+import * as Deferred from "@effect/io/Deferred"
 import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
+import * as Fiber from "@effect/io/Fiber"
 import * as Synchronized from "@effect/io/Ref/Synchronized"
 import * as it from "@effect/io/test/utils/extend"
 import { pipe } from "@fp-ts/data/Function"
@@ -122,23 +124,22 @@ describe.concurrent("SynchronizedRef", () => {
       assert.deepStrictEqual(result, Exit.fail(failure))
     }))
 
-  // TODO(Mike/Max): infinitely hangs
-  // it.effect("getAndUpdateSomeEffect - interrupt parent fiber and update", () =>
-  //   Effect.gen(function*() {
-  //     const deferred = yield* Deferred.make<never, Synchronized.Synchronized<State>>()
-  //     const latch = yield* Deferred.make<never, void>()
-  //     const makeAndWait = pipe(
-  //       deferred,
-  //       Deferred.complete(Synchronized.make<State>(Active)),
-  //       Effect.zipRight(Deferred.await(latch))
-  //     )
-  //     const fiber = yield* Effect.fork(makeAndWait)
-  //     const ref = yield* Deferred.await(deferred)
-  //     yield* Fiber.interrupt(fiber)
-  //     const result = yield* pipe(
-  //       ref,
-  //       Synchronized.updateAndGetEffect((_) => Effect.succeed(Closed))
-  //     )
-  //     assert.deepStrictEqual(result, Closed)
-  //   }))
+  it.effect("getAndUpdateSomeEffect - interrupt parent fiber and update", () =>
+    Effect.gen(function*() {
+      const deferred = yield* Deferred.make<never, Synchronized.Synchronized<State>>()
+      const latch = yield* Deferred.make<never, void>()
+      const makeAndWait = pipe(
+        deferred,
+        Deferred.complete(Synchronized.make<State>(Active)),
+        Effect.zipRight(Deferred.await(latch))
+      )
+      const fiber = yield* Effect.fork(makeAndWait)
+      const ref = yield* Deferred.await(deferred)
+      yield* Fiber.interrupt(fiber)
+      const result = yield* pipe(
+        ref,
+        Synchronized.updateAndGetEffect((_) => Effect.succeed(Closed))
+      )
+      assert.deepStrictEqual(result, Closed)
+    }))
 })
