@@ -25,7 +25,6 @@ import type { Refinement } from "@fp-ts/data/Refinement"
 
 // TODO:
 // - [ ] delay family
-// - [ ] repeat family
 // - [ ] retry family
 // - [ ] schedule family
 
