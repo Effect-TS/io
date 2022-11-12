@@ -545,10 +545,10 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
       return false
     }
     let told = false
-    this._children.forEach((next) => {
-      next.tell(FiberMessage.interruptSignal(Cause.interrupt(this.id())))
+    for (const child of this._children) {
+      child.tell(FiberMessage.interruptSignal(Cause.interrupt(this.id())))
       told = true
-    })
+    }
     return told
   }
 

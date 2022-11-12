@@ -4,7 +4,6 @@ import { pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
 import * as MutableRef from "@fp-ts/data/mutable/MutableRef"
 import * as Option from "@fp-ts/data/Option"
-import * as SafeEval from "@fp-ts/data/SafeEval"
 
 const FiberIdSymbolKey = "@effect/io/Fiber/Id"
 
@@ -56,19 +55,24 @@ class Runtime implements FiberId.Runtime {
 class Composite implements FiberId.Composite {
   readonly [FiberIdTypeId]: FiberId.FiberIdTypeId = FiberIdTypeId
   readonly _tag = "Composite"
-  constructor(readonly fiberIds: HashSet.HashSet<FiberId.Runtime>) {}
+  constructor(
+    readonly left: FiberId.FiberId,
+    readonly right: FiberId.FiberId
+  ) {}
   [Equal.symbolHash](): number {
     return pipe(
       Equal.hash(FiberIdSymbolKey),
       Equal.hashCombine(Equal.hash(this._tag)),
-      Equal.hashCombine(Equal.hash(this.fiberIds))
+      Equal.hashCombine(Equal.hash(this.left)),
+      Equal.hashCombine(Equal.hash(this.right))
     )
   }
 
   [Equal.symbolEqual](that: unknown): boolean {
     return isFiberId(that) &&
       that._tag === "Composite" &&
-      Equal.equals(this.fiberIds, that.fiberIds)
+      Equal.equals(this.left, that.left) &&
+      Equal.equals(this.right, that.right)
   }
 }
 
@@ -81,8 +85,8 @@ export const runtime = (id: number, startTimeMillis: number): FiberId.FiberId =>
 }
 
 /** @internal */
-export const composite = (fiberIds: HashSet.HashSet<FiberId.Runtime>): FiberId.FiberId => {
-  return new Composite(fiberIds)
+export const composite = (left: FiberId.FiberId, right: FiberId.FiberId): FiberId.FiberId => {
+  return new Composite(left, right)
 }
 
 /** @internal */
@@ -92,66 +96,19 @@ export const isFiberId = (self: unknown): self is FiberId.FiberId => {
 
 /** @internal */
 export const isNone = (self: FiberId.FiberId): self is FiberId.None => {
-  return SafeEval.execute(isNoneSafe(self))
-}
-
-const isNoneSafe = (self: FiberId.FiberId): SafeEval.SafeEval<boolean> => {
-  switch (self._tag) {
-    case "None": {
-      return SafeEval.succeed(true)
-    }
-    case "Runtime": {
-      return SafeEval.succeed(false)
-    }
-    case "Composite": {
-      let base = SafeEval.succeed(true)
-      for (const fiberId of self.fiberIds) {
-        base = SafeEval.suspend(() =>
-          pipe(
-            isNoneSafe(fiberId),
-            SafeEval.zipWith(base, (a, b) => a && b)
-          )
-        )
-      }
-      return base
-    }
-  }
+  return pipe(toSet(self), HashSet.every((id) => isNone(id)))
 }
 
 /** @internal */
 export const combine = (that: FiberId.FiberId) => {
   return (self: FiberId.FiberId): FiberId.FiberId => {
-    switch (self._tag) {
-      case "None": {
-        return that
-      }
-      case "Runtime": {
-        switch (that._tag) {
-          case "None": {
-            return self
-          }
-          case "Runtime": {
-            return new Composite(HashSet.make(self, that))
-          }
-          case "Composite": {
-            return new Composite(pipe(that.fiberIds, HashSet.add(self)))
-          }
-        }
-      }
-      case "Composite": {
-        switch (that._tag) {
-          case "None": {
-            return self
-          }
-          case "Runtime": {
-            return new Composite(pipe(self.fiberIds, HashSet.add(that)))
-          }
-          case "Composite": {
-            return new Composite(pipe(self.fiberIds, HashSet.union(that.fiberIds)))
-          }
-        }
-      }
+    if (self._tag === "None") {
+      return that
     }
+    if (that._tag === "None") {
+      return self
+    }
+    return new Composite(self, that)
   }
 }
 
@@ -167,26 +124,15 @@ export const getOrElse = (that: FiberId.FiberId) => {
 
 /** @internal */
 export const ids = (self: FiberId.FiberId): HashSet.HashSet<number> => {
-  return SafeEval.execute(idsSafe(self))
-}
-
-const idsSafe = (self: FiberId.FiberId): SafeEval.SafeEval<HashSet.HashSet<number>> => {
   switch (self._tag) {
     case "None": {
-      return SafeEval.succeed(HashSet.empty())
+      return HashSet.empty()
     }
     case "Runtime": {
-      return SafeEval.succeed(HashSet.from([self.id]))
+      return HashSet.make(self.id)
     }
     case "Composite": {
-      let base = SafeEval.succeed(HashSet.empty<number>())
-      for (const fiberId of self.fiberIds) {
-        base = pipe(
-          SafeEval.suspend(() => idsSafe(fiberId)),
-          SafeEval.zipWith(base, (a, b) => pipe(a, HashSet.union(b)))
-        )
-      }
-      return base
+      return pipe(ids(self.left), HashSet.union(ids(self.right)))
     }
   }
 }
@@ -214,39 +160,36 @@ export const threadName = (self: FiberId.FiberId): string => {
 
 /** @internal */
 export const toOption = (self: FiberId.FiberId): Option.Option<FiberId.FiberId> => {
-  return SafeEval.execute(toOptionSafe(self))
+  const fiberIds = toSet(self)
+  if (HashSet.size(fiberIds) === 0) {
+    return Option.none
+  }
+  let first = true
+  let acc: FiberId.FiberId
+  for (const fiberId of fiberIds) {
+    if (first) {
+      acc = fiberId
+      first = false
+    } else {
+      // @ts-expect-error
+      acc = pipe(acc, combine(fiberId))
+    }
+  }
+  // @ts-expect-error
+  return Option.some(acc)
 }
 
-const toOptionSafe = (self: FiberId.FiberId): SafeEval.SafeEval<Option.Option<FiberId.FiberId>> => {
+/** @internal */
+export const toSet = (self: FiberId.FiberId): HashSet.HashSet<FiberId.Runtime> => {
   switch (self._tag) {
     case "None": {
-      return SafeEval.succeed(Option.none)
-    }
-    case "Runtime": {
-      return SafeEval.succeed(Option.some(self))
+      return HashSet.empty()
     }
     case "Composite": {
-      let base = SafeEval.succeed(HashSet.empty<FiberId.FiberId>())
-      for (const fiberId of self.fiberIds) {
-        base = pipe(
-          base,
-          SafeEval.zipWith(
-            SafeEval.suspend(() => toOptionSafe(fiberId)),
-            (fiberIds, optionFiberId) =>
-              optionFiberId._tag === "Some" ?
-                pipe(fiberIds, HashSet.add(optionFiberId.value)) :
-                fiberIds
-          )
-        )
-      }
-      return pipe(
-        base,
-        SafeEval.map((fiberIds) =>
-          HashSet.size(fiberIds) === 0 ?
-            Option.none :
-            Option.some(combineAll(fiberIds))
-        )
-      )
+      return pipe(toSet(self.left), HashSet.union(toSet(self.right)))
+    }
+    case "Runtime": {
+      return HashSet.make(self)
     }
   }
 }

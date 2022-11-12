@@ -93,3 +93,18 @@ export const suspended = (
 export const isFiberStatus = (u: unknown): u is FiberStatus.FiberStatus => {
   return typeof u === "object" && u != null && FiberStatusTypeId in u
 }
+
+/** @internal */
+export const isDone = (self: FiberStatus.FiberStatus): self is FiberStatus.Done => {
+  return self._tag === "Done"
+}
+
+/** @internal */
+export const isRunning = (self: FiberStatus.FiberStatus): self is FiberStatus.Running => {
+  return self._tag === "Running"
+}
+
+/** @internal */
+export const isSuspended = (self: FiberStatus.FiberStatus): self is FiberStatus.Suspended => {
+  return self._tag === "Suspended"
+}

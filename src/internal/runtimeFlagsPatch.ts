@@ -32,7 +32,7 @@ export const enable = (flag: RuntimeFlags.RuntimeFlag): RuntimeFlagsPatch.Runtim
 
 /** @internal */
 export const disable = (flag: RuntimeFlags.RuntimeFlag): RuntimeFlagsPatch.RuntimeFlagsPatch => {
-  return make(flag, flag)
+  return make(flag, 0)
 }
 
 /** @internal */
