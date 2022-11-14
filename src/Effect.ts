@@ -7,7 +7,7 @@ import * as circular from "@effect/io/internal/effect/circular"
 import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
 import * as layer from "@effect/io/internal/layer"
 import * as _runtime from "@effect/io/internal/runtime"
-import * as schedule from "@effect/io/internal/schedule"
+import * as _schedule from "@effect/io/internal/schedule"
 import type { NonEmptyArrayEffect, TupleA } from "@effect/io/internal/types"
 import type { Equal } from "@fp-ts/data/Equal"
 
@@ -2297,7 +2297,7 @@ export const rejectEffect = effect.rejectEffect
  * @since 1.0.0
  * @category mutations
  */
-export const repeat = schedule.repeat_Effect
+export const repeat = _schedule.repeat_Effect
 
 /**
  * Returns a new effect that repeats this effect the specified number of times
@@ -2324,7 +2324,7 @@ export const repeatN = effect.repeatN
  * @since 1.0.0
  * @category mutations
  */
-export const repeatOrElse = schedule.repeatOrElse_Effect
+export const repeatOrElse = _schedule.repeatOrElse_Effect
 
 /**
  * Returns a new effect that repeats this effect according to the specified
@@ -2339,7 +2339,7 @@ export const repeatOrElse = schedule.repeatOrElse_Effect
  * @since 1.0.0
  * @category mutations
  */
-export const repeatOrElseEither = schedule.repeatOrElseEither_Effect
+export const repeatOrElseEither = _schedule.repeatOrElseEither_Effect
 
 /**
  * Repeats this effect until its value satisfies the specified predicate or
@@ -2349,7 +2349,7 @@ export const repeatOrElseEither = schedule.repeatOrElseEither_Effect
  * @since 1.0.0
  * @category mutations
  */
-export const repeatUntil = schedule.repeatUntil_Effect
+export const repeatUntil = _schedule.repeatUntil_Effect
 
 /**
  * Repeats this effect until its value satisfies the specified effectful
@@ -2359,7 +2359,7 @@ export const repeatUntil = schedule.repeatUntil_Effect
  * @since 1.0.0
  * @category mutations
  */
-export const repeatUntilEffect = schedule.repeatUntilEffect_Effect
+export const repeatUntilEffect = _schedule.repeatUntilEffect_Effect
 
 /**
  * Repeats this effect until its value is equal to the specified value or
@@ -2369,7 +2369,7 @@ export const repeatUntilEffect = schedule.repeatUntilEffect_Effect
  * @since 1.0.0
  * @category mutations
  */
-export const repeatUntilEquals = schedule.repeatUntilEquals_Effect
+export const repeatUntilEquals = _schedule.repeatUntilEquals_Effect
 
 /**
  * Repeats this effect while its value satisfies the specified effectful
@@ -2379,7 +2379,7 @@ export const repeatUntilEquals = schedule.repeatUntilEquals_Effect
  * @since 1.0.0
  * @category mutations
  */
-export const repeatWhile = schedule.repeatWhile_Effect
+export const repeatWhile = _schedule.repeatWhile_Effect
 
 /**
  * Repeats this effect while its value satisfies the specified effectful
@@ -2389,7 +2389,7 @@ export const repeatWhile = schedule.repeatWhile_Effect
  * @since 1.0.0
  * @category mutations
  */
-export const repeatWhileEffect = schedule.repeatWhileEffect_Effect
+export const repeatWhileEffect = _schedule.repeatWhileEffect_Effect
 
 /**
  * Repeats this effect for as long as its value is equal to the specified
@@ -2399,7 +2399,7 @@ export const repeatWhileEffect = schedule.repeatWhileEffect_Effect
  * @since 1.0.0
  * @category mutations
  */
-export const repeatWhileEquals = schedule.repeatWhileEquals_Effect
+export const repeatWhileEquals = _schedule.repeatWhileEquals_Effect
 
 /**
  * Replicates the given effect `n` times.
@@ -2476,6 +2476,38 @@ export const runtime = _runtime.runtime
  * @category error handling
  */
 export const sandbox = effect.sandbox
+
+/**
+ * Runs this effect according to the specified schedule.
+ *
+ * See `scheduleFrom` for a variant that allows the schedule's decision to
+ * depend on the result of this effect.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const schedule = _schedule.schedule_Effect
+
+/**
+ * Runs this effect according to the specified schedule in a new fiber
+ * attached to the current scope.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const scheduleForked = circular.scheduleForked
+
+/**
+ * Runs this effect according to the specified schedule starting from the
+ * specified input value.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const scheduleFrom = _schedule.scheduleFrom_Effect
 
 /**
  * @macro traced

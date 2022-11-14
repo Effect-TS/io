@@ -12,9 +12,11 @@ import * as internalFiber from "@effect/io/internal/fiber"
 import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
 import * as OpCodes from "@effect/io/internal/opCodes/effect"
 import * as internalRef from "@effect/io/internal/ref"
+import * as _schedule from "@effect/io/internal/schedule"
 import * as STM from "@effect/io/internal/stm"
 import * as internalTRef from "@effect/io/internal/stm/ref"
 import type * as Synchronized from "@effect/io/Ref/Synchronized"
+import type * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"
 import type * as Semaphore from "@effect/io/Semaphore"
 import * as Supervisor from "@effect/io/Supervisor"
@@ -451,6 +453,16 @@ export const raceWith = <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
           )
       )
     ).traced(trace)
+  }
+}
+
+/** @internal */
+export const scheduleForked = <R2, Out>(schedule: Schedule.Schedule<R2, unknown, Out>) => {
+  const trace = getCallTrace()
+  return <R, E, A>(
+    self: Effect.Effect<R, E, A>
+  ): Effect.Effect<R | R2 | Scope.Scope, E, Fiber.RuntimeFiber<unknown, Out>> => {
+    return pipe(self, _schedule.schedule_Effect(schedule), forkScoped).traced(trace)
   }
 }
 
