@@ -1035,6 +1035,24 @@ export class NoSuchElementException implements Cause.NoSuchElementException {
 export const isNoSuchElementException = (u: unknown): u is Cause.NoSuchElementException => {
   return typeof u === "object" && u != null && NoSuchElementExceptionTypeId in u
 }
+
+/** @internal */
+export const InvalidHubCapacityExceptionTypeId: Cause.InvalidHubCapacityExceptionTypeId = Symbol.for(
+  "@effect/io/Cause/errors/InvalidHubCapacityException"
+) as Cause.InvalidHubCapacityExceptionTypeId
+
+/** @internal */
+export class InvalidHubCapacityException implements Cause.InvalidHubCapacityException {
+  readonly [InvalidHubCapacityExceptionTypeId]: Cause.InvalidHubCapacityExceptionTypeId =
+    InvalidHubCapacityExceptionTypeId
+  constructor(readonly message?: string) {}
+}
+
+/** @internal */
+export const isInvalidCapacityError = (u: unknown): u is Cause.InvalidHubCapacityException => {
+  return typeof u === "object" && u != null && InvalidHubCapacityExceptionTypeId in u
+}
+
 // -----------------------------------------------------------------------------
 // Stack Annotations
 // -----------------------------------------------------------------------------

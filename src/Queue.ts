@@ -65,11 +65,14 @@ export interface Queue<A> extends Enqueue<A>, Dequeue<A> {
  * @since 1.0.0
  * @category models
  */
-export interface Enqueue<A> extends Queue.EnqueueVariance<A> {
+export interface Enqueue<A> extends Queue.EnqueueVariance<A>, BaseQueue {
   /**
    * Places one value in the queue.
+   *
+   * @macro traced
    */
   offer(value: A): Effect.Effect<never, never, boolean>
+
   /**
    * For Bounded Queue: uses the `BackPressure` Strategy, places the values in
    * the queue and always returns true. If the queue has reached capacity, then
@@ -84,6 +87,8 @@ export interface Enqueue<A> extends Queue.EnqueueVariance<A> {
    *
    * For Dropping Queue: uses `Dropping` Strategy, It places the values in the
    * queue but if there is no room it will not enqueue them and return false.
+   *
+   * @macro traced
    */
   offerAll(iterable: Iterable<A>): Effect.Effect<never, never, boolean>
 }
@@ -92,27 +97,99 @@ export interface Enqueue<A> extends Queue.EnqueueVariance<A> {
  * @since 1.0.0
  * @category models
  */
-export interface Dequeue<A> extends Queue.DequeueVariance<A> {
+export interface Dequeue<A> extends Queue.DequeueVariance<A>, BaseQueue {
   /**
    * Takes the oldest value in the queue. If the queue is empty, this will return
    * a computation that resumes when an item has been added to the queue.
+   *
+   * @macro traced
    */
   take(): Effect.Effect<never, never, A>
+
   /**
    * Takes all the values in the queue and returns the values. If the queue is
    * empty returns an empty collection.
+   *
+   * @macro traced
    */
   takeAll(): Effect.Effect<never, never, Chunk.Chunk<A>>
+
   /**
    * Takes up to max number of values from the queue.
+   *
+   * @macro traced
    */
   takeUpTo(max: number): Effect.Effect<never, never, Chunk.Chunk<A>>
+
   /**
    * Takes a number of elements from the queue between the specified minimum and
    * maximum. If there are fewer than the minimum number of elements available,
    * suspends until at least the minimum number of elements have been collected.
+   *
+   * @macro traced
    */
   takeBetween(min: number, max: number): Effect.Effect<never, never, Chunk.Chunk<A>>
+}
+
+/**
+ * The base interface that all `Queue`s must implement.
+ *
+ * @since 1.0.0
+ * @category models
+ */
+export interface BaseQueue {
+  /**
+   *  Returns the number of elements the queue can hold.
+   */
+  capacity(): number
+
+  /**
+   * Retrieves the size of the queue, which is equal to the number of elements
+   * in the queue. This may be negative if fibers are suspended waiting for
+   * elements to be added to the queue.
+   *
+   * @macro traced
+   */
+  size(): Effect.Effect<never, never, number>
+
+  /**
+   * Returns `true` if the `Queue` contains at least one element, `false`
+   * otherwise.
+   *
+   * @macro traced
+   */
+  isFull(): Effect.Effect<never, never, boolean>
+
+  /**
+   * Returns `true` if the `Queue` contains zero elements, `false` otherwise.
+   *
+   * @macro traced
+   */
+  isEmpty(): Effect.Effect<never, never, boolean>
+
+  /**
+   * Interrupts any fibers that are suspended on `offer` or `take`. Future calls
+   * to `offer*` and `take*` will be interrupted immediately.
+   *
+   * @macro traced
+   */
+  shutdown(): Effect.Effect<never, never, void>
+
+  /**
+   * Returns `true` if `shutdown` has been called, otherwise returns `false`.
+   *
+   * @macro traced
+   */
+  isShutdown(): Effect.Effect<never, never, boolean>
+
+  /**
+   * Waits until the queue is shutdown. The `Effect` returned by this method will
+   * not resume until the queue has been shutdown. If the queue is already
+   * shutdown, the `Effect` will resume right away.
+   *
+   * @macro traced
+   */
+  awaitShutdown(): Effect.Effect<never, never, void>
 }
 
 /**
@@ -124,16 +201,22 @@ export interface Strategy<A> extends Queue.StrategyVariance<A> {
    * Returns the number of surplus values that were unable to be added to the
    * `Queue`
    */
-  get surplusSize(): number
+  surplusSize(): number
+
   /**
    * Determines how the `Queue.Strategy` should shut down when the `Queue` is
    * shut down.
+   *
+   * @macro traced
    */
-  get shutdown(): Effect.Effect<never, never, void>
+  shutdown(): Effect.Effect<never, never, void>
+
   /**
    * Determines the behavior of the `Queue.Strategy` when there are surplus
    * values that could not be added to the `Queue` following an `offer`
    * operation.
+   *
+   * @macro traced
    */
   handleSurplus(
     iterable: Iterable<A>,
@@ -141,6 +224,7 @@ export interface Strategy<A> extends Queue.StrategyVariance<A> {
     takers: MutableQueue.MutableQueue<Deferred.Deferred<never, A>>,
     isShutdown: MutableRef.MutableRef<boolean>
   ): Effect.Effect<never, never, boolean>
+
   /**
    * Determines the behavior of the `Queue.Strategy` when the `Queue` has empty
    * slots following a `take` operation.
@@ -237,6 +321,7 @@ export const slidingStrategy = internal.slidingStrategy
  * better performance by utilising an optimised version of the underlying
  * `RingBuffer`.
  *
+ * @macro traced
  * @since 1.0.0
  * @category constructors
  */
@@ -252,6 +337,7 @@ export const bounded = internal.bounded
  * better performance by utilising an optimised version of the underlying
  * `RingBuffer`.
  *
+ * @macro traced
  * @since 1.0.0
  * @category constructors
  */
@@ -267,6 +353,7 @@ export const dropping = internal.dropping
  * better performance by utilising an optimised version of the underlying
  * `RingBuffer`.
  *
+ * @macro traced
  * @since 1.0.0
  * @category constructors
  */
@@ -275,6 +362,7 @@ export const sliding = internal.sliding
 /**
  * Creates a new unbounded `Queue`.
  *
+ * @macro traced
  * @since 1.0.0
  * @category constructors
  */
@@ -293,6 +381,7 @@ export const capacity = internal.capacity
  * in the queue. This may be negative if fibers are suspended waiting for
  * elements to be added to the queue.
  *
+ * @macro traced
  * @since 1.0.0
  * @category getters
  */
@@ -301,6 +390,7 @@ export const size = internal.size
 /**
  * Returns `true` if the `Queue` contains zero elements, `false` otherwise.
  *
+ * @macro traced
  * @since 1.0.0
  * @category getters
  */
@@ -310,6 +400,7 @@ export const isEmpty = internal.isEmpty
  * Returns `true` if the `Queue` contains at least one element, `false`
  * otherwise.
  *
+ * @macro traced
  * @since 1.0.0
  * @category getters
  */
@@ -318,6 +409,7 @@ export const isFull = internal.isFull
 /**
  * Returns `true` if `shutdown` has been called, otherwise returns `false`.
  *
+ * @macro traced
  * @since 1.0.0
  * @category getters
  */
@@ -328,6 +420,7 @@ export const isShutdown = internal.isShutdown
  * not resume until the queue has been shutdown. If the queue is already
  * shutdown, the `Effect` will resume right away.
  *
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -337,6 +430,7 @@ export const awaitShutdown = internal.awaitShutdown
  * Interrupts any fibers that are suspended on `offer` or `take`. Future calls
  * to `offer*` and `take*` will be interrupted immediately.
  *
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -345,6 +439,7 @@ export const shutdown = internal.shutdown
 /**
  * Places one value in the queue.
  *
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -365,6 +460,7 @@ export const offer = internal.offer
  * For Dropping Queue: uses `Dropping` Strategy, It places the values in the
  * queue but if there is no room it will not enqueue them and return false.
  *
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -374,6 +470,7 @@ export const offerAll = internal.offerAll
  * Returns the first value in the `Queue` as a `Some<A>`, or `None` if the queue
  * is empty.
  *
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -383,6 +480,7 @@ export const poll = internal.poll
  * Takes the oldest value in the queue. If the queue is empty, this will return
  * a computation that resumes when an item has been added to the queue.
  *
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -392,6 +490,7 @@ export const take = internal.take
  * Takes all the values in the queue and returns the values. If the queue is
  * empty returns an empty collection.
  *
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -400,6 +499,7 @@ export const takeAll = internal.takeAll
 /**
  * Takes up to max number of values from the queue.
  *
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -410,6 +510,7 @@ export const takeUpTo = internal.takeUpTo
  * maximum. If there are fewer than the minimum number of elements available,
  * suspends until at least the minimum number of elements have been collected.
  *
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -420,6 +521,7 @@ export const takeBetween = internal.takeBetween
  * than the specified number of elements available, it suspends until they
  * become available.
  *
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */

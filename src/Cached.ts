@@ -27,10 +27,15 @@ export type CachedTypeId = typeof CachedTypeId
  * @category models
  */
 export interface Cached<E, A> extends Cached.Variance<E, A> {
-  /** @internal */
-  readonly ref: ScopedRef.ScopedRef<Exit.Exit<E, A>>
-  /** @internal */
-  readonly acquire: Effect.Effect<Scope.Scope, E, A>
+  /**
+   * @internal
+   */
+  readonly scopedRef: ScopedRef.ScopedRef<Exit.Exit<E, A>>
+  /**
+   * @macro traced
+   * @internal
+   */
+  acquire(): Effect.Effect<Scope.Scope, E, A>
 }
 
 /**

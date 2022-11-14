@@ -53,8 +53,11 @@ export const manual = <R, E, A>(
         scopedRef.fromAcquire(core.exit(acquire)),
         core.map((ref) => ({
           [CachedTypeId]: cachedVariance,
-          ref,
-          acquire: pipe(acquire, core.provideEnvironment(env))
+          scopedRef: ref,
+          acquire: () => {
+            const trace = getCallTrace()
+            return pipe(acquire, core.provideEnvironment(env)).traced(trace)
+          }
         }))
       )
     )
@@ -65,7 +68,7 @@ export const manual = <R, E, A>(
 export const get = <E, A>(self: Cached.Cached<E, A>): Effect.Effect<never, E, A> => {
   const trace = getCallTrace()
   return pipe(
-    scopedRef.get(self.ref),
+    scopedRef.get(self.scopedRef),
     core.flatMap(core.done)
   ).traced(trace)
 }
@@ -73,7 +76,7 @@ export const get = <E, A>(self: Cached.Cached<E, A>): Effect.Effect<never, E, A>
 export const refresh = <E, A>(self: Cached.Cached<E, A>): Effect.Effect<never, E, void> => {
   const trace = getCallTrace()
   return pipe(
-    self.ref,
-    scopedRef.set<never, E, Exit.Exit<E, A>>(pipe(self.acquire, core.map(core.exitSucceed)))
+    self.scopedRef,
+    scopedRef.set<never, E, Exit.Exit<E, A>>(pipe(self.acquire(), core.map(core.exitSucceed)))
   ).traced(trace)
 }
