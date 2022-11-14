@@ -2035,3 +2035,36 @@ export const repeatWhileEquals_Effect = <A>(value: A) => {
     return pipe(self, repeatWhile_Effect((a) => Equal.equals(a, value))).traced(trace)
   }
 }
+
+/** @internal */
+export const schedule_Effect = <R2, Out>(schedule: Schedule.Schedule<R2, any, Out>) => {
+  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E, Out> => {
+    return pipe(self, scheduleFrom_Effect(void 0 as unknown as A, schedule))
+  }
+}
+
+/** @internal */
+export const scheduleFrom_Effect = <R2, In, Out>(initial: In, schedule: Schedule.Schedule<R2, In, Out>) => {
+  const trace = getCallTrace()
+  return <R, E>(self: Effect.Effect<R, E, In>): Effect.Effect<R | R2, E, Out> => {
+    return pipe(
+      driver(schedule),
+      core.flatMap((driver) => scheduleFrom_EffectLoop(self, initial, driver))
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+const scheduleFrom_EffectLoop = <R, E, In, R2, Out>(
+  self: Effect.Effect<R, E, In>,
+  initial: In,
+  driver: Schedule.ScheduleDriver<R2, In, Out>
+): Effect.Effect<R | R2, E, Out> => {
+  return pipe(
+    driver.next(initial),
+    core.foldEffect(
+      () => effect.orDie(driver.last()),
+      () => pipe(self, core.flatMap((a) => scheduleFrom_EffectLoop(self, a, driver)))
+    )
+  )
+}
