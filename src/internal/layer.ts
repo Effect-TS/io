@@ -769,6 +769,18 @@ export const scope = (): Layer.Layer<never, never, Scope.Scope.Closeable> => {
 }
 
 /** @internal */
+export const scoped = <T>(tag: Context.Tag<T>) => {
+  return <R, E, T1 extends T>(effect: Effect.Effect<R, E, T1>): Layer.Layer<Exclude<R, Scope.Scope>, E, T> => {
+    return scopedEnvironment(
+      pipe(
+        effect,
+        core.map((service) => pipe(Context.empty(), Context.add(tag)(service)))
+      )
+    )
+  }
+}
+
+/** @internal */
 export const scopedDiscard = <R, E, T>(
   effect: Effect.Effect<R, E, T>
 ): Layer.Layer<Exclude<R, Scope.Scope>, E, never> => {

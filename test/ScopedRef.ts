@@ -1,71 +1,14 @@
 import * as Effect from "@effect/io/Effect"
-import * as Ref from "@effect/io/Ref"
-import type * as Scope from "@effect/io/Scope"
 import * as ScopedRef from "@effect/io/ScopedRef"
+import * as Counter from "@effect/io/test/utils/counter"
 import * as it from "@effect/io/test/utils/extend"
 import { pipe } from "@fp-ts/data/Function"
 import { assert, describe } from "vitest"
 
-interface Counter {
-  acquire(): Effect.Effect<Scope.Scope, never, number>
-  incrementAcquire(): Effect.Effect<never, never, number>
-  incrementRelease(): Effect.Effect<never, never, number>
-  acquired(): Effect.Effect<never, never, number>
-  released(): Effect.Effect<never, never, number>
-}
-
-class CounterImpl implements Counter {
-  constructor(readonly ref: Ref.Ref<readonly [number, number]>) {}
-
-  acquire(): Effect.Effect<Scope.Scope, never, number> {
-    return pipe(
-      this.incrementAcquire(),
-      Effect.zipRight(Effect.addFinalizer(() => this.incrementRelease())),
-      Effect.zipRight(this.acquired()),
-      Effect.uninterruptible
-    )
-  }
-
-  incrementAcquire(): Effect.Effect<never, never, number> {
-    return pipe(
-      this.ref,
-      Ref.modify(([acquire, release]) => [acquire + 1, [acquire + 1, release] as const] as const)
-    )
-  }
-
-  incrementRelease(): Effect.Effect<never, never, number> {
-    return pipe(
-      this.ref,
-      Ref.modify(([acquire, release]) => [release + 1, [acquire, release + 1] as const] as const)
-    )
-  }
-
-  acquired(): Effect.Effect<never, never, number> {
-    return pipe(
-      Ref.get(this.ref),
-      Effect.map((tuple) => tuple[0])
-    )
-  }
-
-  released(): Effect.Effect<never, never, number> {
-    return pipe(
-      Ref.get(this.ref),
-      Effect.map((tuple) => tuple[1])
-    )
-  }
-}
-
-const makeCounter = (): Effect.Effect<never, never, Counter> => {
-  return pipe(
-    Ref.make([0, 0] as const),
-    Effect.map((ref) => new CounterImpl(ref))
-  )
-}
-
 describe.concurrent("ScopedRef", () => {
   it.scoped("single set", () =>
     Effect.gen(function*() {
-      const counter = yield* makeCounter()
+      const counter = yield* Counter.make()
       const ref = yield* ScopedRef.make(() => 0)
       yield* pipe(ref, ScopedRef.set(counter.acquire()))
       const result = yield* ScopedRef.get(ref)
@@ -74,7 +17,7 @@ describe.concurrent("ScopedRef", () => {
 
   it.scoped("dual set", () =>
     Effect.gen(function*() {
-      const counter = yield* makeCounter()
+      const counter = yield* Counter.make()
       const ref = yield* ScopedRef.make(() => 0)
       yield* pipe(
         ref,
@@ -87,7 +30,7 @@ describe.concurrent("ScopedRef", () => {
 
   it.scoped("release on swap", () =>
     Effect.gen(function*() {
-      const counter = yield* makeCounter()
+      const counter = yield* Counter.make()
       const ref = yield* ScopedRef.make(() => 0)
       yield* pipe(
         ref,
@@ -102,7 +45,7 @@ describe.concurrent("ScopedRef", () => {
 
   it.scoped("double release on double swap", () =>
     Effect.gen(function*() {
-      const counter = yield* makeCounter()
+      const counter = yield* Counter.make()
       const ref = yield* ScopedRef.make(() => 0)
       yield* pipe(
         ref,
@@ -118,7 +61,7 @@ describe.concurrent("ScopedRef", () => {
 
   it.effect("full release", () =>
     Effect.gen(function*() {
-      const counter = yield* makeCounter()
+      const counter = yield* Counter.make()
       yield* pipe(
         ScopedRef.make(() => 0),
         Effect.flatMap((ref) =>
