@@ -4,7 +4,7 @@ import * as Equal from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
 import * as Option from "@fp-ts/data/Option"
 import * as fc from "fast-check"
-import { assert } from "vitest"
+import { assert, describe } from "vitest"
 
 describe.concurrent("Cause", () => {
   it("should be compared for equality by value", () => {

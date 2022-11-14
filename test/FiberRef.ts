@@ -7,6 +7,7 @@ import * as it from "@effect/io/test/utils/extend"
 import * as Duration from "@fp-ts/data/Duration"
 import { constant, identity, pipe } from "@fp-ts/data/Function"
 import * as Option from "@fp-ts/data/Option"
+import { assert, describe } from "vitest"
 
 const initial = "initial"
 const update = "update"

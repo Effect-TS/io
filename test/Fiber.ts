@@ -13,6 +13,7 @@ import * as Chunk from "@fp-ts/data/Chunk"
 import { constVoid, identity, pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
 import * as Option from "@fp-ts/data/Option"
+import { assert, describe } from "vitest"
 
 const initial = "initial"
 const update = "update"

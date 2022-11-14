@@ -10,6 +10,7 @@ import * as Chunk from "@fp-ts/data/Chunk"
 import * as Either from "@fp-ts/data/Either"
 import { pipe } from "@fp-ts/data/Function"
 import * as Option from "@fp-ts/data/Option"
+import { assert, describe } from "vitest"
 
 export const waitForValue = <A>(
   ref: Effect.Effect<never, never, A>,
@@ -835,7 +836,7 @@ describe.concurrent("Queue", () => {
       assert.deepStrictEqual(result, Chunk.range(1, 4))
     }))
 
-  it.effect("rts = handles falsy values", () =>
+  it.effect("rts - handles falsy values", () =>
     Effect.gen(function*() {
       const queue = yield* Queue.unbounded<number>()
       yield* pipe(queue, Queue.offer(0))

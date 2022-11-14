@@ -1,0 +1,91 @@
+/**
+ * @since 1.0.0
+ */
+import * as internal from "@effect/io/internal/scopedRef"
+import type * as Synchronized from "@effect/io/Ref/Synchronized"
+import type * as Scope from "@effect/io/Scope"
+
+/**
+ * @since 1.0.0
+ * @category symbols
+ */
+export const ScopedRefTypeId: unique symbol = internal.ScopedRefTypeId
+
+/**
+ * @since 1.0.0
+ * @category symbols
+ */
+export type ScopedRefTypeId = typeof ScopedRefTypeId
+
+/**
+ * A `ScopedRef` is a reference whose value is associated with resources,
+ * which must be released properly. You can both get the current value of any
+ * `ScopedRef`, as well as set it to a new value (which may require new
+ * resources). The reference itself takes care of properly releasing resources
+ * for the old value whenever a new value is obtained.
+ *
+ * @since 1.0.0
+ * @category models
+ */
+export interface ScopedRef<A> extends ScopedRef.Variance<A> {
+  /** @internal */
+  readonly ref: Synchronized.Synchronized<readonly [Scope.Scope.Closeable, A]>
+}
+
+/**
+ * @since 1.0.0
+ */
+export declare namespace ScopedRef {
+  /**
+   * @since 1.0.0
+   * @category models
+   */
+  export interface Variance<A> {
+    readonly [ScopedRefTypeId]: {
+      readonly _A: (_: never) => A
+    }
+  }
+}
+
+/**
+ * Creates a new `ScopedRef` from an effect that resourcefully produces a
+ * value.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const fromAcquire = internal.fromAcquire
+
+/**
+ * Retrieves the current value of the scoped reference.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category getters
+ */
+export const get = internal.get
+
+/**
+ * Creates a new `ScopedRef` from the specified value. This method should
+ * not be used for values whose creation require the acquisition of resources.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const make = internal.make
+
+/**
+ * Sets the value of this reference to the specified resourcefully-created
+ * value. Any resources associated with the old value will be released.
+ *
+ * This method will not return until either the reference is successfully
+ * changed to the new value, with old resources released, or until the attempt
+ * to acquire a new value fails.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category getters
+ */
+export const set = internal.set

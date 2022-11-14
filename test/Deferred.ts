@@ -5,7 +5,7 @@ import * as Ref from "@effect/io/Ref"
 import * as it from "@effect/io/test/utils/extend"
 import { pipe } from "@fp-ts/data/Function"
 import * as Option from "@fp-ts/data/Option"
-import { assert } from "vitest"
+import { assert, describe } from "vitest"
 
 describe.concurrent("Deferred", () => {
   it.effect("complete a deferred using succeed", () =>
