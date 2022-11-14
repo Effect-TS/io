@@ -92,6 +92,18 @@ export type NoSuchElementExceptionTypeId = typeof NoSuchElementExceptionTypeId
  * @since 1.0.0
  * @category symbols
  */
+export const InvalidHubCapacityExceptionTypeId: unique symbol = internal.InvalidHubCapacityExceptionTypeId
+
+/**
+ * @since 1.0.0
+ * @category symbols
+ */
+export type InvalidHubCapacityExceptionTypeId = typeof InvalidHubCapacityExceptionTypeId
+
+/**
+ * @since 1.0.0
+ * @category symbols
+ */
 export const StackAnnotationTypeId: unique symbol = internal.StackAnnotationTypeId
 
 /**
@@ -226,6 +238,18 @@ export interface IllegalArgumentException {
  */
 export interface NoSuchElementException {
   readonly [NoSuchElementExceptionTypeId]: NoSuchElementExceptionTypeId
+  readonly message?: string
+}
+
+/**
+ * Represents a checked exception which occurs when attempting to construct a
+ * `Hub` with an invalid capacity.
+ *
+ * @since 1.0.0
+ * @category models
+ */
+export interface InvalidHubCapacityException {
+  readonly [InvalidHubCapacityExceptionTypeId]: InvalidHubCapacityExceptionTypeId
   readonly message?: string
 }
 

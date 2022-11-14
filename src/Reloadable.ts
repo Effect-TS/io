@@ -25,10 +25,15 @@ export type ReloadableTypeId = typeof ReloadableTypeId
  * @category models
  */
 export interface Reloadable<A> extends Reloadable.Variance<A> {
-  /** @internal */
+  /**
+   * @internal
+   */
   readonly scopedRef: ScopedRef.ScopedRef<A>
-  /** @internal */
-  readonly reload: Effect.Effect<never, unknown, void>
+  /**
+   * @macro traced
+   * @internal
+   */
+  reload(): Effect.Effect<never, unknown, void>
 }
 
 /**

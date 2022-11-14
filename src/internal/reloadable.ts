@@ -40,7 +40,7 @@ export const auto = <Out>(tag: Context.Tag<Out>) => {
         core.tap((reloadable) =>
           fiberRuntime.acquireRelease(
             pipe(
-              reloadable.reload,
+              reloadable.reload(),
               effect.ignoreLogged,
               _schedule.schedule_Effect(policy),
               fiberRuntime.forkDaemon
@@ -91,13 +91,16 @@ export const manual = <Out>(tag: Context.Tag<Out>) => {
             core.map((ref) => ({
               [ReloadableTypeId]: reloadableVariance,
               scopedRef: ref,
-              reload: pipe(
-                ref,
-                scopedRef.set(
-                  pipe(_layer.build(layer), core.map(Context.unsafeGet(tag)))
-                ),
-                core.provideEnvironment(env)
-              )
+              reload: () => {
+                const trace = getCallTrace()
+                return pipe(
+                  ref,
+                  scopedRef.set(
+                    pipe(_layer.build(layer), core.map(Context.unsafeGet(tag)))
+                  ),
+                  core.provideEnvironment(env)
+                ).traced(trace)
+              }
             }))
           )
         )
@@ -123,7 +126,7 @@ export const reloadableTag = <A>(tag: Context.Tag<A>): Context.Tag<Reloadable.Re
 /** @internal */
 export const reload = <A>(tag: Context.Tag<A>): Effect.Effect<Reloadable.Reloadable<A>, unknown, void> => {
   const trace = getCallTrace()
-  return core.serviceWithEffect(reloadableTag(tag))((reloadable) => reloadable.reload).traced(trace)
+  return core.serviceWithEffect(reloadableTag(tag))((reloadable) => reloadable.reload()).traced(trace)
 }
 
 /** @internal */
@@ -131,7 +134,7 @@ export const reloadFork = <A>(tag: Context.Tag<A>): Effect.Effect<Reloadable.Rel
   const trace = getCallTrace()
   return core.serviceWithEffect(reloadableTag(tag))((reloadable) =>
     pipe(
-      reloadable.reload,
+      reloadable.reload(),
       effect.ignoreLogged,
       fiberRuntime.forkDaemon,
       core.asUnit
