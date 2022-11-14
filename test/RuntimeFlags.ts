@@ -2,7 +2,7 @@ import * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import * as RuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
 import { pipe } from "@fp-ts/data/Function"
 import * as fc from "fast-check"
-import { describe, it } from "vitest"
+import { assert, describe, it } from "vitest"
 
 const arbRuntimeFlag = fc.constantFrom(
   RuntimeFlags.None,

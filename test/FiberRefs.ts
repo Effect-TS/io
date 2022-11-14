@@ -5,6 +5,7 @@ import type * as FiberRefs from "@effect/io/FiberRefs"
 import * as Queue from "@effect/io/Queue"
 import * as it from "@effect/io/test/utils/extend"
 import { pipe } from "@fp-ts/data/Function"
+import { assert, describe } from "vitest"
 
 describe.concurrent("FiberRefs", () => {
   it.scoped("propagate FiberRef values across fiber boundaries", () =>
