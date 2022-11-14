@@ -14,11 +14,10 @@ import * as OpCodes from "@effect/io/internal/opCodes/effect"
 import * as internalRef from "@effect/io/internal/ref"
 import * as _schedule from "@effect/io/internal/schedule"
 import * as STM from "@effect/io/internal/stm"
-import * as internalTRef from "@effect/io/internal/stm/ref"
+import * as TRef from "@effect/io/internal/stm/ref"
 import type * as Synchronized from "@effect/io/Ref/Synchronized"
 import type * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"
-import type * as Semaphore from "@effect/io/Semaphore"
 import * as Supervisor from "@effect/io/Supervisor"
 import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as Duration from "@fp-ts/data/Duration"
@@ -630,58 +629,57 @@ export const updateSomeAndGetEffectSynchronized = <A, R, E>(pf: (a: A) => Option
 
 // circular with Semaphore
 
-/** @internal */
 const SemaphoreSymbolKey = "@effect/io/Ref/Semaphore"
 
-/** @internal */
-export const SemaphoreTypeId: Semaphore.SemaphoreTypeId = Symbol.for(
-  SemaphoreSymbolKey
-) as Semaphore.SemaphoreTypeId
+export const SemaphoreTypeId = Symbol.for(SemaphoreSymbolKey)
 
-/** @internal */
-export class SemaphoreImpl implements Semaphore.Semaphore {
-  readonly [SemaphoreTypeId]: Semaphore.SemaphoreTypeId = SemaphoreTypeId
-  constructor(readonly permits: internalTRef.Ref<number>) {}
+export type SemaphoreTypeId = typeof SemaphoreTypeId
+
+export interface Semaphore {
+  readonly [SemaphoreTypeId]: SemaphoreTypeId
+  /** @internal */
+  readonly permits: TRef.Ref<number>
 }
 
-/** @internal */
-export const unsafeMakeSemaphore = (permits: number): Semaphore.Semaphore => {
-  return new SemaphoreImpl(new internalTRef.RefImpl(permits))
+export class SemaphoreImpl implements Semaphore {
+  readonly [SemaphoreTypeId]: SemaphoreTypeId = SemaphoreTypeId
+  constructor(readonly permits: TRef.Ref<number>) {}
 }
 
-/** @internal */
+export const unsafeMakeSemaphore = (permits: number): Semaphore => {
+  return new SemaphoreImpl(new TRef.RefImpl(permits))
+}
+
 export const acquireN = (n: number) => {
-  return (self: Semaphore.Semaphore): STM.STM<never, never, void> => {
+  return (self: Semaphore): STM.STM<never, never, void> => {
     return STM.effect((journal) => {
       if (n < 0) {
         throw new Cause.IllegalArgumentException(`Unexpected negative value ${n} passed to Semaphore.acquireN`)
       }
-      const value = pipe(self.permits, internalTRef.unsafeGet(journal))
+      const value = pipe(self.permits, TRef.unsafeGet(journal))
       if (value < n) {
         throw new STM.STMRetryException()
       } else {
-        return pipe(self.permits, internalTRef.unsafeSet(value - n, journal))
+        return pipe(self.permits, TRef.unsafeSet(value - n, journal))
       }
     })
   }
 }
 
-/** @internal */
 export const releaseN = (n: number) => {
-  return (self: Semaphore.Semaphore): STM.STM<never, never, void> => {
+  return (self: Semaphore): STM.STM<never, never, void> => {
     return STM.effect((journal) => {
       if (n < 0) {
         throw new Cause.IllegalArgumentException(`Unexpected negative value ${n} passed to Semaphore.releaseN`)
       }
-      const current = pipe(self.permits, internalTRef.unsafeGet(journal))
-      return pipe(self.permits, internalTRef.unsafeSet(current + n, journal))
+      const current = pipe(self.permits, TRef.unsafeGet(journal))
+      return pipe(self.permits, TRef.unsafeSet(current + n, journal))
     })
   }
 }
 
-/** @internal */
 export const withPermits = (permits: number) => {
-  return (semaphore: Semaphore.Semaphore) => {
+  return (semaphore: Semaphore) => {
     return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
       return core.uninterruptibleMask((restore) =>
         pipe(
@@ -698,9 +696,8 @@ export const withPermits = (permits: number) => {
   }
 }
 
-/** @internal */
 export const withPermitsScoped = (permits: number) => {
-  return (self: Semaphore.Semaphore): Effect.Effect<Scope.Scope, never, void> =>
+  return (self: Semaphore): Effect.Effect<Scope.Scope, never, void> =>
     acquireReleaseInterruptible(
       pipe(self, acquireN(permits), STM.commit),
       () => pipe(self, releaseN(permits), STM.commit)
