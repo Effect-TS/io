@@ -372,6 +372,14 @@ export const scope = internal.scope
  * @since 1.0.0
  * @category constructors
  */
+export const scoped = internal.scoped
+
+/**
+ * Constructs a layer from the specified scoped effect.
+ *
+ * @since 1.0.0
+ * @category constructors
+ */
 export const scopedDiscard = internal.scopedDiscard
 
 /**
