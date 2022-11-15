@@ -460,7 +460,7 @@ export const scheduleForked = <R2, Out>(schedule: Schedule.Schedule<R2, unknown,
   const trace = getCallTrace()
   return <R, E, A>(
     self: Effect.Effect<R, E, A>
-  ): Effect.Effect<R | R2 | Scope.Scope, E, Fiber.RuntimeFiber<unknown, Out>> => {
+  ): Effect.Effect<R | R2 | Scope.Scope, never, Fiber.RuntimeFiber<E, Out>> => {
     return pipe(self, _schedule.schedule_Effect(schedule), forkScoped).traced(trace)
   }
 }

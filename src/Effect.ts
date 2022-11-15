@@ -2402,6 +2402,106 @@ export const repeatWhileEffect = _schedule.repeatWhileEffect_Effect
 export const repeatWhileEquals = _schedule.repeatWhileEquals_Effect
 
 /**
+ * Retries with the specified retry policy. Retries are done following the
+ * failure of the original `io` (up to a fixed maximum with `once` or `recurs`
+ * for example), so that that `io.retry(Schedule.once)` means "execute `io`
+ * and in case of failure, try again once".
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const retry = _schedule.retry_Effect
+
+/**
+ * Retries this effect the specified number of times.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const retryN = _schedule.retryN_Effect
+
+/**
+ * Retries with the specified schedule, until it fails, and then both the
+ * value produced by the schedule together with the last error are passed to
+ * the recovery function.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const retryOrElse = _schedule.retryOrElse_Effect
+
+/**
+ * Retries with the specified schedule, until it fails, and then both the
+ * value produced by the schedule together with the last error are passed to
+ * the recovery function.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const retryOrElseEither = _schedule.retryOrElseEither_Effect
+
+/**
+ * Retries this effect until its error satisfies the specified predicate.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const retryUntil = _schedule.retryUntil_Effect
+
+/**
+ * Retries this effect until its error satisfies the specified effectful
+ * predicate.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const retryUntilEffect = _schedule.retryUntilEffect_Effect
+
+/**
+ * Retries this effect until its error is equal to the specified error.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const retryUntilEquals = _schedule.retryUntilEquals_Effect
+
+/**
+ * Retries this effect while its error satisfies the specified predicate.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const retryWhile = _schedule.retryWhile_Effect
+
+/**
+ * Retries this effect while its error satisfies the specified effectful
+ * predicate.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const retryWhileEffect = _schedule.retryWhileEffect_Effect
+
+/**
+ * Retries this effect for as long as its error is equal to the specified
+ * error.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const retryWhileEquals = _schedule.retryWhileEquals_Effect
+
+/**
  * Replicates the given effect `n` times.
  *
  * @since 1.0.0

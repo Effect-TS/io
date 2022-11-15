@@ -1314,7 +1314,13 @@ export const recurWhileEquals = <A>(value: A): Schedule.Schedule<never, A, A> =>
 
 /** @internal */
 export const recurs = (n: number): Schedule.Schedule<never, unknown, number> => {
-  return pipe(forever(), whileOutput((out) => out < n))
+  return pipe(
+    forever(),
+    whileOutput((out) => {
+      console.log(out)
+      return out < n
+    })
+  )
 }
 
 /** @internal */
@@ -2033,6 +2039,154 @@ export const repeatWhileEquals_Effect = <A>(value: A) => {
   const trace = getCallTrace()
   return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
     return pipe(self, repeatWhile_Effect((a) => Equal.equals(a, value))).traced(trace)
+  }
+}
+
+/** @internal */
+export const retry_Effect = <R1, E, B>(policy: Schedule.Schedule<R1, E, B>) => {
+  const trace = getCallTrace()
+  return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1, E, A> => {
+    return pipe(self, retryOrElse_Effect(policy, (e, _) => core.fail(e))).traced(trace)
+  }
+}
+
+/** @internal */
+export const retryN_Effect = (n: number) => {
+  const trace = getCallTrace()
+  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
+    return retryN_EffectLoop(self, n).traced(trace)
+  }
+}
+
+/** @internal */
+const retryN_EffectLoop = <R, E, A>(
+  self: Effect.Effect<R, E, A>,
+  n: number
+): Effect.Effect<R, E, A> => {
+  return pipe(
+    self,
+    effect.catchAll((e) =>
+      n < 0 ?
+        core.fail(e) :
+        pipe(core.yieldNow(), core.flatMap(() => retryN_EffectLoop(self, n - 1)))
+    )
+  )
+}
+
+/** @internal */
+export const retryOrElse_Effect = <R1, E extends E3, A1, R2, E2, A2, E3>(
+  policy: Schedule.Schedule<R1, E3, A1>,
+  orElse: (e: E, out: A1) => Effect.Effect<R2, E2, A2>
+) => {
+  const trace = getCallTrace()
+  return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1 | R2, E | E2, A | A2> => {
+    return pipe(
+      self,
+      retryOrElseEither_Effect(policy, orElse),
+      core.map(Either.toUnion)
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+export const retryOrElseEither_Effect = <R1, E extends E3, A1, R2, E2, A2, E3>(
+  policy: Schedule.Schedule<R1, E3, A1>,
+  orElse: (e: E, out: A1) => Effect.Effect<R2, E2, A2>
+): <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1 | R2, E | E2, Either.Either<A2, A>> => {
+  const trace = getCallTrace()
+  return <R, A>(
+    self: Effect.Effect<R, E, A>
+  ): Effect.Effect<R | R1 | R2, E | E2, Either.Either<A2, A>> => {
+    return pipe(
+      driver(policy),
+      core.flatMap((driver) => retryOrElseEither_EffectLoop(self, driver, orElse))
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+const retryOrElseEither_EffectLoop = <R, E, A, R1, A1, R2, E2, A2>(
+  self: Effect.Effect<R, E, A>,
+  driver: Schedule.ScheduleDriver<R1, E, A1>,
+  orElse: (e: E, out: A1) => Effect.Effect<R2, E2, A2>
+): Effect.Effect<R | R1 | R2, E | E2, Either.Either<A2, A>> => {
+  return pipe(
+    self,
+    core.map(Either.right),
+    effect.catchAll((e) =>
+      pipe(
+        driver.next(e),
+        core.foldEffect(
+          () =>
+            pipe(
+              driver.last(),
+              effect.orDie,
+              core.flatMap((out) => pipe(orElse(e, out), core.map(Either.left)))
+            ),
+          () => retryOrElseEither_EffectLoop(self, driver, orElse)
+        )
+      )
+    )
+  )
+}
+
+/** @internal */
+export const retryUntil_Effect = <E>(f: Predicate<E>) => {
+  const trace = getCallTrace()
+  return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
+    return pipe(self, retryUntilEffect_Effect((e) => core.sync(() => f(e)))).traced(trace)
+  }
+}
+
+/** @internal */
+export const retryUntilEffect_Effect = <R1, E>(f: (e: E) => Effect.Effect<R1, never, boolean>) => {
+  const trace = getCallTrace()
+  return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1, E, A> => {
+    return pipe(
+      self,
+      effect.catchAll((e) =>
+        pipe(
+          f(e),
+          core.flatMap((b) =>
+            b ?
+              core.fail(e) :
+              pipe(core.yieldNow(), core.flatMap(() => pipe(self, retryUntilEffect_Effect(f))))
+          )
+        )
+      )
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+export const retryUntilEquals_Effect = <E>(e: E) => {
+  const trace = getCallTrace()
+  return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
+    return pipe(self, retryUntil_Effect((_) => Equal.equals(_, e))).traced(trace)
+  }
+}
+
+/** @internal */
+export const retryWhile_Effect = <E>(f: Predicate<E>) => {
+  const trace = getCallTrace()
+  return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
+    return pipe(self, retryWhileEffect_Effect((e) => core.sync(() => f(e)))).traced(trace)
+  }
+}
+
+/** @internal */
+export const retryWhileEffect_Effect = <R1, E>(f: (e: E) => Effect.Effect<R1, never, boolean>) => {
+  const trace = getCallTrace()
+  return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1, E, A> => {
+    return pipe(self, retryUntilEffect_Effect((e) => effect.negate(f(e)))).traced(trace)
+  }
+}
+
+/** @internal */
+export const retryWhileEquals_Effect = <E>(e: E) => {
+  const trace = getCallTrace()
+  return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
+    return pipe(self, retryWhile_Effect((err) => Equal.equals(e, err))).traced(trace)
   }
 }
 

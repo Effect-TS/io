@@ -26,8 +26,6 @@ import type { Refinement } from "@fp-ts/data/Refinement"
 
 // TODO:
 // - [ ] delay family
-// - [ ] retry family
-// - [ ] schedule family
 
 /** @internal */
 export const absolve = <R, E, A>(self: Effect.Effect<R, E, Either.Either<E, A>>): Effect.Effect<R, E, A> => {
