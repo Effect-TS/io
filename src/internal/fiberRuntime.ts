@@ -16,6 +16,8 @@ import * as internalFiber from "@effect/io/internal/fiber"
 import * as FiberMessage from "@effect/io/internal/fiberMessage"
 import * as FiberRefs from "@effect/io/internal/fiberRefs"
 import * as internalLogger from "@effect/io/internal/logger"
+import * as metric from "@effect/io/internal/metric"
+import * as metricBoundaries from "@effect/io/internal/metric/boundaries"
 import * as OpCodes from "@effect/io/internal/opCodes/effect"
 import { Stack } from "@effect/io/internal/stack"
 import * as SupervisorPatch from "@effect/io/internal/supervisor/patch"
@@ -33,6 +35,11 @@ import * as List from "@fp-ts/data/List"
 import * as MutableQueue from "@fp-ts/data/mutable/MutableQueue"
 import * as MutableRef from "@fp-ts/data/mutable/MutableRef"
 import * as Option from "@fp-ts/data/Option"
+
+const fibersStarted = metric.counter("effect_fiber_started")
+const fiberSuccesses = metric.counter("effect_fiber_successes")
+const fiberFailures = metric.counter("effect_fiber_failures")
+const fiberLifetimes = metric.histogram("effect_fiber_lifetimes", metricBoundaries.exponential(1.0, 2.0, 100))
 
 /** @internal */
 type EvaluationSignal = EvaluationSignalContinue | EvaluationSignalDone | EvaluationSignalYieldNow
@@ -89,8 +96,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     this._fiberId = fiberId
     this._fiberRefs = fiberRefs0
     if (pipe(runtimeFlags0, RuntimeFlags.isEnabled(RuntimeFlags.RuntimeMetrics))) {
-      // TODO(Max): after Metrics
-      // fibersStarted.unsafeUpdate(1, HashSet.empty())
+      fibersStarted.unsafeUpdate(1, HashSet.empty())
     }
   }
   private _queue = MutableQueue.unbounded<FiberMessage.FiberMessage>()
@@ -587,14 +593,13 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
 
   reportExitValue(exit: Exit.Exit<E, A>) {
     if (pipe(this._runtimeFlags, RuntimeFlags.isEnabled(RuntimeFlags.RuntimeMetrics))) {
-      // TODO(Max): after Metrics
       switch (exit.op) {
         case OpCodes.OP_SUCCESS: {
-          // fiberSuccesses.unsafeUpdate(1, HashSet.empty())
+          fiberSuccesses.unsafeUpdate(1, HashSet.empty())
           break
         }
         case OpCodes.OP_FAILURE: {
-          // fiberFailures.unsafeUpdate(1, HashSet.empty())
+          fiberFailures.unsafeUpdate(1, HashSet.empty())
           break
         }
       }
@@ -605,10 +610,9 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     this._exitValue = exit
 
     if (pipe(this._runtimeFlags, RuntimeFlags.isEnabled(RuntimeFlags.RuntimeMetrics))) {
-      // TODO(Max): after Metrics
-      // const startTimeMillis = this.id().startTimeMillis
-      // const endTimeMillis = new Date().getTime()
-      // fiberLifetimes.unsafeUpdate((endTimeMillis - startTimeMillis) / 1000.0, HashSet.empty())
+      const startTimeMillis = this.id().startTimeMillis
+      const endTimeMillis = new Date().getTime()
+      fiberLifetimes.unsafeUpdate((endTimeMillis - startTimeMillis) / 1000.0, HashSet.empty())
     }
 
     this.reportExitValue(exit)
