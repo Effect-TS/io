@@ -1954,6 +1954,44 @@ export function struct<NER extends Record<string, Effect.Effect<any, any, any>>>
 }
 
 /** @internal */
+export const tapDefect = <R2, E2, X>(f: (cause: Cause.Cause<never>) => Effect.Effect<R2, E2, X>) => {
+  const trace = getCallTrace()
+  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, A> => {
+    return pipe(
+      self,
+      core.foldCauseEffect(
+        (cause) => pipe(f(Cause.stripFailures(cause)), core.zipRight(core.failCause(cause))),
+        core.succeed
+      )
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+export const tapError = <E, R2, E2, X>(f: (e: E) => Effect.Effect<R2, E2, X>) => {
+  const trace = getCallTrace()
+  return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, A> => {
+    return pipe(
+      self,
+      core.foldCauseEffect(
+        (cause) => {
+          const either = Cause.failureOrCause(cause)
+          switch (either._tag) {
+            case "Left": {
+              return pipe(f(either.left), core.zipRight(core.failCause(cause)))
+            }
+            case "Right": {
+              return core.failCause(cause)
+            }
+          }
+        },
+        core.succeed
+      )
+    ).traced(trace)
+  }
+}
+
+/** @internal */
 export const tryCatch = <E, A>(
   attempt: () => A,
   onThrow: (u: unknown) => E
