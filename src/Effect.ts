@@ -2690,6 +2690,24 @@ export const sync = core.sync
 export const tap = core.tap
 
 /**
+ * Returns an effect that effectually "peeks" at the defect of this effect.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category sequencing
+ */
+export const tapDefect = effect.tapDefect
+
+/**
+ * Returns an effect that effectfully "peeks" at the failure of this effect.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category sequencing
+ */
+export const tapError = effect.tapError
+
+/**
  * @since 1.0.0
  * @category tracing
  */
