@@ -11,6 +11,7 @@ import * as core from "@effect/io/internal/core"
 import type { EnforceNonEmptyRecord, MergeRecord, NonEmptyArrayEffect, TupleA } from "@effect/io/internal/types"
 import * as LogLevel from "@effect/io/Logger/Level"
 import * as LogSpan from "@effect/io/Logger/Span"
+import type * as Metric from "@effect/io/Metric"
 import * as Random from "@effect/io/Random"
 import * as Ref from "@effect/io/Ref"
 import * as Chunk from "@fp-ts/data/Chunk"
@@ -2102,4 +2103,12 @@ export const updateFiberRefs = (
     state.setFiberRefs(f(state.id(), state.unsafeGetFiberRefs()))
     return core.unit()
   })
+}
+
+/** @internal */
+export const withMetric = <Type, In, Out>(metric: Metric.Metric<Type, In, Out>) => {
+  const trace = getCallTrace()
+  return <R, E, A extends In>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
+    return metric(self).traced(trace)
+  }
 }

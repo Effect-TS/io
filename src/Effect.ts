@@ -2907,6 +2907,13 @@ export const whenEffect = core.whenEffect
 /**
  * @macro traced
  * @since 1.0.0
+ * @category mutations
+ */
+export const withMetric = effect.withMetric
+
+/**
+ * @macro traced
+ * @since 1.0.0
  * @category concurrency
  */
 export const withParallelism = core.withParallelism
