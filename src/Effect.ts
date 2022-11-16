@@ -658,6 +658,16 @@ export const continueOrFailEffect = effect.continueOrFailEffect
 export const daemonChildren = fiberRuntime.daemonChildren
 
 /**
+ * Returns an effect that is delayed from this effect by the specified
+ * `Duration`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const delay = effect.delay
+
+/**
  * Constructs an effect with information about the current `Fiber`.
  *
  * @macro traced
@@ -756,6 +766,15 @@ export const Do = effect.Do
  * @category constructors
  */
 export const done = core.done
+
+/**
+ * Drops all elements so long as the predicate returns true.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const dropWhile = effect.dropWhile
 
 /**
  * Returns an effect whose failure and success have been lifted into an
