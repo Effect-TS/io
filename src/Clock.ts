@@ -29,19 +29,10 @@ export type ClockTypeId = typeof ClockTypeId
 export interface Clock {
   readonly [ClockTypeId]: ClockTypeId
   /**
-   * Unsafely returns the current time in milliseconds.
-   */
-  unsafeCurrentTimeMillis(): number
-  /**
    * Returns the current time in milliseconds.
    * @macro traced
    */
   currentTimeMillis(): Effect.Effect<never, never, number>
-  /**
-   * Returns the scheduler for the `Clock`.
-   * @macro traced
-   */
-  scheduler(): Effect.Effect<never, never, ClockScheduler>
   /**
    * Asynchronously sleeps for the specified duration.
    * @macro traced

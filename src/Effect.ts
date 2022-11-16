@@ -2,6 +2,7 @@
  * @since 1.0.0
  */
 import * as core from "@effect/io/internal/core"
+import * as defaultServices from "@effect/io/internal/defaultServices"
 import * as effect from "@effect/io/internal/effect"
 import * as circular from "@effect/io/internal/effect/circular"
 import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
@@ -3493,6 +3494,26 @@ export const whenCaseEffect = effect.whenCaseEffect
  * @category constructors
  */
 export const whenEffect = core.whenEffect
+
+/**
+ * Executes the specified workflow with the specified implementation of the
+ * clock service.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const withClock = defaultServices.withClock
+
+/**
+ * Sets the implementation of the clock service to the specified value and
+ * restores it to its original value when the scope is closed.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const withClockScoped = fiberRuntime.withClockScoped
 
 /**
  * @macro traced

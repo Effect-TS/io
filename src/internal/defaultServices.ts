@@ -49,6 +49,17 @@ export const clockWith = <R, E, A>(f: (clock: Clock.Clock) => Effect.Effect<R, E
   ).traced(trace)
 }
 
+/** @internal */
+export const withClock = <A extends Clock.Clock>(value: A) => {
+  const trace = getCallTrace()
+  return <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
+    return pipe(
+      currentServices,
+      core.locallyWithFiberRef(Context.add(clock.clockTag)(value))
+    )(effect).traced(trace)
+  }
+}
+
 // circular with Random
 
 /** @internal */
