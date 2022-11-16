@@ -1,4 +1,5 @@
 import * as Cause from "@effect/io/Cause"
+import type * as Clock from "@effect/io/Clock"
 import { getCallTrace } from "@effect/io/Debug"
 import * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
@@ -11,7 +12,9 @@ import * as RuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
 import * as FiberScope from "@effect/io/Fiber/Scope"
 import * as FiberStatus from "@effect/io/Fiber/Status"
 import type * as FiberRef from "@effect/io/FiberRef"
+import * as clock from "@effect/io/internal/clock"
 import * as core from "@effect/io/internal/core"
+import * as defaultServices from "@effect/io/internal/defaultServices"
 import * as internalFiber from "@effect/io/internal/fiber"
 import * as FiberMessage from "@effect/io/internal/fiberMessage"
 import * as FiberRefs from "@effect/io/internal/fiberRefs"
@@ -1903,6 +1906,15 @@ export const validateFirstPar = <R, E, A, B>(f: (a: A) => Effect.Effect<R, E, B>
   return (elements: Iterable<A>): Effect.Effect<R, Chunk.Chunk<E>, B> => {
     return pipe(elements, forEachPar((a) => core.flip(f(a))), core.flip).traced(trace)
   }
+}
+
+/** @internal */
+export const withClockScoped = <A extends Clock.Clock>(value: A) => {
+  const trace = getCallTrace()
+  return pipe(
+    defaultServices.currentServices,
+    locallyScopedWithFiberRef(Context.add(clock.clockTag)(value))
+  ).traced(trace)
 }
 
 // circular with ReleaseMap
