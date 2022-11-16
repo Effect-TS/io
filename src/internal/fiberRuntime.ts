@@ -1416,7 +1416,7 @@ export const forkDaemon = <R, E, A>(
   self: Effect.Effect<R, E, A>
 ): Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>> => {
   const trace = getCallTrace()
-  return daemonChildren(fork(self)).traced(trace)
+  return pipe(self, forkWithScopeOverride(FiberScope.globalScope)).traced(trace)
 }
 
 /** @internal */
@@ -1445,9 +1445,10 @@ export const forkWithErrorHandler = <E, X>(handler: (e: E) => Effect.Effect<neve
 export const unsafeFork = <R, E, A, E2, B>(
   effect: Effect.Effect<R, E, A>,
   parentFiber: FiberRuntime<E2, B>,
-  parentRuntimeFlags: RuntimeFlags.RuntimeFlags
+  parentRuntimeFlags: RuntimeFlags.RuntimeFlags,
+  overrideScope: FiberScope.FiberScope | null = null
 ): FiberRuntime<E, A> => {
-  const childFiber = unsafeForkUnstarted(effect, parentFiber, parentRuntimeFlags)
+  const childFiber = unsafeForkUnstarted(effect, parentFiber, parentRuntimeFlags, overrideScope)
   childFiber.start(effect)
   return childFiber
 }
@@ -1456,7 +1457,8 @@ export const unsafeFork = <R, E, A, E2, B>(
 export const unsafeForkUnstarted = <R, E, A, E2, B>(
   effect: Effect.Effect<R, E, A>,
   parentFiber: FiberRuntime<E2, B>,
-  parentRuntimeFlags: RuntimeFlags.RuntimeFlags
+  parentRuntimeFlags: RuntimeFlags.RuntimeFlags,
+  overrideScope: FiberScope.FiberScope | null = null
 ): FiberRuntime<E, A> => {
   const childId = FiberId.unsafeMake()
   const parentFiberRefs = parentFiber.unsafeGetFiberRefs()
@@ -1479,7 +1481,7 @@ export const unsafeForkUnstarted = <R, E, A, E2, B>(
 
   childFiber.unsafeAddObserver((exit) => supervisor.onEnd(exit, childFiber))
 
-  const parentScope = pipe(
+  const parentScope = overrideScope !== null ? overrideScope : pipe(
     parentFiber.getFiberRef(core.forkScopeOverride),
     Option.getOrElse(parentFiber.scope())
   )
@@ -1487,6 +1489,19 @@ export const unsafeForkUnstarted = <R, E, A, E2, B>(
   parentScope.add(parentRuntimeFlags, childFiber)
 
   return childFiber
+}
+
+/**
+ * @macro traced
+ * @internal
+ */
+const forkWithScopeOverride = (scopeOverride: FiberScope.FiberScope) => {
+  const trace = getCallTrace()
+  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>> => {
+    return core.withFiberRuntime<R, never, Fiber.RuntimeFiber<E, A>>((parentFiber, parentStatus) =>
+      core.succeed(unsafeFork(self, parentFiber, parentStatus.runtimeFlags, scopeOverride))
+    ).traced(trace)
+  }
 }
 
 /** @internal */

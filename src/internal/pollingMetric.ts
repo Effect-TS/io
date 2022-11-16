@@ -44,11 +44,11 @@ export const collectAll = <R, E, Out>(
     [PollingMetricTypeId]: PollingMetricTypeId,
     metric: metric.make(
       Chunk.single<any>(void 0),
-      (inputs: Chunk.Chunk<any>, _extraTags) => {
+      (inputs: Chunk.Chunk<any>, extraTags) => {
         for (let i = 0; i < inputs.length; i++) {
           const pollingMetric = metrics[i]!
-          const input = inputs[i]!
-          pipe(pollingMetric.metric, metric.update(input))
+          const input = pipe(inputs, Chunk.unsafeGet(i))
+          pipe(pollingMetric.metric.unsafeUpdate(input, extraTags))
         }
       },
       (extraTags) => Chunk.unsafeFromArray(metrics.map((pollingMetric) => pollingMetric.metric.unsafeValue(extraTags)))
