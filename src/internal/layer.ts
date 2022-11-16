@@ -936,3 +936,10 @@ export const provideSomeLayer = <R2, E2, A2>(layer: Layer.Layer<R2, E2, A2>) => 
     ).traced(trace)
   }
 }
+
+/** @internal */
+export const toLayer = <A>(tag: Context.Tag<A>) => {
+  return <R, E>(self: Effect.Effect<R, E, A>): Layer.Layer<R, E, A> => {
+    return fromEffect(tag)(self)
+  }
+}

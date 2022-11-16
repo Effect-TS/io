@@ -1564,6 +1564,18 @@ export function onDoneCause<E, A, R1, X1, R2, X2>(
 }
 
 /** @internal */
+export const partitionPar = <R, E, A, B>(f: (a: A) => Effect.Effect<R, E, B>) => {
+  const trace = getCallTrace()
+  return (elements: Iterable<A>): Effect.Effect<R, never, readonly [List.List<E>, List.List<B>]> => {
+    return pipe(
+      elements,
+      forEachPar((a) => core.either(f(a))),
+      core.map((chunk) => core.partitionMap(chunk, identity))
+    ).traced(trace)
+  }
+}
+
+/** @internal */
 export const raceAll = <R1, E1, A1>(effects: Iterable<Effect.Effect<R1, E1, A1>>) => {
   const trace = getCallTrace()
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1, E | E1, A | A1> => {
@@ -1851,6 +1863,46 @@ export const unsome = <R, E, A>(
       (a) => core.succeed(Option.some(a))
     )
   ).traced(trace)
+}
+
+/** @internal */
+export const validateAllPar = <R, E, A, B>(f: (a: A) => Effect.Effect<R, E, B>) => {
+  const trace = getCallTrace()
+  return (elements: Iterable<A>): Effect.Effect<R, Chunk.Chunk<E>, Chunk.Chunk<B>> => {
+    return pipe(
+      elements,
+      partitionPar(f),
+      core.flatMap(([es, bs]) =>
+        List.isNil(es)
+          ? core.succeed(Chunk.fromIterable(bs))
+          : core.fail(Chunk.fromIterable(es))
+      )
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+export const validateAllParDiscard = <R, E, A, B>(f: (a: A) => Effect.Effect<R, E, B>) => {
+  const trace = getCallTrace()
+  return (elements: Iterable<A>): Effect.Effect<R, Chunk.Chunk<E>, void> => {
+    return pipe(
+      elements,
+      partitionPar(f),
+      core.flatMap(([es, _]) =>
+        List.isNil(es)
+          ? core.unit()
+          : core.fail(Chunk.fromIterable(es))
+      )
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+export const validateFirstPar = <R, E, A, B>(f: (a: A) => Effect.Effect<R, E, B>) => {
+  const trace = getCallTrace()
+  return (elements: Iterable<A>): Effect.Effect<R, Chunk.Chunk<E>, B> => {
+    return pipe(elements, forEachPar((a) => core.flip(f(a))), core.flip).traced(trace)
+  }
 }
 
 // circular with ReleaseMap

@@ -8,7 +8,7 @@ import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
 import * as layer from "@effect/io/internal/layer"
 import * as _runtime from "@effect/io/internal/runtime"
 import * as _schedule from "@effect/io/internal/schedule"
-import type { NonEmptyArrayEffect, TupleA } from "@effect/io/internal/types"
+import type { EnforceNonEmptyRecord, NonEmptyArrayEffect, TupleA } from "@effect/io/internal/types"
 import type { Equal } from "@fp-ts/data/Equal"
 
 /**
@@ -771,7 +771,7 @@ export const done = core.done
  * @since 1.0.0
  * @category conversions
  */
-export const either = effect.either
+export const either = core.either
 
 /**
  * Returns an effect that, if this effect _starts_ execution, then the
@@ -1055,7 +1055,7 @@ export const flattenErrorOption = effect.flattenErrorOption
  * @since 1.0.0
  * @category mutations
  */
-export const flip = effect.flip
+export const flip = core.flip
 
 /**
  * Swaps the error/value parameters, applies the function `f` and flips the
@@ -2025,6 +2025,36 @@ export const parallelErrors = effect.parallelErrors
 export const parallelFinalizers = fiberRuntime.parallelFinalizers
 
 /**
+ * Feeds elements of type `A` to a function `f` that returns an effect.
+ * Collects all successes and failures in a tupled fashion.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const partition = effect.partition
+
+/**
+ * Feeds elements of type `A` to a function `f` that returns an effect.
+ * Collects all successes and failures in parallel and returns the result as a
+ * tuple.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const partitionPar = fiberRuntime.partitionPar
+
+/**
+ * Like `tryPromise` but produces a defect in case of errors.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const promise = effect.promise
+
+/**
  * Provides the effect with its required environment, which eliminates its
  * dependency on `R`.
  *
@@ -2742,7 +2772,15 @@ export const someWith = fiberRuntime.someWith
  * @since 1.0.0
  * @category constructors
  */
-export const struct = effect.struct
+export const struct: <NER extends Record<string, Effect<any, any, any>>>(
+  r: EnforceNonEmptyRecord<NER> | Record<string, Effect<any, any, any>>
+) => Effect<
+  [NER[keyof NER]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R : never,
+  [NER[keyof NER]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E : never,
+  {
+    [K in keyof NER]: [NER[K]] extends [{ [EffectTypeId]: { _A: (_: never) => infer A } }] ? A : never
+  }
+> = effect.struct
 
 /**
  * @macro traced
@@ -2759,6 +2797,53 @@ export const structPar = fiberRuntime.structPar
 export const succeed = core.succeed
 
 /**
+ * Returns an effect which succeeds with the value wrapped in a `Left`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const succeedLeft = effect.succeedLeft
+
+/**
+ * Returns an effect which succeeds with `None`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const succeedNone = effect.succeedNone
+
+/**
+ * Returns an effect which succeeds with the value wrapped in a `Right`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const succeedRight = effect.succeedRight
+
+/**
+ * Returns an effect which succeeds with the value wrapped in a `Some`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const succeedSome = effect.succeedSome
+
+/**
+ * Summarizes a effect by computing some value before and after execution, and
+ * then combining the values to produce a summary, together with the result of
+ * execution.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const summarized = effect.summarized
+
+/**
  * Returns an effect with the behavior of this one, but where all child fibers
  * forked in the effect are reported to the specified supervisor.
  *
@@ -2767,6 +2852,17 @@ export const succeed = core.succeed
  * @category mutations
  */
 export const supervised = circular.supervised
+
+/**
+ * Returns a lazily constructed effect, whose construction may itself require
+ * effects. When no environment is required (i.e., when `R == unknown`) it is
+ * conceptually equivalent to `flatten(succeed(io))`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const suspend = effect.suspend
 
 /**
  * @macro traced
@@ -2783,11 +2879,30 @@ export const suspendSucceed = core.suspendSucceed
 export const sync = core.sync
 
 /**
+ * Takes all elements so long as the effectual predicate returns true.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const takeWhile = effect.takeWhile
+
+/**
  * @macro traced
  * @since 1.0.0
  * @category sequencing
  */
 export const tap = core.tap
+
+/**
+ * Returns an effect that effectfully "peeks" at the failure or success of
+ * this effect.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category sequencing
+ */
+export const tapBoth = effect.tapBoth
 
 /**
  * Returns an effect that effectually "peeks" at the defect of this effect.
@@ -2799,6 +2914,15 @@ export const tap = core.tap
 export const tapDefect = effect.tapDefect
 
 /**
+ * Returns an effect that effectfully "peeks" at the result of this effect.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category sequencing
+ */
+export const tapEither = effect.tapEither
+
+/**
  * Returns an effect that effectfully "peeks" at the failure of this effect.
  *
  * @macro traced
@@ -2806,6 +2930,110 @@ export const tapDefect = effect.tapDefect
  * @category sequencing
  */
 export const tapError = effect.tapError
+
+/**
+ * Returns an effect that effectually "peeks" at the cause of the failure of
+ * this effect.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category sequencing
+ */
+export const tapErrorCause = effect.tapErrorCause
+
+/**
+ * Returns an effect that effectfully "peeks" at the success of this effect.
+ * If the partial function isn't defined at the input, the result is
+ * equivalent to the original effect.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category sequencing
+ */
+export const tapSome = effect.tapSome
+
+/**
+ * Returns a new effect that executes this one and times the execution.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const timed = effect.timed
+
+/**
+ * A more powerful variation of `timed` that allows specifying the clock.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const timedWith = effect.timedWith
+
+/**
+ * Returns an effect that will timeout this effect, returning `None` if the
+ * timeout elapses before the effect has produced a value; and returning
+ * `Some` of the produced value otherwise.
+ *
+ * If the timeout elapses without producing a value, the running effect will
+ * be safely interrupted.
+ *
+ * WARNING: The effect returned by this method will not itself return until
+ * the underlying effect is actually interrupted. This leads to more
+ * predictable resource utilization. If early return is desired, then instead
+ * of using `effect.timeout(d)`, use `effect.disconnect.timeout(d)`, which
+ * first disconnects the effect's interruption signal before performing the
+ * timeout, resulting in earliest possible return, before an underlying effect
+ * has been successfully interrupted.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const timeout = circular.timeout
+
+/**
+ * The same as `timeout`, but instead of producing a `None` in the event of
+ * timeout, it will produce the specified error.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const timeoutFail = circular.timeoutFail
+
+/**
+ * The same as `timeout`, but instead of producing a `None` in the event of
+ * timeout, it will produce the specified failure.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const timeoutFailCause = circular.timeoutFailCause
+
+/**
+ * Returns an effect that will timeout this effect, returning either the
+ * default value if the timeout elapses before the effect has produced a
+ * value or returning the result of applying the function `f` to the
+ * success value of the effect.
+ *
+ * If the timeout elapses without producing a value, the running effect will
+ * be safely interrupted.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const timeoutTo = circular.timeoutTo
+
+/**
+ * Constructs a layer from this effect.
+ *
+ * @since 1.0.0
+ * @category conversions
+ */
+export const toLayer = layer.toLayer
 
 /**
  * @since 1.0.0
@@ -2838,6 +3066,16 @@ export const transplant = core.transplant
 export const tryCatch = effect.tryCatch
 
 /**
+ * Create an `Effect` that when executed will construct `promise` and wait for
+ * its result, errors will be handled using `onReject`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const tryCatchPromise = effect.tryCatchPromise
+
+/**
  * Executed `that` in case `self` fails with a `Cause` that doesn't contain
  * defects, executes `success` in case of successes
  *
@@ -2848,13 +3086,29 @@ export const tryCatch = effect.tryCatch
 export const tryOrElse = effect.tryOrElse
 
 /**
+ * Create an `Effect` that when executed will construct `promise` and wait for
+ * its result, errors will produce failure as `unknown`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const tryPromise = effect.tryPromise
+
+/**
  * Like `forEach` + `identity` with a tuple type.
  *
  * @macro traced
  * @since 1.0.0
  * @category constructors
  */
-export const tuple = effect.tuple
+export const tuple: <T extends NonEmptyArrayEffect>(
+  ...t: T
+) => Effect<
+  [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R : never,
+  [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E : never,
+  TupleA<T>
+> = effect.tuple
 
 /**
  * Like tuple but parallel, same as `forEachPar` + `identity` with a tuple type.
@@ -2868,6 +3122,29 @@ export const tuplePar: <T extends NonEmptyArrayEffect>(...t: T) => Effect<
   [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E : never,
   TupleA<T>
 > = fiberRuntime.tuplePar
+
+/**
+ * When this effect succeeds with a cause, then this method returns a new
+ * effect that either fails with the cause that this effect succeeded with, or
+ * succeeds with unit, depending on whether the cause is empty.
+ *
+ * This operation is the opposite of `cause`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const uncause = effect.uncause
+
+/**
+ * Constructs a `Chunk` by repeatedly applying the effectual function `f` as
+ * long as it returns `Some`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const unfold = effect.unfold
 
 /**
  * @macro traced
@@ -2889,6 +3166,43 @@ export const uninterruptibleMask = core.uninterruptibleMask
  * @category constructors
  */
 export const unit = core.unit
+
+/**
+ * Converts a `Effect<R, Either<E, B>, A>` into a `Effect<R, E, Either<A, B>>`.
+ * The inverse of `left`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category getters
+ */
+export const unleft = effect.unleft
+
+/**
+ * The moral equivalent of `if (!p) exp`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const unless = effect.unless
+
+/**
+ * The moral equivalent of `if (!p) exp` when `p` has side-effects.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const unlessEffect = effect.unlessEffect
+
+/**
+ * Takes some fiber failures and converts them into errors.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const unrefine = effect.unrefine
 
 /**
  * Takes some fiber failures and converts them into errors, using the specified
@@ -2965,6 +3279,18 @@ export const unsafeRunSyncExit = _runtime.unsafeRunSyncExit
 export const unsafeRunWith = _runtime.unsafeRunWith
 
 /**
+ * The inverse operation `sandbox(effect)`
+ *
+ * Terminates with exceptions on the `Left` side of the `Either` error, if it
+ * exists. Otherwise extracts the contained `Effect< R, E, A>`
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const unsandbox = effect.unsandbox
+
+/**
  * Converts an option on errors into an option on values.
  *
  * @macro traced
@@ -2991,11 +3317,156 @@ export const updateFiberRefs = effect.updateFiberRefs
 export const updateRuntimeFlags = core.updateRuntimeFlags
 
 /**
+ * Updates the service with the required service entry.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category environment
+ */
+export const updateService = effect.updateService
+
+/**
+ * Sequentially zips the this result with the specified result. Combines both
+ * `Cause`s when both effects fail.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const validate = effect.validate
+
+/**
+ * Returns an effect that executes both this effect and the specified effect,
+ * in parallel. Combines both Cause<E1>` when both effects fail.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const validatePar = circular.validatePar
+
+/**
+ * Feeds elements of type `A` to `f` and accumulates all errors in error
+ * channel or successes in success channel.
+ *
+ * This combinator is lossy meaning that if there are errors all successes
+ * will be lost. To retain all information please use `partition`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const validateAll = effect.validateAll
+
+/**
+ * Feeds elements of type `A` to `f `and accumulates, in parallel, all errors
+ * in error channel or successes in success channel.
+ *
+ * This combinator is lossy meaning that if there are errors all successes
+ * will be lost. To retain all information please use [[partitionPar]].
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const validateAllPar = fiberRuntime.validateAllPar
+
+/**
+ * Feeds elements of type `A` to `f` and accumulates all errors, discarding
+ * the successes.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const validateAllDiscard = effect.validateAllDiscard
+
+/**
+ * Feeds elements of type `A` to `f` in parallel and accumulates all errors,
+ * discarding the successes.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const validateAllParDiscard = fiberRuntime.validateAllParDiscard
+
+/**
+ * Feeds elements of type `A` to `f` until it succeeds. Returns first success
+ * or the accumulation of all errors.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const validateFirst = effect.validateFirst
+
+/**
+ * Feeds elements of type `A` to `f` until it succeeds. Returns first success
+ * or the accumulation of all errors.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const validateFirstPar = fiberRuntime.validateFirstPar
+
+/**
+ * Sequentially zips this effect with the specified effect using the specified
+ * combiner function. Combines the causes in case both effect fail.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const validateWith = effect.validateWith
+
+/**
+ * Returns an effect that executes both this effect and the specified effect,
+ * in parallel, combining their results with the specified `f` function. If
+ * both sides fail, then the cause will be combined.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const validateWithPar = circular.validateWithPar
+
+/**
  * @macro traced
  * @since 1.0.0
  * @category constructors
  */
 export const whileLoop = core.whileLoop
+
+/**
+ * The moral equivalent of `if (p) exp`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const when = effect.when
+
+/**
+ * Runs an effect when the supplied partial function matches for the given
+ * value, otherwise does nothing.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const whenCase = effect.whenCase
+
+/**
+ * Runs an effect when the supplied partial function matches for the given
+ * value, otherwise does nothing.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const whenCaseEffect = effect.whenCaseEffect
 
 /**
  * @macro traced
