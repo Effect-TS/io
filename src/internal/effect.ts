@@ -25,9 +25,6 @@ import * as Option from "@fp-ts/data/Option"
 import type { Predicate } from "@fp-ts/data/Predicate"
 import type { Refinement } from "@fp-ts/data/Refinement"
 
-// TODO:
-// - [ ] delay family
-
 /** @internal */
 export const absolve = <R, E, A>(self: Effect.Effect<R, E, Either.Either<E, A>>): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
@@ -423,6 +420,14 @@ export const continueOrFailEffect = <E1, A, R2, E2, A2>(
 }
 
 /** @internal */
+export const delay = (duration: Duration.Duration) => {
+  const trace = getCallTrace()
+  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
+    return pipe(Clock.sleep(duration), core.zipRight(self)).traced(trace)
+  }
+}
+
+/** @internal */
 export const descriptor = (): Effect.Effect<never, never, Fiber.Fiber.Descriptor> => {
   const trace = getCallTrace()
   return descriptorWith(core.succeed).traced(trace)
@@ -525,34 +530,34 @@ export const bindValue = <N extends string, K, A>(tag: Exclude<N, keyof K>, f: (
  * @category constructors
  * @since 1.0.0
  */
-export const dropWhile = <R, E, A>(
-  elements: Iterable<A>,
-  f: (a: A) => Effect.Effect<R, E, boolean>
-): Effect.Effect<R, E, Chunk.Chunk<A>> => {
-  return core.suspendSucceed(() => {
-    const iterator = elements[Symbol.iterator]()
-    const builder: Array<A> = []
-    let next
-    let dropping: Effect.Effect<R, E, boolean> = core.succeed(true)
-    while ((next = iterator.next()) && !next.done) {
-      const a = next.value
-      dropping = pipe(
-        dropping,
-        core.flatMap((d) =>
-          pipe(
-            d ? f(a) : core.succeed(false),
-            core.map((b) => {
-              if (!b) {
-                builder.push(a)
-              }
-              return b
-            })
+export const dropWhile = <R, E, A>(f: (a: A) => Effect.Effect<R, E, boolean>) => {
+  const trace = getCallTrace()
+  return (elements: Iterable<A>): Effect.Effect<R, E, Chunk.Chunk<A>> => {
+    return core.suspendSucceed(() => {
+      const iterator = elements[Symbol.iterator]()
+      const builder: Array<A> = []
+      let next
+      let dropping: Effect.Effect<R, E, boolean> = core.succeed(true)
+      while ((next = iterator.next()) && !next.done) {
+        const a = next.value
+        dropping = pipe(
+          dropping,
+          core.flatMap((d) =>
+            pipe(
+              d ? f(a) : core.succeed(false),
+              core.map((b) => {
+                if (!b) {
+                  builder.push(a)
+                }
+                return b
+              })
+            )
           )
         )
-      )
-    }
-    return pipe(dropping, core.map(() => Chunk.unsafeFromArray(builder)))
-  })
+      }
+      return pipe(dropping, core.map(() => Chunk.unsafeFromArray(builder)))
+    }).traced(trace)
+  }
 }
 
 /** @internal */
