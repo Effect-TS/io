@@ -8,7 +8,6 @@ describe.concurrent("Debug", () => {
   it("should include call trace", () => {
     const op = Effect.yieldNow()
     const yieldOp = (op as Yield)
-    console.log(yieldOp.trace)
     assert.isTrue(yieldOp.trace && yieldOp.trace.endsWith(__dirname + "/Debug.ts:9:23"))
   })
 })

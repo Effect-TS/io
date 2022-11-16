@@ -98,8 +98,9 @@ const unionLoop = (
         interval = Interval.make(interval.startMillis, that.head.endMillis)
         that = that.tail
       }
+    } else {
+      throw new Error("BUG: Intervals.unionLoop - please report an issue at https://github.com/Effect-TS/io/issues")
     }
-    throw new Error("BUG: Intervals.unionLoop - please report an issue at https://github.com/Effect-TS/io/issues")
   }
   return make(pipe(acc, List.prepend(interval), List.reverse))
 }

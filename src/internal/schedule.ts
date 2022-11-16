@@ -1316,10 +1316,7 @@ export const recurWhileEquals = <A>(value: A): Schedule.Schedule<never, A, A> =>
 export const recurs = (n: number): Schedule.Schedule<never, unknown, number> => {
   return pipe(
     forever(),
-    whileOutput((out) => {
-      console.log(out)
-      return out < n
-    })
+    whileOutput((out) => out < n)
   )
 }
 

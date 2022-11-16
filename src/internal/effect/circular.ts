@@ -223,9 +223,21 @@ export const forkIn = (scope: Scope.Scope) => {
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>> => {
     return core.uninterruptibleMask((restore) =>
       pipe(
-        restore(self),
-        fiberRuntime.forkDaemon,
-        core.tap((fiber) => scope.addFinalizer(() => core.asUnit(core.interruptFiber(fiber))))
+        scope.fork(ExecutionStrategy.sequential),
+        core.flatMap((child) =>
+          pipe(
+            restore(self),
+            core.onExit((exit) => child.close(exit)),
+            fiberRuntime.forkDaemon,
+            core.tap((fiber) =>
+              child.addFinalizer(() =>
+                core.fiberIdWith((fiberId) =>
+                  Equal.equals(fiberId, fiber.id()) ? core.unit() : core.asUnit(core.interruptFiber(fiber))
+                )
+              )
+            )
+          )
+        )
       )
     ).traced(trace)
   }
@@ -236,29 +248,7 @@ export const forkScoped = <R, E, A>(
   self: Effect.Effect<R, E, A>
 ): Effect.Effect<R | Scope.Scope, never, Fiber.RuntimeFiber<E, A>> => {
   const trace = getCallTrace()
-  return core.uninterruptibleMask((restore) =>
-    fiberRuntime.scopeWith((scope) =>
-      pipe(
-        scope.fork(ExecutionStrategy.sequential),
-        core.flatMap((child) =>
-          pipe(
-            restore(self),
-            core.onExit((e) => child.close(e)),
-            fiberRuntime.forkDaemon,
-            core.tap((fiber) =>
-              child.addFinalizer(() =>
-                core.fiberIdWith((fiberId) =>
-                  Equal.equals(fiberId, fiber.id) ?
-                    core.unit() :
-                    core.asUnit(core.interruptFiber(fiber))
-                )
-              )
-            )
-          )
-        )
-      )
-    )
-  ).traced(trace)
+  return fiberRuntime.scopeWith((scope) => pipe(self, forkIn(scope))).traced(trace)
 }
 
 /** @internal */
