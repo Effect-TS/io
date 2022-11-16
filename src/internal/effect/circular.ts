@@ -465,6 +465,73 @@ export const supervised = <X>(supervisor: Supervisor.Supervisor<X>) => {
 }
 
 /** @internal */
+export const timeout = (duration: Duration.Duration) => {
+  const trace = getCallTrace()
+  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, Option.Option<A>> => {
+    return pipe(self, timeoutTo(Option.none, Option.some, duration)).traced(trace)
+  }
+}
+
+/** @internal */
+export const timeoutFail = <E1>(evaluate: () => E1, duration: Duration.Duration) => {
+  const trace = getCallTrace()
+  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E | E1, A> => {
+    return pipe(
+      self,
+      timeoutTo(core.failSync(evaluate), core.succeed, duration),
+      core.flatten
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+export const timeoutFailCause = <E1>(evaluate: () => Cause.Cause<E1>, duration: Duration.Duration) => {
+  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E | E1, A> => {
+    return pipe(self, timeoutTo(core.failCauseSync(evaluate), core.succeed, duration), core.flatten)
+  }
+}
+
+/** @internal */
+export const timeoutTo = <A, B, B1>(def: B1, f: (a: A) => B, duration: Duration.Duration) => {
+  const trace = getCallTrace()
+  return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, B | B1> => {
+    return pipe(
+      self,
+      core.map(f),
+      raceFirst(
+        pipe(
+          effect.sleep(duration),
+          core.as(def),
+          core.interruptible
+        )
+      )
+    ).traced(trace)
+  }
+}
+
+/** @internal */
+export const validatePar = <R1, E1, B>(that: Effect.Effect<R1, E1, B>) => {
+  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1, E | E1, readonly [A, B]> => {
+    return pipe(self, validateWithPar(that, (a, b) => [a, b] as const))
+  }
+}
+
+/** @internal */
+export const validateWithPar = <A, R1, E1, B, C>(that: Effect.Effect<R1, E1, B>, f: (a: A, b: B) => C) => {
+  const trace = getCallTrace()
+  return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1, E | E1, C> => {
+    return pipe(
+      core.exit(self),
+      zipWithPar(
+        core.exit(that),
+        (ea, eb) => pipe(ea, core.exitZipWith(eb, f, (ca, cb) => Cause.parallel(ca, cb)))
+      ),
+      core.flatten
+    ).traced(trace)
+  }
+}
+
+/** @internal */
 export const zipPar = <R2, E2, A2>(that: Effect.Effect<R2, E2, A2>) => {
   const trace = getCallTrace()
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, readonly [A, A2]> => {
