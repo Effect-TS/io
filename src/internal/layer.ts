@@ -10,6 +10,7 @@ import * as circular from "@effect/io/internal/effect/circular"
 import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
 import * as EffectOpCodes from "@effect/io/internal/opCodes/effect"
 import * as OpCodes from "@effect/io/internal/opCodes/layer"
+import * as ref from "@effect/io/internal/ref"
 import * as runtime from "@effect/io/internal/runtime"
 import * as synchronized from "@effect/io/internal/synchronizedRef"
 import type * as Layer from "@effect/io/Layer"
@@ -22,7 +23,6 @@ import * as Scope from "@effect/io/Scope"
 import * as Context from "@fp-ts/data/Context"
 import * as Duration from "@fp-ts/data/Duration"
 import { pipe } from "@fp-ts/data/Function"
-import * as Option from "@fp-ts/data/Option"
 
 /** @internal */
 const LayerSymbolKey = "@effect/io/Layer"
@@ -161,125 +161,121 @@ class MemoMap {
     return pipe(
       this.ref,
       synchronized.modifyEffect((map) => {
-        const inMap = Option.fromNullable(map.get(layer))
-        switch (inMap._tag) {
-          case "Some": {
-            const [acquire, release] = inMap.value
-            const cached: Effect.Effect<never, E, Context.Context<ROut>> = pipe(
-              acquire as Effect.Effect<never, E, readonly [Context.Context<ROut>, FiberRefs.FiberRefs]>,
-              core.flatMap(([b, refs]) => pipe(effect.inheritFiberRefs(refs), core.as(b))),
-              core.onExit((exit) => {
-                switch (exit.op) {
-                  case EffectOpCodes.OP_FAILURE: {
-                    return core.unit()
-                  }
-                  case EffectOpCodes.OP_SUCCESS: {
-                    return scope.addFinalizer(release)
-                  }
+        const inMap = map.get(layer)
+        if (inMap !== undefined) {
+          const [acquire, release] = inMap
+          const cached: Effect.Effect<never, E, Context.Context<ROut>> = pipe(
+            acquire as Effect.Effect<never, E, readonly [Context.Context<ROut>, FiberRefs.FiberRefs]>,
+            core.flatMap(([b, refs]) => pipe(effect.inheritFiberRefs(refs), core.as(b))),
+            core.onExit((exit) => {
+              switch (exit.op) {
+                case EffectOpCodes.OP_FAILURE: {
+                  return core.unit()
                 }
-              })
-            )
-            return core.succeed([cached, map] as const)
-          }
-          case "None": {
-            return pipe(
-              circular.makeSynchronized(0),
-              core.flatMap((observers) =>
+                case EffectOpCodes.OP_SUCCESS: {
+                  return scope.addFinalizer(release)
+                }
+              }
+            })
+          )
+          return core.succeed([cached, map] as const)
+        }
+        return pipe(
+          ref.make(0),
+          core.flatMap((observers) =>
+            pipe(
+              core.makeDeferred<E, readonly [Context.Context<ROut>, FiberRefs.FiberRefs]>(),
+              core.flatMap((deferred) =>
                 pipe(
-                  core.makeDeferred<E, readonly [Context.Context<ROut>, FiberRefs.FiberRefs]>(),
-                  core.flatMap((deferred) =>
-                    pipe(
-                      circular.makeSynchronized<Scope.Scope.Finalizer>(core.unit),
-                      core.map((finalizerRef) => {
-                        const resource = core.uninterruptibleMask((restore) =>
+                  ref.make<Scope.Scope.Finalizer>(() => core.unit()),
+                  core.map((finalizerRef) => {
+                    const resource = core.uninterruptibleMask((restore) =>
+                      pipe(
+                        fiberRuntime.scopeMake(),
+                        core.flatMap((innerScope) =>
                           pipe(
-                            fiberRuntime.scopeMake(),
-                            core.flatMap((innerScope) =>
+                            restore(
                               pipe(
-                                restore(
-                                  pipe(
-                                    layer,
-                                    withScope(innerScope),
-                                    core.flatMap((f) => pipe(f(this), core.zip(effect.getFiberRefs())))
-                                  )
-                                ),
-                                core.exit,
-                                core.flatMap((exit) => {
-                                  switch (exit.op) {
-                                    case EffectOpCodes.OP_FAILURE: {
-                                      return pipe(
-                                        deferred,
-                                        core.failCauseDeferred(exit.cause),
-                                        core.zipRight(innerScope.close(exit)),
-                                        core.zipRight(core.failCause(exit.cause))
-                                      )
-                                    }
-                                    case EffectOpCodes.OP_SUCCESS: {
-                                      return pipe(
-                                        finalizerRef,
-                                        synchronized.set((exit) =>
-                                          pipe(
-                                            core.whenEffect(
-                                              pipe(
-                                                observers,
-                                                synchronized.modify((n) => [n === 1, n - 1] as const)
-                                              ),
-                                              innerScope.close(exit)
-                                            ),
-                                            core.asUnit
-                                          )
-                                        ),
-                                        core.zipRight(pipe(observers, synchronized.update((n) => n + 1))),
-                                        core.zipRight(
-                                          scope.addFinalizer((exit) =>
-                                            pipe(
-                                              synchronized.get(finalizerRef),
-                                              core.flatMap((finalizer) => finalizer(exit))
-                                            )
-                                          )
-                                        ),
-                                        core.zipRight(pipe(deferred, core.succeedDeferred(exit.value))),
-                                        core.as(exit.value[0])
-                                      )
-                                    }
-                                  }
-                                })
+                                layer,
+                                withScope(innerScope),
+                                core.flatMap((f) => pipe(f(this), core.zip(effect.getFiberRefs())))
                               )
-                            )
-                          )
-                        )
-                        const memoized = [
-                          pipe(
-                            core.awaitDeferred(deferred),
-                            core.onExit((exit) => {
+                            ),
+                            core.exit,
+                            core.flatMap((exit) => {
                               switch (exit.op) {
                                 case EffectOpCodes.OP_FAILURE: {
-                                  return core.unit()
+                                  return pipe(
+                                    deferred,
+                                    core.failCauseDeferred(exit.cause),
+                                    core.zipRight(innerScope.close(exit)),
+                                    core.zipRight(core.failCause(exit.cause))
+                                  )
                                 }
                                 case EffectOpCodes.OP_SUCCESS: {
-                                  return pipe(observers, synchronized.update((n) => n + 1))
+                                  return pipe(
+                                    finalizerRef,
+                                    ref.set((exit) =>
+                                      pipe(
+                                        innerScope.close(exit),
+                                        core.whenEffect(
+                                          pipe(
+                                            observers,
+                                            ref.modify((n) => [n === 1, n - 1] as const)
+                                          )
+                                        ),
+                                        core.asUnit
+                                      )
+                                    ),
+                                    core.zipRight(pipe(observers, ref.update((n) => n + 1))),
+                                    core.zipRight(
+                                      scope.addFinalizer((exit) =>
+                                        pipe(
+                                          ref.get(finalizerRef),
+                                          core.flatMap((finalizer) => finalizer(exit))
+                                        )
+                                      )
+                                    ),
+                                    core.zipRight(pipe(deferred, core.succeedDeferred(exit.value))),
+                                    core.as(exit.value[0])
+                                  )
                                 }
                               }
                             })
-                          ),
-                          (exit: Exit.Exit<unknown, unknown>) =>
-                            pipe(
-                              synchronized.get(finalizerRef),
-                              core.flatMap((finalizer) => finalizer(exit))
-                            )
-                        ] as const
-                        return [
-                          resource,
-                          isFresh(layer) ? map : map.set(layer, memoized)
-                        ] as const
-                      })
+                          )
+                        )
+                      )
                     )
-                  )
+                    const memoized = [
+                      pipe(
+                        core.awaitDeferred(deferred),
+                        core.onExit((exit) => {
+                          switch (exit.op) {
+                            case EffectOpCodes.OP_FAILURE: {
+                              return core.unit()
+                            }
+                            case EffectOpCodes.OP_SUCCESS: {
+                              return pipe(observers, ref.update((n) => n + 1))
+                            }
+                          }
+                        })
+                      ),
+                      (exit: Exit.Exit<unknown, unknown>) =>
+                        pipe(
+                          ref.get(finalizerRef),
+                          core.flatMap((finalizer) => finalizer(exit))
+                        )
+                    ] as const
+                    return [
+                      resource,
+                      isFresh(layer) ? map : map.set(layer, memoized)
+                    ] as const
+                  })
                 )
               )
             )
-          }
-        }
+          )
+        )
       }),
       core.flatten
     )
@@ -626,14 +622,7 @@ export const merge = <RIn2, E2, ROut2>(that: Layer.Layer<RIn2, E2, ROut2>) => {
     E | E2,
     ROut | ROut2
   > => {
-    const zipWithPar = Object.create(proto)
-    zipWithPar.op = OpCodes.OP_ZIP_WITH_PAR
-    zipWithPar.first = self
-    zipWithPar.second = that
-    zipWithPar.zipK = (a: Context.Context<unknown>, b: Context.Context<unknown>) => {
-      return pipe(a, Context.merge(b))
-    }
-    return zipWithPar
+    return pipe(self, zipWithPar(that, (a, b) => pipe(a, Context.merge(b))))
   }
 }
 

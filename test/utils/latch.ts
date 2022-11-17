@@ -37,7 +37,7 @@ export const withLatchAwait = <R, E, A>(
         )
       )
     )
-    yield* Effect.whenEffect(Ref.get(ref), Deferred.await(latch))
+    yield* pipe(Deferred.await(latch), Effect.whenEffect(Ref.get(ref)))
     return result
   })
 }

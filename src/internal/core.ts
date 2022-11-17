@@ -858,15 +858,14 @@ export const updateRuntimeFlags = (
 }
 
 /** @internal */
-export const whenEffect = <R, E, R1, E1, A>(
-  predicate: Effect.Effect<R, E, boolean>,
-  effect: Effect.Effect<R1, E1, A>
-): Effect.Effect<R | R1, E | E1, Option.Option<A>> => {
+export const whenEffect = <R, E>(predicate: Effect.Effect<R, E, boolean>) => {
   const trace = getCallTrace()
-  return pipe(
-    suspendSucceed(() => predicate),
-    flatMap((b) => b ? pipe(effect, map(Option.some)) : pipe(effect, map(() => Option.none)))
-  ).traced(trace)
+  return <R2, E2, A>(effect: Effect.Effect<R2, E2, A>): Effect.Effect<R | R2, E | E2, Option.Option<A>> => {
+    return pipe(
+      suspendSucceed(() => predicate),
+      flatMap((b) => b ? pipe(effect, map(Option.some)) : pipe(effect, map(() => Option.none)))
+    ).traced(trace)
+  }
 }
 
 /** @internal */
@@ -1311,7 +1310,7 @@ export const releaseMapRelease = (key: number, exit: Exit.Exit<unknown, unknown>
         case "Running": {
           const finalizer = self.state.finalizers.get(key)
           self.state.finalizers.delete(key)
-          if (finalizer) {
+          if (finalizer !== undefined) {
             return self.state.update(finalizer)(exit)
           }
           return unit()

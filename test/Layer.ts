@@ -556,7 +556,7 @@ describe.concurrent("Layer", () => {
       assert.deepStrictEqual(Array.from(result), [acquire1, release1])
     }))
 
-  // TODO(Mike/Max): releasing layer1 before layer 2
+  // // TODO(Mike/Max): releasing layer1 before layer 2
   // it.effect("sharing with multiple layers with provideTo", () =>
   //   Effect.gen(function*() {
   //     const ref = yield* makeRef()
