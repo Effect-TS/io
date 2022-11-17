@@ -617,4 +617,24 @@ describe.concurrent("Effect", () => {
       const result = MutableRef.get(ref)
       assert.strictEqual(result, 0)
     }))
+
+  it.effect("interruption status is inheritable", () =>
+    Effect.gen(function*() {
+      const latch = yield* Deferred.make<never, void>()
+      const ref = yield* Ref.make(true)
+      yield* pipe(
+        Effect.checkInterruptible((isInterruptible) =>
+          pipe(
+            ref,
+            Ref.set(isInterruptible),
+            Effect.zipRight(pipe(latch, Deferred.succeed<void>(void 0)))
+          )
+        ),
+        Effect.fork,
+        Effect.zipRight(Deferred.await(latch)),
+        Effect.uninterruptible
+      )
+      const result = yield* Ref.get(ref)
+      assert.isFalse(result)
+    }))
 })

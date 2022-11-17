@@ -321,6 +321,13 @@ export const catchAllCause = <E, R2, E2, A2>(
 }
 
 /** @internal */
+export const checkInterruptible = <R, E, A>(
+  f: (isInterruptible: boolean) => Effect.Effect<R, E, A>
+): Effect.Effect<R, E, A> => {
+  return withFiberRuntime((_, status) => f(RuntimeFlags.interruption(status.runtimeFlags)))
+}
+
+/** @internal */
 export const die = (defect: unknown): Effect.Effect<never, never, never> => {
   const trace = getCallTrace()
   return failCause(Cause.die(defect)).traced(trace)
