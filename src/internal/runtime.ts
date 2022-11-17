@@ -287,7 +287,7 @@ export const asyncEffect = <R, E, A, R2, E2, X>(
                 )
               ),
               FiberRuntime.fork,
-              core.zipRight(core.awaitDeferred(deferred))
+              core.zipRight(restore(core.awaitDeferred(deferred)))
             )
           )
         )
