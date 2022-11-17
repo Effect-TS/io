@@ -468,6 +468,16 @@ export const catchTag = effect.catchTag
 export const cause = effect.cause
 
 /**
+ * Checks the interrupt status, and produces the effect returned by the
+ * specified callback.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const checkInterruptible = core.checkInterruptible
+
+/**
  * Retreives the `Clock` service from the environment.
  *
  * @macro traced
