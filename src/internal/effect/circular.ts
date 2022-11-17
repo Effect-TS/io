@@ -562,61 +562,80 @@ export const zipWithPar = <R2, E2, A2, A, B>(
 ) => {
   const trace = getCallTrace()
   return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, B> => {
-    const g = (b: A2, a: A) => f(a, b)
     return core.uninterruptibleMask((restore) =>
-      core.transplant((graft) =>
-        core.fiberIdWith((fiberId) =>
-          pipe(
-            graft(restore(self)),
-            raceFibersWith(
-              graft(restore(that)),
-              (w, l) => coordinateZipWithPar(fiberId, f, true, w, l),
-              (w, l) => coordinateZipWithPar(fiberId, g, false, w, l)
+      core.transplant((graft) => {
+        const deferred = core.unsafeMakeDeferred<void, void>(FiberId.none)
+        const ref = MutableRef.make(false)
+        return pipe(
+          forkZipWithPar(self, graft, restore, deferred, ref),
+          core.zip(forkZipWithPar(that, graft, restore, deferred, ref)),
+          core.flatMap(([left, right]) =>
+            pipe(
+              restore(core.awaitDeferred(deferred)),
+              core.foldCauseEffect(
+                (cause) =>
+                  pipe(
+                    fiberRuntime.interruptFork(left),
+                    core.zipRight(fiberRuntime.interruptFork(right)),
+                    core.zipRight(
+                      pipe(
+                        internalFiber._await(left),
+                        core.zip(internalFiber._await(right)),
+                        core.flatMap(([left, right]) =>
+                          pipe(
+                            left,
+                            core.exitZipWith(right, f, Cause.parallel),
+                            core.exitMatch(
+                              (causes) => core.failCause(Cause.parallel(Cause.stripFailures(cause), causes)),
+                              () => core.failCause(Cause.stripFailures(cause))
+                            )
+                          )
+                        )
+                      )
+                    )
+                  ),
+                () =>
+                  pipe(
+                    internalFiber.join(left),
+                    core.zipWith(internalFiber.join(right), f)
+                  )
+              )
             )
           )
         )
-      )
+      })
     ).traced(trace)
   }
 }
 
 /** @internal */
-const coordinateZipWithPar = <E, E1, B, X, Y>(
-  fiberId: FiberId.FiberId,
-  f: (a: X, b: Y) => B,
-  leftWinner: boolean,
-  winner: Fiber.Fiber<E, X>,
-  loser: Fiber.Fiber<E1, Y>
-): Effect.Effect<never, E | E1, B> => {
+const forkZipWithPar = <R, E, A>(
+  self: Effect.Effect<R, E, A>,
+  graft: <RX, EX, AX>(effect: Effect.Effect<RX, EX, AX>) => Effect.Effect<RX, EX, AX>,
+  restore: <RX, EX, AX>(effect: Effect.Effect<RX, EX, AX>) => Effect.Effect<RX, EX, AX>,
+  deferred: Deferred.Deferred<void, void>,
+  ref: MutableRef.MutableRef<boolean>
+): Effect.Effect<R, never, Fiber.Fiber<E, A>> => {
   return pipe(
-    winner.await(),
-    core.flatMap(Exit.match(
-      (winnerCause) =>
+    graft(restore(self)),
+    core.foldCauseEffect(
+      (cause) =>
         pipe(
-          loser,
-          core.interruptWithFiber(fiberId),
-          core.flatMap(Exit.match(
-            (loserCause) =>
-              leftWinner ?
-                core.failCause(Cause.parallel(winnerCause, loserCause)) :
-                core.failCause(Cause.parallel(loserCause, winnerCause)),
-            () => core.failCause(winnerCause)
-          ))
+          deferred,
+          core.failDeferred<void>(void 0),
+          core.zipRight(core.failCause(cause))
         ),
-      (a) =>
-        pipe(
-          loser.await(),
-          core.flatMap(Exit.match<E | E1, Y, Effect.Effect<never, E | E1, B>>(
-            core.failCause,
-            (b) =>
-              pipe(
-                winner.inheritAll(),
-                core.zipRight(loser.inheritAll()),
-                core.zipRight(core.sync(() => f(a, b)))
-              )
-          ))
-        )
-    ))
+      (value) => {
+        const flag = MutableRef.get(ref)
+        if (flag) {
+          pipe(deferred, core.unsafeDoneDeferred<void, void>(core.unit()))
+          return core.succeed(value)
+        }
+        pipe(ref, MutableRef.set(true))
+        return core.succeed(value)
+      }
+    ),
+    fiberRuntime.forkDaemon
   )
 }
 

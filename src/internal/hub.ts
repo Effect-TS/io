@@ -864,15 +864,19 @@ class SubscriptionImpl<A> implements Queue.Dequeue<A> {
     return pipe(
       core.withFiberRuntime<never, never, void>((state) => {
         pipe(this.shutdownFlag, MutableRef.set(true))
-        return core.asUnit(core.whenEffect(
-          pipe(this.shutdownHook, core.succeedDeferred<void>(void 0)),
-          pipe(
-            unsafePollAllQueue(this.pollers),
-            fiberRuntime.forEachPar(core.interruptAsDeferred(state.id())),
-            core.zipRight(core.sync(() => this.subscription.unsubscribe())),
-            core.zipRight(core.sync(() => this.strategy.unsafeOnHubEmptySpace(this.hub, this.subscribers)))
-          )
-        ))
+        return pipe(
+          unsafePollAllQueue(this.pollers),
+          fiberRuntime.forEachPar(core.interruptAsDeferred(state.id())),
+          core.zipRight(core.sync(() => this.subscription.unsubscribe())),
+          core.zipRight(core.sync(() => this.strategy.unsafeOnHubEmptySpace(this.hub, this.subscribers))),
+          core.whenEffect(
+            pipe(
+              this.shutdownHook,
+              core.succeedDeferred<void>(void 0)
+            )
+          ),
+          core.asUnit
+        )
       }),
       core.uninterruptible
     ).traced(trace)
@@ -1040,13 +1044,17 @@ class HubImpl<A> implements Hub.Hub<A> {
     return pipe(
       core.withFiberRuntime<never, never, void>((state) => {
         pipe(this.shutdownFlag, MutableRef.set(true))
-        return core.asUnit(core.whenEffect(
-          pipe(this.shutdownHook, core.succeedDeferred<void>(void 0)),
-          pipe(
-            this.scope.close(core.exitInterrupt(state.id())),
-            core.zipRight(this.strategy.shutdown())
-          )
-        ))
+        return pipe(
+          this.scope.close(core.exitInterrupt(state.id())),
+          core.zipRight(this.strategy.shutdown()),
+          core.whenEffect(
+            pipe(
+              this.shutdownHook,
+              core.succeedDeferred<void>(void 0)
+            )
+          ),
+          core.asUnit
+        )
       }),
       core.uninterruptible
     ).traced(trace)

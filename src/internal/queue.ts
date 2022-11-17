@@ -98,14 +98,15 @@ class QueueImpl<A> implements Queue.Queue<A> {
       core.withFiberRuntime<never, never, void>((state) => {
         pipe(this.shutdownFlag, MutableRef.set(true))
         return pipe(
+          unsafePollAll(this.takers),
+          fiberRuntime.forEachParDiscard(
+            core.interruptAsDeferred(state.id())
+          ),
+          core.zipRight(this.strategy.shutdown()),
           core.whenEffect(
-            pipe(this.shutdownHook, core.succeedDeferred<void>(void 0)),
             pipe(
-              unsafePollAll(this.takers),
-              fiberRuntime.forEachParDiscard(
-                core.interruptAsDeferred(state.id())
-              ),
-              core.zipRight(this.strategy.shutdown())
+              this.shutdownHook,
+              core.succeedDeferred<void>(void 0)
             )
           ),
           core.asUnit

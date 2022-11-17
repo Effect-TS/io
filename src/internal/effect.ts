@@ -1498,7 +1498,7 @@ export const once = <R, E, A>(
   const trace = getCallTrace()
   return pipe(
     Ref.make(true),
-    core.map((ref) => pipe(core.whenEffect(pipe(ref, Ref.getAndSet(false)), self), core.asUnit))
+    core.map((ref) => pipe(self, core.whenEffect(pipe(ref, Ref.getAndSet(false))), core.asUnit))
   ).traced(trace)
 }
 
