@@ -747,6 +747,16 @@ export const dieSync = core.dieSync
 export const disconnect = circular.disconnect
 
 /**
+ * Returns a new workflow that executes this one and captures the changes in
+ * `FiberRef` values.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const diffFiberRefs = effect.diffFiberRefs
+
+/**
  * Binds an effectful value in a `do` scope
  *
  * @macro traced
@@ -2074,6 +2084,16 @@ export const partition = effect.partition
  * @category constructors
  */
 export const partitionPar = fiberRuntime.partitionPar
+
+/**
+ * Applies the specified changes to the `FiberRef` values for the fiber
+ * running this workflow.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const patchFiberRefs = effect.patchFiberRefs
 
 /**
  * Like `tryPromise` but produces a defect in case of errors.

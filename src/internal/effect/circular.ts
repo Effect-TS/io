@@ -6,6 +6,7 @@ import * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
 import * as Exit from "@effect/io/Exit"
 import type * as Fiber from "@effect/io/Fiber"
 import * as FiberId from "@effect/io/Fiber/Id"
+import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
 import * as core from "@effect/io/internal/core"
 import * as effect from "@effect/io/internal/effect"
 import * as internalFiber from "@effect/io/internal/fiber"
@@ -136,18 +137,14 @@ const invalidateCache = <E, A>(
 export const disconnect = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
   return core.uninterruptibleMask((restore) =>
-    pipe(
-      core.fiberId(),
-      core.flatMap((fiberId) =>
-        pipe(
-          restore(self),
-          fiberRuntime.forkDaemon,
-          core.flatMap((fiber) =>
-            pipe(
-              internalFiber.join(fiber),
-              core.interruptible,
-              core.onInterrupt(() => fiber.interruptWithFork(fiberId))
-            )
+    core.fiberIdWith((fiberId) =>
+      pipe(
+        restore(self),
+        fiberRuntime.forkDaemon,
+        core.flatMap((fiber) =>
+          pipe(
+            restore(internalFiber.join(fiber)),
+            core.onInterrupt(() => pipe(fiber, internalFiber.interruptWithFork(fiberId)))
           )
         )
       )
@@ -269,7 +266,9 @@ export const memoizeFunction = <R, E, A, B>(
 ): Effect.Effect<never, never, (a: A) => Effect.Effect<R, E, B>> => {
   const trace = getCallTrace()
   return pipe(
-    core.sync(() => MutableHashMap.empty<A, Deferred.Deferred<E, B>>()),
+    core.sync(() => {
+      return MutableHashMap.empty<A, Deferred.Deferred<E, readonly [FiberRefsPatch.FiberRefsPatch, B]>>()
+    }),
     core.flatMap(makeSynchronized),
     core.map((ref) =>
       (a: A) =>
@@ -278,14 +277,21 @@ export const memoizeFunction = <R, E, A, B>(
             const result = pipe(map, MutableHashMap.get(a))
             if (Option.isNone(result)) {
               return pipe(
-                core.makeDeferred<E, B>(),
-                core.tap((deferred) => pipe(f(a), core.intoDeferred(deferred), fiberRuntime.fork)),
+                core.makeDeferred<E, readonly [FiberRefsPatch.FiberRefsPatch, B]>(),
+                core.tap((deferred) =>
+                  pipe(
+                    effect.diffFiberRefs(f(a)),
+                    core.intoDeferred(deferred),
+                    fiberRuntime.fork
+                  )
+                ),
                 core.map((deferred) => [deferred, pipe(map, MutableHashMap.set(a, deferred))] as const)
               )
             }
             return core.succeed([result.value, map] as const)
           }),
-          core.flatMap(core.awaitDeferred)
+          core.flatMap(core.awaitDeferred),
+          core.flatMap(([patch, b]) => pipe(effect.patchFiberRefs(patch), core.as(b)))
         )
     )
   ).traced(trace)
@@ -295,8 +301,23 @@ export const memoizeFunction = <R, E, A, B>(
 export const race = <R2, E2, A2>(that: Effect.Effect<R2, E2, A2>) => {
   const trace = getCallTrace()
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, A | A2> => {
-    return pipe(disconnect(self), raceAwait(disconnect(that))).traced(trace)
+    return core.checkInterruptible((isInterruptible) =>
+      pipe(
+        raceDisconnect(self, isInterruptible),
+        raceAwait(raceDisconnect(that, isInterruptible))
+      )
+    ).traced(trace)
   }
+}
+
+/** @internal */
+const raceDisconnect = <R, E, A>(
+  self: Effect.Effect<R, E, A>,
+  isInterruptible: boolean
+): Effect.Effect<R, E, A> => {
+  return isInterruptible ?
+    disconnect(self) :
+    core.interruptible(disconnect(core.uninterruptible(self)))
 }
 
 /** @internal */

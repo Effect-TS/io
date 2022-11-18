@@ -3,7 +3,7 @@ import * as Clock from "@effect/io/Clock"
 import { getCallTrace } from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
-import type * as FiberRefs from "@effect/io/FiberRefs"
+import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
 import * as core from "@effect/io/internal/core"
 import * as effect from "@effect/io/internal/effect"
 import * as circular from "@effect/io/internal/effect/circular"
@@ -53,6 +53,7 @@ export type Primitive =
   | Scoped
   | Suspend
   | ProvideTo
+  | ZipWith
   | ZipWithPar
 
 /** @internal */
@@ -113,6 +114,18 @@ export interface ProvideTo extends
 {}
 
 /** @internal */
+export interface ZipWith extends
+  Op<OpCodes.OP_ZIP_WITH, {
+    readonly first: Layer.Layer<never, never, unknown>
+    readonly second: Layer.Layer<never, never, unknown>
+    readonly zipK: (
+      left: Context.Context<unknown>,
+      right: Context.Context<unknown>
+    ) => Context.Context<unknown>
+  }>
+{}
+
+/** @internal */
 export interface ZipWithPar extends
   Op<OpCodes.OP_ZIP_WITH_PAR, {
     readonly first: Layer.Layer<never, never, unknown>
@@ -165,8 +178,8 @@ class MemoMap {
         if (inMap !== undefined) {
           const [acquire, release] = inMap
           const cached: Effect.Effect<never, E, Context.Context<ROut>> = pipe(
-            acquire as Effect.Effect<never, E, readonly [Context.Context<ROut>, FiberRefs.FiberRefs]>,
-            core.flatMap(([b, refs]) => pipe(effect.inheritFiberRefs(refs), core.as(b))),
+            acquire as Effect.Effect<never, E, readonly [FiberRefsPatch.FiberRefsPatch, Context.Context<ROut>]>,
+            core.flatMap(([patch, b]) => pipe(effect.patchFiberRefs(patch), core.as(b))),
             core.onExit((exit) => {
               switch (exit.op) {
                 case EffectOpCodes.OP_FAILURE: {
@@ -184,7 +197,7 @@ class MemoMap {
           ref.make(0),
           core.flatMap((observers) =>
             pipe(
-              core.makeDeferred<E, readonly [Context.Context<ROut>, FiberRefs.FiberRefs]>(),
+              core.makeDeferred<E, readonly [FiberRefsPatch.FiberRefsPatch, Context.Context<ROut>]>(),
               core.flatMap((deferred) =>
                 pipe(
                   ref.make<Scope.Scope.Finalizer>(() => core.unit()),
@@ -198,7 +211,7 @@ class MemoMap {
                               pipe(
                                 layer,
                                 withScope(innerScope),
-                                core.flatMap((f) => pipe(f(this), core.zip(effect.getFiberRefs())))
+                                core.flatMap((f) => effect.diffFiberRefs(f(this)))
                               )
                             ),
                             core.exit,
@@ -237,7 +250,7 @@ class MemoMap {
                                       )
                                     ),
                                     core.zipRight(pipe(deferred, core.succeedDeferred(exit.value))),
-                                    core.as(exit.value[0])
+                                    core.as(exit.value[1])
                                   )
                                 }
                               }
@@ -303,7 +316,7 @@ export const build = <RIn, E, ROut>(
   self: Layer.Layer<RIn, E, ROut>
 ): Effect.Effect<RIn | Scope.Scope, E, Context.Context<ROut>> => {
   const trace = getCallTrace()
-  return core.serviceWithEffect(Scope.Tag)(
+  return fiberRuntime.scopeWith(
     (scope) => pipe(self, buildWithScope(scope))
   ).traced(trace)
 }
@@ -385,6 +398,18 @@ export const withScope = (scope: Scope.Scope) => {
       }
       case OpCodes.OP_SUSPEND: {
         return core.sync(() => (memoMap: MemoMap) => memoMap.getOrElseMemoize(op.evaluate(), scope))
+      }
+      case OpCodes.OP_ZIP_WITH: {
+        return core.sync(() =>
+          (memoMap: MemoMap) =>
+            pipe(
+              memoMap.getOrElseMemoize(op.first, scope),
+              core.zipWith(
+                memoMap.getOrElseMemoize(op.second, scope),
+                op.zipK
+              )
+            )
+        )
       }
       case OpCodes.OP_ZIP_WITH_PAR: {
         return core.sync(() =>
@@ -537,15 +562,10 @@ export function fromEffect<T>(tag: Context.Tag<T>) {
 export function fromEffectEnvironment<R, E, A>(
   effect: Effect.Effect<R, E, Context.Context<A>>
 ): Layer.Layer<R, E, A> {
-  const suspend = Object.create(proto)
-  suspend.op = OpCodes.OP_SUSPEND
-  suspend.evaluate = () => {
-    const fromEffect = Object.create(proto)
-    fromEffect.op = OpCodes.OP_FROM_EFFECT
-    fromEffect.effect = effect
-    return fromEffect
-  }
-  return suspend
+  const fromEffect = Object.create(proto)
+  fromEffect.op = OpCodes.OP_FROM_EFFECT
+  fromEffect.effect = effect
+  return fromEffect
 }
 
 /** @internal */
@@ -603,16 +623,15 @@ export const mapError = <E, E1>(f: (error: E) => E1) => {
 export const memoize = <RIn, E, ROut>(
   self: Layer.Layer<RIn, E, ROut>
 ): Effect.Effect<Scope.Scope, never, Layer.Layer<RIn, E, ROut>> => {
-  return pipe(
-    fiberRuntime.scopeWith((scope) => pipe(self, buildWithScope(scope))),
-    effect.memoize,
-    core.map((effect) => {
-      const scoped = Object.create(proto)
-      scoped.op = OpCodes.OP_SCOPED
-      scoped.effect = effect
-      return scoped
-    })
-  )
+  const trace = getCallTrace()
+  return fiberRuntime.scopeWith((scope) =>
+    pipe(
+      self,
+      buildWithScope(scope),
+      effect.memoize,
+      core.map(fromEffectEnvironment)
+    )
+  ).traced(trace)
 }
 
 /** @internal */
@@ -680,7 +699,14 @@ export function provideToAndMerge<RIn2, E2, ROut2>(that: Layer.Layer<RIn2, E2, R
   return <RIn, E, ROut>(
     self: Layer.Layer<RIn, E, ROut>
   ): Layer.Layer<RIn | Exclude<RIn2, ROut>, E2 | E, ROut | ROut2> => {
-    return pipe(self, merge(pipe(self, provideTo(that))))
+    const zipWith = Object.create(proto)
+    zipWith.op = OpCodes.OP_ZIP_WITH
+    zipWith.first = self
+    zipWith.second = pipe(self, provideTo(that))
+    zipWith.zipK = (a: Context.Context<ROut>, b: Context.Context<ROut2>): Context.Context<ROut | ROut2> => {
+      return pipe(a, Context.merge(b))
+    }
+    return zipWith
   }
 }
 
@@ -881,17 +907,12 @@ export function zipWithPar<R1, E1, A1, A, A2>(
   f: (a: Context.Context<A>, b: Context.Context<A1>) => Context.Context<A2>
 ) {
   return <R, E>(self: Layer.Layer<R, E, A>): Layer.Layer<R | R1, E | E1, A2> => {
-    const suspend = Object.create(proto)
-    suspend.op = OpCodes.OP_SUSPEND
-    suspend.evaluate = () => {
-      const zipWithPar = Object.create(proto)
-      zipWithPar.op = OpCodes.OP_ZIP_WITH_PAR
-      zipWithPar.first = self
-      zipWithPar.second = that
-      zipWithPar.zipK = f
-      return zipWithPar
-    }
-    return suspend
+    const zipWithPar = Object.create(proto)
+    zipWithPar.op = OpCodes.OP_ZIP_WITH_PAR
+    zipWithPar.first = self
+    zipWithPar.second = that
+    zipWithPar.zipK = f
+    return zipWithPar
   }
 }
 
@@ -909,7 +930,7 @@ export const provideLayer = <R, E, A>(layer: Layer.Layer<R, E, A>) => {
           buildWithScope(scope),
           core.flatMap((context) => pipe(self, core.provideEnvironment(context)))
         ),
-      (scope, exit) => scope.close(exit)
+      (scope, exit) => pipe(scope, core.scopeClose(exit))
     ).traced(trace)
   }
 }

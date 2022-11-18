@@ -781,6 +781,23 @@ export const NoSuchElementException = internal.NoSuchElementException
 export const isNoSuchElementException = internal.isNoSuchElementException
 
 /**
+ * Represents a generic checked exception which occurs at runtime.
+ *
+ * @since 1.0.0
+ * @category errors
+ */
+export const RuntimeException = internal.RuntimeException
+
+/**
+  * Returns `true` if the specified value is an `RuntimeException`, `false`
+  * otherwise.
+
+  * @since 1.0.0
+  * @category refinements
+  */
+export const isRuntimeException = internal.isRuntimeException
+
+/**
  * The default `Cause.Renderer`.
  *
  * @since 1.0.0

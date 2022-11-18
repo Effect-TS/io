@@ -342,7 +342,7 @@ export const dieSync = (evaluate: () => unknown): Effect.Effect<never, never, ne
 /** @internal */
 export const done = <E, A>(exit: Exit.Exit<E, A>): Effect.Effect<never, E, A> => {
   const trace = getCallTrace()
-  return exit.op === OpCodes.OP_FAILURE ? failCause(exit.cause).traced(trace) : succeed(exit.value).traced(trace)
+  return suspendSucceed(() => exit).traced(trace)
 }
 
 /** @internal */
@@ -1201,7 +1201,18 @@ export const unsafeMakePatchFiberRef = <Value, Patch>(
 })
 
 /** @internal */
-export const currentEnvironment: FiberRef.FiberRef<Context.Context<never>> = unsafeMakeFiberRef(
+export const unsafeMakeRuntimeFlagsFiberRef = (
+  initial: RuntimeFlags.RuntimeFlags
+): FiberRef.FiberRef<RuntimeFlags.RuntimeFlags> => {
+  return unsafeMakePatchFiberRef(
+    initial,
+    RuntimeFlags.differ(),
+    RuntimeFlagsPatch.empty
+  )
+}
+
+/** @internal */
+export const currentEnvironment: FiberRef.FiberRef<Context.Context<never>> = unsafeMakeEnvironmentFiberRef(
   Context.empty()
 )
 
@@ -1234,14 +1245,15 @@ export const currentParallelism: FiberRef.FiberRef<Option.Option<number>> = unsa
 /** @internal */
 export const forkScopeOverride: FiberRef.FiberRef<Option.Option<FiberScope.FiberScope>> = unsafeMakeFiberRef(
   Option.none,
-  () => Option.none as Option.Option<FiberScope.FiberScope>
+  () => Option.none as Option.Option<FiberScope.FiberScope>,
+  (parent, _) => parent
 )
 
 /** @internal */
 export const interruptedCause: FiberRef.FiberRef<Cause.Cause<never>> = unsafeMakeFiberRef(
   Cause.empty,
   () => Cause.empty,
-  (parent) => parent
+  (parent, _) => parent
 )
 
 // -----------------------------------------------------------------------------

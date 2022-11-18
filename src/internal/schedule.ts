@@ -334,7 +334,7 @@ export const choose = <Env2, In2, Out2>(that: Schedule.Schedule<Env2, In2, Out2>
           }
           case "Right": {
             return pipe(
-              that.step(now, either.right, that.initial),
+              that.step(now, either.right, state[1]),
               core.map(([rState, out2, decision]) =>
                 [[state[0], rState] as const, Either.right(out2), decision] as const
               )

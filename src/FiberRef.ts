@@ -47,22 +47,32 @@ export interface Variance<A> {
 }
 
 /**
+ * @macro traced
  * @since 1.0.0
  * @category constructors
  */
 export const make = fiberRuntime.makeFiberRef
 
 /**
+ * @macro traced
  * @since 1.0.0
  * @category constructors
  */
 export const makeWith = fiberRuntime.makeWithFiberRef
 
 /**
+ * @macro traced
  * @since 1.0.0
  * @category constructors
  */
 export const makeEnvironment = fiberRuntime.makeEnvironmentFiberRef
+
+/**
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const makeRuntimeFlags = fiberRuntime.makeRuntimeFlagsFiberRef
 
 /**
  * @since 1.0.0
@@ -234,6 +244,12 @@ export const currentLogLevel = core.currentLogLevel
  * @category fiberRefs
  */
 export const currentLogSpan = core.currentLogSpan
+
+/**
+ * @since 1.0.0
+ * @category fiberRefs
+ */
+export const currentRuntimeFlags = fiberRuntime.currentRuntimeFlags
 
 /**
  * @since 1.0.0
