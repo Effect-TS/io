@@ -2,9 +2,7 @@
  * @since 1.0.0
  */
 
-import * as RuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
 import * as internal from "@effect/io/internal/runtimeFlags"
-import * as runtimeFlagsPatch from "@effect/io/internal/runtimeFlagsPatch"
 
 /**
  * Represents a set of `RuntimeFlag`s. `RuntimeFlag`s affect the operation of
@@ -279,11 +277,15 @@ export const interruptible = (self: RuntimeFlags): boolean => {
  * @since 1.0.0
  * @category diffing
  */
-export const diff = (that: RuntimeFlags) => {
-  return (self: RuntimeFlags): RuntimeFlagsPatch.RuntimeFlagsPatch => {
-    return RuntimeFlagsPatch.make(self ^ that, that)
-  }
-}
+export const diff = internal.diff
+
+/**
+ * Constructs a differ that knows how to diff `RuntimeFlags` values.
+ *
+ * @since 1.0.0
+ * @category mutations
+ */
+export const differ = internal.differ
 
 /**
  * Patches a set of `RuntimeFlag`s with a `RuntimeFlagsPatch`, returning the
@@ -292,14 +294,7 @@ export const diff = (that: RuntimeFlags) => {
  * @since 1.0.0
  * @category mutations
  */
-export const patch = (patch: RuntimeFlagsPatch.RuntimeFlagsPatch) => {
-  return (self: RuntimeFlags): RuntimeFlags => {
-    return (
-      (self & (runtimeFlagsPatch.invert(runtimeFlagsPatch.active(patch)) | runtimeFlagsPatch.enabled(patch))) |
-      (runtimeFlagsPatch.active(patch) & runtimeFlagsPatch.enabled(patch))
-    ) as RuntimeFlags
-  }
-}
+export const patch = internal.patch
 
 /**
  * Converts the provided `RuntimeFlags` into a `ReadonlySet<number>`.

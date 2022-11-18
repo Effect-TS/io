@@ -253,10 +253,16 @@ export const trackAll = <In>(input: In) => {
     return <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
       return pipe(
         effect,
-        core.map((a) => {
-          self.unsafeUpdate(input, HashSet.empty())
-          return a
-        })
+        core.foldCauseEffect(
+          (cause) => {
+            self.unsafeUpdate(input, HashSet.empty())
+            return core.failCause(cause)
+          },
+          (value) => {
+            self.unsafeUpdate(input, HashSet.empty())
+            return core.succeed(value)
+          }
+        )
       ).traced(trace)
     }
   }

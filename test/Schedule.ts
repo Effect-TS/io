@@ -1,10 +1,10 @@
 import * as Clock from "@effect/io/Clock"
 import * as Deferred from "@effect/io/Deferred"
 import * as Effect from "@effect/io/Effect"
-import * as Fiber from "@effect/io/Fiber"
+// import * as Fiber from "@effect/io/Fiber"
 import * as schedule from "@effect/io/internal/schedule"
-import * as TestClock from "@effect/io/internal/testing/testClock"
-import type * as TestEnvironment from "@effect/io/internal/testing/testEnvironment"
+// import * as TestClock from "@effect/io/internal/testing/testClock"
+// import type * as TestEnvironment from "@effect/io/internal/testing/testEnvironment"
 import * as Ref from "@effect/io/Ref"
 import * as Schedule from "@effect/io/Schedule"
 import * as ScheduleDecision from "@effect/io/Schedule/Decision"
@@ -1006,53 +1006,53 @@ const checkRepetitions = <Env>(
   })
 }
 
-export const run = <R, E, A>(
-  effect: Effect.Effect<R, E, A>
-): Effect.Effect<R | TestEnvironment.TestEnvironment, E, A> => {
-  return pipe(
-    Effect.fork(effect),
-    Effect.tap(() => TestClock.setTime(Number.POSITIVE_INFINITY)),
-    Effect.flatMap(Fiber.join)
-  )
-}
+// export const run = <R, E, A>(
+//   effect: Effect.Effect<R, E, A>
+// ): Effect.Effect<R | TestEnvironment.TestEnvironment, E, A> => {
+//   return pipe(
+//     Effect.fork(effect),
+//     Effect.tap(() => TestClock.setTime(Number.POSITIVE_INFINITY)),
+//     Effect.flatMap(Fiber.join)
+//   )
+// }
 
-export const runCollect = <Env, In, Out>(
-  schedule: Schedule.Schedule<Env, In, Out>,
-  input: Iterable<In>
-): Effect.Effect<Env | TestEnvironment.TestEnvironment, never, Chunk.Chunk<Out>> => {
-  return run(
-    pipe(
-      Schedule.driver(schedule),
-      Effect.flatMap((driver) => runCollectLoop(driver, List.fromIterable(input), Chunk.empty))
-    )
-  )
-}
+// export const runCollect = <Env, In, Out>(
+//   schedule: Schedule.Schedule<Env, In, Out>,
+//   input: Iterable<In>
+// ): Effect.Effect<Env | TestEnvironment.TestEnvironment, never, Chunk.Chunk<Out>> => {
+//   return run(
+//     pipe(
+//       Schedule.driver(schedule),
+//       Effect.flatMap((driver) => runCollectLoop(driver, List.fromIterable(input), Chunk.empty))
+//     )
+//   )
+// }
 
-const runCollectLoop = <Env, In, Out>(
-  driver: Schedule.ScheduleDriver<Env, In, Out>,
-  input: List.List<In>,
-  acc: Chunk.Chunk<Out>
-): Effect.Effect<Env | TestEnvironment.TestEnvironment, never, Chunk.Chunk<Out>> => {
-  if (List.isNil(input)) {
-    return Effect.succeed(acc)
-  }
-  const head = input.head
-  const tail = input.tail
-  return pipe(
-    driver.next(head),
-    Effect.foldEffect(
-      () =>
-        pipe(
-          driver.last(),
-          Effect.fold(
-            () => acc,
-            (b) => pipe(acc, Chunk.append(b))
-          )
-        ),
-      (b) => runCollectLoop(driver, tail, pipe(acc, Chunk.append(b)))
-    )
-  )
-}
+// const runCollectLoop = <Env, In, Out>(
+//   driver: Schedule.ScheduleDriver<Env, In, Out>,
+//   input: List.List<In>,
+//   acc: Chunk.Chunk<Out>
+// ): Effect.Effect<Env | TestEnvironment.TestEnvironment, never, Chunk.Chunk<Out>> => {
+//   if (List.isNil(input)) {
+//     return Effect.succeed(acc)
+//   }
+//   const head = input.head
+//   const tail = input.tail
+//   return pipe(
+//     driver.next(head),
+//     Effect.foldEffect(
+//       () =>
+//         pipe(
+//           driver.last(),
+//           Effect.fold(
+//             () => acc,
+//             (b) => pipe(acc, Chunk.append(b))
+//           )
+//         ),
+//       (b) => runCollectLoop(driver, tail, pipe(acc, Chunk.append(b)))
+//     )
+//   )
+// }
 
 const runManually = <Env, In, Out>(
   schedule: Schedule.Schedule<Env, In, Out>,

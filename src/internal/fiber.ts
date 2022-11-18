@@ -162,9 +162,10 @@ export const interruptAll = (
 export const interruptAllWith = (fiberId: FiberId.FiberId) => {
   const trace = getCallTrace()
   return (fibers: Iterable<Fiber.Fiber<any, any>>): Effect.Effect<never, never, void> => {
-    return Array.from(fibers).reduce(
-      (effect, fiber) => pipe(effect, core.zipLeft(fiber.interruptWithFork(fiberId))),
-      core.unit()
+    return pipe(
+      fibers,
+      core.forEachDiscard(interruptWithFork(fiberId)),
+      core.zipRight(pipe(fibers, core.forEachDiscard(_await)))
     ).traced(trace)
   }
 }

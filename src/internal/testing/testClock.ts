@@ -609,10 +609,7 @@ export const save = (): Effect.Effect<never, never, Effect.Effect<never, never, 
  */
 export const setTime = (instant: number): Effect.Effect<never, never, void> => {
   const trace = getCallTrace()
-  return testClockWith((testClock) => {
-    console.log(testClock)
-    return testClock.setTime(instant)
-  }).traced(trace)
+  return testClockWith((testClock) => testClock.setTime(instant)).traced(trace)
 }
 
 /**

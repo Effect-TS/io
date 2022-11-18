@@ -6,8 +6,10 @@ import * as Exit from "@effect/io/Exit"
 import type * as Fiber from "@effect/io/Fiber"
 import * as FiberId from "@effect/io/Fiber/Id"
 import * as FiberRefs from "@effect/io/FiberRefs"
+import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
 import { RuntimeException } from "@effect/io/internal/cause"
 import * as core from "@effect/io/internal/core"
+import * as fiberRefsPatch from "@effect/io/internal/fiberRefs/patch"
 import type { EnforceNonEmptyRecord, MergeRecord, NonEmptyArrayEffect, TupleA } from "@effect/io/internal/types"
 import * as LogLevel from "@effect/io/Logger/Level"
 import * as LogSpan from "@effect/io/Logger/Span"
@@ -450,6 +452,14 @@ export const descriptorWith = <R, E, A>(
 /** @internal */
 export const dieMessage = (message: string): Effect.Effect<never, never, never> => {
   return core.failCauseSync(() => Cause.die(new RuntimeException(message)))
+}
+
+/** @internal */
+export const diffFiberRefs = <R, E, A>(
+  self: Effect.Effect<R, E, A>
+): Effect.Effect<R, E, readonly [FiberRefsPatch.FiberRefsPatch, A]> => {
+  const trace = getCallTrace()
+  return pipe(self, summarized(getFiberRefs(), fiberRefsPatch.diff)).traced(trace)
 }
 
 /** @internal */
@@ -1418,13 +1428,23 @@ export const memoize = <R, E, A>(
 ): Effect.Effect<never, never, Effect.Effect<R, E, A>> => {
   const trace = getCallTrace()
   return pipe(
-    core.makeDeferred<E, A>(),
+    core.makeDeferred<E, readonly [FiberRefsPatch.FiberRefsPatch, A]>(),
     core.flatMap((deferred) =>
       pipe(
-        self,
+        diffFiberRefs(self),
         core.intoDeferred(deferred),
         once,
-        core.map(core.zipRight(core.awaitDeferred(deferred)))
+        core.map((complete) =>
+          pipe(
+            complete,
+            core.zipRight(
+              pipe(
+                core.awaitDeferred(deferred),
+                core.flatMap(([patch, a]) => pipe(patchFiberRefs(patch), core.as(a)))
+              )
+            )
+          )
+        )
       )
     )
   ).traced(trace)
@@ -1626,6 +1646,16 @@ export const partition = <R, E, A, B>(f: (a: A) => Effect.Effect<R, E, B>) => {
       core.map((chunk) => core.partitionMap(chunk, identity))
     ).traced(trace)
   }
+}
+
+/** @internal */
+export const patchFiberRefs = (
+  patch: FiberRefsPatch.FiberRefsPatch
+): Effect.Effect<never, never, void> => {
+  const trace = getCallTrace()
+  return updateFiberRefs(
+    (fiberId, fiberRefs) => pipe(patch, fiberRefsPatch.patch(fiberId, fiberRefs))
+  ).traced(trace)
 }
 
 /** @internal */

@@ -41,7 +41,13 @@ export const OP_PROVIDE_TO = 6 as const
 export type OP_PROVIDE_TO = typeof OP_PROVIDE_TO
 
 /** @internal */
-export const OP_ZIP_WITH_PAR = 7 as const
+export const OP_ZIP_WITH = 7 as const
+
+/** @internal */
+export type OP_ZIP_WITH = typeof OP_ZIP_WITH
+
+/** @internal */
+export const OP_ZIP_WITH_PAR = 8 as const
 
 /** @internal */
 export type OP_ZIP_WITH_PAR = typeof OP_ZIP_WITH_PAR

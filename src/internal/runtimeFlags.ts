@@ -1,6 +1,7 @@
 import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import type * as RuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
 import * as runtimeFlagsPatch from "@effect/io/internal/runtimeFlagsPatch"
+import * as Differ from "@fp-ts/data/Differ"
 
 /** @internal */
 export const None: RuntimeFlags.RuntimeFlag = 0 as RuntimeFlags.RuntimeFlag
@@ -77,6 +78,23 @@ export const disabledSet = (self: RuntimeFlagsPatch.RuntimeFlagsPatch): Readonly
 }
 
 /** @internal */
+export const diff = (that: RuntimeFlags.RuntimeFlags) => {
+  return (self: RuntimeFlags.RuntimeFlags): RuntimeFlagsPatch.RuntimeFlagsPatch => {
+    return runtimeFlagsPatch.make(self ^ that, that)
+  }
+}
+
+/** @internal */
+export const patch = (patch: RuntimeFlagsPatch.RuntimeFlagsPatch) => {
+  return (self: RuntimeFlags.RuntimeFlags): RuntimeFlags.RuntimeFlags => {
+    return (
+      (self & (runtimeFlagsPatch.invert(runtimeFlagsPatch.active(patch)) | runtimeFlagsPatch.enabled(patch))) |
+      (runtimeFlagsPatch.active(patch) & runtimeFlagsPatch.enabled(patch))
+    ) as RuntimeFlags.RuntimeFlags
+  }
+}
+
+/** @internal */
 const renderFlag = (a: RuntimeFlags.RuntimeFlag): string => {
   return `${allFlags.find((b) => a === b)!}`
 }
@@ -90,4 +108,14 @@ export const renderPatch = (self: RuntimeFlagsPatch.RuntimeFlagsPatch): string =
     .map((flag) => renderFlag(flag))
     .join(", ")
   return `RuntimeFlagsPatch(enabled = (${enabled}), disabled = (${disabled}))`
+}
+
+/** @internal */
+export const differ = (): Differ.Differ<RuntimeFlags.RuntimeFlags, RuntimeFlagsPatch.RuntimeFlagsPatch> => {
+  return Differ.make({
+    empty: runtimeFlagsPatch.empty,
+    diff: (oldValue, newValue) => diff(newValue)(oldValue),
+    combine: (first, second) => runtimeFlagsPatch.andThen(second)(first),
+    patch: (_patch, oldValue) => patch(_patch)(oldValue)
+  })
 }
