@@ -1089,7 +1089,7 @@ const runManuallyLoop = <Env, In, Out>(
 }
 
 // TODO(Mike/Max): remove if added to `@fp-ts/data`
-export const scanLeft = <A, B>(self: Chunk.Chunk<A>, b: B, f: (b: B, a: A) => B): Chunk.Chunk<B> => {
+const scanLeft = <A, B>(self: Chunk.Chunk<A>, b: B, f: (b: B, a: A) => B): Chunk.Chunk<B> => {
   const len = self.length
   const out = new Array(len + 1)
   out[0] = b

@@ -383,7 +383,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    * **NOTE**: This method must be invoked by the fiber itself.
    */
   setFiberRef<X>(fiberRef: FiberRef.FiberRef<X>, value: X): void {
-    this._fiberRefs = pipe(this._fiberRefs, FiberRefs.updateAs(this.id(), fiberRef, value))
+    this._fiberRefs = pipe(this._fiberRefs, FiberRefs.updateAs(this._fiberId, fiberRef, value))
   }
 
   /**
@@ -994,12 +994,19 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
               const oldRuntimeFlags = this._runtimeFlags
               const newRuntimeFlags = pipe(oldRuntimeFlags, RuntimeFlags.patch(updateFlags))
               if (newRuntimeFlags === oldRuntimeFlags) {
+                // No change, short circuit
                 cur = op.scope(oldRuntimeFlags)
               } else {
+                // One more chance to short circuit: if we're immediately going
+                // to interrupt. Interruption will cause immediate reversion of
+                // the flag, so as long as we "peek ahead", there's no need to
+                // set them to begin with.
                 if (RuntimeFlags.interruptible(newRuntimeFlags) && this.isInterrupted()) {
                   cur = core.exitFailCause(this.getInterruptedCause())
                 } else {
+                  // Impossible to short circuit, so record the changes
                   this.patchRuntimeFlags(this._runtimeFlags, updateFlags)
+                  // Since we updated the flags, we need to revert them
                   const revertFlags = pipe(newRuntimeFlags, RuntimeFlags.diff(oldRuntimeFlags))
                   this._stack = new Stack(new core.RevertFlags(revertFlags), this._stack)
                   cur = op.scope(oldRuntimeFlags)

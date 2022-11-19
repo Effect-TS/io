@@ -59,29 +59,28 @@ describe.concurrent("Effect", () => {
       assert.deepStrictEqual(Cause.defects(result), List.of(releaseDied))
     }))
 
-  // TODO(Mike/Max): never terminates
-  // it.effect("acquireUseRelease - error handling + disconnect", () =>
-  //   Effect.gen(function*() {
-  //     const releaseDied = new Cause.RuntimeException("release died")
-  //     const exit = yield* pipe(
-  //       Effect.acquireUseRelease(
-  //         Effect.succeed(42),
-  //         () => Effect.fail("use failed"),
-  //         () => Effect.die(releaseDied)
-  //       ),
-  //       Effect.disconnect,
-  //       Effect.exit
-  //     )
-  //     const result = yield* pipe(
-  //       exit,
-  //       Exit.matchEffect(
-  //         Effect.succeed,
-  //         () => Effect.fail("effect should have failed")
-  //       )
-  //     )
-  //     assert.deepStrictEqual(Cause.failures(result), List.of("use failed"))
-  //     assert.deepStrictEqual(Cause.defects(result), List.of(releaseDied))
-  //   }))
+  it.effect("acquireUseRelease - error handling + disconnect", () =>
+    Effect.gen(function*() {
+      const releaseDied = new Cause.RuntimeException("release died")
+      const exit = yield* pipe(
+        Effect.acquireUseRelease(
+          Effect.succeed(42),
+          () => Effect.fail("use failed"),
+          () => Effect.die(releaseDied)
+        ),
+        Effect.disconnect,
+        Effect.exit
+      )
+      const result = yield* pipe(
+        exit,
+        Exit.matchEffect(
+          Effect.succeed,
+          () => Effect.fail("effect should have failed")
+        )
+      )
+      assert.deepStrictEqual(Cause.failures(result), List.of("use failed"))
+      assert.deepStrictEqual(Cause.defects(result), List.of(releaseDied))
+    }))
 
   it.effect("acquireUseRelease - beast mode error handling + disconnect", () =>
     Effect.gen(function*() {
