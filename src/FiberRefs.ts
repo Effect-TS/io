@@ -112,4 +112,4 @@ export const getOrDefault = internal.getOrDefault
  * @since 1.0.0
  * @category mutations
  */
-export const updateAs = internal.updateAs
+export const updatedAs = internal.updatedAs

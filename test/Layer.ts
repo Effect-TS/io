@@ -384,17 +384,16 @@ describe.concurrent("Layer", () => {
   //     assert.deepStrictEqual(Array.from(result), [acquire1, release1])
   //   }))
 
-  // TODO(Mike/Max): not memoized
-  // it.scoped("fiberRef changes are memoized", () =>
-  //   Effect.gen(function*() {
-  //     const fiberRef = yield* FiberRef.make<boolean>(false)
-  //     const tag = Context.Tag<boolean>()
-  //     const layer1 = Layer.scopedDiscard(pipe(fiberRef, FiberRef.locallyScoped(true)))
-  //     const layer2 = Layer.fromEffect(tag)(FiberRef.get(fiberRef))
-  //     const layer3 = pipe(layer1, Layer.merge(pipe(layer1, Layer.provideTo(layer2))))
-  //     const result = yield* Layer.build(layer3)
-  //     assert.equal(pipe(result, Context.unsafeGet(tag)), true)
-  //   }))
+  it.scoped("fiberRef changes are memoized", () =>
+    Effect.gen(function*() {
+      const fiberRef = yield* FiberRef.make<boolean>(false)
+      const tag = Context.Tag<boolean>()
+      const layer1 = Layer.scopedDiscard(pipe(fiberRef, FiberRef.locallyScoped(true)))
+      const layer2 = Layer.fromEffect(tag)(FiberRef.get(fiberRef))
+      const layer3 = pipe(layer1, Layer.merge(pipe(layer1, Layer.provideTo(layer2))))
+      const result = yield* Layer.build(layer3)
+      assert.equal(pipe(result, Context.unsafeGet(tag)), true)
+    }))
 
   it.effect("provides a partial environment to an effect", () =>
     Effect.gen(function*() {

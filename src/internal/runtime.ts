@@ -37,7 +37,7 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
 
     const fiberRefs = pipe(
       this.fiberRefs,
-      FiberRefs.updateAs(
+      FiberRefs.updatedAs(
         fiberId,
         core.currentEnvironment,
         this.context as Context.Context<never>
@@ -73,7 +73,7 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
 
     const fiberRefs = pipe(
       this.fiberRefs,
-      FiberRefs.updateAs(
+      FiberRefs.updatedAs(
         fiberId,
         core.currentEnvironment,
         this.context as Context.Context<never>
@@ -125,12 +125,12 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
 
     const fiberRefs = pipe(
       this.fiberRefs,
-      FiberRefs.updateAs(
+      FiberRefs.updatedAs(
         fiberId,
         core.currentEnvironment,
         this.context as Context.Context<never>
       ),
-      FiberRefs.updateAs(
+      FiberRefs.updatedAs(
         fiberId,
         core.currentScheduler,
         scheduler
