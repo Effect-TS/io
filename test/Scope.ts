@@ -108,4 +108,53 @@ describe.concurrent("Scope", () => {
       assert.isTrue(result.slice(4, 6).some((action) => isRelease(action) && action.id === 1))
       assert.isTrue(result.slice(4, 6).some((action) => isRelease(action) && action.id === 2))
     }))
+
+  it.effect("preserves order of nested sequential finalizers", () =>
+    Effect.gen(function*() {
+      const ref = yield* Ref.make<ReadonlyArray<Action>>([])
+      const left = Effect.sequentialFinalizers(pipe(resource(1, ref), Effect.zipRight(resource(2, ref))))
+      const right = Effect.sequentialFinalizers(pipe(resource(3, ref), Effect.zipRight(resource(4, ref))))
+      yield* Effect.scoped(Effect.parallelFinalizers(pipe(left, Effect.zipPar(right))))
+      const actions = yield* Ref.get(ref)
+      const action1Index = actions.findIndex((action) => action.op === OP_RELEASE && action.id === 1)
+      const action2Index = actions.findIndex((action) => action.op === OP_RELEASE && action.id === 2)
+      const action3Index = actions.findIndex((action) => action.op === OP_RELEASE && action.id === 3)
+      const action4Index = actions.findIndex((action) => action.op === OP_RELEASE && action.id === 4)
+      assert.isBelow(action2Index, action1Index)
+      assert.isBelow(action4Index, action3Index)
+    }))
+
+  it.scoped("withEarlyRelease", () =>
+    Effect.gen(function*() {
+      const ref = yield* Ref.make<ReadonlyArray<Action>>([])
+      const left = resource(1, ref)
+      const right = Effect.withEarlyRelease(resource(2, ref))
+      yield* pipe(left, Effect.zipRight(pipe(right, Effect.flatMap(([release, _]) => release))))
+      const actions = yield* Ref.get(ref)
+      assert.deepStrictEqual(actions[0], acquire(1))
+      assert.deepStrictEqual(actions[1], acquire(2))
+      assert.deepStrictEqual(actions[2], release(2))
+    }))
+
+  it.effect("using", () =>
+    Effect.gen(function*() {
+      const ref1 = yield* Ref.make<ReadonlyArray<Action>>([])
+      const ref2 = yield* Ref.make<ReadonlyArray<Action>>([])
+      yield* pipe(
+        resource(1, ref1),
+        Effect.using(() =>
+          pipe(
+            ref1,
+            Ref.update((actions) => [...actions, use(1)]),
+            Effect.zipRight(resource(2, ref2))
+          )
+        ),
+        Effect.zipRight(pipe(ref2, Ref.update((actions) => [...actions, use(2)]))),
+        Effect.scoped
+      )
+      const actions1 = yield* Ref.get(ref1)
+      const actions2 = yield* Ref.get(ref2)
+      assert.deepStrictEqual(actions1, [acquire(1), use(1), release(1)])
+      assert.deepStrictEqual(actions2, [acquire(2), use(2), release(2)])
+    }))
 })

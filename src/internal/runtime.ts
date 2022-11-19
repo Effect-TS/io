@@ -46,7 +46,7 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
 
     const fiberRuntime = new FiberRuntime.FiberRuntime<E, A>(
       fiberId,
-      fiberRefs,
+      pipe(fiberRefs, FiberRefs.forkAs(fiberId)),
       this.runtimeFlags
     )
 
@@ -82,7 +82,7 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
 
     const fiberRuntime = new FiberRuntime.FiberRuntime<E, A>(
       fiberId,
-      fiberRefs,
+      pipe(fiberRefs, FiberRefs.forkAs(fiberId)),
       this.runtimeFlags
     )
 
@@ -139,7 +139,7 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
 
     const fiberRuntime = new FiberRuntime.FiberRuntime<E, A>(
       fiberId,
-      fiberRefs,
+      pipe(fiberRefs, FiberRefs.forkAs(fiberId)),
       this.runtimeFlags
     )
 

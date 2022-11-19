@@ -180,16 +180,10 @@ class MemoMap {
           const cached: Effect.Effect<never, E, Context.Context<ROut>> = pipe(
             acquire as Effect.Effect<never, E, readonly [FiberRefsPatch.FiberRefsPatch, Context.Context<ROut>]>,
             core.flatMap(([patch, b]) => pipe(effect.patchFiberRefs(patch), core.as(b))),
-            core.onExit((exit) => {
-              switch (exit.op) {
-                case EffectOpCodes.OP_FAILURE: {
-                  return core.unit()
-                }
-                case EffectOpCodes.OP_SUCCESS: {
-                  return pipe(scope, core.scopeAddFinalizerExit(release))
-                }
-              }
-            })
+            core.onExit(core.exitMatch(
+              () => core.unit(),
+              () => pipe(scope, core.scopeAddFinalizerExit(release))
+            ))
           )
           return core.succeed([cached, map] as const)
         }
@@ -230,7 +224,8 @@ class MemoMap {
                                     finalizerRef,
                                     ref.set((exit) =>
                                       pipe(
-                                        pipe(innerScope, core.scopeClose(exit)),
+                                        innerScope,
+                                        core.scopeClose(exit),
                                         core.whenEffect(
                                           pipe(
                                             observers,
@@ -265,16 +260,10 @@ class MemoMap {
                     const memoized = [
                       pipe(
                         core.awaitDeferred(deferred),
-                        core.onExit((exit) => {
-                          switch (exit.op) {
-                            case EffectOpCodes.OP_FAILURE: {
-                              return core.unit()
-                            }
-                            case EffectOpCodes.OP_SUCCESS: {
-                              return pipe(observers, ref.update((n) => n + 1))
-                            }
-                          }
-                        })
+                        core.onExit(core.exitMatchEffect(
+                          () => core.unit(),
+                          () => pipe(observers, ref.update((n) => n + 1))
+                        ))
                       ),
                       (exit: Exit.Exit<unknown, unknown>) =>
                         pipe(
@@ -310,7 +299,7 @@ const makeMemoMap = (): Effect.Effect<never, never, MemoMap> => {
         ]
       >
     >(new Map()),
-    core.flatMap((ref) => core.sync(() => new MemoMap(ref)))
+    core.map((ref) => new MemoMap(ref))
   )
 }
 

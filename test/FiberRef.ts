@@ -3,9 +3,10 @@ import * as Deferred from "@effect/io/Deferred"
 import * as Effect from "@effect/io/Effect"
 import * as Fiber from "@effect/io/Fiber"
 import * as FiberRef from "@effect/io/FiberRef"
+import type * as Runtime from "@effect/io/Runtime"
 import * as it from "@effect/io/test/utils/extend"
 import * as Duration from "@fp-ts/data/Duration"
-import { constant, identity, pipe } from "@fp-ts/data/Function"
+import { constant, constTrue, identity, pipe } from "@fp-ts/data/Function"
 import * as Option from "@fp-ts/data/Option"
 import { assert, describe } from "vitest"
 
@@ -388,5 +389,44 @@ describe.concurrent("FiberRef", () => {
       )
       const result = yield* FiberRef.get(fiberRef)
       assert.strictEqual(result, initial)
+    }))
+
+  it.scoped("fork patch is applied when a fiber is unsafely run", () =>
+    Effect.gen(function*() {
+      const fiberRef = yield* FiberRef.make<boolean>(true, constTrue)
+      const deferred = yield* Deferred.make<never, boolean>()
+      const runtime: Runtime.Runtime<never> = yield* pipe(
+        Effect.runtime<never>(),
+        pipe(fiberRef, FiberRef.locally(false))
+      )
+      yield* Effect.sync(() =>
+        pipe(
+          FiberRef.get(fiberRef),
+          Effect.intoDeferred(deferred),
+          runtime.unsafeRunAsync
+        )
+      )
+      const result = yield* Deferred.await(deferred)
+      assert.isTrue(result)
+    }))
+
+  it.scoped("fork patch is applied when a fiber is unsafely forked", () =>
+    Effect.gen(function*() {
+      const fiberRef = yield* FiberRef.make<boolean>(true, constTrue)
+      const deferred = yield* Deferred.make<never, boolean>()
+      const runtime: Runtime.Runtime<never> = yield* pipe(
+        Effect.runtime<never>(),
+        pipe(fiberRef, FiberRef.locally(false))
+      )
+      const fiber = yield* Effect.sync(() =>
+        pipe(
+          FiberRef.get(fiberRef),
+          Effect.intoDeferred(deferred),
+          runtime.unsafeFork
+        )
+      )
+      yield* Fiber.join(fiber)
+      const result = yield* Deferred.await(deferred)
+      assert.isTrue(result)
     }))
 })
