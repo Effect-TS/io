@@ -205,17 +205,18 @@ describe.concurrent("Effect", () => {
       assert.strictEqual(result, 42)
     }))
 
-  it.it("race in uninterruptible region", async () => {
-    const awaiter = Deferred.unsafeMake<never, void>(FiberId.none)
-    const program = pipe(
-      Effect.unit(),
-      Effect.race(Effect.never()),
-      Effect.uninterruptible
-    )
-    const result = await Effect.unsafeRunPromise(program)
-    await Effect.unsafeRunPromise(pipe(awaiter, Deferred.succeed<void>(void 0)))
-    assert.isUndefined(result)
-  })
+  it.effect("race in uninterruptible region", () =>
+    Effect.gen(function*() {
+      const awaiter = Deferred.unsafeMake<never, void>(FiberId.none)
+      const program = pipe(
+        Effect.unit(),
+        Effect.race(pipe(awaiter, Deferred.await)),
+        Effect.uninterruptible
+      )
+      const result = yield* program
+      yield* pipe(awaiter, Deferred.succeed<void>(void 0))
+      assert.isUndefined(result)
+    }))
 
   it.effect("race of two forks does not interrupt winner", () =>
     Effect.gen(function*() {
