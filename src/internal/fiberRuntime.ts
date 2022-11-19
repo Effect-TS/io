@@ -1925,7 +1925,7 @@ export const withClockScoped = <A extends Clock.Clock>(value: A) => {
 /** @internal */
 export const releaseMapReleaseAll = (
   strategy: ExecutionStrategy.ExecutionStrategy,
-  exit0: Exit.Exit<unknown, unknown>
+  exit: Exit.Exit<unknown, unknown>
 ) =>
   (self: core.ReleaseMap) =>
     core.suspendSucceed(() => {
@@ -1935,46 +1935,43 @@ export const releaseMapReleaseAll = (
         }
         case "Running": {
           const finalizersMap = self.state.finalizers
+          const update = self.state.update
           const finalizers = Array.from(finalizersMap.keys()).sort((a, b) => b - a).map((key) =>
             finalizersMap.get(key)!
           )
-          const update = self.state.update
-          self.state = { _tag: "Exited", nextKey: self.state.nextKey, exit: exit0, update: self.state.update }
+          self.state = { _tag: "Exited", nextKey: self.state.nextKey, exit, update }
           return ExecutionStrategy.isSequential(strategy) ?
             pipe(
               finalizers,
-              core.forEach((fin) => core.exit(update(fin)(exit0))),
+              core.forEach((fin) => core.exit(update(fin)(exit))),
               core.flatMap((results) =>
                 pipe(
                   core.exitCollectAll(results),
                   Option.map(core.exitAsUnit),
-                  Option.getOrElse(core.exitUnit()),
-                  core.done
+                  Option.getOrElse(core.exitUnit())
                 )
               )
             ) :
             ExecutionStrategy.isParallel(strategy) ?
             pipe(
               finalizers,
-              forEachPar((fin) => core.exit(update(fin)(exit0))),
+              forEachPar((fin) => core.exit(update(fin)(exit))),
               core.flatMap((results) =>
                 pipe(
                   core.exitCollectAllPar(results),
                   Option.map(core.exitAsUnit),
-                  Option.getOrElse(core.exitUnit()),
-                  core.done
+                  Option.getOrElse(core.exitUnit())
                 )
               )
             ) :
             pipe(
               finalizers,
-              forEachPar((fin) => core.exit(update(fin)(exit0))),
+              forEachPar((fin) => core.exit(update(fin)(exit))),
               core.flatMap((results) =>
                 pipe(
                   core.exitCollectAllPar(results),
                   Option.map(core.exitAsUnit),
-                  Option.getOrElse(core.exitUnit()),
-                  core.done
+                  Option.getOrElse(core.exitUnit())
                 )
               ),
               core.withParallelism(strategy.parallelism)

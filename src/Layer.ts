@@ -240,14 +240,6 @@ export const fromEffectEnvironment = internal.fromEffectEnvironment
 export const fromFunction = internal.fromFunction
 
 /**
- * Construct a service layer from a value
- *
- * @since 1.0.0
- * @category constructors
- */
-export const fromValue = internal.fromValue
-
-/**
  * Builds this layer and uses it until it is interrupted. This is useful when
  * your entire application is a layer, such as an HTTP server.
  *

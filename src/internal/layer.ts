@@ -186,7 +186,7 @@ class MemoMap {
                   return core.unit()
                 }
                 case EffectOpCodes.OP_SUCCESS: {
-                  return scope.addFinalizer(release)
+                  return pipe(scope, core.scopeAddFinalizerExit(release))
                 }
               }
             })
@@ -221,7 +221,7 @@ class MemoMap {
                                   return pipe(
                                     deferred,
                                     core.failCauseDeferred(exit.cause),
-                                    core.zipRight(innerScope.close(exit)),
+                                    core.zipRight(pipe(innerScope, core.scopeClose(exit))),
                                     core.zipRight(core.failCause(exit.cause))
                                   )
                                 }
@@ -230,7 +230,7 @@ class MemoMap {
                                     finalizerRef,
                                     ref.set((exit) =>
                                       pipe(
-                                        innerScope.close(exit),
+                                        pipe(innerScope, core.scopeClose(exit)),
                                         core.whenEffect(
                                           pipe(
                                             observers,
@@ -242,10 +242,13 @@ class MemoMap {
                                     ),
                                     core.zipRight(pipe(observers, ref.update((n) => n + 1))),
                                     core.zipRight(
-                                      scope.addFinalizer((exit) =>
-                                        pipe(
-                                          ref.get(finalizerRef),
-                                          core.flatMap((finalizer) => finalizer(exit))
+                                      pipe(
+                                        scope,
+                                        core.scopeAddFinalizerExit((exit) =>
+                                          pipe(
+                                            ref.get(finalizerRef),
+                                            core.flatMap((finalizer) => finalizer(exit))
+                                          )
                                         )
                                       )
                                     ),
@@ -365,13 +368,13 @@ export const withScope = (scope: Scope.Scope) => {
                 (value) => memoMap.getOrElseMemoize(op.successK(value), scope)
               )
             )
-        )
+        ).traced(trace)
       }
       case OpCodes.OP_FRESH: {
-        return core.sync(() => (_: MemoMap) => pipe(op.layer, buildWithScope(scope)))
+        return core.sync(() => (_: MemoMap) => pipe(op.layer, buildWithScope(scope))).traced(trace)
       }
       case OpCodes.OP_FROM_EFFECT: {
-        return core.sync(() => (_: MemoMap) => op.effect as Effect.Effect<RIn, E, Context.Context<ROut>>)
+        return core.sync(() => (_: MemoMap) => op.effect as Effect.Effect<RIn, E, Context.Context<ROut>>).traced(trace)
       }
       case OpCodes.OP_PROVIDE_TO: {
         return core.sync(() =>
@@ -385,7 +388,7 @@ export const withScope = (scope: Scope.Scope) => {
                 )
               )
             )
-        )
+        ).traced(trace)
       }
       case OpCodes.OP_SCOPED: {
         return core.sync(() =>
@@ -394,10 +397,10 @@ export const withScope = (scope: Scope.Scope) => {
               scope,
               fiberRuntime.scopeExtend(op.effect as Effect.Effect<RIn, E, Context.Context<ROut>>)
             )
-        )
+        ).traced(trace)
       }
       case OpCodes.OP_SUSPEND: {
-        return core.sync(() => (memoMap: MemoMap) => memoMap.getOrElseMemoize(op.evaluate(), scope))
+        return core.sync(() => (memoMap: MemoMap) => memoMap.getOrElseMemoize(op.evaluate(), scope)).traced(trace)
       }
       case OpCodes.OP_ZIP_WITH: {
         return core.sync(() =>
@@ -409,7 +412,7 @@ export const withScope = (scope: Scope.Scope) => {
                 op.zipK
               )
             )
-        )
+        ).traced(trace)
       }
       case OpCodes.OP_ZIP_WITH_PAR: {
         return core.sync(() =>
@@ -421,7 +424,7 @@ export const withScope = (scope: Scope.Scope) => {
                 op.zipK
               )
             )
-        )
+        ).traced(trace)
       }
     }
   }
@@ -578,24 +581,6 @@ export const fromFunction = <A, B>(tagA: Context.Tag<A>, tagB: Context.Tag<B>) =
 }
 
 /** @internal */
-export const fromValue = <T>(tag: Context.Tag<T>) => {
-  return <T1 extends T>(evaluate: () => T1): Layer.Layer<never, never, T> => {
-    const suspend = Object.create(proto)
-    suspend.op = OpCodes.OP_SUSPEND
-    suspend.evaluate = () => {
-      const fromEffect = Object.create(proto)
-      fromEffect.op = OpCodes.OP_SCOPED
-      fromEffect.effect = pipe(
-        core.sync(evaluate),
-        core.map((service) => pipe(Context.empty(), Context.add(tag)(service)))
-      )
-      return fromEffect
-    }
-    return suspend
-  }
-}
-
-/** @internal */
 export const launch = <RIn, E, ROut>(self: Layer.Layer<RIn, E, ROut>): Effect.Effect<RIn, E, never> => {
   return fiberRuntime.scopedEffect(
     pipe(
@@ -686,11 +671,13 @@ export const provideTo = <RIn2, E2, ROut2>(that: Layer.Layer<RIn2, E2, ROut2>) =
   return <RIn, E, ROut>(
     self: Layer.Layer<RIn, E, ROut>
   ): Layer.Layer<RIn | Exclude<RIn2, ROut>, E | E2, ROut2> => {
-    const provideTo = Object.create(proto)
-    provideTo.op = OpCodes.OP_PROVIDE_TO
-    provideTo.first = pipe(environment<Exclude<RIn2, ROut>>(), merge(self))
-    provideTo.second = that
-    return provideTo
+    return suspend(() => {
+      const provideTo = Object.create(proto)
+      provideTo.op = OpCodes.OP_PROVIDE_TO
+      provideTo.first = pipe(environment<Exclude<RIn2, ROut>>(), merge(self))
+      provideTo.second = that
+      return provideTo
+    })
   }
 }
 
@@ -806,15 +793,10 @@ export const scopedDiscard = <R, E, T>(
 export const scopedEnvironment = <R, E, A>(
   effect: Effect.Effect<R, E, Context.Context<A>>
 ): Layer.Layer<Exclude<R, Scope.Scope>, E, A> => {
-  const suspend = Object.create(proto)
-  suspend.op = OpCodes.OP_SUSPEND
-  suspend.evaluate = () => {
-    const scoped = Object.create(proto)
-    scoped.op = OpCodes.OP_SCOPED
-    scoped.effect = effect
-    return scoped
-  }
-  return suspend
+  const scoped = Object.create(proto)
+  scoped.op = OpCodes.OP_SCOPED
+  scoped.effect = effect
+  return scoped
 }
 
 /** @internal */
@@ -907,12 +889,14 @@ export function zipWithPar<R1, E1, A1, A, A2>(
   f: (a: Context.Context<A>, b: Context.Context<A1>) => Context.Context<A2>
 ) {
   return <R, E>(self: Layer.Layer<R, E, A>): Layer.Layer<R | R1, E | E1, A2> => {
-    const zipWithPar = Object.create(proto)
-    zipWithPar.op = OpCodes.OP_ZIP_WITH_PAR
-    zipWithPar.first = self
-    zipWithPar.second = that
-    zipWithPar.zipK = f
-    return zipWithPar
+    return suspend(() => {
+      const zipWithPar = Object.create(proto)
+      zipWithPar.op = OpCodes.OP_ZIP_WITH_PAR
+      zipWithPar.first = self
+      zipWithPar.second = that
+      zipWithPar.zipK = f
+      return zipWithPar
+    })
   }
 }
 

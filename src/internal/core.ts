@@ -667,12 +667,29 @@ export const onError = <E, R2, X>(cleanup: (cause: Cause.Cause<E>) => Effect.Eff
 /** @internal */
 export const onExit = <E, A, R2, X>(cleanup: (exit: Exit.Exit<E, A>) => Effect.Effect<R2, never, X>) => {
   const trace = getCallTrace()
-  return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E, A> =>
-    acquireUseRelease(
-      unit(),
-      () => self,
-      (_, exit) => cleanup(exit)
+  return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E, A> => {
+    return uninterruptibleMask((restore) =>
+      pipe(
+        restore(self),
+        foldCauseEffect(
+          (cause1) => {
+            const result = exitFailCause(cause1)
+            return pipe(
+              cleanup(result),
+              foldCauseEffect(
+                (cause2) => exitFailCause(Cause.sequential(cause1, cause2)),
+                () => result
+              )
+            )
+          },
+          (success) => {
+            const result = exitSucceed(success)
+            return pipe(cleanup(result), zipRight(result))
+          }
+        )
+      )
     ).traced(trace)
+  }
 }
 
 /** @internal */
@@ -1344,7 +1361,7 @@ export const releaseMapAddIfOpen = (finalizer: Scope.Scope.Finalizer) =>
       switch (self.state._tag) {
         case "Exited": {
           self.state.nextKey += 1
-          return as(Option.none)(finalizer(self.state.exit))
+          return pipe(finalizer(self.state.exit), as(Option.none))
         }
         case "Running": {
           const key = self.state.nextKey
