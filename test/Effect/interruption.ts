@@ -3,6 +3,7 @@ import * as Deferred from "@effect/io/Deferred"
 import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import * as Fiber from "@effect/io/Fiber"
+import * as FiberId from "@effect/io/Fiber/Id"
 import * as Ref from "@effect/io/Ref"
 import * as it from "@effect/io/test/utils/extend"
 import { withLatch, withLatchAwait } from "@effect/io/test/utils/latch"
@@ -51,18 +52,23 @@ describe.concurrent("Effect", () => {
       assert.isTrue(Exit.isFailure(result) && Cause.isInterruptedOnly(result.cause))
     }))
 
-  it.effect("acquireUseRelease is uninterruptible", () =>
-    Effect.gen(function*() {
+  it.it("acquireUseRelease - acquire is uninterruptible", async () => {
+    const awaiter = Deferred.unsafeMake<never, void>(FiberId.none)
+    const program = Effect.gen(function*() {
       const deferred = yield* Deferred.make<never, void>()
       const fiber = yield* pipe(
         Effect.acquireUseRelease(
-          pipe(deferred, Deferred.succeed<void>(void 0), Effect.zipLeft(Effect.never())),
+          pipe(
+            deferred,
+            Deferred.succeed<void>(void 0),
+            Effect.zipLeft(Deferred.await(awaiter))
+          ),
           () => Effect.unit(),
           () => Effect.unit()
         ),
         Effect.forkDaemon
       )
-      const result = yield* pipe(
+      return yield* pipe(
         Deferred.await(deferred),
         Effect.zipRight(
           pipe(
@@ -71,10 +77,13 @@ describe.concurrent("Effect", () => {
           )
         )
       )
-      assert.strictEqual(result, 42)
-    }))
+    })
+    const result = await Effect.unsafeRunPromise(program)
+    await Effect.unsafeRunPromise(pipe(awaiter, Deferred.succeed<void>(void 0)))
+    assert.strictEqual(result, 42)
+  })
 
-  it.effect("acquireUseRelease use is interruptible", () =>
+  it.effect("acquireUseRelease - use is interruptible", () =>
     Effect.gen(function*() {
       const fiber = yield* pipe(
         Effect.acquireUseRelease(
@@ -88,7 +97,7 @@ describe.concurrent("Effect", () => {
       assert.isTrue(Exit.isInterrupted(result))
     }))
 
-  it.effect("acquireUseRelease release called on interrupt", () =>
+  it.effect("acquireUseRelease - release is called on interrupt", () =>
     Effect.gen(function*() {
       const deferred1 = yield* Deferred.make<never, void>()
       const deferred2 = yield* Deferred.make<never, void>()

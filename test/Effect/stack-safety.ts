@@ -4,7 +4,7 @@ import * as it from "@effect/io/test/utils/extend"
 import { constVoid, pipe } from "@fp-ts/data/Function"
 import { assert, describe } from "vitest"
 
-export const deepMapEffect = (n: number): Effect.Effect<never, never, number> => {
+const deepMapEffect = (n: number): Effect.Effect<never, never, number> => {
   const loop = (n: number, acc: Effect.Effect<never, never, number>): Effect.Effect<never, never, number> => {
     if (n <= 0) {
       return acc

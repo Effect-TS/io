@@ -2,6 +2,7 @@ import * as Deferred from "@effect/io/Deferred"
 import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import * as Fiber from "@effect/io/Fiber"
+import * as FiberId from "@effect/io/Fiber/Id"
 import * as Ref from "@effect/io/Ref"
 import * as it from "@effect/io/test/utils/extend"
 import { withLatch } from "@effect/io/test/utils/latch"
@@ -204,15 +205,17 @@ describe.concurrent("Effect", () => {
       assert.strictEqual(result, 42)
     }))
 
-  it.effect("race in uninterruptible region", () =>
-    Effect.gen(function*() {
-      const result = yield* pipe(
-        Effect.unit(),
-        Effect.race(Effect.never()),
-        Effect.uninterruptible
-      )
-      assert.isUndefined(result)
-    }))
+  it.it("race in uninterruptible region", async () => {
+    const awaiter = Deferred.unsafeMake<never, void>(FiberId.none)
+    const program = pipe(
+      Effect.unit(),
+      Effect.race(Effect.never()),
+      Effect.uninterruptible
+    )
+    const result = await Effect.unsafeRunPromise(program)
+    await Effect.unsafeRunPromise(pipe(awaiter, Deferred.succeed<void>(void 0)))
+    assert.isUndefined(result)
+  })
 
   it.effect("race of two forks does not interrupt winner", () =>
     Effect.gen(function*() {

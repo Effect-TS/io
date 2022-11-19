@@ -25,7 +25,6 @@ import type * as Duration from "@fp-ts/data/Duration"
 import * as Either from "@fp-ts/data/Either"
 import * as Equal from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
-import * as HashSet from "@fp-ts/data/HashSet"
 import * as MutableHashMap from "@fp-ts/data/mutable/MutableHashMap"
 import * as MutableRef from "@fp-ts/data/mutable/MutableRef"
 import * as Option from "@fp-ts/data/Option"
@@ -324,7 +323,7 @@ const raceDisconnect = <R, E, A>(
 export const raceAwait = <R2, E2, A2>(that: Effect.Effect<R2, E2, A2>) => {
   const trace = getCallTrace()
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, A | A2> => {
-    return core.withFiberRuntime<R | R2, E | E2, A | A2>((state) =>
+    return core.fiberIdWith<R | R2, E | E2, A | A2>((parentFiberId) =>
       pipe(
         self,
         raceWith(
@@ -332,25 +331,35 @@ export const raceAwait = <R2, E2, A2>(that: Effect.Effect<R2, E2, A2>) => {
           (exit, right) =>
             pipe(
               exit,
-              Exit.matchEffect(
-                (cause1) =>
+              core.exitMatchEffect(
+                (cause) =>
                   pipe(
                     internalFiber.join(right),
-                    effect.mapErrorCause((cause2) => Cause.parallel(cause1, cause2))
+                    effect.mapErrorCause((cause2) => Cause.parallel(cause, cause2))
                   ),
-                (a) => pipe(right, core.interruptWithFiber(state.id()), core.as(a))
+                (value) =>
+                  pipe(
+                    right,
+                    core.interruptWithFiber(parentFiberId),
+                    core.as(value)
+                  )
               )
             ),
           (exit, left) =>
             pipe(
               exit,
-              Exit.matchEffect(
-                (cause2) =>
+              core.exitMatchEffect(
+                (cause) =>
                   pipe(
                     internalFiber.join(left),
-                    effect.mapErrorCause((cause1) => Cause.parallel(cause1, cause2))
+                    effect.mapErrorCause((cause2) => Cause.parallel(cause2, cause))
                   ),
-                (a) => pipe(left, core.interruptWithFiber(state.id()), core.as(a))
+                (value) =>
+                  pipe(
+                    left,
+                    core.interruptWithFiber(parentFiberId),
+                    core.as(value)
+                  )
               )
             )
         )
@@ -382,8 +391,8 @@ export const raceFirst = <R2, E2, A2>(that: Effect.Effect<R2, E2, A2>) => {
 /** @internal */
 export const raceFibersWith = <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
   that: Effect.Effect<R1, E1, A1>,
-  selfWins: (winner: Fiber.Fiber<E, A>, loser: Fiber.Fiber<E1, A1>) => Effect.Effect<R2, E2, A2>,
-  thatWins: (winner: Fiber.Fiber<E1, A1>, loser: Fiber.Fiber<E, A>) => Effect.Effect<R3, E3, A3>
+  selfWins: (winner: Fiber.RuntimeFiber<E, A>, loser: Fiber.RuntimeFiber<E1, A1>) => Effect.Effect<R2, E2, A2>,
+  thatWins: (winner: Fiber.RuntimeFiber<E1, A1>, loser: Fiber.RuntimeFiber<E, A>) => Effect.Effect<R3, E3, A3>
 ) => {
   const trace = getCallTrace()
   return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<
@@ -391,28 +400,46 @@ export const raceFibersWith = <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
     E2 | E3,
     A2 | A3
   > => {
-    return core.withFiberRuntime<R | R1 | R2 | R3, E2 | E3, A2 | A3>((parentState, parentStatus) => {
+    return core.withFiberRuntime<R | R1 | R2 | R3, E2 | E3, A2 | A3>((parentFiber, parentStatus) => {
       const parentRuntimeFlags = parentStatus.runtimeFlags
       const raceIndicator = MutableRef.make(true)
-      const leftFiber = fiberRuntime.unsafeForkUnstarted(self, parentState, parentRuntimeFlags)
-      const rightFiber = fiberRuntime.unsafeForkUnstarted(that, parentState, parentRuntimeFlags)
-      leftFiber.setFiberRef(core.forkScopeOverride, Option.some(parentState.scope()))
-      rightFiber.setFiberRef(core.forkScopeOverride, Option.some(parentState.scope()))
-      return core.async((cb) => {
-        leftFiber.unsafeAddObserver(() => completeRace(leftFiber, rightFiber, selfWins, raceIndicator, cb))
-        rightFiber.unsafeAddObserver(() => completeRace(rightFiber, leftFiber, thatWins, raceIndicator, cb))
-        leftFiber.startFork(self)
-        rightFiber.startFork(that)
-      }, FiberId.combineAll(HashSet.from([leftFiber.id(), rightFiber.id()])))
+      const leftFiber: fiberRuntime.FiberRuntime<E, A> = fiberRuntime.unsafeForkUnstarted(
+        self,
+        parentFiber,
+        parentRuntimeFlags
+      )
+      const rightFiber: fiberRuntime.FiberRuntime<E1, A1> = fiberRuntime.unsafeForkUnstarted(
+        that,
+        parentFiber,
+        parentRuntimeFlags
+      )
+      leftFiber.startFork(self)
+      rightFiber.startFork(that)
+      leftFiber.setFiberRef(core.forkScopeOverride, Option.some(parentFiber.scope()))
+      rightFiber.setFiberRef(core.forkScopeOverride, Option.some(parentFiber.scope()))
+      return pipe(
+        core.async<R | R1 | R2 | R3, E2 | E3, A2 | A3>((cb) => {
+          leftFiber.unsafeAddObserver(() => completeRace(leftFiber, rightFiber, selfWins, raceIndicator, cb))
+          rightFiber.unsafeAddObserver(() => completeRace(rightFiber, leftFiber, thatWins, raceIndicator, cb))
+        }, pipe(leftFiber.id(), FiberId.combine(rightFiber.id()))),
+        core.onInterrupt(() =>
+          pipe(
+            leftFiber.interruptWithFork(parentFiber.id()),
+            core.zipRight(rightFiber.interruptWithFork(parentFiber.id())),
+            core.zipRight(leftFiber.await()),
+            core.zipRight(rightFiber.await())
+          )
+        )
+      )
     }).traced(trace)
   }
 }
 
 /** @internal */
 const completeRace = <R, R1, R2, E2, A2, R3, E3, A3>(
-  winner: Fiber.Fiber<any, any>,
-  loser: Fiber.Fiber<any, any>,
-  cont: (winner: Fiber.Fiber<any, any>, loser: Fiber.Fiber<any, any>) => Effect.Effect<any, any, any>,
+  winner: Fiber.RuntimeFiber<any, any>,
+  loser: Fiber.RuntimeFiber<any, any>,
+  cont: (winner: Fiber.RuntimeFiber<any, any>, loser: Fiber.RuntimeFiber<any, any>) => Effect.Effect<any, any, any>,
   ab: MutableRef.MutableRef<boolean>,
   cb: (_: Effect.Effect<R | R1 | R2 | R3, E2 | E3, A2 | A3>) => void
 ): void => {

@@ -697,19 +697,20 @@ export const onInterrupt = <R2, X>(
   cleanup: (interruptors: HashSet.HashSet<FiberId.FiberId>) => Effect.Effect<R2, never, X>
 ) => {
   const trace = getCallTrace()
-  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E, A> =>
-    uninterruptibleMask((restore) =>
-      pipe(
-        restore(self),
-        foldCauseEffect(
+  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E, A> => {
+    return pipe(
+      self,
+      onExit(
+        exitMatch(
           (cause) =>
-            Cause.isInterrupted(cause)
-              ? pipe(cleanup(Cause.interruptors(cause)), zipRight(failCause(cause)))
-              : failCause(cause),
-          succeed
+            Cause.isInterruptedOnly(cause) ?
+              asUnit(cleanup(Cause.interruptors(cause))) :
+              unit(),
+          () => unit()
         )
       )
     ).traced(trace)
+  }
 }
 
 /** @internal */
