@@ -12,12 +12,13 @@ import * as RuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
 import * as FiberScope from "@effect/io/Fiber/Scope"
 import * as FiberStatus from "@effect/io/Fiber/Status"
 import type * as FiberRef from "@effect/io/FiberRef"
+import type * as FiberRefs from "@effect/io/FiberRefs"
 import * as clock from "@effect/io/internal/clock"
 import * as core from "@effect/io/internal/core"
 import * as defaultServices from "@effect/io/internal/defaultServices"
 import * as internalFiber from "@effect/io/internal/fiber"
 import * as FiberMessage from "@effect/io/internal/fiberMessage"
-import * as FiberRefs from "@effect/io/internal/fiberRefs"
+import * as fiberRefs from "@effect/io/internal/fiberRefs"
 import * as internalLogger from "@effect/io/internal/logger"
 import * as metric from "@effect/io/internal/metric"
 import * as metricBoundaries from "@effect/io/internal/metric/boundaries"
@@ -273,7 +274,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
 
       const updatedFiberRefs = pipe(
         parentFiberRefs,
-        FiberRefs.joinAs(parentFiberId, childFiberRefs)
+        fiberRefs.joinAs(parentFiberId, childFiberRefs)
       )
 
       parentFiber.setFiberRefs(updatedFiberRefs)
@@ -363,7 +364,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    * **NOTE**: This method must be invoked by the fiber itself.
    */
   unsafeDeleteFiberRef<X>(fiberRef: FiberRef.FiberRef<X>): void {
-    this._fiberRefs = pipe(this._fiberRefs, FiberRefs.delete(fiberRef))
+    this._fiberRefs = pipe(this._fiberRefs, fiberRefs.delete(fiberRef))
   }
 
   /**
@@ -374,7 +375,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    * log annotations and log level) may not be up-to-date.
    */
   getFiberRef<X>(fiberRef: FiberRef.FiberRef<X>): X {
-    return pipe(this._fiberRefs, FiberRefs.getOrDefault(fiberRef))
+    return pipe(this._fiberRefs, fiberRefs.getOrDefault(fiberRef))
   }
 
   /**
@@ -383,7 +384,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    * **NOTE**: This method must be invoked by the fiber itself.
    */
   setFiberRef<X>(fiberRef: FiberRef.FiberRef<X>, value: X): void {
-    this._fiberRefs = pipe(this._fiberRefs, FiberRefs.updateAs(this._fiberId, fiberRef, value))
+    this._fiberRefs = pipe(this._fiberRefs, fiberRefs.updatedAs(this._fiberId, fiberRef, value))
   }
 
   /**
@@ -1475,11 +1476,11 @@ export const unsafeForkUnstarted = <R, E, A, E2, B>(
 ): FiberRuntime<E, A> => {
   const childId = FiberId.unsafeMake()
   const parentFiberRefs = parentFiber.unsafeGetFiberRefs()
-  const childFiberRefs = pipe(parentFiberRefs, FiberRefs.forkAs(childId))
+  const childFiberRefs = pipe(parentFiberRefs, fiberRefs.forkAs(childId))
   const childFiber = new FiberRuntime<E, A>(childId, childFiberRefs, parentRuntimeFlags)
   const childEnvironment = pipe(
     childFiberRefs,
-    FiberRefs.getOrDefault(
+    fiberRefs.getOrDefault(
       core.currentEnvironment as unknown as FiberRef.FiberRef<Context.Context<R>>
     )
   )

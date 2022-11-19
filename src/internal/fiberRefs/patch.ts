@@ -1,6 +1,6 @@
 import type * as FiberId from "@effect/io/Fiber/Id"
+import type * as FiberRefs from "@effect/io/FiberRefs"
 import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
-import type * as FiberRefs from "@effect/io/internal/fiberRefs"
 import * as _fiberRefs from "@effect/io/internal/fiberRefs"
 import { pipe } from "@fp-ts/data/Function"
 import * as List from "@fp-ts/data/List"
@@ -100,7 +100,7 @@ export const patch = (fiberId: FiberId.Runtime, oldValue: FiberRefs.FiberRefs) =
           break
         }
         case OP_ADD: {
-          fiberRefs = pipe(fiberRefs, _fiberRefs.updateAs(fiberId, head.fiberRef, head.value))
+          fiberRefs = pipe(fiberRefs, _fiberRefs.updatedAs(fiberId, head.fiberRef, head.value))
           patches = tail
           break
         }
@@ -113,7 +113,7 @@ export const patch = (fiberId: FiberId.Runtime, oldValue: FiberRefs.FiberRefs) =
           const value = pipe(fiberRefs, _fiberRefs.getOrDefault(head.fiberRef))
           fiberRefs = pipe(
             fiberRefs,
-            _fiberRefs.updateAs(fiberId, head.fiberRef, head.fiberRef.patch(head.patch)(value))
+            _fiberRefs.updatedAs(fiberId, head.fiberRef, head.fiberRef.patch(head.patch)(value))
           )
           patches = tail
           break

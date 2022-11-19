@@ -67,7 +67,6 @@ class Composite implements FiberId.Composite {
       Equal.hashCombine(Equal.hash(this.right))
     )
   }
-
   [Equal.symbolEqual](that: unknown): boolean {
     return isFiberId(that) &&
       that._tag === "Composite" &&
