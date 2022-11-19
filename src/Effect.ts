@@ -2716,6 +2716,19 @@ export const scopeWith = fiberRuntime.scopeWith
 export const scoped = fiberRuntime.scopedEffect
 
 /**
+ * Returns a new scoped workflow that runs finalizers added to the scope of
+ * this workflow sequentially in the reverse of the order in which they were
+ * added. Note that finalizers are run sequentially by default so this only
+ * has meaning if used within a scope where finalizers are being run in
+ * parallel.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const sequentialFinalizers = fiberRuntime.sequentialFinalizers
+
+/**
  * Extracts the specified service from the environment of the effect.
  *
  * @macro traced
@@ -3341,6 +3354,16 @@ export const unsafeRunWith = _runtime.unsafeRunWith
 export const unsandbox = effect.unsandbox
 
 /**
+ * Scopes all resources acquired by `resource` to the lifetime of `use`
+ * without effecting the scope of any resources acquired by `use`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const using = fiberRuntime.using
+
+/**
  * Converts an option on errors into an option on values.
  *
  * @macro traced
@@ -3544,6 +3567,16 @@ export const withClock = defaultServices.withClock
  * @category constructors
  */
 export const withClockScoped = fiberRuntime.withClockScoped
+
+/**
+ * Returns a new scoped workflow that returns the result of this workflow as
+ * well as a finalizer that can be run to close the scope of this workflow.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const withEarlyRelease = fiberRuntime.withEarlyRelease
 
 /**
  * @macro traced

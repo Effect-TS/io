@@ -1788,6 +1788,18 @@ export const scopedEffect = <R, E, A>(
 }
 
 /** @internal */
+export const sequentialFinalizers = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | Scope.Scope, E, A> => {
+  const trace = getCallTrace()
+  return scopeWith((scope) =>
+    pipe(
+      scope,
+      core.scopeFork(ExecutionStrategy.sequential),
+      core.flatMap(scopeExtend(self))
+    )
+  ).traced(trace)
+}
+
+/** @internal */
 export const some = <R, E, A>(
   self: Effect.Effect<R, E, Option.Option<A>>
 ): Effect.Effect<R, Option.Option<E>, A> => {
@@ -1853,6 +1865,18 @@ export const tuplePar = <T extends [Effect.Effect<any, any, any>, ...Array<Effec
   TupleA<T>
 > => {
   return pipe(collectAllPar(t), core.map(Chunk.toReadonlyArray)) as any
+}
+
+/** @internal */
+export const using = <A, R2, E2, A2>(use: (a: A) => Effect.Effect<R2, E2, A2>) => {
+  const trace = getCallTrace()
+  return <R, E>(self: Effect.Effect<R | Scope.Scope, E, A>): Effect.Effect<R | R2, E | E2, A2> => {
+    return core.acquireUseRelease(
+      scopeMake(),
+      (scope) => pipe(scope, scopeExtend(self), core.flatMap(use)),
+      (scope, exit) => pipe(scope, core.scopeClose(exit))
+    ).traced(trace)
+  }
 }
 
 /** @internal */
@@ -1924,6 +1948,31 @@ export const withClockScoped = <A extends Clock.Clock>(value: A) => {
   return pipe(
     defaultServices.currentServices,
     locallyScopedWithFiberRef(Context.add(clock.clockTag)(value))
+  ).traced(trace)
+}
+
+/** @internal */
+export const withEarlyRelease = <R, E, A>(
+  self: Effect.Effect<R, E, A>
+): Effect.Effect<R | Scope.Scope, E, readonly [Effect.Effect<never, never, void>, A]> => {
+  const trace = getCallTrace()
+  return scopeWith((parent) =>
+    pipe(
+      parent,
+      core.scopeFork(ExecutionStrategy.sequential),
+      core.flatMap((child) =>
+        pipe(
+          child,
+          scopeExtend(self),
+          core.map((value) =>
+            [
+              core.fiberIdWith((fiberId) => pipe(child, core.scopeClose(core.exitInterrupt(fiberId)))),
+              value
+            ] as const
+          )
+        )
+      )
+    )
   ).traced(trace)
 }
 
