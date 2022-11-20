@@ -10,7 +10,7 @@ import * as it from "@effect/io/test/utils/extend"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Context from "@fp-ts/data/Context"
 import * as Duration from "@fp-ts/data/Duration"
-import { pipe } from "@fp-ts/data/Function"
+import { identity, pipe } from "@fp-ts/data/Function"
 import { assert, describe } from "vitest"
 
 export const acquire1 = "Acquiring Module 1"
@@ -360,30 +360,29 @@ describe.concurrent("Layer", () => {
       assert.strictEqual(result.name, "name")
     }))
 
-  // TODO(Mike/Max): does not properly memoize
-  // it.effect("memoizes acquisition of resources", () =>
-  //   Effect.gen(function*() {
-  //     const ref = yield* makeRef()
-  //     const memoized = Layer.memoize(makeLayer1(ref))
-  //     yield* pipe(
-  //       memoized,
-  //       Effect.flatMap((layer) =>
-  //         pipe(
-  //           Effect.environment<Service1>(),
-  //           Effect.provideLayer(layer),
-  //           Effect.flatMap(() =>
-  //             pipe(
-  //               Effect.environment<Service1>(),
-  //               Effect.provideLayer(layer)
-  //             )
-  //           )
-  //         )
-  //       ),
-  //       Effect.scoped
-  //     )
-  //     const result = yield* Ref.get(ref)
-  //     assert.deepStrictEqual(Array.from(result), [acquire1, release1])
-  //   }))
+  it.effect("memoizes acquisition of resources", () =>
+    Effect.gen(function*() {
+      const ref = yield* makeRef()
+      const memoized = Layer.memoize(makeLayer1(ref))
+      yield* pipe(
+        memoized,
+        Effect.flatMap((layer) =>
+          pipe(
+            Effect.environment<Service1>(),
+            Effect.provideLayer(layer),
+            Effect.flatMap(() =>
+              pipe(
+                Effect.environment<Service1>(),
+                Effect.provideLayer(layer)
+              )
+            )
+          )
+        ),
+        Effect.scoped
+      )
+      const result = yield* Ref.get(ref)
+      assert.deepStrictEqual(Array.from(result), [acquire1, release1])
+    }))
 
   it.scoped("fiberRef changes are memoized", () =>
     Effect.gen(function*() {
@@ -556,33 +555,32 @@ describe.concurrent("Layer", () => {
       assert.deepStrictEqual(Array.from(result), [acquire1, release1])
     }))
 
-  // // TODO(Mike/Max): releasing layer1 before layer 2
-  // it.effect("sharing with multiple layers with provideTo", () =>
-  //   Effect.gen(function*() {
-  //     const ref = yield* makeRef()
-  //     const layer1 = makeLayer1(ref)
-  //     const layer2 = makeLayer2(ref)
-  //     const layer3 = makeLayer3(ref)
-  //     const env = pipe(
-  //       layer1,
-  //       Layer.provideTo(layer2),
-  //       Layer.merge(
-  //         pipe(
-  //           layer1,
-  //           Layer.provideTo(layer3)
-  //         )
-  //       ),
-  //       Layer.build
-  //     )
-  //     yield* Effect.scoped(env)
-  //     const result = yield* pipe(Ref.get(ref), Effect.map((chunk) => Array.from(chunk)))
-  //     assert.strictEqual(result[0], acquire1)
-  //     assert.isTrue(result.slice(1, 3).some((s) => s === acquire2))
-  //     assert.isTrue(result.slice(1, 3).some((s) => s === acquire3))
-  //     assert.isTrue(result.slice(3, 5).some((s) => s === release3))
-  //     assert.isTrue(result.slice(3, 5).some((s) => s === release2))
-  //     assert.strictEqual(result[5], release1)
-  //   }))
+  it.effect("sharing with multiple layers with provideTo", () =>
+    Effect.gen(function*() {
+      const ref = yield* makeRef()
+      const layer1 = makeLayer1(ref)
+      const layer2 = makeLayer2(ref)
+      const layer3 = makeLayer3(ref)
+      const env = pipe(
+        layer1,
+        Layer.provideTo(layer2),
+        Layer.merge(
+          pipe(
+            layer1,
+            Layer.provideTo(layer3)
+          )
+        ),
+        Layer.build
+      )
+      yield* Effect.scoped(env)
+      const result = yield* pipe(Ref.get(ref), Effect.map((chunk) => Array.from(chunk)))
+      assert.strictEqual(result[0], acquire1)
+      assert.isTrue(result.slice(1, 3).some((s) => s === acquire2))
+      assert.isTrue(result.slice(1, 3).some((s) => s === acquire3))
+      assert.isTrue(result.slice(3, 5).some((s) => s === release3))
+      assert.isTrue(result.slice(3, 5).some((s) => s === release2))
+      assert.strictEqual(result[5], release1)
+    }))
 
   it.effect("finalizers with provideTo", () =>
     Effect.gen(function*() {
@@ -629,91 +627,88 @@ describe.concurrent("Layer", () => {
       assert.strictEqual(result, 4)
     }))
 
-  // TODO(Mike/Max): releasing layer1 before layer 2
-  // it.effect("map does not interfere with sharing", () =>
-  //   Effect.gen(function*() {
-  //     const ref = yield* makeRef()
-  //     const layer1 = makeLayer1(ref)
-  //     const layer2 = makeLayer2(ref)
-  //     const layer3 = makeLayer3(ref)
-  //     const env = pipe(
-  //       layer1,
-  //       Layer.map(identity),
-  //       Layer.provideTo(layer2),
-  //       Layer.provideTo(
-  //         pipe(
-  //           layer1,
-  //           Layer.provideTo(layer3)
-  //         )
-  //       ),
-  //       Layer.build
-  //     )
-  //     yield* Effect.scoped(env)
-  //     const result = yield* pipe(Ref.get(ref), Effect.map((chunk) => Array.from(chunk)))
-  //     assert.strictEqual(result[0], acquire1)
-  //     assert.isTrue(result.slice(1, 3).some((s) => s === acquire2))
-  //     assert.isTrue(result.slice(1, 3).some((s) => s === acquire3))
-  //     assert.isTrue(result.slice(3, 5).some((s) => s === release3))
-  //     assert.isTrue(result.slice(3, 5).some((s) => s === release2))
-  //     assert.strictEqual(result[5], release1)
-  //   }))
+  it.effect("map does not interfere with sharing", () =>
+    Effect.gen(function*() {
+      const ref = yield* makeRef()
+      const layer1 = makeLayer1(ref)
+      const layer2 = makeLayer2(ref)
+      const layer3 = makeLayer3(ref)
+      const env = pipe(
+        layer1,
+        Layer.map(identity),
+        Layer.provideTo(layer2),
+        Layer.provideTo(
+          pipe(
+            layer1,
+            Layer.provideTo(layer3)
+          )
+        ),
+        Layer.build
+      )
+      yield* Effect.scoped(env)
+      const result = yield* pipe(Ref.get(ref), Effect.map((chunk) => Array.from(chunk)))
+      assert.strictEqual(result[0], acquire1)
+      assert.isTrue(result.slice(1, 3).some((s) => s === acquire2))
+      assert.isTrue(result.slice(1, 3).some((s) => s === acquire3))
+      assert.isTrue(result.slice(3, 5).some((s) => s === release3))
+      assert.isTrue(result.slice(3, 5).some((s) => s === release2))
+      assert.strictEqual(result[5], release1)
+    }))
 
-  // TODO(Mike/Max): releasing layer1 before layer 2
-  // it.effect("mapError does not interfere with sharing", () =>
-  //   Effect.gen(function*() {
-  //     const ref = yield* makeRef()
-  //     const layer1 = makeLayer1(ref)
-  //     const layer2 = makeLayer2(ref)
-  //     const layer3 = makeLayer3(ref)
-  //     const env = pipe(
-  //       layer1,
-  //       Layer.mapError(identity),
-  //       Layer.provideTo(layer2),
-  //       Layer.provideTo(
-  //         pipe(
-  //           layer1,
-  //           Layer.provideTo(layer3)
-  //         )
-  //       ),
-  //       Layer.build
-  //     )
-  //     yield* Effect.scoped(env)
-  //     const result = yield* pipe(Ref.get(ref), Effect.map((chunk) => Array.from(chunk)))
-  //     assert.strictEqual(result[0], acquire1)
-  //     assert.isTrue(result.slice(1, 3).some((s) => s === acquire2))
-  //     assert.isTrue(result.slice(1, 3).some((s) => s === acquire3))
-  //     assert.isTrue(result.slice(3, 5).some((s) => s === release3))
-  //     assert.isTrue(result.slice(3, 5).some((s) => s === release2))
-  //     assert.strictEqual(result[5], release1)
-  //   }))
+  it.effect("mapError does not interfere with sharing", () =>
+    Effect.gen(function*() {
+      const ref = yield* makeRef()
+      const layer1 = makeLayer1(ref)
+      const layer2 = makeLayer2(ref)
+      const layer3 = makeLayer3(ref)
+      const env = pipe(
+        layer1,
+        Layer.mapError(identity),
+        Layer.provideTo(layer2),
+        Layer.provideTo(
+          pipe(
+            layer1,
+            Layer.provideTo(layer3)
+          )
+        ),
+        Layer.build
+      )
+      yield* Effect.scoped(env)
+      const result = yield* pipe(Ref.get(ref), Effect.map((chunk) => Array.from(chunk)))
+      assert.strictEqual(result[0], acquire1)
+      assert.isTrue(result.slice(1, 3).some((s) => s === acquire2))
+      assert.isTrue(result.slice(1, 3).some((s) => s === acquire3))
+      assert.isTrue(result.slice(3, 5).some((s) => s === release3))
+      assert.isTrue(result.slice(3, 5).some((s) => s === release2))
+      assert.strictEqual(result[5], release1)
+    }))
 
-  // TODO(Mike/Max): releasing layer1 before layer 2
-  // it.effect("orDie does not interfere with sharing", () =>
-  //   Effect.gen(function*() {
-  //     const ref = yield* makeRef()
-  //     const layer1 = makeLayer1(ref)
-  //     const layer2 = makeLayer2(ref)
-  //     const layer3 = makeLayer3(ref)
-  //     const env = pipe(
-  //       Layer.orDie(layer1),
-  //       Layer.provideTo(layer2),
-  //       Layer.provideTo(
-  //         pipe(
-  //           layer1,
-  //           Layer.provideTo(layer3)
-  //         )
-  //       ),
-  //       Layer.build
-  //     )
-  //     yield* Effect.scoped(env)
-  //     const result = yield* pipe(Ref.get(ref), Effect.map((chunk) => Array.from(chunk)))
-  //     assert.strictEqual(result[0], acquire1)
-  //     assert.isTrue(result.slice(1, 3).some((s) => s === acquire2))
-  //     assert.isTrue(result.slice(1, 3).some((s) => s === acquire3))
-  //     assert.isTrue(result.slice(3, 5).some((s) => s === release3))
-  //     assert.isTrue(result.slice(3, 5).some((s) => s === release2))
-  //     assert.strictEqual(result[5], release1)
-  //   }))
+  it.effect("orDie does not interfere with sharing", () =>
+    Effect.gen(function*() {
+      const ref = yield* makeRef()
+      const layer1 = makeLayer1(ref)
+      const layer2 = makeLayer2(ref)
+      const layer3 = makeLayer3(ref)
+      const env = pipe(
+        Layer.orDie(layer1),
+        Layer.provideTo(layer2),
+        Layer.provideTo(
+          pipe(
+            layer1,
+            Layer.provideTo(layer3)
+          )
+        ),
+        Layer.build
+      )
+      yield* Effect.scoped(env)
+      const result = yield* pipe(Ref.get(ref), Effect.map((chunk) => Array.from(chunk)))
+      assert.strictEqual(result[0], acquire1)
+      assert.isTrue(result.slice(1, 3).some((s) => s === acquire2))
+      assert.isTrue(result.slice(1, 3).some((s) => s === acquire3))
+      assert.isTrue(result.slice(3, 5).some((s) => s === release3))
+      assert.isTrue(result.slice(3, 5).some((s) => s === release2))
+      assert.strictEqual(result[5], release1)
+    }))
 
   it.effect("tap peeks at an acquired resource", () =>
     Effect.gen(function*() {

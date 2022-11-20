@@ -887,8 +887,13 @@ export const whenEffect = <R, E>(predicate: Effect.Effect<R, E, boolean>) => {
   const trace = getCallTrace()
   return <R2, E2, A>(effect: Effect.Effect<R2, E2, A>): Effect.Effect<R | R2, E | E2, Option.Option<A>> => {
     return pipe(
-      suspendSucceed(() => predicate),
-      flatMap((b) => b ? pipe(effect, map(Option.some)) : pipe(effect, map(() => Option.none)))
+      predicate,
+      flatMap((b) => {
+        if (b) {
+          return pipe(effect, map(Option.some))
+        }
+        return succeed(Option.none)
+      })
     ).traced(trace)
   }
 }
