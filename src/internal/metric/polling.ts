@@ -6,14 +6,14 @@ import * as circular from "@effect/io/internal/effect/circular"
 import * as metric from "@effect/io/internal/metric"
 import * as schedule from "@effect/io/internal/schedule"
 import type * as Metric from "@effect/io/Metric"
-import type * as PollingMetric from "@effect/io/PollingMetric"
+import type * as PollingMetric from "@effect/io/Metric/Polling"
 import type * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"
 import * as Chunk from "@fp-ts/data/Chunk"
 import { pipe } from "@fp-ts/data/Function"
 
 /** @internal */
-const PollingMetricSymbolKey = "@effect/io/PollingMetric"
+const PollingMetricSymbolKey = "@effect/io/Metric/Polling"
 
 /** @internal */
 export const PollingMetricTypeId: PollingMetric.PollingMetricTypeId = Symbol.for(
