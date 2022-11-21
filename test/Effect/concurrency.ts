@@ -369,7 +369,7 @@ describe.concurrent("Effect", () => {
         Effect.timeout(Duration.hours(1)),
         Effect.exit
       )
-      assert.deepStrictEqual(result, Exit.fail("uh oh"))
+      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail("uh oh"))
     }))
 
   it.effect("timeout of terminate", () =>
@@ -379,6 +379,6 @@ describe.concurrent("Effect", () => {
         Effect.timeout(Duration.hours(1)),
         Effect.exit
       )
-      assert.deepStrictEqual(result, Exit.die(ExampleError))
+      assert.deepStrictEqual(Exit.unannotate(result), Exit.die(ExampleError))
     }))
 })

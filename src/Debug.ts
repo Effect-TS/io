@@ -50,10 +50,6 @@ export interface Debug {
    */
   traceStackLimit: number
   /**
-   * Sets a limit on how many span traces should be rendered.
-   */
-  traceSpanLimit: number
-  /**
    * Enables debug logging of execution traces.
    */
   traceExecutionLogEnabled: boolean
@@ -73,17 +69,16 @@ export interface Debug {
  */
 export const runtimeDebug: Debug = {
   logLevelOverride: undefined,
-  traceExecutionEnabled: false,
-  traceExecutionLogEnabled: false,
-  traceExecutionEnabledInCause: false,
-  traceSpanEnabledInCause: false,
-  traceStackEnabledInCause: false,
+  traceExecutionEnabled: true,
+  traceExecutionLogEnabled: true,
+  traceExecutionEnabledInCause: true,
+  traceSpanEnabledInCause: true,
+  traceStackEnabledInCause: true,
   traceExecutionLimit: 5,
   traceStackLimit: 5,
-  traceSpanLimit: 5,
   traceExtractor: undefined,
   traceFilter: () => true,
-  traceEnabled: false,
+  traceEnabled: true,
   traceExecutionHook: []
 }
 

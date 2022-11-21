@@ -3684,3 +3684,12 @@ export const zipParRight = circular.zipParRight
  * @category zipping
  */
 export const zipWithPar = circular.zipWithPar
+
+/**
+ * Annotates the wrapped effect with a span using the current Tracer.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category tracing
+ */
+export const withSpan = effect.withSpan

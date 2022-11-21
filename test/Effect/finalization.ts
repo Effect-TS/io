@@ -38,7 +38,7 @@ describe.concurrent("Effect", () => {
         ),
         Effect.exit
       )
-      assert.deepStrictEqual(result, Exit.fail(ExampleError))
+      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(ExampleError))
       assert.isTrue(finalized)
     }))
 
@@ -54,7 +54,7 @@ describe.concurrent("Effect", () => {
         ),
         Effect.exit
       )
-      assert.deepStrictEqual(result, Exit.fail(ExampleError))
+      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(ExampleError))
       assert.isTrue(finalized)
     }))
 
@@ -71,7 +71,7 @@ describe.concurrent("Effect", () => {
         Effect.map((cause) => cause)
       )
       const expected = Cause.sequential(Cause.sequential(Cause.fail(ExampleError), Cause.die(e2)), Cause.die(e3))
-      assert.deepStrictEqual(result, expected)
+      assert.deepStrictEqual(Cause.unannotate(result), expected)
     }))
 
   it.effect("finalizer errors reported", () =>
@@ -116,7 +116,7 @@ describe.concurrent("Effect", () => {
         ),
         Effect.exit
       )
-      assert.deepStrictEqual(result, Exit.fail(ExampleError))
+      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(ExampleError))
     }))
 
   it.effect("error in just release", () =>
@@ -129,7 +129,7 @@ describe.concurrent("Effect", () => {
         ),
         Effect.exit
       )
-      assert.deepStrictEqual(result, Exit.die(ExampleError))
+      assert.deepStrictEqual(Exit.unannotate(result), Exit.die(ExampleError))
     }))
 
   it.effect("error in just usage", () =>
@@ -142,7 +142,7 @@ describe.concurrent("Effect", () => {
         ),
         Effect.exit
       )
-      assert.deepStrictEqual(result, Exit.fail(ExampleError))
+      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(ExampleError))
     }))
 
   it.effect("rethrown caught error in acquisition", () =>
@@ -170,7 +170,7 @@ describe.concurrent("Effect", () => {
         ),
         Effect.exit
       )
-      assert.deepStrictEqual(result, Exit.die(ExampleError))
+      assert.deepStrictEqual(Exit.unannotate(result), Exit.die(ExampleError))
     }))
 
   it.effect("rethrown caught error in usage", () =>
@@ -185,7 +185,7 @@ describe.concurrent("Effect", () => {
         Effect.absolve,
         Effect.exit
       )
-      assert.deepEqual(result, Exit.fail(ExampleError))
+      assert.deepEqual(Exit.unannotate(result), Exit.fail(ExampleError))
     }))
 
   it.effect("test eval of async fail", () =>
@@ -204,10 +204,10 @@ describe.concurrent("Effect", () => {
       const a2 = yield* Effect.exit(io2)
       const a3 = yield* pipe(io1, Effect.either, Effect.absolve, Effect.exit)
       const a4 = yield* pipe(io2, Effect.either, Effect.absolve, Effect.exit)
-      assert.deepStrictEqual(a1, Exit.fail(ExampleError))
-      assert.deepStrictEqual(a2, Exit.fail(ExampleError))
-      assert.deepStrictEqual(a3, Exit.fail(ExampleError))
-      assert.deepStrictEqual(a4, Exit.fail(ExampleError))
+      assert.deepStrictEqual(Exit.unannotate(a1), Exit.fail(ExampleError))
+      assert.deepStrictEqual(Exit.unannotate(a2), Exit.fail(ExampleError))
+      assert.deepStrictEqual(Exit.unannotate(a3), Exit.fail(ExampleError))
+      assert.deepStrictEqual(Exit.unannotate(a4), Exit.fail(ExampleError))
     }))
 
   it.live("acquireUseRelease regression 1", () =>

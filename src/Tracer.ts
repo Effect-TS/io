@@ -1,37 +1,47 @@
 /**
  * @since 1.0.0
  */
+
+import type { Effect } from "@effect/io/Effect"
+import * as core from "@effect/io/internal/core"
 import type { Option } from "@fp-ts/data/Option"
+import { none } from "@fp-ts/data/Option"
 
 /**
- * @since 1.0.0
  * @category symbols
+ * @since 1.0.0
  */
-export const SpanTypeId = Symbol.for("@effect/io/Tracer/Span")
+export const TracerTypeId: unique symbol = Symbol.for("@effect/io/Tracer")
 
 /**
- * @since 1.0.0
  * @category symbols
- */
-export type SpanTypeId = typeof SpanTypeId
-
-/**
  * @since 1.0.0
- * @category models
  */
-export interface Span {
-  readonly [SpanTypeId]: SpanTypeId
-  readonly parent: Option<Span>
-  readonly name: string
-  readonly trace?: string
-}
+export type TracerTypeId = typeof TracerTypeId
 
 /**
- * Returns `true` if the specified value is a `Span`, `false` otherwise.
+ * The Tracer service is used to provide tracing facilities to Effect.
  *
+ * This service is meant to be implemented by exporters such as opentelemetry.
+ *
+ * @category models
  * @since 1.0.0
- * @category refinements
  */
-export const isSpan = (u: unknown): u is Span => {
-  return typeof u === "object" && u != null && SpanTypeId in u
+export interface Tracer {
+  readonly _id: TracerTypeId
+  readonly withSpan: (spanName: string) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
 }
+
+/**
+ * @category constructors
+ * @since 1.0.0
+ */
+export const make: (withSpan: (spanName: string) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>) => Tracer = (
+  withSpan
+) => ({ _id: TracerTypeId, withSpan })
+
+/**
+ * @category fiberRefs
+ * @since 1.0.0
+ */
+export const currentTracer = core.fiberRefUnsafeMake<Option<Tracer>>(none)

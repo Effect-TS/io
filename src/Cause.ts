@@ -27,6 +27,7 @@ import type { Continuation } from "@effect/io/internal/core"
 import type { Stack } from "@effect/io/internal/stack"
 import type { Chunk } from "@fp-ts/data/Chunk"
 import type { Equal } from "@fp-ts/data/Equal"
+import type { Option } from "@fp-ts/data/Option"
 
 /**
  * @since 1.0.0
@@ -110,7 +111,19 @@ export const StackAnnotationTypeId: unique symbol = internal.StackAnnotationType
  * @since 1.0.0
  * @category symbols
  */
+export const SpanAnnotationTypeId: unique symbol = internal.SpanAnnotationTypeId
+
+/**
+ * @since 1.0.0
+ * @category symbols
+ */
 export type StackAnnotationTypeId = typeof StackAnnotationTypeId
+
+/**
+ * @since 1.0.0
+ * @category symbols
+ */
+export type SpanAnnotationTypeId = typeof SpanAnnotationTypeId
 
 /**
  * A `Cause` represents the full history of a failure resulting from running an
@@ -156,6 +169,15 @@ export declare namespace Cause {
     readonly stack: Stack<Continuation> | undefined
     readonly execution: Chunk<string> | undefined
   }
+
+  /**
+   * @since 1.0.0
+   * @category models
+   */
+  export interface SpanAnnotation {
+    readonly [SpanAnnotationTypeId]: SpanAnnotationTypeId
+    readonly currentSpanURI: Option<string>
+  }
 }
 
 /**
@@ -188,7 +210,6 @@ export interface CauseRenderer<E = unknown> {
   readonly renderSpan: boolean
   readonly renderExecution: boolean
   readonly renderStack: boolean
-  readonly renderSpanDepth: number
   readonly renderExecutionDepth: number
   readonly renderStackDepth: number
   readonly renderError: (error: E) => ReadonlyArray<string>
@@ -812,3 +833,19 @@ export const defaultRenderer = internal.defaultRenderer
  * @category rendering
  */
 export const pretty = internal.pretty
+
+/**
+ * Checks if an annotation is a StackAnnotation
+ *
+ * @since 1.0.0
+ * @category guards
+ */
+export const isStackAnnotation = internal.isStackAnnotation
+
+/**
+ * Removes any annotation from the cause
+ *
+ * @since 1.0.0
+ * @category filtering
+ */
+export const unannotate = internal.unannotate
