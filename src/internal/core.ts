@@ -1511,64 +1511,57 @@ export const exitIsSuccess = <E, A>(self: Exit.Exit<E, A>): self is Exit.Success
 
 /** @internal */
 export const exitSucceed = <A>(value: A): Exit.Exit<never, A> => {
-  const trace = getCallTrace()
   const exit = Object.create(proto)
   exit.op = OpCodes.OP_SUCCESS
   exit.value = value
-  exit.trace = trace
+  exit.trace = undefined
   return exit
 }
 
 /** @internal */
 export const exitFail = <E>(error: E): Exit.Exit<E, never> => {
-  const trace = getCallTrace()
-  return exitFailCause(Cause.fail(error)).traced(trace) as Exit.Exit<E, never>
+  return exitFailCause(Cause.fail(error)) as Exit.Exit<E, never>
 }
 
 /** @internal */
 export const exitFailCause = <E>(cause: Cause.Cause<E>): Exit.Exit<E, never> => {
-  const trace = getCallTrace()
   const exit = Object.create(proto)
   exit.op = OpCodes.OP_FAILURE
   exit.cause = cause
-  exit.trace = trace
+  exit.trace = undefined
   return exit
 }
 
 /** @internal */
 export const exitDie = (defect: unknown): Exit.Exit<never, never> => {
-  const trace = getCallTrace()
-  return exitFailCause(Cause.die(defect)).traced(trace) as Exit.Exit<never, never>
+  return exitFailCause(Cause.die(defect)) as Exit.Exit<never, never>
 }
 
 /** @internal */
 export const exitInterrupt = (fiberId: FiberId.FiberId): Exit.Exit<never, never> => {
-  const trace = getCallTrace()
-  return exitFailCause(Cause.interrupt(fiberId)).traced(trace) as Exit.Exit<never, never>
+  return exitFailCause(Cause.interrupt(fiberId)) as Exit.Exit<never, never>
 }
 
 /** @internal */
 export const exitFromEither = <E, A>(either: Either.Either<E, A>): Exit.Exit<E, A> => {
-  const trace = getCallTrace()
   switch (either._tag) {
     case "Left": {
-      return exitFail(either.left).traced(trace) as Exit.Exit<E, A>
+      return exitFail(either.left) as Exit.Exit<E, A>
     }
     case "Right": {
-      return exitSucceed(either.right).traced(trace) as Exit.Exit<E, A>
+      return exitSucceed(either.right) as Exit.Exit<E, A>
     }
   }
 }
 
 /** @internal */
 export const exitFromOption = <A>(option: Option.Option<A>): Exit.Exit<void, A> => {
-  const trace = getCallTrace()
   switch (option._tag) {
     case "None": {
-      return exitFail(void 0).traced(trace) as Exit.Exit<void, A>
+      return exitFail(void 0) as Exit.Exit<void, A>
     }
     case "Some": {
-      return exitSucceed(option.value).traced(trace) as Exit.Exit<void, A>
+      return exitSucceed(option.value) as Exit.Exit<void, A>
     }
   }
 }
@@ -1627,14 +1620,13 @@ export const exitExists = <A>(predicate: Predicate<A>) => {
 
 /** @internal */
 export const exitAs = <A1>(value: A1) => {
-  const trace = getCallTrace()
   return <E, A>(self: Exit.Exit<E, A>): Exit.Exit<E, A1> => {
     switch (self.op) {
       case OpCodes.OP_FAILURE: {
-        return self.traced(trace) as Exit.Exit<E, A1>
+        return self as Exit.Exit<E, A1>
       }
       case OpCodes.OP_SUCCESS: {
-        return exitSucceed(value).traced(trace) as Exit.Exit<E, A1>
+        return exitSucceed(value) as Exit.Exit<E, A1>
       }
     }
   }
@@ -1642,20 +1634,18 @@ export const exitAs = <A1>(value: A1) => {
 
 /** @internal */
 export const exitAsUnit = <E, A>(self: Exit.Exit<E, A>): Exit.Exit<E, void> => {
-  const trace = getCallTrace()
-  return pipe(self, exitAs(void 0)).traced(trace) as Exit.Exit<E, void>
+  return pipe(self, exitAs(void 0)) as Exit.Exit<E, void>
 }
 
 /** @internal */
 export const exitMap = <A, B>(f: (a: A) => B) => {
-  const trace = getCallTrace()
   return <E>(self: Exit.Exit<E, A>): Exit.Exit<E, B> => {
     switch (self.op) {
       case OpCodes.OP_FAILURE: {
-        return self.traced(trace) as Exit.Exit<E, B>
+        return self as Exit.Exit<E, B>
       }
       case OpCodes.OP_SUCCESS: {
-        return exitSucceed(f(self.value)).traced(trace) as Exit.Exit<E, B>
+        return exitSucceed(f(self.value)) as Exit.Exit<E, B>
       }
     }
   }
@@ -1666,29 +1656,31 @@ export const exitMapBoth = <E, A, E1, A1>(
   onFailure: (e: E) => E1,
   onSuccess: (a: A) => A1
 ) => {
-  const trace = getCallTrace()
   return (self: Exit.Exit<E, A>): Exit.Exit<E1, A1> => {
     switch (self.op) {
       case OpCodes.OP_FAILURE: {
-        return exitFailCause(pipe(self.cause, Cause.map(onFailure))).traced(trace) as Exit.Exit<E1, A1>
+        return exitFailCause(pipe(self.cause, Cause.map(onFailure))) as Exit.Exit<E1, A1>
       }
       case OpCodes.OP_SUCCESS: {
-        return exitSucceed(onSuccess(self.value)).traced(trace) as Exit.Exit<E1, A1>
+        return exitSucceed(onSuccess(self.value)) as Exit.Exit<E1, A1>
       }
     }
   }
 }
 
 /** @internal */
+export const exitUnannotate = <E, A>(exit: Exit.Exit<E, A>): Exit.Exit<E, A> =>
+  exitIsSuccess(exit) ? exit : exitFailCause(Cause.unannotate(exit.cause))
+
+/** @internal */
 export const exitMapError = <E, E1>(f: (e: E) => E1) => {
-  const trace = getCallTrace()
   return <A>(self: Exit.Exit<E, A>): Exit.Exit<E1, A> => {
     switch (self.op) {
       case OpCodes.OP_FAILURE: {
-        return exitFailCause(pipe(self.cause, Cause.map(f))).traced(trace) as Exit.Exit<E1, A>
+        return exitFailCause(pipe(self.cause, Cause.map(f))) as Exit.Exit<E1, A>
       }
       case OpCodes.OP_SUCCESS: {
-        return self.traced(trace) as Exit.Exit<E1, A>
+        return self as Exit.Exit<E1, A>
       }
     }
   }
@@ -1696,14 +1688,13 @@ export const exitMapError = <E, E1>(f: (e: E) => E1) => {
 
 /** @internal */
 export const exitMapErrorCause = <E, E1>(f: (cause: Cause.Cause<E>) => Cause.Cause<E1>) => {
-  const trace = getCallTrace()
   return <A>(self: Exit.Exit<E, A>): Exit.Exit<E1, A> => {
     switch (self.op) {
       case OpCodes.OP_FAILURE: {
-        return exitFailCause(f(self.cause)).traced(trace) as Exit.Exit<E1, A>
+        return exitFailCause(f(self.cause)) as Exit.Exit<E1, A>
       }
       case OpCodes.OP_SUCCESS: {
-        return self.traced(trace) as Exit.Exit<E1, A>
+        return self as Exit.Exit<E1, A>
       }
     }
   }
@@ -1711,14 +1702,13 @@ export const exitMapErrorCause = <E, E1>(f: (cause: Cause.Cause<E>) => Cause.Cau
 
 /** @internal */
 export const exitFlatMap = <A, E1, A1>(f: (a: A) => Exit.Exit<E1, A1>) => {
-  const trace = getCallTrace()
   return <E>(self: Exit.Exit<E, A>): Exit.Exit<E | E1, A1> => {
     switch (self.op) {
       case OpCodes.OP_FAILURE: {
-        return self.traced(trace) as Exit.Exit<E | E1, A1>
+        return self as Exit.Exit<E | E1, A1>
       }
       case OpCodes.OP_SUCCESS: {
-        return f(self.value).traced(trace) as Exit.Exit<E | E1, A1>
+        return f(self.value) as Exit.Exit<E | E1, A1>
       }
     }
   }
@@ -1728,14 +1718,13 @@ export const exitFlatMap = <A, E1, A1>(f: (a: A) => Exit.Exit<E1, A1>) => {
 export const exitFlatMapEffect = <E, A, R, E1, A1>(
   f: (a: A) => Effect.Effect<R, E1, Exit.Exit<E, A1>>
 ) => {
-  const trace = getCallTrace()
   return (self: Exit.Exit<E, A>): Effect.Effect<R, E1, Exit.Exit<E, A1>> => {
     switch (self.op) {
       case OpCodes.OP_FAILURE: {
-        return succeed(self).traced(trace)
+        return succeed(self)
       }
       case OpCodes.OP_SUCCESS: {
-        return f(self.value).traced(trace)
+        return f(self.value)
       }
     }
   }
@@ -1745,8 +1734,7 @@ export const exitFlatMapEffect = <E, A, R, E1, A1>(
 export const exitFlatten = <E, E1, A>(
   self: Exit.Exit<E, Exit.Exit<E1, A>>
 ): Exit.Exit<E | E1, A> => {
-  const trace = getCallTrace()
-  return pipe(self, exitFlatMap(identity)).traced(trace) as Exit.Exit<E | E1, A>
+  return pipe(self, exitFlatMap(identity)) as Exit.Exit<E | E1, A>
 }
 
 /** @internal */
@@ -1785,14 +1773,13 @@ export const exitMatchEffect = <E, A, R1, E1, A1, R2, E2, A2>(
 
 /** @internal */
 export const exitForEachEffect = <A, R, E1, B>(f: (a: A) => Effect.Effect<R, E1, B>) => {
-  const trace = getCallTrace()
   return <E>(self: Exit.Exit<E, A>): Effect.Effect<R, never, Exit.Exit<E | E1, B>> => {
     switch (self.op) {
       case OpCodes.OP_FAILURE: {
-        return succeed(exitFailCause(self.cause)).traced(trace)
+        return succeed(exitFailCause(self.cause))
       }
       case OpCodes.OP_SUCCESS: {
-        return exit(f(self.value)).traced(trace)
+        return exit(f(self.value))
       }
     }
   }
@@ -1800,7 +1787,6 @@ export const exitForEachEffect = <A, R, E1, B>(f: (a: A) => Effect.Effect<R, E1,
 
 /** @internal */
 export const exitZip = <E2, A2>(that: Exit.Exit<E2, A2>) => {
-  const trace = getCallTrace()
   return <E, A>(self: Exit.Exit<E, A>): Exit.Exit<E | E2, readonly [A, A2]> => {
     return pipe(
       self,
@@ -1809,13 +1795,12 @@ export const exitZip = <E2, A2>(that: Exit.Exit<E2, A2>) => {
         (a, a2) => [a, a2] as const,
         Cause.sequential
       )
-    ).traced(trace) as Exit.Exit<E | E2, readonly [A, A2]>
+    ) as Exit.Exit<E | E2, readonly [A, A2]>
   }
 }
 
 /** @internal */
 export const exitZipLeft = <E2, A2>(that: Exit.Exit<E2, A2>) => {
-  const trace = getCallTrace()
   return <E, A>(self: Exit.Exit<E, A>): Exit.Exit<E | E2, A> => {
     return pipe(
       self,
@@ -1824,13 +1809,12 @@ export const exitZipLeft = <E2, A2>(that: Exit.Exit<E2, A2>) => {
         (a, _) => a,
         Cause.sequential
       )
-    ).traced(trace) as Exit.Exit<E | E2, A>
+    ) as Exit.Exit<E | E2, A>
   }
 }
 
 /** @internal */
 export const exitZipRight = <E2, A2>(that: Exit.Exit<E2, A2>) => {
-  const trace = getCallTrace()
   return <E, A>(self: Exit.Exit<E, A>): Exit.Exit<E | E2, A2> => {
     return pipe(
       self,
@@ -1839,13 +1823,12 @@ export const exitZipRight = <E2, A2>(that: Exit.Exit<E2, A2>) => {
         (_, a2) => a2,
         Cause.sequential
       )
-    ).traced(trace) as Exit.Exit<E | E2, A2>
+    ) as Exit.Exit<E | E2, A2>
   }
 }
 
 /** @internal */
 export const exitZipPar = <E2, A2>(that: Exit.Exit<E2, A2>) => {
-  const trace = getCallTrace()
   return <E, A>(self: Exit.Exit<E, A>): Exit.Exit<E | E2, readonly [A, A2]> => {
     return pipe(
       self,
@@ -1854,29 +1837,27 @@ export const exitZipPar = <E2, A2>(that: Exit.Exit<E2, A2>) => {
         (a, a2) => [a, a2] as const,
         Cause.parallel
       )
-    ).traced(trace) as Exit.Exit<E | E2, readonly [A, A2]>
+    ) as Exit.Exit<E | E2, readonly [A, A2]>
   }
 }
 
 /** @internal */
 export const exitZipParLeft = <E2, A2>(that: Exit.Exit<E2, A2>) => {
-  const trace = getCallTrace()
   return <E, A>(self: Exit.Exit<E, A>): Exit.Exit<E | E2, A> => {
     return pipe(
       self,
       exitZipWith(that, (a, _) => a, Cause.parallel)
-    ).traced(trace) as Exit.Exit<E | E2, A>
+    ) as Exit.Exit<E | E2, A>
   }
 }
 
 /** @internal */
 export const exitZipParRight = <E2, A2>(that: Exit.Exit<E2, A2>) => {
-  const trace = getCallTrace()
   return <E, A>(self: Exit.Exit<E, A>): Exit.Exit<E | E2, A2> => {
     return pipe(
       self,
       exitZipWith(that, (_, a2) => a2, Cause.parallel)
-    ).traced(trace) as Exit.Exit<E | E2, A2>
+    ) as Exit.Exit<E | E2, A2>
   }
 }
 
@@ -1886,26 +1867,25 @@ export const exitZipWith = <E, E1, A, B, C>(
   f: (a: A, b: B) => C,
   g: (c: Cause.Cause<E>, c1: Cause.Cause<E1>) => Cause.Cause<E | E1>
 ) => {
-  const trace = getCallTrace()
   return (self: Exit.Exit<E, A>): Exit.Exit<E | E1, C> => {
     switch (self.op) {
       case OpCodes.OP_FAILURE: {
         switch (that.op) {
           case OpCodes.OP_SUCCESS: {
-            return self.traced(trace) as Exit.Exit<E | E1, C>
+            return self as Exit.Exit<E | E1, C>
           }
           case OpCodes.OP_FAILURE: {
-            return exitFailCause(g(self.cause, that.cause)).traced(trace) as Exit.Exit<E | E1, C>
+            return exitFailCause(g(self.cause, that.cause)) as Exit.Exit<E | E1, C>
           }
         }
       }
       case OpCodes.OP_SUCCESS: {
         switch (that.op) {
           case OpCodes.OP_SUCCESS: {
-            return exitSucceed(f(self.value, that.value)).traced(trace) as Exit.Exit<E | E1, C>
+            return exitSucceed(f(self.value, that.value)) as Exit.Exit<E | E1, C>
           }
           case OpCodes.OP_FAILURE: {
-            return that.traced(trace) as Exit.Exit<E | E1, C>
+            return that as Exit.Exit<E | E1, C>
           }
         }
       }
@@ -1928,7 +1908,7 @@ export const exitCollectAllPar = <E, A>(
 }
 
 /** @internal */
-export const exitUnit: () => Exit.Exit<never, void> = unit as any
+export const exitUnit: () => Exit.Exit<never, void> = () => exitSucceed(void 0)
 
 /** @internal */
 const exitCollectAllInternal = <E, A>(

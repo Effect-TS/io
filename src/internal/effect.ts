@@ -16,6 +16,7 @@ import * as LogSpan from "@effect/io/Logger/Span"
 import type * as Metric from "@effect/io/Metric"
 import * as Random from "@effect/io/Random"
 import * as Ref from "@effect/io/Ref"
+import { currentTracer } from "@effect/io/Tracer"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Context from "@fp-ts/data/Context"
 import * as Duration from "@fp-ts/data/Duration"
@@ -2585,3 +2586,14 @@ export const withMetric = <Type, In, Out>(metric: Metric.Metric<Type, In, Out>) 
     return metric(self).traced(trace)
   }
 }
+
+/** @internal */
+export const withSpan = (name: string) =>
+  <R, E, A>(self: Effect.Effect<R, E, A>) =>
+    pipe(
+      core.fiberRefGet(currentTracer),
+      core.flatMap(Option.match(
+        () => self,
+        (tracer) => tracer.withSpan(name)(self)
+      ))
+    )

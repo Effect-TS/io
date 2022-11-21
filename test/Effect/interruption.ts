@@ -514,7 +514,7 @@ describe.concurrent("Effect", () => {
         ),
         Effect.flatMap(Fiber.interrupt)
       )
-      assert.deepStrictEqual(result, Exit.fail("foo"))
+      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail("foo"))
     }))
 
   it.live("acquireRelease use inherits interrupt status", () =>

@@ -1,10 +1,10 @@
 import * as Cause from "@effect/io/Cause"
 import type * as Clock from "@effect/io/Clock"
-import { getCallTrace } from "@effect/io/Debug"
+import { getCallTrace, runtimeDebug } from "@effect/io/Debug"
 import * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
 import * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
-import type * as Exit from "@effect/io/Exit"
+import * as Exit from "@effect/io/Exit"
 import type * as Fiber from "@effect/io/Fiber"
 import * as FiberId from "@effect/io/Fiber/Id"
 import * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
@@ -25,8 +25,9 @@ import * as metricBoundaries from "@effect/io/internal/metric/boundaries"
 import * as OpCodes from "@effect/io/internal/opCodes/effect"
 import { Stack } from "@effect/io/internal/stack"
 import * as SupervisorPatch from "@effect/io/internal/supervisor/patch"
+import { RingBuffer } from "@effect/io/internal/support"
 import type { EnforceNonEmptyRecord, TupleA } from "@effect/io/internal/types"
-import type * as LogLevel from "@effect/io/Logger/Level"
+import * as LogLevel from "@effect/io/Logger/Level"
 import * as Ref from "@effect/io/Ref"
 import type * as Scope from "@effect/io/Scope"
 import * as Supervisor from "@effect/io/Supervisor"
@@ -108,6 +109,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   private _observers = List.empty<(exit: Exit.Exit<E, A>) => void>()
   private _running = false
   private _stack: Stack<core.Continuation> | undefined = void 0
+  private _executionTrace: RingBuffer<string> | undefined
   private _asyncInterruptor: ((effect: Effect.Effect<any, any, any>) => any) | null = null
   private _asyncBlockingOn: FiberId.FiberId | null = null
   private _exitValue: Exit.Exit<E, A> | null = null
@@ -876,12 +878,14 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
         const op = cur as core.Primitive
         switch (op.op) {
           case OpCodes.OP_SYNC: {
+            this.logTrace(op.trace)
             const value = op.evaluate()
             const cont = this.getNextSuccessCont()
             if (cont !== undefined) {
               switch (cont.op) {
                 case OpCodes.OP_ON_SUCCESS:
                 case OpCodes.OP_ON_SUCCESS_AND_FAILURE: {
+                  this.logTrace(cont.trace)
                   cur = cont.successK(value)
                   break
                 }
@@ -898,6 +902,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
                   cont.process(value)
                   if (cont.check()) {
                     this._stack = new Stack(cont, this._stack)
+                    this.logTrace(cont.trace)
                     cur = cont.body()
                   } else {
                     cur = core.unit()
@@ -914,12 +919,14 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
             break
           }
           case OpCodes.OP_SUCCESS: {
+            this.logTrace(op.trace)
             const oldCur = op
             const cont = this.getNextSuccessCont()
             if (cont !== undefined) {
               switch (cont.op) {
                 case OpCodes.OP_ON_SUCCESS:
                 case OpCodes.OP_ON_SUCCESS_AND_FAILURE: {
+                  this.logTrace(cont.trace)
                   cur = cont.successK(oldCur.value)
                   break
                 }
@@ -934,6 +941,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
                   cont.process(oldCur.value)
                   if (cont.check()) {
                     this._stack = new Stack(cont, this._stack)
+                    this.logTrace(cont.trace)
                     cur = cont.body()
                   } else {
                     cur = core.unit()
@@ -950,23 +958,32 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
             break
           }
           case OpCodes.OP_FAILURE: {
-            const oldCur = op
+            this.logTrace(op.trace)
+            const cause = Cause.annotated(
+              op.cause,
+              identity<Cause.Cause.StackAnnotation>({
+                [Cause.StackAnnotationTypeId]: Cause.StackAnnotationTypeId,
+                stack: this._stack,
+                execution: this._executionTrace?.toChunkReversed()
+              })
+            )
             const cont = this.getNextFailCont()
             if (cont !== undefined) {
               switch (cont.op) {
                 case OpCodes.OP_ON_FAILURE:
                 case OpCodes.OP_ON_SUCCESS_AND_FAILURE: {
                   if (!(RuntimeFlags.interruptible(this._runtimeFlags) && this.isInterrupted())) {
-                    cur = cont.failK(oldCur.cause)
+                    this.logTrace(cont.trace)
+                    cur = cont.failK(cause)
                   } else {
-                    cur = core.failCause(Cause.stripFailures(oldCur.cause))
+                    cur = core.failCause(Cause.stripFailures(cause))
                   }
                   break
                 }
                 case OpCodes.OP_REVERT_FLAGS: {
                   this.patchRuntimeFlags(this._runtimeFlags, cont.patch)
                   if (RuntimeFlags.interruptible(this._runtimeFlags) && this.isInterrupted()) {
-                    cur = core.exitFailCause(Cause.sequential(oldCur.cause, this.getInterruptedCause()))
+                    cur = core.exitFailCause(Cause.sequential(cause, this.getInterruptedCause()))
                   }
                   break
                 }
@@ -975,11 +992,12 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
                 }
               }
             } else {
-              return oldCur
+              return Exit.failCause(cause)
             }
             break
           }
           case OpCodes.OP_WITH_RUNTIME: {
+            this.logTrace(op.trace)
             cur = op.withRuntime(
               this as FiberRuntime<unknown, unknown>,
               FiberStatus.running(this._runtimeFlags) as FiberStatus.Running
@@ -987,6 +1005,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
             break
           }
           case OpCodes.OP_UPDATE_RUNTIME_FLAGS: {
+            this.logTrace(op.trace)
             if (op.scope === undefined) {
               this.patchRuntimeFlags(this._runtimeFlags, op.update)
               cur = core.unit()
@@ -1024,17 +1043,20 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
             break
           }
           case OpCodes.OP_ASYNC: {
+            this.logTrace(op.trace)
             this._asyncBlockingOn = op.blockingOn
             this.initiateAsync(this._runtimeFlags, op.register)
             throw op
           }
           case OpCodes.OP_YIELD: {
+            this.logTrace(op.trace)
             throw op
           }
           case OpCodes.OP_WHILE: {
             const check = op.check
             const body = op.body
             if (check()) {
+              this.logTrace(op.trace)
               cur = body()
               this._stack = new Stack(op, this._stack)
             } else {
@@ -1043,6 +1065,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
             break
           }
           case OpCodes.OP_COMMIT: {
+            this.logTrace(op.trace)
             cur = op.commit
             break
           }
@@ -1069,6 +1092,23 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
             cur = core.failCause(Cause.die(e))
           }
         }
+      }
+    }
+  }
+
+  logTrace(trace?: string) {
+    if (trace && runtimeDebug.traceEnabled && runtimeDebug.traceExecutionEnabled) {
+      if (runtimeDebug.traceExecutionLogEnabled) {
+        this.log(`Executing: ${trace}`, Cause.empty, Option.some(LogLevel.Debug))
+      }
+      if (runtimeDebug.traceExecutionEnabledInCause) {
+        if (!this._executionTrace) {
+          this._executionTrace = new RingBuffer<string>(runtimeDebug.traceExecutionLimit)
+        }
+        this._executionTrace.push(trace)
+      }
+      for (let i = 0; i < runtimeDebug.traceExecutionHook.length; i++) {
+        runtimeDebug.traceExecutionHook[i]!(trace)
       }
     }
   }

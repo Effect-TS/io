@@ -955,7 +955,7 @@ describe.concurrent("Schedule", () => {
         const exception = new Cause.IllegalArgumentException(
           "Invalid argument in: secondOfMinute(60). Must be in range 0...59"
         )
-        assert.deepStrictEqual(exit, Exit.die(exception))
+        assert.deepStrictEqual(Exit.unannotate(exit), Exit.die(exception))
       }))
 
     it.effect("throw IllegalArgumentException on invalid `minute` argument of `minuteOfHour`", () =>
@@ -965,7 +965,7 @@ describe.concurrent("Schedule", () => {
         const exception = new Cause.IllegalArgumentException(
           "Invalid argument in: minuteOfHour(60). Must be in range 0...59"
         )
-        assert.deepStrictEqual(exit, Exit.die(exception))
+        assert.deepStrictEqual(Exit.unannotate(exit), Exit.die(exception))
       }))
 
     it.effect("throw IllegalArgumentException on invalid `hour` argument of `hourOfDay`", () =>
@@ -975,7 +975,7 @@ describe.concurrent("Schedule", () => {
         const exception = new Cause.IllegalArgumentException(
           "Invalid argument in: hourOfDay(24). Must be in range 0...23"
         )
-        assert.deepStrictEqual(exit, Exit.die(exception))
+        assert.deepStrictEqual(Exit.unannotate(exit), Exit.die(exception))
       }))
 
     it.effect("throw IllegalArgumentException on invalid `day` argument of `dayOfWeek`", () =>
@@ -985,7 +985,7 @@ describe.concurrent("Schedule", () => {
         const exception = new Cause.IllegalArgumentException(
           "Invalid argument in: dayOfWeek(8). Must be in range 1 (Monday)...7 (Sunday)"
         )
-        assert.deepStrictEqual(exit, Exit.die(exception))
+        assert.deepStrictEqual(Exit.unannotate(exit), Exit.die(exception))
       }))
 
     it.effect("throw IllegalArgumentException on invalid `day` argument of `dayOfMonth`", () =>
@@ -995,7 +995,7 @@ describe.concurrent("Schedule", () => {
         const exception = new Cause.IllegalArgumentException(
           "Invalid argument in: dayOfMonth(32). Must be in range 1...31"
         )
-        assert.deepStrictEqual(exit, Exit.die(exception))
+        assert.deepStrictEqual(Exit.unannotate(exit), Exit.die(exception))
       }))
   })
 })

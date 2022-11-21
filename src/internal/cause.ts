@@ -4,7 +4,6 @@ import * as FiberId from "@effect/io/Fiber/Id"
 import type * as core from "@effect/io/internal/core"
 import * as OpCodes from "@effect/io/internal/opCodes/effect"
 import { Stack } from "@effect/io/internal/stack"
-import * as Tracer from "@effect/io/Tracer"
 import * as Doc from "@effect/printer/Doc"
 import * as Optimize from "@effect/printer/Optimize"
 import * as Render from "@effect/printer/Render"
@@ -606,7 +605,7 @@ export const find = <E, Z>(pf: (cause: Cause.Cause<E>) => Option.Option<Z>) => {
               break
             }
             case "Annotated": {
-              stack = new Stack(stack.value.cause, stack)
+              stack = new Stack(stack.value.cause, stack.previous)
               break
             }
             default: {
@@ -1077,6 +1076,28 @@ export const isStackAnnotation = (u: unknown): u is Cause.Cause.StackAnnotation 
 }
 
 // -----------------------------------------------------------------------------
+// Span Annotations
+// -----------------------------------------------------------------------------
+
+/** @internal */
+export const SpanAnnotationTypeId: Cause.SpanAnnotationTypeId = Symbol.for(
+  "@effect/io/Cause/SpanAnnotation"
+) as Cause.SpanAnnotationTypeId
+
+/** @internal */
+export class SpanAnnotation implements Cause.Cause.SpanAnnotation {
+  readonly [SpanAnnotationTypeId]: Cause.SpanAnnotationTypeId = SpanAnnotationTypeId
+  constructor(
+    readonly currentSpanURI: Option.Option<string>
+  ) {}
+}
+
+/** @internal */
+export const isSpanAnnotation = (u: unknown): u is Cause.Cause.SpanAnnotation => {
+  return typeof u === "object" && u != null && SpanAnnotationTypeId in u
+}
+
+// -----------------------------------------------------------------------------
 // Pretty Printing
 // -----------------------------------------------------------------------------
 
@@ -1185,30 +1206,22 @@ const times = <A>(value: A, n: number): ReadonlyArray<A> => {
 }
 
 /** @internal */
-const spanToLines = (span: Tracer.Span, renderer: Cause.CauseRenderer<any>): ReadonlyArray<Doc.Doc<never>> => {
-  const lines: Array<Doc.Doc<never>> = []
-  let current = Option.some(span)
-  while (Option.isSome(current) && lines.length < renderer.renderSpanDepth) {
-    if (current.value.trace) {
-      lines.push(Doc.text(`${current.value.name} @ ${current.value.trace}`))
-    } else {
-      lines.push(Doc.text(`${current.value.name}`))
-    }
-    current = current.value.parent
-  }
-  return lines
+const spanToLines = (span: SpanAnnotation): ReadonlyArray<Doc.Doc<never>> => {
+  return span.currentSpanURI._tag === "Some" ? [Doc.text(span.currentSpanURI.value)] : []
 }
 
 /** @internal */
 const stackToLines = (stack: StackAnnotation, renderer: Cause.CauseRenderer<any>): ReadonlyArray<Doc.Doc<never>> => {
   const lines: Array<Doc.Doc<never>> = []
   let current = stack.stack
+  let last: undefined | string = undefined
   while (current !== undefined && lines.length < renderer.renderStackDepth) {
     switch (current.value.op) {
       case OpCodes.OP_ON_FAILURE:
       case OpCodes.OP_ON_SUCCESS:
       case OpCodes.OP_ON_SUCCESS_AND_FAILURE: {
-        if (current.value.trace) {
+        if (current.value.trace && current.value.trace !== last) {
+          last = current.value.trace
           lines.push(Doc.text(current.value.trace))
         }
         break
@@ -1221,13 +1234,13 @@ const stackToLines = (stack: StackAnnotation, renderer: Cause.CauseRenderer<any>
 
 /** @internal */
 const renderSpan = (
-  span: Option.Option<Tracer.Span>,
+  span: Option.Option<SpanAnnotation>,
   renderer: Cause.CauseRenderer<any>
 ): ReadonlyArray<Doc.Doc<never>> => {
   if (!renderer.renderSpan || Option.isNone(span)) {
     return []
   }
-  const lines = spanToLines(span.value, renderer)
+  const lines = spanToLines(span.value)
   return lines.length === 0 ? [] : [
     Doc.text("Span:"),
     Doc.empty,
@@ -1279,7 +1292,7 @@ const renderExecution = (
 /** @internal */
 const renderFail = (
   error: ReadonlyArray<Doc.Doc<never>>,
-  span: Option.Option<Tracer.Span>,
+  span: Option.Option<SpanAnnotation>,
   stack: Option.Option<StackAnnotation>,
   renderer: Cause.CauseRenderer<any>
 ): SequentialSegment => {
@@ -1299,7 +1312,7 @@ const renderFail = (
 /** @internal */
 const renderDie = (
   error: ReadonlyArray<Doc.Doc<never>>,
-  span: Option.Option<Tracer.Span>,
+  span: Option.Option<SpanAnnotation>,
   stack: Option.Option<StackAnnotation>,
   renderer: Cause.CauseRenderer<any>
 ): SequentialSegment => {
@@ -1319,7 +1332,7 @@ const renderDie = (
 /** @internal */
 const renderInterrupt = (
   fiberId: FiberId.FiberId,
-  span: Option.Option<Tracer.Span>,
+  span: Option.Option<SpanAnnotation>,
   stack: Option.Option<StackAnnotation>,
   renderer: Cause.CauseRenderer<any>
 ): SequentialSegment => {
@@ -1395,7 +1408,7 @@ const format = (segment: Segment): ReadonlyArray<Doc.Doc<never>> => {
 const linearSegments = <E>(
   cause: Cause.Cause<E>,
   renderer: Cause.CauseRenderer<E>,
-  span: Option.Option<Tracer.Span>,
+  span: Option.Option<SpanAnnotation>,
   stack: Option.Option<StackAnnotation>
 ): SafeEval.SafeEval<ReadonlyArray<Step>> => {
   switch (cause._tag) {
@@ -1421,7 +1434,7 @@ const linearSegments = <E>(
 const parallelSegments = <E>(
   cause: Cause.Cause<E>,
   renderer: Cause.CauseRenderer<E>,
-  span: Option.Option<Tracer.Span>,
+  span: Option.Option<SpanAnnotation>,
   stack: Option.Option<StackAnnotation>
 ): SafeEval.SafeEval<ReadonlyArray<SequentialSegment>> => {
   switch (cause._tag) {
@@ -1447,7 +1460,7 @@ const parallelSegments = <E>(
 const causeToSequential = <E>(
   cause: Cause.Cause<E>,
   renderer: Cause.CauseRenderer<E>,
-  span: Option.Option<Tracer.Span>,
+  span: Option.Option<SpanAnnotation>,
   stack: Option.Option<StackAnnotation>
 ): SafeEval.SafeEval<SequentialSegment> => {
   switch (cause._tag) {
@@ -1493,7 +1506,7 @@ const causeToSequential = <E>(
     }
     case "Annotated": {
       const annotation = cause.annotation
-      if (Tracer.isSpan(annotation)) {
+      if (isSpanAnnotation(annotation)) {
         return SafeEval.suspend(() =>
           causeToSequential(
             cause.cause,
@@ -1530,7 +1543,6 @@ export const defaultRenderer: Cause.CauseRenderer = {
   renderSpan: Debug.runtimeDebug.traceSpanEnabledInCause,
   renderStack: Debug.runtimeDebug.traceStackEnabledInCause,
   renderExecution: Debug.runtimeDebug.traceExecutionEnabledInCause,
-  renderSpanDepth: Debug.runtimeDebug.traceSpanLimit,
   renderStackDepth: Debug.runtimeDebug.traceStackLimit,
   renderExecutionDepth: Debug.runtimeDebug.traceExecutionLimit,
   renderError: defaultErrorToLines,
@@ -1585,3 +1597,18 @@ const prettySafe = <E>(
 export const pretty = <E>(renderer: Cause.CauseRenderer<E> = defaultRenderer) => {
   return (self: Cause.Cause<E>): string => SafeEval.execute(prettySafe(self, renderer))
 }
+
+/** @internal */
+const UnAnnotateCauseReducer = <E>(): Cause.CauseReducer<unknown, E, Cause.Cause<E>> => ({
+  emptyCase: () => empty,
+  failCase: (_, error) => fail(error),
+  dieCase: (_, defect) => die(defect),
+  interruptCase: (_, fiberId) => interrupt(fiberId),
+  annotatedCase: (_, cause, __) => cause,
+  sequentialCase: (_, left, right) => sequential(left, right),
+  parallelCase: (_, left, right) => parallel(left, right)
+})
+
+/** @internal */
+export const unannotate = <E>(cause: Cause.Cause<E>) =>
+  pipe(cause, reduceWithContext(undefined, UnAnnotateCauseReducer<E>()))

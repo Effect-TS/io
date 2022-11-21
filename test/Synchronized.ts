@@ -64,7 +64,7 @@ describe.concurrent("SynchronizedRef", () => {
         Synchronized.getAndUpdateEffect((_) => Effect.fail(failure)),
         Effect.exit
       )
-      assert.deepStrictEqual(result, Exit.fail(failure))
+      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(failure))
     }))
 
   it.effect("getAndUpdateSomeEffect - happy path", () =>
@@ -122,7 +122,7 @@ describe.concurrent("SynchronizedRef", () => {
         ),
         Effect.exit
       )
-      assert.deepStrictEqual(result, Exit.fail(failure))
+      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(failure))
     }))
 
   it.effect("getAndUpdateSomeEffect - interrupt parent fiber and update", () =>
