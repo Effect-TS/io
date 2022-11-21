@@ -86,7 +86,7 @@ export const modifySomeEffect = <B, A, R, E>(
   const trace = getCallTrace()
   return (self: Synchronized.Synchronized<A>): Effect.Effect<R, E, B> => {
     return self.modifyEffect(
-      (value) => pipe(pf(value), Option.getOrElse(core.succeed([fallback, value] as const)))
+      (value) => pipe(pf(value), Option.getOrElse(() => core.succeed([fallback, value] as const)))
     ).traced(trace)
   }
 }

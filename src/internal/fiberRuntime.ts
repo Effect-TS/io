@@ -1497,7 +1497,7 @@ export const unsafeForkUnstarted = <R, E, A, E2, B>(
 
   const parentScope = overrideScope !== null ? overrideScope : pipe(
     parentFiber.getFiberRef(core.forkScopeOverride),
-    Option.getOrElse(parentFiber.scope())
+    Option.getOrElse(() => parentFiber.scope())
   )
 
   parentScope.add(parentRuntimeFlags, childFiber)
@@ -2005,7 +2005,7 @@ export const releaseMapReleaseAll = (
                 pipe(
                   core.exitCollectAll(results),
                   Option.map(core.exitAsUnit),
-                  Option.getOrElse(core.exitUnit())
+                  Option.getOrElse(() => core.exitUnit())
                 )
               )
             ) :
@@ -2017,7 +2017,7 @@ export const releaseMapReleaseAll = (
                 pipe(
                   core.exitCollectAllPar(results),
                   Option.map(core.exitAsUnit),
-                  Option.getOrElse(core.exitUnit())
+                  Option.getOrElse(() => core.exitUnit())
                 )
               )
             ) :
@@ -2028,7 +2028,7 @@ export const releaseMapReleaseAll = (
                 pipe(
                   core.exitCollectAllPar(results),
                   Option.map(core.exitAsUnit),
-                  Option.getOrElse(core.exitUnit())
+                  Option.getOrElse(() => core.exitUnit())
                 )
               ),
               core.withParallelism(strategy.parallelism)

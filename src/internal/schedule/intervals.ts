@@ -137,7 +137,7 @@ export const start = (self: Intervals.Intervals): number => {
   return pipe(
     self.intervals,
     List.head,
-    Option.getOrElse(Interval.empty)
+    Option.getOrElse(() => Interval.empty)
   ).startMillis
 }
 
@@ -146,7 +146,7 @@ export const end = (self: Intervals.Intervals): number => {
   return pipe(
     self.intervals,
     List.head,
-    Option.getOrElse(Interval.empty)
+    Option.getOrElse(() => Interval.empty)
   ).endMillis
 }
 

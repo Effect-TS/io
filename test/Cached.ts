@@ -24,7 +24,7 @@ describe.concurrent("Cached", () => {
       assert.strictEqual(result2, 1)
     }))
 
-  it.scoped("auto", () =>
+  it.scopedLive("auto", () =>
     Effect.gen(function*() {
       const ref = yield* Ref.make(0)
       const cached = yield* Cached.auto(Ref.get(ref), Schedule.spaced(Duration.millis(4)))
@@ -39,7 +39,7 @@ describe.concurrent("Cached", () => {
       assert.strictEqual(result2, 1)
     }))
 
-  it.scoped("failed refresh doesn't affect cached value", () =>
+  it.scopedLive("failed refresh doesn't affect cached value", () =>
     Effect.gen(function*() {
       const ref = yield* Ref.make<Either.Either<string, number>>(Either.right(0))
       const cached = yield* Cached.auto(Effect.absolve(Ref.get(ref)), Schedule.spaced(Duration.millis(4)))

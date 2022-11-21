@@ -177,7 +177,7 @@ export const andThen = <Env1, In1, Out2>(that: Schedule.Schedule<Env1, In1, Out2
     In & In1,
     Out | Out2
   > => {
-    return pipe(self, andThenEither(that), map(Either.toUnion))
+    return pipe(self, andThenEither(that), map(Either.merge))
   }
 }
 
@@ -350,7 +350,7 @@ export const chooseMerge = <Env2, In2, Out2>(that: Schedule.Schedule<Env2, In2, 
   return <Env, In, Out>(
     self: Schedule.Schedule<Env, In, Out>
   ): Schedule.Schedule<Env | Env2, Either.Either<In, In2>, Out | Out2> => {
-    return pipe(self, choose(that), map(Either.toUnion))
+    return pipe(self, choose(that), map(Either.merge))
   }
 }
 
@@ -1929,7 +1929,7 @@ export const repeatOrElse_Effect = <R2, A, B, E, R3, E2>(
     return pipe(
       self,
       repeatOrElseEither_Effect(schedule, orElse),
-      core.map(Either.toUnion)
+      core.map(Either.merge)
     ).traced(trace)
   }
 }
@@ -2080,7 +2080,7 @@ export const retryOrElse_Effect = <R1, E extends E3, A1, R2, E2, A2, E3>(
     return pipe(
       self,
       retryOrElseEither_Effect(policy, orElse),
-      core.map(Either.toUnion)
+      core.map(Either.merge)
     ).traced(trace)
   }
 }

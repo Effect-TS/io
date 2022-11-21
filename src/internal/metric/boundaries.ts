@@ -35,7 +35,7 @@ export const isMetricBoundaries = (u: unknown): u is MetricBoundaries.MetricBoun
 export const fromChunk = (chunk: Chunk.Chunk<number>): MetricBoundaries.MetricBoundaries => {
   const values = pipe(
     chunk,
-    Chunk.concat(Chunk.single(Number.POSITIVE_INFINITY)),
+    Chunk.concat(Chunk.singleton(Number.POSITIVE_INFINITY)),
     Chunk.dedupe
   )
   return new MetricBoundariesImpl(values)

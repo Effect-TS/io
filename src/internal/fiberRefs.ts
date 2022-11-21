@@ -165,7 +165,7 @@ export const get = <A>(fiberRef: FiberRef.FiberRef<A>) =>
 
 /** @internal */
 export const getOrDefault = <A>(fiberRef: FiberRef.FiberRef<A>) =>
-  (self: FiberRefs.FiberRefs): A => pipe(self, get(fiberRef), Option.getOrElse(fiberRef.initial))
+  (self: FiberRefs.FiberRefs): A => pipe(self, get(fiberRef), Option.getOrElse(() => fiberRef.initial))
 
 /** @internal */
 export const updatedAs = <A>(fiberId: FiberId.Runtime, fiberRef: FiberRef.FiberRef<A>, value: A) =>

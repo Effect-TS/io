@@ -824,7 +824,7 @@ export const transplant = <R, E, A>(
   const trace = getCallTrace()
   return withFiberRuntime<R, E, A>((state) => {
     const scopeOverride = state.getFiberRef(forkScopeOverride)
-    const scope = pipe(scopeOverride, Option.getOrElse(state.scope()))
+    const scope = pipe(scopeOverride, Option.getOrElse(() => state.scope()))
     return f(pipe(forkScopeOverride, locallyFiberRef(Option.some(scope))))
   }).traced(trace)
 }
@@ -1066,7 +1066,7 @@ export const getAndUpdateFiberRef = <A>(f: (a: A) => A) => {
 /** @internal */
 export const getAndUpdateSomeFiberRef = <A>(pf: (a: A) => Option.Option<A>) => {
   return (self: FiberRef.FiberRef<A>): Effect.Effect<never, never, A> => {
-    return pipe(self, modifyFiberRef((v) => [v, pipe(pf(v), Option.getOrElse(v))] as const))
+    return pipe(self, modifyFiberRef((v) => [v, pipe(pf(v), Option.getOrElse(() => v))] as const))
   }
 }
 
@@ -1111,7 +1111,7 @@ export const modifyFiberRef = <A, B>(f: (a: A) => readonly [B, A]) => {
 /** @internal */
 export const modifySomeFiberRef = <B, A>(def: B, f: (a: A) => Option.Option<readonly [B, A]>) => {
   return (self: FiberRef.FiberRef<A>): Effect.Effect<never, never, B> => {
-    return pipe(self, modifyFiberRef((v) => pipe(f(v), Option.getOrElse([def, v] as const))))
+    return pipe(self, modifyFiberRef((v) => pipe(f(v), Option.getOrElse(() => [def, v] as const))))
   }
 }
 
@@ -1126,7 +1126,7 @@ export const updateFiberRef = <A>(f: (a: A) => A) => {
 export const updateSomeFiberRef = <A>(
   pf: (a: A) => Option.Option<A>
 ): (self: FiberRef.FiberRef<A>) => Effect.Effect<never, never, void> => {
-  return modifyFiberRef((v) => [undefined, pipe(pf(v), Option.getOrElse(v))] as const)
+  return modifyFiberRef((v) => [undefined, pipe(pf(v), Option.getOrElse(() => v))] as const)
 }
 
 /** @internal */
@@ -1144,7 +1144,7 @@ export const updateSomeAndGetFiberRef = <A>(
   pf: (a: A) => Option.Option<A>
 ): (self: FiberRef.FiberRef<A>) => Effect.Effect<never, never, A> => {
   return modifyFiberRef((v) => {
-    const result = pipe(pf(v), Option.getOrElse(v))
+    const result = pipe(pf(v), Option.getOrElse(() => v))
     return [result, result] as const
   })
 }

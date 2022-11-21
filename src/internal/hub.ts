@@ -633,7 +633,7 @@ class BoundedHubSingleSubscription<A> implements Subscription<A> {
       this.self.value = null as unknown as A
     }
     this.subscriberIndex += 1
-    return Chunk.single(a)
+    return Chunk.singleton(a)
   }
 
   unsubscribe(): void {
@@ -1075,7 +1075,7 @@ class HubImpl<A> implements Hub.Hub<A> {
       return this.strategy.handleSurplus(
         this.hub,
         this.subscribers,
-        Chunk.single(value),
+        Chunk.singleton(value),
         this.shutdownFlag
       )
     }).traced(trace)

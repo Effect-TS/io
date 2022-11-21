@@ -24,8 +24,7 @@ import { constVoid, identity, pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
 import * as List from "@fp-ts/data/List"
 import * as Option from "@fp-ts/data/Option"
-import type { Predicate } from "@fp-ts/data/Predicate"
-import type { Refinement } from "@fp-ts/data/Refinement"
+import type { Predicate, Refinement } from "@fp-ts/data/Predicate"
 
 /** @internal */
 export const absolve = <R, E, A>(self: Effect.Effect<R, E, Either.Either<E, A>>): Effect.Effect<R, E, A> => {
@@ -177,7 +176,7 @@ export const catchSome = <E, R2, E2, A2>(pf: (e: E) => Option.Option<Effect.Effe
           const either = Cause.failureOrCause(cause)
           switch (either._tag) {
             case "Left": {
-              return pipe(pf(either.left), Option.getOrElse(core.failCause(cause)))
+              return pipe(pf(either.left), Option.getOrElse(() => core.failCause(cause)))
             }
             case "Right": {
               return core.failCause(either.right)
@@ -297,7 +296,7 @@ export const collectAllWithEffect = <A, R, E, B>(f: (a: A) => Option.Option<Effe
           return core.succeed(Chunk.empty).traced(trace)
         }
         case "Some": {
-          return pipe(option.value, core.map(Chunk.single)).traced(trace)
+          return pipe(option.value, core.map(Chunk.singleton)).traced(trace)
         }
       }
     }
@@ -372,7 +371,7 @@ export const collectWhile = <A, R, E, B>(f: (a: A) => Option.Option<Effect.Effec
           return core.succeed(Chunk.empty).traced(trace)
         }
         case "Some": {
-          return pipe(option.value, core.map(Chunk.single)).traced(trace)
+          return pipe(option.value, core.map(Chunk.singleton)).traced(trace)
         }
       }
     }
@@ -416,7 +415,7 @@ export const continueOrFailEffect = <E1, A, R2, E2, A2>(
   return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E1 | E2, A2> => {
     return pipe(
       self,
-      core.flatMap((value): Effect.Effect<R2, E1 | E2, A2> => pipe(pf(value), Option.getOrElse(core.fail(error))))
+      core.flatMap((value): Effect.Effect<R2, E1 | E2, A2> => pipe(pf(value), Option.getOrElse(() => core.fail(error))))
     ).traced(trace)
   }
 }
@@ -774,7 +773,7 @@ const findLoop = <A, R, E>(
 export const flattenErrorOption = <E1>(fallback: E1) => {
   const trace = getCallTrace()
   return <R, E, A>(self: Effect.Effect<R, Option.Option<E>, A>): Effect.Effect<R, E | E1, A> => {
-    return pipe(self, mapError(Option.getOrElse(fallback))).traced(trace)
+    return pipe(self, mapError(Option.getOrElse(() => fallback))).traced(trace)
   }
 }
 
@@ -1940,7 +1939,7 @@ export const someOrElseEffect = <R2, E2, A2>(orElse: () => Effect.Effect<R2, E2,
   return <R, E, A>(self: Effect.Effect<R, E, Option.Option<A>>): Effect.Effect<R | R2, E | E2, A | A2> => {
     return pipe(
       self as Effect.Effect<R, E, Option.Option<A | A2>>,
-      core.flatMap((option) => pipe(option, Option.map(core.succeed), Option.getOrElse(orElse())))
+      core.flatMap((option) => pipe(option, Option.map(core.succeed), Option.getOrElse(() => orElse())))
     ).traced(trace)
   }
 }
@@ -2202,7 +2201,7 @@ export const tapSome = <A, R1, E1, X>(
         pipe(
           pf(a),
           Option.map(core.asUnit),
-          Option.getOrElse(core.unit())
+          Option.getOrElse(() => core.unit())
         )
       )
     ).traced(trace)
@@ -2563,7 +2562,7 @@ export const whenCase = <R, E, A, B>(
       pipe(
         pf(a),
         Option.map(asSome),
-        Option.getOrElse(succeedNone())
+        Option.getOrElse(() => succeedNone())
       )
     )
   ).traced(trace)
