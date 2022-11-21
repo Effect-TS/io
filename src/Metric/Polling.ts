@@ -2,7 +2,7 @@
  * @since 1.0.0
  */
 import type * as Effect from "@effect/io/Effect"
-import * as internal from "@effect/io/internal/pollingMetric"
+import * as internal from "@effect/io/internal/metric/polling"
 import type * as Metric from "@effect/io/Metric"
 
 /**
