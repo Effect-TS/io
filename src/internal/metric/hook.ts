@@ -257,7 +257,7 @@ const calculateQuantiles = (
   const resolved = pipe(
     tail,
     Chunk.reduce(
-      Chunk.single(
+      Chunk.singleton(
         resolveQuantile(
           error,
           sampleCount,
@@ -266,7 +266,7 @@ const calculateQuantiles = (
           head,
           sortedSamples
         )
-      ),
+      ) as Chunk.Chunk<ResolvedQuantile>,
       (accumulator, quantile) => {
         const h = Chunk.unsafeHead(accumulator)
         return pipe(

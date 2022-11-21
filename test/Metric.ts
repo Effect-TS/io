@@ -373,7 +373,7 @@ describe.concurrent("Metric", () => {
         assert.strictEqual(result.max, 3)
       }))
 
-    it.effect("observe durations", () =>
+    it.live("observe durations", () =>
       Effect.gen(function*() {
         const boundaries = MetricBoundaries.linear(0, 1, 10)
         const histogram = pipe(

@@ -210,7 +210,7 @@ describe.concurrent("Effect", () => {
       assert.deepStrictEqual(a4, Exit.fail(ExampleError))
     }))
 
-  it.effect("acquireUseRelease regression 1", () =>
+  it.live("acquireUseRelease regression 1", () =>
     Effect.gen(function*() {
       const makeLogger = (ref: Ref.Ref<List.List<string>>) => {
         return (line: string): Effect.Effect<never, never, void> => {
@@ -259,7 +259,7 @@ describe.concurrent("Effect", () => {
       assert.isTrue(pipe(result, List.findFirst((s) => s === "release 2"), Option.isSome))
     }))
 
-  it.effect("interrupt waits for finalizer", () =>
+  it.live("interrupt waits for finalizer", () =>
     Effect.gen(function*() {
       const ref = yield* Ref.make(false)
       const deferred1 = yield* Deferred.make<never, void>()

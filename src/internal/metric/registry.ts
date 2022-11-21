@@ -45,7 +45,7 @@ class MetricRegistryImpl implements MetricRegistry.MetricRegistry {
     const hook = pipe(
       this.map,
       MutableHashMap.get(key as MetricKey.MetricKey<MetricKeyType.MetricKeyType.Untyped>),
-      Option.toUndefined
+      Option.getOrUndefined
     )
     if (hook == null) {
       if (metricKeyType.isCounterKey(key.keyType)) {
@@ -75,7 +75,7 @@ class MetricRegistryImpl implements MetricRegistry.MetricRegistry {
     let value = pipe(
       this.map,
       MutableHashMap.get(key as MetricKey.MetricKey<MetricKeyType.MetricKeyType.Untyped>),
-      Option.toUndefined
+      Option.getOrUndefined
     )
     if (value == null) {
       const counter = metricHook.counter(key)
@@ -97,7 +97,7 @@ class MetricRegistryImpl implements MetricRegistry.MetricRegistry {
     let value = pipe(
       this.map,
       MutableHashMap.get(key as MetricKey.MetricKey<MetricKeyType.MetricKeyType.Untyped>),
-      Option.toUndefined
+      Option.getOrUndefined
     )
     if (value == null) {
       const frequency = metricHook.frequency(key)
@@ -119,7 +119,7 @@ class MetricRegistryImpl implements MetricRegistry.MetricRegistry {
     let value = pipe(
       this.map,
       MutableHashMap.get(key as MetricKey.MetricKey<MetricKeyType.MetricKeyType.Untyped>),
-      Option.toUndefined
+      Option.getOrUndefined
     )
     if (value == null) {
       const gauge = metricHook.gauge(key, 0)
@@ -141,7 +141,7 @@ class MetricRegistryImpl implements MetricRegistry.MetricRegistry {
     let value = pipe(
       this.map,
       MutableHashMap.get(key as MetricKey.MetricKey<MetricKeyType.MetricKeyType.Untyped>),
-      Option.toUndefined
+      Option.getOrUndefined
     )
     if (value == null) {
       const histogram = metricHook.histogram(key)
@@ -163,7 +163,7 @@ class MetricRegistryImpl implements MetricRegistry.MetricRegistry {
     let value = pipe(
       this.map,
       MutableHashMap.get(key as MetricKey.MetricKey<MetricKeyType.MetricKeyType.Untyped>),
-      Option.toUndefined
+      Option.getOrUndefined
     )
     if (value == null) {
       const summary = metricHook.summary(key)

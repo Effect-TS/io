@@ -42,7 +42,10 @@
       "@effect/io/examples/*": ["./examples/*"],
       "@effect/io/*": ["./src/*"]
     },
-    "plugins": [{ "transform": "./plugins/tsPlugin.ts" }]
+    "plugins": [
+      { "transform": "./plugins/tsPlugin.ts" },
+      { "name": "@effect/language-service" }
+    ]
   },
   "include": [],
   "exclude": ["node_modules", "build", "lib"]

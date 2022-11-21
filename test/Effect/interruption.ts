@@ -475,7 +475,7 @@ describe.concurrent("Effect", () => {
       assert.isTrue(Exit.isInterrupted(result))
     }))
 
-  it.effect("disconnected effect that is then interrupted eventually performs interruption", () =>
+  it.live("disconnected effect that is then interrupted eventually performs interruption", () =>
     Effect.gen(function*() {
       const ref = yield* Ref.make(false)
       const deferred1 = yield* Deferred.make<never, void>()
@@ -517,7 +517,7 @@ describe.concurrent("Effect", () => {
       assert.deepStrictEqual(result, Exit.fail("foo"))
     }))
 
-  it.effect("acquireRelease use inherits interrupt status", () =>
+  it.live("acquireRelease use inherits interrupt status", () =>
     Effect.gen(function*() {
       const ref = yield* Ref.make(false)
       const fiber = yield* withLatchAwait((release2, await2) =>
@@ -546,7 +546,7 @@ describe.concurrent("Effect", () => {
       assert.isTrue(result)
     }))
 
-  it.effect("acquireRelease use inherits interrupt status 2", () =>
+  it.live("acquireRelease use inherits interrupt status 2", () =>
     Effect.gen(function*() {
       const latch1 = yield* Deferred.make<never, void>()
       const latch2 = yield* Deferred.make<never, void>()
@@ -573,7 +573,7 @@ describe.concurrent("Effect", () => {
       assert.isTrue(result)
     }))
 
-  it.effect("async can be uninterruptible", () =>
+  it.live("async can be uninterruptible", () =>
     Effect.gen(function*() {
       const ref = yield* Ref.make(false)
       const fiber = yield* withLatch((release) =>
@@ -590,7 +590,7 @@ describe.concurrent("Effect", () => {
       assert.isTrue(result)
     }))
 
-  it.effect("closing scope is uninterruptible", () =>
+  it.live("closing scope is uninterruptible", () =>
     Effect.gen(function*() {
       const ref = yield* Ref.make(false)
       const deferred = yield* Deferred.make<never, void>()

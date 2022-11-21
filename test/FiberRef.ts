@@ -225,7 +225,7 @@ describe.concurrent("FiberRef", () => {
       assert.strictEqual(result, 2)
     }))
 
-  it.scoped("the value of the loser is inherited in zipPar", () =>
+  it.scopedLive("the value of the loser is inherited in zipPar", () =>
     Effect.gen(function*() {
       const fiberRef = yield* FiberRef.make(initial)
       const latch = yield* Deferred.make<never, void>()
@@ -272,7 +272,7 @@ describe.concurrent("FiberRef", () => {
       assert.isTrue(new RegExp(`${update1}|${update2}`).test(result))
     }))
 
-  it.scoped("its value is inherited after a race with a bad winner", () =>
+  it.scopedLive("its value is inherited after a race with a bad winner", () =>
     Effect.gen(function*() {
       const fiberRef = yield* FiberRef.make(initial)
       const latch = yield* Deferred.make<never, void>()

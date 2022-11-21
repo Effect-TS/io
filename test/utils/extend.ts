@@ -28,6 +28,22 @@ export const effect = <E, A>(
   )
 }
 
+export const live = <E, A>(
+  name: string,
+  self: () => Effect.Effect<never, E, A>,
+  timeout = 5_000
+) => {
+  return it(
+    name,
+    () =>
+      pipe(
+        Effect.suspendSucceed(self),
+        Effect.unsafeRunPromise
+      ),
+    timeout
+  )
+}
+
 export const flakyTest = <R, E, A>(
   self: Effect.Effect<R, E, A>,
   timeout: Duration.Duration = Duration.seconds(30)
@@ -57,6 +73,23 @@ export const scoped = <E, A>(
         Effect.suspendSucceed(self),
         Effect.scoped,
         Effect.provideLayer(TestEnvironment.TestEnvironment),
+        Effect.unsafeRunPromise
+      ),
+    timeout
+  )
+}
+
+export const scopedLive = <E, A>(
+  name: string,
+  self: () => Effect.Effect<Scope.Scope, E, A>,
+  timeout = 5_000
+) => {
+  return it(
+    name,
+    () =>
+      pipe(
+        Effect.suspendSucceed(self),
+        Effect.scoped,
         Effect.unsafeRunPromise
       ),
     timeout

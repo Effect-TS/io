@@ -71,7 +71,7 @@ describe.concurrent("Effect", () => {
       assert.isUndefined(result)
     }))
 
-  it.effect("async should not resume fiber twice after interruption", () =>
+  it.live("async should not resume fiber twice after interruption", () =>
     Effect.gen(function*() {
       const step = yield* Deferred.make<never, void>()
       const unexpectedPlace = yield* Ref.make(List.empty<number>())
@@ -102,7 +102,7 @@ describe.concurrent("Effect", () => {
       assert.deepStrictEqual(result, Option.none) // the timeout should happen
     }))
 
-  it.effect("asyncMaybe should not resume fiber twice after synchronous result", () =>
+  it.live("asyncMaybe should not resume fiber twice after synchronous result", () =>
     Effect.gen(function*() {
       const step = yield* Deferred.make<never, void>()
       const unexpectedPlace = yield* Ref.make(List.empty<number>())

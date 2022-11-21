@@ -142,7 +142,7 @@ describe.concurrent("Effect", () => {
       assert.isUndefined(res2)
     }))
 
-  it.effect("supervise fibers", () =>
+  it.live("supervise fibers", () =>
     Effect.gen(function*() {
       const makeChild = (n: number): Effect.Effect<never, never, Fiber.Fiber<never, void>> => {
         return pipe(
@@ -269,7 +269,7 @@ describe.concurrent("Effect", () => {
       assert.deepStrictEqual(result, Either.right(100))
     }))
 
-  it.effect("firstSuccessOf of failures", () =>
+  it.live("firstSuccessOf of failures", () =>
     Effect.gen(function*() {
       const result = yield* pipe(
         Effect.firstSuccessOf([
@@ -281,7 +281,7 @@ describe.concurrent("Effect", () => {
       assert.deepStrictEqual(result, Either.left(101))
     }))
 
-  it.effect("firstSuccessOf of failures & 1 success", () =>
+  it.live("firstSuccessOf of failures & 1 success", () =>
     Effect.gen(function*() {
       const result = yield* pipe(
         Effect.firstSuccessOf([
