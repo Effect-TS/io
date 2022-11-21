@@ -40,7 +40,7 @@ Creates a metric key for a counter, with the specified name.
 **Signature**
 
 ```ts
-export declare const counter: any
+export declare const counter: (name: string) => MetricKey.Counter
 ```
 
 Added in v1.0.0
@@ -53,7 +53,7 @@ name.
 **Signature**
 
 ```ts
-export declare const frequency: any
+export declare const frequency: (name: string) => MetricKey.Frequency
 ```
 
 Added in v1.0.0
@@ -65,7 +65,7 @@ Creates a metric key for a gauge, with the specified name.
 **Signature**
 
 ```ts
-export declare const gauge: any
+export declare const gauge: (name: string) => MetricKey.Gauge
 ```
 
 Added in v1.0.0
@@ -77,7 +77,7 @@ Creates a metric key for a histogram, with the specified name and boundaries.
 **Signature**
 
 ```ts
-export declare const histogram: any
+export declare const histogram: (name: string, boundaries: MetricBoundaries) => MetricKey.Histogram
 ```
 
 Added in v1.0.0
@@ -90,7 +90,13 @@ maxSize, error, and quantiles.
 **Signature**
 
 ```ts
-export declare const summary: any
+export declare const summary: (
+  name: string,
+  maxAge: Duration,
+  maxSize: number,
+  error: number,
+  quantiles: Chunk<number>
+) => MetricKey.Summary
 ```
 
 Added in v1.0.0
@@ -102,7 +108,10 @@ Returns a new `MetricKey` with the specified tag appended.
 **Signature**
 
 ```ts
-export declare const tagged: any
+export declare const tagged: (
+  key: string,
+  value: string
+) => <Type extends MetricKeyType.MetricKeyType<any, any>>(self: MetricKey<Type>) => MetricKey<Type>
 ```
 
 Added in v1.0.0
@@ -114,7 +123,9 @@ Returns a new `MetricKey` with the specified tags appended.
 **Signature**
 
 ```ts
-export declare const taggedWithLabelSet: any
+export declare const taggedWithLabelSet: (
+  extraTags: HashSet.HashSet<MetricLabel.MetricLabel>
+) => <Type extends MetricKeyType.MetricKeyType<any, any>>(self: MetricKey<Type>) => MetricKey<Type>
 ```
 
 Added in v1.0.0
@@ -126,7 +137,9 @@ Returns a new `MetricKey` with the specified tags appended.
 **Signature**
 
 ```ts
-export declare const taggedWithLabels: any
+export declare const taggedWithLabels: (
+  extraTags: Iterable<MetricLabel.MetricLabel>
+) => <Type extends MetricKeyType.MetricKeyType<any, any>>(self: MetricKey<Type>) => MetricKey<Type>
 ```
 
 Added in v1.0.0
@@ -162,7 +175,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const isMetricKey: any
+export declare const isMetricKey: (u: unknown) => u is MetricKey<MetricKeyType.MetricKeyType<unknown, unknown>>
 ```
 
 Added in v1.0.0

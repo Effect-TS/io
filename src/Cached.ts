@@ -4,6 +4,7 @@
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
 import * as internal from "@effect/io/internal/cached"
+import type * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"
 import type * as ScopedRef from "@effect/io/ScopedRef"
 
@@ -65,7 +66,10 @@ export declare namespace Cached {
  * @since 1.0.0
  * @category constructors
  */
-export const auto = internal.auto
+export const auto: <R, E, A, R2, In, Out>(
+  acquire: Effect.Effect<R, E, A>,
+  policy: Schedule.Schedule<R2, In, Out>
+) => Effect.Effect<Scope.Scope | R | R2, never, Cached<E, A>> = internal.auto
 
 /**
  * Retrieves the current value stored in the cache.
@@ -74,7 +78,7 @@ export const auto = internal.auto
  * @since 1.0.0
  * @category getters
  */
-export const get = internal.get
+export const get: <E, A>(self: Cached<E, A>) => Effect.Effect<never, E, A> = internal.get
 
 /**
  * Creates a new `Cached` value that must be manually refreshed by calling
@@ -87,7 +91,8 @@ export const get = internal.get
  * @since 1.0.0
  * @category constructors
  */
-export const manual = internal.manual
+export const manual: <R, E, A>(acquire: Effect.Effect<R, E, A>) => Effect.Effect<Scope.Scope | R, never, Cached<E, A>> =
+  internal.manual
 
 /**
  * Refreshes the cache. This method will not return until either the refresh
@@ -97,4 +102,4 @@ export const manual = internal.manual
  * @since 1.0.0
  * @category mutations
  */
-export const refresh = internal.refresh
+export const refresh: <E, A>(self: Cached<E, A>) => Effect.Effect<never, E, void> = internal.refresh

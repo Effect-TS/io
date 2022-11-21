@@ -38,7 +38,7 @@ importers:
       babel-plugin-annotate-pure-calls: ^0.4.0
       concurrently: ^7.6.0
       cpx: ^1.5.0
-      docs-ts: 0.7.0
+      docs-ts: 0.6.10
       eslint: ^8.28.0
       eslint-import-resolver-typescript: ^3.5.2
       eslint-plugin-codegen: 0.16.1
@@ -87,7 +87,7 @@ importers:
       babel-plugin-annotate-pure-calls: 0.4.0_@babel+core@7.20.2
       concurrently: 7.6.0
       cpx: 1.5.0
-      docs-ts: 0.7.0_wbcyan4knibwiqrg7345gyo3qi
+      docs-ts: 0.6.10_cafcqw24npsdw2cmfoccfh2gly_wbcyan4knibwiqrg7345gyo3qi
       eslint: 8.28.0
       eslint-import-resolver-typescript: 3.5.2_ktrec6dplf4now6nlbc6d67jee
       eslint-plugin-codegen: 0.16.1
@@ -2484,8 +2484,8 @@ packages:
     dev: true
     patched: true
 
-  /docs-ts/0.7.0_wbcyan4knibwiqrg7345gyo3qi:
-    resolution: {integrity: sha512-S9UM7Ddh0l3qwftSJiko+3+aGJrnGTnigKq4wpsOvQBmMJz7kMmdAeiTwNCRgzQI70oT3T2uyuzR9hy5JT2xPQ==}
+  /docs-ts/0.6.10_cafcqw24npsdw2cmfoccfh2gly_wbcyan4knibwiqrg7345gyo3qi:
+    resolution: {integrity: sha512-DTX9c5AJ92ojMOKqqvwF8t77C8Gdgs9FPB8seymHs+F+Wl6aapc3ZkHUM+p8o+jwcBmPoihxssdK903dfwQ1JQ==}
     hasBin: true
     peerDependencies:
       prettier: ^2.0.0
@@ -2505,6 +2505,7 @@ packages:
       ts-node: 8.10.2_typescript@4.9.3
       typescript: 4.9.3
     dev: true
+    patched: true
 
   /doctrine/2.1.0:
     resolution: {integrity: sha512-35mSku4ZXK0vfCuHEDAwt55dg2jNajHZ1odvF+8SSr82EsZY4QmXfuWso8oEd8zRhVObSN18aM0CjSdoBX7zIw==}
@@ -4047,8 +4048,8 @@ packages:
   /io-ts-extra/0.11.6:
     resolution: {integrity: sha512-rTsvx3W5B2nx7p/eGf+OsEaBTmjSjLzxBDEiweCjwqIL9ZN6CZjG7hFK8zyGJyM0I2uCsRU4uYUhaTgg2SKHkQ==}
     dependencies:
-      fp-ts: 2.12.3
-      io-ts: 2.2.19_fp-ts@2.12.3
+      fp-ts: 2.13.1
+      io-ts: 2.2.19_fp-ts@2.13.1
     dev: true
 
   /io-ts/2.2.19_fp-ts@2.12.3:

@@ -28,7 +28,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const make: any
+export declare const make: (label: string, startTime: number) => LogSpan
 ```
 
 Added in v1.0.0
@@ -40,7 +40,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const render: any
+export declare const render: (now: number) => (self: LogSpan) => string
 ```
 
 Added in v1.0.0

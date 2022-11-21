@@ -50,7 +50,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const counter: any
+export declare const counter: MetricKeyType.Counter
 ```
 
 Added in v1.0.0
@@ -60,7 +60,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const frequency: any
+export declare const frequency: MetricKeyType.Frequency
 ```
 
 Added in v1.0.0
@@ -70,7 +70,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const gauge: any
+export declare const gauge: MetricKeyType.Gauge
 ```
 
 Added in v1.0.0
@@ -80,7 +80,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const histogram: any
+export declare const histogram: (boundaries: MetricBoundaries.MetricBoundaries) => MetricKeyType.Histogram
 ```
 
 Added in v1.0.0
@@ -90,7 +90,12 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const summary: any
+export declare const summary: (
+  maxAge: Duration.Duration,
+  maxSize: number,
+  error: number,
+  quantiles: Chunk.Chunk<number>
+) => MetricKeyType.Summary
 ```
 
 Added in v1.0.0
@@ -114,7 +119,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const isCounterKey: any
+export declare const isCounterKey: (u: unknown) => u is MetricKeyType.Counter
 ```
 
 Added in v1.0.0
@@ -124,7 +129,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const isFrequencyKey: any
+export declare const isFrequencyKey: (u: unknown) => u is MetricKeyType.Frequency
 ```
 
 Added in v1.0.0
@@ -134,7 +139,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const isGaugeKey: any
+export declare const isGaugeKey: (u: unknown) => u is MetricKeyType.Gauge
 ```
 
 Added in v1.0.0
@@ -144,7 +149,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const isHistogramKey: any
+export declare const isHistogramKey: (u: unknown) => u is MetricKeyType.Histogram
 ```
 
 Added in v1.0.0
@@ -154,7 +159,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const isMetricKeyType: any
+export declare const isMetricKeyType: (u: unknown) => u is MetricKeyType<unknown, unknown>
 ```
 
 Added in v1.0.0
@@ -164,7 +169,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const isSummaryKey: any
+export declare const isSummaryKey: (u: unknown) => u is MetricKeyType.Summary
 ```
 
 Added in v1.0.0

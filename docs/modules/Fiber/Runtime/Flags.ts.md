@@ -197,7 +197,7 @@ Converts the provided `RuntimeFlags` into a `string`.
 **Signature**
 
 ```ts
-export declare const render: any
+export declare const render: (self: RuntimeFlags) => string
 ```
 
 Added in v1.0.0
@@ -209,7 +209,7 @@ Converts the provided `RuntimeFlags` into a `ReadonlySet<number>`.
 **Signature**
 
 ```ts
-export declare const toSet: any
+export declare const toSet: (self: RuntimeFlags) => ReadonlySet<RuntimeFlag>
 ```
 
 Added in v1.0.0
@@ -224,7 +224,7 @@ and `that`.
 **Signature**
 
 ```ts
-export declare const diff: any
+export declare const diff: (that: RuntimeFlags) => (self: RuntimeFlags) => RuntimeFlagsPatch
 ```
 
 Added in v1.0.0
@@ -238,7 +238,7 @@ Returns `true` if the specified `RuntimeFlag` is disabled, `false` otherwise.
 **Signature**
 
 ```ts
-export declare const isDisabled: any
+export declare const isDisabled: (flag: RuntimeFlag) => (self: RuntimeFlags) => boolean
 ```
 
 Added in v1.0.0
@@ -250,7 +250,7 @@ Returns `true` if the specified `RuntimeFlag` is enabled, `false` otherwise.
 **Signature**
 
 ```ts
-export declare const isEnabled: any
+export declare const isEnabled: (flag: RuntimeFlag) => (self: RuntimeFlags) => boolean
 ```
 
 Added in v1.0.0
@@ -407,7 +407,7 @@ Constructs a differ that knows how to diff `RuntimeFlags` values.
 **Signature**
 
 ```ts
-export declare const differ: any
+export declare const differ: () => Differ<RuntimeFlags, RuntimeFlagsPatch>
 ```
 
 Added in v1.0.0
@@ -468,7 +468,7 @@ patched set of `RuntimeFlag`s.
 **Signature**
 
 ```ts
-export declare const patch: any
+export declare const patch: (patch: RuntimeFlagsPatch) => (self: RuntimeFlags) => RuntimeFlags
 ```
 
 Added in v1.0.0

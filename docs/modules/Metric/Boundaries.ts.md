@@ -36,7 +36,7 @@ with exponentially increasing values.
 **Signature**
 
 ```ts
-export declare const exponential: any
+export declare const exponential: (start: number, factor: number, count: number) => MetricBoundaries
 ```
 
 Added in v1.0.0
@@ -46,7 +46,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const fromChunk: any
+export declare const fromChunk: (chunk: Chunk.Chunk<number>) => MetricBoundaries
 ```
 
 Added in v1.0.0
@@ -59,7 +59,7 @@ with linear increasing values.
 **Signature**
 
 ```ts
-export declare const linear: any
+export declare const linear: (start: number, width: number, count: number) => MetricBoundaries
 ```
 
 Added in v1.0.0
@@ -86,7 +86,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const isMetricBoundaries: any
+export declare const isMetricBoundaries: (u: unknown) => u is MetricBoundaries
 ```
 
 Added in v1.0.0

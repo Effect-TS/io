@@ -61,7 +61,7 @@ Deletes the specified `FiberRef` from the `FibterRefs`.
 **Signature**
 
 ```ts
-export declare const delete: any
+export declare const delete: <A>(fiberRef: FiberRef.FiberRef<A>) => (self: FiberRefs) => FiberRefs
 ```
 
 Added in v1.0.0
@@ -73,7 +73,7 @@ Set each ref to either its value or its default.
 **Signature**
 
 ```ts
-export declare const setAll: any
+export declare const setAll: (self: FiberRefs) => Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -85,7 +85,11 @@ Updates the value of the specified `FiberRef` using the provided `FiberId`
 **Signature**
 
 ```ts
-export declare const updatedAs: any
+export declare const updatedAs: <A>(
+  fiberId: FiberId.Runtime,
+  fiberRef: FiberRef.FiberRef<A>,
+  value: A
+) => (self: FiberRefs) => FiberRefs
 ```
 
 Added in v1.0.0
@@ -121,7 +125,7 @@ Note: it will not copy the provided Map, make sure to provide a fresh one.
 **Signature**
 
 ```ts
-export declare const unsafeMake: any
+export declare const unsafeMake: typeof internal.unsafeMake
 ```
 
 Added in v1.0.0
@@ -135,7 +139,7 @@ Returns a set of each `FiberRef` in this collection.
 **Signature**
 
 ```ts
-export declare const fiberRefs: any
+export declare const fiberRefs: (self: FiberRefs) => HashSet<FiberRef.FiberRef<any>>
 ```
 
 Added in v1.0.0
@@ -149,7 +153,7 @@ individual fiber refs that make up the collection.
 **Signature**
 
 ```ts
-export declare const forkAs: any
+export declare const forkAs: (childId: FiberId.Runtime) => (self: FiberRefs) => internal.FiberRefsImpl
 ```
 
 Added in v1.0.0
@@ -162,7 +166,7 @@ values if it exists or `None` otherwise.
 **Signature**
 
 ```ts
-export declare const get: any
+export declare const get: <A>(fiberRef: FiberRef.FiberRef<A>) => (self: FiberRefs) => Option<A>
 ```
 
 Added in v1.0.0
@@ -175,7 +179,7 @@ values if it exists or the `initial` value of the `FiberRef` otherwise.
 **Signature**
 
 ```ts
-export declare const getOrDefault: any
+export declare const getOrDefault: <A>(fiberRef: FiberRef.FiberRef<A>) => (self: FiberRefs) => A
 ```
 
 Added in v1.0.0
@@ -189,7 +193,7 @@ preservation of maximum information from both child and parent refs.
 **Signature**
 
 ```ts
-export declare const joinAs: any
+export declare const joinAs: (fiberId: FiberId.Runtime, that: FiberRefs) => (self: FiberRefs) => FiberRefs
 ```
 
 Added in v1.0.0

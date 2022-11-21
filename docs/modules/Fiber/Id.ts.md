@@ -50,7 +50,7 @@ Combine two `FiberId`s.
 **Signature**
 
 ```ts
-export declare const combine: any
+export declare const combine: (that: FiberId) => (self: FiberId) => FiberId
 ```
 
 Added in v1.0.0
@@ -62,7 +62,7 @@ Combines a set of `FiberId`s into a single `FiberId`.
 **Signature**
 
 ```ts
-export declare const combineAll: any
+export declare const combineAll: (fiberIds: HashSet<FiberId>) => FiberId
 ```
 
 Added in v1.0.0
@@ -72,7 +72,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const composite: any
+export declare const composite: (left: FiberId, right: FiberId) => FiberId
 ```
 
 Added in v1.0.0
@@ -84,7 +84,7 @@ Creates a new `FiberId`.
 **Signature**
 
 ```ts
-export declare const make: any
+export declare const make: (id: number, startTimeSeconds: number) => FiberId
 ```
 
 Added in v1.0.0
@@ -94,7 +94,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const none: any
+export declare const none: FiberId
 ```
 
 Added in v1.0.0
@@ -104,7 +104,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const runtime: any
+export declare const runtime: (id: number, startTimeMillis: number) => FiberId
 ```
 
 Added in v1.0.0
@@ -116,7 +116,7 @@ Unsafely creates a new `FiberId`.
 **Signature**
 
 ```ts
-export declare const unsafeMake: any
+export declare const unsafeMake: () => Runtime
 ```
 
 Added in v1.0.0
@@ -130,7 +130,7 @@ Get the set of identifiers for this `FiberId`.
 **Signature**
 
 ```ts
-export declare const ids: any
+export declare const ids: (self: FiberId) => HashSet<number>
 ```
 
 Added in v1.0.0
@@ -143,7 +143,7 @@ represented by the specified `FiberId`.
 **Signature**
 
 ```ts
-export declare const threadName: any
+export declare const threadName: (self: FiberId) => string
 ```
 
 Added in v1.0.0
@@ -155,7 +155,7 @@ Convert a `FiberId` into an `Option<FiberId>`.
 **Signature**
 
 ```ts
-export declare const toOption: any
+export declare const toOption: (self: FiberId) => Option<FiberId>
 ```
 
 Added in v1.0.0
@@ -167,7 +167,7 @@ Convert a `FiberId` into a `HashSet<FiberId>`.
 **Signature**
 
 ```ts
-export declare const toSet: any
+export declare const toSet: (self: FiberId) => HashSet<Runtime>
 ```
 
 Added in v1.0.0
@@ -236,7 +236,7 @@ Returns this `FiberId` if it is not `None`, otherwise returns that `FiberId`.
 **Signature**
 
 ```ts
-export declare const getOrElse: any
+export declare const getOrElse: (that: FiberId) => (self: FiberId) => FiberId
 ```
 
 Added in v1.0.0
@@ -251,7 +251,7 @@ otherwise.
 **Signature**
 
 ```ts
-export declare const isFiberId: any
+export declare const isFiberId: (self: unknown) => self is FiberId
 ```
 
 Added in v1.0.0
@@ -263,7 +263,7 @@ Determines if the `FiberId` is a `None`.
 **Signature**
 
 ```ts
-export declare const isNone: any
+export declare const isNone: (self: FiberId) => self is None
 ```
 
 Added in v1.0.0

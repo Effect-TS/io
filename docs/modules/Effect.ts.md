@@ -423,7 +423,7 @@ unchecked and not a part of the type of the effect.
 **Signature**
 
 ```ts
-export declare const orDie: any
+export declare const orDie: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, A>
 ```
 
 Added in v1.0.0
@@ -435,7 +435,7 @@ Converts all failures to unchecked exceptions.
 **Signature**
 
 ```ts
-export declare const orDieKeep: any
+export declare const orDieKeep: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, A>
 ```
 
 Added in v1.0.0
@@ -448,7 +448,7 @@ specified function to convert the `E` into a `Throwable`.
 **Signature**
 
 ```ts
-export declare const orDieWith: any
+export declare const orDieWith: <E>(f: (e: E) => unknown) => <R, A>(self: Effect<R, E, A>) => Effect<R, never, A>
 ```
 
 Added in v1.0.0
@@ -461,7 +461,9 @@ executes the specified effect.
 **Signature**
 
 ```ts
-export declare const orElse: any
+export declare const orElse: <R2, E2, A2>(
+  that: () => Effect<R2, E2, A2>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2, A2 | A>
 ```
 
 Added in v1.0.0
@@ -474,7 +476,9 @@ fails, in which case, it will produce the value of the specified effect.
 **Signature**
 
 ```ts
-export declare const orElseEither: any
+export declare const orElseEither: <R2, E2, A2>(
+  that: () => Effect<R2, E2, A2>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2, Either<A, A2>>
 ```
 
 Added in v1.0.0
@@ -487,7 +491,7 @@ fails with the specified error.
 **Signature**
 
 ```ts
-export declare const orElseFail: any
+export declare const orElseFail: <E2>(evaluate: () => E2) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E2, A>
 ```
 
 Added in v1.0.0
@@ -501,7 +505,9 @@ the specified effect.
 **Signature**
 
 ```ts
-export declare const orElseOptional: any
+export declare const orElseOptional: <R, E, A, R2, E2, A2>(
+  that: () => Effect<R2, Option<E2>, A2>
+) => (self: Effect<R, Option<E>, A>) => Effect<R | R2, Option<E | E2>, A | A2>
 ```
 
 Added in v1.0.0
@@ -514,7 +520,7 @@ otherwise succeeds with the specified value.
 **Signature**
 
 ```ts
-export declare const orElseSucceed: any
+export declare const orElseSucceed: <A2>(evaluate: () => A2) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A2 | A>
 ```
 
 Added in v1.0.0
@@ -527,7 +533,10 @@ defects, executes `success` in case of successes
 **Signature**
 
 ```ts
-export declare const tryOrElse: any
+export declare const tryOrElse: <R2, E2, A2, A, R3, E3, A3>(
+  that: () => Effect<R2, E2, A2>,
+  onSuccess: (a: A) => Effect<R3, E3, A3>
+) => <R, E>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2 | E3, A2 | A3>
 ```
 
 Added in v1.0.0
@@ -542,7 +551,7 @@ parallel operations.
 **Signature**
 
 ```ts
-export declare const withParallelismUnbounded: any
+export declare const withParallelismUnbounded: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -554,7 +563,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const withParallelism: any
+export declare const withParallelism: (parallelism: number) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -577,7 +586,10 @@ when the scope is closed.
 **Signature**
 
 ```ts
-export declare const acquireRelease: any
+export declare const acquireRelease: <R, E, A, R2, X>(
+  acquire: Effect<R, E, A>,
+  release: (a: A, exit: Exit<unknown, unknown>) => Effect<R2, never, X>
+) => Effect<Scope | R | R2, E, A>
 ```
 
 Added in v1.0.0
@@ -598,7 +610,10 @@ when the scope is closed.
 **Signature**
 
 ```ts
-export declare const acquireReleaseInterruptible: any
+export declare const acquireReleaseInterruptible: <R, E, A, R2, X>(
+  acquire: Effect<R, E, A>,
+  release: (exit: Exit<unknown, unknown>) => Effect<R2, never, X>
+) => Effect<Scope | R | R2, E, A>
 ```
 
 Added in v1.0.0
@@ -629,7 +644,11 @@ produced by the `release` effect can be caught and ignored.
 **Signature**
 
 ```ts
-export declare const acquireUseRelease: any
+export declare const acquireUseRelease: <R, E, A, R2, E2, A2, R3, X>(
+  acquire: Effect<R, E, A>,
+  use: (a: A) => Effect<R2, E2, A2>,
+  release: (a: A, exit: Exit<E2, A2>) => Effect<R3, never, X>
+) => Effect<R | R2 | R3, E | E2, A2>
 ```
 
 Added in v1.0.0
@@ -644,7 +663,7 @@ Note that this allows for interruption to occur in uninterruptible regions.
 **Signature**
 
 ```ts
-export declare const allowInterrupt: any
+export declare const allowInterrupt: () => Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -663,7 +682,10 @@ provided to allow for better diagnostics.
 **Signature**
 
 ```ts
-export declare const async: any
+export declare const async: <R, E, A>(
+  register: (callback: (_: Effect<R, E, A>) => void) => void,
+  blockingOn?: FiberId
+) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -678,7 +700,9 @@ With this variant, the registration function may return a an `Effect`.
 **Signature**
 
 ```ts
-export declare const asyncEffect: any
+export declare const asyncEffect: <R, E, A, R2, E2, X>(
+  register: (callback: (_: Effect<R, E, A>) => void) => Effect<R2, E2, X>
+) => Effect<R | R2, E | E2, A>
 ```
 
 Added in v1.0.0
@@ -702,7 +726,10 @@ provided to allow for better diagnostics.
 **Signature**
 
 ```ts
-export declare const asyncInterrupt: any
+export declare const asyncInterrupt: <R, E, A>(
+  register: (callback: (effect: Effect<R, E, A>) => void) => Either<Effect<R, never, void>, Effect<R, E, A>>,
+  blockingOn?: FiberId
+) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -722,7 +749,10 @@ provided to allow for better diagnostics.
 **Signature**
 
 ```ts
-export declare const asyncOption: any
+export declare const asyncOption: <R, E, A>(
+  register: (callback: (_: Effect<R, E, A>) => void) => Option<Effect<R, E, A>>,
+  blockingOn?: FiberId
+) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -735,7 +765,7 @@ thrown exceptions into typed failed effects creating with `Effect.fail`.
 **Signature**
 
 ```ts
-export declare const attempt: any
+export declare const attempt: <A>(evaluate: () => A) => Effect<never, unknown, A>
 ```
 
 Added in v1.0.0
@@ -748,7 +778,7 @@ specified callback.
 **Signature**
 
 ```ts
-export declare const checkInterruptible: any
+export declare const checkInterruptible: <R, E, A>(f: (isInterruptible: boolean) => Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -761,7 +791,7 @@ specified effectful function.
 **Signature**
 
 ```ts
-export declare const clockWith: any
+export declare const clockWith: <R, E, A>(f: (clock: Clock) => Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -774,7 +804,9 @@ the successful values and discarding the empty cases. For a parallel version, se
 **Signature**
 
 ```ts
-export declare const collect: any
+export declare const collect: <A, R, E, B>(
+  f: (a: A) => Effect<R, Option<E>, B>
+) => (elements: Iterable<A>) => Effect<R, E, Chunk<B>>
 ```
 
 Added in v1.0.0
@@ -787,7 +819,7 @@ results. For a parallel version, see `collectAllPar`.
 **Signature**
 
 ```ts
-export declare const collectAll: any
+export declare const collectAll: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, E, Chunk<A>>
 ```
 
 Added in v1.0.0
@@ -800,7 +832,7 @@ results. For a parallel version, see `collectAllParDiscard`.
 **Signature**
 
 ```ts
-export declare const collectAllDiscard: any
+export declare const collectAllDiscard: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, E, void>
 ```
 
 Added in v1.0.0
@@ -813,7 +845,7 @@ For a sequential version, see `collectAll`.
 **Signature**
 
 ```ts
-export declare const collectAllPar: any
+export declare const collectAllPar: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, E, Chunk<A>>
 ```
 
 Added in v1.0.0
@@ -826,7 +858,7 @@ For a sequential version, see `collectAllDiscard`.
 **Signature**
 
 ```ts
-export declare const collectAllParDiscard: any
+export declare const collectAllParDiscard: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, E, void>
 ```
 
 Added in v1.0.0
@@ -839,7 +871,7 @@ discarding results from failed effects.
 **Signature**
 
 ```ts
-export declare const collectAllSuccesses: any
+export declare const collectAllSuccesses: <R, E, A>(as: Iterable<Effect<R, E, A>>) => Effect<R, never, Chunk<A>>
 ```
 
 Added in v1.0.0
@@ -852,7 +884,9 @@ results, discarding results from failed effects.
 **Signature**
 
 ```ts
-export declare const collectAllSuccessesPar: any
+export declare const collectAllSuccessesPar: <R, E, A>(
+  elements: Iterable<Effect<R, E, A>>
+) => Effect<R, never, Chunk<A>>
 ```
 
 Added in v1.0.0
@@ -865,7 +899,9 @@ results with given partial function.
 **Signature**
 
 ```ts
-export declare const collectAllWith: any
+export declare const collectAllWith: <A, B>(
+  pf: (a: A) => Option<B>
+) => <R, E>(elements: Iterable<Effect<R, E, A>>) => Effect<R, E, Chunk<B>>
 ```
 
 Added in v1.0.0
@@ -878,7 +914,9 @@ partial function.
 **Signature**
 
 ```ts
-export declare const collectAllWithEffect: any
+export declare const collectAllWithEffect: <A, R, E, B>(
+  f: (a: A) => Option<Effect<R, E, B>>
+) => (elements: Iterable<A>) => Effect<R, E, Chunk<B>>
 ```
 
 Added in v1.0.0
@@ -891,7 +929,9 @@ the results with given partial function.
 **Signature**
 
 ```ts
-export declare const collectAllWithPar: any
+export declare const collectAllWithPar: <A, B>(
+  pf: (a: A) => Option<B>
+) => <R, E>(elements: Iterable<Effect<R, E, A>>) => Effect<R, E, Chunk<B>>
 ```
 
 Added in v1.0.0
@@ -904,7 +944,9 @@ function `f` returns `Some`.
 **Signature**
 
 ```ts
-export declare const collectFirst: any
+export declare const collectFirst: <R, E, A, B>(
+  f: (a: A) => Effect<R, E, Option<B>>
+) => (elements: Iterable<A>) => Effect<R, E, Option<B>>
 ```
 
 Added in v1.0.0
@@ -917,7 +959,9 @@ values and discarding the empty cases.
 **Signature**
 
 ```ts
-export declare const collectPar: any
+export declare const collectPar: <A, R, E, B>(
+  f: (a: A) => Effect<R, Option<E>, B>
+) => (elements: Iterable<A>) => Effect<R, E, Chunk<B>>
 ```
 
 Added in v1.0.0
@@ -930,7 +974,9 @@ function is defined.
 **Signature**
 
 ```ts
-export declare const collectWhile: any
+export declare const collectWhile: <A, R, E, B>(
+  f: (a: A) => Option<Effect<R, E, B>>
+) => (elements: Iterable<A>) => Effect<R, E, Chunk<B>>
 ```
 
 Added in v1.0.0
@@ -945,7 +991,7 @@ For effectful conditionals, see `ifEffect`.
 **Signature**
 
 ```ts
-export declare const cond: any
+export declare const cond: <E, A>(predicate: () => boolean, result: () => A, error: () => E) => Effect<never, E, A>
 ```
 
 Added in v1.0.0
@@ -957,7 +1003,7 @@ Constructs an effect with information about the current `Fiber`.
 **Signature**
 
 ```ts
-export declare const descriptor: any
+export declare const descriptor: () => Effect<never, never, Fiber.Descriptor>
 ```
 
 Added in v1.0.0
@@ -969,7 +1015,7 @@ Constructs an effect based on information about the current `Fiber`.
 **Signature**
 
 ```ts
-export declare const descriptorWith: any
+export declare const descriptorWith: <R, E, A>(f: (descriptor: Fiber.Descriptor) => Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -979,7 +1025,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const die: any
+export declare const die: (defect: unknown) => Effect<never, never, never>
 ```
 
 Added in v1.0.0
@@ -989,7 +1035,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const dieMessage: any
+export declare const dieMessage: (message: string) => Effect<never, never, never>
 ```
 
 Added in v1.0.0
@@ -999,7 +1045,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const dieSync: any
+export declare const dieSync: (evaluate: () => unknown) => Effect<never, never, never>
 ```
 
 Added in v1.0.0
@@ -1009,7 +1055,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const done: any
+export declare const done: <E, A>(exit: Exit<E, A>) => Effect<never, E, A>
 ```
 
 Added in v1.0.0
@@ -1021,7 +1067,9 @@ Drops all elements so long as the predicate returns true.
 **Signature**
 
 ```ts
-export declare const dropWhile: any
+export declare const dropWhile: <R, E, A>(
+  f: (a: A) => Effect<R, E, boolean>
+) => (elements: Iterable<A>) => Effect<R, E, Chunk<A>>
 ```
 
 Added in v1.0.0
@@ -1034,7 +1082,9 @@ predicate `f`, working sequentially.
 **Signature**
 
 ```ts
-export declare const exists: any
+export declare const exists: <R, E, A>(
+  f: (a: A) => Effect<R, E, boolean>
+) => (elements: Iterable<A>) => Effect<R, E, boolean>
 ```
 
 Added in v1.0.0
@@ -1048,7 +1098,9 @@ finding an element that satisfies the predicate.
 **Signature**
 
 ```ts
-export declare const existsPar: any
+export declare const existsPar: <R, E, A>(
+  f: (a: A) => Effect<R, E, boolean>
+) => (elements: Iterable<A>) => Effect<R, E, boolean>
 ```
 
 Added in v1.0.0
@@ -1058,7 +1110,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const fail: any
+export declare const fail: <E>(error: E) => Effect<never, E, never>
 ```
 
 Added in v1.0.0
@@ -1068,7 +1120,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const failCause: any
+export declare const failCause: <E>(cause: Cause<E>) => Effect<never, E, never>
 ```
 
 Added in v1.0.0
@@ -1078,7 +1130,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const failCauseSync: any
+export declare const failCauseSync: <E>(evaluate: () => Cause<E>) => Effect<never, E, never>
 ```
 
 Added in v1.0.0
@@ -1088,7 +1140,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const failSync: any
+export declare const failSync: <E>(evaluate: () => E) => Effect<never, E, never>
 ```
 
 Added in v1.0.0
@@ -1098,7 +1150,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const fiberIdWith: any
+export declare const fiberIdWith: <R, E, A>(f: (descriptor: Runtime) => Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -1108,7 +1160,9 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const forEach: any
+export declare const forEach: <A, R, E, B>(
+  f: (a: A) => Effect<R, E, B>
+) => (self: Iterable<A>) => Effect<R, E, Chunk<B>>
 ```
 
 Added in v1.0.0
@@ -1118,7 +1172,9 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const forEachDiscard: any
+export declare const forEachDiscard: <A, R, E, B>(
+  f: (a: A) => Effect<R, E, B>
+) => (self: Iterable<A>) => Effect<R, E, void>
 ```
 
 Added in v1.0.0
@@ -1131,7 +1187,10 @@ the result in a new `Chunk<B>` using the specified execution strategy.
 **Signature**
 
 ```ts
-export declare const forEachExec: any
+export declare const forEachExec: <R, E, A, B>(
+  f: (a: A) => Effect<R, E, B>,
+  strategy: ExecutionStrategy
+) => (elements: Iterable<A>) => Effect<R, E, Chunk<B>>
 ```
 
 Added in v1.0.0
@@ -1141,7 +1200,9 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const forEachPar: any
+export declare const forEachPar: <A, R, E, B>(
+  f: (a: A) => Effect<R, E, B>
+) => (self: Iterable<A>) => Effect<R, E, Chunk<B>>
 ```
 
 Added in v1.0.0
@@ -1151,7 +1212,9 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const forEachParDiscard: any
+export declare const forEachParDiscard: <A, R, E, _>(
+  f: (a: A) => Effect<R, E, _>
+) => (self: Iterable<A>) => Effect<R, E, void>
 ```
 
 Added in v1.0.0
@@ -1165,7 +1228,9 @@ of the current element being iterated over.
 **Signature**
 
 ```ts
-export declare const forEachParWithIndex: any
+export declare const forEachParWithIndex: <R, E, A, B>(
+  f: (a: A, i: number) => Effect<R, E, B>
+) => (elements: Iterable<A>) => Effect<R, E, Chunk<B>>
 ```
 
 Added in v1.0.0
@@ -1175,7 +1240,13 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const gen: any
+export declare const gen: <Eff extends Effect.Variance<any, any, any>, AEff>(
+  f: () => Generator<Eff, AEff, any>
+) => Effect<
+  [Eff] extends [never] ? never : [Eff] extends [Effect.Variance<infer R, any, any>] ? R : never,
+  [Eff] extends [never] ? never : [Eff] extends [Effect.Variance<any, infer E, any>] ? E : never,
+  AEff
+>
 ```
 
 Added in v1.0.0
@@ -1188,7 +1259,7 @@ effect.
 **Signature**
 
 ```ts
-export declare const getFiberRefs: any
+export declare const getFiberRefs: () => Effect<never, never, FiberRefs>
 ```
 
 Added in v1.0.0
@@ -1200,7 +1271,10 @@ Runs `onTrue` if the result of `self` is `true` and `onFalse` otherwise.
 **Signature**
 
 ```ts
-export declare const ifEffect: any
+export declare const ifEffect: <R1, R2, E1, E2, A, A1>(
+  onTrue: Effect<R1, E1, A>,
+  onFalse: Effect<R2, E2, A1>
+) => <R, E>(self: Effect<R, E, boolean>) => Effect<R1 | R2 | R, E1 | E2 | E, A | A1>
 ```
 
 Added in v1.0.0
@@ -1212,7 +1286,7 @@ Inherits values from all `FiberRef` instances into current fiber.
 **Signature**
 
 ```ts
-export declare const inheritFiberRefs: any
+export declare const inheritFiberRefs: (childFiberRefs: FiberRefs) => Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -1237,7 +1311,12 @@ A.reverse(as)
 **Signature**
 
 ```ts
-export declare const loop: any
+export declare const loop: <Z, R, E, A>(
+  initial: Z,
+  cont: (z: Z) => boolean,
+  inc: (z: Z) => Z,
+  body: (z: Z) => Effect<R, E, A>
+) => Effect<R, E, Chunk<A>>
 ```
 
 Added in v1.0.0
@@ -1259,7 +1338,12 @@ while (cont(s)) {
 **Signature**
 
 ```ts
-export declare const loopDiscard: any
+export declare const loopDiscard: <Z, R, E, X>(
+  initial: Z,
+  cont: (z: Z) => boolean,
+  inc: (z: Z) => Z,
+  body: (z: Z) => Effect<R, E, X>
+) => Effect<R, E, void>
 ```
 
 Added in v1.0.0
@@ -1271,7 +1355,7 @@ Constructs a new `EffectError`.
 **Signature**
 
 ```ts
-export declare const makeEffectError: any
+export declare const makeEffectError: <E>(cause: Cause<E>) => core.EffectError<E>
 ```
 
 Added in v1.0.0
@@ -1283,7 +1367,9 @@ Returns a memoized version of the specified effectual function.
 **Signature**
 
 ```ts
-export declare const memoizeFunction: any
+export declare const memoizeFunction: <R, E, A, B>(
+  f: (a: A) => Effect<R, E, B>
+) => Effect<never, never, (a: A) => Effect<R, E, B>>
 ```
 
 Added in v1.0.0
@@ -1296,7 +1382,10 @@ sequentially.
 **Signature**
 
 ```ts
-export declare const mergeAll: any
+export declare const mergeAll: <Z, A>(
+  zero: Z,
+  f: (z: Z, a: A) => Z
+) => <R, E>(elements: Iterable<Effect<R, E, A>>) => Effect<R, E, Z>
 ```
 
 Added in v1.0.0
@@ -1317,7 +1406,10 @@ more than once for some of `in` elements during effect execution.
 **Signature**
 
 ```ts
-export declare const mergeAllPar: any
+export declare const mergeAllPar: <Z, A>(
+  zero: Z,
+  f: (z: Z, a: A) => Z
+) => <R, E>(elements: Iterable<Effect<R, E, A>>) => Effect<R, E, Z>
 ```
 
 Added in v1.0.0
@@ -1330,7 +1422,7 @@ Returns a effect that will never produce anything. The moral equivalent of
 **Signature**
 
 ```ts
-export declare const never: any
+export declare const never: () => Effect<never, never, never>
 ```
 
 Added in v1.0.0
@@ -1342,7 +1434,7 @@ Requires the option produced by this value to be `None`.
 **Signature**
 
 ```ts
-export declare const none: any
+export declare const none: <R, E, A>(self: Effect<R, E, Option<A>>) => Effect<R, Option<E>, void>
 ```
 
 Added in v1.0.0
@@ -1355,7 +1447,7 @@ Lifts an `Option` into a `Effect`. If the option is empty it succeeds with
 **Signature**
 
 ```ts
-export declare const noneOrFail: any
+export declare const noneOrFail: <E>(option: Option<E>) => Effect<never, E, void>
 ```
 
 Added in v1.0.0
@@ -1369,7 +1461,7 @@ the specified function.
 **Signature**
 
 ```ts
-export declare const noneOrFailWith: any
+export declare const noneOrFailWith: <E, A>(option: Option<A>, f: (a: A) => E) => Effect<never, E, void>
 ```
 
 Added in v1.0.0
@@ -1382,7 +1474,9 @@ Collects all successes and failures in a tupled fashion.
 **Signature**
 
 ```ts
-export declare const partition: any
+export declare const partition: <R, E, A, B>(
+  f: (a: A) => Effect<R, E, B>
+) => (elements: Iterable<A>) => Effect<R, never, readonly [List<E>, List<B>]>
 ```
 
 Added in v1.0.0
@@ -1396,7 +1490,9 @@ tuple.
 **Signature**
 
 ```ts
-export declare const partitionPar: any
+export declare const partitionPar: <R, E, A, B>(
+  f: (a: A) => Effect<R, E, B>
+) => (elements: Iterable<A>) => Effect<R, never, readonly [List<E>, List<B>]>
 ```
 
 Added in v1.0.0
@@ -1408,7 +1504,7 @@ Like `tryPromise` but produces a defect in case of errors.
 **Signature**
 
 ```ts
-export declare const promise: any
+export declare const promise: <A>(evaluate: () => Promise<A>) => Effect<never, never, A>
 ```
 
 Added in v1.0.0
@@ -1420,7 +1516,7 @@ Retreives the `Random` service from the environment.
 **Signature**
 
 ```ts
-export declare const random: any
+export declare const random: () => Effect<never, never, Random>
 ```
 
 Added in v1.0.0
@@ -1433,7 +1529,7 @@ specified workflow.
 **Signature**
 
 ```ts
-export declare const randomWith: any
+export declare const randomWith: <R, E, A>(f: (random: Random) => Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -1447,7 +1543,7 @@ that must call back into Effect code.
 **Signature**
 
 ```ts
-export declare const runtime: any
+export declare const runtime: <R>() => Effect<R, never, _runtime.RuntimeImpl<R>>
 ```
 
 Added in v1.0.0
@@ -1460,7 +1556,7 @@ asynchronous, and does not actually block the fiber executing the effect.
 **Signature**
 
 ```ts
-export declare const sleep: any
+export declare const sleep: (duration: Duration) => Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -1471,7 +1567,7 @@ Added in v1.0.0
 
 ```ts
 export declare const struct: <NER extends Record<string, Effect<any, any, any>>>(
-  r: any
+  r: Record<string, Effect<any, any, any>> | EnforceNonEmptyRecord<NER>
 ) => Effect<
   [NER[keyof NER]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R : never,
   [NER[keyof NER]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E : never,
@@ -1486,7 +1582,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const structPar: any
+export declare const structPar: typeof fiberRuntime.structPar
 ```
 
 Added in v1.0.0
@@ -1496,7 +1592,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const succeed: any
+export declare const succeed: <A>(value: A) => Effect<never, never, A>
 ```
 
 Added in v1.0.0
@@ -1508,7 +1604,7 @@ Returns an effect which succeeds with the value wrapped in a `Left`.
 **Signature**
 
 ```ts
-export declare const succeedLeft: any
+export declare const succeedLeft: <A>(value: A) => Effect<never, never, Either<A, never>>
 ```
 
 Added in v1.0.0
@@ -1520,7 +1616,7 @@ Returns an effect which succeeds with `None`.
 **Signature**
 
 ```ts
-export declare const succeedNone: any
+export declare const succeedNone: () => Effect<never, never, Option<never>>
 ```
 
 Added in v1.0.0
@@ -1532,7 +1628,7 @@ Returns an effect which succeeds with the value wrapped in a `Right`.
 **Signature**
 
 ```ts
-export declare const succeedRight: any
+export declare const succeedRight: <A>(value: A) => Effect<never, never, Either<never, A>>
 ```
 
 Added in v1.0.0
@@ -1544,7 +1640,7 @@ Returns an effect which succeeds with the value wrapped in a `Some`.
 **Signature**
 
 ```ts
-export declare const succeedSome: any
+export declare const succeedSome: <A>(value: A) => Effect<never, never, Option<A>>
 ```
 
 Added in v1.0.0
@@ -1558,7 +1654,7 @@ conceptually equivalent to `flatten(succeed(io))`.
 **Signature**
 
 ```ts
-export declare const suspend: any
+export declare const suspend: <R, E, A>(evaluate: () => Effect<R, E, A>) => Effect<R, unknown, A>
 ```
 
 Added in v1.0.0
@@ -1568,7 +1664,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const suspendSucceed: any
+export declare const suspendSucceed: <R, E, A>(effect: () => Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -1578,7 +1674,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const sync: any
+export declare const sync: <A>(evaluate: () => A) => Effect<never, never, A>
 ```
 
 Added in v1.0.0
@@ -1590,7 +1686,9 @@ Takes all elements so long as the effectual predicate returns true.
 **Signature**
 
 ```ts
-export declare const takeWhile: any
+export declare const takeWhile: <R, E, A>(
+  f: (a: A) => Effect<R, E, boolean>
+) => (elements: Iterable<A>) => Effect<R, E, Chunk<A>>
 ```
 
 Added in v1.0.0
@@ -1603,7 +1701,7 @@ thrown exceptions into typed failed effects.
 **Signature**
 
 ```ts
-export declare const tryCatch: any
+export declare const tryCatch: <E, A>(attempt: () => A, onThrow: (u: unknown) => E) => Effect<never, E, A>
 ```
 
 Added in v1.0.0
@@ -1616,7 +1714,10 @@ its result, errors will be handled using `onReject`.
 **Signature**
 
 ```ts
-export declare const tryCatchPromise: any
+export declare const tryCatchPromise: <E, A>(
+  evaluate: () => Promise<A>,
+  onReject: (reason: unknown) => E
+) => Effect<never, E, A>
 ```
 
 Added in v1.0.0
@@ -1629,7 +1730,7 @@ its result, errors will produce failure as `unknown`.
 **Signature**
 
 ```ts
-export declare const tryPromise: any
+export declare const tryPromise: <A>(evaluate: () => Promise<A>) => Effect<never, unknown, A>
 ```
 
 Added in v1.0.0
@@ -1641,12 +1742,12 @@ Like `forEach` + `identity` with a tuple type.
 **Signature**
 
 ```ts
-export declare const tuple: <T extends any>(
+export declare const tuple: <T extends [Effect<any, any, any>, ...Effect<any, any, any>[]]>(
   ...t: T
 ) => Effect<
   [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R : never,
   [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E : never,
-  any
+  TupleA<T>
 >
 ```
 
@@ -1659,12 +1760,12 @@ Like tuple but parallel, same as `forEachPar` + `identity` with a tuple type.
 **Signature**
 
 ```ts
-export declare const tuplePar: <T extends any>(
+export declare const tuplePar: <T extends [Effect<any, any, any>, ...Effect<any, any, any>[]]>(
   ...t: T
 ) => Effect<
   [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R : never,
   [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E : never,
-  any
+  TupleA<T>
 >
 ```
 
@@ -1678,7 +1779,10 @@ long as it returns `Some`.
 **Signature**
 
 ```ts
-export declare const unfold: any
+export declare const unfold: <A, R, E, S>(
+  s: S,
+  f: (s: S) => Effect<R, E, Option<readonly [A, S]>>
+) => Effect<R, E, Chunk<A>>
 ```
 
 Added in v1.0.0
@@ -1688,7 +1792,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const unit: any
+export declare const unit: () => Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -1701,7 +1805,9 @@ specified function.
 **Signature**
 
 ```ts
-export declare const updateFiberRefs: any
+export declare const updateFiberRefs: (
+  f: (fiberId: Runtime, fiberRefs: FiberRefs) => FiberRefs
+) => Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -1711,7 +1817,9 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const whenEffect: any
+export declare const whenEffect: <R, E>(
+  predicate: Effect<R, E, boolean>
+) => <R2, E2, A>(effect: Effect<R2, E2, A>) => Effect<R | R2, E | E2, Option<A>>
 ```
 
 Added in v1.0.0
@@ -1721,7 +1829,11 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const whileLoop: any
+export declare const whileLoop: <R, E, A>(
+  check: () => boolean,
+  body: () => Effect<R, E, A>,
+  process: (a: A) => void
+) => Effect<R, E, void>
 ```
 
 Added in v1.0.0
@@ -1734,7 +1846,7 @@ restores it to its original value when the scope is closed.
 **Signature**
 
 ```ts
-export declare const withClockScoped: any
+export declare const withClockScoped: <A extends Clock>(value: A) => Effect<Scope, never, void>
 ```
 
 Added in v1.0.0
@@ -1744,7 +1856,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const yieldNow: any
+export declare const yieldNow: () => Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -1765,7 +1877,7 @@ guaranteed the effect does not model failure.
 **Signature**
 
 ```ts
-export declare const either: any
+export declare const either: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Either<E, A>>
 ```
 
 Added in v1.0.0
@@ -1777,7 +1889,7 @@ Lifts an `Either<E, A>` into an `Effect<never, E, A>`.
 **Signature**
 
 ```ts
-export declare const fromEither: any
+export declare const fromEither: <E, A>(either: Either<E, A>) => Effect<never, E, A>
 ```
 
 Added in v1.0.0
@@ -1789,7 +1901,7 @@ Lifts an `Either<Cause<E>, A>` into an `Effect<never, E, A>`.
 **Signature**
 
 ```ts
-export declare const fromEitherCause: any
+export declare const fromEitherCause: <E, A>(either: Either<Cause<E>, A>) => Effect<never, E, A>
 ```
 
 Added in v1.0.0
@@ -1802,7 +1914,7 @@ fiber.
 **Signature**
 
 ```ts
-export declare const fromFiber: any
+export declare const fromFiber: <E, A>(fiber: Fiber<E, A>) => Effect<never, E, A>
 ```
 
 Added in v1.0.0
@@ -1815,7 +1927,7 @@ fiber.
 **Signature**
 
 ```ts
-export declare const fromFiberEffect: any
+export declare const fromFiberEffect: <R, E, A>(fiber: Effect<R, E, Fiber<E, A>>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -1828,7 +1940,7 @@ the error channel, making it easier to compose in some scenarios.
 **Signature**
 
 ```ts
-export declare const fromOption: any
+export declare const fromOption: <A>(option: Option<A>) => Effect<never, Option<never>, A>
 ```
 
 Added in v1.0.0
@@ -1841,7 +1953,7 @@ with `NoSuchElementException`.
 **Signature**
 
 ```ts
-export declare const getOrFail: any
+export declare const getOrFail: <A>(option: Option<A>) => Effect<never, NoSuchElementException, A>
 ```
 
 Added in v1.0.0
@@ -1854,7 +1966,7 @@ Lifts an `Option` into a `IO`, if the option is not defined it fails with
 **Signature**
 
 ```ts
-export declare const getOrFailDiscard: any
+export declare const getOrFailDiscard: <A>(option: Option<A>) => Effect<never, void, A>
 ```
 
 Added in v1.0.0
@@ -1867,7 +1979,7 @@ the specified `e` value.
 **Signature**
 
 ```ts
-export declare const getOrFailWith: any
+export declare const getOrFailWith: <E>(error: () => E) => <A>(option: Option<A>) => Effect<never, E, A>
 ```
 
 Added in v1.0.0
@@ -1879,7 +1991,7 @@ Constructs a layer from this effect.
 **Signature**
 
 ```ts
-export declare const toLayer: any
+export declare const toLayer: <A>(tag: Tag<A>) => <R, E>(self: Effect<R, E, A>) => Layer<R, E, A>
 ```
 
 Added in v1.0.0
@@ -1891,7 +2003,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const Do: any
+export declare const Do: () => Effect<never, never, {}>
 ```
 
 Added in v1.0.0
@@ -1903,7 +2015,10 @@ Binds an effectful value in a `do` scope
 **Signature**
 
 ```ts
-export declare const bind: any
+export declare const bind: <N extends string, K, R2, E2, A>(
+  tag: Exclude<N, keyof K>,
+  f: (_: K) => Effect<R2, E2, A>
+) => <R, E>(self: Effect<R, E, K>) => Effect<R2 | R, E2 | E, MergeRecord<K, { [k in N]: A }>>
 ```
 
 Added in v1.0.0
@@ -1915,7 +2030,10 @@ Like bind for values
 **Signature**
 
 ```ts
-export declare const bindValue: any
+export declare const bindValue: <N extends string, K, A>(
+  tag: Exclude<N, keyof K>,
+  f: (_: K) => A
+) => <R, E>(self: Effect<R, E, K>) => Effect<R, E, MergeRecord<K, { [k in N]: A }>>
 ```
 
 Added in v1.0.0
@@ -1929,7 +2047,9 @@ Returns the first element that satisfies the effectful predicate.
 **Signature**
 
 ```ts
-export declare const find: any
+export declare const find: <A, R, E>(
+  f: (a: A) => Effect<R, E, boolean>
+) => (elements: Iterable<A>) => Effect<R, E, Option<A>>
 ```
 
 Added in v1.0.0
@@ -1942,7 +2062,7 @@ of the specified effects in order until one of them succeeds.
 **Signature**
 
 ```ts
-export declare const firstSuccessOf: any
+export declare const firstSuccessOf: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -1955,7 +2075,9 @@ predicate `f`.
 **Signature**
 
 ```ts
-export declare const forAll: any
+export declare const forAll: <R, E, A>(
+  f: (a: A) => Effect<R, E, boolean>
+) => (elements: Iterable<A>) => Effect<R, E, boolean>
 ```
 
 Added in v1.0.0
@@ -1968,7 +2090,9 @@ provided callback. If this effect fails, then the failure will be ignored.
 **Signature**
 
 ```ts
-export declare const forEachEffect: any
+export declare const forEachEffect: <A, R1, E1, B>(
+  f: (a: A) => Effect<R1, E1, B>
+) => <R, E>(self: Effect<R, E, A>) => Effect<R1 | R, E1, Option<B>>
 ```
 
 Added in v1.0.0
@@ -1981,7 +2105,9 @@ results in a new `Option<B>`.
 **Signature**
 
 ```ts
-export declare const forEachOption: any
+export declare const forEachOption: <R, E, A, B>(
+  f: (a: A) => Effect<R, E, B>
+) => (option: Option<A>) => Effect<R, E, Option<B>>
 ```
 
 Added in v1.0.0
@@ -1995,7 +2121,7 @@ Retreives the `Clock` service from the environment.
 **Signature**
 
 ```ts
-export declare const clock: any
+export declare const clock: () => Effect<never, never, Clock>
 ```
 
 Added in v1.0.0
@@ -2005,7 +2131,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const environment: any
+export declare const environment: <R>() => Effect<R, never, Context<R>>
 ```
 
 Added in v1.0.0
@@ -2017,7 +2143,7 @@ Accesses the environment of the effect.
 **Signature**
 
 ```ts
-export declare const environmentWith: any
+export declare const environmentWith: <R, A>(f: (context: Context<R>) => A) => Effect<R, never, A>
 ```
 
 Added in v1.0.0
@@ -2029,7 +2155,9 @@ Effectually accesses the environment of the effect.
 **Signature**
 
 ```ts
-export declare const environmentWithEffect: any
+export declare const environmentWithEffect: <R, R0, E, A>(
+  f: (context: Context<R0>) => Effect<R, E, A>
+) => Effect<R | R0, E, A>
 ```
 
 Added in v1.0.0
@@ -2042,7 +2170,9 @@ dependency on `R`.
 **Signature**
 
 ```ts
-export declare const provideEnvironment: any
+export declare const provideEnvironment: <R>(
+  environment: Context<R>
+) => <E, A>(self: Effect<R, E, A>) => Effect<never, E, A>
 ```
 
 Added in v1.0.0
@@ -2054,7 +2184,9 @@ Provides a layer to the effect, which translates it to another level.
 **Signature**
 
 ```ts
-export declare const provideLayer: any
+export declare const provideLayer: <R, E, A>(
+  layer: Layer<R, E, A>
+) => <E1, A1>(self: Effect<A, E1, A1>) => Effect<R, E | E1, A1>
 ```
 
 Added in v1.0.0
@@ -2067,7 +2199,10 @@ requires more than one service use `provideEnvironment` instead.
 **Signature**
 
 ```ts
-export declare const provideService: any
+export declare const provideService: <T>(
+  tag: Tag<T>,
+  resource: T
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<Exclude<R, T>, E, A>
 ```
 
 Added in v1.0.0
@@ -2080,7 +2215,10 @@ requires more than one service use `provideEnvironment` instead.
 **Signature**
 
 ```ts
-export declare const provideServiceEffect: any
+export declare const provideServiceEffect: <T, R1, E1>(
+  tag: Tag<T>,
+  effect: Effect<R1, E1, T>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | Exclude<R, T>, E1 | E, A>
 ```
 
 Added in v1.0.0
@@ -2093,7 +2231,9 @@ leaving the remainder `R0`.
 **Signature**
 
 ```ts
-export declare const provideSomeEnvironment: any
+export declare const provideSomeEnvironment: <R0, R>(
+  f: (context: Context<R0>) => Context<R>
+) => <E, A>(self: Effect<R, E, A>) => Effect<R0, E, A>
 ```
 
 Added in v1.0.0
@@ -2106,7 +2246,9 @@ specified layer and leaving the remainder `R0`.
 **Signature**
 
 ```ts
-export declare const provideSomeLayer: any
+export declare const provideSomeLayer: <R2, E2, A2>(
+  layer: Layer<R2, E2, A2>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | Exclude<R, A2>, E2 | E, A>
 ```
 
 Added in v1.0.0
@@ -2116,7 +2258,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const scope: any
+export declare const scope: () => Effect<Scope, never, Scope>
 ```
 
 Added in v1.0.0
@@ -2130,7 +2272,7 @@ execution, whether by success, failure, or interruption.
 **Signature**
 
 ```ts
-export declare const scoped: any
+export declare const scoped: <R, E, A>(effect: Effect<R, E, A>) => Effect<Exclude<R, Scope>, E, A>
 ```
 
 Added in v1.0.0
@@ -2142,7 +2284,7 @@ Extracts the specified service from the environment of the effect.
 **Signature**
 
 ```ts
-export declare const service: any
+export declare const service: <T>(tag: Tag<T>) => Effect<T, never, T>
 ```
 
 Added in v1.0.0
@@ -2154,7 +2296,7 @@ Accesses the specified service in the environment of the effect.
 **Signature**
 
 ```ts
-export declare const serviceWith: any
+export declare const serviceWith: <T>(tag: Tag<T>) => <A>(f: (a: T) => A) => Effect<T, never, A>
 ```
 
 Added in v1.0.0
@@ -2166,7 +2308,9 @@ Effectfully accesses the specified service in the environment of the effect.
 **Signature**
 
 ```ts
-export declare const serviceWithEffect: any
+export declare const serviceWithEffect: <T>(
+  tag: Tag<T>
+) => <R, E, A>(f: (a: T) => Effect<R, E, A>) => Effect<T | R, E, A>
 ```
 
 Added in v1.0.0
@@ -2178,7 +2322,9 @@ Updates the service with the required service entry.
 **Signature**
 
 ```ts
-export declare const updateService: any
+export declare const updateService: <T>(
+  tag: Tag<T>
+) => <T1 extends T>(f: (_: T) => T1) => <R, E, A>(self: Effect<R, E, A>) => Effect<T | R, E, A>
 ```
 
 Added in v1.0.0
@@ -2193,7 +2339,7 @@ operation of `either`.
 **Signature**
 
 ```ts
-export declare const absolve: any
+export declare const absolve: <R, E, A>(self: Effect<R, E, Either<E, A>>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -2206,7 +2352,7 @@ about the cause of the failure.
 **Signature**
 
 ```ts
-export declare const absorb: any
+export declare const absorb: <R, E, A>(self: Effect<R, E, A>) => Effect<R, unknown, A>
 ```
 
 Added in v1.0.0
@@ -2219,7 +2365,7 @@ throwing away all information about the cause of the failure.
 **Signature**
 
 ```ts
-export declare const absorbWith: any
+export declare const absorbWith: <E>(f: (e: E) => unknown) => <R, A>(self: Effect<R, E, A>) => Effect<R, unknown, A>
 ```
 
 Added in v1.0.0
@@ -2231,7 +2377,7 @@ Recovers from specified error.
 **Signature**
 
 ```ts
-export declare const catch: any
+export declare const catch: <N extends keyof E, K extends E[N] & string, E, R1, E1, A1>(tag: N, k: K, f: (e: Extract<E, { [n in N]: K; }>) => Effect<R1, E1, A1>) => <R, A>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | Exclude<E, { [n in N]: K; }>, A1 | A>
 ```
 
 Added in v1.0.0
@@ -2247,7 +2393,9 @@ recover from both recoverable and unrecoverable errors use
 **Signature**
 
 ```ts
-export declare const catchAll: any
+export declare const catchAll: <E, R2, E2, A2>(
+  f: (e: E) => Effect<R2, E2, A2>
+) => <R, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2, A2 | A>
 ```
 
 Added in v1.0.0
@@ -2262,7 +2410,9 @@ recover from defects.
 **Signature**
 
 ```ts
-export declare const catchAllCause: any
+export declare const catchAllCause: <E, R2, E2, A2>(
+  f: (cause: Cause<E>) => Effect<R2, E2, A2>
+) => <R, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2, A2 | A>
 ```
 
 Added in v1.0.0
@@ -2279,7 +2429,9 @@ purposes.
 **Signature**
 
 ```ts
-export declare const catchAllDefect: any
+export declare const catchAllDefect: <R2, E2, A2>(
+  f: (defect: unknown) => Effect<R2, E2, A2>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2 | A>
 ```
 
 Added in v1.0.0
@@ -2291,7 +2443,9 @@ Recovers from some or all of the error cases.
 **Signature**
 
 ```ts
-export declare const catchSome: any
+export declare const catchSome: <E, R2, E2, A2>(
+  pf: (e: E) => Option<Effect<R2, E2, A2>>
+) => <R, A>(self: Effect<R, E, A>) => Effect<R2 | R, E | E2, A2 | A>
 ```
 
 Added in v1.0.0
@@ -2303,7 +2457,9 @@ Recovers from some or all of the error cases with provided cause.
 **Signature**
 
 ```ts
-export declare const catchSomeCause: any
+export declare const catchSomeCause: <E, R2, E2, A2>(
+  f: (cause: Cause<E>) => Option<Effect<R2, E2, A2>>
+) => <R, A>(self: Effect<R, E, A>) => Effect<R2 | R, E | E2, A2 | A>
 ```
 
 Added in v1.0.0
@@ -2320,7 +2476,9 @@ purposes.
 **Signature**
 
 ```ts
-export declare const catchSomeDefect: any
+export declare const catchSomeDefect: <R2, E2, A2>(
+  pf: (_: unknown) => Option<Effect<R2, E2, A2>>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2 | A>
 ```
 
 Added in v1.0.0
@@ -2332,7 +2490,10 @@ Recovers from specified tagged error.
 **Signature**
 
 ```ts
-export declare const catchTag: any
+export declare const catchTag: <K extends E['_tag'] & string, E extends { _tag: string }, R1, E1, A1>(
+  k: K,
+  f: (e: Extract<E, { _tag: K }>) => Effect<R1, E1, A1>
+) => <R, A>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | Exclude<E, { _tag: K }>, A1 | A>
 ```
 
 Added in v1.0.0
@@ -2345,7 +2506,7 @@ or `Cause.empty` if the effect did succeed.
 **Signature**
 
 ```ts
-export declare const cause: any
+export declare const cause: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Cause<E>>
 ```
 
 Added in v1.0.0
@@ -2358,7 +2519,10 @@ match, otherwise continue with the returned value.
 **Signature**
 
 ```ts
-export declare const continueOrFail: any
+export declare const continueOrFail: <E1, A, A2>(
+  error: E1,
+  pf: (a: A) => Option<A2>
+) => <R, E>(self: Effect<R, E, A>) => Effect<R, E1 | E, A2>
 ```
 
 Added in v1.0.0
@@ -2371,7 +2535,10 @@ match, otherwise continue with the returned value.
 **Signature**
 
 ```ts
-export declare const continueOrFailEffect: any
+export declare const continueOrFailEffect: <E1, A, R2, E2, A2>(
+  error: E1,
+  pf: (a: A) => Option<Effect<R2, E2, A2>>
+) => <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E1 | E2 | E, A2>
 ```
 
 Added in v1.0.0
@@ -2381,7 +2548,10 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const foldCause: any
+export declare const foldCause: <E, A2, A, A3>(
+  onFailure: (cause: Cause<E>) => A2,
+  onSuccess: (a: A) => A3
+) => <R>(self: Effect<R, E, A>) => Effect<R, never, A2 | A3>
 ```
 
 Added in v1.0.0
@@ -2391,7 +2561,10 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const foldCauseEffect: any
+export declare const foldCauseEffect: <E, A, R2, E2, A2, R3, E3, A3>(
+  onFailure: (cause: Cause<E>) => Effect<R2, E2, A2>,
+  onSuccess: (a: A) => Effect<R3, E3, A3>
+) => <R>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2 | E3, A2 | A3>
 ```
 
 Added in v1.0.0
@@ -2401,7 +2574,10 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const foldEffect: any
+export declare const foldEffect: <E, A, R2, E2, A2, R3, E3, A3>(
+  onFailure: (e: E) => Effect<R2, E2, A2>,
+  onSuccess: (a: A) => Effect<R3, E3, A3>
+) => <R>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2 | E3, A2 | A3>
 ```
 
 Added in v1.0.0
@@ -2413,7 +2589,7 @@ Exposes the full `Cause` of failure for the specified effect.
 **Signature**
 
 ```ts
-export declare const sandbox: any
+export declare const sandbox: <R, E, A>(self: Effect<R, E, A>) => Effect<R, Cause<E>, A>
 ```
 
 Added in v1.0.0
@@ -2426,7 +2602,10 @@ function to convert the `E` into an `E1 | E2`.
 **Signature**
 
 ```ts
-export declare const unrefineWith: any
+export declare const unrefineWith: <E, E1, E2>(
+  pf: (u: unknown) => Option<E1>,
+  f: (e: E) => E2
+) => <R, A>(self: Effect<R, E, A>) => Effect<R, E1 | E2, A>
 ```
 
 Added in v1.0.0
@@ -2438,7 +2617,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const unsafeFork: any
+export declare const unsafeFork: <E, A>(effect: Effect<never, E, A>) => RuntimeFiber<E, A>
 ```
 
 Added in v1.0.0
@@ -2448,7 +2627,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const unsafeRunAsync: any
+export declare const unsafeRunAsync: <E, A>(effect: Effect<never, E, A>) => void
 ```
 
 Added in v1.0.0
@@ -2458,7 +2637,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const unsafeRunAsyncWith: any
+export declare const unsafeRunAsyncWith: <E, A>(effect: Effect<never, E, A>, k: (exit: Exit<E, A>) => void) => void
 ```
 
 Added in v1.0.0
@@ -2471,7 +2650,7 @@ result of the workflow or rejects with an error.
 **Signature**
 
 ```ts
-export declare const unsafeRunPromise: any
+export declare const unsafeRunPromise: <E, A>(effect: Effect<never, E, A>) => Promise<A>
 ```
 
 Added in v1.0.0
@@ -2484,7 +2663,7 @@ Runs an `Effect` workflow, returning a `Promise` which resolves with the
 **Signature**
 
 ```ts
-export declare const unsafeRunPromiseExit: any
+export declare const unsafeRunPromiseExit: <E, A>(effect: Effect<never, E, A>) => Promise<Exit<E, A>>
 ```
 
 Added in v1.0.0
@@ -2494,7 +2673,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const unsafeRunSync: any
+export declare const unsafeRunSync: <E, A>(effect: Effect<never, E, A>) => A
 ```
 
 Added in v1.0.0
@@ -2504,7 +2683,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const unsafeRunSyncExit: any
+export declare const unsafeRunSyncExit: <E, A>(effect: Effect<never, E, A>) => Exit<E, A>
 ```
 
 Added in v1.0.0
@@ -2514,7 +2693,10 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const unsafeRunWith: any
+export declare const unsafeRunWith: <E, A>(
+  effect: Effect<never, E, A>,
+  k: (exit: Exit<E, A>) => void
+) => (fiberId: FiberId) => (_: (exit: Exit<E, A>) => void) => void
 ```
 
 Added in v1.0.0
@@ -2528,7 +2710,9 @@ Filters the collection using the specified effectful predicate.
 **Signature**
 
 ```ts
-export declare const filter: any
+export declare const filter: <A, R, E>(
+  f: (a: A) => Effect<R, E, boolean>
+) => (elements: Iterable<A>) => Effect<R, E, Chunk<A>>
 ```
 
 Added in v1.0.0
@@ -2541,7 +2725,9 @@ all elements that satisfy the predicate.
 **Signature**
 
 ```ts
-export declare const filterNot: any
+export declare const filterNot: <A, R, E>(
+  f: (a: A) => Effect<R, E, boolean>
+) => (elements: Iterable<A>) => Effect<R, E, Chunk<A>>
 ```
 
 Added in v1.0.0
@@ -2554,7 +2740,9 @@ See `filterNot` for a sequential version.
 **Signature**
 
 ```ts
-export declare const filterNotPar: any
+export declare const filterNotPar: <A, R, E>(
+  f: (a: A) => Effect<R, E, boolean>
+) => (elements: Iterable<A>) => Effect<R, E, Chunk<A>>
 ```
 
 Added in v1.0.0
@@ -2567,7 +2755,10 @@ defect if the predicate fails.
 **Signature**
 
 ```ts
-export declare const filterOrDie: any
+export declare const filterOrDie: {
+  <A, B extends A>(f: Refinement<A, B>, defect: () => unknown): <R, E>(self: Effect<R, E, A>) => Effect<R, E, B>
+  <A>(f: Predicate<A>, defect: () => unknown): <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
+}
 ```
 
 Added in v1.0.0
@@ -2580,7 +2771,10 @@ message if the predicate fails.
 **Signature**
 
 ```ts
-export declare const filterOrDieMessage: any
+export declare const filterOrDieMessage: {
+  <A, B extends A>(f: Refinement<A, B>, message: string): <R, E>(self: Effect<R, E, A>) => Effect<R, E, B>
+  <A>(f: Predicate<A>, message: string): <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
+}
 ```
 
 Added in v1.0.0
@@ -2593,7 +2787,14 @@ of the effect if it is successful, otherwise returns the value of `orElse`.
 **Signature**
 
 ```ts
-export declare const filterOrElse: any
+export declare const filterOrElse: {
+  <A, B extends A, R2, E2, C>(f: Refinement<A, B>, orElse: () => Effect<R2, E2, C>): <R, E>(
+    self: Effect<R, E, A>
+  ) => Effect<R2 | R, E2 | E, B | C>
+  <A, R2, E2, B>(f: Predicate<A>, orElse: () => Effect<R2, E2, B>): <R, E>(
+    self: Effect<R, E, A>
+  ) => Effect<R2 | R, E2 | E, A | B>
+}
 ```
 
 Added in v1.0.0
@@ -2606,7 +2807,14 @@ of the effect if it is successful, otherwise returns the value of `orElse`.
 **Signature**
 
 ```ts
-export declare const filterOrElseWith: any
+export declare const filterOrElseWith: {
+  <A, B extends A, R2, E2, C>(f: Refinement<A, B>, orElse: (a: A) => Effect<R2, E2, C>): <R, E>(
+    self: Effect<R, E, A>
+  ) => Effect<R2 | R, E2 | E, B | C>
+  <A, R2, E2, B>(f: Predicate<A>, orElse: (a: A) => Effect<R2, E2, B>): <R, E>(
+    self: Effect<R, E, A>
+  ) => Effect<R2 | R, E2 | E, A | B>
+}
 ```
 
 Added in v1.0.0
@@ -2619,7 +2827,10 @@ error if the predicate fails.
 **Signature**
 
 ```ts
-export declare const filterOrFail: any
+export declare const filterOrFail: {
+  <A, B extends A, E2>(f: Refinement<A, B>, error: () => E2): <R, E>(self: Effect<R, E, A>) => Effect<R, E2 | E, B>
+  <A, E2>(f: Predicate<A>, error: () => E2): <R, E>(self: Effect<R, E, A>) => Effect<R, E2 | E, A>
+}
 ```
 
 Added in v1.0.0
@@ -2632,7 +2843,9 @@ See `filter` for a sequential version of it.
 **Signature**
 
 ```ts
-export declare const filterPar: any
+export declare const filterPar: <A, R, E>(
+  f: (a: A) => Effect<R, E, boolean>
+) => (elements: Iterable<A>) => Effect<R, E, Chunk<A>>
 ```
 
 Added in v1.0.0
@@ -2648,7 +2861,9 @@ the scope is closed with.
 **Signature**
 
 ```ts
-export declare const addFinalizer: any
+export declare const addFinalizer: <R, X>(
+  finalizer: (exit: Exit<unknown, unknown>) => Effect<R, never, X>
+) => Effect<Scope | R, never, void>
 ```
 
 Added in v1.0.0
@@ -2668,7 +2883,9 @@ logic built on `ensuring`, see the `acquireRelease` family of methods.
 **Signature**
 
 ```ts
-export declare const ensuring: any
+export declare const ensuring: <R1, X>(
+  finalizer: Effect<R1, never, X>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | R, E, A>
 ```
 
 Added in v1.0.0
@@ -2682,7 +2899,9 @@ effect succeeds.
 **Signature**
 
 ```ts
-export declare const ensuringChild: any
+export declare const ensuringChild: <R2, X>(
+  f: (fiber: Fiber<any, Chunk<unknown>>) => Effect<R2, never, X>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E, A>
 ```
 
 Added in v1.0.0
@@ -2695,7 +2914,9 @@ will be invoked, whether or not this effect succeeds.
 **Signature**
 
 ```ts
-export declare const ensuringChildren: any
+export declare const ensuringChildren: <R1, X>(
+  children: (fibers: Chunk<RuntimeFiber<any, any>>) => Effect<R1, never, X>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | R, E, A>
 ```
 
 Added in v1.0.0
@@ -2708,7 +2929,9 @@ or is interrupted.
 **Signature**
 
 ```ts
-export declare const onExit: any
+export declare const onExit: <E, A, R2, X>(
+  cleanup: (exit: Exit<E, A>) => Effect<R2, never, X>
+) => <R>(self: Effect<R, E, A>) => Effect<R2 | R, E, A>
 ```
 
 Added in v1.0.0
@@ -2718,7 +2941,9 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const onInterrupt: any
+export declare const onInterrupt: <R2, X>(
+  cleanup: (interruptors: HashSet<FiberId>) => Effect<R2, never, X>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E, A>
 ```
 
 Added in v1.0.0
@@ -2734,7 +2959,10 @@ function passed to `fold`.
 **Signature**
 
 ```ts
-export declare const fold: any
+export declare const fold: <E, A, A2, A3>(
+  onFailure: (error: E) => A2,
+  onSuccess: (value: A) => A3
+) => <R>(self: Effect<R, E, A>) => Effect<R, never, A2 | A3>
 ```
 
 Added in v1.0.0
@@ -2747,7 +2975,10 @@ from left to right.
 **Signature**
 
 ```ts
-export declare const reduce: any
+export declare const reduce: <Z, A, R, E>(
+  zero: Z,
+  f: (z: Z, a: A) => Effect<R, E, Z>
+) => (elements: Iterable<A>) => Effect<R, E, Z>
 ```
 
 Added in v1.0.0
@@ -2760,7 +2991,10 @@ sequentially.
 **Signature**
 
 ```ts
-export declare const reduceAll: any
+export declare const reduceAll: <R, E, A>(
+  zero: Effect<R, E, A>,
+  f: (acc: A, a: A) => A
+) => (elements: Iterable<Effect<R, E, A>>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -2773,7 +3007,10 @@ parallel.
 **Signature**
 
 ```ts
-export declare const reduceAllPar: any
+export declare const reduceAllPar: <R, E, A>(
+  zero: Effect<R, E, A>,
+  f: (acc: A, a: A) => A
+) => (elements: Iterable<Effect<R, E, A>>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -2785,7 +3022,10 @@ Folds an `Iterable<A>` using an effectual function f, working sequentially from 
 **Signature**
 
 ```ts
-export declare const reduceRight: any
+export declare const reduceRight: <A, Z, R, E>(
+  zero: Z,
+  f: (a: A, z: Z) => Effect<R, E, Z>
+) => (elements: Iterable<A>) => Effect<R, E, Z>
 ```
 
 Added in v1.0.0
@@ -2798,7 +3038,11 @@ when the predicate is not satisfied.
 **Signature**
 
 ```ts
-export declare const reduceWhile: any
+export declare const reduceWhile: <A, R, E, Z>(
+  zero: Z,
+  p: Predicate<Z>,
+  f: (s: Z, a: A) => Effect<R, E, Z>
+) => (elements: Iterable<A>) => Effect<R, E, Z>
 ```
 
 Added in v1.0.0
@@ -2813,7 +3057,7 @@ possibility that the value is a `Left` to the error channel.
 **Signature**
 
 ```ts
-export declare const right: any
+export declare const right: <R, E, A, B>(self: Effect<R, E, Either<A, B>>) => Effect<R, Either<A, E>, B>
 ```
 
 Added in v1.0.0
@@ -2826,7 +3070,9 @@ Performs the specified operation while "zoomed in" on the `Right` case of an
 **Signature**
 
 ```ts
-export declare const rightWith: any
+export declare const rightWith: <R, E, A, A1, B, B1, R1, E1>(
+  f: (effect: Effect<R, Either<A, E>, B>) => Effect<R1, Either<A1, E1>, B1>
+) => (self: Effect<R, E, Either<A, B>>) => Effect<R | R1, E | E1, Either<A1, B1>>
 ```
 
 Added in v1.0.0
@@ -2839,7 +3085,7 @@ The inverse of `left`.
 **Signature**
 
 ```ts
-export declare const unleft: any
+export declare const unleft: <R, E, B, A>(self: Effect<R, Either<E, B>, A>) => Effect<R, E, Either<A, B>>
 ```
 
 Added in v1.0.0
@@ -2863,7 +3109,7 @@ See timeout and race for other applications.
 **Signature**
 
 ```ts
-export declare const disconnect: any
+export declare const disconnect: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -2873,7 +3119,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const interrupt: any
+export declare const interrupt: () => Effect<never, never, never>
 ```
 
 Added in v1.0.0
@@ -2883,7 +3129,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const interruptAs: any
+export declare const interruptAs: (fiberId: FiberId) => Effect<never, never, never>
 ```
 
 Added in v1.0.0
@@ -2893,7 +3139,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const interruptible: any
+export declare const interruptible: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -2903,7 +3149,9 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const interruptibleMask: any
+export declare const interruptibleMask: <R, E, A>(
+  f: (restore: <RX, EX, AX>(effect: Effect<RX, EX, AX>) => Effect<RX, EX, AX>) => Effect<R, E, A>
+) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -2913,7 +3161,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const uninterruptible: any
+export declare const uninterruptible: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -2923,7 +3171,9 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const uninterruptibleMask: any
+export declare const uninterruptibleMask: <R, E, A>(
+  f: (restore: <RX, EX, AX>(effect: Effect<RX, EX, AX>) => Effect<RX, EX, AX>) => Effect<R, E, A>
+) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -2937,7 +3187,7 @@ Logs the specified message at the current log level.
 **Signature**
 
 ```ts
-export declare const log: any
+export declare const log: (message: string) => Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -2949,7 +3199,7 @@ Annotates each log in this effect with the specified log annotation.
 **Signature**
 
 ```ts
-export declare const logAnnotate: any
+export declare const logAnnotate: (key: string, value: string) => <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -2961,7 +3211,7 @@ Retrieves the log annotations associated with the current scope.
 **Signature**
 
 ```ts
-export declare const logAnnotations: any
+export declare const logAnnotations: () => Effect<never, never, ReadonlyMap<string, string>>
 ```
 
 Added in v1.0.0
@@ -2973,7 +3223,7 @@ Logs the specified message at the debug log level.
 **Signature**
 
 ```ts
-export declare const logDebug: any
+export declare const logDebug: (message: string) => Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -2985,7 +3235,7 @@ Logs the specified cause at the debug log level.
 **Signature**
 
 ```ts
-export declare const logDebugCause: any
+export declare const logDebugCause: <E>(cause: Cause<E>) => Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -2997,7 +3247,7 @@ Logs the specified message and cause at the debug log level.
 **Signature**
 
 ```ts
-export declare const logDebugCauseMessage: any
+export declare const logDebugCauseMessage: <E>(message: string, cause: Cause<E>) => Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -3009,7 +3259,7 @@ Logs the specified message at the error log level.
 **Signature**
 
 ```ts
-export declare const logError: any
+export declare const logError: (message: string) => Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -3021,7 +3271,7 @@ Logs the specified cause at the error log level.
 **Signature**
 
 ```ts
-export declare const logErrorCause: any
+export declare const logErrorCause: <E>(cause: Cause<E>) => Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -3033,7 +3283,7 @@ Logs the specified message and cause at the error log level.
 **Signature**
 
 ```ts
-export declare const logErrorCauseMessage: any
+export declare const logErrorCauseMessage: <E>(message: string, cause: Cause<E>) => Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -3045,7 +3295,7 @@ Logs the specified message at the fatal log level.
 **Signature**
 
 ```ts
-export declare const logFatal: any
+export declare const logFatal: (message: string) => Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -3057,7 +3307,7 @@ Logs the specified cause at the fatal log level.
 **Signature**
 
 ```ts
-export declare const logFatalCause: any
+export declare const logFatalCause: <E>(cause: Cause<E>) => Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -3069,7 +3319,7 @@ Logs the specified message and cause at the fatal log level.
 **Signature**
 
 ```ts
-export declare const logFatalCauseMessage: any
+export declare const logFatalCauseMessage: <E>(message: string, cause: Cause<E>) => Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -3081,7 +3331,7 @@ Logs the specified message at the informational log level.
 **Signature**
 
 ```ts
-export declare const logInfo: any
+export declare const logInfo: (message: string) => Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -3093,7 +3343,7 @@ Logs the specified cause at the informational log level.
 **Signature**
 
 ```ts
-export declare const logInfoCause: any
+export declare const logInfoCause: <E>(cause: Cause<E>) => Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -3105,7 +3355,7 @@ Logs the specified message and cause at the informational log level.
 **Signature**
 
 ```ts
-export declare const logInfoCauseMessage: any
+export declare const logInfoCauseMessage: <E>(message: string, cause: Cause<E>) => Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -3117,7 +3367,7 @@ Adjusts the label for the current logging span.
 **Signature**
 
 ```ts
-export declare const logSpan: any
+export declare const logSpan: (label: string) => <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -3129,7 +3379,7 @@ Logs the specified message at the trace log level.
 **Signature**
 
 ```ts
-export declare const logTrace: any
+export declare const logTrace: (message: string) => Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -3141,7 +3391,7 @@ Logs the specified cause at the trace log level.
 **Signature**
 
 ```ts
-export declare const logTraceCause: any
+export declare const logTraceCause: <E>(cause: Cause<E>) => Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -3153,7 +3403,7 @@ Logs the specified message and cause at the trace log level.
 **Signature**
 
 ```ts
-export declare const logTraceCauseMessage: any
+export declare const logTraceCauseMessage: <E>(message: string, cause: Cause<E>) => Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -3165,7 +3415,7 @@ Logs the specified message at the warning log level.
 **Signature**
 
 ```ts
-export declare const logWarning: any
+export declare const logWarning: (message: string) => Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -3177,7 +3427,7 @@ Logs the specified cause at the warning log level.
 **Signature**
 
 ```ts
-export declare const logWarningCause: any
+export declare const logWarningCause: <E>(cause: Cause<E>) => Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -3189,7 +3439,7 @@ Logs the specified message and cause at the warning log level.
 **Signature**
 
 ```ts
-export declare const logWarningCauseMessage: any
+export declare const logWarningCauseMessage: <E>(message: string, cause: Cause<E>) => Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -3203,7 +3453,7 @@ Maps the success value of this effect to the specified constant value.
 **Signature**
 
 ```ts
-export declare const as: any
+export declare const as: <B>(value: B) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, B>
 ```
 
 Added in v1.0.0
@@ -3215,7 +3465,7 @@ Maps the success value of this effect to a `Left` value.
 **Signature**
 
 ```ts
-export declare const asLeft: any
+export declare const asLeft: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Either<A, never>>
 ```
 
 Added in v1.0.0
@@ -3227,7 +3477,7 @@ Maps the error value of this effect to a `Left` value.
 **Signature**
 
 ```ts
-export declare const asLeftError: any
+export declare const asLeftError: <R, E, A>(self: Effect<R, E, A>) => Effect<R, Either<E, never>, A>
 ```
 
 Added in v1.0.0
@@ -3239,7 +3489,7 @@ Maps the success value of this effect to a `Right` value.
 **Signature**
 
 ```ts
-export declare const asRight: any
+export declare const asRight: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Either<never, A>>
 ```
 
 Added in v1.0.0
@@ -3251,7 +3501,7 @@ Maps the error value of this effect to a `Right` value.
 **Signature**
 
 ```ts
-export declare const asRightError: any
+export declare const asRightError: <R, E, A>(self: Effect<R, E, A>) => Effect<R, Either<never, E>, A>
 ```
 
 Added in v1.0.0
@@ -3263,7 +3513,7 @@ Maps the success value of this effect to a `Some` value.
 **Signature**
 
 ```ts
-export declare const asSome: any
+export declare const asSome: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Option<A>>
 ```
 
 Added in v1.0.0
@@ -3275,7 +3525,7 @@ Maps the error value of this effect to a `Some` value.
 **Signature**
 
 ```ts
-export declare const asSomeError: any
+export declare const asSomeError: <R, E, A>(self: Effect<R, E, A>) => Effect<R, Option<E>, A>
 ```
 
 Added in v1.0.0
@@ -3287,7 +3537,7 @@ Maps the success value of this effect to `void`.
 **Signature**
 
 ```ts
-export declare const asUnit: any
+export declare const asUnit: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, void>
 ```
 
 Added in v1.0.0
@@ -3297,7 +3547,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const map: any
+export declare const map: <A, B>(f: (a: A) => B) => <R, E>(self: Effect<R, E, A>) => Effect<R, E, B>
 ```
 
 Added in v1.0.0
@@ -3310,7 +3560,11 @@ new elements.
 **Signature**
 
 ```ts
-export declare const mapAccum: any
+export declare const mapAccum: <A, B, R, E, Z>(
+  elements: Iterable<A>,
+  zero: Z,
+  f: (z: Z, a: A) => Effect<R, E, readonly [Z, B]>
+) => Effect<R, E, readonly [Z, Chunk<B>]>
 ```
 
 Added in v1.0.0
@@ -3323,7 +3577,10 @@ the specified pair of functions, `f` and `g`.
 **Signature**
 
 ```ts
-export declare const mapBoth: any
+export declare const mapBoth: <E, A, E2, A2>(
+  f: (e: E) => E2,
+  g: (a: A) => A2
+) => <R>(self: Effect<R, E, A>) => Effect<R, E2, A2>
 ```
 
 Added in v1.0.0
@@ -3335,7 +3592,7 @@ Returns an effect with its error channel mapped using the specified function.
 **Signature**
 
 ```ts
-export declare const mapError: any
+export declare const mapError: <E, E2>(f: (e: E) => E2) => <R, A>(self: Effect<R, E, A>) => Effect<R, E2, A>
 ```
 
 Added in v1.0.0
@@ -3352,7 +3609,9 @@ with defects.
 **Signature**
 
 ```ts
-export declare const mapErrorCause: any
+export declare const mapErrorCause: <E, E2>(
+  f: (cause: Cause<E>) => Cause<E2>
+) => <R, A>(self: Effect<R, E, A>) => Effect<R, E2, A>
 ```
 
 Added in v1.0.0
@@ -3365,7 +3624,10 @@ Returns an effect whose success is mapped by the specified side effecting
 **Signature**
 
 ```ts
-export declare const mapTryCatch: any
+export declare const mapTryCatch: <A, B, E1>(
+  f: (a: A) => B,
+  onThrow: (u: unknown) => E1
+) => <R, E>(self: Effect<R, E, A>) => Effect<R, E1 | E, B>
 ```
 
 Added in v1.0.0
@@ -3377,7 +3639,7 @@ Returns a new effect where boolean value of this effect is negated.
 **Signature**
 
 ```ts
-export declare const negate: any
+export declare const negate: <R, E>(self: Effect<R, E, boolean>) => Effect<R, E, boolean>
 ```
 
 Added in v1.0.0
@@ -3407,7 +3669,7 @@ waiting for the end of all child fibers forked by the effect.
 **Signature**
 
 ```ts
-export declare const awaitAllChildren: any
+export declare const awaitAllChildren: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -3420,7 +3682,7 @@ effect. Cached results will expire after `timeToLive` duration.
 **Signature**
 
 ```ts
-export declare const cached: any
+export declare const cached: typeof circular.cached
 ```
 
 Added in v1.0.0
@@ -3435,7 +3697,9 @@ cached value before the `timeToLive` duration expires.
 **Signature**
 
 ```ts
-export declare const cachedInvalidate: any
+export declare const cachedInvalidate: (
+  timeToLive: Duration
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, readonly [Effect<never, E, A>, Effect<never, never, void>]>
 ```
 
 Added in v1.0.0
@@ -3448,7 +3712,7 @@ Returns an effect that is delayed from this effect by the specified
 **Signature**
 
 ```ts
-export declare const delay: any
+export declare const delay: (duration: Duration) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -3461,7 +3725,7 @@ Returns a new workflow that executes this one and captures the changes in
 **Signature**
 
 ```ts
-export declare const diffFiberRefs: any
+export declare const diffFiberRefs: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, readonly [FiberRefsPatch, A]>
 ```
 
 Added in v1.0.0
@@ -3474,7 +3738,7 @@ eventually succeeds.
 **Signature**
 
 ```ts
-export declare const eventually: any
+export declare const eventually: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, A>
 ```
 
 Added in v1.0.0
@@ -3487,7 +3751,7 @@ use all methods on the error channel, possibly before flipping back.
 **Signature**
 
 ```ts
-export declare const flip: any
+export declare const flip: <R, E, A>(self: Effect<R, E, A>) => Effect<R, A, E>
 ```
 
 Added in v1.0.0
@@ -3500,7 +3764,9 @@ parameters back
 **Signature**
 
 ```ts
-export declare const flipWith: any
+export declare const flipWith: <R, A, E, R2, A2, E2>(
+  f: (effect: Effect<R, A, E>) => Effect<R2, A2, E2>
+) => (self: Effect<R, E, A>) => Effect<R2, E2, A2>
 ```
 
 Added in v1.0.0
@@ -3512,7 +3778,7 @@ Repeats this effect forever (until the first error).
 **Signature**
 
 ```ts
-export declare const forever: any
+export declare const forever: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, never>
 ```
 
 Added in v1.0.0
@@ -3525,7 +3791,7 @@ is non-empty, or fails with the error `None` if the collection is empty.
 **Signature**
 
 ```ts
-export declare const head: any
+export declare const head: <R, E, A>(self: Effect<R, E, Iterable<A>>) => Effect<R, Option<E>, A>
 ```
 
 Added in v1.0.0
@@ -3537,7 +3803,7 @@ Returns a new effect that ignores the success or failure of this effect.
 **Signature**
 
 ```ts
-export declare const ignore: any
+export declare const ignore: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, void>
 ```
 
 Added in v1.0.0
@@ -3551,7 +3817,7 @@ turns out to be important.
 **Signature**
 
 ```ts
-export declare const ignoreLogged: any
+export declare const ignoreLogged: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, void>
 ```
 
 Added in v1.0.0
@@ -3564,7 +3830,7 @@ result of this effect.
 **Signature**
 
 ```ts
-export declare const memoize: any
+export declare const memoize: <R, E, A>(self: Effect<R, E, A>) => Effect<never, never, Effect<R, E, A>>
 ```
 
 Added in v1.0.0
@@ -3577,7 +3843,7 @@ success channel to their common combined type.
 **Signature**
 
 ```ts
-export declare const merge: any
+export declare const merge: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, E | A>
 ```
 
 Added in v1.0.0
@@ -3587,7 +3853,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const onDone: any
+export declare const onDone: typeof fiberRuntime.onDone
 ```
 
 Added in v1.0.0
@@ -3597,7 +3863,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const onDoneCause: any
+export declare const onDoneCause: typeof fiberRuntime.onDoneCause
 ```
 
 Added in v1.0.0
@@ -3610,7 +3876,9 @@ effect if it exists. The provided effect will not be interrupted.
 **Signature**
 
 ```ts
-export declare const onError: any
+export declare const onError: <E, R2, X>(
+  cleanup: (cause: Cause<E>) => Effect<R2, never, X>
+) => <R, A>(self: Effect<R, E, A>) => Effect<R2 | R, E, A>
 ```
 
 Added in v1.0.0
@@ -3623,7 +3891,7 @@ evaluated multiple times.
 **Signature**
 
 ```ts
-export declare const once: any
+export declare const once: <R, E, A>(self: Effect<R, E, A>) => Effect<never, never, Effect<R, E, void>>
 ```
 
 Added in v1.0.0
@@ -3636,7 +3904,7 @@ success.
 **Signature**
 
 ```ts
-export declare const option: any
+export declare const option: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Option<A>>
 ```
 
 Added in v1.0.0
@@ -3648,7 +3916,7 @@ Exposes all parallel errors in a single call.
 **Signature**
 
 ```ts
-export declare const parallelErrors: any
+export declare const parallelErrors: <R, E, A>(self: Effect<R, E, A>) => Effect<R, Chunk<E>, A>
 ```
 
 Added in v1.0.0
@@ -3658,7 +3926,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const parallelFinalizers: any
+export declare const parallelFinalizers: <R, E, A>(self: Effect<R, E, A>) => Effect<Scope | R, E, A>
 ```
 
 Added in v1.0.0
@@ -3671,7 +3939,7 @@ running this workflow.
 **Signature**
 
 ```ts
-export declare const patchFiberRefs: any
+export declare const patchFiberRefs: (patch: FiberRefsPatch) => Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -3691,7 +3959,9 @@ disconnect or interrupt losers.
 **Signature**
 
 ```ts
-export declare const race: any
+export declare const race: <R2, E2, A2>(
+  that: Effect<R2, E2, A2>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2 | A>
 ```
 
 Added in v1.0.0
@@ -3705,7 +3975,9 @@ the race will be interrupted immediately
 **Signature**
 
 ```ts
-export declare const raceAll: any
+export declare const raceAll: <R1, E1, A1>(
+  effects: Iterable<Effect<R1, E1, A1>>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, A1 | A>
 ```
 
 Added in v1.0.0
@@ -3720,7 +3992,9 @@ effect will fail with some error.
 **Signature**
 
 ```ts
-export declare const raceAwait: any
+export declare const raceAwait: <R2, E2, A2>(
+  that: Effect<R2, E2, A2>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2 | A>
 ```
 
 Added in v1.0.0
@@ -3737,7 +4011,9 @@ resume until the loser has been cleanly terminated.
 **Signature**
 
 ```ts
-export declare const raceEither: any
+export declare const raceEither: <R2, E2, A2>(
+  that: Effect<R2, E2, A2>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, Either<A, A2>>
 ```
 
 Added in v1.0.0
@@ -3753,7 +4029,11 @@ higher-level operators like `race`.
 **Signature**
 
 ```ts
-export declare const raceFibersWith: any
+export declare const raceFibersWith: <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
+  that: Effect<R1, E1, A1>,
+  selfWins: (winner: RuntimeFiber<E, A>, loser: RuntimeFiber<E1, A1>) => Effect<R2, E2, A2>,
+  thatWins: (winner: RuntimeFiber<E1, A1>, loser: RuntimeFiber<E, A>) => Effect<R3, E3, A3>
+) => <R>(self: Effect<R, E, A>) => Effect<R1 | R2 | R3 | R, E2 | E3, A2 | A3>
 ```
 
 Added in v1.0.0
@@ -3774,7 +4054,9 @@ in the background.
 **Signature**
 
 ```ts
-export declare const raceFirst: any
+export declare const raceFirst: <R2, E2, A2>(
+  that: Effect<R2, E2, A2>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2 | A>
 ```
 
 Added in v1.0.0
@@ -3787,7 +4069,11 @@ the specified finisher as soon as one result or the other has been computed.
 **Signature**
 
 ```ts
-export declare const raceWith: any
+export declare const raceWith: <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
+  that: Effect<R1, E1, A1>,
+  leftDone: (exit: Exit<E, A>, fiber: Fiber<E1, A1>) => Effect<R2, E2, A2>,
+  rightDone: (exit: Exit<E1, A1>, fiber: Fiber<E, A>) => Effect<R3, E3, A3>
+) => <R>(self: Effect<R, E, A>) => Effect<R1 | R2 | R3 | R, E2 | E3, A2 | A3>
 ```
 
 Added in v1.0.0
@@ -3799,7 +4085,7 @@ Keeps some of the errors, and terminates the fiber with the rest
 **Signature**
 
 ```ts
-export declare const refineOrDie: any
+export declare const refineOrDie: <E, E1>(pf: (e: E) => Option<E1>) => <R, A>(self: Effect<R, E, A>) => Effect<R, E1, A>
 ```
 
 Added in v1.0.0
@@ -3812,7 +4098,10 @@ the specified function to convert the `E` into a defect.
 **Signature**
 
 ```ts
-export declare const refineOrDieWith: any
+export declare const refineOrDieWith: <E, E1>(
+  pf: (e: E) => Option<E1>,
+  f: (e: E) => unknown
+) => <R, A>(self: Effect<R, E, A>) => Effect<R, E1, A>
 ```
 
 Added in v1.0.0
@@ -3825,7 +4114,7 @@ continue with our held value.
 **Signature**
 
 ```ts
-export declare const reject: any
+export declare const reject: <A, E1>(pf: (a: A) => Option<E1>) => <R, E>(self: Effect<R, E, A>) => Effect<R, E1 | E, A>
 ```
 
 Added in v1.0.0
@@ -3839,7 +4128,9 @@ our held value.
 **Signature**
 
 ```ts
-export declare const rejectEffect: any
+export declare const rejectEffect: <A, R1, E1>(
+  pf: (a: A) => Option<Effect<R1, E1, E1>>
+) => <R, E>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, A>
 ```
 
 Added in v1.0.0
@@ -3855,7 +4146,9 @@ time.
 **Signature**
 
 ```ts
-export declare const repeat: any
+export declare const repeat: <R1, A, B>(
+  schedule: Schedule<R1, A, B>
+) => <R, E>(self: Effect<R, E, A>) => Effect<R1 | R, E, B>
 ```
 
 Added in v1.0.0
@@ -3870,7 +4163,7 @@ that succeeds, executes `io` an additional time.
 **Signature**
 
 ```ts
-export declare const repeatN: any
+export declare const repeatN: (n: number) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -3888,7 +4181,10 @@ Scheduled recurrences are in addition to the first execution, so that
 **Signature**
 
 ```ts
-export declare const repeatOrElse: any
+export declare const repeatOrElse: <R2, A, B, E, R3, E2>(
+  schedule: Schedule<R2, A, B>,
+  orElse: (error: E, option: Option<B>) => Effect<R3, E2, B>
+) => <R>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2, B>
 ```
 
 Added in v1.0.0
@@ -3906,7 +4202,10 @@ Scheduled recurrences are in addition to the first execution, so that
 **Signature**
 
 ```ts
-export declare const repeatOrElseEither: any
+export declare const repeatOrElseEither: <R2, A, B, E, R3, E2, C>(
+  schedule: Schedule<R2, A, B>,
+  orElse: (error: E, option: Option<B>) => Effect<R3, E2, C>
+) => <R>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2, Either<C, B>>
 ```
 
 Added in v1.0.0
@@ -3919,7 +4218,7 @@ until the first failure.
 **Signature**
 
 ```ts
-export declare const repeatUntil: any
+export declare const repeatUntil: <A>(f: Predicate<A>) => <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -3932,7 +4231,9 @@ predicate or until the first failure.
 **Signature**
 
 ```ts
-export declare const repeatUntilEffect: any
+export declare const repeatUntilEffect: <A, R2>(
+  f: (a: A) => Effect<R2, never, boolean>
+) => <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E, A>
 ```
 
 Added in v1.0.0
@@ -3945,7 +4246,7 @@ until the first failure.
 **Signature**
 
 ```ts
-export declare const repeatUntilEquals: any
+export declare const repeatUntilEquals: <A>(value: A) => <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -3958,7 +4259,7 @@ predicate or until the first failure.
 **Signature**
 
 ```ts
-export declare const repeatWhile: any
+export declare const repeatWhile: <A>(f: Predicate<A>) => <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -3971,7 +4272,9 @@ predicate or until the first failure.
 **Signature**
 
 ```ts
-export declare const repeatWhileEffect: any
+export declare const repeatWhileEffect: <R1, A>(
+  f: (a: A) => Effect<R1, never, boolean>
+) => <R, E>(self: Effect<R, E, A>) => Effect<R1 | R, E, A>
 ```
 
 Added in v1.0.0
@@ -3984,7 +4287,7 @@ value or until the first failure.
 **Signature**
 
 ```ts
-export declare const repeatWhileEquals: any
+export declare const repeatWhileEquals: <A>(value: A) => <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -3996,7 +4299,7 @@ Replicates the given effect `n` times.
 **Signature**
 
 ```ts
-export declare const replicate: any
+export declare const replicate: (n: number) => <R, E, A>(self: Effect<R, E, A>) => Chunk<Effect<R, E, A>>
 ```
 
 Added in v1.0.0
@@ -4009,7 +4312,7 @@ results.
 **Signature**
 
 ```ts
-export declare const replicateEffect: any
+export declare const replicateEffect: (n: number) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Chunk<A>>
 ```
 
 Added in v1.0.0
@@ -4022,7 +4325,7 @@ results.
 **Signature**
 
 ```ts
-export declare const replicateEffectDiscard: any
+export declare const replicateEffectDiscard: (n: number) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, void>
 ```
 
 Added in v1.0.0
@@ -4034,7 +4337,7 @@ Unearth the unchecked failure of the effect (opposite of `orDie`).
 **Signature**
 
 ```ts
-export declare const resurrect: any
+export declare const resurrect: <R, E, A>(self: Effect<R, E, A>) => Effect<R, unknown, A>
 ```
 
 Added in v1.0.0
@@ -4049,7 +4352,9 @@ and in case of failure, try again once".
 **Signature**
 
 ```ts
-export declare const retry: any
+export declare const retry: <R1, E, B>(
+  policy: Schedule<R1, E, B>
+) => <R, A>(self: Effect<R, E, A>) => Effect<R1 | R, E, A>
 ```
 
 Added in v1.0.0
@@ -4061,7 +4366,7 @@ Retries this effect the specified number of times.
 **Signature**
 
 ```ts
-export declare const retryN: any
+export declare const retryN: (n: number) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -4075,7 +4380,10 @@ the recovery function.
 **Signature**
 
 ```ts
-export declare const retryOrElse: any
+export declare const retryOrElse: <R1, E extends E3, A1, R2, E2, A2, E3>(
+  policy: Schedule<R1, E3, A1>,
+  orElse: (e: E, out: A1) => Effect<R2, E2, A2>
+) => <R, A>(self: Effect<R, E, A>) => Effect<R1 | R2 | R, E | E2, A2 | A>
 ```
 
 Added in v1.0.0
@@ -4089,7 +4397,10 @@ the recovery function.
 **Signature**
 
 ```ts
-export declare const retryOrElseEither: any
+export declare const retryOrElseEither: <R1, E extends E3, A1, R2, E2, A2, E3>(
+  policy: Schedule<R1, E3, A1>,
+  orElse: (e: E, out: A1) => Effect<R2, E2, A2>
+) => <R, A>(self: Effect<R, E, A>) => Effect<R1 | R2 | R, E | E2, Either<A2, A>>
 ```
 
 Added in v1.0.0
@@ -4101,7 +4412,7 @@ Retries this effect until its error satisfies the specified predicate.
 **Signature**
 
 ```ts
-export declare const retryUntil: any
+export declare const retryUntil: <E>(f: Predicate<E>) => <R, A>(self: Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -4114,7 +4425,9 @@ predicate.
 **Signature**
 
 ```ts
-export declare const retryUntilEffect: any
+export declare const retryUntilEffect: <R1, E>(
+  f: (e: E) => Effect<R1, never, boolean>
+) => <R, A>(self: Effect<R, E, A>) => Effect<R1 | R, E, A>
 ```
 
 Added in v1.0.0
@@ -4126,7 +4439,7 @@ Retries this effect until its error is equal to the specified error.
 **Signature**
 
 ```ts
-export declare const retryUntilEquals: any
+export declare const retryUntilEquals: <E>(e: E) => <R, A>(self: Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -4138,7 +4451,7 @@ Retries this effect while its error satisfies the specified predicate.
 **Signature**
 
 ```ts
-export declare const retryWhile: any
+export declare const retryWhile: <E>(f: Predicate<E>) => <R, A>(self: Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -4151,7 +4464,9 @@ predicate.
 **Signature**
 
 ```ts
-export declare const retryWhileEffect: any
+export declare const retryWhileEffect: <R1, E>(
+  f: (e: E) => Effect<R1, never, boolean>
+) => <R, A>(self: Effect<R, E, A>) => Effect<R1 | R, E, A>
 ```
 
 Added in v1.0.0
@@ -4164,7 +4479,7 @@ error.
 **Signature**
 
 ```ts
-export declare const retryWhileEquals: any
+export declare const retryWhileEquals: <E>(e: E) => <R, A>(self: Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -4179,7 +4494,9 @@ depend on the result of this effect.
 **Signature**
 
 ```ts
-export declare const schedule: any
+export declare const schedule: <R2, Out>(
+  schedule: Schedule<R2, any, Out>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E, Out>
 ```
 
 Added in v1.0.0
@@ -4192,7 +4509,9 @@ attached to the current scope.
 **Signature**
 
 ```ts
-export declare const scheduleForked: any
+export declare const scheduleForked: <R2, Out>(
+  schedule: Schedule<R2, unknown, Out>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<Scope | R2 | R, never, RuntimeFiber<E, Out>>
 ```
 
 Added in v1.0.0
@@ -4205,7 +4524,10 @@ specified input value.
 **Signature**
 
 ```ts
-export declare const scheduleFrom: any
+export declare const scheduleFrom: <R2, In, Out>(
+  initial: In,
+  schedule: Schedule<R2, In, Out>
+) => <R, E>(self: Effect<R, E, In>) => Effect<R2 | R, E, Out>
 ```
 
 Added in v1.0.0
@@ -4221,7 +4543,7 @@ parallel.
 **Signature**
 
 ```ts
-export declare const sequentialFinalizers: any
+export declare const sequentialFinalizers: <R, E, A>(self: Effect<R, E, A>) => Effect<Scope | R, E, A>
 ```
 
 Added in v1.0.0
@@ -4234,7 +4556,7 @@ in the specified collection of `FiberRef` values.
 **Signature**
 
 ```ts
-export declare const setFiberRefs: any
+export declare const setFiberRefs: (fiberRefs: FiberRefs) => Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -4246,7 +4568,7 @@ Converts an option on values into an option on errors.
 **Signature**
 
 ```ts
-export declare const some: any
+export declare const some: <R, E, A>(self: Effect<R, E, Option<A>>) => Effect<R, Option<E>, A>
 ```
 
 Added in v1.0.0
@@ -4258,7 +4580,7 @@ Extracts the optional value, or returns the given 'orElse'.
 **Signature**
 
 ```ts
-export declare const someOrElse: any
+export declare const someOrElse: <B>(orElse: () => B) => <R, E, A>(self: Effect<R, E, Option<A>>) => Effect<R, E, B | A>
 ```
 
 Added in v1.0.0
@@ -4270,7 +4592,9 @@ Extracts the optional value, or executes the given 'orElse' effect.
 **Signature**
 
 ```ts
-export declare const someOrElseEffect: any
+export declare const someOrElseEffect: <R2, E2, A2>(
+  orElse: () => Effect<R2, E2, A2>
+) => <R, E, A>(self: Effect<R, E, Option<A>>) => Effect<R2 | R, E2 | E, A2 | A>
 ```
 
 Added in v1.0.0
@@ -4282,7 +4606,9 @@ Extracts the optional value, or fails with the given error 'e'.
 **Signature**
 
 ```ts
-export declare const someOrFail: any
+export declare const someOrFail: <E2>(
+  orFail: () => E2
+) => <R, E, A>(self: Effect<R, E, Option<A>>) => Effect<R, E2 | E, A>
 ```
 
 Added in v1.0.0
@@ -4294,7 +4620,9 @@ Extracts the optional value, or fails with a `NoSuchElementException`.
 **Signature**
 
 ```ts
-export declare const someOrFailException: any
+export declare const someOrFailException: <R, E, A>(
+  self: Effect<R, E, Option<A>>
+) => Effect<R, NoSuchElementException | E, A>
 ```
 
 Added in v1.0.0
@@ -4307,7 +4635,9 @@ Perfoms the specified operation while "zoomed in" on the `Some` case of an
 **Signature**
 
 ```ts
-export declare const someWith: any
+export declare const someWith: <R, E, A, R1, E1, A1>(
+  f: (effect: Effect<R, Option<E>, A>) => Effect<R1, Option<E1>, A1>
+) => (self: Effect<R, E, Option<A>>) => Effect<R | R1, E | E1, Option<A1>>
 ```
 
 Added in v1.0.0
@@ -4321,7 +4651,10 @@ execution.
 **Signature**
 
 ```ts
-export declare const summarized: any
+export declare const summarized: <R2, E2, B, C>(
+  summary: Effect<R2, E2, B>,
+  f: (start: B, end: B) => C
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, readonly [C, A]>
 ```
 
 Added in v1.0.0
@@ -4334,7 +4667,7 @@ forked in the effect are reported to the specified supervisor.
 **Signature**
 
 ```ts
-export declare const supervised: any
+export declare const supervised: <X>(supervisor: Supervisor<X>) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -4346,7 +4679,7 @@ Returns a new effect that executes this one and times the execution.
 **Signature**
 
 ```ts
-export declare const timed: any
+export declare const timed: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, readonly [Duration, A]>
 ```
 
 Added in v1.0.0
@@ -4358,7 +4691,9 @@ A more powerful variation of `timed` that allows specifying the clock.
 **Signature**
 
 ```ts
-export declare const timedWith: any
+export declare const timedWith: <R1, E1>(
+  milliseconds: Effect<R1, E1, number>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, readonly [Duration, A]>
 ```
 
 Added in v1.0.0
@@ -4383,7 +4718,7 @@ has been successfully interrupted.
 **Signature**
 
 ```ts
-export declare const timeout: any
+export declare const timeout: (duration: Duration) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Option<A>>
 ```
 
 Added in v1.0.0
@@ -4396,7 +4731,10 @@ timeout, it will produce the specified error.
 **Signature**
 
 ```ts
-export declare const timeoutFail: any
+export declare const timeoutFail: <E1>(
+  evaluate: () => E1,
+  duration: Duration
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E1 | E, A>
 ```
 
 Added in v1.0.0
@@ -4409,7 +4747,10 @@ timeout, it will produce the specified failure.
 **Signature**
 
 ```ts
-export declare const timeoutFailCause: any
+export declare const timeoutFailCause: <E1>(
+  evaluate: () => Cause<E1>,
+  duration: Duration
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E1 | E, A>
 ```
 
 Added in v1.0.0
@@ -4427,7 +4768,11 @@ be safely interrupted.
 **Signature**
 
 ```ts
-export declare const timeoutTo: any
+export declare const timeoutTo: <A, B, B1>(
+  def: B1,
+  f: (a: A) => B,
+  duration: Duration
+) => <R, E>(self: Effect<R, E, A>) => Effect<R, E, B | B1>
 ```
 
 Added in v1.0.0
@@ -4444,7 +4789,9 @@ effectively extending their lifespans into the parent scope.
 **Signature**
 
 ```ts
-export declare const transplant: any
+export declare const transplant: <R, E, A>(
+  f: (grafter: <R2, E2, A2>(effect: Effect<R2, E2, A2>) => Effect<R2, E2, A2>) => Effect<R, E, A>
+) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -4460,7 +4807,7 @@ This operation is the opposite of `cause`.
 **Signature**
 
 ```ts
-export declare const uncause: any
+export declare const uncause: <R, E>(self: Effect<R, never, Cause<E>>) => Effect<R, E, void>
 ```
 
 Added in v1.0.0
@@ -4472,7 +4819,7 @@ The moral equivalent of `if (!p) exp`.
 **Signature**
 
 ```ts
-export declare const unless: any
+export declare const unless: (predicate: () => boolean) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Option<A>>
 ```
 
 Added in v1.0.0
@@ -4484,7 +4831,9 @@ The moral equivalent of `if (!p) exp` when `p` has side-effects.
 **Signature**
 
 ```ts
-export declare const unlessEffect: any
+export declare const unlessEffect: <R2, E2>(
+  predicate: Effect<R2, E2, boolean>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, Option<A>>
 ```
 
 Added in v1.0.0
@@ -4496,7 +4845,9 @@ Takes some fiber failures and converts them into errors.
 **Signature**
 
 ```ts
-export declare const unrefine: any
+export declare const unrefine: <E1>(
+  pf: (u: unknown) => Option<E1>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E1 | E, A>
 ```
 
 Added in v1.0.0
@@ -4509,7 +4860,7 @@ The inverse of `right`.
 **Signature**
 
 ```ts
-export declare const unright: any
+export declare const unright: <R, B, E, A>(self: Effect<R, Either<B, E>, A>) => Effect<R, E, Either<B, A>>
 ```
 
 Added in v1.0.0
@@ -4524,7 +4875,7 @@ exists. Otherwise extracts the contained `Effect< R, E, A>`
 **Signature**
 
 ```ts
-export declare const unsandbox: any
+export declare const unsandbox: <R, E, A>(self: Effect<R, Cause<E>, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -4536,7 +4887,7 @@ Converts an option on errors into an option on values.
 **Signature**
 
 ```ts
-export declare const unsome: any
+export declare const unsome: <R, E, A>(self: Effect<R, Option<E>, A>) => Effect<R, E, Option<A>>
 ```
 
 Added in v1.0.0
@@ -4549,7 +4900,9 @@ without effecting the scope of any resources acquired by `use`.
 **Signature**
 
 ```ts
-export declare const using: any
+export declare const using: <A, R2, E2, A2>(
+  use: (a: A) => Effect<R2, E2, A2>
+) => <R, E>(self: Effect<Scope | R, E, A>) => Effect<R2 | R, E2 | E, A2>
 ```
 
 Added in v1.0.0
@@ -4562,7 +4915,9 @@ Sequentially zips the this result with the specified result. Combines both
 **Signature**
 
 ```ts
-export declare const validate: any
+export declare const validate: <R1, E1, B>(
+  that: Effect<R1, E1, B>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, readonly [A, B]>
 ```
 
 Added in v1.0.0
@@ -4578,7 +4933,9 @@ will be lost. To retain all information please use `partition`.
 **Signature**
 
 ```ts
-export declare const validateAll: any
+export declare const validateAll: <R, E, A, B>(
+  f: (a: A) => Effect<R, E, B>
+) => (elements: Iterable<A>) => Effect<R, Chunk<E>, Chunk<B>>
 ```
 
 Added in v1.0.0
@@ -4591,7 +4948,9 @@ the successes.
 **Signature**
 
 ```ts
-export declare const validateAllDiscard: any
+export declare const validateAllDiscard: <R, E, A, X>(
+  f: (a: A) => Effect<R, E, X>
+) => (elements: Iterable<A>) => Effect<R, Chunk<E>, void>
 ```
 
 Added in v1.0.0
@@ -4607,7 +4966,9 @@ will be lost. To retain all information please use [[partitionPar]].
 **Signature**
 
 ```ts
-export declare const validateAllPar: any
+export declare const validateAllPar: <R, E, A, B>(
+  f: (a: A) => Effect<R, E, B>
+) => (elements: Iterable<A>) => Effect<R, Chunk<E>, Chunk<B>>
 ```
 
 Added in v1.0.0
@@ -4620,7 +4981,9 @@ discarding the successes.
 **Signature**
 
 ```ts
-export declare const validateAllParDiscard: any
+export declare const validateAllParDiscard: <R, E, A, B>(
+  f: (a: A) => Effect<R, E, B>
+) => (elements: Iterable<A>) => Effect<R, Chunk<E>, void>
 ```
 
 Added in v1.0.0
@@ -4633,7 +4996,9 @@ or the accumulation of all errors.
 **Signature**
 
 ```ts
-export declare const validateFirst: any
+export declare const validateFirst: <R, E, A, B>(
+  f: (a: A) => Effect<R, E, B>
+) => (elements: Iterable<A>) => Effect<R, Chunk<E>, B>
 ```
 
 Added in v1.0.0
@@ -4646,7 +5011,9 @@ or the accumulation of all errors.
 **Signature**
 
 ```ts
-export declare const validateFirstPar: any
+export declare const validateFirstPar: <R, E, A, B>(
+  f: (a: A) => Effect<R, E, B>
+) => (elements: Iterable<A>) => Effect<R, Chunk<E>, B>
 ```
 
 Added in v1.0.0
@@ -4659,7 +5026,9 @@ in parallel. Combines both Cause<E1>` when both effects fail.
 **Signature**
 
 ```ts
-export declare const validatePar: any
+export declare const validatePar: <R1, E1, B>(
+  that: Effect<R1, E1, B>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, readonly [A, B]>
 ```
 
 Added in v1.0.0
@@ -4672,7 +5041,10 @@ combiner function. Combines the causes in case both effect fail.
 **Signature**
 
 ```ts
-export declare const validateWith: any
+export declare const validateWith: <A, R1, E1, B, C>(
+  that: Effect<R1, E1, B>,
+  f: (a: A, b: B) => C
+) => <R, E>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, C>
 ```
 
 Added in v1.0.0
@@ -4686,7 +5058,10 @@ both sides fail, then the cause will be combined.
 **Signature**
 
 ```ts
-export declare const validateWithPar: any
+export declare const validateWithPar: <A, R1, E1, B, C>(
+  that: Effect<R1, E1, B>,
+  f: (a: A, b: B) => C
+) => <R, E>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, C>
 ```
 
 Added in v1.0.0
@@ -4698,7 +5073,7 @@ The moral equivalent of `if (p) exp`.
 **Signature**
 
 ```ts
-export declare const when: any
+export declare const when: (predicate: () => boolean) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Option<A>>
 ```
 
 Added in v1.0.0
@@ -4711,7 +5086,10 @@ value, otherwise does nothing.
 **Signature**
 
 ```ts
-export declare const whenCase: any
+export declare const whenCase: <R, E, A, B>(
+  evaluate: () => A,
+  pf: (a: A) => Option<Effect<R, E, B>>
+) => Effect<R, E, Option<B>>
 ```
 
 Added in v1.0.0
@@ -4724,7 +5102,9 @@ value, otherwise does nothing.
 **Signature**
 
 ```ts
-export declare const whenCaseEffect: any
+export declare const whenCaseEffect: <A, R2, E2, A2>(
+  pf: (a: A) => Option<Effect<R2, E2, A2>>
+) => <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, Option<A2>>
 ```
 
 Added in v1.0.0
@@ -4737,7 +5117,7 @@ clock service.
 **Signature**
 
 ```ts
-export declare const withClock: any
+export declare const withClock: <A extends Clock>(value: A) => <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -4750,7 +5130,9 @@ well as a finalizer that can be run to close the scope of this workflow.
 **Signature**
 
 ```ts
-export declare const withEarlyRelease: any
+export declare const withEarlyRelease: <R, E, A>(
+  self: Effect<R, E, A>
+) => Effect<Scope | R, E, readonly [Effect<never, never, void>, A]>
 ```
 
 Added in v1.0.0
@@ -4760,7 +5142,9 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const withMetric: any
+export declare const withMetric: <Type, In, Out>(
+  metric: Metric<Type, In, Out>
+) => <R, E, A extends In>(self: Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -4772,7 +5156,9 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const zip: any
+export declare const zip: <R2, E2, A2>(
+  that: Effect<R2, E2, A2>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, readonly [A, A2]>
 ```
 
 Added in v1.0.0
@@ -4782,7 +5168,9 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const zipLeft: any
+export declare const zipLeft: <R2, E2, A2>(
+  that: Effect<R2, E2, A2>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A>
 ```
 
 Added in v1.0.0
@@ -4792,7 +5180,9 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const zipRight: any
+export declare const zipRight: <R2, E2, A2>(
+  that: Effect<R2, E2, A2>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2>
 ```
 
 Added in v1.0.0
@@ -4802,7 +5192,10 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const zipWith: any
+export declare const zipWith: <R2, E2, A2, A, B>(
+  that: Effect<R2, E2, A2>,
+  f: (a: A, b: A2) => B
+) => <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, B>
 ```
 
 Added in v1.0.0
@@ -4816,7 +5209,7 @@ Returns `true` if the specified value is an `Effect`, `false` otherwise.
 **Signature**
 
 ```ts
-export declare const isEffect: any
+export declare const isEffect: (u: unknown) => u is Effect<unknown, unknown, unknown>
 ```
 
 Added in v1.0.0
@@ -4828,7 +5221,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const updateRuntimeFlags: any
+export declare const updateRuntimeFlags: (patch: RuntimeFlagsPatch) => Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -4838,7 +5231,9 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const withRuntimeFlags: any
+export declare const withRuntimeFlags: (
+  update: RuntimeFlagsPatch
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -4852,7 +5247,7 @@ Accesses the current scope and uses it to perform the specified effect.
 **Signature**
 
 ```ts
-export declare const scopeWith: any
+export declare const scopeWith: <R, E, A>(f: (scope: Scope) => Effect<R, E, A>) => Effect<Scope | R, E, A>
 ```
 
 Added in v1.0.0
@@ -4864,7 +5259,9 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const flatMap: any
+export declare const flatMap: <A, R1, E1, B>(
+  f: (a: A) => Effect<R1, E1, B>
+) => <R, E>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, B>
 ```
 
 Added in v1.0.0
@@ -4874,7 +5271,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const flatten: any
+export declare const flatten: <R, E, R1, E1, A>(self: Effect<R, E, Effect<R1, E1, A>>) => Effect<R | R1, E | E1, A>
 ```
 
 Added in v1.0.0
@@ -4886,7 +5283,9 @@ Unwraps the optional error, defaulting to the provided value.
 **Signature**
 
 ```ts
-export declare const flattenErrorOption: any
+export declare const flattenErrorOption: <E1>(
+  fallback: E1
+) => <R, E, A>(self: Effect<R, Option<E>, A>) => Effect<R, E1 | E, A>
 ```
 
 Added in v1.0.0
@@ -4896,7 +5295,9 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const tap: any
+export declare const tap: <A, R2, E2, X>(
+  f: (a: A) => Effect<R2, E2, X>
+) => <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A>
 ```
 
 Added in v1.0.0
@@ -4909,7 +5310,10 @@ this effect.
 **Signature**
 
 ```ts
-export declare const tapBoth: any
+export declare const tapBoth: <E, A, R2, E2, X, R3, E3, X1>(
+  f: (e: E) => Effect<R2, E2, X>,
+  g: (a: A) => Effect<R3, E3, X1>
+) => <R>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E | E2 | E3, A>
 ```
 
 Added in v1.0.0
@@ -4921,7 +5325,9 @@ Returns an effect that effectually "peeks" at the defect of this effect.
 **Signature**
 
 ```ts
-export declare const tapDefect: any
+export declare const tapDefect: <R2, E2, X>(
+  f: (cause: Cause<never>) => Effect<R2, E2, X>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A>
 ```
 
 Added in v1.0.0
@@ -4933,7 +5339,9 @@ Returns an effect that effectfully "peeks" at the result of this effect.
 **Signature**
 
 ```ts
-export declare const tapEither: any
+export declare const tapEither: <E, A, R2, E2, X>(
+  f: (either: Either<E, A>) => Effect<R2, E2, X>
+) => <R>(self: Effect<R, E, A>) => Effect<R2 | R, E | E2, A>
 ```
 
 Added in v1.0.0
@@ -4945,7 +5353,9 @@ Returns an effect that effectfully "peeks" at the failure of this effect.
 **Signature**
 
 ```ts
-export declare const tapError: any
+export declare const tapError: <E, R2, E2, X>(
+  f: (e: E) => Effect<R2, E2, X>
+) => <R, A>(self: Effect<R, E, A>) => Effect<R2 | R, E | E2, A>
 ```
 
 Added in v1.0.0
@@ -4958,7 +5368,9 @@ this effect.
 **Signature**
 
 ```ts
-export declare const tapErrorCause: any
+export declare const tapErrorCause: <E, R2, E2, X>(
+  f: (cause: Cause<E>) => Effect<R2, E2, X>
+) => <R, A>(self: Effect<R, E, A>) => Effect<R2 | R, E | E2, A>
 ```
 
 Added in v1.0.0
@@ -4972,7 +5384,9 @@ equivalent to the original effect.
 **Signature**
 
 ```ts
-export declare const tapSome: any
+export declare const tapSome: <A, R1, E1, X>(
+  pf: (a: A) => Option<Effect<R1, E1, X>>
+) => <R, E>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, A>
 ```
 
 Added in v1.0.0
@@ -4987,7 +5401,7 @@ workflow.
 **Signature**
 
 ```ts
-export declare const daemonChildren: any
+export declare const daemonChildren: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -5017,7 +5431,7 @@ behavior is not desired, you may use the `forkDaemon` or `forkIn` methods.
 **Signature**
 
 ```ts
-export declare const fork: any
+export declare const fork: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, RuntimeFiber<E, A>>
 ```
 
 Added in v1.0.0
@@ -5030,7 +5444,7 @@ composite fiber that produces a list of their results, in order.
 **Signature**
 
 ```ts
-export declare const forkAll: any
+export declare const forkAll: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, never, Fiber<E, Chunk<A>>>
 ```
 
 Added in v1.0.0
@@ -5044,7 +5458,7 @@ in cases where the results of the forked fibers are not needed.
 **Signature**
 
 ```ts
-export declare const forkAllDiscard: any
+export declare const forkAllDiscard: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, never, void>
 ```
 
 Added in v1.0.0
@@ -5058,7 +5472,7 @@ returned effect terminates, the forked fiber will continue running.
 **Signature**
 
 ```ts
-export declare const forkDaemon: any
+export declare const forkDaemon: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, RuntimeFiber<E, A>>
 ```
 
 Added in v1.0.0
@@ -5071,7 +5485,7 @@ when the scope is closed.
 **Signature**
 
 ```ts
-export declare const forkIn: any
+export declare const forkIn: (scope: Scope) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, RuntimeFiber<E, A>>
 ```
 
 Added in v1.0.0
@@ -5083,7 +5497,7 @@ Forks the fiber in a `Scope`, interrupting it when the scope is closed.
 **Signature**
 
 ```ts
-export declare const forkScoped: any
+export declare const forkScoped: <R, E, A>(self: Effect<R, E, A>) => Effect<Scope | R, never, RuntimeFiber<E, A>>
 ```
 
 Added in v1.0.0
@@ -5095,7 +5509,9 @@ Like fork but handles an error with the provided handler.
 **Signature**
 
 ```ts
-export declare const forkWithErrorHandler: any
+export declare const forkWithErrorHandler: <E, X>(
+  handler: (e: E) => Effect<never, never, X>
+) => <R, A>(self: Effect<R, E, A>) => Effect<R, never, RuntimeFiber<E, A>>
 ```
 
 Added in v1.0.0
@@ -5129,7 +5545,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const traced: any
+export declare const traced: (trace: string | undefined) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -5145,7 +5561,9 @@ of the current element being iterated over.
 **Signature**
 
 ```ts
-export declare const forEachWithIndex: any
+export declare const forEachWithIndex: <A, R, E, B>(
+  f: (a: A, i: number) => Effect<R, E, B>
+) => (elements: Iterable<A>) => Effect<R, E, Chunk<B>>
 ```
 
 Added in v1.0.0
@@ -5157,7 +5575,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const exit: any
+export declare const exit: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Exit<E, A>>
 ```
 
 Added in v1.0.0
@@ -5167,7 +5585,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const fiberId: any
+export declare const fiberId: () => Effect<never, never, FiberId>
 ```
 
 Added in v1.0.0
@@ -5177,7 +5595,9 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const intoDeferred: any
+export declare const intoDeferred: <E, A>(
+  deferred: Deferred<E, A>
+) => <R>(self: Effect<R, E, A>) => Effect<R, never, boolean>
 ```
 
 Added in v1.0.0
@@ -5191,7 +5611,9 @@ Zips this effect and that effect in parallel.
 **Signature**
 
 ```ts
-export declare const zipPar: any
+export declare const zipPar: <R2, E2, A2>(
+  that: Effect<R2, E2, A2>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, readonly [A, A2]>
 ```
 
 Added in v1.0.0
@@ -5205,7 +5627,9 @@ then the other side will be interrupted.
 **Signature**
 
 ```ts
-export declare const zipParLeft: any
+export declare const zipParLeft: <R2, E2, A2>(
+  that: Effect<R2, E2, A2>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A>
 ```
 
 Added in v1.0.0
@@ -5219,7 +5643,9 @@ then the other side will be interrupted.
 **Signature**
 
 ```ts
-export declare const zipParRight: any
+export declare const zipParRight: <R2, E2, A2>(
+  that: Effect<R2, E2, A2>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2>
 ```
 
 Added in v1.0.0
@@ -5232,7 +5658,10 @@ specified combiner function.
 **Signature**
 
 ```ts
-export declare const zipWithPar: any
+export declare const zipWithPar: <R2, E2, A2, A, B>(
+  that: Effect<R2, E2, A2>,
+  f: (a: A, b: A2) => B
+) => <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, B>
 ```
 
 Added in v1.0.0

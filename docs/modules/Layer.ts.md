@@ -103,7 +103,7 @@ Constructs a layer that dies with the specified defect.
 **Signature**
 
 ```ts
-export declare const die: any
+export declare const die: (defect: unknown) => Layer<never, never, unknown>
 ```
 
 Added in v1.0.0
@@ -115,7 +115,7 @@ Constructs a layer that dies with the specified defect.
 **Signature**
 
 ```ts
-export declare const dieSync: any
+export declare const dieSync: (evaluate: () => unknown) => Layer<never, never, unknown>
 ```
 
 Added in v1.0.0
@@ -128,7 +128,7 @@ output.
 **Signature**
 
 ```ts
-export declare const environment: any
+export declare const environment: <R>() => Layer<R, never, R>
 ```
 
 Added in v1.0.0
@@ -140,7 +140,7 @@ Constructs a layer that fails with the specified error.
 **Signature**
 
 ```ts
-export declare const fail: any
+export declare const fail: <E>(error: E) => Layer<never, E, unknown>
 ```
 
 Added in v1.0.0
@@ -152,7 +152,7 @@ Constructs a layer that fails with the specified cause.
 **Signature**
 
 ```ts
-export declare const failCause: any
+export declare const failCause: <E>(cause: Cause<E>) => Layer<never, E, unknown>
 ```
 
 Added in v1.0.0
@@ -164,7 +164,7 @@ Constructs a layer that fails with the specified cause.
 **Signature**
 
 ```ts
-export declare const failCauseSync: any
+export declare const failCauseSync: <E>(evaluate: () => Cause<E>) => Layer<never, E, unknown>
 ```
 
 Added in v1.0.0
@@ -176,7 +176,7 @@ Constructs a layer that fails with the specified error.
 **Signature**
 
 ```ts
-export declare const failSync: any
+export declare const failSync: <E>(evaluate: () => E) => Layer<never, E, unknown>
 ```
 
 Added in v1.0.0
@@ -188,7 +188,7 @@ Constructs a layer from the specified effect.
 **Signature**
 
 ```ts
-export declare const fromEffect: any
+export declare const fromEffect: typeof internal.fromEffect
 ```
 
 Added in v1.0.0
@@ -201,7 +201,7 @@ services.
 **Signature**
 
 ```ts
-export declare const fromEffectEnvironment: any
+export declare const fromEffectEnvironment: typeof internal.fromEffectEnvironment
 ```
 
 Added in v1.0.0
@@ -213,7 +213,7 @@ Constructs a layer from the environment using the specified function.
 **Signature**
 
 ```ts
-export declare const fromFunction: any
+export declare const fromFunction: <A, B>(tagA: Tag<A>, tagB: Tag<B>) => (f: (a: A) => B) => Layer<A, never, B>
 ```
 
 Added in v1.0.0
@@ -228,7 +228,7 @@ workflow.
 **Signature**
 
 ```ts
-export declare const scope: any
+export declare const scope: () => Layer<never, never, CloseableScope>
 ```
 
 Added in v1.0.0
@@ -240,7 +240,9 @@ Constructs a layer from the specified scoped effect.
 **Signature**
 
 ```ts
-export declare const scoped: any
+export declare const scoped: <T>(
+  tag: Tag<T>
+) => <R, E, T1 extends T>(effect: Effect<R, E, T1>) => Layer<Exclude<R, Scope>, E, T>
 ```
 
 Added in v1.0.0
@@ -252,7 +254,7 @@ Constructs a layer from the specified scoped effect.
 **Signature**
 
 ```ts
-export declare const scopedDiscard: any
+export declare const scopedDiscard: <R, E, T>(effect: Effect<R, E, T>) => Layer<Exclude<R, Scope>, E, never>
 ```
 
 Added in v1.0.0
@@ -265,7 +267,7 @@ or more services.
 **Signature**
 
 ```ts
-export declare const scopedEnvironment: any
+export declare const scopedEnvironment: <R, E, A>(effect: Effect<R, E, Context<A>>) => Layer<Exclude<R, Scope>, E, A>
 ```
 
 Added in v1.0.0
@@ -278,7 +280,7 @@ environment.
 **Signature**
 
 ```ts
-export declare const service: any
+export declare const service: <T>(tag: Tag<T>) => Layer<T, never, T>
 ```
 
 Added in v1.0.0
@@ -290,7 +292,7 @@ Constructs a layer from the specified value.
 **Signature**
 
 ```ts
-export declare const succeed: any
+export declare const succeed: <T>(tag: Tag<T>) => (resource: T) => Layer<never, never, T>
 ```
 
 Added in v1.0.0
@@ -303,7 +305,7 @@ services.
 **Signature**
 
 ```ts
-export declare const succeedEnvironment: any
+export declare const succeedEnvironment: <A>(environment: Context<A>) => Layer<never, never, A>
 ```
 
 Added in v1.0.0
@@ -316,7 +318,7 @@ creating layers that refer to themselves.
 **Signature**
 
 ```ts
-export declare const suspend: any
+export declare const suspend: <RIn, E, ROut>(evaluate: () => Layer<RIn, E, ROut>) => Layer<RIn, E, ROut>
 ```
 
 Added in v1.0.0
@@ -328,7 +330,7 @@ Lazily constructs a layer from the specified value.
 **Signature**
 
 ```ts
-export declare const sync: any
+export declare const sync: <T>(tag: Tag<T>) => (evaluate: () => T) => Layer<never, never, T>
 ```
 
 Added in v1.0.0
@@ -341,7 +343,7 @@ services.
 **Signature**
 
 ```ts
-export declare const syncEnvironment: any
+export declare const syncEnvironment: <A>(evaluate: () => Context<A>) => Layer<never, never, A>
 ```
 
 Added in v1.0.0
@@ -356,7 +358,7 @@ your entire application is a layer, such as an HTTP server.
 **Signature**
 
 ```ts
-export declare const launch: any
+export declare const launch: <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Effect<RIn, E, never>
 ```
 
 Added in v1.0.0
@@ -369,7 +371,7 @@ be used to execute effects.
 **Signature**
 
 ```ts
-export declare const toRuntime: any
+export declare const toRuntime: <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Effect<Scope | RIn, E, Runtime<ROut>>
 ```
 
 Added in v1.0.0
@@ -383,7 +385,7 @@ Builds a layer into a scoped value.
 **Signature**
 
 ```ts
-export declare const build: any
+export declare const build: <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Effect<Scope | RIn, E, Context<ROut>>
 ```
 
 Added in v1.0.0
@@ -399,7 +401,9 @@ layer is provided to.
 **Signature**
 
 ```ts
-export declare const buildWithScope: any
+export declare const buildWithScope: (
+  scope: Scope
+) => <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Effect<RIn, E, Context<ROut>>
 ```
 
 Added in v1.0.0
@@ -413,7 +417,9 @@ Recovers from all errors.
 **Signature**
 
 ```ts
-export declare const catchAll: any
+export declare const catchAll: <E, R2, E2, A2>(
+  onError: (error: E) => Layer<R2, E2, A2>
+) => <R, A>(self: Layer<R, E, A>) => Layer<R2 | R, E2, A & A2>
 ```
 
 Added in v1.0.0
@@ -426,7 +432,7 @@ unchecked and not a part of the type of the layer.
 **Signature**
 
 ```ts
-export declare const orDie: any
+export declare const orDie: <R, E, A>(self: Layer<R, E, A>) => Layer<R, never, A>
 ```
 
 Added in v1.0.0
@@ -439,7 +445,9 @@ executes the specified layer.
 **Signature**
 
 ```ts
-export declare const orElse: any
+export declare const orElse: <R1, E1, A1>(
+  that: () => Layer<R1, E1, A1>
+) => <R, E, A>(self: Layer<R, E, A>) => Layer<R1 | R, E1 | E, A & A1>
 ```
 
 Added in v1.0.0
@@ -455,7 +463,10 @@ the inputs of this layer, and the error or outputs of the specified layer.
 **Signature**
 
 ```ts
-export declare const foldCauseLayer: any
+export declare const foldCauseLayer: <E, A, R2, E2, A2, R3, E3, A3>(
+  onFailure: (cause: Cause<E>) => Layer<R2, E2, A2>,
+  onSuccess: (context: Context<A>) => Layer<R3, E3, A3>
+) => <R>(self: Layer<R, E, A>) => Layer<R2 | R3 | R, E2 | E3, A2 | A3>
 ```
 
 Added in v1.0.0
@@ -469,7 +480,10 @@ the inputs of this layer, and the error or outputs of the specified layer.
 **Signature**
 
 ```ts
-export declare const foldLayer: any
+export declare const foldLayer: <E, R2, E2, A2, A, R3, E3, A3>(
+  onFailure: (error: E) => Layer<R2, E2, A2>,
+  onSuccess: (context: Context<A>) => Layer<R3, E3, A3>
+) => <R>(self: Layer<R, E, A>) => Layer<R2 | R3 | R, E2 | E3, A2 & A3>
 ```
 
 Added in v1.0.0
@@ -484,7 +498,7 @@ shared, `false` otherwise.
 **Signature**
 
 ```ts
-export declare const isFresh: any
+export declare const isFresh: <R, E, A>(self: Layer<R, E, A>) => boolean
 ```
 
 Added in v1.0.0
@@ -496,7 +510,7 @@ Returns `true` if the specified value is a `Layer`, `false` otherwise.
 **Signature**
 
 ```ts
-export declare const isLayer: any
+export declare const isLayer: (u: unknown) => u is Layer<unknown, unknown, unknown>
 ```
 
 Added in v1.0.0
@@ -510,7 +524,9 @@ Returns a new layer whose output is mapped by the specified function.
 **Signature**
 
 ```ts
-export declare const map: any
+export declare const map: <A, B>(
+  f: (context: Context<A>) => Context<B>
+) => <R, E>(self: Layer<R, E, A>) => Layer<R, E, B>
 ```
 
 Added in v1.0.0
@@ -522,7 +538,7 @@ Returns a layer with its error channel mapped using the specified function.
 **Signature**
 
 ```ts
-export declare const mapError: any
+export declare const mapError: <E, E1>(f: (error: E) => E1) => <R, A>(self: Layer<R, E, A>) => Layer<R, E1, A>
 ```
 
 Added in v1.0.0
@@ -551,7 +567,7 @@ effect depends on is closed.
 **Signature**
 
 ```ts
-export declare const extendScope: any
+export declare const extendScope: <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Layer<Scope | RIn, E, ROut>
 ```
 
 Added in v1.0.0
@@ -563,7 +579,7 @@ Creates a fresh version of this layer that will not be shared.
 **Signature**
 
 ```ts
-export declare const fresh: any
+export declare const fresh: <R, E, A>(self: Layer<R, E, A>) => Layer<R, E, A>
 ```
 
 Added in v1.0.0
@@ -576,7 +592,7 @@ result of this layer.
 **Signature**
 
 ```ts
-export declare const memoize: any
+export declare const memoize: <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Effect<Scope, never, Layer<RIn, E, ROut>>
 ```
 
 Added in v1.0.0
@@ -589,7 +605,9 @@ has the inputs and outputs of both.
 **Signature**
 
 ```ts
-export declare const merge: any
+export declare const merge: <RIn2, E2, ROut2>(
+  that: Layer<RIn2, E2, ROut2>
+) => <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn2 | RIn, E2 | E, ROut2 | ROut>
 ```
 
 Added in v1.0.0
@@ -602,7 +620,7 @@ passes through the inputs.
 **Signature**
 
 ```ts
-export declare const passthrough: any
+export declare const passthrough: <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn, E, RIn | ROut>
 ```
 
 Added in v1.0.0
@@ -615,7 +633,10 @@ specified function.
 **Signature**
 
 ```ts
-export declare const project: any
+export declare const project: <A, B>(
+  tagA: Tag<A>,
+  tagB: Tag<B>
+) => (f: (a: A) => B) => <RIn, E, ROut>(self: Layer<RIn, E, A | ROut>) => Layer<RIn, E, B>
 ```
 
 Added in v1.0.0
@@ -629,7 +650,9 @@ well as any leftover inputs, and the outputs of the specified builder.
 **Signature**
 
 ```ts
-export declare const provideTo: any
+export declare const provideTo: <RIn2, E2, ROut2>(
+  that: Layer<RIn2, E2, ROut2>
+) => <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn | Exclude<RIn2, ROut>, E2 | E, ROut2>
 ```
 
 Added in v1.0.0
@@ -643,7 +666,7 @@ outputs of both layers.
 **Signature**
 
 ```ts
-export declare const provideToAndMerge: any
+export declare const provideToAndMerge: typeof internal.provideToAndMerge
 ```
 
 Added in v1.0.0
@@ -657,7 +680,9 @@ Retries constructing this layer according to the specified schedule.
 **Signature**
 
 ```ts
-export declare const retry: any
+export declare const retry: <RIn1, E, X>(
+  schedule: Schedule<RIn1, E, X>
+) => <RIn, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn1 | RIn, E, ROut>
 ```
 
 Added in v1.0.0
@@ -671,7 +696,9 @@ Constructs a layer dynamically based on the output of this layer.
 **Signature**
 
 ```ts
-export declare const flatMap: any
+export declare const flatMap: <A, R2, E2, A2>(
+  f: (context: Context<A>) => Layer<R2, E2, A2>
+) => <R, E>(self: Layer<R, E, A>) => Layer<R2 | R, E2 | E, A2>
 ```
 
 Added in v1.0.0
@@ -683,7 +710,9 @@ Flattens layers nested in the environment of an effect.
 **Signature**
 
 ```ts
-export declare const flatten: any
+export declare const flatten: <R2, E2, A>(
+  tag: Tag<Layer<R2, E2, A>>
+) => <R, E>(self: Layer<R, E, Layer<R2, E2, A>>) => Layer<R2 | R, E2 | E, A>
 ```
 
 Added in v1.0.0
@@ -695,7 +724,9 @@ Performs the specified effect if this layer succeeds.
 **Signature**
 
 ```ts
-export declare const tap: any
+export declare const tap: <ROut, RIn2, E2, X>(
+  f: (context: Context<ROut>) => Effect<RIn2, E2, X>
+) => <RIn, E>(self: Layer<RIn, E, ROut>) => Layer<RIn2 | RIn, E2 | E, ROut>
 ```
 
 Added in v1.0.0
@@ -707,7 +738,9 @@ Performs the specified effect if this layer fails.
 **Signature**
 
 ```ts
-export declare const tapError: any
+export declare const tapError: <E, RIn2, E2, X>(
+  f: (e: E) => Effect<RIn2, E2, X>
+) => <RIn, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn2 | RIn, E | E2, ROut>
 ```
 
 Added in v1.0.0
@@ -745,7 +778,7 @@ function.
 **Signature**
 
 ```ts
-export declare const zipWithPar: any
+export declare const zipWithPar: typeof internal.zipWithPar
 ```
 
 Added in v1.0.0

@@ -39,7 +39,7 @@ Execute effects in parallel.
 **Signature**
 
 ```ts
-export declare const parallel: any
+export declare const parallel: ExecutionStrategy
 ```
 
 Added in v1.0.0
@@ -51,7 +51,7 @@ Execute effects in parallel, up to the specified number of concurrent fibers.
 **Signature**
 
 ```ts
-export declare const parallelN: any
+export declare const parallelN: (parallelism: number) => ExecutionStrategy
 ```
 
 Added in v1.0.0
@@ -63,7 +63,7 @@ Execute effects sequentially.
 **Signature**
 
 ```ts
-export declare const sequential: any
+export declare const sequential: ExecutionStrategy
 ```
 
 Added in v1.0.0
@@ -78,7 +78,11 @@ functions.
 **Signature**
 
 ```ts
-export declare const match: any
+export declare const match: <A>(
+  onSequential: () => A,
+  onParallel: () => A,
+  onParallelN: (n: number) => A
+) => (self: ExecutionStrategy) => A
 ```
 
 Added in v1.0.0
@@ -154,7 +158,7 @@ Returns `true` if the specified `ExecutionStrategy` is an instance of
 **Signature**
 
 ```ts
-export declare const isParallel: any
+export declare const isParallel: (self: ExecutionStrategy) => self is Parallel
 ```
 
 Added in v1.0.0
@@ -167,7 +171,7 @@ Returns `true` if the specified `ExecutionStrategy` is an instance of
 **Signature**
 
 ```ts
-export declare const isParallelN: any
+export declare const isParallelN: (self: ExecutionStrategy) => self is ParallelN
 ```
 
 Added in v1.0.0
@@ -180,7 +184,7 @@ Returns `true` if the specified `ExecutionStrategy` is an instance of
 **Signature**
 
 ```ts
-export declare const isSequential: any
+export declare const isSequential: (self: ExecutionStrategy) => self is Sequential
 ```
 
 Added in v1.0.0

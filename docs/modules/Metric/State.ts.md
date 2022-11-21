@@ -50,7 +50,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const counter: any
+export declare const counter: (count: number) => MetricState.Counter
 ```
 
 Added in v1.0.0
@@ -60,7 +60,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const frequency: any
+export declare const frequency: (occurrences: HashMap.HashMap<string, number>) => MetricState.Frequency
 ```
 
 Added in v1.0.0
@@ -70,7 +70,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const gauge: any
+export declare const gauge: (value: number) => MetricState.Gauge
 ```
 
 Added in v1.0.0
@@ -80,7 +80,13 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const histogram: any
+export declare const histogram: (
+  buckets: Chunk.Chunk<readonly [number, number]>,
+  count: number,
+  min: number,
+  max: number,
+  sum: number
+) => MetricState.Histogram
 ```
 
 Added in v1.0.0
@@ -90,7 +96,14 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const summary: any
+export declare const summary: (
+  error: number,
+  quantiles: Chunk.Chunk<readonly [number, Option.Option<number>]>,
+  count: number,
+  min: number,
+  max: number,
+  sum: number
+) => MetricState.Summary
 ```
 
 Added in v1.0.0
@@ -118,7 +131,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const isCounterState: any
+export declare const isCounterState: (u: unknown) => u is MetricState.Counter
 ```
 
 Added in v1.0.0
@@ -128,7 +141,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const isFrequencyState: any
+export declare const isFrequencyState: (u: unknown) => u is MetricState.Frequency
 ```
 
 Added in v1.0.0
@@ -138,7 +151,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const isGaugeState: any
+export declare const isGaugeState: (u: unknown) => u is MetricState.Gauge
 ```
 
 Added in v1.0.0
@@ -148,7 +161,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const isHistogramState: any
+export declare const isHistogramState: (u: unknown) => u is MetricState.Histogram
 ```
 
 Added in v1.0.0
@@ -158,7 +171,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const isMetricState: any
+export declare const isMetricState: (u: unknown) => u is MetricState.Counter
 ```
 
 Added in v1.0.0
@@ -168,7 +181,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const isSummaryState: any
+export declare const isSummaryState: (u: unknown) => u is MetricState.Summary
 ```
 
 Added in v1.0.0

@@ -39,7 +39,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const done: any
+export declare const done: FiberStatus
 ```
 
 Added in v1.0.0
@@ -49,7 +49,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const running: any
+export declare const running: (runtimeFlags: RuntimeFlags) => FiberStatus
 ```
 
 Added in v1.0.0
@@ -59,7 +59,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const suspended: any
+export declare const suspended: (runtimeFlags: RuntimeFlags, blockingOn: FiberId) => FiberStatus
 ```
 
 Added in v1.0.0
@@ -127,7 +127,7 @@ Returns `true` if the specified `FiberStatus` is `Done`, `false` otherwise.
 **Signature**
 
 ```ts
-export declare const isDone: any
+export declare const isDone: (self: FiberStatus) => self is Done
 ```
 
 Added in v1.0.0
@@ -139,7 +139,7 @@ Returns `true` if the specified value is a `FiberStatus`, `false` otherwise.
 **Signature**
 
 ```ts
-export declare const isFiberStatus: any
+export declare const isFiberStatus: (u: unknown) => u is FiberStatus
 ```
 
 Added in v1.0.0
@@ -152,7 +152,7 @@ otherwise.
 **Signature**
 
 ```ts
-export declare const isRunning: any
+export declare const isRunning: (self: FiberStatus) => self is Running
 ```
 
 Added in v1.0.0
@@ -165,7 +165,7 @@ otherwise.
 **Signature**
 
 ```ts
-export declare const isSuspended: any
+export declare const isSuspended: (self: FiberStatus) => self is Suspended
 ```
 
 Added in v1.0.0

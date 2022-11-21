@@ -40,7 +40,10 @@ constructor.
 **Signature**
 
 ```ts
-export declare const auto: any
+export declare const auto: <R, E, A, R2, In, Out>(
+  acquire: Effect.Effect<R, E, A>,
+  policy: Schedule.Schedule<R2, In, Out>
+) => Effect.Effect<Scope.Scope | R | R2, never, Cached<E, A>>
 ```
 
 Added in v1.0.0
@@ -56,7 +59,9 @@ constructor.
 **Signature**
 
 ```ts
-export declare const manual: any
+export declare const manual: <R, E, A>(
+  acquire: Effect.Effect<R, E, A>
+) => Effect.Effect<Scope.Scope | R, never, Cached<E, A>>
 ```
 
 Added in v1.0.0
@@ -70,7 +75,7 @@ Retrieves the current value stored in the cache.
 **Signature**
 
 ```ts
-export declare const get: any
+export declare const get: <E, A>(self: Cached<E, A>) => Effect.Effect<never, E, A>
 ```
 
 Added in v1.0.0
@@ -110,7 +115,7 @@ is successful, or the refresh operation fails.
 **Signature**
 
 ```ts
-export declare const refresh: any
+export declare const refresh: <E, A>(self: Cached<E, A>) => Effect.Effect<never, E, void>
 ```
 
 Added in v1.0.0

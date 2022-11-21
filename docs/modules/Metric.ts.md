@@ -73,7 +73,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const increment: any
+export declare const increment: (self: Metric.Counter<number>) => Effect.Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -83,7 +83,9 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const incrementBy: any
+export declare const incrementBy: (
+  amount: number
+) => (self: Metric.Counter<number>) => Effect.Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -93,7 +95,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const set: any
+export declare const set: <In>(value: In) => (self: Metric.Gauge<In>) => Effect.Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -107,7 +109,9 @@ that effect fails or succeeds.
 **Signature**
 
 ```ts
-export declare const trackAll: any
+export declare const trackAll: <In>(
+  input: In
+) => <Type, Out>(self: Metric<Type, In, Out>) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -120,7 +124,9 @@ effects that it is applied to.
 **Signature**
 
 ```ts
-export declare const trackDefect: any
+export declare const trackDefect: <Type, Out>(
+  self: Metric<Type, unknown, Out>
+) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -134,7 +140,9 @@ aspect is applied to.
 **Signature**
 
 ```ts
-export declare const trackDefectWith: any
+export declare const trackDefectWith: <In>(
+  f: (defect: unknown) => In
+) => <Type, Out>(self: Metric<Type, In, Out>) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -148,7 +156,9 @@ must be `Duration`.
 **Signature**
 
 ```ts
-export declare const trackDuration: any
+export declare const trackDuration: <Type, Out>(
+  self: Metric<Type, Duration, Out>
+) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -162,7 +172,9 @@ that can convert the `Duration` to the input type of this metric.
 **Signature**
 
 ```ts
-export declare const trackDurationWith: any
+export declare const trackDurationWith: <In>(
+  f: (duration: Duration) => In
+) => <Type, Out>(self: Metric<Type, In, Out>) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -175,7 +187,9 @@ the effects that it is applied to.
 **Signature**
 
 ```ts
-export declare const trackError: any
+export declare const trackError: <Type, In, Out>(
+  self: Metric<Type, In, Out>
+) => <R, E extends In, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -189,7 +203,11 @@ applied to.
 **Signature**
 
 ```ts
-export declare const trackErrorWith: any
+export declare const trackErrorWith: <In, In2>(
+  f: (error: In2) => In
+) => <Type, Out>(
+  self: Metric<Type, In, Out>
+) => <R, E extends In2, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -202,7 +220,9 @@ the effects that it is applied to.
 **Signature**
 
 ```ts
-export declare const trackSuccess: any
+export declare const trackSuccess: <Type, In, Out>(
+  self: Metric<Type, In, Out>
+) => <R, E, A extends In>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -216,7 +236,11 @@ applied to.
 **Signature**
 
 ```ts
-export declare const trackSuccessWith: any
+export declare const trackSuccessWith: <In, In2>(
+  f: (value: In2) => In
+) => <Type, Out>(
+  self: Metric<Type, In, Out>
+) => <R, E, A extends In2>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -230,7 +254,7 @@ A counter, which can be incremented by numbers.
 **Signature**
 
 ```ts
-export declare const counter: any
+export declare const counter: (name: string) => Metric.Counter<number>
 ```
 
 Added in v1.0.0
@@ -243,7 +267,7 @@ strings.
 **Signature**
 
 ```ts
-export declare const frequency: any
+export declare const frequency: (name: string) => Metric.Frequency<string>
 ```
 
 Added in v1.0.0
@@ -257,7 +281,9 @@ update value.
 **Signature**
 
 ```ts
-export declare const fromConst: any
+export declare const fromConst: <In>(
+  input: () => In
+) => <Type, Out>(self: Metric<Type, In, Out>) => Metric<Type, unknown, Out>
 ```
 
 Added in v1.0.0
@@ -267,7 +293,9 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const fromMetricKey: any
+export declare const fromMetricKey: <Type extends MetricKeyType.MetricKeyType<any, any>>(
+  key: MetricKey<Type>
+) => Metric<Type, MetricKeyType.MetricKeyType.InType<Type>, MetricKeyType.MetricKeyType.OutType<Type>>
 ```
 
 Added in v1.0.0
@@ -279,7 +307,7 @@ A gauge, which can be set to a value.
 **Signature**
 
 ```ts
-export declare const gauge: any
+export declare const gauge: (name: string) => Metric.Gauge<number>
 ```
 
 Added in v1.0.0
@@ -292,7 +320,10 @@ fall in bins with the specified boundaries.
 **Signature**
 
 ```ts
-export declare const histogram: any
+export declare const histogram: (
+  name: string,
+  boundaries: MetricBoundaries
+) => Metric<MetricKeyType.MetricKeyType.Histogram, number, MetricState.MetricState.Histogram>
 ```
 
 Added in v1.0.0
@@ -302,7 +333,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const make: any
+export declare const make: MetricApply
 ```
 
 Added in v1.0.0
@@ -314,7 +345,7 @@ Creates a metric that ignores input and produces constant output.
 **Signature**
 
 ```ts
-export declare const succeed: any
+export declare const succeed: <Out>(out: Out) => Metric<void, unknown, Out>
 ```
 
 Added in v1.0.0
@@ -324,7 +355,13 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const summary: any
+export declare const summary: (
+  name: string,
+  maxAge: Duration,
+  maxSize: number,
+  error: number,
+  quantiles: Chunk<number>
+) => Metric.Summary<number>
 ```
 
 Added in v1.0.0
@@ -334,7 +371,13 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const summaryTimestamp: any
+export declare const summaryTimestamp: (
+  name: string,
+  maxAge: Duration,
+  maxSize: number,
+  error: number,
+  quantiles: Chunk<number>
+) => Metric.Summary<readonly [value: number, timestamp: number]>
 ```
 
 Added in v1.0.0
@@ -346,7 +389,7 @@ Creates a metric that ignores input and produces constant output.
 **Signature**
 
 ```ts
-export declare const sync: any
+export declare const sync: <Out>(evaluate: () => Out) => Metric<void, unknown, Out>
 ```
 
 Added in v1.0.0
@@ -360,7 +403,9 @@ the metric as a tag (i.e. `"time_unit: milliseconds"`).
 **Signature**
 
 ```ts
-export declare const timer: any
+export declare const timer: (
+  name: string
+) => Metric<MetricKeyType.MetricKeyType.Histogram, Duration, MetricState.MetricState.Histogram>
 ```
 
 Added in v1.0.0
@@ -374,7 +419,7 @@ Retrieves a snapshot of the value of the metric at this moment in time.
 **Signature**
 
 ```ts
-export declare const value: any
+export declare const value: <Type, In, Out>(self: Metric<Type, In, Out>) => Effect.Effect<never, never, Out>
 ```
 
 Added in v1.0.0
@@ -386,7 +431,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const globalMetricRegistry: any
+export declare const globalMetricRegistry: MetricRegistry
 ```
 
 Added in v1.0.0
@@ -402,7 +447,9 @@ this metric.
 **Signature**
 
 ```ts
-export declare const contramap: any
+export declare const contramap: <In, In2>(
+  f: (input: In2) => In
+) => <Type, Out>(self: Metric<Type, In, Out>) => Metric<Type, In2, Out>
 ```
 
 Added in v1.0.0
@@ -416,7 +463,9 @@ specified function.
 **Signature**
 
 ```ts
-export declare const map: any
+export declare const map: <Out, Out2>(
+  f: (out: Out) => Out2
+) => <Type, In>(self: Metric<Type, In, Out>) => Metric<Type, In, Out2>
 ```
 
 Added in v1.0.0
@@ -426,7 +475,9 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const mapType: any
+export declare const mapType: <Type, Type2>(
+  f: (type: Type) => Type2
+) => <In, Out>(self: Metric<Type, In, Out>) => Metric<Type2, In, Out>
 ```
 
 Added in v1.0.0
@@ -497,7 +548,10 @@ the specified tags have been added to the tags of this metric.
 **Signature**
 
 ```ts
-export declare const tagged: any
+export declare const tagged: <Type, In, Out>(
+  key: string,
+  value: string
+) => (self: Metric<Type, In, Out>) => Metric<Type, In, Out>
 ```
 
 Added in v1.0.0
@@ -512,7 +566,9 @@ dynamic nature of the added tags.
 **Signature**
 
 ```ts
-export declare const taggedWith: any
+export declare const taggedWith: <In>(
+  f: (input: In) => HashSet.HashSet<MetricLabel.MetricLabel>
+) => <Type, Out>(self: Metric<Type, In, Out>) => Metric<Type, In, void>
 ```
 
 Added in v1.0.0
@@ -525,7 +581,9 @@ the specified tags have been added to the tags of this metric.
 **Signature**
 
 ```ts
-export declare const taggedWithLabelSet: any
+export declare const taggedWithLabelSet: (
+  extraTags: HashSet.HashSet<MetricLabel.MetricLabel>
+) => <Type, In, Out>(self: Metric<Type, In, Out>) => Metric<Type, In, Out>
 ```
 
 Added in v1.0.0
@@ -538,7 +596,9 @@ the specified tags have been added to the tags of this metric.
 **Signature**
 
 ```ts
-export declare const taggedWithLabels: any
+export declare const taggedWithLabels: <Type, In, Out>(
+  extraTags: Iterable<MetricLabel.MetricLabel>
+) => (self: Metric<Type, In, Out>) => Metric<Type, In, Out>
 ```
 
 Added in v1.0.0
@@ -552,7 +612,9 @@ provided amount.
 **Signature**
 
 ```ts
-export declare const update: any
+export declare const update: <In>(
+  input: In
+) => <Type, Out>(self: Metric<Type, In, Out>) => Effect.Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -562,7 +624,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const withNow: any
+export declare const withNow: <Type, In, Out>(self: Metric<Type, readonly [In, number], Out>) => Metric<Type, In, Out>
 ```
 
 Added in v1.0.0
@@ -598,7 +660,7 @@ Unsafely captures a snapshot of all metrics recorded by the application.
 **Signature**
 
 ```ts
-export declare const unsafeSnapshot: any
+export declare const unsafeSnapshot: typeof internal.unsafeSnapshot
 ```
 
 Added in v1.0.0
@@ -610,7 +672,11 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const zip: any
+export declare const zip: <Type2, In2, Out2>(
+  that: Metric<Type2, In2, Out2>
+) => <Type, In, Out>(
+  self: Metric<Type, In, Out>
+) => Metric<readonly [Type, Type2], readonly [In, In2], readonly [Out, Out2]>
 ```
 
 Added in v1.0.0

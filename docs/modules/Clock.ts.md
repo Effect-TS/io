@@ -37,7 +37,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const clockWith: any
+export declare const clockWith: <R, E, A>(f: (clock: Clock) => Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -47,7 +47,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const currentTimeMillis: any
+export declare const currentTimeMillis: () => Effect.Effect<never, never, number>
 ```
 
 Added in v1.0.0
@@ -57,7 +57,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const make: any
+export declare const make: () => Clock
 ```
 
 Added in v1.0.0
@@ -67,7 +67,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const sleep: any
+export declare const sleep: (duration: Duration.Duration) => Effect.Effect<never, never, void>
 ```
 
 Added in v1.0.0

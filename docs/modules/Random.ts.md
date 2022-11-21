@@ -37,7 +37,7 @@ Returns the next numeric value from the pseudo-random number generator.
 **Signature**
 
 ```ts
-export declare const next: any
+export declare const next: () => Effect.Effect<never, never, number>
 ```
 
 Added in v1.0.0
@@ -49,7 +49,7 @@ Returns the next boolean value from the pseudo-random number generator.
 **Signature**
 
 ```ts
-export declare const nextBoolean: any
+export declare const nextBoolean: () => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -61,7 +61,7 @@ Returns the next integer value from the pseudo-random number generator.
 **Signature**
 
 ```ts
-export declare const nextInt: any
+export declare const nextInt: () => Effect.Effect<never, never, number>
 ```
 
 Added in v1.0.0
@@ -74,7 +74,7 @@ pseudo-random number generator.
 **Signature**
 
 ```ts
-export declare const nextIntBetween: any
+export declare const nextIntBetween: (min: number, max: number) => Effect.Effect<never, never, number>
 ```
 
 Added in v1.0.0
@@ -87,7 +87,7 @@ pseudo-random number generator.
 **Signature**
 
 ```ts
-export declare const nextRange: any
+export declare const nextRange: (min: number, max: number) => Effect.Effect<never, never, number>
 ```
 
 Added in v1.0.0
@@ -100,7 +100,7 @@ specified workflow.
 **Signature**
 
 ```ts
-export declare const randomWith: any
+export declare const randomWith: <R, E, A>(f: (random: Random) => Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -112,7 +112,7 @@ Uses the pseudo-random number generator to shuffle the specified iterable.
 **Signature**
 
 ```ts
-export declare const shuffle: any
+export declare const shuffle: <A>(elements: Iterable<A>) => Effect.Effect<never, never, Chunk.Chunk<A>>
 ```
 
 Added in v1.0.0

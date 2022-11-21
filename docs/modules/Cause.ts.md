@@ -140,7 +140,7 @@ Constructs a new `Annotated` cause from the specified `annotation`.
 **Signature**
 
 ```ts
-export declare const annotated: any
+export declare const annotated: <E>(cause: Cause<E>, annotation: unknown) => Cause<E>
 ```
 
 Added in v1.0.0
@@ -152,7 +152,7 @@ Constructs a new `Die` cause from the specified `defect`.
 **Signature**
 
 ```ts
-export declare const die: any
+export declare const die: (defect: unknown) => Cause<never>
 ```
 
 Added in v1.0.0
@@ -164,7 +164,7 @@ Constructs a new `Empty` cause.
 **Signature**
 
 ```ts
-export declare const empty: any
+export declare const empty: Cause<never>
 ```
 
 Added in v1.0.0
@@ -176,7 +176,7 @@ Constructs a new `Fail` cause from the specified `error`.
 **Signature**
 
 ```ts
-export declare const fail: any
+export declare const fail: <E>(error: E) => Cause<E>
 ```
 
 Added in v1.0.0
@@ -188,7 +188,7 @@ Constructs a new `Interrupt` cause from the specified `fiberId`.
 **Signature**
 
 ```ts
-export declare const interrupt: any
+export declare const interrupt: (fiberId: FiberId) => Cause<never>
 ```
 
 Added in v1.0.0
@@ -201,7 +201,7 @@ causes.
 **Signature**
 
 ```ts
-export declare const parallel: any
+export declare const parallel: <E, E2>(left: Cause<E>, right: Cause<E2>) => Cause<E | E2>
 ```
 
 Added in v1.0.0
@@ -214,7 +214,7 @@ Constructs a new `Sequential` cause from the specified pecified `left` and
 **Signature**
 
 ```ts
-export declare const sequential: any
+export declare const sequential: <E, E2>(left: Cause<E>, right: Cause<E2>) => Cause<E | E2>
 ```
 
 Added in v1.0.0
@@ -229,7 +229,7 @@ defect.
 **Signature**
 
 ```ts
-export declare const squash: any
+export declare const squash: <E>(self: Cause<E>) => unknown
 ```
 
 Added in v1.0.0
@@ -243,7 +243,7 @@ to map the error a defect, and the resulting value will be returned.
 **Signature**
 
 ```ts
-export declare const squashWith: any
+export declare const squashWith: <E>(f: (error: E) => unknown) => (self: Cause<E>) => unknown
 ```
 
 Added in v1.0.0
@@ -258,7 +258,7 @@ Returns `true` if the `self` cause contains or is equal to `that` cause,
 **Signature**
 
 ```ts
-export declare const contains: any
+export declare const contains: <E2>(that: Cause<E2>) => <E>(self: Cause<E>) => boolean
 ```
 
 Added in v1.0.0
@@ -271,7 +271,7 @@ to extract information from it.
 **Signature**
 
 ```ts
-export declare const find: any
+export declare const find: <E, Z>(pf: (cause: Cause<E>) => Option<Z>) => (self: Cause<E>) => Option<Z>
 ```
 
 Added in v1.0.0
@@ -286,7 +286,7 @@ provided to a method.
 **Signature**
 
 ```ts
-export declare const IllegalArgumentException: any
+export declare const IllegalArgumentException: typeof internal.IllegalArgumentException
 ```
 
 Added in v1.0.0
@@ -298,7 +298,7 @@ Represents a checked exception which occurs when a `Fiber` is interrupted.
 **Signature**
 
 ```ts
-export declare const InterruptedException: any
+export declare const InterruptedException: typeof internal.InterruptedException
 ```
 
 Added in v1.0.0
@@ -311,7 +311,7 @@ unable to be found.
 **Signature**
 
 ```ts
-export declare const NoSuchElementException: any
+export declare const NoSuchElementException: typeof internal.NoSuchElementException
 ```
 
 Added in v1.0.0
@@ -323,7 +323,7 @@ Represents a generic checked exception which occurs at runtime.
 **Signature**
 
 ```ts
-export declare const RuntimeException: any
+export declare const RuntimeException: typeof internal.RuntimeException
 ```
 
 Added in v1.0.0
@@ -337,7 +337,7 @@ Filters causes which match the provided predicate out of the specified cause.
 **Signature**
 
 ```ts
-export declare const filter: any
+export declare const filter: <E>(predicate: Predicate<Cause<E>>) => (self: Cause<E>) => Cause<E>
 ```
 
 Added in v1.0.0
@@ -351,7 +351,15 @@ Folds the specified cause into a value of type `Z`.
 **Signature**
 
 ```ts
-export declare const match: any
+export declare const match: <Z, E>(
+  emptyCase: Z,
+  failCase: (error: E) => Z,
+  dieCase: (defect: unknown) => Z,
+  interruptCase: (fiberId: FiberId) => Z,
+  annotatedCase: (value: Z, annotation: unknown) => Z,
+  sequentialCase: (left: Z, right: Z) => Z,
+  parallelCase: (left: Z, right: Z) => Z
+) => (self: Cause<E>) => Z
 ```
 
 Added in v1.0.0
@@ -364,7 +372,10 @@ provided `zero` value.
 **Signature**
 
 ```ts
-export declare const reduce: any
+export declare const reduce: <Z, E>(
+  zero: Z,
+  pf: (accumulator: Z, cause: Cause<E>) => Option<Z>
+) => (self: Cause<E>) => Z
 ```
 
 Added in v1.0.0
@@ -377,7 +388,7 @@ Also allows for accessing the provided context during reduction.
 **Signature**
 
 ```ts
-export declare const reduceWithContext: any
+export declare const reduceWithContext: <C, E, Z>(context: C, reducer: CauseReducer<C, E, Z>) => (self: Cause<E>) => Z
 ```
 
 Added in v1.0.0
@@ -391,7 +402,7 @@ Returns a `List` of all unrecoverable defects in the specified cause.
 **Signature**
 
 ```ts
-export declare const defects: any
+export declare const defects: <E>(self: Cause<E>) => List<unknown>
 ```
 
 Added in v1.0.0
@@ -404,7 +415,7 @@ exists.
 **Signature**
 
 ```ts
-export declare const dieOption: any
+export declare const dieOption: <E>(self: Cause<E>) => Option<unknown>
 ```
 
 Added in v1.0.0
@@ -417,7 +428,7 @@ exists.
 **Signature**
 
 ```ts
-export declare const failureOption: any
+export declare const failureOption: <E>(self: Cause<E>) => Option<E>
 ```
 
 Added in v1.0.0
@@ -431,7 +442,7 @@ only `Die` or `Interrupt` causes.
 **Signature**
 
 ```ts
-export declare const failureOrCause: any
+export declare const failureOrCause: <E>(self: Cause<E>) => Either<E, Cause<never>>
 ```
 
 Added in v1.0.0
@@ -444,7 +455,7 @@ cause.
 **Signature**
 
 ```ts
-export declare const failures: any
+export declare const failures: <E>(self: Cause<E>) => List<E>
 ```
 
 Added in v1.0.0
@@ -457,7 +468,7 @@ cause, if one exists.
 **Signature**
 
 ```ts
-export declare const interruptOption: any
+export declare const interruptOption: <E>(self: Cause<E>) => Option<FiberId>
 ```
 
 Added in v1.0.0
@@ -470,7 +481,7 @@ described by the specified cause.
 **Signature**
 
 ```ts
-export declare const interruptors: any
+export declare const interruptors: <E>(self: Cause<E>) => HashSet<FiberId>
 ```
 
 Added in v1.0.0
@@ -482,7 +493,7 @@ Returns `true` if the specified cause contains a defect, `false` otherwise.
 **Signature**
 
 ```ts
-export declare const isDie: any
+export declare const isDie: <E>(self: Cause<E>) => boolean
 ```
 
 Added in v1.0.0
@@ -494,7 +505,7 @@ Returns `true` if the specified cause is empty, `false` otherwise.
 **Signature**
 
 ```ts
-export declare const isEmpty: any
+export declare const isEmpty: <E>(self: Cause<E>) => boolean
 ```
 
 Added in v1.0.0
@@ -506,7 +517,7 @@ Returns `true` if the specified cause contains a failure, `false` otherwise.
 **Signature**
 
 ```ts
-export declare const isFailure: any
+export declare const isFailure: <E>(self: Cause<E>) => boolean
 ```
 
 Added in v1.0.0
@@ -519,7 +530,7 @@ otherwise.
 **Signature**
 
 ```ts
-export declare const isInterrupted: any
+export declare const isInterrupted: <E>(self: Cause<E>) => boolean
 ```
 
 Added in v1.0.0
@@ -532,7 +543,7 @@ any `Die` or `Fail` causes), `false` otherwise.
 **Signature**
 
 ```ts
-export declare const isInterruptedOnly: any
+export declare const isInterruptedOnly: <E>(self: Cause<E>) => boolean
 ```
 
 Added in v1.0.0
@@ -545,7 +556,7 @@ a cause containing only `Die` cause/finalizer defects.
 **Signature**
 
 ```ts
-export declare const keepDefects: any
+export declare const keepDefects: <E>(self: Cause<E>) => Option<Cause<never>>
 ```
 
 Added in v1.0.0
@@ -558,7 +569,7 @@ parallel cause contains a linear sequence of failures.
 **Signature**
 
 ```ts
-export declare const linearize: any
+export declare const linearize: <E>(self: Cause<E>) => HashSet<Cause<E>>
 ```
 
 Added in v1.0.0
@@ -571,7 +582,7 @@ nodes found in the `Cause` semiring structure.
 **Signature**
 
 ```ts
-export declare const size: any
+export declare const size: <E>(self: Cause<E>) => number
 ```
 
 Added in v1.0.0
@@ -584,7 +595,7 @@ a cause containing only `Die` cause/finalizer defects.
 **Signature**
 
 ```ts
-export declare const stripFailures: any
+export declare const stripFailures: <E>(self: Cause<E>) => Cause<never>
 ```
 
 Added in v1.0.0
@@ -598,7 +609,9 @@ remaining causes.
 **Signature**
 
 ```ts
-export declare const stripSomeDefects: any
+export declare const stripSomeDefects: (
+  pf: (defect: unknown) => Option<unknown>
+) => <E>(self: Cause<E>) => Option<Cause<E>>
 ```
 
 Added in v1.0.0
@@ -610,7 +623,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const as: any
+export declare const as: <E1>(error: E1) => <E>(self: Cause<E>) => Cause<E1>
 ```
 
 Added in v1.0.0
@@ -620,7 +633,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const map: any
+export declare const map: <E, E1>(f: (e: E) => E1) => (self: Cause<E>) => Cause<E1>
 ```
 
 Added in v1.0.0
@@ -882,7 +895,7 @@ otherwise.
 **Signature**
 
 ```ts
-export declare const isAnnotatedType: any
+export declare const isAnnotatedType: <E>(self: Cause<E>) => self is Annotated<E>
 ```
 
 Added in v1.0.0
@@ -894,7 +907,7 @@ Returns `true` if the specified value is a `Cause`, `false` otherwise.
 **Signature**
 
 ```ts
-export declare const isCause: any
+export declare const isCause: (u: unknown) => u is Cause<never>
 ```
 
 Added in v1.0.0
@@ -907,7 +920,7 @@ otherwise.
 **Signature**
 
 ```ts
-export declare const isDieType: any
+export declare const isDieType: <E>(self: Cause<E>) => self is Die
 ```
 
 Added in v1.0.0
@@ -920,7 +933,7 @@ otherwise.
 **Signature**
 
 ```ts
-export declare const isEmptyType: any
+export declare const isEmptyType: <E>(self: Cause<E>) => self is Empty
 ```
 
 Added in v1.0.0
@@ -933,7 +946,7 @@ otherwise.
 **Signature**
 
 ```ts
-export declare const isFailType: any
+export declare const isFailType: <E>(self: Cause<E>) => self is Fail<E>
 ```
 
 Added in v1.0.0
@@ -946,7 +959,7 @@ otherwise.
 **Signature**
 
 ```ts
-export declare const isIllegalArgumentException: any
+export declare const isIllegalArgumentException: (u: unknown) => u is IllegalArgumentException
 ```
 
 Added in v1.0.0
@@ -959,7 +972,7 @@ otherwise.
 **Signature**
 
 ```ts
-export declare const isInterruptType: any
+export declare const isInterruptType: <E>(self: Cause<E>) => self is Interrupt
 ```
 
 Added in v1.0.0
@@ -972,7 +985,7 @@ otherwise.
 **Signature**
 
 ```ts
-export declare const isInterruptedException: any
+export declare const isInterruptedException: (u: unknown) => u is InterruptedException
 ```
 
 Added in v1.0.0
@@ -985,7 +998,7 @@ otherwise.
 **Signature**
 
 ```ts
-export declare const isNoSuchElementException: any
+export declare const isNoSuchElementException: (u: unknown) => u is NoSuchElementException
 ```
 
 Added in v1.0.0
@@ -998,7 +1011,7 @@ otherwise.
 **Signature**
 
 ```ts
-export declare const isParallelType: any
+export declare const isParallelType: <E>(self: Cause<E>) => self is Parallel<E>
 ```
 
 Added in v1.0.0
@@ -1011,7 +1024,7 @@ otherwise.
 **Signature**
 
 ```ts
-export declare const isRuntimeException: any
+export declare const isRuntimeException: (u: unknown) => u is RuntimeException
 ```
 
 Added in v1.0.0
@@ -1024,7 +1037,7 @@ otherwise.
 **Signature**
 
 ```ts
-export declare const isSequentialType: any
+export declare const isSequentialType: <E>(self: Cause<E>) => self is Sequential<E>
 ```
 
 Added in v1.0.0
@@ -1062,7 +1075,7 @@ The default `Cause.Renderer`.
 **Signature**
 
 ```ts
-export declare const defaultRenderer: any
+export declare const defaultRenderer: CauseRenderer<unknown>
 ```
 
 Added in v1.0.0
@@ -1074,7 +1087,7 @@ Returns the specified `Cause` as a pretty-printed string.
 **Signature**
 
 ```ts
-export declare const pretty: any
+export declare const pretty: <E>(renderer?: CauseRenderer<E>) => (self: Cause<E>) => string
 ```
 
 Added in v1.0.0
@@ -1086,7 +1099,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const flatMap: any
+export declare const flatMap: <E, E1>(f: (e: E) => Cause<E1>) => (self: Cause<E>) => Cause<E1>
 ```
 
 Added in v1.0.0
@@ -1096,7 +1109,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const flatten: any
+export declare const flatten: <E>(self: Cause<Cause<E>>) => Cause<E>
 ```
 
 Added in v1.0.0

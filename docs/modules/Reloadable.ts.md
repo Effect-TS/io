@@ -41,7 +41,9 @@ provided schedule.
 **Signature**
 
 ```ts
-export declare const auto: any
+export declare const auto: <Out>(
+  tag: Tag<Out>
+) => <In, E, R, Out2>(layer: Layer<In, E, Out>, policy: Schedule<R, In, Out2>) => Layer<In | R, E, Reloadable<Out>>
 ```
 
 Added in v1.0.0
@@ -55,7 +57,12 @@ schedule, which is extracted from the input to the layer.
 **Signature**
 
 ```ts
-export declare const autoFromConfig: any
+export declare const autoFromConfig: <Out>(
+  tag: Tag<Out>
+) => <In, E, R, Out2>(
+  layer: Layer<In, E, Out>,
+  scheduleFromConfig: (context: Context<In>) => Schedule<R, In, Out2>
+) => Layer<In | R, E, Reloadable<Out>>
 ```
 
 Added in v1.0.0
@@ -68,7 +75,7 @@ of a static service.
 **Signature**
 
 ```ts
-export declare const manual: any
+export declare const manual: <Out>(tag: Tag<Out>) => <In, E>(layer: Layer<In, E, Out>) => Layer<In, E, Reloadable<Out>>
 ```
 
 Added in v1.0.0
@@ -80,7 +87,7 @@ Reloads the specified service.
 **Signature**
 
 ```ts
-export declare const reload: any
+export declare const reload: <A>(tag: Tag<A>) => Effect.Effect<Reloadable<A>, unknown, void>
 ```
 
 Added in v1.0.0
@@ -92,7 +99,7 @@ Forks the reload of the service in the background, ignoring any errors.
 **Signature**
 
 ```ts
-export declare const reloadFork: any
+export declare const reloadFork: <A>(tag: Tag<A>) => Effect.Effect<Reloadable<A>, unknown, void>
 ```
 
 Added in v1.0.0
@@ -104,7 +111,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const reloadableTag: any
+export declare const reloadableTag: <A>(tag: Tag<A>) => Tag<Reloadable<A>>
 ```
 
 Added in v1.0.0
@@ -118,7 +125,7 @@ Retrieves the current version of the reloadable service.
 **Signature**
 
 ```ts
-export declare const get: any
+export declare const get: <A>(tag: Tag<A>) => Effect.Effect<Reloadable<A>, never, A>
 ```
 
 Added in v1.0.0

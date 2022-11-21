@@ -34,7 +34,7 @@ interruption of a parent fiber, because there is no parent fiber).
 **Signature**
 
 ```ts
-export declare const globalScope: any
+export declare const globalScope: FiberScope
 ```
 
 Added in v1.0.0
@@ -46,7 +46,7 @@ Unsafely creates a new `FiberScope` from a `Fiber`.
 **Signature**
 
 ```ts
-export declare const unsafeMake: any
+export declare const unsafeMake: (fiber: FiberRuntime<any, any>) => FiberScope
 ```
 
 Added in v1.0.0

@@ -29,7 +29,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const defaultRuntime: any
+export declare const defaultRuntime: Runtime<never>
 ```
 
 Added in v1.0.0
@@ -39,7 +39,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const defaultRuntimeFlags: any
+export declare const defaultRuntimeFlags: RuntimeFlags
 ```
 
 Added in v1.0.0
@@ -49,7 +49,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const make: any
+export declare const make: <R>(context: Context<R>, runtimeFlags: RuntimeFlags, fiberRefs: FiberRefs) => Runtime<R>
 ```
 
 Added in v1.0.0

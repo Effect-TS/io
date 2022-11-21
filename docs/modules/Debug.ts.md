@@ -131,7 +131,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const withCallTrace: (trace: string) => <A>(x: A) => A
+export declare const withCallTrace: (trace: string) => <A>(a: A) => A
 ```
 
 Added in v1.0.0

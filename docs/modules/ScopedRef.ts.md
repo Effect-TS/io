@@ -36,7 +36,7 @@ value.
 **Signature**
 
 ```ts
-export declare const fromAcquire: any
+export declare const fromAcquire: <R, E, A>(acquire: Effect<R, E, A>) => Effect<R | Scope.Scope, E, ScopedRef<A>>
 ```
 
 Added in v1.0.0
@@ -49,7 +49,7 @@ not be used for values whose creation require the acquisition of resources.
 **Signature**
 
 ```ts
-export declare const make: any
+export declare const make: <A>(evaluate: () => A) => Effect<Scope.Scope, never, ScopedRef<A>>
 ```
 
 Added in v1.0.0
@@ -63,7 +63,7 @@ Retrieves the current value of the scoped reference.
 **Signature**
 
 ```ts
-export declare const get: any
+export declare const get: <A>(self: ScopedRef<A>) => Effect<never, never, A>
 ```
 
 Added in v1.0.0
@@ -80,7 +80,9 @@ to acquire a new value fails.
 **Signature**
 
 ```ts
-export declare const set: any
+export declare const set: <R, E, A>(
+  acquire: Effect<Scope.Scope | R, E, A>
+) => (self: ScopedRef<A>) => Effect<R, E, void>
 ```
 
 Added in v1.0.0

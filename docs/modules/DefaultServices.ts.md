@@ -28,7 +28,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const liveServices: any
+export declare const liveServices: Context<DefaultServices>
 ```
 
 Added in v1.0.0
@@ -40,7 +40,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const currentServices: any
+export declare const currentServices: FiberRef<Context<DefaultServices>>
 ```
 
 Added in v1.0.0
