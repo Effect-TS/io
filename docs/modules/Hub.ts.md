@@ -47,7 +47,7 @@ For best performance use capacities that are powers of two.
 **Signature**
 
 ```ts
-export declare const bounded: any
+export declare const bounded: <A>(requestedCapacity: number) => Effect.Effect<never, never, Hub<A>>
 ```
 
 Added in v1.0.0
@@ -62,7 +62,7 @@ For best performance use capacities that are powers of two.
 **Signature**
 
 ```ts
-export declare const dropping: any
+export declare const dropping: <A>(requestedCapacity: number) => Effect.Effect<never, never, Hub<A>>
 ```
 
 Added in v1.0.0
@@ -77,7 +77,7 @@ For best performance use capacities that are powers of two.
 **Signature**
 
 ```ts
-export declare const sliding: any
+export declare const sliding: <A>(requestedCapacity: number) => Effect.Effect<never, never, Hub<A>>
 ```
 
 Added in v1.0.0
@@ -89,7 +89,7 @@ Creates an unbounded hub.
 **Signature**
 
 ```ts
-export declare const unbounded: any
+export declare const unbounded: <A>() => Effect.Effect<never, never, Hub<A>>
 ```
 
 Added in v1.0.0
@@ -103,7 +103,7 @@ Returns the number of elements the queue can hold.
 **Signature**
 
 ```ts
-export declare const capacity: any
+export declare const capacity: <A>(self: Hub<A>) => number
 ```
 
 Added in v1.0.0
@@ -115,7 +115,7 @@ Returns `true` if the `Queue` contains zero elements, `false` otherwise.
 **Signature**
 
 ```ts
-export declare const isEmpty: any
+export declare const isEmpty: <A>(self: Hub<A>) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -128,7 +128,7 @@ otherwise.
 **Signature**
 
 ```ts
-export declare const isFull: any
+export declare const isFull: <A>(self: Hub<A>) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -140,7 +140,7 @@ Returns `true` if `shutdown` has been called, otherwise returns `false`.
 **Signature**
 
 ```ts
-export declare const isShutdown: any
+export declare const isShutdown: <A>(self: Hub<A>) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -154,7 +154,7 @@ elements to be added to the queue.
 **Signature**
 
 ```ts
-export declare const size: any
+export declare const size: <A>(self: Hub<A>) => Effect.Effect<never, never, number>
 ```
 
 Added in v1.0.0
@@ -211,7 +211,7 @@ shutdown, the `Effect` will resume right away.
 **Signature**
 
 ```ts
-export declare const awaitShutdown: any
+export declare const awaitShutdown: <A>(self: Hub<A>) => Effect.Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -224,7 +224,7 @@ to the hub.
 **Signature**
 
 ```ts
-export declare const publish: any
+export declare const publish: <A>(value: A) => (self: Hub<A>) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -237,7 +237,7 @@ were published to the hub.
 **Signature**
 
 ```ts
-export declare const publishAll: any
+export declare const publishAll: <A>(elements: Iterable<A>) => (self: Hub<A>) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -250,7 +250,7 @@ to `offer*` and `take*` will be interrupted immediately.
 **Signature**
 
 ```ts
-export declare const shutdown: any
+export declare const shutdown: <A>(self: Hub<A>) => Effect.Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -264,7 +264,7 @@ each time.
 **Signature**
 
 ```ts
-export declare const subscribe: any
+export declare const subscribe: <A>(self: Hub<A>) => Effect.Effect<Scope.Scope, never, Queue.Dequeue<A>>
 ```
 
 Added in v1.0.0

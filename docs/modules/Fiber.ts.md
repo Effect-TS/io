@@ -87,7 +87,7 @@ fibers, sequentially, from left to right.
 **Signature**
 
 ```ts
-export declare const orElse: any
+export declare const orElse: <E2, A2>(that: Fiber<E2, A2>) => <E, A>(self: Fiber<E, A>) => Fiber<E2 | E, A2 | A>
 ```
 
 Added in v1.0.0
@@ -101,7 +101,9 @@ fibers, sequentially, from left to right.
 **Signature**
 
 ```ts
-export declare const orElseEither: any
+export declare const orElseEither: <E2, A2>(
+  that: Fiber<E2, A2>
+) => <E, A>(self: Fiber<E, A>) => Fiber<E2 | E, Either<A, A2>>
 ```
 
 Added in v1.0.0
@@ -116,7 +118,7 @@ results.
 **Signature**
 
 ```ts
-export declare const collectAll: any
+export declare const collectAll: typeof fiberRuntime.collectAll
 ```
 
 Added in v1.0.0
@@ -128,7 +130,7 @@ A fiber that is done with the specified `Exit` value.
 **Signature**
 
 ```ts
-export declare const done: any
+export declare const done: <E, A>(exit: Exit.Exit<E, A>) => Fiber<E, A>
 ```
 
 Added in v1.0.0
@@ -140,7 +142,7 @@ A fiber that has already failed with the specified value.
 **Signature**
 
 ```ts
-export declare const fail: any
+export declare const fail: <E>(error: E) => Fiber<E, never>
 ```
 
 Added in v1.0.0
@@ -152,7 +154,7 @@ Creates a `Fiber` that has already failed with the specified cause.
 **Signature**
 
 ```ts
-export declare const failCause: any
+export declare const failCause: <E>(cause: Cause<E>) => Fiber<E, never>
 ```
 
 Added in v1.0.0
@@ -164,7 +166,7 @@ Constructrs a `Fiber` that is already interrupted.
 **Signature**
 
 ```ts
-export declare const interrupted: any
+export declare const interrupted: (fiberId: FiberId.FiberId) => Fiber<never, never>
 ```
 
 Added in v1.0.0
@@ -176,7 +178,7 @@ A fiber that never fails or succeeds.
 **Signature**
 
 ```ts
-export declare const never: any
+export declare const never: () => Fiber<never, never>
 ```
 
 Added in v1.0.0
@@ -189,7 +191,7 @@ returned chunk is only weakly consistent.
 **Signature**
 
 ```ts
-export declare const roots: any
+export declare const roots: () => Effect.Effect<never, never, Chunk.Chunk<RuntimeFiber<any, any>>>
 ```
 
 Added in v1.0.0
@@ -201,7 +203,7 @@ Returns a fiber that has already succeeded with the specified value.
 **Signature**
 
 ```ts
-export declare const succeed: any
+export declare const succeed: <A>(value: A) => Fiber<never, A>
 ```
 
 Added in v1.0.0
@@ -213,7 +215,7 @@ A fiber that has already succeeded with unit.
 **Signature**
 
 ```ts
-export declare const unit: any
+export declare const unit: () => Fiber<never, void>
 ```
 
 Added in v1.0.0
@@ -227,7 +229,7 @@ Lifts an `Effect` into a `Fiber`.
 **Signature**
 
 ```ts
-export declare const fromEffect: any
+export declare const fromEffect: <E, A>(effect: Effect.Effect<never, E, A>) => Effect.Effect<never, never, Fiber<E, A>>
 ```
 
 Added in v1.0.0
@@ -241,7 +243,7 @@ Awaits on all fibers to be completed, successfully or not.
 **Signature**
 
 ```ts
-export declare const awaitAll: any
+export declare const awaitAll: (fibers: Iterable<Fiber<any, any>>) => Effect.Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -251,7 +253,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const dump: any
+export declare const dump: <E, A>(self: RuntimeFiber<E, A>) => Effect.Effect<never, never, Fiber.Dump>
 ```
 
 Added in v1.0.0
@@ -261,7 +263,9 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const dumpAll: any
+export declare const dumpAll: (
+  fibers: Iterable<RuntimeFiber<unknown, unknown>>
+) => Effect.Effect<never, never, Chunk.Chunk<Fiber.Dump>>
 ```
 
 Added in v1.0.0
@@ -274,7 +278,7 @@ will resume immediately.
 **Signature**
 
 ```ts
-export declare const inheritAll: any
+export declare const inheritAll: <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -290,7 +294,7 @@ another fiber, "inner interruption" can be caught and recovered.
 **Signature**
 
 ```ts
-export declare const join: any
+export declare const join: <E, A>(self: Fiber<E, A>) => Effect.Effect<never, E, A>
 ```
 
 Added in v1.0.0
@@ -304,7 +308,7 @@ error does not result from interruption.
 **Signature**
 
 ```ts
-export declare const joinAll: any
+export declare const joinAll: <E, A>(fibers: Iterable<Fiber<E, A>>) => Effect.Effect<never, E, void>
 ```
 
 Added in v1.0.0
@@ -316,7 +320,7 @@ Pretty-prints a `RuntimeFiber`.
 **Signature**
 
 ```ts
-export declare const pretty: any
+export declare const pretty: <E, A>(self: RuntimeFiber<E, A>) => Effect.Effect<never, never, string>
 ```
 
 Added in v1.0.0
@@ -329,7 +333,7 @@ scope is closed.
 **Signature**
 
 ```ts
-export declare const scoped: any
+export declare const scoped: <E, A>(self: Fiber<E, A>) => Effect.Effect<Scope, never, Fiber<E, A>>
 ```
 
 Added in v1.0.0
@@ -343,7 +347,7 @@ Folds over the `Fiber` or `RuntimeFiber`.
 **Signature**
 
 ```ts
-export declare const match: any
+export declare const match: typeof internal.match
 ```
 
 Added in v1.0.0
@@ -358,7 +362,7 @@ fiber has been determined.
 **Signature**
 
 ```ts
-export declare const await: any
+export declare const await: <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, Exit.Exit<E, A>>
 ```
 
 Added in v1.0.0
@@ -370,7 +374,9 @@ Retrieves the immediate children of the fiber.
 **Signature**
 
 ```ts
-export declare const children: any
+export declare const children: <E, A>(
+  self: Fiber<E, A>
+) => Effect.Effect<never, never, Chunk.Chunk<RuntimeFiber<any, any>>>
 ```
 
 Added in v1.0.0
@@ -382,7 +388,7 @@ The identity of the fiber.
 **Signature**
 
 ```ts
-export declare const id: any
+export declare const id: <E, A>(self: Fiber<E, A>) => FiberId.FiberId
 ```
 
 Added in v1.0.0
@@ -395,7 +401,7 @@ already done.
 **Signature**
 
 ```ts
-export declare const poll: any
+export declare const poll: <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, Option.Option<Exit.Exit<E, A>>>
 ```
 
 Added in v1.0.0
@@ -407,7 +413,7 @@ Returns the `FiberStatus` of a `RuntimeFiber`.
 **Signature**
 
 ```ts
-export declare const status: any
+export declare const status: <E, A>(self: RuntimeFiber<E, A>) => Effect.Effect<never, never, FiberStatus.FiberStatus>
 ```
 
 Added in v1.0.0
@@ -419,7 +425,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const Order: any
+export declare const Order: Order<RuntimeFiber<unknown, unknown>>
 ```
 
 Added in v1.0.0
@@ -435,7 +441,7 @@ Otherwise, the effect will resume when the fiber exits.
 **Signature**
 
 ```ts
-export declare const interrupt: any
+export declare const interrupt: <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, Exit.Exit<E, A>>
 ```
 
 Added in v1.0.0
@@ -447,7 +453,7 @@ Interrupts all fibers, awaiting their interruption.
 **Signature**
 
 ```ts
-export declare const interruptAll: any
+export declare const interruptAll: (fibers: Iterable<Fiber<any, any>>) => Effect.Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -460,7 +466,9 @@ interruption.
 **Signature**
 
 ```ts
-export declare const interruptAllWith: any
+export declare const interruptAllWith: (
+  fiberId: FiberId.FiberId
+) => (fibers: Iterable<Fiber<any, any>>) => Effect.Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -474,7 +482,7 @@ effect will always resume immediately without waiting.
 **Signature**
 
 ```ts
-export declare const interruptFork: any
+export declare const interruptFork: <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -488,7 +496,9 @@ Otherwise, the effect will resume when the fiber exits.
 **Signature**
 
 ```ts
-export declare const interruptWith: any
+export declare const interruptWith: (
+  fiberId: FiberId.FiberId
+) => <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, Exit.Exit<E, A>>
 ```
 
 Added in v1.0.0
@@ -502,7 +512,9 @@ Otherwise, the effect will resume when the fiber exits.
 **Signature**
 
 ```ts
-export declare const interruptWithFork: any
+export declare const interruptWithFork: (
+  fiberId: FiberId.FiberId
+) => <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -516,7 +528,7 @@ Maps over the value the Fiber computes.
 **Signature**
 
 ```ts
-export declare const map: any
+export declare const map: <A, B>(f: (a: A) => B) => <E>(self: Fiber<E, A>) => Fiber<E, B>
 ```
 
 Added in v1.0.0
@@ -528,7 +540,9 @@ Effectually maps over the value the fiber computes.
 **Signature**
 
 ```ts
-export declare const mapEffect: any
+export declare const mapEffect: <A, E2, A2>(
+  f: (a: A) => Effect.Effect<never, E2, A2>
+) => <E>(self: Fiber<E, A>) => Fiber<E2 | E, A2>
 ```
 
 Added in v1.0.0
@@ -541,7 +555,9 @@ with the fiber that it returns.
 **Signature**
 
 ```ts
-export declare const mapFiber: any
+export declare const mapFiber: <E, E1, A, B>(
+  f: (a: A) => Fiber<E1, B>
+) => (self: Fiber<E, A>) => Effect.Effect<never, never, Fiber<E | E1, B>>
 ```
 
 Added in v1.0.0
@@ -677,7 +693,7 @@ Returns `true` if the specified value is a `Fiber`, `false` otherwise.
 **Signature**
 
 ```ts
-export declare const isFiber: any
+export declare const isFiber: (u: unknown) => u is Fiber<unknown, unknown>
 ```
 
 Added in v1.0.0
@@ -690,7 +706,7 @@ otherwise.
 **Signature**
 
 ```ts
-export declare const isRuntimeFiber: any
+export declare const isRuntimeFiber: <E, A>(self: Fiber<E, A>) => self is RuntimeFiber<E, A>
 ```
 
 Added in v1.0.0
@@ -747,7 +763,7 @@ their output.
 **Signature**
 
 ```ts
-export declare const zip: any
+export declare const zip: <E2, A2>(that: Fiber<E2, A2>) => <E, A>(self: Fiber<E, A>) => Fiber<E2 | E, readonly [A, A2]>
 ```
 
 Added in v1.0.0
@@ -759,7 +775,7 @@ Same as `zip` but discards the output of that `Fiber`.
 **Signature**
 
 ```ts
-export declare const zipLeft: any
+export declare const zipLeft: <E2, A2>(that: Fiber<E2, A2>) => <E, A>(self: Fiber<E, A>) => Fiber<E2 | E, A>
 ```
 
 Added in v1.0.0
@@ -771,7 +787,7 @@ Same as `zip` but discards the output of this `Fiber`.
 **Signature**
 
 ```ts
-export declare const zipRight: any
+export declare const zipRight: <E2, A2>(that: Fiber<E2, A2>) => <E, A>(self: Fiber<E, A>) => Fiber<E2 | E, A2>
 ```
 
 Added in v1.0.0
@@ -785,7 +801,10 @@ sequential order from left to right.
 **Signature**
 
 ```ts
-export declare const zipWith: any
+export declare const zipWith: <E2, A, B, C>(
+  that: Fiber<E2, B>,
+  f: (a: A, b: B) => C
+) => <E>(self: Fiber<E, A>) => Fiber<E2 | E, C>
 ```
 
 Added in v1.0.0

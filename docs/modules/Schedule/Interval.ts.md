@@ -46,7 +46,7 @@ specified start time.
 **Signature**
 
 ```ts
-export declare const after: any
+export declare const after: (startMilliseconds: number) => Interval
 ```
 
 Added in v1.0.0
@@ -59,7 +59,7 @@ specified end time.
 **Signature**
 
 ```ts
-export declare const before: any
+export declare const before: (endMilliseconds: number) => Interval
 ```
 
 Added in v1.0.0
@@ -71,7 +71,7 @@ An `Interval` of zero-width.
 **Signature**
 
 ```ts
-export declare const empty: any
+export declare const empty: Interval
 ```
 
 Added in v1.0.0
@@ -85,7 +85,7 @@ returned.
 **Signature**
 
 ```ts
-export declare const make: any
+export declare const make: (startMillis: number, endMillis: number) => Interval
 ```
 
 Added in v1.0.0
@@ -100,7 +100,7 @@ interval to the end of the interval.
 **Signature**
 
 ```ts
-export declare const size: any
+export declare const size: (self: Interval) => Duration
 ```
 
 Added in v1.0.0
@@ -135,7 +135,7 @@ form a union.
 **Signature**
 
 ```ts
-export declare const union: any
+export declare const union: (that: Interval) => (self: Interval) => Option<Interval>
 ```
 
 Added in v1.0.0
@@ -150,7 +150,7 @@ that `Interval`.
 **Signature**
 
 ```ts
-export declare const intersect: any
+export declare const intersect: (that: Interval) => (self: Interval) => Interval
 ```
 
 Added in v1.0.0
@@ -162,7 +162,7 @@ Returns `true` if the specified `Interval` is empty, `false` otherwise.
 **Signature**
 
 ```ts
-export declare const isEmpty: any
+export declare const isEmpty: (self: Interval) => boolean
 ```
 
 Added in v1.0.0
@@ -174,7 +174,7 @@ Returns `true` if the specified `Interval` is non-empty, `false` otherwise.
 **Signature**
 
 ```ts
-export declare const isNonEmpty: any
+export declare const isNonEmpty: (self: Interval) => boolean
 ```
 
 Added in v1.0.0
@@ -187,7 +187,7 @@ otherwise.
 **Signature**
 
 ```ts
-export declare const lessThan: any
+export declare const lessThan: (that: Interval) => (self: Interval) => boolean
 ```
 
 Added in v1.0.0
@@ -199,7 +199,7 @@ Returns the maximum of two `Interval`s.
 **Signature**
 
 ```ts
-export declare const max: any
+export declare const max: (that: Interval) => (self: Interval) => Interval
 ```
 
 Added in v1.0.0
@@ -211,7 +211,7 @@ Returns the minimum of two `Interval`s.
 **Signature**
 
 ```ts
-export declare const min: any
+export declare const min: (that: Interval) => (self: Interval) => Interval
 ```
 
 Added in v1.0.0

@@ -31,7 +31,10 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const make: any
+export declare const make: <Type extends MetricKeyType.MetricKeyType<any, any>>(
+  metricKey: MetricKey.MetricKey<Type>,
+  metricState: MetricState.MetricState<MetricKeyType.MetricKeyType.OutType<Type>>
+) => MetricPair.Untyped
 ```
 
 Added in v1.0.0
@@ -80,7 +83,10 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const unsafeMake: any
+export declare const unsafeMake: <Type extends MetricKeyType.MetricKeyType<any, any>>(
+  metricKey: MetricKey.MetricKey<Type>,
+  metricState: MetricState.MetricState.Untyped
+) => MetricPair.Untyped
 ```
 
 Added in v1.0.0

@@ -36,7 +36,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const counter: any
+export declare const counter: (_key: MetricKey.Counter) => MetricHook.Counter
 ```
 
 Added in v1.0.0
@@ -46,7 +46,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const frequency: any
+export declare const frequency: (_key: MetricKey.Frequency) => MetricHook.Frequency
 ```
 
 Added in v1.0.0
@@ -56,7 +56,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const gauge: any
+export declare const gauge: (_key: MetricKey.Gauge, startAt: number) => MetricHook.Gauge
 ```
 
 Added in v1.0.0
@@ -66,7 +66,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const histogram: any
+export declare const histogram: (key: MetricKey.Histogram) => MetricHook.Histogram
 ```
 
 Added in v1.0.0
@@ -76,7 +76,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const make: any
+export declare const make: <In, Out>(get: () => Out, update: (input: In) => void) => MetricHook<In, Out>
 ```
 
 Added in v1.0.0
@@ -86,7 +86,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const summary: any
+export declare const summary: (key: MetricKey.Summary) => MetricHook.Summary
 ```
 
 Added in v1.0.0
@@ -113,7 +113,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const onUpdate: any
+export declare const onUpdate: <In, Out>(f: (input: In) => void) => (self: MetricHook<In, Out>) => MetricHook<In, Out>
 ```
 
 Added in v1.0.0

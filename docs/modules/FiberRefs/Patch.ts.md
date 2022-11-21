@@ -39,7 +39,7 @@ sequentially.
 **Signature**
 
 ```ts
-export declare const combine: any
+export declare const combine: (that: FiberRefsPatch) => (self: FiberRefsPatch) => FiberRefsPatch
 ```
 
 Added in v1.0.0
@@ -52,7 +52,7 @@ collections of `FiberRef`
 **Signature**
 
 ```ts
-export declare const diff: any
+export declare const diff: (oldValue: FiberRefs, newValue: FiberRefs) => FiberRefsPatch
 ```
 
 Added in v1.0.0
@@ -62,7 +62,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const empty: any
+export declare const empty: () => FiberRefsPatch
 ```
 
 Added in v1.0.0
@@ -77,7 +77,7 @@ of `FiberRef` values.
 **Signature**
 
 ```ts
-export declare const patch: any
+export declare const patch: (fiberId: Runtime, oldValue: FiberRefs) => (self: FiberRefsPatch) => FiberRefs
 ```
 
 Added in v1.0.0

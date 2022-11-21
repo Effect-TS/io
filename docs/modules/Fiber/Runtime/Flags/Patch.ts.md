@@ -48,7 +48,7 @@ Creates a `RuntimeFlagsPatch` describing disabling the provided `RuntimeFlag`.
 **Signature**
 
 ```ts
-export declare const disable: any
+export declare const disable: (flag: RuntimeFlag) => RuntimeFlagsPatch
 ```
 
 Added in v1.0.0
@@ -60,7 +60,7 @@ The empty `RuntimeFlagsPatch`.
 **Signature**
 
 ```ts
-export declare const empty: any
+export declare const empty: RuntimeFlagsPatch
 ```
 
 Added in v1.0.0
@@ -72,7 +72,7 @@ Creates a `RuntimeFlagsPatch` describing enabling the provided `RuntimeFlag`.
 **Signature**
 
 ```ts
-export declare const enable: any
+export declare const enable: (flag: RuntimeFlag) => RuntimeFlagsPatch
 ```
 
 Added in v1.0.0
@@ -82,7 +82,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const make: any
+export declare const make: (active: number, enabled: number) => RuntimeFlagsPatch
 ```
 
 Added in v1.0.0
@@ -97,7 +97,7 @@ disabled by the specified `RuntimeFlagsPatch`.
 **Signature**
 
 ```ts
-export declare const disabledSet: any
+export declare const disabledSet: (self: RuntimeFlagsPatch) => ReadonlySet<RuntimeFlag>
 ```
 
 Added in v1.0.0
@@ -110,7 +110,7 @@ enabled by the specified `RuntimeFlagsPatch`.
 **Signature**
 
 ```ts
-export declare const enabledSet: any
+export declare const enabledSet: (self: RuntimeFlagsPatch) => ReadonlySet<RuntimeFlag>
 ```
 
 Added in v1.0.0
@@ -122,7 +122,7 @@ Renders the provided `RuntimeFlagsPatch` to a string.
 **Signature**
 
 ```ts
-export declare const render: any
+export declare const render: (self: RuntimeFlagsPatch) => string
 ```
 
 Added in v1.0.0
@@ -137,7 +137,7 @@ Returns `true` if the `RuntimeFlagsPatch` includes the specified
 **Signature**
 
 ```ts
-export declare const includes: any
+export declare const includes: (flag: RuntimeFlagsPatch) => (self: RuntimeFlagsPatch) => boolean
 ```
 
 Added in v1.0.0
@@ -150,7 +150,7 @@ Returns `true` if the `RuntimeFlagsPatch` describes the specified
 **Signature**
 
 ```ts
-export declare const isActive: any
+export declare const isActive: (flag: RuntimeFlagsPatch) => (self: RuntimeFlagsPatch) => boolean
 ```
 
 Added in v1.0.0
@@ -163,7 +163,7 @@ Returns `true` if the `RuntimeFlagsPatch` describes the specified
 **Signature**
 
 ```ts
-export declare const isDisabled: any
+export declare const isDisabled: (flag: RuntimeFlag) => (self: RuntimeFlagsPatch) => boolean
 ```
 
 Added in v1.0.0
@@ -176,7 +176,7 @@ Returns `true` if the `RuntimeFlagsPatch` describes the specified
 **Signature**
 
 ```ts
-export declare const isEnabled: any
+export declare const isEnabled: (flag: RuntimeFlag) => (self: RuntimeFlagsPatch) => boolean
 ```
 
 Added in v1.0.0
@@ -190,7 +190,7 @@ Returns `true` if the specified `RuntimeFlagsPatch` is empty.
 **Signature**
 
 ```ts
-export declare const isEmpty: any
+export declare const isEmpty: (patch: RuntimeFlagsPatch) => boolean
 ```
 
 Added in v1.0.0
@@ -219,7 +219,7 @@ followed by `that` patch.
 **Signature**
 
 ```ts
-export declare const andThen: any
+export declare const andThen: (that: RuntimeFlagsPatch) => (self: RuntimeFlagsPatch) => RuntimeFlagsPatch
 ```
 
 Added in v1.0.0
@@ -232,7 +232,7 @@ and `that` patch.
 **Signature**
 
 ```ts
-export declare const both: any
+export declare const both: (that: RuntimeFlagsPatch) => (self: RuntimeFlagsPatch) => RuntimeFlagsPatch
 ```
 
 Added in v1.0.0
@@ -245,7 +245,7 @@ patch or `that` patch.
 **Signature**
 
 ```ts
-export declare const either: any
+export declare const either: (that: RuntimeFlagsPatch) => (self: RuntimeFlagsPatch) => RuntimeFlagsPatch
 ```
 
 Added in v1.0.0
@@ -258,7 +258,7 @@ Creates a `RuntimeFlagsPatch` which describes exclusion of the specified
 **Signature**
 
 ```ts
-export declare const exclude: any
+export declare const exclude: (flag: RuntimeFlag) => (self: RuntimeFlagsPatch) => RuntimeFlagsPatch
 ```
 
 Added in v1.0.0
@@ -271,7 +271,7 @@ specified by the provided `RuntimeFlagsPatch`.
 **Signature**
 
 ```ts
-export declare const inverse: any
+export declare const inverse: (patch: RuntimeFlagsPatch) => RuntimeFlagsPatch
 ```
 
 Added in v1.0.0

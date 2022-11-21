@@ -39,7 +39,9 @@ Creates a new supervisor that tracks children in a set.
 **Signature**
 
 ```ts
-export declare const fibersIn: any
+export declare const fibersIn: (
+  ref: MutableRef<SortedSet<Fiber.RuntimeFiber<any, any>>>
+) => Effect.Effect<never, never, Supervisor<SortedSet<Fiber.RuntimeFiber<any, any>>>>
 ```
 
 Added in v1.0.0
@@ -51,7 +53,7 @@ Creates a new supervisor that constantly yields effect when polled
 **Signature**
 
 ```ts
-export declare const fromEffect: any
+export declare const fromEffect: <A>(effect: Effect.Effect<never, never, A>) => Supervisor<A>
 ```
 
 Added in v1.0.0
@@ -63,7 +65,7 @@ A supervisor that doesn't do anything in response to supervision events.
 **Signature**
 
 ```ts
-export declare const none: any
+export declare const none: Supervisor<void>
 ```
 
 Added in v1.0.0
@@ -75,7 +77,7 @@ Creates a new supervisor that tracks children in a set.
 **Signature**
 
 ```ts
-export declare const track: any
+export declare const track: () => Effect.Effect<never, never, Supervisor<Chunk<Fiber.RuntimeFiber<any, any>>>>
 ```
 
 Added in v1.0.0
@@ -174,7 +176,7 @@ Unsafely creates a new supervisor that tracks children in a set.
 **Signature**
 
 ```ts
-export declare const unsafeTrack: any
+export declare const unsafeTrack: () => Supervisor<Chunk<Fiber.RuntimeFiber<any, any>>>
 ```
 
 Added in v1.0.0

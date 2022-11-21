@@ -47,7 +47,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const consoleLogger: any
+export declare const consoleLogger: () => Logger<string, void>
 ```
 
 Added in v1.0.0
@@ -57,7 +57,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const defaultLogger: any
+export declare const defaultLogger: Logger<string, string>
 ```
 
 Added in v1.0.0
@@ -69,7 +69,7 @@ A logger that does nothing in response to logging events.
 **Signature**
 
 ```ts
-export declare const none: any
+export declare const none: () => Logger<unknown, void>
 ```
 
 Added in v1.0.0
@@ -79,7 +79,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const simple: any
+export declare const simple: <A, B>(log: (a: A) => B) => Logger<A, B>
 ```
 
 Added in v1.0.0
@@ -89,7 +89,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const succeed: any
+export declare const succeed: <A>(value: A) => Logger<unknown, A>
 ```
 
 Added in v1.0.0
@@ -99,7 +99,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const sync: any
+export declare const sync: <A>(evaluate: () => A) => Logger<unknown, A>
 ```
 
 Added in v1.0.0
@@ -109,7 +109,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const test: any
+export declare const test: <Message>(input: Message) => <Output>(self: Logger<Message, Output>) => Output
 ```
 
 Added in v1.0.0
@@ -121,7 +121,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const console: any
+export declare const console: (minLevel?: LogLevel.LogLevel) => Layer<never, never, never>
 ```
 
 Added in v1.0.0
@@ -131,7 +131,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const layer: any
+export declare const layer: <B>(logger: Logger<string, B>) => Layer<never, never, never>
 ```
 
 Added in v1.0.0
@@ -146,7 +146,9 @@ satisfies the specified predicate.
 **Signature**
 
 ```ts
-export declare const filterLogLevel: any
+export declare const filterLogLevel: (
+  f: (logLevel: LogLevel.LogLevel) => boolean
+) => <Message, Output>(self: Logger<Message, Output>) => Logger<Message, Option<Output>>
 ```
 
 Added in v1.0.0
@@ -158,7 +160,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const contramap: any
+export declare const contramap: typeof internal.contramap
 ```
 
 Added in v1.0.0
@@ -168,7 +170,9 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const map: any
+export declare const map: <Output, Output2>(
+  f: (output: Output) => Output2
+) => <Message>(self: Logger<Message, Output>) => Logger<Message, Output2>
 ```
 
 Added in v1.0.0
@@ -227,7 +231,9 @@ logs to both this logger and that logger.
 **Signature**
 
 ```ts
-export declare const zip: any
+export declare const zip: <Message2, Output2>(
+  that: Logger<Message2, Output2>
+) => <Message, Output>(self: Logger<Message, Output>) => Logger<Message & Message2, readonly [Output, Output2]>
 ```
 
 Added in v1.0.0
@@ -237,7 +243,9 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const zipLeft: any
+export declare const zipLeft: <Message2, Output2>(
+  that: Logger<Message2, Output2>
+) => <Message, Output>(self: Logger<Message, Output>) => Logger<Message & Message2, Output>
 ```
 
 Added in v1.0.0
@@ -247,7 +255,9 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const zipRight: any
+export declare const zipRight: <Message2, Output2>(
+  that: Logger<Message2, Output2>
+) => <Message, Output>(self: Logger<Message, Output>) => Logger<Message & Message2, Output2>
 ```
 
 Added in v1.0.0

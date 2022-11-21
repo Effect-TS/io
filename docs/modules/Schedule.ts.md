@@ -148,7 +148,9 @@ schedule, or feeding inputs to the specified schedule.
 **Signature**
 
 ```ts
-export declare const choose: any
+export declare const choose: <Env2, In2, Out2>(
+  that: Schedule<Env2, In2, Out2>
+) => <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env, Either<In, In2>, Either<Out, Out2>>
 ```
 
 Added in v1.0.0
@@ -161,7 +163,9 @@ output.
 **Signature**
 
 ```ts
-export declare const chooseMerge: any
+export declare const chooseMerge: <Env2, In2, Out2>(
+  that: Schedule<Env2, In2, Out2>
+) => <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env, Either<In, In2>, Out2 | Out>
 ```
 
 Added in v1.0.0
@@ -174,7 +178,9 @@ defined by both schedules.
 **Signature**
 
 ```ts
-export declare const either: any
+export declare const either: <Env2, In2, Out2>(
+  that: Schedule<Env2, In2, Out2>
+) => <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env, In & In2, readonly [Out, Out2]>
 ```
 
 Added in v1.0.0
@@ -186,7 +192,10 @@ The same as `either` followed by `map`.
 **Signature**
 
 ```ts
-export declare const eitherWith: any
+export declare const eitherWith: <Env2, In2, Out2, Out, Out3>(
+  that: Schedule<Env2, In2, Out2>,
+  f: (out: Out, out2: Out2) => Out3
+) => <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env, In & In2, Out3>
 ```
 
 Added in v1.0.0
@@ -200,7 +209,7 @@ Returns a new schedule that maps the output of this schedule to unit.
 **Signature**
 
 ```ts
-export declare const asUnit: any
+export declare const asUnit: <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env, In, void>
 ```
 
 Added in v1.0.0
@@ -212,7 +221,7 @@ A schedule that recurs anywhere, collecting all inputs into a `Chunk`.
 **Signature**
 
 ```ts
-export declare const collectAllInputs: any
+export declare const collectAllInputs: <A>() => Schedule<never, A, Chunk<A>>
 ```
 
 Added in v1.0.0
@@ -224,7 +233,7 @@ A schedule that always recurs, which counts the number of recurrences.
 **Signature**
 
 ```ts
-export declare const count: any
+export declare const count: () => Schedule<never, unknown, number>
 ```
 
 Added in v1.0.0
@@ -241,7 +250,7 @@ NOTE: `day` parameter is validated lazily. Must be in range 1...31.
 **Signature**
 
 ```ts
-export declare const dayOfMonth: any
+export declare const dayOfMonth: (day: number) => Schedule<never, unknown, number>
 ```
 
 Added in v1.0.0
@@ -257,7 +266,7 @@ NOTE: `day` parameter is validated lazily. Must be in range 1 (Monday)...7
 **Signature**
 
 ```ts
-export declare const dayOfWeek: any
+export declare const dayOfWeek: (day: number) => Schedule<never, unknown, number>
 ```
 
 Added in v1.0.0
@@ -270,7 +279,9 @@ before the start of each interval produced by this schedule.
 **Signature**
 
 ```ts
-export declare const delayedEffect: any
+export declare const delayedEffect: <Env2>(
+  f: (duration: Duration) => Effect.Effect<Env2, never, Duration>
+) => <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env, In, Out>
 ```
 
 Added in v1.0.0
@@ -283,7 +294,7 @@ uses this delay to further delay intervals in the resulting schedule.
 **Signature**
 
 ```ts
-export declare const delayedSchedule: any
+export declare const delayedSchedule: <Env, In>(schedule: Schedule<Env, In, Duration>) => Schedule<Env, In, Duration>
 ```
 
 Added in v1.0.0
@@ -295,7 +306,7 @@ Returns a new schedule that outputs the delay between each occurence.
 **Signature**
 
 ```ts
-export declare const delays: any
+export declare const delays: <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Duration>
 ```
 
 Added in v1.0.0
@@ -308,7 +319,7 @@ future.
 **Signature**
 
 ```ts
-export declare const duration: any
+export declare const duration: (duration: Duration) => Schedule<never, unknown, Duration>
 ```
 
 Added in v1.0.0
@@ -321,7 +332,7 @@ since the first step.
 **Signature**
 
 ```ts
-export declare const elapsed: any
+export declare const elapsed: () => Schedule<never, unknown, Duration>
 ```
 
 Added in v1.0.0
@@ -335,7 +346,7 @@ repetitions so far. Returns the current duration between recurrences.
 **Signature**
 
 ```ts
-export declare const exponential: any
+export declare const exponential: (base: Duration, factor?: number) => Schedule<never, unknown, Duration>
 ```
 
 Added in v1.0.0
@@ -349,7 +360,7 @@ duration between recurrences.
 **Signature**
 
 ```ts
-export declare const fibonacci: any
+export declare const fibonacci: (one: Duration) => Schedule<never, unknown, Duration>
 ```
 
 Added in v1.0.0
@@ -370,7 +381,7 @@ action will be run immediately, but re-runs will not "pile up".
 **Signature**
 
 ```ts
-export declare const fixed: any
+export declare const fixed: (interval: Duration) => Schedule<never, unknown, number>
 ```
 
 Added in v1.0.0
@@ -382,7 +393,7 @@ A schedule that always recurs, producing a count of repeats: 0, 1, 2.
 **Signature**
 
 ```ts
-export declare const forever: any
+export declare const forever: () => Schedule<never, unknown, number>
 ```
 
 Added in v1.0.0
@@ -394,7 +405,7 @@ A schedule that recurs once with the specified delay.
 **Signature**
 
 ```ts
-export declare const fromDelay: any
+export declare const fromDelay: (delay: Duration) => Schedule<never, unknown, Duration>
 ```
 
 Added in v1.0.0
@@ -408,7 +419,7 @@ the current duration between recurrences.
 **Signature**
 
 ```ts
-export declare const fromDelays: any
+export declare const fromDelays: (delay: Duration, ...delays: Duration[]) => Schedule<never, unknown, Duration>
 ```
 
 Added in v1.0.0
@@ -421,7 +432,7 @@ function.
 **Signature**
 
 ```ts
-export declare const fromFunction: any
+export declare const fromFunction: <A, B>(f: (a: A) => B) => Schedule<never, A, B>
 ```
 
 Added in v1.0.0
@@ -436,7 +447,7 @@ NOTE: `hour` parameter is validated lazily. Must be in range 0...23.
 **Signature**
 
 ```ts
-export declare const hourOfDay: any
+export declare const hourOfDay: (hour: number) => Schedule<never, unknown, number>
 ```
 
 Added in v1.0.0
@@ -448,7 +459,7 @@ A schedule that always recurs, which returns inputs as outputs.
 **Signature**
 
 ```ts
-export declare const identity: any
+export declare const identity: <A>() => Schedule<never, A, A>
 ```
 
 Added in v1.0.0
@@ -463,7 +474,10 @@ The new interval size is between `min * old interval size` and `max * old interv
 **Signature**
 
 ```ts
-export declare const jittered: any
+export declare const jittered: (
+  min?: number,
+  max?: number
+) => <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env | Random, In, Out>
 ```
 
 Added in v1.0.0
@@ -477,7 +491,7 @@ the current duration between recurrences.
 **Signature**
 
 ```ts
-export declare const linear: any
+export declare const linear: (base: Duration) => Schedule<never, unknown, Duration>
 ```
 
 Added in v1.0.0
@@ -490,7 +504,14 @@ specified `step` function.
 **Signature**
 
 ```ts
-export declare const makeWithState: any
+export declare const makeWithState: <S, Env, In, Out>(
+  initial: S,
+  step: (
+    now: number,
+    input: In,
+    state: S
+  ) => Effect.Effect<Env, never, readonly [S, Out, ScheduleDecision.ScheduleDecision]>
+) => Schedule<Env, In, Out>
 ```
 
 Added in v1.0.0
@@ -505,7 +526,7 @@ NOTE: `minute` parameter is validated lazily. Must be in range 0...59.
 **Signature**
 
 ```ts
-export declare const minuteOfHour: any
+export declare const minuteOfHour: (minute: number) => Schedule<never, unknown, number>
 ```
 
 Added in v1.0.0
@@ -517,7 +538,7 @@ A schedule that recurs one time.
 **Signature**
 
 ```ts
-export declare const once: any
+export declare const once: () => Schedule<never, unknown, void>
 ```
 
 Added in v1.0.0
@@ -530,7 +551,7 @@ number of times before it terminates.
 **Signature**
 
 ```ts
-export declare const recurs: any
+export declare const recurs: (n: number) => Schedule<never, unknown, number>
 ```
 
 Added in v1.0.0
@@ -543,7 +564,7 @@ state when this schedule is done.
 **Signature**
 
 ```ts
-export declare const repeatForever: any
+export declare const repeatForever: () => Schedule<never, unknown, number>
 ```
 
 Added in v1.0.0
@@ -559,7 +580,7 @@ NOTE: `second` parameter is validated lazily. Must be in range 0...59.
 **Signature**
 
 ```ts
-export declare const secondOfMinute: any
+export declare const secondOfMinute: (second: number) => Schedule<never, unknown, number>
 ```
 
 Added in v1.0.0
@@ -572,7 +593,7 @@ specified duration from the last run.
 **Signature**
 
 ```ts
-export declare const spaced: any
+export declare const spaced: (duration: Duration) => Schedule<never, unknown, number>
 ```
 
 Added in v1.0.0
@@ -584,7 +605,7 @@ A schedule that does not recur, it just stops.
 **Signature**
 
 ```ts
-export declare const stop: any
+export declare const stop: () => Schedule<never, unknown, void>
 ```
 
 Added in v1.0.0
@@ -597,7 +618,7 @@ value.
 **Signature**
 
 ```ts
-export declare const succeed: any
+export declare const succeed: <A>(value: A) => Schedule<never, unknown, A>
 ```
 
 Added in v1.0.0
@@ -610,7 +631,7 @@ value.
 **Signature**
 
 ```ts
-export declare const sync: any
+export declare const sync: <A>(evaluate: () => A) => Schedule<never, unknown, A>
 ```
 
 Added in v1.0.0
@@ -623,7 +644,7 @@ iterator.
 **Signature**
 
 ```ts
-export declare const unfold: any
+export declare const unfold: <A>(initial: A, f: (a: A) => A) => Schedule<never, unknown, A>
 ```
 
 Added in v1.0.0
@@ -645,7 +666,7 @@ follows:
 **Signature**
 
 ```ts
-export declare const windowed: any
+export declare const windowed: (interval: Duration) => Schedule<never, unknown, number>
 ```
 
 Added in v1.0.0
@@ -659,7 +680,10 @@ Runs a schedule using the provided inputs, and collects all outputs.
 **Signature**
 
 ```ts
-export declare const run: any
+export declare const run: <In>(
+  now: number,
+  input: Iterable<In>
+) => <Env, Out>(self: Schedule<Env, In, Out>) => Effect.Effect<Env, never, Chunk<Out>>
 ```
 
 Added in v1.0.0
@@ -674,7 +698,9 @@ resulting schedule does not require any environment.
 **Signature**
 
 ```ts
-export declare const provideEnvironment: any
+export declare const provideEnvironment: <R>(
+  context: Context<R>
+) => <In, Out>(self: Schedule<R, In, Out>) => Schedule<never, In, Out>
 ```
 
 Added in v1.0.0
@@ -688,7 +714,10 @@ instead.
 **Signature**
 
 ```ts
-export declare const provideService: any
+export declare const provideService: <T, T1 extends T>(
+  tag: Tag<T>,
+  service: T1
+) => <R, In, Out>(self: Schedule<T | R, In, Out>) => Schedule<Exclude<R, T>, In, Out>
 ```
 
 Added in v1.0.0
@@ -701,7 +730,9 @@ specified function.
 **Signature**
 
 ```ts
-export declare const provideSomeEnvironment: any
+export declare const provideSomeEnvironment: <R0, R>(
+  f: (env0: Context<R0>) => Context<R>
+) => <In, Out>(self: Schedule<R, In, Out>) => Schedule<R0, In, Out>
 ```
 
 Added in v1.0.0
@@ -719,7 +750,9 @@ the driver of the schedule may not run to completion. However, if the
 **Signature**
 
 ```ts
-export declare const ensuring: any
+export declare const ensuring: <X>(
+  finalizer: Effect.Effect<never, never, X>
+) => <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out>
 ```
 
 Added in v1.0.0
@@ -733,7 +766,10 @@ Returns a new schedule that folds over the outputs of this one.
 **Signature**
 
 ```ts
-export declare const fold: any
+export declare const fold: <Out, Z>(
+  zero: Z,
+  f: (z: Z, out: Out) => Z
+) => <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Z>
 ```
 
 Added in v1.0.0
@@ -745,7 +781,10 @@ Returns a new schedule that effectfully folds over the outputs of this one.
 **Signature**
 
 ```ts
-export declare const foldEffect: any
+export declare const foldEffect: <Out, Env1, Z>(
+  zero: Z,
+  f: (z: Z, out: Out) => Effect.Effect<Env1, never, Z>
+) => <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env1 | Env, In, Z>
 ```
 
 Added in v1.0.0
@@ -760,7 +799,9 @@ handling sleeping.
 **Signature**
 
 ```ts
-export declare const driver: any
+export declare const driver: <Env, In, Out>(
+  self: Schedule<Env, In, Out>
+) => Effect.Effect<never, never, ScheduleDriver<Env, In, Out>>
 ```
 
 Added in v1.0.0
@@ -774,7 +815,7 @@ Returns a new schedule that maps this schedule to a constant output.
 **Signature**
 
 ```ts
-export declare const as: any
+export declare const as: <Out2>(out2: Out2) => <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out2>
 ```
 
 Added in v1.0.0
@@ -787,7 +828,9 @@ schedule.
 **Signature**
 
 ```ts
-export declare const contramap: any
+export declare const contramap: <In, In2>(
+  f: (in2: In2) => In
+) => <Env, Out>(self: Schedule<Env, In, Out>) => Schedule<Env, In2, Out>
 ```
 
 Added in v1.0.0
@@ -800,7 +843,9 @@ schedule.
 **Signature**
 
 ```ts
-export declare const contramapEffect: any
+export declare const contramapEffect: <In, Env1, In2>(
+  f: (in2: In2) => Effect.Effect<Env1, never, In>
+) => <Env, Out>(self: Schedule<Env, In, Out>) => Schedule<Env1 | Env, In2, Out>
 ```
 
 Added in v1.0.0
@@ -812,7 +857,7 @@ Returns a new schedule that contramaps the input and maps the output.
 **Signature**
 
 ```ts
-export declare const dimap: any
+export declare const dimap: typeof internal.dimap
 ```
 
 Added in v1.0.0
@@ -824,7 +869,10 @@ Returns a new schedule that contramaps the input and maps the output.
 **Signature**
 
 ```ts
-export declare const dimapEffect: any
+export declare const dimapEffect: <In2, Env2, In, Out, Env3, Out2>(
+  f: (input: In2) => Effect.Effect<Env2, never, In>,
+  g: (out: Out) => Effect.Effect<Env3, never, Out2>
+) => <Env>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env3 | Env, In2, Out2>
 ```
 
 Added in v1.0.0
@@ -837,7 +885,9 @@ specified function.
 **Signature**
 
 ```ts
-export declare const map: any
+export declare const map: <Out, Out2>(
+  f: (out: Out) => Out2
+) => <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out2>
 ```
 
 Added in v1.0.0
@@ -850,7 +900,9 @@ specified effectful function.
 **Signature**
 
 ```ts
-export declare const mapEffect: any
+export declare const mapEffect: <Out, Env2, Out2>(
+  f: (out: Out) => Effect.Effect<Env2, never, Out2>
+) => <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env, In, Out2>
 ```
 
 Added in v1.0.0
@@ -942,7 +994,9 @@ by this schedule.
 **Signature**
 
 ```ts
-export declare const addDelay: any
+export declare const addDelay: <Out>(
+  f: (out: Out) => Duration
+) => <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out>
 ```
 
 Added in v1.0.0
@@ -955,7 +1009,9 @@ every interval defined by this schedule.
 **Signature**
 
 ```ts
-export declare const addDelayEffect: any
+export declare const addDelayEffect: <Out, Env2>(
+  f: (out: Out) => Effect.Effect<Env2, never, Duration>
+) => <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env, In, Out>
 ```
 
 Added in v1.0.0
@@ -968,7 +1024,9 @@ specified schedule.
 **Signature**
 
 ```ts
-export declare const bothInOut: any
+export declare const bothInOut: <Env2, In2, Out2>(
+  that: Schedule<Env2, In2, Out2>
+) => <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env, readonly [In, In2], readonly [Out, Out2]>
 ```
 
 Added in v1.0.0
@@ -982,7 +1040,9 @@ based on the return value of the function.
 **Signature**
 
 ```ts
-export declare const check: any
+export declare const check: <In, Out>(
+  test: (input: In, output: Out) => boolean
+) => <Env>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out>
 ```
 
 Added in v1.0.0
@@ -996,7 +1056,9 @@ based on the return value of the function.
 **Signature**
 
 ```ts
-export declare const checkEffect: any
+export declare const checkEffect: <In, Out, Env2>(
+  test: (input: In, output: Out) => Effect.Effect<Env2, never, boolean>
+) => <Env>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env, In, Out>
 ```
 
 Added in v1.0.0
@@ -1008,7 +1070,7 @@ Returns a new schedule that collects the outputs of this one into a chunk.
 **Signature**
 
 ```ts
-export declare const collectAllOutputs: any
+export declare const collectAllOutputs: <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Chunk<Out>>
 ```
 
 Added in v1.0.0
@@ -1021,7 +1083,7 @@ into a list.
 **Signature**
 
 ```ts
-export declare const collectUntil: any
+export declare const collectUntil: <A>(f: Predicate<A>) => Schedule<never, A, Chunk<A>>
 ```
 
 Added in v1.0.0
@@ -1034,7 +1096,9 @@ all inputs into a list.
 **Signature**
 
 ```ts
-export declare const collectUntilEffect: any
+export declare const collectUntilEffect: <Env, A>(
+  f: (a: A) => Effect.Effect<Env, never, boolean>
+) => Schedule<Env, A, Chunk<A>>
 ```
 
 Added in v1.0.0
@@ -1047,7 +1111,7 @@ inputs into a list.
 **Signature**
 
 ```ts
-export declare const collectWhile: any
+export declare const collectWhile: <A>(f: Predicate<A>) => Schedule<never, A, Chunk<A>>
 ```
 
 Added in v1.0.0
@@ -1060,7 +1124,9 @@ all inputs into a list.
 **Signature**
 
 ```ts
-export declare const collectWhileEffect: any
+export declare const collectWhileEffect: <Env, A>(
+  f: (a: A) => Effect.Effect<Env, never, boolean>
+) => Schedule<Env, A, Chunk<A>>
 ```
 
 Added in v1.0.0
@@ -1075,7 +1141,9 @@ described by the second schedule.
 **Signature**
 
 ```ts
-export declare const compose: any
+export declare const compose: <Env1, Out, Out2>(
+  that: Schedule<Env1, Out, Out2>
+) => <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env1 | Env, In, Out2>
 ```
 
 Added in v1.0.0
@@ -1088,7 +1156,9 @@ before the start of each interval produced by this schedule.
 **Signature**
 
 ```ts
-export declare const delayed: any
+export declare const delayed: (
+  f: (duration: Duration) => Duration
+) => <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out>
 ```
 
 Added in v1.0.0
@@ -1101,7 +1171,9 @@ intervals defined by both schedules.
 **Signature**
 
 ```ts
-export declare const intersect: any
+export declare const intersect: <Env2, In2, Out2>(
+  that: Schedule<Env2, In2, Out2>
+) => <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env, In & In2, readonly [Out, Out2]>
 ```
 
 Added in v1.0.0
@@ -1115,7 +1187,10 @@ the next intervals according to the specified merge function.
 **Signature**
 
 ```ts
-export declare const intersectWith: any
+export declare const intersectWith: <Env2, In2, Out2>(
+  that: Schedule<Env2, In2, Out2>,
+  f: (x: Intervals, y: Intervals) => Intervals
+) => <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env, In & In2, readonly [Out, Out2]>
 ```
 
 Added in v1.0.0
@@ -1129,7 +1204,9 @@ channel on demand.
 **Signature**
 
 ```ts
-export declare const left: any
+export declare const left: <Env, In, Out, X>(
+  self: Schedule<Env, In, Out>
+) => Schedule<Env, Either<In, X>, Either<Out, X>>
 ```
 
 Added in v1.0.0
@@ -1142,7 +1219,9 @@ function.
 **Signature**
 
 ```ts
-export declare const modifyDelay: any
+export declare const modifyDelay: <Out>(
+  f: (out: Out, duration: Duration) => Duration
+) => <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out>
 ```
 
 Added in v1.0.0
@@ -1155,7 +1234,9 @@ effectual function.
 **Signature**
 
 ```ts
-export declare const modifyDelayEffect: any
+export declare const modifyDelayEffect: <Out, Env2>(
+  f: (out: Out, duration: Duration) => Effect.Effect<Env2, never, Duration>
+) => <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env, In, Out>
 ```
 
 Added in v1.0.0
@@ -1169,7 +1250,9 @@ schedules that log failures, decisions, or computed values.
 **Signature**
 
 ```ts
-export declare const onDecision: any
+export declare const onDecision: <Out, Env2, X>(
+  f: (out: Out, decision: ScheduleDecision.ScheduleDecision) => Effect.Effect<Env2, never, X>
+) => <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env, In, Out>
 ```
 
 Added in v1.0.0
@@ -1181,7 +1264,9 @@ Returns a new schedule that passes through the inputs of this schedule.
 **Signature**
 
 ```ts
-export declare const passthrough: any
+export declare const passthrough: <Env, Input, Output>(
+  self: Schedule<Env, Input, Output>
+) => Schedule<Env, Input, Input>
 ```
 
 Added in v1.0.0
@@ -1195,7 +1280,9 @@ process.
 **Signature**
 
 ```ts
-export declare const reconsider: any
+export declare const reconsider: <Out, Out2>(
+  f: (out: Out, decision: ScheduleDecision.ScheduleDecision) => Either<Out2, readonly [Out2, Interval]>
+) => <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out2>
 ```
 
 Added in v1.0.0
@@ -1209,7 +1296,12 @@ the process.
 **Signature**
 
 ```ts
-export declare const reconsiderEffect: any
+export declare const reconsiderEffect: <Out, Env2, Out2>(
+  f: (
+    out: Out,
+    decision: ScheduleDecision.ScheduleDecision
+  ) => Effect.Effect<Env2, never, Either<Out2, readonly [Out2, Interval]>>
+) => <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env, In, Out2>
 ```
 
 Added in v1.0.0
@@ -1221,7 +1313,7 @@ A schedule that recurs for until the predicate evaluates to true.
 **Signature**
 
 ```ts
-export declare const recurUntil: any
+export declare const recurUntil: <A>(f: Predicate<A>) => Schedule<never, A, A>
 ```
 
 Added in v1.0.0
@@ -1233,7 +1325,7 @@ A schedule that recurs for until the predicate evaluates to true.
 **Signature**
 
 ```ts
-export declare const recurUntilEffect: any
+export declare const recurUntilEffect: <Env, A>(f: (a: A) => Effect.Effect<Env, never, boolean>) => Schedule<Env, A, A>
 ```
 
 Added in v1.0.0
@@ -1245,7 +1337,7 @@ A schedule that recurs for until the predicate is equal.
 **Signature**
 
 ```ts
-export declare const recurUntilEquals: any
+export declare const recurUntilEquals: <A>(value: A) => Schedule<never, A, A>
 ```
 
 Added in v1.0.0
@@ -1258,7 +1350,7 @@ partial function and then map that value with given function.
 **Signature**
 
 ```ts
-export declare const recurUntilOption: any
+export declare const recurUntilOption: <A, B>(pf: (a: A) => Option.Option<B>) => Schedule<never, A, Option.Option<B>>
 ```
 
 Added in v1.0.0
@@ -1270,7 +1362,7 @@ A schedule that recurs during the given duration.
 **Signature**
 
 ```ts
-export declare const recurUpTo: any
+export declare const recurUpTo: (duration: Duration) => Schedule<never, unknown, Duration>
 ```
 
 Added in v1.0.0
@@ -1282,7 +1374,7 @@ A schedule that recurs for as long as the predicate evaluates to true.
 **Signature**
 
 ```ts
-export declare const recurWhile: any
+export declare const recurWhile: <A>(f: Predicate<A>) => Schedule<never, A, A>
 ```
 
 Added in v1.0.0
@@ -1295,7 +1387,7 @@ true.
 **Signature**
 
 ```ts
-export declare const recurWhileEffect: any
+export declare const recurWhileEffect: <Env, A>(f: (a: A) => Effect.Effect<Env, never, boolean>) => Schedule<Env, A, A>
 ```
 
 Added in v1.0.0
@@ -1308,7 +1400,7 @@ specified value.
 **Signature**
 
 ```ts
-export declare const recurWhileEquals: any
+export declare const recurWhileEquals: <A>(value: A) => Schedule<never, A, A>
 ```
 
 Added in v1.0.0
@@ -1320,7 +1412,7 @@ Returns a new schedule that outputs the number of repetitions of this one.
 **Signature**
 
 ```ts
-export declare const repetitions: any
+export declare const repetitions: <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env, In, number>
 ```
 
 Added in v1.0.0
@@ -1333,7 +1425,9 @@ state after some time of inactivity defined by `duration`.
 **Signature**
 
 ```ts
-export declare const resetAfter: any
+export declare const resetAfter: (
+  duration: Duration
+) => <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out>
 ```
 
 Added in v1.0.0
@@ -1346,7 +1440,9 @@ evaluates to true.
 **Signature**
 
 ```ts
-export declare const resetWhen: any
+export declare const resetWhen: <Out>(
+  f: Predicate<Out>
+) => <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out>
 ```
 
 Added in v1.0.0
@@ -1360,7 +1456,9 @@ channel on demand.
 **Signature**
 
 ```ts
-export declare const right: any
+export declare const right: <Env, In, Out, X>(
+  self: Schedule<Env, In, Out>
+) => Schedule<Env, Either<X, In>, Either<X, Out>>
 ```
 
 Added in v1.0.0
@@ -1373,7 +1471,9 @@ defined by both schedules.
 **Signature**
 
 ```ts
-export declare const union: any
+export declare const union: <Env2, In2, Out2>(
+  that: Schedule<Env2, In2, Out2>
+) => <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env, In & In2, readonly [Out, Out2]>
 ```
 
 Added in v1.0.0
@@ -1387,7 +1487,10 @@ merging the next intervals according to the specified merge function.
 **Signature**
 
 ```ts
-export declare const unionWith: any
+export declare const unionWith: <Env2, In2, Out2>(
+  that: Schedule<Env2, In2, Out2>,
+  f: (x: Intervals, y: Intervals) => Intervals
+) => <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env, In & In2, readonly [Out, Out2]>
 ```
 
 Added in v1.0.0
@@ -1400,7 +1503,9 @@ input evaluates to true.
 **Signature**
 
 ```ts
-export declare const untilInput: any
+export declare const untilInput: <In>(
+  f: Predicate<In>
+) => <Env, Out>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out>
 ```
 
 Added in v1.0.0
@@ -1413,7 +1518,9 @@ predicate on the input evaluates to true.
 **Signature**
 
 ```ts
-export declare const untilInputEffect: any
+export declare const untilInputEffect: <In, Env2>(
+  f: (input: In) => Effect.Effect<Env2, never, boolean>
+) => <Env, Out>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env, In, Out>
 ```
 
 Added in v1.0.0
@@ -1426,7 +1533,9 @@ output evaluates to true.
 **Signature**
 
 ```ts
-export declare const untilOutput: any
+export declare const untilOutput: <Out>(
+  f: Predicate<Out>
+) => <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out>
 ```
 
 Added in v1.0.0
@@ -1439,7 +1548,9 @@ predicate on the output evaluates to true.
 **Signature**
 
 ```ts
-export declare const untilOutputEffect: any
+export declare const untilOutputEffect: <Out, Env2>(
+  f: (out: Out) => Effect.Effect<Env2, never, boolean>
+) => <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env, In, Out>
 ```
 
 Added in v1.0.0
@@ -1451,7 +1562,9 @@ A schedule that recurs during the given duration.
 **Signature**
 
 ```ts
-export declare const upTo: any
+export declare const upTo: (
+  duration: Duration
+) => <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out>
 ```
 
 Added in v1.0.0
@@ -1464,7 +1577,9 @@ on the input evaluates to true.
 **Signature**
 
 ```ts
-export declare const whileInput: any
+export declare const whileInput: <In>(
+  f: Predicate<In>
+) => <Env, Out>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out>
 ```
 
 Added in v1.0.0
@@ -1477,7 +1592,9 @@ predicate on the input evaluates to true.
 **Signature**
 
 ```ts
-export declare const whileInputEffect: any
+export declare const whileInputEffect: <In, Env1>(
+  f: (input: In) => Effect.Effect<Env1, never, boolean>
+) => <Env, Out>(self: Schedule<Env, In, Out>) => Schedule<Env1 | Env, In, Out>
 ```
 
 Added in v1.0.0
@@ -1490,7 +1607,9 @@ on the output evaluates to true.
 **Signature**
 
 ```ts
-export declare const whileOutput: any
+export declare const whileOutput: <Out>(
+  f: Predicate<Out>
+) => <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out>
 ```
 
 Added in v1.0.0
@@ -1503,7 +1622,9 @@ predicate on the output evaluates to true.
 **Signature**
 
 ```ts
-export declare const whileOutputEffect: any
+export declare const whileOutputEffect: <Out, Env1>(
+  f: (out: Out) => Effect.Effect<Env1, never, boolean>
+) => <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env1 | Env, In, Out>
 ```
 
 Added in v1.0.0
@@ -1517,7 +1638,9 @@ The same as `andThenEither`, but merges the output.
 **Signature**
 
 ```ts
-export declare const andThen: any
+export declare const andThen: <Env1, In1, Out2>(
+  that: Schedule<Env1, In1, Out2>
+) => <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env1 | Env, In & In1, Out2 | Out>
 ```
 
 Added in v1.0.0
@@ -1530,7 +1653,9 @@ then executes the specified schedule to completion.
 **Signature**
 
 ```ts
-export declare const andThenEither: any
+export declare const andThenEither: <Env2, In2, Out2>(
+  that: Schedule<Env2, In2, Out2>
+) => <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env, In & In2, Either<Out, Out2>>
 ```
 
 Added in v1.0.0
@@ -1543,7 +1668,9 @@ schedule.
 **Signature**
 
 ```ts
-export declare const tapInput: any
+export declare const tapInput: <Env2, In2, X>(
+  f: (input: In2) => Effect.Effect<Env2, never, X>
+) => <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env, In & In2, Out>
 ```
 
 Added in v1.0.0
@@ -1556,7 +1683,9 @@ schedule.
 **Signature**
 
 ```ts
-export declare const tapOutput: any
+export declare const tapOutput: <Out, Env2, X>(
+  f: (out: Out) => Effect.Effect<Env2, never, X>
+) => <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env, In, Out>
 ```
 
 Added in v1.0.0
@@ -1612,7 +1741,9 @@ The same as `intersect` but ignores the right output.
 **Signature**
 
 ```ts
-export declare const zipLeft: any
+export declare const zipLeft: <Env2, In2, Out2>(
+  that: Schedule<Env2, In2, Out2>
+) => <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env, In & In2, Out>
 ```
 
 Added in v1.0.0
@@ -1624,7 +1755,9 @@ The same as `intersect` but ignores the left output.
 **Signature**
 
 ```ts
-export declare const zipRight: any
+export declare const zipRight: <Env2, In2, Out2>(
+  that: Schedule<Env2, In2, Out2>
+) => <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env, In & In2, Out2>
 ```
 
 Added in v1.0.0
@@ -1636,7 +1769,7 @@ Equivalent to `intersect` followed by `map`.
 **Signature**
 
 ```ts
-export declare const zipWith: any
+export declare const zipWith: typeof internal.zipWith
 ```
 
 Added in v1.0.0

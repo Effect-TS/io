@@ -47,7 +47,9 @@ If an ExecutionStrategy is not provided `sequential` will be used.
 **Signature**
 
 ```ts
-export declare const make: any
+export declare const make: (
+  executionStrategy?: Sequential | Parallel | ParallelN | undefined
+) => Effect.Effect<never, never, CloseableScope>
 ```
 
 Added in v1.0.0
@@ -62,7 +64,9 @@ have been added to the scope.
 **Signature**
 
 ```ts
-export declare const close: any
+export declare const close: (
+  exit: Exit.Exit<unknown, unknown>
+) => (self: CloseableScope) => Effect.Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -77,7 +81,9 @@ interruption.
 **Signature**
 
 ```ts
-export declare const use: any
+export declare const use: <R, E, A>(
+  effect: Effect.Effect<R, E, A>
+) => (self: CloseableScope) => Effect.Effect<Exclude<R, Scope>, E, A>
 ```
 
 Added in v1.0.0
@@ -104,7 +110,7 @@ automatically be closed when this scope is closed.
 **Signature**
 
 ```ts
-export declare const fork: any
+export declare const fork: (strategy: ExecutionStrategy) => (self: Scope) => Effect.Effect<never, never, CloseableScope>
 ```
 
 Added in v1.0.0
@@ -153,7 +159,9 @@ the scope is closed.
 **Signature**
 
 ```ts
-export declare const addFinalizer: any
+export declare const addFinalizer: (
+  finalizer: Effect.Effect<never, never, unknown>
+) => (self: Scope) => Effect.Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -166,7 +174,9 @@ depend on the `Exit` value that the scope is closed with.
 **Signature**
 
 ```ts
-export declare const addFinalizerExit: any
+export declare const addFinalizerExit: (
+  finalizer: Scope.Finalizer
+) => (self: Scope) => Effect.Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -181,7 +191,9 @@ larger scope.
 **Signature**
 
 ```ts
-export declare const extend: any
+export declare const extend: <R, E, A>(
+  effect: Effect.Effect<R, E, A>
+) => (self: Scope) => Effect.Effect<Exclude<R, Scope>, E, A>
 ```
 
 Added in v1.0.0

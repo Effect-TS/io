@@ -39,7 +39,9 @@ polls for, updates, and produces the outputs of all individual metrics.
 **Signature**
 
 ```ts
-export declare const collectAll: any
+export declare const collectAll: <R, E, Out>(
+  iterable: Iterable<PollingMetric<any, any, R, E, Out>>
+) => PollingMetric<Chunk<any>, Chunk<any>, R, E, Chunk<Out>>
 ```
 
 Added in v1.0.0
@@ -51,7 +53,10 @@ Constructs a new polling metric from a metric and poll effect.
 **Signature**
 
 ```ts
-export declare const make: any
+export declare const make: <Type, In, Out, R, E>(
+  metric: Metric.Metric<Type, In, Out>,
+  poll: Effect.Effect<R, E, In>
+) => PollingMetric<Type, In, R, E, Out>
 ```
 
 Added in v1.0.0
@@ -64,7 +69,9 @@ specified retry policy.
 **Signature**
 
 ```ts
-export declare const retry: any
+export declare const retry: <R2, E, _>(
+  policy: Schedule<R2, E, _>
+) => <Type, In, R, Out>(self: PollingMetric<Type, In, R, E, Out>) => PollingMetric<Type, In, R2 | R, E, Out>
 ```
 
 Added in v1.0.0
@@ -106,7 +113,11 @@ fiber, using the specified schedule.
 **Signature**
 
 ```ts
-export declare const launch: any
+export declare const launch: <R2, A2>(
+  schedule: Schedule<R2, unknown, A2>
+) => <Type, In, R, E, Out>(
+  self: PollingMetric<Type, In, R, E, Out>
+) => Effect.Effect<Scope | R2 | R, never, Fiber<E, A2>>
 ```
 
 Added in v1.0.0
@@ -118,7 +129,7 @@ An effect that polls a value that may be fed to the metric.
 **Signature**
 
 ```ts
-export declare const poll: any
+export declare const poll: <Type, In, R, E, Out>(self: PollingMetric<Type, In, R, E, Out>) => Effect.Effect<R, E, In>
 ```
 
 Added in v1.0.0
@@ -130,7 +141,9 @@ An effect that polls for a value and uses the value to update the metric.
 **Signature**
 
 ```ts
-export declare const pollAndUpdate: any
+export declare const pollAndUpdate: <Type, In, R, E, Out>(
+  self: PollingMetric<Type, In, R, E, Out>
+) => Effect.Effect<R, E, void>
 ```
 
 Added in v1.0.0
@@ -142,7 +155,11 @@ Zips this polling metric with the specified polling metric.
 **Signature**
 
 ```ts
-export declare const zip: any
+export declare const zip: <Type2, In2, R2, E2, Out2>(
+  that: PollingMetric<Type2, In2, R2, E2, Out2>
+) => <Type, In, R, E, Out>(
+  self: PollingMetric<Type, In, R, E, Out>
+) => PollingMetric<readonly [Type, Type2], readonly [In, In2], R2 | R, E2 | E, readonly [Out, Out2]>
 ```
 
 Added in v1.0.0

@@ -43,7 +43,7 @@ Constructs an empty list of `Interval`s.
 **Signature**
 
 ```ts
-export declare const empty: any
+export declare const empty: Intervals
 ```
 
 Added in v1.0.0
@@ -55,7 +55,7 @@ Constructs `Intervals` from the specified `Iterable<Interval>`.
 **Signature**
 
 ```ts
-export declare const fromIterable: any
+export declare const fromIterable: (intervals: Iterable<Interval.Interval>) => Intervals
 ```
 
 Added in v1.0.0
@@ -67,7 +67,7 @@ Creates a new `Intervals` from a `List` of `Interval`s.
 **Signature**
 
 ```ts
-export declare const make: any
+export declare const make: (intervals: List.List<Interval.Interval>) => Intervals
 ```
 
 Added in v1.0.0
@@ -81,7 +81,7 @@ The end of the latest interval in the specified `Intervals`.
 **Signature**
 
 ```ts
-export declare const end: any
+export declare const end: (self: Intervals) => number
 ```
 
 Added in v1.0.0
@@ -93,7 +93,7 @@ Returns `true` if this `Intervals` is non-empty, `false` otherwise.
 **Signature**
 
 ```ts
-export declare const isNonEmpty: any
+export declare const isNonEmpty: (self: Intervals) => boolean
 ```
 
 Added in v1.0.0
@@ -105,7 +105,7 @@ The start of the earliest interval in the specified `Intervals`.
 **Signature**
 
 ```ts
-export declare const start: any
+export declare const start: (self: Intervals) => number
 ```
 
 Added in v1.0.0
@@ -136,7 +136,7 @@ Produces the intersection of this `Intervals` and that `Intervals`.
 **Signature**
 
 ```ts
-export declare const intersect: any
+export declare const intersect: (that: Intervals) => (self: Intervals) => Intervals
 ```
 
 Added in v1.0.0
@@ -148,7 +148,7 @@ Computes the union of this `Intervals` and that `Intervals`
 **Signature**
 
 ```ts
-export declare const union: any
+export declare const union: (that: Intervals) => (self: Intervals) => Intervals
 ```
 
 Added in v1.0.0
@@ -163,7 +163,7 @@ Returns `true` if the start of this `Intervals` is before the start of that
 **Signature**
 
 ```ts
-export declare const lessThan: any
+export declare const lessThan: (that: Intervals) => (self: Intervals) => boolean
 ```
 
 Added in v1.0.0
@@ -175,7 +175,7 @@ Returns the maximum of the two `Intervals` (i.e. which has the latest start).
 **Signature**
 
 ```ts
-export declare const max: any
+export declare const max: (that: Intervals) => (self: Intervals) => Intervals
 ```
 
 Added in v1.0.0

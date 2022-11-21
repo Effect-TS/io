@@ -73,7 +73,7 @@ better performance by utilising an optimised version of the underlying
 **Signature**
 
 ```ts
-export declare const bounded: any
+export declare const bounded: <A>(requestedCapacity: number) => Effect.Effect<never, never, Queue<A>>
 ```
 
 Added in v1.0.0
@@ -92,7 +92,7 @@ better performance by utilising an optimised version of the underlying
 **Signature**
 
 ```ts
-export declare const dropping: any
+export declare const dropping: <A>(requestedCapacity: number) => Effect.Effect<never, never, Queue<A>>
 ```
 
 Added in v1.0.0
@@ -111,7 +111,7 @@ better performance by utilising an optimised version of the underlying
 **Signature**
 
 ```ts
-export declare const sliding: any
+export declare const sliding: <A>(requestedCapacity: number) => Effect.Effect<never, never, Queue<A>>
 ```
 
 Added in v1.0.0
@@ -123,7 +123,7 @@ Creates a new unbounded `Queue`.
 **Signature**
 
 ```ts
-export declare const unbounded: any
+export declare const unbounded: <A>() => Effect.Effect<never, never, Queue<A>>
 ```
 
 Added in v1.0.0
@@ -137,7 +137,7 @@ Returns the number of elements the queue can hold.
 **Signature**
 
 ```ts
-export declare const capacity: any
+export declare const capacity: <A>(self: Queue<A>) => number
 ```
 
 Added in v1.0.0
@@ -149,7 +149,7 @@ Returns `true` if the `Queue` contains zero elements, `false` otherwise.
 **Signature**
 
 ```ts
-export declare const isEmpty: any
+export declare const isEmpty: <A>(self: Queue<A>) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -162,7 +162,7 @@ otherwise.
 **Signature**
 
 ```ts
-export declare const isFull: any
+export declare const isFull: <A>(self: Queue<A>) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -174,7 +174,7 @@ Returns `true` if `shutdown` has been called, otherwise returns `false`.
 **Signature**
 
 ```ts
-export declare const isShutdown: any
+export declare const isShutdown: <A>(self: Queue<A>) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -188,7 +188,7 @@ elements to be added to the queue.
 **Signature**
 
 ```ts
-export declare const size: any
+export declare const size: <A>(self: Queue<A>) => Effect.Effect<never, never, number>
 ```
 
 Added in v1.0.0
@@ -417,7 +417,7 @@ shutdown, the `Effect` will resume right away.
 **Signature**
 
 ```ts
-export declare const awaitShutdown: any
+export declare const awaitShutdown: <A>(self: Queue<A>) => Effect.Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -429,7 +429,7 @@ Places one value in the queue.
 **Signature**
 
 ```ts
-export declare const offer: any
+export declare const offer: <A>(value: A) => (self: Enqueue<A>) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -453,7 +453,7 @@ queue but if there is no room it will not enqueue them and return false.
 **Signature**
 
 ```ts
-export declare const offerAll: any
+export declare const offerAll: <A>(iterable: Iterable<A>) => (self: Enqueue<A>) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -466,7 +466,7 @@ is empty.
 **Signature**
 
 ```ts
-export declare const poll: any
+export declare const poll: <A>(self: Dequeue<A>) => Effect.Effect<never, never, Option<A>>
 ```
 
 Added in v1.0.0
@@ -479,7 +479,7 @@ to `offer*` and `take*` will be interrupted immediately.
 **Signature**
 
 ```ts
-export declare const shutdown: any
+export declare const shutdown: <A>(self: Queue<A>) => Effect.Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -492,7 +492,7 @@ a computation that resumes when an item has been added to the queue.
 **Signature**
 
 ```ts
-export declare const take: any
+export declare const take: <A>(self: Dequeue<A>) => Effect.Effect<never, never, A>
 ```
 
 Added in v1.0.0
@@ -505,7 +505,7 @@ empty returns an empty collection.
 **Signature**
 
 ```ts
-export declare const takeAll: any
+export declare const takeAll: <A>(self: Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>>
 ```
 
 Added in v1.0.0
@@ -519,7 +519,10 @@ suspends until at least the minimum number of elements have been collected.
 **Signature**
 
 ```ts
-export declare const takeBetween: any
+export declare const takeBetween: (
+  min: number,
+  max: number
+) => <A>(self: Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>>
 ```
 
 Added in v1.0.0
@@ -533,7 +536,7 @@ become available.
 **Signature**
 
 ```ts
-export declare const takeN: any
+export declare const takeN: (n: number) => <A>(self: Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>>
 ```
 
 Added in v1.0.0
@@ -545,7 +548,7 @@ Takes up to max number of values from the queue.
 **Signature**
 
 ```ts
-export declare const takeUpTo: any
+export declare const takeUpTo: (max: number) => <A>(self: Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>>
 ```
 
 Added in v1.0.0
@@ -559,7 +562,7 @@ Returns `true` if the specified value is a `Dequeue`, `false` otherwise.
 **Signature**
 
 ```ts
-export declare const isDequeue: any
+export declare const isDequeue: (u: unknown) => u is Dequeue<unknown>
 ```
 
 Added in v1.0.0
@@ -571,7 +574,7 @@ Returns `true` if the specified value is a `Enqueue`, `false` otherwise.
 **Signature**
 
 ```ts
-export declare const isEnqueue: any
+export declare const isEnqueue: (u: unknown) => u is Enqueue<unknown>
 ```
 
 Added in v1.0.0
@@ -583,7 +586,7 @@ Returns `true` if the specified value is a `Queue`, `false` otherwise.
 **Signature**
 
 ```ts
-export declare const isQueue: any
+export declare const isQueue: (u: unknown) => u is Queue<unknown>
 ```
 
 Added in v1.0.0
@@ -595,7 +598,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const backPressureStrategy: any
+export declare const backPressureStrategy: <A>() => Strategy<A>
 ```
 
 Added in v1.0.0
@@ -605,7 +608,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const droppingStrategy: any
+export declare const droppingStrategy: <A>() => Strategy<A>
 ```
 
 Added in v1.0.0
@@ -615,7 +618,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const slidingStrategy: any
+export declare const slidingStrategy: <A>() => Strategy<A>
 ```
 
 Added in v1.0.0

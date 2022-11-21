@@ -31,7 +31,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const make: any
+export declare const make: (key: string, value: string) => MetricLabel
 ```
 
 Added in v1.0.0
@@ -66,7 +66,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const isMetricLabel: any
+export declare const isMetricLabel: (u: unknown) => u is MetricLabel
 ```
 
 Added in v1.0.0
