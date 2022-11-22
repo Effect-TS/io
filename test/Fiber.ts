@@ -27,7 +27,7 @@ describe.concurrent("Fiber", () => {
       const blockingOn = yield* pipe(
         Fiber.status(fiber2),
         Effect.continueOrFail(constVoid, (status) =>
-          status._tag === "Suspended"
+          FiberStatus.isSuspended(status)
             ? Option.some(status.blockingOn)
             : Option.none),
         Effect.eventually

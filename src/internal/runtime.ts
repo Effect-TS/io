@@ -5,11 +5,11 @@ import * as Exit from "@effect/io/Exit"
 import * as Fiber from "@effect/io/Fiber"
 import * as FiberId from "@effect/io/Fiber/Id"
 import * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
-import * as FiberScope from "@effect/io/Fiber/Scope"
 import type * as FiberRef from "@effect/io/FiberRef"
 import * as FiberRefs from "@effect/io/FiberRefs"
 import * as core from "@effect/io/internal/core"
 import * as FiberRuntime from "@effect/io/internal/fiberRuntime"
+import * as fiberScope from "@effect/io/internal/fiberScope"
 import * as OpCodes from "@effect/io/internal/opCodes/effect"
 import * as Scheduler from "@effect/io/internal/scheduler"
 import type * as Runtime from "@effect/io/Runtime"
@@ -60,7 +60,7 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
 
     fiberRuntime.start(effect)
 
-    FiberScope.globalScope.add(this.runtimeFlags, fiberRuntime)
+    fiberScope.globalScope.add(this.runtimeFlags, fiberRuntime)
 
     return fiberRuntime
   }
@@ -96,7 +96,7 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
 
     fiberRuntime.start(effect)
 
-    FiberScope.globalScope.add(this.runtimeFlags, fiberRuntime)
+    fiberScope.globalScope.add(this.runtimeFlags, fiberRuntime)
 
     fiberRuntime.unsafeAddObserver((exit) => {
       k(exit)
@@ -153,7 +153,7 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
 
     fiberRuntime.start(effect)
 
-    FiberScope.globalScope.add(this.runtimeFlags, fiberRuntime)
+    fiberScope.globalScope.add(this.runtimeFlags, fiberRuntime)
 
     scheduler.flush()
 

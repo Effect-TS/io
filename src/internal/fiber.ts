@@ -6,7 +6,7 @@ import * as Exit from "@effect/io/Exit"
 import type * as Fiber from "@effect/io/Fiber"
 import * as FiberId from "@effect/io/Fiber/Id"
 import * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
-import type * as FiberStatus from "@effect/io/Fiber/Status"
+import * as FiberStatus from "@effect/io/Fiber/Status"
 import * as core from "@effect/io/internal/core"
 import * as fiberScope from "@effect/io/internal/fiberScope"
 import * as order from "@fp-ts/core/typeclass/Order"
@@ -374,18 +374,17 @@ const parseMs = (milliseconds: number) => {
 
 /** @internal */
 const renderStatus = (status: FiberStatus.FiberStatus): string => {
-  switch (status._tag) {
-    case "Done":
-      return "Done"
-    case "Running":
-      return "Running"
-    case "Suspended": {
-      const isInterruptible = RuntimeFlags.interruptible(status.runtimeFlags) ?
-        "interruptible" :
-        "uninterruptible"
-      return `Suspended(${isInterruptible})`
-    }
+  if (FiberStatus.isDone(status)) {
+    return "Done"
   }
+  if (FiberStatus.isRunning(status)) {
+    return "Running"
+  }
+
+  const isInterruptible = RuntimeFlags.interruptible(status.runtimeFlags) ?
+    "interruptible" :
+    "uninterruptible"
+  return `Suspended(${isInterruptible})`
 }
 
 /** @internal */
@@ -404,19 +403,14 @@ export const pretty = <E, A>(self: Fiber.RuntimeFiber<E, A>): Effect.Effect<neve
             (days === 0 && hours === 0 && minutes === 0 ? "" : `${minutes}m`) +
             (days === 0 && hours === 0 && minutes === 0 && seconds === 0 ? "" : `${seconds}s`) +
             `${milliseconds}ms`
-          const waitMsg = ((status: FiberStatus.FiberStatus) => {
-            switch (status._tag) {
-              case "Suspended": {
-                const ids = FiberId.ids(status.blockingOn)
-                return HashSet.size(ids) > 0
-                  ? `waiting on ` + Array.from(ids).map((id) => `${id}`).join(", ")
-                  : ""
-              }
-              default: {
-                return ""
-              }
-            }
-          })(dump.status)
+          const waitMsg = FiberStatus.isSuspended(dump.status) ?
+            (() => {
+              const ids = FiberId.ids(dump.status.blockingOn)
+              return HashSet.size(ids) > 0
+                ? `waiting on ` + Array.from(ids).map((id) => `${id}`).join(", ")
+                : ""
+            })() :
+            ""
           const statusMsg = renderStatus(dump.status)
           return `[Fiber](#${dump.id.id}) (${lifeMsg}) ${waitMsg}\n   Status: ${statusMsg}`
         })
