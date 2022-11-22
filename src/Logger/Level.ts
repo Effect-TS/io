@@ -113,89 +113,42 @@ export interface None {
  * @since 1.0.0
  * @category constructors
  */
-export const All: LogLevel = {
-  _tag: "All",
-  syslog: 0,
-  label: "ALL",
-  ordinal: Number.MIN_SAFE_INTEGER
-}
-
+export const All: LogLevel = core.logLevelAll
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const Fatal: LogLevel = {
-  _tag: "Fatal",
-  syslog: 2,
-  label: "FATAL",
-  ordinal: 50000
-}
-
+export const Fatal: LogLevel = core.logLevelFatal
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const Error: LogLevel = {
-  _tag: "Error",
-  syslog: 3,
-  label: "ERROR",
-  ordinal: 40000
-}
-
+export const Error: LogLevel = core.logLevelError
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const Warning: LogLevel = {
-  _tag: "Warning",
-  syslog: 4,
-  label: "WARN",
-  ordinal: 30000
-}
-
+export const Warning: LogLevel = core.logLevelWarning
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const Info: LogLevel = {
-  _tag: "Info",
-  syslog: 6,
-  label: "INFO",
-  ordinal: 20000
-}
-
+export const Info: LogLevel = core.logLevelInfo
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const Debug: LogLevel = {
-  _tag: "Debug",
-  syslog: 7,
-  label: "DEBUG",
-  ordinal: 10000
-}
-
+export const Debug: LogLevel = core.logLevelDebug
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const Trace: LogLevel = {
-  _tag: "Trace",
-  syslog: 7,
-  label: "TRACE",
-  ordinal: 0
-}
-
+export const Trace: LogLevel = core.logLevelTrace
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const None: LogLevel = {
-  _tag: "None",
-  syslog: 7,
-  label: "OFF",
-  ordinal: Number.MAX_SAFE_INTEGER
-}
+export const None: LogLevel = core.logLevelNone
 
 /**
  * Locally applies the specified `LogLevel` to an `Effect` workflow, reverting
