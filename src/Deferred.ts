@@ -56,142 +56,158 @@ export declare namespace Deferred {
 /**
  * Creates a new `Deferred`.
  *
+ * @macro traced
  * @since 1.0.0
  * @category constructors
  */
-export const make = core.makeDeferred
+export const make = core.deferredMake
 
 /**
  * Creates a new `Deferred` from the specified `FiberId`.
  *
+ * @macro traced
  * @since 1.0.0
  * @category constructors
  */
-export const makeAs = core.makeAsDeferred
+export const makeAs = core.deferredMakeAs
 
 /**
  * Completes the `Deferred` with the specified value.
  *
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const succeed = core.succeedDeferred
+export const succeed = core.deferredSucceed
 
 /**
  * Completes the `Deferred` with the specified value.
  *
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const sync = core.syncDeferred
+export const sync = core.deferredSync
 
 /**
  * Fails the `Deferred` with the specified error, which will be propagated to
  * all fibers waiting on the value of the `Deferred`.
  *
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const fail = core.failDeferred
+export const fail = core.deferredFail
 
 /**
  * Fails the `Deferred` with the specified error, which will be propagated to
  * all fibers waiting on the value of the `Deferred`.
  *
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const failSync = core.failSyncDeferred
+export const failSync = core.deferredFailSync
 
 /**
  * Fails the `Deferred` with the specified `Cause`, which will be propagated to
  * all fibers waiting on the value of the `Deferred`.
  *
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const failCause = core.failCauseDeferred
+export const failCause = core.deferredFailCause
 
 /**
  * Fails the `Deferred` with the specified `Cause`, which will be propagated to
  * all fibers waiting on the value of the `Deferred`.
  *
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const failCauseSync = core.failCauseSyncDeferred
+export const failCauseSync = core.deferredFailCauseSync
 
 /**
  * Kills the `Deferred` with the specified defect, which will be propagated to
  * all fibers waiting on the value of the `Deferred`.
  *
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const die = core.dieDeferred
+export const die = core.deferredDie
 
 /**
  * Kills the `Deferred` with the specified defect, which will be propagated to
  * all fibers waiting on the value of the `Deferred`.
  *
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const dieSync = core.dieSyncDeferred
+export const dieSync = core.deferredDieSync
 
 /**
  * Completes the `Deferred` with interruption. This will interrupt all fibers
  * waiting on the value of the `Deferred` with the `FiberId` of the fiber
  * calling this method.
  *
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const interrupt = core.interruptDeferred
+export const interrupt = core.deferredInterrupt
 
 /**
  * Completes the `Deferred` with interruption. This will interrupt all fibers
  * waiting on the value of the `Deferred` with the specified `FiberId`.
  *
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const interruptAs = core.interruptAsDeferred
+export const interruptWith = core.deferredInterruptWith
 
 /**
  * Exits the `Deferred` with the specified `Exit` value, which will be
  * propagated to all fibers waiting on the value of the `Deferred`.
  *
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const done = core.doneDeferred
+export const done = core.deferredDone
 
 /**
  * Returns `true` if this `Deferred` has already been completed with a value or
  * an error, `false` otherwise.
  *
+ * @macro traced
  * @since 1.0.0
  * @category getters
  */
-export const isDone = core.isDoneDeferred
+export const isDone = core.deferredIsDone
 
 /**
  * Returns a `Some<Effect<R, E, A>>` from the `Deferred` if this `Deferred` has
  * already been completed, `None` otherwise.
  *
+ * @macro traced
  * @since 1.0.0
  * @category getters
  */
-export const poll = core.pollDeferred
+export const poll = core.deferredPoll
 
-const _await = core.awaitDeferred
+const _await = core.deferredAwait
 
 export {
   /**
    * Retrieves the value of the `Deferred`, suspending the fiber running the
    * workflow until the result is available.
    *
+   * @macro traced
    * @since 1.0.0
    * @category getters
    */
@@ -205,19 +221,21 @@ export {
  * Note that `Deferred.completeWith` will be much faster, so consider using
  * that if you do not need to memoize the result of the specified effect.
  *
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const complete = core.completeDeferred
+export const complete = core.deferredComplete
 
 /**
  * Completes the deferred with the result of the specified effect. If the
  * deferred has already been completed, the method will produce false.
  *
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const completeWith = core.completeWithDeferred
+export const completeWith = core.deferredCompleteWith
 
 /**
  * Unsafely creates a new `Deferred` from the specified `FiberId`.
@@ -225,7 +243,7 @@ export const completeWith = core.completeWithDeferred
  * @since 1.0.0
  * @category unsafe
  */
-export const unsafeMake = core.unsafeMakeDeferred
+export const unsafeMake = core.deferredUnsafeMake
 
 /**
  * Unsafely exits the `Deferred` with the specified `Exit` value, which will be
@@ -234,4 +252,4 @@ export const unsafeMake = core.unsafeMakeDeferred
  * @since 1.0.0
  * @category unsafe
  */
-export const unsafeDone = core.unsafeDoneDeferred
+export const unsafeDone = core.deferredUnsafeDone

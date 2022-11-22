@@ -166,7 +166,7 @@ const makeSubscription = <A>(
 ): Effect.Effect<never, never, Queue.Dequeue<A>> => {
   const trace = getCallTrace()
   return pipe(
-    core.makeDeferred<never, void>(),
+    core.deferredMake<never, void>(),
     core.map((deferred) =>
       unsafeMakeSubscription(
         hub,
@@ -866,13 +866,13 @@ class SubscriptionImpl<A> implements Queue.Dequeue<A> {
         pipe(this.shutdownFlag, MutableRef.set(true))
         return pipe(
           unsafePollAllQueue(this.pollers),
-          fiberRuntime.forEachPar(core.interruptAsDeferred(state.id())),
+          fiberRuntime.forEachPar(core.deferredInterruptWith(state.id())),
           core.zipRight(core.sync(() => this.subscription.unsubscribe())),
           core.zipRight(core.sync(() => this.strategy.unsafeOnHubEmptySpace(this.hub, this.subscribers))),
           core.whenEffect(
             pipe(
               this.shutdownHook,
-              core.succeedDeferred<void>(void 0)
+              core.deferredSucceed<void>(void 0)
             )
           ),
           core.asUnit
@@ -889,7 +889,7 @@ class SubscriptionImpl<A> implements Queue.Dequeue<A> {
 
   awaitShutdown(): Effect.Effect<never, never, void> {
     const trace = getCallTrace()
-    return core.awaitDeferred(this.shutdownHook).traced(trace)
+    return core.deferredAwait(this.shutdownHook).traced(trace)
   }
 
   take(): Effect.Effect<never, never, A> {
@@ -902,7 +902,7 @@ class SubscriptionImpl<A> implements Queue.Dequeue<A> {
         ? this.subscription.poll(MutableQueue.EmptyMutableQueue)
         : MutableQueue.EmptyMutableQueue
       if (message === MutableQueue.EmptyMutableQueue) {
-        const deferred = core.unsafeMakeDeferred<never, A>(state.id())
+        const deferred = core.deferredUnsafeMake<never, A>(state.id())
         return pipe(
           core.suspendSucceed(() => {
             pipe(this.pollers, MutableQueue.offer(deferred))
@@ -913,7 +913,7 @@ class SubscriptionImpl<A> implements Queue.Dequeue<A> {
               this.subscription,
               this.pollers
             )
-            return MutableRef.get(this.shutdownFlag) ? core.interrupt() : core.awaitDeferred(deferred)
+            return MutableRef.get(this.shutdownFlag) ? core.interrupt() : core.deferredAwait(deferred)
           }),
           core.onInterrupt(() => core.sync(() => unsafeRemove(this.pollers, deferred)))
         )
@@ -1031,7 +1031,7 @@ class HubImpl<A> implements Hub.Hub<A> {
 
   awaitShutdown(): Effect.Effect<never, never, void> {
     const trace = getCallTrace()
-    return core.awaitDeferred(this.shutdownHook).traced(trace)
+    return core.deferredAwait(this.shutdownHook).traced(trace)
   }
 
   isShutdown(): Effect.Effect<never, never, boolean> {
@@ -1050,7 +1050,7 @@ class HubImpl<A> implements Hub.Hub<A> {
           core.whenEffect(
             pipe(
               this.shutdownHook,
-              core.succeedDeferred<void>(void 0)
+              core.deferredSucceed<void>(void 0)
             )
           ),
           core.asUnit
@@ -1133,7 +1133,7 @@ export const makeHub = <A>(
     fiberRuntime.scopeMake(),
     core.flatMap((scope) =>
       pipe(
-        core.makeDeferred<never, void>(),
+        core.deferredMake<never, void>(),
         core.map((deferred) =>
           unsafeMakeHub(
             hub,
@@ -1176,7 +1176,7 @@ const ensureCapacity = (capacity: number): void => {
 
 /** @internal */
 const unsafeCompleteDeferred = <A>(deferred: Deferred.Deferred<never, A>, a: A): void => {
-  pipe(deferred, core.unsafeDoneDeferred(core.succeed(a)))
+  pipe(deferred, core.deferredUnsafeDone(core.succeed(a)))
 }
 
 /** @internal */
@@ -1300,7 +1300,7 @@ class BackPressureStrategy<A> implements HubStrategy<A> {
               publishers,
               fiberRuntime.forEachParDiscard(([_, deferred, last]) =>
                 last ?
-                  pipe(deferred, core.interruptAsDeferred(fiberId), core.asUnit) :
+                  pipe(deferred, core.deferredInterruptWith(fiberId), core.asUnit) :
                   core.unit()
               )
             )
@@ -1318,7 +1318,7 @@ class BackPressureStrategy<A> implements HubStrategy<A> {
   ): Effect.Effect<never, never, boolean> {
     const trace = getCallTrace()
     return core.withFiberRuntime<never, never, boolean>((state) => {
-      const deferred = core.unsafeMakeDeferred<never, boolean>(state.id())
+      const deferred = core.deferredUnsafeMake<never, boolean>(state.id())
       return pipe(
         core.suspendSucceed(() => {
           this.unsafeOffer(elements, deferred)
@@ -1326,7 +1326,7 @@ class BackPressureStrategy<A> implements HubStrategy<A> {
           this.unsafeCompleteSubscribers(hub, subscribers)
           return MutableRef.get(isShutdown) ?
             core.interrupt() :
-            core.awaitDeferred(deferred)
+            core.deferredAwait(deferred)
         }),
         core.onInterrupt(() => core.sync(() => this.unsafeRemove(deferred)))
       )

@@ -51,98 +51,105 @@ export interface Variance<A> {
  * @since 1.0.0
  * @category constructors
  */
-export const make = fiberRuntime.makeFiberRef
+export const make = fiberRuntime.fiberRefMake
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category constructors
  */
-export const makeWith = fiberRuntime.makeWithFiberRef
+export const makeWith = fiberRuntime.fiberRefMakeWith
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category constructors
  */
-export const makeEnvironment = fiberRuntime.makeEnvironmentFiberRef
+export const makeEnvironment = fiberRuntime.fiberRefMakeEnvironment
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category constructors
  */
-export const makeRuntimeFlags = fiberRuntime.makeRuntimeFlagsFiberRef
+export const makeRuntimeFlags = fiberRuntime.fiberRefMakeRuntimeFlags
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const unsafeMake = core.unsafeMakeFiberRef
+export const unsafeMake = core.fiberRefUnsafeMake
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const unsafeMakeHashSet = core.unsafeMakeHashSetFiberRef
+export const unsafeMakeHashSet = core.fiberRefUnsafeMakeHashSet
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const unsafeMakeEnvironment = core.unsafeMakeEnvironmentFiberRef
+export const unsafeMakeEnvironment = core.fiberRefUnsafeMakeEnvironment
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const unsafeMakeSupervisor = fiberRuntime.unsafeMakeSupervisorFiberRef
+export const unsafeMakeSupervisor = fiberRuntime.fiberRefUnsafeMakeSupervisor
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const unsafeMakePatch = core.unsafeMakePatchFiberRef
+export const unsafeMakePatch = core.fiberRefUnsafeMakePatch
 
 /**
+ * @macro traced
  * @since 1.0.0
  * @category getters
  */
-export const get = core.getFiberRef
+export const get = core.fiberRefGet
 
 /**
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const getAndSet = core.getAndSetFiberRef
+export const getAndSet = core.fiberRefGetAndSet
 
 /**
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const getAndUpdate = core.getAndUpdateFiberRef
+export const getAndUpdate = core.fiberRefgetAndUpdate
 
 /**
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const getAndUpdateSome = core.getAndUpdateSomeFiberRef
+export const getAndUpdateSome = core.fiberRefGetAndUpdateSome
 
 /**
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const getWith = core.getWithFiberRef
+export const getWith = core.fiberRefGetWith
 
 /**
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const set = core.setFiberRef
+export const set = core.fiberRefSet
 
-const _delete = core.deleteFiberRef
+const _delete = core.fiberRefDelete
 export {
   /**
+   * @macro traced
    * @since 1.0.0
    * @category mutations
    */
@@ -150,78 +157,91 @@ export {
 }
 
 /**
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const reset = core.resetFiberRef
+export const reset = core.fiberRefReset
 
 /**
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const modify = core.modifyFiberRef
+export const modify = core.fiberRefModify
 
 /**
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const modifySome = core.modifySomeFiberRef
+export const modifySome = core.fiberRefModifySome
 
 /**
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const update = core.updateFiberRef
+export const update = core.fiberRefUpdate
 
 /**
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const updateSome = core.updateSomeFiberRef
+export const updateSome = core.fiberRefUpdateSome
 
 /**
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const updateAndGet = core.updateAndGetFiberRef
+export const updateAndGet = core.fiberRefUpdateAndGet
 
 /**
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const updateSomeAndGet = core.updateSomeAndGetFiberRef
+export const updateSomeAndGet = core.fiberRefUpdateSomeAndGet
 
 /**
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const locally = core.locallyFiberRef
+export const locally = core.fiberRefLocally
 
 /**
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const locallyWith = core.locallyWithFiberRef
+export const locallyWith = core.fiberRefLocallyWith
 
 /**
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const locallyScoped = fiberRuntime.locallyScopedFiberRef
+export const locallyScoped = fiberRuntime.fiberRefLocallyScoped
 
 /**
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const locallyScopedWith = fiberRuntime.locallyScopedFiberRef
+export const locallyScopedWith = fiberRuntime.fiberRefLocallyScoped
 
 /**
+ * @macro traced
  * @since 1.0.0
  * @category fiberRefs
  */
 export const currentEnvironment = core.currentEnvironment
 
 /**
+ * @macro traced
  * @since 1.0.0
  * @category fiberRefs
  */

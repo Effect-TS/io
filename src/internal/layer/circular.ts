@@ -31,7 +31,7 @@ export const loggerLayer = <B>(logger: Logger.Logger<string, B>): Layer.Layer<ne
   return layer.scopedDiscard(
     pipe(
       _logger.currentLoggers,
-      fiberRuntime.locallyScopedWithFiberRef(HashSet.add(logger))
+      fiberRuntime.fiberRefLocallyScopedWith(HashSet.add(logger))
     )
   )
 }

@@ -61,7 +61,7 @@ class AnnotationsImpl implements Annotations {
   get<A>(key: TestAnnotation.TestAnnotation<A>): Effect.Effect<never, never, A> {
     const trace = getCallTrace()
     return pipe(
-      core.getFiberRef(this.fiberRef),
+      core.fiberRefGet(this.fiberRef),
       core.map(TestAnnotationMap.get(key))
     ).traced(trace)
   }
@@ -69,14 +69,14 @@ class AnnotationsImpl implements Annotations {
     const trace = getCallTrace()
     return pipe(
       this.fiberRef,
-      core.updateFiberRef(TestAnnotationMap.annotate(key, value))
+      core.fiberRefUpdate(TestAnnotationMap.annotate(key, value))
     ).traced(trace)
   }
   supervisedFibers(): Effect.Effect<never, never, SortedSet.SortedSet<Fiber.RuntimeFiber<unknown, unknown>>> {
     const trace = getCallTrace()
     return effect.descriptorWith((descriptor) =>
       pipe(
-        core.getFiberRef(this.fiberRef),
+        core.fiberRefGet(this.fiberRef),
         core.map(TestAnnotationMap.get(TestAnnotation.fibers)),
         core.flatMap((either) => {
           switch (either._tag) {
@@ -155,7 +155,7 @@ export const supervisedFibers = (): Effect.Effect<
  */
 export const live: Layer.Layer<never, never, Annotations> = layer.scoped(Tag)(
   pipe(
-    fiberRuntime.makeFiberRef(TestAnnotationMap.empty),
+    fiberRuntime.fiberRefMake(TestAnnotationMap.empty),
     core.map((fiberRef): Annotations => new AnnotationsImpl(fiberRef))
   )
 )

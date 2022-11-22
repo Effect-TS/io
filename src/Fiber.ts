@@ -268,7 +268,7 @@ export {
  * @since 1.0.0
  * @category destructors
  */
-export const awaitAll = fiberRuntime.awaitAll
+export const awaitAll = fiberRuntime.fiberAwaitAll
 
 /**
  * Retrieves the immediate children of the fiber.
@@ -287,7 +287,7 @@ export const children = internal.children
  * @since 1.0.0
  * @category constructors
  */
-export const collectAll = fiberRuntime.collectAll
+export const collectAll = fiberRuntime.fiberCollectAll
 
 /**
  * A fiber that is done with the specified `Exit` value.
@@ -416,7 +416,7 @@ export const interruptAllWith = internal.interruptAllWith
  * @since 1.0.0
  * @category interruption
  */
-export const interruptFork = fiberRuntime.interruptFork
+export const interruptFork = fiberRuntime.fiberInterruptFork
 
 /**
  * Joins the fiber, which suspends the joining fiber until the result of the
@@ -440,7 +440,7 @@ export const join = internal.join
  * @since 1.0.0
  * @category destructors
  */
-export const joinAll = fiberRuntime.joinAll
+export const joinAll = fiberRuntime.fiberJoinAll
 
 /**
  * Maps over the value the Fiber computes.
@@ -540,7 +540,7 @@ export const roots = internal.roots
  * @since 1.0.0
  * @category destructors
  */
-export const scoped = fiberRuntime.scoped
+export const scoped = fiberRuntime.fiberScoped
 
 /**
  * Returns the `FiberStatus` of a `RuntimeFiber`.

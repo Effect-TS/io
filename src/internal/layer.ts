@@ -191,7 +191,7 @@ class MemoMap {
           ref.make(0),
           core.flatMap((observers) =>
             pipe(
-              core.makeDeferred<E, readonly [FiberRefsPatch.FiberRefsPatch, Context.Context<ROut>]>(),
+              core.deferredMake<E, readonly [FiberRefsPatch.FiberRefsPatch, Context.Context<ROut>]>(),
               core.flatMap((deferred) =>
                 pipe(
                   ref.make<Scope.Scope.Finalizer>(() => core.unit()),
@@ -214,7 +214,7 @@ class MemoMap {
                                 case EffectOpCodes.OP_FAILURE: {
                                   return pipe(
                                     deferred,
-                                    core.failCauseDeferred(exit.cause),
+                                    core.deferredFailCause(exit.cause),
                                     core.zipRight(pipe(innerScope, core.scopeClose(exit))),
                                     core.zipRight(core.failCause(exit.cause))
                                   )
@@ -247,7 +247,7 @@ class MemoMap {
                                         )
                                       )
                                     ),
-                                    core.zipRight(pipe(deferred, core.succeedDeferred(exit.value))),
+                                    core.zipRight(pipe(deferred, core.deferredSucceed(exit.value))),
                                     core.as(exit.value[1])
                                   )
                                 }
@@ -259,7 +259,7 @@ class MemoMap {
                     )
                     const memoized = [
                       pipe(
-                        core.awaitDeferred(deferred),
+                        core.deferredAwait(deferred),
                         core.onExit(core.exitMatchEffect(
                           () => core.unit(),
                           () => pipe(observers, ref.update((n) => n + 1))

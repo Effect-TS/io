@@ -324,7 +324,10 @@ export const catchAllCause = <E, R2, E2, A2>(
 export const checkInterruptible = <R, E, A>(
   f: (isInterruptible: boolean) => Effect.Effect<R, E, A>
 ): Effect.Effect<R, E, A> => {
-  return withFiberRuntime((_, status) => f(RuntimeFlags.interruption(status.runtimeFlags)))
+  const trace = getCallTrace()
+  return withFiberRuntime<R, E, A>(
+    (_, status) => f(RuntimeFlags.interruption(status.runtimeFlags))
+  ).traced(trace)
 }
 
 /** @internal */
@@ -361,7 +364,7 @@ export const either = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, 
 export const environment = <R>(): Effect.Effect<R, never, Context.Context<R>> => {
   const trace = getCallTrace()
   return suspendSucceed(
-    () => getFiberRef(currentEnvironment) as Effect.Effect<never, never, Context.Context<R>>
+    () => fiberRefGet(currentEnvironment) as Effect.Effect<never, never, Context.Context<R>>
   ).traced(trace)
 }
 
@@ -624,7 +627,7 @@ export const intoDeferred = <E, A>(deferred: Deferred.Deferred<E, A>) => {
       return pipe(
         restore(self),
         exit,
-        flatMap((exit) => pipe(deferred, doneDeferred(exit)))
+        flatMap((exit) => pipe(deferred, deferredDone(exit)))
       )
     }).traced(trace)
 }
@@ -740,7 +743,7 @@ export const provideEnvironment = <R>(environment: Context.Context<R>) => {
   return <E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<never, E, A> => {
     return pipe(
       self as Effect.Effect<never, E, A>,
-      pipe(currentEnvironment, locallyFiberRef(environment as Context.Context<never>))
+      pipe(currentEnvironment, fiberRefLocally(environment as Context.Context<never>))
     ).traced(trace)
   }
 }
@@ -760,8 +763,9 @@ export const service = <T>(tag: Context.Tag<T>): Effect.Effect<T, never, T> => {
 
 /** @internal */
 export const serviceWith = <T>(tag: Context.Tag<T>) => {
+  const trace = getCallTrace()
   return <A>(f: (a: T) => A): Effect.Effect<T, never, A> => {
-    return serviceWithEffect(tag)((a) => sync(() => f(a)))
+    return serviceWithEffect(tag)((a) => sync(() => f(a))).traced(trace)
   }
 }
 
@@ -771,7 +775,7 @@ export const serviceWithEffect = <T>(tag: Context.Tag<T>) => {
     const trace = getCallTrace()
     return suspendSucceed(() =>
       pipe(
-        getFiberRef(currentEnvironment),
+        fiberRefGet(currentEnvironment),
         flatMap((env) => f(pipe(env, Context.unsafeGet(tag))))
       )
     ).traced(trace)
@@ -825,7 +829,7 @@ export const transplant = <R, E, A>(
   return withFiberRuntime<R, E, A>((state) => {
     const scopeOverride = state.getFiberRef(forkScopeOverride)
     const scope = pipe(scopeOverride, Option.getOrElse(() => state.scope()))
-    return f(pipe(forkScopeOverride, locallyFiberRef(Option.some(scope))))
+    return f(pipe(forkScopeOverride, fiberRefLocally(Option.some(scope))))
   }).traced(trace)
 }
 
@@ -937,7 +941,7 @@ export const withParallelism = (parallelism: number) => {
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
     const trace = getCallTrace()
     return suspendSucceed(
-      () => pipe(self, locallyFiberRef(Option.some(parallelism))(currentParallelism))
+      () => pipe(self, fiberRefLocally(Option.some(parallelism))(currentParallelism))
     ).traced(trace)
   }
 }
@@ -946,7 +950,7 @@ export const withParallelism = (parallelism: number) => {
 export const withParallelismUnbounded = <R, E, A>(self: Effect.Effect<R, E, A>) => {
   const trace = getCallTrace()
   return suspendSucceed(
-    () => pipe(self, locallyFiberRef(Option.none as Option.Option<number>)(currentParallelism))
+    () => pipe(self, fiberRefLocally(Option.none as Option.Option<number>)(currentParallelism))
   ).traced(trace)
 }
 
@@ -1045,139 +1049,164 @@ const fiberRefVariance = {
 }
 
 /** @internal */
-export const getFiberRef = <A>(self: FiberRef.FiberRef<A>): Effect.Effect<never, never, A> => {
-  return pipe(self, modifyFiberRef((a) => [a, a] as const))
+export const fiberRefGet = <A>(self: FiberRef.FiberRef<A>): Effect.Effect<never, never, A> => {
+  const trace = getCallTrace()
+  return pipe(self, fiberRefModify((a) => [a, a] as const)).traced(trace)
 }
 
 /** @internal */
-export const getAndSetFiberRef = <A>(value: A) => {
+export const fiberRefGetAndSet = <A>(value: A) => {
+  const trace = getCallTrace()
   return (self: FiberRef.FiberRef<A>): Effect.Effect<never, never, A> => {
-    return pipe(self, modifyFiberRef((v) => [v, value] as const))
+    return pipe(self, fiberRefModify((v) => [v, value] as const)).traced(trace)
   }
 }
 
 /** @internal */
-export const getAndUpdateFiberRef = <A>(f: (a: A) => A) => {
+export const fiberRefgetAndUpdate = <A>(f: (a: A) => A) => {
+  const trace = getCallTrace()
   return (self: FiberRef.FiberRef<A>): Effect.Effect<never, never, A> => {
-    return pipe(self, modifyFiberRef((v) => [v, f(v)] as const))
+    return pipe(self, fiberRefModify((v) => [v, f(v)] as const)).traced(trace)
   }
 }
 
 /** @internal */
-export const getAndUpdateSomeFiberRef = <A>(pf: (a: A) => Option.Option<A>) => {
+export const fiberRefGetAndUpdateSome = <A>(pf: (a: A) => Option.Option<A>) => {
+  const trace = getCallTrace()
   return (self: FiberRef.FiberRef<A>): Effect.Effect<never, never, A> => {
-    return pipe(self, modifyFiberRef((v) => [v, pipe(pf(v), Option.getOrElse(() => v))] as const))
+    return pipe(self, fiberRefModify((v) => [v, pipe(pf(v), Option.getOrElse(() => v))] as const)).traced(trace)
   }
 }
 
 /** @internal */
-export const getWithFiberRef = <R, E, A, B>(f: (a: A) => Effect.Effect<R, E, B>) => {
+export const fiberRefGetWith = <R, E, A, B>(f: (a: A) => Effect.Effect<R, E, B>) => {
+  const trace = getCallTrace()
   return (self: FiberRef.FiberRef<A>): Effect.Effect<R, E, B> => {
-    return pipe(getFiberRef(self), flatMap(f))
+    return pipe(fiberRefGet(self), flatMap(f)).traced(trace)
   }
 }
 
 /** @internal */
-export const setFiberRef = <A>(value: A) => {
+export const fiberRefSet = <A>(value: A) => {
+  const trace = getCallTrace()
   return (self: FiberRef.FiberRef<A>): Effect.Effect<never, never, void> => {
-    return pipe(self, modifyFiberRef(() => [undefined, value] as const))
+    return pipe(self, fiberRefModify(() => [undefined, value] as const)).traced(trace)
   }
 }
 
 /** @internal */
-export const deleteFiberRef = <A>(self: FiberRef.FiberRef<A>): Effect.Effect<never, never, void> => {
-  return withFiberRuntime((state) => {
+export const fiberRefDelete = <A>(self: FiberRef.FiberRef<A>): Effect.Effect<never, never, void> => {
+  const trace = getCallTrace()
+  return withFiberRuntime<never, never, void>((state) => {
     state.unsafeDeleteFiberRef(self)
     return unit()
-  })
+  }).traced(trace)
 }
 
 /** @internal */
-export const resetFiberRef = <A>(self: FiberRef.FiberRef<A>): Effect.Effect<never, never, void> => {
-  return pipe(self, setFiberRef(self.initial))
+export const fiberRefReset = <A>(self: FiberRef.FiberRef<A>): Effect.Effect<never, never, void> => {
+  const trace = getCallTrace()
+  return pipe(self, fiberRefSet(self.initial)).traced(trace)
 }
 
 /** @internal */
-export const modifyFiberRef = <A, B>(f: (a: A) => readonly [B, A]) => {
+export const fiberRefModify = <A, B>(f: (a: A) => readonly [B, A]) => {
+  const trace = getCallTrace()
   return (self: FiberRef.FiberRef<A>): Effect.Effect<never, never, B> => {
-    return withFiberRuntime((state) => {
+    return withFiberRuntime<never, never, B>((state) => {
       const [b, a] = f(state.getFiberRef(self) as A)
       state.setFiberRef(self, a)
       return succeed(b)
-    })
+    }).traced(trace)
   }
 }
 
 /** @internal */
-export const modifySomeFiberRef = <B, A>(def: B, f: (a: A) => Option.Option<readonly [B, A]>) => {
+export const fiberRefModifySome = <B, A>(def: B, f: (a: A) => Option.Option<readonly [B, A]>) => {
+  const trace = getCallTrace()
   return (self: FiberRef.FiberRef<A>): Effect.Effect<never, never, B> => {
-    return pipe(self, modifyFiberRef((v) => pipe(f(v), Option.getOrElse(() => [def, v] as const))))
+    return pipe(self, fiberRefModify((v) => pipe(f(v), Option.getOrElse(() => [def, v] as const)))).traced(trace)
   }
 }
 
 /** @internal */
-export const updateFiberRef = <A>(f: (a: A) => A) => {
+export const fiberRefUpdate = <A>(f: (a: A) => A) => {
+  const trace = getCallTrace()
   return (self: FiberRef.FiberRef<A>): Effect.Effect<never, never, void> => {
-    return pipe(self, modifyFiberRef((v) => [undefined, f(v)] as const))
+    return pipe(self, fiberRefModify((v) => [void 0, f(v)] as const)).traced(trace)
   }
 }
 
 /** @internal */
-export const updateSomeFiberRef = <A>(
-  pf: (a: A) => Option.Option<A>
-): (self: FiberRef.FiberRef<A>) => Effect.Effect<never, never, void> => {
-  return modifyFiberRef((v) => [undefined, pipe(pf(v), Option.getOrElse(() => v))] as const)
+export const fiberRefUpdateSome = <A>(pf: (a: A) => Option.Option<A>) => {
+  const trace = getCallTrace()
+  return (self: FiberRef.FiberRef<A>): Effect.Effect<never, never, void> => {
+    return pipe(
+      self,
+      fiberRefModify((v) => [void 0, pipe(pf(v), Option.getOrElse(() => v))] as const)
+    ).traced(trace)
+  }
 }
 
 /** @internal */
-export const updateAndGetFiberRef = <A>(
-  f: (a: A) => A
-): (self: FiberRef.FiberRef<A>) => Effect.Effect<never, never, A> => {
-  return modifyFiberRef((v) => {
-    const result = f(v)
-    return [result, result] as const
-  })
+export const fiberRefUpdateAndGet = <A>(f: (a: A) => A) => {
+  const trace = getCallTrace()
+  return (self: FiberRef.FiberRef<A>): Effect.Effect<never, never, A> => {
+    return pipe(
+      self,
+      fiberRefModify((v) => {
+        const result = f(v)
+        return [result, result] as const
+      })
+    ).traced(trace)
+  }
 }
 
 /** @internal */
-export const updateSomeAndGetFiberRef = <A>(
-  pf: (a: A) => Option.Option<A>
-): (self: FiberRef.FiberRef<A>) => Effect.Effect<never, never, A> => {
-  return modifyFiberRef((v) => {
-    const result = pipe(pf(v), Option.getOrElse(() => v))
-    return [result, result] as const
-  })
+export const fiberRefUpdateSomeAndGet = <A>(pf: (a: A) => Option.Option<A>) => {
+  const trace = getCallTrace()
+  return (self: FiberRef.FiberRef<A>): Effect.Effect<never, never, A> => {
+    return pipe(
+      self,
+      fiberRefModify((v) => {
+        const result = pipe(pf(v), Option.getOrElse(() => v))
+        return [result, result] as const
+      })
+    ).traced(trace)
+  }
 }
 
 /** @internal */
-export const locallyFiberRef = <A>(value: A) => {
+export const fiberRefLocally = <A>(value: A) => {
+  const trace = getCallTrace()
   return (self: FiberRef.FiberRef<A>) => {
     return <R, E, B>(use: Effect.Effect<R, E, B>): Effect.Effect<R, E, B> => {
       return acquireUseRelease(
-        pipe(getFiberRef(self), zipLeft(pipe(self, setFiberRef(value)))),
+        pipe(fiberRefGet(self), zipLeft(pipe(self, fiberRefSet(value)))),
         () => use,
-        (oldValue) => pipe(self, setFiberRef(oldValue))
-      )
+        (oldValue) => pipe(self, fiberRefSet(oldValue))
+      ).traced(trace)
     }
   }
 }
 
 /** @internal */
-export const locallyWithFiberRef = <A>(f: (a: A) => A) => {
+export const fiberRefLocallyWith = <A>(f: (a: A) => A) => {
+  const trace = getCallTrace()
   return (self: FiberRef.FiberRef<A>) => {
     return <R, E, B>(use: Effect.Effect<R, E, B>): Effect.Effect<R, E, B> => {
-      return pipe(self, getWithFiberRef((a) => pipe(use, pipe(self, locallyFiberRef(f(a))))))
+      return pipe(self, fiberRefGetWith((a) => pipe(use, pipe(self, fiberRefLocally(f(a)))))).traced(trace)
     }
   }
 }
 
 /** @internal */
-export const unsafeMakeFiberRef = <Value>(
+export const fiberRefUnsafeMake = <Value>(
   initial: Value,
   fork: (a: Value) => Value = identity,
   join: (left: Value, right: Value) => Value = (_, a) => a
 ): FiberRef.FiberRef<Value> => {
-  return unsafeMakePatchFiberRef(
+  return fiberRefUnsafeMakePatch(
     initial,
     Differ.update(),
     fork,
@@ -1186,10 +1215,10 @@ export const unsafeMakeFiberRef = <Value>(
 }
 
 /** @internal */
-export const unsafeMakeHashSetFiberRef = <A>(
+export const fiberRefUnsafeMakeHashSet = <A>(
   initial: HashSet.HashSet<A>
 ): FiberRef.FiberRef<HashSet.HashSet<A>> => {
-  return unsafeMakePatchFiberRef(
+  return fiberRefUnsafeMakePatch(
     initial,
     Differ.hashSet(),
     HashSetPatch.empty()
@@ -1197,10 +1226,10 @@ export const unsafeMakeHashSetFiberRef = <A>(
 }
 
 /** @internal */
-export const unsafeMakeEnvironmentFiberRef = <A>(
+export const fiberRefUnsafeMakeEnvironment = <A>(
   initial: Context.Context<A>
 ): FiberRef.FiberRef<Context.Context<A>> => {
-  return unsafeMakePatchFiberRef(
+  return fiberRefUnsafeMakePatch(
     initial,
     Differ.environment(),
     ContextPatch.empty()
@@ -1208,7 +1237,7 @@ export const unsafeMakeEnvironmentFiberRef = <A>(
 }
 
 /** @internal */
-export const unsafeMakePatchFiberRef = <Value, Patch>(
+export const fiberRefUnsafeMakePatch = <Value, Patch>(
   initial: Value,
   differ: Differ.Differ<Value, Patch>,
   fork: Patch,
@@ -1224,10 +1253,10 @@ export const unsafeMakePatchFiberRef = <Value, Patch>(
 })
 
 /** @internal */
-export const unsafeMakeRuntimeFlagsFiberRef = (
+export const fiberRefUnsafeMakeRuntimeFlags = (
   initial: RuntimeFlags.RuntimeFlags
 ): FiberRef.FiberRef<RuntimeFlags.RuntimeFlags> => {
-  return unsafeMakePatchFiberRef(
+  return fiberRefUnsafeMakePatch(
     initial,
     RuntimeFlags.differ(),
     RuntimeFlagsPatch.empty
@@ -1235,17 +1264,17 @@ export const unsafeMakeRuntimeFlagsFiberRef = (
 }
 
 /** @internal */
-export const currentEnvironment: FiberRef.FiberRef<Context.Context<never>> = unsafeMakeEnvironmentFiberRef(
+export const currentEnvironment: FiberRef.FiberRef<Context.Context<never>> = fiberRefUnsafeMakeEnvironment(
   Context.empty()
 )
 
 /** @internal */
-export const currentLogAnnotations: FiberRef.FiberRef<ReadonlyMap<string, string>> = unsafeMakeFiberRef(
+export const currentLogAnnotations: FiberRef.FiberRef<ReadonlyMap<string, string>> = fiberRefUnsafeMake(
   new Map() as ReadonlyMap<string, string>
 )
 
 /** @internal */
-export const currentLogLevel: FiberRef.FiberRef<LogLevel.LogLevel> = unsafeMakeFiberRef<LogLevel.LogLevel>({
+export const currentLogLevel: FiberRef.FiberRef<LogLevel.LogLevel> = fiberRefUnsafeMake<LogLevel.LogLevel>({
   _tag: "Info",
   syslog: 6,
   label: "INFO",
@@ -1253,27 +1282,27 @@ export const currentLogLevel: FiberRef.FiberRef<LogLevel.LogLevel> = unsafeMakeF
 })
 
 /** @internal */
-export const currentLogSpan: FiberRef.FiberRef<List.List<LogSpan.LogSpan>> = unsafeMakeFiberRef(
+export const currentLogSpan: FiberRef.FiberRef<List.List<LogSpan.LogSpan>> = fiberRefUnsafeMake(
   List.empty<LogSpan.LogSpan>()
 )
 
 /** @internal */
-export const currentScheduler: FiberRef.FiberRef<Scheduler.Scheduler> = unsafeMakeFiberRef(Scheduler.defaultScheduler)
+export const currentScheduler: FiberRef.FiberRef<Scheduler.Scheduler> = fiberRefUnsafeMake(Scheduler.defaultScheduler)
 
 /** @internal */
-export const currentParallelism: FiberRef.FiberRef<Option.Option<number>> = unsafeMakeFiberRef<Option.Option<number>>(
+export const currentParallelism: FiberRef.FiberRef<Option.Option<number>> = fiberRefUnsafeMake<Option.Option<number>>(
   Option.none
 )
 
 /** @internal */
-export const forkScopeOverride: FiberRef.FiberRef<Option.Option<FiberScope.FiberScope>> = unsafeMakeFiberRef(
+export const forkScopeOverride: FiberRef.FiberRef<Option.Option<FiberScope.FiberScope>> = fiberRefUnsafeMake(
   Option.none,
   () => Option.none as Option.Option<FiberScope.FiberScope>,
   (parent, _) => parent
 )
 
 /** @internal */
-export const interruptedCause: FiberRef.FiberRef<Cause.Cause<never>> = unsafeMakeFiberRef(
+export const interruptedCause: FiberRef.FiberRef<Cause.Cause<never>> = fiberRefUnsafeMake(
   Cause.empty,
   () => Cause.empty,
   (parent, _) => parent
@@ -1292,20 +1321,36 @@ export const CloseableScopeTypeId: Scope.CloseableScopeTypeId = Symbol.for(
 ) as Scope.CloseableScopeTypeId
 
 /** @internal */
-export const scopeAddFinalizer = (finalizer: Effect.Effect<never, never, unknown>) =>
-  (self: Scope.Scope): Effect.Effect<never, never, void> => self.addFinalizer(() => asUnit(finalizer))
+export const scopeAddFinalizer = (finalizer: Effect.Effect<never, never, unknown>) => {
+  const trace = getCallTrace()
+  return (self: Scope.Scope): Effect.Effect<never, never, void> => {
+    return self.addFinalizer(() => asUnit(finalizer)).traced(trace)
+  }
+}
 
 /** @internal */
-export const scopeAddFinalizerExit = (finalizer: Scope.Scope.Finalizer) =>
-  (self: Scope.Scope): Effect.Effect<never, never, void> => self.addFinalizer(finalizer)
+export const scopeAddFinalizerExit = (finalizer: Scope.Scope.Finalizer) => {
+  const trace = getCallTrace()
+  return (self: Scope.Scope): Effect.Effect<never, never, void> => {
+    return self.addFinalizer(finalizer).traced(trace)
+  }
+}
 
 /** @internal */
-export const scopeClose = (exit: Exit.Exit<unknown, unknown>) =>
-  (self: Scope.Scope.Closeable): Effect.Effect<never, never, void> => self.close(exit)
+export const scopeClose = (exit: Exit.Exit<unknown, unknown>) => {
+  const trace = getCallTrace()
+  return (self: Scope.Scope.Closeable): Effect.Effect<never, never, void> => {
+    return self.close(exit).traced(trace)
+  }
+}
 
 /** @internal */
-export const scopeFork = (strategy: ExecutionStrategy.ExecutionStrategy) =>
-  (self: Scope.Scope): Effect.Effect<never, never, Scope.Scope.Closeable> => self.fork(strategy)
+export const scopeFork = (strategy: ExecutionStrategy.ExecutionStrategy) => {
+  const trace = getCallTrace()
+  return (self: Scope.Scope): Effect.Effect<never, never, Scope.Scope.Closeable> => {
+    return self.fork(strategy).traced(trace)
+  }
+}
 
 // -----------------------------------------------------------------------------
 // ReleaseMap
@@ -1330,21 +1375,25 @@ export interface ReleaseMap {
 }
 
 /** @internal */
-export const releaseMapAdd = (finalizer: Scope.Scope.Finalizer) =>
-  (self: ReleaseMap) =>
-    pipe(
+export const releaseMapAdd = (finalizer: Scope.Scope.Finalizer) => {
+  const trace = getCallTrace()
+  return (self: ReleaseMap): Effect.Effect<never, never, Scope.Scope.Finalizer> => {
+    return pipe(
       self,
       releaseMapAddIfOpen(finalizer),
       map(Option.match(
         (): Scope.Scope.Finalizer => () => unit(),
         (key): Scope.Scope.Finalizer => (exit) => releaseMapRelease(key, exit)(self)
       ))
-    )
+    ).traced(trace)
+  }
+}
 
 /** @internal */
-export const releaseMapRelease = (key: number, exit: Exit.Exit<unknown, unknown>) =>
-  (self: ReleaseMap) =>
-    suspendSucceed(() => {
+export const releaseMapRelease = (key: number, exit: Exit.Exit<unknown, unknown>) => {
+  const trace = getCallTrace()
+  return (self: ReleaseMap): Effect.Effect<never, never, void> => {
+    return suspendSucceed(() => {
       switch (self.state._tag) {
         case "Exited": {
           return unit()
@@ -1358,12 +1407,15 @@ export const releaseMapRelease = (key: number, exit: Exit.Exit<unknown, unknown>
           return unit()
         }
       }
-    })
+    }).traced(trace)
+  }
+}
 
 /** @internal */
-export const releaseMapAddIfOpen = (finalizer: Scope.Scope.Finalizer) =>
-  (self: ReleaseMap) =>
-    suspendSucceed(() => {
+export const releaseMapAddIfOpen = (finalizer: Scope.Scope.Finalizer) => {
+  const trace = getCallTrace()
+  return (self: ReleaseMap): Effect.Effect<never, never, Option.Option<number>> => {
+    return suspendSucceed(() => {
       switch (self.state._tag) {
         case "Exited": {
           self.state.nextKey += 1
@@ -1376,19 +1428,25 @@ export const releaseMapAddIfOpen = (finalizer: Scope.Scope.Finalizer) =>
           return succeed(Option.some(key))
         }
       }
-    })
+    }).traced(trace)
+  }
+}
 
 /** @internal */
-export const releaseMapGet = (key: number) =>
-  (self: ReleaseMap) =>
-    sync((): Option.Option<Scope.Scope.Finalizer> =>
+export const releaseMapGet = (key: number) => {
+  const trace = getCallTrace()
+  return (self: ReleaseMap): Effect.Effect<never, never, Option.Option<Scope.Scope.Finalizer>> => {
+    return sync((): Option.Option<Scope.Scope.Finalizer> =>
       self.state._tag === "Running" ? Option.fromNullable(self.state.finalizers.get(key)) : Option.none
-    )
+    ).traced(trace)
+  }
+}
 
 /** @internal */
-export const releaseMapReplace = (key: number, finalizer: Scope.Scope.Finalizer) =>
-  (self: ReleaseMap) =>
-    suspendSucceed(() => {
+export const releaseMapReplace = (key: number, finalizer: Scope.Scope.Finalizer) => {
+  const trace = getCallTrace()
+  return (self: ReleaseMap): Effect.Effect<never, never, Option.Option<Scope.Scope.Finalizer>> => {
+    return suspendSucceed(() => {
       switch (self.state._tag) {
         case "Exited": {
           return as(Option.none)(finalizer(self.state.exit))
@@ -1399,30 +1457,37 @@ export const releaseMapReplace = (key: number, finalizer: Scope.Scope.Finalizer)
           return succeed(fin)
         }
       }
-    })
+    }).traced(trace)
+  }
+}
 
 /** @internal */
-export const releaseMapRemove = (key: number) =>
-  (self: ReleaseMap): Effect.Effect<never, never, Option.Option<Scope.Scope.Finalizer>> =>
-    sync(() => {
+export const releaseMapRemove = (key: number) => {
+  const trace = getCallTrace()
+  return (self: ReleaseMap): Effect.Effect<never, never, Option.Option<Scope.Scope.Finalizer>> => {
+    return sync(() => {
       if (self.state._tag === "Exited") {
         return Option.none
       }
       const fin = Option.fromNullable(self.state.finalizers.get(key))
       self.state.finalizers.delete(key)
       return fin
-    })
+    }).traced(trace)
+  }
+}
 
 /** @internal */
-export const releaseMapMake = () =>
-  sync((): ReleaseMap => ({
+export const releaseMapMake = (): Effect.Effect<never, never, ReleaseMap> => {
+  const trace = getCallTrace()
+  return sync((): ReleaseMap => ({
     state: {
       _tag: "Running",
       nextKey: 0,
       finalizers: new Map(),
       update: identity
     }
-  }))
+  })).traced(trace)
+}
 
 // -----------------------------------------------------------------------------
 // Exit
@@ -1430,8 +1495,8 @@ export const releaseMapMake = () =>
 
 /** @internal */
 export const exitIsExit = (u: unknown): u is Exit.Exit<unknown, unknown> => {
-  return isEffect(u) && "_tag" in u &&
-    (u["_tag"] === "Success" || u["_tag"] === "Failure")
+  return isEffect(u) && "op" in u &&
+    (u["op"] === OpCodes.OP_SUCCESS || u["op"] === OpCodes.OP_FAILURE)
 }
 
 /** @internal */
@@ -1446,55 +1511,64 @@ export const exitIsSuccess = <E, A>(self: Exit.Exit<E, A>): self is Exit.Success
 
 /** @internal */
 export const exitSucceed = <A>(value: A): Exit.Exit<never, A> => {
-  const effect = Object.create(proto)
-  effect.op = OpCodes.OP_SUCCESS
-  effect.value = value
-  return effect
+  const trace = getCallTrace()
+  const exit = Object.create(proto)
+  exit.op = OpCodes.OP_SUCCESS
+  exit.value = value
+  exit.trace = trace
+  return exit
 }
 
 /** @internal */
 export const exitFail = <E>(error: E): Exit.Exit<E, never> => {
-  return exitFailCause(Cause.fail(error))
+  const trace = getCallTrace()
+  return exitFailCause(Cause.fail(error)).traced(trace) as Exit.Exit<E, never>
 }
 
 /** @internal */
 export const exitFailCause = <E>(cause: Cause.Cause<E>): Exit.Exit<E, never> => {
-  const effect = Object.create(proto)
-  effect.op = OpCodes.OP_FAILURE
-  effect.cause = cause
-  return effect
+  const trace = getCallTrace()
+  const exit = Object.create(proto)
+  exit.op = OpCodes.OP_FAILURE
+  exit.cause = cause
+  exit.trace = trace
+  return exit
 }
 
 /** @internal */
 export const exitDie = (defect: unknown): Exit.Exit<never, never> => {
-  return exitFailCause(Cause.die(defect))
+  const trace = getCallTrace()
+  return exitFailCause(Cause.die(defect)).traced(trace) as Exit.Exit<never, never>
 }
 
 /** @internal */
 export const exitInterrupt = (fiberId: FiberId.FiberId): Exit.Exit<never, never> => {
-  return exitFailCause(Cause.interrupt(fiberId))
+  const trace = getCallTrace()
+  return exitFailCause(Cause.interrupt(fiberId)).traced(trace) as Exit.Exit<never, never>
 }
 
 /** @internal */
 export const exitFromEither = <E, A>(either: Either.Either<E, A>): Exit.Exit<E, A> => {
+  const trace = getCallTrace()
   switch (either._tag) {
     case "Left": {
-      return exitFail(either.left)
+      return exitFail(either.left).traced(trace) as Exit.Exit<E, A>
     }
     case "Right": {
-      return exitSucceed(either.right)
+      return exitSucceed(either.right).traced(trace) as Exit.Exit<E, A>
     }
   }
 }
 
 /** @internal */
 export const exitFromOption = <A>(option: Option.Option<A>): Exit.Exit<void, A> => {
+  const trace = getCallTrace()
   switch (option._tag) {
     case "None": {
-      return exitFail(undefined)
+      return exitFail(void 0).traced(trace) as Exit.Exit<void, A>
     }
     case "Some": {
-      return exitSucceed(option.value)
+      return exitSucceed(option.value).traced(trace) as Exit.Exit<void, A>
     }
   }
 }
@@ -1552,30 +1626,36 @@ export const exitExists = <A>(predicate: Predicate<A>) => {
 }
 
 /** @internal */
-export const exitAs = <A1>(value: A1) =>
-  <E, A>(self: Exit.Exit<E, A>): Exit.Exit<E, A1> => {
+export const exitAs = <A1>(value: A1) => {
+  const trace = getCallTrace()
+  return <E, A>(self: Exit.Exit<E, A>): Exit.Exit<E, A1> => {
     switch (self.op) {
       case OpCodes.OP_FAILURE: {
-        return self
+        return self.traced(trace) as Exit.Exit<E, A1>
       }
       case OpCodes.OP_SUCCESS: {
-        return exitSucceed(value)
+        return exitSucceed(value).traced(trace) as Exit.Exit<E, A1>
       }
     }
   }
+}
 
 /** @internal */
-export const exitAsUnit = <E, A>(self: Exit.Exit<E, A>): Exit.Exit<E, void> => exitAs(void 0)(self)
+export const exitAsUnit = <E, A>(self: Exit.Exit<E, A>): Exit.Exit<E, void> => {
+  const trace = getCallTrace()
+  return pipe(self, exitAs(void 0)).traced(trace) as Exit.Exit<E, void>
+}
 
 /** @internal */
 export const exitMap = <A, B>(f: (a: A) => B) => {
+  const trace = getCallTrace()
   return <E>(self: Exit.Exit<E, A>): Exit.Exit<E, B> => {
     switch (self.op) {
       case OpCodes.OP_FAILURE: {
-        return self
+        return self.traced(trace) as Exit.Exit<E, B>
       }
       case OpCodes.OP_SUCCESS: {
-        return exitSucceed(f(self.value))
+        return exitSucceed(f(self.value)).traced(trace) as Exit.Exit<E, B>
       }
     }
   }
@@ -1586,13 +1666,14 @@ export const exitMapBoth = <E, A, E1, A1>(
   onFailure: (e: E) => E1,
   onSuccess: (a: A) => A1
 ) => {
+  const trace = getCallTrace()
   return (self: Exit.Exit<E, A>): Exit.Exit<E1, A1> => {
     switch (self.op) {
       case OpCodes.OP_FAILURE: {
-        return exitFailCause(pipe(self.cause, Cause.map(onFailure)))
+        return exitFailCause(pipe(self.cause, Cause.map(onFailure))).traced(trace) as Exit.Exit<E1, A1>
       }
       case OpCodes.OP_SUCCESS: {
-        return exitSucceed(onSuccess(self.value))
+        return exitSucceed(onSuccess(self.value)).traced(trace) as Exit.Exit<E1, A1>
       }
     }
   }
@@ -1600,13 +1681,14 @@ export const exitMapBoth = <E, A, E1, A1>(
 
 /** @internal */
 export const exitMapError = <E, E1>(f: (e: E) => E1) => {
+  const trace = getCallTrace()
   return <A>(self: Exit.Exit<E, A>): Exit.Exit<E1, A> => {
     switch (self.op) {
       case OpCodes.OP_FAILURE: {
-        return exitFailCause(pipe(self.cause, Cause.map(f)))
+        return exitFailCause(pipe(self.cause, Cause.map(f))).traced(trace) as Exit.Exit<E1, A>
       }
       case OpCodes.OP_SUCCESS: {
-        return self
+        return self.traced(trace) as Exit.Exit<E1, A>
       }
     }
   }
@@ -1614,13 +1696,14 @@ export const exitMapError = <E, E1>(f: (e: E) => E1) => {
 
 /** @internal */
 export const exitMapErrorCause = <E, E1>(f: (cause: Cause.Cause<E>) => Cause.Cause<E1>) => {
+  const trace = getCallTrace()
   return <A>(self: Exit.Exit<E, A>): Exit.Exit<E1, A> => {
     switch (self.op) {
       case OpCodes.OP_FAILURE: {
-        return exitFailCause(f(self.cause))
+        return exitFailCause(f(self.cause)).traced(trace) as Exit.Exit<E1, A>
       }
       case OpCodes.OP_SUCCESS: {
-        return self
+        return self.traced(trace) as Exit.Exit<E1, A>
       }
     }
   }
@@ -1628,13 +1711,14 @@ export const exitMapErrorCause = <E, E1>(f: (cause: Cause.Cause<E>) => Cause.Cau
 
 /** @internal */
 export const exitFlatMap = <A, E1, A1>(f: (a: A) => Exit.Exit<E1, A1>) => {
+  const trace = getCallTrace()
   return <E>(self: Exit.Exit<E, A>): Exit.Exit<E | E1, A1> => {
     switch (self.op) {
       case OpCodes.OP_FAILURE: {
-        return self
+        return self.traced(trace) as Exit.Exit<E | E1, A1>
       }
       case OpCodes.OP_SUCCESS: {
-        return f(self.value)
+        return f(self.value).traced(trace) as Exit.Exit<E | E1, A1>
       }
     }
   }
@@ -1644,13 +1728,14 @@ export const exitFlatMap = <A, E1, A1>(f: (a: A) => Exit.Exit<E1, A1>) => {
 export const exitFlatMapEffect = <E, A, R, E1, A1>(
   f: (a: A) => Effect.Effect<R, E1, Exit.Exit<E, A1>>
 ) => {
+  const trace = getCallTrace()
   return (self: Exit.Exit<E, A>): Effect.Effect<R, E1, Exit.Exit<E, A1>> => {
     switch (self.op) {
       case OpCodes.OP_FAILURE: {
-        return succeed(self)
+        return succeed(self).traced(trace)
       }
       case OpCodes.OP_SUCCESS: {
-        return f(self.value)
+        return f(self.value).traced(trace)
       }
     }
   }
@@ -1660,7 +1745,8 @@ export const exitFlatMapEffect = <E, A, R, E1, A1>(
 export const exitFlatten = <E, E1, A>(
   self: Exit.Exit<E, Exit.Exit<E1, A>>
 ): Exit.Exit<E | E1, A> => {
-  return pipe(self, exitFlatMap(identity))
+  const trace = getCallTrace()
+  return pipe(self, exitFlatMap(identity)).traced(trace) as Exit.Exit<E | E1, A>
 }
 
 /** @internal */
@@ -1699,58 +1785,99 @@ export const exitMatchEffect = <E, A, R1, E1, A1, R2, E2, A2>(
 
 /** @internal */
 export const exitForEachEffect = <A, R, E1, B>(f: (a: A) => Effect.Effect<R, E1, B>) => {
+  const trace = getCallTrace()
   return <E>(self: Exit.Exit<E, A>): Effect.Effect<R, never, Exit.Exit<E | E1, B>> => {
     switch (self.op) {
       case OpCodes.OP_FAILURE: {
-        return succeed(exitFailCause(self.cause))
+        return succeed(exitFailCause(self.cause)).traced(trace)
       }
       case OpCodes.OP_SUCCESS: {
-        return exit(f(self.value))
+        return exit(f(self.value)).traced(trace)
       }
     }
   }
 }
 
 /** @internal */
-export const exitZip = <E2, A2>(that: Exit.Exit<E2, A2>): <E, A>(
-  self: Exit.Exit<E, A>
-) => Exit.Exit<E | E2, readonly [A, A2]> => {
-  return exitZipWith(that, (a, a2) => [a, a2] as const, Cause.sequential)
+export const exitZip = <E2, A2>(that: Exit.Exit<E2, A2>) => {
+  const trace = getCallTrace()
+  return <E, A>(self: Exit.Exit<E, A>): Exit.Exit<E | E2, readonly [A, A2]> => {
+    return pipe(
+      self,
+      exitZipWith(
+        that,
+        (a, a2) => [a, a2] as const,
+        Cause.sequential
+      )
+    ).traced(trace) as Exit.Exit<E | E2, readonly [A, A2]>
+  }
 }
 
 /** @internal */
-export const exitZipLeft = <E2, A2>(that: Exit.Exit<E2, A2>): <E, A>(
-  self: Exit.Exit<E, A>
-) => Exit.Exit<E | E2, A> => {
-  return exitZipWith(that, (a, _) => a, Cause.sequential)
+export const exitZipLeft = <E2, A2>(that: Exit.Exit<E2, A2>) => {
+  const trace = getCallTrace()
+  return <E, A>(self: Exit.Exit<E, A>): Exit.Exit<E | E2, A> => {
+    return pipe(
+      self,
+      exitZipWith(
+        that,
+        (a, _) => a,
+        Cause.sequential
+      )
+    ).traced(trace) as Exit.Exit<E | E2, A>
+  }
 }
 
 /** @internal */
-export const exitZipRight = <E2, A2>(that: Exit.Exit<E2, A2>): <E, A>(
-  self: Exit.Exit<E, A>
-) => Exit.Exit<E | E2, A2> => {
-  return exitZipWith(that, (_, a2) => a2, Cause.sequential)
+export const exitZipRight = <E2, A2>(that: Exit.Exit<E2, A2>) => {
+  const trace = getCallTrace()
+  return <E, A>(self: Exit.Exit<E, A>): Exit.Exit<E | E2, A2> => {
+    return pipe(
+      self,
+      exitZipWith(
+        that,
+        (_, a2) => a2,
+        Cause.sequential
+      )
+    ).traced(trace) as Exit.Exit<E | E2, A2>
+  }
 }
 
 /** @internal */
-export const exitZipPar = <E2, A2>(that: Exit.Exit<E2, A2>): <E, A>(
-  self: Exit.Exit<E, A>
-) => Exit.Exit<E | E2, readonly [A, A2]> => {
-  return exitZipWith(that, (a, a2) => [a, a2] as const, Cause.parallel)
+export const exitZipPar = <E2, A2>(that: Exit.Exit<E2, A2>) => {
+  const trace = getCallTrace()
+  return <E, A>(self: Exit.Exit<E, A>): Exit.Exit<E | E2, readonly [A, A2]> => {
+    return pipe(
+      self,
+      exitZipWith(
+        that,
+        (a, a2) => [a, a2] as const,
+        Cause.parallel
+      )
+    ).traced(trace) as Exit.Exit<E | E2, readonly [A, A2]>
+  }
 }
 
 /** @internal */
-export const exitZipParLeft = <E2, A2>(that: Exit.Exit<E2, A2>): <E, A>(
-  self: Exit.Exit<E, A>
-) => Exit.Exit<E | E2, A> => {
-  return exitZipWith(that, (a, _) => a, Cause.parallel)
+export const exitZipParLeft = <E2, A2>(that: Exit.Exit<E2, A2>) => {
+  const trace = getCallTrace()
+  return <E, A>(self: Exit.Exit<E, A>): Exit.Exit<E | E2, A> => {
+    return pipe(
+      self,
+      exitZipWith(that, (a, _) => a, Cause.parallel)
+    ).traced(trace) as Exit.Exit<E | E2, A>
+  }
 }
 
 /** @internal */
-export const exitZipParRight = <E2, A2>(that: Exit.Exit<E2, A2>): <E, A>(
-  self: Exit.Exit<E, A>
-) => Exit.Exit<E | E2, A2> => {
-  return exitZipWith(that, (_, a2) => a2, Cause.parallel)
+export const exitZipParRight = <E2, A2>(that: Exit.Exit<E2, A2>) => {
+  const trace = getCallTrace()
+  return <E, A>(self: Exit.Exit<E, A>): Exit.Exit<E | E2, A2> => {
+    return pipe(
+      self,
+      exitZipWith(that, (_, a2) => a2, Cause.parallel)
+    ).traced(trace) as Exit.Exit<E | E2, A2>
+  }
 }
 
 /** @internal */
@@ -1759,25 +1886,26 @@ export const exitZipWith = <E, E1, A, B, C>(
   f: (a: A, b: B) => C,
   g: (c: Cause.Cause<E>, c1: Cause.Cause<E1>) => Cause.Cause<E | E1>
 ) => {
+  const trace = getCallTrace()
   return (self: Exit.Exit<E, A>): Exit.Exit<E | E1, C> => {
     switch (self.op) {
       case OpCodes.OP_FAILURE: {
         switch (that.op) {
           case OpCodes.OP_SUCCESS: {
-            return self
+            return self.traced(trace) as Exit.Exit<E | E1, C>
           }
           case OpCodes.OP_FAILURE: {
-            return exitFailCause(g(self.cause, that.cause))
+            return exitFailCause(g(self.cause, that.cause)).traced(trace) as Exit.Exit<E | E1, C>
           }
         }
       }
       case OpCodes.OP_SUCCESS: {
         switch (that.op) {
           case OpCodes.OP_SUCCESS: {
-            return exitSucceed(f(self.value, that.value))
+            return exitSucceed(f(self.value, that.value)).traced(trace) as Exit.Exit<E | E1, C>
           }
           case OpCodes.OP_FAILURE: {
-            return that
+            return that.traced(trace) as Exit.Exit<E | E1, C>
           }
         }
       }
@@ -1832,7 +1960,7 @@ const exitCollectAllInternal = <E, A>(
 // -----------------------------------------------------------------------------
 
 /** @internal */
-export const unsafeMakeDeferred = <E, A>(fiberId: FiberId.FiberId): Deferred.Deferred<E, A> => {
+export const deferredUnsafeMake = <E, A>(fiberId: FiberId.FiberId): Deferred.Deferred<E, A> => {
   return {
     [deferred.DeferredTypeId]: deferred.deferredVariance,
     state: MutableRef.make(deferred.pending([])),
@@ -1841,82 +1969,93 @@ export const unsafeMakeDeferred = <E, A>(fiberId: FiberId.FiberId): Deferred.Def
 }
 
 /** @internal */
-export const makeDeferred = <E, A>(): Effect.Effect<never, never, Deferred.Deferred<E, A>> => {
-  return pipe(fiberId(), flatMap((id) => makeAsDeferred(id)))
+export const deferredMake = <E, A>(): Effect.Effect<never, never, Deferred.Deferred<E, A>> => {
+  const trace = getCallTrace()
+  return pipe(fiberId(), flatMap((id) => deferredMakeAs<E, A>(id))).traced(trace)
 }
 
 /** @internal */
-export const makeAsDeferred = <E, A>(
+export const deferredMakeAs = <E, A>(
   fiberId: FiberId.FiberId
 ): Effect.Effect<never, never, Deferred.Deferred<E, A>> => {
-  return sync(() => unsafeMakeDeferred(fiberId))
+  const trace = getCallTrace()
+  return sync(() => deferredUnsafeMake<E, A>(fiberId)).traced(trace)
 }
 
 /** @internal */
-export const succeedDeferred = <A>(value: A) => {
+export const deferredSucceed = <A>(value: A) => {
+  const trace = getCallTrace()
   return <E>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
-    return pipe(self, completeWithDeferred(succeed(value) as Effect.Effect<never, E, A>))
+    return pipe(self, deferredCompleteWith(succeed(value) as Effect.Effect<never, E, A>)).traced(trace)
   }
 }
 
 /** @internal */
-export const syncDeferred = <A>(evaluate: () => A) => {
+export const deferredSync = <A>(evaluate: () => A) => {
+  const trace = getCallTrace()
   return <E>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
-    return pipe(self, completeWithDeferred(sync(evaluate) as Effect.Effect<never, E, A>))
+    return pipe(self, deferredCompleteWith(sync(evaluate) as Effect.Effect<never, E, A>)).traced(trace)
   }
 }
 
 /** @internal */
-export const failDeferred = <E>(error: E) => {
+export const deferredFail = <E>(error: E) => {
+  const trace = getCallTrace()
   return <A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
-    return pipe(self, completeWithDeferred(fail(error) as Effect.Effect<never, E, A>))
+    return pipe(self, deferredCompleteWith(fail(error) as Effect.Effect<never, E, A>)).traced(trace)
   }
 }
 
 /** @internal */
-export const failSyncDeferred = <E>(evaluate: () => E) => {
+export const deferredFailSync = <E>(evaluate: () => E) => {
+  const trace = getCallTrace()
   return <A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
-    return pipe(self, completeWithDeferred(failSync(evaluate) as Effect.Effect<never, E, A>))
+    return pipe(self, deferredCompleteWith(failSync(evaluate) as Effect.Effect<never, E, A>)).traced(trace)
   }
 }
 
 /** @internal */
-export const failCauseDeferred = <E>(cause: Cause.Cause<E>) => {
+export const deferredFailCause = <E>(cause: Cause.Cause<E>) => {
+  const trace = getCallTrace()
   return <A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
-    return pipe(self, completeWithDeferred(failCause(cause) as Effect.Effect<never, E, A>))
+    return pipe(self, deferredCompleteWith(failCause(cause) as Effect.Effect<never, E, A>)).traced(trace)
   }
 }
 
 /** @internal */
-export const failCauseSyncDeferred = <E>(evaluate: () => Cause.Cause<E>) => {
+export const deferredFailCauseSync = <E>(evaluate: () => Cause.Cause<E>) => {
+  const trace = getCallTrace()
   return <A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
-    return pipe(self, completeWithDeferred(failCauseSync(evaluate) as Effect.Effect<never, E, A>))
+    return pipe(self, deferredCompleteWith(failCauseSync(evaluate) as Effect.Effect<never, E, A>)).traced(trace)
   }
 }
 
 /** @internal */
-export const dieDeferred = (defect: unknown) => {
+export const deferredDie = (defect: unknown) => {
+  const trace = getCallTrace()
   return <E, A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
-    return pipe(self, completeWithDeferred(die(defect) as Effect.Effect<never, E, A>))
+    return pipe(self, deferredCompleteWith(die(defect) as Effect.Effect<never, E, A>)).traced(trace)
   }
 }
 
 /** @internal */
-export const dieSyncDeferred = (evaluate: () => unknown) => {
+export const deferredDieSync = (evaluate: () => unknown) => {
+  const trace = getCallTrace()
   return <E, A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
-    return pipe(self, completeWithDeferred(dieSync(evaluate) as Effect.Effect<never, E, A>))
+    return pipe(self, deferredCompleteWith(dieSync(evaluate) as Effect.Effect<never, E, A>)).traced(trace)
   }
 }
 
 /** @internal */
-export const doneDeferred = <E, A>(exit: Exit.Exit<E, A>) => {
+export const deferredDone = <E, A>(exit: Exit.Exit<E, A>) => {
+  const trace = getCallTrace()
   return (self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
-    return pipe(self, completeWithDeferred(done(exit)))
+    return pipe(self, deferredCompleteWith(done(exit))).traced(trace)
   }
 }
 
 /** @internal */
-export const unsafeDoneDeferred = <E, A>(effect: Effect.Effect<never, E, A>) => {
+export const deferredUnsafeDone = <E, A>(effect: Effect.Effect<never, E, A>) => {
   return (self: Deferred.Deferred<E, A>): void => {
     const state = MutableRef.get(self.state)
     if (state.op === deferred.OP_STATE_PENDING) {
@@ -1929,23 +2068,26 @@ export const unsafeDoneDeferred = <E, A>(effect: Effect.Effect<never, E, A>) => 
 }
 
 /** @internal */
-export const interruptDeferred = <E, A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
+export const deferredInterrupt = <E, A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
+  const trace = getCallTrace()
   return pipe(
     fiberId(),
-    flatMap((fiberId) => pipe(self, completeWithDeferred(interruptAs(fiberId) as Effect.Effect<never, E, A>)))
-  )
+    flatMap((fiberId) => pipe(self, deferredCompleteWith(interruptAs(fiberId) as Effect.Effect<never, E, A>)))
+  ).traced(trace)
 }
 
 /** @internal */
-export const interruptAsDeferred = (fiberId: FiberId.FiberId) => {
+export const deferredInterruptWith = (fiberId: FiberId.FiberId) => {
+  const trace = getCallTrace()
   return <E, A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
-    return pipe(self, completeWithDeferred(interruptAs(fiberId) as Effect.Effect<never, E, A>))
+    return pipe(self, deferredCompleteWith(interruptAs(fiberId) as Effect.Effect<never, E, A>)).traced(trace)
   }
 }
 
 /** @internal */
-export const awaitDeferred = <E, A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, E, A> => {
-  return asyncInterrupt((k) => {
+export const deferredAwait = <E, A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, E, A> => {
+  const trace = getCallTrace()
+  return asyncInterrupt<never, E, A>((k) => {
     const state = MutableRef.get(self.state)
     switch (state.op) {
       case deferred.OP_STATE_DONE: {
@@ -1956,21 +2098,23 @@ export const awaitDeferred = <E, A>(self: Deferred.Deferred<E, A>): Effect.Effec
           self.state,
           MutableRef.set(deferred.pending([k, ...state.joiners]))
         )
-        return Either.left(interruptDeferredJoiner(self, k))
+        return Either.left(deferredInterruptJoiner(self, k))
       }
     }
-  }, self.blockingOn)
+  }, self.blockingOn).traced(trace)
 }
 
 /** @internal */
-export const completeDeferred = <E, A>(effect: Effect.Effect<never, E, A>) => {
+export const deferredComplete = <E, A>(effect: Effect.Effect<never, E, A>) => {
+  const trace = getCallTrace()
   return (self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
-    return pipe(effect, intoDeferred(self))
+    return pipe(effect, intoDeferred(self)).traced(trace)
   }
 }
 
 /** @internal */
-export const completeWithDeferred = <E, A>(effect: Effect.Effect<never, E, A>) => {
+export const deferredCompleteWith = <E, A>(effect: Effect.Effect<never, E, A>) => {
+  const trace = getCallTrace()
   return (self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
     return sync(() => {
       const state = MutableRef.get(self.state)
@@ -1986,19 +2130,21 @@ export const completeWithDeferred = <E, A>(effect: Effect.Effect<never, E, A>) =
           return true
         }
       }
-    })
+    }).traced(trace)
   }
 }
 
 /** @internal */
-export const isDoneDeferred = <E, A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
-  return sync(() => MutableRef.get(self.state).op === deferred.OP_STATE_DONE)
+export const deferredIsDone = <E, A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
+  const trace = getCallTrace()
+  return sync(() => MutableRef.get(self.state).op === deferred.OP_STATE_DONE).traced(trace)
 }
 
 /** @internal */
-export const pollDeferred = <E, A>(
+export const deferredPoll = <E, A>(
   self: Deferred.Deferred<E, A>
 ): Effect.Effect<never, never, Option.Option<Effect.Effect<never, E, A>>> => {
+  const trace = getCallTrace()
   return sync(() => {
     const state = MutableRef.get(self.state)
     switch (state.op) {
@@ -2009,14 +2155,18 @@ export const pollDeferred = <E, A>(
         return Option.none
       }
     }
-  })
+  }).traced(trace)
 }
 
-/** @internal */
-const interruptDeferredJoiner = <E, A>(
+/**
+ * @macro traced
+ * @internal
+ */
+const deferredInterruptJoiner = <E, A>(
   self: Deferred.Deferred<E, A>,
   joiner: (effect: Effect.Effect<never, E, A>) => void
 ): Effect.Effect<never, never, void> => {
+  const trace = getCallTrace()
   return sync(() => {
     const state = MutableRef.get(self.state)
     if (state.op === deferred.OP_STATE_PENDING) {
@@ -2025,5 +2175,5 @@ const interruptDeferredJoiner = <E, A>(
         MutableRef.set(deferred.pending(state.joiners.filter((j) => j !== joiner)))
       )
     }
-  })
+  }).traced(trace)
 }

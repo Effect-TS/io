@@ -138,7 +138,7 @@ export const setAll = (self: FiberRefs.FiberRefs) =>
     self,
     fiberRefs,
     core.forEachDiscard(
-      (fiberRef) => pipe(fiberRef, core.setFiberRef(getOrDefault(fiberRef)(self)))
+      (fiberRef) => pipe(fiberRef, core.fiberRefSet(getOrDefault(fiberRef)(self)))
     )
   )
 

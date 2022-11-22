@@ -179,7 +179,7 @@ export class TestClockImpl implements TestClock {
   sleep(duration: Duration.Duration): Effect.Effect<never, never, void> {
     const trace = getCallTrace()
     return pipe(
-      core.makeDeferred<never, void>(),
+      core.deferredMake<never, void>(),
       core.flatMap((deferred) =>
         pipe(
           this.clockState,
@@ -198,8 +198,8 @@ export class TestClockImpl implements TestClock {
           }),
           core.flatMap((shouldAwait) =>
             shouldAwait ?
-              pipe(this.warningStart(), core.zipRight(core.awaitDeferred(deferred))) :
-              pipe(deferred, core.succeedDeferred<void>(void 0), core.asUnit)
+              pipe(this.warningStart(), core.zipRight(core.deferredAwait(deferred))) :
+              pipe(deferred, core.deferredSucceed<void>(void 0), core.asUnit)
           )
         )
       )
@@ -517,7 +517,7 @@ export class TestClockImpl implements TestClock {
                 const [end, deferred] = option.value
                 return pipe(
                   deferred,
-                  core.succeedDeferred<void>(void 0),
+                  core.deferredSucceed<void>(void 0),
                   core.zipRight(core.yieldNow()),
                   core.zipRight(this.run(() => end))
                 )
@@ -657,6 +657,6 @@ export const testClockWith = <R, E, A>(
   const trace = getCallTrace()
   return pipe(
     defaultServices.currentServices,
-    core.getWithFiberRef((services) => f(pipe(services, Context.get(clock.clockTag)) as TestClock))
+    core.fiberRefGetWith((services) => f(pipe(services, Context.get(clock.clockTag)) as TestClock))
   ).traced(trace)
 }

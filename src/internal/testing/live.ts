@@ -35,7 +35,7 @@ export const defaultLive = layer.fromEffect(Tag)(
         effect,
         pipe(
           defaultServices.currentServices,
-          core.locallyWithFiberRef(Context.merge(env))
+          core.fiberRefLocallyWith(Context.merge(env))
         )
       )
   }))
@@ -62,12 +62,12 @@ export const withLive = <R, E, A, R2, E2, A2>(f: (effect: Effect.Effect<R, E, A>
   return (effect: Effect.Effect<R, E, A>): Effect.Effect<R | R2 | Live, E | E2, A2> => {
     return pipe(
       defaultServices.currentServices,
-      core.getWithFiberRef((services) =>
+      core.fiberRefGetWith((services) =>
         live(
           f(
             pipe(
               effect,
-              pipe(defaultServices.currentServices, core.locallyFiberRef(services))
+              pipe(defaultServices.currentServices, core.fiberRefLocally(services))
             )
           )
         )

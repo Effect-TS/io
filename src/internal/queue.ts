@@ -100,13 +100,13 @@ class QueueImpl<A> implements Queue.Queue<A> {
         return pipe(
           unsafePollAll(this.takers),
           fiberRuntime.forEachParDiscard(
-            core.interruptAsDeferred(state.id())
+            core.deferredInterruptWith(state.id())
           ),
           core.zipRight(this.strategy.shutdown()),
           core.whenEffect(
             pipe(
               this.shutdownHook,
-              core.succeedDeferred<void>(void 0)
+              core.deferredSucceed<void>(void 0)
             )
           ),
           core.asUnit
@@ -123,7 +123,7 @@ class QueueImpl<A> implements Queue.Queue<A> {
 
   awaitShutdown(): Effect.Effect<never, never, void> {
     const trace = getCallTrace()
-    return core.awaitDeferred(this.shutdownHook).traced(trace)
+    return core.deferredAwait(this.shutdownHook).traced(trace)
   }
 
   offer(value: A): Effect.Effect<never, never, boolean> {
@@ -202,14 +202,14 @@ class QueueImpl<A> implements Queue.Queue<A> {
         // - Try to take again in case a value was added since
         // - Wait for the deferred to be completed
         // - Clean up resources in case of interruption
-        const deferred = core.unsafeMakeDeferred<never, A>(state.id())
+        const deferred = core.deferredUnsafeMake<never, A>(state.id())
         return pipe(
           core.suspendSucceed(() => {
             pipe(this.takers, MutableQueue.offer(deferred))
             unsafeCompleteTakers(this.strategy, this.queue, this.takers)
             return MutableRef.get(this.shutdownFlag) ?
               core.interrupt() :
-              core.awaitDeferred(deferred)
+              core.deferredAwait(deferred)
           }),
           core.onInterrupt(() => {
             return core.sync(() => unsafeRemove(this.takers, deferred))
@@ -362,7 +362,7 @@ const make = <A>(
 ): Effect.Effect<never, never, Queue.Queue<A>> => {
   const trace = getCallTrace()
   return pipe(
-    core.makeDeferred<never, void>(),
+    core.deferredMake<never, void>(),
     core.map((deferred) =>
       unsafeMake(
         queue,
@@ -511,7 +511,7 @@ class BackPressureStrategy<A> implements Queue.Strategy<A> {
         pipe(
           core.sync(() => unsafePollAll(this.putters)),
           core.flatMap(fiberRuntime.forEachParDiscard(([_, deferred, isLastItem]) =>
-            isLastItem ? pipe(deferred, core.interruptAsDeferred(fiberId), core.asUnit) : core.unit()
+            isLastItem ? pipe(deferred, core.deferredInterruptWith(fiberId), core.asUnit) : core.unit()
           ))
         )
       )
@@ -526,13 +526,13 @@ class BackPressureStrategy<A> implements Queue.Strategy<A> {
   ): Effect.Effect<never, never, boolean> {
     const trace = getCallTrace()
     return core.withFiberRuntime<never, never, boolean>((state) => {
-      const deferred = core.unsafeMakeDeferred<never, boolean>(state.id())
+      const deferred = core.deferredUnsafeMake<never, boolean>(state.id())
       return pipe(
         core.suspendSucceed(() => {
           this.unsafeOffer(iterable, deferred)
           this.unsafeOnQueueEmptySpace(queue, takers)
           unsafeCompleteTakers(this, queue, takers)
-          return MutableRef.get(isShutdown) ? core.interrupt() : core.awaitDeferred(deferred)
+          return MutableRef.get(isShutdown) ? core.interrupt() : core.deferredAwait(deferred)
         }),
         core.onInterrupt(() => core.sync(() => this.unsafeRemove(deferred)))
       )
@@ -667,7 +667,7 @@ class SlidingStrategy<A> implements Queue.Strategy<A> {
 
 /** @internal */
 const unsafeCompleteDeferred = <A>(deferred: Deferred.Deferred<never, A>, a: A): void => {
-  return pipe(deferred, core.unsafeDoneDeferred(core.succeed(a)))
+  return pipe(deferred, core.deferredUnsafeDone(core.succeed(a)))
 }
 
 /** @internal */

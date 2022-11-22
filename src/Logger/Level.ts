@@ -205,7 +205,7 @@ export const None: LogLevel = {
  * @category mutations
  */
 export const locally = (self: LogLevel): <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A> =>
-  core.locallyFiberRef(self)(core.currentLogLevel)
+  core.fiberRefLocally(self)(core.currentLogLevel)
 
 /**
  * @since 1.0.0
