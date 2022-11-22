@@ -164,6 +164,48 @@ export const disable: (flag: RuntimeFlag) => (self: RuntimeFlags) => RuntimeFlag
 export const disableAll: (flags: RuntimeFlags) => (self: RuntimeFlags) => RuntimeFlags = internal.disableAll
 
 /**
+ * @since 1.0.0
+ * @category environment
+ */
+export const disableCooperativeYielding: () => Layer.Layer<never, never, never> = circular.disableCooperativeYielding
+
+/**
+ * @since 1.0.0
+ * @category environment
+ */
+export const disableCurrentFiber: () => Layer.Layer<never, never, never> = circular.disableCurrentFiber
+
+/**
+ * @since 1.0.0
+ * @category environment
+ */
+export const disableFiberRoots: () => Layer.Layer<never, never, never> = circular.disableFiberRoots
+
+/**
+ * @since 1.0.0
+ * @category environment
+ */
+export const disableInterruption: () => Layer.Layer<never, never, never> = circular.disableInterruption
+
+/**
+ * @since 1.0.0
+ * @category environment
+ */
+export const disableOpSupervision: () => Layer.Layer<never, never, never> = circular.disableOpSupervision
+
+/**
+ * @since 1.0.0
+ * @category environment
+ */
+export const disableRuntimeMetrics: () => Layer.Layer<never, never, never> = circular.disableRuntimeMetrics
+
+/**
+ * @since 1.0.0
+ * @category environment
+ */
+export const disableWindDown: () => Layer.Layer<never, never, never> = circular.disableWindDown
+
+/**
  * Enables the specified `RuntimeFlag`.
  *
  * @since 1.0.0
@@ -201,6 +243,12 @@ export const enableFiberRoots: () => Layer.Layer<never, never, never> = circular
  * @since 1.0.0
  * @category environment
  */
+export const enableInterruption: () => Layer.Layer<never, never, never> = circular.enableInterruption
+
+/**
+ * @since 1.0.0
+ * @category environment
+ */
 export const enableOpSupervision: () => Layer.Layer<never, never, never> = circular.enableOpSupervision
 
 /**
@@ -208,6 +256,12 @@ export const enableOpSupervision: () => Layer.Layer<never, never, never> = circu
  * @category environment
  */
 export const enableRuntimeMetrics: () => Layer.Layer<never, never, never> = circular.enableRuntimeMetrics
+
+/**
+ * @since 1.0.0
+ * @category environment
+ */
+export const enableWindDown: () => Layer.Layer<never, never, never> = circular.enableWindDown
 
 /**
  * Returns `true` if the `FiberRoots` `RuntimeFlag` is enabled, `false`
