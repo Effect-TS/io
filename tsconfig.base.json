@@ -42,7 +42,14 @@
       "@effect/io/examples/*": ["./examples/*"],
       "@effect/io/*": ["./src/*"]
     },
-    "plugins": [{ "name": "@effect/language-service" }],
+    "plugins": [
+      {
+        "name": "@effect/language-service",
+        "diagnostic": {
+          "1002": "none"
+        }
+      }
+    ],
     "transformers": [
       {
         "name": "./plugins/tsPlugin.ts",
