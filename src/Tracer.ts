@@ -29,14 +29,16 @@ export type TracerTypeId = typeof TracerTypeId
  */
 export interface Tracer {
   readonly _id: TracerTypeId
-  readonly withSpan: (spanName: string) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  readonly withSpan: (spanName: string, trace?: string) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
 }
 
 /**
  * @category constructors
  * @since 1.0.0
  */
-export const make: (withSpan: (spanName: string) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>) => Tracer = (
+export const make: (
+  withSpan: (spanName: string, trace?: string) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+) => Tracer = (
   withSpan
 ) => ({ _id: TracerTypeId, withSpan })
 
