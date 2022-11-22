@@ -224,7 +224,7 @@ and `that`.
 **Signature**
 
 ```ts
-export declare const diff: (that: RuntimeFlags) => (self: RuntimeFlags) => RuntimeFlagsPatch
+export declare const diff: (that: RuntimeFlags) => (self: RuntimeFlags) => RuntimeFlagsPatch.RuntimeFlagsPatch
 ```
 
 Added in v1.0.0
@@ -407,7 +407,7 @@ Constructs a differ that knows how to diff `RuntimeFlags` values.
 **Signature**
 
 ```ts
-export declare const differ: () => Differ<RuntimeFlags, RuntimeFlagsPatch>
+export declare const differ: () => Differ.Differ<RuntimeFlags, RuntimeFlagsPatch.RuntimeFlagsPatch>
 ```
 
 Added in v1.0.0
@@ -468,7 +468,7 @@ patched set of `RuntimeFlag`s.
 **Signature**
 
 ```ts
-export declare const patch: (patch: RuntimeFlagsPatch) => (self: RuntimeFlags) => RuntimeFlags
+export declare const patch: (patch: RuntimeFlagsPatch.RuntimeFlagsPatch) => (self: RuntimeFlags) => RuntimeFlags
 ```
 
 Added in v1.0.0

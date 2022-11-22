@@ -48,7 +48,7 @@ Creates a `RuntimeFlagsPatch` describing disabling the provided `RuntimeFlag`.
 **Signature**
 
 ```ts
-export declare const disable: (flag: RuntimeFlag) => RuntimeFlagsPatch
+export declare const disable: (flag: RuntimeFlags.RuntimeFlag) => RuntimeFlagsPatch
 ```
 
 Added in v1.0.0
@@ -72,7 +72,7 @@ Creates a `RuntimeFlagsPatch` describing enabling the provided `RuntimeFlag`.
 **Signature**
 
 ```ts
-export declare const enable: (flag: RuntimeFlag) => RuntimeFlagsPatch
+export declare const enable: (flag: RuntimeFlags.RuntimeFlag) => RuntimeFlagsPatch
 ```
 
 Added in v1.0.0
@@ -97,7 +97,7 @@ disabled by the specified `RuntimeFlagsPatch`.
 **Signature**
 
 ```ts
-export declare const disabledSet: (self: RuntimeFlagsPatch) => ReadonlySet<RuntimeFlag>
+export declare const disabledSet: (self: RuntimeFlagsPatch) => ReadonlySet<RuntimeFlags.RuntimeFlag>
 ```
 
 Added in v1.0.0
@@ -110,7 +110,7 @@ enabled by the specified `RuntimeFlagsPatch`.
 **Signature**
 
 ```ts
-export declare const enabledSet: (self: RuntimeFlagsPatch) => ReadonlySet<RuntimeFlag>
+export declare const enabledSet: (self: RuntimeFlagsPatch) => ReadonlySet<RuntimeFlags.RuntimeFlag>
 ```
 
 Added in v1.0.0
@@ -163,7 +163,7 @@ Returns `true` if the `RuntimeFlagsPatch` describes the specified
 **Signature**
 
 ```ts
-export declare const isDisabled: (flag: RuntimeFlag) => (self: RuntimeFlagsPatch) => boolean
+export declare const isDisabled: (flag: RuntimeFlags.RuntimeFlag) => (self: RuntimeFlagsPatch) => boolean
 ```
 
 Added in v1.0.0
@@ -176,7 +176,7 @@ Returns `true` if the `RuntimeFlagsPatch` describes the specified
 **Signature**
 
 ```ts
-export declare const isEnabled: (flag: RuntimeFlag) => (self: RuntimeFlagsPatch) => boolean
+export declare const isEnabled: (flag: RuntimeFlags.RuntimeFlag) => (self: RuntimeFlagsPatch) => boolean
 ```
 
 Added in v1.0.0
@@ -258,7 +258,7 @@ Creates a `RuntimeFlagsPatch` which describes exclusion of the specified
 **Signature**
 
 ```ts
-export declare const exclude: (flag: RuntimeFlag) => (self: RuntimeFlagsPatch) => RuntimeFlagsPatch
+export declare const exclude: (flag: RuntimeFlags.RuntimeFlag) => (self: RuntimeFlagsPatch) => RuntimeFlagsPatch
 ```
 
 Added in v1.0.0

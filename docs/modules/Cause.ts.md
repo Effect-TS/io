@@ -53,6 +53,7 @@ Added in v1.0.0
   - [RuntimeException](#runtimeexception)
 - [filtering](#filtering)
   - [filter](#filter)
+  - [unannotate](#unannotate)
 - [folding](#folding)
   - [match](#match)
   - [reduce](#reduce)
@@ -75,6 +76,8 @@ Added in v1.0.0
   - [size](#size)
   - [stripFailures](#stripfailures)
   - [stripSomeDefects](#stripsomedefects)
+- [guards](#guards)
+  - [isStackAnnotation](#isstackannotation)
 - [mapping](#mapping)
   - [as](#as)
   - [map](#map)
@@ -126,6 +129,8 @@ Added in v1.0.0
   - [NoSuchElementExceptionTypeId (type alias)](#nosuchelementexceptiontypeid-type-alias)
   - [RuntimeExceptionTypeId](#runtimeexceptiontypeid)
   - [RuntimeExceptionTypeId (type alias)](#runtimeexceptiontypeid-type-alias)
+  - [SpanAnnotationTypeId](#spanannotationtypeid)
+  - [SpanAnnotationTypeId (type alias)](#spanannotationtypeid-type-alias)
   - [StackAnnotationTypeId](#stackannotationtypeid)
   - [StackAnnotationTypeId (type alias)](#stackannotationtypeid-type-alias)
 
@@ -338,6 +343,18 @@ Filters causes which match the provided predicate out of the specified cause.
 
 ```ts
 export declare const filter: <E>(predicate: Predicate<Cause<E>>) => (self: Cause<E>) => Cause<E>
+```
+
+Added in v1.0.0
+
+## unannotate
+
+Removes any annotation from the cause
+
+**Signature**
+
+```ts
+export declare const unannotate: <E>(cause: Cause<E>) => Cause<E>
 ```
 
 Added in v1.0.0
@@ -612,6 +629,20 @@ remaining causes.
 export declare const stripSomeDefects: (
   pf: (defect: unknown) => Option<unknown>
 ) => <E>(self: Cause<E>) => Option<Cause<E>>
+```
+
+Added in v1.0.0
+
+# guards
+
+## isStackAnnotation
+
+Checks if an annotation is a StackAnnotation
+
+**Signature**
+
+```ts
+export declare const isStackAnnotation: (u: unknown) => u is Cause.StackAnnotation
 ```
 
 Added in v1.0.0
@@ -1058,7 +1089,6 @@ export interface CauseRenderer<E = unknown> {
   readonly renderSpan: boolean
   readonly renderExecution: boolean
   readonly renderStack: boolean
-  readonly renderSpanDepth: number
   readonly renderExecutionDepth: number
   readonly renderStackDepth: number
   readonly renderError: (error: E) => ReadonlyArray<string>
@@ -1232,6 +1262,26 @@ Added in v1.0.0
 
 ```ts
 export type RuntimeExceptionTypeId = typeof RuntimeExceptionTypeId
+```
+
+Added in v1.0.0
+
+## SpanAnnotationTypeId
+
+**Signature**
+
+```ts
+export declare const SpanAnnotationTypeId: typeof SpanAnnotationTypeId
+```
+
+Added in v1.0.0
+
+## SpanAnnotationTypeId (type alias)
+
+**Signature**
+
+```ts
+export type SpanAnnotationTypeId = typeof SpanAnnotationTypeId
 ```
 
 Added in v1.0.0

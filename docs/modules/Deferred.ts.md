@@ -32,7 +32,7 @@ Added in v1.0.0
   - [failCauseSync](#failcausesync)
   - [failSync](#failsync)
   - [interrupt](#interrupt)
-  - [interruptAs](#interruptas)
+  - [interruptWith](#interruptwith)
   - [succeed](#succeed)
   - [sync](#sync)
 - [symbols](#symbols)
@@ -278,7 +278,7 @@ export declare const interrupt: <E, A>(self: Deferred<E, A>) => Effect<never, ne
 
 Added in v1.0.0
 
-## interruptAs
+## interruptWith
 
 Completes the `Deferred` with interruption. This will interrupt all fibers
 waiting on the value of the `Deferred` with the specified `FiberId`.
@@ -286,7 +286,7 @@ waiting on the value of the `Deferred` with the specified `FiberId`.
 **Signature**
 
 ```ts
-export declare const interruptAs: (
+export declare const interruptWith: (
   fiberId: FiberId.FiberId
 ) => <E, A>(self: Deferred<E, A>) => Effect<never, never, boolean>
 ```

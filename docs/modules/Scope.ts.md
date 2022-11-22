@@ -1,6 +1,6 @@
 ---
 title: Scope.ts
-nav_order: 44
+nav_order: 43
 parent: Modules
 ---
 
@@ -19,8 +19,6 @@ Added in v1.0.0
   - [use](#use)
 - [environment](#environment)
   - [Tag](#tag)
-- [forking](#forking)
-  - [fork](#fork)
 - [models](#models)
   - [CloseableScope (interface)](#closeablescope-interface)
   - [Scope (interface)](#scope-interface)
@@ -28,6 +26,7 @@ Added in v1.0.0
   - [addFinalizer](#addfinalizer)
   - [addFinalizerExit](#addfinalizerexit)
   - [extend](#extend)
+  - [fork](#fork)
 - [symbols](#symbols)
   - [CloseableScopeTypeId](#closeablescopetypeid)
   - [CloseableScopeTypeId (type alias)](#closeablescopetypeid-type-alias)
@@ -100,21 +99,6 @@ export declare const Tag: Context.Tag<Scope>
 
 Added in v1.0.0
 
-# forking
-
-## fork
-
-Forks a new scope that is a child of this scope. The child scope will
-automatically be closed when this scope is closed.
-
-**Signature**
-
-```ts
-export declare const fork: (strategy: ExecutionStrategy) => (self: Scope) => Effect.Effect<never, never, CloseableScope>
-```
-
-Added in v1.0.0
-
 # models
 
 ## CloseableScope (interface)
@@ -125,7 +109,10 @@ Added in v1.0.0
 export interface CloseableScope extends Scope {
   readonly [CloseableScopeTypeId]: CloseableScopeTypeId
 
-  /** @internal */
+  /**
+   * @macro traced
+   * @internal
+   */
   readonly close: (exit: Exit.Exit<unknown, unknown>) => Effect.Effect<never, never, void>
 }
 ```
@@ -140,9 +127,15 @@ Added in v1.0.0
 export interface Scope {
   readonly [ScopeTypeId]: ScopeTypeId
 
-  /** @internal */
+  /**
+   * @macro traced
+   * @internal
+   */
   readonly fork: (strategy: ExecutionStrategy) => Effect.Effect<never, never, Scope.Closeable>
-  /** @internal */
+  /**
+   * @macro traced
+   * @internal
+   */
   readonly addFinalizer: (finalizer: Scope.Finalizer) => Effect.Effect<never, never, void>
 }
 ```
@@ -194,6 +187,19 @@ larger scope.
 export declare const extend: <R, E, A>(
   effect: Effect.Effect<R, E, A>
 ) => (self: Scope) => Effect.Effect<Exclude<R, Scope>, E, A>
+```
+
+Added in v1.0.0
+
+## fork
+
+Forks a new scope that is a child of this scope. The child scope will
+automatically be closed when this scope is closed.
+
+**Signature**
+
+```ts
+export declare const fork: (strategy: ExecutionStrategy) => (self: Scope) => Effect.Effect<never, never, CloseableScope>
 ```
 
 Added in v1.0.0

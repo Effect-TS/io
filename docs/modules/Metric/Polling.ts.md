@@ -1,10 +1,10 @@
 ---
-title: PollingMetric.ts
-nav_order: 33
+title: Metric/Polling.ts
+nav_order: 30
 parent: Modules
 ---
 
-## PollingMetric overview
+## Polling overview
 
 Added in v1.0.0
 

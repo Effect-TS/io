@@ -1,6 +1,6 @@
 ---
 title: Tracer.ts
-nav_order: 47
+nav_order: 46
 parent: Modules
 ---
 
@@ -12,65 +12,81 @@ Added in v1.0.0
 
 <h2 class="text-delta">Table of contents</h2>
 
+- [constructors](#constructors)
+  - [make](#make)
+- [fiberRefs](#fiberrefs)
+  - [currentTracer](#currenttracer)
 - [models](#models)
-  - [Span (interface)](#span-interface)
-- [refinements](#refinements)
-  - [isSpan](#isspan)
+  - [Tracer (interface)](#tracer-interface)
 - [symbols](#symbols)
-  - [SpanTypeId](#spantypeid)
-  - [SpanTypeId (type alias)](#spantypeid-type-alias)
+  - [TracerTypeId](#tracertypeid)
+  - [TracerTypeId (type alias)](#tracertypeid-type-alias)
 
 ---
 
-# models
+# constructors
 
-## Span (interface)
+## make
 
 **Signature**
 
 ```ts
-export interface Span {
-  readonly [SpanTypeId]: SpanTypeId
-  readonly parent: Option<Span>
-  readonly name: string
-  readonly trace?: string
-}
+export declare const make: (
+  withSpan: (spanName: string) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+) => Tracer
 ```
 
 Added in v1.0.0
 
-# refinements
+# fiberRefs
 
-## isSpan
-
-Returns `true` if the specified value is a `Span`, `false` otherwise.
+## currentTracer
 
 **Signature**
 
 ```ts
-export declare const isSpan: (u: unknown) => u is Span
+export declare const currentTracer: FiberRef<Option<Tracer>>
+```
+
+Added in v1.0.0
+
+# models
+
+## Tracer (interface)
+
+The Tracer service is used to provide tracing facilities to Effect.
+
+This service is meant to be implemented by exporters such as opentelemetry.
+
+**Signature**
+
+```ts
+export interface Tracer {
+  readonly _id: TracerTypeId
+  readonly withSpan: (spanName: string) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+}
 ```
 
 Added in v1.0.0
 
 # symbols
 
-## SpanTypeId
+## TracerTypeId
 
 **Signature**
 
 ```ts
-export declare const SpanTypeId: typeof SpanTypeId
+export declare const TracerTypeId: typeof TracerTypeId
 ```
 
 Added in v1.0.0
 
-## SpanTypeId (type alias)
+## TracerTypeId (type alias)
 
 **Signature**
 
 ```ts
-export type SpanTypeId = typeof SpanTypeId
+export type TracerTypeId = typeof TracerTypeId
 ```
 
 Added in v1.0.0

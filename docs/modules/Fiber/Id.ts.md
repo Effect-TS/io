@@ -19,7 +19,6 @@ Added in v1.0.0
   - [make](#make)
   - [none](#none)
   - [runtime](#runtime)
-  - [unsafeMake](#unsafemake)
 - [destructors](#destructors)
   - [ids](#ids)
   - [threadName](#threadname)
@@ -33,11 +32,15 @@ Added in v1.0.0
 - [mutations](#mutations)
   - [getOrElse](#getorelse)
 - [refinements](#refinements)
+  - [isComposite](#iscomposite)
   - [isFiberId](#isfiberid)
   - [isNone](#isnone)
+  - [isRuntime](#isruntime)
 - [symbols](#symbols)
   - [FiberIdTypeId](#fiberidtypeid)
   - [FiberIdTypeId (type alias)](#fiberidtypeid-type-alias)
+- [unsafe](#unsafe)
+  - [unsafeMake](#unsafemake)
 
 ---
 
@@ -62,7 +65,7 @@ Combines a set of `FiberId`s into a single `FiberId`.
 **Signature**
 
 ```ts
-export declare const combineAll: (fiberIds: HashSet<FiberId>) => FiberId
+export declare const combineAll: (fiberIds: HashSet.HashSet<FiberId>) => FiberId
 ```
 
 Added in v1.0.0
@@ -109,18 +112,6 @@ export declare const runtime: (id: number, startTimeMillis: number) => FiberId
 
 Added in v1.0.0
 
-## unsafeMake
-
-Unsafely creates a new `FiberId`.
-
-**Signature**
-
-```ts
-export declare const unsafeMake: () => Runtime
-```
-
-Added in v1.0.0
-
 # destructors
 
 ## ids
@@ -130,7 +121,7 @@ Get the set of identifiers for this `FiberId`.
 **Signature**
 
 ```ts
-export declare const ids: (self: FiberId) => HashSet<number>
+export declare const ids: (self: FiberId) => HashSet.HashSet<number>
 ```
 
 Added in v1.0.0
@@ -155,7 +146,7 @@ Convert a `FiberId` into an `Option<FiberId>`.
 **Signature**
 
 ```ts
-export declare const toOption: (self: FiberId) => Option<FiberId>
+export declare const toOption: (self: FiberId) => Option.Option<FiberId>
 ```
 
 Added in v1.0.0
@@ -167,7 +158,7 @@ Convert a `FiberId` into a `HashSet<FiberId>`.
 **Signature**
 
 ```ts
-export declare const toSet: (self: FiberId) => HashSet<Runtime>
+export declare const toSet: (self: FiberId) => HashSet.HashSet<Runtime>
 ```
 
 Added in v1.0.0
@@ -179,9 +170,9 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface Composite extends Equal {
+export interface Composite extends Equal.Equal {
   readonly [FiberIdTypeId]: FiberIdTypeId
-  readonly _tag: 'Composite'
+  readonly op: internal.OP_COMPOSITE
   readonly left: FiberId
   readonly right: FiberId
 }
@@ -204,9 +195,9 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface None extends Equal {
+export interface None extends Equal.Equal {
   readonly [FiberIdTypeId]: FiberIdTypeId
-  readonly _tag: 'None'
+  readonly op: internal.OP_NONE
 }
 ```
 
@@ -217,9 +208,9 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface Runtime extends Equal {
+export interface Runtime extends Equal.Equal {
   readonly [FiberIdTypeId]: FiberIdTypeId
-  readonly _tag: 'Runtime'
+  readonly op: internal.OP_RUNTIME
   readonly id: number
   readonly startTimeMillis: number
 }
@@ -243,6 +234,18 @@ Added in v1.0.0
 
 # refinements
 
+## isComposite
+
+Returns `true` if the `FiberId` is a `Composite`, `false` otherwise.
+
+**Signature**
+
+```ts
+export declare const isComposite: (self: FiberId) => self is Composite
+```
+
+Added in v1.0.0
+
 ## isFiberId
 
 Returns `true` if the specified unknown value is a `FiberId`, `false`
@@ -258,12 +261,24 @@ Added in v1.0.0
 
 ## isNone
 
-Determines if the `FiberId` is a `None`.
+Returns `true` if the `FiberId` is a `None`, `false` otherwise.
 
 **Signature**
 
 ```ts
 export declare const isNone: (self: FiberId) => self is None
+```
+
+Added in v1.0.0
+
+## isRuntime
+
+Returns `true` if the `FiberId` is a `Runtime`, `false` otherwise.
+
+**Signature**
+
+```ts
+export declare const isRuntime: (self: FiberId) => self is Runtime
 ```
 
 Added in v1.0.0
@@ -286,6 +301,20 @@ Added in v1.0.0
 
 ```ts
 export type FiberIdTypeId = typeof FiberIdTypeId
+```
+
+Added in v1.0.0
+
+# unsafe
+
+## unsafeMake
+
+Unsafely creates a new `FiberId`.
+
+**Signature**
+
+```ts
+export declare const unsafeMake: () => Runtime
 ```
 
 Added in v1.0.0

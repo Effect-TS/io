@@ -1,6 +1,6 @@
 ---
 title: Fiber/Status.ts
-nav_order: 15
+nav_order: 14
 parent: Modules
 ---
 
@@ -49,7 +49,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const running: (runtimeFlags: RuntimeFlags) => FiberStatus
+export declare const running: (runtimeFlags: RuntimeFlags.RuntimeFlags) => FiberStatus
 ```
 
 Added in v1.0.0
@@ -59,7 +59,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const suspended: (runtimeFlags: RuntimeFlags, blockingOn: FiberId) => FiberStatus
+export declare const suspended: (runtimeFlags: RuntimeFlags.RuntimeFlags, blockingOn: FiberId.FiberId) => FiberStatus
 ```
 
 Added in v1.0.0
@@ -71,8 +71,8 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface Done extends Equal {
-  readonly _tag: 'Done'
+export interface Done extends Equal.Equal {
+  readonly op: internal.OP_DONE
   readonly [FiberStatusTypeId]: FiberStatusTypeId
 }
 ```
@@ -94,10 +94,10 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface Running extends Equal {
-  readonly _tag: 'Running'
+export interface Running extends Equal.Equal {
+  readonly op: internal.OP_RUNNING
   readonly [FiberStatusTypeId]: FiberStatusTypeId
-  readonly runtimeFlags: RuntimeFlags
+  readonly runtimeFlags: RuntimeFlags.RuntimeFlags
 }
 ```
 
@@ -108,11 +108,11 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface Suspended extends Equal {
-  readonly _tag: 'Suspended'
+export interface Suspended extends Equal.Equal {
+  readonly op: internal.OP_SUSPENDED
   readonly [FiberStatusTypeId]: FiberStatusTypeId
-  readonly runtimeFlags: RuntimeFlags
-  readonly blockingOn: FiberId
+  readonly runtimeFlags: RuntimeFlags.RuntimeFlags
+  readonly blockingOn: FiberId.FiberId
 }
 ```
 
