@@ -1,6 +1,5 @@
 import * as FiberId from "@effect/io/Fiber/Id"
 import * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
-import type * as FiberScope from "@effect/io/Fiber/Scope"
 import * as FiberMessage from "@effect/io/internal/fiberMessage"
 import type * as FiberRuntime from "@effect/io/internal/fiberRuntime"
 
@@ -8,13 +7,27 @@ import type * as FiberRuntime from "@effect/io/internal/fiberRuntime"
 const FiberScopeSymbolKey = "@effect/io/Fiber/Scope"
 
 /** @internal */
-export const FiberScopeTypeId: FiberScope.FiberScopeTypeId = Symbol.for(
-  FiberScopeSymbolKey
-) as FiberScope.FiberScopeTypeId
+export const FiberScopeTypeId = Symbol.for(FiberScopeSymbolKey)
+
+export type FiberScopeTypeId = typeof FiberScopeTypeId
+
+/**
+ * A `FiberScope` represents the scope of a fiber lifetime. The scope of a
+ * fiber can be retrieved using `Effect.descriptor`, and when forking fibers,
+ * you can specify a custom scope to fork them on by using the `forkIn`.
+ *
+ * @since 1.0.0
+ * @category models
+ */
+export interface FiberScope {
+  readonly [FiberScopeTypeId]: FiberScopeTypeId
+  get fiberId(): FiberId.FiberId
+  add(runtimeFlags: RuntimeFlags.RuntimeFlags, child: FiberRuntime.FiberRuntime<any, any>): void
+}
 
 /** @internal */
-class Global implements FiberScope.FiberScope {
-  readonly [FiberScopeTypeId]: FiberScope.FiberScopeTypeId = FiberScopeTypeId
+class Global implements FiberScope {
+  readonly [FiberScopeTypeId]: FiberScopeTypeId = FiberScopeTypeId
   readonly fiberId = FiberId.none
   add(runtimeFlags: RuntimeFlags.RuntimeFlags, child: FiberRuntime.FiberRuntime<any, any>): void {
     if (RuntimeFlags.isEnabled(RuntimeFlags.FiberRoots)(runtimeFlags)) {
@@ -27,8 +40,8 @@ class Global implements FiberScope.FiberScope {
 }
 
 /** @internal */
-class Local implements FiberScope.FiberScope {
-  readonly [FiberScopeTypeId]: FiberScope.FiberScopeTypeId = FiberScopeTypeId
+class Local implements FiberScope {
+  readonly [FiberScopeTypeId]: FiberScopeTypeId = FiberScopeTypeId
   constructor(
     readonly fiberId: FiberId.FiberId,
     readonly parent: FiberRuntime.FiberRuntime<any, any>
@@ -46,12 +59,12 @@ class Local implements FiberScope.FiberScope {
 }
 
 /** @internal */
-export const unsafeMake = (fiber: FiberRuntime.FiberRuntime<any, any>): FiberScope.FiberScope => {
+export const unsafeMake = (fiber: FiberRuntime.FiberRuntime<any, any>): FiberScope => {
   return new Local(fiber.id(), fiber)
 }
 
 /** @internal */
-export const globalScope: FiberScope.FiberScope = new Global()
+export const globalScope: FiberScope = new Global()
 
 /** @internal */
 export const _roots = new Set<FiberRuntime.FiberRuntime<any, any>>()
