@@ -1,3 +1,4 @@
+import { getCallTrace } from "@effect/io/Debug"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRef from "@effect/io/FiberRef"
 import type * as FiberRefs from "@effect/io/FiberRefs"
@@ -133,14 +134,16 @@ export const forkAs = (childId: FiberId.Runtime) =>
 export const fiberRefs = (self: FiberRefs.FiberRefs) => HashSet.from(self.locals.keys())
 
 /** @internal */
-export const setAll = (self: FiberRefs.FiberRefs) =>
-  pipe(
+export const setAll = (self: FiberRefs.FiberRefs) => {
+  const trace = getCallTrace()
+  return pipe(
     self,
     fiberRefs,
     core.forEachDiscard(
       (fiberRef) => pipe(fiberRef, core.fiberRefSet(getOrDefault(fiberRef)(self)))
     )
-  )
+  ).traced(trace)
+}
 
 const delete_ = <A>(fiberRef: FiberRef.FiberRef<A>) =>
   (self: FiberRefs.FiberRefs): FiberRefs.FiberRefs => {
