@@ -1,10 +1,14 @@
 /**
  * @since 1.0.0
  */
+import type * as Cause from "@effect/io/Cause"
+import type * as Effect from "@effect/io/Effect"
+import type * as Exit from "@effect/io/Exit"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import * as core from "@effect/io/internal/core"
 import * as internal from "@effect/io/internal/deferred"
 import type * as MutableRef from "@fp-ts/data/mutable/MutableRef"
+import type * as Option from "@fp-ts/data/Option"
 
 /**
  * @since 1.0.0
@@ -60,7 +64,7 @@ export declare namespace Deferred {
  * @since 1.0.0
  * @category constructors
  */
-export const make = core.deferredMake
+export const make: <E, A>() => Effect.Effect<never, never, Deferred<E, A>> = core.deferredMake
 
 /**
  * Creates a new `Deferred` from the specified `FiberId`.
@@ -69,7 +73,8 @@ export const make = core.deferredMake
  * @since 1.0.0
  * @category constructors
  */
-export const makeAs = core.deferredMakeAs
+export const makeAs: <E, A>(fiberId: FiberId.FiberId) => Effect.Effect<never, never, Deferred<E, A>> =
+  core.deferredMakeAs
 
 /**
  * Completes the `Deferred` with the specified value.
@@ -78,7 +83,8 @@ export const makeAs = core.deferredMakeAs
  * @since 1.0.0
  * @category mutations
  */
-export const succeed = core.deferredSucceed
+export const succeed: <A>(value: A) => <E>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean> =
+  core.deferredSucceed
 
 /**
  * Completes the `Deferred` with the specified value.
@@ -87,7 +93,8 @@ export const succeed = core.deferredSucceed
  * @since 1.0.0
  * @category mutations
  */
-export const sync = core.deferredSync
+export const sync: <A>(evaluate: () => A) => <E>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean> =
+  core.deferredSync
 
 /**
  * Fails the `Deferred` with the specified error, which will be propagated to
@@ -97,7 +104,8 @@ export const sync = core.deferredSync
  * @since 1.0.0
  * @category mutations
  */
-export const fail = core.deferredFail
+export const fail: <E>(error: E) => <A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean> =
+  core.deferredFail
 
 /**
  * Fails the `Deferred` with the specified error, which will be propagated to
@@ -107,7 +115,8 @@ export const fail = core.deferredFail
  * @since 1.0.0
  * @category mutations
  */
-export const failSync = core.deferredFailSync
+export const failSync: <E>(evaluate: () => E) => <A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean> =
+  core.deferredFailSync
 
 /**
  * Fails the `Deferred` with the specified `Cause`, which will be propagated to
@@ -117,7 +126,9 @@ export const failSync = core.deferredFailSync
  * @since 1.0.0
  * @category mutations
  */
-export const failCause = core.deferredFailCause
+export const failCause: <E>(
+  cause: Cause.Cause<E>
+) => <A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean> = core.deferredFailCause
 
 /**
  * Fails the `Deferred` with the specified `Cause`, which will be propagated to
@@ -127,7 +138,9 @@ export const failCause = core.deferredFailCause
  * @since 1.0.0
  * @category mutations
  */
-export const failCauseSync = core.deferredFailCauseSync
+export const failCauseSync: <E>(
+  evaluate: () => Cause.Cause<E>
+) => <A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean> = core.deferredFailCauseSync
 
 /**
  * Kills the `Deferred` with the specified defect, which will be propagated to
@@ -137,7 +150,8 @@ export const failCauseSync = core.deferredFailCauseSync
  * @since 1.0.0
  * @category mutations
  */
-export const die = core.deferredDie
+export const die: (defect: unknown) => <E, A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean> =
+  core.deferredDie
 
 /**
  * Kills the `Deferred` with the specified defect, which will be propagated to
@@ -147,7 +161,9 @@ export const die = core.deferredDie
  * @since 1.0.0
  * @category mutations
  */
-export const dieSync = core.deferredDieSync
+export const dieSync: (
+  evaluate: () => unknown
+) => <E, A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean> = core.deferredDieSync
 
 /**
  * Completes the `Deferred` with interruption. This will interrupt all fibers
@@ -158,7 +174,7 @@ export const dieSync = core.deferredDieSync
  * @since 1.0.0
  * @category mutations
  */
-export const interrupt = core.deferredInterrupt
+export const interrupt: <E, A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean> = core.deferredInterrupt
 
 /**
  * Completes the `Deferred` with interruption. This will interrupt all fibers
@@ -168,7 +184,9 @@ export const interrupt = core.deferredInterrupt
  * @since 1.0.0
  * @category mutations
  */
-export const interruptWith = core.deferredInterruptWith
+export const interruptWith: (
+  fiberId: FiberId.FiberId
+) => <E, A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean> = core.deferredInterruptWith
 
 /**
  * Exits the `Deferred` with the specified `Exit` value, which will be
@@ -178,7 +196,8 @@ export const interruptWith = core.deferredInterruptWith
  * @since 1.0.0
  * @category mutations
  */
-export const done = core.deferredDone
+export const done: <E, A>(exit: Exit.Exit<E, A>) => (self: Deferred<E, A>) => Effect.Effect<never, never, boolean> =
+  core.deferredDone
 
 /**
  * Returns `true` if this `Deferred` has already been completed with a value or
@@ -188,7 +207,7 @@ export const done = core.deferredDone
  * @since 1.0.0
  * @category getters
  */
-export const isDone = core.deferredIsDone
+export const isDone: <E, A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean> = core.deferredIsDone
 
 /**
  * Returns a `Some<Effect<R, E, A>>` from the `Deferred` if this `Deferred` has
@@ -198,9 +217,11 @@ export const isDone = core.deferredIsDone
  * @since 1.0.0
  * @category getters
  */
-export const poll = core.deferredPoll
+export const poll: <E, A>(
+  self: Deferred<E, A>
+) => Effect.Effect<never, never, Option.Option<Effect.Effect<never, E, A>>> = core.deferredPoll
 
-const _await = core.deferredAwait
+const _await: <E, A>(self: Deferred<E, A>) => Effect.Effect<never, E, A> = core.deferredAwait
 
 export {
   /**
@@ -225,7 +246,9 @@ export {
  * @since 1.0.0
  * @category mutations
  */
-export const complete = core.deferredComplete
+export const complete: <E, A>(
+  effect: Effect.Effect<never, E, A>
+) => (self: Deferred<E, A>) => Effect.Effect<never, never, boolean> = core.deferredComplete
 
 /**
  * Completes the deferred with the result of the specified effect. If the
@@ -235,7 +258,9 @@ export const complete = core.deferredComplete
  * @since 1.0.0
  * @category mutations
  */
-export const completeWith = core.deferredCompleteWith
+export const completeWith: <E, A>(
+  effect: Effect.Effect<never, E, A>
+) => (self: Deferred<E, A>) => Effect.Effect<never, never, boolean> = core.deferredCompleteWith
 
 /**
  * Unsafely creates a new `Deferred` from the specified `FiberId`.
@@ -243,7 +268,7 @@ export const completeWith = core.deferredCompleteWith
  * @since 1.0.0
  * @category unsafe
  */
-export const unsafeMake = core.deferredUnsafeMake
+export const unsafeMake: <E, A>(fiberId: FiberId.FiberId) => Deferred<E, A> = core.deferredUnsafeMake
 
 /**
  * Unsafely exits the `Deferred` with the specified `Exit` value, which will be
@@ -252,4 +277,5 @@ export const unsafeMake = core.deferredUnsafeMake
  * @since 1.0.0
  * @category unsafe
  */
-export const unsafeDone = core.deferredUnsafeDone
+export const unsafeDone: <E, A>(effect: Effect.Effect<never, E, A>) => (self: Deferred<E, A>) => void =
+  core.deferredUnsafeDone
