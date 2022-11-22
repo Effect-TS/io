@@ -3,7 +3,7 @@ import { getCallTrace } from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import type * as Fiber from "@effect/io/Fiber"
 import type * as FiberId from "@effect/io/Fiber/Id"
-import type * as FiberStatus from "@effect/io/Fiber/Status"
+import * as FiberStatus from "@effect/io/Fiber/Status"
 import * as clock from "@effect/io/internal/clock"
 import * as core from "@effect/io/internal/core"
 import * as defaultServices from "@effect/io/internal/defaultServices"
@@ -285,33 +285,29 @@ export class TestClockImpl implements TestClock {
               pipe(
                 fiber.status(),
                 core.flatMap((status) => {
-                  switch (status._tag) {
-                    case "Done": {
-                      return core.succeed(
-                        pipe(
-                          map,
-                          HashMap.set(
-                            fiber.id() as FiberId.FiberId,
-                            status as FiberStatus.FiberStatus
-                          )
+                  if (FiberStatus.isDone(status)) {
+                    return core.succeed(
+                      pipe(
+                        map,
+                        HashMap.set(
+                          fiber.id() as FiberId.FiberId,
+                          status as FiberStatus.FiberStatus
                         )
                       )
-                    }
-                    case "Suspended": {
-                      return core.succeed(
-                        pipe(
-                          map,
-                          HashMap.set(
-                            fiber.id() as FiberId.FiberId,
-                            status as FiberStatus.FiberStatus
-                          )
-                        )
-                      )
-                    }
-                    default: {
-                      return core.fail(void 0)
-                    }
+                    )
                   }
+                  if (FiberStatus.isSuspended(status)) {
+                    return core.succeed(
+                      pipe(
+                        map,
+                        HashMap.set(
+                          fiber.id() as FiberId.FiberId,
+                          status as FiberStatus.FiberStatus
+                        )
+                      )
+                    )
+                  }
+                  return core.fail(void 0)
                 })
               )
           )

@@ -8,11 +8,11 @@ import type * as Fiber from "@effect/io/Fiber"
 import * as FiberId from "@effect/io/Fiber/Id"
 import * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import * as RuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
-import type * as FiberScope from "@effect/io/Fiber/Scope"
 import type * as FiberStatus from "@effect/io/Fiber/Status"
 import type * as FiberRef from "@effect/io/FiberRef"
 import * as deferred from "@effect/io/internal/deferred"
 import type * as FiberRuntime from "@effect/io/internal/fiberRuntime"
+import type * as fiberScope from "@effect/io/internal/fiberScope"
 import * as OpCodes from "@effect/io/internal/opCodes/effect"
 import * as Scheduler from "@effect/io/internal/scheduler"
 import * as SingleShotGen from "@effect/io/internal/singleShotGen"
@@ -1295,9 +1295,9 @@ export const currentParallelism: FiberRef.FiberRef<Option.Option<number>> = fibe
 )
 
 /** @internal */
-export const forkScopeOverride: FiberRef.FiberRef<Option.Option<FiberScope.FiberScope>> = fiberRefUnsafeMake(
+export const forkScopeOverride: FiberRef.FiberRef<Option.Option<fiberScope.FiberScope>> = fiberRefUnsafeMake(
   Option.none,
-  () => Option.none as Option.Option<FiberScope.FiberScope>,
+  () => Option.none as Option.Option<fiberScope.FiberScope>,
   (parent, _) => parent
 )
 

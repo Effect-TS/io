@@ -9,7 +9,6 @@ import type * as Fiber from "@effect/io/Fiber"
 import * as FiberId from "@effect/io/Fiber/Id"
 import * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import * as RuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
-import * as FiberScope from "@effect/io/Fiber/Scope"
 import * as FiberStatus from "@effect/io/Fiber/Status"
 import type * as FiberRef from "@effect/io/FiberRef"
 import type * as FiberRefs from "@effect/io/FiberRefs"
@@ -19,6 +18,7 @@ import * as defaultServices from "@effect/io/internal/defaultServices"
 import * as internalFiber from "@effect/io/internal/fiber"
 import * as FiberMessage from "@effect/io/internal/fiberMessage"
 import * as fiberRefs from "@effect/io/internal/fiberRefs"
+import * as fiberScope from "@effect/io/internal/fiberScope"
 import * as internalLogger from "@effect/io/internal/logger"
 import * as metric from "@effect/io/internal/metric"
 import * as metricBoundaries from "@effect/io/internal/metric/boundaries"
@@ -137,7 +137,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   runtimeFlags(): Effect.Effect<never, never, RuntimeFlags.RuntimeFlags> {
     const trace = getCallTrace()
     return this.ask((state, status) => {
-      if (status._tag === "Done") {
+      if (FiberStatus.isDone(status)) {
         return state._runtimeFlags
       }
       return status.runtimeFlags
@@ -147,8 +147,8 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   /**
    * Returns the current `FiberScope` for the fiber.
    */
-  scope(): FiberScope.FiberScope {
-    return FiberScope.unsafeMake(this)
+  scope(): fiberScope.FiberScope {
+    return fiberScope.unsafeMake(this)
   }
 
   /**
@@ -1171,7 +1171,7 @@ export const collectAllWithPar = <A, B>(pf: (a: A) => Option.Option<B>) => {
 /** @internal */
 export const daemonChildren = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
-  const forkScope = pipe(core.forkScopeOverride, core.fiberRefLocally(Option.some(FiberScope.globalScope)))
+  const forkScope = pipe(core.forkScopeOverride, core.fiberRefLocally(Option.some(fiberScope.globalScope)))
   return forkScope(self).traced(trace)
 }
 
@@ -1430,7 +1430,7 @@ export const forkDaemon = <R, E, A>(
   self: Effect.Effect<R, E, A>
 ): Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>> => {
   const trace = getCallTrace()
-  return pipe(self, forkWithScopeOverride(FiberScope.globalScope)).traced(trace)
+  return pipe(self, forkWithScopeOverride(fiberScope.globalScope)).traced(trace)
 }
 
 /**
@@ -1463,7 +1463,7 @@ export const unsafeFork = <R, E, A, E2, B>(
   effect: Effect.Effect<R, E, A>,
   parentFiber: FiberRuntime<E2, B>,
   parentRuntimeFlags: RuntimeFlags.RuntimeFlags,
-  overrideScope: FiberScope.FiberScope | null = null
+  overrideScope: fiberScope.FiberScope | null = null
 ): FiberRuntime<E, A> => {
   const childFiber = unsafeMakeChildFiber(effect, parentFiber, parentRuntimeFlags, overrideScope)
   childFiber.start(effect)
@@ -1475,7 +1475,7 @@ export const unsafeMakeChildFiber = <R, E, A, E2, B>(
   effect: Effect.Effect<R, E, A>,
   parentFiber: FiberRuntime<E2, B>,
   parentRuntimeFlags: RuntimeFlags.RuntimeFlags,
-  overrideScope: FiberScope.FiberScope | null = null
+  overrideScope: fiberScope.FiberScope | null = null
 ): FiberRuntime<E, A> => {
   const childId = FiberId.unsafeMake()
   const parentFiberRefs = parentFiber.unsafeGetFiberRefs()
@@ -1512,7 +1512,7 @@ export const unsafeMakeChildFiber = <R, E, A, E2, B>(
  * @macro traced
  * @internal
  */
-const forkWithScopeOverride = (scopeOverride: FiberScope.FiberScope) => {
+const forkWithScopeOverride = (scopeOverride: fiberScope.FiberScope) => {
   const trace = getCallTrace()
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>> => {
     return core.withFiberRuntime<R, never, Fiber.RuntimeFiber<E, A>>((parentFiber, parentStatus) =>
