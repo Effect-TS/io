@@ -3,7 +3,10 @@
  */
 import type * as Effect from "@effect/io/Effect"
 import * as internal from "@effect/io/internal/reloadable"
+import type * as Layer from "@effect/io/Layer"
+import type * as Schedule from "@effect/io/Schedule"
 import type * as ScopedRef from "@effect/io/ScopedRef"
+import type * as Context from "@fp-ts/data/Context"
 
 /**
  * @since 1.0.0
@@ -59,7 +62,12 @@ export declare namespace Reloadable {
  * @since 1.0.0
  * @category constructors
  */
-export const auto = internal.auto
+export const auto: <Out>(
+  tag: Context.Tag<Out>
+) => <In, E, R, Out2>(
+  layer: Layer.Layer<In, E, Out>,
+  policy: Schedule.Schedule<R, In, Out2>
+) => Layer.Layer<In | R, E, Reloadable<Out>> = internal.auto
 
 /**
  * Makes a new reloadable service from a layer that describes the construction
@@ -69,7 +77,12 @@ export const auto = internal.auto
  * @since 1.0.0
  * @category constructors
  */
-export const autoFromConfig = internal.autoFromConfig
+export const autoFromConfig: <Out>(
+  tag: Context.Tag<Out>
+) => <In, E, R, Out2>(
+  layer: Layer.Layer<In, E, Out>,
+  scheduleFromConfig: (context: Context.Context<In>) => Schedule.Schedule<R, In, Out2>
+) => Layer.Layer<In | R, E, Reloadable<Out>> = internal.autoFromConfig
 
 /**
  * Retrieves the current version of the reloadable service.
@@ -78,7 +91,7 @@ export const autoFromConfig = internal.autoFromConfig
  * @since 1.0.0
  * @category getters
  */
-export const get = internal.get
+export const get: <A>(tag: Context.Tag<A>) => Effect.Effect<Reloadable<A>, never, A> = internal.get
 
 /**
  * Makes a new reloadable service from a layer that describes the construction
@@ -87,7 +100,9 @@ export const get = internal.get
  * @since 1.0.0
  * @category constructors
  */
-export const manual = internal.manual
+export const manual: <Out>(
+  tag: Context.Tag<Out>
+) => <In, E>(layer: Layer.Layer<In, E, Out>) => Layer.Layer<In, E, Reloadable<Out>> = internal.manual
 
 /**
  * Reloads the specified service.
@@ -96,13 +111,13 @@ export const manual = internal.manual
  * @since 1.0.0
  * @category constructors
  */
-export const reload = internal.reload
+export const reload: <A>(tag: Context.Tag<A>) => Effect.Effect<Reloadable<A>, unknown, void> = internal.reload
 
 /**
  * @since 1.0.0
  * @category environment
  */
-export const reloadableTag = internal.reloadableTag
+export const reloadableTag: <A>(tag: Context.Tag<A>) => Context.Tag<Reloadable<A>> = internal.reloadableTag
 
 /**
  * Forks the reload of the service in the background, ignoring any errors.
@@ -111,4 +126,4 @@ export const reloadableTag = internal.reloadableTag
  * @since 1.0.0
  * @category constructors
  */
-export const reloadFork = internal.reloadFork
+export const reloadFork: <A>(tag: Context.Tag<A>) => Effect.Effect<Reloadable<A>, unknown, void> = internal.reloadFork
