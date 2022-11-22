@@ -152,7 +152,7 @@ Constructs a layer that fails with the specified cause.
 **Signature**
 
 ```ts
-export declare const failCause: <E>(cause: Cause<E>) => Layer<never, E, unknown>
+export declare const failCause: <E>(cause: Cause.Cause<E>) => Layer<never, E, unknown>
 ```
 
 Added in v1.0.0
@@ -164,7 +164,7 @@ Constructs a layer that fails with the specified cause.
 **Signature**
 
 ```ts
-export declare const failCauseSync: <E>(evaluate: () => Cause<E>) => Layer<never, E, unknown>
+export declare const failCauseSync: <E>(evaluate: () => Cause.Cause<E>) => Layer<never, E, unknown>
 ```
 
 Added in v1.0.0
@@ -188,7 +188,7 @@ Constructs a layer from the specified effect.
 **Signature**
 
 ```ts
-export declare const fromEffect: typeof internal.fromEffect
+export declare const fromEffect: <T>(tag: Context.Tag<T>) => <R, E>(effect: Effect.Effect<R, E, T>) => Layer<R, E, T>
 ```
 
 Added in v1.0.0
@@ -201,7 +201,7 @@ services.
 **Signature**
 
 ```ts
-export declare const fromEffectEnvironment: typeof internal.fromEffectEnvironment
+export declare const fromEffectEnvironment: <R, E, A>(effect: Effect.Effect<R, E, Context.Context<A>>) => Layer<R, E, A>
 ```
 
 Added in v1.0.0
@@ -213,7 +213,10 @@ Constructs a layer from the environment using the specified function.
 **Signature**
 
 ```ts
-export declare const fromFunction: <A, B>(tagA: Tag<A>, tagB: Tag<B>) => (f: (a: A) => B) => Layer<A, never, B>
+export declare const fromFunction: <A, B>(
+  tagA: Context.Tag<A>,
+  tagB: Context.Tag<B>
+) => (f: (a: A) => B) => Layer<A, never, B>
 ```
 
 Added in v1.0.0
@@ -228,7 +231,7 @@ workflow.
 **Signature**
 
 ```ts
-export declare const scope: () => Layer<never, never, CloseableScope>
+export declare const scope: () => Layer<never, never, Scope.CloseableScope>
 ```
 
 Added in v1.0.0
@@ -241,8 +244,8 @@ Constructs a layer from the specified scoped effect.
 
 ```ts
 export declare const scoped: <T>(
-  tag: Tag<T>
-) => <R, E, T1 extends T>(effect: Effect<R, E, T1>) => Layer<Exclude<R, Scope>, E, T>
+  tag: Context.Tag<T>
+) => <R, E, T1 extends T>(effect: Effect.Effect<R, E, T1>) => Layer<Exclude<R, Scope.Scope>, E, T>
 ```
 
 Added in v1.0.0
@@ -254,7 +257,9 @@ Constructs a layer from the specified scoped effect.
 **Signature**
 
 ```ts
-export declare const scopedDiscard: <R, E, T>(effect: Effect<R, E, T>) => Layer<Exclude<R, Scope>, E, never>
+export declare const scopedDiscard: <R, E, T>(
+  effect: Effect.Effect<R, E, T>
+) => Layer<Exclude<R, Scope.Scope>, E, never>
 ```
 
 Added in v1.0.0
@@ -267,7 +272,9 @@ or more services.
 **Signature**
 
 ```ts
-export declare const scopedEnvironment: <R, E, A>(effect: Effect<R, E, Context<A>>) => Layer<Exclude<R, Scope>, E, A>
+export declare const scopedEnvironment: <R, E, A>(
+  effect: Effect.Effect<R, E, Context.Context<A>>
+) => Layer<Exclude<R, Scope.Scope>, E, A>
 ```
 
 Added in v1.0.0
@@ -280,7 +287,7 @@ environment.
 **Signature**
 
 ```ts
-export declare const service: <T>(tag: Tag<T>) => Layer<T, never, T>
+export declare const service: <T>(tag: Context.Tag<T>) => Layer<T, never, T>
 ```
 
 Added in v1.0.0
@@ -292,7 +299,7 @@ Constructs a layer from the specified value.
 **Signature**
 
 ```ts
-export declare const succeed: <T>(tag: Tag<T>) => (resource: T) => Layer<never, never, T>
+export declare const succeed: <T>(tag: Context.Tag<T>) => (resource: T) => Layer<never, never, T>
 ```
 
 Added in v1.0.0
@@ -305,7 +312,7 @@ services.
 **Signature**
 
 ```ts
-export declare const succeedEnvironment: <A>(environment: Context<A>) => Layer<never, never, A>
+export declare const succeedEnvironment: <A>(environment: Context.Context<A>) => Layer<never, never, A>
 ```
 
 Added in v1.0.0
@@ -330,7 +337,7 @@ Lazily constructs a layer from the specified value.
 **Signature**
 
 ```ts
-export declare const sync: <T>(tag: Tag<T>) => (evaluate: () => T) => Layer<never, never, T>
+export declare const sync: <T>(tag: Context.Tag<T>) => (evaluate: () => T) => Layer<never, never, T>
 ```
 
 Added in v1.0.0
@@ -343,7 +350,7 @@ services.
 **Signature**
 
 ```ts
-export declare const syncEnvironment: <A>(evaluate: () => Context<A>) => Layer<never, never, A>
+export declare const syncEnvironment: <A>(evaluate: () => Context.Context<A>) => Layer<never, never, A>
 ```
 
 Added in v1.0.0
@@ -358,7 +365,7 @@ your entire application is a layer, such as an HTTP server.
 **Signature**
 
 ```ts
-export declare const launch: <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Effect<RIn, E, never>
+export declare const launch: <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Effect.Effect<RIn, E, never>
 ```
 
 Added in v1.0.0
@@ -371,7 +378,9 @@ be used to execute effects.
 **Signature**
 
 ```ts
-export declare const toRuntime: <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Effect<Scope | RIn, E, Runtime<ROut>>
+export declare const toRuntime: <RIn, E, ROut>(
+  self: Layer<RIn, E, ROut>
+) => Effect.Effect<Scope.Scope | RIn, E, Runtime.Runtime<ROut>>
 ```
 
 Added in v1.0.0
@@ -385,7 +394,9 @@ Builds a layer into a scoped value.
 **Signature**
 
 ```ts
-export declare const build: <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Effect<Scope | RIn, E, Context<ROut>>
+export declare const build: <RIn, E, ROut>(
+  self: Layer<RIn, E, ROut>
+) => Effect.Effect<Scope.Scope | RIn, E, Context.Context<ROut>>
 ```
 
 Added in v1.0.0
@@ -402,8 +413,8 @@ layer is provided to.
 
 ```ts
 export declare const buildWithScope: (
-  scope: Scope
-) => <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Effect<RIn, E, Context<ROut>>
+  scope: Scope.Scope
+) => <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Effect.Effect<RIn, E, Context.Context<ROut>>
 ```
 
 Added in v1.0.0
@@ -464,8 +475,8 @@ the inputs of this layer, and the error or outputs of the specified layer.
 
 ```ts
 export declare const foldCauseLayer: <E, A, R2, E2, A2, R3, E3, A3>(
-  onFailure: (cause: Cause<E>) => Layer<R2, E2, A2>,
-  onSuccess: (context: Context<A>) => Layer<R3, E3, A3>
+  onFailure: (cause: Cause.Cause<E>) => Layer<R2, E2, A2>,
+  onSuccess: (context: Context.Context<A>) => Layer<R3, E3, A3>
 ) => <R>(self: Layer<R, E, A>) => Layer<R2 | R3 | R, E2 | E3, A2 | A3>
 ```
 
@@ -482,7 +493,7 @@ the inputs of this layer, and the error or outputs of the specified layer.
 ```ts
 export declare const foldLayer: <E, R2, E2, A2, A, R3, E3, A3>(
   onFailure: (error: E) => Layer<R2, E2, A2>,
-  onSuccess: (context: Context<A>) => Layer<R3, E3, A3>
+  onSuccess: (context: Context.Context<A>) => Layer<R3, E3, A3>
 ) => <R>(self: Layer<R, E, A>) => Layer<R2 | R3 | R, E2 | E3, A2 & A3>
 ```
 
@@ -525,7 +536,7 @@ Returns a new layer whose output is mapped by the specified function.
 
 ```ts
 export declare const map: <A, B>(
-  f: (context: Context<A>) => Context<B>
+  f: (context: Context.Context<A>) => Context.Context<B>
 ) => <R, E>(self: Layer<R, E, A>) => Layer<R, E, B>
 ```
 
@@ -567,7 +578,7 @@ effect depends on is closed.
 **Signature**
 
 ```ts
-export declare const extendScope: <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Layer<Scope | RIn, E, ROut>
+export declare const extendScope: <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Layer<Scope.Scope | RIn, E, ROut>
 ```
 
 Added in v1.0.0
@@ -592,7 +603,9 @@ result of this layer.
 **Signature**
 
 ```ts
-export declare const memoize: <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Effect<Scope, never, Layer<RIn, E, ROut>>
+export declare const memoize: <RIn, E, ROut>(
+  self: Layer<RIn, E, ROut>
+) => Effect.Effect<Scope.Scope, never, Layer<RIn, E, ROut>>
 ```
 
 Added in v1.0.0
@@ -634,8 +647,8 @@ specified function.
 
 ```ts
 export declare const project: <A, B>(
-  tagA: Tag<A>,
-  tagB: Tag<B>
+  tagA: Context.Tag<A>,
+  tagB: Context.Tag<B>
 ) => (f: (a: A) => B) => <RIn, E, ROut>(self: Layer<RIn, E, A | ROut>) => Layer<RIn, E, B>
 ```
 
@@ -666,7 +679,9 @@ outputs of both layers.
 **Signature**
 
 ```ts
-export declare const provideToAndMerge: typeof internal.provideToAndMerge
+export declare const provideToAndMerge: <RIn2, E2, ROut2>(
+  that: Layer<RIn2, E2, ROut2>
+) => <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn | Exclude<RIn2, ROut>, E2 | E, ROut2 | ROut>
 ```
 
 Added in v1.0.0
@@ -681,7 +696,7 @@ Retries constructing this layer according to the specified schedule.
 
 ```ts
 export declare const retry: <RIn1, E, X>(
-  schedule: Schedule<RIn1, E, X>
+  schedule: Schedule.Schedule<RIn1, E, X>
 ) => <RIn, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn1 | RIn, E, ROut>
 ```
 
@@ -697,7 +712,7 @@ Constructs a layer dynamically based on the output of this layer.
 
 ```ts
 export declare const flatMap: <A, R2, E2, A2>(
-  f: (context: Context<A>) => Layer<R2, E2, A2>
+  f: (context: Context.Context<A>) => Layer<R2, E2, A2>
 ) => <R, E>(self: Layer<R, E, A>) => Layer<R2 | R, E2 | E, A2>
 ```
 
@@ -711,7 +726,7 @@ Flattens layers nested in the environment of an effect.
 
 ```ts
 export declare const flatten: <R2, E2, A>(
-  tag: Tag<Layer<R2, E2, A>>
+  tag: Context.Tag<Layer<R2, E2, A>>
 ) => <R, E>(self: Layer<R, E, Layer<R2, E2, A>>) => Layer<R2 | R, E2 | E, A>
 ```
 
@@ -725,7 +740,7 @@ Performs the specified effect if this layer succeeds.
 
 ```ts
 export declare const tap: <ROut, RIn2, E2, X>(
-  f: (context: Context<ROut>) => Effect<RIn2, E2, X>
+  f: (context: Context.Context<ROut>) => Effect.Effect<RIn2, E2, X>
 ) => <RIn, E>(self: Layer<RIn, E, ROut>) => Layer<RIn2 | RIn, E2 | E, ROut>
 ```
 
@@ -739,7 +754,7 @@ Performs the specified effect if this layer fails.
 
 ```ts
 export declare const tapError: <E, RIn2, E2, X>(
-  f: (e: E) => Effect<RIn2, E2, X>
+  f: (e: E) => Effect.Effect<RIn2, E2, X>
 ) => <RIn, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn2 | RIn, E | E2, ROut>
 ```
 
@@ -778,7 +793,10 @@ function.
 **Signature**
 
 ```ts
-export declare const zipWithPar: typeof internal.zipWithPar
+export declare const zipWithPar: <R1, E1, A1, A, A2>(
+  that: Layer<R1, E1, A1>,
+  f: (a: Context.Context<A>, b: Context.Context<A1>) => Context.Context<A2>
+) => <R, E>(self: Layer<R, E, A>) => Layer<R1 | R, E1 | E, A2>
 ```
 
 Added in v1.0.0

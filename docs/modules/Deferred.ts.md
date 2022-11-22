@@ -53,7 +53,7 @@ Creates a new `Deferred`.
 **Signature**
 
 ```ts
-export declare const make: <E, A>() => Effect<never, never, Deferred<E, A>>
+export declare const make: <E, A>() => Effect.Effect<never, never, Deferred<E, A>>
 ```
 
 Added in v1.0.0
@@ -65,7 +65,7 @@ Creates a new `Deferred` from the specified `FiberId`.
 **Signature**
 
 ```ts
-export declare const makeAs: <E, A>(fiberId: FiberId.FiberId) => Effect<never, never, Deferred<E, A>>
+export declare const makeAs: <E, A>(fiberId: FiberId.FiberId) => Effect.Effect<never, never, Deferred<E, A>>
 ```
 
 Added in v1.0.0
@@ -80,7 +80,7 @@ workflow until the result is available.
 **Signature**
 
 ```ts
-export declare const await: <E, A>(self: Deferred<E, A>) => Effect<never, E, A>
+export declare const await: <E, A>(self: Deferred<E, A>) => Effect.Effect<never, E, A>
 ```
 
 Added in v1.0.0
@@ -93,7 +93,7 @@ an error, `false` otherwise.
 **Signature**
 
 ```ts
-export declare const isDone: <E, A>(self: Deferred<E, A>) => Effect<never, never, boolean>
+export declare const isDone: <E, A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -106,7 +106,9 @@ already been completed, `None` otherwise.
 **Signature**
 
 ```ts
-export declare const poll: <E, A>(self: Deferred<E, A>) => Effect<never, never, Option<Effect<never, E, A>>>
+export declare const poll: <E, A>(
+  self: Deferred<E, A>
+) => Effect.Effect<never, never, Option.Option<Effect.Effect<never, E, A>>>
 ```
 
 Added in v1.0.0
@@ -150,8 +152,8 @@ that if you do not need to memoize the result of the specified effect.
 
 ```ts
 export declare const complete: <E, A>(
-  effect: Effect<never, E, A>
-) => (self: Deferred<E, A>) => Effect<never, never, boolean>
+  effect: Effect.Effect<never, E, A>
+) => (self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -165,8 +167,8 @@ deferred has already been completed, the method will produce false.
 
 ```ts
 export declare const completeWith: <E, A>(
-  effect: Effect<never, E, A>
-) => (self: Deferred<E, A>) => Effect<never, never, boolean>
+  effect: Effect.Effect<never, E, A>
+) => (self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -179,7 +181,7 @@ all fibers waiting on the value of the `Deferred`.
 **Signature**
 
 ```ts
-export declare const die: (defect: unknown) => <E, A>(self: Deferred<E, A>) => Effect<never, never, boolean>
+export declare const die: (defect: unknown) => <E, A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -192,7 +194,9 @@ all fibers waiting on the value of the `Deferred`.
 **Signature**
 
 ```ts
-export declare const dieSync: (evaluate: () => unknown) => <E, A>(self: Deferred<E, A>) => Effect<never, never, boolean>
+export declare const dieSync: (
+  evaluate: () => unknown
+) => <E, A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -205,7 +209,9 @@ propagated to all fibers waiting on the value of the `Deferred`.
 **Signature**
 
 ```ts
-export declare const done: <E, A>(exit: Exit<E, A>) => (self: Deferred<E, A>) => Effect<never, never, boolean>
+export declare const done: <E, A>(
+  exit: Exit.Exit<E, A>
+) => (self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -218,7 +224,7 @@ all fibers waiting on the value of the `Deferred`.
 **Signature**
 
 ```ts
-export declare const fail: <E>(error: E) => <A>(self: Deferred<E, A>) => Effect<never, never, boolean>
+export declare const fail: <E>(error: E) => <A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -231,7 +237,9 @@ all fibers waiting on the value of the `Deferred`.
 **Signature**
 
 ```ts
-export declare const failCause: <E>(cause: Cause<E>) => <A>(self: Deferred<E, A>) => Effect<never, never, boolean>
+export declare const failCause: <E>(
+  cause: Cause.Cause<E>
+) => <A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -245,8 +253,8 @@ all fibers waiting on the value of the `Deferred`.
 
 ```ts
 export declare const failCauseSync: <E>(
-  evaluate: () => Cause<E>
-) => <A>(self: Deferred<E, A>) => Effect<never, never, boolean>
+  evaluate: () => Cause.Cause<E>
+) => <A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -259,7 +267,9 @@ all fibers waiting on the value of the `Deferred`.
 **Signature**
 
 ```ts
-export declare const failSync: <E>(evaluate: () => E) => <A>(self: Deferred<E, A>) => Effect<never, never, boolean>
+export declare const failSync: <E>(
+  evaluate: () => E
+) => <A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -273,7 +283,7 @@ calling this method.
 **Signature**
 
 ```ts
-export declare const interrupt: <E, A>(self: Deferred<E, A>) => Effect<never, never, boolean>
+export declare const interrupt: <E, A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -288,7 +298,7 @@ waiting on the value of the `Deferred` with the specified `FiberId`.
 ```ts
 export declare const interruptWith: (
   fiberId: FiberId.FiberId
-) => <E, A>(self: Deferred<E, A>) => Effect<never, never, boolean>
+) => <E, A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -300,7 +310,7 @@ Completes the `Deferred` with the specified value.
 **Signature**
 
 ```ts
-export declare const succeed: <A>(value: A) => <E>(self: Deferred<E, A>) => Effect<never, never, boolean>
+export declare const succeed: <A>(value: A) => <E>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -312,7 +322,7 @@ Completes the `Deferred` with the specified value.
 **Signature**
 
 ```ts
-export declare const sync: <A>(evaluate: () => A) => <E>(self: Deferred<E, A>) => Effect<never, never, boolean>
+export declare const sync: <A>(evaluate: () => A) => <E>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -349,7 +359,7 @@ propagated to all fibers waiting on the value of the `Deferred`.
 **Signature**
 
 ```ts
-export declare const unsafeDone: <E, A>(effect: Effect<never, E, A>) => (self: Deferred<E, A>) => void
+export declare const unsafeDone: <E, A>(effect: Effect.Effect<never, E, A>) => (self: Deferred<E, A>) => void
 ```
 
 Added in v1.0.0

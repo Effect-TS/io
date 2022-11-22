@@ -52,7 +52,7 @@ collections of `FiberRef`
 **Signature**
 
 ```ts
-export declare const diff: (oldValue: FiberRefs, newValue: FiberRefs) => FiberRefsPatch
+export declare const diff: (oldValue: FiberRefs.FiberRefs, newValue: FiberRefs.FiberRefs) => FiberRefsPatch
 ```
 
 Added in v1.0.0
@@ -77,7 +77,10 @@ of `FiberRef` values.
 **Signature**
 
 ```ts
-export declare const patch: (fiberId: Runtime, oldValue: FiberRefs) => (self: FiberRefsPatch) => FiberRefs
+export declare const patch: (
+  fiberId: FiberId.Runtime,
+  oldValue: FiberRefs.FiberRefs
+) => (self: FiberRefsPatch) => FiberRefs.FiberRefs
 ```
 
 Added in v1.0.0

@@ -126,7 +126,7 @@ Added in v1.0.0
 
 ```ts
 export declare const getAndUpdateSome: <A>(
-  f: (a: A) => Option<A>
+  f: (a: A) => Option.Option<A>
 ) => (self: Synchronized<A>) => Effect.Effect<never, never, A>
 ```
 
@@ -138,7 +138,7 @@ Added in v1.0.0
 
 ```ts
 export declare const getAndUpdateSomeEffect: <A, R, E>(
-  pf: (a: A) => Option<Effect.Effect<R, E, A>>
+  pf: (a: A) => Option.Option<Effect.Effect<R, E, A>>
 ) => (self: Synchronized<A>) => Effect.Effect<R, E, A>
 ```
 
@@ -175,7 +175,7 @@ Added in v1.0.0
 ```ts
 export declare const modifySome: <A, B>(
   fallback: B,
-  f: (a: A) => Option<readonly [B, A]>
+  f: (a: A) => Option.Option<readonly [B, A]>
 ) => (self: Synchronized<A>) => Effect.Effect<never, never, B>
 ```
 
@@ -188,7 +188,7 @@ Added in v1.0.0
 ```ts
 export declare const modifySomeEffect: <B, A, R, E>(
   fallback: B,
-  pf: (a: A) => Option<Effect.Effect<R, E, readonly [B, A]>>
+  pf: (a: A) => Option.Option<Effect.Effect<R, E, readonly [B, A]>>
 ) => (self: Synchronized<A>) => Effect.Effect<R, E, B>
 ```
 
@@ -254,7 +254,7 @@ Added in v1.0.0
 
 ```ts
 export declare const updateSome: <A>(
-  f: (a: A) => Option<A>
+  f: (a: A) => Option.Option<A>
 ) => (self: Synchronized<A>) => Effect.Effect<never, never, void>
 ```
 
@@ -266,7 +266,7 @@ Added in v1.0.0
 
 ```ts
 export declare const updateSomeAndGet: <A>(
-  f: (a: A) => Option<A>
+  f: (a: A) => Option.Option<A>
 ) => (self: Synchronized<A>) => Effect.Effect<never, never, A>
 ```
 
@@ -278,7 +278,7 @@ Added in v1.0.0
 
 ```ts
 export declare const updateSomeAndGetEffect: <A, R, E>(
-  pf: (a: A) => Option<Effect.Effect<R, E, A>>
+  pf: (a: A) => Option.Option<Effect.Effect<R, E, A>>
 ) => (self: Synchronized<A>) => Effect.Effect<R, E, A>
 ```
 
@@ -290,7 +290,7 @@ Added in v1.0.0
 
 ```ts
 export declare const updateSomeEffect: <A, R, E>(
-  pf: (a: A) => Option<Effect.Effect<R, E, A>>
+  pf: (a: A) => Option.Option<Effect.Effect<R, E, A>>
 ) => (self: Synchronized<A>) => Effect.Effect<R, E, void>
 ```
 

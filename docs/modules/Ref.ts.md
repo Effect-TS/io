@@ -106,7 +106,9 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const getAndUpdateSome: <A>(pf: (a: A) => Option<A>) => (self: Ref<A>) => Effect.Effect<never, never, A>
+export declare const getAndUpdateSome: <A>(
+  pf: (a: A) => Option.Option<A>
+) => (self: Ref<A>) => Effect.Effect<never, never, A>
 ```
 
 Added in v1.0.0
@@ -128,7 +130,7 @@ Added in v1.0.0
 ```ts
 export declare const modifySome: <A, B>(
   fallback: B,
-  pf: (a: A) => Option<readonly [B, A]>
+  pf: (a: A) => Option.Option<readonly [B, A]>
 ) => (self: Ref<A>) => Effect.Effect<never, never, B>
 ```
 
@@ -179,7 +181,9 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const updateSome: <A>(f: (a: A) => Option<A>) => (self: Ref<A>) => Effect.Effect<never, never, void>
+export declare const updateSome: <A>(
+  f: (a: A) => Option.Option<A>
+) => (self: Ref<A>) => Effect.Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -189,7 +193,9 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const updateSomeAndGet: <A>(pf: (a: A) => Option<A>) => (self: Ref<A>) => Effect.Effect<never, never, A>
+export declare const updateSomeAndGet: <A>(
+  pf: (a: A) => Option.Option<A>
+) => (self: Ref<A>) => Effect.Effect<never, never, A>
 ```
 
 Added in v1.0.0

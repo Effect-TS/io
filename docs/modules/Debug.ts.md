@@ -56,7 +56,7 @@ export interface Debug {
   /**
    * Overrides the default log level filter for loggers such as console.
    */
-  logLevelOverride: LogLevel | undefined
+  logLevelOverride: LogLevel.LogLevel | undefined
   /**
    * When specified it will be used to collect call traces at runtime.
    *
@@ -127,7 +127,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const withCallTrace: (trace: string) => <A>(a: A) => A
+export declare const withCallTrace: (trace: string) => <A>(value: A) => A
 ```
 
 Added in v1.0.0

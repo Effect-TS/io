@@ -100,7 +100,7 @@ interval to the end of the interval.
 **Signature**
 
 ```ts
-export declare const size: (self: Interval) => Duration
+export declare const size: (self: Interval) => Duration.Duration
 ```
 
 Added in v1.0.0
@@ -135,7 +135,7 @@ form a union.
 **Signature**
 
 ```ts
-export declare const union: (that: Interval) => (self: Interval) => Option<Interval>
+export declare const union: (that: Interval) => (self: Interval) => Option.Option<Interval>
 ```
 
 Added in v1.0.0

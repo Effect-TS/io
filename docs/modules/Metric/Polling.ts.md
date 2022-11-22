@@ -41,7 +41,7 @@ polls for, updates, and produces the outputs of all individual metrics.
 ```ts
 export declare const collectAll: <R, E, Out>(
   iterable: Iterable<PollingMetric<any, any, R, E, Out>>
-) => PollingMetric<Chunk<any>, Chunk<any>, R, E, Chunk<Out>>
+) => PollingMetric<Chunk.Chunk<any>, Chunk.Chunk<any>, R, E, Chunk.Chunk<Out>>
 ```
 
 Added in v1.0.0
@@ -70,7 +70,7 @@ specified retry policy.
 
 ```ts
 export declare const retry: <R2, E, _>(
-  policy: Schedule<R2, E, _>
+  policy: Schedule.Schedule<R2, E, _>
 ) => <Type, In, R, Out>(self: PollingMetric<Type, In, R, E, Out>) => PollingMetric<Type, In, R2 | R, E, Out>
 ```
 
@@ -114,10 +114,10 @@ fiber, using the specified schedule.
 
 ```ts
 export declare const launch: <R2, A2>(
-  schedule: Schedule<R2, unknown, A2>
+  schedule: Schedule.Schedule<R2, unknown, A2>
 ) => <Type, In, R, E, Out>(
   self: PollingMetric<Type, In, R, E, Out>
-) => Effect.Effect<Scope | R2 | R, never, Fiber<E, A2>>
+) => Effect.Effect<Scope.Scope | R2 | R, never, Fiber.Fiber<E, A2>>
 ```
 
 Added in v1.0.0

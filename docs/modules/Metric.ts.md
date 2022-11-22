@@ -157,7 +157,7 @@ must be `Duration`.
 
 ```ts
 export declare const trackDuration: <Type, Out>(
-  self: Metric<Type, Duration, Out>
+  self: Metric<Type, Duration.Duration, Out>
 ) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
 ```
 
@@ -173,7 +173,7 @@ that can convert the `Duration` to the input type of this metric.
 
 ```ts
 export declare const trackDurationWith: <In>(
-  f: (duration: Duration) => In
+  f: (duration: Duration.Duration) => In
 ) => <Type, Out>(self: Metric<Type, In, Out>) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
 ```
 
@@ -294,7 +294,7 @@ Added in v1.0.0
 
 ```ts
 export declare const fromMetricKey: <Type extends MetricKeyType.MetricKeyType<any, any>>(
-  key: MetricKey<Type>
+  key: MetricKey.MetricKey<Type>
 ) => Metric<Type, MetricKeyType.MetricKeyType.InType<Type>, MetricKeyType.MetricKeyType.OutType<Type>>
 ```
 
@@ -322,7 +322,7 @@ fall in bins with the specified boundaries.
 ```ts
 export declare const histogram: (
   name: string,
-  boundaries: MetricBoundaries
+  boundaries: MetricBoundaries.MetricBoundaries
 ) => Metric<MetricKeyType.MetricKeyType.Histogram, number, MetricState.MetricState.Histogram>
 ```
 
@@ -357,10 +357,10 @@ Added in v1.0.0
 ```ts
 export declare const summary: (
   name: string,
-  maxAge: Duration,
+  maxAge: Duration.Duration,
   maxSize: number,
   error: number,
-  quantiles: Chunk<number>
+  quantiles: Chunk.Chunk<number>
 ) => Metric.Summary<number>
 ```
 
@@ -373,10 +373,10 @@ Added in v1.0.0
 ```ts
 export declare const summaryTimestamp: (
   name: string,
-  maxAge: Duration,
+  maxAge: Duration.Duration,
   maxSize: number,
   error: number,
-  quantiles: Chunk<number>
+  quantiles: Chunk.Chunk<number>
 ) => Metric.Summary<readonly [value: number, timestamp: number]>
 ```
 
@@ -405,7 +405,7 @@ the metric as a tag (i.e. `"time_unit: milliseconds"`).
 ```ts
 export declare const timer: (
   name: string
-) => Metric<MetricKeyType.MetricKeyType.Histogram, Duration, MetricState.MetricState.Histogram>
+) => Metric<MetricKeyType.MetricKeyType.Histogram, Duration.Duration, MetricState.MetricState.Histogram>
 ```
 
 Added in v1.0.0
@@ -431,7 +431,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const globalMetricRegistry: MetricRegistry
+export declare const globalMetricRegistry: MetricRegistry.MetricRegistry
 ```
 
 Added in v1.0.0
@@ -660,7 +660,7 @@ Unsafely captures a snapshot of all metrics recorded by the application.
 **Signature**
 
 ```ts
-export declare const unsafeSnapshot: typeof internal.unsafeSnapshot
+export declare const unsafeSnapshot: () => HashSet.HashSet<MetricPair.MetricPair.Untyped>
 ```
 
 Added in v1.0.0

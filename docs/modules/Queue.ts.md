@@ -466,7 +466,7 @@ is empty.
 **Signature**
 
 ```ts
-export declare const poll: <A>(self: Dequeue<A>) => Effect.Effect<never, never, Option<A>>
+export declare const poll: <A>(self: Dequeue<A>) => Effect.Effect<never, never, Option.Option<A>>
 ```
 
 Added in v1.0.0

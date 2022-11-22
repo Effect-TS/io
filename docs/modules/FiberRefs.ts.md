@@ -12,10 +12,16 @@ Added in v1.0.0
 
 <h2 class="text-delta">Table of contents</h2>
 
+- [getters](#getters)
+  - [fiberRefs](#fiberrefs)
+  - [get](#get)
+  - [getOrDefault](#getordefault)
 - [models](#models)
   - [FiberRefs (interface)](#fiberrefs-interface)
 - [mutations](#mutations)
   - [delete](#delete)
+  - [forkAs](#forkas)
+  - [joinAs](#joinas)
   - [setAll](#setall)
   - [updatedAs](#updatedas)
 - [symbols](#symbols)
@@ -23,14 +29,48 @@ Added in v1.0.0
   - [FiberRefsSym (type alias)](#fiberrefssym-type-alias)
 - [unsafe](#unsafe)
   - [unsafeMake](#unsafemake)
-- [utilities](#utilities)
-  - [fiberRefs](#fiberrefs)
-  - [forkAs](#forkas)
-  - [get](#get)
-  - [getOrDefault](#getordefault)
-  - [joinAs](#joinas)
 
 ---
+
+# getters
+
+## fiberRefs
+
+Returns a set of each `FiberRef` in this collection.
+
+**Signature**
+
+```ts
+export declare const fiberRefs: (self: FiberRefs) => HashSet.HashSet<FiberRef.FiberRef<any>>
+```
+
+Added in v1.0.0
+
+## get
+
+Gets the value of the specified `FiberRef` in this collection of `FiberRef`
+values if it exists or `None` otherwise.
+
+**Signature**
+
+```ts
+export declare const get: <A>(fiberRef: FiberRef.FiberRef<A>) => (self: FiberRefs) => Option.Option<A>
+```
+
+Added in v1.0.0
+
+## getOrDefault
+
+Gets the value of the specified `FiberRef` in this collection of `FiberRef`
+values if it exists or the `initial` value of the `FiberRef` otherwise.
+
+**Signature**
+
+```ts
+export declare const getOrDefault: <A>(fiberRef: FiberRef.FiberRef<A>) => (self: FiberRefs) => A
+```
+
+Added in v1.0.0
 
 # models
 
@@ -66,6 +106,34 @@ export declare const delete: <A>(fiberRef: FiberRef.FiberRef<A>) => (self: Fiber
 
 Added in v1.0.0
 
+## forkAs
+
+Forks this collection of fiber refs as the specified child fiber id. This
+will potentially modify the value of the fiber refs, as determined by the
+individual fiber refs that make up the collection.
+
+**Signature**
+
+```ts
+export declare const forkAs: (childId: FiberId.Runtime) => (self: FiberRefs) => internal.FiberRefsImpl
+```
+
+Added in v1.0.0
+
+## joinAs
+
+Joins this collection of fiber refs to the specified collection, as the
+specified fiber id. This will perform diffing and merging to ensure
+preservation of maximum information from both child and parent refs.
+
+**Signature**
+
+```ts
+export declare const joinAs: (fiberId: FiberId.Runtime, that: FiberRefs) => (self: FiberRefs) => FiberRefs
+```
+
+Added in v1.0.0
+
 ## setAll
 
 Set each ref to either its value or its default.
@@ -73,7 +141,7 @@ Set each ref to either its value or its default.
 **Signature**
 
 ```ts
-export declare const setAll: (self: FiberRefs) => Effect<never, never, void>
+export declare const setAll: (self: FiberRefs) => Effect.Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -125,75 +193,9 @@ Note: it will not copy the provided Map, make sure to provide a fresh one.
 **Signature**
 
 ```ts
-export declare const unsafeMake: typeof internal.unsafeMake
-```
-
-Added in v1.0.0
-
-# utilities
-
-## fiberRefs
-
-Returns a set of each `FiberRef` in this collection.
-
-**Signature**
-
-```ts
-export declare const fiberRefs: (self: FiberRefs) => HashSet<FiberRef.FiberRef<any>>
-```
-
-Added in v1.0.0
-
-## forkAs
-
-Forks this collection of fiber refs as the specified child fiber id. This
-will potentially modify the value of the fiber refs, as determined by the
-individual fiber refs that make up the collection.
-
-**Signature**
-
-```ts
-export declare const forkAs: (childId: FiberId.Runtime) => (self: FiberRefs) => internal.FiberRefsImpl
-```
-
-Added in v1.0.0
-
-## get
-
-Gets the value of the specified `FiberRef` in this collection of `FiberRef`
-values if it exists or `None` otherwise.
-
-**Signature**
-
-```ts
-export declare const get: <A>(fiberRef: FiberRef.FiberRef<A>) => (self: FiberRefs) => Option<A>
-```
-
-Added in v1.0.0
-
-## getOrDefault
-
-Gets the value of the specified `FiberRef` in this collection of `FiberRef`
-values if it exists or the `initial` value of the `FiberRef` otherwise.
-
-**Signature**
-
-```ts
-export declare const getOrDefault: <A>(fiberRef: FiberRef.FiberRef<A>) => (self: FiberRefs) => A
-```
-
-Added in v1.0.0
-
-## joinAs
-
-Joins this collection of fiber refs to the specified collection, as the
-specified fiber id. This will perform diffing and merging to ensure
-preservation of maximum information from both child and parent refs.
-
-**Signature**
-
-```ts
-export declare const joinAs: (fiberId: FiberId.Runtime, that: FiberRefs) => (self: FiberRefs) => FiberRefs
+export declare const unsafeMake: (
+  fiberRefLocals: Map<FiberRef.FiberRef<any>, List.Cons<readonly [FiberId.Runtime, any]>>
+) => FiberRefs
 ```
 
 Added in v1.0.0

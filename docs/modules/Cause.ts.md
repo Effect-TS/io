@@ -193,7 +193,7 @@ Constructs a new `Interrupt` cause from the specified `fiberId`.
 **Signature**
 
 ```ts
-export declare const interrupt: (fiberId: FiberId) => Cause<never>
+export declare const interrupt: (fiberId: FiberId.FiberId) => Cause<never>
 ```
 
 Added in v1.0.0
@@ -276,7 +276,7 @@ to extract information from it.
 **Signature**
 
 ```ts
-export declare const find: <E, Z>(pf: (cause: Cause<E>) => Option<Z>) => (self: Cause<E>) => Option<Z>
+export declare const find: <E, Z>(pf: (cause: Cause<E>) => Option.Option<Z>) => (self: Cause<E>) => Option.Option<Z>
 ```
 
 Added in v1.0.0
@@ -291,7 +291,7 @@ provided to a method.
 **Signature**
 
 ```ts
-export declare const IllegalArgumentException: typeof internal.IllegalArgumentException
+export declare const IllegalArgumentException: (message?: string | undefined) => IllegalArgumentException
 ```
 
 Added in v1.0.0
@@ -303,7 +303,7 @@ Represents a checked exception which occurs when a `Fiber` is interrupted.
 **Signature**
 
 ```ts
-export declare const InterruptedException: typeof internal.InterruptedException
+export declare const InterruptedException: (message?: string | undefined) => InterruptedException
 ```
 
 Added in v1.0.0
@@ -316,7 +316,7 @@ unable to be found.
 **Signature**
 
 ```ts
-export declare const NoSuchElementException: typeof internal.NoSuchElementException
+export declare const NoSuchElementException: (message?: string | undefined) => NoSuchElementException
 ```
 
 Added in v1.0.0
@@ -328,7 +328,7 @@ Represents a generic checked exception which occurs at runtime.
 **Signature**
 
 ```ts
-export declare const RuntimeException: typeof internal.RuntimeException
+export declare const RuntimeException: (message?: string | undefined) => RuntimeException
 ```
 
 Added in v1.0.0
@@ -372,7 +372,7 @@ export declare const match: <Z, E>(
   emptyCase: Z,
   failCase: (error: E) => Z,
   dieCase: (defect: unknown) => Z,
-  interruptCase: (fiberId: FiberId) => Z,
+  interruptCase: (fiberId: FiberId.FiberId) => Z,
   annotatedCase: (value: Z, annotation: unknown) => Z,
   sequentialCase: (left: Z, right: Z) => Z,
   parallelCase: (left: Z, right: Z) => Z
@@ -391,7 +391,7 @@ provided `zero` value.
 ```ts
 export declare const reduce: <Z, E>(
   zero: Z,
-  pf: (accumulator: Z, cause: Cause<E>) => Option<Z>
+  pf: (accumulator: Z, cause: Cause<E>) => Option.Option<Z>
 ) => (self: Cause<E>) => Z
 ```
 
@@ -419,7 +419,7 @@ Returns a `List` of all unrecoverable defects in the specified cause.
 **Signature**
 
 ```ts
-export declare const defects: <E>(self: Cause<E>) => List<unknown>
+export declare const defects: <E>(self: Cause<E>) => List.List<unknown>
 ```
 
 Added in v1.0.0
@@ -432,7 +432,7 @@ exists.
 **Signature**
 
 ```ts
-export declare const dieOption: <E>(self: Cause<E>) => Option<unknown>
+export declare const dieOption: <E>(self: Cause<E>) => Option.Option<unknown>
 ```
 
 Added in v1.0.0
@@ -445,7 +445,7 @@ exists.
 **Signature**
 
 ```ts
-export declare const failureOption: <E>(self: Cause<E>) => Option<E>
+export declare const failureOption: <E>(self: Cause<E>) => Option.Option<E>
 ```
 
 Added in v1.0.0
@@ -459,7 +459,7 @@ only `Die` or `Interrupt` causes.
 **Signature**
 
 ```ts
-export declare const failureOrCause: <E>(self: Cause<E>) => Either<E, Cause<never>>
+export declare const failureOrCause: <E>(self: Cause<E>) => Either.Either<E, Cause<never>>
 ```
 
 Added in v1.0.0
@@ -472,7 +472,7 @@ cause.
 **Signature**
 
 ```ts
-export declare const failures: <E>(self: Cause<E>) => List<E>
+export declare const failures: <E>(self: Cause<E>) => List.List<E>
 ```
 
 Added in v1.0.0
@@ -485,7 +485,7 @@ cause, if one exists.
 **Signature**
 
 ```ts
-export declare const interruptOption: <E>(self: Cause<E>) => Option<FiberId>
+export declare const interruptOption: <E>(self: Cause<E>) => Option.Option<FiberId.FiberId>
 ```
 
 Added in v1.0.0
@@ -498,7 +498,7 @@ described by the specified cause.
 **Signature**
 
 ```ts
-export declare const interruptors: <E>(self: Cause<E>) => HashSet<FiberId>
+export declare const interruptors: <E>(self: Cause<E>) => HashSet.HashSet<FiberId.FiberId>
 ```
 
 Added in v1.0.0
@@ -573,7 +573,7 @@ a cause containing only `Die` cause/finalizer defects.
 **Signature**
 
 ```ts
-export declare const keepDefects: <E>(self: Cause<E>) => Option<Cause<never>>
+export declare const keepDefects: <E>(self: Cause<E>) => Option.Option<Cause<never>>
 ```
 
 Added in v1.0.0
@@ -586,7 +586,7 @@ parallel cause contains a linear sequence of failures.
 **Signature**
 
 ```ts
-export declare const linearize: <E>(self: Cause<E>) => HashSet<Cause<E>>
+export declare const linearize: <E>(self: Cause<E>) => HashSet.HashSet<Cause<E>>
 ```
 
 Added in v1.0.0
@@ -627,8 +627,8 @@ remaining causes.
 
 ```ts
 export declare const stripSomeDefects: (
-  pf: (defect: unknown) => Option<unknown>
-) => <E>(self: Cause<E>) => Option<Cause<E>>
+  pf: (defect: unknown) => Option.Option<unknown>
+) => <E>(self: Cause<E>) => Option.Option<Cause<E>>
 ```
 
 Added in v1.0.0
@@ -681,7 +681,7 @@ For example, we can annotate a `Cause` with a trace to assist in debugging.
 **Signature**
 
 ```ts
-export interface Annotated<E> extends Cause.Variance<E>, Equal {
+export interface Annotated<E> extends Cause.Variance<E>, Equal.Equal {
   readonly _tag: 'Annotated'
   readonly cause: Cause<E>
   readonly annotation: unknown
@@ -720,7 +720,7 @@ export interface CauseReducer<C, E, Z> {
   readonly emptyCase: (context: C) => Z
   readonly failCase: (context: C, error: E) => Z
   readonly dieCase: (context: C, defect: unknown) => Z
-  readonly interruptCase: (context: C, fiberId: FiberId) => Z
+  readonly interruptCase: (context: C, fiberId: FiberId.FiberId) => Z
   readonly annotatedCase: (context: C, value: Z, annotation: unknown) => Z
   readonly sequentialCase: (context: C, left: Z, right: Z) => Z
   readonly parallelCase: (context: C, left: Z, right: Z) => Z
@@ -739,7 +739,7 @@ type `E`.
 **Signature**
 
 ```ts
-export interface Die extends Cause.Variance<never>, Equal {
+export interface Die extends Cause.Variance<never>, Equal.Equal {
   readonly _tag: 'Die'
   readonly defect: unknown
 }
@@ -754,7 +754,7 @@ The `Empty` cause represents a lack of errors.
 **Signature**
 
 ```ts
-export interface Empty extends Cause.Variance<never>, Equal {
+export interface Empty extends Cause.Variance<never>, Equal.Equal {
   readonly _tag: 'Empty'
 }
 ```
@@ -769,7 +769,7 @@ type `E`.
 **Signature**
 
 ```ts
-export interface Fail<E> extends Cause.Variance<E>, Equal {
+export interface Fail<E> extends Cause.Variance<E>, Equal.Equal {
   readonly _tag: 'Fail'
   readonly error: E
 }
@@ -801,9 +801,9 @@ contains the `FiberId` of the interrupted `Fiber`.
 **Signature**
 
 ```ts
-export interface Interrupt extends Cause.Variance<never>, Equal {
+export interface Interrupt extends Cause.Variance<never>, Equal.Equal {
   readonly _tag: 'Interrupt'
-  readonly fiberId: FiberId
+  readonly fiberId: FiberId.FiberId
 }
 ```
 
@@ -870,7 +870,7 @@ occurred in parallel. In these cases, the errors can be represented by the
 **Signature**
 
 ```ts
-export interface Parallel<E> extends Cause.Variance<E>, Equal {
+export interface Parallel<E> extends Cause.Variance<E>, Equal.Equal {
   readonly _tag: 'Parallel'
   readonly left: Cause<E>
   readonly right: Cause<E>
@@ -907,7 +907,7 @@ represented by the `Sequential` cause.
 **Signature**
 
 ```ts
-export interface Sequential<E> extends Cause.Variance<E>, Equal {
+export interface Sequential<E> extends Cause.Variance<E>, Equal.Equal {
   readonly _tag: 'Sequential'
   readonly left: Cause<E>
   readonly right: Cause<E>
@@ -1117,7 +1117,7 @@ Returns the specified `Cause` as a pretty-printed string.
 **Signature**
 
 ```ts
-export declare const pretty: <E>(renderer?: CauseRenderer<E>) => (self: Cause<E>) => string
+export declare const pretty: <E>(renderer?: CauseRenderer<E> | undefined) => (self: Cause<E>) => string
 ```
 
 Added in v1.0.0

@@ -31,6 +31,21 @@ Added in v1.0.0
 - [elements](#elements)
   - [isDisabled](#isdisabled)
   - [isEnabled](#isenabled)
+- [environment](#environment)
+  - [disableCooperativeYielding](#disablecooperativeyielding)
+  - [disableCurrentFiber](#disablecurrentfiber)
+  - [disableFiberRoots](#disablefiberroots)
+  - [disableInterruption](#disableinterruption)
+  - [disableOpSupervision](#disableopsupervision)
+  - [disableRuntimeMetrics](#disableruntimemetrics)
+  - [disableWindDown](#disablewinddown)
+  - [enableCooperativeYielding](#enablecooperativeyielding)
+  - [enableCurrentFiber](#enablecurrentfiber)
+  - [enableFiberRoots](#enablefiberroots)
+  - [enableInterruption](#enableinterruption)
+  - [enableOpSupervision](#enableopsupervision)
+  - [enableRuntimeMetrics](#enableruntimemetrics)
+  - [enableWindDown](#enablewinddown)
 - [getters](#getters)
   - [cooperativeYielding](#cooperativeyielding)
   - [currentFiber](#currentfiber)
@@ -251,6 +266,148 @@ Returns `true` if the specified `RuntimeFlag` is enabled, `false` otherwise.
 
 ```ts
 export declare const isEnabled: (flag: RuntimeFlag) => (self: RuntimeFlags) => boolean
+```
+
+Added in v1.0.0
+
+# environment
+
+## disableCooperativeYielding
+
+**Signature**
+
+```ts
+export declare const disableCooperativeYielding: () => Layer.Layer<never, never, never>
+```
+
+Added in v1.0.0
+
+## disableCurrentFiber
+
+**Signature**
+
+```ts
+export declare const disableCurrentFiber: () => Layer.Layer<never, never, never>
+```
+
+Added in v1.0.0
+
+## disableFiberRoots
+
+**Signature**
+
+```ts
+export declare const disableFiberRoots: () => Layer.Layer<never, never, never>
+```
+
+Added in v1.0.0
+
+## disableInterruption
+
+**Signature**
+
+```ts
+export declare const disableInterruption: () => Layer.Layer<never, never, never>
+```
+
+Added in v1.0.0
+
+## disableOpSupervision
+
+**Signature**
+
+```ts
+export declare const disableOpSupervision: () => Layer.Layer<never, never, never>
+```
+
+Added in v1.0.0
+
+## disableRuntimeMetrics
+
+**Signature**
+
+```ts
+export declare const disableRuntimeMetrics: () => Layer.Layer<never, never, never>
+```
+
+Added in v1.0.0
+
+## disableWindDown
+
+**Signature**
+
+```ts
+export declare const disableWindDown: () => Layer.Layer<never, never, never>
+```
+
+Added in v1.0.0
+
+## enableCooperativeYielding
+
+**Signature**
+
+```ts
+export declare const enableCooperativeYielding: () => Layer.Layer<never, never, never>
+```
+
+Added in v1.0.0
+
+## enableCurrentFiber
+
+**Signature**
+
+```ts
+export declare const enableCurrentFiber: () => Layer.Layer<never, never, never>
+```
+
+Added in v1.0.0
+
+## enableFiberRoots
+
+**Signature**
+
+```ts
+export declare const enableFiberRoots: () => Layer.Layer<never, never, never>
+```
+
+Added in v1.0.0
+
+## enableInterruption
+
+**Signature**
+
+```ts
+export declare const enableInterruption: () => Layer.Layer<never, never, never>
+```
+
+Added in v1.0.0
+
+## enableOpSupervision
+
+**Signature**
+
+```ts
+export declare const enableOpSupervision: () => Layer.Layer<never, never, never>
+```
+
+Added in v1.0.0
+
+## enableRuntimeMetrics
+
+**Signature**
+
+```ts
+export declare const enableRuntimeMetrics: () => Layer.Layer<never, never, never>
+```
+
+Added in v1.0.0
+
+## enableWindDown
+
+**Signature**
+
+```ts
+export declare const enableWindDown: () => Layer.Layer<never, never, never>
 ```
 
 Added in v1.0.0
