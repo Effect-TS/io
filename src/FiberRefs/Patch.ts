@@ -1,7 +1,9 @@
 /**
  * @since 1.0.0
  */
+import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRef from "@effect/io/FiberRef"
+import type * as FiberRefs from "@effect/io/FiberRefs"
 import * as internal from "@effect/io/internal/fiberRefs/patch"
 
 /**
@@ -66,7 +68,7 @@ export interface AndThen {
  * @since 1.0.0
  * @category constructors
  */
-export const empty = internal.empty
+export const empty: () => FiberRefsPatch = internal.empty
 
 /**
  * Constructs a patch that describes the changes between the specified
@@ -75,7 +77,7 @@ export const empty = internal.empty
  * @since 1.0.0
  * @category constructors
  */
-export const diff = internal.diff
+export const diff: (oldValue: FiberRefs.FiberRefs, newValue: FiberRefs.FiberRefs) => FiberRefsPatch = internal.diff
 
 /**
  * Combines this patch and the specified patch to create a new patch that
@@ -85,7 +87,7 @@ export const diff = internal.diff
  * @since 1.0.0
  * @category constructors
  */
-export const combine = internal.combine
+export const combine: (that: FiberRefsPatch) => (self: FiberRefsPatch) => FiberRefsPatch = internal.combine
 
 /**
  * Applies the changes described by this patch to the specified collection
@@ -94,4 +96,7 @@ export const combine = internal.combine
  * @since 1.0.0
  * @category destructors
  */
-export const patch = internal.patch
+export const patch: (
+  fiberId: FiberId.Runtime,
+  oldValue: FiberRefs.FiberRefs
+) => (self: FiberRefsPatch) => FiberRefs.FiberRefs = internal.patch
