@@ -407,7 +407,8 @@ export const stripSomeDefects = (pf: (defect: unknown) => Option.Option<unknown>
 /** @internal */
 export const as = <E1>(error: E1) => {
   return <E>(self: Cause.Cause<E>): Cause.Cause<E1> => {
-    if (self._tag === "Fail") {
+    const cause = unannotate(self)
+    if (cause._tag === "Fail") {
       return fail(error)
     }
     return self as Cause.Cause<E1>
@@ -417,8 +418,9 @@ export const as = <E1>(error: E1) => {
 /** @internal */
 export const map = <E, E1>(f: (e: E) => E1) => {
   return (self: Cause.Cause<E>): Cause.Cause<E1> => {
-    if (self._tag === "Fail") {
-      return fail(f(self.error))
+    const cause = unannotate(self)
+    if (cause._tag === "Fail") {
+      return fail(f(cause.error))
     }
     return self as Cause.Cause<E1>
   }
@@ -431,8 +433,9 @@ export const map = <E, E1>(f: (e: E) => E1) => {
 /** @internal */
 export const flatMap = <E, E1>(f: (e: E) => Cause.Cause<E1>) => {
   return (self: Cause.Cause<E>): Cause.Cause<E1> => {
-    if (self._tag === "Fail") {
-      return f(self.error)
+    const cause = unannotate(self)
+    if (cause._tag === "Fail") {
+      return f(cause.error)
     }
     return self as Cause.Cause<E1>
   }
