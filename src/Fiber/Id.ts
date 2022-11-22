@@ -2,7 +2,9 @@
  * @since 1.0.0
  */
 import * as internal from "@effect/io/internal/fiberId"
-import type { Equal } from "@fp-ts/data/Equal"
+import type * as Equal from "@fp-ts/data/Equal"
+import type * as HashSet from "@fp-ts/data/HashSet"
+import type * as Option from "@fp-ts/data/Option"
 
 /**
  * @since 1.0.0
@@ -26,18 +28,18 @@ export type FiberId = None | Runtime | Composite
  * @since 1.0.0
  * @category models
  */
-export interface None extends Equal {
+export interface None extends Equal.Equal {
   readonly [FiberIdTypeId]: FiberIdTypeId
-  readonly _tag: "None"
+  readonly op: internal.OP_NONE
 }
 
 /**
  * @since 1.0.0
  * @category models
  */
-export interface Runtime extends Equal {
+export interface Runtime extends Equal.Equal {
   readonly [FiberIdTypeId]: FiberIdTypeId
-  readonly _tag: "Runtime"
+  readonly op: internal.OP_RUNTIME
   readonly id: number
   readonly startTimeMillis: number
 }
@@ -46,9 +48,9 @@ export interface Runtime extends Equal {
  * @since 1.0.0
  * @category models
  */
-export interface Composite extends Equal {
+export interface Composite extends Equal.Equal {
   readonly [FiberIdTypeId]: FiberIdTypeId
-  readonly _tag: "Composite"
+  readonly op: internal.OP_COMPOSITE
   readonly left: FiberId
   readonly right: FiberId
 }
@@ -57,27 +59,19 @@ export interface Composite extends Equal {
  * @since 1.0.0
  * @category constructors
  */
-export const none = internal.none
+export const none: FiberId = internal.none
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const runtime = internal.runtime
+export const runtime: (id: number, startTimeMillis: number) => FiberId = internal.runtime
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const composite = internal.composite
-
-/**
- * Determines if the `FiberId` is a `None`.
- *
- * @since 1.0.0
- * @category refinements
- */
-export const isNone = internal.isNone
+export const composite: (left: FiberId, right: FiberId) => FiberId = internal.composite
 
 /**
  * Returns `true` if the specified unknown value is a `FiberId`, `false`
@@ -86,7 +80,31 @@ export const isNone = internal.isNone
  * @since 1.0.0
  * @category refinements
  */
-export const isFiberId = internal.isFiberId
+export const isFiberId: (self: unknown) => self is FiberId = internal.isFiberId
+
+/**
+ * Returns `true` if the `FiberId` is a `None`, `false` otherwise.
+ *
+ * @since 1.0.0
+ * @category refinements
+ */
+export const isNone: (self: FiberId) => self is None = internal.isNone
+
+/**
+ * Returns `true` if the `FiberId` is a `Runtime`, `false` otherwise.
+ *
+ * @since 1.0.0
+ * @category refinements
+ */
+export const isRuntime: (self: FiberId) => self is Runtime = internal.isRuntime
+
+/**
+ * Returns `true` if the `FiberId` is a `Composite`, `false` otherwise.
+ *
+ * @since 1.0.0
+ * @category refinements
+ */
+export const isComposite: (self: FiberId) => self is Composite = internal.isComposite
 
 /**
  * Combine two `FiberId`s.
@@ -94,7 +112,7 @@ export const isFiberId = internal.isFiberId
  * @since 1.0.0
  * @category constructors
  */
-export const combine = internal.combine
+export const combine: (that: FiberId) => (self: FiberId) => FiberId = internal.combine
 
 /**
  * Combines a set of `FiberId`s into a single `FiberId`.
@@ -102,7 +120,7 @@ export const combine = internal.combine
  * @since 1.0.0
  * @category constructors
  */
-export const combineAll = internal.combineAll
+export const combineAll: (fiberIds: HashSet.HashSet<FiberId>) => FiberId = internal.combineAll
 
 /**
  * Returns this `FiberId` if it is not `None`, otherwise returns that `FiberId`.
@@ -110,7 +128,7 @@ export const combineAll = internal.combineAll
  * @since 1.0.0
  * @category mutations
  */
-export const getOrElse = internal.getOrElse
+export const getOrElse: (that: FiberId) => (self: FiberId) => FiberId = internal.getOrElse
 
 /**
  * Get the set of identifiers for this `FiberId`.
@@ -118,7 +136,7 @@ export const getOrElse = internal.getOrElse
  * @since 1.0.0
  * @category destructors
  */
-export const ids = internal.ids
+export const ids: (self: FiberId) => HashSet.HashSet<number> = internal.ids
 
 /**
  * Creates a new `FiberId`.
@@ -126,15 +144,7 @@ export const ids = internal.ids
  * @since 1.0.0
  * @category constructors
  */
-export const make = internal.make
-
-/**
- * Unsafely creates a new `FiberId`.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const unsafeMake = internal.unsafeMake
+export const make: (id: number, startTimeSeconds: number) => FiberId = internal.make
 
 /**
  * Creates a string representing the name of the current thread of execution
@@ -143,7 +153,7 @@ export const unsafeMake = internal.unsafeMake
  * @since 1.0.0
  * @category destructors
  */
-export const threadName = internal.threadName
+export const threadName: (self: FiberId) => string = internal.threadName
 
 /**
  * Convert a `FiberId` into an `Option<FiberId>`.
@@ -151,7 +161,7 @@ export const threadName = internal.threadName
  * @since 1.0.0
  * @category destructors
  */
-export const toOption = internal.toOption
+export const toOption: (self: FiberId) => Option.Option<FiberId> = internal.toOption
 
 /**
  * Convert a `FiberId` into a `HashSet<FiberId>`.
@@ -159,4 +169,12 @@ export const toOption = internal.toOption
  * @since 1.0.0
  * @category destructors
  */
-export const toSet = internal.toSet
+export const toSet: (self: FiberId) => HashSet.HashSet<Runtime> = internal.toSet
+
+/**
+ * Unsafely creates a new `FiberId`.
+ *
+ * @since 1.0.0
+ * @category unsafe
+ */
+export const unsafeMake: () => Runtime = internal.unsafeMake
