@@ -2,6 +2,7 @@
  * @since 1.0.0
  */
 import * as internal from "@effect/io/internal/schedule/decision"
+import type * as Interval from "@effect/io/Schedule/Interval"
 import type * as Intervals from "@effect/io/Schedule/Intervals"
 
 /**
@@ -40,22 +41,22 @@ export {
  * @since 1.0.0
  * @category constructors
  */
-export const continueWith = internal.continueWith
+export const continueWith: (interval: Interval.Interval) => ScheduleDecision = internal.continueWith
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const done = internal.done
+export const done: ScheduleDecision = internal.done
 
 /**
  * @since 1.0.0
  * @category refinements
  */
-export const isContinue = internal.isContinue
+export const isContinue: (self: ScheduleDecision) => self is Continue = internal.isContinue
 
 /**
  * @since 1.0.0
  * @category refinements
  */
-export const isDone = internal.isDone
+export const isDone: (self: ScheduleDecision) => self is Done = internal.isDone
