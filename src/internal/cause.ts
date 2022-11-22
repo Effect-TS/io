@@ -417,10 +417,7 @@ export const as = <E1>(error: E1) => {
 /** @internal */
 export const map = <E, E1>(f: (e: E) => E1) => {
   return (self: Cause.Cause<E>): Cause.Cause<E1> => {
-    if (self._tag === "Fail") {
-      return fail(f(self.error))
-    }
-    return self as Cause.Cause<E1>
+    return pipe(self, flatMap((e) => fail(f(e))))
   }
 }
 
@@ -431,10 +428,18 @@ export const map = <E, E1>(f: (e: E) => E1) => {
 /** @internal */
 export const flatMap = <E, E1>(f: (e: E) => Cause.Cause<E1>) => {
   return (self: Cause.Cause<E>): Cause.Cause<E1> => {
-    if (self._tag === "Fail") {
-      return f(self.error)
-    }
-    return self as Cause.Cause<E1>
+    return pipe(
+      self,
+      match<Cause.Cause<E1>, E>(
+        empty,
+        (error) => f(error),
+        (defect) => die(defect),
+        (fiberId) => interrupt(fiberId),
+        (cause, annotation) => annotated(cause, annotation),
+        (left, right) => sequential(left, right),
+        (left, right) => parallel(left, right)
+      )
+    )
   }
 }
 

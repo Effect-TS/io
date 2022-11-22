@@ -76,7 +76,9 @@ export const runtimeFiberVariance = {
 }
 
 const absurd = (_: never): never => {
-  throw new Error(`BUG: FiberRuntime - ${_} - please report an issue at https://github.com/Effect-TS/io/issues`)
+  throw new Error(
+    `BUG: FiberRuntime - ${JSON.stringify(_)} - please report an issue at https://github.com/Effect-TS/io/issues`
+  )
 }
 
 /**
