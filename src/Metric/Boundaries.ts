@@ -30,13 +30,13 @@ export interface MetricBoundaries extends Equal.Equal {
  * @since 1.0.0
  * @category refinements
  */
-export const isMetricBoundaries = internal.isMetricBoundaries
+export const isMetricBoundaries: (u: unknown) => u is MetricBoundaries = internal.isMetricBoundaries
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const fromChunk = internal.fromChunk
+export const fromChunk: (chunk: Chunk.Chunk<number>) => MetricBoundaries = internal.fromChunk
 
 /**
  * A helper method to create histogram bucket boundaries for a histogram
@@ -45,7 +45,7 @@ export const fromChunk = internal.fromChunk
  * @since 1.0.0
  * @category constructors
  */
-export const linear = internal.linear
+export const linear: (start: number, width: number, count: number) => MetricBoundaries = internal.linear
 
 /**
  * A helper method to create histogram bucket boundaries for a histogram
@@ -54,4 +54,4 @@ export const linear = internal.linear
  * @since 1.0.0
  * @category constructors
  */
-export const exponential = internal.exponential
+export const exponential: (start: number, factor: number, count: number) => MetricBoundaries = internal.exponential

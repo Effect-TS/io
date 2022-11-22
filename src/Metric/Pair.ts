@@ -52,10 +52,16 @@ export declare namespace MetricPair {
  * @since 1.0.0
  * @category constructors
  */
-export const make = internal.make
+export const make: <Type extends MetricKeyType.MetricKeyType<any, any>>(
+  metricKey: MetricKey.MetricKey<Type>,
+  metricState: MetricState.MetricState<MetricKeyType.MetricKeyType.OutType<Type>>
+) => MetricPair.Untyped = internal.make
 
 /**
  * @since 1.0.0
  * @category unsafe
  */
-export const unsafeMake = internal.unsafeMake
+export const unsafeMake: <Type extends MetricKeyType.MetricKeyType<any, any>>(
+  metricKey: MetricKey.MetricKey<Type>,
+  metricState: MetricState.MetricState.Untyped
+) => MetricPair.Untyped = internal.unsafeMake

@@ -2,6 +2,7 @@
  * @since 1.0.0
  */
 import * as internal from "@effect/io/internal/metric/hook"
+import type * as MetricKey from "@effect/io/Metric/Key"
 import type * as MetricState from "@effect/io/Metric/State"
 
 /**
@@ -87,40 +88,41 @@ export declare namespace MetricHook {
  * @since 1.0.0
  * @category constructors
  */
-export const make = internal.make
+export const make: <In, Out>(get: () => Out, update: (input: In) => void) => MetricHook<In, Out> = internal.make
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const counter = internal.counter
+export const counter: (_key: MetricKey.MetricKey.Counter) => MetricHook.Counter = internal.counter
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const frequency = internal.frequency
+export const frequency: (_key: MetricKey.MetricKey.Frequency) => MetricHook.Frequency = internal.frequency
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const gauge = internal.gauge
+export const gauge: (_key: MetricKey.MetricKey.Gauge, startAt: number) => MetricHook.Gauge = internal.gauge
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const histogram = internal.histogram
+export const histogram: (key: MetricKey.MetricKey.Histogram) => MetricHook.Histogram = internal.histogram
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const summary = internal.summary
+export const summary: (key: MetricKey.MetricKey.Summary) => MetricHook.Summary = internal.summary
 
 /**
  * @since 1.0.0
  * @category mutations
  */
-export const onUpdate = internal.onUpdate
+export const onUpdate: <In, Out>(f: (input: In) => void) => (self: MetricHook<In, Out>) => MetricHook<In, Out> =
+  internal.onUpdate

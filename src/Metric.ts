@@ -3,9 +3,15 @@
  */
 import type * as Effect from "@effect/io/Effect"
 import * as internal from "@effect/io/internal/metric"
+import type * as MetricBoundaries from "@effect/io/Metric/Boundaries"
+import type * as MetricKey from "@effect/io/Metric/Key"
 import type * as MetricKeyType from "@effect/io/Metric/KeyType"
 import type * as MetricLabel from "@effect/io/Metric/Label"
+import type * as MetricPair from "@effect/io/Metric/Pair"
+import type * as MetricRegistry from "@effect/io/Metric/Registry"
 import type * as MetricState from "@effect/io/Metric/State"
+import type * as Chunk from "@fp-ts/data/Chunk"
+import type * as Duration from "@fp-ts/data/Duration"
 import type * as HashSet from "@fp-ts/data/HashSet"
 
 /**
@@ -117,13 +123,13 @@ export declare namespace Metric {
  * @since 1.0.0
  * @category globals
  */
-export const globalMetricRegistry = internal.globalMetricRegistry
+export const globalMetricRegistry: MetricRegistry.MetricRegistry = internal.globalMetricRegistry
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const make = internal.make
+export const make: MetricApply = internal.make
 
 /**
  * Returns a new metric that is powered by this one, but which accepts updates
@@ -133,7 +139,9 @@ export const make = internal.make
  * @since 1.0.0
  * @category mapping
  */
-export const contramap = internal.contramap
+export const contramap: <In, In2>(
+  f: (input: In2) => In
+) => <Type, Out>(self: Metric<Type, In, Out>) => Metric<Type, In2, Out> = internal.contramap
 
 /**
  * A counter, which can be incremented by numbers.
@@ -141,7 +149,7 @@ export const contramap = internal.contramap
  * @since 1.0.0
  * @category constructors
  */
-export const counter = internal.counter
+export const counter: (name: string) => Metric.Counter<number> = internal.counter
 
 /**
  * A string histogram metric, which keeps track of the counts of different
@@ -150,7 +158,7 @@ export const counter = internal.counter
  * @since 1.0.0
  * @category constructors
  */
-export const frequency = internal.frequency
+export const frequency: (name: string) => Metric.Frequency<string> = internal.frequency
 
 /**
  * Returns a new metric that is powered by this one, but which accepts updates
@@ -160,13 +168,18 @@ export const frequency = internal.frequency
  * @since 1.0.0
  * @category constructors
  */
-export const fromConst = internal.fromConst
+export const fromConst: <In>(
+  input: () => In
+) => <Type, Out>(self: Metric<Type, In, Out>) => Metric<Type, unknown, Out> = internal.fromConst
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const fromMetricKey = internal.fromMetricKey
+export const fromMetricKey: <Type extends MetricKeyType.MetricKeyType<any, any>>(
+  key: MetricKey.MetricKey<Type>
+) => Metric<Type, MetricKeyType.MetricKeyType.InType<Type>, MetricKeyType.MetricKeyType.OutType<Type>> =
+  internal.fromMetricKey
 
 /**
  * A gauge, which can be set to a value.
@@ -174,7 +187,7 @@ export const fromMetricKey = internal.fromMetricKey
  * @since 1.0.0
  * @category constructors
  */
-export const gauge = internal.gauge
+export const gauge: (name: string) => Metric.Gauge<number> = internal.gauge
 
 /**
  * A numeric histogram metric, which keeps track of the count of numbers that
@@ -183,21 +196,25 @@ export const gauge = internal.gauge
  * @since 1.0.0
  * @category constructors
  */
-export const histogram = internal.histogram
+export const histogram: (
+  name: string,
+  boundaries: MetricBoundaries.MetricBoundaries
+) => Metric<MetricKeyType.MetricKeyType.Histogram, number, MetricState.MetricState.Histogram> = internal.histogram
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category aspects
  */
-export const increment = internal.increment
+export const increment: (self: Metric.Counter<number>) => Effect.Effect<never, never, void> = internal.increment
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category aspects
  */
-export const incrementBy = internal.incrementBy
+export const incrementBy: (amount: number) => (self: Metric.Counter<number>) => Effect.Effect<never, never, void> =
+  internal.incrementBy
 
 /**
  * Returns a new metric that is powered by this one, but which outputs a new
@@ -207,20 +224,24 @@ export const incrementBy = internal.incrementBy
  * @since 1.0.0
  * @category mapping
  */
-export const map = internal.map
+export const map: <Out, Out2>(
+  f: (out: Out) => Out2
+) => <Type, In>(self: Metric<Type, In, Out>) => Metric<Type, In, Out2> = internal.map
 
 /**
  * @since 1.0.0
  * @category mapping
  */
-export const mapType = internal.mapType
+export const mapType: <Type, Type2>(
+  f: (type: Type) => Type2
+) => <In, Out>(self: Metric<Type, In, Out>) => Metric<Type2, In, Out> = internal.mapType
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category aspects
  */
-export const set = internal.set
+export const set: <In>(value: In) => (self: Metric.Gauge<In>) => Effect.Effect<never, never, void> = internal.set
 
 /**
  * Creates a metric that ignores input and produces constant output.
@@ -228,7 +249,7 @@ export const set = internal.set
  * @since 1.0.0
  * @category constructors
  */
-export const succeed = internal.succeed
+export const succeed: <Out>(out: Out) => Metric<void, unknown, Out> = internal.succeed
 
 /**
  * Creates a metric that ignores input and produces constant output.
@@ -236,19 +257,31 @@ export const succeed = internal.succeed
  * @since 1.0.0
  * @category constructors
  */
-export const sync = internal.sync
+export const sync: <Out>(evaluate: () => Out) => Metric<void, unknown, Out> = internal.sync
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const summary = internal.summary
+export const summary: (
+  name: string,
+  maxAge: Duration.Duration,
+  maxSize: number,
+  error: number,
+  quantiles: Chunk.Chunk<number>
+) => Metric.Summary<number> = internal.summary
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const summaryTimestamp = internal.summaryTimestamp
+export const summaryTimestamp: (
+  name: string,
+  maxAge: Duration.Duration,
+  maxSize: number,
+  error: number,
+  quantiles: Chunk.Chunk<number>
+) => Metric.Summary<readonly [value: number, timestamp: number]> = internal.summaryTimestamp
 
 /**
  * Returns a new metric, which is identical in every way to this one, except
@@ -257,7 +290,10 @@ export const summaryTimestamp = internal.summaryTimestamp
  * @since 1.0.0
  * @category mutations
  */
-export const tagged = internal.tagged
+export const tagged: <Type, In, Out>(
+  key: string,
+  value: string
+) => (self: Metric<Type, In, Out>) => Metric<Type, In, Out> = internal.tagged
 
 /**
  * Returns a new metric, which is identical in every way to this one, except
@@ -268,7 +304,9 @@ export const tagged = internal.tagged
  * @since 1.0.0
  * @category mutations
  */
-export const taggedWith = internal.taggedWith
+export const taggedWith: <In>(
+  f: (input: In) => HashSet.HashSet<MetricLabel.MetricLabel>
+) => <Type, Out>(self: Metric<Type, In, Out>) => Metric<Type, In, void> = internal.taggedWith
 
 /**
  * Returns a new metric, which is identical in every way to this one, except
@@ -277,7 +315,9 @@ export const taggedWith = internal.taggedWith
  * @since 1.0.0
  * @category mutations
  */
-export const taggedWithLabels = internal.taggedWithLabels
+export const taggedWithLabels: <Type, In, Out>(
+  extraTags: Iterable<MetricLabel.MetricLabel>
+) => (self: Metric<Type, In, Out>) => Metric<Type, In, Out> = internal.taggedWithLabels
 
 /**
  * Returns a new metric, which is identical in every way to this one, except
@@ -286,7 +326,9 @@ export const taggedWithLabels = internal.taggedWithLabels
  * @since 1.0.0
  * @category mutations
  */
-export const taggedWithLabelSet = internal.taggedWithLabelSet
+export const taggedWithLabelSet: (
+  extraTags: HashSet.HashSet<MetricLabel.MetricLabel>
+) => <Type, In, Out>(self: Metric<Type, In, Out>) => Metric<Type, In, Out> = internal.taggedWithLabelSet
 
 /**
  * Creates a timer metric, based on a histogram, which keeps track of
@@ -296,7 +338,10 @@ export const taggedWithLabelSet = internal.taggedWithLabelSet
  * @since 1.0.0
  * @category constructors
  */
-export const timer = internal.timer
+export const timer: (
+  name: string
+) => Metric<MetricKeyType.MetricKeyType.Histogram, Duration.Duration, MetricState.MetricState.Histogram> =
+  internal.timer
 
 /**
  * Returns an aspect that will update this metric with the specified constant
@@ -307,7 +352,10 @@ export const timer = internal.timer
  * @since 1.0.0
  * @category aspects
  */
-export const trackAll = internal.trackAll
+export const trackAll: <In>(
+  input: In
+) => <Type, Out>(self: Metric<Type, In, Out>) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A> =
+  internal.trackAll
 
 /**
  * Returns an aspect that will update this metric with the defects of the
@@ -317,7 +365,9 @@ export const trackAll = internal.trackAll
  * @since 1.0.0
  * @category aspects
  */
-export const trackDefect = internal.trackDefect
+export const trackDefect: <Type, Out>(
+  self: Metric<Type, unknown, Out>
+) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A> = internal.trackDefect
 
 /**
  * Returns an aspect that will update this metric with the result of applying
@@ -328,7 +378,10 @@ export const trackDefect = internal.trackDefect
  * @since 1.0.0
  * @category aspects
  */
-export const trackDefectWith = internal.trackDefectWith
+export const trackDefectWith: <In>(
+  f: (defect: unknown) => In
+) => <Type, Out>(self: Metric<Type, In, Out>) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A> =
+  internal.trackDefectWith
 
 /**
  * Returns an aspect that will update this metric with the duration that the
@@ -339,7 +392,9 @@ export const trackDefectWith = internal.trackDefectWith
  * @since 1.0.0
  * @category aspects
  */
-export const trackDuration = internal.trackDuration
+export const trackDuration: <Type, Out>(
+  self: Metric<Type, Duration.Duration, Out>
+) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A> = internal.trackDuration
 
 /**
  * Returns an aspect that will update this metric with the duration that the
@@ -350,7 +405,10 @@ export const trackDuration = internal.trackDuration
  * @since 1.0.0
  * @category aspects
  */
-export const trackDurationWith = internal.trackDurationWith
+export const trackDurationWith: <In>(
+  f: (duration: Duration.Duration) => In
+) => <Type, Out>(self: Metric<Type, In, Out>) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A> =
+  internal.trackDurationWith
 
 /**
  * Returns an aspect that will update this metric with the failure value of
@@ -360,7 +418,9 @@ export const trackDurationWith = internal.trackDurationWith
  * @since 1.0.0
  * @category aspects
  */
-export const trackError = internal.trackError
+export const trackError: <Type, In, Out>(
+  self: Metric<Type, In, Out>
+) => <R, E extends In, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A> = internal.trackError
 
 /**
  * Returns an aspect that will update this metric with the success value of
@@ -370,7 +430,9 @@ export const trackError = internal.trackError
  * @since 1.0.0
  * @category aspects
  */
-export const trackSuccess = internal.trackSuccess
+export const trackSuccess: <Type, In, Out>(
+  self: Metric<Type, In, Out>
+) => <R, E, A extends In>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A> = internal.trackSuccess
 
 /**
  * Returns an aspect that will update this metric with the result of applying
@@ -381,7 +443,11 @@ export const trackSuccess = internal.trackSuccess
  * @since 1.0.0
  * @category aspects
  */
-export const trackSuccessWith = internal.trackSuccessWith
+export const trackSuccessWith: <In, In2>(
+  f: (value: In2) => In
+) => <Type, Out>(
+  self: Metric<Type, In, Out>
+) => <R, E, A extends In2>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A> = internal.trackSuccessWith
 
 /**
  * Returns an aspect that will update this metric with the result of applying
@@ -392,7 +458,11 @@ export const trackSuccessWith = internal.trackSuccessWith
  * @since 1.0.0
  * @category aspects
  */
-export const trackErrorWith = internal.trackErrorWith
+export const trackErrorWith: <In, In2>(
+  f: (error: In2) => In
+) => <Type, Out>(
+  self: Metric<Type, In, Out>
+) => <R, E extends In2, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A> = internal.trackErrorWith
 
 /**
  * Updates the metric with the specified update message. For example, if the
@@ -403,7 +473,8 @@ export const trackErrorWith = internal.trackErrorWith
  * @since 1.0.0
  * @category mutations
  */
-export const update = internal.update
+export const update: <In>(input: In) => <Type, Out>(self: Metric<Type, In, Out>) => Effect.Effect<never, never, void> =
+  internal.update
 
 /**
  * Retrieves a snapshot of the value of the metric at this moment in time.
@@ -412,19 +483,24 @@ export const update = internal.update
  * @since 1.0.0
  * @category getters
  */
-export const value = internal.value
+export const value: <Type, In, Out>(self: Metric<Type, In, Out>) => Effect.Effect<never, never, Out> = internal.value
 
 /**
  * @since 1.0.0
  * @category mutations
  */
-export const withNow = internal.withNow
+export const withNow: <Type, In, Out>(self: Metric<Type, readonly [In, number], Out>) => Metric<Type, In, Out> =
+  internal.withNow
 
 /**
  * @since 1.0.0
  * @category zipping
  */
-export const zip = internal.zip
+export const zip: <Type2, In2, Out2>(
+  that: Metric<Type2, In2, Out2>
+) => <Type, In, Out>(
+  self: Metric<Type, In, Out>
+) => Metric<readonly [Type, Type2], readonly [In, In2], readonly [Out, Out2]> = internal.zip
 
 /**
  * Unsafely captures a snapshot of all metrics recorded by the application.
@@ -432,4 +508,4 @@ export const zip = internal.zip
  * @since 1.0.0
  * @category unsafe
  */
-export const unsafeSnapshot = internal.unsafeSnapshot
+export const unsafeSnapshot: () => HashSet.HashSet<MetricPair.MetricPair.Untyped> = internal.unsafeSnapshot

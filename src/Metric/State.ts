@@ -169,64 +169,77 @@ export declare namespace MetricState {
  * @since 1.0.0
  * @category constructors
  */
-export const counter = internal.counter
+export const counter: (count: number) => MetricState.Counter = internal.counter
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const frequency = internal.frequency
+export const frequency: (occurrences: HashMap.HashMap<string, number>) => MetricState.Frequency = internal.frequency
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const gauge = internal.gauge
+export const gauge: (value: number) => MetricState.Gauge = internal.gauge
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const histogram = internal.histogram
+export const histogram: (
+  buckets: Chunk.Chunk<readonly [number, number]>,
+  count: number,
+  min: number,
+  max: number,
+  sum: number
+) => MetricState.Histogram = internal.histogram
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const summary = internal.summary
+export const summary: (
+  error: number,
+  quantiles: Chunk.Chunk<readonly [number, Option.Option<number>]>,
+  count: number,
+  min: number,
+  max: number,
+  sum: number
+) => MetricState.Summary = internal.summary
 
 /**
  * @since 1.0.0
  * @category refinements
  */
-export const isMetricState = internal.isMetricState
+export const isMetricState: (u: unknown) => u is MetricState.Counter = internal.isMetricState
 
 /**
  * @since 1.0.0
  * @category refinements
  */
-export const isCounterState = internal.isCounterState
+export const isCounterState: (u: unknown) => u is MetricState.Counter = internal.isCounterState
 
 /**
  * @since 1.0.0
  * @category refinements
  */
-export const isFrequencyState = internal.isFrequencyState
+export const isFrequencyState: (u: unknown) => u is MetricState.Frequency = internal.isFrequencyState
 
 /**
  * @since 1.0.0
  * @category refinements
  */
-export const isGaugeState = internal.isGaugeState
+export const isGaugeState: (u: unknown) => u is MetricState.Gauge = internal.isGaugeState
 
 /**
  * @since 1.0.0
  * @category refinements
  */
-export const isHistogramState = internal.isHistogramState
+export const isHistogramState: (u: unknown) => u is MetricState.Histogram = internal.isHistogramState
 
 /**
  * @since 1.0.0
  * @category refinements
  */
-export const isSummaryState = internal.isSummaryState
+export const isSummaryState: (u: unknown) => u is MetricState.Summary = internal.isSummaryState
