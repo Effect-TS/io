@@ -1,5 +1,13 @@
 # @effect/io
 
+## 0.0.4
+
+### Patch Changes
+
+- [#22](https://github.com/Effect-TS/io/pull/22) [`f1d781c`](https://github.com/Effect-TS/io/commit/f1d781c21fbd3a55f75b3da6a75c7c75b9146397) Thanks [@IMax153](https://github.com/IMax153)! - fix Cause.flatMap and Cause.map
+
+- [#24](https://github.com/Effect-TS/io/pull/24) [`60a44d8`](https://github.com/Effect-TS/io/commit/60a44d8708fa8dba7387797c8343c7b5cea93f71) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Fix Cause.as
+
 ## 0.0.3
 
 ### Patch Changes
