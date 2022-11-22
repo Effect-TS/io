@@ -4,7 +4,6 @@ import * as Deferred from "@effect/io/Deferred"
 import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import * as Fiber from "@effect/io/Fiber"
-import * as schedule from "@effect/io/internal/schedule"
 import * as TestClock from "@effect/io/internal/testing/testClock"
 import type * as TestEnvironment from "@effect/io/internal/testing/testEnvironment"
 import * as Ref from "@effect/io/Ref"
@@ -759,22 +758,20 @@ describe.concurrent("Schedule", () => {
 
         const input = pipe(
           List.make(inTimeSecondMillis, inTimeSecond, beforeTime, afterTime),
-          List.map((n) => [n, undefined] as const)
+          List.map((n) => [n, void 0] as const)
         )
 
         const result = yield* pipe(
           runManually(Schedule.secondOfMinute(1), input),
           Effect.map((output) => pipe(output[0], List.map((tuple) => tuple[0])))
         )
-
-        const expected = new Date(new Date(originOffset).setSeconds(1))
-        const inTimeSecondExpected = new Date(expected).setMinutes(expected.getMinutes() + 1)
-        const beforeTimeExpected = new Date(expected).setMinutes(expected.getMinutes() + 2)
-        const afterTimeExpected = new Date(expected).setMinutes(expected.getMinutes() + 3)
+        const expectedDate = new Date(new Date(originOffset).setSeconds(1))
+        const expected = expectedDate.getTime()
+        const afterTimeExpected = new Date(expectedDate).setMinutes(expectedDate.getMinutes() + 1)
         const expectedOutput = List.make(
-          inTimeSecondMillis,
-          inTimeSecondExpected,
-          beforeTimeExpected,
+          expected,
+          afterTimeExpected,
+          expected,
           afterTimeExpected
         )
 
@@ -792,7 +789,7 @@ describe.concurrent("Schedule", () => {
 
         const input = pipe(
           List.make(inTimeMinuteMillis, inTimeMinute, beforeTime, afterTime),
-          List.map((n) => [n, undefined] as const)
+          List.map((n) => [n, void 0] as const)
         )
 
         const result = yield* pipe(
@@ -801,13 +798,11 @@ describe.concurrent("Schedule", () => {
         )
 
         const expected = new Date(new Date(originOffset).setMinutes(1))
-        const inTimeMinuteExpected = new Date(expected).setHours(expected.getHours() + 1)
-        const beforeTimeExpected = new Date(expected).setHours(expected.getHours() + 2)
-        const afterTimeExpected = new Date(expected).setHours(expected.getHours() + 3)
+        const afterTimeExpected = new Date(expected).setHours(expected.getHours() + 1)
         const expectedOutput = List.make(
-          inTimeMinuteMillis,
-          inTimeMinuteExpected,
-          beforeTimeExpected,
+          expected.getTime(),
+          afterTimeExpected,
+          expected.getTime(),
           afterTimeExpected
         )
 
@@ -825,7 +820,7 @@ describe.concurrent("Schedule", () => {
 
         const input = pipe(
           List.make(inTimeHourSecond, inTimeHour, beforeTime, afterTime),
-          List.map((n) => [n, undefined] as const)
+          List.map((n) => [n, void 0] as const)
         )
 
         const result = yield* pipe(
@@ -833,14 +828,13 @@ describe.concurrent("Schedule", () => {
           Effect.map((output) => pipe(output[0], List.map((tuple) => tuple[0])))
         )
 
-        const expected = new Date(new Date(originOffset).setHours(1))
-        const inTimeHourExpected = new Date(expected).setDate(expected.getDate() + 1)
-        const beforeTimeExpected = new Date(expected).setDate(expected.getDate() + 2)
-        const afterTimeExpected = new Date(expected).setDate(expected.getDate() + 3)
+        const expectedDate = new Date(new Date(originOffset).setHours(1))
+        const expected = expectedDate.getTime()
+        const afterTimeExpected = new Date(expectedDate).setDate(expectedDate.getDate() + 1)
         const expectedOutput = List.make(
-          inTimeHourSecond,
-          inTimeHourExpected,
-          beforeTimeExpected,
+          expected,
+          afterTimeExpected,
+          expected,
           afterTimeExpected
         )
 
@@ -849,16 +843,20 @@ describe.concurrent("Schedule", () => {
 
     it.effect("recur at Tuesday of each week", () =>
       Effect.gen(function*() {
-        const originOffset = new Date().setUTCHours(0, 0, 0, 0)
+        const withDayOfWeek = (now: number, dayOfWeek: number): number => {
+          const date = new Date(now)
+          return date.setDate(date.getDate() + (7 + dayOfWeek - date.getDay()) % 7)
+        }
+        const originOffset = new Date().setHours(0, 0, 0, 0)
 
-        const tuesdayHour = new Date(schedule.nextDay(originOffset, 2)).setHours(1)
-        const tuesday = schedule.nextDay(originOffset, 2)
-        const monday = schedule.nextDay(originOffset, 1)
-        const wednesday = schedule.nextDay(originOffset, 3)
+        const tuesdayHour = new Date(withDayOfWeek(originOffset, 2)).setHours(1)
+        const tuesday = withDayOfWeek(originOffset, 2)
+        const monday = new Date(tuesday).setDate(new Date(tuesday).getDate() - 1)
+        const wednesday = withDayOfWeek(originOffset, 3)
 
         const input = pipe(
           List.make(tuesdayHour, tuesday, monday, wednesday),
-          List.map((n) => [n, undefined] as const)
+          List.map((n) => [n, void 0] as const)
         )
 
         const result = yield* pipe(
@@ -866,15 +864,13 @@ describe.concurrent("Schedule", () => {
           Effect.map((output) => pipe(output[0], List.map((tuple) => tuple[0])))
         )
 
-        const expectedTuesday = new Date(schedule.nextDay(originOffset, 2))
-        const tuesdayExpected = new Date(expectedTuesday).setDate(expectedTuesday.getDate() + 7)
-        const mondayExpected = new Date(expectedTuesday).setDate(expectedTuesday.getDate() + 14)
-        const wednesdayExpected = new Date(expectedTuesday).setDate(expectedTuesday.getDate() + 21)
+        const expectedTuesday = new Date(withDayOfWeek(originOffset, 2))
+        const nextTuesday = new Date(expectedTuesday).setDate(expectedTuesday.getDate() + 7)
         const expectedOutput = List.make(
-          tuesdayHour,
-          tuesdayExpected,
-          mondayExpected,
-          wednesdayExpected
+          expectedTuesday.getTime(),
+          nextTuesday,
+          expectedTuesday.getTime(),
+          nextTuesday
         )
 
         assert.deepStrictEqual(result, expectedOutput)
@@ -891,7 +887,7 @@ describe.concurrent("Schedule", () => {
 
         const input = pipe(
           List.make(inTimeDate1, inTimeDate2, before, after),
-          List.map((n) => [n, undefined] as const)
+          List.map((n) => [n, void 0] as const)
         )
 
         const result = yield* pipe(
@@ -899,25 +895,28 @@ describe.concurrent("Schedule", () => {
           Effect.map((output) => pipe(output[0], List.map((tuple) => tuple[0])))
         )
 
-        const expectedBefore = new Date(new Date(originOffset).setDate(2))
-        const inTimeDate2Expected = new Date(expectedBefore).setMonth(expectedBefore.getMonth() + 1)
-        const beforeExpected = new Date(expectedBefore).setMonth(expectedBefore.getMonth() + 2)
-        const afterExpected = new Date(expectedBefore).setMonth(expectedBefore.getMonth() + 3)
-        const expectedOutput = List.make(
-          inTimeDate1,
-          inTimeDate2Expected,
-          beforeExpected,
-          afterExpected
+        const expectedFirstInTime = new Date(new Date(originOffset).setDate(2))
+        const expectedSecondInTime = new Date(expectedFirstInTime).setMonth(expectedFirstInTime.getMonth() + 1)
+        const expectedBefore = new Date(originOffset).setDate(2)
+        const expectedAfter = new Date(new Date(expectedBefore).setDate(2)).setMonth(
+          new Date(expectedBefore).getMonth() + 1
         )
 
-        assert.deepStrictEqual(result, expectedOutput)
+        const expected = List.make(
+          expectedFirstInTime.getTime(),
+          expectedSecondInTime,
+          expectedBefore,
+          expectedAfter
+        )
+
+        assert.deepStrictEqual(result, expected)
       }))
 
     it.effect("recur only in months containing valid number of days", () =>
       Effect.gen(function*() {
         const originOffset = new Date(2020, 0, 31, 0, 0, 0).getTime()
 
-        const input = List.of([originOffset, undefined] as const)
+        const input = List.of([originOffset, void 0] as const)
 
         const result = yield* pipe(
           runManually(Schedule.dayOfMonth(30), input),
@@ -927,6 +926,26 @@ describe.concurrent("Schedule", () => {
         const expected = List.make(new Date(originOffset).setMonth(2, 30))
 
         assert.deepStrictEqual(result, expected)
+      }))
+
+    it.effect("union with cron like schedules", () =>
+      Effect.gen(function*() {
+        const ref = yield* Ref.make<ReadonlyArray<number>>([])
+        yield* TestClock.adjust(Duration.seconds(5))
+        const schedule = pipe(
+          Schedule.spaced(Duration.seconds(20)),
+          Schedule.union(Schedule.secondOfMinute(30))
+        )
+        yield* pipe(
+          TestClock.currentTimeMillis(),
+          Effect.tap((instant) => pipe(ref, Ref.update((seconds) => [...seconds, instant / 1000]))),
+          Effect.repeat(schedule),
+          Effect.fork
+        )
+        yield* TestClock.adjust(Duration.minutes(2))
+        const result = yield* Ref.get(ref)
+        const expected = [5, 25, 30, 50, 70, 90, 110]
+        assert.deepStrictEqual(Array.from(result), expected)
       }))
 
     it.effect("throw IllegalArgumentException on invalid `second` argument of `secondOfMinute`", () =>

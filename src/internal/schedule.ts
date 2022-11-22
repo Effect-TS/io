@@ -453,10 +453,10 @@ export const dayOfMonth = (day: number): Schedule.Schedule<never, unknown, numbe
           )
         ).traced(trace)
       }
-      const [end0, n] = state
-      const now0 = Math.max(end0, now)
-      const day0 = nextDayOfMonth(now0, day)
-      const start = Math.max(beginningOfDay(day0), now0)
+      const n = state[1]
+      const initial = n === 0
+      const day0 = nextDayOfMonth(now, day, initial)
+      const start = beginningOfDay(day0)
       const end = endOfDay(day0)
       const interval = Interval.make(start, end)
       return core.succeed(
@@ -483,10 +483,10 @@ export const dayOfWeek = (day: number): Schedule.Schedule<never, unknown, number
           )
         ).traced(trace)
       }
-      const [end0, n] = state
-      const now0 = Math.max(end0, now)
-      const day0 = nextDay(now0, day)
-      const start = Math.max(beginningOfDay(day0), now0)
+      const n = state[1]
+      const initial = n === 0
+      const day0 = nextDay(now, day, initial)
+      const start = beginningOfDay(day0)
       const end = endOfDay(day0)
       const interval = Interval.make(start, end)
       return core.succeed(
@@ -817,10 +817,10 @@ export const hourOfDay = (hour: number): Schedule.Schedule<never, unknown, numbe
           )
         ).traced(trace)
       }
-      const [end0, n] = state
-      const now0 = Math.max(end0, now)
-      const hour0 = nextHour(now0, hour)
-      const start = Math.max(beginningOfHour(hour0), now0)
+      const n = state[1]
+      const initial = n === 0
+      const hour0 = nextHour(now, hour, initial)
+      const start = beginningOfHour(hour0)
       const end = endOfHour(hour0)
       const interval = Interval.make(start, end)
       return core.succeed(
@@ -1067,10 +1067,10 @@ export const minuteOfHour = (minute: number): Schedule.Schedule<never, unknown, 
           )
         ).traced(trace)
       }
-      const [end0, n] = state
-      const now0 = Math.max(end0, now)
-      const minute0 = nextMinute(Math.max(end0, now0), minute)
-      const start = Math.max(beginningOfMinute(minute0), now0)
+      const n = state[1]
+      const initial = n === 0
+      const minute0 = nextMinute(now, minute, initial)
+      const start = beginningOfMinute(minute0)
       const end = endOfMinute(minute0)
       const interval = Interval.make(start, end)
       return core.succeed(
@@ -1444,10 +1444,10 @@ export const secondOfMinute = (second: number): Schedule.Schedule<never, unknown
           )
         )
       }
-      const [end0, n] = state
-      const now0 = Math.max(end0, now)
-      const second0 = nextSecond(now0, second)
-      const start = Math.max(beginningOfSecond(second0), now0)
+      const n = state[1]
+      const initial = n === 0
+      const second0 = nextSecond(now, second, initial)
+      const start = beginningOfSecond(second0)
       const end = endOfSecond(second0)
       const interval = Interval.make(start, end)
       return core.succeed(
@@ -1762,9 +1762,9 @@ export const endOfSecond = (now: number): number => {
 }
 
 /** @internal */
-export const nextSecond = (now: number, second: number): number => {
+export const nextSecond = (now: number, second: number, initial: boolean): number => {
   const date = new Date(now)
-  if (date.getSeconds() === second) {
+  if (date.getSeconds() === second && initial) {
     return now
   }
   if (date.getSeconds() < second) {
@@ -1800,9 +1800,9 @@ export const endOfMinute = (now: number): number => {
 }
 
 /** @internal */
-export const nextMinute = (now: number, minute: number): number => {
+export const nextMinute = (now: number, minute: number, initial: boolean): number => {
   const date = new Date(now)
-  if (date.getMinutes() === minute) {
+  if (date.getMinutes() === minute && initial) {
     return now
   }
   if (date.getMinutes() < minute) {
@@ -1838,9 +1838,9 @@ export const endOfHour = (now: number): number => {
 }
 
 /** @internal */
-export const nextHour = (now: number, hour: number): number => {
+export const nextHour = (now: number, hour: number, initial: boolean): number => {
   const date = new Date(now)
-  if (date.getHours() === hour) {
+  if (date.getHours() === hour && initial) {
     return now
   }
   if (date.getHours() < hour) {
@@ -1876,18 +1876,19 @@ export const endOfDay = (now: number): number => {
 }
 
 /** @internal */
-export const nextDay = (now: number, dayOfWeek: number): number => {
+export const nextDay = (now: number, dayOfWeek: number, initial: boolean): number => {
   const date = new Date(now)
-  if (date.getDay() === dayOfWeek) {
+  if (date.getDay() === dayOfWeek && initial) {
     return now
   }
-  return date.setDate(date.getDate() + ((7 + dayOfWeek - date.getDay()) % 7))
+  const nextDayOfWeek = (7 + dayOfWeek - date.getDay()) % 7
+  return date.setDate(date.getDate() + (nextDayOfWeek === 0 ? 7 : nextDayOfWeek))
 }
 
 /** @internal */
-export const nextDayOfMonth = (now: number, day: number): number => {
+export const nextDayOfMonth = (now: number, day: number, initial: boolean): number => {
   const date = new Date(now)
-  if (date.getDate() === day) {
+  if (date.getDate() === day && initial) {
     return now
   }
   if (date.getDate() < day) {
