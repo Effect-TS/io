@@ -52,7 +52,7 @@ export interface ParallelN {
  * @since 1.0.0
  * @category constructors
  */
-export const sequential = internal.sequential
+export const sequential: ExecutionStrategy = internal.sequential
 
 /**
  * Execute effects in parallel.
@@ -60,7 +60,7 @@ export const sequential = internal.sequential
  * @since 1.0.0
  * @category constructors
  */
-export const parallel = internal.parallel
+export const parallel: ExecutionStrategy = internal.parallel
 
 /**
  * Execute effects in parallel, up to the specified number of concurrent fibers.
@@ -68,7 +68,7 @@ export const parallel = internal.parallel
  * @since 1.0.0
  * @category constructors
  */
-export const parallelN = internal.parallelN
+export const parallelN: (parallelism: number) => ExecutionStrategy = internal.parallelN
 
 /**
  * Returns `true` if the specified `ExecutionStrategy` is an instance of
@@ -77,7 +77,7 @@ export const parallelN = internal.parallelN
  * @since 1.0.0
  * @category refinements
  */
-export const isSequential = internal.isSequential
+export const isSequential: (self: ExecutionStrategy) => self is Sequential = internal.isSequential
 
 /**
  * Returns `true` if the specified `ExecutionStrategy` is an instance of
@@ -86,7 +86,7 @@ export const isSequential = internal.isSequential
  * @since 1.0.0
  * @category refinements
  */
-export const isParallel = internal.isParallel
+export const isParallel: (self: ExecutionStrategy) => self is Parallel = internal.isParallel
 
 /**
  * Returns `true` if the specified `ExecutionStrategy` is an instance of
@@ -95,7 +95,7 @@ export const isParallel = internal.isParallel
  * @since 1.0.0
  * @category refinements
  */
-export const isParallelN = internal.isParallelN
+export const isParallelN: (self: ExecutionStrategy) => self is ParallelN = internal.isParallelN
 
 /**
  * Folds over the specified `ExecutionStrategy` using the provided case
@@ -104,4 +104,8 @@ export const isParallelN = internal.isParallelN
  * @since 1.0.0
  * @category folding
  */
-export const match = internal.match
+export const match: <A>(
+  onSequential: () => A,
+  onParallel: () => A,
+  onParallelN: (n: number) => A
+) => (self: ExecutionStrategy) => A = internal.match
