@@ -1,10 +1,10 @@
 import * as Cause from "@effect/io/Cause"
-import * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRef from "@effect/io/FiberRef"
-import * as FiberRefs from "@effect/io/FiberRefs"
 import * as core from "@effect/io/internal/core"
+import * as _fiberId from "@effect/io/internal/fiberId"
+import * as fiberRefs from "@effect/io/internal/fiberRefs"
 import type * as Logger from "@effect/io/Logger"
-import * as LogLevel from "@effect/io/Logger/Level"
+import type * as LogLevel from "@effect/io/Logger/Level"
 import * as LogSpan from "@effect/io/Logger/Span"
 import { constVoid, pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
@@ -40,7 +40,7 @@ export const defaultLogger: Logger.Logger<string, string> = {
     const outputArray = [
       `timestamp=${now.toISOString()}`,
       `level=${logLevel.label}`,
-      `fiber=${FiberId.threadName(fiberId)}`
+      `fiber=${_fiberId.threadName(fiberId)}`
     ]
 
     if (message.length > 0) {
@@ -174,11 +174,11 @@ export const sync = <A>(evaluate: () => A): Logger.Logger<unknown, A> => {
 export const test = <Message>(input: Message) => {
   return <Output>(self: Logger.Logger<Message, Output>): Output => {
     return self.log(
-      FiberId.none,
-      LogLevel.Info,
+      _fiberId.none,
+      core.logLevelInfo,
       input,
       Cause.empty,
-      FiberRefs.unsafeMake(new Map()),
+      fiberRefs.unsafeMake(new Map()),
       List.empty(),
       new Map()
     )

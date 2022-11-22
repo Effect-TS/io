@@ -7,7 +7,9 @@
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
 import type * as Fiber from "@effect/io/Fiber"
+import * as circular from "@effect/io/internal/layer/circular"
 import * as internal from "@effect/io/internal/supervisor"
+import type * as Layer from "@effect/io/Layer"
 import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as Context from "@fp-ts/data/Context"
 import type * as MutableRef from "@fp-ts/data/mutable/MutableRef"
@@ -99,12 +101,10 @@ export declare namespace Supervisor {
 }
 
 /**
- * Unsafely creates a new supervisor that tracks children in a set.
- *
  * @since 1.0.0
- * @category unsafe
+ * @category environment
  */
-export const unsafeTrack: () => Supervisor<Chunk.Chunk<Fiber.RuntimeFiber<any, any>>> = internal.unsafeTrack
+export const addSupervisor: <A>(supervisor: Supervisor<A>) => Layer.Layer<never, never, never> = circular.addSupervisor
 
 /**
  * Creates a new supervisor that tracks children in a set.
@@ -113,8 +113,9 @@ export const unsafeTrack: () => Supervisor<Chunk.Chunk<Fiber.RuntimeFiber<any, a
  * @since 1.0.0
  * @category constructors
  */
-export const track: () => Effect.Effect<never, never, Supervisor<Chunk.Chunk<Fiber.RuntimeFiber<any, any>>>> =
-  internal.track
+export const fibersIn: (
+  ref: MutableRef.MutableRef<SortedSet.SortedSet<Fiber.RuntimeFiber<any, any>>>
+) => Effect.Effect<never, never, Supervisor<SortedSet.SortedSet<Fiber.RuntimeFiber<any, any>>>> = internal.fibersIn
 
 /**
  * Creates a new supervisor that constantly yields effect when polled
@@ -139,6 +140,13 @@ export const none: Supervisor<void> = internal.none
  * @since 1.0.0
  * @category constructors
  */
-export const fibersIn: (
-  ref: MutableRef.MutableRef<SortedSet.SortedSet<Fiber.RuntimeFiber<any, any>>>
-) => Effect.Effect<never, never, Supervisor<SortedSet.SortedSet<Fiber.RuntimeFiber<any, any>>>> = internal.fibersIn
+export const track: () => Effect.Effect<never, never, Supervisor<Chunk.Chunk<Fiber.RuntimeFiber<any, any>>>> =
+  internal.track
+
+/**
+ * Unsafely creates a new supervisor that tracks children in a set.
+ *
+ * @since 1.0.0
+ * @category unsafe
+ */
+export const unsafeTrack: () => Supervisor<Chunk.Chunk<Fiber.RuntimeFiber<any, any>>> = internal.unsafeTrack
