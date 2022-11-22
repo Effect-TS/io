@@ -45,7 +45,7 @@
     "plugins": [
       {
         "name": "@effect/language-service",
-        "diagnostic": {
+        "diagnostics": {
           "1002": "none"
         }
       }
