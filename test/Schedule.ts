@@ -1,6 +1,8 @@
+import * as Cause from "@effect/io/Cause"
 import * as Clock from "@effect/io/Clock"
 import * as Deferred from "@effect/io/Deferred"
 import * as Effect from "@effect/io/Effect"
+import * as Exit from "@effect/io/Exit"
 import * as Fiber from "@effect/io/Fiber"
 import * as schedule from "@effect/io/internal/schedule"
 import * as TestClock from "@effect/io/internal/testing/testClock"
@@ -84,49 +86,54 @@ describe.concurrent("Schedule", () => {
       assert.strictEqual(result, 8)
     }))
 
-  // TODO(Mike/Max): after TestClock - make it compile
-  // it.effect("reset after some inactivity", () =>
-  //   Effect.gen(function*() {
-  //     const io = (
-  //       ref: Ref.Ref<number>,
-  //       latch: Deferred.Deferred<never, void>
-  //     ): Effect.Effect<never, string, void> => {
-  //       return pipe(
-  //         ref,
-  //         Ref.updateAndGet((n) => n + 1),
-  //         Effect.flatMap((retries) => {
-  //           // The 5th retry will fail after 10 seconds to let the schedule reset
-  //           if (retries == 5) {
-  //             return latch.succeed(undefined).zipRight(io(ref, latch).delay((10).seconds))
-  //           }
-  //           // The 10th retry will succeed, which is only possible if the schedule was reset
-  //           if (retries == 10) {
-  //             return Effect.unit
-  //           }
-  //           return Effect.fail("Boom")
-  //         })
-  //       )
-  //     }
-  //     const schedule = pipe(Schedule.recurs(5), Schedule.resetAfter(Duration.seconds(5)))
-  //     const retriesCounter = yield* Ref.make(-1)
-  //     const latch = yield* Deferred.make<never, void>()
-  //     const fiber = yield* pipe(io(retriesCounter, latch), Effect.retry(schedule), Effect.fork)
-  //     yield* Deferred.await(latch)
-  //     yield* TestClock.adjust(Duration.seconds(10))
-  //     yield* Fiber.join(fiber)
-  //     const retries = yield* Ref.get(retriesCounter)
-  //     assert.strictEqual(retries, 10)
-  //   }))
+  it.effect("reset after some inactivity", () =>
+    Effect.gen(function*() {
+      const io = (
+        ref: Ref.Ref<number>,
+        latch: Deferred.Deferred<never, void>
+      ): Effect.Effect<never, string, void> => {
+        return pipe(
+          ref,
+          Ref.updateAndGet((n) => n + 1),
+          Effect.flatMap((retries) => {
+            // The 5th retry will fail after 10 seconds to let the schedule reset
+            if (retries == 5) {
+              return pipe(
+                latch,
+                Deferred.succeed<void>(void 0),
+                Effect.zipRight(pipe(io(ref, latch), Effect.delay(Duration.seconds(10))))
+              )
+            }
+            // The 10th retry will succeed, which is only possible if the schedule was reset
+            if (retries == 10) {
+              return Effect.unit()
+            }
+            return Effect.fail("Boom")
+          })
+        )
+      }
+      const schedule = pipe(Schedule.recurs(5), Schedule.resetAfter(Duration.seconds(5)))
+      const retriesCounter = yield* Ref.make(-1)
+      const latch = yield* Deferred.make<never, void>()
+      const fiber = yield* pipe(io(retriesCounter, latch), Effect.retry(schedule), Effect.fork)
+      yield* Deferred.await(latch)
+      yield* TestClock.adjust(Duration.seconds(10))
+      yield* Fiber.join(fiber)
+      const retries = yield* Ref.get(retriesCounter)
+      assert.strictEqual(retries, 10)
+    }))
 
-  // TODO(Mike/Max): after TestClock
-  // it.effect("union of two schedules should continue as long as either wants to continue", () =>
-  //   Do(($) => {
-  //     const schedule = Schedule.recurWhile((b: boolean) => b).union(Schedule.fixed((1).seconds))
-  //     const input = List(true, false, false, false, false)
-  //     const result = $(runCollect(schedule.compose(Schedule.elapsed), input))
-  //     const expected = Chunk((0).seconds, (0).seconds, (1).seconds, (2).seconds, (3).seconds)
-  //     assert.isTrue(result == expected)
-  //   }))
+  it.effect("union of two schedules should continue as long as either wants to continue", () =>
+    Effect.gen(function*() {
+      const schedule = pipe(
+        Schedule.recurWhile((b: boolean) => b),
+        Schedule.union(Schedule.fixed(Duration.seconds(1)))
+      )
+      const input = List.make(true, false, false, false, false)
+      const result = yield* runCollect(pipe(schedule, Schedule.compose(Schedule.elapsed())), input)
+      const expected = [0, 0, 1, 2, 3].map(Duration.seconds)
+      assert.deepStrictEqual(Array.from(result), expected)
+    }))
 
   it.effect("Schedule.fixed should compute delays correctly", () =>
     Effect.gen(function*() {
@@ -580,113 +587,150 @@ describe.concurrent("Schedule", () => {
     // assert.isTrue()
     // }).unsafeRunPromise()
 
-    // TODO(Mike/Max): after TestClock
-    // it.effect("fixed delay with error predicate", () =>
-    //   Effect.gen(function*(){
-    //     let i = 0
-    //     const io = Effect.sync(() => {
-    //       i = i + 1
-    //     }).flatMap(() => i < 5 ? Effect.fail("KeepTryingError") : Effect.fail("GiveUpError"))
-    //     const strategy = Schedule.spaced((200).millis).whileInput((s: string) =>
-    //       s === "KeepTryingError"
-    //     )
-    //     const program = io.retryOrElseEither(strategy, (s, n) =>
-    //       TestClock.currentTime.map((now) => [new DurationInternal(now), s, n] as const))
-    //     const result = $(run(program))
-    //     const expected = [(800).millis, "GiveUpError", 4] as const
-    //     assert.isTrue(result == Either.left(expected))
-    //   }))
+    it.effect("fixed delay with error predicate", () =>
+      Effect.gen(function*() {
+        let i = 0
+        const effect = pipe(
+          Effect.sync(() => {
+            i = i + 1
+          }),
+          Effect.flatMap(() => i < 5 ? Effect.fail("KeepTryingError") : Effect.fail("GiveUpError"))
+        )
+        const strategy = pipe(
+          Schedule.spaced(Duration.millis(200)),
+          Schedule.whileInput((s: string) => s === "KeepTryingError")
+        )
+        const program = pipe(
+          effect,
+          Effect.retryOrElseEither(
+            strategy,
+            (s, n) =>
+              pipe(
+                TestClock.currentTimeMillis(),
+                Effect.map((now) => [Duration.millis(now), s, n] as const)
+              )
+          )
+        )
+        const result = yield* run(program)
+        assert.deepStrictEqual(
+          result,
+          Either.left([Duration.millis(800), "GiveUpError", 4] as const)
+        )
+      }))
 
-    // it.effect("fibonacci delay", () =>
-    //   Effect.gen(function*(){
-    //     const schedule = Schedule.fibonacci((100).millis).compose(Schedule.elapsed)
-    //     const result = $(runCollect(schedule, Chunk.fill(5, constVoid)))
-    //     const expected = Chunk((0).millis, (100).millis, (200).millis, (400).millis, (700).millis)
-    //     assert.isTrue(result == expected)
-    //   }))
+    it.effect("fibonacci delay", () =>
+      Effect.gen(function*() {
+        const schedule = pipe(
+          Schedule.fibonacci(Duration.millis(100)),
+          Schedule.compose(Schedule.elapsed())
+        )
+        const result = yield* runCollect(schedule, Array.from({ length: 5 }, constVoid))
+        const expected = [0, 100, 200, 400, 700].map(Duration.millis)
+        assert.deepStrictEqual(Array.from(result), expected)
+      }))
 
-    // it.effect("linear delay", () =>
-    //   Effect.gen(function*(){
-    //     const schedule = Schedule.linear((100).millis).compose(Schedule.elapsed)
-    //     const result = $(runCollect(schedule, Chunk.fill(5, constVoid)))
-    //     const expected = Chunk((0).millis, (100).millis, (300).millis, (600).millis, (1000).millis)
-    //     assert.isTrue(result == expected)
-    //   }))
+    it.effect("linear delay", () =>
+      Effect.gen(function*() {
+        const schedule = pipe(
+          Schedule.linear(Duration.millis(100)),
+          Schedule.compose(Schedule.elapsed())
+        )
+        const result = yield* runCollect(schedule, Array.from({ length: 5 }, constVoid))
+        const expected = [0, 100, 300, 600, 1000].map(Duration.millis)
+        assert.deepStrictEqual(Array.from(result), expected)
+      }))
 
-    // it.effect("spaced delay", () =>
-    //   Effect.gen(function*(){
-    //     const schedule = Schedule.spaced((100).millis).compose(Schedule.elapsed)
-    //     const result = $(runCollect(schedule, Chunk.fill(5, constVoid)))
-    //     const expected = Chunk((0).millis, (100).millis, (200).millis, (300).millis, (400).millis)
-    //     assert.isTrue(result == expected)
-    //   }))
+    it.effect("spaced delay", () =>
+      Effect.gen(function*() {
+        const schedule = pipe(
+          Schedule.spaced(Duration.millis(100)),
+          Schedule.compose(Schedule.elapsed())
+        )
+        const result = yield* runCollect(schedule, Array.from({ length: 5 }, constVoid))
+        const expected = [0, 100, 200, 300, 400].map(Duration.millis)
+        assert.deepStrictEqual(Array.from(result), expected)
+      }))
 
-    // it.effect("fixed delay", () =>
-    //   Effect.gen(function*(){
-    //     const schedule = Schedule.fixed((100).millis).compose(Schedule.elapsed)
-    //     const result = $(runCollect(schedule, Chunk.fill(5, constVoid)))
-    //     const expected = Chunk((0).millis, (100).millis, (200).millis, (300).millis, (400).millis)
-    //     assert.isTrue(result == expected)
-    //   }))
+    it.effect("fixed delay", () =>
+      Effect.gen(function*() {
+        const schedule = pipe(
+          Schedule.fixed(Duration.millis(100)),
+          Schedule.compose(Schedule.elapsed())
+        )
+        const result = yield* runCollect(schedule, Array.from({ length: 5 }, constVoid))
+        const expected = [0, 100, 200, 300, 400].map(Duration.millis)
+        assert.deepStrictEqual(Array.from(result), expected)
+      }))
 
-    // it.effect("fixed delay with zero delay", () =>
-    //   Effect.gen(function*(){
-    //     const schedule = Schedule.fixed((0).millis).compose(Schedule.elapsed)
-    //     const result = $(runCollect(schedule, Chunk.fill(5, constVoid)))
-    //     const expected = Chunk.fill(5, () => (0).millis)
-    //     assert.isTrue(result == expected)
-    //   }))
+    it.effect("fixed delay with zero delay", () =>
+      Effect.gen(function*() {
+        const schedule = pipe(
+          Schedule.fixed(Duration.zero),
+          Schedule.compose(Schedule.elapsed())
+        )
+        const result = yield* runCollect(schedule, Array.from({ length: 5 }, constVoid))
+        const expected = Array.from({ length: 5 }, () => Duration.zero)
+        assert.deepStrictEqual(Array.from(result), expected)
+      }))
 
-    // it.effect("windowed", () =>
-    //   Effect.gen(function*(){
-    //     const schedule = Schedule.windowed((100).millis).compose(Schedule.elapsed)
-    //     const result = $(runCollect(schedule, Chunk.fill(5, constVoid)))
-    //     const expected = Chunk((0).millis, (100).millis, (200).millis, (300).millis, (400).millis)
-    //     assert.isTrue(result == expected)
-    //   }))
+    it.effect("windowed", () =>
+      Effect.gen(function*() {
+        const schedule = pipe(
+          Schedule.windowed(Duration.millis(100)),
+          Schedule.compose(Schedule.elapsed())
+        )
+        const result = yield* runCollect(schedule, Array.from({ length: 5 }, constVoid))
+        const expected = [0, 100, 200, 300, 400].map(Duration.millis)
+        assert.deepStrictEqual(Array.from(result), expected)
+      }))
 
-    // it.effect("modified linear delay", () =>
-    //   Effect.gen(function*(){
-    //     const schedule = Schedule.linear((100).millis)
-    //       .modifyDelayEffect((_, d) => Effect.succeed(d * 2))
-    //       .compose(Schedule.elapsed)
-    //     const result = $(runCollect(schedule, Chunk.fill(5, constVoid)))
-    //     const expected = Chunk((0).millis, (200).millis, (600).millis, (1200).millis, (2000).millis)
-    //     assert.isTrue(result == expected)
-    //   }))
+    it.effect("modified linear delay", () =>
+      Effect.gen(function*() {
+        const schedule = pipe(
+          Schedule.linear(Duration.millis(100)),
+          Schedule.modifyDelayEffect((_, duration) => Effect.succeed(pipe(duration, Duration.times(2)))),
+          Schedule.compose(Schedule.elapsed())
+        )
+        const result = yield* runCollect(schedule, Array.from({ length: 5 }, constVoid))
+        const expected = [0, 200, 600, 1200, 2000].map(Duration.millis)
+        assert.deepStrictEqual(Array.from(result), expected)
+      }))
 
-    // it.effect("exponential delay with default factor", () =>
-    //   Effect.gen(function*(){
-    //     const schedule = Schedule.exponential((100).millis).compose(Schedule.elapsed)
-    //     const result = $(runCollect(schedule, Chunk.fill(5, constVoid)))
-    //     const expected = Chunk((0).millis, (100).millis, (300).millis, (700).millis, (1500).millis)
-    //     assert.isTrue(result == expected)
-    //   }))
+    it.effect("exponential delay with default factor", () =>
+      Effect.gen(function*() {
+        const schedule = pipe(
+          Schedule.exponential(Duration.millis(100)),
+          Schedule.compose(Schedule.elapsed())
+        )
+        const result = yield* runCollect(schedule, Array.from({ length: 5 }, constVoid))
+        const expected = [0, 100, 300, 700, 1500].map(Duration.millis)
+        assert.deepStrictEqual(Array.from(result), expected)
+      }))
 
-    // it.effect("exponential delay with other factor", () =>
-    //   Effect.gen(function*(){
-    //     const schedule = pipe(
-    //       Schedule.exponential(Duration.millis(100), 3),
-    //       Schedule.compose(Schedule.elapsed())
-    //     )
-    //     const result = yield* runCollect(schedule, Array.from({ length: 5 }, constVoid))
-    //     const expected = Chunk((0).millis, (100).millis, (400).millis, (1300).millis, (4000).millis)
-    //     assert.isTrue(result == expected)
-    //   }))
+    it.effect("exponential delay with other factor", () =>
+      Effect.gen(function*() {
+        const schedule = pipe(
+          Schedule.exponential(Duration.millis(100), 3),
+          Schedule.compose(Schedule.elapsed())
+        )
+        const result = yield* runCollect(schedule, Array.from({ length: 5 }, constVoid))
+        const expected = [0, 100, 400, 1300, 4000].map(Duration.millis)
+        assert.deepStrictEqual(Array.from(result), expected)
+      }))
 
-    // it.effect("fromDelays", () =>
-    //   Effect.gen(function*(){
-    //     const durations = Schedule.fromDurations(
-    //       (4).seconds,
-    //       (7).seconds,
-    //       (12).seconds,
-    //       (19).seconds
-    //     )
-    //     const schedule = durations.compose(Schedule.elapsed)
-    //     const result = $(runCollect(schedule, Chunk.fill(5, constVoid)))
-    //     const expected = Chunk((0).seconds, (4).seconds, (11).seconds, (23).seconds, (42).seconds)
-    //     assert.isTrue(result == expected)
-    //   }))
+    it.effect("fromDelays", () =>
+      Effect.gen(function*() {
+        const delays = Schedule.fromDelays(
+          Duration.seconds(4),
+          Duration.seconds(7),
+          Duration.seconds(12),
+          Duration.seconds(19)
+        )
+        const schedule = pipe(delays, Schedule.compose(Schedule.elapsed()))
+        const result = yield* runCollect(schedule, Array.from({ length: 5 }, constVoid))
+        const expected = [0, 4, 11, 23, 42].map(Duration.seconds)
+        assert.deepStrictEqual(Array.from(result), expected)
+      }))
 
     it.effect("retry a failed action 2 times and call `ensuring` should run the specified finalizer as soon as the schedule is complete", () =>
       Effect.gen(function*() {
@@ -885,66 +929,55 @@ describe.concurrent("Schedule", () => {
         assert.deepStrictEqual(result, expected)
       }))
 
-    // TODO(Mike/Max): needs TestClock
-    // it.effect("throw IllegalArgumentException on invalid `second` argument of `secondOfMinute`", () =>
-    //   Effect.gen(function*() {
-    //     const input = List.of(Date.now())
-    //     const exit = yield* Effect.exit(runCollect(Schedule.secondOfMinute(60), input))
-    //     assert.isTrue(
-    //       exit.isFailure() && exit.cause.isDieType() &&
-    //         exit.cause.value instanceof IllegalArgumentException &&
-    //         exit.cause.value.message ==
-    //           "Invalid argument in: secondOfMinute(60). Must be in range 0...59"
-    //     )
-    //   }))
+    it.effect("throw IllegalArgumentException on invalid `second` argument of `secondOfMinute`", () =>
+      Effect.gen(function*() {
+        const input = List.of(Date.now())
+        const exit = yield* Effect.exit(runCollect(Schedule.secondOfMinute(60), input))
+        const exception = new Cause.IllegalArgumentException(
+          "Invalid argument in: secondOfMinute(60). Must be in range 0...59"
+        )
+        assert.deepStrictEqual(exit, Exit.die(exception))
+      }))
 
-    // it.effect("throw IllegalArgumentException on invalid `minute` argument of `minuteOfHour`", () =>
-    //   Effect.gen(function*(){
-    //     const input = List(Date.now())
-    //     const exit = $(runCollect(Schedule.minuteOfHour(60), input).exit)
-    //     assert.isTrue(
-    //       exit.isFailure() && exit.cause.isDieType() &&
-    //         exit.cause.value instanceof IllegalArgumentException &&
-    //         exit.cause.value.message ==
-    //           "Invalid argument in: minuteOfHour(60). Must be in range 0...59"
-    //     )
-    //   }))
+    it.effect("throw IllegalArgumentException on invalid `minute` argument of `minuteOfHour`", () =>
+      Effect.gen(function*() {
+        const input = List.of(Date.now())
+        const exit = yield* Effect.exit(runCollect(Schedule.minuteOfHour(60), input))
+        const exception = new Cause.IllegalArgumentException(
+          "Invalid argument in: minuteOfHour(60). Must be in range 0...59"
+        )
+        assert.deepStrictEqual(exit, Exit.die(exception))
+      }))
 
-    // it.effect("throw IllegalArgumentException on invalid `hour` argument of `hourOfDay`", () =>
-    //   Effect.gen(function*(){
-    //     const input = List(Date.now())
-    //     const exit = $(runCollect(Schedule.hourOfDay(24), input).exit)
-    //     assert.isTrue(
-    //       exit.isFailure() && exit.cause.isDieType() &&
-    //         exit.cause.value instanceof IllegalArgumentException &&
-    //         exit.cause.value.message ==
-    //           "Invalid argument in: hourOfDay(24). Must be in range 0...23"
-    //     )
-    //   }))
+    it.effect("throw IllegalArgumentException on invalid `hour` argument of `hourOfDay`", () =>
+      Effect.gen(function*() {
+        const input = List.of(Date.now())
+        const exit = yield* Effect.exit(runCollect(Schedule.hourOfDay(24), input))
+        const exception = new Cause.IllegalArgumentException(
+          "Invalid argument in: hourOfDay(24). Must be in range 0...23"
+        )
+        assert.deepStrictEqual(exit, Exit.die(exception))
+      }))
 
-    // it.effect("throw IllegalArgumentException on invalid `day` argument of `dayOfWeek`", () =>
-    //   Effect.gen(function*(){
-    //     const input = List(Date.now())
-    //     const exit = $(runCollect(Schedule.dayOfWeek(8), input).exit)
-    //     assert.isTrue(
-    //       exit.isFailure() && exit.cause.isDieType() &&
-    //         exit.cause.value instanceof IllegalArgumentException &&
-    //         exit.cause.value.message ==
-    //           "Invalid argument in: dayOfWeek(8). Must be in range 1 (Monday)...7 (Sunday)"
-    //     )
-    //   }))
+    it.effect("throw IllegalArgumentException on invalid `day` argument of `dayOfWeek`", () =>
+      Effect.gen(function*() {
+        const input = List.of(Date.now())
+        const exit = yield* Effect.exit(runCollect(Schedule.dayOfWeek(8), input))
+        const exception = new Cause.IllegalArgumentException(
+          "Invalid argument in: dayOfWeek(8). Must be in range 1 (Monday)...7 (Sunday)"
+        )
+        assert.deepStrictEqual(exit, Exit.die(exception))
+      }))
 
-    // it.effect("throw IllegalArgumentException on invalid `day` argument of `dayOfMonth`", () =>
-    //   Effect.gen(function*(){
-    //     const input = List(Date.now())
-    //     const exit = $(runCollect(Schedule.dayOfMonth(32), input).exit)
-    //     assert.isTrue(
-    //       exit.isFailure() && exit.cause.isDieType() &&
-    //         exit.cause.value instanceof IllegalArgumentException &&
-    //         exit.cause.value.message ==
-    //           "Invalid argument in: dayOfMonth(32). Must be in range 1...31"
-    //     )
-    //   }))
+    it.effect("throw IllegalArgumentException on invalid `day` argument of `dayOfMonth`", () =>
+      Effect.gen(function*() {
+        const input = List.of(Date.now())
+        const exit = yield* Effect.exit(runCollect(Schedule.dayOfMonth(32), input))
+        const exception = new Cause.IllegalArgumentException(
+          "Invalid argument in: dayOfMonth(32). Must be in range 1...31"
+        )
+        assert.deepStrictEqual(exit, Exit.die(exception))
+      }))
   })
 })
 
