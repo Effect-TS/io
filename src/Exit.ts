@@ -3,8 +3,13 @@
  */
 import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
+import type * as FiberId from "@effect/io/Fiber/Id"
 import * as core from "@effect/io/internal/core"
 import type * as OpCodes from "@effect/io/internal/opCodes/effect"
+import type * as Either from "@fp-ts/data/Either"
+import type * as List from "@fp-ts/data/List"
+import type * as Option from "@fp-ts/data/Option"
+import type { Predicate } from "@fp-ts/data/Predicate"
 
 /**
  * An `Exit<E, A>` describes the result of a executing an `Effect` workflow.
@@ -50,7 +55,7 @@ export interface Success<A> extends Effect.Effect<never, never, A> {
  * @since 1.0.0
  * @category refinements
  */
-export const isExit = core.exitIsExit
+export const isExit: (u: unknown) => u is Exit<unknown, unknown> = core.exitIsExit
 
 /**
  * Returns `true` if the specified `Exit` is a `Failure`, `false` otherwise.
@@ -58,7 +63,7 @@ export const isExit = core.exitIsExit
  * @since 1.0.0
  * @category refinements
  */
-export const isFailure = core.exitIsFailure
+export const isFailure: <E, A>(self: Exit<E, A>) => self is Failure<E> = core.exitIsFailure
 
 /**
  * Returns `true` if the specified `Exit` is a `Success`, `false` otherwise.
@@ -66,7 +71,7 @@ export const isFailure = core.exitIsFailure
  * @since 1.0.0
  * @category refinements
  */
-export const isSuccess = core.exitIsSuccess
+export const isSuccess: <E, A>(self: Exit<E, A>) => self is Success<A> = core.exitIsSuccess
 
 /**
  * Constructs a new `Exit.Success` containing the specified value of type `A`.
@@ -74,7 +79,7 @@ export const isSuccess = core.exitIsSuccess
  * @since 1.0.0
  * @category constructors
  */
-export const succeed = core.exitSucceed
+export const succeed: <A>(value: A) => Exit<never, A> = core.exitSucceed
 
 /**
  * Constructs a new `Exit.Failure` from the specified recoverable error of type
@@ -83,7 +88,7 @@ export const succeed = core.exitSucceed
  * @since 1.0.0
  * @category constructors
  */
-export const fail = core.exitFail
+export const fail: <E>(error: E) => Exit<E, never> = core.exitFail
 
 /**
  * Constructs a new `Exit.Failure` from the specified `Cause` of type `E`.
@@ -91,7 +96,7 @@ export const fail = core.exitFail
  * @since 1.0.0
  * @category constructors
  */
-export const failCause = core.exitFailCause
+export const failCause: <E>(cause: Cause.Cause<E>) => Exit<E, never> = core.exitFailCause
 
 /**
  * Constructs a new `Exit.Failure` from the specified unrecoverable defect.
@@ -99,7 +104,7 @@ export const failCause = core.exitFailCause
  * @since 1.0.0
  * @category constructors
  */
-export const die = core.exitDie
+export const die: (defect: unknown) => Exit<never, never> = core.exitDie
 
 /**
  * Constructs a new `Exit.Failure` from the specified `FiberId` indicating that
@@ -108,7 +113,7 @@ export const die = core.exitDie
  * @since 1.0.0
  * @category constructors
  */
-export const interrupt = core.exitInterrupt
+export const interrupt: (fiberId: FiberId.FiberId) => Exit<never, never> = core.exitInterrupt
 
 /**
  * Collects all of the specified exit values into a `Some<Exit<E, List<A>>>`. If
@@ -119,7 +124,8 @@ export const interrupt = core.exitInterrupt
  * @since 1.0.0
  * @category constructors
  */
-export const collectAll = core.exitCollectAll
+export const collectAll: <E, A>(exits: Iterable<Exit<E, A>>) => Option.Option<Exit<E, List.List<A>>> =
+  core.exitCollectAll
 
 /**
  * Collects all of the specified exit values into a `Some<Exit<E, List<A>>>`. If
@@ -130,7 +136,8 @@ export const collectAll = core.exitCollectAll
  * @since 1.0.0
  * @category constructors
  */
-export const collectAllPar = core.exitCollectAllPar
+export const collectAllPar: <E, A>(exits: Iterable<Exit<E, A>>) => Option.Option<Exit<E, List.List<A>>> =
+  core.exitCollectAllPar
 
 /**
  * Represents an `Exit` which succeeds with `undefined`.
@@ -138,7 +145,7 @@ export const collectAllPar = core.exitCollectAllPar
  * @since 1.0.0
  * @category constructors
  */
-export const unit = core.exitUnit
+export const unit: () => Exit<never, void> = core.exitUnit
 
 /**
  * Converts an `Either<E, A>` into an `Exit<E, A>`.
@@ -146,7 +153,7 @@ export const unit = core.exitUnit
  * @since 1.0.0
  * @category conversions
  */
-export const fromEither = core.exitFromEither
+export const fromEither: <E, A>(either: Either.Either<E, A>) => Exit<E, A> = core.exitFromEither
 
 /**
  * Converts an `Option<A>` into an `Exit<void, A>`.
@@ -154,7 +161,7 @@ export const fromEither = core.exitFromEither
  * @since 1.0.0
  * @category conversions
  */
-export const fromOption = core.exitFromOption
+export const fromOption: <A>(option: Option.Option<A>) => Exit<void, A> = core.exitFromOption
 
 /**
  * Returns `true` if the specified exit is a `Failure` **and** the `Cause` of
@@ -163,7 +170,7 @@ export const fromOption = core.exitFromOption
  * @since 1.0.0
  * @category getters
  */
-export const isInterrupted = core.exitIsInterrupted
+export const isInterrupted: <E, A>(self: Exit<E, A>) => boolean = core.exitIsInterrupted
 
 /**
  * Returns a `Some<Cause<E>>` if the specified exit is a `Failure`, `None`
@@ -172,7 +179,7 @@ export const isInterrupted = core.exitIsInterrupted
  * @since 1.0.0
  * @category getters
  */
-export const causeOption = core.exitCauseOption
+export const causeOption: <E, A>(self: Exit<E, A>) => Option.Option<Cause.Cause<E>> = core.exitCauseOption
 
 /**
  * Returns the `A` if specified exit is a `Success`, otherwise returns the
@@ -182,7 +189,7 @@ export const causeOption = core.exitCauseOption
  * @since 1.0.0
  * @category getters
  */
-export const getOrElse = core.exitGetOrElse
+export const getOrElse: <E, A>(orElse: (cause: Cause.Cause<E>) => A) => (self: Exit<E, A>) => A = core.exitGetOrElse
 
 /**
  * Executes the predicate on the value of the specified exit if it is a
@@ -191,7 +198,7 @@ export const getOrElse = core.exitGetOrElse
  * @since 1.0.0
  * @category elements
  */
-export const exists = core.exitExists
+export const exists: <A>(predicate: Predicate<A>) => <E>(self: Exit<E, A>) => boolean = core.exitExists
 
 /**
  * Maps the `Success` value of the specified exit to the provided constant
@@ -200,7 +207,7 @@ export const exists = core.exitExists
  * @since 1.0.0
  * @category mapping
  */
-export const as = core.exitAs
+export const as: <A1>(value: A1) => <E, A>(self: Exit<E, A>) => Exit<E, A1> = core.exitAs
 
 /**
  * Maps the `Success` value of the specified exit to a void.
@@ -208,7 +215,7 @@ export const as = core.exitAs
  * @since 1.0.0
  * @category mapping
  */
-export const asUnit = core.exitAsUnit
+export const asUnit: <E, A>(self: Exit<E, A>) => Exit<E, void> = core.exitAsUnit
 
 /**
  * Maps over the `Success` value of the specified exit using the provided
@@ -217,7 +224,7 @@ export const asUnit = core.exitAsUnit
  * @since 1.0.0
  * @category mapping
  */
-export const map = core.exitMap
+export const map: <A, B>(f: (a: A) => B) => <E>(self: Exit<E, A>) => Exit<E, B> = core.exitMap
 
 /**
  * Maps over the `Success` and `Failure` cases of the specified exit using the
@@ -226,7 +233,10 @@ export const map = core.exitMap
  * @since 1.0.0
  * @category mapping
  */
-export const mapBoth = core.exitMapBoth
+export const mapBoth: <E, A, E1, A1>(
+  onFailure: (e: E) => E1,
+  onSuccess: (a: A) => A1
+) => (self: Exit<E, A>) => Exit<E1, A1> = core.exitMapBoth
 
 /**
  * Maps over the error contained in the `Failure` of the specified exit using
@@ -235,7 +245,7 @@ export const mapBoth = core.exitMapBoth
  * @since 1.0.0
  * @category mapping
  */
-export const mapError = core.exitMapError
+export const mapError: <E, E1>(f: (e: E) => E1) => <A>(self: Exit<E, A>) => Exit<E1, A> = core.exitMapError
 
 /**
  * Maps over the `Cause` contained in the `Failure` of the specified exit using
@@ -244,43 +254,56 @@ export const mapError = core.exitMapError
  * @since 1.0.0
  * @category mapping
  */
-export const mapErrorCause = core.exitMapErrorCause
+export const mapErrorCause: <E, E1>(
+  f: (cause: Cause.Cause<E>) => Cause.Cause<E1>
+) => <A>(self: Exit<E, A>) => Exit<E1, A> = core.exitMapErrorCause
 
 /**
  * @since 1.0.0
  * @category sequencing
  */
-export const flatMap = core.exitFlatMap
+export const flatMap: <A, E1, A1>(f: (a: A) => Exit<E1, A1>) => <E>(self: Exit<E, A>) => Exit<E1 | E, A1> =
+  core.exitFlatMap
 
 /**
  * @since 1.0.0
  * @category sequencing
  */
-export const flatMapEffect = core.exitFlatMapEffect
+export const flatMapEffect: <E, A, R, E1, A1>(
+  f: (a: A) => Effect.Effect<R, E1, Exit<E, A1>>
+) => (self: Exit<E, A>) => Effect.Effect<R, E1, Exit<E, A1>> = core.exitFlatMapEffect
 
 /**
  * @since 1.0.0
  * @category sequencing
  */
-export const flatten = core.exitFlatten
+export const flatten: <E, E1, A>(self: Exit<E, Exit<E1, A>>) => Exit<E | E1, A> = core.exitFlatten
 
 /**
  * @since 1.0.0
  * @category folding
  */
-export const match = core.exitMatch
+export const match: <E, A, Z>(
+  onFailure: (cause: Cause.Cause<E>) => Z,
+  onSuccess: (a: A) => Z
+) => (self: Exit<E, A>) => Z = core.exitMatch
 
 /**
  * @since 1.0.0
  * @category folding
  */
-export const matchEffect = core.exitMatchEffect
+export const matchEffect: <E, A, R1, E1, A1, R2, E2, A2>(
+  onFailure: (cause: Cause.Cause<E>) => Effect.Effect<R1, E1, A1>,
+  onSuccess: (a: A) => Effect.Effect<R2, E2, A2>
+) => (self: Exit<E, A>) => Effect.Effect<R1 | R2, E1 | E2, A1 | A2> = core.exitMatchEffect
 
 /**
  * @since 1.0.0
  * @category traversing
  */
-export const forEachEffect = core.exitForEachEffect
+export const forEachEffect: <A, R, E1, B>(
+  f: (a: A) => Effect.Effect<R, E1, B>
+) => <E>(self: Exit<E, A>) => Effect.Effect<R, never, Exit<E1 | E, B>> = core.exitForEachEffect
 
 /**
  * Sequentially zips the this result with the specified result or else returns
@@ -289,7 +312,8 @@ export const forEachEffect = core.exitForEachEffect
  * @since 1.0.0
  * @category zipping
  */
-export const zip = core.exitZip
+export const zip: <E2, A2>(that: Exit<E2, A2>) => <E, A>(self: Exit<E, A>) => Exit<E2 | E, readonly [A, A2]> =
+  core.exitZip
 
 /**
  * Sequentially zips the this result with the specified result discarding the
@@ -298,7 +322,7 @@ export const zip = core.exitZip
  * @since 1.0.0
  * @category zipping
  */
-export const zipLeft = core.exitZipLeft
+export const zipLeft: <E2, A2>(that: Exit<E2, A2>) => <E, A>(self: Exit<E, A>) => Exit<E2 | E, A> = core.exitZipLeft
 
 /**
  * Sequentially zips the this result with the specified result discarding the
@@ -307,7 +331,7 @@ export const zipLeft = core.exitZipLeft
  * @since 1.0.0
  * @category zipping
  */
-export const zipRight = core.exitZipRight
+export const zipRight: <E2, A2>(that: Exit<E2, A2>) => <E, A>(self: Exit<E, A>) => Exit<E2 | E, A2> = core.exitZipRight
 
 /**
  * Parallelly zips the this result with the specified result or else returns
@@ -316,7 +340,8 @@ export const zipRight = core.exitZipRight
  * @since 1.0.0
  * @category zipping
  */
-export const zipPar = core.exitZipPar
+export const zipPar: <E2, A2>(that: Exit<E2, A2>) => <E, A>(self: Exit<E, A>) => Exit<E2 | E, readonly [A, A2]> =
+  core.exitZipPar
 
 /**
  * Parallelly zips the this result with the specified result discarding the
@@ -325,7 +350,8 @@ export const zipPar = core.exitZipPar
  * @since 1.0.0
  * @category zipping
  */
-export const zipParLeft = core.exitZipParLeft
+export const zipParLeft: <E2, A2>(that: Exit<E2, A2>) => <E, A>(self: Exit<E, A>) => Exit<E2 | E, A> =
+  core.exitZipParLeft
 
 /**
  * Parallelly zips the this result with the specified result discarding the
@@ -334,7 +360,8 @@ export const zipParLeft = core.exitZipParLeft
  * @since 1.0.0
  * @category zipping
  */
-export const zipParRight = core.exitZipParRight
+export const zipParRight: <E2, A2>(that: Exit<E2, A2>) => <E, A>(self: Exit<E, A>) => Exit<E2 | E, A2> =
+  core.exitZipParRight
 
 /**
  * Zips this exit together with that exit using the specified combination
@@ -343,7 +370,11 @@ export const zipParRight = core.exitZipParRight
  * @since 1.0.0
  * @category zipping
  */
-export const zipWith = core.exitZipWith
+export const zipWith: <E, E1, A, B, C>(
+  that: Exit<E1, B>,
+  f: (a: A, b: B) => C,
+  g: (c: Cause.Cause<E>, c1: Cause.Cause<E1>) => Cause.Cause<E | E1>
+) => (self: Exit<E, A>) => Exit<E | E1, C> = core.exitZipWith
 
 /**
  * Removes any annotation from the failure cause
@@ -351,4 +382,4 @@ export const zipWith = core.exitZipWith
  * @since 1.0.0
  * @category filtering
  */
-export const unannotate = core.exitUnannotate
+export const unannotate: <E, A>(exit: Exit<E, A>) => Exit<E, A> = core.exitUnannotate

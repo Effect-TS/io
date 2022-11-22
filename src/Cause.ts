@@ -180,7 +180,7 @@ export declare namespace Cause {
    */
   export interface SpanAnnotation {
     readonly [SpanAnnotationTypeId]: SpanAnnotationTypeId
-    readonly currentSpanURI: Option<string>
+    readonly currentSpanURI: Option.Option<string>
   }
 }
 
