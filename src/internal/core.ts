@@ -1032,6 +1032,74 @@ export const interruptWithFiber = (fiberId: FiberId.FiberId) => {
 }
 
 // -----------------------------------------------------------------------------
+// LogLevel
+// -----------------------------------------------------------------------------
+
+/** @internal */
+export const logLevelAll: LogLevel.LogLevel = {
+  _tag: "All",
+  syslog: 0,
+  label: "ALL",
+  ordinal: Number.MIN_SAFE_INTEGER
+}
+
+/** @internal */
+export const logLevelFatal: LogLevel.LogLevel = {
+  _tag: "Fatal",
+  syslog: 2,
+  label: "FATAL",
+  ordinal: 50000
+}
+
+/** @internal */
+export const logLevelError: LogLevel.LogLevel = {
+  _tag: "Error",
+  syslog: 3,
+  label: "ERROR",
+  ordinal: 40000
+}
+
+/** @internal */
+export const logLevelWarning: LogLevel.LogLevel = {
+  _tag: "Warning",
+  syslog: 4,
+  label: "WARN",
+  ordinal: 30000
+}
+
+/** @internal */
+export const logLevelInfo: LogLevel.LogLevel = {
+  _tag: "Info",
+  syslog: 6,
+  label: "INFO",
+  ordinal: 20000
+}
+
+/** @internal */
+export const logLevelDebug: LogLevel.LogLevel = {
+  _tag: "Debug",
+  syslog: 7,
+  label: "DEBUG",
+  ordinal: 10000
+}
+
+/** @internal */
+export const logLevelTrace: LogLevel.LogLevel = {
+  _tag: "Trace",
+  syslog: 7,
+  label: "TRACE",
+  ordinal: 0
+}
+
+/** @internal */
+export const logLevelNone: LogLevel.LogLevel = {
+  _tag: "None",
+  syslog: 7,
+  label: "OFF",
+  ordinal: Number.MAX_SAFE_INTEGER
+}
+
+// -----------------------------------------------------------------------------
 // FiberRef
 // -----------------------------------------------------------------------------
 
@@ -1274,12 +1342,9 @@ export const currentLogAnnotations: FiberRef.FiberRef<ReadonlyMap<string, string
 )
 
 /** @internal */
-export const currentLogLevel: FiberRef.FiberRef<LogLevel.LogLevel> = fiberRefUnsafeMake<LogLevel.LogLevel>({
-  _tag: "Info",
-  syslog: 6,
-  label: "INFO",
-  ordinal: 20000
-})
+export const currentLogLevel: FiberRef.FiberRef<LogLevel.LogLevel> = fiberRefUnsafeMake<LogLevel.LogLevel>(
+  logLevelInfo
+)
 
 /** @internal */
 export const currentLogSpan: FiberRef.FiberRef<List.List<LogSpan.LogSpan>> = fiberRefUnsafeMake(
