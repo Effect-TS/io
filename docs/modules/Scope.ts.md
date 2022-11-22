@@ -47,7 +47,7 @@ If an ExecutionStrategy is not provided `sequential` will be used.
 
 ```ts
 export declare const make: (
-  executionStrategy?: Sequential | Parallel | ParallelN | undefined
+  executionStrategy?: ExecutionStrategy.ExecutionStrategy | undefined
 ) => Effect.Effect<never, never, CloseableScope>
 ```
 
@@ -131,7 +131,7 @@ export interface Scope {
    * @macro traced
    * @internal
    */
-  readonly fork: (strategy: ExecutionStrategy) => Effect.Effect<never, never, Scope.Closeable>
+  readonly fork: (strategy: ExecutionStrategy.ExecutionStrategy) => Effect.Effect<never, never, Scope.Closeable>
   /**
    * @macro traced
    * @internal
@@ -199,7 +199,9 @@ automatically be closed when this scope is closed.
 **Signature**
 
 ```ts
-export declare const fork: (strategy: ExecutionStrategy) => (self: Scope) => Effect.Effect<never, never, CloseableScope>
+export declare const fork: (
+  strategy: ExecutionStrategy.ExecutionStrategy
+) => (self: Scope) => Effect.Effect<never, never, CloseableScope>
 ```
 
 Added in v1.0.0

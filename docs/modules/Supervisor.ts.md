@@ -20,6 +20,8 @@ Added in v1.0.0
   - [fromEffect](#fromeffect)
   - [none](#none)
   - [track](#track)
+- [environment](#environment)
+  - [addSupervisor](#addsupervisor)
 - [models](#models)
   - [Supervisor (interface)](#supervisor-interface)
 - [symbols](#symbols)
@@ -40,8 +42,8 @@ Creates a new supervisor that tracks children in a set.
 
 ```ts
 export declare const fibersIn: (
-  ref: MutableRef<SortedSet<Fiber.RuntimeFiber<any, any>>>
-) => Effect.Effect<never, never, Supervisor<SortedSet<Fiber.RuntimeFiber<any, any>>>>
+  ref: MutableRef.MutableRef<SortedSet.SortedSet<Fiber.RuntimeFiber<any, any>>>
+) => Effect.Effect<never, never, Supervisor<SortedSet.SortedSet<Fiber.RuntimeFiber<any, any>>>>
 ```
 
 Added in v1.0.0
@@ -77,7 +79,19 @@ Creates a new supervisor that tracks children in a set.
 **Signature**
 
 ```ts
-export declare const track: () => Effect.Effect<never, never, Supervisor<Chunk<Fiber.RuntimeFiber<any, any>>>>
+export declare const track: () => Effect.Effect<never, never, Supervisor<Chunk.Chunk<Fiber.RuntimeFiber<any, any>>>>
+```
+
+Added in v1.0.0
+
+# environment
+
+## addSupervisor
+
+**Signature**
+
+```ts
+export declare const addSupervisor: <A>(supervisor: Supervisor<A>) => Layer.Layer<never, never, never>
 ```
 
 Added in v1.0.0
@@ -176,7 +190,7 @@ Unsafely creates a new supervisor that tracks children in a set.
 **Signature**
 
 ```ts
-export declare const unsafeTrack: () => Supervisor<Chunk<Fiber.RuntimeFiber<any, any>>>
+export declare const unsafeTrack: () => Supervisor<Chunk.Chunk<Fiber.RuntimeFiber<any, any>>>
 ```
 
 Added in v1.0.0

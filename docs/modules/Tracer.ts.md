@@ -32,7 +32,7 @@ Added in v1.0.0
 
 ```ts
 export declare const make: (
-  withSpan: (spanName: string) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  withSpan: (spanName: string, trace?: string | undefined) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
 ) => Tracer
 ```
 
@@ -45,7 +45,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const currentTracer: FiberRef<Option<Tracer>>
+export declare const currentTracer: FiberRef<Option.Option<Tracer>>
 ```
 
 Added in v1.0.0
@@ -63,7 +63,7 @@ This service is meant to be implemented by exporters such as opentelemetry.
 ```ts
 export interface Tracer {
   readonly _id: TracerTypeId
-  readonly withSpan: (spanName: string) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  readonly withSpan: (spanName: string, trace?: string) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
 }
 ```
 

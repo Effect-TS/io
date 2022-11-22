@@ -43,7 +43,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const continueWith: (interval: Interval) => ScheduleDecision
+export declare const continueWith: (interval: Interval.Interval) => ScheduleDecision
 ```
 
 Added in v1.0.0

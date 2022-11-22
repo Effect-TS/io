@@ -79,7 +79,7 @@ the provided iterable contains no elements, `None` will be returned.
 **Signature**
 
 ```ts
-export declare const collectAll: <E, A>(exits: Iterable<Exit<E, A>>) => Option<Exit<E, List<A>>>
+export declare const collectAll: <E, A>(exits: Iterable<Exit<E, A>>) => Option.Option<Exit<E, List.List<A>>>
 ```
 
 Added in v1.0.0
@@ -94,7 +94,7 @@ the provided iterable contains no elements, `None` will be returned.
 **Signature**
 
 ```ts
-export declare const collectAllPar: <E, A>(exits: Iterable<Exit<E, A>>) => Option<Exit<E, List<A>>>
+export declare const collectAllPar: <E, A>(exits: Iterable<Exit<E, A>>) => Option.Option<Exit<E, List.List<A>>>
 ```
 
 Added in v1.0.0
@@ -144,7 +144,7 @@ the `Fiber` running an `Effect` workflow was terminated due to interruption.
 **Signature**
 
 ```ts
-export declare const interrupt: (fiberId: FiberId) => Exit<never, never>
+export declare const interrupt: (fiberId: FiberId.FiberId) => Exit<never, never>
 ```
 
 Added in v1.0.0
@@ -182,7 +182,7 @@ Converts an `Either<E, A>` into an `Exit<E, A>`.
 **Signature**
 
 ```ts
-export declare const fromEither: <E, A>(either: Either<E, A>) => Exit<E, A>
+export declare const fromEither: <E, A>(either: Either.Either<E, A>) => Exit<E, A>
 ```
 
 Added in v1.0.0
@@ -194,7 +194,7 @@ Converts an `Option<A>` into an `Exit<void, A>`.
 **Signature**
 
 ```ts
-export declare const fromOption: <A>(option: Option<A>) => Exit<void, A>
+export declare const fromOption: <A>(option: Option.Option<A>) => Exit<void, A>
 ```
 
 Added in v1.0.0
@@ -266,7 +266,7 @@ otherwise.
 **Signature**
 
 ```ts
-export declare const causeOption: <E, A>(self: Exit<E, A>) => Option<Cause.Cause<E>>
+export declare const causeOption: <E, A>(self: Exit<E, A>) => Option.Option<Cause.Cause<E>>
 ```
 
 Added in v1.0.0

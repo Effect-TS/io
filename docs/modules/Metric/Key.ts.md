@@ -77,7 +77,7 @@ Creates a metric key for a histogram, with the specified name and boundaries.
 **Signature**
 
 ```ts
-export declare const histogram: (name: string, boundaries: MetricBoundaries) => MetricKey.Histogram
+export declare const histogram: (name: string, boundaries: MetricBoundaries.MetricBoundaries) => MetricKey.Histogram
 ```
 
 Added in v1.0.0
@@ -92,10 +92,10 @@ maxSize, error, and quantiles.
 ```ts
 export declare const summary: (
   name: string,
-  maxAge: Duration,
+  maxAge: Duration.Duration,
   maxSize: number,
   error: number,
-  quantiles: Chunk<number>
+  quantiles: Chunk.Chunk<number>
 ) => MetricKey.Summary
 ```
 

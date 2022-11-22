@@ -21,8 +21,8 @@ Added in v1.0.0
   - [sync](#sync)
   - [test](#test)
 - [environment](#environment)
+  - [addLogger](#addlogger)
   - [console](#console)
-  - [layer](#layer)
 - [filtering](#filtering)
   - [filterLogLevel](#filterloglevel)
 - [mapping](#mapping)
@@ -116,22 +116,33 @@ Added in v1.0.0
 
 # environment
 
+## addLogger
+
+**Signature**
+
+```ts
+export declare const addLogger: <B>(logger: Logger<string, B>) => Layer.Layer<never, never, never>
+```
+
+Added in v1.0.0
+
 ## console
 
 **Signature**
 
 ```ts
-export declare const console: (minLevel?: LogLevel.LogLevel) => Layer<never, never, never>
-```
-
-Added in v1.0.0
-
-## layer
-
-**Signature**
-
-```ts
-export declare const layer: <B>(logger: Logger<string, B>) => Layer<never, never, never>
+export declare const console: (
+  minLevel?:
+    | LogLevel.All
+    | LogLevel.Fatal
+    | LogLevel.Error
+    | LogLevel.Warning
+    | LogLevel.Info
+    | LogLevel.Debug
+    | LogLevel.Trace
+    | LogLevel.None
+    | undefined
+) => Layer.Layer<never, never, never>
 ```
 
 Added in v1.0.0
@@ -148,7 +159,7 @@ satisfies the specified predicate.
 ```ts
 export declare const filterLogLevel: (
   f: (logLevel: LogLevel.LogLevel) => boolean
-) => <Message, Output>(self: Logger<Message, Output>) => Logger<Message, Option<Output>>
+) => <Message, Output>(self: Logger<Message, Output>) => Logger<Message, Option.Option<Output>>
 ```
 
 Added in v1.0.0
@@ -160,7 +171,9 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const contramap: typeof internal.contramap
+export declare const contramap: <Message, Message2>(
+  f: (message: Message2) => Message
+) => <Output>(self: Logger<Message, Output>) => Logger<Message2, Output>
 ```
 
 Added in v1.0.0

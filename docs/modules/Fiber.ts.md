@@ -103,7 +103,7 @@ fibers, sequentially, from left to right.
 ```ts
 export declare const orElseEither: <E2, A2>(
   that: Fiber<E2, A2>
-) => <E, A>(self: Fiber<E, A>) => Fiber<E2 | E, Either<A, A2>>
+) => <E, A>(self: Fiber<E, A>) => Fiber<E2 | E, Either.Either<A, A2>>
 ```
 
 Added in v1.0.0
@@ -118,7 +118,7 @@ results.
 **Signature**
 
 ```ts
-export declare const collectAll: typeof fiberRuntime.fiberCollectAll
+export declare const collectAll: <E, A>(fibers: Iterable<Fiber<E, A>>) => Fiber<E, Chunk.Chunk<A>>
 ```
 
 Added in v1.0.0
@@ -154,7 +154,7 @@ Creates a `Fiber` that has already failed with the specified cause.
 **Signature**
 
 ```ts
-export declare const failCause: <E>(cause: Cause<E>) => Fiber<E, never>
+export declare const failCause: <E>(cause: Cause.Cause<E>) => Fiber<E, never>
 ```
 
 Added in v1.0.0
@@ -333,7 +333,7 @@ scope is closed.
 **Signature**
 
 ```ts
-export declare const scoped: <E, A>(self: Fiber<E, A>) => Effect.Effect<Scope, never, Fiber<E, A>>
+export declare const scoped: <E, A>(self: Fiber<E, A>) => Effect.Effect<Scope.Scope, never, Fiber<E, A>>
 ```
 
 Added in v1.0.0
@@ -347,7 +347,10 @@ Folds over the `Fiber` or `RuntimeFiber`.
 **Signature**
 
 ```ts
-export declare const match: typeof internal.match
+export declare const match: <E, A, Z>(
+  onFiber: (_: Fiber<E, A>) => Z,
+  onRuntimeFiber: (_: RuntimeFiber<E, A>) => Z
+) => (self: Fiber<E, A>) => Z
 ```
 
 Added in v1.0.0
@@ -425,7 +428,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const Order: Order<RuntimeFiber<unknown, unknown>>
+export declare const Order: order.Order<RuntimeFiber<unknown, unknown>>
 ```
 
 Added in v1.0.0
