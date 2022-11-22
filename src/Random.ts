@@ -65,7 +65,7 @@ export interface Random {
  * @since 1.0.0
  * @category constructors
  */
-export const next = defaultServices.next
+export const next: () => Effect.Effect<never, never, number> = defaultServices.next
 
 /**
  * Returns the next integer value from the pseudo-random number generator.
@@ -74,7 +74,7 @@ export const next = defaultServices.next
  * @since 1.0.0
  * @category constructors
  */
-export const nextInt = defaultServices.nextInt
+export const nextInt: () => Effect.Effect<never, never, number> = defaultServices.nextInt
 
 /**
  * Returns the next boolean value from the pseudo-random number generator.
@@ -83,7 +83,7 @@ export const nextInt = defaultServices.nextInt
  * @since 1.0.0
  * @category constructors
  */
-export const nextBoolean = defaultServices.nextBoolean
+export const nextBoolean: () => Effect.Effect<never, never, boolean> = defaultServices.nextBoolean
 
 /**
  * Returns the next numeric value in the specified range from the
@@ -93,7 +93,7 @@ export const nextBoolean = defaultServices.nextBoolean
  * @since 1.0.0
  * @category constructors
  */
-export const nextRange = defaultServices.nextRange
+export const nextRange: (min: number, max: number) => Effect.Effect<never, never, number> = defaultServices.nextRange
 
 /**
  * Returns the next integer value in the specified range from the
@@ -103,7 +103,8 @@ export const nextRange = defaultServices.nextRange
  * @since 1.0.0
  * @category constructors
  */
-export const nextIntBetween = defaultServices.nextIntBetween
+export const nextIntBetween: (min: number, max: number) => Effect.Effect<never, never, number> =
+  defaultServices.nextIntBetween
 
 /**
  * Uses the pseudo-random number generator to shuffle the specified iterable.
@@ -112,7 +113,8 @@ export const nextIntBetween = defaultServices.nextIntBetween
  * @since 1.0.0
  * @category constructors
  */
-export const shuffle = defaultServices.shuffle
+export const shuffle: <A>(elements: Iterable<A>) => Effect.Effect<never, never, Chunk.Chunk<A>> =
+  defaultServices.shuffle
 
 /**
  * Retreives the `Random` service from the environment and uses it to run the
@@ -122,4 +124,5 @@ export const shuffle = defaultServices.shuffle
  * @since 1.0.0
  * @category constructors
  */
-export const randomWith = defaultServices.randomWith
+export const randomWith: <R, E, A>(f: (random: Random) => Effect.Effect<R, E, A>) => Effect.Effect<R, E, A> =
+  defaultServices.randomWith
