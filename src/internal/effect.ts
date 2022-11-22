@@ -2588,12 +2588,14 @@ export const withMetric = <Type, In, Out>(metric: Metric.Metric<Type, In, Out>) 
 }
 
 /** @internal */
-export const withSpan = (name: string) =>
-  <R, E, A>(self: Effect.Effect<R, E, A>) =>
+export const withSpan = (name: string) => {
+  const trace = getCallTrace()
+  return <R, E, A>(self: Effect.Effect<R, E, A>) =>
     pipe(
       core.fiberRefGet(currentTracer),
       core.flatMap(Option.match(
         () => self,
-        (tracer) => tracer.withSpan(name)(self)
+        (tracer) => tracer.withSpan(name, trace)(self)
       ))
-    )
+    ).traced(trace)
+}
