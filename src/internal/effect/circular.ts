@@ -40,7 +40,7 @@ export const acquireReleaseInterruptible = <R, E, A, R2, X>(
 
 /** @internal */
 export const awaitAllChildren = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-  return pipe(self, ensuringChildren(fiberRuntime.awaitAll))
+  return pipe(self, ensuringChildren(fiberRuntime.fiberAwaitAll))
 }
 
 /** @internal */
@@ -81,7 +81,7 @@ const computeCachedValue = <R, E, A>(
   start: number
 ): Effect.Effect<R, never, Option.Option<readonly [number, Deferred.Deferred<E, A>]>> => {
   return pipe(
-    core.makeDeferred<E, A>(),
+    core.deferredMake<E, A>(),
     core.tap((deferred) => pipe(self, core.intoDeferred(deferred))),
     core.map((deferred) => Option.some([start + timeToLive.millis, deferred] as const))
   )
@@ -119,7 +119,7 @@ const getCachedValue = <R, E, A>(
           effect.dieMessage(
             "BUG: Effect.cachedInvalidate - please report an issue at https://github.com/Effect-TS/io/issues"
           ) :
-          restore(core.awaitDeferred(option.value[1]))
+          restore(core.deferredAwait(option.value[1]))
       )
     )
   )
@@ -181,7 +181,7 @@ export const ensuringChild = <R2, X>(
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E, A> => {
     return pipe(
       self,
-      ensuringChildren((children) => f(fiberRuntime.collectAll(children)))
+      ensuringChildren((children) => f(fiberRuntime.fiberCollectAll(children)))
     ).traced(trace)
   }
 }
@@ -210,7 +210,7 @@ export const forkAll = <R, E, A>(
   effects: Iterable<Effect.Effect<R, E, A>>
 ): Effect.Effect<R, never, Fiber.Fiber<E, Chunk.Chunk<A>>> => {
   const trace = getCallTrace()
-  return pipe(effects, core.forEach(fiberRuntime.fork), core.map(fiberRuntime.collectAll)).traced(trace)
+  return pipe(effects, core.forEach(fiberRuntime.fork), core.map(fiberRuntime.fiberCollectAll)).traced(trace)
 }
 
 /** @internal */
@@ -276,7 +276,7 @@ export const memoizeFunction = <R, E, A, B>(
             const result = pipe(map, MutableHashMap.get(a))
             if (Option.isNone(result)) {
               return pipe(
-                core.makeDeferred<E, readonly [FiberRefsPatch.FiberRefsPatch, B]>(),
+                core.deferredMake<E, readonly [FiberRefsPatch.FiberRefsPatch, B]>(),
                 core.tap((deferred) =>
                   pipe(
                     effect.diffFiberRefs(f(a)),
@@ -289,7 +289,7 @@ export const memoizeFunction = <R, E, A, B>(
             }
             return core.succeed([result.value, map] as const)
           }),
-          core.flatMap(core.awaitDeferred),
+          core.flatMap(core.deferredAwait),
           core.flatMap(([patch, b]) => pipe(effect.patchFiberRefs(patch), core.as(b)))
         )
     )
@@ -403,12 +403,12 @@ export const raceFibersWith = <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
     return core.withFiberRuntime<R | R1 | R2 | R3, E2 | E3, A2 | A3>((parentFiber, parentStatus) => {
       const parentRuntimeFlags = parentStatus.runtimeFlags
       const raceIndicator = MutableRef.make(true)
-      const leftFiber: fiberRuntime.FiberRuntime<E, A> = fiberRuntime.unsafeForkUnstarted(
+      const leftFiber: fiberRuntime.FiberRuntime<E, A> = fiberRuntime.unsafeMakeChildFiber(
         self,
         parentFiber,
         parentRuntimeFlags
       )
-      const rightFiber: fiberRuntime.FiberRuntime<E1, A1> = fiberRuntime.unsafeForkUnstarted(
+      const rightFiber: fiberRuntime.FiberRuntime<E1, A1> = fiberRuntime.unsafeMakeChildFiber(
         that,
         parentFiber,
         parentRuntimeFlags
@@ -507,7 +507,7 @@ export const scheduleForked = <R2, Out>(schedule: Schedule.Schedule<R2, unknown,
 export const supervised = <X>(supervisor: Supervisor.Supervisor<X>) => {
   const trace = getCallTrace()
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-    const supervise = pipe(fiberRuntime.currentSupervisor, core.locallyWithFiberRef((s) => s.zip(supervisor)))
+    const supervise = pipe(fiberRuntime.currentSupervisor, core.fiberRefLocallyWith((s) => s.zip(supervisor)))
     return supervise(self).traced(trace)
   }
 }
@@ -612,19 +612,19 @@ export const zipWithPar = <R2, E2, A2, A, B>(
   return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, B> => {
     return core.uninterruptibleMask((restore) =>
       core.transplant((graft) => {
-        const deferred = core.unsafeMakeDeferred<void, void>(FiberId.none)
+        const deferred = core.deferredUnsafeMake<void, void>(FiberId.none)
         const ref = MutableRef.make(false)
         return pipe(
           forkZipWithPar(self, graft, restore, deferred, ref),
           core.zip(forkZipWithPar(that, graft, restore, deferred, ref)),
           core.flatMap(([left, right]) =>
             pipe(
-              restore(core.awaitDeferred(deferred)),
+              restore(core.deferredAwait(deferred)),
               core.foldCauseEffect(
                 (cause) =>
                   pipe(
-                    fiberRuntime.interruptFork(left),
-                    core.zipRight(fiberRuntime.interruptFork(right)),
+                    fiberRuntime.fiberInterruptFork(left),
+                    core.zipRight(fiberRuntime.fiberInterruptFork(right)),
                     core.zipRight(
                       pipe(
                         internalFiber._await(left),
@@ -670,13 +670,13 @@ const forkZipWithPar = <R, E, A>(
       (cause) =>
         pipe(
           deferred,
-          core.failDeferred<void>(void 0),
+          core.deferredFail<void>(void 0),
           core.zipRight(core.failCause(cause))
         ),
       (value) => {
         const flag = MutableRef.get(ref)
         if (flag) {
-          pipe(deferred, core.unsafeDoneDeferred<void, void>(core.unit()))
+          pipe(deferred, core.deferredUnsafeDone<void, void>(core.unit()))
           return core.succeed(value)
         }
         pipe(ref, MutableRef.set(true))

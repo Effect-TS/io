@@ -1242,14 +1242,14 @@ export const logSpan = (label: string) => {
   const trace = getCallTrace()
   return <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
     return pipe(
-      core.getFiberRef(core.currentLogSpan),
+      core.fiberRefGet(core.currentLogSpan),
       core.flatMap((stack) =>
         pipe(
           Clock.currentTimeMillis(),
           core.flatMap((now) =>
             core.suspendSucceed(() => {
               const logSpan = LogSpan.make(label, now)
-              return core.locallyFiberRef(
+              return core.fiberRefLocally(
                 pipe(stack, List.prepend(logSpan)) as List.List<LogSpan.LogSpan>
               )(core.currentLogSpan)(effect)
             })
@@ -1265,12 +1265,12 @@ export const logAnnotate = (key: string, value: string) => {
   const trace = getCallTrace()
   return <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
     return pipe(
-      core.getFiberRef(core.currentLogAnnotations),
+      core.fiberRefGet(core.currentLogAnnotations),
       core.flatMap((annotations) =>
         core.suspendSucceed(() =>
           pipe(
             effect,
-            core.locallyFiberRef(
+            core.fiberRefLocally(
               (annotations as Map<string, string>).set(key, value) as ReadonlyMap<string, string>
             )(core.currentLogAnnotations)
           )
@@ -1283,7 +1283,7 @@ export const logAnnotate = (key: string, value: string) => {
 /** @internal */
 export const logAnnotations = (): Effect.Effect<never, never, ReadonlyMap<string, string>> => {
   const trace = getCallTrace()
-  return core.getFiberRef(core.currentLogAnnotations).traced(trace)
+  return core.fiberRefGet(core.currentLogAnnotations).traced(trace)
 }
 
 /** @internal */
@@ -1427,7 +1427,7 @@ export const memoize = <R, E, A>(
 ): Effect.Effect<never, never, Effect.Effect<R, E, A>> => {
   const trace = getCallTrace()
   return pipe(
-    core.makeDeferred<E, readonly [FiberRefsPatch.FiberRefsPatch, A]>(),
+    core.deferredMake<E, readonly [FiberRefsPatch.FiberRefsPatch, A]>(),
     core.flatMap((deferred) =>
       pipe(
         diffFiberRefs(self),
@@ -1438,7 +1438,7 @@ export const memoize = <R, E, A>(
             complete,
             core.zipRight(
               pipe(
-                core.awaitDeferred(deferred),
+                core.deferredAwait(deferred),
                 core.flatMap(([patch, a]) => pipe(patchFiberRefs(patch), core.as(a)))
               )
             )

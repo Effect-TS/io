@@ -273,7 +273,7 @@ export const asyncEffect = <R, E, A, R2, E2, X>(
 ): Effect.Effect<R | R2, E | E2, A> => {
   const trace = getCallTrace()
   return pipe(
-    core.makeDeferred<E | E2, A>(),
+    core.deferredMake<E | E2, A>(),
     core.flatMap((deferred) =>
       pipe(
         runtime<R | R2>(),
@@ -283,11 +283,11 @@ export const asyncEffect = <R, E, A, R2, E2, X>(
               restore(
                 pipe(
                   register((cb) => runtime.unsafeRunAsync(pipe(cb, core.intoDeferred(deferred)))),
-                  core.catchAllCause((cause) => pipe(deferred, core.failCauseDeferred(cause as Cause.Cause<E | E2>)))
+                  core.catchAllCause((cause) => pipe(deferred, core.deferredFailCause(cause as Cause.Cause<E | E2>)))
                 )
               ),
               FiberRuntime.fork,
-              core.zipRight(restore(core.awaitDeferred(deferred)))
+              core.zipRight(restore(core.deferredAwait(deferred)))
             )
           )
         )

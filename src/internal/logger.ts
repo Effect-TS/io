@@ -28,7 +28,7 @@ const loggerVariance = {
 /** @internal */
 export const currentLoggers: FiberRef.FiberRef<
   HashSet.HashSet<Logger.Logger<string, any>>
-> = core.unsafeMakeHashSetFiberRef(HashSet.empty())
+> = core.fiberRefUnsafeMakeHashSet(HashSet.empty())
 
 /** @internal */
 export const defaultLogger: Logger.Logger<string, string> = {

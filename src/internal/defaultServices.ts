@@ -24,7 +24,7 @@ export const liveServices: Context.Context<DefaultServices.DefaultServices> = pi
  * @since 1.0.0
  * @category fiberRefs
  */
-export const currentServices = core.unsafeMakeEnvironmentFiberRef(liveServices)
+export const currentServices = core.fiberRefUnsafeMakeEnvironment(liveServices)
 
 // circular with Clock
 
@@ -45,7 +45,7 @@ export const clockWith = <R, E, A>(f: (clock: Clock.Clock) => Effect.Effect<R, E
   const trace = getCallTrace()
   return pipe(
     currentServices,
-    core.getWithFiberRef((services) => f(pipe(services, Context.get(clock.clockTag))))
+    core.fiberRefGetWith((services) => f(pipe(services, Context.get(clock.clockTag))))
   ).traced(trace)
 }
 
@@ -55,7 +55,7 @@ export const withClock = <A extends Clock.Clock>(value: A) => {
   return <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
     return pipe(
       currentServices,
-      core.locallyWithFiberRef(Context.add(clock.clockTag)(value))
+      core.fiberRefLocallyWith(Context.add(clock.clockTag)(value))
     )(effect).traced(trace)
   }
 }
@@ -67,7 +67,7 @@ export const randomWith = <R, E, A>(f: (random: Random.Random) => Effect.Effect<
   const trace = getCallTrace()
   return pipe(
     currentServices,
-    core.getWithFiberRef((services) => f(pipe(services, Context.get(random.randomTag))))
+    core.fiberRefGetWith((services) => f(pipe(services, Context.get(random.randomTag))))
   ).traced(trace)
 }
 

@@ -40,9 +40,15 @@ export type CloseableScopeTypeId = typeof CloseableScopeTypeId
 export interface Scope {
   readonly [ScopeTypeId]: ScopeTypeId
 
-  /** @internal */
+  /**
+   * @macro traced
+   * @internal
+   */
   readonly fork: (strategy: ExecutionStrategy) => Effect.Effect<never, never, Scope.Closeable>
-  /** @internal */
+  /**
+   * @macro traced
+   * @internal
+   */
   readonly addFinalizer: (finalizer: Scope.Finalizer) => Effect.Effect<never, never, void>
 }
 
@@ -53,7 +59,10 @@ export interface Scope {
 export interface CloseableScope extends Scope {
   readonly [CloseableScopeTypeId]: CloseableScopeTypeId
 
-  /** @internal */
+  /**
+   * @macro traced
+   * @internal
+   */
   readonly close: (exit: Exit.Exit<unknown, unknown>) => Effect.Effect<never, never, void>
 }
 
@@ -83,6 +92,7 @@ export declare namespace Scope {
  * Adds a finalizer to this scope. The finalizer is guaranteed to be run when
  * the scope is closed.
  *
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -92,6 +102,7 @@ export const addFinalizer = core.scopeAddFinalizer
  * A simplified version of `addFinalizerWith` when the `finalizer` does not
  * depend on the `Exit` value that the scope is closed with.
  *
+ * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -101,6 +112,7 @@ export const addFinalizerExit = core.scopeAddFinalizerExit
  * Closes a scope with the specified exit value, running all finalizers that
  * have been added to the scope.
  *
+ * @macro traced
  * @category destructors
  * @since 1.0.0
  */
@@ -112,6 +124,7 @@ export const close = core.scopeClose
  * workflow completes execution. This allows extending a scoped value into a
  * larger scope.
  *
+ * @macro traced
  * @category mutations
  * @since 1.0.0
  */
@@ -121,7 +134,8 @@ export const extend = fiberRuntime.scopeExtend
  * Forks a new scope that is a child of this scope. The child scope will
  * automatically be closed when this scope is closed.
  *
- * @category forking
+ * @macro traced
+ * @category mutations
  * @since 1.0.0
  */
 export const fork = core.scopeFork
@@ -132,6 +146,7 @@ export const fork = core.scopeFork
  * soon as the workflow completes execution, whether by success, failure, or
  * interruption.
  *
+ * @macro traced
  * @category destructors
  * @since 1.0.0
  */
@@ -142,6 +157,7 @@ export const use = fiberRuntime.scopeUse
  *
  * If an ExecutionStrategy is not provided `sequential` will be used.
  *
+ * @macro traced
  * @category constructors
  * @since 1.0.0
  */

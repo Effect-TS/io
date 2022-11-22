@@ -71,6 +71,7 @@ export const isSuccess = core.exitIsSuccess
 /**
  * Constructs a new `Exit.Success` containing the specified value of type `A`.
  *
+ * @macro traced
  * @since 1.0.0
  * @category constructors
  */
@@ -80,6 +81,7 @@ export const succeed = core.exitSucceed
  * Constructs a new `Exit.Failure` from the specified recoverable error of type
  * `E`.
  *
+ * @macro traced
  * @since 1.0.0
  * @category constructors
  */
@@ -88,6 +90,7 @@ export const fail = core.exitFail
 /**
  * Constructs a new `Exit.Failure` from the specified `Cause` of type `E`.
  *
+ * @macro traced
  * @since 1.0.0
  * @category constructors
  */
@@ -96,6 +99,7 @@ export const failCause = core.exitFailCause
 /**
  * Constructs a new `Exit.Failure` from the specified unrecoverable defect.
  *
+ * @macro traced
  * @since 1.0.0
  * @category constructors
  */
@@ -105,6 +109,7 @@ export const die = core.exitDie
  * Constructs a new `Exit.Failure` from the specified `FiberId` indicating that
  * the `Fiber` running an `Effect` workflow was terminated due to interruption.
  *
+ * @macro traced
  * @since 1.0.0
  * @category constructors
  */
@@ -135,6 +140,7 @@ export const collectAllPar = core.exitCollectAllPar
 /**
  * Represents an `Exit` which succeeds with `undefined`.
  *
+ * @macro traced
  * @since 1.0.0
  * @category constructors
  */
@@ -143,6 +149,7 @@ export const unit = core.exitUnit
 /**
  * Converts an `Either<E, A>` into an `Exit<E, A>`.
  *
+ * @macro traced
  * @since 1.0.0
  * @category conversions
  */
@@ -151,6 +158,7 @@ export const fromEither = core.exitFromEither
 /**
  * Converts an `Option<A>` into an `Exit<void, A>`.
  *
+ * @macro traced
  * @since 1.0.0
  * @category conversions
  */
@@ -197,6 +205,7 @@ export const exists = core.exitExists
  * Maps the `Success` value of the specified exit to the provided constant
  * value.
  *
+ * @macro traced
  * @since 1.0.0
  * @category mapping
  */
@@ -205,6 +214,7 @@ export const as = core.exitAs
 /**
  * Maps the `Success` value of the specified exit to a void.
  *
+ * @macro traced
  * @since 1.0.0
  * @category mapping
  */
@@ -214,6 +224,7 @@ export const asUnit = core.exitAsUnit
  * Maps over the `Success` value of the specified exit using the provided
  * function.
  *
+ * @macro traced
  * @since 1.0.0
  * @category mapping
  */
@@ -223,6 +234,7 @@ export const map = core.exitMap
  * Maps over the `Success` and `Failure` cases of the specified exit using the
  * provided functions.
  *
+ * @macro traced
  * @since 1.0.0
  * @category mapping
  */
@@ -232,6 +244,7 @@ export const mapBoth = core.exitMapBoth
  * Maps over the error contained in the `Failure` of the specified exit using
  * the provided function.
  *
+ * @macro traced
  * @since 1.0.0
  * @category mapping
  */
@@ -241,24 +254,28 @@ export const mapError = core.exitMapError
  * Maps over the `Cause` contained in the `Failure` of the specified exit using
  * the provided function.
  *
+ * @macro traced
  * @since 1.0.0
  * @category mapping
  */
 export const mapErrorCause = core.exitMapErrorCause
 
 /**
+ * @macro traced
  * @since 1.0.0
  * @category sequencing
  */
 export const flatMap = core.exitFlatMap
 
 /**
+ * @macro traced
  * @since 1.0.0
  * @category sequencing
  */
 export const flatMapEffect = core.exitFlatMapEffect
 
 /**
+ * @macro traced
  * @since 1.0.0
  * @category sequencing
  */
@@ -277,6 +294,7 @@ export const match = core.exitMatch
 export const matchEffect = core.exitMatchEffect
 
 /**
+ * @macro traced
  * @since 1.0.0
  * @category traversing
  */
@@ -286,6 +304,7 @@ export const forEachEffect = core.exitForEachEffect
  * Sequentially zips the this result with the specified result or else returns
  * the failed `Cause<E | E2>`.
  *
+ * @macro traced
  * @since 1.0.0
  * @category zipping
  */
@@ -295,6 +314,7 @@ export const zip = core.exitZip
  * Sequentially zips the this result with the specified result discarding the
  * second element of the tuple or else returns the failed `Cause<E | E2>`.
  *
+ * @macro traced
  * @since 1.0.0
  * @category zipping
  */
@@ -304,6 +324,7 @@ export const zipLeft = core.exitZipLeft
  * Sequentially zips the this result with the specified result discarding the
  * first element of the tuple or else returns the failed `Cause<E | E2>`.
  *
+ * @macro traced
  * @since 1.0.0
  * @category zipping
  */
@@ -313,6 +334,7 @@ export const zipRight = core.exitZipRight
  * Parallelly zips the this result with the specified result or else returns
  * the failed `Cause<E | E2>`.
  *
+ * @macro traced
  * @since 1.0.0
  * @category zipping
  */
@@ -322,6 +344,7 @@ export const zipPar = core.exitZipPar
  * Parallelly zips the this result with the specified result discarding the
  * second element of the tuple or else returns the failed `Cause<E | E2>`.
  *
+ * @macro traced
  * @since 1.0.0
  * @category zipping
  */
@@ -331,6 +354,7 @@ export const zipParLeft = core.exitZipParLeft
  * Parallelly zips the this result with the specified result discarding the
  * first element of the tuple or else returns the failed `Cause<E | E2>`.
  *
+ * @macro traced
  * @since 1.0.0
  * @category zipping
  */
@@ -340,6 +364,7 @@ export const zipParRight = core.exitZipParRight
  * Zips this exit together with that exit using the specified combination
  * functions.
  *
+ * @macro traced
  * @since 1.0.0
  * @category zipping
  */
