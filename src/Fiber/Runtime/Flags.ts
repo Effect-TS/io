@@ -2,7 +2,9 @@
  * @since 1.0.0
  */
 
+import type * as RuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
 import * as internal from "@effect/io/internal/runtimeFlags"
+import type * as Differ from "@fp-ts/data/Differ"
 
 /**
  * Represents a set of `RuntimeFlag`s. `RuntimeFlag`s affect the operation of
@@ -25,14 +27,6 @@ export type RuntimeFlags = number & {
  */
 export type RuntimeFlag = number & {
   readonly RuntimeFlag: unique symbol
-}
-
-/**
- * @since 1.0.0
- * @category constructors
- */
-export const make = (...flags: ReadonlyArray<RuntimeFlag>): RuntimeFlags => {
-  return flags.reduce((a, b) => a | b, 0) as RuntimeFlags
 }
 
 /**
@@ -117,77 +111,13 @@ export const WindDown: RuntimeFlag = internal.WindDown
 export const CooperativeYielding: RuntimeFlag = internal.CooperativeYielding
 
 /**
- * @since 1.0.0
- * @category constructors
- */
-export const none = make(None)
-
-/**
- * Enables the specified `RuntimeFlag`.
- *
- * @since 1.0.0
- * @category mutations
- */
-export const enable = (flag: RuntimeFlag) => {
-  return (self: RuntimeFlags): RuntimeFlags => (self | flag) as RuntimeFlags
-}
-
-/**
- * Enables all of the `RuntimeFlag`s in the specified set of `RuntimeFlags`.
- *
- * @since 1.0.0
- * @category mutations
- */
-export const enableAll = (flags: RuntimeFlags) => {
-  return (self: RuntimeFlags): RuntimeFlags => (self | flags) as RuntimeFlags
-}
-
-/**
- * Disables the specified `RuntimeFlag`.
- *
- * @since 1.0.0
- * @category mutations
- */
-export const disable = (flag: RuntimeFlag) => {
-  return (self: RuntimeFlags): RuntimeFlags => (self & ~flag) as RuntimeFlags
-}
-
-/**
- * Disables all of the `RuntimeFlag`s in the specified set of `RuntimeFlags`.
- *
- * @since 1.0.0
- * @category mutations
- */
-export const disableAll = (flags: RuntimeFlags) => {
-  return (self: RuntimeFlags): RuntimeFlags => (self & ~flags) as RuntimeFlags
-}
-
-/**
- * Returns `true` if the specified `RuntimeFlag` is enabled, `false` otherwise.
- *
- * @since 1.0.0
- * @category elements
- */
-export const isEnabled = internal.isEnabled
-
-/**
- * Returns `true` if the specified `RuntimeFlag` is disabled, `false` otherwise.
- *
- * @since 1.0.0
- * @category elements
- */
-export const isDisabled = internal.isDisabled
-
-/**
- * Returns `true` if the `Interruption` `RuntimeFlag` is enabled, `false`
+ * Returns `true` if the `CooperativeYielding` `RuntimeFlag` is enabled, `false`
  * otherwise.
  *
  * @since 1.0.0
  * @category getters
  */
-export const interruption = (self: RuntimeFlags): boolean => {
-  return isEnabled(Interruption)(self)
-}
+export const cooperativeYielding: (self: RuntimeFlags) => boolean = internal.cooperativeYielding
 
 /**
  * Returns `true` if the `CurrentFiber` `RuntimeFlag` is enabled, `false`
@@ -196,31 +126,56 @@ export const interruption = (self: RuntimeFlags): boolean => {
  * @since 1.0.0
  * @category getters
  */
-export const currentFiber = (self: RuntimeFlags): boolean => {
-  return isEnabled(CurrentFiber)(self)
-}
+export const currentFiber: (self: RuntimeFlags) => boolean = internal.currentFiber
 
 /**
- * Returns `true` if the `OpSupervision` `RuntimeFlag` is enabled, `false`
- * otherwise.
+ * Creates a `RuntimeFlagsPatch` which describes the difference between `self`
+ * and `that`.
  *
  * @since 1.0.0
- * @category getters
+ * @category diffing
  */
-export const opSupervision = (self: RuntimeFlags): boolean => {
-  return isEnabled(OpSupervision)(self)
-}
+export const diff: (that: RuntimeFlags) => (self: RuntimeFlags) => RuntimeFlagsPatch.RuntimeFlagsPatch = internal.diff
 
 /**
- * Returns `true` if the `RuntimeMetrics` `RuntimeFlag` is enabled, `false`
- * otherwise.
+ * Constructs a differ that knows how to diff `RuntimeFlags` values.
  *
  * @since 1.0.0
- * @category getters
+ * @category mutations
  */
-export const runtimeMetrics = (self: RuntimeFlags): boolean => {
-  return isEnabled(RuntimeMetrics)(self)
-}
+export const differ: () => Differ.Differ<RuntimeFlags, RuntimeFlagsPatch.RuntimeFlagsPatch> = internal.differ
+
+/**
+ * Disables the specified `RuntimeFlag`.
+ *
+ * @since 1.0.0
+ * @category mutations
+ */
+export const disable: (flag: RuntimeFlag) => (self: RuntimeFlags) => RuntimeFlags = internal.disable
+
+/**
+ * Disables all of the `RuntimeFlag`s in the specified set of `RuntimeFlags`.
+ *
+ * @since 1.0.0
+ * @category mutations
+ */
+export const disableAll: (flags: RuntimeFlags) => (self: RuntimeFlags) => RuntimeFlags = internal.disableAll
+
+/**
+ * Enables the specified `RuntimeFlag`.
+ *
+ * @since 1.0.0
+ * @category mutations
+ */
+export const enable: (flag: RuntimeFlag) => (self: RuntimeFlags) => RuntimeFlags = internal.enable
+
+/**
+ * Enables all of the `RuntimeFlag`s in the specified set of `RuntimeFlags`.
+ *
+ * @since 1.0.0
+ * @category mutations
+ */
+export const enableAll: (flags: RuntimeFlags) => (self: RuntimeFlags) => RuntimeFlags = internal.enableAll
 
 /**
  * Returns `true` if the `FiberRoots` `RuntimeFlag` is enabled, `false`
@@ -229,31 +184,7 @@ export const runtimeMetrics = (self: RuntimeFlags): boolean => {
  * @since 1.0.0
  * @category getters
  */
-export const fiberRoots = (self: RuntimeFlags): boolean => {
-  return isEnabled(FiberRoots)(self)
-}
-
-/**
- * Returns `true` if the `WindDown` `RuntimeFlag` is enabled, `false`
- * otherwise.
- *
- * @since 1.0.0
- * @category getters
- */
-export const windDown = (self: RuntimeFlags): boolean => {
-  return isEnabled(WindDown)(self)
-}
-
-/**
- * Returns `true` if the `CooperativeYielding` `RuntimeFlag` is enabled, `false`
- * otherwise.
- *
- * @since 1.0.0
- * @category getters
- */
-export const cooperativeYielding = (self: RuntimeFlags): boolean => {
-  return isEnabled(CooperativeYielding)(self)
-}
+export const fiberRoots: (self: RuntimeFlags) => boolean = internal.fiberRoots
 
 /**
  * Returns true only if the `Interruption` flag is **enabled** and the
@@ -266,26 +197,53 @@ export const cooperativeYielding = (self: RuntimeFlags): boolean => {
  * @since 1.0.0
  * @category getters
  */
-export const interruptible = (self: RuntimeFlags): boolean => {
-  return interruption(self) && !windDown(self)
-}
+export const interruptible: (self: RuntimeFlags) => boolean = internal.interruptible
 
 /**
- * Creates a `RuntimeFlagsPatch` which describes the difference between `self`
- * and `that`.
+ * Returns `true` if the `Interruption` `RuntimeFlag` is enabled, `false`
+ * otherwise.
  *
  * @since 1.0.0
- * @category diffing
+ * @category getters
  */
-export const diff = internal.diff
+export const interruption: (self: RuntimeFlags) => boolean = internal.interruption
 
 /**
- * Constructs a differ that knows how to diff `RuntimeFlags` values.
+ * Returns `true` if the specified `RuntimeFlag` is enabled, `false` otherwise.
  *
  * @since 1.0.0
- * @category mutations
+ * @category elements
  */
-export const differ = internal.differ
+export const isEnabled: (flag: RuntimeFlag) => (self: RuntimeFlags) => boolean = internal.isEnabled
+
+/**
+ * Returns `true` if the specified `RuntimeFlag` is disabled, `false` otherwise.
+ *
+ * @since 1.0.0
+ * @category elements
+ */
+export const isDisabled: (flag: RuntimeFlag) => (self: RuntimeFlags) => boolean = internal.isDisabled
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const make: (...flags: ReadonlyArray<RuntimeFlag>) => RuntimeFlags = internal.make
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const none: RuntimeFlags = internal.none
+
+/**
+ * Returns `true` if the `OpSupervision` `RuntimeFlag` is enabled, `false`
+ * otherwise.
+ *
+ * @since 1.0.0
+ * @category getters
+ */
+export const opSupervision: (self: RuntimeFlags) => boolean = internal.opSupervision
 
 /**
  * Patches a set of `RuntimeFlag`s with a `RuntimeFlagsPatch`, returning the
@@ -294,15 +252,8 @@ export const differ = internal.differ
  * @since 1.0.0
  * @category mutations
  */
-export const patch = internal.patch
-
-/**
- * Converts the provided `RuntimeFlags` into a `ReadonlySet<number>`.
- *
- * @category conversions
- * @since 1.0.0
- */
-export const toSet = internal.toSet
+export const patch: (patch: RuntimeFlagsPatch.RuntimeFlagsPatch) => (self: RuntimeFlags) => RuntimeFlags =
+  internal.patch
 
 /**
  * Converts the provided `RuntimeFlags` into a `string`.
@@ -310,4 +261,30 @@ export const toSet = internal.toSet
  * @category conversions
  * @since 1.0.0
  */
-export const render = internal.render
+export const render: (self: RuntimeFlags) => string = internal.render
+
+/**
+ * Returns `true` if the `RuntimeMetrics` `RuntimeFlag` is enabled, `false`
+ * otherwise.
+ *
+ * @since 1.0.0
+ * @category getters
+ */
+export const runtimeMetrics: (self: RuntimeFlags) => boolean = internal.runtimeMetrics
+
+/**
+ * Converts the provided `RuntimeFlags` into a `ReadonlySet<number>`.
+ *
+ * @category conversions
+ * @since 1.0.0
+ */
+export const toSet: (self: RuntimeFlags) => ReadonlySet<RuntimeFlag> = internal.toSet
+
+/**
+ * Returns `true` if the `WindDown` `RuntimeFlag` is enabled, `false`
+ * otherwise.
+ *
+ * @since 1.0.0
+ * @category getters
+ */
+export const windDown: (self: RuntimeFlags) => boolean = internal.windDown
