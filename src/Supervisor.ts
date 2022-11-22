@@ -8,8 +8,11 @@ import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
 import type * as Fiber from "@effect/io/Fiber"
 import * as internal from "@effect/io/internal/supervisor"
+import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as Context from "@fp-ts/data/Context"
+import type * as MutableRef from "@fp-ts/data/mutable/MutableRef"
 import type * as Option from "@fp-ts/data/Option"
+import type * as SortedSet from "@fp-ts/data/SortedSet"
 
 /**
  * @since 1.0.0
@@ -101,7 +104,7 @@ export declare namespace Supervisor {
  * @since 1.0.0
  * @category unsafe
  */
-export const unsafeTrack = internal.unsafeTrack
+export const unsafeTrack: () => Supervisor<Chunk.Chunk<Fiber.RuntimeFiber<any, any>>> = internal.unsafeTrack
 
 /**
  * Creates a new supervisor that tracks children in a set.
@@ -110,7 +113,8 @@ export const unsafeTrack = internal.unsafeTrack
  * @since 1.0.0
  * @category constructors
  */
-export const track = internal.track
+export const track: () => Effect.Effect<never, never, Supervisor<Chunk.Chunk<Fiber.RuntimeFiber<any, any>>>> =
+  internal.track
 
 /**
  * Creates a new supervisor that constantly yields effect when polled
@@ -118,7 +122,7 @@ export const track = internal.track
  * @since 1.0.0
  * @category constructors
  */
-export const fromEffect = internal.fromEffect
+export const fromEffect: <A>(effect: Effect.Effect<never, never, A>) => Supervisor<A> = internal.fromEffect
 
 /**
  * A supervisor that doesn't do anything in response to supervision events.
@@ -126,7 +130,7 @@ export const fromEffect = internal.fromEffect
  * @since 1.0.0
  * @category constructors
  */
-export const none = internal.none
+export const none: Supervisor<void> = internal.none
 
 /**
  * Creates a new supervisor that tracks children in a set.
@@ -135,4 +139,6 @@ export const none = internal.none
  * @since 1.0.0
  * @category constructors
  */
-export const fibersIn = internal.fibersIn
+export const fibersIn: (
+  ref: MutableRef.MutableRef<SortedSet.SortedSet<Fiber.RuntimeFiber<any, any>>>
+) => Effect.Effect<never, never, Supervisor<SortedSet.SortedSet<Fiber.RuntimeFiber<any, any>>>> = internal.fibersIn
