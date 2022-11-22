@@ -94,10 +94,6 @@ export interface Debug {
    */
   traceStackLimit: number
   /**
-   * Sets a limit on how many span traces should be rendered.
-   */
-  traceSpanLimit: number
-  /**
    * Enables debug logging of execution traces.
    */
   traceExecutionLogEnabled: boolean

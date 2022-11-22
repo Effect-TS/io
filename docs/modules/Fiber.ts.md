@@ -118,7 +118,7 @@ results.
 **Signature**
 
 ```ts
-export declare const collectAll: typeof fiberRuntime.collectAll
+export declare const collectAll: typeof fiberRuntime.fiberCollectAll
 ```
 
 Added in v1.0.0

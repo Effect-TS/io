@@ -399,6 +399,7 @@ Added in v1.0.0
   - [EffectTypeId (type alias)](#effecttypeid-type-alias)
 - [tracing](#tracing)
   - [traced](#traced)
+  - [withSpan](#withspan)
 - [traversing](#traversing)
   - [forEachWithIndex](#foreachwithindex)
 - [utilities](#utilities)
@@ -5546,6 +5547,18 @@ Added in v1.0.0
 
 ```ts
 export declare const traced: (trace: string | undefined) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+```
+
+Added in v1.0.0
+
+## withSpan
+
+Annotates the wrapped effect with a span using the current Tracer.
+
+**Signature**
+
+```ts
+export declare const withSpan: (name: string) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0

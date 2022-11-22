@@ -26,6 +26,8 @@ Added in v1.0.0
   - [fromOption](#fromoption)
 - [elements](#elements)
   - [exists](#exists)
+- [filtering](#filtering)
+  - [unannotate](#unannotate)
 - [folding](#folding)
   - [match](#match)
   - [matchEffect](#matcheffect)
@@ -208,6 +210,20 @@ Executes the predicate on the value of the specified exit if it is a
 
 ```ts
 export declare const exists: <A>(predicate: Predicate<A>) => <E>(self: Exit<E, A>) => boolean
+```
+
+Added in v1.0.0
+
+# filtering
+
+## unannotate
+
+Removes any annotation from the failure cause
+
+**Signature**
+
+```ts
+export declare const unannotate: <E, A>(exit: Exit<E, A>) => Exit<E, A>
 ```
 
 Added in v1.0.0
