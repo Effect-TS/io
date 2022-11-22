@@ -405,30 +405,20 @@ export const stripSomeDefects = (pf: (defect: unknown) => Option.Option<unknown>
 // -----------------------------------------------------------------------------
 
 /** @internal */
-export const as = <E1>(error: E1) => {
-  return <E>(self: Cause.Cause<E>): Cause.Cause<E1> => {
-    if (self._tag === "Fail") {
-      return fail(error)
-    }
-    return self as Cause.Cause<E1>
-  }
-}
+export const as = <E1>(error: E1) => <E>(self: Cause.Cause<E>): Cause.Cause<E1> => pipe(self, map(() => error))
 
 /** @internal */
-export const map = <E, E1>(f: (e: E) => E1) => {
-  return (self: Cause.Cause<E>): Cause.Cause<E1> => {
-    return pipe(self, flatMap((e) => fail(f(e))))
-  }
-}
+export const map = <E, E1>(f: (e: E) => E1) =>
+  (self: Cause.Cause<E>): Cause.Cause<E1> => pipe(self, flatMap((e) => fail(f(e))))
 
 // -----------------------------------------------------------------------------
 // Sequencing
 // -----------------------------------------------------------------------------
 
 /** @internal */
-export const flatMap = <E, E1>(f: (e: E) => Cause.Cause<E1>) => {
-  return (self: Cause.Cause<E>): Cause.Cause<E1> => {
-    return pipe(
+export const flatMap = <E, E1>(f: (e: E) => Cause.Cause<E1>) =>
+  (self: Cause.Cause<E>): Cause.Cause<E1> =>
+    pipe(
       self,
       match<Cause.Cause<E1>, E>(
         empty,
@@ -440,8 +430,6 @@ export const flatMap = <E, E1>(f: (e: E) => Cause.Cause<E1>) => {
         (left, right) => parallel(left, right)
       )
     )
-  }
-}
 
 /** @internal */
 export const flatten = <E>(self: Cause.Cause<Cause.Cause<E>>): Cause.Cause<E> => {
