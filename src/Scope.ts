@@ -3,7 +3,7 @@
  */
 
 import type * as Effect from "@effect/io/Effect"
-import type { ExecutionStrategy } from "@effect/io/ExecutionStrategy"
+import type * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
 import type * as Exit from "@effect/io/Exit"
 import * as core from "@effect/io/internal/core"
 import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
@@ -44,7 +44,7 @@ export interface Scope {
    * @macro traced
    * @internal
    */
-  readonly fork: (strategy: ExecutionStrategy) => Effect.Effect<never, never, Scope.Closeable>
+  readonly fork: (strategy: ExecutionStrategy.ExecutionStrategy) => Effect.Effect<never, never, Scope.Closeable>
   /**
    * @macro traced
    * @internal
@@ -96,7 +96,9 @@ export declare namespace Scope {
  * @since 1.0.0
  * @category mutations
  */
-export const addFinalizer = core.scopeAddFinalizer
+export const addFinalizer: (
+  finalizer: Effect.Effect<never, never, unknown>
+) => (self: Scope) => Effect.Effect<never, never, void> = core.scopeAddFinalizer
 
 /**
  * A simplified version of `addFinalizerWith` when the `finalizer` does not
@@ -106,7 +108,8 @@ export const addFinalizer = core.scopeAddFinalizer
  * @since 1.0.0
  * @category mutations
  */
-export const addFinalizerExit = core.scopeAddFinalizerExit
+export const addFinalizerExit: (finalizer: Scope.Finalizer) => (self: Scope) => Effect.Effect<never, never, void> =
+  core.scopeAddFinalizerExit
 
 /**
  * Closes a scope with the specified exit value, running all finalizers that
@@ -116,7 +119,8 @@ export const addFinalizerExit = core.scopeAddFinalizerExit
  * @category destructors
  * @since 1.0.0
  */
-export const close = core.scopeClose
+export const close: (exit: Exit.Exit<unknown, unknown>) => (self: CloseableScope) => Effect.Effect<never, never, void> =
+  core.scopeClose
 
 /**
  * Extends the scope of an `Effect` workflow that needs a scope into this
@@ -128,7 +132,9 @@ export const close = core.scopeClose
  * @category mutations
  * @since 1.0.0
  */
-export const extend = fiberRuntime.scopeExtend
+export const extend: <R, E, A>(
+  effect: Effect.Effect<R, E, A>
+) => (self: Scope) => Effect.Effect<Exclude<R, Scope>, E, A> = fiberRuntime.scopeExtend
 
 /**
  * Forks a new scope that is a child of this scope. The child scope will
@@ -138,7 +144,9 @@ export const extend = fiberRuntime.scopeExtend
  * @category mutations
  * @since 1.0.0
  */
-export const fork = core.scopeFork
+export const fork: (
+  strategy: ExecutionStrategy.ExecutionStrategy
+) => (self: Scope) => Effect.Effect<never, never, CloseableScope> = core.scopeFork
 
 /**
  * Uses the scope by providing it to an `Effect` workflow that needs a scope,
@@ -150,7 +158,9 @@ export const fork = core.scopeFork
  * @category destructors
  * @since 1.0.0
  */
-export const use = fiberRuntime.scopeUse
+export const use: <R, E, A>(
+  effect: Effect.Effect<R, E, A>
+) => (self: CloseableScope) => Effect.Effect<Exclude<R, Scope>, E, A> = fiberRuntime.scopeUse
 
 /**
  * Creates a Scope where Finalizers will run according to the `ExecutionStrategy`.
@@ -161,4 +171,6 @@ export const use = fiberRuntime.scopeUse
  * @category constructors
  * @since 1.0.0
  */
-export const make = fiberRuntime.scopeMake
+export const make: (
+  executionStrategy?: ExecutionStrategy.ExecutionStrategy | undefined
+) => Effect.Effect<never, never, CloseableScope> = fiberRuntime.scopeMake
