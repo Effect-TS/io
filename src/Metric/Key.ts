@@ -2,8 +2,11 @@
  * @since 1.0.0
  */
 import * as internal from "@effect/io/internal/metric/key"
+import type * as MetricBoundaries from "@effect/io/Metric/Boundaries"
 import type * as MetricKeyType from "@effect/io/Metric/KeyType"
 import type * as MetricLabel from "@effect/io/Metric/Label"
+import type * as Chunk from "@fp-ts/data/Chunk"
+import type * as Duration from "@fp-ts/data/Duration"
 import type * as Equal from "@fp-ts/data/Equal"
 import type * as HashSet from "@fp-ts/data/HashSet"
 
@@ -92,7 +95,8 @@ export declare namespace MetricKey {
  * @since 1.0.0
  * @category refinements
  */
-export const isMetricKey = internal.isMetricKey
+export const isMetricKey: (u: unknown) => u is MetricKey<MetricKeyType.MetricKeyType<unknown, unknown>> =
+  internal.isMetricKey
 
 /**
  * Creates a metric key for a counter, with the specified name.
@@ -100,7 +104,7 @@ export const isMetricKey = internal.isMetricKey
  * @since 1.0.0
  * @category constructors
  */
-export const counter = internal.counter
+export const counter: (name: string) => MetricKey.Counter = internal.counter
 
 /**
  * Creates a metric key for a categorical frequency table, with the specified
@@ -109,7 +113,7 @@ export const counter = internal.counter
  * @since 1.0.0
  * @category constructors
  */
-export const frequency = internal.frequency
+export const frequency: (name: string) => MetricKey.Frequency = internal.frequency
 
 /**
  * Creates a metric key for a gauge, with the specified name.
@@ -117,7 +121,7 @@ export const frequency = internal.frequency
  * @since 1.0.0
  * @category constructors
  */
-export const gauge = internal.gauge
+export const gauge: (name: string) => MetricKey.Gauge = internal.gauge
 
 /**
  * Creates a metric key for a histogram, with the specified name and boundaries.
@@ -125,7 +129,8 @@ export const gauge = internal.gauge
  * @since 1.0.0
  * @category constructors
  */
-export const histogram = internal.histogram
+export const histogram: (name: string, boundaries: MetricBoundaries.MetricBoundaries) => MetricKey.Histogram =
+  internal.histogram
 
 /**
  * Creates a metric key for a summary, with the specified name, maxAge,
@@ -134,7 +139,13 @@ export const histogram = internal.histogram
  * @since 1.0.0
  * @category constructors
  */
-export const summary = internal.summary
+export const summary: (
+  name: string,
+  maxAge: Duration.Duration,
+  maxSize: number,
+  error: number,
+  quantiles: Chunk.Chunk<number>
+) => MetricKey.Summary = internal.summary
 
 /**
  * Returns a new `MetricKey` with the specified tag appended.
@@ -142,7 +153,10 @@ export const summary = internal.summary
  * @since 1.0.0
  * @category constructors
  */
-export const tagged = internal.tagged
+export const tagged: (
+  key: string,
+  value: string
+) => <Type extends MetricKeyType.MetricKeyType<any, any>>(self: MetricKey<Type>) => MetricKey<Type> = internal.tagged
 
 /**
  * Returns a new `MetricKey` with the specified tags appended.
@@ -150,7 +164,10 @@ export const tagged = internal.tagged
  * @since 1.0.0
  * @category constructors
  */
-export const taggedWithLabels = internal.taggedWithLabels
+export const taggedWithLabels: (
+  extraTags: Iterable<MetricLabel.MetricLabel>
+) => <Type extends MetricKeyType.MetricKeyType<any, any>>(self: MetricKey<Type>) => MetricKey<Type> =
+  internal.taggedWithLabels
 
 /**
  * Returns a new `MetricKey` with the specified tags appended.
@@ -158,4 +175,7 @@ export const taggedWithLabels = internal.taggedWithLabels
  * @since 1.0.0
  * @category constructors
  */
-export const taggedWithLabelSet = internal.taggedWithLabelSet
+export const taggedWithLabelSet: (
+  extraTags: HashSet.HashSet<MetricLabel.MetricLabel>
+) => <Type extends MetricKeyType.MetricKeyType<any, any>>(self: MetricKey<Type>) => MetricKey<Type> =
+  internal.taggedWithLabelSet

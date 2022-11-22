@@ -37,10 +37,10 @@ export interface MetricLabel extends Equal.Equal {
  * @since 1.0.0
  * @category constructors
  */
-export const make = internal.make
+export const make: (key: string, value: string) => MetricLabel = internal.make
 
 /**
  * @since 1.0.0
  * @category refinements
  */
-export const isMetricLabel = internal.isMetricLabel
+export const isMetricLabel: (u: unknown) => u is MetricLabel = internal.isMetricLabel

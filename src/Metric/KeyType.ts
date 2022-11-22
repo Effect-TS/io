@@ -183,64 +183,69 @@ export declare namespace MetricKeyType {
  * @since 1.0.0
  * @category constructors
  */
-export const counter = internal.counter
+export const counter: MetricKeyType.Counter = internal.counter
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const frequency = internal.frequency
+export const frequency: MetricKeyType.Frequency = internal.frequency
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const gauge = internal.gauge
+export const gauge: MetricKeyType.Gauge = internal.gauge
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const histogram = internal.histogram
+export const histogram: (boundaries: MetricBoundaries.MetricBoundaries) => MetricKeyType.Histogram = internal.histogram
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const summary = internal.summary
+export const summary: (
+  maxAge: Duration.Duration,
+  maxSize: number,
+  error: number,
+  quantiles: Chunk.Chunk<number>
+) => MetricKeyType.Summary = internal.summary
 
 /**
  * @since 1.0.0
  * @category refinements
  */
-export const isMetricKeyType = internal.isMetricKeyType
+export const isMetricKeyType: (u: unknown) => u is MetricKeyType<unknown, unknown> = internal.isMetricKeyType
 
 /**
  * @since 1.0.0
  * @category refinements
  */
-export const isCounterKey = internal.isCounterKey
+export const isCounterKey: (u: unknown) => u is MetricKeyType.Counter = internal.isCounterKey
 
 /**
  * @since 1.0.0
  * @category refinements
  */
-export const isFrequencyKey = internal.isFrequencyKey
+export const isFrequencyKey: (u: unknown) => u is MetricKeyType.Frequency = internal.isFrequencyKey
 
 /**
  * @since 1.0.0
  * @category refinements
  */
-export const isGaugeKey = internal.isGaugeKey
+export const isGaugeKey: (u: unknown) => u is MetricKeyType.Gauge = internal.isGaugeKey
 
 /**
  * @since 1.0.0
  * @category refinements
  */
-export const isHistogramKey = internal.isHistogramKey
+export const isHistogramKey: (u: unknown) => u is MetricKeyType.Histogram = internal.isHistogramKey
 
 /**
  * @since 1.0.0
  * @category refinements
  */
-export const isSummaryKey = internal.isSummaryKey
+export const isSummaryKey: (u: unknown) => u is MetricKeyType.Summary = internal.isSummaryKey

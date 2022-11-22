@@ -2,8 +2,12 @@
  * @since 1.0.0
  */
 import type * as Effect from "@effect/io/Effect"
+import type * as Fiber from "@effect/io/Fiber"
 import * as internal from "@effect/io/internal/metric/polling"
 import type * as Metric from "@effect/io/Metric"
+import type * as Schedule from "@effect/io/Schedule"
+import type * as Scope from "@effect/io/Scope"
+import type * as Chunk from "@fp-ts/data/Chunk"
 
 /**
  * @since 1.0.0
@@ -44,7 +48,10 @@ export interface PollingMetric<Type, In, R, E, Out> {
  * @since 1.0.0
  * @category constructors
  */
-export const make = internal.make
+export const make: <Type, In, Out, R, E>(
+  metric: Metric.Metric<Type, In, Out>,
+  poll: Effect.Effect<R, E, In>
+) => PollingMetric<Type, In, R, E, Out> = internal.make
 
 /**
  * Collects all of the polling metrics into a single polling metric, which
@@ -53,7 +60,9 @@ export const make = internal.make
  * @since 1.0.0
  * @category constructors
  */
-export const collectAll = internal.collectAll
+export const collectAll: <R, E, Out>(
+  iterable: Iterable<PollingMetric<any, any, R, E, Out>>
+) => PollingMetric<Chunk.Chunk<any>, Chunk.Chunk<any>, R, E, Chunk.Chunk<Out>> = internal.collectAll
 
 /**
  * Returns an effect that will launch the polling metric in a background
@@ -63,7 +72,11 @@ export const collectAll = internal.collectAll
  * @since 1.0.0
  * @category mutations
  */
-export const launch = internal.launch
+export const launch: <R2, A2>(
+  schedule: Schedule.Schedule<R2, unknown, A2>
+) => <Type, In, R, E, Out>(
+  self: PollingMetric<Type, In, R, E, Out>
+) => Effect.Effect<R2 | R | Scope.Scope, never, Fiber.Fiber<E, A2>> = internal.launch
 
 /**
  * An effect that polls a value that may be fed to the metric.
@@ -72,7 +85,8 @@ export const launch = internal.launch
  * @since 1.0.0
  * @category mutations
  */
-export const poll = internal.poll
+export const poll: <Type, In, R, E, Out>(self: PollingMetric<Type, In, R, E, Out>) => Effect.Effect<R, E, In> =
+  internal.poll
 
 /**
  * An effect that polls for a value and uses the value to update the metric.
@@ -81,7 +95,9 @@ export const poll = internal.poll
  * @since 1.0.0
  * @category mutations
  */
-export const pollAndUpdate = internal.pollAndUpdate
+export const pollAndUpdate: <Type, In, R, E, Out>(
+  self: PollingMetric<Type, In, R, E, Out>
+) => Effect.Effect<R, E, void> = internal.pollAndUpdate
 
 /**
  * Returns a new polling metric whose poll function will be retried with the
@@ -90,7 +106,10 @@ export const pollAndUpdate = internal.pollAndUpdate
  * @since 1.0.0
  * @category constructors
  */
-export const retry = internal.retry
+export const retry: <R2, E, _>(
+  policy: Schedule.Schedule<R2, E, _>
+) => <Type, In, R, Out>(self: PollingMetric<Type, In, R, E, Out>) => PollingMetric<Type, In, R2 | R, E, Out> =
+  internal.retry
 
 /**
  * Zips this polling metric with the specified polling metric.
@@ -98,4 +117,8 @@ export const retry = internal.retry
  * @since 1.0.0
  * @category mutations
  */
-export const zip = internal.zip
+export const zip: <Type2, In2, R2, E2, Out2>(
+  that: PollingMetric<Type2, In2, R2, E2, Out2>
+) => <Type, In, R, E, Out>(
+  self: PollingMetric<Type, In, R, E, Out>
+) => PollingMetric<readonly [Type, Type2], readonly [In, In2], R2 | R, E2 | E, readonly [Out, Out2]> = internal.zip
