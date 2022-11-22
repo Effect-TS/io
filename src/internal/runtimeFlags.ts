@@ -40,8 +40,48 @@ export const allFlags: ReadonlyArray<RuntimeFlags.RuntimeFlag> = [
 ]
 
 /** @internal */
-export const isEnabled = (flag: RuntimeFlags.RuntimeFlag) => {
-  return (self: RuntimeFlags.RuntimeFlags): boolean => (self & flag) !== 0
+export const cooperativeYielding = (self: RuntimeFlags.RuntimeFlags): boolean => {
+  return isEnabled(CooperativeYielding)(self)
+}
+
+/** @internal */
+export const disable = (flag: RuntimeFlags.RuntimeFlag) => {
+  return (self: RuntimeFlags.RuntimeFlags): RuntimeFlags.RuntimeFlags => (self & ~flag) as RuntimeFlags.RuntimeFlags
+}
+
+/** @internal */
+export const disableAll = (flags: RuntimeFlags.RuntimeFlags) => {
+  return (self: RuntimeFlags.RuntimeFlags): RuntimeFlags.RuntimeFlags => (self & ~flags) as RuntimeFlags.RuntimeFlags
+}
+
+/** @internal */
+export const enable = (flag: RuntimeFlags.RuntimeFlag) => {
+  return (self: RuntimeFlags.RuntimeFlags): RuntimeFlags.RuntimeFlags => (self | flag) as RuntimeFlags.RuntimeFlags
+}
+
+/** @internal */
+export const enableAll = (flags: RuntimeFlags.RuntimeFlags) => {
+  return (self: RuntimeFlags.RuntimeFlags): RuntimeFlags.RuntimeFlags => (self | flags) as RuntimeFlags.RuntimeFlags
+}
+
+/** @internal */
+export const currentFiber = (self: RuntimeFlags.RuntimeFlags): boolean => {
+  return isEnabled(CurrentFiber)(self)
+}
+
+/** @internal */
+export const fiberRoots = (self: RuntimeFlags.RuntimeFlags): boolean => {
+  return isEnabled(FiberRoots)(self)
+}
+
+/** @internal */
+export const interruptible = (self: RuntimeFlags.RuntimeFlags): boolean => {
+  return interruption(self) && !windDown(self)
+}
+
+/** @internal */
+export const interruption = (self: RuntimeFlags.RuntimeFlags): boolean => {
+  return isEnabled(Interruption)(self)
 }
 
 /** @internal */
@@ -50,8 +90,21 @@ export const isDisabled = (flag: RuntimeFlags.RuntimeFlag) => {
 }
 
 /** @internal */
-export const toSet = (self: RuntimeFlags.RuntimeFlags): ReadonlySet<RuntimeFlags.RuntimeFlag> => {
-  return new Set(allFlags.filter((flag) => isEnabled(flag)(self)))
+export const isEnabled = (flag: RuntimeFlags.RuntimeFlag) => {
+  return (self: RuntimeFlags.RuntimeFlags): boolean => (self & flag) !== 0
+}
+
+/** @internal */
+export const make = (...flags: ReadonlyArray<RuntimeFlags.RuntimeFlag>): RuntimeFlags.RuntimeFlags => {
+  return flags.reduce((a, b) => a | b, 0) as RuntimeFlags.RuntimeFlags
+}
+
+/** @internal */
+export const none: RuntimeFlags.RuntimeFlags = make(None)
+
+/** @internal */
+export const opSupervision = (self: RuntimeFlags.RuntimeFlags): boolean => {
+  return isEnabled(OpSupervision)(self)
 }
 
 /** @internal */
@@ -63,6 +116,20 @@ export const render = (self: RuntimeFlags.RuntimeFlags): string => {
     }
   })
   return `RuntimeFlags(${active.join(", ")})`
+}
+
+/** @internal */
+export const runtimeMetrics = (self: RuntimeFlags.RuntimeFlags): boolean => {
+  return isEnabled(RuntimeMetrics)(self)
+}
+
+/** @internal */
+export const toSet = (self: RuntimeFlags.RuntimeFlags): ReadonlySet<RuntimeFlags.RuntimeFlag> => {
+  return new Set(allFlags.filter((flag) => isEnabled(flag)(self)))
+}
+
+export const windDown = (self: RuntimeFlags.RuntimeFlags): boolean => {
+  return isEnabled(WindDown)(self)
 }
 
 // circular with RuntimeFlagsPatch

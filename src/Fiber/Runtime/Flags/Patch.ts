@@ -1,6 +1,7 @@
 /**
  * @since 1.0.0
  */
+import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import * as runtimeFlags from "@effect/io/internal/runtimeFlags"
 import * as internal from "@effect/io/internal/runtimeFlagsPatch"
 
@@ -18,13 +19,13 @@ export type RuntimeFlagsPatch = number & {
  * @since 1.0.0
  * @category constructors
  */
-export const empty = internal.empty
+export const empty: RuntimeFlagsPatch = internal.empty
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const make = internal.make
+export const make: (active: number, enabled: number) => RuntimeFlagsPatch = internal.make
 
 /**
  * Creates a `RuntimeFlagsPatch` describing enabling the provided `RuntimeFlag`.
@@ -32,7 +33,7 @@ export const make = internal.make
  * @since 1.0.0
  * @category constructors
  */
-export const enable = internal.enable
+export const enable: (flag: RuntimeFlags.RuntimeFlag) => RuntimeFlagsPatch = internal.enable
 
 /**
  * Creates a `RuntimeFlagsPatch` describing disabling the provided `RuntimeFlag`.
@@ -40,7 +41,7 @@ export const enable = internal.enable
  * @since 1.0.0
  * @category constructors
  */
-export const disable = internal.disable
+export const disable: (flag: RuntimeFlags.RuntimeFlag) => RuntimeFlagsPatch = internal.disable
 
 /**
  * Returns `true` if the specified `RuntimeFlagsPatch` is empty.
@@ -48,7 +49,7 @@ export const disable = internal.disable
  * @since 1.0.0
  * @category getters
  */
-export const isEmpty = internal.isEmpty
+export const isEmpty: (patch: RuntimeFlagsPatch) => boolean = internal.isEmpty
 
 /**
  * Returns `true` if the `RuntimeFlagsPatch` describes the specified
@@ -57,7 +58,7 @@ export const isEmpty = internal.isEmpty
  * @since 1.0.0
  * @category elements
  */
-export const isActive = internal.isActive
+export const isActive: (flag: RuntimeFlagsPatch) => (self: RuntimeFlagsPatch) => boolean = internal.isActive
 
 /**
  * Returns `true` if the `RuntimeFlagsPatch` describes the specified
@@ -66,7 +67,7 @@ export const isActive = internal.isActive
  * @since 1.0.0
  * @category elements
  */
-export const isEnabled = internal.isEnabled
+export const isEnabled: (flag: RuntimeFlags.RuntimeFlag) => (self: RuntimeFlagsPatch) => boolean = internal.isEnabled
 
 /**
  * Returns `true` if the `RuntimeFlagsPatch` describes the specified
@@ -75,7 +76,7 @@ export const isEnabled = internal.isEnabled
  * @since 1.0.0
  * @category elements
  */
-export const isDisabled = internal.isDisabled
+export const isDisabled: (flag: RuntimeFlags.RuntimeFlag) => (self: RuntimeFlagsPatch) => boolean = internal.isDisabled
 
 /**
  * Returns `true` if the `RuntimeFlagsPatch` includes the specified
@@ -84,7 +85,7 @@ export const isDisabled = internal.isDisabled
  * @since 1.0.0
  * @category elements
  */
-export const includes = internal.isActive
+export const includes: (flag: RuntimeFlagsPatch) => (self: RuntimeFlagsPatch) => boolean = internal.isActive
 
 /**
  * Creates a `RuntimeFlagsPatch` describing the application of the `self` patch,
@@ -93,7 +94,7 @@ export const includes = internal.isActive
  * @since 1.0.0
  * @category mutations
  */
-export const andThen = internal.andThen
+export const andThen: (that: RuntimeFlagsPatch) => (self: RuntimeFlagsPatch) => RuntimeFlagsPatch = internal.andThen
 
 /**
  * Creates a `RuntimeFlagsPatch` describing application of both the `self` patch
@@ -102,7 +103,7 @@ export const andThen = internal.andThen
  * @since 1.0.0
  * @category mutations
  */
-export const both = internal.both
+export const both: (that: RuntimeFlagsPatch) => (self: RuntimeFlagsPatch) => RuntimeFlagsPatch = internal.both
 
 /**
  * Creates a `RuntimeFlagsPatch` describing application of either the `self`
@@ -111,7 +112,7 @@ export const both = internal.both
  * @since 1.0.0
  * @category mutations
  */
-export const either = internal.either
+export const either: (that: RuntimeFlagsPatch) => (self: RuntimeFlagsPatch) => RuntimeFlagsPatch = internal.either
 
 /**
  * Creates a `RuntimeFlagsPatch` which describes exclusion of the specified
@@ -120,7 +121,8 @@ export const either = internal.either
  * @category mutations
  * @since 1.0.0
  */
-export const exclude = internal.exclude
+export const exclude: (flag: RuntimeFlags.RuntimeFlag) => (self: RuntimeFlagsPatch) => RuntimeFlagsPatch =
+  internal.exclude
 
 /**
  * Creates a `RuntimeFlagsPatch` which describes the inverse of the patch
@@ -129,7 +131,7 @@ export const exclude = internal.exclude
  * @since 1.0.0
  * @category mutations
  */
-export const inverse = internal.inverse
+export const inverse: (patch: RuntimeFlagsPatch) => RuntimeFlagsPatch = internal.inverse
 
 /**
  * Returns a `ReadonlySet<number>` containing the `RuntimeFlags` described as
@@ -138,7 +140,7 @@ export const inverse = internal.inverse
  * @since 1.0.0
  * @category destructors
  */
-export const enabledSet = runtimeFlags.enabledSet
+export const enabledSet: (self: RuntimeFlagsPatch) => ReadonlySet<RuntimeFlags.RuntimeFlag> = runtimeFlags.enabledSet
 
 /**
  * Returns a `ReadonlySet<number>` containing the `RuntimeFlags` described as
@@ -147,7 +149,7 @@ export const enabledSet = runtimeFlags.enabledSet
  * @since 1.0.0
  * @category destructors
  */
-export const disabledSet = runtimeFlags.disabledSet
+export const disabledSet: (self: RuntimeFlagsPatch) => ReadonlySet<RuntimeFlags.RuntimeFlag> = runtimeFlags.disabledSet
 
 /**
  * Renders the provided `RuntimeFlagsPatch` to a string.
@@ -155,4 +157,4 @@ export const disabledSet = runtimeFlags.disabledSet
  * @since 1.0.0
  * @category destructors
  */
-export const render = runtimeFlags.renderPatch
+export const render: (self: RuntimeFlagsPatch) => string = runtimeFlags.renderPatch
