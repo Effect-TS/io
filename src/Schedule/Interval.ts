@@ -2,6 +2,8 @@
  * @since 1.0.0
  */
 import * as internal from "@effect/io/internal/schedule/interval"
+import type * as Duration from "@fp-ts/data/Duration"
+import type * as Option from "@fp-ts/data/Option"
 
 /**
  * @since 1.0.0
@@ -37,7 +39,7 @@ export interface Interval {
  * @since 1.0.0
  * @category constructors
  */
-export const make = internal.make
+export const make: (startMillis: number, endMillis: number) => Interval = internal.make
 
 /**
  * An `Interval` of zero-width.
@@ -45,7 +47,7 @@ export const make = internal.make
  * @since 1.0.0
  * @category constructors
  */
-export const empty = internal.empty
+export const empty: Interval = internal.empty
 
 /**
  * Returns `true` if this `Interval` is less than `that` interval, `false`
@@ -54,7 +56,7 @@ export const empty = internal.empty
  * @since 1.0.0
  * @category ordering
  */
-export const lessThan = internal.lessThan
+export const lessThan: (that: Interval) => (self: Interval) => boolean = internal.lessThan
 
 /**
  * Returns the minimum of two `Interval`s.
@@ -62,7 +64,7 @@ export const lessThan = internal.lessThan
  * @since 1.0.0
  * @category ordering
  */
-export const min = internal.min
+export const min: (that: Interval) => (self: Interval) => Interval = internal.min
 
 /**
  * Returns the maximum of two `Interval`s.
@@ -70,7 +72,7 @@ export const min = internal.min
  * @since 1.0.0
  * @category ordering
  */
-export const max = internal.max
+export const max: (that: Interval) => (self: Interval) => Interval = internal.max
 
 /**
  * Returns `true` if the specified `Interval` is empty, `false` otherwise.
@@ -78,7 +80,7 @@ export const max = internal.max
  * @since 1.0.0
  * @category ordering
  */
-export const isEmpty = internal.isEmpty
+export const isEmpty: (self: Interval) => boolean = internal.isEmpty
 
 /**
  * Returns `true` if the specified `Interval` is non-empty, `false` otherwise.
@@ -86,7 +88,7 @@ export const isEmpty = internal.isEmpty
  * @since 1.0.0
  * @category ordering
  */
-export const isNonEmpty = internal.isNonEmpty
+export const isNonEmpty: (self: Interval) => boolean = internal.isNonEmpty
 
 /**
  * Computes a new `Interval` which is the intersection of this `Interval` and
@@ -95,7 +97,7 @@ export const isNonEmpty = internal.isNonEmpty
  * @since 1.0.0
  * @category ordering
  */
-export const intersect = internal.intersect
+export const intersect: (that: Interval) => (self: Interval) => Interval = internal.intersect
 
 /**
  * Calculates the size of the `Interval` as the `Duration` from the start of the
@@ -104,7 +106,7 @@ export const intersect = internal.intersect
  * @since 1.0.0
  * @category getters
  */
-export const size = internal.size
+export const size: (self: Interval) => Duration.Duration = internal.size
 
 /**
  * Computes a new `Interval` which is the union of this `Interval` and that
@@ -114,7 +116,7 @@ export const size = internal.size
  * @since 1.0.0
  * @category mutations
  */
-export const union = internal.union
+export const union: (that: Interval) => (self: Interval) => Option.Option<Interval> = internal.union
 
 /**
  * Construct an `Interval` that includes all time equal to and after the
@@ -123,7 +125,7 @@ export const union = internal.union
  * @since 1.0.0
  * @category constructors
  */
-export const after = internal.after
+export const after: (startMilliseconds: number) => Interval = internal.after
 
 /**
  * Construct an `Interval` that includes all time equal to and before the
@@ -133,4 +135,4 @@ export const after = internal.after
  * @category constructors
  * @since 1.0.0
  */
-export const before = internal.before
+export const before: (endMilliseconds: number) => Interval = internal.before

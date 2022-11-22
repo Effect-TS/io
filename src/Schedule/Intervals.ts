@@ -34,7 +34,7 @@ export interface Intervals {
  * @since 1.0.0
  * @category constructors
  */
-export const make = internal.make
+export const make: (intervals: List.List<Interval.Interval>) => Intervals = internal.make
 
 /**
  * Constructs an empty list of `Interval`s.
@@ -42,7 +42,7 @@ export const make = internal.make
  * @since 1.0.0
  * @category constructors
  */
-export const empty = internal.empty
+export const empty: Intervals = internal.empty
 
 /**
  * Constructs `Intervals` from the specified `Iterable<Interval>`.
@@ -50,7 +50,7 @@ export const empty = internal.empty
  * @since 1.0.0
  * @category constructors
  */
-export const fromIterable = internal.fromIterable
+export const fromIterable: (intervals: Iterable<Interval.Interval>) => Intervals = internal.fromIterable
 
 /**
  * Computes the union of this `Intervals` and  that `Intervals`
@@ -58,7 +58,7 @@ export const fromIterable = internal.fromIterable
  * @since 1.0.0
  * @category mutations
  */
-export const union = internal.union
+export const union: (that: Intervals) => (self: Intervals) => Intervals = internal.union
 
 /**
  * Produces the intersection of this `Intervals` and that `Intervals`.
@@ -66,7 +66,7 @@ export const union = internal.union
  * @since 1.0.0
  * @category mutations
  */
-export const intersect = internal.intersect
+export const intersect: (that: Intervals) => (self: Intervals) => Intervals = internal.intersect
 
 /**
  * The start of the earliest interval in the specified `Intervals`.
@@ -74,7 +74,7 @@ export const intersect = internal.intersect
  * @since 1.0.0
  * @category getters
  */
-export const start = internal.start
+export const start: (self: Intervals) => number = internal.start
 
 /**
  * The end of the latest interval in the specified `Intervals`.
@@ -82,7 +82,7 @@ export const start = internal.start
  * @since 1.0.0
  * @category getters
  */
-export const end = internal.end
+export const end: (self: Intervals) => number = internal.end
 
 /**
  * Returns `true` if the start of this `Intervals` is before the start of that
@@ -91,7 +91,7 @@ export const end = internal.end
  * @since 1.0.0
  * @category ordering
  */
-export const lessThan = internal.lessThan
+export const lessThan: (that: Intervals) => (self: Intervals) => boolean = internal.lessThan
 
 /**
  * Returns `true` if this `Intervals` is non-empty, `false` otherwise.
@@ -99,7 +99,7 @@ export const lessThan = internal.lessThan
  * @since 1.0.0
  * @category getters
  */
-export const isNonEmpty = internal.isNonEmpty
+export const isNonEmpty: (self: Intervals) => boolean = internal.isNonEmpty
 
 /**
  * Returns the maximum of the two `Intervals` (i.e. which has the latest start).
@@ -107,4 +107,4 @@ export const isNonEmpty = internal.isNonEmpty
  * @since 1.0.0
  * @category ordering
  */
-export const max = internal.max
+export const max: (that: Intervals) => (self: Intervals) => Intervals = internal.max
