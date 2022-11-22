@@ -5,6 +5,7 @@ import type * as Effect from "@effect/io/Effect"
 import * as circular from "@effect/io/internal/effect/circular"
 import * as internal from "@effect/io/internal/synchronizedRef"
 import type * as Ref from "@effect/io/Ref"
+import type * as Option from "@fp-ts/data/Option"
 
 /**
  * @since 1.0.0
@@ -49,143 +50,172 @@ export declare namespace Synchronized {
  * @since 1.0.0
  * @category constructors
  */
-export const make = circular.makeSynchronized
+export const make: <A>(value: A) => Effect.Effect<never, never, Synchronized<A>> = circular.makeSynchronized
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category getters
  */
-export const get = internal.get
+export const get: <A>(self: Synchronized<A>) => Effect.Effect<never, never, A> = internal.get
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const getAndSet = internal.getAndSet
+export const getAndSet: <A>(value: A) => (self: Synchronized<A>) => Effect.Effect<never, never, A> = internal.getAndSet
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const getAndUpdate = internal.getAndUpdate
+export const getAndUpdate: <A>(f: (a: A) => A) => (self: Synchronized<A>) => Effect.Effect<never, never, A> =
+  internal.getAndUpdate
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const getAndUpdateEffect = internal.getAndUpdateEffect
+export const getAndUpdateEffect: <A, R, E>(
+  f: (a: A) => Effect.Effect<R, E, A>
+) => (self: Synchronized<A>) => Effect.Effect<R, E, A> = internal.getAndUpdateEffect
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const getAndUpdateSome = internal.getAndUpdateSome
+export const getAndUpdateSome: <A>(
+  f: (a: A) => Option.Option<A>
+) => (self: Synchronized<A>) => Effect.Effect<never, never, A> = internal.getAndUpdateSome
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const getAndUpdateSomeEffect = internal.getAndUpdateSomeEffect
+export const getAndUpdateSomeEffect: <A, R, E>(
+  pf: (a: A) => Option.Option<Effect.Effect<R, E, A>>
+) => (self: Synchronized<A>) => Effect.Effect<R, E, A> = internal.getAndUpdateSomeEffect
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const modify = internal.modify
+export const modify: <A, B>(f: (a: A) => readonly [B, A]) => (self: Synchronized<A>) => Effect.Effect<never, never, B> =
+  internal.modify
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const modifyEffect = internal.modifyEffect
+export const modifyEffect: <A, R, E, B>(
+  f: (a: A) => Effect.Effect<R, E, readonly [B, A]>
+) => (self: Synchronized<A>) => Effect.Effect<R, E, B> = internal.modifyEffect
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const modifySome = internal.modifySome
+export const modifySome: <A, B>(
+  fallback: B,
+  f: (a: A) => Option.Option<readonly [B, A]>
+) => (self: Synchronized<A>) => Effect.Effect<never, never, B> = internal.modifySome
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const modifySomeEffect = internal.modifySomeEffect
+export const modifySomeEffect: <B, A, R, E>(
+  fallback: B,
+  pf: (a: A) => Option.Option<Effect.Effect<R, E, readonly [B, A]>>
+) => (self: Synchronized<A>) => Effect.Effect<R, E, B> = internal.modifySomeEffect
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const set = internal.set
+export const set: <A>(value: A) => (self: Synchronized<A>) => Effect.Effect<never, never, void> = internal.set
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const setAndGet = internal.setAndGet
+export const setAndGet: <A>(value: A) => (self: Synchronized<A>) => Effect.Effect<never, never, A> = internal.setAndGet
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const update = internal.update
+export const update: <A>(f: (a: A) => A) => (self: Synchronized<A>) => Effect.Effect<never, never, void> =
+  internal.update
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const updateEffect = internal.updateEffect
+export const updateEffect: <A, R, E>(
+  f: (a: A) => Effect.Effect<R, E, A>
+) => (self: Synchronized<A>) => Effect.Effect<R, E, void> = internal.updateEffect
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const updateAndGetEffect = internal.updateAndGetEffect
+export const updateAndGetEffect: <A, R, E>(
+  f: (a: A) => Effect.Effect<R, E, A>
+) => (self: Synchronized<A>) => Effect.Effect<R, E, A> = internal.updateAndGetEffect
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const updateSome = internal.updateSome
+export const updateSome: <A>(
+  f: (a: A) => Option.Option<A>
+) => (self: Synchronized<A>) => Effect.Effect<never, never, void> = internal.updateSome
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const updateSomeEffect = internal.updateSomeEffect
+export const updateSomeEffect: <A, R, E>(
+  pf: (a: A) => Option.Option<Effect.Effect<R, E, A>>
+) => (self: Synchronized<A>) => Effect.Effect<R, E, void> = internal.updateSomeEffect
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const updateSomeAndGet = internal.updateSomeAndGet
+export const updateSomeAndGet: <A>(
+  f: (a: A) => Option.Option<A>
+) => (self: Synchronized<A>) => Effect.Effect<never, never, A> = internal.updateSomeAndGet
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const updateSomeAndGetEffect = circular.updateSomeAndGetEffectSynchronized
+export const updateSomeAndGetEffect: <A, R, E>(
+  pf: (a: A) => Option.Option<Effect.Effect<R, E, A>>
+) => (self: Synchronized<A>) => Effect.Effect<R, E, A> = circular.updateSomeAndGetEffectSynchronized
 
 /**
  * @since 1.0.0
  * @category unsafe
  */
-export const unsafeMake = circular.unsafeMakeSynchronized
+export const unsafeMake: <A>(value: A) => Synchronized<A> = circular.unsafeMakeSynchronized
