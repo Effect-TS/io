@@ -952,7 +952,7 @@ describe.concurrent("Schedule", () => {
       Effect.gen(function*() {
         const input = List.of(Date.now())
         const exit = yield* Effect.exit(runCollect(Schedule.secondOfMinute(60), input))
-        const exception = new Cause.IllegalArgumentException(
+        const exception = Cause.IllegalArgumentException(
           "Invalid argument in: secondOfMinute(60). Must be in range 0...59"
         )
         assert.deepStrictEqual(Exit.unannotate(exit), Exit.die(exception))
@@ -962,7 +962,7 @@ describe.concurrent("Schedule", () => {
       Effect.gen(function*() {
         const input = List.of(Date.now())
         const exit = yield* Effect.exit(runCollect(Schedule.minuteOfHour(60), input))
-        const exception = new Cause.IllegalArgumentException(
+        const exception = Cause.IllegalArgumentException(
           "Invalid argument in: minuteOfHour(60). Must be in range 0...59"
         )
         assert.deepStrictEqual(Exit.unannotate(exit), Exit.die(exception))
@@ -972,7 +972,7 @@ describe.concurrent("Schedule", () => {
       Effect.gen(function*() {
         const input = List.of(Date.now())
         const exit = yield* Effect.exit(runCollect(Schedule.hourOfDay(24), input))
-        const exception = new Cause.IllegalArgumentException(
+        const exception = Cause.IllegalArgumentException(
           "Invalid argument in: hourOfDay(24). Must be in range 0...23"
         )
         assert.deepStrictEqual(Exit.unannotate(exit), Exit.die(exception))
@@ -982,7 +982,7 @@ describe.concurrent("Schedule", () => {
       Effect.gen(function*() {
         const input = List.of(Date.now())
         const exit = yield* Effect.exit(runCollect(Schedule.dayOfWeek(8), input))
-        const exception = new Cause.IllegalArgumentException(
+        const exception = Cause.IllegalArgumentException(
           "Invalid argument in: dayOfWeek(8). Must be in range 1 (Monday)...7 (Sunday)"
         )
         assert.deepStrictEqual(Exit.unannotate(exit), Exit.die(exception))
@@ -992,7 +992,7 @@ describe.concurrent("Schedule", () => {
       Effect.gen(function*() {
         const input = List.of(Date.now())
         const exit = yield* Effect.exit(runCollect(Schedule.dayOfMonth(32), input))
-        const exception = new Cause.IllegalArgumentException(
+        const exception = Cause.IllegalArgumentException(
           "Invalid argument in: dayOfMonth(32). Must be in range 1...31"
         )
         assert.deepStrictEqual(Exit.unannotate(exit), Exit.die(exception))

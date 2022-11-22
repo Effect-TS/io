@@ -778,7 +778,7 @@ export const acquireN = (n: number) => {
   return (self: Semaphore): STM.STM<never, never, void> => {
     return STM.effect((journal) => {
       if (n < 0) {
-        throw new Cause.IllegalArgumentException(`Unexpected negative value ${n} passed to Semaphore.acquireN`)
+        throw Cause.IllegalArgumentException(`Unexpected negative value ${n} passed to Semaphore.acquireN`)
       }
       const value = pipe(self.permits, TRef.unsafeGet(journal))
       if (value < n) {
@@ -794,7 +794,7 @@ export const releaseN = (n: number) => {
   return (self: Semaphore): STM.STM<never, never, void> => {
     return STM.effect((journal) => {
       if (n < 0) {
-        throw new Cause.IllegalArgumentException(`Unexpected negative value ${n} passed to Semaphore.releaseN`)
+        throw Cause.IllegalArgumentException(`Unexpected negative value ${n} passed to Semaphore.releaseN`)
       }
       const current = pipe(self.permits, TRef.unsafeGet(journal))
       return pipe(self.permits, TRef.unsafeSet(current + n, journal))
