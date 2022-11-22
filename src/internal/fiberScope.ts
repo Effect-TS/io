@@ -1,7 +1,8 @@
 import * as FiberId from "@effect/io/Fiber/Id"
-import * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
+import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import * as FiberMessage from "@effect/io/internal/fiberMessage"
 import type * as FiberRuntime from "@effect/io/internal/fiberRuntime"
+import * as _runtimeFlags from "@effect/io/internal/runtimeFlags"
 
 /** @internal */
 const FiberScopeSymbolKey = "@effect/io/Fiber/Scope"
@@ -30,7 +31,7 @@ class Global implements FiberScope {
   readonly [FiberScopeTypeId]: FiberScopeTypeId = FiberScopeTypeId
   readonly fiberId = FiberId.none
   add(runtimeFlags: RuntimeFlags.RuntimeFlags, child: FiberRuntime.FiberRuntime<any, any>): void {
-    if (RuntimeFlags.isEnabled(RuntimeFlags.FiberRoots)(runtimeFlags)) {
+    if (_runtimeFlags.isEnabled(_runtimeFlags.FiberRoots)(runtimeFlags)) {
       _roots.add(child)
       child.unsafeAddObserver(() => {
         _roots.delete(child)

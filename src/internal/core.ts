@@ -6,7 +6,7 @@ import type * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
 import type * as Exit from "@effect/io/Exit"
 import type * as Fiber from "@effect/io/Fiber"
 import * as FiberId from "@effect/io/Fiber/Id"
-import * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
+import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import * as RuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
 import type * as FiberStatus from "@effect/io/Fiber/Status"
 import type * as FiberRef from "@effect/io/FiberRef"
@@ -14,6 +14,7 @@ import * as deferred from "@effect/io/internal/deferred"
 import type * as FiberRuntime from "@effect/io/internal/fiberRuntime"
 import type * as fiberScope from "@effect/io/internal/fiberScope"
 import * as OpCodes from "@effect/io/internal/opCodes/effect"
+import * as _runtimeFlags from "@effect/io/internal/runtimeFlags"
 import * as Scheduler from "@effect/io/internal/scheduler"
 import * as SingleShotGen from "@effect/io/internal/singleShotGen"
 import type * as LogLevel from "@effect/io/Logger/Level"
@@ -326,7 +327,7 @@ export const checkInterruptible = <R, E, A>(
 ): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
   return withFiberRuntime<R, E, A>(
-    (_, status) => f(RuntimeFlags.interruption(status.runtimeFlags))
+    (_, status) => f(_runtimeFlags.interruption(status.runtimeFlags))
   ).traced(trace)
 }
 
@@ -593,7 +594,7 @@ export const interruptible = <R, E, A>(
   const trace = getCallTrace()
   const effect = Object.create(proto)
   effect.op = OpCodes.OP_UPDATE_RUNTIME_FLAGS
-  effect.update = RuntimeFlagsPatch.enable(RuntimeFlags.Interruption)
+  effect.update = RuntimeFlagsPatch.enable(_runtimeFlags.Interruption)
   effect.scope = () => self
   effect.trace = trace
   return effect
@@ -610,9 +611,9 @@ export const interruptibleMask = <R, E, A>(
   const trace = getCallTrace()
   const effect = Object.create(proto)
   effect.op = OpCodes.OP_UPDATE_RUNTIME_FLAGS
-  effect.update = RuntimeFlagsPatch.enable(RuntimeFlags.Interruption)
+  effect.update = RuntimeFlagsPatch.enable(_runtimeFlags.Interruption)
   effect.scope = (oldFlags: RuntimeFlags.RuntimeFlags) =>
-    RuntimeFlags.interruption(oldFlags)
+    _runtimeFlags.interruption(oldFlags)
       ? f(interruptible)
       : f(uninterruptible)
   effect.trace = trace
@@ -756,6 +757,14 @@ export const provideSomeEnvironment = <R0, R>(f: (context: Context.Context<R0>) 
 }
 
 /** @internal */
+export const runtimeFlags = (): Effect.Effect<never, never, RuntimeFlags.RuntimeFlags> => {
+  const trace = getCallTrace()
+  return withFiberRuntime<never, never, RuntimeFlags.RuntimeFlags>((_, status) => succeed(status.runtimeFlags)).traced(
+    trace
+  )
+}
+
+/** @internal */
 export const service = <T>(tag: Context.Tag<T>): Effect.Effect<T, never, T> => {
   const trace = getCallTrace()
   return serviceWithEffect(tag)(succeed).traced(trace)
@@ -840,7 +849,7 @@ export const uninterruptible = <R, E, A>(
   const trace = getCallTrace()
   const effect = Object.create(proto)
   effect.op = OpCodes.OP_UPDATE_RUNTIME_FLAGS
-  effect.update = RuntimeFlagsPatch.disable(RuntimeFlags.Interruption)
+  effect.update = RuntimeFlagsPatch.disable(_runtimeFlags.Interruption)
   effect.scope = () => self
   effect.trace = trace
   return effect
@@ -857,9 +866,9 @@ export const uninterruptibleMask = <R, E, A>(
   const trace = getCallTrace()
   const effect = Object.create(proto)
   effect.op = OpCodes.OP_UPDATE_RUNTIME_FLAGS
-  effect.update = RuntimeFlagsPatch.disable(RuntimeFlags.Interruption)
+  effect.update = RuntimeFlagsPatch.disable(_runtimeFlags.Interruption)
   effect.scope = (oldFlags: RuntimeFlags.RuntimeFlags) => {
-    return RuntimeFlags.interruption(oldFlags)
+    return _runtimeFlags.interruption(oldFlags)
       ? f(interruptible)
       : f(uninterruptible)
   }
@@ -1326,7 +1335,7 @@ export const fiberRefUnsafeMakeRuntimeFlags = (
 ): FiberRef.FiberRef<RuntimeFlags.RuntimeFlags> => {
   return fiberRefUnsafeMakePatch(
     initial,
-    RuntimeFlags.differ(),
+    _runtimeFlags.differ(),
     RuntimeFlagsPatch.empty
   )
 }

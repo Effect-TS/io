@@ -4,16 +4,17 @@ import type * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import * as Fiber from "@effect/io/Fiber"
 import * as FiberId from "@effect/io/Fiber/Id"
-import * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
+import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import type * as FiberRef from "@effect/io/FiberRef"
 import * as FiberRefs from "@effect/io/FiberRefs"
 import * as core from "@effect/io/internal/core"
 import * as FiberRuntime from "@effect/io/internal/fiberRuntime"
 import * as fiberScope from "@effect/io/internal/fiberScope"
 import * as OpCodes from "@effect/io/internal/opCodes/effect"
+import * as runtimeFlags from "@effect/io/internal/runtimeFlags"
 import * as Scheduler from "@effect/io/internal/scheduler"
+import * as _supervisor from "@effect/io/internal/supervisor"
 import type * as Runtime from "@effect/io/Runtime"
-import * as Supervisor from "@effect/io/Supervisor"
 import * as Context from "@fp-ts/data/Context"
 import { constVoid, identity, pipe } from "@fp-ts/data/Function"
 import * as Option from "@fp-ts/data/Option"
@@ -52,7 +53,7 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
 
     const supervisor = fiberRuntime.getSupervisor()
 
-    if (supervisor !== Supervisor.none) {
+    if (supervisor !== _supervisor.none) {
       supervisor.onStart(this.context, effect, Option.none, fiberRuntime)
 
       fiberRuntime.unsafeAddObserver((exit) => supervisor.onEnd(exit, fiberRuntime))
@@ -88,7 +89,7 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
 
     const supervisor = fiberRuntime.getSupervisor()
 
-    if (supervisor !== Supervisor.none) {
+    if (supervisor !== _supervisor.none) {
       supervisor.onStart(this.context, effect, Option.none, fiberRuntime)
 
       fiberRuntime.unsafeAddObserver((exit) => supervisor.onEnd(exit, fiberRuntime))
@@ -145,7 +146,7 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
 
     const supervisor = fiberRuntime.getSupervisor()
 
-    if (supervisor !== Supervisor.none) {
+    if (supervisor !== _supervisor.none) {
       supervisor.onStart(this.context, effect, Option.none, fiberRuntime)
 
       fiberRuntime.unsafeAddObserver((exit) => supervisor.onEnd(exit, fiberRuntime))
@@ -228,10 +229,10 @@ export const runtime = <R>(): Effect.Effect<R, never, Runtime.Runtime<R>> => {
 }
 
 /** @internal */
-export const defaultRuntimeFlags = RuntimeFlags.make(
-  RuntimeFlags.FiberRoots,
-  RuntimeFlags.Interruption,
-  RuntimeFlags.CooperativeYielding
+export const defaultRuntimeFlags: RuntimeFlags.RuntimeFlags = runtimeFlags.make(
+  runtimeFlags.FiberRoots,
+  runtimeFlags.Interruption,
+  runtimeFlags.CooperativeYielding
 )
 
 /** @internal */

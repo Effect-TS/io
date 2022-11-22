@@ -5,10 +5,10 @@ import type * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import type * as Fiber from "@effect/io/Fiber"
 import * as FiberId from "@effect/io/Fiber/Id"
-import * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import * as FiberStatus from "@effect/io/Fiber/Status"
 import * as core from "@effect/io/internal/core"
 import * as fiberScope from "@effect/io/internal/fiberScope"
+import * as runtimeFlags from "@effect/io/internal/runtimeFlags"
 import * as order from "@fp-ts/core/typeclass/Order"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Either from "@fp-ts/data/Either"
@@ -381,7 +381,7 @@ const renderStatus = (status: FiberStatus.FiberStatus): string => {
     return "Running"
   }
 
-  const isInterruptible = RuntimeFlags.interruptible(status.runtimeFlags) ?
+  const isInterruptible = runtimeFlags.interruptible(status.runtimeFlags) ?
     "interruptible" :
     "uninterruptible"
   return `Suspended(${isInterruptible})`

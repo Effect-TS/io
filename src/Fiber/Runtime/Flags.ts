@@ -3,7 +3,9 @@
  */
 
 import type * as RuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
+import * as circular from "@effect/io/internal/layer/circular"
 import * as internal from "@effect/io/internal/runtimeFlags"
+import type * as Layer from "@effect/io/Layer"
 import type * as Differ from "@fp-ts/data/Differ"
 
 /**
@@ -176,6 +178,36 @@ export const enable: (flag: RuntimeFlag) => (self: RuntimeFlags) => RuntimeFlags
  * @category mutations
  */
 export const enableAll: (flags: RuntimeFlags) => (self: RuntimeFlags) => RuntimeFlags = internal.enableAll
+
+/**
+ * @since 1.0.0
+ * @category environment
+ */
+export const enableCooperativeYielding: () => Layer.Layer<never, never, never> = circular.enableCooperativeYielding
+
+/**
+ * @since 1.0.0
+ * @category environment
+ */
+export const enableCurrentFiber: () => Layer.Layer<never, never, never> = circular.enableCurrentFiber
+
+/**
+ * @since 1.0.0
+ * @category environment
+ */
+export const enableFiberRoots: () => Layer.Layer<never, never, never> = circular.enableFiberRoots
+
+/**
+ * @since 1.0.0
+ * @category environment
+ */
+export const enableOpSupervision: () => Layer.Layer<never, never, never> = circular.enableOpSupervision
+
+/**
+ * @since 1.0.0
+ * @category environment
+ */
+export const enableRuntimeMetrics: () => Layer.Layer<never, never, never> = circular.enableRuntimeMetrics
 
 /**
  * Returns `true` if the `FiberRoots` `RuntimeFlag` is enabled, `false`

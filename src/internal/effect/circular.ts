@@ -16,10 +16,11 @@ import * as internalRef from "@effect/io/internal/ref"
 import * as _schedule from "@effect/io/internal/schedule"
 import * as STM from "@effect/io/internal/stm"
 import * as TRef from "@effect/io/internal/stm/ref"
+import * as supervisor from "@effect/io/internal/supervisor"
 import type * as Synchronized from "@effect/io/Ref/Synchronized"
 import type * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"
-import * as Supervisor from "@effect/io/Supervisor"
+import type * as Supervisor from "@effect/io/Supervisor"
 import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as Duration from "@fp-ts/data/Duration"
 import * as Either from "@fp-ts/data/Either"
@@ -193,7 +194,7 @@ export const ensuringChildren = <R1, X>(
   const trace = getCallTrace()
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1, E, A> => {
     return pipe(
-      Supervisor.track(),
+      supervisor.track(),
       core.flatMap((supervisor) =>
         pipe(
           self,

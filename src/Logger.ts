@@ -58,15 +58,15 @@ export declare namespace Logger {
 
 /**
  * @since 1.0.0
- * @category constructors
+ * @category environment
  */
-export const consoleLogger: () => Logger<string, void> = internal.consoleLogger
+export const addLogger: <B>(logger: Logger<string, B>) => Layer.Layer<never, never, never> = circular.addLogger
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const defaultLogger: Logger<string, string> = internal.defaultLogger
+export const consoleLogger: () => Logger<string, void> = internal.consoleLogger
 
 /**
  * @since 1.0.0
@@ -83,6 +83,12 @@ export const contramap: <Message, Message2>(
 ) => <Output>(self: Logger<Message, Output>) => Logger<Message2, Output> = internal.contramap
 
 /**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const defaultLogger: Logger<string, string> = internal.defaultLogger
+
+/**
  * Returns a version of this logger that only logs messages when the log level
  * satisfies the specified predicate.
  *
@@ -93,12 +99,6 @@ export const filterLogLevel: (
   f: (logLevel: LogLevel.LogLevel) => boolean
 ) => <Message, Output>(self: Logger<Message, Output>) => Logger<Message, Option.Option<Output>> =
   internal.filterLogLevel
-
-/**
- * @since 1.0.0
- * @category environment
- */
-export const layer: <B>(logger: Logger<string, B>) => Layer.Layer<never, never, never> = circular.loggerLayer
 
 /**
  * @since 1.0.0

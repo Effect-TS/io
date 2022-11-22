@@ -1,5 +1,5 @@
-import { Zip } from "@effect/io/internal/supervisor"
-import * as Supervisor from "@effect/io/Supervisor"
+import * as supervisor from "@effect/io/internal/supervisor"
+import type * as Supervisor from "@effect/io/Supervisor"
 import * as Differ from "@fp-ts/data/Differ"
 import * as Equal from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
@@ -128,9 +128,9 @@ const removeSupervisor = (
   that: Supervisor.Supervisor<any>
 ): Supervisor.Supervisor<any> => {
   if (Equal.equals(self, that)) {
-    return Supervisor.none
+    return supervisor.none
   } else {
-    if (self instanceof Zip) {
+    if (self instanceof supervisor.Zip) {
       return removeSupervisor(self.left, that).zip(removeSupervisor(self.right, that))
     } else {
       return self
@@ -140,10 +140,10 @@ const removeSupervisor = (
 
 /** @internal */
 const toSet = (self: Supervisor.Supervisor<any>): HashSet.HashSet<Supervisor.Supervisor<any>> => {
-  if (Equal.equals(self, Supervisor.none)) {
+  if (Equal.equals(self, supervisor.none)) {
     return HashSet.empty()
   } else {
-    if (self instanceof Zip) {
+    if (self instanceof supervisor.Zip) {
       return pipe(toSet(self.left), HashSet.union(toSet(self.right)))
     } else {
       return HashSet.make(self)

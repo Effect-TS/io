@@ -8,6 +8,7 @@ import type * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
 import type * as Exit from "@effect/io/Exit"
 import type * as Fiber from "@effect/io/Fiber"
 import type * as FiberId from "@effect/io/Fiber/Id"
+import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import type * as RuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
 import type * as FiberRefs from "@effect/io/FiberRefs"
 import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
@@ -3033,6 +3034,16 @@ export const rightWith: <R, E, A, A1, B, B1, R1, E1>(
 export const runtime: <R>() => Effect<R, never, Runtime.Runtime<R>> = _runtime.runtime
 
 /**
+ * Retrieves an effect that succeeds with the current runtime flags, which
+ * govern behavior and features of the runtime system.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const runtimeFlags: () => Effect<never, never, RuntimeFlags.RuntimeFlags> = core.runtimeFlags
+
+/**
  * Exposes the full `Cause` of failure for the specified effect.
  *
  * @macro traced
@@ -4137,6 +4148,14 @@ export const withParallelismUnbounded: <R, E, A>(self: Effect<R, E, A>) => Effec
 export const withRuntimeFlags: (
   update: RuntimeFlagsPatch.RuntimeFlagsPatch
 ) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A> = core.withRuntimeFlags
+
+/**
+ * @macro traced
+ * @since 1.0.0
+ * @category runtime
+ */
+export const withRuntimeFlagsScoped: (update: RuntimeFlagsPatch.RuntimeFlagsPatch) => Effect<Scope.Scope, never, void> =
+  fiberRuntime.withRuntimeFlagsScoped
 
 /**
  * Annotates the wrapped effect with a span using the current Tracer.
