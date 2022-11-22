@@ -1,5 +1,13 @@
 # @effect/io
 
+## 0.0.3
+
+### Patch Changes
+
+- [#17](https://github.com/Effect-TS/io/pull/17) [`8891d12`](https://github.com/Effect-TS/io/commit/8891d1244e37cc6dab123b0b2e4617333d8a9206) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Support Tag in Gen
+
+- [#20](https://github.com/Effect-TS/io/pull/20) [`9ea5b01`](https://github.com/Effect-TS/io/commit/9ea5b01b1c9239b8f2e7dd78571acde12c16bc5d) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Rollback Tag Support
+
 ## 0.0.2
 
 ### Patch Changes
