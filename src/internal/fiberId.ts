@@ -5,6 +5,7 @@ import * as HashSet from "@fp-ts/data/HashSet"
 import * as MutableRef from "@fp-ts/data/mutable/MutableRef"
 import * as Option from "@fp-ts/data/Option"
 
+/** @internal */
 const FiberIdSymbolKey = "@effect/io/Fiber/Id"
 
 /** @internal */
@@ -13,24 +14,42 @@ export const FiberIdTypeId: FiberId.FiberIdTypeId = Symbol.for(
 ) as FiberId.FiberIdTypeId
 
 /** @internal */
+const OP_NONE = 0 as const
+
+/** @internal */
+export type OP_NONE = typeof OP_NONE
+
+/** @internal */
+const OP_RUNTIME = 1 as const
+
+/** @internal */
+export type OP_RUNTIME = typeof OP_RUNTIME
+
+/** @internal */
+const OP_COMPOSITE = 2 as const
+
+/** @internal */
+export type OP_COMPOSITE = typeof OP_COMPOSITE
+
+/** @internal */
 class None implements FiberId.None {
   readonly [FiberIdTypeId]: FiberId.FiberIdTypeId = FiberIdTypeId
-  readonly _tag = "None";
+  readonly op = OP_NONE;
   [Equal.symbolHash](): number {
     return pipe(
       Equal.hash(FiberIdSymbolKey),
-      Equal.hashCombine(Equal.hash(this._tag))
+      Equal.hashCombine(Equal.hash(this.op))
     )
   }
   [Equal.symbolEqual](that: unknown): boolean {
-    return isFiberId(that) && that._tag === "None"
+    return isFiberId(that) && that.op === OP_NONE
   }
 }
 
 /** @internal */
 class Runtime implements FiberId.Runtime {
   readonly [FiberIdTypeId]: FiberId.FiberIdTypeId = FiberIdTypeId
-  readonly _tag = "Runtime"
+  readonly op = OP_RUNTIME
   constructor(
     readonly id: number,
     readonly startTimeMillis: number
@@ -38,14 +57,14 @@ class Runtime implements FiberId.Runtime {
   [Equal.symbolHash](): number {
     return pipe(
       Equal.hash(FiberIdSymbolKey),
-      Equal.hashCombine(Equal.hash(this._tag)),
+      Equal.hashCombine(Equal.hash(this.op)),
       Equal.hashCombine(Equal.hash(this.id)),
       Equal.hashCombine(Equal.hash(this.startTimeMillis))
     )
   }
   [Equal.symbolEqual](that: unknown): boolean {
     return isFiberId(that) &&
-      that._tag === "Runtime" &&
+      that.op === OP_RUNTIME &&
       this.id === that.id &&
       this.startTimeMillis === that.startTimeMillis
   }
@@ -54,7 +73,7 @@ class Runtime implements FiberId.Runtime {
 /** @internal */
 class Composite implements FiberId.Composite {
   readonly [FiberIdTypeId]: FiberId.FiberIdTypeId = FiberIdTypeId
-  readonly _tag = "Composite"
+  readonly op = OP_COMPOSITE
   constructor(
     readonly left: FiberId.FiberId,
     readonly right: FiberId.FiberId
@@ -62,14 +81,14 @@ class Composite implements FiberId.Composite {
   [Equal.symbolHash](): number {
     return pipe(
       Equal.hash(FiberIdSymbolKey),
-      Equal.hashCombine(Equal.hash(this._tag)),
+      Equal.hashCombine(Equal.hash(this.op)),
       Equal.hashCombine(Equal.hash(this.left)),
       Equal.hashCombine(Equal.hash(this.right))
     )
   }
   [Equal.symbolEqual](that: unknown): boolean {
     return isFiberId(that) &&
-      that._tag === "Composite" &&
+      that.op === OP_COMPOSITE &&
       Equal.equals(this.left, that.left) &&
       Equal.equals(this.right, that.right)
   }
@@ -95,16 +114,26 @@ export const isFiberId = (self: unknown): self is FiberId.FiberId => {
 
 /** @internal */
 export const isNone = (self: FiberId.FiberId): self is FiberId.None => {
-  return pipe(toSet(self), HashSet.every((id) => isNone(id)))
+  return self.op === OP_NONE || pipe(toSet(self), HashSet.every((id) => isNone(id)))
+}
+
+/** @internal */
+export const isRuntime = (self: FiberId.FiberId): self is FiberId.Runtime => {
+  return self.op === OP_RUNTIME
+}
+
+/** @internal */
+export const isComposite = (self: FiberId.FiberId): self is FiberId.Composite => {
+  return self.op === OP_COMPOSITE
 }
 
 /** @internal */
 export const combine = (that: FiberId.FiberId) => {
   return (self: FiberId.FiberId): FiberId.FiberId => {
-    if (self._tag === "None") {
+    if (self.op === OP_NONE) {
       return that
     }
-    if (that._tag === "None") {
+    if (that.op === OP_NONE) {
       return self
     }
     return new Composite(self, that)
@@ -123,14 +152,14 @@ export const getOrElse = (that: FiberId.FiberId) => {
 
 /** @internal */
 export const ids = (self: FiberId.FiberId): HashSet.HashSet<number> => {
-  switch (self._tag) {
-    case "None": {
+  switch (self.op) {
+    case OP_NONE: {
       return HashSet.empty()
     }
-    case "Runtime": {
+    case OP_RUNTIME: {
       return HashSet.make(self.id)
     }
-    case "Composite": {
+    case OP_COMPOSITE: {
       return pipe(ids(self.left), HashSet.union(ids(self.right)))
     }
   }
@@ -141,13 +170,6 @@ const _fiberCounter = MutableRef.make(0)
 /** @internal */
 export const make = (id: number, startTimeSeconds: number): FiberId.FiberId => {
   return new Runtime(id, startTimeSeconds)
-}
-
-/** @internal */
-export const unsafeMake = (): FiberId.Runtime => {
-  const id = MutableRef.get(_fiberCounter)
-  pipe(_fiberCounter, MutableRef.set(id + 1))
-  return new Runtime(id, new Date().getTime())
 }
 
 /** @internal */
@@ -180,15 +202,22 @@ export const toOption = (self: FiberId.FiberId): Option.Option<FiberId.FiberId> 
 
 /** @internal */
 export const toSet = (self: FiberId.FiberId): HashSet.HashSet<FiberId.Runtime> => {
-  switch (self._tag) {
-    case "None": {
+  switch (self.op) {
+    case OP_NONE: {
       return HashSet.empty()
     }
-    case "Composite": {
-      return pipe(toSet(self.left), HashSet.union(toSet(self.right)))
-    }
-    case "Runtime": {
+    case OP_RUNTIME: {
       return HashSet.make(self)
     }
+    case OP_COMPOSITE: {
+      return pipe(toSet(self.left), HashSet.union(toSet(self.right)))
+    }
   }
+}
+
+/** @internal */
+export const unsafeMake = (): FiberId.Runtime => {
+  const id = MutableRef.get(_fiberCounter)
+  pipe(_fiberCounter, MutableRef.set(id + 1))
+  return new Runtime(id, new Date().getTime())
 }
