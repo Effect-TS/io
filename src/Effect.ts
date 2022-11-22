@@ -1583,25 +1583,15 @@ export const fromFiberEffect: <R, E, A>(fiber: Effect<R, E, Fiber.Fiber<E, A>>) 
 export const fromOption: <A>(option: Option.Option<A>) => Effect<never, Option.Option<never>, A> = effect.fromOption
 
 /**
- * @since 1.0.0
- * @category models
- */
-export type GenEffects<EffectOrTag extends Effect.Variance<any, any, any> | Context.Tag<any>> = EffectOrTag extends any
-  ? [EffectOrTag] extends [Effect.Variance<infer R, infer E, infer A>] ? Effect<R, E, A>
-  : [EffectOrTag] extends [Context.Tag<infer A>] ? Effect<A, never, A>
-  : Effect<never, never, never>
-  : Effect<never, never, never>
-
-/**
  * @macro traced
  * @since 1.0.0
  * @category constructors
  */
-export const gen: <Eff extends Effect.Variance<any, any, any> | Context.Tag<any>, AEff>(
+export const gen: <Eff extends Effect.Variance<any, any, any>, AEff>(
   f: () => Generator<Eff, AEff, any>
 ) => Effect<
-  [Eff] extends [never] ? never : [GenEffects<Eff>] extends [Effect<infer R, any, any>] ? R : never,
-  [Eff] extends [never] ? never : [GenEffects<Eff>] extends [Effect<any, infer E, any>] ? E : never,
+  [Eff] extends [never] ? never : [Eff] extends [Effect.Variance<infer R, any, any>] ? R : never,
+  [Eff] extends [never] ? never : [Eff] extends [Effect.Variance<any, infer E, any>] ? E : never,
   AEff
 > = effect.gen
 

@@ -261,7 +261,6 @@ Added in v1.0.0
   - [negate](#negate)
 - [models](#models)
   - [Effect (interface)](#effect-interface)
-  - [GenEffects (type alias)](#geneffects-type-alias)
 - [mutations](#mutations)
   - [awaitAllChildren](#awaitallchildren)
   - [cached](#cached)
@@ -1250,9 +1249,13 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const gen: <Eff extends Effect.Variance<any, any, any> | Context.Tag<any>, AEff>(
+export declare const gen: <Eff extends Effect.Variance<any, any, any>, AEff>(
   f: () => Generator<Eff, AEff, any>
-) => Effect<[Eff] extends [never] ? never : unknown, [Eff] extends [never] ? never : unknown, AEff>
+) => Effect<
+  [Eff] extends [never] ? never : [Eff] extends [Effect.Variance<infer R, any, any>] ? R : never,
+  [Eff] extends [never] ? never : [Eff] extends [Effect.Variance<any, infer E, any>] ? E : never,
+  AEff
+>
 ```
 
 Added in v1.0.0
@@ -3680,22 +3683,6 @@ export interface Effect<R, E, A> extends Effect.Variance<R, E, A>, Equal.Equal {
   /** @internal */
   traced(trace: string | undefined): Effect<R, E, A>
 }
-```
-
-Added in v1.0.0
-
-## GenEffects (type alias)
-
-**Signature**
-
-```ts
-export type GenEffects<EffectOrTag extends Effect.Variance<any, any, any> | Context.Tag<any>> = EffectOrTag extends any
-  ? [EffectOrTag] extends [Effect.Variance<infer R, infer E, infer A>]
-    ? Effect<R, E, A>
-    : [EffectOrTag] extends [Context.Tag<infer A>]
-    ? Effect<A, never, A>
-    : Effect<never, never, never>
-  : Effect<never, never, never>
 ```
 
 Added in v1.0.0

@@ -924,11 +924,11 @@ export const fromOption = <A>(option: Option.Option<A>): Effect.Effect<never, Op
  * Inspired by https://github.com/tusharmath/qio/pull/22 (revised)
  * @internal
  */
-export const gen = <Eff extends Effect.Effect.Variance<any, any, any> | Context.Tag<any>, AEff>(
+export const gen = <Eff extends Effect.Effect.Variance<any, any, any>, AEff>(
   f: () => Generator<Eff, AEff, any>
 ): Effect.Effect<
-  [Eff] extends [never] ? never : [Effect.GenEffects<Eff>] extends [Effect.Effect<infer R, any, any>] ? R : never,
-  [Eff] extends [never] ? never : [Effect.GenEffects<Eff>] extends [Effect.Effect<any, infer E, any>] ? E : never,
+  [Eff] extends [never] ? never : [Eff] extends [Effect.Effect.Variance<infer R, any, any>] ? R : never,
+  [Eff] extends [never] ? never : [Eff] extends [Effect.Effect.Variance<any, infer E, any>] ? E : never,
   AEff
 > => {
   const trace = getCallTrace()
@@ -941,9 +941,7 @@ export const gen = <Eff extends Effect.Effect.Variance<any, any, any> | Context.
       (state.done ?
         core.succeed(state.value) :
         pipe(
-          Context.isTag(state.value) ?
-            core.service(state.value) :
-            state.value as unknown as Effect.Effect<any, any, any>,
+          state.value as unknown as Effect.Effect<any, any, any>,
           core.flatMap((val: any) => run(iterator.next(val)))
         )).traced(trace)
     return run(state)
