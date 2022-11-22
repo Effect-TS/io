@@ -1,6 +1,7 @@
 /**
  * @since 1.0.0
  */
+import type * as Effect from "@effect/io/Effect"
 import * as internal from "@effect/io/internal/scopedRef"
 import type * as Synchronized from "@effect/io/Ref/Synchronized"
 import type * as Scope from "@effect/io/Scope"
@@ -55,7 +56,9 @@ export declare namespace ScopedRef {
  * @since 1.0.0
  * @category constructors
  */
-export const fromAcquire = internal.fromAcquire
+export const fromAcquire: <R, E, A>(
+  acquire: Effect.Effect<R, E, A>
+) => Effect.Effect<Scope.Scope | R, E, ScopedRef<A>> = internal.fromAcquire
 
 /**
  * Retrieves the current value of the scoped reference.
@@ -64,7 +67,7 @@ export const fromAcquire = internal.fromAcquire
  * @since 1.0.0
  * @category getters
  */
-export const get = internal.get
+export const get: <A>(self: ScopedRef<A>) => Effect.Effect<never, never, A> = internal.get
 
 /**
  * Creates a new `ScopedRef` from the specified value. This method should
@@ -74,7 +77,7 @@ export const get = internal.get
  * @since 1.0.0
  * @category constructors
  */
-export const make = internal.make
+export const make: <A>(evaluate: () => A) => Effect.Effect<Scope.Scope, never, ScopedRef<A>> = internal.make
 
 /**
  * Sets the value of this reference to the specified resourcefully-created
@@ -88,4 +91,6 @@ export const make = internal.make
  * @since 1.0.0
  * @category getters
  */
-export const set = internal.set
+export const set: <R, E, A>(
+  acquire: Effect.Effect<Scope.Scope | R, E, A>
+) => (self: ScopedRef<A>) => Effect.Effect<R, E, void> = internal.set
