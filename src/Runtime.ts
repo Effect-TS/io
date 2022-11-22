@@ -5,7 +5,10 @@ import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
 import type * as Fiber from "@effect/io/Fiber"
 import type * as FiberId from "@effect/io/Fiber/Id"
+import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
+import type * as FiberRefs from "@effect/io/FiberRefs"
 import * as internal from "@effect/io/internal/runtime"
+import type * as Context from "@fp-ts/data/Context"
 
 /**
  * @since 1.0.0
@@ -76,16 +79,20 @@ export interface Runtime<R> {
  * @since 1.0.0
  * @category constructors
  */
-export const defaultRuntime = internal.defaultRuntime
+export const defaultRuntime: Runtime<never> = internal.defaultRuntime
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const defaultRuntimeFlags = internal.defaultRuntimeFlags
+export const defaultRuntimeFlags: RuntimeFlags.RuntimeFlags = internal.defaultRuntimeFlags
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const make = internal.make
+export const make: <R>(
+  context: Context.Context<R>,
+  runtimeFlags: RuntimeFlags.RuntimeFlags,
+  fiberRefs: FiberRefs.FiberRefs
+) => Runtime<R> = internal.make
