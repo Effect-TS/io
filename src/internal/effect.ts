@@ -7,7 +7,6 @@ import type * as Fiber from "@effect/io/Fiber"
 import * as FiberId from "@effect/io/Fiber/Id"
 import * as FiberRefs from "@effect/io/FiberRefs"
 import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
-import { RuntimeException } from "@effect/io/internal/cause"
 import * as core from "@effect/io/internal/core"
 import * as fiberRefsPatch from "@effect/io/internal/fiberRefs/patch"
 import type { EnforceNonEmptyRecord, MergeRecord, NonEmptyArrayEffect, TupleA } from "@effect/io/internal/types"
@@ -451,7 +450,7 @@ export const descriptorWith = <R, E, A>(
 
 /** @internal */
 export const dieMessage = (message: string): Effect.Effect<never, never, never> => {
-  return core.failCauseSync(() => Cause.die(new RuntimeException(message)))
+  return core.failCauseSync(() => Cause.die(Cause.RuntimeException(message)))
 }
 
 /** @internal */
@@ -740,7 +739,7 @@ export const firstSuccessOf = <R, E, A>(effects: Iterable<Effect.Effect<R, E, A>
   return core.suspendSucceed(() => {
     const list = List.fromIterable(effects)
     if (List.isNil(list)) {
-      return core.dieSync(() => new Cause.IllegalArgumentException(`Received an empty collection of effects`))
+      return core.dieSync(() => Cause.IllegalArgumentException(`Received an empty collection of effects`))
     }
     return pipe(
       list.tail,
@@ -962,7 +961,7 @@ export const getOrFail = <A>(
   option: Option.Option<A>
 ): Effect.Effect<never, Cause.NoSuchElementException, A> => {
   const trace = getCallTrace()
-  return pipe(option, getOrFailWith(() => new Cause.NoSuchElementException())).traced(trace)
+  return pipe(option, getOrFailWith(() => Cause.NoSuchElementException())).traced(trace)
 }
 
 /** @internal */
@@ -1970,7 +1969,7 @@ export const someOrFailException = <R, E, A>(
   self: Effect.Effect<R, E, Option.Option<A>>
 ): Effect.Effect<R, E | Cause.NoSuchElementException, A> => {
   const trace = getCallTrace()
-  return pipe(self, someOrFail(() => new Cause.NoSuchElementException())).traced(trace)
+  return pipe(self, someOrFail(() => Cause.NoSuchElementException())).traced(trace)
 }
 
 /** @internal */

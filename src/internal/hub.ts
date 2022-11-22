@@ -1170,7 +1170,7 @@ const nextPow2 = (n: number): number => {
 /** @internal */
 const ensureCapacity = (capacity: number): void => {
   if (capacity <= 0) {
-    throw new cause.InvalidHubCapacityException(`Cannot construct Hub with capacity of ${capacity}`)
+    throw cause.InvalidHubCapacityException(`Cannot construct Hub with capacity of ${capacity}`)
   }
 }
 

@@ -571,12 +571,12 @@ export const squashWith = <E>(f: (error: E) => unknown) => {
             HashSet.flatMap((fiberId) => pipe(FiberId.ids(fiberId), HashSet.map((n) => `#${n}`))),
             HashSet.reduce("", (acc, id) => `${acc}, ${id}`)
           )
-          return new InterruptedException(`Interrupted by fibers: ${fibers}`)
+          return InterruptedException(`Interrupted by fibers: ${fibers}`)
         }
         return pipe(
           defects(self),
           List.head,
-          Option.match(() => new InterruptedException(), identity)
+          Option.match(() => InterruptedException(), identity)
         )
       }
       case "Some": {
@@ -977,10 +977,10 @@ export const RuntimeExceptionTypeId: Cause.RuntimeExceptionTypeId = Symbol.for(
 ) as Cause.RuntimeExceptionTypeId
 
 /** @internal */
-export class RuntimeException implements Cause.RuntimeException {
-  readonly [RuntimeExceptionTypeId]: Cause.RuntimeExceptionTypeId = RuntimeExceptionTypeId
-  constructor(readonly message?: string) {}
-}
+export const RuntimeException = (message?: string): Cause.RuntimeException => ({
+  [RuntimeExceptionTypeId]: RuntimeExceptionTypeId,
+  message
+})
 
 /** @internal */
 export const isRuntimeException = (u: unknown): u is Cause.RuntimeException => {
@@ -993,10 +993,10 @@ export const InterruptedExceptionTypeId: Cause.InterruptedExceptionTypeId = Symb
 ) as Cause.InterruptedExceptionTypeId
 
 /** @internal */
-export class InterruptedException implements Cause.InterruptedException {
-  readonly [InterruptedExceptionTypeId]: Cause.InterruptedExceptionTypeId = InterruptedExceptionTypeId
-  constructor(readonly message?: string) {}
-}
+export const InterruptedException = (message?: string): Cause.InterruptedException => ({
+  [InterruptedExceptionTypeId]: InterruptedExceptionTypeId,
+  message
+})
 
 /** @internal */
 export const isInterruptedException = (u: unknown): u is Cause.InterruptedException => {
@@ -1009,10 +1009,10 @@ export const IllegalArgumentExceptionTypeId: Cause.IllegalArgumentExceptionTypeI
 ) as Cause.IllegalArgumentExceptionTypeId
 
 /** @internal */
-export class IllegalArgumentException implements Cause.IllegalArgumentException {
-  readonly [IllegalArgumentExceptionTypeId]: Cause.IllegalArgumentExceptionTypeId = IllegalArgumentExceptionTypeId
-  constructor(readonly message?: string) {}
-}
+export const IllegalArgumentException = (message?: string): Cause.IllegalArgumentException => ({
+  [IllegalArgumentExceptionTypeId]: IllegalArgumentExceptionTypeId,
+  message
+})
 
 /** @internal */
 export const isIllegalArgumentException = (u: unknown): u is Cause.IllegalArgumentException => {
@@ -1025,10 +1025,10 @@ export const NoSuchElementExceptionTypeId: Cause.NoSuchElementExceptionTypeId = 
 ) as Cause.NoSuchElementExceptionTypeId
 
 /** @internal */
-export class NoSuchElementException implements Cause.NoSuchElementException {
-  readonly [NoSuchElementExceptionTypeId]: Cause.NoSuchElementExceptionTypeId = NoSuchElementExceptionTypeId
-  constructor(readonly message?: string) {}
-}
+export const NoSuchElementException = (message?: string): Cause.NoSuchElementException => ({
+  [NoSuchElementExceptionTypeId]: NoSuchElementExceptionTypeId,
+  message
+})
 
 /** @internal */
 export const isNoSuchElementException = (u: unknown): u is Cause.NoSuchElementException => {
@@ -1041,11 +1041,10 @@ export const InvalidHubCapacityExceptionTypeId: Cause.InvalidHubCapacityExceptio
 ) as Cause.InvalidHubCapacityExceptionTypeId
 
 /** @internal */
-export class InvalidHubCapacityException implements Cause.InvalidHubCapacityException {
-  readonly [InvalidHubCapacityExceptionTypeId]: Cause.InvalidHubCapacityExceptionTypeId =
-    InvalidHubCapacityExceptionTypeId
-  constructor(readonly message?: string) {}
-}
+export const InvalidHubCapacityException = (message?: string): Cause.InvalidHubCapacityException => ({
+  [InvalidHubCapacityExceptionTypeId]: InvalidHubCapacityExceptionTypeId,
+  message
+})
 
 /** @internal */
 export const isInvalidCapacityError = (u: unknown): u is Cause.InvalidHubCapacityException => {
