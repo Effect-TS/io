@@ -215,7 +215,7 @@ export const make = <R>(
 ): Runtime.Runtime<R> => new RuntimeImpl(context, runtimeFlags, fiberRefs)
 
 /** @internal */
-export const runtime = <R>(): Effect.Effect<R, never, RuntimeImpl<R>> => {
+export const runtime = <R>(): Effect.Effect<R, never, Runtime.Runtime<R>> => {
   return core.withFiberRuntime<R, never, RuntimeImpl<R>>((state, status) =>
     core.succeed(
       new RuntimeImpl<R>(
