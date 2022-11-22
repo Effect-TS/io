@@ -67,25 +67,29 @@ export interface ClockScheduler {
  * @since 1.0.0
  * @category constructors
  */
-export const make = internal.make
+export const make: () => Clock = internal.make
 
 /**
+ * @macro traced
  * @since 1.0.0
  * @category constructors
  */
-export const sleep = defaultServices.sleep
+export const sleep: (duration: Duration.Duration) => Effect.Effect<never, never, void> = defaultServices.sleep
 
 /**
+ * @macro traced
  * @since 1.0.0
  * @category constructors
  */
-export const currentTimeMillis = defaultServices.currentTimeMillis
+export const currentTimeMillis: () => Effect.Effect<never, never, number> = defaultServices.currentTimeMillis
 
 /**
+ * @macro traced
  * @since 1.0.0
  * @category constructors
  */
-export const clockWith = defaultServices.clockWith
+export const clockWith: <R, E, A>(f: (clock: Clock) => Effect.Effect<R, E, A>) => Effect.Effect<R, E, A> =
+  defaultServices.clockWith
 
 /**
  * @since 1.0.0
