@@ -1,7 +1,7 @@
 /**
  * @since 1.0.0
  */
-import type { LogLevel } from "@effect/io/Logger/Level"
+import type * as LogLevel from "@effect/io/Logger/Level"
 import { identity } from "@fp-ts/data/Function"
 
 /**
@@ -12,7 +12,7 @@ export interface Debug {
   /**
    * Overrides the default log level filter for loggers such as console.
    */
-  logLevelOverride: LogLevel | undefined
+  logLevelOverride: LogLevel.LogLevel | undefined
   /**
    * When specified it will be used to collect call traces at runtime.
    *
@@ -86,7 +86,7 @@ export const runtimeDebug: Debug = {
  * @category debug
  * @since 1.0.0
  */
-export const nodeSourceMapExtractor = (at: number) => {
+export const nodeSourceMapExtractor = (at: number): string | undefined => {
   const limit = Error.stackTraceLimit
   Error.stackTraceLimit = at
   const stack = new Error().stack
@@ -113,17 +113,17 @@ const cleanup = <A>(x: A) => {
 }
 
 /** @internal */
-const orUndefined = (trace: string | undefined) => {
+const orUndefined = (trace: string | undefined): string | undefined => {
   if (trace && runtimeDebug.traceFilter(trace)) {
     return trace
   }
-  return undefined
+  return void 0
 }
 
 /**
  * @since 1.0.0
  */
-export const withCallTrace = (trace: string) => {
+export const withCallTrace = (trace: string): <A>(value: A) => A => {
   if (runtimeDebug.traceEnabled && !runtimeDebug.traceExtractor) {
     stack.push(trace)
     return cleanup
@@ -134,7 +134,7 @@ export const withCallTrace = (trace: string) => {
 /**
  * @since 1.0.0
  */
-export const getCallTrace = () => {
+export const getCallTrace = (): string | undefined => {
   if (!runtimeDebug.traceEnabled) {
     return
   }
