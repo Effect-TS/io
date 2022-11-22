@@ -7,6 +7,7 @@ import * as internal from "@effect/io/internal/queue"
 import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as MutableQueue from "@fp-ts/data/mutable/MutableQueue"
 import type * as MutableRef from "@fp-ts/data/mutable/MutableRef"
+import type * as Option from "@fp-ts/data/Option"
 
 /**
  * @since 1.0.0
@@ -276,7 +277,7 @@ export declare namespace Queue {
  * @since 1.0.0
  * @category refinements
  */
-export const isQueue = internal.isQueue
+export const isQueue: (u: unknown) => u is Queue<unknown> = internal.isQueue
 
 /**
  * Returns `true` if the specified value is a `Dequeue`, `false` otherwise.
@@ -284,7 +285,7 @@ export const isQueue = internal.isQueue
  * @since 1.0.0
  * @category refinements
  */
-export const isDequeue = internal.isDequeue
+export const isDequeue: (u: unknown) => u is Dequeue<unknown> = internal.isDequeue
 
 /**
  * Returns `true` if the specified value is a `Enqueue`, `false` otherwise.
@@ -292,25 +293,25 @@ export const isDequeue = internal.isDequeue
  * @since 1.0.0
  * @category refinements
  */
-export const isEnqueue = internal.isEnqueue
+export const isEnqueue: (u: unknown) => u is Enqueue<unknown> = internal.isEnqueue
 
 /**
  * @since 1.0.0
  * @category strategies
  */
-export const backPressureStrategy = internal.backPressureStrategy
+export const backPressureStrategy: <A>() => Strategy<A> = internal.backPressureStrategy
 
 /**
  * @since 1.0.0
  * @category strategies
  */
-export const droppingStrategy = internal.droppingStrategy
+export const droppingStrategy: <A>() => Strategy<A> = internal.droppingStrategy
 
 /**
  * @since 1.0.0
  * @category strategies
  */
-export const slidingStrategy = internal.slidingStrategy
+export const slidingStrategy: <A>() => Strategy<A> = internal.slidingStrategy
 
 /**
  * Makes a new bounded `Queue`. When the capacity of the queue is reached, any
@@ -325,7 +326,7 @@ export const slidingStrategy = internal.slidingStrategy
  * @since 1.0.0
  * @category constructors
  */
-export const bounded = internal.bounded
+export const bounded: <A>(requestedCapacity: number) => Effect.Effect<never, never, Queue<A>> = internal.bounded
 
 /**
  * Makes a new bounded `Queue` with the dropping strategy.
@@ -341,7 +342,7 @@ export const bounded = internal.bounded
  * @since 1.0.0
  * @category constructors
  */
-export const dropping = internal.dropping
+export const dropping: <A>(requestedCapacity: number) => Effect.Effect<never, never, Queue<A>> = internal.dropping
 
 /**
  * Makes a new bounded `Queue` with the sliding strategy.
@@ -357,7 +358,7 @@ export const dropping = internal.dropping
  * @since 1.0.0
  * @category constructors
  */
-export const sliding = internal.sliding
+export const sliding: <A>(requestedCapacity: number) => Effect.Effect<never, never, Queue<A>> = internal.sliding
 
 /**
  * Creates a new unbounded `Queue`.
@@ -366,7 +367,7 @@ export const sliding = internal.sliding
  * @since 1.0.0
  * @category constructors
  */
-export const unbounded = internal.unbounded
+export const unbounded: <A>() => Effect.Effect<never, never, Queue<A>> = internal.unbounded
 
 /**
  * Returns the number of elements the queue can hold.
@@ -374,7 +375,7 @@ export const unbounded = internal.unbounded
  * @since 1.0.0
  * @category getters
  */
-export const capacity = internal.capacity
+export const capacity: <A>(self: Queue<A>) => number = internal.capacity
 
 /**
  * Retrieves the size of the queue, which is equal to the number of elements
@@ -385,7 +386,7 @@ export const capacity = internal.capacity
  * @since 1.0.0
  * @category getters
  */
-export const size = internal.size
+export const size: <A>(self: Queue<A>) => Effect.Effect<never, never, number> = internal.size
 
 /**
  * Returns `true` if the `Queue` contains zero elements, `false` otherwise.
@@ -394,7 +395,7 @@ export const size = internal.size
  * @since 1.0.0
  * @category getters
  */
-export const isEmpty = internal.isEmpty
+export const isEmpty: <A>(self: Queue<A>) => Effect.Effect<never, never, boolean> = internal.isEmpty
 
 /**
  * Returns `true` if the `Queue` contains at least one element, `false`
@@ -404,7 +405,7 @@ export const isEmpty = internal.isEmpty
  * @since 1.0.0
  * @category getters
  */
-export const isFull = internal.isFull
+export const isFull: <A>(self: Queue<A>) => Effect.Effect<never, never, boolean> = internal.isFull
 
 /**
  * Returns `true` if `shutdown` has been called, otherwise returns `false`.
@@ -413,7 +414,7 @@ export const isFull = internal.isFull
  * @since 1.0.0
  * @category getters
  */
-export const isShutdown = internal.isShutdown
+export const isShutdown: <A>(self: Queue<A>) => Effect.Effect<never, never, boolean> = internal.isShutdown
 
 /**
  * Waits until the queue is shutdown. The `Effect` returned by this method will
@@ -424,7 +425,7 @@ export const isShutdown = internal.isShutdown
  * @since 1.0.0
  * @category mutations
  */
-export const awaitShutdown = internal.awaitShutdown
+export const awaitShutdown: <A>(self: Queue<A>) => Effect.Effect<never, never, void> = internal.awaitShutdown
 
 /**
  * Interrupts any fibers that are suspended on `offer` or `take`. Future calls
@@ -434,7 +435,7 @@ export const awaitShutdown = internal.awaitShutdown
  * @since 1.0.0
  * @category mutations
  */
-export const shutdown = internal.shutdown
+export const shutdown: <A>(self: Queue<A>) => Effect.Effect<never, never, void> = internal.shutdown
 
 /**
  * Places one value in the queue.
@@ -443,7 +444,7 @@ export const shutdown = internal.shutdown
  * @since 1.0.0
  * @category mutations
  */
-export const offer = internal.offer
+export const offer: <A>(value: A) => (self: Enqueue<A>) => Effect.Effect<never, never, boolean> = internal.offer
 
 /**
  * For Bounded Queue: uses the `BackPressure` Strategy, places the values in
@@ -464,7 +465,8 @@ export const offer = internal.offer
  * @since 1.0.0
  * @category mutations
  */
-export const offerAll = internal.offerAll
+export const offerAll: <A>(iterable: Iterable<A>) => (self: Enqueue<A>) => Effect.Effect<never, never, boolean> =
+  internal.offerAll
 
 /**
  * Returns the first value in the `Queue` as a `Some<A>`, or `None` if the queue
@@ -474,7 +476,7 @@ export const offerAll = internal.offerAll
  * @since 1.0.0
  * @category mutations
  */
-export const poll = internal.poll
+export const poll: <A>(self: Dequeue<A>) => Effect.Effect<never, never, Option.Option<A>> = internal.poll
 
 /**
  * Takes the oldest value in the queue. If the queue is empty, this will return
@@ -484,7 +486,7 @@ export const poll = internal.poll
  * @since 1.0.0
  * @category mutations
  */
-export const take = internal.take
+export const take: <A>(self: Dequeue<A>) => Effect.Effect<never, never, A> = internal.take
 
 /**
  * Takes all the values in the queue and returns the values. If the queue is
@@ -494,7 +496,7 @@ export const take = internal.take
  * @since 1.0.0
  * @category mutations
  */
-export const takeAll = internal.takeAll
+export const takeAll: <A>(self: Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>> = internal.takeAll
 
 /**
  * Takes up to max number of values from the queue.
@@ -503,7 +505,8 @@ export const takeAll = internal.takeAll
  * @since 1.0.0
  * @category mutations
  */
-export const takeUpTo = internal.takeUpTo
+export const takeUpTo: (max: number) => <A>(self: Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>> =
+  internal.takeUpTo
 
 /**
  * Takes a number of elements from the queue between the specified minimum and
@@ -514,7 +517,10 @@ export const takeUpTo = internal.takeUpTo
  * @since 1.0.0
  * @category mutations
  */
-export const takeBetween = internal.takeBetween
+export const takeBetween: (
+  min: number,
+  max: number
+) => <A>(self: Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>> = internal.takeBetween
 
 /**
  * Takes the specified number of elements from the queue. If there are fewer
@@ -525,4 +531,4 @@ export const takeBetween = internal.takeBetween
  * @since 1.0.0
  * @category mutations
  */
-export const takeN = internal.takeN
+export const takeN: (n: number) => <A>(self: Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>> = internal.takeN
