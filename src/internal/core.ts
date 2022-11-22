@@ -577,11 +577,11 @@ export const ifEffect = <R1, R2, E1, E2, A, A1>(
 /** @internal */
 export const interrupt = (): Effect.Effect<never, never, never> => {
   const trace = getCallTrace()
-  return pipe(fiberId(), flatMap((fiberId) => interruptAs(fiberId))).traced(trace)
+  return pipe(fiberId(), flatMap((fiberId) => interruptWith(fiberId))).traced(trace)
 }
 
 /** @internal */
-export const interruptAs = (fiberId: FiberId.FiberId): Effect.Effect<never, never, never> => {
+export const interruptWith = (fiberId: FiberId.FiberId): Effect.Effect<never, never, never> => {
   const trace = getCallTrace()
   return failCause(Cause.interrupt(fiberId)).traced(trace)
 }
@@ -2117,7 +2117,7 @@ export const deferredInterrupt = <E, A>(self: Deferred.Deferred<E, A>): Effect.E
   const trace = getCallTrace()
   return pipe(
     fiberId(),
-    flatMap((fiberId) => pipe(self, deferredCompleteWith(interruptAs(fiberId) as Effect.Effect<never, E, A>)))
+    flatMap((fiberId) => pipe(self, deferredCompleteWith(interruptWith(fiberId) as Effect.Effect<never, E, A>)))
   ).traced(trace)
 }
 
@@ -2125,7 +2125,7 @@ export const deferredInterrupt = <E, A>(self: Deferred.Deferred<E, A>): Effect.E
 export const deferredInterruptWith = (fiberId: FiberId.FiberId) => {
   const trace = getCallTrace()
   return <E, A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
-    return pipe(self, deferredCompleteWith(interruptAs(fiberId) as Effect.Effect<never, E, A>)).traced(trace)
+    return pipe(self, deferredCompleteWith(interruptWith(fiberId) as Effect.Effect<never, E, A>)).traced(trace)
   }
 }
 

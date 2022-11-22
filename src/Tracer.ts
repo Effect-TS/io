@@ -1,11 +1,9 @@
 /**
  * @since 1.0.0
  */
-
 import type { Effect } from "@effect/io/Effect"
 import * as core from "@effect/io/internal/core"
-import type { Option } from "@fp-ts/data/Option"
-import { none } from "@fp-ts/data/Option"
+import * as Option from "@fp-ts/data/Option"
 
 /**
  * @category symbols
@@ -46,4 +44,4 @@ export const make: (
  * @category fiberRefs
  * @since 1.0.0
  */
-export const currentTracer = core.fiberRefUnsafeMake<Option<Tracer>>(none)
+export const currentTracer = core.fiberRefUnsafeMake<Option.Option<Tracer>>(Option.none)
