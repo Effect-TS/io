@@ -1,5 +1,15 @@
 # @effect/io
 
+## 0.0.6
+
+### Patch Changes
+
+- [#34](https://github.com/Effect-TS/io/pull/34) [`b911229`](https://github.com/Effect-TS/io/commit/b91122989c3a516bc7185a4579a056a967e3e2c7) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Fix Cause Rendering
+
+- [#33](https://github.com/Effect-TS/io/pull/33) [`86deebb`](https://github.com/Effect-TS/io/commit/86deebb968b127cde3b2720d0a1098ba311cdf2f) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Improve trace gluing
+
+- [#31](https://github.com/Effect-TS/io/pull/31) [`efcd6ac`](https://github.com/Effect-TS/io/commit/efcd6ac0d1e773706bd2c0c956940e680d053f26) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Merge Stack Annotations in Cause Render
+
 ## 0.0.5
 
 ### Patch Changes
