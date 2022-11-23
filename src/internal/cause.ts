@@ -1,4 +1,5 @@
 import type * as Cause from "@effect/io/Cause"
+import { runtimeDebug } from "@effect/io/Debug"
 import * as FiberId from "@effect/io/Fiber/Id"
 import { Stack } from "@effect/io/internal/stack"
 import * as Doc from "@effect/printer/Doc"
@@ -1474,7 +1475,26 @@ const causeToSequential = <E>(
             cause.cause,
             renderer,
             span,
-            Option.some(annotation)
+            pipe(
+              stack,
+              Option.map((parent) =>
+                new StackAnnotation(
+                  pipe(
+                    annotation.stack,
+                    Chunk.concat(parent.stack),
+                    Chunk.dedupeAdjacent,
+                    Chunk.take(runtimeDebug.traceStackLimit)
+                  ),
+                  pipe(
+                    annotation.execution,
+                    Chunk.concat(parent.execution),
+                    Chunk.dedupeAdjacent,
+                    Chunk.take(runtimeDebug.traceExecutionLimit)
+                  )
+                )
+              ),
+              Option.orElse(Option.some(annotation))
+            )
           )
         )
       }
