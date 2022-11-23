@@ -646,4 +646,30 @@ describe.concurrent("Effect", () => {
       const result = yield* Ref.get(ref)
       assert.isFalse(result)
     }))
+
+  it.effect("running an effect preserves interruption status", () =>
+    Effect.gen(function*() {
+      const deferred = yield* Deferred.make<never, void>()
+      const fiber = yield* pipe(
+        deferred,
+        Deferred.succeed<void>(void 0),
+        Effect.zipRight(Effect.never()),
+        Effect.fork
+      )
+      yield* Deferred.await(deferred)
+      const result = yield* Fiber.interrupt(fiber)
+      assert.isTrue(Exit.isFailure(result) && Exit.isInterrupted(result) && Cause.isInterruptedOnly(result.cause))
+    }))
+
+  it.effect("running an effect swallows inner interruption", () =>
+    Effect.gen(function*() {
+      const deferred = yield* Deferred.make<never, number>()
+      yield* pipe(
+        Effect.interrupt(),
+        Effect.exit,
+        Effect.zipRight(pipe(deferred, Deferred.succeed(42)))
+      )
+      const result = yield* Deferred.await(deferred)
+      assert.strictEqual(result, 42)
+    }))
 })
