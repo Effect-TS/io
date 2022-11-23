@@ -1729,6 +1729,69 @@ export const intoDeferred: <E, A>(
 ) => <R>(self: Effect<R, E, A>) => Effect<R, never, boolean> = core.intoDeferred
 
 /**
+ * Returns `true` if this effect is a failure, `false` otherwise.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category getter
+ */
+export const isFailure: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, boolean> = effect.isFailure
+
+/**
+ * Returns `true` if this effect is a success, `false` otherwise.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category getter
+ */
+export const isSuccess: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, boolean> = effect.isSuccess
+
+/**
+ * Iterates with the specified effectual function. The moral equivalent of:
+ *
+ * ```ts
+ * let s = initial
+ *
+ * while (cont(s)) {
+ *   s = body(s)
+ * }
+ *
+ * return s
+ * ```
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const iterate: <Z>(
+  initial: Z,
+  cont: (z: Z) => boolean
+) => <R, E>(body: (z: Z) => Effect<R, E, Z>) => Effect<R, E, Z> = effect.iterate
+
+/**
+ * "Zooms in" on the value in the `Left` side of an `Either`, moving the
+ * possibility that the value is a `Right` to the error channel.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const left: <R, E, A, B>(self: Effect<R, E, Either.Either<A, B>>) => Effect<R, Either.Either<E, B>, A> =
+  effect.left
+
+/**
+ * Performs the specified operation while "zoomed in" on the `Left` case of an
+ * `Either`.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const leftWith: <R, E, B, A, R1, E1, B1, A1>(
+  f: (effect: Effect<R, Either.Either<E, B>, A>) => Effect<R1, Either.Either<E1, B1>, A1>
+) => (self: Effect<R, E, Either.Either<A, B>>) => Effect<R | R1, E | E1, Either.Either<A1, B1>> = effect.leftWith
+
+/**
  * Logs the specified message at the current log level.
  *
  * @macro traced

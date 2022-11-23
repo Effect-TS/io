@@ -1367,7 +1367,7 @@ const forEachParUnbounded = <A, R, E, B>(
     core.suspendSucceed(() => {
       const as = Array.from(self).map((v, i) => [v, i] as const)
       const array = new Array<B>(as.length)
-      const fn = ([a, i]: readonly [A, number]) => pipe(f(a), core.map((b) => array[i] = b))
+      const fn = ([a, i]: readonly [A, number]) => pipe(f(a), core.flatMap((b) => core.sync(() => array[i] = b)))
       return pipe(as, forEachParUnboundedDiscard(fn), core.zipRight(core.succeed(Chunk.unsafeFromArray(array))))
     }).traced(trace)
 }

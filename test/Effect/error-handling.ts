@@ -227,6 +227,24 @@ describe.concurrent("Effect", () => {
       assert.deepStrictEqual(badCase, Either.left(Either.left("value was not 0")))
     }))
 
+  it.effect("ignore - return success as unit", () =>
+    Effect.gen(function*() {
+      const result = yield* Effect.ignore(Effect.succeed(11))
+      assert.isUndefined(result)
+    }))
+
+  it.effect("ignore - return failure as unit", () =>
+    Effect.gen(function*() {
+      const result = yield* Effect.ignore(Effect.fail(123))
+      assert.isUndefined(result)
+    }))
+
+  it.effect("ignore - not catch throwable", () =>
+    Effect.gen(function*() {
+      const result = yield* Effect.exit(Effect.ignore(Effect.die(ExampleError)))
+      assert.deepStrictEqual(Exit.unannotate(result), Exit.die(ExampleError))
+    }))
+
   it.effect("tryCatch = handles exceptions", () =>
     Effect.gen(function*() {
       const message = "hello"
