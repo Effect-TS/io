@@ -76,6 +76,7 @@ Added in v1.0.0
   - [getFiberRefs](#getfiberrefs)
   - [ifEffect](#ifeffect)
   - [inheritFiberRefs](#inheritfiberrefs)
+  - [iterate](#iterate)
   - [loop](#loop)
   - [loopDiscard](#loopdiscard)
   - [makeEffectError](#makeeffecterror)
@@ -208,6 +209,9 @@ Added in v1.0.0
   - [reduceAllPar](#reduceallpar)
   - [reduceRight](#reduceright)
   - [reduceWhile](#reducewhile)
+- [getter](#getter)
+  - [isFailure](#isfailure)
+  - [isSuccess](#issuccess)
 - [getters](#getters)
   - [right](#right)
   - [rightWith](#rightwith)
@@ -274,6 +278,8 @@ Added in v1.0.0
   - [head](#head)
   - [ignore](#ignore)
   - [ignoreLogged](#ignorelogged)
+  - [left](#left)
+  - [leftWith](#leftwith)
   - [memoize](#memoize)
   - [merge](#merge)
   - [onDone](#ondone)
@@ -1296,6 +1302,31 @@ Inherits values from all `FiberRef` instances into current fiber.
 
 ```ts
 export declare const inheritFiberRefs: (childFiberRefs: FiberRefs.FiberRefs) => Effect<never, never, void>
+```
+
+Added in v1.0.0
+
+## iterate
+
+Iterates with the specified effectual function. The moral equivalent of:
+
+```ts
+let s = initial
+
+while (cont(s)) {
+  s = body(s)
+}
+
+return s
+```
+
+**Signature**
+
+```ts
+export declare const iterate: <Z>(
+  initial: Z,
+  cont: (z: Z) => boolean
+) => <R, E>(body: (z: Z) => Effect<R, E, Z>) => Effect<R, E, Z>
 ```
 
 Added in v1.0.0
@@ -3075,6 +3106,32 @@ export declare const reduceWhile: <A, R, E, Z>(
 
 Added in v1.0.0
 
+# getter
+
+## isFailure
+
+Returns `true` if this effect is a failure, `false` otherwise.
+
+**Signature**
+
+```ts
+export declare const isFailure: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, boolean>
+```
+
+Added in v1.0.0
+
+## isSuccess
+
+Returns `true` if this effect is a success, `false` otherwise.
+
+**Signature**
+
+```ts
+export declare const isSuccess: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, boolean>
+```
+
+Added in v1.0.0
+
 # getters
 
 ## right
@@ -3850,6 +3907,34 @@ turns out to be important.
 
 ```ts
 export declare const ignoreLogged: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, void>
+```
+
+Added in v1.0.0
+
+## left
+
+"Zooms in" on the value in the `Left` side of an `Either`, moving the
+possibility that the value is a `Right` to the error channel.
+
+**Signature**
+
+```ts
+export declare const left: <R, E, A, B>(self: Effect<R, E, Either.Either<A, B>>) => Effect<R, Either.Either<E, B>, A>
+```
+
+Added in v1.0.0
+
+## leftWith
+
+Performs the specified operation while "zoomed in" on the `Left` case of an
+`Either`.
+
+**Signature**
+
+```ts
+export declare const leftWith: <R, E, B, A, R1, E1, B1, A1>(
+  f: (effect: Effect<R, Either.Either<E, B>, A>) => Effect<R1, Either.Either<E1, B1>, A1>
+) => (self: Effect<R, E, Either.Either<A, B>>) => Effect<R | R1, E | E1, Either.Either<A1, B1>>
 ```
 
 Added in v1.0.0
