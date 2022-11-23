@@ -1,5 +1,15 @@
 # @effect/io
 
+## 0.0.5
+
+### Patch Changes
+
+- [#26](https://github.com/Effect-TS/io/pull/26) [`6538300`](https://github.com/Effect-TS/io/commit/653830005f50c3b6e005dc15f2b7a6f9b8f091b8) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Fix Cause.find on Parallel/Sequential
+
+- [#25](https://github.com/Effect-TS/io/pull/25) [`a0ff508`](https://github.com/Effect-TS/io/commit/a0ff5087f717f6e027a246024ab49ae6788ce2ef) Thanks [@IMax153](https://github.com/IMax153)! - add additional effect methods
+
+- [#28](https://github.com/Effect-TS/io/pull/28) [`a8aecbc`](https://github.com/Effect-TS/io/commit/a8aecbcc72b73c59b762c08b6783bd768bb23c44) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Preserve Stack Annotations when patching flags
+
 ## 0.0.4
 
 ### Patch Changes
