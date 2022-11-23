@@ -594,7 +594,7 @@ export const find = <E, Z>(pf: (cause: Cause.Cause<E>) => Option.Option<Z>) => {
           switch (stack.value._tag) {
             case "Sequential":
             case "Parallel": {
-              stack = new Stack(stack.value.left, new Stack(stack.value.right, stack))
+              stack = new Stack(stack.value.left, new Stack(stack.value.right, stack.previous))
               break
             }
             case "Annotated": {
