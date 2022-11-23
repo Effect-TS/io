@@ -1336,9 +1336,14 @@ const format = (segment: Segment): ReadonlyArray<Doc.Doc<never>> => {
       const verticalSeparator = Doc.cat(box.vertical.heavy)(spaces)
 
       const junction = Doc.cat(box.branch.down.heavy)(horizontalLines)
-      const busTerminal = Doc.cat(box.terminal.down.heavy)(horizontalLines)
 
-      const fiberBus = Doc.hcat([...times(junction, segment.all.length - 1), busTerminal])
+      const fiberBus = Doc.hcat([
+        ...times(junction, segment.all.length - 1),
+        box.horizontal.heavy,
+        box.horizontal.heavy,
+        box.terminal.down.heavy
+      ])
+
       const segments = segment.all.reduceRight(
         (acc, curr) => [
           ...prefixBlock(acc, verticalSeparator, verticalSeparator),
