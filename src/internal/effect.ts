@@ -20,7 +20,7 @@ import * as Chunk from "@fp-ts/data/Chunk"
 import * as Context from "@fp-ts/data/Context"
 import * as Duration from "@fp-ts/data/Duration"
 import * as Either from "@fp-ts/data/Either"
-import { constVoid, identity, pipe } from "@fp-ts/data/Function"
+import { constFalse, constTrue, constVoid, identity, pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
 import * as List from "@fp-ts/data/List"
 import * as Option from "@fp-ts/data/Option"
@@ -1036,6 +1036,66 @@ export const inheritFiberRefs = (childFiberRefs: FiberRefs.FiberRefs) => {
 }
 
 /** @internal */
+export const isFailure = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, boolean> => {
+  const trace = getCallTrace()
+  return pipe(self, fold(constTrue, constFalse)).traced(trace)
+}
+
+/** @internal */
+export const isSuccess = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, boolean> => {
+  const trace = getCallTrace()
+  return pipe(self, fold(constFalse, constTrue)).traced(trace)
+}
+
+/** @internal */
+export const iterate = <Z>(initial: Z, cont: (z: Z) => boolean) => {
+  const trace = getCallTrace()
+  return <R, E>(body: (z: Z) => Effect.Effect<R, E, Z>): Effect.Effect<R, E, Z> =>
+    core.suspendSucceed<R, E, Z>(() => {
+      if (cont(initial)) {
+        return pipe(
+          body(initial),
+          core.flatMap((z2) => iterate(z2, cont)(body))
+        )
+      }
+      return core.succeed(initial)
+    }).traced(trace)
+}
+
+/** @internal */
+export const left = <R, E, A, B>(
+  self: Effect.Effect<R, E, Either.Either<A, B>>
+): Effect.Effect<R, Either.Either<E, B>, A> => {
+  const trace = getCallTrace()
+  return pipe(
+    self,
+    core.foldEffect(
+      (e) => core.fail(Either.left(e)),
+      (either) => {
+        switch (either._tag) {
+          case "Left": {
+            return core.succeed(either.left)
+          }
+          case "Right": {
+            return core.fail(Either.right(either.right))
+          }
+        }
+      }
+    )
+  ).traced(trace)
+}
+
+/** @internal */
+export const leftWith = <R, E, B, A, R1, E1, B1, A1>(
+  f: (effect: Effect.Effect<R, Either.Either<E, B>, A>) => Effect.Effect<R1, Either.Either<E1, B1>, A1>
+) => {
+  const trace = getCallTrace()
+  return (self: Effect.Effect<R, E, Either.Either<A, B>>): Effect.Effect<R | R1, E | E1, Either.Either<A1, B1>> => {
+    return core.suspendSucceed(() => unleft(f(left(self)))).traced(trace)
+  }
+}
+
+/** @internal */
 const someFatal = Option.some(LogLevel.Fatal)
 /** @internal */
 const someError = Option.some(LogLevel.Error)
@@ -1835,7 +1895,7 @@ const repeatNLoop = <R, E, A>(self: Effect.Effect<R, E, A>, n: number): Effect.E
 /** @internal */
 export const replicate = (n: number) => {
   return <R, E, A>(self: Effect.Effect<R, E, A>): Chunk.Chunk<Effect.Effect<R, E, A>> => {
-    return Chunk.unsafeFromArray(Array.from({ length: n - 1 }, () => self))
+    return Chunk.unsafeFromArray(Array.from({ length: n }, () => self))
   }
 }
 

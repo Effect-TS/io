@@ -850,13 +850,13 @@ describe.concurrent("Schedule", () => {
         }
         const originOffset = new Date().setHours(0, 0, 0, 0)
 
-        const tuesdayHour = new Date(withDayOfWeek(originOffset, 2)).setHours(1)
-        const tuesday = withDayOfWeek(originOffset, 2)
-        const monday = new Date(tuesday).setDate(new Date(tuesday).getDate() - 1)
-        const wednesday = withDayOfWeek(originOffset, 3)
+        const tuesday = new Date(withDayOfWeek(originOffset, 2))
+        const tuesdayHour = new Date(tuesday).setHours(1)
+        const monday = new Date(tuesday).setDate(tuesday.getDate() - 1)
+        const wednesday = new Date(tuesday).setDate(tuesday.getDate() + 1)
 
         const input = pipe(
-          List.make(tuesdayHour, tuesday, monday, wednesday),
+          List.make(tuesdayHour, tuesday.getTime(), monday, wednesday),
           List.map((n) => [n, void 0] as const)
         )
 
@@ -865,7 +865,7 @@ describe.concurrent("Schedule", () => {
           Effect.map((output) => pipe(output[0], List.map((tuple) => tuple[0])))
         )
 
-        const expectedTuesday = new Date(withDayOfWeek(originOffset, 2))
+        const expectedTuesday = new Date(tuesday)
         const nextTuesday = new Date(expectedTuesday).setDate(expectedTuesday.getDate() + 7)
         const expectedOutput = List.make(
           expectedTuesday.getTime(),
