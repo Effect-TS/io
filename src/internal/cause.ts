@@ -1479,18 +1479,22 @@ const causeToSequential = <E>(
               stack,
               Option.map((parent) =>
                 new StackAnnotation(
-                  pipe(
+                  annotation.stack.length < runtimeDebug.traceStackLimit ?
+                    pipe(
+                      annotation.stack,
+                      Chunk.concat(parent.stack),
+                      Chunk.dedupeAdjacent,
+                      Chunk.take(runtimeDebug.traceStackLimit)
+                    ) :
                     annotation.stack,
-                    Chunk.concat(parent.stack),
-                    Chunk.dedupeAdjacent,
-                    Chunk.take(runtimeDebug.traceStackLimit)
-                  ),
-                  pipe(
-                    annotation.execution,
-                    Chunk.concat(parent.execution),
-                    Chunk.dedupeAdjacent,
-                    Chunk.take(runtimeDebug.traceExecutionLimit)
-                  )
+                  annotation.execution.length < runtimeDebug.traceExecutionLimit ?
+                    pipe(
+                      annotation.execution,
+                      Chunk.concat(parent.execution),
+                      Chunk.dedupeAdjacent,
+                      Chunk.take(runtimeDebug.traceExecutionLimit)
+                    ) :
+                    annotation.execution
                 )
               ),
               Option.orElse(Option.some(annotation))
