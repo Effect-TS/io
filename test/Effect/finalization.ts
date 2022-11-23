@@ -276,4 +276,53 @@ describe.concurrent("Effect", () => {
       const result = yield* Ref.get(ref)
       assert.isTrue(result)
     }))
+
+  it.effect("onExit - executes that a cleanup function runs when effect succeeds", () =>
+    Effect.gen(function*() {
+      const ref = yield* Ref.make(false)
+      yield* pipe(
+        Effect.unit(),
+        Effect.onExit(Exit.match(Effect.unit, () => pipe(ref, Ref.set(true))))
+      )
+      const result = yield* Ref.get(ref)
+      assert.isTrue(result)
+    }))
+
+  it.effect("onExit - ensures that a cleanup function runs when an effect fails", () =>
+    Effect.gen(function*() {
+      const ref = yield* Ref.make(false)
+      yield* pipe(
+        Effect.die(Cause.RuntimeException),
+        Effect.onExit((exit) =>
+          Exit.isFailure(exit) && Cause.isDie(exit.cause) ?
+            pipe(ref, Ref.set(true)) :
+            Effect.unit()
+        ),
+        Effect.sandbox,
+        Effect.ignore
+      )
+      const result = yield* Ref.get(ref)
+      assert.isTrue(result)
+    }))
+
+  it.effect("onExit - ensures that a cleanup function runs when an effect is interrupted", () =>
+    Effect.gen(function*() {
+      const latch1 = yield* Deferred.make<never, void>()
+      const latch2 = yield* Deferred.make<never, void>()
+      const fiber = yield* pipe(
+        latch1,
+        Deferred.succeed<void>(void 0),
+        Effect.zipRight(Effect.never()),
+        Effect.onExit((exit) =>
+          Exit.isFailure(exit) && Cause.isInterrupted(exit.cause) ?
+            pipe(latch2, Deferred.succeed<void>(void 0), Effect.asUnit) :
+            Effect.unit()
+        ),
+        Effect.fork
+      )
+      yield* Deferred.await(latch1)
+      yield* Fiber.interrupt(fiber)
+      const result = yield* Deferred.await(latch2)
+      assert.isUndefined(result)
+    }))
 })

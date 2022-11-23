@@ -841,8 +841,7 @@ describe.concurrent("Schedule", () => {
         assert.deepStrictEqual(result, expectedOutput)
       }))
 
-    // TODO(Max): make deterministic
-    it.effect.skip("recur at Tuesday of each week", () =>
+    it.effect("recur at Tuesday of each week", () =>
       Effect.gen(function*() {
         const withDayOfWeek = (now: number, dayOfWeek: number): number => {
           const date = new Date(now)

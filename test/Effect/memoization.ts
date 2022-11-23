@@ -1,5 +1,6 @@
 import * as Effect from "@effect/io/Effect"
 import * as Random from "@effect/io/Random"
+import * as Ref from "@effect/io/Ref"
 import * as it from "@effect/io/test/utils/extend"
 import { pipe } from "@fp-ts/data/Function"
 import { assert, describe } from "vitest"
@@ -40,4 +41,17 @@ describe.concurrent("Effect", () => {
         assert.strictEqual(c, d)
       })
     ))
+
+  it.effect("once returns an effect that will only be executed once", () =>
+    Effect.gen(function*() {
+      const ref = yield* Ref.make(0)
+      const effect: Effect.Effect<never, never, void> = yield* pipe(
+        ref,
+        Ref.update((n) => n + 1),
+        Effect.once
+      )
+      yield* pipe(effect, Effect.replicate(100), Effect.collectAllPar)
+      const result = yield* Ref.get(ref)
+      assert.strictEqual(result, 1)
+    }))
 })

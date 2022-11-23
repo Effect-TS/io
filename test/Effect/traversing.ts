@@ -6,7 +6,7 @@ import * as Fiber from "@effect/io/Fiber"
 import * as Ref from "@effect/io/Ref"
 import * as it from "@effect/io/test/utils/extend"
 import * as Either from "@fp-ts/data/Either"
-import { identity, pipe } from "@fp-ts/data/Function"
+import { constVoid, identity, pipe } from "@fp-ts/data/Function"
 import * as List from "@fp-ts/data/List"
 import * as Option from "@fp-ts/data/Option"
 import { assert, describe } from "vitest"
@@ -466,5 +466,301 @@ describe.concurrent("Effect", () => {
       )
       const result = yield* pipe(Ref.get(ref), Effect.map(List.reverse))
       assert.deepStrictEqual(Array.from(result), [1, 2, 3, 4, 5])
+    }))
+
+  it.effect("merge - on flipped result", () =>
+    Effect.gen(function*() {
+      const effect: Effect.Effect<never, number, number> = Effect.succeed(1)
+      const a = yield* Effect.merge(effect)
+      const b = yield* Effect.merge(Effect.flip(effect))
+      assert.strictEqual(a, b)
+    }))
+
+  it.effect("mergeAll - return zero element on empty input", () =>
+    Effect.gen(function*() {
+      const zeroElement = 42
+      const nonZero = 43
+      const result = yield* pipe(
+        [] as ReadonlyArray<Effect.Effect<never, never, unknown>>,
+        Effect.mergeAll(zeroElement, () => nonZero)
+      )
+      assert.strictEqual(result, zeroElement)
+    }))
+
+  it.effect("mergeAll - merge list using function", () =>
+    Effect.gen(function*() {
+      const result = yield* pipe(
+        [3, 5, 7].map(Effect.succeed),
+        Effect.mergeAll(1, (b, a) => b + a)
+      )
+      assert.strictEqual(result, 1 + 3 + 5 + 7)
+    }))
+
+  it.effect("mergeAll - return error if it exists in list", () =>
+    Effect.gen(function*() {
+      const effects: ReadonlyArray<Effect.Effect<never, number, void>> = [Effect.unit(), Effect.fail(1)]
+      const result = yield* pipe(
+        effects,
+        Effect.mergeAll(void 0 as void, constVoid),
+        Effect.exit
+      )
+      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(1))
+    }))
+
+  it.effect("mergeAllPar - return zero element on empty input", () =>
+    Effect.gen(function*() {
+      const zeroElement = 42
+      const nonZero = 43
+      const result = yield* pipe(
+        [] as ReadonlyArray<Effect.Effect<never, never, unknown>>,
+        Effect.mergeAllPar(zeroElement, () => nonZero)
+      )
+      assert.strictEqual(result, zeroElement)
+    }))
+
+  it.effect("mergeAllPar - merge list using function", () =>
+    Effect.gen(function*() {
+      const result = yield* pipe(
+        [3, 5, 7].map(Effect.succeed),
+        Effect.mergeAllPar(1, (b, a) => b + a)
+      )
+      assert.strictEqual(result, 1 + 3 + 5 + 7)
+    }))
+
+  it.effect("mergeAllPar - return error if it exists in list", () =>
+    Effect.gen(function*() {
+      const effects: ReadonlyArray<Effect.Effect<never, number, void>> = [Effect.unit(), Effect.fail(1)]
+      const result = yield* pipe(
+        effects,
+        Effect.mergeAllPar(void 0 as void, constVoid),
+        Effect.exit
+      )
+      assert.deepStrictEqual(Exit.unannotate(result), Exit.failCause(Cause.parallel(Cause.empty, Cause.fail(1))))
+    }))
+
+  it.effect("partition - collects only successes", () =>
+    Effect.gen(function*() {
+      const array = Array.from({ length: 10 }, (_, i) => i)
+      const [left, right] = yield* pipe(
+        array,
+        Effect.partition(Effect.succeed)
+      )
+      assert.deepStrictEqual(Array.from(left), [])
+      assert.deepStrictEqual(Array.from(right), array)
+    }))
+
+  it.effect("partition - collects only failures", () =>
+    Effect.gen(function*() {
+      const array = Array.from({ length: 10 }, () => 0)
+      const [left, right] = yield* pipe(
+        array,
+        Effect.partition(Effect.fail)
+      )
+      assert.deepStrictEqual(Array.from(left), array)
+      assert.deepStrictEqual(Array.from(right), [])
+    }))
+
+  it.effect("partition - collects failures and successes", () =>
+    Effect.gen(function*() {
+      const array = Array.from({ length: 10 }, (_, i) => i)
+      const [left, right] = yield* pipe(
+        array,
+        Effect.partition((n) => n % 2 === 0 ? Effect.fail(n) : Effect.succeed(n))
+      )
+      assert.deepStrictEqual(Array.from(left), [0, 2, 4, 6, 8])
+      assert.deepStrictEqual(Array.from(right), [1, 3, 5, 7, 9])
+    }))
+
+  it.effect("partition - evaluates effects in correct order", () =>
+    Effect.gen(function*() {
+      const array = [2, 4, 6, 3, 5, 6]
+      const ref = yield* Ref.make(List.empty<number>())
+      yield* pipe(
+        array,
+        Effect.partition((n) => pipe(ref, Ref.update(List.prepend(n))))
+      )
+      const result = yield* pipe(Ref.get(ref), Effect.map(List.reverse))
+      assert.deepStrictEqual(Array.from(result), [2, 4, 6, 3, 5, 6])
+    }))
+
+  it.effect("partitionPar - collects successes", () =>
+    Effect.gen(function*() {
+      const array = Array.from({ length: 1_000 }, (_, i) => i)
+      const [left, right] = yield* pipe(
+        array,
+        Effect.partitionPar(Effect.succeed)
+      )
+      assert.deepStrictEqual(Array.from(left), [])
+      assert.deepStrictEqual(Array.from(right), array)
+    }))
+
+  it.effect("partitionPar - collects failures", () =>
+    Effect.gen(function*() {
+      const array = Array.from({ length: 10 }, () => 0)
+      const [left, right] = yield* pipe(
+        array,
+        Effect.partitionPar(Effect.fail)
+      )
+      assert.deepStrictEqual(Array.from(left), array)
+      assert.deepStrictEqual(Array.from(right), [])
+    }))
+
+  it.effect("partitionPar - collects failures and successes", () =>
+    Effect.gen(function*() {
+      const array = Array.from({ length: 10 }, (_, i) => i)
+      const [left, right] = yield* pipe(
+        array,
+        Effect.partitionPar((n) => n % 2 === 0 ? Effect.fail(n) : Effect.succeed(n))
+      )
+      assert.deepStrictEqual(Array.from(left), [0, 2, 4, 6, 8])
+      assert.deepStrictEqual(Array.from(right), [1, 3, 5, 7, 9])
+    }))
+
+  it.effect("partitionPar - parallelism - collects successes", () =>
+    Effect.gen(function*() {
+      const array = Array.from({ length: 1_000 }, (_, i) => i)
+      const [left, right] = yield* pipe(
+        array,
+        Effect.partitionPar(Effect.succeed),
+        Effect.withParallelism(3)
+      )
+      assert.deepStrictEqual(Array.from(left), [])
+      assert.deepStrictEqual(Array.from(right), array)
+    }))
+
+  it.effect("partitionPar - parallelism - collects failures", () =>
+    Effect.gen(function*() {
+      const array = Array.from({ length: 10 }, () => 0)
+      const [left, right] = yield* pipe(
+        array,
+        Effect.partitionPar(Effect.fail),
+        Effect.withParallelism(3)
+      )
+      assert.deepStrictEqual(Array.from(left), array)
+      assert.deepStrictEqual(Array.from(right), [])
+    }))
+
+  it.effect("partitionPar - parallelism - collects failures and successes", () =>
+    Effect.gen(function*() {
+      const array = Array.from({ length: 10 }, (_, i) => i)
+      const [left, right] = yield* pipe(
+        array,
+        Effect.partitionPar((n) => n % 2 === 0 ? Effect.fail(n) : Effect.succeed(n)),
+        Effect.withParallelism(3)
+      )
+      assert.deepStrictEqual(Array.from(left), [0, 2, 4, 6, 8])
+      assert.deepStrictEqual(Array.from(right), [1, 3, 5, 7, 9])
+    }))
+
+  it.effect("reduce - with a successful step function sums the list properly", () =>
+    Effect.gen(function*() {
+      const result = yield* pipe(
+        [1, 2, 3, 4, 5],
+        Effect.reduce(0, (acc, curr) => Effect.succeed(acc + curr))
+      )
+      assert.strictEqual(result, 15)
+    }))
+
+  it.effect("reduce - with a failing step function returns a failed IO", () =>
+    Effect.gen(function*() {
+      const result = yield* pipe(
+        [1, 2, 3, 4, 5],
+        Effect.reduce(0, () => Effect.fail("fail")),
+        Effect.exit
+      )
+      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail("fail"))
+    }))
+
+  it.effect("reduce - run sequentially from left to right", () =>
+    Effect.gen(function*() {
+      const result = yield* pipe(
+        [1, 2, 3, 4, 5],
+        Effect.reduce(
+          [] as ReadonlyArray<number>,
+          (acc, curr) => Effect.succeed([...acc, curr])
+        )
+      )
+      assert.deepStrictEqual(result, [1, 2, 3, 4, 5])
+    }))
+
+  it.effect("reduceRight - with a successful step function sums the list properly", () =>
+    Effect.gen(function*() {
+      const result = yield* pipe(
+        [1, 2, 3, 4, 5],
+        Effect.reduceRight(0, (acc, curr) => Effect.succeed(acc + curr))
+      )
+      assert.strictEqual(result, 15)
+    }))
+
+  it.effect("reduceRight - with a failing step function returns a failed IO", () =>
+    Effect.gen(function*() {
+      const result = yield* pipe(
+        [1, 2, 3, 4, 5],
+        Effect.reduceRight(0, () => Effect.fail("fail")),
+        Effect.exit
+      )
+      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail("fail"))
+    }))
+
+  it.effect("reduceRight - run sequentially from right to left", () =>
+    Effect.gen(function*() {
+      const result = yield* pipe(
+        [1, 2, 3, 4, 5],
+        Effect.reduceRight(
+          [] as ReadonlyArray<number>,
+          (curr, acc) => Effect.succeed([curr, ...acc])
+        )
+      )
+      assert.deepStrictEqual(result, [1, 2, 3, 4, 5])
+    }))
+
+  it.effect("reduceAllPar - return zero element on empty input", () =>
+    Effect.gen(function*() {
+      const zeroElement = 42
+      const nonZero = 43
+      const result = yield* pipe(
+        [] as ReadonlyArray<Effect.Effect<never, never, number>>,
+        Effect.reduceAllPar(
+          Effect.succeed(zeroElement),
+          () => nonZero
+        )
+      )
+      assert.strictEqual(result, zeroElement)
+    }))
+
+  it.effect("reduceAllPar - reduce list using function", () =>
+    Effect.gen(function*() {
+      const result = yield* pipe(
+        [3, 5, 7].map(Effect.succeed),
+        Effect.reduceAllPar(
+          Effect.succeed(1),
+          (acc, a) => acc + a
+        )
+      )
+      assert.strictEqual(result, 1 + 3 + 5 + 7)
+    }))
+
+  it.effect("reduceAllPar - return error if zero is an error", () =>
+    Effect.gen(function*() {
+      const result = yield* pipe(
+        [Effect.unit(), Effect.unit()],
+        Effect.reduceAllPar(
+          Effect.fail(1),
+          constVoid
+        ),
+        Effect.exit
+      )
+      assert.deepStrictEqual(Exit.unannotate(result), Exit.failCause(Cause.parallel(Cause.empty, Cause.fail(1))))
+    }))
+
+  it.effect("reduceAllPar - return error if it exists in list", () =>
+    Effect.gen(function*() {
+      const effects: ReadonlyArray<Effect.Effect<never, number, void>> = [Effect.unit(), Effect.fail(1)]
+      const result = yield* pipe(
+        effects,
+        Effect.reduceAllPar(Effect.unit() as Effect.Effect<never, number, void>, constVoid),
+        Effect.exit
+      )
+      assert.deepStrictEqual(Exit.unannotate(result), Exit.failCause(Cause.parallel(Cause.empty, Cause.fail(1))))
     }))
 })

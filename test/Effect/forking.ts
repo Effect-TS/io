@@ -38,6 +38,26 @@ describe.concurrent("Effect", () => {
       assert.isTrue(Exit.isInterrupted(result))
     }))
 
+  it.effect("fork - interruption status is heritable", () =>
+    Effect.gen(function*() {
+      const latch = yield* Deferred.make<never, void>()
+      const ref = yield* Ref.make(true)
+      yield* pipe(
+        Effect.checkInterruptible((isInterruptible) =>
+          pipe(
+            ref,
+            Ref.set(isInterruptible),
+            Effect.zipRight(pipe(latch, Deferred.succeed<void>(void 0)))
+          )
+        ),
+        Effect.fork,
+        Effect.zipRight(Deferred.await(latch)),
+        Effect.uninterruptible
+      )
+      const result = yield* Ref.get(ref)
+      assert.isFalse(result)
+    }))
+
   it.effect("forkWithErrorHandler - calls provided function when task fails", () =>
     Effect.gen(function*() {
       const deferred = yield* Deferred.make<never, void>()
