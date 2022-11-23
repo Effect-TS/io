@@ -23,8 +23,6 @@
  */
 import type * as FiberId from "@effect/io/Fiber/Id"
 import * as internal from "@effect/io/internal/cause"
-import type { Continuation } from "@effect/io/internal/core"
-import type { Stack } from "@effect/io/internal/stack"
 import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as Either from "@fp-ts/data/Either"
 import type * as Equal from "@fp-ts/data/Equal"
@@ -170,8 +168,8 @@ export declare namespace Cause {
    */
   export interface StackAnnotation {
     readonly [StackAnnotationTypeId]: StackAnnotationTypeId
-    readonly stack: Stack<Continuation> | undefined
-    readonly execution: Chunk.Chunk<string> | undefined
+    readonly stack: Chunk.Chunk<string>
+    readonly execution: Chunk.Chunk<string>
   }
 
   /**
@@ -211,11 +209,6 @@ export interface CauseReducer<C, E, Z> {
 export interface CauseRenderer<E = unknown> {
   readonly lineWidth: number
   readonly ribbonFraction: number
-  readonly renderSpan: boolean
-  readonly renderExecution: boolean
-  readonly renderStack: boolean
-  readonly renderExecutionDepth: number
-  readonly renderStackDepth: number
   readonly renderError: (error: E) => ReadonlyArray<string>
   readonly renderUnknown: (error: unknown) => ReadonlyArray<string>
 }

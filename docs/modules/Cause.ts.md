@@ -1086,11 +1086,6 @@ print a `Cause`.
 export interface CauseRenderer<E = unknown> {
   readonly lineWidth: number
   readonly ribbonFraction: number
-  readonly renderSpan: boolean
-  readonly renderExecution: boolean
-  readonly renderStack: boolean
-  readonly renderExecutionDepth: number
-  readonly renderStackDepth: number
   readonly renderError: (error: E) => ReadonlyArray<string>
   readonly renderUnknown: (error: unknown) => ReadonlyArray<string>
 }

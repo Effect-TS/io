@@ -1,8 +1,5 @@
 import type * as Cause from "@effect/io/Cause"
-import * as Debug from "@effect/io/Debug"
 import * as FiberId from "@effect/io/Fiber/Id"
-import type * as core from "@effect/io/internal/core"
-import * as OpCodes from "@effect/io/internal/opCodes/effect"
 import { Stack } from "@effect/io/internal/stack"
 import * as Doc from "@effect/printer/Doc"
 import * as Optimize from "@effect/printer/Optimize"
@@ -1057,8 +1054,8 @@ export const StackAnnotationTypeId: Cause.StackAnnotationTypeId = Symbol.for(
 export class StackAnnotation implements Cause.Cause.StackAnnotation {
   readonly [StackAnnotationTypeId]: Cause.StackAnnotationTypeId = StackAnnotationTypeId
   constructor(
-    readonly stack: Stack<core.Continuation> | undefined,
-    readonly execution: Chunk.Chunk<string> | undefined
+    readonly stack: Chunk.Chunk<string>,
+    readonly execution: Chunk.Chunk<string>
   ) {}
 }
 
@@ -1203,33 +1200,8 @@ const spanToLines = (span: SpanAnnotation): ReadonlyArray<Doc.Doc<never>> => {
 }
 
 /** @internal */
-const stackToLines = (stack: StackAnnotation, renderer: Cause.CauseRenderer<any>): ReadonlyArray<Doc.Doc<never>> => {
-  const lines: Array<Doc.Doc<never>> = []
-  let current = stack.stack
-  let last: undefined | string = undefined
-  while (current !== undefined && lines.length < renderer.renderStackDepth) {
-    switch (current.value.op) {
-      case OpCodes.OP_ON_FAILURE:
-      case OpCodes.OP_ON_SUCCESS:
-      case OpCodes.OP_ON_SUCCESS_AND_FAILURE: {
-        if (current.value.trace && current.value.trace !== last) {
-          last = current.value.trace
-          lines.push(Doc.text(current.value.trace))
-        }
-        break
-      }
-    }
-    current = current.previous
-  }
-  return lines
-}
-
-/** @internal */
-const renderSpan = (
-  span: Option.Option<SpanAnnotation>,
-  renderer: Cause.CauseRenderer<any>
-): ReadonlyArray<Doc.Doc<never>> => {
-  if (!renderer.renderSpan || Option.isNone(span)) {
+const renderSpan = (span: Option.Option<SpanAnnotation>): ReadonlyArray<Doc.Doc<never>> => {
+  if (Option.isNone(span)) {
     return []
   }
   const lines = spanToLines(span.value)
@@ -1242,14 +1214,11 @@ const renderSpan = (
 }
 
 /** @internal */
-const renderStack = (
-  span: Option.Option<StackAnnotation>,
-  renderer: Cause.CauseRenderer<any>
-): ReadonlyArray<Doc.Doc<never>> => {
-  if (!renderer.renderStack || Option.isNone(span)) {
+const renderStack = (span: Option.Option<StackAnnotation>): ReadonlyArray<Doc.Doc<never>> => {
+  if (Option.isNone(span)) {
     return []
   }
-  const lines = stackToLines(span.value, renderer)
+  const lines = pipe(span.value.stack, Chunk.map(Doc.text))
   return lines.length === 0 ? [] : [
     Doc.text("Stack:"),
     Doc.empty,
@@ -1259,21 +1228,17 @@ const renderStack = (
 }
 
 /** @internal */
-const renderExecution = (
-  span: Option.Option<StackAnnotation>,
-  renderer: Cause.CauseRenderer<any>
-): ReadonlyArray<Doc.Doc<never>> => {
-  if (!renderer.renderExecution || Option.isNone(span)) {
+const renderExecution = (span: Option.Option<StackAnnotation>): ReadonlyArray<Doc.Doc<never>> => {
+  if (Option.isNone(span)) {
     return []
   }
-  if (span.value.execution && Chunk.isNonEmpty(span.value.execution)) {
+  if (Chunk.isNonEmpty(span.value.execution)) {
     return [
       Doc.text("Execution:"),
       Doc.empty,
       ...pipe(
         span.value.execution,
-        Chunk.take(renderer.renderExecutionDepth),
-        Chunk.map((line) => Doc.text(line))
+        Chunk.map(Doc.text)
       ),
       Doc.empty
     ]
@@ -1285,8 +1250,7 @@ const renderExecution = (
 const renderFail = (
   error: ReadonlyArray<Doc.Doc<never>>,
   span: Option.Option<SpanAnnotation>,
-  stack: Option.Option<StackAnnotation>,
-  renderer: Cause.CauseRenderer<any>
+  stack: Option.Option<StackAnnotation>
 ): SequentialSegment => {
   return SequentialSegment([
     FailureSegment([
@@ -1294,9 +1258,9 @@ const renderFail = (
       Doc.empty,
       ...error,
       Doc.empty,
-      ...renderSpan(span, renderer),
-      ...renderStack(stack, renderer),
-      ...renderExecution(stack, renderer)
+      ...renderSpan(span),
+      ...renderStack(stack),
+      ...renderExecution(stack)
     ])
   ])
 }
@@ -1305,8 +1269,7 @@ const renderFail = (
 const renderDie = (
   error: ReadonlyArray<Doc.Doc<never>>,
   span: Option.Option<SpanAnnotation>,
-  stack: Option.Option<StackAnnotation>,
-  renderer: Cause.CauseRenderer<any>
+  stack: Option.Option<StackAnnotation>
 ): SequentialSegment => {
   return SequentialSegment([
     FailureSegment([
@@ -1314,9 +1277,9 @@ const renderDie = (
       Doc.empty,
       ...error,
       Doc.empty,
-      ...renderSpan(span, renderer),
-      ...renderStack(stack, renderer),
-      ...renderExecution(stack, renderer)
+      ...renderSpan(span),
+      ...renderStack(stack),
+      ...renderExecution(stack)
     ])
   ])
 }
@@ -1325,17 +1288,16 @@ const renderDie = (
 const renderInterrupt = (
   fiberId: FiberId.FiberId,
   span: Option.Option<SpanAnnotation>,
-  stack: Option.Option<StackAnnotation>,
-  renderer: Cause.CauseRenderer<any>
+  stack: Option.Option<StackAnnotation>
 ): SequentialSegment => {
   const ids = Array.from(FiberId.ids(fiberId)).map((id) => `#${id}`).join(", ")
   return SequentialSegment([
     FailureSegment([
       Doc.text(`An interrupt was produced by ${ids}.`),
       Doc.empty,
-      ...renderSpan(span, renderer),
-      ...renderStack(stack, renderer),
-      ...renderExecution(stack, renderer)
+      ...renderSpan(span),
+      ...renderStack(stack),
+      ...renderExecution(stack)
     ])
   ])
 }
@@ -1464,8 +1426,7 @@ const causeToSequential = <E>(
         renderFail(
           renderer.renderError(cause.error).map((line) => Doc.text(line)),
           span,
-          stack,
-          renderer
+          stack
         )
       )
     }
@@ -1474,14 +1435,13 @@ const causeToSequential = <E>(
         renderDie(
           renderer.renderUnknown(cause.defect).map((line) => Doc.text(line)),
           span,
-          stack,
-          renderer
+          stack
         )
       )
     }
     case "Interrupt": {
       return SafeEval.succeed(
-        renderInterrupt(cause.fiberId, span, stack, renderer)
+        renderInterrupt(cause.fiberId, span, stack)
       )
     }
     case "Sequential": {
@@ -1532,11 +1492,6 @@ const defaultErrorToLines = (error: unknown) => {
 export const defaultRenderer: Cause.CauseRenderer = {
   lineWidth: 80,
   ribbonFraction: 1,
-  renderSpan: Debug.runtimeDebug.traceSpanEnabledInCause,
-  renderStack: Debug.runtimeDebug.traceStackEnabledInCause,
-  renderExecution: Debug.runtimeDebug.traceExecutionEnabledInCause,
-  renderStackDepth: Debug.runtimeDebug.traceStackLimit,
-  renderExecutionDepth: Debug.runtimeDebug.traceExecutionLimit,
   renderError: defaultErrorToLines,
   renderUnknown: defaultErrorToLines
 }
