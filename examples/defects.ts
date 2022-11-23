@@ -5,7 +5,7 @@ import * as Logger from "@effect/io/Logger"
 import { pipe } from "@fp-ts/data/Function"
 
 const program = pipe(
-  E.fail(0),
+  E.tuplePar(E.fail(0), E.unit()),
   E.flatMap((res) => E.sync(() => console.log(`res: ${res}`)))
 )
 
