@@ -113,7 +113,7 @@ Execute effects in parallel.
 
 ```ts
 export interface Parallel {
-  readonly op: internal.OP_PARALLEL
+  readonly op: 1
 }
 ```
 
@@ -127,7 +127,7 @@ Execute effects in parallel, up to the specified number of concurrent fibers.
 
 ```ts
 export interface ParallelN {
-  readonly op: internal.OP_PARALLEL_N
+  readonly op: 2
   readonly parallelism: number
 }
 ```
@@ -142,7 +142,7 @@ Execute effects sequentially.
 
 ```ts
 export interface Sequential {
-  readonly op: internal.OP_SEQUENTIAL
+  readonly op: 0
 }
 ```
 
