@@ -79,7 +79,6 @@ Added in v1.0.0
   - [iterate](#iterate)
   - [loop](#loop)
   - [loopDiscard](#loopdiscard)
-  - [makeEffectError](#makeeffecterror)
   - [memoizeFunction](#memoizefunction)
   - [mergeAll](#mergeall)
   - [mergeAllPar](#mergeallpar)
@@ -1384,18 +1383,6 @@ export declare const loopDiscard: <Z, R, E, X>(
   inc: (z: Z) => Z,
   body: (z: Z) => Effect<R, E, X>
 ) => Effect<R, E, void>
-```
-
-Added in v1.0.0
-
-## makeEffectError
-
-Constructs a new `EffectError`.
-
-**Signature**
-
-```ts
-export declare const makeEffectError: <E>(cause: Cause.Cause<E>) => core.EffectError<E>
 ```
 
 Added in v1.0.0

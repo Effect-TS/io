@@ -66,7 +66,7 @@ Added in v1.0.0
 
 ```ts
 export interface Continue {
-  readonly op: internal.OP_CONTINUE
+  readonly op: 0
   readonly intervals: Intervals.Intervals
 }
 ```
@@ -79,7 +79,7 @@ Added in v1.0.0
 
 ```ts
 export interface Done {
-  readonly op: internal.OP_DONE
+  readonly op: 1
 }
 ```
 

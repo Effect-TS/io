@@ -16,13 +16,12 @@ export const OP_DONE = 1 as const
 export type OP_DONE = typeof OP_DONE
 
 /** @internal */
-const _continue = (intervals: Intervals.Intervals): ScheduleDecision.ScheduleDecision => {
+export const _continue = (intervals: Intervals.Intervals): ScheduleDecision.ScheduleDecision => {
   return {
     op: OP_CONTINUE,
     intervals
   }
 }
-export { _continue as continue }
 
 /** @internal */
 export const continueWith = (interval: Interval.Interval): ScheduleDecision.ScheduleDecision => {

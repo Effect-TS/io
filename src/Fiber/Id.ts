@@ -30,7 +30,7 @@ export type FiberId = None | Runtime | Composite
  */
 export interface None extends Equal.Equal {
   readonly [FiberIdTypeId]: FiberIdTypeId
-  readonly op: internal.OP_NONE
+  readonly op: 0
 }
 
 /**
@@ -39,7 +39,7 @@ export interface None extends Equal.Equal {
  */
 export interface Runtime extends Equal.Equal {
   readonly [FiberIdTypeId]: FiberIdTypeId
-  readonly op: internal.OP_RUNTIME
+  readonly op: 1
   readonly id: number
   readonly startTimeMillis: number
 }
@@ -50,7 +50,7 @@ export interface Runtime extends Equal.Equal {
  */
 export interface Composite extends Equal.Equal {
   readonly [FiberIdTypeId]: FiberIdTypeId
-  readonly op: internal.OP_COMPOSITE
+  readonly op: 2
   readonly left: FiberId
   readonly right: FiberId
 }

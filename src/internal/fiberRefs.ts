@@ -116,7 +116,7 @@ export const joinAs = (fiberId: FiberId.Runtime, that: FiberRefs.FiberRefs) =>
 
 /** @internal */
 export const forkAs = (childId: FiberId.Runtime) =>
-  (self: FiberRefs.FiberRefs) => {
+  (self: FiberRefs.FiberRefs): FiberRefs.FiberRefs => {
     const map = new Map<FiberRef.FiberRef<any>, List.Cons<readonly [FiberId.Runtime, unknown]>>()
     for (const [fiberRef, stack] of self.locals.entries()) {
       const oldValue = stack.head[1]
