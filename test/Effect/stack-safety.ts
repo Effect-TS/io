@@ -16,32 +16,21 @@ const deepMapEffect = (n: number): Effect.Effect<never, never, number> => {
 
 describe.concurrent("Effect", () => {
   it.effect("deep map of sync effect", () =>
-    Effect.gen(function*() {
-      const result = yield* deepMapEffect(10_000)
-      assert.strictEqual(result, 10_000)
+    Effect.gen(function*($) {
+      const result = yield* $(deepMapEffect(10000))
+      assert.strictEqual(result, 10000)
     }))
-
   it.effect("deep attempt", () =>
-    Effect.gen(function*() {
-      const array = Array.from({ length: 10_000 }, (_, i) => i)
-      const result = yield* array.reduce(
-        (acc, _) =>
-          pipe(
-            acc,
-            Effect.foldEffect(Effect.die, Effect.succeed),
-            Effect.either,
-            Effect.asUnit
-          ),
-        pipe(
-          Effect.attempt(constVoid),
-          Effect.foldEffect(Effect.die, Effect.succeed)
-        )
-      )
+    Effect.gen(function*($) {
+      const array = Array.from({ length: 10000 }, (_, i) => i)
+      const result = yield* $(array.reduce(
+        (acc, _) => pipe(acc, Effect.foldEffect(Effect.die, Effect.succeed), Effect.either, Effect.asUnit),
+        pipe(Effect.attempt(constVoid), Effect.foldEffect(Effect.die, Effect.succeed))
+      ))
       assert.isUndefined(result)
     }))
-
   it.effect("deep flatMap", () =>
-    Effect.gen(function*() {
+    Effect.gen(function*($) {
       const fib = (
         n: number,
         a: BigInt = BigInt("0"),
@@ -52,65 +41,46 @@ describe.concurrent("Effect", () => {
           Effect.flatMap((b2) => n > 0 ? fib(n - 1, b, b2) : Effect.succeed(b2))
         )
       }
-      const result = yield* fib(1_000)
+      const result = yield* $(fib(1000))
       const expected = BigInt(
         "113796925398360272257523782552224175572745930353730513145086634176691092536145985470146129334641866902783673042322088625863396052888690096969577173696370562180400527049497109023054114771394568040040412172632376"
       )
       assert.deepEqual(result, expected)
     }))
-
   it.effect("deep absolve/attempt is identity", () =>
-    Effect.gen(function*() {
+    Effect.gen(function*($) {
       const array = Array.from({ length: 100 }, (_, i) => i)
-      const result = yield* array.reduce((acc, _) => Effect.absolve(Effect.either(acc)), Effect.succeed(42))
+      const result = yield* $(array.reduce((acc, _) => Effect.absolve(Effect.either(acc)), Effect.succeed(42)))
       assert.strictEqual(result, 42)
     }))
-
   it.effect("deep async absolve/attempt is identity", () =>
-    Effect.gen(function*() {
-      const array = Array.from({ length: 1_000 }, (_, i) => i)
-      const result = yield* array.reduce(
+    Effect.gen(function*($) {
+      const array = Array.from({ length: 1000 }, (_, i) => i)
+      const result = yield* $(array.reduce(
         (acc, _) => Effect.absolve(Effect.either(acc)),
         Effect.async<never, unknown, unknown>((cb) => {
           cb(Effect.succeed(42))
         })
-      )
+      ))
       assert.strictEqual(result, 42)
     }))
-
   it.effect("deep effects", () =>
-    Effect.gen(function*() {
+    Effect.gen(function*($) {
       const incLeft = (n: number, ref: Ref.Ref<number>): Effect.Effect<never, never, number> => {
         if (n <= 0) {
           return Ref.get(ref)
         }
-        return pipe(
-          incLeft(n - 1, ref),
-          Effect.zipLeft(pipe(ref, Ref.update((n) => n + 1)))
-        )
+        return pipe(incLeft(n - 1, ref), Effect.zipLeft(pipe(ref, Ref.update((n) => n + 1))))
       }
-
       const incRight = (n: number, ref: Ref.Ref<number>): Effect.Effect<never, never, number> => {
         if (n <= 0) {
           return Ref.get(ref)
         }
-        return pipe(
-          ref,
-          Ref.update((n) => n + 1),
-          Effect.zipRight(incRight(n - 1, ref))
-        )
+        return pipe(ref, Ref.update((n) => n + 1), Effect.zipRight(incRight(n - 1, ref)))
       }
-      const left = pipe(
-        Ref.make(0),
-        Effect.flatMap((ref) => incLeft(100, ref)),
-        Effect.map((n) => n === 0)
-      )
-      const right = pipe(
-        Ref.make(0),
-        Effect.flatMap((ref) => incRight(1_000, ref)),
-        Effect.map((n) => n === 1_000)
-      )
-      const result = yield* pipe(left, Effect.zipWith(right, (a, b) => a && b))
+      const left = pipe(Ref.make(0), Effect.flatMap((ref) => incLeft(100, ref)), Effect.map((n) => n === 0))
+      const right = pipe(Ref.make(0), Effect.flatMap((ref) => incRight(1000, ref)), Effect.map((n) => n === 1000))
+      const result = yield* $(pipe(left, Effect.zipWith(right, (a, b) => a && b)))
       assert.isTrue(result)
     }))
 })

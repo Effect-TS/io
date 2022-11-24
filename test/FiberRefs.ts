@@ -12,35 +12,26 @@ import { assert, describe } from "vitest"
 
 describe.concurrent("FiberRefs", () => {
   it.scoped("propagate FiberRef values across fiber boundaries", () =>
-    Effect.gen(function*() {
-      const fiberRef = yield* FiberRef.make(false)
-      const queue = yield* Queue.unbounded<FiberRefs.FiberRefs>()
-      const producer = yield* pipe(
-        fiberRef,
-        FiberRef.set(true),
-        Effect.zipRight(
-          pipe(
-            Effect.getFiberRefs(),
-            Effect.flatMap((a) => pipe(queue, Queue.offer(a)))
-          )
-        ),
-        Effect.fork
+    Effect.gen(function*($) {
+      const fiberRef = yield* $(FiberRef.make(false))
+      const queue = yield* $(Queue.unbounded<FiberRefs.FiberRefs>())
+      const producer = yield* $(
+        pipe(
+          fiberRef,
+          FiberRef.set(true),
+          Effect.zipRight(pipe(Effect.getFiberRefs(), Effect.flatMap((a) => pipe(queue, Queue.offer(a))))),
+          Effect.fork
+        )
       )
-      const consumer = yield* pipe(
+      const consumer = yield* $(pipe(
         Queue.take(queue),
-        Effect.flatMap((fiberRefs) =>
-          pipe(
-            Effect.setFiberRefs(fiberRefs),
-            Effect.zipRight(FiberRef.get(fiberRef))
-          )
-        ),
+        Effect.flatMap((fiberRefs) => pipe(Effect.setFiberRefs(fiberRefs), Effect.zipRight(FiberRef.get(fiberRef)))),
         Effect.fork
-      )
-      yield* Fiber.join(producer)
-      const result = yield* Fiber.join(consumer)
+      ))
+      yield* $(Fiber.join(producer))
+      const result = yield* $(Fiber.join(consumer))
       assert.isTrue(result)
     }))
-
   it.it("interruptedCause", () => {
     const parent = FiberId.make(1, Date.now()) as FiberId.Runtime
     const child = FiberId.make(2, Date.now()) as FiberId.Runtime
@@ -49,13 +40,7 @@ describe.concurrent("FiberRefs", () => {
       parentFiberRefs,
       FiberRefs.updatedAs(child, FiberRef.interruptedCause, Cause.interrupt(parent))
     )
-    const newParentFiberRefs = pipe(
-      parentFiberRefs,
-      FiberRefs.joinAs(parent, childFiberRefs)
-    )
-    assert.deepStrictEqual(
-      pipe(newParentFiberRefs, FiberRefs.get(FiberRef.interruptedCause)),
-      Option.some(Cause.empty)
-    )
+    const newParentFiberRefs = pipe(parentFiberRefs, FiberRefs.joinAs(parent, childFiberRefs))
+    assert.deepStrictEqual(pipe(newParentFiberRefs, FiberRefs.get(FiberRef.interruptedCause)), Option.some(Cause.empty))
   })
 })

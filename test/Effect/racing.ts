@@ -6,36 +6,30 @@ import { assert, describe } from "vitest"
 
 describe.concurrent("Effect", () => {
   it.effect("returns first success", () =>
-    Effect.gen(function*() {
-      const result = yield* pipe(
-        Effect.fail("fail"),
-        Effect.raceAll([Effect.succeed(24)])
-      )
+    Effect.gen(function*($) {
+      const result = yield* $(pipe(Effect.fail("fail"), Effect.raceAll([Effect.succeed(24)])))
       assert.strictEqual(result, 24)
     }))
-
   it.live("returns last failure", () =>
-    Effect.gen(function*() {
-      const result = yield* pipe(
-        Effect.sleep(Duration.millis(100)),
-        Effect.zipRight(Effect.fail(24)),
-        Effect.raceAll([Effect.fail(25)]),
-        Effect.flip
+    Effect.gen(function*($) {
+      const result = yield* $(
+        pipe(
+          Effect.sleep(Duration.millis(100)),
+          Effect.zipRight(Effect.fail(24)),
+          Effect.raceAll([Effect.fail(25)]),
+          Effect.flip
+        )
       )
       assert.strictEqual(result, 24)
     }))
-
   it.live("returns success when it happens after failure", () =>
-    Effect.gen(function*() {
-      const result = yield* pipe(
+    Effect.gen(function*($) {
+      const result = yield* $(pipe(
         Effect.fail(42),
         Effect.raceAll([
-          pipe(
-            Effect.succeed(24),
-            Effect.zipLeft(Effect.sleep(Duration.millis(100)))
-          )
+          pipe(Effect.succeed(24), Effect.zipLeft(Effect.sleep(Duration.millis(100))))
         ])
-      )
+      ))
       assert.strictEqual(result, 24)
     }))
 })

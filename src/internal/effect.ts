@@ -9,6 +9,7 @@ import * as FiberRefs from "@effect/io/FiberRefs"
 import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
 import * as core from "@effect/io/internal/core"
 import * as fiberRefsPatch from "@effect/io/internal/fiberRefs/patch"
+import * as SingleShotGen from "@effect/io/internal/singleShotGen"
 import type { EnforceNonEmptyRecord, MergeRecord, NonEmptyArrayEffect, TupleA } from "@effect/io/internal/types"
 import * as LogLevel from "@effect/io/Logger/Level"
 import * as LogSpan from "@effect/io/Logger/Span"
@@ -921,27 +922,31 @@ export const fromOption = <A>(option: Option.Option<A>): Effect.Effect<never, Op
 }
 
 /**
+ * @internal
+ */
+class EffectGen {
+  constructor(readonly value: Effect.Effect<any, any, any>) {}
+  [Symbol.iterator]() {
+    return new SingleShotGen.SingleShotGen(this)
+  }
+}
+
+/**
  * Inspired by https://github.com/tusharmath/qio/pull/22 (revised)
  * @internal
  */
-export const gen = <Eff extends Effect.Effect.Variance<any, any, any>, AEff>(
-  f: () => Generator<Eff, AEff, any>
-): Effect.Effect<
-  [Eff] extends [never] ? never : [Eff] extends [Effect.Effect.Variance<infer R, any, any>] ? R : never,
-  [Eff] extends [never] ? never : [Eff] extends [Effect.Effect.Variance<any, infer E, any>] ? E : never,
-  AEff
-> => {
+export const gen: typeof Effect.gen = (f) => {
   const trace = getCallTrace()
   return core.suspendSucceed(() => {
-    const iterator = f()
+    const iterator = f((self) => new EffectGen(self) as any)
     const state = iterator.next()
     const run = (
-      state: IteratorYieldResult<Eff> | IteratorReturnResult<AEff>
-    ): Effect.Effect<any, any, AEff> =>
+      state: IteratorYieldResult<any> | IteratorReturnResult<any>
+    ): Effect.Effect<any, any, any> =>
       (state.done ?
         core.succeed(state.value) :
         pipe(
-          state.value as unknown as Effect.Effect<any, any, any>,
+          state.value.value as unknown as Effect.Effect<any, any, any>,
           core.flatMap((val: any) => run(iterator.next(val)))
         )).traced(trace)
     return run(state)
