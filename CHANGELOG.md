@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.0.7
+
+### Patch Changes
+
+- [#37](https://github.com/Effect-TS/io/pull/37) [`3dbcb37`](https://github.com/Effect-TS/io/commit/3dbcb375d447552a10b1225929abe90ce0669eaf) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Fix internal types
+
 ## 0.0.6
 
 ### Patch Changes
