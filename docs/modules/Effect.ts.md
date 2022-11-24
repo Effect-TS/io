@@ -264,6 +264,7 @@ Added in v1.0.0
   - [negate](#negate)
 - [models](#models)
   - [Effect (interface)](#effect-interface)
+  - [EffectGen (interface)](#effectgen-interface)
 - [mutations](#mutations)
   - [awaitAllChildren](#awaitallchildren)
   - [cached](#cached)
@@ -1254,11 +1255,11 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const gen: <Eff extends Effect.Variance<any, any, any>, AEff>(
-  f: () => Generator<Eff, AEff, any>
+export declare const gen: <Eff extends EffectGen<any, any, any>, AEff>(
+  f: (resume: <R, E, A>(self: Effect<R, E, A>) => EffectGen<R, E, A>) => Generator<Eff, AEff, any>
 ) => Effect<
-  [Eff] extends [never] ? never : [Eff] extends [Effect.Variance<infer R, any, any>] ? R : never,
-  [Eff] extends [never] ? never : [Eff] extends [Effect.Variance<any, infer E, any>] ? E : never,
+  [Eff] extends [never] ? never : [Eff] extends [EffectGen<infer R, any, any>] ? R : never,
+  [Eff] extends [never] ? never : [Eff] extends [EffectGen<any, infer E, any>] ? E : never,
   AEff
 >
 ```
@@ -3726,6 +3727,23 @@ Added in v1.0.0
 export interface Effect<R, E, A> extends Effect.Variance<R, E, A>, Equal.Equal {
   /** @internal */
   traced(trace: string | undefined): Effect<R, E, A>
+}
+```
+
+Added in v1.0.0
+
+## EffectGen (interface)
+
+**Signature**
+
+```ts
+export interface EffectGen<R, E, A> {
+  readonly _R: () => R
+  readonly _E: () => E
+  readonly _A: () => A
+  readonly value: Effect<R, E, A>
+
+  [Symbol.iterator](): Generator<EffectGen<R, E, A>, A>
 }
 ```
 

@@ -32,49 +32,43 @@ const isClosed = (self: State): boolean => self._tag === "Closed"
 
 describe.concurrent("Ref", () => {
   it.effect("get", () =>
-    Effect.gen(function*() {
-      const result = yield* pipe(Ref.make(current), Effect.flatMap(Ref.get))
+    Effect.gen(function*($) {
+      const result = yield* $(pipe(Ref.make(current), Effect.flatMap(Ref.get)))
       assert.strictEqual(result, current)
     }))
-
   it.effect("getAndSet", () =>
-    Effect.gen(function*() {
-      const ref = yield* Ref.make(current)
-      const result1 = yield* pipe(ref, Ref.getAndSet(update))
-      const result2 = yield* Ref.get(ref)
+    Effect.gen(function*($) {
+      const ref = yield* $(Ref.make(current))
+      const result1 = yield* $(pipe(ref, Ref.getAndSet(update)))
+      const result2 = yield* $(Ref.get(ref))
       assert.strictEqual(result1, current)
       assert.strictEqual(result2, update)
     }))
-
   it.effect("getAndUpdate", () =>
-    Effect.gen(function*() {
-      const ref = yield* Ref.make(current)
-      const result1 = yield* pipe(ref, Ref.getAndUpdate(() => update))
-      const result2 = yield* Ref.get(ref)
+    Effect.gen(function*($) {
+      const ref = yield* $(Ref.make(current))
+      const result1 = yield* $(pipe(ref, Ref.getAndUpdate(() => update)))
+      const result2 = yield* $(Ref.get(ref))
       assert.strictEqual(result1, current)
       assert.strictEqual(result2, update)
     }))
-
   it.effect("getAndUpdateSome - once", () =>
-    Effect.gen(function*() {
-      const ref = yield* Ref.make<State>(Active)
-      const result1 = yield* pipe(
-        ref,
-        Ref.getAndUpdateSome((state) => isClosed(state) ? Option.some(Changed) : Option.none)
+    Effect.gen(function*($) {
+      const ref = yield* $(Ref.make<State>(Active))
+      const result1 = yield* $(
+        pipe(ref, Ref.getAndUpdateSome((state) => isClosed(state) ? Option.some(Changed) : Option.none))
       )
-      const result2 = yield* Ref.get(ref)
+      const result2 = yield* $(Ref.get(ref))
       assert.strictEqual(result1, Active)
       assert.strictEqual(result2, Active)
     }))
-
   it.effect("getAndUpdateSome - twice", () =>
-    Effect.gen(function*() {
-      const ref = yield* Ref.make<State>(Active)
-      const result1 = yield* pipe(
-        ref,
-        Ref.getAndUpdateSome((state) => isActive(state) ? Option.some(Changed) : Option.none)
+    Effect.gen(function*($) {
+      const ref = yield* $(Ref.make<State>(Active))
+      const result1 = yield* $(
+        pipe(ref, Ref.getAndUpdateSome((state) => isActive(state) ? Option.some(Changed) : Option.none))
       )
-      const result2 = yield* pipe(
+      const result2 = yield* $(pipe(
         ref,
         Ref.getAndUpdateSome((state) =>
           isActive(state) ?
@@ -83,50 +77,45 @@ describe.concurrent("Ref", () => {
             Option.some(Closed) :
             Option.none
         )
-      )
-      const result3 = yield* Ref.get(ref)
+      ))
+      const result3 = yield* $(Ref.get(ref))
       assert.strictEqual(result1, Active)
       assert.strictEqual(result2, Changed)
       assert.strictEqual(result3, Closed)
     }))
-
   it.effect("set", () =>
-    Effect.gen(function*() {
-      const ref = yield* Ref.make(current)
-      yield* pipe(ref, Ref.set(update))
-      const result = yield* Ref.get(ref)
+    Effect.gen(function*($) {
+      const ref = yield* $(Ref.make(current))
+      yield* $(pipe(ref, Ref.set(update)))
+      const result = yield* $(Ref.get(ref))
       assert.strictEqual(result, update)
     }))
-
   it.effect("update", () =>
-    Effect.gen(function*() {
-      const ref = yield* Ref.make(current)
-      yield* pipe(ref, Ref.update(() => update))
-      const result = yield* Ref.get(ref)
+    Effect.gen(function*($) {
+      const ref = yield* $(Ref.make(current))
+      yield* $(pipe(ref, Ref.update(() => update)))
+      const result = yield* $(Ref.get(ref))
       assert.strictEqual(result, update)
     }))
-
   it.effect("updateAndGet", () =>
-    Effect.gen(function*() {
-      const ref = yield* Ref.make(current)
-      const result = yield* pipe(ref, Ref.updateAndGet(() => update))
+    Effect.gen(function*($) {
+      const ref = yield* $(Ref.make(current))
+      const result = yield* $(pipe(ref, Ref.updateAndGet(() => update)))
       assert.strictEqual(result, update)
     }))
-
   it.effect("updateSome - once", () =>
-    Effect.gen(function*() {
-      const ref = yield* Ref.make<State>(Active)
-      yield* pipe(ref, Ref.updateSome((state) => isClosed(state) ? Option.some(Changed) : Option.none))
-      const result = yield* Ref.get(ref)
+    Effect.gen(function*($) {
+      const ref = yield* $(Ref.make<State>(Active))
+      yield* $(pipe(ref, Ref.updateSome((state) => isClosed(state) ? Option.some(Changed) : Option.none)))
+      const result = yield* $(Ref.get(ref))
       assert.deepEqual(result, Active)
     }))
-
   it.effect("updateSome - twice", () =>
-    Effect.gen(function*() {
-      const ref = yield* Ref.make<State>(Active)
-      yield* pipe(ref, Ref.updateSome((state) => isActive(state) ? Option.some(Changed) : Option.none))
-      const result1 = yield* Ref.get(ref)
-      yield* pipe(
+    Effect.gen(function*($) {
+      const ref = yield* $(Ref.make<State>(Active))
+      yield* $(pipe(ref, Ref.updateSome((state) => isActive(state) ? Option.some(Changed) : Option.none)))
+      const result1 = yield* $(Ref.get(ref))
+      yield* $(pipe(
         ref,
         Ref.updateSome((state) =>
           isActive(state) ?
@@ -135,30 +124,26 @@ describe.concurrent("Ref", () => {
             Option.some(Closed) :
             Option.none
         )
-      )
-      const result2 = yield* Ref.get(ref)
+      ))
+      const result2 = yield* $(Ref.get(ref))
       assert.deepEqual(result1, Changed)
       assert.deepEqual(result2, Closed)
     }))
-
   it.effect("updateSomeAndGet - once", () =>
-    Effect.gen(function*() {
-      const ref = yield* Ref.make<State>(Active)
-      const result = yield* pipe(
-        ref,
-        Ref.updateSomeAndGet((state) => isClosed(state) ? Option.some(Changed) : Option.none)
+    Effect.gen(function*($) {
+      const ref = yield* $(Ref.make<State>(Active))
+      const result = yield* $(
+        pipe(ref, Ref.updateSomeAndGet((state) => isClosed(state) ? Option.some(Changed) : Option.none))
       )
       assert.strictEqual(result, Active)
     }))
-
   it.effect("updateSomeAndGet - twice", () =>
-    Effect.gen(function*() {
-      const ref = yield* Ref.make<State>(Active)
-      const result1 = yield* pipe(
-        ref,
-        Ref.updateSomeAndGet((state) => isActive(state) ? Option.some(Changed) : Option.none)
+    Effect.gen(function*($) {
+      const ref = yield* $(Ref.make<State>(Active))
+      const result1 = yield* $(
+        pipe(ref, Ref.updateSomeAndGet((state) => isActive(state) ? Option.some(Changed) : Option.none))
       )
-      const result2 = yield* pipe(
+      const result2 = yield* $(pipe(
         ref,
         Ref.updateSomeAndGet((state): Option.Option<State> => {
           return isActive(state) ?
@@ -167,61 +152,49 @@ describe.concurrent("Ref", () => {
             Option.some(Closed) :
             Option.none
         })
-      )
+      ))
       assert.deepEqual(result1, Changed)
       assert.deepEqual(result2, Closed)
     }))
-
   it.effect("modify", () =>
-    Effect.gen(function*() {
-      const ref = yield* Ref.make(current)
-      const result1 = yield* pipe(ref, Ref.modify(() => ["hello", update]))
-      const result2 = yield* Ref.get(ref)
+    Effect.gen(function*($) {
+      const ref = yield* $(Ref.make(current))
+      const result1 = yield* $(pipe(ref, Ref.modify(() => ["hello", update])))
+      const result2 = yield* $(Ref.get(ref))
       assert.strictEqual(result1, "hello")
       assert.strictEqual(result2, update)
     }))
-
   it.effect("modifySome - once", () =>
-    Effect.gen(function*() {
-      const ref = yield* Ref.make<State>(Active)
-      const result = yield* pipe(
+    Effect.gen(function*($) {
+      const ref = yield* $(Ref.make<State>(Active))
+      const result = yield* $(pipe(
         ref,
-        Ref.modifySome(
-          "state does not change",
-          (state) =>
-            isClosed(state) ?
-              Option.some(["active", Active]) :
-              Option.none
-        )
-      )
+        Ref.modifySome("state does not change", (state) =>
+          isClosed(state) ?
+            Option.some(["active", Active]) :
+            Option.none)
+      ))
       assert.strictEqual(result, "state does not change")
     }))
-
   it.effect("modifySome - twice", () =>
-    Effect.gen(function*() {
-      const ref = yield* Ref.make<State>(Active)
-      const result1 = yield* pipe(
+    Effect.gen(function*($) {
+      const ref = yield* $(Ref.make<State>(Active))
+      const result1 = yield* $(pipe(
         ref,
-        Ref.modifySome(
-          "state does not change",
-          (state) =>
-            isActive(state) ?
-              Option.some(["changed", Changed]) :
-              Option.none
-        )
-      )
-      const result2 = yield* pipe(
+        Ref.modifySome("state does not change", (state) =>
+          isActive(state) ?
+            Option.some(["changed", Changed]) :
+            Option.none)
+      ))
+      const result2 = yield* $(pipe(
         ref,
-        Ref.modifySome(
-          "state does not change",
-          (state) =>
-            isActive(state) ?
-              Option.some(["changed", Changed]) :
-              isChanged(state) ?
-              Option.some(["closed", Closed]) :
-              Option.none
-        )
-      )
+        Ref.modifySome("state does not change", (state) =>
+          isActive(state) ?
+            Option.some(["changed", Changed]) :
+            isChanged(state) ?
+            Option.some(["closed", Closed]) :
+            Option.none)
+      ))
       assert.strictEqual(result1, "changed")
       assert.strictEqual(result2, "closed")
     }))

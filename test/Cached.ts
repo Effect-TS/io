@@ -10,45 +10,39 @@ import { assert, describe } from "vitest"
 
 describe.concurrent("Cached", () => {
   it.scoped("manual", () =>
-    Effect.gen(function*() {
-      const ref = yield* Ref.make(0)
-      const cached = yield* Cached.manual(Ref.get(ref))
-      const resul1 = yield* Cached.get(cached)
-      const result2 = yield* pipe(
-        ref,
-        Ref.set(1),
-        Effect.zipRight(Cached.refresh(cached)),
-        Effect.zipRight(Cached.get(cached))
+    Effect.gen(function*($) {
+      const ref = yield* $(Ref.make(0))
+      const cached = yield* $(Cached.manual(Ref.get(ref)))
+      const resul1 = yield* $(Cached.get(cached))
+      const result2 = yield* $(
+        pipe(ref, Ref.set(1), Effect.zipRight(Cached.refresh(cached)), Effect.zipRight(Cached.get(cached)))
       )
       assert.strictEqual(resul1, 0)
       assert.strictEqual(result2, 1)
     }))
-
   it.scopedLive("auto", () =>
-    Effect.gen(function*() {
-      const ref = yield* Ref.make(0)
-      const cached = yield* Cached.auto(Ref.get(ref), Schedule.spaced(Duration.millis(4)))
-      const result1 = yield* Cached.get(cached)
-      const result2 = yield* pipe(
-        ref,
-        Ref.set(1),
-        Effect.zipRight(Effect.sleep(Duration.millis(5))),
-        Effect.zipRight(Cached.get(cached))
+    Effect.gen(function*($) {
+      const ref = yield* $(Ref.make(0))
+      const cached = yield* $(Cached.auto(Ref.get(ref), Schedule.spaced(Duration.millis(4))))
+      const result1 = yield* $(Cached.get(cached))
+      const result2 = yield* $(
+        pipe(ref, Ref.set(1), Effect.zipRight(Effect.sleep(Duration.millis(5))), Effect.zipRight(Cached.get(cached)))
       )
       assert.strictEqual(result1, 0)
       assert.strictEqual(result2, 1)
     }))
-
   it.scopedLive("failed refresh doesn't affect cached value", () =>
-    Effect.gen(function*() {
-      const ref = yield* Ref.make<Either.Either<string, number>>(Either.right(0))
-      const cached = yield* Cached.auto(Effect.absolve(Ref.get(ref)), Schedule.spaced(Duration.millis(4)))
-      const result1 = yield* Cached.get(cached)
-      const result2 = yield* pipe(
-        ref,
-        Ref.set(Either.left("Uh oh!") as Either.Either<string, number>),
-        Effect.zipRight(Effect.sleep(Duration.millis(5))),
-        Effect.zipRight(Cached.get(cached))
+    Effect.gen(function*($) {
+      const ref = yield* $(Ref.make<Either.Either<string, number>>(Either.right(0)))
+      const cached = yield* $(Cached.auto(Effect.absolve(Ref.get(ref)), Schedule.spaced(Duration.millis(4))))
+      const result1 = yield* $(Cached.get(cached))
+      const result2 = yield* $(
+        pipe(
+          ref,
+          Ref.set(Either.left("Uh oh!") as Either.Either<string, number>),
+          Effect.zipRight(Effect.sleep(Duration.millis(5))),
+          Effect.zipRight(Cached.get(cached))
+        )
       )
       assert.strictEqual(result1, 0)
       assert.strictEqual(result2, 0)

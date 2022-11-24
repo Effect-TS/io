@@ -68,8 +68,6 @@ export declare namespace Effect {
    * @category models
    */
   export interface Variance<R, E, A> {
-    [Symbol.iterator](): Generator<Effect.Variance<R, E, A>, A>
-
     readonly [EffectTypeId]: {
       readonly _R: (_: never) => R
       readonly _E: (_: never) => E
@@ -1575,15 +1573,28 @@ export const fromFiberEffect: <R, E, A>(fiber: Effect<R, E, Fiber.Fiber<E, A>>) 
 export const fromOption: <A>(option: Option.Option<A>) => Effect<never, Option.Option<never>, A> = effect.fromOption
 
 /**
+ * @category models
+ * @since 1.0.0
+ */
+export interface EffectGen<R, E, A> {
+  readonly _R: () => R
+  readonly _E: () => E
+  readonly _A: () => A
+  readonly value: Effect<R, E, A>
+
+  [Symbol.iterator](): Generator<EffectGen<R, E, A>, A>
+}
+
+/**
  * @macro traced
  * @since 1.0.0
  * @category constructors
  */
-export const gen: <Eff extends Effect.Variance<any, any, any>, AEff>(
-  f: () => Generator<Eff, AEff, any>
+export const gen: <Eff extends EffectGen<any, any, any>, AEff>(
+  f: (resume: <R, E, A>(self: Effect<R, E, A>) => EffectGen<R, E, A>) => Generator<Eff, AEff, any>
 ) => Effect<
-  [Eff] extends [never] ? never : [Eff] extends [Effect.Variance<infer R, any, any>] ? R : never,
-  [Eff] extends [never] ? never : [Eff] extends [Effect.Variance<any, infer E, any>] ? E : never,
+  [Eff] extends [never] ? never : [Eff] extends [EffectGen<infer R, any, any>] ? R : never,
+  [Eff] extends [never] ? never : [Eff] extends [EffectGen<any, infer E, any>] ? E : never,
   AEff
 > = effect.gen
 

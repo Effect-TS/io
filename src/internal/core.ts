@@ -16,7 +16,6 @@ import type * as fiberScope from "@effect/io/internal/fiberScope"
 import * as OpCodes from "@effect/io/internal/opCodes/effect"
 import * as _runtimeFlags from "@effect/io/internal/runtimeFlags"
 import * as Scheduler from "@effect/io/internal/scheduler"
-import * as SingleShotGen from "@effect/io/internal/singleShotGen"
 import type * as LogLevel from "@effect/io/Logger/Level"
 import type * as LogSpan from "@effect/io/Logger/Span"
 import type * as Scope from "@effect/io/Scope"
@@ -121,9 +120,6 @@ export const proto = {
     Object.assign(fresh, this)
     fresh.trace = trace
     return fresh
-  },
-  [Symbol.iterator]() {
-    return new SingleShotGen.SingleShotGen(this)
   }
 }
 

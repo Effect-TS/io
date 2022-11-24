@@ -76,22 +76,18 @@ export interface TestClock extends Clock.Clock {
    * @macro traced
    */
   adjust(duration: Duration.Duration): Effect.Effect<never, never, void>
-
   /**
    * @macro traced
    */
   adjustWith(duration: Duration.Duration): <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
-
   /**
    * @macro traced
    */
   save(): Effect.Effect<never, never, Effect.Effect<never, never, void>>
-
   /**
    * @macro traced
    */
   setTime(time: number): Effect.Effect<never, never, void>
-
   /**
    * @macro traced
    */
@@ -119,7 +115,6 @@ const suspendedWarning = "Warning: A test is advancing the test clock, " +
 /** @internal */
 export class TestClockImpl implements TestClock {
   [clock.ClockTypeId]: Clock.ClockTypeId = clock.ClockTypeId
-
   constructor(
     readonly clockState: Ref.Ref<Data.Data>,
     readonly live: Live.Live,
@@ -127,7 +122,6 @@ export class TestClockImpl implements TestClock {
     readonly warningState: Synchronized.Synchronized<WarningData.WarningData>,
     readonly suspendedWarningState: Synchronized.Synchronized<SuspendedWarningData.SuspendedWarningData>
   ) {}
-
   /**
    * Returns the current clock time in milliseconds.
    *
@@ -135,12 +129,8 @@ export class TestClockImpl implements TestClock {
    */
   currentTimeMillis(): Effect.Effect<never, never, number> {
     const trace = getCallTrace()
-    return pipe(
-      ref.get(this.clockState),
-      core.map((data) => data.instant)
-    ).traced(trace)
+    return pipe(ref.get(this.clockState), core.map((data) => data.instant)).traced(trace)
   }
-
   /**
    * Saves the `TestClock`'s current state in an effect which, when run, will
    * restore the `TestClock` state to the saved state.
@@ -149,12 +139,8 @@ export class TestClockImpl implements TestClock {
    */
   save(): Effect.Effect<never, never, Effect.Effect<never, never, void>> {
     const trace = getCallTrace()
-    return pipe(
-      ref.get(this.clockState),
-      core.map((data) => pipe(this.clockState, ref.set(data)))
-    ).traced(trace)
+    return pipe(ref.get(this.clockState), core.map((data) => pipe(this.clockState, ref.set(data)))).traced(trace)
   }
-
   /**
    * Sets the current clock time to the specified instant. Any effects that
    * were scheduled to occur on or before the new time will be run in order.
@@ -163,12 +149,8 @@ export class TestClockImpl implements TestClock {
    */
   setTime(instant: number): Effect.Effect<never, never, void> {
     const trace = getCallTrace()
-    return pipe(
-      this.warningDone(),
-      core.zipRight(this.run(() => instant))
-    ).traced(trace)
+    return pipe(this.warningDone(), core.zipRight(this.run(() => instant))).traced(trace)
   }
-
   /**
    * Semantically blocks the current fiber until the clock time is equal to or
    * greater than the specified duration. Once the clock time is adjusted to
@@ -188,10 +170,7 @@ export class TestClockImpl implements TestClock {
             if (end > data.instant) {
               return [
                 true,
-                Data.make(
-                  data.instant,
-                  pipe(data.sleeps, List.prepend([end, deferred] as const))
-                )
+                Data.make(data.instant, pipe(data.sleeps, List.prepend([end, deferred] as const)))
               ] as const
             }
             return [false, data] as const
@@ -205,7 +184,6 @@ export class TestClockImpl implements TestClock {
       )
     ).traced(trace)
   }
-
   /**
    * Returns a list of the times at which all queued effects are scheduled to
    * resume.
@@ -214,12 +192,8 @@ export class TestClockImpl implements TestClock {
    */
   sleeps(): Effect.Effect<never, never, List.List<number>> {
     const trace = getCallTrace()
-    return pipe(
-      ref.get(this.clockState),
-      core.map((data) => pipe(data.sleeps, List.map((_) => _[0])))
-    ).traced(trace)
+    return pipe(ref.get(this.clockState), core.map((data) => pipe(data.sleeps, List.map((_) => _[0])))).traced(trace)
   }
-
   /**
    * Increments the current clock time by the specified duration. Any effects
    * that were scheduled to occur on or before the new time will be run in
@@ -229,12 +203,8 @@ export class TestClockImpl implements TestClock {
    */
   adjust(duration: Duration.Duration): Effect.Effect<never, never, void> {
     const trace = getCallTrace()
-    return pipe(
-      this.warningDone(),
-      core.zipRight(this.run((n) => n + duration.millis))
-    ).traced(trace)
+    return pipe(this.warningDone(), core.zipRight(this.run((n) => n + duration.millis))).traced(trace)
   }
-
   /**
    * Increments the current clock time by the specified duration. Any effects
    * that were scheduled to occur on or before the new time will be run in
@@ -248,21 +218,15 @@ export class TestClockImpl implements TestClock {
       return pipe(effect, circular.zipParLeft(this.adjust(duration))).traced(trace)
     }
   }
-
   /**
    * Returns a set of all fibers in this test.
    *
    * @macro traced
    */
-  supervisedFibers(): Effect.Effect<
-    never,
-    never,
-    SortedSet.SortedSet<Fiber.RuntimeFiber<unknown, unknown>>
-  > {
+  supervisedFibers(): Effect.Effect<never, never, SortedSet.SortedSet<Fiber.RuntimeFiber<unknown, unknown>>> {
     const trace = getCallTrace()
     return this.annotations.supervisedFibers().traced(trace)
   }
-
   /**
    * Captures a "snapshot" of the identifier and status of all fibers in this
    * test other than the current fiber. Fails with the `Unit` value if any of
@@ -279,43 +243,27 @@ export class TestClockImpl implements TestClock {
       core.flatMap((fibers) =>
         pipe(
           fibers,
-          effect.reduce(
-            HashMap.empty<FiberId.FiberId, FiberStatus.FiberStatus>(),
-            (map, fiber) =>
-              pipe(
-                fiber.status(),
-                core.flatMap((status) => {
-                  if (FiberStatus.isDone(status)) {
-                    return core.succeed(
-                      pipe(
-                        map,
-                        HashMap.set(
-                          fiber.id() as FiberId.FiberId,
-                          status as FiberStatus.FiberStatus
-                        )
-                      )
-                    )
-                  }
-                  if (FiberStatus.isSuspended(status)) {
-                    return core.succeed(
-                      pipe(
-                        map,
-                        HashMap.set(
-                          fiber.id() as FiberId.FiberId,
-                          status as FiberStatus.FiberStatus
-                        )
-                      )
-                    )
-                  }
-                  return core.fail(void 0)
-                })
-              )
-          )
+          effect.reduce(HashMap.empty<FiberId.FiberId, FiberStatus.FiberStatus>(), (map, fiber) =>
+            pipe(
+              fiber.status(),
+              core.flatMap((status) => {
+                if (FiberStatus.isDone(status)) {
+                  return core.succeed(
+                    pipe(map, HashMap.set(fiber.id() as FiberId.FiberId, status as FiberStatus.FiberStatus))
+                  )
+                }
+                if (FiberStatus.isSuspended(status)) {
+                  return core.succeed(
+                    pipe(map, HashMap.set(fiber.id() as FiberId.FiberId, status as FiberStatus.FiberStatus))
+                  )
+                }
+                return core.fail(void 0)
+              })
+            ))
         )
       )
     ).traced(trace)
   }
-
   /**
    * Forks a fiber that will display a warning message if a test is using time
    * but is not advancing the `TestClock`.
@@ -330,9 +278,7 @@ export class TestClockImpl implements TestClock {
         WarningData.isStart(data) ?
           Option.some(
             pipe(
-              this.live.provide(
-                pipe(effect.logWarning(warning), effect.delay(Duration.seconds(5)))
-              ),
+              this.live.provide(pipe(effect.logWarning(warning), effect.delay(Duration.seconds(5)))),
               core.interruptible,
               fiberRuntime.fork,
               core.map((fiber) => WarningData.pending(fiber))
@@ -342,7 +288,6 @@ export class TestClockImpl implements TestClock {
       )
     ).traced(trace)
   }
-
   /**
    * Cancels the warning message that is displayed if a test is using time but
    * is not advancing the `TestClock`.
@@ -358,18 +303,12 @@ export class TestClockImpl implements TestClock {
           return Option.some(core.succeed(WarningData.done))
         }
         if (WarningData.isPending(warningData)) {
-          return Option.some(
-            pipe(
-              core.interruptFiber(warningData.fiber),
-              core.as(WarningData.done)
-            )
-          )
+          return Option.some(pipe(core.interruptFiber(warningData.fiber), core.as(WarningData.done)))
         }
         return Option.none
       })
     ).traced(trace)
   }
-
   /**
    * Returns whether all descendants of this fiber are done or suspended.
    *
@@ -387,7 +326,6 @@ export class TestClockImpl implements TestClock {
       )
     ).traced(trace)
   }
-
   /**
    * Polls until all descendants of this fiber are done or suspended.
    *
@@ -401,10 +339,7 @@ export class TestClockImpl implements TestClock {
         pipe(
           this.suspended(),
           core.zipWith(
-            pipe(
-              this.live.provide(effect.sleep(Duration.millis(10))),
-              core.zipRight(this.suspended())
-            ),
+            pipe(this.live.provide(effect.sleep(Duration.millis(10))), core.zipRight(this.suspended())),
             Equal.equals
           ),
           effect.filterOrFail(identity, constVoid),
@@ -414,7 +349,6 @@ export class TestClockImpl implements TestClock {
       core.zipRight(this.suspendedWarningDone())
     ).traced(trace)
   }
-
   /**
    * Forks a fiber that will display a warning message if a test is advancing
    * the `TestClock` but a fiber is not suspending.
@@ -446,7 +380,6 @@ export class TestClockImpl implements TestClock {
       })
     ).traced(trace)
   }
-
   /**
    * Cancels the warning message that is displayed if a test is advancing the
    * `TestClock` but a fiber is not suspending.
@@ -459,18 +392,12 @@ export class TestClockImpl implements TestClock {
       this.suspendedWarningState,
       synchronized.updateSomeEffect((suspendedWarningData) => {
         if (SuspendedWarningData.isPending(suspendedWarningData)) {
-          return Option.some(
-            pipe(
-              core.interruptFiber(suspendedWarningData.fiber),
-              core.as(SuspendedWarningData.start)
-            )
-          )
+          return Option.some(pipe(core.interruptFiber(suspendedWarningData.fiber), core.as(SuspendedWarningData.start)))
         }
         return Option.none
       })
     ).traced(trace)
   }
-
   /**
    * Runs all effects scheduled to occur on or before the specified instant,
    * which may depend on the current time, in order.
@@ -481,70 +408,57 @@ export class TestClockImpl implements TestClock {
     const trace = getCallTrace()
     return pipe(
       this.awaitSuspended(),
-      core.zipRight(
-        pipe(
-          this.clockState,
-          ref.modify((data) => {
-            const end = f(data.instant)
-            const sorted = pipe(
-              data.sleeps,
-              List.sort(pipe(
-                number.Order,
-                Order.contramap((_) => _[0])
-              ))
-            )
-            if (List.isCons(sorted)) {
-              const [instant, deferred] = sorted.head
-              if (instant <= end) {
-                return [
-                  Option.some([end, deferred] as const),
-                  Data.make(instant, sorted.tail)
-                ] as const
-              }
+      core.zipRight(pipe(
+        this.clockState,
+        ref.modify((data) => {
+          const end = f(data.instant)
+          const sorted = pipe(data.sleeps, List.sort(pipe(number.Order, Order.contramap((_) => _[0]))))
+          if (List.isCons(sorted)) {
+            const [instant, deferred] = sorted.head
+            if (instant <= end) {
+              return [
+                Option.some([end, deferred] as const),
+                Data.make(instant, sorted.tail)
+              ] as const
             }
-            return [Option.none, Data.make(end, data.sleeps)] as const
-          }),
-          core.flatMap((option) => {
-            switch (option._tag) {
-              case "None": {
-                return core.unit()
-              }
-              case "Some": {
-                const [end, deferred] = option.value
-                return pipe(
-                  deferred,
-                  core.deferredSucceed<void>(void 0),
-                  core.zipRight(core.yieldNow()),
-                  core.zipRight(this.run(() => end))
-                )
-              }
+          }
+          return [Option.none, Data.make(end, data.sleeps)] as const
+        }),
+        core.flatMap((option) => {
+          switch (option._tag) {
+            case "None": {
+              return core.unit()
             }
-          })
-        )
-      )
+            case "Some": {
+              const [end, deferred] = option.value
+              return pipe(
+                deferred,
+                core.deferredSucceed<void>(void 0),
+                core.zipRight(core.yieldNow()),
+                core.zipRight(this.run(() => end))
+              )
+            }
+          }
+        })
+      ))
     ).traced(trace)
   }
 }
 
 export const live = (data: Data.Data): Layer.Layer<Annotations.Annotations | Live.Live, never, TestClock> => {
-  return layer.scoped(Tag)(
-    effect.gen(function*() {
-      const live = yield* core.service(Live.Tag)
-      const annotations = yield* core.service(Annotations.Tag)
-      const clockState = yield* core.sync(() => ref.unsafeMake(data))
-      const warningState = yield* circular.makeSynchronized(WarningData.start)
-      const suspendedWarningState = yield* circular.makeSynchronized(SuspendedWarningData.start)
-      const testClock = new TestClockImpl(clockState, live, annotations, warningState, suspendedWarningState)
-      yield* fiberRuntime.withClockScoped(testClock)
-      yield* fiberRuntime.addFinalizer(() =>
-        pipe(
-          testClock.warningDone(),
-          core.zipRight(testClock.suspendedWarningDone())
-        )
-      )
-      return testClock
-    })
-  )
+  return layer.scoped(Tag)(effect.gen(function*($) {
+    const live = yield* $(core.service(Live.Tag))
+    const annotations = yield* $(core.service(Annotations.Tag))
+    const clockState = yield* $(core.sync(() => ref.unsafeMake(data)))
+    const warningState = yield* $(circular.makeSynchronized(WarningData.start))
+    const suspendedWarningState = yield* $(circular.makeSynchronized(SuspendedWarningData.start))
+    const testClock = new TestClockImpl(clockState, live, annotations, warningState, suspendedWarningState)
+    yield* $(fiberRuntime.withClockScoped(testClock))
+    yield* $(
+      fiberRuntime.addFinalizer(() => pipe(testClock.warningDone(), core.zipRight(testClock.suspendedWarningDone())))
+    )
+    return testClock
+  }))
 }
 
 export const defaultTestClock: Layer.Layer<Annotations.Annotations | Live.Live, never, TestClock> = live(
@@ -647,9 +561,7 @@ export const testClock = (): Effect.Effect<never, never, TestClock> => {
  *
  * @macro traced
  */
-export const testClockWith = <R, E, A>(
-  f: (testClock: TestClock) => Effect.Effect<R, E, A>
-): Effect.Effect<R, E, A> => {
+export const testClockWith = <R, E, A>(f: (testClock: TestClock) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
   return pipe(
     defaultServices.currentServices,

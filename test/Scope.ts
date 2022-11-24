@@ -35,15 +35,11 @@ interface Release {
 const acquire = (id: number): Action => ({ op: OP_ACQUIRE, id })
 const use = (id: number): Action => ({ op: OP_USE, id })
 const release = (id: number): Action => ({ op: OP_RELEASE, id })
-
 const isAcquire = (self: Action): self is Use => self.op === OP_ACQUIRE
 const isUse = (self: Action): self is Use => self.op === OP_USE
 const isRelease = (self: Action): self is Use => self.op === OP_RELEASE
 
-const resource = (
-  id: number,
-  ref: Ref.Ref<ReadonlyArray<Action>>
-): Effect.Effect<Scope.Scope, never, number> => {
+const resource = (id: number, ref: Ref.Ref<ReadonlyArray<Action>>): Effect.Effect<Scope.Scope, never, number> => {
   return pipe(
     ref,
     Ref.update((actions) => [...actions, acquire(id)]),
@@ -59,48 +55,46 @@ const resource = (
 
 describe.concurrent("Scope", () => {
   it.effect("runs finalizers when the scope is closed", () =>
-    Effect.gen(function*() {
-      const ref = yield* Ref.make<ReadonlyArray<Action>>([])
-      yield* Effect.scoped(
-        pipe(
-          resource(1, ref),
-          Effect.flatMap((id) => pipe(ref, Ref.update((actions) => [...actions, use(id)])))
-        )
-      )
-      const result = yield* Ref.get(ref)
+    Effect.gen(function*($) {
+      const ref = yield* $(Ref.make<ReadonlyArray<Action>>([]))
+      yield* $(Effect.scoped(pipe(
+        resource(1, ref),
+        Effect.flatMap((id) => pipe(ref, Ref.update((actions) => [...actions, use(id)])))
+      )))
+      const result = yield* $(Ref.get(ref))
       assert.deepStrictEqual(result, [acquire(1), use(1), release(1)])
     }))
-
   it.effect("runs finalizers in parallel", () =>
-    Effect.gen(function*() {
-      const deferred = yield* Deferred.make<never, void>()
-      const result = yield* pipe(
+    Effect.gen(function*($) {
+      const deferred = yield* $(Deferred.make<never, void>())
+      const result = yield* $(pipe(
         Effect.addFinalizer(() => pipe(deferred, Deferred.succeed<void>(void 0))),
         Effect.zipRight(Effect.addFinalizer(() => Deferred.await(deferred))),
         Effect.parallelFinalizers,
         Effect.scoped,
         Effect.asUnit
-      )
+      ))
       assert.isUndefined(result)
     }))
-
   it.effect("runs finalizers in parallel when the scope is closed", () =>
-    Effect.gen(function*() {
-      const ref = yield* Ref.make<ReadonlyArray<Action>>([])
-      yield* Effect.scoped(
-        pipe(
-          Effect.parallelFinalizers(resource(1, ref)),
-          Effect.zipPar(resource(2, ref)),
-          Effect.flatMap(([resource1, resource2]) =>
-            pipe(
-              ref,
-              Ref.update((actions) => [...actions, use(resource1)]),
-              Effect.zipPar(pipe(ref, Ref.update((actions) => [...actions, use(resource2)])))
+    Effect.gen(function*($) {
+      const ref = yield* $(Ref.make<ReadonlyArray<Action>>([]))
+      yield* $(
+        Effect.scoped(
+          pipe(
+            Effect.parallelFinalizers(resource(1, ref)),
+            Effect.zipPar(resource(2, ref)),
+            Effect.flatMap(([resource1, resource2]) =>
+              pipe(
+                ref,
+                Ref.update((actions) => [...actions, use(resource1)]),
+                Effect.zipPar(pipe(ref, Ref.update((actions) => [...actions, use(resource2)])))
+              )
             )
           )
         )
       )
-      const result = yield* Ref.get(ref)
+      const result = yield* $(Ref.get(ref))
       assert.isTrue(result.slice(0, 2).some((action) => isAcquire(action) && action.id === 1))
       assert.isTrue(result.slice(0, 2).some((action) => isAcquire(action) && action.id === 2))
       assert.isTrue(result.slice(2, 4).some((action) => isUse(action) && action.id === 1))
@@ -108,14 +102,13 @@ describe.concurrent("Scope", () => {
       assert.isTrue(result.slice(4, 6).some((action) => isRelease(action) && action.id === 1))
       assert.isTrue(result.slice(4, 6).some((action) => isRelease(action) && action.id === 2))
     }))
-
   it.effect("preserves order of nested sequential finalizers", () =>
-    Effect.gen(function*() {
-      const ref = yield* Ref.make<ReadonlyArray<Action>>([])
+    Effect.gen(function*($) {
+      const ref = yield* $(Ref.make<ReadonlyArray<Action>>([]))
       const left = Effect.sequentialFinalizers(pipe(resource(1, ref), Effect.zipRight(resource(2, ref))))
       const right = Effect.sequentialFinalizers(pipe(resource(3, ref), Effect.zipRight(resource(4, ref))))
-      yield* Effect.scoped(Effect.parallelFinalizers(pipe(left, Effect.zipPar(right))))
-      const actions = yield* Ref.get(ref)
+      yield* $(Effect.scoped(Effect.parallelFinalizers(pipe(left, Effect.zipPar(right)))))
+      const actions = yield* $(Ref.get(ref))
       const action1Index = actions.findIndex((action) => action.op === OP_RELEASE && action.id === 1)
       const action2Index = actions.findIndex((action) => action.op === OP_RELEASE && action.id === 2)
       const action3Index = actions.findIndex((action) => action.op === OP_RELEASE && action.id === 3)
@@ -123,37 +116,31 @@ describe.concurrent("Scope", () => {
       assert.isBelow(action2Index, action1Index)
       assert.isBelow(action4Index, action3Index)
     }))
-
   it.scoped("withEarlyRelease", () =>
-    Effect.gen(function*() {
-      const ref = yield* Ref.make<ReadonlyArray<Action>>([])
+    Effect.gen(function*($) {
+      const ref = yield* $(Ref.make<ReadonlyArray<Action>>([]))
       const left = resource(1, ref)
       const right = Effect.withEarlyRelease(resource(2, ref))
-      yield* pipe(left, Effect.zipRight(pipe(right, Effect.flatMap(([release, _]) => release))))
-      const actions = yield* Ref.get(ref)
+      yield* $(pipe(left, Effect.zipRight(pipe(right, Effect.flatMap(([release, _]) => release)))))
+      const actions = yield* $(Ref.get(ref))
       assert.deepStrictEqual(actions[0], acquire(1))
       assert.deepStrictEqual(actions[1], acquire(2))
       assert.deepStrictEqual(actions[2], release(2))
     }))
-
   it.effect("using", () =>
-    Effect.gen(function*() {
-      const ref1 = yield* Ref.make<ReadonlyArray<Action>>([])
-      const ref2 = yield* Ref.make<ReadonlyArray<Action>>([])
-      yield* pipe(
+    Effect.gen(function*($) {
+      const ref1 = yield* $(Ref.make<ReadonlyArray<Action>>([]))
+      const ref2 = yield* $(Ref.make<ReadonlyArray<Action>>([]))
+      yield* $(pipe(
         resource(1, ref1),
         Effect.using(() =>
-          pipe(
-            ref1,
-            Ref.update((actions) => [...actions, use(1)]),
-            Effect.zipRight(resource(2, ref2))
-          )
+          pipe(ref1, Ref.update((actions) => [...actions, use(1)]), Effect.zipRight(resource(2, ref2)))
         ),
         Effect.zipRight(pipe(ref2, Ref.update((actions) => [...actions, use(2)]))),
         Effect.scoped
-      )
-      const actions1 = yield* Ref.get(ref1)
-      const actions2 = yield* Ref.get(ref2)
+      ))
+      const actions1 = yield* $(Ref.get(ref1))
+      const actions2 = yield* $(Ref.get(ref2))
       assert.deepStrictEqual(actions1, [acquire(1), use(1), release(1)])
       assert.deepStrictEqual(actions2, [acquire(2), use(2), release(2)])
     }))

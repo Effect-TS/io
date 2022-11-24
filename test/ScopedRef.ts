@@ -7,62 +7,56 @@ import { assert, describe } from "vitest"
 
 describe.concurrent("ScopedRef", () => {
   it.scoped("single set", () =>
-    Effect.gen(function*() {
-      const counter = yield* Counter.make()
-      const ref = yield* ScopedRef.make(() => 0)
-      yield* pipe(ref, ScopedRef.set(counter.acquire()))
-      const result = yield* ScopedRef.get(ref)
+    Effect.gen(function*($) {
+      const counter = yield* $(Counter.make())
+      const ref = yield* $(ScopedRef.make(() => 0))
+      yield* $(pipe(ref, ScopedRef.set(counter.acquire())))
+      const result = yield* $(ScopedRef.get(ref))
       assert.strictEqual(result, 1)
     }))
-
   it.scoped("dual set", () =>
-    Effect.gen(function*() {
-      const counter = yield* Counter.make()
-      const ref = yield* ScopedRef.make(() => 0)
-      yield* pipe(
-        ref,
-        ScopedRef.set(counter.acquire()),
-        Effect.zipRight(pipe(ref, ScopedRef.set(counter.acquire())))
+    Effect.gen(function*($) {
+      const counter = yield* $(Counter.make())
+      const ref = yield* $(ScopedRef.make(() => 0))
+      yield* $(
+        pipe(ref, ScopedRef.set(counter.acquire()), Effect.zipRight(pipe(ref, ScopedRef.set(counter.acquire()))))
       )
-      const result = yield* ScopedRef.get(ref)
+      const result = yield* $(ScopedRef.get(ref))
       assert.strictEqual(result, 2)
     }))
-
   it.scoped("release on swap", () =>
-    Effect.gen(function*() {
-      const counter = yield* Counter.make()
-      const ref = yield* ScopedRef.make(() => 0)
-      yield* pipe(
-        ref,
-        ScopedRef.set(counter.acquire()),
-        Effect.zipRight(pipe(ref, ScopedRef.set(counter.acquire())))
+    Effect.gen(function*($) {
+      const counter = yield* $(Counter.make())
+      const ref = yield* $(ScopedRef.make(() => 0))
+      yield* $(
+        pipe(ref, ScopedRef.set(counter.acquire()), Effect.zipRight(pipe(ref, ScopedRef.set(counter.acquire()))))
       )
-      const acquired = yield* counter.acquired()
-      const released = yield* counter.released()
+      const acquired = yield* $(counter.acquired())
+      const released = yield* $(counter.released())
       assert.strictEqual(acquired, 2)
       assert.strictEqual(released, 1)
     }))
-
   it.scoped("double release on double swap", () =>
-    Effect.gen(function*() {
-      const counter = yield* Counter.make()
-      const ref = yield* ScopedRef.make(() => 0)
-      yield* pipe(
-        ref,
-        ScopedRef.set(counter.acquire()),
-        Effect.zipRight(pipe(ref, ScopedRef.set(counter.acquire()))),
-        Effect.zipRight(pipe(ref, ScopedRef.set(counter.acquire())))
+    Effect.gen(function*($) {
+      const counter = yield* $(Counter.make())
+      const ref = yield* $(ScopedRef.make(() => 0))
+      yield* $(
+        pipe(
+          ref,
+          ScopedRef.set(counter.acquire()),
+          Effect.zipRight(pipe(ref, ScopedRef.set(counter.acquire()))),
+          Effect.zipRight(pipe(ref, ScopedRef.set(counter.acquire())))
+        )
       )
-      const acquired = yield* counter.acquired()
-      const released = yield* counter.released()
+      const acquired = yield* $(counter.acquired())
+      const released = yield* $(counter.released())
       assert.strictEqual(acquired, 3)
       assert.strictEqual(released, 2)
     }))
-
   it.effect("full release", () =>
-    Effect.gen(function*() {
-      const counter = yield* Counter.make()
-      yield* pipe(
+    Effect.gen(function*($) {
+      const counter = yield* $(Counter.make())
+      yield* $(pipe(
         ScopedRef.make(() => 0),
         Effect.flatMap((ref) =>
           pipe(
@@ -73,9 +67,9 @@ describe.concurrent("ScopedRef", () => {
           )
         ),
         Effect.scoped
-      )
-      const acquired = yield* counter.acquired()
-      const released = yield* counter.released()
+      ))
+      const acquired = yield* $(counter.acquired())
+      const released = yield* $(counter.released())
       assert.strictEqual(acquired, 3)
       assert.strictEqual(released, 3)
     }))
