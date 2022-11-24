@@ -16,7 +16,7 @@ export type ScheduleDecision = Continue | Done
  * @category models
  */
 export interface Continue {
-  readonly op: internal.OP_CONTINUE
+  readonly op: 0
   readonly intervals: Intervals.Intervals
 }
 
@@ -25,10 +25,10 @@ export interface Continue {
  * @category models
  */
 export interface Done {
-  readonly op: internal.OP_DONE
+  readonly op: 1
 }
 
-const _continue = internal.continue
+const _continue = internal._continue
 export {
   /**
    * @since 1.0.0

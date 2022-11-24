@@ -63,7 +63,7 @@ export const fiberRefs: (self: FiberRefs) => HashSet.HashSet<FiberRef.FiberRef<a
  * @since 1.0.0
  * @category mutations
  */
-export const forkAs: (childId: FiberId.Runtime) => (self: FiberRefs) => internal.FiberRefsImpl = internal.forkAs
+export const forkAs: (childId: FiberId.Runtime) => (self: FiberRefs) => FiberRefs = internal.forkAs
 
 /**
  * Gets the value of the specified `FiberRef` in this collection of `FiberRef`

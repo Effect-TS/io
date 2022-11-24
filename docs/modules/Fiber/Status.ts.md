@@ -72,7 +72,7 @@ Added in v1.0.0
 
 ```ts
 export interface Done extends Equal.Equal {
-  readonly op: internal.OP_DONE
+  readonly op: 0
   readonly [FiberStatusTypeId]: FiberStatusTypeId
 }
 ```
@@ -95,7 +95,7 @@ Added in v1.0.0
 
 ```ts
 export interface Running extends Equal.Equal {
-  readonly op: internal.OP_RUNNING
+  readonly op: 1
   readonly [FiberStatusTypeId]: FiberStatusTypeId
   readonly runtimeFlags: RuntimeFlags.RuntimeFlags
 }
@@ -109,7 +109,7 @@ Added in v1.0.0
 
 ```ts
 export interface Suspended extends Equal.Equal {
-  readonly op: internal.OP_SUSPENDED
+  readonly op: 2
   readonly [FiberStatusTypeId]: FiberStatusTypeId
   readonly runtimeFlags: RuntimeFlags.RuntimeFlags
   readonly blockingOn: FiberId.FiberId

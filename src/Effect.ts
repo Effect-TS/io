@@ -87,14 +87,6 @@ export declare namespace Effect {
 export const isEffect: (u: unknown) => u is Effect<unknown, unknown, unknown> = core.isEffect
 
 /**
- * Constructs a new `EffectError`.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const makeEffectError: <E>(cause: Cause.Cause<E>) => core.EffectError<E> = core.makeEffectError
-
-/**
  * Adds a finalizer to the scope of this effect. The finalizer is guaranteed
  * to be run when the scope is closed and may depend on the `Exit` value that
  * the scope is closed with.

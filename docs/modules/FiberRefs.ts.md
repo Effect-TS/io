@@ -115,7 +115,7 @@ individual fiber refs that make up the collection.
 **Signature**
 
 ```ts
-export declare const forkAs: (childId: FiberId.Runtime) => (self: FiberRefs) => internal.FiberRefsImpl
+export declare const forkAs: (childId: FiberId.Runtime) => (self: FiberRefs) => FiberRefs
 ```
 
 Added in v1.0.0
