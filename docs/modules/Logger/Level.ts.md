@@ -21,6 +21,8 @@ Added in v1.0.0
   - [None](#none)
   - [Trace](#trace)
   - [Warning](#warning)
+- [conversions](#conversions)
+  - [fromLiteral](#fromliteral)
 - [instances](#instances)
   - [Order](#order)
 - [model](#model)
@@ -121,6 +123,20 @@ Added in v1.0.0
 
 ```ts
 export declare const Warning: LogLevel
+```
+
+Added in v1.0.0
+
+# conversions
+
+## fromLiteral
+
+**Signature**
+
+```ts
+export declare const fromLiteral: (
+  _: 'All' | 'Fatal' | 'Error' | 'Warning' | 'Info' | 'Debug' | 'Trace' | 'None'
+) => LogLevel
 ```
 
 Added in v1.0.0

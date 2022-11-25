@@ -1,4 +1,5 @@
 import * as Cause from "@effect/io/Cause"
+import { runtimeDebug } from "@effect/io/Debug"
 import type * as FiberRef from "@effect/io/FiberRef"
 import * as core from "@effect/io/internal/core"
 import * as _fiberId from "@effect/io/internal/fiberId"
@@ -10,7 +11,6 @@ import { constVoid, pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
 import * as List from "@fp-ts/data/List"
 import * as Option from "@fp-ts/data/Option"
-
 /** @internal */
 const LoggerSymbolKey = "@effect/io/Logger"
 
@@ -215,7 +215,11 @@ export const zipRight = <Message2, Output2>(that: Logger.Logger<Message2, Output
 /** @internal */
 export const defaultLogger = pipe(
   consoleLogger(),
-  filterLogLevel(LogLevel.greaterThanEqual(LogLevel.Info)),
+  filterLogLevel(
+    LogLevel.greaterThanEqual(
+      runtimeDebug.logLevelOverride ? LogLevel.fromLiteral(runtimeDebug.logLevelOverride) : LogLevel.Info
+    )
+  ),
   map(constVoid)
 )
 

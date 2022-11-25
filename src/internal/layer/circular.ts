@@ -12,35 +12,6 @@ import type * as Supervisor from "@effect/io/Supervisor"
 import { constVoid, pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
 
-const fromOverride = (_: NonNullable<typeof runtimeDebug.logLevelOverride>): LogLevel.LogLevel => {
-  switch (_) {
-    case "All": {
-      return LogLevel.All
-    }
-    case "Debug": {
-      return LogLevel.Debug
-    }
-    case "Error": {
-      return LogLevel.Error
-    }
-    case "Fatal": {
-      return LogLevel.Fatal
-    }
-    case "Info": {
-      return LogLevel.Info
-    }
-    case "Trace": {
-      return LogLevel.Trace
-    }
-    case "None": {
-      return LogLevel.None
-    }
-    case "Warning": {
-      return LogLevel.Warning
-    }
-  }
-}
-
 // circular with Logger
 
 /** @internal */
@@ -48,7 +19,7 @@ export const consoleLoggerLayer = (
   minLevel: LogLevel.LogLevel = LogLevel.Info
 ): Layer.Layer<never, never, never> => {
   const newMin = runtimeDebug.logLevelOverride ?
-    fromOverride(runtimeDebug.logLevelOverride) :
+    LogLevel.fromLiteral(runtimeDebug.logLevelOverride) :
     minLevel
   return pipe(
     removeDefaultLoggers(),
