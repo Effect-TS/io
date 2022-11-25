@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.0.9
+
+### Patch Changes
+
+- [#41](https://github.com/Effect-TS/io/pull/41) [`02b7ec0`](https://github.com/Effect-TS/io/commit/02b7ec0ba8ac1c780855aaea64fd40d67819cd33) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Rollback adapter removal
+
 ## 0.0.8
 
 ### Patch Changes
