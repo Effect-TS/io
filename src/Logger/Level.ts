@@ -192,3 +192,38 @@ export const greaterThan = order.greaterThan(Order)
  * @category ordering
  */
 export const greaterThanEqual = order.greaterThanOrEqualTo(Order)
+
+/**
+ * @since 1.0.0
+ * @category conversions
+ */
+export const fromLiteral = (
+  _: "All" | "Fatal" | "Error" | "Warning" | "Info" | "Debug" | "Trace" | "None"
+): LogLevel => {
+  switch (_) {
+    case "All": {
+      return All
+    }
+    case "Debug": {
+      return Debug
+    }
+    case "Error": {
+      return Error
+    }
+    case "Fatal": {
+      return Fatal
+    }
+    case "Info": {
+      return Info
+    }
+    case "Trace": {
+      return Trace
+    }
+    case "None": {
+      return None
+    }
+    case "Warning": {
+      return Warning
+    }
+  }
+}
