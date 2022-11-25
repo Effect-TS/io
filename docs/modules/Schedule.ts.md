@@ -479,7 +479,8 @@ Added in v1.0.0
 Returns a new schedule that randomly modifies the size of the intervals of
 this schedule.
 
-The new interval size is between `min * old interval size` and `max * old interval size`.
+The new interval size is between `min * old interval size` and `max * old
+interval size`.
 
 **Signature**
 

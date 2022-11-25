@@ -2487,27 +2487,33 @@ export const provideLayer: <R, E, A>(
  * Provides the effect with the single service it requires. If the effect
  * requires more than one service use `provideEnvironment` instead.
  *
- * @macro traced
  * @since 1.0.0
  * @category environment
  */
 export const provideService: <T>(
-  tag: Context.Tag<T>,
-  resource: T
-) => <R, E, A>(self: Effect<R, E, A>) => Effect<Exclude<R, T>, E, A> = effect.provideService
+  tag: Context.Tag<T>
+) => {
+  /**
+   * @macro traced
+   */
+  (resource: T): <R, E, A>(self: Effect<R, E, A>) => Effect<Exclude<R, T>, E, A>
+} = effect.provideService
 
 /**
  * Provides the effect with the single service it requires. If the effect
  * requires more than one service use `provideEnvironment` instead.
  *
- * @macro traced
  * @since 1.0.0
  * @category environment
  */
-export const provideServiceEffect: <T, R1, E1>(
-  tag: Context.Tag<T>,
-  effect: Effect<R1, E1, T>
-) => <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | Exclude<R, T>, E1 | E, A> = effect.provideServiceEffect
+export const provideServiceEffect: <T>(
+  tag: Context.Tag<T>
+) => {
+  /**
+   * @macro traced
+   */
+  <R1, E1>(effect: Effect<R1, E1, T>): <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | Exclude<R, T>, E1 | E, A>
+} = effect.provideServiceEffect
 
 /**
  * Provides some of the environment required to run this effect,
