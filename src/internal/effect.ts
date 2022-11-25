@@ -1738,27 +1738,29 @@ export const promise = <A>(evaluate: () => Promise<A>): Effect.Effect<never, nev
 }
 
 /** @internal */
-export const provideService = <T>(tag: Context.Tag<T>, resource: T) => {
-  const trace = getCallTrace()
-  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<Exclude<R, T>, E, A> => {
-    return pipe(self, provideServiceEffect(tag, core.succeed(resource))).traced(trace)
+export const provideService = <T>(tag: Context.Tag<T>) =>
+  (resource: T) => {
+    const trace = getCallTrace()
+    return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<Exclude<R, T>, E, A> => {
+      return pipe(self, provideServiceEffect(tag)(core.succeed(resource))).traced(trace)
+    }
   }
-}
 
 /** @internal */
-export const provideServiceEffect = <T, R1, E1>(tag: Context.Tag<T>, effect: Effect.Effect<R1, E1, T>) => {
-  const trace = getCallTrace()
-  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R1 | Exclude<R, T>, E | E1, A> => {
-    return core.environmentWithEffect((env: Context.Context<R1 | Exclude<R, T>>) =>
-      pipe(
-        effect,
-        core.flatMap((service) =>
-          pipe(self, core.provideEnvironment(pipe(env, Context.add(tag)(service)) as Context.Context<R | R1>))
+export const provideServiceEffect = <T>(tag: Context.Tag<T>) =>
+  <R1, E1>(effect: Effect.Effect<R1, E1, T>) => {
+    const trace = getCallTrace()
+    return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R1 | Exclude<R, T>, E | E1, A> => {
+      return core.environmentWithEffect((env: Context.Context<R1 | Exclude<R, T>>) =>
+        pipe(
+          effect,
+          core.flatMap((service) =>
+            pipe(self, core.provideEnvironment(pipe(env, Context.add(tag)(service)) as Context.Context<R | R1>))
+          )
         )
-      )
-    ).traced(trace)
+      ).traced(trace)
+    }
   }
-}
 
 /** @internal */
 export const random = (): Effect.Effect<never, never, Random.Random> => {

@@ -2247,9 +2247,8 @@ requires more than one service use `provideEnvironment` instead.
 
 ```ts
 export declare const provideService: <T>(
-  tag: Context.Tag<T>,
-  resource: T
-) => <R, E, A>(self: Effect<R, E, A>) => Effect<Exclude<R, T>, E, A>
+  tag: Context.Tag<T>
+) => (resource: T) => <R, E, A>(self: Effect<R, E, A>) => Effect<Exclude<R, T>, E, A>
 ```
 
 Added in v1.0.0
@@ -2262,10 +2261,9 @@ requires more than one service use `provideEnvironment` instead.
 **Signature**
 
 ```ts
-export declare const provideServiceEffect: <T, R1, E1>(
-  tag: Context.Tag<T>,
-  effect: Effect<R1, E1, T>
-) => <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | Exclude<R, T>, E1 | E, A>
+export declare const provideServiceEffect: <T>(
+  tag: Context.Tag<T>
+) => <R1, E1>(effect: Effect<R1, E1, T>) => <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | Exclude<R, T>, E1 | E, A>
 ```
 
 Added in v1.0.0
