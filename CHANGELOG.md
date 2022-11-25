@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.0.11
+
+### Patch Changes
+
+- [#45](https://github.com/Effect-TS/io/pull/45) [`ab078fb`](https://github.com/Effect-TS/io/commit/ab078fb20d952d3eda86355083266f97ae39f6b5) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Curry provideService and provideServiceEffect
+
 ## 0.0.10
 
 ### Patch Changes
