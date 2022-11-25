@@ -21,11 +21,16 @@ export const consoleLoggerLayer = (
   const newMin = runtimeDebug.logLevelOverride ?
     runtimeDebug.logLevelOverride :
     minLevel
-  return addLogger(
-    pipe(
-      _logger.consoleLogger(),
-      _logger.filterLogLevel(LogLevel.greaterThanEqual(newMin)),
-      _logger.map(constVoid)
+  return pipe(
+    removeDefaultLoggers(),
+    layer.flatMap(() =>
+      addLogger(
+        pipe(
+          _logger.consoleLogger(),
+          _logger.filterLogLevel(LogLevel.greaterThanEqual(newMin)),
+          _logger.map(constVoid)
+        )
+      )
     )
   )
 }
