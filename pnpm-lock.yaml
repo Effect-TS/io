@@ -19,10 +19,10 @@ importers:
       '@changesets/cli': ^2.25.2
       '@effect-ts/build-utils': 0.40.5
       '@effect-ts/core': ^0.60.2
-      '@effect/language-service': ^0.0.1
-      '@effect/printer': ^0.1.1
+      '@effect/language-service': ^0.0.2
+      '@effect/printer': ^0.1.2
       '@fp-ts/core': ^0.0.8
-      '@fp-ts/data': ^0.0.12
+      '@fp-ts/data': ^0.0.14
       '@repo-tooling/eslint-plugin-dprint': ^0.0.4
       '@rollup/pluginutils': ^5.0.2
       '@types/benchmark': ^2.1.2
@@ -34,7 +34,7 @@ importers:
       '@types/rimraf': ^3.0.2
       '@typescript-eslint/eslint-plugin': ^5.44.0
       '@typescript-eslint/parser': ^5.44.0
-      '@vitest/coverage-c8': ^0.25.2
+      '@vitest/coverage-c8': ^0.25.3
       babel-plugin-annotate-pure-calls: ^0.4.0
       concurrently: ^7.6.0
       cpx: ^1.5.0
@@ -50,7 +50,7 @@ importers:
       glob: ^8.0.3
       madge: ^5.0.1
       picocolors: ^1.0.0
-      prettier: ^2.7.1
+      prettier: ^2.8.0
       rimraf: ^3.0.2
       ts-codemod: ^4.0.4
       ts-node: ^10.9.1
@@ -58,11 +58,11 @@ importers:
       typescript: https://cdn.jsdelivr.net/npm/@tsplus/installer@0.0.155/compiler/typescript.tgz
       ultra-runner: ^3.10.5
       vite: ^3.2.4
-      vitest: 0.25.2
+      vitest: 0.25.3
     dependencies:
-      '@effect/printer': 0.1.1
+      '@effect/printer': 0.1.2
       '@fp-ts/core': 0.0.8
-      '@fp-ts/data': 0.0.12
+      '@fp-ts/data': 0.0.14
     devDependencies:
       '@babel/cli': 7.19.3_@babel+core@7.20.2
       '@babel/core': 7.20.2
@@ -71,7 +71,7 @@ importers:
       '@changesets/cli': 2.25.2
       '@effect-ts/build-utils': 0.40.5_smskbqsf3q6kbozdrpluio47kq
       '@effect-ts/core': 0.60.4
-      '@effect/language-service': 0.0.1
+      '@effect/language-service': 0.0.2
       '@repo-tooling/eslint-plugin-dprint': 0.0.4_delwud2hnnlzcq6m6ihqj3umw4
       '@rollup/pluginutils': 5.0.2
       '@types/benchmark': 2.1.2
@@ -83,11 +83,11 @@ importers:
       '@types/rimraf': 3.0.2
       '@typescript-eslint/eslint-plugin': 5.44.0_mttkvfjptna7jq3edscluypady
       '@typescript-eslint/parser': 5.44.0_chf6py4i242zuwa6npudsy5lcm
-      '@vitest/coverage-c8': 0.25.2
+      '@vitest/coverage-c8': 0.25.3
       babel-plugin-annotate-pure-calls: 0.4.0_@babel+core@7.20.2
       concurrently: 7.6.0
       cpx: 1.5.0
-      docs-ts: 0.6.10_cafcqw24npsdw2cmfoccfh2gly_es7d7x5ogtray3iubc7he3gnou
+      docs-ts: 0.6.10_cafcqw24npsdw2cmfoccfh2gly_m6ozmxoytcakqsjkoivozufc4u
       eslint: 8.28.0
       eslint-import-resolver-typescript: 3.5.2_ktrec6dplf4now6nlbc6d67jee
       eslint-plugin-codegen: 0.16.1
@@ -99,7 +99,7 @@ importers:
       glob: 8.0.3
       madge: 5.0.1
       picocolors: 1.0.0
-      prettier: 2.7.1
+      prettier: 2.8.0
       rimraf: 3.0.2
       ts-codemod: 4.0.4
       ts-node: 10.9.1_jjeypyhkvr6nfxyjtcbdiczd2y
@@ -107,7 +107,7 @@ importers:
       typescript: '@cdn.jsdelivr.net/npm/@tsplus/installer@0.0.155/compiler/typescript.tgz'
       ultra-runner: 3.10.5
       vite: 3.2.4_@types+node@18.11.9
-      vitest: 0.25.2
+      vitest: 0.25.3
     publishDirectory: dist
 
   packages/babel-plugin:
@@ -461,7 +461,7 @@ packages:
       fs-extra: 7.0.1
       lodash.startcase: 4.4.0
       outdent: 0.5.0
-      prettier: 2.7.1
+      prettier: 2.8.0
       resolve-from: 5.0.0
       semver: 5.7.1
     dev: true
@@ -647,7 +647,7 @@ packages:
       '@changesets/types': 5.2.0
       fs-extra: 7.0.1
       human-id: 1.0.2
-      prettier: 2.7.1
+      prettier: 2.8.0
     dev: true
 
   /@cspotcode/source-map-support/0.8.1:
@@ -703,11 +703,11 @@ packages:
       '@tsplus/stdlib': 0.2.8
     dev: true
 
-  /@effect/language-service/0.0.1:
-    resolution: {integrity: sha512-6gaWqJIBP3VHAUyRpY3WeCxkMi1p7vNTmTq4O6FZuSDChNLx+/8tdmYkL31lHUF/SJCjI41ew50ioTPVCqXASg==}
+  /@effect/language-service/0.0.2:
+    resolution: {integrity: sha512-kAfP8BoT0Sv2IaFP1uqpLqaX61TyNisMSQPTSv9n4NQcHNFI7acYg2gJqCLgK83mWTdzKSqYasQH9sujHtzgUw==}
     dependencies:
       '@effect/core': 0.0.16
-      '@effect/printer': 0.1.1
+      '@effect/printer': 0.1.2
       '@fp-ts/core': 0.0.8
       '@fp-ts/data': 0.0.9
       '@tsplus/stdlib': 0.2.8
@@ -719,11 +719,11 @@ packages:
       '@tsplus/stdlib': 0.2.8
     dev: true
 
-  /@effect/printer/0.1.1:
-    resolution: {integrity: sha512-KZYAyDTE2M/k8WUY6O25sxfZDTB11NCyXu95g7ytzDHSmzxZWxWqT7n1pi9g2YJIwzdh8zUAWaG3IMePDT6ZtA==}
+  /@effect/printer/0.1.2:
+    resolution: {integrity: sha512-Y4sxEHEp6gxU6UWoxt8KPWyXV24j6//ZqggRZRFYT8L4MhiawR4O4T01BHtBMNJRuQEX+Q9dR7ClqWs05ArsBw==}
     dependencies:
       '@fp-ts/core': 0.0.8
-      '@fp-ts/data': 0.0.12
+      '@fp-ts/data': 0.0.14
 
   /@esbuild/android-arm/0.15.15:
     resolution: {integrity: sha512-JJjZjJi2eBL01QJuWjfCdZxcIgot+VoK6Fq7eKF9w4YHm9hwl7nhBR1o2Wnt/WcANk5l9SkpvrldW1PLuXxcbw==}
@@ -776,8 +776,8 @@ packages:
   /@fp-ts/core/0.0.8:
     resolution: {integrity: sha512-TcZnP2Oc5b2eJ949z81sI3wdt9GpFFufwpEb6VOIlTQTucx18xNXPWmKv+1jrDacfdDh6Q8rP9kUSRohRUz5pQ==}
 
-  /@fp-ts/data/0.0.12:
-    resolution: {integrity: sha512-ns/CBDrnX3bodCV8VvFm4zRfU6PE8nj01AwIOeyBIOwOGG3rQG5qVdpjKMYG8hyeO5jB3mMUgEfTH3PwywfYDw==}
+  /@fp-ts/data/0.0.14:
+    resolution: {integrity: sha512-rFEl63SkPvgUm6al1KbcBenXvKr/O7u/HQrphFeBfoVhUVgqqdMGmsjt9WWlfIeeNOU3ug7nxQJFrY1+lS5ncw==}
     dependencies:
       '@fp-ts/core': 0.0.8
 
@@ -1393,11 +1393,11 @@ packages:
       eslint-visitor-keys: 3.3.0
     dev: true
 
-  /@vitest/coverage-c8/0.25.2:
-    resolution: {integrity: sha512-qKsiUJh3bjbB5Q229CbxEWCqiDBwvIrcZ9OOuQdMEC0pce3/LlTUK3+K3hd7WqAYEbbiqXfC5MVMKHZkV82PgA==}
+  /@vitest/coverage-c8/0.25.3:
+    resolution: {integrity: sha512-+tmrB3E7pZTSM+aWKzLk0FpyyaQOoRQf0594hHp+E3Kk0tiFONiEFYf7+9a1Z+C2ffU/0w6KvyBjpNPdashMrg==}
     dependencies:
       c8: 7.12.0
-      vitest: 0.25.2
+      vitest: 0.25.3
     transitivePeerDependencies:
       - '@edge-runtime/vm'
       - '@vitest/browser'
@@ -2497,7 +2497,7 @@ packages:
     dev: true
     patched: true
 
-  /docs-ts/0.6.10_cafcqw24npsdw2cmfoccfh2gly_es7d7x5ogtray3iubc7he3gnou:
+  /docs-ts/0.6.10_cafcqw24npsdw2cmfoccfh2gly_m6ozmxoytcakqsjkoivozufc4u:
     resolution: {integrity: sha512-DTX9c5AJ92ojMOKqqvwF8t77C8Gdgs9FPB8seymHs+F+Wl6aapc3ZkHUM+p8o+jwcBmPoihxssdK903dfwQ1JQ==}
     hasBin: true
     peerDependencies:
@@ -2512,7 +2512,7 @@ packages:
       io-ts: 2.2.19_fp-ts@2.13.1
       logging-ts: 0.3.4_fp-ts@2.13.1
       markdown-toc: 1.2.0
-      prettier: 2.7.1
+      prettier: 2.8.0
       rimraf: 2.7.1
       ts-morph: 9.1.0
       ts-node: 8.10.2_delwud2hnnlzcq6m6ihqj3umw4
@@ -5564,6 +5564,12 @@ packages:
     hasBin: true
     dev: true
 
+  /prettier/2.8.0:
+    resolution: {integrity: sha512-9Lmg8hTFZKG0Asr/kW9Bp8tJjRVluO8EJQVfY2T7FMw9T5jy4I/Uvx0Rca/XWf50QQ1/SS48+6IJWnrb+2yemA==}
+    engines: {node: '>=10.13.0'}
+    hasBin: true
+    dev: true
+
   /pretty-format/26.6.2:
     resolution: {integrity: sha512-7AeGuCYNGmycyQbCqd/3PWH4eOoX/OiCa0uphp57NVTeAGdJGaAliecxwBDHYQCIvrW7aDBZCYeNTP/WX69mkg==}
     engines: {node: '>= 10'}
@@ -6984,8 +6990,8 @@ packages:
       - supports-color
     dev: true
 
-  /vitest/0.25.2:
-    resolution: {integrity: sha512-qqkzfzglEFbQY7IGkgSJkdOhoqHjwAao/OrphnHboeYHC5JzsVFoLCaB2lnAy8krhj7sbrFTVRApzpkTOeuDWQ==}
+  /vitest/0.25.3:
+    resolution: {integrity: sha512-/UzHfXIKsELZhL7OaM2xFlRF8HRZgAHtPctacvNK8H4vOcbJJAMEgbWNGSAK7Y9b1NBe5SeM7VTuz2RsTHFJJA==}
     engines: {node: '>=v14.16.0'}
     hasBin: true
     peerDependencies:
