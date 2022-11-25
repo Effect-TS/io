@@ -352,7 +352,7 @@ export const stripFailures = <E>(self: Cause.Cause<E>): Cause.Cause<never> => {
     () => empty,
     (defect) => die(defect),
     (fiberId) => interrupt(fiberId),
-    (cause, annotation) => annotated(cause, annotation),
+    (cause, annotation) => isEmptyType(cause) ? cause : annotated(cause, annotation),
     (left, right) => sequential(left, right),
     (left, right) => parallel(left, right)
   )(self)
@@ -1484,7 +1484,10 @@ const causeToSequential = <E>(
               stack,
               Option.map((parent) =>
                 new StackAnnotation(
-                  annotation.stack.length < runtimeDebug.traceStackLimit ?
+                  annotation.stack.length < runtimeDebug.traceStackLimit && parent.stack.length > 0 &&
+                    ((annotation.stack.length > 0 &&
+                      Chunk.unsafeLast(parent.stack) !== Chunk.unsafeLast(annotation.stack)) ||
+                      annotation.stack.length === 0) ?
                     pipe(
                       annotation.stack,
                       Chunk.concat(parent.stack),
@@ -1492,7 +1495,10 @@ const causeToSequential = <E>(
                       Chunk.take(runtimeDebug.traceStackLimit)
                     ) :
                     annotation.stack,
-                  annotation.execution.length < runtimeDebug.traceExecutionLimit ?
+                  annotation.execution.length < runtimeDebug.traceExecutionLimit && parent.execution.length > 0 &&
+                    ((annotation.execution.length > 0 &&
+                      Chunk.unsafeLast(parent.execution) !== Chunk.unsafeLast(annotation.execution)) ||
+                      annotation.execution.length === 0) ?
                     pipe(
                       annotation.execution,
                       Chunk.concat(parent.execution),
@@ -1531,7 +1537,12 @@ const prettyDocuments = <E>(
   renderer: Cause.CauseRenderer<E>
 ): SafeEval.SafeEval<ReadonlyArray<Doc.Doc<never>>> => {
   return pipe(
-    causeToSequential(cause, renderer, Option.none, Option.none),
+    causeToSequential(
+      cause,
+      renderer,
+      Option.none,
+      Option.none
+    ),
     SafeEval.map((sequential) => {
       if (
         sequential.all.length === 1 &&
@@ -1570,8 +1581,20 @@ const prettySafe = <E>(
 }
 
 /** @internal */
+const UnEmptyCauseReducer = <E>(): Cause.CauseReducer<unknown, E, Cause.Cause<E>> => ({
+  emptyCase: () => empty,
+  failCase: (_, error) => fail(error),
+  dieCase: (_, defect) => die(defect),
+  interruptCase: (_, fiberId) => interrupt(fiberId),
+  annotatedCase: (_, cause, annotation) => isEmptyType(cause) ? cause : annotated(cause, annotation),
+  sequentialCase: (_, left, right) => isEmptyType(left) ? right : isEmptyType(right) ? left : sequential(left, right),
+  parallelCase: (_, left, right) => isEmptyType(left) ? right : isEmptyType(right) ? left : parallel(left, right)
+})
+
+/** @internal */
 export const pretty = <E>(renderer: Cause.CauseRenderer<E> = defaultRenderer) => {
-  return (self: Cause.Cause<E>): string => SafeEval.execute(prettySafe(self, renderer))
+  return (self: Cause.Cause<E>): string =>
+    SafeEval.execute(prettySafe(pipe(self, reduceWithContext(undefined, UnEmptyCauseReducer<E>())), renderer))
 }
 
 /** @internal */

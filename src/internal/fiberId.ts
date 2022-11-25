@@ -174,9 +174,8 @@ export const make = (id: number, startTimeSeconds: number): FiberId.FiberId => {
 
 /** @internal */
 export const threadName = (self: FiberId.FiberId): string => {
-  const identifiers = Array.from(ids(self)).map((n) => `${n}`).join(",")
-  const plural = identifiers.length > 1
-  return `effect-fiber${plural ? "s" : ""}-${identifiers}`
+  const identifiers = Array.from(ids(self)).map((n) => `#${n}`).join(",")
+  return identifiers
 }
 
 /** @internal */
