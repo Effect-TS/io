@@ -86,7 +86,13 @@ export const contramap: <Message, Message2>(
  * @since 1.0.0
  * @category constructors
  */
-export const defaultLogger: Logger<string, string> = internal.defaultLogger
+export const defaultLogger: Logger<string, void> = internal.defaultLogger
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const stringLogger: Logger<string, string> = internal.stringLogger
 
 /**
  * Returns a version of this logger that only logs messages when the log level

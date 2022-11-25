@@ -17,6 +17,7 @@ Added in v1.0.0
   - [defaultLogger](#defaultlogger)
   - [none](#none)
   - [simple](#simple)
+  - [stringLogger](#stringlogger)
   - [succeed](#succeed)
   - [sync](#sync)
   - [test](#test)
@@ -57,7 +58,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const defaultLogger: Logger<string, string>
+export declare const defaultLogger: Logger<string, void>
 ```
 
 Added in v1.0.0
@@ -80,6 +81,16 @@ Added in v1.0.0
 
 ```ts
 export declare const simple: <A, B>(log: (a: A) => B) => Logger<A, B>
+```
+
+Added in v1.0.0
+
+## stringLogger
+
+**Signature**
+
+```ts
+export declare const stringLogger: Logger<string, string>
 ```
 
 Added in v1.0.0
