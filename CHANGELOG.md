@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.0.14
+
+### Patch Changes
+
+- [#51](https://github.com/Effect-TS/io/pull/51) [`76f1e22`](https://github.com/Effect-TS/io/commit/76f1e228a0da8aea8b704553ea60bf56ca67c7be) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Cleanup Cause
+
 ## 0.0.13
 
 ### Patch Changes
