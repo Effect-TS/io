@@ -56,7 +56,7 @@ export interface Debug {
   /**
    * Overrides the default log level filter for loggers such as console.
    */
-  logLevelOverride: LogLevel.LogLevel | undefined
+  logLevelOverride: 'All' | 'Fatal' | 'Error' | 'Warning' | 'Info' | 'Debug' | 'Trace' | 'None' | undefined
   /**
    * When specified it will be used to collect call traces at runtime.
    *
