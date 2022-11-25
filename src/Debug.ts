@@ -70,7 +70,7 @@ export interface Debug {
 export const runtimeDebug: Debug = {
   logLevelOverride: undefined,
   traceExecutionEnabled: true,
-  traceExecutionLogEnabled: true,
+  traceExecutionLogEnabled: false,
   traceExecutionEnabledInCause: true,
   traceSpanEnabledInCause: true,
   traceStackEnabledInCause: true,

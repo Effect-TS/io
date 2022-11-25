@@ -12,6 +12,7 @@ import * as RuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
 import * as FiberStatus from "@effect/io/Fiber/Status"
 import type * as FiberRef from "@effect/io/FiberRef"
 import type * as FiberRefs from "@effect/io/FiberRefs"
+import { StackAnnotation } from "@effect/io/internal/cause"
 import * as clock from "@effect/io/internal/clock"
 import * as core from "@effect/io/internal/core"
 import * as defaultServices from "@effect/io/internal/defaultServices"
@@ -983,17 +984,53 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
           }
           case OpCodes.OP_FAILURE: {
             this.logTrace(op.trace)
-            const cause = (this._tracesInStack > 0 || (this._executionTrace && this._executionTrace.size > 0)) &&
-                !(Cause.isAnnotatedType(op.cause) && Cause.isStackAnnotation(op.cause.annotation)) ?
-              Cause.annotated(
-                op.cause,
-                identity<Cause.Cause.StackAnnotation>({
-                  [Cause.StackAnnotationTypeId]: Cause.StackAnnotationTypeId,
-                  stack: this.stackToLines(),
-                  execution: this._executionTrace?.toChunkReversed() || Chunk.empty
-                })
-              ) :
-              op.cause
+            let cause = op.cause
+            if (this._tracesInStack > 0 || (this._executionTrace && this._executionTrace.size > 0)) {
+              if (Cause.isAnnotatedType(cause) && Cause.isStackAnnotation(cause.annotation)) {
+                const stack = cause.annotation.stack
+                const execution = cause.annotation.execution
+                const currentStack = this.stackToLines()
+                const currentExecution = this._executionTrace?.toChunkReversed() || Chunk.empty
+                cause = Cause.annotated(
+                  cause.cause,
+                  new StackAnnotation(
+                    pipe(
+                      stack.length === 0 ?
+                        currentStack :
+                        currentStack.length === 0 ?
+                        stack :
+                        Chunk.unsafeLast(stack) === Chunk.unsafeLast(currentStack) ?
+                        stack :
+                        pipe(
+                          stack,
+                          Chunk.concat(currentStack)
+                        ),
+                      Chunk.dedupeAdjacent,
+                      Chunk.take(runtimeDebug.traceStackLimit)
+                    ),
+                    pipe(
+                      execution.length === 0 ?
+                        currentExecution :
+                        currentExecution.length === 0 ?
+                        execution :
+                        Chunk.unsafeLast(execution) === Chunk.unsafeLast(currentExecution) ?
+                        execution :
+                        pipe(
+                          execution,
+                          Chunk.concat(currentExecution)
+                        ),
+                      Chunk.dedupeAdjacent,
+                      Chunk.take(runtimeDebug.traceExecutionLimit)
+                    )
+                  )
+                )
+              } else {
+                cause = Cause.annotated(
+                  op.cause,
+                  new StackAnnotation(this.stackToLines(), this._executionTrace?.toChunkReversed() || Chunk.empty)
+                )
+              }
+            }
             const cont = this.getNextFailCont()
             if (cont !== undefined) {
               switch (cont.op) {
