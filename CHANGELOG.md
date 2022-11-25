@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.0.15
+
+### Patch Changes
+
+- [#53](https://github.com/Effect-TS/io/pull/53) [`5393109`](https://github.com/Effect-TS/io/commit/53931093809df1de115636d35744f2c1867ff211) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Isolate Debug from LogLevel
+
 ## 0.0.14
 
 ### Patch Changes
