@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.0.13
+
+### Patch Changes
+
+- [#49](https://github.com/Effect-TS/io/pull/49) [`3d2fd3b`](https://github.com/Effect-TS/io/commit/3d2fd3b5a8d95d016f60704e0aaf04632bfa9fb2) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Set default logger to be console
+
 ## 0.0.12
 
 ### Patch Changes
