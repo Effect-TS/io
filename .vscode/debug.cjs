@@ -2,7 +2,11 @@
 /* eslint-disable no-undef */
 require("ts-node").register({
   lazy: true,
-  project: "tsconfig.examples.json"
-})
+  project: "tsconfig.examples.json",
+});
 
-require("../examples/bench")
+const { runtimeDebug } = require("@effect/io/Debug");
+
+runtimeDebug.debuggerEnabled = true;
+
+require("../examples/bench");
