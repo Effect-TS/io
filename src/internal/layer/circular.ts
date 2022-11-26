@@ -16,18 +16,15 @@ import * as HashSet from "@fp-ts/data/HashSet"
 
 /** @internal */
 export const consoleLoggerLayer = (
-  minLevel: LogLevel.LogLevel = LogLevel.Info
+  minLevel: LogLevel.LogLevel = LogLevel.fromLiteral(runtimeDebug.defaultLogLevel)
 ): Layer.Layer<never, never, never> => {
-  const newMin = runtimeDebug.logLevelOverride ?
-    LogLevel.fromLiteral(runtimeDebug.logLevelOverride) :
-    minLevel
   return pipe(
     removeDefaultLoggers(),
     layer.flatMap(() =>
       addLogger(
         pipe(
           _logger.consoleLogger(),
-          _logger.filterLogLevel(LogLevel.greaterThanEqual(newMin)),
+          _logger.filterLogLevel(LogLevel.greaterThanEqual(minLevel)),
           _logger.map(constVoid)
         )
       )

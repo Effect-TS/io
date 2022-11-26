@@ -1,6 +1,6 @@
 import * as Cause from "@effect/io/Cause"
 import type * as Clock from "@effect/io/Clock"
-import { getCallTrace, runtimeDebug } from "@effect/io/Debug"
+import { getCallTrace, isTraceEnabled, runtimeDebug } from "@effect/io/Debug"
 import * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
 import * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
@@ -165,7 +165,8 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    * @macro traced
    */
   children(): Effect.Effect<never, never, Chunk.Chunk<Fiber.RuntimeFiber<any, any>>> {
-    return this.ask((fiber) => Chunk.fromIterable(fiber.getChildren()))
+    const trace = getCallTrace()
+    return this.ask((fiber) => Chunk.fromIterable(fiber.getChildren())).traced(trace)
   }
 
   /**
@@ -1163,18 +1164,18 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   }
 
   logTrace(trace?: string) {
-    if (trace && runtimeDebug.traceEnabled && runtimeDebug.traceExecutionEnabled) {
-      if (runtimeDebug.traceExecutionLogEnabled) {
-        this.log(`Executing: ${trace}`, Cause.empty, Option.some(LogLevel.Debug))
+    if (trace && isTraceEnabled()) {
+      if (!this._executionTrace) {
+        this._executionTrace = new RingBuffer<string>(runtimeDebug.traceExecutionLimit)
       }
-      if (runtimeDebug.traceExecutionEnabledInCause) {
-        if (!this._executionTrace) {
-          this._executionTrace = new RingBuffer<string>(runtimeDebug.traceExecutionLimit)
+      const isNew = this._executionTrace.push(trace)
+      if (isNew) {
+        if (runtimeDebug.traceExecutionLogEnabled) {
+          this.log(`Executing: ${trace}`, Cause.empty, Option.some(LogLevel.Debug))
         }
-        this._executionTrace.push(trace)
-      }
-      for (let i = 0; i < runtimeDebug.traceExecutionHook.length; i++) {
-        runtimeDebug.traceExecutionHook[i]!(trace)
+        for (let i = 0; i < runtimeDebug.traceExecutionHook.length; i++) {
+          runtimeDebug.traceExecutionHook[i]!(trace)
+        }
       }
     }
   }
