@@ -822,7 +822,8 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    */
   initiateAsync(
     runtimeFlags: RuntimeFlags.RuntimeFlags,
-    asyncRegister: (resume: (effect: Effect.Effect<any, any, any>) => void) => void
+    asyncRegister: (resume: (effect: Effect.Effect<any, any, any>) => void) => void,
+    op: core.Primitive
   ) {
     let alreadyCalled = false
     const callback = (effect: Effect.Effect<any, any, any>) => {
@@ -835,7 +836,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
       this._asyncInterruptor = callback
     }
     try {
-      asyncRegister(callback)
+      this.debugOnFunction(asyncRegister, [callback], op)
     } catch (e) {
       callback(core.failCause(Cause.die(e)))
     }
@@ -880,6 +881,24 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     }
   }
 
+  onExecute(_op: core.Primitive) {
+    if (_op.trace && isTraceEnabled()) {
+      this.logTrace(_op.trace)
+    }
+  }
+
+  debugOnFunction<ARGS extends Array<unknown>, V>(
+    _evaluate: (...args: ARGS) => V,
+    _args: ARGS,
+    _op: core.Primitive
+  ): V {
+    if (runtimeDebug.debuggerEnabled) {
+      // eslint-disable-next-line no-debugger
+      debugger
+    }
+    return _evaluate.apply(void 0, _args)
+  }
+
   /**
    * The main run-loop for evaluating effects.
    *
@@ -904,15 +923,15 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
         const op = cur as core.Primitive
         switch (op.op) {
           case OpCodes.OP_SYNC: {
-            this.logTrace(op.trace)
-            const value = op.evaluate()
+            this.onExecute(op)
+            const value = this.debugOnFunction(op.evaluate, [], op)
             const cont = this.getNextSuccessCont()
             if (cont !== undefined) {
               switch (cont.op) {
                 case OpCodes.OP_ON_SUCCESS:
                 case OpCodes.OP_ON_SUCCESS_AND_FAILURE: {
-                  this.logTrace(cont.trace)
-                  cur = cont.successK(value)
+                  this.onExecute(cont)
+                  cur = this.debugOnFunction(cont.successK, [value], cont)
                   break
                 }
                 case OpCodes.OP_REVERT_FLAGS: {
@@ -928,8 +947,8 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
                   cont.process(value)
                   if (cont.check()) {
                     this.pushStack(cont)
-                    this.logTrace(cont.trace)
-                    cur = cont.body()
+                    this.onExecute(cont)
+                    cur = this.debugOnFunction(cont.body, [], cont)
                   } else {
                     cur = core.unit()
                   }
@@ -945,15 +964,15 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
             break
           }
           case OpCodes.OP_SUCCESS: {
-            this.logTrace(op.trace)
+            this.onExecute(op)
             const oldCur = op
             const cont = this.getNextSuccessCont()
             if (cont !== undefined) {
               switch (cont.op) {
                 case OpCodes.OP_ON_SUCCESS:
                 case OpCodes.OP_ON_SUCCESS_AND_FAILURE: {
-                  this.logTrace(cont.trace)
-                  cur = cont.successK(oldCur.value)
+                  this.onExecute(cont)
+                  cur = this.debugOnFunction(cont.successK, [oldCur.value], cont)
                   break
                 }
                 case OpCodes.OP_REVERT_FLAGS: {
@@ -967,8 +986,8 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
                   cont.process(oldCur.value)
                   if (cont.check()) {
                     this.pushStack(cont)
-                    this.logTrace(cont.trace)
-                    cur = cont.body()
+                    this.onExecute(cont)
+                    cur = this.debugOnFunction(cont.body, [], cont)
                   } else {
                     cur = core.unit()
                   }
@@ -984,7 +1003,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
             break
           }
           case OpCodes.OP_FAILURE: {
-            this.logTrace(op.trace)
+            this.onExecute(op)
             let cause = op.cause
             if (this._tracesInStack > 0 || (this._executionTrace && this._executionTrace.size > 0)) {
               if (Cause.isAnnotatedType(cause) && Cause.isStackAnnotation(cause.annotation)) {
@@ -1038,8 +1057,8 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
                 case OpCodes.OP_ON_FAILURE:
                 case OpCodes.OP_ON_SUCCESS_AND_FAILURE: {
                   if (!(_runtimeFlags.interruptible(this._runtimeFlags) && this.isInterrupted())) {
-                    this.logTrace(cont.trace)
-                    cur = cont.failK(cause)
+                    this.onExecute(cont)
+                    cur = this.debugOnFunction(cont.failK, [cause], cont)
                   } else {
                     cur = core.failCause(Cause.stripFailures(cause))
                   }
@@ -1064,7 +1083,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
             break
           }
           case OpCodes.OP_WITH_RUNTIME: {
-            this.logTrace(op.trace)
+            this.onExecute(op)
             cur = op.withRuntime(
               this as FiberRuntime<unknown, unknown>,
               FiberStatus.running(this._runtimeFlags) as FiberStatus.Running
@@ -1072,7 +1091,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
             break
           }
           case OpCodes.OP_UPDATE_RUNTIME_FLAGS: {
-            this.logTrace(op.trace)
+            this.onExecute(op)
             if (op.scope === undefined) {
               this.patchRuntimeFlags(this._runtimeFlags, op.update)
               cur = core.unit()
@@ -1082,7 +1101,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
               const newRuntimeFlags = pipe(oldRuntimeFlags, _runtimeFlags.patch(updateFlags))
               if (newRuntimeFlags === oldRuntimeFlags) {
                 // No change, short circuit
-                cur = op.scope(oldRuntimeFlags)
+                cur = this.debugOnFunction(op.scope, [oldRuntimeFlags], op)
               } else {
                 // One more chance to short circuit: if we're immediately going
                 // to interrupt. Interruption will cause immediate reversion of
@@ -1096,7 +1115,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
                   // Since we updated the flags, we need to revert them
                   const revertFlags = pipe(newRuntimeFlags, _runtimeFlags.diff(oldRuntimeFlags))
                   this.pushStack(new core.RevertFlags(revertFlags))
-                  cur = op.scope(oldRuntimeFlags)
+                  cur = this.debugOnFunction(op.scope, [oldRuntimeFlags], op)
                 }
               }
             }
@@ -1110,21 +1129,21 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
             break
           }
           case OpCodes.OP_ASYNC: {
-            this.logTrace(op.trace)
+            this.onExecute(op)
             this._asyncBlockingOn = op.blockingOn
-            this.initiateAsync(this._runtimeFlags, op.register)
+            this.initiateAsync(this._runtimeFlags, op.register, op)
             throw op
           }
           case OpCodes.OP_YIELD: {
-            this.logTrace(op.trace)
+            this.onExecute(op)
             throw op
           }
           case OpCodes.OP_WHILE: {
             const check = op.check
             const body = op.body
-            if (check()) {
-              this.logTrace(op.trace)
-              cur = body()
+            if (this.debugOnFunction(check, [], op)) {
+              this.onExecute(op)
+              cur = this.debugOnFunction(body, [], op)
               this.pushStack(op)
             } else {
               cur = core.unit()
@@ -1132,7 +1151,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
             break
           }
           case OpCodes.OP_COMMIT: {
-            this.logTrace(op.trace)
+            this.onExecute(op)
             cur = op.commit
             break
           }
@@ -1163,19 +1182,14 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     }
   }
 
-  logTrace(trace?: string) {
-    if (trace && isTraceEnabled()) {
-      if (!this._executionTrace) {
-        this._executionTrace = new RingBuffer<string>(runtimeDebug.traceExecutionLimit)
-      }
-      const isNew = this._executionTrace.push(trace)
-      if (isNew) {
-        if (runtimeDebug.traceExecutionLogEnabled) {
-          this.log(`Executing: ${trace}`, Cause.empty, Option.some(LogLevel.Debug))
-        }
-        for (let i = 0; i < runtimeDebug.traceExecutionHook.length; i++) {
-          runtimeDebug.traceExecutionHook[i]!(trace)
-        }
+  logTrace(trace: string) {
+    if (!this._executionTrace) {
+      this._executionTrace = new RingBuffer<string>(runtimeDebug.traceExecutionLimit)
+    }
+    const isNew = this._executionTrace.push(trace)
+    if (isNew) {
+      if (runtimeDebug.traceExecutionLogEnabled) {
+        this.log(`Executing: ${trace}`, Cause.empty, Option.some(LogLevel.Debug))
       }
     }
   }

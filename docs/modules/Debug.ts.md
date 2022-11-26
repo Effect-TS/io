@@ -13,24 +13,25 @@ Added in v1.0.0
 <h2 class="text-delta">Table of contents</h2>
 
 - [debug](#debug)
-  - [nodeSourceMapExtractor](#nodesourcemapextractor)
+  - [getCallTraceFromNewError](#getcalltracefromnewerror)
   - [runtimeDebug](#runtimedebug)
 - [models](#models)
   - [Debug (interface)](#debug-interface)
 - [utils](#utils)
   - [getCallTrace](#getcalltrace)
+  - [isTraceEnabled](#istraceenabled)
   - [withCallTrace](#withcalltrace)
 
 ---
 
 # debug
 
-## nodeSourceMapExtractor
+## getCallTraceFromNewError
 
 **Signature**
 
 ```ts
-export declare const nodeSourceMapExtractor: (at: number) => string | undefined
+export declare const getCallTraceFromNewError: (at: number) => string | undefined
 ```
 
 Added in v1.0.0
@@ -56,7 +57,7 @@ export interface Debug {
   /**
    * Overrides the default log level filter for loggers such as console.
    */
-  logLevelOverride: 'All' | 'Fatal' | 'Error' | 'Warning' | 'Info' | 'Debug' | 'Trace' | 'None' | undefined
+  defaultLogLevel: 'All' | 'Fatal' | 'Error' | 'Warning' | 'Info' | 'Debug' | 'Trace' | 'None'
   /**
    * When specified it will be used to collect call traces at runtime.
    *
@@ -64,47 +65,27 @@ export interface Debug {
    * to the stack trace format being non standardized across platforms.
    * This flag is meant to be used only when debugging during development.
    */
-  traceExtractor: ((at: number) => string | undefined) | undefined
+  getCallTrace: ((at: number) => string | undefined) | undefined
   /**
    * A function that is used to filter which traces to show and collect.
    */
   traceFilter: (trace: string) => boolean
   /**
-   * Enables execution tracing in the fiber runtime.
+   * Sets a limit on how many stack traces should be rendered.
    */
-  traceExecutionEnabled: boolean
-  /**
-   * Renders the execution trace in the error cause when it is available.
-   */
-  traceExecutionEnabledInCause: boolean
-  /**
-   * Renders the stack trace in the error cause when it is available.
-   */
-  traceStackEnabledInCause: boolean
-  /**
-   * Renders the span trace in the error cause when it is available.
-   */
-  traceSpanEnabledInCause: boolean
+  traceStackLimit: number
   /**
    * Sets a limit on how many execution traces should be rendered.
    */
   traceExecutionLimit: number
   /**
-   * Sets a limit on how many stack traces should be rendered.
-   */
-  traceStackLimit: number
-  /**
    * Enables debug logging of execution traces.
    */
   traceExecutionLogEnabled: boolean
   /**
-   * Enables tracing.
+   * Enable debugger on execution
    */
-  traceEnabled: boolean
-  /**
-   * Listens to execution traces.
-   */
-  traceExecutionHook: Array<(trace: string) => void>
+  debuggerEnabled: boolean
 }
 ```
 
@@ -118,6 +99,16 @@ Added in v1.0.0
 
 ```ts
 export declare const getCallTrace: () => string | undefined
+```
+
+Added in v1.0.0
+
+## isTraceEnabled
+
+**Signature**
+
+```ts
+export declare const isTraceEnabled: () => boolean
 ```
 
 Added in v1.0.0
