@@ -1,5 +1,5 @@
 import * as Cause from "@effect/io/Cause"
-import { getCallTrace, isTraceEnabled } from "@effect/io/Debug"
+import { debugAs, getCallTrace, isTraceEnabled } from "@effect/io/Debug"
 import type * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
 import type * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
@@ -497,7 +497,7 @@ export const foldEffect = <E, A, R2, E2, A2, R3, E3, A3>(
     return pipe(
       self,
       foldCauseEffect(
-        (cause) => {
+        debugAs(onFailure, (cause) => {
           const either = Cause.failureOrCause(cause)
           switch (either._tag) {
             case "Left": {
@@ -507,7 +507,7 @@ export const foldEffect = <E, A, R2, E2, A2, R3, E3, A3>(
               return failCause(either.right)
             }
           }
-        },
+        }),
         onSuccess
       )
     ).traced(trace)

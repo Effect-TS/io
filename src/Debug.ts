@@ -37,9 +37,9 @@ export interface Debug {
    */
   traceExecutionLogEnabled: boolean
   /**
-   * Listens to execution traces.
+   * Enable debugger on execution
    */
-  traceExecutionHook: Array<(trace: string) => void>
+  debuggerEnabled: boolean
 }
 
 /**
@@ -52,15 +52,15 @@ export const runtimeDebug: Debug = {
   traceStackLimit: 5,
   getCallTrace: undefined,
   traceFilter: () => true,
-  traceExecutionHook: [],
-  traceExecutionLogEnabled: false
+  traceExecutionLogEnabled: false,
+  debuggerEnabled: false
 }
 
 /**
  * @category debug
  * @since 1.0.0
  */
-export const nodeSourceMapExtractor = (at: number): string | undefined => {
+export const getCallTraceFromNewError = (at: number): string | undefined => {
   const limit = Error.stackTraceLimit
   Error.stackTraceLimit = at
   const stack = new Error().stack
@@ -120,3 +120,9 @@ export const getCallTrace = (): string | undefined => {
   }
   return orUndefined(stack[stack.length - 1])
 }
+
+/**
+ * @since 1.0.0
+ */
+export const debugAs = <F extends Function, G extends Function>(f: F, g: G): G =>
+  Object.assign(g as any, { debugAs: "debugAs" in f ? f["debugAs"] : f }) as any
