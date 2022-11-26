@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.0.17
+
+### Patch Changes
+
+- [#58](https://github.com/Effect-TS/io/pull/58) [`5c982f9`](https://github.com/Effect-TS/io/commit/5c982f91ec7892e18b3b0a78a791bbdaaa4e3b47) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Fix log level override
+
 ## 0.0.16
 
 ### Patch Changes
