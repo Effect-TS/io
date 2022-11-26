@@ -36,10 +36,6 @@ export interface Debug {
    * Enables debug logging of execution traces.
    */
   traceExecutionLogEnabled: boolean
-  /**
-   * Enable debugger on execution
-   */
-  debuggerEnabled: boolean
 }
 
 /**
@@ -52,8 +48,7 @@ export const runtimeDebug: Debug = {
   traceStackLimit: 5,
   getCallTrace: undefined,
   traceFilter: () => true,
-  traceExecutionLogEnabled: false,
-  debuggerEnabled: false
+  traceExecutionLogEnabled: false
 }
 
 /**
@@ -120,9 +115,3 @@ export const getCallTrace = (): string | undefined => {
   }
   return orUndefined(stack[stack.length - 1])
 }
-
-/**
- * @since 1.0.0
- */
-export const debugAs = <F extends Function, G extends Function>(f: F, g: G): G =>
-  Object.assign(g as any, { debugAs: "debugAs" in f ? f["debugAs"] : f }) as any

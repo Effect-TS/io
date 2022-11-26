@@ -1,5 +1,5 @@
 import * as Cause from "@effect/io/Cause"
-import { debugAs, getCallTrace, isTraceEnabled } from "@effect/io/Debug"
+import { getCallTrace, isTraceEnabled } from "@effect/io/Debug"
 import type * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
 import type * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
@@ -497,7 +497,7 @@ export const foldEffect = <E, A, R2, E2, A2, R3, E3, A3>(
     return pipe(
       self,
       foldCauseEffect(
-        debugAs(onFailure, (cause) => {
+        (cause) => {
           const either = Cause.failureOrCause(cause)
           switch (either._tag) {
             case "Left": {
@@ -507,7 +507,7 @@ export const foldEffect = <E, A, R2, E2, A2, R3, E3, A3>(
               return failCause(either.right)
             }
           }
-        }),
+        },
         onSuccess
       )
     ).traced(trace)
@@ -743,6 +743,12 @@ export const provideEnvironment = <R>(environment: Context.Context<R>) => {
       pipe(currentEnvironment, fiberRefLocally(environment as Context.Context<never>))
     ).traced(trace)
   }
+}
+
+/** @internal */
+export const withExecutionDebug = <R, E, A>(self: Effect.Effect<R, E, A>) => {
+  const trace = getCallTrace()
+  return fiberRefLocally(true)(currentExecutionDebug)(self).traced(trace)
 }
 
 /** @internal */
@@ -1335,6 +1341,9 @@ export const fiberRefUnsafeMakeRuntimeFlags = (
     RuntimeFlagsPatch.empty
   )
 }
+
+/** @internal */
+export const currentExecutionDebug: FiberRef.FiberRef<boolean> = fiberRefUnsafeMake(false)
 
 /** @internal */
 export const currentEnvironment: FiberRef.FiberRef<Context.Context<never>> = fiberRefUnsafeMakeEnvironment(

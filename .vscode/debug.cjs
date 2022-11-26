@@ -5,8 +5,4 @@ require("ts-node").register({
   project: "tsconfig.examples.json",
 });
 
-const { runtimeDebug } = require("@effect/io/Debug");
-
-runtimeDebug.debuggerEnabled = true;
-
 require("../examples/bench");
