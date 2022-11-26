@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.0.19
+
+### Patch Changes
+
+- [#63](https://github.com/Effect-TS/io/pull/63) [`43d7db1`](https://github.com/Effect-TS/io/commit/43d7db1d69cad9cbb51262d86e01e6d316fc6b1f) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Support execution debugging
+
 ## 0.0.18
 
 ### Patch Changes
