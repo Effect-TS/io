@@ -1,6 +1,6 @@
 ---
 title: Logger/Level.ts
-nav_order: 21
+nav_order: 25
 parent: Modules
 ---
 

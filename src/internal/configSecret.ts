@@ -1,0 +1,69 @@
+import type * as ConfigSecret from "@effect/io/Config/Secret"
+import * as Chunk from "@fp-ts/data/Chunk"
+import * as Equal from "@fp-ts/data/Equal"
+import { pipe } from "@fp-ts/data/Function"
+
+/** @internal */
+const ConfigSecretSymbolKey = "@effect/io/Config/Secret"
+
+/** @internal */
+export const ConfigSecretTypeId: ConfigSecret.ConfigSecretTypeId = Symbol.for(
+  ConfigSecretSymbolKey
+) as ConfigSecret.ConfigSecretTypeId
+
+/** @internal */
+export const proto = {
+  [ConfigSecretTypeId]: ConfigSecretTypeId,
+  [Equal.symbolHash](this: ConfigSecret.ConfigSecret): number {
+    return pipe(
+      Equal.hash(ConfigSecretSymbolKey),
+      Equal.hashCombine(Equal.hash(this.raw))
+    )
+  },
+  [Equal.symbolEqual](this: ConfigSecret.ConfigSecret, that: unknown): boolean {
+    return isConfigSecret(that) && Equal.equals(this.raw, that.raw)
+  }
+}
+
+/** @internal */
+export const isConfigSecret = (u: unknown): u is ConfigSecret.ConfigSecret => {
+  return typeof u === "object" && u != null && ConfigSecretTypeId in u
+}
+
+/** @internal */
+export const make = (bytes: Array<number>): ConfigSecret.ConfigSecret => {
+  const secret = Object.create(proto)
+  Object.defineProperty(secret, "toString", {
+    enumerable: false,
+    value() {
+      return "ConfigSecret(<redacted>)"
+    }
+  })
+  Object.defineProperty(secret, "raw", {
+    enumerable: false,
+    value: bytes
+  })
+  return secret
+}
+
+/** @internal */
+export const fromChunk = (chunk: Chunk.Chunk<string>): ConfigSecret.ConfigSecret => {
+  return make(Chunk.toReadonlyArray(chunk).map((char) => char.charCodeAt(0)))
+}
+
+/** @internal */
+export const fromString = (text: string): ConfigSecret.ConfigSecret => {
+  return make(text.split("").map((char) => char.charCodeAt(0)))
+}
+
+/** @internal */
+export const value = (self: ConfigSecret.ConfigSecret): string => {
+  return self.raw.map((byte) => String.fromCharCode(byte)).join("")
+}
+
+/** @internal */
+export const unsafeWipe = (self: ConfigSecret.ConfigSecret): void => {
+  for (let i = 0; i < self.raw.length; i++) {
+    self.raw[i] = 0
+  }
+}

@@ -1,0 +1,333 @@
+---
+title: Config/Error.ts
+nav_order: 5
+parent: Modules
+---
+
+## Error overview
+
+Added in v1.0.0
+
+---
+
+<h2 class="text-delta">Table of contents</h2>
+
+- [constructors](#constructors)
+  - [And](#and)
+  - [InvalidData](#invaliddata)
+  - [MissingData](#missingdata)
+  - [Or](#or)
+  - [SourceUnavailable](#sourceunavailable)
+  - [Unsupported](#unsupported)
+- [models](#models)
+  - [And (interface)](#and-interface)
+  - [ConfigError (type alias)](#configerror-type-alias)
+  - [InvalidData (interface)](#invaliddata-interface)
+  - [MissingData (interface)](#missingdata-interface)
+  - [Or (interface)](#or-interface)
+  - [SourceUnavailable (interface)](#sourceunavailable-interface)
+  - [Unsupported (interface)](#unsupported-interface)
+- [mutations](#mutations)
+  - [prefixed](#prefixed)
+- [refinements](#refinements)
+  - [isAnd](#isand)
+  - [isConfigError](#isconfigerror)
+  - [isInvalidData](#isinvaliddata)
+  - [isMissingData](#ismissingdata)
+  - [isOr](#isor)
+  - [isSourceUnavailable](#issourceunavailable)
+  - [isUnsupported](#isunsupported)
+- [symbols](#symbols)
+  - [ConfigErrorTypeId](#configerrortypeid)
+  - [ConfigErrorTypeId (type alias)](#configerrortypeid-type-alias)
+
+---
+
+# constructors
+
+## And
+
+**Signature**
+
+```ts
+export declare const And: (self: ConfigError, that: ConfigError) => ConfigError
+```
+
+Added in v1.0.0
+
+## InvalidData
+
+**Signature**
+
+```ts
+export declare const InvalidData: (path: Chunk.Chunk<string>, message: string) => ConfigError
+```
+
+Added in v1.0.0
+
+## MissingData
+
+**Signature**
+
+```ts
+export declare const MissingData: (path: Chunk.Chunk<string>, message: string) => ConfigError
+```
+
+Added in v1.0.0
+
+## Or
+
+**Signature**
+
+```ts
+export declare const Or: (self: ConfigError, that: ConfigError) => ConfigError
+```
+
+Added in v1.0.0
+
+## SourceUnavailable
+
+**Signature**
+
+```ts
+export declare const SourceUnavailable: (
+  path: Chunk.Chunk<string>,
+  message: string,
+  cause: Cause.Cause<unknown>
+) => ConfigError
+```
+
+Added in v1.0.0
+
+## Unsupported
+
+**Signature**
+
+```ts
+export declare const Unsupported: (path: Chunk.Chunk<string>, message: string) => ConfigError
+```
+
+Added in v1.0.0
+
+# models
+
+## And (interface)
+
+**Signature**
+
+```ts
+export interface And extends ConfigError.Proto {
+  readonly op: 0
+  readonly left: ConfigError
+  readonly right: ConfigError
+}
+```
+
+Added in v1.0.0
+
+## ConfigError (type alias)
+
+The possible ways that loading configuration data may fail.
+
+**Signature**
+
+```ts
+export type ConfigError = And | Or | InvalidData | MissingData | SourceUnavailable | Unsupported
+```
+
+Added in v1.0.0
+
+## InvalidData (interface)
+
+**Signature**
+
+```ts
+export interface InvalidData extends ConfigError.Proto {
+  readonly op: 2
+  readonly path: Chunk.Chunk<string>
+  readonly message: string
+}
+```
+
+Added in v1.0.0
+
+## MissingData (interface)
+
+**Signature**
+
+```ts
+export interface MissingData extends ConfigError.Proto {
+  readonly op: 3
+  readonly path: Chunk.Chunk<string>
+  readonly message: string
+}
+```
+
+Added in v1.0.0
+
+## Or (interface)
+
+**Signature**
+
+```ts
+export interface Or extends ConfigError.Proto {
+  readonly op: 1
+  readonly left: ConfigError
+  readonly right: ConfigError
+}
+```
+
+Added in v1.0.0
+
+## SourceUnavailable (interface)
+
+**Signature**
+
+```ts
+export interface SourceUnavailable extends ConfigError.Proto {
+  readonly op: 4
+  readonly path: Chunk.Chunk<string>
+  readonly message: string
+  readonly cause: Cause.Cause<unknown>
+}
+```
+
+Added in v1.0.0
+
+## Unsupported (interface)
+
+**Signature**
+
+```ts
+export interface Unsupported extends ConfigError.Proto {
+  readonly op: 5
+  readonly path: Chunk.Chunk<string>
+  readonly message: string
+}
+```
+
+Added in v1.0.0
+
+# mutations
+
+## prefixed
+
+**Signature**
+
+```ts
+export declare const prefixed: (prefix: Chunk.Chunk<string>) => (self: ConfigError) => ConfigError
+```
+
+Added in v1.0.0
+
+# refinements
+
+## isAnd
+
+Returns `true` if the specified `ConfigError` is an `And`, `false` otherwise.
+
+**Signature**
+
+```ts
+export declare const isAnd: (self: ConfigError) => self is And
+```
+
+Added in v1.0.0
+
+## isConfigError
+
+Returns `true` if the specified value is a `ConfigError`, `false` otherwise.
+
+**Signature**
+
+```ts
+export declare const isConfigError: (u: unknown) => u is ConfigError
+```
+
+Added in v1.0.0
+
+## isInvalidData
+
+Returns `true` if the specified `ConfigError` is an `InvalidData`, `false`
+otherwise.
+
+**Signature**
+
+```ts
+export declare const isInvalidData: (self: ConfigError) => self is InvalidData
+```
+
+Added in v1.0.0
+
+## isMissingData
+
+Returns `true` if the specified `ConfigError` is an `MissingData`, `false`
+otherwise.
+
+**Signature**
+
+```ts
+export declare const isMissingData: (self: ConfigError) => self is MissingData
+```
+
+Added in v1.0.0
+
+## isOr
+
+Returns `true` if the specified `ConfigError` is an `Or`, `false` otherwise.
+
+**Signature**
+
+```ts
+export declare const isOr: (self: ConfigError) => self is Or
+```
+
+Added in v1.0.0
+
+## isSourceUnavailable
+
+Returns `true` if the specified `ConfigError` is a `SourceUnavailable`,
+`false` otherwise.
+
+**Signature**
+
+```ts
+export declare const isSourceUnavailable: (self: ConfigError) => self is SourceUnavailable
+```
+
+Added in v1.0.0
+
+## isUnsupported
+
+Returns `true` if the specified `ConfigError` is an `Unsupported`, `false`
+otherwise.
+
+**Signature**
+
+```ts
+export declare const isUnsupported: (self: ConfigError) => self is Unsupported
+```
+
+Added in v1.0.0
+
+# symbols
+
+## ConfigErrorTypeId
+
+**Signature**
+
+```ts
+export declare const ConfigErrorTypeId: typeof ConfigErrorTypeId
+```
+
+Added in v1.0.0
+
+## ConfigErrorTypeId (type alias)
+
+**Signature**
+
+```ts
+export type ConfigErrorTypeId = typeof ConfigErrorTypeId
+```
+
+Added in v1.0.0

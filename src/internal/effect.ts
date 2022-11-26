@@ -10,7 +10,7 @@ import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
 import * as core from "@effect/io/internal/core"
 import * as fiberRefsPatch from "@effect/io/internal/fiberRefs/patch"
 import * as SingleShotGen from "@effect/io/internal/singleShotGen"
-import type { EnforceNonEmptyRecord, MergeRecord, NonEmptyArrayEffect, TupleA } from "@effect/io/internal/types"
+import type { EnforceNonEmptyRecord, MergeRecord, NonEmptyArrayEffect, TupleEffect } from "@effect/io/internal/types"
 import * as LogLevel from "@effect/io/Logger/Level"
 import * as LogSpan from "@effect/io/Logger/Span"
 import type * as Metric from "@effect/io/Metric"
@@ -2374,7 +2374,7 @@ export const tuple = <T extends NonEmptyArrayEffect>(
 ): Effect.Effect<
   [T[number]] extends [{ [core.EffectTypeId]: { _R: (_: never) => infer R } }] ? R : never,
   [T[number]] extends [{ [core.EffectTypeId]: { _E: (_: never) => infer E } }] ? E : never,
-  TupleA<T>
+  TupleEffect<T>
 > => {
   const trace = getCallTrace()
   return pipe(collectAll(t), core.map(Chunk.toReadonlyArray)).traced(trace) as any

@@ -1,6 +1,6 @@
 ---
 title: Logger/Span.ts
-nav_order: 22
+nav_order: 26
 parent: Modules
 ---
 

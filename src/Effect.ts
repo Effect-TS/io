@@ -20,7 +20,7 @@ import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
 import * as layer from "@effect/io/internal/layer"
 import * as _runtime from "@effect/io/internal/runtime"
 import * as _schedule from "@effect/io/internal/schedule"
-import type { EnforceNonEmptyRecord, MergeRecord, NonEmptyArrayEffect, TupleA } from "@effect/io/internal/types"
+import type { EnforceNonEmptyRecord, MergeRecord, NonEmptyArrayEffect, TupleEffect } from "@effect/io/internal/types"
 import type * as Layer from "@effect/io/Layer"
 import type * as Metric from "@effect/io/Metric"
 import type * as Random from "@effect/io/Random"
@@ -3710,7 +3710,7 @@ export const tuple: <T extends NonEmptyArrayEffect>(
 ) => Effect<
   [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R : never,
   [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E : never,
-  TupleA<T>
+  TupleEffect<T>
 > = effect.tuple
 
 /**
@@ -3723,7 +3723,7 @@ export const tuple: <T extends NonEmptyArrayEffect>(
 export const tuplePar: <T extends NonEmptyArrayEffect>(...t: T) => Effect<
   [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R : never,
   [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E : never,
-  TupleA<T>
+  TupleEffect<T>
 > = fiberRuntime.tuplePar
 
 /**
