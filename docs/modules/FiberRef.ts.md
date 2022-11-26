@@ -24,6 +24,7 @@ Added in v1.0.0
   - [unsafeMakeSupervisor](#unsafemakesupervisor)
 - [fiberRefs](#fiberrefs)
   - [currentEnvironment](#currentenvironment)
+  - [currentExecutionDebug](#currentexecutiondebug)
   - [currentLogAnnotations](#currentlogannotations)
   - [currentLogLevel](#currentloglevel)
   - [currentLogSpan](#currentlogspan)
@@ -179,6 +180,16 @@ Added in v1.0.0
 
 ```ts
 export declare const currentEnvironment: FiberRef<Context.Context<never>>
+```
+
+Added in v1.0.0
+
+## currentExecutionDebug
+
+**Signature**
+
+```ts
+export declare const currentExecutionDebug: FiberRef<boolean>
 ```
 
 Added in v1.0.0

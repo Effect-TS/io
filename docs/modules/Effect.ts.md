@@ -407,6 +407,7 @@ Added in v1.0.0
   - [EffectTypeId (type alias)](#effecttypeid-type-alias)
 - [tracing](#tracing)
   - [traced](#traced)
+  - [withExecutionDebug](#withexecutiondebug)
   - [withSpan](#withspan)
 - [traversing](#traversing)
   - [forEachWithIndex](#foreachwithindex)
@@ -5706,6 +5707,18 @@ Added in v1.0.0
 
 ```ts
 export declare const traced: (trace: string | undefined) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+```
+
+Added in v1.0.0
+
+## withExecutionDebug
+
+Enables debugger on every operation from the fiber runtime
+
+**Signature**
+
+```ts
+export declare const withExecutionDebug: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0

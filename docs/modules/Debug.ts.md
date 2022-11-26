@@ -82,10 +82,6 @@ export interface Debug {
    * Enables debug logging of execution traces.
    */
   traceExecutionLogEnabled: boolean
-  /**
-   * Enable debugger on execution
-   */
-  debuggerEnabled: boolean
 }
 ```
 

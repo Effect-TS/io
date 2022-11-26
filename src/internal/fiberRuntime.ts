@@ -892,7 +892,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     _args: ARGS,
     _op: core.Primitive
   ): V {
-    if (runtimeDebug.debuggerEnabled) {
+    if (this.getFiberRef(core.currentExecutionDebug)) {
       // eslint-disable-next-line no-debugger
       debugger
     }
