@@ -215,11 +215,7 @@ export const zipRight = <Message2, Output2>(that: Logger.Logger<Message2, Output
 /** @internal */
 export const defaultLogger = pipe(
   consoleLogger(),
-  filterLogLevel(
-    LogLevel.greaterThanEqual(
-      runtimeDebug.logLevelOverride ? LogLevel.fromLiteral(runtimeDebug.logLevelOverride) : LogLevel.Info
-    )
-  ),
+  filterLogLevel(LogLevel.greaterThanEqual(LogLevel.fromLiteral(runtimeDebug.defaultLogLevel))),
   map(constVoid)
 )
 

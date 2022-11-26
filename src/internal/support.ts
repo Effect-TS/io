@@ -12,13 +12,13 @@ export class RingBuffer<T> {
 
   push(value: T) {
     if (equals(value, MutableList.tail(this.values))) {
-      return this.values
+      return false
     }
     if (MutableList.length(this.values) - this.ignored >= this.size) {
       MutableList.shift(this.values)
     }
     MutableList.append(value)(this.values)
-    return this.values
+    return true
   }
 
   pop() {

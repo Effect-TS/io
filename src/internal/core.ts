@@ -1,5 +1,5 @@
 import * as Cause from "@effect/io/Cause"
-import { getCallTrace, runtimeDebug } from "@effect/io/Debug"
+import { getCallTrace, isTraceEnabled } from "@effect/io/Debug"
 import type * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
 import type * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
@@ -113,7 +113,7 @@ export const proto = {
     return Equal.hashRandom(this)
   },
   traced(this: Effect.Effect<never, never, never>, trace: string | undefined): Effect.Effect<never, never, never> {
-    if (!runtimeDebug.traceEnabled || trace === this["trace"]) {
+    if (!isTraceEnabled() || trace === this["trace"]) {
       return this
     }
     const fresh = Object.create(proto)

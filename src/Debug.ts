@@ -11,7 +11,7 @@ export interface Debug {
   /**
    * Overrides the default log level filter for loggers such as console.
    */
-  logLevelOverride: "All" | "Fatal" | "Error" | "Warning" | "Info" | "Debug" | "Trace" | "None" | undefined
+  defaultLogLevel: "All" | "Fatal" | "Error" | "Warning" | "Info" | "Debug" | "Trace" | "None"
   /**
    * When specified it will be used to collect call traces at runtime.
    *
@@ -19,43 +19,23 @@ export interface Debug {
    * to the stack trace format being non standardized across platforms.
    * This flag is meant to be used only when debugging during development.
    */
-  traceExtractor: ((at: number) => string | undefined) | undefined
+  getCallTrace: ((at: number) => string | undefined) | undefined
   /**
    * A function that is used to filter which traces to show and collect.
    */
   traceFilter: (trace: string) => boolean
   /**
-   * Enables execution tracing in the fiber runtime.
+   * Sets a limit on how many stack traces should be rendered.
    */
-  traceExecutionEnabled: boolean
-  /**
-   * Renders the execution trace in the error cause when it is available.
-   */
-  traceExecutionEnabledInCause: boolean
-  /**
-   * Renders the stack trace in the error cause when it is available.
-   */
-  traceStackEnabledInCause: boolean
-  /**
-   * Renders the span trace in the error cause when it is available.
-   */
-  traceSpanEnabledInCause: boolean
+  traceStackLimit: number
   /**
    * Sets a limit on how many execution traces should be rendered.
    */
   traceExecutionLimit: number
   /**
-   * Sets a limit on how many stack traces should be rendered.
-   */
-  traceStackLimit: number
-  /**
    * Enables debug logging of execution traces.
    */
   traceExecutionLogEnabled: boolean
-  /**
-   * Enables tracing.
-   */
-  traceEnabled: boolean
   /**
    * Listens to execution traces.
    */
@@ -67,18 +47,13 @@ export interface Debug {
  * @since 1.0.0
  */
 export const runtimeDebug: Debug = {
-  logLevelOverride: undefined,
-  traceExecutionEnabled: true,
-  traceExecutionLogEnabled: false,
-  traceExecutionEnabledInCause: true,
-  traceSpanEnabledInCause: true,
-  traceStackEnabledInCause: true,
+  defaultLogLevel: "Info",
   traceExecutionLimit: 5,
   traceStackLimit: 5,
-  traceExtractor: undefined,
+  getCallTrace: undefined,
   traceFilter: () => true,
-  traceEnabled: true,
-  traceExecutionHook: []
+  traceExecutionHook: [],
+  traceExecutionLogEnabled: false
 }
 
 /**
@@ -122,8 +97,14 @@ const orUndefined = (trace: string | undefined): string | undefined => {
 /**
  * @since 1.0.0
  */
+export const isTraceEnabled: () => boolean = () =>
+  (runtimeDebug.traceStackLimit > 0) || (runtimeDebug.traceExecutionLimit > 0)
+
+/**
+ * @since 1.0.0
+ */
 export const withCallTrace = (trace: string): <A>(value: A) => A => {
-  if (runtimeDebug.traceEnabled && !runtimeDebug.traceExtractor) {
+  if (!runtimeDebug.getCallTrace) {
     stack.push(trace)
     return cleanup
   }
@@ -134,11 +115,8 @@ export const withCallTrace = (trace: string): <A>(value: A) => A => {
  * @since 1.0.0
  */
 export const getCallTrace = (): string | undefined => {
-  if (!runtimeDebug.traceEnabled) {
-    return
-  }
-  if (runtimeDebug.traceExtractor) {
-    return orUndefined(runtimeDebug.traceExtractor(4))
+  if (runtimeDebug.getCallTrace) {
+    return orUndefined(runtimeDebug.getCallTrace(4))
   }
   return orUndefined(stack[stack.length - 1])
 }
