@@ -29,7 +29,7 @@ import { Stack } from "@effect/io/internal/stack"
 import * as supervisor from "@effect/io/internal/supervisor"
 import * as SupervisorPatch from "@effect/io/internal/supervisor/patch"
 import { RingBuffer } from "@effect/io/internal/support"
-import type { EnforceNonEmptyRecord, TupleA } from "@effect/io/internal/types"
+import type { EnforceNonEmptyRecord, TupleEffect } from "@effect/io/internal/types"
 import * as LogLevel from "@effect/io/Logger/Level"
 import * as Ref from "@effect/io/Ref"
 import type * as Scope from "@effect/io/Scope"
@@ -2021,7 +2021,7 @@ export const tuplePar = <T extends [Effect.Effect<any, any, any>, ...Array<Effec
 ): Effect.Effect<
   [T[number]] extends [{ [core.EffectTypeId]: { _R: (_: never) => infer R } }] ? R : never,
   [T[number]] extends [{ [core.EffectTypeId]: { _E: (_: never) => infer E } }] ? E : never,
-  TupleA<T>
+  TupleEffect<T>
 > => {
   const trace = getCallTrace()
   return pipe(collectAllPar(t), core.map(Chunk.toReadonlyArray)).traced(trace) as any

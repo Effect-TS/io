@@ -1,3 +1,4 @@
+import type * as Config from "@effect/io/Config"
 import type * as Effect from "@effect/io/Effect"
 
 export type EnforceNonEmptyRecord<R> = keyof R extends never ? never : R
@@ -11,6 +12,12 @@ export type MergeRecord<K, H> = {
 
 export type NonEmptyArrayEffect = [Effect.Effect<any, any, any>, ...Array<Effect.Effect<any, any, any>>]
 
-export type TupleA<T extends NonEmptyArrayEffect> = {
+export type NonEmptyArrayConfig = [Config.Config<any>, ...Array<Config.Config<any>>]
+
+export type TupleEffect<T extends NonEmptyArrayEffect> = {
   [K in keyof T]: [T[K]] extends [Effect.Effect<any, any, infer A>] ? A : never
+}
+
+export type TupleConfig<T extends NonEmptyArrayConfig> = {
+  [K in keyof T]: [T[K]] extends [Config.Config<infer A>] ? A : never
 }

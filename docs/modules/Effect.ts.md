@@ -1,6 +1,6 @@
 ---
 title: Effect.ts
-nav_order: 7
+nav_order: 11
 parent: Modules
 ---
 
@@ -1795,7 +1795,7 @@ export declare const tuple: <T extends [Effect<any, any, any>, ...Effect<any, an
 ) => Effect<
   [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R : never,
   [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E : never,
-  TupleA<T>
+  TupleEffect<T>
 >
 ```
 
@@ -1813,7 +1813,7 @@ export declare const tuplePar: <T extends [Effect<any, any, any>, ...Effect<any,
 ) => Effect<
   [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R : never,
   [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E : never,
-  TupleA<T>
+  TupleEffect<T>
 >
 ```
 
