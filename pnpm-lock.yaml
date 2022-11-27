@@ -17,7 +17,7 @@ importers:
       '@babel/plugin-transform-modules-commonjs': ^7.19.6
       '@changesets/changelog-github': ^0.4.7
       '@changesets/cli': ^2.25.2
-      '@effect-ts/build-utils': 0.40.5
+      '@effect-ts/build-utils': 0.40.3
       '@effect-ts/core': ^0.60.2
       '@effect/language-service': ^0.0.4
       '@effect/printer': ^0.1.4
@@ -69,7 +69,7 @@ importers:
       '@babel/plugin-transform-modules-commonjs': 7.19.6_@babel+core@7.20.2
       '@changesets/changelog-github': 0.4.7
       '@changesets/cli': 2.25.2
-      '@effect-ts/build-utils': 0.40.5_smskbqsf3q6kbozdrpluio47kq
+      '@effect-ts/build-utils': 0.40.3_wzvflwv62ngf22ppz3frldq37m_smskbqsf3q6kbozdrpluio47kq
       '@effect-ts/core': 0.60.4
       '@effect/language-service': 0.0.4
       '@repo-tooling/eslint-plugin-dprint': 0.0.4_delwud2hnnlzcq6m6ihqj3umw4
@@ -673,8 +673,8 @@ packages:
       is-negated-glob: 1.0.0
     dev: true
 
-  /@effect-ts/build-utils/0.40.5_smskbqsf3q6kbozdrpluio47kq:
-    resolution: {integrity: sha512-5gWxbnxhqcDydsTSgTG1e0bOHADfk0lm3cv97yjgeLeqVhO1RxJ4R7RM0alF5MeRsismMW/mInLR8Gn82TU+7Q==}
+  /@effect-ts/build-utils/0.40.3_wzvflwv62ngf22ppz3frldq37m_smskbqsf3q6kbozdrpluio47kq:
+    resolution: {integrity: sha512-4AogENdrtSyEFLYgyFNlj0d+W2ckZ/ZTapCO2lWdl4kRGHQr4/beKoNmAbPNyfxZeoJ/7rFEa1mB1Tvm7eIdlw==}
     hasBin: true
     peerDependencies:
       '@effect-ts/core': '>= 0.28.9'
@@ -685,6 +685,7 @@ packages:
       cpx: 1.5.0
       picocolors: 1.0.0
     dev: true
+    patched: true
 
   /@effect-ts/core/0.60.4:
     resolution: {integrity: sha512-kplDLAsiuidDAOipNcZJPbo3YF7eJHdIWe9sK+6l83HjnTwAp8+56s3hgVhTti0mMO7/Wzo9ZnuQlbjo9IykZA==}
