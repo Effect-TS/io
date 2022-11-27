@@ -115,3 +115,9 @@ export const getCallTrace = (): string | undefined => {
   }
   return orUndefined(stack[stack.length - 1])
 }
+
+/**
+ * @since 1.0.0
+ */
+export const debugAs = <F, G>(f: F, g: G): G =>
+  Object.assign(g as any, { debugAs: "debugAs" in (f as any) ? f["debugAs"] : f }) as any

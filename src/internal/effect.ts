@@ -1,6 +1,6 @@
 import * as Cause from "@effect/io/Cause"
 import * as Clock from "@effect/io/Clock"
-import { getCallTrace } from "@effect/io/Debug"
+import { debugAs, getCallTrace } from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import type * as Fiber from "@effect/io/Fiber"
@@ -761,8 +761,8 @@ export const fold = <E, A, A2, A3>(onFailure: (error: E) => A2, onSuccess: (valu
     return pipe(
       self,
       core.foldEffect(
-        (e) => core.succeed(onFailure(e)),
-        (a) => core.succeed(onSuccess(a))
+        debugAs(onFailure, (e) => core.succeed(onFailure(e))),
+        debugAs(onSuccess, (a) => core.succeed(onSuccess(a)))
       )
     ).traced(trace)
   }
