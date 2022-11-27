@@ -7,15 +7,18 @@ import * as _config from "@effect/io/internal/config"
 import * as configError from "@effect/io/internal/configError"
 import * as configSecret from "@effect/io/internal/configSecret"
 import * as core from "@effect/io/internal/core"
-import * as effect from "@effect/io/internal/effect"
 import * as OpCodes from "@effect/io/internal/opCodes/config"
 import * as Chunk from "@fp-ts/data/Chunk"
+import * as Context from "@fp-ts/data/Context"
 import * as Either from "@fp-ts/data/Either"
 import type { LazyArg } from "@fp-ts/data/Function"
 import { pipe } from "@fp-ts/data/Function"
 import * as HashMap from "@fp-ts/data/HashMap"
 import * as HashSet from "@fp-ts/data/HashSet"
 import * as Option from "@fp-ts/data/Option"
+
+/** @internal */
+export const configProviderTag: Context.Tag<ConfigProvider.ConfigProvider> = Context.Tag()
 
 /** @internal */
 const ConfigProviderSymbolKey = "@effect/io/Config/Provider"
@@ -89,6 +92,53 @@ export const fromFlat = (flat: ConfigProvider.ConfigProvider.Flat): ConfigProvid
 }
 
 /** @internal */
+export const env = (): ConfigProvider.ConfigProvider => {
+  const makePathString = (path: Chunk.Chunk<string>): string => pipe(path, Chunk.join("_"))
+  const unmakePathString = (pathString: string): ReadonlyArray<string> => pathString.split("_")
+
+  const getEnv = () =>
+    typeof process !== "undefined" && "env" in process && typeof process.env === "object" ? process.env : {}
+
+  const load = <A>(
+    path: Chunk.Chunk<string>,
+    primitive: Config.Config.Primitive<A>
+  ): Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>> => {
+    const trace = getCallTrace()
+    const pathString = makePathString(path)
+    const current = getEnv()
+    const valueOpt = pathString in current ? Option.some(current[pathString]!) : Option.none
+    return pipe(
+      core.fromOption(valueOpt),
+      core.mapError(() => configError.MissingData(path, `Expected ${pathString} to exist in the process environment`)),
+      core.flatMap((value) => parsePrimitive(value, path, primitive, ":"))
+    ).traced(trace)
+  }
+
+  const enumerateChildren = (
+    path: Chunk.Chunk<string>
+  ): Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>> => {
+    return core.sync(() => {
+      const current = getEnv()
+      const keys = Object.keys(current)
+      const keyPaths = Array.from(keys).map(unmakePathString)
+      const filteredKeyPaths = keyPaths.filter((keyPath) => {
+        for (let i = 0; i < path.length; i++) {
+          const pathComponent = pipe(path, Chunk.unsafeGet(i))
+          const currentElement = keyPath[i]
+          if (currentElement === undefined || pathComponent !== currentElement) {
+            return false
+          }
+        }
+        return true
+      }).flatMap((keyPath) => keyPath.slice(path.length, path.length + 1))
+      return HashSet.from(filteredKeyPaths)
+    })
+  }
+
+  return fromFlat(makeFlat(load, enumerateChildren))
+}
+
+/** @internal */
 export const fromMap = (
   map: Map<string, string>,
   config: Partial<ConfigProvider.ConfigProvider.FromMapConfig> = {}
@@ -102,10 +152,10 @@ export const fromMap = (
   ): Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>> => {
     const trace = getCallTrace()
     const pathString = makePathString(path)
-    const valueOpt = Option.fromNullable(map.get(pathString))
+    const valueOpt = map.has(pathString) ? Option.some(map.get(pathString)!) : Option.none
     return pipe(
-      effect.fromOption(valueOpt),
-      effect.mapError(() => configError.MissingData(path, `Expected ${pathString} to exist in the provided map`)),
+      core.fromOption(valueOpt),
+      core.mapError(() => configError.MissingData(path, `Expected ${pathString} to exist in the provided map`)),
       core.flatMap((value) => parsePrimitive(value, path, primitive, seqDelim))
     ).traced(trace)
   }
@@ -188,10 +238,10 @@ const fromFlatLoop = <A>(
     case OpCodes.OP_FALLBACK: {
       return pipe(
         core.suspendSucceed(() => fromFlatLoop(flat, prefix, op.first, isEmptyOk)),
-        effect.catchAll((error1) =>
+        core.catchAll((error1) =>
           pipe(
             fromFlatLoop(flat, prefix, op.second, isEmptyOk),
-            effect.catchAll((error2) => core.fail(pipe(configError.Or(error1, error2))))
+            core.catchAll((error2) => core.fail(pipe(configError.Or(error1, error2))))
           )
         )
       ).traced(trace) as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
@@ -209,7 +259,7 @@ const fromFlatLoop = <A>(
       return core.suspendSucceed(() =>
         pipe(
           fromFlatLoop(flat, prefix, op.original, isEmptyOk),
-          core.flatMap(core.forEach((a) => effect.fromEither(op.mapOrFail(a))))
+          core.flatMap(core.forEach((a) => core.fromEither(op.mapOrFail(a))))
         )
       ).traced(trace) as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
     }
@@ -226,7 +276,7 @@ const fromFlatLoop = <A>(
     case OpCodes.OP_PRIMITIVE: {
       return pipe(
         flat.load(prefix, op),
-        effect.catchSome((error) =>
+        core.catchSome((error) =>
           configError.isMissingData(error) && isEmptyOk
             ? Option.some(core.succeed(Chunk.empty))
             : Option.none
@@ -303,8 +353,8 @@ const fromFlatLoop = <A>(
                     Chunk.zip(rights),
                     core.forEach(([left, right]) =>
                       pipe(
-                        effect.fromEither(left),
-                        core.zip(effect.fromEither(right)),
+                        core.fromEither(left),
+                        core.zip(core.fromEither(right)),
                         core.map(([left, right]) => op.zip(left, right))
                       )
                     )
@@ -352,7 +402,7 @@ export const orElse = (that: LazyArg<ConfigProvider.ConfigProvider>) => {
     return make(
       (config) => {
         const trace = getCallTrace()
-        return pipe(self.load(config), effect.orElse(() => that().load(config))).traced(trace)
+        return pipe(self.load(config), core.orElse(() => that().load(config))).traced(trace)
       }
     )
   }
@@ -373,12 +423,12 @@ const parsePrimitive = <A>(
 ): Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>> => {
   const unsplit = configSecret.isConfigSecret(primitive)
   if (unsplit) {
-    return pipe(effect.fromEither(primitive.parse(text)), core.map(Chunk.singleton))
+    return pipe(core.fromEither(primitive.parse(text)), core.map(Chunk.singleton))
   }
   return pipe(
     splitPathString(text, delimiter),
-    core.forEach((char) => effect.fromEither(primitive.parse(char.trim()))),
-    effect.mapError(configError.prefixed(path))
+    core.forEach((char) => core.fromEither(primitive.parse(char.trim()))),
+    core.mapError(configError.prefixed(path))
   )
 }
 

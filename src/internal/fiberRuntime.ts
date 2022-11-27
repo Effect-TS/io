@@ -1,5 +1,6 @@
 import * as Cause from "@effect/io/Cause"
 import type * as Clock from "@effect/io/Clock"
+import type { ConfigProvider } from "@effect/io/Config/Provider"
 import { getCallTrace, isTraceEnabled, runtimeDebug } from "@effect/io/Debug"
 import * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
@@ -14,6 +15,7 @@ import type * as FiberRef from "@effect/io/FiberRef"
 import type * as FiberRefs from "@effect/io/FiberRefs"
 import { StackAnnotation } from "@effect/io/internal/cause"
 import * as clock from "@effect/io/internal/clock"
+import { configProviderTag } from "@effect/io/internal/configProvider"
 import * as core from "@effect/io/internal/core"
 import * as defaultServices from "@effect/io/internal/defaultServices"
 import * as internalFiber from "@effect/io/internal/fiber"
@@ -2108,6 +2110,15 @@ export const withClockScoped = <A extends Clock.Clock>(value: A) => {
   return pipe(
     defaultServices.currentServices,
     fiberRefLocallyScopedWith(Context.add(clock.clockTag)(value))
+  ).traced(trace)
+}
+
+/** @internal */
+export const withConfigProviderScoped = (value: ConfigProvider) => {
+  const trace = getCallTrace()
+  return pipe(
+    defaultServices.currentServices,
+    fiberRefLocallyScopedWith(Context.add(configProviderTag)(value))
   ).traced(trace)
 }
 

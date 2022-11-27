@@ -3,6 +3,9 @@
  */
 import type * as Cause from "@effect/io/Cause"
 import type * as Clock from "@effect/io/Clock"
+import type { Config } from "@effect/io/Config"
+import type { ConfigError } from "@effect/io/Config/Error"
+import type { ConfigProvider } from "@effect/io/Config/Provider"
 import type * as Deferred from "@effect/io/Deferred"
 import type * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
 import type * as Exit from "@effect/io/Exit"
@@ -441,7 +444,7 @@ export {
  */
 export const catchAll: <E, R2, E2, A2>(
   f: (e: E) => Effect<R2, E2, A2>
-) => <R, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2, A2 | A> = effect.catchAll
+) => <R, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2, A2 | A> = core.catchAll
 
 /**
  * Recovers from both recoverable and unrecoverable errors.
@@ -482,7 +485,7 @@ export const catchAllDefect: <R2, E2, A2>(
  */
 export const catchSome: <E, R2, E2, A2>(
   pf: (e: E) => Option.Option<Effect<R2, E2, A2>>
-) => <R, A>(self: Effect<R, E, A>) => Effect<R2 | R, E | E2, A2 | A> = effect.catchSome
+) => <R, A>(self: Effect<R, E, A>) => Effect<R2 | R, E | E2, A2 | A> = core.catchSome
 
 /**
  * Recovers from some or all of the error cases with provided cause.
@@ -562,6 +565,49 @@ export const clock: () => Effect<never, never, Clock.Clock> = effect.clock
  * @category constructors
  */
 export const clockWith: <R, E, A>(f: (clock: Clock.Clock) => Effect<R, E, A>) => Effect<R, E, A> = effect.clockWith
+
+/**
+ * Uses the default config provider to load the specified config, or fail with
+ * an error of type Config.Error.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category config
+ */
+export const config: <A>(config: Config<A>) => Effect<never, ConfigError, A> = defaultServices.config
+
+/**
+ * Retrieves the default config provider, and passes it to the specified
+ * function, which may return an effect that uses the provider to perform some
+ * work or compute some value.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category config
+ */
+export const configProviderWith: <R, E, A>(f: (configProvider: ConfigProvider) => Effect<R, E, A>) => Effect<R, E, A> =
+  defaultServices.configProviderWith
+
+/**
+ * Executes the specified workflow with the specified configuration provider.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category config
+ */
+export const withConfigProvider: (value: ConfigProvider) => <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A> =
+  defaultServices.withConfigProvider
+
+/**
+ * Sets the configuration provider to the specified value and restores it to its original value
+ * when the scope is closed.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category config
+ */
+export const withConfigProviderScoped: (value: ConfigProvider) => Effect<Scope.Scope, never, void> =
+  fiberRuntime.withConfigProviderScoped
 
 /**
  * Evaluate each effect in the structure from left to right, collecting the
@@ -1529,7 +1575,7 @@ export const forkWithErrorHandler: <E, X>(
  * @since 1.0.0
  * @category conversions
  */
-export const fromEither: <E, A>(either: Either.Either<E, A>) => Effect<never, E, A> = effect.fromEither
+export const fromEither: <E, A>(either: Either.Either<E, A>) => Effect<never, E, A> = core.fromEither
 
 /**
  * Lifts an `Either<Cause<E>, A>` into an `Effect<never, E, A>`.
@@ -1570,7 +1616,7 @@ export const fromFiberEffect: <R, E, A>(fiber: Effect<R, E, Fiber.Fiber<E, A>>) 
  * @since 1.0.0
  * @category conversions
  */
-export const fromOption: <A>(option: Option.Option<A>) => Effect<never, Option.Option<never>, A> = effect.fromOption
+export const fromOption: <A>(option: Option.Option<A>) => Effect<never, Option.Option<never>, A> = core.fromOption
 
 /**
  * @category models
@@ -2091,7 +2137,7 @@ export const mapBoth: <E, A, E2, A2>(
  * @since 1.0.0
  * @category mapping
  */
-export const mapError: <E, E2>(f: (e: E) => E2) => <R, A>(self: Effect<R, E, A>) => Effect<R, E2, A> = effect.mapError
+export const mapError: <E, E2>(f: (e: E) => E2) => <R, A>(self: Effect<R, E, A>) => Effect<R, E2, A> = core.mapError
 
 /**
  * Returns an effect with its full cause of failure mapped using the specified
@@ -2317,7 +2363,7 @@ export const option: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Option
  * @since 1.0.0
  * @category alternatives
  */
-export const orDie: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, A> = effect.orDie
+export const orDie: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, A> = core.orDie
 
 /**
  * Converts all failures to unchecked exceptions.
@@ -2337,7 +2383,7 @@ export const orDieKeep: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, A> 
  * @category alternatives
  */
 export const orDieWith: <E>(f: (e: E) => unknown) => <R, A>(self: Effect<R, E, A>) => Effect<R, never, A> =
-  effect.orDieWith
+  core.orDieWith
 
 /**
  * Executes this effect and returns its value, if it succeeds, but otherwise
@@ -2349,7 +2395,7 @@ export const orDieWith: <E>(f: (e: E) => unknown) => <R, A>(self: Effect<R, E, A
  */
 export const orElse: <R2, E2, A2>(
   that: () => Effect<R2, E2, A2>
-) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2, A2 | A> = effect.orElse
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2, A2 | A> = core.orElse
 
 /**
  * Returns an effect that will produce the value of this effect, unless it
@@ -3686,7 +3732,7 @@ export const tryCatchPromise: <E, A>(
 export const tryOrElse: <R2, E2, A2, A, R3, E3, A3>(
   that: () => Effect<R2, E2, A2>,
   onSuccess: (a: A) => Effect<R3, E3, A3>
-) => <R, E>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2 | E3, A2 | A3> = effect.tryOrElse
+) => <R, E>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2 | E3, A2 | A3> = core.tryOrElse
 
 /**
  * Create an `Effect` that when executed will construct `promise` and wait for

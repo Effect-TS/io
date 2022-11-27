@@ -127,6 +127,15 @@ export const fromMap: (map: Map<string, string>, config?: Partial<ConfigProvider
   internal.fromMap
 
 /**
+ * A config provider that loads configuration from environment variables,
+ * using the default System service.
+ *
+ * @since 1.0.0
+ * @category constructors
+ */
+export const env: () => ConfigProvider = internal.env
+
+/**
  * Returns a new config provider that will automatically nest all
  * configuration under the specified property name. This can be utilized to
  * aggregate separate configuration sources that are all required to load a

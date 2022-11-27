@@ -1,8 +1,11 @@
 import type * as Clock from "@effect/io/Clock"
+import type { Config } from "@effect/io/Config"
+import type { ConfigProvider } from "@effect/io/Config/Provider"
 import { getCallTrace } from "@effect/io/Debug"
 import type * as DefaultServices from "@effect/io/DefaultServices"
 import type * as Effect from "@effect/io/Effect"
 import * as clock from "@effect/io/internal/clock"
+import * as configProvider from "@effect/io/internal/configProvider"
 import * as core from "@effect/io/internal/core"
 import * as random from "@effect/io/internal/random"
 import type * as Random from "@effect/io/Random"
@@ -15,7 +18,8 @@ import { pipe } from "@fp-ts/data/Function"
 export const liveServices: Context.Context<DefaultServices.DefaultServices> = pipe(
   Context.empty(),
   Context.add(clock.clockTag)(clock.make()),
-  Context.add(random.randomTag)(random.make((Math.random() * 4294967296) >>> 0))
+  Context.add(random.randomTag)(random.make((Math.random() * 4294967296) >>> 0)),
+  Context.add(configProvider.configProviderTag)(configProvider.env())
 )
 
 /**
@@ -59,6 +63,36 @@ export const withClock = <A extends Clock.Clock>(value: A) => {
     )(effect).traced(trace)
   }
 }
+
+// circular with ConfigProvider
+
+/** @internal */
+export const withConfigProvider = (value: ConfigProvider) => {
+  const trace = getCallTrace()
+  return <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
+    return pipe(
+      currentServices,
+      core.fiberRefLocallyWith(Context.add(configProvider.configProviderTag)(value))
+    )(effect).traced(trace)
+  }
+}
+
+/** @internal */
+export const configProviderWith = <R, E, A>(
+  f: (configProvider: ConfigProvider) => Effect.Effect<R, E, A>
+): Effect.Effect<R, E, A> => {
+  const trace = getCallTrace()
+  return pipe(
+    currentServices,
+    core.fiberRefGetWith((services) => f(pipe(services, Context.get(configProvider.configProviderTag))))
+  ).traced(trace)
+}
+
+/** @internal */
+export const config = <A>(config: Config<A>) => configProviderWith((_) => _.load(config))
+
+/** @internal */
+export const configOrDie = <A>(config: Config<A>) => core.orDie(configProviderWith((_) => _.load(config)))
 
 // circular with Random
 

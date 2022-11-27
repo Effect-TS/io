@@ -30,7 +30,7 @@ import type { Predicate, Refinement } from "@fp-ts/data/Predicate"
 /** @internal */
 export const absolve = <R, E, A>(self: Effect.Effect<R, E, Either.Either<E, A>>): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
-  return pipe(self, core.flatMap(fromEither)).traced(trace)
+  return pipe(self, core.flatMap(core.fromEither)).traced(trace)
 }
 
 /** @internal */
@@ -70,7 +70,7 @@ export const asLeft = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, 
 /** @internal */
 export const asLeftError = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, Either.Either<E, never>, A> => {
   const trace = getCallTrace()
-  return pipe(self, mapError(Either.left)).traced(trace)
+  return pipe(self, core.mapError(Either.left)).traced(trace)
 }
 
 /** @internal */
@@ -82,7 +82,7 @@ export const asRight = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R,
 /** @internal */
 export const asRightError = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, Either.Either<never, E>, A> => {
   const trace = getCallTrace()
-  return pipe(self, mapError(Either.right)).traced(trace)
+  return pipe(self, core.mapError(Either.right)).traced(trace)
 }
 
 /** @internal */
@@ -94,7 +94,7 @@ export const asSome = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, 
 /** @internal */
 export const asSomeError = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, Option.Option<E>, A> => {
   const trace = getCallTrace()
-  return pipe(self, mapError(Option.some)).traced(trace)
+  return pipe(self, core.mapError(Option.some)).traced(trace)
 }
 
 /** @internal */
@@ -141,7 +141,7 @@ export const _catch = <N extends keyof E, K extends E[N] & string, E, R1, E1, A1
   return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1, Exclude<E, { [n in N]: K }> | E1, A | A1> => {
     return pipe(
       self,
-      catchAll((e) => {
+      core.catchAll((e) => {
         if (typeof e === "object" && e != null && tag in e && e[tag] === k) {
           return f(e as any)
         }
@@ -152,41 +152,9 @@ export const _catch = <N extends keyof E, K extends E[N] & string, E, R1, E1, A1
 }
 
 /** @internal */
-export const catchAll = <E, R2, E2, A2>(f: (e: E) => Effect.Effect<R2, E2, A2>) => {
-  const trace = getCallTrace()
-  return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R2 | R, E2, A2 | A> => {
-    return pipe(self, core.foldEffect(f, core.succeed)).traced(trace)
-  }
-}
-
-/** @internal */
 export const catchAllDefect = <R2, E2, A2>(f: (defect: unknown) => Effect.Effect<R2, E2, A2>) => {
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, A | A2> => {
     return pipe(self, catchSomeDefect((defect) => Option.some(f(defect))))
-  }
-}
-
-/** @internal */
-export const catchSome = <E, R2, E2, A2>(pf: (e: E) => Option.Option<Effect.Effect<R2, E2, A2>>) => {
-  const trace = getCallTrace()
-  return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, A | A2> => {
-    return pipe(
-      self,
-      core.foldCauseEffect(
-        (cause): Effect.Effect<R2, E | E2, A2> => {
-          const either = Cause.failureOrCause(cause)
-          switch (either._tag) {
-            case "Left": {
-              return pipe(pf(either.left), Option.getOrElse(() => core.failCause(cause)))
-            }
-            case "Right": {
-              return core.failCause(either.right)
-            }
-          }
-        },
-        core.succeed
-      )
-    ).traced(trace)
   }
 }
 
@@ -221,7 +189,7 @@ export const catchSomeDefect = <R2, E2, A2>(
   pf: (_: unknown) => Option.Option<Effect.Effect<R2, E2, A2>>
 ) => {
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, A | A2> => {
-    return pipe(self, unrefineWith(pf, core.fail), catchAll((s): Effect.Effect<R2, E | E2, A2> => s))
+    return pipe(self, unrefineWith(pf, core.fail), core.catchAll((s): Effect.Effect<R2, E | E2, A2> => s))
   }
 }
 
@@ -234,7 +202,7 @@ export const catchTag = <K extends E["_tag"] & string, E extends { _tag: string 
   return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1, Exclude<E, { _tag: K }> | E1, A | A1> => {
     return pipe(
       self,
-      catchAll((e) => {
+      core.catchAll((e) => {
         if ("_tag" in e && e["_tag"] === k) {
           return f(e as any)
         }
@@ -599,7 +567,7 @@ const existsLoop = <R, E, A>(
 /** @internal */
 export const eventually = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, A> => {
   const trace = getCallTrace()
-  return pipe(self, orElse(() => pipe(core.yieldNow(), core.flatMap(() => eventually(self))))).traced(trace)
+  return pipe(self, core.orElse(() => pipe(core.yieldNow(), core.flatMap(() => eventually(self))))).traced(trace)
 }
 
 /** @internal */
@@ -744,7 +712,7 @@ export const firstSuccessOf = <R, E, A>(effects: Iterable<Effect.Effect<R, E, A>
     }
     return pipe(
       list.tail,
-      List.reduce(list.head, (left, right) => pipe(left, orElse(() => right)))
+      List.reduce(list.head, (left, right) => pipe(left, core.orElse(() => right)))
     )
   }).traced(trace)
 }
@@ -774,7 +742,7 @@ const findLoop = <A, R, E>(
 export const flattenErrorOption = <E1>(fallback: E1) => {
   const trace = getCallTrace()
   return <R, E, A>(self: Effect.Effect<R, Option.Option<E>, A>): Effect.Effect<R, E | E1, A> => {
-    return pipe(self, mapError(Option.getOrElse(() => fallback))).traced(trace)
+    return pipe(self, core.mapError(Option.getOrElse(() => fallback))).traced(trace)
   }
 }
 
@@ -883,19 +851,6 @@ export const forever = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R,
 }
 
 /** @internal */
-export const fromEither = <E, A>(either: Either.Either<E, A>): Effect.Effect<never, E, A> => {
-  const trace = getCallTrace()
-  switch (either._tag) {
-    case "Left": {
-      return core.fail(either.left).traced(trace)
-    }
-    case "Right": {
-      return core.succeed(either.right).traced(trace)
-    }
-  }
-}
-
-/** @internal */
 export const fromEitherCause = <E, A>(either: Either.Either<Cause.Cause<E>, A>): Effect.Effect<never, E, A> => {
   const trace = getCallTrace()
   switch (either._tag) {
@@ -904,19 +859,6 @@ export const fromEitherCause = <E, A>(either: Either.Either<Cause.Cause<E>, A>):
     }
     case "Right": {
       return core.succeed(either.right).traced(trace)
-    }
-  }
-}
-
-/** @internal */
-export const fromOption = <A>(option: Option.Option<A>): Effect.Effect<never, Option.Option<never>, A> => {
-  const trace = getCallTrace()
-  switch (option._tag) {
-    case "None": {
-      return core.fail(Option.none).traced(trace)
-    }
-    case "Some": {
-      return core.succeed(option.value).traced(trace)
     }
   }
 }
@@ -1444,30 +1386,6 @@ export const mapBoth = <E, A, E2, A2>(f: (e: E) => E2, g: (a: A) => A2) => {
 }
 
 /** @internal */
-export const mapError = <E, E2>(f: (e: E) => E2) => {
-  const trace = getCallTrace()
-  return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E2, A> => {
-    return pipe(
-      self,
-      core.foldCauseEffect(
-        (cause) => {
-          const either = Cause.failureOrCause(cause)
-          switch (either._tag) {
-            case "Left": {
-              return core.failSync(() => f(either.left))
-            }
-            case "Right": {
-              return core.failCause(either.right)
-            }
-          }
-        },
-        core.succeed
-      )
-    ).traced(trace)
-  }
-}
-
-/** @internal */
 export const mapErrorCause = <E, E2>(f: (cause: Cause.Cause<E>) => Cause.Cause<E2>) => {
   const trace = getCallTrace()
   return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E2, A> => {
@@ -1572,7 +1490,7 @@ export const noneOrFailWith = <E, A>(
   f: (a: A) => E
 ): Effect.Effect<never, E, void> => {
   const trace = getCallTrace()
-  return pipe(core.flip(getOrFailDiscard(option)), mapError(f)).traced(trace)
+  return pipe(core.flip(getOrFailDiscard(option)), core.mapError(f)).traced(trace)
 }
 
 /** @internal */
@@ -1599,12 +1517,6 @@ export const option = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, 
 }
 
 /** @internal */
-export const orDie = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, A> => {
-  const trace = getCallTrace()
-  return pipe(self, orDieWith(identity)).traced(trace)
-}
-
-/** @internal */
 export const orDieKeep = <R, E, A>(self: Effect.Effect<R, E, A>) => {
   const trace = getCallTrace()
   return pipe(
@@ -1617,28 +1529,12 @@ export const orDieKeep = <R, E, A>(self: Effect.Effect<R, E, A>) => {
 }
 
 /** @internal */
-export const orDieWith = <E>(f: (e: E) => unknown) => {
-  const trace = getCallTrace()
-  return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, A> => {
-    return pipe(self, core.foldEffect((e) => core.die(f(e)), core.succeed)).traced(trace)
-  }
-}
-
-/** @internal */
-export const orElse = <R2, E2, A2>(that: () => Effect.Effect<R2, E2, A2>) => {
-  const trace = getCallTrace()
-  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E2, A | A2> => {
-    return pipe(self, tryOrElse(that, core.succeed)).traced(trace)
-  }
-}
-
-/** @internal */
 export const orElseEither = <R2, E2, A2>(that: () => Effect.Effect<R2, E2, A2>) => {
   const trace = getCallTrace()
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E2, Either.Either<A, A2>> => {
     return pipe(
       self,
-      tryOrElse(
+      core.tryOrElse(
         () => pipe(that(), core.map(Either.right)),
         (a) => core.succeed(Either.left(a))
       )
@@ -1650,7 +1546,7 @@ export const orElseEither = <R2, E2, A2>(that: () => Effect.Effect<R2, E2, A2>) 
 export const orElseFail = <E2>(evaluate: () => E2) => {
   const trace = getCallTrace()
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E2, A> => {
-    return pipe(self, orElse(() => core.failSync(evaluate))).traced(trace)
+    return pipe(self, core.orElse(() => core.failSync(evaluate))).traced(trace)
   }
 }
 
@@ -1664,7 +1560,7 @@ export const orElseOptional = <R, E, A, R2, E2, A2>(
   ): Effect.Effect<R | R2, Option.Option<E | E2>, A | A2> => {
     return pipe(
       self,
-      catchAll((option) => {
+      core.catchAll((option) => {
         switch (option._tag) {
           case "None": {
             return that()
@@ -1682,7 +1578,7 @@ export const orElseOptional = <R, E, A, R2, E2, A2>(
 export const orElseSucceed = <A2>(evaluate: () => A2) => {
   const trace = getCallTrace()
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A | A2> => {
-    return pipe(self, orElse(() => core.sync(evaluate))).traced(trace)
+    return pipe(self, core.orElse(() => core.sync(evaluate))).traced(trace)
   }
 }
 
@@ -1865,7 +1761,7 @@ export const refineOrDieWith = <E, E1>(
   return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E1, A> => {
     return pipe(
       self,
-      catchAll((e) => {
+      core.catchAll((e) => {
         const option = pf(e)
         switch (option._tag) {
           case "None": {
@@ -2324,33 +2220,6 @@ export const tryCatchPromise = <E, A>(
       })
     )
   ).traced(trace)
-}
-
-/** @internal */
-export const tryOrElse = <R2, E2, A2, A, R3, E3, A3>(
-  that: () => Effect.Effect<R2, E2, A2>,
-  onSuccess: (a: A) => Effect.Effect<R3, E3, A3>
-) => {
-  const trace = getCallTrace()
-  return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2 | R3, E2 | E3, A2 | A3> => {
-    return pipe(
-      self,
-      core.foldCauseEffect(
-        (cause) => {
-          const option = Cause.keepDefects(cause)
-          switch (option._tag) {
-            case "None": {
-              return that()
-            }
-            case "Some": {
-              return core.failCause(option.value)
-            }
-          }
-        },
-        onSuccess
-      )
-    ).traced(trace)
-  }
 }
 
 /** @internal */

@@ -1967,7 +1967,7 @@ const repeatOrElseEitherEffectLoop = <R, E, A, R1, B, R2, E2, C>(
   return pipe(
     driver.next(value),
     core.foldEffect(
-      () => pipe(effect.orDie(driver.last()), core.map(Either.right)),
+      () => pipe(core.orDie(driver.last()), core.map(Either.right)),
       (b) =>
         pipe(
           self,
@@ -2063,7 +2063,7 @@ const retryN_EffectLoop = <R, E, A>(
 ): Effect.Effect<R, E, A> => {
   return pipe(
     self,
-    effect.catchAll((e) =>
+    core.catchAll((e) =>
       n < 0 ?
         core.fail(e) :
         pipe(core.yieldNow(), core.flatMap(() => retryN_EffectLoop(self, n - 1)))
@@ -2111,14 +2111,14 @@ const retryOrElseEither_EffectLoop = <R, E, A, R1, A1, R2, E2, A2>(
   return pipe(
     self,
     core.map(Either.right),
-    effect.catchAll((e) =>
+    core.catchAll((e) =>
       pipe(
         driver.next(e),
         core.foldEffect(
           () =>
             pipe(
               driver.last(),
-              effect.orDie,
+              core.orDie,
               core.flatMap((out) => pipe(orElse(e, out), core.map(Either.left)))
             ),
           () => retryOrElseEither_EffectLoop(self, driver, orElse)
@@ -2142,7 +2142,7 @@ export const retryUntilEffect_Effect = <R1, E>(f: (e: E) => Effect.Effect<R1, ne
   return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1, E, A> => {
     return pipe(
       self,
-      effect.catchAll((e) =>
+      core.catchAll((e) =>
         pipe(
           f(e),
           core.flatMap((b) =>
@@ -2215,7 +2215,7 @@ const scheduleFrom_EffectLoop = <R, E, In, R2, Out>(
   return pipe(
     driver.next(initial),
     core.foldEffect(
-      () => effect.orDie(driver.last()),
+      () => core.orDie(driver.last()),
       () => pipe(self, core.flatMap((a) => scheduleFrom_EffectLoop(self, a, driver)))
     )
   )
