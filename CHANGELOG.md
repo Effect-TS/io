@@ -1,5 +1,17 @@
 # @effect/io
 
+## 0.0.20
+
+### Patch Changes
+
+- [#66](https://github.com/Effect-TS/io/pull/66) [`aa9d97d`](https://github.com/Effect-TS/io/commit/aa9d97d63758cd7f1ad205d024043f2eee2abdaf) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Debug config based on FiberRef
+
+- [#36](https://github.com/Effect-TS/io/pull/36) [`e9c8092`](https://github.com/Effect-TS/io/commit/e9c809292102ffa4de8bd31d83b7916bf05fa636) Thanks [@IMax153](https://github.com/IMax153)! - add Config api
+
+- [#68](https://github.com/Effect-TS/io/pull/68) [`333ea04`](https://github.com/Effect-TS/io/commit/333ea047d33e4aeeeb51ecbee5acfbd8b6a35c46) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Fix source maps
+
+- [#36](https://github.com/Effect-TS/io/pull/36) [`6dc2a16`](https://github.com/Effect-TS/io/commit/6dc2a16f2893e6c4fb144a5444f82f7ae9b52617) Thanks [@IMax153](https://github.com/IMax153)! - Add default ConfigProvider
+
 ## 0.0.19
 
 ### Patch Changes
