@@ -4285,15 +4285,6 @@ export const withRuntimeFlagsScoped: (update: RuntimeFlagsPatch.RuntimeFlagsPatc
 export const withSpan: (name: string) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A> = effect.withSpan
 
 /**
- * Enables debugger on every operation from the fiber runtime
- *
- * @macro traced
- * @since 1.0.0
- * @category tracing
- */
-export const withExecutionDebug: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A> = core.withExecutionDebug
-
-/**
  * @macro traced
  * @since 1.0.0
  * @category constructors

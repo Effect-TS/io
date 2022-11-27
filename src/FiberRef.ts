@@ -293,12 +293,6 @@ export const locallyScopedWith: <A>(value: A) => (self: FiberRef<A>) => Effect.E
  * @since 1.0.0
  * @category fiberRefs
  */
-export const currentExecutionDebug: FiberRef<boolean> = core.currentExecutionDebug
-
-/**
- * @since 1.0.0
- * @category fiberRefs
- */
 export const currentEnvironment: FiberRef<Context.Context<never>> = core.currentEnvironment
 
 /**
