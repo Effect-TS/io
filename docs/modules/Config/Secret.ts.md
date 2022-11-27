@@ -69,7 +69,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const value: (self: ConfigSecret) => Chunk.Chunk<string>
+export declare const value: (self: ConfigSecret) => string
 ```
 
 Added in v1.0.0

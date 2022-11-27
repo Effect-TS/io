@@ -13,6 +13,7 @@ Added in v1.0.0
 <h2 class="text-delta">Table of contents</h2>
 
 - [constructors](#constructors)
+  - [env](#env)
   - [fromFlat](#fromflat)
   - [fromMap](#frommap)
   - [make](#make)
@@ -29,6 +30,19 @@ Added in v1.0.0
 ---
 
 # constructors
+
+## env
+
+A config provider that loads configuration from environment variables,
+using the default System service.
+
+**Signature**
+
+```ts
+export declare const env: () => ConfigProvider
+```
+
+Added in v1.0.0
 
 ## fromFlat
 

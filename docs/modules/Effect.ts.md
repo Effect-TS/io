@@ -26,6 +26,11 @@ Added in v1.0.0
   - [withParallelismUnbounded](#withparallelismunbounded)
 - [concurrency](#concurrency)
   - [withParallelism](#withparallelism)
+- [config](#config)
+  - [config](#config-1)
+  - [configProviderWith](#configproviderwith)
+  - [withConfigProvider](#withconfigprovider)
+  - [withConfigProviderScoped](#withconfigproviderscoped)
 - [constructors](#constructors)
   - [acquireRelease](#acquirerelease)
   - [acquireReleaseInterruptible](#acquirereleaseinterruptible)
@@ -574,6 +579,64 @@ Added in v1.0.0
 
 ```ts
 export declare const withParallelism: (parallelism: number) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+```
+
+Added in v1.0.0
+
+# config
+
+## config
+
+Uses the default config provider to load the specified config, or fail with
+an error of type Config.Error.
+
+**Signature**
+
+```ts
+export declare const config: <A>(config: Config<A>) => Effect<never, ConfigError, A>
+```
+
+Added in v1.0.0
+
+## configProviderWith
+
+Retrieves the default config provider, and passes it to the specified
+function, which may return an effect that uses the provider to perform some
+work or compute some value.
+
+**Signature**
+
+```ts
+export declare const configProviderWith: <R, E, A>(
+  f: (configProvider: ConfigProvider) => Effect<R, E, A>
+) => Effect<R, E, A>
+```
+
+Added in v1.0.0
+
+## withConfigProvider
+
+Executes the specified workflow with the specified configuration provider.
+
+**Signature**
+
+```ts
+export declare const withConfigProvider: (
+  value: ConfigProvider
+) => <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
+```
+
+Added in v1.0.0
+
+## withConfigProviderScoped
+
+Sets the configuration provider to the specified value and restores it to its original value
+when the scope is closed.
+
+**Signature**
+
+```ts
+export declare const withConfigProviderScoped: (value: ConfigProvider) => Effect<Scope.Scope, never, void>
 ```
 
 Added in v1.0.0
