@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.0.21
+
+### Patch Changes
+
+- [#69](https://github.com/Effect-TS/io/pull/69) [`ccfdc6a`](https://github.com/Effect-TS/io/commit/ccfdc6af6a68d10bc4736baf1749fbf4235011bf) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Readd debugAs
+
 ## 0.0.20
 
 ### Patch Changes
