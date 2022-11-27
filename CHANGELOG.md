@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.0.22
+
+### Patch Changes
+
+- [#71](https://github.com/Effect-TS/io/pull/71) [`dc3beb7`](https://github.com/Effect-TS/io/commit/dc3beb703e2122f1208f4cac90c44b37308f4b49) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Switch to compile time debugger
+
 ## 0.0.21
 
 ### Patch Changes
