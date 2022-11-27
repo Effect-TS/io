@@ -18,6 +18,7 @@ Added in v1.0.0
 - [models](#models)
   - [Debug (interface)](#debug-interface)
 - [utils](#utils)
+  - [debugAs](#debugas)
   - [getCallTrace](#getcalltrace)
   - [isTraceEnabled](#istraceenabled)
   - [withCallTrace](#withcalltrace)
@@ -88,6 +89,16 @@ export interface Debug {
 Added in v1.0.0
 
 # utils
+
+## debugAs
+
+**Signature**
+
+```ts
+export declare const debugAs: <F, G>(f: F, g: G) => G
+```
+
+Added in v1.0.0
 
 ## getCallTrace
 
