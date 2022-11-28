@@ -59,9 +59,9 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
       fiberRuntime.unsafeAddObserver((exit) => supervisor.onEnd(exit, fiberRuntime))
     }
 
-    fiberRuntime.start(effect)
-
     fiberScope.globalScope.add(this.runtimeFlags, fiberRuntime)
+
+    fiberRuntime.start(effect)
 
     return fiberRuntime
   }
