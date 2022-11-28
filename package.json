@@ -56,19 +56,19 @@
     }
   },
   "dependencies": {
-    "@effect/printer": "^0.1.4",
+    "@effect/printer": "^0.1.5",
     "@fp-ts/core": "^0.0.8",
-    "@fp-ts/data": "^0.0.16"
+    "@fp-ts/data": "^0.0.17"
   },
   "devDependencies": {
     "@babel/cli": "^7.18.6",
-    "@babel/core": "^7.20.2",
+    "@babel/core": "^7.20.5",
     "@babel/plugin-transform-modules-commonjs": "^7.19.6",
     "@changesets/changelog-github": "^0.4.7",
     "@changesets/cli": "^2.25.2",
     "@effect-ts/build-utils": "0.40.3",
     "@effect-ts/core": "^0.60.2",
-    "@effect/language-service": "^0.0.4",
+    "@effect/language-service": "^0.0.6",
     "@repo-tooling/eslint-plugin-dprint": "^0.0.4",
     "@rollup/pluginutils": "^5.0.2",
     "@types/benchmark": "^2.1.2",
