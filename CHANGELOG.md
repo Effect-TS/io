@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.0.26
+
+### Patch Changes
+
+- [#79](https://github.com/Effect-TS/io/pull/79) [`97d3364`](https://github.com/Effect-TS/io/commit/97d3364174898a10e66cd420daece4d33637e0a3) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Resume on fork instead of start
+
 ## 0.0.25
 
 ### Patch Changes
