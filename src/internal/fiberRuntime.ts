@@ -84,6 +84,8 @@ const absurd = (_: never): never => {
   )
 }
 
+const currentFiberURI = "@effect/io/Fiber/Current"
+
 /** @internal */
 export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   readonly [internalFiber.FiberTypeId] = internalFiber.fiberVariance
@@ -121,6 +123,15 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    */
   id(): FiberId.Runtime {
     return this._fiberId
+  }
+
+  /**
+   * Begins execution of the effect associated with this fiber on in the
+   * background. This can be called to "kick off" execution of a fiber after
+   * it has been created.
+   */
+  resume<E, A>(effect: Effect.Effect<any, E, A>) {
+    this.tell(FiberMessage.resume(effect))
   }
 
   /**
@@ -430,7 +441,8 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     let recurse = true
     while (recurse) {
       let evaluationSignal: EvaluationSignal = EvaluationSignalContinue
-      globalThis["@effect/io/Fiber/Current"] = this
+      const prev = globalThis[currentFiberURI]
+      globalThis[currentFiberURI] = this
       try {
         while (evaluationSignal === EvaluationSignalContinue) {
           evaluationSignal = MutableQueue.isEmpty(this._queue) ?
@@ -439,7 +451,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
         }
       } finally {
         this._running = false
-        globalThis["@effect/io/Fiber/Current"] = void 0
+        globalThis[currentFiberURI] = prev
       }
       // Maybe someone added something to the queue between us checking, and us
       // giving up the drain. If so, we need to restart the draining, but only
@@ -759,13 +771,14 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    */
   start<R>(effect: Effect.Effect<R, E, A>): void {
     if (!this._running) {
+      this._running = true
+      const prev = globalThis[currentFiberURI]
+      globalThis[currentFiberURI] = this
       try {
-        this._running = true
-        globalThis["@effect/io/Fiber/Current"] = this
         this.evaluateEffect(effect)
       } finally {
         this._running = false
-        globalThis["@effect/io/Fiber/Current"] = void 0
+        globalThis[currentFiberURI] = prev
         // Because we're special casing `start`, we have to be responsible
         // for spinning up the fiber if there were new messages added to
         // the queue between the completion of the effect and the transition
@@ -798,7 +811,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    */
   patchRuntimeFlags(oldRuntimeFlags: RuntimeFlags.RuntimeFlags, patch: RuntimeFlagsPatch.RuntimeFlagsPatch) {
     const newRuntimeFlags = pipe(oldRuntimeFlags, _runtimeFlags.patch(patch))
-    globalThis["@effect/io/Fiber/Current"] = this
+    globalThis[currentFiberURI] = this
     this._runtimeFlags = newRuntimeFlags
     return newRuntimeFlags
   }
@@ -1595,7 +1608,7 @@ export const unsafeFork = <R, E, A, E2, B>(
   overrideScope: fiberScope.FiberScope | null = null
 ): FiberRuntime<E, A> => {
   const childFiber = unsafeMakeChildFiber(effect, parentFiber, parentRuntimeFlags, overrideScope)
-  childFiber.start(effect)
+  childFiber.resume(effect)
   return childFiber
 }
 
