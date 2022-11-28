@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.0.23
+
+### Patch Changes
+
+- [#73](https://github.com/Effect-TS/io/pull/73) [`5e22bf7`](https://github.com/Effect-TS/io/commit/5e22bf7fcf57d2bf76c08ce87561d71c7e0f02b7) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Track fibers globally
+
 ## 0.0.22
 
 ### Patch Changes
