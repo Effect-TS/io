@@ -30,12 +30,18 @@ export interface FiberScope {
 class Global implements FiberScope {
   readonly [FiberScopeTypeId]: FiberScopeTypeId = FiberScopeTypeId
   readonly fiberId = FiberId.none
-  add(runtimeFlags: RuntimeFlags.RuntimeFlags, child: FiberRuntime.FiberRuntime<any, any>): void {
-    if (_runtimeFlags.isEnabled(_runtimeFlags.FiberRoots)(runtimeFlags)) {
-      _roots.add(child)
-      child.unsafeAddObserver(() => {
-        _roots.delete(child)
-      })
+  readonly roots = new Set<FiberRuntime.FiberRuntime<any, any>>()
+  add(_runtimeFlags: RuntimeFlags.RuntimeFlags, child: FiberRuntime.FiberRuntime<any, any>): void {
+    this.roots.add(child)
+    child.unsafeAddObserver(() => {
+      this.roots.delete(child)
+    })
+  }
+  constructor() {
+    if (typeof globalThis["@effect/io/FiberScope/Global"] === "undefined") {
+      globalThis["@effect/io/FiberScope/Global"] = this
+    } else {
+      throw new Error("Bug: @effect/io/FiberScope/Global initialized twice")
     }
   }
 }
@@ -65,7 +71,4 @@ export const unsafeMake = (fiber: FiberRuntime.FiberRuntime<any, any>): FiberSco
 }
 
 /** @internal */
-export const globalScope: FiberScope = new Global()
-
-/** @internal */
-export const _roots = new Set<FiberRuntime.FiberRuntime<any, any>>()
+export const globalScope = new Global()

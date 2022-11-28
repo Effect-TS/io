@@ -422,7 +422,7 @@ export const pretty = <E, A>(self: Fiber.RuntimeFiber<E, A>): Effect.Effect<neve
 /** @internal */
 export const roots = (): Effect.Effect<never, never, Chunk.Chunk<Fiber.RuntimeFiber<any, any>>> => {
   const trace = getCallTrace()
-  return core.sync(() => Chunk.fromIterable(fiberScope._roots)).traced(trace)
+  return core.sync(() => Chunk.fromIterable(fiberScope.globalScope.roots)).traced(trace)
 }
 
 /** @internal */

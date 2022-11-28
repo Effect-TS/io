@@ -49,17 +49,6 @@ export const None: RuntimeFlag = internal.None
 export const Interruption: RuntimeFlag = internal.Interruption
 
 /**
- * The current fiber flag determines whether or not the Effect runtime system
- * will store the current fiber whenever a fiber begins executing. Use of this
- * flag will negatively impact performance, but is essential when tracking the
- * current fiber is necessary.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const CurrentFiber: RuntimeFlag = internal.CurrentFiber
-
-/**
  * The op supervision flag determines whether or not the Effect runtime system
  * will supervise all operations of the Effect runtime. Use of this flag will
  * negatively impact performance, but is required for some operations, such as
@@ -81,16 +70,6 @@ export const OpSupervision: RuntimeFlag = internal.OpSupervision
  * @category constructors
  */
 export const RuntimeMetrics: RuntimeFlag = internal.RuntimeMetrics
-
-/**
- * The fiber roots flag determines whether or not the Effect runtime system will
- * keep track of all fiber roots. Use of this flag will negatively impact
- * performance, but is required for the fiber dumps functionality.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const FiberRoots: RuntimeFlag = internal.FiberRoots
 
 /**
  * The wind down flag determines whether the Effect runtime system will execute
@@ -120,15 +99,6 @@ export const CooperativeYielding: RuntimeFlag = internal.CooperativeYielding
  * @category getters
  */
 export const cooperativeYielding: (self: RuntimeFlags) => boolean = internal.cooperativeYielding
-
-/**
- * Returns `true` if the `CurrentFiber` `RuntimeFlag` is enabled, `false`
- * otherwise.
- *
- * @since 1.0.0
- * @category getters
- */
-export const currentFiber: (self: RuntimeFlags) => boolean = internal.currentFiber
 
 /**
  * Creates a `RuntimeFlagsPatch` which describes the difference between `self`
@@ -168,18 +138,6 @@ export const disableAll: (flags: RuntimeFlags) => (self: RuntimeFlags) => Runtim
  * @category environment
  */
 export const disableCooperativeYielding: () => Layer.Layer<never, never, never> = circular.disableCooperativeYielding
-
-/**
- * @since 1.0.0
- * @category environment
- */
-export const disableCurrentFiber: () => Layer.Layer<never, never, never> = circular.disableCurrentFiber
-
-/**
- * @since 1.0.0
- * @category environment
- */
-export const disableFiberRoots: () => Layer.Layer<never, never, never> = circular.disableFiberRoots
 
 /**
  * @since 1.0.0
@@ -231,18 +189,6 @@ export const enableCooperativeYielding: () => Layer.Layer<never, never, never> =
  * @since 1.0.0
  * @category environment
  */
-export const enableCurrentFiber: () => Layer.Layer<never, never, never> = circular.enableCurrentFiber
-
-/**
- * @since 1.0.0
- * @category environment
- */
-export const enableFiberRoots: () => Layer.Layer<never, never, never> = circular.enableFiberRoots
-
-/**
- * @since 1.0.0
- * @category environment
- */
 export const enableInterruption: () => Layer.Layer<never, never, never> = circular.enableInterruption
 
 /**
@@ -262,15 +208,6 @@ export const enableRuntimeMetrics: () => Layer.Layer<never, never, never> = circ
  * @category environment
  */
 export const enableWindDown: () => Layer.Layer<never, never, never> = circular.enableWindDown
-
-/**
- * Returns `true` if the `FiberRoots` `RuntimeFlag` is enabled, `false`
- * otherwise.
- *
- * @since 1.0.0
- * @category getters
- */
-export const fiberRoots: (self: RuntimeFlags) => boolean = internal.fiberRoots
 
 /**
  * Returns true only if the `Interruption` flag is **enabled** and the
