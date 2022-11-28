@@ -604,7 +604,7 @@ describe.concurrent("Queue", () => {
       const fiber = yield* $(pipe(values, Effect.forEach((n) => pipe(queue, Queue.offer(n))), Effect.fork))
       const result = yield* $(pipe(queue, Queue.takeBetween(values.length, values.length)))
       yield* $(Fiber.interrupt(fiber))
-      assert.deepStrictEqual(result, Chunk.unsafeFromArray(values))
+      assert.deepStrictEqual(Array.from(result), values)
     }))
   it.effect("takeN returns immediately if there is enough elements", () =>
     Effect.gen(function*($) {

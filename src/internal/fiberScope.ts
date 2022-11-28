@@ -26,6 +26,8 @@ export interface FiberScope {
   add(runtimeFlags: RuntimeFlags.RuntimeFlags, child: FiberRuntime.FiberRuntime<any, any>): void
 }
 
+const globalFiberScopeURI = "@effect/io/FiberScope/Global"
+
 /** @internal */
 class Global implements FiberScope {
   readonly [FiberScopeTypeId]: FiberScopeTypeId = FiberScopeTypeId
@@ -38,10 +40,10 @@ class Global implements FiberScope {
     })
   }
   constructor() {
-    if (typeof globalThis["@effect/io/FiberScope/Global"] === "undefined") {
-      globalThis["@effect/io/FiberScope/Global"] = this
+    if (typeof globalThis[globalFiberScopeURI] === "undefined") {
+      globalThis[globalFiberScopeURI] = this
     } else {
-      throw new Error("Bug: @effect/io/FiberScope/Global initialized twice")
+      throw new Error("Bug: FiberScope.Global initialized twice (maybe coming from a duplicated module)")
     }
   }
 }

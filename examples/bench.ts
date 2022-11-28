@@ -1,11 +1,18 @@
 import * as E from "@effect/io/Effect"
+import * as F from "@effect/io/Fiber"
+import { seconds } from "@fp-ts/data/Duration"
 import { pipe } from "@fp-ts/data/Function"
 
 pipe(
-  E.succeed(0),
-  E.fold(() => E.die("error"), (n) => E.succeed(n + 1)),
-  E.repeatN(5),
-  E.timed,
-  E.flatMap(([{ millis }]) => E.log(`timed: ${millis} ms`)),
+  E.sync(() => 0),
+  E.flatMap(() =>
+    E.fork(
+      pipe(
+        E.sync(() => 1),
+        E.zipRight(E.sleep(seconds(3)))
+      )
+    )
+  ),
+  E.flatMap((_) => F.join(_)),
   E.unsafeFork
 )
