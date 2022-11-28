@@ -147,6 +147,17 @@ export default function effectPlugin(
 
         const optimizeVisitor = (node: ts.Node): ts.Node => {
           const visited = ts.visitEachChild(node, optimizeVisitor, ctx)
+          if (ts.isPropertyAccessExpression(visited)) {
+            const type = checker.getTypeAtLocation(visited)
+            if (type && type.flags & ts.TypeFlags.NumberLiteral) {
+              const literal = (type as ts.NumberLiteralType)
+              return ctx.factory.createNumericLiteral(literal.value)
+            }
+            if (type && type.flags & ts.TypeFlags.StringLiteral) {
+              const literal = (type as ts.StringLiteralType)
+              return ctx.factory.createStringLiteral(literal.value)
+            }
+          }
           if (ts.isCallExpression(visited) && visited.arguments.length > 0) {
             const signature = checker.getResolvedSignature(visited)
             const declaration = signature?.declaration

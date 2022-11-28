@@ -19,6 +19,7 @@ importers:
       '@changesets/cli': ^2.25.2
       '@effect-ts/build-utils': 0.40.3
       '@effect-ts/core': ^0.60.2
+      '@effect/core': ^0.0.16
       '@effect/language-service': ^0.0.6
       '@effect/printer': ^0.1.5
       '@fp-ts/core': ^0.0.8
@@ -71,6 +72,7 @@ importers:
       '@changesets/cli': 2.25.2
       '@effect-ts/build-utils': 0.40.3_wzvflwv62ngf22ppz3frldq37m_smskbqsf3q6kbozdrpluio47kq
       '@effect-ts/core': 0.60.4
+      '@effect/core': 0.0.16
       '@effect/language-service': 0.0.6
       '@repo-tooling/eslint-plugin-dprint': 0.0.4_delwud2hnnlzcq6m6ihqj3umw4
       '@rollup/pluginutils': 5.0.2

@@ -1,18 +1,30 @@
+import * as EC from "@effect/core/io/Effect"
 import * as E from "@effect/io/Effect"
-import * as F from "@effect/io/Fiber"
-import { seconds } from "@fp-ts/data/Duration"
 import { pipe } from "@fp-ts/data/Function"
 
-pipe(
-  E.sync(() => 0),
-  E.flatMap(() =>
-    E.fork(
-      pipe(
-        E.sync(() => 1),
-        E.zipRight(E.sleep(seconds(3)))
-      )
-    )
-  ),
-  E.flatMap((_) => F.join(_)),
-  E.unsafeFork
-)
+const newProgram = () =>
+  pipe(
+    E.succeed(0),
+    E.flatMap((n) => E.succeed(n + 1)),
+    E.repeatN(100_000),
+    E.unsafeRunPromise
+  )
+
+const oldProgram = () =>
+  pipe(
+    EC.succeed(0),
+    EC.flatMap((n) => EC.succeed(n + 1)),
+    EC.repeatN(100_000),
+    EC.unsafeRunPromise
+  )
+
+async function main() {
+  console.time("old")
+  await oldProgram()
+  console.timeEnd("old")
+  console.time("new")
+  await newProgram()
+  console.timeEnd("new")
+}
+
+main()
