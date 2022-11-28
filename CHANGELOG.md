@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.0.25
+
+### Patch Changes
+
+- [#77](https://github.com/Effect-TS/io/pull/77) [`6c3f8f0`](https://github.com/Effect-TS/io/commit/6c3f8f0a59e47e24b683ba1e034ad57b4f9ff9c1) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Add fibers to global scope before start
+
 ## 0.0.24
 
 ### Patch Changes
