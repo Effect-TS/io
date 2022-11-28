@@ -72,28 +72,10 @@ export const enableCooperativeYielding = (): Layer.Layer<never, never, never> =>
 }
 
 /** @internal */
-export const enableCurrentFiber = (): Layer.Layer<never, never, never> => {
-  return layer.scopedDiscard(
-    pipe(
-      fiberRuntime.withRuntimeFlagsScoped(runtimeFlagsPatch.enable(runtimeFlags.CurrentFiber))
-    )
-  )
-}
-
-/** @internal */
 export const enableInterruption = (): Layer.Layer<never, never, never> => {
   return layer.scopedDiscard(
     pipe(
       fiberRuntime.withRuntimeFlagsScoped(runtimeFlagsPatch.enable(runtimeFlags.Interruption))
-    )
-  )
-}
-
-/** @internal */
-export const enableFiberRoots = (): Layer.Layer<never, never, never> => {
-  return layer.scopedDiscard(
-    pipe(
-      fiberRuntime.withRuntimeFlagsScoped(runtimeFlagsPatch.enable(runtimeFlags.FiberRoots))
     )
   )
 }
@@ -135,28 +117,10 @@ export const disableCooperativeYielding = (): Layer.Layer<never, never, never> =
 }
 
 /** @internal */
-export const disableCurrentFiber = (): Layer.Layer<never, never, never> => {
-  return layer.scopedDiscard(
-    pipe(
-      fiberRuntime.withRuntimeFlagsScoped(runtimeFlagsPatch.disable(runtimeFlags.CurrentFiber))
-    )
-  )
-}
-
-/** @internal */
 export const disableInterruption = (): Layer.Layer<never, never, never> => {
   return layer.scopedDiscard(
     pipe(
       fiberRuntime.withRuntimeFlagsScoped(runtimeFlagsPatch.disable(runtimeFlags.Interruption))
-    )
-  )
-}
-
-/** @internal */
-export const disableFiberRoots = (): Layer.Layer<never, never, never> => {
-  return layer.scopedDiscard(
-    pipe(
-      fiberRuntime.withRuntimeFlagsScoped(runtimeFlagsPatch.disable(runtimeFlags.FiberRoots))
     )
   )
 }

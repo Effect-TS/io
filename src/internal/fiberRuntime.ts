@@ -22,6 +22,7 @@ import * as internalFiber from "@effect/io/internal/fiber"
 import * as FiberMessage from "@effect/io/internal/fiberMessage"
 import * as fiberRefs from "@effect/io/internal/fiberRefs"
 import * as fiberScope from "@effect/io/internal/fiberScope"
+import type { FiberScope } from "@effect/io/internal/fiberScope"
 import * as internalLogger from "@effect/io/internal/logger"
 import * as metric from "@effect/io/internal/metric"
 import * as metricBoundaries from "@effect/io/internal/metric/boundaries"
@@ -43,7 +44,6 @@ import { identity, pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
 import * as List from "@fp-ts/data/List"
 import * as MutableQueue from "@fp-ts/data/mutable/MutableQueue"
-import * as MutableRef from "@fp-ts/data/mutable/MutableRef"
 import * as Option from "@fp-ts/data/Option"
 
 const fibersStarted = metric.counter("effect_fiber_started")
@@ -83,12 +83,6 @@ const absurd = (_: never): never => {
     `BUG: FiberRuntime - ${JSON.stringify(_)} - please report an issue at https://github.com/Effect-TS/io/issues`
   )
 }
-
-/**
- * @since 1.0.0
- * @category references
- */
-export const currentFiber = MutableRef.make<FiberRuntime<any, any> | null>(null)
 
 /** @internal */
 export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
@@ -436,9 +430,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     let recurse = true
     while (recurse) {
       let evaluationSignal: EvaluationSignal = EvaluationSignalContinue
-      if (pipe(this._runtimeFlags, _runtimeFlags.isEnabled(_runtimeFlags.CurrentFiber))) {
-        pipe(currentFiber, MutableRef.set(this as FiberRuntime<any, any> | null))
-      }
+      globalThis["@effect/io/Fiber/Current"] = this
       try {
         while (evaluationSignal === EvaluationSignalContinue) {
           evaluationSignal = MutableQueue.isEmpty(this._queue) ?
@@ -447,9 +439,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
         }
       } finally {
         this._running = false
-        if (pipe(this._runtimeFlags, _runtimeFlags.isEnabled(_runtimeFlags.CurrentFiber))) {
-          pipe(currentFiber, MutableRef.set(null as FiberRuntime<any, any> | null))
-        }
+        globalThis["@effect/io/Fiber/Current"] = void 0
       }
       // Maybe someone added something to the queue between us checking, and us
       // giving up the drain. If so, we need to restart the draining, but only
@@ -771,9 +761,11 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     if (!this._running) {
       try {
         this._running = true
+        globalThis["@effect/io/Fiber/Current"] = this
         this.evaluateEffect(effect)
       } finally {
         this._running = false
+        globalThis["@effect/io/Fiber/Current"] = void 0
         // Because we're special casing `start`, we have to be responsible
         // for spinning up the fiber if there were new messages added to
         // the queue between the completion of the effect and the transition
@@ -806,11 +798,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    */
   patchRuntimeFlags(oldRuntimeFlags: RuntimeFlags.RuntimeFlags, patch: RuntimeFlagsPatch.RuntimeFlagsPatch) {
     const newRuntimeFlags = pipe(oldRuntimeFlags, _runtimeFlags.patch(patch))
-    if (pipe(patch, RuntimeFlagsPatch.isEnabled(_runtimeFlags.CurrentFiber))) {
-      pipe(currentFiber, MutableRef.set(this as FiberRuntime<any, any> | null))
-    } else if (pipe(patch, RuntimeFlagsPatch.isDisabled(_runtimeFlags.CurrentFiber))) {
-      pipe(currentFiber, MutableRef.set(null as FiberRuntime<any, any> | null))
-    }
+    globalThis["@effect/io/Fiber/Current"] = this
     this._runtimeFlags = newRuntimeFlags
     return newRuntimeFlags
   }
@@ -1309,7 +1297,10 @@ export const collectAllWithPar = <A, B>(pf: (a: A) => Option.Option<B>) => {
 /** @internal */
 export const daemonChildren = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
-  const forkScope = pipe(core.forkScopeOverride, core.fiberRefLocally(Option.some(fiberScope.globalScope)))
+  const forkScope = pipe(
+    core.forkScopeOverride,
+    core.fiberRefLocally(Option.some(fiberScope.globalScope as FiberScope))
+  )
   return forkScope(self).traced(trace)
 }
 

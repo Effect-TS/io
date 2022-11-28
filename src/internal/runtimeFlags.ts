@@ -10,31 +10,23 @@ export const None: RuntimeFlags.RuntimeFlag = 0 as RuntimeFlags.RuntimeFlag
 export const Interruption: RuntimeFlags.RuntimeFlag = 1 << 0 as RuntimeFlags.RuntimeFlag
 
 /** @internal */
-export const CurrentFiber: RuntimeFlags.RuntimeFlag = 1 << 1 as RuntimeFlags.RuntimeFlag
+export const OpSupervision: RuntimeFlags.RuntimeFlag = 1 << 1 as RuntimeFlags.RuntimeFlag
 
 /** @internal */
-export const OpSupervision: RuntimeFlags.RuntimeFlag = 1 << 2 as RuntimeFlags.RuntimeFlag
+export const RuntimeMetrics: RuntimeFlags.RuntimeFlag = 1 << 2 as RuntimeFlags.RuntimeFlag
 
 /** @internal */
-export const RuntimeMetrics: RuntimeFlags.RuntimeFlag = 1 << 3 as RuntimeFlags.RuntimeFlag
+export const WindDown: RuntimeFlags.RuntimeFlag = 1 << 4 as RuntimeFlags.RuntimeFlag
 
 /** @internal */
-export const FiberRoots: RuntimeFlags.RuntimeFlag = 1 << 4 as RuntimeFlags.RuntimeFlag
-
-/** @internal */
-export const WindDown: RuntimeFlags.RuntimeFlag = 1 << 5 as RuntimeFlags.RuntimeFlag
-
-/** @internal */
-export const CooperativeYielding: RuntimeFlags.RuntimeFlag = 1 << 6 as RuntimeFlags.RuntimeFlag
+export const CooperativeYielding: RuntimeFlags.RuntimeFlag = 1 << 5 as RuntimeFlags.RuntimeFlag
 
 /** @internal */
 export const allFlags: ReadonlyArray<RuntimeFlags.RuntimeFlag> = [
   None,
   Interruption,
-  CurrentFiber,
   OpSupervision,
   RuntimeMetrics,
-  FiberRoots,
   WindDown,
   CooperativeYielding
 ]
@@ -62,16 +54,6 @@ export const enable = (flag: RuntimeFlags.RuntimeFlag) => {
 /** @internal */
 export const enableAll = (flags: RuntimeFlags.RuntimeFlags) => {
   return (self: RuntimeFlags.RuntimeFlags): RuntimeFlags.RuntimeFlags => (self | flags) as RuntimeFlags.RuntimeFlags
-}
-
-/** @internal */
-export const currentFiber = (self: RuntimeFlags.RuntimeFlags): boolean => {
-  return isEnabled(CurrentFiber)(self)
-}
-
-/** @internal */
-export const fiberRoots = (self: RuntimeFlags.RuntimeFlags): boolean => {
-  return isEnabled(FiberRoots)(self)
 }
 
 /** @internal */

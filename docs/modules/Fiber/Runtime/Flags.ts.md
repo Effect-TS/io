@@ -14,8 +14,6 @@ Added in v1.0.0
 
 - [constructors](#constructors)
   - [CooperativeYielding](#cooperativeyielding)
-  - [CurrentFiber](#currentfiber)
-  - [FiberRoots](#fiberroots)
   - [Interruption](#interruption)
   - [None](#none)
   - [OpSupervision](#opsupervision)
@@ -33,23 +31,17 @@ Added in v1.0.0
   - [isEnabled](#isenabled)
 - [environment](#environment)
   - [disableCooperativeYielding](#disablecooperativeyielding)
-  - [disableCurrentFiber](#disablecurrentfiber)
-  - [disableFiberRoots](#disablefiberroots)
   - [disableInterruption](#disableinterruption)
   - [disableOpSupervision](#disableopsupervision)
   - [disableRuntimeMetrics](#disableruntimemetrics)
   - [disableWindDown](#disablewinddown)
   - [enableCooperativeYielding](#enablecooperativeyielding)
-  - [enableCurrentFiber](#enablecurrentfiber)
-  - [enableFiberRoots](#enablefiberroots)
   - [enableInterruption](#enableinterruption)
   - [enableOpSupervision](#enableopsupervision)
   - [enableRuntimeMetrics](#enableruntimemetrics)
   - [enableWindDown](#enablewinddown)
 - [getters](#getters)
   - [cooperativeYielding](#cooperativeyielding)
-  - [currentFiber](#currentfiber)
-  - [fiberRoots](#fiberroots)
   - [interruptible](#interruptible)
   - [interruption](#interruption)
   - [opSupervision](#opsupervision)
@@ -79,35 +71,6 @@ yield to another fiber.
 
 ```ts
 export declare const CooperativeYielding: RuntimeFlag
-```
-
-Added in v1.0.0
-
-## CurrentFiber
-
-The current fiber flag determines whether or not the Effect runtime system
-will store the current fiber whenever a fiber begins executing. Use of this
-flag will negatively impact performance, but is essential when tracking the
-current fiber is necessary.
-
-**Signature**
-
-```ts
-export declare const CurrentFiber: RuntimeFlag
-```
-
-Added in v1.0.0
-
-## FiberRoots
-
-The fiber roots flag determines whether or not the Effect runtime system will
-keep track of all fiber roots. Use of this flag will negatively impact
-performance, but is required for the fiber dumps functionality.
-
-**Signature**
-
-```ts
-export declare const FiberRoots: RuntimeFlag
 ```
 
 Added in v1.0.0
@@ -282,26 +245,6 @@ export declare const disableCooperativeYielding: () => Layer.Layer<never, never,
 
 Added in v1.0.0
 
-## disableCurrentFiber
-
-**Signature**
-
-```ts
-export declare const disableCurrentFiber: () => Layer.Layer<never, never, never>
-```
-
-Added in v1.0.0
-
-## disableFiberRoots
-
-**Signature**
-
-```ts
-export declare const disableFiberRoots: () => Layer.Layer<never, never, never>
-```
-
-Added in v1.0.0
-
 ## disableInterruption
 
 **Signature**
@@ -348,26 +291,6 @@ Added in v1.0.0
 
 ```ts
 export declare const enableCooperativeYielding: () => Layer.Layer<never, never, never>
-```
-
-Added in v1.0.0
-
-## enableCurrentFiber
-
-**Signature**
-
-```ts
-export declare const enableCurrentFiber: () => Layer.Layer<never, never, never>
-```
-
-Added in v1.0.0
-
-## enableFiberRoots
-
-**Signature**
-
-```ts
-export declare const enableFiberRoots: () => Layer.Layer<never, never, never>
 ```
 
 Added in v1.0.0
@@ -423,32 +346,6 @@ otherwise.
 
 ```ts
 export declare const cooperativeYielding: (self: RuntimeFlags) => boolean
-```
-
-Added in v1.0.0
-
-## currentFiber
-
-Returns `true` if the `CurrentFiber` `RuntimeFlag` is enabled, `false`
-otherwise.
-
-**Signature**
-
-```ts
-export declare const currentFiber: (self: RuntimeFlags) => boolean
-```
-
-Added in v1.0.0
-
-## fiberRoots
-
-Returns `true` if the `FiberRoots` `RuntimeFlag` is enabled, `false`
-otherwise.
-
-**Signature**
-
-```ts
-export declare const fiberRoots: (self: RuntimeFlags) => boolean
 ```
 
 Added in v1.0.0

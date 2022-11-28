@@ -230,7 +230,6 @@ export const runtime = <R>(): Effect.Effect<R, never, Runtime.Runtime<R>> => {
 
 /** @internal */
 export const defaultRuntimeFlags: RuntimeFlags.RuntimeFlags = runtimeFlags.make(
-  runtimeFlags.FiberRoots,
   runtimeFlags.Interruption,
   runtimeFlags.CooperativeYielding
 )

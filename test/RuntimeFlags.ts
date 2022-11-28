@@ -7,10 +7,8 @@ import { assert, describe, it } from "vitest"
 const arbRuntimeFlag = fc.constantFrom(
   RuntimeFlags.None,
   RuntimeFlags.Interruption,
-  RuntimeFlags.CurrentFiber,
   RuntimeFlags.OpSupervision,
   RuntimeFlags.RuntimeMetrics,
-  RuntimeFlags.FiberRoots,
   RuntimeFlags.WindDown,
   RuntimeFlags.CooperativeYielding
 )
@@ -22,21 +20,19 @@ const arbRuntimeFlags = fc.uniqueArray(arbRuntimeFlag).map(
 describe.concurrent("RuntimeFlags", () => {
   it("isDisabled & isEnabled", () => {
     const flags = RuntimeFlags.make(
-      RuntimeFlags.CurrentFiber,
+      RuntimeFlags.RuntimeMetrics,
       RuntimeFlags.Interruption
     )
-    assert.isTrue(pipe(flags, RuntimeFlags.isEnabled(RuntimeFlags.CurrentFiber)))
+    assert.isTrue(pipe(flags, RuntimeFlags.isEnabled(RuntimeFlags.RuntimeMetrics)))
     assert.isTrue(pipe(flags, RuntimeFlags.isEnabled(RuntimeFlags.Interruption)))
     assert.isFalse(pipe(flags, RuntimeFlags.isEnabled(RuntimeFlags.CooperativeYielding)))
-    assert.isFalse(pipe(flags, RuntimeFlags.isEnabled(RuntimeFlags.FiberRoots)))
     assert.isFalse(pipe(flags, RuntimeFlags.isEnabled(RuntimeFlags.OpSupervision)))
-    assert.isFalse(pipe(flags, RuntimeFlags.isEnabled(RuntimeFlags.RuntimeMetrics)))
     assert.isFalse(pipe(flags, RuntimeFlags.isEnabled(RuntimeFlags.WindDown)))
   })
 
   it("enabled patching", () => {
     const patch = pipe(
-      RuntimeFlagsPatch.enable(RuntimeFlags.CurrentFiber),
+      RuntimeFlagsPatch.enable(RuntimeFlags.RuntimeMetrics),
       RuntimeFlagsPatch.andThen(RuntimeFlagsPatch.enable(RuntimeFlags.OpSupervision))
     )
     const result = pipe(
@@ -44,7 +40,7 @@ describe.concurrent("RuntimeFlags", () => {
       RuntimeFlags.patch(patch)
     )
     const expected = RuntimeFlags.make(
-      RuntimeFlags.CurrentFiber,
+      RuntimeFlags.RuntimeMetrics,
       RuntimeFlags.OpSupervision
     )
     assert.strictEqual(result, expected)
@@ -52,15 +48,15 @@ describe.concurrent("RuntimeFlags", () => {
 
   it("inverse patching", () => {
     const flags = RuntimeFlags.make(
-      RuntimeFlags.CurrentFiber,
+      RuntimeFlags.RuntimeMetrics,
       RuntimeFlags.OpSupervision
     )
     const patch1 = pipe(
-      RuntimeFlagsPatch.enable(RuntimeFlags.CurrentFiber),
+      RuntimeFlagsPatch.enable(RuntimeFlags.RuntimeMetrics),
       RuntimeFlagsPatch.inverse
     )
     const patch2 = pipe(
-      RuntimeFlagsPatch.enable(RuntimeFlags.CurrentFiber),
+      RuntimeFlagsPatch.enable(RuntimeFlags.RuntimeMetrics),
       RuntimeFlagsPatch.andThen(RuntimeFlagsPatch.enable(RuntimeFlags.OpSupervision)),
       RuntimeFlagsPatch.inverse
     )
@@ -75,8 +71,8 @@ describe.concurrent("RuntimeFlags", () => {
   })
 
   it("diff", () => {
-    const flags1 = RuntimeFlags.make(RuntimeFlags.CurrentFiber)
-    const flags2 = RuntimeFlags.make(RuntimeFlags.CurrentFiber, RuntimeFlags.OpSupervision)
+    const flags1 = RuntimeFlags.make(RuntimeFlags.RuntimeMetrics)
+    const flags2 = RuntimeFlags.make(RuntimeFlags.RuntimeMetrics, RuntimeFlags.OpSupervision)
     assert.strictEqual(
       pipe(flags1, RuntimeFlags.diff(flags2)),
       RuntimeFlagsPatch.enable(RuntimeFlags.OpSupervision)
