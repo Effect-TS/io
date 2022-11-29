@@ -131,6 +131,43 @@ const contOpSuccess = {
   }
 }
 
+const drainQueueWhileRunningTable = {
+  [FiberMessage.OP_INTERRUPT_SIGNAL]: (
+    self: FiberRuntime<any, any>,
+    runtimeFlags: RuntimeFlags.RuntimeFlags,
+    cur: Effect.Effect<any, any, any>,
+    message: FiberMessage.FiberMessage & { op: FiberMessage.OP_INTERRUPT_SIGNAL }
+  ) => {
+    self.processNewInterruptSignal(message.cause)
+    return _runtimeFlags.interruptible(runtimeFlags) ? core.exitFailCause(message.cause) : cur
+  },
+  [FiberMessage.OP_RESUME]: (
+    _self: FiberRuntime<any, any>,
+    _runtimeFlags: RuntimeFlags.RuntimeFlags,
+    _cur: Effect.Effect<any, any, any>,
+    _message: FiberMessage.FiberMessage
+  ) => {
+    throw new Error("It is illegal to have multiple concurrent run loops in a single fiber")
+  },
+  [FiberMessage.OP_STATEFUL]: (
+    self: FiberRuntime<any, any>,
+    runtimeFlags: RuntimeFlags.RuntimeFlags,
+    cur: Effect.Effect<any, any, any>,
+    message: FiberMessage.FiberMessage & { op: FiberMessage.OP_STATEFUL }
+  ) => {
+    message.onFiber(self, FiberStatus.running(runtimeFlags))
+    return cur
+  },
+  [FiberMessage.OP_YIELD_NOW]: (
+    _self: FiberRuntime<any, any>,
+    _runtimeFlags: RuntimeFlags.RuntimeFlags,
+    cur: Effect.Effect<any, any, any>,
+    _message: FiberMessage.FiberMessage & { op: FiberMessage.OP_YIELD_NOW }
+  ) => {
+    return pipe(core.yieldNow(), core.flatMap(() => cur))
+  }
+}
+
 /** @internal */
 export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   readonly [internalFiber.FiberTypeId] = internalFiber.fiberVariance
@@ -542,28 +579,8 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     let cur = cur0
     while (!MutableQueue.isEmpty(this._queue)) {
       const message = pipe(this._queue, MutableQueue.poll(void 0))!
-      switch (message.op) {
-        case FiberMessage.OP_INTERRUPT_SIGNAL: {
-          this.processNewInterruptSignal(message.cause)
-          cur = _runtimeFlags.interruptible(runtimeFlags) ? core.exitFailCause(message.cause) : cur
-          break
-        }
-        case FiberMessage.OP_RESUME: {
-          throw new Error("It is illegal to have multiple concurrent run loops in a single fiber")
-        }
-        case FiberMessage.OP_STATEFUL: {
-          message.onFiber(this, FiberStatus.running(runtimeFlags))
-          break
-        }
-        case FiberMessage.OP_YIELD_NOW: {
-          const oldCur = cur
-          cur = pipe(core.yieldNow(), core.flatMap(() => oldCur))
-          break
-        }
-        default: {
-          absurd(message)
-        }
-      }
+      // @ts-expect-error
+      cur = drainQueueWhileRunningTable[message.op](this, runtimeFlags, cur, message)
     }
     return cur
   }
