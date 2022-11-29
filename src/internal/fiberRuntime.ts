@@ -86,6 +86,51 @@ const absurd = (_: never): never => {
 
 const currentFiberURI = "@effect/io/Fiber/Current"
 
+const contOpSuccess = {
+  [OpCodes.OP_ON_SUCCESS]: (
+    self: FiberRuntime<any, any>,
+    cont: core.OnSuccess,
+    value: unknown
+  ) => {
+    self.onExecute(cont)
+    return cont.successK(value)
+  },
+  [OpCodes.OP_ON_SUCCESS_AND_FAILURE]: (
+    self: FiberRuntime<any, any>,
+    cont: core.OnSuccessAndFailure,
+    value: unknown
+  ) => {
+    self.onExecute(cont)
+    return cont.successK(value)
+  },
+  [OpCodes.OP_REVERT_FLAGS]: (
+    self: FiberRuntime<any, any>,
+    cont: core.RevertFlags,
+    value: unknown
+  ) => {
+    self.patchRuntimeFlags(self._runtimeFlags, cont.patch)
+    if (_runtimeFlags.interruptible(self._runtimeFlags) && self.isInterrupted()) {
+      return core.exitFailCause(self.getInterruptedCause())
+    } else {
+      return core.succeed(value)
+    }
+  },
+  [OpCodes.OP_WHILE]: (
+    self: FiberRuntime<any, any>,
+    cont: core.While,
+    value: unknown
+  ) => {
+    cont.process(value)
+    if (cont.check()) {
+      self.pushStack(cont)
+      self.onExecute(cont)
+      return cont.body()
+    } else {
+      return core.unit()
+    }
+  }
+}
+
 /** @internal */
 export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   readonly [internalFiber.FiberTypeId] = internalFiber.fiberVariance
@@ -94,7 +139,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
 
   private _fiberRefs: FiberRefs.FiberRefs
   private _fiberId: FiberId.Runtime
-  private _runtimeFlags: RuntimeFlags.RuntimeFlags
+  public _runtimeFlags: RuntimeFlags.RuntimeFlags
   constructor(
     fiberId: FiberId.Runtime,
     fiberRefs0: FiberRefs.FiberRefs,
@@ -889,6 +934,199 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     }
   }
 
+  [OpCodes.OP_SYNC](op: core.Primitive & { op: OpCodes.OP_SYNC }) {
+    this.onExecute(op)
+    const value = op.evaluate()
+    const cont = this.getNextSuccessCont()
+    if (cont !== undefined) {
+      if (!(cont.op in contOpSuccess)) {
+        // @ts-expect-error
+        absurd(cont)
+      }
+      // @ts-expect-error
+      return contOpSuccess[cont.op](this, cont, value)
+    } else {
+      throw core.exitSucceed(value)
+    }
+  }
+
+  [OpCodes.OP_SUCCESS](op: core.Primitive & { op: OpCodes.OP_SUCCESS }) {
+    this.onExecute(op)
+    const oldCur = op
+    const cont = this.getNextSuccessCont()
+    if (cont !== undefined) {
+      if (!(cont.op in contOpSuccess)) {
+        // @ts-expect-error
+        absurd(cont)
+      }
+      // @ts-expect-error
+      return contOpSuccess[cont.op](this, cont, oldCur.value)
+    } else {
+      throw oldCur
+    }
+  }
+
+  [OpCodes.OP_FAILURE](op: core.Primitive & { op: OpCodes.OP_FAILURE }) {
+    this.onExecute(op)
+    let cause = op.cause
+    if (this._tracesInStack > 0 || (this._executionTrace && this._executionTrace.size > 0)) {
+      if (Cause.isAnnotatedType(cause) && Cause.isStackAnnotation(cause.annotation)) {
+        const stack = cause.annotation.stack
+        const execution = cause.annotation.execution
+        const currentStack = this.stackToLines()
+        const currentExecution = this._executionTrace?.toChunkReversed() || Chunk.empty
+        cause = Cause.annotated(
+          cause.cause,
+          new StackAnnotation(
+            pipe(
+              stack.length === 0 ?
+                currentStack :
+                currentStack.length === 0 ?
+                stack :
+                Chunk.unsafeLast(stack) === Chunk.unsafeLast(currentStack) ?
+                stack :
+                pipe(
+                  stack,
+                  Chunk.concat(currentStack)
+                ),
+              Chunk.dedupeAdjacent,
+              Chunk.take(runtimeDebug.traceStackLimit)
+            ),
+            pipe(
+              execution.length === 0 ?
+                currentExecution :
+                currentExecution.length === 0 ?
+                execution :
+                Chunk.unsafeLast(execution) === Chunk.unsafeLast(currentExecution) ?
+                execution :
+                pipe(
+                  execution,
+                  Chunk.concat(currentExecution)
+                ),
+              Chunk.dedupeAdjacent,
+              Chunk.take(runtimeDebug.traceExecutionLimit)
+            )
+          )
+        )
+      } else {
+        cause = Cause.annotated(
+          op.cause,
+          new StackAnnotation(this.stackToLines(), this._executionTrace?.toChunkReversed() || Chunk.empty)
+        )
+      }
+    }
+    const cont = this.getNextFailCont()
+    if (cont !== undefined) {
+      switch (cont.op) {
+        case OpCodes.OP_ON_FAILURE:
+        case OpCodes.OP_ON_SUCCESS_AND_FAILURE: {
+          if (!(_runtimeFlags.interruptible(this._runtimeFlags) && this.isInterrupted())) {
+            this.onExecute(cont)
+            return cont.failK(cause)
+          } else {
+            return core.failCause(Cause.stripFailures(cause))
+          }
+        }
+        case OpCodes.OP_REVERT_FLAGS: {
+          this.patchRuntimeFlags(this._runtimeFlags, cont.patch)
+          if (_runtimeFlags.interruptible(this._runtimeFlags) && this.isInterrupted()) {
+            return core.exitFailCause(Cause.sequential(cause, this.getInterruptedCause()))
+          } else {
+            return core.failCause(cause)
+          }
+        }
+        default: {
+          absurd(cont)
+        }
+      }
+    } else {
+      throw Exit.failCause(cause)
+    }
+  }
+
+  [OpCodes.OP_WITH_RUNTIME](op: core.Primitive & { op: OpCodes.OP_WITH_RUNTIME }) {
+    this.onExecute(op)
+    return op.withRuntime(
+      this as FiberRuntime<unknown, unknown>,
+      FiberStatus.running(this._runtimeFlags) as FiberStatus.Running
+    )
+  }
+
+  [OpCodes.OP_UPDATE_RUNTIME_FLAGS](op: core.Primitive & { op: OpCodes.OP_UPDATE_RUNTIME_FLAGS }) {
+    this.onExecute(op)
+    if (op.scope === undefined) {
+      this.patchRuntimeFlags(this._runtimeFlags, op.update)
+      return core.unit()
+    } else {
+      const updateFlags = op.update
+      const oldRuntimeFlags = this._runtimeFlags
+      const newRuntimeFlags = pipe(oldRuntimeFlags, _runtimeFlags.patch(updateFlags))
+      if (newRuntimeFlags === oldRuntimeFlags) {
+        // No change, short circuit
+        return op.scope(oldRuntimeFlags)
+      } else {
+        // One more chance to short circuit: if we're immediately going
+        // to interrupt. Interruption will cause immediate reversion of
+        // the flag, so as long as we "peek ahead", there's no need to
+        // set them to begin with.
+        if (_runtimeFlags.interruptible(newRuntimeFlags) && this.isInterrupted()) {
+          return core.exitFailCause(this.getInterruptedCause())
+        } else {
+          // Impossible to short circuit, so record the changes
+          this.patchRuntimeFlags(this._runtimeFlags, updateFlags)
+          // Since we updated the flags, we need to revert them
+          const revertFlags = pipe(newRuntimeFlags, _runtimeFlags.diff(oldRuntimeFlags))
+          this.pushStack(new core.RevertFlags(revertFlags))
+          return op.scope(oldRuntimeFlags)
+        }
+      }
+    }
+  }
+
+  [OpCodes.OP_ON_SUCCESS](op: core.Primitive & { op: OpCodes.OP_ON_SUCCESS }) {
+    this.pushStack(op)
+    return op.first
+  }
+
+  [OpCodes.OP_ON_FAILURE](op: core.Primitive & { op: OpCodes.OP_ON_FAILURE }) {
+    this.pushStack(op)
+    return op.first
+  }
+
+  [OpCodes.OP_ON_SUCCESS_AND_FAILURE](op: core.Primitive & { op: OpCodes.OP_ON_SUCCESS_AND_FAILURE }) {
+    this.pushStack(op)
+    return op.first
+  }
+
+  [OpCodes.OP_ASYNC](op: core.Primitive & { op: OpCodes.OP_ASYNC }) {
+    this.onExecute(op)
+    this._asyncBlockingOn = op.blockingOn
+    this.initiateAsync(this._runtimeFlags, op.register)
+    throw op
+  }
+
+  [OpCodes.OP_YIELD](op: core.Primitive & { op: OpCodes.OP_YIELD }) {
+    this.onExecute(op)
+    throw op
+  }
+
+  [OpCodes.OP_WHILE](op: core.Primitive & { op: OpCodes.OP_WHILE }) {
+    const check = op.check
+    const body = op.body
+    if (check()) {
+      this.onExecute(op)
+      this.pushStack(op)
+      return body()
+    } else {
+      return core.unit()
+    }
+  }
+
+  [OpCodes.OP_COMMIT](op: core.Primitive & { op: OpCodes.OP_COMMIT }) {
+    this.onExecute(op)
+    return op.commit
+  }
+
   /**
    * The main run-loop for evaluating effects.
    *
@@ -910,245 +1148,12 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
         cur = pipe(core.yieldNow(), core.flatMap(() => oldCur))
       }
       try {
-        const op = cur as core.Primitive
-        switch (op.op) {
-          case OpCodes.OP_SYNC: {
-            this.onExecute(op)
-            const value = op.evaluate()
-            const cont = this.getNextSuccessCont()
-            if (cont !== undefined) {
-              switch (cont.op) {
-                case OpCodes.OP_ON_SUCCESS:
-                case OpCodes.OP_ON_SUCCESS_AND_FAILURE: {
-                  this.onExecute(cont)
-                  cur = cont.successK(value)
-                  break
-                }
-                case OpCodes.OP_REVERT_FLAGS: {
-                  this.patchRuntimeFlags(this._runtimeFlags, cont.patch)
-                  if (_runtimeFlags.interruptible(this._runtimeFlags) && this.isInterrupted()) {
-                    cur = core.exitFailCause(this.getInterruptedCause())
-                  } else {
-                    cur = core.succeed(value)
-                  }
-                  break
-                }
-                case OpCodes.OP_WHILE: {
-                  cont.process(value)
-                  if (cont.check()) {
-                    this.pushStack(cont)
-                    this.onExecute(cont)
-                    cur = cont.body()
-                  } else {
-                    cur = core.unit()
-                  }
-                  break
-                }
-                default: {
-                  absurd(cont)
-                }
-              }
-            } else {
-              return core.exitSucceed(value)
-            }
-            break
-          }
-          case OpCodes.OP_SUCCESS: {
-            this.onExecute(op)
-            const oldCur = op
-            const cont = this.getNextSuccessCont()
-            if (cont !== undefined) {
-              switch (cont.op) {
-                case OpCodes.OP_ON_SUCCESS:
-                case OpCodes.OP_ON_SUCCESS_AND_FAILURE: {
-                  this.onExecute(cont)
-                  cur = cont.successK(oldCur.value)
-                  break
-                }
-                case OpCodes.OP_REVERT_FLAGS: {
-                  this.patchRuntimeFlags(this._runtimeFlags, cont.patch)
-                  if (_runtimeFlags.interruptible(this._runtimeFlags) && this.isInterrupted()) {
-                    cur = core.exitFailCause(this.getInterruptedCause())
-                  }
-                  break
-                }
-                case OpCodes.OP_WHILE: {
-                  cont.process(oldCur.value)
-                  if (cont.check()) {
-                    this.pushStack(cont)
-                    this.onExecute(cont)
-                    cur = cont.body()
-                  } else {
-                    cur = core.unit()
-                  }
-                  break
-                }
-                default: {
-                  absurd(cont)
-                }
-              }
-            } else {
-              return oldCur
-            }
-            break
-          }
-          case OpCodes.OP_FAILURE: {
-            this.onExecute(op)
-            let cause = op.cause
-            if (this._tracesInStack > 0 || (this._executionTrace && this._executionTrace.size > 0)) {
-              if (Cause.isAnnotatedType(cause) && Cause.isStackAnnotation(cause.annotation)) {
-                const stack = cause.annotation.stack
-                const execution = cause.annotation.execution
-                const currentStack = this.stackToLines()
-                const currentExecution = this._executionTrace?.toChunkReversed() || Chunk.empty
-                cause = Cause.annotated(
-                  cause.cause,
-                  new StackAnnotation(
-                    pipe(
-                      stack.length === 0 ?
-                        currentStack :
-                        currentStack.length === 0 ?
-                        stack :
-                        Chunk.unsafeLast(stack) === Chunk.unsafeLast(currentStack) ?
-                        stack :
-                        pipe(
-                          stack,
-                          Chunk.concat(currentStack)
-                        ),
-                      Chunk.dedupeAdjacent,
-                      Chunk.take(runtimeDebug.traceStackLimit)
-                    ),
-                    pipe(
-                      execution.length === 0 ?
-                        currentExecution :
-                        currentExecution.length === 0 ?
-                        execution :
-                        Chunk.unsafeLast(execution) === Chunk.unsafeLast(currentExecution) ?
-                        execution :
-                        pipe(
-                          execution,
-                          Chunk.concat(currentExecution)
-                        ),
-                      Chunk.dedupeAdjacent,
-                      Chunk.take(runtimeDebug.traceExecutionLimit)
-                    )
-                  )
-                )
-              } else {
-                cause = Cause.annotated(
-                  op.cause,
-                  new StackAnnotation(this.stackToLines(), this._executionTrace?.toChunkReversed() || Chunk.empty)
-                )
-              }
-            }
-            const cont = this.getNextFailCont()
-            if (cont !== undefined) {
-              switch (cont.op) {
-                case OpCodes.OP_ON_FAILURE:
-                case OpCodes.OP_ON_SUCCESS_AND_FAILURE: {
-                  if (!(_runtimeFlags.interruptible(this._runtimeFlags) && this.isInterrupted())) {
-                    this.onExecute(cont)
-                    cur = cont.failK(cause)
-                  } else {
-                    cur = core.failCause(Cause.stripFailures(cause))
-                  }
-                  break
-                }
-                case OpCodes.OP_REVERT_FLAGS: {
-                  this.patchRuntimeFlags(this._runtimeFlags, cont.patch)
-                  if (_runtimeFlags.interruptible(this._runtimeFlags) && this.isInterrupted()) {
-                    cur = core.exitFailCause(Cause.sequential(cause, this.getInterruptedCause()))
-                  } else {
-                    cur = core.failCause(cause)
-                  }
-                  break
-                }
-                default: {
-                  absurd(cont)
-                }
-              }
-            } else {
-              return Exit.failCause(cause)
-            }
-            break
-          }
-          case OpCodes.OP_WITH_RUNTIME: {
-            this.onExecute(op)
-            cur = op.withRuntime(
-              this as FiberRuntime<unknown, unknown>,
-              FiberStatus.running(this._runtimeFlags) as FiberStatus.Running
-            )
-            break
-          }
-          case OpCodes.OP_UPDATE_RUNTIME_FLAGS: {
-            this.onExecute(op)
-            if (op.scope === undefined) {
-              this.patchRuntimeFlags(this._runtimeFlags, op.update)
-              cur = core.unit()
-            } else {
-              const updateFlags = op.update
-              const oldRuntimeFlags = this._runtimeFlags
-              const newRuntimeFlags = pipe(oldRuntimeFlags, _runtimeFlags.patch(updateFlags))
-              if (newRuntimeFlags === oldRuntimeFlags) {
-                // No change, short circuit
-                cur = op.scope(oldRuntimeFlags)
-              } else {
-                // One more chance to short circuit: if we're immediately going
-                // to interrupt. Interruption will cause immediate reversion of
-                // the flag, so as long as we "peek ahead", there's no need to
-                // set them to begin with.
-                if (_runtimeFlags.interruptible(newRuntimeFlags) && this.isInterrupted()) {
-                  cur = core.exitFailCause(this.getInterruptedCause())
-                } else {
-                  // Impossible to short circuit, so record the changes
-                  this.patchRuntimeFlags(this._runtimeFlags, updateFlags)
-                  // Since we updated the flags, we need to revert them
-                  const revertFlags = pipe(newRuntimeFlags, _runtimeFlags.diff(oldRuntimeFlags))
-                  this.pushStack(new core.RevertFlags(revertFlags))
-                  cur = op.scope(oldRuntimeFlags)
-                }
-              }
-            }
-            break
-          }
-          case OpCodes.OP_ON_SUCCESS:
-          case OpCodes.OP_ON_FAILURE:
-          case OpCodes.OP_ON_SUCCESS_AND_FAILURE: {
-            this.pushStack(op)
-            cur = op.first
-            break
-          }
-          case OpCodes.OP_ASYNC: {
-            this.onExecute(op)
-            this._asyncBlockingOn = op.blockingOn
-            this.initiateAsync(this._runtimeFlags, op.register)
-            throw op
-          }
-          case OpCodes.OP_YIELD: {
-            this.onExecute(op)
-            throw op
-          }
-          case OpCodes.OP_WHILE: {
-            const check = op.check
-            const body = op.body
-            if (check()) {
-              this.onExecute(op)
-              cur = body()
-              this.pushStack(op)
-            } else {
-              cur = core.unit()
-            }
-            break
-          }
-          case OpCodes.OP_COMMIT: {
-            this.onExecute(op)
-            cur = op.commit
-            break
-          }
-          default: {
-            absurd(op)
-          }
+        if (!((cur as core.Primitive).op in this)) {
+          // @ts-expect-error
+          absurd(cur)
         }
+        // @ts-expect-error
+        cur = this[(cur as core.Primitive).op](cur as core.Primitive)
       } catch (e) {
         if (core.isEffect(e)) {
           if (
@@ -1156,6 +1161,12 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
             (e as core.Primitive).op === OpCodes.OP_ASYNC
           ) {
             throw e
+          }
+          if (
+            (e as core.Primitive).op === OpCodes.OP_SUCCESS ||
+            (e as core.Primitive).op === OpCodes.OP_FAILURE
+          ) {
+            return e as Exit.Exit<E, A>
           }
         } else {
           if (core.isEffectError(e)) {
