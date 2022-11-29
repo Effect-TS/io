@@ -56,9 +56,9 @@
     }
   },
   "dependencies": {
-    "@effect/printer": "^0.1.5",
-    "@fp-ts/core": "^0.0.8",
-    "@fp-ts/data": "^0.0.17"
+    "@effect/printer": "^0.1.6",
+    "@fp-ts/core": "^0.0.9",
+    "@fp-ts/data": "^0.0.18"
   },
   "devDependencies": {
     "@babel/cli": "^7.18.6",
@@ -79,8 +79,8 @@
     "@types/node": "^18.11.9",
     "@types/prettier": "2.7.1",
     "@types/rimraf": "^3.0.2",
-    "@typescript-eslint/eslint-plugin": "^5.44.0",
-    "@typescript-eslint/parser": "^5.44.0",
+    "@typescript-eslint/eslint-plugin": "^5.45.0",
+    "@typescript-eslint/parser": "^5.45.0",
     "@vitest/coverage-c8": "^0.25.3",
     "babel-plugin-annotate-pure-calls": "^0.4.0",
     "concurrently": "^7.6.0",
