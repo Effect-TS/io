@@ -29,13 +29,13 @@ export const OP_PROVIDE = 4 as const
 export type OP_PROVIDE = typeof OP_PROVIDE
 
 /** @internal */
-export const OP_SUCCEED = 5 as const
+export const OP_SYNC = 5 as const
+
+/** @internal */
+export type OP_SYNC = typeof OP_SYNC
+
+/** @internal */
+export const OP_SUCCEED = 6 as const
 
 /** @internal */
 export type OP_SUCCEED = typeof OP_SUCCEED
-
-/** @internal */
-export const OP_SUCCEED_NOW = 6 as const
-
-/** @internal */
-export type OP_SUCCEED_NOW = typeof OP_SUCCEED_NOW

@@ -1,18 +1,21 @@
-import { getCallTrace } from "@effect/io/Debug"
+import * as Cause from "@effect/io/Cause"
+import { getCallTrace, isTraceEnabled, runtimeDebug } from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import type * as FiberId from "@effect/io/Fiber/Id"
+import { StackAnnotation } from "@effect/io/internal/cause"
 import * as core from "@effect/io/internal/core"
 import * as EffectOpCodes from "@effect/io/internal/opCodes/effect"
 import * as STMOpCodes from "@effect/io/internal/opCodes/stm"
 import type * as Scheduler from "@effect/io/internal/scheduler"
 import { Stack } from "@effect/io/internal/stack"
-import * as Entry from "@effect/io/internal/stm/entry"
 import * as TExit from "@effect/io/internal/stm/exit"
 import * as Journal from "@effect/io/internal/stm/journal"
 import * as STMState from "@effect/io/internal/stm/state"
 import * as TryCommit from "@effect/io/internal/stm/tryCommit"
 import * as TxnId from "@effect/io/internal/stm/txnId"
+import { RingBuffer } from "@effect/io/internal/support"
+import * as Chunk from "@fp-ts/data/Chunk"
 import type * as Context from "@fp-ts/data/Context"
 import * as Either from "@fp-ts/data/Either"
 import * as Equal from "@fp-ts/data/Equal"
@@ -23,7 +26,14 @@ export const STMTypeId = Symbol.for("@effect/stm/STM")
 
 export type STMTypeId = typeof STMTypeId
 
-export interface STM<R, E, A> extends STM.Variance<R, E, A>, Effect.Effect<R, E, A> {}
+export interface STM<R, E, A> extends STM.Variance<R, E, A>, Effect.Effect<R, E, A> {
+  /** @internal */
+  trace: string | undefined
+  /** @internal */
+  traced(trace: string | undefined): STM<R, E, A>
+  /** @internal */
+  commit(): Effect.Effect<R, E, A>
+}
 
 export declare namespace STM {
   export interface Variance<R, E, A> {
@@ -41,8 +51,8 @@ export type Primitive =
   | STMOnRetry
   | STMOnSuccess
   | STMProvide
+  | STMSync
   | STMSucceed
-  | STMSucceedNow
 
 const stmVariance = {
   _R: (_: never) => _,
@@ -50,9 +60,62 @@ const stmVariance = {
   _A: (_: never) => _
 }
 
-const proto = Object.assign({}, core.proto, {
+/**
+ * @macro traced
+ */
+export const commit = <R, E, A>(self: STM<R, E, A>): Effect.Effect<R, E, A> => {
+  const trace = getCallTrace()
+  return core.withFiberRuntime<R, E, A>((state) => {
+    const fiberId = state.id()
+    const env = state.getFiberRef(core.currentEnvironment) as Context.Context<R>
+    const scheduler = state.getFiberRef(core.currentScheduler)
+    const commitResult = tryCommitSync(fiberId, self, env, scheduler)
+    switch (commitResult.op) {
+      case TryCommit.OP_DONE: {
+        return core.done(commitResult.exit)
+      }
+      case TryCommit.OP_SUSPEND: {
+        const txnId = TxnId.make()
+        const state = MutableRef.make<STMState.STMState<E, A>>(STMState.running)
+        const io = core.async(
+          tryCommitAsync(commitResult.journal, fiberId, self, txnId, state, env, scheduler)
+        )
+        return core.uninterruptibleMask((restore) =>
+          pipe(
+            restore(io),
+            core.catchAllCause((cause) => {
+              let currentState = MutableRef.get(state)
+              if (Equal.equals(currentState, STMState.running)) {
+                pipe(state, MutableRef.set(STMState.interrupted as STMState.STMState<E, A>))
+              }
+              currentState = MutableRef.get(state)
+              return currentState.op === STMState.OP_DONE
+                ? core.done(currentState.exit)
+                : core.failCause(cause)
+            })
+          )
+        )
+      }
+    }
+  }).traced(trace)
+}
+
+const proto = Object.assign({}, {
+  ...core.proto,
   [STMTypeId]: stmVariance,
-  op: EffectOpCodes.OP_COMMIT
+  op: EffectOpCodes.OP_COMMIT,
+  commit(this: STM<any, any, any>): Effect.Effect<any, any, any> {
+    return commit(this)
+  },
+  traced(this: STM<any, any, any>, trace: string | undefined): STM<any, any, any> {
+    if (!isTraceEnabled() || trace === this["trace"]) {
+      return this
+    }
+    const fresh = Object.create(proto)
+    Object.assign(fresh, this)
+    fresh.trace = trace
+    return fresh
+  }
 })
 
 type STMOp<OpCode extends number, Body = {}> = STM<never, never, never> & Body & {
@@ -99,16 +162,16 @@ interface STMProvide extends
   }>
 {}
 
-interface STMSucceed extends
-  STMOp<STMOpCodes.OP_SUCCEED, {
-    readonly opSTM: STMOpCodes.OP_SUCCEED
+interface STMSync extends
+  STMOp<STMOpCodes.OP_SYNC, {
+    readonly opSTM: STMOpCodes.OP_SYNC
     readonly evaluate: () => unknown
   }>
 {}
 
-interface STMSucceedNow extends
-  STMOp<STMOpCodes.OP_SUCCEED_NOW, {
-    readonly opSTM: STMOpCodes.OP_SUCCEED_NOW
+interface STMSucceed extends
+  STMOp<STMOpCodes.OP_SUCCEED, {
+    readonly opSTM: STMOpCodes.OP_SUCCEED
     readonly value: unknown
   }>
 {}
@@ -182,6 +245,9 @@ export const isRetryException = (u: unknown): u is STMRetryException => {
   return typeof u === "object" && u != null && STMRetryExceptionTypeId in u
 }
 
+/**
+ * @macro traced
+ */
 export function effect<R, A>(
   f: (journal: Journal.Journal, fiberId: FiberId.FiberId, context: Context.Context<R>) => A
 ): STM<R, never, A> {
@@ -193,48 +259,73 @@ export function effect<R, A>(
   return stm
 }
 
+/**
+ * @macro traced
+ */
 export const fail = <E>(error: E): STM<never, E, never> => {
-  return effect(() => {
+  const trace = getCallTrace()
+  return effect<never, never>(() => {
     throw new STMFailException(error)
-  })
+  }).traced(trace)
 }
 
+/**
+ * @macro traced
+ */
 export const die = (defect: unknown): STM<never, never, never> => {
-  return effect(() => {
+  const trace = getCallTrace()
+  return effect<never, never>(() => {
     throw new STMDieException(defect)
-  })
+  }).traced(trace)
 }
 
+/**
+ * @macro traced
+ */
 export const interrupt = (): STM<never, never, never> => {
-  return effect((_, fiberId) => {
+  const trace = getCallTrace()
+  return effect<never, never>((_, fiberId) => {
     throw new STMInterruptException(fiberId)
-  })
+  }).traced(trace)
 }
 
+/**
+ * @macro traced
+ */
 export const retry = (): STM<never, never, never> => {
-  return effect(() => {
+  const trace = getCallTrace()
+  return effect<never, never>(() => {
     throw new STMRetryException()
-  })
+  }).traced(trace)
 }
 
+/**
+ * @macro traced
+ */
 export const succeed = <A>(value: A): STM<never, never, A> => {
   const trace = getCallTrace()
   const stm = Object.create(proto)
-  stm.opSTM = STMOpCodes.OP_SUCCEED_NOW
+  stm.opSTM = STMOpCodes.OP_SUCCEED
   stm.value = value
   stm.trace = trace
   return stm
 }
 
+/**
+ * @macro traced
+ */
 export const sync = <A>(evaluate: () => A): STM<never, never, A> => {
   const trace = getCallTrace()
   const stm = Object.create(proto)
-  stm.opSTM = STMOpCodes.OP_SUCCEED
+  stm.opSTM = STMOpCodes.OP_SYNC
   stm.evaluate = evaluate
   stm.trace = trace
   return stm
 }
 
+/**
+ * @macro traced
+ */
 export const catchAll = <E, R1, E1, B>(f: (e: E) => STM<R1, E1, B>) => {
   const trace = getCallTrace()
   return <R, A>(self: STM<R, E, A>): STM<R | R1, E1, A | B> => {
@@ -247,6 +338,9 @@ export const catchAll = <E, R1, E1, B>(f: (e: E) => STM<R1, E1, B>) => {
   }
 }
 
+/**
+ * @macro traced
+ */
 export const orTry = <R1, E1, A1>(that: () => STM<R1, E1, A1>) => {
   const trace = getCallTrace()
   return <R, E, A>(self: STM<R, E, A>): STM<R | R1, E | E1, A | A1> => {
@@ -259,6 +353,9 @@ export const orTry = <R1, E1, A1>(that: () => STM<R1, E1, A1>) => {
   }
 }
 
+/**
+ * @macro traced
+ */
 export const flatMap = <A, R1, E1, A2>(f: (a: A) => STM<R1, E1, A2>) => {
   const trace = getCallTrace()
   return <R, E>(self: STM<R, E, A>): STM<R1 | R, E | E1, A2> => {
@@ -271,6 +368,9 @@ export const flatMap = <A, R1, E1, A2>(f: (a: A) => STM<R1, E1, A2>) => {
   }
 }
 
+/**
+ * @macro traced
+ */
 export const provideSomeEnvironment = <R0, R>(f: (context: Context.Context<R0>) => Context.Context<R>) => {
   const trace = getCallTrace()
   return <E, A>(self: STM<R, E, A>): STM<R0, E, A> => {
@@ -283,16 +383,24 @@ export const provideSomeEnvironment = <R0, R>(f: (context: Context.Context<R0>) 
   }
 }
 
+/**
+ * @macro traced
+ */
 export const map = <A, B>(f: (a: A) => B) => {
+  const trace = getCallTrace()
   return <R, E>(self: STM<R, E, A>): STM<R, E, B> => {
-    return pipe(self, flatMap((a) => sync(() => f(a))))
+    return pipe(self, flatMap((a) => sync(() => f(a)))).traced(trace)
   }
 }
 
+/**
+ * @macro traced
+ */
 export const foldSTM = <E, R1, E1, A1, A, R2, E2, A2>(
   onFailure: (e: E) => STM<R1, E1, A1>,
   onSuccess: (a: A) => STM<R2, E2, A2>
 ) => {
+  const trace = getCallTrace()
   return <R>(self: STM<R, E, A>): STM<R | R1 | R2, E1 | E2, A1 | A2> => {
     return pipe(
       self,
@@ -308,11 +416,15 @@ export const foldSTM = <E, R1, E1, A1, A, R2, E2, A2>(
           }
         }
       })
-    )
+    ).traced(trace)
   }
 }
 
+/**
+ * @macro traced
+ */
 export const ensuring = <R1, B>(finalizer: STM<R1, never, B>) => {
+  const trace = getCallTrace()
   return <R, E, A>(self: STM<R, E, A>): STM<R | R1, E, A> =>
     pipe(
       self,
@@ -320,75 +432,56 @@ export const ensuring = <R1, B>(finalizer: STM<R1, never, B>) => {
         (e) => pipe(finalizer, zipRight(fail(e))),
         (a) => pipe(finalizer, zipRight(succeed(a)))
       )
-    )
+    ).traced(trace)
 }
 
+/**
+ * @macro traced
+ */
 export const zip = <R1, E1, A1>(that: STM<R1, E1, A1>) => {
+  const trace = getCallTrace()
   return <R, E, A>(self: STM<R, E, A>): STM<R | R1, E | E1, readonly [A, A1]> => {
-    return pipe(self, zipWith(that, (a, a1) => [a, a1]))
+    return pipe(self, zipWith(that, (a, a1) => [a, a1] as const)).traced(trace)
   }
 }
 
+/**
+ * @macro traced
+ */
 export const zipLeft = <R1, E1, A1>(that: STM<R1, E1, A1>) => {
+  const trace = getCallTrace()
   return <R, E, A>(self: STM<R, E, A>): STM<R | R1, E | E1, A> => {
-    return pipe(self, flatMap((a) => pipe(that, map(() => a))))
+    return pipe(self, flatMap((a) => pipe(that, map(() => a)))).traced(trace)
   }
 }
 
+/**
+ * @macro traced
+ */
 export const zipRight = <R1, E1, A1>(that: STM<R1, E1, A1>) => {
+  const trace = getCallTrace()
   return <R, E, A>(self: STM<R, E, A>): STM<R | R1, E | E1, A1> => {
-    return pipe(self, flatMap(() => that))
+    return pipe(self, flatMap(() => that)).traced(trace)
   }
 }
 
+/**
+ * @macro traced
+ */
 export const zipWith = <R1, E1, A1, A, A2>(that: STM<R1, E1, A1>, f: (a: A, b: A1) => A2) => {
+  const trace = getCallTrace()
   return <R, E>(self: STM<R, E, A>): STM<R1 | R, E | E1, A2> => {
-    return pipe(self, flatMap((a) => pipe(that, map((b) => f(a, b)))))
+    return pipe(self, flatMap((a) => pipe(that, map((b) => f(a, b))))).traced(trace)
   }
-}
-
-export const commit = <R, E, A>(self: STM<R, E, A>): Effect.Effect<R, E, A> => {
-  return core.withFiberRuntime((state) => {
-    const fiberId = state.id()
-    const env = state.getFiberRef(core.currentEnvironment) as Context.Context<R>
-    const scheduler = state.getFiberRef(core.currentScheduler)
-    const commitResult = tryCommitSync(fiberId, self, env, scheduler)
-    switch (commitResult.op) {
-      case TryCommit.OP_DONE: {
-        return core.done(commitResult.exit)
-      }
-      case TryCommit.OP_SUSPEND: {
-        const txnId = TxnId.make()
-        const state = MutableRef.make<STMState.STMState<E, A>>(STMState.running)
-        const io = core.async(
-          tryCommitAsync(commitResult.journal, fiberId, self, txnId, state, env, scheduler)
-        )
-        return core.uninterruptibleMask((restore) =>
-          pipe(
-            restore(io),
-            core.catchAllCause((cause) => {
-              let currentState = MutableRef.get(state)
-              if (Equal.equals(currentState, STMState.running)) {
-                pipe(state, MutableRef.set(STMState.interrupted as STMState.STMState<E, A>))
-              }
-              currentState = MutableRef.get(state)
-              return currentState.op === STMState.OP_DONE
-                ? core.done(currentState.exit)
-                : core.failCause(cause)
-            })
-          )
-        )
-      }
-    }
-  })
 }
 
 type Continuation = STMOnFailure | STMOnSuccess | STMOnRetry
 
 export class STMDriver<R, E, A> {
-  private yieldOpCount = 2048
   private contStack: Stack<Continuation> | undefined
-  private envStack: Stack<Context.Context<unknown>>
+  private env: Context.Context<unknown>
+  private execution: RingBuffer<string> | undefined
+  private tracesInStack = 0
 
   constructor(
     readonly self: STM<R, E, A>,
@@ -396,7 +489,16 @@ export class STMDriver<R, E, A> {
     readonly fiberId: FiberId.FiberId,
     r0: Context.Context<R>
   ) {
-    this.envStack = new Stack(r0 as Context.Context<unknown>)
+    this.env = r0 as Context.Context<unknown>
+  }
+
+  private logTrace(trace: string | undefined) {
+    if (trace) {
+      if (!this.execution) {
+        this.execution = new RingBuffer<string>(runtimeDebug.traceExecutionLimit)
+      }
+      this.execution.push(trace)
+    }
   }
 
   private unwindStack(error: unknown, isRetry: boolean): Primitive | undefined {
@@ -406,11 +508,13 @@ export class STMDriver<R, E, A> {
       this.contStack = this.contStack.previous
       if (cont.opSTM === STMOpCodes.OP_ON_FAILURE) {
         if (!isRetry) {
+          this.logTrace(cont.trace)
           result = cont.failK(error) as Primitive
         }
       }
       if (cont.opSTM === STMOpCodes.OP_ON_RETRY) {
         if (isRetry) {
+          this.logTrace(cont.trace)
           result = cont.retryK() as Primitive
         }
       }
@@ -418,138 +522,175 @@ export class STMDriver<R, E, A> {
     return result
   }
 
+  pushStack(cont: Continuation) {
+    this.contStack = new Stack(cont, this.contStack)
+    if ("trace" in cont) {
+      this.tracesInStack++
+    }
+  }
+
+  popStack() {
+    if (this.contStack) {
+      const current = this.contStack
+      this.contStack = this.contStack.previous
+      if ("trace" in current.value) {
+        this.tracesInStack--
+      }
+      return current.value
+    }
+    return
+  }
+
+  stackToLines(): Chunk.Chunk<string> {
+    if (this.tracesInStack === 0) {
+      return Chunk.empty
+    }
+    const lines: Array<string> = []
+    let current = this.contStack
+    let last: undefined | string = undefined
+    let seen = 0
+    while (current !== undefined && lines.length < runtimeDebug.traceStackLimit && seen < this.tracesInStack) {
+      switch (current.value.opSTM) {
+        case STMOpCodes.OP_ON_SUCCESS:
+        case STMOpCodes.OP_ON_FAILURE:
+        case STMOpCodes.OP_ON_RETRY: {
+          if (current.value.trace) {
+            seen++
+            if (current.value.trace !== last) {
+              last = current.value.trace
+              lines.push(current.value.trace)
+            }
+          }
+          break
+        }
+      }
+      current = current.previous
+    }
+    return Chunk.unsafeFromArray(lines)
+  }
+
   run(): TExit.Exit<E, A> {
     let curr = this.self as Primitive | undefined
     let exit: TExit.Exit<unknown, unknown> | undefined = undefined
-    let opCount = 0
-
     while (exit === undefined && curr !== undefined) {
-      if (opCount === this.yieldOpCount) {
-        let valid = true
-        for (const [, entry] of this.journal) {
-          valid = Entry.isValid(entry)
-        }
-        if (!valid) {
-          exit = TExit.retry
-        } else {
-          opCount = 0
-        }
-      } else {
-        const current = curr
-        switch (current.opSTM) {
-          case STMOpCodes.OP_EFFECT: {
-            try {
-              const a = current.evaluate(this.journal, this.fiberId, this.envStack.value)
-              if (!this.contStack) {
-                exit = TExit.succeed(a)
-              } else {
-                const cont = this.contStack.value
-                this.contStack = this.contStack.previous
-                if (
-                  cont.opSTM === STMOpCodes.OP_ON_FAILURE ||
-                  cont.opSTM === STMOpCodes.OP_ON_RETRY
-                ) {
-                  curr = succeed(a) as Primitive
-                } else {
-                  curr = cont.successK(a) as Primitive
-                }
-              }
-            } catch (error) {
-              if (isRetryException(error)) {
-                curr = this.unwindStack(undefined, true)
-                if (!curr) {
-                  exit = TExit.retry
-                }
-              } else if (isFailException(error)) {
-                curr = this.unwindStack(error.error, false)
-                if (!curr) {
-                  exit = TExit.fail(error.error)
-                }
-              } else if (isDieException(error)) {
-                curr = this.unwindStack(error.defect, false)
-                if (!curr) {
-                  exit = TExit.die(error.defect)
-                }
-              } else if (isInterruptException(error)) {
-                exit = TExit.interrupt(error.fiberId)
-              } else {
-                throw error
-              }
-            }
-            break
-          }
-
-          case STMOpCodes.OP_ON_SUCCESS: {
-            this.contStack = new Stack(current, this.contStack)
-            curr = current.first as Primitive
-            break
-          }
-
-          case STMOpCodes.OP_ON_FAILURE: {
-            this.contStack = new Stack(current, this.contStack)
-            curr = current.first as Primitive
-            break
-          }
-
-          case STMOpCodes.OP_ON_RETRY: {
-            this.contStack = new Stack(current, this.contStack)
-            curr = current.first as Primitive
-            break
-          }
-
-          case STMOpCodes.OP_PROVIDE: {
-            this.envStack = new Stack(current.provide(this.envStack.value), this.envStack)
-            curr = pipe(
-              current.stm,
-              ensuring(sync(() => {
-                this.envStack = this.envStack.previous!
-              }))
-            ) as Primitive
-            break
-          }
-
-          case STMOpCodes.OP_SUCCEED_NOW: {
-            const value = current.value
-            if (!this.contStack) {
-              exit = TExit.succeed(value)
+      const current = curr
+      switch (current.opSTM) {
+        case STMOpCodes.OP_EFFECT: {
+          try {
+            this.logTrace(current.trace)
+            const a = current.evaluate(this.journal, this.fiberId, this.env)
+            const cont = this.popStack()
+            if (!cont) {
+              exit = TExit.succeed(a)
             } else {
-              const cont = this.contStack.value
-              this.contStack = this.contStack.previous
               if (
                 cont.opSTM === STMOpCodes.OP_ON_FAILURE ||
                 cont.opSTM === STMOpCodes.OP_ON_RETRY
               ) {
-                curr = succeed(value) as Primitive
+                curr = succeed(a) as Primitive
               } else {
-                curr = cont.successK(value) as Primitive
+                this.logTrace(cont.trace)
+                curr = cont.successK(a) as Primitive
               }
             }
-            break
-          }
-
-          case STMOpCodes.OP_SUCCEED: {
-            const value = current.evaluate()
-            if (!this.contStack) {
-              exit = TExit.succeed(value)
+          } catch (error) {
+            if (isRetryException(error)) {
+              curr = this.unwindStack(undefined, true)
+              if (!curr) {
+                exit = TExit.retry
+              }
+            } else if (isFailException(error)) {
+              const annotation = new StackAnnotation(
+                this.stackToLines(),
+                this.execution?.toChunkReversed() || Chunk.empty
+              )
+              curr = this.unwindStack(error.error, false)
+              if (!curr) {
+                exit = TExit.fail(
+                  error.error,
+                  annotation
+                )
+              }
+            } else if (isDieException(error)) {
+              const annotation = new StackAnnotation(
+                this.stackToLines(),
+                this.execution?.toChunkReversed() || Chunk.empty
+              )
+              curr = this.unwindStack(error.defect, false)
+              if (!curr) {
+                exit = TExit.die(error.defect, annotation)
+              }
+            } else if (isInterruptException(error)) {
+              const annotation = new StackAnnotation(
+                this.stackToLines(),
+                this.execution?.toChunkReversed() || Chunk.empty
+              )
+              exit = TExit.interrupt(error.fiberId, annotation)
             } else {
-              const cont = this.contStack.value
-              this.contStack = this.contStack.previous
-              if (
-                cont.opSTM === STMOpCodes.OP_ON_FAILURE ||
-                cont.opSTM === STMOpCodes.OP_ON_RETRY
-              ) {
-                curr = succeed(value) as Primitive
-              } else {
-                curr = cont.successK(value) as Primitive
-              }
+              throw error
             }
-            break
           }
+          break
         }
-        opCount = opCount + 1
+        case STMOpCodes.OP_ON_SUCCESS:
+        case STMOpCodes.OP_ON_FAILURE:
+        case STMOpCodes.OP_ON_RETRY: {
+          this.pushStack(current)
+          curr = current.first as Primitive
+          break
+        }
+        case STMOpCodes.OP_PROVIDE: {
+          this.logTrace(current.trace)
+          const env = this.env
+          this.env = current.provide(env)
+          curr = pipe(
+            current.stm,
+            ensuring(sync(() => {
+              this.env = env
+            }))
+          ) as Primitive
+          break
+        }
+        case STMOpCodes.OP_SUCCEED: {
+          this.logTrace(current.trace)
+          const value = current.value
+          const cont = this.popStack()
+          if (!cont) {
+            exit = TExit.succeed(value)
+          } else {
+            if (
+              cont.opSTM === STMOpCodes.OP_ON_FAILURE ||
+              cont.opSTM === STMOpCodes.OP_ON_RETRY
+            ) {
+              curr = succeed(value) as Primitive
+            } else {
+              this.logTrace(cont.trace)
+              curr = cont.successK(value) as Primitive
+            }
+          }
+          break
+        }
+        case STMOpCodes.OP_SYNC: {
+          this.logTrace(current.trace)
+          const value = current.evaluate()
+          const cont = this.popStack()
+          if (!cont) {
+            exit = TExit.succeed(value)
+          } else {
+            if (
+              cont.opSTM === STMOpCodes.OP_ON_FAILURE ||
+              cont.opSTM === STMOpCodes.OP_ON_RETRY
+            ) {
+              curr = succeed(value) as Primitive
+            } else {
+              this.logTrace(cont.trace)
+              curr = cont.successK(value) as Primitive
+            }
+          }
+          break
+        }
       }
     }
-
     return exit as TExit.Exit<E, A>
   }
 }
@@ -577,13 +718,40 @@ const tryCommit = <R, E, A>(
       return completeTodos(Exit.succeed(tExit.value), journal, scheduler)
     }
     case TExit.OP_FAIL: {
-      return completeTodos(Exit.fail(tExit.error), journal, scheduler)
+      const cause = Cause.fail(tExit.error)
+      return completeTodos(
+        Exit.failCause(
+          tExit.annotation.stack.length > 0 || tExit.annotation.execution.length > 0 ?
+            Cause.annotated(cause, tExit.annotation) :
+            cause
+        ),
+        journal,
+        scheduler
+      )
     }
     case TExit.OP_DIE: {
-      return completeTodos(Exit.die(tExit.defect), journal, scheduler)
+      const cause = Cause.die(tExit.defect)
+      return completeTodos(
+        Exit.failCause(
+          tExit.annotation.stack.length > 0 || tExit.annotation.execution.length > 0 ?
+            Cause.annotated(cause, tExit.annotation) :
+            cause
+        ),
+        journal,
+        scheduler
+      )
     }
     case TExit.OP_INTERRUPT: {
-      return completeTodos(Exit.interrupt(fiberId), journal, scheduler)
+      const cause = Cause.interrupt(fiberId)
+      return completeTodos(
+        Exit.failCause(
+          tExit.annotation.stack.length > 0 || tExit.annotation.execution.length > 0 ?
+            Cause.annotated(cause, tExit.annotation) :
+            cause
+        ),
+        journal,
+        scheduler
+      )
     }
     case TExit.OP_RETRY: {
       return TryCommit.suspend(journal)
@@ -614,13 +782,40 @@ const tryCommitSync = <R, E, A>(
       return completeTodos(Exit.succeed(tExit.value), journal, scheduler)
     }
     case TExit.OP_FAIL: {
-      return completeTodos(Exit.fail(tExit.error), journal, scheduler)
+      const cause = Cause.fail(tExit.error)
+      return completeTodos(
+        Exit.failCause(
+          tExit.annotation.stack.length > 0 || tExit.annotation.execution.length > 0 ?
+            Cause.annotated(cause, tExit.annotation) :
+            cause
+        ),
+        journal,
+        scheduler
+      )
     }
     case TExit.OP_DIE: {
-      return completeTodos(Exit.die(tExit.defect), journal, scheduler)
+      const cause = Cause.die(tExit.defect)
+      return completeTodos(
+        Exit.failCause(
+          tExit.annotation.stack.length > 0 || tExit.annotation.execution.length > 0 ?
+            Cause.annotated(cause, tExit.annotation) :
+            cause
+        ),
+        journal,
+        scheduler
+      )
     }
     case TExit.OP_INTERRUPT: {
-      return completeTodos(Exit.interrupt(fiberId), journal, scheduler)
+      const cause = Cause.interrupt(fiberId)
+      return completeTodos(
+        Exit.failCause(
+          tExit.annotation.stack.length > 0 || tExit.annotation.execution.length > 0 ?
+            Cause.annotated(cause, tExit.annotation) :
+            cause
+        ),
+        journal,
+        scheduler
+      )
     }
     case TExit.OP_RETRY: {
       return TryCommit.suspend(journal)

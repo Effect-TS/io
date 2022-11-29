@@ -775,9 +775,13 @@ export const unsafeMakeSemaphore = (permits: number): Semaphore => {
   return new SemaphoreImpl(new TRef.RefImpl(permits))
 }
 
+/**
+ * @macro traced
+ */
 export const acquireN = (n: number) => {
+  const trace = getCallTrace()
   return (self: Semaphore): STM.STM<never, never, void> => {
-    return STM.effect((journal) => {
+    return STM.effect<never, void>((journal) => {
       if (n < 0) {
         throw Cause.IllegalArgumentException(`Unexpected negative value ${n} passed to Semaphore.acquireN`)
       }
@@ -787,23 +791,31 @@ export const acquireN = (n: number) => {
       } else {
         return pipe(self.permits, TRef.unsafeSet(value - n, journal))
       }
-    })
+    }).traced(trace)
   }
 }
 
+/**
+ * @macro traced
+ */
 export const releaseN = (n: number) => {
+  const trace = getCallTrace()
   return (self: Semaphore): STM.STM<never, never, void> => {
-    return STM.effect((journal) => {
+    return STM.effect<never, void>((journal) => {
       if (n < 0) {
         throw Cause.IllegalArgumentException(`Unexpected negative value ${n} passed to Semaphore.releaseN`)
       }
       const current = pipe(self.permits, TRef.unsafeGet(journal))
       return pipe(self.permits, TRef.unsafeSet(current + n, journal))
-    })
+    }).traced(trace)
   }
 }
 
+/**
+ * @macro traced
+ */
 export const withPermits = (permits: number) => {
+  const trace = getCallTrace()
   return (semaphore: Semaphore) => {
     return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
       return core.uninterruptibleMask((restore) =>
@@ -816,17 +828,21 @@ export const withPermits = (permits: number) => {
             )
           )
         )
-      )
+      ).traced(trace)
     }
   }
 }
 
+/**
+ * @macro traced
+ */
 export const withPermitsScoped = (permits: number) => {
+  const trace = getCallTrace()
   return (self: Semaphore): Effect.Effect<Scope.Scope, never, void> =>
     acquireReleaseInterruptible(
       pipe(self, acquireN(permits), STM.commit),
       () => pipe(self, releaseN(permits), STM.commit)
-    )
+    ).traced(trace)
 }
 
 // circular with Fiber

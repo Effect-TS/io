@@ -1,3 +1,4 @@
+import { getCallTrace } from "@effect/io/Debug"
 import * as internal from "@effect/io/internal/stm"
 import type * as STM from "@effect/io/internal/stm"
 import * as Entry from "@effect/io/internal/stm/entry"
@@ -54,38 +55,90 @@ export class RefImpl<A> implements Ref<A> {
   }
 }
 
-export const make = <A>(evaluate: () => A): STM.STM<never, never, Ref<A>> => {
-  return internal.effect((journal) => {
-    const value = evaluate()
+/**
+ * @macro traced
+ */
+export const make = <A>(value: A): STM.STM<never, never, Ref<A>> => {
+  const trace = getCallTrace()
+  return internal.effect<never, Ref<A>>((journal) => {
     const ref = new RefImpl(value)
     journal.set(ref, Entry.make(ref, true))
     return ref
-  })
+  }).traced(trace)
 }
 
-export const get = <A>(self: Ref<A>) => self.modify((a) => [a, a])
+/**
+ * @macro traced
+ */
+export const get = <A>(self: Ref<A>) => {
+  const trace = getCallTrace()
+  return self.modify((a) => [a, a]).traced(trace)
+}
 
-export const set = <A>(value: A) => (self: Ref<A>) => self.modify((): [void, A] => [void 0, value])
+/**
+ * @macro traced
+ */
+export const set = <A>(value: A) =>
+  (self: Ref<A>) => {
+    const trace = getCallTrace()
+    return self.modify((): [void, A] => [void 0, value]).traced(trace)
+  }
 
-export const getAndSet = <A>(value: A) => (self: Ref<A>) => self.modify((a): [A, A] => [a, value])
+/**
+ * @macro traced
+ */
+export const getAndSet = <A>(value: A) =>
+  (self: Ref<A>) => {
+    const trace = getCallTrace()
+    return self.modify((a): [A, A] => [a, value]).traced(trace)
+  }
 
-export const getAndUpdate = <A>(f: (a: A) => A) => (self: Ref<A>) => self.modify((a): [A, A] => [a, f(a)])
+/**
+ * @macro traced
+ */
+export const getAndUpdate = <A>(f: (a: A) => A) =>
+  (self: Ref<A>) => {
+    const trace = getCallTrace()
+    return self.modify((a): [A, A] => [a, f(a)]).traced(trace)
+  }
 
-export const getAndUpdateSome = <A>(f: (a: A) => Option.Option<A>) =>
-  (self: Ref<A>) =>
+/**
+ * @macro traced
+ */
+export const getAndUpdateSome = <A>(f: (a: A) => Option.Option<A>) => {
+  const trace = getCallTrace()
+  return (self: Ref<A>) =>
     self.modify((a): [A, A] =>
       pipe(
         f(a),
         Option.match(() => [a, a], (b) => [a, b])
       )
-    )
+    ).traced(trace)
+}
 
-export const setAndGet = <A>(value: A) => (self: Ref<A>) => self.modify((): [A, A] => [value, value])
+/**
+ * @macro traced
+ */
+export const setAndGet = <A>(value: A) =>
+  (self: Ref<A>) => {
+    const trace = getCallTrace()
+    return self.modify((): [A, A] => [value, value]).traced(trace)
+  }
 
-export const modify = <A, B>(f: (a: A) => readonly [B, A]) => (self: Ref<A>) => self.modify(f)
+/**
+ * @macro traced
+ */
+export const modify = <A, B>(f: (a: A) => readonly [B, A]) => {
+  const trace = getCallTrace()
+  return (self: Ref<A>) => self.modify(f).traced(trace)
+}
 
-export const modifySome = <A, B>(fallback: B, f: (a: A) => Option.Option<readonly [B, A]>) =>
-  (self: Ref<A>) =>
+/**
+ * @macro traced
+ */
+export const modifySome = <A, B>(fallback: B, f: (a: A) => Option.Option<readonly [B, A]>) => {
+  const trace = getCallTrace()
+  return (self: Ref<A>) =>
     self.modify((a) =>
       pipe(
         f(a),
@@ -94,22 +147,46 @@ export const modifySome = <A, B>(fallback: B, f: (a: A) => Option.Option<readonl
           (b) => b
         )
       )
-    )
+    ).traced(trace)
+}
 
-export const update = <A>(f: (a: A) => A) => (self: Ref<A>) => self.modify((a): [void, A] => [void 0, f(a)])
+/**
+ * @macro traced
+ */
+export const update = <A>(f: (a: A) => A) => {
+  const trace = getCallTrace()
+  return (self: Ref<A>) => self.modify((a): [void, A] => [void 0, f(a)]).traced(trace)
+}
 
-export const updateAndGet = <A>(f: (a: A) => A) =>
-  (self: Ref<A>) =>
+/**
+ * @macro traced
+ */
+export const updateAndGet = <A>(f: (a: A) => A) => {
+  const trace = getCallTrace()
+  return (self: Ref<A>) =>
     self.modify((a): [A, A] => {
       const b = f(a)
       return [b, b]
-    })
+    }).traced(trace)
+}
 
-export const updateSome = <A>(f: (a: A) => Option.Option<A>) =>
-  (self: Ref<A>) => self.modify((a): [void, A] => [void 0, pipe(f(a), Option.match(() => a, (b) => b))])
+/**
+ * @macro traced
+ */
+export const updateSome = <A>(f: (a: A) => Option.Option<A>) => {
+  const trace = getCallTrace()
+  return (self: Ref<A>) =>
+    self.modify((a): [void, A] => [void 0, pipe(f(a), Option.match(() => a, (b) => b))]).traced(trace)
+}
 
-export const updateSomeAndGet = <A>(f: (a: A) => Option.Option<A>) =>
-  (self: Ref<A>) => self.modify((a): [A, A] => pipe(f(a), Option.match(() => [a, a], (b) => [b, b])))
+/**
+ * @macro traced
+ */
+export const updateSomeAndGet = <A>(f: (a: A) => Option.Option<A>) => {
+  const trace = getCallTrace()
+  return (self: Ref<A>) =>
+    self.modify((a): [A, A] => pipe(f(a), Option.match(() => [a, a], (b) => [b, b]))).traced(trace)
+}
 
 const getOrMakeEntry = <A>(self: Ref<A>, journal: Journal.Journal): Entry.Entry => {
   if (journal.has(self)) {

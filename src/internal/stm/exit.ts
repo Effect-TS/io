@@ -1,4 +1,5 @@
 import type * as FiberId from "@effect/io/Fiber/Id"
+import type { StackAnnotation } from "@effect/io/internal/cause"
 import * as Equal from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
 
@@ -62,18 +63,21 @@ export type OP_RETRY = typeof OP_RETRY
 export interface Fail<E> extends Variance<E, never>, Equal.Equal {
   readonly op: OP_FAIL
   readonly error: E
+  readonly annotation: StackAnnotation
 }
 
 /** @internal */
 export interface Die extends Variance<never, never>, Equal.Equal {
   readonly op: OP_DIE
   readonly defect: unknown
+  readonly annotation: StackAnnotation
 }
 
 /** @internal */
 export interface Interrupt extends Variance<never, never>, Equal.Equal {
   readonly op: OP_INTERRUPT
   readonly fiberId: FiberId.FiberId
+  readonly annotation: StackAnnotation
 }
 
 /** @internal */
@@ -118,10 +122,11 @@ export const isRetry = <E, A>(self: Exit<E, A>): self is Retry => {
 }
 
 /** @internal */
-export const fail = <E>(error: E): Exit<E, never> => ({
+export const fail = <E>(error: E, annotation: StackAnnotation): Exit<E, never> => ({
   [ExitTypeId]: variance,
   op: OP_FAIL,
   error,
+  annotation,
   [Equal.symbolHash](): number {
     return pipe(
       Equal.hash(TExitSymbolKey),
@@ -135,10 +140,11 @@ export const fail = <E>(error: E): Exit<E, never> => ({
 })
 
 /** @internal */
-export const die = (defect: unknown): Exit<never, never> => ({
+export const die = (defect: unknown, annotation: StackAnnotation): Exit<never, never> => ({
   [ExitTypeId]: variance,
   op: OP_DIE,
   defect,
+  annotation,
   [Equal.symbolHash](): number {
     return pipe(
       Equal.hash(TExitSymbolKey),
@@ -152,10 +158,11 @@ export const die = (defect: unknown): Exit<never, never> => ({
 })
 
 /** @internal */
-export const interrupt = (fiberId: FiberId.FiberId): Exit<never, never> => ({
+export const interrupt = (fiberId: FiberId.FiberId, annotation: StackAnnotation): Exit<never, never> => ({
   [ExitTypeId]: variance,
   op: OP_INTERRUPT,
   fiberId,
+  annotation,
   [Equal.symbolHash](): number {
     return pipe(
       Equal.hash(TExitSymbolKey),
