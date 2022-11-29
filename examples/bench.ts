@@ -1,30 +1,24 @@
-import * as EC from "@effect/core/io/Effect"
-import * as E from "@effect/io/Effect"
+import * as Cause from "@effect/io/Cause"
+import * as Effect from "@effect/io/Effect"
+import * as Exit from "@effect/io/Exit"
+import * as Sem from "@effect/io/internal/semaphore"
+import * as Duration from "@fp-ts/data/Duration"
 import { pipe } from "@fp-ts/data/Function"
+import * as ROArray from "@fp-ts/data/ReadonlyArray"
 
-const newProgram = () =>
-  pipe(
-    E.succeed(0),
-    E.flatMap((n) => E.succeed(n + 1)),
-    E.repeatN(100_000),
-    E.unsafeRunPromise
-  )
+const program = Effect.gen(function*($) {
+  const sem = yield* $(Sem.make(1))
 
-const oldProgram = () =>
-  pipe(
-    EC.succeed(0),
-    EC.flatMap((n) => EC.succeed(n + 1)),
-    EC.repeatN(100_000),
-    EC.unsafeRunPromise
-  )
+  yield* $(pipe(
+    ROArray.range(1, 20),
+    Effect.forEachPar((n) =>
+      pipe(Effect.sync(() => console.log(n)), Effect.delay(Duration.millis(200)), Sem.withPermit(sem))
+    )
+  ))
+})
 
-async function main() {
-  console.time("old")
-  await oldProgram()
-  console.timeEnd("old")
-  console.time("new")
-  await newProgram()
-  console.timeEnd("new")
-}
-
-main()
+Effect.unsafeRunPromiseExit(program).then((exit) => {
+  if (Exit.isFailure(exit)) {
+    console.log(Cause.pretty()(exit.cause))
+  }
+})

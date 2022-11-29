@@ -86,9 +86,9 @@ export const collectTodos = (journal: Journal): Map<TxnId.TxnId, Todo> => {
 
 /** @internal */
 export const execTodos = (todos: Map<TxnId.TxnId, Todo>) => {
-  const todoKeys = Array.from(todos.keys()).sort()
-  for (const todo of todoKeys) {
-    todos.get(todo)![1]()
+  const todosSorted = Array.from(todos.entries()).sort((x, y) => x[0] - y[0])
+  for (const [_, todo] of todosSorted) {
+    todo()
   }
 }
 

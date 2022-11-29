@@ -1140,8 +1140,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   }
 
   [OpCodes.OP_COMMIT](op: core.Primitive & { op: OpCodes.OP_COMMIT }) {
-    this.onExecute(op)
-    return op.commit
+    return op.commit()
   }
 
   /**

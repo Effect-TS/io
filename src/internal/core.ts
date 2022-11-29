@@ -140,7 +140,11 @@ export interface Async extends
 /** @internal */
 export interface Failure extends Op<OpCodes.OP_FAILURE, { readonly cause: Cause.Cause<unknown> }> {}
 
-export interface Commit extends Op<OpCodes.OP_COMMIT, { readonly commit: Effect.Effect<unknown, unknown, unknown> }> {}
+export interface Commit extends
+  Op<OpCodes.OP_COMMIT, {
+    commit(): Effect.Effect<unknown, unknown, unknown>
+  }>
+{}
 
 /** @internal */
 export interface OnFailure extends
