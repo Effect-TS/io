@@ -1,5 +1,13 @@
 # @effect/io
 
+## 0.0.27
+
+### Patch Changes
+
+- [#82](https://github.com/Effect-TS/io/pull/82) [`7267bc7`](https://github.com/Effect-TS/io/commit/7267bc7ffbd36c5211695c8bdaf961b9deb87aa3) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Optimize runLoop
+
+- [#84](https://github.com/Effect-TS/io/pull/84) [`d2577c3`](https://github.com/Effect-TS/io/commit/d2577c387a6285fe646ffe5c9dd4b0306b2a612e) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Add function table for drainQueueWhileRunning
+
 ## 0.0.26
 
 ### Patch Changes
