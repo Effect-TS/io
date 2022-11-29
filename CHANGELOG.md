@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.0.28
+
+### Patch Changes
+
+- [`1365ebd`](https://github.com/Effect-TS/io/commit/1365ebdfa2d5976697fe1035e21b6f6c207e14a6) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Update dependencies
+
 ## 0.0.27
 
 ### Patch Changes
