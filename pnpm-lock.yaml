@@ -21,9 +21,9 @@ importers:
       '@effect-ts/core': ^0.60.2
       '@effect/core': ^0.0.16
       '@effect/language-service': ^0.0.6
-      '@effect/printer': ^0.1.6
+      '@effect/printer': ^0.1.7
       '@fp-ts/core': ^0.0.9
-      '@fp-ts/data': ^0.0.18
+      '@fp-ts/data': ^0.0.19
       '@repo-tooling/eslint-plugin-dprint': ^0.0.4
       '@rollup/pluginutils': ^5.0.2
       '@types/benchmark': ^2.1.2
@@ -61,9 +61,9 @@ importers:
       vite: ^3.2.4
       vitest: 0.25.3
     dependencies:
-      '@effect/printer': 0.1.6
+      '@effect/printer': 0.1.7
       '@fp-ts/core': 0.0.9
-      '@fp-ts/data': 0.0.18
+      '@fp-ts/data': 0.0.19
     devDependencies:
       '@babel/cli': 7.19.3_@babel+core@7.20.5
       '@babel/core': 7.20.5
@@ -710,7 +710,7 @@ packages:
     resolution: {integrity: sha512-cT81NV2c3IVYl6YFp6c5u8PHMxPMVb4lD/5WXVvMLtvx16Bl45gG/dLmOpkDVXHP0cc9PQO0zhaLloe/2yVWBA==}
     dependencies:
       '@effect/core': 0.0.16
-      '@effect/printer': 0.1.6
+      '@effect/printer': 0.1.7
       '@fp-ts/core': 0.0.8
       '@fp-ts/data': 0.0.15
       '@tsplus/stdlib': 0.2.8
@@ -722,11 +722,11 @@ packages:
       '@tsplus/stdlib': 0.2.8
     dev: true
 
-  /@effect/printer/0.1.6:
-    resolution: {integrity: sha512-2XdEqCT91vKUQMNgmyXYC1q+vfwiTv2L+nsk2glVUp0er7N8/ryKHR8aFIKR3iJSPBK9hb7QjrqHr5IcO1xXeQ==}
+  /@effect/printer/0.1.7:
+    resolution: {integrity: sha512-i7hsBQ9s94Omzt9UkrE4DGD3SQVsC2UMkKczKXwRKP7n+SB1/NzNTpX8h6K4pIMLmta/y3EjQKCMN5Qm1reh3w==}
     dependencies:
       '@fp-ts/core': 0.0.9
-      '@fp-ts/data': 0.0.18
+      '@fp-ts/data': 0.0.19
 
   /@esbuild/android-arm/0.15.15:
     resolution: {integrity: sha512-JJjZjJi2eBL01QJuWjfCdZxcIgot+VoK6Fq7eKF9w4YHm9hwl7nhBR1o2Wnt/WcANk5l9SkpvrldW1PLuXxcbw==}
@@ -785,8 +785,8 @@ packages:
       '@fp-ts/core': 0.0.8
     dev: true
 
-  /@fp-ts/data/0.0.18:
-    resolution: {integrity: sha512-5Gxq9K+Ckhy8XcwOTiUQIbsO34WvS3axaqB9A0Qm5REr/O8EtYbfmDnqoLmXabMnyo+RVeJ9AQAv7tHeHLBTVg==}
+  /@fp-ts/data/0.0.19:
+    resolution: {integrity: sha512-oZJmUPLHx3577m9qVLYknWmJJNGAFqwnWGtKRAosWZYwpgB7OF+p2aMf+muzfOZ4TsDaZbaJN17UM7nzxFohrA==}
     dependencies:
       '@fp-ts/core': 0.0.9
 
