@@ -13,8 +13,8 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@effect/io/test": path.resolve(__dirname, "/test"),
-      "@effect/io": path.resolve(__dirname, "/src")
+      "@effect/io/test": path.join(__dirname, "test"),
+      "@effect/io": path.join(__dirname, "src")
     }
   }
 })
