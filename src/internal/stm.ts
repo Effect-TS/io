@@ -53,6 +53,10 @@ export type Primitive =
   | STMProvide
   | STMSync
   | STMSucceed
+  | STMRetry
+  | STMFail
+  | STMDie
+  | STMInterrupt
 
 const stmVariance = {
   _R: (_: never) => _,
@@ -150,12 +154,10 @@ type STMOp<OpCode extends number, Body = {}> = STM<never, never, never> & Body &
 }
 
 interface STMEffect extends
-  STMOp<STMOpCodes.OP_EFFECT, {
+  STMOp<STMOpCodes.OP_WITH_STM_RUNTIME, {
     readonly evaluate: (
-      journal: Journal.Journal,
-      fiberId: FiberId.FiberId,
-      context: Context.Context<unknown>
-    ) => unknown
+      runtime: STMDriver<unknown, unknown, unknown>
+    ) => STM<unknown, unknown, unknown>
   }>
 {}
 
@@ -168,7 +170,6 @@ interface STMOnFailure extends
 
 interface STMOnRetry extends
   STMOp<STMOpCodes.OP_ON_RETRY, {
-    readonly opSTM: STMOpCodes.OP_ON_RETRY
     readonly first: STM<unknown, unknown, unknown>
     readonly retryK: () => STM<unknown, unknown, unknown>
   }>
@@ -190,96 +191,41 @@ interface STMProvide extends
 
 interface STMSync extends
   STMOp<STMOpCodes.OP_SYNC, {
-    readonly opSTM: STMOpCodes.OP_SYNC
     readonly evaluate: () => unknown
   }>
 {}
 
 interface STMSucceed extends
   STMOp<STMOpCodes.OP_SUCCEED, {
-    readonly opSTM: STMOpCodes.OP_SUCCEED
     readonly value: unknown
   }>
 {}
 
-export const STMFailExceptionTypeId = Symbol.for("@effect/stm/STM/FailException")
+interface STMRetry extends STMOp<STMOpCodes.OP_RETRY, {}> {}
 
-export type STMFailExceptionTypeId = typeof STMFailExceptionTypeId
+interface STMFail extends
+  STMOp<STMOpCodes.OP_FAIL, {
+    readonly error: unknown
+  }>
+{}
 
-export interface STMFailException<E> {
-  readonly [STMFailExceptionTypeId]: STMFailExceptionTypeId
-  readonly error: E
-}
+interface STMDie extends
+  STMOp<STMOpCodes.OP_DIE, {
+    readonly defect: unknown
+  }>
+{}
 
-export class STMFailException<E> implements STMFailException<E> {
-  readonly [STMFailExceptionTypeId]: STMFailExceptionTypeId = STMFailExceptionTypeId
-  constructor(readonly error: E) {}
-}
-
-export const isFailException = (u: unknown): u is STMFailException<unknown> => {
-  return typeof u === "object" && u != null && STMFailExceptionTypeId in u
-}
-
-export const STMDieExceptionTypeId = Symbol.for("@effect/stm/STM/DieException")
-
-export type STMDieExceptionTypeId = typeof STMDieExceptionTypeId
-
-export interface STMDieException {
-  readonly [STMDieExceptionTypeId]: STMDieExceptionTypeId
-  readonly defect: unknown
-}
-
-export class STMDieException implements STMDieException {
-  readonly [STMDieExceptionTypeId]: STMDieExceptionTypeId = STMDieExceptionTypeId
-  constructor(readonly defect: unknown) {}
-}
-
-export const isDieException = (u: unknown): u is STMDieException => {
-  return typeof u === "object" && u != null && STMDieExceptionTypeId in u
-}
-
-export const STMInterruptExceptionTypeId = Symbol.for("@effect/stm/STM/InterruptException")
-
-export type STMInterruptExceptionTypeId = typeof STMInterruptExceptionTypeId
-
-export interface STMInterruptException {
-  readonly [STMInterruptExceptionTypeId]: STMInterruptExceptionTypeId
-  readonly fiberId: FiberId.FiberId
-}
-export class STMInterruptException implements STMInterruptException {
-  readonly [STMInterruptExceptionTypeId]: STMInterruptExceptionTypeId = STMInterruptExceptionTypeId
-  constructor(readonly fiberId: FiberId.FiberId) {}
-}
-
-export const isInterruptException = (u: unknown): u is STMInterruptException => {
-  return typeof u === "object" && u != null && STMInterruptExceptionTypeId in u
-}
-
-export const STMRetryExceptionTypeId = Symbol.for("@effect/stm/STM/RetryException")
-
-export type STMRetryExceptionTypeId = typeof STMRetryExceptionTypeId
-
-export interface STMRetryException {
-  readonly [STMRetryExceptionTypeId]: STMRetryExceptionTypeId
-}
-
-export class STMRetryException {
-  readonly [STMRetryExceptionTypeId]: STMRetryExceptionTypeId = STMRetryExceptionTypeId
-}
-
-export const isRetryException = (u: unknown): u is STMRetryException => {
-  return typeof u === "object" && u != null && STMRetryExceptionTypeId in u
-}
+interface STMInterrupt extends STMOp<STMOpCodes.OP_INTERRUPT, {}> {}
 
 /**
  * @macro traced
  */
-export function effect<R, A>(
-  f: (journal: Journal.Journal, fiberId: FiberId.FiberId, context: Context.Context<R>) => A
-): STM<R, never, A> {
+export function withSTMRuntime<R, E, A>(
+  f: (runtime: STMDriver<unknown, unknown, unknown>) => STM<R, E, A>
+): STM<R, E, A> {
   const trace = getCallTrace()
   const stm = Object.create(proto)
-  stm.opSTM = STMOpCodes.OP_EFFECT
+  stm.opSTM = STMOpCodes.OP_WITH_STM_RUNTIME
   stm.evaluate = f
   stm.trace = trace
   return stm
@@ -290,9 +236,11 @@ export function effect<R, A>(
  */
 export const fail = <E>(error: E): STM<never, E, never> => {
   const trace = getCallTrace()
-  return effect<never, never>(() => {
-    throw new STMFailException(error)
-  }).traced(trace)
+  const stm = Object.create(proto)
+  stm.opSTM = STMOpCodes.OP_FAIL
+  stm.error = error
+  stm.trace = trace
+  return stm
 }
 
 /**
@@ -300,9 +248,11 @@ export const fail = <E>(error: E): STM<never, E, never> => {
  */
 export const die = (defect: unknown): STM<never, never, never> => {
   const trace = getCallTrace()
-  return effect<never, never>(() => {
-    throw new STMDieException(defect)
-  }).traced(trace)
+  const stm = Object.create(proto)
+  stm.opSTM = STMOpCodes.OP_DIE
+  stm.defect = defect
+  stm.trace = trace
+  return stm
 }
 
 /**
@@ -310,9 +260,13 @@ export const die = (defect: unknown): STM<never, never, never> => {
  */
 export const interrupt = (): STM<never, never, never> => {
   const trace = getCallTrace()
-  return effect<never, never>((_, fiberId) => {
-    throw new STMInterruptException(fiberId)
-  }).traced(trace)
+  return withSTMRuntime((_) => {
+    const stm = Object.create(proto)
+    stm.opSTM = STMOpCodes.OP_INTERRUPT
+    stm.trace = trace
+    stm.fiberId = _.fiberId
+    return stm
+  })
 }
 
 /**
@@ -320,9 +274,10 @@ export const interrupt = (): STM<never, never, never> => {
  */
 export const retry = (): STM<never, never, never> => {
   const trace = getCallTrace()
-  return effect<never, never>(() => {
-    throw new STMRetryException()
-  }).traced(trace)
+  const stm = Object.create(proto)
+  stm.opSTM = STMOpCodes.OP_RETRY
+  stm.trace = trace
+  return stm
 }
 
 /**
@@ -527,27 +482,6 @@ export class STMDriver<R, E, A> {
     }
   }
 
-  private unwindStack(error: unknown, isRetry: boolean): Primitive | undefined {
-    let result: Primitive | undefined = undefined
-    while (this.contStack && result === undefined) {
-      const cont = this.contStack.value
-      this.contStack = this.contStack.previous
-      if (cont.opSTM === STMOpCodes.OP_ON_FAILURE) {
-        if (!isRetry) {
-          this.logTrace(cont.trace)
-          result = cont.failK(error) as Primitive
-        }
-      }
-      if (cont.opSTM === STMOpCodes.OP_ON_RETRY) {
-        if (isRetry) {
-          this.logTrace(cont.trace)
-          result = cont.retryK() as Primitive
-        }
-      }
-    }
-    return result
-  }
-
   pushStack(cont: Continuation) {
     this.contStack = new Stack(cont, this.contStack)
     if ("trace" in cont) {
@@ -595,126 +529,130 @@ export class STMDriver<R, E, A> {
     return Chunk.unsafeFromArray(lines)
   }
 
+  nextSuccess() {
+    let current = this.popStack()
+    while (current && current.opSTM !== STMOpCodes.OP_ON_SUCCESS) {
+      current = this.popStack()
+    }
+    return current
+  }
+
+  nextFailure() {
+    let current = this.popStack()
+    while (current && current.opSTM !== STMOpCodes.OP_ON_FAILURE) {
+      current = this.popStack()
+    }
+    return current
+  }
+
+  nextRetry() {
+    let current = this.popStack()
+    while (current && current.opSTM !== STMOpCodes.OP_ON_RETRY) {
+      current = this.popStack()
+    }
+    return current
+  }
+
   run(): TExit.Exit<E, A> {
     let curr = this.self as Primitive | undefined
     let exit: TExit.Exit<unknown, unknown> | undefined = undefined
     while (exit === undefined && curr !== undefined) {
-      const current = curr
-      switch (current.opSTM) {
-        case STMOpCodes.OP_EFFECT: {
-          try {
-            this.logTrace(current.trace)
-            const a = current.evaluate(this.journal, this.fiberId, this.env)
-            const cont = this.popStack()
+      try {
+        const current = curr
+        switch (current.opSTM) {
+          case STMOpCodes.OP_DIE: {
+            this.logTrace(curr.trace)
+            const annotation = new StackAnnotation(
+              this.stackToLines(),
+              this.execution?.toChunkReversed() || Chunk.empty
+            )
+            exit = TExit.die(current.defect, annotation)
+            break
+          }
+          case STMOpCodes.OP_FAIL: {
+            this.logTrace(curr.trace)
+            const annotation = new StackAnnotation(
+              this.stackToLines(),
+              this.execution?.toChunkReversed() || Chunk.empty
+            )
+            const cont = this.nextFailure()
             if (!cont) {
-              exit = TExit.succeed(a)
+              exit = TExit.fail(current.error, annotation)
             } else {
-              if (
-                cont.opSTM === STMOpCodes.OP_ON_FAILURE ||
-                cont.opSTM === STMOpCodes.OP_ON_RETRY
-              ) {
-                curr = succeed(a) as Primitive
-              } else {
-                this.logTrace(cont.trace)
-                curr = cont.successK(a) as Primitive
-              }
+              this.logTrace(cont.trace)
+              curr = cont.failK(current.error) as Primitive
             }
-          } catch (error) {
-            if (isRetryException(error)) {
-              curr = this.unwindStack(undefined, true)
-              if (!curr) {
-                exit = TExit.retry
-              }
-            } else if (isFailException(error)) {
-              const annotation = new StackAnnotation(
-                this.stackToLines(),
-                this.execution?.toChunkReversed() || Chunk.empty
-              )
-              curr = this.unwindStack(error.error, false)
-              if (!curr) {
-                exit = TExit.fail(
-                  error.error,
-                  annotation
-                )
-              }
-            } else if (isDieException(error)) {
-              const annotation = new StackAnnotation(
-                this.stackToLines(),
-                this.execution?.toChunkReversed() || Chunk.empty
-              )
-              curr = this.unwindStack(error.defect, false)
-              if (!curr) {
-                exit = TExit.die(error.defect, annotation)
-              }
-            } else if (isInterruptException(error)) {
-              const annotation = new StackAnnotation(
-                this.stackToLines(),
-                this.execution?.toChunkReversed() || Chunk.empty
-              )
-              exit = TExit.interrupt(error.fiberId, annotation)
-            } else {
-              throw error
-            }
+            break
           }
-          break
-        }
-        case STMOpCodes.OP_ON_SUCCESS:
-        case STMOpCodes.OP_ON_FAILURE:
-        case STMOpCodes.OP_ON_RETRY: {
-          this.pushStack(current)
-          curr = current.first as Primitive
-          break
-        }
-        case STMOpCodes.OP_PROVIDE: {
-          this.logTrace(current.trace)
-          const env = this.env
-          this.env = current.provide(env)
-          curr = pipe(
-            current.stm,
-            ensuring(sync(() => {
-              this.env = env
-            }))
-          ) as Primitive
-          break
-        }
-        case STMOpCodes.OP_SUCCEED: {
-          this.logTrace(current.trace)
-          const value = current.value
-          const cont = this.popStack()
-          if (!cont) {
-            exit = TExit.succeed(value)
-          } else {
-            if (
-              cont.opSTM === STMOpCodes.OP_ON_FAILURE ||
-              cont.opSTM === STMOpCodes.OP_ON_RETRY
-            ) {
-              curr = succeed(value) as Primitive
+          case STMOpCodes.OP_RETRY: {
+            this.logTrace(curr.trace)
+            const cont = this.nextRetry()
+            if (!cont) {
+              exit = TExit.retry
+            } else {
+              this.logTrace(cont.trace)
+              curr = cont.retryK() as Primitive
+            }
+            break
+          }
+          case STMOpCodes.OP_INTERRUPT: {
+            this.logTrace(curr.trace)
+            const annotation = new StackAnnotation(
+              this.stackToLines(),
+              this.execution?.toChunkReversed() || Chunk.empty
+            )
+            exit = TExit.interrupt(this.fiberId, annotation)
+            break
+          }
+          case STMOpCodes.OP_WITH_STM_RUNTIME: {
+            this.logTrace(current.trace)
+            curr = current.evaluate(this) as Primitive
+            break
+          }
+          case STMOpCodes.OP_ON_SUCCESS:
+          case STMOpCodes.OP_ON_FAILURE:
+          case STMOpCodes.OP_ON_RETRY: {
+            this.pushStack(current)
+            curr = current.first as Primitive
+            break
+          }
+          case STMOpCodes.OP_PROVIDE: {
+            this.logTrace(current.trace)
+            const env = this.env
+            this.env = current.provide(env)
+            curr = pipe(
+              current.stm,
+              ensuring(sync(() => (this.env = env)))
+            ) as Primitive
+            break
+          }
+          case STMOpCodes.OP_SUCCEED: {
+            this.logTrace(current.trace)
+            const value = current.value
+            const cont = this.nextSuccess()
+            if (!cont) {
+              exit = TExit.succeed(value)
             } else {
               this.logTrace(cont.trace)
               curr = cont.successK(value) as Primitive
             }
+            break
           }
-          break
-        }
-        case STMOpCodes.OP_SYNC: {
-          this.logTrace(current.trace)
-          const value = current.evaluate()
-          const cont = this.popStack()
-          if (!cont) {
-            exit = TExit.succeed(value)
-          } else {
-            if (
-              cont.opSTM === STMOpCodes.OP_ON_FAILURE ||
-              cont.opSTM === STMOpCodes.OP_ON_RETRY
-            ) {
-              curr = succeed(value) as Primitive
+          case STMOpCodes.OP_SYNC: {
+            this.logTrace(current.trace)
+            const value = current.evaluate()
+            const cont = this.nextSuccess()
+            if (!cont) {
+              exit = TExit.succeed(value)
             } else {
               this.logTrace(cont.trace)
               curr = cont.successK(value) as Primitive
             }
+            break
           }
-          break
         }
+      } catch (e) {
+        curr = die(e) as Primitive
       }
     }
     return exit as TExit.Exit<E, A>

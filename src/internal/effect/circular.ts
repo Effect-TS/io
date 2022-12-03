@@ -781,15 +781,15 @@ export const unsafeMakeSemaphore = (permits: number): Semaphore => {
 export const acquireN = (n: number) => {
   const trace = getCallTrace()
   return (self: Semaphore): STM.STM<never, never, void> => {
-    return STM.effect<never, void>((journal) => {
+    return STM.withSTMRuntime((_) => {
       if (n < 0) {
         throw Cause.IllegalArgumentException(`Unexpected negative value ${n} passed to Semaphore.acquireN`)
       }
-      const value = pipe(self.permits, TRef.unsafeGet(journal))
+      const value = pipe(self.permits, TRef.unsafeGet(_.journal))
       if (value < n) {
-        throw new STM.STMRetryException()
+        return STM.retry()
       } else {
-        return pipe(self.permits, TRef.unsafeSet(value - n, journal))
+        return STM.succeed(pipe(self.permits, TRef.unsafeSet(value - n, _.journal)))
       }
     }).traced(trace)
   }
@@ -801,12 +801,12 @@ export const acquireN = (n: number) => {
 export const releaseN = (n: number) => {
   const trace = getCallTrace()
   return (self: Semaphore): STM.STM<never, never, void> => {
-    return STM.effect<never, void>((journal) => {
+    return STM.withSTMRuntime((_) => {
       if (n < 0) {
         throw Cause.IllegalArgumentException(`Unexpected negative value ${n} passed to Semaphore.releaseN`)
       }
-      const current = pipe(self.permits, TRef.unsafeGet(journal))
-      return pipe(self.permits, TRef.unsafeSet(current + n, journal))
+      const current = pipe(self.permits, TRef.unsafeGet(_.journal))
+      return STM.succeed(pipe(self.permits, TRef.unsafeSet(current + n, _.journal)))
     }).traced(trace)
   }
 }

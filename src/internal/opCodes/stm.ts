@@ -1,8 +1,8 @@
 /** @internal */
-export const OP_EFFECT = 0 as const
+export const OP_WITH_STM_RUNTIME = 0 as const
 
 /** @internal */
-export type OP_EFFECT = typeof OP_EFFECT
+export type OP_WITH_STM_RUNTIME = typeof OP_WITH_STM_RUNTIME
 
 /** @internal */
 export const OP_ON_FAILURE = 1 as const
@@ -39,3 +39,27 @@ export const OP_SUCCEED = 6 as const
 
 /** @internal */
 export type OP_SUCCEED = typeof OP_SUCCEED
+
+/** @internal */
+export const OP_RETRY = 7 as const
+
+/** @internal */
+export type OP_RETRY = typeof OP_RETRY
+
+/** @internal */
+export const OP_FAIL = 8 as const
+
+/** @internal */
+export type OP_FAIL = typeof OP_FAIL
+
+/** @internal */
+export const OP_DIE = 9 as const
+
+/** @internal */
+export type OP_DIE = typeof OP_DIE
+
+/** @internal */
+export const OP_INTERRUPT = 10 as const
+
+/** @internal */
+export type OP_INTERRUPT = typeof OP_INTERRUPT
