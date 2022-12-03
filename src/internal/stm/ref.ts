@@ -46,11 +46,11 @@ export class RefImpl<A> implements Ref<A> {
     this.todos = new Map()
   }
   modify<B>(f: (a: A) => readonly [B, A]): STM.STM<never, never, B> {
-    return internal.effect((journal) => {
-      const entry = getOrMakeEntry(this, journal)
+    return internal.withSTMRuntime((_) => {
+      const entry = getOrMakeEntry(this, _.journal)
       const [retValue, newValue] = f(Entry.unsafeGet(entry) as A)
       Entry.unsafeSet(entry, newValue)
-      return retValue
+      return internal.succeed(retValue)
     })
   }
 }
@@ -60,10 +60,10 @@ export class RefImpl<A> implements Ref<A> {
  */
 export const make = <A>(value: A): STM.STM<never, never, Ref<A>> => {
   const trace = getCallTrace()
-  return internal.effect<never, Ref<A>>((journal) => {
+  return internal.withSTMRuntime((_) => {
     const ref = new RefImpl(value)
-    journal.set(ref, Entry.make(ref, true))
-    return ref
+    _.journal.set(ref, Entry.make(ref, true))
+    return internal.succeed(ref)
   }).traced(trace)
 }
 
