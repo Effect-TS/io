@@ -78,7 +78,33 @@ export const commit = <R, E, A>(self: STM<R, E, A>): Effect.Effect<R, E, A> => {
         const txnId = TxnId.make()
         const state = MutableRef.make<STMState.STMState<E, A>>(STMState.running)
         const io = core.async(
-          tryCommitAsync(commitResult.journal, fiberId, self, txnId, state, env, scheduler)
+          (k: (effect: Effect.Effect<R, E, A>) => unknown): void => {
+            if (STMState.isRunning(MutableRef.get(state))) {
+              if (Journal.isInvalid(commitResult.journal)) {
+                const result = tryCommit(fiberId, self, state, env, scheduler)
+                switch (result.op) {
+                  case TryCommit.OP_DONE: {
+                    completeTryCommit(result.exit, k)
+                    break
+                  }
+                  case TryCommit.OP_SUSPEND: {
+                    Journal.addTodo(
+                      txnId,
+                      result.journal,
+                      () => tryCommitAsync(fiberId, self, txnId, state, env, scheduler, k)
+                    )
+                    break
+                  }
+                }
+              } else {
+                Journal.addTodo(
+                  txnId,
+                  commitResult.journal,
+                  () => tryCommitAsync(fiberId, self, txnId, state, env, scheduler, k)
+                )
+              }
+            }
+          }
         )
         return core.uninterruptibleMask((restore) =>
           pipe(
@@ -824,40 +850,28 @@ const tryCommitSync = <R, E, A>(
 }
 
 const tryCommitAsync = <R, E, A>(
-  journal: Journal.Journal | undefined,
   fiberId: FiberId.FiberId,
-  stm: STM<R, E, A>,
+  self: STM<R, E, A>,
   txnId: TxnId.TxnId,
   state: MutableRef.MutableRef<STMState.STMState<E, A>>,
   context: Context.Context<R>,
-  scheduler: Scheduler.Scheduler
+  scheduler: Scheduler.Scheduler,
+  k: (effect: Effect.Effect<R, E, A>) => unknown
 ) => {
-  return (k: (effect: Effect.Effect<R, E, A>) => unknown): void => {
-    if (STMState.isRunning(MutableRef.get(state))) {
-      if (journal == null) {
-        const result = tryCommit(fiberId, stm, state, context, scheduler)
-        switch (result.op) {
-          case TryCommit.OP_DONE: {
-            completeTryCommit(result.exit, k)
-            break
-          }
-          case TryCommit.OP_SUSPEND: {
-            suspendTryCommit(
-              fiberId,
-              stm,
-              txnId,
-              state,
-              context,
-              k,
-              result.journal,
-              result.journal,
-              scheduler
-            )
-            break
-          }
-        }
-      } else {
-        suspendTryCommit(fiberId, stm, txnId, state, context, k, journal, journal, scheduler)
+  if (STMState.isRunning(MutableRef.get(state))) {
+    const result = tryCommit(fiberId, self, state, context, scheduler)
+    switch (result.op) {
+      case TryCommit.OP_DONE: {
+        completeTryCommit(result.exit, k)
+        break
+      }
+      case TryCommit.OP_SUSPEND: {
+        Journal.addTodo(
+          txnId,
+          result.journal,
+          () => tryCommitAsync(fiberId, self, txnId, state, context, scheduler, k)
+        )
+        break
       }
     }
   }
@@ -880,46 +894,4 @@ const completeTryCommit = <R, E, A>(
   k: (effect: Effect.Effect<R, E, A>) => unknown
 ): void => {
   k(core.done(exit))
-}
-
-const suspendTryCommit = <R, E, A>(
-  fiberId: FiberId.FiberId,
-  stm: STM<R, E, A>,
-  txnId: TxnId.TxnId,
-  state: MutableRef.MutableRef<STMState.STMState<E, A>>,
-  context: Context.Context<R>,
-  k: (effect: Effect.Effect<R, E, A>) => unknown,
-  accum: Journal.Journal,
-  journal: Journal.Journal,
-  scheduler: Scheduler.Scheduler
-): void => {
-  // eslint-disable-next-line no-constant-condition
-  while (1) {
-    Journal.addTodo(
-      txnId,
-      journal,
-      () => tryCommitAsync(undefined, fiberId, stm, txnId, state, context, scheduler)(k)
-    )
-    if (Journal.isInvalid(journal)) {
-      const result = tryCommit(fiberId, stm, state, context, scheduler)
-      switch (result.op) {
-        case TryCommit.OP_DONE: {
-          completeTryCommit(result.exit, k)
-          return
-        }
-        case TryCommit.OP_SUSPEND: {
-          const untracked = Journal.untrackedTodoTargets(accum, result.journal)
-          if (untracked.size > 0) {
-            for (const entry of untracked) {
-              accum.set(entry[0], entry[1])
-            }
-            journal = untracked
-          }
-          break
-        }
-      }
-    } else {
-      return
-    }
-  }
 }

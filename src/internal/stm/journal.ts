@@ -30,23 +30,6 @@ export const JournalAnalysisReadOnly = 2 as const
 export type JournalAnalysisReadOnly = typeof JournalAnalysisReadOnly
 
 /** @internal */
-export const prepareResetJournal = (journal: Journal): () => unknown => {
-  const saved: Journal = new Map()
-  for (const entry of journal) {
-    saved.set(
-      entry[0],
-      Entry.copy(entry[1])
-    )
-  }
-  return () => {
-    journal.clear()
-    for (const entry of saved) {
-      journal.set(entry[0], entry[1])
-    }
-  }
-}
-
-/** @internal */
 export const commitJournal = (journal: Journal) => {
   for (const entry of journal) {
     Entry.commit(entry[1])
@@ -106,28 +89,6 @@ export const addTodo = (
     }
   }
   return added
-}
-
-/** @internal */
-export const untrackedTodoTargets = (
-  oldJournal: Journal,
-  newJournal: Journal
-): Journal => {
-  const untracked: Journal = new Map()
-  for (const [ref, entry] of newJournal) {
-    if (
-      // We already tracked this one
-      !oldJournal.has(ref) &&
-      // This `TRef` was created in the current transaction, so no need to
-      // add any todos to it, because it cannot be modified from the outside
-      // until the transaction succeeds; so any todo added to it would never
-      // succeed.
-      !entry.isNew
-    ) {
-      untracked.set(ref, entry)
-    }
-  }
-  return untracked
 }
 
 /** @internal */
