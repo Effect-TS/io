@@ -1,5 +1,15 @@
 # @effect/io
 
+## 0.0.29
+
+### Patch Changes
+
+- [#89](https://github.com/Effect-TS/io/pull/89) [`db4a8bc`](https://github.com/Effect-TS/io/commit/db4a8bc6536b9c88b6dbf6d4a1319a947e0803fa) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Change design of STM.withJournal and STMDriver
+
+- [#86](https://github.com/Effect-TS/io/pull/86) [`d928327`](https://github.com/Effect-TS/io/commit/d9283274e3b1e2f0e7c07e6015774e1ff31d134b) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Integrate tracing in STM
+
+- [#89](https://github.com/Effect-TS/io/pull/89) [`0ffff27`](https://github.com/Effect-TS/io/commit/0ffff27d7270378341caec75e4859c02a0bb9460) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Simplify STM branching
+
 ## 0.0.28
 
 ### Patch Changes
