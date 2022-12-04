@@ -56,9 +56,9 @@
     }
   },
   "dependencies": {
-    "@effect/printer": "^0.1.7",
+    "@effect/printer": "^0.1.8",
     "@fp-ts/core": "^0.0.9",
-    "@fp-ts/data": "^0.0.19"
+    "@fp-ts/data": "^0.0.20"
   },
   "devDependencies": {
     "@babel/cli": "^7.18.6",
@@ -69,14 +69,14 @@
     "@effect-ts/build-utils": "0.40.3",
     "@effect-ts/core": "^0.60.2",
     "@effect/core": "^0.0.16",
-    "@effect/language-service": "^0.0.6",
+    "@effect/language-service": "^0.0.9",
     "@repo-tooling/eslint-plugin-dprint": "^0.0.4",
     "@rollup/pluginutils": "^5.0.2",
     "@types/benchmark": "^2.1.2",
     "@types/chai": "^4.3.4",
     "@types/glob": "^8.0.0",
     "@types/jest": "^29.2.3",
-    "@types/node": "^18.11.9",
+    "@types/node": "^18.11.10",
     "@types/prettier": "2.7.1",
     "@types/rimraf": "^3.0.2",
     "@typescript-eslint/eslint-plugin": "^5.45.0",
@@ -86,7 +86,7 @@
     "concurrently": "^7.6.0",
     "cpx": "^1.5.0",
     "docs-ts": "0.6.10",
-    "eslint": "^8.28.0",
+    "eslint": "^8.29.0",
     "eslint-import-resolver-typescript": "^3.5.2",
     "eslint-plugin-codegen": "0.16.1",
     "eslint-plugin-deprecation": "^1.3.3",

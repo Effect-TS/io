@@ -644,16 +644,17 @@ Added in v1.0.0
 
 ## acquireRelease
 
-Constructs a scoped resource from an `acquire` and `release` effect.
+This function constructs a scoped resource from an `acquire` and `release`
+`Effect` value.
 
-If `acquire` successfully completes execution then `release` will be added to
-the finalizers associated with the scope of this effect and is guaranteed to
-be run when the scope is closed.
+If the `acquire` `Effect` value successfully completes execution, then the
+`release` `Effect` value will be added to the finalizers associated with the
+scope of this `Effect` value, and it is guaranteed to be run when the scope
+is closed.
 
-The `acquire` and `release` effects will be run uninterruptibly.
-
-Additionally, the `release` effect may depend on the `Exit` value specified
-when the scope is closed.
+The `acquire` and `release` `Effect` values will be run uninterruptibly.
+Additionally, the `release` `Effect` value may depend on the `Exit` value
+specified when the scope is closed.
 
 **Signature**
 
@@ -668,16 +669,17 @@ Added in v1.0.0
 
 ## acquireReleaseInterruptible
 
-A variant of `acquireRelease` that allows the `acquire` effect to be
-interruptible.
+This function is a variant of `acquireRelease` that allows the `acquire`
+`Effect` value to be interruptible.
 
-Since the `acquire` effect could be interrupted after partially acquiring
-resources, the `release` effect is not allowed to access the resource
-produced by `acquire` and must independently determine what finalization,
-if any, needs to be performed (e.g. by examining in memory state).
+Since the `acquire` `Effect` value could be interrupted after partially
+acquiring resources, the `release` `Effect` value is not allowed to access
+the resource produced by `acquire` and must independently determine what
+finalization, if any, needs to be performed (e.g. by examining in memory
+state).
 
-Additionally, the `release` effect may depend on the `Exit` value specified
-when the scope is closed.
+Additionally, the `release` `Effect` value may depend on the `Exit` value
+specified when the scope is closed.
 
 **Signature**
 
@@ -692,26 +694,27 @@ Added in v1.0.0
 
 ## acquireUseRelease
 
-When this effect represents acquisition of a resource (for example, opening
-a file, launching a thread, etc.), `acquireUseRelease` can be used to
-ensure the acquisition is not interrupted and the resource is always
-released.
+This function is used to ensure that an `Effect` value that represents the
+acquisition of a resource (for example, opening a file, launching a thread,
+etc.) will not be interrupted, and that the resource will always be released
+when the `Effect` value completes execution.
 
-The function does two things:
+`acquireUseRelease` does the following:
 
-1. Ensures this effect, which acquires the resource, will not be
-   interrupted. Of course, acquisition may fail for internal reasons (an
-   uncaught exception).
-2. Ensures the `release` effect will not be interrupted, and will be
-   executed so long as this effect successfully
-   acquires the resource.
+1. Ensures that the `Effect` value that acquires the resource will not be
+   interrupted. Note that acquisition may still fail due to internal
+   reasons (such as an uncaught exception).
+2. Ensures that the `release` `Effect` value will not be interrupted,
+   and will be executed as long as the acquisition `Effect` value
+   successfully acquires the resource.
 
-In between acquisition and release of the resource, the `use` effect is
-executed.
+During the time period between the acquisition and release of the resource,
+the `use` `Effect` value will be executed.
 
-If the `release` effect fails, then the entire effect will fail even if the
-`use` effect succeeds. If this fail-fast behavior is not desired, errors
-produced by the `release` effect can be caught and ignored.
+If the `release` `Effect` value fails, then the entire `Effect` value will
+fail, even if the `use` `Effect` value succeeds. If this fail-fast behavior
+is not desired, errors produced by the `release` `Effect` value can be caught
+and ignored.
 
 **Signature**
 
@@ -727,8 +730,8 @@ Added in v1.0.0
 
 ## allowInterrupt
 
-Makes an explicit check to see if any fibers are attempting to interrupt the
-current fiber, and if so, performs self-interruption.
+This function checks if any fibers are attempting to interrupt the current
+fiber, and if so, performs self-interruption.
 
 Note that this allows for interruption to occur in uninterruptible regions.
 
@@ -2166,8 +2169,14 @@ Added in v1.0.0
 
 ## firstSuccessOf
 
-Returns an effect that runs this effect and in case of failure, runs each
-of the specified effects in order until one of them succeeds.
+This function takes an iterable of `Effect` values and returns a new
+`Effect` value that represents the first `Effect` value in the iterable
+that succeeds. If all of the `Effect` values in the iterable fail, then
+the resulting `Effect` value will fail as well.
+
+This function is sequential, meaning that the `Effect` values in the
+iterable will be executed in sequence, and the first one that succeeds
+will determine the outcome of the resulting `Effect` value.
 
 **Signature**
 
@@ -2441,8 +2450,13 @@ Added in v1.0.0
 
 ## absolve
 
-Submerges the error case of an `Either` into an `Effect`. The inverse
-operation of `either`.
+This function submerges the error case of an `Either` value into an
+`Effect` value. It is the inverse operation of `either`.
+
+If the `Either` value is a `Right` value, then the `Effect` value will
+succeed with the value contained in the `Right`. If the `Either` value
+is a `Left` value, then the `Effect` value will fail with the error
+contained in the `Left`.
 
 **Signature**
 
@@ -2454,8 +2468,12 @@ Added in v1.0.0
 
 ## absorb
 
-Attempts to convert defects into a failure, throwing away all information
-about the cause of the failure.
+This function transforms an `Effect` value that may fail with a defect
+into a new `Effect` value that may fail with an unknown error.
+
+The resulting `Effect` value will have the same context and success
+type as the original `Effect` value, but it will have a more general
+error type that allows it to fail with any type of error.
 
 **Signature**
 
@@ -2467,8 +2485,17 @@ Added in v1.0.0
 
 ## absorbWith
 
-Attempts to convert defects into a failure with the specified function,
-throwing away all information about the cause of the failure.
+This function takes a mapping function `f` and returns a new function
+that transforms an `Effect` value that may fail with a defect into a new
+`Effect` value that may fail with an unknown error.
+
+If the original `Effect` value fails with a known error, then the
+mapping function `f` will be applied to the error to convert it to an
+unknown structure.
+
+The resulting `Effect` value will have the same context and success
+type as the original `Effect` value, but it will have a more general
+error type that allows it to fail with any type of error.
 
 **Signature**
 
@@ -2962,9 +2989,9 @@ Added in v1.0.0
 
 ## addFinalizer
 
-Adds a finalizer to the scope of this effect. The finalizer is guaranteed
-to be run when the scope is closed and may depend on the `Exit` value that
-the scope is closed with.
+This function adds a finalizer to the scope of the calling `Effect` value.
+The finalizer is guaranteed to be run when the scope is closed, and it may
+depend on the `Exit` value that the scope is closed with.
 
 **Signature**
 
@@ -3582,7 +3609,8 @@ Added in v1.0.0
 
 ## as
 
-Maps the success value of this effect to the specified constant value.
+This function maps the success value of an `Effect` value to a specified
+constant value.
 
 **Signature**
 
@@ -3594,7 +3622,8 @@ Added in v1.0.0
 
 ## asLeft
 
-Maps the success value of this effect to a `Left` value.
+This function maps the success value of an `Effect` value to a `Left` value
+in an `Either` value.
 
 **Signature**
 
@@ -3606,7 +3635,8 @@ Added in v1.0.0
 
 ## asLeftError
 
-Maps the error value of this effect to a `Left` value.
+This function maps the error value of an `Effect` value to a `Left` value
+in an `Either` value.
 
 **Signature**
 
@@ -3618,7 +3648,8 @@ Added in v1.0.0
 
 ## asRight
 
-Maps the success value of this effect to a `Right` value.
+This function maps the success value of an `Effect` value to a `Right` value
+in an `Either` value.
 
 **Signature**
 
@@ -3630,7 +3661,8 @@ Added in v1.0.0
 
 ## asRightError
 
-Maps the error value of this effect to a `Right` value.
+This function maps the error value of an `Effect` value to a `Right` value
+in an `Either` value.
 
 **Signature**
 
@@ -3642,7 +3674,9 @@ Added in v1.0.0
 
 ## asSome
 
-Maps the success value of this effect to a `Some` value.
+This function maps the success value of an `Effect` value to a `Some` value
+in an `Option` value. If the original `Effect` value fails, the returned
+`Effect` value will also fail.
 
 **Signature**
 
@@ -3654,7 +3688,9 @@ Added in v1.0.0
 
 ## asSomeError
 
-Maps the error value of this effect to a `Some` value.
+This function maps the error value of an `Effect` value to a `Some` value
+in an `Option` value. If the original `Effect` value succeeds, the returned
+`Effect` value will also succeed.
 
 **Signature**
 
@@ -3666,7 +3702,10 @@ Added in v1.0.0
 
 ## asUnit
 
-Maps the success value of this effect to `void`.
+This function maps the success value of an `Effect` value to `void`. If the
+original `Effect` value succeeds, the returned `Effect` value will also
+succeed. If the original `Effect` value fails, the returned `Effect` value
+will fail with the same error.
 
 **Signature**
 
@@ -3781,6 +3820,18 @@ Added in v1.0.0
 # models
 
 ## Effect (interface)
+
+The `Effect` interface defines a value that lazily describes a workflow or job.
+The workflow requires some context `R`, and may fail with an error of type `E`,
+or succeed with a value of type `A`.
+
+`Effect` values model resourceful interaction with the outside world, including
+synchronous, asynchronous, concurrent, and parallel interaction. They use a
+fiber-based concurrency model, with built-in support for scheduling, fine-grained
+interruption, structured concurrency, and high scalability.
+
+To run an `Effect` value, you need a `Runtime`, which is a type that is capable
+of executing `Effect` values.
 
 **Signature**
 
@@ -5409,7 +5460,13 @@ Added in v1.0.0
 
 ## isEffect
 
-Returns `true` if the specified value is an `Effect`, `false` otherwise.
+This function returns `true` if the specified value is an `Effect` value,
+`false` otherwise.
+
+This function can be useful for checking the type of a value before
+attempting to operate on it as an `Effect` value. For example, you could
+use `isEffect` to check the type of a value before using it as an
+argument to a function that expects an `Effect` value.
 
 **Signature**
 
@@ -5472,6 +5529,9 @@ Added in v1.0.0
 # sequencing
 
 ## flatMap
+
+This function is a pipeable operator that maps over an `Effect` value,
+flattening the result of the mapping function into a new `Effect` value.
 
 **Signature**
 

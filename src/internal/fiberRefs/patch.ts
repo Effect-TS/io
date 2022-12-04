@@ -2,6 +2,7 @@ import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRefs from "@effect/io/FiberRefs"
 import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
 import * as _fiberRefs from "@effect/io/internal/fiberRefs"
+import { equals } from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
 import * as List from "@fp-ts/data/List"
 
@@ -52,7 +53,7 @@ export const diff = (
     const old = missingLocals.get(fiberRef)
     if (old !== undefined) {
       const oldValue = old.head[1]
-      if (oldValue !== newValue) {
+      if (!equals(oldValue, newValue)) {
         patch = combine({
           op: OP_UPDATE,
           fiberRef,
