@@ -54,6 +54,18 @@ export const EffectTypeId: unique symbol = core.EffectTypeId
 export type EffectTypeId = typeof EffectTypeId
 
 /**
+ * The `Effect` interface defines a value that lazily describes a workflow or job.
+ * The workflow requires some context `R`, and may fail with an error of type `E`,
+ * or succeed with a value of type `A`.
+ *
+ * `Effect` values model resourceful interaction with the outside world, including
+ * synchronous, asynchronous, concurrent, and parallel interaction. They use a
+ * fiber-based concurrency model, with built-in support for scheduling, fine-grained
+ * interruption, structured concurrency, and high scalability.
+ *
+ * To run an `Effect` value, you need a `Runtime`, which is a type that is capable
+ * of executing `Effect` values.
+ *
  * @since 1.0.0
  * @category models
  */
@@ -80,7 +92,18 @@ export declare namespace Effect {
 }
 
 /**
- * Returns `true` if the specified value is an `Effect`, `false` otherwise.
+ * This function returns `true` if the specified value is an `Effect` value,
+ * `false` otherwise.
+ *
+ * This function can be useful for checking the type of a value before
+ * attempting to operate on it as an `Effect` value. For example, you could
+ * use `isEffect` to check the type of a value before using it as an
+ * argument to a function that expects an `Effect` value.
+ *
+ * @param u - The value to check for being an `Effect` value.
+ *
+ * @returns `true` if the specified value is an `Effect` value, `false`
+ * otherwise.
  *
  * @since 1.0.0
  * @category refinements
@@ -88,9 +111,16 @@ export declare namespace Effect {
 export const isEffect: (u: unknown) => u is Effect<unknown, unknown, unknown> = core.isEffect
 
 /**
- * Adds a finalizer to the scope of this effect. The finalizer is guaranteed
- * to be run when the scope is closed and may depend on the `Exit` value that
- * the scope is closed with.
+ * This function adds a finalizer to the scope of the calling `Effect` value.
+ * The finalizer is guaranteed to be run when the scope is closed, and it may
+ * depend on the `Exit` value that the scope is closed with.
+ *
+ * @param finalizer - The finalizer to add to the scope of the calling
+ * `Effect` value. This function must take an `Exit` value as its parameter,
+ * and return a new `Effect` value.
+ *
+ * @returns A new `Effect` value that represents the addition of the finalizer
+ * to the scope of the calling `Effect` value.
  *
  * @macro traced
  * @since 1.0.0
@@ -101,8 +131,20 @@ export const addFinalizer: <R, X>(
 ) => Effect<R | Scope.Scope, never, void> = fiberRuntime.addFinalizer
 
 /**
- * Submerges the error case of an `Either` into an `Effect`. The inverse
- * operation of `either`.
+ * This function submerges the error case of an `Either` value into an
+ * `Effect` value. It is the inverse operation of `either`.
+ *
+ * If the `Either` value is a `Right` value, then the `Effect` value will
+ * succeed with the value contained in the `Right`. If the `Either` value
+ * is a `Left` value, then the `Effect` value will fail with the error
+ * contained in the `Left`.
+ *
+ * @param self - The `Effect` value that contains an `Either` value as its
+ * result.
+ *
+ * @returns A new `Effect` value that has the same context as the original
+ * `Effect` value, but has the error case of the `Either` value submerged
+ * into it.
  *
  * @macro traced
  * @since 1.0.0
@@ -111,8 +153,18 @@ export const addFinalizer: <R, X>(
 export const absolve: <R, E, A>(self: Effect<R, E, Either.Either<E, A>>) => Effect<R, E, A> = effect.absolve
 
 /**
- * Attempts to convert defects into a failure, throwing away all information
- * about the cause of the failure.
+ * This function transforms an `Effect` value that may fail with a defect
+ * into a new `Effect` value that may fail with an unknown error.
+ *
+ * The resulting `Effect` value will have the same context and success
+ * type as the original `Effect` value, but it will have a more general
+ * error type that allows it to fail with any type of error.
+ *
+ * @param self - The `Effect` value to transform.
+ *
+ * @returns A new `Effect` value that has the same context and success
+ * type as the original `Effect` value, but a more general error type that
+ * allows it to fail with any type of error.
  *
  * @macro traced
  * @since 1.0.0
@@ -121,8 +173,24 @@ export const absolve: <R, E, A>(self: Effect<R, E, Either.Either<E, A>>) => Effe
 export const absorb: <R, E, A>(self: Effect<R, E, A>) => Effect<R, unknown, A> = effect.absorb
 
 /**
- * Attempts to convert defects into a failure with the specified function,
- * throwing away all information about the cause of the failure.
+ * This function takes a mapping function `f` and returns a new function
+ * that transforms an `Effect` value that may fail with a defect into a new
+ * `Effect` value that may fail with an unknown error.
+ *
+ * If the original `Effect` value fails with a known error, then the
+ * mapping function `f` will be applied to the error to convert it to an
+ * unknown structure.
+ *
+ * The resulting `Effect` value will have the same context and success
+ * type as the original `Effect` value, but it will have a more general
+ * error type that allows it to fail with any type of error.
+ *
+ * @param f - The mapping function to apply to known errors. This function
+ * must take an error of type `E` and return an unknown structure.
+ *
+ * @returns A new function that transforms an `Effect` value that may fail
+ * with a defect into a new `Effect` value that may fail with an unknown
+ * error.
  *
  * @macro traced
  * @since 1.0.0
@@ -132,16 +200,22 @@ export const absorbWith: <E>(f: (e: E) => unknown) => <R, A>(self: Effect<R, E, 
   effect.absorbWith
 
 /**
- * Constructs a scoped resource from an `acquire` and `release` effect.
+ * This function constructs a scoped resource from an `acquire` and `release`
+ * `Effect` value.
  *
- * If `acquire` successfully completes execution then `release` will be added to
- * the finalizers associated with the scope of this effect and is guaranteed to
- * be run when the scope is closed.
+ * If the `acquire` `Effect` value successfully completes execution, then the
+ * `release` `Effect` value will be added to the finalizers associated with the
+ * scope of this `Effect` value, and it is guaranteed to be run when the scope
+ * is closed.
  *
- * The `acquire` and `release` effects will be run uninterruptibly.
+ * The `acquire` and `release` `Effect` values will be run uninterruptibly.
+ * Additionally, the `release` `Effect` value may depend on the `Exit` value
+ * specified when the scope is closed.
  *
- * Additionally, the `release` effect may depend on the `Exit` value specified
- * when the scope is closed.
+ * @param acquire - The `Effect` value that acquires the resource.
+ * @param release - The `Effect` value that releases the resource.
+ *
+ * @returns A new `Effect` value that represents the scoped resource.
  *
  * @macro traced
  * @since 1.0.0
@@ -153,16 +227,25 @@ export const acquireRelease: <R, E, A, R2, X>(
 ) => Effect<Scope.Scope | R | R2, E, A> = fiberRuntime.acquireRelease
 
 /**
- * A variant of `acquireRelease` that allows the `acquire` effect to be
- * interruptible.
+ * This function is a variant of `acquireRelease` that allows the `acquire`
+ * `Effect` value to be interruptible.
  *
- * Since the `acquire` effect could be interrupted after partially acquiring
- * resources, the `release` effect is not allowed to access the resource
- * produced by `acquire` and must independently determine what finalization,
- * if any, needs to be performed (e.g. by examining in memory state).
+ * Since the `acquire` `Effect` value could be interrupted after partially
+ * acquiring resources, the `release` `Effect` value is not allowed to access
+ * the resource produced by `acquire` and must independently determine what
+ * finalization, if any, needs to be performed (e.g. by examining in memory
+ * state).
  *
- * Additionally, the `release` effect may depend on the `Exit` value specified
- * when the scope is closed.
+ * Additionally, the `release` `Effect` value may depend on the `Exit` value
+ * specified when the scope is closed.
+ *
+ * @param acquire - The interruptible `Effect` value that acquires the
+ * resource.
+ * @param release - The `Effect` value that releases the resource. This function
+ * must take an `Exit` value as its parameter, and return a new `Effect` value.
+ *
+ * @returns A new `Effect` value that represents the interruptible scoped
+ * resource.
  *
  * @macro traced
  * @since 1.0.0
@@ -174,26 +257,35 @@ export const acquireReleaseInterruptible: <R, E, A, R2, X>(
 ) => Effect<Scope.Scope | R | R2, E, A> = circular.acquireReleaseInterruptible
 
 /**
- * When this effect represents acquisition of a resource (for example, opening
- * a file, launching a thread, etc.), `acquireUseRelease` can be used to
- * ensure the acquisition is not interrupted and the resource is always
- * released.
+ * This function is used to ensure that an `Effect` value that represents the
+ * acquisition of a resource (for example, opening a file, launching a thread,
+ * etc.) will not be interrupted, and that the resource will always be released
+ * when the `Effect` value completes execution.
  *
- * The function does two things:
+ * `acquireUseRelease` does the following:
  *
- *   1. Ensures this effect, which acquires the resource, will not be
- *      interrupted. Of course, acquisition may fail for internal reasons (an
- *      uncaught exception).
- *   2. Ensures the `release` effect will not be interrupted, and will be
- *      executed so long as this effect successfully
- *      acquires the resource.
+ *   1. Ensures that the `Effect` value that acquires the resource will not be
+ *      interrupted. Note that acquisition may still fail due to internal
+ *      reasons (such as an uncaught exception).
+ *   2. Ensures that the `release` `Effect` value will not be interrupted,
+ *      and will be executed as long as the acquisition `Effect` value
+ *      successfully acquires the resource.
  *
- * In between acquisition and release of the resource, the `use` effect is
- * executed.
+ * During the time period between the acquisition and release of the resource,
+ * the `use` `Effect` value will be executed.
  *
- * If the `release` effect fails, then the entire effect will fail even if the
- * `use` effect succeeds. If this fail-fast behavior is not desired, errors
- * produced by the `release` effect can be caught and ignored.
+ * If the `release` `Effect` value fails, then the entire `Effect` value will
+ * fail, even if the `use` `Effect` value succeeds. If this fail-fast behavior
+ * is not desired, errors produced by the `release` `Effect` value can be caught
+ * and ignored.
+ *
+ * @param acquire - The `Effect` value that acquires the resource.
+ * @param use - The `Effect` value that is executed between the acquisition
+ * and release of the resource.
+ * @param release - The `Effect` value that releases the resource.
+ *
+ * @returns A new `Effect` value that represents the acquisition, use, and
+ * release of the resource.
  *
  * @macro traced
  * @since 1.0.0
@@ -206,10 +298,13 @@ export const acquireUseRelease: <R, E, A, R2, E2, A2, R3, X>(
 ) => Effect<R | R2 | R3, E | E2, A2> = core.acquireUseRelease
 
 /**
- * Makes an explicit check to see if any fibers are attempting to interrupt the
- * current fiber, and if so, performs self-interruption.
+ * This function checks if any fibers are attempting to interrupt the current
+ * fiber, and if so, performs self-interruption.
  *
  * Note that this allows for interruption to occur in uninterruptible regions.
+ *
+ * @returns A new `Effect` value that represents the check for interruption
+ * and the potential self-interruption of the current fiber.
  *
  * @macro traced
  * @since 1.0.0
@@ -218,7 +313,16 @@ export const acquireUseRelease: <R, E, A, R2, E2, A2, R3, X>(
 export const allowInterrupt: () => Effect<never, never, void> = effect.allowInterrupt
 
 /**
- * Maps the success value of this effect to the specified constant value.
+ * This function maps the success value of an `Effect` value to a specified
+ * constant value.
+ *
+ * @param value - The constant value that the success value of the `Effect`
+ * value will be mapped to.
+ * @param self - The `Effect` value whose success value will be mapped to the
+ * specified constant value.
+ *
+ * @returns A new `Effect` value that represents the mapping of the success
+ * value of the original `Effect` value to the specified constant value.
  *
  * @macro traced
  * @since 1.0.0
@@ -227,7 +331,15 @@ export const allowInterrupt: () => Effect<never, never, void> = effect.allowInte
 export const as: <B>(value: B) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, B> = core.as
 
 /**
- * Maps the success value of this effect to a `Left` value.
+ * This function maps the success value of an `Effect` value to a `Left` value
+ * in an `Either` value.
+ *
+ * @param self - The `Effect` value whose success value will be mapped to a
+ * `Left` value in an `Either` value.
+ *
+ * @returns A new `Effect` value that represents the mapping of the success
+ * value of the original `Effect` value to a `Left` value in an `Either`
+ * value.
  *
  * @macro traced
  * @since 1.0.0
@@ -236,7 +348,15 @@ export const as: <B>(value: B) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, 
 export const asLeft: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Either.Either<A, never>> = effect.asLeft
 
 /**
- * Maps the error value of this effect to a `Left` value.
+ * This function maps the error value of an `Effect` value to a `Left` value
+ * in an `Either` value.
+ *
+ * @param self - The `Effect` value whose error value will be mapped to a
+ * `Left` value in an `Either` value.
+ *
+ * @returns A new `Effect` value that represents the mapping of the error
+ * value of the original `Effect` value to a `Left` value in an `Either`
+ * value.
  *
  * @macro traced
  * @since 1.0.0
@@ -245,7 +365,15 @@ export const asLeft: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Either.Eit
 export const asLeftError: <R, E, A>(self: Effect<R, E, A>) => Effect<R, Either.Either<E, never>, A> = effect.asLeftError
 
 /**
- * Maps the success value of this effect to a `Right` value.
+ * This function maps the success value of an `Effect` value to a `Right` value
+ * in an `Either` value.
+ *
+ * @param self - The `Effect` value whose success value will be mapped to a
+ * `Right` value in an `Either` value.
+ *
+ * @returns A new `Effect` value that represents the mapping of the success
+ * value of the original `Effect` value to a `Right` value in an `Either`
+ * value.
  *
  * @macro traced
  * @since 1.0.0
@@ -254,7 +382,15 @@ export const asLeftError: <R, E, A>(self: Effect<R, E, A>) => Effect<R, Either.E
 export const asRight: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Either.Either<never, A>> = effect.asRight
 
 /**
- * Maps the error value of this effect to a `Right` value.
+ * This function maps the error value of an `Effect` value to a `Right` value
+ * in an `Either` value.
+ *
+ * @param self - The `Effect` value whose error value will be mapped to a
+ * `Right` value in an `Either` value.
+ *
+ * @returns A new `Effect` value that represents the mapping of the error
+ * value of the original `Effect` value to a `Right` value in an `Either`
+ * value.
  *
  * @macro traced
  * @since 1.0.0
@@ -264,7 +400,17 @@ export const asRightError: <R, E, A>(self: Effect<R, E, A>) => Effect<R, Either.
   effect.asRightError
 
 /**
- * Maps the success value of this effect to a `Some` value.
+ * This function maps the success value of an `Effect` value to a `Some` value
+ * in an `Option` value. If the original `Effect` value fails, the returned
+ * `Effect` value will also fail.
+ *
+ * @param self - The `Effect` value whose success value will be mapped to a
+ * `Some` value in an `Option` value.
+ *
+ * @returns A new `Effect` value that represents the mapping of the success
+ * value of the original `Effect` value to a `Some` value in an `Option`
+ * value. The returned `Effect` value may fail if the original `Effect` value
+ * fails.
  *
  * @macro traced
  * @category mapping
@@ -273,7 +419,17 @@ export const asRightError: <R, E, A>(self: Effect<R, E, A>) => Effect<R, Either.
 export const asSome: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Option.Option<A>> = effect.asSome
 
 /**
- * Maps the error value of this effect to a `Some` value.
+ * This function maps the error value of an `Effect` value to a `Some` value
+ * in an `Option` value. If the original `Effect` value succeeds, the returned
+ * `Effect` value will also succeed.
+ *
+ * @param self - The `Effect` value whose error value will be mapped to a
+ * `Some` value in an `Option` value.
+ *
+ * @returns A new `Effect` value that represents the mapping of the error
+ * value of the original `Effect` value to a `Some` value in an `Option`
+ * value. The returned `Effect` value may succeed if the original `Effect`
+ * value succeeds.
  *
  * @macro traced
  * @category mapping
@@ -282,7 +438,15 @@ export const asSome: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Option.Opt
 export const asSomeError: <R, E, A>(self: Effect<R, E, A>) => Effect<R, Option.Option<E>, A> = effect.asSomeError
 
 /**
- * Maps the success value of this effect to `void`.
+ * This function maps the success value of an `Effect` value to `void`. If the
+ * original `Effect` value succeeds, the returned `Effect` value will also
+ * succeed. If the original `Effect` value fails, the returned `Effect` value
+ * will fail with the same error.
+ *
+ * @param self - The `Effect` value whose success value will be mapped to `void`.
+ *
+ * @returns A new `Effect` value that represents the mapping of the success
+ * value of the original `Effect` value to `void`.
  *
  * @macro traced
  * @since 1.0.0
@@ -1251,8 +1415,20 @@ export const find: <A, R, E>(
 ) => (elements: Iterable<A>) => Effect<R, E, Option.Option<A>> = effect.find
 
 /**
- * Returns an effect that runs this effect and in case of failure, runs each
- * of the specified effects in order until one of them succeeds.
+ * This function takes an iterable of `Effect` values and returns a new
+ * `Effect` value that represents the first `Effect` value in the iterable
+ * that succeeds. If all of the `Effect` values in the iterable fail, then
+ * the resulting `Effect` value will fail as well.
+ *
+ * This function is sequential, meaning that the `Effect` values in the
+ * iterable will be executed in sequence, and the first one that succeeds
+ * will determine the outcome of the resulting `Effect` value.
+ *
+ * @param effects - The iterable of `Effect` values to evaluate.
+ *
+ * @returns A new `Effect` value that represents the first successful
+ * `Effect` value in the iterable, or a failed `Effect` value if all of the
+ * `Effect` values in the iterable fail.
  *
  * @macro traced
  * @since 1.0.0
@@ -1261,6 +1437,15 @@ export const find: <A, R, E>(
 export const firstSuccessOf: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, E, A> = effect.firstSuccessOf
 
 /**
+ * This function is a pipeable operator that maps over an `Effect` value,
+ * flattening the result of the mapping function into a new `Effect` value.
+ *
+ * @param f - The mapping function to apply to the `Effect` value.
+ * This function must return another `Effect` value.
+ *
+ * @returns A new `Effect` value that is the result of flattening the
+ * mapped `Effect` value.
+ *
  * @macro traced
  * @since 1.0.0
  * @category sequencing
