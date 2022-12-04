@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.0.30
+
+### Patch Changes
+
+- [#90](https://github.com/Effect-TS/io/pull/90) [`e550a1f`](https://github.com/Effect-TS/io/commit/e550a1f42d23be7e80850152bc361571617ab8e3) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Update dependencies and improve docs
+
 ## 0.0.29
 
 ### Patch Changes
