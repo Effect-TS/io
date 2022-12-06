@@ -41,7 +41,6 @@ Added in v1.0.0
   - [asyncInterrupt](#asyncinterrupt)
   - [asyncOption](#asyncoption)
   - [attempt](#attempt)
-  - [blocking](#blocking)
   - [checkInterruptible](#checkinterruptible)
   - [clockWith](#clockwith)
   - [collect](#collect)
@@ -121,6 +120,7 @@ Added in v1.0.0
   - [updateFiberRefs](#updatefiberrefs)
   - [whenEffect](#wheneffect)
   - [whileLoop](#whileloop)
+  - [withBackgroundPriority](#withbackgroundpriority)
   - [withClockScoped](#withclockscoped)
   - [yieldNow](#yieldnow)
 - [conversions](#conversions)
@@ -842,20 +842,6 @@ thrown exceptions into typed failed effects creating with `Effect.fail`.
 
 ```ts
 export declare const attempt: <A>(evaluate: () => A) => Effect<never, unknown, A>
-```
-
-Added in v1.0.0
-
-## blocking
-
-Schedules a potentially blocking effect to occur at the next tick according to priority.
-
-**Signature**
-
-```ts
-export declare const blocking: (
-  priority: 'high-priority' | 'mid-priority' | 'low-priority'
-) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -1962,6 +1948,18 @@ export declare const whileLoop: <R, E, A>(
   body: () => Effect<R, E, A>,
   process: (a: A) => void
 ) => Effect<R, E, void>
+```
+
+Added in v1.0.0
+
+## withBackgroundPriority
+
+Schedules a potentially blocking effect to occur with background priority.
+
+**Signature**
+
+```ts
+export declare const withBackgroundPriority: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0

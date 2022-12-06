@@ -9,7 +9,6 @@ import * as FiberRefs from "@effect/io/FiberRefs"
 import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
 import * as core from "@effect/io/internal/core"
 import * as fiberRefsPatch from "@effect/io/internal/fiberRefs/patch"
-import { highPriorityScheduler, lowPriorityScheduler, midPriorityScheduler } from "@effect/io/internal/scheduler"
 import * as SingleShotGen from "@effect/io/internal/singleShotGen"
 import type { EnforceNonEmptyRecord, MergeRecord, NonEmptyArrayEffect, TupleEffect } from "@effect/io/internal/types"
 import * as LogLevel from "@effect/io/Logger/Level"
@@ -2537,16 +2536,7 @@ export const withSpan = (name: string) => {
 }
 
 /** @internal */
-export const blocking = (priority: "high-priority" | "mid-priority" | "low-priority") => {
+export const blocking = <R, E, A>(self: Effect.Effect<R, E, A>) => {
   const trace = getCallTrace()
-  return <R, E, A>(self: Effect.Effect<R, E, A>) =>
-    core.async<R, E, A>((resume) => {
-      const scheduler = priority === "low-priority" ?
-        lowPriorityScheduler :
-        priority === "mid-priority" ?
-        midPriorityScheduler :
-        highPriorityScheduler
-
-      scheduler.scheduleTask(() => resume(self))
-    }).traced(trace)
+  return pipe(core.yieldNow("background"), core.zipRight(self)).traced(trace)
 }

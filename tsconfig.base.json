@@ -53,8 +53,8 @@
     "transformers": [
       {
         "name": "./plugins/tsPlugin.ts",
-        "trace": { "exclude": ["src/**/*.ts"] },
-        "debug": { "include": ["examples/bench.ts"] }
+        "trace": { "exclude": ["src/**/*.ts"] }
+        // "debug": { "include": ["src/internal/main-thread.ts"] }
       }
     ],
     "tsPlusEnabled": false

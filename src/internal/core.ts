@@ -206,7 +206,9 @@ export interface WithRuntime extends
 {}
 
 /** @internal */
-export interface Yield extends Op<OpCodes.OP_YIELD> {}
+export interface Yield extends Op<OpCodes.OP_YIELD> {
+  readonly priority: "normal" | "background"
+}
 
 /** @internal */
 export const isEffect = (u: unknown): u is Effect.Effect<unknown, unknown, unknown> => {
@@ -1110,11 +1112,14 @@ export const withRuntimeFlags = (
 }
 
 /** @internal */
-export const yieldNow: () => Effect.Effect<never, never, void> = () => {
+export const yieldNow: (priority?: "background" | "normal") => Effect.Effect<never, never, void> = (
+  priority = "normal"
+) => {
   const trace = getCallTrace()
   const effect = Object.create(proto)
   effect.op = OpCodes.OP_YIELD
   effect.trace = trace
+  effect.priority = priority
   return effect
 }
 
@@ -1493,7 +1498,7 @@ export const currentLogSpan: FiberRef.FiberRef<List.List<LogSpan.LogSpan>> = fib
 
 /** @internal */
 export const currentScheduler: FiberRef.FiberRef<Scheduler.Scheduler> = fiberRefUnsafeMake(
-  Scheduler.highPriorityScheduler
+  Scheduler.defaultScheduler
 )
 
 /** @internal */

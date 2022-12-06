@@ -32,6 +32,7 @@ importers:
       '@types/jest': ^29.2.3
       '@types/node': ^18.11.10
       '@types/prettier': 2.7.1
+      '@types/requestidlecallback': ^0.3.5
       '@types/rimraf': ^3.0.2
       '@typescript-eslint/eslint-plugin': ^5.45.0
       '@typescript-eslint/parser': ^5.45.0
@@ -60,6 +61,7 @@ importers:
       ultra-runner: ^3.10.5
       vite: ^3.2.4
       vitest: 0.25.3
+      wtfnode: ^0.9.1
     dependencies:
       '@effect/printer': 0.1.8
       '@fp-ts/core': 0.0.9
@@ -82,6 +84,7 @@ importers:
       '@types/jest': 29.2.3
       '@types/node': 18.11.10
       '@types/prettier': 2.7.1
+      '@types/requestidlecallback': 0.3.5
       '@types/rimraf': 3.0.2
       '@typescript-eslint/eslint-plugin': 5.45.0_r7ay4lnv2qfn7hoq2es72gvuru
       '@typescript-eslint/parser': 5.45.0_jlrukjo6ocbb6wheurm4l7mijy
@@ -110,6 +113,7 @@ importers:
       ultra-runner: 3.10.5
       vite: 3.2.4_@types+node@18.11.10
       vitest: 0.25.3
+      wtfnode: 0.9.1
     publishDirectory: dist
 
   packages/babel-plugin:
@@ -1124,6 +1128,10 @@ packages:
 
   /@types/prettier/2.7.1:
     resolution: {integrity: sha512-ri0UmynRRvZiiUJdiz38MmIblKK+oH30MztdBVR95dv/Ubw6neWSb8u1XpRb72L4qsZOhz+L+z9JD40SJmfWow==}
+    dev: true
+
+  /@types/requestidlecallback/0.3.5:
+    resolution: {integrity: sha512-Uh49VrVTPfU0y/qIvXXYuRmd/sKLfVgQWZU1t8FWH22AIJyQbCei1aSmXdMDAijwGUFhBDpJmksiHEDsfiE/cg==}
     dev: true
 
   /@types/rimraf/3.0.2:
@@ -7201,6 +7209,11 @@ packages:
 
   /wrappy/1.0.2:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
+    dev: true
+
+  /wtfnode/0.9.1:
+    resolution: {integrity: sha512-Ip6C2KeQPl/F3aP1EfOnPoQk14Udd9lffpoqWDNH3Xt78svxPbv53ngtmtfI0q2Te3oTq79XKTnRNXVIn/GsPA==}
+    hasBin: true
     dev: true
 
   /xtend/4.0.2:

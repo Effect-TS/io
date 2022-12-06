@@ -54,6 +54,7 @@ export interface Resume {
 /** @internal */
 export interface YieldNow {
   readonly op: OP_YIELD_NOW
+  readonly priority: "background" | "normal"
 }
 
 /** @internal */
@@ -80,6 +81,7 @@ export const resume = (effect: Effect.Effect<any, any, any>): FiberMessage => ({
 })
 
 /** @internal */
-export const yieldNow: FiberMessage = {
-  op: OP_YIELD_NOW
-}
+export const yieldNow = (priority: "background" | "normal"): FiberMessage => ({
+  op: OP_YIELD_NOW,
+  priority
+})
