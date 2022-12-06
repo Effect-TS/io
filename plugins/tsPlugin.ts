@@ -92,7 +92,7 @@ export default function effectPlugin(
                 ])
             )
           }
-          return ts.visitEachChild(node, debugVisitor, ctx)
+          return visited
         }
 
         const traceVisitor = (node: ts.Node): ts.Node => {

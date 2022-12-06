@@ -41,6 +41,7 @@ Added in v1.0.0
   - [asyncInterrupt](#asyncinterrupt)
   - [asyncOption](#asyncoption)
   - [attempt](#attempt)
+  - [blocking](#blocking)
   - [checkInterruptible](#checkinterruptible)
   - [clockWith](#clockwith)
   - [collect](#collect)
@@ -841,6 +842,18 @@ thrown exceptions into typed failed effects creating with `Effect.fail`.
 
 ```ts
 export declare const attempt: <A>(evaluate: () => A) => Effect<never, unknown, A>
+```
+
+Added in v1.0.0
+
+## blocking
+
+Schedules a potentially blocking effect to occur at the next tick according to priority.
+
+**Signature**
+
+```ts
+export declare const blocking: (priority: 'high' | 'mid' | 'low') => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0

@@ -1492,7 +1492,9 @@ export const currentLogSpan: FiberRef.FiberRef<List.List<LogSpan.LogSpan>> = fib
 )
 
 /** @internal */
-export const currentScheduler: FiberRef.FiberRef<Scheduler.Scheduler> = fiberRefUnsafeMake(Scheduler.defaultScheduler)
+export const currentScheduler: FiberRef.FiberRef<Scheduler.Scheduler> = fiberRefUnsafeMake(
+  Scheduler.highPriorityScheduler
+)
 
 /** @internal */
 export const currentParallelism: FiberRef.FiberRef<Option.Option<number>> = fiberRefUnsafeMake<Option.Option<number>>(

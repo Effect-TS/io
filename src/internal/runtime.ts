@@ -122,7 +122,7 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
   ): Exit.Exit<E, A> => {
     const fiberId = FiberId.unsafeMake()
 
-    const scheduler = new Scheduler.StagedScheduler()
+    const scheduler = new Scheduler.SyncScheduler()
 
     const fiberRefs = pipe(
       this.fiberRefs,

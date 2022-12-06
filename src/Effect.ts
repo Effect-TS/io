@@ -4562,3 +4562,13 @@ export const zipWithPar: <R2, E2, A2, A, B>(
   that: Effect<R2, E2, A2>,
   f: (a: A, b: A2) => B
 ) => <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, B> = circular.zipWithPar
+
+/**
+ * Schedules a potentially blocking effect to occur at the next tick according to priority.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const blocking: (priority: "high" | "mid" | "low") => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A> =
+  effect.blocking
