@@ -4570,5 +4570,6 @@ export const zipWithPar: <R2, E2, A2, A, B>(
  * @since 1.0.0
  * @category constructors
  */
-export const blocking: (priority: "high" | "mid" | "low") => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A> =
-  effect.blocking
+export const blocking: (
+  priority: "high-priority" | "mid-priority" | "low-priority"
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A> = effect.blocking

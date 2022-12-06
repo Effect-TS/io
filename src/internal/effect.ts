@@ -2537,13 +2537,13 @@ export const withSpan = (name: string) => {
 }
 
 /** @internal */
-export const blocking = (priority: "high" | "mid" | "low") => {
+export const blocking = (priority: "high-priority" | "mid-priority" | "low-priority") => {
   const trace = getCallTrace()
   return <R, E, A>(self: Effect.Effect<R, E, A>) =>
     core.async<R, E, A>((resume) => {
-      const scheduler = priority === "low" ?
+      const scheduler = priority === "low-priority" ?
         lowPriorityScheduler :
-        priority === "mid" ?
+        priority === "mid-priority" ?
         midPriorityScheduler :
         highPriorityScheduler
 
