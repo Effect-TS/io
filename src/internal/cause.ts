@@ -1187,15 +1187,6 @@ const renderToString = (u: unknown): string => {
 }
 
 /** @internal */
-const times = <A>(value: A, n: number): ReadonlyArray<A> => {
-  const array: Array<A> = []
-  for (let i = 0; i < n; i = i + 1) {
-    array.push(value)
-  }
-  return array
-}
-
-/** @internal */
 const spanToLines = (span: SpanAnnotation): ReadonlyArray<Doc.Doc<never>> => {
   return span.currentSpanURI._tag === "Some" ? [Doc.text(span.currentSpanURI.value)] : []
 }
@@ -1332,18 +1323,12 @@ const format = (segment: Segment): ReadonlyArray<Doc.Doc<never>> => {
     }
     case "ParallelSegment": {
       const spaces = Doc.spaces(2)
-      const horizontalLines = Doc.cat(box.horizontal.heavy)(box.horizontal.heavy)
       const verticalSeparator = Doc.cat(box.vertical.heavy)(spaces)
-
-      const junction = Doc.cat(box.branch.down.heavy)(horizontalLines)
-
-      const fiberBus = Doc.hcat([
-        ...times(junction, segment.all.length - 1),
-        box.horizontal.heavy,
-        box.horizontal.heavy,
-        box.terminal.down.heavy
-      ])
-
+      const fiberBus = Doc.hcat(segment.all.flatMap((_, i) => {
+        return i === segment.all.length - 1 ?
+          [box.horizontal.heavy, box.horizontal.heavy, box.terminal.down.heavy] :
+          [box.horizontal.heavy, box.horizontal.heavy, box.branch.down.heavy]
+      }))
       const segments = segment.all.reduceRight(
         (acc, curr) => [
           ...prefixBlock(acc, verticalSeparator, verticalSeparator),
@@ -1351,7 +1336,6 @@ const format = (segment: Segment): ReadonlyArray<Doc.Doc<never>> => {
         ],
         [] as ReadonlyArray<Doc.Doc<never>>
       )
-
       return [fiberBus, ...segments]
     }
     case "SequentialSegment": {

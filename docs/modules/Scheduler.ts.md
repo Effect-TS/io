@@ -16,9 +16,7 @@ Added in v1.0.0
   - [Scheduler (interface)](#scheduler-interface)
   - [Task (interface)](#task-interface)
   - [currentScheduler](#currentscheduler)
-  - [highPriorityScheduler](#highpriorityscheduler)
-  - [lowPriorityScheduler](#lowpriorityscheduler)
-  - [midPriorityScheduler](#midpriorityscheduler)
+  - [defaultScheduler](#defaultscheduler)
 
 ---
 
@@ -58,32 +56,12 @@ export declare const currentScheduler: FiberRef<Scheduler>
 
 Added in v1.0.0
 
-## highPriorityScheduler
+## defaultScheduler
 
 **Signature**
 
 ```ts
-export declare const highPriorityScheduler: Scheduler
-```
-
-Added in v1.0.0
-
-## lowPriorityScheduler
-
-**Signature**
-
-```ts
-export declare const lowPriorityScheduler: Scheduler
-```
-
-Added in v1.0.0
-
-## midPriorityScheduler
-
-**Signature**
-
-```ts
-export declare const midPriorityScheduler: Scheduler
+export declare const defaultScheduler: Scheduler
 ```
 
 Added in v1.0.0

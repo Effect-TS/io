@@ -92,6 +92,26 @@ export default function effectPlugin(
                 ])
             )
           }
+          if (ts.isFunctionDeclaration(visited)) {
+            return ctx.factory.updateFunctionDeclaration(
+              visited,
+              visited.modifiers,
+              visited.asteriskToken,
+              visited.name,
+              visited.typeParameters,
+              visited.parameters,
+              visited.type,
+              visited.body && ts.isBlock(visited.body) ?
+                ctx.factory.updateBlock(visited.body, [
+                  ctx.factory.createDebuggerStatement(),
+                  ...visited.body.statements
+                ]) :
+                ctx.factory.createBlock([
+                  ctx.factory.createDebuggerStatement(),
+                  ctx.factory.createReturnStatement(visited.body)
+                ])
+            )
+          }
           return visited
         }
 

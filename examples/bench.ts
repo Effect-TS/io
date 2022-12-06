@@ -10,9 +10,14 @@ const program = Effect.gen(function*($) {
   const sem = yield* $(Sem.make(1))
 
   yield* $(pipe(
-    ROArray.range(1, 20),
+    ROArray.range(1, 4),
     Effect.forEachPar((n) =>
-      pipe(Effect.sync(() => console.log(n)), Effect.delay(Duration.millis(200)), Sem.withPermit(sem))
+      pipe(
+        Effect.sync(() => console.log(n)),
+        Effect.blocking,
+        Effect.delay(Duration.millis(200)),
+        Sem.withPermit(sem)
+      )
     )
   ))
 })

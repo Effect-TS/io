@@ -4474,7 +4474,7 @@ export const withSpan: (name: string) => <R, E, A>(self: Effect<R, E, A>) => Eff
  * @since 1.0.0
  * @category constructors
  */
-export const yieldNow: () => Effect<never, never, void> = core.yieldNow
+export const yieldNow: (priority?: "background" | "normal" | undefined) => Effect<never, never, void> = core.yieldNow
 
 /**
  * @macro traced
@@ -4564,12 +4564,12 @@ export const zipWithPar: <R2, E2, A2, A, B>(
 ) => <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, B> = circular.zipWithPar
 
 /**
- * Schedules a potentially blocking effect to occur at the next tick according to priority.
+ * Schedules a potentially blocking effect to occur with background priority.
+ *
+ * Note: this is equivalent to pipe(yieldNow("background"), zipRight(self))
  *
  * @macro traced
  * @since 1.0.0
  * @category constructors
  */
-export const blocking: (
-  priority: "high-priority" | "mid-priority" | "low-priority"
-) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A> = effect.blocking
+export const blocking: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A> = effect.blocking

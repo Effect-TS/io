@@ -22,17 +22,7 @@ export interface Scheduler {
 /**
  * @since 1.0.0
  */
-export const highPriorityScheduler: Scheduler = internal.highPriorityScheduler
-
-/**
- * @since 1.0.0
- */
-export const lowPriorityScheduler: Scheduler = internal.lowPriorityScheduler
-
-/**
- * @since 1.0.0
- */
-export const midPriorityScheduler: Scheduler = internal.midPriorityScheduler
+export const defaultScheduler: Scheduler = internal.defaultScheduler
 
 /**
  * @since 1.0.0
