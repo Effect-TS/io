@@ -853,7 +853,9 @@ Schedules a potentially blocking effect to occur at the next tick according to p
 **Signature**
 
 ```ts
-export declare const blocking: (priority: 'high' | 'mid' | 'low') => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+export declare const blocking: (
+  priority: 'high-priority' | 'mid-priority' | 'low-priority'
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
