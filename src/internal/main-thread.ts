@@ -118,7 +118,7 @@ function startTracking(): void {
     if (typeof requestAnimationFrame !== "undefined") {
       requestAnimationFrame(cb)
     } else {
-      setTimeout(cb, 0)
+      setTimeout(cb, 16)
     }
   }
 
