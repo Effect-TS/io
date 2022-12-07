@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.0.32
+
+### Patch Changes
+
+- [#96](https://github.com/Effect-TS/io/pull/96) [`806d075`](https://github.com/Effect-TS/io/commit/806d0750690fc7b990ec036cc2df24135f0641c3) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Improve semver ranges
+
 ## 0.0.31
 
 ### Patch Changes
