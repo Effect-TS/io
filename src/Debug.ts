@@ -1,7 +1,6 @@
 /**
  * @since 1.0.0
  */
-import { Stack } from "@effect/io/internal/stack"
 import { identity } from "@fp-ts/data/Function"
 
 /**
@@ -75,10 +74,10 @@ export const getCallTraceFromNewError = (at: number): string | undefined => {
 }
 
 /** @internal */
-let stack: undefined | Stack<string> = undefined
+const stack: Array<string> = []
 /** @internal */
 const cleanup = <A>(x: A) => {
-  stack = stack?.previous
+  stack.pop()
   return x
 }
 
@@ -101,7 +100,7 @@ export const isTraceEnabled: () => boolean = () =>
  */
 export const withCallTrace = (trace: string): <A>(value: A) => A => {
   if (!runtimeDebug.getCallTrace) {
-    stack = new Stack(trace, stack)
+    stack.push(trace)
     return cleanup
   }
   return identity
@@ -114,5 +113,5 @@ export const getCallTrace = (): string | undefined => {
   if (runtimeDebug.getCallTrace) {
     return orUndefined(runtimeDebug.getCallTrace(4))
   }
-  return orUndefined(stack?.value)
+  return orUndefined(stack[stack.length - 1])
 }

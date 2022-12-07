@@ -29,7 +29,6 @@ import * as metric from "@effect/io/internal/metric"
 import * as metricBoundaries from "@effect/io/internal/metric/boundaries"
 import * as OpCodes from "@effect/io/internal/opCodes/effect"
 import * as _runtimeFlags from "@effect/io/internal/runtimeFlags"
-import { Stack } from "@effect/io/internal/stack"
 import * as supervisor from "@effect/io/internal/supervisor"
 import * as SupervisorPatch from "@effect/io/internal/supervisor/patch"
 import { RingBuffer } from "@effect/io/internal/support"
@@ -204,7 +203,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   private _children: Set<FiberRuntime<any, any>> | null = null
   private _observers = List.empty<(exit: Exit.Exit<E, A>) => void>()
   private _running = false
-  private _stack: Stack<core.Continuation> | undefined = void 0
+  private _stack: Array<core.Continuation> = []
   private _executionTrace: RingBuffer<string> | undefined
   private _asyncInterruptor: ((effect: Effect.Effect<any, any, any>) => any) | null = null
   private _asyncBlockingOn: FiberId.FiberId | null = null
@@ -927,20 +926,19 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   }
 
   pushStack(cont: core.Continuation) {
-    this._stack = new Stack(cont, this._stack)
+    this._stack.push(cont)
     if ("trace" in cont) {
       this._tracesInStack++
     }
   }
 
   popStack() {
-    if (this._stack) {
-      const current = this._stack
-      this._stack = this._stack.previous
-      if ("trace" in current.value) {
+    const item = this._stack.pop()
+    if (item) {
+      if ("trace" in item) {
         this._tracesInStack--
       }
-      return current.value
+      return item
     }
     return
   }
@@ -1236,25 +1234,26 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
       return Chunk.empty
     }
     const lines: Array<string> = []
-    let current = this._stack
+    let current = this._stack.length - 1
     let last: undefined | string = undefined
     let seen = 0
-    while (current !== undefined && lines.length < runtimeDebug.traceStackLimit && seen < this._tracesInStack) {
-      switch (current.value.op) {
+    while (current >= 0 && lines.length < runtimeDebug.traceStackLimit && seen < this._tracesInStack) {
+      const value = this._stack[current]
+      switch (value.op) {
         case OpCodes.OP_ON_FAILURE:
         case OpCodes.OP_ON_SUCCESS:
         case OpCodes.OP_ON_SUCCESS_AND_FAILURE: {
-          if (current.value.trace) {
+          if (value.trace) {
             seen++
-            if (current.value.trace !== last) {
-              last = current.value.trace
-              lines.push(current.value.trace)
+            if (value.trace !== last) {
+              last = value.trace
+              lines.push(value.trace)
             }
           }
           break
         }
       }
-      current = current.previous
+      current = current - 1
     }
     return Chunk.unsafeFromArray(lines)
   }

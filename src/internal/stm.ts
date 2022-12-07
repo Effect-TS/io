@@ -8,7 +8,6 @@ import * as core from "@effect/io/internal/core"
 import * as EffectOpCodes from "@effect/io/internal/opCodes/effect"
 import * as STMOpCodes from "@effect/io/internal/opCodes/stm"
 import type * as Scheduler from "@effect/io/internal/scheduler"
-import { Stack } from "@effect/io/internal/stack"
 import * as TExit from "@effect/io/internal/stm/exit"
 import * as Journal from "@effect/io/internal/stm/journal"
 import * as STMState from "@effect/io/internal/stm/state"
@@ -459,7 +458,7 @@ export const zipWith = <R1, E1, A1, A, A2>(that: STM<R1, E1, A1>, f: (a: A, b: A
 type Continuation = STMOnFailure | STMOnSuccess | STMOnRetry
 
 export class STMDriver<R, E, A> {
-  private contStack: Stack<Continuation> | undefined
+  private contStack: Array<Continuation> = []
   private env: Context.Context<unknown>
   private execution: RingBuffer<string> | undefined
   private tracesInStack = 0
@@ -483,20 +482,19 @@ export class STMDriver<R, E, A> {
   }
 
   pushStack(cont: Continuation) {
-    this.contStack = new Stack(cont, this.contStack)
+    this.contStack.push(cont)
     if ("trace" in cont) {
       this.tracesInStack++
     }
   }
 
   popStack() {
-    if (this.contStack) {
-      const current = this.contStack
-      this.contStack = this.contStack.previous
-      if ("trace" in current.value) {
+    const item = this.contStack.pop()
+    if (item) {
+      if ("trace" in item) {
         this.tracesInStack--
       }
-      return current.value
+      return item
     }
     return
   }
@@ -506,25 +504,26 @@ export class STMDriver<R, E, A> {
       return Chunk.empty
     }
     const lines: Array<string> = []
-    let current = this.contStack
+    let current = this.contStack.length - 1
     let last: undefined | string = undefined
     let seen = 0
-    while (current !== undefined && lines.length < runtimeDebug.traceStackLimit && seen < this.tracesInStack) {
-      switch (current.value.opSTM) {
+    while (current >= 0 && lines.length < runtimeDebug.traceStackLimit && seen < this.tracesInStack) {
+      const value = this.contStack[current]!
+      switch (value.opSTM) {
         case STMOpCodes.OP_ON_SUCCESS:
         case STMOpCodes.OP_ON_FAILURE:
         case STMOpCodes.OP_ON_RETRY: {
-          if (current.value.trace) {
+          if (value.trace) {
             seen++
-            if (current.value.trace !== last) {
-              last = current.value.trace
-              lines.push(current.value.trace)
+            if (value.trace !== last) {
+              last = value.trace
+              lines.push(value.trace)
             }
           }
           break
         }
       }
-      current = current.previous
+      current = current - 1
     }
     return Chunk.unsafeFromArray(lines)
   }
