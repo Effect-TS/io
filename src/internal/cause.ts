@@ -1,7 +1,6 @@
 import type * as Cause from "@effect/io/Cause"
 import { runtimeDebug } from "@effect/io/Debug"
 import * as FiberId from "@effect/io/Fiber/Id"
-import { Stack } from "@effect/io/internal/stack"
 import * as Doc from "@effect/printer/Doc"
 import * as Optimize from "@effect/printer/Optimize"
 import * as Render from "@effect/printer/Render"
@@ -584,23 +583,21 @@ export const squashWith = <E>(f: (error: E) => unknown) => {
 /** @internal */
 export const find = <E, Z>(pf: (cause: Cause.Cause<E>) => Option.Option<Z>) => {
   return (self: Cause.Cause<E>): Option.Option<Z> => {
-    let stack: Stack<Cause.Cause<E>> | undefined = new Stack(self)
-    while (stack !== undefined) {
-      const option = pf(stack.value)
+    const stack: Array<Cause.Cause<E>> = [self]
+    while (stack.length > 0) {
+      const item = stack.pop()!
+      const option = pf(item)
       switch (option._tag) {
         case "None": {
-          switch (stack.value._tag) {
+          switch (item._tag) {
             case "Sequential":
             case "Parallel": {
-              stack = new Stack(stack.value.left, new Stack(stack.value.right, stack.previous))
+              stack.push(item.right)
+              stack.push(item.left)
               break
             }
             case "Annotated": {
-              stack = new Stack(stack.value.cause, stack.previous)
-              break
-            }
-            default: {
-              stack = stack.previous
+              stack.push(item.cause)
               break
             }
           }
@@ -640,44 +637,40 @@ const evaluateCause = (
   self: Cause.Cause<unknown>
 ): readonly [HashSet.HashSet<unknown>, List.List<Cause.Cause<unknown>>] => {
   let cause: Cause.Cause<unknown> | undefined = self
-  let stack: Stack<Cause.Cause<unknown>> | undefined = undefined
+  const stack: Array<Cause.Cause<unknown>> = []
   let _parallel = HashSet.empty<unknown>()
   let _sequential = List.empty<Cause.Cause<unknown>>()
   while (cause !== undefined) {
     switch (cause._tag) {
       case "Empty": {
-        if (stack === undefined) {
+        if (stack.length === 0) {
           return [_parallel, _sequential]
         }
-        cause = stack.value
-        stack = stack.previous
+        cause = stack.pop()
         break
       }
       case "Fail": {
-        if (stack === undefined) {
+        if (stack.length === 0) {
           return [pipe(_parallel, HashSet.add(cause.error)), _sequential]
         }
         _parallel = pipe(_parallel, HashSet.add(cause.error))
-        cause = stack.value
-        stack = stack.previous
+        cause = stack.pop()
         break
       }
       case "Die": {
-        if (stack === undefined) {
+        if (stack.length === 0) {
           return [pipe(_parallel, HashSet.add(cause.defect)), _sequential]
         }
         _parallel = pipe(_parallel, HashSet.add(cause.defect))
-        cause = stack.value
-        stack = stack.previous
+        cause = stack.pop()
         break
       }
       case "Interrupt": {
-        if (stack === undefined) {
+        if (stack.length === 0) {
           return [pipe(_parallel, HashSet.add(cause.fiberId as unknown)), _sequential]
         }
         _parallel = pipe(_parallel, HashSet.add(cause.fiberId as unknown))
-        cause = stack.value
-        stack = stack.previous
+        cause = stack.pop()
         break
       }
       case "Annotated": {
@@ -714,7 +707,7 @@ const evaluateCause = (
         break
       }
       case "Parallel": {
-        stack = new Stack(cause.right, stack)
+        stack.push(cause.right)
         cause = cause.left
         break
       }
@@ -834,18 +827,18 @@ export const reduce = <Z, E>(
   return (self: Cause.Cause<E>): Z => {
     let accumulator: Z = zero
     let cause: Cause.Cause<E> | undefined = self
-    let causes: Stack<Cause.Cause<E>> | undefined = undefined
+    const causes: Array<Cause.Cause<E>> = []
     while (cause !== undefined) {
       const option = pf(accumulator, cause)
       accumulator = Option.isSome(option) ? option.value : accumulator
       switch (cause._tag) {
         case "Sequential": {
-          causes = new Stack(cause.right, causes)
+          causes.push(cause.right)
           cause = cause.left
           break
         }
         case "Parallel": {
-          causes = new Stack(cause.right, causes)
+          causes.push(cause.right)
           cause = cause.left
           break
         }
@@ -858,9 +851,8 @@ export const reduce = <Z, E>(
           break
         }
       }
-      if (cause === undefined && causes !== undefined) {
-        cause = causes.value
-        causes = causes.previous
+      if (cause === undefined && causes.length > 0) {
+        cause = causes.pop()!
       }
     }
     return accumulator
@@ -870,91 +862,85 @@ export const reduce = <Z, E>(
 /** @internal */
 export const reduceWithContext = <C, E, Z>(context: C, reducer: Cause.CauseReducer<C, E, Z>) => {
   return (self: Cause.Cause<E>): Z => {
-    let input: Stack<Cause.Cause<E>> | undefined = new Stack(self)
-    let output: Stack<Either.Either<CauseCase, Z>> | undefined = undefined
-    while (input !== undefined) {
-      const cause = input.value
+    const input: Array<Cause.Cause<E>> = [self]
+    const output: Array<Either.Either<CauseCase, Z>> = []
+    while (input.length > 0) {
+      const cause = input.pop()!
       switch (cause._tag) {
         case "Empty": {
-          input = input.previous
-          output = new Stack(Either.right(reducer.emptyCase(context)), output)
+          output.push(Either.right(reducer.emptyCase(context)))
           break
         }
         case "Fail": {
-          input = input.previous
-          output = new Stack(Either.right(reducer.failCase(context, cause.error)), output)
+          output.push(Either.right(reducer.failCase(context, cause.error)))
           break
         }
         case "Die": {
-          input = input.previous
-          output = new Stack(Either.right(reducer.dieCase(context, cause.defect)), output)
+          output.push(Either.right(reducer.dieCase(context, cause.defect)))
           break
         }
         case "Interrupt": {
-          input = input.previous
-          output = new Stack(Either.right(reducer.interruptCase(context, cause.fiberId)), output)
+          output.push(Either.right(reducer.interruptCase(context, cause.fiberId)))
           break
         }
         case "Annotated": {
-          input = new Stack(cause.cause, input.previous)
-          output = new Stack(
-            Either.left({ _tag: "AnnotatedCase", annotation: cause.annotation }),
-            output
-          )
+          input.push(cause.cause)
+          output.push(Either.left({ _tag: "AnnotatedCase", annotation: cause.annotation }))
           break
         }
         case "Sequential": {
-          input = new Stack(cause.left, new Stack(cause.right, input.previous))
-          output = new Stack(Either.left({ _tag: "SequentialCase" }), output)
+          input.push(cause.right)
+          input.push(cause.left)
+          output.push(Either.left({ _tag: "SequentialCase" }))
           break
         }
         case "Parallel": {
-          input = new Stack(cause.left, new Stack(cause.right, input.previous))
-          output = new Stack(Either.left({ _tag: "ParallelCase" }), output)
+          input.push(cause.right)
+          input.push(cause.left)
+          output.push(Either.left({ _tag: "ParallelCase" }))
           break
         }
       }
     }
-    let accumulator: Stack<Z> | undefined = undefined
-    while (output !== undefined) {
-      const either = output.value
+    const accumulator: Array<Z> = []
+    while (output.length > 0) {
+      const either = output.pop()!
       switch (either._tag) {
         case "Left": {
           switch (either.left._tag) {
             case "SequentialCase": {
-              const left = accumulator!.value
-              const right = accumulator!.previous!.value
+              const left = accumulator.pop()!
+              const right = accumulator.pop()!
               const value = reducer.sequentialCase(context, left, right)
-              accumulator = new Stack(value, accumulator!.previous!.previous)
+              accumulator.push(value)
               break
             }
             case "ParallelCase": {
-              const left = accumulator!.value
-              const right = accumulator!.previous!.value
+              const left = accumulator.pop()!
+              const right = accumulator.pop()!
               const value = reducer.parallelCase(context, left, right)
-              accumulator = new Stack(value, accumulator!.previous!.previous)
+              accumulator.push(value)
               break
             }
             case "AnnotatedCase": {
-              const cause = accumulator!.value
+              const cause = accumulator.pop()!
               const value = reducer.annotatedCase(context, cause, either.left.annotation)
-              accumulator = new Stack(value, accumulator!.previous)
+              accumulator.push(value)
               break
             }
           }
           break
         }
         case "Right": {
-          accumulator = new Stack(either.right, accumulator)
+          accumulator.push(either.right)
           break
         }
       }
-      output = output.previous
     }
-    if (accumulator === undefined) {
+    if (accumulator.length === 0) {
       throw new Error("BUG: Cause.reduceWithContext - please report an issue at https://github.com/Effect-TS/io/issues")
     }
-    return accumulator.value
+    return accumulator.pop()!
   }
 }
 

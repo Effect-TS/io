@@ -1,7 +1,3 @@
-import { pipe } from "@fp-ts/data/Function"
-import * as MutableList from "@fp-ts/data/mutable/MutableList"
-import * as MutableRef from "@fp-ts/data/mutable/MutableRef"
-
 /** @internal */
 export type Task = () => void
 
@@ -12,21 +8,18 @@ export interface Scheduler {
 
 /** @internal */
 export class HighPriorityScheduler {
-  readonly running = MutableRef.make(false)
-  readonly tasks = MutableRef.make(MutableList.make<Task>())
+  running = false
+  tasks: Array<Task> = []
   readonly promise = Promise.resolve(void 0)
 
   starveInternal(depth: number) {
-    const toRun = MutableRef.get(this.tasks)
-    pipe(this.tasks, MutableRef.set(MutableList.make()))
-    pipe(
-      toRun,
-      MutableList.forEach((task) => {
-        task()
-      })
-    )
-    if (MutableList.isEmpty(MutableRef.get(this.tasks))) {
-      pipe(this.running, MutableRef.set(false))
+    const toRun = this.tasks
+    this.tasks = []
+    for (let i = 0; i < toRun.length; i++) {
+      toRun[i]()
+    }
+    if (this.tasks.length === 0) {
+      this.running = false
     } else {
       this.starve(depth)
     }
@@ -41,9 +34,9 @@ export class HighPriorityScheduler {
   }
 
   scheduleTask(task: Task) {
-    pipe(MutableRef.get(this.tasks), MutableList.append(task))
-    if (!MutableRef.get(this.running)) {
-      pipe(this.running, MutableRef.set(true))
+    this.tasks.push(task)
+    if (!this.running) {
+      this.running = true
       this.starve()
     }
   }
@@ -54,21 +47,25 @@ export const defaultScheduler: Scheduler = new HighPriorityScheduler()
 
 /** @internal */
 export class SyncScheduler {
-  readonly tasks = MutableList.make<Task>()
-  readonly deferred = MutableRef.make(false)
+  tasks: Array<Task> = []
+  deferred = false
 
   scheduleTask(task: Task) {
-    if (MutableRef.get(this.deferred)) {
+    if (this.deferred) {
       defaultScheduler.scheduleTask(task)
     } else {
-      pipe(this.tasks, MutableList.append(task))
+      this.tasks.push(task)
     }
   }
 
   flush() {
-    while (!MutableList.isEmpty(this.tasks)) {
-      MutableList.shift(this.tasks)!()
+    while (this.tasks.length > 0) {
+      const toRun = this.tasks
+      this.tasks = []
+      for (let i = 0; i < toRun.length; i++) {
+        toRun[i]()
+      }
     }
-    pipe(this.deferred, MutableRef.set(true))
+    this.deferred = true
   }
 }
