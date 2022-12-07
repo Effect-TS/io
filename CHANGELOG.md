@@ -1,5 +1,15 @@
 # @effect/io
 
+## 0.0.31
+
+### Patch Changes
+
+- [#95](https://github.com/Effect-TS/io/pull/95) [`2dfe6e4`](https://github.com/Effect-TS/io/commit/2dfe6e4739b65f7a1ec9b8a2babaeac8db4f8cc9) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Update dependencies
+
+- [#94](https://github.com/Effect-TS/io/pull/94) [`88d5b06`](https://github.com/Effect-TS/io/commit/88d5b06513a1189bedd8084416b14ea6be5225c0) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Improve priority naming
+
+- [#92](https://github.com/Effect-TS/io/pull/92) [`904b82e`](https://github.com/Effect-TS/io/commit/904b82e04a36b46118e6e5e196a22efd669847e0) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Expose Schedulers
+
 ## 0.0.30
 
 ### Patch Changes
