@@ -56,9 +56,9 @@
     }
   },
   "dependencies": {
-    "@effect/printer": "^0.1.8",
+    "@effect/printer": "^0.1.10",
     "@fp-ts/core": "^0.0.9",
-    "@fp-ts/data": "^0.0.20"
+    "@fp-ts/data": "^0.0.21"
   },
   "devDependencies": {
     "@babel/cli": "^7.18.6",
@@ -69,20 +69,20 @@
     "@effect-ts/build-utils": "0.40.3",
     "@effect-ts/core": "^0.60.2",
     "@effect/core": "^0.0.16",
-    "@effect/language-service": "^0.0.9",
+    "@effect/language-service": "^0.0.10",
     "@repo-tooling/eslint-plugin-dprint": "^0.0.4",
     "@rollup/pluginutils": "^5.0.2",
     "@types/benchmark": "^2.1.2",
     "@types/chai": "^4.3.4",
     "@types/glob": "^8.0.0",
-    "@types/jest": "^29.2.3",
-    "@types/node": "^18.11.10",
+    "@types/jest": "^29.2.4",
+    "@types/node": "^18.11.11",
     "@types/prettier": "2.7.1",
     "@types/requestidlecallback": "^0.3.5",
     "@types/rimraf": "^3.0.2",
-    "@typescript-eslint/eslint-plugin": "^5.45.0",
-    "@typescript-eslint/parser": "^5.45.0",
-    "@vitest/coverage-c8": "^0.25.3",
+    "@typescript-eslint/eslint-plugin": "^5.45.1",
+    "@typescript-eslint/parser": "^5.45.1",
+    "@vitest/coverage-c8": "^0.25.5",
     "babel-plugin-annotate-pure-calls": "^0.4.0",
     "concurrently": "^7.6.0",
     "cpx": "^1.5.0",
@@ -105,8 +105,8 @@
     "tslint": "^6.1.3",
     "typescript": "https://cdn.jsdelivr.net/npm/@tsplus/installer@0.0.155/compiler/typescript.tgz",
     "ultra-runner": "^3.10.5",
-    "vite": "^3.2.4",
-    "vitest": "0.25.3",
+    "vite": "^3.2.5",
+    "vitest": "0.25.5",
     "wtfnode": "^0.9.1"
   },
   "pnpm": {
