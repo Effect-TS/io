@@ -79,7 +79,7 @@ the provided iterable contains no elements, `None` will be returned.
 **Signature**
 
 ```ts
-export declare const collectAll: <E, A>(exits: Iterable<Exit<E, A>>) => Option.Option<Exit<E, List.List<A>>>
+export declare const collectAll: <E, A>(exits: Iterable<Exit<E, A>>) => Option.Option<Exit<E, Chunk.Chunk<A>>>
 ```
 
 Added in v1.0.0
@@ -94,7 +94,7 @@ the provided iterable contains no elements, `None` will be returned.
 **Signature**
 
 ```ts
-export declare const collectAllPar: <E, A>(exits: Iterable<Exit<E, A>>) => Option.Option<Exit<E, List.List<A>>>
+export declare const collectAllPar: <E, A>(exits: Iterable<Exit<E, A>>) => Option.Option<Exit<E, Chunk.Chunk<A>>>
 ```
 
 Added in v1.0.0

@@ -86,7 +86,7 @@ example between an asynchronous producer and consumer.
 ```ts
 export interface FiberRefs {
   readonly [FiberRefsSym]: FiberRefsSym
-  readonly locals: Map<FiberRef.FiberRef<any>, List.Cons<readonly [FiberId.Runtime, any]>>
+  readonly locals: Map<FiberRef.FiberRef<any>, Chunk.NonEmptyChunk<readonly [FiberId.Runtime, any]>>
 }
 ```
 
@@ -194,7 +194,7 @@ Note: it will not copy the provided Map, make sure to provide a fresh one.
 
 ```ts
 export declare const unsafeMake: (
-  fiberRefLocals: Map<FiberRef.FiberRef<any>, List.Cons<readonly [FiberId.Runtime, any]>>
+  fiberRefLocals: Map<FiberRef.FiberRef<any>, Chunk.NonEmptyChunk<readonly [FiberId.Runtime, any]>>
 ) => FiberRefs
 ```
 

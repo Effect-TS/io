@@ -2691,6 +2691,16 @@ export const patchFiberRefs: (patch: FiberRefsPatch.FiberRefsPatch) => Effect<ne
 export const promise: <A>(evaluate: () => Promise<A>) => Effect<never, never, A> = effect.promise
 
 /**
+ * Like `promise` but allows for interruption via AbortSignal
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const promiseAbort: <A>(evaluate: (signal: AbortSignal) => Promise<A>) => Effect<never, never, A> =
+  effect.promiseAbort
+
+/**
  * Provides the effect with its required environment, which eliminates its
  * dependency on `R`.
  *
@@ -3906,6 +3916,18 @@ export const tryCatchPromise: <E, A>(
 ) => Effect<never, E, A> = effect.tryCatchPromise
 
 /**
+ * Like `tryCatchPromise` but allows for interruption via AbortSignal
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const tryCatchPromiseAbort: <E, A>(
+  evaluate: (signal: AbortSignal) => Promise<A>,
+  onReject: (reason: unknown) => E
+) => Effect<never, E, A> = effect.tryCatchPromiseAbort
+
+/**
  * Executed `that` in case `self` fails with a `Cause` that doesn't contain
  * defects, executes `success` in case of successes
  *
@@ -3927,6 +3949,16 @@ export const tryOrElse: <R2, E2, A2, A, R3, E3, A3>(
  * @category constructors
  */
 export const tryPromise: <A>(evaluate: () => Promise<A>) => Effect<never, unknown, A> = effect.tryPromise
+
+/**
+ * Like `tryPromise` but allows for interruption via AbortSignal
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const tryPromiseAbort: <A>(evaluate: (signal: AbortSignal) => Promise<A>) => Effect<never, unknown, A> =
+  effect.tryPromiseAbort
 
 /**
  * Like `forEach` + `identity` with a tuple type.

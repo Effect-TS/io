@@ -144,7 +144,7 @@ Constructs a config for a sequence of values.
 **Signature**
 
 ```ts
-export declare const listOf: <A>(config: Config<A>, name?: string | undefined) => Config<List.List<A>>
+export declare const listOf: <A>(config: Config<A>, name?: string | undefined) => Config<Chunk.Chunk<A>>
 ```
 
 Added in v1.0.0
