@@ -1,5 +1,23 @@
 # @effect/io
 
+## 0.0.33
+
+### Patch Changes
+
+- [#103](https://github.com/Effect-TS/io/pull/103) [`48aa63a`](https://github.com/Effect-TS/io/commit/48aa63ad4746747e98d53781230bfd9207d87ea4) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Add promise with abort variants
+
+- [#103](https://github.com/Effect-TS/io/pull/103) [`e4183ec`](https://github.com/Effect-TS/io/commit/e4183ec3712f83f2e895ee676fd29ad1bc3b61f8) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Remove dependency on List
+
+- [#102](https://github.com/Effect-TS/io/pull/102) [`73f91e7`](https://github.com/Effect-TS/io/commit/73f91e7351fa5c0e665f5b2f025defca8e100be7) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Unbundle printer and SafeEval, expose Runtime to Logger
+
+- [#98](https://github.com/Effect-TS/io/pull/98) [`edde247`](https://github.com/Effect-TS/io/commit/edde247c385a7c4288203b478c0c6380e22d6612) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Perf: Remove Stack
+
+- [#103](https://github.com/Effect-TS/io/pull/103) [`e4183ec`](https://github.com/Effect-TS/io/commit/e4183ec3712f83f2e895ee676fd29ad1bc3b61f8) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Remove dependency on WeakIterableMap
+
+- [#101](https://github.com/Effect-TS/io/pull/101) [`f57ddf2`](https://github.com/Effect-TS/io/commit/f57ddf2ad783612fc173ffd2e90b8adba2e30fe5) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Dedupe Runtime Fork Logic
+
+- [#100](https://github.com/Effect-TS/io/pull/100) [`902d847`](https://github.com/Effect-TS/io/commit/902d847a101d788698dad5fc8853a3875dbc1784) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Replace Semaphore with highly performant lock
+
 ## 0.0.32
 
 ### Patch Changes
