@@ -39,7 +39,10 @@ export const unsafeMakeLock = () => {
         ensuring(
           core.sync(() => {
             running = false
-            observers.forEach((observer) => observer())
+            const next = observers.values().next()
+            if (!next.done) {
+              next.value()
+            }
           })
         )
       )
