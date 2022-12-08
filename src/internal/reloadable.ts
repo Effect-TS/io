@@ -11,8 +11,6 @@ import type * as Reloadable from "@effect/io/Reloadable"
 import type * as Schedule from "@effect/io/Schedule"
 import * as Context from "@fp-ts/data/Context"
 import { pipe } from "@fp-ts/data/Function"
-import * as Option from "@fp-ts/data/Option"
-import * as WeakIterableMap from "@fp-ts/data/weak/WeakIterableMap"
 
 /** @internal */
 const ReloadableSymbolKey = "@effect/io/Reloadable"
@@ -110,16 +108,15 @@ export const manual = <Out>(tag: Context.Tag<Out>) => {
 }
 
 /** @internal */
-const tagMap = WeakIterableMap.make<Context.Tag<any>, Context.Tag<any>>([])
+const tagMap = new WeakMap<Context.Tag<any>, Context.Tag<any>>([])
 
 /** @internal */
 export const reloadableTag = <A>(tag: Context.Tag<A>): Context.Tag<Reloadable.Reloadable<A>> => {
-  const already = pipe(tagMap, WeakIterableMap.get(tag))
-  if (Option.isSome(already)) {
-    return already.value
+  if (tagMap.has(tag)) {
+    return tagMap.get(tag)!
   }
   const newTag = Context.Tag<Reloadable.Reloadable<A>>()
-  pipe(tagMap, WeakIterableMap.set(tag, newTag))
+  tagMap.set(tag, newTag)
   return newTag
 }
 

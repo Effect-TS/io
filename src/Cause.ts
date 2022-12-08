@@ -29,7 +29,6 @@ import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as Either from "@fp-ts/data/Either"
 import type * as Equal from "@fp-ts/data/Equal"
 import type * as HashSet from "@fp-ts/data/HashSet"
-import type * as List from "@fp-ts/data/List"
 import type * as Option from "@fp-ts/data/Option"
 import type { Predicate } from "@fp-ts/data/Predicate"
 
@@ -559,7 +558,7 @@ export const isInterruptedOnly: <E>(self: Cause<E>) => boolean = internal.isInte
  * @since 1.0.0
  * @category getters
  */
-export const failures: <E>(self: Cause<E>) => List.List<E> = internal.failures
+export const failures: <E>(self: Cause<E>) => Chunk.Chunk<E> = internal.failures
 
 /**
  * Returns a `List` of all unrecoverable defects in the specified cause.
@@ -567,7 +566,7 @@ export const failures: <E>(self: Cause<E>) => List.List<E> = internal.failures
  * @since 1.0.0
  * @category getters
  */
-export const defects: <E>(self: Cause<E>) => List.List<unknown> = internal.defects
+export const defects: <E>(self: Cause<E>) => Chunk.Chunk<unknown> = internal.defects
 
 /**
  * Returns a `HashSet` of `FiberId`s for all fibers that interrupted the fiber

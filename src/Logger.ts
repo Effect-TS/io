@@ -11,7 +11,7 @@ import type * as Layer from "@effect/io/Layer"
 import type * as LogLevel from "@effect/io/Logger/Level"
 import type * as LogSpan from "@effect/io/Logger/Span"
 import type { Runtime } from "@effect/io/Runtime"
-import type * as List from "@fp-ts/data/List"
+import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as Option from "@fp-ts/data/Option"
 
 /**
@@ -37,7 +37,7 @@ export interface Logger<Message, Output> extends Logger.Variance<Message, Output
     message: Message,
     cause: Cause.Cause<unknown>,
     context: FiberRefs.FiberRefs,
-    spans: List.List<LogSpan.LogSpan>,
+    spans: Chunk.Chunk<LogSpan.LogSpan>,
     annotations: ReadonlyMap<string, string>,
     runtime: Runtime<never>
   ) => Output

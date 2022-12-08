@@ -85,7 +85,7 @@ export const done = <E, A>(exit: Exit.Exit<E, A>): Fiber.Fiber<E, A> => {
     },
     children: () => {
       const trace = getCallTrace()
-      return core.succeed(Chunk.empty).traced(trace)
+      return core.succeed(Chunk.empty()).traced(trace)
     },
     inheritAll: () => {
       const trace = getCallTrace()
@@ -270,7 +270,7 @@ export const never = (): Fiber.Fiber<never, never> => ({
   },
   children: () => {
     const trace = getCallTrace()
-    return core.succeed(Chunk.empty).traced(trace)
+    return core.succeed(Chunk.empty()).traced(trace)
   },
   inheritAll: () => {
     const trace = getCallTrace()

@@ -7,7 +7,7 @@ import type * as Exit from "@effect/io/Exit"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import * as core from "@effect/io/internal/core"
 import * as internal from "@effect/io/internal/deferred"
-import type * as MutableRef from "@fp-ts/data/mutable/MutableRef"
+import type * as MutableRef from "@fp-ts/data/MutableRef"
 import type * as Option from "@fp-ts/data/Option"
 
 /**

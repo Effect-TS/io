@@ -1,5 +1,6 @@
 import type * as Clock from "@effect/io/Clock"
 import { getCallTrace } from "@effect/io/Debug"
+import type { Deferred } from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
 import type * as Fiber from "@effect/io/Fiber"
 import type * as FiberId from "@effect/io/Fiber/Id"
@@ -22,12 +23,12 @@ import type * as Layer from "@effect/io/Layer"
 import type * as Ref from "@effect/io/Ref"
 import type * as Synchronized from "@effect/io/Ref/Synchronized"
 import * as Order from "@fp-ts/core/typeclass/Order"
+import * as Chunk from "@fp-ts/data/Chunk"
 import * as Context from "@fp-ts/data/Context"
 import * as Duration from "@fp-ts/data/Duration"
 import * as Equal from "@fp-ts/data/Equal"
 import { constVoid, identity, pipe } from "@fp-ts/data/Function"
 import * as HashMap from "@fp-ts/data/HashMap"
-import * as List from "@fp-ts/data/List"
 import * as number from "@fp-ts/data/Number"
 import * as Option from "@fp-ts/data/Option"
 import type * as SortedSet from "@fp-ts/data/SortedSet"
@@ -91,7 +92,7 @@ export interface TestClock extends Clock.Clock {
   /**
    * @macro traced
    */
-  sleeps(): Effect.Effect<never, never, List.List<number>>
+  sleeps(): Effect.Effect<never, never, Chunk.Chunk<number>>
 }
 
 export const Tag: Context.Tag<TestClock> = Context.Tag<TestClock>()
@@ -170,7 +171,7 @@ export class TestClockImpl implements TestClock {
             if (end > data.instant) {
               return [
                 true,
-                Data.make(data.instant, pipe(data.sleeps, List.prepend([end, deferred] as const)))
+                Data.make(data.instant, pipe(data.sleeps, Chunk.prepend([end, deferred] as const)))
               ] as const
             }
             return [false, data] as const
@@ -190,9 +191,9 @@ export class TestClockImpl implements TestClock {
    *
    * @macro traced
    */
-  sleeps(): Effect.Effect<never, never, List.List<number>> {
+  sleeps(): Effect.Effect<never, never, Chunk.Chunk<number>> {
     const trace = getCallTrace()
-    return pipe(ref.get(this.clockState), core.map((data) => pipe(data.sleeps, List.map((_) => _[0])))).traced(trace)
+    return pipe(ref.get(this.clockState), core.map((data) => pipe(data.sleeps, Chunk.map((_) => _[0])))).traced(trace)
   }
   /**
    * Increments the current clock time by the specified duration. Any effects
@@ -412,13 +413,16 @@ export class TestClockImpl implements TestClock {
         this.clockState,
         ref.modify((data) => {
           const end = f(data.instant)
-          const sorted = pipe(data.sleeps, List.sort(pipe(number.Order, Order.contramap((_) => _[0]))))
-          if (List.isCons(sorted)) {
-            const [instant, deferred] = sorted.head
+          const sorted = pipe(
+            data.sleeps,
+            Chunk.sort<readonly [number, Deferred<never, void>]>(pipe(number.Order, Order.contramap((_) => _[0])))
+          )
+          if (Chunk.isNonEmpty(sorted)) {
+            const [instant, deferred] = Chunk.headNonEmpty(sorted)
             if (instant <= end) {
               return [
                 Option.some([end, deferred] as const),
-                Data.make(instant, sorted.tail)
+                Data.make(instant, Chunk.tailNonEmpty(sorted))
               ] as const
             }
           }
@@ -462,7 +466,7 @@ export const live = (data: Data.Data): Layer.Layer<Annotations.Annotations | Liv
 }
 
 export const defaultTestClock: Layer.Layer<Annotations.Annotations | Live.Live, never, TestClock> = live(
-  Data.make(new Date(0).getTime(), List.nil())
+  Data.make(new Date(0).getTime(), Chunk.empty())
 )
 
 /**
@@ -540,7 +544,7 @@ export const sleep = (duration: Duration.Duration): Effect.Effect<never, never, 
  *
  * @macro traced
  */
-export const sleeps = (): Effect.Effect<never, never, List.List<number>> => {
+export const sleeps = (): Effect.Effect<never, never, Chunk.Chunk<number>> => {
   const trace = getCallTrace()
   return testClockWith((testClock) => testClock.sleeps()).traced(trace)
 }

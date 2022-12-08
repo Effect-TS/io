@@ -7,12 +7,12 @@ import * as FiberId from "@effect/io/Fiber/Id"
 import * as Ref from "@effect/io/Ref"
 import * as it from "@effect/io/test/utils/extend"
 import { withLatch, withLatchAwait } from "@effect/io/test/utils/latch"
+import * as Chunk from "@fp-ts/data/Chunk"
 import * as Duration from "@fp-ts/data/Duration"
 import * as Either from "@fp-ts/data/Either"
 import { constVoid, pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
-import * as List from "@fp-ts/data/List"
-import * as MutableRef from "@fp-ts/data/mutable/MutableRef"
+import * as MutableRef from "@fp-ts/data/MutableRef"
 import * as Option from "@fp-ts/data/Option"
 import { assert, describe } from "vitest"
 
@@ -195,12 +195,12 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("interrupted cause persists after catching", () =>
     Effect.gen(function*($) {
-      const process = (list: List.List<Exit.Exit<never, any>>): List.List<Exit.Exit<never, any>> => {
-        return pipe(list, List.map(Exit.mapErrorCause((cause) => cause)))
+      const process = (list: Chunk.Chunk<Exit.Exit<never, any>>): Chunk.Chunk<Exit.Exit<never, any>> => {
+        return pipe(list, Chunk.map(Exit.mapErrorCause((cause) => cause)))
       }
       const latch1 = yield* $(Deferred.make<never, void>())
       const latch2 = yield* $(Deferred.make<never, void>())
-      const exits = yield* $(Ref.make(List.empty<Exit.Exit<never, any>>()))
+      const exits = yield* $(Ref.make(Chunk.empty<Exit.Exit<never, any>>()))
       const fiber = yield* $(pipe(
         Effect.uninterruptibleMask((restore) =>
           pipe(
@@ -208,13 +208,13 @@ describe.concurrent("Effect", () => {
               Effect.uninterruptibleMask((restore) =>
                 pipe(
                   restore(pipe(latch1, Deferred.succeed<void>(void 0), Effect.zipRight(Deferred.await(latch2)))),
-                  Effect.onExit((exit) => pipe(exits, Ref.update(List.prepend(exit))))
+                  Effect.onExit((exit) => pipe(exits, Ref.update(Chunk.prepend(exit))))
                 )
               ),
               Effect.asUnit
             )),
             Effect.exit,
-            Effect.flatMap((exit) => pipe(exits, Ref.update(List.prepend(exit))))
+            Effect.flatMap((exit) => pipe(exits, Ref.update(Chunk.prepend(exit))))
           )
         ),
         Effect.fork
@@ -224,7 +224,7 @@ describe.concurrent("Effect", () => {
       assert.strictEqual(Array.from(result).length, 2)
       assert.isTrue(pipe(
         result,
-        List.reduce(true, (acc, curr) => acc && Exit.isFailure(curr) && Cause.isInterruptedOnly(curr.cause))
+        Chunk.reduce(true, (acc, curr) => acc && Exit.isFailure(curr) && Cause.isInterruptedOnly(curr.cause))
       ))
     }))
   it.effect("interruption of raced", () =>

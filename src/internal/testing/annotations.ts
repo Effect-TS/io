@@ -14,7 +14,7 @@ import * as Chunk from "@fp-ts/data/Chunk"
 import * as Context from "@fp-ts/data/Context"
 import * as Equal from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
-import * as MutableRef from "@fp-ts/data/mutable/MutableRef"
+import * as MutableRef from "@fp-ts/data/MutableRef"
 import * as SortedSet from "@fp-ts/data/SortedSet"
 
 export const AnnotationsTypeId = Symbol.for("@effect/test/Annotations")

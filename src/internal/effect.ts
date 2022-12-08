@@ -24,7 +24,6 @@ import * as Duration from "@fp-ts/data/Duration"
 import * as Either from "@fp-ts/data/Either"
 import { constFalse, constTrue, constVoid, identity, pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
-import * as List from "@fp-ts/data/List"
 import * as Option from "@fp-ts/data/Option"
 import type { Predicate, Refinement } from "@fp-ts/data/Predicate"
 
@@ -256,14 +255,14 @@ export const collectAllWithEffect = <A, R, E, B>(f: (a: A) => Option.Option<Effe
     const array = Array.from(elements)
     // Break out early if there are no elements
     if (array.length === 0) {
-      return core.succeed(Chunk.empty).traced(trace)
+      return core.succeed(Chunk.empty()).traced(trace)
     }
     // Break out early if there is only one element
     if (array.length === 1) {
       const option = f(array[0]!)
       switch (option._tag) {
         case "None": {
-          return core.succeed(Chunk.empty).traced(trace)
+          return core.succeed(Chunk.empty()).traced(trace)
         }
         case "Some": {
           return pipe(option.value, core.map(Chunk.singleton)).traced(trace)
@@ -271,11 +270,11 @@ export const collectAllWithEffect = <A, R, E, B>(f: (a: A) => Option.Option<Effe
       }
     }
     // Otherwise create the intermediate result structure
-    let result: Effect.Effect<R, E, List.List<B>> = core.succeed(List.empty<B>())
+    let result: Effect.Effect<R, E, Chunk.Chunk<B>> = core.succeed(Chunk.empty<B>())
     for (let i = array.length - 1; i >= 0; i--) {
       const option = f(array[i]!)
       if (option._tag === "Some") {
-        result = pipe(result, core.zipWith(option.value, (list, b) => pipe(list, List.prepend(b))))
+        result = pipe(result, core.zipWith(option.value, (list, b) => pipe(list, Chunk.prepend(b))))
       }
     }
     return pipe(result, core.map(Chunk.fromIterable)).traced(trace)
@@ -331,14 +330,14 @@ export const collectWhile = <A, R, E, B>(f: (a: A) => Option.Option<Effect.Effec
     const array = Array.from(elements)
     // Break out early if the input is empty
     if (array.length === 0) {
-      return core.succeed(Chunk.empty).traced(trace)
+      return core.succeed(Chunk.empty()).traced(trace)
     }
     // Break out early if there is only one element in the list
     if (array.length === 1) {
       const option = f(array[0]!)
       switch (option._tag) {
         case "None": {
-          return core.succeed(Chunk.empty).traced(trace)
+          return core.succeed(Chunk.empty()).traced(trace)
         }
         case "Some": {
           return pipe(option.value, core.map(Chunk.singleton)).traced(trace)
@@ -346,7 +345,7 @@ export const collectWhile = <A, R, E, B>(f: (a: A) => Option.Option<Effect.Effec
       }
     }
     // Otherwise setup our intermediate result
-    let result: Effect.Effect<R, E, List.List<B>> = core.succeed(List.empty())
+    let result: Effect.Effect<R, E, Chunk.Chunk<B>> = core.succeed(Chunk.empty())
     for (let i = array.length - 1; i >= 0; i--) {
       const option = f(array[i]!)
       switch (option._tag) {
@@ -354,7 +353,7 @@ export const collectWhile = <A, R, E, B>(f: (a: A) => Option.Option<Effect.Effec
           return pipe(result, core.map(Chunk.fromIterable)).traced(trace)
         }
         case "Some": {
-          result = pipe(result, core.zipWith(option.value, (bs, b) => pipe(bs, List.prepend(b))))
+          result = pipe(result, core.zipWith(option.value, (bs, b) => pipe(bs, Chunk.prepend(b))))
         }
       }
     }
@@ -583,12 +582,11 @@ export const filter = <A, R, E>(f: (a: A) => Effect.Effect<R, E, boolean>) => {
               effect,
               core.zipWith(
                 core.suspendSucceed(() => f(a)),
-                (list, b) => b ? pipe(list, List.prepend(a)) : list
+                (list, b) => b ? pipe(list, Chunk.prepend(a)) : list
               )
             ),
-          core.sync(() => List.empty<A>()) as Effect.Effect<R, E, List.List<A>>
-        ),
-        core.map(Chunk.fromIterable)
+          core.sync(() => Chunk.empty<A>()) as Effect.Effect<R, E, Chunk.Chunk<A>>
+        )
       )
     ).traced(trace)
   }
@@ -707,13 +705,13 @@ export const find = <A, R, E>(f: (a: A) => Effect.Effect<R, E, boolean>) => {
 export const firstSuccessOf = <R, E, A>(effects: Iterable<Effect.Effect<R, E, A>>): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
   return core.suspendSucceed(() => {
-    const list = List.fromIterable(effects)
-    if (List.isNil(list)) {
+    const list = Chunk.fromIterable(effects)
+    if (!Chunk.isNonEmpty(list)) {
       return core.dieSync(() => internalCause.IllegalArgumentException(`Received an empty collection of effects`))
     }
     return pipe(
-      list.tail,
-      List.reduce(list.head, (left, right) => pipe(left, core.orElse(() => right)))
+      Chunk.tailNonEmpty(list),
+      Chunk.reduce(Chunk.headNonEmpty(list), (left, right) => pipe(left, core.orElse(() => right)))
     )
   }).traced(trace)
 }
@@ -1258,7 +1256,7 @@ export const logSpan = (label: string) => {
             core.suspendSucceed(() => {
               const logSpan = LogSpan.make(label, now)
               return core.fiberRefLocally(
-                pipe(stack, List.prepend(logSpan)) as List.List<LogSpan.LogSpan>
+                pipe(stack, Chunk.prepend(logSpan)) as Chunk.Chunk<LogSpan.LogSpan>
               )(core.currentLogSpan)(effect)
             })
           )
@@ -1302,7 +1300,7 @@ export const loop = <Z, R, E, A>(
   body: (z: Z) => Effect.Effect<R, E, A>
 ): Effect.Effect<R, E, Chunk.Chunk<A>> => {
   const trace = getCallTrace()
-  return pipe(loopInternal(initial, cont, inc, body), core.map(Chunk.fromIterable)).traced(trace)
+  return loopInternal(initial, cont, inc, body).traced(trace)
 }
 
 /** @internal */
@@ -1311,7 +1309,7 @@ const loopInternal = <Z, R, E, A>(
   cont: (z: Z) => boolean,
   inc: (z: Z) => Z,
   body: (z: Z) => Effect.Effect<R, E, A>
-): Effect.Effect<R, E, List.List<A>> => {
+): Effect.Effect<R, E, Chunk.Chunk<A>> => {
   return core.suspendSucceed(() => {
     return cont(initial)
       ? pipe(
@@ -1319,11 +1317,11 @@ const loopInternal = <Z, R, E, A>(
         core.flatMap((a) =>
           pipe(
             loopInternal(inc(initial), cont, inc, body),
-            core.map(List.prepend(a))
+            core.map(Chunk.prepend(a))
           )
         )
       )
-      : core.sync(() => List.empty())
+      : core.sync(() => Chunk.empty())
   })
 }
 
@@ -1600,7 +1598,7 @@ export const parallelErrors = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Ef
 /** @internal */
 export const partition = <R, E, A, B>(f: (a: A) => Effect.Effect<R, E, B>) => {
   const trace = getCallTrace()
-  return (elements: Iterable<A>): Effect.Effect<R, never, readonly [List.List<E>, List.List<B>]> => {
+  return (elements: Iterable<A>): Effect.Effect<R, never, readonly [Chunk.Chunk<E>, Chunk.Chunk<B>]> => {
     return pipe(
       elements,
       core.forEach((a) => core.either(f(a))),
@@ -2268,8 +2266,8 @@ export const unfold = <A, R, E, S>(
 ): Effect.Effect<R, E, Chunk.Chunk<A>> => {
   const trace = getCallTrace()
   return pipe(
-    unfoldLoop(s, f, List.empty()),
-    core.map((list) => Chunk.fromIterable(List.reverse(list)))
+    unfoldLoop(s, f, Chunk.empty()),
+    core.map((list) => Chunk.reverse(list))
   ).traced(trace)
 }
 
@@ -2277,13 +2275,13 @@ export const unfold = <A, R, E, S>(
 const unfoldLoop = <A, R, E, S>(
   s: S,
   f: (s: S) => Effect.Effect<R, E, Option.Option<readonly [A, S]>>,
-  builder: List.List<A>
-): Effect.Effect<R, E, List.List<A>> => {
+  builder: Chunk.Chunk<A>
+): Effect.Effect<R, E, Chunk.Chunk<A>> => {
   return pipe(
     f(s),
     core.flatMap((option) => {
       if (Option.isSome(option)) {
-        return unfoldLoop(option.value[1], f, pipe(builder, List.prepend(option.value[0])))
+        return unfoldLoop(option.value[1], f, pipe(builder, Chunk.prepend(option.value[0])))
       } else {
         return core.succeed(builder)
       }
@@ -2434,9 +2432,9 @@ export const validateAll = <R, E, A, B>(f: (a: A) => Effect.Effect<R, E, B>) => 
       elements,
       partition(f),
       core.flatMap(([es, bs]) =>
-        List.isNil(es)
-          ? core.succeed(Chunk.fromIterable(bs))
-          : core.fail(Chunk.fromIterable(es))
+        Chunk.isEmpty(es)
+          ? core.succeed(bs)
+          : core.fail(es)
       )
     ).traced(trace)
   }
@@ -2450,9 +2448,9 @@ export const validateAllDiscard = <R, E, A, X>(f: (a: A) => Effect.Effect<R, E, 
       elements,
       partition(f),
       core.flatMap(([es, _]) =>
-        List.isNil(es)
-          ? core.unit()
-          : core.fail(Chunk.fromIterable(es))
+        Chunk.isEmpty(es) ?
+          core.unit() :
+          core.fail(es)
       )
     ).traced(trace)
   }

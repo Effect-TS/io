@@ -6,8 +6,8 @@ import type * as Effect from "@effect/io/Effect"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import * as core from "@effect/io/internal/core"
 import type * as OpCodes from "@effect/io/internal/opCodes/effect"
+import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as Either from "@fp-ts/data/Either"
-import type * as List from "@fp-ts/data/List"
 import type * as Option from "@fp-ts/data/Option"
 import type { Predicate } from "@fp-ts/data/Predicate"
 
@@ -124,7 +124,7 @@ export const interrupt: (fiberId: FiberId.FiberId) => Exit<never, never> = core.
  * @since 1.0.0
  * @category constructors
  */
-export const collectAll: <E, A>(exits: Iterable<Exit<E, A>>) => Option.Option<Exit<E, List.List<A>>> =
+export const collectAll: <E, A>(exits: Iterable<Exit<E, A>>) => Option.Option<Exit<E, Chunk.Chunk<A>>> =
   core.exitCollectAll
 
 /**
@@ -136,7 +136,7 @@ export const collectAll: <E, A>(exits: Iterable<Exit<E, A>>) => Option.Option<Ex
  * @since 1.0.0
  * @category constructors
  */
-export const collectAllPar: <E, A>(exits: Iterable<Exit<E, A>>) => Option.Option<Exit<E, List.List<A>>> =
+export const collectAllPar: <E, A>(exits: Iterable<Exit<E, A>>) => Option.Option<Exit<E, Chunk.Chunk<A>>> =
   core.exitCollectAllPar
 
 /**

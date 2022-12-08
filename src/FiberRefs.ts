@@ -5,8 +5,8 @@ import type * as Effect from "@effect/io/Effect"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRef from "@effect/io/FiberRef"
 import * as internal from "@effect/io/internal/fiberRefs"
+import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as HashSet from "@fp-ts/data/HashSet"
-import type * as List from "@fp-ts/data/List"
 import type * as Option from "@fp-ts/data/Option"
 
 /**
@@ -32,7 +32,7 @@ export type FiberRefsSym = typeof FiberRefsSym
  */
 export interface FiberRefs {
   readonly [FiberRefsSym]: FiberRefsSym
-  readonly locals: Map<FiberRef.FiberRef<any>, List.Cons<readonly [FiberId.Runtime, any]>>
+  readonly locals: Map<FiberRef.FiberRef<any>, Chunk.NonEmptyChunk<readonly [FiberId.Runtime, any]>>
 }
 
 const delete_: <A>(fiberRef: FiberRef.FiberRef<A>) => (self: FiberRefs) => FiberRefs = internal.delete
@@ -121,5 +121,5 @@ export const updatedAs: <A>(
  * @category unsafe
  */
 export const unsafeMake: (
-  fiberRefLocals: Map<FiberRef.FiberRef<any>, List.Cons<readonly [FiberId.Runtime, any]>>
+  fiberRefLocals: Map<FiberRef.FiberRef<any>, Chunk.NonEmptyChunk<readonly [FiberId.Runtime, any]>>
 ) => FiberRefs = internal.unsafeMake

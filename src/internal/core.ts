@@ -29,8 +29,7 @@ import * as Either from "@fp-ts/data/Either"
 import * as Equal from "@fp-ts/data/Equal"
 import { identity, pipe } from "@fp-ts/data/Function"
 import type * as HashSet from "@fp-ts/data/HashSet"
-import * as List from "@fp-ts/data/List"
-import * as MutableRef from "@fp-ts/data/mutable/MutableRef"
+import * as MutableRef from "@fp-ts/data/MutableRef"
 import * as Option from "@fp-ts/data/Option"
 import type { Predicate } from "@fp-ts/data/Predicate"
 
@@ -855,20 +854,20 @@ export const tryOrElse = <R2, E2, A2, A, R3, E3, A3>(
 export const partitionMap = <A, A1, A2>(
   elements: Iterable<A>,
   f: (a: A) => Either.Either<A1, A2>
-): readonly [List.List<A1>, List.List<A2>] => {
+): readonly [Chunk.Chunk<A1>, Chunk.Chunk<A2>] => {
   return Array.from(elements).reduceRight(
     ([lefts, rights], current) => {
       const either = f(current)
       switch (either._tag) {
         case "Left": {
-          return [pipe(lefts, List.prepend(either.left)), rights] as const
+          return [pipe(lefts, Chunk.prepend(either.left)), rights] as const
         }
         case "Right": {
-          return [lefts, pipe(rights, List.prepend(either.right))] as const
+          return [lefts, pipe(rights, Chunk.prepend(either.right))] as const
         }
       }
     },
-    [List.empty<A1>(), List.empty<A2>()] as const
+    [Chunk.empty<A1>(), Chunk.empty<A2>()] as const
   )
 }
 
@@ -1493,8 +1492,8 @@ export const currentLogLevel: FiberRef.FiberRef<LogLevel.LogLevel> = fiberRefUns
 )
 
 /** @internal */
-export const currentLogSpan: FiberRef.FiberRef<List.List<LogSpan.LogSpan>> = fiberRefUnsafeMake(
-  List.empty<LogSpan.LogSpan>()
+export const currentLogSpan: FiberRef.FiberRef<Chunk.Chunk<LogSpan.LogSpan>> = fiberRefUnsafeMake(
+  Chunk.empty<LogSpan.LogSpan>()
 )
 
 /** @internal */
@@ -2109,14 +2108,14 @@ export const exitZipWith = <E, E1, A, B, C>(
 /** @internal */
 export const exitCollectAll = <E, A>(
   exits: Iterable<Exit.Exit<E, A>>
-): Option.Option<Exit.Exit<E, List.List<A>>> => {
+): Option.Option<Exit.Exit<E, Chunk.Chunk<A>>> => {
   return exitCollectAllInternal(exits, internalCause.sequential)
 }
 
 /** @internal */
 export const exitCollectAllPar = <E, A>(
   exits: Iterable<Exit.Exit<E, A>>
-): Option.Option<Exit.Exit<E, List.List<A>>> => {
+): Option.Option<Exit.Exit<E, Chunk.Chunk<A>>> => {
   return exitCollectAllInternal(exits, internalCause.parallel)
 }
 
@@ -2127,23 +2126,26 @@ export const exitUnit: () => Exit.Exit<never, void> = () => exitSucceed(void 0)
 const exitCollectAllInternal = <E, A>(
   exits: Iterable<Exit.Exit<E, A>>,
   combineCauses: (causeA: Cause.Cause<E>, causeB: Cause.Cause<E>) => Cause.Cause<E>
-): Option.Option<Exit.Exit<E, List.List<A>>> => {
-  const list = List.fromIterable(exits)
-  if (List.isNil(list)) {
+): Option.Option<Exit.Exit<E, Chunk.Chunk<A>>> => {
+  const list = Chunk.fromIterable(exits)
+  if (!Chunk.isNonEmpty(list)) {
     return Option.none
   }
   return pipe(
-    list.tail,
-    List.reduce(pipe(list.head, exitMap(List.of)), (accumulator, current) =>
-      pipe(
-        accumulator,
-        exitZipWith(
-          current,
-          (list, value) => pipe(list, List.prepend(value)),
-          combineCauses
+    Chunk.tailNonEmpty(list),
+    Chunk.reduce(
+      pipe(Chunk.headNonEmpty(list), exitMap<A, Chunk.Chunk<A>>(Chunk.singleton)),
+      (accumulator, current) =>
+        pipe(
+          accumulator,
+          exitZipWith(
+            current,
+            (list, value) => pipe(list, Chunk.prepend(value)),
+            combineCauses
+          )
         )
-      )),
-    exitMap(List.reverse),
+    ),
+    exitMap(Chunk.reverse),
     Option.some
   )
 }

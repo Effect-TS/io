@@ -3,7 +3,7 @@ import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal/core"
 import type * as Ref from "@effect/io/Ref"
 import { pipe } from "@fp-ts/data/Function"
-import * as MutableRef from "@fp-ts/data/mutable/MutableRef"
+import * as MutableRef from "@fp-ts/data/MutableRef"
 import * as Option from "@fp-ts/data/Option"
 
 /** @internal */

@@ -11,7 +11,6 @@ import type { LazyArg } from "@fp-ts/data/Function"
 import { pipe } from "@fp-ts/data/Function"
 import type * as HashMap from "@fp-ts/data/HashMap"
 import * as HashSet from "@fp-ts/data/HashSet"
-import * as List from "@fp-ts/data/List"
 import * as Option from "@fp-ts/data/Option"
 import type { Predicate, Refinement } from "@fp-ts/data/Predicate"
 
@@ -166,7 +165,7 @@ export const bool = (name?: string): Config.Config<boolean> => {
         }
         default: {
           const error = configError.InvalidData(
-            Chunk.empty,
+            Chunk.empty(),
             `Expected a boolean value, but received ${text}`
           )
           return Either.left(error)
@@ -191,7 +190,7 @@ export const date = (name?: string): Config.Config<Date> => {
       if (Number.isNaN(result)) {
         return Either.left(
           configError.InvalidData(
-            Chunk.empty,
+            Chunk.empty(),
             `Expected a date value but received ${text}`
           )
         )
@@ -215,7 +214,7 @@ export const fail = (message: string): Config.Config<never> => {
   const fail = Object.create(proto)
   fail.op = OpCodes.OP_FAIL
   fail.message = message
-  fail.parse = () => Either.left(configError.Unsupported(Chunk.empty, message))
+  fail.parse = () => Either.left(configError.Unsupported(Chunk.empty(), message))
   return fail
 }
 
@@ -228,7 +227,7 @@ export const float = (name?: string): Config.Config<number> => {
       if (Number.isNaN(result)) {
         return Either.left(
           configError.InvalidData(
-            Chunk.empty,
+            Chunk.empty(),
             `Expected an float value but received ${text}`
           )
         )
@@ -248,7 +247,7 @@ export const integer = (name?: string): Config.Config<number> => {
       if (Number.isNaN(result)) {
         return Either.left(
           configError.InvalidData(
-            Chunk.empty,
+            Chunk.empty(),
             `Expected an integer value but received ${text}`
           )
         )
@@ -260,8 +259,8 @@ export const integer = (name?: string): Config.Config<number> => {
 }
 
 /** @internal */
-export const listOf = <A>(config: Config.Config<A>, name?: string): Config.Config<List.List<A>> => {
-  return pipe(chunkOf(config, name), map(List.fromIterable))
+export const listOf = <A>(config: Config.Config<A>, name?: string): Config.Config<Chunk.Chunk<A>> => {
+  return pipe(chunkOf(config, name), map(Chunk.fromIterable))
 }
 
 /** @internal */
@@ -282,7 +281,7 @@ export const mapAttempt = <A, B>(f: (a: A) => B) => {
         } catch (error) {
           return Either.left(
             configError.InvalidData(
-              Chunk.empty,
+              Chunk.empty(),
               error instanceof Error ? error.message : `${error}`
             )
           )
@@ -306,7 +305,7 @@ export const mapOrFail = <A, B>(f: (a: A) => Either.Either<ConfigError.ConfigErr
 /** @internal */
 export const missingError = (name: string) => {
   return <A>(self: Config.Config.Primitive<A>): ConfigError.ConfigError => {
-    return configError.MissingData(Chunk.empty, `Expected ${self.description} with name ${name}`)
+    return configError.MissingData(Chunk.empty(), `Expected ${self.description} with name ${name}`)
   }
 }
 
@@ -455,7 +454,7 @@ export const validate: {
         if (f(a)) {
           return Either.right(a)
         }
-        return Either.left(configError.InvalidData(Chunk.empty, message))
+        return Either.left(configError.InvalidData(Chunk.empty(), message))
       })
     )
   }

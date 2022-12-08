@@ -5,10 +5,10 @@ import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import * as it from "@effect/io/test/utils/extend"
 import * as Chunk from "@fp-ts/data/Chunk"
+import { equals } from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
 import * as HashMap from "@fp-ts/data/HashMap"
 import * as HashSet from "@fp-ts/data/HashSet"
-import * as List from "@fp-ts/data/List"
 import { assert, describe } from "vitest"
 
 interface HostPort {
@@ -22,7 +22,7 @@ const hostPortConfig: Config.Config<HostPort> = Config.struct({
 })
 
 interface HostPorts {
-  readonly hostPorts: List.List<HostPort>
+  readonly hostPorts: Chunk.Chunk<HostPort>
 }
 
 const hostPortsConfig: Config.Config<HostPorts> = Config.struct({
@@ -113,7 +113,7 @@ describe.concurrent("ConfigProvider", () => {
       ])
       const result = yield* $(provider(map).load(hostPortsConfig))
       assert.deepStrictEqual(result, {
-        hostPorts: List.fromIterable(
+        hostPorts: Chunk.fromIterable(
           Array.from({ length: 3 }, () => ({ host: "localhost", port: 8080 }))
         )
       })
@@ -123,7 +123,7 @@ describe.concurrent("ConfigProvider", () => {
     Effect.gen(function*($) {
       const map = new Map()
       const result = yield* $(provider(map).load(hostPortsConfig))
-      assert.deepStrictEqual(result, { hostPorts: List.nil() })
+      assert.isTrue(equals(result, { hostPorts: Chunk.empty() }))
     }))
 
   it.effect("simple map", () =>
@@ -150,7 +150,7 @@ describe.concurrent("ConfigProvider", () => {
       ])
       const result = yield* $(ConfigProvider.fromMap(map, { seqDelim: "///" }).load(hostPortsConfig))
       assert.deepStrictEqual(result, {
-        hostPorts: List.fromIterable(
+        hostPorts: Chunk.fromIterable(
           Array.from({ length: 3 }, () => ({ host: "localhost", port: 8080 }))
         )
       })
@@ -164,7 +164,7 @@ describe.concurrent("ConfigProvider", () => {
       ])
       const result = yield* $(ConfigProvider.fromMap(map, { seqDelim: "|||" }).load(hostPortsConfig))
       assert.deepStrictEqual(result, {
-        hostPorts: List.fromIterable(
+        hostPorts: Chunk.fromIterable(
           Array.from({ length: 3 }, () => ({ host: "localhost", port: 8080 }))
         )
       })
@@ -178,7 +178,7 @@ describe.concurrent("ConfigProvider", () => {
       ])
       const result = yield* $(ConfigProvider.fromMap(map, { seqDelim: "*" }).load(hostPortsConfig))
       assert.deepStrictEqual(result, {
-        hostPorts: List.fromIterable(
+        hostPorts: Chunk.fromIterable(
           Array.from({ length: 3 }, () => ({ host: "localhost", port: 8080 }))
         )
       })

@@ -2,7 +2,7 @@ import type * as FiberId from "@effect/io/Fiber/Id"
 import * as Equal from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
-import * as MutableRef from "@fp-ts/data/mutable/MutableRef"
+import * as MutableRef from "@fp-ts/data/MutableRef"
 import * as Option from "@fp-ts/data/Option"
 
 /** @internal */

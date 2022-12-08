@@ -10,10 +10,9 @@ import type * as Queue from "@effect/io/Queue"
 import type * as Scope from "@effect/io/Scope"
 import * as Chunk from "@fp-ts/data/Chunk"
 import { pipe } from "@fp-ts/data/Function"
-import * as List from "@fp-ts/data/List"
-import * as MutableHashSet from "@fp-ts/data/mutable/MutableHashSet"
-import * as MutableQueue from "@fp-ts/data/mutable/MutableQueue"
-import * as MutableRef from "@fp-ts/data/mutable/MutableRef"
+import * as MutableHashSet from "@fp-ts/data/MutableHashSet"
+import * as MutableQueue from "@fp-ts/data/MutableQueue"
+import * as MutableRef from "@fp-ts/data/MutableRef"
 
 /** @internal */
 export interface AtomicHub<A> {
@@ -322,13 +321,13 @@ class BoundedHubArbSubscription<A> implements Subscription<A> {
 
   pollUpTo(n: number): Chunk.Chunk<A> {
     if (this.unsubscribed) {
-      return Chunk.empty
+      return Chunk.empty()
     }
     this.subscriberIndex = Math.max(this.subscriberIndex, this.self.subscribersIndex)
     const size = this.self.publisherIndex - this.subscriberIndex
     const toPoll = Math.min(n, size)
     if (toPoll <= 0) {
-      return Chunk.empty
+      return Chunk.empty()
     }
     const builder: Array<A> = []
     const pollUpToIndex = this.subscriberIndex + toPoll
@@ -489,13 +488,13 @@ class BoundedHubPow2Subscription<A> implements Subscription<A> {
 
   pollUpTo(n: number): Chunk.Chunk<A> {
     if (this.unsubscribed) {
-      return Chunk.empty
+      return Chunk.empty()
     }
     this.subscriberIndex = Math.max(this.subscriberIndex, this.self.subscribersIndex)
     const size = this.self.publisherIndex - this.subscriberIndex
     const toPoll = Math.min(n, size)
     if (toPoll <= 0) {
-      return Chunk.empty
+      return Chunk.empty()
     }
     const builder: Array<A> = []
     const pollUpToIndex = this.subscriberIndex + toPoll
@@ -625,7 +624,7 @@ class BoundedHubSingleSubscription<A> implements Subscription<A> {
 
   pollUpTo(n: number): Chunk.Chunk<A> {
     if (this.isEmpty() || n < 1) {
-      return Chunk.empty
+      return Chunk.empty()
     }
     const a = this.self.value
     this.self.subscribers -= 1
@@ -698,7 +697,7 @@ class UnboundedHub<A> implements AtomicHub<A> {
     for (const a of elements) {
       this.publish(a)
     }
-    return Chunk.empty
+    return Chunk.empty()
   }
 
   slide(): void {
@@ -932,7 +931,7 @@ class SubscriptionImpl<A> implements Queue.Dequeue<A> {
       }
       const as = MutableQueue.isEmpty(this.pollers)
         ? unsafePollAllSubscription(this.subscription)
-        : Chunk.empty
+        : Chunk.empty()
       this.strategy.unsafeOnHubEmptySpace(this.hub, this.subscribers)
       return core.succeed(as)
     }).traced(trace)
@@ -946,7 +945,7 @@ class SubscriptionImpl<A> implements Queue.Dequeue<A> {
       }
       const as = MutableQueue.isEmpty(this.pollers)
         ? unsafePollN(this.subscription, max)
-        : Chunk.empty
+        : Chunk.empty()
       this.strategy.unsafeOnHubEmptySpace(this.hub, this.subscribers)
       return core.succeed(as)
     }).traced(trace)
@@ -954,7 +953,7 @@ class SubscriptionImpl<A> implements Queue.Dequeue<A> {
 
   takeBetween(min: number, max: number): Effect.Effect<never, never, Chunk.Chunk<A>> {
     const trace = getCallTrace()
-    return core.suspendSucceed(() => takeRemainderLoop(this, min, max, Chunk.empty)).traced(trace)
+    return core.suspendSucceed(() => takeRemainderLoop(this, min, max, Chunk.empty())).traced(trace)
   }
 }
 
@@ -1180,12 +1179,12 @@ const unsafeCompleteDeferred = <A>(deferred: Deferred.Deferred<never, A>, a: A):
 }
 
 /** @internal */
-const unsafeOfferAll = <A>(queue: MutableQueue.MutableQueue<A>, as: Iterable<A>): List.List<A> => {
+const unsafeOfferAll = <A>(queue: MutableQueue.MutableQueue<A>, as: Iterable<A>): Chunk.Chunk<A> => {
   return pipe(queue, MutableQueue.offerAll(as))
 }
 
 /** @internal */
-const unsafePollAllQueue = <A>(queue: MutableQueue.MutableQueue<A>): List.List<A> => {
+const unsafePollAllQueue = <A>(queue: MutableQueue.MutableQueue<A>): Chunk.Chunk<A> => {
   return pipe(queue, MutableQueue.pollUpTo(Number.POSITIVE_INFINITY))
 }
 
@@ -1208,7 +1207,7 @@ const unsafePublishAll = <A>(hub: AtomicHub<A>, as: Iterable<A>): Chunk.Chunk<A>
 const unsafeRemove = <A>(queue: MutableQueue.MutableQueue<A>, value: A): void => {
   unsafeOfferAll(
     queue,
-    pipe(unsafePollAllQueue(queue), List.filter((elem) => elem !== value))
+    pipe(unsafePollAllQueue(queue), Chunk.filter((elem) => elem !== value))
   )
 }
 
@@ -1349,7 +1348,7 @@ class BackPressureStrategy<A> implements HubStrategy<A> {
         } else if (!published) {
           unsafeOfferAll(
             this.publishers,
-            pipe(unsafePollAllQueue(this.publishers), List.prepend(publisher))
+            pipe(unsafePollAllQueue(this.publishers), Chunk.prepend(publisher))
           )
         }
         this.unsafeCompleteSubscribers(hub, subscribers)
@@ -1396,7 +1395,7 @@ class BackPressureStrategy<A> implements HubStrategy<A> {
   unsafeRemove(deferred: Deferred.Deferred<never, boolean>): void {
     unsafeOfferAll(
       this.publishers,
-      pipe(unsafePollAllQueue(this.publishers), List.filter(([_, a]) => a !== deferred))
+      pipe(unsafePollAllQueue(this.publishers), Chunk.filter(([_, a]) => a !== deferred))
     )
   }
 }
@@ -1538,7 +1537,7 @@ const unsafeStrategyCompletePollers = <A>(
     } else {
       const pollResult = subscription.poll(MutableQueue.EmptyMutableQueue)
       if (pollResult === MutableQueue.EmptyMutableQueue) {
-        unsafeOfferAll(pollers, pipe(unsafePollAllQueue(pollers), List.prepend(poller)))
+        unsafeOfferAll(pollers, pipe(unsafePollAllQueue(pollers), Chunk.prepend(poller)))
       } else {
         unsafeCompleteDeferred(poller, pollResult)
         strategy.unsafeOnHubEmptySpace(hub, subscribers)

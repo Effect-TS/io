@@ -5,9 +5,9 @@ import * as Exit from "@effect/io/Exit"
 import * as Fiber from "@effect/io/Fiber"
 import * as Ref from "@effect/io/Ref"
 import * as it from "@effect/io/test/utils/extend"
+import * as Chunk from "@fp-ts/data/Chunk"
 import * as Duration from "@fp-ts/data/Duration"
 import { pipe } from "@fp-ts/data/Function"
-import * as List from "@fp-ts/data/List"
 import * as Option from "@fp-ts/data/Option"
 import * as os from "node:os"
 import { assert, describe } from "vitest"
@@ -69,37 +69,37 @@ describe.concurrent("Effect", () => {
   it.live("async should not resume fiber twice after interruption", () =>
     Effect.gen(function*($) {
       const step = yield* $(Deferred.make<never, void>())
-      const unexpectedPlace = yield* $(Ref.make(List.empty<number>()))
+      const unexpectedPlace = yield* $(Ref.make(Chunk.empty<number>()))
       const runtime = yield* $(Effect.runtime<never>())
       const fiber = yield* $(pipe(
         Effect.async<never, never, void>((cb) =>
           runtime.unsafeRunAsync(pipe(
             Deferred.await(step),
-            Effect.zipRight(Effect.sync(() => cb(pipe(unexpectedPlace, Ref.update(List.prepend(1))))))
+            Effect.zipRight(Effect.sync(() => cb(pipe(unexpectedPlace, Ref.update(Chunk.prepend(1))))))
           ))
         ),
         Effect.ensuring(Effect.async<never, never, void>(() => {
           // The callback is never called so this never completes
           runtime.unsafeRunAsync(pipe(step, Deferred.succeed<void>(undefined)))
         })),
-        Effect.ensuring(pipe(unexpectedPlace, Ref.update(List.prepend(2)))),
+        Effect.ensuring(pipe(unexpectedPlace, Ref.update(Chunk.prepend(2)))),
         Effect.forkDaemon
       ))
       const result = yield* $(pipe(Fiber.interrupt(fiber), Effect.timeout(Duration.seconds(1))))
       const unexpected = yield* $(Ref.get(unexpectedPlace))
-      assert.deepStrictEqual(unexpected, List.empty())
+      assert.deepStrictEqual(unexpected, Chunk.empty())
       assert.deepStrictEqual(result, Option.none) // the timeout should happen
     }))
   it.live("asyncMaybe should not resume fiber twice after synchronous result", () =>
     Effect.gen(function*($) {
       const step = yield* $(Deferred.make<never, void>())
-      const unexpectedPlace = yield* $(Ref.make(List.empty<number>()))
+      const unexpectedPlace = yield* $(Ref.make(Chunk.empty<number>()))
       const runtime = yield* $(Effect.runtime<never>())
       const fiber = yield* $(pipe(
         Effect.asyncOption<never, never, void>((cb) => {
           runtime.unsafeRunAsync(pipe(
             Deferred.await(step),
-            Effect.zipRight(Effect.sync(() => cb(pipe(unexpectedPlace, Ref.update(List.prepend(1))))))
+            Effect.zipRight(Effect.sync(() => cb(pipe(unexpectedPlace, Ref.update(Chunk.prepend(1))))))
           ))
           return Option.some(Effect.unit())
         }),
@@ -109,13 +109,13 @@ describe.concurrent("Effect", () => {
             runtime.unsafeRunAsync(pipe(step, Deferred.succeed<void>(void 0)))
           })
         ),
-        Effect.ensuring(pipe(unexpectedPlace, Ref.update(List.prepend(2)))),
+        Effect.ensuring(pipe(unexpectedPlace, Ref.update(Chunk.prepend(2)))),
         Effect.uninterruptible,
         Effect.forkDaemon
       ))
       const result = yield* $(pipe(Fiber.interrupt(fiber), Effect.timeout(Duration.seconds(1))))
       const unexpected = yield* $(Ref.get(unexpectedPlace))
-      assert.deepStrictEqual(unexpected, List.empty())
+      assert.deepStrictEqual(unexpected, Chunk.empty())
       assert.deepStrictEqual(result, Option.none) // timeout should happen
     }))
   it.effect("sleep 0 must return", () =>
@@ -157,7 +157,7 @@ describe.concurrent("Effect", () => {
         ),
         Effect.exit,
         Effect.map(Exit.match((cause) =>
-          pipe(Cause.defects(cause), List.head, Option.map((e) => (e as Error).message)), () =>
+          pipe(Cause.defects(cause), Chunk.head, Option.map((e) => (e as Error).message)), () =>
           Option.none))
       ))
       assert.deepStrictEqual(result, Option.some("ouch"))

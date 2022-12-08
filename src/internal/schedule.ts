@@ -17,7 +17,6 @@ import * as Duration from "@fp-ts/data/Duration"
 import * as Either from "@fp-ts/data/Either"
 import * as Equal from "@fp-ts/data/Equal"
 import { constVoid, pipe } from "@fp-ts/data/Function"
-import * as List from "@fp-ts/data/List"
 import * as Option from "@fp-ts/data/Option"
 import type { Predicate } from "@fp-ts/data/Predicate"
 
@@ -364,7 +363,7 @@ export const collectAllInputs = <A>(): Schedule.Schedule<never, A, Chunk.Chunk<A
 export const collectAllOutputs = <Env, In, Out>(
   self: Schedule.Schedule<Env, In, Out>
 ): Schedule.Schedule<Env, In, Chunk.Chunk<Out>> => {
-  return pipe(self, fold(Chunk.empty as Chunk.Chunk<Out>, (outs, out) => pipe(outs, Chunk.append(out))))
+  return pipe(self, fold(Chunk.empty<Out>(), (outs, out) => pipe(outs, Chunk.append(out))))
 }
 
 /** @internal */
@@ -1396,8 +1395,8 @@ export const run = <In>(now: number, input: Iterable<In>) => {
     self: Schedule.Schedule<Env, In, Out>
   ): Effect.Effect<Env, never, Chunk.Chunk<Out>> => {
     return pipe(
-      runLoop(self, now, List.fromIterable(input), self.initial, List.nil()),
-      core.map((list) => Chunk.fromIterable(List.reverse(list)))
+      runLoop(self, now, Chunk.fromIterable(input), self.initial, Chunk.empty()),
+      core.map((list) => Chunk.reverse(list))
     ).traced(trace)
   }
 }
@@ -1406,27 +1405,27 @@ export const run = <In>(now: number, input: Iterable<In>) => {
 const runLoop = <Env, In, Out>(
   self: Schedule.Schedule<Env, In, Out>,
   now: number,
-  inputs: List.List<In>,
+  inputs: Chunk.Chunk<In>,
   state: any,
-  acc: List.List<Out>
-): Effect.Effect<Env, never, List.List<Out>> => {
-  if (List.isNil(inputs)) {
+  acc: Chunk.Chunk<Out>
+): Effect.Effect<Env, never, Chunk.Chunk<Out>> => {
+  if (!Chunk.isNonEmpty(inputs)) {
     return core.succeed(acc)
   }
-  const input = inputs.head
-  const nextInputs = inputs.tail
+  const input = Chunk.headNonEmpty(inputs)
+  const nextInputs = Chunk.tailNonEmpty(inputs)
   return pipe(
     self.step(now, input, state),
     core.flatMap(([state, out, decision]) => {
       if (ScheduleDecision.isDone(decision)) {
-        return core.sync(() => pipe(acc, List.prepend(out)))
+        return core.sync(() => pipe(acc, Chunk.prepend(out)))
       }
       return runLoop(
         self,
         Intervals.start(decision.intervals),
         nextInputs,
         state,
-        pipe(acc, List.prepend(out))
+        pipe(acc, Chunk.prepend(out))
       )
     })
   )

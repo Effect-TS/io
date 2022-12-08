@@ -3,15 +3,15 @@ import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRef from "@effect/io/FiberRef"
 import type * as FiberRefs from "@effect/io/FiberRefs"
 import * as core from "@effect/io/internal/core"
+import * as Chunk from "@fp-ts/data/Chunk"
 import * as Equal from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
-import * as List from "@fp-ts/data/List"
 import * as Option from "@fp-ts/data/Option"
 
 /** @internal */
 export function unsafeMake(
-  fiberRefLocals: Map<FiberRef.FiberRef<any>, List.Cons<readonly [FiberId.Runtime, any]>>
+  fiberRefLocals: Map<FiberRef.FiberRef<any>, Chunk.NonEmptyChunk<readonly [FiberId.Runtime, any]>>
 ): FiberRefs.FiberRefs {
   return new FiberRefsImpl(fiberRefLocals)
 }
@@ -25,7 +25,7 @@ export class FiberRefsImpl implements FiberRefs.FiberRefs {
   constructor(
     readonly locals: Map<
       FiberRef.FiberRef<any>,
-      List.Cons<readonly [FiberId.Runtime, any]>
+      Chunk.NonEmptyChunk<readonly [FiberId.Runtime, any]>
     >
   ) {}
 }
@@ -33,8 +33,8 @@ export class FiberRefsImpl implements FiberRefs.FiberRefs {
 /** @internal */
 const findAncestor = (
   _ref: FiberRef.FiberRef<any>,
-  _parentStack: List.List<readonly [FiberId.Runtime, unknown]>,
-  _childStack: List.List<readonly [FiberId.Runtime, unknown]>,
+  _parentStack: Chunk.Chunk<readonly [FiberId.Runtime, unknown]>,
+  _childStack: Chunk.Chunk<readonly [FiberId.Runtime, unknown]>,
   _childModified = false
 ): readonly [unknown, boolean] => {
   const ref = _ref
@@ -43,12 +43,12 @@ const findAncestor = (
   let childModified = _childModified
   let ret: readonly [unknown, boolean] | undefined = undefined
   while (ret === undefined) {
-    if (List.isCons(parentStack) && List.isCons(childStack)) {
-      const parentFiberId = parentStack.head[0]
-      const parentAncestors = parentStack.tail
-      const childFiberId = childStack.head[0]
-      const childRefValue = childStack.head[1]
-      const childAncestors = childStack.tail
+    if (Chunk.isNonEmpty(parentStack) && Chunk.isNonEmpty(childStack)) {
+      const parentFiberId = Chunk.headNonEmpty(parentStack)[0]
+      const parentAncestors = Chunk.tailNonEmpty(parentStack)
+      const childFiberId = Chunk.headNonEmpty(childStack)[0]
+      const childRefValue = Chunk.headNonEmpty(childStack)[1]
+      const childAncestors = Chunk.tailNonEmpty(childStack)
       if (parentFiberId.startTimeMillis < childFiberId.startTimeMillis) {
         childStack = childAncestors
         childModified = true
@@ -76,15 +76,15 @@ export const joinAs = (fiberId: FiberId.Runtime, that: FiberRefs.FiberRefs) =>
   (self: FiberRefs.FiberRefs): FiberRefs.FiberRefs => {
     const parentFiberRefs = new Map(self.locals)
     for (const [fiberRef, childStack] of that.locals) {
-      const childValue = childStack.head[1]
-      if (!Equal.equals(childStack.head[0], fiberId)) {
+      const childValue = Chunk.headNonEmpty(childStack)[1]
+      if (!Equal.equals(Chunk.headNonEmpty(childStack)[0], fiberId)) {
         if (!parentFiberRefs.has(fiberRef)) {
           if (Equal.equals(childValue, fiberRef.initial)) {
             continue
           }
           parentFiberRefs.set(
             fiberRef,
-            List.cons([fiberId, fiberRef.join(fiberRef.initial, childValue)] as const, List.nil())
+            Chunk.singleton([fiberId, fiberRef.join(fiberRef.initial, childValue)] as const)
           )
           continue
         }
@@ -96,15 +96,19 @@ export const joinAs = (fiberId: FiberId.Runtime, that: FiberRefs.FiberRefs) =>
         )
         if (wasModified) {
           const patch = fiberRef.diff(ancestor, childValue)
-          const oldValue = parentStack.head[1]
+          const oldValue = Chunk.headNonEmpty(parentStack)[1]
           const newValue = fiberRef.join(oldValue, fiberRef.patch(patch)(oldValue))
           if (!Equal.equals(oldValue, newValue)) {
-            let newStack: List.Cons<readonly [FiberId.Runtime, unknown]>
-            const parentFiberId = parentStack.head[0]
+            let newStack: Chunk.NonEmptyChunk<readonly [FiberId.Runtime, unknown]>
+            const parentFiberId = Chunk.headNonEmpty(parentStack)[0]
             if (Equal.equals(parentFiberId, fiberId)) {
-              newStack = List.cons([parentFiberId, newValue] as const, parentStack.tail)
+              newStack = Chunk.prepend([parentFiberId, newValue] as const)(
+                Chunk.tailNonEmpty(parentStack)
+              ) as Chunk.NonEmptyChunk<readonly [FiberId.Runtime, unknown]>
             } else {
-              newStack = List.cons([fiberId, newValue] as const, parentStack)
+              newStack = Chunk.prepend([fiberId, newValue] as const)(
+                parentStack
+              ) as Chunk.NonEmptyChunk<readonly [FiberId.Runtime, unknown]>
             }
             parentFiberRefs.set(fiberRef, newStack)
           }
@@ -117,14 +121,14 @@ export const joinAs = (fiberId: FiberId.Runtime, that: FiberRefs.FiberRefs) =>
 /** @internal */
 export const forkAs = (childId: FiberId.Runtime) =>
   (self: FiberRefs.FiberRefs): FiberRefs.FiberRefs => {
-    const map = new Map<FiberRef.FiberRef<any>, List.Cons<readonly [FiberId.Runtime, unknown]>>()
+    const map = new Map<FiberRef.FiberRef<any>, Chunk.NonEmptyChunk<readonly [FiberId.Runtime, unknown]>>()
     for (const [fiberRef, stack] of self.locals.entries()) {
-      const oldValue = stack.head[1]
+      const oldValue = Chunk.headNonEmpty(stack)[1]
       const newValue = fiberRef.patch(fiberRef.fork)(oldValue)
       if (Equal.equals(oldValue, newValue)) {
         map.set(fiberRef, stack)
       } else {
-        map.set(fiberRef, List.cons([childId, newValue] as const, stack))
+        map.set(fiberRef, Chunk.prepend([childId, newValue] as const)(stack) as typeof stack)
       }
     }
     return new FiberRefsImpl(map)
@@ -163,7 +167,7 @@ export const get = <A>(fiberRef: FiberRef.FiberRef<A>) =>
     if (!self.locals.has(fiberRef)) {
       return Option.none
     }
-    return Option.some(self.locals.get(fiberRef)!.head[1])
+    return Option.some(Chunk.headNonEmpty(self.locals.get(fiberRef)!)[1])
   }
 
 /** @internal */
@@ -175,14 +179,16 @@ export const updatedAs = <A>(fiberId: FiberId.Runtime, fiberRef: FiberRef.FiberR
   (self: FiberRefs.FiberRefs): FiberRefs.FiberRefs => {
     const oldStack = self.locals.has(fiberRef) ?
       self.locals.get(fiberRef)! :
-      List.empty<readonly [FiberId.Runtime, any]>()
+      Chunk.empty<readonly [FiberId.Runtime, any]>()
 
-    const newStack = List.isNil(oldStack)
-      ? List.cons([fiberId, value] as const, List.nil())
-      : Equal.equals(oldStack.head[0], fiberId)
-      ? List.cons([fiberId, value] as const, oldStack.tail)
-      : List.cons([fiberId, value] as const, oldStack)
+    const newStack = Chunk.isEmpty(oldStack)
+      ? Chunk.singleton([fiberId, value] as const)
+      : Equal.equals(Chunk.headNonEmpty(oldStack as Chunk.NonEmptyChunk<readonly [FiberId.Runtime, any]>)[0], fiberId)
+      ? Chunk.prepend([fiberId, value] as const)(
+        Chunk.tailNonEmpty(oldStack as Chunk.NonEmptyChunk<readonly [FiberId.Runtime, any]>)
+      )
+      : Chunk.prepend([fiberId, value] as const)(oldStack)
 
     const locals = new Map(self.locals)
-    return new FiberRefsImpl(locals.set(fiberRef, newStack))
+    return new FiberRefsImpl(locals.set(fiberRef, newStack as Chunk.NonEmptyChunk<readonly [FiberId.Runtime, any]>))
   }

@@ -15,7 +15,6 @@ import * as Chunk from "@fp-ts/data/Chunk"
 import * as Duration from "@fp-ts/data/Duration"
 import * as Either from "@fp-ts/data/Either"
 import { constVoid, pipe } from "@fp-ts/data/Function"
-import * as List from "@fp-ts/data/List"
 import * as Option from "@fp-ts/data/Option"
 import { assert, describe } from "vitest"
 
@@ -111,19 +110,19 @@ describe.concurrent("Schedule", () => {
   it.effect("union of two schedules should continue as long as either wants to continue", () =>
     Effect.gen(function*($) {
       const schedule = pipe(Schedule.recurWhile((b: boolean) => b), Schedule.union(Schedule.fixed(Duration.seconds(1))))
-      const input = List.make(true, false, false, false, false)
+      const input = Chunk.make(true, false, false, false, false)
       const result = yield* $(runCollect(pipe(schedule, Schedule.compose(Schedule.elapsed())), input))
       const expected = [0, 0, 1, 2, 3].map(Duration.seconds)
       assert.deepStrictEqual(Array.from(result), expected)
     }))
   it.effect("Schedule.fixed should compute delays correctly", () =>
     Effect.gen(function*($) {
-      const inputs = List.make([0, undefined] as const, [6500, undefined] as const)
+      const inputs = Chunk.make([0, undefined] as const, [6500, undefined] as const)
       const result = yield* $(pipe(
         runManually(Schedule.fixed(Duration.seconds(5)), inputs),
-        Effect.map((output) => pipe(output[0], List.map((tuple) => tuple[0])))
+        Effect.map((output) => pipe(output[0], Chunk.map((tuple) => tuple[0])))
       ))
-      assert.deepStrictEqual(result, List.make(5000, 10000))
+      assert.deepStrictEqual(result, Chunk.make(5000, 10000))
     }))
   it.effect("intersection of schedules recurring in bounded intervals", () =>
     Effect.gen(function*($) {
@@ -627,17 +626,17 @@ describe.concurrent("Schedule", () => {
         const beforeTime = new Date(originOffset).setSeconds(0)
         const afterTime = new Date(originOffset).setSeconds(3)
         const input = pipe(
-          List.make(inTimeSecondMillis, inTimeSecond, beforeTime, afterTime),
-          List.map((n) => [n, void 0] as const)
+          Chunk.make(inTimeSecondMillis, inTimeSecond, beforeTime, afterTime),
+          Chunk.map((n) => [n, void 0] as const)
         )
         const result = yield* $(pipe(
           runManually(Schedule.secondOfMinute(1), input),
-          Effect.map((output) => pipe(output[0], List.map((tuple) => tuple[0])))
+          Effect.map((output) => pipe(output[0], Chunk.map((tuple) => tuple[0])))
         ))
         const expectedDate = new Date(new Date(originOffset).setSeconds(1))
         const expected = expectedDate.getTime()
         const afterTimeExpected = new Date(expectedDate).setMinutes(expectedDate.getMinutes() + 1)
-        const expectedOutput = List.make(expected, afterTimeExpected, expected, afterTimeExpected)
+        const expectedOutput = Chunk.make(expected, afterTimeExpected, expected, afterTimeExpected)
         assert.deepStrictEqual(result, expectedOutput)
       }))
     it.effect("recur at 01 minute of each hour", () =>
@@ -648,16 +647,16 @@ describe.concurrent("Schedule", () => {
         const beforeTime = new Date(originOffset).setMinutes(0)
         const afterTime = new Date(originOffset).setMinutes(3)
         const input = pipe(
-          List.make(inTimeMinuteMillis, inTimeMinute, beforeTime, afterTime),
-          List.map((n) => [n, void 0] as const)
+          Chunk.make(inTimeMinuteMillis, inTimeMinute, beforeTime, afterTime),
+          Chunk.map((n) => [n, void 0] as const)
         )
         const result = yield* $(pipe(
           runManually(Schedule.minuteOfHour(1), input),
-          Effect.map((output) => pipe(output[0], List.map((tuple) => tuple[0])))
+          Effect.map((output) => pipe(output[0], Chunk.map((tuple) => tuple[0])))
         ))
         const expected = new Date(new Date(originOffset).setMinutes(1))
         const afterTimeExpected = new Date(expected).setHours(expected.getHours() + 1)
-        const expectedOutput = List.make(expected.getTime(), afterTimeExpected, expected.getTime(), afterTimeExpected)
+        const expectedOutput = Chunk.make(expected.getTime(), afterTimeExpected, expected.getTime(), afterTimeExpected)
         assert.deepStrictEqual(result, expectedOutput)
       }))
     it.effect("recur at 01 hour of each day", () =>
@@ -668,17 +667,17 @@ describe.concurrent("Schedule", () => {
         const beforeTime = new Date(originOffset).setHours(0)
         const afterTime = new Date(originOffset).setHours(3)
         const input = pipe(
-          List.make(inTimeHourSecond, inTimeHour, beforeTime, afterTime),
-          List.map((n) => [n, void 0] as const)
+          Chunk.make(inTimeHourSecond, inTimeHour, beforeTime, afterTime),
+          Chunk.map((n) => [n, void 0] as const)
         )
         const result = yield* $(pipe(
           runManually(Schedule.hourOfDay(1), input),
-          Effect.map((output) => pipe(output[0], List.map((tuple) => tuple[0])))
+          Effect.map((output) => pipe(output[0], Chunk.map((tuple) => tuple[0])))
         ))
         const expectedDate = new Date(new Date(originOffset).setHours(1))
         const expected = expectedDate.getTime()
         const afterTimeExpected = new Date(expectedDate).setDate(expectedDate.getDate() + 1)
-        const expectedOutput = List.make(expected, afterTimeExpected, expected, afterTimeExpected)
+        const expectedOutput = Chunk.make(expected, afterTimeExpected, expected, afterTimeExpected)
         assert.deepStrictEqual(result, expectedOutput)
       }))
     it.effect("recur at Tuesday of each week", () =>
@@ -693,16 +692,21 @@ describe.concurrent("Schedule", () => {
         const monday = new Date(tuesday).setDate(tuesday.getDate() - 1)
         const wednesday = new Date(tuesday).setDate(tuesday.getDate() + 1)
         const input = pipe(
-          List.make(tuesdayHour, tuesday.getTime(), monday, wednesday),
-          List.map((n) => [n, void 0] as const)
+          Chunk.make(tuesdayHour, tuesday.getTime(), monday, wednesday),
+          Chunk.map((n) => [n, void 0] as const)
         )
         const result = yield* $(pipe(
           runManually(Schedule.dayOfWeek(2), input),
-          Effect.map((output) => pipe(output[0], List.map((tuple) => tuple[0])))
+          Effect.map((output) => pipe(output[0], Chunk.map((tuple) => tuple[0])))
         ))
         const expectedTuesday = new Date(tuesday)
         const nextTuesday = new Date(expectedTuesday).setDate(expectedTuesday.getDate() + 7)
-        const expectedOutput = List.make(expectedTuesday.getTime(), nextTuesday, expectedTuesday.getTime(), nextTuesday)
+        const expectedOutput = Chunk.make(
+          expectedTuesday.getTime(),
+          nextTuesday,
+          expectedTuesday.getTime(),
+          nextTuesday
+        )
         assert.deepStrictEqual(result, expectedOutput)
       }))
     it.effect("recur in the 2nd day of each month", () =>
@@ -712,10 +716,10 @@ describe.concurrent("Schedule", () => {
         const inTimeDate2 = new Date(originOffset).setDate(2)
         const before = new Date(originOffset).setDate(1)
         const after = new Date(originOffset).setDate(2)
-        const input = pipe(List.make(inTimeDate1, inTimeDate2, before, after), List.map((n) => [n, void 0] as const))
+        const input = pipe(Chunk.make(inTimeDate1, inTimeDate2, before, after), Chunk.map((n) => [n, void 0] as const))
         const result = yield* $(pipe(
           runManually(Schedule.dayOfMonth(2), input),
-          Effect.map((output) => pipe(output[0], List.map((tuple) => tuple[0])))
+          Effect.map((output) => pipe(output[0], Chunk.map((tuple) => tuple[0])))
         ))
         const expectedFirstInTime = new Date(new Date(originOffset).setDate(2))
         const expectedSecondInTime = new Date(expectedFirstInTime).setMonth(expectedFirstInTime.getMonth() + 1)
@@ -723,18 +727,18 @@ describe.concurrent("Schedule", () => {
         const expectedAfter = new Date(new Date(expectedBefore).setDate(2)).setMonth(
           new Date(expectedBefore).getMonth() + 1
         )
-        const expected = List.make(expectedFirstInTime.getTime(), expectedSecondInTime, expectedBefore, expectedAfter)
+        const expected = Chunk.make(expectedFirstInTime.getTime(), expectedSecondInTime, expectedBefore, expectedAfter)
         assert.deepStrictEqual(result, expected)
       }))
     it.effect("recur only in months containing valid number of days", () =>
       Effect.gen(function*($) {
         const originOffset = new Date(2020, 0, 31, 0, 0, 0).getTime()
-        const input = List.of([originOffset, void 0] as const)
+        const input = Chunk.singleton([originOffset, void 0] as const)
         const result = yield* $(pipe(
           runManually(Schedule.dayOfMonth(30), input),
-          Effect.map((output) => pipe(output[0], List.map((tuple) => tuple[0])))
+          Effect.map((output) => pipe(output[0], Chunk.map((tuple) => tuple[0])))
         ))
-        const expected = List.make(new Date(originOffset).setMonth(2, 30))
+        const expected = Chunk.make(new Date(originOffset).setMonth(2, 30))
         assert.deepStrictEqual(result, expected)
       }))
     it.effect("union with cron like schedules", () =>
@@ -755,7 +759,7 @@ describe.concurrent("Schedule", () => {
       }))
     it.effect("throw IllegalArgumentException on invalid `second` argument of `secondOfMinute`", () =>
       Effect.gen(function*($) {
-        const input = List.of(Date.now())
+        const input = Chunk.singleton(Date.now())
         const exit = yield* $(Effect.exit(runCollect(Schedule.secondOfMinute(60), input)))
         const exception = Cause.IllegalArgumentException(
           "Invalid argument in: secondOfMinute(60). Must be in range 0...59"
@@ -764,7 +768,7 @@ describe.concurrent("Schedule", () => {
       }))
     it.effect("throw IllegalArgumentException on invalid `minute` argument of `minuteOfHour`", () =>
       Effect.gen(function*($) {
-        const input = List.of(Date.now())
+        const input = Chunk.singleton(Date.now())
         const exit = yield* $(Effect.exit(runCollect(Schedule.minuteOfHour(60), input)))
         const exception = Cause.IllegalArgumentException(
           "Invalid argument in: minuteOfHour(60). Must be in range 0...59"
@@ -773,14 +777,14 @@ describe.concurrent("Schedule", () => {
       }))
     it.effect("throw IllegalArgumentException on invalid `hour` argument of `hourOfDay`", () =>
       Effect.gen(function*($) {
-        const input = List.of(Date.now())
+        const input = Chunk.singleton(Date.now())
         const exit = yield* $(Effect.exit(runCollect(Schedule.hourOfDay(24), input)))
         const exception = Cause.IllegalArgumentException("Invalid argument in: hourOfDay(24). Must be in range 0...23")
         assert.deepStrictEqual(Exit.unannotate(exit), Exit.die(exception))
       }))
     it.effect("throw IllegalArgumentException on invalid `day` argument of `dayOfWeek`", () =>
       Effect.gen(function*($) {
-        const input = List.of(Date.now())
+        const input = Chunk.singleton(Date.now())
         const exit = yield* $(Effect.exit(runCollect(Schedule.dayOfWeek(8), input)))
         const exception = Cause.IllegalArgumentException(
           "Invalid argument in: dayOfWeek(8). Must be in range 1 (Monday)...7 (Sunday)"
@@ -789,7 +793,7 @@ describe.concurrent("Schedule", () => {
       }))
     it.effect("throw IllegalArgumentException on invalid `day` argument of `dayOfMonth`", () =>
       Effect.gen(function*($) {
-        const input = List.of(Date.now())
+        const input = Chunk.singleton(Date.now())
         const exit = yield* $(Effect.exit(runCollect(Schedule.dayOfMonth(32), input)))
         const exception = Cause.IllegalArgumentException("Invalid argument in: dayOfMonth(32). Must be in range 1...31")
         assert.deepStrictEqual(Exit.unannotate(exit), Exit.die(exception))
@@ -865,20 +869,20 @@ export const runCollect = <Env, In, Out>(
   return run(
     pipe(
       Schedule.driver(schedule),
-      Effect.flatMap((driver) => runCollectLoop(driver, List.fromIterable(input), Chunk.empty))
+      Effect.flatMap((driver) => runCollectLoop(driver, Chunk.fromIterable(input), Chunk.empty()))
     )
   )
 }
 const runCollectLoop = <Env, In, Out>(
   driver: Schedule.ScheduleDriver<Env, In, Out>,
-  input: List.List<In>,
+  input: Chunk.Chunk<In>,
   acc: Chunk.Chunk<Out>
 ): Effect.Effect<Env | TestEnvironment.TestEnvironment, never, Chunk.Chunk<Out>> => {
-  if (List.isNil(input)) {
+  if (!Chunk.isNonEmpty(input)) {
     return Effect.succeed(acc)
   }
-  const head = input.head
-  const tail = input.tail
+  const head = Chunk.headNonEmpty(input)
+  const tail = Chunk.tailNonEmpty(input)
   return pipe(
     driver.next(head),
     Effect.foldEffect(
@@ -899,7 +903,7 @@ const runManually = <Env, In, Out>(
   Env,
   never,
   readonly [
-    List.List<
+    Chunk.Chunk<
       readonly [
         number,
         Out
@@ -908,18 +912,18 @@ const runManually = <Env, In, Out>(
     Option.Option<Out>
   ]
 > => {
-  return runManuallyLoop(schedule, schedule.initial, List.fromIterable(inputs), List.nil())
+  return runManuallyLoop(schedule, schedule.initial, Chunk.fromIterable(inputs), Chunk.empty())
 }
 const runManuallyLoop = <Env, In, Out>(
   schedule: Schedule.Schedule<Env, In, Out>,
   state: unknown,
-  inputs: List.List<
+  inputs: Chunk.Chunk<
     readonly [
       number,
       In
     ]
   >,
-  acc: List.List<
+  acc: Chunk.Chunk<
     readonly [
       number,
       Out
@@ -929,7 +933,7 @@ const runManuallyLoop = <Env, In, Out>(
   Env,
   never,
   readonly [
-    List.List<
+    Chunk.Chunk<
       readonly [
         number,
         Out
@@ -938,22 +942,22 @@ const runManuallyLoop = <Env, In, Out>(
     Option.Option<Out>
   ]
 > => {
-  if (List.isNil(inputs)) {
-    return Effect.succeed([List.reverse(acc), Option.none] as const)
+  if (!Chunk.isNonEmpty(inputs)) {
+    return Effect.succeed([Chunk.reverse(acc), Option.none] as const)
   }
-  const [offset, input] = inputs.head
-  const rest = inputs.tail
+  const [offset, input] = Chunk.headNonEmpty(inputs)
+  const rest = Chunk.tailNonEmpty(inputs)
   return pipe(
     schedule.step(offset, input, state),
     Effect.flatMap(([state, out, decision]) => {
       if (ScheduleDecision.isDone(decision)) {
-        return Effect.succeed([List.reverse(acc), Option.some(out)] as const)
+        return Effect.succeed([Chunk.reverse(acc), Option.some(out)] as const)
       }
       return runManuallyLoop(
         schedule,
         state,
         rest,
-        pipe(acc, List.prepend([Intervals.start(decision.intervals), out] as const))
+        pipe(acc, Chunk.prepend([Intervals.start(decision.intervals), out] as const))
       )
     })
   )

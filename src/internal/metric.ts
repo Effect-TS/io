@@ -16,11 +16,10 @@ import type * as MetricLabel from "@effect/io/Metric/Label"
 import type * as MetricPair from "@effect/io/Metric/Pair"
 import type * as MetricRegistry from "@effect/io/Metric/Registry"
 import type * as MetricState from "@effect/io/Metric/State"
-import type * as Chunk from "@fp-ts/data/Chunk"
+import * as Chunk from "@fp-ts/data/Chunk"
 import * as Duration from "@fp-ts/data/Duration"
 import { constVoid, identity, pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
-import * as List from "@fp-ts/data/List"
 
 /** @internal */
 const MetricSymbolKey = "@effect/io/Metric"
@@ -288,7 +287,7 @@ export const trackDefectWith = <In>(f: (defect: unknown) => In) => {
           core.sync(() =>
             pipe(
               Cause.defects(cause),
-              List.forEach(updater)
+              Chunk.forEach(updater)
             )
           )
         )

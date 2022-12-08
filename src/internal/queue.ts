@@ -6,9 +6,8 @@ import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
 import type * as Queue from "@effect/io/Queue"
 import * as Chunk from "@fp-ts/data/Chunk"
 import { pipe } from "@fp-ts/data/Function"
-import * as List from "@fp-ts/data/List"
-import * as MutableQueue from "@fp-ts/data/mutable/MutableQueue"
-import * as MutableRef from "@fp-ts/data/mutable/MutableRef"
+import * as MutableQueue from "@fp-ts/data/MutableQueue"
+import * as MutableRef from "@fp-ts/data/MutableRef"
 import type * as Option from "@fp-ts/data/Option"
 import * as ReadonlyArray from "@fp-ts/data/ReadonlyArray"
 
@@ -181,7 +180,7 @@ class QueueImpl<A> implements Queue.Queue<A> {
       // Not enough takers, offer to the queue
       const surplus = unsafeOfferAll(this.queue, remaining)
       unsafeCompleteTakers(this.strategy, this.queue, this.takers)
-      return List.isNil(surplus)
+      return Chunk.isEmpty(surplus)
         ? core.succeed(true)
         : this.strategy.handleSurplus(surplus, this.queue, this.takers, this.shutdownFlag)
     }).traced(trace)
@@ -247,7 +246,7 @@ class QueueImpl<A> implements Queue.Queue<A> {
 
   takeBetween(min: number, max: number): Effect.Effect<never, never, Chunk.Chunk<A>> {
     const trace = getCallTrace()
-    return core.suspendSucceed(() => takeRemainderLoop(this, min, max, Chunk.empty)).traced(trace)
+    return core.suspendSucceed(() => takeRemainderLoop(this, min, max, Chunk.empty())).traced(trace)
   }
 }
 
@@ -553,7 +552,7 @@ class BackPressureStrategy<A> implements Queue.Strategy<A> {
         if (offered && putter[2]) {
           unsafeCompleteDeferred(putter[1], true)
         } else if (!offered) {
-          unsafeOfferAll(this.putters, pipe(unsafePollAll(this.putters), List.prepend(putter)))
+          unsafeOfferAll(this.putters, pipe(unsafePollAll(this.putters), Chunk.prepend(putter)))
         }
         unsafeCompleteTakers(this, queue, takers)
       }
@@ -580,7 +579,7 @@ class BackPressureStrategy<A> implements Queue.Strategy<A> {
   unsafeRemove(deferred: Deferred.Deferred<never, boolean>): void {
     unsafeOfferAll(
       this.putters,
-      pipe(unsafePollAll(this.putters), List.filter(([, _]) => _ !== deferred))
+      pipe(unsafePollAll(this.putters), Chunk.filter(([, _]) => _ !== deferred))
     )
   }
 }
@@ -671,17 +670,17 @@ const unsafeCompleteDeferred = <A>(deferred: Deferred.Deferred<never, A>, a: A):
 }
 
 /** @internal */
-const unsafeOfferAll = <A>(queue: MutableQueue.MutableQueue<A>, as: Iterable<A>): List.List<A> => {
+const unsafeOfferAll = <A>(queue: MutableQueue.MutableQueue<A>, as: Iterable<A>): Chunk.Chunk<A> => {
   return pipe(queue, MutableQueue.offerAll(as))
 }
 
 /** @internal */
-const unsafePollAll = <A>(queue: MutableQueue.MutableQueue<A>): List.List<A> => {
+const unsafePollAll = <A>(queue: MutableQueue.MutableQueue<A>): Chunk.Chunk<A> => {
   return pipe(queue, MutableQueue.pollUpTo(Number.POSITIVE_INFINITY))
 }
 
 /** @internal */
-const unsafePollN = <A>(queue: MutableQueue.MutableQueue<A>, max: number): List.List<A> => {
+const unsafePollN = <A>(queue: MutableQueue.MutableQueue<A>, max: number): Chunk.Chunk<A> => {
   return pipe(queue, MutableQueue.pollUpTo(max))
 }
 
@@ -689,7 +688,7 @@ const unsafePollN = <A>(queue: MutableQueue.MutableQueue<A>, max: number): List.
 export const unsafeRemove = <A>(queue: MutableQueue.MutableQueue<A>, a: A): void => {
   unsafeOfferAll(
     queue,
-    pipe(unsafePollAll(queue), List.filter((b) => a !== b))
+    pipe(unsafePollAll(queue), Chunk.filter((b) => a !== b))
   )
 }
 
@@ -709,7 +708,7 @@ export const unsafeCompleteTakers = <A>(
         unsafeCompleteDeferred(taker, element)
         strategy.unsafeOnQueueEmptySpace(queue, takers)
       } else {
-        unsafeOfferAll(takers, pipe(unsafePollAll(takers), List.prepend(taker)))
+        unsafeOfferAll(takers, pipe(unsafePollAll(takers), Chunk.prepend(taker)))
       }
       keepPolling = true
     } else {

@@ -1,10 +1,10 @@
 import * as supervisor from "@effect/io/internal/supervisor"
 import type * as Supervisor from "@effect/io/Supervisor"
+import * as Chunk from "@fp-ts/data/Chunk"
 import * as Differ from "@fp-ts/data/Differ"
 import * as Equal from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
-import * as List from "@fp-ts/data/List"
 
 /** @internal */
 export type SupervisorPatch = Empty | AddSupervisor | RemoveSupervisor | AndThen
@@ -87,34 +87,35 @@ export const patch = (
   self: SupervisorPatch,
   supervisor: Supervisor.Supervisor<any>
 ): Supervisor.Supervisor<any> => {
-  return patchLoop(supervisor, List.of(self))
+  return patchLoop(supervisor, Chunk.singleton(self))
 }
 
 /** @internal */
 const patchLoop = (
   _supervisor: Supervisor.Supervisor<any>,
-  _patches: List.List<SupervisorPatch>
+  _patches: Chunk.Chunk<SupervisorPatch>
 ): Supervisor.Supervisor<any> => {
   let supervisor = _supervisor
   let patches = _patches
-  while (List.isCons(patches)) {
-    switch (patches.head.op) {
+  while (Chunk.isNonEmpty(patches)) {
+    const head = Chunk.headNonEmpty(patches)
+    switch (head.op) {
       case OP_EMPTY: {
-        patches = patches.tail
+        patches = Chunk.tailNonEmpty(patches)
         break
       }
       case OP_ADD_SUPERVISOR: {
-        supervisor = supervisor.zip(patches.head.supervisor)
-        patches = patches.tail
+        supervisor = supervisor.zip(head.supervisor)
+        patches = Chunk.tailNonEmpty(patches)
         break
       }
       case OP_REMOVE_SUPERVISOR: {
-        supervisor = removeSupervisor(supervisor, patches.head.supervisor)
-        patches = patches.tail
+        supervisor = removeSupervisor(supervisor, head.supervisor)
+        patches = Chunk.tailNonEmpty(patches)
         break
       }
       case OP_AND_THEN: {
-        patches = List.cons(patches.head.first, List.cons(patches.head.second, patches.tail))
+        patches = Chunk.prepend(head.first)(Chunk.prepend(head.second)(Chunk.tailNonEmpty(patches)))
         break
       }
     }

@@ -5,9 +5,9 @@ import * as Exit from "@effect/io/Exit"
 import * as Fiber from "@effect/io/Fiber"
 import * as Ref from "@effect/io/Ref"
 import * as it from "@effect/io/test/utils/extend"
+import * as Chunk from "@fp-ts/data/Chunk"
 import * as Duration from "@fp-ts/data/Duration"
 import { pipe } from "@fp-ts/data/Function"
-import * as List from "@fp-ts/data/List"
 import * as Option from "@fp-ts/data/Option"
 import { assert, describe } from "vitest"
 
@@ -166,12 +166,12 @@ describe.concurrent("Effect", () => {
     }))
   it.live("acquireUseRelease regression 1", () =>
     Effect.gen(function*($) {
-      const makeLogger = (ref: Ref.Ref<List.List<string>>) => {
+      const makeLogger = (ref: Ref.Ref<Chunk.Chunk<string>>) => {
         return (line: string): Effect.Effect<never, never, void> => {
-          return pipe(ref, Ref.update(List.prepend(line)))
+          return pipe(ref, Ref.update(Chunk.prepend(line)))
         }
       }
-      const ref = yield* $(Ref.make(List.empty<string>()))
+      const ref = yield* $(Ref.make(Chunk.empty<string>()))
       const log = makeLogger(ref)
       const fiber = yield* $(pipe(
         Effect.acquireUseRelease(
@@ -194,27 +194,27 @@ describe.concurrent("Effect", () => {
       yield* $(pipe(
         Ref.get(ref),
         Effect.zipLeft(Effect.sleep(Duration.millis(1))),
-        Effect.repeatUntil((list) => pipe(list, List.findFirst((s) => s === "start 1"), Option.isSome))
+        Effect.repeatUntil((list) => pipe(list, Chunk.findFirst((s) => s === "start 1"), Option.isSome))
       ))
       yield* $(Fiber.interrupt(fiber))
       yield* $(pipe(
         Ref.get(ref),
         Effect.zipLeft(Effect.sleep(Duration.millis(1))),
-        Effect.repeatUntil((list) => pipe(list, List.findFirst((s) => s === "release 2"), Option.isSome))
+        Effect.repeatUntil((list) => pipe(list, Chunk.findFirst((s) => s === "release 2"), Option.isSome))
       ))
       const result = yield* $(Ref.get(ref))
       assert.isTrue(pipe(
         result,
-        List.findFirst((s) => s === "start 1"),
+        Chunk.findFirst((s) => s === "start 1"),
         Option.isSome
       ))
       assert.isTrue(pipe(
         result,
-        List.findFirst((s) => s === "release 1"),
+        Chunk.findFirst((s) => s === "release 1"),
         Option.isSome
       ))
-      assert.isTrue(pipe(result, List.findFirst((s) => s === "start 2"), Option.isSome))
-      assert.isTrue(pipe(result, List.findFirst((s) => s === "release 2"), Option.isSome))
+      assert.isTrue(pipe(result, Chunk.findFirst((s) => s === "start 2"), Option.isSome))
+      assert.isTrue(pipe(result, Chunk.findFirst((s) => s === "release 2"), Option.isSome))
     }))
   it.live("interrupt waits for finalizer", () =>
     Effect.gen(function*($) {

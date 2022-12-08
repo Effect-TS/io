@@ -45,10 +45,10 @@ describe.concurrent("Layer", () => {
   it.effect("preserves identity of acquired resources", () =>
     Effect.gen(function*($) {
       const ChunkTag = Context.Tag<Ref.Ref<Chunk.Chunk<string>>>()
-      const testRef = yield* $(Ref.make<Chunk.Chunk<string>>(Chunk.empty))
+      const testRef = yield* $(Ref.make<Chunk.Chunk<string>>(Chunk.empty()))
       const layer = Layer.scoped(ChunkTag)(
         pipe(
-          Effect.acquireRelease(Ref.make<Chunk.Chunk<string>>(Chunk.empty), (ref) =>
+          Effect.acquireRelease(Ref.make<Chunk.Chunk<string>>(Chunk.empty()), (ref) =>
             pipe(
               Ref.get(ref),
               Effect.flatMap((chunk) => pipe(testRef, Ref.set(chunk)))
@@ -611,7 +611,7 @@ describe.concurrent("Layer", () => {
     }))
 })
 export const makeRef = (): Effect.Effect<never, never, Ref.Ref<Chunk.Chunk<string>>> => {
-  return Ref.make(Chunk.empty)
+  return Ref.make(Chunk.empty())
 }
 export class Service1 {
   one(): Effect.Effect<never, never, number> {
