@@ -95,6 +95,7 @@ Added in v1.0.0
   - [partition](#partition)
   - [partitionPar](#partitionpar)
   - [promise](#promise)
+  - [promiseAbort](#promiseabort)
   - [random](#random)
   - [randomWith](#randomwith)
   - [runtime](#runtime)
@@ -113,7 +114,9 @@ Added in v1.0.0
   - [takeWhile](#takewhile)
   - [tryCatch](#trycatch)
   - [tryCatchPromise](#trycatchpromise)
+  - [tryCatchPromiseAbort](#trycatchpromiseabort)
   - [tryPromise](#trypromise)
+  - [tryPromiseAbort](#trypromiseabort)
   - [tuple](#tuple)
   - [tuplePar](#tuplepar)
   - [unfold](#unfold)
@@ -1585,7 +1588,7 @@ Collects all successes and failures in a tupled fashion.
 ```ts
 export declare const partition: <R, E, A, B>(
   f: (a: A) => Effect<R, E, B>
-) => (elements: Iterable<A>) => Effect<R, never, readonly [List.List<E>, List.List<B>]>
+) => (elements: Iterable<A>) => Effect<R, never, readonly [Chunk.Chunk<E>, Chunk.Chunk<B>]>
 ```
 
 Added in v1.0.0
@@ -1601,7 +1604,7 @@ tuple.
 ```ts
 export declare const partitionPar: <R, E, A, B>(
   f: (a: A) => Effect<R, E, B>
-) => (elements: Iterable<A>) => Effect<R, never, readonly [List.List<E>, List.List<B>]>
+) => (elements: Iterable<A>) => Effect<R, never, readonly [Chunk.Chunk<E>, Chunk.Chunk<B>]>
 ```
 
 Added in v1.0.0
@@ -1614,6 +1617,18 @@ Like `tryPromise` but produces a defect in case of errors.
 
 ```ts
 export declare const promise: <A>(evaluate: () => Promise<A>) => Effect<never, never, A>
+```
+
+Added in v1.0.0
+
+## promiseAbort
+
+Like `promise` but allows for interruption via AbortSignal
+
+**Signature**
+
+```ts
+export declare const promiseAbort: <A>(evaluate: (signal: AbortSignal) => Promise<A>) => Effect<never, never, A>
 ```
 
 Added in v1.0.0
@@ -1850,6 +1865,21 @@ export declare const tryCatchPromise: <E, A>(
 
 Added in v1.0.0
 
+## tryCatchPromiseAbort
+
+Like `tryCatchPromise` but allows for interruption via AbortSignal
+
+**Signature**
+
+```ts
+export declare const tryCatchPromiseAbort: <E, A>(
+  evaluate: (signal: AbortSignal) => Promise<A>,
+  onReject: (reason: unknown) => E
+) => Effect<never, E, A>
+```
+
+Added in v1.0.0
+
 ## tryPromise
 
 Create an `Effect` that when executed will construct `promise` and wait for
@@ -1859,6 +1889,18 @@ its result, errors will produce failure as `unknown`.
 
 ```ts
 export declare const tryPromise: <A>(evaluate: () => Promise<A>) => Effect<never, unknown, A>
+```
+
+Added in v1.0.0
+
+## tryPromiseAbort
+
+Like `tryPromise` but allows for interruption via AbortSignal
+
+**Signature**
+
+```ts
+export declare const tryPromiseAbort: <A>(evaluate: (signal: AbortSignal) => Promise<A>) => Effect<never, unknown, A>
 ```
 
 Added in v1.0.0

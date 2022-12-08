@@ -1620,16 +1620,24 @@ export const patchFiberRefs = (
 /** @internal */
 export const promise = <A>(evaluate: () => Promise<A>): Effect.Effect<never, never, A> => {
   const trace = getCallTrace()
-  return pipe(
-    core.sync(evaluate),
-    core.flatMap((promise) =>
-      core.async<never, never, A>((resolve) => {
-        promise
-          .then((a) => resolve(core.succeed(a)))
-          .catch((e) => resolve(core.die(e)))
-      })
-    )
-  ).traced(trace)
+  return core.async<never, never, A>((resolve) => {
+    evaluate()
+      .then((a) => resolve(core.succeed(a)))
+      .catch((e) => resolve(core.die(e)))
+  }).traced(trace)
+}
+
+/** @internal */
+export const promiseAbort = <A>(evaluate: (signal: AbortSignal) => Promise<A>): Effect.Effect<never, never, A> => {
+  const trace = getCallTrace()
+  return core.asyncInterrupt<never, never, A>((resolve) => {
+    const controller = new AbortController()
+    evaluate(controller.signal)
+      .then((a) => resolve(core.succeed(a)))
+      .catch((e) => resolve(core.die(e)))
+    return Either.left(core.sync(() => controller.abort()))
+  })
+    .traced(trace)
 }
 
 /** @internal */
@@ -2222,6 +2230,27 @@ export const tryCatchPromise = <E, A>(
 }
 
 /** @internal */
+export const tryCatchPromiseAbort = <E, A>(
+  evaluate: (signal: AbortSignal) => Promise<A>,
+  onReject: (reason: unknown) => E
+): Effect.Effect<never, E, A> => {
+  const trace = getCallTrace()
+  return core.suspendSucceed(() => {
+    const controller = new AbortController()
+    return pipe(
+      tryCatch(() => evaluate(controller.signal), onReject),
+      core.flatMap((promise) =>
+        core.async<never, E, A>((resolve) => {
+          promise
+            .then((a) => resolve(core.succeed(a)))
+            .catch((e) => resolve(core.fail(onReject(e))))
+        })
+      )
+    )
+  }).traced(trace)
+}
+
+/** @internal */
 export const tryPromise = <A>(evaluate: () => Promise<A>): Effect.Effect<never, unknown, A> => {
   const trace = getCallTrace()
   return pipe(
@@ -2231,6 +2260,25 @@ export const tryPromise = <A>(evaluate: () => Promise<A>): Effect.Effect<never, 
         promise
           .then((a) => resolve(core.succeed(a)))
           .catch((e) => resolve(core.fail(e)))
+      })
+    )
+  ).traced(trace)
+}
+
+/** @internal */
+export const tryPromiseAbort = <A>(evaluate: (signal: AbortSignal) => Promise<A>): Effect.Effect<never, unknown, A> => {
+  const trace = getCallTrace()
+  return pipe(
+    attempt(() => {
+      const controller = new AbortController()
+      return [controller, evaluate(controller.signal)] as const
+    }),
+    core.flatMap(([controller, promise]) =>
+      core.asyncInterrupt<never, unknown, A>((resolve) => {
+        promise
+          .then((a) => resolve(core.succeed(a)))
+          .catch((e) => resolve(core.fail(e)))
+        return Either.left(core.sync(() => controller.abort()))
       })
     )
   ).traced(trace)

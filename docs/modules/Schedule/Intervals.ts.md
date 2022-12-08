@@ -67,7 +67,7 @@ Creates a new `Intervals` from a `List` of `Interval`s.
 **Signature**
 
 ```ts
-export declare const make: (intervals: List.List<Interval.Interval>) => Intervals
+export declare const make: (intervals: Check.Chunk<Interval.Interval>) => Intervals
 ```
 
 Added in v1.0.0
@@ -121,7 +121,7 @@ An `Intervals` represents a list of several `Interval`s.
 ```ts
 export interface Intervals {
   readonly [IntervalsTypeId]: IntervalsTypeId
-  readonly intervals: List.List<Interval.Interval>
+  readonly intervals: Check.Chunk<Interval.Interval>
 }
 ```
 

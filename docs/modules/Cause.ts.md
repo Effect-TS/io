@@ -419,7 +419,7 @@ Returns a `List` of all unrecoverable defects in the specified cause.
 **Signature**
 
 ```ts
-export declare const defects: <E>(self: Cause<E>) => List.List<unknown>
+export declare const defects: <E>(self: Cause<E>) => Chunk.Chunk<unknown>
 ```
 
 Added in v1.0.0
@@ -472,7 +472,7 @@ cause.
 **Signature**
 
 ```ts
-export declare const failures: <E>(self: Cause<E>) => List.List<E>
+export declare const failures: <E>(self: Cause<E>) => Chunk.Chunk<E>
 ```
 
 Added in v1.0.0

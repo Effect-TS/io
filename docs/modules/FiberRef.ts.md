@@ -208,7 +208,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const currentLogSpan: FiberRef<List.List<LogSpan.LogSpan>>
+export declare const currentLogSpan: FiberRef<Chunk.Chunk<LogSpan.LogSpan>>
 ```
 
 Added in v1.0.0

@@ -185,8 +185,7 @@ Added in v1.0.0
 
 ## roots
 
-Returns a chunk containing all root fibers. Due to concurrency, the
-returned chunk is only weakly consistent.
+Returns a chunk containing all root fibers.
 
 **Signature**
 
