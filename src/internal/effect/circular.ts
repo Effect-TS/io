@@ -14,8 +14,6 @@ import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
 import * as OpCodes from "@effect/io/internal/opCodes/effect"
 import * as internalRef from "@effect/io/internal/ref"
 import * as _schedule from "@effect/io/internal/schedule"
-import * as STM from "@effect/io/internal/stm"
-import * as TRef from "@effect/io/internal/stm/ref"
 import * as supervisor from "@effect/io/internal/supervisor"
 import type * as Synchronized from "@effect/io/Ref/Synchronized"
 import type * as Schedule from "@effect/io/Schedule"
@@ -29,6 +27,55 @@ import { pipe } from "@fp-ts/data/Function"
 import * as MutableHashMap from "@fp-ts/data/mutable/MutableHashMap"
 import * as MutableRef from "@fp-ts/data/mutable/MutableRef"
 import * as Option from "@fp-ts/data/Option"
+
+/** @internal */
+export const unsafeMakeLock = () => {
+  let running = false
+  const observers: Set<() => void> = new Set()
+  return <R, E, A>(self: Effect.Effect<R, E, A>) =>
+    core.asyncInterrupt<R, E, A>((resume) => {
+      if (!running) {
+        running = true
+        return pipe(
+          self,
+          ensuring(
+            core.sync(() => {
+              running = false
+              observers.forEach((observer) => {
+                observer()
+              })
+            })
+          ),
+          Either.right
+        )
+      } else {
+        const observer = () => {
+          if (!running) {
+            running = true
+            observers.delete(observer)
+            resume(pipe(
+              self,
+              ensuring(
+                core.sync(() => {
+                  running = false
+                  observers.forEach((observer) => {
+                    observer()
+                  })
+                })
+              )
+            ))
+          }
+        }
+        observers.add(observer)
+        return Either.left(core.sync(() => {
+          observers.delete(observer)
+        }))
+      }
+    })
+}
+
+/** @internal */
+export const makeLock = core.sync(unsafeMakeLock)
 
 /** @internal */
 export const acquireReleaseInterruptible = <R, E, A, R2, X>(
@@ -712,7 +759,7 @@ export const makeSynchronized = <A>(value: A): Effect.Effect<never, never, Synch
 /** @internal */
 export const unsafeMakeSynchronized = <A>(value: A): Synchronized.Synchronized<A> => {
   const ref = internalRef.unsafeMake(value)
-  const semaphore = unsafeMakeSemaphore(1)
+  const withLock = unsafeMakeLock()
   return {
     [SynchronizedTypeId]: synchronizedVariance,
     [internalRef.RefTypeId]: internalRef.refVariance,
@@ -728,7 +775,7 @@ export const unsafeMakeSynchronized = <A>(value: A): Synchronized.Synchronized<A
         internalRef.get(ref),
         core.flatMap(f),
         core.flatMap(([b, a]) => pipe(ref, internalRef.set(a), core.as(b))),
-        withPermits(1)(semaphore)
+        withLock
       ).traced(trace)
     }
   }
@@ -750,99 +797,6 @@ export const updateSomeAndGetEffectSynchronized = <A, R, E>(pf: (a: A) => Option
       }
     }).traced(trace)
   }
-}
-
-// circular with Semaphore
-
-const SemaphoreSymbolKey = "@effect/io/Ref/Semaphore"
-
-export const SemaphoreTypeId = Symbol.for(SemaphoreSymbolKey)
-
-export type SemaphoreTypeId = typeof SemaphoreTypeId
-
-export interface Semaphore {
-  readonly [SemaphoreTypeId]: SemaphoreTypeId
-  /** @internal */
-  readonly permits: TRef.Ref<number>
-}
-
-export class SemaphoreImpl implements Semaphore {
-  readonly [SemaphoreTypeId]: SemaphoreTypeId = SemaphoreTypeId
-  constructor(readonly permits: TRef.Ref<number>) {}
-}
-
-export const unsafeMakeSemaphore = (permits: number): Semaphore => {
-  return new SemaphoreImpl(new TRef.RefImpl(permits))
-}
-
-/**
- * @macro traced
- */
-export const acquireN = (n: number) => {
-  const trace = getCallTrace()
-  return (self: Semaphore): STM.STM<never, never, void> => {
-    return STM.withSTMRuntime((_) => {
-      if (n < 0) {
-        throw Cause.IllegalArgumentException(`Unexpected negative value ${n} passed to Semaphore.acquireN`)
-      }
-      const value = pipe(self.permits, TRef.unsafeGet(_.journal))
-      if (value < n) {
-        return STM.retry()
-      } else {
-        return STM.succeed(pipe(self.permits, TRef.unsafeSet(value - n, _.journal)))
-      }
-    }).traced(trace)
-  }
-}
-
-/**
- * @macro traced
- */
-export const releaseN = (n: number) => {
-  const trace = getCallTrace()
-  return (self: Semaphore): STM.STM<never, never, void> => {
-    return STM.withSTMRuntime((_) => {
-      if (n < 0) {
-        throw Cause.IllegalArgumentException(`Unexpected negative value ${n} passed to Semaphore.releaseN`)
-      }
-      const current = pipe(self.permits, TRef.unsafeGet(_.journal))
-      return STM.succeed(pipe(self.permits, TRef.unsafeSet(current + n, _.journal)))
-    }).traced(trace)
-  }
-}
-
-/**
- * @macro traced
- */
-export const withPermits = (permits: number) => {
-  const trace = getCallTrace()
-  return (semaphore: Semaphore) => {
-    return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-      return core.uninterruptibleMask((restore) =>
-        pipe(
-          restore(STM.commit(acquireN(permits)(semaphore))),
-          core.zipRight(
-            pipe(
-              restore(self),
-              ensuring(STM.commit(releaseN(permits)(semaphore)))
-            )
-          )
-        )
-      ).traced(trace)
-    }
-  }
-}
-
-/**
- * @macro traced
- */
-export const withPermitsScoped = (permits: number) => {
-  const trace = getCallTrace()
-  return (self: Semaphore): Effect.Effect<Scope.Scope, never, void> =>
-    acquireReleaseInterruptible(
-      pipe(self, acquireN(permits), STM.commit),
-      () => pipe(self, releaseN(permits), STM.commit)
-    ).traced(trace)
 }
 
 // circular with Fiber
