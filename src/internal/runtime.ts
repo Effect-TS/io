@@ -33,10 +33,10 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
     readonly fiberRefs: FiberRefs.FiberRefs
   ) {}
 
-  unsafeFork = <E, A>(effect: Effect.Effect<R, E, A>) => {
+  unsafeFork = <E, A>(effect: Effect.Effect<R, E, A>, scheduler?: Scheduler.Scheduler) => {
     const fiberId = FiberId.unsafeMake()
 
-    const fiberRefs = pipe(
+    let fiberRefs = pipe(
       this.fiberRefs,
       FiberRefs.updatedAs(
         fiberId,
@@ -44,6 +44,17 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
         this.context as Context.Context<never>
       )
     )
+
+    if (scheduler) {
+      fiberRefs = pipe(
+        fiberRefs,
+        FiberRefs.updatedAs(
+          fiberId,
+          core.currentScheduler,
+          scheduler
+        )
+      )
+    }
 
     const fiberRuntime = new FiberRuntime.FiberRuntime<E, A>(
       fiberId,
@@ -70,34 +81,7 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
     effect: Effect.Effect<R, E, A>,
     k: (exit: Exit.Exit<E, A>) => void
   ): ((fiberId: FiberId.FiberId) => (_: (exit: Exit.Exit<E, A>) => void) => void) => {
-    const fiberId = FiberId.unsafeMake()
-
-    const fiberRefs = pipe(
-      this.fiberRefs,
-      FiberRefs.updatedAs(
-        fiberId,
-        core.currentEnvironment,
-        this.context as Context.Context<never>
-      )
-    )
-
-    const fiberRuntime = new FiberRuntime.FiberRuntime<E, A>(
-      fiberId,
-      pipe(fiberRefs, FiberRefs.forkAs(fiberId)),
-      this.runtimeFlags
-    )
-
-    const supervisor = fiberRuntime.getSupervisor()
-
-    if (supervisor !== _supervisor.none) {
-      supervisor.onStart(this.context, effect, Option.none, fiberRuntime)
-
-      fiberRuntime.unsafeAddObserver((exit) => supervisor.onEnd(exit, fiberRuntime))
-    }
-
-    fiberRuntime.start(effect)
-
-    fiberScope.globalScope.add(this.runtimeFlags, fiberRuntime)
+    const fiberRuntime = this.unsafeFork(effect)
 
     fiberRuntime.unsafeAddObserver((exit) => {
       k(exit)
@@ -120,41 +104,9 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
   unsafeRunSyncExit = <E, A>(
     effect: Effect.Effect<R, E, A>
   ): Exit.Exit<E, A> => {
-    const fiberId = FiberId.unsafeMake()
-
     const scheduler = new Scheduler.SyncScheduler()
 
-    const fiberRefs = pipe(
-      this.fiberRefs,
-      FiberRefs.updatedAs(
-        fiberId,
-        core.currentEnvironment,
-        this.context as Context.Context<never>
-      ),
-      FiberRefs.updatedAs(
-        fiberId,
-        core.currentScheduler,
-        scheduler
-      )
-    )
-
-    const fiberRuntime = new FiberRuntime.FiberRuntime<E, A>(
-      fiberId,
-      pipe(fiberRefs, FiberRefs.forkAs(fiberId)),
-      this.runtimeFlags
-    )
-
-    const supervisor = fiberRuntime.getSupervisor()
-
-    if (supervisor !== _supervisor.none) {
-      supervisor.onStart(this.context, effect, Option.none, fiberRuntime)
-
-      fiberRuntime.unsafeAddObserver((exit) => supervisor.onEnd(exit, fiberRuntime))
-    }
-
-    fiberRuntime.start(effect)
-
-    fiberScope.globalScope.add(this.runtimeFlags, fiberRuntime)
+    const fiberRuntime = this.unsafeFork(effect, scheduler)
 
     scheduler.flush()
 
