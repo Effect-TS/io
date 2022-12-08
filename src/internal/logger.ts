@@ -1,9 +1,9 @@
-import * as Cause from "@effect/io/Cause"
 import { runtimeDebug } from "@effect/io/Debug"
 import type * as FiberRef from "@effect/io/FiberRef"
+import * as Cause from "@effect/io/internal/cause"
+import * as Pretty from "@effect/io/internal/cause-pretty"
 import * as core from "@effect/io/internal/core"
 import * as _fiberId from "@effect/io/internal/fiberId"
-import * as fiberRefs from "@effect/io/internal/fiberRefs"
 import type * as Logger from "@effect/io/Logger"
 import * as LogLevel from "@effect/io/Logger/Level"
 import * as LogSpan from "@effect/io/Logger/Span"
@@ -11,6 +11,7 @@ import { constVoid, pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
 import * as List from "@fp-ts/data/List"
 import * as Option from "@fp-ts/data/Option"
+
 /** @internal */
 const LoggerSymbolKey = "@effect/io/Logger"
 
@@ -28,7 +29,7 @@ const loggerVariance = {
 /** @internal */
 export const stringLogger: Logger.Logger<string, string> = {
   [LoggerTypeId]: loggerVariance,
-  log: (fiberId, logLevel, message, cause, _context, spans, annotations) => {
+  log: (fiberId, logLevel, message, cause, _context, spans, annotations, runtime) => {
     const now = new Date()
     const nowMillis = now.getTime()
 
@@ -43,7 +44,7 @@ export const stringLogger: Logger.Logger<string, string> = {
     }
 
     if (cause != null && cause != Cause.empty) {
-      outputArray.push(`cause="${pipe(cause, Cause.pretty())}"`)
+      outputArray.push(`cause="${runtime.unsafeRunSync(Pretty.prettySafe(cause, Pretty.defaultRenderer))}"`)
     }
 
     let output = outputArray.join(" ")
@@ -103,8 +104,8 @@ export const consoleLogger = (): Logger.Logger<string, void> => {
 export function contramap<Message, Message2>(f: (message: Message2) => Message) {
   return <Output>(self: Logger.Logger<Message, Output>): Logger.Logger<Message2, Output> => ({
     [LoggerTypeId]: loggerVariance,
-    log: (fiberId, logLevel, message, cause, context, spans, annotations) => {
-      return self.log(fiberId, logLevel, f(message), cause, context, spans, annotations)
+    log: (fiberId, logLevel, message, cause, context, spans, annotations, runtime) => {
+      return self.log(fiberId, logLevel, f(message), cause, context, spans, annotations, runtime)
     }
   })
 }
@@ -113,7 +114,7 @@ export function contramap<Message, Message2>(f: (message: Message2) => Message) 
 export const filterLogLevel = (f: (logLevel: LogLevel.LogLevel) => boolean) => {
   return <Message, Output>(self: Logger.Logger<Message, Output>): Logger.Logger<Message, Option.Option<Output>> => ({
     [LoggerTypeId]: loggerVariance,
-    log: (fiberId, logLevel, message, cause, context, spans, annotations) => {
+    log: (fiberId, logLevel, message, cause, context, spans, annotations, runtime) => {
       return f(logLevel)
         ? Option.some(
           self.log(
@@ -123,7 +124,8 @@ export const filterLogLevel = (f: (logLevel: LogLevel.LogLevel) => boolean) => {
             cause,
             context,
             spans,
-            annotations
+            annotations,
+            runtime
           )
         )
         : Option.none
@@ -135,8 +137,8 @@ export const filterLogLevel = (f: (logLevel: LogLevel.LogLevel) => boolean) => {
 export const map = <Output, Output2>(f: (output: Output) => Output2) => {
   return <Message>(self: Logger.Logger<Message, Output>): Logger.Logger<Message, Output2> => ({
     [LoggerTypeId]: loggerVariance,
-    log: (fiberId, logLevel, message, cause, context, spans, annotations) => {
-      return f(self.log(fiberId, logLevel, message, cause, context, spans, annotations))
+    log: (fiberId, logLevel, message, cause, context, spans, annotations, runtime) => {
+      return f(self.log(fiberId, logLevel, message, cause, context, spans, annotations, runtime))
     }
   })
 }
@@ -166,30 +168,15 @@ export const sync = <A>(evaluate: () => A): Logger.Logger<unknown, A> => {
 }
 
 /** @internal */
-export const test = <Message>(input: Message) => {
-  return <Output>(self: Logger.Logger<Message, Output>): Output => {
-    return self.log(
-      _fiberId.none,
-      core.logLevelInfo,
-      input,
-      Cause.empty,
-      fiberRefs.unsafeMake(new Map()),
-      List.empty(),
-      new Map()
-    )
-  }
-}
-
-/** @internal */
 export const zip = <Message2, Output2>(that: Logger.Logger<Message2, Output2>) => {
   return <Message, Output>(
     self: Logger.Logger<Message, Output>
   ): Logger.Logger<Message & Message2, readonly [Output, Output2]> => ({
     [LoggerTypeId]: loggerVariance,
-    log: (fiberId, logLevel, message, cause, context, spans, annotations) =>
+    log: (fiberId, logLevel, message, cause, context, spans, annotations, runtime) =>
       [
-        self.log(fiberId, logLevel, message, cause, context, spans, annotations),
-        that.log(fiberId, logLevel, message, cause, context, spans, annotations)
+        self.log(fiberId, logLevel, message, cause, context, spans, annotations, runtime),
+        that.log(fiberId, logLevel, message, cause, context, spans, annotations, runtime)
       ] as const
   })
 }

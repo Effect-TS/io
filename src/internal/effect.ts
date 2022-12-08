@@ -1,4 +1,4 @@
-import * as Cause from "@effect/io/Cause"
+import type * as Cause from "@effect/io/Cause"
 import * as Clock from "@effect/io/Clock"
 import { getCallTrace } from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
@@ -7,6 +7,7 @@ import type * as Fiber from "@effect/io/Fiber"
 import * as FiberId from "@effect/io/Fiber/Id"
 import * as FiberRefs from "@effect/io/FiberRefs"
 import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
+import * as internalCause from "@effect/io/internal/cause"
 import * as core from "@effect/io/internal/core"
 import * as fiberRefsPatch from "@effect/io/internal/fiberRefs/patch"
 import * as SingleShotGen from "@effect/io/internal/singleShotGen"
@@ -45,7 +46,7 @@ export const absorbWith = <E>(f: (e: E) => unknown) => {
   return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, unknown, A> => {
     return pipe(
       sandbox(self),
-      core.foldEffect((cause) => core.fail(pipe(cause, Cause.squashWith(f))), core.succeed)
+      core.foldEffect((cause) => core.fail(pipe(cause, internalCause.squashWith(f))), core.succeed)
     ).traced(trace)
   }
 }
@@ -126,7 +127,7 @@ export const attempt = <A>(evaluate: () => A): Effect.Effect<never, unknown, A> 
     try {
       return evaluate()
     } catch (error) {
-      throw core.makeEffectError(Cause.fail(error))
+      throw core.makeEffectError(internalCause.fail(error))
     }
   }).traced(trace)
 }
@@ -215,7 +216,7 @@ export const catchTag = <K extends E["_tag"] & string, E extends { _tag: string 
 /** @internal */
 export const cause = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Cause.Cause<E>> => {
   const trace = getCallTrace()
-  return pipe(self, core.foldCause(identity, () => Cause.empty)).traced(trace)
+  return pipe(self, core.foldCause(identity, () => internalCause.empty)).traced(trace)
 }
 
 /** @internal */
@@ -412,14 +413,14 @@ export const descriptorWith = <R, E, A>(
     return f({
       id: state.id(),
       status,
-      interruptors: Cause.interruptors(state.getFiberRef(core.interruptedCause))
+      interruptors: internalCause.interruptors(state.getFiberRef(core.interruptedCause))
     })
   }).traced(trace) as Effect.Effect<R, E, A>
 }
 
 /** @internal */
 export const dieMessage = (message: string): Effect.Effect<never, never, never> => {
-  return core.failCauseSync(() => Cause.die(Cause.RuntimeException(message)))
+  return core.failCauseSync(() => internalCause.die(internalCause.RuntimeException(message)))
 }
 
 /** @internal */
@@ -708,7 +709,7 @@ export const firstSuccessOf = <R, E, A>(effects: Iterable<Effect.Effect<R, E, A>
   return core.suspendSucceed(() => {
     const list = List.fromIterable(effects)
     if (List.isNil(list)) {
-      return core.dieSync(() => Cause.IllegalArgumentException(`Received an empty collection of effects`))
+      return core.dieSync(() => internalCause.IllegalArgumentException(`Received an empty collection of effects`))
     }
     return pipe(
       list.tail,
@@ -908,7 +909,7 @@ export const getOrFail = <A>(
   option: Option.Option<A>
 ): Effect.Effect<never, Cause.NoSuchElementException, A> => {
   const trace = getCallTrace()
-  return pipe(option, getOrFailWith(() => Cause.NoSuchElementException())).traced(trace)
+  return pipe(option, getOrFailWith(() => internalCause.NoSuchElementException())).traced(trace)
 }
 
 /** @internal */
@@ -1059,7 +1060,7 @@ const someDebug = Option.some(LogLevel.Debug)
 export const log = (message: string): Effect.Effect<never, never, void> => {
   const trace = getCallTrace()
   return core.withFiberRuntime<never, never, void>((fiberState) => {
-    fiberState.log(message, Cause.empty, Option.none)
+    fiberState.log(message, internalCause.empty, Option.none)
     return core.unit()
   }).traced(trace)
 }
@@ -1068,7 +1069,7 @@ export const log = (message: string): Effect.Effect<never, never, void> => {
 export const logDebug = (message: string): Effect.Effect<never, never, void> => {
   const trace = getCallTrace()
   return core.withFiberRuntime<never, never, void>((fiberState) => {
-    fiberState.log(message, Cause.empty, someDebug)
+    fiberState.log(message, internalCause.empty, someDebug)
     return core.unit()
   }).traced(trace)
 }
@@ -1098,7 +1099,7 @@ export const logDebugCauseMessage = <E>(
 export const logError = (message: string): Effect.Effect<never, never, void> => {
   const trace = getCallTrace()
   return core.withFiberRuntime<never, never, void>((fiberState) => {
-    fiberState.log(message, Cause.empty, someError)
+    fiberState.log(message, internalCause.empty, someError)
     return core.unit()
   }).traced(trace)
 }
@@ -1128,7 +1129,7 @@ export const logErrorCauseMessage = <E>(
 export const logFatal = (message: string): Effect.Effect<never, never, void> => {
   const trace = getCallTrace()
   return core.withFiberRuntime<never, never, void>((fiberState) => {
-    fiberState.log(message, Cause.empty, someFatal)
+    fiberState.log(message, internalCause.empty, someFatal)
     return core.unit()
   }).traced(trace)
 }
@@ -1158,7 +1159,7 @@ export const logFatalCauseMessage = <E>(
 export const logInfo = (message: string): Effect.Effect<never, never, void> => {
   const trace = getCallTrace()
   return core.withFiberRuntime<never, never, void>((fiberState) => {
-    fiberState.log(message, Cause.empty, someInfo)
+    fiberState.log(message, internalCause.empty, someInfo)
     return core.unit()
   }).traced(trace)
 }
@@ -1188,7 +1189,7 @@ export const logInfoCauseMessage = <E>(
 export const logWarning = (message: string): Effect.Effect<never, never, void> => {
   const trace = getCallTrace()
   return core.withFiberRuntime<never, never, void>((fiberState) => {
-    fiberState.log(message, Cause.empty, someWarning)
+    fiberState.log(message, internalCause.empty, someWarning)
     return core.unit()
   }).traced(trace)
 }
@@ -1218,7 +1219,7 @@ export const logWarningCauseMessage = <E>(
 export const logTrace = (message: string): Effect.Effect<never, never, void> => {
   const trace = getCallTrace()
   return core.withFiberRuntime<never, never, void>((fiberState) => {
-    fiberState.log(message, Cause.empty, someTrace)
+    fiberState.log(message, internalCause.empty, someTrace)
     return core.unit()
   }).traced(trace)
 }
@@ -1522,7 +1523,7 @@ export const orDieKeep = <R, E, A>(self: Effect.Effect<R, E, A>) => {
   return pipe(
     self,
     core.foldCauseEffect(
-      (cause) => core.failCause(pipe(cause, Cause.flatMap(Cause.die))),
+      (cause) => core.failCause(pipe(cause, internalCause.flatMap(internalCause.die))),
       core.succeed
     )
   ).traced(trace)
@@ -1588,7 +1589,7 @@ export const parallelErrors = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Ef
   return pipe(
     self,
     core.foldCauseEffect((cause) => {
-      const errors = Chunk.fromIterable(Cause.failures(cause))
+      const errors = Chunk.fromIterable(internalCause.failures(cause))
       return errors.length === 0
         ? core.failCause(cause as Cause.Cause<never>)
         : core.fail(errors)
@@ -1932,7 +1933,7 @@ export const someOrFailException = <R, E, A>(
   self: Effect.Effect<R, E, Option.Option<A>>
 ): Effect.Effect<R, E | Cause.NoSuchElementException, A> => {
   const trace = getCallTrace()
-  return pipe(self, someOrFail(() => Cause.NoSuchElementException())).traced(trace)
+  return pipe(self, someOrFail(() => internalCause.NoSuchElementException())).traced(trace)
 }
 
 /** @internal */
@@ -2056,7 +2057,7 @@ export const tapBoth = <E, A, R2, E2, X, R3, E3, X1>(
       self,
       core.foldCauseEffect(
         (cause) => {
-          const either = Cause.failureOrCause(cause)
+          const either = internalCause.failureOrCause(cause)
           switch (either._tag) {
             case "Left": {
               return pipe(f(either.left), core.zipRight(core.failCause(cause)))
@@ -2079,7 +2080,7 @@ export const tapDefect = <R2, E2, X>(f: (cause: Cause.Cause<never>) => Effect.Ef
     return pipe(
       self,
       core.foldCauseEffect(
-        (cause) => pipe(f(Cause.stripFailures(cause)), core.zipRight(core.failCause(cause))),
+        (cause) => pipe(f(internalCause.stripFailures(cause)), core.zipRight(core.failCause(cause))),
         core.succeed
       )
     ).traced(trace)
@@ -2096,7 +2097,7 @@ export const tapEither = <E, A, R2, E2, X>(
       self,
       core.foldCauseEffect(
         (cause) => {
-          const either = Cause.failureOrCause(cause)
+          const either = internalCause.failureOrCause(cause)
           switch (either._tag) {
             case "Left": {
               return pipe(f(either), core.zipRight(core.failCause(cause)))
@@ -2120,7 +2121,7 @@ export const tapError = <E, R2, E2, X>(f: (e: E) => Effect.Effect<R2, E2, X>) =>
       self,
       core.foldCauseEffect(
         (cause) => {
-          const either = Cause.failureOrCause(cause)
+          const either = internalCause.failureOrCause(cause)
           switch (either._tag) {
             case "Left": {
               return pipe(f(either.left), core.zipRight(core.failCause(cause)))
@@ -2199,7 +2200,7 @@ export const tryCatch = <E, A>(
     try {
       return attempt()
     } catch (error) {
-      throw core.makeEffectError(Cause.fail(onThrow(error)))
+      throw core.makeEffectError(internalCause.fail(onThrow(error)))
     }
   }).traced(trace)
 }
@@ -2256,7 +2257,7 @@ export const uncause = <R, E>(
   const trace = getCallTrace()
   return pipe(
     self,
-    core.flatMap((cause) => Cause.isEmpty(cause) ? core.unit() : core.failCause(cause))
+    core.flatMap((cause) => internalCause.isEmpty(cause) ? core.unit() : core.failCause(cause))
   ).traced(trace)
 }
 
@@ -2348,10 +2349,13 @@ export const unrefineWith = <E, E1, E2>(
       self,
       core.catchAllCause(
         (cause): Effect.Effect<R, E1 | E2, A> => {
-          const option = pipe(cause, Cause.find((cause) => (Cause.isDieType(cause) ? pf(cause.defect) : Option.none)))
+          const option = pipe(
+            cause,
+            internalCause.find((cause) => (internalCause.isDieType(cause) ? pf(cause.defect) : Option.none))
+          )
           switch (option._tag) {
             case "None": {
-              return core.failCause(pipe(cause, Cause.map(f)))
+              return core.failCause(pipe(cause, internalCause.map(f)))
             }
             case "Some": {
               return core.fail(option.value)
@@ -2389,7 +2393,7 @@ export const unright = <R, B, E, A>(
 /** @internal */
 export const unsandbox = <R, E, A>(self: Effect.Effect<R, Cause.Cause<E>, A>) => {
   const trace = getCallTrace()
-  return pipe(self, mapErrorCause(Cause.flatten)).traced(trace)
+  return pipe(self, mapErrorCause(internalCause.flatten)).traced(trace)
 }
 
 /** @internal */
@@ -2470,7 +2474,7 @@ export const validateWith = <A, R1, E1, B, C>(that: Effect.Effect<R1, E1, B>, f:
       core.exit(self),
       core.zipWith(
         core.exit(that),
-        (ea, eb) => pipe(ea, core.exitZipWith(eb, f, (ca, cb) => Cause.sequential(ca, cb)))
+        (ea, eb) => pipe(ea, core.exitZipWith(eb, f, (ca, cb) => internalCause.sequential(ca, cb)))
       ),
       core.flatten
     ).traced(trace)

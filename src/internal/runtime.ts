@@ -1,4 +1,4 @@
-import * as Cause from "@effect/io/Cause"
+import type * as Cause from "@effect/io/Cause"
 import { getCallTrace } from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
@@ -7,6 +7,7 @@ import * as FiberId from "@effect/io/Fiber/Id"
 import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import type * as FiberRef from "@effect/io/FiberRef"
 import * as FiberRefs from "@effect/io/FiberRefs"
+import * as internalCause from "@effect/io/internal/cause"
 import * as core from "@effect/io/internal/core"
 import * as FiberRuntime from "@effect/io/internal/fiberRuntime"
 import * as fiberScope from "@effect/io/internal/fiberScope"
@@ -56,10 +57,11 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
       )
     }
 
-    const fiberRuntime = new FiberRuntime.FiberRuntime<E, A>(
+    const fiberRuntime: FiberRuntime.FiberRuntime<E, A> = new FiberRuntime.FiberRuntime<E, A>(
       fiberId,
       pipe(fiberRefs, FiberRefs.forkAs(fiberId)),
-      this.runtimeFlags
+      this.runtimeFlags,
+      this
     )
 
     const supervisor = fiberRuntime.getSupervisor()
@@ -96,7 +98,7 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
   ): A => {
     const exit = this.unsafeRunSyncExit(effect)
     if (exit.op === OpCodes.OP_FAILURE) {
-      throw pipe(exit.cause, Cause.squashWith(identity))
+      throw pipe(exit.cause, internalCause.squashWith(identity))
     }
     return exit.value
   }
@@ -141,7 +143,7 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
             break
           }
           case OpCodes.OP_FAILURE: {
-            reject(pipe(exit.cause, Cause.squashWith(identity)))
+            reject(pipe(exit.cause, internalCause.squashWith(identity)))
             break
           }
         }

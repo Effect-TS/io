@@ -216,7 +216,8 @@ export interface Logger<Message, Output> extends Logger.Variance<Message, Output
     cause: Cause.Cause<unknown>,
     context: FiberRefs.FiberRefs,
     spans: List.List<LogSpan.LogSpan>,
-    annotations: ReadonlyMap<string, string>
+    annotations: ReadonlyMap<string, string>,
+    runtime: Runtime<never>
   ) => Output
 }
 ```

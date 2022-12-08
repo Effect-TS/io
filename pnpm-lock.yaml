@@ -21,7 +21,6 @@ importers:
       '@effect-ts/core': ^0.60.2
       '@effect/core': ^0.0.16
       '@effect/language-service': ^0.0.10
-      '@effect/printer': ~0.1.11
       '@fp-ts/core': ~0.0.9
       '@fp-ts/data': ~0.0.22
       '@repo-tooling/eslint-plugin-dprint': ^0.0.4
@@ -63,7 +62,6 @@ importers:
       vitest: 0.25.5
       wtfnode: ^0.9.1
     dependencies:
-      '@effect/printer': 0.1.11
       '@fp-ts/core': 0.0.9
       '@fp-ts/data': 0.0.22
     devDependencies:
@@ -737,6 +735,7 @@ packages:
     dependencies:
       '@fp-ts/core': 0.0.9
       '@fp-ts/data': 0.0.22
+    dev: true
 
   /@esbuild/android-arm/0.15.18:
     resolution: {integrity: sha512-5GT+kcs2WVGjVs7+boataCkO5Fg0y4kCjzkB5bAip7H4jfnOS3dA6KPiww9W1OEKTKeAcUVhdZGvgI65OXmUnw==}

@@ -23,6 +23,8 @@
  */
 import type * as FiberId from "@effect/io/Fiber/Id"
 import * as internal from "@effect/io/internal/cause"
+import * as _pretty from "@effect/io/internal/cause-pretty"
+import * as _pretty_run from "@effect/io/internal/cause-pretty-run"
 import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as Either from "@fp-ts/data/Either"
 import type * as Equal from "@fp-ts/data/Equal"
@@ -840,7 +842,7 @@ export const isRuntimeException: (u: unknown) => u is RuntimeException = interna
  * @since 1.0.0
  * @category rendering
  */
-export const defaultRenderer: CauseRenderer<unknown> = internal.defaultRenderer
+export const defaultRenderer: CauseRenderer<unknown> = _pretty.defaultRenderer
 
 /**
  * Returns the specified `Cause` as a pretty-printed string.
@@ -848,7 +850,7 @@ export const defaultRenderer: CauseRenderer<unknown> = internal.defaultRenderer
  * @since 1.0.0
  * @category rendering
  */
-export const pretty: <E>(renderer?: CauseRenderer<E>) => (self: Cause<E>) => string = internal.pretty
+export const pretty: <E>(renderer?: CauseRenderer<E>) => (self: Cause<E>) => string = _pretty_run.pretty
 
 /**
  * Checks if an annotation is a StackAnnotation

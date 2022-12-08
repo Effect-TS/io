@@ -1,7 +1,8 @@
-import * as Cause from "@effect/io/Cause"
+import type * as Cause from "@effect/io/Cause"
 import * as Clock from "@effect/io/Clock"
 import { getCallTrace } from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
+import * as internalCause from "@effect/io/internal/cause"
 import * as core from "@effect/io/internal/core"
 import * as effect from "@effect/io/internal/effect"
 import * as Random from "@effect/io/Random"
@@ -83,7 +84,7 @@ class ScheduleDriverImpl<Env, In, Out> implements Schedule.ScheduleDriver<Env, I
       core.flatMap(([element, _]) => {
         switch (element._tag) {
           case "None": {
-            return core.failSync(() => Cause.NoSuchElementException())
+            return core.failSync(() => internalCause.NoSuchElementException())
           }
           case "Some": {
             return core.succeed(element.value)
@@ -448,7 +449,7 @@ export const dayOfMonth = (day: number): Schedule.Schedule<never, unknown, numbe
       const trace = getCallTrace()
       if (!Number.isInteger(day) || day < 1 || 31 < day) {
         return core.dieSync(() =>
-          Cause.IllegalArgumentException(
+          internalCause.IllegalArgumentException(
             `Invalid argument in: dayOfMonth(${day}). Must be in range 1...31`
           )
         ).traced(trace)
@@ -478,7 +479,7 @@ export const dayOfWeek = (day: number): Schedule.Schedule<never, unknown, number
       const trace = getCallTrace()
       if (!Number.isInteger(day) || day < 1 || 7 < day) {
         return core.dieSync(() =>
-          Cause.IllegalArgumentException(
+          internalCause.IllegalArgumentException(
             `Invalid argument in: dayOfWeek(${day}). Must be in range 1 (Monday)...7 (Sunday)`
           )
         ).traced(trace)
@@ -812,7 +813,7 @@ export const hourOfDay = (hour: number): Schedule.Schedule<never, unknown, numbe
       const trace = getCallTrace()
       if (!Number.isInteger(hour) || hour < 0 || 23 < hour) {
         return core.dieSync(() =>
-          Cause.IllegalArgumentException(
+          internalCause.IllegalArgumentException(
             `Invalid argument in: hourOfDay(${hour}). Must be in range 0...23`
           )
         ).traced(trace)
@@ -1062,7 +1063,7 @@ export const minuteOfHour = (minute: number): Schedule.Schedule<never, unknown, 
       const trace = getCallTrace()
       if (!Number.isInteger(minute) || minute < 0 || 59 < minute) {
         return core.dieSync(() =>
-          Cause.IllegalArgumentException(
+          internalCause.IllegalArgumentException(
             `Invalid argument in: minuteOfHour(${minute}). Must be in range 0...59`
           )
         ).traced(trace)
@@ -1439,7 +1440,7 @@ export const secondOfMinute = (second: number): Schedule.Schedule<never, unknown
       const trace = getCallTrace()
       if (!Number.isInteger(second) || second < 0 || 59 < second) {
         return core.dieSync(() =>
-          Cause.IllegalArgumentException(
+          internalCause.IllegalArgumentException(
             `Invalid argument in: secondOfMinute(${second}). Must be in range 0...59`
           )
         )

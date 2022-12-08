@@ -1,6 +1,6 @@
-import * as Cause from "@effect/io/Cause"
 import { getCallTrace } from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
+import * as Cause from "@effect/io/internal/cause"
 import * as core from "@effect/io/internal/core"
 import * as _effect from "@effect/io/internal/effect"
 import * as metricBoundaries from "@effect/io/internal/metric/boundaries"

@@ -6,9 +6,11 @@ import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRefs from "@effect/io/FiberRefs"
 import * as circular from "@effect/io/internal/layer/circular"
 import * as internal from "@effect/io/internal/logger"
+import * as internalCircular from "@effect/io/internal/logger-circular"
 import type * as Layer from "@effect/io/Layer"
 import type * as LogLevel from "@effect/io/Logger/Level"
 import type * as LogSpan from "@effect/io/Logger/Span"
+import type { Runtime } from "@effect/io/Runtime"
 import type * as List from "@fp-ts/data/List"
 import type * as Option from "@fp-ts/data/Option"
 
@@ -36,7 +38,8 @@ export interface Logger<Message, Output> extends Logger.Variance<Message, Output
     cause: Cause.Cause<unknown>,
     context: FiberRefs.FiberRefs,
     spans: List.List<LogSpan.LogSpan>,
-    annotations: ReadonlyMap<string, string>
+    annotations: ReadonlyMap<string, string>,
+    runtime: Runtime<never>
   ) => Output
 }
 
@@ -144,7 +147,8 @@ export const sync: <A>(evaluate: () => A) => Logger<unknown, A> = internal.sync
  * @since 1.0.0
  * @category constructors
  */
-export const test: <Message>(input: Message) => <Output>(self: Logger<Message, Output>) => Output = internal.test
+export const test: <Message>(input: Message) => <Output>(self: Logger<Message, Output>) => Output =
+  internalCircular.test
 
 /**
  * Combines this logger with the specified logger to produce a new logger that

@@ -1,4 +1,4 @@
-import * as Cause from "@effect/io/Cause"
+import type * as Cause from "@effect/io/Cause"
 import { getCallTrace, isTraceEnabled } from "@effect/io/Debug"
 import type * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
@@ -10,6 +10,7 @@ import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import * as RuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
 import type * as FiberStatus from "@effect/io/Fiber/Status"
 import type * as FiberRef from "@effect/io/FiberRef"
+import * as internalCause from "@effect/io/internal/cause"
 import * as deferred from "@effect/io/internal/deferred"
 import type * as FiberRuntime from "@effect/io/internal/fiberRuntime"
 import type * as fiberScope from "@effect/io/internal/fiberScope"
@@ -236,7 +237,7 @@ export const acquireUseRelease = <R, E, A, R2, E2, A2, R3, X>(
                 (cause) => {
                   switch (exit.op) {
                     case OpCodes.OP_FAILURE: {
-                      return failCause(Cause.parallel(exit.cause, cause))
+                      return failCause(internalCause.parallel(exit.cause, cause))
                     }
                     case OpCodes.OP_SUCCESS: {
                       return failCause(cause)
@@ -339,7 +340,7 @@ export const catchSome = <E, R2, E2, A2>(pf: (e: E) => Option.Option<Effect.Effe
       self,
       foldCauseEffect(
         (cause): Effect.Effect<R2, E | E2, A2> => {
-          const either = Cause.failureOrCause(cause)
+          const either = internalCause.failureOrCause(cause)
           switch (either._tag) {
             case "Left": {
               return pipe(pf(either.left), Option.getOrElse(() => failCause(cause)))
@@ -368,13 +369,13 @@ export const checkInterruptible = <R, E, A>(
 /** @internal */
 export const die = (defect: unknown): Effect.Effect<never, never, never> => {
   const trace = getCallTrace()
-  return failCause(Cause.die(defect)).traced(trace)
+  return failCause(internalCause.die(defect)).traced(trace)
 }
 
 /** @internal */
 export const dieSync = (evaluate: () => unknown): Effect.Effect<never, never, never> => {
   const trace = getCallTrace()
-  return failCauseSync(() => Cause.die(evaluate())).traced(trace)
+  return failCauseSync(() => internalCause.die(evaluate())).traced(trace)
 }
 
 /** @internal */
@@ -420,13 +421,13 @@ export const exit = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, ne
 /** @internal */
 export const fail = <E>(error: E): Effect.Effect<never, E, never> => {
   const trace = getCallTrace()
-  return failCause(Cause.fail(error)).traced(trace)
+  return failCause(internalCause.fail(error)).traced(trace)
 }
 
 /** @internal */
 export const failSync = <E>(evaluate: () => E): Effect.Effect<never, E, never> => {
   const trace = getCallTrace()
-  return failCauseSync(() => Cause.fail(evaluate())).traced(trace)
+  return failCauseSync(() => internalCause.fail(evaluate())).traced(trace)
 }
 
 /** @internal */
@@ -536,7 +537,7 @@ export const foldEffect = <E, A, R2, E2, A2, R3, E3, A3>(
       self,
       foldCauseEffect(
         (cause) => {
-          const either = Cause.failureOrCause(cause)
+          const either = internalCause.failureOrCause(cause)
           switch (either._tag) {
             case "Left": {
               return onFailure(either.left)
@@ -644,7 +645,7 @@ export const interrupt = (): Effect.Effect<never, never, never> => {
 /** @internal */
 export const interruptWith = (fiberId: FiberId.FiberId): Effect.Effect<never, never, never> => {
   const trace = getCallTrace()
-  return failCause(Cause.interrupt(fiberId)).traced(trace)
+  return failCause(internalCause.interrupt(fiberId)).traced(trace)
 }
 
 /** @internal */
@@ -709,7 +710,7 @@ export const mapError = <E, E2>(f: (e: E) => E2) => {
       self,
       foldCauseEffect(
         (cause) => {
-          const either = Cause.failureOrCause(cause)
+          const either = internalCause.failureOrCause(cause)
           switch (either._tag) {
             case "Left": {
               return failSync(() => f(either.left))
@@ -765,7 +766,7 @@ export const onExit = <E, A, R2, X>(cleanup: (exit: Exit.Exit<E, A>) => Effect.E
             return pipe(
               cleanup(result),
               foldCauseEffect(
-                (cause2) => exitFailCause(Cause.sequential(cause1, cause2)),
+                (cause2) => exitFailCause(internalCause.sequential(cause1, cause2)),
                 () => result
               )
             )
@@ -791,8 +792,8 @@ export const onInterrupt = <R2, X>(
       onExit(
         exitMatch(
           (cause) =>
-            Cause.isInterruptedOnly(cause) ?
-              asUnit(cleanup(Cause.interruptors(cause))) :
+            internalCause.isInterruptedOnly(cause) ?
+              asUnit(cleanup(internalCause.interruptors(cause))) :
               unit(),
           () => unit()
         )
@@ -834,7 +835,7 @@ export const tryOrElse = <R2, E2, A2, A, R3, E3, A3>(
       self,
       foldCauseEffect(
         (cause) => {
-          const option = Cause.keepDefects(cause)
+          const option = internalCause.keepDefects(cause)
           switch (option._tag) {
             case "None": {
               return that()
@@ -1515,8 +1516,8 @@ export const forkScopeOverride: FiberRef.FiberRef<Option.Option<fiberScope.Fiber
 
 /** @internal */
 export const interruptedCause: FiberRef.FiberRef<Cause.Cause<never>> = fiberRefUnsafeMake(
-  Cause.empty,
-  () => Cause.empty,
+  internalCause.empty,
+  () => internalCause.empty,
   (parent, _) => parent
 )
 
@@ -1732,7 +1733,7 @@ export const exitSucceed = <A>(value: A): Exit.Exit<never, A> => {
 
 /** @internal */
 export const exitFail = <E>(error: E): Exit.Exit<E, never> => {
-  return exitFailCause(Cause.fail(error)) as Exit.Exit<E, never>
+  return exitFailCause(internalCause.fail(error)) as Exit.Exit<E, never>
 }
 
 /** @internal */
@@ -1746,12 +1747,12 @@ export const exitFailCause = <E>(cause: Cause.Cause<E>): Exit.Exit<E, never> => 
 
 /** @internal */
 export const exitDie = (defect: unknown): Exit.Exit<never, never> => {
-  return exitFailCause(Cause.die(defect)) as Exit.Exit<never, never>
+  return exitFailCause(internalCause.die(defect)) as Exit.Exit<never, never>
 }
 
 /** @internal */
 export const exitInterrupt = (fiberId: FiberId.FiberId): Exit.Exit<never, never> => {
-  return exitFailCause(Cause.interrupt(fiberId)) as Exit.Exit<never, never>
+  return exitFailCause(internalCause.interrupt(fiberId)) as Exit.Exit<never, never>
 }
 
 /** @internal */
@@ -1782,7 +1783,7 @@ export const exitFromOption = <A>(option: Option.Option<A>): Exit.Exit<void, A> 
 export const exitIsInterrupted = <E, A>(self: Exit.Exit<E, A>): boolean => {
   switch (self.op) {
     case OpCodes.OP_FAILURE: {
-      return Cause.isInterrupted(self.cause)
+      return internalCause.isInterrupted(self.cause)
     }
     case OpCodes.OP_SUCCESS: {
       return false
@@ -1871,7 +1872,7 @@ export const exitMapBoth = <E, A, E1, A1>(
   return (self: Exit.Exit<E, A>): Exit.Exit<E1, A1> => {
     switch (self.op) {
       case OpCodes.OP_FAILURE: {
-        return exitFailCause(pipe(self.cause, Cause.map(onFailure))) as Exit.Exit<E1, A1>
+        return exitFailCause(pipe(self.cause, internalCause.map(onFailure))) as Exit.Exit<E1, A1>
       }
       case OpCodes.OP_SUCCESS: {
         return exitSucceed(onSuccess(self.value)) as Exit.Exit<E1, A1>
@@ -1882,14 +1883,14 @@ export const exitMapBoth = <E, A, E1, A1>(
 
 /** @internal */
 export const exitUnannotate = <E, A>(exit: Exit.Exit<E, A>): Exit.Exit<E, A> =>
-  exitIsSuccess(exit) ? exit : exitFailCause(Cause.unannotate(exit.cause))
+  exitIsSuccess(exit) ? exit : exitFailCause(internalCause.unannotate(exit.cause))
 
 /** @internal */
 export const exitMapError = <E, E1>(f: (e: E) => E1) => {
   return <A>(self: Exit.Exit<E, A>): Exit.Exit<E1, A> => {
     switch (self.op) {
       case OpCodes.OP_FAILURE: {
-        return exitFailCause(pipe(self.cause, Cause.map(f))) as Exit.Exit<E1, A>
+        return exitFailCause(pipe(self.cause, internalCause.map(f))) as Exit.Exit<E1, A>
       }
       case OpCodes.OP_SUCCESS: {
         return self as Exit.Exit<E1, A>
@@ -2005,7 +2006,7 @@ export const exitZip = <E2, A2>(that: Exit.Exit<E2, A2>) => {
       exitZipWith(
         that,
         (a, a2) => [a, a2] as const,
-        Cause.sequential
+        internalCause.sequential
       )
     ) as Exit.Exit<E | E2, readonly [A, A2]>
   }
@@ -2019,7 +2020,7 @@ export const exitZipLeft = <E2, A2>(that: Exit.Exit<E2, A2>) => {
       exitZipWith(
         that,
         (a, _) => a,
-        Cause.sequential
+        internalCause.sequential
       )
     ) as Exit.Exit<E | E2, A>
   }
@@ -2033,7 +2034,7 @@ export const exitZipRight = <E2, A2>(that: Exit.Exit<E2, A2>) => {
       exitZipWith(
         that,
         (_, a2) => a2,
-        Cause.sequential
+        internalCause.sequential
       )
     ) as Exit.Exit<E | E2, A2>
   }
@@ -2047,7 +2048,7 @@ export const exitZipPar = <E2, A2>(that: Exit.Exit<E2, A2>) => {
       exitZipWith(
         that,
         (a, a2) => [a, a2] as const,
-        Cause.parallel
+        internalCause.parallel
       )
     ) as Exit.Exit<E | E2, readonly [A, A2]>
   }
@@ -2058,7 +2059,7 @@ export const exitZipParLeft = <E2, A2>(that: Exit.Exit<E2, A2>) => {
   return <E, A>(self: Exit.Exit<E, A>): Exit.Exit<E | E2, A> => {
     return pipe(
       self,
-      exitZipWith(that, (a, _) => a, Cause.parallel)
+      exitZipWith(that, (a, _) => a, internalCause.parallel)
     ) as Exit.Exit<E | E2, A>
   }
 }
@@ -2068,7 +2069,7 @@ export const exitZipParRight = <E2, A2>(that: Exit.Exit<E2, A2>) => {
   return <E, A>(self: Exit.Exit<E, A>): Exit.Exit<E | E2, A2> => {
     return pipe(
       self,
-      exitZipWith(that, (_, a2) => a2, Cause.parallel)
+      exitZipWith(that, (_, a2) => a2, internalCause.parallel)
     ) as Exit.Exit<E | E2, A2>
   }
 }
@@ -2109,14 +2110,14 @@ export const exitZipWith = <E, E1, A, B, C>(
 export const exitCollectAll = <E, A>(
   exits: Iterable<Exit.Exit<E, A>>
 ): Option.Option<Exit.Exit<E, List.List<A>>> => {
-  return exitCollectAllInternal(exits, Cause.sequential)
+  return exitCollectAllInternal(exits, internalCause.sequential)
 }
 
 /** @internal */
 export const exitCollectAllPar = <E, A>(
   exits: Iterable<Exit.Exit<E, A>>
 ): Option.Option<Exit.Exit<E, List.List<A>>> => {
-  return exitCollectAllInternal(exits, Cause.parallel)
+  return exitCollectAllInternal(exits, internalCause.parallel)
 }
 
 /** @internal */
