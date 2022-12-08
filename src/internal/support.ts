@@ -9,6 +9,9 @@ export class RingBuffer<T> {
   constructor(readonly size: number) {}
 
   push(value: T) {
+    if (this.size === 0) {
+      return false
+    }
     if (this.values.length > 0) {
       if (equals(value, Chunk.unsafeHead(this.values))) {
         return false
