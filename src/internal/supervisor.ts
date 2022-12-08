@@ -7,7 +7,7 @@ import type * as Supervisor from "@effect/io/Supervisor"
 import * as Chunk from "@fp-ts/data/Chunk"
 import type * as Context from "@fp-ts/data/Context"
 import { pipe } from "@fp-ts/data/Function"
-import * as MutableRef from "@fp-ts/data/mutable/MutableRef"
+import * as MutableRef from "@fp-ts/data/MutableRef"
 import type * as Option from "@fp-ts/data/Option"
 import * as SortedSet from "@fp-ts/data/SortedSet"
 

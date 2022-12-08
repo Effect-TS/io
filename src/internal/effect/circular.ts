@@ -25,8 +25,8 @@ import type * as Duration from "@fp-ts/data/Duration"
 import * as Either from "@fp-ts/data/Either"
 import * as Equal from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
-import * as MutableHashMap from "@fp-ts/data/mutable/MutableHashMap"
-import * as MutableRef from "@fp-ts/data/mutable/MutableRef"
+import * as MutableHashMap from "@fp-ts/data/MutableHashMap"
+import * as MutableRef from "@fp-ts/data/MutableRef"
 import * as Option from "@fp-ts/data/Option"
 
 /** @internal */

@@ -44,8 +44,7 @@ import * as Context from "@fp-ts/data/Context"
 import * as Either from "@fp-ts/data/Either"
 import { identity, pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
-import * as List from "@fp-ts/data/List"
-import * as MutableQueue from "@fp-ts/data/mutable/MutableQueue"
+import * as MutableQueue from "@fp-ts/data/MutableQueue"
 import * as Option from "@fp-ts/data/Option"
 
 const fibersStarted = metric.counter("effect_fiber_started")
@@ -204,7 +203,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   }
   private _queue = MutableQueue.unbounded<FiberMessage.FiberMessage>()
   private _children: Set<FiberRuntime<any, any>> | null = null
-  private _observers = List.empty<(exit: Exit.Exit<E, A>) => void>()
+  private _observers = Chunk.empty<(exit: Exit.Exit<E, A>) => void>()
   private _running = false
   private _stack: Array<core.Continuation> = []
   private _executionTrace: RingBuffer<string> | undefined
@@ -444,7 +443,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     if (this._exitValue !== null) {
       observer(this._exitValue!)
     } else {
-      this._observers = List.cons(observer, this._observers)
+      this._observers = Chunk.prepend(observer)(this._observers)
     }
   }
 
@@ -455,7 +454,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    * **NOTE**: This method must be invoked by the fiber itself.
    */
   unsafeRemoveObserver(observer: (exit: Exit.Exit<E, A>) => void): void {
-    this._observers = pipe(this._observers, List.filter((o) => o !== observer))
+    this._observers = pipe(this._observers, Chunk.filter((o) => o !== observer))
   }
   /**
    * Retrieves all fiber refs of the fiber.
@@ -719,7 +718,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
 
     pipe(
       this._observers,
-      List.forEach((observer) => {
+      Chunk.forEach((observer) => {
         observer(exit)
       })
     )
@@ -1012,7 +1011,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
         const stack = cause.annotation.stack
         const execution = cause.annotation.execution
         const currentStack = this.stackToLines()
-        const currentExecution = this._executionTrace?.toChunkReversed() || Chunk.empty
+        const currentExecution = this._executionTrace?.toChunkReversed() || Chunk.empty()
         cause = internalCause.annotated(
           cause.cause,
           new StackAnnotation(
@@ -1049,7 +1048,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
       } else {
         cause = internalCause.annotated(
           op.cause,
-          new StackAnnotation(this.stackToLines(), this._executionTrace?.toChunkReversed() || Chunk.empty)
+          new StackAnnotation(this.stackToLines(), this._executionTrace?.toChunkReversed() || Chunk.empty())
         )
       }
     }
@@ -1234,7 +1233,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
 
   stackToLines(): Chunk.Chunk<string> {
     if (this._tracesInStack === 0) {
-      return Chunk.empty
+      return Chunk.empty()
     }
     const lines: Array<string> = []
     let current = this._stack.length - 1
@@ -1776,7 +1775,7 @@ export function onDoneCause<E, A, R1, X1, R2, X2>(
 /** @internal */
 export const partitionPar = <R, E, A, B>(f: (a: A) => Effect.Effect<R, E, B>) => {
   const trace = getCallTrace()
-  return (elements: Iterable<A>): Effect.Effect<R, never, readonly [List.List<E>, List.List<B>]> => {
+  return (elements: Iterable<A>): Effect.Effect<R, never, readonly [Chunk.Chunk<E>, Chunk.Chunk<B>]> => {
     return pipe(
       elements,
       forEachPar((a) => core.either(f(a))),
@@ -2114,9 +2113,9 @@ export const validateAllPar = <R, E, A, B>(f: (a: A) => Effect.Effect<R, E, B>) 
       elements,
       partitionPar(f),
       core.flatMap(([es, bs]) =>
-        List.isNil(es)
-          ? core.succeed(Chunk.fromIterable(bs))
-          : core.fail(Chunk.fromIterable(es))
+        Chunk.isEmpty(es)
+          ? core.succeed(bs)
+          : core.fail(es)
       )
     ).traced(trace)
   }
@@ -2130,9 +2129,9 @@ export const validateAllParDiscard = <R, E, A, B>(f: (a: A) => Effect.Effect<R, 
       elements,
       partitionPar(f),
       core.flatMap(([es, _]) =>
-        List.isNil(es)
+        Chunk.isEmpty(es)
           ? core.unit()
-          : core.fail(Chunk.fromIterable(es))
+          : core.fail(es)
       )
     ).traced(trace)
   }
@@ -2465,7 +2464,7 @@ export function fiberCollectAll<E, A>(fibers: Iterable<Fiber.Fiber<E, A>>): Fibe
         core.forEach((fiber) => fiber.poll()),
         core.map(
           Chunk.reduceRight(
-            Option.some<Exit.Exit<E, Chunk.Chunk<A>>>(core.exitSucceed(Chunk.empty)),
+            Option.some<Exit.Exit<E, Chunk.Chunk<A>>>(core.exitSucceed(Chunk.empty())),
             (optionB, optionA) => {
               switch (optionA._tag) {
                 case "None": {

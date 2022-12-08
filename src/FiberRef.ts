@@ -12,10 +12,10 @@ import type * as LogLevel from "@effect/io/Logger/Level"
 import type * as LogSpan from "@effect/io/Logger/Span"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
+import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as Context from "@fp-ts/data/Context"
 import type * as Differ from "@fp-ts/data/Differ"
 import type * as HashSet from "@fp-ts/data/HashSet"
-import type * as List from "@fp-ts/data/List"
 import type * as Option from "@fp-ts/data/Option"
 
 /**
@@ -317,7 +317,7 @@ export const currentLogLevel: FiberRef<LogLevel.LogLevel> = core.currentLogLevel
  * @since 1.0.0
  * @category fiberRefs
  */
-export const currentLogSpan: FiberRef<List.List<LogSpan.LogSpan>> = core.currentLogSpan
+export const currentLogSpan: FiberRef<Chunk.Chunk<LogSpan.LogSpan>> = core.currentLogSpan
 
 /**
  * @since 1.0.0

@@ -1,11 +1,10 @@
 import type * as Cause from "@effect/io/Cause"
 import * as FiberId from "@effect/io/Fiber/Id"
-import type * as Chunk from "@fp-ts/data/Chunk"
+import * as Chunk from "@fp-ts/data/Chunk"
 import * as Either from "@fp-ts/data/Either"
 import * as Equal from "@fp-ts/data/Equal"
 import { constFalse, constTrue, identity, pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
-import * as List from "@fp-ts/data/List"
 import * as Option from "@fp-ts/data/Option"
 import type { Predicate } from "@fp-ts/data/Predicate"
 
@@ -198,26 +197,26 @@ export const isInterruptedOnly = <E>(self: Cause.Cause<E>): boolean => {
 }
 
 /** @internal */
-export const failures = <E>(self: Cause.Cause<E>): List.List<E> => {
-  return List.reverse(
-    reduce<List.List<E>, E>(
-      List.empty<E>(),
+export const failures = <E>(self: Cause.Cause<E>): Chunk.Chunk<E> => {
+  return Chunk.reverse(
+    reduce<Chunk.Chunk<E>, E>(
+      Chunk.empty<E>(),
       (list, cause) =>
         cause._tag === "Fail" ?
-          Option.some(pipe(list, List.prepend(cause.error))) :
+          Option.some(pipe(list, Chunk.prepend(cause.error))) :
           Option.none
     )(self)
   )
 }
 
 /** @internal */
-export const defects = <E>(self: Cause.Cause<E>): List.List<unknown> => {
-  return List.reverse(
-    reduce<List.List<unknown>, E>(
-      List.empty<unknown>(),
+export const defects = <E>(self: Cause.Cause<E>): Chunk.Chunk<unknown> => {
+  return Chunk.reverse(
+    reduce<Chunk.Chunk<unknown>, E>(
+      Chunk.empty<unknown>(),
       (list, cause) =>
         cause._tag === "Die" ?
-          Option.some(pipe(list, List.prepend(cause.defect))) :
+          Option.some(pipe(list, Chunk.prepend(cause.defect))) :
           Option.none
     )(self)
   )
@@ -445,34 +444,34 @@ export const contains = <E2>(that: Cause.Cause<E2>) => {
 
 /** @internal */
 const causeEquals = (left: Cause.Cause<unknown>, right: Cause.Cause<unknown>): boolean => {
-  let leftStack = List.of(left)
-  let rightStack = List.of(right)
-  while (List.isCons(leftStack) && List.isCons(rightStack)) {
+  let leftStack: Chunk.Chunk<Cause.Cause<unknown>> = Chunk.singleton(left)
+  let rightStack: Chunk.Chunk<Cause.Cause<unknown>> = Chunk.singleton(right)
+  while (Chunk.isNonEmpty(leftStack) && Chunk.isNonEmpty(rightStack)) {
     const [leftParallel, leftSequential] = pipe(
-      leftStack.head,
+      Chunk.headNonEmpty(leftStack),
       reduce(
-        [HashSet.empty<unknown>(), List.empty<Cause.Cause<unknown>>()] as const,
+        [HashSet.empty<unknown>(), Chunk.empty<Cause.Cause<unknown>>()] as const,
         ([parallel, sequential], cause) => {
           const [par, seq] = evaluateCause(cause)
           return Option.some(
             [
               pipe(parallel, HashSet.union(par)),
-              pipe(sequential, List.concat(seq))
+              pipe(sequential, Chunk.concat(seq))
             ] as const
           )
         }
       )
     )
     const [rightParallel, rightSequential] = pipe(
-      rightStack.head,
+      Chunk.headNonEmpty(rightStack),
       reduce(
-        [HashSet.empty<unknown>(), List.empty<Cause.Cause<unknown>>()] as const,
+        [HashSet.empty<unknown>(), Chunk.empty<Cause.Cause<unknown>>()] as const,
         ([parallel, sequential], cause) => {
           const [par, seq] = evaluateCause(cause)
           return Option.some(
             [
               pipe(parallel, HashSet.union(par)),
-              pipe(sequential, List.concat(seq))
+              pipe(sequential, Chunk.concat(seq))
             ] as const
           )
         }
@@ -498,35 +497,35 @@ const causeEquals = (left: Cause.Cause<unknown>, right: Cause.Cause<unknown>): b
  *
  * @internal
  */
-const flattenCause = (cause: Cause.Cause<unknown>): List.List<HashSet.HashSet<unknown>> => {
-  return flattenCauseLoop(List.of(cause), List.nil())
+const flattenCause = (cause: Cause.Cause<unknown>): Chunk.Chunk<HashSet.HashSet<unknown>> => {
+  return flattenCauseLoop(Chunk.singleton(cause), Chunk.empty())
 }
 
 /** @internal */
 const flattenCauseLoop = (
-  causes: List.List<Cause.Cause<unknown>>,
-  flattened: List.List<HashSet.HashSet<unknown>>
-): List.List<HashSet.HashSet<unknown>> => {
+  causes: Chunk.Chunk<Cause.Cause<unknown>>,
+  flattened: Chunk.Chunk<HashSet.HashSet<unknown>>
+): Chunk.Chunk<HashSet.HashSet<unknown>> => {
   // eslint-disable-next-line no-constant-condition
   while (1) {
     const [parallel, sequential] = pipe(
       causes,
-      List.reduce(
-        [HashSet.empty<unknown>(), List.empty<Cause.Cause<unknown>>()] as const,
+      Chunk.reduce(
+        [HashSet.empty<unknown>(), Chunk.empty<Cause.Cause<unknown>>()] as const,
         ([parallel, sequential], cause) => {
           const [par, seq] = evaluateCause(cause)
           return [
             pipe(parallel, HashSet.union(par)),
-            pipe(sequential, List.concat(seq))
+            pipe(sequential, Chunk.concat(seq))
           ]
         }
       )
     )
     const updated = HashSet.size(parallel) > 0 ?
-      pipe(flattened, List.prepend(parallel)) :
+      pipe(flattened, Chunk.prepend(parallel)) :
       flattened
-    if (List.isNil(sequential)) {
-      return List.reverse(updated)
+    if (Chunk.isEmpty(sequential)) {
+      return Chunk.reverse(updated)
     }
     causes = sequential
     flattened = updated
@@ -559,7 +558,7 @@ export const squashWith = <E>(f: (error: E) => unknown) => {
         }
         return pipe(
           defects(self),
-          List.head,
+          Chunk.head,
           Option.match(() => InterruptedException(), identity)
         )
       }
@@ -629,11 +628,11 @@ export const filter = <E>(predicate: Predicate<Cause.Cause<E>>) => {
  */
 const evaluateCause = (
   self: Cause.Cause<unknown>
-): readonly [HashSet.HashSet<unknown>, List.List<Cause.Cause<unknown>>] => {
+): readonly [HashSet.HashSet<unknown>, Chunk.Chunk<Cause.Cause<unknown>>] => {
   let cause: Cause.Cause<unknown> | undefined = self
   const stack: Array<Cause.Cause<unknown>> = []
   let _parallel = HashSet.empty<unknown>()
-  let _sequential = List.empty<Cause.Cause<unknown>>()
+  let _sequential = Chunk.empty<Cause.Cause<unknown>>()
   while (cause !== undefined) {
     switch (cause._tag) {
       case "Empty": {
@@ -693,7 +692,7 @@ const evaluateCause = (
             break
           }
           default: {
-            _sequential = pipe(_sequential, List.prepend(cause.right))
+            _sequential = pipe(_sequential, Chunk.prepend(cause.right))
             cause = cause.left
             break
           }

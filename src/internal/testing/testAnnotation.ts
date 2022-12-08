@@ -5,7 +5,7 @@ import * as Either from "@fp-ts/data/Either"
 import * as Equal from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
-import type * as MutableRef from "@fp-ts/data/mutable/MutableRef"
+import type * as MutableRef from "@fp-ts/data/MutableRef"
 import type * as SortedSet from "@fp-ts/data/SortedSet"
 
 const TestAnnotationSymbolKey = "@effect/test/TestAnnotation"

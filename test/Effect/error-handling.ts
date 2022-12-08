@@ -6,9 +6,9 @@ import * as FiberId from "@effect/io/Fiber/Id"
 import * as Ref from "@effect/io/Ref"
 import { causesArb } from "@effect/io/test/utils/cause"
 import * as it from "@effect/io/test/utils/extend"
+import * as Chunk from "@fp-ts/data/Chunk"
 import * as Either from "@fp-ts/data/Either"
 import { constFalse, constTrue, identity, pipe } from "@fp-ts/data/Function"
-import * as List from "@fp-ts/data/List"
 import * as Option from "@fp-ts/data/Option"
 import * as fc from "fast-check"
 import { assert, describe } from "vitest"
@@ -379,8 +379,8 @@ describe.concurrent("Effect", () => {
         Effect.catchAllCause((cause) => {
           if (Cause.isDie(cause)) {
             const defects = Cause.defects(cause)
-            if (List.isCons(defects)) {
-              const head = defects.head
+            if (Chunk.isNonEmpty(defects)) {
+              const head = Chunk.headNonEmpty(defects)
               return Effect.succeed((head as Cause.RuntimeException).message === "2")
             }
           }
@@ -399,8 +399,8 @@ describe.concurrent("Effect", () => {
         Effect.catchAllCause((cause) => {
           if (Cause.isFailure(cause)) {
             const failures = Cause.failures(cause)
-            if (List.isCons(failures)) {
-              const head = failures.head
+            if (Chunk.isNonEmpty(failures)) {
+              const head = Chunk.headNonEmpty(failures)
               return Effect.succeed(head.message === "2")
             }
           }

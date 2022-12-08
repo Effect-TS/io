@@ -37,7 +37,6 @@ import type * as Duration from "@fp-ts/data/Duration"
 import type * as Either from "@fp-ts/data/Either"
 import type * as Equal from "@fp-ts/data/Equal"
 import type * as HashSet from "@fp-ts/data/HashSet"
-import type * as List from "@fp-ts/data/List"
 import type * as Option from "@fp-ts/data/Option"
 import type { Predicate, Refinement } from "@fp-ts/data/Predicate"
 
@@ -2656,7 +2655,7 @@ export const parallelFinalizers: <R, E, A>(self: Effect<R, E, A>) => Effect<Scop
  */
 export const partition: <R, E, A, B>(
   f: (a: A) => Effect<R, E, B>
-) => (elements: Iterable<A>) => Effect<R, never, readonly [List.List<E>, List.List<B>]> = effect.partition
+) => (elements: Iterable<A>) => Effect<R, never, readonly [Chunk.Chunk<E>, Chunk.Chunk<B>]> = effect.partition
 
 /**
  * Feeds elements of type `A` to a function `f` that returns an effect.
@@ -2669,7 +2668,7 @@ export const partition: <R, E, A, B>(
  */
 export const partitionPar: <R, E, A, B>(
   f: (a: A) => Effect<R, E, B>
-) => (elements: Iterable<A>) => Effect<R, never, readonly [List.List<E>, List.List<B>]> = fiberRuntime.partitionPar
+) => (elements: Iterable<A>) => Effect<R, never, readonly [Chunk.Chunk<E>, Chunk.Chunk<B>]> = fiberRuntime.partitionPar
 
 /**
  * Applies the specified changes to the `FiberRef` values for the fiber

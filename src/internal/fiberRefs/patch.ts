@@ -2,9 +2,9 @@ import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRefs from "@effect/io/FiberRefs"
 import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
 import * as _fiberRefs from "@effect/io/internal/fiberRefs"
+import * as Chunk from "@fp-ts/data/Chunk"
 import { equals } from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
-import * as List from "@fp-ts/data/List"
 
 /** @internal */
 export const OP_EMPTY = 0 as const
@@ -49,10 +49,10 @@ export const diff = (
   const missingLocals = new Map(oldValue.locals)
   let patch = empty()
   for (const [fiberRef, pairs] of newValue.locals.entries()) {
-    const newValue = pairs.head[1]
+    const newValue = Chunk.headNonEmpty(pairs)[1]
     const old = missingLocals.get(fiberRef)
     if (old !== undefined) {
-      const oldValue = old.head[1]
+      const oldValue = Chunk.headNonEmpty(old)[1]
       if (!equals(oldValue, newValue)) {
         patch = combine({
           op: OP_UPDATE,
@@ -91,10 +91,10 @@ export const combine = (that: FiberRefsPatch.FiberRefsPatch) => {
 export const patch = (fiberId: FiberId.Runtime, oldValue: FiberRefs.FiberRefs) => {
   return (self: FiberRefsPatch.FiberRefsPatch): FiberRefs.FiberRefs => {
     let fiberRefs = oldValue
-    let patches = List.of(self)
-    while (List.isCons(patches)) {
-      const head = patches.head
-      const tail = patches.tail
+    let patches: Chunk.Chunk<FiberRefsPatch.FiberRefsPatch> = Chunk.singleton(self)
+    while (Chunk.isNonEmpty(patches)) {
+      const head = Chunk.headNonEmpty(patches)
+      const tail = Chunk.tailNonEmpty(patches)
       switch (head.op) {
         case OP_EMPTY: {
           patches = tail
@@ -120,7 +120,7 @@ export const patch = (fiberId: FiberId.Runtime, oldValue: FiberRefs.FiberRefs) =
           break
         }
         case OP_AND_THEN: {
-          patches = List.cons(head.first, List.cons(head.second, tail))
+          patches = Chunk.prepend(head.first)(Chunk.prepend(head.second)(tail))
           break
         }
       }

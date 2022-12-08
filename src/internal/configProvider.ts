@@ -70,7 +70,7 @@ export const fromFlat = (flat: ConfigProvider.ConfigProvider.Flat): ConfigProvid
     (config) => {
       const trace = getCallTrace()
       return pipe(
-        fromFlatLoop(flat, Chunk.empty, config, false),
+        fromFlatLoop(flat, Chunk.empty(), config, false),
         core.flatMap((chunk) =>
           pipe(
             Chunk.head(chunk),
@@ -78,7 +78,7 @@ export const fromFlat = (flat: ConfigProvider.ConfigProvider.Flat): ConfigProvid
               () =>
                 core.fail(
                   configError.MissingData(
-                    Chunk.empty,
+                    Chunk.empty(),
                     `Expected a single value having structure: ${config}`
                   )
                 ),
@@ -278,7 +278,7 @@ const fromFlatLoop = <A>(
         flat.load(prefix, op),
         core.catchSome((error) =>
           configError.isMissingData(error) && isEmptyOk
-            ? Option.some(core.succeed(Chunk.empty))
+            ? Option.some(core.succeed(Chunk.empty()))
             : Option.none
         ),
         core.flatMap((values) => {

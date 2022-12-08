@@ -552,8 +552,7 @@ export const poll: <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, Opti
 export const pretty: <E, A>(self: RuntimeFiber<E, A>) => Effect.Effect<never, never, string> = internal.pretty
 
 /**
- * Returns a chunk containing all root fibers. Due to concurrency, the
- * returned chunk is only weakly consistent.
+ * Returns a chunk containing all root fibers.
  *
  * @macro traced
  * @since 1.0.0

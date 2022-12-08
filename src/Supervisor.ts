@@ -12,7 +12,7 @@ import * as internal from "@effect/io/internal/supervisor"
 import type * as Layer from "@effect/io/Layer"
 import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as Context from "@fp-ts/data/Context"
-import type * as MutableRef from "@fp-ts/data/mutable/MutableRef"
+import type * as MutableRef from "@fp-ts/data/MutableRef"
 import type * as Option from "@fp-ts/data/Option"
 import type * as SortedSet from "@fp-ts/data/SortedSet"
 

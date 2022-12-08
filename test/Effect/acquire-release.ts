@@ -3,8 +3,9 @@ import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import * as Ref from "@effect/io/Ref"
 import * as it from "@effect/io/test/utils/extend"
+import * as Chunk from "@fp-ts/data/Chunk"
+import { equals } from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
-import * as List from "@fp-ts/data/List"
 import { assert, describe } from "vitest"
 
 describe.concurrent("Effect", () => {
@@ -40,8 +41,8 @@ describe.concurrent("Effect", () => {
         exit,
         Exit.matchEffect(Effect.succeed, () => Effect.fail("effect should have failed"))
       ))
-      assert.deepStrictEqual(Cause.failures(result), List.of("use failed"))
-      assert.deepStrictEqual(Cause.defects(result), List.of(releaseDied))
+      assert.isTrue(equals(Cause.failures(result), Chunk.singleton("use failed")))
+      assert.isTrue(equals(Cause.defects(result), Chunk.singleton(releaseDied)))
     }))
   it.effect("acquireUseRelease - error handling + disconnect", () =>
     Effect.gen(function*($) {
@@ -55,8 +56,8 @@ describe.concurrent("Effect", () => {
         exit,
         Exit.matchEffect(Effect.succeed, () => Effect.fail("effect should have failed"))
       ))
-      assert.deepStrictEqual(Cause.failures(result), List.of("use failed"))
-      assert.deepStrictEqual(Cause.defects(result), List.of(releaseDied))
+      assert.isTrue(equals(Cause.failures(result), Chunk.singleton("use failed")))
+      assert.isTrue(equals(Cause.defects(result), Chunk.singleton(releaseDied)))
     }))
   it.effect("acquireUseRelease - beast mode error handling + disconnect", () =>
     Effect.gen(function*($) {
@@ -75,7 +76,7 @@ describe.concurrent("Effect", () => {
         pipe(exit, Exit.matchEffect(Effect.succeed, () => Effect.fail("effect should have failed")))
       )
       const released = yield* $(Ref.get(release))
-      assert.deepStrictEqual(Cause.defects(result), List.of(useDied))
+      assert.isTrue(equals(Cause.defects(result), Chunk.singleton(useDied)))
       assert.isTrue(released)
     }))
 })

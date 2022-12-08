@@ -10,7 +10,6 @@ import type * as Either from "@fp-ts/data/Either"
 import type { LazyArg } from "@fp-ts/data/Function"
 import type * as HashMap from "@fp-ts/data/HashMap"
 import type * as HashSet from "@fp-ts/data/HashSet"
-import type * as List from "@fp-ts/data/List"
 import type * as Option from "@fp-ts/data/Option"
 import type { Predicate, Refinement } from "@fp-ts/data/Predicate"
 
@@ -120,7 +119,7 @@ export const integer: (name?: string | undefined) => Config<number> = internal.i
  * @since 1.0.0
  * @category constructors
  */
-export const listOf: <A>(config: Config<A>, name?: string | undefined) => Config<List.List<A>> = internal.listOf
+export const listOf: <A>(config: Config<A>, name?: string | undefined) => Config<Chunk.Chunk<A>> = internal.listOf
 
 /**
  * Returns a  config whose structure is the same as this one, but which produces

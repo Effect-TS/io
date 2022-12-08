@@ -13,7 +13,7 @@ export const release2 = "Releasing Module 2"
 export const release3 = "Releasing Module 3"
 
 export const makeRef = (): Effect.Effect<never, never, Ref.Ref<Chunk.Chunk<string>>> => {
-  return Ref.make(Chunk.empty)
+  return Ref.make(Chunk.empty())
 }
 
 export class Service1 {

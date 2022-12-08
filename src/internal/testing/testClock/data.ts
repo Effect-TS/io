@@ -1,17 +1,17 @@
 import type * as Deferred from "@effect/io/Deferred"
-import type * as List from "@fp-ts/data/List"
+import type * as Chunk from "@fp-ts/data/Chunk"
 
 /**
  * `Data` represents the state of the `TestClock`, including the clock time.
  */
 export interface Data {
   readonly instant: number
-  readonly sleeps: List.List<readonly [number, Deferred.Deferred<never, void>]>
+  readonly sleeps: Chunk.Chunk<readonly [number, Deferred.Deferred<never, void>]>
 }
 
 export const make = (
   instant: number,
-  sleeps: List.List<readonly [number, Deferred.Deferred<never, void>]>
+  sleeps: Chunk.Chunk<readonly [number, Deferred.Deferred<never, void>]>
 ): Data => ({
   instant,
   sleeps

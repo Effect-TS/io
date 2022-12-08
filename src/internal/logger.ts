@@ -7,9 +7,9 @@ import * as _fiberId from "@effect/io/internal/fiberId"
 import type * as Logger from "@effect/io/Logger"
 import * as LogLevel from "@effect/io/Logger/Level"
 import * as LogSpan from "@effect/io/Logger/Span"
+import * as Chunk from "@fp-ts/data/Chunk"
 import { constVoid, pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
-import * as List from "@fp-ts/data/List"
 import * as Option from "@fp-ts/data/Option"
 
 /** @internal */
@@ -49,7 +49,7 @@ export const stringLogger: Logger.Logger<string, string> = {
 
     let output = outputArray.join(" ")
 
-    if (List.isCons(spans)) {
+    if (Chunk.isNonEmpty(spans)) {
       output = output + " "
 
       let first = true

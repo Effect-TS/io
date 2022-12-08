@@ -250,7 +250,7 @@ const calculateQuantiles = (
   // The number of samples examined
   const sampleCount = sortedSamples.length
   if (Chunk.isEmpty(sortedQuantiles)) {
-    return Chunk.empty
+    return Chunk.empty()
   }
   const head = Chunk.unsafeHead(sortedQuantiles)
   const tail = pipe(sortedQuantiles, Chunk.drop(1))
@@ -317,7 +317,7 @@ const resolveQuantile = (
         quantile: quantile_1,
         value: Option.none,
         consumed: consumed_1,
-        rest: Chunk.empty
+        rest: Chunk.empty()
       }
     }
     // If the quantile is the 100% quantile, we can take the maximum of all the
@@ -327,7 +327,7 @@ const resolveQuantile = (
         quantile: quantile_1,
         value: Option.some(Chunk.unsafeLast(rest_1)),
         consumed: consumed_1 + rest_1.length,
-        rest: Chunk.empty
+        rest: Chunk.empty()
       }
     }
     // Split into two chunks - the first chunk contains all elements of the same

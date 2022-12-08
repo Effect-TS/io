@@ -5,9 +5,9 @@ import * as Exit from "@effect/io/Exit"
 import * as Fiber from "@effect/io/Fiber"
 import * as Ref from "@effect/io/Ref"
 import * as it from "@effect/io/test/utils/extend"
+import * as Chunk from "@fp-ts/data/Chunk"
 import * as Either from "@fp-ts/data/Either"
 import { constVoid, identity, pipe } from "@fp-ts/data/Function"
-import * as List from "@fp-ts/data/List"
 import * as Option from "@fp-ts/data/Option"
 import { assert, describe } from "vitest"
 
@@ -35,17 +35,17 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("loop - loops with the specified effectual function", () =>
     Effect.gen(function*($) {
-      const ref = yield* $(Ref.make(List.empty<number>()))
-      yield* $(Effect.loop(0, (n) => n < 5, (n) => n + 1, (n) => pipe(ref, Ref.update(List.prepend(n)))))
-      const result = yield* $(pipe(Ref.get(ref), Effect.map(List.reverse)))
-      assert.deepStrictEqual(result, List.make(0, 1, 2, 3, 4))
+      const ref = yield* $(Ref.make(Chunk.empty<number>()))
+      yield* $(Effect.loop(0, (n) => n < 5, (n) => n + 1, (n) => pipe(ref, Ref.update(Chunk.prepend(n)))))
+      const result = yield* $(pipe(Ref.get(ref), Effect.map(Chunk.reverse)))
+      assert.deepStrictEqual(result, Chunk.make(0, 1, 2, 3, 4))
     }))
   it.effect("loopDiscard - loops with the specified effectual function", () =>
     Effect.gen(function*($) {
-      const ref = yield* $(Ref.make(List.empty<number>()))
-      yield* $(Effect.loopDiscard(0, (n) => n < 5, (n) => n + 1, (n) => pipe(ref, Ref.update(List.prepend(n)))))
-      const result = yield* $(pipe(Ref.get(ref), Effect.map(List.reverse)))
-      assert.deepStrictEqual(result, List.make(0, 1, 2, 3, 4))
+      const ref = yield* $(Ref.make(Chunk.empty<number>()))
+      yield* $(Effect.loopDiscard(0, (n) => n < 5, (n) => n + 1, (n) => pipe(ref, Ref.update(Chunk.prepend(n)))))
+      const result = yield* $(pipe(Ref.get(ref), Effect.map(Chunk.reverse)))
+      assert.deepStrictEqual(result, Chunk.make(0, 1, 2, 3, 4))
     }))
   it.effect("replicate - zero", () =>
     Effect.gen(function*($) {
@@ -69,18 +69,18 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("forEach - both evaluates effects and returns results in the same order", () =>
     Effect.gen(function*($) {
-      const ref = yield* $(Ref.make(List.empty<string>()))
+      const ref = yield* $(Ref.make(Chunk.empty<string>()))
       const result = yield* $(pipe(
-        List.make("1", "2", "3"),
+        Chunk.make("1", "2", "3"),
         Effect.forEach((s) =>
           pipe(
             ref,
-            Ref.update(List.prepend(s)),
+            Ref.update(Chunk.prepend(s)),
             Effect.zipRight(Effect.sync(() => Number.parseInt(s)))
           )
         )
       ))
-      const effects = yield* $(pipe(Ref.get(ref), Effect.map(List.reverse)))
+      const effects = yield* $(pipe(Ref.get(ref), Effect.map(Chunk.reverse)))
       assert.deepStrictEqual(Array.from(effects), ["1", "2", "3"])
       assert.deepStrictEqual(Array.from(result), [1, 2, 3])
     }))
@@ -103,10 +103,10 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("forEachDiscard - runs effects in order", () =>
     Effect.gen(function*($) {
-      const ref = yield* $(Ref.make(List.empty<number>()))
-      yield* $(pipe([1, 2, 3, 4, 5], Effect.forEachDiscard((n) => pipe(ref, Ref.update(List.prepend(n))))))
-      const result = yield* $(pipe(Ref.get(ref), Effect.map(List.reverse)))
-      assert.deepStrictEqual(result, List.make(1, 2, 3, 4, 5))
+      const ref = yield* $(Ref.make(Chunk.empty<number>()))
+      yield* $(pipe([1, 2, 3, 4, 5], Effect.forEachDiscard((n) => pipe(ref, Ref.update(Chunk.prepend(n))))))
+      const result = yield* $(pipe(Ref.get(ref), Effect.map(Chunk.reverse)))
+      assert.deepStrictEqual(result, Chunk.make(1, 2, 3, 4, 5))
     }))
   it.effect("forEachDiscard - can be run twice", () =>
     Effect.gen(function*($) {
@@ -342,15 +342,15 @@ describe.concurrent("Effect", () => {
       const result = yield* $(pipe(
         [1, 2, 3],
         Effect.forEachParDiscard((n) => pipe(task(started, trigger, n), Effect.uninterruptible)),
-        Effect.foldCause(Cause.failures, () => List.empty<number>())
+        Effect.foldCause(Cause.failures, () => Chunk.empty<number>())
       ))
       assert.deepStrictEqual(Array.from(result), [1, 2, 3])
     }))
   it.effect("forEachParDiscard - runs all effects", () =>
     Effect.gen(function*($) {
-      const ref = yield* $(Ref.make(List.empty<number>()))
-      yield* $(pipe([1, 2, 3, 4, 5], Effect.forEachParDiscard((n) => pipe(ref, Ref.update(List.prepend(n))))))
-      const result = yield* $(pipe(Ref.get(ref), Effect.map(List.reverse)))
+      const ref = yield* $(Ref.make(Chunk.empty<number>()))
+      yield* $(pipe([1, 2, 3, 4, 5], Effect.forEachParDiscard((n) => pipe(ref, Ref.update(Chunk.prepend(n))))))
+      const result = yield* $(pipe(Ref.get(ref), Effect.map(Chunk.reverse)))
       assert.deepStrictEqual(Array.from(result), [1, 2, 3, 4, 5])
     }))
   it.effect("forEachParDiscard - completes on empty input", () =>
@@ -360,13 +360,13 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("forEachParDiscard - parallelism - runs all effects", () =>
     Effect.gen(function*($) {
-      const ref = yield* $(Ref.make(List.empty<number>()))
+      const ref = yield* $(Ref.make(Chunk.empty<number>()))
       yield* $(pipe(
         [1, 2, 3, 4, 5],
-        Effect.forEachParDiscard((n) => pipe(ref, Ref.update(List.prepend(n)))),
+        Effect.forEachParDiscard((n) => pipe(ref, Ref.update(Chunk.prepend(n)))),
         Effect.withParallelism(2)
       ))
-      const result = yield* $(pipe(Ref.get(ref), Effect.map(List.reverse)))
+      const result = yield* $(pipe(Ref.get(ref), Effect.map(Chunk.reverse)))
       assert.deepStrictEqual(Array.from(result), [1, 2, 3, 4, 5])
     }))
   it.effect("merge - on flipped result", () =>
@@ -442,9 +442,9 @@ describe.concurrent("Effect", () => {
   it.effect("partition - evaluates effects in correct order", () =>
     Effect.gen(function*($) {
       const array = [2, 4, 6, 3, 5, 6]
-      const ref = yield* $(Ref.make(List.empty<number>()))
-      yield* $(pipe(array, Effect.partition((n) => pipe(ref, Ref.update(List.prepend(n))))))
-      const result = yield* $(pipe(Ref.get(ref), Effect.map(List.reverse)))
+      const ref = yield* $(Ref.make(Chunk.empty<number>()))
+      yield* $(pipe(array, Effect.partition((n) => pipe(ref, Ref.update(Chunk.prepend(n))))))
+      const result = yield* $(pipe(Ref.get(ref), Effect.map(Chunk.reverse)))
       assert.deepStrictEqual(Array.from(result), [2, 4, 6, 3, 5, 6])
     }))
   it.effect("partitionPar - collects successes", () =>

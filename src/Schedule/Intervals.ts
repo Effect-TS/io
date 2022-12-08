@@ -3,7 +3,7 @@
  */
 import * as internal from "@effect/io/internal/schedule/intervals"
 import type * as Interval from "@effect/io/Schedule/Interval"
-import type * as List from "@fp-ts/data/List"
+import type * as Check from "@fp-ts/data/Chunk"
 
 /**
  * @since 1.0.0
@@ -25,7 +25,7 @@ export type IntervalsTypeId = typeof IntervalsTypeId
  */
 export interface Intervals {
   readonly [IntervalsTypeId]: IntervalsTypeId
-  readonly intervals: List.List<Interval.Interval>
+  readonly intervals: Check.Chunk<Interval.Interval>
 }
 
 /**
@@ -34,7 +34,7 @@ export interface Intervals {
  * @since 1.0.0
  * @category constructors
  */
-export const make: (intervals: List.List<Interval.Interval>) => Intervals = internal.make
+export const make: (intervals: Check.Chunk<Interval.Interval>) => Intervals = internal.make
 
 /**
  * Constructs an empty list of `Interval`s.

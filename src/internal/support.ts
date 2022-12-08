@@ -3,7 +3,7 @@ import { equals } from "@fp-ts/data/Equal"
 
 /** @internal */
 export class RingBuffer<T> {
-  private values: Chunk.Chunk<T> = Chunk.empty
+  private values: Chunk.Chunk<T> = Chunk.empty()
   private ignored = 0
 
   constructor(readonly size: number) {}
