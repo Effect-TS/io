@@ -1,4 +1,4 @@
-import * as Cause from "@effect/io/Cause"
+import type * as Cause from "@effect/io/Cause"
 import { getCallTrace } from "@effect/io/Debug"
 import type * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
@@ -7,6 +7,7 @@ import * as Exit from "@effect/io/Exit"
 import type * as Fiber from "@effect/io/Fiber"
 import * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
+import * as internalCause from "@effect/io/internal/cause"
 import * as core from "@effect/io/internal/core"
 import * as effect from "@effect/io/internal/effect"
 import * as internalFiber from "@effect/io/internal/fiber"
@@ -200,7 +201,7 @@ export const ensuring = <R1, X>(finalizer: Effect.Effect<R1, never, X>) => {
             pipe(
               finalizer,
               core.foldCauseEffect(
-                (cause2) => core.failCause(Cause.sequential(cause1, cause2)),
+                (cause2) => core.failCause(internalCause.sequential(cause1, cause2)),
                 () => core.failCause(cause1)
               )
             ),
@@ -372,7 +373,7 @@ export const raceAwait = <R2, E2, A2>(that: Effect.Effect<R2, E2, A2>) => {
                 (cause) =>
                   pipe(
                     internalFiber.join(right),
-                    effect.mapErrorCause((cause2) => Cause.parallel(cause, cause2))
+                    effect.mapErrorCause((cause2) => internalCause.parallel(cause, cause2))
                   ),
                 (value) =>
                   pipe(
@@ -389,7 +390,7 @@ export const raceAwait = <R2, E2, A2>(that: Effect.Effect<R2, E2, A2>) => {
                 (cause) =>
                   pipe(
                     internalFiber.join(left),
-                    effect.mapErrorCause((cause2) => Cause.parallel(cause2, cause))
+                    effect.mapErrorCause((cause2) => internalCause.parallel(cause2, cause))
                   ),
                 (value) =>
                   pipe(
@@ -609,7 +610,7 @@ export const validateWithPar = <A, R1, E1, B, C>(that: Effect.Effect<R1, E1, B>,
       core.exit(self),
       zipWithPar(
         core.exit(that),
-        (ea, eb) => pipe(ea, core.exitZipWith(eb, f, (ca, cb) => Cause.parallel(ca, cb)))
+        (ea, eb) => pipe(ea, core.exitZipWith(eb, f, (ca, cb) => internalCause.parallel(ca, cb)))
       ),
       core.flatten
     ).traced(trace)
@@ -669,10 +670,11 @@ export const zipWithPar = <R2, E2, A2, A, B>(
                         core.flatMap(([left, right]) =>
                           pipe(
                             left,
-                            core.exitZipWith(right, f, Cause.parallel),
+                            core.exitZipWith(right, f, internalCause.parallel),
                             core.exitMatch(
-                              (causes) => core.failCause(Cause.parallel(Cause.stripFailures(cause), causes)),
-                              () => core.failCause(Cause.stripFailures(cause))
+                              (causes) =>
+                                core.failCause(internalCause.parallel(internalCause.stripFailures(cause), causes)),
+                              () => core.failCause(internalCause.stripFailures(cause))
                             )
                           )
                         )
@@ -845,7 +847,7 @@ export const zipWithFiber = <E2, A, B, C>(that: Fiber.Fiber<E2, B>, f: (a: A, b:
               Option.flatMap((exitA) =>
                 pipe(
                   optionB,
-                  Option.map((exitB) => pipe(exitA, Exit.zipWith(exitB, f, Cause.parallel)))
+                  Option.map((exitB) => pipe(exitA, Exit.zipWith(exitB, f, internalCause.parallel)))
                 )
               )
             )

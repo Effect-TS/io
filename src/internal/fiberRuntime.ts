@@ -1,4 +1,4 @@
-import * as Cause from "@effect/io/Cause"
+import type * as Cause from "@effect/io/Cause"
 import type * as Clock from "@effect/io/Clock"
 import type { ConfigProvider } from "@effect/io/Config/Provider"
 import { getCallTrace, isTraceEnabled, runtimeDebug } from "@effect/io/Debug"
@@ -13,6 +13,7 @@ import * as RuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
 import * as FiberStatus from "@effect/io/Fiber/Status"
 import type * as FiberRef from "@effect/io/FiberRef"
 import type * as FiberRefs from "@effect/io/FiberRefs"
+import * as internalCause from "@effect/io/internal/cause"
 import { StackAnnotation } from "@effect/io/internal/cause"
 import * as clock from "@effect/io/internal/clock"
 import { configProviderTag } from "@effect/io/internal/configProvider"
@@ -35,6 +36,7 @@ import { RingBuffer } from "@effect/io/internal/support"
 import type { EnforceNonEmptyRecord, TupleEffect } from "@effect/io/internal/types"
 import * as LogLevel from "@effect/io/Logger/Level"
 import * as Ref from "@effect/io/Ref"
+import type { Runtime } from "@effect/io/Runtime"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
 import * as Chunk from "@fp-ts/data/Chunk"
@@ -190,7 +192,8 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   constructor(
     fiberId: FiberId.Runtime,
     fiberRefs0: FiberRefs.FiberRefs,
-    runtimeFlags0: RuntimeFlags.RuntimeFlags
+    runtimeFlags0: RuntimeFlags.RuntimeFlags,
+    readonly runtime: Runtime<never>
   ) {
     this._runtimeFlags = runtimeFlags0
     this._fiberId = fiberId
@@ -429,7 +432,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    */
   interruptWithFork(fiberId: FiberId.FiberId): Effect.Effect<never, never, void> {
     const trace = getCallTrace()
-    return core.sync(() => this.tell(FiberMessage.interruptSignal(Cause.interrupt(fiberId)))).traced(trace)
+    return core.sync(() => this.tell(FiberMessage.interruptSignal(internalCause.interrupt(fiberId)))).traced(trace)
   }
 
   /**
@@ -612,7 +615,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    * log annotations and log level) may not be up-to-date.
    */
   isInterrupted(): boolean {
-    return !Cause.isEmpty(this.getFiberRef(core.interruptedCause))
+    return !internalCause.isEmpty(this.getFiberRef(core.interruptedCause))
   }
 
   /**
@@ -623,7 +626,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    */
   addInterruptedCause(cause: Cause.Cause<never>) {
     const oldSC = this.getFiberRef(core.interruptedCause)
-    this.setFiberRef(core.interruptedCause, Cause.sequential(oldSC, cause))
+    this.setFiberRef(core.interruptedCause, internalCause.sequential(oldSC, cause))
   }
 
   /**
@@ -649,7 +652,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     }
     let told = false
     for (const child of this._children) {
-      child.tell(FiberMessage.interruptSignal(Cause.interrupt(this.id())))
+      child.tell(FiberMessage.interruptSignal(internalCause.interrupt(this.id())))
       told = true
     }
     return told
@@ -741,7 +744,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     pipe(
       loggers,
       HashSet.forEach((logger) => {
-        logger.log(this.id(), logLevel, message, cause, contextMap, spans, annotations)
+        logger.log(this.id(), logLevel, message, cause, contextMap, spans, annotations, this.runtime)
       })
     )
   }
@@ -921,7 +924,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     try {
       asyncRegister(callback)
     } catch (e) {
-      callback(core.failCause(Cause.die(e)))
+      callback(core.failCause(internalCause.die(e)))
     }
   }
 
@@ -1005,12 +1008,12 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     this.onExecute(op)
     let cause = op.cause
     if (this._tracesInStack > 0 || (this._executionTrace && this._executionTrace.size > 0)) {
-      if (Cause.isAnnotatedType(cause) && Cause.isStackAnnotation(cause.annotation)) {
+      if (internalCause.isAnnotatedType(cause) && internalCause.isStackAnnotation(cause.annotation)) {
         const stack = cause.annotation.stack
         const execution = cause.annotation.execution
         const currentStack = this.stackToLines()
         const currentExecution = this._executionTrace?.toChunkReversed() || Chunk.empty
-        cause = Cause.annotated(
+        cause = internalCause.annotated(
           cause.cause,
           new StackAnnotation(
             pipe(
@@ -1044,7 +1047,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
           )
         )
       } else {
-        cause = Cause.annotated(
+        cause = internalCause.annotated(
           op.cause,
           new StackAnnotation(this.stackToLines(), this._executionTrace?.toChunkReversed() || Chunk.empty)
         )
@@ -1059,13 +1062,13 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
             this.onExecute(cont)
             return cont.failK(cause)
           } else {
-            return core.failCause(Cause.stripFailures(cause))
+            return core.failCause(internalCause.stripFailures(cause))
           }
         }
         case OpCodes.OP_REVERT_FLAGS: {
           this.patchRuntimeFlags(this._runtimeFlags, cont.patch)
           if (_runtimeFlags.interruptible(this._runtimeFlags) && this.isInterrupted()) {
-            return core.exitFailCause(Cause.sequential(cause, this.getInterruptedCause()))
+            return core.exitFailCause(internalCause.sequential(cause, this.getInterruptedCause()))
           } else {
             return core.failCause(cause)
           }
@@ -1205,12 +1208,12 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
         } else {
           if (core.isEffectError(e)) {
             cur = core.failCause(e.cause)
-          } else if (Cause.isInterruptedException(e)) {
+          } else if (internalCause.isInterruptedException(e)) {
             cur = core.exitFailCause(
-              Cause.sequential(Cause.die(e), Cause.interrupt(FiberId.none))
+              internalCause.sequential(internalCause.die(e), internalCause.interrupt(FiberId.none))
             )
           } else {
-            cur = core.failCause(Cause.die(e))
+            cur = core.failCause(internalCause.die(e))
           }
         }
       }
@@ -1224,7 +1227,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     const isNew = this._executionTrace.push(trace)
     if (isNew) {
       if (runtimeDebug.traceExecutionLogEnabled) {
-        this.log(`Executing: ${trace}`, Cause.empty, Option.some(LogLevel.Debug))
+        this.log(`Executing: ${trace}`, internalCause.empty, Option.some(LogLevel.Debug))
       }
     }
   }
@@ -1516,9 +1519,11 @@ const forEachParUnboundedDiscard = <R, E, A, _>(f: (a: A) => Effect.Effect<R, E,
                       (exits) => {
                         const exit = core.exitCollectAllPar(exits)
                         if (exit._tag === "Some" && core.exitIsFailure(exit.value)) {
-                          return core.failCause(Cause.parallel(Cause.stripFailures(cause), exit.value.cause))
+                          return core.failCause(
+                            internalCause.parallel(internalCause.stripFailures(cause), exit.value.cause)
+                          )
                         } else {
-                          return core.failCause(Cause.stripFailures(cause))
+                          return core.failCause(internalCause.stripFailures(cause))
                         }
                       }
                     )
@@ -1631,7 +1636,7 @@ export const forkWithErrorHandler = <E, X>(handler: (e: E) => Effect.Effect<neve
     return pipe(
       self,
       core.onError((cause) => {
-        const either = Cause.failureOrCause(cause)
+        const either = internalCause.failureOrCause(cause)
         switch (either._tag) {
           case "Left": {
             return handler(either.left)
@@ -1668,7 +1673,7 @@ export const unsafeMakeChildFiber = <R, E, A, E2, B>(
   const childId = FiberId.unsafeMake()
   const parentFiberRefs = parentFiber.unsafeGetFiberRefs()
   const childFiberRefs = pipe(parentFiberRefs, fiberRefs.forkAs(childId))
-  const childFiber = new FiberRuntime<E, A>(childId, childFiberRefs, parentRuntimeFlags)
+  const childFiber = new FiberRuntime<E, A>(childId, childFiberRefs, parentRuntimeFlags, parentFiber.runtime)
   const childEnvironment = pipe(
     childFiberRefs,
     fiberRefs.getOrDefault(
@@ -2478,7 +2483,7 @@ export function fiberCollectAll<E, A>(fibers: Iterable<Fiber.Fiber<E, A>>): Fibe
                           core.exitZipWith(
                             optionB.value,
                             (a, chunk) => pipe(chunk, Chunk.prepend(a)),
-                            Cause.parallel
+                            internalCause.parallel
                           )
                         )
                       )

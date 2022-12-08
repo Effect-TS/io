@@ -41,6 +41,7 @@ Added in v1.0.0
   - [asyncInterrupt](#asyncinterrupt)
   - [asyncOption](#asyncoption)
   - [attempt](#attempt)
+  - [blocking](#blocking)
   - [checkInterruptible](#checkinterruptible)
   - [clockWith](#clockwith)
   - [collect](#collect)
@@ -120,7 +121,6 @@ Added in v1.0.0
   - [updateFiberRefs](#updatefiberrefs)
   - [whenEffect](#wheneffect)
   - [whileLoop](#whileloop)
-  - [withBackgroundPriority](#withbackgroundpriority)
   - [withClockScoped](#withclockscoped)
   - [yieldNow](#yieldnow)
 - [conversions](#conversions)
@@ -842,6 +842,20 @@ thrown exceptions into typed failed effects creating with `Effect.fail`.
 
 ```ts
 export declare const attempt: <A>(evaluate: () => A) => Effect<never, unknown, A>
+```
+
+Added in v1.0.0
+
+## blocking
+
+Schedules a potentially blocking effect to occur with background priority.
+
+Note: this is equivalent to pipe(yieldNow("background"), zipRight(self))
+
+**Signature**
+
+```ts
+export declare const blocking: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -1952,18 +1966,6 @@ export declare const whileLoop: <R, E, A>(
 
 Added in v1.0.0
 
-## withBackgroundPriority
-
-Schedules a potentially blocking effect to occur with background priority.
-
-**Signature**
-
-```ts
-export declare const withBackgroundPriority: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
-```
-
-Added in v1.0.0
-
 ## withClockScoped
 
 Sets the implementation of the clock service to the specified value and
@@ -1982,7 +1984,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const yieldNow: () => Effect<never, never, void>
+export declare const yieldNow: (priority?: 'background' | 'normal' | undefined) => Effect<never, never, void>
 ```
 
 Added in v1.0.0
