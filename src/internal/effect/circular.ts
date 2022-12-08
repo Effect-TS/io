@@ -34,42 +34,28 @@ export const unsafeMakeLock = () => {
   const observers: Set<() => void> = new Set()
   return <R, E, A>(self: Effect.Effect<R, E, A>) =>
     core.asyncInterrupt<R, E, A>((resume) => {
+      const withFinalizer = pipe(
+        self,
+        ensuring(
+          core.sync(() => {
+            running = false
+            observers.forEach((observer) => observer())
+          })
+        )
+      )
       if (!running) {
         running = true
-        return pipe(
-          self,
-          ensuring(
-            core.sync(() => {
-              running = false
-              observers.forEach((observer) => {
-                observer()
-              })
-            })
-          ),
-          Either.right
-        )
+        return Either.right(withFinalizer)
       } else {
         const observer = () => {
           if (!running) {
             running = true
             observers.delete(observer)
-            resume(pipe(
-              self,
-              ensuring(
-                core.sync(() => {
-                  running = false
-                  observers.forEach((observer) => {
-                    observer()
-                  })
-                })
-              )
-            ))
+            resume(withFinalizer)
           }
         }
         observers.add(observer)
-        return Either.left(core.sync(() => {
-          observers.delete(observer)
-        }))
+        return Either.left(core.sync(() => observers.delete(observer)))
       }
     })
 }
