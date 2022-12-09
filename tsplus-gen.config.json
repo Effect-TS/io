@@ -1,0 +1,107 @@
+{
+  "project": {
+    "packageName": "@effect/io",
+    "tsconfig": "tsconfig.build.json",
+    "rootDir": "src",
+    "exclude": ["**/internal/**"],
+    "moduleConfig": {
+      "@effect/io": {
+        "staticPrefixes": ["from", "unsafeFrom", "make", "unsafeMake"],
+        "fluentNamespaces": ["effect/io", "Iterable"]
+      },
+      "@effect/io/Layer": {
+        "staticPrefixes": ["from", "unsafeFrom", "make", "unsafeMake"],
+        "fluentNamespaces": ["effect/io/Layer"]
+      }
+    }
+  },
+  "namespaces": [
+    {
+      "name": "effect/io",
+      "type": {
+        "include": true,
+        "includeCompanion": true,
+        "companionSuffix": ".Ops"
+      },
+      "static": {
+        "include": true,
+        "staticSuffix": ".Ops"
+      },
+      "fluent": {
+        "include": true,
+        "includeStatic": true,
+        "staticSuffix": ".Aspects"
+      },
+      "pipeable": {
+        "include": true,
+        "includeStatic": true,
+        "staticSuffix": ".Aspects"
+      },
+      "getter": {
+        "include": true,
+        "includeStatic": true,
+        "staticSuffix": ".Aspects"
+      }
+    },
+    {
+      "name": "Iterable",
+      "static": {
+        "include": false
+      },
+      "getter": {
+        "include": true,
+        "includeStatic": true,
+        "staticSuffix": ".Ops",
+        "staticUsesOutputType": true
+      },
+      "pipeable": {
+        "include": true,
+        "includeStatic": true,
+        "staticSuffix": ".Ops",
+        "staticUsesOutputType": true
+      },
+      "exclude": [
+        "@effect/io/Exit#collectAll",
+        "@effect/io/Exit#collectAllPar",
+        "@effect/io/Fiber#collectAll",
+        "@effect/io/Metric/Polling#collectAll"
+      ]
+    }
+  ],
+  "additionalExtensions": [
+    ["effect/io/Effect#unsafeRun", "fluent", "unsafeRun"],
+
+    ["effect/io/Effect#orElse", "pipeable-operator", "|"],
+    ["effect/io/Effect#zip", "pipeable-operator", "+"],
+    ["effect/io/Effect#zipPar", "pipeable-operator", "&"],
+    ["effect/io/Effect#zipLeft", "pipeable-operator", "<"],
+    ["effect/io/Effect#zipRight", "pipeable-operator", ">"],
+
+    ["effect/io/Exit#isFailure", "static", "isFailure", "effect/io/Exit.Ops"],
+    ["effect/io/Exit#isSuccess", "static", "isSuccess", "effect/io/Exit.Ops"],
+
+    ["effect/io/Layer#merge", "pipeable-operator", "+"],
+    ["effect/io/Layer#orElse", "pipeable-operator", "|"],
+    ["effect/io/Layer#provideTo", "pipeable-operator", ">>"],
+    ["effect/io/Layer#provideToAndMerge", "pipeable-operator", ">"],
+
+    ["effect/io/Queue.Enqueue#offer", "pipeable-operator", "<<"],
+    ["effect/io/Queue.Enqueue#offerAll", "pipeable-operator", "+"],
+
+    ["effect/io/Schedule#andThen", "pipeable-operator", "/"],
+    ["effect/io/Schedule#andThenEither", "pipeable-operator", "%"],
+    ["effect/io/Schedule#bothInOut", "pipeable-operator", "**"],
+    ["effect/io/Schedule#choose", "pipeable-operator", "+"],
+    ["effect/io/Schedule#compose", "pipeable-operator", ">>"],
+    ["effect/io/Schedule#intersect", "pipeable-operator", "&&"],
+    ["effect/io/Schedule#union", "pipeable-operator", "||"],
+    ["effect/io/Schedule#zipLeft", "pipeable-operator", "<"],
+    ["effect/io/Schedule#zipRight", "pipeable-operator", ">"],
+
+    ["effect/io/Schedule/Interval#lessThan", "pipeable-operator", "<"],
+
+    ["effect/io/Schedule/Intervals#intersect", "pipeable-operator", "&&"],
+    ["effect/io/Schedule/Intervals#lessThan", "pipeable-operator", "<"],
+    ["effect/io/Schedule/Intervals#union", "pipeable-operator", "||"]
+  ]
+}

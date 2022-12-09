@@ -1,12 +1,12 @@
 lockfileVersion: 5.4
 
 patchedDependencies:
-  '@effect-ts/build-utils@0.40.3':
-    hash: wzvflwv62ngf22ppz3frldq37m
-    path: patches/@effect-ts__build-utils@0.40.3.patch
   docs-ts@0.6.10:
     hash: cafcqw24npsdw2cmfoccfh2gly
     path: patches/docs-ts@0.6.10.patch
+  '@effect-ts/build-utils@0.40.3':
+    hash: wzvflwv62ngf22ppz3frldq37m
+    path: patches/@effect-ts__build-utils@0.40.3.patch
 
 importers:
 
@@ -57,6 +57,7 @@ importers:
       ts-codemod: ^4.0.4
       ts-node: ^10.9.1
       tslint: ^6.1.3
+      tsplus-gen: ^0.2.19
       typescript: https://cdn.jsdelivr.net/npm/@tsplus/installer@0.0.155/compiler/typescript.tgz
       ultra-runner: ^3.10.5
       vite: ^4.0.4
@@ -108,6 +109,7 @@ importers:
       ts-codemod: 4.0.4
       ts-node: 10.9.1_wly7vct6bz3dqlyn5b4673ysga
       tslint: 6.1.3_delwud2hnnlzcq6m6ihqj3umw4
+      tsplus-gen: 0.2.19
       typescript: '@cdn.jsdelivr.net/npm/@tsplus/installer@0.0.155/compiler/typescript.tgz'
       ultra-runner: 3.10.5
       vite: 4.0.4_@types+node@18.11.18
@@ -6422,6 +6424,17 @@ packages:
       typescript: '@cdn.jsdelivr.net/npm/@tsplus/installer@0.0.155/compiler/typescript.tgz'
     dev: true
 
+  /tsplus-gen/0.2.19:
+    resolution: {integrity: sha512-66y+mDUUSKdgUJ2LU4/ObbuZqKXEaytWP+d2/+yTALQF3HlljjGDXyUImufcLlNHY/1ZOYB3Wfv1irVGKHyLEg==}
+    hasBin: true
+    dependencies:
+      '@effect/core': 0.0.16
+      '@tsplus/stdlib': 0.2.8
+      minimatch: 5.1.0
+      typescript: 4.9.3
+      zod: 3.19.1
+    dev: true
+
   /tsutils/2.29.0_delwud2hnnlzcq6m6ihqj3umw4:
     resolution: {integrity: sha512-g5JVHCIJwzfISaXpXE1qvNalca5Jwob6FjI4AoPlqMusJ6ftFE7IkkFoMhVLRgK+4Kx3gkzb8UZK5t5yTTvEmA==}
     peerDependencies:
@@ -6521,6 +6534,18 @@ packages:
 
   /typescript/4.1.6:
     resolution: {integrity: sha512-pxnwLxeb/Z5SP80JDRzVjh58KsM6jZHRAOtTpS7sXLS4ogXNKC9ANxHHZqLLeVHZN35jCtI4JdmLLbLiC1kBow==}
+    engines: {node: '>=4.2.0'}
+    hasBin: true
+    dev: true
+
+  /typescript/4.8.4:
+    resolution: {integrity: sha512-QCh+85mCy+h0IGff8r5XWzOVSbBO+KfeYrMQh7NJ58QujwcE22u+NUSmUxqF+un70P9GXKxa2HCNiTTMJknyjQ==}
+    engines: {node: '>=4.2.0'}
+    hasBin: true
+    dev: true
+
+  /typescript/4.9.3:
+    resolution: {integrity: sha512-CIfGzTelbKNEnLpLdGFgdyKhG23CKdKgQPOBc+OUNrkJ2vr+KSzsSV5kq5iWhEQbok+quxgGzrAtGWCyU7tHnA==}
     engines: {node: '>=4.2.0'}
     hasBin: true
     dev: true
@@ -6972,6 +6997,10 @@ packages:
   /yocto-queue/0.1.0:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
+    dev: true
+
+  /zod/3.19.1:
+    resolution: {integrity: sha512-LYjZsEDhCdYET9ikFu6dVPGp2YH9DegXjdJToSzD9rO6fy4qiRYFoyEYwps88OseJlPyl2NOe2iJuhEhL7IpEA==}
     dev: true
 
   '@cdn.jsdelivr.net/npm/@tsplus/installer@0.0.155/compiler/typescript.tgz':
