@@ -6,9 +6,6 @@
  * reversal of task order
  */
 
-// eslint-disable-next-line @typescript-eslint/triple-slash-reference
-/// <reference path="../../node_modules/@types/requestidlecallback/index.d.ts" />
-
 /** @internal */
 type WhenReady<T> = {
   promise: () => Promise<T>
@@ -34,6 +31,7 @@ type State = {
   onIdleCallback: WhenReady<void>
   onAnimationFrame: WhenReady<void>
   frameWorkStartTime: number | undefined
+  // @ts-expect-error
   idleDeadline: IdleDeadline | undefined
 }
 
@@ -85,7 +83,9 @@ function startTracking(): void {
   }
 
   const loop = (): void => {
+    // @ts-expect-error
     if (typeof requestIdleCallback !== "undefined") {
+      // @ts-expect-error
       idleCallbackId = requestIdleCallback((deadline) => {
         reset()
 
@@ -115,7 +115,9 @@ function startTracking(): void {
       }
     }
 
+    // @ts-expect-error
     if (typeof requestAnimationFrame !== "undefined") {
+      // @ts-expect-error
       requestAnimationFrame(cb)
     } else {
       setTimeout(cb, 16)
@@ -168,6 +170,7 @@ function isTimeToYield(): boolean {
 
   lastCallTime = now
   lastResult = now >= calculateDeadline() ||
+    // @ts-expect-error
     (typeof navigator !== "undefined" && navigator.scheduling?.isInputPending?.() === true)
 
   if (lastResult) {
@@ -229,6 +232,7 @@ function requestNextTask(callback: () => void): void {
   if (callbacks.length === 0) {
     const channel = new MessageChannel()
     channel.port2.postMessage(undefined)
+    // @ts-expect-error
     channel.port1.onmessage = (): void => {
       channel.port1.close()
       channel.port2.close()
@@ -276,9 +280,11 @@ async function schedule(): Promise<void> {
     await state.onAnimationFrame.promise()
   }
 
+  // @ts-expect-error
   if (typeof requestIdleCallback === "undefined") {
     await new Promise<void>((resolve) => requestNextTask(resolve))
 
+    // @ts-expect-error
     if (typeof navigator !== "undefined" && navigator.scheduling?.isInputPending?.() === true) {
       await schedule()
     } else if (state.frameWorkStartTime === undefined) {
