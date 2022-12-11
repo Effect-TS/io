@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.0.35
+
+### Patch Changes
+
+- [#106](https://github.com/Effect-TS/io/pull/106) [`9d43955`](https://github.com/Effect-TS/io/commit/9d439557ca762fc9558b0b4c6ba8c81ddf30a7b3) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Weaken cast to satisfy stm
+
 ## 0.0.34
 
 ### Patch Changes
