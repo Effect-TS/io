@@ -226,7 +226,7 @@ const fromFlatLoop = <A>(
     case OpCodes.OP_DESCRIBED: {
       return core.suspendSucceed(
         () => fromFlatLoop(flat, prefix, op.config, isEmptyOk)
-      ).traced(trace) as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
+      ).traced(trace) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
     }
     case OpCodes.OP_FAIL: {
       return core.fail(configError.MissingData(prefix, op.message)).traced(trace) as Effect.Effect<
@@ -244,7 +244,7 @@ const fromFlatLoop = <A>(
             core.catchAll((error2) => core.fail(pipe(configError.Or(error1, error2))))
           )
         )
-      ).traced(trace) as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
+      ).traced(trace) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
     }
     case OpCodes.OP_LAZY: {
       return core.suspendSucceed(() => fromFlatLoop(flat, prefix, op.config(), isEmptyOk)).traced(
@@ -261,7 +261,7 @@ const fromFlatLoop = <A>(
           fromFlatLoop(flat, prefix, op.original, isEmptyOk),
           core.flatMap(core.forEach((a) => core.fromEither(op.mapOrFail(a))))
         )
-      ).traced(trace) as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
+      ).traced(trace) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
     }
     case OpCodes.OP_NESTED: {
       return core.suspendSucceed(() =>
@@ -271,7 +271,7 @@ const fromFlatLoop = <A>(
           op.config,
           isEmptyOk
         )
-      ).traced(trace) as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
+      ).traced(trace) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
     }
     case OpCodes.OP_PRIMITIVE: {
       return pipe(
@@ -288,7 +288,7 @@ const fromFlatLoop = <A>(
           }
           return core.succeed(values)
         })
-      ).traced(trace) as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
+      ).traced(trace) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
     }
     case OpCodes.OP_SEQUENCE: {
       return core.suspendSucceed(() => {
@@ -296,7 +296,7 @@ const fromFlatLoop = <A>(
           fromFlatLoop(flat, prefix, op.config, true),
           core.map(Chunk.singleton)
         )
-      }).traced(trace) as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
+      }).traced(trace) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
     }
     case OpCodes.OP_TABLE: {
       return core.suspendSucceed(() =>
@@ -318,7 +318,7 @@ const fromFlatLoop = <A>(
             )
           })
         )
-      ).traced(trace) as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
+      ).traced(trace) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
     }
     case OpCodes.OP_ZIP_WITH: {
       return core.suspendSucceed(() =>
@@ -367,7 +367,7 @@ const fromFlatLoop = <A>(
             )
           )
         )
-      ).traced(trace) as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
+      ).traced(trace) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
     }
   }
 }
