@@ -44,6 +44,22 @@ export const effect = (() => {
           ),
         timeout
       )
+    },
+    only: <E, A>(
+      name: string,
+      self: () => Effect.Effect<TestEnvironment.TestEnvironment, E, A>,
+      timeout = 5_000
+    ) => {
+      return it.only(
+        name,
+        () =>
+          pipe(
+            Effect.suspendSucceed(self),
+            Effect.provideLayer(TestEnvironment.TestEnvironment),
+            Effect.unsafeRunPromise
+          ),
+        timeout
+      )
     }
   })
 })()

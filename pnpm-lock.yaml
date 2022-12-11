@@ -31,7 +31,6 @@ importers:
       '@types/jest': ^29.2.4
       '@types/node': ^18.11.11
       '@types/prettier': 2.7.1
-      '@types/requestidlecallback': ^0.3.5
       '@types/rimraf': ^3.0.2
       '@typescript-eslint/eslint-plugin': ^5.46.0
       '@typescript-eslint/parser': ^5.46.0
@@ -82,7 +81,6 @@ importers:
       '@types/jest': 29.2.4
       '@types/node': 18.11.11
       '@types/prettier': 2.7.1
-      '@types/requestidlecallback': 0.3.5
       '@types/rimraf': 3.0.2
       '@typescript-eslint/eslint-plugin': 5.46.0_z4b73fep65kcrdly2h6uhrjism
       '@typescript-eslint/parser': 5.46.0_jlrukjo6ocbb6wheurm4l7mijy
@@ -1103,10 +1101,6 @@ packages:
 
   /@types/prettier/2.7.1:
     resolution: {integrity: sha512-ri0UmynRRvZiiUJdiz38MmIblKK+oH30MztdBVR95dv/Ubw6neWSb8u1XpRb72L4qsZOhz+L+z9JD40SJmfWow==}
-    dev: true
-
-  /@types/requestidlecallback/0.3.5:
-    resolution: {integrity: sha512-Uh49VrVTPfU0y/qIvXXYuRmd/sKLfVgQWZU1t8FWH22AIJyQbCei1aSmXdMDAijwGUFhBDpJmksiHEDsfiE/cg==}
     dev: true
 
   /@types/rimraf/3.0.2:

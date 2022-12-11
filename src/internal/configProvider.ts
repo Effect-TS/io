@@ -291,12 +291,12 @@ const fromFlatLoop = <A>(
       ).traced(trace) as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
     }
     case OpCodes.OP_SEQUENCE: {
-      return core.suspendSucceed(() =>
-        pipe(
+      return core.suspendSucceed(() => {
+        return pipe(
           fromFlatLoop(flat, prefix, op.config, true),
           core.map(Chunk.singleton)
         )
-      ).traced(trace) as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
+      }).traced(trace) as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
     }
     case OpCodes.OP_TABLE: {
       return core.suspendSucceed(() =>
