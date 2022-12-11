@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.0.34
+
+### Patch Changes
+
+- [#104](https://github.com/Effect-TS/io/pull/104) [`bd05241`](https://github.com/Effect-TS/io/commit/bd05241208fc1ec83c3aff98f287ecf7007d588d) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Fix configProvider, avoid depending on external types
+
 ## 0.0.33
 
 ### Patch Changes
