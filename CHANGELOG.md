@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.0.37
+
+### Patch Changes
+
+- [#111](https://github.com/Effect-TS/io/pull/111) [`ca7719a`](https://github.com/Effect-TS/io/commit/ca7719ab0a68e00f3a9cb04f9a82518f3303fd8e) Thanks [@IMax153](https://github.com/IMax153)! - add Effect.dropUntil
+
 ## 0.0.36
 
 ### Patch Changes
