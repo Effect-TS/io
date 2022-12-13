@@ -375,42 +375,42 @@ const make = <A>(
 }
 
 /** @internal */
-export const capacity = <A>(self: Queue.Queue<A>): number => {
+export const capacity = <A>(self: Queue.Dequeue<A> | Queue.Enqueue<A>): number => {
   return self.capacity()
 }
 
 /** @internal */
-export const size = <A>(self: Queue.Queue<A>): Effect.Effect<never, never, number> => {
+export const size = <A>(self: Queue.Dequeue<A> | Queue.Enqueue<A>): Effect.Effect<never, never, number> => {
   const trace = getCallTrace()
   return self.size().traced(trace)
 }
 
 /** @internal */
-export const isFull = <A>(self: Queue.Queue<A>): Effect.Effect<never, never, boolean> => {
+export const isFull = <A>(self: Queue.Dequeue<A> | Queue.Enqueue<A>): Effect.Effect<never, never, boolean> => {
   const trace = getCallTrace()
   return self.isFull().traced(trace)
 }
 
 /** @internal */
-export const isEmpty = <A>(self: Queue.Queue<A>): Effect.Effect<never, never, boolean> => {
+export const isEmpty = <A>(self: Queue.Dequeue<A> | Queue.Enqueue<A>): Effect.Effect<never, never, boolean> => {
   const trace = getCallTrace()
   return self.isEmpty().traced(trace)
 }
 
 /** @internal */
-export const isShutdown = <A>(self: Queue.Queue<A>): Effect.Effect<never, never, boolean> => {
+export const isShutdown = <A>(self: Queue.Dequeue<A> | Queue.Enqueue<A>): Effect.Effect<never, never, boolean> => {
   const trace = getCallTrace()
   return self.isShutdown().traced(trace)
 }
 
 /** @internal */
-export const awaitShutdown = <A>(self: Queue.Queue<A>): Effect.Effect<never, never, void> => {
+export const awaitShutdown = <A>(self: Queue.Dequeue<A> | Queue.Enqueue<A>): Effect.Effect<never, never, void> => {
   const trace = getCallTrace()
   return self.awaitShutdown().traced(trace)
 }
 
 /** @internal */
-export const shutdown = <A>(self: Queue.Queue<A>): Effect.Effect<never, never, void> => {
+export const shutdown = <A>(self: Queue.Dequeue<A> | Queue.Enqueue<A>): Effect.Effect<never, never, void> => {
   const trace = getCallTrace()
   return self.shutdown().traced(trace)
 }

@@ -375,7 +375,7 @@ export const unbounded: <A>() => Effect.Effect<never, never, Queue<A>> = interna
  * @since 1.0.0
  * @category getters
  */
-export const capacity: <A>(self: Queue<A>) => number = internal.capacity
+export const capacity: <A>(self: Dequeue<A> | Enqueue<A>) => number = internal.capacity
 
 /**
  * Retrieves the size of the queue, which is equal to the number of elements
@@ -386,7 +386,7 @@ export const capacity: <A>(self: Queue<A>) => number = internal.capacity
  * @since 1.0.0
  * @category getters
  */
-export const size: <A>(self: Queue<A>) => Effect.Effect<never, never, number> = internal.size
+export const size: <A>(self: Dequeue<A> | Enqueue<A>) => Effect.Effect<never, never, number> = internal.size
 
 /**
  * Returns `true` if the `Queue` contains zero elements, `false` otherwise.
@@ -395,7 +395,7 @@ export const size: <A>(self: Queue<A>) => Effect.Effect<never, never, number> = 
  * @since 1.0.0
  * @category getters
  */
-export const isEmpty: <A>(self: Queue<A>) => Effect.Effect<never, never, boolean> = internal.isEmpty
+export const isEmpty: <A>(self: Dequeue<A> | Enqueue<A>) => Effect.Effect<never, never, boolean> = internal.isEmpty
 
 /**
  * Returns `true` if the `Queue` contains at least one element, `false`
@@ -405,7 +405,7 @@ export const isEmpty: <A>(self: Queue<A>) => Effect.Effect<never, never, boolean
  * @since 1.0.0
  * @category getters
  */
-export const isFull: <A>(self: Queue<A>) => Effect.Effect<never, never, boolean> = internal.isFull
+export const isFull: <A>(self: Dequeue<A> | Enqueue<A>) => Effect.Effect<never, never, boolean> = internal.isFull
 
 /**
  * Returns `true` if `shutdown` has been called, otherwise returns `false`.
@@ -414,7 +414,8 @@ export const isFull: <A>(self: Queue<A>) => Effect.Effect<never, never, boolean>
  * @since 1.0.0
  * @category getters
  */
-export const isShutdown: <A>(self: Queue<A>) => Effect.Effect<never, never, boolean> = internal.isShutdown
+export const isShutdown: <A>(self: Dequeue<A> | Enqueue<A>) => Effect.Effect<never, never, boolean> =
+  internal.isShutdown
 
 /**
  * Waits until the queue is shutdown. The `Effect` returned by this method will
@@ -425,7 +426,8 @@ export const isShutdown: <A>(self: Queue<A>) => Effect.Effect<never, never, bool
  * @since 1.0.0
  * @category mutations
  */
-export const awaitShutdown: <A>(self: Queue<A>) => Effect.Effect<never, never, void> = internal.awaitShutdown
+export const awaitShutdown: <A>(self: Dequeue<A> | Enqueue<A>) => Effect.Effect<never, never, void> =
+  internal.awaitShutdown
 
 /**
  * Interrupts any fibers that are suspended on `offer` or `take`. Future calls
@@ -435,7 +437,7 @@ export const awaitShutdown: <A>(self: Queue<A>) => Effect.Effect<never, never, v
  * @since 1.0.0
  * @category mutations
  */
-export const shutdown: <A>(self: Queue<A>) => Effect.Effect<never, never, void> = internal.shutdown
+export const shutdown: <A>(self: Dequeue<A> | Enqueue<A>) => Effect.Effect<never, never, void> = internal.shutdown
 
 /**
  * Places one value in the queue.

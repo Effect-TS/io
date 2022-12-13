@@ -313,7 +313,7 @@ describe.concurrent("Metric", () => {
         assert.strictEqual(result.min, 1)
         assert.strictEqual(result.max, 3)
       }))
-    it.live("observe durations", () =>
+    it.flakyTest(
       Effect.gen(function*($) {
         const boundaries = MetricBoundaries.linear(0, 1, 10)
         const histogram = pipe(
