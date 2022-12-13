@@ -1,5 +1,13 @@
 # @effect/io
 
+## 0.0.36
+
+### Patch Changes
+
+- [#108](https://github.com/Effect-TS/io/pull/108) [`fca450f`](https://github.com/Effect-TS/io/commit/fca450f7bb510f483ececad28f329e122fdf48ca) Thanks [@IMax153](https://github.com/IMax153)! - expose Scheduler
+
+- [#109](https://github.com/Effect-TS/io/pull/109) [`7c1f086`](https://github.com/Effect-TS/io/commit/7c1f086391ecbc2b4333c00f90cf6f4721046a7f) Thanks [@IMax153](https://github.com/IMax153)! - fix Queue method signatures
+
 ## 0.0.35
 
 ### Patch Changes
