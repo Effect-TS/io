@@ -501,13 +501,33 @@ export const bindValue = <N extends string, K, A>(tag: Exclude<N, keyof K>, f: (
   }
 }
 
-/**
- * Drops all elements so long as the predicate returns true.
- *
- * @macro traced
- * @category constructors
- * @since 1.0.0
- */
+/** @internal */
+export const dropUntil = <A, R, E>(predicate: (a: A) => Effect.Effect<R, E, boolean>) => {
+  const trace = getCallTrace()
+  return (elements: Iterable<A>): Effect.Effect<R, E, Chunk.Chunk<A>> =>
+    core.suspendSucceed(() => {
+      const iterator = elements[Symbol.iterator]()
+      const builder: Array<A> = []
+      let next
+      let dropping: Effect.Effect<R, E, boolean> = core.succeed(false)
+      while ((next = iterator.next()) && !next.done) {
+        const a = next.value
+        dropping = pipe(
+          dropping,
+          core.flatMap((bool) => {
+            if (bool) {
+              builder.push(a)
+              return core.succeed(true)
+            }
+            return predicate(a)
+          })
+        )
+      }
+      return pipe(dropping, core.map(() => Chunk.unsafeFromArray(builder)))
+    }).traced(trace)
+}
+
+/** @internal */
 export const dropWhile = <R, E, A>(f: (a: A) => Effect.Effect<R, E, boolean>) => {
   const trace = getCallTrace()
   return (elements: Iterable<A>): Effect.Effect<R, E, Chunk.Chunk<A>> => {

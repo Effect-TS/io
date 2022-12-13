@@ -1096,6 +1096,17 @@ export const Do: () => Effect<never, never, {}> = effect.Do
 export const done: <E, A>(exit: Exit.Exit<E, A>) => Effect<never, E, A> = core.done
 
 /**
+ * Drops all elements until the effectful predicate returns true.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const dropUntil: <A, R, E>(
+  predicate: (a: A) => Effect<R, E, boolean>
+) => (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<A>> = effect.dropUntil
+
+/**
  * Drops all elements so long as the predicate returns true.
  *
  * @macro traced
