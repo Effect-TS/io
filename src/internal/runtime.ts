@@ -13,7 +13,8 @@ import * as FiberRuntime from "@effect/io/internal/fiberRuntime"
 import * as fiberScope from "@effect/io/internal/fiberScope"
 import * as OpCodes from "@effect/io/internal/opCodes/effect"
 import * as runtimeFlags from "@effect/io/internal/runtimeFlags"
-import * as Scheduler from "@effect/io/internal/scheduler"
+import * as Scheduler from "@effect/io/Scheduler"
+import * as _scheduler from "@effect/io/internal/scheduler"
 import * as _supervisor from "@effect/io/internal/supervisor"
 import type * as Runtime from "@effect/io/Runtime"
 import * as Context from "@fp-ts/data/Context"
@@ -106,7 +107,7 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
   unsafeRunSyncExit = <E, A>(
     effect: Effect.Effect<R, E, A>
   ): Exit.Exit<E, A> => {
-    const scheduler = new Scheduler.SyncScheduler()
+    const scheduler = new _scheduler.SyncScheduler()
 
     const fiberRuntime = this.unsafeFork(effect, scheduler)
 
