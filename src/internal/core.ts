@@ -16,9 +16,10 @@ import type * as FiberRuntime from "@effect/io/internal/fiberRuntime"
 import type * as fiberScope from "@effect/io/internal/fiberScope"
 import * as OpCodes from "@effect/io/internal/opCodes/effect"
 import * as _runtimeFlags from "@effect/io/internal/runtimeFlags"
-import * as Scheduler from "@effect/io/internal/scheduler"
+import * as scheduler from "@effect/io/internal/scheduler"
 import type * as LogLevel from "@effect/io/Logger/Level"
 import type * as LogSpan from "@effect/io/Logger/Span"
+import type * as Scheduler from "@effect/io/Scheduler"
 import type * as Scope from "@effect/io/Scope"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Context from "@fp-ts/data/Context"
@@ -1497,9 +1498,7 @@ export const currentLogSpan: FiberRef.FiberRef<Chunk.Chunk<LogSpan.LogSpan>> = f
 )
 
 /** @internal */
-export const currentScheduler: FiberRef.FiberRef<Scheduler.Scheduler> = fiberRefUnsafeMake(
-  Scheduler.defaultScheduler
-)
+export const currentScheduler: FiberRef.FiberRef<Scheduler.Scheduler> = fiberRefUnsafeMake(scheduler.defaultScheduler)
 
 /** @internal */
 export const currentParallelism: FiberRef.FiberRef<Option.Option<number>> = fiberRefUnsafeMake<Option.Option<number>>(

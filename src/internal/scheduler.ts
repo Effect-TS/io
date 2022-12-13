@@ -1,15 +1,9 @@
-/** @internal */
-export type Task = () => void
-
-/** @internal */
-export interface Scheduler {
-  scheduleTask(task: Task): void
-}
+import type * as Scheduler from "@effect/io/Scheduler"
 
 /** @internal */
 export class HighPriorityScheduler {
   running = false
-  tasks: Array<Task> = []
+  tasks: Array<Scheduler.Task> = []
   readonly promise = Promise.resolve(void 0)
 
   starveInternal(depth: number) {
@@ -33,7 +27,7 @@ export class HighPriorityScheduler {
     }
   }
 
-  scheduleTask(task: Task) {
+  scheduleTask(task: Scheduler.Task) {
     this.tasks.push(task)
     if (!this.running) {
       this.running = true
@@ -43,14 +37,14 @@ export class HighPriorityScheduler {
 }
 
 /** @internal */
-export const defaultScheduler: Scheduler = new HighPriorityScheduler()
+export const defaultScheduler: Scheduler.Scheduler = new HighPriorityScheduler()
 
 /** @internal */
 export class SyncScheduler {
-  tasks: Array<Task> = []
+  tasks: Array<Scheduler.Task> = []
   deferred = false
 
-  scheduleTask(task: Task) {
+  scheduleTask(task: Scheduler.Task) {
     if (this.deferred) {
       defaultScheduler.scheduleTask(task)
     } else {

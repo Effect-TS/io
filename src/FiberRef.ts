@@ -6,6 +6,7 @@ import type * as Effect from "@effect/io/Effect"
 import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import * as core from "@effect/io/internal/core"
 import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
+import type * as Scheduler from "@effect/io/Scheduler"
 import * as logger from "@effect/io/internal/logger"
 import type * as Logger from "@effect/io/Logger"
 import type * as LogLevel from "@effect/io/Logger/Level"
@@ -330,6 +331,12 @@ export const currentRuntimeFlags: FiberRef<RuntimeFlags.RuntimeFlags> = fiberRun
  * @category fiberRefs
  */
 export const currentParallelism: FiberRef<Option.Option<number>> = core.currentParallelism
+
+/**
+ * @since 1.0.0
+ * @category fiberRefs
+ */
+export const currentScheduler: FiberRef<Scheduler.Scheduler> = core.currentScheduler
 
 /**
  * @since 1.0.0
