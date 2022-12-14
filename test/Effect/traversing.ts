@@ -12,6 +12,27 @@ import * as Option from "@fp-ts/data/Option"
 import { assert, describe } from "vitest"
 
 describe.concurrent("Effect", () => {
+  it.effect("dropWhile - happy path", () =>
+    Effect.gen(function*($) {
+      const result = yield* $(
+        pipe(
+          [1, 2, 3, 4, 5],
+          Effect.dropWhile((n) => Effect.succeed(n % 2 === 1))
+        )
+      )
+      assert.deepStrictEqual(Array.from(result), [2, 3, 4, 5])
+    }))
+  it.effect("dropWhile - error", () =>
+    Effect.gen(function*($) {
+      const result = yield* $(
+        pipe(
+          [1, 1, 1],
+          Effect.dropWhile(() => Effect.fail("Ouch")),
+          Effect.either
+        )
+      )
+      assert.deepStrictEqual(result, Either.left("Ouch"))
+    }))
   it.effect("exists - determines whether any element satisfies the effectual predicate", () =>
     Effect.gen(function*($) {
       const array = [1, 2, 3, 4, 5]
@@ -563,5 +584,26 @@ describe.concurrent("Effect", () => {
         pipe(effects, Effect.reduceAllPar(Effect.unit() as Effect.Effect<never, number, void>, constVoid), Effect.exit)
       )
       assert.deepStrictEqual(Exit.unannotate(result), Exit.failCause(Cause.parallel(Cause.empty, Cause.fail(1))))
+    }))
+  it.effect("takeWhile - happy path", () =>
+    Effect.gen(function*($) {
+      const result = yield* $(
+        pipe(
+          [1, 2, 3, 4, 5],
+          Effect.takeWhile((n) => Effect.succeed(n % 2 === 1))
+        )
+      )
+      assert.deepStrictEqual(Array.from(result), [1])
+    }))
+  it.effect("takeWhile - error", () =>
+    Effect.gen(function*($) {
+      const result = yield* $(
+        pipe(
+          [1, 1, 1],
+          Effect.takeWhile(() => Effect.fail("Ouch")),
+          Effect.either
+        )
+      )
+      assert.deepStrictEqual(result, Either.left("Ouch"))
     }))
 })

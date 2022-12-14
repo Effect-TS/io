@@ -508,7 +508,7 @@ export const dropUntil = <A, R, E>(predicate: (a: A) => Effect.Effect<R, E, bool
     core.suspendSucceed(() => {
       const iterator = elements[Symbol.iterator]()
       const builder: Array<A> = []
-      let next
+      let next: IteratorResult<A, any>
       let dropping: Effect.Effect<R, E, boolean> = core.succeed(false)
       while ((next = iterator.next()) && !next.done) {
         const a = next.value
@@ -2043,7 +2043,7 @@ export const struct = <NER extends Record<string, Effect.Effect<any, any, any>>>
 }
 
 /** @internal */
-export const takeWhile = <R, E, A>(f: (a: A) => Effect.Effect<R, E, boolean>) => {
+export const takeWhile = <R, E, A>(predicate: (a: A) => Effect.Effect<R, E, boolean>) => {
   const trace = getCallTrace()
   return (elements: Iterable<A>): Effect.Effect<R, E, Chunk.Chunk<A>> => {
     return core.suspendSucceed(() => {
@@ -2051,23 +2051,24 @@ export const takeWhile = <R, E, A>(f: (a: A) => Effect.Effect<R, E, boolean>) =>
       const builder: Array<A> = []
       let next: IteratorResult<A, any>
       let taking: Effect.Effect<R, E, boolean> = core.succeed(true)
-      while (!(next = iterator.next()).done) {
+      while ((next = iterator.next()) && !next.done) {
+        const a = next.value
         taking = pipe(
           taking,
-          core.flatMap((d) =>
+          core.flatMap((taking) =>
             pipe(
-              d ? f(next.value) : core.succeed(false),
-              core.map((b) => {
-                if (b) {
-                  builder.push(next.value)
+              taking ? predicate(a) : core.succeed(false),
+              core.map((bool) => {
+                if (bool) {
+                  builder.push(a)
                 }
-                return b
+                return bool
               })
             )
           )
         )
       }
-      return pipe(taking, core.map(() => Chunk.fromIterable(builder)))
+      return pipe(taking, core.map(() => Chunk.unsafeFromArray(builder)))
     }).traced(trace)
   }
 }
