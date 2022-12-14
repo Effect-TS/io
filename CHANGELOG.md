@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.0.38
+
+### Patch Changes
+
+- [#113](https://github.com/Effect-TS/io/pull/113) [`c8898e4`](https://github.com/Effect-TS/io/commit/c8898e4917963bb3d477ea5dbed7634defce78e4) Thanks [@IMax153](https://github.com/IMax153)! - fix implementation of Effect.takeWhile
+
 ## 0.0.37
 
 ### Patch Changes
