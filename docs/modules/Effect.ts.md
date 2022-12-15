@@ -280,6 +280,7 @@ Added in v1.0.0
   - [cachedInvalidate](#cachedinvalidate)
   - [delay](#delay)
   - [diffFiberRefs](#difffiberrefs)
+  - [dropUntil](#dropuntil)
   - [eventually](#eventually)
   - [flip](#flip)
   - [flipWith](#flipwith)
@@ -3993,6 +3994,20 @@ export declare const diffFiberRefs: <R, E, A>(
 
 Added in v1.0.0
 
+## dropUntil
+
+Drops all elements until the effectful predicate returns true.
+
+**Signature**
+
+```ts
+export declare const dropUntil: <A, R, E>(
+  predicate: (a: A) => Effect<R, E, boolean>
+) => (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<A>>
+```
+
+Added in v1.0.0
+
 ## eventually
 
 Returns an effect that ignores errors and runs repeatedly until it
@@ -4272,9 +4287,7 @@ the race will be interrupted immediately
 **Signature**
 
 ```ts
-export declare const raceAll: <R1, E1, A1>(
-  effects: Iterable<Effect<R1, E1, A1>>
-) => <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, A1 | A>
+export declare const raceAll: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0

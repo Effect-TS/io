@@ -137,7 +137,7 @@ Returns the number of elements the queue can hold.
 **Signature**
 
 ```ts
-export declare const capacity: <A>(self: Queue<A>) => number
+export declare const capacity: <A>(self: Dequeue<A> | Enqueue<A>) => number
 ```
 
 Added in v1.0.0
@@ -149,7 +149,7 @@ Returns `true` if the `Queue` contains zero elements, `false` otherwise.
 **Signature**
 
 ```ts
-export declare const isEmpty: <A>(self: Queue<A>) => Effect.Effect<never, never, boolean>
+export declare const isEmpty: <A>(self: Dequeue<A> | Enqueue<A>) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -162,7 +162,7 @@ otherwise.
 **Signature**
 
 ```ts
-export declare const isFull: <A>(self: Queue<A>) => Effect.Effect<never, never, boolean>
+export declare const isFull: <A>(self: Dequeue<A> | Enqueue<A>) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -174,7 +174,7 @@ Returns `true` if `shutdown` has been called, otherwise returns `false`.
 **Signature**
 
 ```ts
-export declare const isShutdown: <A>(self: Queue<A>) => Effect.Effect<never, never, boolean>
+export declare const isShutdown: <A>(self: Dequeue<A> | Enqueue<A>) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -188,7 +188,7 @@ elements to be added to the queue.
 **Signature**
 
 ```ts
-export declare const size: <A>(self: Queue<A>) => Effect.Effect<never, never, number>
+export declare const size: <A>(self: Dequeue<A> | Enqueue<A>) => Effect.Effect<never, never, number>
 ```
 
 Added in v1.0.0
@@ -417,7 +417,7 @@ shutdown, the `Effect` will resume right away.
 **Signature**
 
 ```ts
-export declare const awaitShutdown: <A>(self: Queue<A>) => Effect.Effect<never, never, void>
+export declare const awaitShutdown: <A>(self: Dequeue<A> | Enqueue<A>) => Effect.Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -479,7 +479,7 @@ to `offer*` and `take*` will be interrupted immediately.
 **Signature**
 
 ```ts
-export declare const shutdown: <A>(self: Queue<A>) => Effect.Effect<never, never, void>
+export declare const shutdown: <A>(self: Dequeue<A> | Enqueue<A>) => Effect.Effect<never, never, void>
 ```
 
 Added in v1.0.0

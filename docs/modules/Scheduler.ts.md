@@ -12,15 +12,13 @@ Added in v1.0.0
 
 <h2 class="text-delta">Table of contents</h2>
 
-- [utils](#utils)
+- [models](#models)
   - [Scheduler (interface)](#scheduler-interface)
-  - [Task (interface)](#task-interface)
-  - [currentScheduler](#currentscheduler)
-  - [defaultScheduler](#defaultscheduler)
+  - [Task (type alias)](#task-type-alias)
 
 ---
 
-# utils
+# models
 
 ## Scheduler (interface)
 
@@ -34,34 +32,12 @@ export interface Scheduler {
 
 Added in v1.0.0
 
-## Task (interface)
+## Task (type alias)
 
 **Signature**
 
 ```ts
-export interface Task {
-  (): void
-}
-```
-
-Added in v1.0.0
-
-## currentScheduler
-
-**Signature**
-
-```ts
-export declare const currentScheduler: FiberRef<Scheduler>
-```
-
-Added in v1.0.0
-
-## defaultScheduler
-
-**Signature**
-
-```ts
-export declare const defaultScheduler: Scheduler
+export type Task = () => void
 ```
 
 Added in v1.0.0
