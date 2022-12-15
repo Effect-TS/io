@@ -1,5 +1,13 @@
 # @effect/io
 
+## 0.0.39
+
+### Patch Changes
+
+- [#115](https://github.com/Effect-TS/io/pull/115) [`70d73b6`](https://github.com/Effect-TS/io/commit/70d73b6bcfc9884c057c74b693dc0e030f402d90) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Change signature of Effect.raceAll to raise a defect on empty
+
+- [#117](https://github.com/Effect-TS/io/pull/117) [`fb749ab`](https://github.com/Effect-TS/io/commit/fb749abe5f1e180b737581388e0e4c30b38495b1) Thanks [@IMax153](https://github.com/IMax153)! - add Cause.flipCauseOption
+
 ## 0.0.38
 
 ### Patch Changes
