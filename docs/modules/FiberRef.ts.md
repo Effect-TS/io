@@ -30,6 +30,7 @@ Added in v1.0.0
   - [currentLoggers](#currentloggers)
   - [currentParallelism](#currentparallelism)
   - [currentRuntimeFlags](#currentruntimeflags)
+  - [currentScheduler](#currentscheduler)
   - [currentSupervisor](#currentsupervisor)
   - [interruptedCause](#interruptedcause)
 - [getters](#getters)
@@ -239,6 +240,16 @@ Added in v1.0.0
 
 ```ts
 export declare const currentRuntimeFlags: FiberRef<RuntimeFlags.RuntimeFlags>
+```
+
+Added in v1.0.0
+
+## currentScheduler
+
+**Signature**
+
+```ts
+export declare const currentScheduler: FiberRef<Scheduler.Scheduler>
 ```
 
 Added in v1.0.0

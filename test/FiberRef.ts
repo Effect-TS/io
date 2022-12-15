@@ -5,6 +5,7 @@ import * as Fiber from "@effect/io/Fiber"
 import * as FiberRef from "@effect/io/FiberRef"
 import type * as Runtime from "@effect/io/Runtime"
 import * as it from "@effect/io/test/utils/extend"
+import * as Chunk from "@fp-ts/data/Chunk"
 import * as Duration from "@fp-ts/data/Duration"
 import { constant, constTrue, identity, pipe } from "@fp-ts/data/Function"
 import * as Option from "@fp-ts/data/Option"
@@ -284,7 +285,7 @@ describe.concurrent("FiberRef", () => {
   it.scoped("its value is inherited in a trivial race", () =>
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(initial))
-      yield* $(pipe(fiberRef, FiberRef.set(update), Effect.raceAll<never, never, void>([])))
+      yield* $(Effect.raceAll([pipe(fiberRef, FiberRef.set(update))]))
       const result = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(result, update)
     }))
@@ -302,11 +303,11 @@ describe.concurrent("FiberRef", () => {
         Effect.zipRight(pipe(fiberRef, FiberRef.set(update2))),
         Effect.zipRight(loseTimeAndCpu)
       )
-      yield* $(pipe(loser1, Effect.raceAll([winner1])))
+      yield* $(Effect.raceAll([loser1, winner1]))
       const value1 = yield* $(pipe(FiberRef.get(fiberRef), Effect.zipLeft(pipe(fiberRef, FiberRef.set(initial)))))
       const winner2 = pipe(fiberRef, FiberRef.set(update1))
       const loser2 = pipe(fiberRef, FiberRef.set(update2), Effect.zipRight(Effect.fail(":-O")))
-      yield* $(pipe(loser2, Effect.raceAll([winner2])))
+      yield* $(Effect.raceAll([loser2, winner2]))
       const value2 = yield* $(pipe(FiberRef.get(fiberRef), Effect.zipLeft(pipe(fiberRef, FiberRef.set(initial)))))
       assert.strictEqual(value1, update1)
       assert.strictEqual(value2, update1)
@@ -319,7 +320,8 @@ describe.concurrent("FiberRef", () => {
       const winner1 = pipe(
         fiberRef,
         FiberRef.set(update1),
-        Effect.zipRight(pipe(latch, Deferred.succeed<void>(void 0)))
+        Effect.zipRight(pipe(latch, Deferred.succeed<void>(void 0))),
+        Effect.asUnit
       )
       const losers1 = pipe(
         Deferred.await(latch),
@@ -327,11 +329,11 @@ describe.concurrent("FiberRef", () => {
         Effect.zipRight(loseTimeAndCpu),
         Effect.replicate(n)
       )
-      yield* $(pipe(winner1, Effect.raceAll(losers1)))
+      yield* $(pipe(losers1, Chunk.prepend(winner1), Effect.raceAll))
       const value1 = yield* $(pipe(FiberRef.get(fiberRef), Effect.zipLeft(pipe(fiberRef, FiberRef.set(initial)))))
       const winner2 = pipe(fiberRef, FiberRef.set(update1))
       const losers2 = pipe(fiberRef, FiberRef.set(update1), Effect.zipRight(Effect.fail(":-O")), Effect.replicate(n))
-      yield* $(pipe(winner2, Effect.raceAll(losers2)))
+      yield* $(pipe(losers2, Chunk.prepend(winner2), Effect.raceAll))
       const value2 = yield* $(pipe(FiberRef.get(fiberRef), Effect.zipLeft(pipe(fiberRef, FiberRef.set(initial)))))
       assert.strictEqual(value1, update1)
       assert.strictEqual(value2, update1)
@@ -340,7 +342,7 @@ describe.concurrent("FiberRef", () => {
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(initial))
       const loser = pipe(fiberRef, FiberRef.set(update), Effect.zipRight(Effect.fail("darn")))
-      yield* $(pipe(loser, Effect.raceAll(Array.from({ length: 63 }, () => loser)), Effect.orElse(Effect.unit)))
+      yield* $(pipe(Effect.raceAll([loser, ...Array.from({ length: 63 }, () => loser)]), Effect.orElse(Effect.unit)))
       const result = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(result, initial)
     }))

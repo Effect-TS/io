@@ -1785,61 +1785,60 @@ export const partitionPar = <R, E, A, B>(f: (a: A) => Effect.Effect<R, E, B>) =>
 }
 
 /** @internal */
-export const raceAll = <R1, E1, A1>(effects: Iterable<Effect.Effect<R1, E1, A1>>) => {
+export const raceAll = <R, E, A>(all: Iterable<Effect.Effect<R, E, A>>) => {
   const trace = getCallTrace()
-  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1, E | E1, A | A1> => {
-    const inheritAll = (res: readonly [A | A1, Fiber.Fiber<E | E1, A | A1>]) =>
-      pipe(
-        internalFiber.inheritAll(res[1]),
-        core.as(res[0])
-      )
-    return pipe(
-      core.sync(() => Chunk.fromIterable(effects)),
-      core.flatMap((effects) =>
+  const list = Chunk.fromIterable(all)
+  if (!Chunk.isNonEmpty(list)) {
+    return core.dieSync(() => internalCause.IllegalArgumentException(`Received an empty collection of effects`))
+  }
+  const self = Chunk.headNonEmpty(list)
+  const effects = Chunk.tailNonEmpty(list)
+  const inheritAll = (res: readonly [A, Fiber.Fiber<E, A>]) =>
+    pipe(
+      internalFiber.inheritAll(res[1]),
+      core.as(res[0])
+    )
+  return pipe(
+    pipe(
+      core.deferredMake<E, readonly [A, Fiber.Fiber<E, A>]>(),
+      core.flatMap((done) =>
         pipe(
-          core.deferredMake<E | E1, readonly [A | A1, Fiber.Fiber<E | E1, A | A1>]>(),
-          core.flatMap((done) =>
-            pipe(
-              Ref.make(effects.length),
-              core.flatMap((fails) =>
-                core.uninterruptibleMask<R | R1, E | E1, A | A1>((restore) =>
+          Ref.make(effects.length),
+          core.flatMap((fails) =>
+            core.uninterruptibleMask<R, E, A>((restore) =>
+              pipe(
+                fork(core.interruptible(self)),
+                core.flatMap((head) =>
                   pipe(
-                    fork(core.interruptible(self)),
-                    core.flatMap((head) =>
+                    effects,
+                    core.forEach((effect) => fork(core.interruptible(effect))),
+                    core.map((tail) => pipe(tail, Chunk.prepend(head)) as Chunk.Chunk<Fiber.RuntimeFiber<E, A>>),
+                    core.tap((fibers) =>
                       pipe(
-                        effects,
-                        core.forEach((effect) => fork(core.interruptible(effect))),
-                        core.map((tail) =>
-                          pipe(tail, Chunk.prepend(head)) as Chunk.Chunk<Fiber.RuntimeFiber<E | E1, A | A1>>
-                        ),
-                        core.tap((fibers) =>
+                        fibers,
+                        Chunk.reduce(core.unit(), (effect, fiber) =>
+                          pipe(
+                            effect,
+                            core.zipRight(
+                              pipe(
+                                internalFiber._await(fiber),
+                                core.flatMap(raceAllArbiter(fibers, fiber, done, fails)),
+                                fork,
+                                core.asUnit
+                              )
+                            )
+                          ))
+                      )
+                    ),
+                    core.flatMap((fibers) =>
+                      pipe(
+                        restore(pipe(Deferred.await(done), core.flatMap(inheritAll))),
+                        core.onInterrupt(() =>
                           pipe(
                             fibers,
-                            Chunk.reduce(core.unit(), (effect, fiber) =>
-                              pipe(
-                                effect,
-                                core.zipRight(
-                                  pipe(
-                                    internalFiber._await(fiber),
-                                    core.flatMap(raceAllArbiter(fibers, fiber, done, fails)),
-                                    fork,
-                                    core.asUnit
-                                  )
-                                )
-                              ))
-                          )
-                        ),
-                        core.flatMap((fibers) =>
-                          pipe(
-                            restore(pipe(Deferred.await(done), core.flatMap(inheritAll))),
-                            core.onInterrupt(() =>
-                              pipe(
-                                fibers,
-                                Chunk.reduce(
-                                  core.unit(),
-                                  (effect, fiber) => pipe(effect, core.zipLeft(core.interruptFiber(fiber)))
-                                )
-                              )
+                            Chunk.reduce(
+                              core.unit(),
+                              (effect, fiber) => pipe(effect, core.zipLeft(core.interruptFiber(fiber)))
                             )
                           )
                         )
@@ -1852,8 +1851,8 @@ export const raceAll = <R1, E1, A1>(effects: Iterable<Effect.Effect<R1, E1, A1>>
           )
         )
       )
-    ).traced(trace)
-  }
+    )
+  ).traced(trace)
 }
 
 /**

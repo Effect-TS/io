@@ -2818,9 +2818,7 @@ export const race: <R2, E2, A2>(
  * @since 1.0.0
  * @category mutations
  */
-export const raceAll: <R1, E1, A1>(
-  effects: Iterable<Effect<R1, E1, A1>>
-) => <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, A1 | A> = fiberRuntime.raceAll
+export const raceAll: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, E, A> = fiberRuntime.raceAll
 
 /**
  * Returns an effect that races this effect with the specified effect,
