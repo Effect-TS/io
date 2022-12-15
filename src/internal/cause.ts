@@ -263,6 +263,41 @@ export const dieOption = <E>(self: Cause.Cause<E>): Option.Option<unknown> => {
 }
 
 /** @internal */
+export const flipCauseOption = <E>(self: Cause.Cause<Option.Option<E>>): Option.Option<Cause.Cause<E>> => {
+  return match<Option.Option<Cause.Cause<E>>, Option.Option<E>>(
+    Option.some(empty),
+    (failureOption) => pipe(failureOption, Option.map(fail)),
+    (defect) => Option.some(die(defect)),
+    (fiberId) => Option.some(interrupt(fiberId)),
+    (causeOption, annotation) => pipe(causeOption, Option.map((cause) => annotated(cause, annotation))),
+    (left, right) => {
+      if (Option.isSome(left) && Option.isSome(right)) {
+        return Option.some(sequential(left.value, right.value))
+      }
+      if (Option.isNone(left) && Option.isSome(right)) {
+        return Option.some(right.value)
+      }
+      if (Option.isSome(left) && Option.isNone(right)) {
+        return Option.some(left.value)
+      }
+      return Option.none
+    },
+    (left, right) => {
+      if (Option.isSome(left) && Option.isSome(right)) {
+        return Option.some(parallel(left.value, right.value))
+      }
+      if (Option.isNone(left) && Option.isSome(right)) {
+        return Option.some(right.value)
+      }
+      if (Option.isSome(left) && Option.isNone(right)) {
+        return Option.some(left.value)
+      }
+      return Option.none
+    }
+  )(self)
+}
+
+/** @internal */
 export const interruptOption = <E>(self: Cause.Cause<E>): Option.Option<FiberId.FiberId> => {
   return find((cause) =>
     cause._tag === "Interrupt" ?
