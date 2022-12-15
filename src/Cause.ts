@@ -597,6 +597,15 @@ export const failureOption: <E>(self: Cause<E>) => Option.Option<E> = internal.f
 export const failureOrCause: <E>(self: Cause<E>) => Either.Either<E, Cause<never>> = internal.failureOrCause
 
 /**
+ * Converts the specified `Cause<Option<E>>` to an `Option<Cause<E>>` by
+ * recursively stripping out any failures with the error `None`.
+ *
+ * @since 1.0.0
+ * @category getters
+ */
+export const flipCauseOption: <E>(self: Cause<Option.Option<E>>) => Option.Option<Cause<E>> = internal.flipCauseOption
+
+/**
  * Returns the defect associated with the first `Die` in this `Cause`, if one
  * exists.
  *
