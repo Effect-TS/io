@@ -226,7 +226,7 @@ export const foldLayer: <E, R2, E2, A2, A, R3, E3, A3>(
 export const foldCauseLayer: <E, A, R2, E2, A2, R3, E3, A3>(
   onFailure: (cause: Cause.Cause<E>) => Layer<R2, E2, A2>,
   onSuccess: (context: Context.Context<A>) => Layer<R3, E3, A3>
-) => <R>(self: Layer<R, E, A>) => Layer<R2 | R3 | R, E2 | E3, A2 | A3> = internal.foldCauseLayer
+) => <R>(self: Layer<R, E, A>) => Layer<R2 | R3 | R, E2 | E3, A2 & A3> = internal.foldCauseLayer
 
 /**
  * Creates a fresh version of this layer that will not be shared.
