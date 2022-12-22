@@ -60,16 +60,15 @@ export const setAndGet: <A>(value: A) => (self: Synchronized.Synchronized<A>) =>
   _ref.setAndGet
 
 /** @internal */
-export const modify: <A, B>(
-  f: (a: A) => readonly [B, A]
-) => (self: Synchronized.Synchronized<A>) => Effect.Effect<never, never, B> = _ref.modify
+export const modify = <A, B>(f: (a: A) => readonly [B, A]) => {
+  const trace = getCallTrace()
+  return (self: Synchronized.Synchronized<A>): Effect.Effect<never, never, B> => self.modify(f).traced(trace)
+}
 
 /** @internal */
 export const modifyEffect = <A, R, E, B>(f: (a: A) => Effect.Effect<R, E, readonly [B, A]>) => {
   const trace = getCallTrace()
-  return (self: Synchronized.Synchronized<A>): Effect.Effect<R, E, B> => {
-    return self.modifyEffect(f).traced(trace)
-  }
+  return (self: Synchronized.Synchronized<A>): Effect.Effect<R, E, B> => self.modifyEffect(f).traced(trace)
 }
 
 /** @internal */
