@@ -2708,8 +2708,8 @@ export const promise: <A>(evaluate: () => Promise<A>) => Effect<never, never, A>
  * @since 1.0.0
  * @category constructors
  */
-export const promiseAbort: <A>(evaluate: (signal: AbortSignal) => Promise<A>) => Effect<never, never, A> =
-  effect.promiseAbort
+export const promiseInterrupt: <A>(evaluate: (signal: AbortSignal) => Promise<A>) => Effect<never, never, A> =
+  effect.promiseInterrupt
 
 /**
  * Provides the effect with its required environment, which eliminates its
@@ -3931,10 +3931,10 @@ export const tryCatchPromise: <E, A>(
  * @since 1.0.0
  * @category constructors
  */
-export const tryCatchPromiseAbort: <E, A>(
+export const tryCatchPromiseInterrupt: <E, A>(
   evaluate: (signal: AbortSignal) => Promise<A>,
   onReject: (reason: unknown) => E
-) => Effect<never, E, A> = effect.tryCatchPromiseAbort
+) => Effect<never, E, A> = effect.tryCatchPromiseInterrupt
 
 /**
  * Executed `that` in case `self` fails with a `Cause` that doesn't contain
@@ -3966,8 +3966,8 @@ export const tryPromise: <A>(evaluate: () => Promise<A>) => Effect<never, unknow
  * @since 1.0.0
  * @category constructors
  */
-export const tryPromiseAbort: <A>(evaluate: (signal: AbortSignal) => Promise<A>) => Effect<never, unknown, A> =
-  effect.tryPromiseAbort
+export const tryPromiseInterrupt: <A>(evaluate: (signal: AbortSignal) => Promise<A>) => Effect<never, unknown, A> =
+  effect.tryPromiseInterrupt
 
 /**
  * Like `forEach` + `identity` with a tuple type.

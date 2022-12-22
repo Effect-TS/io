@@ -1648,7 +1648,7 @@ export const promise = <A>(evaluate: () => Promise<A>): Effect.Effect<never, nev
 }
 
 /** @internal */
-export const promiseAbort = <A>(evaluate: (signal: AbortSignal) => Promise<A>): Effect.Effect<never, never, A> => {
+export const promiseInterrupt = <A>(evaluate: (signal: AbortSignal) => Promise<A>): Effect.Effect<never, never, A> => {
   const trace = getCallTrace()
   return core.asyncInterrupt<never, never, A>((resolve) => {
     const controller = new AbortController()
@@ -2251,7 +2251,7 @@ export const tryCatchPromise = <E, A>(
 }
 
 /** @internal */
-export const tryCatchPromiseAbort = <E, A>(
+export const tryCatchPromiseInterrupt = <E, A>(
   evaluate: (signal: AbortSignal) => Promise<A>,
   onReject: (reason: unknown) => E
 ): Effect.Effect<never, E, A> => {
@@ -2287,7 +2287,9 @@ export const tryPromise = <A>(evaluate: () => Promise<A>): Effect.Effect<never, 
 }
 
 /** @internal */
-export const tryPromiseAbort = <A>(evaluate: (signal: AbortSignal) => Promise<A>): Effect.Effect<never, unknown, A> => {
+export const tryPromiseInterrupt = <A>(
+  evaluate: (signal: AbortSignal) => Promise<A>
+): Effect.Effect<never, unknown, A> => {
   const trace = getCallTrace()
   return pipe(
     attempt(() => {
