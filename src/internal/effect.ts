@@ -103,7 +103,7 @@ export const asyncOption = <R, E, A>(
   blockingOn: FiberId.FiberId = FiberId.none
 ): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
-  return core.asyncInterrupt<R, E, A>(
+  return core.asyncInterruptEither<R, E, A>(
     (cb) => {
       const option = register(cb)
       switch (option._tag) {
@@ -1650,7 +1650,7 @@ export const promise = <A>(evaluate: () => Promise<A>): Effect.Effect<never, nev
 /** @internal */
 export const promiseInterrupt = <A>(evaluate: (signal: AbortSignal) => Promise<A>): Effect.Effect<never, never, A> => {
   const trace = getCallTrace()
-  return core.asyncInterrupt<never, never, A>((resolve) => {
+  return core.asyncInterruptEither<never, never, A>((resolve) => {
     const controller = new AbortController()
     evaluate(controller.signal)
       .then((a) => resolve(core.succeed(a)))
@@ -2297,7 +2297,7 @@ export const tryPromiseInterrupt = <A>(
       return [controller, evaluate(controller.signal)] as const
     }),
     core.flatMap(([controller, promise]) =>
-      core.asyncInterrupt<never, unknown, A>((resolve) => {
+      core.asyncInterruptEither<never, unknown, A>((resolve) => {
         promise
           .then((a) => resolve(core.succeed(a)))
           .catch((e) => resolve(core.fail(e)))

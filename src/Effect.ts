@@ -507,12 +507,12 @@ export const asyncOption: <R, E, A>(
 ) => Effect<R, E, A> = effect.asyncOption
 
 /**
- * Imports an asynchronous side-effect into an effect. The side-effect has
- * the option of returning the value synchronously, which is useful in cases
- * where it cannot be determined if the effect is synchronous or asynchronous
- * until the side-effect is actually executed. The effect also has the option
- * of returning a canceler, which will be used by the runtime to cancel the
- * asynchronous effect if the fiber executing the effect is interrupted.
+ * Imports an asynchronous side-effect into an effect. It has the option of
+ * returning the value synchronously, which is useful in cases where it cannot
+ * be determined if the effect is synchronous or asynchronous until the register
+ * is actually executed. It also has the option of returning a canceler,
+ * which will be used by the runtime to cancel the asynchronous effect if the fiber
+ * executing the effect is interrupted.
  *
  * If the register function returns a value synchronously, then the callback
  * function `Effect<R, E, A> => void` must not be called. Otherwise the callback
@@ -525,8 +525,23 @@ export const asyncOption: <R, E, A>(
  * @since 1.0.0
  * @category constructors
  */
-export const asyncInterrupt: <R, E, A>(
+export const asyncInterruptEither: <R, E, A>(
   register: (callback: (effect: Effect<R, E, A>) => void) => Either.Either<Effect<R, never, void>, Effect<R, E, A>>,
+  blockingOn?: FiberId.FiberId
+) => Effect<R, E, A> = core.asyncInterruptEither
+
+/**
+ * Imports an asynchronous side-effect into an effect allowing control of interruption.
+ *
+ * The `FiberId` of the fiber that may complete the async callback may be
+ * provided to allow for better diagnostics.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const asyncInterrupt: <R, E, A>(
+  register: (callback: (effect: Effect<R, E, A>) => void) => Effect<R, never, void>,
   blockingOn?: FiberId.FiberId
 ) => Effect<R, E, A> = core.asyncInterrupt
 

@@ -514,7 +514,7 @@ describe.concurrent("Effect", () => {
   it.effect("asyncInterrupt cancelation", () =>
     Effect.gen(function*($) {
       const ref = MutableRef.make(0)
-      const effect = Effect.asyncInterrupt(() => {
+      const effect = Effect.asyncInterruptEither(() => {
         pipe(ref, MutableRef.set(MutableRef.get(ref) + 1))
         return Either.left(Effect.sync(() => {
           pipe(ref, MutableRef.set(MutableRef.get(ref) - 1))
