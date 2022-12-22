@@ -39,6 +39,7 @@ Added in v1.0.0
   - [async](#async)
   - [asyncEffect](#asynceffect)
   - [asyncInterrupt](#asyncinterrupt)
+  - [asyncInterruptEither](#asyncinterrupteither)
   - [asyncOption](#asyncoption)
   - [attempt](#attempt)
   - [blocking](#blocking)
@@ -95,7 +96,7 @@ Added in v1.0.0
   - [partition](#partition)
   - [partitionPar](#partitionpar)
   - [promise](#promise)
-  - [promiseAbort](#promiseabort)
+  - [promiseInterrupt](#promiseinterrupt)
   - [random](#random)
   - [randomWith](#randomwith)
   - [runtime](#runtime)
@@ -114,9 +115,9 @@ Added in v1.0.0
   - [takeWhile](#takewhile)
   - [tryCatch](#trycatch)
   - [tryCatchPromise](#trycatchpromise)
-  - [tryCatchPromiseAbort](#trycatchpromiseabort)
+  - [tryCatchPromiseInterrupt](#trycatchpromiseinterrupt)
   - [tryPromise](#trypromise)
-  - [tryPromiseAbort](#trypromiseabort)
+  - [tryPromiseInterrupt](#trypromiseinterrupt)
   - [tuple](#tuple)
   - [tuplePar](#tuplepar)
   - [unfold](#unfold)
@@ -789,12 +790,30 @@ Added in v1.0.0
 
 ## asyncInterrupt
 
-Imports an asynchronous side-effect into an effect. The side-effect has
-the option of returning the value synchronously, which is useful in cases
-where it cannot be determined if the effect is synchronous or asynchronous
-until the side-effect is actually executed. The effect also has the option
-of returning a canceler, which will be used by the runtime to cancel the
-asynchronous effect if the fiber executing the effect is interrupted.
+Imports an asynchronous side-effect into an effect allowing control of interruption.
+
+The `FiberId` of the fiber that may complete the async callback may be
+provided to allow for better diagnostics.
+
+**Signature**
+
+```ts
+export declare const asyncInterrupt: <R, E, A>(
+  register: (callback: (effect: Effect<R, E, A>) => void) => Effect<R, never, void>,
+  blockingOn?: FiberId.Runtime | FiberId.None | FiberId.Composite | undefined
+) => Effect<R, E, A>
+```
+
+Added in v1.0.0
+
+## asyncInterruptEither
+
+Imports an asynchronous side-effect into an effect. It has the option of
+returning the value synchronously, which is useful in cases where it cannot
+be determined if the effect is synchronous or asynchronous until the register
+is actually executed. It also has the option of returning a canceler,
+which will be used by the runtime to cancel the asynchronous effect if the fiber
+executing the effect is interrupted.
 
 If the register function returns a value synchronously, then the callback
 function `Effect<R, E, A> => void` must not be called. Otherwise the callback
@@ -806,7 +825,7 @@ provided to allow for better diagnostics.
 **Signature**
 
 ```ts
-export declare const asyncInterrupt: <R, E, A>(
+export declare const asyncInterruptEither: <R, E, A>(
   register: (callback: (effect: Effect<R, E, A>) => void) => Either.Either<Effect<R, never, void>, Effect<R, E, A>>,
   blockingOn?: FiberId.Runtime | FiberId.None | FiberId.Composite | undefined
 ) => Effect<R, E, A>
@@ -1622,14 +1641,14 @@ export declare const promise: <A>(evaluate: () => Promise<A>) => Effect<never, n
 
 Added in v1.0.0
 
-## promiseAbort
+## promiseInterrupt
 
 Like `promise` but allows for interruption via AbortSignal
 
 **Signature**
 
 ```ts
-export declare const promiseAbort: <A>(evaluate: (signal: AbortSignal) => Promise<A>) => Effect<never, never, A>
+export declare const promiseInterrupt: <A>(evaluate: (signal: AbortSignal) => Promise<A>) => Effect<never, never, A>
 ```
 
 Added in v1.0.0
@@ -1866,14 +1885,14 @@ export declare const tryCatchPromise: <E, A>(
 
 Added in v1.0.0
 
-## tryCatchPromiseAbort
+## tryCatchPromiseInterrupt
 
 Like `tryCatchPromise` but allows for interruption via AbortSignal
 
 **Signature**
 
 ```ts
-export declare const tryCatchPromiseAbort: <E, A>(
+export declare const tryCatchPromiseInterrupt: <E, A>(
   evaluate: (signal: AbortSignal) => Promise<A>,
   onReject: (reason: unknown) => E
 ) => Effect<never, E, A>
@@ -1894,14 +1913,16 @@ export declare const tryPromise: <A>(evaluate: () => Promise<A>) => Effect<never
 
 Added in v1.0.0
 
-## tryPromiseAbort
+## tryPromiseInterrupt
 
 Like `tryPromise` but allows for interruption via AbortSignal
 
 **Signature**
 
 ```ts
-export declare const tryPromiseAbort: <A>(evaluate: (signal: AbortSignal) => Promise<A>) => Effect<never, unknown, A>
+export declare const tryPromiseInterrupt: <A>(
+  evaluate: (signal: AbortSignal) => Promise<A>
+) => Effect<never, unknown, A>
 ```
 
 Added in v1.0.0
