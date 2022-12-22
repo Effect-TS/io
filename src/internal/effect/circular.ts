@@ -16,6 +16,7 @@ import * as OpCodes from "@effect/io/internal/opCodes/effect"
 import * as internalRef from "@effect/io/internal/ref"
 import * as _schedule from "@effect/io/internal/schedule"
 import * as supervisor from "@effect/io/internal/supervisor"
+import type * as Ref from "@effect/io/Ref"
 import type * as Synchronized from "@effect/io/Ref/Synchronized"
 import type * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"
@@ -742,6 +743,30 @@ export const synchronizedVariance = {
 }
 
 /** @internal */
+class SynchronizedImpl<A> implements Synchronized.Synchronized<A> {
+  readonly [SynchronizedTypeId] = synchronizedVariance
+  readonly [internalRef.RefTypeId] = internalRef.refVariance
+  constructor(
+    readonly ref: Ref.Ref<A>,
+    readonly withLock: <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  ) {}
+  modify<B>(f: (a: A) => readonly [B, A]): Effect.Effect<never, never, B> {
+    const trace = getCallTrace()
+    return this.modifyEffect((a) => core.succeed(f(a))).traced(trace)
+  }
+  modifyEffect<R, E, B>(f: (a: A) => Effect.Effect<R, E, readonly [B, A]>): Effect.Effect<R, E, B> {
+    const trace = getCallTrace()
+    return this.withLock(
+      pipe(
+        internalRef.get(this.ref),
+        core.flatMap(f),
+        core.flatMap(([b, a]) => pipe(this.ref, internalRef.set(a), core.as(b)))
+      )
+    ).traced(trace)
+  }
+}
+
+/** @internal */
 export const makeSynchronized = <A>(value: A): Effect.Effect<never, never, Synchronized.Synchronized<A>> => {
   const trace = getCallTrace()
   return core.sync(() => unsafeMakeSynchronized(value)).traced(trace)
@@ -751,25 +776,7 @@ export const makeSynchronized = <A>(value: A): Effect.Effect<never, never, Synch
 export const unsafeMakeSynchronized = <A>(value: A): Synchronized.Synchronized<A> => {
   const ref = internalRef.unsafeMake(value)
   const withLock = unsafeMakeLock()
-  return {
-    [SynchronizedTypeId]: synchronizedVariance,
-    [internalRef.RefTypeId]: internalRef.refVariance,
-    modify: <B>(f: (a: A) => readonly [B, A]): Effect.Effect<never, never, B> => {
-      const trace = getCallTrace()
-      return ref.modify(f).traced(trace)
-    },
-    modifyEffect: <R, E, B>(
-      f: (a: A) => Effect.Effect<R, E, readonly [B, A]>
-    ): Effect.Effect<R, E, B> => {
-      const trace = getCallTrace()
-      return pipe(
-        internalRef.get(ref),
-        core.flatMap(f),
-        core.flatMap(([b, a]) => pipe(ref, internalRef.set(a), core.as(b))),
-        withLock
-      ).traced(trace)
-    }
-  }
+  return new SynchronizedImpl(ref, withLock)
 }
 
 /** @internal */
