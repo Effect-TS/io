@@ -13,18 +13,21 @@ import * as FiberRuntime from "@effect/io/internal/fiberRuntime"
 import * as fiberScope from "@effect/io/internal/fiberScope"
 import * as OpCodes from "@effect/io/internal/opCodes/effect"
 import * as runtimeFlags from "@effect/io/internal/runtimeFlags"
-import * as Scheduler from "@effect/io/Scheduler"
 import * as _scheduler from "@effect/io/internal/scheduler"
 import * as _supervisor from "@effect/io/internal/supervisor"
 import type * as Runtime from "@effect/io/Runtime"
+import type * as Scheduler from "@effect/io/Scheduler"
 import * as Context from "@fp-ts/data/Context"
+import * as Equal from "@fp-ts/data/Equal"
 import { constVoid, identity, pipe } from "@fp-ts/data/Function"
 import * as Option from "@fp-ts/data/Option"
 
 /** @internal */
 export class AsyncFiber<E, A> implements Runtime.AsyncFiber<E, A> {
   readonly _tag = "AsyncFiber"
-  constructor(readonly fiber: FiberRuntime.FiberRuntime<E, A>) {}
+  constructor(readonly fiber: FiberRuntime.FiberRuntime<E, A>) {
+    Equal.considerByRef(this)
+  }
 }
 
 /** @internal */
@@ -33,7 +36,9 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
     readonly context: Context.Context<R>,
     readonly runtimeFlags: RuntimeFlags.RuntimeFlags,
     readonly fiberRefs: FiberRefs.FiberRefs
-  ) {}
+  ) {
+    Equal.considerByRef(this)
+  }
 
   unsafeFork = <E, A>(effect: Effect.Effect<R, E, A>, scheduler?: Scheduler.Scheduler) => {
     const fiberId = FiberId.unsafeMake()

@@ -95,7 +95,9 @@ export type Continuation =
 /** @internal */
 export class RevertFlags {
   readonly op = OpCodes.OP_REVERT_FLAGS
-  constructor(readonly patch: RuntimeFlagsPatch.RuntimeFlagsPatch) {}
+  constructor(readonly patch: RuntimeFlagsPatch.RuntimeFlagsPatch) {
+    Equal.considerByRef(this)
+  }
 }
 
 const effectVariance = {

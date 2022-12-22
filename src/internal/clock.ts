@@ -5,6 +5,7 @@ import * as core from "@effect/io/internal/core"
 import * as Context from "@fp-ts/data/Context"
 import type * as Duration from "@fp-ts/data/Duration"
 import * as Either from "@fp-ts/data/Either"
+import * as Equal from "@fp-ts/data/Equal"
 import { constFalse } from "@fp-ts/data/Function"
 
 /** @internal */
@@ -44,6 +45,10 @@ export const globalClockScheduler: Clock.ClockScheduler = {
 /** @internal */
 class ClockImpl implements Clock.Clock {
   readonly [ClockTypeId]: Clock.ClockTypeId = ClockTypeId
+
+  constructor() {
+    Equal.considerByRef(this)
+  }
 
   unsafeCurrentTimeMillis(): number {
     return new Date().getTime()

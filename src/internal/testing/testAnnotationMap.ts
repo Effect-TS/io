@@ -1,5 +1,6 @@
 import type * as TestAnnotation from "@effect/io/internal/testing/testAnnotation"
 import * as Chunk from "@fp-ts/data/Chunk"
+import * as Equal from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
 
 export const TestAnnotationMapTypeId = Symbol.for("@effect/test/TestAnnotationMap")
@@ -17,7 +18,9 @@ export interface TestAnnotationMap {
 
 class TestAnnotationMapImpl implements TestAnnotationMap {
   readonly [TestAnnotationMapTypeId]: TestAnnotationMapTypeId = TestAnnotationMapTypeId
-  constructor(readonly map: ReadonlyMap<TestAnnotation.TestAnnotation<unknown>, unknown>) {}
+  constructor(readonly map: ReadonlyMap<TestAnnotation.TestAnnotation<unknown>, unknown>) {
+    Equal.considerByRef(this)
+  }
 }
 
 export const isTestAnnotationMap = (u: unknown): u is TestAnnotationMap => {

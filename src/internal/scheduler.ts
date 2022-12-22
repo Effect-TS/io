@@ -1,10 +1,15 @@
 import type * as Scheduler from "@effect/io/Scheduler"
+import * as Equal from "@fp-ts/data/Equal"
 
 /** @internal */
 export class HighPriorityScheduler {
   running = false
   tasks: Array<Scheduler.Task> = []
   readonly promise = Promise.resolve(void 0)
+
+  constructor() {
+    Equal.considerByRef(this)
+  }
 
   starveInternal(depth: number) {
     const toRun = this.tasks
@@ -43,6 +48,10 @@ export const defaultScheduler: Scheduler.Scheduler = new HighPriorityScheduler()
 export class SyncScheduler {
   tasks: Array<Scheduler.Task> = []
   deferred = false
+
+  constructor() {
+    Equal.considerByRef(this)
+  }
 
   scheduleTask(task: Scheduler.Task) {
     if (this.deferred) {

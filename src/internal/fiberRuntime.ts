@@ -47,6 +47,8 @@ import * as HashSet from "@fp-ts/data/HashSet"
 import * as MutableQueue from "@fp-ts/data/MutableQueue"
 import * as Option from "@fp-ts/data/Option"
 
+import * as Equal from "@fp-ts/data/Equal"
+
 const fibersStarted = metric.counter("effect_fiber_started")
 const fiberSuccesses = metric.counter("effect_fiber_successes")
 const fiberFailures = metric.counter("effect_fiber_failures")
@@ -194,6 +196,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     runtimeFlags0: RuntimeFlags.RuntimeFlags,
     readonly runtime: Runtime<never>
   ) {
+    Equal.considerByRef(this)
     this._runtimeFlags = runtimeFlags0
     this._fiberId = fiberId
     this._fiberRefs = fiberRefs0

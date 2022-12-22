@@ -24,6 +24,8 @@ import * as Context from "@fp-ts/data/Context"
 import * as Duration from "@fp-ts/data/Duration"
 import { pipe } from "@fp-ts/data/Function"
 
+import * as Equal from "@fp-ts/data/Equal"
+
 /** @internal */
 const LayerSymbolKey = "@effect/io/Layer"
 
@@ -160,7 +162,9 @@ class MemoMap {
         readonly [Effect.Effect<never, any, any>, Scope.Scope.Finalizer]
       >
     >
-  ) {}
+  ) {
+    Equal.considerByRef(this)
+  }
 
   /**
    * Checks the memo map to see if a layer exists. If it is, immediately

@@ -1,19 +1,21 @@
 import * as Chunk from "@fp-ts/data/Chunk"
-import { equals } from "@fp-ts/data/Equal"
+import * as Equal from "@fp-ts/data/Equal"
 
 /** @internal */
 export class RingBuffer<T> {
   private values: Chunk.Chunk<T> = Chunk.empty()
   private ignored = 0
 
-  constructor(readonly size: number) {}
+  constructor(readonly size: number) {
+    Equal.considerByRef(this)
+  }
 
   push(value: T) {
     if (this.size === 0) {
       return false
     }
     if (this.values.length > 0) {
-      if (equals(value, Chunk.unsafeHead(this.values))) {
+      if (Equal.equals(value, Chunk.unsafeHead(this.values))) {
         return false
       }
       if (this.values.length - this.ignored >= this.size) {

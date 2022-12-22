@@ -6,6 +6,7 @@ import type * as MetricKey from "@effect/io/Metric/Key"
 import type * as MetricKeyType from "@effect/io/Metric/KeyType"
 import type * as MetricPair from "@effect/io/Metric/Pair"
 import type * as MetricRegistry from "@effect/io/Metric/Registry"
+import * as Equal from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
 import * as MutableHashMap from "@fp-ts/data/MutableHashMap"
@@ -27,6 +28,10 @@ class MetricRegistryImpl implements MetricRegistry.MetricRegistry {
     MetricKey.MetricKey<MetricKeyType.MetricKeyType.Untyped>,
     MetricHook.MetricHook.Root
   >()
+
+  constructor() {
+    Equal.considerByRef(this)
+  }
 
   snapshot(): HashSet.HashSet<MetricPair.MetricPair.Untyped> {
     const result: Array<MetricPair.MetricPair.Untyped> = []
