@@ -9,6 +9,7 @@ import * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
 import * as internalCause from "@effect/io/internal/cause"
 import * as core from "@effect/io/internal/core"
+import { currentScheduler } from "@effect/io/internal/core"
 import * as effect from "@effect/io/internal/effect"
 import * as internalFiber from "@effect/io/internal/fiber"
 import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
@@ -32,36 +33,37 @@ import * as Option from "@fp-ts/data/Option"
 
 /** @internal */
 export const unsafeMakeLock = () => {
-  let running = false
   const observers: Set<() => void> = new Set()
+  const runNext = () => {
+    const next = observers.values().next()
+    if (!next.done) {
+      observers.delete(next.value)
+      next.value()
+    }
+  }
   return <R, E, A>(self: Effect.Effect<R, E, A>) =>
-    core.asyncInterruptEither<R, E, A>((resume) => {
-      const withFinalizer = pipe(
-        self,
-        ensuring(
-          core.sync(() => {
-            running = false
-            const next = observers.values().next()
-            if (!next.done) {
-              next.value()
-            }
-          })
+    core.withFiberRuntime<R, E, A>((runtime) => {
+      const scheduler = runtime.getFiberRef(currentScheduler)
+      return core.asyncInterruptEither<R, E, A>((resume) => {
+        const withFinalizer = pipe(
+          self,
+          ensuring(core.sync(() => scheduler.scheduleTask(runNext)))
         )
-      )
-      if (!running) {
-        running = true
-        return Either.right(withFinalizer)
-      } else {
+        let interrupted = false
         const observer = () => {
-          if (!running) {
-            running = true
-            observers.delete(observer)
+          if (!interrupted) {
             resume(withFinalizer)
+          } else {
+            runNext()
           }
         }
         observers.add(observer)
-        return Either.left(core.sync(() => observers.delete(observer)))
-      }
+        scheduler.scheduleTask(runNext)
+        return Either.left(core.sync(() => {
+          interrupted = true
+          observers.delete(observer)
+        }))
+      })
     })
 }
 
