@@ -1071,7 +1071,9 @@ export class StackAnnotation implements Cause.Cause.StackAnnotation {
   constructor(
     readonly stack: Chunk.Chunk<string>,
     readonly execution: Chunk.Chunk<string>
-  ) {}
+  ) {
+    Equal.considerByRef(this)
+  }
 }
 
 /** @internal */
@@ -1093,7 +1095,9 @@ export class SpanAnnotation implements Cause.Cause.SpanAnnotation {
   readonly [SpanAnnotationTypeId]: Cause.SpanAnnotationTypeId = SpanAnnotationTypeId
   constructor(
     readonly currentSpanURI: Option.Option<string>
-  ) {}
+  ) {
+    Equal.considerByRef(this)
+  }
 }
 
 /** @internal */

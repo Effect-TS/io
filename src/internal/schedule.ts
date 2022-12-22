@@ -59,7 +59,9 @@ class ScheduleImpl<S, Env, In, Out> implements Schedule.Schedule<Env, In, Out> {
       input: In,
       state: S
     ) => Effect.Effect<Env, never, readonly [S, Out, ScheduleDecision.ScheduleDecision]>
-  ) {}
+  ) {
+    Equal.considerByRef(this)
+  }
 }
 
 /** @internal */
@@ -69,7 +71,9 @@ class ScheduleDriverImpl<Env, In, Out> implements Schedule.ScheduleDriver<Env, I
   constructor(
     readonly schedule: Schedule.Schedule<Env, In, Out>,
     readonly ref: Ref.Ref<readonly [Option.Option<Out>, any]>
-  ) {}
+  ) {
+    Equal.considerByRef(this)
+  }
 
   state(): Effect.Effect<never, never, unknown> {
     const trace = getCallTrace()

@@ -27,7 +27,9 @@ export class FiberRefsImpl implements FiberRefs.FiberRefs {
       FiberRef.FiberRef<any>,
       Chunk.NonEmptyChunk<readonly [FiberId.Runtime, any]>
     >
-  ) {}
+  ) {
+    Equal.considerByRef(this)
+  }
 }
 
 /** @internal */

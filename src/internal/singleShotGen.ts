@@ -1,8 +1,12 @@
+import * as Equal from "@fp-ts/data/Equal"
+
 /** @internal */
 export class SingleShotGen<T, A> implements Generator<T, A> {
   called = false
 
-  constructor(readonly self: T) {}
+  constructor(readonly self: T) {
+    Equal.considerByRef(this)
+  }
 
   next(a: A): IteratorResult<T, A> {
     return this.called ?
