@@ -64,6 +64,7 @@ Added in v1.0.0
   - [failureOption](#failureoption)
   - [failureOrCause](#failureorcause)
   - [failures](#failures)
+  - [flipCauseOption](#flipcauseoption)
   - [interruptOption](#interruptoption)
   - [interruptors](#interruptors)
   - [isDie](#isdie)
@@ -473,6 +474,19 @@ cause.
 
 ```ts
 export declare const failures: <E>(self: Cause<E>) => Chunk.Chunk<E>
+```
+
+Added in v1.0.0
+
+## flipCauseOption
+
+Converts the specified `Cause<Option<E>>` to an `Option<Cause<E>>` by
+recursively stripping out any failures with the error `None`.
+
+**Signature**
+
+```ts
+export declare const flipCauseOption: <E>(self: Cause<Option.Option<E>>) => Option.Option<Cause<E>>
 ```
 
 Added in v1.0.0
