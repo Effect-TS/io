@@ -353,7 +353,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
 
   await(): Effect.Effect<never, never, Exit.Exit<E, A>> {
     const trace = getCallTrace()
-    return core.asyncInterrupt<never, never, Exit.Exit<E, A>>((resume) => {
+    return core.asyncInterruptEither<never, never, Exit.Exit<E, A>>((resume) => {
       const cb = (exit: Exit.Exit<E, A>) => resume(core.succeed(exit))
       this.tell(
         FiberMessage.stateful((fiber, _) => {

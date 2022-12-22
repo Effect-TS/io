@@ -34,7 +34,7 @@ export const unsafeMakeLock = () => {
   let running = false
   const observers: Set<() => void> = new Set()
   return <R, E, A>(self: Effect.Effect<R, E, A>) =>
-    core.asyncInterrupt<R, E, A>((resume) => {
+    core.asyncInterruptEither<R, E, A>((resume) => {
       const withFinalizer = pipe(
         self,
         ensuring(

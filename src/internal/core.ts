@@ -283,7 +283,7 @@ export const async = <R, E, A>(
 }
 
 /** @internal */
-export const asyncInterrupt = <R, E, A>(
+export const asyncInterruptEither = <R, E, A>(
   register: (
     callback: (effect: Effect.Effect<R, E, A>) => void
   ) => Either.Either<Effect.Effect<R, never, void>, Effect.Effect<R, E, A>>,
@@ -301,6 +301,28 @@ export const asyncInterrupt = <R, E, A>(
           } else {
             cancelerRef = result.left
           }
+        },
+        blockingOn
+      ),
+      onInterrupt(() => cancelerRef)
+    )
+  }).traced(trace)
+}
+
+/** @internal */
+export const asyncInterrupt = <R, E, A>(
+  register: (
+    callback: (effect: Effect.Effect<R, E, A>) => void
+  ) => Effect.Effect<R, never, void>,
+  blockingOn: FiberId.FiberId = FiberId.none
+): Effect.Effect<R, E, A> => {
+  const trace = getCallTrace()
+  return suspendSucceed(() => {
+    let cancelerRef: Effect.Effect<R, never, void> = unit()
+    return pipe(
+      async<R, E, A>(
+        (resume) => {
+          cancelerRef = register(resume)
         },
         blockingOn
       ),
@@ -729,7 +751,7 @@ export const mapError = <E, E2>(f: (e: E) => E2) => {
 /** @internal */
 export const never = (): Effect.Effect<never, never, never> => {
   const trace = getCallTrace()
-  return asyncInterrupt<never, never, never>(() => {
+  return asyncInterruptEither<never, never, never>(() => {
     const interval = setInterval(() => {
       //
     }, 2 ** 31 - 1)
@@ -2281,7 +2303,7 @@ export const deferredInterruptWith = (fiberId: FiberId.FiberId) => {
 /** @internal */
 export const deferredAwait = <E, A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, E, A> => {
   const trace = getCallTrace()
-  return asyncInterrupt<never, E, A>((k) => {
+  return asyncInterruptEither<never, E, A>((k) => {
     const state = MutableRef.get(self.state)
     switch (state.op) {
       case deferred.OP_STATE_DONE: {
