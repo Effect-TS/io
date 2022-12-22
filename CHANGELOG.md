@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.0.42
+
+### Patch Changes
+
+- [#126](https://github.com/Effect-TS/io/pull/126) [`a8c216f`](https://github.com/Effect-TS/io/commit/a8c216f97de59463b3059b129e6442ada1fbb714) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Fix ByRef Equality
+
 ## 0.0.41
 
 ### Patch Changes
