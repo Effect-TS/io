@@ -1,5 +1,13 @@
 # @effect/io
 
+## 0.0.40
+
+### Patch Changes
+
+- [#121](https://github.com/Effect-TS/io/pull/121) [`d7cf2b2`](https://github.com/Effect-TS/io/commit/d7cf2b29b50b2cde9e9266a3347586a23682df42) Thanks [@IMax153](https://github.com/IMax153)! - expose Synchronized variance
+
+- [#118](https://github.com/Effect-TS/io/pull/118) [`5441c12`](https://github.com/Effect-TS/io/commit/5441c12bbf095dde4dd9788534dfa558832ff29a) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Fix Layer.foldCauseLayer signature
+
 ## 0.0.39
 
 ### Patch Changes
