@@ -1,5 +1,17 @@
 # @effect/io
 
+## 0.0.41
+
+### Patch Changes
+
+- [#122](https://github.com/Effect-TS/io/pull/122) [`9f289e2`](https://github.com/Effect-TS/io/commit/9f289e2f2426afa0aadfb89aaef1644e2b87ae86) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Simplify asyncInterrupt and add asyncInterruptEither
+
+- [#122](https://github.com/Effect-TS/io/pull/122) [`a728c33`](https://github.com/Effect-TS/io/commit/a728c3315017bc5432367c61de3ed94db0bc6326) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Rename promiseAbort variants to promiseInterrupt
+
+- [#124](https://github.com/Effect-TS/io/pull/124) [`c8f6f1b`](https://github.com/Effect-TS/io/commit/c8f6f1b1b079faa974534c99633056de32adcd9a) Thanks [@IMax153](https://github.com/IMax153)! - fix SynchronizedRef.modify
+
+- [#125](https://github.com/Effect-TS/io/pull/125) [`a909e80`](https://github.com/Effect-TS/io/commit/a909e809b7156ee2dc65d656a862cce486935281) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Improve lock
+
 ## 0.0.40
 
 ### Patch Changes
