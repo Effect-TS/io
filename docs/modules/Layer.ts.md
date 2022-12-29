@@ -60,8 +60,8 @@ Added in v1.0.0
   - [orDie](#ordie)
   - [orElse](#orelse)
 - [folding](#folding)
-  - [foldCauseLayer](#foldcauselayer)
-  - [foldLayer](#foldlayer)
+  - [matchCauseLayer](#matchcauselayer)
+  - [matchLayer](#matchlayer)
 - [getters](#getters)
   - [isFresh](#isfresh)
   - [isLayer](#islayer)
@@ -465,7 +465,7 @@ Added in v1.0.0
 
 # folding
 
-## foldCauseLayer
+## matchCauseLayer
 
 Feeds the error or output services of this layer into the input of either
 the specified `failure` or `success` layers, resulting in a new layer with
@@ -474,7 +474,7 @@ the inputs of this layer, and the error or outputs of the specified layer.
 **Signature**
 
 ```ts
-export declare const foldCauseLayer: <E, A, R2, E2, A2, R3, E3, A3>(
+export declare const matchCauseLayer: <E, A, R2, E2, A2, R3, E3, A3>(
   onFailure: (cause: Cause.Cause<E>) => Layer<R2, E2, A2>,
   onSuccess: (context: Context.Context<A>) => Layer<R3, E3, A3>
 ) => <R>(self: Layer<R, E, A>) => Layer<R2 | R3 | R, E2 | E3, A2 & A3>
@@ -482,7 +482,7 @@ export declare const foldCauseLayer: <E, A, R2, E2, A2, R3, E3, A3>(
 
 Added in v1.0.0
 
-## foldLayer
+## matchLayer
 
 Feeds the error or output services of this layer into the input of either
 the specified `failure` or `success` layers, resulting in a new layer with
@@ -491,7 +491,7 @@ the inputs of this layer, and the error or outputs of the specified layer.
 **Signature**
 
 ```ts
-export declare const foldLayer: <E, R2, E2, A2, A, R3, E3, A3>(
+export declare const matchLayer: <E, R2, E2, A2, A, R3, E3, A3>(
   onFailure: (error: E) => Layer<R2, E2, A2>,
   onSuccess: (context: Context.Context<A>) => Layer<R3, E3, A3>
 ) => <R>(self: Layer<R, E, A>) => Layer<R2 | R3 | R, E2 | E3, A2 & A3>

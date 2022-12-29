@@ -60,8 +60,8 @@ Added in v1.0.0
 - [finalization](#finalization)
   - [ensuring](#ensuring)
 - [folding](#folding)
-  - [fold](#fold)
-  - [foldEffect](#foldeffect)
+  - [reduce](#reduce)
+  - [reduceEffect](#reduceeffect)
 - [getter](#getter)
   - [driver](#driver)
 - [mapping](#mapping)
@@ -770,14 +770,14 @@ Added in v1.0.0
 
 # folding
 
-## fold
+## reduce
 
 Returns a new schedule that folds over the outputs of this one.
 
 **Signature**
 
 ```ts
-export declare const fold: <Out, Z>(
+export declare const reduce: <Out, Z>(
   zero: Z,
   f: (z: Z, out: Out) => Z
 ) => <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Z>
@@ -785,14 +785,14 @@ export declare const fold: <Out, Z>(
 
 Added in v1.0.0
 
-## foldEffect
+## reduceEffect
 
 Returns a new schedule that effectfully folds over the outputs of this one.
 
 **Signature**
 
 ```ts
-export declare const foldEffect: <Out, Env1, Z>(
+export declare const reduceEffect: <Out, Env1, Z>(
   zero: Z,
   f: (z: Z, out: Out) => Effect.Effect<Env1, never, Z>
 ) => <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env1 | Env, In, Z>
