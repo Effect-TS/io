@@ -190,7 +190,10 @@ describe.concurrent("Schedule", () => {
       Effect.gen(function*($) {
         const ref = yield* $(Ref.make(0))
         const result = yield* $(
-          pipe(alwaysFail(ref), Effect.foldEffect(Effect.succeed, () => Effect.succeed("it should never be a success")))
+          pipe(
+            alwaysFail(ref),
+            Effect.matchEffect(Effect.succeed, () => Effect.succeed("it should never be a success"))
+          )
         )
         assert.strictEqual(result, "Error: 1")
       }))
@@ -419,7 +422,7 @@ describe.concurrent("Schedule", () => {
           pipe(
             alwaysFail(ref),
             Effect.retryOrElse(Schedule.once(), ioFail),
-            Effect.foldEffect(Effect.succeed, () => Effect.succeed("it should not be a success"))
+            Effect.matchEffect(Effect.succeed, () => Effect.succeed("it should not be a success"))
           )
         )
         assert.strictEqual(result, "OrElseFailed")
@@ -437,7 +440,7 @@ describe.concurrent("Schedule", () => {
           pipe(
             alwaysFail(ref),
             Effect.retryOrElseEither(Schedule.once(), ioFail),
-            Effect.foldEffect(Effect.succeed, () => Effect.succeed("it should not be a success"))
+            Effect.matchEffect(Effect.succeed, () => Effect.succeed("it should not be a success"))
           )
         )
         assert.strictEqual(result, "OrElseFailed")
@@ -456,7 +459,7 @@ describe.concurrent("Schedule", () => {
           pipe(
             alwaysFail(ref),
             Effect.retry(Schedule.recurs(0)),
-            Effect.foldEffect(Effect.succeed, () => Effect.succeed("it should not be a success"))
+            Effect.matchEffect(Effect.succeed, () => Effect.succeed("it should not be a success"))
           )
         )
         assert.strictEqual(result, "Error: 1")
@@ -479,7 +482,7 @@ describe.concurrent("Schedule", () => {
           pipe(
             alwaysFail(ref),
             Effect.retry(Schedule.once()),
-            Effect.foldEffect(Effect.succeed, () => Effect.succeed("it should not be a success"))
+            Effect.matchEffect(Effect.succeed, () => Effect.succeed("it should not be a success"))
           )
         )
         assert.strictEqual(result, "Error: 2")
@@ -885,8 +888,8 @@ const runCollectLoop = <Env, In, Out>(
   const tail = Chunk.tailNonEmpty(input)
   return pipe(
     driver.next(head),
-    Effect.foldEffect(
-      () => pipe(driver.last(), Effect.fold(() => acc, (b) => pipe(acc, Chunk.append(b)))),
+    Effect.matchEffect(
+      () => pipe(driver.last(), Effect.match(() => acc, (b) => pipe(acc, Chunk.append(b)))),
       (b) => runCollectLoop(driver, tail, pipe(acc, Chunk.append(b)))
     )
   )

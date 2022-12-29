@@ -235,7 +235,7 @@ export const acquireUseRelease = <R, E, A, R2, E2, A2, R3, X>(
           flatMap((exit) =>
             pipe(
               suspendSucceed(() => release(a, exit)),
-              foldCauseEffect(
+              matchCauseEffect(
                 (cause) => {
                   switch (exit.op) {
                     case OpCodes.OP_FAILURE: {
@@ -352,7 +352,7 @@ export const catchAllCause = <E, R2, E2, A2>(
 export const catchAll = <E, R2, E2, A2>(f: (e: E) => Effect.Effect<R2, E2, A2>) => {
   const trace = getCallTrace()
   return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R2 | R, E2, A2 | A> => {
-    return pipe(self, foldEffect(f, succeed)).traced(trace)
+    return pipe(self, matchEffect(f, succeed)).traced(trace)
   }
 }
 
@@ -362,7 +362,7 @@ export const catchSome = <E, R2, E2, A2>(pf: (e: E) => Option.Option<Effect.Effe
   return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, A | A2> => {
     return pipe(
       self,
-      foldCauseEffect(
+      matchCauseEffect(
         (cause): Effect.Effect<R2, E | E2, A2> => {
           const either = internalCause.failureOrCause(cause)
           switch (either._tag) {
@@ -413,7 +413,7 @@ export const either = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, 
   const trace = getCallTrace()
   return pipe(
     self,
-    foldEffect(
+    matchEffect(
       (e) => succeed(Either.left(e)),
       (a) => succeed(Either.right(a))
     )
@@ -439,7 +439,7 @@ export const environmentWithEffect = <R, R0, E, A>(
 /** @internal */
 export const exit = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Exit.Exit<E, A>> => {
   const trace = getCallTrace()
-  return pipe(self, foldCause(failCause, succeed)).traced(trace) as Effect.Effect<R, never, Exit.Exit<E, A>>
+  return pipe(self, matchCause(failCause, succeed)).traced(trace) as Effect.Effect<R, never, Exit.Exit<E, A>>
 }
 
 /** @internal */
@@ -510,11 +510,11 @@ export const flatten = <R, E, R1, E1, A>(self: Effect.Effect<R, E, Effect.Effect
 /** @internal */
 export const flip = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, A, E> => {
   const trace = getCallTrace()
-  return pipe(self, foldEffect(succeed, fail)).traced(trace)
+  return pipe(self, matchEffect(succeed, fail)).traced(trace)
 }
 
 /** @internal */
-export const foldCause = <E, A2, A, A3>(
+export const matchCause = <E, A2, A, A3>(
   onFailure: (cause: Cause.Cause<E>) => A2,
   onSuccess: (a: A) => A3
 ) => {
@@ -522,7 +522,7 @@ export const foldCause = <E, A2, A, A3>(
   return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, A2 | A3> =>
     pipe(
       self,
-      foldCauseEffect(
+      matchCauseEffect(
         (cause) => succeed(onFailure(cause)),
         (a) => succeed(onSuccess(a))
       )
@@ -530,7 +530,7 @@ export const foldCause = <E, A2, A, A3>(
 }
 
 /** @internal */
-export const foldCauseEffect = <E, A, R2, E2, A2, R3, E3, A3>(
+export const matchCauseEffect = <E, A, R2, E2, A2, R3, E3, A3>(
   onFailure: (cause: Cause.Cause<E>) => Effect.Effect<R2, E2, A2>,
   onSuccess: (a: A) => Effect.Effect<R3, E3, A3>
 ) => {
@@ -551,7 +551,7 @@ export const foldCauseEffect = <E, A, R2, E2, A2, R3, E3, A3>(
 }
 
 /** @internal */
-export const foldEffect = <E, A, R2, E2, A2, R3, E3, A3>(
+export const matchEffect = <E, A, R2, E2, A2, R3, E3, A3>(
   onFailure: (e: E) => Effect.Effect<R2, E2, A2>,
   onSuccess: (a: A) => Effect.Effect<R3, E3, A3>
 ) => {
@@ -559,7 +559,7 @@ export const foldEffect = <E, A, R2, E2, A2, R3, E3, A3>(
   return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2 | R3, E2 | E3, A2 | A3> => {
     return pipe(
       self,
-      foldCauseEffect(
+      matchCauseEffect(
         (cause) => {
           const either = internalCause.failureOrCause(cause)
           switch (either._tag) {
@@ -732,7 +732,7 @@ export const mapError = <E, E2>(f: (e: E) => E2) => {
   return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E2, A> => {
     return pipe(
       self,
-      foldCauseEffect(
+      matchCauseEffect(
         (cause) => {
           const either = internalCause.failureOrCause(cause)
           switch (either._tag) {
@@ -784,12 +784,12 @@ export const onExit = <E, A, R2, X>(cleanup: (exit: Exit.Exit<E, A>) => Effect.E
     return uninterruptibleMask((restore) =>
       pipe(
         restore(self),
-        foldCauseEffect(
+        matchCauseEffect(
           (cause1) => {
             const result = exitFailCause(cause1)
             return pipe(
               cleanup(result),
-              foldCauseEffect(
+              matchCauseEffect(
                 (cause2) => exitFailCause(internalCause.sequential(cause1, cause2)),
                 () => result
               )
@@ -844,7 +844,7 @@ export const orDie = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, n
 export const orDieWith = <E>(f: (e: E) => unknown) => {
   const trace = getCallTrace()
   return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, A> => {
-    return pipe(self, foldEffect((e) => die(f(e)), succeed)).traced(trace)
+    return pipe(self, matchEffect((e) => die(f(e)), succeed)).traced(trace)
   }
 }
 
@@ -857,7 +857,7 @@ export const tryOrElse = <R2, E2, A2, A, R3, E3, A3>(
   return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2 | R3, E2 | E3, A2 | A3> => {
     return pipe(
       self,
-      foldCauseEffect(
+      matchCauseEffect(
         (cause) => {
           const option = internalCause.keepDefects(cause)
           switch (option._tag) {

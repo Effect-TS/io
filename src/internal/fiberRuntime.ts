@@ -1378,7 +1378,7 @@ export const existsPar = <R, E, A>(f: (a: A) => Effect.Effect<R, E, boolean>) =>
     return pipe(
       elements,
       forEachPar((a) => pipe(f(a), core.ifEffect(core.fail(_existsParFound), core.unit()))),
-      core.foldEffect(
+      core.matchEffect(
         (e) => e === _existsParFound ? core.succeed(true) : core.fail(e),
         () => core.succeed(false)
       )
@@ -1490,7 +1490,7 @@ const forEachParUnboundedDiscard = <R, E, A, _>(f: (a: A) => Effect.Effect<R, E,
               pipe(
                 graft(pipe(
                   restore(core.suspendSucceed(() => f(a))),
-                  core.foldCauseEffect(
+                  core.matchCauseEffect(
                     (cause) => pipe(deferred, core.deferredFail<void>(void 0), core.zipRight(core.failCause(cause))),
                     () => {
                       if (ref + 1 === size) {
@@ -1512,7 +1512,7 @@ const forEachParUnboundedDiscard = <R, E, A, _>(f: (a: A) => Effect.Effect<R, E,
           core.flatMap((fibers) =>
             pipe(
               restore(core.deferredAwait(deferred)),
-              core.foldCauseEffect(
+              core.matchCauseEffect(
                 (cause) =>
                   pipe(
                     fibers,
@@ -1743,7 +1743,7 @@ export function onDone<E, A, R1, X1, R2, X2>(
     return core.uninterruptibleMask((restore) =>
       pipe(
         restore(self),
-        core.foldEffect(
+        core.matchEffect(
           (e) => restore(onError(e)),
           (a) => restore(onSuccess(a))
         ),
@@ -1764,7 +1764,7 @@ export function onDoneCause<E, A, R1, X1, R2, X2>(
     return core.uninterruptibleMask((restore) =>
       pipe(
         restore(self),
-        core.foldCauseEffect(
+        core.matchCauseEffect(
           (c) => restore(onCause(c)),
           (a) => restore(onSuccess(a))
         ),
@@ -2010,7 +2010,7 @@ export const some = <R, E, A>(
   const trace = getCallTrace()
   return pipe(
     self,
-    core.foldEffect(
+    core.matchEffect(
       (e) => core.fail(Option.some(e)),
       (option) => {
         switch (option._tag) {
@@ -2091,7 +2091,7 @@ export const unsome = <R, E, A>(
   const trace = getCallTrace()
   return pipe(
     self,
-    core.foldEffect(
+    core.matchEffect(
       (option) => {
         switch (option._tag) {
           case "None": {

@@ -363,7 +363,7 @@ describe.concurrent("Effect", () => {
       const result = yield* $(pipe(
         [1, 2, 3],
         Effect.forEachParDiscard((n) => pipe(task(started, trigger, n), Effect.uninterruptible)),
-        Effect.foldCause(Cause.failures, () => Chunk.empty<number>())
+        Effect.matchCause(Cause.failures, () => Chunk.empty<number>())
       ))
       assert.deepStrictEqual(Array.from(result), [1, 2, 3])
     }))

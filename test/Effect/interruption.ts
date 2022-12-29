@@ -272,7 +272,7 @@ describe.concurrent("Effect", () => {
         pipe(
           release,
           Effect.zipRight(pipe(Effect.never(), Effect.interruptible)),
-          Effect.foldCauseEffect(
+          Effect.matchCauseEffect(
             (cause) => pipe(recovered, Ref.set(Cause.isInterrupted(cause))),
             () => pipe(recovered, Ref.set(false))
           ),

@@ -46,7 +46,7 @@ export const absorbWith = <E>(f: (e: E) => unknown) => {
   return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, unknown, A> => {
     return pipe(
       sandbox(self),
-      core.foldEffect((cause) => core.fail(pipe(cause, internalCause.squashWith(f))), core.succeed)
+      core.matchEffect((cause) => core.fail(pipe(cause, internalCause.squashWith(f))), core.succeed)
     ).traced(trace)
   }
 }
@@ -167,7 +167,7 @@ export const catchSomeCause = <E, R2, E2, A2>(
   return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, A | A2> => {
     return pipe(
       self,
-      core.foldCauseEffect(
+      core.matchCauseEffect(
         (cause): Effect.Effect<R2, E | E2, A2> => {
           const option = f(cause)
           switch (option._tag) {
@@ -216,7 +216,7 @@ export const catchTag = <K extends E["_tag"] & string, E extends { _tag: string 
 /** @internal */
 export const cause = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Cause.Cause<E>> => {
   const trace = getCallTrace()
-  return pipe(self, core.foldCause(identity, () => internalCause.empty)).traced(trace)
+  return pipe(self, core.matchCause(identity, () => internalCause.empty)).traced(trace)
 }
 
 /** @internal */
@@ -775,12 +775,12 @@ export const flipWith = <R, A, E, R2, A2, E2>(f: (effect: Effect.Effect<R, A, E>
 }
 
 /** @internal */
-export const fold = <E, A, A2, A3>(onFailure: (error: E) => A2, onSuccess: (value: A) => A3) => {
+export const match = <E, A, A2, A3>(onFailure: (error: E) => A2, onSuccess: (value: A) => A3) => {
   const trace = getCallTrace()
   return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, A2 | A3> => {
     return pipe(
       self,
-      core.foldEffect(
+      core.matchEffect(
         (e) => core.succeed(onFailure(e)),
         (a) => core.succeed(onSuccess(a))
       )
@@ -816,7 +816,7 @@ export const forEachEffect = <A, R1, E1, B>(f: (a: A) => Effect.Effect<R1, E1, B
   return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1, E1, Option.Option<B>> => {
     return pipe(
       self,
-      core.foldCauseEffect(
+      core.matchCauseEffect(
         () => core.succeed(Option.none),
         (a) => pipe(f(a), core.map(Option.some))
       )
@@ -960,7 +960,7 @@ export const head = <R, E, A>(
   const trace = getCallTrace()
   return pipe(
     self,
-    core.foldEffect(
+    core.matchEffect(
       (e) => core.fail(Option.some(e)),
       (as) => {
         const iterator = as[Symbol.iterator]()
@@ -977,7 +977,7 @@ export const head = <R, E, A>(
 /** @internal */
 export const ignore = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, void> => {
   const trace = getCallTrace()
-  return pipe(self, fold(constVoid, constVoid)).traced(trace)
+  return pipe(self, match(constVoid, constVoid)).traced(trace)
 }
 
 /** @internal */
@@ -985,7 +985,7 @@ export const ignoreLogged = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effe
   const trace = getCallTrace()
   return pipe(
     self,
-    core.foldCauseEffect(
+    core.matchCauseEffect(
       (cause) =>
         logDebugCauseMessage(
           "An error was silently ignored because it is not anticipated to be useful",
@@ -1006,13 +1006,13 @@ export const inheritFiberRefs = (childFiberRefs: FiberRefs.FiberRefs) => {
 /** @internal */
 export const isFailure = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, boolean> => {
   const trace = getCallTrace()
-  return pipe(self, fold(constTrue, constFalse)).traced(trace)
+  return pipe(self, match(constTrue, constFalse)).traced(trace)
 }
 
 /** @internal */
 export const isSuccess = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, boolean> => {
   const trace = getCallTrace()
-  return pipe(self, fold(constFalse, constTrue)).traced(trace)
+  return pipe(self, match(constFalse, constTrue)).traced(trace)
 }
 
 /** @internal */
@@ -1037,7 +1037,7 @@ export const left = <R, E, A, B>(
   const trace = getCallTrace()
   return pipe(
     self,
-    core.foldEffect(
+    core.matchEffect(
       (e) => core.fail(Either.left(e)),
       (either) => {
         switch (either._tag) {
@@ -1398,7 +1398,7 @@ export const mapBoth = <E, A, E2, A2>(f: (e: E) => E2, g: (a: A) => A2) => {
   return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E2, A2> => {
     return pipe(
       self,
-      core.foldEffect(
+      core.matchEffect(
         (e) => core.failSync(() => f(e)),
         (a) => core.sync(() => g(a))
       )
@@ -1412,7 +1412,7 @@ export const mapErrorCause = <E, E2>(f: (cause: Cause.Cause<E>) => Cause.Cause<E
   return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E2, A> => {
     return pipe(
       self,
-      core.foldCauseEffect((c) => core.failCauseSync(() => f(c)), core.succeed)
+      core.matchCauseEffect((c) => core.failCauseSync(() => f(c)), core.succeed)
     ).traced(trace)
   }
 }
@@ -1456,7 +1456,7 @@ export const memoize = <R, E, A>(
 /** @internal */
 export const merge = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, E | A> => {
   const trace = getCallTrace()
-  return pipe(self, core.foldEffect((e) => core.succeed(e), core.succeed)).traced(trace)
+  return pipe(self, core.matchEffect((e) => core.succeed(e), core.succeed)).traced(trace)
 }
 
 /** @internal */
@@ -1483,7 +1483,7 @@ export const none = <R, E, A>(
   const trace = getCallTrace()
   return pipe(
     self,
-    core.foldEffect(
+    core.matchEffect(
       (e) => core.fail(Option.some(e)),
       (option) => {
         switch (option._tag) {
@@ -1530,7 +1530,7 @@ export const option = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, 
   const trace = getCallTrace()
   return pipe(
     self,
-    core.foldEffect(
+    core.matchEffect(
       () => core.succeed(Option.none),
       (a) => core.succeed(Option.some(a))
     )
@@ -1542,7 +1542,7 @@ export const orDieKeep = <R, E, A>(self: Effect.Effect<R, E, A>) => {
   const trace = getCallTrace()
   return pipe(
     self,
-    core.foldCauseEffect(
+    core.matchCauseEffect(
       (cause) => core.failCause(pipe(cause, internalCause.flatMap(internalCause.die))),
       core.succeed
     )
@@ -1608,7 +1608,7 @@ export const parallelErrors = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Ef
   const trace = getCallTrace()
   return pipe(
     self,
-    core.foldCauseEffect((cause) => {
+    core.matchCauseEffect((cause) => {
       const errors = Chunk.fromIterable(internalCause.failures(cause))
       return errors.length === 0
         ? core.failCause(cause as Cause.Cause<never>)
@@ -1860,7 +1860,7 @@ export const right = <R, E, A, B>(
   const trace = getCallTrace()
   return pipe(
     self,
-    core.foldEffect(
+    core.matchEffect(
       (e) => core.fail(Either.right(e)),
       (either) => {
         switch (either._tag) {
@@ -1893,7 +1893,7 @@ export const sandbox = <R, E, A>(
   self: Effect.Effect<R, E, A>
 ): Effect.Effect<R, Cause.Cause<E>, A> => {
   const trace = getCallTrace()
-  return pipe(self, core.foldCauseEffect(core.fail, core.succeed)).traced(trace)
+  return pipe(self, core.matchCauseEffect(core.fail, core.succeed)).traced(trace)
 }
 
 /** @internal */
@@ -2084,7 +2084,7 @@ export const tapBoth = <E, A, R2, E2, X, R3, E3, X1>(
   return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2 | R3, E | E2 | E3, A> => {
     return pipe(
       self,
-      core.foldCauseEffect(
+      core.matchCauseEffect(
         (cause) => {
           const either = internalCause.failureOrCause(cause)
           switch (either._tag) {
@@ -2108,7 +2108,7 @@ export const tapDefect = <R2, E2, X>(f: (cause: Cause.Cause<never>) => Effect.Ef
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, A> => {
     return pipe(
       self,
-      core.foldCauseEffect(
+      core.matchCauseEffect(
         (cause) => pipe(f(internalCause.stripFailures(cause)), core.zipRight(core.failCause(cause))),
         core.succeed
       )
@@ -2124,7 +2124,7 @@ export const tapEither = <E, A, R2, E2, X>(
   return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, A> => {
     return pipe(
       self,
-      core.foldCauseEffect(
+      core.matchCauseEffect(
         (cause) => {
           const either = internalCause.failureOrCause(cause)
           switch (either._tag) {
@@ -2148,7 +2148,7 @@ export const tapError = <E, R2, E2, X>(f: (e: E) => Effect.Effect<R2, E2, X>) =>
   return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, A> => {
     return pipe(
       self,
-      core.foldCauseEffect(
+      core.matchCauseEffect(
         (cause) => {
           const either = internalCause.failureOrCause(cause)
           switch (either._tag) {
@@ -2174,7 +2174,7 @@ export const tapErrorCause = <E, R2, E2, X>(
   return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, A> => {
     return pipe(
       self,
-      core.foldCauseEffect(
+      core.matchCauseEffect(
         (cause) => pipe(f(cause), core.zipRight(core.failCause(cause))),
         core.succeed
       )
@@ -2369,7 +2369,7 @@ export const unleft = <R, E, B, A>(
   const trace = getCallTrace()
   return pipe(
     self,
-    core.foldEffect(
+    core.matchEffect(
       (either) => {
         switch (either._tag) {
           case "Left": {
@@ -2445,7 +2445,7 @@ export const unright = <R, B, E, A>(
   const trace = getCallTrace()
   return pipe(
     self,
-    core.foldEffect(
+    core.matchEffect(
       (either) => {
         switch (either._tag) {
           case "Left": {

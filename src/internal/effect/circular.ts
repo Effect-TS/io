@@ -199,11 +199,11 @@ export const ensuring = <R1, X>(finalizer: Effect.Effect<R1, never, X>) => {
     core.uninterruptibleMask((restore) =>
       pipe(
         restore(self),
-        core.foldCauseEffect(
+        core.matchCauseEffect(
           (cause1) =>
             pipe(
               finalizer,
-              core.foldCauseEffect(
+              core.matchCauseEffect(
                 (cause2) => core.failCause(internalCause.sequential(cause1, cause2)),
                 () => core.failCause(cause1)
               )
@@ -661,7 +661,7 @@ export const zipWithPar = <R2, E2, A2, A, B>(
           core.flatMap(([left, right]) =>
             pipe(
               restore(core.deferredAwait(deferred)),
-              core.foldCauseEffect(
+              core.matchCauseEffect(
                 (cause) =>
                   pipe(
                     fiberRuntime.fiberInterruptFork(left),
@@ -708,7 +708,7 @@ const forkZipWithPar = <R, E, A>(
 ): Effect.Effect<R, never, Fiber.Fiber<E, A>> => {
   return pipe(
     graft(restore(self)),
-    core.foldCauseEffect(
+    core.matchCauseEffect(
       (cause) =>
         pipe(
           deferred,
