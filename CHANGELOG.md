@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.0.45
+
+### Patch Changes
+
+- [#135](https://github.com/Effect-TS/io/pull/135) [`1acb36b`](https://github.com/Effect-TS/io/commit/1acb36be8449be65ca972ed275a543f13292309c) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Avoid useless checks in Semaphore
+
 ## 0.0.44
 
 ### Patch Changes
