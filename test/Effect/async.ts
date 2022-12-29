@@ -73,14 +73,14 @@ describe.concurrent("Effect", () => {
       const runtime = yield* $(Effect.runtime<never>())
       const fiber = yield* $(pipe(
         Effect.async<never, never, void>((cb) =>
-          runtime.unsafeRunAsync(pipe(
+          runtime.unsafeRun(pipe(
             Deferred.await(step),
             Effect.zipRight(Effect.sync(() => cb(pipe(unexpectedPlace, Ref.update(Chunk.prepend(1))))))
           ))
         ),
         Effect.ensuring(Effect.async<never, never, void>(() => {
           // The callback is never called so this never completes
-          runtime.unsafeRunAsync(pipe(step, Deferred.succeed<void>(undefined)))
+          runtime.unsafeRun(pipe(step, Deferred.succeed<void>(undefined)))
         })),
         Effect.ensuring(pipe(unexpectedPlace, Ref.update(Chunk.prepend(2)))),
         Effect.forkDaemon
@@ -97,7 +97,7 @@ describe.concurrent("Effect", () => {
       const runtime = yield* $(Effect.runtime<never>())
       const fiber = yield* $(pipe(
         Effect.asyncOption<never, never, void>((cb) => {
-          runtime.unsafeRunAsync(pipe(
+          runtime.unsafeRun(pipe(
             Deferred.await(step),
             Effect.zipRight(Effect.sync(() => cb(pipe(unexpectedPlace, Ref.update(Chunk.prepend(1))))))
           ))
@@ -106,7 +106,7 @@ describe.concurrent("Effect", () => {
         Effect.flatMap(() =>
           Effect.async<never, never, void>(() => {
             // The callback is never called so this never completes
-            runtime.unsafeRunAsync(pipe(step, Deferred.succeed<void>(void 0)))
+            runtime.unsafeRun(pipe(step, Deferred.succeed<void>(void 0)))
           })
         ),
         Effect.ensuring(pipe(unexpectedPlace, Ref.update(Chunk.prepend(2)))),

@@ -187,13 +187,13 @@ Added in v1.0.0
   - [unrefineWith](#unrefinewith)
 - [execution](#execution)
   - [unsafeFork](#unsafefork)
-  - [unsafeRunAsync](#unsaferunasync)
-  - [unsafeRunAsyncWith](#unsaferunasyncwith)
+  - [unsafeRun](#unsaferun)
   - [unsafeRunPromise](#unsaferunpromise)
+  - [unsafeRunPromiseEither](#unsaferunpromiseeither)
   - [unsafeRunPromiseExit](#unsaferunpromiseexit)
   - [unsafeRunSync](#unsaferunsync)
+  - [unsafeRunSyncEither](#unsaferunsynceither)
   - [unsafeRunSyncExit](#unsaferunsyncexit)
-  - [unsafeRunWith](#unsaferunwith)
 - [filtering](#filtering)
   - [filter](#filter)
   - [filterNot](#filternot)
@@ -233,6 +233,10 @@ Added in v1.0.0
   - [interruptibleMask](#interruptiblemask)
   - [uninterruptible](#uninterruptible)
   - [uninterruptibleMask](#uninterruptiblemask)
+- [locking](#locking)
+  - [Lock (interface)](#lock-interface)
+  - [makeLock](#makelock)
+  - [unsafeMakeLock](#unsafemakelock)
 - [logging](#logging)
   - [log](#log)
   - [logAnnotate](#logannotate)
@@ -2836,22 +2840,15 @@ export declare const unsafeFork: <E, A>(effect: Effect<never, E, A>) => Fiber.Ru
 
 Added in v1.0.0
 
-## unsafeRunAsync
+## unsafeRun
 
 **Signature**
 
 ```ts
-export declare const unsafeRunAsync: <E, A>(effect: Effect<never, E, A>) => void
-```
-
-Added in v1.0.0
-
-## unsafeRunAsyncWith
-
-**Signature**
-
-```ts
-export declare const unsafeRunAsyncWith: <E, A>(effect: Effect<never, E, A>, k: (exit: Exit.Exit<E, A>) => void) => void
+export declare const unsafeRun: <E, A>(
+  effect: Effect<never, E, A>,
+  k?: ((exit: Exit.Exit<E, A>) => void) | undefined
+) => (fiberId: FiberId.FiberId) => (_: (exit: Exit.Exit<E, A>) => void) => void
 ```
 
 Added in v1.0.0
@@ -2865,6 +2862,16 @@ result of the workflow or rejects with an error.
 
 ```ts
 export declare const unsafeRunPromise: <E, A>(effect: Effect<never, E, A>) => Promise<A>
+```
+
+Added in v1.0.0
+
+## unsafeRunPromiseEither
+
+**Signature**
+
+```ts
+export declare const unsafeRunPromiseEither: <E, A>(effect: Effect<never, E, A>) => Promise<Either.Either<E, A>>
 ```
 
 Added in v1.0.0
@@ -2892,25 +2899,22 @@ export declare const unsafeRunSync: <E, A>(effect: Effect<never, E, A>) => A
 
 Added in v1.0.0
 
+## unsafeRunSyncEither
+
+**Signature**
+
+```ts
+export declare const unsafeRunSyncEither: <E, A>(effect: Effect<never, E, A>) => Either.Either<E, A>
+```
+
+Added in v1.0.0
+
 ## unsafeRunSyncExit
 
 **Signature**
 
 ```ts
 export declare const unsafeRunSyncExit: <E, A>(effect: Effect<never, E, A>) => Exit.Exit<E, A>
-```
-
-Added in v1.0.0
-
-## unsafeRunWith
-
-**Signature**
-
-```ts
-export declare const unsafeRunWith: <E, A>(
-  effect: Effect<never, E, A>,
-  k: (exit: Exit.Exit<E, A>) => void
-) => (fiberId: FiberId.FiberId) => (_: (exit: Exit.Exit<E, A>) => void) => void
 ```
 
 Added in v1.0.0
@@ -3414,6 +3418,46 @@ Added in v1.0.0
 export declare const uninterruptibleMask: <R, E, A>(
   f: (restore: <RX, EX, AX>(effect: Effect<RX, EX, AX>) => Effect<RX, EX, AX>) => Effect<R, E, A>
 ) => Effect<R, E, A>
+```
+
+Added in v1.0.0
+
+# locking
+
+## Lock (interface)
+
+A lock is a high-performance semaphore with a single permit
+
+**Signature**
+
+```ts
+export interface Lock {
+  <R, E, A>(self: Effect<R, E, A>): Effect<R, E, A>
+}
+```
+
+Added in v1.0.0
+
+## makeLock
+
+Creates a new Lock
+
+**Signature**
+
+```ts
+export declare const makeLock: () => Effect<never, never, Lock>
+```
+
+Added in v1.0.0
+
+## unsafeMakeLock
+
+Unsafely creates a new Lock
+
+**Signature**
+
+```ts
+export declare const unsafeMakeLock: () => Lock
 ```
 
 Added in v1.0.0

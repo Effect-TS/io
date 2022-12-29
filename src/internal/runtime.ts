@@ -18,8 +18,9 @@ import * as _supervisor from "@effect/io/internal/supervisor"
 import type * as Runtime from "@effect/io/Runtime"
 import type * as Scheduler from "@effect/io/Scheduler"
 import * as Context from "@fp-ts/data/Context"
+import type { Either } from "@fp-ts/data/Either"
 import * as Equal from "@fp-ts/data/Equal"
-import { constVoid, identity, pipe } from "@fp-ts/data/Function"
+import { identity, pipe } from "@fp-ts/data/Function"
 import * as Option from "@fp-ts/data/Option"
 
 /** @internal */
@@ -39,6 +40,12 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
   ) {
     Equal.considerByRef(this)
   }
+
+  unsafeRunSyncEither: <E, A>(effect: Effect.Effect<R, E, A>) => Either<E, A> = (effect) =>
+    this.unsafeRunSync(core.either(effect))
+
+  unsafeRunPromiseEither: <E, A>(effect: Effect.Effect<R, E, A>) => Promise<Either<E, A>> = (effect) =>
+    this.unsafeRunPromise(core.either(effect))
 
   unsafeFork = <E, A>(effect: Effect.Effect<R, E, A>, scheduler?: Scheduler.Scheduler) => {
     const fiberId = FiberId.unsafeMake()
@@ -85,18 +92,19 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
     return fiberRuntime
   }
 
-  unsafeRunWith = <E, A>(
+  unsafeRun = <E, A>(
     effect: Effect.Effect<R, E, A>,
-    k: (exit: Exit.Exit<E, A>) => void
+    k?: (exit: Exit.Exit<E, A>) => void
   ): ((fiberId: FiberId.FiberId) => (_: (exit: Exit.Exit<E, A>) => void) => void) => {
     const fiberRuntime = this.unsafeFork(effect)
 
-    fiberRuntime.unsafeAddObserver((exit) => {
-      k(exit)
-    })
+    if (k) {
+      fiberRuntime.unsafeAddObserver((exit) => {
+        k(exit)
+      })
+    }
 
-    return (id) =>
-      (k) => this.unsafeRunAsyncWith(pipe(fiberRuntime, Fiber.interruptWith(id)), (exit) => k(Exit.flatten(exit)))
+    return (id) => (k) => this.unsafeRun(pipe(fiberRuntime, Fiber.interruptWith(id)), (exit) => k(Exit.flatten(exit)))
   }
 
   unsafeRunSync = <E, A>(
@@ -127,22 +135,11 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
     return Exit.die(new AsyncFiber(fiberRuntime))
   }
 
-  unsafeRunAsync = <E, A>(effect: Effect.Effect<R, E, A>): void => {
-    return this.unsafeRunAsyncWith(effect, constVoid)
-  }
-
-  unsafeRunAsyncWith = <E, A>(
-    effect: Effect.Effect<R, E, A>,
-    k: (exit: Exit.Exit<E, A>) => void
-  ): void => {
-    this.unsafeRunWith(effect, k)
-  }
-
   unsafeRunPromise = <E, A>(
     effect: Effect.Effect<R, E, A>
   ): Promise<A> => {
     return new Promise((resolve, reject) => {
-      this.unsafeRunAsyncWith(effect, (exit) => {
+      this.unsafeRun(effect, (exit) => {
         switch (exit.op) {
           case OpCodes.OP_SUCCESS: {
             resolve(exit.value)
@@ -161,7 +158,7 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
     effect: Effect.Effect<R, E, A>
   ): Promise<Exit.Exit<E, A>> => {
     return new Promise((resolve) => {
-      this.unsafeRunAsyncWith(effect, (exit) => {
+      this.unsafeRun(effect, (exit) => {
         resolve(exit)
       })
     })
@@ -202,28 +199,28 @@ export const defaultRuntime = make(
 )
 
 /** @internal */
-export const unsafeRunPromise = defaultRuntime.unsafeRunPromise
-
-/** @internal */
-export const unsafeRunAsync = defaultRuntime.unsafeRunAsync
+export const unsafeRun = defaultRuntime.unsafeRun
 
 /** @internal */
 export const unsafeFork = defaultRuntime.unsafeFork
 
 /** @internal */
-export const unsafeRunAsyncWith = defaultRuntime.unsafeRunAsyncWith
+export const unsafeRunPromise = defaultRuntime.unsafeRunPromise
+
+/** @internal */
+export const unsafeRunPromiseEither = defaultRuntime.unsafeRunPromiseEither
 
 /** @internal */
 export const unsafeRunPromiseExit = defaultRuntime.unsafeRunPromiseExit
-
-/** @internal */
-export const unsafeRunWith = defaultRuntime.unsafeRunWith
 
 /** @internal */
 export const unsafeRunSync = defaultRuntime.unsafeRunSync
 
 /** @internal */
 export const unsafeRunSyncExit = defaultRuntime.unsafeRunSyncExit
+
+/** @internal */
+export const unsafeRunSyncEither = defaultRuntime.unsafeRunSyncEither
 
 // circular with Effect
 
@@ -242,7 +239,7 @@ export const asyncEffect = <R, E, A, R2, E2, X>(
             pipe(
               restore(
                 pipe(
-                  register((cb) => runtime.unsafeRunAsync(pipe(cb, core.intoDeferred(deferred)))),
+                  register((cb) => runtime.unsafeRun(pipe(cb, core.intoDeferred(deferred)))),
                   core.catchAllCause((cause) => pipe(deferred, core.deferredFailCause(cause as Cause.Cause<E | E2>)))
                 )
               ),

@@ -68,7 +68,10 @@ export const unsafeMakeLock = () => {
 }
 
 /** @internal */
-export const makeLock = core.sync(unsafeMakeLock)
+export const makeLock = () => {
+  const trace = getCallTrace()
+  return core.sync(unsafeMakeLock).traced(trace)
+}
 
 /** @internal */
 export const acquireReleaseInterruptible = <R, E, A, R2, X>(
