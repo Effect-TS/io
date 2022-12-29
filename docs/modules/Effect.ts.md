@@ -180,9 +180,9 @@ Added in v1.0.0
   - [cause](#cause)
   - [continueOrFail](#continueorfail)
   - [continueOrFailEffect](#continueorfaileffect)
-  - [foldCause](#foldcause)
-  - [foldCauseEffect](#foldcauseeffect)
-  - [foldEffect](#foldeffect)
+  - [matchCause](#matchcause)
+  - [matchCauseEffect](#matchcauseeffect)
+  - [matchEffect](#matcheffect)
   - [sandbox](#sandbox)
   - [unrefineWith](#unrefinewith)
 - [execution](#execution)
@@ -212,7 +212,7 @@ Added in v1.0.0
   - [onExit](#onexit)
   - [onInterrupt](#oninterrupt)
 - [folding](#folding)
-  - [fold](#fold)
+  - [match](#match)
   - [reduce](#reduce)
   - [reduceAll](#reduceall)
   - [reduceAllPar](#reduceallpar)
@@ -2757,12 +2757,12 @@ export declare const continueOrFailEffect: <E1, A, R2, E2, A2>(
 
 Added in v1.0.0
 
-## foldCause
+## matchCause
 
 **Signature**
 
 ```ts
-export declare const foldCause: <E, A2, A, A3>(
+export declare const matchCause: <E, A2, A, A3>(
   onFailure: (cause: Cause.Cause<E>) => A2,
   onSuccess: (a: A) => A3
 ) => <R>(self: Effect<R, E, A>) => Effect<R, never, A2 | A3>
@@ -2770,12 +2770,12 @@ export declare const foldCause: <E, A2, A, A3>(
 
 Added in v1.0.0
 
-## foldCauseEffect
+## matchCauseEffect
 
 **Signature**
 
 ```ts
-export declare const foldCauseEffect: <E, A, R2, E2, A2, R3, E3, A3>(
+export declare const matchCauseEffect: <E, A, R2, E2, A2, R3, E3, A3>(
   onFailure: (cause: Cause.Cause<E>) => Effect<R2, E2, A2>,
   onSuccess: (a: A) => Effect<R3, E3, A3>
 ) => <R>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2 | E3, A2 | A3>
@@ -2783,12 +2783,12 @@ export declare const foldCauseEffect: <E, A, R2, E2, A2, R3, E3, A3>(
 
 Added in v1.0.0
 
-## foldEffect
+## matchEffect
 
 **Signature**
 
 ```ts
-export declare const foldEffect: <E, A, R2, E2, A2, R3, E3, A3>(
+export declare const matchEffect: <E, A, R2, E2, A2, R3, E3, A3>(
   onFailure: (e: E) => Effect<R2, E2, A2>,
   onSuccess: (a: A) => Effect<R3, E3, A3>
 ) => <R>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2 | E3, A2 | A3>
@@ -3164,16 +3164,16 @@ Added in v1.0.0
 
 # folding
 
-## fold
+## match
 
 Folds over the failure value or the success value to yield an effect that
 does not fail, but succeeds with the value returned by the left or right
-function passed to `fold`.
+function passed to `match`.
 
 **Signature**
 
 ```ts
-export declare const fold: <E, A, A2, A3>(
+export declare const match: <E, A, A2, A3>(
   onFailure: (error: E) => A2,
   onSuccess: (value: A) => A3
 ) => <R>(self: Effect<R, E, A>) => Effect<R, never, A2 | A3>
