@@ -88,6 +88,21 @@ export declare namespace Effect {
       readonly _A: (_: never) => A
     }
   }
+  /**
+   * @since 1.0.0
+   * @category type-level
+   */
+  export type Context<T extends Effect<any, any, any>> = [T] extends [Effect<infer _R, infer _E, infer _A>] ? _R : never
+  /**
+   * @since 1.0.0
+   * @category type-level
+   */
+  export type Error<T extends Effect<any, any, any>> = [T] extends [Effect<infer _R, infer _E, infer _A>] ? _E : never
+  /**
+   * @since 1.0.0
+   * @category type-level
+   */
+  export type Success<T extends Effect<any, any, any>> = [T] extends [Effect<infer _R, infer _E, infer _A>] ? _A : never
 }
 
 /**
