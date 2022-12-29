@@ -81,7 +81,7 @@ describe.concurrent("Effect", () => {
         Effect.attempt(() => {
           throw ExampleError
         }),
-        Effect.fold(Option.some, () => Option.none)
+        Effect.match(Option.some, () => Option.none)
       ))
       assert.deepStrictEqual(result, Option.some(ExampleError))
     }))
@@ -335,7 +335,7 @@ describe.concurrent("Effect", () => {
           throw ExampleError
         }),
         Effect.sandbox,
-        Effect.fold(Option.some, () => Option.none as Option.Option<Cause.Cause<never>>)
+        Effect.match(Option.some, () => Option.none as Option.Option<Cause.Cause<never>>)
       ))
       assert.deepStrictEqual(pipe(result, Option.map(Cause.unannotate)), Option.some(Cause.die(ExampleError)))
     }))
@@ -656,7 +656,7 @@ describe.concurrent("Effect", () => {
       const message = yield* $(pipe(
         failure,
         Effect.unsandbox,
-        Effect.foldEffect((e) => Effect.succeed(e.message), () => Effect.succeed("unexpected"))
+        Effect.matchEffect((e) => Effect.succeed(e.message), () => Effect.succeed("unexpected"))
       ))
       const result = yield* $(Effect.unsandbox(success))
       assert.strictEqual(message, "fail")
@@ -665,7 +665,7 @@ describe.concurrent("Effect", () => {
   it.effect("no information is lost during composition", () =>
     Effect.gen(function*($) {
       const cause = <R, E>(effect: Effect.Effect<R, E, never>): Effect.Effect<R, never, Cause.Cause<E>> => {
-        return pipe(effect, Effect.foldCauseEffect(Effect.succeed, Effect.fail))
+        return pipe(effect, Effect.matchCauseEffect(Effect.succeed, Effect.fail))
       }
       const expectedCause = Cause.fail("oh no")
       const result = yield* $(cause(pipe(Effect.failCause(expectedCause), Effect.sandbox, Effect.unsandbox)))

@@ -569,10 +569,10 @@ export const fixed: (interval: Duration.Duration) => Schedule<never, unknown, nu
  * @since 1.0.0
  * @category folding
  */
-export const fold: <Out, Z>(
+export const reduce: <Out, Z>(
   zero: Z,
   f: (z: Z, out: Out) => Z
-) => <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Z> = internal.fold
+) => <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Z> = internal.reduce
 
 /**
  * Returns a new schedule that effectfully folds over the outputs of this one.
@@ -580,10 +580,10 @@ export const fold: <Out, Z>(
  * @since 1.0.0
  * @category folding
  */
-export const foldEffect: <Out, Env1, Z>(
+export const reduceEffect: <Out, Env1, Z>(
   zero: Z,
   f: (z: Z, out: Out) => Effect.Effect<Env1, never, Z>
-) => <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env1 | Env, In, Z> = internal.foldEffect
+) => <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env1 | Env, In, Z> = internal.reduceEffect
 
 /**
  * A schedule that always recurs, producing a count of repeats: 0, 1, 2.

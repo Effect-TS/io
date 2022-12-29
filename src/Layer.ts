@@ -225,10 +225,10 @@ export const flatten: <R2, E2, A>(
  * @since 1.0.0
  * @category folding
  */
-export const foldLayer: <E, R2, E2, A2, A, R3, E3, A3>(
+export const matchLayer: <E, R2, E2, A2, A, R3, E3, A3>(
   onFailure: (error: E) => Layer<R2, E2, A2>,
   onSuccess: (context: Context.Context<A>) => Layer<R3, E3, A3>
-) => <R>(self: Layer<R, E, A>) => Layer<R2 | R3 | R, E2 | E3, A2 & A3> = internal.foldLayer
+) => <R>(self: Layer<R, E, A>) => Layer<R2 | R3 | R, E2 | E3, A2 & A3> = internal.matchLayer
 
 /**
  * Feeds the error or output services of this layer into the input of either
@@ -238,10 +238,10 @@ export const foldLayer: <E, R2, E2, A2, A, R3, E3, A3>(
  * @since 1.0.0
  * @category folding
  */
-export const foldCauseLayer: <E, A, R2, E2, A2, R3, E3, A3>(
+export const matchCauseLayer: <E, A, R2, E2, A2, R3, E3, A3>(
   onFailure: (cause: Cause.Cause<E>) => Layer<R2, E2, A2>,
   onSuccess: (context: Context.Context<A>) => Layer<R3, E3, A3>
-) => <R>(self: Layer<R, E, A>) => Layer<R2 | R3 | R, E2 | E3, A2 & A3> = internal.foldCauseLayer
+) => <R>(self: Layer<R, E, A>) => Layer<R2 | R3 | R, E2 | E3, A2 & A3> = internal.matchCauseLayer
 
 /**
  * Creates a fresh version of this layer that will not be shared.

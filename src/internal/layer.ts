@@ -356,7 +356,7 @@ export const withScope = (scope: Scope.Scope) => {
           (memoMap: MemoMap) =>
             pipe(
               memoMap.getOrElseMemoize(op.layer, scope),
-              core.foldCauseEffect(
+              core.matchCauseEffect(
                 (cause) => memoMap.getOrElseMemoize(op.failureK(cause), scope),
                 (value) => memoMap.getOrElseMemoize(op.successK(value), scope)
               )
@@ -430,7 +430,7 @@ export const withScope = (scope: Scope.Scope) => {
 /** @internal */
 export const catchAll = <E, R2, E2, A2>(onError: (error: E) => Layer.Layer<R2, E2, A2>) => {
   return <R, A>(self: Layer.Layer<R, E, A>): Layer.Layer<R | R2, E2, A & A2> => {
-    return pipe(self, foldLayer(onError, succeedEnvironment))
+    return pipe(self, matchLayer(onError, succeedEnvironment))
   }
 }
 
@@ -482,7 +482,7 @@ export const failCauseSync = <E>(evaluate: () => Cause.Cause<E>): Layer.Layer<ne
 /** @internal */
 export const flatMap = <A, R2, E2, A2>(f: (context: Context.Context<A>) => Layer.Layer<R2, E2, A2>) => {
   return <R, E>(self: Layer.Layer<R, E, A>): Layer.Layer<R | R2, E | E2, A2> => {
-    return pipe(self, foldLayer(fail, f))
+    return pipe(self, matchLayer(fail, f))
   }
 }
 
@@ -494,7 +494,7 @@ export const flatten = <R2, E2, A>(tag: Context.Tag<Layer.Layer<R2, E2, A>>) => 
 }
 
 /** @internal */
-export const foldCauseLayer = <E, A, R2, E2, A2, R3, E3, A3>(
+export const matchCauseLayer = <E, A, R2, E2, A2, R3, E3, A3>(
   onFailure: (cause: Cause.Cause<E>) => Layer.Layer<R2, E2, A2>,
   onSuccess: (context: Context.Context<A>) => Layer.Layer<R3, E3, A3>
 ) => {
@@ -509,14 +509,14 @@ export const foldCauseLayer = <E, A, R2, E2, A2, R3, E3, A3>(
 }
 
 /** @internal */
-export const foldLayer = <E, R2, E2, A2, A, R3, E3, A3>(
+export const matchLayer = <E, R2, E2, A2, A, R3, E3, A3>(
   onFailure: (error: E) => Layer.Layer<R2, E2, A2>,
   onSuccess: (context: Context.Context<A>) => Layer.Layer<R3, E3, A3>
 ) => {
   return <R>(self: Layer.Layer<R, E, A>): Layer.Layer<R | R2 | R3, E2 | E3, A2 & A3> => {
     return pipe(
       self,
-      foldCauseLayer(
+      matchCauseLayer(
         (cause) => {
           const failureOrCause = Cause.failureOrCause(cause)
           switch (failureOrCause._tag) {

@@ -367,7 +367,7 @@ export const collectAllInputs = <A>(): Schedule.Schedule<never, A, Chunk.Chunk<A
 export const collectAllOutputs = <Env, In, Out>(
   self: Schedule.Schedule<Env, In, Out>
 ): Schedule.Schedule<Env, In, Chunk.Chunk<Out>> => {
-  return pipe(self, fold(Chunk.empty<Out>(), (outs, out) => pipe(outs, Chunk.append(out))))
+  return pipe(self, reduce(Chunk.empty<Out>(), (outs, out) => pipe(outs, Chunk.append(out))))
 }
 
 /** @internal */
@@ -732,14 +732,14 @@ export const fixed = (interval: Duration.Duration): Schedule.Schedule<never, unk
 }
 
 /** @internal */
-export const fold = <Out, Z>(zero: Z, f: (z: Z, out: Out) => Z) => {
+export const reduce = <Out, Z>(zero: Z, f: (z: Z, out: Out) => Z) => {
   return <Env, In>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env, In, Z> => {
-    return pipe(self, foldEffect(zero, (z, out) => core.sync(() => f(z, out))))
+    return pipe(self, reduceEffect(zero, (z, out) => core.sync(() => f(z, out))))
   }
 }
 
 /** @internal */
-export const foldEffect = <Out, Env1, Z>(
+export const reduceEffect = <Out, Env1, Z>(
   zero: Z,
   f: (z: Z, out: Out) => Effect.Effect<Env1, never, Z>
 ) => {
@@ -1351,7 +1351,7 @@ export const repeatForever = <Env, In, Out>(
 export const repetitions = <Env, In, Out>(
   self: Schedule.Schedule<Env, In, Out>
 ): Schedule.Schedule<Env, In, number> => {
-  return pipe(self, fold(0, (n, _) => n + 1))
+  return pipe(self, reduce(0, (n, _) => n + 1))
 }
 
 /** @internal */
@@ -1951,7 +1951,7 @@ export const repeatOrElseEither_Effect = <R2, A, B, E, R3, E2, C>(
       core.flatMap((driver) =>
         pipe(
           self,
-          core.foldEffect(
+          core.matchEffect(
             (error) => pipe(orElse(error, Option.none), core.map(Either.left)),
             (value) => repeatOrElseEitherEffectLoop(self, driver, orElse, value)
           )
@@ -1970,12 +1970,12 @@ const repeatOrElseEitherEffectLoop = <R, E, A, R1, B, R2, E2, C>(
 ): Effect.Effect<R | R1 | R2, E2, Either.Either<C, B>> => {
   return pipe(
     driver.next(value),
-    core.foldEffect(
+    core.matchEffect(
       () => pipe(core.orDie(driver.last()), core.map(Either.right)),
       (b) =>
         pipe(
           self,
-          core.foldEffect(
+          core.matchEffect(
             (error) => pipe(orElse(error, Option.some(b)), core.map(Either.left)),
             (value) => repeatOrElseEitherEffectLoop(self, driver, orElse, value)
           )
@@ -2118,7 +2118,7 @@ const retryOrElseEither_EffectLoop = <R, E, A, R1, A1, R2, E2, A2>(
     core.catchAll((e) =>
       pipe(
         driver.next(e),
-        core.foldEffect(
+        core.matchEffect(
           () =>
             pipe(
               driver.last(),
@@ -2218,7 +2218,7 @@ const scheduleFrom_EffectLoop = <R, E, In, R2, Out>(
 ): Effect.Effect<R | R2, E, Out> => {
   return pipe(
     driver.next(initial),
-    core.foldEffect(
+    core.matchEffect(
       () => core.orDie(driver.last()),
       () => pipe(self, core.flatMap((a) => scheduleFrom_EffectLoop(self, a, driver)))
     )

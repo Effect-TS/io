@@ -1538,46 +1538,46 @@ export const flipWith: <R, A, E, R2, A2, E2>(
 /**
  * Folds over the failure value or the success value to yield an effect that
  * does not fail, but succeeds with the value returned by the left or right
- * function passed to `fold`.
+ * function passed to `match`.
  *
  * @macro traced
  * @since 1.0.0
  * @category folding
  */
-export const fold: <E, A, A2, A3>(
+export const match: <E, A, A2, A3>(
   onFailure: (error: E) => A2,
   onSuccess: (value: A) => A3
-) => <R>(self: Effect<R, E, A>) => Effect<R, never, A2 | A3> = effect.fold
+) => <R>(self: Effect<R, E, A>) => Effect<R, never, A2 | A3> = effect.match
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category error handling
  */
-export const foldCause: <E, A2, A, A3>(
+export const matchCause: <E, A2, A, A3>(
   onFailure: (cause: Cause.Cause<E>) => A2,
   onSuccess: (a: A) => A3
-) => <R>(self: Effect<R, E, A>) => Effect<R, never, A2 | A3> = core.foldCause
+) => <R>(self: Effect<R, E, A>) => Effect<R, never, A2 | A3> = core.matchCause
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category error handling
  */
-export const foldCauseEffect: <E, A, R2, E2, A2, R3, E3, A3>(
+export const matchCauseEffect: <E, A, R2, E2, A2, R3, E3, A3>(
   onFailure: (cause: Cause.Cause<E>) => Effect<R2, E2, A2>,
   onSuccess: (a: A) => Effect<R3, E3, A3>
-) => <R>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2 | E3, A2 | A3> = core.foldCauseEffect
+) => <R>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2 | E3, A2 | A3> = core.matchCauseEffect
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category error handling
  */
-export const foldEffect: <E, A, R2, E2, A2, R3, E3, A3>(
+export const matchEffect: <E, A, R2, E2, A2, R3, E3, A3>(
   onFailure: (e: E) => Effect<R2, E2, A2>,
   onSuccess: (a: A) => Effect<R3, E3, A3>
-) => <R>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2 | E3, A2 | A3> = core.foldEffect
+) => <R>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2 | E3, A2 | A3> = core.matchEffect
 
 /**
  * Determines whether all elements of the `Collection<A>` satisfies the effectual
