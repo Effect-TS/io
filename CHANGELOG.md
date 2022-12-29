@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.0.44
+
+### Patch Changes
+
+- [#133](https://github.com/Effect-TS/io/pull/133) [`b93eb0d`](https://github.com/Effect-TS/io/commit/b93eb0defd6a0991920cbfbffedc324aa2521bf9) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Fix Lock, extend Lock to be Semaphore
+
 ## 0.0.43
 
 ### Patch Changes
