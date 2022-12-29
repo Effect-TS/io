@@ -4144,10 +4144,31 @@ export const unright: <R, B, E, A>(self: Effect<R, Either.Either<B, E>, A>) => E
   effect.unright
 
 /**
+ * A lock is a high-performance semaphore with a single permit
+ *
+ * @category locking
  * @since 1.0.0
- * @category execution
  */
-export const unsafeRunAsync: <E, A>(effect: Effect<never, E, A>) => void = _runtime.unsafeRunAsync
+export interface Lock {
+  <R, E, A>(self: Effect<R, E, A>): Effect<R, E, A>
+}
+
+/**
+ * Unsafely creates a new Lock
+ *
+ * @since 1.0.0
+ * @category locking
+ */
+export const unsafeMakeLock: () => Lock = circular.unsafeMakeLock
+
+/**
+ * Creates a new Lock
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category locking
+ */
+export const makeLock: () => Effect<never, never, Lock> = circular.makeLock
 
 /**
  * @since 1.0.0
@@ -4159,8 +4180,17 @@ export const unsafeFork: <E, A>(effect: Effect<never, E, A>) => Fiber.RuntimeFib
  * @since 1.0.0
  * @category execution
  */
-export const unsafeRunAsyncWith: <E, A>(effect: Effect<never, E, A>, k: (exit: Exit.Exit<E, A>) => void) => void =
-  _runtime.unsafeRunAsyncWith
+export const unsafeRun: <E, A>(
+  effect: Effect<never, E, A>,
+  k?: (exit: Exit.Exit<E, A>) => void
+) => (fiberId: FiberId.FiberId) => (_: (exit: Exit.Exit<E, A>) => void) => void = _runtime.unsafeRun
+
+/**
+ * @since 1.0.0
+ * @category execution
+ */
+export const unsafeRunPromiseEither: <E, A>(effect: Effect<never, E, A>) => Promise<Either.Either<E, A>> =
+  _runtime.unsafeRunPromiseEither
 
 /**
  * Runs an `Effect` workflow, returning a `Promise` which resolves with the
@@ -4197,10 +4227,8 @@ export const unsafeRunSyncExit: <E, A>(effect: Effect<never, E, A>) => Exit.Exit
  * @since 1.0.0
  * @category execution
  */
-export const unsafeRunWith: <E, A>(
-  effect: Effect<never, E, A>,
-  k: (exit: Exit.Exit<E, A>) => void
-) => (fiberId: FiberId.FiberId) => (_: (exit: Exit.Exit<E, A>) => void) => void = _runtime.unsafeRunWith
+export const unsafeRunSyncEither: <E, A>(effect: Effect<never, E, A>) => Either.Either<E, A> =
+  _runtime.unsafeRunSyncEither
 
 /**
  * The inverse operation `sandbox(effect)`

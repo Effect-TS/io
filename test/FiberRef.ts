@@ -353,7 +353,7 @@ describe.concurrent("FiberRef", () => {
       const runtime: Runtime.Runtime<never> = yield* $(
         pipe(Effect.runtime<never>(), pipe(fiberRef, FiberRef.locally(false)))
       )
-      yield* $(Effect.sync(() => pipe(FiberRef.get(fiberRef), Effect.intoDeferred(deferred), runtime.unsafeRunAsync)))
+      yield* $(Effect.sync(() => pipe(FiberRef.get(fiberRef), Effect.intoDeferred(deferred), runtime.unsafeRun)))
       const result = yield* $(Deferred.await(deferred))
       assert.isTrue(result)
     }))

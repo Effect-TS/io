@@ -8,7 +8,9 @@ import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import type * as FiberRefs from "@effect/io/FiberRefs"
 import * as internal from "@effect/io/internal/runtime"
+import type { Scheduler } from "@effect/io/Scheduler"
 import type * as Context from "@fp-ts/data/Context"
+import type { Either } from "@fp-ts/data/Either"
 
 /**
  * @since 1.0.0
@@ -24,24 +26,11 @@ export interface AsyncFiber<E, A> {
  * @category models
  */
 export interface Runtime<R> {
-  unsafeFork: <E, A>(effect: Effect.Effect<R, E, A>) => Fiber.RuntimeFiber<E, A>
-
-  unsafeRunWith: <E, A>(
-    effect: Effect.Effect<R, E, A>,
-    k: (exit: Exit.Exit<E, A>) => void
-  ) => (fiberId: FiberId.FiberId) => (_: (exit: Exit.Exit<E, A>) => void) => void
-
-  unsafeRunSync: <E, A>(effect: Effect.Effect<R, E, A>) => A
-
-  unsafeRunSyncExit: <E, A>(effect: Effect.Effect<R, E, A>) => Exit.Exit<E, A>
-
   /**
-   * Executes the effect asynchronously, discarding the result of execution.
-   *
-   * This method is effectful and should only be invoked at the edges of your
-   * program.
+   * Executes the effect using the provided Scheduler or using the global
+   * Scheduler if not provided
    */
-  unsafeRunAsync: <E, A>(effect: Effect.Effect<R, E, A>) => void
+  unsafeFork: <E, A>(effect: Effect.Effect<R, E, A>, scheduler?: Scheduler) => Fiber.RuntimeFiber<E, A>
 
   /**
    * Executes the effect asynchronously, eventually passing the exit value to
@@ -50,10 +39,36 @@ export interface Runtime<R> {
    * This method is effectful and should only be invoked at the edges of your
    * program.
    */
-  unsafeRunAsyncWith: <E, A>(
+  unsafeRun: <E, A>(
     effect: Effect.Effect<R, E, A>,
-    k: (exit: Exit.Exit<E, A>) => void
-  ) => void
+    k?: (exit: Exit.Exit<E, A>) => void
+  ) => (fiberId: FiberId.FiberId) => (_: (exit: Exit.Exit<E, A>) => void) => void
+
+  /**
+   * Executes the effect synchronously returning the successful result or throwing otherwise.
+   *
+   * This method is effectful and should only be invoked at the edges of your
+   * program.
+   */
+  unsafeRunSync: <E, A>(effect: Effect.Effect<R, E, A>) => A
+
+  /**
+   * Executes the effect synchronously returning the exit.
+   *
+   * This method is effectful and should only be invoked at the edges of your
+   * program.
+   */
+  unsafeRunSyncExit: <E, A>(effect: Effect.Effect<R, E, A>) => Exit.Exit<E, A>
+
+  /**
+   * Executes the effect synchronously returning either the result or a failure.
+   *
+   * Throwing in case of defects and interruptions.
+   *
+   * This method is effectful and should only be invoked at the edges of your
+   * program.
+   */
+  unsafeRunSyncEither: <E, A>(effect: Effect.Effect<R, E, A>) => Either<E, A>
 
   /**
    * Runs the `Effect`, returning a JavaScript `Promise` that will be resolved
@@ -73,6 +88,16 @@ export interface Runtime<R> {
    * program.
    */
   unsafeRunPromiseExit: <E, A>(effect: Effect.Effect<R, E, A>) => Promise<Exit.Exit<E, A>>
+
+  /**
+   * Runs the `Effect`, returning a JavaScript `Promise` that will be resolved
+   * with the either a success or a failure. The promise will be rejected in case
+   * of defects and interruption.
+   *
+   * This method is effectful and should only be used at the edges of your
+   * program.
+   */
+  unsafeRunPromiseEither: <E, A>(effect: Effect.Effect<R, E, A>) => Promise<Either<E, A>>
 }
 
 /**
