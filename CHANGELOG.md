@@ -1,5 +1,15 @@
 # @effect/io
 
+## 0.0.43
+
+### Patch Changes
+
+- [#132](https://github.com/Effect-TS/io/pull/132) [`cacde86`](https://github.com/Effect-TS/io/commit/cacde860c7a877d0d59faf130e1dd610ed4dd290) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Improve Runtime, remove redundancy add Either variants
+
+- [#128](https://github.com/Effect-TS/io/pull/128) [`f248a7b`](https://github.com/Effect-TS/io/commit/f248a7b7eae7db0ef4d5a68e24d15276dcdf0f88) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Add Type Extractors to Layer and Effect
+
+- [#130](https://github.com/Effect-TS/io/pull/130) [`4a64084`](https://github.com/Effect-TS/io/commit/4a64084f86d25d0f2e3db5503e90c069045d7f62) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Align naming of fold to match & reduce
+
 ## 0.0.42
 
 ### Patch Changes
