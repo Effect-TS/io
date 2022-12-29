@@ -234,9 +234,9 @@ Added in v1.0.0
   - [uninterruptible](#uninterruptible)
   - [uninterruptibleMask](#uninterruptiblemask)
 - [locking](#locking)
-  - [Lock (interface)](#lock-interface)
-  - [makeLock](#makelock)
-  - [unsafeMakeLock](#unsafemakelock)
+  - [Semaphore (interface)](#semaphore-interface)
+  - [makeSemaphore](#makesemaphore)
+  - [unsafeMakeSemaphore](#unsafemakesemaphore)
 - [logging](#logging)
   - [log](#log)
   - [logAnnotate](#logannotate)
@@ -3424,40 +3424,38 @@ Added in v1.0.0
 
 # locking
 
-## Lock (interface)
-
-A lock is a high-performance semaphore with a single permit
+## Semaphore (interface)
 
 **Signature**
 
 ```ts
-export interface Lock {
-  <R, E, A>(self: Effect<R, E, A>): Effect<R, E, A>
+export interface Semaphore {
+  (permits: number): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
 }
 ```
 
 Added in v1.0.0
 
-## makeLock
+## makeSemaphore
 
-Creates a new Lock
+Creates a new Semaphore
 
 **Signature**
 
 ```ts
-export declare const makeLock: () => Effect<never, never, Lock>
+export declare const makeSemaphore: (permits: number) => Effect<never, never, Semaphore>
 ```
 
 Added in v1.0.0
 
-## unsafeMakeLock
+## unsafeMakeSemaphore
 
-Unsafely creates a new Lock
+Unsafely creates a new Semaphore
 
 **Signature**
 
 ```ts
-export declare const unsafeMakeLock: () => Lock
+export declare const unsafeMakeSemaphore: (permits: number) => Semaphore
 ```
 
 Added in v1.0.0
