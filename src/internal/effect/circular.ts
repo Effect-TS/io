@@ -55,18 +55,12 @@ export const unsafeMakeSemaphore = (leases: number) => {
           running = running + permits
           return Either.right(finalized)
         } else {
-          let interrupted = false
           const observer = () => {
-            if (!interrupted) {
-              running = running + permits
-              cb(finalized)
-            } else {
-              runNext()
-            }
+            running = running + permits
+            cb(finalized)
           }
           observers.add(observer)
           return Either.left(core.sync(() => {
-            interrupted = true
             observers.delete(observer)
           }))
         }
