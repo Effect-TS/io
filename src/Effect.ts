@@ -4144,31 +4144,29 @@ export const unright: <R, B, E, A>(self: Effect<R, Either.Either<B, E>, A>) => E
   effect.unright
 
 /**
- * A lock is a high-performance semaphore with a single permit
- *
  * @category locking
  * @since 1.0.0
  */
-export interface Lock {
-  <R, E, A>(self: Effect<R, E, A>): Effect<R, E, A>
+export interface Semaphore {
+  (permits: number): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
 }
 
 /**
- * Unsafely creates a new Lock
+ * Unsafely creates a new Semaphore
  *
  * @since 1.0.0
  * @category locking
  */
-export const unsafeMakeLock: () => Lock = circular.unsafeMakeLock
+export const unsafeMakeSemaphore: (permits: number) => Semaphore = circular.unsafeMakeSemaphore
 
 /**
- * Creates a new Lock
+ * Creates a new Semaphore
  *
  * @macro traced
  * @since 1.0.0
  * @category locking
  */
-export const makeLock: () => Effect<never, never, Lock> = circular.makeLock
+export const makeSemaphore: (permits: number) => Effect<never, never, Semaphore> = circular.makeSemaphore
 
 /**
  * @since 1.0.0

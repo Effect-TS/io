@@ -9,7 +9,6 @@ import * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
 import * as internalCause from "@effect/io/internal/cause"
 import * as core from "@effect/io/internal/core"
-import { currentScheduler } from "@effect/io/internal/core"
 import * as effect from "@effect/io/internal/effect"
 import * as internalFiber from "@effect/io/internal/fiber"
 import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
@@ -32,8 +31,9 @@ import * as MutableRef from "@fp-ts/data/MutableRef"
 import * as Option from "@fp-ts/data/Option"
 
 /** @internal */
-export const unsafeMakeLock = () => {
+export const unsafeMakeSemaphore = (leases: number) => {
   const observers: Set<() => void> = new Set()
+  let running = 0
   const runNext = () => {
     const next = observers.values().next()
     if (!next.done) {
@@ -41,36 +41,42 @@ export const unsafeMakeLock = () => {
       next.value()
     }
   }
-  return <R, E, A>(self: Effect.Effect<R, E, A>) =>
-    core.withFiberRuntime<R, E, A>((runtime) => {
-      const scheduler = runtime.getFiberRef(currentScheduler)
-      return core.asyncInterruptEither<R, E, A>((resume) => {
-        const withFinalizer = pipe(
+  return (permits: number) =>
+    <R, E, A>(self: Effect.Effect<R, E, A>) =>
+      core.asyncInterruptEither<R, E, A>((cb) => {
+        const finalized = pipe(
           self,
-          ensuring(core.sync(() => scheduler.scheduleTask(runNext)))
-        )
-        let interrupted = false
-        const observer = () => {
-          if (!interrupted) {
-            resume(withFinalizer)
-          } else {
+          ensuring(core.sync(() => {
+            running = running - permits
             runNext()
+          }))
+        )
+        if (running + permits <= leases) {
+          running = running + permits
+          return Either.right(finalized)
+        } else {
+          let interrupted = false
+          const observer = () => {
+            if (!interrupted) {
+              running = running + permits
+              cb(finalized)
+            } else {
+              runNext()
+            }
           }
+          observers.add(observer)
+          return Either.left(core.sync(() => {
+            interrupted = true
+            observers.delete(observer)
+          }))
         }
-        observers.add(observer)
-        scheduler.scheduleTask(runNext)
-        return Either.left(core.sync(() => {
-          interrupted = true
-          observers.delete(observer)
-        }))
       })
-    })
 }
 
 /** @internal */
-export const makeLock = () => {
+export const makeSemaphore = (permits: number) => {
   const trace = getCallTrace()
-  return core.sync(unsafeMakeLock).traced(trace)
+  return core.sync(() => unsafeMakeSemaphore(permits)).traced(trace)
 }
 
 /** @internal */
@@ -782,8 +788,8 @@ export const makeSynchronized = <A>(value: A): Effect.Effect<never, never, Synch
 /** @internal */
 export const unsafeMakeSynchronized = <A>(value: A): Synchronized.Synchronized<A> => {
   const ref = internalRef.unsafeMake(value)
-  const withLock = unsafeMakeLock()
-  return new SynchronizedImpl(ref, withLock)
+  const withPermits = unsafeMakeSemaphore(1)
+  return new SynchronizedImpl(ref, withPermits(1))
 }
 
 /** @internal */
