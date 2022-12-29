@@ -58,6 +58,21 @@ export declare namespace Layer {
       readonly _ROut: (_: ROut) => void
     }
   }
+  /**
+   * @since 1.0.0
+   * @category type-level
+   */
+  export type Context<T extends Layer<any, any, any>> = [T] extends [Layer<infer _R, infer _E, infer _A>] ? _R : never
+  /**
+   * @since 1.0.0
+   * @category type-level
+   */
+  export type Error<T extends Layer<any, any, any>> = [T] extends [Layer<infer _R, infer _E, infer _A>] ? _E : never
+  /**
+   * @since 1.0.0
+   * @category type-level
+   */
+  export type Success<T extends Layer<any, any, any>> = [T] extends [Layer<infer _R, infer _E, infer _A>] ? _A : never
 }
 
 /**
