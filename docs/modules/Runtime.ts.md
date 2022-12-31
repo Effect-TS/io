@@ -18,6 +18,7 @@ Added in v1.0.0
   - [make](#make)
 - [models](#models)
   - [AsyncFiber (interface)](#asyncfiber-interface)
+  - [Cancel (interface)](#cancel-interface)
   - [Runtime (interface)](#runtime-interface)
 
 ---
@@ -73,6 +74,18 @@ export interface AsyncFiber<E, A> {
 
 Added in v1.0.0
 
+## Cancel (interface)
+
+**Signature**
+
+```ts
+export interface Cancel<E, A> {
+  (fiberId?: FiberId.FiberId, onExit?: (exit: Exit.Exit<E, A>) => void): void
+}
+```
+
+Added in v1.0.0
+
 ## Runtime (interface)
 
 **Signature**
@@ -92,13 +105,10 @@ export interface Runtime<R> {
    * This method is effectful and should only be invoked at the edges of your
    * program.
    */
-  unsafeRun: <E, A>(
-    effect: Effect.Effect<R, E, A>,
-    k?: (exit: Exit.Exit<E, A>) => void
-  ) => (fiberId: FiberId.FiberId) => (_: (exit: Exit.Exit<E, A>) => void) => void
+  unsafeRun: <E, A>(effect: Effect.Effect<R, E, A>, onExit?: (exit: Exit.Exit<E, A>) => void) => Cancel<E, A>
 
   /**
-   * Executes the effect synchronously returning the successful result or throwing otherwise.
+   * Executes the effect synchronously throwing in case of errors or async boundaries.
    *
    * This method is effectful and should only be invoked at the edges of your
    * program.

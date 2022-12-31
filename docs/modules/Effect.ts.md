@@ -2847,8 +2847,8 @@ Added in v1.0.0
 ```ts
 export declare const unsafeRun: <E, A>(
   effect: Effect<never, E, A>,
-  k?: ((exit: Exit.Exit<E, A>) => void) | undefined
-) => (fiberId: FiberId.FiberId) => (_: (exit: Exit.Exit<E, A>) => void) => void
+  onExit?: ((exit: Exit.Exit<E, A>) => void) | undefined
+) => Runtime.Cancel<E, A>
 ```
 
 Added in v1.0.0
