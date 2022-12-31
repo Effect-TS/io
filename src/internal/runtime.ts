@@ -94,17 +94,25 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
 
   unsafeRun = <E, A>(
     effect: Effect.Effect<R, E, A>,
-    k?: (exit: Exit.Exit<E, A>) => void
-  ): ((fiberId: FiberId.FiberId) => (_: (exit: Exit.Exit<E, A>) => void) => void) => {
+    onExit?: (exit: Exit.Exit<E, A>) => void
+  ): ((fiberId?: FiberId.FiberId, onExit?: (exit: Exit.Exit<E, A>) => void) => void) => {
     const fiberRuntime = this.unsafeFork(effect)
 
-    if (k) {
+    if (onExit) {
       fiberRuntime.unsafeAddObserver((exit) => {
-        k(exit)
+        onExit(exit)
       })
     }
 
-    return (id) => (k) => this.unsafeRun(pipe(fiberRuntime, Fiber.interruptWith(id)), (exit) => k(Exit.flatten(exit)))
+    return (id, onExitInterrupt) =>
+      this.unsafeRun(
+        pipe(fiberRuntime, Fiber.interruptWith(id ?? FiberId.none)),
+        onExitInterrupt ?
+          (exit) => {
+            return onExitInterrupt(Exit.flatten(exit))
+          } :
+          void 0
+      )
   }
 
   unsafeRunSync = <E, A>(

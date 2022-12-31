@@ -4180,8 +4180,8 @@ export const unsafeFork: <E, A>(effect: Effect<never, E, A>) => Fiber.RuntimeFib
  */
 export const unsafeRun: <E, A>(
   effect: Effect<never, E, A>,
-  k?: (exit: Exit.Exit<E, A>) => void
-) => (fiberId: FiberId.FiberId) => (_: (exit: Exit.Exit<E, A>) => void) => void = _runtime.unsafeRun
+  onExit?: (exit: Exit.Exit<E, A>) => void
+) => Runtime.Cancel<E, A> = _runtime.unsafeRun
 
 /**
  * @since 1.0.0
