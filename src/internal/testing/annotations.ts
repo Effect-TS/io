@@ -151,7 +151,6 @@ export const supervisedFibers = (): Effect.Effect<
 /**
  * Constructs a new `Annotations` service.
  *
- * @tsplus static effect/core/testing/Annotations.Ops live
  * @category environment
  * @since 1.0.0
  */
