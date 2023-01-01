@@ -561,6 +561,15 @@ export const pretty: <E, A>(self: RuntimeFiber<E, A>) => Effect.Effect<never, ne
 export const roots: () => Effect.Effect<never, never, Chunk.Chunk<RuntimeFiber<any, any>>> = internal.roots
 
 /**
+ * Returns a chunk containing all root fibers.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const unsafeRoots: () => Chunk.Chunk<RuntimeFiber<any, any>> = internal.unsafeRoots
+
+/**
  * Converts this fiber into a scoped effect. The fiber is interrupted when the
  * scope is closed.
  *
