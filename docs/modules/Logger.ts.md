@@ -23,8 +23,10 @@ Added in v1.0.0
   - [sync](#sync)
   - [test](#test)
 - [environment](#environment)
-  - [addLogger](#addlogger)
+  - [add](#add)
   - [console](#console)
+  - [remove](#remove)
+  - [replace](#replace)
 - [filtering](#filtering)
   - [filterLogLevel](#filterloglevel)
 - [mapping](#mapping)
@@ -149,12 +151,12 @@ Added in v1.0.0
 
 # environment
 
-## addLogger
+## add
 
 **Signature**
 
 ```ts
-export declare const addLogger: <B>(logger: Logger<string, B>) => Layer.Layer<never, never, never>
+export declare const add: <B>(logger: Logger<string, B>) => Layer.Layer<never, never, never>
 ```
 
 Added in v1.0.0
@@ -175,6 +177,29 @@ export declare const console: (
     | LogLevel.Trace
     | LogLevel.None
     | undefined
+) => Layer.Layer<never, never, never>
+```
+
+Added in v1.0.0
+
+## remove
+
+**Signature**
+
+```ts
+export declare const remove: <A>(logger: Logger<string, A>) => Layer.Layer<never, never, never>
+```
+
+Added in v1.0.0
+
+## replace
+
+**Signature**
+
+```ts
+export declare const replace: <A, B>(
+  logger: Logger<string, A>,
+  that: Logger<string, B>
 ) => Layer.Layer<never, never, never>
 ```
 

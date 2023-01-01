@@ -63,7 +63,14 @@ export declare namespace Logger {
  * @since 1.0.0
  * @category environment
  */
-export const addLogger: <B>(logger: Logger<string, B>) => Layer.Layer<never, never, never> = circular.addLogger
+export const add: <B>(logger: Logger<string, B>) => Layer.Layer<never, never, never> = circular.addLogger
+
+/**
+ * @since 1.0.0
+ * @category environment
+ */
+export const replace: <A, B>(logger: Logger<string, A>, that: Logger<string, B>) => Layer.Layer<never, never, never> =
+  circular.replaceLogger
 
 /**
  * @since 1.0.0
@@ -84,6 +91,12 @@ export const console: (minLevel?: LogLevel.LogLevel) => Layer.Layer<never, never
 export const contramap: <Message, Message2>(
   f: (message: Message2) => Message
 ) => <Output>(self: Logger<Message, Output>) => Logger<Message2, Output> = internal.contramap
+
+/**
+ * @since 1.0.0
+ * @category environment
+ */
+export const remove: <A>(logger: Logger<string, A>) => Layer.Layer<never, never, never> = circular.removeLogger
 
 /**
  * @since 1.0.0
