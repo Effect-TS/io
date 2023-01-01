@@ -6,7 +6,6 @@ import type * as Effect from "@effect/io/Effect"
 import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import * as core from "@effect/io/internal/core"
 import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
-import * as logger from "@effect/io/internal/logger"
 import type * as Logger from "@effect/io/Logger"
 import type * as LogLevel from "@effect/io/Logger/Level"
 import type * as LogSpan from "@effect/io/Logger/Span"
@@ -306,13 +305,19 @@ export const currentLogAnnotations: FiberRef<ReadonlyMap<string, string>> = core
  * @since 1.0.0
  * @category fiberRefs
  */
-export const currentLoggers: FiberRef<HashSet.HashSet<Logger.Logger<string, any>>> = logger.currentLoggers
+export const currentLoggers: FiberRef<HashSet.HashSet<Logger.Logger<string, any>>> = fiberRuntime.currentLoggers
 
 /**
  * @since 1.0.0
  * @category fiberRefs
  */
 export const currentLogLevel: FiberRef<LogLevel.LogLevel> = core.currentLogLevel
+
+/**
+ * @since 1.0.0
+ * @category fiberRefs
+ */
+export const currentMinimumLogLevel: FiberRef<LogLevel.LogLevel> = fiberRuntime.currentMinimumLogLevel
 
 /**
  * @since 1.0.0

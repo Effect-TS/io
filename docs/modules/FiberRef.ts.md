@@ -28,6 +28,7 @@ Added in v1.0.0
   - [currentLogLevel](#currentloglevel)
   - [currentLogSpan](#currentlogspan)
   - [currentLoggers](#currentloggers)
+  - [currentMinimumLogLevel](#currentminimumloglevel)
   - [currentParallelism](#currentparallelism)
   - [currentRuntimeFlags](#currentruntimeflags)
   - [currentScheduler](#currentscheduler)
@@ -220,6 +221,16 @@ Added in v1.0.0
 
 ```ts
 export declare const currentLoggers: FiberRef<HashSet.HashSet<Logger.Logger<string, any>>>
+```
+
+Added in v1.0.0
+
+## currentMinimumLogLevel
+
+**Signature**
+
+```ts
+export declare const currentMinimumLogLevel: FiberRef<LogLevel.LogLevel>
 ```
 
 Added in v1.0.0

@@ -1,20 +1,17 @@
 import type * as CauseExt from "@effect/io/Cause"
-import { runtimeDebug } from "@effect/io/Debug"
 import type * as FiberId from "@effect/io/Fiber/Id"
-import type * as FiberRef from "@effect/io/FiberRef"
 import type * as FiberRefs from "@effect/io/FiberRefs"
 import * as Cause from "@effect/io/internal/cause"
 import * as Pretty from "@effect/io/internal/cause-pretty"
-import * as core from "@effect/io/internal/core"
 import * as _fiberId from "@effect/io/internal/fiberId"
 import type * as Logger from "@effect/io/Logger"
-import * as LogLevel from "@effect/io/Logger/Level"
+import type * as LogLevel from "@effect/io/Logger/Level"
 import * as LogSpan from "@effect/io/Logger/Span"
 import type { Runtime } from "@effect/io/Runtime"
 import * as Chunk from "@fp-ts/data/Chunk"
 import { constVoid, pipe } from "@fp-ts/data/Function"
-import * as HashSet from "@fp-ts/data/HashSet"
 import * as Option from "@fp-ts/data/Option"
+
 /** @internal */
 const LoggerSymbolKey = "@effect/io/Logger"
 
@@ -110,14 +107,6 @@ const appendQuoted = (label: string, output: string): string => {
   } else {
     return output + `"${label}"`
   }
-}
-
-/** @internal */
-export const consoleLogger = (): Logger.Logger<string, void> => {
-  return pipe(
-    stringLogger,
-    map((message) => globalThis.console.log(message))
-  )
 }
 
 /** @internal */
@@ -218,15 +207,3 @@ export const zipRight = <Message2, Output2>(that: Logger.Logger<Message2, Output
     return pipe(self, zip(that), map((tuple) => tuple[1]))
   }
 }
-
-/** @internal */
-export const defaultLogger = pipe(
-  consoleLogger(),
-  filterLogLevel(LogLevel.greaterThanEqual(LogLevel.fromLiteral(runtimeDebug.defaultLogLevel))),
-  map(constVoid)
-)
-
-/** @internal */
-export const currentLoggers: FiberRef.FiberRef<
-  HashSet.HashSet<Logger.Logger<string, any>>
-> = core.fiberRefUnsafeMakeHashSet(HashSet.make(defaultLogger))

@@ -1,6 +1,6 @@
 import { runtimeDebug } from "@effect/io/Debug"
 
-runtimeDebug.defaultLogLevel = "Debug"
+runtimeDebug.minumumLogLevel = "Debug"
 runtimeDebug.traceExecutionLogEnabled = true
 
 import("./traced")

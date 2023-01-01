@@ -1,42 +1,31 @@
-import { runtimeDebug } from "@effect/io/Debug"
+import * as core from "@effect/io/internal/core"
 import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
 import * as layer from "@effect/io/internal/layer"
-import * as _logger from "@effect/io/internal/logger"
 import * as runtimeFlags from "@effect/io/internal/runtimeFlags"
 import * as runtimeFlagsPatch from "@effect/io/internal/runtimeFlagsPatch"
 import * as _supervisor from "@effect/io/internal/supervisor"
 import type * as Layer from "@effect/io/Layer"
 import type * as Logger from "@effect/io/Logger"
-import * as LogLevel from "@effect/io/Logger/Level"
+import type * as LogLevel from "@effect/io/Logger/Level"
 import type * as Supervisor from "@effect/io/Supervisor"
-import { constVoid, pipe } from "@fp-ts/data/Function"
+import { pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
 
 // circular with Logger
 
 /** @internal */
-export const consoleLoggerLayer = (
-  minLevel: LogLevel.LogLevel = LogLevel.fromLiteral(runtimeDebug.defaultLogLevel)
-): Layer.Layer<never, never, never> => {
-  return pipe(
-    removeLogger(_logger.defaultLogger),
-    layer.flatMap(() =>
-      addLogger(
-        pipe(
-          _logger.consoleLogger(),
-          _logger.filterLogLevel(LogLevel.greaterThanEqual(minLevel)),
-          _logger.map(constVoid)
-        )
-      )
-    )
-  )
-}
+export const minimumLogLevel = (level: LogLevel.LogLevel) =>
+  layer.scopedDiscard(fiberRuntime.fiberRefLocallyScoped(level)(fiberRuntime.currentMinimumLogLevel))
+
+/** @internal */
+export const withMinimumLogLevel = (level: LogLevel.LogLevel) =>
+  core.fiberRefLocally(level)(fiberRuntime.currentMinimumLogLevel)
 
 /** @internal */
 export const addLogger = <A>(logger: Logger.Logger<string, A>): Layer.Layer<never, never, never> => {
   return layer.scopedDiscard(
     pipe(
-      _logger.currentLoggers,
+      fiberRuntime.currentLoggers,
       fiberRuntime.fiberRefLocallyScopedWith(HashSet.add(logger))
     )
   )
@@ -46,7 +35,7 @@ export const addLogger = <A>(logger: Logger.Logger<string, A>): Layer.Layer<neve
 export const removeLogger = <A>(logger: Logger.Logger<string, A>): Layer.Layer<never, never, never> => {
   return layer.scopedDiscard(
     pipe(
-      _logger.currentLoggers,
+      fiberRuntime.currentLoggers,
       fiberRuntime.fiberRefLocallyScopedWith(HashSet.remove(logger))
     )
   )
