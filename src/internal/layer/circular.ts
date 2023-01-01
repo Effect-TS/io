@@ -19,7 +19,7 @@ export const consoleLoggerLayer = (
   minLevel: LogLevel.LogLevel = LogLevel.fromLiteral(runtimeDebug.defaultLogLevel)
 ): Layer.Layer<never, never, never> => {
   return pipe(
-    removeDefaultLoggers(),
+    removeLogger(_logger.defaultLogger),
     layer.flatMap(() =>
       addLogger(
         pipe(
@@ -43,13 +43,21 @@ export const addLogger = <A>(logger: Logger.Logger<string, A>): Layer.Layer<neve
 }
 
 /** @internal */
-export const removeDefaultLoggers = (): Layer.Layer<never, never, never> => {
+export const removeLogger = <A>(logger: Logger.Logger<string, A>): Layer.Layer<never, never, never> => {
   return layer.scopedDiscard(
     pipe(
       _logger.currentLoggers,
-      fiberRuntime.fiberRefLocallyScopedWith(HashSet.remove(_logger.defaultLogger))
+      fiberRuntime.fiberRefLocallyScopedWith(HashSet.remove(logger))
     )
   )
+}
+
+/** @internal */
+export const replaceLogger = <A, B>(
+  logger: Logger.Logger<string, A>,
+  that: Logger.Logger<string, B>
+): Layer.Layer<never, never, never> => {
+  return pipe(removeLogger(logger), layer.flatMap(() => addLogger(that)))
 }
 
 /** @internal */
