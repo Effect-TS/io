@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.0.47
+
+### Patch Changes
+
+- [#140](https://github.com/Effect-TS/io/pull/140) [`8ed2101`](https://github.com/Effect-TS/io/commit/8ed2101894ab932963b416aee8880ea7d91d3058) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Add Fiber.unsafeRoots
+
 ## 0.0.46
 
 ### Patch Changes
