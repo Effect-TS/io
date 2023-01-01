@@ -25,6 +25,7 @@ Added in v1.0.0
   - [roots](#roots)
   - [succeed](#succeed)
   - [unit](#unit)
+  - [unsafeRoots](#unsaferoots)
 - [conversions](#conversions)
   - [fromEffect](#fromeffect)
 - [destructors](#destructors)
@@ -215,6 +216,18 @@ A fiber that has already succeeded with unit.
 
 ```ts
 export declare const unit: () => Fiber<never, void>
+```
+
+Added in v1.0.0
+
+## unsafeRoots
+
+Returns a chunk containing all root fibers.
+
+**Signature**
+
+```ts
+export declare const unsafeRoots: () => Chunk.Chunk<RuntimeFiber<any, any>>
 ```
 
 Added in v1.0.0
