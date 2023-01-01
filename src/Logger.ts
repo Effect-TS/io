@@ -110,6 +110,23 @@ export const filterLogLevel: (
   internal.filterLogLevel
 
 /**
+ * @category constructors
+ * @since 1.0.0
+ */
+export const make: <Message, Output>(
+  log: (
+    fiberId: FiberId.FiberId,
+    logLevel: LogLevel.LogLevel,
+    message: Message,
+    cause: Cause.Cause<unknown>,
+    context: FiberRefs.FiberRefs,
+    spans: Chunk.Chunk<LogSpan.LogSpan>,
+    annotations: ReadonlyMap<string, string>,
+    runtime: Runtime<never>
+  ) => Output
+) => Logger<Message, Output> = internal.makeLogger
+
+/**
  * @since 1.0.0
  * @category mapping
  */

@@ -1,5 +1,8 @@
+import type * as CauseExt from "@effect/io/Cause"
 import { runtimeDebug } from "@effect/io/Debug"
+import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRef from "@effect/io/FiberRef"
+import type * as FiberRefs from "@effect/io/FiberRefs"
 import * as Cause from "@effect/io/internal/cause"
 import * as Pretty from "@effect/io/internal/cause-pretty"
 import * as core from "@effect/io/internal/core"
@@ -7,11 +10,11 @@ import * as _fiberId from "@effect/io/internal/fiberId"
 import type * as Logger from "@effect/io/Logger"
 import * as LogLevel from "@effect/io/Logger/Level"
 import * as LogSpan from "@effect/io/Logger/Span"
+import type { Runtime } from "@effect/io/Runtime"
 import * as Chunk from "@fp-ts/data/Chunk"
 import { constVoid, pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
 import * as Option from "@fp-ts/data/Option"
-
 /** @internal */
 const LoggerSymbolKey = "@effect/io/Logger"
 
@@ -25,6 +28,23 @@ const loggerVariance = {
   _Message: (_: unknown) => _,
   _Output: (_: never) => _
 }
+
+/** @internal */
+export const makeLogger = <Message, Output>(
+  log: (
+    fiberId: FiberId.FiberId,
+    logLevel: LogLevel.LogLevel,
+    message: Message,
+    cause: CauseExt.Cause<unknown>,
+    context: FiberRefs.FiberRefs,
+    spans: Chunk.Chunk<LogSpan.LogSpan>,
+    annotations: ReadonlyMap<string, string>,
+    runtime: Runtime<never>
+  ) => Output
+): Logger.Logger<Message, Output> => ({
+  [LoggerTypeId]: loggerVariance,
+  log
+})
 
 /** @internal */
 export const stringLogger: Logger.Logger<string, string> = {

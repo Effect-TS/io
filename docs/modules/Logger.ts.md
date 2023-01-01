@@ -15,6 +15,7 @@ Added in v1.0.0
 - [constructors](#constructors)
   - [consoleLogger](#consolelogger)
   - [defaultLogger](#defaultlogger)
+  - [make](#make)
   - [none](#none)
   - [simple](#simple)
   - [stringLogger](#stringlogger)
@@ -59,6 +60,27 @@ Added in v1.0.0
 
 ```ts
 export declare const defaultLogger: Logger<string, void>
+```
+
+Added in v1.0.0
+
+## make
+
+**Signature**
+
+```ts
+export declare const make: <Message, Output>(
+  log: (
+    fiberId: FiberId.FiberId,
+    logLevel: LogLevel.LogLevel,
+    message: Message,
+    cause: Cause.Cause<unknown>,
+    context: FiberRefs.FiberRefs,
+    spans: Chunk.Chunk<LogSpan.LogSpan>,
+    annotations: ReadonlyMap<string, string>,
+    runtime: Runtime<never>
+  ) => Output
+) => Logger<Message, Output>
 ```
 
 Added in v1.0.0
