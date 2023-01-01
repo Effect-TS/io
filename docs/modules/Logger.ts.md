@@ -13,7 +13,6 @@ Added in v1.0.0
 <h2 class="text-delta">Table of contents</h2>
 
 - [constructors](#constructors)
-  - [consoleLogger](#consolelogger)
   - [defaultLogger](#defaultlogger)
   - [make](#make)
   - [none](#none)
@@ -24,9 +23,10 @@ Added in v1.0.0
   - [test](#test)
 - [environment](#environment)
   - [add](#add)
-  - [console](#console)
+  - [minimumLogLevel](#minimumloglevel)
   - [remove](#remove)
   - [replace](#replace)
+  - [withMinimumLogLevel](#withminimumloglevel)
 - [filtering](#filtering)
   - [filterLogLevel](#filterloglevel)
 - [mapping](#mapping)
@@ -45,16 +45,6 @@ Added in v1.0.0
 ---
 
 # constructors
-
-## consoleLogger
-
-**Signature**
-
-```ts
-export declare const consoleLogger: () => Logger<string, void>
-```
-
-Added in v1.0.0
 
 ## defaultLogger
 
@@ -161,23 +151,12 @@ export declare const add: <B>(logger: Logger<string, B>) => Layer.Layer<never, n
 
 Added in v1.0.0
 
-## console
+## minimumLogLevel
 
 **Signature**
 
 ```ts
-export declare const console: (
-  minLevel?:
-    | LogLevel.All
-    | LogLevel.Fatal
-    | LogLevel.Error
-    | LogLevel.Warning
-    | LogLevel.Info
-    | LogLevel.Debug
-    | LogLevel.Trace
-    | LogLevel.None
-    | undefined
-) => Layer.Layer<never, never, never>
+export declare const minimumLogLevel: (level: LogLevel.LogLevel) => Layer.Layer<never, never, never>
 ```
 
 Added in v1.0.0
@@ -201,6 +180,18 @@ export declare const replace: <A, B>(
   logger: Logger<string, A>,
   that: Logger<string, B>
 ) => Layer.Layer<never, never, never>
+```
+
+Added in v1.0.0
+
+## withMinimumLogLevel
+
+**Signature**
+
+```ts
+export declare const withMinimumLogLevel: (
+  level: LogLevel.LogLevel
+) => <R, E, B>(use: Effect<R, E, B>) => Effect<R, E, B>
 ```
 
 Added in v1.0.0

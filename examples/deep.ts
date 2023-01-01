@@ -10,7 +10,7 @@ const program = pipe(
   Effect.forEachPar((n) => Effect.delay(seconds(1))(n % 3 === 0 ? Effect.die("boom") : Effect.succeed(n + 1))),
   Effect.flatMap((chunk) => Effect.sync(() => console.log(Array.from(chunk)))),
   Effect.tapErrorCause(Effect.logErrorCause),
-  Effect.provideLayer(Logger.console(Level.Debug))
+  Effect.provideLayer(Logger.minimumLogLevel(Level.Debug))
 )
 
 Effect.unsafeFork(program)

@@ -57,7 +57,7 @@ export interface Debug {
   /**
    * Overrides the default log level filter for loggers such as console.
    */
-  defaultLogLevel: 'All' | 'Fatal' | 'Error' | 'Warning' | 'Info' | 'Debug' | 'Trace' | 'None'
+  minumumLogLevel: 'All' | 'Fatal' | 'Error' | 'Warning' | 'Info' | 'Debug' | 'Trace' | 'None'
   /**
    * When specified it will be used to collect call traces at runtime.
    *

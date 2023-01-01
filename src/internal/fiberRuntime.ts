@@ -34,6 +34,7 @@ import * as supervisor from "@effect/io/internal/supervisor"
 import * as SupervisorPatch from "@effect/io/internal/supervisor/patch"
 import { RingBuffer } from "@effect/io/internal/support"
 import type { EnforceNonEmptyRecord, TupleEffect } from "@effect/io/internal/types"
+import type { Logger } from "@effect/io/Logger"
 import * as LogLevel from "@effect/io/Logger/Level"
 import * as Ref from "@effect/io/Ref"
 import type { Runtime } from "@effect/io/Runtime"
@@ -42,12 +43,11 @@ import type * as Supervisor from "@effect/io/Supervisor"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Context from "@fp-ts/data/Context"
 import * as Either from "@fp-ts/data/Either"
+import * as Equal from "@fp-ts/data/Equal"
 import { identity, pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
 import * as MutableQueue from "@fp-ts/data/MutableQueue"
 import * as Option from "@fp-ts/data/Option"
-
-import * as Equal from "@fp-ts/data/Equal"
 
 const fibersStarted = metric.counter("effect_fiber_started")
 const fiberSuccesses = metric.counter("effect_fiber_successes")
@@ -728,7 +728,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   }
 
   getLoggers() {
-    return this.getFiberRef(internalLogger.currentLoggers)
+    return this.getFiberRef(currentLoggers)
   }
 
   log(
@@ -1267,6 +1267,38 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     this.drainQueueOnCurrentThread()
   }
 }
+
+// circular with Logger
+
+/** @internal */
+export const currentMinimumLogLevel: FiberRef.FiberRef<LogLevel.LogLevel> = core.fiberRefUnsafeMake<LogLevel.LogLevel>(
+  LogLevel.fromLiteral(runtimeDebug.minumumLogLevel)
+)
+
+/** @internal */
+export const defaultLogger: Logger<string, void> = internalLogger.makeLogger(
+  (fiberId, logLevel, message, cause, context, spans, annotations, runtime) => {
+    const formatted = internalLogger.stringLogger.log(
+      fiberId,
+      logLevel,
+      message,
+      cause,
+      context,
+      spans,
+      annotations,
+      runtime
+    )
+    const filter = fiberRefs.getOrDefault(currentMinimumLogLevel)(context)
+    if (LogLevel.greaterThanEqual(filter)(logLevel)) {
+      globalThis.console.log(formatted)
+    }
+  }
+)
+
+/** @internal */
+export const currentLoggers: FiberRef.FiberRef<
+  HashSet.HashSet<Logger<string, any>>
+> = core.fiberRefUnsafeMakeHashSet(HashSet.make(defaultLogger))
 
 // circular with Effect
 

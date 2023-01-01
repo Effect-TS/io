@@ -2,8 +2,10 @@
  * @since 1.0.0
  */
 import type * as Cause from "@effect/io/Cause"
+import type { Effect } from "@effect/io/Effect"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRefs from "@effect/io/FiberRefs"
+import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
 import * as circular from "@effect/io/internal/layer/circular"
 import * as internal from "@effect/io/internal/logger"
 import * as internalCircular from "@effect/io/internal/logger-circular"
@@ -74,18 +76,6 @@ export const replace: <A, B>(logger: Logger<string, A>, that: Logger<string, B>)
 
 /**
  * @since 1.0.0
- * @category constructors
- */
-export const consoleLogger: () => Logger<string, void> = internal.consoleLogger
-
-/**
- * @since 1.0.0
- * @category environment
- */
-export const console: (minLevel?: LogLevel.LogLevel) => Layer.Layer<never, never, never> = circular.consoleLoggerLayer
-
-/**
- * @since 1.0.0
  * @category mapping
  */
 export const contramap: <Message, Message2>(
@@ -102,7 +92,20 @@ export const remove: <A>(logger: Logger<string, A>) => Layer.Layer<never, never,
  * @since 1.0.0
  * @category constructors
  */
-export const defaultLogger: Logger<string, void> = internal.defaultLogger
+export const defaultLogger: Logger<string, void> = fiberRuntime.defaultLogger
+
+/**
+ * @since 1.0.0
+ * @category environment
+ */
+export const minimumLogLevel: (level: LogLevel.LogLevel) => Layer.Layer<never, never, never> = circular.minimumLogLevel
+
+/**
+ * @since 1.0.0
+ * @category environment
+ */
+export const withMinimumLogLevel: (level: LogLevel.LogLevel) => <R, E, B>(use: Effect<R, E, B>) => Effect<R, E, B> =
+  circular.withMinimumLogLevel
 
 /**
  * @since 1.0.0
