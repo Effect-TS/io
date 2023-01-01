@@ -21,7 +21,6 @@ export type IntervalTypeId = typeof IntervalTypeId
  * An `Interval` represents an interval of time. Intervals can encompass all
  * time, or no time at all.
  *
- * @tsplus type effect/core/io/Interval/Interval
  * @since 1.0.0
  * @category models
  */
@@ -131,7 +130,6 @@ export const after: (startMilliseconds: number) => Interval = internal.after
  * Construct an `Interval` that includes all time equal to and before the
  * specified end time.
  *
- * @tsplus static effect/core/io/Interval/Interval before
  * @category constructors
  * @since 1.0.0
  */

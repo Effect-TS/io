@@ -64,7 +64,6 @@ export type ScheduleDriverTypeId = typeof ScheduleDriverTypeId
  * and the companion object for `Schedule` contains all common types of
  * schedules, both for performing retrying, as well as performing repetition.
  *
- * @tsplus type effect/core/io/Schedule
  * @category model
  * @since 1.0.0
  */
@@ -318,7 +317,6 @@ export const collectWhile: <A>(f: Predicate<A>) => Schedule<never, A, Chunk.Chun
  * A schedule that recurs as long as the effectful condition holds, collecting
  * all inputs into a list.
  *
- * @tsplus static effect/core/io/Schedule.Ops collectWhileEffect
  * @category mutations
  * @since 1.0.0
  */
@@ -929,7 +927,6 @@ export const recurWhileEquals: <A>(value: A) => Schedule<never, A, A> = internal
  * A schedule spanning all time, which can be stepped only the specified
  * number of times before it terminates.
  *
- * @tsplus static effect/core/io/Schedule.Ops recurs
  * @category constructors
  * @since 1.0.0
  */
@@ -1039,7 +1036,6 @@ export const succeed: <A>(value: A) => Schedule<never, unknown, A> = internal.su
  * Returns a schedule that repeats one time, producing the specified constant
  * value.
  *
- * @tsplus static effect/core/io/Schedule.Ops sync
  * @category constructors
  * @since 1.0.0
  */
