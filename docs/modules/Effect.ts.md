@@ -429,8 +429,6 @@ Added in v1.0.0
   - [exit](#exit)
   - [fiberId](#fiberid)
   - [intoDeferred](#intodeferred)
-- [utils](#utils)
-  - [unsafeRootFibers](#unsaferootfibers)
 - [zipping](#zipping)
   - [zipPar](#zippar)
   - [zipParLeft](#zipparleft)
@@ -6028,18 +6026,6 @@ Added in v1.0.0
 export declare const intoDeferred: <E, A>(
   deferred: Deferred.Deferred<E, A>
 ) => <R>(self: Effect<R, E, A>) => Effect<R, never, boolean>
-```
-
-Added in v1.0.0
-
-# utils
-
-## unsafeRootFibers
-
-**Signature**
-
-```ts
-export declare const unsafeRootFibers: () => Array<Fiber.Fiber<any, any>>
 ```
 
 Added in v1.0.0

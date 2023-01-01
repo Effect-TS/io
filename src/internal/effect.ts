@@ -10,7 +10,6 @@ import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
 import * as internalCause from "@effect/io/internal/cause"
 import * as core from "@effect/io/internal/core"
 import * as fiberRefsPatch from "@effect/io/internal/fiberRefs/patch"
-import * as fiberScope from "@effect/io/internal/fiberScope"
 import * as SingleShotGen from "@effect/io/internal/singleShotGen"
 import type { EnforceNonEmptyRecord, MergeRecord, NonEmptyArrayEffect, TupleEffect } from "@effect/io/internal/types"
 import * as LogLevel from "@effect/io/Logger/Level"
@@ -2616,6 +2615,3 @@ export const blocking = <R, E, A>(self: Effect.Effect<R, E, A>) => {
   const trace = getCallTrace()
   return pipe(core.yieldNow("background"), core.zipRight(self)).traced(trace)
 }
-
-/** @internal */
-export const unsafeRootFibers = (): Array<Fiber.Fiber<any, any>> => Array.from(fiberScope.globalScope.roots)

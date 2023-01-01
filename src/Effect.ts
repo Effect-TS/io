@@ -4229,12 +4229,6 @@ export const unsafeRunSyncEither: <E, A>(effect: Effect<never, E, A>) => Either.
   _runtime.unsafeRunSyncEither
 
 /**
- * @since 1.0.0
- * @category utils
- */
-export const unsafeRootFibers: () => Array<Fiber.Fiber<any, any>> = effect.unsafeRootFibers
-
-/**
  * The inverse operation `sandbox(effect)`
  *
  * Terminates with exceptions on the `Left` side of the `Either` error, if it
