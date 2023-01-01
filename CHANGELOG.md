@@ -1,5 +1,15 @@
 # @effect/io
 
+## 0.0.46
+
+### Patch Changes
+
+- [#139](https://github.com/Effect-TS/io/pull/139) [`d04b063`](https://github.com/Effect-TS/io/commit/d04b06366d1466ae8eac933a5593f42afb1273d8) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Add Logger.make
+
+- [#139](https://github.com/Effect-TS/io/pull/139) [`18668e4`](https://github.com/Effect-TS/io/commit/18668e436ba55d3928cbea449e1b1a042fb8f43f) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Expose unsafeRootFibers
+
+- [#137](https://github.com/Effect-TS/io/pull/137) [`53e13c5`](https://github.com/Effect-TS/io/commit/53e13c5e9d028f01f33743cf592615828b390d61) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Improve Effect.unsafeRun typing
+
 ## 0.0.45
 
 ### Patch Changes
