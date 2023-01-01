@@ -771,7 +771,7 @@ provided to allow for better diagnostics.
 ```ts
 export declare const async: <R, E, A>(
   register: (callback: (_: Effect<R, E, A>) => void) => void,
-  blockingOn?: FiberId.Runtime | FiberId.None | FiberId.Composite | undefined
+  blockingOn?: FiberId.None | FiberId.Runtime | FiberId.Composite | undefined
 ) => Effect<R, E, A>
 ```
 
@@ -806,7 +806,7 @@ provided to allow for better diagnostics.
 ```ts
 export declare const asyncInterrupt: <R, E, A>(
   register: (callback: (effect: Effect<R, E, A>) => void) => Effect<R, never, void>,
-  blockingOn?: FiberId.Runtime | FiberId.None | FiberId.Composite | undefined
+  blockingOn?: FiberId.None | FiberId.Runtime | FiberId.Composite | undefined
 ) => Effect<R, E, A>
 ```
 
@@ -833,7 +833,7 @@ provided to allow for better diagnostics.
 ```ts
 export declare const asyncInterruptEither: <R, E, A>(
   register: (callback: (effect: Effect<R, E, A>) => void) => Either.Either<Effect<R, never, void>, Effect<R, E, A>>,
-  blockingOn?: FiberId.Runtime | FiberId.None | FiberId.Composite | undefined
+  blockingOn?: FiberId.None | FiberId.Runtime | FiberId.Composite | undefined
 ) => Effect<R, E, A>
 ```
 
@@ -856,7 +856,7 @@ provided to allow for better diagnostics.
 ```ts
 export declare const asyncOption: <R, E, A>(
   register: (callback: (_: Effect<R, E, A>) => void) => Option.Option<Effect<R, E, A>>,
-  blockingOn?: FiberId.Runtime | FiberId.None | FiberId.Composite | undefined
+  blockingOn?: FiberId.None | FiberId.Runtime | FiberId.Composite | undefined
 ) => Effect<R, E, A>
 ```
 
