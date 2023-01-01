@@ -551,7 +551,7 @@ export const scheduleForked = <R2, Out>(schedule: Schedule.Schedule<R2, unknown,
 export const supervised = <X>(supervisor: Supervisor.Supervisor<X>) => {
   const trace = getCallTrace()
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-    const supervise = pipe(fiberRuntime.currentSupervisor, core.fiberRefLocallyWith((s) => s.zip(supervisor)))
+    const supervise = core.fiberRefLocallyWith(fiberRuntime.currentSupervisor)((s) => s.zip(supervisor))
     return supervise(self).traced(trace)
   }
 }

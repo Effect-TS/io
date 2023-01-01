@@ -1393,10 +1393,7 @@ export const collectAllWithPar = <A, B>(pf: (a: A) => Option.Option<B>) => {
 /** @internal */
 export const daemonChildren = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
-  const forkScope = pipe(
-    core.forkScopeOverride,
-    core.fiberRefLocally(Option.some(fiberScope.globalScope as FiberScope))
-  )
+  const forkScope = core.fiberRefLocally(core.forkScopeOverride)(Option.some(fiberScope.globalScope as FiberScope))
   return forkScope(self).traced(trace)
 }
 
@@ -1464,11 +1461,8 @@ export const forEachPar = <A, R, E, B>(
 ) => {
   const trace = getCallTrace()
   return (self: Iterable<A>): Effect.Effect<R, E, Chunk.Chunk<B>> =>
-    pipe(
-      core.currentParallelism,
-      core.fiberRefGetWith(
-        (o) => o._tag === "None" ? forEachParUnbounded(f)(self) : forEachParN(o.value, f)(self)
-      )
+    core.fiberRefGetWith(core.currentParallelism)(
+      (o) => o._tag === "None" ? forEachParUnbounded(f)(self) : forEachParN(o.value, f)(self)
     ).traced(trace)
 }
 
@@ -1478,11 +1472,8 @@ export const forEachParDiscard = <A, R, E, _>(
 ) => {
   const trace = getCallTrace()
   return (self: Iterable<A>): Effect.Effect<R, E, void> =>
-    pipe(
-      core.currentParallelism,
-      core.fiberRefGetWith(
-        (o) => o._tag === "None" ? forEachParUnboundedDiscard(f)(self) : forEachParNDiscard(o.value, f)(self)
-      )
+    core.fiberRefGetWith(core.currentParallelism)(
+      (o) => o._tag === "None" ? forEachParUnboundedDiscard(f)(self) : forEachParNDiscard(o.value, f)(self)
     ).traced(trace)
 }
 
@@ -2182,19 +2173,13 @@ export const validateFirstPar = <R, E, A, B>(f: (a: A) => Effect.Effect<R, E, B>
 /** @internal */
 export const withClockScoped = <A extends Clock.Clock>(value: A) => {
   const trace = getCallTrace()
-  return pipe(
-    defaultServices.currentServices,
-    fiberRefLocallyScopedWith(Context.add(clock.clockTag)(value))
-  ).traced(trace)
+  return fiberRefLocallyScopedWith(defaultServices.currentServices)(Context.add(clock.clockTag)(value)).traced(trace)
 }
 
 /** @internal */
 export const withConfigProviderScoped = (value: ConfigProvider) => {
   const trace = getCallTrace()
-  return pipe(
-    defaultServices.currentServices,
-    fiberRefLocallyScopedWith(Context.add(configProviderTag)(value))
-  ).traced(trace)
+  return fiberRefLocallyScopedWith(defaultServices.currentServices)(Context.add(configProviderTag)(value)).traced(trace)
 }
 
 /** @internal */
@@ -2394,16 +2379,16 @@ export const fiberRefUnsafeMakeSupervisor = (
 // circular with FiberRef
 
 /** @internal */
-export const fiberRefLocallyScoped = <A>(value: A) => {
+export const fiberRefLocallyScoped = <A>(self: FiberRef.FiberRef<A>) => {
   const trace = getCallTrace()
-  return (self: FiberRef.FiberRef<A>): Effect.Effect<Scope.Scope, never, void> => {
+  return (value: A): Effect.Effect<Scope.Scope, never, void> => {
     return pipe(
       acquireRelease(
         pipe(
           core.fiberRefGet(self),
-          core.flatMap((oldValue) => pipe(self, core.fiberRefSet(value), core.as(oldValue)))
+          core.flatMap((oldValue) => pipe(core.fiberRefSet(self)(value), core.as(oldValue)))
         ),
-        (oldValue) => pipe(self, core.fiberRefSet(oldValue))
+        (oldValue) => core.fiberRefSet(self)(oldValue)
       ),
       core.asUnit
     ).traced(trace)
@@ -2411,10 +2396,10 @@ export const fiberRefLocallyScoped = <A>(value: A) => {
 }
 
 /** @internal */
-export const fiberRefLocallyScopedWith = <A>(f: (a: A) => A) => {
+export const fiberRefLocallyScopedWith = <A>(self: FiberRef.FiberRef<A>) => {
   const trace = getCallTrace()
-  return (self: FiberRef.FiberRef<A>): Effect.Effect<Scope.Scope, never, void> => {
-    return pipe(self, core.fiberRefGetWith((a) => pipe(self, fiberRefLocallyScoped(f(a))))).traced(trace)
+  return (f: (a: A) => A): Effect.Effect<Scope.Scope, never, void> => {
+    return core.fiberRefGetWith(self)((a) => fiberRefLocallyScoped(self)(f(a))).traced(trace)
   }
 }
 
@@ -2434,7 +2419,7 @@ export const fiberRefMakeWith = <Value>(
 ): Effect.Effect<Scope.Scope, never, FiberRef.FiberRef<Value>> => {
   const trace = getCallTrace()
   return acquireRelease(
-    pipe(core.sync(ref), core.tap(core.fiberRefUpdate(identity))),
+    pipe(core.sync(ref), core.tap((ref) => core.fiberRefUpdate(ref)(identity))),
     (fiberRef) => core.fiberRefDelete(fiberRef)
   ).traced(trace)
 }

@@ -69,10 +69,7 @@ class AnnotationsImpl implements Annotations {
   }
   annotate<A>(key: TestAnnotation.TestAnnotation<A>, value: A): Effect.Effect<never, never, void> {
     const trace = getCallTrace()
-    return pipe(
-      this.fiberRef,
-      core.fiberRefUpdate(TestAnnotationMap.annotate(key, value))
-    ).traced(trace)
+    return core.fiberRefUpdate(this.fiberRef)(TestAnnotationMap.annotate(key, value)).traced(trace)
   }
   supervisedFibers(): Effect.Effect<never, never, SortedSet.SortedSet<Fiber.RuntimeFiber<unknown, unknown>>> {
     const trace = getCallTrace()

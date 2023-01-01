@@ -143,11 +143,8 @@ export const fiberRefs = (self: FiberRefs.FiberRefs) => HashSet.from(self.locals
 export const setAll = (self: FiberRefs.FiberRefs) => {
   const trace = getCallTrace()
   return pipe(
-    self,
-    fiberRefs,
-    core.forEachDiscard(
-      (fiberRef) => pipe(fiberRef, core.fiberRefSet(getOrDefault(fiberRef)(self)))
-    )
+    fiberRefs(self),
+    core.forEachDiscard((fiberRef) => core.fiberRefSet(fiberRef)(getOrDefault(fiberRef)(self)))
   ).traced(trace)
 }
 

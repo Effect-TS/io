@@ -5,7 +5,6 @@ import * as defaultServices from "@effect/io/internal/defaultServices"
 import * as effect from "@effect/io/internal/effect"
 import * as layer from "@effect/io/internal/layer"
 import * as Context from "@fp-ts/data/Context"
-import { pipe } from "@fp-ts/data/Function"
 
 /**
  * The `Live` trait provides access to the "live" default Effect services from
@@ -30,14 +29,7 @@ export const Tag: Context.Tag<Live> = Context.Tag<Live>()
  */
 export const defaultLive = layer.fromEffect(Tag)(
   effect.environmentWith<never, Live>((env) => ({
-    provide: (effect) =>
-      pipe(
-        effect,
-        pipe(
-          defaultServices.currentServices,
-          core.fiberRefLocallyWith(Context.merge(env))
-        )
-      )
+    provide: core.fiberRefLocallyWith(defaultServices.currentServices)(Context.merge(env))
   }))
 )
 
@@ -60,17 +52,9 @@ export const live = <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R |
 export const withLive = <R, E, A, R2, E2, A2>(f: (effect: Effect.Effect<R, E, A>) => Effect.Effect<R2, E2, A2>) => {
   const trace = getCallTrace()
   return (effect: Effect.Effect<R, E, A>): Effect.Effect<R | R2 | Live, E | E2, A2> => {
-    return pipe(
-      defaultServices.currentServices,
-      core.fiberRefGetWith((services) =>
-        live(
-          f(
-            pipe(
-              effect,
-              pipe(defaultServices.currentServices, core.fiberRefLocally(services))
-            )
-          )
-        )
+    return core.fiberRefGetWith(defaultServices.currentServices)((services) =>
+      live(
+        f(core.fiberRefLocally(defaultServices.currentServices)(services)(effect))
       )
     ).traced(trace)
   }
