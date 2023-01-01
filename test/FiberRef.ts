@@ -41,7 +41,7 @@ describe.concurrent("FiberRef", () => {
   it.scoped("getAndUpdate - changing the value", () =>
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(initial))
-      const value1 = yield* $(pipe(fiberRef, FiberRef.getAndUpdate(() => update)))
+      const value1 = yield* $(FiberRef.getAndUpdate(fiberRef)(() => update))
       const value2 = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(value1, initial)
       assert.strictEqual(value2, update)
@@ -49,7 +49,7 @@ describe.concurrent("FiberRef", () => {
   it.scoped("getAndUpdateSome - changing the value", () =>
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(initial))
-      const value1 = yield* $(pipe(fiberRef, FiberRef.getAndUpdateSome(() => Option.some(update))))
+      const value1 = yield* $(FiberRef.getAndUpdateSome(fiberRef)(() => Option.some(update)))
       const value2 = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(value1, initial)
       assert.strictEqual(value2, update)
@@ -57,7 +57,7 @@ describe.concurrent("FiberRef", () => {
   it.scoped("getAndUpdateSome - not changing value", () =>
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(initial))
-      const value1 = yield* $(pipe(fiberRef, FiberRef.getAndUpdateSome<string>(() => Option.none)))
+      const value1 = yield* $(FiberRef.getAndUpdateSome(fiberRef)(() => Option.none))
       const value2 = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(value1, initial)
       assert.strictEqual(value2, initial)
@@ -65,7 +65,7 @@ describe.concurrent("FiberRef", () => {
   it.scoped("set updates the current value", () =>
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(initial))
-      yield* $(pipe(fiberRef, FiberRef.set(update)))
+      yield* $(FiberRef.set(fiberRef)(update))
       const result = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(result, update)
     }))
@@ -75,8 +75,7 @@ describe.concurrent("FiberRef", () => {
       const deferred = yield* $(Deferred.make<never, void>())
       yield* $(
         pipe(
-          fiberRef,
-          FiberRef.set(update),
+          FiberRef.set(fiberRef)(update),
           Effect.zipRight(pipe(deferred, Deferred.succeed<void>(void 0))),
           Effect.fork
         )
@@ -88,13 +87,7 @@ describe.concurrent("FiberRef", () => {
   it.scoped("modify - changing the value", () =>
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(initial))
-      const value1 = yield* $(pipe(
-        fiberRef,
-        FiberRef.modify((): [
-          number,
-          string
-        ] => [1, update])
-      ))
+      const value1 = yield* $(FiberRef.modify(fiberRef)(() => [1, update]))
       const value2 = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(value1, 1)
       assert.strictEqual(value2, update)
@@ -102,7 +95,7 @@ describe.concurrent("FiberRef", () => {
   it.scoped("modifySome - not changing the value", () =>
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(initial))
-      const value1 = yield* $(pipe(fiberRef, FiberRef.modifySome(2, () => Option.none)))
+      const value1 = yield* $(FiberRef.modifySome(fiberRef)(2, () => Option.none))
       const value2 = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(value1, 2)
       assert.strictEqual(value2, initial)
@@ -110,7 +103,7 @@ describe.concurrent("FiberRef", () => {
   it.scoped("updateAndGet - changing the value", () =>
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(initial))
-      const value1 = yield* $(pipe(fiberRef, FiberRef.updateAndGet(() => update)))
+      const value1 = yield* $(FiberRef.updateAndGet(fiberRef)(() => update))
       const value2 = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(value1, update)
       assert.strictEqual(value2, update)
@@ -118,7 +111,7 @@ describe.concurrent("FiberRef", () => {
   it.scoped("updateSomeAndGet - changing the value", () =>
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(initial))
-      const value1 = yield* $(pipe(fiberRef, FiberRef.updateSomeAndGet(() => Option.some(update))))
+      const value1 = yield* $(FiberRef.updateSomeAndGet(fiberRef)(() => Option.some(update)))
       const value2 = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(value1, update)
       assert.strictEqual(value2, update)
@@ -126,7 +119,7 @@ describe.concurrent("FiberRef", () => {
   it.scoped("updateSomeAndGet - not changing the value", () =>
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(initial))
-      const value1 = yield* $(pipe(fiberRef, FiberRef.updateSomeAndGet<string>(() => Option.none)))
+      const value1 = yield* $(FiberRef.updateSomeAndGet(fiberRef)(() => Option.none))
       const value2 = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(value1, initial)
       assert.strictEqual(value2, initial)
@@ -134,7 +127,7 @@ describe.concurrent("FiberRef", () => {
   it.scoped("restores the original value", () =>
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(initial))
-      yield* $(pipe(fiberRef, FiberRef.set(update)))
+      yield* $(FiberRef.set(fiberRef)(update))
       yield* $(FiberRef.delete(fiberRef))
       const result = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(result, initial)
@@ -142,7 +135,7 @@ describe.concurrent("FiberRef", () => {
   it.scoped("locally - restores original value", () =>
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(initial))
-      const local = yield* $(pipe(FiberRef.locally(update)(fiberRef))(FiberRef.get(fiberRef)))
+      const local = yield* $(pipe(FiberRef.locally(fiberRef)(update))(FiberRef.get(fiberRef)))
       const value = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(local, update)
       assert.strictEqual(value, initial)
@@ -150,7 +143,7 @@ describe.concurrent("FiberRef", () => {
   it.scoped("locally - restores parent's value", () =>
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(initial))
-      const child = yield* $(pipe(FiberRef.locally(update)(fiberRef))(pipe(FiberRef.get(fiberRef), Effect.fork)))
+      const child = yield* $(pipe(FiberRef.locally(fiberRef)(update))(pipe(FiberRef.get(fiberRef), Effect.fork)))
       const local = yield* $(Fiber.join(child))
       const value = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(local, update)
@@ -162,7 +155,7 @@ describe.concurrent("FiberRef", () => {
       )
       // Don't use join as it inherits values from child
       const fiberRef = yield* $(pipe(Fiber.await(child), Effect.flatMap((exit) => Effect.done(exit))))
-      const localValue = yield* $(pipe(fiberRef, FiberRef.locally(update))(FiberRef.get(fiberRef)))
+      const localValue = yield* $(FiberRef.locally(fiberRef)(update)(FiberRef.get(fiberRef)))
       const value = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(localValue, update)
       assert.strictEqual(value, initial)
@@ -170,7 +163,7 @@ describe.concurrent("FiberRef", () => {
   it.scoped("initial value is inherited on join", () =>
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(initial))
-      const child = yield* $(pipe(fiberRef, FiberRef.set(update), Effect.fork))
+      const child = yield* $(Effect.fork(FiberRef.set(fiberRef)(update)))
       yield* $(Fiber.join(child))
       const result = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(result, update)
@@ -201,7 +194,7 @@ describe.concurrent("FiberRef", () => {
   it.scoped("join function is applied on join - 1", () =>
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(0, identity, Math.max))
-      const child = yield* $(pipe(fiberRef, FiberRef.update(increment), Effect.fork))
+      const child = yield* $(Effect.fork(FiberRef.update(fiberRef)(increment)))
       yield* $(Fiber.join(child))
       const result = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(result, 1)
@@ -209,8 +202,8 @@ describe.concurrent("FiberRef", () => {
   it.scoped("join function is applied on join - 2", () =>
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(0, identity, Math.max))
-      const child = yield* $(pipe(fiberRef, FiberRef.update(increment), Effect.fork))
-      yield* $(pipe(fiberRef, FiberRef.update((n) => n + 2)))
+      const child = yield* $(Effect.fork(FiberRef.update(fiberRef)(increment)))
+      yield* $(FiberRef.update(fiberRef)((n) => n + 2))
       yield* $(Fiber.join(child))
       const result = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(result, 2)
@@ -219,11 +212,11 @@ describe.concurrent("FiberRef", () => {
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(initial))
       const latch = yield* $(Deferred.make<never, void>())
-      const winner = pipe(fiberRef, FiberRef.set(update1), Effect.zipRight(pipe(latch, Deferred.succeed<void>(void 0))))
+      const winner = pipe(FiberRef.set(fiberRef)(update1), Effect.zipRight(pipe(latch, Deferred.succeed<void>(void 0))))
       const loser = pipe(
         Deferred.await(latch),
         Effect.zipRight(Clock.sleep(Duration.millis(1))),
-        Effect.zipRight(pipe(fiberRef, FiberRef.set(update2)))
+        Effect.zipRight(FiberRef.set(fiberRef)(update2))
       )
       yield* $(pipe(winner, Effect.zipPar(loser)))
       const result = yield* $(FiberRef.get(fiberRef))
@@ -232,9 +225,9 @@ describe.concurrent("FiberRef", () => {
   it.scoped("nothing gets inherited with a failure in zipPar", () =>
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(initial))
-      const success = pipe(fiberRef, FiberRef.set(update))
-      const failure1 = pipe(fiberRef, FiberRef.set(update), Effect.zipRight(Effect.fail(":-(")))
-      const failure2 = pipe(fiberRef, FiberRef.set(update), Effect.zipRight(Effect.fail(":-O")))
+      const success = FiberRef.set(fiberRef)(update)
+      const failure1 = pipe(FiberRef.set(fiberRef)(update), Effect.zipRight(Effect.fail(":-(")))
+      const failure2 = pipe(FiberRef.set(fiberRef)(update), Effect.zipRight(Effect.fail(":-O")))
       yield* $(pipe(success, Effect.zipPar(pipe(failure1, Effect.zipPar(failure2))), Effect.orElse(Effect.unit)))
       const result = yield* $(FiberRef.get(fiberRef))
       assert.isTrue(result.includes(initial))
@@ -243,14 +236,14 @@ describe.concurrent("FiberRef", () => {
     Effect.gen(function*($) {
       const n = 1000
       const fiberRef = yield* $(FiberRef.make(0, constant(0), (a, b) => a + b))
-      yield* $(Effect.collectAllPar(Array.from({ length: n }, () => pipe(fiberRef, FiberRef.update((n) => n + 1)))))
+      yield* $(Effect.collectAllPar(Array.from({ length: n }, () => FiberRef.update(fiberRef)((n) => n + 1))))
       const result = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(result, n)
     }))
   it.scoped("its value is inherited after simple race", () =>
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(initial))
-      yield* $(pipe(fiberRef, FiberRef.set(update1), Effect.race(pipe(fiberRef, FiberRef.set(update2)))))
+      yield* $(pipe(FiberRef.set(fiberRef)(update1), Effect.race(FiberRef.set(fiberRef)(update2))))
       const result = yield* $(FiberRef.get(fiberRef))
       assert.isTrue(new RegExp(`${update1}|${update2}`).test(result))
     }))
@@ -259,13 +252,11 @@ describe.concurrent("FiberRef", () => {
       const fiberRef = yield* $(FiberRef.make(initial))
       const latch = yield* $(Deferred.make<never, void>())
       const badWinner = pipe(
-        fiberRef,
-        FiberRef.set(update1),
+        FiberRef.set(fiberRef)(update1),
         Effect.zipRight(pipe(Effect.fail("ups"), Effect.ensuring(pipe(latch, Deferred.succeed<void>(void 0)))))
       )
       const goodLoser = pipe(
-        fiberRef,
-        FiberRef.set(update2),
+        FiberRef.set(fiberRef)(update2),
         Effect.zipRight(Deferred.await(latch)),
         Effect.zipRight(Effect.sleep(Duration.seconds(1)))
       )
@@ -276,8 +267,8 @@ describe.concurrent("FiberRef", () => {
   it.scoped("its value is not inherited after a race of losers", () =>
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(initial))
-      const loser1 = pipe(fiberRef, FiberRef.set(update1), Effect.zipRight(Effect.fail("ups1")))
-      const loser2 = pipe(fiberRef, FiberRef.set(update2), Effect.zipRight(Effect.fail("ups2")))
+      const loser1 = pipe(FiberRef.set(fiberRef)(update1), Effect.zipRight(Effect.fail("ups1")))
+      const loser2 = pipe(FiberRef.set(fiberRef)(update2), Effect.zipRight(Effect.fail("ups2")))
       yield* $(pipe(loser1, Effect.race(loser2), Effect.ignore))
       const result = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(result, initial)
@@ -285,7 +276,7 @@ describe.concurrent("FiberRef", () => {
   it.scoped("its value is inherited in a trivial race", () =>
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(initial))
-      yield* $(Effect.raceAll([pipe(fiberRef, FiberRef.set(update))]))
+      yield* $(Effect.raceAll([FiberRef.set(fiberRef)(update)]))
       const result = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(result, update)
     }))
@@ -294,21 +285,20 @@ describe.concurrent("FiberRef", () => {
       const fiberRef = yield* $(FiberRef.make(initial))
       const latch = yield* $(Deferred.make<never, void>())
       const winner1 = pipe(
-        fiberRef,
-        FiberRef.set(update1),
+        FiberRef.set(fiberRef)(update1),
         Effect.zipRight(pipe(latch, Deferred.succeed<void>(void 0)))
       )
       const loser1 = pipe(
         Deferred.await(latch),
-        Effect.zipRight(pipe(fiberRef, FiberRef.set(update2))),
+        Effect.zipRight(FiberRef.set(fiberRef)(update2)),
         Effect.zipRight(loseTimeAndCpu)
       )
       yield* $(Effect.raceAll([loser1, winner1]))
-      const value1 = yield* $(pipe(FiberRef.get(fiberRef), Effect.zipLeft(pipe(fiberRef, FiberRef.set(initial)))))
-      const winner2 = pipe(fiberRef, FiberRef.set(update1))
-      const loser2 = pipe(fiberRef, FiberRef.set(update2), Effect.zipRight(Effect.fail(":-O")))
+      const value1 = yield* $(pipe(FiberRef.get(fiberRef), Effect.zipLeft(FiberRef.set(fiberRef)(initial))))
+      const winner2 = FiberRef.set(fiberRef)(update1)
+      const loser2 = pipe(FiberRef.set(fiberRef)(update2), Effect.zipRight(Effect.fail(":-O")))
       yield* $(Effect.raceAll([loser2, winner2]))
-      const value2 = yield* $(pipe(FiberRef.get(fiberRef), Effect.zipLeft(pipe(fiberRef, FiberRef.set(initial)))))
+      const value2 = yield* $(pipe(FiberRef.get(fiberRef), Effect.zipLeft(FiberRef.set(fiberRef)(initial))))
       assert.strictEqual(value1, update1)
       assert.strictEqual(value2, update1)
     }))
@@ -318,30 +308,29 @@ describe.concurrent("FiberRef", () => {
       const fiberRef = yield* $(FiberRef.make(initial))
       const latch = yield* $(Deferred.make<never, void>())
       const winner1 = pipe(
-        fiberRef,
-        FiberRef.set(update1),
+        FiberRef.set(fiberRef)(update1),
         Effect.zipRight(pipe(latch, Deferred.succeed<void>(void 0))),
         Effect.asUnit
       )
       const losers1 = pipe(
         Deferred.await(latch),
-        Effect.zipRight(pipe(fiberRef, FiberRef.set(update2))),
+        Effect.zipRight(FiberRef.set(fiberRef)(update2)),
         Effect.zipRight(loseTimeAndCpu),
         Effect.replicate(n)
       )
       yield* $(pipe(losers1, Chunk.prepend(winner1), Effect.raceAll))
-      const value1 = yield* $(pipe(FiberRef.get(fiberRef), Effect.zipLeft(pipe(fiberRef, FiberRef.set(initial)))))
-      const winner2 = pipe(fiberRef, FiberRef.set(update1))
-      const losers2 = pipe(fiberRef, FiberRef.set(update1), Effect.zipRight(Effect.fail(":-O")), Effect.replicate(n))
+      const value1 = yield* $(pipe(FiberRef.get(fiberRef), Effect.zipLeft(FiberRef.set(fiberRef)(initial))))
+      const winner2 = FiberRef.set(fiberRef)(update1)
+      const losers2 = pipe(FiberRef.set(fiberRef)(update1), Effect.zipRight(Effect.fail(":-O")), Effect.replicate(n))
       yield* $(pipe(losers2, Chunk.prepend(winner2), Effect.raceAll))
-      const value2 = yield* $(pipe(FiberRef.get(fiberRef), Effect.zipLeft(pipe(fiberRef, FiberRef.set(initial)))))
+      const value2 = yield* $(pipe(FiberRef.get(fiberRef), Effect.zipLeft(FiberRef.set(fiberRef)(initial))))
       assert.strictEqual(value1, update1)
       assert.strictEqual(value2, update1)
     }))
   it.scoped("nothing gets inherited when racing failures with raceAll", () =>
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(initial))
-      const loser = pipe(fiberRef, FiberRef.set(update), Effect.zipRight(Effect.fail("darn")))
+      const loser = pipe(FiberRef.set(fiberRef)(update), Effect.zipRight(Effect.fail("darn")))
       yield* $(pipe(Effect.raceAll([loser, ...Array.from({ length: 63 }, () => loser)]), Effect.orElse(Effect.unit)))
       const result = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(result, initial)
@@ -351,7 +340,7 @@ describe.concurrent("FiberRef", () => {
       const fiberRef = yield* $(FiberRef.make<boolean>(true, constTrue))
       const deferred = yield* $(Deferred.make<never, boolean>())
       const runtime: Runtime.Runtime<never> = yield* $(
-        pipe(Effect.runtime<never>(), pipe(fiberRef, FiberRef.locally(false)))
+        pipe(Effect.runtime<never>(), FiberRef.locally(fiberRef)(false))
       )
       yield* $(Effect.sync(() => pipe(FiberRef.get(fiberRef), Effect.intoDeferred(deferred), runtime.unsafeRun)))
       const result = yield* $(Deferred.await(deferred))
@@ -362,7 +351,7 @@ describe.concurrent("FiberRef", () => {
       const fiberRef = yield* $(FiberRef.make<boolean>(true, constTrue))
       const deferred = yield* $(Deferred.make<never, boolean>())
       const runtime: Runtime.Runtime<never> = yield* $(
-        pipe(Effect.runtime<never>(), pipe(fiberRef, FiberRef.locally(false)))
+        pipe(Effect.runtime<never>(), FiberRef.locally(fiberRef)(false))
       )
       const fiber = yield* $(
         Effect.sync(() => pipe(FiberRef.get(fiberRef), Effect.intoDeferred(deferred), runtime.unsafeFork))

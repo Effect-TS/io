@@ -15,29 +15,22 @@ import * as HashSet from "@fp-ts/data/HashSet"
 
 /** @internal */
 export const minimumLogLevel = (level: LogLevel.LogLevel) =>
-  layer.scopedDiscard(fiberRuntime.fiberRefLocallyScoped(level)(fiberRuntime.currentMinimumLogLevel))
+  layer.scopedDiscard(fiberRuntime.fiberRefLocallyScoped(fiberRuntime.currentMinimumLogLevel)(level))
 
 /** @internal */
-export const withMinimumLogLevel = (level: LogLevel.LogLevel) =>
-  core.fiberRefLocally(level)(fiberRuntime.currentMinimumLogLevel)
+export const withMinimumLogLevel = core.fiberRefLocally(fiberRuntime.currentMinimumLogLevel)
 
 /** @internal */
 export const addLogger = <A>(logger: Logger.Logger<string, A>): Layer.Layer<never, never, never> => {
   return layer.scopedDiscard(
-    pipe(
-      fiberRuntime.currentLoggers,
-      fiberRuntime.fiberRefLocallyScopedWith(HashSet.add(logger))
-    )
+    fiberRuntime.fiberRefLocallyScopedWith(fiberRuntime.currentLoggers)(HashSet.add(logger))
   )
 }
 
 /** @internal */
 export const removeLogger = <A>(logger: Logger.Logger<string, A>): Layer.Layer<never, never, never> => {
   return layer.scopedDiscard(
-    pipe(
-      fiberRuntime.currentLoggers,
-      fiberRuntime.fiberRefLocallyScopedWith(HashSet.remove(logger))
-    )
+    fiberRuntime.fiberRefLocallyScopedWith(fiberRuntime.currentLoggers)(HashSet.remove(logger))
   )
 }
 
@@ -52,9 +45,8 @@ export const replaceLogger = <A, B>(
 /** @internal */
 export const addSupervisor = <A>(supervisor: Supervisor.Supervisor<A>): Layer.Layer<never, never, never> => {
   return layer.scopedDiscard(
-    pipe(
-      fiberRuntime.currentSupervisor,
-      fiberRuntime.fiberRefLocallyScopedWith((current) => new _supervisor.Zip(current, supervisor))
+    fiberRuntime.fiberRefLocallyScopedWith(fiberRuntime.currentSupervisor)((current) =>
+      new _supervisor.Zip(current, supervisor)
     )
   )
 }

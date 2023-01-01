@@ -569,8 +569,7 @@ export const testClock = (): Effect.Effect<never, never, TestClock> => {
  */
 export const testClockWith = <R, E, A>(f: (testClock: TestClock) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
-  return pipe(
-    defaultServices.currentServices,
-    core.fiberRefGetWith((services) => f(pipe(services, Context.get(clock.clockTag)) as TestClock))
+  return core.fiberRefGetWith(defaultServices.currentServices)((services) =>
+    f(pipe(services, Context.get(clock.clockTag)) as TestClock)
   ).traced(trace)
 }

@@ -300,7 +300,7 @@ to the previous `LogLevel` after the `Effect` workflow completes.
 **Signature**
 
 ```ts
-export declare const locally: (self: LogLevel) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+export declare const locally: (value: LogLevel) => <R, E, B>(use: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>
 ```
 
 Added in v1.0.0

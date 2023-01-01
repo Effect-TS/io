@@ -1277,9 +1277,9 @@ export const logSpan = (label: string) => {
           core.flatMap((now) =>
             core.suspendSucceed(() => {
               const logSpan = LogSpan.make(label, now)
-              return core.fiberRefLocally(
+              return core.fiberRefLocally(core.currentLogSpan)(
                 pipe(stack, Chunk.prepend(logSpan)) as Chunk.Chunk<LogSpan.LogSpan>
-              )(core.currentLogSpan)(effect)
+              )(effect)
             })
           )
         )
@@ -1298,9 +1298,9 @@ export const logAnnotate = (key: string, value: string) => {
         core.suspendSucceed(() =>
           pipe(
             effect,
-            core.fiberRefLocally(
+            core.fiberRefLocally(core.currentLogAnnotations)(
               (annotations as Map<string, string>).set(key, value) as ReadonlyMap<string, string>
-            )(core.currentLogAnnotations)
+            )
           )
         )
       )
