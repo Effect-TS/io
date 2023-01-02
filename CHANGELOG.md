@@ -1,5 +1,13 @@
 # @effect/io
 
+## 0.0.48
+
+### Patch Changes
+
+- [#145](https://github.com/Effect-TS/io/pull/145) [`9cf3e68`](https://github.com/Effect-TS/io/commit/9cf3e681ea5ac3de7608d58c18b593d83797dc23) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Make FiberRef API pipeable on the return type
+
+- [#143](https://github.com/Effect-TS/io/pull/143) [`728e48c`](https://github.com/Effect-TS/io/commit/728e48c3008d4da51d619d1ff338d08d4833375c) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Revise default logger, make minimumLogLevel configurable
+
 ## 0.0.47
 
 ### Patch Changes
