@@ -417,7 +417,7 @@ describe.concurrent("Effect", () => {
       causes.map(Either.left) as fc.Arbitrary<Either.Either<Cause.Cause<number>, number>>,
       successes.map(Either.right) as fc.Arbitrary<Either.Either<Cause.Cause<number>, number>>
     ).map(Either.match(Exit.failCause, Exit.succeed))
-    fc.assert(fc.asyncProperty(exits, exits, exits, async (exit1, exit2, exit3) => {
+    await fc.assert(fc.asyncProperty(exits, exits, exits, async (exit1, exit2, exit3) => {
       const effect1 = Effect.done(exit1)
       const effect2 = Effect.done(exit2)
       const effect3 = Effect.done(exit3)
