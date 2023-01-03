@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.0.49
+
+### Patch Changes
+
+- [#147](https://github.com/Effect-TS/io/pull/147) [`11d3eaa`](https://github.com/Effect-TS/io/commit/11d3eaa0cd2e856ff475308d9ff27cb82ad8fa62) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Fix OOM in RingBuffer, improve structure
+
 ## 0.0.48
 
 ### Patch Changes
