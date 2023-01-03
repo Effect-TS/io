@@ -215,7 +215,7 @@ const fromFlatLoop = <A>(
 ): Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>> => {
   const trace = getCallTrace()
   const op = config as _config.ConfigPrimitive
-  switch (op.op) {
+  switch (op._tag) {
     case OpCodes.OP_CONSTANT: {
       return core.succeed(Chunk.singleton(op.value)).traced(trace) as Effect.Effect<
         never,

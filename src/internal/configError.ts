@@ -20,7 +20,7 @@ export const proto = {
 /** @internal */
 export const And = (self: ConfigError.ConfigError, that: ConfigError.ConfigError): ConfigError.ConfigError => {
   const error = Object.create(proto)
-  error.op = OpCodes.OP_AND
+  error._tag = OpCodes.OP_AND
   error.left = self
   error.right = that
   Object.defineProperty(error, "toString", {
@@ -35,7 +35,7 @@ export const And = (self: ConfigError.ConfigError, that: ConfigError.ConfigError
 /** @internal */
 export const Or = (self: ConfigError.ConfigError, that: ConfigError.ConfigError): ConfigError.ConfigError => {
   const error = Object.create(proto)
-  error.op = OpCodes.OP_OR
+  error._tag = OpCodes.OP_OR
   error.left = self
   error.right = that
   Object.defineProperty(error, "toString", {
@@ -50,7 +50,7 @@ export const Or = (self: ConfigError.ConfigError, that: ConfigError.ConfigError)
 /** @internal */
 export const InvalidData = (path: Chunk.Chunk<string>, message: string): ConfigError.ConfigError => {
   const error = Object.create(proto)
-  error.op = OpCodes.OP_INVALID_DATA
+  error._tag = OpCodes.OP_INVALID_DATA
   error.path = path
   error.message = message
   Object.defineProperty(error, "toString", {
@@ -66,7 +66,7 @@ export const InvalidData = (path: Chunk.Chunk<string>, message: string): ConfigE
 /** @internal */
 export const MissingData = (path: Chunk.Chunk<string>, message: string): ConfigError.ConfigError => {
   const error = Object.create(proto)
-  error.op = OpCodes.OP_MISSING_DATA
+  error._tag = OpCodes.OP_MISSING_DATA
   error.path = path
   error.message = message
   Object.defineProperty(error, "toString", {
@@ -86,7 +86,7 @@ export const SourceUnavailable = (
   cause: Cause.Cause<unknown>
 ): ConfigError.ConfigError => {
   const error = Object.create(proto)
-  error.op = OpCodes.OP_SOURCE_UNAVAILABLE
+  error._tag = OpCodes.OP_SOURCE_UNAVAILABLE
   error.path = path
   error.message = message
   error.cause = cause
@@ -103,7 +103,7 @@ export const SourceUnavailable = (
 /** @internal */
 export const Unsupported = (path: Chunk.Chunk<string>, message: string): ConfigError.ConfigError => {
   const error = Object.create(proto)
-  error.op = OpCodes.OP_UNSUPPORTED
+  error._tag = OpCodes.OP_UNSUPPORTED
   error.path = path
   error.message = message
   Object.defineProperty(error, "toString", {
@@ -123,38 +123,38 @@ export const isConfigError = (u: unknown): u is ConfigError.ConfigError => {
 
 /** @internal */
 export const isAnd = (self: ConfigError.ConfigError): self is ConfigError.And => {
-  return self.op === OpCodes.OP_AND
+  return self._tag === OpCodes.OP_AND
 }
 
 /** @internal */
 export const isOr = (self: ConfigError.ConfigError): self is ConfigError.Or => {
-  return self.op === OpCodes.OP_OR
+  return self._tag === OpCodes.OP_OR
 }
 
 /** @internal */
 export const isInvalidData = (self: ConfigError.ConfigError): self is ConfigError.InvalidData => {
-  return self.op === OpCodes.OP_INVALID_DATA
+  return self._tag === OpCodes.OP_INVALID_DATA
 }
 
 /** @internal */
 export const isMissingData = (self: ConfigError.ConfigError): self is ConfigError.MissingData => {
-  return self.op === OpCodes.OP_MISSING_DATA
+  return self._tag === OpCodes.OP_MISSING_DATA
 }
 
 /** @internal */
 export const isSourceUnavailable = (self: ConfigError.ConfigError): self is ConfigError.SourceUnavailable => {
-  return self.op === OpCodes.OP_SOURCE_UNAVAILABLE
+  return self._tag === OpCodes.OP_SOURCE_UNAVAILABLE
 }
 
 /** @internal */
 export const isUnsupported = (self: ConfigError.ConfigError): self is ConfigError.Unsupported => {
-  return self.op === OpCodes.OP_UNSUPPORTED
+  return self._tag === OpCodes.OP_UNSUPPORTED
 }
 
 /** @internal */
 export const prefixed = (prefix: Chunk.Chunk<string>) => {
   return (self: ConfigError.ConfigError): ConfigError.ConfigError => {
-    switch (self.op) {
+    switch (self._tag) {
       case OpCodes.OP_AND: {
         return And(prefixed(prefix)(self.left), prefixed(prefix)(self.right))
       }

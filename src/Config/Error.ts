@@ -3,6 +3,7 @@
  */
 import type * as Cause from "@effect/io/Cause"
 import * as internal from "@effect/io/internal/configError"
+import type * as OpCodes from "@effect/io/internal/opCodes/configError"
 import type * as Chunk from "@fp-ts/data/Chunk"
 
 /**
@@ -42,7 +43,7 @@ export declare namespace ConfigError {
  * @category models
  */
 export interface And extends ConfigError.Proto {
-  readonly op: 0
+  readonly _tag: OpCodes.OP_AND
   readonly left: ConfigError
   readonly right: ConfigError
 }
@@ -52,7 +53,7 @@ export interface And extends ConfigError.Proto {
  * @category models
  */
 export interface Or extends ConfigError.Proto {
-  readonly op: 1
+  readonly _tag: OpCodes.OP_OR
   readonly left: ConfigError
   readonly right: ConfigError
 }
@@ -62,7 +63,7 @@ export interface Or extends ConfigError.Proto {
  * @category models
  */
 export interface InvalidData extends ConfigError.Proto {
-  readonly op: 2
+  readonly _tag: OpCodes.OP_INVALID_DATA
   readonly path: Chunk.Chunk<string>
   readonly message: string
 }
@@ -72,7 +73,7 @@ export interface InvalidData extends ConfigError.Proto {
  * @category models
  */
 export interface MissingData extends ConfigError.Proto {
-  readonly op: 3
+  readonly _tag: OpCodes.OP_MISSING_DATA
   readonly path: Chunk.Chunk<string>
   readonly message: string
 }
@@ -82,7 +83,7 @@ export interface MissingData extends ConfigError.Proto {
  * @category models
  */
 export interface SourceUnavailable extends ConfigError.Proto {
-  readonly op: 4
+  readonly _tag: OpCodes.OP_SOURCE_UNAVAILABLE
   readonly path: Chunk.Chunk<string>
   readonly message: string
   readonly cause: Cause.Cause<unknown>
@@ -93,7 +94,7 @@ export interface SourceUnavailable extends ConfigError.Proto {
  * @category models
  */
 export interface Unsupported extends ConfigError.Proto {
-  readonly op: 5
+  readonly _tag: OpCodes.OP_UNSUPPORTED
   readonly path: Chunk.Chunk<string>
   readonly message: string
 }
