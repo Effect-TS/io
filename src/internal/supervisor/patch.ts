@@ -10,49 +10,49 @@ import * as HashSet from "@fp-ts/data/HashSet"
 export type SupervisorPatch = Empty | AddSupervisor | RemoveSupervisor | AndThen
 
 /** @internal */
-export const OP_EMPTY = 0 as const
+export const OP_EMPTY = "Empty" as const
 
 /** @internal */
 export type OP_EMPTY = typeof OP_EMPTY
 
 /** @internal */
-export const OP_ADD_SUPERVISOR = 1 as const
+export const OP_ADD_SUPERVISOR = "AddSupervisor" as const
 
 /** @internal */
 export type OP_ADD_SUPERVISOR = typeof OP_ADD_SUPERVISOR
 
 /** @internal */
-export const OP_REMOVE_SUPERVISOR = 2 as const
+export const OP_REMOVE_SUPERVISOR = "RemoveSupervisor" as const
 
 /** @internal */
 export type OP_REMOVE_SUPERVISOR = typeof OP_REMOVE_SUPERVISOR
 
 /** @internal */
-export const OP_AND_THEN = 3 as const
+export const OP_AND_THEN = "AndThen" as const
 
 /** @internal */
 export type OP_AND_THEN = typeof OP_AND_THEN
 
 /** @internal */
 export interface Empty {
-  readonly op: OP_EMPTY
+  readonly _tag: OP_EMPTY
 }
 
 /** @internal */
 export interface AddSupervisor {
-  readonly op: OP_ADD_SUPERVISOR
+  readonly _tag: OP_ADD_SUPERVISOR
   readonly supervisor: Supervisor.Supervisor<any>
 }
 
 /** @internal */
 export interface RemoveSupervisor {
-  readonly op: OP_REMOVE_SUPERVISOR
+  readonly _tag: OP_REMOVE_SUPERVISOR
   readonly supervisor: Supervisor.Supervisor<any>
 }
 
 /** @internal */
 export interface AndThen {
-  readonly op: OP_AND_THEN
+  readonly _tag: OP_AND_THEN
   readonly first: SupervisorPatch
   readonly second: SupervisorPatch
 }
@@ -62,7 +62,7 @@ export interface AndThen {
  *
  * @internal
  */
-export const empty: SupervisorPatch = { op: OP_EMPTY }
+export const empty: SupervisorPatch = { _tag: OP_EMPTY }
 
 /**
  * Combines two patches to produce a new patch that describes applying the
@@ -72,7 +72,7 @@ export const empty: SupervisorPatch = { op: OP_EMPTY }
  */
 export const combine = (self: SupervisorPatch, that: SupervisorPatch): SupervisorPatch => {
   return {
-    op: OP_AND_THEN,
+    _tag: OP_AND_THEN,
     first: self,
     second: that
   }
@@ -99,7 +99,7 @@ const patchLoop = (
   let patches = _patches
   while (Chunk.isNonEmpty(patches)) {
     const head = Chunk.headNonEmpty(patches)
-    switch (head.op) {
+    switch (head._tag) {
       case OP_EMPTY: {
         patches = Chunk.tailNonEmpty(patches)
         break
@@ -167,7 +167,7 @@ export const diff = (
     HashSet.difference(oldSupervisors),
     HashSet.reduce(
       empty as SupervisorPatch,
-      (patch, supervisor) => combine(patch, { op: OP_ADD_SUPERVISOR, supervisor })
+      (patch, supervisor) => combine(patch, { _tag: OP_ADD_SUPERVISOR, supervisor })
     )
   )
   const removed = pipe(
@@ -175,7 +175,7 @@ export const diff = (
     HashSet.difference(newSupervisors),
     HashSet.reduce(
       empty as SupervisorPatch,
-      (patch, supervisor) => combine(patch, { op: OP_REMOVE_SUPERVISOR, supervisor })
+      (patch, supervisor) => combine(patch, { _tag: OP_REMOVE_SUPERVISOR, supervisor })
     )
   )
   return combine(added, removed)

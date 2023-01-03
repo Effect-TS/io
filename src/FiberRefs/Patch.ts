@@ -22,7 +22,7 @@ export type FiberRefsPatch = Empty | Add | Remove | Update | AndThen
  * @category models
  */
 export interface Empty {
-  readonly op: 0
+  readonly _tag: "Empty"
 }
 
 /**
@@ -30,7 +30,7 @@ export interface Empty {
  * @category models
  */
 export interface Add {
-  readonly op: 1
+  readonly _tag: "Add"
   readonly fiberRef: FiberRef.FiberRef<unknown>
   readonly value: unknown
 }
@@ -40,7 +40,7 @@ export interface Add {
  * @category models
  */
 export interface Remove {
-  readonly op: 2
+  readonly _tag: "Remove"
   readonly fiberRef: FiberRef.FiberRef<unknown>
 }
 
@@ -49,7 +49,7 @@ export interface Remove {
  * @category models
  */
 export interface Update {
-  readonly op: 3
+  readonly _tag: "Update"
   readonly fiberRef: FiberRef.FiberRef<unknown>
   readonly patch: unknown
 }
@@ -59,7 +59,7 @@ export interface Update {
  * @category models
  */
 export interface AndThen {
-  readonly op: 4
+  readonly _tag: "AndThen"
   readonly first: FiberRefsPatch
   readonly second: FiberRefsPatch
 }

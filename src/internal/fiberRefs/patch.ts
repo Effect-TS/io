@@ -7,38 +7,38 @@ import { pipe } from "@fp-ts/data/Function"
 import * as Arr from "@fp-ts/data/ReadonlyArray"
 
 /** @internal */
-export const OP_EMPTY = 0 as const
+export const OP_EMPTY = "Empty" as const
 
 /** @internal */
 export type OP_EMPTY = typeof OP_EMPTY
 
 /** @internal */
-export const OP_ADD = 1 as const
+export const OP_ADD = "Add" as const
 
 /** @internal */
 export type OP_ADD = typeof OP_ADD
 
 /** @internal */
-export const OP_REMOVE = 2 as const
+export const OP_REMOVE = "Remove" as const
 
 /** @internal */
 export type OP_REMOVE = typeof OP_REMOVE
 
 /** @internal */
-export const OP_UPDATE = 3 as const
+export const OP_UPDATE = "Update" as const
 
 /** @internal */
 export type OP_UPDATE = typeof OP_UPDATE
 
 /** @internal */
-export const OP_AND_THEN = 4 as const
+export const OP_AND_THEN = "AndThen" as const
 
 /** @internal */
 export type OP_AND_THEN = typeof OP_AND_THEN
 
 /** @internal */
 export const empty = (): FiberRefsPatch.FiberRefsPatch => ({
-  op: OP_EMPTY
+  _tag: OP_EMPTY
 })
 
 /** @internal */
@@ -55,14 +55,14 @@ export const diff = (
       const oldValue = Arr.headNonEmpty(old)[1]
       if (!equals(oldValue, newValue)) {
         patch = combine({
-          op: OP_UPDATE,
+          _tag: OP_UPDATE,
           fiberRef,
           patch: fiberRef.diff(oldValue, newValue)
         })(patch)
       }
     } else {
       patch = combine({
-        op: OP_ADD,
+        _tag: OP_ADD,
         fiberRef,
         value: newValue
       })(patch)
@@ -71,7 +71,7 @@ export const diff = (
   }
   for (const [fiberRef] of missingLocals.entries()) {
     patch = combine({
-      op: OP_REMOVE,
+      _tag: OP_REMOVE,
       fiberRef
     })(patch)
   }
@@ -81,7 +81,7 @@ export const diff = (
 /** @internal */
 export const combine = (that: FiberRefsPatch.FiberRefsPatch) => {
   return (self: FiberRefsPatch.FiberRefsPatch): FiberRefsPatch.FiberRefsPatch => ({
-    op: OP_AND_THEN,
+    _tag: OP_AND_THEN,
     first: self,
     second: that
   })
@@ -95,7 +95,7 @@ export const patch = (fiberId: FiberId.Runtime, oldValue: FiberRefs.FiberRefs) =
     while (Arr.isNonEmpty(patches)) {
       const head = Arr.headNonEmpty(patches)
       const tail = Arr.tailNonEmpty(patches)
-      switch (head.op) {
+      switch (head._tag) {
         case OP_EMPTY: {
           patches = tail
           break
