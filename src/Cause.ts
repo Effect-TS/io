@@ -25,6 +25,7 @@ import type * as FiberId from "@effect/io/Fiber/Id"
 import * as internal from "@effect/io/internal/cause"
 import * as _pretty from "@effect/io/internal/cause-pretty"
 import * as _pretty_run from "@effect/io/internal/cause-pretty-run"
+import type * as OpCodes from "@effect/io/internal/opCodes/cause"
 import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as Either from "@fp-ts/data/Either"
 import type * as Equal from "@fp-ts/data/Equal"
@@ -279,7 +280,7 @@ export interface InvalidHubCapacityException {
  * @category models
  */
 export interface Empty extends Cause.Variance<never>, Equal.Equal {
-  readonly _tag: "Empty"
+  readonly _tag: OpCodes.OP_EMPTY
 }
 
 /**
@@ -290,7 +291,7 @@ export interface Empty extends Cause.Variance<never>, Equal.Equal {
  * @category models
  */
 export interface Fail<E> extends Cause.Variance<E>, Equal.Equal {
-  readonly _tag: "Fail"
+  readonly _tag: OpCodes.OP_FAIL
   readonly error: E
 }
 
@@ -303,7 +304,7 @@ export interface Fail<E> extends Cause.Variance<E>, Equal.Equal {
  * @category models
  */
 export interface Die extends Cause.Variance<never>, Equal.Equal {
-  readonly _tag: "Die"
+  readonly _tag: OpCodes.OP_DIE
   readonly defect: unknown
 }
 
@@ -315,7 +316,7 @@ export interface Die extends Cause.Variance<never>, Equal.Equal {
  * @category models
  */
 export interface Interrupt extends Cause.Variance<never>, Equal.Equal {
-  readonly _tag: "Interrupt"
+  readonly _tag: OpCodes.OP_INTERRUPT
   readonly fiberId: FiberId.FiberId
 }
 
@@ -329,7 +330,7 @@ export interface Interrupt extends Cause.Variance<never>, Equal.Equal {
  * @category models
  */
 export interface Annotated<E> extends Cause.Variance<E>, Equal.Equal {
-  readonly _tag: "Annotated"
+  readonly _tag: OpCodes.OP_ANNOTATED
   readonly cause: Cause<E>
   readonly annotation: unknown
 }
@@ -348,7 +349,7 @@ export interface Annotated<E> extends Cause.Variance<E>, Equal.Equal {
  * @category models
  */
 export interface Parallel<E> extends Cause.Variance<E>, Equal.Equal {
-  readonly _tag: "Parallel"
+  readonly _tag: OpCodes.OP_PARALLEL
   readonly left: Cause<E>
   readonly right: Cause<E>
 }
@@ -366,7 +367,7 @@ export interface Parallel<E> extends Cause.Variance<E>, Equal.Equal {
  * @category models
  */
 export interface Sequential<E> extends Cause.Variance<E>, Equal.Equal {
-  readonly _tag: "Sequential"
+  readonly _tag: OpCodes.OP_SEQUENTIAL
   readonly left: Cause<E>
   readonly right: Cause<E>
 }

@@ -1,5 +1,6 @@
 import type * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
+import * as OpCodes from "@effect/io/internal/opCodes/deferred"
 
 /** @internal */
 const DeferredSymbolKey = "@effect/io/Deferred"
@@ -19,26 +20,14 @@ export const deferredVariance = {
 export type State<E, A> = Pending<E, A> | Done<E, A>
 
 /** @internal */
-export const OP_STATE_PENDING = 0 as const
-
-/** @internal */
-export type OP_STATE_PENDING = typeof OP_STATE_PENDING
-
-/** @internal */
-export const OP_STATE_DONE = 1 as const
-
-/** @internal */
-export type OP_STATE_DONE = typeof OP_STATE_DONE
-
-/** @internal */
 export interface Pending<E, A> {
-  readonly op: OP_STATE_PENDING
+  readonly _tag: OpCodes.OP_STATE_PENDING
   readonly joiners: Array<(effect: Effect.Effect<never, E, A>) => void>
 }
 
 /** @internal */
 export interface Done<E, A> {
-  readonly op: OP_STATE_DONE
+  readonly _tag: OpCodes.OP_STATE_DONE
   readonly effect: Effect.Effect<never, E, A>
 }
 
@@ -46,10 +35,10 @@ export interface Done<E, A> {
 export const pending = <E, A>(
   joiners: Array<(effect: Effect.Effect<never, E, A>) => void>
 ): State<E, A> => {
-  return { op: OP_STATE_PENDING, joiners }
+  return { _tag: OpCodes.OP_STATE_PENDING, joiners }
 }
 
 /** @internal */
 export const done = <E, A>(effect: Effect.Effect<never, E, A>): State<E, A> => {
-  return { op: OP_STATE_DONE, effect }
+  return { _tag: OpCodes.OP_STATE_DONE, effect }
 }

@@ -6,6 +6,7 @@ import * as internal from "@effect/io/internal/cause"
 import type { SpanAnnotation } from "@effect/io/internal/cause"
 import { isSpanAnnotation, StackAnnotation } from "@effect/io/internal/cause"
 import * as core from "@effect/io/internal/core"
+import * as OpCodes from "@effect/io/internal/opCodes/cause"
 import * as Chunk from "@fp-ts/data/Chunk"
 import { pipe } from "@fp-ts/data/Function"
 import * as Option from "@fp-ts/data/Option"
@@ -275,7 +276,7 @@ const linearSegments = <E>(
   stack: Option.Option<StackAnnotation>
 ): Effect.Effect<never, never, ReadonlyArray<Step>> => {
   switch (cause._tag) {
-    case "Sequential": {
+    case OpCodes.OP_SEQUENTIAL: {
       return pipe(
         linearSegments(cause.left, renderer, span, stack),
         core.zipWith(
@@ -301,7 +302,7 @@ const parallelSegments = <E>(
   stack: Option.Option<StackAnnotation>
 ): Effect.Effect<never, never, ReadonlyArray<SequentialSegment>> => {
   switch (cause._tag) {
-    case "Parallel": {
+    case OpCodes.OP_PARALLEL: {
       return pipe(
         parallelSegments(cause.left, renderer, span, stack),
         core.zipWith(
@@ -327,10 +328,10 @@ const causeToSequential = <E>(
   stack: Option.Option<StackAnnotation>
 ): Effect.Effect<never, never, SequentialSegment> => {
   switch (cause._tag) {
-    case "Empty": {
+    case OpCodes.OP_EMPTY: {
       return core.succeed(SequentialSegment([]))
     }
-    case "Fail": {
+    case OpCodes.OP_FAIL: {
       return core.succeed(
         renderFail(
           renderer.renderError(cause.error),
@@ -339,7 +340,7 @@ const causeToSequential = <E>(
         )
       )
     }
-    case "Die": {
+    case OpCodes.OP_DIE: {
       return core.succeed(
         renderDie(
           renderer.renderUnknown(cause.defect),
@@ -348,24 +349,24 @@ const causeToSequential = <E>(
         )
       )
     }
-    case "Interrupt": {
+    case OpCodes.OP_INTERRUPT: {
       return core.succeed(
         renderInterrupt(cause.fiberId, span, stack)
       )
     }
-    case "Sequential": {
+    case OpCodes.OP_SEQUENTIAL: {
       return pipe(
         linearSegments(cause, renderer, span, stack),
         core.map((segments) => SequentialSegment(segments))
       )
     }
-    case "Parallel": {
+    case OpCodes.OP_PARALLEL: {
       return pipe(
         parallelSegments(cause, renderer, span, stack),
         core.map((segments) => SequentialSegment([ParallelSegment(segments)]))
       )
     }
-    case "Annotated": {
+    case OpCodes.OP_ANNOTATED: {
       const annotation = cause.annotation
       if (isSpanAnnotation(annotation)) {
         return core.suspendSucceed(() =>
