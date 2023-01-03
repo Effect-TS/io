@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.0.50
+
+### Patch Changes
+
+- [#149](https://github.com/Effect-TS/io/pull/149) [`b45646b`](https://github.com/Effect-TS/io/commit/b45646b820b665620d025952bb4fb584b9cdf885) Thanks [@IMax153](https://github.com/IMax153)! - upgrade dependencies
+
 ## 0.0.49
 
 ### Patch Changes
