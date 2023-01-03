@@ -47,8 +47,8 @@ const proto = {
 }
 
 /** @internal */
-export type Op<OpCode extends number, Body = {}> = Config.Config<never> & Body & {
-  readonly op: OpCode
+export type Op<Tag extends string, Body = {}> = Config.Config<never> & Body & {
+  readonly _tag: Tag
 }
 
 /** @internal */
@@ -204,7 +204,7 @@ export const date = (name?: string): Config.Config<Date> => {
 /** @internal */
 export const defer = <A>(config: LazyArg<Config.Config<A>>): Config.Config<A> => {
   const lazy = Object.create(proto)
-  lazy.op = OpCodes.OP_LAZY
+  lazy._tag = OpCodes.OP_LAZY
   lazy.config = config
   return lazy
 }
@@ -212,7 +212,7 @@ export const defer = <A>(config: LazyArg<Config.Config<A>>): Config.Config<A> =>
 /** @internal */
 export const fail = (message: string): Config.Config<never> => {
   const fail = Object.create(proto)
-  fail.op = OpCodes.OP_FAIL
+  fail._tag = OpCodes.OP_FAIL
   fail.message = message
   fail.parse = () => Either.left(configError.Unsupported(Chunk.empty(), message))
   return fail
@@ -295,7 +295,7 @@ export const mapAttempt = <A, B>(f: (a: A) => B) => {
 export const mapOrFail = <A, B>(f: (a: A) => Either.Either<ConfigError.ConfigError, B>) => {
   return (self: Config.Config<A>): Config.Config<B> => {
     const mapOrFail = Object.create(proto)
-    mapOrFail.op = OpCodes.OP_MAP_OR_FAIL
+    mapOrFail._tag = OpCodes.OP_MAP_OR_FAIL
     mapOrFail.original = self
     mapOrFail.mapOrFail = f
     return mapOrFail
@@ -313,7 +313,7 @@ export const missingError = (name: string) => {
 export const nested = (name: string) => {
   return <A>(self: Config.Config<A>): Config.Config<A> => {
     const nested = Object.create(proto)
-    nested.op = OpCodes.OP_NESTED
+    nested._tag = OpCodes.OP_NESTED
     nested.name = name
     nested.config = self
     return nested
@@ -324,7 +324,7 @@ export const nested = (name: string) => {
 export const orElse = <A2>(that: LazyArg<Config.Config<A2>>) => {
   return <A>(self: Config.Config<A>): Config.Config<A | A2> => {
     const fallback = Object.create(proto)
-    fallback.op = OpCodes.OP_FALLBACK
+    fallback._tag = OpCodes.OP_FALLBACK
     fallback.first = self
     fallback.second = defer(that)
     return fallback
@@ -346,7 +346,7 @@ export const primitive = <A>(
   parse: (text: string) => Either.Either<ConfigError.ConfigError, A>
 ): Config.Config<A> => {
   const primitive = Object.create(proto)
-  primitive.op = OpCodes.OP_PRIMITIVE
+  primitive._tag = OpCodes.OP_PRIMITIVE
   primitive.description = description
   primitive.parse = parse
   return primitive
@@ -355,7 +355,7 @@ export const primitive = <A>(
 /** @internal */
 export const repeat = <A>(self: Config.Config<A>): Config.Config<Chunk.Chunk<A>> => {
   const repeat = Object.create(proto)
-  repeat.op = OpCodes.OP_SEQUENCE
+  repeat._tag = OpCodes.OP_SEQUENCE
   repeat.config = self
   return repeat
 }
@@ -410,7 +410,7 @@ export const struct = <NER extends Record<string, Config.Config<any>>>(
 /** @internal */
 export const succeed = <A>(value: A): Config.Config<A> => {
   const constant = Object.create(proto)
-  constant.op = OpCodes.OP_CONSTANT
+  constant._tag = OpCodes.OP_CONSTANT
   constant.value = value
   constant.parse = () => Either.right(value)
   return constant
@@ -424,7 +424,7 @@ export const sync = <A>(value: LazyArg<A>): Config.Config<A> => {
 /** @internal */
 export const table = <A>(config: Config.Config<A>, name?: string): Config.Config<HashMap.HashMap<string, A>> => {
   const table = Object.create(proto)
-  table.op = OpCodes.OP_TABLE
+  table._tag = OpCodes.OP_TABLE
   table.valueConfig = config
   return name === undefined ? table : nested(name)(table)
 }
@@ -471,7 +471,7 @@ export const withDefault = <A2>(def: A2) => {
 export const withDescription = (description: string) => {
   return <A>(self: Config.Config<A>): Config.Config<A> => {
     const described = Object.create(proto)
-    described.op = OpCodes.OP_DESCRIBED
+    described._tag = OpCodes.OP_DESCRIBED
     described.config = self
     described.description = description
     return described
@@ -489,7 +489,7 @@ export const zip = <B>(that: Config.Config<B>) => {
 export const zipWith = <B, A, C>(that: Config.Config<B>, f: (a: A, b: B) => C) => {
   return (self: Config.Config<A>): Config.Config<C> => {
     const zipWith = Object.create(proto)
-    zipWith.op = OpCodes.OP_ZIP_WITH
+    zipWith._tag = OpCodes.OP_ZIP_WITH
     zipWith.left = self
     zipWith.right = that
     zipWith.zip = f
