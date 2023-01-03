@@ -119,7 +119,7 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
     effect: Effect.Effect<R, E, A>
   ): A => {
     const exit = this.unsafeRunSyncExit(effect)
-    if (exit.op === OpCodes.OP_FAILURE) {
+    if (exit._tag === OpCodes.OP_FAILURE) {
       throw pipe(exit.cause, internalCause.squashWith(identity))
     }
     return exit.value
@@ -148,7 +148,7 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
   ): Promise<A> => {
     return new Promise((resolve, reject) => {
       this.unsafeRun(effect, (exit) => {
-        switch (exit.op) {
+        switch (exit._tag) {
           case OpCodes.OP_SUCCESS: {
             resolve(exit.value)
             break

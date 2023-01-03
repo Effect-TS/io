@@ -695,7 +695,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
 
   reportExitValue(exit: Exit.Exit<E, A>) {
     if (pipe(this._runtimeFlags, _runtimeFlags.isEnabled(_runtimeFlags.RuntimeMetrics))) {
-      switch (exit.op) {
+      switch (exit._tag) {
         case OpCodes.OP_SUCCESS: {
           fiberSuccesses.unsafeUpdate(1, HashSet.empty())
           break
@@ -825,7 +825,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
           }
         } catch (e) {
           if (core.isEffect(e)) {
-            if ((e as core.Primitive).op === OpCodes.OP_YIELD) {
+            if ((e as core.Primitive)._tag === OpCodes.OP_YIELD) {
               if (_runtimeFlags.cooperativeYielding(this._runtimeFlags)) {
                 this.tell(FiberMessage.yieldNow((e as core.Yield).priority))
                 this.tell(FiberMessage.resume(core.unit()))
@@ -833,7 +833,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
               } else {
                 effect = core.unit()
               }
-            } else if ((e as core.Primitive).op === OpCodes.OP_ASYNC) {
+            } else if ((e as core.Primitive)._tag === OpCodes.OP_ASYNC) {
               // Terminate this evaluation, async resumption will continue evaluation:
               effect = null
             }
@@ -951,7 +951,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   getNextSuccessCont() {
     let frame = this.popStack()
     while (frame) {
-      if (frame.op !== OpCodes.OP_ON_FAILURE) {
+      if (frame._tag !== OpCodes.OP_ON_FAILURE) {
         return frame
       }
       frame = this.popStack()
@@ -961,7 +961,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   getNextFailCont() {
     let frame = this.popStack()
     while (frame) {
-      if (frame.op !== OpCodes.OP_ON_SUCCESS && frame.op !== OpCodes.OP_WHILE) {
+      if (frame._tag !== OpCodes.OP_ON_SUCCESS && frame._tag !== OpCodes.OP_WHILE) {
         return frame
       }
       frame = this.popStack()
@@ -974,39 +974,39 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     }
   }
 
-  [OpCodes.OP_SYNC](op: core.Primitive & { op: OpCodes.OP_SYNC }) {
+  [OpCodes.OP_SYNC](op: core.Primitive & { _tag: OpCodes.OP_SYNC }) {
     this.onExecute(op)
     const value = op.evaluate()
     const cont = this.getNextSuccessCont()
     if (cont !== undefined) {
-      if (!(cont.op in contOpSuccess)) {
+      if (!(cont._tag in contOpSuccess)) {
         // @ts-expect-error
         absurd(cont)
       }
       // @ts-expect-error
-      return contOpSuccess[cont.op](this, cont, value)
+      return contOpSuccess[cont._tag](this, cont, value)
     } else {
       throw core.exitSucceed(value)
     }
   }
 
-  [OpCodes.OP_SUCCESS](op: core.Primitive & { op: OpCodes.OP_SUCCESS }) {
+  [OpCodes.OP_SUCCESS](op: core.Primitive & { _tag: OpCodes.OP_SUCCESS }) {
     this.onExecute(op)
     const oldCur = op
     const cont = this.getNextSuccessCont()
     if (cont !== undefined) {
-      if (!(cont.op in contOpSuccess)) {
+      if (!(cont._tag in contOpSuccess)) {
         // @ts-expect-error
         absurd(cont)
       }
       // @ts-expect-error
-      return contOpSuccess[cont.op](this, cont, oldCur.value)
+      return contOpSuccess[cont._tag](this, cont, oldCur.value)
     } else {
       throw oldCur
     }
   }
 
-  [OpCodes.OP_FAILURE](op: core.Primitive & { op: OpCodes.OP_FAILURE }) {
+  [OpCodes.OP_FAILURE](op: core.Primitive & { _tag: OpCodes.OP_FAILURE }) {
     this.onExecute(op)
     let cause = op.cause
     if (this._tracesInStack > 0 || (this._executionTrace && this._executionTrace.size > 0)) {
@@ -1057,7 +1057,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     }
     const cont = this.getNextFailCont()
     if (cont !== undefined) {
-      switch (cont.op) {
+      switch (cont._tag) {
         case OpCodes.OP_ON_FAILURE:
         case OpCodes.OP_ON_SUCCESS_AND_FAILURE: {
           if (!(_runtimeFlags.interruptible(this._runtimeFlags) && this.isInterrupted())) {
@@ -1084,7 +1084,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     }
   }
 
-  [OpCodes.OP_WITH_RUNTIME](op: core.Primitive & { op: OpCodes.OP_WITH_RUNTIME }) {
+  [OpCodes.OP_WITH_RUNTIME](op: core.Primitive & { _tag: OpCodes.OP_WITH_RUNTIME }) {
     this.onExecute(op)
     return op.withRuntime(
       this as FiberRuntime<unknown, unknown>,
@@ -1092,7 +1092,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     )
   }
 
-  [OpCodes.OP_UPDATE_RUNTIME_FLAGS](op: core.Primitive & { op: OpCodes.OP_UPDATE_RUNTIME_FLAGS }) {
+  [OpCodes.OP_UPDATE_RUNTIME_FLAGS](op: core.Primitive & { _tag: OpCodes.OP_UPDATE_RUNTIME_FLAGS }) {
     this.onExecute(op)
     if (op.scope === undefined) {
       this.patchRuntimeFlags(this._runtimeFlags, op.update)
@@ -1123,22 +1123,22 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     }
   }
 
-  [OpCodes.OP_ON_SUCCESS](op: core.Primitive & { op: OpCodes.OP_ON_SUCCESS }) {
+  [OpCodes.OP_ON_SUCCESS](op: core.Primitive & { _tag: OpCodes.OP_ON_SUCCESS }) {
     this.pushStack(op)
     return op.first
   }
 
-  [OpCodes.OP_ON_FAILURE](op: core.Primitive & { op: OpCodes.OP_ON_FAILURE }) {
+  [OpCodes.OP_ON_FAILURE](op: core.Primitive & { _tag: OpCodes.OP_ON_FAILURE }) {
     this.pushStack(op)
     return op.first
   }
 
-  [OpCodes.OP_ON_SUCCESS_AND_FAILURE](op: core.Primitive & { op: OpCodes.OP_ON_SUCCESS_AND_FAILURE }) {
+  [OpCodes.OP_ON_SUCCESS_AND_FAILURE](op: core.Primitive & { _tag: OpCodes.OP_ON_SUCCESS_AND_FAILURE }) {
     this.pushStack(op)
     return op.first
   }
 
-  [OpCodes.OP_ASYNC](op: core.Primitive & { op: OpCodes.OP_ASYNC }) {
+  [OpCodes.OP_ASYNC](op: core.Primitive & { _tag: OpCodes.OP_ASYNC }) {
     this.onExecute(op)
     this._asyncBlockingOn = op.blockingOn
     this.initiateAsync(this._runtimeFlags, op.register)
@@ -1150,7 +1150,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     throw op
   }
 
-  [OpCodes.OP_WHILE](op: core.Primitive & { op: OpCodes.OP_WHILE }) {
+  [OpCodes.OP_WHILE](op: core.Primitive & { _tag: OpCodes.OP_WHILE }) {
     const check = op.check
     const body = op.body
     if (check()) {
@@ -1162,7 +1162,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     }
   }
 
-  [OpCodes.OP_COMMIT](op: core.Primitive & { op: OpCodes.OP_COMMIT }) {
+  [OpCodes.OP_COMMIT](op: core.Primitive & { _tag: OpCodes.OP_COMMIT }) {
     return op.commit()
   }
 
@@ -1187,23 +1187,23 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
         cur = pipe(core.yieldNow(), core.flatMap(() => oldCur))
       }
       try {
-        if (!((cur as core.Primitive).op in this)) {
+        if (!((cur as core.Primitive)._tag in this)) {
           // @ts-expect-error
           absurd(cur)
         }
         // @ts-expect-error
-        cur = this[(cur as core.Primitive).op](cur as core.Primitive)
+        cur = this[(cur as core.Primitive)._tag](cur as core.Primitive)
       } catch (e) {
         if (core.isEffect(e)) {
           if (
-            (e as core.Primitive).op === OpCodes.OP_YIELD ||
-            (e as core.Primitive).op === OpCodes.OP_ASYNC
+            (e as core.Primitive)._tag === OpCodes.OP_YIELD ||
+            (e as core.Primitive)._tag === OpCodes.OP_ASYNC
           ) {
             throw e
           }
           if (
-            (e as core.Primitive).op === OpCodes.OP_SUCCESS ||
-            (e as core.Primitive).op === OpCodes.OP_FAILURE
+            (e as core.Primitive)._tag === OpCodes.OP_SUCCESS ||
+            (e as core.Primitive)._tag === OpCodes.OP_FAILURE
           ) {
             return e as Exit.Exit<E, A>
           }
@@ -1244,7 +1244,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     let seen = 0
     while (current >= 0 && lines.length < runtimeDebug.traceStackLimit && seen < this._tracesInStack) {
       const value = this._stack[current]
-      switch (value.op) {
+      switch (value._tag) {
         case OpCodes.OP_ON_FAILURE:
         case OpCodes.OP_ON_SUCCESS:
         case OpCodes.OP_ON_SUCCESS_AND_FAILURE: {

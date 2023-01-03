@@ -94,7 +94,7 @@ export type Continuation =
 
 /** @internal */
 export class RevertFlags {
-  readonly op = OpCodes.OP_REVERT_FLAGS
+  readonly _tag = OpCodes.OP_REVERT_FLAGS
   constructor(readonly patch: RuntimeFlagsPatch.RuntimeFlagsPatch) {
     Equal.considerByRef(this)
   }
@@ -127,8 +127,8 @@ export const proto = {
 }
 
 /** @internal */
-export type Op<OpCode extends number, Body = {}> = Effect.Effect<never, never, never> & Body & {
-  readonly op: OpCode
+export type Op<Tag extends string, Body = {}> = Effect.Effect<never, never, never> & Body & {
+  readonly _tag: Tag
   readonly trace?: string
 }
 
@@ -237,7 +237,7 @@ export const acquireUseRelease = <R, E, A, R2, E2, A2, R3, X>(
               suspendSucceed(() => release(a, exit)),
               matchCauseEffect(
                 (cause) => {
-                  switch (exit.op) {
+                  switch (exit._tag) {
                     case OpCodes.OP_FAILURE: {
                       return failCause(internalCause.parallel(exit.cause, cause))
                     }
@@ -277,7 +277,7 @@ export const async = <R, E, A>(
 ): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
   const effect = Object.create(proto)
-  effect.op = OpCodes.OP_ASYNC
+  effect._tag = OpCodes.OP_ASYNC
   effect.register = register
   effect.blockingOn = blockingOn
   effect.trace = trace
@@ -340,7 +340,7 @@ export const catchAllCause = <E, R2, E2, A2>(
   const trace = getCallTrace()
   return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E2, A | A2> => {
     const effect = Object.create(proto)
-    effect.op = OpCodes.OP_ON_FAILURE
+    effect._tag = OpCodes.OP_ON_FAILURE
     effect.first = self
     effect.failK = f
     effect.trace = trace
@@ -458,7 +458,7 @@ export const failSync = <E>(evaluate: () => E): Effect.Effect<never, E, never> =
 export const failCause = <E>(cause: Cause.Cause<E>): Effect.Effect<never, E, never> => {
   const trace = getCallTrace()
   const effect = Object.create(proto)
-  effect.op = OpCodes.OP_FAILURE
+  effect._tag = OpCodes.OP_FAILURE
   effect.cause = cause
   effect.trace = trace
   return effect
@@ -493,7 +493,7 @@ export const flatMap = <A, R1, E1, B>(f: (a: A) => Effect.Effect<R1, E1, B>) => 
   const trace = getCallTrace()
   return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1, E | E1, B> => {
     const effect = Object.create(proto)
-    effect.op = OpCodes.OP_ON_SUCCESS
+    effect._tag = OpCodes.OP_ON_SUCCESS
     effect.first = self
     effect.successK = f
     effect.trace = trace
@@ -541,7 +541,7 @@ export const matchCauseEffect = <E, A, R2, E2, A2, R3, E3, A3>(
     A2 | A3
   > => {
     const effect = Object.create(proto)
-    effect.op = OpCodes.OP_ON_SUCCESS_AND_FAILURE
+    effect._tag = OpCodes.OP_ON_SUCCESS_AND_FAILURE
     effect.first = self
     effect.failK = onFailure
     effect.successK = onSuccess
@@ -678,7 +678,7 @@ export const interruptible = <R, E, A>(
 ): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
   const effect = Object.create(proto)
-  effect.op = OpCodes.OP_UPDATE_RUNTIME_FLAGS
+  effect._tag = OpCodes.OP_UPDATE_RUNTIME_FLAGS
   effect.update = RuntimeFlagsPatch.enable(_runtimeFlags.Interruption)
   effect.scope = () => self
   effect.trace = trace
@@ -695,7 +695,7 @@ export const interruptibleMask = <R, E, A>(
 ): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
   const effect = Object.create(proto)
-  effect.op = OpCodes.OP_UPDATE_RUNTIME_FLAGS
+  effect._tag = OpCodes.OP_UPDATE_RUNTIME_FLAGS
   effect.update = RuntimeFlagsPatch.enable(_runtimeFlags.Interruption)
   effect.scope = (oldFlags: RuntimeFlags.RuntimeFlags) =>
     _runtimeFlags.interruption(oldFlags)
@@ -953,7 +953,7 @@ export const serviceWithEffect = <T>(tag: Context.Tag<T>) => {
 export const succeed = <A>(value: A): Effect.Effect<never, never, A> => {
   const trace = getCallTrace()
   const effect = Object.create(proto)
-  effect.op = OpCodes.OP_SUCCESS
+  effect._tag = OpCodes.OP_SUCCESS
   effect.value = value
   effect.trace = trace
   return effect
@@ -971,7 +971,7 @@ export const suspendSucceed = <R, E, A>(
 export const sync = <A>(evaluate: () => A): Effect.Effect<never, never, A> => {
   const trace = getCallTrace()
   const effect = Object.create(proto)
-  effect.op = OpCodes.OP_SYNC
+  effect._tag = OpCodes.OP_SYNC
   effect.evaluate = evaluate
   effect.trace = trace
   return effect
@@ -1006,7 +1006,7 @@ export const uninterruptible = <R, E, A>(
 ): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
   const effect = Object.create(proto)
-  effect.op = OpCodes.OP_UPDATE_RUNTIME_FLAGS
+  effect._tag = OpCodes.OP_UPDATE_RUNTIME_FLAGS
   effect.update = RuntimeFlagsPatch.disable(_runtimeFlags.Interruption)
   effect.scope = () => self
   effect.trace = trace
@@ -1023,7 +1023,7 @@ export const uninterruptibleMask = <R, E, A>(
 ): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
   const effect = Object.create(proto)
-  effect.op = OpCodes.OP_UPDATE_RUNTIME_FLAGS
+  effect._tag = OpCodes.OP_UPDATE_RUNTIME_FLAGS
   effect.update = RuntimeFlagsPatch.disable(_runtimeFlags.Interruption)
   effect.scope = (oldFlags: RuntimeFlags.RuntimeFlags) => {
     return _runtimeFlags.interruption(oldFlags)
@@ -1046,7 +1046,7 @@ export const updateRuntimeFlags = (
 ): Effect.Effect<never, never, void> => {
   const trace = getCallTrace()
   const effect = Object.create(proto)
-  effect.op = OpCodes.OP_UPDATE_RUNTIME_FLAGS
+  effect._tag = OpCodes.OP_UPDATE_RUNTIME_FLAGS
   effect.update = patch
   effect.scope = undefined
   effect.trace = trace
@@ -1077,7 +1077,7 @@ export const whileLoop = <R, E, A>(
 ): Effect.Effect<R, E, void> => {
   const trace = getCallTrace()
   const effect = Object.create(proto)
-  effect.op = OpCodes.OP_WHILE
+  effect._tag = OpCodes.OP_WHILE
   effect.check = check
   effect.body = body
   effect.process = process
@@ -1097,7 +1097,7 @@ export const withFiberRuntime = <R, E, A>(
 ): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
   const effect = Object.create(proto)
-  effect.op = OpCodes.OP_WITH_RUNTIME
+  effect._tag = OpCodes.OP_WITH_RUNTIME
   effect.withRuntime = withRuntime
   effect.trace = trace
   return effect
@@ -1128,7 +1128,7 @@ export const withRuntimeFlags = (
   const trace = getCallTrace()
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
     const effect = Object.create(proto)
-    effect.op = OpCodes.OP_UPDATE_RUNTIME_FLAGS
+    effect._tag = OpCodes.OP_UPDATE_RUNTIME_FLAGS
     effect.update = update
     effect.scope = () => self
     effect.trace = trace
@@ -1142,7 +1142,7 @@ export const yieldNow: (priority?: "background" | "normal") => Effect.Effect<nev
 ) => {
   const trace = getCallTrace()
   const effect = Object.create(proto)
-  effect.op = OpCodes.OP_YIELD
+  effect._tag = OpCodes.OP_YIELD
   effect.trace = trace
   effect.priority = priority
   return effect
@@ -1715,24 +1715,23 @@ export const releaseMapMake = (): Effect.Effect<never, never, ReleaseMap> => {
 
 /** @internal */
 export const exitIsExit = (u: unknown): u is Exit.Exit<unknown, unknown> => {
-  return isEffect(u) && "op" in u &&
-    (u["op"] === OpCodes.OP_SUCCESS || u["op"] === OpCodes.OP_FAILURE)
+  return isEffect(u) && "_tag" in u && (u._tag === "Success" || u._tag === "Failure")
 }
 
 /** @internal */
 export const exitIsFailure = <E, A>(self: Exit.Exit<E, A>): self is Exit.Failure<E> => {
-  return self.op === OpCodes.OP_FAILURE
+  return self._tag === "Failure"
 }
 
 /** @internal */
 export const exitIsSuccess = <E, A>(self: Exit.Exit<E, A>): self is Exit.Success<A> => {
-  return self.op === OpCodes.OP_SUCCESS
+  return self._tag === "Success"
 }
 
 /** @internal */
 export const exitSucceed = <A>(value: A): Exit.Exit<never, A> => {
   const exit = Object.create(proto)
-  exit.op = OpCodes.OP_SUCCESS
+  exit._tag = OpCodes.OP_SUCCESS
   exit.value = value
   exit.trace = undefined
   return exit
@@ -1746,7 +1745,7 @@ export const exitFail = <E>(error: E): Exit.Exit<E, never> => {
 /** @internal */
 export const exitFailCause = <E>(cause: Cause.Cause<E>): Exit.Exit<E, never> => {
   const exit = Object.create(proto)
-  exit.op = OpCodes.OP_FAILURE
+  exit._tag = OpCodes.OP_FAILURE
   exit.cause = cause
   exit.trace = undefined
   return exit
@@ -1788,7 +1787,7 @@ export const exitFromOption = <A>(option: Option.Option<A>): Exit.Exit<void, A> 
 
 /** @internal */
 export const exitIsInterrupted = <E, A>(self: Exit.Exit<E, A>): boolean => {
-  switch (self.op) {
+  switch (self._tag) {
     case OpCodes.OP_FAILURE: {
       return internalCause.isInterrupted(self.cause)
     }
@@ -1800,7 +1799,7 @@ export const exitIsInterrupted = <E, A>(self: Exit.Exit<E, A>): boolean => {
 
 /** @internal */
 export const exitCauseOption = <E, A>(self: Exit.Exit<E, A>): Option.Option<Cause.Cause<E>> => {
-  switch (self.op) {
+  switch (self._tag) {
     case OpCodes.OP_FAILURE: {
       return Option.some(self.cause)
     }
@@ -1813,7 +1812,7 @@ export const exitCauseOption = <E, A>(self: Exit.Exit<E, A>): Option.Option<Caus
 /** @internal */
 export const exitGetOrElse = <E, A>(orElse: (cause: Cause.Cause<E>) => A) => {
   return (self: Exit.Exit<E, A>): A => {
-    switch (self.op) {
+    switch (self._tag) {
       case OpCodes.OP_FAILURE: {
         return orElse(self.cause)
       }
@@ -1827,7 +1826,7 @@ export const exitGetOrElse = <E, A>(orElse: (cause: Cause.Cause<E>) => A) => {
 /** @internal */
 export const exitExists = <A>(predicate: Predicate<A>) => {
   return <E>(self: Exit.Exit<E, A>): boolean => {
-    switch (self.op) {
+    switch (self._tag) {
       case OpCodes.OP_FAILURE: {
         return false
       }
@@ -1841,7 +1840,7 @@ export const exitExists = <A>(predicate: Predicate<A>) => {
 /** @internal */
 export const exitAs = <A1>(value: A1) => {
   return <E, A>(self: Exit.Exit<E, A>): Exit.Exit<E, A1> => {
-    switch (self.op) {
+    switch (self._tag) {
       case OpCodes.OP_FAILURE: {
         return self as Exit.Exit<E, A1>
       }
@@ -1860,7 +1859,7 @@ export const exitAsUnit = <E, A>(self: Exit.Exit<E, A>): Exit.Exit<E, void> => {
 /** @internal */
 export const exitMap = <A, B>(f: (a: A) => B) => {
   return <E>(self: Exit.Exit<E, A>): Exit.Exit<E, B> => {
-    switch (self.op) {
+    switch (self._tag) {
       case OpCodes.OP_FAILURE: {
         return self as Exit.Exit<E, B>
       }
@@ -1877,7 +1876,7 @@ export const exitMapBoth = <E, A, E1, A1>(
   onSuccess: (a: A) => A1
 ) => {
   return (self: Exit.Exit<E, A>): Exit.Exit<E1, A1> => {
-    switch (self.op) {
+    switch (self._tag) {
       case OpCodes.OP_FAILURE: {
         return exitFailCause(pipe(self.cause, internalCause.map(onFailure))) as Exit.Exit<E1, A1>
       }
@@ -1895,7 +1894,7 @@ export const exitUnannotate = <E, A>(exit: Exit.Exit<E, A>): Exit.Exit<E, A> =>
 /** @internal */
 export const exitMapError = <E, E1>(f: (e: E) => E1) => {
   return <A>(self: Exit.Exit<E, A>): Exit.Exit<E1, A> => {
-    switch (self.op) {
+    switch (self._tag) {
       case OpCodes.OP_FAILURE: {
         return exitFailCause(pipe(self.cause, internalCause.map(f))) as Exit.Exit<E1, A>
       }
@@ -1909,7 +1908,7 @@ export const exitMapError = <E, E1>(f: (e: E) => E1) => {
 /** @internal */
 export const exitMapErrorCause = <E, E1>(f: (cause: Cause.Cause<E>) => Cause.Cause<E1>) => {
   return <A>(self: Exit.Exit<E, A>): Exit.Exit<E1, A> => {
-    switch (self.op) {
+    switch (self._tag) {
       case OpCodes.OP_FAILURE: {
         return exitFailCause(f(self.cause)) as Exit.Exit<E1, A>
       }
@@ -1923,7 +1922,7 @@ export const exitMapErrorCause = <E, E1>(f: (cause: Cause.Cause<E>) => Cause.Cau
 /** @internal */
 export const exitFlatMap = <A, E1, A1>(f: (a: A) => Exit.Exit<E1, A1>) => {
   return <E>(self: Exit.Exit<E, A>): Exit.Exit<E | E1, A1> => {
-    switch (self.op) {
+    switch (self._tag) {
       case OpCodes.OP_FAILURE: {
         return self as Exit.Exit<E | E1, A1>
       }
@@ -1939,7 +1938,7 @@ export const exitFlatMapEffect = <E, A, R, E1, A1>(
   f: (a: A) => Effect.Effect<R, E1, Exit.Exit<E, A1>>
 ) => {
   return (self: Exit.Exit<E, A>): Effect.Effect<R, E1, Exit.Exit<E, A1>> => {
-    switch (self.op) {
+    switch (self._tag) {
       case OpCodes.OP_FAILURE: {
         return succeed(self)
       }
@@ -1963,7 +1962,7 @@ export const exitMatch = <E, A, Z>(
   onSuccess: (a: A) => Z
 ) => {
   return (self: Exit.Exit<E, A>): Z => {
-    switch (self.op) {
+    switch (self._tag) {
       case OpCodes.OP_FAILURE: {
         return onFailure(self.cause)
       }
@@ -1980,7 +1979,7 @@ export const exitMatchEffect = <E, A, R1, E1, A1, R2, E2, A2>(
   onSuccess: (a: A) => Effect.Effect<R2, E2, A2>
 ) => {
   return (self: Exit.Exit<E, A>): Effect.Effect<R1 | R2, E1 | E2, A1 | A2> => {
-    switch (self.op) {
+    switch (self._tag) {
       case OpCodes.OP_FAILURE: {
         return onFailure(self.cause)
       }
@@ -1994,7 +1993,7 @@ export const exitMatchEffect = <E, A, R1, E1, A1, R2, E2, A2>(
 /** @internal */
 export const exitForEachEffect = <A, R, E1, B>(f: (a: A) => Effect.Effect<R, E1, B>) => {
   return <E>(self: Exit.Exit<E, A>): Effect.Effect<R, never, Exit.Exit<E | E1, B>> => {
-    switch (self.op) {
+    switch (self._tag) {
       case OpCodes.OP_FAILURE: {
         return succeed(exitFailCause(self.cause))
       }
@@ -2088,9 +2087,9 @@ export const exitZipWith = <E, E1, A, B, C>(
   g: (c: Cause.Cause<E>, c1: Cause.Cause<E1>) => Cause.Cause<E | E1>
 ) => {
   return (self: Exit.Exit<E, A>): Exit.Exit<E | E1, C> => {
-    switch (self.op) {
+    switch (self._tag) {
       case OpCodes.OP_FAILURE: {
-        switch (that.op) {
+        switch (that._tag) {
           case OpCodes.OP_SUCCESS: {
             return self as Exit.Exit<E | E1, C>
           }
@@ -2100,7 +2099,7 @@ export const exitZipWith = <E, E1, A, B, C>(
         }
       }
       case OpCodes.OP_SUCCESS: {
-        switch (that.op) {
+        switch (that._tag) {
           case OpCodes.OP_SUCCESS: {
             return exitSucceed(f(self.value, that.value)) as Exit.Exit<E | E1, C>
           }
