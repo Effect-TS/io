@@ -4,13 +4,13 @@ import * as Intervals from "@effect/io/Schedule/Intervals"
 import * as Chunk from "@fp-ts/data/Chunk"
 
 /** @internal */
-export const OP_CONTINUE = 0 as const
+export const OP_CONTINUE = "Continue" as const
 
 /** @internal */
 export type OP_CONTINUE = typeof OP_CONTINUE
 
 /** @internal */
-export const OP_DONE = 1 as const
+export const OP_DONE = "Done" as const
 
 /** @internal */
 export type OP_DONE = typeof OP_DONE
@@ -18,7 +18,7 @@ export type OP_DONE = typeof OP_DONE
 /** @internal */
 export const _continue = (intervals: Intervals.Intervals): ScheduleDecision.ScheduleDecision => {
   return {
-    op: OP_CONTINUE,
+    _tag: OP_CONTINUE,
     intervals
   }
 }
@@ -26,22 +26,22 @@ export const _continue = (intervals: Intervals.Intervals): ScheduleDecision.Sche
 /** @internal */
 export const continueWith = (interval: Interval.Interval): ScheduleDecision.ScheduleDecision => {
   return {
-    op: OP_CONTINUE,
+    _tag: OP_CONTINUE,
     intervals: Intervals.make(Chunk.singleton(interval))
   }
 }
 
 /** @internal */
 export const done: ScheduleDecision.ScheduleDecision = {
-  op: OP_DONE
+  _tag: OP_DONE
 }
 
 /** @internal */
 export const isContinue = (self: ScheduleDecision.ScheduleDecision): self is ScheduleDecision.Continue => {
-  return self.op === OP_CONTINUE
+  return self._tag === OP_CONTINUE
 }
 
 /** @internal */
 export const isDone = (self: ScheduleDecision.ScheduleDecision): self is ScheduleDecision.Done => {
-  return self.op === OP_DONE
+  return self._tag === OP_DONE
 }
