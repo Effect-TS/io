@@ -14,19 +14,19 @@ export const FiberIdTypeId: FiberId.FiberIdTypeId = Symbol.for(
 ) as FiberId.FiberIdTypeId
 
 /** @internal */
-const OP_NONE = 0 as const
+const OP_NONE = "None" as const
 
 /** @internal */
 export type OP_NONE = typeof OP_NONE
 
 /** @internal */
-const OP_RUNTIME = 1 as const
+const OP_RUNTIME = "Runtime" as const
 
 /** @internal */
 export type OP_RUNTIME = typeof OP_RUNTIME
 
 /** @internal */
-const OP_COMPOSITE = 2 as const
+const OP_COMPOSITE = "Composite" as const
 
 /** @internal */
 export type OP_COMPOSITE = typeof OP_COMPOSITE
@@ -34,22 +34,22 @@ export type OP_COMPOSITE = typeof OP_COMPOSITE
 /** @internal */
 class None implements FiberId.None {
   readonly [FiberIdTypeId]: FiberId.FiberIdTypeId = FiberIdTypeId
-  readonly op = OP_NONE;
+  readonly _tag = OP_NONE;
   [Equal.symbolHash](): number {
     return pipe(
       Equal.hash(FiberIdSymbolKey),
-      Equal.hashCombine(Equal.hash(this.op))
+      Equal.hashCombine(Equal.hash(this._tag))
     )
   }
   [Equal.symbolEqual](that: unknown): boolean {
-    return isFiberId(that) && that.op === OP_NONE
+    return isFiberId(that) && that._tag === OP_NONE
   }
 }
 
 /** @internal */
 class Runtime implements FiberId.Runtime {
   readonly [FiberIdTypeId]: FiberId.FiberIdTypeId = FiberIdTypeId
-  readonly op = OP_RUNTIME
+  readonly _tag = OP_RUNTIME
   constructor(
     readonly id: number,
     readonly startTimeMillis: number
@@ -57,14 +57,14 @@ class Runtime implements FiberId.Runtime {
   [Equal.symbolHash](): number {
     return pipe(
       Equal.hash(FiberIdSymbolKey),
-      Equal.hashCombine(Equal.hash(this.op)),
+      Equal.hashCombine(Equal.hash(this._tag)),
       Equal.hashCombine(Equal.hash(this.id)),
       Equal.hashCombine(Equal.hash(this.startTimeMillis))
     )
   }
   [Equal.symbolEqual](that: unknown): boolean {
     return isFiberId(that) &&
-      that.op === OP_RUNTIME &&
+      that._tag === OP_RUNTIME &&
       this.id === that.id &&
       this.startTimeMillis === that.startTimeMillis
   }
@@ -73,7 +73,7 @@ class Runtime implements FiberId.Runtime {
 /** @internal */
 class Composite implements FiberId.Composite {
   readonly [FiberIdTypeId]: FiberId.FiberIdTypeId = FiberIdTypeId
-  readonly op = OP_COMPOSITE
+  readonly _tag = OP_COMPOSITE
   constructor(
     readonly left: FiberId.FiberId,
     readonly right: FiberId.FiberId
@@ -81,14 +81,14 @@ class Composite implements FiberId.Composite {
   [Equal.symbolHash](): number {
     return pipe(
       Equal.hash(FiberIdSymbolKey),
-      Equal.hashCombine(Equal.hash(this.op)),
+      Equal.hashCombine(Equal.hash(this._tag)),
       Equal.hashCombine(Equal.hash(this.left)),
       Equal.hashCombine(Equal.hash(this.right))
     )
   }
   [Equal.symbolEqual](that: unknown): boolean {
     return isFiberId(that) &&
-      that.op === OP_COMPOSITE &&
+      that._tag === OP_COMPOSITE &&
       Equal.equals(this.left, that.left) &&
       Equal.equals(this.right, that.right)
   }
@@ -114,26 +114,26 @@ export const isFiberId = (self: unknown): self is FiberId.FiberId => {
 
 /** @internal */
 export const isNone = (self: FiberId.FiberId): self is FiberId.None => {
-  return self.op === OP_NONE || pipe(toSet(self), HashSet.every((id) => isNone(id)))
+  return self._tag === OP_NONE || pipe(toSet(self), HashSet.every((id) => isNone(id)))
 }
 
 /** @internal */
 export const isRuntime = (self: FiberId.FiberId): self is FiberId.Runtime => {
-  return self.op === OP_RUNTIME
+  return self._tag === OP_RUNTIME
 }
 
 /** @internal */
 export const isComposite = (self: FiberId.FiberId): self is FiberId.Composite => {
-  return self.op === OP_COMPOSITE
+  return self._tag === OP_COMPOSITE
 }
 
 /** @internal */
 export const combine = (that: FiberId.FiberId) => {
   return (self: FiberId.FiberId): FiberId.FiberId => {
-    if (self.op === OP_NONE) {
+    if (self._tag === OP_NONE) {
       return that
     }
-    if (that.op === OP_NONE) {
+    if (that._tag === OP_NONE) {
       return self
     }
     return new Composite(self, that)
@@ -152,7 +152,7 @@ export const getOrElse = (that: FiberId.FiberId) => {
 
 /** @internal */
 export const ids = (self: FiberId.FiberId): HashSet.HashSet<number> => {
-  switch (self.op) {
+  switch (self._tag) {
     case OP_NONE: {
       return HashSet.empty()
     }
@@ -201,7 +201,7 @@ export const toOption = (self: FiberId.FiberId): Option.Option<FiberId.FiberId> 
 
 /** @internal */
 export const toSet = (self: FiberId.FiberId): HashSet.HashSet<FiberId.Runtime> => {
-  switch (self.op) {
+  switch (self._tag) {
     case OP_NONE: {
       return HashSet.empty()
     }
