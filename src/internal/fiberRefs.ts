@@ -3,15 +3,15 @@ import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRef from "@effect/io/FiberRef"
 import type * as FiberRefs from "@effect/io/FiberRefs"
 import * as core from "@effect/io/internal/core"
-import * as Chunk from "@fp-ts/data/Chunk"
 import * as Equal from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
 import * as Option from "@fp-ts/data/Option"
+import * as Arr from "@fp-ts/data/ReadonlyArray"
 
 /** @internal */
 export function unsafeMake(
-  fiberRefLocals: Map<FiberRef.FiberRef<any>, Chunk.NonEmptyChunk<readonly [FiberId.Runtime, any]>>
+  fiberRefLocals: Map<FiberRef.FiberRef<any>, Arr.NonEmptyReadonlyArray<readonly [FiberId.Runtime, any]>>
 ): FiberRefs.FiberRefs {
   return new FiberRefsImpl(fiberRefLocals)
 }
@@ -25,7 +25,7 @@ export class FiberRefsImpl implements FiberRefs.FiberRefs {
   constructor(
     readonly locals: Map<
       FiberRef.FiberRef<any>,
-      Chunk.NonEmptyChunk<readonly [FiberId.Runtime, any]>
+      Arr.NonEmptyReadonlyArray<readonly [FiberId.Runtime, any]>
     >
   ) {
     Equal.considerByRef(this)
@@ -35,8 +35,8 @@ export class FiberRefsImpl implements FiberRefs.FiberRefs {
 /** @internal */
 const findAncestor = (
   _ref: FiberRef.FiberRef<any>,
-  _parentStack: Chunk.Chunk<readonly [FiberId.Runtime, unknown]>,
-  _childStack: Chunk.Chunk<readonly [FiberId.Runtime, unknown]>,
+  _parentStack: ReadonlyArray<readonly [FiberId.Runtime, unknown]>,
+  _childStack: ReadonlyArray<readonly [FiberId.Runtime, unknown]>,
   _childModified = false
 ): readonly [unknown, boolean] => {
   const ref = _ref
@@ -45,12 +45,12 @@ const findAncestor = (
   let childModified = _childModified
   let ret: readonly [unknown, boolean] | undefined = undefined
   while (ret === undefined) {
-    if (Chunk.isNonEmpty(parentStack) && Chunk.isNonEmpty(childStack)) {
-      const parentFiberId = Chunk.headNonEmpty(parentStack)[0]
-      const parentAncestors = Chunk.tailNonEmpty(parentStack)
-      const childFiberId = Chunk.headNonEmpty(childStack)[0]
-      const childRefValue = Chunk.headNonEmpty(childStack)[1]
-      const childAncestors = Chunk.tailNonEmpty(childStack)
+    if (Arr.isNonEmpty(parentStack) && Arr.isNonEmpty(childStack)) {
+      const parentFiberId = Arr.headNonEmpty(parentStack)[0]
+      const parentAncestors = Arr.tailNonEmpty(parentStack)
+      const childFiberId = Arr.headNonEmpty(childStack)[0]
+      const childRefValue = Arr.headNonEmpty(childStack)[1]
+      const childAncestors = Arr.tailNonEmpty(childStack)
       if (parentFiberId.startTimeMillis < childFiberId.startTimeMillis) {
         childStack = childAncestors
         childModified = true
@@ -78,15 +78,15 @@ export const joinAs = (fiberId: FiberId.Runtime, that: FiberRefs.FiberRefs) =>
   (self: FiberRefs.FiberRefs): FiberRefs.FiberRefs => {
     const parentFiberRefs = new Map(self.locals)
     for (const [fiberRef, childStack] of that.locals) {
-      const childValue = Chunk.headNonEmpty(childStack)[1]
-      if (!Equal.equals(Chunk.headNonEmpty(childStack)[0], fiberId)) {
+      const childValue = Arr.headNonEmpty(childStack)[1]
+      if (!Equal.equals(Arr.headNonEmpty(childStack)[0], fiberId)) {
         if (!parentFiberRefs.has(fiberRef)) {
           if (Equal.equals(childValue, fiberRef.initial)) {
             continue
           }
           parentFiberRefs.set(
             fiberRef,
-            Chunk.singleton([fiberId, fiberRef.join(fiberRef.initial, childValue)] as const)
+            [[fiberId, fiberRef.join(fiberRef.initial, childValue)]]
           )
           continue
         }
@@ -98,19 +98,19 @@ export const joinAs = (fiberId: FiberId.Runtime, that: FiberRefs.FiberRefs) =>
         )
         if (wasModified) {
           const patch = fiberRef.diff(ancestor, childValue)
-          const oldValue = Chunk.headNonEmpty(parentStack)[1]
+          const oldValue = Arr.headNonEmpty(parentStack)[1]
           const newValue = fiberRef.join(oldValue, fiberRef.patch(patch)(oldValue))
           if (!Equal.equals(oldValue, newValue)) {
-            let newStack: Chunk.NonEmptyChunk<readonly [FiberId.Runtime, unknown]>
-            const parentFiberId = Chunk.headNonEmpty(parentStack)[0]
+            let newStack: Arr.NonEmptyReadonlyArray<readonly [FiberId.Runtime, unknown]>
+            const parentFiberId = Arr.headNonEmpty(parentStack)[0]
             if (Equal.equals(parentFiberId, fiberId)) {
-              newStack = Chunk.prepend([parentFiberId, newValue] as const)(
-                Chunk.tailNonEmpty(parentStack)
-              ) as Chunk.NonEmptyChunk<readonly [FiberId.Runtime, unknown]>
+              newStack = Arr.prepend([parentFiberId, newValue] as const)(
+                Arr.tailNonEmpty(parentStack)
+              ) as Arr.NonEmptyReadonlyArray<readonly [FiberId.Runtime, unknown]>
             } else {
-              newStack = Chunk.prepend([fiberId, newValue] as const)(
+              newStack = Arr.prepend([fiberId, newValue] as const)(
                 parentStack
-              ) as Chunk.NonEmptyChunk<readonly [FiberId.Runtime, unknown]>
+              ) as Arr.NonEmptyReadonlyArray<readonly [FiberId.Runtime, unknown]>
             }
             parentFiberRefs.set(fiberRef, newStack)
           }
@@ -123,14 +123,14 @@ export const joinAs = (fiberId: FiberId.Runtime, that: FiberRefs.FiberRefs) =>
 /** @internal */
 export const forkAs = (childId: FiberId.Runtime) =>
   (self: FiberRefs.FiberRefs): FiberRefs.FiberRefs => {
-    const map = new Map<FiberRef.FiberRef<any>, Chunk.NonEmptyChunk<readonly [FiberId.Runtime, unknown]>>()
+    const map = new Map<FiberRef.FiberRef<any>, Arr.NonEmptyReadonlyArray<readonly [FiberId.Runtime, unknown]>>()
     for (const [fiberRef, stack] of self.locals.entries()) {
-      const oldValue = Chunk.headNonEmpty(stack)[1]
+      const oldValue = Arr.headNonEmpty(stack)[1]
       const newValue = fiberRef.patch(fiberRef.fork)(oldValue)
       if (Equal.equals(oldValue, newValue)) {
         map.set(fiberRef, stack)
       } else {
-        map.set(fiberRef, Chunk.prepend([childId, newValue] as const)(stack) as typeof stack)
+        map.set(fiberRef, Arr.prepend([childId, newValue] as const)(stack) as typeof stack)
       }
     }
     return new FiberRefsImpl(map)
@@ -166,7 +166,7 @@ export const get = <A>(fiberRef: FiberRef.FiberRef<A>) =>
     if (!self.locals.has(fiberRef)) {
       return Option.none
     }
-    return Option.some(Chunk.headNonEmpty(self.locals.get(fiberRef)!)[1])
+    return Option.some(Arr.headNonEmpty(self.locals.get(fiberRef)!)[1])
   }
 
 /** @internal */
@@ -178,16 +178,21 @@ export const updatedAs = <A>(fiberId: FiberId.Runtime, fiberRef: FiberRef.FiberR
   (self: FiberRefs.FiberRefs): FiberRefs.FiberRefs => {
     const oldStack = self.locals.has(fiberRef) ?
       self.locals.get(fiberRef)! :
-      Chunk.empty<readonly [FiberId.Runtime, any]>()
+      Arr.empty<readonly [FiberId.Runtime, any]>()
 
-    const newStack = Chunk.isEmpty(oldStack)
-      ? Chunk.singleton([fiberId, value] as const)
-      : Equal.equals(Chunk.headNonEmpty(oldStack as Chunk.NonEmptyChunk<readonly [FiberId.Runtime, any]>)[0], fiberId)
-      ? Chunk.prepend([fiberId, value] as const)(
-        Chunk.tailNonEmpty(oldStack as Chunk.NonEmptyChunk<readonly [FiberId.Runtime, any]>)
+    const newStack = Arr.isEmpty(oldStack)
+      ? Arr.of([fiberId, value] as const)
+      : Equal.equals(
+          Arr.headNonEmpty(oldStack as Arr.NonEmptyReadonlyArray<readonly [FiberId.Runtime, any]>)[0],
+          fiberId
+        )
+      ? Arr.prepend([fiberId, value] as const)(
+        Arr.tailNonEmpty(oldStack as Arr.NonEmptyReadonlyArray<readonly [FiberId.Runtime, any]>)
       )
-      : Chunk.prepend([fiberId, value] as const)(oldStack)
+      : Arr.prepend([fiberId, value] as const)(oldStack)
 
     const locals = new Map(self.locals)
-    return new FiberRefsImpl(locals.set(fiberRef, newStack as Chunk.NonEmptyChunk<readonly [FiberId.Runtime, any]>))
+    return new FiberRefsImpl(
+      locals.set(fiberRef, newStack as Arr.NonEmptyReadonlyArray<readonly [FiberId.Runtime, any]>)
+    )
   }
