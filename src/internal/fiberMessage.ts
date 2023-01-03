@@ -7,38 +7,38 @@ import type * as FiberRuntime from "@effect/io/internal/fiberRuntime"
 export type FiberMessage = InterruptSignal | Stateful | Resume | YieldNow
 
 /** @internal */
-export const OP_INTERRUPT_SIGNAL = 0 as const
+export const OP_INTERRUPT_SIGNAL = "InterruptSignal" as const
 
 /** @internal */
 export type OP_INTERRUPT_SIGNAL = typeof OP_INTERRUPT_SIGNAL
 
 /** @internal */
-export const OP_STATEFUL = 1 as const
+export const OP_STATEFUL = "Stateful" as const
 
 /** @internal */
 export type OP_STATEFUL = typeof OP_STATEFUL
 
 /** @internal */
-export const OP_RESUME = 2 as const
+export const OP_RESUME = "Resume" as const
 
 /** @internal */
 export type OP_RESUME = typeof OP_RESUME
 
 /** @internal */
-export const OP_YIELD_NOW = 3 as const
+export const OP_YIELD_NOW = "YieldNow" as const
 
 /** @internal */
 export type OP_YIELD_NOW = typeof OP_YIELD_NOW
 
 /** @internal */
 export interface InterruptSignal {
-  readonly op: OP_INTERRUPT_SIGNAL
+  readonly _tag: OP_INTERRUPT_SIGNAL
   readonly cause: Cause.Cause<never>
 }
 
 /** @internal */
 export interface Stateful {
-  readonly op: OP_STATEFUL
+  readonly _tag: OP_STATEFUL
   readonly onFiber: (
     fiber: FiberRuntime.FiberRuntime<any, any>,
     status: FiberStatus.FiberStatus
@@ -47,19 +47,19 @@ export interface Stateful {
 
 /** @internal */
 export interface Resume {
-  readonly op: OP_RESUME
+  readonly _tag: OP_RESUME
   readonly effect: Effect.Effect<any, any, any>
 }
 
 /** @internal */
 export interface YieldNow {
-  readonly op: OP_YIELD_NOW
+  readonly _tag: OP_YIELD_NOW
   readonly priority: "background" | "normal"
 }
 
 /** @internal */
 export const interruptSignal = (cause: Cause.Cause<never>): FiberMessage => ({
-  op: OP_INTERRUPT_SIGNAL,
+  _tag: OP_INTERRUPT_SIGNAL,
   cause
 })
 
@@ -70,18 +70,18 @@ export const stateful = (
     status: FiberStatus.FiberStatus
   ) => void
 ): FiberMessage => ({
-  op: OP_STATEFUL,
+  _tag: OP_STATEFUL,
   onFiber
 })
 
 /** @internal */
 export const resume = (effect: Effect.Effect<any, any, any>): FiberMessage => ({
-  op: OP_RESUME,
+  _tag: OP_RESUME,
   effect
 })
 
 /** @internal */
 export const yieldNow = (priority: "background" | "normal"): FiberMessage => ({
-  op: OP_YIELD_NOW,
+  _tag: OP_YIELD_NOW,
   priority
 })

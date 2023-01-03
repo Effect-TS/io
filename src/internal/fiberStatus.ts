@@ -12,19 +12,19 @@ export const FiberStatusTypeId: FiberStatus.FiberStatusTypeId = Symbol.for(
 ) as FiberStatus.FiberStatusTypeId
 
 /** @internal */
-export const OP_DONE = 0 as const
+export const OP_DONE = "Done" as const
 
 /** @internal */
 export type OP_DONE = typeof OP_DONE
 
 /** @internal */
-export const OP_RUNNING = 1 as const
+export const OP_RUNNING = "Running" as const
 
 /** @internal */
 export type OP_RUNNING = typeof OP_RUNNING
 
 /** @internal */
-export const OP_SUSPENDED = 2 as const
+export const OP_SUSPENDED = "Suspended" as const
 
 /** @internal */
 export type OP_SUSPENDED = typeof OP_SUSPENDED
@@ -32,34 +32,34 @@ export type OP_SUSPENDED = typeof OP_SUSPENDED
 /** @internal */
 class Done implements FiberStatus.Done {
   readonly [FiberStatusTypeId]: FiberStatus.FiberStatusTypeId = FiberStatusTypeId
-  readonly op = OP_DONE;
+  readonly _tag = OP_DONE;
   [Equal.symbolHash](): number {
     return pipe(
       Equal.hash(FiberStatusSymbolKey),
-      Equal.hashCombine(Equal.hash(this.op))
+      Equal.hashCombine(Equal.hash(this._tag))
     )
   }
   [Equal.symbolEqual](that: unknown): boolean {
-    return isFiberStatus(that) && that.op === OP_DONE
+    return isFiberStatus(that) && that._tag === OP_DONE
   }
 }
 
 /** @internal */
 class Running implements FiberStatus.Running {
   readonly [FiberStatusTypeId]: FiberStatus.FiberStatusTypeId = FiberStatusTypeId
-  readonly op = OP_RUNNING
+  readonly _tag = OP_RUNNING
   constructor(readonly runtimeFlags: RuntimeFlags) {}
   [Equal.symbolHash](): number {
     return pipe(
       Equal.hash(FiberStatusSymbolKey),
-      Equal.hashCombine(Equal.hash(this.op)),
+      Equal.hashCombine(Equal.hash(this._tag)),
       Equal.hashCombine(Equal.hash(this.runtimeFlags))
     )
   }
   [Equal.symbolEqual](that: unknown): boolean {
     return (
       isFiberStatus(that) &&
-      that.op === OP_RUNNING &&
+      that._tag === OP_RUNNING &&
       this.runtimeFlags === that.runtimeFlags
     )
   }
@@ -68,7 +68,7 @@ class Running implements FiberStatus.Running {
 /** @internal */
 class Suspended implements FiberStatus.Suspended {
   readonly [FiberStatusTypeId]: FiberStatus.FiberStatusTypeId = FiberStatusTypeId
-  readonly op = OP_SUSPENDED
+  readonly _tag = OP_SUSPENDED
   constructor(
     readonly runtimeFlags: RuntimeFlags,
     readonly blockingOn: FiberId
@@ -76,7 +76,7 @@ class Suspended implements FiberStatus.Suspended {
   [Equal.symbolHash](): number {
     return pipe(
       Equal.hash(FiberStatusSymbolKey),
-      Equal.hashCombine(Equal.hash(this.op)),
+      Equal.hashCombine(Equal.hash(this._tag)),
       Equal.hashCombine(Equal.hash(this.runtimeFlags)),
       Equal.hashCombine(Equal.hash(this.blockingOn))
     )
@@ -84,7 +84,7 @@ class Suspended implements FiberStatus.Suspended {
   [Equal.symbolEqual](that: unknown): boolean {
     return (
       isFiberStatus(that) &&
-      that.op === OP_SUSPENDED &&
+      that._tag === OP_SUSPENDED &&
       this.runtimeFlags === that.runtimeFlags &&
       Equal.equals(this.blockingOn, that.blockingOn)
     )
@@ -114,15 +114,15 @@ export const isFiberStatus = (u: unknown): u is FiberStatus.FiberStatus => {
 
 /** @internal */
 export const isDone = (self: FiberStatus.FiberStatus): self is FiberStatus.Done => {
-  return self.op === OP_DONE
+  return self._tag === OP_DONE
 }
 
 /** @internal */
 export const isRunning = (self: FiberStatus.FiberStatus): self is FiberStatus.Running => {
-  return self.op === OP_RUNNING
+  return self._tag === OP_RUNNING
 }
 
 /** @internal */
 export const isSuspended = (self: FiberStatus.FiberStatus): self is FiberStatus.Suspended => {
-  return self.op === OP_SUSPENDED
+  return self._tag === OP_SUSPENDED
 }

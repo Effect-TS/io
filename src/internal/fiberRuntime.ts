@@ -149,7 +149,7 @@ const drainQueueWhileRunningTable = {
     self: FiberRuntime<any, any>,
     runtimeFlags: RuntimeFlags.RuntimeFlags,
     cur: Effect.Effect<any, any, any>,
-    message: FiberMessage.FiberMessage & { op: FiberMessage.OP_INTERRUPT_SIGNAL }
+    message: FiberMessage.FiberMessage & { _tag: FiberMessage.OP_INTERRUPT_SIGNAL }
   ) => {
     self.processNewInterruptSignal(message.cause)
     return _runtimeFlags.interruptible(runtimeFlags) ? core.exitFailCause(message.cause) : cur
@@ -166,7 +166,7 @@ const drainQueueWhileRunningTable = {
     self: FiberRuntime<any, any>,
     runtimeFlags: RuntimeFlags.RuntimeFlags,
     cur: Effect.Effect<any, any, any>,
-    message: FiberMessage.FiberMessage & { op: FiberMessage.OP_STATEFUL }
+    message: FiberMessage.FiberMessage & { _tag: FiberMessage.OP_STATEFUL }
   ) => {
     message.onFiber(self, FiberStatus.running(runtimeFlags))
     return cur
@@ -175,7 +175,7 @@ const drainQueueWhileRunningTable = {
     _self: FiberRuntime<any, any>,
     _runtimeFlags: RuntimeFlags.RuntimeFlags,
     cur: Effect.Effect<any, any, any>,
-    _message: FiberMessage.FiberMessage & { op: FiberMessage.OP_YIELD_NOW }
+    _message: FiberMessage.FiberMessage & { _tag: FiberMessage.OP_YIELD_NOW }
   ) => {
     return pipe(core.yieldNow(_message.priority), core.flatMap(() => cur))
   }
@@ -604,7 +604,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     while (!MutableQueue.isEmpty(this._queue)) {
       const message = pipe(this._queue, MutableQueue.poll(void 0))!
       // @ts-expect-error
-      cur = drainQueueWhileRunningTable[message.op](this, runtimeFlags, cur, message)
+      cur = drainQueueWhileRunningTable[message._tag](this, runtimeFlags, cur, message)
     }
     return cur
   }
@@ -759,7 +759,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    * **NOTE**: This method must be invoked by the fiber itself.
    */
   evaluateMessageWhileSuspended(message: FiberMessage.FiberMessage): EvaluationSignal {
-    switch (message.op) {
+    switch (message._tag) {
       case FiberMessage.OP_YIELD_NOW: {
         return message.priority === "background" ? EvaluationSignalYieldNowInBackground : EvaluationSignalYieldNow
       }
