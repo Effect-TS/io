@@ -1,5 +1,6 @@
 import type * as Cause from "@effect/io/Cause"
 import * as FiberId from "@effect/io/Fiber/Id"
+import * as OpCodes from "@effect/io/internal/opCodes/cause"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Either from "@fp-ts/data/Either"
 import * as Equal from "@fp-ts/data/Equal"
@@ -46,14 +47,14 @@ const proto = {
 /** @internal */
 export const empty: Cause.Cause<never> = (() => {
   const o = Object.create(proto)
-  o._tag = "Empty"
+  o._tag = OpCodes.OP_EMPTY
   return o
 })()
 
 /** @internal */
 export const fail = <E>(error: E): Cause.Cause<E> => {
   const o = Object.create(proto)
-  o._tag = "Fail"
+  o._tag = OpCodes.OP_FAIL
   o.error = error
   return o
 }
@@ -61,7 +62,7 @@ export const fail = <E>(error: E): Cause.Cause<E> => {
 /** @internal */
 export const die = (defect: unknown): Cause.Cause<never> => {
   const o = Object.create(proto)
-  o._tag = "Die"
+  o._tag = OpCodes.OP_DIE
   o.defect = defect
   return o
 }
@@ -69,7 +70,7 @@ export const die = (defect: unknown): Cause.Cause<never> => {
 /** @internal */
 export const interrupt = (fiberId: FiberId.FiberId): Cause.Cause<never> => {
   const o = Object.create(proto)
-  o._tag = "Interrupt"
+  o._tag = OpCodes.OP_INTERRUPT
   o.fiberId = fiberId
   return o
 }
@@ -77,7 +78,7 @@ export const interrupt = (fiberId: FiberId.FiberId): Cause.Cause<never> => {
 /** @internal */
 export const annotated = <E>(cause: Cause.Cause<E>, annotation: unknown): Cause.Cause<E> => {
   const o = Object.create(proto)
-  o._tag = "Annotated"
+  o._tag = OpCodes.OP_ANNOTATED
   o.cause = cause
   o.annotation = annotation
   return o
@@ -86,7 +87,7 @@ export const annotated = <E>(cause: Cause.Cause<E>, annotation: unknown): Cause.
 /** @internal */
 export const parallel = <E, E2>(left: Cause.Cause<E>, right: Cause.Cause<E2>): Cause.Cause<E | E2> => {
   const o = Object.create(proto)
-  o._tag = "Parallel"
+  o._tag = OpCodes.OP_PARALLEL
   o.left = left
   o.right = right
   return o
@@ -95,7 +96,7 @@ export const parallel = <E, E2>(left: Cause.Cause<E>, right: Cause.Cause<E2>): C
 /** @internal */
 export const sequential = <E, E2>(left: Cause.Cause<E>, right: Cause.Cause<E2>): Cause.Cause<E | E2> => {
   const o = Object.create(proto)
-  o._tag = "Sequential"
+  o._tag = OpCodes.OP_SEQUENTIAL
   o.left = left
   o.right = right
   return o
@@ -112,37 +113,37 @@ export const isCause = (u: unknown): u is Cause.Cause<never> => {
 
 /** @internal */
 export const isEmptyType = <E>(self: Cause.Cause<E>): self is Cause.Empty => {
-  return self._tag === "Empty"
+  return self._tag === OpCodes.OP_EMPTY
 }
 
 /** @internal */
 export const isFailType = <E>(self: Cause.Cause<E>): self is Cause.Fail<E> => {
-  return self._tag === "Fail"
+  return self._tag === OpCodes.OP_FAIL
 }
 
 /** @internal */
 export const isDieType = <E>(self: Cause.Cause<E>): self is Cause.Die => {
-  return self._tag === "Die"
+  return self._tag === OpCodes.OP_DIE
 }
 
 /** @internal */
 export const isInterruptType = <E>(self: Cause.Cause<E>): self is Cause.Interrupt => {
-  return self._tag === "Interrupt"
+  return self._tag === OpCodes.OP_INTERRUPT
 }
 
 /** @internal */
 export const isAnnotatedType = <E>(self: Cause.Cause<E>): self is Cause.Annotated<E> => {
-  return self._tag === "Annotated"
+  return self._tag === OpCodes.OP_ANNOTATED
 }
 
 /** @internal */
 export const isSequentialType = <E>(self: Cause.Cause<E>): self is Cause.Sequential<E> => {
-  return self._tag === "Sequential"
+  return self._tag === OpCodes.OP_SEQUENTIAL
 }
 
 /** @internal */
 export const isParallelType = <E>(self: Cause.Cause<E>): self is Cause.Parallel<E> => {
-  return self._tag === "Parallel"
+  return self._tag === OpCodes.OP_PARALLEL
 }
 
 // -----------------------------------------------------------------------------
@@ -161,12 +162,12 @@ export const isEmpty = <E>(self: Cause.Cause<E>): boolean => {
   }
   return reduce(true, (acc, cause) => {
     switch (cause._tag) {
-      case "Empty": {
+      case OpCodes.OP_EMPTY: {
         return Option.some(acc)
       }
-      case "Die":
-      case "Fail":
-      case "Interrupt": {
+      case OpCodes.OP_DIE:
+      case OpCodes.OP_FAIL:
+      case OpCodes.OP_INTERRUPT: {
         return Option.some(false)
       }
       default: {
@@ -202,7 +203,7 @@ export const failures = <E>(self: Cause.Cause<E>): Chunk.Chunk<E> => {
     reduce<Chunk.Chunk<E>, E>(
       Chunk.empty<E>(),
       (list, cause) =>
-        cause._tag === "Fail" ?
+        cause._tag === OpCodes.OP_FAIL ?
           Option.some(pipe(list, Chunk.prepend(cause.error))) :
           Option.none
     )(self)
@@ -215,7 +216,7 @@ export const defects = <E>(self: Cause.Cause<E>): Chunk.Chunk<unknown> => {
     reduce<Chunk.Chunk<unknown>, E>(
       Chunk.empty<unknown>(),
       (list, cause) =>
-        cause._tag === "Die" ?
+        cause._tag === OpCodes.OP_DIE ?
           Option.some(pipe(list, Chunk.prepend(cause.defect))) :
           Option.none
     )(self)
@@ -225,7 +226,7 @@ export const defects = <E>(self: Cause.Cause<E>): Chunk.Chunk<unknown> => {
 /** @internal */
 export const interruptors = <E>(self: Cause.Cause<E>): HashSet.HashSet<FiberId.FiberId> => {
   return reduce(HashSet.empty<FiberId.FiberId>(), (set, cause) =>
-    cause._tag === "Interrupt" ?
+    cause._tag === OpCodes.OP_INTERRUPT ?
       Option.some(pipe(set, HashSet.add(cause.fiberId))) :
       Option.none)(self)
 }
@@ -233,7 +234,7 @@ export const interruptors = <E>(self: Cause.Cause<E>): HashSet.HashSet<FiberId.F
 /** @internal */
 export const failureOption = <E>(self: Cause.Cause<E>): Option.Option<E> => {
   return find<E, E>((cause) =>
-    cause._tag === "Fail" ?
+    cause._tag === OpCodes.OP_FAIL ?
       Option.some(cause.error) :
       Option.none
   )(self)
@@ -256,7 +257,7 @@ export const failureOrCause = <E>(self: Cause.Cause<E>): Either.Either<E, Cause.
 /** @internal */
 export const dieOption = <E>(self: Cause.Cause<E>): Option.Option<unknown> => {
   return find((cause) =>
-    cause._tag === "Die" ?
+    cause._tag === OpCodes.OP_DIE ?
       Option.some(cause.defect) :
       Option.none
   )(self)
@@ -300,7 +301,7 @@ export const flipCauseOption = <E>(self: Cause.Cause<Option.Option<E>>): Option.
 /** @internal */
 export const interruptOption = <E>(self: Cause.Cause<E>): Option.Option<FiberId.FiberId> => {
   return find((cause) =>
-    cause._tag === "Interrupt" ?
+    cause._tag === OpCodes.OP_INTERRUPT ?
       Option.some(cause.fiberId) :
       Option.none
   )(self)
@@ -468,7 +469,7 @@ export const flatten = <E>(self: Cause.Cause<Cause.Cause<E>>): Cause.Cause<E> =>
 /** @internal */
 export const contains = <E2>(that: Cause.Cause<E2>) => {
   return <E>(self: Cause.Cause<E>): boolean => {
-    if (that._tag === "Empty" || self === that) {
+    if (that._tag === OpCodes.OP_EMPTY || self === that) {
       return true
     }
     return reduce(false, (accumulator, cause) => {
@@ -618,13 +619,13 @@ export const find = <E, Z>(pf: (cause: Cause.Cause<E>) => Option.Option<Z>) => {
       switch (option._tag) {
         case "None": {
           switch (item._tag) {
-            case "Sequential":
-            case "Parallel": {
+            case OpCodes.OP_SEQUENTIAL:
+            case OpCodes.OP_PARALLEL: {
               stack.push(item.right)
               stack.push(item.left)
               break
             }
-            case "Annotated": {
+            case OpCodes.OP_ANNOTATED: {
               stack.push(item.cause)
               break
             }
@@ -670,14 +671,14 @@ const evaluateCause = (
   let _sequential = Chunk.empty<Cause.Cause<unknown>>()
   while (cause !== undefined) {
     switch (cause._tag) {
-      case "Empty": {
+      case OpCodes.OP_EMPTY: {
         if (stack.length === 0) {
           return [_parallel, _sequential]
         }
         cause = stack.pop()
         break
       }
-      case "Fail": {
+      case OpCodes.OP_FAIL: {
         if (stack.length === 0) {
           return [pipe(_parallel, HashSet.add(cause.error)), _sequential]
         }
@@ -685,7 +686,7 @@ const evaluateCause = (
         cause = stack.pop()
         break
       }
-      case "Die": {
+      case OpCodes.OP_DIE: {
         if (stack.length === 0) {
           return [pipe(_parallel, HashSet.add(cause.defect)), _sequential]
         }
@@ -693,7 +694,7 @@ const evaluateCause = (
         cause = stack.pop()
         break
       }
-      case "Interrupt": {
+      case OpCodes.OP_INTERRUPT: {
         if (stack.length === 0) {
           return [pipe(_parallel, HashSet.add(cause.fiberId as unknown)), _sequential]
         }
@@ -701,28 +702,28 @@ const evaluateCause = (
         cause = stack.pop()
         break
       }
-      case "Annotated": {
+      case OpCodes.OP_ANNOTATED: {
         cause = cause.cause
         break
       }
-      case "Sequential": {
+      case OpCodes.OP_SEQUENTIAL: {
         switch (cause.left._tag) {
-          case "Empty": {
+          case OpCodes.OP_EMPTY: {
             cause = cause.right
             break
           }
-          case "Sequential": {
+          case OpCodes.OP_SEQUENTIAL: {
             cause = sequential(cause.left.left, sequential(cause.left.right, cause.right))
             break
           }
-          case "Parallel": {
+          case OpCodes.OP_PARALLEL: {
             cause = parallel(
               sequential(cause.left.left, cause.right),
               sequential(cause.left.right, cause.right)
             )
             break
           }
-          case "Annotated": {
+          case OpCodes.OP_ANNOTATED: {
             cause = sequential(cause.left.cause, cause.right)
             break
           }
@@ -734,7 +735,7 @@ const evaluateCause = (
         }
         break
       }
-      case "Parallel": {
+      case OpCodes.OP_PARALLEL: {
         stack.push(cause.right)
         cause = cause.left
         break
@@ -808,19 +809,25 @@ const FilterCauseReducer = <E>(
 /** @internal */
 type CauseCase = SequentialCase | ParallelCase | AnnotatedCase
 
+const OP_SEQUENTIAL_CASE = "SequentialCase"
+
+const OP_PARALLEL_CASE = "ParallelCase"
+
+const OP_ANNOTATED_CASE = "AnnotatedCase"
+
 /** @internal */
 interface SequentialCase {
-  readonly _tag: "SequentialCase"
+  readonly _tag: typeof OP_SEQUENTIAL_CASE
 }
 
 /** @internal */
 interface ParallelCase {
-  readonly _tag: "ParallelCase"
+  readonly _tag: typeof OP_PARALLEL_CASE
 }
 
 /** @internal */
 interface AnnotatedCase {
-  readonly _tag: "AnnotatedCase"
+  readonly _tag: typeof OP_ANNOTATED_CASE
   readonly annotation: unknown
 }
 
@@ -860,17 +867,17 @@ export const reduce = <Z, E>(
       const option = pf(accumulator, cause)
       accumulator = Option.isSome(option) ? option.value : accumulator
       switch (cause._tag) {
-        case "Sequential": {
+        case OpCodes.OP_SEQUENTIAL: {
           causes.push(cause.right)
           cause = cause.left
           break
         }
-        case "Parallel": {
+        case OpCodes.OP_PARALLEL: {
           causes.push(cause.right)
           cause = cause.left
           break
         }
-        case "Annotated": {
+        case OpCodes.OP_ANNOTATED: {
           cause = cause.cause
           break
         }
@@ -895,37 +902,37 @@ export const reduceWithContext = <C, E, Z>(context: C, reducer: Cause.CauseReduc
     while (input.length > 0) {
       const cause = input.pop()!
       switch (cause._tag) {
-        case "Empty": {
+        case OpCodes.OP_EMPTY: {
           output.push(Either.right(reducer.emptyCase(context)))
           break
         }
-        case "Fail": {
+        case OpCodes.OP_FAIL: {
           output.push(Either.right(reducer.failCase(context, cause.error)))
           break
         }
-        case "Die": {
+        case OpCodes.OP_DIE: {
           output.push(Either.right(reducer.dieCase(context, cause.defect)))
           break
         }
-        case "Interrupt": {
+        case OpCodes.OP_INTERRUPT: {
           output.push(Either.right(reducer.interruptCase(context, cause.fiberId)))
           break
         }
-        case "Annotated": {
+        case OpCodes.OP_ANNOTATED: {
           input.push(cause.cause)
-          output.push(Either.left({ _tag: "AnnotatedCase", annotation: cause.annotation }))
+          output.push(Either.left({ _tag: OP_ANNOTATED_CASE, annotation: cause.annotation }))
           break
         }
-        case "Sequential": {
+        case OpCodes.OP_SEQUENTIAL: {
           input.push(cause.right)
           input.push(cause.left)
-          output.push(Either.left({ _tag: "SequentialCase" }))
+          output.push(Either.left({ _tag: OP_SEQUENTIAL_CASE }))
           break
         }
-        case "Parallel": {
+        case OpCodes.OP_PARALLEL: {
           input.push(cause.right)
           input.push(cause.left)
-          output.push(Either.left({ _tag: "ParallelCase" }))
+          output.push(Either.left({ _tag: OP_PARALLEL_CASE }))
           break
         }
       }
@@ -936,21 +943,21 @@ export const reduceWithContext = <C, E, Z>(context: C, reducer: Cause.CauseReduc
       switch (either._tag) {
         case "Left": {
           switch (either.left._tag) {
-            case "SequentialCase": {
+            case OP_SEQUENTIAL_CASE: {
               const left = accumulator.pop()!
               const right = accumulator.pop()!
               const value = reducer.sequentialCase(context, left, right)
               accumulator.push(value)
               break
             }
-            case "ParallelCase": {
+            case OP_PARALLEL_CASE: {
               const left = accumulator.pop()!
               const right = accumulator.pop()!
               const value = reducer.parallelCase(context, left, right)
               accumulator.push(value)
               break
             }
-            case "AnnotatedCase": {
+            case OP_ANNOTATED_CASE: {
               const cause = accumulator.pop()!
               const value = reducer.annotatedCase(context, cause, either.left.annotation)
               accumulator.push(value)

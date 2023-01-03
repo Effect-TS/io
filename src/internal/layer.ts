@@ -59,8 +59,8 @@ export type Primitive =
   | ZipWithPar
 
 /** @internal */
-export type Op<OpCode extends number, Body = {}> = Layer.Layer<unknown, unknown, unknown> & Body & {
-  readonly op: OpCode
+export type Op<Tag extends string, Body = {}> = Layer.Layer<unknown, unknown, unknown> & Body & {
+  readonly _tag: Tag
 }
 
 /** @internal */
@@ -146,7 +146,7 @@ export const isLayer = (u: unknown): u is Layer.Layer<unknown, unknown, unknown>
 
 /** @internal */
 export const isFresh = <R, E, A>(self: Layer.Layer<R, E, A>): boolean => {
-  return (self as Primitive).op === OpCodes.OP_FRESH
+  return (self as Primitive)._tag === OpCodes.OP_FRESH
 }
 
 // -----------------------------------------------------------------------------
@@ -342,7 +342,7 @@ export const withScope = (scope: Scope.Scope) => {
     (memoMap: MemoMap) => Effect.Effect<RIn, E, Context.Context<ROut>>
   > => {
     const op = self as Primitive
-    switch (op.op) {
+    switch (op._tag) {
       case OpCodes.OP_EXTEND_SCOPE: {
         return core.sync(() =>
           (memoMap: MemoMap) =>
@@ -454,7 +454,7 @@ export const extendScope = <RIn, E, ROut>(
   self: Layer.Layer<RIn, E, ROut>
 ): Layer.Layer<RIn | Scope.Scope, E, ROut> => {
   const extendScope = Object.create(proto)
-  extendScope.op = OpCodes.OP_EXTEND_SCOPE
+  extendScope._tag = OpCodes.OP_EXTEND_SCOPE
   extendScope.layer = self
   return extendScope
 }
@@ -500,7 +500,7 @@ export const matchCauseLayer = <E, A, R2, E2, A2, R3, E3, A3>(
 ) => {
   return <R>(self: Layer.Layer<R, E, A>): Layer.Layer<R | R2 | R3, E2 | E3, A2 & A3> => {
     const fold = Object.create(proto)
-    fold.op = OpCodes.OP_FOLD
+    fold._tag = OpCodes.OP_FOLD
     fold.layer = self
     fold.failureK = onFailure
     fold.successK = onSuccess
@@ -537,7 +537,7 @@ export const matchLayer = <E, R2, E2, A2, A, R3, E3, A3>(
 /** @internal */
 export const fresh = <R, E, A>(self: Layer.Layer<R, E, A>): Layer.Layer<R, E, A> => {
   const fresh = Object.create(proto)
-  fresh.op = OpCodes.OP_FRESH
+  fresh._tag = OpCodes.OP_FRESH
   fresh.layer = self
   return fresh
 }
@@ -559,7 +559,7 @@ export function fromEffectEnvironment<R, E, A>(
   effect: Effect.Effect<R, E, Context.Context<A>>
 ): Layer.Layer<R, E, A> {
   const fromEffect = Object.create(proto)
-  fromEffect.op = OpCodes.OP_FROM_EFFECT
+  fromEffect._tag = OpCodes.OP_FROM_EFFECT
   fromEffect.effect = effect
   return fromEffect
 }
@@ -666,7 +666,7 @@ export const provideTo = <RIn2, E2, ROut2>(that: Layer.Layer<RIn2, E2, ROut2>) =
   ): Layer.Layer<RIn | Exclude<RIn2, ROut>, E | E2, ROut2> => {
     return suspend(() => {
       const provideTo = Object.create(proto)
-      provideTo.op = OpCodes.OP_PROVIDE_TO
+      provideTo._tag = OpCodes.OP_PROVIDE_TO
       provideTo.first = pipe(environment<Exclude<RIn2, ROut>>(), merge(self))
       provideTo.second = that
       return provideTo
@@ -680,7 +680,7 @@ export function provideToAndMerge<RIn2, E2, ROut2>(that: Layer.Layer<RIn2, E2, R
     self: Layer.Layer<RIn, E, ROut>
   ): Layer.Layer<RIn | Exclude<RIn2, ROut>, E2 | E, ROut | ROut2> => {
     const zipWith = Object.create(proto)
-    zipWith.op = OpCodes.OP_ZIP_WITH
+    zipWith._tag = OpCodes.OP_ZIP_WITH
     zipWith.first = self
     zipWith.second = pipe(self, provideTo(that))
     zipWith.zipK = (a: Context.Context<ROut>, b: Context.Context<ROut2>): Context.Context<ROut | ROut2> => {
@@ -787,7 +787,7 @@ export const scopedEnvironment = <R, E, A>(
   effect: Effect.Effect<R, E, Context.Context<A>>
 ): Layer.Layer<Exclude<R, Scope.Scope>, E, A> => {
   const scoped = Object.create(proto)
-  scoped.op = OpCodes.OP_SCOPED
+  scoped._tag = OpCodes.OP_SCOPED
   scoped.effect = effect
   return scoped
 }
@@ -819,7 +819,7 @@ export const suspend = <RIn, E, ROut>(
   evaluate: () => Layer.Layer<RIn, E, ROut>
 ): Layer.Layer<RIn, E, ROut> => {
   const suspend = Object.create(proto)
-  suspend.op = OpCodes.OP_SUSPEND
+  suspend._tag = OpCodes.OP_SUSPEND
   suspend.evaluate = evaluate
   return suspend
 }
@@ -884,7 +884,7 @@ export function zipWithPar<R1, E1, A1, A, A2>(
   return <R, E>(self: Layer.Layer<R, E, A>): Layer.Layer<R | R1, E | E1, A2> => {
     return suspend(() => {
       const zipWithPar = Object.create(proto)
-      zipWithPar.op = OpCodes.OP_ZIP_WITH_PAR
+      zipWithPar._tag = OpCodes.OP_ZIP_WITH_PAR
       zipWithPar.first = self
       zipWithPar.second = that
       zipWithPar.zipK = f

@@ -14,6 +14,7 @@ import * as internalCause from "@effect/io/internal/cause"
 import * as deferred from "@effect/io/internal/deferred"
 import type * as FiberRuntime from "@effect/io/internal/fiberRuntime"
 import type * as fiberScope from "@effect/io/internal/fiberScope"
+import * as DeferredOpCodes from "@effect/io/internal/opCodes/deferred"
 import * as OpCodes from "@effect/io/internal/opCodes/effect"
 import * as _runtimeFlags from "@effect/io/internal/runtimeFlags"
 import * as scheduler from "@effect/io/internal/scheduler"
@@ -2260,7 +2261,7 @@ export const deferredDone = <E, A>(exit: Exit.Exit<E, A>) => {
 export const deferredUnsafeDone = <E, A>(effect: Effect.Effect<never, E, A>) => {
   return (self: Deferred.Deferred<E, A>): void => {
     const state = MutableRef.get(self.state)
-    if (state.op === deferred.OP_STATE_PENDING) {
+    if (state._tag === DeferredOpCodes.OP_STATE_PENDING) {
       pipe(self.state, MutableRef.set(deferred.done(effect)))
       for (let i = state.joiners.length - 1; i >= 0; i--) {
         state.joiners[i](effect)
@@ -2291,11 +2292,11 @@ export const deferredAwait = <E, A>(self: Deferred.Deferred<E, A>): Effect.Effec
   const trace = getCallTrace()
   return asyncInterruptEither<never, E, A>((k) => {
     const state = MutableRef.get(self.state)
-    switch (state.op) {
-      case deferred.OP_STATE_DONE: {
+    switch (state._tag) {
+      case DeferredOpCodes.OP_STATE_DONE: {
         return Either.right(state.effect)
       }
-      case deferred.OP_STATE_PENDING: {
+      case DeferredOpCodes.OP_STATE_PENDING: {
         pipe(
           self.state,
           MutableRef.set(deferred.pending([k, ...state.joiners]))
@@ -2320,11 +2321,11 @@ export const deferredCompleteWith = <E, A>(effect: Effect.Effect<never, E, A>) =
   return (self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
     return sync(() => {
       const state = MutableRef.get(self.state)
-      switch (state.op) {
-        case deferred.OP_STATE_DONE: {
+      switch (state._tag) {
+        case DeferredOpCodes.OP_STATE_DONE: {
           return false
         }
-        case deferred.OP_STATE_PENDING: {
+        case DeferredOpCodes.OP_STATE_PENDING: {
           pipe(self.state, MutableRef.set(deferred.done(effect)))
           for (let i = 0; i < state.joiners.length; i++) {
             state.joiners[i](effect)
@@ -2339,7 +2340,7 @@ export const deferredCompleteWith = <E, A>(effect: Effect.Effect<never, E, A>) =
 /** @internal */
 export const deferredIsDone = <E, A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
   const trace = getCallTrace()
-  return sync(() => MutableRef.get(self.state).op === deferred.OP_STATE_DONE).traced(trace)
+  return sync(() => MutableRef.get(self.state)._tag === DeferredOpCodes.OP_STATE_DONE).traced(trace)
 }
 
 /** @internal */
@@ -2349,11 +2350,11 @@ export const deferredPoll = <E, A>(
   const trace = getCallTrace()
   return sync(() => {
     const state = MutableRef.get(self.state)
-    switch (state.op) {
-      case deferred.OP_STATE_DONE: {
+    switch (state._tag) {
+      case DeferredOpCodes.OP_STATE_DONE: {
         return Option.some(state.effect)
       }
-      case deferred.OP_STATE_PENDING: {
+      case DeferredOpCodes.OP_STATE_PENDING: {
         return Option.none
       }
     }
@@ -2371,7 +2372,7 @@ const deferredInterruptJoiner = <E, A>(
   const trace = getCallTrace()
   return sync(() => {
     const state = MutableRef.get(self.state)
-    if (state.op === deferred.OP_STATE_PENDING) {
+    if (state._tag === DeferredOpCodes.OP_STATE_PENDING) {
       pipe(
         self.state,
         MutableRef.set(deferred.pending(state.joiners.filter((j) => j !== joiner)))
