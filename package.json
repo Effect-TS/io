@@ -57,7 +57,7 @@
   },
   "dependencies": {
     "@fp-ts/core": "~0.0.11",
-    "@fp-ts/data": "~0.0.32"
+    "@fp-ts/data": "~0.0.35"
   },
   "devDependencies": {
     "@babel/cli": "^7.20.7",

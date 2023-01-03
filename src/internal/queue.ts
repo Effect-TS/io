@@ -269,7 +269,10 @@ const takeRemainderLoop = <A>(
     core.flatMap((bs) => {
       const remaining = min - bs.length
       if (remaining === 1) {
-        return pipe(take(self), core.map((b) => pipe(acc, Chunk.concat(bs), Chunk.append(b))))
+        return pipe(
+          take(self),
+          core.map((b) => pipe(acc, Chunk.concat(bs), Chunk.append(b)))
+        )
       }
       if (remaining > 1) {
         return pipe(
