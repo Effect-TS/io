@@ -22,7 +22,7 @@ export type ExecutionStrategy = Sequential | Parallel | ParallelN
  * @category models
  */
 export interface Sequential {
-  readonly op: 0
+  readonly _tag: "Sequential"
 }
 
 /**
@@ -32,7 +32,7 @@ export interface Sequential {
  * @category models
  */
 export interface Parallel {
-  readonly op: 1
+  readonly _tag: "Parallel"
 }
 
 /**
@@ -42,7 +42,7 @@ export interface Parallel {
  * @category models
  */
 export interface ParallelN {
-  readonly op: 2
+  readonly _tag: "ParallelN"
   readonly parallelism: number
 }
 
