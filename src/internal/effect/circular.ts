@@ -508,7 +508,7 @@ export const raceWith = <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
           pipe(
             winner.await(),
             core.flatMap((exit) => {
-              switch (exit.op) {
+              switch (exit._tag) {
                 case OpCodes.OP_SUCCESS: {
                   return pipe(winner.inheritAll(), core.flatMap(() => leftDone(exit, loser)))
                 }
@@ -522,7 +522,7 @@ export const raceWith = <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
           pipe(
             winner.await(),
             core.flatMap((exit) => {
-              switch (exit.op) {
+              switch (exit._tag) {
                 case OpCodes.OP_SUCCESS: {
                   return pipe(winner.inheritAll(), core.flatMap(() => rightDone(exit, loser)))
                 }

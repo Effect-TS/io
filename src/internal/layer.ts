@@ -214,7 +214,7 @@ class MemoMap {
                             ),
                             core.exit,
                             core.flatMap((exit) => {
-                              switch (exit.op) {
+                              switch (exit._tag) {
                                 case EffectOpCodes.OP_FAILURE: {
                                   return pipe(
                                     deferred,
