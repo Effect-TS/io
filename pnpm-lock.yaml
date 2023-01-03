@@ -61,7 +61,6 @@ importers:
       ultra-runner: ^3.10.5
       vite: ^4.0.4
       vitest: 0.26.3
-      wtfnode: ^0.9.1
     dependencies:
       '@fp-ts/core': 0.0.11
       '@fp-ts/data': 0.0.32
@@ -113,7 +112,6 @@ importers:
       ultra-runner: 3.10.5
       vite: 4.0.4_@types+node@18.11.18
       vitest: 0.26.3
-      wtfnode: 0.9.1
     publishDirectory: dist
 
   packages/babel-plugin:
@@ -6819,11 +6817,6 @@ packages:
 
   /wrappy/1.0.2:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
-    dev: true
-
-  /wtfnode/0.9.1:
-    resolution: {integrity: sha512-Ip6C2KeQPl/F3aP1EfOnPoQk14Udd9lffpoqWDNH3Xt78svxPbv53ngtmtfI0q2Te3oTq79XKTnRNXVIn/GsPA==}
-    hasBin: true
     dev: true
 
   /xtend/4.0.2:

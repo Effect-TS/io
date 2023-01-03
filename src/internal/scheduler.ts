@@ -5,7 +5,6 @@ import * as Equal from "@fp-ts/data/Equal"
 export class HighPriorityScheduler {
   running = false
   tasks: Array<Scheduler.Task> = []
-  readonly promise = Promise.resolve(void 0)
 
   constructor() {
     Equal.considerByRef(this)
@@ -28,7 +27,7 @@ export class HighPriorityScheduler {
     if (depth >= 2048) {
       setTimeout(() => this.starveInternal(0), 0)
     } else {
-      this.promise.then(() => this.starveInternal(depth + 1))
+      Promise.resolve(void 0).then(() => this.starveInternal(depth + 1))
     }
   }
 

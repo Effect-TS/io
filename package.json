@@ -106,8 +106,7 @@
     "typescript": "https://cdn.jsdelivr.net/npm/@tsplus/installer@0.0.155/compiler/typescript.tgz",
     "ultra-runner": "^3.10.5",
     "vite": "^4.0.4",
-    "vitest": "0.26.3",
-    "wtfnode": "^0.9.1"
+    "vitest": "0.26.3"
   },
   "pnpm": {
     "patchedDependencies": {
