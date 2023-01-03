@@ -1,47 +1,47 @@
 import type * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
 
 /** @internal */
-export const OP_SEQUENTIAL = 0 as const
+export const OP_SEQUENTIAL = "Sequential" as const
 
 /** @internal */
 export type OP_SEQUENTIAL = typeof OP_SEQUENTIAL
 
 /** @internal */
-export const OP_PARALLEL = 1 as const
+export const OP_PARALLEL = "Parallel" as const
 
 /** @internal */
 export type OP_PARALLEL = typeof OP_PARALLEL
 
 /** @internal */
-export const OP_PARALLEL_N = 2 as const
+export const OP_PARALLEL_N = "ParallelN" as const
 
 /** @internal */
 export type OP_PARALLEL_N = typeof OP_PARALLEL_N
 
 /** @internal */
-export const sequential: ExecutionStrategy.ExecutionStrategy = { op: OP_SEQUENTIAL }
+export const sequential: ExecutionStrategy.ExecutionStrategy = { _tag: OP_SEQUENTIAL }
 
 /** @internal */
-export const parallel: ExecutionStrategy.ExecutionStrategy = { op: OP_PARALLEL }
+export const parallel: ExecutionStrategy.ExecutionStrategy = { _tag: OP_PARALLEL }
 
 /** @internal */
 export const parallelN = (parallelism: number): ExecutionStrategy.ExecutionStrategy => {
-  return { op: OP_PARALLEL_N, parallelism }
+  return { _tag: OP_PARALLEL_N, parallelism }
 }
 
 /** @internal */
 export const isSequential = (self: ExecutionStrategy.ExecutionStrategy): self is ExecutionStrategy.Sequential => {
-  return self.op === OP_SEQUENTIAL
+  return self._tag === OP_SEQUENTIAL
 }
 
 /** @internal */
 export const isParallel = (self: ExecutionStrategy.ExecutionStrategy): self is ExecutionStrategy.Parallel => {
-  return self.op === OP_PARALLEL
+  return self._tag === OP_PARALLEL
 }
 
 /** @internal */
 export const isParallelN = (self: ExecutionStrategy.ExecutionStrategy): self is ExecutionStrategy.ParallelN => {
-  return self.op === OP_PARALLEL_N
+  return self._tag === OP_PARALLEL_N
 }
 
 /** @internal */
@@ -51,7 +51,7 @@ export const match = <A>(
   onParallelN: (n: number) => A
 ) => {
   return (self: ExecutionStrategy.ExecutionStrategy): A => {
-    switch (self.op) {
+    switch (self._tag) {
       case OP_SEQUENTIAL: {
         return onSequential()
       }
