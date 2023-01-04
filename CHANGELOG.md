@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.0.52
+
+### Patch Changes
+
+- [#154](https://github.com/Effect-TS/io/pull/154) [`99c12bd`](https://github.com/Effect-TS/io/commit/99c12bdaa68d5c8051b90890c6269ebf5b5019e4) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Update fp-ts/data
+
 ## 0.0.51
 
 ### Patch Changes
