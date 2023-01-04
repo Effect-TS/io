@@ -266,7 +266,7 @@ export const collectAllWithEffect = <A, R, E, B>(f: (a: A) => Option.Option<Effe
           return core.succeed(Chunk.empty()).traced(trace)
         }
         case "Some": {
-          return pipe(option.value, core.map(Chunk.singleton)).traced(trace)
+          return pipe(option.value, core.map(Chunk.of)).traced(trace)
         }
       }
     }
@@ -341,7 +341,7 @@ export const collectWhile = <A, R, E, B>(f: (a: A) => Option.Option<Effect.Effec
           return core.succeed(Chunk.empty()).traced(trace)
         }
         case "Some": {
-          return pipe(option.value, core.map(Chunk.singleton)).traced(trace)
+          return pipe(option.value, core.map(Chunk.of)).traced(trace)
         }
       }
     }

@@ -87,7 +87,7 @@ export const patch = (
   self: SupervisorPatch,
   supervisor: Supervisor.Supervisor<any>
 ): Supervisor.Supervisor<any> => {
-  return patchLoop(supervisor, Chunk.singleton(self))
+  return patchLoop(supervisor, Chunk.of(self))
 }
 
 /** @internal */

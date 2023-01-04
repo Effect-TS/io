@@ -27,7 +27,7 @@ export const _continue = (intervals: Intervals.Intervals): ScheduleDecision.Sche
 export const continueWith = (interval: Interval.Interval): ScheduleDecision.ScheduleDecision => {
   return {
     _tag: OP_CONTINUE,
-    intervals: Intervals.make(Chunk.singleton(interval))
+    intervals: Intervals.make(Chunk.of(interval))
   }
 }
 

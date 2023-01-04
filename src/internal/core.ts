@@ -2142,7 +2142,7 @@ const exitCollectAllInternal = <E, A>(
   return pipe(
     Chunk.tailNonEmpty(list),
     Chunk.reduce(
-      pipe(Chunk.headNonEmpty(list), exitMap<A, Chunk.Chunk<A>>(Chunk.singleton)),
+      pipe(Chunk.headNonEmpty(list), exitMap<A, Chunk.Chunk<A>>(Chunk.of)),
       (accumulator, current) =>
         pipe(
           accumulator,

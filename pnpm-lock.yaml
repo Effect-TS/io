@@ -23,7 +23,7 @@ importers:
       '@effect/language-service': ^0.0.15
       '@effect/vite-plugin': ^0.0.1
       '@fp-ts/core': ~0.0.11
-      '@fp-ts/data': ~0.0.35
+      '@fp-ts/data': ~0.0.36
       '@repo-tooling/eslint-plugin-dprint': ^0.0.4
       '@rollup/pluginutils': ^5.0.2
       '@types/benchmark': ^2.1.2
@@ -63,7 +63,7 @@ importers:
       vitest: 0.26.3
     dependencies:
       '@fp-ts/core': 0.0.11
-      '@fp-ts/data': 0.0.35
+      '@fp-ts/data': 0.0.36
     devDependencies:
       '@babel/cli': 7.20.7_@babel+core@7.20.7
       '@babel/core': 7.20.7
@@ -684,7 +684,7 @@ packages:
     resolution: {integrity: sha512-ELYL6h56W2TjTd13AiddZgbZjZFaa0J6MpnLpM26XlxYIR66j5tmdNFW67dtJxFbieoFS33+E713E5hrkg8MKg==}
     dependencies:
       '@fp-ts/core': 0.0.11
-      '@fp-ts/data': 0.0.35
+      '@fp-ts/data': 0.0.36
     dev: true
 
   /@effect/printer/0.0.4:
@@ -923,8 +923,8 @@ packages:
   /@fp-ts/core/0.0.11:
     resolution: {integrity: sha512-BCAJBYzghwoJpcUOARJ1tui50HoYJFlV2pJlVMlsEkDFhD8MTtq8xQVpZCRF66RmtkxtGBYINCQ+5H1lRaL35Q==}
 
-  /@fp-ts/data/0.0.35:
-    resolution: {integrity: sha512-0EGZdUmIuidTLixWKYI9n2J2sBnjg6SkUkCuRqTpllfQHVNsDgqi6NqNOPF2QtLD+9uIdauJ1YaPQWmd3PAv+w==}
+  /@fp-ts/data/0.0.36:
+    resolution: {integrity: sha512-uC8S69OO+KyXrVTQhDr+JWXmex9blTwZcwG9BcxflPnytHA3lU8BxMz0DjxgSpeWzoGJIZ9F5L6bbwCnvcLeEA==}
     dependencies:
       '@fp-ts/core': 0.0.11
 

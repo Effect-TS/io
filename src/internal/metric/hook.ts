@@ -257,7 +257,7 @@ const calculateQuantiles = (
   const resolved = pipe(
     tail,
     Chunk.reduce(
-      Chunk.singleton(
+      Chunk.of(
         resolveQuantile(
           error,
           sampleCount,

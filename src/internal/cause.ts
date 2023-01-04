@@ -480,8 +480,8 @@ export const contains = <E2>(that: Cause.Cause<E2>) => {
 
 /** @internal */
 const causeEquals = (left: Cause.Cause<unknown>, right: Cause.Cause<unknown>): boolean => {
-  let leftStack: Chunk.Chunk<Cause.Cause<unknown>> = Chunk.singleton(left)
-  let rightStack: Chunk.Chunk<Cause.Cause<unknown>> = Chunk.singleton(right)
+  let leftStack: Chunk.Chunk<Cause.Cause<unknown>> = Chunk.of(left)
+  let rightStack: Chunk.Chunk<Cause.Cause<unknown>> = Chunk.of(right)
   while (Chunk.isNonEmpty(leftStack) && Chunk.isNonEmpty(rightStack)) {
     const [leftParallel, leftSequential] = pipe(
       Chunk.headNonEmpty(leftStack),
@@ -534,7 +534,7 @@ const causeEquals = (left: Cause.Cause<unknown>, right: Cause.Cause<unknown>): b
  * @internal
  */
 const flattenCause = (cause: Cause.Cause<unknown>): Chunk.Chunk<HashSet.HashSet<unknown>> => {
-  return flattenCauseLoop(Chunk.singleton(cause), Chunk.empty())
+  return flattenCauseLoop(Chunk.of(cause), Chunk.empty())
 }
 
 /** @internal */

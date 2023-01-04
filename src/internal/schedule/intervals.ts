@@ -25,7 +25,7 @@ export const empty: Intervals.Intervals = make(Chunk.empty())
 /** @internal */
 export const fromIterable = (intervals: Iterable<Interval.Interval>): Intervals.Intervals => {
   return Array.from(intervals).reduce(
-    (intervals, interval) => pipe(intervals, union(make(Chunk.singleton(interval)))),
+    (intervals, interval) => pipe(intervals, union(make(Chunk.of(interval)))),
     empty
   )
 }
