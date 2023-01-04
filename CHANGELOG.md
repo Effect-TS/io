@@ -1,5 +1,31 @@
 # @effect/io
 
+## 0.0.51
+
+### Patch Changes
+
+- [#153](https://github.com/Effect-TS/io/pull/153) [`4bbd707`](https://github.com/Effect-TS/io/commit/4bbd707b0a3c8aeee63cf274dfb22c31b02a3c23) Thanks [@IMax153](https://github.com/IMax153)! - upgrade dependencies
+
+- [#153](https://github.com/Effect-TS/io/pull/153) [`2546790`](https://github.com/Effect-TS/io/commit/2546790c16e04bbe602565bd1d3f3b948d31c49c) Thanks [@IMax153](https://github.com/IMax153)! - use \_tag over op for internal testing data types
+
+- [#153](https://github.com/Effect-TS/io/pull/153) [`05cb45a`](https://github.com/Effect-TS/io/commit/05cb45a1697cc9e9f1d4b18a7cffcb4119e5878d) Thanks [@IMax153](https://github.com/IMax153)! - use \_tag over op in FiberId
+
+- [#153](https://github.com/Effect-TS/io/pull/153) [`6f2f6a2`](https://github.com/Effect-TS/io/commit/6f2f6a283df47963130bf99e5210801118a2e204) Thanks [@IMax153](https://github.com/IMax153)! - prefer \_tag over op for Schedule.Decision
+
+- [#153](https://github.com/Effect-TS/io/pull/153) [`99018af`](https://github.com/Effect-TS/io/commit/99018afc1a494e533e0d915ff821e4100cf20476) Thanks [@IMax153](https://github.com/IMax153)! - use \_tag over op for Effect/Exit
+
+- [#151](https://github.com/Effect-TS/io/pull/151) [`7c39d11`](https://github.com/Effect-TS/io/commit/7c39d1152453b8c620cee2af85d7a8bec9608b1b) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Fix OOM in FiberRefs
+
+- [#153](https://github.com/Effect-TS/io/pull/153) [`b5c0b24`](https://github.com/Effect-TS/io/commit/b5c0b242a5354cc0db1c1a275d69dfb486aec903) Thanks [@IMax153](https://github.com/IMax153)! - use \_tag over op for ExecutionStrategy
+
+- [#153](https://github.com/Effect-TS/io/pull/153) [`ca6c993`](https://github.com/Effect-TS/io/commit/ca6c993b938978cc1c357bd68389e8ec97cb10a1) Thanks [@IMax153](https://github.com/IMax153)! - use \_tag over op for Config
+
+- [#153](https://github.com/Effect-TS/io/pull/153) [`9c33eb1`](https://github.com/Effect-TS/io/commit/9c33eb1378184d1d14cf4e61ec7982bc9847b63f) Thanks [@IMax153](https://github.com/IMax153)! - use \_tag over op in FiberStatus
+
+- [#153](https://github.com/Effect-TS/io/pull/153) [`dc8d86c`](https://github.com/Effect-TS/io/commit/dc8d86c5a3e98905461b266a9e8a9f64e3448d8e) Thanks [@IMax153](https://github.com/IMax153)! - use \_tag over op for Layer
+
+- [#153](https://github.com/Effect-TS/io/pull/153) [`5f55b31`](https://github.com/Effect-TS/io/commit/5f55b317b3029c9a7f861d4c90a1bf1515e29a46) Thanks [@IMax153](https://github.com/IMax153)! - use \_tag over op for Patch datatypes
+
 ## 0.0.50
 
 ### Patch Changes
