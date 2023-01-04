@@ -43,7 +43,7 @@ export const collectAll = <R, E, Out>(
   return {
     [PollingMetricTypeId]: PollingMetricTypeId,
     metric: metric.make(
-      Chunk.singleton<any>(void 0) as Chunk.Chunk<any>,
+      Chunk.of<any>(void 0) as Chunk.Chunk<any>,
       (inputs: Chunk.Chunk<any>, extraTags) => {
         for (let i = 0; i < inputs.length; i++) {
           const pollingMetric = metrics[i]!

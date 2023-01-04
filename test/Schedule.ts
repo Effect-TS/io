@@ -736,7 +736,7 @@ describe.concurrent("Schedule", () => {
     it.effect("recur only in months containing valid number of days", () =>
       Effect.gen(function*($) {
         const originOffset = new Date(2020, 0, 31, 0, 0, 0).getTime()
-        const input = Chunk.singleton([originOffset, void 0] as const)
+        const input = Chunk.of([originOffset, void 0] as const)
         const result = yield* $(pipe(
           runManually(Schedule.dayOfMonth(30), input),
           Effect.map((output) => pipe(output[0], Chunk.map((tuple) => tuple[0])))
@@ -762,7 +762,7 @@ describe.concurrent("Schedule", () => {
       }))
     it.effect("throw IllegalArgumentException on invalid `second` argument of `secondOfMinute`", () =>
       Effect.gen(function*($) {
-        const input = Chunk.singleton(Date.now())
+        const input = Chunk.of(Date.now())
         const exit = yield* $(Effect.exit(runCollect(Schedule.secondOfMinute(60), input)))
         const exception = Cause.IllegalArgumentException(
           "Invalid argument in: secondOfMinute(60). Must be in range 0...59"
@@ -771,7 +771,7 @@ describe.concurrent("Schedule", () => {
       }))
     it.effect("throw IllegalArgumentException on invalid `minute` argument of `minuteOfHour`", () =>
       Effect.gen(function*($) {
-        const input = Chunk.singleton(Date.now())
+        const input = Chunk.of(Date.now())
         const exit = yield* $(Effect.exit(runCollect(Schedule.minuteOfHour(60), input)))
         const exception = Cause.IllegalArgumentException(
           "Invalid argument in: minuteOfHour(60). Must be in range 0...59"
@@ -780,14 +780,14 @@ describe.concurrent("Schedule", () => {
       }))
     it.effect("throw IllegalArgumentException on invalid `hour` argument of `hourOfDay`", () =>
       Effect.gen(function*($) {
-        const input = Chunk.singleton(Date.now())
+        const input = Chunk.of(Date.now())
         const exit = yield* $(Effect.exit(runCollect(Schedule.hourOfDay(24), input)))
         const exception = Cause.IllegalArgumentException("Invalid argument in: hourOfDay(24). Must be in range 0...23")
         assert.deepStrictEqual(Exit.unannotate(exit), Exit.die(exception))
       }))
     it.effect("throw IllegalArgumentException on invalid `day` argument of `dayOfWeek`", () =>
       Effect.gen(function*($) {
-        const input = Chunk.singleton(Date.now())
+        const input = Chunk.of(Date.now())
         const exit = yield* $(Effect.exit(runCollect(Schedule.dayOfWeek(8), input)))
         const exception = Cause.IllegalArgumentException(
           "Invalid argument in: dayOfWeek(8). Must be in range 1 (Monday)...7 (Sunday)"
@@ -796,7 +796,7 @@ describe.concurrent("Schedule", () => {
       }))
     it.effect("throw IllegalArgumentException on invalid `day` argument of `dayOfMonth`", () =>
       Effect.gen(function*($) {
-        const input = Chunk.singleton(Date.now())
+        const input = Chunk.of(Date.now())
         const exit = yield* $(Effect.exit(runCollect(Schedule.dayOfMonth(32), input)))
         const exception = Cause.IllegalArgumentException("Invalid argument in: dayOfMonth(32). Must be in range 1...31")
         assert.deepStrictEqual(Exit.unannotate(exit), Exit.die(exception))

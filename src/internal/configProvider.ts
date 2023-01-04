@@ -217,7 +217,7 @@ const fromFlatLoop = <A>(
   const op = config as _config.ConfigPrimitive
   switch (op._tag) {
     case OpCodes.OP_CONSTANT: {
-      return core.succeed(Chunk.singleton(op.value)).traced(trace) as Effect.Effect<
+      return core.succeed(Chunk.of(op.value)).traced(trace) as Effect.Effect<
         never,
         ConfigError.ConfigError,
         Chunk.Chunk<A>
@@ -267,7 +267,7 @@ const fromFlatLoop = <A>(
       return core.suspendSucceed(() =>
         fromFlatLoop(
           flat,
-          pipe(prefix, Chunk.concat(Chunk.singleton(op.name))),
+          pipe(prefix, Chunk.concat(Chunk.of(op.name))),
           op.config,
           isEmptyOk
         )
@@ -294,7 +294,7 @@ const fromFlatLoop = <A>(
       return core.suspendSucceed(() => {
         return pipe(
           fromFlatLoop(flat, prefix, op.config, true),
-          core.map(Chunk.singleton)
+          core.map(Chunk.of)
         )
       }).traced(trace) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
     }
@@ -306,7 +306,7 @@ const fromFlatLoop = <A>(
             return pipe(
               keys,
               core.forEach((key) =>
-                fromFlatLoop(flat, pipe(prefix, Chunk.concat(Chunk.singleton(key))), op.valueConfig, isEmptyOk)
+                fromFlatLoop(flat, pipe(prefix, Chunk.concat(Chunk.of(key))), op.valueConfig, isEmptyOk)
               ),
               core.map((values) => {
                 const matrix = Chunk.toReadonlyArray(values).map(Chunk.toReadonlyArray) as Array<Array<unknown>>
@@ -423,7 +423,7 @@ const parsePrimitive = <A>(
 ): Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>> => {
   const unsplit = configSecret.isConfigSecret(primitive)
   if (unsplit) {
-    return pipe(core.fromEither(primitive.parse(text)), core.map(Chunk.singleton))
+    return pipe(core.fromEither(primitive.parse(text)), core.map(Chunk.of))
   }
   return pipe(
     splitPathString(text, delimiter),

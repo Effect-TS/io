@@ -41,8 +41,8 @@ describe.concurrent("Effect", () => {
         exit,
         Exit.matchEffect(Effect.succeed, () => Effect.fail("effect should have failed"))
       ))
-      assert.isTrue(equals(Cause.failures(result), Chunk.singleton("use failed")))
-      assert.isTrue(equals(Cause.defects(result), Chunk.singleton(releaseDied)))
+      assert.isTrue(equals(Cause.failures(result), Chunk.of("use failed")))
+      assert.isTrue(equals(Cause.defects(result), Chunk.of(releaseDied)))
     }))
   it.effect("acquireUseRelease - error handling + disconnect", () =>
     Effect.gen(function*($) {
@@ -56,8 +56,8 @@ describe.concurrent("Effect", () => {
         exit,
         Exit.matchEffect(Effect.succeed, () => Effect.fail("effect should have failed"))
       ))
-      assert.isTrue(equals(Cause.failures(result), Chunk.singleton("use failed")))
-      assert.isTrue(equals(Cause.defects(result), Chunk.singleton(releaseDied)))
+      assert.isTrue(equals(Cause.failures(result), Chunk.of("use failed")))
+      assert.isTrue(equals(Cause.defects(result), Chunk.of(releaseDied)))
     }))
   it.effect("acquireUseRelease - beast mode error handling + disconnect", () =>
     Effect.gen(function*($) {
@@ -76,7 +76,7 @@ describe.concurrent("Effect", () => {
         pipe(exit, Exit.matchEffect(Effect.succeed, () => Effect.fail("effect should have failed")))
       )
       const released = yield* $(Ref.get(release))
-      assert.isTrue(equals(Cause.defects(result), Chunk.singleton(useDied)))
+      assert.isTrue(equals(Cause.defects(result), Chunk.of(useDied)))
       assert.isTrue(released)
     }))
 })
