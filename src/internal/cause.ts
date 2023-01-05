@@ -584,18 +584,15 @@ export const squashWith = <E>(f: (error: E) => unknown) => {
     const option = pipe(self, failureOption, Option.map(f))
     switch (option._tag) {
       case "None": {
-        if (isInterrupted(self)) {
-          const fibers = pipe(
-            interruptors(self),
-            HashSet.flatMap((fiberId) => pipe(FiberId.ids(fiberId), HashSet.map((n) => `#${n}`))),
-            HashSet.reduce("", (acc, id) => `${acc}, ${id}`)
-          )
-          return InterruptedException(`Interrupted by fibers: ${fibers}`)
-        }
         return pipe(
           defects(self),
           Chunk.head,
-          Option.match(() => InterruptedException(), identity)
+          Option.match(() => {
+            const interrupts = Array.from(interruptors(self)).flatMap((fiberId) =>
+              Array.from(FiberId.ids(fiberId)).map((id) => `#${id}`)
+            )
+            return InterruptedException(interrupts ? `Interrupted by fibers: ${interrupts.join(", ")}` : void 0)
+          }, identity)
         )
       }
       case "Some": {
