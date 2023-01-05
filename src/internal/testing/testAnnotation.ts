@@ -8,10 +8,16 @@ import * as HashSet from "@fp-ts/data/HashSet"
 import type * as MutableRef from "@fp-ts/data/MutableRef"
 import type * as SortedSet from "@fp-ts/data/SortedSet"
 
+/** @internal */
 const TestAnnotationSymbolKey = "@effect/test/TestAnnotation"
+
+/** @internal */
 export const TestAnnotationTypeId = Symbol.for(TestAnnotationSymbolKey)
+
+/** @internal */
 export type TestAnnotationTypeId = typeof TestAnnotationTypeId
 
+/** @internal */
 export interface TestAnnotation<A> extends Equal.Equal {
   readonly [TestAnnotationTypeId]: TestAnnotationTypeId
   readonly identifier: string
@@ -20,6 +26,7 @@ export interface TestAnnotation<A> extends Equal.Equal {
   readonly combine: (a: A, b: A) => A
 }
 
+/** @internal */
 class TestAnnotationImpl<A> implements Equal.Equal {
   readonly [TestAnnotationTypeId]: TestAnnotationTypeId = TestAnnotationTypeId
   constructor(
@@ -42,10 +49,12 @@ class TestAnnotationImpl<A> implements Equal.Equal {
   }
 }
 
+/** @internal */
 export const isTestAnnotation = (u: unknown): u is TestAnnotation<unknown> => {
   return typeof u === "object" && u != null && TestAnnotationTypeId in u
 }
 
+/** @internal */
 export const make = <A>(
   identifier: string,
   tag: Context.Tag<A>,
@@ -55,6 +64,7 @@ export const make = <A>(
   return new TestAnnotationImpl(identifier, tag, initial, combine)
 }
 
+/** @internal */
 export const compose = <A>(
   left: Either.Either<number, Chunk.Chunk<A>>,
   right: Either.Either<number, Chunk.Chunk<A>>
@@ -74,6 +84,7 @@ export const compose = <A>(
   throw new Error("BUG: TestAnnotation.compose - please report an issue at https://github.com/Effect-TS/io/issues")
 }
 
+/** @internal */
 export const fibers: TestAnnotation<
   Either.Either<
     number,
@@ -90,6 +101,8 @@ export const fibers: TestAnnotation<
 
 /**
  * An annotation which counts ignored tests.
+ *
+ * @internal
  */
 export const ignored: TestAnnotation<number> = make(
   "ignored",
@@ -100,6 +113,8 @@ export const ignored: TestAnnotation<number> = make(
 
 /**
  * An annotation which counts repeated tests.
+ *
+ * @internal
  */
 export const repeated: TestAnnotation<number> = make(
   "repeated",
@@ -110,6 +125,8 @@ export const repeated: TestAnnotation<number> = make(
 
 /**
  * An annotation which counts retried tests.
+ *
+ * @internal
  */
 export const retried: TestAnnotation<number> = make(
   "retried",
@@ -120,6 +137,8 @@ export const retried: TestAnnotation<number> = make(
 
 /**
  * An annotation which tags tests with strings.
+ *
+ * @internal
  */
 export const tagged: TestAnnotation<HashSet.HashSet<string>> = make(
   "tagged",
