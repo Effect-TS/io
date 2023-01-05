@@ -21,7 +21,7 @@ describe("stringLogger", () => {
   test("keys with special chars", () => {
     const date = new Date()
     vi.setSystemTime(date)
-    const spans = Chunk.make(LogSpan.make("imma span=\"", date.getTime()))
+    const spans = Chunk.make(LogSpan.make("imma span=\"", date.getTime() - 7))
     const annotations = new Map<string, string>([["I am bad key name", JSON.stringify({ coolValue: "cool value" })]])
 
     const result = Logger.stringLogger.log(
@@ -36,7 +36,7 @@ describe("stringLogger", () => {
     )
 
     expect(result).toEqual(
-      `timestamp=${date.toJSON()} level=INFO fiber= message="My message" imma_span__=0ms I_am_bad_key_name="{\\"coolValue\\":\\"cool value\\"}"`
+      `timestamp=${date.toJSON()} level=INFO fiber= message="My message" imma_span__=7ms I_am_bad_key_name="{\\"coolValue\\":\\"cool value\\"}"`
     )
   })
 })
