@@ -56,15 +56,17 @@ export const stringLogger: Logger.Logger<string, string> = {
       `fiber=${_fiberId.threadName(fiberId)}`
     ]
 
+    let output = outputArray.join(" ")
+
     if (message.length > 0) {
-      outputArray.push(`message="${message}"`)
+      output = output + " message="
+      output = appendQuoted(message, output)
     }
 
     if (cause != null && cause != Cause.empty) {
-      outputArray.push(`cause="${runtime.unsafeRunSync(Pretty.prettySafe(cause, Pretty.defaultRenderer))}"`)
+      output = output + " cause="
+      output = appendQuoted(runtime.unsafeRunSync(Pretty.prettySafe(cause, Pretty.defaultRenderer)), output)
     }
-
-    let output = outputArray.join(" ")
 
     if (Chunk.isNonEmpty(spans)) {
       output = output + " "
@@ -90,7 +92,7 @@ export const stringLogger: Logger.Logger<string, string> = {
         } else {
           output = output + " "
         }
-        output = appendQuoted(key, output)
+        output = output + key.replace(/[ ="]/g, "_")
         output = output + "="
         output = appendQuoted(value, output)
       }
@@ -102,11 +104,7 @@ export const stringLogger: Logger.Logger<string, string> = {
 
 /** @internal */
 const appendQuoted = (label: string, output: string): string => {
-  if (label.indexOf(" ") < 0) {
-    return output + label
-  } else {
-    return output + `"${label}"`
-  }
+  return output + JSON.stringify(label)
 }
 
 /** @internal */
