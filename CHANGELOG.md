@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.0.53
+
+### Patch Changes
+
+- [#156](https://github.com/Effect-TS/io/pull/156) [`4aa0fb1`](https://github.com/Effect-TS/io/commit/4aa0fb1a47489cd792eb4920440a430ecf92a675) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Improve squash priority
+
 ## 0.0.52
 
 ### Patch Changes
