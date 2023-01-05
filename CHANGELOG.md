@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.0.55
+
+### Patch Changes
+
+- [#160](https://github.com/Effect-TS/io/pull/160) [`0b9a92d`](https://github.com/Effect-TS/io/commit/0b9a92d96d75e425371661f2217efae75a9d704b) Thanks [@patroza](https://github.com/patroza)! - Improve stringlogger logfmt compatibility
+
 ## 0.0.54
 
 ### Patch Changes
