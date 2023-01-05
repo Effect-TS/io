@@ -9,7 +9,7 @@ export const make = (label: string, startTime: number): LogSpan.LogSpan => ({
 /** @internal */
 export const render = (now: number) => {
   return (self: LogSpan.LogSpan): string => {
-    const label = self.label.indexOf(" ") < 0 ? self.label : `"${self.label}"`
+    const label = self.label.replace(/[ ="]/g, "_")
     return `${label}=${now - self.startTime}ms`
   }
 }
