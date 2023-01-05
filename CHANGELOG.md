@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.0.54
+
+### Patch Changes
+
+- [#158](https://github.com/Effect-TS/io/pull/158) [`2f86303`](https://github.com/Effect-TS/io/commit/2f86303080ac25bc78c2d11bee1444e6d2e2144c) Thanks [@IMax153](https://github.com/IMax153)! - make all testing utils internal
+
 ## 0.0.53
 
 ### Patch Changes
