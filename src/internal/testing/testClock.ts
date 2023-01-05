@@ -71,6 +71,8 @@ import type * as SortedSet from "@fp-ts/data/SortedSet"
  * below. Thus, a useful pattern when using `TestClock` is to fork the effect
  * being tested, then adjust the clock time, and finally verify that the
  * expected effects have been performed.
+ *
+ * @internal
  */
 export interface TestClock extends Clock.Clock {
   /**
@@ -95,11 +97,14 @@ export interface TestClock extends Clock.Clock {
   sleeps(): Effect.Effect<never, never, Chunk.Chunk<number>>
 }
 
+/** @internal */
 export const Tag: Context.Tag<TestClock> = Context.Tag<TestClock>()
 
 /**
  * The warning message that will be displayed if a test is using time but is
  * not advancing the `TestClock`.
+ *
+ * @internal
  */
 const warning = "Warning: A test is using time, but is not advancing " +
   "the test clock, which may result in the test hanging. Use TestClock.adjust to " +
@@ -108,6 +113,8 @@ const warning = "Warning: A test is using time, but is not advancing " +
 /**
  * The warning message that will be displayed if a test is advancing the clock
  * but a fiber is still running.
+ *
+ * @internal
  */
 const suspendedWarning = "Warning: A test is advancing the test clock, " +
   "but a fiber is not suspending, which may result in the test hanging. Use " +
@@ -451,6 +458,7 @@ export class TestClockImpl implements TestClock {
   }
 }
 
+/** @internal */
 export const live = (data: Data.Data): Layer.Layer<Annotations.Annotations | Live.Live, never, TestClock> => {
   return layer.scoped(Tag)(effect.gen(function*($) {
     const live = yield* $(core.service(Live.Tag))
@@ -467,6 +475,7 @@ export const live = (data: Data.Data): Layer.Layer<Annotations.Annotations | Liv
   }))
 }
 
+/** @internal */
 export const defaultTestClock: Layer.Layer<Annotations.Annotations | Live.Live, never, TestClock> = live(
   Data.make(new Date(0).getTime(), Chunk.empty())
 )
@@ -477,6 +486,7 @@ export const defaultTestClock: Layer.Layer<Annotations.Annotations | Live.Live, 
  * the new time in order.
  *
  * @macro traced
+ * @internal
  */
 export const adjust = (duration: Duration.Duration): Effect.Effect<never, never, void> => {
   const trace = getCallTrace()
@@ -485,6 +495,7 @@ export const adjust = (duration: Duration.Duration): Effect.Effect<never, never,
 
 /**
  * @macro traced
+ * @internal
  */
 export const adjustWith = (duration: Duration.Duration) => {
   return <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
@@ -498,6 +509,7 @@ export const adjustWith = (duration: Duration.Duration) => {
  * milliseconds.
  *
  * @macro traced
+ * @internal
  */
 export const currentTimeMillis = (): Effect.Effect<never, never, number> => {
   const trace = getCallTrace()
@@ -510,6 +522,7 @@ export const currentTimeMillis = (): Effect.Effect<never, never, number> => {
  * saved state.
  *
  * @macro traced
+ * @internal
  */
 export const save = (): Effect.Effect<never, never, Effect.Effect<never, never, void>> => {
   const trace = getCallTrace()
@@ -522,6 +535,7 @@ export const save = (): Effect.Effect<never, never, Effect.Effect<never, never, 
  * the new time in order.
  *
  * @macro traced
+ * @internal
  */
 export const setTime = (instant: number): Effect.Effect<never, never, void> => {
   const trace = getCallTrace()
@@ -534,6 +548,7 @@ export const setTime = (instant: number): Effect.Effect<never, never, void> => {
  * on or after the duration, the fiber will automatically be resumed.
  *
  * @macro traced
+ * @internal
  */
 export const sleep = (duration: Duration.Duration): Effect.Effect<never, never, void> => {
   const trace = getCallTrace()
@@ -545,6 +560,7 @@ export const sleep = (duration: Duration.Duration): Effect.Effect<never, never, 
  * times that effects are scheduled to run.
  *
  * @macro traced
+ * @internal
  */
 export const sleeps = (): Effect.Effect<never, never, Chunk.Chunk<number>> => {
   const trace = getCallTrace()
@@ -555,6 +571,7 @@ export const sleeps = (): Effect.Effect<never, never, Chunk.Chunk<number>> => {
  * Retrieves the `TestClock` service for this test.
  *
  * @macro traced
+ * @internal
  */
 export const testClock = (): Effect.Effect<never, never, TestClock> => {
   const trace = getCallTrace()
@@ -566,6 +583,7 @@ export const testClock = (): Effect.Effect<never, never, TestClock> => {
  * specified workflow.
  *
  * @macro traced
+ * @internal
  */
 export const testClockWith = <R, E, A>(f: (testClock: TestClock) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()

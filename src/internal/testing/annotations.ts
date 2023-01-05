@@ -17,7 +17,10 @@ import { pipe } from "@fp-ts/data/Function"
 import * as MutableRef from "@fp-ts/data/MutableRef"
 import * as SortedSet from "@fp-ts/data/SortedSet"
 
+/** @internal */
 export const AnnotationsTypeId = Symbol.for("@effect/test/Annotations")
+
+/** @internal */
 export type AnnotationsTypeId = typeof AnnotationsTypeId
 
 /**
@@ -27,6 +30,8 @@ export type AnnotationsTypeId = typeof AnnotationsTypeId
  * Annotations form monoids and you can think of `Annotations` as a more
  * structured logging service or as a super polymorphic version of the writer
  * monad effect.
+ *
+ * @internal
  */
 export interface Annotations {
   readonly [AnnotationsTypeId]: AnnotationsTypeId
@@ -55,6 +60,7 @@ export interface Annotations {
   supervisedFibers(): Effect.Effect<never, never, SortedSet.SortedSet<Fiber.RuntimeFiber<unknown, unknown>>>
 }
 
+/** @internal */
 class AnnotationsImpl implements Annotations {
   readonly [AnnotationsTypeId]: AnnotationsTypeId = AnnotationsTypeId
   constructor(readonly fiberRef: FiberRef.FiberRef<TestAnnotationMap.TestAnnotationMap>) {
@@ -100,8 +106,10 @@ class AnnotationsImpl implements Annotations {
   }
 }
 
+/** @internal */
 export const Tag: Context.Tag<Annotations> = Context.Tag<Annotations>()
 
+/** @internal */
 export const isAnnotations = (u: unknown): u is Annotations => {
   return typeof u === "object" && u != null && AnnotationsTypeId in u
 }
@@ -111,6 +119,7 @@ export const isAnnotations = (u: unknown): u is Annotations => {
  * annotation of the specified type, or its default value if there is none.
  *
  * @macro traced
+ * @internal
  */
 export const get = <A>(key: TestAnnotation.TestAnnotation<A>): Effect.Effect<Annotations, never, A> => {
   const trace = getCallTrace()
@@ -122,6 +131,7 @@ export const get = <A>(key: TestAnnotation.TestAnnotation<A>): Effect.Effect<Ann
  * specified annotation to the annotation map.
  *
  * @macro traced
+ * @internal
  */
 export const annotate = <A>(
   key: TestAnnotation.TestAnnotation<A>,
@@ -135,6 +145,7 @@ export const annotate = <A>(
  * Returns the set of all fibers in this test.
  *
  * @macro traced
+ * @internal
  */
 export const supervisedFibers = (): Effect.Effect<
   Annotations,
@@ -148,8 +159,7 @@ export const supervisedFibers = (): Effect.Effect<
 /**
  * Constructs a new `Annotations` service.
  *
- * @category environment
- * @since 1.0.0
+ * @internal
  */
 export const live: Layer.Layer<never, never, Annotations> = layer.scoped(Tag)(
   pipe(

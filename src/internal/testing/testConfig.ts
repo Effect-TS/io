@@ -11,6 +11,8 @@ import * as Context from "@fp-ts/data/Context"
  * they are stable, the number of times to retry flaky tests, the sufficient
  * number of samples to check from a random variable, and the maximum number of
  * shrinkings to minimize large failures.
+ *
+ * @internal
  */
 export interface TestConfig {
   /**
@@ -31,8 +33,10 @@ export interface TestConfig {
   readonly shrinks: number
 }
 
+/** @internal */
 export const Tag: Context.Tag<TestConfig> = Context.Tag<TestConfig>()
 
+/** @internal */
 export const make = (params: {
   readonly repeats: number
   readonly retries: number
@@ -42,6 +46,8 @@ export const make = (params: {
 
 /**
  * Constructs a new `TestConfig` service with the specified settings.
+ *
+ * @internal
  */
 export const live = (
   params: {
@@ -56,6 +62,8 @@ export const live = (
 
 /**
  * Constructs a new `TestConfig` with the default settings.
+ *
+ * @internal
  */
 export const defaultTestConfig: Layer.Layer<never, never, TestConfig> = live({
   repeats: 100,
@@ -68,6 +76,7 @@ export const defaultTestConfig: Layer.Layer<never, never, TestConfig> = live({
  * The number of times to repeat tests to ensure they are stable.
  *
  * @macro traced
+ * @internal
  */
 export const repeats = (): Effect.Effect<TestConfig, never, number> => {
   const trace = getCallTrace()
@@ -78,6 +87,7 @@ export const repeats = (): Effect.Effect<TestConfig, never, number> => {
  * The number of times to retry flaky tests.
  *
  * @macro traced
+ * @internal
  */
 export const retries = (): Effect.Effect<TestConfig, never, number> => {
   const trace = getCallTrace()
@@ -88,6 +98,7 @@ export const retries = (): Effect.Effect<TestConfig, never, number> => {
  * The number of sufficient samples to check for a random variable.
  *
  * @macro traced
+ * @internal
  */
 export const samples = (): Effect.Effect<TestConfig, never, number> => {
   const trace = getCallTrace()
@@ -98,6 +109,7 @@ export const samples = (): Effect.Effect<TestConfig, never, number> => {
  * The maximum number of shrinkings to minimize large failures.
  *
  * @macro traced
+ * @internal
  */
 export const shrinks = (): Effect.Effect<TestConfig, never, number> => {
   const trace = getCallTrace()

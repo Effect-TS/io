@@ -11,6 +11,8 @@ import * as Context from "@fp-ts/data/Context"
  * within tests for workflows such as printing test results to the console or
  * timing out tests where it is necessary to access the real implementations of
  * these services.
+ *
+ * @internal
  */
 export interface Live {
   /**
@@ -19,6 +21,7 @@ export interface Live {
   provide<R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A>
 }
 
+/** @internal */
 export const Tag: Context.Tag<Live> = Context.Tag<Live>()
 
 /**
@@ -26,6 +29,8 @@ export const Tag: Context.Tag<Live> = Context.Tag<Live>()
  * typically should not be necessary as the `TestEnvironment` already includes
  * the `Live` service but could be useful if you are mixing in interfaces to
  * create your own environment type.
+ *
+ * @internal
  */
 export const defaultLive = layer.fromEffect(Tag)(
   effect.environmentWith<never, Live>((env) => ({
@@ -37,6 +42,7 @@ export const defaultLive = layer.fromEffect(Tag)(
  * Provides a workflow with the "live" default Effect services.
  *
  * @macro traced
+ * @internal
  */
 export const live = <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R | Live, E, A> => {
   const trace = getCallTrace()
@@ -48,6 +54,7 @@ export const live = <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R |
  * ensuring that the workflow itself is run with the test services.
  *
  * @macro traced
+ * @internal
  */
 export const withLive = <R, E, A, R2, E2, A2>(f: (effect: Effect.Effect<R, E, A>) => Effect.Effect<R2, E2, A2>) => {
   const trace = getCallTrace()

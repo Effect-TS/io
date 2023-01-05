@@ -8,11 +8,13 @@ import * as TestConfig from "@effect/io/internal/testing/testConfig"
 import type * as Layer from "@effect/io/Layer"
 import { pipe } from "@fp-ts/data/Function"
 
+/** @internal */
 export type TestEnvironment =
   | Annotations.Annotations
   | Live.Live
   | TestConfig.TestConfig
 
+/** @internal */
 export const live: Layer.Layer<DefaultServices.DefaultServices, never, TestEnvironment> = pipe(
   Annotations.live,
   layer.merge(Live.defaultLive),
@@ -24,6 +26,7 @@ export const live: Layer.Layer<DefaultServices.DefaultServices, never, TestEnvir
   layer.merge(TestConfig.defaultTestConfig)
 )
 
+/** @internal */
 export const TestEnvironment: Layer.Layer<never, never, TestEnvironment> = pipe(
   layer.syncEnvironment(() => defaultServices.liveServices),
   layer.provideToAndMerge(live)
