@@ -93,7 +93,7 @@ Added in v1.0.0
 
 ```ts
 export interface Add {
-  readonly op: 1
+  readonly _tag: 'Add'
   readonly fiberRef: FiberRef.FiberRef<unknown>
   readonly value: unknown
 }
@@ -107,7 +107,7 @@ Added in v1.0.0
 
 ```ts
 export interface AndThen {
-  readonly op: 4
+  readonly _tag: 'AndThen'
   readonly first: FiberRefsPatch
   readonly second: FiberRefsPatch
 }
@@ -121,7 +121,7 @@ Added in v1.0.0
 
 ```ts
 export interface Empty {
-  readonly op: 0
+  readonly _tag: 'Empty'
 }
 ```
 
@@ -148,7 +148,7 @@ Added in v1.0.0
 
 ```ts
 export interface Remove {
-  readonly op: 2
+  readonly _tag: 'Remove'
   readonly fiberRef: FiberRef.FiberRef<unknown>
 }
 ```
@@ -161,7 +161,7 @@ Added in v1.0.0
 
 ```ts
 export interface Update {
-  readonly op: 3
+  readonly _tag: 'Update'
   readonly fiberRef: FiberRef.FiberRef<unknown>
   readonly patch: unknown
 }

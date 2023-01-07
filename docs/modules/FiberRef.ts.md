@@ -33,6 +33,7 @@ Added in v1.0.0
   - [currentRuntimeFlags](#currentruntimeflags)
   - [currentScheduler](#currentscheduler)
   - [currentSupervisor](#currentsupervisor)
+  - [currentTags](#currenttags)
   - [interruptedCause](#interruptedcause)
 - [getters](#getters)
   - [get](#get)
@@ -271,6 +272,16 @@ Added in v1.0.0
 
 ```ts
 export declare const currentSupervisor: FiberRef<Supervisor.Supervisor<any>>
+```
+
+Added in v1.0.0
+
+## currentTags
+
+**Signature**
+
+```ts
+export declare const currentTags: FiberRef<HashSet.HashSet<MetricLabel.MetricLabel>>
 ```
 
 Added in v1.0.0

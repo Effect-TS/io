@@ -117,7 +117,7 @@ Added in v1.0.0
 
 ```ts
 export interface And extends ConfigError.Proto {
-  readonly op: 0
+  readonly _tag: OpCodes.OP_AND
   readonly left: ConfigError
   readonly right: ConfigError
 }
@@ -143,7 +143,7 @@ Added in v1.0.0
 
 ```ts
 export interface InvalidData extends ConfigError.Proto {
-  readonly op: 2
+  readonly _tag: OpCodes.OP_INVALID_DATA
   readonly path: Chunk.Chunk<string>
   readonly message: string
 }
@@ -157,7 +157,7 @@ Added in v1.0.0
 
 ```ts
 export interface MissingData extends ConfigError.Proto {
-  readonly op: 3
+  readonly _tag: OpCodes.OP_MISSING_DATA
   readonly path: Chunk.Chunk<string>
   readonly message: string
 }
@@ -171,7 +171,7 @@ Added in v1.0.0
 
 ```ts
 export interface Or extends ConfigError.Proto {
-  readonly op: 1
+  readonly _tag: OpCodes.OP_OR
   readonly left: ConfigError
   readonly right: ConfigError
 }
@@ -185,7 +185,7 @@ Added in v1.0.0
 
 ```ts
 export interface SourceUnavailable extends ConfigError.Proto {
-  readonly op: 4
+  readonly _tag: OpCodes.OP_SOURCE_UNAVAILABLE
   readonly path: Chunk.Chunk<string>
   readonly message: string
   readonly cause: Cause.Cause<unknown>
@@ -200,7 +200,7 @@ Added in v1.0.0
 
 ```ts
 export interface Unsupported extends ConfigError.Proto {
-  readonly op: 5
+  readonly _tag: OpCodes.OP_UNSUPPORTED
   readonly path: Chunk.Chunk<string>
   readonly message: string
 }

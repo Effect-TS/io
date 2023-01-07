@@ -112,6 +112,9 @@ Added in v1.0.0
   - [suspend](#suspend)
   - [suspendSucceed](#suspendsucceed)
   - [sync](#sync)
+  - [taggedScoped](#taggedscoped)
+  - [taggedScopedWithLabelSet](#taggedscopedwithlabelset)
+  - [taggedScopedWithLabels](#taggedscopedwithlabels)
   - [takeWhile](#takewhile)
   - [tryCatch](#trycatch)
   - [tryCatchPromise](#trycatchpromise)
@@ -224,6 +227,7 @@ Added in v1.0.0
 - [getters](#getters)
   - [right](#right)
   - [rightWith](#rightwith)
+  - [tags](#tags)
   - [unleft](#unleft)
 - [interruption](#interruption)
   - [disconnect](#disconnect)
@@ -234,6 +238,7 @@ Added in v1.0.0
   - [uninterruptible](#uninterruptible)
   - [uninterruptibleMask](#uninterruptiblemask)
 - [locking](#locking)
+  - [Permit (interface)](#permit-interface)
   - [Semaphore (interface)](#semaphore-interface)
   - [makeSemaphore](#makesemaphore)
   - [unsafeMakeSemaphore](#unsafemakesemaphore)
@@ -353,6 +358,9 @@ Added in v1.0.0
   - [someWith](#somewith)
   - [summarized](#summarized)
   - [supervised](#supervised)
+  - [tagged](#tagged)
+  - [taggedWithLabelSet](#taggedwithlabelset)
+  - [taggedWithLabels](#taggedwithlabels)
   - [timed](#timed)
   - [timedWith](#timedwith)
   - [timeout](#timeout)
@@ -381,6 +389,8 @@ Added in v1.0.0
   - [when](#when)
   - [whenCase](#whencase)
   - [whenCaseEffect](#whencaseeffect)
+  - [whenFiberRef](#whenfiberref)
+  - [whenRef](#whenref)
   - [withClock](#withclock)
   - [withEarlyRelease](#withearlyrelease)
   - [withMetric](#withmetric)
@@ -1842,6 +1852,48 @@ Added in v1.0.0
 
 ```ts
 export declare const sync: <A>(evaluate: () => A) => Effect<never, never, A>
+```
+
+Added in v1.0.0
+
+## taggedScoped
+
+Tags each metric in a scope with a the specific tag.
+
+**Signature**
+
+```ts
+export declare const taggedScoped: (key: string, value: string) => Effect<Scope.Scope, never, void>
+```
+
+Added in v1.0.0
+
+## taggedScopedWithLabelSet
+
+Tags each metric in a scope with a the specific tag.
+
+**Signature**
+
+```ts
+export declare const taggedScopedWithLabelSet: (
+  labels: HashSet.HashSet<MetricLabel.MetricLabel>
+) => Effect<Scope.Scope, never, void>
+```
+
+Added in v1.0.0
+
+## taggedScopedWithLabels
+
+Tags each metric in a scope with a the specific tag.
+
+**Signature**
+
+```ts
+export declare const taggedScopedWithLabels: <
+  Labels extends readonly [MetricLabel.MetricLabel, ...MetricLabel.MetricLabel[]]
+>(
+  ...labels: Labels
+) => Effect<Scope.Scope, never, void>
 ```
 
 Added in v1.0.0
@@ -3321,6 +3373,18 @@ export declare const rightWith: <R, E, A, A1, B, B1, R1, E1>(
 
 Added in v1.0.0
 
+## tags
+
+Retrieves the metric tags associated with the current scope.
+
+**Signature**
+
+```ts
+export declare const tags: () => Effect<never, never, HashSet.HashSet<MetricLabel.MetricLabel>>
+```
+
+Added in v1.0.0
+
 ## unleft
 
 Converts a `Effect<R, Either<E, B>, A>` into a `Effect<R, E, Either<A, B>>`.
@@ -3424,13 +3488,27 @@ Added in v1.0.0
 
 # locking
 
+## Permit (interface)
+
+**Signature**
+
+```ts
+export interface Permit {
+  readonly index: number
+}
+```
+
+Added in v1.0.0
+
 ## Semaphore (interface)
 
 **Signature**
 
 ```ts
 export interface Semaphore {
-  (permits: number): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  readonly withPermits: (permits: number) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  readonly take: (n: number) => Effect<never, never, Array<Permit>>
+  readonly release: (permit: Permit) => Effect<never, never, void>
 }
 ```
 
@@ -5053,6 +5131,48 @@ export declare const supervised: <X>(
 
 Added in v1.0.0
 
+## tagged
+
+Tags each metric in this effect with the specific tag.
+
+**Signature**
+
+```ts
+export declare const tagged: (key: string, value: string) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+```
+
+Added in v1.0.0
+
+## taggedWithLabelSet
+
+Tags each metric in this effect with the specific tag.
+
+**Signature**
+
+```ts
+export declare const taggedWithLabelSet: (
+  labels: HashSet.HashSet<MetricLabel.MetricLabel>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+```
+
+Added in v1.0.0
+
+## taggedWithLabels
+
+Tags each metric in this effect with the specific tag.
+
+**Signature**
+
+```ts
+export declare const taggedWithLabels: <
+  Labels extends readonly [MetricLabel.MetricLabel, ...MetricLabel.MetricLabel[]]
+>(
+  ...labels: Labels
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+```
+
+Added in v1.0.0
+
 ## timed
 
 Returns a new effect that executes this one and times the execution.
@@ -5492,6 +5612,37 @@ value, otherwise does nothing.
 export declare const whenCaseEffect: <A, R2, E2, A2>(
   pf: (a: A) => Option.Option<Effect<R2, E2, A2>>
 ) => <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, Option.Option<A2>>
+```
+
+Added in v1.0.0
+
+## whenFiberRef
+
+Executes this workflow when value of the specified `FiberRef` satisfies the
+predicate.
+
+**Signature**
+
+```ts
+export declare const whenFiberRef: <S>(
+  fiberRef: FiberRef.FiberRef<S>,
+  predicate: Predicate<S>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, readonly [S, Option.Option<A>]>
+```
+
+Added in v1.0.0
+
+## whenRef
+
+Executes this workflow when the value of the `Ref` satisfies the predicate.
+
+**Signature**
+
+```ts
+export declare const whenRef: <S>(
+  ref: Ref.Ref<S>,
+  predicate: Predicate<S>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, readonly [S, Option.Option<A>]>
 ```
 
 Added in v1.0.0
