@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.0.57
+
+### Patch Changes
+
+- [#167](https://github.com/Effect-TS/io/pull/167) [`4594c6f`](https://github.com/Effect-TS/io/commit/4594c6f1084781cf9c04423cbd7679cc08986deb) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Improve semahore again
+
 ## 0.0.56
 
 ### Patch Changes
