@@ -33,7 +33,7 @@ export type TestServices =
  * @internal
  */
 export const liveServices: Context.Context<TestServices> = pipe(
-  Context.make(Annotations.Tag)(Annotations.make(ref.unsafeMake(TestAnnotationMap.empty))),
+  Context.make(Annotations.Tag)(Annotations.make(ref.unsafeMake(TestAnnotationMap.empty()))),
   Context.add(Live.Tag)(Live.make(defaultServices.liveServices)),
   Context.add(Sized.Tag)(Sized.make(100)),
   Context.add(TestConfig.Tag)(TestConfig.make({ repeats: 100, retries: 100, samples: 200, shrinks: 1000 }))
@@ -110,7 +110,7 @@ export const withAnnotationsScoped = (
 export const annotationsLayer = (): Layer.Layer<never, never, Annotations.Annotations> =>
   layer.scoped(Annotations.Tag)(
     pipe(
-      core.sync(() => ref.unsafeMake(TestAnnotationMap.empty)),
+      core.sync(() => ref.unsafeMake(TestAnnotationMap.empty())),
       core.map(Annotations.make),
       core.tap(withAnnotationsScoped)
     )

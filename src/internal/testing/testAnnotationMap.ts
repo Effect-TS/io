@@ -1,5 +1,4 @@
 import type * as TestAnnotation from "@effect/io/internal/testing/testAnnotation"
-import * as Chunk from "@fp-ts/data/Chunk"
 import * as Equal from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
 
@@ -92,21 +91,15 @@ export const annotate = <A>(key: TestAnnotation.TestAnnotation<A>, value: A) => 
 /** @internal */
 export const combine = (that: TestAnnotationMap) => {
   return (self: TestAnnotationMap): TestAnnotationMap => {
-    const map = pipe(
-      Chunk.fromIterable(self.map),
-      Chunk.concat(Chunk.fromIterable(that.map)),
-      Chunk.reduce(
-        new Map<TestAnnotation.TestAnnotation<unknown>, unknown>(),
-        (acc, [key, oldValue]) => {
-          let newValue = acc.get(key)
-          if (newValue === undefined) {
-            newValue = oldValue
-          }
-          newValue = key.combine(newValue, oldValue)
-          return acc.set(key, newValue)
-        }
-      )
-    )
-    return make(map)
+    const result = new Map<TestAnnotation.TestAnnotation<unknown>, unknown>(self.map)
+    for (const entry of that.map) {
+      if (result.has(entry[0])) {
+        const value = result.get(entry[0])!
+        result.set(entry[0], entry[0].combine(value, entry[1]))
+      } else {
+        result.set(entry[0], entry[1])
+      }
+    }
+    return make(result)
   }
 }
