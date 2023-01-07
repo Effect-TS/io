@@ -34,7 +34,7 @@ export const isTestAnnotationMap = (u: unknown): u is TestAnnotationMap => {
 }
 
 /** @internal */
-export const empty = new TestAnnotationMapImpl(new Map())
+export const empty: () => TestAnnotationMap = () => new TestAnnotationMapImpl(new Map())
 
 /** @internal */
 export const make = (map: ReadonlyMap<TestAnnotation.TestAnnotation<unknown>, unknown>): TestAnnotationMap => {
