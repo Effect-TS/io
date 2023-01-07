@@ -1,5 +1,13 @@
 # @effect/io
 
+## 0.0.58
+
+### Patch Changes
+
+- [#169](https://github.com/Effect-TS/io/pull/169) [`d7dc29a`](https://github.com/Effect-TS/io/commit/d7dc29a3f266e44616d5952fdec0703dadf2fd9d) Thanks [@IMax153](https://github.com/IMax153)! - fix TestAnnotationMap.empty
+
+- [#169](https://github.com/Effect-TS/io/pull/169) [`1c52e5c`](https://github.com/Effect-TS/io/commit/1c52e5c948c8186ac58118d75e03af296f3086c2) Thanks [@IMax153](https://github.com/IMax153)! - improve performance of TestAnnotationMap.combine
+
 ## 0.0.57
 
 ### Patch Changes
