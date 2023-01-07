@@ -21,7 +21,7 @@ import type * as Synchronized from "@effect/io/Ref/Synchronized"
 import type * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
-import * as Chunk from "@fp-ts/data/Chunk"
+import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as Duration from "@fp-ts/data/Duration"
 import * as Either from "@fp-ts/data/Either"
 import * as Equal from "@fp-ts/data/Equal"
@@ -31,31 +31,27 @@ import * as MutableRef from "@fp-ts/data/MutableRef"
 import * as Option from "@fp-ts/data/Option"
 
 /** @internal */
-type Permit = { index: number }
-
-/** @internal */
 class Semaphore {
   public waiters = new Array<() => void>()
+  public taken = 0
 
-  constructor(public permits: Array<Option.Option<FiberId.FiberId>>) {}
+  constructor(readonly permits: number) {}
 
-  private takeId(id: FiberId.FiberId, n: number) {
-    return core.asyncInterruptEither<never, never, Array<Permit>>((resume) => {
-      const available = this.permits.map((_, i) => [_, i] as const).filter(([_]) => Option.isNone(_))
-      if (available.length < n) {
+  get free() {
+    return this.permits - this.taken
+  }
+
+  readonly take = (n: number) =>
+    core.asyncInterruptEither<never, never, number>((resume) => {
+      if (this.free < n) {
         const observer = () => {
-          const available = this.permits.map((_, i) => [_, i] as const).filter(([_]) => Option.isNone(_))
-          if (available.length >= n) {
+          if (this.free >= n) {
             const observerIndex = this.waiters.findIndex((cb) => cb === observer)
             if (observerIndex !== -1) {
               this.waiters.splice(observerIndex, 1)
             }
-            const taken: Array<Permit> = []
-            for (let i = 0; i < n; i++) {
-              this.permits[available[i][1]] = Option.some(id)
-              taken.push({ index: available[i][1] })
-            }
-            resume(core.succeed(taken))
+            this.taken += n
+            resume(core.succeed(n))
           }
         }
         this.waiters.push(observer)
@@ -66,21 +62,13 @@ class Semaphore {
           }
         }))
       }
-      const taken: Array<Permit> = []
-      for (let i = 0; i < n; i++) {
-        this.permits[available[i][1]] = Option.some(id)
-        taken.push({ index: available[i][1] })
-      }
-      return Either.right(core.succeed(taken))
+      this.taken += n
+      return Either.right(core.succeed(n))
     })
-  }
 
-  readonly take = (n: number) =>
-    core.withFiberRuntime<never, never, Array<Permit>>((fiber) => this.takeId(fiber.id(), n))
-
-  readonly release = (permit: Permit) =>
+  readonly release = (n: number) =>
     core.withFiberRuntime<never, never, void>((fiber) => {
-      this.permits[permit.index] = Option.none
+      this.taken -= n
       fiber.getFiberRef(core.currentScheduler).scheduleTask(() => {
         this.waiters.forEach((wake) => wake())
       })
@@ -96,10 +84,7 @@ class Semaphore {
             (permits) =>
               pipe(
                 restore(self),
-                ensuring(pipe(
-                  permits,
-                  core.forEach(this.release)
-                ))
+                ensuring(this.release(permits))
               )
           )
         )
@@ -108,7 +93,7 @@ class Semaphore {
 
 /** @internal */
 export const unsafeMakeSemaphore = (leases: number) => {
-  return new Semaphore(Array.from(Chunk.range(1, leases)).map(() => Option.none))
+  return new Semaphore(leases)
 }
 
 /** @internal */
