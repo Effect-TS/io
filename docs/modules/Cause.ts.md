@@ -696,7 +696,7 @@ For example, we can annotate a `Cause` with a trace to assist in debugging.
 
 ```ts
 export interface Annotated<E> extends Cause.Variance<E>, Equal.Equal {
-  readonly _tag: 'Annotated'
+  readonly _tag: OpCodes.OP_ANNOTATED
   readonly cause: Cause<E>
   readonly annotation: unknown
 }
@@ -754,7 +754,7 @@ type `E`.
 
 ```ts
 export interface Die extends Cause.Variance<never>, Equal.Equal {
-  readonly _tag: 'Die'
+  readonly _tag: OpCodes.OP_DIE
   readonly defect: unknown
 }
 ```
@@ -769,7 +769,7 @@ The `Empty` cause represents a lack of errors.
 
 ```ts
 export interface Empty extends Cause.Variance<never>, Equal.Equal {
-  readonly _tag: 'Empty'
+  readonly _tag: OpCodes.OP_EMPTY
 }
 ```
 
@@ -784,7 +784,7 @@ type `E`.
 
 ```ts
 export interface Fail<E> extends Cause.Variance<E>, Equal.Equal {
-  readonly _tag: 'Fail'
+  readonly _tag: OpCodes.OP_FAIL
   readonly error: E
 }
 ```
@@ -816,7 +816,7 @@ contains the `FiberId` of the interrupted `Fiber`.
 
 ```ts
 export interface Interrupt extends Cause.Variance<never>, Equal.Equal {
-  readonly _tag: 'Interrupt'
+  readonly _tag: OpCodes.OP_INTERRUPT
   readonly fiberId: FiberId.FiberId
 }
 ```
@@ -885,7 +885,7 @@ occurred in parallel. In these cases, the errors can be represented by the
 
 ```ts
 export interface Parallel<E> extends Cause.Variance<E>, Equal.Equal {
-  readonly _tag: 'Parallel'
+  readonly _tag: OpCodes.OP_PARALLEL
   readonly left: Cause<E>
   readonly right: Cause<E>
 }
@@ -922,7 +922,7 @@ represented by the `Sequential` cause.
 
 ```ts
 export interface Sequential<E> extends Cause.Variance<E>, Equal.Equal {
-  readonly _tag: 'Sequential'
+  readonly _tag: OpCodes.OP_SEQUENTIAL
   readonly left: Cause<E>
   readonly right: Cause<E>
 }

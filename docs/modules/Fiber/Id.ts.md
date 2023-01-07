@@ -172,7 +172,7 @@ Added in v1.0.0
 ```ts
 export interface Composite extends Equal.Equal {
   readonly [FiberIdTypeId]: FiberIdTypeId
-  readonly op: 2
+  readonly _tag: 'Composite'
   readonly left: FiberId
   readonly right: FiberId
 }
@@ -197,7 +197,7 @@ Added in v1.0.0
 ```ts
 export interface None extends Equal.Equal {
   readonly [FiberIdTypeId]: FiberIdTypeId
-  readonly op: 0
+  readonly _tag: 'None'
 }
 ```
 
@@ -210,7 +210,7 @@ Added in v1.0.0
 ```ts
 export interface Runtime extends Equal.Equal {
   readonly [FiberIdTypeId]: FiberIdTypeId
-  readonly op: 1
+  readonly _tag: 'Runtime'
   readonly id: number
   readonly startTimeMillis: number
 }
