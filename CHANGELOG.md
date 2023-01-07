@@ -1,5 +1,15 @@
 # @effect/io
 
+## 0.0.56
+
+### Patch Changes
+
+- [#165](https://github.com/Effect-TS/io/pull/165) [`762bf09`](https://github.com/Effect-TS/io/commit/762bf09a9e63ae9cfa06a7afa88aea4b1ff7b4f3) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Improve liteweight semaphore
+
+- [#164](https://github.com/Effect-TS/io/pull/164) [`f26abe6`](https://github.com/Effect-TS/io/commit/f26abe6d82be738e1bba4734c1d1537dd475333e) Thanks [@IMax153](https://github.com/IMax153)! - use FiberRefs for TestServices
+
+- [#162](https://github.com/Effect-TS/io/pull/162) [`88fc794`](https://github.com/Effect-TS/io/commit/88fc7948a223798c74f3f535da27c834169e8157) Thanks [@IMax153](https://github.com/IMax153)! - make tags a regional setting
+
 ## 0.0.55
 
 ### Patch Changes
