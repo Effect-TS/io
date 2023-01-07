@@ -5,7 +5,6 @@ import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import * as Fiber from "@effect/io/Fiber"
 import * as TestClock from "@effect/io/internal/testing/testClock"
-import type * as TestEnvironment from "@effect/io/internal/testing/testEnvironment"
 import * as Ref from "@effect/io/Ref"
 import * as Schedule from "@effect/io/Schedule"
 import * as ScheduleDecision from "@effect/io/Schedule/Decision"
@@ -858,7 +857,7 @@ const checkRepetitions = <Env>(schedule: Schedule.Schedule<Env, number, number>)
 }
 export const run = <R, E, A>(
   effect: Effect.Effect<R, E, A>
-): Effect.Effect<R | TestEnvironment.TestEnvironment, E, A> => {
+): Effect.Effect<R, E, A> => {
   return pipe(
     Effect.fork(effect),
     Effect.tap(() => TestClock.setTime(Number.POSITIVE_INFINITY)),
@@ -868,7 +867,7 @@ export const run = <R, E, A>(
 export const runCollect = <Env, In, Out>(
   schedule: Schedule.Schedule<Env, In, Out>,
   input: Iterable<In>
-): Effect.Effect<Env | TestEnvironment.TestEnvironment, never, Chunk.Chunk<Out>> => {
+): Effect.Effect<Env, never, Chunk.Chunk<Out>> => {
   return run(
     pipe(
       Schedule.driver(schedule),
@@ -880,7 +879,7 @@ const runCollectLoop = <Env, In, Out>(
   driver: Schedule.ScheduleDriver<Env, In, Out>,
   input: Chunk.Chunk<In>,
   acc: Chunk.Chunk<Out>
-): Effect.Effect<Env | TestEnvironment.TestEnvironment, never, Chunk.Chunk<Out>> => {
+): Effect.Effect<Env, never, Chunk.Chunk<Out>> => {
   if (!Chunk.isNonEmpty(input)) {
     return Effect.succeed(acc)
   }

@@ -1,15 +1,12 @@
 import { getCallTrace } from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import type * as Fiber from "@effect/io/Fiber"
-import type * as FiberRef from "@effect/io/FiberRef"
 import * as core from "@effect/io/internal/core"
 import * as effect from "@effect/io/internal/effect"
 import * as fiber from "@effect/io/internal/fiber"
-import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
-import * as layer from "@effect/io/internal/layer"
 import * as TestAnnotation from "@effect/io/internal/testing/testAnnotation"
 import * as TestAnnotationMap from "@effect/io/internal/testing/testAnnotationMap"
-import type * as Layer from "@effect/io/Layer"
+import * as Ref from "@effect/io/Ref"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Context from "@fp-ts/data/Context"
 import * as Equal from "@fp-ts/data/Equal"
@@ -35,6 +32,9 @@ export type AnnotationsTypeId = typeof AnnotationsTypeId
  */
 export interface Annotations {
   readonly [AnnotationsTypeId]: AnnotationsTypeId
+
+  /** @internal */
+  readonly ref: Ref.Ref<TestAnnotationMap.TestAnnotationMap>
 
   /**
    * Accesses an `Annotations` instance in the environment and retrieves the
@@ -63,26 +63,28 @@ export interface Annotations {
 /** @internal */
 class AnnotationsImpl implements Annotations {
   readonly [AnnotationsTypeId]: AnnotationsTypeId = AnnotationsTypeId
-  constructor(readonly fiberRef: FiberRef.FiberRef<TestAnnotationMap.TestAnnotationMap>) {
+  constructor(readonly ref: Ref.Ref<TestAnnotationMap.TestAnnotationMap>) {
     Equal.considerByRef(this)
   }
   get<A>(key: TestAnnotation.TestAnnotation<A>): Effect.Effect<never, never, A> {
     const trace = getCallTrace()
     return pipe(
-      core.fiberRefGet(this.fiberRef),
+      Ref.get(this.ref),
       core.map(TestAnnotationMap.get(key))
     ).traced(trace)
   }
   annotate<A>(key: TestAnnotation.TestAnnotation<A>, value: A): Effect.Effect<never, never, void> {
     const trace = getCallTrace()
-    return core.fiberRefUpdate(this.fiberRef)(TestAnnotationMap.annotate(key, value)).traced(trace)
+    return pipe(
+      this.ref,
+      Ref.update(TestAnnotationMap.annotate(key, value))
+    ).traced(trace)
   }
   supervisedFibers(): Effect.Effect<never, never, SortedSet.SortedSet<Fiber.RuntimeFiber<unknown, unknown>>> {
     const trace = getCallTrace()
     return effect.descriptorWith((descriptor) =>
       pipe(
-        core.fiberRefGet(this.fiberRef),
-        core.map(TestAnnotationMap.get(TestAnnotation.fibers)),
+        this.get(TestAnnotation.fibers),
         core.flatMap((either) => {
           switch (either._tag) {
             case "Left": {
@@ -114,56 +116,7 @@ export const isAnnotations = (u: unknown): u is Annotations => {
   return typeof u === "object" && u != null && AnnotationsTypeId in u
 }
 
-/**
- * Accesses an `Annotations` instance in the environment and retrieves the
- * annotation of the specified type, or its default value if there is none.
- *
- * @macro traced
- * @internal
- */
-export const get = <A>(key: TestAnnotation.TestAnnotation<A>): Effect.Effect<Annotations, never, A> => {
-  const trace = getCallTrace()
-  return core.serviceWithEffect(Tag)((annotations) => annotations.get(key)).traced(trace)
-}
-
-/**
- * Accesses an `Annotations` instance in the environment and appends the
- * specified annotation to the annotation map.
- *
- * @macro traced
- * @internal
- */
-export const annotate = <A>(
-  key: TestAnnotation.TestAnnotation<A>,
-  value: A
-): Effect.Effect<Annotations, never, void> => {
-  const trace = getCallTrace()
-  return core.serviceWithEffect(Tag)((annotations) => annotations.annotate(key, value)).traced(trace)
-}
-
-/**
- * Returns the set of all fibers in this test.
- *
- * @macro traced
- * @internal
- */
-export const supervisedFibers = (): Effect.Effect<
-  Annotations,
-  never,
-  SortedSet.SortedSet<Fiber.RuntimeFiber<unknown, unknown>>
-> => {
-  const trace = getCallTrace()
-  return core.serviceWithEffect(Tag)((annotations) => annotations.supervisedFibers()).traced(trace)
-}
-
-/**
- * Constructs a new `Annotations` service.
- *
- * @internal
- */
-export const live: Layer.Layer<never, never, Annotations> = layer.scoped(Tag)(
-  pipe(
-    fiberRuntime.fiberRefMake(TestAnnotationMap.empty),
-    core.map((fiberRef): Annotations => new AnnotationsImpl(fiberRef))
-  )
-)
+/** @internal */
+export const make = (
+  ref: Ref.Ref<TestAnnotationMap.TestAnnotationMap>
+): Annotations => new AnnotationsImpl(ref)

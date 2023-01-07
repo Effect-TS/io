@@ -1,10 +1,15 @@
 import { getCallTrace } from "@effect/io/Debug"
+import type * as DefaultServices from "@effect/io/DefaultServices"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal/core"
 import * as defaultServices from "@effect/io/internal/defaultServices"
-import * as effect from "@effect/io/internal/effect"
-import * as layer from "@effect/io/internal/layer"
 import * as Context from "@fp-ts/data/Context"
+
+/** @internal */
+export const LiveTypeId = Symbol.for("@effect/test/Live")
+
+/** @internal */
+export type LiveTypeId = typeof LiveTypeId
 
 /**
  * The `Live` trait provides access to the "live" default Effect services from
@@ -15,6 +20,7 @@ import * as Context from "@fp-ts/data/Context"
  * @internal
  */
 export interface Live {
+  readonly [LiveTypeId]: LiveTypeId
   /**
    * @macro traced
    */
@@ -24,45 +30,17 @@ export interface Live {
 /** @internal */
 export const Tag: Context.Tag<Live> = Context.Tag<Live>()
 
-/**
- * Constructs a new `Live` service that implements the `Live` interface. This
- * typically should not be necessary as the `TestEnvironment` already includes
- * the `Live` service but could be useful if you are mixing in interfaces to
- * create your own environment type.
- *
- * @internal
- */
-export const defaultLive = layer.fromEffect(Tag)(
-  effect.environmentWith<never, Live>((env) => ({
-    provide: core.fiberRefLocallyWith(defaultServices.currentServices)(Context.merge(env))
-  }))
-)
-
-/**
- * Provides a workflow with the "live" default Effect services.
- *
- * @macro traced
- * @internal
- */
-export const live = <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R | Live, E, A> => {
-  const trace = getCallTrace()
-  return core.serviceWithEffect(Tag)((live) => live.provide(effect)).traced(trace)
-}
-
-/**
- * Runs a transformation function with the live default Effect services while
- * ensuring that the workflow itself is run with the test services.
- *
- * @macro traced
- * @internal
- */
-export const withLive = <R, E, A, R2, E2, A2>(f: (effect: Effect.Effect<R, E, A>) => Effect.Effect<R2, E2, A2>) => {
-  const trace = getCallTrace()
-  return (effect: Effect.Effect<R, E, A>): Effect.Effect<R | R2 | Live, E | E2, A2> => {
-    return core.fiberRefGetWith(defaultServices.currentServices)((services) =>
-      live(
-        f(core.fiberRefLocally(defaultServices.currentServices)(services)(effect))
-      )
-    ).traced(trace)
+/** @internal */
+class LiveImpl implements Live {
+  readonly [LiveTypeId]: LiveTypeId = LiveTypeId
+  constructor(readonly services: Context.Context<DefaultServices.DefaultServices>) {}
+  provide<R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> {
+    const trace = getCallTrace()
+    return core.fiberRefLocallyWith(defaultServices.currentServices)(
+      Context.merge(this.services)
+    )(effect).traced(trace)
   }
 }
+
+/** @internal */
+export const make = (services: Context.Context<DefaultServices.DefaultServices>): Live => new LiveImpl(services)

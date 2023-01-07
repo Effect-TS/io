@@ -1,33 +1,31 @@
 import type * as DefaultServices from "@effect/io/DefaultServices"
 import * as defaultServices from "@effect/io/internal/defaultServices"
 import * as layer from "@effect/io/internal/layer"
-import * as Annotations from "@effect/io/internal/testing/annotations"
-import * as Live from "@effect/io/internal/testing/live"
 import * as TestClock from "@effect/io/internal/testing/testClock"
-import * as TestConfig from "@effect/io/internal/testing/testConfig"
+import * as TestServices from "@effect/io/internal/testing/testServices"
 import type * as Layer from "@effect/io/Layer"
 import { pipe } from "@fp-ts/data/Function"
 
 /** @internal */
-export type TestEnvironment =
-  | Annotations.Annotations
-  | Live.Live
-  | TestConfig.TestConfig
-
-/** @internal */
-export const live: Layer.Layer<DefaultServices.DefaultServices, never, TestEnvironment> = pipe(
-  Annotations.live,
-  layer.merge(Live.defaultLive),
+export const live: Layer.Layer<DefaultServices.DefaultServices, never, TestServices.TestServices> = pipe(
+  TestServices.annotationsLayer(),
+  layer.merge(TestServices.liveLayer()),
+  layer.merge(TestServices.sizedLayer(100)),
   layer.merge(pipe(
-    Live.defaultLive,
-    layer.merge(Annotations.live),
+    TestServices.liveLayer(),
+    layer.merge(TestServices.annotationsLayer()),
     layer.provideToAndMerge(TestClock.defaultTestClock)
   )),
-  layer.merge(TestConfig.defaultTestConfig)
+  layer.merge(TestServices.testConfigLayer({ repeats: 100, retries: 100, samples: 200, shrinks: 1000 }))
 )
 
 /** @internal */
-export const TestEnvironment: Layer.Layer<never, never, TestEnvironment> = pipe(
-  layer.syncEnvironment(() => defaultServices.liveServices),
-  layer.provideToAndMerge(live)
-)
+export const liveEnvironment = (): Layer.Layer<never, never, DefaultServices.DefaultServices> =>
+  layer.syncEnvironment(() => defaultServices.liveServices)
+
+/** @internal */
+export const testEnvironment = (): Layer.Layer<never, never, TestServices.TestServices> =>
+  pipe(
+    liveEnvironment(),
+    layer.provideToAndMerge(live)
+  )
