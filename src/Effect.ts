@@ -13,6 +13,7 @@ import type * as Fiber from "@effect/io/Fiber"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import type * as RuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
+import type * as FiberRef from "@effect/io/FiberRef"
 import type * as FiberRefs from "@effect/io/FiberRefs"
 import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
 import * as core from "@effect/io/internal/core"
@@ -26,7 +27,9 @@ import * as _schedule from "@effect/io/internal/schedule"
 import type { EnforceNonEmptyRecord, MergeRecord, NonEmptyArrayEffect, TupleEffect } from "@effect/io/internal/types"
 import type * as Layer from "@effect/io/Layer"
 import type * as Metric from "@effect/io/Metric"
+import type * as MetricLabel from "@effect/io/Metric/Label"
 import type * as Random from "@effect/io/Random"
+import type * as Ref from "@effect/io/Ref"
 import type * as Runtime from "@effect/io/Runtime"
 import type * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"
@@ -3733,6 +3736,79 @@ export const takeWhile: <R, E, A>(
 ) => (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<A>> = effect.takeWhile
 
 /**
+ * Tags each metric in this effect with the specific tag.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const tagged: (key: string, value: string) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A> = effect.tagged
+
+/**
+ * Tags each metric in this effect with the specific tag.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const taggedWithLabels: <Labels extends readonly [MetricLabel.MetricLabel, ...Array<MetricLabel.MetricLabel>]>(
+  ...labels: Labels
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A> = effect.taggedWithLabels
+
+/**
+ * Tags each metric in this effect with the specific tag.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const taggedWithLabelSet: (
+  labels: HashSet.HashSet<MetricLabel.MetricLabel>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A> = effect.taggedWithLabelSet
+
+/**
+ * Tags each metric in a scope with a the specific tag.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const taggedScoped: (key: string, value: string) => Effect<Scope.Scope, never, void> = fiberRuntime.taggedScoped
+
+/**
+ * Tags each metric in a scope with a the specific tag.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const taggedScopedWithLabels: <
+  Labels extends readonly [MetricLabel.MetricLabel, ...Array<MetricLabel.MetricLabel>]
+>(
+  ...labels: Labels
+) => Effect<Scope.Scope, never, void> = fiberRuntime.taggedScopedWithLabels
+
+/**
+ * Tags each metric in a scope with a the specific tag.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category constructors
+ */
+export const taggedScopedWithLabelSet: (
+  labels: HashSet.HashSet<MetricLabel.MetricLabel>
+) => Effect<Scope.Scope, never, void> = fiberRuntime.taggedScopedWithLabelSet
+
+/**
+ * Retrieves the metric tags associated with the current scope.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category getters
+ */
+export const tags: () => Effect<never, never, HashSet.HashSet<MetricLabel.MetricLabel>> = core.tags
+
+/**
  * @macro traced
  * @since 1.0.0
  * @category sequencing
@@ -4476,6 +4552,31 @@ export const whenCaseEffect: <A, R2, E2, A2>(
 export const whenEffect: <R, E>(
   predicate: Effect<R, E, boolean>
 ) => <R2, E2, A>(effect: Effect<R2, E2, A>) => Effect<R | R2, E | E2, Option.Option<A>> = core.whenEffect
+
+/**
+ * Executes this workflow when value of the specified `FiberRef` satisfies the
+ * predicate.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const whenFiberRef: <S>(
+  fiberRef: FiberRef.FiberRef<S>,
+  predicate: Predicate<S>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, readonly [S, Option.Option<A>]> = effect.whenFiberRef
+
+/**
+ * Executes this workflow when the value of the `Ref` satisfies the predicate.
+ *
+ * @macro traced
+ * @since 1.0.0
+ * @category mutations
+ */
+export const whenRef: <S>(
+  ref: Ref.Ref<S>,
+  predicate: Predicate<S>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, readonly [S, Option.Option<A>]> = effect.whenRef
 
 /**
  * Executes the specified workflow with the specified implementation of the

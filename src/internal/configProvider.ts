@@ -259,7 +259,14 @@ const fromFlatLoop = <A>(
       return core.suspendSucceed(() =>
         pipe(
           fromFlatLoop(flat, prefix, op.original, isEmptyOk),
-          core.flatMap(core.forEach((a) => core.fromEither(op.mapOrFail(a))))
+          core.flatMap(
+            core.forEach((a) =>
+              pipe(
+                core.fromEither(op.mapOrFail(a)),
+                core.mapError(configError.prefixed(prefix))
+              )
+            )
+          )
         )
       ).traced(trace) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
     }
@@ -309,6 +316,9 @@ const fromFlatLoop = <A>(
                 fromFlatLoop(flat, pipe(prefix, Chunk.concat(Chunk.of(key))), op.valueConfig, isEmptyOk)
               ),
               core.map((values) => {
+                if (values.length === 0) {
+                  return Chunk.of(HashMap.empty())
+                }
                 const matrix = Chunk.toReadonlyArray(values).map(Chunk.toReadonlyArray) as Array<Array<unknown>>
                 return pipe(
                   Chunk.unsafeFromArray(transpose(matrix).map(Chunk.unsafeFromArray)),

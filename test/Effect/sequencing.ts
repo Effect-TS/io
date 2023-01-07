@@ -59,15 +59,29 @@ describe.concurrent("Effect", () => {
         assert.isTrue(effect)
       }))
   })
-  it.effect("tapDefect - effectually peeks at the cause of the failure of this effect", () =>
+  it.effect("tapDefect - effectually peeks at defects", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(false))
-      const result = yield* $(
-        pipe(Effect.dieMessage("die"), Effect.tapDefect(() => pipe(ref, Ref.set(true))), Effect.exit)
-      )
+      const result = yield* $(pipe(
+        Effect.dieMessage("die"),
+        Effect.tapDefect(() => pipe(ref, Ref.set(true))),
+        Effect.exit
+      ))
       const effect = yield* $(Ref.get(ref))
       assert.isTrue(Exit.isFailure(result) && Option.isSome(Cause.dieOption(result.cause)))
       assert.isTrue(effect)
+    }))
+  it.effect("tapDefect - leaves failures", () =>
+    Effect.gen(function*($) {
+      const ref = yield* $(Ref.make(false))
+      const result = yield* $(pipe(
+        Effect.fail("fail"),
+        Effect.tapDefect(() => pipe(ref, Ref.set(true))),
+        Effect.exit
+      ))
+      const effect = yield* $(Ref.get(ref))
+      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail("fail"))
+      assert.isFalse(effect)
     }))
   it.effect("tapEither - effectually peeks at the failure of this effect", () =>
     Effect.gen(function*($) {
