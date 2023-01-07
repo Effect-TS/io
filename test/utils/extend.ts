@@ -1,5 +1,6 @@
 import * as Effect from "@effect/io/Effect"
 import * as TestEnvironment from "@effect/io/internal/testing/testEnvironment"
+import type * as TestServices from "@effect/io/internal/testing/testServices"
 import * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"
 import * as Duration from "@fp-ts/data/Duration"
@@ -14,7 +15,7 @@ export const it: API = V.it
 export const effect = (() => {
   const f = <E, A>(
     name: string,
-    self: () => Effect.Effect<TestEnvironment.TestEnvironment, E, A>,
+    self: () => Effect.Effect<TestServices.TestServices, E, A>,
     timeout = 5_000
   ) => {
     return it(
@@ -22,7 +23,7 @@ export const effect = (() => {
       () =>
         pipe(
           Effect.suspendSucceed(self),
-          Effect.provideLayer(TestEnvironment.TestEnvironment),
+          Effect.provideLayer(TestEnvironment.testEnvironment()),
           Effect.unsafeRunPromise
         ),
       timeout
@@ -31,7 +32,7 @@ export const effect = (() => {
   return Object.assign(f, {
     skip: <E, A>(
       name: string,
-      self: () => Effect.Effect<TestEnvironment.TestEnvironment, E, A>,
+      self: () => Effect.Effect<TestServices.TestServices, E, A>,
       timeout = 5_000
     ) => {
       return it.skip(
@@ -39,7 +40,7 @@ export const effect = (() => {
         () =>
           pipe(
             Effect.suspendSucceed(self),
-            Effect.provideLayer(TestEnvironment.TestEnvironment),
+            Effect.provideLayer(TestEnvironment.testEnvironment()),
             Effect.unsafeRunPromise
           ),
         timeout
@@ -47,7 +48,7 @@ export const effect = (() => {
     },
     only: <E, A>(
       name: string,
-      self: () => Effect.Effect<TestEnvironment.TestEnvironment, E, A>,
+      self: () => Effect.Effect<TestServices.TestServices, E, A>,
       timeout = 5_000
     ) => {
       return it.only(
@@ -55,7 +56,7 @@ export const effect = (() => {
         () =>
           pipe(
             Effect.suspendSucceed(self),
-            Effect.provideLayer(TestEnvironment.TestEnvironment),
+            Effect.provideLayer(TestEnvironment.testEnvironment()),
             Effect.unsafeRunPromise
           ),
         timeout
@@ -99,7 +100,7 @@ export const flakyTest = <R, E, A>(
 
 export const scoped = <E, A>(
   name: string,
-  self: () => Effect.Effect<Scope.Scope | TestEnvironment.TestEnvironment, E, A>,
+  self: () => Effect.Effect<Scope.Scope | TestServices.TestServices, E, A>,
   timeout = 5_000
 ) => {
   return it(
@@ -108,7 +109,7 @@ export const scoped = <E, A>(
       pipe(
         Effect.suspendSucceed(self),
         Effect.scoped,
-        Effect.provideLayer(TestEnvironment.TestEnvironment),
+        Effect.provideLayer(TestEnvironment.testEnvironment()),
         Effect.unsafeRunPromise
       ),
     timeout
