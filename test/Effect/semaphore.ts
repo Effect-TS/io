@@ -7,12 +7,12 @@ import { assert, describe } from "vitest"
 describe.concurrent("Effect", () => {
   it.effect("semaphore works", () =>
     Effect.gen(function*($) {
-      const withPermits = yield* $(Effect.makeSemaphore(4))
+      const sem = yield* $(Effect.makeSemaphore(4))
       const messages: Array<string> = []
       yield* $(
         Effect.fork(Effect.collectAllPar(
           [0, 1, 2, 3].map((n) =>
-            withPermits(2)(Effect.delay(D.seconds(2))(Effect.sync(() => messages.push(`process: ${n}`))))
+            sem.withPermits(2)(Effect.delay(D.seconds(2))(Effect.sync(() => messages.push(`process: ${n}`))))
           )
         ))
       )
@@ -23,7 +23,7 @@ describe.concurrent("Effect", () => {
       yield* $(
         Effect.fork(Effect.collectAllPar(
           [0, 1, 2, 3].map((n) =>
-            withPermits(2)(Effect.delay(D.seconds(2))(Effect.sync(() => messages.push(`process: ${n}`))))
+            sem.withPermits(2)(Effect.delay(D.seconds(2))(Effect.sync(() => messages.push(`process: ${n}`))))
           )
         ))
       )

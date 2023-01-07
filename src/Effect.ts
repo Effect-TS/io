@@ -4223,8 +4223,18 @@ export const unright: <R, B, E, A>(self: Effect<R, Either.Either<B, E>, A>) => E
  * @category locking
  * @since 1.0.0
  */
+export interface Permit {
+  readonly index: number
+}
+
+/**
+ * @category locking
+ * @since 1.0.0
+ */
 export interface Semaphore {
-  (permits: number): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  readonly withPermits: (permits: number) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  readonly take: (n: number) => Effect<never, never, Array<Permit>>
+  readonly release: (permit: Permit) => Effect<never, never, void>
 }
 
 /**

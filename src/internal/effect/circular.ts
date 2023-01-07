@@ -21,7 +21,7 @@ import type * as Synchronized from "@effect/io/Ref/Synchronized"
 import type * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
-import type * as Chunk from "@fp-ts/data/Chunk"
+import * as Chunk from "@fp-ts/data/Chunk"
 import type * as Duration from "@fp-ts/data/Duration"
 import * as Either from "@fp-ts/data/Either"
 import * as Equal from "@fp-ts/data/Equal"
@@ -31,40 +31,84 @@ import * as MutableRef from "@fp-ts/data/MutableRef"
 import * as Option from "@fp-ts/data/Option"
 
 /** @internal */
-export const unsafeMakeSemaphore = (leases: number) => {
-  const observers: Set<() => void> = new Set()
-  let running = 0
-  const runNext = () => {
-    const next = observers.values().next()
-    if (!next.done) {
-      observers.delete(next.value)
-      next.value()
-    }
-  }
-  return (permits: number) =>
-    <R, E, A>(self: Effect.Effect<R, E, A>) =>
-      core.asyncInterruptEither<R, E, A>((cb) => {
-        const finalized = pipe(
-          self,
-          ensuring(core.sync(() => {
-            running = running - permits
-            runNext()
-          }))
-        )
-        if (running + permits <= leases) {
-          running = running + permits
-          return Either.right(finalized)
-        } else {
-          const observer = () => {
-            running = running + permits
-            cb(finalized)
+type Permit = { index: number }
+
+/** @internal */
+class Semaphore {
+  public waiters = new Array<() => void>()
+
+  constructor(public permits: Array<Option.Option<FiberId.FiberId>>) {}
+
+  private takeId(id: FiberId.FiberId, n: number) {
+    return core.asyncInterruptEither<never, never, Array<Permit>>((resume) => {
+      const available = this.permits.map((_, i) => [_, i] as const).filter(([_]) => Option.isNone(_))
+      if (available.length < n) {
+        const observer = () => {
+          const available = this.permits.map((_, i) => [_, i] as const).filter(([_]) => Option.isNone(_))
+          if (available.length >= n) {
+            const observerIndex = this.waiters.findIndex((cb) => cb === observer)
+            if (observerIndex !== -1) {
+              this.waiters.splice(observerIndex, 1)
+            }
+            const taken: Array<Permit> = []
+            for (let i = 0; i < n; i++) {
+              this.permits[available[i][1]] = Option.some(id)
+              taken.push({ index: available[i][1] })
+            }
+            resume(core.succeed(taken))
           }
-          observers.add(observer)
-          return Either.left(core.sync(() => {
-            observers.delete(observer)
-          }))
         }
+        this.waiters.push(observer)
+        return Either.left(core.sync(() => {
+          const observerIndex = this.waiters.findIndex((cb) => cb === observer)
+          if (observerIndex !== -1) {
+            this.waiters.splice(observerIndex, 1)
+          }
+        }))
+      }
+      const taken: Array<Permit> = []
+      for (let i = 0; i < n; i++) {
+        this.permits[available[i][1]] = Option.some(id)
+        taken.push({ index: available[i][1] })
+      }
+      return Either.right(core.succeed(taken))
+    })
+  }
+
+  readonly take = (n: number) =>
+    core.withFiberRuntime<never, never, Array<Permit>>((fiber) => this.takeId(fiber.id(), n))
+
+  readonly release = (permit: Permit) =>
+    core.withFiberRuntime<never, never, void>((fiber) => {
+      this.permits[permit.index] = Option.none
+      fiber.getFiberRef(core.currentScheduler).scheduleTask(() => {
+        this.waiters.forEach((wake) => wake())
       })
+      return core.unit()
+    })
+
+  readonly withPermits = (n: number) =>
+    <R, E, A>(self: Effect.Effect<R, E, A>) =>
+      core.uninterruptibleMask((restore) =>
+        pipe(
+          restore(this.take(n)),
+          core.flatMap(
+            (permits) =>
+              pipe(
+                restore(self),
+                ensuring(pipe(
+                  permits,
+                  core.forEach(this.release)
+                ))
+              )
+          )
+        )
+      )
+}
+
+/** @internal */
+export const unsafeMakeSemaphore = (leases: number) => {
+  return new Semaphore(Array.from(Chunk.range(1, leases)).map(() => Option.none))
 }
 
 /** @internal */
@@ -782,8 +826,8 @@ export const makeSynchronized = <A>(value: A): Effect.Effect<never, never, Synch
 /** @internal */
 export const unsafeMakeSynchronized = <A>(value: A): Synchronized.Synchronized<A> => {
   const ref = internalRef.unsafeMake(value)
-  const withPermits = unsafeMakeSemaphore(1)
-  return new SynchronizedImpl(ref, withPermits(1))
+  const sem = unsafeMakeSemaphore(1)
+  return new SynchronizedImpl(ref, sem.withPermits(1))
 }
 
 /** @internal */
