@@ -667,7 +667,12 @@ export const provideTo = <RIn2, E2, ROut2>(that: Layer.Layer<RIn2, E2, ROut2>) =
     return suspend(() => {
       const provideTo = Object.create(proto)
       provideTo._tag = OpCodes.OP_PROVIDE_TO
-      provideTo.first = pipe(environment<Exclude<RIn2, ROut>>(), merge(self))
+      provideTo.first = Object.create(proto, {
+        _tag: { value: OpCodes.OP_ZIP_WITH, enumerable: true },
+        first: { value: environment<Exclude<RIn2, ROut>>(), enumerable: true },
+        second: { value: self },
+        zipK: { value: (a: Context.Context<ROut>, b: Context.Context<ROut2>) => pipe(a, Context.merge(b)) }
+      })
       provideTo.second = that
       return provideTo
     })

@@ -249,6 +249,12 @@ describe.concurrent("ConfigProvider", () => {
       })
     }))
 
+  it.effect("empty tables", () =>
+    Effect.gen(function*($) {
+      const result = yield* $(provider(new Map()).load(snp500Config))
+      assert.deepStrictEqual(result, { stockDays: HashMap.empty() })
+    }))
+
   it.effect("collection of atoms", () =>
     Effect.gen(function*($) {
       const map = new Map([

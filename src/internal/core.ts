@@ -20,6 +20,7 @@ import * as _runtimeFlags from "@effect/io/internal/runtimeFlags"
 import * as scheduler from "@effect/io/internal/scheduler"
 import type * as LogLevel from "@effect/io/Logger/Level"
 import type * as LogSpan from "@effect/io/Logger/Span"
+import type * as MetricLabel from "@effect/io/Metric/Label"
 import type * as Scheduler from "@effect/io/Scheduler"
 import type * as Scope from "@effect/io/Scope"
 import * as Chunk from "@fp-ts/data/Chunk"
@@ -30,7 +31,7 @@ import * as HashSetPatch from "@fp-ts/data/Differ/HashSetPatch"
 import * as Either from "@fp-ts/data/Either"
 import * as Equal from "@fp-ts/data/Equal"
 import { identity, pipe } from "@fp-ts/data/Function"
-import type * as HashSet from "@fp-ts/data/HashSet"
+import * as HashSet from "@fp-ts/data/HashSet"
 import * as MutableRef from "@fp-ts/data/MutableRef"
 import * as Option from "@fp-ts/data/Option"
 import type { Predicate } from "@fp-ts/data/Predicate"
@@ -101,6 +102,7 @@ export class RevertFlags {
   }
 }
 
+/** @internal */
 const effectVariance = {
   _R: (_: never) => _,
   _E: (_: never) => _,
@@ -219,7 +221,10 @@ export const isEffect = (u: unknown): u is Effect.Effect<unknown, unknown, unkno
   return typeof u === "object" && u != null && EffectTypeId in u
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const acquireUseRelease = <R, E, A, R2, E2, A2, R3, X>(
   acquire: Effect.Effect<R, E, A>,
   use: (a: A) => Effect.Effect<R2, E2, A2>,
@@ -257,7 +262,10 @@ export const acquireUseRelease = <R, E, A, R2, E2, A2, R3, X>(
   ).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const as = <B>(value: B) => {
   const trace = getCallTrace()
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, B> => {
@@ -265,13 +273,19 @@ export const as = <B>(value: B) => {
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const asUnit = <R, E, A>(self: Effect.Effect<R, E, A>) => {
   const trace = getCallTrace()
   return pipe(self, as<void>(void 0)).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const async = <R, E, A>(
   register: (callback: (_: Effect.Effect<R, E, A>) => void) => void,
   blockingOn: FiberId.FiberId = FiberId.none
@@ -285,7 +299,10 @@ export const async = <R, E, A>(
   return effect
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const asyncInterruptEither = <R, E, A>(
   register: (
     callback: (effect: Effect.Effect<R, E, A>) => void
@@ -312,7 +329,10 @@ export const asyncInterruptEither = <R, E, A>(
   }).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const asyncInterrupt = <R, E, A>(
   register: (
     callback: (effect: Effect.Effect<R, E, A>) => void
@@ -334,7 +354,10 @@ export const asyncInterrupt = <R, E, A>(
   }).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const catchAllCause = <E, R2, E2, A2>(
   f: (cause: Cause.Cause<E>) => Effect.Effect<R2, E2, A2>
 ) => {
@@ -349,7 +372,10 @@ export const catchAllCause = <E, R2, E2, A2>(
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const catchAll = <E, R2, E2, A2>(f: (e: E) => Effect.Effect<R2, E2, A2>) => {
   const trace = getCallTrace()
   return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R2 | R, E2, A2 | A> => {
@@ -357,7 +383,10 @@ export const catchAll = <E, R2, E2, A2>(f: (e: E) => Effect.Effect<R2, E2, A2>) 
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const catchSome = <E, R2, E2, A2>(pf: (e: E) => Option.Option<Effect.Effect<R2, E2, A2>>) => {
   const trace = getCallTrace()
   return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, A | A2> => {
@@ -381,7 +410,10 @@ export const catchSome = <E, R2, E2, A2>(pf: (e: E) => Option.Option<Effect.Effe
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const checkInterruptible = <R, E, A>(
   f: (isInterruptible: boolean) => Effect.Effect<R, E, A>
 ): Effect.Effect<R, E, A> => {
@@ -391,25 +423,37 @@ export const checkInterruptible = <R, E, A>(
   ).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const die = (defect: unknown): Effect.Effect<never, never, never> => {
   const trace = getCallTrace()
   return failCause(internalCause.die(defect)).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const dieSync = (evaluate: () => unknown): Effect.Effect<never, never, never> => {
   const trace = getCallTrace()
   return failCauseSync(() => internalCause.die(evaluate())).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const done = <E, A>(exit: Exit.Exit<E, A>): Effect.Effect<never, E, A> => {
   const trace = getCallTrace()
   return suspendSucceed(() => exit).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const either = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Either.Either<E, A>> => {
   const trace = getCallTrace()
   return pipe(
@@ -421,7 +465,10 @@ export const either = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, 
   ).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const environment = <R>(): Effect.Effect<R, never, Context.Context<R>> => {
   const trace = getCallTrace()
   return suspendSucceed(
@@ -429,7 +476,10 @@ export const environment = <R>(): Effect.Effect<R, never, Context.Context<R>> =>
   ).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const environmentWithEffect = <R, R0, E, A>(
   f: (context: Context.Context<R0>) => Effect.Effect<R, E, A>
 ): Effect.Effect<R | R0, E, A> => {
@@ -437,25 +487,37 @@ export const environmentWithEffect = <R, R0, E, A>(
   return pipe(environment<R0>(), flatMap(f)).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const exit = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Exit.Exit<E, A>> => {
   const trace = getCallTrace()
   return pipe(self, matchCause(failCause, succeed)).traced(trace) as Effect.Effect<R, never, Exit.Exit<E, A>>
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const fail = <E>(error: E): Effect.Effect<never, E, never> => {
   const trace = getCallTrace()
   return failCause(internalCause.fail(error)).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const failSync = <E>(evaluate: () => E): Effect.Effect<never, E, never> => {
   const trace = getCallTrace()
   return failCauseSync(() => internalCause.fail(evaluate())).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const failCause = <E>(cause: Cause.Cause<E>): Effect.Effect<never, E, never> => {
   const trace = getCallTrace()
   const effect = Object.create(proto)
@@ -465,13 +527,19 @@ export const failCause = <E>(cause: Cause.Cause<E>): Effect.Effect<never, E, nev
   return effect
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const failCauseSync = <E>(evaluate: () => Cause.Cause<E>): Effect.Effect<never, E, never> => {
   const trace = getCallTrace()
   return pipe(sync(evaluate), flatMap(failCause)).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const fiberId = (): Effect.Effect<never, never, FiberId.FiberId> => {
   const trace = getCallTrace()
   return withFiberRuntime<never, never, FiberId.FiberId>(
@@ -479,7 +547,10 @@ export const fiberId = (): Effect.Effect<never, never, FiberId.FiberId> => {
   ).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const fiberIdWith = <R, E, A>(
   f: (descriptor: FiberId.Runtime) => Effect.Effect<R, E, A>
 ): Effect.Effect<R, E, A> => {
@@ -489,7 +560,10 @@ export const fiberIdWith = <R, E, A>(
   ).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const flatMap = <A, R1, E1, B>(f: (a: A) => Effect.Effect<R1, E1, B>) => {
   const trace = getCallTrace()
   return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1, E | E1, B> => {
@@ -502,19 +576,28 @@ export const flatMap = <A, R1, E1, B>(f: (a: A) => Effect.Effect<R1, E1, B>) => 
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const flatten = <R, E, R1, E1, A>(self: Effect.Effect<R, E, Effect.Effect<R1, E1, A>>) => {
   const trace = getCallTrace()
   return pipe(self, flatMap(identity)).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const flip = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, A, E> => {
   const trace = getCallTrace()
   return pipe(self, matchEffect(succeed, fail)).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const matchCause = <E, A2, A, A3>(
   onFailure: (cause: Cause.Cause<E>) => A2,
   onSuccess: (a: A) => A3
@@ -530,7 +613,10 @@ export const matchCause = <E, A2, A, A3>(
     ).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const matchCauseEffect = <E, A, R2, E2, A2, R3, E3, A3>(
   onFailure: (cause: Cause.Cause<E>) => Effect.Effect<R2, E2, A2>,
   onSuccess: (a: A) => Effect.Effect<R3, E3, A3>
@@ -551,7 +637,10 @@ export const matchCauseEffect = <E, A, R2, E2, A2, R3, E3, A3>(
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const matchEffect = <E, A, R2, E2, A2, R3, E3, A3>(
   onFailure: (e: E) => Effect.Effect<R2, E2, A2>,
   onSuccess: (a: A) => Effect.Effect<R3, E3, A3>
@@ -578,7 +667,10 @@ export const matchEffect = <E, A, R2, E2, A2, R3, E3, A3>(
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const forEach = <A, R, E, B>(
   f: (a: A) => Effect.Effect<R, E, B>
 ) => {
@@ -601,7 +693,10 @@ export const forEach = <A, R, E, B>(
     }).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const forEachDiscard = <A, R, E, B>(
   f: (a: A) => Effect.Effect<R, E, B>
 ) => {
@@ -621,7 +716,10 @@ export const forEachDiscard = <A, R, E, B>(
     }).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const fromOption = <A>(option: Option.Option<A>): Effect.Effect<never, Option.Option<never>, A> => {
   const trace = getCallTrace()
   switch (option._tag) {
@@ -634,7 +732,10 @@ export const fromOption = <A>(option: Option.Option<A>): Effect.Effect<never, Op
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const fromEither = <E, A>(either: Either.Either<E, A>): Effect.Effect<never, E, A> => {
   const trace = getCallTrace()
   switch (either._tag) {
@@ -647,7 +748,10 @@ export const fromEither = <E, A>(either: Either.Either<E, A>): Effect.Effect<nev
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const ifEffect = <R1, R2, E1, E2, A, A1>(
   onTrue: Effect.Effect<R1, E1, A>,
   onFalse: Effect.Effect<R2, E2, A1>
@@ -661,19 +765,28 @@ export const ifEffect = <R1, R2, E1, E2, A, A1>(
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const interrupt = (): Effect.Effect<never, never, never> => {
   const trace = getCallTrace()
   return pipe(fiberId(), flatMap((fiberId) => interruptWith(fiberId))).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const interruptWith = (fiberId: FiberId.FiberId): Effect.Effect<never, never, never> => {
   const trace = getCallTrace()
   return failCause(internalCause.interrupt(fiberId)).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const interruptible = <R, E, A>(
   self: Effect.Effect<R, E, A>
 ): Effect.Effect<R, E, A> => {
@@ -686,7 +799,10 @@ export const interruptible = <R, E, A>(
   return effect
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const interruptibleMask = <R, E, A>(
   f: (
     restore: <RX, EX, AX>(
@@ -706,7 +822,10 @@ export const interruptibleMask = <R, E, A>(
   return effect
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const intoDeferred = <E, A>(deferred: Deferred.Deferred<E, A>) => {
   const trace = getCallTrace()
   return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, boolean> =>
@@ -719,7 +838,10 @@ export const intoDeferred = <E, A>(deferred: Deferred.Deferred<E, A>) => {
     }).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const map = <A, B>(f: (a: A) => B) => {
   const trace = getCallTrace()
   return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, B> => {
@@ -727,7 +849,10 @@ export const map = <A, B>(f: (a: A) => B) => {
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const mapError = <E, E2>(f: (e: E) => E2) => {
   const trace = getCallTrace()
   return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E2, A> => {
@@ -751,7 +876,10 @@ export const mapError = <E, E2>(f: (e: E) => E2) => {
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const never = (): Effect.Effect<never, never, never> => {
   const trace = getCallTrace()
   return asyncInterruptEither<never, never, never>(() => {
@@ -762,7 +890,10 @@ export const never = (): Effect.Effect<never, never, never> => {
   }).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const onError = <E, R2, X>(cleanup: (cause: Cause.Cause<E>) => Effect.Effect<R2, never, X>) => {
   const trace = getCallTrace()
   return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E, A> => {
@@ -778,7 +909,10 @@ export const onError = <E, R2, X>(cleanup: (cause: Cause.Cause<E>) => Effect.Eff
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const onExit = <E, A, R2, X>(cleanup: (exit: Exit.Exit<E, A>) => Effect.Effect<R2, never, X>) => {
   const trace = getCallTrace()
   return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E, A> => {
@@ -806,7 +940,10 @@ export const onExit = <E, A, R2, X>(cleanup: (exit: Exit.Exit<E, A>) => Effect.E
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const onInterrupt = <R2, X>(
   cleanup: (interruptors: HashSet.HashSet<FiberId.FiberId>) => Effect.Effect<R2, never, X>
 ) => {
@@ -827,7 +964,10 @@ export const onInterrupt = <R2, X>(
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const orElse = <R2, E2, A2>(that: () => Effect.Effect<R2, E2, A2>) => {
   const trace = getCallTrace()
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E2, A | A2> => {
@@ -835,13 +975,19 @@ export const orElse = <R2, E2, A2>(that: () => Effect.Effect<R2, E2, A2>) => {
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const orDie = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, A> => {
   const trace = getCallTrace()
   return pipe(self, orDieWith(identity)).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const orDieWith = <E>(f: (e: E) => unknown) => {
   const trace = getCallTrace()
   return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, A> => {
@@ -849,7 +995,185 @@ export const orDieWith = <E>(f: (e: E) => unknown) => {
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
+export const partitionMap = <A, A1, A2>(
+  elements: Iterable<A>,
+  f: (a: A) => Either.Either<A1, A2>
+): readonly [Chunk.Chunk<A1>, Chunk.Chunk<A2>] => {
+  return Array.from(elements).reduceRight(
+    ([lefts, rights], current) => {
+      const either = f(current)
+      switch (either._tag) {
+        case "Left": {
+          return [pipe(lefts, Chunk.prepend(either.left)), rights] as const
+        }
+        case "Right": {
+          return [lefts, pipe(rights, Chunk.prepend(either.right))] as const
+        }
+      }
+    },
+    [Chunk.empty<A1>(), Chunk.empty<A2>()] as const
+  )
+}
+
+/**
+ * @macro traced
+ * @internal
+ */
+export const provideEnvironment = <R>(environment: Context.Context<R>) => {
+  const trace = getCallTrace()
+  return <E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<never, E, A> => {
+    return pipe(
+      self as Effect.Effect<never, E, A>,
+      fiberRefLocally(currentEnvironment)(environment as Context.Context<never>)
+    ).traced(trace)
+  }
+}
+
+/**
+ * @macro traced
+ * @internal
+ */
+export const provideSomeEnvironment = <R0, R>(f: (context: Context.Context<R0>) => Context.Context<R>) => {
+  const trace = getCallTrace()
+  return <E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R0, E, A> =>
+    environmentWithEffect((context: Context.Context<R0>) => pipe(self, provideEnvironment(f(context)))).traced(trace)
+}
+
+/**
+ * @macro traced
+ * @internal
+ */
+export const runtimeFlags = (): Effect.Effect<never, never, RuntimeFlags.RuntimeFlags> => {
+  const trace = getCallTrace()
+  return withFiberRuntime<never, never, RuntimeFlags.RuntimeFlags>((_, status) => succeed(status.runtimeFlags)).traced(
+    trace
+  )
+}
+
+/**
+ * @macro traced
+ * @internal
+ */
+export const service = <T>(tag: Context.Tag<T>): Effect.Effect<T, never, T> => {
+  const trace = getCallTrace()
+  return serviceWithEffect(tag)(succeed).traced(trace)
+}
+
+/**
+ * @macro traced
+ * @internal
+ */
+export const serviceWith = <T>(tag: Context.Tag<T>) => {
+  const trace = getCallTrace()
+  return <A>(f: (a: T) => A): Effect.Effect<T, never, A> => {
+    return serviceWithEffect(tag)((a) => sync(() => f(a))).traced(trace)
+  }
+}
+
+/**
+ * @macro traced
+ * @internal
+ */
+export const serviceWithEffect = <T>(tag: Context.Tag<T>) => {
+  return <R, E, A>(f: (a: T) => Effect.Effect<R, E, A>): Effect.Effect<R | T, E, A> => {
+    const trace = getCallTrace()
+    return suspendSucceed(() =>
+      pipe(
+        fiberRefGet(currentEnvironment),
+        flatMap((env) => f(pipe(env, Context.unsafeGet(tag))))
+      )
+    ).traced(trace)
+  }
+}
+
+/**
+ * @macro traced
+ * @internal
+ */
+export const succeed = <A>(value: A): Effect.Effect<never, never, A> => {
+  const trace = getCallTrace()
+  const effect = Object.create(proto)
+  effect._tag = OpCodes.OP_SUCCESS
+  effect.value = value
+  effect.trace = trace
+  return effect
+}
+
+/**
+ * @macro traced
+ * @internal
+ */
+export const suspendSucceed = <R, E, A>(
+  effect: () => Effect.Effect<R, E, A>
+): Effect.Effect<R, E, A> => {
+  const trace = getCallTrace()
+  return pipe(sync(effect), flatMap(identity)).traced(trace)
+}
+
+/**
+ * @macro traced
+ * @internal
+ */
+export const sync = <A>(evaluate: () => A): Effect.Effect<never, never, A> => {
+  const trace = getCallTrace()
+  const effect = Object.create(proto)
+  effect._tag = OpCodes.OP_SYNC
+  effect.evaluate = evaluate
+  effect.trace = trace
+  return effect
+}
+
+/**
+ * @macro traced
+ * @internal
+ */
+export const tags = (): Effect.Effect<never, never, HashSet.HashSet<MetricLabel.MetricLabel>> => {
+  const trace = getCallTrace()
+  return fiberRefGet(currentTags).traced(trace)
+}
+
+/**
+ * @macro traced
+ * @internal
+ */
+export const tap = <A, R2, E2, X>(f: (a: A) => Effect.Effect<R2, E2, X>) => {
+  const trace = getCallTrace()
+  return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, A> => {
+    return pipe(self, flatMap((a: A) => pipe(f(a), as(a)))).traced(trace)
+  }
+}
+
+/**
+ * @macro traced
+ * @internal
+ */
+export const traced = (trace: string | undefined) => {
+  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => self.traced(trace)
+}
+
+/**
+ * @macro traced
+ * @internal
+ */
+export const transplant = <R, E, A>(
+  f: (grafter: <R2, E2, A2>(effect: Effect.Effect<R2, E2, A2>) => Effect.Effect<R2, E2, A2>) => Effect.Effect<R, E, A>
+): Effect.Effect<R, E, A> => {
+  const trace = getCallTrace()
+  return withFiberRuntime<R, E, A>((state) => {
+    const scopeOverride = state.getFiberRef(forkScopeOverride)
+    const scope = pipe(scopeOverride, Option.getOrElse(() => state.scope()))
+    return f(fiberRefLocally(forkScopeOverride)(Option.some(scope)))
+  }).traced(trace)
+}
+
+/**
+ * @macro traced
+ * @internal
+ */
 export const tryOrElse = <R2, E2, A2, A, R3, E3, A3>(
   that: () => Effect.Effect<R2, E2, A2>,
   onSuccess: (a: A) => Effect.Effect<R3, E3, A3>
@@ -876,132 +1200,10 @@ export const tryOrElse = <R2, E2, A2, A, R3, E3, A3>(
   }
 }
 
-/** @internal */
-export const partitionMap = <A, A1, A2>(
-  elements: Iterable<A>,
-  f: (a: A) => Either.Either<A1, A2>
-): readonly [Chunk.Chunk<A1>, Chunk.Chunk<A2>] => {
-  return Array.from(elements).reduceRight(
-    ([lefts, rights], current) => {
-      const either = f(current)
-      switch (either._tag) {
-        case "Left": {
-          return [pipe(lefts, Chunk.prepend(either.left)), rights] as const
-        }
-        case "Right": {
-          return [lefts, pipe(rights, Chunk.prepend(either.right))] as const
-        }
-      }
-    },
-    [Chunk.empty<A1>(), Chunk.empty<A2>()] as const
-  )
-}
-
-/** @internal */
-export const provideEnvironment = <R>(environment: Context.Context<R>) => {
-  const trace = getCallTrace()
-  return <E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<never, E, A> => {
-    return pipe(
-      self as Effect.Effect<never, E, A>,
-      fiberRefLocally(currentEnvironment)(environment as Context.Context<never>)
-    ).traced(trace)
-  }
-}
-
-/** @internal */
-export const provideSomeEnvironment = <R0, R>(f: (context: Context.Context<R0>) => Context.Context<R>) => {
-  const trace = getCallTrace()
-  return <E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R0, E, A> =>
-    environmentWithEffect((context: Context.Context<R0>) => pipe(self, provideEnvironment(f(context)))).traced(trace)
-}
-
-/** @internal */
-export const runtimeFlags = (): Effect.Effect<never, never, RuntimeFlags.RuntimeFlags> => {
-  const trace = getCallTrace()
-  return withFiberRuntime<never, never, RuntimeFlags.RuntimeFlags>((_, status) => succeed(status.runtimeFlags)).traced(
-    trace
-  )
-}
-
-/** @internal */
-export const service = <T>(tag: Context.Tag<T>): Effect.Effect<T, never, T> => {
-  const trace = getCallTrace()
-  return serviceWithEffect(tag)(succeed).traced(trace)
-}
-
-/** @internal */
-export const serviceWith = <T>(tag: Context.Tag<T>) => {
-  const trace = getCallTrace()
-  return <A>(f: (a: T) => A): Effect.Effect<T, never, A> => {
-    return serviceWithEffect(tag)((a) => sync(() => f(a))).traced(trace)
-  }
-}
-
-/** @internal */
-export const serviceWithEffect = <T>(tag: Context.Tag<T>) => {
-  return <R, E, A>(f: (a: T) => Effect.Effect<R, E, A>): Effect.Effect<R | T, E, A> => {
-    const trace = getCallTrace()
-    return suspendSucceed(() =>
-      pipe(
-        fiberRefGet(currentEnvironment),
-        flatMap((env) => f(pipe(env, Context.unsafeGet(tag))))
-      )
-    ).traced(trace)
-  }
-}
-
-/** @internal */
-export const succeed = <A>(value: A): Effect.Effect<never, never, A> => {
-  const trace = getCallTrace()
-  const effect = Object.create(proto)
-  effect._tag = OpCodes.OP_SUCCESS
-  effect.value = value
-  effect.trace = trace
-  return effect
-}
-
-/** @internal */
-export const suspendSucceed = <R, E, A>(
-  effect: () => Effect.Effect<R, E, A>
-): Effect.Effect<R, E, A> => {
-  const trace = getCallTrace()
-  return pipe(sync(effect), flatMap(identity)).traced(trace)
-}
-
-/** @internal */
-export const sync = <A>(evaluate: () => A): Effect.Effect<never, never, A> => {
-  const trace = getCallTrace()
-  const effect = Object.create(proto)
-  effect._tag = OpCodes.OP_SYNC
-  effect.evaluate = evaluate
-  effect.trace = trace
-  return effect
-}
-
-/** @internal */
-export const tap = <A, R2, E2, X>(f: (a: A) => Effect.Effect<R2, E2, X>) => {
-  const trace = getCallTrace()
-  return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, A> => {
-    return pipe(self, flatMap((a: A) => pipe(f(a), as(a)))).traced(trace)
-  }
-}
-
-/** @internal */
-export const traced = (trace: string | undefined) => <R, E, A>(self: Effect.Effect<R, E, A>) => self.traced(trace)
-
-/** @internal */
-export const transplant = <R, E, A>(
-  f: (grafter: <R2, E2, A2>(effect: Effect.Effect<R2, E2, A2>) => Effect.Effect<R2, E2, A2>) => Effect.Effect<R, E, A>
-): Effect.Effect<R, E, A> => {
-  const trace = getCallTrace()
-  return withFiberRuntime<R, E, A>((state) => {
-    const scopeOverride = state.getFiberRef(forkScopeOverride)
-    const scope = pipe(scopeOverride, Option.getOrElse(() => state.scope()))
-    return f(fiberRefLocally(forkScopeOverride)(Option.some(scope)))
-  }).traced(trace)
-}
-
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const uninterruptible = <R, E, A>(
   self: Effect.Effect<R, E, A>
 ): Effect.Effect<R, E, A> => {
@@ -1014,7 +1216,10 @@ export const uninterruptible = <R, E, A>(
   return effect
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const uninterruptibleMask = <R, E, A>(
   f: (
     restore: <RX, EX, AX>(
@@ -1035,13 +1240,19 @@ export const uninterruptibleMask = <R, E, A>(
   return effect
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const unit: () => Effect.Effect<never, never, void> = () => {
   const trace = getCallTrace()
   return succeed(undefined).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const updateRuntimeFlags = (
   patch: RuntimeFlagsPatch.RuntimeFlagsPatch
 ): Effect.Effect<never, never, void> => {
@@ -1054,7 +1265,10 @@ export const updateRuntimeFlags = (
   return effect
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const whenEffect = <R, E>(predicate: Effect.Effect<R, E, boolean>) => {
   const trace = getCallTrace()
   return <R2, E2, A>(effect: Effect.Effect<R2, E2, A>): Effect.Effect<R | R2, E | E2, Option.Option<A>> => {
@@ -1070,7 +1284,10 @@ export const whenEffect = <R, E>(predicate: Effect.Effect<R, E, boolean>) => {
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const whileLoop = <R, E, A>(
   check: () => boolean,
   body: () => Effect.Effect<R, E, A>,
@@ -1104,7 +1321,10 @@ export const withFiberRuntime = <R, E, A>(
   return effect
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const withParallelism = (parallelism: number) => {
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
     const trace = getCallTrace()
@@ -1114,7 +1334,10 @@ export const withParallelism = (parallelism: number) => {
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const withParallelismUnbounded = <R, E, A>(self: Effect.Effect<R, E, A>) => {
   const trace = getCallTrace()
   return suspendSucceed(
@@ -1122,7 +1345,10 @@ export const withParallelismUnbounded = <R, E, A>(self: Effect.Effect<R, E, A>) 
   ).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const withRuntimeFlags = (
   update: RuntimeFlagsPatch.RuntimeFlagsPatch
 ) => {
@@ -1137,7 +1363,10 @@ export const withRuntimeFlags = (
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const yieldNow: (priority?: "background" | "normal") => Effect.Effect<never, never, void> = (
   priority = "normal"
 ) => {
@@ -1149,7 +1378,10 @@ export const yieldNow: (priority?: "background" | "normal") => Effect.Effect<nev
   return effect
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const zip = <R2, E2, A2>(that: Effect.Effect<R2, E2, A2>) => {
   const trace = getCallTrace()
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, readonly [A, A2]> => {
@@ -1157,7 +1389,10 @@ export const zip = <R2, E2, A2>(that: Effect.Effect<R2, E2, A2>) => {
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const zipLeft = <R2, E2, A2>(that: Effect.Effect<R2, E2, A2>) => {
   const trace = getCallTrace()
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, A> => {
@@ -1165,7 +1400,10 @@ export const zipLeft = <R2, E2, A2>(that: Effect.Effect<R2, E2, A2>) => {
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const zipRight = <R2, E2, A2>(that: Effect.Effect<R2, E2, A2>) => {
   const trace = getCallTrace()
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, A2> => {
@@ -1173,7 +1411,10 @@ export const zipRight = <R2, E2, A2>(that: Effect.Effect<R2, E2, A2>) => {
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const zipWith = <R2, E2, A2, A, B>(that: Effect.Effect<R2, E2, A2>, f: (a: A, b: A2) => B) => {
   const trace = getCallTrace()
   return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, B> => {
@@ -1185,7 +1426,10 @@ export const zipWith = <R2, E2, A2, A, B>(that: Effect.Effect<R2, E2, A2>, f: (a
 // Fiber
 // -----------------------------------------------------------------------------
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const interruptFiber = <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<never, never, Exit.Exit<E, A>> => {
   const trace = getCallTrace()
   return pipe(
@@ -1194,7 +1438,10 @@ export const interruptFiber = <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<nev
   ).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const interruptWithFiber = (fiberId: FiberId.FiberId) => {
   const trace = getCallTrace()
   return <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<never, never, Exit.Exit<E, A>> => {
@@ -1287,13 +1534,19 @@ const fiberRefVariance = {
   _A: (_: never) => _
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const fiberRefGet = <A>(self: FiberRef.FiberRef<A>): Effect.Effect<never, never, A> => {
   const trace = getCallTrace()
   return fiberRefModify(self)((a) => [a, a] as const).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const fiberRefGetAndSet = <A>(self: FiberRef.FiberRef<A>) => {
   const trace = getCallTrace()
   return (value: A): Effect.Effect<never, never, A> => {
@@ -1301,7 +1554,10 @@ export const fiberRefGetAndSet = <A>(self: FiberRef.FiberRef<A>) => {
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const fiberRefGetAndUpdate = <A>(self: FiberRef.FiberRef<A>) => {
   const trace = getCallTrace()
   return (f: (a: A) => A): Effect.Effect<never, never, A> => {
@@ -1309,7 +1565,10 @@ export const fiberRefGetAndUpdate = <A>(self: FiberRef.FiberRef<A>) => {
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const fiberRefGetAndUpdateSome = <A>(self: FiberRef.FiberRef<A>) => {
   const trace = getCallTrace()
   return (pf: (a: A) => Option.Option<A>): Effect.Effect<never, never, A> => {
@@ -1317,7 +1576,10 @@ export const fiberRefGetAndUpdateSome = <A>(self: FiberRef.FiberRef<A>) => {
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const fiberRefGetWith = <A>(self: FiberRef.FiberRef<A>) => {
   const trace = getCallTrace()
   return <R, E, B>(f: (a: A) => Effect.Effect<R, E, B>): Effect.Effect<R, E, B> => {
@@ -1325,7 +1587,10 @@ export const fiberRefGetWith = <A>(self: FiberRef.FiberRef<A>) => {
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const fiberRefSet = <A>(self: FiberRef.FiberRef<A>) => {
   const trace = getCallTrace()
   return (value: A): Effect.Effect<never, never, void> => {
@@ -1333,7 +1598,10 @@ export const fiberRefSet = <A>(self: FiberRef.FiberRef<A>) => {
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const fiberRefDelete = <A>(self: FiberRef.FiberRef<A>): Effect.Effect<never, never, void> => {
   const trace = getCallTrace()
   return withFiberRuntime<never, never, void>((state) => {
@@ -1342,13 +1610,19 @@ export const fiberRefDelete = <A>(self: FiberRef.FiberRef<A>): Effect.Effect<nev
   }).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const fiberRefReset = <A>(self: FiberRef.FiberRef<A>): Effect.Effect<never, never, void> => {
   const trace = getCallTrace()
   return fiberRefSet(self)(self.initial).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const fiberRefModify = <A>(self: FiberRef.FiberRef<A>) => {
   const trace = getCallTrace()
   return <B>(f: (a: A) => readonly [B, A]): Effect.Effect<never, never, B> =>
@@ -1359,28 +1633,40 @@ export const fiberRefModify = <A>(self: FiberRef.FiberRef<A>) => {
     }).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const fiberRefModifySome = <A>(self: FiberRef.FiberRef<A>) => {
   const trace = getCallTrace()
   return <B>(def: B, f: (a: A) => Option.Option<readonly [B, A]>): Effect.Effect<never, never, B> =>
     fiberRefModify(self)((v) => pipe(f(v), Option.getOrElse(() => [def, v] as const))).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const fiberRefUpdate = <A>(self: FiberRef.FiberRef<A>) => {
   const trace = getCallTrace()
   return (f: (a: A) => A): Effect.Effect<never, never, void> =>
     fiberRefModify(self)((v) => [void 0, f(v)] as const).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const fiberRefUpdateSome = <A>(self: FiberRef.FiberRef<A>) => {
   const trace = getCallTrace()
   return (pf: (a: A) => Option.Option<A>): Effect.Effect<never, never, void> =>
     fiberRefModify(self)((v) => [void 0, pipe(pf(v), Option.getOrElse(() => v))] as const).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const fiberRefUpdateAndGet = <A>(self: FiberRef.FiberRef<A>) => {
   const trace = getCallTrace()
   return (f: (a: A) => A): Effect.Effect<never, never, A> =>
@@ -1390,7 +1676,10 @@ export const fiberRefUpdateAndGet = <A>(self: FiberRef.FiberRef<A>) => {
     }).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const fiberRefUpdateSomeAndGet = <A>(self: FiberRef.FiberRef<A>) => {
   const trace = getCallTrace()
   return (pf: (a: A) => Option.Option<A>): Effect.Effect<never, never, A> =>
@@ -1400,7 +1689,10 @@ export const fiberRefUpdateSomeAndGet = <A>(self: FiberRef.FiberRef<A>) => {
     }).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const fiberRefLocally = <A>(self: FiberRef.FiberRef<A>) => {
   const trace = getCallTrace()
   return (value: A) => {
@@ -1414,7 +1706,10 @@ export const fiberRefLocally = <A>(self: FiberRef.FiberRef<A>) => {
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const fiberRefLocallyWith = <A>(self: FiberRef.FiberRef<A>) => {
   const trace = getCallTrace()
   return (f: (a: A) => A) => {
@@ -1516,6 +1811,11 @@ export const currentParallelism: FiberRef.FiberRef<Option.Option<number>> = fibe
 )
 
 /** @internal */
+export const currentTags: FiberRef.FiberRef<HashSet.HashSet<MetricLabel.MetricLabel>> = fiberRefUnsafeMakeHashSet(
+  HashSet.empty()
+)
+
+/** @internal */
 export const forkScopeOverride: FiberRef.FiberRef<Option.Option<fiberScope.FiberScope>> = fiberRefUnsafeMake(
   Option.none,
   () => Option.none as Option.Option<fiberScope.FiberScope>,
@@ -1541,7 +1841,10 @@ export const CloseableScopeTypeId: Scope.CloseableScopeTypeId = Symbol.for(
   "@effect/io/CloseableScope"
 ) as Scope.CloseableScopeTypeId
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const scopeAddFinalizer = (finalizer: Effect.Effect<never, never, unknown>) => {
   const trace = getCallTrace()
   return (self: Scope.Scope): Effect.Effect<never, never, void> => {
@@ -1549,7 +1852,10 @@ export const scopeAddFinalizer = (finalizer: Effect.Effect<never, never, unknown
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const scopeAddFinalizerExit = (finalizer: Scope.Scope.Finalizer) => {
   const trace = getCallTrace()
   return (self: Scope.Scope): Effect.Effect<never, never, void> => {
@@ -1557,7 +1863,10 @@ export const scopeAddFinalizerExit = (finalizer: Scope.Scope.Finalizer) => {
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const scopeClose = (exit: Exit.Exit<unknown, unknown>) => {
   const trace = getCallTrace()
   return (self: Scope.Scope.Closeable): Effect.Effect<never, never, void> => {
@@ -1565,7 +1874,10 @@ export const scopeClose = (exit: Exit.Exit<unknown, unknown>) => {
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const scopeFork = (strategy: ExecutionStrategy.ExecutionStrategy) => {
   const trace = getCallTrace()
   return (self: Scope.Scope): Effect.Effect<never, never, Scope.Scope.Closeable> => {
@@ -1595,7 +1907,10 @@ export interface ReleaseMap {
   state: ReleaseMapState
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const releaseMapAdd = (finalizer: Scope.Scope.Finalizer) => {
   const trace = getCallTrace()
   return (self: ReleaseMap): Effect.Effect<never, never, Scope.Scope.Finalizer> => {
@@ -1610,7 +1925,10 @@ export const releaseMapAdd = (finalizer: Scope.Scope.Finalizer) => {
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const releaseMapRelease = (key: number, exit: Exit.Exit<unknown, unknown>) => {
   const trace = getCallTrace()
   return (self: ReleaseMap): Effect.Effect<never, never, void> => {
@@ -1632,7 +1950,10 @@ export const releaseMapRelease = (key: number, exit: Exit.Exit<unknown, unknown>
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const releaseMapAddIfOpen = (finalizer: Scope.Scope.Finalizer) => {
   const trace = getCallTrace()
   return (self: ReleaseMap): Effect.Effect<never, never, Option.Option<number>> => {
@@ -1653,7 +1974,10 @@ export const releaseMapAddIfOpen = (finalizer: Scope.Scope.Finalizer) => {
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const releaseMapGet = (key: number) => {
   const trace = getCallTrace()
   return (self: ReleaseMap): Effect.Effect<never, never, Option.Option<Scope.Scope.Finalizer>> => {
@@ -1663,7 +1987,10 @@ export const releaseMapGet = (key: number) => {
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const releaseMapReplace = (key: number, finalizer: Scope.Scope.Finalizer) => {
   const trace = getCallTrace()
   return (self: ReleaseMap): Effect.Effect<never, never, Option.Option<Scope.Scope.Finalizer>> => {
@@ -1682,7 +2009,10 @@ export const releaseMapReplace = (key: number, finalizer: Scope.Scope.Finalizer)
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const releaseMapRemove = (key: number) => {
   const trace = getCallTrace()
   return (self: ReleaseMap): Effect.Effect<never, never, Option.Option<Scope.Scope.Finalizer>> => {
@@ -1697,7 +2027,10 @@ export const releaseMapRemove = (key: number) => {
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const releaseMapMake = (): Effect.Effect<never, never, ReleaseMap> => {
   const trace = getCallTrace()
   return sync((): ReleaseMap => ({
@@ -2171,13 +2504,19 @@ export const deferredUnsafeMake = <E, A>(fiberId: FiberId.FiberId): Deferred.Def
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const deferredMake = <E, A>(): Effect.Effect<never, never, Deferred.Deferred<E, A>> => {
   const trace = getCallTrace()
   return pipe(fiberId(), flatMap((id) => deferredMakeAs<E, A>(id))).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const deferredMakeAs = <E, A>(
   fiberId: FiberId.FiberId
 ): Effect.Effect<never, never, Deferred.Deferred<E, A>> => {
@@ -2185,7 +2524,10 @@ export const deferredMakeAs = <E, A>(
   return sync(() => deferredUnsafeMake<E, A>(fiberId)).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const deferredSucceed = <A>(value: A) => {
   const trace = getCallTrace()
   return <E>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
@@ -2193,7 +2535,10 @@ export const deferredSucceed = <A>(value: A) => {
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const deferredSync = <A>(evaluate: () => A) => {
   const trace = getCallTrace()
   return <E>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
@@ -2201,7 +2546,10 @@ export const deferredSync = <A>(evaluate: () => A) => {
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const deferredFail = <E>(error: E) => {
   const trace = getCallTrace()
   return <A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
@@ -2209,7 +2557,10 @@ export const deferredFail = <E>(error: E) => {
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const deferredFailSync = <E>(evaluate: () => E) => {
   const trace = getCallTrace()
   return <A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
@@ -2217,7 +2568,10 @@ export const deferredFailSync = <E>(evaluate: () => E) => {
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const deferredFailCause = <E>(cause: Cause.Cause<E>) => {
   const trace = getCallTrace()
   return <A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
@@ -2225,7 +2579,10 @@ export const deferredFailCause = <E>(cause: Cause.Cause<E>) => {
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const deferredFailCauseSync = <E>(evaluate: () => Cause.Cause<E>) => {
   const trace = getCallTrace()
   return <A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
@@ -2233,7 +2590,10 @@ export const deferredFailCauseSync = <E>(evaluate: () => Cause.Cause<E>) => {
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const deferredDie = (defect: unknown) => {
   const trace = getCallTrace()
   return <E, A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
@@ -2241,7 +2601,10 @@ export const deferredDie = (defect: unknown) => {
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const deferredDieSync = (evaluate: () => unknown) => {
   const trace = getCallTrace()
   return <E, A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
@@ -2249,7 +2612,10 @@ export const deferredDieSync = (evaluate: () => unknown) => {
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const deferredDone = <E, A>(exit: Exit.Exit<E, A>) => {
   const trace = getCallTrace()
   return (self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
@@ -2270,7 +2636,10 @@ export const deferredUnsafeDone = <E, A>(effect: Effect.Effect<never, E, A>) => 
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const deferredInterrupt = <E, A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
   const trace = getCallTrace()
   return pipe(
@@ -2279,7 +2648,10 @@ export const deferredInterrupt = <E, A>(self: Deferred.Deferred<E, A>): Effect.E
   ).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const deferredInterruptWith = (fiberId: FiberId.FiberId) => {
   const trace = getCallTrace()
   return <E, A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
@@ -2287,7 +2659,10 @@ export const deferredInterruptWith = (fiberId: FiberId.FiberId) => {
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const deferredAwait = <E, A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, E, A> => {
   const trace = getCallTrace()
   return asyncInterruptEither<never, E, A>((k) => {
@@ -2307,7 +2682,10 @@ export const deferredAwait = <E, A>(self: Deferred.Deferred<E, A>): Effect.Effec
   }, self.blockingOn).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const deferredComplete = <E, A>(effect: Effect.Effect<never, E, A>) => {
   const trace = getCallTrace()
   return (self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
@@ -2315,7 +2693,10 @@ export const deferredComplete = <E, A>(effect: Effect.Effect<never, E, A>) => {
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const deferredCompleteWith = <E, A>(effect: Effect.Effect<never, E, A>) => {
   const trace = getCallTrace()
   return (self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
@@ -2337,13 +2718,19 @@ export const deferredCompleteWith = <E, A>(effect: Effect.Effect<never, E, A>) =
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const deferredIsDone = <E, A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
   const trace = getCallTrace()
   return sync(() => MutableRef.get(self.state)._tag === DeferredOpCodes.OP_STATE_DONE).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const deferredPoll = <E, A>(
   self: Deferred.Deferred<E, A>
 ): Effect.Effect<never, never, Option.Option<Effect.Effect<never, E, A>>> => {

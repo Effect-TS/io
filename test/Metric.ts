@@ -157,6 +157,22 @@ describe.concurrent("Metric", () => {
         )
         assert.deepStrictEqual(result, MetricState.counter(2))
       }))
+    it.effect("tags are a region setting", () =>
+      Effect.gen(function*($) {
+        const counter = Metric.counter("c9")
+        const result = yield* $(pipe(
+          Metric.increment(counter),
+          Effect.tagged("key", "value"),
+          Effect.zipRight(
+            pipe(
+              counter,
+              Metric.tagged("key", "value"),
+              Metric.value
+            )
+          )
+        ))
+        assert.deepStrictEqual(result, MetricState.counter(1))
+      }))
   })
   describe.concurrent("Frequency", () => {
     it.effect("custom occurrences as aspect", () =>
@@ -321,9 +337,8 @@ describe.concurrent("Metric", () => {
           Metric.taggedWithLabels(labels),
           Metric.contramap((duration: Duration.Duration) => duration.millis / 1000)
         )
-        const start = yield* $(Effect.sync(() => Date.now()) // NOTE: trackDuration always uses the **real** Clock
-        )
         // NOTE: trackDuration always uses the **real** Clock
+        const start = yield* $(Effect.sync(() => Date.now()))
         yield* $(pipe(Effect.sleep(Duration.millis(100)), Metric.trackDuration(histogram)))
         yield* $(pipe(Effect.sleep(Duration.millis(300)), Metric.trackDuration(histogram)))
         const end = yield* $(Effect.sync(() => Date.now()))
@@ -336,7 +351,8 @@ describe.concurrent("Metric", () => {
         assert.isBelow(result.min, result.max)
         assert.isAtLeast(result.max, 0.3)
         assert.isBelow(result.max, elapsed)
-      }))
+      })
+    )
     it.effect("custom observe with contramap", () =>
       Effect.gen(function*($) {
         const boundaries = MetricBoundaries.linear(0, 1, 10)

@@ -123,13 +123,19 @@ export const histogram = (name: string, boundaries: MetricBoundaries.MetricBound
   return fromMetricKey(metricKey.histogram(name, boundaries))
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const increment = (self: Metric.Metric.Counter<number>): Effect.Effect<never, never, void> => {
   const trace = getCallTrace()
   return pipe(self, update(1)).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const incrementBy = (amount: number) => {
   const trace = getCallTrace()
   return (self: Metric.Metric.Counter<number>): Effect.Effect<never, never, void> => {
@@ -155,7 +161,10 @@ export const mapType = <Type, Type2>(f: (type: Type) => Type2) => {
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const set = <In>(value: In) => {
   const trace = getCallTrace()
   return (self: Metric.Metric.Gauge<In>): Effect.Effect<never, never, void> => {
@@ -245,7 +254,10 @@ export const timer = (name: string): Metric.Metric<
   return pipe(base, contramap((duration) => duration.millis))
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const trackAll = <In>(input: In) => {
   const trace = getCallTrace()
   return <Type, Out>(self: Metric.Metric<Type, In, Out>) => {
@@ -267,7 +279,10 @@ export const trackAll = <In>(input: In) => {
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const trackDefect = <Type, Out>(self: Metric.Metric<Type, unknown, Out>) => {
   const trace = getCallTrace()
   return <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
@@ -275,7 +290,10 @@ export const trackDefect = <Type, Out>(self: Metric.Metric<Type, unknown, Out>) 
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const trackDefectWith = <In>(f: (defect: unknown) => In) => {
   const trace = getCallTrace()
   return <Type, Out>(self: Metric.Metric<Type, In, Out>) => {
@@ -296,7 +314,10 @@ export const trackDefectWith = <In>(f: (defect: unknown) => In) => {
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const trackDuration = <Type, Out>(self: Metric.Metric<Type, Duration.Duration, Out>) => {
   const trace = getCallTrace()
   return <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
@@ -304,7 +325,10 @@ export const trackDuration = <Type, Out>(self: Metric.Metric<Type, Duration.Dura
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const trackDurationWith = <In>(f: (duration: Duration.Duration) => In) => {
   const trace = getCallTrace()
   return <Type, Out>(self: Metric.Metric<Type, In, Out>) => {
@@ -325,7 +349,10 @@ export const trackDurationWith = <In>(f: (duration: Duration.Duration) => In) =>
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const trackError = <Type, In, Out>(self: Metric.Metric<Type, In, Out>) => {
   const trace = getCallTrace()
   return <R, E extends In, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
@@ -333,7 +360,10 @@ export const trackError = <Type, In, Out>(self: Metric.Metric<Type, In, Out>) =>
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const trackErrorWith = <In, In2>(f: (error: In2) => In) => {
   const trace = getCallTrace()
   return <Type, Out>(self: Metric.Metric<Type, In, Out>) => {
@@ -344,7 +374,10 @@ export const trackErrorWith = <In, In2>(f: (error: In2) => In) => {
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const trackSuccess = <Type, In, Out>(self: Metric.Metric<Type, In, Out>) => {
   const trace = getCallTrace()
   return <R, E, A extends In>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
@@ -352,7 +385,10 @@ export const trackSuccess = <Type, In, Out>(self: Metric.Metric<Type, In, Out>) 
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const trackSuccessWith = <In, In2>(f: (value: In2) => In) => {
   const trace = getCallTrace()
   return <Type, Out>(self: Metric.Metric<Type, In, Out>) => {
@@ -363,24 +399,35 @@ export const trackSuccessWith = <In, In2>(f: (value: In2) => In) => {
   }
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const update = <In>(input: In) => {
   const trace = getCallTrace()
-  return <Type, Out>(self: Metric.Metric<Type, In, Out>): Effect.Effect<never, never, void> => {
-    return core.sync(() => self.unsafeUpdate(input, HashSet.empty())).traced(trace)
-  }
+  return <Type, Out>(self: Metric.Metric<Type, In, Out>): Effect.Effect<never, never, void> =>
+    core.fiberRefGetWith(core.currentTags)(
+      (tags) => core.sync(() => self.unsafeUpdate(input, tags))
+    ).traced(trace)
 }
 
-/** @internal */
+/**
+ * @macro traced
+ * @internal
+ */
 export const value = <Type, In, Out>(
   self: Metric.Metric<Type, In, Out>
 ): Effect.Effect<never, never, Out> => {
   const trace = getCallTrace()
-  return core.sync(() => self.unsafeValue(HashSet.empty())).traced(trace)
+  return core.fiberRefGetWith(core.currentTags)(
+    (tags) => core.sync(() => self.unsafeValue(tags))
+  ).traced(trace)
 }
 
 /** @internal */
-export const withNow = <Type, In, Out>(self: Metric.Metric<Type, readonly [In, number], Out>) => {
+export const withNow = <Type, In, Out>(
+  self: Metric.Metric<Type, readonly [In, number], Out>
+): Metric.Metric<Type, In, Out> => {
   return pipe(self, contramap((input: In) => [input, Date.now()] as const))
 }
 

@@ -9,6 +9,7 @@ import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
 import type * as Logger from "@effect/io/Logger"
 import type * as LogLevel from "@effect/io/Logger/Level"
 import type * as LogSpan from "@effect/io/Logger/Span"
+import type * as MetricLabel from "@effect/io/Metric/Label"
 import type * as Scheduler from "@effect/io/Scheduler"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
@@ -348,6 +349,12 @@ export const currentScheduler: FiberRef<Scheduler.Scheduler> = core.currentSched
  * @category fiberRefs
  */
 export const currentSupervisor: FiberRef<Supervisor.Supervisor<any>> = fiberRuntime.currentSupervisor
+
+/**
+ * @since 1.0.0
+ * @category fiberRefs
+ */
+export const currentTags: FiberRef<HashSet.HashSet<MetricLabel.MetricLabel>> = core.currentTags
 
 /**
  * @since 1.0.0
