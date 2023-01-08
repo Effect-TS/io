@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.0.59
+
+### Patch Changes
+
+- [#171](https://github.com/Effect-TS/io/pull/171) [`857941c`](https://github.com/Effect-TS/io/commit/857941cfa3a00489e7dfcbda9395a4c7667a8609) Thanks [@IMax153](https://github.com/IMax153)! - fix Random.nextIntBetween
+
 ## 0.0.58
 
 ### Patch Changes
