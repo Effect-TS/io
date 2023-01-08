@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.0.60
+
+### Patch Changes
+
+- [#173](https://github.com/Effect-TS/io/pull/173) [`088f803`](https://github.com/Effect-TS/io/commit/088f80360ea0c5f96dcfc59f51ac7bf23fa8ca61) Thanks [@IMax153](https://github.com/IMax153)! - use "," as seqDelim in ConfigProvider.fromEnv
+
 ## 0.0.59
 
 ### Patch Changes
