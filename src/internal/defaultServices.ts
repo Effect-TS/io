@@ -19,7 +19,7 @@ export const liveServices: Context.Context<DefaultServices.DefaultServices> = pi
   Context.empty(),
   Context.add(clock.clockTag)(clock.make()),
   Context.add(random.randomTag)(random.make((Math.random() * 4294967296) >>> 0)),
-  Context.add(configProvider.configProviderTag)(configProvider.env())
+  Context.add(configProvider.configProviderTag)(configProvider.fromEnv())
 )
 
 /**

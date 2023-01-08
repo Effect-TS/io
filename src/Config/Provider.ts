@@ -79,6 +79,15 @@ export declare namespace ConfigProvider {
     readonly pathDelim: string
     readonly seqDelim: string
   }
+
+  /**
+   * @since 1.0.0
+   * @category models
+   */
+  export interface FromEnvConfig {
+    readonly pathDelim: string
+    readonly seqDelim: string
+  }
 }
 
 /**
@@ -108,6 +117,15 @@ export const makeFlat: (
 ) => ConfigProvider.Flat = internal.makeFlat
 
 /**
+ * A config provider that loads configuration from environment variables,
+ * using the default System service.
+ *
+ * @since 1.0.0
+ * @category constructors
+ */
+export const fromEnv: (config?: ConfigProvider.FromEnvConfig) => ConfigProvider = internal.fromEnv
+
+/**
  * Constructs a new `ConfigProvider` from a key/value (flat) provider, where
  * nesting is embedded into the string keys.
  *
@@ -125,15 +143,6 @@ export const fromFlat: (flat: ConfigProvider.Flat) => ConfigProvider = internal.
  */
 export const fromMap: (map: Map<string, string>, config?: Partial<ConfigProvider.FromMapConfig>) => ConfigProvider =
   internal.fromMap
-
-/**
- * A config provider that loads configuration from environment variables,
- * using the default System service.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const env: () => ConfigProvider = internal.env
 
 /**
  * Returns a new config provider that will automatically nest all
