@@ -51,7 +51,7 @@ class RandomImpl implements Random.Random {
 
   nextIntBetween(min: number, max: number): Effect.Effect<never, never, number> {
     const trace = getCallTrace()
-    return core.sync(() => this.PRNG.integer(max - min) + min).traced(trace)
+    return core.sync(() => this.PRNG.integer(1 + max - min) + min).traced(trace)
   }
 
   shuffle<A>(elements: Iterable<A>): Effect.Effect<never, never, Chunk.Chunk<A>> {
