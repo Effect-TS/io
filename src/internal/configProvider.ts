@@ -92,9 +92,12 @@ export const fromFlat = (flat: ConfigProvider.ConfigProvider.Flat): ConfigProvid
 }
 
 /** @internal */
-export const env = (): ConfigProvider.ConfigProvider => {
-  const makePathString = (path: Chunk.Chunk<string>): string => pipe(path, Chunk.join("_"))
-  const unmakePathString = (pathString: string): ReadonlyArray<string> => pathString.split("_")
+export const fromEnv = (
+  config: Partial<ConfigProvider.ConfigProvider.FromEnvConfig> = {}
+): ConfigProvider.ConfigProvider => {
+  const { pathDelim, seqDelim } = Object.assign({}, { pathDelim: "_", seqDelim: "," }, config)
+  const makePathString = (path: Chunk.Chunk<string>): string => pipe(path, Chunk.join(pathDelim))
+  const unmakePathString = (pathString: string): ReadonlyArray<string> => pathString.split(pathDelim)
 
   const getEnv = () =>
     typeof process !== "undefined" && "env" in process && typeof process.env === "object" ? process.env : {}
@@ -110,7 +113,7 @@ export const env = (): ConfigProvider.ConfigProvider => {
     return pipe(
       core.fromOption(valueOpt),
       core.mapError(() => configError.MissingData(path, `Expected ${pathString} to exist in the process environment`)),
-      core.flatMap((value) => parsePrimitive(value, path, primitive, ":"))
+      core.flatMap((value) => parsePrimitive(value, path, primitive, seqDelim))
     ).traced(trace)
   }
 

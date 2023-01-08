@@ -5,7 +5,6 @@ import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import * as core from "@effect/io/internal/core"
-import type * as OpCodes from "@effect/io/internal/opCodes/effect"
 import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as Either from "@fp-ts/data/Either"
 import type * as Option from "@fp-ts/data/Option"
@@ -31,8 +30,7 @@ export type Exit<E, A> = Failure<E> | Success<A>
  * @category models
  */
 export interface Failure<E> extends Effect.Effect<never, E, never> {
-  /** @internal */
-  readonly _tag: OpCodes.OP_FAILURE
+  readonly _tag: "Failure"
   readonly cause: Cause.Cause<E>
 }
 
@@ -44,8 +42,7 @@ export interface Failure<E> extends Effect.Effect<never, E, never> {
  * @category models
  */
 export interface Success<A> extends Effect.Effect<never, never, A> {
-  /** @internal */
-  readonly _tag: OpCodes.OP_SUCCESS
+  readonly _tag: "Success"
   readonly value: A
 }
 
