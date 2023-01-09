@@ -93,6 +93,15 @@ export const isLayer: (u: unknown) => u is Layer<unknown, unknown, unknown> = in
 export const isFresh: <R, E, A>(self: Layer<R, E, A>) => boolean = internal.isFresh
 
 /**
+ * Replaces the layer's output with `void` and includes the layer only for its
+ * side-effects.
+ *
+ * @since 1.0.0
+ * @category mapping
+ */
+export const asUnit: <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn, E, void> = internal.asUnit
+
+/**
  * Builds a layer into a scoped value.
  *
  * @macro traced
@@ -127,6 +136,16 @@ export const buildWithScope: (
 export const catchAll: <E, R2, E2, A2>(
   onError: (error: E) => Layer<R2, E2, A2>
 ) => <R, A>(self: Layer<R, E, A>) => Layer<R2 | R, E2, A & A2> = internal.catchAll
+
+/**
+ * Recovers from all errors.
+ *
+ * @since 1.0.0
+ * @category error handling
+ */
+export const catchAllCause: <E, R2, E2, A2>(
+  onError: (cause: Cause.Cause<E>) => Layer<R2, E2, A2>
+) => <R, A>(self: Layer<R, E, A>) => Layer<R2 | R, E2, A & A2> = internal.catchAllCause
 
 /**
  * Constructs a layer that dies with the specified defect.
@@ -522,6 +541,16 @@ export const tap: <ROut, RIn2, E2, X>(
 export const tapError: <E, RIn2, E2, X>(
   f: (e: E) => Effect.Effect<RIn2, E2, X>
 ) => <RIn, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn2 | RIn, E | E2, ROut> = internal.tapError
+
+/**
+ * Performs the specified effect if this layer fails.
+ *
+ * @since 1.0.0
+ * @category sequencing
+ */
+export const tapErrorCause: <E, RIn2, E2, X>(
+  f: (cause: Cause.Cause<E>) => Effect.Effect<RIn2, E2, X>
+) => <RIn, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn2 | RIn, E | E2, ROut> = internal.tapErrorCause
 
 /**
  * Converts a layer that requires no services into a scoped runtime, which can

@@ -428,10 +428,20 @@ export const withScope = (scope: Scope.Scope) => {
 // -----------------------------------------------------------------------------
 
 /** @internal */
+export const asUnit = <RIn, E, ROut>(self: Layer.Layer<RIn, E, ROut>): Layer.Layer<RIn, E, void> =>
+  pipe(self, map(() => Context.make(Context.Tag<void>())(void 0)))
+
+/** @internal */
 export const catchAll = <E, R2, E2, A2>(onError: (error: E) => Layer.Layer<R2, E2, A2>) => {
   return <R, A>(self: Layer.Layer<R, E, A>): Layer.Layer<R | R2, E2, A & A2> => {
     return pipe(self, matchLayer(onError, succeedEnvironment))
   }
+}
+
+/** @internal */
+export const catchAllCause = <E, R2, E2, A2>(onError: (cause: Cause.Cause<E>) => Layer.Layer<R2, E2, A2>) => {
+  return <R, A>(self: Layer.Layer<R, E, A>): Layer.Layer<R | R2, E2, A & A2> =>
+    pipe(self, matchCauseLayer(onError, succeedEnvironment))
 }
 
 /** @internal */
@@ -864,6 +874,15 @@ export const tapError = <E, RIn2, E2, X>(f: (e: E) => Effect.Effect<RIn2, E2, X>
       catchAll((e) => fromEffectEnvironment(pipe(f(e), core.flatMap(() => core.fail(e)))))
     )
   }
+}
+
+/** @internal */
+export const tapErrorCause = <E, RIn2, E2, X>(f: (cause: Cause.Cause<E>) => Effect.Effect<RIn2, E2, X>) => {
+  return <RIn, ROut>(self: Layer.Layer<RIn, E, ROut>): Layer.Layer<RIn | RIn2, E | E2, ROut> =>
+    pipe(
+      self,
+      catchAllCause((cause) => fromEffectEnvironment(pipe(f(cause), core.flatMap(() => core.failCause(cause)))))
+    )
 }
 
 /** @internal */
