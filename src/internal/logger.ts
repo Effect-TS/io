@@ -103,14 +103,14 @@ export const stringLogger: Logger.Logger<string, string> = {
 }
 
 function escapeDoubleQuotes(str: string) {
-  return str.replace(/\\([\s\S])|(")/g, "\\$1$2")
+  return `"${str.replace(/\\([\s\S])|(")/g, "\\$1$2")}"`
 }
 
 const textOnly = /^[^\s"=]+$/
 
 /** @internal */
 const appendQuoted = (label: string, output: string): string => {
-  return output + (label.match(textOnly) ? label : `"${escapeDoubleQuotes(label)}"`)
+  return output + (label.match(textOnly) ? label : escapeDoubleQuotes(label))
 }
 
 /** @internal */
