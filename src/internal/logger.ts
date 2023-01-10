@@ -92,7 +92,7 @@ export const stringLogger: Logger.Logger<string, string> = {
         } else {
           output = output + " "
         }
-        output = output + key.replace(/[\n ="]/g, "_")
+        output = output + key.replace(/[\s="]/g, "_")
         output = output + "="
         output = appendQuoted(value, output)
       }
