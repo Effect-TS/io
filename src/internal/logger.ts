@@ -44,9 +44,8 @@ export const makeLogger = <Message, Output>(
 })
 
 /** @internal */
-export const stringLogger: Logger.Logger<string, string> = {
-  [LoggerTypeId]: loggerVariance,
-  log: (fiberId, logLevel, message, cause, _context, spans, annotations, runtime) => {
+export const stringLogger: Logger.Logger<string, string> = makeLogger<string, string>(
+  (fiberId, logLevel, message, cause, _context, spans, annotations, runtime) => {
     const now = new Date()
     const nowMillis = now.getTime()
 
@@ -92,7 +91,7 @@ export const stringLogger: Logger.Logger<string, string> = {
         } else {
           output = output + " "
         }
-        output = output + key.replace(/[ ="]/g, "_")
+        output = output + filterKeyName(key)
         output = output + "="
         output = appendQuoted(value, output)
       }
@@ -100,11 +99,99 @@ export const stringLogger: Logger.Logger<string, string> = {
 
     return output
   }
+)
+
+/** @internal */
+function escapeDoubleQuotes(str: string) {
+  return `"${str.replace(/\\([\s\S])|(")/g, "\\$1$2")}"`
 }
+
+const textOnly = /^[^\s"=]+$/
 
 /** @internal */
 const appendQuoted = (label: string, output: string): string => {
-  return output + JSON.stringify(label)
+  return output + (label.match(textOnly) ? label : escapeDoubleQuotes(label))
+}
+
+/** @internal */
+export const logfmtLogger = makeLogger<string, string>(
+  (fiberId, logLevel, message, cause, _context, spans, annotations, runtime) => {
+    const now = new Date()
+    const nowMillis = now.getTime()
+
+    const outputArray = [
+      `timestamp=${now.toISOString()}`,
+      `level=${logLevel.label}`,
+      `fiber=${_fiberId.threadName(fiberId)}`
+    ]
+
+    let output = outputArray.join(" ")
+
+    if (message.length > 0) {
+      output = output + " message="
+      output = appendQuotedLogfmt(message, output)
+    }
+
+    if (cause != null && cause != Cause.empty) {
+      output = output + " cause="
+      output = appendQuotedLogfmt(runtime.unsafeRunSync(Pretty.prettySafe(cause, Pretty.defaultRenderer)), output)
+    }
+
+    if (Chunk.isNonEmpty(spans)) {
+      output = output + " "
+
+      let first = true
+      for (const span of spans) {
+        if (first) {
+          first = false
+        } else {
+          output = output + " "
+        }
+        output = output + pipe(span, renderLogSpanLogfmt(nowMillis))
+      }
+    }
+
+    if (annotations.size > 0) {
+      output = output + " "
+
+      let first = true
+      for (const [key, value] of annotations) {
+        if (first) {
+          first = false
+        } else {
+          output = output + " "
+        }
+        output = output + filterKeyName(key)
+        output = output + "="
+        output = appendQuotedLogfmt(value, output)
+      }
+    }
+
+    return output
+  }
+)
+
+/** @internal */
+function filterKeyName(key: string) {
+  return key.replace(/[\s="]/g, "_")
+}
+
+/** @internal */
+function escapeDoubleQuotesLogfmt(str: string) {
+  return JSON.stringify(str)
+}
+
+/** @internal */
+const appendQuotedLogfmt = (label: string, output: string): string => {
+  return output + (label.match(textOnly) ? label : escapeDoubleQuotesLogfmt(label))
+}
+
+/** @internal */
+const renderLogSpanLogfmt = (now: number) => {
+  return (self: LogSpan.LogSpan): string => {
+    const label = filterKeyName(self.label)
+    return `${label}=${now - self.startTime}ms`
+  }
 }
 
 /** @internal */

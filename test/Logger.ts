@@ -22,7 +22,11 @@ describe("stringLogger", () => {
     const date = new Date()
     vi.setSystemTime(date)
     const spans = Chunk.make(LogSpan.make("imma span=\"", date.getTime() - 7))
-    const annotations = new Map<string, string>([["I am bad key name", JSON.stringify({ coolValue: "cool value" })]])
+    const annotations = new Map<string, string>([
+      ["just_a_key", "just_a_value"],
+      ["I am bad key name", JSON.stringify({ coolValue: "cool value" })],
+      ["good_key", "I am a good value"]
+    ])
 
     const result = Logger.stringLogger.log(
       FiberId.none,
@@ -36,7 +40,98 @@ describe("stringLogger", () => {
     )
 
     expect(result).toEqual(
-      `timestamp=${date.toJSON()} level=INFO fiber= message="My message" imma_span__=7ms I_am_bad_key_name="{\\"coolValue\\":\\"cool value\\"}"`
+      `timestamp=${date.toJSON()} level=INFO fiber= message="My message" imma_span__=7ms just_a_key=just_a_value I_am_bad_key_name="{\\"coolValue\\":\\"cool value\\"}" good_key="I am a good value"`
+    )
+  })
+
+  test("with linebreaks", () => {
+    const date = new Date()
+    vi.setSystemTime(date)
+    const spans = Chunk.make(LogSpan.make("imma\nspan=\"", date.getTime() - 7))
+    const annotations = new Map<string, string>([
+      ["I am also\na bad key name", JSON.stringify({ return: "cool\nvalue" })],
+      ["good_key", JSON.stringify({ returnWithSpace: "cool\nvalue or not" })],
+      ["good_key2", "I am a good value\nwith line breaks"],
+      ["good_key3", "I_have=a"]
+    ])
+
+    const result = Logger.stringLogger.log(
+      FiberId.none,
+      logLevelInfo,
+      "My\nmessage",
+      Cause.empty,
+      FiberRefs.unsafeMake(new Map()),
+      spans,
+      annotations,
+      Runtime.defaultRuntime
+    )
+
+    expect(result).toEqual(
+      `timestamp=${date.toJSON()} level=INFO fiber= message="My
+message" imma_span__=7ms I_am_also_a_bad_key_name="{\\"return\\":\\"cool\\nvalue\\"}" good_key="{\\"returnWithSpace\\":\\"cool\\nvalue or not\\"}" good_key2="I am a good value
+with line breaks" good_key3="I_have=a"`
+    )
+  })
+})
+
+describe("logfmtLogger", () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  test("keys with special chars", () => {
+    const date = new Date()
+    vi.setSystemTime(date)
+    const spans = Chunk.make(LogSpan.make("imma span=\"", date.getTime() - 7))
+    const annotations = new Map<string, string>([
+      ["just_a_key", "just_a_value"],
+      ["I am bad key name", JSON.stringify({ coolValue: "cool value" })],
+      ["good_key", "I am a good value"]
+    ])
+
+    const result = Logger.logfmtLogger.log(
+      FiberId.none,
+      logLevelInfo,
+      "My message",
+      Cause.empty,
+      FiberRefs.unsafeMake(new Map()),
+      spans,
+      annotations,
+      Runtime.defaultRuntime
+    )
+
+    expect(result).toEqual(
+      `timestamp=${date.toJSON()} level=INFO fiber= message="My message" imma_span__=7ms just_a_key=just_a_value I_am_bad_key_name="{\\"coolValue\\":\\"cool value\\"}" good_key="I am a good value"`
+    )
+  })
+
+  test("with linebreaks", () => {
+    const date = new Date()
+    vi.setSystemTime(date)
+    const spans = Chunk.make(LogSpan.make("imma\nspan=\"", date.getTime() - 7))
+    const annotations = new Map<string, string>([
+      ["I am also\na bad key name", JSON.stringify({ return: "cool\nvalue" })],
+      ["good_key", JSON.stringify({ returnWithSpace: "cool\nvalue or not" })],
+      ["good_key2", "I am a good value\nwith line breaks"],
+      ["good_key3", "I_have=a"]
+    ])
+
+    const result = Logger.logfmtLogger.log(
+      FiberId.none,
+      logLevelInfo,
+      "My\nmessage",
+      Cause.empty,
+      FiberRefs.unsafeMake(new Map()),
+      spans,
+      annotations,
+      Runtime.defaultRuntime
+    )
+
+    expect(result).toEqual(
+      `timestamp=${date.toJSON()} level=INFO fiber= message="My\\nmessage" imma_span__=7ms I_am_also_a_bad_key_name="{\\"return\\":\\"cool\\\\nvalue\\"}" good_key="{\\"returnWithSpace\\":\\"cool\\\\nvalue or not\\"}" good_key2="I am a good value\\nwith line breaks" good_key3="I_have=a"`
     )
   })
 })
