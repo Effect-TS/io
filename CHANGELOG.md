@@ -1,5 +1,17 @@
 # @effect/io
 
+## 0.0.61
+
+### Patch Changes
+
+- [#177](https://github.com/Effect-TS/io/pull/177) [`d5ea3ec`](https://github.com/Effect-TS/io/commit/d5ea3ecfa6e11ec0492033fd5a59bbadaf541467) Thanks [@patroza](https://github.com/patroza)! - Extracted logfmtLogger from stringLogger and restored linebreaks in stringLogger.
+
+- [#180](https://github.com/Effect-TS/io/pull/180) [`2adf0bb`](https://github.com/Effect-TS/io/commit/2adf0bb4b7f768534c88f46b742aeefd66d7b843) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - improve layer api
+
+- [#175](https://github.com/Effect-TS/io/pull/175) [`56d775b`](https://github.com/Effect-TS/io/commit/56d775bcf85de67b1867818c4da5eaeb511fd082) Thanks [@IMax153](https://github.com/IMax153)! - add several Layer combinators
+
+- [#178](https://github.com/Effect-TS/io/pull/178) [`ee0a5f2`](https://github.com/Effect-TS/io/commit/ee0a5f22455985fe5b9002a1aabd36de4b5bdb29) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Make Tracer compatible with OTEL-like systems
+
 ## 0.0.60
 
 ### Patch Changes
