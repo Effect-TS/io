@@ -96,6 +96,12 @@ export const defaultLogger: Logger<string, void> = fiberRuntime.defaultLogger
 
 /**
  * @since 1.0.0
+ * @category constructors
+ */
+export const logFmt: Layer.Layer<never, never, never> = replace(fiberRuntime.defaultLogger, fiberRuntime.logFmtLogger)
+
+/**
+ * @since 1.0.0
  * @category environment
  */
 export const minimumLogLevel: (level: LogLevel.LogLevel) => Layer.Layer<never, never, never> = circular.minimumLogLevel
@@ -112,6 +118,12 @@ export const withMinimumLogLevel: (level: LogLevel.LogLevel) => <R, E, B>(use: E
  * @category constructors
  */
 export const stringLogger: Logger<string, string> = internal.stringLogger
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const logfmtLogger: Logger<string, string> = internal.logfmtLogger
 
 /**
  * Returns a version of this logger that only logs messages when the log level

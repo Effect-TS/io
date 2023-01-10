@@ -1301,6 +1301,26 @@ export const defaultLogger: Logger<string, void> = internalLogger.makeLogger(
 )
 
 /** @internal */
+export const logFmtLogger: Logger<string, void> = internalLogger.makeLogger(
+  (fiberId, logLevel, message, cause, context, spans, annotations, runtime) => {
+    const formatted = internalLogger.logfmtLogger.log(
+      fiberId,
+      logLevel,
+      message,
+      cause,
+      context,
+      spans,
+      annotations,
+      runtime
+    )
+    const filter = fiberRefs.getOrDefault(currentMinimumLogLevel)(context)
+    if (LogLevel.greaterThanEqual(filter)(logLevel)) {
+      globalThis.console.log(formatted)
+    }
+  }
+)
+
+/** @internal */
 export const currentLoggers: FiberRef.FiberRef<
   HashSet.HashSet<Logger<string, any>>
 > = core.fiberRefUnsafeMakeHashSet(HashSet.make(defaultLogger))
