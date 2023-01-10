@@ -3283,14 +3283,26 @@ export const withMetric = <Type, In, Out>(metric: Metric.Metric<Type, In, Out>) 
  * @macro traced
  * @internal
  */
-export const withSpan = (name: string) => {
+export const withSpan = (name: string, attributes?: Record<string, string>) => {
   const trace = getCallTrace()
   return <R, E, A>(self: Effect.Effect<R, E, A>) =>
-    pipe(
-      core.fiberRefGet(currentTracer),
-      core.flatMap(Option.match(
-        () => self,
-        (tracer) => tracer.withSpan(name, trace)(self)
-      ))
-    ).traced(trace)
+    core.withFiberRuntime<R, E, A>((fiber) => {
+      const tracerMaybe = fiber.getFiberRef(currentTracer)
+      if (tracerMaybe._tag === "Some") {
+        const tracer = tracerMaybe.value
+        const parentSpan = fiber.getFiberRef(tracer.ref)
+        const span = tracer.create(name, attributes ?? {}, parentSpan, trace)
+        return core.acquireUseRelease(
+          pipe(core.fiberRefGet(tracer.ref), core.zipLeft(core.fiberRefSet(tracer.ref)(span))),
+          () => self,
+          (oldValue, exit) => {
+            tracer.status(span, exit)
+            tracer.end(span)
+            return core.fiberRefSet(tracer.ref)(oldValue)
+          }
+        )
+      }
+      return self
+    })
+      .traced(trace)
 }

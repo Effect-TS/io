@@ -1,7 +1,8 @@
 /**
  * @since 1.0.0
  */
-import type { Effect } from "@effect/io/Effect"
+import type { Exit } from "@effect/io/Exit"
+import type { FiberRef } from "@effect/io/FiberRef"
 import * as core from "@effect/io/internal/core"
 import * as Option from "@fp-ts/data/Option"
 
@@ -25,23 +26,30 @@ export type TracerTypeId = typeof TracerTypeId
  * @category models
  * @since 1.0.0
  */
-export interface Tracer {
-  readonly _id: TracerTypeId
-  readonly withSpan: (spanName: string, trace?: string) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+export interface Tracer<S> {
+  readonly [TracerTypeId]: TracerTypeId
+  readonly ref: FiberRef<Option.Option<S>>
+  readonly create: (
+    name: string,
+    attributes: Record<string, string>,
+    parent: Option.Option<S>,
+    trace: string | undefined
+  ) => S
+  readonly add: (span: S, key: string, value: string) => void
+  readonly status: (span: S, exit: Exit<any, any>) => void
+  readonly end: (span: S) => void
 }
 
 /**
  * @category constructors
  * @since 1.0.0
  */
-export const make: (
-  withSpan: (spanName: string, trace?: string) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
-) => Tracer = (
-  withSpan
-) => ({ _id: TracerTypeId, withSpan })
+export const make = <S>(
+  args: Omit<Tracer<S>, TracerTypeId>
+): Tracer<S> => ({ ...args, [TracerTypeId]: TracerTypeId })
 
 /**
  * @category fiberRefs
  * @since 1.0.0
  */
-export const currentTracer = core.fiberRefUnsafeMake<Option.Option<Tracer>>(Option.none)
+export const currentTracer = core.fiberRefUnsafeMake<Option.Option<Tracer<any>>>(Option.none)

@@ -4674,7 +4674,10 @@ export const withRuntimeFlagsScoped: (update: RuntimeFlagsPatch.RuntimeFlagsPatc
  * @since 1.0.0
  * @category tracing
  */
-export const withSpan: (name: string) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A> = effect.withSpan
+export const withSpan: (
+  name: string,
+  attributes?: Record<string, string> | undefined
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A> = effect.withSpan
 
 /**
  * @macro traced
