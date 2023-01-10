@@ -14,6 +14,8 @@ Added in v1.0.0
 
 - [constructors](#constructors)
   - [defaultLogger](#defaultlogger)
+  - [logFmt](#logfmt)
+  - [logfmtLogger](#logfmtlogger)
   - [make](#make)
   - [none](#none)
   - [simple](#simple)
@@ -52,6 +54,26 @@ Added in v1.0.0
 
 ```ts
 export declare const defaultLogger: Logger<string, void>
+```
+
+Added in v1.0.0
+
+## logFmt
+
+**Signature**
+
+```ts
+export declare const logFmt: Layer.Layer<never, never, never>
+```
+
+Added in v1.0.0
+
+## logfmtLogger
+
+**Signature**
+
+```ts
+export declare const logfmtLogger: Logger<string, string>
 ```
 
 Added in v1.0.0

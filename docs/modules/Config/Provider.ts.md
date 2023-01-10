@@ -13,7 +13,7 @@ Added in v1.0.0
 <h2 class="text-delta">Table of contents</h2>
 
 - [constructors](#constructors)
-  - [env](#env)
+  - [fromEnv](#fromenv)
   - [fromFlat](#fromflat)
   - [fromMap](#frommap)
   - [make](#make)
@@ -31,7 +31,7 @@ Added in v1.0.0
 
 # constructors
 
-## env
+## fromEnv
 
 A config provider that loads configuration from environment variables,
 using the default System service.
@@ -39,7 +39,7 @@ using the default System service.
 **Signature**
 
 ```ts
-export declare const env: () => ConfigProvider
+export declare const fromEnv: (config?: ConfigProvider.FromEnvConfig | undefined) => ConfigProvider
 ```
 
 Added in v1.0.0
