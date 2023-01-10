@@ -99,7 +99,7 @@ export const isFresh: <R, E, A>(self: Layer<R, E, A>) => boolean = internal.isFr
  * @since 1.0.0
  * @category mapping
  */
-export const asUnit: <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn, E, void> = internal.asUnit
+export const discard: <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn, E, never> = internal.discard
 
 /**
  * Builds a layer into a scoped value.
@@ -276,8 +276,16 @@ export const fresh: <R, E, A>(self: Layer<R, E, A>) => Layer<R, E, A> = internal
  * @since 1.0.0
  * @category constructors
  */
-export const fromEffect: <T>(tag: Context.Tag<T>) => <R, E>(effect: Effect.Effect<R, E, T>) => Layer<R, E, T> =
+export const effect: <T>(tag: Context.Tag<T>) => <R, E>(effect: Effect.Effect<R, E, T>) => Layer<R, E, T> =
   internal.fromEffect
+
+/**
+ * Constructs a layer from the specified effect discarding it's output.
+ *
+ * @since 1.0.0
+ * @category constructors
+ */
+export const effectDiscard: <R, E, _>(effect: Effect.Effect<R, E, _>) => Layer<R, E, never> = internal.fromEffectDiscard
 
 /**
  * Constructs a layer from the specified effect, which must return one or more
@@ -286,19 +294,23 @@ export const fromEffect: <T>(tag: Context.Tag<T>) => <R, E>(effect: Effect.Effec
  * @since 1.0.0
  * @category constructors
  */
-export const fromEffectEnvironment: <R, E, A>(effect: Effect.Effect<R, E, Context.Context<A>>) => Layer<R, E, A> =
+export const effectEnvironment: <R, E, A>(effect: Effect.Effect<R, E, Context.Context<A>>) => Layer<R, E, A> =
   internal.fromEffectEnvironment
 
-/**
- * Constructs a layer from the environment using the specified function.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const fromFunction: <A, B>(
+const fromFunction: <A, B>(
   tagA: Context.Tag<A>,
   tagB: Context.Tag<B>
 ) => (f: (a: A) => B) => Layer<A, never, B> = internal.fromFunction
+
+export {
+  /**
+   * Constructs a layer from the environment using the specified function.
+   *
+   * @since 1.0.0
+   * @category constructors
+   */
+  fromFunction as function
+}
 
 /**
  * Builds this layer and uses it until it is interrupted. This is useful when

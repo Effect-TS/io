@@ -25,7 +25,7 @@ describe.concurrent("Layer", () => {
     Effect.gen(function*($) {
       const BoolTag = Context.Tag<boolean>()
       const deferred = yield* $(Deferred.make<never, void>())
-      const layer1 = Layer.fromEffectEnvironment<never, never, never>(Effect.never())
+      const layer1 = Layer.effectEnvironment<never, never, never>(Effect.never())
       const layer2 = Layer.scopedEnvironment(
         Effect.acquireRelease(
           pipe(
@@ -106,17 +106,17 @@ describe.concurrent("Layer", () => {
         constructor(readonly value: number) {}
       }
       const ATag = Context.Tag<A>()
-      const aLayer = Layer.fromFunction(ConfigTag, ATag)((config) => new A(config.value))
+      const aLayer = Layer.function(ConfigTag, ATag)((config) => new A(config.value))
       class B {
         constructor(readonly value: number) {}
       }
       const BTag = Context.Tag<B>()
-      const bLayer = Layer.fromFunction(ATag, BTag)((_: A) => new B(_.value))
+      const bLayer = Layer.function(ATag, BTag)((_: A) => new B(_.value))
       class C {
         constructor(readonly value: number) {}
       }
       const CTag = Context.Tag<C>()
-      const cLayer = Layer.fromFunction(ATag, CTag)((_: A) => new C(_.value))
+      const cLayer = Layer.function(ATag, CTag)((_: A) => new C(_.value))
       const fedB = pipe(
         Layer.succeed(ConfigTag)(new Config(1)),
         Layer.provideToAndMerge(aLayer),
@@ -297,7 +297,7 @@ describe.concurrent("Layer", () => {
       const ServiceBTag = Context.Tag<ServiceB>()
       const StringTag = Context.Tag<string>()
       const layer1 = Layer.succeed(ServiceATag)({ name: "name", value: 1 })
-      const layer2 = Layer.fromFunction(StringTag, ServiceBTag)((name) => ({ name }))
+      const layer2 = Layer.function(StringTag, ServiceBTag)((name) => ({ name }))
       const live = pipe(
         layer1,
         Layer.map((context) =>
@@ -331,7 +331,7 @@ describe.concurrent("Layer", () => {
       const fiberRef = yield* $(FiberRef.make<boolean>(false))
       const tag = Context.Tag<boolean>()
       const layer1 = Layer.scopedDiscard(FiberRef.locallyScoped(fiberRef)(true))
-      const layer2 = Layer.fromEffect(tag)(FiberRef.get(fiberRef))
+      const layer2 = Layer.effect(tag)(FiberRef.get(fiberRef))
       const layer3 = pipe(layer1, Layer.merge(pipe(layer1, Layer.provideTo(layer2))))
       const result = yield* $(Layer.build(layer3))
       assert.equal(pipe(result, Context.unsafeGet(tag)), true)
@@ -380,7 +380,7 @@ describe.concurrent("Layer", () => {
           )
         })
       )
-      const provideNumberRef = Layer.fromEffect(NumberRefTag)(Ref.make(10))
+      const provideNumberRef = Layer.effect(NumberRefTag)(Ref.make(10))
       const provideString = Layer.succeed(StringTag)("hi")
       const needsString = pipe(provideNumberRef, Layer.provideTo(fooBuilder))
       const layer = pipe(provideString, Layer.provideTo(needsString))
@@ -420,7 +420,7 @@ describe.concurrent("Layer", () => {
           )
         })
       )
-      const provideNumberRef = Layer.fromEffect(NumberRefTag)(Ref.make(10))
+      const provideNumberRef = Layer.effect(NumberRefTag)(Ref.make(10))
       const provideString = Layer.succeed(StringTag)("hi")
       const needsString = pipe(provideNumberRef, Layer.provideToAndMerge(fooBuilder))
       const layer = pipe(provideString, Layer.provideToAndMerge(needsString))
@@ -445,7 +445,7 @@ describe.concurrent("Layer", () => {
         readonly value: string
       }
       const ToStringTag = Context.Tag<ToStringService>()
-      const layer = Layer.fromFunction(NumberTag, ToStringTag)((numberService) => ({
+      const layer = Layer.function(NumberTag, ToStringTag)((numberService) => ({
         value: numberService.value.toString()
       }))
       const live = pipe(Layer.succeed(NumberTag)({ value: 1 }), Layer.provideTo(Layer.passthrough(layer)))
@@ -524,7 +524,7 @@ describe.concurrent("Layer", () => {
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(0))
       const effect = pipe(ref, Ref.update((n) => n + 1), Effect.zipRight(Effect.fail("fail")))
-      const layer = pipe(Layer.fromEffectEnvironment(effect), Layer.retry(Schedule.recurs(3)))
+      const layer = pipe(Layer.effectEnvironment(effect), Layer.retry(Schedule.recurs(3)))
       yield* $(Effect.ignore(Effect.scoped(Layer.build(layer))))
       const result = yield* $(Ref.get(ref))
       assert.strictEqual(result, 4)
