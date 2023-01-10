@@ -410,8 +410,7 @@ of type `E`.
 
 ```ts
 export interface Failure<E> extends Effect.Effect<never, E, never> {
-  /** @internal */
-  readonly _tag: OpCodes.OP_FAILURE
+  readonly _tag: 'Failure'
   readonly cause: Cause.Cause<E>
 }
 ```
@@ -427,8 +426,7 @@ of type `A`.
 
 ```ts
 export interface Success<A> extends Effect.Effect<never, never, A> {
-  /** @internal */
-  readonly _tag: OpCodes.OP_SUCCESS
+  readonly _tag: 'Success'
   readonly value: A
 }
 ```

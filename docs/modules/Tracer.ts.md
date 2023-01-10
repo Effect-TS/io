@@ -31,9 +31,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const make: (
-  withSpan: (spanName: string, trace?: string | undefined) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
-) => Tracer
+export declare const make: <S>(args: Pick<Tracer<S>, 'ref' | 'create' | 'add' | 'status' | 'end'>) => Tracer<S>
 ```
 
 Added in v1.0.0
@@ -45,7 +43,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const currentTracer: FiberRef<Option.Option<Tracer>>
+export declare const currentTracer: FiberRef<Option.Option<Tracer<any>>>
 ```
 
 Added in v1.0.0
@@ -61,9 +59,18 @@ This service is meant to be implemented by exporters such as opentelemetry.
 **Signature**
 
 ```ts
-export interface Tracer {
-  readonly _id: TracerTypeId
-  readonly withSpan: (spanName: string, trace?: string) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+export interface Tracer<S> {
+  readonly [TracerTypeId]: TracerTypeId
+  readonly ref: FiberRef<Option.Option<S>>
+  readonly create: (
+    name: string,
+    attributes: Record<string, string>,
+    parent: Option.Option<S>,
+    trace: string | undefined
+  ) => S
+  readonly add: (span: S, key: string, value: string) => void
+  readonly status: (span: S, exit: Exit<any, any>) => void
+  readonly end: (span: S) => void
 }
 ```
 

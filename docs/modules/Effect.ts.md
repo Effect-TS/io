@@ -6124,7 +6124,10 @@ Annotates the wrapped effect with a span using the current Tracer.
 **Signature**
 
 ```ts
-export declare const withSpan: (name: string) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+export declare const withSpan: (
+  name: string,
+  attributes?: Record<string, string> | undefined
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0

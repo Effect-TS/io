@@ -57,6 +57,7 @@ Added in v1.0.0
   - [buildWithScope](#buildwithscope)
 - [error handling](#error-handling)
   - [catchAll](#catchall)
+  - [catchAllCause](#catchallcause)
   - [orDie](#ordie)
   - [orElse](#orelse)
 - [folding](#folding)
@@ -66,6 +67,7 @@ Added in v1.0.0
   - [isFresh](#isfresh)
   - [isLayer](#islayer)
 - [mapping](#mapping)
+  - [asUnit](#asunit)
   - [map](#map)
   - [mapError](#maperror)
 - [models](#models)
@@ -86,6 +88,7 @@ Added in v1.0.0
   - [flatten](#flatten)
   - [tap](#tap)
   - [tapError](#taperror)
+  - [tapErrorCause](#taperrorcause)
 - [symbols](#symbols)
   - [LayerTypeId](#layertypeid)
   - [LayerTypeId (type alias)](#layertypeid-type-alias)
@@ -435,6 +438,20 @@ export declare const catchAll: <E, R2, E2, A2>(
 
 Added in v1.0.0
 
+## catchAllCause
+
+Recovers from all errors.
+
+**Signature**
+
+```ts
+export declare const catchAllCause: <E, R2, E2, A2>(
+  onError: (cause: Cause.Cause<E>) => Layer<R2, E2, A2>
+) => <R, A>(self: Layer<R, E, A>) => Layer<R2 | R, E2, A & A2>
+```
+
+Added in v1.0.0
+
 ## orDie
 
 Translates effect failure into death of the fiber, making all failures
@@ -527,6 +544,19 @@ export declare const isLayer: (u: unknown) => u is Layer<unknown, unknown, unkno
 Added in v1.0.0
 
 # mapping
+
+## asUnit
+
+Replaces the layer's output with `void` and includes the layer only for its
+side-effects.
+
+**Signature**
+
+```ts
+export declare const asUnit: <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn, E, void>
+```
+
+Added in v1.0.0
 
 ## map
 
@@ -755,6 +785,20 @@ Performs the specified effect if this layer fails.
 ```ts
 export declare const tapError: <E, RIn2, E2, X>(
   f: (e: E) => Effect.Effect<RIn2, E2, X>
+) => <RIn, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn2 | RIn, E | E2, ROut>
+```
+
+Added in v1.0.0
+
+## tapErrorCause
+
+Performs the specified effect if this layer fails.
+
+**Signature**
+
+```ts
+export declare const tapErrorCause: <E, RIn2, E2, X>(
+  f: (cause: Cause.Cause<E>) => Effect.Effect<RIn2, E2, X>
 ) => <RIn, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn2 | RIn, E | E2, ROut>
 ```
 
