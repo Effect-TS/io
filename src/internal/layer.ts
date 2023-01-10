@@ -428,8 +428,8 @@ export const withScope = (scope: Scope.Scope) => {
 // -----------------------------------------------------------------------------
 
 /** @internal */
-export const asUnit = <RIn, E, ROut>(self: Layer.Layer<RIn, E, ROut>): Layer.Layer<RIn, E, void> =>
-  pipe(self, map(() => Context.make(Context.Tag<void>())(void 0)))
+export const discard = <RIn, E, ROut>(self: Layer.Layer<RIn, E, ROut>): Layer.Layer<RIn, E, never> =>
+  pipe(self, map(() => Context.empty()))
 
 /** @internal */
 export const catchAll = <E, R2, E2, A2>(onError: (error: E) => Layer.Layer<R2, E2, A2>) => {
@@ -562,6 +562,16 @@ export function fromEffect<T>(tag: Context.Tag<T>) {
       )
     )
   }
+}
+
+/** @internal */
+export function fromEffectDiscard<R, E, _>(effect: Effect.Effect<R, E, _>): Layer.Layer<R, E, never> {
+  return fromEffectEnvironment(
+    pipe(
+      effect,
+      core.map(() => Context.empty())
+    )
+  )
 }
 
 /** @internal */

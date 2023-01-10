@@ -31,14 +31,15 @@ Added in v1.0.0
 - [constructors](#constructors)
   - [die](#die)
   - [dieSync](#diesync)
+  - [effect](#effect)
+  - [effectDiscard](#effectdiscard)
+  - [effectEnvironment](#effectenvironment)
   - [environment](#environment)
   - [fail](#fail)
   - [failCause](#failcause)
   - [failCauseSync](#failcausesync)
   - [failSync](#failsync)
-  - [fromEffect](#fromeffect)
-  - [fromEffectEnvironment](#fromeffectenvironment)
-  - [fromFunction](#fromfunction)
+  - [function](#function)
   - [scope](#scope)
   - [scoped](#scoped)
   - [scopedDiscard](#scopeddiscard)
@@ -67,7 +68,7 @@ Added in v1.0.0
   - [isFresh](#isfresh)
   - [isLayer](#islayer)
 - [mapping](#mapping)
-  - [asUnit](#asunit)
+  - [discard](#discard)
   - [map](#map)
   - [mapError](#maperror)
 - [models](#models)
@@ -119,6 +120,43 @@ Constructs a layer that dies with the specified defect.
 
 ```ts
 export declare const dieSync: (evaluate: () => unknown) => Layer<never, never, unknown>
+```
+
+Added in v1.0.0
+
+## effect
+
+Constructs a layer from the specified effect.
+
+**Signature**
+
+```ts
+export declare const effect: <T>(tag: Context.Tag<T>) => <R, E>(effect: Effect.Effect<R, E, T>) => Layer<R, E, T>
+```
+
+Added in v1.0.0
+
+## effectDiscard
+
+Constructs a layer from the specified effect discarding it's output.
+
+**Signature**
+
+```ts
+export declare const effectDiscard: <R, E, _>(effect: Effect.Effect<R, E, _>) => Layer<R, E, never>
+```
+
+Added in v1.0.0
+
+## effectEnvironment
+
+Constructs a layer from the specified effect, which must return one or more
+services.
+
+**Signature**
+
+```ts
+export declare const effectEnvironment: <R, E, A>(effect: Effect.Effect<R, E, Context.Context<A>>) => Layer<R, E, A>
 ```
 
 Added in v1.0.0
@@ -184,42 +222,14 @@ export declare const failSync: <E>(evaluate: () => E) => Layer<never, E, unknown
 
 Added in v1.0.0
 
-## fromEffect
-
-Constructs a layer from the specified effect.
-
-**Signature**
-
-```ts
-export declare const fromEffect: <T>(tag: Context.Tag<T>) => <R, E>(effect: Effect.Effect<R, E, T>) => Layer<R, E, T>
-```
-
-Added in v1.0.0
-
-## fromEffectEnvironment
-
-Constructs a layer from the specified effect, which must return one or more
-services.
-
-**Signature**
-
-```ts
-export declare const fromEffectEnvironment: <R, E, A>(effect: Effect.Effect<R, E, Context.Context<A>>) => Layer<R, E, A>
-```
-
-Added in v1.0.0
-
-## fromFunction
+## function
 
 Constructs a layer from the environment using the specified function.
 
 **Signature**
 
 ```ts
-export declare const fromFunction: <A, B>(
-  tagA: Context.Tag<A>,
-  tagB: Context.Tag<B>
-) => (f: (a: A) => B) => Layer<A, never, B>
+export declare const function: <A, B>(tagA: Context.Tag<A>, tagB: Context.Tag<B>) => (f: (a: A) => B) => Layer<A, never, B>
 ```
 
 Added in v1.0.0
@@ -545,7 +555,7 @@ Added in v1.0.0
 
 # mapping
 
-## asUnit
+## discard
 
 Replaces the layer's output with `void` and includes the layer only for its
 side-effects.
@@ -553,7 +563,7 @@ side-effects.
 **Signature**
 
 ```ts
-export declare const asUnit: <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn, E, void>
+export declare const discard: <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn, E, never>
 ```
 
 Added in v1.0.0
