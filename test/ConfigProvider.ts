@@ -73,6 +73,13 @@ const webScrapingTargetsConfig: Config.Config<WebScrapingTargets> = Config.struc
   targets: Config.setOf(Config.string(), "targets")
 })
 
+const webScrapingTargetsConfig2 = Config.struct({
+  targets: pipe(
+    Config.chunkOf(Config.string(), "targets"),
+    Config.withDefault(Chunk.make("https://effect.website2", "https://github.com/Effect-TS2"))
+  )
+})
+
 const provider = (map: Map<string, string>): ConfigProvider.ConfigProvider => {
   return ConfigProvider.fromMap(map)
 }
@@ -263,6 +270,15 @@ describe.concurrent("ConfigProvider", () => {
       const result = yield* $(provider(map).load(webScrapingTargetsConfig))
       assert.deepStrictEqual(result, {
         targets: HashSet.make("https://effect.website", "https://github.com/Effect-TS")
+      })
+    }))
+
+  it.effect("collection of atoms falls back to default", () =>
+    Effect.gen(function*($) {
+      const map = new Map()
+      const result = yield* $(provider(map).load(webScrapingTargetsConfig2))
+      assert.deepStrictEqual(result, {
+        targets: Chunk.make("https://effect.website2", "https://github.com/Effect-TS2")
       })
     }))
 
