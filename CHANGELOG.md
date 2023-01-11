@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.0.62
+
+### Patch Changes
+
+- [#181](https://github.com/Effect-TS/io/pull/181) [`2911cd8`](https://github.com/Effect-TS/io/commit/2911cd817afcf5fcc1aa2a49f488cdc5f0b51a8b) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Update build scripts
+
 ## 0.0.61
 
 ### Patch Changes
