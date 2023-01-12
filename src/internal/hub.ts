@@ -11,7 +11,6 @@ import type * as Scope from "@effect/io/Scope"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Equal from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
-import * as MutableHashSet from "@fp-ts/data/MutableHashSet"
 import * as MutableQueue from "@fp-ts/data/MutableQueue"
 import * as MutableRef from "@fp-ts/data/MutableRef"
 
@@ -37,12 +36,37 @@ interface Subscription<A> {
 }
 
 /** @internal */
-type Subscribers<A> = MutableHashSet.MutableHashSet<
-  readonly [
-    Subscription<A>,
-    MutableQueue.MutableQueue<Deferred.Deferred<never, A>>
-  ]
+type Subscribers<A> = Map<
+  Subscription<A>,
+  Set<MutableQueue.MutableQueue<Deferred.Deferred<never, A>>>
 >
+
+const addSubscribers = <A>(
+  subscription: Subscription<A>,
+  pollers: MutableQueue.MutableQueue<Deferred.Deferred<never, A>>
+) =>
+  (subscribers: Subscribers<A>) => {
+    if (!subscribers.has(subscription)) {
+      subscribers.set(subscription, new Set())
+    }
+    const set = subscribers.get(subscription)!
+    set.add(pollers)
+  }
+
+const removeSubscribers = <A>(
+  subscription: Subscription<A>,
+  pollers: MutableQueue.MutableQueue<Deferred.Deferred<never, A>>
+) =>
+  (subscribers: Subscribers<A>) => {
+    if (!subscribers.has(subscription)) {
+      return
+    }
+    const set = subscribers.get(subscription)!
+    set.delete(pollers)
+    if (set.size === 0) {
+      subscribers.delete(subscription)
+    }
+  }
 
 /** @internal */
 export const bounded = <A>(requestedCapacity: number): Effect.Effect<never, never, Hub.Hub<A>> => {
@@ -922,7 +946,7 @@ class SubscriptionImpl<A> implements Queue.Dequeue<A> {
         return pipe(
           core.suspendSucceed(() => {
             pipe(this.pollers, MutableQueue.offer(deferred))
-            pipe(this.subscribers, MutableHashSet.add([this.subscription, this.pollers] as const))
+            pipe(this.subscribers, addSubscribers(this.subscription, this.pollers))
             this.strategy.unsafeCompletePollers(
               this.hub,
               this.subscribers,
@@ -1155,7 +1179,7 @@ export const makeHub = <A>(
         core.map((deferred) =>
           unsafeMakeHub(
             hub,
-            MutableHashSet.empty(),
+            new Map(),
             scope,
             deferred,
             MutableRef.make(false),
@@ -1558,12 +1582,11 @@ const unsafeStrategyCompletePollers = <A>(
   while (keepPolling && !subscription.isEmpty()) {
     const poller = pipe(pollers, MutableQueue.poll(MutableQueue.EmptyMutableQueue))
     if (poller === MutableQueue.EmptyMutableQueue) {
-      const subPollerPair = [subscription, pollers] as const
-      pipe(subscribers, MutableHashSet.remove(subPollerPair))
+      pipe(subscribers, removeSubscribers(subscription, pollers))
       if (MutableQueue.isEmpty(pollers)) {
         keepPolling = false
       } else {
-        pipe(subscribers, MutableHashSet.add(subPollerPair))
+        pipe(subscribers, addSubscribers(subscription, pollers))
       }
     } else {
       const pollResult = subscription.poll(MutableQueue.EmptyMutableQueue)
@@ -1584,8 +1607,10 @@ const unsafeStrategyCompleteSubscribers = <A>(
   subscribers: Subscribers<A>
 ): void => {
   for (
-    const [subscription, pollers] of subscribers
+    const [subscription, pollersSet] of subscribers
   ) {
-    strategy.unsafeCompletePollers(hub, subscribers, subscription, pollers)
+    for (const pollers of pollersSet) {
+      strategy.unsafeCompletePollers(hub, subscribers, subscription, pollers)
+    }
   }
 }
