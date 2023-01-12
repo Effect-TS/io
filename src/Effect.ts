@@ -39,6 +39,7 @@ import type * as Context from "@fp-ts/data/Context"
 import type * as Duration from "@fp-ts/data/Duration"
 import type * as Either from "@fp-ts/data/Either"
 import type * as Equal from "@fp-ts/data/Equal"
+import type * as HashMap from "@fp-ts/data/HashMap"
 import type * as HashSet from "@fp-ts/data/HashSet"
 import type * as Option from "@fp-ts/data/Option"
 import type { Predicate, Refinement } from "@fp-ts/data/Predicate"
@@ -2271,7 +2272,7 @@ export const logAnnotate: (key: string, value: string) => <R, E, A>(effect: Effe
  * @since 1.0.0
  * @category logging
  */
-export const logAnnotations: () => Effect<never, never, ReadonlyMap<string, string>> = effect.logAnnotations
+export const logAnnotations: () => Effect<never, never, HashMap.HashMap<string, string>> = effect.logAnnotations
 
 /**
  * Loops with the specified effectual function, collecting the results into a

@@ -7,6 +7,7 @@ import * as Runtime from "@effect/io/Runtime"
 
 import * as Logger from "@effect/io/Logger"
 import * as Chunk from "@fp-ts/data/Chunk"
+import * as HashMap from "@fp-ts/data/HashMap"
 
 import { vi } from "vitest"
 
@@ -22,11 +23,11 @@ describe("stringLogger", () => {
     const date = new Date()
     vi.setSystemTime(date)
     const spans = Chunk.make(LogSpan.make("imma span=\"", date.getTime() - 7))
-    const annotations = new Map<string, string>([
+    const annotations = HashMap.make(
       ["just_a_key", "just_a_value"],
       ["I am bad key name", JSON.stringify({ coolValue: "cool value" })],
       ["good_key", "I am a good value"]
-    ])
+    )
 
     const result = Logger.stringLogger.log(
       FiberId.none,
@@ -48,12 +49,12 @@ describe("stringLogger", () => {
     const date = new Date()
     vi.setSystemTime(date)
     const spans = Chunk.make(LogSpan.make("imma\nspan=\"", date.getTime() - 7))
-    const annotations = new Map<string, string>([
+    const annotations = HashMap.make(
       ["I am also\na bad key name", JSON.stringify({ return: "cool\nvalue" })],
       ["good_key", JSON.stringify({ returnWithSpace: "cool\nvalue or not" })],
       ["good_key2", "I am a good value\nwith line breaks"],
       ["good_key3", "I_have=a"]
-    ])
+    )
 
     const result = Logger.stringLogger.log(
       FiberId.none,
@@ -86,11 +87,11 @@ describe("logfmtLogger", () => {
     const date = new Date()
     vi.setSystemTime(date)
     const spans = Chunk.make(LogSpan.make("imma span=\"", date.getTime() - 7))
-    const annotations = new Map<string, string>([
+    const annotations = HashMap.make(
       ["just_a_key", "just_a_value"],
       ["I am bad key name", JSON.stringify({ coolValue: "cool value" })],
       ["good_key", "I am a good value"]
-    ])
+    )
 
     const result = Logger.logfmtLogger.log(
       FiberId.none,
@@ -112,12 +113,12 @@ describe("logfmtLogger", () => {
     const date = new Date()
     vi.setSystemTime(date)
     const spans = Chunk.make(LogSpan.make("imma\nspan=\"", date.getTime() - 7))
-    const annotations = new Map<string, string>([
+    const annotations = HashMap.make(
       ["I am also\na bad key name", JSON.stringify({ return: "cool\nvalue" })],
       ["good_key", JSON.stringify({ returnWithSpace: "cool\nvalue or not" })],
       ["good_key2", "I am a good value\nwith line breaks"],
       ["good_key3", "I_have=a"]
-    ])
+    )
 
     const result = Logger.logfmtLogger.log(
       FiberId.none,

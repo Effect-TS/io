@@ -91,7 +91,7 @@ export declare const make: <Message, Output>(
     cause: Cause.Cause<unknown>,
     context: FiberRefs.FiberRefs,
     spans: Chunk.Chunk<LogSpan.LogSpan>,
-    annotations: ReadonlyMap<string, string>,
+    annotations: HashMap.HashMap<string, string>,
     runtime: Runtime<never>
   ) => Output
 ) => Logger<Message, Output>
@@ -276,7 +276,7 @@ export interface Logger<Message, Output> extends Logger.Variance<Message, Output
     cause: Cause.Cause<unknown>,
     context: FiberRefs.FiberRefs,
     spans: Chunk.Chunk<LogSpan.LogSpan>,
-    annotations: ReadonlyMap<string, string>,
+    annotations: HashMap<string, string>,
     runtime: Runtime<never>
   ) => Output
 }

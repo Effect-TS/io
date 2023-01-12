@@ -31,6 +31,7 @@ import * as HashSetPatch from "@fp-ts/data/Differ/HashSetPatch"
 import * as Either from "@fp-ts/data/Either"
 import * as Equal from "@fp-ts/data/Equal"
 import { identity, pipe } from "@fp-ts/data/Function"
+import * as HashMap from "@fp-ts/data/HashMap"
 import * as HashSet from "@fp-ts/data/HashSet"
 import * as MutableRef from "@fp-ts/data/MutableRef"
 import * as Option from "@fp-ts/data/Option"
@@ -1788,8 +1789,8 @@ export const currentEnvironment: FiberRef.FiberRef<Context.Context<never>> = fib
 )
 
 /** @internal */
-export const currentLogAnnotations: FiberRef.FiberRef<ReadonlyMap<string, string>> = fiberRefUnsafeMake(
-  new Map() as ReadonlyMap<string, string>
+export const currentLogAnnotations: FiberRef.FiberRef<HashMap.HashMap<string, string>> = fiberRefUnsafeMake(
+  HashMap.empty()
 )
 
 /** @internal */

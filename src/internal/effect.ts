@@ -27,6 +27,7 @@ import * as Duration from "@fp-ts/data/Duration"
 import * as Either from "@fp-ts/data/Either"
 import * as Equal from "@fp-ts/data/Equal"
 import { constFalse, constTrue, constVoid, identity, pipe } from "@fp-ts/data/Function"
+import * as HashMap from "@fp-ts/data/HashMap"
 import * as HashSet from "@fp-ts/data/HashSet"
 import * as Option from "@fp-ts/data/Option"
 import type { Predicate, Refinement } from "@fp-ts/data/Predicate"
@@ -1611,7 +1612,7 @@ export const logAnnotate = (key: string, value: string) => {
           pipe(
             effect,
             core.fiberRefLocally(core.currentLogAnnotations)(
-              (annotations as Map<string, string>).set(key, value) as ReadonlyMap<string, string>
+              pipe(annotations, HashMap.set(key, value))
             )
           )
         )
@@ -1624,7 +1625,7 @@ export const logAnnotate = (key: string, value: string) => {
  * @macro traced
  * @internal
  */
-export const logAnnotations = (): Effect.Effect<never, never, ReadonlyMap<string, string>> => {
+export const logAnnotations = (): Effect.Effect<never, never, HashMap.HashMap<string, string>> => {
   const trace = getCallTrace()
   return core.fiberRefGet(core.currentLogAnnotations).traced(trace)
 }

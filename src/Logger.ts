@@ -14,6 +14,7 @@ import type * as LogLevel from "@effect/io/Logger/Level"
 import type * as LogSpan from "@effect/io/Logger/Span"
 import type { Runtime } from "@effect/io/Runtime"
 import type * as Chunk from "@fp-ts/data/Chunk"
+import type * as HashMap from "@fp-ts/data/HashMap"
 import type * as Option from "@fp-ts/data/Option"
 
 /**
@@ -40,7 +41,7 @@ export interface Logger<Message, Output> extends Logger.Variance<Message, Output
     cause: Cause.Cause<unknown>,
     context: FiberRefs.FiberRefs,
     spans: Chunk.Chunk<LogSpan.LogSpan>,
-    annotations: ReadonlyMap<string, string>,
+    annotations: HashMap.HashMap<string, string>,
     runtime: Runtime<never>
   ) => Output
 }
@@ -149,7 +150,7 @@ export const make: <Message, Output>(
     cause: Cause.Cause<unknown>,
     context: FiberRefs.FiberRefs,
     spans: Chunk.Chunk<LogSpan.LogSpan>,
-    annotations: ReadonlyMap<string, string>,
+    annotations: HashMap.HashMap<string, string>,
     runtime: Runtime<never>
   ) => Output
 ) => Logger<Message, Output> = internal.makeLogger

@@ -16,6 +16,7 @@ import type * as Supervisor from "@effect/io/Supervisor"
 import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as Context from "@fp-ts/data/Context"
 import type * as Differ from "@fp-ts/data/Differ"
+import type * as HashMap from "@fp-ts/data/HashMap"
 import type * as HashSet from "@fp-ts/data/HashSet"
 import type * as Option from "@fp-ts/data/Option"
 
@@ -300,7 +301,7 @@ export const currentEnvironment: FiberRef<Context.Context<never>> = core.current
  * @since 1.0.0
  * @category fiberRefs
  */
-export const currentLogAnnotations: FiberRef<ReadonlyMap<string, string>> = core.currentLogAnnotations
+export const currentLogAnnotations: FiberRef<HashMap.HashMap<string, string>> = core.currentLogAnnotations
 
 /**
  * @since 1.0.0
