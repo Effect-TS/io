@@ -240,12 +240,15 @@ const fromFlatLoop = <A>(
     case OpCodes.OP_FALLBACK: {
       return pipe(
         core.suspendSucceed(() => fromFlatLoop(flat, prefix, op.first)),
-        core.catchAll((error1) =>
-          pipe(
-            fromFlatLoop(flat, prefix, op.second),
-            core.catchAll((error2) => core.fail(pipe(configError.Or(error1, error2))))
-          )
-        )
+        core.catchAll((error1) => {
+          if (error1._tag === "MissingData") {
+            return pipe(
+              fromFlatLoop(flat, prefix, op.second),
+              core.catchAll((error2) => core.fail(pipe(configError.Or(error1, error2))))
+            )
+          }
+          return core.fail(error1)
+        })
       ).traced(trace) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
     }
     case OpCodes.OP_LAZY: {
