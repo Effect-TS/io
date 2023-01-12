@@ -177,6 +177,11 @@ export const bool = (name?: string): Config.Config<boolean> => {
 }
 
 /** @internal */
+export const arrayOf = <A>(config: Config.Config<A>, name?: string): Config.Config<ReadonlyArray<A>> => {
+  return pipe(chunkOf(config, name), map(Chunk.toReadonlyArray))
+}
+
+/** @internal */
 export const chunkOf = <A>(config: Config.Config<A>, name?: string): Config.Config<Chunk.Chunk<A>> => {
   return name === undefined ? repeat(config) : nested(name)(repeat(config))
 }
@@ -256,11 +261,6 @@ export const integer = (name?: string): Config.Config<number> => {
     }
   )
   return name === undefined ? config : nested(name)(config)
-}
-
-/** @internal */
-export const listOf = <A>(config: Config.Config<A>, name?: string): Config.Config<Chunk.Chunk<A>> => {
-  return pipe(chunkOf(config, name), map(Chunk.fromIterable))
 }
 
 /** @internal */

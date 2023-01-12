@@ -70,7 +70,7 @@ export const fromFlat = (flat: ConfigProvider.ConfigProvider.Flat): ConfigProvid
     (config) => {
       const trace = getCallTrace()
       return pipe(
-        fromFlatLoop(flat, Chunk.empty(), config, false),
+        fromFlatLoop(flat, Chunk.empty(), config),
         core.flatMap((chunk) =>
           pipe(
             Chunk.head(chunk),
@@ -213,8 +213,7 @@ const extend = <A, B>(
 const fromFlatLoop = <A>(
   flat: ConfigProvider.ConfigProvider.Flat,
   prefix: Chunk.Chunk<string>,
-  config: Config.Config<A>,
-  isEmptyOk: boolean
+  config: Config.Config<A>
 ): Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>> => {
   const trace = getCallTrace()
   const op = config as _config.ConfigPrimitive
@@ -228,7 +227,7 @@ const fromFlatLoop = <A>(
     }
     case OpCodes.OP_DESCRIBED: {
       return core.suspendSucceed(
-        () => fromFlatLoop(flat, prefix, op.config, isEmptyOk)
+        () => fromFlatLoop(flat, prefix, op.config)
       ).traced(trace) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
     }
     case OpCodes.OP_FAIL: {
@@ -240,17 +239,17 @@ const fromFlatLoop = <A>(
     }
     case OpCodes.OP_FALLBACK: {
       return pipe(
-        core.suspendSucceed(() => fromFlatLoop(flat, prefix, op.first, isEmptyOk)),
+        core.suspendSucceed(() => fromFlatLoop(flat, prefix, op.first)),
         core.catchAll((error1) =>
           pipe(
-            fromFlatLoop(flat, prefix, op.second, isEmptyOk),
+            fromFlatLoop(flat, prefix, op.second),
             core.catchAll((error2) => core.fail(pipe(configError.Or(error1, error2))))
           )
         )
       ).traced(trace) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
     }
     case OpCodes.OP_LAZY: {
-      return core.suspendSucceed(() => fromFlatLoop(flat, prefix, op.config(), isEmptyOk)).traced(
+      return core.suspendSucceed(() => fromFlatLoop(flat, prefix, op.config())).traced(
         trace
       ) as Effect.Effect<
         never,
@@ -261,7 +260,7 @@ const fromFlatLoop = <A>(
     case OpCodes.OP_MAP_OR_FAIL: {
       return core.suspendSucceed(() =>
         pipe(
-          fromFlatLoop(flat, prefix, op.original, isEmptyOk),
+          fromFlatLoop(flat, prefix, op.original),
           core.flatMap(
             core.forEach((a) =>
               pipe(
@@ -278,21 +277,15 @@ const fromFlatLoop = <A>(
         fromFlatLoop(
           flat,
           pipe(prefix, Chunk.concat(Chunk.of(op.name))),
-          op.config,
-          isEmptyOk
+          op.config
         )
       ).traced(trace) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
     }
     case OpCodes.OP_PRIMITIVE: {
       return pipe(
         flat.load(prefix, op),
-        core.catchSome((error) =>
-          configError.isMissingData(error) && isEmptyOk
-            ? Option.some(core.succeed(Chunk.empty()))
-            : Option.none
-        ),
         core.flatMap((values) => {
-          if (Chunk.isEmpty(values) && !isEmptyOk) {
+          if (Chunk.isEmpty(values)) {
             const name = pipe(Chunk.last(prefix), Option.getOrElse(() => "<n/a>"))
             return core.fail(_config.missingError(name))
           }
@@ -301,12 +294,12 @@ const fromFlatLoop = <A>(
       ).traced(trace) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
     }
     case OpCodes.OP_SEQUENCE: {
-      return core.suspendSucceed(() => {
-        return pipe(
-          fromFlatLoop(flat, prefix, op.config, true),
+      return core.suspendSucceed(() =>
+        pipe(
+          fromFlatLoop(flat, prefix, op.config),
           core.map(Chunk.of)
         )
-      }).traced(trace) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
+      ).traced(trace) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
     }
     case OpCodes.OP_TABLE: {
       return core.suspendSucceed(() =>
@@ -316,7 +309,11 @@ const fromFlatLoop = <A>(
             return pipe(
               keys,
               core.forEach((key) =>
-                fromFlatLoop(flat, pipe(prefix, Chunk.concat(Chunk.of(key))), op.valueConfig, isEmptyOk)
+                fromFlatLoop(
+                  flat,
+                  pipe(prefix, Chunk.concat(Chunk.of(key))),
+                  op.valueConfig
+                )
               ),
               core.map((values) => {
                 if (values.length === 0) {
@@ -336,11 +333,11 @@ const fromFlatLoop = <A>(
     case OpCodes.OP_ZIP_WITH: {
       return core.suspendSucceed(() =>
         pipe(
-          fromFlatLoop(flat, prefix, op.left, isEmptyOk),
+          fromFlatLoop(flat, prefix, op.left),
           core.either,
           core.flatMap((left) =>
             pipe(
-              fromFlatLoop(flat, prefix, op.right, isEmptyOk),
+              fromFlatLoop(flat, prefix, op.right),
               core.either,
               core.flatMap((right) => {
                 if (Either.isLeft(left) && Either.isLeft(right)) {
