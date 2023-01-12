@@ -5,7 +5,6 @@ import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import * as it from "@effect/io/test/utils/extend"
 import * as Chunk from "@fp-ts/data/Chunk"
-import { equals } from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
 import * as HashMap from "@fp-ts/data/HashMap"
 import * as HashSet from "@fp-ts/data/HashSet"
@@ -22,11 +21,11 @@ const hostPortConfig: Config.Config<HostPort> = Config.struct({
 })
 
 interface HostPorts {
-  readonly hostPorts: Chunk.Chunk<HostPort>
+  readonly hostPorts: ReadonlyArray<HostPort>
 }
 
 const hostPortsConfig: Config.Config<HostPorts> = Config.struct({
-  hostPorts: Config.listOf(hostPortConfig, "hostPorts")
+  hostPorts: Config.arrayOf(hostPortConfig, "hostPorts")
 })
 
 interface ServiceConfig {
@@ -73,9 +72,9 @@ const webScrapingTargetsConfig: Config.Config<WebScrapingTargets> = Config.struc
   targets: Config.setOf(Config.string(), "targets")
 })
 
-const webScrapingTargetsConfig2 = Config.struct({
+const webScrapingTargetsConfigWithDefault = Config.struct({
   targets: pipe(
-    Config.chunkOf(Config.string(), "targets"),
+    Config.chunkOf(Config.string()),
     Config.withDefault(Chunk.make("https://effect.website2", "https://github.com/Effect-TS2"))
   )
 })
@@ -120,17 +119,15 @@ describe.concurrent("ConfigProvider", () => {
       ])
       const result = yield* $(provider(map).load(hostPortsConfig))
       assert.deepStrictEqual(result, {
-        hostPorts: Chunk.fromIterable(
-          Array.from({ length: 3 }, () => ({ host: "localhost", port: 8080 }))
-        )
+        hostPorts: Array.from({ length: 3 }, () => ({ host: "localhost", port: 8080 }))
       })
     }))
 
   it.effect("top-level missing list", () =>
     Effect.gen(function*($) {
       const map = new Map()
-      const result = yield* $(provider(map).load(hostPortsConfig))
-      assert.isTrue(equals(result, { hostPorts: Chunk.empty() }))
+      const result = yield* $(Effect.exit(provider(map).load(hostPortsConfig)))
+      assert.isTrue(Exit.isFailure(result))
     }))
 
   it.effect("simple map", () =>
@@ -157,9 +154,7 @@ describe.concurrent("ConfigProvider", () => {
       ])
       const result = yield* $(ConfigProvider.fromMap(map, { seqDelim: "///" }).load(hostPortsConfig))
       assert.deepStrictEqual(result, {
-        hostPorts: Chunk.fromIterable(
-          Array.from({ length: 3 }, () => ({ host: "localhost", port: 8080 }))
-        )
+        hostPorts: Array.from({ length: 3 }, () => ({ host: "localhost", port: 8080 }))
       })
     }))
 
@@ -171,9 +166,7 @@ describe.concurrent("ConfigProvider", () => {
       ])
       const result = yield* $(ConfigProvider.fromMap(map, { seqDelim: "|||" }).load(hostPortsConfig))
       assert.deepStrictEqual(result, {
-        hostPorts: Chunk.fromIterable(
-          Array.from({ length: 3 }, () => ({ host: "localhost", port: 8080 }))
-        )
+        hostPorts: Array.from({ length: 3 }, () => ({ host: "localhost", port: 8080 }))
       })
     }))
 
@@ -185,9 +178,7 @@ describe.concurrent("ConfigProvider", () => {
       ])
       const result = yield* $(ConfigProvider.fromMap(map, { seqDelim: "*" }).load(hostPortsConfig))
       assert.deepStrictEqual(result, {
-        hostPorts: Chunk.fromIterable(
-          Array.from({ length: 3 }, () => ({ host: "localhost", port: 8080 }))
-        )
+        hostPorts: Array.from({ length: 3 }, () => ({ host: "localhost", port: 8080 }))
       })
     }))
 
@@ -276,7 +267,7 @@ describe.concurrent("ConfigProvider", () => {
   it.effect("collection of atoms falls back to default", () =>
     Effect.gen(function*($) {
       const map = new Map()
-      const result = yield* $(provider(map).load(webScrapingTargetsConfig2))
+      const result = yield* $(provider(map).load(webScrapingTargetsConfigWithDefault))
       assert.deepStrictEqual(result, {
         targets: Chunk.make("https://effect.website2", "https://github.com/Effect-TS2")
       })
