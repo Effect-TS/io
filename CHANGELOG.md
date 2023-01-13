@@ -1,5 +1,13 @@
 # @effect/io
 
+## 0.0.63
+
+### Patch Changes
+
+- [#186](https://github.com/Effect-TS/io/pull/186) [`91115f2`](https://github.com/Effect-TS/io/commit/91115f26704799807c47ce3e35316024d0d4f2fb) Thanks [@patroza](https://github.com/patroza)! - Fix FiberRefs.currentLogAnnotations leak
+
+- [#185](https://github.com/Effect-TS/io/pull/185) [`f8b3ff5`](https://github.com/Effect-TS/io/commit/f8b3ff556320e6ac8be98f1760e97d9a5fa8ee68) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Remove dependency on MutableHashSet
+
 ## 0.0.62
 
 ### Patch Changes
