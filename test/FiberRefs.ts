@@ -7,6 +7,7 @@ import * as FiberRefs from "@effect/io/FiberRefs"
 import * as Queue from "@effect/io/Queue"
 import * as it from "@effect/io/test/utils/extend"
 import { pipe } from "@fp-ts/data/Function"
+import * as HashMap from "@fp-ts/data/HashMap"
 import * as Option from "@fp-ts/data/Option"
 import { assert, describe } from "vitest"
 
@@ -41,5 +42,12 @@ describe.concurrent("FiberRefs", () => {
     )
     const newParentFiberRefs = pipe(parentFiberRefs, FiberRefs.joinAs(parent, childFiberRefs))
     assert.deepStrictEqual(pipe(newParentFiberRefs, FiberRefs.get(FiberRef.interruptedCause)), Option.some(Cause.empty))
+  })
+
+  describe.concurrent("currentLogAnnotations", () => {
+    it.it("doesnt leak", () => {
+      pipe(Effect.unit(), Effect.logAnnotate("test", "abc"), Effect.unsafeRunSync)
+      expect(pipe(FiberRef.currentLogAnnotations, FiberRef.get, Effect.map(HashMap.size), Effect.unsafeRunSync)).toBe(0)
+    })
   })
 })
