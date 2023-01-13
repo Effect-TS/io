@@ -10,6 +10,7 @@ import * as LogSpan from "@effect/io/Logger/Span"
 import type { Runtime } from "@effect/io/Runtime"
 import * as Chunk from "@fp-ts/data/Chunk"
 import { constVoid, pipe } from "@fp-ts/data/Function"
+import * as HashMap from "@fp-ts/data/HashMap"
 import * as Option from "@fp-ts/data/Option"
 
 /** @internal */
@@ -35,7 +36,7 @@ export const makeLogger = <Message, Output>(
     cause: CauseExt.Cause<unknown>,
     context: FiberRefs.FiberRefs,
     spans: Chunk.Chunk<LogSpan.LogSpan>,
-    annotations: ReadonlyMap<string, string>,
+    annotations: HashMap.HashMap<string, string>,
     runtime: Runtime<never>
   ) => Output
 ): Logger.Logger<Message, Output> => ({
@@ -81,7 +82,7 @@ export const stringLogger: Logger.Logger<string, string> = makeLogger<string, st
       }
     }
 
-    if (annotations.size > 0) {
+    if (pipe(annotations, HashMap.size) > 0) {
       output = output + " "
 
       let first = true
@@ -151,7 +152,7 @@ export const logfmtLogger = makeLogger<string, string>(
       }
     }
 
-    if (annotations.size > 0) {
+    if (pipe(annotations, HashMap.size) > 0) {
       output = output + " "
 
       let first = true

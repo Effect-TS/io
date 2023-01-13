@@ -5,6 +5,7 @@ import * as fiberRefs from "@effect/io/internal/fiberRefs"
 import { defaultRuntime } from "@effect/io/internal/runtime"
 import type * as Logger from "@effect/io/Logger"
 import * as Chunk from "@fp-ts/data/Chunk"
+import * as HashMap from "@fp-ts/data/HashMap"
 
 /** @internal */
 export const test = <Message>(input: Message) => {
@@ -16,7 +17,7 @@ export const test = <Message>(input: Message) => {
       Cause.empty,
       fiberRefs.unsafeMake(new Map()),
       Chunk.empty(),
-      new Map(),
+      HashMap.empty(),
       defaultRuntime
     )
   }
