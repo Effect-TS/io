@@ -41,7 +41,7 @@ describe("stringLogger", () => {
     )
 
     expect(result).toEqual(
-      `timestamp=${date.toJSON()} level=INFO fiber= message="My message" imma_span__=7ms just_a_key=just_a_value I_am_bad_key_name="{\\"coolValue\\":\\"cool value\\"}" good_key="I am a good value"`
+      `timestamp=${date.toJSON()} level=INFO fiber= message="My message" imma_span__=7ms just_a_key=just_a_value good_key="I am a good value" I_am_bad_key_name="{\\"coolValue\\":\\"cool value\\"}"`
     )
   })
 
@@ -105,7 +105,7 @@ describe("logfmtLogger", () => {
     )
 
     expect(result).toEqual(
-      `timestamp=${date.toJSON()} level=INFO fiber= message="My message" imma_span__=7ms just_a_key=just_a_value I_am_bad_key_name="{\\"coolValue\\":\\"cool value\\"}" good_key="I am a good value"`
+      `timestamp=${date.toJSON()} level=INFO fiber= message="My message" imma_span__=7ms just_a_key=just_a_value good_key="I am a good value" I_am_bad_key_name="{\\"coolValue\\":\\"cool value\\"}"`
     )
   })
 
