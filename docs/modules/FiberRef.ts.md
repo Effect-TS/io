@@ -191,7 +191,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const currentLogAnnotations: FiberRef<ReadonlyMap<string, string>>
+export declare const currentLogAnnotations: FiberRef<HashMap.HashMap<string, string>>
 ```
 
 Added in v1.0.0

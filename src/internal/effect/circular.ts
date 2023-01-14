@@ -216,7 +216,7 @@ export const disconnect = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect
         core.flatMap((fiber) =>
           pipe(
             restore(internalFiber.join(fiber)),
-            core.onInterrupt(() => pipe(fiber, internalFiber.interruptWithFork(fiberId)))
+            core.onInterrupt(() => pipe(fiber, internalFiber.interruptAsFork(fiberId)))
           )
         )
       )
@@ -413,7 +413,7 @@ export const raceAwait = <R2, E2, A2>(that: Effect.Effect<R2, E2, A2>) => {
                 (value) =>
                   pipe(
                     right,
-                    core.interruptWithFiber(parentFiberId),
+                    core.interruptAsFiber(parentFiberId),
                     core.as(value)
                   )
               )
@@ -430,7 +430,7 @@ export const raceAwait = <R2, E2, A2>(that: Effect.Effect<R2, E2, A2>) => {
                 (value) =>
                   pipe(
                     left,
-                    core.interruptWithFiber(parentFiberId),
+                    core.interruptAsFiber(parentFiberId),
                     core.as(value)
                   )
               )
@@ -497,8 +497,8 @@ export const raceFibersWith = <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
         }, pipe(leftFiber.id(), FiberId.combine(rightFiber.id()))),
         core.onInterrupt(() =>
           pipe(
-            leftFiber.interruptWithFork(parentFiber.id()),
-            core.zipRight(rightFiber.interruptWithFork(parentFiber.id())),
+            leftFiber.interruptAsFork(parentFiber.id()),
+            core.zipRight(rightFiber.interruptAsFork(parentFiber.id())),
             core.zipRight(leftFiber.await()),
             core.zipRight(rightFiber.await())
           )
@@ -897,9 +897,9 @@ export const zipWithFiber = <E2, A, B, C>(that: Fiber.Fiber<E2, B>, f: (a: A, b:
         )
       ).traced(trace)
     },
-    interruptWithFork: (id) => {
+    interruptAsFork: (id) => {
       const trace = getCallTrace()
-      return pipe(self.interruptWithFork(id), core.zipRight(that.interruptWithFork(id))).traced(trace)
+      return pipe(self.interruptAsFork(id), core.zipRight(that.interruptAsFork(id))).traced(trace)
     }
   })
 }

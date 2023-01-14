@@ -44,7 +44,6 @@ import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Context from "@fp-ts/data/Context"
-import * as Either from "@fp-ts/data/Either"
 import * as Equal from "@fp-ts/data/Equal"
 import { identity, pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
@@ -64,25 +63,25 @@ type EvaluationSignal =
   | EvaluationSignalYieldNowInBackground
 
 /** @internal */
-const EvaluationSignalContinue = 0 as const
+const EvaluationSignalContinue = "Continue" as const
 
 /** @internal */
 type EvaluationSignalContinue = typeof EvaluationSignalContinue
 
 /** @internal */
-const EvaluationSignalDone = 1 as const
+const EvaluationSignalDone = "Done" as const
 
 /** @internal */
 type EvaluationSignalDone = typeof EvaluationSignalDone
 
 /** @internal */
-const EvaluationSignalYieldNow = 2 as const
+const EvaluationSignalYieldNow = "Yield" as const
 
 /** @internal */
 type EvaluationSignalYieldNow = typeof EvaluationSignalYieldNow
 
 /** @internal */
-const EvaluationSignalYieldNowInBackground = 3 as const
+const EvaluationSignalYieldNowInBackground = "YieldInBackground" as const
 
 /** @internal */
 type EvaluationSignalYieldNowInBackground = typeof EvaluationSignalYieldNowInBackground
@@ -209,7 +208,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   }
   private _queue = MutableQueue.unbounded<FiberMessage.FiberMessage>()
   private _children: Set<FiberRuntime<any, any>> | null = null
-  private _observers = Chunk.empty<(exit: Exit.Exit<E, A>) => void>()
+  private _observers = new Array<(exit: Exit.Exit<E, A>) => void>()
   private _running = false
   private _stack: Array<core.Continuation> = []
   private _executionTrace: RingBuffer<string> | undefined
@@ -359,7 +358,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
 
   await(): Effect.Effect<never, never, Exit.Exit<E, A>> {
     const trace = getCallTrace()
-    return core.asyncInterruptEither<never, never, Exit.Exit<E, A>>((resume) => {
+    return core.asyncInterrupt<never, never, Exit.Exit<E, A>>((resume) => {
       const cb = (exit: Exit.Exit<E, A>) => resume(core.succeed(exit))
       this.tell(
         FiberMessage.stateful((fiber, _) => {
@@ -370,13 +369,13 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
           }
         })
       )
-      return Either.left(core.sync(() =>
+      return core.sync(() =>
         this.tell(
           FiberMessage.stateful((fiber, _) => {
             fiber.unsafeRemoveObserver(cb)
           })
         )
-      ))
+      )
     }, this.id()).traced(trace)
   }
 
@@ -429,13 +428,11 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   }
 
   /**
-   * In the background, interrupts the fiber as if interrupted from the
-   * specified fiber. If the fiber has already exited, the returned effect will
-   * resume immediately. Otherwise, the effect will resume when the fiber exits.
+   * In the background, interrupts the fiber as if interrupted from the specified fiber.
    *
    * @macro traced
    */
-  interruptWithFork(fiberId: FiberId.FiberId): Effect.Effect<never, never, void> {
+  interruptAsFork(fiberId: FiberId.FiberId): Effect.Effect<never, never, void> {
     const trace = getCallTrace()
     return core.sync(() => this.tell(FiberMessage.interruptSignal(internalCause.interrupt(fiberId)))).traced(trace)
   }
@@ -449,7 +446,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     if (this._exitValue !== null) {
       observer(this._exitValue!)
     } else {
-      this._observers = Chunk.prepend(observer)(this._observers)
+      this._observers.push(observer)
     }
   }
 
@@ -460,7 +457,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    * **NOTE**: This method must be invoked by the fiber itself.
    */
   unsafeRemoveObserver(observer: (exit: Exit.Exit<E, A>) => void): void {
-    this._observers = pipe(this._observers, Chunk.filter((o) => o !== observer))
+    this._observers = this._observers.filter((o) => o !== observer)
   }
   /**
    * Retrieves all fiber refs of the fiber.
@@ -724,12 +721,9 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
 
     this.reportExitValue(exit)
 
-    pipe(
-      this._observers,
-      Chunk.forEach((observer) => {
-        observer(exit)
-      })
-    )
+    for (let i = this._observers.length - 1; i >= 0; i--) {
+      this._observers[i](exit)
+    }
   }
 
   getLoggers() {
@@ -2748,11 +2742,11 @@ export function fiberCollectAll<E, A>(fibers: Iterable<Fiber.Fiber<E, A>>): Fibe
         )
       ).traced(trace)
     },
-    interruptWithFork: (fiberId) => {
+    interruptAsFork: (fiberId) => {
       const trace = getCallTrace()
       return pipe(
         fibers,
-        core.forEachDiscard((fiber) => fiber.interruptWithFork(fiberId))
+        core.forEachDiscard((fiber) => fiber.interruptAsFork(fiberId))
       ).traced(trace)
     }
   }

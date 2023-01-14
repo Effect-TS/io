@@ -95,7 +95,7 @@ export interface Fiber<E, A> extends Fiber.Variance<E, A> {
    * resume immediately. Otherwise, the effect will resume when the fiber exits.
    * @macro traced
    */
-  interruptWithFork(fiberId: FiberId.FiberId): Effect.Effect<never, never, void>
+  interruptAsFork(fiberId: FiberId.FiberId): Effect.Effect<never, never, void>
 }
 
 /**
@@ -385,9 +385,9 @@ export const interrupted: (fiberId: FiberId.FiberId) => Fiber<never, never> = in
  * @since 1.0.0
  * @category interruption
  */
-export const interruptWith: (
+export const interruptAs: (
   fiberId: FiberId.FiberId
-) => <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, Exit.Exit<E, A>> = core.interruptWithFiber
+) => <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, Exit.Exit<E, A>> = core.interruptAsFiber
 
 /**
  * Interrupts the fiber as if interrupted from the specified fiber. If the
@@ -398,9 +398,9 @@ export const interruptWith: (
  * @since 1.0.0
  * @category interruption
  */
-export const interruptWithFork: (
+export const interruptAsFork: (
   fiberId: FiberId.FiberId
-) => <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, void> = internal.interruptWithFork
+) => <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, void> = internal.interruptAsFork
 
 /**
  * Interrupts all fibers, awaiting their interruption.

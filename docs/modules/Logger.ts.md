@@ -276,7 +276,7 @@ export interface Logger<Message, Output> extends Logger.Variance<Message, Output
     cause: Cause.Cause<unknown>,
     context: FiberRefs.FiberRefs,
     spans: Chunk.Chunk<LogSpan.LogSpan>,
-    annotations: HashMap<string, string>,
+    annotations: HashMap.HashMap<string, string>,
     runtime: Runtime<never>
   ) => Output
 }

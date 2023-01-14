@@ -106,7 +106,7 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
 
     return (id, onExitInterrupt) =>
       this.unsafeRun(
-        pipe(fiberRuntime, Fiber.interruptWith(id ?? FiberId.none)),
+        pipe(fiberRuntime, Fiber.interruptAs(id ?? FiberId.none)),
         onExitInterrupt ?
           (exit) => {
             return onExitInterrupt(Exit.flatten(exit))
