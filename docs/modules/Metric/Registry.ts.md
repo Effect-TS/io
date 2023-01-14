@@ -47,8 +47,8 @@ export interface MetricRegistry {
   get<Type extends MetricKeyType.MetricKeyType<any, any>>(
     key: MetricKey.MetricKey<Type>
   ): MetricHook.MetricHook<
-    MetricKeyType.MetricKeyType.InType<typeof key['keyType']>,
-    MetricKeyType.MetricKeyType.OutType<typeof key['keyType']>
+    MetricKeyType.MetricKeyType.InType<(typeof key)['keyType']>,
+    MetricKeyType.MetricKeyType.OutType<(typeof key)['keyType']>
   >
   getCounter(key: MetricKey.MetricKey.Counter): MetricHook.MetricHook.Counter
   getFrequency(key: MetricKey.MetricKey.Frequency): MetricHook.MetricHook.Frequency

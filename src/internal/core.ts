@@ -1435,7 +1435,7 @@ export const interruptFiber = <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<nev
   const trace = getCallTrace()
   return pipe(
     fiberId(),
-    flatMap((fiberId) => pipe(self, interruptWithFiber(fiberId)))
+    flatMap((fiberId) => pipe(self, interruptAsFiber(fiberId)))
   ).traced(trace)
 }
 
@@ -1443,10 +1443,10 @@ export const interruptFiber = <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<nev
  * @macro traced
  * @internal
  */
-export const interruptWithFiber = (fiberId: FiberId.FiberId) => {
+export const interruptAsFiber = (fiberId: FiberId.FiberId) => {
   const trace = getCallTrace()
   return <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<never, never, Exit.Exit<E, A>> => {
-    return pipe(self.interruptWithFork(fiberId), flatMap(() => self.await())).traced(trace)
+    return pipe(self.interruptAsFork(fiberId), flatMap(() => self.await())).traced(trace)
   }
 }
 

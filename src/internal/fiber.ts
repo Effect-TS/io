@@ -95,7 +95,7 @@ export const done = <E, A>(exit: Exit.Exit<E, A>): Fiber.Fiber<E, A> => {
       const trace = getCallTrace()
       return core.succeed(Option.some(exit)).traced(trace)
     },
-    interruptWithFork: () => {
+    interruptAsFork: () => {
       const trace = getCallTrace()
       return core.unit().traced(trace)
     }
@@ -164,17 +164,17 @@ export const interruptAllWith = (fiberId: FiberId.FiberId) => {
   return (fibers: Iterable<Fiber.Fiber<any, any>>): Effect.Effect<never, never, void> => {
     return pipe(
       fibers,
-      core.forEachDiscard(interruptWithFork(fiberId)),
+      core.forEachDiscard(interruptAsFork(fiberId)),
       core.zipRight(pipe(fibers, core.forEachDiscard(_await)))
     ).traced(trace)
   }
 }
 
 /** @internal */
-export const interruptWithFork = (fiberId: FiberId.FiberId) => {
+export const interruptAsFork = (fiberId: FiberId.FiberId) => {
   const trace = getCallTrace()
   return <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<never, never, void> => {
-    return self.interruptWithFork(fiberId).traced(trace)
+    return self.interruptAsFork(fiberId).traced(trace)
   }
 }
 
@@ -225,9 +225,9 @@ export const mapEffect = <A, E2, A2>(f: (a: A) => Effect.Effect<never, E2, A2>) 
           })
         ).traced(trace)
       },
-      interruptWithFork: (id) => {
+      interruptAsFork: (id) => {
         const trace = getCallTrace()
-        return self.interruptWithFork(id).traced(trace)
+        return self.interruptAsFork(id).traced(trace)
       }
     }
   }
@@ -280,7 +280,7 @@ export const never = (): Fiber.Fiber<never, never> => ({
     const trace = getCallTrace()
     return core.succeed(Option.none).traced(trace)
   },
-  interruptWithFork: () => {
+  interruptAsFork: () => {
     const trace = getCallTrace()
     return core.never().traced(trace)
   }
@@ -328,12 +328,12 @@ export const orElse = <E2, A2>(that: Fiber.Fiber<E2, A2>) => {
         )
       ).traced(trace)
     },
-    interruptWithFork: (id) => {
+    interruptAsFork: (id) => {
       const trace = getCallTrace()
       return pipe(
         self,
-        core.interruptWithFiber(id),
-        core.zipRight(pipe(that, core.interruptWithFiber(id))),
+        core.interruptAsFiber(id),
+        core.zipRight(pipe(that, core.interruptAsFiber(id))),
         core.asUnit
       ).traced(trace)
     }

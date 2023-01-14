@@ -51,9 +51,9 @@ Added in v1.0.0
   - [interrupt](#interrupt)
   - [interruptAll](#interruptall)
   - [interruptAllWith](#interruptallwith)
+  - [interruptAs](#interruptas)
+  - [interruptAsFork](#interruptasfork)
   - [interruptFork](#interruptfork)
-  - [interruptWith](#interruptwith)
-  - [interruptWithFork](#interruptwithfork)
 - [mapping](#mapping)
   - [map](#map)
   - [mapEffect](#mapeffect)
@@ -488,6 +488,38 @@ export declare const interruptAllWith: (
 
 Added in v1.0.0
 
+## interruptAs
+
+Interrupts the fiber as if interrupted from the specified fiber. If the
+fiber has already exited, the returned effect will resume immediately.
+Otherwise, the effect will resume when the fiber exits.
+
+**Signature**
+
+```ts
+export declare const interruptAs: (
+  fiberId: FiberId.FiberId
+) => <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, Exit.Exit<E, A>>
+```
+
+Added in v1.0.0
+
+## interruptAsFork
+
+Interrupts the fiber as if interrupted from the specified fiber. If the
+fiber has already exited, the returned effect will resume immediately.
+Otherwise, the effect will resume when the fiber exits.
+
+**Signature**
+
+```ts
+export declare const interruptAsFork: (
+  fiberId: FiberId.FiberId
+) => <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, void>
+```
+
+Added in v1.0.0
+
 ## interruptFork
 
 Interrupts the fiber from whichever fiber is calling this method. The
@@ -498,38 +530,6 @@ effect will always resume immediately without waiting.
 
 ```ts
 export declare const interruptFork: <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, void>
-```
-
-Added in v1.0.0
-
-## interruptWith
-
-Interrupts the fiber as if interrupted from the specified fiber. If the
-fiber has already exited, the returned effect will resume immediately.
-Otherwise, the effect will resume when the fiber exits.
-
-**Signature**
-
-```ts
-export declare const interruptWith: (
-  fiberId: FiberId.FiberId
-) => <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, Exit.Exit<E, A>>
-```
-
-Added in v1.0.0
-
-## interruptWithFork
-
-Interrupts the fiber as if interrupted from the specified fiber. If the
-fiber has already exited, the returned effect will resume immediately.
-Otherwise, the effect will resume when the fiber exits.
-
-**Signature**
-
-```ts
-export declare const interruptWithFork: (
-  fiberId: FiberId.FiberId
-) => <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -631,7 +631,7 @@ export interface Fiber<E, A> extends Fiber.Variance<E, A> {
    * resume immediately. Otherwise, the effect will resume when the fiber exits.
    * @macro traced
    */
-  interruptWithFork(fiberId: FiberId.FiberId): Effect.Effect<never, never, void>
+  interruptAsFork(fiberId: FiberId.FiberId): Effect.Effect<never, never, void>
 }
 ```
 
