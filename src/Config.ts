@@ -58,6 +58,14 @@ export declare namespace Config {
 }
 
 /**
+ * Constructs a config for an array of values.
+ *
+ * @since 1.0.0
+ * @category constructors
+ */
+export const arrayOf: <A>(config: Config<A>, name?: string | undefined) => Config<ReadonlyArray<A>> = internal.arrayOf
+
+/**
  * Constructs a config for a boolean value.
  *
  * @since 1.0.0
@@ -112,14 +120,6 @@ export const float: (name?: string | undefined) => Config<number> = internal.flo
  * @category constructors
  */
 export const integer: (name?: string | undefined) => Config<number> = internal.integer
-
-/**
- * Constructs a config for a sequence of values.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const listOf: <A>(config: Config<A>, name?: string | undefined) => Config<Chunk.Chunk<A>> = internal.listOf
 
 /**
  * Returns a  config whose structure is the same as this one, but which produces
