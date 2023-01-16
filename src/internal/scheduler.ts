@@ -2,9 +2,13 @@ import type * as Scheduler from "@effect/io/Scheduler"
 import * as Equal from "@fp-ts/data/Equal"
 
 /** @internal */
-export class HighPriorityScheduler {
+export class HighPriorityScheduler implements Scheduler.Scheduler {
   running = false
   tasks: Array<Scheduler.Task> = []
+
+  get preferredExecution(): "Sync" | "Async" {
+    return "Async"
+  }
 
   constructor() {
     Equal.considerByRef(this)
@@ -44,7 +48,7 @@ export class HighPriorityScheduler {
 export const defaultScheduler: Scheduler.Scheduler = new HighPriorityScheduler()
 
 /** @internal */
-export class SyncScheduler {
+export class SyncScheduler implements Scheduler.Scheduler {
   tasks: Array<Scheduler.Task> = []
   deferred = false
 
@@ -58,6 +62,10 @@ export class SyncScheduler {
     } else {
       this.tasks.push(task)
     }
+  }
+
+  get preferredExecution(): "Sync" | "Async" {
+    return this.deferred ? "Async" : "Sync"
   }
 
   flush() {

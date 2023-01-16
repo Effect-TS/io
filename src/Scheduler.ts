@@ -13,5 +13,6 @@ export type Task = () => void
  * @category models
  */
 export interface Scheduler {
+  get preferredExecution(): "Sync" | "Async"
   scheduleTask(task: Task): void
 }
