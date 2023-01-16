@@ -12,6 +12,7 @@ import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as Context from "@fp-ts/data/Context"
 import type * as Duration from "@fp-ts/data/Duration"
 import type * as Either from "@fp-ts/data/Either"
+import type { LazyArg } from "@fp-ts/data/Function"
 import type * as Option from "@fp-ts/data/Option"
 import type { Predicate } from "@fp-ts/data/Predicate"
 
@@ -1039,7 +1040,7 @@ export const succeed: <A>(value: A) => Schedule<never, unknown, A> = internal.su
  * @category constructors
  * @since 1.0.0
  */
-export const sync: <A>(evaluate: () => A) => Schedule<never, unknown, A> = internal.sync
+export const sync: <A>(evaluate: LazyArg<A>) => Schedule<never, unknown, A> = internal.sync
 
 /**
  * Returns a new schedule that effectfully processes every input to this

@@ -5,6 +5,7 @@ import type * as Effect from "@effect/io/Effect"
 import * as internal from "@effect/io/internal/scopedRef"
 import type * as Synchronized from "@effect/io/Ref/Synchronized"
 import type * as Scope from "@effect/io/Scope"
+import type { LazyArg } from "@fp-ts/data/Function"
 
 /**
  * @since 1.0.0
@@ -77,7 +78,7 @@ export const get: <A>(self: ScopedRef<A>) => Effect.Effect<never, never, A> = in
  * @since 1.0.0
  * @category constructors
  */
-export const make: <A>(evaluate: () => A) => Effect.Effect<Scope.Scope, never, ScopedRef<A>> = internal.make
+export const make: <A>(evaluate: LazyArg<A>) => Effect.Effect<Scope.Scope, never, ScopedRef<A>> = internal.make
 
 /**
  * Sets the value of this reference to the specified resourcefully-created

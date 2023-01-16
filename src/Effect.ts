@@ -39,6 +39,7 @@ import type * as Context from "@fp-ts/data/Context"
 import type * as Duration from "@fp-ts/data/Duration"
 import type * as Either from "@fp-ts/data/Either"
 import type * as Equal from "@fp-ts/data/Equal"
+import type { LazyArg } from "@fp-ts/data/Function"
 import type * as HashMap from "@fp-ts/data/HashMap"
 import type * as HashSet from "@fp-ts/data/HashSet"
 import type * as Option from "@fp-ts/data/Option"
@@ -572,7 +573,7 @@ export const asyncInterrupt: <R, E, A>(
  * @since 1.0.0
  * @category constructors
  */
-export const attempt: <A>(evaluate: () => A) => Effect<never, unknown, A> = effect.attempt
+export const attempt: <A>(evaluate: LazyArg<A>) => Effect<never, unknown, A> = effect.attempt
 
 /**
  * Returns a new effect that will not succeed with its value before first
@@ -967,7 +968,7 @@ export const collectWhile: <A, R, E, B>(
  * @since 1.0.0
  * @category constructors
  */
-export const cond: <E, A>(predicate: () => boolean, result: () => A, error: () => E) => Effect<never, E, A> =
+export const cond: <E, A>(predicate: LazyArg<boolean>, result: LazyArg<A>, error: LazyArg<E>) => Effect<never, E, A> =
   effect.cond
 
 /**
@@ -1058,7 +1059,7 @@ export const dieMessage: (message: string) => Effect<never, never, never> = effe
  * @since 1.0.0
  * @category constructors
  */
-export const dieSync: (evaluate: () => unknown) => Effect<never, never, never> = core.dieSync
+export const dieSync: (evaluate: LazyArg<unknown>) => Effect<never, never, never> = core.dieSync
 
 /**
  * Returns an effect whose interruption will be disconnected from the
@@ -1292,7 +1293,7 @@ export const fail: <E>(error: E) => Effect<never, E, never> = core.fail
  * @since 1.0.0
  * @category constructors
  */
-export const failSync: <E>(evaluate: () => E) => Effect<never, E, never> = core.failSync
+export const failSync: <E>(evaluate: LazyArg<E>) => Effect<never, E, never> = core.failSync
 
 /**
  * @macro traced
@@ -1306,7 +1307,7 @@ export const failCause: <E>(cause: Cause.Cause<E>) => Effect<never, E, never> = 
  * @since 1.0.0
  * @category constructors
  */
-export const failCauseSync: <E>(evaluate: () => Cause.Cause<E>) => Effect<never, E, never> = core.failCauseSync
+export const failCauseSync: <E>(evaluate: LazyArg<Cause.Cause<E>>) => Effect<never, E, never> = core.failCauseSync
 
 /**
  * @macro traced
@@ -1379,8 +1380,8 @@ export const filterNotPar: <A, R, E>(
  * @category filtering
  */
 export const filterOrDie: {
-  <A, B extends A>(f: Refinement<A, B>, defect: () => unknown): <R, E>(self: Effect<R, E, A>) => Effect<R, E, B>
-  <A>(f: Predicate<A>, defect: () => unknown): <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <A, B extends A>(f: Refinement<A, B>, defect: LazyArg<unknown>): <R, E>(self: Effect<R, E, A>) => Effect<R, E, B>
+  <A>(f: Predicate<A>, defect: LazyArg<unknown>): <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
 } = effect.filterOrDie
 
 /**
@@ -1407,11 +1408,11 @@ export const filterOrDieMessage: {
 export const filterOrElse: {
   <A, B extends A, R2, E2, C>(
     f: Refinement<A, B>,
-    orElse: () => Effect<R2, E2, C>
+    orElse: LazyArg<Effect<R2, E2, C>>
   ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, B | C>
   <A, R2, E2, B>(
     f: Predicate<A>,
-    orElse: () => Effect<R2, E2, B>
+    orElse: LazyArg<Effect<R2, E2, B>>
   ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A | B>
 } = effect.filterOrElse
 
@@ -1443,8 +1444,8 @@ export const filterOrElseWith: {
  * @category filtering
  */
 export const filterOrFail: {
-  <A, B extends A, E2>(f: Refinement<A, B>, error: () => E2): <R, E>(self: Effect<R, E, A>) => Effect<R, E2 | E, B>
-  <A, E2>(f: Predicate<A>, error: () => E2): <R, E>(self: Effect<R, E, A>) => Effect<R, E2 | E, A>
+  <A, B extends A, E2>(f: Refinement<A, B>, error: LazyArg<E2>): <R, E>(self: Effect<R, E, A>) => Effect<R, E2 | E, B>
+  <A, E2>(f: Predicate<A>, error: LazyArg<E2>): <R, E>(self: Effect<R, E, A>) => Effect<R, E2 | E, A>
 } = effect.filterOrFail
 
 /**
@@ -1912,7 +1913,7 @@ export const getOrFailDiscard: <A>(option: Option.Option<A>) => Effect<never, vo
  * @since 1.0.0
  * @category conversions
  */
-export const getOrFailWith: <E>(error: () => E) => <A>(option: Option.Option<A>) => Effect<never, E, A> =
+export const getOrFailWith: <E>(error: LazyArg<E>) => <A>(option: Option.Option<A>) => Effect<never, E, A> =
   effect.getOrFailWith
 
 /**
@@ -2623,7 +2624,7 @@ export const orDieWith: <E>(f: (e: E) => unknown) => <R, A>(self: Effect<R, E, A
  * @category alternatives
  */
 export const orElse: <R2, E2, A2>(
-  that: () => Effect<R2, E2, A2>
+  that: LazyArg<Effect<R2, E2, A2>>
 ) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2, A2 | A> = core.orElse
 
 /**
@@ -2635,7 +2636,7 @@ export const orElse: <R2, E2, A2>(
  * @category alternatives
  */
 export const orElseEither: <R2, E2, A2>(
-  that: () => Effect<R2, E2, A2>
+  that: LazyArg<Effect<R2, E2, A2>>
 ) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2, Either.Either<A, A2>> = effect.orElseEither
 
 /**
@@ -2648,7 +2649,7 @@ export const orElseEither: <R2, E2, A2>(
  * @category alternatives
  */
 export const orElseOptional: <R, E, A, R2, E2, A2>(
-  that: () => Effect<R2, Option.Option<E2>, A2>
+  that: LazyArg<Effect<R2, Option.Option<E2>, A2>>
 ) => (self: Effect<R, Option.Option<E>, A>) => Effect<R | R2, Option.Option<E | E2>, A | A2> = effect.orElseOptional
 
 /**
@@ -2659,7 +2660,7 @@ export const orElseOptional: <R, E, A, R2, E2, A2>(
  * @since 1.0.0
  * @category alternatives
  */
-export const orElseSucceed: <A2>(evaluate: () => A2) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A2 | A> =
+export const orElseSucceed: <A2>(evaluate: LazyArg<A2>) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A2 | A> =
   effect.orElseSucceed
 
 /**
@@ -2670,7 +2671,7 @@ export const orElseSucceed: <A2>(evaluate: () => A2) => <R, E, A>(self: Effect<R
  * @since 1.0.0
  * @category alternatives
  */
-export const orElseFail: <E2>(evaluate: () => E2) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E2, A> =
+export const orElseFail: <E2>(evaluate: LazyArg<E2>) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E2, A> =
   effect.orElseFail
 
 /**
@@ -2733,7 +2734,7 @@ export const patchFiberRefs: (patch: FiberRefsPatch.FiberRefsPatch) => Effect<ne
  * @since 1.0.0
  * @category constructors
  */
-export const promise: <A>(evaluate: () => Promise<A>) => Effect<never, never, A> = effect.promise
+export const promise: <A>(evaluate: LazyArg<Promise<A>>) => Effect<never, never, A> = effect.promise
 
 /**
  * Like `promise` but allows for interruption via AbortSignal
@@ -3555,7 +3556,7 @@ export const some: <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R, 
  * @category mutations
  */
 export const someOrElse: <B>(
-  orElse: () => B
+  orElse: LazyArg<B>
 ) => <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R, E, B | A> = effect.someOrElse
 
 /**
@@ -3566,7 +3567,7 @@ export const someOrElse: <B>(
  * @category mutations
  */
 export const someOrElseEffect: <R2, E2, A2>(
-  orElse: () => Effect<R2, E2, A2>
+  orElse: LazyArg<Effect<R2, E2, A2>>
 ) => <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R2 | R, E2 | E, A2 | A> = effect.someOrElseEffect
 
 /**
@@ -3577,7 +3578,7 @@ export const someOrElseEffect: <R2, E2, A2>(
  * @category mutations
  */
 export const someOrFail: <E2>(
-  orFail: () => E2
+  orFail: LazyArg<E2>
 ) => <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R, E2 | E, A> = effect.someOrFail
 
 /**
@@ -3709,21 +3710,21 @@ export const supervised: <X>(
  * @since 1.0.0
  * @category constructors
  */
-export const suspend: <R, E, A>(evaluate: () => Effect<R, E, A>) => Effect<R, unknown, A> = effect.suspend
+export const suspend: <R, E, A>(evaluate: LazyArg<Effect<R, E, A>>) => Effect<R, unknown, A> = effect.suspend
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category constructors
  */
-export const suspendSucceed: <R, E, A>(effect: () => Effect<R, E, A>) => Effect<R, E, A> = core.suspendSucceed
+export const suspendSucceed: <R, E, A>(effect: LazyArg<Effect<R, E, A>>) => Effect<R, E, A> = core.suspendSucceed
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category constructors
  */
-export const sync: <A>(evaluate: () => A) => Effect<never, never, A> = core.sync
+export const sync: <A>(evaluate: LazyArg<A>) => Effect<never, never, A> = core.sync
 
 /**
  * Takes all elements so long as the effectual predicate returns true.
@@ -3942,7 +3943,7 @@ export const timeout: (
  * @category mutations
  */
 export const timeoutFail: <E1>(
-  evaluate: () => E1,
+  evaluate: LazyArg<E1>,
   duration: Duration.Duration
 ) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E1 | E, A> = circular.timeoutFail
 
@@ -3955,7 +3956,7 @@ export const timeoutFail: <E1>(
  * @category mutations
  */
 export const timeoutFailCause: <E1>(
-  evaluate: () => Cause.Cause<E1>,
+  evaluate: LazyArg<Cause.Cause<E1>>,
   duration: Duration.Duration
 ) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E1 | E, A> = circular.timeoutFailCause
 
@@ -4016,7 +4017,7 @@ export const transplant: <R, E, A>(
  * @since 1.0.0
  * @category constructors
  */
-export const tryCatch: <E, A>(attempt: () => A, onThrow: (u: unknown) => E) => Effect<never, E, A> = effect.tryCatch
+export const tryCatch: <E, A>(attempt: LazyArg<A>, onThrow: (u: unknown) => E) => Effect<never, E, A> = effect.tryCatch
 
 /**
  * Create an `Effect` that when executed will construct `promise` and wait for
@@ -4027,7 +4028,7 @@ export const tryCatch: <E, A>(attempt: () => A, onThrow: (u: unknown) => E) => E
  * @category constructors
  */
 export const tryCatchPromise: <E, A>(
-  evaluate: () => Promise<A>,
+  evaluate: LazyArg<Promise<A>>,
   onReject: (reason: unknown) => E
 ) => Effect<never, E, A> = effect.tryCatchPromise
 
@@ -4052,7 +4053,7 @@ export const tryCatchPromiseInterrupt: <E, A>(
  * @category alternatives
  */
 export const tryOrElse: <R2, E2, A2, A, R3, E3, A3>(
-  that: () => Effect<R2, E2, A2>,
+  that: LazyArg<Effect<R2, E2, A2>>,
   onSuccess: (a: A) => Effect<R3, E3, A3>
 ) => <R, E>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2 | E3, A2 | A3> = core.tryOrElse
 
@@ -4064,7 +4065,7 @@ export const tryOrElse: <R2, E2, A2, A, R3, E3, A3>(
  * @since 1.0.0
  * @category constructors
  */
-export const tryPromise: <A>(evaluate: () => Promise<A>) => Effect<never, unknown, A> = effect.tryPromise
+export const tryPromise: <A>(evaluate: LazyArg<Promise<A>>) => Effect<never, unknown, A> = effect.tryPromise
 
 /**
  * Like `tryPromise` but allows for interruption via AbortSignal
@@ -4171,8 +4172,9 @@ export const unleft: <R, E, B, A>(self: Effect<R, Either.Either<E, B>, A>) => Ef
  * @since 1.0.0
  * @category mutations
  */
-export const unless: (predicate: () => boolean) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Option.Option<A>> =
-  effect.unless
+export const unless: (
+  predicate: LazyArg<boolean>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Option.Option<A>> = effect.unless
 
 /**
  * The moral equivalent of `if (!p) exp` when `p` has side-effects.
@@ -4515,8 +4517,8 @@ export const validateWithPar: <A, R1, E1, B, C>(
  * @category constructors
  */
 export const whileLoop: <R, E, A>(
-  check: () => boolean,
-  body: () => Effect<R, E, A>,
+  check: LazyArg<boolean>,
+  body: LazyArg<Effect<R, E, A>>,
   process: (a: A) => void
 ) => Effect<R, E, void> = core.whileLoop
 
@@ -4527,7 +4529,7 @@ export const whileLoop: <R, E, A>(
  * @since 1.0.0
  * @category mutations
  */
-export const when: (predicate: () => boolean) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Option.Option<A>> =
+export const when: (predicate: LazyArg<boolean>) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Option.Option<A>> =
   effect.when
 
 /**
@@ -4539,7 +4541,7 @@ export const when: (predicate: () => boolean) => <R, E, A>(self: Effect<R, E, A>
  * @category mutations
  */
 export const whenCase: <R, E, A, B>(
-  evaluate: () => A,
+  evaluate: LazyArg<A>,
   pf: (a: A) => Option.Option<Effect<R, E, B>>
 ) => Effect<R, E, Option.Option<B>> = effect.whenCase
 

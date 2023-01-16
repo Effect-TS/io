@@ -2,6 +2,7 @@
  * @since 1.0.0
  */
 import * as internal from "@effect/io/internal/executionStrategy"
+import type { LazyArg } from "@fp-ts/data/Function"
 
 /**
  * Describes a strategy for evaluating multiple effects, potentially in
@@ -105,7 +106,7 @@ export const isParallelN: (self: ExecutionStrategy) => self is ParallelN = inter
  * @category folding
  */
 export const match: <A>(
-  onSequential: () => A,
-  onParallel: () => A,
+  onSequential: LazyArg<A>,
+  onParallel: LazyArg<A>,
   onParallelN: (n: number) => A
 ) => (self: ExecutionStrategy) => A = internal.match

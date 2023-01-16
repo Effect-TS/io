@@ -4,6 +4,7 @@
 import * as internal from "@effect/io/internal/metric/hook"
 import type * as MetricKey from "@effect/io/Metric/Key"
 import type * as MetricState from "@effect/io/Metric/State"
+import type { LazyArg } from "@fp-ts/data/Function"
 
 /**
  * @since 1.0.0
@@ -88,7 +89,7 @@ export declare namespace MetricHook {
  * @since 1.0.0
  * @category constructors
  */
-export const make: <In, Out>(get: () => Out, update: (input: In) => void) => MetricHook<In, Out> = internal.make
+export const make: <In, Out>(get: LazyArg<Out>, update: (input: In) => void) => MetricHook<In, Out> = internal.make
 
 /**
  * @since 1.0.0

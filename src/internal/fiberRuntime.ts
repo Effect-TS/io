@@ -45,6 +45,7 @@ import type * as Supervisor from "@effect/io/Supervisor"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Context from "@fp-ts/data/Context"
 import * as Equal from "@fp-ts/data/Equal"
+import type { LazyArg } from "@fp-ts/data/Function"
 import { identity, pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
 import * as MutableQueue from "@fp-ts/data/MutableQueue"
@@ -2633,7 +2634,7 @@ export const fiberRefMake = <A>(
  * @internal
  */
 export const fiberRefMakeWith = <Value>(
-  ref: () => FiberRef.FiberRef<Value>
+  ref: LazyArg<FiberRef.FiberRef<Value>>
 ): Effect.Effect<Scope.Scope, never, FiberRef.FiberRef<Value>> => {
   const trace = getCallTrace()
   return acquireRelease(

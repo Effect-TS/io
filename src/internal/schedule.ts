@@ -16,7 +16,7 @@ import * as Context from "@fp-ts/data/Context"
 import * as Duration from "@fp-ts/data/Duration"
 import * as Either from "@fp-ts/data/Either"
 import * as Equal from "@fp-ts/data/Equal"
-import { constVoid, pipe } from "@fp-ts/data/Function"
+import { constVoid, LazyArg, pipe } from "@fp-ts/data/Function"
 import * as Option from "@fp-ts/data/Option"
 import type { Predicate } from "@fp-ts/data/Predicate"
 
@@ -1481,7 +1481,7 @@ export const succeed = <A>(value: A): Schedule.Schedule<never, unknown, A> => {
 }
 
 /** @internal */
-export const sync = <A>(evaluate: () => A): Schedule.Schedule<never, unknown, A> => {
+export const sync = <A>(evaluate: LazyArg<A>): Schedule.Schedule<never, unknown, A> => {
   return pipe(forever(), map(evaluate))
 }
 

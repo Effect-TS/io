@@ -1,4 +1,5 @@
 import type * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
+import type { LazyArg } from "@fp-ts/data/Function"
 
 /** @internal */
 export const OP_SEQUENTIAL = "Sequential" as const
@@ -46,8 +47,8 @@ export const isParallelN = (self: ExecutionStrategy.ExecutionStrategy): self is 
 
 /** @internal */
 export const match = <A>(
-  onSequential: () => A,
-  onParallel: () => A,
+  onSequential: LazyArg<A>,
+  onParallel: LazyArg<A>,
   onParallelN: (n: number) => A
 ) => {
   return (self: ExecutionStrategy.ExecutionStrategy): A => {

@@ -24,6 +24,7 @@ import type * as Runtime from "@effect/io/Runtime"
 import type * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"
 import type * as Context from "@fp-ts/data/Context"
+import type { LazyArg } from "@fp-ts/data/Function"
 
 /**
  * @since 1.0.0
@@ -161,7 +162,7 @@ export const die: (defect: unknown) => Layer<never, never, unknown> = internal.d
  * @since 1.0.0
  * @category constructors
  */
-export const dieSync: (evaluate: () => unknown) => Layer<never, never, unknown> = internal.dieSync
+export const dieSync: (evaluate: LazyArg<unknown>) => Layer<never, never, unknown> = internal.dieSync
 
 /**
  * Constructs a `Layer` that passes along the specified environment as an
@@ -198,7 +199,7 @@ export const fail: <E>(error: E) => Layer<never, E, unknown> = internal.fail
  * @since 1.0.0
  * @category constructors
  */
-export const failSync: <E>(evaluate: () => E) => Layer<never, E, unknown> = internal.failSync
+export const failSync: <E>(evaluate: LazyArg<E>) => Layer<never, E, unknown> = internal.failSync
 
 /**
  * Constructs a layer that fails with the specified cause.
@@ -214,7 +215,7 @@ export const failCause: <E>(cause: Cause.Cause<E>) => Layer<never, E, unknown> =
  * @since 1.0.0
  * @category constructors
  */
-export const failCauseSync: <E>(evaluate: () => Cause.Cause<E>) => Layer<never, E, unknown> = internal.failCauseSync
+export const failCauseSync: <E>(evaluate: LazyArg<Cause.Cause<E>>) => Layer<never, E, unknown> = internal.failCauseSync
 
 /**
  * Constructs a layer dynamically based on the output of this layer.
@@ -380,7 +381,7 @@ export const orDie: <R, E, A>(self: Layer<R, E, A>) => Layer<R, never, A> = inte
  * @category error handling
  */
 export const orElse: <R1, E1, A1>(
-  that: () => Layer<R1, E1, A1>
+  that: LazyArg<Layer<R1, E1, A1>>
 ) => <R, E, A>(self: Layer<R, E, A>) => Layer<R1 | R, E1 | E, A & A1> = internal.orElse
 
 /**
@@ -514,7 +515,7 @@ export const succeedEnvironment: <A>(environment: Context.Context<A>) => Layer<n
  * @since 1.0.0
  * @category constructors
  */
-export const suspend: <RIn, E, ROut>(evaluate: () => Layer<RIn, E, ROut>) => Layer<RIn, E, ROut> = internal.suspend
+export const suspend: <RIn, E, ROut>(evaluate: LazyArg<Layer<RIn, E, ROut>>) => Layer<RIn, E, ROut> = internal.suspend
 
 /**
  * Lazily constructs a layer from the specified value.
@@ -522,7 +523,7 @@ export const suspend: <RIn, E, ROut>(evaluate: () => Layer<RIn, E, ROut>) => Lay
  * @since 1.0.0
  * @category constructors
  */
-export const sync: <T>(tag: Context.Tag<T>) => (evaluate: () => T) => Layer<never, never, T> = internal.sync
+export const sync: <T>(tag: Context.Tag<T>) => (evaluate: LazyArg<T>) => Layer<never, never, T> = internal.sync
 
 /**
  * Lazily constructs a layer from the specified value, which must return one or more
@@ -531,7 +532,7 @@ export const sync: <T>(tag: Context.Tag<T>) => (evaluate: () => T) => Layer<neve
  * @since 1.0.0
  * @category constructors
  */
-export const syncEnvironment: <A>(evaluate: () => Context.Context<A>) => Layer<never, never, A> =
+export const syncEnvironment: <A>(evaluate: LazyArg<Context.Context<A>>) => Layer<never, never, A> =
   internal.syncEnvironment
 
 /**

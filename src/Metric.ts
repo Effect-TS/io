@@ -12,6 +12,7 @@ import type * as MetricRegistry from "@effect/io/Metric/Registry"
 import type * as MetricState from "@effect/io/Metric/State"
 import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as Duration from "@fp-ts/data/Duration"
+import type { LazyArg } from "@fp-ts/data/Function"
 import type * as HashSet from "@fp-ts/data/HashSet"
 
 /**
@@ -169,7 +170,7 @@ export const frequency: (name: string) => Metric.Frequency<string> = internal.fr
  * @category constructors
  */
 export const fromConst: <In>(
-  input: () => In
+  input: LazyArg<In>
 ) => <Type, Out>(self: Metric<Type, In, Out>) => Metric<Type, unknown, Out> = internal.fromConst
 
 /**
@@ -257,7 +258,7 @@ export const succeed: <Out>(out: Out) => Metric<void, unknown, Out> = internal.s
  * @since 1.0.0
  * @category constructors
  */
-export const sync: <Out>(evaluate: () => Out) => Metric<void, unknown, Out> = internal.sync
+export const sync: <Out>(evaluate: LazyArg<Out>) => Metric<void, unknown, Out> = internal.sync
 
 /**
  * @since 1.0.0

@@ -18,7 +18,7 @@ import type * as MetricRegistry from "@effect/io/Metric/Registry"
 import type * as MetricState from "@effect/io/Metric/State"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Duration from "@fp-ts/data/Duration"
-import { constVoid, identity, pipe } from "@fp-ts/data/Function"
+import { constVoid, identity, LazyArg, pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
 
 /** @internal */
@@ -85,7 +85,7 @@ export const frequency = (name: string): Metric.Metric.Frequency<string> => {
 }
 
 /** @internal */
-export const fromConst = <In>(input: () => In) => {
+export const fromConst = <In>(input: LazyArg<In>) => {
   return <Type, Out>(self: Metric.Metric<Type, In, Out>): Metric.Metric<Type, unknown, Out> => {
     return pipe(self, contramap(input))
   }
@@ -178,7 +178,7 @@ export const succeed = <Out>(out: Out): Metric.Metric<void, unknown, Out> => {
 }
 
 /** @internal */
-export const sync = <Out>(evaluate: () => Out): Metric.Metric<void, unknown, Out> => {
+export const sync = <Out>(evaluate: LazyArg<Out>): Metric.Metric<void, unknown, Out> => {
   return make(void 0 as void, constVoid, evaluate)
 }
 

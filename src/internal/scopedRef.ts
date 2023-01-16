@@ -8,6 +8,7 @@ import * as synchronized from "@effect/io/internal/synchronizedRef"
 import type * as Scope from "@effect/io/Scope"
 import type * as ScopedRef from "@effect/io/ScopedRef"
 import * as Context from "@fp-ts/data/Context"
+import type { LazyArg } from "@fp-ts/data/Function"
 import { pipe } from "@fp-ts/data/Function"
 
 /** @internal */
@@ -77,7 +78,7 @@ export const get = <A>(self: ScopedRef.ScopedRef<A>): Effect.Effect<never, never
 
 /** @internal */
 export const make = <A>(
-  evaluate: () => A
+  evaluate: LazyArg<A>
 ): Effect.Effect<Scope.Scope, never, ScopedRef.ScopedRef<A>> => {
   const trace = getCallTrace()
   return fromAcquire(core.sync(evaluate)).traced(trace)
