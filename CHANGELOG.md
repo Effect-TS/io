@@ -1,5 +1,15 @@
 # @effect/io
 
+## 0.0.64
+
+### Patch Changes
+
+- [#190](https://github.com/Effect-TS/io/pull/190) [`c45ac05`](https://github.com/Effect-TS/io/commit/c45ac05d34a15b69a3e05361769d93af818f6772) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Expose preferred execution via Scheduler
+
+- [#188](https://github.com/Effect-TS/io/pull/188) [`b8f7154`](https://github.com/Effect-TS/io/commit/b8f7154567ecd71940b27788b5bd1303141562f2) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Align Fiber Methods
+
+- [#183](https://github.com/Effect-TS/io/pull/183) [`d12fea7`](https://github.com/Effect-TS/io/commit/d12fea7616565cde7c5f230f2ec1179668dd347c) Thanks [@patroza](https://github.com/patroza)! - fix sequence configs
+
 ## 0.0.63
 
 ### Patch Changes
