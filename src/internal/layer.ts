@@ -22,6 +22,7 @@ import * as Intervals from "@effect/io/Schedule/Intervals"
 import * as Scope from "@effect/io/Scope"
 import * as Context from "@fp-ts/data/Context"
 import * as Duration from "@fp-ts/data/Duration"
+import type { LazyArg } from "@fp-ts/data/Function"
 import { pipe } from "@fp-ts/data/Function"
 
 import * as Equal from "@fp-ts/data/Equal"
@@ -103,7 +104,7 @@ export interface Scoped extends
 /** @internal */
 export interface Suspend extends
   Op<OpCodes.OP_SUSPEND, {
-    readonly evaluate: () => Layer.Layer<never, never, unknown>
+    readonly evaluate: LazyArg<Layer.Layer<never, never, unknown>>
   }>
 {}
 
@@ -450,7 +451,7 @@ export const die = (defect: unknown): Layer.Layer<never, never, unknown> => {
 }
 
 /** @internal */
-export const dieSync = (evaluate: () => unknown): Layer.Layer<never, never, unknown> => {
+export const dieSync = (evaluate: LazyArg<unknown>): Layer.Layer<never, never, unknown> => {
   return failCauseSync(() => Cause.die(evaluate()))
 }
 
@@ -475,7 +476,7 @@ export const fail = <E>(error: E): Layer.Layer<never, E, unknown> => {
 }
 
 /** @internal */
-export const failSync = <E>(evaluate: () => E): Layer.Layer<never, E, unknown> => {
+export const failSync = <E>(evaluate: LazyArg<E>): Layer.Layer<never, E, unknown> => {
   return failCauseSync(() => Cause.fail(evaluate()))
 }
 
@@ -485,7 +486,7 @@ export const failCause = <E>(cause: Cause.Cause<E>): Layer.Layer<never, E, unkno
 }
 
 /** @internal */
-export const failCauseSync = <E>(evaluate: () => Cause.Cause<E>): Layer.Layer<never, E, unknown> => {
+export const failCauseSync = <E>(evaluate: LazyArg<Cause.Cause<E>>): Layer.Layer<never, E, unknown> => {
   return fromEffectEnvironment(core.failCauseSync(evaluate))
 }
 
@@ -649,7 +650,7 @@ export const orDie = <R, E, A>(self: Layer.Layer<R, E, A>): Layer.Layer<R, never
 }
 
 /** @internal */
-export const orElse = <R1, E1, A1>(that: () => Layer.Layer<R1, E1, A1>) => {
+export const orElse = <R1, E1, A1>(that: LazyArg<Layer.Layer<R1, E1, A1>>) => {
   return <R, E, A>(self: Layer.Layer<R, E, A>): Layer.Layer<R | R1, E | E1, A & A1> => {
     return pipe(self, catchAll(() => that()))
   }
@@ -841,7 +842,7 @@ export const succeedEnvironment = <A>(
 
 /** @internal */
 export const suspend = <RIn, E, ROut>(
-  evaluate: () => Layer.Layer<RIn, E, ROut>
+  evaluate: LazyArg<Layer.Layer<RIn, E, ROut>>
 ): Layer.Layer<RIn, E, ROut> => {
   const suspend = Object.create(proto)
   suspend._tag = OpCodes.OP_SUSPEND
@@ -851,7 +852,7 @@ export const suspend = <RIn, E, ROut>(
 
 /** @internal */
 export const sync = <T>(tag: Context.Tag<T>) => {
-  return (evaluate: () => T): Layer.Layer<never, never, T> => {
+  return (evaluate: LazyArg<T>): Layer.Layer<never, never, T> => {
     return fromEffectEnvironment(core.sync(() =>
       pipe(
         Context.empty(),
@@ -862,7 +863,7 @@ export const sync = <T>(tag: Context.Tag<T>) => {
 }
 
 /** @internal */
-export const syncEnvironment = <A>(evaluate: () => Context.Context<A>): Layer.Layer<never, never, A> => {
+export const syncEnvironment = <A>(evaluate: LazyArg<Context.Context<A>>): Layer.Layer<never, never, A> => {
   return fromEffectEnvironment(core.sync(evaluate))
 }
 

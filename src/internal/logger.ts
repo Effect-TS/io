@@ -9,6 +9,7 @@ import type * as LogLevel from "@effect/io/Logger/Level"
 import * as LogSpan from "@effect/io/Logger/Span"
 import type { Runtime } from "@effect/io/Runtime"
 import * as Chunk from "@fp-ts/data/Chunk"
+import type { LazyArg } from "@fp-ts/data/Function"
 import { constVoid, pipe } from "@fp-ts/data/Function"
 import * as HashMap from "@fp-ts/data/HashMap"
 import * as Option from "@fp-ts/data/Option"
@@ -258,7 +259,7 @@ export const succeed = <A>(value: A): Logger.Logger<unknown, A> => {
 }
 
 /** @internal */
-export const sync = <A>(evaluate: () => A): Logger.Logger<unknown, A> => {
+export const sync = <A>(evaluate: LazyArg<A>): Logger.Logger<unknown, A> => {
   return simple(evaluate)
 }
 

@@ -30,6 +30,7 @@ import * as ContextPatch from "@fp-ts/data/Differ/ContextPatch"
 import * as HashSetPatch from "@fp-ts/data/Differ/HashSetPatch"
 import * as Either from "@fp-ts/data/Either"
 import * as Equal from "@fp-ts/data/Equal"
+import type { LazyArg } from "@fp-ts/data/Function"
 import { identity, pipe } from "@fp-ts/data/Function"
 import * as HashMap from "@fp-ts/data/HashMap"
 import * as HashSet from "@fp-ts/data/HashSet"
@@ -184,7 +185,7 @@ export interface Success extends Op<OpCodes.OP_SUCCESS, { readonly value: unknow
 /** @internal */
 export interface Sync extends
   Op<OpCodes.OP_SYNC, {
-    readonly evaluate: () => unknown
+    readonly evaluate: LazyArg<unknown>
   }>
 {}
 
@@ -437,7 +438,7 @@ export const die = (defect: unknown): Effect.Effect<never, never, never> => {
  * @macro traced
  * @internal
  */
-export const dieSync = (evaluate: () => unknown): Effect.Effect<never, never, never> => {
+export const dieSync = (evaluate: LazyArg<unknown>): Effect.Effect<never, never, never> => {
   const trace = getCallTrace()
   return failCauseSync(() => internalCause.die(evaluate())).traced(trace)
 }
@@ -510,7 +511,7 @@ export const fail = <E>(error: E): Effect.Effect<never, E, never> => {
  * @macro traced
  * @internal
  */
-export const failSync = <E>(evaluate: () => E): Effect.Effect<never, E, never> => {
+export const failSync = <E>(evaluate: LazyArg<E>): Effect.Effect<never, E, never> => {
   const trace = getCallTrace()
   return failCauseSync(() => internalCause.fail(evaluate())).traced(trace)
 }
@@ -532,7 +533,7 @@ export const failCause = <E>(cause: Cause.Cause<E>): Effect.Effect<never, E, nev
  * @macro traced
  * @internal
  */
-export const failCauseSync = <E>(evaluate: () => Cause.Cause<E>): Effect.Effect<never, E, never> => {
+export const failCauseSync = <E>(evaluate: LazyArg<Cause.Cause<E>>): Effect.Effect<never, E, never> => {
   const trace = getCallTrace()
   return pipe(sync(evaluate), flatMap(failCause)).traced(trace)
 }
@@ -969,7 +970,7 @@ export const onInterrupt = <R2, X>(
  * @macro traced
  * @internal
  */
-export const orElse = <R2, E2, A2>(that: () => Effect.Effect<R2, E2, A2>) => {
+export const orElse = <R2, E2, A2>(that: LazyArg<Effect.Effect<R2, E2, A2>>) => {
   const trace = getCallTrace()
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E2, A | A2> => {
     return pipe(self, tryOrElse(that, succeed)).traced(trace)
@@ -1109,7 +1110,7 @@ export const succeed = <A>(value: A): Effect.Effect<never, never, A> => {
  * @internal
  */
 export const suspendSucceed = <R, E, A>(
-  effect: () => Effect.Effect<R, E, A>
+  effect: LazyArg<Effect.Effect<R, E, A>>
 ): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
   return pipe(sync(effect), flatMap(identity)).traced(trace)
@@ -1119,7 +1120,7 @@ export const suspendSucceed = <R, E, A>(
  * @macro traced
  * @internal
  */
-export const sync = <A>(evaluate: () => A): Effect.Effect<never, never, A> => {
+export const sync = <A>(evaluate: LazyArg<A>): Effect.Effect<never, never, A> => {
   const trace = getCallTrace()
   const effect = Object.create(proto)
   effect._tag = OpCodes.OP_SYNC
@@ -1176,7 +1177,7 @@ export const transplant = <R, E, A>(
  * @internal
  */
 export const tryOrElse = <R2, E2, A2, A, R3, E3, A3>(
-  that: () => Effect.Effect<R2, E2, A2>,
+  that: LazyArg<Effect.Effect<R2, E2, A2>>,
   onSuccess: (a: A) => Effect.Effect<R3, E3, A3>
 ) => {
   const trace = getCallTrace()
@@ -1290,8 +1291,8 @@ export const whenEffect = <R, E>(predicate: Effect.Effect<R, E, boolean>) => {
  * @internal
  */
 export const whileLoop = <R, E, A>(
-  check: () => boolean,
-  body: () => Effect.Effect<R, E, A>,
+  check: LazyArg<boolean>,
+  body: LazyArg<Effect.Effect<R, E, A>>,
   process: (a: A) => void
 ): Effect.Effect<R, E, void> => {
   const trace = getCallTrace()
@@ -2540,7 +2541,7 @@ export const deferredSucceed = <A>(value: A) => {
  * @macro traced
  * @internal
  */
-export const deferredSync = <A>(evaluate: () => A) => {
+export const deferredSync = <A>(evaluate: LazyArg<A>) => {
   const trace = getCallTrace()
   return <E>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
     return pipe(self, deferredCompleteWith(sync(evaluate) as Effect.Effect<never, E, A>)).traced(trace)
@@ -2562,7 +2563,7 @@ export const deferredFail = <E>(error: E) => {
  * @macro traced
  * @internal
  */
-export const deferredFailSync = <E>(evaluate: () => E) => {
+export const deferredFailSync = <E>(evaluate: LazyArg<E>) => {
   const trace = getCallTrace()
   return <A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
     return pipe(self, deferredCompleteWith(failSync(evaluate) as Effect.Effect<never, E, A>)).traced(trace)
@@ -2584,7 +2585,7 @@ export const deferredFailCause = <E>(cause: Cause.Cause<E>) => {
  * @macro traced
  * @internal
  */
-export const deferredFailCauseSync = <E>(evaluate: () => Cause.Cause<E>) => {
+export const deferredFailCauseSync = <E>(evaluate: LazyArg<Cause.Cause<E>>) => {
   const trace = getCallTrace()
   return <A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
     return pipe(self, deferredCompleteWith(failCauseSync(evaluate) as Effect.Effect<never, E, A>)).traced(trace)
@@ -2606,7 +2607,7 @@ export const deferredDie = (defect: unknown) => {
  * @macro traced
  * @internal
  */
-export const deferredDieSync = (evaluate: () => unknown) => {
+export const deferredDieSync = (evaluate: LazyArg<unknown>) => {
   const trace = getCallTrace()
   return <E, A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> => {
     return pipe(self, deferredCompleteWith(dieSync(evaluate) as Effect.Effect<never, E, A>)).traced(trace)

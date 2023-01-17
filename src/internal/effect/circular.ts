@@ -25,6 +25,7 @@ import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as Duration from "@fp-ts/data/Duration"
 import * as Either from "@fp-ts/data/Either"
 import * as Equal from "@fp-ts/data/Equal"
+import type { LazyArg } from "@fp-ts/data/Function"
 import { pipe } from "@fp-ts/data/Function"
 import * as MutableHashMap from "@fp-ts/data/MutableHashMap"
 import * as MutableRef from "@fp-ts/data/MutableRef"
@@ -594,7 +595,7 @@ export const timeout = (duration: Duration.Duration) => {
 }
 
 /** @internal */
-export const timeoutFail = <E1>(evaluate: () => E1, duration: Duration.Duration) => {
+export const timeoutFail = <E1>(evaluate: LazyArg<E1>, duration: Duration.Duration) => {
   const trace = getCallTrace()
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E | E1, A> => {
     return pipe(
@@ -606,7 +607,7 @@ export const timeoutFail = <E1>(evaluate: () => E1, duration: Duration.Duration)
 }
 
 /** @internal */
-export const timeoutFailCause = <E1>(evaluate: () => Cause.Cause<E1>, duration: Duration.Duration) => {
+export const timeoutFailCause = <E1>(evaluate: LazyArg<Cause.Cause<E1>>, duration: Duration.Duration) => {
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E | E1, A> => {
     return pipe(self, timeoutTo(core.failCauseSync(evaluate), core.succeed, duration), core.flatten)
   }

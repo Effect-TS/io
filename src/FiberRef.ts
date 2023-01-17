@@ -16,6 +16,7 @@ import type * as Supervisor from "@effect/io/Supervisor"
 import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as Context from "@fp-ts/data/Context"
 import type * as Differ from "@fp-ts/data/Differ"
+import type { LazyArg } from "@fp-ts/data/Function"
 import type * as HashMap from "@fp-ts/data/HashMap"
 import type * as HashSet from "@fp-ts/data/HashSet"
 import type * as Option from "@fp-ts/data/Option"
@@ -77,7 +78,7 @@ export const make: <A>(
  * @since 1.0.0
  * @category constructors
  */
-export const makeWith: <Value>(ref: () => FiberRef<Value>) => Effect.Effect<Scope.Scope, never, FiberRef<Value>> =
+export const makeWith: <Value>(ref: LazyArg<FiberRef<Value>>) => Effect.Effect<Scope.Scope, never, FiberRef<Value>> =
   fiberRuntime.fiberRefMakeWith
 
 /**

@@ -7,6 +7,7 @@ import type * as Exit from "@effect/io/Exit"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import * as core from "@effect/io/internal/core"
 import * as internal from "@effect/io/internal/deferred"
+import type { LazyArg } from "@fp-ts/data/Function"
 import type * as MutableRef from "@fp-ts/data/MutableRef"
 import type * as Option from "@fp-ts/data/Option"
 
@@ -93,7 +94,7 @@ export const succeed: <A>(value: A) => <E>(self: Deferred<E, A>) => Effect.Effec
  * @since 1.0.0
  * @category mutations
  */
-export const sync: <A>(evaluate: () => A) => <E>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean> =
+export const sync: <A>(evaluate: LazyArg<A>) => <E>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean> =
   core.deferredSync
 
 /**
@@ -115,7 +116,7 @@ export const fail: <E>(error: E) => <A>(self: Deferred<E, A>) => Effect.Effect<n
  * @since 1.0.0
  * @category mutations
  */
-export const failSync: <E>(evaluate: () => E) => <A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean> =
+export const failSync: <E>(evaluate: LazyArg<E>) => <A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean> =
   core.deferredFailSync
 
 /**
@@ -139,7 +140,7 @@ export const failCause: <E>(
  * @category mutations
  */
 export const failCauseSync: <E>(
-  evaluate: () => Cause.Cause<E>
+  evaluate: LazyArg<Cause.Cause<E>>
 ) => <A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean> = core.deferredFailCauseSync
 
 /**
@@ -162,7 +163,7 @@ export const die: (defect: unknown) => <E, A>(self: Deferred<E, A>) => Effect.Ef
  * @category mutations
  */
 export const dieSync: (
-  evaluate: () => unknown
+  evaluate: LazyArg<unknown>
 ) => <E, A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean> = core.deferredDieSync
 
 /**

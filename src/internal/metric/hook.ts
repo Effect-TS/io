@@ -3,6 +3,7 @@ import type * as MetricHook from "@effect/io/Metric/Hook"
 import type * as MetricKey from "@effect/io/Metric/Key"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Duration from "@fp-ts/data/Duration"
+import type { LazyArg } from "@fp-ts/data/Function"
 import { pipe } from "@fp-ts/data/Function"
 import * as HashMap from "@fp-ts/data/HashMap"
 import * as number from "@fp-ts/data/Number"
@@ -24,7 +25,7 @@ const metricHookVariance = {
 
 /** @internal */
 export const make = <In, Out>(
-  get: () => Out,
+  get: LazyArg<Out>,
   update: (input: In) => void
 ): MetricHook.MetricHook<In, Out> => {
   return {
