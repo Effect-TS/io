@@ -987,6 +987,7 @@ export const RuntimeExceptionTypeId: Cause.RuntimeExceptionTypeId = Symbol.for(
 
 /** @internal */
 export const RuntimeException = (message?: string): Cause.RuntimeException => ({
+  _tag: "RuntimeException",
   [RuntimeExceptionTypeId]: RuntimeExceptionTypeId,
   message
 })
@@ -1003,6 +1004,7 @@ export const InterruptedExceptionTypeId: Cause.InterruptedExceptionTypeId = Symb
 
 /** @internal */
 export const InterruptedException = (message?: string): Cause.InterruptedException => ({
+  _tag: "InterruptedException",
   [InterruptedExceptionTypeId]: InterruptedExceptionTypeId,
   message
 })
@@ -1019,6 +1021,7 @@ export const IllegalArgumentExceptionTypeId: Cause.IllegalArgumentExceptionTypeI
 
 /** @internal */
 export const IllegalArgumentException = (message?: string): Cause.IllegalArgumentException => ({
+  _tag: "IllegalArgumentException",
   [IllegalArgumentExceptionTypeId]: IllegalArgumentExceptionTypeId,
   message
 })
@@ -1035,6 +1038,7 @@ export const NoSuchElementExceptionTypeId: Cause.NoSuchElementExceptionTypeId = 
 
 /** @internal */
 export const NoSuchElementException = (message?: string): Cause.NoSuchElementException => ({
+  _tag: "NoSuchElementException",
   [NoSuchElementExceptionTypeId]: NoSuchElementExceptionTypeId,
   message
 })
@@ -1051,6 +1055,7 @@ export const InvalidHubCapacityExceptionTypeId: Cause.InvalidHubCapacityExceptio
 
 /** @internal */
 export const InvalidHubCapacityException = (message?: string): Cause.InvalidHubCapacityException => ({
+  _tag: "InvalidHubCapacityException",
   [InvalidHubCapacityExceptionTypeId]: InvalidHubCapacityExceptionTypeId,
   message
 })

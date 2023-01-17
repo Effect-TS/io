@@ -222,6 +222,7 @@ export interface CauseRenderer<E = unknown> {
  * @category models
  */
 export interface RuntimeException {
+  readonly _tag: "RuntimeException"
   readonly [RuntimeExceptionTypeId]: RuntimeExceptionTypeId
   readonly message?: string
 }
@@ -233,6 +234,7 @@ export interface RuntimeException {
  * @category models
  */
 export interface InterruptedException {
+  readonly _tag: "InterruptedException"
   readonly [InterruptedExceptionTypeId]: InterruptedExceptionTypeId
   readonly message?: string
 }
@@ -245,6 +247,7 @@ export interface InterruptedException {
  * @category models
  */
 export interface IllegalArgumentException {
+  readonly _tag: "IllegalArgumentException"
   readonly [IllegalArgumentExceptionTypeId]: IllegalArgumentExceptionTypeId
   readonly message?: string
 }
@@ -257,6 +260,7 @@ export interface IllegalArgumentException {
  * @category models
  */
 export interface NoSuchElementException {
+  readonly _tag: "NoSuchElementException"
   readonly [NoSuchElementExceptionTypeId]: NoSuchElementExceptionTypeId
   readonly message?: string
 }
@@ -269,6 +273,7 @@ export interface NoSuchElementException {
  * @category models
  */
 export interface InvalidHubCapacityException {
+  readonly _tag: "InvalidHubCapacityException"
   readonly [InvalidHubCapacityExceptionTypeId]: InvalidHubCapacityExceptionTypeId
   readonly message?: string
 }
