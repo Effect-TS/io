@@ -20,8 +20,7 @@ describe.concurrent("Effect", () => {
       const latch = yield* $(Deferred.make<never, void>())
       const fiber = yield* $(
         pipe(
-          latch,
-          Deferred.succeed<void>(void 0),
+          Deferred.succeed(latch)(void 0),
           Effect.zipRight(Effect.die(new Error())),
           Effect.zipPar(Effect.never()),
           Effect.fork
@@ -37,7 +36,7 @@ describe.concurrent("Effect", () => {
       const ref = yield* $(Ref.make(true))
       yield* $(pipe(
         Effect.checkInterruptible((isInterruptible) =>
-          pipe(Ref.set(ref)(isInterruptible), Effect.zipRight(pipe(latch, Deferred.succeed<void>(void 0))))
+          pipe(Ref.set(ref)(isInterruptible), Effect.zipRight(Deferred.succeed(latch)(void 0)))
         ),
         Effect.fork,
         Effect.zipRight(Deferred.await(latch)),
@@ -51,7 +50,7 @@ describe.concurrent("Effect", () => {
       const deferred = yield* $(Deferred.make<never, void>())
       yield* $(pipe(
         Effect.fail<void>(void 0),
-        Effect.forkWithErrorHandler((e) => pipe(deferred, Deferred.succeed(e), Effect.asUnit))
+        Effect.forkWithErrorHandler((e) => pipe(Deferred.succeed(deferred)(e), Effect.asUnit))
       ))
       const result = yield* $(Deferred.await(deferred))
       assert.isUndefined(result)

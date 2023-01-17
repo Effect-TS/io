@@ -53,9 +53,9 @@ describe.concurrent("Effect", () => {
         Effect.asyncEffect<never, unknown, unknown, never, never, never>(() =>
           // This will never complete because we never call the callback
           Effect.acquireUseRelease(
-            pipe(acquire, Deferred.succeed<void>(void 0)),
+            Deferred.succeed(acquire)(void 0),
             () => Effect.never(),
-            () => pipe(release, Deferred.succeed<void>(void 0))
+            () => Deferred.succeed(release)(void 0)
           )
         ),
         Effect.disconnect,
@@ -80,7 +80,7 @@ describe.concurrent("Effect", () => {
         ),
         Effect.ensuring(Effect.async<never, never, void>(() => {
           // The callback is never called so this never completes
-          runtime.unsafeRun(pipe(step, Deferred.succeed<void>(undefined)))
+          runtime.unsafeRun(Deferred.succeed(step)(undefined))
         })),
         Effect.ensuring(Ref.update(unexpectedPlace)(Chunk.prepend(2))),
         Effect.forkDaemon
@@ -106,7 +106,7 @@ describe.concurrent("Effect", () => {
         Effect.flatMap(() =>
           Effect.async<never, never, void>(() => {
             // The callback is never called so this never completes
-            runtime.unsafeRun(pipe(step, Deferred.succeed<void>(void 0)))
+            runtime.unsafeRun(Deferred.succeed(step)(void 0))
           })
         ),
         Effect.ensuring(Ref.update(unexpectedPlace)(Chunk.prepend(2))),

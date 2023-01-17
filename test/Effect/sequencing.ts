@@ -302,18 +302,17 @@ describe.concurrent("Effect", () => {
       const ref = yield* $(Ref.make(false))
       const left = Effect.uninterruptibleMask((restore) =>
         pipe(
-          latch2,
-          Deferred.succeed<void>(void 0),
+          Deferred.succeed(latch2)(void 0),
           Effect.zipRight(restore(pipe(Deferred.await(latch1), Effect.zipRight(Effect.succeed("foo"))))),
           Effect.onInterrupt(() => Ref.set(ref)(true))
         )
       )
-      const right = pipe(latch3, Deferred.succeed<void>(void 0), Effect.as(42))
+      const right = pipe(Deferred.succeed(latch3)(void 0), Effect.as(42))
       yield* $(
         pipe(
           Deferred.await(latch2),
           Effect.zipRight(Deferred.await(latch3)),
-          Effect.zipRight(pipe(latch1, Deferred.succeed<void>(void 0))),
+          Effect.zipRight(Deferred.succeed(latch1)(void 0)),
           Effect.fork
         )
       )

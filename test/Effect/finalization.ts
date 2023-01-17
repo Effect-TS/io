@@ -223,8 +223,7 @@ describe.concurrent("Effect", () => {
       const deferred2 = yield* $(Deferred.make<never, number>())
       const fiber = yield* $(
         pipe(
-          deferred1,
-          Deferred.succeed<void>(void 0),
+          Deferred.succeed(deferred1)(void 0),
           Effect.zipRight(Deferred.await(deferred2)),
           Effect.ensuring(pipe(Ref.set(ref)(true), Effect.zipRight(Effect.sleep(Duration.millis(10))))),
           Effect.fork
@@ -264,12 +263,11 @@ describe.concurrent("Effect", () => {
       const latch2 = yield* $(Deferred.make<never, void>())
       const fiber = yield* $(
         pipe(
-          latch1,
-          Deferred.succeed<void>(void 0),
+          Deferred.succeed(latch1)(void 0),
           Effect.zipRight(Effect.never()),
           Effect.onExit((exit) =>
             Exit.isFailure(exit) && Cause.isInterrupted(exit.cause) ?
-              pipe(latch2, Deferred.succeed<void>(void 0), Effect.asUnit) :
+              pipe(Deferred.succeed(latch2)(void 0), Effect.asUnit) :
               Effect.unit()
           ),
           Effect.fork

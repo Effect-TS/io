@@ -906,15 +906,10 @@ class SubscriptionImpl<A> implements Queue.Dequeue<A> {
         pipe(this.shutdownFlag, MutableRef.set(true))
         return pipe(
           unsafePollAllQueue(this.pollers),
-          fiberRuntime.forEachPar(core.deferredInterruptWith(state.id())),
+          fiberRuntime.forEachPar((d) => core.deferredInterruptWith(d)(state.id())),
           core.zipRight(core.sync(() => this.subscription.unsubscribe())),
           core.zipRight(core.sync(() => this.strategy.unsafeOnHubEmptySpace(this.hub, this.subscribers))),
-          core.whenEffect(
-            pipe(
-              this.shutdownHook,
-              core.deferredSucceed<void>(void 0)
-            )
-          ),
+          core.whenEffect(core.deferredSucceed(this.shutdownHook)(void 0)),
           core.asUnit
         )
       }),
@@ -1089,12 +1084,7 @@ class HubImpl<A> implements Hub.Hub<A> {
         return pipe(
           this.scope.close(core.exitInterrupt(state.id())),
           core.zipRight(this.strategy.shutdown()),
-          core.whenEffect(
-            pipe(
-              this.shutdownHook,
-              core.deferredSucceed<void>(void 0)
-            )
-          ),
+          core.whenEffect(core.deferredSucceed(this.shutdownHook)(void 0)),
           core.asUnit
         )
       }),
@@ -1218,7 +1208,7 @@ const ensureCapacity = (capacity: number): void => {
 
 /** @internal */
 const unsafeCompleteDeferred = <A>(deferred: Deferred.Deferred<never, A>, a: A): void => {
-  pipe(deferred, core.deferredUnsafeDone(core.succeed(a)))
+  core.deferredUnsafeDone(deferred)(core.succeed(a))
 }
 
 /** @internal */
@@ -1346,7 +1336,7 @@ class BackPressureStrategy<A> implements HubStrategy<A> {
               publishers,
               fiberRuntime.forEachParDiscard(([_, deferred, last]) =>
                 last ?
-                  pipe(deferred, core.deferredInterruptWith(fiberId), core.asUnit) :
+                  pipe(core.deferredInterruptWith(deferred)(fiberId), core.asUnit) :
                   core.unit()
               )
             )

@@ -336,7 +336,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
       const deferred = core.deferredUnsafeMake<never, Z>(this._fiberId)
       this.tell(
         FiberMessage.stateful((fiber, status) => {
-          pipe(deferred, core.deferredUnsafeDone(core.sync(() => f(fiber, status))))
+          core.deferredUnsafeDone(deferred)(core.sync(() => f(fiber, status)))
         })
       )
       return core.deferredAwait(deferred)
@@ -1585,10 +1585,10 @@ const forEachParUnboundedDiscard = <R, E, A, _>(f: (a: A) => Effect.Effect<R, E,
                 graft(pipe(
                   restore(core.suspendSucceed(() => f(a))),
                   core.matchCauseEffect(
-                    (cause) => pipe(deferred, core.deferredFail<void>(void 0), core.zipRight(core.failCause(cause))),
+                    (cause) => pipe(core.deferredFail(deferred)(void 0), core.zipRight(core.failCause(cause))),
                     () => {
                       if (ref + 1 === size) {
-                        pipe(deferred, core.deferredUnsafeDone(core.unit() as Effect.Effect<never, void, void>))
+                        core.deferredUnsafeDone(deferred)(core.unit())
                       } else {
                         ref = ref + 1
                       }
@@ -2006,7 +2006,7 @@ const raceAllArbiter = <E, E1, A, A1>(
             Ref.modify(fails)((fails) =>
               [
                 fails === 0 ?
-                  pipe(deferred, core.deferredFailCause<E | E1>(cause), core.asUnit) :
+                  pipe(core.deferredFailCause(deferred)(cause), core.asUnit) :
                   core.unit(),
                 fails - 1
               ] as const
@@ -2015,8 +2015,7 @@ const raceAllArbiter = <E, E1, A, A1>(
           ),
         (value): Effect.Effect<never, never, void> =>
           pipe(
-            deferred,
-            core.deferredSucceed([value, winner] as const),
+            core.deferredSucceed(deferred)([value, winner] as const),
             core.flatMap((set) =>
               set ?
                 pipe(

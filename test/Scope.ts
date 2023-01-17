@@ -65,7 +65,7 @@ describe.concurrent("Scope", () => {
     Effect.gen(function*($) {
       const deferred = yield* $(Deferred.make<never, void>())
       const result = yield* $(pipe(
-        Effect.addFinalizer(() => pipe(deferred, Deferred.succeed<void>(void 0))),
+        Effect.addFinalizer(() => Deferred.succeed(deferred)(void 0)),
         Effect.zipRight(Effect.addFinalizer(() => Deferred.await(deferred))),
         Effect.parallelFinalizers,
         Effect.scoped,

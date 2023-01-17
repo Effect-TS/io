@@ -741,14 +741,13 @@ const forkZipWithPar = <R, E, A>(
     core.matchCauseEffect(
       (cause) =>
         pipe(
-          deferred,
-          core.deferredFail<void>(void 0),
+          core.deferredFail(deferred)(void 0),
           core.zipRight(core.failCause(cause))
         ),
       (value) => {
         const flag = MutableRef.get(ref)
         if (flag) {
-          pipe(deferred, core.deferredUnsafeDone<void, void>(core.unit()))
+          core.deferredUnsafeDone(deferred)(core.unit())
           return core.succeed(value)
         }
         pipe(ref, MutableRef.set(true))
