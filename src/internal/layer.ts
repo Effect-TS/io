@@ -214,7 +214,7 @@ class MemoMap {
                               switch (exit._tag) {
                                 case EffectOpCodes.OP_FAILURE: {
                                   return pipe(
-                                    core.deferredFailCause(deferred)(exit.cause),
+                                    core.deferredFailCause(deferred, exit.cause),
                                     core.zipRight(pipe(innerScope, core.scopeClose(exit))),
                                     core.zipRight(core.failCause(exit.cause))
                                   )
@@ -243,7 +243,7 @@ class MemoMap {
                                         )
                                       )
                                     ),
-                                    core.zipRight(pipe(core.deferredSucceed(deferred)(exit.value))),
+                                    core.zipRight(core.deferredSucceed(deferred, exit.value)),
                                     core.as(exit.value[1])
                                   )
                                 }

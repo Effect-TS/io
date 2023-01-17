@@ -110,7 +110,7 @@ describe.concurrent("SynchronizedRef", () => {
       const deferred = yield* $(Deferred.make<never, Synchronized.Synchronized<State>>())
       const latch = yield* $(Deferred.make<never, void>())
       const makeAndWait = pipe(
-        Deferred.complete(deferred)(Synchronized.make<State>(Active)),
+        Deferred.complete(deferred, Synchronized.make<State>(Active)),
         Effect.zipRight(Deferred.await(latch))
       )
       const fiber = yield* $(Effect.fork(makeAndWait))

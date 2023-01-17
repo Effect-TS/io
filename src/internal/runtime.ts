@@ -244,7 +244,7 @@ export const asyncEffect = <R, E, A, R2, E2, X>(
               restore(
                 pipe(
                   register((cb) => runtime.unsafeRun(pipe(cb, core.intoDeferred(deferred)))),
-                  core.catchAllCause((cause) => core.deferredFailCause(deferred)(cause))
+                  core.catchAllCause((cause) => core.deferredFailCause(deferred, cause))
                 )
               ),
               FiberRuntime.fork,

@@ -186,7 +186,7 @@ export class TestClockImpl implements TestClock {
           core.flatMap((shouldAwait) =>
             shouldAwait ?
               pipe(this.warningStart(), core.zipRight(core.deferredAwait(deferred))) :
-              pipe(core.deferredSucceed(deferred)(void 0), core.asUnit)
+              pipe(core.deferredSucceed(deferred, void 0), core.asUnit)
           )
         )
       )
@@ -432,7 +432,7 @@ export class TestClockImpl implements TestClock {
             case "Some": {
               const [end, deferred] = option.value
               return pipe(
-                core.deferredSucceed(deferred)(void 0),
+                core.deferredSucceed(deferred, void 0),
                 core.zipRight(core.yieldNow()),
                 core.zipRight(this.run(() => end))
               )

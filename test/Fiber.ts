@@ -65,14 +65,14 @@ describe.concurrent("Fiber", () => {
       const child1 = yield* $(
         pipe(
           FiberRef.set(fiberRef)("child1"),
-          Effect.zipRight(Deferred.succeed(latch1)(void 0)),
+          Effect.zipRight(Deferred.succeed(latch1, void 0)),
           Effect.fork
         )
       )
       const child2 = yield* $(
         pipe(
           FiberRef.set(fiberRef)("child2"),
-          Effect.zipRight(Deferred.succeed(latch2)(void 0)),
+          Effect.zipRight(Deferred.succeed(latch2, void 0)),
           Effect.fork
         )
       )
@@ -89,14 +89,14 @@ describe.concurrent("Fiber", () => {
       const child1 = yield* $(
         pipe(
           FiberRef.set(fiberRef)("child1"),
-          Effect.zipRight(Deferred.succeed(latch1)(void 0)),
+          Effect.zipRight(Deferred.succeed(latch1, void 0)),
           Effect.fork
         )
       )
       const child2 = yield* $(
         pipe(
           FiberRef.set(fiberRef)("child2"),
-          Effect.zipRight(Deferred.succeed(latch2)(void 0)),
+          Effect.zipRight(Deferred.succeed(latch2, void 0)),
           Effect.fork
         )
       )
@@ -167,7 +167,7 @@ describe.concurrent("Fiber", () => {
       const latch = yield* $(Deferred.make<never, void>())
       const child = pipe(
         Effect.interruptible(Effect.never()),
-        Effect.onInterrupt(() => pipe(Deferred.succeed(latch)(void 0))),
+        Effect.onInterrupt(() => pipe(Deferred.succeed(latch, void 0))),
         Effect.fork
       )
       yield* $(Effect.uninterruptible(Effect.fork(child)))
@@ -194,11 +194,11 @@ describe.concurrent("Fiber", () => {
       const deferred1 = yield* $(Deferred.make<never, void>())
       const deferred2 = yield* $(Deferred.make<never, void>())
       const fiber1 = yield* $(
-        pipe(Deferred.succeed(deferred1)(void 0), Effect.zipRight(Effect.never()), Effect.forkDaemon)
+        pipe(Deferred.succeed(deferred1, void 0), Effect.zipRight(Effect.never()), Effect.forkDaemon)
       )
       const fiber2 = yield* $(
         pipe(
-          Deferred.succeed(deferred2)(void 0),
+          Deferred.succeed(deferred2, void 0),
           Effect.zipRight(Fiber.await(fiber1)),
           Effect.uninterruptible,
           Effect.forkDaemon

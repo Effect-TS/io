@@ -52,9 +52,9 @@ describe.concurrent("Effect", () => {
         Effect.asyncEffect<never, unknown, unknown, never, unknown, unknown>((_) =>
           // This will never complete because the callback is never invoked
           Effect.acquireUseRelease(
-            Deferred.succeed(acquire)(void 0),
+            Deferred.succeed(acquire, void 0),
             () => Effect.never(),
-            () => pipe(Deferred.succeed(release)(42), Effect.asUnit)
+            () => pipe(Deferred.succeed(release, 42), Effect.asUnit)
           )
         ),
         Effect.fork
@@ -82,7 +82,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const plus1 = <X>(latch: Deferred.Deferred<never, void>, finalizer: Effect.Effect<never, never, X>) => {
         return pipe(
-          Deferred.succeed(latch)(void 0),
+          Deferred.succeed(latch, void 0),
           Effect.zipRight(Effect.sleep(Duration.hours(1))),
           Effect.onInterrupt(() => pipe(finalizer, Effect.map((x) => x)))
         )
@@ -111,14 +111,14 @@ describe.concurrent("Effect", () => {
       const deferred1 = yield* $(Deferred.make<never, void>())
       const deferred2 = yield* $(Deferred.make<never, void>())
       const loser1 = Effect.acquireUseRelease(
-        Deferred.succeed(latch1)(void 0),
+        Deferred.succeed(latch1, void 0),
         () => Effect.never(),
-        () => Deferred.succeed(deferred1)(void 0)
+        () => Deferred.succeed(deferred1, void 0)
       )
       const loser2 = Effect.acquireUseRelease(
-        Deferred.succeed(latch2)(void 0),
+        Deferred.succeed(latch2, void 0),
         () => Effect.never(),
-        () => Deferred.succeed(deferred2)(void 0)
+        () => Deferred.succeed(deferred2, void 0)
       )
       const fiber = yield* $(pipe(loser1, Effect.race(loser2), Effect.forkDaemon))
       yield* $(Deferred.await(latch1))
@@ -174,7 +174,7 @@ describe.concurrent("Effect", () => {
       const awaiter = Deferred.unsafeMake<never, void>(FiberId.none)
       const program = pipe(Effect.unit(), Effect.race(pipe(awaiter, Deferred.await)), Effect.uninterruptible)
       const result = yield* $(program)
-      yield* $(Deferred.succeed(awaiter)(void 0))
+      yield* $(Deferred.succeed(awaiter, void 0))
       assert.isUndefined(result)
     }))
   it.effect("race of two forks does not interrupt winner", () =>
@@ -188,7 +188,7 @@ describe.concurrent("Effect", () => {
           pipe(
             restore(Deferred.await(latch)),
             Effect.onInterrupt(() =>
-              pipe(Ref.update(interrupted)((_) => _ + 1), Effect.zipRight(Deferred.succeed(done)(void 0)))
+              pipe(Ref.update(interrupted)((_) => _ + 1), Effect.zipRight(Deferred.succeed(done, void 0)))
             ),
             Effect.fork
           )
@@ -204,7 +204,7 @@ describe.concurrent("Effect", () => {
       yield* $(pipe(forkWaiter1, Effect.race(forkWaiter2)))
       const count = yield* $(
         pipe(
-          Deferred.succeed(latch1)(void 0),
+          Deferred.succeed(latch1, void 0),
           Effect.zipRight(Deferred.await(done1)),
           Effect.zipRight(Deferred.await(done2)),
           Effect.zipRight(Ref.get(interrupted))
@@ -251,9 +251,9 @@ describe.concurrent("Effect", () => {
       const effect = yield* $(Deferred.make<never, number>())
       const winner = Effect.fromEither(Either.right(void 0))
       const loser = Effect.acquireUseRelease(
-        Deferred.succeed(deferred)(void 0),
+        Deferred.succeed(deferred, void 0),
         () => Effect.never(),
-        () => pipe(Deferred.succeed(effect)(42))
+        () => pipe(Deferred.succeed(effect, 42))
       )
       yield* $(pipe(winner, Effect.raceFirst(loser)))
       const result = yield* $(Deferred.await(effect))
@@ -265,9 +265,9 @@ describe.concurrent("Effect", () => {
       const effect = yield* $(Deferred.make<never, number>())
       const winner = pipe(Deferred.await(deferred), Effect.zipRight(Effect.fromEither(Either.left(new Error()))))
       const loser = Effect.acquireUseRelease(
-        Deferred.succeed(deferred)(void 0),
+        Deferred.succeed(deferred, void 0),
         () => Effect.never(),
-        () => Deferred.succeed(effect)(42)
+        () => Deferred.succeed(effect, 42)
       )
       yield* $(pipe(winner, Effect.raceFirst(loser), Effect.either))
       const result = yield* $(Deferred.await(effect))

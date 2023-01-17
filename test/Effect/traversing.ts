@@ -246,7 +246,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const deferred = yield* $(Deferred.make<never, void>())
       yield* $(
-        pipe([Effect.never(), Deferred.succeed(deferred)(void 0)], Effect.forEachPar(identity), Effect.fork)
+        pipe([Effect.never(), Deferred.succeed(deferred, void 0)], Effect.forEachPar(identity), Effect.fork)
       )
       const result = yield* $(Deferred.await(deferred))
       assert.isUndefined(result)
@@ -307,7 +307,7 @@ describe.concurrent("Effect", () => {
       const deferred = yield* $(Deferred.make<never, void>())
       yield* $(
         pipe(
-          [Effect.never(), Deferred.succeed(deferred)(void 0)],
+          [Effect.never(), Deferred.succeed(deferred, void 0)],
           Effect.forEachPar(identity),
           Effect.withParallelism(2),
           Effect.fork
@@ -347,7 +347,7 @@ describe.concurrent("Effect", () => {
           Ref.updateAndGet(started)((n) => n + 1),
           Effect.flatMap((count) =>
             pipe(
-              Deferred.succeed(trigger)(void 0),
+              Deferred.succeed(trigger, void 0),
               Effect.when(() => count === 3),
               Effect.zipRight(Deferred.await(trigger)),
               Effect.zipRight(Effect.fail(n))
