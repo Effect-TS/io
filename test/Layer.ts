@@ -29,7 +29,7 @@ describe.concurrent("Layer", () => {
       const layer2 = Layer.scopedEnvironment(
         Effect.acquireRelease(
           pipe(
-            Deferred.succeed(deferred)(void 0),
+            Deferred.succeed(deferred, void 0),
             Effect.map((bool) => pipe(Context.empty(), Context.add(BoolTag)(bool)))
           ),
           () => Effect.unit()
