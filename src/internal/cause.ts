@@ -989,7 +989,10 @@ const exceptionProto = {
   }
 }
 
-const makeException = <T>(proto: object, _tag: string) =>
+const makeException = <T extends { _tag: string; message?: string }>(
+  proto: Omit<T, "message" | "_tag">,
+  _tag: T["_tag"]
+) =>
   (message?: string): T =>
     Object.create(proto, {
       _tag: {
