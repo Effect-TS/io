@@ -24,7 +24,7 @@ export const withLatchAwait = <R, E, A>(
       f(
         pipe(latch, Deferred.succeed<void>(void 0), Effect.asUnit),
         Effect.uninterruptibleMask((restore) =>
-          pipe(ref, Ref.set(false), Effect.zipRight(restore(Deferred.await(latch))))
+          pipe(Ref.set(ref)(false), Effect.zipRight(restore(Deferred.await(latch))))
         )
       )
     )

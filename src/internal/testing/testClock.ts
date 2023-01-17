@@ -149,7 +149,7 @@ export class TestClockImpl implements TestClock {
    */
   save(): Effect.Effect<never, never, Effect.Effect<never, never, void>> {
     const trace = getCallTrace()
-    return pipe(ref.get(this.clockState), core.map((data) => pipe(this.clockState, ref.set(data)))).traced(trace)
+    return pipe(ref.get(this.clockState), core.map((data) => ref.set(this.clockState)(data))).traced(trace)
   }
   /**
    * Sets the current clock time to the specified instant. Any effects that
@@ -174,8 +174,7 @@ export class TestClockImpl implements TestClock {
       core.deferredMake<never, void>(),
       core.flatMap((deferred) =>
         pipe(
-          this.clockState,
-          ref.modify((data) => {
+          ref.modify(this.clockState)((data) => {
             const end = data.instant + duration.millis
             if (end > data.instant) {
               return [
@@ -282,20 +281,17 @@ export class TestClockImpl implements TestClock {
    */
   warningStart(): Effect.Effect<never, never, void> {
     const trace = getCallTrace()
-    return pipe(
-      this.warningState,
-      synchronized.updateSomeEffect((data) =>
-        WarningData.isStart(data) ?
-          Option.some(
-            pipe(
-              this.live.provide(pipe(effect.logWarning(warning), effect.delay(Duration.seconds(5)))),
-              core.interruptible,
-              fiberRuntime.fork,
-              core.map((fiber) => WarningData.pending(fiber))
-            )
-          ) :
-          Option.none
-      )
+    return synchronized.updateSomeEffect(this.warningState)((data) =>
+      WarningData.isStart(data) ?
+        Option.some(
+          pipe(
+            this.live.provide(pipe(effect.logWarning(warning), effect.delay(Duration.seconds(5)))),
+            core.interruptible,
+            fiberRuntime.fork,
+            core.map((fiber) => WarningData.pending(fiber))
+          )
+        ) :
+        Option.none
     ).traced(trace)
   }
   /**
@@ -306,18 +302,15 @@ export class TestClockImpl implements TestClock {
    */
   warningDone(): Effect.Effect<never, never, void> {
     const trace = getCallTrace()
-    return pipe(
-      this.warningState,
-      synchronized.updateSomeEffect((warningData) => {
-        if (WarningData.isStart(warningData)) {
-          return Option.some(core.succeed(WarningData.done))
-        }
-        if (WarningData.isPending(warningData)) {
-          return Option.some(pipe(core.interruptFiber(warningData.fiber), core.as(WarningData.done)))
-        }
-        return Option.none
-      })
-    ).traced(trace)
+    return synchronized.updateSomeEffect(this.warningState)((warningData) => {
+      if (WarningData.isStart(warningData)) {
+        return Option.some(core.succeed(WarningData.done))
+      }
+      if (WarningData.isPending(warningData)) {
+        return Option.some(pipe(core.interruptFiber(warningData.fiber), core.as(WarningData.done)))
+      }
+      return Option.none
+    }).traced(trace)
   }
   /**
    * Returns whether all descendants of this fiber are done or suspended.
@@ -367,28 +360,25 @@ export class TestClockImpl implements TestClock {
    */
   suspendedWarningStart(): Effect.Effect<never, never, void> {
     const trace = getCallTrace()
-    return pipe(
-      this.suspendedWarningState,
-      synchronized.updateSomeEffect((suspendedWarningData) => {
-        if (SuspendedWarningData.isStart(suspendedWarningData)) {
-          return Option.some(
-            pipe(
-              this.live.provide(
-                pipe(
-                  effect.logWarning(suspendedWarning),
-                  core.zipRight(pipe(this.suspendedWarningState, synchronized.set(SuspendedWarningData.done))),
-                  effect.delay(Duration.seconds(5))
-                )
-              ),
-              core.interruptible,
-              fiberRuntime.fork,
-              core.map((fiber) => SuspendedWarningData.pending(fiber))
-            )
+    return synchronized.updateSomeEffect(this.suspendedWarningState)((suspendedWarningData) => {
+      if (SuspendedWarningData.isStart(suspendedWarningData)) {
+        return Option.some(
+          pipe(
+            this.live.provide(
+              pipe(
+                effect.logWarning(suspendedWarning),
+                core.zipRight(synchronized.set(this.suspendedWarningState)(SuspendedWarningData.done)),
+                effect.delay(Duration.seconds(5))
+              )
+            ),
+            core.interruptible,
+            fiberRuntime.fork,
+            core.map((fiber) => SuspendedWarningData.pending(fiber))
           )
-        }
-        return Option.none
-      })
-    ).traced(trace)
+        )
+      }
+      return Option.none
+    }).traced(trace)
   }
   /**
    * Cancels the warning message that is displayed if a test is advancing the
@@ -399,8 +389,7 @@ export class TestClockImpl implements TestClock {
   suspendedWarningDone(): Effect.Effect<never, never, void> {
     const trace = getCallTrace()
     return pipe(
-      this.suspendedWarningState,
-      synchronized.updateSomeEffect((suspendedWarningData) => {
+      synchronized.updateSomeEffect(this.suspendedWarningState)((suspendedWarningData) => {
         if (SuspendedWarningData.isPending(suspendedWarningData)) {
           return Option.some(pipe(core.interruptFiber(suspendedWarningData.fiber), core.as(SuspendedWarningData.start)))
         }
@@ -419,8 +408,7 @@ export class TestClockImpl implements TestClock {
     return pipe(
       this.awaitSuspended(),
       core.zipRight(pipe(
-        this.clockState,
-        ref.modify((data) => {
+        ref.modify(this.clockState)((data) => {
           const end = f(data.instant)
           const sorted = pipe(
             data.sleeps,

@@ -168,7 +168,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const makeLogger = (ref: Ref.Ref<Chunk.Chunk<string>>) => {
         return (line: string): Effect.Effect<never, never, void> => {
-          return pipe(ref, Ref.update(Chunk.prepend(line)))
+          return pipe(Ref.update(ref)(Chunk.prepend(line)))
         }
       }
       const ref = yield* $(Ref.make(Chunk.empty<string>()))
@@ -226,7 +226,7 @@ describe.concurrent("Effect", () => {
           deferred1,
           Deferred.succeed<void>(void 0),
           Effect.zipRight(Deferred.await(deferred2)),
-          Effect.ensuring(pipe(ref, Ref.set(true), Effect.zipRight(Effect.sleep(Duration.millis(10))))),
+          Effect.ensuring(pipe(Ref.set(ref)(true), Effect.zipRight(Effect.sleep(Duration.millis(10))))),
           Effect.fork
         )
       )
@@ -238,7 +238,7 @@ describe.concurrent("Effect", () => {
   it.effect("onExit - executes that a cleanup function runs when effect succeeds", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(false))
-      yield* $(pipe(Effect.unit(), Effect.onExit(Exit.match(Effect.unit, () => pipe(ref, Ref.set(true))))))
+      yield* $(pipe(Effect.unit(), Effect.onExit(Exit.match(Effect.unit, () => Ref.set(ref)(true)))))
       const result = yield* $(Ref.get(ref))
       assert.isTrue(result)
     }))
@@ -249,7 +249,7 @@ describe.concurrent("Effect", () => {
         Effect.die(Cause.RuntimeException),
         Effect.onExit((exit) =>
           Exit.isFailure(exit) && Cause.isDie(exit.cause) ?
-            pipe(ref, Ref.set(true)) :
+            Ref.set(ref)(true) :
             Effect.unit()
         ),
         Effect.sandbox,

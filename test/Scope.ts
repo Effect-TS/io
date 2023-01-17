@@ -41,14 +41,11 @@ const isRelease = (self: Action): self is Use => self.op === OP_RELEASE
 
 const resource = (id: number, ref: Ref.Ref<ReadonlyArray<Action>>): Effect.Effect<Scope.Scope, never, number> => {
   return pipe(
-    ref,
-    Ref.update((actions) => [...actions, acquire(id)]),
+    Ref.update(ref)((actions) => [...actions, acquire(id)]),
     Effect.as(id),
     Effect.uninterruptible,
     Effect.ensuring(
-      Effect.scopeWith((scope) =>
-        scope.addFinalizer(() => pipe(ref, Ref.update((actions) => [...actions, release(id)])))
-      )
+      Effect.scopeWith((scope) => scope.addFinalizer(() => Ref.update(ref)((actions) => [...actions, release(id)])))
     )
   )
 }
@@ -59,7 +56,7 @@ describe.concurrent("Scope", () => {
       const ref = yield* $(Ref.make<ReadonlyArray<Action>>([]))
       yield* $(Effect.scoped(pipe(
         resource(1, ref),
-        Effect.flatMap((id) => pipe(ref, Ref.update((actions) => [...actions, use(id)])))
+        Effect.flatMap((id) => Ref.update(ref)((actions) => [...actions, use(id)]))
       )))
       const result = yield* $(Ref.get(ref))
       assert.deepStrictEqual(result, [acquire(1), use(1), release(1)])
@@ -86,9 +83,8 @@ describe.concurrent("Scope", () => {
             Effect.zipPar(resource(2, ref)),
             Effect.flatMap(([resource1, resource2]) =>
               pipe(
-                ref,
-                Ref.update((actions) => [...actions, use(resource1)]),
-                Effect.zipPar(pipe(ref, Ref.update((actions) => [...actions, use(resource2)])))
+                Ref.update(ref)((actions) => [...actions, use(resource1)]),
+                Effect.zipPar(pipe(Ref.update(ref)((actions) => [...actions, use(resource2)])))
               )
             )
           )
@@ -134,9 +130,9 @@ describe.concurrent("Scope", () => {
       yield* $(pipe(
         resource(1, ref1),
         Effect.using(() =>
-          pipe(ref1, Ref.update((actions) => [...actions, use(1)]), Effect.zipRight(resource(2, ref2)))
+          pipe(Ref.update(ref1)((actions) => [...actions, use(1)]), Effect.zipRight(resource(2, ref2)))
         ),
-        Effect.zipRight(pipe(ref2, Ref.update((actions) => [...actions, use(2)]))),
+        Effect.zipRight(Ref.update(ref2)((actions) => [...actions, use(2)])),
         Effect.scoped
       ))
       const actions1 = yield* $(Ref.get(ref1))

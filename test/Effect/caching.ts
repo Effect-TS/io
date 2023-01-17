@@ -9,11 +9,11 @@ import { assert, describe } from "vitest"
 describe.concurrent("Effect", () => {
   it.effect("cached - returns new instances after duration", () =>
     Effect.gen(function*($) {
-      const incrementAndGet = (ref: Ref.Ref<number>): Effect.Effect<never, never, number> => {
-        return pipe(ref, Ref.updateAndGet((n) => n + 1))
-      }
       const ref = yield* $(Ref.make(0))
-      const cache = yield* $(pipe(incrementAndGet(ref), Effect.cached(Duration.minutes(60))))
+      const cache = yield* $(pipe(
+        Ref.updateAndGet(ref)((n) => n + 1),
+        Effect.cached(Duration.minutes(60))
+      ))
       const a = yield* $(cache)
       yield* $(TestClock.adjust(Duration.minutes(59)))
       const b = yield* $(cache)
@@ -28,8 +28,10 @@ describe.concurrent("Effect", () => {
   it.effect("cached - correctly handles an infinite duration time to live", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(0))
-      const getAndIncrement = pipe(ref, Ref.modify((curr) => [curr, curr + 1]))
-      const cached = yield* $(pipe(getAndIncrement, Effect.cached(Duration.infinity)))
+      const cached = yield* $(pipe(
+        Ref.modify(ref)((curr) => [curr, curr + 1]),
+        Effect.cached(Duration.infinity)
+      ))
       const a = yield* $(cached)
       const b = yield* $(cached)
       const c = yield* $(cached)
@@ -39,11 +41,13 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("cachedInvalidate - returns new instances after duration", () =>
     Effect.gen(function*($) {
-      const incrementAndGet = (ref: Ref.Ref<number>): Effect.Effect<never, never, number> => {
-        return pipe(ref, Ref.updateAndGet((n) => n + 1))
-      }
       const ref = yield* $(Ref.make(0))
-      const [cached, invalidate] = yield* $(pipe(incrementAndGet(ref), Effect.cachedInvalidate(Duration.minutes(60))))
+      const [cached, invalidate] = yield* $(
+        pipe(
+          Ref.updateAndGet(ref)((n) => n + 1),
+          Effect.cachedInvalidate(Duration.minutes(60))
+        )
+      )
       const a = yield* $(cached)
       yield* $(TestClock.adjust(Duration.minutes(59)))
       const b = yield* $(cached)

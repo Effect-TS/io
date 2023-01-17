@@ -140,7 +140,7 @@ describe.concurrent("Queue", () => {
       const queue = yield* $(Queue.bounded<number>(10))
       const ref = yield* $(Ref.make(true))
       yield* $(pipe(queue.offer(1), Effect.repeatN(9)))
-      const fiber = yield* $(pipe(queue, Queue.offer(2), Effect.zipRight(pipe(ref, Ref.set(false))), Effect.fork))
+      const fiber = yield* $(pipe(queue, Queue.offer(2), Effect.zipRight(Ref.set(ref)(false)), Effect.fork))
       yield* $(waitForSize(queue, 11))
       const result = yield* $(Ref.get(ref))
       yield* $(Fiber.interrupt(fiber))
@@ -155,7 +155,7 @@ describe.concurrent("Queue", () => {
       yield* $(waitForSize(queue, 10))
       yield* $(pipe(
         Queue.take(queue),
-        Effect.flatMap((n) => pipe(ref, Ref.update((values) => [...values, n]))),
+        Effect.flatMap((n) => Ref.update(ref)((values) => [...values, n])),
         Effect.repeatN(9)
       ))
       const result = yield* $(Ref.get(ref))
@@ -379,9 +379,11 @@ describe.concurrent("Queue", () => {
       const fiber = yield* $(Effect.forkAll(Array.from({ length: 10 }, (_, i) => pipe(queue, Queue.offer(i + 1)))))
       yield* $(waitForSize(queue, 10))
       const ref = yield* $(Ref.make<ReadonlyArray<number>>([]))
-      yield* $(
-        pipe(Queue.take(queue), Effect.flatMap((n) => pipe(ref, Ref.update((ns) => [...ns, n]))), Effect.repeatN(9))
-      )
+      yield* $(pipe(
+        Queue.take(queue),
+        Effect.flatMap((n) => Ref.update(ref)((ns) => [...ns, n])),
+        Effect.repeatN(9)
+      ))
       const result = yield* $(Ref.get(ref))
       yield* $(Fiber.join(fiber))
       assert.deepStrictEqual(result, Array.from({ length: 10 }, (_, i) => i + 1))

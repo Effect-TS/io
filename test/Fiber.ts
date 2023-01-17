@@ -116,8 +116,14 @@ describe.concurrent("Fiber", () => {
       const ref = yield* $(Ref.make(false))
       const fiber = yield* $(withLatch((release) =>
         pipe(
-          Effect.acquireUseRelease(pipe(release, Effect.zipRight(Effect.unit())), () => Effect.never(), (_, __) =>
-            pipe(ref, Ref.set(true))),
+          Effect.acquireUseRelease(
+            pipe(
+              release,
+              Effect.zipRight(Effect.unit())
+            ),
+            () => Effect.never(),
+            (_, __) => Ref.set(ref)(true)
+          ),
           Effect.fork
         )
       ))
@@ -208,9 +214,9 @@ describe.concurrent("Fiber", () => {
   it.effect("await does not return until all fibers have completed execution", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(0))
-      const fiber = yield* $(Effect.forkAll(Array.from({ length: 100 }, () => pipe(ref, Ref.set(10)))))
+      const fiber = yield* $(Effect.forkAll(Array.from({ length: 100 }, () => Ref.set(ref)(10))))
       yield* $(Fiber.interrupt(fiber))
-      yield* $(pipe(ref, Ref.set(-1)))
+      yield* $(Ref.set(ref)(-1))
       const result = yield* $(Ref.get(ref))
       assert.strictEqual(result, -1)
     }))

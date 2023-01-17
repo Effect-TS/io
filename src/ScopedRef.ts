@@ -92,6 +92,6 @@ export const make: <A>(evaluate: LazyArg<A>) => Effect.Effect<Scope.Scope, never
  * @since 1.0.0
  * @category getters
  */
-export const set: <R, E, A>(
-  acquire: Effect.Effect<Scope.Scope | R, E, A>
-) => (self: ScopedRef<A>) => Effect.Effect<R, E, void> = internal.set
+export const set: <A>(
+  self: ScopedRef<A>
+) => <R, E>(acquire: Effect.Effect<R, E, A>) => Effect.Effect<Exclude<R, Scope.Scope>, E, void> = internal.set
