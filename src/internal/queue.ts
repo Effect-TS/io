@@ -101,16 +101,9 @@ class QueueImpl<A> implements Queue.Queue<A> {
         pipe(this.shutdownFlag, MutableRef.set(true))
         return pipe(
           unsafePollAll(this.takers),
-          fiberRuntime.forEachParDiscard(
-            core.deferredInterruptWith(state.id())
-          ),
+          fiberRuntime.forEachParDiscard((d) => core.deferredInterruptWith(d)(state.id())),
           core.zipRight(this.strategy.shutdown()),
-          core.whenEffect(
-            pipe(
-              this.shutdownHook,
-              core.deferredSucceed<void>(void 0)
-            )
-          ),
+          core.whenEffect(core.deferredSucceed(this.shutdownHook)(void 0)),
           core.asUnit
         )
       }),
@@ -520,7 +513,7 @@ class BackPressureStrategy<A> implements Queue.Strategy<A> {
         pipe(
           core.sync(() => unsafePollAll(this.putters)),
           core.flatMap(fiberRuntime.forEachParDiscard(([_, deferred, isLastItem]) =>
-            isLastItem ? pipe(deferred, core.deferredInterruptWith(fiberId), core.asUnit) : core.unit()
+            isLastItem ? pipe(core.deferredInterruptWith(deferred)(fiberId), core.asUnit) : core.unit()
           ))
         )
       )
@@ -684,7 +677,7 @@ class SlidingStrategy<A> implements Queue.Strategy<A> {
 
 /** @internal */
 const unsafeCompleteDeferred = <A>(deferred: Deferred.Deferred<never, A>, a: A): void => {
-  return pipe(deferred, core.deferredUnsafeDone(core.succeed(a)))
+  return core.deferredUnsafeDone(deferred)(core.succeed(a))
 }
 
 /** @internal */

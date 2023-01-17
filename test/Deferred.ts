@@ -11,8 +11,8 @@ describe.concurrent("Deferred", () => {
   it.effect("complete a deferred using succeed", () =>
     Effect.gen(function*($) {
       const deferred = yield* $(Deferred.make<never, number>())
-      const success = yield* $(pipe(deferred, Deferred.succeed(32)))
-      const result = yield* $(pipe(Deferred.await(deferred)))
+      const success = yield* $(Deferred.succeed(deferred)(32))
+      const result = yield* $(Deferred.await(deferred))
       assert.isTrue(success)
       assert.strictEqual(result, 32)
     }))
@@ -20,7 +20,7 @@ describe.concurrent("Deferred", () => {
     Effect.gen(function*($) {
       const deferred = yield* $(Deferred.make<never, number>())
       const ref = yield* $(Ref.make(13))
-      yield* $(pipe(deferred, Deferred.complete(Ref.updateAndGet(ref)((n) => n + 1))))
+      yield* $(Deferred.complete(deferred)(Ref.updateAndGet(ref)((n) => n + 1)))
       const result1 = yield* $(Deferred.await(deferred))
       const result2 = yield* $(Deferred.await(deferred))
       assert.strictEqual(result1, 14)
@@ -30,7 +30,7 @@ describe.concurrent("Deferred", () => {
     Effect.gen(function*($) {
       const deferred = yield* $(Deferred.make<never, number>())
       const ref = yield* $(Ref.make(13))
-      yield* $(pipe(deferred, Deferred.completeWith(Ref.updateAndGet(ref)((n) => n + 1))))
+      yield* $(Deferred.completeWith(deferred)(Ref.updateAndGet(ref)((n) => n + 1)))
       const result1 = yield* $(Deferred.await(deferred))
       const result2 = yield* $(Deferred.await(deferred))
       assert.strictEqual(result1, 14)
@@ -39,8 +39,8 @@ describe.concurrent("Deferred", () => {
   it.effect("complete a deferred twice", () =>
     Effect.gen(function*($) {
       const deferred = yield* $(Deferred.make<string, number>())
-      yield* $(pipe(deferred, Deferred.succeed(1)))
-      const success = yield* $(Deferred.complete(Effect.succeed(9))(deferred as any))
+      yield* $(Deferred.succeed(deferred)(1))
+      const success = yield* $(Deferred.complete(deferred)(Effect.succeed(9)))
       const result = yield* $(Deferred.await(deferred))
       assert.isFalse(success)
       assert.strictEqual(result, 1)
@@ -48,7 +48,7 @@ describe.concurrent("Deferred", () => {
   it.effect("fail a deferred using fail", () =>
     Effect.gen(function*($) {
       const deferred = yield* $(Deferred.make<string, number>())
-      const success = yield* $(pipe(deferred, Deferred.fail("error with fail")))
+      const success = yield* $(Deferred.fail(deferred)("error with fail"))
       const result = yield* $(pipe(deferred, Deferred.await, Effect.exit))
       assert.isTrue(success)
       assert.isTrue(Exit.isFailure(result))
@@ -58,10 +58,7 @@ describe.concurrent("Deferred", () => {
       const deferred = yield* $(Deferred.make<string, number>())
       const ref = yield* $(Ref.make(["first error", "second error"]))
       const success = yield* $(
-        pipe(
-          deferred,
-          Deferred.complete<string, number>(pipe(Ref.modify(ref)((as) => [as[0]!, as.slice(1)]), Effect.flip))
-        )
+        Deferred.complete(deferred)(Effect.flip(Ref.modify(ref)((as) => [as[0]!, as.slice(1)])))
       )
       const result1 = yield* $(pipe(deferred, Deferred.await, Effect.exit))
       const result2 = yield* $(pipe(deferred, Deferred.await, Effect.exit))
@@ -74,10 +71,9 @@ describe.concurrent("Deferred", () => {
       const deferred = yield* $(Deferred.make<string, number>())
       const ref = yield* $(Ref.make(["first error", "second error"]))
       const success = yield* $(
-        pipe(
-          deferred,
-          Deferred.completeWith<string, number>(pipe(Ref.modify(ref)((as) => [as[0]!, as.slice(1)]), Effect.flip))
-        )
+        Deferred.completeWith(deferred)(Effect.flip(
+          Ref.modify(ref)((as) => [as[0]!, as.slice(1)])
+        ))
       )
       const result1 = yield* $(pipe(deferred, Deferred.await, Effect.exit))
       const result2 = yield* $(pipe(deferred, Deferred.await, Effect.exit))
@@ -88,14 +84,14 @@ describe.concurrent("Deferred", () => {
   it.effect("is done when a deferred is completed", () =>
     Effect.gen(function*($) {
       const deferred = yield* $(Deferred.make<string, number>())
-      yield* $(pipe(deferred, Deferred.succeed(0)))
+      yield* $(Deferred.succeed(deferred)(0))
       const result = yield* $(Deferred.isDone(deferred))
       assert.isTrue(result)
     }))
   it.effect("is done when a deferred is failed", () =>
     Effect.gen(function*($) {
       const deferred = yield* $(Deferred.make<string, number>())
-      yield* $(pipe(deferred, Deferred.fail("failure")))
+      yield* $(Deferred.fail(deferred)("failure"))
       const result = yield* $(Deferred.isDone(deferred))
       assert.isTrue(result)
     }))
@@ -114,7 +110,7 @@ describe.concurrent("Deferred", () => {
   it.effect("poll a deferred that is completed", () =>
     Effect.gen(function*($) {
       const deferred = yield* $(Deferred.make<string, number>())
-      yield* $(pipe(deferred, Deferred.succeed(12)))
+      yield* $(Deferred.succeed(deferred)(12))
       const result = yield* $(
         pipe(Deferred.poll(deferred), Effect.someOrFail(() => "fail"), Effect.flatten, Effect.exit)
       )
@@ -123,7 +119,7 @@ describe.concurrent("Deferred", () => {
   it.effect("poll a deferred that is failed", () =>
     Effect.gen(function*($) {
       const deferred = yield* $(Deferred.make<string, number>())
-      yield* $(pipe(deferred, Deferred.fail("failure")))
+      yield* $(Deferred.fail(deferred)("failure"))
       const result = yield* $(
         pipe(Deferred.poll(deferred), Effect.someOrFail(() => "fail"), Effect.flatten, Effect.exit)
       )

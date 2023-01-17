@@ -20,8 +20,7 @@ describe.concurrent("Hub", () => {
           Hub.subscribe(hub),
           Effect.flatMap((subscription) =>
             pipe(
-              deferred1,
-              Deferred.succeed<void>(void 0),
+              Deferred.succeed(deferred1)(void 0),
               Effect.zipRight(Deferred.await(deferred2)),
               Effect.zipRight(pipe(values, Effect.forEach(() => Queue.take(subscription))))
             )
@@ -32,7 +31,7 @@ describe.concurrent("Hub", () => {
       )
       yield* $(Deferred.await(deferred1))
       yield* $(pipe(values, Effect.forEach((n) => pipe(hub, Hub.publish(n)))))
-      yield* $(pipe(deferred2, Deferred.succeed<void>(void 0)))
+      yield* $(Deferred.succeed(deferred2)(void 0))
       const result = yield* $(Fiber.join(subscriber))
       assert.deepStrictEqual(result, values)
     }))
@@ -48,8 +47,7 @@ describe.concurrent("Hub", () => {
           Hub.subscribe(hub),
           Effect.flatMap((subscription) =>
             pipe(
-              deferred1,
-              Deferred.succeed<void>(void 0),
+              Deferred.succeed(deferred1)(void 0),
               Effect.zipRight(Deferred.await(deferred3)),
               Effect.zipRight(pipe(values, Effect.forEach(() => Queue.take(subscription))))
             )
@@ -63,8 +61,7 @@ describe.concurrent("Hub", () => {
           Hub.subscribe(hub),
           Effect.flatMap((subscription) =>
             pipe(
-              deferred2,
-              Deferred.succeed<void>(void 0),
+              Deferred.succeed(deferred2)(void 0),
               Effect.zipRight(Deferred.await(deferred3)),
               Effect.zipRight(pipe(values, Effect.forEach(() => Queue.take(subscription))))
             )
@@ -76,7 +73,7 @@ describe.concurrent("Hub", () => {
       yield* $(Deferred.await(deferred1))
       yield* $(Deferred.await(deferred2))
       yield* $(pipe(values, Effect.forEach((n) => pipe(hub, Hub.publish(n)))))
-      yield* $(pipe(deferred3, Deferred.succeed<void>(undefined)))
+      yield* $(Deferred.succeed(deferred3)(undefined))
       const result1 = yield* $(Fiber.join(subscriber1))
       const result2 = yield* $(Fiber.join(subscriber2))
       assert.deepStrictEqual(result1, values)
@@ -91,8 +88,7 @@ describe.concurrent("Hub", () => {
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
-            deferred,
-            Deferred.succeed<void>(void 0),
+            Deferred.succeed(deferred)(void 0),
             Effect.zipRight(pipe(values, Effect.forEach((_) => Queue.take(subscription))))
           )
         ),
@@ -118,8 +114,7 @@ describe.concurrent("Hub", () => {
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
-            deferred1,
-            Deferred.succeed<void>(void 0),
+            Deferred.succeed(deferred1)(void 0),
             Effect.zipRight(pipe(values, Effect.forEach((_) => Queue.take(subscription))))
           )
         ),
@@ -130,8 +125,7 @@ describe.concurrent("Hub", () => {
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
-            deferred2,
-            Deferred.succeed<void>(void 0),
+            Deferred.succeed(deferred2)(void 0),
             Effect.zipRight(pipe(values, Effect.forEach((_) => Queue.take(subscription))))
           )
         ),
@@ -160,8 +154,7 @@ describe.concurrent("Hub", () => {
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
-            deferred1,
-            Deferred.succeed<void>(void 0),
+            Deferred.succeed(deferred1)(void 0),
             Effect.zipRight(pipe(
               values,
               Chunk.concat(values),
@@ -176,8 +169,7 @@ describe.concurrent("Hub", () => {
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
-            deferred2,
-            Deferred.succeed<void>(void 0),
+            Deferred.succeed(deferred2)(void 0),
             Effect.zipRight(pipe(
               values,
               Chunk.concat(values),
@@ -213,8 +205,7 @@ describe.concurrent("Hub", () => {
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
-            deferred,
-            Deferred.succeed<void>(void 0),
+            Deferred.succeed(deferred)(void 0),
             Effect.zipRight(pipe(values, Effect.forEach((_) => Queue.take(subscription))))
           )
         ),
@@ -240,8 +231,7 @@ describe.concurrent("Hub", () => {
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
-            deferred1,
-            Deferred.succeed<void>(void 0),
+            Deferred.succeed(deferred1)(void 0),
             Effect.zipRight(pipe(values, Effect.forEach((_) => Queue.take(subscription))))
           )
         ),
@@ -252,8 +242,7 @@ describe.concurrent("Hub", () => {
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
-            deferred2,
-            Deferred.succeed<void>(void 0),
+            Deferred.succeed(deferred2)(void 0),
             Effect.zipRight(pipe(values, Effect.forEach((_) => Queue.take(subscription))))
           )
         ),
@@ -282,8 +271,7 @@ describe.concurrent("Hub", () => {
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
-            deferred1,
-            Deferred.succeed<void>(void 0),
+            Deferred.succeed(deferred1)(void 0),
             Effect.zipRight(pipe(
               values,
               Chunk.concat(values),
@@ -298,8 +286,7 @@ describe.concurrent("Hub", () => {
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
-            deferred2,
-            Deferred.succeed<void>(void 0),
+            Deferred.succeed(deferred2)(void 0),
             Effect.zipRight(pipe(
               values,
               Chunk.concat(values),
@@ -335,8 +322,7 @@ describe.concurrent("Hub", () => {
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
-            deferred,
-            Deferred.succeed<void>(void 0),
+            Deferred.succeed(deferred)(void 0),
             Effect.zipRight(pipe(values, Effect.forEach((_) => Queue.take(subscription))))
           )
         ),
@@ -362,8 +348,7 @@ describe.concurrent("Hub", () => {
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
-            deferred1,
-            Deferred.succeed<void>(void 0),
+            Deferred.succeed(deferred1)(void 0),
             Effect.zipRight(pipe(values, Effect.forEach((_) => Queue.take(subscription))))
           )
         ),
@@ -374,8 +359,7 @@ describe.concurrent("Hub", () => {
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
-            deferred2,
-            Deferred.succeed<void>(void 0),
+            Deferred.succeed(deferred2)(void 0),
             Effect.zipRight(pipe(values, Effect.forEach((_) => Queue.take(subscription))))
           )
         ),
@@ -404,8 +388,7 @@ describe.concurrent("Hub", () => {
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
-            deferred1,
-            Deferred.succeed<void>(void 0),
+            Deferred.succeed(deferred1)(void 0),
             Effect.zipRight(pipe(
               values,
               Chunk.concat(values),
@@ -420,8 +403,7 @@ describe.concurrent("Hub", () => {
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
-            deferred2,
-            Deferred.succeed<void>(void 0),
+            Deferred.succeed(deferred2)(void 0),
             Effect.zipRight(pipe(
               values,
               Chunk.concat(values),
@@ -457,8 +439,7 @@ describe.concurrent("Hub", () => {
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
-            deferred,
-            Deferred.succeed<void>(void 0),
+            Deferred.succeed(deferred)(void 0),
             Effect.zipRight(pipe(values, Effect.forEach((_) => Queue.take(subscription))))
           )
         ),
@@ -484,8 +465,7 @@ describe.concurrent("Hub", () => {
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
-            deferred1,
-            Deferred.succeed<void>(void 0),
+            Deferred.succeed(deferred1)(void 0),
             Effect.zipRight(pipe(values, Effect.forEach((_) => Queue.take(subscription))))
           )
         ),
@@ -496,8 +476,7 @@ describe.concurrent("Hub", () => {
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
-            deferred2,
-            Deferred.succeed<void>(void 0),
+            Deferred.succeed(deferred2)(void 0),
             Effect.zipRight(pipe(values, Effect.forEach((_) => Queue.take(subscription))))
           )
         ),
@@ -526,8 +505,7 @@ describe.concurrent("Hub", () => {
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
-            deferred1,
-            Deferred.succeed<void>(void 0),
+            Deferred.succeed(deferred1)(void 0),
             Effect.zipRight(pipe(
               values,
               Chunk.concat(values),
@@ -542,8 +520,7 @@ describe.concurrent("Hub", () => {
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
-            deferred2,
-            Deferred.succeed<void>(void 0),
+            Deferred.succeed(deferred2)(void 0),
             Effect.zipRight(pipe(
               values,
               Chunk.concat(values),

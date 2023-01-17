@@ -1,4 +1,3 @@
-import type * as Cause from "@effect/io/Cause"
 import { getCallTrace } from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
@@ -248,7 +247,7 @@ export const asyncEffect = <R, E, A, R2, E2, X>(
               restore(
                 pipe(
                   register((cb) => runtime.unsafeRun(pipe(cb, core.intoDeferred(deferred)))),
-                  core.catchAllCause((cause) => pipe(deferred, core.deferredFailCause(cause as Cause.Cause<E | E2>)))
+                  core.catchAllCause((cause) => core.deferredFailCause(deferred)(cause))
                 )
               ),
               FiberRuntime.fork,

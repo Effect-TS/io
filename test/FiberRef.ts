@@ -76,7 +76,7 @@ describe.concurrent("FiberRef", () => {
       yield* $(
         pipe(
           FiberRef.set(fiberRef)(update),
-          Effect.zipRight(pipe(deferred, Deferred.succeed<void>(void 0))),
+          Effect.zipRight(Deferred.succeed(deferred)(void 0)),
           Effect.fork
         )
       )
@@ -212,7 +212,7 @@ describe.concurrent("FiberRef", () => {
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(initial))
       const latch = yield* $(Deferred.make<never, void>())
-      const winner = pipe(FiberRef.set(fiberRef)(update1), Effect.zipRight(pipe(latch, Deferred.succeed<void>(void 0))))
+      const winner = pipe(FiberRef.set(fiberRef)(update1), Effect.zipRight(Deferred.succeed(latch)(void 0)))
       const loser = pipe(
         Deferred.await(latch),
         Effect.zipRight(Clock.sleep(Duration.millis(1))),
@@ -253,7 +253,7 @@ describe.concurrent("FiberRef", () => {
       const latch = yield* $(Deferred.make<never, void>())
       const badWinner = pipe(
         FiberRef.set(fiberRef)(update1),
-        Effect.zipRight(pipe(Effect.fail("ups"), Effect.ensuring(pipe(latch, Deferred.succeed<void>(void 0)))))
+        Effect.zipRight(pipe(Effect.fail("ups"), Effect.ensuring(pipe(Deferred.succeed(latch)(void 0)))))
       )
       const goodLoser = pipe(
         FiberRef.set(fiberRef)(update2),
@@ -286,7 +286,7 @@ describe.concurrent("FiberRef", () => {
       const latch = yield* $(Deferred.make<never, void>())
       const winner1 = pipe(
         FiberRef.set(fiberRef)(update1),
-        Effect.zipRight(pipe(latch, Deferred.succeed<void>(void 0)))
+        Effect.zipRight(Deferred.succeed(latch)(void 0))
       )
       const loser1 = pipe(
         Deferred.await(latch),
@@ -309,7 +309,7 @@ describe.concurrent("FiberRef", () => {
       const latch = yield* $(Deferred.make<never, void>())
       const winner1 = pipe(
         FiberRef.set(fiberRef)(update1),
-        Effect.zipRight(pipe(latch, Deferred.succeed<void>(void 0))),
+        Effect.zipRight(Deferred.succeed(latch)(void 0)),
         Effect.asUnit
       )
       const losers1 = pipe(

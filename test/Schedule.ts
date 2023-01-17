@@ -82,8 +82,7 @@ describe.concurrent("Schedule", () => {
             // The 5th retry will fail after 10 seconds to let the schedule reset
             if (retries == 5) {
               return pipe(
-                latch,
-                Deferred.succeed<void>(void 0),
+                Deferred.succeed(latch)(void 0),
                 Effect.zipRight(pipe(io(ref, latch), Effect.delay(Duration.seconds(10))))
               )
             }
@@ -213,7 +212,7 @@ describe.concurrent("Schedule", () => {
         yield* $(pipe(
           Ref.update(ref)((n) => n + 2),
           Effect.repeat(Schedule.recurs(2)),
-          Effect.ensuring(pipe(deferred, Deferred.succeed<void>(void 0)))
+          Effect.ensuring(Deferred.succeed(deferred)(void 0))
         ))
         const value = yield* $(Ref.get(ref))
         const finalizerValue = yield* $(Deferred.poll(deferred))
@@ -608,7 +607,7 @@ describe.concurrent("Schedule", () => {
           pipe(
             Effect.fail("oh no"),
             Effect.retry(Schedule.recurs(2)),
-            Effect.ensuring(pipe(deferred, Deferred.succeed<void>(void 0))),
+            Effect.ensuring(Deferred.succeed(deferred)(void 0)),
             Effect.option
           )
         )
