@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.0.65
+
+### Patch Changes
+
+- [#192](https://github.com/Effect-TS/io/pull/192) [`911994d`](https://github.com/Effect-TS/io/commit/911994d11122cca68d7f1c7647b8803b68d87f55) Thanks [@patroza](https://github.com/patroza)! - Use LazyArg where appropriate. Thanks @tim-smart
+
 ## 0.0.64
 
 ### Patch Changes
