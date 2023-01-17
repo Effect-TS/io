@@ -171,22 +171,19 @@ const getCachedValue = <R, E, A>(
     pipe(
       effect.clockWith((clock) => clock.currentTimeMillis()),
       core.flatMap((time) =>
-        pipe(
-          cache,
-          updateSomeAndGetEffectSynchronized((option) => {
-            switch (option._tag) {
-              case "None": {
-                return Option.some(computeCachedValue(self, timeToLive, time))
-              }
-              case "Some": {
-                const [end] = option.value
-                return end - time <= 0
-                  ? Option.some(computeCachedValue(self, timeToLive, time))
-                  : Option.none
-              }
+        updateSomeAndGetEffectSynchronized(cache)((option) => {
+          switch (option._tag) {
+            case "None": {
+              return Option.some(computeCachedValue(self, timeToLive, time))
             }
-          })
-        )
+            case "Some": {
+              const [end] = option.value
+              return end - time <= 0
+                ? Option.some(computeCachedValue(self, timeToLive, time))
+                : Option.none
+            }
+          }
+        })
       ),
       core.flatMap((option) =>
         Option.isNone(option) ?
@@ -203,7 +200,7 @@ const getCachedValue = <R, E, A>(
 const invalidateCache = <E, A>(
   cache: Synchronized.Synchronized<Option.Option<readonly [number, Deferred.Deferred<E, A>]>>
 ): Effect.Effect<never, never, void> => {
-  return pipe(cache, internalRef.set(Option.none as Option.Option<readonly [number, Deferred.Deferred<E, A>]>))
+  return internalRef.set(cache)(Option.none as Option.Option<readonly [number, Deferred.Deferred<E, A>]>)
 }
 
 /** @internal */
@@ -797,7 +794,7 @@ class SynchronizedImpl<A> implements Synchronized.Synchronized<A> {
       pipe(
         internalRef.get(this.ref),
         core.flatMap(f),
-        core.flatMap(([b, a]) => pipe(this.ref, internalRef.set(a), core.as(b)))
+        core.flatMap(([b, a]) => pipe(internalRef.set(this.ref)(a), core.as(b)))
       )
     ).traced(trace)
   }
@@ -817,9 +814,9 @@ export const unsafeMakeSynchronized = <A>(value: A): Synchronized.Synchronized<A
 }
 
 /** @internal */
-export const updateSomeAndGetEffectSynchronized = <A, R, E>(pf: (a: A) => Option.Option<Effect.Effect<R, E, A>>) => {
+export const updateSomeAndGetEffectSynchronized = <A>(self: Synchronized.Synchronized<A>) => {
   const trace = getCallTrace()
-  return (self: Synchronized.Synchronized<A>): Effect.Effect<R, E, A> => {
+  return <R, E>(pf: (a: A) => Option.Option<Effect.Effect<R, E, A>>): Effect.Effect<R, E, A> => {
     return self.modifyEffect((value) => {
       const result = pf(value)
       switch (result._tag) {

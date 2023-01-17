@@ -47,7 +47,7 @@ const exactlyOnce = <R, A, A1>(
 ): Effect.Effect<R, string, A1> => {
   return Effect.gen(function*($) {
     const ref = yield* $(Ref.make(0))
-    const res = yield* $(f(pipe(ref, Ref.update((n) => n + 1), Effect.zipRight(Effect.succeed(value)))))
+    const res = yield* $(f(pipe(Ref.update(ref)((n) => n + 1), Effect.zipRight(Effect.succeed(value)))))
     const count = yield* $(Ref.get(ref))
     yield* $(count !== 1 ? Effect.fail("Accessed more than once") : Effect.unit())
     return res

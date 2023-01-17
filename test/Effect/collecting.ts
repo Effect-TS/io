@@ -15,7 +15,7 @@ describe.concurrent("Effect", () => {
   it.effect("collectAllPar - is referentially transparent", () =>
     Effect.gen(function*($) {
       const counter = yield* $(Ref.make(0))
-      const op = pipe(counter, Ref.getAndUpdate((n) => n + 1))
+      const op = Ref.getAndUpdate(counter)((n) => n + 1)
       const ops3 = Effect.collectAllPar([op, op, op])
       const result = yield* $(pipe(ops3, Effect.zipPar(ops3)))
       assert.notDeepEqual(Array.from(result[0]), Array.from(result[1]))

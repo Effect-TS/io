@@ -16,7 +16,7 @@ describe.concurrent("Cached", () => {
       const cached = yield* $(Cached.manual(Ref.get(ref)))
       const resul1 = yield* $(Cached.get(cached))
       const result2 = yield* $(
-        pipe(ref, Ref.set(1), Effect.zipRight(Cached.refresh(cached)), Effect.zipRight(Cached.get(cached)))
+        pipe(Ref.set(ref)(1), Effect.zipRight(Cached.refresh(cached)), Effect.zipRight(Cached.get(cached)))
       )
       assert.strictEqual(resul1, 0)
       assert.strictEqual(result2, 1)
@@ -28,8 +28,7 @@ describe.concurrent("Cached", () => {
       const result1 = yield* $(Cached.get(cached))
       const result2 = yield* $(
         pipe(
-          ref,
-          Ref.set(1),
+          Ref.set(ref)(1),
           Effect.zipRight(TestClock.adjust(Duration.millis(5))),
           Effect.zipRight(Cached.get(cached))
         )
@@ -44,8 +43,7 @@ describe.concurrent("Cached", () => {
       const result1 = yield* $(Cached.get(cached))
       const result2 = yield* $(
         pipe(
-          ref,
-          Ref.set(Either.left("Uh oh!") as Either.Either<string, number>),
+          Ref.set(ref)(Either.left("Uh oh!")),
           Effect.zipRight(Effect.sleep(Duration.millis(5))),
           Effect.zipRight(Cached.get(cached))
         )

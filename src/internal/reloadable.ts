@@ -92,8 +92,7 @@ export const manual = <Out>(tag: Context.Tag<Out>) => {
               reload: () => {
                 const trace = getCallTrace()
                 return pipe(
-                  ref,
-                  scopedRef.set(
+                  scopedRef.set(ref)(
                     pipe(_layer.build(layer), core.map(Context.unsafeGet(tag)))
                   ),
                   core.provideEnvironment(env)

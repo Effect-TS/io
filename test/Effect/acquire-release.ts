@@ -13,7 +13,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const release = yield* $(Ref.make(false))
       const result = yield* $(
-        Effect.acquireUseRelease(Effect.succeed(42), (n) => Effect.succeed(n + 1), () => pipe(release, Ref.set(true)))
+        Effect.acquireUseRelease(Effect.succeed(42), (n) => Effect.succeed(n + 1), () => Ref.set(release)(true))
       )
       const released = yield* $(Ref.get(release))
       assert.strictEqual(result, 43)
@@ -23,7 +23,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const release = yield* $(Ref.make(false))
       const result = yield* $(pipe(
-        Effect.acquireUseRelease(Effect.succeed(42), (n) => Effect.succeed(n + 1), () => pipe(release, Ref.set(true))),
+        Effect.acquireUseRelease(Effect.succeed(42), (n) => Effect.succeed(n + 1), () => Ref.set(release)(true)),
         Effect.disconnect
       ))
       const released = yield* $(Ref.get(release))
@@ -65,9 +65,13 @@ describe.concurrent("Effect", () => {
       const release = yield* $(Ref.make(false))
       const exit = yield* $(
         pipe(
-          Effect.acquireUseRelease(Effect.succeed(42), (): Effect.Effect<never, unknown, unknown> => {
-            throw useDied
-          }, () => pipe(release, Ref.set(true))),
+          Effect.acquireUseRelease(
+            Effect.succeed(42),
+            (): Effect.Effect<never, unknown, unknown> => {
+              throw useDied
+            },
+            () => Ref.set(release)(true)
+          ),
           Effect.disconnect,
           Effect.exit
         )

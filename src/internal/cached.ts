@@ -1,7 +1,6 @@
 import type * as Cached from "@effect/io/Cached"
 import { getCallTrace } from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
-import type * as Exit from "@effect/io/Exit"
 import * as core from "@effect/io/internal/core"
 import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
 import * as _schedule from "@effect/io/internal/schedule"
@@ -75,8 +74,9 @@ export const get = <E, A>(self: Cached.Cached<E, A>): Effect.Effect<never, E, A>
 
 export const refresh = <E, A>(self: Cached.Cached<E, A>): Effect.Effect<never, E, void> => {
   const trace = getCallTrace()
-  return pipe(
-    self.scopedRef,
-    scopedRef.set<never, E, Exit.Exit<E, A>>(pipe(self.acquire(), core.map(core.exitSucceed)))
-  ).traced(trace)
+  return scopedRef.set(self.scopedRef)(pipe(
+    self.acquire(),
+    core.map(core.exitSucceed)
+  ))
+    .traced(trace)
 }

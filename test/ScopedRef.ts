@@ -10,7 +10,7 @@ describe.concurrent("ScopedRef", () => {
     Effect.gen(function*($) {
       const counter = yield* $(Counter.make())
       const ref = yield* $(ScopedRef.make(() => 0))
-      yield* $(pipe(ref, ScopedRef.set(counter.acquire())))
+      yield* $(pipe(ScopedRef.set(ref)(counter.acquire())))
       const result = yield* $(ScopedRef.get(ref))
       assert.strictEqual(result, 1)
     }))
@@ -18,9 +18,10 @@ describe.concurrent("ScopedRef", () => {
     Effect.gen(function*($) {
       const counter = yield* $(Counter.make())
       const ref = yield* $(ScopedRef.make(() => 0))
-      yield* $(
-        pipe(ref, ScopedRef.set(counter.acquire()), Effect.zipRight(pipe(ref, ScopedRef.set(counter.acquire()))))
-      )
+      yield* $(pipe(
+        ScopedRef.set(ref)(counter.acquire()),
+        Effect.zipRight(ScopedRef.set(ref)(counter.acquire()))
+      ))
       const result = yield* $(ScopedRef.get(ref))
       assert.strictEqual(result, 2)
     }))
@@ -28,9 +29,10 @@ describe.concurrent("ScopedRef", () => {
     Effect.gen(function*($) {
       const counter = yield* $(Counter.make())
       const ref = yield* $(ScopedRef.make(() => 0))
-      yield* $(
-        pipe(ref, ScopedRef.set(counter.acquire()), Effect.zipRight(pipe(ref, ScopedRef.set(counter.acquire()))))
-      )
+      yield* $(pipe(
+        ScopedRef.set(ref)(counter.acquire()),
+        Effect.zipRight(ScopedRef.set(ref)(counter.acquire()))
+      ))
       const acquired = yield* $(counter.acquired())
       const released = yield* $(counter.released())
       assert.strictEqual(acquired, 2)
@@ -42,10 +44,9 @@ describe.concurrent("ScopedRef", () => {
       const ref = yield* $(ScopedRef.make(() => 0))
       yield* $(
         pipe(
-          ref,
-          ScopedRef.set(counter.acquire()),
-          Effect.zipRight(pipe(ref, ScopedRef.set(counter.acquire()))),
-          Effect.zipRight(pipe(ref, ScopedRef.set(counter.acquire())))
+          ScopedRef.set(ref)(counter.acquire()),
+          Effect.zipRight(ScopedRef.set(ref)(counter.acquire())),
+          Effect.zipRight(ScopedRef.set(ref)(counter.acquire()))
         )
       )
       const acquired = yield* $(counter.acquired())
@@ -60,10 +61,9 @@ describe.concurrent("ScopedRef", () => {
         ScopedRef.make(() => 0),
         Effect.flatMap((ref) =>
           pipe(
-            ref,
-            ScopedRef.set(counter.acquire()),
-            Effect.zipRight(pipe(ref, ScopedRef.set(counter.acquire()))),
-            Effect.zipRight(pipe(ref, ScopedRef.set(counter.acquire())))
+            ScopedRef.set(ref)(counter.acquire()),
+            Effect.zipRight(ScopedRef.set(ref)(counter.acquire())),
+            Effect.zipRight(ScopedRef.set(ref)(counter.acquire()))
           )
         ),
         Effect.scoped

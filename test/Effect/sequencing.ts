@@ -52,7 +52,7 @@ describe.concurrent("Effect", () => {
       Effect.gen(function*($) {
         const ref = yield* $(Ref.make(false))
         const result = yield* $(
-          pipe(Effect.dieMessage("die"), Effect.tapErrorCause(() => pipe(ref, Ref.set(true))), Effect.exit)
+          pipe(Effect.dieMessage("die"), Effect.tapErrorCause(() => Ref.set(ref)(true)), Effect.exit)
         )
         const effect = yield* $(Ref.get(ref))
         assert.isTrue(Exit.isFailure(result) && Option.isSome(Cause.dieOption(result.cause)))
@@ -64,7 +64,7 @@ describe.concurrent("Effect", () => {
       const ref = yield* $(Ref.make(false))
       const result = yield* $(pipe(
         Effect.dieMessage("die"),
-        Effect.tapDefect(() => pipe(ref, Ref.set(true))),
+        Effect.tapDefect(() => Ref.set(ref)(true)),
         Effect.exit
       ))
       const effect = yield* $(Ref.get(ref))
@@ -76,7 +76,7 @@ describe.concurrent("Effect", () => {
       const ref = yield* $(Ref.make(false))
       const result = yield* $(pipe(
         Effect.fail("fail"),
-        Effect.tapDefect(() => pipe(ref, Ref.set(true))),
+        Effect.tapDefect(() => Ref.set(ref)(true)),
         Effect.exit
       ))
       const effect = yield* $(Ref.get(ref))
@@ -88,7 +88,7 @@ describe.concurrent("Effect", () => {
       const ref = yield* $(Ref.make(0))
       yield* $(pipe(
         Effect.fail(42),
-        Effect.tapEither(Either.match((n) => pipe(ref, Ref.set(n)), () => pipe(ref, Ref.set(-1)))),
+        Effect.tapEither(Either.match((n) => Ref.set(ref)(n), () => Ref.set(ref)(-1))),
         Effect.exit
       ))
       const result = yield* $(Ref.get(ref))
@@ -99,7 +99,7 @@ describe.concurrent("Effect", () => {
       const ref = yield* $(Ref.make(0))
       yield* $(pipe(
         Effect.succeed(42),
-        Effect.tapEither(Either.match(() => pipe(ref, Ref.set(-1)), (n) => pipe(ref, Ref.set(n)))),
+        Effect.tapEither(Either.match(() => Ref.set(ref)(-1), (n) => Ref.set(ref)(n))),
         Effect.exit
       ))
       const result = yield* $(Ref.get(ref))
@@ -110,8 +110,7 @@ describe.concurrent("Effect", () => {
       const ref = yield* $(Ref.make(false))
       const result = yield* $(
         pipe(
-          ref,
-          Ref.set(true),
+          Ref.set(ref)(true),
           Effect.as(42),
           Effect.tapSome((): Option.Option<Effect.Effect<never, never, never>> => Option.none)
         )
@@ -124,7 +123,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(0))
       const result = yield* $(
-        pipe(ref, Ref.set(10), Effect.as(42), Effect.tapSome((n) => Option.some(pipe(ref, Ref.set(n)))))
+        pipe(Ref.set(ref)(10), Effect.as(42), Effect.tapSome((n) => Option.some(Ref.set(ref)(n))))
       )
       const effect = yield* $(Ref.get(ref))
       assert.strictEqual(result, 42)
@@ -133,9 +132,9 @@ describe.concurrent("Effect", () => {
   it.effect("unless - executes correct branch only", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(0))
-      yield* $(pipe(ref, Ref.set(1), Effect.unless(constTrue)))
+      yield* $(pipe(Ref.set(ref)(1), Effect.unless(constTrue)))
       const v1 = yield* $(Ref.get(ref))
-      yield* $(pipe(ref, Ref.set(2), Effect.unless(constFalse)))
+      yield* $(pipe(Ref.set(ref)(2), Effect.unless(constFalse)))
       const v2 = yield* $(Ref.get(ref))
       const failure = new Error("expected")
       yield* $(pipe(Effect.fail(failure), Effect.unless(constTrue)))
@@ -148,12 +147,12 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const effectRef = yield* $(Ref.make(0))
       const conditionRef = yield* $(Ref.make(0))
-      const conditionTrue = pipe(conditionRef, Ref.update((n) => n + 1), Effect.as(true))
-      const conditionFalse = pipe(conditionRef, Ref.update((n) => n + 1), Effect.as(false))
-      yield* $(pipe(effectRef, Ref.set(1), Effect.unlessEffect(conditionTrue)))
+      const conditionTrue = pipe(Ref.update(conditionRef)((n) => n + 1), Effect.as(true))
+      const conditionFalse = pipe(Ref.update(conditionRef)((n) => n + 1), Effect.as(false))
+      yield* $(pipe(Ref.set(effectRef)(1), Effect.unlessEffect(conditionTrue)))
       const v1 = yield* $(Ref.get(effectRef))
       const c1 = yield* $(Ref.get(conditionRef))
-      yield* $(pipe(effectRef, Ref.set(2), Effect.unlessEffect(conditionFalse)))
+      yield* $(pipe(Ref.set(effectRef)(2), Effect.unlessEffect(conditionFalse)))
       const v2 = yield* $(Ref.get(effectRef))
       const c2 = yield* $(Ref.get(conditionRef))
       const failure = new Error("expected")
@@ -168,9 +167,9 @@ describe.concurrent("Effect", () => {
   it.effect("when - executes correct branch only", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(0))
-      yield* $(pipe(ref, Ref.set(1), Effect.when(constFalse)))
+      yield* $(pipe(Ref.set(ref)(1), Effect.when(constFalse)))
       const v1 = yield* $(Ref.get(ref))
-      yield* $(pipe(ref, Ref.set(2), Effect.when(constTrue)))
+      yield* $(pipe(Ref.set(ref)(2), Effect.when(constTrue)))
       const v2 = yield* $(Ref.get(ref))
       const failure = new Error("expected")
       yield* $(pipe(Effect.fail(failure), Effect.when(constFalse)))
@@ -186,12 +185,12 @@ describe.concurrent("Effect", () => {
       const ref = yield* $(Ref.make(false))
       yield* $(Effect.whenCase(() => v1, (option) =>
         option._tag === "Some" ?
-          Option.some(pipe(ref, Ref.set(true))) :
+          Option.some(Ref.set(ref)(true)) :
           Option.none))
       const res1 = yield* $(Ref.get(ref))
       yield* $(Effect.whenCase(() => v2, (option) =>
         option._tag === "Some" ?
-          Option.some(pipe(ref, Ref.set(true))) :
+          Option.some(Ref.set(ref)(true)) :
           Option.none))
       const res2 = yield* $(Ref.get(ref))
       assert.isFalse(res1)
@@ -206,7 +205,7 @@ describe.concurrent("Effect", () => {
         Effect.succeed(v1),
         Effect.whenCaseEffect((option) =>
           option._tag === "Some" ?
-            Option.some(pipe(ref, Ref.set(true))) :
+            Option.some(Ref.set(ref)(true)) :
             Option.none
         )
       ))
@@ -215,7 +214,7 @@ describe.concurrent("Effect", () => {
         Effect.succeed(v2),
         Effect.whenCaseEffect((option) =>
           option._tag === "Some" ?
-            Option.some(pipe(ref, Ref.set(true))) :
+            Option.some(Ref.set(ref)(true)) :
             Option.none
         )
       ))
@@ -227,12 +226,12 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const effectRef = yield* $(Ref.make(0))
       const conditionRef = yield* $(Ref.make(0))
-      const conditionTrue = pipe(conditionRef, Ref.update((n) => n + 1), Effect.as(true))
-      const conditionFalse = pipe(conditionRef, Ref.update((n) => n + 1), Effect.as(false))
-      yield* $(pipe(pipe(effectRef, Ref.set(1)), Effect.whenEffect(conditionFalse)))
+      const conditionTrue = pipe(Ref.update(conditionRef)((n) => n + 1), Effect.as(true))
+      const conditionFalse = pipe(Ref.update(conditionRef)((n) => n + 1), Effect.as(false))
+      yield* $(pipe(pipe(Ref.set(effectRef)(1)), Effect.whenEffect(conditionFalse)))
       const v1 = yield* $(Ref.get(effectRef))
       const c1 = yield* $(Ref.get(conditionRef))
-      yield* $(pipe(pipe(effectRef, Ref.set(2)), Effect.whenEffect(conditionTrue)))
+      yield* $(pipe(pipe(Ref.set(effectRef)(2)), Effect.whenEffect(conditionTrue)))
       const v2 = yield* $(Ref.get(effectRef))
       const c2 = yield* $(Ref.get(conditionRef))
       const failure = new Error("expected")
@@ -306,7 +305,7 @@ describe.concurrent("Effect", () => {
           latch2,
           Deferred.succeed<void>(void 0),
           Effect.zipRight(restore(pipe(Deferred.await(latch1), Effect.zipRight(Effect.succeed("foo"))))),
-          Effect.onInterrupt(() => pipe(ref, Ref.set(true)))
+          Effect.onInterrupt(() => Ref.set(ref)(true))
         )
       )
       const right = pipe(latch3, Deferred.succeed<void>(void 0), Effect.as(42))

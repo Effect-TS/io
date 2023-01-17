@@ -57,14 +57,14 @@ describe.concurrent("Effect", () => {
   it.effect("loop - loops with the specified effectual function", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(Chunk.empty<number>()))
-      yield* $(Effect.loop(0, (n) => n < 5, (n) => n + 1, (n) => pipe(ref, Ref.update(Chunk.prepend(n)))))
+      yield* $(Effect.loop(0, (n) => n < 5, (n) => n + 1, (n) => Ref.update(ref)(Chunk.prepend(n))))
       const result = yield* $(pipe(Ref.get(ref), Effect.map(Chunk.reverse)))
       assert.deepStrictEqual(result, Chunk.make(0, 1, 2, 3, 4))
     }))
   it.effect("loopDiscard - loops with the specified effectual function", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(Chunk.empty<number>()))
-      yield* $(Effect.loopDiscard(0, (n) => n < 5, (n) => n + 1, (n) => pipe(ref, Ref.update(Chunk.prepend(n)))))
+      yield* $(Effect.loopDiscard(0, (n) => n < 5, (n) => n + 1, (n) => Ref.update(ref)(Chunk.prepend(n))))
       const result = yield* $(pipe(Ref.get(ref), Effect.map(Chunk.reverse)))
       assert.deepStrictEqual(result, Chunk.make(0, 1, 2, 3, 4))
     }))
@@ -95,8 +95,7 @@ describe.concurrent("Effect", () => {
         Chunk.make("1", "2", "3"),
         Effect.forEach((s) =>
           pipe(
-            ref,
-            Ref.update(Chunk.prepend(s)),
+            Ref.update(ref)(Chunk.prepend(s)),
             Effect.zipRight(Effect.sync(() => Number.parseInt(s)))
           )
         )
@@ -125,14 +124,14 @@ describe.concurrent("Effect", () => {
   it.effect("forEachDiscard - runs effects in order", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(Chunk.empty<number>()))
-      yield* $(pipe([1, 2, 3, 4, 5], Effect.forEachDiscard((n) => pipe(ref, Ref.update(Chunk.prepend(n))))))
+      yield* $(pipe([1, 2, 3, 4, 5], Effect.forEachDiscard((n) => Ref.update(ref)(Chunk.prepend(n)))))
       const result = yield* $(pipe(Ref.get(ref), Effect.map(Chunk.reverse)))
       assert.deepStrictEqual(result, Chunk.make(1, 2, 3, 4, 5))
     }))
   it.effect("forEachDiscard - can be run twice", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(0))
-      const effect = pipe([1, 2, 3, 4, 5], Effect.forEachDiscard((n) => pipe(ref, Ref.update((_) => _ + n))))
+      const effect = pipe([1, 2, 3, 4, 5], Effect.forEachDiscard((n) => Ref.update(ref)((_) => _ + n)))
       yield* $(effect)
       yield* $(effect)
       const result = yield* $(Ref.get(ref))
@@ -269,7 +268,7 @@ describe.concurrent("Effect", () => {
         Effect.never(),
         Effect.succeed(1),
         Effect.fail("C"),
-        pipe(Deferred.await(deferred), Effect.zipRight(pipe(ref, Ref.set(true))), Effect.as(1))
+        pipe(Deferred.await(deferred), Effect.zipRight(Ref.set(ref)(true)), Effect.as(1))
       ]
       const error = yield* $(pipe(actions, Effect.forEachPar(identity), Effect.flip))
       const value = yield* $(Ref.get(ref))
@@ -281,7 +280,7 @@ describe.concurrent("Effect", () => {
       const ref = yield* $(Ref.make(0))
       const fibers = yield* $(pipe(
         Array.from({ length: 100 }, (_, i) => i + 1),
-        Effect.forEachPar(() => pipe(ref, Ref.update((_) => _ + 1), Effect.fork))
+        Effect.forEachPar(() => pipe(Ref.update(ref)((_) => _ + 1), Effect.fork))
       ))
       yield* $(pipe(fibers, Effect.forEach(Fiber.await)))
       const result = yield* $(Ref.get(ref))
@@ -345,8 +344,7 @@ describe.concurrent("Effect", () => {
         n: number
       ): Effect.Effect<never, number, void> => {
         return pipe(
-          started,
-          Ref.updateAndGet((n) => n + 1),
+          Ref.updateAndGet(started)((n) => n + 1),
           Effect.flatMap((count) =>
             pipe(
               trigger,
@@ -370,7 +368,7 @@ describe.concurrent("Effect", () => {
   it.effect("forEachParDiscard - runs all effects", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(Chunk.empty<number>()))
-      yield* $(pipe([1, 2, 3, 4, 5], Effect.forEachParDiscard((n) => pipe(ref, Ref.update(Chunk.prepend(n))))))
+      yield* $(pipe([1, 2, 3, 4, 5], Effect.forEachParDiscard((n) => Ref.update(ref)(Chunk.prepend(n)))))
       const result = yield* $(pipe(Ref.get(ref), Effect.map(Chunk.reverse)))
       assert.deepStrictEqual(Array.from(result), [1, 2, 3, 4, 5])
     }))
@@ -384,7 +382,7 @@ describe.concurrent("Effect", () => {
       const ref = yield* $(Ref.make(Chunk.empty<number>()))
       yield* $(pipe(
         [1, 2, 3, 4, 5],
-        Effect.forEachParDiscard((n) => pipe(ref, Ref.update(Chunk.prepend(n)))),
+        Effect.forEachParDiscard((n) => Ref.update(ref)(Chunk.prepend(n))),
         Effect.withParallelism(2)
       ))
       const result = yield* $(pipe(Ref.get(ref), Effect.map(Chunk.reverse)))
@@ -464,7 +462,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const array = [2, 4, 6, 3, 5, 6]
       const ref = yield* $(Ref.make(Chunk.empty<number>()))
-      yield* $(pipe(array, Effect.partition((n) => pipe(ref, Ref.update(Chunk.prepend(n))))))
+      yield* $(pipe(array, Effect.partition((n) => Ref.update(ref)(Chunk.prepend(n)))))
       const result = yield* $(pipe(Ref.get(ref), Effect.map(Chunk.reverse)))
       assert.deepStrictEqual(Array.from(result), [2, 4, 6, 3, 5, 6])
     }))

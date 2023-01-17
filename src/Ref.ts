@@ -59,14 +59,14 @@ export const get: <A>(self: Ref<A>) => Effect.Effect<never, never, A> = internal
  * @since 1.0.0
  * @category mutations
  */
-export const getAndSet: <A>(value: A) => (self: Ref<A>) => Effect.Effect<never, never, A> = internal.getAndSet
+export const getAndSet: <A>(self: Ref<A>) => (value: A) => Effect.Effect<never, never, A> = internal.getAndSet
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const getAndUpdate: <A>(f: (a: A) => A) => (self: Ref<A>) => Effect.Effect<never, never, A> =
+export const getAndUpdate: <A>(self: Ref<A>) => (f: (a: A) => A) => Effect.Effect<never, never, A> =
   internal.getAndUpdate
 
 /**
@@ -74,7 +74,7 @@ export const getAndUpdate: <A>(f: (a: A) => A) => (self: Ref<A>) => Effect.Effec
  * @since 1.0.0
  * @category mutations
  */
-export const getAndUpdateSome: <A>(pf: (a: A) => Option.Option<A>) => (self: Ref<A>) => Effect.Effect<never, never, A> =
+export const getAndUpdateSome: <A>(self: Ref<A>) => (pf: (a: A) => Option.Option<A>) => Effect.Effect<never, never, A> =
   internal.getAndUpdateSome
 
 /**
@@ -82,7 +82,7 @@ export const getAndUpdateSome: <A>(pf: (a: A) => Option.Option<A>) => (self: Ref
  * @since 1.0.0
  * @category mutations
  */
-export const modify: <A, B>(f: (a: A) => readonly [B, A]) => (self: Ref<A>) => Effect.Effect<never, never, B> =
+export const modify: <A>(self: Ref<A>) => <B>(f: (a: A) => readonly [B, A]) => Effect.Effect<never, never, B> =
   internal.modify
 
 /**
@@ -90,38 +90,38 @@ export const modify: <A, B>(f: (a: A) => readonly [B, A]) => (self: Ref<A>) => E
  * @since 1.0.0
  * @category mutations
  */
-export const modifySome: <A, B>(
-  fallback: B,
-  pf: (a: A) => Option.Option<readonly [B, A]>
-) => (self: Ref<A>) => Effect.Effect<never, never, B> = internal.modifySome
+export const modifySome: <A>(
+  self: Ref<A>
+) => <B>(fallback: B, pf: (a: A) => Option.Option<readonly [B, A]>) => Effect.Effect<never, never, B> =
+  internal.modifySome
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const set: <A>(value: A) => (self: Ref<A>) => Effect.Effect<never, never, void> = internal.set
+export const set: <A>(self: Ref<A>) => (value: A) => Effect.Effect<never, never, void> = internal.set
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const setAndGet: <A>(value: A) => (self: Ref<A>) => Effect.Effect<never, never, A> = internal.setAndGet
+export const setAndGet: <A>(self: Ref<A>) => (value: A) => Effect.Effect<never, never, A> = internal.setAndGet
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const update: <A>(f: (a: A) => A) => (self: Ref<A>) => Effect.Effect<never, never, void> = internal.update
+export const update: <A>(self: Ref<A>) => (f: (a: A) => A) => Effect.Effect<never, never, void> = internal.update
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const updateAndGet: <A>(f: (a: A) => A) => (self: Ref<A>) => Effect.Effect<never, never, A> =
+export const updateAndGet: <A>(self: Ref<A>) => (f: (a: A) => A) => Effect.Effect<never, never, A> =
   internal.updateAndGet
 
 /**
@@ -129,7 +129,7 @@ export const updateAndGet: <A>(f: (a: A) => A) => (self: Ref<A>) => Effect.Effec
  * @since 1.0.0
  * @category mutations
  */
-export const updateSome: <A>(f: (a: A) => Option.Option<A>) => (self: Ref<A>) => Effect.Effect<never, never, void> =
+export const updateSome: <A>(self: Ref<A>) => (f: (a: A) => Option.Option<A>) => Effect.Effect<never, never, void> =
   internal.updateSome
 
 /**
@@ -137,7 +137,7 @@ export const updateSome: <A>(f: (a: A) => Option.Option<A>) => (self: Ref<A>) =>
  * @since 1.0.0
  * @category mutations
  */
-export const updateSomeAndGet: <A>(pf: (a: A) => Option.Option<A>) => (self: Ref<A>) => Effect.Effect<never, never, A> =
+export const updateSomeAndGet: <A>(self: Ref<A>) => (pf: (a: A) => Option.Option<A>) => Effect.Effect<never, never, A> =
   internal.updateSomeAndGet
 
 /**

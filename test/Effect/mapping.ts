@@ -68,7 +68,7 @@ describe.concurrent("Effect", () => {
   it.effect("summarized - returns summary and value", () =>
     Effect.gen(function*($) {
       const counter = yield* $(Ref.make(0))
-      const increment = pipe(counter, Ref.updateAndGet((n) => n + 1))
+      const increment = Ref.updateAndGet(counter)((n) => n + 1)
       const [[start, end], value] = yield* $(
         pipe(increment, Effect.summarized(increment, (start, end) => [start, end] as const))
       )

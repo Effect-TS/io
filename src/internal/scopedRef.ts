@@ -85,12 +85,11 @@ export const make = <A>(
 }
 
 /** @internal */
-export const set = <R, E, A>(acquire: Effect.Effect<R | Scope.Scope, E, A>) => {
+export const set = <A>(self: ScopedRef.ScopedRef<A>) => {
   const trace = getCallTrace()
-  return (self: ScopedRef.ScopedRef<A>): Effect.Effect<R, E, void> => {
-    return pipe(
-      self.ref,
-      synchronized.modifyEffect(([oldScope, value]) =>
+  return <R, E>(acquire: Effect.Effect<R, E, A>): Effect.Effect<Exclude<R, Scope.Scope>, E, void> => {
+    return core.flatten(
+      synchronized.modifyEffect(self.ref)(([oldScope, value]) =>
         core.uninterruptibleMask((restore) =>
           pipe(
             fiberRuntime.scopeMake(),
@@ -99,7 +98,9 @@ export const set = <R, E, A>(acquire: Effect.Effect<R | Scope.Scope, E, A>) => {
                 restore(
                   pipe(
                     acquire,
-                    core.provideSomeEnvironment<R, R | Scope.Scope>(Context.add(fiberRuntime.scopeTag)(newScope))
+                    core.provideSomeEnvironment<Exclude<R, Scope.Scope>, R>(
+                      Context.add(fiberRuntime.scopeTag)(newScope) as any
+                    )
                   )
                 ),
                 core.exit,
@@ -128,8 +129,7 @@ export const set = <R, E, A>(acquire: Effect.Effect<R | Scope.Scope, E, A>) => {
             )
           )
         )
-      ),
-      core.flatten
+      )
     ).traced(trace)
   }
 }

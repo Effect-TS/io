@@ -51,14 +51,14 @@ describe.concurrent("Layer", () => {
           Effect.acquireRelease(Ref.make<Chunk.Chunk<string>>(Chunk.empty()), (ref) =>
             pipe(
               Ref.get(ref),
-              Effect.flatMap((chunk) => pipe(testRef, Ref.set(chunk)))
+              Effect.flatMap((chunk) => Ref.set(testRef)(chunk))
             )),
           Effect.tap(() => Effect.unit())
         )
       )
       yield* $(pipe(
         Layer.build(layer),
-        Effect.flatMap((context) => pipe(context, Context.get(ChunkTag), Ref.update(Chunk.append("test")))),
+        Effect.flatMap((context) => Ref.update(pipe(context, Context.get(ChunkTag)))(Chunk.append("test"))),
         Effect.scoped
       ))
       const result = yield* $(Ref.get(testRef))
@@ -523,7 +523,7 @@ describe.concurrent("Layer", () => {
   it.effect("retry", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(0))
-      const effect = pipe(ref, Ref.update((n) => n + 1), Effect.zipRight(Effect.fail("fail")))
+      const effect = pipe(Ref.update(ref)((n) => n + 1), Effect.zipRight(Effect.fail("fail")))
       const layer = pipe(Layer.effectEnvironment(effect), Layer.retry(Schedule.recurs(3)))
       yield* $(Effect.ignore(Effect.scoped(Layer.build(layer))))
       const result = yield* $(Ref.get(ref))
@@ -603,7 +603,7 @@ describe.concurrent("Layer", () => {
       const ref: Ref.Ref<string> = yield* $(Ref.make("foo"))
       const layer = pipe(
         Layer.succeed(BarTag)({ bar: "bar" }),
-        Layer.tap((context) => pipe(ref, Ref.set(pipe(context, Context.get(BarTag)).bar)))
+        Layer.tap((context) => Ref.set(ref)(pipe(context, Context.get(BarTag)).bar))
       )
       yield* $(Effect.scoped(Layer.build(layer)))
       const result = yield* $(Ref.get(ref))
@@ -622,8 +622,8 @@ export const Service1Tag = Context.Tag<Service1>()
 export const makeLayer1 = (ref: Ref.Ref<Chunk.Chunk<string>>): Layer.Layer<never, never, Service1> => {
   return Layer.scoped(Service1Tag)(
     Effect.acquireRelease(
-      pipe(ref, Ref.update(Chunk.append(acquire1)), Effect.as(new Service1())),
-      () => pipe(ref, Ref.update(Chunk.append(release1)))
+      pipe(Ref.update(ref)(Chunk.append(acquire1)), Effect.as(new Service1())),
+      () => Ref.update(ref)(Chunk.append(release1))
     )
   )
 }
@@ -636,8 +636,8 @@ export const Service2Tag = Context.Tag<Service2>()
 export const makeLayer2 = (ref: Ref.Ref<Chunk.Chunk<string>>): Layer.Layer<never, never, Service2> => {
   return Layer.scoped(Service2Tag)(
     Effect.acquireRelease(
-      pipe(ref, Ref.update(Chunk.append(acquire2)), Effect.as(new Service2())),
-      () => pipe(ref, Ref.update(Chunk.append(release2)))
+      pipe(Ref.update(ref)(Chunk.append(acquire2)), Effect.as(new Service2())),
+      () => Ref.update(ref)(Chunk.append(release2))
     )
   )
 }
@@ -650,8 +650,8 @@ export const Service3Tag = Context.Tag<Service3>()
 export const makeLayer3 = (ref: Ref.Ref<Chunk.Chunk<string>>): Layer.Layer<never, never, Service3> => {
   return Layer.scoped(Service3Tag)(
     Effect.acquireRelease(
-      pipe(ref, Ref.update(Chunk.append(acquire3)), Effect.as(new Service3())),
-      () => pipe(ref, Ref.update(Chunk.append(release3)))
+      pipe(Ref.update(ref)(Chunk.append(acquire3)), Effect.as(new Service3())),
+      () => Ref.update(ref)(Chunk.append(release3))
     )
   )
 }

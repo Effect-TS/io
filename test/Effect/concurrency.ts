@@ -68,7 +68,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const child = (ref: Ref.Ref<boolean>) => {
         return withLatch((release) =>
-          pipe(release, Effect.zipRight(Effect.never()), Effect.ensuring(pipe(ref, Ref.set(true))))
+          pipe(release, Effect.zipRight(Effect.never()), Effect.ensuring(Ref.set(ref)(true)))
         )
       }
       const ref = yield* $(Ref.make(false))
@@ -91,7 +91,7 @@ describe.concurrent("Effect", () => {
       const interruptionRef = yield* $(Ref.make(0))
       const latch1Start = yield* $(Deferred.make<never, void>())
       const latch2Start = yield* $(Deferred.make<never, void>())
-      const inc = pipe(interruptionRef, Ref.updateAndGet((n) => n + 1))
+      const inc = Ref.updateAndGet(interruptionRef)((n) => n + 1)
       const left = plus1(latch1Start, inc)
       const right = plus1(latch2Start, inc)
       const fiber = yield* $(pipe(left, Effect.race(right), Effect.fork))
@@ -138,7 +138,7 @@ describe.concurrent("Effect", () => {
         Effect.ensuringChildren((fs) =>
           Array.from(fs).reduce(
             (acc, fiber) =>
-              pipe(acc, Effect.zipRight(Fiber.interrupt(fiber)), Effect.zipRight(pipe(ref, Ref.update((n) => n + 1)))),
+              pipe(acc, Effect.zipRight(Fiber.interrupt(fiber)), Effect.zipRight(Ref.update(ref)((n) => n + 1))),
             Effect.unit()
           )
         )
@@ -185,7 +185,7 @@ describe.concurrent("Effect", () => {
           pipe(
             restore(Deferred.await(latch)),
             Effect.onInterrupt(() =>
-              pipe(interrupted, Ref.update((_) => _ + 1), Effect.zipRight(pipe(done, Deferred.succeed<void>(void 0))))
+              pipe(Ref.update(interrupted)((_) => _ + 1), Effect.zipRight(pipe(done, Deferred.succeed<void>(void 0))))
             ),
             Effect.fork
           )

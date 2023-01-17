@@ -66,10 +66,10 @@ describe.concurrent("Schedule", () => {
   it.effect("perform log for each recurrence of effect", () =>
     Effect.gen(function*($) {
       const schedule = (ref: Ref.Ref<number>) => {
-        return pipe(Schedule.recurs(3), Schedule.onDecision(() => pipe(ref, Ref.update((n) => n + 1))))
+        return pipe(Schedule.recurs(3), Schedule.onDecision(() => Ref.update(ref)((n) => n + 1)))
       }
       const ref = yield* $(Ref.make(0))
-      yield* $(pipe(ref, Ref.getAndUpdate((n) => n + 1), Effect.repeat(schedule(ref))))
+      yield* $(pipe(Ref.getAndUpdate(ref)((n) => n + 1), Effect.repeat(schedule(ref))))
       const result = yield* $(Ref.get(ref))
       assert.strictEqual(result, 8)
     }))
@@ -77,8 +77,7 @@ describe.concurrent("Schedule", () => {
     Effect.gen(function*($) {
       const io = (ref: Ref.Ref<number>, latch: Deferred.Deferred<never, void>): Effect.Effect<never, string, void> => {
         return pipe(
-          ref,
-          Ref.updateAndGet((n) => n + 1),
+          Ref.updateAndGet(ref)((n) => n + 1),
           Effect.flatMap((retries) => {
             // The 5th retry will fail after 10 seconds to let the schedule reset
             if (retries == 5) {
@@ -137,7 +136,7 @@ describe.concurrent("Schedule", () => {
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(0))
       const result = yield* $(
-        pipe(ref, Ref.getAndUpdate((n) => n + 1), Effect.repeat(pipe(Schedule.recurs(10), Schedule.passthrough)))
+        pipe(Ref.getAndUpdate(ref)((n) => n + 1), Effect.repeat(pipe(Schedule.recurs(10), Schedule.passthrough)))
       )
       assert.strictEqual(result, 10)
     }))
@@ -200,7 +199,7 @@ describe.concurrent("Schedule", () => {
       Effect.gen(function*($) {
         const n = 42
         const ref = yield* $(Ref.make(0))
-        const effect = pipe(ref, Ref.update((n) => n + 1), Effect.repeat(Schedule.recurs(n)))
+        const effect = pipe(Ref.update(ref)((n) => n + 1), Effect.repeat(Schedule.recurs(n)))
         yield* $(pipe(effect, Effect.repeat(Schedule.recurs(1))))
         const result = yield* $(Ref.get(ref))
         assert.strictEqual(result, (n + 1) * 2)
@@ -212,8 +211,7 @@ describe.concurrent("Schedule", () => {
         const deferred = yield* $(Deferred.make<never, void>())
         const ref = yield* $(Ref.make(0))
         yield* $(pipe(
-          ref,
-          Ref.update((n) => n + 2),
+          Ref.update(ref)((n) => n + 2),
           Effect.repeat(Schedule.recurs(2)),
           Effect.ensuring(pipe(deferred, Deferred.succeed<void>(void 0)))
         ))
@@ -244,7 +242,7 @@ describe.concurrent("Schedule", () => {
     it.effect("for 'once' will repeat 1 additional time", () =>
       Effect.gen(function*($) {
         const ref = yield* $(Ref.make(0))
-        yield* $(pipe(ref, Ref.update((n) => n + 1), Effect.repeat(Schedule.once())))
+        yield* $(pipe(Ref.update(ref)((n) => n + 1), Effect.repeat(Schedule.once())))
         const result = yield* $(Ref.get(ref))
         assert.strictEqual(result, 2)
       }))
@@ -447,7 +445,7 @@ describe.concurrent("Schedule", () => {
     it.effect("retry 0 time for `once` when first time succeeds", () =>
       Effect.gen(function*($) {
         const ref = yield* $(Ref.make(0))
-        yield* $(pipe(ref, Ref.update((n) => n + 1), Effect.retry(Schedule.once())))
+        yield* $(pipe(Ref.update(ref)((n) => n + 1), Effect.retry(Schedule.once())))
         const result = yield* $(Ref.get(ref))
         assert.strictEqual(result, 1)
       }))
@@ -750,7 +748,7 @@ describe.concurrent("Schedule", () => {
         const schedule = pipe(Schedule.spaced(Duration.seconds(20)), Schedule.union(Schedule.secondOfMinute(30)))
         yield* $(pipe(
           TestClock.currentTimeMillis(),
-          Effect.tap((instant) => pipe(ref, Ref.update((seconds) => [...seconds, instant / 1000]))),
+          Effect.tap((instant) => pipe(Ref.update(ref)((seconds) => [...seconds, instant / 1000]))),
           Effect.repeat(schedule),
           Effect.fork
         ))
@@ -806,15 +804,23 @@ const ioSucceed = () => Effect.succeed("OrElse")
 const ioFail = () => Effect.fail("OrElseFailed")
 const failOn0 = (ref: Ref.Ref<number>): Effect.Effect<never, string, number> => {
   return Effect.gen(function*($) {
-    const i = yield* $(pipe(ref, Ref.updateAndGet((n) => n + 1)))
+    const i = yield* $(Ref.updateAndGet(ref)((n) => n + 1))
     return yield* $(i <= 1 ? Effect.fail(`Error: ${i}`) : Effect.succeed(i))
   })
 }
 const alwaysFail = (ref: Ref.Ref<number>): Effect.Effect<never, string, number> => {
-  return pipe(ref, Ref.updateAndGet((n) => n + 1), Effect.flatMap((n) => Effect.fail(`Error: ${n}`)))
+  return pipe(Ref.updateAndGet(ref)((n) => n + 1), Effect.flatMap((n) => Effect.fail(`Error: ${n}`)))
 }
 const repeat = <Env, B>(schedule: Schedule.Schedule<Env, number, B>): Effect.Effect<Env, never, B> => {
-  return pipe(Ref.make(0), Effect.flatMap((ref) => pipe(ref, Ref.updateAndGet((n) => n + 1), Effect.repeat(schedule))))
+  return pipe(
+    Ref.make(0),
+    Effect.flatMap((ref) =>
+      pipe(
+        Ref.updateAndGet(ref)((n) => n + 1),
+        Effect.repeat(schedule)
+      )
+    )
+  )
 }
 const roundToNearestHour = (date: Date): number => {
   date.setMinutes(date.getMinutes() + 30)

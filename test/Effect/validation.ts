@@ -104,7 +104,15 @@ describe.concurrent("Effect", () => {
       const array = Array.from({ length: 10 }, (_, i) => i + 1)
       const counter = yield* $(Ref.make<number>(0))
       const result = yield* $(
-        pipe(array, Effect.validateFirst((n) => pipe(counter, Ref.update((n) => n + 1), Effect.zipRight(f(n)))))
+        pipe(
+          array,
+          Effect.validateFirst((n) =>
+            pipe(
+              Ref.update(counter)((n) => n + 1),
+              Effect.zipRight(f(n))
+            )
+          )
+        )
       )
       const count = yield* $(Ref.get(counter))
       assert.strictEqual(result, 6)

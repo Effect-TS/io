@@ -10,21 +10,21 @@ import * as Option from "@fp-ts/data/Option"
 export const get: <A>(self: Synchronized.Synchronized<A>) => Effect.Effect<never, never, A> = _ref.get
 
 /** @internal */
-export const set: <A>(value: A) => (self: Synchronized.Synchronized<A>) => Effect.Effect<never, never, void> = _ref.set
+export const set: <A>(self: Synchronized.Synchronized<A>) => (value: A) => Effect.Effect<never, never, void> = _ref.set
 
 /** @internal */
-export const getAndSet: <A>(value: A) => (self: Synchronized.Synchronized<A>) => Effect.Effect<never, never, A> =
+export const getAndSet: <A>(self: Synchronized.Synchronized<A>) => (value: A) => Effect.Effect<never, never, A> =
   _ref.getAndSet
 
 /** @internal */
-export const getAndUpdate: <A>(
+export const getAndUpdate: <A>(self: Synchronized.Synchronized<A>) => (
   f: (a: A) => A
-) => (self: Synchronized.Synchronized<A>) => Effect.Effect<never, never, A> = _ref.getAndUpdate
+) => Effect.Effect<never, never, A> = _ref.getAndUpdate
 
 /** @internal */
-export const getAndUpdateEffect = <A, R, E>(f: (a: A) => Effect.Effect<R, E, A>) => {
+export const getAndUpdateEffect = <A>(self: Synchronized.Synchronized<A>) => {
   const trace = getCallTrace()
-  return (self: Synchronized.Synchronized<A>): Effect.Effect<R, E, A> => {
+  return <R, E>(f: (a: A) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
     return self.modifyEffect(
       (value) => pipe(f(value), core.map((result) => [value, result] as const))
     ).traced(trace)
@@ -32,16 +32,16 @@ export const getAndUpdateEffect = <A, R, E>(f: (a: A) => Effect.Effect<R, E, A>)
 }
 
 /** @internal */
-export const getAndUpdateSome: <A>(
+export const getAndUpdateSome: <A>(self: Synchronized.Synchronized<A>) => (
   f: (a: A) => Option.Option<A>
-) => (self: Synchronized.Synchronized<A>) => Effect.Effect<never, never, A> = _ref.getAndUpdateSome
+) => Effect.Effect<never, never, A> = _ref.getAndUpdateSome
 
 /** @internal */
-export const getAndUpdateSomeEffect = <A, R, E>(
-  pf: (a: A) => Option.Option<Effect.Effect<R, E, A>>
-) => {
+export const getAndUpdateSomeEffect = <A>(self: Synchronized.Synchronized<A>) => {
   const trace = getCallTrace()
-  return (self: Synchronized.Synchronized<A>): Effect.Effect<R, E, A> => {
+  return <R, E>(
+    pf: (a: A) => Option.Option<Effect.Effect<R, E, A>>
+  ): Effect.Effect<R, E, A> => {
     return self.modifyEffect((value) => {
       const result = pf(value)
       switch (result._tag) {
@@ -56,34 +56,35 @@ export const getAndUpdateSomeEffect = <A, R, E>(
   }
 }
 /** @internal */
-export const setAndGet: <A>(value: A) => (self: Synchronized.Synchronized<A>) => Effect.Effect<never, never, A> =
+export const setAndGet: <A>(self: Synchronized.Synchronized<A>) => (value: A) => Effect.Effect<never, never, A> =
   _ref.setAndGet
 
 /** @internal */
-export const modify = <A, B>(f: (a: A) => readonly [B, A]) => {
+export const modify = <A>(self: Synchronized.Synchronized<A>) => {
   const trace = getCallTrace()
-  return (self: Synchronized.Synchronized<A>): Effect.Effect<never, never, B> => self.modify(f).traced(trace)
+  return <B>(f: (a: A) => readonly [B, A]): Effect.Effect<never, never, B> => self.modify(f).traced(trace)
 }
 
 /** @internal */
-export const modifyEffect = <A, R, E, B>(f: (a: A) => Effect.Effect<R, E, readonly [B, A]>) => {
+export const modifyEffect = <A>(self: Synchronized.Synchronized<A>) => {
   const trace = getCallTrace()
-  return (self: Synchronized.Synchronized<A>): Effect.Effect<R, E, B> => self.modifyEffect(f).traced(trace)
+  return <R, E, B>(f: (a: A) => Effect.Effect<R, E, readonly [B, A]>): Effect.Effect<R, E, B> =>
+    self.modifyEffect(f).traced(trace)
 }
 
 /** @internal */
-export const modifySome: <A, B>(
+export const modifySome: <A>(self: Synchronized.Synchronized<A>) => <B>(
   fallback: B,
   f: (a: A) => Option.Option<readonly [B, A]>
-) => (self: Synchronized.Synchronized<A>) => Effect.Effect<never, never, B> = _ref.modifySome
+) => Effect.Effect<never, never, B> = _ref.modifySome
 
 /** @internal */
-export const modifySomeEffect = <B, A, R, E>(
-  fallback: B,
-  pf: (a: A) => Option.Option<Effect.Effect<R, E, readonly [B, A]>>
-) => {
+export const modifySomeEffect = <A>(self: Synchronized.Synchronized<A>) => {
   const trace = getCallTrace()
-  return (self: Synchronized.Synchronized<A>): Effect.Effect<R, E, B> => {
+  return <B, R, E>(
+    fallback: B,
+    pf: (a: A) => Option.Option<Effect.Effect<R, E, readonly [B, A]>>
+  ): Effect.Effect<R, E, B> => {
     return self.modifyEffect(
       (value) => pipe(pf(value), Option.getOrElse(() => core.succeed([fallback, value] as const)))
     ).traced(trace)
@@ -91,23 +92,27 @@ export const modifySomeEffect = <B, A, R, E>(
 }
 
 /** @internal */
-export const update: <A>(f: (a: A) => A) => (self: Synchronized.Synchronized<A>) => Effect.Effect<never, never, void> =
+export const update: <A>(self: Synchronized.Synchronized<A>) => (f: (a: A) => A) => Effect.Effect<never, never, void> =
   _ref.update
 
 /** @internal */
-export const updateEffect = <A, R, E>(f: (a: A) => Effect.Effect<R, E, A>) => {
+export const updateEffect = <A>(self: Synchronized.Synchronized<A>) => {
   const trace = getCallTrace()
-  return (self: Synchronized.Synchronized<A>): Effect.Effect<R, E, void> => {
-    return self.modifyEffect(
-      (value) => pipe(f(value), core.map((result) => [undefined as void, result] as const))
-    ).traced(trace)
+  return <R, E>(f: (a: A) => Effect.Effect<R, E, A>): Effect.Effect<R, E, void> => {
+    return self.modifyEffect((value) =>
+      pipe(
+        f(value),
+        core.map((result) => [undefined as void, result] as const)
+      )
+    )
+      .traced(trace)
   }
 }
 
 /** @internal */
-export const updateAndGetEffect = <A, R, E>(f: (a: A) => Effect.Effect<R, E, A>) => {
+export const updateAndGetEffect = <A>(self: Synchronized.Synchronized<A>) => {
   const trace = getCallTrace()
-  return (self: Synchronized.Synchronized<A>): Effect.Effect<R, E, A> => {
+  return <R, E>(f: (a: A) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
     return self.modifyEffect(
       (value) => pipe(f(value), core.map((result) => [result, result] as const))
     ).traced(trace)
@@ -115,14 +120,14 @@ export const updateAndGetEffect = <A, R, E>(f: (a: A) => Effect.Effect<R, E, A>)
 }
 
 /** @internal */
-export const updateSome: <A>(
+export const updateSome: <A>(self: Synchronized.Synchronized<A>) => (
   f: (a: A) => Option.Option<A>
-) => (self: Synchronized.Synchronized<A>) => Effect.Effect<never, never, void> = _ref.updateSome
+) => Effect.Effect<never, never, void> = _ref.updateSome
 
 /** @internal */
-export const updateSomeEffect = <A, R, E>(pf: (a: A) => Option.Option<Effect.Effect<R, E, A>>) => {
+export const updateSomeEffect = <A>(self: Synchronized.Synchronized<A>) => {
   const trace = getCallTrace()
-  return (self: Synchronized.Synchronized<A>): Effect.Effect<R, E, void> => {
+  return <R, E>(pf: (a: A) => Option.Option<Effect.Effect<R, E, A>>): Effect.Effect<R, E, void> => {
     return self.modifyEffect((value) => {
       const result = pf(value)
       switch (result._tag) {
@@ -138,6 +143,6 @@ export const updateSomeEffect = <A, R, E>(pf: (a: A) => Option.Option<Effect.Eff
 }
 
 /** @internal */
-export const updateSomeAndGet: <A>(
+export const updateSomeAndGet: <A>(self: Synchronized.Synchronized<A>) => (
   f: (a: A) => Option.Option<A>
-) => (self: Synchronized.Synchronized<A>) => Effect.Effect<never, never, A> = _ref.updateSomeAndGet
+) => Effect.Effect<never, never, A> = _ref.updateSomeAndGet
