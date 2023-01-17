@@ -980,34 +980,42 @@ export const reduceWithContext = <C, E, Z>(context: C, reducer: Cause.CauseReduc
 // Errors
 // -----------------------------------------------------------------------------
 
-const makeExceptionProto = (_tag: string) => ({
-  _tag,
-  toString: {
-    value(this: { message?: string; _tag: string }) {
-      return `${this._tag}: ${this.message}`
-    },
-    enumerable: false
+const makeException = <T extends { _tag: string; message?: string }>(
+  proto: Omit<T, "message" | "_tag">,
+  tag: T["_tag"]
+) => {
+  const _tag = {
+    value: tag,
+    enumerable: true
   }
-})
+  const protoWithToString = {
+    ...proto,
+    toString: {
+      value(this: { message?: string; _tag: string }) {
+        return `${this._tag}: ${this.message}`
+      },
+      enumerable: false
+    }
+  }
+  return (message?: string): T =>
+    Object.create(protoWithToString, {
+      _tag,
+      message: {
+        value: message,
+        enumerable: true
+      }
+    })
+}
 
 /** @internal */
 export const RuntimeExceptionTypeId: Cause.RuntimeExceptionTypeId = Symbol.for(
   "@effect/io/Cause/errors/RuntimeException"
 ) as Cause.RuntimeExceptionTypeId
 
-const RuntimeExceptionProto = {
-  [RuntimeExceptionTypeId]: RuntimeExceptionTypeId,
-  ...makeExceptionProto("RuntimeException")
-}
-
 /** @internal */
-export const RuntimeException = (message?: string): Cause.RuntimeException =>
-  Object.create(RuntimeExceptionProto, {
-    message: {
-      value: message,
-      enumerable: true
-    }
-  })
+export const RuntimeException = makeException<Cause.RuntimeException>({
+  [RuntimeExceptionTypeId]: RuntimeExceptionTypeId
+}, "RuntimeException")
 
 /** @internal */
 export const isRuntimeException = (u: unknown): u is Cause.RuntimeException => {
@@ -1019,19 +1027,10 @@ export const InterruptedExceptionTypeId: Cause.InterruptedExceptionTypeId = Symb
   "@effect/io/Cause/errors/InterruptedException"
 ) as Cause.InterruptedExceptionTypeId
 
-const InterruptedExceptionProto = {
-  [InterruptedExceptionTypeId]: InterruptedExceptionTypeId,
-  ...makeExceptionProto("InterruptedException")
-}
-
 /** @internal */
-export const InterruptedException = (message?: string): Cause.InterruptedException =>
-  Object.create(InterruptedExceptionProto, {
-    message: {
-      value: message,
-      enumerable: true
-    }
-  })
+export const InterruptedException = makeException<Cause.InterruptedException>({
+  [InterruptedExceptionTypeId]: InterruptedExceptionTypeId
+}, "InterruptedException")
 
 /** @internal */
 export const isInterruptedException = (u: unknown): u is Cause.InterruptedException => {
@@ -1043,19 +1042,10 @@ export const IllegalArgumentExceptionTypeId: Cause.IllegalArgumentExceptionTypeI
   "@effect/io/Cause/errors/IllegalArgument"
 ) as Cause.IllegalArgumentExceptionTypeId
 
-const IllegalArgumentExceptionProto = {
-  [IllegalArgumentExceptionTypeId]: IllegalArgumentExceptionTypeId,
-  ...makeExceptionProto("IllegalArgumentException")
-}
-
 /** @internal */
-export const IllegalArgumentException = (message?: string): Cause.IllegalArgumentException =>
-  Object.create(IllegalArgumentExceptionProto, {
-    message: {
-      value: message,
-      enumerable: true
-    }
-  })
+export const IllegalArgumentException = makeException<Cause.IllegalArgumentException>({
+  [IllegalArgumentExceptionTypeId]: IllegalArgumentExceptionTypeId
+}, "IllegalArgumentException")
 
 /** @internal */
 export const isIllegalArgumentException = (u: unknown): u is Cause.IllegalArgumentException => {
@@ -1067,19 +1057,10 @@ export const NoSuchElementExceptionTypeId: Cause.NoSuchElementExceptionTypeId = 
   "@effect/io/Cause/errors/NoSuchElement"
 ) as Cause.NoSuchElementExceptionTypeId
 
-const NoSuchElementExceptionProto = {
-  [NoSuchElementExceptionTypeId]: NoSuchElementExceptionTypeId,
-  ...makeExceptionProto("NoSuchElementException")
-}
-
 /** @internal */
-export const NoSuchElementException = (message?: string): Cause.NoSuchElementException =>
-  Object.create(NoSuchElementExceptionProto, {
-    message: {
-      value: message,
-      enumerable: true
-    }
-  })
+export const NoSuchElementException = makeException<Cause.NoSuchElementException>({
+  [NoSuchElementExceptionTypeId]: NoSuchElementExceptionTypeId
+}, "NoSuchElementException")
 
 /** @internal */
 export const isNoSuchElementException = (u: unknown): u is Cause.NoSuchElementException => {
@@ -1091,19 +1072,10 @@ export const InvalidHubCapacityExceptionTypeId: Cause.InvalidHubCapacityExceptio
   "@effect/io/Cause/errors/InvalidHubCapacityException"
 ) as Cause.InvalidHubCapacityExceptionTypeId
 
-const InvalidHubCapacityExceptionProto = {
-  [InvalidHubCapacityExceptionTypeId]: InvalidHubCapacityExceptionTypeId,
-  ...makeExceptionProto("InvalidHubCapacityException")
-}
-
 /** @internal */
-export const InvalidHubCapacityException = (message?: string): Cause.InvalidHubCapacityException =>
-  Object.create(InvalidHubCapacityExceptionProto, {
-    message: {
-      value: message,
-      enumerable: true
-    }
-  })
+export const InvalidHubCapacityException = makeException<Cause.InvalidHubCapacityException>({
+  [InvalidHubCapacityExceptionTypeId]: InvalidHubCapacityExceptionTypeId
+}, "InvalidHubCapacityException")
 
 /** @internal */
 export const isInvalidCapacityError = (u: unknown): u is Cause.InvalidHubCapacityException => {
