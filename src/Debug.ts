@@ -92,7 +92,7 @@ const orUndefined = (trace: string | undefined): string | undefined => {
 /**
  * @since 1.0.0
  */
-export const isTraceEnabled: () => boolean = () =>
+export const isTraceEnabled: (_: void) => boolean = () =>
   (runtimeDebug.traceStackLimit > 0) || (runtimeDebug.traceExecutionLimit > 0)
 
 /**

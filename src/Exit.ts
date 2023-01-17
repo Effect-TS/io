@@ -142,7 +142,7 @@ export const collectAllPar: <E, A>(exits: Iterable<Exit<E, A>>) => Option.Option
  * @since 1.0.0
  * @category constructors
  */
-export const unit: () => Exit<never, void> = core.exitUnit
+export const unit: (_: void) => Exit<never, void> = core.exitUnit
 
 /**
  * Converts an `Either<E, A>` into an `Exit<E, A>`.

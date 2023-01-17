@@ -65,7 +65,7 @@ export interface Random {
  * @since 1.0.0
  * @category constructors
  */
-export const next: () => Effect.Effect<never, never, number> = defaultServices.next
+export const next: (_: void) => Effect.Effect<never, never, number> = defaultServices.next
 
 /**
  * Returns the next integer value from the pseudo-random number generator.
@@ -74,7 +74,7 @@ export const next: () => Effect.Effect<never, never, number> = defaultServices.n
  * @since 1.0.0
  * @category constructors
  */
-export const nextInt: () => Effect.Effect<never, never, number> = defaultServices.nextInt
+export const nextInt: (_: void) => Effect.Effect<never, never, number> = defaultServices.nextInt
 
 /**
  * Returns the next boolean value from the pseudo-random number generator.
@@ -83,7 +83,7 @@ export const nextInt: () => Effect.Effect<never, never, number> = defaultService
  * @since 1.0.0
  * @category constructors
  */
-export const nextBoolean: () => Effect.Effect<never, never, boolean> = defaultServices.nextBoolean
+export const nextBoolean: (_: void) => Effect.Effect<never, never, boolean> = defaultServices.nextBoolean
 
 /**
  * Returns the next numeric value in the specified range from the
