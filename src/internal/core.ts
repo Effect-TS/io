@@ -1246,7 +1246,7 @@ export const uninterruptibleMask = <R, E, A>(
  * @macro traced
  * @internal
  */
-export const unit: () => Effect.Effect<never, never, void> = () => {
+export const unit: (_: void) => Effect.Effect<never, never, void> = () => {
   const trace = getCallTrace()
   return succeed(undefined).traced(trace)
 }
@@ -2463,7 +2463,7 @@ export const exitCollectAllPar = <E, A>(
 }
 
 /** @internal */
-export const exitUnit: () => Exit.Exit<never, void> = () => exitSucceed(void 0)
+export const exitUnit: (_: void) => Exit.Exit<never, void> = () => exitSucceed(void 0)
 
 /** @internal */
 const exitCollectAllInternal = <E, A>(

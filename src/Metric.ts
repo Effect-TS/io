@@ -509,4 +509,4 @@ export const zip: <Type2, In2, Out2>(
  * @since 1.0.0
  * @category unsafe
  */
-export const unsafeSnapshot: () => HashSet.HashSet<MetricPair.MetricPair.Untyped> = internal.unsafeSnapshot
+export const unsafeSnapshot: (_: void) => HashSet.HashSet<MetricPair.MetricPair.Untyped> = internal.unsafeSnapshot

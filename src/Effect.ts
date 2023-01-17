@@ -329,7 +329,7 @@ export const acquireUseRelease: <R, E, A, R2, E2, A2, R3, X>(
  * @since 1.0.0
  * @category constructors
  */
-export const allowInterrupt: () => Effect<never, never, void> = effect.allowInterrupt
+export const allowInterrupt: (_: void) => Effect<never, never, void> = effect.allowInterrupt
 
 /**
  * This function maps the success value of an `Effect` value to a specified
@@ -752,7 +752,7 @@ export const checkInterruptible: <R, E, A>(f: (isInterruptible: boolean) => Effe
  * @since 1.0.0
  * @category environment
  */
-export const clock: () => Effect<never, never, Clock.Clock> = effect.clock
+export const clock: (_: void) => Effect<never, never, Clock.Clock> = effect.clock
 
 /**
  * Retreives the `Clock` service from the environment and provides it to the
@@ -1024,7 +1024,7 @@ export const delay: (duration: Duration.Duration) => <R, E, A>(self: Effect<R, E
  * @since 1.0.0
  * @category constructors
  */
-export const descriptor: () => Effect<never, never, Fiber.Fiber.Descriptor> = effect.descriptor
+export const descriptor: (_: void) => Effect<never, never, Fiber.Fiber.Descriptor> = effect.descriptor
 
 /**
  * Constructs an effect based on information about the current `Fiber`.
@@ -1121,7 +1121,7 @@ export const bindValue: <N extends string, K, A>(
  * @since 1.0.0
  * @category do notation
  */
-export const Do: () => Effect<never, never, {}> = effect.Do
+export const Do: (_: void) => Effect<never, never, {}> = effect.Do
 
 /**
  * @macro traced
@@ -1314,7 +1314,7 @@ export const failCauseSync: <E>(evaluate: LazyArg<Cause.Cause<E>>) => Effect<nev
  * @since 1.0.0
  * @category utilities
  */
-export const fiberId: () => Effect<never, never, FiberId.FiberId> = core.fiberId
+export const fiberId: (_: void) => Effect<never, never, FiberId.FiberId> = core.fiberId
 
 /**
  * @macro traced
@@ -1882,7 +1882,7 @@ export const gen: <Eff extends EffectGen<any, any, any>, AEff>(
  * @since 1.0.0
  * @category constructors
  */
-export const getFiberRefs: () => Effect<never, never, FiberRefs.FiberRefs> = effect.getFiberRefs
+export const getFiberRefs: (_: void) => Effect<never, never, FiberRefs.FiberRefs> = effect.getFiberRefs
 
 /**
  * Lifts an `Option` into an `Effect`, if the option is not defined it fails
@@ -1973,7 +1973,7 @@ export const inheritFiberRefs: (childFiberRefs: FiberRefs.FiberRefs) => Effect<n
  * @since 1.0.0
  * @category interruption
  */
-export const interrupt: () => Effect<never, never, never> = core.interrupt
+export const interrupt: (_: void) => Effect<never, never, never> = core.interrupt
 
 /**
  * @macro traced
@@ -2273,7 +2273,7 @@ export const logAnnotate: (key: string, value: string) => <R, E, A>(effect: Effe
  * @since 1.0.0
  * @category logging
  */
-export const logAnnotations: () => Effect<never, never, HashMap.HashMap<string, string>> = effect.logAnnotations
+export const logAnnotations: (_: void) => Effect<never, never, HashMap.HashMap<string, string>> = effect.logAnnotations
 
 /**
  * Loops with the specified effectual function, collecting the results into a
@@ -2479,7 +2479,7 @@ export const negate: <R, E>(self: Effect<R, E, boolean>) => Effect<R, E, boolean
  * @since 1.0.0
  * @category constructors
  */
-export const never: () => Effect<never, never, never> = core.never
+export const never: (_: void) => Effect<never, never, never> = core.never
 
 /**
  * Requires the option produced by this value to be `None`.
@@ -2943,7 +2943,7 @@ export const raceWith: <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
  * @since 1.0.0
  * @category constructors
  */
-export const random: () => Effect<never, never, Random.Random> = effect.random
+export const random: (_: void) => Effect<never, never, Random.Random> = effect.random
 
 /**
  * Retreives the `Random` service from the environment and uses it to run the
@@ -3397,7 +3397,7 @@ export const runtime: <R>() => Effect<R, never, Runtime.Runtime<R>> = _runtime.r
  * @since 1.0.0
  * @category constructors
  */
-export const runtimeFlags: () => Effect<never, never, RuntimeFlags.RuntimeFlags> = core.runtimeFlags
+export const runtimeFlags: (_: void) => Effect<never, never, RuntimeFlags.RuntimeFlags> = core.runtimeFlags
 
 /**
  * Exposes the full `Cause` of failure for the specified effect.
@@ -3453,7 +3453,7 @@ export const scheduleFrom: <R2, In, Out>(
  * @since 1.0.0
  * @category environment
  */
-export const scope: () => Effect<Scope.Scope, never, Scope.Scope> = fiberRuntime.scope
+export const scope: (_: void) => Effect<Scope.Scope, never, Scope.Scope> = fiberRuntime.scope
 
 /**
  * Accesses the current scope and uses it to perform the specified effect.
@@ -3655,7 +3655,7 @@ export const succeedLeft: <A>(value: A) => Effect<never, never, Either.Either<A,
  * @since 1.0.0
  * @category constructors
  */
-export const succeedNone: () => Effect<never, never, Option.Option<never>> = effect.succeedNone
+export const succeedNone: (_: void) => Effect<never, never, Option.Option<never>> = effect.succeedNone
 
 /**
  * Returns an effect which succeeds with the value wrapped in a `Right`.
@@ -3808,7 +3808,7 @@ export const taggedScopedWithLabelSet: (
  * @since 1.0.0
  * @category getters
  */
-export const tags: () => Effect<never, never, HashSet.HashSet<MetricLabel.MetricLabel>> = core.tags
+export const tags: (_: void) => Effect<never, never, HashSet.HashSet<MetricLabel.MetricLabel>> = core.tags
 
 /**
  * @macro traced
@@ -4152,7 +4152,7 @@ export const uninterruptibleMask: <R, E, A>(
  * @since 1.0.0
  * @category constructors
  */
-export const unit: () => Effect<never, never, void> = core.unit
+export const unit: (_: void) => Effect<never, never, void> = core.unit
 
 /**
  * Converts a `Effect<R, Either<E, B>, A>` into a `Effect<R, E, Either<A, B>>`.

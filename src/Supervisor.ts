@@ -140,7 +140,7 @@ export const none: Supervisor<void> = internal.none
  * @since 1.0.0
  * @category constructors
  */
-export const track: () => Effect.Effect<never, never, Supervisor<Chunk.Chunk<Fiber.RuntimeFiber<any, any>>>> =
+export const track: (_: void) => Effect.Effect<never, never, Supervisor<Chunk.Chunk<Fiber.RuntimeFiber<any, any>>>> =
   internal.track
 
 /**
@@ -149,4 +149,4 @@ export const track: () => Effect.Effect<never, never, Supervisor<Chunk.Chunk<Fib
  * @since 1.0.0
  * @category unsafe
  */
-export const unsafeTrack: () => Supervisor<Chunk.Chunk<Fiber.RuntimeFiber<any, any>>> = internal.unsafeTrack
+export const unsafeTrack: (_: void) => Supervisor<Chunk.Chunk<Fiber.RuntimeFiber<any, any>>> = internal.unsafeTrack

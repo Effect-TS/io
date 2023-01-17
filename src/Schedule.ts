@@ -366,7 +366,7 @@ export const contramapEffect: <In, Env1, In2>(
  * @since 1.0.0
  * @category constructors
  */
-export const count: () => Schedule<never, unknown, number> = internal.count
+export const count: (_: void) => Schedule<never, unknown, number> = internal.count
 
 /**
  * Cron-like schedule that recurs every specified `day` of month. Won't recur
@@ -508,7 +508,7 @@ export const eitherWith: <Env2, In2, Out2, Out, Out3>(
  * @since 1.0.0
  * @category constructors
  */
-export const elapsed: () => Schedule<never, unknown, Duration.Duration> = internal.elapsed
+export const elapsed: (_: void) => Schedule<never, unknown, Duration.Duration> = internal.elapsed
 
 /**
  * Returns a new schedule that will run the specified finalizer as soon as the
@@ -590,7 +590,7 @@ export const reduceEffect: <Out, Env1, Z>(
  * @since 1.0.0
  * @category constructors
  */
-export const forever: () => Schedule<never, unknown, number> = internal.forever
+export const forever: (_: void) => Schedule<never, unknown, number> = internal.forever
 
 /**
  * A schedule that recurs once with the specified delay.
@@ -780,7 +780,7 @@ export const onDecision: <Out, Env2, X>(
  * @since 1.0.0
  * @category constructors
  */
-export const once: () => Schedule<never, unknown, void> = internal.once
+export const once: (_: void) => Schedule<never, unknown, void> = internal.once
 
 /**
  * Returns a new schedule that passes through the inputs of this schedule.
@@ -940,7 +940,7 @@ export const recurs: (n: number) => Schedule<never, unknown, number> = internal.
  * @since 1.0.0
  * @category constructors
  */
-export const repeatForever: () => Schedule<never, unknown, number> = internal.forever
+export const repeatForever: (_: void) => Schedule<never, unknown, number> = internal.forever
 
 /**
  * Returns a new schedule that outputs the number of repetitions of this one.
@@ -1022,7 +1022,7 @@ export const spaced: (duration: Duration.Duration) => Schedule<never, unknown, n
  * @since 1.0.0
  * @category constructors
  */
-export const stop: () => Schedule<never, unknown, void> = internal.stop
+export const stop: (_: void) => Schedule<never, unknown, void> = internal.stop
 
 /**
  * Returns a schedule that repeats one time, producing the specified constant

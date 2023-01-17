@@ -449,7 +449,7 @@ export const retry: <RIn1, E, X>(
  * @since 1.0.0
  * @category constructors
  */
-export const scope: () => Layer<never, never, Scope.CloseableScope> = internal.scope
+export const scope: (_: void) => Layer<never, never, Scope.CloseableScope> = internal.scope
 
 /**
  * Constructs a layer from the specified scoped effect.

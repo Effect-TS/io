@@ -507,7 +507,7 @@ export const match: <E, A, Z>(
  * @since 1.0.0
  * @category constructors
  */
-export const never: () => Fiber<never, never> = internal.never
+export const never: (_: void) => Fiber<never, never> = internal.never
 
 /**
  * Returns a fiber that prefers `this` fiber, but falls back to the `that` one
@@ -558,7 +558,7 @@ export const pretty: <E, A>(self: RuntimeFiber<E, A>) => Effect.Effect<never, ne
  * @since 1.0.0
  * @category constructors
  */
-export const roots: () => Effect.Effect<never, never, Chunk.Chunk<RuntimeFiber<any, any>>> = internal.roots
+export const roots: (_: void) => Effect.Effect<never, never, Chunk.Chunk<RuntimeFiber<any, any>>> = internal.roots
 
 /**
  * Returns a chunk containing all root fibers.
@@ -567,7 +567,7 @@ export const roots: () => Effect.Effect<never, never, Chunk.Chunk<RuntimeFiber<a
  * @since 1.0.0
  * @category constructors
  */
-export const unsafeRoots: () => Chunk.Chunk<RuntimeFiber<any, any>> = internal.unsafeRoots
+export const unsafeRoots: (_: void) => Chunk.Chunk<RuntimeFiber<any, any>> = internal.unsafeRoots
 
 /**
  * Converts this fiber into a scoped effect. The fiber is interrupted when the
@@ -604,7 +604,7 @@ export const succeed: <A>(value: A) => Fiber<never, A> = internal.succeed
  * @since 1.0.0
  * @category constructors
  */
-export const unit: () => Fiber<never, void> = internal.unit
+export const unit: (_: void) => Fiber<never, void> = internal.unit
 
 /**
  * Zips this fiber and the specified fiber together, producing a tuple of

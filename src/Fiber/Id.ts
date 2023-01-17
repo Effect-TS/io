@@ -177,4 +177,4 @@ export const toSet: (self: FiberId) => HashSet.HashSet<Runtime> = internal.toSet
  * @since 1.0.0
  * @category unsafe
  */
-export const unsafeMake: () => Runtime = internal.unsafeMake
+export const unsafeMake: (_: void) => Runtime = internal.unsafeMake

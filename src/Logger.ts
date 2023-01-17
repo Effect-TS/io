@@ -170,7 +170,7 @@ export const map: <Output, Output2>(
  * @since 1.0.0
  * @category constructors
  */
-export const none: () => Logger<unknown, void> = internal.none
+export const none: (_: void) => Logger<unknown, void> = internal.none
 
 /**
  * @since 1.0.0

@@ -44,4 +44,4 @@ export interface MetricRegistry {
  * @since 1.0.0
  * @category constructors
  */
-export const make: () => MetricRegistry = internal.make
+export const make: (_: void) => MetricRegistry = internal.make
