@@ -980,15 +980,26 @@ export const reduceWithContext = <C, E, Z>(context: C, reducer: Cause.CauseReduc
 // Errors
 // -----------------------------------------------------------------------------
 
-const makeExceptionProto = (_tag: string) => ({
-  _tag,
+const exceptionProto = {
   toString: {
     value(this: { message?: string; _tag: string }) {
       return `${this._tag}: ${this.message}`
     },
     enumerable: false
   }
-})
+}
+
+const makeException = (proto: object, _tag: string, message?: string) =>
+  Object.create(proto, {
+    _tag: {
+      value: _tag,
+      enumerable: true
+    },
+    message: {
+      value: message,
+      enumerable: true
+    }
+  })
 
 /** @internal */
 export const RuntimeExceptionTypeId: Cause.RuntimeExceptionTypeId = Symbol.for(
@@ -997,17 +1008,12 @@ export const RuntimeExceptionTypeId: Cause.RuntimeExceptionTypeId = Symbol.for(
 
 const RuntimeExceptionProto = {
   [RuntimeExceptionTypeId]: RuntimeExceptionTypeId,
-  ...makeExceptionProto("RuntimeException")
+  ...exceptionProto
 }
 
 /** @internal */
 export const RuntimeException = (message?: string): Cause.RuntimeException =>
-  Object.create(RuntimeExceptionProto, {
-    message: {
-      value: message,
-      enumerable: true
-    }
-  })
+  makeException(RuntimeExceptionProto, "RuntimeException", message)
 
 /** @internal */
 export const isRuntimeException = (u: unknown): u is Cause.RuntimeException => {
@@ -1021,17 +1027,12 @@ export const InterruptedExceptionTypeId: Cause.InterruptedExceptionTypeId = Symb
 
 const InterruptedExceptionProto = {
   [InterruptedExceptionTypeId]: InterruptedExceptionTypeId,
-  ...makeExceptionProto("InterruptedException")
+  ...exceptionProto
 }
 
 /** @internal */
 export const InterruptedException = (message?: string): Cause.InterruptedException =>
-  Object.create(InterruptedExceptionProto, {
-    message: {
-      value: message,
-      enumerable: true
-    }
-  })
+  makeException(InterruptedExceptionProto, "InterruptedException", message)
 
 /** @internal */
 export const isInterruptedException = (u: unknown): u is Cause.InterruptedException => {
@@ -1045,17 +1046,12 @@ export const IllegalArgumentExceptionTypeId: Cause.IllegalArgumentExceptionTypeI
 
 const IllegalArgumentExceptionProto = {
   [IllegalArgumentExceptionTypeId]: IllegalArgumentExceptionTypeId,
-  ...makeExceptionProto("IllegalArgumentException")
+  ...exceptionProto
 }
 
 /** @internal */
 export const IllegalArgumentException = (message?: string): Cause.IllegalArgumentException =>
-  Object.create(IllegalArgumentExceptionProto, {
-    message: {
-      value: message,
-      enumerable: true
-    }
-  })
+  makeException(IllegalArgumentExceptionProto, "IllegalArgumentException", message)
 
 /** @internal */
 export const isIllegalArgumentException = (u: unknown): u is Cause.IllegalArgumentException => {
@@ -1069,17 +1065,12 @@ export const NoSuchElementExceptionTypeId: Cause.NoSuchElementExceptionTypeId = 
 
 const NoSuchElementExceptionProto = {
   [NoSuchElementExceptionTypeId]: NoSuchElementExceptionTypeId,
-  ...makeExceptionProto("NoSuchElementException")
+  ...exceptionProto
 }
 
 /** @internal */
 export const NoSuchElementException = (message?: string): Cause.NoSuchElementException =>
-  Object.create(NoSuchElementExceptionProto, {
-    message: {
-      value: message,
-      enumerable: true
-    }
-  })
+  makeException(NoSuchElementExceptionProto, "NoSuchElementException", message)
 
 /** @internal */
 export const isNoSuchElementException = (u: unknown): u is Cause.NoSuchElementException => {
@@ -1093,17 +1084,12 @@ export const InvalidHubCapacityExceptionTypeId: Cause.InvalidHubCapacityExceptio
 
 const InvalidHubCapacityExceptionProto = {
   [InvalidHubCapacityExceptionTypeId]: InvalidHubCapacityExceptionTypeId,
-  ...makeExceptionProto("InvalidHubCapacityException")
+  ...exceptionProto
 }
 
 /** @internal */
 export const InvalidHubCapacityException = (message?: string): Cause.InvalidHubCapacityException =>
-  Object.create(InvalidHubCapacityExceptionProto, {
-    message: {
-      value: message,
-      enumerable: true
-    }
-  })
+  makeException(InvalidHubCapacityExceptionProto, "InvalidHubCapacityException", message)
 
 /** @internal */
 export const isInvalidCapacityError = (u: unknown): u is Cause.InvalidHubCapacityException => {
