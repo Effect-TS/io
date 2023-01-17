@@ -980,30 +980,32 @@ export const reduceWithContext = <C, E, Z>(context: C, reducer: Cause.CauseReduc
 // Errors
 // -----------------------------------------------------------------------------
 
-const exceptionProto = {
-  toString: {
-    value(this: { message?: string; _tag: string }) {
-      return `${this._tag}: ${this.message}`
-    },
-    enumerable: false
-  }
-}
-
 const makeException = <T extends { _tag: string; message?: string }>(
   proto: Omit<T, "message" | "_tag">,
-  _tag: T["_tag"]
-) =>
-  (message?: string): T =>
-    Object.create(proto, {
-      _tag: {
-        value: _tag,
-        enumerable: true
+  tag: T["_tag"]
+) => {
+  const _tag = {
+    value: tag,
+    enumerable: true
+  }
+  const protoWithToString = {
+    ...proto,
+    toString: {
+      value(this: { message?: string; _tag: string }) {
+        return `${this._tag}: ${this.message}`
       },
+      enumerable: false
+    }
+  }
+  return (message?: string): T =>
+    Object.create(protoWithToString, {
+      _tag,
       message: {
         value: message,
         enumerable: true
       }
     })
+}
 
 /** @internal */
 export const RuntimeExceptionTypeId: Cause.RuntimeExceptionTypeId = Symbol.for(
@@ -1012,8 +1014,7 @@ export const RuntimeExceptionTypeId: Cause.RuntimeExceptionTypeId = Symbol.for(
 
 /** @internal */
 export const RuntimeException = makeException<Cause.RuntimeException>({
-  [RuntimeExceptionTypeId]: RuntimeExceptionTypeId,
-  ...exceptionProto
+  [RuntimeExceptionTypeId]: RuntimeExceptionTypeId
 }, "RuntimeException")
 
 /** @internal */
@@ -1028,8 +1029,7 @@ export const InterruptedExceptionTypeId: Cause.InterruptedExceptionTypeId = Symb
 
 /** @internal */
 export const InterruptedException = makeException<Cause.InterruptedException>({
-  [InterruptedExceptionTypeId]: InterruptedExceptionTypeId,
-  ...exceptionProto
+  [InterruptedExceptionTypeId]: InterruptedExceptionTypeId
 }, "InterruptedException")
 
 /** @internal */
@@ -1044,8 +1044,7 @@ export const IllegalArgumentExceptionTypeId: Cause.IllegalArgumentExceptionTypeI
 
 /** @internal */
 export const IllegalArgumentException = makeException<Cause.IllegalArgumentException>({
-  [IllegalArgumentExceptionTypeId]: IllegalArgumentExceptionTypeId,
-  ...exceptionProto
+  [IllegalArgumentExceptionTypeId]: IllegalArgumentExceptionTypeId
 }, "IllegalArgumentException")
 
 /** @internal */
@@ -1060,8 +1059,7 @@ export const NoSuchElementExceptionTypeId: Cause.NoSuchElementExceptionTypeId = 
 
 /** @internal */
 export const NoSuchElementException = makeException<Cause.NoSuchElementException>({
-  [NoSuchElementExceptionTypeId]: NoSuchElementExceptionTypeId,
-  ...exceptionProto
+  [NoSuchElementExceptionTypeId]: NoSuchElementExceptionTypeId
 }, "NoSuchElementException")
 
 /** @internal */
@@ -1076,8 +1074,7 @@ export const InvalidHubCapacityExceptionTypeId: Cause.InvalidHubCapacityExceptio
 
 /** @internal */
 export const InvalidHubCapacityException = makeException<Cause.InvalidHubCapacityException>({
-  [InvalidHubCapacityExceptionTypeId]: InvalidHubCapacityExceptionTypeId,
-  ...exceptionProto
+  [InvalidHubCapacityExceptionTypeId]: InvalidHubCapacityExceptionTypeId
 }, "InvalidHubCapacityException")
 
 /** @internal */
