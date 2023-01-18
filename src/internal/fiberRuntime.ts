@@ -1349,13 +1349,13 @@ export const addFinalizer = <R, X>(
       pipe(
         scope(),
         core.flatMap(
-          core.scopeAddFinalizerExit((exit) =>
-            pipe(
-              finalizer(exit),
-              core.provideEnvironment(environment),
-              core.asUnit
-            )
-          )
+          (scope) =>
+            core.scopeAddFinalizerExit(scope, (exit) =>
+              pipe(
+                finalizer(exit),
+                core.provideEnvironment(environment),
+                core.asUnit
+              ))
         )
       )
     )
@@ -2091,7 +2091,7 @@ export const parallelFinalizers = <R, E, A>(self: Effect.Effect<R, E, A>): Effec
         core.flatMap((innerScope) =>
           pipe(
             outerScope.addFinalizer((exit) => innerScope.close(exit)),
-            core.zipRight(pipe(innerScope, scopeExtend(self)))
+            core.zipRight(pipe(self, scopeExtend(innerScope)))
           )
         )
       )
@@ -2127,7 +2127,7 @@ export const scopedEffect = <R, E, A>(
   effect: Effect.Effect<R, E, A>
 ): Effect.Effect<Exclude<R, Scope.Scope>, E, A> => {
   const trace = getCallTrace()
-  return pipe(scopeMake(), core.flatMap(scopeUse(effect))).traced(trace)
+  return pipe(scopeMake(), core.flatMap((scope) => scopeUse(scope)(effect))).traced(trace)
 }
 
 /**
@@ -2138,9 +2138,8 @@ export const sequentialFinalizers = <R, E, A>(self: Effect.Effect<R, E, A>): Eff
   const trace = getCallTrace()
   return scopeWith((scope) =>
     pipe(
-      scope,
-      core.scopeFork(ExecutionStrategy.sequential),
-      core.flatMap(scopeExtend(self))
+      core.scopeFork(scope, ExecutionStrategy.sequential),
+      core.flatMap((scope) => scopeExtend(scope)(self))
     )
   ).traced(trace)
 }
@@ -2268,8 +2267,8 @@ export const using = <A, R2, E2, A2>(use: (a: A) => Effect.Effect<R2, E2, A2>) =
   return <R, E>(self: Effect.Effect<R | Scope.Scope, E, A>): Effect.Effect<R | R2, E | E2, A2> => {
     return core.acquireUseRelease(
       scopeMake(),
-      (scope) => pipe(scope, scopeExtend(self), core.flatMap(use)),
-      (scope, exit) => pipe(scope, core.scopeClose(exit))
+      (scope) => pipe(self, scopeExtend(scope), core.flatMap(use)),
+      (scope, exit) => core.scopeClose(scope, exit)
     ).traced(trace)
   }
 }
@@ -2377,15 +2376,14 @@ export const withEarlyRelease = <R, E, A>(
   const trace = getCallTrace()
   return scopeWith((parent) =>
     pipe(
-      parent,
-      core.scopeFork(ExecutionStrategy.sequential),
+      core.scopeFork(parent, ExecutionStrategy.sequential),
       core.flatMap((child) =>
         pipe(
-          child,
-          scopeExtend(self),
+          self,
+          scopeExtend(child),
           core.map((value) =>
             [
-              core.fiberIdWith((fiberId) => pipe(child, core.scopeClose(core.exitInterrupt(fiberId)))),
+              core.fiberIdWith((fiberId) => core.scopeClose(child, core.exitInterrupt(fiberId))),
               value
             ] as const
           )
@@ -2512,8 +2510,8 @@ export const scopeMake: (
             core.flatMap((scope) =>
               pipe(
                 rm,
-                core.releaseMapAdd((exit) => pipe(scope, core.scopeClose(exit))),
-                core.tap((fin) => pipe(scope, core.scopeAddFinalizerExit(fin))),
+                core.releaseMapAdd((exit) => core.scopeClose(scope, exit)),
+                core.tap((fin) => core.scopeAddFinalizerExit(scope, fin)),
                 core.as(scope)
               )
             )
@@ -2535,9 +2533,9 @@ export const scopeMake: (
  * @macro traced
  * @internal
  */
-export const scopeExtend = <R, E, A>(effect: Effect.Effect<R, E, A>) => {
-  const trace = getCallTrace()
-  return (self: Scope.Scope): Effect.Effect<Exclude<R, Scope.Scope>, E, A> => {
+export const scopeExtend = (self: Scope.Scope) =>
+  <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<Exclude<R, Scope.Scope>, E, A> => {
+    const trace = getCallTrace()
     return pipe(
       effect,
       core.provideSomeEnvironment<Exclude<R, Scope.Scope>, R>(
@@ -2549,22 +2547,20 @@ export const scopeExtend = <R, E, A>(effect: Effect.Effect<R, E, A>) => {
       )
     ).traced(trace)
   }
-}
 
 /**
  * @macro traced
  * @internal
  */
-export const scopeUse = <R, E, A>(effect: Effect.Effect<R, E, A>) => {
-  const trace = getCallTrace()
-  return (self: Scope.Scope.Closeable): Effect.Effect<Exclude<R, Scope.Scope>, E, A> => {
+export const scopeUse = (self: Scope.Scope.Closeable) =>
+  <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<Exclude<R, Scope.Scope>, E, A> => {
+    const trace = getCallTrace()
     return pipe(
-      self,
-      scopeExtend(effect),
+      effect,
+      scopeExtend(self),
       core.onExit((exit) => self.close(exit))
     ).traced(trace)
   }
-}
 
 // circular with Supervisor
 
