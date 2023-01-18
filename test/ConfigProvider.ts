@@ -8,11 +8,9 @@ import * as Chunk from "@fp-ts/data/Chunk"
 import { pipe } from "@fp-ts/data/Function"
 import * as HashMap from "@fp-ts/data/HashMap"
 import * as HashSet from "@fp-ts/data/HashSet"
+import { camelCase } from "camel-case"
+import { constantCase } from "constant-case"
 import { assert, describe } from "vitest"
-
-// TODO: Why?
-// @ts-expect-error
-import { camelCase, constantCase } from "change-case"
 
 interface HostPort {
   readonly host: string
