@@ -11,8 +11,6 @@ import * as MutableRef from "@fp-ts/data/MutableRef"
 import type * as Option from "@fp-ts/data/Option"
 import * as SortedSet from "@fp-ts/data/SortedSet"
 
-import * as Equal from "@fp-ts/data/Equal"
-
 /** @internal */
 const SupervisorSymbolKey = "@effect/io/Supervisor"
 
@@ -34,7 +32,6 @@ export class ProxySupervisor<T> implements Supervisor.Supervisor<T> {
     readonly underlying: Supervisor.Supervisor<any>,
     readonly value0: () => Effect.Effect<never, never, T>
   ) {
-    Equal.considerByRef(this)
   }
 
   value(): Effect.Effect<never, never, T> {
@@ -84,7 +81,6 @@ export class Zip<T0, T1> implements Supervisor.Supervisor<readonly [T0, T1]> {
     readonly left: Supervisor.Supervisor<T0>,
     readonly right: Supervisor.Supervisor<T1>
   ) {
-    Equal.considerByRef(this)
   }
 
   value(): Effect.Effect<never, never, readonly [T0, T1]> {
@@ -135,10 +131,6 @@ export class Track implements Supervisor.Supervisor<Chunk.Chunk<Fiber.RuntimeFib
 
   readonly fibers: Set<Fiber.RuntimeFiber<any, any>> = new Set()
 
-  constructor() {
-    Equal.considerByRef(this)
-  }
-
   value(): Effect.Effect<never, never, Chunk.Chunk<Fiber.RuntimeFiber<any, any>>> {
     return core.sync(() => Chunk.fromIterable(this.fibers))
   }
@@ -183,7 +175,6 @@ export class Const<T> implements Supervisor.Supervisor<T> {
   readonly [SupervisorTypeId] = supervisorVariance
 
   constructor(readonly effect: Effect.Effect<never, never, T>) {
-    Equal.considerByRef(this)
   }
 
   value(): Effect.Effect<never, never, T> {
@@ -229,7 +220,6 @@ class FibersIn implements Supervisor.Supervisor<SortedSet.SortedSet<Fiber.Runtim
   readonly [SupervisorTypeId] = supervisorVariance
 
   constructor(readonly ref: MutableRef.MutableRef<SortedSet.SortedSet<Fiber.RuntimeFiber<any, any>>>) {
-    Equal.considerByRef(this)
   }
 
   value(): Effect.Effect<never, never, SortedSet.SortedSet<Fiber.RuntimeFiber<any, any>>> {

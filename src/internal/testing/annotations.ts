@@ -64,7 +64,6 @@ export interface Annotations {
 class AnnotationsImpl implements Annotations {
   readonly [AnnotationsTypeId]: AnnotationsTypeId = AnnotationsTypeId
   constructor(readonly ref: Ref.Ref<TestAnnotationMap.TestAnnotationMap>) {
-    Equal.considerByRef(this)
   }
   get<A>(key: TestAnnotation.TestAnnotation<A>): Effect.Effect<never, never, A> {
     const trace = getCallTrace()

@@ -1,6 +1,7 @@
 import type * as FiberId from "@effect/io/Fiber/Id"
 import * as Equal from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
+import * as Hash from "@fp-ts/data/Hash"
 import * as HashSet from "@fp-ts/data/HashSet"
 import * as MutableRef from "@fp-ts/data/MutableRef"
 import * as Option from "@fp-ts/data/Option"
@@ -35,13 +36,13 @@ export type OP_COMPOSITE = typeof OP_COMPOSITE
 class None implements FiberId.None {
   readonly [FiberIdTypeId]: FiberId.FiberIdTypeId = FiberIdTypeId
   readonly _tag = OP_NONE;
-  [Equal.symbolHash](): number {
+  [Hash.symbol](): number {
     return pipe(
-      Equal.hash(FiberIdSymbolKey),
-      Equal.hashCombine(Equal.hash(this._tag))
+      Hash.hash(FiberIdSymbolKey),
+      Hash.combine(Hash.hash(this._tag))
     )
   }
-  [Equal.symbolEqual](that: unknown): boolean {
+  [Equal.symbol](that: unknown): boolean {
     return isFiberId(that) && that._tag === OP_NONE
   }
 }
@@ -54,15 +55,15 @@ class Runtime implements FiberId.Runtime {
     readonly id: number,
     readonly startTimeMillis: number
   ) {}
-  [Equal.symbolHash](): number {
+  [Hash.symbol](): number {
     return pipe(
-      Equal.hash(FiberIdSymbolKey),
-      Equal.hashCombine(Equal.hash(this._tag)),
-      Equal.hashCombine(Equal.hash(this.id)),
-      Equal.hashCombine(Equal.hash(this.startTimeMillis))
+      Hash.hash(FiberIdSymbolKey),
+      Hash.combine(Hash.hash(this._tag)),
+      Hash.combine(Hash.hash(this.id)),
+      Hash.combine(Hash.hash(this.startTimeMillis))
     )
   }
-  [Equal.symbolEqual](that: unknown): boolean {
+  [Equal.symbol](that: unknown): boolean {
     return isFiberId(that) &&
       that._tag === OP_RUNTIME &&
       this.id === that.id &&
@@ -78,15 +79,15 @@ class Composite implements FiberId.Composite {
     readonly left: FiberId.FiberId,
     readonly right: FiberId.FiberId
   ) {}
-  [Equal.symbolHash](): number {
+  [Hash.symbol](): number {
     return pipe(
-      Equal.hash(FiberIdSymbolKey),
-      Equal.hashCombine(Equal.hash(this._tag)),
-      Equal.hashCombine(Equal.hash(this.left)),
-      Equal.hashCombine(Equal.hash(this.right))
+      Hash.hash(FiberIdSymbolKey),
+      Hash.combine(Hash.hash(this._tag)),
+      Hash.combine(Hash.hash(this.left)),
+      Hash.combine(Hash.hash(this.right))
     )
   }
-  [Equal.symbolEqual](that: unknown): boolean {
+  [Equal.symbol](that: unknown): boolean {
     return isFiberId(that) &&
       that._tag === OP_COMPOSITE &&
       Equal.equals(this.left, that.left) &&

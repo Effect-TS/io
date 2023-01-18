@@ -130,7 +130,6 @@ export class TestClockImpl implements TestClock {
     readonly warningState: Synchronized.Synchronized<WarningData.WarningData>,
     readonly suspendedWarningState: Synchronized.Synchronized<SuspendedWarningData.SuspendedWarningData>
   ) {
-    Equal.considerByRef(this)
   }
   /**
    * Returns the current clock time in milliseconds.

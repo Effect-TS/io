@@ -25,7 +25,6 @@ import * as Chunk from "@fp-ts/data/Chunk"
 import * as Context from "@fp-ts/data/Context"
 import * as Duration from "@fp-ts/data/Duration"
 import * as Either from "@fp-ts/data/Either"
-import * as Equal from "@fp-ts/data/Equal"
 import { constFalse, constTrue, constVoid, identity, pipe } from "@fp-ts/data/Function"
 import type { LazyArg } from "@fp-ts/data/Function"
 import * as HashMap from "@fp-ts/data/HashMap"
@@ -1101,7 +1100,6 @@ export const fromEitherCause = <E, A>(either: Either.Either<Cause.Cause<E>, A>):
 /** @internal */
 class EffectGen {
   constructor(readonly value: Effect.Effect<any, any, any>) {
-    Equal.considerByRef(this)
   }
   [Symbol.iterator]() {
     return new SingleShotGen.SingleShotGen(this)

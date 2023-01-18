@@ -9,7 +9,6 @@ import * as queue from "@effect/io/internal/queue"
 import type * as Queue from "@effect/io/Queue"
 import type * as Scope from "@effect/io/Scope"
 import * as Chunk from "@fp-ts/data/Chunk"
-import * as Equal from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
 import * as MutableQueue from "@fp-ts/data/MutableQueue"
 import * as MutableRef from "@fp-ts/data/MutableRef"
@@ -237,7 +236,6 @@ class BoundedHubArb<A> implements AtomicHub<A> {
   readonly capacity: number
 
   constructor(requestedCapacity: number) {
-    Equal.considerByRef(this)
     this.array = Array.from({ length: requestedCapacity })
     this.subscribers = Array.from({ length: requestedCapacity })
     this.capacity = requestedCapacity
@@ -310,7 +308,6 @@ class BoundedHubArbSubscription<A> implements Subscription<A> {
     private subscriberIndex: number,
     private unsubscribed: boolean
   ) {
-    Equal.considerByRef(this)
   }
 
   isEmpty(): boolean {
@@ -408,7 +405,6 @@ class BoundedHubPow2<A> implements AtomicHub<A> {
     this.mask = requestedCapacity - 1
     this.subscribers = Array.from({ length: requestedCapacity })
     this.capacity = requestedCapacity
-    Equal.considerByRef(this)
   }
 
   isEmpty(): boolean {
@@ -479,7 +475,6 @@ class BoundedHubPow2Subscription<A> implements Subscription<A> {
     private subscriberIndex: number,
     private unsubscribed: boolean
   ) {
-    Equal.considerByRef(this)
   }
 
   isEmpty(): boolean {
@@ -567,10 +562,6 @@ class BoundedHubSingle<A> implements AtomicHub<A> {
   subscribers = 0
   value: A = null as unknown as A
 
-  constructor() {
-    Equal.considerByRef(this)
-  }
-
   readonly capacity = 1
 
   isEmpty(): boolean {
@@ -629,7 +620,6 @@ class BoundedHubSingleSubscription<A> implements Subscription<A> {
     private subscriberIndex: number,
     private unsubscribed: boolean
   ) {
-    Equal.considerByRef(this)
   }
 
   isEmpty(): boolean {
@@ -691,7 +681,6 @@ class Node<A> {
     public subscribers: number,
     public next: Node<A> | null
   ) {
-    Equal.considerByRef(this)
   }
 }
 
@@ -705,7 +694,6 @@ class UnboundedHub<A> implements AtomicHub<A> {
   readonly capacity = Number.MAX_SAFE_INTEGER
 
   constructor() {
-    Equal.considerByRef(this)
     this.publisherTail = this.publisherHead
   }
 
@@ -765,7 +753,6 @@ class UnboundedHubSubscription<A> implements Subscription<A> {
     private subscriberIndex: number,
     private unsubscribed: boolean
   ) {
-    Equal.considerByRef(this)
   }
 
   isEmpty(): boolean {
@@ -873,7 +860,6 @@ class SubscriptionImpl<A> implements Queue.Dequeue<A> {
     readonly shutdownFlag: MutableRef.MutableRef<boolean>,
     readonly strategy: HubStrategy<A>
   ) {
-    Equal.considerByRef(this)
   }
 
   capacity(): number {
@@ -1040,7 +1026,6 @@ class HubImpl<A> implements Hub.Hub<A> {
     readonly shutdownFlag: MutableRef.MutableRef<boolean>,
     readonly strategy: HubStrategy<A>
   ) {
-    Equal.considerByRef(this)
   }
 
   capacity(): number {
@@ -1320,10 +1305,6 @@ class BackPressureStrategy<A> implements HubStrategy<A> {
     ]
   > = MutableQueue.unbounded()
 
-  constructor() {
-    Equal.considerByRef(this)
-  }
-
   shutdown(): Effect.Effect<never, never, void> {
     const trace = getCallTrace()
     return pipe(
@@ -1453,10 +1434,6 @@ export class DroppingStrategy<A> implements HubStrategy<A> {
     return core.unit().traced(trace)
   }
 
-  constructor() {
-    Equal.considerByRef(this)
-  }
-
   handleSurplus(
     _hub: AtomicHub<A>,
     _subscribers: Subscribers<A>,
@@ -1498,10 +1475,6 @@ export class DroppingStrategy<A> implements HubStrategy<A> {
  * @internal
  */
 export class SlidingStrategy<A> implements HubStrategy<A> {
-  constructor() {
-    Equal.considerByRef(this)
-  }
-
   shutdown(): Effect.Effect<never, never, void> {
     const trace = getCallTrace()
     return core.unit().traced(trace)

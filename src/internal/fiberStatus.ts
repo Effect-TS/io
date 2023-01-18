@@ -3,6 +3,7 @@ import type { RuntimeFlags } from "@effect/io/Fiber/Runtime/Flags"
 import type * as FiberStatus from "@effect/io/Fiber/Status"
 import * as Equal from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
+import * as Hash from "@fp-ts/data/Hash"
 
 const FiberStatusSymbolKey = "@effect/io/Fiber/Status"
 
@@ -33,13 +34,13 @@ export type OP_SUSPENDED = typeof OP_SUSPENDED
 class Done implements FiberStatus.Done {
   readonly [FiberStatusTypeId]: FiberStatus.FiberStatusTypeId = FiberStatusTypeId
   readonly _tag = OP_DONE;
-  [Equal.symbolHash](): number {
+  [Hash.symbol](): number {
     return pipe(
-      Equal.hash(FiberStatusSymbolKey),
-      Equal.hashCombine(Equal.hash(this._tag))
+      Hash.hash(FiberStatusSymbolKey),
+      Hash.combine(Hash.hash(this._tag))
     )
   }
-  [Equal.symbolEqual](that: unknown): boolean {
+  [Equal.symbol](that: unknown): boolean {
     return isFiberStatus(that) && that._tag === OP_DONE
   }
 }
@@ -49,14 +50,14 @@ class Running implements FiberStatus.Running {
   readonly [FiberStatusTypeId]: FiberStatus.FiberStatusTypeId = FiberStatusTypeId
   readonly _tag = OP_RUNNING
   constructor(readonly runtimeFlags: RuntimeFlags) {}
-  [Equal.symbolHash](): number {
+  [Hash.symbol](): number {
     return pipe(
-      Equal.hash(FiberStatusSymbolKey),
-      Equal.hashCombine(Equal.hash(this._tag)),
-      Equal.hashCombine(Equal.hash(this.runtimeFlags))
+      Hash.hash(FiberStatusSymbolKey),
+      Hash.combine(Hash.hash(this._tag)),
+      Hash.combine(Hash.hash(this.runtimeFlags))
     )
   }
-  [Equal.symbolEqual](that: unknown): boolean {
+  [Equal.symbol](that: unknown): boolean {
     return (
       isFiberStatus(that) &&
       that._tag === OP_RUNNING &&
@@ -73,15 +74,15 @@ class Suspended implements FiberStatus.Suspended {
     readonly runtimeFlags: RuntimeFlags,
     readonly blockingOn: FiberId
   ) {}
-  [Equal.symbolHash](): number {
+  [Hash.symbol](): number {
     return pipe(
-      Equal.hash(FiberStatusSymbolKey),
-      Equal.hashCombine(Equal.hash(this._tag)),
-      Equal.hashCombine(Equal.hash(this.runtimeFlags)),
-      Equal.hashCombine(Equal.hash(this.blockingOn))
+      Hash.hash(FiberStatusSymbolKey),
+      Hash.combine(Hash.hash(this._tag)),
+      Hash.combine(Hash.hash(this.runtimeFlags)),
+      Hash.combine(Hash.hash(this.blockingOn))
     )
   }
-  [Equal.symbolEqual](that: unknown): boolean {
+  [Equal.symbol](that: unknown): boolean {
     return (
       isFiberStatus(that) &&
       that._tag === OP_SUSPENDED &&

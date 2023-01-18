@@ -2,6 +2,7 @@ import type * as MetricState from "@effect/io/Metric/State"
 import type * as Chunk from "@fp-ts/data/Chunk"
 import * as Equal from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
+import * as Hash from "@fp-ts/data/Hash"
 import type * as HashMap from "@fp-ts/data/HashMap"
 import type * as Option from "@fp-ts/data/Option"
 
@@ -63,13 +64,13 @@ class CounterState implements MetricState.MetricState.Counter {
   readonly [MetricStateTypeId] = metricStateVariance
   readonly [CounterStateTypeId]: MetricState.CounterStateTypeId = CounterStateTypeId
   constructor(readonly count: number) {}
-  [Equal.symbolHash](): number {
+  [Hash.symbol](): number {
     return pipe(
-      Equal.hash(CounterStateSymbolKey),
-      Equal.hashCombine(Equal.hash(this.count))
+      Hash.hash(CounterStateSymbolKey),
+      Hash.combine(Hash.hash(this.count))
     )
   }
-  [Equal.symbolEqual](that: unknown): boolean {
+  [Equal.symbol](that: unknown): boolean {
     return isCounterState(that) && this.count === that.count
   }
 }
@@ -79,13 +80,13 @@ class FrequencyState implements MetricState.MetricState.Frequency {
   readonly [MetricStateTypeId] = metricStateVariance
   readonly [FrequencyStateTypeId]: MetricState.FrequencyStateTypeId = FrequencyStateTypeId
   constructor(readonly occurrences: HashMap.HashMap<string, number>) {}
-  [Equal.symbolHash](): number {
+  [Hash.symbol](): number {
     return pipe(
-      Equal.hash(FrequencyStateSymbolKey),
-      Equal.hashCombine(Equal.hash(this.occurrences))
+      Hash.hash(FrequencyStateSymbolKey),
+      Hash.combine(Hash.hash(this.occurrences))
     )
   }
-  [Equal.symbolEqual](that: unknown): boolean {
+  [Equal.symbol](that: unknown): boolean {
     return isFrequencyState(that) && Equal.equals(this.occurrences, that.occurrences)
   }
 }
@@ -95,13 +96,13 @@ class GaugeState implements MetricState.MetricState.Gauge {
   readonly [MetricStateTypeId] = metricStateVariance
   readonly [GaugeStateTypeId]: MetricState.GaugeStateTypeId = GaugeStateTypeId
   constructor(readonly value: number) {}
-  [Equal.symbolHash](): number {
+  [Hash.symbol](): number {
     return pipe(
-      Equal.hash(GaugeStateSymbolKey),
-      Equal.hashCombine(Equal.hash(this.value))
+      Hash.hash(GaugeStateSymbolKey),
+      Hash.combine(Hash.hash(this.value))
     )
   }
-  [Equal.symbolEqual](u: unknown): boolean {
+  [Equal.symbol](u: unknown): boolean {
     return isGaugeState(u) && this.value === u.value
   }
 }
@@ -117,17 +118,17 @@ export class HistogramState implements MetricState.MetricState.Histogram {
     readonly max: number,
     readonly sum: number
   ) {}
-  [Equal.symbolHash](): number {
+  [Hash.symbol](): number {
     return pipe(
-      Equal.hash(HistogramStateSymbolKey),
-      Equal.hashCombine(Equal.hash(this.buckets)),
-      Equal.hashCombine(Equal.hash(this.count)),
-      Equal.hashCombine(Equal.hash(this.min)),
-      Equal.hashCombine(Equal.hash(this.max)),
-      Equal.hashCombine(Equal.hash(this.sum))
+      Hash.hash(HistogramStateSymbolKey),
+      Hash.combine(Hash.hash(this.buckets)),
+      Hash.combine(Hash.hash(this.count)),
+      Hash.combine(Hash.hash(this.min)),
+      Hash.combine(Hash.hash(this.max)),
+      Hash.combine(Hash.hash(this.sum))
     )
   }
-  [Equal.symbolEqual](that: unknown): boolean {
+  [Equal.symbol](that: unknown): boolean {
     return isHistogramState(that) &&
       Equal.equals(this.buckets, that.buckets) &&
       this.count === that.count &&
@@ -149,18 +150,18 @@ export class SummaryState implements MetricState.MetricState.Summary {
     readonly max: number,
     readonly sum: number
   ) {}
-  [Equal.symbolHash](): number {
+  [Hash.symbol](): number {
     return pipe(
-      Equal.hash(SummaryStateSymbolKey),
-      Equal.hashCombine(Equal.hash(this.error)),
-      Equal.hashCombine(Equal.hash(this.quantiles)),
-      Equal.hashCombine(Equal.hash(this.count)),
-      Equal.hashCombine(Equal.hash(this.min)),
-      Equal.hashCombine(Equal.hash(this.max)),
-      Equal.hashCombine(Equal.hash(this.sum))
+      Hash.hash(SummaryStateSymbolKey),
+      Hash.combine(Hash.hash(this.error)),
+      Hash.combine(Hash.hash(this.quantiles)),
+      Hash.combine(Hash.hash(this.count)),
+      Hash.combine(Hash.hash(this.min)),
+      Hash.combine(Hash.hash(this.max)),
+      Hash.combine(Hash.hash(this.sum))
     )
   }
-  [Equal.symbolEqual](that: unknown): boolean {
+  [Equal.symbol](that: unknown): boolean {
     return isSummaryState(that) &&
       this.error === that.error &&
       Equal.equals(this.quantiles, that.quantiles) &&

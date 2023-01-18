@@ -2,6 +2,7 @@ import * as Cause from "@effect/io/Cause"
 import { causes, equalCauses, errorCauseFunctions, errors } from "@effect/io/test/utils/cause"
 import * as Equal from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
+import * as Hash from "@fp-ts/data/Hash"
 import * as Option from "@fp-ts/data/Option"
 import * as fc from "fast-check"
 import { assert, describe } from "vitest"
@@ -25,7 +26,7 @@ describe.concurrent("Cause", () => {
 
   it("`Cause.equals` and `Cause.hashCode` satisfy the contract", () => {
     fc.assert(fc.property(equalCauses, ([causeA, causeB]) => {
-      assert.strictEqual(Equal.hash(causeA), Equal.hash(causeB))
+      assert.strictEqual(Hash.hash(causeA), Hash.hash(causeB))
     }))
   })
 

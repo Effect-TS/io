@@ -5,7 +5,6 @@ import * as core from "@effect/io/internal/core"
 import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
 import type * as Queue from "@effect/io/Queue"
 import * as Chunk from "@fp-ts/data/Chunk"
-import * as Equal from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
 import * as MutableQueue from "@fp-ts/data/MutableQueue"
 import * as MutableRef from "@fp-ts/data/MutableRef"
@@ -64,7 +63,6 @@ class QueueImpl<A> implements Queue.Queue<A> {
     /** @internal */
     readonly strategy: Queue.Strategy<A>
   ) {
-    Equal.considerByRef(this)
   }
 
   capacity(): number {
@@ -497,10 +495,6 @@ class BackPressureStrategy<A> implements Queue.Strategy<A> {
 
   readonly putters = MutableQueue.unbounded<readonly [A, Deferred.Deferred<never, boolean>, boolean]>()
 
-  constructor() {
-    Equal.considerByRef(this)
-  }
-
   surplusSize(): number {
     return MutableQueue.length(this.putters)
   }
@@ -591,10 +585,6 @@ class BackPressureStrategy<A> implements Queue.Strategy<A> {
 class DroppingStrategy<A> implements Queue.Strategy<A> {
   readonly [QueueStrategyTypeId] = queueStrategyVariance
 
-  constructor() {
-    Equal.considerByRef(this)
-  }
-
   surplusSize(): number {
     return 0
   }
@@ -625,10 +615,6 @@ class DroppingStrategy<A> implements Queue.Strategy<A> {
 /** @internal */
 class SlidingStrategy<A> implements Queue.Strategy<A> {
   readonly [QueueStrategyTypeId] = queueStrategyVariance
-
-  constructor() {
-    Equal.considerByRef(this)
-  }
 
   surplusSize(): number {
     return 0

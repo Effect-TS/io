@@ -16,7 +16,8 @@ import * as Context from "@fp-ts/data/Context"
 import * as Duration from "@fp-ts/data/Duration"
 import * as Either from "@fp-ts/data/Either"
 import * as Equal from "@fp-ts/data/Equal"
-import { constVoid, LazyArg, pipe } from "@fp-ts/data/Function"
+import type { LazyArg } from "@fp-ts/data/Function"
+import { constVoid, pipe } from "@fp-ts/data/Function"
 import * as Option from "@fp-ts/data/Option"
 import type { Predicate } from "@fp-ts/data/Predicate"
 
@@ -60,7 +61,6 @@ class ScheduleImpl<S, Env, In, Out> implements Schedule.Schedule<Env, In, Out> {
       state: S
     ) => Effect.Effect<Env, never, readonly [S, Out, ScheduleDecision.ScheduleDecision]>
   ) {
-    Equal.considerByRef(this)
   }
 }
 
@@ -72,7 +72,6 @@ class ScheduleDriverImpl<Env, In, Out> implements Schedule.ScheduleDriver<Env, I
     readonly schedule: Schedule.Schedule<Env, In, Out>,
     readonly ref: Ref.Ref<readonly [Option.Option<Out>, any]>
   ) {
-    Equal.considerByRef(this)
   }
 
   state(): Effect.Effect<never, never, unknown> {
