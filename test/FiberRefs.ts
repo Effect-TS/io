@@ -18,7 +18,7 @@ describe.concurrent("FiberRefs", () => {
       const queue = yield* $(Queue.unbounded<FiberRefs.FiberRefs>())
       const producer = yield* $(
         pipe(
-          FiberRef.set(fiberRef)(true),
+          FiberRef.set(fiberRef, true),
           Effect.zipRight(pipe(Effect.getFiberRefs(), Effect.flatMap((a) => pipe(queue, Queue.offer(a))))),
           Effect.fork
         )

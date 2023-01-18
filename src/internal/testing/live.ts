@@ -36,9 +36,7 @@ class LiveImpl implements Live {
   constructor(readonly services: Context.Context<DefaultServices.DefaultServices>) {}
   provide<R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> {
     const trace = getCallTrace()
-    return core.fiberRefLocallyWith(defaultServices.currentServices)(
-      Context.merge(this.services)
-    )(effect).traced(trace)
+    return core.fiberRefLocallyWith(defaultServices.currentServices, Context.merge(this.services))(effect).traced(trace)
   }
 }
 

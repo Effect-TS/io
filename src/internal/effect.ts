@@ -1590,7 +1590,8 @@ export const logSpan = (label: string) => {
           core.flatMap((now) =>
             core.suspendSucceed(() => {
               const logSpan = LogSpan.make(label, now)
-              return core.fiberRefLocally(core.currentLogSpan)(
+              return core.fiberRefLocally(
+                core.currentLogSpan,
                 pipe(stack, Chunk.prepend(logSpan)) as Chunk.Chunk<LogSpan.LogSpan>
               )(effect)
             })
@@ -1614,9 +1615,7 @@ export const logAnnotate = (key: string, value: string) => {
         core.suspendSucceed(() =>
           pipe(
             effect,
-            core.fiberRefLocally(core.currentLogAnnotations)(
-              pipe(annotations, HashMap.set(key, value))
-            )
+            core.fiberRefLocally(core.currentLogAnnotations, pipe(annotations, HashMap.set(key, value)))
           )
         )
       )
@@ -2576,7 +2575,7 @@ export const taggedWithLabelSet = (labels: HashSet.HashSet<MetricLabel.MetricLab
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
     pipe(
       self,
-      core.fiberRefLocallyWith(core.currentTags)((set) => pipe(set, HashSet.union(labels)))
+      core.fiberRefLocallyWith(core.currentTags, (set) => pipe(set, HashSet.union(labels)))
     ).traced(trace)
 }
 
@@ -3297,12 +3296,12 @@ export const withSpan = (name: string, attributes?: Record<string, string>) => {
         const parentSpan = fiber.getFiberRef(tracer.ref)
         const span = tracer.create(name, attributes ?? {}, parentSpan, trace)
         return core.acquireUseRelease(
-          pipe(core.fiberRefGet(tracer.ref), core.zipLeft(core.fiberRefSet(tracer.ref)(span))),
+          pipe(core.fiberRefGet(tracer.ref), core.zipLeft(core.fiberRefSet(tracer.ref, span))),
           () => self,
           (oldValue, exit) => {
             tracer.status(span, exit)
             tracer.end(span)
-            return core.fiberRefSet(tracer.ref)(oldValue)
+            return core.fiberRefSet(tracer.ref, oldValue)
           }
         )
       }

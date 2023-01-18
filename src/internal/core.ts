@@ -1030,7 +1030,7 @@ export const provideEnvironment = <R>(environment: Context.Context<R>) => {
   return <E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<never, E, A> => {
     return pipe(
       self as Effect.Effect<never, E, A>,
-      fiberRefLocally(currentEnvironment)(environment as Context.Context<never>)
+      fiberRefLocally(currentEnvironment, environment as Context.Context<never>)
     ).traced(trace)
   }
 }
@@ -1168,7 +1168,7 @@ export const transplant = <R, E, A>(
   return withFiberRuntime<R, E, A>((state) => {
     const scopeOverride = state.getFiberRef(forkScopeOverride)
     const scope = pipe(scopeOverride, Option.getOrElse(() => state.scope()))
-    return f(fiberRefLocally(forkScopeOverride)(Option.some(scope)))
+    return f(fiberRefLocally(forkScopeOverride, Option.some(scope)))
   }).traced(trace)
 }
 
@@ -1331,7 +1331,7 @@ export const withParallelism = (parallelism: number) => {
   return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
     const trace = getCallTrace()
     return suspendSucceed(
-      () => fiberRefLocally(currentParallelism)(Option.some(parallelism))(self)
+      () => fiberRefLocally(currentParallelism, Option.some(parallelism))(self)
     ).traced(trace)
   }
 }
@@ -1343,7 +1343,7 @@ export const withParallelism = (parallelism: number) => {
 export const withParallelismUnbounded = <R, E, A>(self: Effect.Effect<R, E, A>) => {
   const trace = getCallTrace()
   return suspendSucceed(
-    () => fiberRefLocally(currentParallelism)(Option.none as Option.Option<number>)(self)
+    () => fiberRefLocally(currentParallelism, Option.none as Option.Option<number>)(self)
   ).traced(trace)
 }
 
@@ -1542,62 +1542,58 @@ const fiberRefVariance = {
  */
 export const fiberRefGet = <A>(self: FiberRef.FiberRef<A>): Effect.Effect<never, never, A> => {
   const trace = getCallTrace()
-  return fiberRefModify(self)((a) => [a, a] as const).traced(trace)
+  return fiberRefModify(self, (a) => [a, a] as const).traced(trace)
 }
 
 /**
  * @macro traced
  * @internal
  */
-export const fiberRefGetAndSet = <A>(self: FiberRef.FiberRef<A>) => {
+export const fiberRefGetAndSet = <A>(self: FiberRef.FiberRef<A>, value: A): Effect.Effect<never, never, A> => {
   const trace = getCallTrace()
-  return (value: A): Effect.Effect<never, never, A> => {
-    return fiberRefModify(self)((v) => [v, value] as const).traced(trace)
-  }
+  return fiberRefModify(self, (v) => [v, value] as const).traced(trace)
 }
 
 /**
  * @macro traced
  * @internal
  */
-export const fiberRefGetAndUpdate = <A>(self: FiberRef.FiberRef<A>) => {
+export const fiberRefGetAndUpdate = <A>(self: FiberRef.FiberRef<A>, f: (a: A) => A): Effect.Effect<never, never, A> => {
   const trace = getCallTrace()
-  return (f: (a: A) => A): Effect.Effect<never, never, A> => {
-    return fiberRefModify(self)((v) => [v, f(v)] as const).traced(trace)
-  }
+  return fiberRefModify(self, (v) => [v, f(v)] as const).traced(trace)
 }
 
 /**
  * @macro traced
  * @internal
  */
-export const fiberRefGetAndUpdateSome = <A>(self: FiberRef.FiberRef<A>) => {
+export const fiberRefGetAndUpdateSome = <A>(
+  self: FiberRef.FiberRef<A>,
+  pf: (a: A) => Option.Option<A>
+): Effect.Effect<never, never, A> => {
   const trace = getCallTrace()
-  return (pf: (a: A) => Option.Option<A>): Effect.Effect<never, never, A> => {
-    return fiberRefModify(self)((v) => [v, pipe(pf(v), Option.getOrElse(() => v))] as const).traced(trace)
-  }
+  return fiberRefModify(self, (v) => [v, pipe(pf(v), Option.getOrElse(() => v))] as const).traced(trace)
 }
 
 /**
  * @macro traced
  * @internal
  */
-export const fiberRefGetWith = <A>(self: FiberRef.FiberRef<A>) => {
+export const fiberRefGetWith = <A, R, E, B>(
+  self: FiberRef.FiberRef<A>,
+  f: (a: A) => Effect.Effect<R, E, B>
+): Effect.Effect<R, E, B> => {
   const trace = getCallTrace()
-  return <R, E, B>(f: (a: A) => Effect.Effect<R, E, B>): Effect.Effect<R, E, B> => {
-    return pipe(fiberRefGet(self), flatMap(f)).traced(trace)
-  }
+  return pipe(fiberRefGet(self), flatMap(f)).traced(trace)
 }
 
 /**
  * @macro traced
  * @internal
  */
-export const fiberRefSet = <A>(self: FiberRef.FiberRef<A>) => {
+export const fiberRefSet = <A>(self: FiberRef.FiberRef<A>, value: A): Effect.Effect<never, never, void> => {
   const trace = getCallTrace()
-  return (value: A): Effect.Effect<never, never, void> => {
-    return fiberRefModify(self)(() => [undefined, value] as const).traced(trace)
-  }
+  return fiberRefModify(self, () => [undefined, value] as const).traced(trace)
 }
 
 /**
@@ -1618,107 +1614,108 @@ export const fiberRefDelete = <A>(self: FiberRef.FiberRef<A>): Effect.Effect<nev
  */
 export const fiberRefReset = <A>(self: FiberRef.FiberRef<A>): Effect.Effect<never, never, void> => {
   const trace = getCallTrace()
-  return fiberRefSet(self)(self.initial).traced(trace)
+  return fiberRefSet(self, self.initial).traced(trace)
 }
 
 /**
  * @macro traced
  * @internal
  */
-export const fiberRefModify = <A>(self: FiberRef.FiberRef<A>) => {
+export const fiberRefModify = <A, B>(
+  self: FiberRef.FiberRef<A>,
+  f: (a: A) => readonly [B, A]
+): Effect.Effect<never, never, B> => {
   const trace = getCallTrace()
-  return <B>(f: (a: A) => readonly [B, A]): Effect.Effect<never, never, B> =>
-    withFiberRuntime<never, never, B>((state) => {
-      const [b, a] = f(state.getFiberRef(self) as A)
-      state.setFiberRef(self, a)
-      return succeed(b)
-    }).traced(trace)
+  return withFiberRuntime<never, never, B>((state) => {
+    const [b, a] = f(state.getFiberRef(self) as A)
+    state.setFiberRef(self, a)
+    return succeed(b)
+  }).traced(trace)
 }
 
 /**
  * @macro traced
  * @internal
  */
-export const fiberRefModifySome = <A>(self: FiberRef.FiberRef<A>) => {
+export const fiberRefModifySome = <A, B>(
+  self: FiberRef.FiberRef<A>,
+  def: B,
+  f: (a: A) => Option.Option<readonly [B, A]>
+): Effect.Effect<never, never, B> => {
   const trace = getCallTrace()
-  return <B>(def: B, f: (a: A) => Option.Option<readonly [B, A]>): Effect.Effect<never, never, B> =>
-    fiberRefModify(self)((v) => pipe(f(v), Option.getOrElse(() => [def, v] as const))).traced(trace)
+  return fiberRefModify(self, (v) => pipe(f(v), Option.getOrElse(() => [def, v] as const))).traced(trace)
 }
 
 /**
  * @macro traced
  * @internal
  */
-export const fiberRefUpdate = <A>(self: FiberRef.FiberRef<A>) => {
+export const fiberRefUpdate = <A>(self: FiberRef.FiberRef<A>, f: (a: A) => A): Effect.Effect<never, never, void> => {
   const trace = getCallTrace()
-  return (f: (a: A) => A): Effect.Effect<never, never, void> =>
-    fiberRefModify(self)((v) => [void 0, f(v)] as const).traced(trace)
+  return fiberRefModify(self, (v) => [void 0, f(v)] as const).traced(trace)
 }
 
 /**
  * @macro traced
  * @internal
  */
-export const fiberRefUpdateSome = <A>(self: FiberRef.FiberRef<A>) => {
+export const fiberRefUpdateSome = <A>(
+  self: FiberRef.FiberRef<A>,
+  pf: (a: A) => Option.Option<A>
+): Effect.Effect<never, never, void> => {
   const trace = getCallTrace()
-  return (pf: (a: A) => Option.Option<A>): Effect.Effect<never, never, void> =>
-    fiberRefModify(self)((v) => [void 0, pipe(pf(v), Option.getOrElse(() => v))] as const).traced(trace)
+  return fiberRefModify(self, (v) => [void 0, pipe(pf(v), Option.getOrElse(() => v))] as const).traced(trace)
 }
 
 /**
  * @macro traced
  * @internal
  */
-export const fiberRefUpdateAndGet = <A>(self: FiberRef.FiberRef<A>) => {
+export const fiberRefUpdateAndGet = <A>(self: FiberRef.FiberRef<A>, f: (a: A) => A): Effect.Effect<never, never, A> => {
   const trace = getCallTrace()
-  return (f: (a: A) => A): Effect.Effect<never, never, A> =>
-    fiberRefModify(self)((v) => {
-      const result = f(v)
-      return [result, result] as const
-    }).traced(trace)
+  return fiberRefModify(self, (v) => {
+    const result = f(v)
+    return [result, result] as const
+  }).traced(trace)
 }
 
 /**
  * @macro traced
  * @internal
  */
-export const fiberRefUpdateSomeAndGet = <A>(self: FiberRef.FiberRef<A>) => {
+export const fiberRefUpdateSomeAndGet = <A>(
+  self: FiberRef.FiberRef<A>,
+  pf: (a: A) => Option.Option<A>
+): Effect.Effect<never, never, A> => {
   const trace = getCallTrace()
-  return (pf: (a: A) => Option.Option<A>): Effect.Effect<never, never, A> =>
-    fiberRefModify(self)((v) => {
-      const result = pipe(pf(v), Option.getOrElse(() => v))
-      return [result, result] as const
-    }).traced(trace)
+  return fiberRefModify(self, (v) => {
+    const result = pipe(pf(v), Option.getOrElse(() => v))
+    return [result, result] as const
+  }).traced(trace)
 }
 
 /**
  * @macro traced
  * @internal
  */
-export const fiberRefLocally = <A>(self: FiberRef.FiberRef<A>) => {
+export const fiberRefLocally = <A>(self: FiberRef.FiberRef<A>, value: A) => {
   const trace = getCallTrace()
-  return (value: A) => {
-    return <R, E, B>(use: Effect.Effect<R, E, B>): Effect.Effect<R, E, B> => {
-      return acquireUseRelease(
-        pipe(fiberRefGet(self), zipLeft(fiberRefSet(self)(value))),
-        () => use,
-        (oldValue) => fiberRefSet(self)(oldValue)
-      ).traced(trace)
-    }
-  }
+  return <R, E, B>(use: Effect.Effect<R, E, B>): Effect.Effect<R, E, B> =>
+    acquireUseRelease(
+      pipe(fiberRefGet(self), zipLeft(fiberRefSet(self, value))),
+      () => use,
+      (oldValue) => fiberRefSet(self, oldValue)
+    ).traced(trace)
 }
 
 /**
  * @macro traced
  * @internal
  */
-export const fiberRefLocallyWith = <A>(self: FiberRef.FiberRef<A>) => {
+export const fiberRefLocallyWith = <A>(self: FiberRef.FiberRef<A>, f: (a: A) => A) => {
   const trace = getCallTrace()
-  return (f: (a: A) => A) => {
-    return <R, E, B>(use: Effect.Effect<R, E, B>): Effect.Effect<R, E, B> => {
-      return fiberRefGetWith(self)((a) => pipe(use, fiberRefLocally(self)(f(a)))).traced(trace)
-    }
-  }
+  return <R, E, B>(use: Effect.Effect<R, E, B>): Effect.Effect<R, E, B> =>
+    fiberRefGetWith(self, (a) => pipe(use, fiberRefLocally(self, f(a)))).traced(trace)
 }
 
 /** @internal */

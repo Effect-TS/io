@@ -153,14 +153,14 @@ export const get: <A>(self: FiberRef<A>) => Effect.Effect<never, never, A> = cor
  * @since 1.0.0
  * @category mutations
  */
-export const getAndSet: <A>(self: FiberRef<A>) => (value: A) => Effect.Effect<never, never, A> = core.fiberRefGetAndSet
+export const getAndSet: <A>(self: FiberRef<A>, value: A) => Effect.Effect<never, never, A> = core.fiberRefGetAndSet
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const getAndUpdate: <A>(self: FiberRef<A>) => (f: (a: A) => A) => Effect.Effect<never, never, A> =
+export const getAndUpdate: <A>(self: FiberRef<A>, f: (a: A) => A) => Effect.Effect<never, never, A> =
   core.fiberRefGetAndUpdate
 
 /**
@@ -169,24 +169,24 @@ export const getAndUpdate: <A>(self: FiberRef<A>) => (f: (a: A) => A) => Effect.
  * @category mutations
  */
 export const getAndUpdateSome: <A>(
-  self: FiberRef<A>
-) => (pf: (a: A) => Option.Option<A>) => Effect.Effect<never, never, A> = core.fiberRefGetAndUpdateSome
+  self: FiberRef<A>,
+  pf: (a: A) => Option.Option<A>
+) => Effect.Effect<never, never, A> = core.fiberRefGetAndUpdateSome
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const getWith: <A>(
-  self: FiberRef<A>
-) => <R, E, B>(f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, E, B> = core.fiberRefGetWith
+export const getWith: <A, R, E, B>(self: FiberRef<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, E, B> =
+  core.fiberRefGetWith
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const set: <A>(self: FiberRef<A>) => (value: A) => Effect.Effect<never, never, void> = core.fiberRefSet
+export const set: <A>(self: FiberRef<A>, value: A) => Effect.Effect<never, never, void> = core.fiberRefSet
 
 const _delete: <A>(self: FiberRef<A>) => Effect.Effect<never, never, void> = core.fiberRefDelete
 
@@ -211,7 +211,7 @@ export const reset: <A>(self: FiberRef<A>) => Effect.Effect<never, never, void> 
  * @since 1.0.0
  * @category mutations
  */
-export const modify: <A>(self: FiberRef<A>) => <B>(f: (a: A) => readonly [B, A]) => Effect.Effect<never, never, B> =
+export const modify: <A, B>(self: FiberRef<A>, f: (a: A) => readonly [B, A]) => Effect.Effect<never, never, B> =
   core.fiberRefModify
 
 /**
@@ -219,34 +219,33 @@ export const modify: <A>(self: FiberRef<A>) => <B>(f: (a: A) => readonly [B, A])
  * @since 1.0.0
  * @category mutations
  */
-export const modifySome: <A>(
-  self: FiberRef<A>
-) => <B>(def: B, f: (a: A) => Option.Option<readonly [B, A]>) => Effect.Effect<never, never, B> =
-  core.fiberRefModifySome
+export const modifySome: <A, B>(
+  self: FiberRef<A>,
+  def: B,
+  f: (a: A) => Option.Option<readonly [B, A]>
+) => Effect.Effect<never, never, B> = core.fiberRefModifySome
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const update: <A>(self: FiberRef<A>) => (f: (a: A) => A) => Effect.Effect<never, never, void> =
-  core.fiberRefUpdate
+export const update: <A>(self: FiberRef<A>, f: (a: A) => A) => Effect.Effect<never, never, void> = core.fiberRefUpdate
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const updateSome: <A>(
-  self: FiberRef<A>
-) => (pf: (a: A) => Option.Option<A>) => Effect.Effect<never, never, void> = core.fiberRefUpdateSome
+export const updateSome: <A>(self: FiberRef<A>, pf: (a: A) => Option.Option<A>) => Effect.Effect<never, never, void> =
+  core.fiberRefUpdateSome
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const updateAndGet: <A>(self: FiberRef<A>) => (f: (a: A) => A) => Effect.Effect<never, never, A> =
+export const updateAndGet: <A>(self: FiberRef<A>, f: (a: A) => A) => Effect.Effect<never, never, A> =
   core.fiberRefUpdateAndGet
 
 /**
@@ -255,8 +254,9 @@ export const updateAndGet: <A>(self: FiberRef<A>) => (f: (a: A) => A) => Effect.
  * @category mutations
  */
 export const updateSomeAndGet: <A>(
-  self: FiberRef<A>
-) => (pf: (a: A) => Option.Option<A>) => Effect.Effect<never, never, A> = core.fiberRefUpdateSomeAndGet
+  self: FiberRef<A>,
+  pf: (a: A) => Option.Option<A>
+) => Effect.Effect<never, never, A> = core.fiberRefUpdateSomeAndGet
 
 /**
  * @macro traced
@@ -264,8 +264,9 @@ export const updateSomeAndGet: <A>(
  * @category mutations
  */
 export const locally: <A>(
-  self: FiberRef<A>
-) => (value: A) => <R, E, B>(use: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B> = core.fiberRefLocally
+  self: FiberRef<A>,
+  value: A
+) => <R, E, B>(use: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B> = core.fiberRefLocally
 
 /**
  * @macro traced
@@ -273,15 +274,16 @@ export const locally: <A>(
  * @category mutations
  */
 export const locallyWith: <A>(
-  self: FiberRef<A>
-) => (f: (a: A) => A) => <R, E, B>(use: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B> = core.fiberRefLocallyWith
+  self: FiberRef<A>,
+  f: (a: A) => A
+) => <R, E, B>(use: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B> = core.fiberRefLocallyWith
 
 /**
  * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const locallyScoped: <A>(self: FiberRef<A>) => (value: A) => Effect.Effect<Scope.Scope, never, void> =
+export const locallyScoped: <A>(self: FiberRef<A>, value: A) => Effect.Effect<Scope.Scope, never, void> =
   fiberRuntime.fiberRefLocallyScoped
 
 /**
@@ -289,7 +291,7 @@ export const locallyScoped: <A>(self: FiberRef<A>) => (value: A) => Effect.Effec
  * @since 1.0.0
  * @category mutations
  */
-export const locallyScopedWith: <A>(self: FiberRef<A>) => (value: A) => Effect.Effect<Scope.Scope, never, void> =
+export const locallyScopedWith: <A>(self: FiberRef<A>, value: A) => Effect.Effect<Scope.Scope, never, void> =
   fiberRuntime.fiberRefLocallyScoped
 
 /**

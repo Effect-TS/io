@@ -18,7 +18,8 @@ import type * as MetricRegistry from "@effect/io/Metric/Registry"
 import type * as MetricState from "@effect/io/Metric/State"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Duration from "@fp-ts/data/Duration"
-import { constVoid, identity, LazyArg, pipe } from "@fp-ts/data/Function"
+import type { LazyArg } from "@fp-ts/data/Function"
+import { constVoid, identity, pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
 
 /** @internal */
@@ -406,9 +407,7 @@ export const trackSuccessWith = <In, In2>(f: (value: In2) => In) => {
 export const update = <In>(input: In) => {
   const trace = getCallTrace()
   return <Type, Out>(self: Metric.Metric<Type, In, Out>): Effect.Effect<never, never, void> =>
-    core.fiberRefGetWith(core.currentTags)(
-      (tags) => core.sync(() => self.unsafeUpdate(input, tags))
-    ).traced(trace)
+    core.fiberRefGetWith(core.currentTags, (tags) => core.sync(() => self.unsafeUpdate(input, tags))).traced(trace)
 }
 
 /**
@@ -419,9 +418,7 @@ export const value = <Type, In, Out>(
   self: Metric.Metric<Type, In, Out>
 ): Effect.Effect<never, never, Out> => {
   const trace = getCallTrace()
-  return core.fiberRefGetWith(core.currentTags)(
-    (tags) => core.sync(() => self.unsafeValue(tags))
-  ).traced(trace)
+  return core.fiberRefGetWith(core.currentTags, (tags) => core.sync(() => self.unsafeValue(tags))).traced(trace)
 }
 
 /** @internal */

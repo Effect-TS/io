@@ -66,9 +66,9 @@ export const annotationsWith = <R, E, A>(
   f: (annotations: Annotations.Annotations) => Effect.Effect<R, E, A>
 ): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
-  return core.fiberRefGetWith(currentServices)(
-    (services) => f(pipe(services, Context.get(Annotations.Tag)))
-  ).traced(trace)
+  return core.fiberRefGetWith(currentServices, (services) => f(pipe(services, Context.get(Annotations.Tag)))).traced(
+    trace
+  )
 }
 
 /**
@@ -81,9 +81,7 @@ export const annotationsWith = <R, E, A>(
 export const withAnnotations = (annotations: Annotations.Annotations) => {
   const trace = getCallTrace()
   return <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
-    core.fiberRefLocallyWith(currentServices)(
-      Context.add(Annotations.Tag)(annotations)
-    )(effect).traced(trace)
+    core.fiberRefLocallyWith(currentServices, Context.add(Annotations.Tag)(annotations))(effect).traced(trace)
 }
 
 /**
@@ -178,9 +176,7 @@ export const live = (): Effect.Effect<never, never, Live.Live> => {
  */
 export const liveWith = <R, E, A>(f: (live: Live.Live) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
-  return core.fiberRefGetWith(currentServices)(
-    (services) => f(pipe(services, Context.get(Live.Tag)))
-  ).traced(trace)
+  return core.fiberRefGetWith(currentServices, (services) => f(pipe(services, Context.get(Live.Tag)))).traced(trace)
 }
 
 /**
@@ -193,9 +189,7 @@ export const liveWith = <R, E, A>(f: (live: Live.Live) => Effect.Effect<R, E, A>
 export const withLive = (live: Live.Live) => {
   const trace = getCallTrace()
   return <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
-    core.fiberRefLocallyWith(currentServices)(
-      Context.add(Live.Tag)(live)
-    )(effect).traced(trace)
+    core.fiberRefLocallyWith(currentServices, Context.add(Live.Tag)(live))(effect).traced(trace)
 }
 
 /**
@@ -248,8 +242,9 @@ export const provideWithLive = <R, E, A, R2, E2, A2>(
 ) => {
   const trace = getCallTrace()
   return (self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, A2> =>
-    core.fiberRefGetWith(defaultServices.currentServices)(
-      (services) => provideLive(f(core.fiberRefLocally(defaultServices.currentServices)(services)(self)))
+    core.fiberRefGetWith(
+      defaultServices.currentServices,
+      (services) => provideLive(f(core.fiberRefLocally(defaultServices.currentServices, services)(self)))
     ).traced(trace)
 }
 
@@ -273,9 +268,7 @@ export const sized = (): Effect.Effect<never, never, Sized.Sized> => {
  */
 export const sizedWith = <R, E, A>(f: (sized: Sized.Sized) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
-  return core.fiberRefGetWith(currentServices)(
-    (services) => f(pipe(services, Context.get(Sized.Tag)))
-  ).traced(trace)
+  return core.fiberRefGetWith(currentServices, (services) => f(pipe(services, Context.get(Sized.Tag)))).traced(trace)
 }
 
 /**
@@ -288,9 +281,7 @@ export const sizedWith = <R, E, A>(f: (sized: Sized.Sized) => Effect.Effect<R, E
 export const withSized = (sized: Sized.Sized) => {
   const trace = getCallTrace()
   return <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
-    core.fiberRefLocallyWith(currentServices)(
-      Context.add(Sized.Tag)(sized)
-    )(effect).traced(trace)
+    core.fiberRefLocallyWith(currentServices, Context.add(Sized.Tag)(sized))(effect).traced(trace)
 }
 
 /**
@@ -356,9 +347,9 @@ export const testConfigWith = <R, E, A>(
   f: (config: TestConfig.TestConfig) => Effect.Effect<R, E, A>
 ): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
-  return core.fiberRefGetWith(currentServices)(
-    (services) => f(pipe(services, Context.get(TestConfig.Tag)))
-  ).traced(trace)
+  return core.fiberRefGetWith(currentServices, (services) => f(pipe(services, Context.get(TestConfig.Tag)))).traced(
+    trace
+  )
 }
 
 /**
@@ -371,9 +362,7 @@ export const testConfigWith = <R, E, A>(
 export const withTestConfig = (config: TestConfig.TestConfig) => {
   const trace = getCallTrace()
   return <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
-    core.fiberRefLocallyWith(currentServices)(
-      Context.add(TestConfig.Tag)(config)
-    )(effect).traced(trace)
+    core.fiberRefLocallyWith(currentServices, Context.add(TestConfig.Tag)(config))(effect).traced(trace)
 }
 
 /**

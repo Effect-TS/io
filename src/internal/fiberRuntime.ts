@@ -23,7 +23,6 @@ import * as internalFiber from "@effect/io/internal/fiber"
 import * as FiberMessage from "@effect/io/internal/fiberMessage"
 import * as fiberRefs from "@effect/io/internal/fiberRefs"
 import * as fiberScope from "@effect/io/internal/fiberScope"
-import type { FiberScope } from "@effect/io/internal/fiberScope"
 import * as internalLogger from "@effect/io/internal/logger"
 import { yieldBackgroundOrContinue } from "@effect/io/internal/main-thread"
 import * as metric from "@effect/io/internal/metric"
@@ -1438,7 +1437,7 @@ export const collectAllWithPar = <A, B>(pf: (a: A) => Option.Option<B>) => {
  */
 export const daemonChildren = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
-  const forkScope = core.fiberRefLocally(core.forkScopeOverride)(Option.some(fiberScope.globalScope as FiberScope))
+  const forkScope = core.fiberRefLocally(core.forkScopeOverride, Option.some(fiberScope.globalScope))
   return forkScope(self).traced(trace)
 }
 
@@ -1521,7 +1520,8 @@ export const forEachPar = <A, R, E, B>(
 ) => {
   const trace = getCallTrace()
   return (self: Iterable<A>): Effect.Effect<R, E, Chunk.Chunk<B>> =>
-    core.fiberRefGetWith(core.currentParallelism)(
+    core.fiberRefGetWith(
+      core.currentParallelism,
       (o) => o._tag === "None" ? forEachParUnbounded(f)(self) : forEachParN(o.value, f)(self)
     ).traced(trace)
 }
@@ -1535,7 +1535,8 @@ export const forEachParDiscard = <A, R, E, _>(
 ) => {
   const trace = getCallTrace()
   return (self: Iterable<A>): Effect.Effect<R, E, void> =>
-    core.fiberRefGetWith(core.currentParallelism)(
+    core.fiberRefGetWith(
+      core.currentParallelism,
       (o) => o._tag === "None" ? forEachParUnboundedDiscard(f)(self) : forEachParNDiscard(o.value, f)(self)
     ).traced(trace)
 }
@@ -2584,20 +2585,21 @@ export const fiberRefUnsafeMakeSupervisor = (
  * @macro traced
  * @internal
  */
-export const fiberRefLocallyScoped = <A>(self: FiberRef.FiberRef<A>) => {
+export const fiberRefLocallyScoped = <A>(
+  self: FiberRef.FiberRef<A>,
+  value: A
+): Effect.Effect<Scope.Scope, never, void> => {
   const trace = getCallTrace()
-  return (value: A): Effect.Effect<Scope.Scope, never, void> => {
-    return pipe(
-      acquireRelease(
-        pipe(
-          core.fiberRefGet(self),
-          core.flatMap((oldValue) => pipe(core.fiberRefSet(self)(value), core.as(oldValue)))
-        ),
-        (oldValue) => core.fiberRefSet(self)(oldValue)
+  return pipe(
+    acquireRelease(
+      pipe(
+        core.fiberRefGet(self),
+        core.flatMap((oldValue) => pipe(core.fiberRefSet(self, value), core.as(oldValue)))
       ),
-      core.asUnit
-    ).traced(trace)
-  }
+      (oldValue) => core.fiberRefSet(self, oldValue)
+    ),
+    core.asUnit
+  ).traced(trace)
 }
 
 /**
@@ -2607,7 +2609,7 @@ export const fiberRefLocallyScoped = <A>(self: FiberRef.FiberRef<A>) => {
 export const fiberRefLocallyScopedWith = <A>(self: FiberRef.FiberRef<A>) => {
   const trace = getCallTrace()
   return (f: (a: A) => A): Effect.Effect<Scope.Scope, never, void> => {
-    return core.fiberRefGetWith(self)((a) => fiberRefLocallyScoped(self)(f(a))).traced(trace)
+    return core.fiberRefGetWith(self, (a) => fiberRefLocallyScoped(self, f(a))).traced(trace)
   }
 }
 
@@ -2633,7 +2635,7 @@ export const fiberRefMakeWith = <Value>(
 ): Effect.Effect<Scope.Scope, never, FiberRef.FiberRef<Value>> => {
   const trace = getCallTrace()
   return acquireRelease(
-    pipe(core.sync(ref), core.tap((ref) => core.fiberRefUpdate(ref)(identity))),
+    pipe(core.sync(ref), core.tap((ref) => core.fiberRefUpdate(ref, identity))),
     (fiberRef) => core.fiberRefDelete(fiberRef)
   ).traced(trace)
 }
