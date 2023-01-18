@@ -323,3 +323,35 @@ describe.concurrent("ConfigProvider", () => {
       assert.strictEqual(result, "value1")
     }))
 })
+
+describe.concurrent("EnvProvider", () => {
+  it.effect("capitalisation", () => {
+    return Effect.gen(function*($) {
+      process.env["HOST" /* "host" */] = "localhost"
+      process.env["PORT" /* "port" */] = "8080"
+      const provider = ConfigProvider.fromEnv()
+      const result = yield* $(provider.load(hostPortConfig))
+      assert.deepStrictEqual(result, {
+        host: "localhost",
+        port: 8080
+      })
+    })
+  })
+
+  it.effect("capitalisation, word separation should use _, and nesting __", () => {
+    return Effect.gen(function*($) {
+      process.env["HOST_PORT__HOST" /* "hostPort.host" */] = "localhost"
+      process.env["HOST_PORT__PORT" /* "hostPort.port" */] = "8080"
+      process.env["TIMEOUT" /* "timeout" */] = "1000"
+      const provider = ConfigProvider.fromEnv()
+      const result = yield* $(provider.load(serviceConfigConfig))
+      assert.deepStrictEqual(result, {
+        hostPort: {
+          host: "localhost",
+          port: 8080
+        },
+        timeout: 1000
+      })
+    })
+  })
+})
