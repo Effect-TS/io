@@ -11,8 +11,8 @@ describe.concurrent("Effect", () => {
       const input = yield* $(Ref.make(10))
       const output = yield* $(Ref.make(0))
       yield* $(pipe(
-        Ref.updateAndGet(input)((n) => n - 1),
-        Effect.zipLeft(Ref.update(output)((n) => n + 1)),
+        Ref.updateAndGet(input, (n) => n - 1),
+        Effect.zipLeft(Ref.update(output, (n) => n + 1)),
         Effect.flipWith(Effect.retryUntil((n) => n === 0))
       ))
       const result = yield* $(Ref.get(output))
@@ -21,7 +21,7 @@ describe.concurrent("Effect", () => {
   it.effect("retryUntil - runs at least once", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(0))
-      yield* $(pipe(Ref.update(ref)((n) => n + 1), Effect.flipWith(Effect.retryUntil(constTrue))))
+      yield* $(pipe(Ref.update(ref, (n) => n + 1), Effect.flipWith(Effect.retryUntil(constTrue))))
       const result = yield* $(Ref.get(ref))
       assert.strictEqual(result, 1)
     }))
@@ -32,7 +32,7 @@ describe.concurrent("Effect", () => {
       yield* $(pipe(queue, Queue.offerAll([1, 2, 3, 4, 5, 6])))
       yield* $(pipe(
         Queue.take(queue),
-        Effect.zipLeft(Ref.update(ref)((n) => n + 1)),
+        Effect.zipLeft(Ref.update(ref, (n) => n + 1)),
         Effect.flipWith(Effect.retryUntilEquals(5))
       ))
       const result = yield* $(Ref.get(ref))
@@ -43,8 +43,8 @@ describe.concurrent("Effect", () => {
       const input = yield* $(Ref.make(10))
       const output = yield* $(Ref.make(0))
       yield* $(pipe(
-        Ref.updateAndGet(input)((n) => n - 1),
-        Effect.zipLeft(Ref.update(output)((n) => n + 1)),
+        Ref.updateAndGet(input, (n) => n - 1),
+        Effect.zipLeft(Ref.update(output, (n) => n + 1)),
         Effect.flipWith(Effect.retryUntilEffect((n) => Effect.succeed(n === 0)))
       ))
       const result = yield* $(Ref.get(output))
@@ -54,7 +54,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(0))
       yield* $(pipe(
-        Ref.update(ref)((n) => n + 1),
+        Ref.update(ref, (n) => n + 1),
         Effect.flipWith(Effect.retryUntilEffect(() => Effect.succeed(true)))
       ))
       const result = yield* $(Ref.get(ref))
@@ -65,8 +65,8 @@ describe.concurrent("Effect", () => {
       const input = yield* $(Ref.make(10))
       const output = yield* $(Ref.make(0))
       yield* $(pipe(
-        Ref.updateAndGet(input)((n) => n - 1),
-        Effect.zipLeft(Ref.update(output)((n) => n + 1)),
+        Ref.updateAndGet(input, (n) => n - 1),
+        Effect.zipLeft(Ref.update(output, (n) => n + 1)),
         Effect.flipWith(Effect.retryWhile((n) => n >= 0))
       ))
       const result = yield* $(Ref.get(output))
@@ -75,7 +75,7 @@ describe.concurrent("Effect", () => {
   it.effect("retryWhile - runs at least once", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(0))
-      yield* $(pipe(Ref.update(ref)((n) => n + 1), Effect.flipWith(Effect.retryWhile(constFalse))))
+      yield* $(pipe(Ref.update(ref, (n) => n + 1), Effect.flipWith(Effect.retryWhile(constFalse))))
       const result = yield* $(Ref.get(ref))
       assert.strictEqual(result, 1)
     }))
@@ -86,7 +86,7 @@ describe.concurrent("Effect", () => {
       yield* $(pipe(queue, Queue.offerAll([0, 0, 0, 0, 1, 2])))
       yield* $(pipe(
         Queue.take(queue),
-        Effect.zipLeft(Ref.update(ref)((n) => n + 1)),
+        Effect.zipLeft(Ref.update(ref, (n) => n + 1)),
         Effect.flipWith(Effect.retryWhileEquals(0))
       ))
       const result = yield* $(Ref.get(ref))
@@ -97,8 +97,8 @@ describe.concurrent("Effect", () => {
       const input = yield* $(Ref.make(10))
       const output = yield* $(Ref.make(0))
       yield* $(pipe(
-        Ref.updateAndGet(input)((n) => n - 1),
-        Effect.zipLeft(Ref.update(output)((n) => n + 1)),
+        Ref.updateAndGet(input, (n) => n - 1),
+        Effect.zipLeft(Ref.update(output, (n) => n + 1)),
         Effect.flipWith(Effect.retryWhileEffect((n) => Effect.succeed(n >= 0)))
       ))
       const result = yield* $(Ref.get(output))
@@ -108,7 +108,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(0))
       yield* $(pipe(
-        Ref.update(ref)((n) => n + 1),
+        Ref.update(ref, (n) => n + 1),
         Effect.flipWith(Effect.retryWhileEffect(() => Effect.succeed(false)))
       ))
       const result = yield* $(Ref.get(ref))

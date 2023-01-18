@@ -11,7 +11,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(0))
       const cache = yield* $(pipe(
-        Ref.updateAndGet(ref)((n) => n + 1),
+        Ref.updateAndGet(ref, (n) => n + 1),
         Effect.cached(Duration.minutes(60))
       ))
       const a = yield* $(cache)
@@ -29,7 +29,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(0))
       const cached = yield* $(pipe(
-        Ref.modify(ref)((curr) => [curr, curr + 1]),
+        Ref.modify(ref, (curr) => [curr, curr + 1]),
         Effect.cached(Duration.infinity)
       ))
       const a = yield* $(cached)
@@ -44,7 +44,7 @@ describe.concurrent("Effect", () => {
       const ref = yield* $(Ref.make(0))
       const [cached, invalidate] = yield* $(
         pipe(
-          Ref.updateAndGet(ref)((n) => n + 1),
+          Ref.updateAndGet(ref, (n) => n + 1),
           Effect.cachedInvalidate(Duration.minutes(60))
         )
       )

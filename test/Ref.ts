@@ -39,7 +39,7 @@ describe.concurrent("Ref", () => {
   it.effect("getAndSet", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(current))
-      const result1 = yield* $(Ref.getAndSet(ref)(update))
+      const result1 = yield* $(Ref.getAndSet(ref, update))
       const result2 = yield* $(Ref.get(ref))
       assert.strictEqual(result1, current)
       assert.strictEqual(result2, update)
@@ -47,7 +47,7 @@ describe.concurrent("Ref", () => {
   it.effect("getAndUpdate", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(current))
-      const result1 = yield* $(Ref.getAndUpdate(ref)(() => update))
+      const result1 = yield* $(Ref.getAndUpdate(ref, () => update))
       const result2 = yield* $(Ref.get(ref))
       assert.strictEqual(result1, current)
       assert.strictEqual(result2, update)
@@ -56,7 +56,7 @@ describe.concurrent("Ref", () => {
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make<State>(Active))
       const result1 = yield* $(
-        Ref.getAndUpdateSome(ref)((state) => isClosed(state) ? Option.some(Changed) : Option.none)
+        Ref.getAndUpdateSome(ref, (state) => isClosed(state) ? Option.some(Changed) : Option.none)
       )
       const result2 = yield* $(Ref.get(ref))
       assert.strictEqual(result1, Active)
@@ -66,16 +66,15 @@ describe.concurrent("Ref", () => {
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make<State>(Active))
       const result1 = yield* $(
-        Ref.getAndUpdateSome(ref)((state) => isActive(state) ? Option.some(Changed) : Option.none)
+        Ref.getAndUpdateSome(ref, (state) => isActive(state) ? Option.some(Changed) : Option.none)
       )
       const result2 = yield* $(
-        Ref.getAndUpdateSome(ref)((state) =>
+        Ref.getAndUpdateSome(ref, (state) =>
           isActive(state) ?
             Option.some(Changed) :
             isChanged(state) ?
             Option.some(Closed) :
-            Option.none
-        )
+            Option.none)
       )
       const result3 = yield* $(Ref.get(ref))
       assert.strictEqual(result1, Active)
@@ -85,43 +84,42 @@ describe.concurrent("Ref", () => {
   it.effect("set", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(current))
-      yield* $(Ref.set(ref)(update))
+      yield* $(Ref.set(ref, update))
       const result = yield* $(Ref.get(ref))
       assert.strictEqual(result, update)
     }))
   it.effect("update", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(current))
-      yield* $(Ref.update(ref)(() => update))
+      yield* $(Ref.update(ref, () => update))
       const result = yield* $(Ref.get(ref))
       assert.strictEqual(result, update)
     }))
   it.effect("updateAndGet", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(current))
-      const result = yield* $(Ref.updateAndGet(ref)(() => update))
+      const result = yield* $(Ref.updateAndGet(ref, () => update))
       assert.strictEqual(result, update)
     }))
   it.effect("updateSome - once", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make<State>(Active))
-      yield* $(Ref.updateSome(ref)((state) => isClosed(state) ? Option.some(Changed) : Option.none))
+      yield* $(Ref.updateSome(ref, (state) => isClosed(state) ? Option.some(Changed) : Option.none))
       const result = yield* $(Ref.get(ref))
       assert.deepEqual(result, Active)
     }))
   it.effect("updateSome - twice", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make<State>(Active))
-      yield* $(Ref.updateSome(ref)((state) => isActive(state) ? Option.some(Changed) : Option.none))
+      yield* $(Ref.updateSome(ref, (state) => isActive(state) ? Option.some(Changed) : Option.none))
       const result1 = yield* $(Ref.get(ref))
       yield* $(
-        Ref.updateSome(ref)((state) =>
+        Ref.updateSome(ref, (state) =>
           isActive(state) ?
             Option.some(Changed) :
             isChanged(state) ?
             Option.some(Closed) :
-            Option.none
-        )
+            Option.none)
       )
       const result2 = yield* $(Ref.get(ref))
       assert.deepEqual(result1, Changed)
@@ -131,7 +129,7 @@ describe.concurrent("Ref", () => {
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make<State>(Active))
       const result = yield* $(
-        Ref.updateSomeAndGet(ref)((state) => isClosed(state) ? Option.some(Changed) : Option.none)
+        Ref.updateSomeAndGet(ref, (state) => isClosed(state) ? Option.some(Changed) : Option.none)
       )
       assert.strictEqual(result, Active)
     }))
@@ -139,10 +137,10 @@ describe.concurrent("Ref", () => {
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make<State>(Active))
       const result1 = yield* $(
-        Ref.updateSomeAndGet(ref)((state) => isActive(state) ? Option.some(Changed) : Option.none)
+        Ref.updateSomeAndGet(ref, (state) => isActive(state) ? Option.some(Changed) : Option.none)
       )
       const result2 = yield* $(
-        Ref.updateSomeAndGet(ref)((state): Option.Option<State> => {
+        Ref.updateSomeAndGet(ref, (state): Option.Option<State> => {
           return isActive(state) ?
             Option.some(Changed) :
             isChanged(state) ?
@@ -156,7 +154,7 @@ describe.concurrent("Ref", () => {
   it.effect("modify", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(current))
-      const result1 = yield* $(Ref.modify(ref)(() => ["hello", update]))
+      const result1 = yield* $(Ref.modify(ref, () => ["hello", update]))
       const result2 = yield* $(Ref.get(ref))
       assert.strictEqual(result1, "hello")
       assert.strictEqual(result2, update)
@@ -165,7 +163,7 @@ describe.concurrent("Ref", () => {
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make<State>(Active))
       const result = yield* $(
-        Ref.modifySome(ref)("state does not change", (state) =>
+        Ref.modifySome(ref, "state does not change", (state) =>
           isClosed(state) ?
             Option.some(["active", Active]) :
             Option.none)
@@ -176,13 +174,13 @@ describe.concurrent("Ref", () => {
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make<State>(Active))
       const result1 = yield* $(
-        Ref.modifySome(ref)("state does not change", (state) =>
+        Ref.modifySome(ref, "state does not change", (state) =>
           isActive(state) ?
             Option.some(["changed", Changed]) :
             Option.none)
       )
       const result2 = yield* $(
-        Ref.modifySome(ref)("state does not change", (state) =>
+        Ref.modifySome(ref, "state does not change", (state) =>
           isActive(state) ?
             Option.some(["changed", Changed]) :
             isChanged(state) ?

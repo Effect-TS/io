@@ -14,7 +14,7 @@ describe.concurrent("Effect", () => {
       const ref = yield* $(Ref.make<ReadonlyArray<Duration.Duration>>([]))
       const effect = pipe(
         Clock.currentTimeMillis(),
-        Effect.flatMap((duration) => Ref.update(ref)((array) => [...array, Duration.millis(duration)]))
+        Effect.flatMap((duration) => Ref.update(ref, (array) => [...array, Duration.millis(duration)]))
       )
       const schedule = pipe(Schedule.spaced(Duration.seconds(1)), Schedule.intersect(Schedule.recurs(5)))
       yield* $(pipe(effect, Effect.schedule(schedule), Effect.fork))

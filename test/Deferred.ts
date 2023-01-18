@@ -20,7 +20,7 @@ describe.concurrent("Deferred", () => {
     Effect.gen(function*($) {
       const deferred = yield* $(Deferred.make<never, number>())
       const ref = yield* $(Ref.make(13))
-      yield* $(Deferred.complete(deferred, Ref.updateAndGet(ref)((n) => n + 1)))
+      yield* $(Deferred.complete(deferred, Ref.updateAndGet(ref, (n) => n + 1)))
       const result1 = yield* $(Deferred.await(deferred))
       const result2 = yield* $(Deferred.await(deferred))
       assert.strictEqual(result1, 14)
@@ -30,7 +30,7 @@ describe.concurrent("Deferred", () => {
     Effect.gen(function*($) {
       const deferred = yield* $(Deferred.make<never, number>())
       const ref = yield* $(Ref.make(13))
-      yield* $(Deferred.completeWith(deferred, Ref.updateAndGet(ref)((n) => n + 1)))
+      yield* $(Deferred.completeWith(deferred, Ref.updateAndGet(ref, (n) => n + 1)))
       const result1 = yield* $(Deferred.await(deferred))
       const result2 = yield* $(Deferred.await(deferred))
       assert.strictEqual(result1, 14)
@@ -58,7 +58,7 @@ describe.concurrent("Deferred", () => {
       const deferred = yield* $(Deferred.make<string, number>())
       const ref = yield* $(Ref.make(["first error", "second error"]))
       const success = yield* $(
-        Deferred.complete(deferred, Effect.flip(Ref.modify(ref)((as) => [as[0]!, as.slice(1)])))
+        Deferred.complete(deferred, Effect.flip(Ref.modify(ref, (as) => [as[0]!, as.slice(1)])))
       )
       const result1 = yield* $(pipe(deferred, Deferred.await, Effect.exit))
       const result2 = yield* $(pipe(deferred, Deferred.await, Effect.exit))
@@ -74,7 +74,7 @@ describe.concurrent("Deferred", () => {
         Deferred.completeWith(
           deferred,
           Effect.flip(
-            Ref.modify(ref)((as) => [as[0]!, as.slice(1)])
+            Ref.modify(ref, (as) => [as[0]!, as.slice(1)])
           )
         )
       )

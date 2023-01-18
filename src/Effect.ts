@@ -74,7 +74,6 @@ export type EffectTypeId = typeof EffectTypeId
  * @category models
  */
 export interface Effect<R, E, A> extends Effect.Variance<R, E, A>, Equal.Equal {
-  /** @internal */
   traced(trace: string | undefined): Effect<R, E, A>
 }
 

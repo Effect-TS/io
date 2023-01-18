@@ -74,9 +74,12 @@ export const get = <E, A>(self: Cached.Cached<E, A>): Effect.Effect<never, E, A>
 
 export const refresh = <E, A>(self: Cached.Cached<E, A>): Effect.Effect<never, E, void> => {
   const trace = getCallTrace()
-  return scopedRef.set(self.scopedRef)(pipe(
-    self.acquire(),
-    core.map(core.exitSucceed)
-  ))
+  return scopedRef.set(
+    self.scopedRef,
+    pipe(
+      self.acquire(),
+      core.map(core.exitSucceed)
+    )
+  )
     .traced(trace)
 }

@@ -98,7 +98,7 @@ class ScheduleDriverImpl<Env, In, Out> implements Schedule.ScheduleDriver<Env, I
 
   reset(): Effect.Effect<never, never, void> {
     const trace = getCallTrace()
-    return Ref.set(this.ref)([Option.none as Option.Option<Out>, this.schedule.initial] as const).traced(trace)
+    return Ref.set(this.ref, [Option.none, this.schedule.initial]).traced(trace)
   }
 
   next(input: In): Effect.Effect<Env, Option.Option<never>, Out> {
@@ -115,11 +115,11 @@ class ScheduleDriverImpl<Env, In, Out> implements Schedule.ScheduleDriver<Env, I
               core.flatMap(([state, out, decision]) =>
                 ScheduleDecision.isDone(decision) ?
                   pipe(
-                    Ref.set(this.ref)([Option.some(out), state] as const),
+                    Ref.set(this.ref, [Option.some(out), state] as const),
                     core.zipRight(core.fail(Option.none))
                   ) :
                   pipe(
-                    Ref.set(this.ref)([Option.some(out), state] as const),
+                    Ref.set(this.ref, [Option.some(out), state] as const),
                     core.zipRight(effect.sleep(Duration.millis(Intervals.start(decision.intervals) - now))),
                     core.as(out)
                   )

@@ -85,51 +85,51 @@ export const make = <A>(
 }
 
 /** @internal */
-export const set = <A>(self: ScopedRef.ScopedRef<A>) => {
+export const set = <A, R, E>(
+  self: ScopedRef.ScopedRef<A>,
+  acquire: Effect.Effect<R, E, A>
+): Effect.Effect<Exclude<R, Scope.Scope>, E, void> => {
   const trace = getCallTrace()
-  return <R, E>(acquire: Effect.Effect<R, E, A>): Effect.Effect<Exclude<R, Scope.Scope>, E, void> => {
-    return core.flatten(
-      synchronized.modifyEffect(self.ref)(([oldScope, value]) =>
-        core.uninterruptibleMask((restore) =>
-          pipe(
-            fiberRuntime.scopeMake(),
-            core.flatMap((newScope) =>
-              pipe(
-                restore(
-                  pipe(
-                    acquire,
-                    core.provideSomeEnvironment<Exclude<R, Scope.Scope>, R>(
-                      Context.add(fiberRuntime.scopeTag)(newScope) as any
-                    )
+  return core.flatten(
+    synchronized.modifyEffect(self.ref, ([oldScope, value]) =>
+      core.uninterruptibleMask((restore) =>
+        pipe(
+          fiberRuntime.scopeMake(),
+          core.flatMap((newScope) =>
+            pipe(
+              restore(
+                pipe(
+                  acquire,
+                  core.provideSomeEnvironment<Exclude<R, Scope.Scope>, R>(
+                    Context.add(fiberRuntime.scopeTag)(newScope) as any
                   )
-                ),
-                core.exit,
-                core.flatMap(
-                  core.exitMatch(
-                    (cause) =>
-                      pipe(
-                        newScope.close(core.exitUnit()),
-                        effect.ignore,
-                        core.as(
-                          [
-                            core.failCause(cause) as unknown as Effect.Effect<never, never, void>,
-                            [oldScope, value] as const
-                          ] as const
-                        )
-                      ),
-                    (value) =>
-                      pipe(
-                        oldScope.close(core.exitUnit()),
-                        effect.ignore,
-                        core.as([core.unit(), [newScope, value] as const] as const)
+                )
+              ),
+              core.exit,
+              core.flatMap(
+                core.exitMatch(
+                  (cause) =>
+                    pipe(
+                      newScope.close(core.exitUnit()),
+                      effect.ignore,
+                      core.as(
+                        [
+                          core.failCause(cause) as unknown as Effect.Effect<never, never, void>,
+                          [oldScope, value] as const
+                        ] as const
                       )
-                  )
+                    ),
+                  (value) =>
+                    pipe(
+                      oldScope.close(core.exitUnit()),
+                      effect.ignore,
+                      core.as([core.unit(), [newScope, value] as const] as const)
+                    )
                 )
               )
             )
           )
         )
-      )
-    ).traced(trace)
-  }
+      ))
+  ).traced(trace)
 }

@@ -1839,7 +1839,7 @@ export const mergeAllPar = <Z, A>(zero: Z, f: (z: Z, a: A) => Z) => {
       core.flatMap((acc) =>
         pipe(
           elements,
-          forEachParDiscard(core.flatMap((a) => Ref.update(acc)((b) => f(b, a)))),
+          forEachParDiscard(core.flatMap((a) => Ref.update(acc, (b) => f(b, a)))),
           core.flatMap(() => Ref.get(acc))
         )
       )
@@ -2001,14 +2001,13 @@ const raceAllArbiter = <E, E1, A, A1>(
       core.exitMatchEffect(
         (cause) =>
           pipe(
-            Ref.modify(fails)((fails) =>
+            Ref.modify(fails, (fails) =>
               [
                 fails === 0 ?
                   pipe(core.deferredFailCause(deferred, cause), core.asUnit) :
                   core.unit(),
                 fails - 1
-              ] as const
-            ),
+              ] as const),
             core.flatten
           ),
         (value): Effect.Effect<never, never, void> =>

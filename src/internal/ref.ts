@@ -46,124 +46,106 @@ export const get = <A>(self: Ref.Ref<A>) => {
 }
 
 /** @internal */
-export const set = <A>(self: Ref.Ref<A>) => {
+export const set = <A>(self: Ref.Ref<A>, value: A): Effect.Effect<never, never, void> => {
   const trace = getCallTrace()
-  return (value: A): Effect.Effect<never, never, void> => {
-    return self.modify((): [void, A] => [void 0, value]).traced(trace)
-  }
+  return self.modify((): [void, A] => [void 0, value]).traced(trace)
 }
 
 /** @internal */
-export const getAndSet = <A>(self: Ref.Ref<A>) => {
+export const getAndSet = <A>(self: Ref.Ref<A>, value: A): Effect.Effect<never, never, A> => {
   const trace = getCallTrace()
-  return (value: A): Effect.Effect<never, never, A> => {
-    return self.modify((a): [A, A] => [a, value]).traced(trace)
-  }
+  return self.modify((a): [A, A] => [a, value]).traced(trace)
 }
 
 /** @internal */
-export const getAndUpdate = <A>(self: Ref.Ref<A>) => {
+export const getAndUpdate = <A>(self: Ref.Ref<A>, f: (a: A) => A): Effect.Effect<never, never, A> => {
   const trace = getCallTrace()
-  return (f: (a: A) => A): Effect.Effect<never, never, A> => {
-    return self.modify((a): [A, A] => [a, f(a)]).traced(trace)
-  }
+  return self.modify((a): [A, A] => [a, f(a)]).traced(trace)
 }
 
 /** @internal */
-export const getAndUpdateSome = <A>(self: Ref.Ref<A>) => {
+export const getAndUpdateSome = <A>(
+  self: Ref.Ref<A>,
+  pf: (a: A) => Option.Option<A>
+): Effect.Effect<never, never, A> => {
   const trace = getCallTrace()
-  return (pf: (a: A) => Option.Option<A>): Effect.Effect<never, never, A> => {
-    return self.modify((value): [A, A] => {
-      const option = pf(value)
-      switch (option._tag) {
-        case "None": {
-          return [value, value]
-        }
-        case "Some": {
-          return [value, option.value]
-        }
+  return self.modify((value): [A, A] => {
+    const option = pf(value)
+    switch (option._tag) {
+      case "None": {
+        return [value, value]
       }
-    }).traced(trace)
-  }
-}
-
-/** @internal */
-export const setAndGet = <A>(self: Ref.Ref<A>) => {
-  const trace = getCallTrace()
-  return (value: A): Effect.Effect<never, never, A> => {
-    return self.modify((): [A, A] => [value, value]).traced(trace)
-  }
-}
-
-/** @internal */
-export const modify = <A>(self: Ref.Ref<A>) => {
-  const trace = getCallTrace()
-  return <B>(f: (a: A) => readonly [B, A]): Effect.Effect<never, never, B> => {
-    return self.modify(f).traced(trace)
-  }
-}
-
-/** @internal */
-export const modifySome = <A>(self: Ref.Ref<A>) => {
-  const trace = getCallTrace()
-  return <B>(fallback: B, pf: (a: A) => Option.Option<readonly [B, A]>) => {
-    return self.modify((value) => {
-      const option = pf(value)
-      switch (option._tag) {
-        case "None": {
-          return [fallback, value]
-        }
-        case "Some": {
-          return option.value
-        }
+      case "Some": {
+        return [value, option.value]
       }
-    }).traced(trace)
-  }
+    }
+  }).traced(trace)
 }
 
 /** @internal */
-export const update = <A>(self: Ref.Ref<A>) => {
+export const setAndGet = <A>(self: Ref.Ref<A>, value: A): Effect.Effect<never, never, A> => {
   const trace = getCallTrace()
-  return (f: (a: A) => A) => {
-    return self.modify((a): [void, A] => [void 0, f(a)]).traced(trace)
-  }
+  return self.modify((): [A, A] => [value, value]).traced(trace)
 }
 
 /** @internal */
-export const updateAndGet = <A>(self: Ref.Ref<A>) => {
+export const modify = <A, B>(self: Ref.Ref<A>, f: (a: A) => readonly [B, A]): Effect.Effect<never, never, B> => {
   const trace = getCallTrace()
-  return (f: (a: A) => A): Effect.Effect<never, never, A> => {
-    return self.modify((a): [A, A] => {
-      const result = f(a)
-      return [result, result]
-    }).traced(trace)
-  }
+  return self.modify(f).traced(trace)
 }
 
 /** @internal */
-export const updateSome = <A>(self: Ref.Ref<A>) => {
+export const modifySome = <A, B>(self: Ref.Ref<A>, fallback: B, pf: (a: A) => Option.Option<readonly [B, A]>) => {
   const trace = getCallTrace()
-  return (f: (a: A) => Option.Option<A>): Effect.Effect<never, never, void> => {
-    return self.modify(
-      (a): [void, A] => [void 0, pipe(f(a), Option.match(() => a, (b) => b))]
-    ).traced(trace)
-  }
-}
-
-/** @internal */
-export const updateSomeAndGet = <A>(self: Ref.Ref<A>) => {
-  const trace = getCallTrace()
-  return (pf: (a: A) => Option.Option<A>): Effect.Effect<never, never, A> => {
-    return self.modify((value): [A, A] => {
-      const option = pf(value)
-      switch (option._tag) {
-        case "None": {
-          return [value, value]
-        }
-        case "Some": {
-          return [option.value, option.value]
-        }
+  return self.modify((value) => {
+    const option = pf(value)
+    switch (option._tag) {
+      case "None": {
+        return [fallback, value]
       }
-    }).traced(trace)
-  }
+      case "Some": {
+        return option.value
+      }
+    }
+  }).traced(trace)
+}
+
+/** @internal */
+export const update = <A>(self: Ref.Ref<A>, f: (a: A) => A) => {
+  const trace = getCallTrace()
+  return self.modify((a): [void, A] => [void 0, f(a)]).traced(trace)
+}
+
+/** @internal */
+export const updateAndGet = <A>(self: Ref.Ref<A>, f: (a: A) => A): Effect.Effect<never, never, A> => {
+  const trace = getCallTrace()
+  return self.modify((a): [A, A] => {
+    const result = f(a)
+    return [result, result]
+  }).traced(trace)
+}
+
+/** @internal */
+export const updateSome = <A>(self: Ref.Ref<A>, f: (a: A) => Option.Option<A>): Effect.Effect<never, never, void> => {
+  const trace = getCallTrace()
+  return self.modify((a): [void, A] => [void 0, pipe(f(a), Option.match(() => a, (b) => b))]).traced(trace)
+}
+
+/** @internal */
+export const updateSomeAndGet = <A>(
+  self: Ref.Ref<A>,
+  pf: (a: A) => Option.Option<A>
+): Effect.Effect<never, never, A> => {
+  const trace = getCallTrace()
+  return self.modify((value): [A, A] => {
+    const option = pf(value)
+    switch (option._tag) {
+      case "None": {
+        return [value, value]
+      }
+      case "Some": {
+        return [option.value, option.value]
+      }
+    }
+  }).traced(trace)
 }
