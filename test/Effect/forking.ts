@@ -36,7 +36,7 @@ describe.concurrent("Effect", () => {
       const ref = yield* $(Ref.make(true))
       yield* $(pipe(
         Effect.checkInterruptible((isInterruptible) =>
-          pipe(Ref.set(ref)(isInterruptible), Effect.zipRight(Deferred.succeed(latch, void 0)))
+          pipe(Ref.set(ref, isInterruptible), Effect.zipRight(Deferred.succeed(latch, void 0)))
         ),
         Effect.fork,
         Effect.zipRight(Deferred.await(latch)),

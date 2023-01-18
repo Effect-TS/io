@@ -204,13 +204,13 @@ describe.concurrent("Effect", () => {
               Effect.uninterruptibleMask((restore) =>
                 pipe(
                   restore(pipe(Deferred.succeed(latch1, void 0), Effect.zipRight(Deferred.await(latch2)))),
-                  Effect.onExit((exit) => Ref.update(exits)(Chunk.prepend(exit)))
+                  Effect.onExit((exit) => Ref.update(exits, Chunk.prepend(exit)))
                 )
               ),
               Effect.asUnit
             )),
             Effect.exit,
-            Effect.flatMap((exit) => Ref.update(exits)(Chunk.prepend(exit)))
+            Effect.flatMap((exit) => Ref.update(exits, Chunk.prepend(exit)))
           )
         ),
         Effect.fork
@@ -232,7 +232,7 @@ describe.concurrent("Effect", () => {
         return pipe(
           Deferred.succeed(deferred, void 0),
           Effect.zipRight(Effect.never()),
-          Effect.onInterrupt(() => Ref.update(ref)((n) => n + 1))
+          Effect.onInterrupt(() => Ref.update(ref, (n) => n + 1))
         )
       }
       const raced = yield* $(pipe(make(latch1), Effect.race(make(latch2)), Effect.fork))
@@ -251,7 +251,7 @@ describe.concurrent("Effect", () => {
           Effect.ensuring(pipe(
             Effect.unit(),
             Effect.zipRight(Effect.fail("uh oh")),
-            Effect.catchAll(() => Ref.set(recovered)(true))
+            Effect.catchAll(() => Ref.set(recovered, true))
           )),
           Effect.fork
         )
@@ -268,8 +268,8 @@ describe.concurrent("Effect", () => {
           release,
           Effect.zipRight(pipe(Effect.never(), Effect.interruptible)),
           Effect.matchCauseEffect(
-            (cause) => Ref.set(recovered)(Cause.isInterrupted(cause)),
-            () => Ref.set(recovered)(false)
+            (cause) => Ref.set(recovered, Cause.isInterrupted(cause)),
+            () => Ref.set(recovered, false)
           ),
           Effect.uninterruptible,
           Effect.fork
@@ -289,7 +289,7 @@ describe.concurrent("Effect", () => {
           Effect.sandbox,
           Effect.either,
           Effect.flatMap((either) =>
-            Ref.set(recovered)(Option.some(pipe(either, Either.mapLeft(Cause.isInterrupted))))
+            Ref.set(recovered, Option.some(pipe(either, Either.mapLeft(Cause.isInterrupted))))
           ),
           Effect.uninterruptible,
           Effect.fork
@@ -307,7 +307,7 @@ describe.concurrent("Effect", () => {
           release,
           Effect.zipRight(pipe(Effect.never(), Effect.interruptible)),
           Effect.exit,
-          Effect.flatMap((exit) => Ref.set(recovered)(Option.some(Exit.isInterrupted(exit)))),
+          Effect.flatMap((exit) => Ref.set(recovered, Option.some(Exit.isInterrupted(exit)))),
           Effect.uninterruptible,
           Effect.fork
         )
@@ -323,11 +323,11 @@ describe.concurrent("Effect", () => {
         pipe(
           release,
           Effect.zipRight(pipe(Effect.never(), Effect.interruptible, Effect.exit)),
-          Effect.zipRight(Ref.update(counter)((n) => n + 1)),
+          Effect.zipRight(Ref.update(counter, (n) => n + 1)),
           Effect.uninterruptible,
           Effect.interruptible,
           Effect.exit,
-          Effect.zipRight(Ref.update(counter)((n) => n + 1)),
+          Effect.zipRight(Ref.update(counter, (n) => n + 1)),
           Effect.uninterruptible,
           Effect.fork
         )
@@ -347,7 +347,7 @@ describe.concurrent("Effect", () => {
           Effect.exit,
           Effect.zipRight(release),
           Effect.zipRight(Effect.never()),
-          Effect.ensuring(Ref.set(ref)(true)),
+          Effect.ensuring(Ref.set(ref, true)),
           Effect.fork
         )
       ))
@@ -366,7 +366,7 @@ describe.concurrent("Effect", () => {
           Effect.exit,
           Effect.zipRight(release),
           Effect.zipRight(pipe(Effect.unit(), Effect.forever)),
-          Effect.ensuring(Ref.set(ref)(true)),
+          Effect.ensuring(Ref.set(ref, true)),
           Effect.fork
         )
       ))
@@ -401,7 +401,7 @@ describe.concurrent("Effect", () => {
           Effect.zipRight(Effect.never()),
           Effect.ensuring(
             pipe(
-              Ref.set(ref)(true),
+              Ref.set(ref, true),
               Effect.zipRight(Effect.sleep(Duration.millis(10))),
               Effect.zipRight(Deferred.succeed(deferred2, void 0))
             )
@@ -435,7 +435,7 @@ describe.concurrent("Effect", () => {
                 pipe(
                   await2,
                   Effect.zipRight(Effect.sleep(Duration.millis(10))),
-                  Effect.zipRight(Ref.set(ref)(true))
+                  Effect.zipRight(Ref.set(ref, true))
                 ), () => Effect.unit()),
               Effect.uninterruptible,
               Effect.fork
@@ -458,7 +458,7 @@ describe.concurrent("Effect", () => {
           pipe(
             Deferred.await(latch2),
             Effect.zipRight(Effect.sleep(Duration.millis(10))),
-            Effect.zipRight(Ref.set(ref)(true)),
+            Effect.zipRight(Ref.set(ref, true)),
             Effect.asUnit
           ), () => Effect.unit()),
         Effect.uninterruptible,
@@ -477,7 +477,7 @@ describe.concurrent("Effect", () => {
         pipe(
           release,
           Effect.zipRight(Effect.sleep(Duration.millis(10))),
-          Effect.zipRight(pipe(Ref.set(ref)(true), Effect.asUnit)),
+          Effect.zipRight(pipe(Ref.set(ref, true), Effect.asUnit)),
           Effect.uninterruptible,
           Effect.fork
         )
@@ -493,7 +493,7 @@ describe.concurrent("Effect", () => {
       const child = pipe(
         Deferred.succeed(deferred, void 0),
         Effect.zipRight(Effect.sleep(Duration.millis(10))),
-        Effect.zipRight(pipe(Ref.set(ref)(true)))
+        Effect.zipRight(pipe(Ref.set(ref, true)))
       )
       const parent = pipe(child, Effect.uninterruptible, Effect.fork, Effect.zipRight(Deferred.await(deferred)))
       const fiber = yield* $(Effect.fork(parent))
@@ -521,7 +521,7 @@ describe.concurrent("Effect", () => {
       const ref = yield* $(Ref.make(true))
       yield* $(pipe(
         Effect.checkInterruptible((isInterruptible) =>
-          pipe(Ref.set(ref)(isInterruptible), Effect.zipRight(Deferred.succeed(latch, void 0)))
+          pipe(Ref.set(ref, isInterruptible), Effect.zipRight(Deferred.succeed(latch, void 0)))
         ),
         Effect.fork,
         Effect.zipRight(Deferred.await(latch)),

@@ -148,7 +148,7 @@ export class TestClockImpl implements TestClock {
    */
   save(): Effect.Effect<never, never, Effect.Effect<never, never, void>> {
     const trace = getCallTrace()
-    return pipe(ref.get(this.clockState), core.map((data) => ref.set(this.clockState)(data))).traced(trace)
+    return pipe(ref.get(this.clockState), core.map((data) => ref.set(this.clockState, data))).traced(trace)
   }
   /**
    * Sets the current clock time to the specified instant. Any effects that
@@ -173,7 +173,7 @@ export class TestClockImpl implements TestClock {
       core.deferredMake<never, void>(),
       core.flatMap((deferred) =>
         pipe(
-          ref.modify(this.clockState)((data) => {
+          ref.modify(this.clockState, (data) => {
             const end = data.instant + duration.millis
             if (end > data.instant) {
               return [
@@ -280,7 +280,7 @@ export class TestClockImpl implements TestClock {
    */
   warningStart(): Effect.Effect<never, never, void> {
     const trace = getCallTrace()
-    return synchronized.updateSomeEffect(this.warningState)((data) =>
+    return synchronized.updateSomeEffect(this.warningState, (data) =>
       WarningData.isStart(data) ?
         Option.some(
           pipe(
@@ -290,8 +290,7 @@ export class TestClockImpl implements TestClock {
             core.map((fiber) => WarningData.pending(fiber))
           )
         ) :
-        Option.none
-    ).traced(trace)
+        Option.none).traced(trace)
   }
   /**
    * Cancels the warning message that is displayed if a test is using time but
@@ -301,7 +300,7 @@ export class TestClockImpl implements TestClock {
    */
   warningDone(): Effect.Effect<never, never, void> {
     const trace = getCallTrace()
-    return synchronized.updateSomeEffect(this.warningState)((warningData) => {
+    return synchronized.updateSomeEffect(this.warningState, (warningData) => {
       if (WarningData.isStart(warningData)) {
         return Option.some(core.succeed(WarningData.done))
       }
@@ -359,14 +358,14 @@ export class TestClockImpl implements TestClock {
    */
   suspendedWarningStart(): Effect.Effect<never, never, void> {
     const trace = getCallTrace()
-    return synchronized.updateSomeEffect(this.suspendedWarningState)((suspendedWarningData) => {
+    return synchronized.updateSomeEffect(this.suspendedWarningState, (suspendedWarningData) => {
       if (SuspendedWarningData.isStart(suspendedWarningData)) {
         return Option.some(
           pipe(
             this.live.provide(
               pipe(
                 effect.logWarning(suspendedWarning),
-                core.zipRight(synchronized.set(this.suspendedWarningState)(SuspendedWarningData.done)),
+                core.zipRight(synchronized.set(this.suspendedWarningState, SuspendedWarningData.done)),
                 effect.delay(Duration.seconds(5))
               )
             ),
@@ -388,7 +387,7 @@ export class TestClockImpl implements TestClock {
   suspendedWarningDone(): Effect.Effect<never, never, void> {
     const trace = getCallTrace()
     return pipe(
-      synchronized.updateSomeEffect(this.suspendedWarningState)((suspendedWarningData) => {
+      synchronized.updateSomeEffect(this.suspendedWarningState, (suspendedWarningData) => {
         if (SuspendedWarningData.isPending(suspendedWarningData)) {
           return Option.some(pipe(core.interruptFiber(suspendedWarningData.fiber), core.as(SuspendedWarningData.start)))
         }
@@ -407,7 +406,7 @@ export class TestClockImpl implements TestClock {
     return pipe(
       this.awaitSuspended(),
       core.zipRight(pipe(
-        ref.modify(this.clockState)((data) => {
+        ref.modify(this.clockState, (data) => {
           const end = f(data.instant)
           const sorted = pipe(
             data.sleeps,

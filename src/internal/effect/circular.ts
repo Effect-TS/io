@@ -171,7 +171,7 @@ const getCachedValue = <R, E, A>(
     pipe(
       effect.clockWith((clock) => clock.currentTimeMillis()),
       core.flatMap((time) =>
-        updateSomeAndGetEffectSynchronized(cache)((option) => {
+        updateSomeAndGetEffectSynchronized(cache, (option) => {
           switch (option._tag) {
             case "None": {
               return Option.some(computeCachedValue(self, timeToLive, time))
@@ -200,7 +200,7 @@ const getCachedValue = <R, E, A>(
 const invalidateCache = <E, A>(
   cache: Synchronized.Synchronized<Option.Option<readonly [number, Deferred.Deferred<E, A>]>>
 ): Effect.Effect<never, never, void> => {
-  return internalRef.set(cache)(Option.none as Option.Option<readonly [number, Deferred.Deferred<E, A>]>)
+  return internalRef.set(cache, Option.none)
 }
 
 /** @internal */
@@ -792,7 +792,7 @@ class SynchronizedImpl<A> implements Synchronized.Synchronized<A> {
       pipe(
         internalRef.get(this.ref),
         core.flatMap(f),
-        core.flatMap(([b, a]) => pipe(internalRef.set(this.ref)(a), core.as(b)))
+        core.flatMap(([b, a]) => pipe(internalRef.set(this.ref, a), core.as(b)))
       )
     ).traced(trace)
   }
@@ -812,21 +812,22 @@ export const unsafeMakeSynchronized = <A>(value: A): Synchronized.Synchronized<A
 }
 
 /** @internal */
-export const updateSomeAndGetEffectSynchronized = <A>(self: Synchronized.Synchronized<A>) => {
+export const updateSomeAndGetEffectSynchronized = <A, R, E>(
+  self: Synchronized.Synchronized<A>,
+  pf: (a: A) => Option.Option<Effect.Effect<R, E, A>>
+): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
-  return <R, E>(pf: (a: A) => Option.Option<Effect.Effect<R, E, A>>): Effect.Effect<R, E, A> => {
-    return self.modifyEffect((value) => {
-      const result = pf(value)
-      switch (result._tag) {
-        case "None": {
-          return core.succeed([value, value] as const)
-        }
-        case "Some": {
-          return pipe(result.value, core.map((a) => [a, a] as const))
-        }
+  return self.modifyEffect((value) => {
+    const result = pf(value)
+    switch (result._tag) {
+      case "None": {
+        return core.succeed([value, value] as const)
       }
-    }).traced(trace)
-  }
+      case "Some": {
+        return pipe(result.value, core.map((a) => [a, a] as const))
+      }
+    }
+  }).traced(trace)
 }
 
 // circular with Fiber

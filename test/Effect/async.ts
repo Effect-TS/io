@@ -75,14 +75,14 @@ describe.concurrent("Effect", () => {
         Effect.async<never, never, void>((cb) =>
           runtime.unsafeRun(pipe(
             Deferred.await(step),
-            Effect.zipRight(Effect.sync(() => cb(Ref.update(unexpectedPlace)(Chunk.prepend(1)))))
+            Effect.zipRight(Effect.sync(() => cb(Ref.update(unexpectedPlace, Chunk.prepend(1)))))
           ))
         ),
         Effect.ensuring(Effect.async<never, never, void>(() => {
           // The callback is never called so this never completes
           runtime.unsafeRun(Deferred.succeed(step, undefined))
         })),
-        Effect.ensuring(Ref.update(unexpectedPlace)(Chunk.prepend(2))),
+        Effect.ensuring(Ref.update(unexpectedPlace, Chunk.prepend(2))),
         Effect.forkDaemon
       ))
       const result = yield* $(pipe(Fiber.interrupt(fiber), Effect.timeout(Duration.seconds(1))))
@@ -99,7 +99,7 @@ describe.concurrent("Effect", () => {
         Effect.asyncOption<never, never, void>((cb) => {
           runtime.unsafeRun(pipe(
             Deferred.await(step),
-            Effect.zipRight(Effect.sync(() => cb(Ref.update(unexpectedPlace)(Chunk.prepend(1)))))
+            Effect.zipRight(Effect.sync(() => cb(Ref.update(unexpectedPlace, Chunk.prepend(1)))))
           ))
           return Option.some(Effect.unit())
         }),
@@ -109,7 +109,7 @@ describe.concurrent("Effect", () => {
             runtime.unsafeRun(Deferred.succeed(step, void 0))
           })
         ),
-        Effect.ensuring(Ref.update(unexpectedPlace)(Chunk.prepend(2))),
+        Effect.ensuring(Ref.update(unexpectedPlace, Chunk.prepend(2))),
         Effect.uninterruptible,
         Effect.forkDaemon
       ))

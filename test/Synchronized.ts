@@ -43,7 +43,7 @@ describe.concurrent("SynchronizedRef", () => {
   it.effect("getAndUpdateEffect - happy path", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Synchronized.make(current))
-      const result1 = yield* $(pipe(Synchronized.getAndUpdateEffect(ref)(() => Effect.succeed(update))))
+      const result1 = yield* $(pipe(Synchronized.getAndUpdateEffect(ref, () => Effect.succeed(update))))
       const result2 = yield* $(Synchronized.get(ref))
       assert.strictEqual(result1, current)
       assert.strictEqual(result2, update)
@@ -51,18 +51,17 @@ describe.concurrent("SynchronizedRef", () => {
   it.effect("getAndUpdateEffect - with failure", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Synchronized.make(current))
-      const result = yield* $(pipe(Synchronized.getAndUpdateEffect(ref)((_) => Effect.fail(failure)), Effect.exit))
+      const result = yield* $(pipe(Synchronized.getAndUpdateEffect(ref, (_) => Effect.fail(failure)), Effect.exit))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(failure))
     }))
   it.effect("getAndUpdateSomeEffect - happy path", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Synchronized.make<State>(Active))
       const result1 = yield* $(pipe(
-        Synchronized.getAndUpdateSomeEffect(ref)((state) =>
+        Synchronized.getAndUpdateSomeEffect(ref, (state) =>
           isClosed(state) ?
             Option.some(Effect.succeed(Changed)) :
-            Option.none
-        )
+            Option.none)
       ))
       const result2 = yield* $(Synchronized.get(ref))
       assert.deepStrictEqual(result1, Active)
@@ -72,20 +71,18 @@ describe.concurrent("SynchronizedRef", () => {
     Effect.gen(function*($) {
       const ref = yield* $(Synchronized.make<State>(Active))
       const result1 = yield* $(pipe(
-        Synchronized.getAndUpdateSomeEffect(ref)((state) =>
+        Synchronized.getAndUpdateSomeEffect(ref, (state) =>
           isActive(state) ?
             Option.some(Effect.succeed(Changed)) :
-            Option.none
-        )
+            Option.none)
       ))
       const result2 = yield* $(pipe(
-        Synchronized.getAndUpdateSomeEffect(ref)((state) =>
+        Synchronized.getAndUpdateSomeEffect(ref, (state) =>
           isClosed(state)
             ? Option.some(Effect.succeed(Active))
             : isChanged(state)
             ? Option.some(Effect.succeed(Closed))
-            : Option.none
-        )
+            : Option.none)
       ))
       const result3 = yield* $(Synchronized.get(ref))
       assert.deepStrictEqual(result1, Active)
@@ -96,11 +93,10 @@ describe.concurrent("SynchronizedRef", () => {
     Effect.gen(function*($) {
       const ref = yield* $(Synchronized.make<State>(Active))
       const result = yield* $(pipe(
-        Synchronized.getAndUpdateSomeEffect(ref)((state) =>
+        Synchronized.getAndUpdateSomeEffect(ref, (state) =>
           isActive(state) ?
             Option.some(Effect.fail(failure)) :
-            Option.none
-        ),
+            Option.none),
         Effect.exit
       ))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(failure))
@@ -116,7 +112,7 @@ describe.concurrent("SynchronizedRef", () => {
       const fiber = yield* $(Effect.fork(makeAndWait))
       const ref = yield* $(Deferred.await(deferred))
       yield* $(Fiber.interrupt(fiber))
-      const result = yield* $(pipe(Synchronized.updateAndGetEffect(ref)((_) => Effect.succeed(Closed))))
+      const result = yield* $(pipe(Synchronized.updateAndGetEffect(ref, (_) => Effect.succeed(Closed))))
       assert.deepStrictEqual(result, Closed)
     }))
 })

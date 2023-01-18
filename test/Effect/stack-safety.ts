@@ -70,13 +70,13 @@ describe.concurrent("Effect", () => {
         if (n <= 0) {
           return Ref.get(ref)
         }
-        return pipe(incLeft(n - 1, ref), Effect.zipLeft(Ref.update(ref)((n) => n + 1)))
+        return pipe(incLeft(n - 1, ref), Effect.zipLeft(Ref.update(ref, (n) => n + 1)))
       }
       const incRight = (n: number, ref: Ref.Ref<number>): Effect.Effect<never, never, number> => {
         if (n <= 0) {
           return Ref.get(ref)
         }
-        return pipe(Ref.update(ref)((n) => n + 1), Effect.zipRight(incRight(n - 1, ref)))
+        return pipe(Ref.update(ref, (n) => n + 1), Effect.zipRight(incRight(n - 1, ref)))
       }
       const left = pipe(Ref.make(0), Effect.flatMap((ref) => incLeft(100, ref)), Effect.map((n) => n === 0))
       const right = pipe(Ref.make(0), Effect.flatMap((ref) => incRight(1000, ref)), Effect.map((n) => n === 1000))

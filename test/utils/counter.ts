@@ -24,11 +24,11 @@ class CounterImpl implements Counter {
   }
 
   incrementAcquire(): Effect.Effect<never, never, number> {
-    return Ref.modify(this.ref)(([acquire, release]) => [acquire + 1, [acquire + 1, release] as const] as const)
+    return Ref.modify(this.ref, ([acquire, release]) => [acquire + 1, [acquire + 1, release] as const] as const)
   }
 
   incrementRelease(): Effect.Effect<never, never, number> {
-    return Ref.modify(this.ref)(([acquire, release]) => [release + 1, [acquire, release + 1] as const] as const)
+    return Ref.modify(this.ref, ([acquire, release]) => [release + 1, [acquire, release + 1] as const] as const)
   }
 
   acquired(): Effect.Effect<never, never, number> {

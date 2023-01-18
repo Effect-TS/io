@@ -108,7 +108,7 @@ describe.concurrent("Effect", () => {
           array,
           Effect.validateFirst((n) =>
             pipe(
-              Ref.update(counter)((n) => n + 1),
+              Ref.update(counter, (n) => n + 1),
               Effect.zipRight(f(n))
             )
           )

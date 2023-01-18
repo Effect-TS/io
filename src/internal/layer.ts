@@ -174,7 +174,7 @@ class MemoMap {
     scope: Scope.Scope
   ): Effect.Effect<RIn, E, Context.Context<ROut>> {
     return pipe(
-      synchronized.modifyEffect(this.ref)((map) => {
+      synchronized.modifyEffect(this.ref, (map) => {
         const inMap = map.get(layer)
         if (inMap !== undefined) {
           const [acquire, release] = inMap
@@ -221,17 +221,16 @@ class MemoMap {
                                 }
                                 case EffectOpCodes.OP_SUCCESS: {
                                   return pipe(
-                                    ref.set(finalizerRef)((exit) =>
+                                    ref.set(finalizerRef, (exit) =>
                                       pipe(
                                         innerScope,
                                         core.scopeClose(exit),
                                         core.whenEffect(
-                                          ref.modify(observers)((n) => [n === 1, n - 1] as const)
+                                          ref.modify(observers, (n) => [n === 1, n - 1] as const)
                                         ),
                                         core.asUnit
-                                      )
-                                    ),
-                                    core.zipRight(ref.update(observers)((n) => n + 1)),
+                                      )),
+                                    core.zipRight(ref.update(observers, (n) => n + 1)),
                                     core.zipRight(
                                       pipe(
                                         scope,
@@ -258,7 +257,7 @@ class MemoMap {
                         core.deferredAwait(deferred),
                         core.onExit(core.exitMatchEffect(
                           () => core.unit(),
-                          () => pipe(ref.update(observers)((n) => n + 1))
+                          () => pipe(ref.update(observers, (n) => n + 1))
                         ))
                       ),
                       (exit: Exit.Exit<unknown, unknown>) =>
