@@ -1,5 +1,5 @@
 import type * as Config from "@effect/io/Config"
-import type * as ConfigError from "@effect/io/Config/Error"
+import * as ConfigError from "@effect/io/Config/Error"
 import type * as ConfigSecret from "@effect/io/Config/Secret"
 import * as configError from "@effect/io/internal/configError"
 import * as configSecret from "@effect/io/internal/configSecret"
@@ -8,7 +8,7 @@ import type { EnforceNonEmptyRecord, NonEmptyArrayConfig, TupleConfig } from "@e
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Either from "@fp-ts/data/Either"
 import type { LazyArg } from "@fp-ts/data/Function"
-import { pipe } from "@fp-ts/data/Function"
+import { constTrue, pipe } from "@fp-ts/data/Function"
 import type * as HashMap from "@fp-ts/data/HashMap"
 import * as HashSet from "@fp-ts/data/HashSet"
 import * as Option from "@fp-ts/data/Option"
@@ -72,6 +72,7 @@ export interface Fallback extends
   Op<OpCodes.OP_FALLBACK, {
     readonly first: Config.Config<unknown>
     readonly second: Config.Config<unknown>
+    readonly condition: Predicate<ConfigError.ConfigError>
   }>
 {}
 
@@ -327,6 +328,22 @@ export const orElse = <A2>(that: LazyArg<Config.Config<A2>>) => {
     fallback._tag = OpCodes.OP_FALLBACK
     fallback.first = self
     fallback.second = defer(that)
+    fallback.condition = constTrue
+    return fallback
+  }
+}
+
+/** @internal */
+export const orElseIf = <A2>(
+  that: LazyArg<Config.Config<A2>>,
+  condition: Predicate<ConfigError.ConfigError>
+) => {
+  return <A>(self: Config.Config<A>): Config.Config<A> => {
+    const fallback = Object.create(proto)
+    fallback._tag = OpCodes.OP_FALLBACK
+    fallback.first = self
+    fallback.second = defer(that)
+    fallback.condition = condition
     return fallback
   }
 }
@@ -336,7 +353,7 @@ export const optional = <A>(self: Config.Config<A>): Config.Config<Option.Option
   return pipe(
     self,
     map(Option.some),
-    orElse(() => succeed(Option.none))
+    orElseIf(() => succeed(Option.none), ConfigError.isMissingDataOnly)
   )
 }
 
@@ -462,9 +479,8 @@ export const validate: {
 
 /** @internal */
 export const withDefault = <A2>(def: A2) => {
-  return <A>(self: Config.Config<A>): Config.Config<A | A2> => {
-    return pipe(self, orElse(() => succeed(def)))
-  }
+  return <A>(self: Config.Config<A>): Config.Config<A | A2> =>
+    pipe(self, orElseIf(() => succeed(def), ConfigError.isMissingDataOnly))
 }
 
 /** @internal */

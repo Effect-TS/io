@@ -172,6 +172,19 @@ export const nested: (name: string) => <A>(self: Config<A>) => Config<A> = inter
 export const orElse: <A2>(that: LazyArg<Config<A2>>) => <A>(self: Config<A>) => Config<A2 | A> = internal.orElse
 
 /**
+ * Returns configuration which reads from this configuration, but which falls
+ * back to the specified configuration if reading from this configuration
+ * fails with an error satisfying the specified predicate.
+ *
+ * @since 1.0.0
+ * @category mutations
+ */
+export const orElseIf: <A2>(
+  that: LazyArg<Config<A2>>,
+  condition: Predicate<ConfigError.ConfigError>
+) => <A>(self: Config<A>) => Config<A> = internal.orElseIf
+
+/**
  * Returns an optional version of this config, which will be `None` if the
  * data is missing from configuration, and `Some` otherwise.
  *
