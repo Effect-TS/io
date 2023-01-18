@@ -183,7 +183,7 @@ class MemoMap {
             core.flatMap(([patch, b]) => pipe(effect.patchFiberRefs(patch), core.as(b))),
             core.onExit(core.exitMatch(
               () => core.unit(),
-              () => pipe(scope, core.scopeAddFinalizerExit(release))
+              () => core.scopeAddFinalizerExit(scope, release)
             ))
           )
           return core.succeed([cached, map] as const)
@@ -215,7 +215,7 @@ class MemoMap {
                                 case EffectOpCodes.OP_FAILURE: {
                                   return pipe(
                                     core.deferredFailCause(deferred, exit.cause),
-                                    core.zipRight(pipe(innerScope, core.scopeClose(exit))),
+                                    core.zipRight(core.scopeClose(innerScope, exit)),
                                     core.zipRight(core.failCause(exit.cause))
                                   )
                                 }
@@ -223,8 +223,7 @@ class MemoMap {
                                   return pipe(
                                     ref.set(finalizerRef, (exit) =>
                                       pipe(
-                                        innerScope,
-                                        core.scopeClose(exit),
+                                        core.scopeClose(innerScope, exit),
                                         core.whenEffect(
                                           ref.modify(observers, (n) => [n === 1, n - 1] as const)
                                         ),
@@ -233,13 +232,11 @@ class MemoMap {
                                     core.zipRight(ref.update(observers, (n) => n + 1)),
                                     core.zipRight(
                                       pipe(
-                                        scope,
-                                        core.scopeAddFinalizerExit((exit) =>
+                                        core.scopeAddFinalizerExit(scope, (exit) =>
                                           pipe(
                                             ref.get(finalizerRef),
                                             core.flatMap((finalizer) => finalizer(exit))
-                                          )
-                                        )
+                                          ))
                                       )
                                     ),
                                     core.zipRight(core.deferredSucceed(deferred, exit.value)),
@@ -376,11 +373,7 @@ export const withScope = (scope: Scope.Scope) => {
       }
       case OpCodes.OP_SCOPED: {
         return core.sync(() =>
-          (_: MemoMap) =>
-            pipe(
-              scope,
-              fiberRuntime.scopeExtend(op.effect as Effect.Effect<RIn, E, Context.Context<ROut>>)
-            )
+          (_: MemoMap) => fiberRuntime.scopeExtend(scope)(op.effect as Effect.Effect<RIn, E, Context.Context<ROut>>)
         ).traced(trace)
       }
       case OpCodes.OP_SUSPEND: {
@@ -932,7 +925,7 @@ export const provideLayer = <R, E, A>(layer: Layer.Layer<R, E, A>) => {
           buildWithScope(scope),
           core.flatMap((context) => pipe(self, core.provideEnvironment(context)))
         ),
-      (scope, exit) => pipe(scope, core.scopeClose(exit))
+      (scope, exit) => core.scopeClose(scope, exit)
     ).traced(trace)
   }
 }

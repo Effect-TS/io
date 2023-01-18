@@ -97,8 +97,9 @@ export declare namespace Scope {
  * @category mutations
  */
 export const addFinalizer: (
+  self: Scope,
   finalizer: Effect.Effect<never, never, unknown>
-) => (self: Scope) => Effect.Effect<never, never, void> = core.scopeAddFinalizer
+) => Effect.Effect<never, never, void> = core.scopeAddFinalizer
 
 /**
  * A simplified version of `addFinalizerWith` when the `finalizer` does not
@@ -108,7 +109,7 @@ export const addFinalizer: (
  * @since 1.0.0
  * @category mutations
  */
-export const addFinalizerExit: (finalizer: Scope.Finalizer) => (self: Scope) => Effect.Effect<never, never, void> =
+export const addFinalizerExit: (self: Scope, finalizer: Scope.Finalizer) => Effect.Effect<never, never, void> =
   core.scopeAddFinalizerExit
 
 /**
@@ -119,7 +120,7 @@ export const addFinalizerExit: (finalizer: Scope.Finalizer) => (self: Scope) => 
  * @category destructors
  * @since 1.0.0
  */
-export const close: (exit: Exit.Exit<unknown, unknown>) => (self: CloseableScope) => Effect.Effect<never, never, void> =
+export const close: (self: CloseableScope, exit: Exit.Exit<unknown, unknown>) => Effect.Effect<never, never, void> =
   core.scopeClose
 
 /**
@@ -132,9 +133,9 @@ export const close: (exit: Exit.Exit<unknown, unknown>) => (self: CloseableScope
  * @category mutations
  * @since 1.0.0
  */
-export const extend: <R, E, A>(
-  effect: Effect.Effect<R, E, A>
-) => (self: Scope) => Effect.Effect<Exclude<R, Scope>, E, A> = fiberRuntime.scopeExtend
+export const extend: (
+  self: Scope
+) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<Exclude<R, Scope>, E, A> = fiberRuntime.scopeExtend
 
 /**
  * Forks a new scope that is a child of this scope. The child scope will
@@ -145,8 +146,9 @@ export const extend: <R, E, A>(
  * @since 1.0.0
  */
 export const fork: (
+  self: Scope,
   strategy: ExecutionStrategy.ExecutionStrategy
-) => (self: Scope) => Effect.Effect<never, never, CloseableScope> = core.scopeFork
+) => Effect.Effect<never, never, CloseableScope> = core.scopeFork
 
 /**
  * Uses the scope by providing it to an `Effect` workflow that needs a scope,
@@ -158,9 +160,9 @@ export const fork: (
  * @category destructors
  * @since 1.0.0
  */
-export const use: <R, E, A>(
-  effect: Effect.Effect<R, E, A>
-) => (self: CloseableScope) => Effect.Effect<Exclude<R, Scope>, E, A> = fiberRuntime.scopeUse
+export const use: (
+  self: CloseableScope
+) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<Exclude<R, Scope>, E, A> = fiberRuntime.scopeUse
 
 /**
  * Creates a Scope where Finalizers will run according to the `ExecutionStrategy`.

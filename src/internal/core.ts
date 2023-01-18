@@ -1844,44 +1844,48 @@ export const CloseableScopeTypeId: Scope.CloseableScopeTypeId = Symbol.for(
  * @macro traced
  * @internal
  */
-export const scopeAddFinalizer = (finalizer: Effect.Effect<never, never, unknown>) => {
+export const scopeAddFinalizer = (
+  self: Scope.Scope,
+  finalizer: Effect.Effect<never, never, unknown>
+): Effect.Effect<never, never, void> => {
   const trace = getCallTrace()
-  return (self: Scope.Scope): Effect.Effect<never, never, void> => {
-    return self.addFinalizer(() => asUnit(finalizer)).traced(trace)
-  }
+  return self.addFinalizer(() => asUnit(finalizer)).traced(trace)
 }
 
 /**
  * @macro traced
  * @internal
  */
-export const scopeAddFinalizerExit = (finalizer: Scope.Scope.Finalizer) => {
+export const scopeAddFinalizerExit = (
+  self: Scope.Scope,
+  finalizer: Scope.Scope.Finalizer
+): Effect.Effect<never, never, void> => {
   const trace = getCallTrace()
-  return (self: Scope.Scope): Effect.Effect<never, never, void> => {
-    return self.addFinalizer(finalizer).traced(trace)
-  }
+  return self.addFinalizer(finalizer).traced(trace)
 }
 
 /**
  * @macro traced
  * @internal
  */
-export const scopeClose = (exit: Exit.Exit<unknown, unknown>) => {
+export const scopeClose = (
+  self: Scope.Scope.Closeable,
+  exit: Exit.Exit<unknown, unknown>
+): Effect.Effect<never, never, void> => {
   const trace = getCallTrace()
-  return (self: Scope.Scope.Closeable): Effect.Effect<never, never, void> => {
-    return self.close(exit).traced(trace)
-  }
+  return self.close(exit).traced(trace)
 }
 
 /**
  * @macro traced
  * @internal
  */
-export const scopeFork = (strategy: ExecutionStrategy.ExecutionStrategy) => {
+export const scopeFork = (
+  self: Scope.Scope,
+  strategy: ExecutionStrategy.ExecutionStrategy
+): Effect.Effect<never, never, Scope.Scope.Closeable> => {
   const trace = getCallTrace()
-  return (self: Scope.Scope): Effect.Effect<never, never, Scope.Scope.Closeable> => {
-    return self.fork(strategy).traced(trace)
-  }
+  return self.fork(strategy).traced(trace)
 }
 
 // -----------------------------------------------------------------------------
