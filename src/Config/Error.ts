@@ -32,10 +32,41 @@ export type ConfigError =
   | SourceUnavailable
   | Unsupported
 
+/**
+ * @since 1.0.0
+ */
 export declare namespace ConfigError {
+  /**
+   * @since 1.0.0
+   * @category models
+   */
   export interface Proto {
     readonly [ConfigErrorTypeId]: ConfigErrorTypeId
   }
+
+  /**
+   * @since 1.0.0
+   * @category models
+   */
+  export type Reducer<C, Z> = ConfigErrorReducer<C, Z>
+}
+
+/**
+ * @since 1.0.0
+ * @category models
+ */
+export interface ConfigErrorReducer<C, Z> {
+  readonly andCase: (context: C, left: Z, right: Z) => Z
+  readonly orCase: (context: C, left: Z, right: Z) => Z
+  readonly invalidDataCase: (context: C, path: Chunk.Chunk<string>, message: string) => Z
+  readonly missingDataCase: (context: C, path: Chunk.Chunk<string>, message: string) => Z
+  readonly sourceUnavailableCase: (
+    context: C,
+    path: Chunk.Chunk<string>,
+    message: string,
+    cause: Cause.Cause<unknown>
+  ) => Z
+  readonly unsupportedCase: (context: C, path: Chunk.Chunk<string>, message: string) => Z
 }
 
 /**
@@ -180,6 +211,14 @@ export const isInvalidData: (self: ConfigError) => self is InvalidData = interna
  * @category refinements
  */
 export const isMissingData: (self: ConfigError) => self is MissingData = internal.isMissingData
+
+/**
+ * Returns `true` if the specified `ConfigError` contains only `MissingData` errors, `false` otherwise.
+ *
+ * @since 1.0.0
+ * @categer getters
+ */
+export const isMissingDataOnly: (self: ConfigError) => boolean = internal.isMissingDataOnly
 
 /**
  * Returns `true` if the specified `ConfigError` is a `SourceUnavailable`,

@@ -6,6 +6,7 @@ import type * as ConfigError from "@effect/io/Config/Error"
 import type * as Effect from "@effect/io/Effect"
 import * as internal from "@effect/io/internal/configProvider"
 import type * as Chunk from "@fp-ts/data/Chunk"
+import type * as Context from "@fp-ts/data/Context"
 import type { LazyArg } from "@fp-ts/data/Function"
 import type * as HashSet from "@fp-ts/data/HashSet"
 
@@ -22,6 +23,18 @@ export const ConfigProviderTypeId: unique symbol = internal.ConfigProviderTypeId
 export type ConfigProviderTypeId = typeof ConfigProviderTypeId
 
 /**
+ * @since 1.0.0
+ * @category symbols
+ */
+export const FlatConfigProviderTypeId: unique symbol = internal.FlatConfigProviderTypeId
+
+/**
+ * @since 1.0.0
+ * @category symbols
+ */
+export type FlatConfigProviderTypeId = typeof FlatConfigProviderTypeId
+
+/**
  * A ConfigProvider is a service that provides configuration given a description
  * of the structure of that configuration.
  *
@@ -35,6 +48,11 @@ export interface ConfigProvider extends ConfigProvider.Proto {
    * @macro traced
    */
   load<A>(config: Config.Config<A>): Effect.Effect<never, ConfigError.ConfigError, A>
+  /**
+   * Flattens this config provider into a simplified config provider that knows
+   * only how to deal with flat (key/value) properties.
+   */
+  flatten(): ConfigProvider.Flat
 }
 
 /**
@@ -57,7 +75,8 @@ export declare namespace ConfigProvider {
    * @since 1.0.0
    * @category models
    */
-  export interface Flat extends Proto {
+  export interface Flat {
+    readonly [FlatConfigProviderTypeId]: FlatConfigProviderTypeId
     /**
      * @macro traced
      */
@@ -91,13 +110,22 @@ export declare namespace ConfigProvider {
 }
 
 /**
+ * The service tag for `ConfigProvider`.
+ *
+ * @since 1.0.0
+ * @category environment
+ */
+export const Tag: Context.Tag<ConfigProvider> = internal.configProviderTag
+
+/**
  * Creates a new config provider.
  *
  * @since 1.0.0
  * @category constructors
  */
 export const make: (
-  load: <A>(config: Config.Config<A>) => Effect.Effect<never, ConfigError.ConfigError, A>
+  load: <A>(config: Config.Config<A>) => Effect.Effect<never, ConfigError.ConfigError, A>,
+  flatten: () => ConfigProvider.Flat
 ) => ConfigProvider = internal.make
 
 /**

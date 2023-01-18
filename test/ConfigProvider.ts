@@ -293,4 +293,33 @@ describe.concurrent("ConfigProvider", () => {
         )
       )
     }))
+
+  it.effect("nested", () =>
+    Effect.gen(function*($) {
+      const configProvider1 = ConfigProvider.fromMap(new Map([["nested.key", "value"]]))
+      const config1 = pipe(Config.string("key"), Config.nested("nested"))
+      const configProvider2 = pipe(
+        ConfigProvider.fromMap(new Map([["nested.key", "value"]])),
+        ConfigProvider.nested("nested")
+      )
+      const config2 = Config.string("key")
+      const result1 = yield* $(configProvider1.load(config1))
+      const result2 = yield* $(configProvider2.load(config2))
+      assert.strictEqual(result1, "value")
+      assert.strictEqual(result2, "value")
+    }))
+
+  it.effect("orElse", () =>
+    Effect.gen(function*($) {
+      const configProvider1 = ConfigProvider.fromMap(new Map([["key", "value"]]))
+      const configProvider2 = ConfigProvider.fromMap(new Map([["key1", "value1"]]))
+      const config = Config.string("key1")
+      const result = yield* $(
+        pipe(
+          configProvider1,
+          ConfigProvider.orElse(() => configProvider2)
+        ).load(config)
+      )
+      assert.strictEqual(result, "value1")
+    }))
 })
