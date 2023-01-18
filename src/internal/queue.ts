@@ -255,8 +255,7 @@ const takeRemainderLoop = <A>(
     return core.succeed(acc)
   }
   return pipe(
-    self,
-    takeUpTo(max),
+    takeUpTo(self, max),
     core.flatMap((bs) => {
       const remaining = min - bs.length
       if (remaining === 1) {
@@ -413,19 +412,15 @@ export const shutdown = <A>(self: Queue.Dequeue<A> | Queue.Enqueue<A>): Effect.E
 }
 
 /** @internal */
-export const offer = <A>(value: A) => {
+export const offer = <A>(self: Queue.Enqueue<A>, value: A): Effect.Effect<never, never, boolean> => {
   const trace = getCallTrace()
-  return (self: Queue.Enqueue<A>): Effect.Effect<never, never, boolean> => {
-    return self.offer(value).traced(trace)
-  }
+  return self.offer(value).traced(trace)
 }
 
 /** @internal */
-export const offerAll = <A>(iterable: Iterable<A>) => {
+export const offerAll = <A>(self: Queue.Enqueue<A>, iterable: Iterable<A>): Effect.Effect<never, never, boolean> => {
   const trace = getCallTrace()
-  return (self: Queue.Enqueue<A>): Effect.Effect<never, never, boolean> => {
-    return self.offerAll(iterable).traced(trace)
-  }
+  return self.offerAll(iterable).traced(trace)
 }
 
 /** @internal */
@@ -447,27 +442,25 @@ export const takeAll = <A>(self: Queue.Dequeue<A>): Effect.Effect<never, never, 
 }
 
 /** @internal */
-export const takeUpTo = (max: number) => {
+export const takeUpTo = <A>(self: Queue.Dequeue<A>, max: number): Effect.Effect<never, never, Chunk.Chunk<A>> => {
   const trace = getCallTrace()
-  return <A>(self: Queue.Dequeue<A>): Effect.Effect<never, never, Chunk.Chunk<A>> => {
-    return self.takeUpTo(max).traced(trace)
-  }
+  return self.takeUpTo(max).traced(trace)
 }
 
 /** @internal */
-export const takeBetween = (min: number, max: number) => {
+export const takeBetween = <A>(
+  self: Queue.Dequeue<A>,
+  min: number,
+  max: number
+): Effect.Effect<never, never, Chunk.Chunk<A>> => {
   const trace = getCallTrace()
-  return <A>(self: Queue.Dequeue<A>): Effect.Effect<never, never, Chunk.Chunk<A>> => {
-    return self.takeBetween(min, max).traced(trace)
-  }
+  return self.takeBetween(min, max).traced(trace)
 }
 
 /** @internal */
-export const takeN = (n: number) => {
+export const takeN = <A>(self: Queue.Dequeue<A>, n: number): Effect.Effect<never, never, Chunk.Chunk<A>> => {
   const trace = getCallTrace()
-  return <A>(self: Queue.Dequeue<A>): Effect.Effect<never, never, Chunk.Chunk<A>> => {
-    return self.takeBetween(n, n).traced(trace)
-  }
+  return self.takeBetween(n, n).traced(trace)
 }
 
 // -----------------------------------------------------------------------------

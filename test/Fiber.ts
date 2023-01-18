@@ -154,10 +154,10 @@ describe.concurrent("Fiber", () => {
         if (n === 100) {
           return pipe(Queue.shutdown(queue), Effect.zipRight(Effect.fail("fail")))
         }
-        return pipe(queue, Queue.offer(n), Effect.asUnit)
+        return pipe(Queue.offer(queue, n), Effect.asUnit)
       }
       const queue = yield* $(Queue.unbounded<number>())
-      yield* $(pipe(queue, Queue.offerAll(Array.from(Array(100), (_, i) => i + 1))))
+      yield* $(Queue.offerAll(queue, Array.from(Array(100), (_, i) => i + 1)))
       const result = yield* $(Effect.exit(shard(queue, 4, worker)))
       yield* $(Queue.shutdown(queue))
       assert.isTrue(Exit.isFailure(result))
