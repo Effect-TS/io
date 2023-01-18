@@ -334,7 +334,7 @@ describe.concurrent("Layer", () => {
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make<boolean>(false))
       const tag = Context.Tag<boolean>()
-      const layer1 = Layer.scopedDiscard(FiberRef.locallyScoped(fiberRef)(true))
+      const layer1 = Layer.scopedDiscard(FiberRef.locallyScoped(fiberRef, true))
       const layer2 = Layer.effect(tag)(FiberRef.get(fiberRef))
       const layer3 = pipe(layer1, Layer.merge(pipe(layer1, Layer.provideTo(layer2))))
       const result = yield* $(Layer.build(layer3))

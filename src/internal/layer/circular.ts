@@ -15,10 +15,11 @@ import * as HashSet from "@fp-ts/data/HashSet"
 
 /** @internal */
 export const minimumLogLevel = (level: LogLevel.LogLevel) =>
-  layer.scopedDiscard(fiberRuntime.fiberRefLocallyScoped(fiberRuntime.currentMinimumLogLevel)(level))
+  layer.scopedDiscard(fiberRuntime.fiberRefLocallyScoped(fiberRuntime.currentMinimumLogLevel, level))
 
 /** @internal */
-export const withMinimumLogLevel = core.fiberRefLocally(fiberRuntime.currentMinimumLogLevel)
+export const withMinimumLogLevel = (level: LogLevel.LogLevel) =>
+  core.fiberRefLocally(fiberRuntime.currentMinimumLogLevel, level)
 
 /** @internal */
 export const addLogger = <A>(logger: Logger.Logger<string, A>): Layer.Layer<never, never, never> => {

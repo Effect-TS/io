@@ -143,7 +143,7 @@ export const setAll = (self: FiberRefs.FiberRefs) => {
   const trace = getCallTrace()
   return pipe(
     fiberRefs(self),
-    core.forEachDiscard((fiberRef) => core.fiberRefSet(fiberRef)(getOrDefault(fiberRef)(self)))
+    core.forEachDiscard((fiberRef) => core.fiberRefSet(fiberRef, getOrDefault(fiberRef)(self)))
   ).traced(trace)
 }
 

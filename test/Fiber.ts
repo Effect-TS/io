@@ -51,7 +51,7 @@ describe.concurrent("Fiber", () => {
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(initial))
       const child = yield* $(
-        withLatch((release) => pipe(FiberRef.set(fiberRef)(update), Effect.zipRight(release), Effect.fork))
+        withLatch((release) => pipe(FiberRef.set(fiberRef, update), Effect.zipRight(release), Effect.fork))
       )
       yield* $(pipe(child, Fiber.map(constVoid), Fiber.inheritAll))
       const result = yield* $(FiberRef.get(fiberRef))
@@ -64,14 +64,14 @@ describe.concurrent("Fiber", () => {
       const latch2 = yield* $(Deferred.make<never, void>())
       const child1 = yield* $(
         pipe(
-          FiberRef.set(fiberRef)("child1"),
+          FiberRef.set(fiberRef, "child1"),
           Effect.zipRight(Deferred.succeed(latch1, void 0)),
           Effect.fork
         )
       )
       const child2 = yield* $(
         pipe(
-          FiberRef.set(fiberRef)("child2"),
+          FiberRef.set(fiberRef, "child2"),
           Effect.zipRight(Deferred.succeed(latch2, void 0)),
           Effect.fork
         )
@@ -88,14 +88,14 @@ describe.concurrent("Fiber", () => {
       const latch2 = yield* $(Deferred.make<never, void>())
       const child1 = yield* $(
         pipe(
-          FiberRef.set(fiberRef)("child1"),
+          FiberRef.set(fiberRef, "child1"),
           Effect.zipRight(Deferred.succeed(latch1, void 0)),
           Effect.fork
         )
       )
       const child2 = yield* $(
         pipe(
-          FiberRef.set(fiberRef)("child2"),
+          FiberRef.set(fiberRef, "child2"),
           Effect.zipRight(Deferred.succeed(latch2, void 0)),
           Effect.fork
         )

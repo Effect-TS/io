@@ -47,18 +47,15 @@ export const sleep = (duration: Duration.Duration): Effect.Effect<never, never, 
 /** @internal */
 export const clockWith = <R, E, A>(f: (clock: Clock.Clock) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
-  return core.fiberRefGetWith(currentServices)((services) =>
-    f(
-      pipe(services, Context.get(clock.clockTag))
-    )
-  ).traced(trace)
+  return core.fiberRefGetWith(currentServices, (services) => f(pipe(services, Context.get(clock.clockTag))))
+    .traced(trace)
 }
 
 /** @internal */
 export const withClock = <A extends Clock.Clock>(value: A) => {
   const trace = getCallTrace()
   return <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-    return core.fiberRefLocallyWith(currentServices)(Context.add(clock.clockTag)(value))(effect).traced(trace)
+    return core.fiberRefLocallyWith(currentServices, Context.add(clock.clockTag)(value))(effect).traced(trace)
   }
 }
 
@@ -68,9 +65,8 @@ export const withClock = <A extends Clock.Clock>(value: A) => {
 export const withConfigProvider = (value: ConfigProvider) => {
   const trace = getCallTrace()
   return <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-    return core.fiberRefLocallyWith(currentServices)(
-      Context.add(configProvider.configProviderTag)(value)
-    )(effect).traced(trace)
+    return core.fiberRefLocallyWith(currentServices, Context.add(configProvider.configProviderTag)(value))(effect)
+      .traced(trace)
   }
 }
 
@@ -79,8 +75,9 @@ export const configProviderWith = <R, E, A>(
   f: (configProvider: ConfigProvider) => Effect.Effect<R, E, A>
 ): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
-  return core.fiberRefGetWith(currentServices)((services) =>
-    f(pipe(services, Context.get(configProvider.configProviderTag)))
+  return core.fiberRefGetWith(
+    currentServices,
+    (services) => f(pipe(services, Context.get(configProvider.configProviderTag)))
   ).traced(trace)
 }
 
@@ -95,11 +92,11 @@ export const configOrDie = <A>(config: Config<A>) => core.orDie(configProviderWi
 /** @internal */
 export const randomWith = <R, E, A>(f: (random: Random.Random) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
   const trace = getCallTrace()
-  return core.fiberRefGetWith(currentServices)((services) =>
-    f(
-      pipe(services, Context.get(random.randomTag))
-    )
-  ).traced(trace)
+  return core.fiberRefGetWith(
+    currentServices,
+    (services) => f(pipe(services, Context.get(random.randomTag)))
+  )
+    .traced(trace)
 }
 
 /** @internal */
