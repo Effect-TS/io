@@ -61,7 +61,6 @@ export declare namespace Deferred {
 /**
  * Creates a new `Deferred`.
  *
- * @macro traced
  * @since 1.0.0
  * @category constructors
  */
@@ -70,7 +69,6 @@ export const make: <E, A>() => Effect.Effect<never, never, Deferred<E, A>> = cor
 /**
  * Creates a new `Deferred` from the specified `FiberId`.
  *
- * @macro traced
  * @since 1.0.0
  * @category constructors
  */
@@ -80,7 +78,6 @@ export const makeAs: <E, A>(fiberId: FiberId.FiberId) => Effect.Effect<never, ne
 /**
  * Completes the `Deferred` with the specified value.
  *
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -90,7 +87,6 @@ export const succeed: <E, A>(self: Deferred<E, A>, value: A) => Effect.Effect<ne
 /**
  * Completes the `Deferred` with the specified value.
  *
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -101,7 +97,6 @@ export const sync: <E, A>(self: Deferred<E, A>, evaluate: LazyArg<A>) => Effect.
  * Fails the `Deferred` with the specified error, which will be propagated to
  * all fibers waiting on the value of the `Deferred`.
  *
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -111,7 +106,6 @@ export const fail: <E, A>(self: Deferred<E, A>, error: E) => Effect.Effect<never
  * Fails the `Deferred` with the specified error, which will be propagated to
  * all fibers waiting on the value of the `Deferred`.
  *
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -122,7 +116,6 @@ export const failSync: <E, A>(self: Deferred<E, A>, evaluate: LazyArg<E>) => Eff
  * Fails the `Deferred` with the specified `Cause`, which will be propagated to
  * all fibers waiting on the value of the `Deferred`.
  *
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -133,7 +126,6 @@ export const failCause: <E, A>(self: Deferred<E, A>, cause: Cause.Cause<E>) => E
  * Fails the `Deferred` with the specified `Cause`, which will be propagated to
  * all fibers waiting on the value of the `Deferred`.
  *
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -146,7 +138,6 @@ export const failCauseSync: <E, A>(
  * Kills the `Deferred` with the specified defect, which will be propagated to
  * all fibers waiting on the value of the `Deferred`.
  *
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -157,7 +148,6 @@ export const die: <E, A>(self: Deferred<E, A>, defect: unknown) => Effect.Effect
  * Kills the `Deferred` with the specified defect, which will be propagated to
  * all fibers waiting on the value of the `Deferred`.
  *
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -169,7 +159,6 @@ export const dieSync: <E, A>(self: Deferred<E, A>, evaluate: LazyArg<unknown>) =
  * waiting on the value of the `Deferred` with the `FiberId` of the fiber
  * calling this method.
  *
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -179,7 +168,6 @@ export const interrupt: <E, A>(self: Deferred<E, A>) => Effect.Effect<never, nev
  * Completes the `Deferred` with interruption. This will interrupt all fibers
  * waiting on the value of the `Deferred` with the specified `FiberId`.
  *
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -192,7 +180,6 @@ export const interruptWith: <E, A>(
  * Exits the `Deferred` with the specified `Exit` value, which will be
  * propagated to all fibers waiting on the value of the `Deferred`.
  *
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -203,7 +190,6 @@ export const done: <E, A>(self: Deferred<E, A>, exit: Exit.Exit<E, A>) => Effect
  * Returns `true` if this `Deferred` has already been completed with a value or
  * an error, `false` otherwise.
  *
- * @macro traced
  * @since 1.0.0
  * @category getters
  */
@@ -213,7 +199,6 @@ export const isDone: <E, A>(self: Deferred<E, A>) => Effect.Effect<never, never,
  * Returns a `Some<Effect<R, E, A>>` from the `Deferred` if this `Deferred` has
  * already been completed, `None` otherwise.
  *
- * @macro traced
  * @since 1.0.0
  * @category getters
  */
@@ -228,7 +213,6 @@ export {
    * Retrieves the value of the `Deferred`, suspending the fiber running the
    * workflow until the result is available.
    *
-   * @macro traced
    * @since 1.0.0
    * @category getters
    */
@@ -242,7 +226,6 @@ export {
  * Note that `Deferred.completeWith` will be much faster, so consider using
  * that if you do not need to memoize the result of the specified effect.
  *
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -255,7 +238,6 @@ export const complete: <E, A>(
  * Completes the deferred with the result of the specified effect. If the
  * deferred has already been completed, the method will produce false.
  *
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */

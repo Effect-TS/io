@@ -1,4 +1,5 @@
 import type * as Cause from "@effect/io/Cause"
+import type { Trace } from "@effect/io/Debug"
 import { runtimeDebug } from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as FiberId from "@effect/io/Fiber/Id"
@@ -130,17 +131,36 @@ const renderSpan = (span: Option.Option<SpanAnnotation>): ReadonlyArray<string> 
   ]
 }
 
+const renderTraces = (chunk: Chunk.Chunk<Trace>): ReadonlyArray<string> => {
+  const ret: Array<string> = []
+  for (const s of chunk) {
+    if (s) {
+      const r = s.toString()
+      if (r) {
+        ret.push(r)
+      }
+    }
+  }
+  return ret
+}
+
 /** @internal */
 const renderStack = (span: Option.Option<StackAnnotation>): ReadonlyArray<string> => {
   if (Option.isNone(span)) {
     return []
   }
-  return span.value.stack.length === 0 ? [] : [
-    "Stack:",
-    "",
-    ...span.value.stack,
-    ""
-  ]
+  if (span.value.stack.length > 0) {
+    const traces = renderTraces(span.value.stack)
+    if (traces.length > 0) {
+      return [
+        "Stack:",
+        "",
+        ...renderTraces(span.value.stack),
+        ""
+      ]
+    }
+  }
+  return []
 }
 
 /** @internal */
@@ -149,12 +169,15 @@ const renderExecution = (span: Option.Option<StackAnnotation>): ReadonlyArray<st
     return []
   }
   if (Chunk.isNonEmpty(span.value.execution)) {
-    return [
-      "Execution:",
-      "",
-      ...span.value.execution,
-      ""
-    ]
+    const traces = renderTraces(span.value.execution)
+    if (traces.length > 0) {
+      return [
+        "Execution:",
+        "",
+        ...traces,
+        ""
+      ]
+    }
   }
   return []
 }

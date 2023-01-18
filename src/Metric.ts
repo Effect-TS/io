@@ -55,9 +55,7 @@ export interface Metric<Type, In, Out> extends Metric.Variance<Type, In, Out> {
   readonly keyType: Type
   readonly unsafeUpdate: (input: In, extraTags: HashSet.HashSet<MetricLabel.MetricLabel>) => void
   readonly unsafeValue: (extraTags: HashSet.HashSet<MetricLabel.MetricLabel>) => Out
-  /**
-   * @macro traced
-   */
+  /** */
   <R, E, A extends In>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A>
 }
 
@@ -203,14 +201,12 @@ export const histogram: (
 ) => Metric<MetricKeyType.MetricKeyType.Histogram, number, MetricState.MetricState.Histogram> = internal.histogram
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category aspects
  */
 export const increment: (self: Metric.Counter<number>) => Effect.Effect<never, never, void> = internal.increment
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category aspects
  */
@@ -238,7 +234,6 @@ export const mapType: <Type, Type2>(
 ) => <In, Out>(self: Metric<Type, In, Out>) => Metric<Type2, In, Out> = internal.mapType
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category aspects
  */
@@ -349,7 +344,6 @@ export const timer: (
  * value every time the aspect is applied to an effect, regardless of whether
  * that effect fails or succeeds.
  *
- * @macro traced
  * @since 1.0.0
  * @category aspects
  */
@@ -362,7 +356,6 @@ export const trackAll: <In>(
  * Returns an aspect that will update this metric with the defects of the
  * effects that it is applied to.
  *
- * @macro traced
  * @since 1.0.0
  * @category aspects
  */
@@ -375,7 +368,6 @@ export const trackDefect: <Type, Out>(
  * the specified function to the defect throwables of the effects that the
  * aspect is applied to.
  *
- * @macro traced
  * @since 1.0.0
  * @category aspects
  */
@@ -389,7 +381,6 @@ export const trackDefectWith: <In>(
  * effect takes to execute. To call this method, the input type of the metric
  * must be `Duration`.
  *
- * @macro traced
  * @since 1.0.0
  * @category aspects
  */
@@ -402,7 +393,6 @@ export const trackDuration: <Type, Out>(
  * effect takes to execute. To call this method, you must supply a function
  * that can convert the `Duration` to the input type of this metric.
  *
- * @macro traced
  * @since 1.0.0
  * @category aspects
  */
@@ -415,7 +405,6 @@ export const trackDurationWith: <In>(
  * Returns an aspect that will update this metric with the failure value of
  * the effects that it is applied to.
  *
- * @macro traced
  * @since 1.0.0
  * @category aspects
  */
@@ -427,7 +416,6 @@ export const trackError: <Type, In, Out>(
  * Returns an aspect that will update this metric with the success value of
  * the effects that it is applied to.
  *
- * @macro traced
  * @since 1.0.0
  * @category aspects
  */
@@ -440,7 +428,6 @@ export const trackSuccess: <Type, In, Out>(
  * the specified function to the success value of the effects that the aspect is
  * applied to.
  *
- * @macro traced
  * @since 1.0.0
  * @category aspects
  */
@@ -455,7 +442,6 @@ export const trackSuccessWith: <In, In2>(
  * the specified function to the error value of the effects that the aspect is
  * applied to.
  *
- * @macro traced
  * @since 1.0.0
  * @category aspects
  */
@@ -470,7 +456,6 @@ export const trackErrorWith: <In, In2>(
  * metric were a counter, the update would increment the method by the
  * provided amount.
  *
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -480,7 +465,6 @@ export const update: <In>(input: In) => <Type, Out>(self: Metric<Type, In, Out>)
 /**
  * Retrieves a snapshot of the value of the metric at this moment in time.
  *
- * @macro traced
  * @since 1.0.0
  * @category getters
  */

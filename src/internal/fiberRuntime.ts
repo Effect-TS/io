@@ -1,7 +1,8 @@
 import type * as Cause from "@effect/io/Cause"
 import type * as Clock from "@effect/io/Clock"
 import type { ConfigProvider } from "@effect/io/Config/Provider"
-import { getCallTrace, isTraceEnabled, runtimeDebug } from "@effect/io/Debug"
+import type { Trace } from "@effect/io/Debug"
+import { getCallTrace, runtimeDebug } from "@effect/io/Debug"
 import * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
 import * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
@@ -209,7 +210,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   private _observers = new Array<(exit: Exit.Exit<E, A>) => void>()
   private _running = false
   private _stack: Array<core.Continuation> = []
-  private _executionTrace: RingBuffer<string> | undefined
+  private _executionTrace: RingBuffer<Trace> | undefined
   private _asyncInterruptor: ((effect: Effect.Effect<any, any, any>) => any) | null = null
   private _asyncBlockingOn: FiberId.FiberId | null = null
   private _exitValue: Exit.Exit<E, A> | null = null
@@ -790,6 +791,8 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    * **NOTE**: This method must be invoked by the fiber itself.
    */
   evaluateEffect(effect0: Effect.Effect<any, any, any>) {
+    const pre = runtimeDebug.tracingEnabled
+    runtimeDebug.tracingEnabled = false
     this.getSupervisor().onResume(this)
     try {
       let effect: Effect.Effect<any, any, any> | null =
@@ -835,6 +838,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
         }
       }
     } finally {
+      runtimeDebug.tracingEnabled = pre
       this.getSupervisor().onSuspend(this)
     }
   }
@@ -961,8 +965,13 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   }
 
   onExecute(_op: core.Primitive) {
-    if (_op.trace && isTraceEnabled()) {
-      this.logTrace(_op.trace)
+    if (_op.trace) {
+      if (!this._executionTrace) {
+        this._executionTrace = new RingBuffer<Trace>(
+          runtimeDebug.traceExecutionLimit
+        )
+      }
+      this._executionTrace.push(_op.trace)
     }
   }
 
@@ -1214,25 +1223,13 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     }
   }
 
-  logTrace(trace: string) {
-    if (!this._executionTrace) {
-      this._executionTrace = new RingBuffer<string>(runtimeDebug.traceExecutionLimit)
-    }
-    const isNew = this._executionTrace.push(trace)
-    if (isNew) {
-      if (runtimeDebug.traceExecutionLogEnabled) {
-        this.log(`Executing: ${trace}`, internalCause.empty, Option.some(LogLevel.Debug))
-      }
-    }
-  }
-
-  stackToLines(): Chunk.Chunk<string> {
+  stackToLines(): Chunk.Chunk<Trace> {
     if (this._tracesInStack === 0) {
       return Chunk.empty()
     }
-    const lines: Array<string> = []
+    const lines: Array<Trace> = []
     let current = this._stack.length - 1
-    let last: undefined | string = undefined
+    let last: Trace = undefined
     let seen = 0
     while (current >= 0 && lines.length < runtimeDebug.traceStackLimit && seen < this._tracesInStack) {
       const value = this._stack[current]
@@ -2527,15 +2524,10 @@ export const scopeMake: (
 export const scopeExtend = (self: Scope.Scope) =>
   <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<Exclude<R, Scope.Scope>, E, A> => {
     const trace = getCallTrace()
-    return pipe(
+    return core.contramapContext<Exclude<R, Scope.Scope>, R, E, A>(
       effect,
-      core.contramapContext<Exclude<R, Scope.Scope>, R>(
-        // @ts-expect-error
-        Context.merge(pipe(
-          Context.empty(),
-          Context.add(scopeTag)(self)
-        ))
-      )
+      // @ts-expect-error
+      Context.merge(Context.make(scopeTag)(self))
     ).traced(trace)
   }
 

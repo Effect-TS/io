@@ -21,6 +21,7 @@
  *
  * @since 1.0.0
  */
+import type { Trace } from "@effect/io/Debug"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import * as internal from "@effect/io/internal/cause"
 import * as _pretty from "@effect/io/internal/cause-pretty"
@@ -170,8 +171,8 @@ export declare namespace Cause {
    */
   export interface StackAnnotation {
     readonly [StackAnnotationTypeId]: StackAnnotationTypeId
-    readonly stack: Chunk.Chunk<string>
-    readonly execution: Chunk.Chunk<string>
+    readonly stack: Chunk.Chunk<Trace>
+    readonly execution: Chunk.Chunk<Trace>
   }
 
   /**

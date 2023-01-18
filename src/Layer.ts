@@ -105,7 +105,6 @@ export const discard: <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn, E,
 /**
  * Builds a layer into a scoped value.
  *
- * @macro traced
  * @since 1.0.0
  * @category destructors
  */
@@ -120,7 +119,6 @@ export const build: <RIn, E, ROut>(
  * the services output by the layer exceed the lifetime of the effect the
  * layer is provided to.
  *
- * @macro traced
  * @since 1.0.0
  * @category destructors
  */
@@ -348,7 +346,6 @@ export const mapError: <E, E1>(f: (error: E) => E1) => <R, A>(self: Layer<R, E, 
  * Returns a scoped effect that, if evaluated, will return the lazily computed
  * result of this layer.
  *
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */

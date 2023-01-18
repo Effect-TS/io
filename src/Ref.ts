@@ -22,9 +22,7 @@ export type RefTypeId = typeof RefTypeId
  * @category models
  */
 export interface Ref<A> extends Ref.Variance<A> {
-  /**
-   * @macro traced
-   */
+  /** */
   modify<B>(f: (a: A) => readonly [B, A]): Effect.Effect<never, never, B>
 }
 
@@ -41,35 +39,30 @@ export namespace Ref {
 }
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category constructors
  */
 export const make: <A>(value: A) => Effect.Effect<never, never, Ref<A>> = internal.make
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category getters
  */
 export const get: <A>(self: Ref<A>) => Effect.Effect<never, never, A> = internal.get
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
 export const getAndSet: <A>(self: Ref<A>, value: A) => Effect.Effect<never, never, A> = internal.getAndSet
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
 export const getAndUpdate: <A>(self: Ref<A>, f: (a: A) => A) => Effect.Effect<never, never, A> = internal.getAndUpdate
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -77,7 +70,6 @@ export const getAndUpdateSome: <A>(self: Ref<A>, pf: (a: A) => Option.Option<A>)
   internal.getAndUpdateSome
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -85,7 +77,6 @@ export const modify: <A, B>(self: Ref<A>, f: (a: A) => readonly [B, A]) => Effec
   internal.modify
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -96,35 +87,30 @@ export const modifySome: <A, B>(
 ) => Effect.Effect<never, never, B> = internal.modifySome
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
 export const set: <A>(self: Ref<A>, value: A) => Effect.Effect<never, never, void> = internal.set
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
 export const setAndGet: <A>(self: Ref<A>, value: A) => Effect.Effect<never, never, A> = internal.setAndGet
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
 export const update: <A>(self: Ref<A>, f: (a: A) => A) => Effect.Effect<never, never, void> = internal.update
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
 export const updateAndGet: <A>(self: Ref<A>, f: (a: A) => A) => Effect.Effect<never, never, A> = internal.updateAndGet
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -132,7 +118,6 @@ export const updateSome: <A>(self: Ref<A>, f: (a: A) => Option.Option<A>) => Eff
   internal.updateSome
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */

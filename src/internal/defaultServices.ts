@@ -1,7 +1,7 @@
 import type * as Clock from "@effect/io/Clock"
 import type { Config } from "@effect/io/Config"
 import type { ConfigProvider } from "@effect/io/Config/Provider"
-import { getCallTrace } from "@effect/io/Debug"
+import { getCallTrace, methodWithTrace } from "@effect/io/Debug"
 import type * as DefaultServices from "@effect/io/DefaultServices"
 import type * as Effect from "@effect/io/Effect"
 import * as clock from "@effect/io/internal/clock"
@@ -45,11 +45,11 @@ export const sleep = (duration: Duration.Duration): Effect.Effect<never, never, 
 }
 
 /** @internal */
-export const clockWith = <R, E, A>(f: (clock: Clock.Clock) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-  const trace = getCallTrace()
-  return core.fiberRefGetWith(currentServices, (services) => f(pipe(services, Context.get(clock.clockTag))))
-    .traced(trace)
-}
+export const clockWith = methodWithTrace((trace, restore) =>
+  <R, E, A>(f: (clock: Clock.Clock) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
+    core.fiberRefGetWith(currentServices, (services) => restore(f)(pipe(services, Context.get(clock.clockTag))))
+      .traced(trace)
+)
 
 /** @internal */
 export const withClock = <A extends Clock.Clock>(value: A) => {

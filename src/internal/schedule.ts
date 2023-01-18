@@ -1181,11 +1181,16 @@ export const provideService = <T, T1 extends T>(tag: Context.Tag<T>, service: T1
   ): Schedule.Schedule<Exclude<R, T>, In, Out> => {
     return makeWithState(self.initial, (now, input, state) => {
       const trace = getCallTrace()
-      return core.contextWithEffect((env: Context.Context<Exclude<R, T>>) =>
+      return core.contextWithEffect<
+        Exclude<R, T>,
+        Exclude<R, T>,
+        never,
+        readonly [any, Out, ScheduleDecision.ScheduleDecision]
+      >((env) =>
         pipe(
           self.step(now, input, state),
           // @ts-expect-error
-          core.provideContext(pipe(env, Context.add(tag)(service)) as Exclude<R, T>)
+          core.provideContext(pipe(env, Context.add(tag)(service)))
         )
       ).traced(trace)
     })

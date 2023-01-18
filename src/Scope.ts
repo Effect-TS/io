@@ -41,12 +41,10 @@ export interface Scope {
   readonly [ScopeTypeId]: ScopeTypeId
 
   /**
-   * @macro traced
    * @internal
    */
   readonly fork: (strategy: ExecutionStrategy.ExecutionStrategy) => Effect.Effect<never, never, Scope.Closeable>
   /**
-   * @macro traced
    * @internal
    */
   readonly addFinalizer: (finalizer: Scope.Finalizer) => Effect.Effect<never, never, void>
@@ -60,7 +58,6 @@ export interface CloseableScope extends Scope {
   readonly [CloseableScopeTypeId]: CloseableScopeTypeId
 
   /**
-   * @macro traced
    * @internal
    */
   readonly close: (exit: Exit.Exit<unknown, unknown>) => Effect.Effect<never, never, void>
@@ -92,7 +89,6 @@ export declare namespace Scope {
  * Adds a finalizer to this scope. The finalizer is guaranteed to be run when
  * the scope is closed.
  *
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -105,7 +101,6 @@ export const addFinalizer: (
  * A simplified version of `addFinalizerWith` when the `finalizer` does not
  * depend on the `Exit` value that the scope is closed with.
  *
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -116,7 +111,6 @@ export const addFinalizerExit: (self: Scope, finalizer: Scope.Finalizer) => Effe
  * Closes a scope with the specified exit value, running all finalizers that
  * have been added to the scope.
  *
- * @macro traced
  * @category destructors
  * @since 1.0.0
  */
@@ -129,7 +123,6 @@ export const close: (self: CloseableScope, exit: Exit.Exit<unknown, unknown>) =>
  * workflow completes execution. This allows extending a scoped value into a
  * larger scope.
  *
- * @macro traced
  * @category mutations
  * @since 1.0.0
  */
@@ -141,7 +134,6 @@ export const extend: (
  * Forks a new scope that is a child of this scope. The child scope will
  * automatically be closed when this scope is closed.
  *
- * @macro traced
  * @category mutations
  * @since 1.0.0
  */
@@ -156,7 +148,6 @@ export const fork: (
  * soon as the workflow completes execution, whether by success, failure, or
  * interruption.
  *
- * @macro traced
  * @category destructors
  * @since 1.0.0
  */
@@ -169,7 +160,6 @@ export const use: (
  *
  * If an ExecutionStrategy is not provided `sequential` will be used.
  *
- * @macro traced
  * @category constructors
  * @since 1.0.0
  */

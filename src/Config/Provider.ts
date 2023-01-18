@@ -44,8 +44,6 @@ export type FlatConfigProviderTypeId = typeof FlatConfigProviderTypeId
 export interface ConfigProvider extends ConfigProvider.Proto {
   /**
    * Loads the specified configuration, or fails with a config error.
-   *
-   * @macro traced
    */
   load<A>(config: Config.Config<A>): Effect.Effect<never, ConfigError.ConfigError, A>
   /**
@@ -77,16 +75,10 @@ export declare namespace ConfigProvider {
    */
   export interface Flat {
     readonly [FlatConfigProviderTypeId]: FlatConfigProviderTypeId
-    /**
-     * @macro traced
-     */
     load<A>(
       path: Chunk.Chunk<string>,
       config: Config.Config.Primitive<A>
     ): Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
-    /**
-     * @macro traced
-     */
     enumerateChildren(path: Chunk.Chunk<string>): Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>>
   }
 

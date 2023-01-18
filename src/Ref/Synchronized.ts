@@ -24,9 +24,7 @@ export type SynchronizedTypeId = typeof SynchronizedTypeId
  * @category models
  */
 export interface Synchronized<A> extends Synchronized.Variance<A>, Ref.Ref<A> {
-  /**
-   * @macro traced
-   */
+  /** */
   modifyEffect<R, E, B>(f: (a: A) => Effect.Effect<R, E, readonly [B, A]>): Effect.Effect<R, E, B>
 }
 
@@ -46,28 +44,24 @@ export declare namespace Synchronized {
 }
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category constructors
  */
 export const make: <A>(value: A) => Effect.Effect<never, never, Synchronized<A>> = circular.makeSynchronized
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category getters
  */
 export const get: <A>(self: Synchronized<A>) => Effect.Effect<never, never, A> = internal.get
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
 export const getAndSet: <A>(self: Synchronized<A>, value: A) => Effect.Effect<never, never, A> = internal.getAndSet
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -75,7 +69,6 @@ export const getAndUpdate: <A>(self: Synchronized<A>, f: (a: A) => A) => Effect.
   internal.getAndUpdate
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -85,7 +78,6 @@ export const getAndUpdateEffect: <A, R, E>(
 ) => Effect.Effect<R, E, A> = internal.getAndUpdateEffect
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -95,7 +87,6 @@ export const getAndUpdateSome: <A>(
 ) => Effect.Effect<never, never, A> = internal.getAndUpdateSome
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -105,7 +96,6 @@ export const getAndUpdateSomeEffect: <A, R, E>(
 ) => Effect.Effect<R, E, A> = internal.getAndUpdateSomeEffect
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -113,7 +103,6 @@ export const modify: <A, B>(self: Synchronized<A>, f: (a: A) => readonly [B, A])
   internal.modify
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -123,7 +112,6 @@ export const modifyEffect: <A, R, E, B>(
 ) => Effect.Effect<R, E, B> = internal.modifyEffect
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -134,7 +122,6 @@ export const modifySome: <A, B>(
 ) => Effect.Effect<never, never, B> = internal.modifySome
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -145,28 +132,24 @@ export const modifySomeEffect: <A, B, R, E>(
 ) => Effect.Effect<R, E, B> = internal.modifySomeEffect
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
 export const set: <A>(self: Synchronized<A>, value: A) => Effect.Effect<never, never, void> = internal.set
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
 export const setAndGet: <A>(self: Synchronized<A>, value: A) => Effect.Effect<never, never, A> = internal.setAndGet
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
 export const update: <A>(self: Synchronized<A>, f: (a: A) => A) => Effect.Effect<never, never, void> = internal.update
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -176,7 +159,6 @@ export const updateEffect: <A, R, E>(
 ) => Effect.Effect<R, E, void> = internal.updateEffect
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -186,7 +168,6 @@ export const updateAndGetEffect: <A, R, E>(
 ) => Effect.Effect<R, E, A> = internal.updateAndGetEffect
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -196,7 +177,6 @@ export const updateSome: <A>(
 ) => Effect.Effect<never, never, void> = internal.updateSome
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -206,7 +186,6 @@ export const updateSomeEffect: <A, R, E>(
 ) => Effect.Effect<R, E, void> = internal.updateSomeEffect
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -216,7 +195,6 @@ export const updateSomeAndGet: <A>(
 ) => Effect.Effect<never, never, A> = internal.updateSomeAndGet
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */

@@ -96,7 +96,6 @@ export const joinAs: (self: FiberRefs, fiberId: FiberId.Runtime, that: FiberRefs
 /**
  * Set each ref to either its value or its default.
  *
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */

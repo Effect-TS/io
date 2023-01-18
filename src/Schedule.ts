@@ -75,8 +75,6 @@ export interface Schedule<Env, In, Out> extends Schedule.Variance<Env, In, Out> 
   readonly initial: any
   /**
    * Schedule Step
-   *
-   * @macro traced
    */
   readonly step: (
     now: number,
@@ -115,21 +113,13 @@ export declare namespace Schedule {
  * @category models
  */
 export interface ScheduleDriver<Env, In, Out> extends Schedule.DriverVariance<Env, In, Out> {
-  /**
-   * @macro traced
-   */
+  /** */
   state(): Effect.Effect<never, never, unknown>
-  /**
-   * @macro traced
-   */
+  /** */
   last(): Effect.Effect<never, Cause.NoSuchElementException, Out>
-  /**
-   * @macro traced
-   */
+  /** */
   reset(): Effect.Effect<never, never, void>
-  /**
-   * @macro traced
-   */
+  /** */
   next(input: In): Effect.Effect<Env, Option.Option<never>, Out>
 }
 
@@ -464,7 +454,6 @@ export const dimapEffect: <In2, Env2, In, Out, Env3, Out2>(
  * Returns a driver that can be used to step the schedule, appropriately
  * handling sleeping.
  *
- * @macro traced
  * @since 1.0.0
  * @category getter
  */

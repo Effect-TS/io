@@ -1,4 +1,5 @@
 import type * as Cause from "@effect/io/Cause"
+import type { Trace } from "@effect/io/Debug"
 import * as FiberId from "@effect/io/Fiber/Id"
 import * as OpCodes from "@effect/io/internal/opCodes/cause"
 import * as Chunk from "@fp-ts/data/Chunk"
@@ -1096,8 +1097,8 @@ export const StackAnnotationTypeId: Cause.StackAnnotationTypeId = Symbol.for(
 export class StackAnnotation implements Cause.Cause.StackAnnotation {
   readonly [StackAnnotationTypeId]: Cause.StackAnnotationTypeId = StackAnnotationTypeId
   constructor(
-    readonly stack: Chunk.Chunk<string>,
-    readonly execution: Chunk.Chunk<string>
+    readonly stack: Chunk.Chunk<Trace>,
+    readonly execution: Chunk.Chunk<Trace>
   ) {
   }
 }

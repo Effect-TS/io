@@ -64,27 +64,23 @@ export interface Fiber<E, A> extends Fiber.Variance<E, A> {
   /**
    * Awaits the fiber, which suspends the awaiting fiber until the result of the
    * fiber has been determined.
-   * @macro traced
    */
   await(): Effect.Effect<never, never, Exit.Exit<E, A>>
 
   /**
    * Retrieves the immediate children of the fiber.
-   * @macro traced
    */
   children(): Effect.Effect<never, never, Chunk.Chunk<Fiber.Runtime<any, any>>>
 
   /**
    * Inherits values from all `FiberRef` instances into current fiber. This
    * will resume immediately.
-   * @macro traced
    */
   inheritAll(): Effect.Effect<never, never, void>
 
   /**
    * Tentatively observes the fiber, but returns immediately if it is not
    * already done.
-   * @macro traced
    */
   poll(): Effect.Effect<never, never, Option.Option<Exit.Exit<E, A>>>
 
@@ -92,7 +88,6 @@ export interface Fiber<E, A> extends Fiber.Variance<E, A> {
    * In the background, interrupts the fiber as if interrupted from the
    * specified fiber. If the fiber has already exited, the returned effect will
    * resume immediately. Otherwise, the effect will resume when the fiber exits.
-   * @macro traced
    */
   interruptAsFork(fiberId: FiberId.FiberId): Effect.Effect<never, never, void>
 }
@@ -112,14 +107,11 @@ export interface RuntimeFiber<E, A> extends Fiber<E, A>, Fiber.RuntimeVariance<E
 
   /**
    * The status of the fiber.
-   * @macro traced
    */
   status(): Effect.Effect<never, never, FiberStatus.FiberStatus>
 
   /**
    * Returns the current `RuntimeFlags` the fiber is running with.
-   *
-   * @macro traced
    */
   runtimeFlags(): Effect.Effect<never, never, RuntimeFlags.RuntimeFlags>
 
@@ -256,7 +248,6 @@ export {
    * Awaits the fiber, which suspends the awaiting fiber until the result of the
    * fiber has been determined.
    *
-   * @macro traced
    * @since 1.0.0
    * @category getters
    */
@@ -266,7 +257,6 @@ export {
 /**
  * Awaits on all fibers to be completed, successfully or not.
  *
- * @macro traced
  * @since 1.0.0
  * @category destructors
  */
@@ -276,7 +266,6 @@ export const awaitAll: (fibers: Iterable<Fiber<any, any>>) => Effect.Effect<neve
 /**
  * Retrieves the immediate children of the fiber.
  *
- * @macro traced
  * @since 1.0.0
  * @category getters
  */
@@ -287,7 +276,6 @@ export const children: <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, 
  * Collects all fibers into a single fiber producing an in-order list of the
  * results.
  *
- * @macro traced
  * @since 1.0.0
  * @category constructors
  */
@@ -297,21 +285,18 @@ export const collectAll: <E, A>(fibers: Iterable<Fiber<E, A>>) => Fiber<E, Chunk
 /**
  * A fiber that is done with the specified `Exit` value.
  *
- * @macro traced
  * @since 1.0.0
  * @category constructors
  */
 export const done: <E, A>(exit: Exit.Exit<E, A>) => Fiber<E, A> = internal.done
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category destructors
  */
 export const dump: <E, A>(self: RuntimeFiber<E, A>) => Effect.Effect<never, never, Fiber.Dump> = internal.dump
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category destructors
  */
@@ -338,7 +323,6 @@ export const failCause: <E>(cause: Cause.Cause<E>) => Fiber<E, never> = internal
 /**
  * Lifts an `Effect` into a `Fiber`.
  *
- * @macro traced
  * @since 1.0.0
  * @category conversions
  */
@@ -349,7 +333,6 @@ export const fromEffect: <E, A>(effect: Effect.Effect<never, E, A>) => Effect.Ef
  * Inherits values from all `FiberRef` instances into current fiber. This
  * will resume immediately.
  *
- * @macro traced
  * @since 1.0.0
  * @category destructors
  */
@@ -360,7 +343,6 @@ export const inheritAll: <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never
  * fiber has already exited, the returned effect will resume immediately.
  * Otherwise, the effect will resume when the fiber exits.
  *
- * @macro traced
  * @since 1.0.0
  * @category interruption
  */
@@ -379,20 +361,19 @@ export const interrupted: (fiberId: FiberId.FiberId) => Fiber<never, never> = in
  * fiber has already exited, the returned effect will resume immediately.
  * Otherwise, the effect will resume when the fiber exits.
  *
- * @macro traced
  * @since 1.0.0
  * @category interruption
  */
-export const interruptAs: (
-  fiberId: FiberId.FiberId
-) => <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, Exit.Exit<E, A>> = core.interruptAsFiber
+export const interruptAs: {
+  <E, A>(self: Fiber<E, A>, fiberId: FiberId.FiberId): Effect.Effect<never, never, Exit.Exit<E, A>>
+  (fiberId: FiberId.FiberId): <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, Exit.Exit<E, A>>
+} = core.interruptAsFiber
 
 /**
  * Interrupts the fiber as if interrupted from the specified fiber. If the
  * fiber has already exited, the returned effect will resume immediately.
  * Otherwise, the effect will resume when the fiber exits.
  *
- * @macro traced
  * @since 1.0.0
  * @category interruption
  */
@@ -403,7 +384,6 @@ export const interruptAsFork: (
 /**
  * Interrupts all fibers, awaiting their interruption.
  *
- * @macro traced
  * @since 1.0.0
  * @category interruption
  */
@@ -414,7 +394,6 @@ export const interruptAll: (fibers: Iterable<Fiber<any, any>>) => Effect.Effect<
  * Interrupts all fibers as by the specified fiber, awaiting their
  * interruption.
  *
- * @macro traced
  * @since 1.0.0
  * @category interruption
  */
@@ -427,7 +406,6 @@ export const interruptAllWith: (
  * interruption will happen in a separate daemon fiber, and the returned
  * effect will always resume immediately without waiting.
  *
- * @macro traced
  * @since 1.0.0
  * @category interruption
  */
@@ -441,7 +419,6 @@ export const interruptFork: <E, A>(self: Fiber<E, A>) => Effect.Effect<never, ne
  * "inner interruption" of this fiber, unlike interruption triggered by
  * another fiber, "inner interruption" can be caught and recovered.
  *
- * @macro traced
  * @since 1.0.0
  * @category destructors
  */
@@ -452,7 +429,6 @@ export const join: <E, A>(self: Fiber<E, A>) => Effect.Effect<never, E, A> = int
  * join a fiber that has erred will result in a catchable error, _if_ that
  * error does not result from interruption.
  *
- * @macro traced
  * @since 1.0.0
  * @category destructors
  */
@@ -480,7 +456,6 @@ export const mapEffect: <A, E2, A2>(
  * Passes the success of this fiber to the specified callback, and continues
  * with the fiber that it returns.
  *
- * @macro traced
  * @since 1.0.0
  * @category mapping
  */
@@ -543,7 +518,6 @@ export const poll: <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, Opti
 /**
  * Pretty-prints a `RuntimeFiber`.
  *
- * @macro traced
  * @since 1.0.0
  * @category destructors
  */
@@ -552,7 +526,6 @@ export const pretty: <E, A>(self: RuntimeFiber<E, A>) => Effect.Effect<never, ne
 /**
  * Returns a chunk containing all root fibers.
  *
- * @macro traced
  * @since 1.0.0
  * @category constructors
  */
@@ -561,7 +534,6 @@ export const roots: (_: void) => Effect.Effect<never, never, Chunk.Chunk<Runtime
 /**
  * Returns a chunk containing all root fibers.
  *
- * @macro traced
  * @since 1.0.0
  * @category constructors
  */
@@ -571,7 +543,6 @@ export const unsafeRoots: (_: void) => Chunk.Chunk<RuntimeFiber<any, any>> = int
  * Converts this fiber into a scoped effect. The fiber is interrupted when the
  * scope is closed.
  *
- * @macro traced
  * @since 1.0.0
  * @category destructors
  */
@@ -581,7 +552,6 @@ export const scoped: <E, A>(self: Fiber<E, A>) => Effect.Effect<Scope.Scope, nev
 /**
  * Returns the `FiberStatus` of a `RuntimeFiber`.
  *
- * @macro traced
  * @since 1.0.0
  * @category getters
  */

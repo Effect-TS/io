@@ -18,16 +18,12 @@ export interface Hub<A> extends Queue.Enqueue<A> {
   /**
    * Publishes a message to the hub, returning whether the message was published
    * to the hub.
-   *
-   * @macro traced
    */
   publish(value: A): Effect.Effect<never, never, boolean>
 
   /**
    * Publishes all of the specified messages to the hub, returning whether they
    * were published to the hub.
-   *
-   * @macro traced
    */
   publishAll(elements: Iterable<A>): Effect.Effect<never, never, boolean>
 
@@ -35,8 +31,6 @@ export interface Hub<A> extends Queue.Enqueue<A> {
    * Subscribes to receive messages from the hub. The resulting subscription can
    * be evaluated multiple times within the scope to take a message from the hub
    * each time.
-   *
-   * @macro traced
    */
   subscribe(): Effect.Effect<Scope.Scope, never, Queue.Dequeue<A>>
 }
@@ -48,7 +42,6 @@ export interface Hub<A> extends Queue.Enqueue<A> {
  *
  * For best performance use capacities that are powers of two.
  *
- * @macro traced
  * @since 1.0.0
  * @category constructors
  */
@@ -60,7 +53,6 @@ export const bounded: <A>(requestedCapacity: number) => Effect.Effect<never, nev
  *
  * For best performance use capacities that are powers of two.
  *
- * @macro traced
  * @since 1.0.0
  * @category constructors
  */
@@ -72,7 +64,6 @@ export const dropping: <A>(requestedCapacity: number) => Effect.Effect<never, ne
  *
  * For best performance use capacities that are powers of two.
  *
- * @macro traced
  * @since 1.0.0
  * @category constructors
  */
@@ -81,7 +72,6 @@ export const sliding: <A>(requestedCapacity: number) => Effect.Effect<never, nev
 /**
  * Creates an unbounded hub.
  *
- * @macro traced
  * @since 1.0.0
  * @category constructors
  */
@@ -100,7 +90,6 @@ export const capacity: <A>(self: Hub<A>) => number = internal.capacity
  * in the queue. This may be negative if fibers are suspended waiting for
  * elements to be added to the queue.
  *
- * @macro traced
  * @since 1.0.0
  * @category getters
  */
@@ -110,7 +99,6 @@ export const size: <A>(self: Hub<A>) => Effect.Effect<never, never, number> = in
  * Returns `true` if the `Queue` contains at least one element, `false`
  * otherwise.
  *
- * @macro traced
  * @since 1.0.0
  * @category getters
  */
@@ -119,7 +107,6 @@ export const isFull: <A>(self: Hub<A>) => Effect.Effect<never, never, boolean> =
 /**
  * Returns `true` if the `Queue` contains zero elements, `false` otherwise.
  *
- * @macro traced
  * @since 1.0.0
  * @category getters
  */
@@ -129,7 +116,6 @@ export const isEmpty: <A>(self: Hub<A>) => Effect.Effect<never, never, boolean> 
  * Interrupts any fibers that are suspended on `offer` or `take`. Future calls
  * to `offer*` and `take*` will be interrupted immediately.
  *
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -138,7 +124,6 @@ export const shutdown: <A>(self: Hub<A>) => Effect.Effect<never, never, void> = 
 /**
  * Returns `true` if `shutdown` has been called, otherwise returns `false`.
  *
- * @macro traced
  * @since 1.0.0
  * @category getters
  */
@@ -149,7 +134,6 @@ export const isShutdown: <A>(self: Hub<A>) => Effect.Effect<never, never, boolea
  * not resume until the queue has been shutdown. If the queue is already
  * shutdown, the `Effect` will resume right away.
  *
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -159,7 +143,6 @@ export const awaitShutdown: <A>(self: Hub<A>) => Effect.Effect<never, never, voi
  * Publishes a message to the hub, returning whether the message was published
  * to the hub.
  *
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -169,7 +152,6 @@ export const publish: <A>(self: Hub<A>, value: A) => Effect.Effect<never, never,
  * Publishes all of the specified messages to the hub, returning whether they
  * were published to the hub.
  *
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -181,7 +163,6 @@ export const publishAll: <A>(self: Hub<A>, elements: Iterable<A>) => Effect.Effe
  * be evaluated multiple times within the scope to take a message from the hub
  * each time.
  *
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
