@@ -2,6 +2,7 @@ import type * as ConfigSecret from "@effect/io/Config/Secret"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Equal from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
+import * as Hash from "@fp-ts/data/Hash"
 
 /** @internal */
 const ConfigSecretSymbolKey = "@effect/io/Config/Secret"
@@ -14,14 +15,15 @@ export const ConfigSecretTypeId: ConfigSecret.ConfigSecretTypeId = Symbol.for(
 /** @internal */
 export const proto = {
   [ConfigSecretTypeId]: ConfigSecretTypeId,
-  [Equal.symbolHash](this: ConfigSecret.ConfigSecret): number {
+  [Hash.symbol](this: ConfigSecret.ConfigSecret): number {
     return pipe(
-      Equal.hash(ConfigSecretSymbolKey),
-      Equal.hashCombine(Equal.hash(this.raw))
+      Hash.hash(ConfigSecretSymbolKey),
+      Hash.combine(Hash.array(this.raw))
     )
   },
-  [Equal.symbolEqual](this: ConfigSecret.ConfigSecret, that: unknown): boolean {
-    return isConfigSecret(that) && Equal.equals(this.raw, that.raw)
+  [Equal.symbol](this: ConfigSecret.ConfigSecret, that: unknown): boolean {
+    return isConfigSecret(that) && this.raw.length === that.raw.length &&
+      this.raw.every((v, i) => Equal.equals(v, that.raw[i]))
   }
 }
 

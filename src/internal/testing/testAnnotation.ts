@@ -4,6 +4,7 @@ import * as Context from "@fp-ts/data/Context"
 import * as Either from "@fp-ts/data/Either"
 import * as Equal from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
+import * as Hash from "@fp-ts/data/Hash"
 import * as HashSet from "@fp-ts/data/HashSet"
 import type * as MutableRef from "@fp-ts/data/MutableRef"
 import type * as SortedSet from "@fp-ts/data/SortedSet"
@@ -35,14 +36,14 @@ class TestAnnotationImpl<A> implements Equal.Equal {
     readonly initial: A,
     readonly combine: (a: A, b: A) => A
   ) {}
-  [Equal.symbolHash](): number {
+  [Hash.symbol](): number {
     return pipe(
-      Equal.hash(TestAnnotationSymbolKey),
-      Equal.hashCombine(Equal.hash(this.identifier)),
-      Equal.hashCombine(Equal.hash(this.tag))
+      Hash.hash(TestAnnotationSymbolKey),
+      Hash.combine(Hash.hash(this.identifier)),
+      Hash.combine(Hash.hash(this.tag))
     )
   }
-  [Equal.symbolEqual](that: unknown): boolean {
+  [Equal.symbol](that: unknown): boolean {
     return isTestAnnotation(that) &&
       this.identifier === that.identifier &&
       Equal.equals(this.tag, that.tag)

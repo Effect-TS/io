@@ -32,6 +32,7 @@ import * as Either from "@fp-ts/data/Either"
 import * as Equal from "@fp-ts/data/Equal"
 import type { LazyArg } from "@fp-ts/data/Function"
 import { identity, pipe } from "@fp-ts/data/Function"
+import * as Hash from "@fp-ts/data/Hash"
 import * as HashMap from "@fp-ts/data/HashMap"
 import * as HashSet from "@fp-ts/data/HashSet"
 import * as MutableRef from "@fp-ts/data/MutableRef"
@@ -100,7 +101,6 @@ export type Continuation =
 export class RevertFlags {
   readonly _tag = OpCodes.OP_REVERT_FLAGS
   constructor(readonly patch: RuntimeFlagsPatch.RuntimeFlagsPatch) {
-    Equal.considerByRef(this)
   }
 }
 
@@ -114,11 +114,11 @@ const effectVariance = {
 /** @internal */
 export const proto = {
   [EffectTypeId]: effectVariance,
-  [Equal.symbolEqual](this: {}, that: unknown) {
+  [Equal.symbol](this: {}, that: unknown) {
     return this === that
   },
-  [Equal.symbolHash](this: {}) {
-    return Equal.hashRandom(this)
+  [Hash.symbol](this: {}) {
+    return Hash.random(this)
   },
   traced(this: Effect.Effect<never, never, never>, trace: string | undefined): Effect.Effect<never, never, never> {
     if (!isTraceEnabled() || trace === this["trace"]) {

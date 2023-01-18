@@ -18,7 +18,6 @@ import type * as Runtime from "@effect/io/Runtime"
 import type * as Scheduler from "@effect/io/Scheduler"
 import * as Context from "@fp-ts/data/Context"
 import type { Either } from "@fp-ts/data/Either"
-import * as Equal from "@fp-ts/data/Equal"
 import { identity, pipe } from "@fp-ts/data/Function"
 import * as Option from "@fp-ts/data/Option"
 
@@ -26,7 +25,6 @@ import * as Option from "@fp-ts/data/Option"
 export class AsyncFiber<E, A> implements Runtime.AsyncFiber<E, A> {
   readonly _tag = "AsyncFiber"
   constructor(readonly fiber: FiberRuntime.FiberRuntime<E, A>) {
-    Equal.considerByRef(this)
   }
 }
 
@@ -37,7 +35,6 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
     readonly runtimeFlags: RuntimeFlags.RuntimeFlags,
     readonly fiberRefs: FiberRefs.FiberRefs
   ) {
-    Equal.considerByRef(this)
   }
 
   unsafeRunSyncEither: <E, A>(effect: Effect.Effect<R, E, A>) => Either<E, A> = (effect) =>

@@ -4,6 +4,7 @@ import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as Duration from "@fp-ts/data/Duration"
 import * as Equal from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
+import * as Hash from "@fp-ts/data/Hash"
 
 /** @internal */
 const MetricKeyTypeSymbolKey = "@effect/io/Metric/KeyType"
@@ -63,10 +64,10 @@ const metricKeyTypeVariance = {
 class CounterKeyType implements MetricKeyType.MetricKeyType.Counter {
   readonly [MetricKeyTypeTypeId] = metricKeyTypeVariance
   readonly [CounterKeyTypeTypeId]: MetricKeyType.CounterKeyTypeTypeId = CounterKeyTypeTypeId;
-  [Equal.symbolHash](): number {
-    return Equal.hash(CounterKeyTypeSymbolKey)
+  [Hash.symbol](): number {
+    return Hash.hash(CounterKeyTypeSymbolKey)
   }
-  [Equal.symbolEqual](that: unknown): boolean {
+  [Equal.symbol](that: unknown): boolean {
     return isCounterKey(that)
   }
 }
@@ -75,10 +76,10 @@ class CounterKeyType implements MetricKeyType.MetricKeyType.Counter {
 class FrequencyKeyType implements MetricKeyType.MetricKeyType.Frequency {
   readonly [MetricKeyTypeTypeId] = metricKeyTypeVariance
   readonly [FrequencyKeyTypeTypeId]: MetricKeyType.FrequencyKeyTypeTypeId = FrequencyKeyTypeTypeId;
-  [Equal.symbolHash](): number {
-    return Equal.hash(FrequencyKeyTypeSymbolKey)
+  [Hash.symbol](): number {
+    return Hash.hash(FrequencyKeyTypeSymbolKey)
   }
-  [Equal.symbolEqual](that: unknown): boolean {
+  [Equal.symbol](that: unknown): boolean {
     return isFrequencyKey(that)
   }
 }
@@ -87,10 +88,10 @@ class FrequencyKeyType implements MetricKeyType.MetricKeyType.Frequency {
 class GaugeKeyType implements MetricKeyType.MetricKeyType.Gauge {
   readonly [MetricKeyTypeTypeId] = metricKeyTypeVariance
   readonly [GaugeKeyTypeTypeId]: MetricKeyType.GaugeKeyTypeTypeId = GaugeKeyTypeTypeId;
-  [Equal.symbolHash](): number {
-    return Equal.hash(GaugeKeyTypeSymbolKey)
+  [Hash.symbol](): number {
+    return Hash.hash(GaugeKeyTypeSymbolKey)
   }
-  [Equal.symbolEqual](that: unknown): boolean {
+  [Equal.symbol](that: unknown): boolean {
     return isGaugeKey(that)
   }
 }
@@ -103,13 +104,13 @@ export class HistogramKeyType implements MetricKeyType.MetricKeyType.Histogram {
   readonly [MetricKeyTypeTypeId] = metricKeyTypeVariance
   readonly [HistogramKeyTypeTypeId]: MetricKeyType.HistogramKeyTypeTypeId = HistogramKeyTypeTypeId
   constructor(readonly boundaries: MetricBoundaries.MetricBoundaries) {}
-  [Equal.symbolHash](): number {
+  [Hash.symbol](): number {
     return pipe(
-      Equal.hash(HistogramKeyTypeSymbolKey),
-      Equal.hashCombine(Equal.hash(this.boundaries))
+      Hash.hash(HistogramKeyTypeSymbolKey),
+      Hash.combine(Hash.hash(this.boundaries))
     )
   }
-  [Equal.symbolEqual](that: unknown): boolean {
+  [Equal.symbol](that: unknown): boolean {
     return isHistogramKey(that) && Equal.equals(this.boundaries, that.boundaries)
   }
 }
@@ -124,16 +125,16 @@ class SummaryKeyType implements MetricKeyType.MetricKeyType.Summary {
     readonly error: number,
     readonly quantiles: Chunk.Chunk<number>
   ) {}
-  [Equal.symbolHash](): number {
+  [Hash.symbol](): number {
     return pipe(
-      Equal.hash(SummaryKeyTypeSymbolKey),
-      Equal.hashCombine(Equal.hash(this.maxAge)),
-      Equal.hashCombine(Equal.hash(this.maxSize)),
-      Equal.hashCombine(Equal.hash(this.error)),
-      Equal.hashCombine(Equal.hash(this.quantiles))
+      Hash.hash(SummaryKeyTypeSymbolKey),
+      Hash.combine(Hash.hash(this.maxAge)),
+      Hash.combine(Hash.hash(this.maxSize)),
+      Hash.combine(Hash.hash(this.error)),
+      Hash.combine(Hash.hash(this.quantiles))
     )
   }
-  [Equal.symbolEqual](that: unknown): boolean {
+  [Equal.symbol](that: unknown): boolean {
     return isSummaryKey(that) &&
       Equal.equals(this.maxAge, that.maxAge) &&
       this.maxSize === that.maxSize &&

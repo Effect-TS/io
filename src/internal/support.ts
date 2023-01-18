@@ -8,7 +8,6 @@ export class RingBuffer<T> {
   private length = 0
 
   constructor(readonly size: number) {
-    Equal.considerByRef(this)
   }
 
   private restore() {

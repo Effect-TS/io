@@ -3,7 +3,6 @@ import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import * as FiberMessage from "@effect/io/internal/fiberMessage"
 import type * as FiberRuntime from "@effect/io/internal/fiberRuntime"
 import * as _runtimeFlags from "@effect/io/internal/runtimeFlags"
-import * as Equal from "@fp-ts/data/Equal"
 
 /** @internal */
 const FiberScopeSymbolKey = "@effect/io/Fiber/Scope"
@@ -41,7 +40,6 @@ class Global implements FiberScope {
     })
   }
   constructor() {
-    Equal.considerByRef(this)
     if (typeof globalThis[globalFiberScopeURI] === "undefined") {
       globalThis[globalFiberScopeURI] = this
     } else {
@@ -57,7 +55,6 @@ class Local implements FiberScope {
     readonly fiberId: FiberId.FiberId,
     readonly parent: FiberRuntime.FiberRuntime<any, any>
   ) {
-    Equal.considerByRef(this)
   }
   add(_runtimeFlags: RuntimeFlags.RuntimeFlags, child: FiberRuntime.FiberRuntime<any, any>): void {
     this.parent.tell(

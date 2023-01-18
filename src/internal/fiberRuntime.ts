@@ -44,7 +44,6 @@ import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Context from "@fp-ts/data/Context"
-import * as Equal from "@fp-ts/data/Equal"
 import type { LazyArg } from "@fp-ts/data/Function"
 import { identity, pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
@@ -198,7 +197,6 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     runtimeFlags0: RuntimeFlags.RuntimeFlags,
     readonly runtime: Runtime<never>
   ) {
-    Equal.considerByRef(this)
     this._runtimeFlags = runtimeFlags0
     this._fiberId = fiberId
     this._fiberRefs = fiberRefs0

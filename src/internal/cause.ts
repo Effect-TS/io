@@ -5,6 +5,7 @@ import * as Chunk from "@fp-ts/data/Chunk"
 import * as Either from "@fp-ts/data/Either"
 import * as Equal from "@fp-ts/data/Equal"
 import { constFalse, constTrue, identity, pipe } from "@fp-ts/data/Function"
+import * as Hash from "@fp-ts/data/Hash"
 import * as HashSet from "@fp-ts/data/HashSet"
 import * as Option from "@fp-ts/data/Option"
 import type { Predicate } from "@fp-ts/data/Predicate"
@@ -29,13 +30,13 @@ const variance = {
 /** @internal */
 const proto = {
   [CauseTypeId]: variance,
-  [Equal.symbolHash](this: Cause.Cause<any>): number {
+  [Hash.symbol](this: Cause.Cause<any>): number {
     return pipe(
-      Equal.hash(CauseSymbolKey),
-      Equal.hashCombine(Equal.hash(flattenCause(this)))
+      Hash.hash(CauseSymbolKey),
+      Hash.combine(Hash.hash(flattenCause(this)))
     )
   },
-  [Equal.symbolEqual](this: Cause.Cause<any>, that: unknown): boolean {
+  [Equal.symbol](this: Cause.Cause<any>, that: unknown): boolean {
     return isCause(that) && causeEquals(this, that)
   }
 }
@@ -1098,7 +1099,6 @@ export class StackAnnotation implements Cause.Cause.StackAnnotation {
     readonly stack: Chunk.Chunk<string>,
     readonly execution: Chunk.Chunk<string>
   ) {
-    Equal.considerByRef(this)
   }
 }
 
@@ -1122,7 +1122,6 @@ export class SpanAnnotation implements Cause.Cause.SpanAnnotation {
   constructor(
     readonly currentSpanURI: Option.Option<string>
   ) {
-    Equal.considerByRef(this)
   }
 }
 

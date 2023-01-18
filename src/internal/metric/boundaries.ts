@@ -2,6 +2,7 @@ import type * as MetricBoundaries from "@effect/io/Metric/Boundaries"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Equal from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
+import * as Hash from "@fp-ts/data/Hash"
 
 /** @internal */
 const MetricBoundariesSymbolKey = "@effect/io/Metric/Boundaries"
@@ -15,13 +16,13 @@ export const MetricBoundariesTypeId: MetricBoundaries.MetricBoundariesTypeId = S
 class MetricBoundariesImpl implements MetricBoundaries.MetricBoundaries {
   readonly [MetricBoundariesTypeId]: MetricBoundaries.MetricBoundariesTypeId = MetricBoundariesTypeId
   constructor(readonly values: Chunk.Chunk<number>) {}
-  [Equal.symbolHash](): number {
+  [Hash.symbol](): number {
     return pipe(
-      Equal.hash(MetricBoundariesSymbolKey),
-      Equal.hashCombine(Equal.hash(this.values))
+      Hash.hash(MetricBoundariesSymbolKey),
+      Hash.combine(Hash.hash(this.values))
     )
   }
-  [Equal.symbolEqual](u: unknown): boolean {
+  [Equal.symbol](u: unknown): boolean {
     return isMetricBoundaries(u) && Equal.equals(this.values, u.values)
   }
 }

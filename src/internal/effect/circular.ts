@@ -781,7 +781,6 @@ class SynchronizedImpl<A> implements Synchronized.Synchronized<A> {
     readonly ref: Ref.Ref<A>,
     readonly withLock: <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
   ) {
-    Equal.considerByRef(this)
   }
   modify<B>(f: (a: A) => readonly [B, A]): Effect.Effect<never, never, B> {
     const trace = getCallTrace()

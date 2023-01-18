@@ -4,7 +4,6 @@ import * as core from "@effect/io/internal/core"
 import type * as Random from "@effect/io/Random"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Context from "@fp-ts/data/Context"
-import * as Equal from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
 import * as PCGRandom from "@fp-ts/data/Random"
 
@@ -25,7 +24,6 @@ class RandomImpl implements Random.Random {
   readonly PRNG: PCGRandom.PCGRandom
 
   constructor(readonly seed: number) {
-    Equal.considerByRef(this)
     this.PRNG = new PCGRandom.PCGRandom(seed)
   }
 

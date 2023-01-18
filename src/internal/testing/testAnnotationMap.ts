@@ -1,5 +1,4 @@
 import type * as TestAnnotation from "@effect/io/internal/testing/testAnnotation"
-import * as Equal from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
 
 /** @internal */
@@ -23,7 +22,6 @@ export interface TestAnnotationMap {
 class TestAnnotationMapImpl implements TestAnnotationMap {
   readonly [TestAnnotationMapTypeId]: TestAnnotationMapTypeId = TestAnnotationMapTypeId
   constructor(readonly map: ReadonlyMap<TestAnnotation.TestAnnotation<unknown>, unknown>) {
-    Equal.considerByRef(this)
   }
 }
 

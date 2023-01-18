@@ -25,8 +25,6 @@ import * as Duration from "@fp-ts/data/Duration"
 import type { LazyArg } from "@fp-ts/data/Function"
 import { pipe } from "@fp-ts/data/Function"
 
-import * as Equal from "@fp-ts/data/Equal"
-
 /** @internal */
 const LayerSymbolKey = "@effect/io/Layer"
 
@@ -164,7 +162,6 @@ class MemoMap {
       >
     >
   ) {
-    Equal.considerByRef(this)
   }
 
   /**

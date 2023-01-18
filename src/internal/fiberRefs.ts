@@ -28,7 +28,6 @@ export class FiberRefsImpl implements FiberRefs.FiberRefs {
       Arr.NonEmptyReadonlyArray<readonly [FiberId.Runtime, any]>
     >
   ) {
-    Equal.considerByRef(this)
   }
 }
 

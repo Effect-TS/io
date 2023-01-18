@@ -8,6 +8,7 @@ import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as Duration from "@fp-ts/data/Duration"
 import * as Equal from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
+import * as Hash from "@fp-ts/data/Hash"
 import * as HashSet from "@fp-ts/data/HashSet"
 
 /** @internal */
@@ -31,14 +32,14 @@ class MetricKeyImpl<Type extends MetricKeyType.MetricKeyType<any, any>> implemen
     readonly keyType: Type,
     readonly tags: HashSet.HashSet<MetricLabel.MetricLabel> = HashSet.empty()
   ) {}
-  [Equal.symbolHash](): number {
+  [Hash.symbol](): number {
     return pipe(
-      Equal.hash(this.name),
-      Equal.hashCombine(Equal.hash(this.keyType)),
-      Equal.hashCombine(Equal.hash(this.tags))
+      Hash.hash(this.name),
+      Hash.combine(Hash.hash(this.keyType)),
+      Hash.combine(Hash.hash(this.tags))
     )
   }
-  [Equal.symbolEqual](u: unknown): boolean {
+  [Equal.symbol](u: unknown): boolean {
     return isMetricKey(u) &&
       this.name === u.name &&
       Equal.equals(this.keyType, u.keyType) &&

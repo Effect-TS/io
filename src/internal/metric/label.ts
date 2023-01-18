@@ -1,6 +1,7 @@
 import type * as MetricLabel from "@effect/io/Metric/Label"
 import * as Equal from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
+import * as Hash from "@fp-ts/data/Hash"
 
 /** @internal */
 const MetricLabelSymbolKey = "@effect/io/Metric/Label"
@@ -14,14 +15,14 @@ export const MetricLabelTypeId: MetricLabel.MetricLabelTypeId = Symbol.for(
 class MetricLabelImpl implements MetricLabel.MetricLabel {
   readonly [MetricLabelTypeId]: MetricLabel.MetricLabelTypeId = MetricLabelTypeId
   constructor(readonly key: string, readonly value: string) {}
-  [Equal.symbolHash](): number {
+  [Hash.symbol](): number {
     return pipe(
-      Equal.hash(MetricLabelSymbolKey),
-      Equal.hashCombine(Equal.hash(this.key)),
-      Equal.hashCombine(Equal.hash(this.value))
+      Hash.hash(MetricLabelSymbolKey),
+      Hash.combine(Hash.hash(this.key)),
+      Hash.combine(Hash.hash(this.value))
     )
   }
-  [Equal.symbolEqual](that: unknown): boolean {
+  [Equal.symbol](that: unknown): boolean {
     return isMetricLabel(that) &&
       this.key === that.key &&
       this.value === that.value
