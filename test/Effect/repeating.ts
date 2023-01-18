@@ -45,7 +45,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(0))
       const queue = yield* $(Queue.unbounded<number>())
-      yield* $(pipe(queue, Queue.offerAll([1, 2, 3, 4, 5, 6])))
+      yield* $(Queue.offerAll(queue, [1, 2, 3, 4, 5, 6]))
       yield* $(pipe(
         Queue.take(queue),
         Effect.zipLeft(Ref.update(ref, (n) => n + 1)),
@@ -96,7 +96,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(0))
       const queue = yield* $(Queue.unbounded<number>())
-      yield* $(pipe(queue, Queue.offerAll([0, 0, 0, 0, 1, 2])))
+      yield* $(Queue.offerAll(queue, [0, 0, 0, 0, 1, 2]))
       yield* $(
         pipe(Queue.take(queue), Effect.zipLeft(Ref.update(ref, (n) => n + 1)), Effect.repeatWhileEquals(0))
       )

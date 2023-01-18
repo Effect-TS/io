@@ -446,7 +446,7 @@ export const shutdown: <A>(self: Dequeue<A> | Enqueue<A>) => Effect.Effect<never
  * @since 1.0.0
  * @category mutations
  */
-export const offer: <A>(value: A) => (self: Enqueue<A>) => Effect.Effect<never, never, boolean> = internal.offer
+export const offer: <A>(self: Enqueue<A>, value: A) => Effect.Effect<never, never, boolean> = internal.offer
 
 /**
  * For Bounded Queue: uses the `BackPressure` Strategy, places the values in
@@ -467,7 +467,7 @@ export const offer: <A>(value: A) => (self: Enqueue<A>) => Effect.Effect<never, 
  * @since 1.0.0
  * @category mutations
  */
-export const offerAll: <A>(iterable: Iterable<A>) => (self: Enqueue<A>) => Effect.Effect<never, never, boolean> =
+export const offerAll: <A>(self: Enqueue<A>, iterable: Iterable<A>) => Effect.Effect<never, never, boolean> =
   internal.offerAll
 
 /**
@@ -507,7 +507,7 @@ export const takeAll: <A>(self: Dequeue<A>) => Effect.Effect<never, never, Chunk
  * @since 1.0.0
  * @category mutations
  */
-export const takeUpTo: (max: number) => <A>(self: Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>> =
+export const takeUpTo: <A>(self: Dequeue<A>, max: number) => Effect.Effect<never, never, Chunk.Chunk<A>> =
   internal.takeUpTo
 
 /**
@@ -519,10 +519,11 @@ export const takeUpTo: (max: number) => <A>(self: Dequeue<A>) => Effect.Effect<n
  * @since 1.0.0
  * @category mutations
  */
-export const takeBetween: (
+export const takeBetween: <A>(
+  self: Dequeue<A>,
   min: number,
   max: number
-) => <A>(self: Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>> = internal.takeBetween
+) => Effect.Effect<never, never, Chunk.Chunk<A>> = internal.takeBetween
 
 /**
  * Takes the specified number of elements from the queue. If there are fewer
@@ -533,4 +534,4 @@ export const takeBetween: (
  * @since 1.0.0
  * @category mutations
  */
-export const takeN: (n: number) => <A>(self: Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>> = internal.takeN
+export const takeN: <A>(self: Dequeue<A>, n: number) => Effect.Effect<never, never, Chunk.Chunk<A>> = internal.takeN
