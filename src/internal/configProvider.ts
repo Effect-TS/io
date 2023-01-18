@@ -106,9 +106,19 @@ export const fromFlat = (flat: ConfigProvider.ConfigProvider.Flat): ConfigProvid
 export const fromEnv = (
   config: Partial<ConfigProvider.ConfigProvider.FromEnvConfig> = {}
 ): ConfigProvider.ConfigProvider => {
-  const { pathDelim, seqDelim } = Object.assign({}, { pathDelim: "_", seqDelim: "," }, config)
-  const makePathString = (path: Chunk.Chunk<string>): string => pipe(path, Chunk.join(pathDelim))
-  const unmakePathString = (pathString: string): ReadonlyArray<string> => pathString.split(pathDelim)
+  const { conversion, pathDelim, reverseConversion, seqDelim } = Object.assign(
+    {},
+    {
+      pathDelim: "_",
+      seqDelim: ",",
+      conversion: (k) => k,
+      reverseConversion: (k) => k
+    } as ConfigProvider.ConfigProvider.FromEnvConfig,
+    config
+  )
+  const makePathString = (path: Chunk.Chunk<string>): string => pipe(path, Chunk.map(conversion), Chunk.join(pathDelim))
+  const unmakePathString = (pathString: string): ReadonlyArray<string> =>
+    pathString.split(pathDelim).map(reverseConversion)
 
   const getEnv = () =>
     typeof process !== "undefined" && "env" in process && typeof process.env === "object" ? process.env : {}

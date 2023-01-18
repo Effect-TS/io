@@ -106,6 +106,8 @@ export declare namespace ConfigProvider {
   export interface FromEnvConfig {
     readonly pathDelim: string
     readonly seqDelim: string
+    readonly conversion: (k: string) => string
+    readonly reverseConversion: (k: string) => string
   }
 }
 

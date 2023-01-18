@@ -10,6 +10,10 @@ import * as HashMap from "@fp-ts/data/HashMap"
 import * as HashSet from "@fp-ts/data/HashSet"
 import { assert, describe } from "vitest"
 
+// TODO: Why?
+// @ts-expect-error
+import { camelCase, constantCase } from "change-case"
+
 interface HostPort {
   readonly host: string
   readonly port: number
@@ -324,13 +328,16 @@ describe.concurrent("ConfigProvider", () => {
     }))
 })
 
+const makeEnvProvider = () =>
+  ConfigProvider.fromEnv({ pathDelim: "__", conversion: constantCase, reverseConversion: camelCase, seqDelim: "," })
+
 describe.concurrent("EnvProvider", () => {
   it.effect("capitalisation", () => {
     return Effect.gen(function*($) {
       // current in comments
       process.env["HOST" /* "host" */] = "localhost"
       process.env["PORT" /* "port" */] = "8080"
-      const provider = ConfigProvider.fromEnv()
+      const provider = makeEnvProvider()
       const result = yield* $(provider.load(hostPortConfig))
       assert.deepStrictEqual(result, {
         host: "localhost",
@@ -345,7 +352,7 @@ describe.concurrent("EnvProvider", () => {
       process.env["HOST_PORT__HOST" /* "hostPort_host" */] = "localhost"
       process.env["HOST_PORT__PORT" /* "hostPort_port" */] = "8080"
       process.env["TIMEOUT" /* "timeout" */] = "1000"
-      const provider = ConfigProvider.fromEnv()
+      const provider = makeEnvProvider()
       const result = yield* $(provider.load(serviceConfigConfig))
       assert.deepStrictEqual(result, {
         hostPort: {
@@ -357,7 +364,7 @@ describe.concurrent("EnvProvider", () => {
     })
   })
 
-  it.effect("current - should fail", () => {
+  it.effect("default", () => {
     return Effect.gen(function*($) {
       process.env["hostPort_host"] = "localhost"
       process.env["hostPort_port"] = "8080"
