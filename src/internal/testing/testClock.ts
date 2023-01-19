@@ -386,14 +386,12 @@ export class TestClockImpl implements TestClock {
    */
   suspendedWarningDone(): Effect.Effect<never, never, void> {
     const trace = getCallTrace()
-    return pipe(
-      synchronized.updateSomeEffect(this.suspendedWarningState, (suspendedWarningData) => {
-        if (SuspendedWarningData.isPending(suspendedWarningData)) {
-          return Option.some(pipe(core.interruptFiber(suspendedWarningData.fiber), core.as(SuspendedWarningData.start)))
-        }
-        return Option.none
-      })
-    ).traced(trace)
+    return synchronized.updateSomeEffect(this.suspendedWarningState, (suspendedWarningData) => {
+      if (SuspendedWarningData.isPending(suspendedWarningData)) {
+        return Option.some(pipe(core.interruptFiber(suspendedWarningData.fiber), core.as(SuspendedWarningData.start)))
+      }
+      return Option.none
+    }).traced(trace)
   }
   /**
    * Runs all effects scheduled to occur on or before the specified instant,

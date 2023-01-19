@@ -753,18 +753,16 @@ export const filter = <A, R, E>(f: (a: A) => Effect.Effect<R, E, boolean>) => {
   const trace = getCallTrace()
   return (elements: Iterable<A>): Effect.Effect<R, E, Chunk.Chunk<A>> => {
     return core.suspendSucceed(() =>
-      pipe(
-        Array.from(elements).reduceRight(
-          (effect, a) =>
-            pipe(
-              effect,
-              core.zipWith(
-                core.suspendSucceed(() => f(a)),
-                (list, b) => b ? pipe(list, Chunk.prepend(a)) : list
-              )
-            ),
-          core.sync(() => Chunk.empty<A>()) as Effect.Effect<R, E, Chunk.Chunk<A>>
-        )
+      Array.from(elements).reduceRight(
+        (effect, a) =>
+          pipe(
+            effect,
+            core.zipWith(
+              core.suspendSucceed(() => f(a)),
+              (list, b) => b ? pipe(list, Chunk.prepend(a)) : list
+            )
+          ),
+        core.sync(() => Chunk.empty<A>()) as Effect.Effect<R, E, Chunk.Chunk<A>>
       )
     ).traced(trace)
   }

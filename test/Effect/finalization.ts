@@ -168,7 +168,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const makeLogger = (ref: Ref.Ref<Chunk.Chunk<string>>) => {
         return (line: string): Effect.Effect<never, never, void> => {
-          return pipe(Ref.update(ref, Chunk.prepend(line)))
+          return Ref.update(ref, Chunk.prepend(line))
         }
       }
       const ref = yield* $(Ref.make(Chunk.empty<string>()))

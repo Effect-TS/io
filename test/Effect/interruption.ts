@@ -244,7 +244,7 @@ describe.concurrent("Effect", () => {
   it.effect("recovery of error in finalizer", () =>
     Effect.gen(function*($) {
       const recovered = yield* $(Ref.make(false))
-      const fiber = yield* $(pipe(withLatch((release) =>
+      const fiber = yield* $(withLatch((release) =>
         pipe(
           release,
           Effect.zipRight(Effect.never()),
@@ -255,7 +255,7 @@ describe.concurrent("Effect", () => {
           )),
           Effect.fork
         )
-      )))
+      ))
       yield* $(Fiber.interrupt(fiber))
       const result = yield* $(Ref.get(recovered))
       assert.isTrue(result)
@@ -493,7 +493,7 @@ describe.concurrent("Effect", () => {
       const child = pipe(
         Deferred.succeed(deferred, void 0),
         Effect.zipRight(Effect.sleep(Duration.millis(10))),
-        Effect.zipRight(pipe(Ref.set(ref, true)))
+        Effect.zipRight(Ref.set(ref, true))
       )
       const parent = pipe(child, Effect.uninterruptible, Effect.fork, Effect.zipRight(Deferred.await(deferred)))
       const fiber = yield* $(Effect.fork(parent))

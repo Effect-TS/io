@@ -1929,47 +1929,45 @@ export const raceAll = <R, E, A>(all: Iterable<Effect.Effect<R, E, A>>) => {
       core.as(res[0])
     )
   return pipe(
-    pipe(
-      core.deferredMake<E, readonly [A, Fiber.Fiber<E, A>]>(),
-      core.flatMap((done) =>
-        pipe(
-          Ref.make(effects.length),
-          core.flatMap((fails) =>
-            core.uninterruptibleMask<R, E, A>((restore) =>
-              pipe(
-                fork(core.interruptible(self)),
-                core.flatMap((head) =>
-                  pipe(
-                    effects,
-                    core.forEach((effect) => fork(core.interruptible(effect))),
-                    core.map((tail) => pipe(tail, Chunk.prepend(head)) as Chunk.Chunk<Fiber.RuntimeFiber<E, A>>),
-                    core.tap((fibers) =>
-                      pipe(
-                        fibers,
-                        Chunk.reduce(core.unit(), (effect, fiber) =>
-                          pipe(
-                            effect,
-                            core.zipRight(
-                              pipe(
-                                internalFiber._await(fiber),
-                                core.flatMap(raceAllArbiter(fibers, fiber, done, fails)),
-                                fork,
-                                core.asUnit
-                              )
+    core.deferredMake<E, readonly [A, Fiber.Fiber<E, A>]>(),
+    core.flatMap((done) =>
+      pipe(
+        Ref.make(effects.length),
+        core.flatMap((fails) =>
+          core.uninterruptibleMask<R, E, A>((restore) =>
+            pipe(
+              fork(core.interruptible(self)),
+              core.flatMap((head) =>
+                pipe(
+                  effects,
+                  core.forEach((effect) => fork(core.interruptible(effect))),
+                  core.map((tail) => pipe(tail, Chunk.prepend(head)) as Chunk.Chunk<Fiber.RuntimeFiber<E, A>>),
+                  core.tap((fibers) =>
+                    pipe(
+                      fibers,
+                      Chunk.reduce(core.unit(), (effect, fiber) =>
+                        pipe(
+                          effect,
+                          core.zipRight(
+                            pipe(
+                              internalFiber._await(fiber),
+                              core.flatMap(raceAllArbiter(fibers, fiber, done, fails)),
+                              fork,
+                              core.asUnit
                             )
-                          ))
-                      )
-                    ),
-                    core.flatMap((fibers) =>
-                      pipe(
-                        restore(pipe(Deferred.await(done), core.flatMap(inheritAll))),
-                        core.onInterrupt(() =>
-                          pipe(
-                            fibers,
-                            Chunk.reduce(
-                              core.unit(),
-                              (effect, fiber) => pipe(effect, core.zipLeft(core.interruptFiber(fiber)))
-                            )
+                          )
+                        ))
+                    )
+                  ),
+                  core.flatMap((fibers) =>
+                    pipe(
+                      restore(pipe(Deferred.await(done), core.flatMap(inheritAll))),
+                      core.onInterrupt(() =>
+                        pipe(
+                          fibers,
+                          Chunk.reduce(
+                            core.unit(),
+                            (effect, fiber) => pipe(effect, core.zipLeft(core.interruptFiber(fiber)))
                           )
                         )
                       )

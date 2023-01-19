@@ -10,7 +10,7 @@ describe.concurrent("ScopedRef", () => {
     Effect.gen(function*($) {
       const counter = yield* $(Counter.make())
       const ref = yield* $(ScopedRef.make(() => 0))
-      yield* $(pipe(ScopedRef.set(ref, counter.acquire())))
+      yield* $(ScopedRef.set(ref, counter.acquire()))
       const result = yield* $(ScopedRef.get(ref))
       assert.strictEqual(result, 1)
     }))

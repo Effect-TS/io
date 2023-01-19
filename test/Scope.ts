@@ -84,7 +84,7 @@ describe.concurrent("Scope", () => {
             Effect.flatMap(([resource1, resource2]) =>
               pipe(
                 Ref.update(ref, (actions) => [...actions, use(resource1)]),
-                Effect.zipPar(pipe(Ref.update(ref, (actions) => [...actions, use(resource2)])))
+                Effect.zipPar(Ref.update(ref, (actions) => [...actions, use(resource2)]))
               )
             )
           )
