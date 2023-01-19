@@ -132,13 +132,13 @@ export const cachedInvalidate = (timeToLive: Duration.Duration) => {
     self: Effect.Effect<R, E, A>
   ): Effect.Effect<R, never, readonly [Effect.Effect<never, E, A>, Effect.Effect<never, never, void>]> => {
     return pipe(
-      core.environment<R>(),
+      core.context<R>(),
       core.flatMap((env) =>
         pipe(
           makeSynchronized<Option.Option<readonly [number, Deferred.Deferred<E, A>]>>(Option.none),
           core.map((cache) =>
             [
-              pipe(getCachedValue(self, timeToLive, cache), core.provideEnvironment(env)),
+              pipe(getCachedValue(self, timeToLive, cache), core.provideContext(env)),
               invalidateCache(cache)
             ] as const
           )

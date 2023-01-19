@@ -443,19 +443,22 @@ export class TestClockImpl implements TestClock {
 
 /** @internal */
 export const live = (data: Data.Data): Layer.Layer<Annotations.Annotations | Live.Live, never, TestClock> => {
-  return layer.scoped(Tag)(effect.gen(function*($) {
-    const live = yield* $(core.service(Live.Tag))
-    const annotations = yield* $(core.service(Annotations.Tag))
-    const clockState = yield* $(core.sync(() => ref.unsafeMake(data)))
-    const warningState = yield* $(circular.makeSynchronized(WarningData.start))
-    const suspendedWarningState = yield* $(circular.makeSynchronized(SuspendedWarningData.start))
-    const testClock = new TestClockImpl(clockState, live, annotations, warningState, suspendedWarningState)
-    yield* $(fiberRuntime.withClockScoped(testClock))
-    yield* $(
-      fiberRuntime.addFinalizer(() => pipe(testClock.warningDone(), core.zipRight(testClock.suspendedWarningDone())))
-    )
-    return testClock
-  }))
+  return layer.scoped(
+    Tag,
+    effect.gen(function*($) {
+      const live = yield* $(core.service(Live.Tag))
+      const annotations = yield* $(core.service(Annotations.Tag))
+      const clockState = yield* $(core.sync(() => ref.unsafeMake(data)))
+      const warningState = yield* $(circular.makeSynchronized(WarningData.start))
+      const suspendedWarningState = yield* $(circular.makeSynchronized(SuspendedWarningData.start))
+      const testClock = new TestClockImpl(clockState, live, annotations, warningState, suspendedWarningState)
+      yield* $(fiberRuntime.withClockScoped(testClock))
+      yield* $(
+        fiberRuntime.addFinalizer(() => pipe(testClock.warningDone(), core.zipRight(testClock.suspendedWarningDone())))
+      )
+      return testClock
+    })
+  )
 }
 
 /** @internal */
@@ -464,7 +467,7 @@ export const defaultTestClock: Layer.Layer<Annotations.Annotations | Live.Live, 
 )
 
 /**
- * Accesses a `TestClock` instance in the environment and increments the time
+ * Accesses a `TestClock` instance in the context and increments the time
  * by the specified duration, running any actions scheduled for on or before
  * the new time in order.
  *
@@ -488,7 +491,7 @@ export const adjustWith = (duration: Duration.Duration) => {
 }
 
 /**
- * Accesses the current time of a `TestClock` instance in the environment in
+ * Accesses the current time of a `TestClock` instance in the context in
  * milliseconds.
  *
  * @macro traced
@@ -500,7 +503,7 @@ export const currentTimeMillis = (): Effect.Effect<never, never, number> => {
 }
 
 /**
- * Accesses a `TestClock` instance in the environment and saves the clock
+ * Accesses a `TestClock` instance in the context and saves the clock
  * state in an effect which, when run, will restore the `TestClock` to the
  * saved state.
  *
@@ -513,7 +516,7 @@ export const save = (): Effect.Effect<never, never, Effect.Effect<never, never, 
 }
 
 /**
- * Accesses a `TestClock` instance in the environment and sets the clock time
+ * Accesses a `TestClock` instance in the context and sets the clock time
  * to the specified `Instant`, running any actions scheduled for on or before
  * the new time in order.
  *
@@ -539,7 +542,7 @@ export const sleep = (duration: Duration.Duration): Effect.Effect<never, never, 
 }
 
 /**
- * Accesses a `TestClock` instance in the environment and returns a list of
+ * Accesses a `TestClock` instance in the context and returns a list of
  * times that effects are scheduled to run.
  *
  * @macro traced

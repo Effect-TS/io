@@ -50,7 +50,7 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
       this.fiberRefs,
       FiberRefs.updatedAs(
         fiberId,
-        core.currentEnvironment,
+        core.currentContext,
         this.context as Context.Context<never>
       )
     )
@@ -181,7 +181,7 @@ export const runtime = <R>(): Effect.Effect<R, never, Runtime.Runtime<R>> => {
   return core.withFiberRuntime<R, never, RuntimeImpl<R>>((state, status) =>
     core.succeed(
       new RuntimeImpl<R>(
-        state.getFiberRef(core.currentEnvironment as unknown as FiberRef.FiberRef<Context.Context<R>>),
+        state.getFiberRef(core.currentContext as unknown as FiberRef.FiberRef<Context.Context<R>>),
         status.runtimeFlags,
         state.unsafeGetFiberRefs()
       )

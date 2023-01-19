@@ -102,7 +102,7 @@ export declare namespace Supervisor {
 
 /**
  * @since 1.0.0
- * @category environment
+ * @category context
  */
 export const addSupervisor: <A>(supervisor: Supervisor<A>) => Layer.Layer<never, never, never> = circular.addSupervisor
 

@@ -183,7 +183,7 @@ export class Const<T> implements Supervisor.Supervisor<T> {
   }
 
   onStart<R, E, A>(
-    _environment: Context.Context<R>,
+    _context: Context.Context<R>,
     _effect: Effect.Effect<R, E, A>,
     _parent: Option.Option<Fiber.RuntimeFiber<any, any>>,
     _fiber: Fiber.RuntimeFiber<E, A>

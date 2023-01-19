@@ -705,9 +705,9 @@ export const dropWhile = <R, E, A>(f: (a: A) => Effect.Effect<R, E, boolean>) =>
  * @macro traced
  * @internal
  */
-export const environmentWith = <R, A>(f: (context: Context.Context<R>) => A): Effect.Effect<R, never, A> => {
+export const contextWith = <R, A>(f: (context: Context.Context<R>) => A): Effect.Effect<R, never, A> => {
   const trace = getCallTrace()
-  return pipe(core.environment<R>(), core.map(f)).traced(trace)
+  return pipe(core.context<R>(), core.map(f)).traced(trace)
 }
 
 /**
@@ -2060,32 +2060,33 @@ export const promiseInterrupt = <A>(evaluate: (signal: AbortSignal) => Promise<A
  * @macro traced
  * @internal
  */
-export const provideService = <T>(tag: Context.Tag<T>) =>
-  (resource: T) => {
-    const trace = getCallTrace()
-    return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<Exclude<R, T>, E, A> => {
-      return pipe(self, provideServiceEffect(tag)(core.succeed(resource))).traced(trace)
-    }
+export const provideService = <T extends Context.Tag<any>>(tag: T, service: Context.Tag.Service<T>) => {
+  const trace = getCallTrace()
+  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<Exclude<R, Context.Tag.Service<T>>, E, A> => {
+    return pipe(self, provideServiceEffect(tag, core.succeed(service))).traced(trace)
   }
+}
 
 /**
  * @macro traced
  * @internal
  */
-export const provideServiceEffect = <T>(tag: Context.Tag<T>) =>
-  <R1, E1>(effect: Effect.Effect<R1, E1, T>) => {
-    const trace = getCallTrace()
-    return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R1 | Exclude<R, T>, E | E1, A> => {
-      return core.environmentWithEffect((env: Context.Context<R1 | Exclude<R, T>>) =>
-        pipe(
-          effect,
-          core.flatMap((service) =>
-            pipe(self, core.provideEnvironment(pipe(env, Context.add(tag)(service)) as Context.Context<R | R1>))
-          )
+export const provideServiceEffect = <T extends Context.Tag<any>, R1, E1>(
+  tag: T,
+  effect: Effect.Effect<R1, E1, Context.Tag.Service<T>>
+) => {
+  const trace = getCallTrace()
+  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R1 | Exclude<R, Context.Tag.Service<T>>, E | E1, A> => {
+    return core.contextWithEffect((env: Context.Context<R1 | Exclude<R, Context.Tag.Service<T>>>) =>
+      pipe(
+        effect,
+        core.flatMap((service) =>
+          pipe(self, core.provideContext(pipe(env, Context.add(tag)(service)) as Context.Context<R | R1>))
         )
-      ).traced(trace)
-    }
+      )
+    ).traced(trace)
   }
+}
 
 /**
  * @macro traced
@@ -3106,7 +3107,7 @@ export const updateService = <T>(tag: Context.Tag<T>) => {
     return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | T, E, A> => {
       return pipe(
         self,
-        core.provideSomeEnvironment((env) => pipe(env, Context.add(tag)(f(pipe(env, Context.unsafeGet(tag))))))
+        core.contramapContext((env) => pipe(env, Context.add(tag)(f(pipe(env, Context.unsafeGet(tag))))))
       ).traced(trace) as Effect.Effect<R | T, E, A>
     }
   }

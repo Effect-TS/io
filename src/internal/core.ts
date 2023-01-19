@@ -471,10 +471,10 @@ export const either = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, 
  * @macro traced
  * @internal
  */
-export const environment = <R>(): Effect.Effect<R, never, Context.Context<R>> => {
+export const context = <R>(): Effect.Effect<R, never, Context.Context<R>> => {
   const trace = getCallTrace()
   return suspendSucceed(
-    () => fiberRefGet(currentEnvironment) as Effect.Effect<never, never, Context.Context<R>>
+    () => fiberRefGet(currentContext) as Effect.Effect<never, never, Context.Context<R>>
   ).traced(trace)
 }
 
@@ -482,11 +482,11 @@ export const environment = <R>(): Effect.Effect<R, never, Context.Context<R>> =>
  * @macro traced
  * @internal
  */
-export const environmentWithEffect = <R, R0, E, A>(
+export const contextWithEffect = <R, R0, E, A>(
   f: (context: Context.Context<R0>) => Effect.Effect<R, E, A>
 ): Effect.Effect<R | R0, E, A> => {
   const trace = getCallTrace()
-  return pipe(environment<R0>(), flatMap(f)).traced(trace)
+  return pipe(context<R0>(), flatMap(f)).traced(trace)
 }
 
 /**
@@ -1025,12 +1025,12 @@ export const partitionMap = <A, A1, A2>(
  * @macro traced
  * @internal
  */
-export const provideEnvironment = <R>(environment: Context.Context<R>) => {
+export const provideContext = <R>(context: Context.Context<R>) => {
   const trace = getCallTrace()
   return <E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<never, E, A> => {
     return pipe(
       self as Effect.Effect<never, E, A>,
-      fiberRefLocally(currentEnvironment, environment as Context.Context<never>)
+      fiberRefLocally(currentContext, context as Context.Context<never>)
     ).traced(trace)
   }
 }
@@ -1039,10 +1039,10 @@ export const provideEnvironment = <R>(environment: Context.Context<R>) => {
  * @macro traced
  * @internal
  */
-export const provideSomeEnvironment = <R0, R>(f: (context: Context.Context<R0>) => Context.Context<R>) => {
+export const contramapContext = <R0, R>(f: (context: Context.Context<R0>) => Context.Context<R>) => {
   const trace = getCallTrace()
   return <E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R0, E, A> =>
-    environmentWithEffect((context: Context.Context<R0>) => pipe(self, provideEnvironment(f(context)))).traced(trace)
+    contextWithEffect((context: Context.Context<R0>) => pipe(self, provideContext(f(context)))).traced(trace)
 }
 
 /**
@@ -1062,34 +1062,36 @@ export const runtimeFlags = (): Effect.Effect<never, never, RuntimeFlags.Runtime
  */
 export const service = <T>(tag: Context.Tag<T>): Effect.Effect<T, never, T> => {
   const trace = getCallTrace()
-  return serviceWithEffect(tag)(succeed).traced(trace)
+  return serviceWithEffect(tag, succeed).traced(trace)
 }
 
 /**
  * @macro traced
  * @internal
  */
-export const serviceWith = <T>(tag: Context.Tag<T>) => {
+export const serviceWith = <T extends Context.Tag<any>, A>(
+  tag: T,
+  f: (a: Context.Tag.Service<T>) => A
+): Effect.Effect<Context.Tag.Service<T>, never, A> => {
   const trace = getCallTrace()
-  return <A>(f: (a: T) => A): Effect.Effect<T, never, A> => {
-    return serviceWithEffect(tag)((a) => sync(() => f(a))).traced(trace)
-  }
+  return serviceWithEffect(tag, (a) => sync(() => f(a))).traced(trace)
 }
 
 /**
  * @macro traced
  * @internal
  */
-export const serviceWithEffect = <T>(tag: Context.Tag<T>) => {
-  return <R, E, A>(f: (a: T) => Effect.Effect<R, E, A>): Effect.Effect<R | T, E, A> => {
-    const trace = getCallTrace()
-    return suspendSucceed(() =>
-      pipe(
-        fiberRefGet(currentEnvironment),
-        flatMap((env) => f(pipe(env, Context.unsafeGet(tag))))
-      )
-    ).traced(trace)
-  }
+export const serviceWithEffect = <T extends Context.Tag<any>, R, E, A>(
+  tag: T,
+  f: (a: Context.Tag.Service<T>) => Effect.Effect<R, E, A>
+): Effect.Effect<R | Context.Tag.Service<T>, E, A> => {
+  const trace = getCallTrace()
+  return suspendSucceed(() =>
+    pipe(
+      fiberRefGet(currentContext),
+      flatMap((env) => f(pipe(env, Context.unsafeGet(tag))))
+    )
+  ).traced(trace)
 }
 
 /**
@@ -1744,7 +1746,7 @@ export const fiberRefUnsafeMakeHashSet = <A>(
 }
 
 /** @internal */
-export const fiberRefUnsafeMakeEnvironment = <A>(
+export const fiberRefUnsafeMakeContext = <A>(
   initial: Context.Context<A>
 ): FiberRef.FiberRef<Context.Context<A>> => {
   return fiberRefUnsafeMakePatch(
@@ -1782,7 +1784,7 @@ export const fiberRefUnsafeMakeRuntimeFlags = (
 }
 
 /** @internal */
-export const currentEnvironment: FiberRef.FiberRef<Context.Context<never>> = fiberRefUnsafeMakeEnvironment(
+export const currentContext: FiberRef.FiberRef<Context.Context<never>> = fiberRefUnsafeMakeContext(
   Context.empty()
 )
 

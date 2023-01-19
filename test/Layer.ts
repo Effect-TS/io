@@ -25,8 +25,8 @@ describe.concurrent("Layer", () => {
     Effect.gen(function*($) {
       const BoolTag = Context.Tag<boolean>()
       const deferred = yield* $(Deferred.make<never, void>())
-      const layer1 = Layer.effectEnvironment<never, never, never>(Effect.never())
-      const layer2 = Layer.scopedEnvironment(
+      const layer1 = Layer.effectContext<never, never, never>(Effect.never())
+      const layer2 = Layer.scopedContext(
         Effect.acquireRelease(
           pipe(
             Deferred.succeed(deferred, void 0),
@@ -45,7 +45,8 @@ describe.concurrent("Layer", () => {
     Effect.gen(function*($) {
       const ChunkTag = Context.Tag<Ref.Ref<Chunk.Chunk<string>>>()
       const testRef = yield* $(Ref.make<Chunk.Chunk<string>>(Chunk.empty()))
-      const layer = Layer.scoped(ChunkTag)(
+      const layer = Layer.scoped(
+        ChunkTag,
         pipe(
           Effect.acquireRelease(Ref.make<Chunk.Chunk<string>>(Chunk.empty()), (ref) =>
             pipe(
@@ -80,7 +81,7 @@ describe.concurrent("Layer", () => {
   it.scoped("sharing itself with merge", () =>
     Effect.gen(function*($) {
       const service1 = new Service1()
-      const layer = Layer.succeed(Service1Tag)(service1)
+      const layer = Layer.succeed(Service1Tag, service1)
       const env = pipe(layer, Layer.merge(layer), Layer.merge(layer), Layer.build)
       const result = yield* $(
         pipe(env, Effect.flatMap((context) => Effect.attempt(() => pipe(context, Context.get(Service1Tag)))))
@@ -110,24 +111,24 @@ describe.concurrent("Layer", () => {
         constructor(readonly value: number) {}
       }
       const ATag = Context.Tag<A>()
-      const aLayer = Layer.function(ConfigTag, ATag)((config) => new A(config.value))
+      const aLayer = Layer.function(ConfigTag, ATag, (config) => new A(config.value))
       class B {
         constructor(readonly value: number) {}
       }
       const BTag = Context.Tag<B>()
-      const bLayer = Layer.function(ATag, BTag)((_: A) => new B(_.value))
+      const bLayer = Layer.function(ATag, BTag, (_: A) => new B(_.value))
       class C {
         constructor(readonly value: number) {}
       }
       const CTag = Context.Tag<C>()
-      const cLayer = Layer.function(ATag, CTag)((_: A) => new C(_.value))
+      const cLayer = Layer.function(ATag, CTag, (_: A) => new C(_.value))
       const fedB = pipe(
-        Layer.succeed(ConfigTag)(new Config(1)),
+        Layer.succeed(ConfigTag, new Config(1)),
         Layer.provideToAndMerge(aLayer),
         Layer.provideToAndMerge(bLayer)
       )
       const fedC = pipe(
-        Layer.succeed(ConfigTag)(new Config(2)),
+        Layer.succeed(ConfigTag, new Config(2)),
         Layer.provideToAndMerge(aLayer),
         Layer.provideToAndMerge(cLayer)
       )
@@ -169,9 +170,9 @@ describe.concurrent("Layer", () => {
       const ScopedTag = Context.Tag<void>()
       const sleep = Effect.sleep(Duration.millis(100))
       const layer1 = Layer.fail("foo")
-      const layer2 = Layer.succeed(BarTag)({ bar: "bar" })
-      const layer3 = Layer.succeed(BazTag)({ baz: "baz" })
-      const layer4 = Layer.scoped(ScopedTag)(Effect.scoped(Effect.acquireRelease(sleep, () => sleep)))
+      const layer2 = Layer.succeed(BarTag, { bar: "bar" })
+      const layer3 = Layer.succeed(BazTag, { baz: "baz" })
+      const layer4 = Layer.scoped(ScopedTag, Effect.scoped(Effect.acquireRelease(sleep, () => sleep)))
       const layer = pipe(layer1, Layer.merge(pipe(layer2, Layer.merge(layer3), Layer.provideTo(layer4))))
       const result = yield* $(pipe(Effect.unit(), Effect.provideLayer(layer), Effect.exit))
       assert.isTrue(Exit.isFailure(result))
@@ -300,8 +301,8 @@ describe.concurrent("Layer", () => {
       }
       const ServiceBTag = Context.Tag<ServiceB>()
       const StringTag = Context.Tag<string>()
-      const layer1 = Layer.succeed(ServiceATag)({ name: "name", value: 1 })
-      const layer2 = Layer.function(StringTag, ServiceBTag)((name) => ({ name }))
+      const layer1 = Layer.succeed(ServiceATag, { name: "name", value: 1 })
+      const layer2 = Layer.function(StringTag, ServiceBTag, (name) => ({ name }))
       const live = pipe(
         layer1,
         Layer.map((context) =>
@@ -320,9 +321,9 @@ describe.concurrent("Layer", () => {
         memoized,
         Effect.flatMap((layer) =>
           pipe(
-            Effect.environment<Service1>(),
+            Effect.context<Service1>(),
             Effect.provideLayer(layer),
-            Effect.flatMap(() => pipe(Effect.environment<Service1>(), Effect.provideLayer(layer)))
+            Effect.flatMap(() => pipe(Effect.context<Service1>(), Effect.provideLayer(layer)))
           )
         ),
         Effect.scoped
@@ -335,7 +336,7 @@ describe.concurrent("Layer", () => {
       const fiberRef = yield* $(FiberRef.make<boolean>(false))
       const tag = Context.Tag<boolean>()
       const layer1 = Layer.scopedDiscard(FiberRef.locallyScoped(fiberRef, true))
-      const layer2 = Layer.effect(tag)(FiberRef.get(fiberRef))
+      const layer2 = Layer.effect(tag, FiberRef.get(fiberRef))
       const layer3 = pipe(layer1, Layer.merge(pipe(layer1, Layer.provideTo(layer2))))
       const result = yield* $(Layer.build(layer3))
       assert.equal(pipe(result, Context.unsafeGet(tag)), true)
@@ -345,8 +346,8 @@ describe.concurrent("Layer", () => {
       const NumberTag = Context.Tag<number>()
       const StringTag = Context.Tag<string>()
       const needsNumberAndString = Effect.tuple(Effect.service(NumberTag), Effect.service(StringTag))
-      const providesNumber = Layer.succeed(NumberTag)(10)
-      const providesString = Layer.succeed(StringTag)("hi")
+      const providesNumber = Layer.succeed(NumberTag, 10)
+      const providesString = Layer.succeed(StringTag, "hi")
       const needsString = pipe(needsNumberAndString, Effect.provideSomeLayer(providesNumber))
       const result = yield* $(pipe(needsString, Effect.provideLayer(providesString)))
       assert.strictEqual(result[0], 10)
@@ -370,7 +371,7 @@ describe.concurrent("Layer", () => {
       }
       const FooTag = Context.Tag<FooService>()
       const fooBuilder = pipe(
-        Layer.environment<string | Ref.Ref<number>>(),
+        Layer.context<string | Ref.Ref<number>>(),
         Layer.map((context) => {
           const s = pipe(context, Context.get(StringTag))
           const ref = pipe(context, Context.get(NumberRefTag))
@@ -384,11 +385,11 @@ describe.concurrent("Layer", () => {
           )
         })
       )
-      const provideNumberRef = Layer.effect(NumberRefTag)(Ref.make(10))
-      const provideString = Layer.succeed(StringTag)("hi")
+      const provideNumberRef = Layer.effect(NumberRefTag, Ref.make(10))
+      const provideString = Layer.succeed(StringTag, "hi")
       const needsString = pipe(provideNumberRef, Layer.provideTo(fooBuilder))
       const layer = pipe(provideString, Layer.provideTo(needsString))
-      const result = yield* $(pipe(Effect.serviceWithEffect(FooTag)((_) => _.get), Effect.provideLayer(layer)))
+      const result = yield* $(pipe(Effect.serviceWithEffect(FooTag, (_) => _.get), Effect.provideLayer(layer)))
       assert.strictEqual(result[0], 10)
       assert.strictEqual(result[1], "hi")
     }))
@@ -410,7 +411,7 @@ describe.concurrent("Layer", () => {
       }
       const FooTag = Context.Tag<FooService>()
       const fooBuilder = pipe(
-        Layer.environment<string | Ref.Ref<number>>(),
+        Layer.context<string | Ref.Ref<number>>(),
         Layer.map((context) => {
           const s = pipe(context, Context.get(StringTag))
           const ref = pipe(context, Context.get(NumberRefTag))
@@ -424,14 +425,14 @@ describe.concurrent("Layer", () => {
           )
         })
       )
-      const provideNumberRef = Layer.effect(NumberRefTag)(Ref.make(10))
-      const provideString = Layer.succeed(StringTag)("hi")
+      const provideNumberRef = Layer.effect(NumberRefTag, Ref.make(10))
+      const provideString = Layer.succeed(StringTag, "hi")
       const needsString = pipe(provideNumberRef, Layer.provideToAndMerge(fooBuilder))
       const layer = pipe(provideString, Layer.provideToAndMerge(needsString))
       const result = yield* $(pipe(
-        Effect.serviceWithEffect(FooTag)((foo) => foo.get),
+        Effect.serviceWithEffect(FooTag, (foo) => foo.get),
         Effect.flatMap(([i1, s]) =>
-          pipe(Effect.serviceWithEffect(NumberRefTag)(Ref.get), Effect.map((i2) => [i1, i2, s] as const))
+          pipe(Effect.serviceWithEffect(NumberRefTag, Ref.get), Effect.map((i2) => [i1, i2, s] as const))
         ),
         Effect.provideLayer(layer)
       ))
@@ -449,10 +450,10 @@ describe.concurrent("Layer", () => {
         readonly value: string
       }
       const ToStringTag = Context.Tag<ToStringService>()
-      const layer = Layer.function(NumberTag, ToStringTag)((numberService) => ({
+      const layer = Layer.function(NumberTag, ToStringTag, (numberService) => ({
         value: numberService.value.toString()
       }))
-      const live = pipe(Layer.succeed(NumberTag)({ value: 1 }), Layer.provideTo(Layer.passthrough(layer)))
+      const live = pipe(Layer.succeed(NumberTag, { value: 1 }), Layer.provideTo(Layer.passthrough(layer)))
       const { i, s } = yield* $(pipe(
         Effect.struct({
           i: Effect.service(NumberTag),
@@ -473,8 +474,8 @@ describe.concurrent("Layer", () => {
       }
       const PersonTag = Context.Tag<PersonService>()
       const AgeTag = Context.Tag<AgeService>()
-      const personLayer = Layer.succeed(PersonTag)({ name: "User", age: 42 })
-      const ageLayer = pipe(personLayer, Layer.project(PersonTag, AgeTag)((_) => ({ age: _.age })))
+      const personLayer = Layer.succeed(PersonTag, { name: "User", age: 42 })
+      const ageLayer = pipe(personLayer, Layer.project(PersonTag, AgeTag, (_) => ({ age: _.age })))
       const { age } = yield* $(pipe(Effect.service(AgeTag), Effect.provideLayer(ageLayer)))
       assert.strictEqual(age, 42)
     }))
@@ -528,7 +529,7 @@ describe.concurrent("Layer", () => {
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(0))
       const effect = pipe(Ref.update(ref, (n) => n + 1), Effect.zipRight(Effect.fail("fail")))
-      const layer = pipe(Layer.effectEnvironment(effect), Layer.retry(Schedule.recurs(3)))
+      const layer = pipe(Layer.effectContext(effect), Layer.retry(Schedule.recurs(3)))
       yield* $(Effect.ignore(Effect.scoped(Layer.build(layer))))
       const result = yield* $(Ref.get(ref))
       assert.strictEqual(result, 4)
@@ -606,7 +607,7 @@ describe.concurrent("Layer", () => {
       const BarTag = Context.Tag<BarService>()
       const ref: Ref.Ref<string> = yield* $(Ref.make("foo"))
       const layer = pipe(
-        Layer.succeed(BarTag)({ bar: "bar" }),
+        Layer.succeed(BarTag, { bar: "bar" }),
         Layer.tap((context) => Ref.set(ref, pipe(context, Context.get(BarTag)).bar))
       )
       yield* $(Effect.scoped(Layer.build(layer)))
@@ -624,7 +625,8 @@ export class Service1 {
 }
 export const Service1Tag = Context.Tag<Service1>()
 export const makeLayer1 = (ref: Ref.Ref<Chunk.Chunk<string>>): Layer.Layer<never, never, Service1> => {
-  return Layer.scoped(Service1Tag)(
+  return Layer.scoped(
+    Service1Tag,
     Effect.acquireRelease(
       pipe(Ref.update(ref, Chunk.append(acquire1)), Effect.as(new Service1())),
       () => Ref.update(ref, Chunk.append(release1))
@@ -638,7 +640,8 @@ export class Service2 {
 }
 export const Service2Tag = Context.Tag<Service2>()
 export const makeLayer2 = (ref: Ref.Ref<Chunk.Chunk<string>>): Layer.Layer<never, never, Service2> => {
-  return Layer.scoped(Service2Tag)(
+  return Layer.scoped(
+    Service2Tag,
     Effect.acquireRelease(
       pipe(Ref.update(ref, Chunk.append(acquire2)), Effect.as(new Service2())),
       () => Ref.update(ref, Chunk.append(release2))
@@ -652,7 +655,8 @@ export class Service3 {
 }
 export const Service3Tag = Context.Tag<Service3>()
 export const makeLayer3 = (ref: Ref.Ref<Chunk.Chunk<string>>): Layer.Layer<never, never, Service3> => {
-  return Layer.scoped(Service3Tag)(
+  return Layer.scoped(
+    Service3Tag,
     Effect.acquireRelease(
       pipe(Ref.update(ref, Chunk.append(acquire3)), Effect.as(new Service3())),
       () => Ref.update(ref, Chunk.append(release3))

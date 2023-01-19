@@ -123,7 +123,7 @@ export const fromEnv = (
     const valueOpt = pathString in current ? Option.some(current[pathString]!) : Option.none
     return pipe(
       core.fromOption(valueOpt),
-      core.mapError(() => configError.MissingData(path, `Expected ${pathString} to exist in the process environment`)),
+      core.mapError(() => configError.MissingData(path, `Expected ${pathString} to exist in the process context`)),
       core.flatMap((value) => parsePrimitive(value, path, primitive, seqDelim))
     ).traced(trace)
   }

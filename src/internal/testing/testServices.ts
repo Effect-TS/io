@@ -40,7 +40,7 @@ export const liveServices: Context.Context<TestServices> = pipe(
 )
 
 /** @internal */
-export const currentServices: FiberRef.FiberRef<Context.Context<TestServices>> = core.fiberRefUnsafeMakeEnvironment(
+export const currentServices: FiberRef.FiberRef<Context.Context<TestServices>> = core.fiberRefUnsafeMakeContext(
   liveServices
 )
 
@@ -106,7 +106,8 @@ export const withAnnotationsScoped = (
  * @internal
  */
 export const annotationsLayer = (): Layer.Layer<never, never, Annotations.Annotations> =>
-  layer.scoped(Annotations.Tag)(
+  layer.scoped(
+    Annotations.Tag,
     pipe(
       core.sync(() => ref.unsafeMake(TestAnnotationMap.empty())),
       core.map(Annotations.make),
@@ -115,7 +116,7 @@ export const annotationsLayer = (): Layer.Layer<never, never, Annotations.Annota
   )
 
 /**
- * Accesses an `Annotations` instance in the environment and retrieves the
+ * Accesses an `Annotations` instance in the context and retrieves the
  * annotation of the specified type, or its default value if there is none.
  *
  * @macro traced
@@ -127,7 +128,7 @@ export const get = <A>(key: TestAnnotation.TestAnnotation<A>): Effect.Effect<nev
 }
 
 /**
- * Accesses an `Annotations` instance in the environment and appends the
+ * Accesses an `Annotations` instance in the context and appends the
  * specified annotation to the annotation map.
  *
  * @macro traced
@@ -211,9 +212,10 @@ export const withLiveScoped = (live: Live.Live): Effect.Effect<Scope.Scope, neve
  * @internal
  */
 export const liveLayer = (): Layer.Layer<DefaultServices.DefaultServices, never, Live.Live> =>
-  layer.scoped(Live.Tag)(
+  layer.scoped(
+    Live.Tag,
     pipe(
-      core.environment<DefaultServices.DefaultServices>(),
+      core.context<DefaultServices.DefaultServices>(),
       core.map(Live.make),
       core.tap(withLiveScoped)
     )
@@ -298,7 +300,8 @@ export const withSizedScoped = (sized: Sized.Sized): Effect.Effect<Scope.Scope, 
 
 /** @internal */
 export const sizedLayer = (size: number): Layer.Layer<never, never, Sized.Sized> =>
-  layer.scoped(Sized.Tag)(
+  layer.scoped(
+    Sized.Tag,
     pipe(
       fiberRuntime.fiberRefMake(size),
       core.map(Sized.fromFiberRef),
@@ -388,7 +391,8 @@ export const testConfigLayer = (params: {
   readonly samples: number
   readonly shrinks: number
 }): Layer.Layer<never, never, TestConfig.TestConfig> =>
-  layer.scoped(TestConfig.Tag)(
+  layer.scoped(
+    TestConfig.Tag,
     Effect.suspendSucceed(() => {
       const testConfig = TestConfig.make(params)
       return pipe(

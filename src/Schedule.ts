@@ -792,23 +792,23 @@ export const passthrough: <Env, Input, Output>(self: Schedule<Env, Input, Output
   internal.passthrough
 
 /**
- * Returns a new schedule with its environment provided to it, so the
- * resulting schedule does not require any environment.
+ * Returns a new schedule with its context provided to it, so the
+ * resulting schedule does not require any context.
  *
  * @since 1.0.0
- * @category environment
+ * @category context
  */
-export const provideEnvironment: <R>(
+export const provideContext: <R>(
   context: Context.Context<R>
-) => <In, Out>(self: Schedule<R, In, Out>) => Schedule<never, In, Out> = internal.provideEnvironment
+) => <In, Out>(self: Schedule<R, In, Out>) => Schedule<never, In, Out> = internal.provideContext
 
 /**
  * Returns a new schedule with the single service it requires provided to it.
- * If the schedule requires multiple services use `provideEnvironment`
+ * If the schedule requires multiple services use `provideContext`
  * instead.
  *
  * @since 1.0.0
- * @category environment
+ * @category context
  */
 export const provideService: <T, T1 extends T>(
   tag: Context.Tag<T>,
@@ -816,15 +816,15 @@ export const provideService: <T, T1 extends T>(
 ) => <R, In, Out>(self: Schedule<T | R, In, Out>) => Schedule<Exclude<R, T>, In, Out> = internal.provideService
 
 /**
- * Transforms the environment being provided to this schedule with the
+ * Transforms the context being provided to this schedule with the
  * specified function.
  *
  * @since 1.0.0
- * @category environment
+ * @category context
  */
-export const provideSomeEnvironment: <R0, R>(
+export const contramapContext: <R0, R>(
   f: (env0: Context.Context<R0>) => Context.Context<R>
-) => <In, Out>(self: Schedule<R, In, Out>) => Schedule<R0, In, Out> = internal.provideSomeEnvironment
+) => <In, Out>(self: Schedule<R, In, Out>) => Schedule<R0, In, Out> = internal.contramapContext
 
 /**
  * Returns a new schedule that reconsiders every decision made by this

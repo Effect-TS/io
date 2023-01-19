@@ -4,7 +4,7 @@ import type * as Context from "@fp-ts/data/Context"
 import { pipe } from "@fp-ts/data/Function"
 
 const program = pipe(
-  Effect.environmentWith((_: Context.Context<never>) => _),
+  Effect.contextWith((_: Context.Context<never>) => _),
   Effect.forever,
   Effect.fork,
   Effect.flatMap((f) => Fiber.await(f))

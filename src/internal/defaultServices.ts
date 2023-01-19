@@ -28,7 +28,7 @@ export const liveServices: Context.Context<DefaultServices.DefaultServices> = pi
  * @since 1.0.0
  * @category fiberRefs
  */
-export const currentServices = core.fiberRefUnsafeMakeEnvironment(liveServices)
+export const currentServices = core.fiberRefUnsafeMakeContext(liveServices)
 
 // circular with Clock
 

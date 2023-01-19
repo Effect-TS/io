@@ -115,7 +115,7 @@ export const reload: <A>(tag: Context.Tag<A>) => Effect.Effect<Reloadable<A>, un
 
 /**
  * @since 1.0.0
- * @category environment
+ * @category context
  */
 export const reloadableTag: <A>(tag: Context.Tag<A>) => Context.Tag<Reloadable<A>> = internal.reloadableTag
 

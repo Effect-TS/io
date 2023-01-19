@@ -745,16 +745,16 @@ export const checkInterruptible: <R, E, A>(f: (isInterruptible: boolean) => Effe
   core.checkInterruptible
 
 /**
- * Retreives the `Clock` service from the environment.
+ * Retreives the `Clock` service from the context
  *
  * @macro traced
  * @since 1.0.0
- * @category environment
+ * @category context
  */
 export const clock: (_: void) => Effect<never, never, Clock.Clock> = effect.clock
 
 /**
- * Retreives the `Clock` service from the environment and provides it to the
+ * Retreives the `Clock` service from the context and provides it to the
  * specified effectful function.
  *
  * @macro traced
@@ -1214,30 +1214,29 @@ export const ensuringChildren: <R1, X>(
 /**
  * @macro traced
  * @since 1.0.0
- * @category environment
+ * @category context
  */
-export const environment: <R>() => Effect<R, never, Context.Context<R>> = core.environment
+export const context: <R>() => Effect<R, never, Context.Context<R>> = core.context
 
 /**
- * Accesses the environment of the effect.
+ * Accesses the context of the effect.
  *
  * @macro traced
  * @since 1.0.0
- * @category environment
+ * @category context
  */
-export const environmentWith: <R, A>(f: (context: Context.Context<R>) => A) => Effect<R, never, A> =
-  effect.environmentWith
+export const contextWith: <R, A>(f: (context: Context.Context<R>) => A) => Effect<R, never, A> = effect.contextWith
 
 /**
- * Effectually accesses the environment of the effect.
+ * Effectually accesses the context of the effect.
  *
  * @macro traced
  * @since 1.0.0
- * @category environment
+ * @category context
  */
-export const environmentWithEffect: <R, R0, E, A>(
+export const contextWithEffect: <R, R0, E, A>(
   f: (context: Context.Context<R0>) => Effect<R, E, A>
-) => Effect<R | R0, E, A> = core.environmentWithEffect
+) => Effect<R | R0, E, A> = core.contextWithEffect
 
 /**
  * Returns an effect that ignores errors and runs repeatedly until it
@@ -2746,23 +2745,23 @@ export const promiseInterrupt: <A>(evaluate: (signal: AbortSignal) => Promise<A>
   effect.promiseInterrupt
 
 /**
- * Provides the effect with its required environment, which eliminates its
+ * Provides the effect with its required context, which eliminates its
  * dependency on `R`.
  *
  * @macro traced
  * @since 1.0.0
- * @category environment
+ * @category context
  */
-export const provideEnvironment: <R>(
-  environment: Context.Context<R>
-) => <E, A>(self: Effect<R, E, A>) => Effect<never, E, A> = core.provideEnvironment
+export const provideContext: <R>(
+  context: Context.Context<R>
+) => <E, A>(self: Effect<R, E, A>) => Effect<never, E, A> = core.provideContext
 
 /**
  * Provides a layer to the effect, which translates it to another level.
  *
  * @macro traced
  * @since 1.0.0
- * @category environment
+ * @category context
  */
 export const provideLayer: <R, E, A>(
   layer: Layer.Layer<R, E, A>
@@ -2770,55 +2769,50 @@ export const provideLayer: <R, E, A>(
 
 /**
  * Provides the effect with the single service it requires. If the effect
- * requires more than one service use `provideEnvironment` instead.
+ * requires more than one service use `provideContext` instead.
  *
  * @since 1.0.0
- * @category environment
+ * @category context
+ * @macro traced
  */
-export const provideService: <T>(
-  tag: Context.Tag<T>
-) => {
-  /**
-   * @macro traced
-   */
-  (resource: T): <R, E, A>(self: Effect<R, E, A>) => Effect<Exclude<R, T>, E, A>
-} = effect.provideService
+export const provideService: <T extends Context.Tag<any>>(
+  tag: T,
+  service: Context.Tag.Service<T>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<Exclude<R, Context.Tag.Service<T>>, E, A> = effect.provideService
 
 /**
  * Provides the effect with the single service it requires. If the effect
- * requires more than one service use `provideEnvironment` instead.
+ * requires more than one service use `provideContext` instead.
  *
  * @since 1.0.0
- * @category environment
+ * @category context
+ * @macro traced
  */
-export const provideServiceEffect: <T>(
-  tag: Context.Tag<T>
-) => {
-  /**
-   * @macro traced
-   */
-  <R1, E1>(effect: Effect<R1, E1, T>): <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | Exclude<R, T>, E1 | E, A>
-} = effect.provideServiceEffect
+export const provideServiceEffect: <T extends Context.Tag<any>, R1, E1>(
+  tag: T,
+  effect: Effect<R1, E1, Context.Tag.Service<T>>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | Exclude<R, Context.Tag.Service<T>>, E1 | E, A> =
+  effect.provideServiceEffect
 
 /**
- * Provides some of the environment required to run this effect,
+ * Provides some of the context required to run this effect,
  * leaving the remainder `R0`.
  *
  * @macro traced
  * @since 1.0.0
- * @category environment
+ * @category context
  */
-export const provideSomeEnvironment: <R0, R>(
+export const contramapContext: <R0, R>(
   f: (context: Context.Context<R0>) => Context.Context<R>
-) => <E, A>(self: Effect<R, E, A>) => Effect<R0, E, A> = core.provideSomeEnvironment
+) => <E, A>(self: Effect<R, E, A>) => Effect<R0, E, A> = core.contramapContext
 
 /**
- * Splits the environment into two parts, providing one part using the
+ * Splits the context into two parts, providing one part using the
  * specified layer and leaving the remainder `R0`.
  *
  * @macro traced
  * @since 1.0.0
- * @category environment
+ * @category context
  */
 export const provideSomeLayer: <R2, E2, A2>(
   layer: Layer.Layer<R2, E2, A2>
@@ -2936,7 +2930,7 @@ export const raceWith: <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
 ) => <R>(self: Effect<R, E, A>) => Effect<R1 | R2 | R3 | R, E2 | E3, A2 | A3> = circular.raceWith
 
 /**
- * Retreives the `Random` service from the environment.
+ * Retreives the `Random` service from the context.
  *
  * @macro traced
  * @since 1.0.0
@@ -2945,7 +2939,7 @@ export const raceWith: <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
 export const random: (_: void) => Effect<never, never, Random.Random> = effect.random
 
 /**
- * Retreives the `Random` service from the environment and uses it to run the
+ * Retreives the `Random` service from the context and uses it to run the
  * specified workflow.
  *
  * @macro traced
@@ -3450,7 +3444,7 @@ export const scheduleFrom: <R2, In, Out>(
 /**
  * @macro traced
  * @since 1.0.0
- * @category environment
+ * @category context
  */
 export const scope: (_: void) => Effect<Scope.Scope, never, Scope.Scope> = fiberRuntime.scope
 
@@ -3470,7 +3464,7 @@ export const scopeWith: <R, E, A>(f: (scope: Scope.Scope) => Effect<R, E, A>) =>
  * execution, whether by success, failure, or interruption.
  *
  * @since 1.0.0
- * @category environment
+ * @category context
  */
 export const scoped: <R, E, A>(effect: Effect<R, E, A>) => Effect<Exclude<R, Scope.Scope>, E, A> =
   fiberRuntime.scopedEffect
@@ -3490,33 +3484,37 @@ export const sequentialFinalizers: <R, E, A>(self: Effect<R, E, A>) => Effect<R 
   fiberRuntime.sequentialFinalizers
 
 /**
- * Extracts the specified service from the environment of the effect.
+ * Extracts the specified service from the context of the effect.
  *
  * @macro traced
  * @since 1.0.0
- * @category environment
+ * @category context
  */
 export const service: <T>(tag: Context.Tag<T>) => Effect<T, never, T> = core.service
 
 /**
- * Accesses the specified service in the environment of the effect.
+ * Accesses the specified service in the context of the effect.
  *
  * @macro traced
  * @since 1.0.0
- * @category environment
+ * @category context
  */
-export const serviceWith: <T>(tag: Context.Tag<T>) => <A>(f: (a: T) => A) => Effect<T, never, A> = core.serviceWith
+export const serviceWith: <T extends Context.Tag<any>, A>(
+  tag: T,
+  f: (a: Context.Tag.Service<T>) => A
+) => Effect<Context.Tag.Service<T>, never, A> = core.serviceWith
 
 /**
- * Effectfully accesses the specified service in the environment of the effect.
+ * Effectfully accesses the specified service in the context of the effect.
  *
  * @macro traced
  * @since 1.0.0
- * @category environment
+ * @category context
  */
-export const serviceWithEffect: <T>(
-  tag: Context.Tag<T>
-) => <R, E, A>(f: (a: T) => Effect<R, E, A>) => Effect<T | R, E, A> = core.serviceWithEffect
+export const serviceWithEffect: <T extends Context.Tag<any>, R, E, A>(
+  tag: T,
+  f: (a: Context.Tag.Service<T>) => Effect<R, E, A>
+) => Effect<R | Context.Tag.Service<T>, E, A> = core.serviceWithEffect
 
 /**
  * Sets the `FiberRef` values for the fiber running this effect to the values
@@ -3702,7 +3700,7 @@ export const supervised: <X>(
 
 /**
  * Returns a lazily constructed effect, whose construction may itself require
- * effects. When no environment is required (i.e., when `R == unknown`) it is
+ * effects. When no context is required (i.e., when `R == unknown`) it is
  * conceptually equivalent to `flatten(succeed(io))`.
  *
  * @macro traced
@@ -3985,6 +3983,43 @@ export const timeoutTo: <A, B, B1>(
  * @category conversions
  */
 export const toLayer: <A>(tag: Context.Tag<A>) => <R, E>(self: Effect<R, E, A>) => Layer.Layer<R, E, A> = layer.toLayer
+
+/**
+ * Constructs a layer from this effect.
+ *
+ * @since 1.0.0
+ * @category conversions
+ */
+export const toLayerContext: <R, E, A>(effect: Effect<R, E, Context.Context<A>>) => Layer.Layer<R, E, A> =
+  layer.fromEffectContext
+
+/**
+ * Constructs a layer from this effect.
+ *
+ * @since 1.0.0
+ * @category conversions
+ */
+export const toLayerDiscard: <R, E, _>(effect: Effect<R, E, _>) => Layer.Layer<R, E, never> = layer.fromEffectDiscard
+
+/**
+ * Constructs a layer from this effect.
+ *
+ * @since 1.0.0
+ * @category conversions
+ */
+export const toLayerScopedDiscard: <R, E, _>(
+  effect: Effect<R, E, _>
+) => Layer.Layer<Exclude<R, Scope.Scope>, E, never> = layer.scopedDiscard
+
+/**
+ * Constructs a layer from this effect.
+ *
+ * @since 1.0.0
+ * @category conversions
+ */
+export const toLayerScoped: <A>(
+  tag: Context.Tag<A>
+) => <R, E>(self: Effect<R, E, A>) => Layer.Layer<Exclude<R, Scope.Scope>, E, A> = layer.toLayerScoped
 
 /**
  * @since 1.0.0
@@ -4375,7 +4410,7 @@ export const updateRuntimeFlags: (patch: RuntimeFlagsPatch.RuntimeFlagsPatch) =>
  *
  * @macro traced
  * @since 1.0.0
- * @category environment
+ * @category context
  */
 export const updateService: <T>(
   tag: Context.Tag<T>

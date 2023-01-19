@@ -20,12 +20,12 @@ export const live: Layer.Layer<DefaultServices.DefaultServices, never, TestServi
 )
 
 /** @internal */
-export const liveEnvironment = (): Layer.Layer<never, never, DefaultServices.DefaultServices> =>
-  layer.syncEnvironment(() => defaultServices.liveServices)
+export const liveContext = (): Layer.Layer<never, never, DefaultServices.DefaultServices> =>
+  layer.syncContext(() => defaultServices.liveServices)
 
 /** @internal */
-export const testEnvironment = (): Layer.Layer<never, never, TestServices.TestServices> =>
+export const testContext = (): Layer.Layer<never, never, TestServices.TestServices> =>
   pipe(
-    liveEnvironment(),
+    liveContext(),
     layer.provideToAndMerge(live)
   )

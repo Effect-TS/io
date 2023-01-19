@@ -363,7 +363,7 @@ export const withScope = (scope: Scope.Scope) => {
               core.flatMap((env) =>
                 pipe(
                   memoMap.getOrElseMemoize(op.second, scope),
-                  core.provideEnvironment(env)
+                  core.provideContext(env)
                 )
               )
             )
@@ -416,14 +416,14 @@ export const discard = <RIn, E, ROut>(self: Layer.Layer<RIn, E, ROut>): Layer.La
 /** @internal */
 export const catchAll = <E, R2, E2, A2>(onError: (error: E) => Layer.Layer<R2, E2, A2>) => {
   return <R, A>(self: Layer.Layer<R, E, A>): Layer.Layer<R | R2, E2, A & A2> => {
-    return pipe(self, matchLayer(onError, succeedEnvironment))
+    return pipe(self, matchLayer(onError, succeedContext))
   }
 }
 
 /** @internal */
 export const catchAllCause = <E, R2, E2, A2>(onError: (cause: Cause.Cause<E>) => Layer.Layer<R2, E2, A2>) => {
   return <R, A>(self: Layer.Layer<R, E, A>): Layer.Layer<R | R2, E2, A & A2> =>
-    pipe(self, matchCauseLayer(onError, succeedEnvironment))
+    pipe(self, matchCauseLayer(onError, succeedContext))
 }
 
 /** @internal */
@@ -437,8 +437,8 @@ export const dieSync = (evaluate: LazyArg<unknown>): Layer.Layer<never, never, u
 }
 
 /** @internal */
-export const environment = <R>(): Layer.Layer<R, never, R> => {
-  return fromEffectEnvironment(core.environment<R>())
+export const context = <R>(): Layer.Layer<R, never, R> => {
+  return fromEffectContext(core.context<R>())
 }
 
 /** @internal */
@@ -463,12 +463,12 @@ export const failSync = <E>(evaluate: LazyArg<E>): Layer.Layer<never, E, unknown
 
 /** @internal */
 export const failCause = <E>(cause: Cause.Cause<E>): Layer.Layer<never, E, unknown> => {
-  return fromEffectEnvironment(core.failCause(cause))
+  return fromEffectContext(core.failCause(cause))
 }
 
 /** @internal */
 export const failCauseSync = <E>(evaluate: LazyArg<Cause.Cause<E>>): Layer.Layer<never, E, unknown> => {
-  return fromEffectEnvironment(core.failCauseSync(evaluate))
+  return fromEffectContext(core.failCauseSync(evaluate))
 }
 
 /** @internal */
@@ -535,20 +535,21 @@ export const fresh = <R, E, A>(self: Layer.Layer<R, E, A>): Layer.Layer<R, E, A>
 }
 
 /** @internal */
-export function fromEffect<T>(tag: Context.Tag<T>) {
-  return <R, E>(effect: Effect.Effect<R, E, T>): Layer.Layer<R, E, T> => {
-    return fromEffectEnvironment(
-      pipe(
-        effect,
-        core.map((service) => pipe(Context.empty(), Context.add(tag)(service)))
-      )
+export function fromEffect<T extends Context.Tag<any>, R, E>(
+  tag: T,
+  effect: Effect.Effect<R, E, Context.Tag.Service<T>>
+): Layer.Layer<R, E, Context.Tag.Service<T>> {
+  return fromEffectContext(
+    pipe(
+      effect,
+      core.map((service) => pipe(Context.empty(), Context.add(tag)(service)))
     )
-  }
+  )
 }
 
 /** @internal */
 export function fromEffectDiscard<R, E, _>(effect: Effect.Effect<R, E, _>): Layer.Layer<R, E, never> {
-  return fromEffectEnvironment(
+  return fromEffectContext(
     pipe(
       effect,
       core.map(() => Context.empty())
@@ -557,7 +558,7 @@ export function fromEffectDiscard<R, E, _>(effect: Effect.Effect<R, E, _>): Laye
 }
 
 /** @internal */
-export function fromEffectEnvironment<R, E, A>(
+export function fromEffectContext<R, E, A>(
   effect: Effect.Effect<R, E, Context.Context<A>>
 ): Layer.Layer<R, E, A> {
   const fromEffect = Object.create(proto)
@@ -567,12 +568,12 @@ export function fromEffectEnvironment<R, E, A>(
 }
 
 /** @internal */
-export const fromFunction = <A, B>(tagA: Context.Tag<A>, tagB: Context.Tag<B>) => {
-  return (f: (a: A) => B): Layer.Layer<A, never, B> => {
-    return fromEffectEnvironment(
-      core.serviceWith(tagA)((a) => pipe(Context.empty(), Context.add(tagB)(f(a))))
-    )
-  }
+export const fromFunction = <A extends Context.Tag<any>, B extends Context.Tag<any>>(
+  tagA: A,
+  tagB: B,
+  f: (a: Context.Tag.Service<A>) => Context.Tag.Service<B>
+): Layer.Layer<Context.Tag.Service<A>, never, Context.Tag.Service<B>> => {
+  return fromEffectContext(core.serviceWith(tagA, (a) => pipe(Context.empty(), Context.add(tagB)(f(a)))))
 }
 
 /** @internal */
@@ -588,7 +589,7 @@ export const launch = <RIn, E, ROut>(self: Layer.Layer<RIn, E, ROut>): Effect.Ef
 /** @internal */
 export const map = <A, B>(f: (context: Context.Context<A>) => Context.Context<B>) => {
   return <R, E>(self: Layer.Layer<R, E, A>): Layer.Layer<R, E, B> => {
-    return pipe(self, flatMap((context) => succeedEnvironment(f(context))))
+    return pipe(self, flatMap((context) => succeedContext(f(context))))
   }
 }
 
@@ -609,7 +610,7 @@ export const memoize = <RIn, E, ROut>(
       self,
       buildWithScope(scope),
       effect.memoize,
-      core.map(fromEffectEnvironment)
+      core.map(fromEffectContext)
     )
   ).traced(trace)
 }
@@ -641,23 +642,27 @@ export const orElse = <R1, E1, A1>(that: LazyArg<Layer.Layer<R1, E1, A1>>) => {
 export const passthrough = <RIn, E, ROut>(
   self: Layer.Layer<RIn, E, ROut>
 ): Layer.Layer<RIn, E, RIn | ROut> => {
-  return pipe(environment<RIn>(), merge(self))
+  return pipe(context<RIn>(), merge(self))
 }
 
 /** @internal */
-export const project = <A, B>(tagA: Context.Tag<A>, tagB: Context.Tag<B>) => {
-  return (f: (a: A) => B) => {
-    return <RIn, E, ROut>(self: Layer.Layer<RIn, E, ROut | A>): Layer.Layer<RIn, E, B> => {
-      return pipe(
-        self,
-        map((environment) =>
-          pipe(
-            Context.empty(),
-            Context.add(tagB)(f(pipe(environment, Context.unsafeGet(tagA))))
-          )
+export const project = <A extends Context.Tag<any>, B extends Context.Tag<any>>(
+  tagA: A,
+  tagB: B,
+  f: (a: Context.Tag.Service<A>) => Context.Tag.Service<B>
+) => {
+  return <RIn, E>(
+    self: Layer.Layer<RIn, E, Context.Tag.Service<A>>
+  ): Layer.Layer<RIn, E, Context.Tag.Service<B>> => {
+    return pipe(
+      self,
+      map((context) =>
+        pipe(
+          Context.empty(),
+          Context.add(tagB)(f(pipe(context, Context.unsafeGet(tagA))))
         )
       )
-    }
+    )
   }
 }
 
@@ -671,7 +676,7 @@ export const provideTo = <RIn2, E2, ROut2>(that: Layer.Layer<RIn2, E2, ROut2>) =
       provideTo._tag = OpCodes.OP_PROVIDE_TO
       provideTo.first = Object.create(proto, {
         _tag: { value: OpCodes.OP_ZIP_WITH, enumerable: true },
-        first: { value: environment<Exclude<RIn2, ROut>>(), enumerable: true },
+        first: { value: context<Exclude<RIn2, ROut>>(), enumerable: true },
         second: { value: self },
         zipK: { value: (a: Context.Context<ROut>, b: Context.Context<ROut2>) => pipe(a, Context.merge(b)) }
       })
@@ -703,7 +708,7 @@ export const retry = <RIn1, E, X>(schedule: Schedule.Schedule<RIn1, E, X>) => {
     return suspend(() => {
       const stateTag = Context.Tag<{ state: unknown }>()
       return pipe(
-        succeed(stateTag)({ state: schedule.initial }),
+        succeed(stateTag, { state: schedule.initial }),
         flatMap((env: Context.Context<{ state: unknown }>) =>
           retryLoop(self, schedule, stateTag, pipe(env, Context.get(stateTag)).state)
         )
@@ -737,7 +742,8 @@ const retryUpdate = <RIn, E, X>(
   error: E,
   state: unknown
 ): Layer.Layer<RIn, E, { state: unknown }> => {
-  return fromEffect(stateTag)(
+  return fromEffect(
+    stateTag,
     pipe(
       Clock.currentTimeMillis(),
       core.flatMap((now) =>
@@ -759,7 +765,7 @@ const retryUpdate = <RIn, E, X>(
 
 /** @internal */
 export const scope = (): Layer.Layer<never, never, Scope.Scope.Closeable> => {
-  return scopedEnvironment(
+  return scopedContext(
     pipe(
       fiberRuntime.acquireRelease(
         fiberRuntime.scopeMake(),
@@ -771,26 +777,22 @@ export const scope = (): Layer.Layer<never, never, Scope.Scope.Closeable> => {
 }
 
 /** @internal */
-export const scoped = <T>(tag: Context.Tag<T>) => {
-  return <R, E, T1 extends T>(effect: Effect.Effect<R, E, T1>): Layer.Layer<Exclude<R, Scope.Scope>, E, T> => {
-    return scopedEnvironment(
-      pipe(
-        effect,
-        core.map((service) => pipe(Context.empty(), Context.add(tag)(service)))
-      )
-    )
-  }
+export const scoped = <T extends Context.Tag<any>, R, E>(
+  tag: T,
+  effect: Effect.Effect<R, E, Context.Tag.Service<T>>
+): Layer.Layer<Exclude<R, Scope.Scope>, E, Context.Tag.Service<T>> => {
+  return scopedContext(pipe(effect, core.map((service) => pipe(Context.empty(), Context.add(tag)(service)))))
 }
 
 /** @internal */
-export const scopedDiscard = <R, E, T>(
-  effect: Effect.Effect<R, E, T>
+export const scopedDiscard = <R, E, _>(
+  effect: Effect.Effect<R, E, _>
 ): Layer.Layer<Exclude<R, Scope.Scope>, E, never> => {
-  return scopedEnvironment(pipe(effect, core.as(Context.empty())))
+  return scopedContext(pipe(effect, core.as(Context.empty())))
 }
 
 /** @internal */
-export const scopedEnvironment = <R, E, A>(
+export const scopedContext = <R, E, A>(
   effect: Effect.Effect<R, E, Context.Context<A>>
 ): Layer.Layer<Exclude<R, Scope.Scope>, E, A> => {
   const scoped = Object.create(proto)
@@ -801,24 +803,25 @@ export const scopedEnvironment = <R, E, A>(
 
 /** @internal */
 export const service = <T>(tag: Context.Tag<T>): Layer.Layer<T, never, T> => {
-  return fromEffect(tag)(core.service(tag))
+  return fromEffect(tag, core.service(tag))
 }
 
 /** @internal */
-export const succeed = <T>(tag: Context.Tag<T>) => {
-  return (resource: T): Layer.Layer<never, never, T> => {
-    return fromEffectEnvironment(core.succeed(pipe(
-      Context.empty(),
-      Context.add(tag)(resource)
-    )))
-  }
+export const succeed = <T extends Context.Tag<any>>(
+  tag: T,
+  resource: Context.Tag.Service<T>
+): Layer.Layer<never, never, Context.Tag.Service<T>> => {
+  return fromEffectContext(core.succeed(pipe(
+    Context.empty(),
+    Context.add(tag)(resource)
+  )))
 }
 
 /** @internal */
-export const succeedEnvironment = <A>(
-  environment: Context.Context<A>
+export const succeedContext = <A>(
+  context: Context.Context<A>
 ): Layer.Layer<never, never, A> => {
-  return fromEffectEnvironment(core.succeed(environment))
+  return fromEffectContext(core.succeed(context))
 }
 
 /** @internal */
@@ -832,20 +835,21 @@ export const suspend = <RIn, E, ROut>(
 }
 
 /** @internal */
-export const sync = <T>(tag: Context.Tag<T>) => {
-  return (evaluate: LazyArg<T>): Layer.Layer<never, never, T> => {
-    return fromEffectEnvironment(core.sync(() =>
-      pipe(
-        Context.empty(),
-        Context.add(tag)(evaluate())
-      )
-    ))
-  }
+export const sync = <T extends Context.Tag<any>>(
+  tag: T,
+  evaluate: LazyArg<Context.Tag.Service<T>>
+): Layer.Layer<never, never, Context.Tag.Service<T>> => {
+  return fromEffectContext(core.sync(() =>
+    pipe(
+      Context.empty(),
+      Context.add(tag)(evaluate())
+    )
+  ))
 }
 
 /** @internal */
-export const syncEnvironment = <A>(evaluate: LazyArg<Context.Context<A>>): Layer.Layer<never, never, A> => {
-  return fromEffectEnvironment(core.sync(evaluate))
+export const syncContext = <A>(evaluate: LazyArg<Context.Context<A>>): Layer.Layer<never, never, A> => {
+  return fromEffectContext(core.sync(evaluate))
 }
 
 /** @internal */
@@ -853,7 +857,7 @@ export const tap = <ROut, RIn2, E2, X>(f: (context: Context.Context<ROut>) => Ef
   return <RIn, E>(self: Layer.Layer<RIn, E, ROut>): Layer.Layer<RIn | RIn2, E | E2, ROut> => {
     return pipe(
       self,
-      flatMap((environment) => fromEffectEnvironment(pipe(f(environment), core.as(environment))))
+      flatMap((context) => fromEffectContext(pipe(f(context), core.as(context))))
     )
   }
 }
@@ -863,7 +867,7 @@ export const tapError = <E, RIn2, E2, X>(f: (e: E) => Effect.Effect<RIn2, E2, X>
   return <RIn, ROut>(self: Layer.Layer<RIn, E, ROut>): Layer.Layer<RIn | RIn2, E | E2, ROut> => {
     return pipe(
       self,
-      catchAll((e) => fromEffectEnvironment(pipe(f(e), core.flatMap(() => core.fail(e)))))
+      catchAll((e) => fromEffectContext(pipe(f(e), core.flatMap(() => core.fail(e)))))
     )
   }
 }
@@ -873,7 +877,7 @@ export const tapErrorCause = <E, RIn2, E2, X>(f: (cause: Cause.Cause<E>) => Effe
   return <RIn, ROut>(self: Layer.Layer<RIn, E, ROut>): Layer.Layer<RIn | RIn2, E | E2, ROut> =>
     pipe(
       self,
-      catchAllCause((cause) => fromEffectEnvironment(pipe(f(cause), core.flatMap(() => core.failCause(cause)))))
+      catchAllCause((cause) => fromEffectContext(pipe(f(cause), core.flatMap(() => core.failCause(cause)))))
     )
 }
 
@@ -883,10 +887,10 @@ export const toRuntime = <RIn, E, ROut>(
 ): Effect.Effect<RIn | Scope.Scope, E, Runtime.Runtime<ROut>> => {
   return pipe(
     fiberRuntime.scopeWith((scope) => pipe(self, buildWithScope(scope))),
-    core.flatMap((environment) =>
+    core.flatMap((context) =>
       pipe(
         runtime.runtime<ROut>(),
-        core.provideEnvironment(environment)
+        core.provideContext(context)
       )
     )
   )
@@ -921,7 +925,7 @@ export const provideLayer = <R, E, A>(layer: Layer.Layer<R, E, A>) => {
         pipe(
           layer,
           buildWithScope(scope),
-          core.flatMap((context) => pipe(self, core.provideEnvironment(context)))
+          core.flatMap((context) => pipe(self, core.provideContext(context)))
         ),
       (scope, exit) => core.scopeClose(scope, exit)
     ).traced(trace)
@@ -935,7 +939,7 @@ export const provideSomeLayer = <R2, E2, A2>(layer: Layer.Layer<R2, E2, A2>) => 
     // @ts-expect-error
     return pipe(
       self,
-      provideLayer(pipe(environment(), merge(layer)))
+      provideLayer(pipe(context(), merge(layer)))
     ).traced(trace)
   }
 }
@@ -943,6 +947,13 @@ export const provideSomeLayer = <R2, E2, A2>(layer: Layer.Layer<R2, E2, A2>) => 
 /** @internal */
 export const toLayer = <A>(tag: Context.Tag<A>) => {
   return <R, E>(self: Effect.Effect<R, E, A>): Layer.Layer<R, E, A> => {
-    return fromEffect(tag)(self)
+    return fromEffect(tag, self)
+  }
+}
+
+/** @internal */
+export const toLayerScoped = <A>(tag: Context.Tag<A>) => {
+  return <R, E>(self: Effect.Effect<R, E, A>): Layer.Layer<Exclude<R, Scope.Scope>, E, A> => {
+    return scoped(tag, self)
   }
 }

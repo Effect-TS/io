@@ -113,7 +113,7 @@ export declare namespace ConfigProvider {
  * The service tag for `ConfigProvider`.
  *
  * @since 1.0.0
- * @category environment
+ * @category context
  */
 export const Tag: Context.Tag<ConfigProvider> = internal.configProviderTag
 
@@ -145,7 +145,7 @@ export const makeFlat: (
 ) => ConfigProvider.Flat = internal.makeFlat
 
 /**
- * A config provider that loads configuration from environment variables,
+ * A config provider that loads configuration from context variables,
  * using the default System service.
  *
  * @since 1.0.0
