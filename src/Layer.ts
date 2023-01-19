@@ -597,3 +597,17 @@ export const zipWithPar: <R1, E1, A1, A, A2>(
   that: Layer<R1, E1, A1>,
   f: (a: Context.Context<A>, b: Context.Context<A1>) => Context.Context<A2>
 ) => <R, E>(self: Layer<R, E, A>) => Layer<R1 | R, E1 | E, A2> = internal.zipWithPar
+
+/**
+ * Merges all the layers together in parallel.
+ *
+ * @since 1.0.0
+ * @category zipping
+ */
+export const mergeAll: <Layers extends [Layer<any, any, any>, ...Array<Layer<any, any, any>>]>(
+  ...layers: Layers
+) => Layer<
+  { [k in keyof Layers]: Layer.Context<Layers[k]> }[number],
+  { [k in keyof Layers]: Layer.Error<Layers[k]> }[number],
+  { [k in keyof Layers]: Layer.Success<Layers[k]> }[number]
+> = internal.mergeAll

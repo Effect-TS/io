@@ -957,3 +957,18 @@ export const toLayerScoped = <A>(tag: Context.Tag<A>) => {
     return scoped(tag, self)
   }
 }
+
+/** @internal */
+export const mergeAll = <Layers extends [Layer.Layer<any, any, any>, ...Array<Layer.Layer<any, any, any>>]>(
+  ...layers: Layers
+): Layer.Layer<
+  { [k in keyof Layers]: Layer.Layer.Context<Layers[k]> }[number],
+  { [k in keyof Layers]: Layer.Layer.Error<Layers[k]> }[number],
+  { [k in keyof Layers]: Layer.Layer.Success<Layers[k]> }[number]
+> => {
+  let final = layers[0]
+  for (let i = 1; i < layers.length; i++) {
+    final = merge(layers[i])(final)
+  }
+  return final
+}
