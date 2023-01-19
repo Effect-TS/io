@@ -68,7 +68,7 @@ export interface CloseableScope extends Scope {
 
 /**
  * @since 1.0.0
- * @category environment
+ * @category context
  */
 export const Tag: Context.Tag<Scope> = fiberRuntime.scopeTag
 

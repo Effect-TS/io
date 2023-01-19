@@ -117,7 +117,7 @@ export const shuffle: <A>(elements: Iterable<A>) => Effect.Effect<never, never, 
   defaultServices.shuffle
 
 /**
- * Retreives the `Random` service from the environment and uses it to run the
+ * Retreives the `Random` service from the context and uses it to run the
  * specified workflow.
  *
  * @macro traced

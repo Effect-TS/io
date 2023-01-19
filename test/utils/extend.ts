@@ -23,7 +23,7 @@ export const effect = (() => {
       () =>
         pipe(
           Effect.suspendSucceed(self),
-          Effect.provideLayer(TestEnvironment.testEnvironment()),
+          Effect.provideLayer(TestEnvironment.testContext()),
           Effect.unsafeRunPromise
         ),
       timeout
@@ -40,7 +40,7 @@ export const effect = (() => {
         () =>
           pipe(
             Effect.suspendSucceed(self),
-            Effect.provideLayer(TestEnvironment.testEnvironment()),
+            Effect.provideLayer(TestEnvironment.testContext()),
             Effect.unsafeRunPromise
           ),
         timeout
@@ -56,7 +56,7 @@ export const effect = (() => {
         () =>
           pipe(
             Effect.suspendSucceed(self),
-            Effect.provideLayer(TestEnvironment.testEnvironment()),
+            Effect.provideLayer(TestEnvironment.testContext()),
             Effect.unsafeRunPromise
           ),
         timeout
@@ -109,7 +109,7 @@ export const scoped = <E, A>(
       pipe(
         Effect.suspendSucceed(self),
         Effect.scoped,
-        Effect.provideLayer(TestEnvironment.testEnvironment()),
+        Effect.provideLayer(TestEnvironment.testContext()),
         Effect.unsafeRunPromise
       ),
     timeout

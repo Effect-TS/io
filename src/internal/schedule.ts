@@ -1162,13 +1162,13 @@ export const passthrough = <Env, Input, Output>(
 }
 
 /** @internal */
-export const provideEnvironment = <R>(context: Context.Context<R>) => {
+export const provideContext = <R>(context: Context.Context<R>) => {
   return <In, Out>(self: Schedule.Schedule<R, In, Out>): Schedule.Schedule<never, In, Out> => {
     return makeWithState(self.initial, (now, input, state) => {
       const trace = getCallTrace()
       return pipe(
         self.step(now, input, state),
-        core.provideEnvironment(context)
+        core.provideContext(context)
       ).traced(trace)
     })
   }
@@ -1181,11 +1181,11 @@ export const provideService = <T, T1 extends T>(tag: Context.Tag<T>, service: T1
   ): Schedule.Schedule<Exclude<R, T>, In, Out> => {
     return makeWithState(self.initial, (now, input, state) => {
       const trace = getCallTrace()
-      return core.environmentWithEffect((env: Context.Context<Exclude<R, T>>) =>
+      return core.contextWithEffect((env: Context.Context<Exclude<R, T>>) =>
         pipe(
           self.step(now, input, state),
           // @ts-expect-error
-          core.provideEnvironment(pipe(env, Context.add(tag)(service)) as Exclude<R, T>)
+          core.provideContext(pipe(env, Context.add(tag)(service)) as Exclude<R, T>)
         )
       ).traced(trace)
     })
@@ -1193,11 +1193,11 @@ export const provideService = <T, T1 extends T>(tag: Context.Tag<T>, service: T1
 }
 
 /** @internal */
-export const provideSomeEnvironment = <R0, R>(f: (env0: Context.Context<R0>) => Context.Context<R>) => {
+export const contramapContext = <R0, R>(f: (env0: Context.Context<R0>) => Context.Context<R>) => {
   return <In, Out>(self: Schedule.Schedule<R, In, Out>): Schedule.Schedule<R0, In, Out> => {
     return makeWithState(self.initial, (now, input, state) => {
       const trace = getCallTrace()
-      return pipe(self.step(now, input, state), core.provideSomeEnvironment(f)).traced(trace)
+      return pipe(self.step(now, input, state), core.contramapContext(f)).traced(trace)
     })
   }
 }

@@ -31,7 +31,8 @@ export const auto = <Out>(tag: Context.Tag<Out>) => {
     layer: Layer.Layer<In, E, Out>,
     policy: Schedule.Schedule<R, In, Out2>
   ): Layer.Layer<R | In, E, Reloadable.Reloadable<Out>> => {
-    return _layer.scoped(reloadableTag(tag))(
+    return _layer.scoped(
+      reloadableTag(tag),
       pipe(
         _layer.build(manual(tag)(layer)),
         core.map(Context.unsafeGet(reloadableTag(tag))),
@@ -57,9 +58,10 @@ export const autoFromConfig = <Out>(tag: Context.Tag<Out>) => {
     layer: Layer.Layer<In, E, Out>,
     scheduleFromConfig: (context: Context.Context<In>) => Schedule.Schedule<R, In, Out2>
   ): Layer.Layer<R | In, E, Reloadable.Reloadable<Out>> => {
-    return _layer.scoped(reloadableTag(tag))(
+    return _layer.scoped(
+      reloadableTag(tag),
       pipe(
-        core.environment<In>(),
+        core.context<In>(),
         core.flatMap((env) =>
           pipe(
             _layer.build(auto(tag)(layer, scheduleFromConfig(env))),
@@ -74,15 +76,16 @@ export const autoFromConfig = <Out>(tag: Context.Tag<Out>) => {
 /** @internal */
 export const get = <A>(tag: Context.Tag<A>): Effect.Effect<Reloadable.Reloadable<A>, never, A> => {
   const trace = getCallTrace()
-  return core.serviceWithEffect(reloadableTag(tag))((reloadable) => scopedRef.get(reloadable.scopedRef)).traced(trace)
+  return core.serviceWithEffect(reloadableTag(tag), (reloadable) => scopedRef.get(reloadable.scopedRef)).traced(trace)
 }
 
 /** @internal */
 export const manual = <Out>(tag: Context.Tag<Out>) => {
   return <In, E>(layer: Layer.Layer<In, E, Out>): Layer.Layer<In, E, Reloadable.Reloadable<Out>> => {
-    return _layer.scoped(reloadableTag(tag))(
+    return _layer.scoped(
+      reloadableTag(tag),
       pipe(
-        core.environment<In>(),
+        core.context<In>(),
         core.flatMap((env) =>
           pipe(
             scopedRef.fromAcquire(pipe(_layer.build(layer), core.map(Context.unsafeGet(tag)))),
@@ -93,7 +96,7 @@ export const manual = <Out>(tag: Context.Tag<Out>) => {
                 const trace = getCallTrace()
                 return pipe(
                   scopedRef.set(ref, pipe(_layer.build(layer), core.map(Context.unsafeGet(tag)))),
-                  core.provideEnvironment(env)
+                  core.provideContext(env)
                 ).traced(trace)
               }
             }))
@@ -120,18 +123,17 @@ export const reloadableTag = <A>(tag: Context.Tag<A>): Context.Tag<Reloadable.Re
 /** @internal */
 export const reload = <A>(tag: Context.Tag<A>): Effect.Effect<Reloadable.Reloadable<A>, unknown, void> => {
   const trace = getCallTrace()
-  return core.serviceWithEffect(reloadableTag(tag))((reloadable) => reloadable.reload()).traced(trace)
+  return core.serviceWithEffect(reloadableTag(tag), (reloadable) => reloadable.reload()).traced(trace)
 }
 
 /** @internal */
 export const reloadFork = <A>(tag: Context.Tag<A>): Effect.Effect<Reloadable.Reloadable<A>, unknown, void> => {
   const trace = getCallTrace()
-  return core.serviceWithEffect(reloadableTag(tag))((reloadable) =>
+  return core.serviceWithEffect(reloadableTag(tag), (reloadable) =>
     pipe(
       reloadable.reload(),
       effect.ignoreLogged,
       fiberRuntime.forkDaemon,
       core.asUnit
-    ).traced(trace)
-  )
+    ).traced(trace))
 }

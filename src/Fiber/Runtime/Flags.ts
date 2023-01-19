@@ -135,32 +135,32 @@ export const disableAll: (flags: RuntimeFlags) => (self: RuntimeFlags) => Runtim
 
 /**
  * @since 1.0.0
- * @category environment
+ * @category context
  */
 export const disableCooperativeYielding: (_: void) => Layer.Layer<never, never, never> =
   circular.disableCooperativeYielding
 
 /**
  * @since 1.0.0
- * @category environment
+ * @category context
  */
 export const disableInterruption: (_: void) => Layer.Layer<never, never, never> = circular.disableInterruption
 
 /**
  * @since 1.0.0
- * @category environment
+ * @category context
  */
 export const disableOpSupervision: (_: void) => Layer.Layer<never, never, never> = circular.disableOpSupervision
 
 /**
  * @since 1.0.0
- * @category environment
+ * @category context
  */
 export const disableRuntimeMetrics: (_: void) => Layer.Layer<never, never, never> = circular.disableRuntimeMetrics
 
 /**
  * @since 1.0.0
- * @category environment
+ * @category context
  */
 export const disableWindDown: (_: void) => Layer.Layer<never, never, never> = circular.disableWindDown
 
@@ -182,32 +182,32 @@ export const enableAll: (flags: RuntimeFlags) => (self: RuntimeFlags) => Runtime
 
 /**
  * @since 1.0.0
- * @category environment
+ * @category context
  */
 export const enableCooperativeYielding: (_: void) => Layer.Layer<never, never, never> =
   circular.enableCooperativeYielding
 
 /**
  * @since 1.0.0
- * @category environment
+ * @category context
  */
 export const enableInterruption: (_: void) => Layer.Layer<never, never, never> = circular.enableInterruption
 
 /**
  * @since 1.0.0
- * @category environment
+ * @category context
  */
 export const enableOpSupervision: (_: void) => Layer.Layer<never, never, never> = circular.enableOpSupervision
 
 /**
  * @since 1.0.0
- * @category environment
+ * @category context
  */
 export const enableRuntimeMetrics: (_: void) => Layer.Layer<never, never, never> = circular.enableRuntimeMetrics
 
 /**
  * @since 1.0.0
- * @category environment
+ * @category context
  */
 export const enableWindDown: (_: void) => Layer.Layer<never, never, never> = circular.enableWindDown
 

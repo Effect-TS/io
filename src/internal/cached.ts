@@ -46,7 +46,7 @@ export const manual = <R, E, A>(
 ): Effect.Effect<R | Scope.Scope, never, Cached.Cached<E, A>> => {
   const trace = getCallTrace()
   return pipe(
-    core.environment<R>(),
+    core.context<R>(),
     core.flatMap((env) =>
       pipe(
         scopedRef.fromAcquire(core.exit(acquire)),
@@ -55,7 +55,7 @@ export const manual = <R, E, A>(
           scopedRef: ref,
           acquire: () => {
             const trace = getCallTrace()
-            return pipe(acquire, core.provideEnvironment(env)).traced(trace)
+            return pipe(acquire, core.provideContext(env)).traced(trace)
           }
         }))
       )

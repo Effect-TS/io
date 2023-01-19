@@ -65,13 +65,13 @@ export declare namespace Logger {
 
 /**
  * @since 1.0.0
- * @category environment
+ * @category context
  */
 export const add: <B>(logger: Logger<string, B>) => Layer.Layer<never, never, never> = circular.addLogger
 
 /**
  * @since 1.0.0
- * @category environment
+ * @category context
  */
 export const replace: <A, B>(logger: Logger<string, A>, that: Logger<string, B>) => Layer.Layer<never, never, never> =
   circular.replaceLogger
@@ -86,7 +86,7 @@ export const contramap: <Message, Message2>(
 
 /**
  * @since 1.0.0
- * @category environment
+ * @category context
  */
 export const remove: <A>(logger: Logger<string, A>) => Layer.Layer<never, never, never> = circular.removeLogger
 
@@ -104,13 +104,13 @@ export const logFmt: Layer.Layer<never, never, never> = replace(fiberRuntime.def
 
 /**
  * @since 1.0.0
- * @category environment
+ * @category context
  */
 export const minimumLogLevel: (level: LogLevel.LogLevel) => Layer.Layer<never, never, never> = circular.minimumLogLevel
 
 /**
  * @since 1.0.0
- * @category environment
+ * @category context
  */
 export const withMinimumLogLevel: (level: LogLevel.LogLevel) => <R, E, B>(use: Effect<R, E, B>) => Effect<R, E, B> =
   circular.withMinimumLogLevel

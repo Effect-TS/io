@@ -165,13 +165,13 @@ export const die: (defect: unknown) => Layer<never, never, unknown> = internal.d
 export const dieSync: (evaluate: LazyArg<unknown>) => Layer<never, never, unknown> = internal.dieSync
 
 /**
- * Constructs a `Layer` that passes along the specified environment as an
+ * Constructs a `Layer` that passes along the specified context as an
  * output.
  *
  * @since 1.0.0
  * @category constructors
  */
-export const environment: <R>() => Layer<R, never, R> = internal.environment
+export const context: <R>() => Layer<R, never, R> = internal.context
 
 /**
  * Extends the scope of this layer, returning a new layer that when provided
@@ -228,7 +228,7 @@ export const flatMap: <A, R2, E2, A2>(
 ) => <R, E>(self: Layer<R, E, A>) => Layer<R2 | R, E2 | E, A2> = internal.flatMap
 
 /**
- * Flattens layers nested in the environment of an effect.
+ * Flattens layers nested in the context of an effect.
  *
  * @since 1.0.0
  * @category sequencing
@@ -277,8 +277,10 @@ export const fresh: <R, E, A>(self: Layer<R, E, A>) => Layer<R, E, A> = internal
  * @since 1.0.0
  * @category constructors
  */
-export const effect: <T>(tag: Context.Tag<T>) => <R, E>(effect: Effect.Effect<R, E, T>) => Layer<R, E, T> =
-  internal.fromEffect
+export const effect: <T extends Context.Tag<any>, R, E>(
+  tag: T,
+  effect: Effect.Effect<R, E, Context.Tag.Service<T>>
+) => Layer<R, E, Context.Tag.Service<T>> = internal.fromEffect
 
 /**
  * Constructs a layer from the specified effect discarding it's output.
@@ -295,17 +297,18 @@ export const effectDiscard: <R, E, _>(effect: Effect.Effect<R, E, _>) => Layer<R
  * @since 1.0.0
  * @category constructors
  */
-export const effectEnvironment: <R, E, A>(effect: Effect.Effect<R, E, Context.Context<A>>) => Layer<R, E, A> =
-  internal.fromEffectEnvironment
+export const effectContext: <R, E, A>(effect: Effect.Effect<R, E, Context.Context<A>>) => Layer<R, E, A> =
+  internal.fromEffectContext
 
-const fromFunction: <A, B>(
-  tagA: Context.Tag<A>,
-  tagB: Context.Tag<B>
-) => (f: (a: A) => B) => Layer<A, never, B> = internal.fromFunction
+const fromFunction: <A extends Context.Tag<any>, B extends Context.Tag<any>>(
+  tagA: A,
+  tagB: B,
+  f: (a: Context.Tag.Service<A>) => Context.Tag.Service<B>
+) => Layer<Context.Tag.Service<A>, never, Context.Tag.Service<B>> = internal.fromFunction
 
 export {
   /**
-   * Constructs a layer from the environment using the specified function.
+   * Constructs a layer from the context using the specified function.
    *
    * @since 1.0.0
    * @category constructors
@@ -400,10 +403,11 @@ export const passthrough: <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn
  * @since 1.0.0
  * @category mutations
  */
-export const project: <A, B>(
-  tagA: Context.Tag<A>,
-  tagB: Context.Tag<B>
-) => (f: (a: A) => B) => <RIn, E, ROut>(self: Layer<RIn, E, A | ROut>) => Layer<RIn, E, B> = internal.project
+export const project: <A extends Context.Tag<any>, B extends Context.Tag<any>>(
+  tagA: A,
+  tagB: B,
+  f: (a: Context.Tag.Service<A>) => Context.Tag.Service<B>
+) => <RIn, E>(self: Layer<RIn, E, Context.Tag.Service<A>>) => Layer<RIn, E, Context.Tag.Service<B>> = internal.project
 
 /**
  * Feeds the output services of this builder into the input of the specified
@@ -457,9 +461,10 @@ export const scope: (_: void) => Layer<never, never, Scope.CloseableScope> = int
  * @since 1.0.0
  * @category constructors
  */
-export const scoped: <T>(
-  tag: Context.Tag<T>
-) => <R, E, T1 extends T>(effect: Effect.Effect<R, E, T1>) => Layer<Exclude<R, Scope.Scope>, E, T> = internal.scoped
+export const scoped: <T extends Context.Tag<any>, R, E>(
+  tag: T,
+  effect: Effect.Effect<R, E, Context.Tag.Service<T>>
+) => Layer<Exclude<R, Scope.Scope>, E, Context.Tag.Service<T>> = internal.scoped
 
 /**
  * Constructs a layer from the specified scoped effect.
@@ -477,13 +482,13 @@ export const scopedDiscard: <R, E, T>(effect: Effect.Effect<R, E, T>) => Layer<E
  * @since 1.0.0
  * @category constructors
  */
-export const scopedEnvironment: <R, E, A>(
+export const scopedContext: <R, E, A>(
   effect: Effect.Effect<R, E, Context.Context<A>>
-) => Layer<Exclude<R, Scope.Scope>, E, A> = internal.scopedEnvironment
+) => Layer<Exclude<R, Scope.Scope>, E, A> = internal.scopedContext
 
 /**
  * Constructs a layer that accesses and returns the specified service from the
- * environment.
+ * context.
  *
  * @since 1.0.0
  * @category constructors
@@ -496,7 +501,10 @@ export const service: <T>(tag: Context.Tag<T>) => Layer<T, never, T> = internal.
  * @since 1.0.0
  * @category constructors
  */
-export const succeed: <T>(tag: Context.Tag<T>) => (resource: T) => Layer<never, never, T> = internal.succeed
+export const succeed: <T extends Context.Tag<any>>(
+  tag: T,
+  resource: Context.Tag.Service<T>
+) => Layer<never, never, Context.Tag.Service<T>> = internal.succeed
 
 /**
  * Constructs a layer from the specified value, which must return one or more
@@ -505,8 +513,7 @@ export const succeed: <T>(tag: Context.Tag<T>) => (resource: T) => Layer<never, 
  * @since 1.0.0
  * @category constructors
  */
-export const succeedEnvironment: <A>(environment: Context.Context<A>) => Layer<never, never, A> =
-  internal.succeedEnvironment
+export const succeedContext: <A>(context: Context.Context<A>) => Layer<never, never, A> = internal.succeedContext
 
 /**
  * Lazily constructs a layer. This is useful to avoid infinite recursion when
@@ -523,7 +530,10 @@ export const suspend: <RIn, E, ROut>(evaluate: LazyArg<Layer<RIn, E, ROut>>) => 
  * @since 1.0.0
  * @category constructors
  */
-export const sync: <T>(tag: Context.Tag<T>) => (evaluate: LazyArg<T>) => Layer<never, never, T> = internal.sync
+export const sync: <T extends Context.Tag<any>>(
+  tag: T,
+  evaluate: LazyArg<Context.Tag.Service<T>>
+) => Layer<never, never, Context.Tag.Service<T>> = internal.sync
 
 /**
  * Lazily constructs a layer from the specified value, which must return one or more
@@ -532,8 +542,7 @@ export const sync: <T>(tag: Context.Tag<T>) => (evaluate: LazyArg<T>) => Layer<n
  * @since 1.0.0
  * @category constructors
  */
-export const syncEnvironment: <A>(evaluate: LazyArg<Context.Context<A>>) => Layer<never, never, A> =
-  internal.syncEnvironment
+export const syncContext: <A>(evaluate: LazyArg<Context.Context<A>>) => Layer<never, never, A> = internal.syncContext
 
 /**
  * Performs the specified effect if this layer succeeds.

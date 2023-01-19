@@ -86,9 +86,9 @@ export const makeWith: <Value>(ref: LazyArg<FiberRef<Value>>) => Effect.Effect<S
  * @since 1.0.0
  * @category constructors
  */
-export const makeEnvironment: <A>(
+export const makeContext: <A>(
   initial: Context.Context<A>
-) => Effect.Effect<Scope.Scope, never, FiberRef<Context.Context<A>>> = fiberRuntime.fiberRefMakeEnvironment
+) => Effect.Effect<Scope.Scope, never, FiberRef<Context.Context<A>>> = fiberRuntime.fiberRefMakeContext
 
 /**
  * @macro traced
@@ -120,8 +120,8 @@ export const unsafeMakeHashSet: <A>(initial: HashSet.HashSet<A>) => FiberRef<Has
  * @since 1.0.0
  * @category constructors
  */
-export const unsafeMakeEnvironment: <A>(initial: Context.Context<A>) => FiberRef<Context.Context<A>> =
-  core.fiberRefUnsafeMakeEnvironment
+export const unsafeMakeContext: <A>(initial: Context.Context<A>) => FiberRef<Context.Context<A>> =
+  core.fiberRefUnsafeMakeContext
 
 /**
  * @since 1.0.0
@@ -298,7 +298,7 @@ export const locallyScopedWith: <A>(self: FiberRef<A>, value: A) => Effect.Effec
  * @since 1.0.0
  * @category fiberRefs
  */
-export const currentEnvironment: FiberRef<Context.Context<never>> = core.currentEnvironment
+export const currentContext: FiberRef<Context.Context<never>> = core.currentContext
 
 /**
  * @since 1.0.0

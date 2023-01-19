@@ -46,7 +46,7 @@ export const fromAcquire = <R, E, A>(
           restore(
             pipe(
               acquire,
-              core.provideSomeEnvironment<R, Scope.Scope | R>(Context.add(fiberRuntime.scopeTag)(newScope))
+              core.contramapContext<R, Scope.Scope | R>(Context.add(fiberRuntime.scopeTag)(newScope))
             )
           ),
           core.onError((cause) => newScope.close(core.exitFail(cause))),
@@ -100,7 +100,7 @@ export const set = <A, R, E>(
               restore(
                 pipe(
                   acquire,
-                  core.provideSomeEnvironment<Exclude<R, Scope.Scope>, R>(
+                  core.contramapContext<Exclude<R, Scope.Scope>, R>(
                     Context.add(fiberRuntime.scopeTag)(newScope) as any
                   )
                 )

@@ -1344,8 +1344,8 @@ export const addFinalizer = <R, X>(
 ): Effect.Effect<R | Scope.Scope, never, void> => {
   const trace = getCallTrace()
   return pipe(
-    core.environment<R | Scope.Scope>(),
-    core.flatMap((environment) =>
+    core.context<R | Scope.Scope>(),
+    core.flatMap((context) =>
       pipe(
         scope(),
         core.flatMap(
@@ -1353,7 +1353,7 @@ export const addFinalizer = <R, X>(
             core.scopeAddFinalizerExit(scope, (exit) =>
               pipe(
                 finalizer(exit),
-                core.provideEnvironment(environment),
+                core.provideContext(context),
                 core.asUnit
               ))
         )
@@ -1788,16 +1788,16 @@ export const unsafeMakeChildFiber = <R, E, A, E2, B>(
   const parentFiberRefs = parentFiber.unsafeGetFiberRefs()
   const childFiberRefs = pipe(parentFiberRefs, fiberRefs.forkAs(childId))
   const childFiber = new FiberRuntime<E, A>(childId, childFiberRefs, parentRuntimeFlags, parentFiber.runtime)
-  const childEnvironment = pipe(
+  const childContext = pipe(
     childFiberRefs,
     fiberRefs.getOrDefault(
-      core.currentEnvironment as unknown as FiberRef.FiberRef<Context.Context<R>>
+      core.currentContext as unknown as FiberRef.FiberRef<Context.Context<R>>
     )
   )
   const supervisor = childFiber.getSupervisor()
 
   supervisor.onStart(
-    childEnvironment,
+    childContext,
     effect,
     Option.some(parentFiber),
     childFiber
@@ -2114,7 +2114,7 @@ export const scopeWith = <R, E, A>(
   f: (scope: Scope.Scope) => Effect.Effect<R, E, A>
 ): Effect.Effect<R | Scope.Scope, E, A> => {
   const trace = getCallTrace()
-  return core.serviceWithEffect(scopeTag)(f).traced(trace)
+  return core.serviceWithEffect(scopeTag, f).traced(trace)
 }
 
 /**
@@ -2536,7 +2536,7 @@ export const scopeExtend = (self: Scope.Scope) =>
     const trace = getCallTrace()
     return pipe(
       effect,
-      core.provideSomeEnvironment<Exclude<R, Scope.Scope>, R>(
+      core.contramapContext<Exclude<R, Scope.Scope>, R>(
         // @ts-expect-error
         Context.merge(pipe(
           Context.empty(),
@@ -2638,11 +2638,11 @@ export const fiberRefMakeWith = <Value>(
  * @macro traced
  * @internal
  */
-export const fiberRefMakeEnvironment = <A>(
+export const fiberRefMakeContext = <A>(
   initial: Context.Context<A>
 ): Effect.Effect<Scope.Scope, never, FiberRef.FiberRef<Context.Context<A>>> => {
   const trace = getCallTrace()
-  return fiberRefMakeWith(() => core.fiberRefUnsafeMakeEnvironment(initial)).traced(trace)
+  return fiberRefMakeWith(() => core.fiberRefUnsafeMakeContext(initial)).traced(trace)
 }
 
 /**

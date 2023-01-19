@@ -37,7 +37,7 @@ export interface Annotations {
   readonly ref: Ref.Ref<TestAnnotationMap.TestAnnotationMap>
 
   /**
-   * Accesses an `Annotations` instance in the environment and retrieves the
+   * Accesses an `Annotations` instance in the context and retrieves the
    * annotation of the specified type, or its default value if there is none.
    *
    * @macro traced
@@ -45,7 +45,7 @@ export interface Annotations {
   get<A>(key: TestAnnotation.TestAnnotation<A>): Effect.Effect<never, never, A>
 
   /**
-   * Accesses an `Annotations` instance in the environment and appends the
+   * Accesses an `Annotations` instance in the context and appends the
    * specified annotation to the annotation map.
    *
    * @macro traced
