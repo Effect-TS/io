@@ -69,11 +69,14 @@ export type ScheduleDriverTypeId = typeof ScheduleDriverTypeId
  * @since 1.0.0
  */
 export interface Schedule<Env, In, Out> extends Schedule.Variance<Env, In, Out> {
-  /** @internal */
+  /**
+   * Initial State
+   */
   readonly initial: any
   /**
+   * Schedule Step
+   *
    * @macro traced
-   * @internal
    */
   readonly step: (
     now: number,
