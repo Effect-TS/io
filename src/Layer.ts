@@ -417,9 +417,21 @@ export const project: <A extends Context.Tag<any>, B extends Context.Tag<any>>(
  * @since 1.0.0
  * @category mutations
  */
-export const provideTo: <RIn2, E2, ROut2>(
+export const provide: <RIn2, E2, ROut2>(
   that: Layer<RIn2, E2, ROut2>
-) => <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn | Exclude<RIn2, ROut>, E2 | E, ROut2> = internal.provideTo
+) => <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn | Exclude<RIn2, ROut>, E2 | E, ROut2> = internal.provide
+
+/**
+ * Feeds the output services of this builder into the input of the specified
+ * builder, resulting in a new builder with the inputs of this builder as
+ * well as any leftover inputs, and the outputs of the specified builder.
+ *
+ * @since 1.0.0
+ * @category mutations
+ */
+export const use: <RIn, E, ROut>(
+  self: Layer<RIn, E, ROut>
+) => <RIn2, E2, ROut2>(that: Layer<RIn2, E2, ROut2>) => Layer<RIn | Exclude<RIn2, ROut>, E | E2, ROut2> = internal.use
 
 /**
  * Feeds the output services of this layer into the input of the specified
@@ -429,10 +441,23 @@ export const provideTo: <RIn2, E2, ROut2>(
  * @since 1.0.0
  * @category mutations
  */
-export const provideToAndMerge: <RIn2, E2, ROut2>(
+export const provideMerge: <RIn2, E2, ROut2>(
   that: Layer<RIn2, E2, ROut2>
 ) => <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn | Exclude<RIn2, ROut>, E2 | E, ROut2 | ROut> =
-  internal.provideToAndMerge
+  internal.provideMerge
+
+/**
+ * Feeds the output services of this layer into the input of the specified
+ * layer, resulting in a new layer with the inputs of this layer, and the
+ * outputs of both layers.
+ *
+ * @since 1.0.0
+ * @category mutations
+ */
+export const useMerge: <RIn, E, ROut>(
+  self: Layer<RIn, E, ROut>
+) => <RIn2, E2, ROut2>(that: Layer<RIn2, E2, ROut2>) => Layer<RIn | Exclude<RIn2, ROut>, E | E2, ROut | ROut2> =
+  internal.useMerge
 
 /**
  * Retries constructing this layer according to the specified schedule.
