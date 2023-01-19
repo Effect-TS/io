@@ -667,7 +667,7 @@ export const project = <A extends Context.Tag<any>, B extends Context.Tag<any>>(
 }
 
 /** @internal */
-export const provideTo = <RIn2, E2, ROut2>(that: Layer.Layer<RIn2, E2, ROut2>) => {
+export const provide = <RIn2, E2, ROut2>(that: Layer.Layer<RIn2, E2, ROut2>) => {
   return <RIn, E, ROut>(
     self: Layer.Layer<RIn, E, ROut>
   ): Layer.Layer<RIn | Exclude<RIn2, ROut>, E | E2, ROut2> => {
@@ -687,14 +687,54 @@ export const provideTo = <RIn2, E2, ROut2>(that: Layer.Layer<RIn2, E2, ROut2>) =
 }
 
 /** @internal */
-export function provideToAndMerge<RIn2, E2, ROut2>(that: Layer.Layer<RIn2, E2, ROut2>) {
+export const use = <RIn, E, ROut>(
+  self: Layer.Layer<RIn, E, ROut>
+) => {
+  return <RIn2, E2, ROut2>(
+    that: Layer.Layer<RIn2, E2, ROut2>
+  ): Layer.Layer<RIn | Exclude<RIn2, ROut>, E | E2, ROut2> => {
+    return suspend(() => {
+      const provideTo = Object.create(proto)
+      provideTo._tag = OpCodes.OP_PROVIDE_TO
+      provideTo.first = Object.create(proto, {
+        _tag: { value: OpCodes.OP_ZIP_WITH, enumerable: true },
+        first: { value: context<Exclude<RIn2, ROut>>(), enumerable: true },
+        second: { value: self },
+        zipK: { value: (a: Context.Context<ROut>, b: Context.Context<ROut2>) => pipe(a, Context.merge(b)) }
+      })
+      provideTo.second = that
+      return provideTo
+    })
+  }
+}
+
+/** @internal */
+export function provideMerge<RIn2, E2, ROut2>(that: Layer.Layer<RIn2, E2, ROut2>) {
   return <RIn, E, ROut>(
     self: Layer.Layer<RIn, E, ROut>
   ): Layer.Layer<RIn | Exclude<RIn2, ROut>, E2 | E, ROut | ROut2> => {
     const zipWith = Object.create(proto)
     zipWith._tag = OpCodes.OP_ZIP_WITH
     zipWith.first = self
-    zipWith.second = pipe(self, provideTo(that))
+    zipWith.second = pipe(self, provide(that))
+    zipWith.zipK = (a: Context.Context<ROut>, b: Context.Context<ROut2>): Context.Context<ROut | ROut2> => {
+      return pipe(a, Context.merge(b))
+    }
+    return zipWith
+  }
+}
+
+/** @internal */
+export function useMerge<RIn, E, ROut>(
+  self: Layer.Layer<RIn, E, ROut>
+) {
+  return <RIn2, E2, ROut2>(
+    that: Layer.Layer<RIn2, E2, ROut2>
+  ): Layer.Layer<RIn | Exclude<RIn2, ROut>, E2 | E, ROut | ROut2> => {
+    const zipWith = Object.create(proto)
+    zipWith._tag = OpCodes.OP_ZIP_WITH
+    zipWith.first = self
+    zipWith.second = pipe(self, provide(that))
     zipWith.zipK = (a: Context.Context<ROut>, b: Context.Context<ROut2>): Context.Context<ROut | ROut2> => {
       return pipe(a, Context.merge(b))
     }

@@ -14,7 +14,7 @@ export const live: Layer.Layer<DefaultServices.DefaultServices, never, TestServi
   layer.merge(pipe(
     TestServices.liveLayer(),
     layer.merge(TestServices.annotationsLayer()),
-    layer.provideToAndMerge(TestClock.defaultTestClock)
+    layer.provideMerge(TestClock.defaultTestClock)
   )),
   layer.merge(TestServices.testConfigLayer({ repeats: 100, retries: 100, samples: 200, shrinks: 1000 }))
 )
@@ -27,5 +27,5 @@ export const liveContext = (): Layer.Layer<never, never, DefaultServices.Default
 export const testContext = (): Layer.Layer<never, never, TestServices.TestServices> =>
   pipe(
     liveContext(),
-    layer.provideToAndMerge(live)
+    layer.provideMerge(live)
   )
