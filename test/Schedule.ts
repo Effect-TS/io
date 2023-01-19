@@ -747,7 +747,7 @@ describe.concurrent("Schedule", () => {
         const schedule = pipe(Schedule.spaced(Duration.seconds(20)), Schedule.union(Schedule.secondOfMinute(30)))
         yield* $(pipe(
           TestClock.currentTimeMillis(),
-          Effect.tap((instant) => pipe(Ref.update(ref, (seconds) => [...seconds, instant / 1000]))),
+          Effect.tap((instant) => Ref.update(ref, (seconds) => [...seconds, instant / 1000])),
           Effect.repeat(schedule),
           Effect.fork
         ))

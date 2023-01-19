@@ -48,7 +48,7 @@ export const collectAll = <R, E, Out>(
         for (let i = 0; i < inputs.length; i++) {
           const pollingMetric = metrics[i]!
           const input = pipe(inputs, Chunk.unsafeGet(i))
-          pipe(pollingMetric.metric.unsafeUpdate(input, extraTags))
+          pollingMetric.metric.unsafeUpdate(input, extraTags)
         }
       },
       (extraTags) => Chunk.unsafeFromArray(metrics.map((pollingMetric) => pollingMetric.metric.unsafeValue(extraTags)))

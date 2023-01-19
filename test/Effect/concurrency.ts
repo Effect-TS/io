@@ -253,7 +253,7 @@ describe.concurrent("Effect", () => {
       const loser = Effect.acquireUseRelease(
         Deferred.succeed(deferred, void 0),
         () => Effect.never(),
-        () => pipe(Deferred.succeed(effect, 42))
+        () => Deferred.succeed(effect, 42)
       )
       yield* $(pipe(winner, Effect.raceFirst(loser)))
       const result = yield* $(Deferred.await(effect))

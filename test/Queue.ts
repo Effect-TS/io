@@ -92,7 +92,7 @@ describe.concurrent("Queue", () => {
   it.effect("sliding - with offerAll and takeAll", () =>
     Effect.gen(function*($) {
       const queue = yield* $(Queue.sliding<number>(2))
-      const result1 = yield* $(pipe(Queue.offerAll(queue, [1, 2, 3, 4, 5, 6])))
+      const result1 = yield* $(Queue.offerAll(queue, [1, 2, 3, 4, 5, 6]))
       const result2 = yield* $(Queue.takeAll(queue))
       assert.isTrue(result1)
       assert.deepStrictEqual(result2, Chunk.unsafeFromArray([5, 6]))
@@ -253,7 +253,7 @@ describe.concurrent("Queue", () => {
       const queue = yield* $(Queue.bounded<number>(2))
       const values1 = Chunk.range(1, 2)
       const values2 = Chunk.range(3, 4)
-      yield* $(pipe(Queue.offerAll(queue, values1)))
+      yield* $(Queue.offerAll(queue, values1))
       const fiber = yield* $(pipe(Queue.offerAll(queue, values2), Effect.fork))
       yield* $(waitForSize(queue, 4))
       yield* $(Fiber.interrupt(fiber))
@@ -341,7 +341,7 @@ describe.concurrent("Queue", () => {
     Effect.gen(function*($) {
       const queue = yield* $(Queue.bounded<number>(1000))
       yield* $(Queue.offer(queue, 1))
-      yield* $(pipe(Queue.offerAll(queue, Chunk.range(2, 1000))))
+      yield* $(Queue.offerAll(queue, Chunk.range(2, 1000)))
       yield* $(waitForSize(queue, 1000))
       const result = yield* $(Queue.takeAll(queue))
       assert.deepStrictEqual(result, Chunk.range(1, 1000))
@@ -669,7 +669,7 @@ describe.concurrent("Queue", () => {
       yield* $(Queue.offer(queue, 2))
       yield* $(Queue.offer(queue, 3))
       yield* $(Queue.offer(queue, 4))
-      const result = yield* $(pipe(Queue.takeUpTo(queue, 10)))
+      const result = yield* $(Queue.takeUpTo(queue, 10))
       assert.deepStrictEqual(result, Chunk.range(1, 4))
     }))
   it.effect("should handle taking up to 0 items", () =>
@@ -740,7 +740,7 @@ describe.concurrent("Queue", () => {
   it.effect("rts - handles falsy values", () =>
     Effect.gen(function*($) {
       const queue = yield* $(Queue.unbounded<number>())
-      yield* $(pipe(Queue.offer(queue, 0)))
+      yield* $(Queue.offer(queue, 0))
       const result = yield* $(Queue.take(queue))
       assert.strictEqual(result, 0)
     }))

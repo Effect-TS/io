@@ -135,7 +135,7 @@ describe.concurrent("FiberRef", () => {
   it.scoped("locally - restores original value", () =>
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(initial))
-      const local = yield* $(pipe(FiberRef.locally(fiberRef, update))(FiberRef.get(fiberRef)))
+      const local = yield* $(FiberRef.locally(fiberRef, update)(FiberRef.get(fiberRef)))
       const value = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(local, update)
       assert.strictEqual(value, initial)
@@ -143,7 +143,7 @@ describe.concurrent("FiberRef", () => {
   it.scoped("locally - restores parent's value", () =>
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(initial))
-      const child = yield* $(pipe(FiberRef.locally(fiberRef, update))(pipe(FiberRef.get(fiberRef), Effect.fork)))
+      const child = yield* $(FiberRef.locally(fiberRef, update)(pipe(FiberRef.get(fiberRef), Effect.fork)))
       const local = yield* $(Fiber.join(child))
       const value = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(local, update)
@@ -253,7 +253,7 @@ describe.concurrent("FiberRef", () => {
       const latch = yield* $(Deferred.make<never, void>())
       const badWinner = pipe(
         FiberRef.set(fiberRef, update1),
-        Effect.zipRight(pipe(Effect.fail("ups"), Effect.ensuring(pipe(Deferred.succeed(latch, void 0)))))
+        Effect.zipRight(pipe(Effect.fail("ups"), Effect.ensuring(Deferred.succeed(latch, void 0))))
       )
       const goodLoser = pipe(
         FiberRef.set(fiberRef, update2),

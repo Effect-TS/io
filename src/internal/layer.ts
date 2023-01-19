@@ -231,13 +231,11 @@ class MemoMap {
                                       )),
                                     core.zipRight(ref.update(observers, (n) => n + 1)),
                                     core.zipRight(
-                                      pipe(
-                                        core.scopeAddFinalizerExit(scope, (exit) =>
-                                          pipe(
-                                            ref.get(finalizerRef),
-                                            core.flatMap((finalizer) => finalizer(exit))
-                                          ))
-                                      )
+                                      core.scopeAddFinalizerExit(scope, (exit) =>
+                                        pipe(
+                                          ref.get(finalizerRef),
+                                          core.flatMap((finalizer) => finalizer(exit))
+                                        ))
                                     ),
                                     core.zipRight(core.deferredSucceed(deferred, exit.value)),
                                     core.as(exit.value[1])
@@ -254,7 +252,7 @@ class MemoMap {
                         core.deferredAwait(deferred),
                         core.onExit(core.exitMatchEffect(
                           () => core.unit(),
-                          () => pipe(ref.update(observers, (n) => n + 1))
+                          () => ref.update(observers, (n) => n + 1)
                         ))
                       ),
                       (exit: Exit.Exit<unknown, unknown>) =>

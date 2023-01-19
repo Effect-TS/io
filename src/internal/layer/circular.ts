@@ -55,89 +55,69 @@ export const addSupervisor = <A>(supervisor: Supervisor.Supervisor<A>): Layer.La
 /** @internal */
 export const enableCooperativeYielding = (): Layer.Layer<never, never, never> => {
   return layer.scopedDiscard(
-    pipe(
-      fiberRuntime.withRuntimeFlagsScoped(runtimeFlagsPatch.enable(runtimeFlags.CooperativeYielding))
-    )
+    fiberRuntime.withRuntimeFlagsScoped(runtimeFlagsPatch.enable(runtimeFlags.CooperativeYielding))
   )
 }
 
 /** @internal */
 export const enableInterruption = (): Layer.Layer<never, never, never> => {
   return layer.scopedDiscard(
-    pipe(
-      fiberRuntime.withRuntimeFlagsScoped(runtimeFlagsPatch.enable(runtimeFlags.Interruption))
-    )
+    fiberRuntime.withRuntimeFlagsScoped(runtimeFlagsPatch.enable(runtimeFlags.Interruption))
   )
 }
 
 /** @internal */
 export const enableOpSupervision = (): Layer.Layer<never, never, never> => {
   return layer.scopedDiscard(
-    pipe(
-      fiberRuntime.withRuntimeFlagsScoped(runtimeFlagsPatch.enable(runtimeFlags.OpSupervision))
-    )
+    fiberRuntime.withRuntimeFlagsScoped(runtimeFlagsPatch.enable(runtimeFlags.OpSupervision))
   )
 }
 
 /** @internal */
 export const enableRuntimeMetrics = (): Layer.Layer<never, never, never> => {
   return layer.scopedDiscard(
-    pipe(
-      fiberRuntime.withRuntimeFlagsScoped(runtimeFlagsPatch.enable(runtimeFlags.RuntimeMetrics))
-    )
+    fiberRuntime.withRuntimeFlagsScoped(runtimeFlagsPatch.enable(runtimeFlags.RuntimeMetrics))
   )
 }
 
 /** @internal */
 export const enableWindDown = (): Layer.Layer<never, never, never> => {
   return layer.scopedDiscard(
-    pipe(
-      fiberRuntime.withRuntimeFlagsScoped(runtimeFlagsPatch.enable(runtimeFlags.WindDown))
-    )
+    fiberRuntime.withRuntimeFlagsScoped(runtimeFlagsPatch.enable(runtimeFlags.WindDown))
   )
 }
 
 /** @internal */
 export const disableCooperativeYielding = (): Layer.Layer<never, never, never> => {
   return layer.scopedDiscard(
-    pipe(
-      fiberRuntime.withRuntimeFlagsScoped(runtimeFlagsPatch.disable(runtimeFlags.CooperativeYielding))
-    )
+    fiberRuntime.withRuntimeFlagsScoped(runtimeFlagsPatch.disable(runtimeFlags.CooperativeYielding))
   )
 }
 
 /** @internal */
 export const disableInterruption = (): Layer.Layer<never, never, never> => {
   return layer.scopedDiscard(
-    pipe(
-      fiberRuntime.withRuntimeFlagsScoped(runtimeFlagsPatch.disable(runtimeFlags.Interruption))
-    )
+    fiberRuntime.withRuntimeFlagsScoped(runtimeFlagsPatch.disable(runtimeFlags.Interruption))
   )
 }
 
 /** @internal */
 export const disableOpSupervision = (): Layer.Layer<never, never, never> => {
   return layer.scopedDiscard(
-    pipe(
-      fiberRuntime.withRuntimeFlagsScoped(runtimeFlagsPatch.disable(runtimeFlags.OpSupervision))
-    )
+    fiberRuntime.withRuntimeFlagsScoped(runtimeFlagsPatch.disable(runtimeFlags.OpSupervision))
   )
 }
 
 /** @internal */
 export const disableRuntimeMetrics = (): Layer.Layer<never, never, never> => {
   return layer.scopedDiscard(
-    pipe(
-      fiberRuntime.withRuntimeFlagsScoped(runtimeFlagsPatch.disable(runtimeFlags.RuntimeMetrics))
-    )
+    fiberRuntime.withRuntimeFlagsScoped(runtimeFlagsPatch.disable(runtimeFlags.RuntimeMetrics))
   )
 }
 
 /** @internal */
 export const disableWindDown = (): Layer.Layer<never, never, never> => {
   return layer.scopedDiscard(
-    pipe(
-      fiberRuntime.withRuntimeFlagsScoped(runtimeFlagsPatch.disable(runtimeFlags.WindDown))
-    )
+    fiberRuntime.withRuntimeFlagsScoped(runtimeFlagsPatch.disable(runtimeFlags.WindDown))
   )
 }

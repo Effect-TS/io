@@ -167,7 +167,7 @@ describe.concurrent("Fiber", () => {
       const latch = yield* $(Deferred.make<never, void>())
       const child = pipe(
         Effect.interruptible(Effect.never()),
-        Effect.onInterrupt(() => pipe(Deferred.succeed(latch, void 0))),
+        Effect.onInterrupt(() => Deferred.succeed(latch, void 0)),
         Effect.fork
       )
       yield* $(Effect.uninterruptible(Effect.fork(child)))

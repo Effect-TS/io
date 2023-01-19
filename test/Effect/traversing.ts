@@ -289,7 +289,7 @@ describe.concurrent("Effect", () => {
   it.effect("forEachPar - parallelism - returns the results in the appropriate order", () =>
     Effect.gen(function*($) {
       const result = yield* $(
-        pipe([1, 2, 3], Effect.forEachPar((n) => pipe(Effect.succeed(n.toString()))), Effect.withParallelism(2))
+        pipe([1, 2, 3], Effect.forEachPar((n) => Effect.succeed(n.toString())), Effect.withParallelism(2))
       )
       assert.deepStrictEqual(Array.from(result), ["1", "2", "3"])
     }))
