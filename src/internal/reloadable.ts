@@ -26,51 +26,49 @@ const reloadableVariance = {
 }
 
 /** @internal */
-export const auto = <Out>(tag: Context.Tag<Out>) => {
-  return <In, E, R, Out2>(
-    layer: Layer.Layer<In, E, Out>,
-    policy: Schedule.Schedule<R, In, Out2>
-  ): Layer.Layer<R | In, E, Reloadable.Reloadable<Out>> => {
-    return _layer.scoped(
-      reloadableTag(tag),
-      pipe(
-        _layer.build(manual(tag)(layer)),
-        core.map(Context.unsafeGet(reloadableTag(tag))),
-        core.tap((reloadable) =>
-          fiberRuntime.acquireRelease(
-            pipe(
-              reloadable.reload(),
-              effect.ignoreLogged,
-              _schedule.schedule_Effect(policy),
-              fiberRuntime.forkDaemon
-            ),
-            core.interruptFiber
-          )
+export const auto = <Out extends Context.Tag<any>, In, E, R, Out2>(
+  tag: Out,
+  layer: Layer.Layer<In, E, Context.Tag.Service<Out>>,
+  policy: Schedule.Schedule<R, In, Out2>
+): Layer.Layer<R | In, E, Reloadable.Reloadable<Context.Tag.Service<Out>>> => {
+  return _layer.scoped(
+    reloadableTag(tag),
+    pipe(
+      _layer.build(manual(tag, layer)),
+      core.map(Context.unsafeGet(reloadableTag(tag))),
+      core.tap((reloadable) =>
+        fiberRuntime.acquireRelease(
+          pipe(
+            reloadable.reload(),
+            effect.ignoreLogged,
+            _schedule.schedule_Effect(policy),
+            fiberRuntime.forkDaemon
+          ),
+          core.interruptFiber
         )
       )
     )
-  }
+  )
 }
 
 /** @internal */
-export const autoFromConfig = <Out>(tag: Context.Tag<Out>) => {
-  return <In, E, R, Out2>(
-    layer: Layer.Layer<In, E, Out>,
-    scheduleFromConfig: (context: Context.Context<In>) => Schedule.Schedule<R, In, Out2>
-  ): Layer.Layer<R | In, E, Reloadable.Reloadable<Out>> => {
-    return _layer.scoped(
-      reloadableTag(tag),
-      pipe(
-        core.context<In>(),
-        core.flatMap((env) =>
-          pipe(
-            _layer.build(auto(tag)(layer, scheduleFromConfig(env))),
-            core.map(Context.unsafeGet(reloadableTag(tag)))
-          )
+export const autoFromConfig = <Out extends Context.Tag<any>, In, E, R, Out2>(
+  tag: Out,
+  layer: Layer.Layer<In, E, Context.Tag.Service<Out>>,
+  scheduleFromConfig: (context: Context.Context<In>) => Schedule.Schedule<R, In, Out2>
+): Layer.Layer<R | In, E, Reloadable.Reloadable<Context.Tag.Service<Out>>> => {
+  return _layer.scoped(
+    reloadableTag(tag),
+    pipe(
+      core.context<In>(),
+      core.flatMap((env) =>
+        pipe(
+          _layer.build(auto(tag, layer, scheduleFromConfig(env))),
+          core.map(Context.unsafeGet(reloadableTag(tag)))
         )
       )
     )
-  }
+  )
 }
 
 /** @internal */
@@ -80,31 +78,32 @@ export const get = <A>(tag: Context.Tag<A>): Effect.Effect<Reloadable.Reloadable
 }
 
 /** @internal */
-export const manual = <Out>(tag: Context.Tag<Out>) => {
-  return <In, E>(layer: Layer.Layer<In, E, Out>): Layer.Layer<In, E, Reloadable.Reloadable<Out>> => {
-    return _layer.scoped(
-      reloadableTag(tag),
-      pipe(
-        core.context<In>(),
-        core.flatMap((env) =>
-          pipe(
-            scopedRef.fromAcquire(pipe(_layer.build(layer), core.map(Context.unsafeGet(tag)))),
-            core.map((ref) => ({
-              [ReloadableTypeId]: reloadableVariance,
-              scopedRef: ref,
-              reload: () => {
-                const trace = getCallTrace()
-                return pipe(
-                  scopedRef.set(ref, pipe(_layer.build(layer), core.map(Context.unsafeGet(tag)))),
-                  core.provideContext(env)
-                ).traced(trace)
-              }
-            }))
-          )
+export const manual = <Out extends Context.Tag<any>, In, E>(
+  tag: Out,
+  layer: Layer.Layer<In, E, Context.Tag.Service<Out>>
+): Layer.Layer<In, E, Reloadable.Reloadable<Context.Tag.Service<Out>>> => {
+  return _layer.scoped(
+    reloadableTag(tag),
+    pipe(
+      core.context<In>(),
+      core.flatMap((env) =>
+        pipe(
+          scopedRef.fromAcquire(pipe(_layer.build(layer), core.map(Context.unsafeGet(tag)))),
+          core.map((ref) => ({
+            [ReloadableTypeId]: reloadableVariance,
+            scopedRef: ref,
+            reload: () => {
+              const trace = getCallTrace()
+              return pipe(
+                scopedRef.set(ref, pipe(_layer.build(layer), core.map(Context.unsafeGet(tag)))),
+                core.provideContext(env)
+              ).traced(trace)
+            }
+          }))
         )
       )
     )
-  }
+  )
 }
 
 /** @internal */
