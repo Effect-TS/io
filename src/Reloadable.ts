@@ -62,12 +62,11 @@ export declare namespace Reloadable {
  * @since 1.0.0
  * @category constructors
  */
-export const auto: <Out>(
-  tag: Context.Tag<Out>
-) => <In, E, R, Out2>(
-  layer: Layer.Layer<In, E, Out>,
+export const auto: <Out extends Context.Tag<any>, In, E, R, Out2>(
+  tag: Out,
+  layer: Layer.Layer<In, E, Context.Tag.Service<Out>>,
   policy: Schedule.Schedule<R, In, Out2>
-) => Layer.Layer<In | R, E, Reloadable<Out>> = internal.auto
+) => Layer.Layer<In | R, E, Reloadable<Context.Tag.Service<Out>>> = internal.auto
 
 /**
  * Makes a new reloadable service from a layer that describes the construction
@@ -77,12 +76,11 @@ export const auto: <Out>(
  * @since 1.0.0
  * @category constructors
  */
-export const autoFromConfig: <Out>(
-  tag: Context.Tag<Out>
-) => <In, E, R, Out2>(
-  layer: Layer.Layer<In, E, Out>,
+export const autoFromConfig: <Out extends Context.Tag<any>, In, E, R, Out2>(
+  tag: Out,
+  layer: Layer.Layer<In, E, Context.Tag.Service<Out>>,
   scheduleFromConfig: (context: Context.Context<In>) => Schedule.Schedule<R, In, Out2>
-) => Layer.Layer<In | R, E, Reloadable<Out>> = internal.autoFromConfig
+) => Layer.Layer<In | R, E, Reloadable<Context.Tag.Service<Out>>> = internal.autoFromConfig
 
 /**
  * Retrieves the current version of the reloadable service.
@@ -100,9 +98,10 @@ export const get: <A>(tag: Context.Tag<A>) => Effect.Effect<Reloadable<A>, never
  * @since 1.0.0
  * @category constructors
  */
-export const manual: <Out>(
-  tag: Context.Tag<Out>
-) => <In, E>(layer: Layer.Layer<In, E, Out>) => Layer.Layer<In, E, Reloadable<Out>> = internal.manual
+export const manual: <Out extends Context.Tag<any>, In, E>(
+  tag: Out,
+  layer: Layer.Layer<In, E, Context.Tag.Service<Out>>
+) => Layer.Layer<In, E, Reloadable<Context.Tag.Service<Out>>> = internal.manual
 
 /**
  * Reloads the specified service.
@@ -117,7 +116,7 @@ export const reload: <A>(tag: Context.Tag<A>) => Effect.Effect<Reloadable<A>, un
  * @since 1.0.0
  * @category context
  */
-export const reloadableTag: <A>(tag: Context.Tag<A>) => Context.Tag<Reloadable<A>> = internal.reloadableTag
+export const tag: <A>(tag: Context.Tag<A>) => Context.Tag<Reloadable<A>> = internal.reloadableTag
 
 /**
  * Forks the reload of the service in the background, ignoring any errors.
