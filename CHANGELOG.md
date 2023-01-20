@@ -1,5 +1,49 @@
 # @effect/io
 
+## 0.0.66
+
+### Patch Changes
+
+- [`a4a2c9a`](https://github.com/Effect-TS/io/commit/a4a2c9a077bca8c2ad99601b274e1526c6d2a6f4) Thanks [@patroza](https://github.com/patroza)! - Add toString to Exceptions
+
+- [#198](https://github.com/Effect-TS/io/pull/198) [`59747ea`](https://github.com/Effect-TS/io/commit/59747ea66236e77d589020d17e3d26d575622734) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Improve RuntimeFlags API
+
+- [#198](https://github.com/Effect-TS/io/pull/198) [`4448e99`](https://github.com/Effect-TS/io/commit/4448e99fa63d1c835359615e994e6dc1e113224e) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Expose Schedule step and initial needed for custom schedules
+
+- [#198](https://github.com/Effect-TS/io/pull/198) [`b41507a`](https://github.com/Effect-TS/io/commit/b41507a76c833fdc01ca8c1c89dc1d17b04bc649) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Improve Layer API
+
+- [#199](https://github.com/Effect-TS/io/pull/199) [`7d0a9dc`](https://github.com/Effect-TS/io/commit/7d0a9dcf20feb02028f7847bdf2f4d9210539a0d) Thanks [@patroza](https://github.com/patroza)! - Fix missing \_tag in built-in Exceptions
+
+- [#196](https://github.com/Effect-TS/io/pull/196) [`f1b8d74`](https://github.com/Effect-TS/io/commit/f1b8d74cfd31b0bfa9622b28f61ff2db46303a7f) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Improve Deferred API
+
+- [#198](https://github.com/Effect-TS/io/pull/198) [`a941859`](https://github.com/Effect-TS/io/commit/a9418593727ff417b09906c699659216b4190100) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Defer standardization of OTEL Tracer
+
+- [#198](https://github.com/Effect-TS/io/pull/198) [`e20b27b`](https://github.com/Effect-TS/io/commit/e20b27b1c1fbe5ae7cc2fc9abafc3e9e08054f75) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Improve Reloadable API
+
+- [#198](https://github.com/Effect-TS/io/pull/198) [`411248e`](https://github.com/Effect-TS/io/commit/411248e9125e7d6c565a112f67391b99ab6e3de2) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Type Queue functions as Effect constructors
+
+- [#201](https://github.com/Effect-TS/io/pull/201) [`02f1e57`](https://github.com/Effect-TS/io/commit/02f1e575f3c37377b03890b4e28f499e042dac05) Thanks [@IMax153](https://github.com/IMax153)! - enhancements to Config and ConfigProvider
+
+- [#194](https://github.com/Effect-TS/io/pull/194) [`d4fdba5`](https://github.com/Effect-TS/io/commit/d4fdba556273d7a947528aefadd2579d22b3e8e2) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Improve Ref, Ref.Syncronized and ScopedRef API
+
+- [#198](https://github.com/Effect-TS/io/pull/198) [`ed6ff39`](https://github.com/Effect-TS/io/commit/ed6ff395b84fe1a4b64f274b2a88d09cedc032b7) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Type Ref functions as Effect constructors
+
+- [#198](https://github.com/Effect-TS/io/pull/198) [`87d2ac0`](https://github.com/Effect-TS/io/commit/87d2ac0ca78b61f32cfdbe5ba6903de5d6e27b2a) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Type Scope functions as Effect constructors
+
+- [#198](https://github.com/Effect-TS/io/pull/198) [`8f1c465`](https://github.com/Effect-TS/io/commit/8f1c46559366536f866b76999b8c8fafff187e5e) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Improve FiberRefs API
+
+- [#198](https://github.com/Effect-TS/io/pull/198) [`44f1f6e`](https://github.com/Effect-TS/io/commit/44f1f6e0c86be42f2c5134bb9d0dae9219fbadc7) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Type Deferred functions as Effect constructors
+
+- [#198](https://github.com/Effect-TS/io/pull/198) [`fa08f70`](https://github.com/Effect-TS/io/commit/fa08f70a68a72608c15ecc1e0d6d26a7c6d276bc) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Improve Hub API
+
+- [#198](https://github.com/Effect-TS/io/pull/198) [`b3b862f`](https://github.com/Effect-TS/io/commit/b3b862f9c9068ac1a2d3ebe258f257aaa72d07a5) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Type FiberRef functions as Effect constructors
+
+- [#198](https://github.com/Effect-TS/io/pull/198) [`61cf166`](https://github.com/Effect-TS/io/commit/61cf166da47700951fba5008eb20937f648c56be) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Add Layer.mergeAll
+
+- [#198](https://github.com/Effect-TS/io/pull/198) [`46171ba`](https://github.com/Effect-TS/io/commit/46171ba581aeebc50f7c4d68070130b1b0f34100) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Improve Fiber unsafe api
+
+- [#197](https://github.com/Effect-TS/io/pull/197) [`3af5aa3`](https://github.com/Effect-TS/io/commit/3af5aa35f34c12f877a982bb36bea82973260120) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Prevent tacit usage of constructors with no arguments
+
 ## 0.0.65
 
 ### Patch Changes
