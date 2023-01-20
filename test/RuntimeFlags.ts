@@ -23,11 +23,11 @@ describe.concurrent("RuntimeFlags", () => {
       RuntimeFlags.RuntimeMetrics,
       RuntimeFlags.Interruption
     )
-    assert.isTrue(pipe(flags, RuntimeFlags.isEnabled(RuntimeFlags.RuntimeMetrics)))
-    assert.isTrue(pipe(flags, RuntimeFlags.isEnabled(RuntimeFlags.Interruption)))
-    assert.isFalse(pipe(flags, RuntimeFlags.isEnabled(RuntimeFlags.CooperativeYielding)))
-    assert.isFalse(pipe(flags, RuntimeFlags.isEnabled(RuntimeFlags.OpSupervision)))
-    assert.isFalse(pipe(flags, RuntimeFlags.isEnabled(RuntimeFlags.WindDown)))
+    assert.isTrue(RuntimeFlags.isEnabled(flags, RuntimeFlags.RuntimeMetrics))
+    assert.isTrue(RuntimeFlags.isEnabled(flags, RuntimeFlags.Interruption))
+    assert.isFalse(RuntimeFlags.isEnabled(flags, RuntimeFlags.CooperativeYielding))
+    assert.isFalse(RuntimeFlags.isEnabled(flags, RuntimeFlags.OpSupervision))
+    assert.isFalse(RuntimeFlags.isEnabled(flags, RuntimeFlags.WindDown))
   })
 
   it("enabled patching", () => {
@@ -35,10 +35,8 @@ describe.concurrent("RuntimeFlags", () => {
       RuntimeFlagsPatch.enable(RuntimeFlags.RuntimeMetrics),
       RuntimeFlagsPatch.andThen(RuntimeFlagsPatch.enable(RuntimeFlags.OpSupervision))
     )
-    const result = pipe(
-      RuntimeFlags.none,
-      RuntimeFlags.patch(patch)
-    )
+    const result = RuntimeFlags.patch(RuntimeFlags.none, patch)
+
     const expected = RuntimeFlags.make(
       RuntimeFlags.RuntimeMetrics,
       RuntimeFlags.OpSupervision
@@ -61,11 +59,11 @@ describe.concurrent("RuntimeFlags", () => {
       RuntimeFlagsPatch.inverse
     )
     assert.strictEqual(
-      pipe(flags, RuntimeFlags.patch(patch1)),
+      RuntimeFlags.patch(flags, patch1),
       RuntimeFlags.make(RuntimeFlags.OpSupervision)
     )
     assert.strictEqual(
-      pipe(flags, RuntimeFlags.patch(patch2)),
+      RuntimeFlags.patch(flags, patch2),
       RuntimeFlags.none
     )
   })
@@ -74,7 +72,7 @@ describe.concurrent("RuntimeFlags", () => {
     const flags1 = RuntimeFlags.make(RuntimeFlags.RuntimeMetrics)
     const flags2 = RuntimeFlags.make(RuntimeFlags.RuntimeMetrics, RuntimeFlags.OpSupervision)
     assert.strictEqual(
-      pipe(flags1, RuntimeFlags.diff(flags2)),
+      RuntimeFlags.diff(flags1, flags2),
       RuntimeFlagsPatch.enable(RuntimeFlags.OpSupervision)
     )
   })
@@ -82,7 +80,7 @@ describe.concurrent("RuntimeFlags", () => {
   it("flags within a set of RuntimeFlags is enabled", () => {
     fc.assert(fc.property(arbRuntimeFlags, (flags) => {
       const result = Array.from(RuntimeFlags.toSet(flags)).every(
-        (flag) => pipe(flags, RuntimeFlags.isEnabled(flag))
+        (flag) => RuntimeFlags.isEnabled(flags, flag)
       )
       assert.isTrue(result)
     }))
@@ -90,9 +88,9 @@ describe.concurrent("RuntimeFlags", () => {
 
   it("patching a diff between `none` and a set of flags is an identity", () => {
     fc.assert(fc.property(arbRuntimeFlags, (flags) => {
-      const diff = pipe(RuntimeFlags.none, RuntimeFlags.diff(flags))
+      const diff = RuntimeFlags.diff(RuntimeFlags.none, flags)
       assert.strictEqual(
-        pipe(RuntimeFlags.none, RuntimeFlags.patch(diff)),
+        RuntimeFlags.patch(RuntimeFlags.none, diff),
         flags
       )
     }))
@@ -100,21 +98,13 @@ describe.concurrent("RuntimeFlags", () => {
 
   it("patching the inverse diff between `non` and a set of flags is `none`", () => {
     fc.assert(fc.property(arbRuntimeFlags, (flags) => {
-      const diff = pipe(RuntimeFlags.none, RuntimeFlags.diff(flags))
+      const diff = RuntimeFlags.diff(RuntimeFlags.none, flags)
       assert.strictEqual(
-        pipe(
-          flags,
-          RuntimeFlags.patch(RuntimeFlagsPatch.inverse(diff))
-        ),
+        RuntimeFlags.patch(flags, RuntimeFlagsPatch.inverse(diff)),
         RuntimeFlags.none
       )
       assert.strictEqual(
-        pipe(
-          flags,
-          RuntimeFlags.patch(
-            RuntimeFlagsPatch.inverse(RuntimeFlagsPatch.inverse(diff))
-          )
-        ),
+        RuntimeFlags.patch(flags, RuntimeFlagsPatch.inverse(RuntimeFlagsPatch.inverse(diff))),
         flags
       )
     }))

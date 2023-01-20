@@ -33,7 +33,7 @@ export const allFlags: ReadonlyArray<RuntimeFlags.RuntimeFlag> = [
 
 /** @internal */
 export const cooperativeYielding = (self: RuntimeFlags.RuntimeFlags): boolean => {
-  return isEnabled(CooperativeYielding)(self)
+  return isEnabled(self, CooperativeYielding)
 }
 
 /** @internal */
@@ -63,17 +63,17 @@ export const interruptible = (self: RuntimeFlags.RuntimeFlags): boolean => {
 
 /** @internal */
 export const interruption = (self: RuntimeFlags.RuntimeFlags): boolean => {
-  return isEnabled(Interruption)(self)
+  return isEnabled(self, Interruption)
 }
 
 /** @internal */
-export const isDisabled = (flag: RuntimeFlags.RuntimeFlag) => {
-  return (self: RuntimeFlags.RuntimeFlags): boolean => !isEnabled(flag)(self)
+export const isDisabled = (self: RuntimeFlags.RuntimeFlags, flag: RuntimeFlags.RuntimeFlag) => {
+  return !isEnabled(self, flag)
 }
 
 /** @internal */
-export const isEnabled = (flag: RuntimeFlags.RuntimeFlag) => {
-  return (self: RuntimeFlags.RuntimeFlags): boolean => (self & flag) !== 0
+export const isEnabled = (self: RuntimeFlags.RuntimeFlags, flag: RuntimeFlags.RuntimeFlag) => {
+  return (self & flag) !== 0
 }
 
 /** @internal */
@@ -86,14 +86,14 @@ export const none: RuntimeFlags.RuntimeFlags = make(None)
 
 /** @internal */
 export const opSupervision = (self: RuntimeFlags.RuntimeFlags): boolean => {
-  return isEnabled(OpSupervision)(self)
+  return isEnabled(self, OpSupervision)
 }
 
 /** @internal */
 export const render = (self: RuntimeFlags.RuntimeFlags): string => {
   const active: Array<string> = []
   allFlags.forEach((flag) => {
-    if (isEnabled(flag)(self)) {
+    if (isEnabled(self, flag)) {
       active.push(`${flag}`)
     }
   })
@@ -102,16 +102,16 @@ export const render = (self: RuntimeFlags.RuntimeFlags): string => {
 
 /** @internal */
 export const runtimeMetrics = (self: RuntimeFlags.RuntimeFlags): boolean => {
-  return isEnabled(RuntimeMetrics)(self)
+  return isEnabled(self, RuntimeMetrics)
 }
 
 /** @internal */
 export const toSet = (self: RuntimeFlags.RuntimeFlags): ReadonlySet<RuntimeFlags.RuntimeFlag> => {
-  return new Set(allFlags.filter((flag) => isEnabled(flag)(self)))
+  return new Set(allFlags.filter((flag) => isEnabled(self, flag)))
 }
 
 export const windDown = (self: RuntimeFlags.RuntimeFlags): boolean => {
-  return isEnabled(WindDown)(self)
+  return isEnabled(self, WindDown)
 }
 
 // circular with RuntimeFlagsPatch
@@ -127,20 +127,22 @@ export const disabledSet = (self: RuntimeFlagsPatch.RuntimeFlagsPatch): Readonly
 }
 
 /** @internal */
-export const diff = (that: RuntimeFlags.RuntimeFlags) => {
-  return (self: RuntimeFlags.RuntimeFlags): RuntimeFlagsPatch.RuntimeFlagsPatch => {
-    return runtimeFlagsPatch.make(self ^ that, that)
-  }
+export const diff = (
+  self: RuntimeFlags.RuntimeFlags,
+  that: RuntimeFlags.RuntimeFlags
+): RuntimeFlagsPatch.RuntimeFlagsPatch => {
+  return runtimeFlagsPatch.make(self ^ that, that)
 }
 
 /** @internal */
-export const patch = (patch: RuntimeFlagsPatch.RuntimeFlagsPatch) => {
-  return (self: RuntimeFlags.RuntimeFlags): RuntimeFlags.RuntimeFlags => {
-    return (
-      (self & (runtimeFlagsPatch.invert(runtimeFlagsPatch.active(patch)) | runtimeFlagsPatch.enabled(patch))) |
-      (runtimeFlagsPatch.active(patch) & runtimeFlagsPatch.enabled(patch))
-    ) as RuntimeFlags.RuntimeFlags
-  }
+export const patch = (
+  self: RuntimeFlags.RuntimeFlags,
+  patch: RuntimeFlagsPatch.RuntimeFlagsPatch
+): RuntimeFlags.RuntimeFlags => {
+  return (
+    (self & (runtimeFlagsPatch.invert(runtimeFlagsPatch.active(patch)) | runtimeFlagsPatch.enabled(patch))) |
+    (runtimeFlagsPatch.active(patch) & runtimeFlagsPatch.enabled(patch))
+  ) as RuntimeFlags.RuntimeFlags
 }
 
 /** @internal */
@@ -163,8 +165,8 @@ export const renderPatch = (self: RuntimeFlagsPatch.RuntimeFlagsPatch): string =
 export const differ = (): Differ.Differ<RuntimeFlags.RuntimeFlags, RuntimeFlagsPatch.RuntimeFlagsPatch> => {
   return Differ.make({
     empty: runtimeFlagsPatch.empty,
-    diff: (oldValue, newValue) => diff(newValue)(oldValue),
+    diff: (oldValue, newValue) => diff(oldValue, newValue),
     combine: (first, second) => runtimeFlagsPatch.andThen(second)(first),
-    patch: (_patch, oldValue) => patch(_patch)(oldValue)
+    patch: (_patch, oldValue) => patch(oldValue, _patch)
   })
 }
