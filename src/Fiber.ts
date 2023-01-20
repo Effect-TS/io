@@ -7,7 +7,6 @@ import type * as Exit from "@effect/io/Exit"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import type * as FiberStatus from "@effect/io/Fiber/Status"
-import type * as FiberRef from "@effect/io/FiberRef"
 import type * as FiberRefs from "@effect/io/FiberRefs"
 import * as core from "@effect/io/internal/core"
 import * as circular from "@effect/io/internal/effect/circular"
@@ -140,13 +139,6 @@ export interface RuntimeFiber<E, A> extends Fiber<E, A>, Fiber.RuntimeVariance<E
   unsafeRemoveObserver(observer: (exit: Exit.Exit<E, A>) => void): void
 
   /**
-   * Deletes the specified fiber ref.
-   *
-   * **NOTE**: This method must be invoked by the fiber itself.
-   */
-  unsafeDeleteFiberRef<X>(fiberRef: FiberRef.FiberRef<X>): void
-
-  /**
    * Retrieves all fiber refs of the fiber.
    *
    * **NOTE**: This method is safe to invoke on any fiber, but if not invoked
@@ -154,6 +146,12 @@ export interface RuntimeFiber<E, A> extends Fiber<E, A>, Fiber.RuntimeVariance<E
    * log annotations and log level) may not be up-to-date.
    */
   unsafeGetFiberRefs(): FiberRefs.FiberRefs
+
+  /**
+   * Unsafely observes the fiber, but returns immediately if it is not
+   * already done.
+   */
+  unsafePoll(): Exit.Exit<E, A> | null
 }
 
 /**
