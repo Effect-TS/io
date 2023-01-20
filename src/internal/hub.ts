@@ -143,19 +143,15 @@ export const awaitShutdown = <A>(self: Hub.Hub<A>): Effect.Effect<never, never, 
 }
 
 /** @internal */
-export const publish = <A>(value: A) => {
+export const publish = <A>(self: Hub.Hub<A>, value: A): Effect.Effect<never, never, boolean> => {
   const trace = getCallTrace()
-  return (self: Hub.Hub<A>): Effect.Effect<never, never, boolean> => {
-    return self.publish(value).traced(trace)
-  }
+  return self.publish(value).traced(trace)
 }
 
 /** @internal */
-export const publishAll = <A>(elements: Iterable<A>) => {
+export const publishAll = <A>(self: Hub.Hub<A>, elements: Iterable<A>): Effect.Effect<never, never, boolean> => {
   const trace = getCallTrace()
-  return (self: Hub.Hub<A>): Effect.Effect<never, never, boolean> => {
-    return self.publishAll(elements).traced(trace)
-  }
+  return self.publishAll(elements).traced(trace)
 }
 
 /** @internal */
