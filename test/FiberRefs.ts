@@ -36,12 +36,14 @@ describe.concurrent("FiberRefs", () => {
     const parent = FiberId.make(1, Date.now()) as FiberId.Runtime
     const child = FiberId.make(2, Date.now()) as FiberId.Runtime
     const parentFiberRefs = FiberRefs.unsafeMake(new Map())
-    const childFiberRefs = pipe(
+    const childFiberRefs = FiberRefs.updatedAs(
       parentFiberRefs,
-      FiberRefs.updatedAs(child, FiberRef.interruptedCause, Cause.interrupt(parent))
+      child,
+      FiberRef.interruptedCause,
+      Cause.interrupt(parent)
     )
-    const newParentFiberRefs = pipe(parentFiberRefs, FiberRefs.joinAs(parent, childFiberRefs))
-    assert.deepStrictEqual(pipe(newParentFiberRefs, FiberRefs.get(FiberRef.interruptedCause)), Option.some(Cause.empty))
+    const newParentFiberRefs = FiberRefs.joinAs(parentFiberRefs, parent, childFiberRefs)
+    assert.deepStrictEqual(FiberRefs.get(newParentFiberRefs, FiberRef.interruptedCause), Option.some(Cause.empty))
   })
 
   describe.concurrent("currentLogAnnotations", () => {

@@ -46,29 +46,25 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
   unsafeFork = <E, A>(effect: Effect.Effect<R, E, A>, scheduler?: Scheduler.Scheduler) => {
     const fiberId = FiberId.unsafeMake()
 
-    let fiberRefs = pipe(
+    let fiberRefs = FiberRefs.updatedAs(
       this.fiberRefs,
-      FiberRefs.updatedAs(
-        fiberId,
-        core.currentContext,
-        this.context as Context.Context<never>
-      )
+      fiberId,
+      core.currentContext,
+      this.context as Context.Context<never>
     )
 
     if (scheduler) {
-      fiberRefs = pipe(
+      fiberRefs = FiberRefs.updatedAs(
         fiberRefs,
-        FiberRefs.updatedAs(
-          fiberId,
-          core.currentScheduler,
-          scheduler
-        )
+        fiberId,
+        core.currentScheduler,
+        scheduler
       )
     }
 
     const fiberRuntime: FiberRuntime.FiberRuntime<E, A> = new FiberRuntime.FiberRuntime<E, A>(
       fiberId,
-      pipe(fiberRefs, FiberRefs.forkAs(fiberId)),
+      FiberRefs.forkAs(fiberRefs, fiberId),
       this.runtimeFlags,
       this
     )

@@ -1235,7 +1235,7 @@ export const ignoreLogged = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effe
  */
 export const inheritFiberRefs = (childFiberRefs: FiberRefs.FiberRefs) => {
   return updateFiberRefs((parentFiberId, parentFiberRefs) =>
-    pipe(parentFiberRefs, FiberRefs.joinAs(parentFiberId, childFiberRefs))
+    FiberRefs.joinAs(parentFiberRefs, parentFiberId, childFiberRefs)
   )
 }
 
