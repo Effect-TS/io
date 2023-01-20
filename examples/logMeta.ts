@@ -12,7 +12,7 @@ const logInfoWithMeta = (message: string, data: LogMeta) => FiberRef.locally(log
 
 const customLogger = Logger.make<string, void>(
   (fiberId, logLevel, message, cause, context, spans, annotations, runtime) => {
-    const meta = FiberRefs.getOrDefault(logMeta)(context)
+    const meta = FiberRefs.getOrDefault(context, logMeta)
     const formatted = Logger.stringLogger.log(fiberId, logLevel, message, cause, context, spans, annotations, runtime)
     console.log(formatted, { meta })
   }

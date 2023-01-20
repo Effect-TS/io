@@ -384,11 +384,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
       const parentFiberRefs = parentFiber.unsafeGetFiberRefs()
       const parentRuntimeFlags = parentStatus.runtimeFlags
       const childFiberRefs = this.unsafeGetFiberRefs()
-
-      const updatedFiberRefs = pipe(
-        parentFiberRefs,
-        fiberRefs.joinAs(parentFiberId, childFiberRefs)
-      )
+      const updatedFiberRefs = fiberRefs.joinAs(parentFiberRefs, parentFiberId, childFiberRefs)
 
       parentFiber.setFiberRefs(updatedFiberRefs)
 
@@ -475,7 +471,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    * **NOTE**: This method must be invoked by the fiber itself.
    */
   unsafeDeleteFiberRef<X>(fiberRef: FiberRef.FiberRef<X>): void {
-    this._fiberRefs = pipe(this._fiberRefs, fiberRefs.delete(fiberRef))
+    this._fiberRefs = fiberRefs.delete(this._fiberRefs, fiberRef)
   }
 
   /**
@@ -486,7 +482,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    * log annotations and log level) may not be up-to-date.
    */
   getFiberRef<X>(fiberRef: FiberRef.FiberRef<X>): X {
-    return pipe(this._fiberRefs, fiberRefs.getOrDefault(fiberRef))
+    return fiberRefs.getOrDefault(this._fiberRefs, fiberRef)
   }
 
   /**
@@ -495,7 +491,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    * **NOTE**: This method must be invoked by the fiber itself.
    */
   setFiberRef<X>(fiberRef: FiberRef.FiberRef<X>, value: X): void {
-    this._fiberRefs = pipe(this._fiberRefs, fiberRefs.updatedAs(this._fiberId, fiberRef, value))
+    this._fiberRefs = fiberRefs.updatedAs(this._fiberRefs, this._fiberId, fiberRef, value)
   }
 
   /**
@@ -1285,7 +1281,7 @@ export const defaultLogger: Logger<string, void> = internalLogger.makeLogger(
       annotations,
       runtime
     )
-    const filter = fiberRefs.getOrDefault(currentMinimumLogLevel)(context)
+    const filter = fiberRefs.getOrDefault(context, currentMinimumLogLevel)
     if (LogLevel.greaterThanEqual(filter)(logLevel)) {
       globalThis.console.log(formatted)
     }
@@ -1305,7 +1301,7 @@ export const logFmtLogger: Logger<string, void> = internalLogger.makeLogger(
       annotations,
       runtime
     )
-    const filter = fiberRefs.getOrDefault(currentMinimumLogLevel)(context)
+    const filter = fiberRefs.getOrDefault(context, currentMinimumLogLevel)
     if (LogLevel.greaterThanEqual(filter)(logLevel)) {
       globalThis.console.log(formatted)
     }
@@ -1786,13 +1782,11 @@ export const unsafeMakeChildFiber = <R, E, A, E2, B>(
 ): FiberRuntime<E, A> => {
   const childId = FiberId.unsafeMake()
   const parentFiberRefs = parentFiber.unsafeGetFiberRefs()
-  const childFiberRefs = pipe(parentFiberRefs, fiberRefs.forkAs(childId))
+  const childFiberRefs = fiberRefs.forkAs(parentFiberRefs, childId)
   const childFiber = new FiberRuntime<E, A>(childId, childFiberRefs, parentRuntimeFlags, parentFiber.runtime)
-  const childContext = pipe(
+  const childContext = fiberRefs.getOrDefault(
     childFiberRefs,
-    fiberRefs.getOrDefault(
-      core.currentContext as unknown as FiberRef.FiberRef<Context.Context<R>>
-    )
+    core.currentContext as unknown as FiberRef.FiberRef<Context.Context<R>>
   )
   const supervisor = childFiber.getSupervisor()
 
