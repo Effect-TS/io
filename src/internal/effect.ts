@@ -20,7 +20,6 @@ import type * as Metric from "@effect/io/Metric"
 import type * as MetricLabel from "@effect/io/Metric/Label"
 import * as Random from "@effect/io/Random"
 import * as Ref from "@effect/io/Ref"
-import { currentTracer } from "@effect/io/Tracer"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Context from "@fp-ts/data/Context"
 import * as Duration from "@fp-ts/data/Duration"
@@ -3279,32 +3278,4 @@ export const withMetric = <Type, In, Out>(metric: Metric.Metric<Type, In, Out>) 
   return <R, E, A extends In>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
     return metric(self).traced(trace)
   }
-}
-
-/**
- * @macro traced
- * @internal
- */
-export const withSpan = (name: string, attributes?: Record<string, string>) => {
-  const trace = getCallTrace()
-  return <R, E, A>(self: Effect.Effect<R, E, A>) =>
-    core.withFiberRuntime<R, E, A>((fiber) => {
-      const tracerMaybe = fiber.getFiberRef(currentTracer)
-      if (tracerMaybe._tag === "Some") {
-        const tracer = tracerMaybe.value
-        const parentSpan = fiber.getFiberRef(tracer.ref)
-        const span = tracer.create(name, attributes ?? {}, parentSpan, trace)
-        return core.acquireUseRelease(
-          pipe(core.fiberRefGet(tracer.ref), core.zipLeft(core.fiberRefSet(tracer.ref, span))),
-          () => self,
-          (oldValue, exit) => {
-            tracer.status(span, exit)
-            tracer.end(span)
-            return core.fiberRefSet(tracer.ref, oldValue)
-          }
-        )
-      }
-      return self
-    })
-      .traced(trace)
 }
