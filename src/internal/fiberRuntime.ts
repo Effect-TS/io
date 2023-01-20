@@ -391,8 +391,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
       const updatedRuntimeFlags = parentFiber.getFiberRef(currentRuntimeFlags)
 
       const patch = pipe(
-        parentRuntimeFlags,
-        _runtimeFlags.diff(updatedRuntimeFlags),
+        _runtimeFlags.diff(parentRuntimeFlags, updatedRuntimeFlags),
         // Do not inherit WindDown or Interruption!
         RuntimeFlagsPatch.exclude(_runtimeFlags.Interruption),
         RuntimeFlagsPatch.exclude(_runtimeFlags.WindDown)
@@ -889,7 +888,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    * **NOTE**: This method must be invoked by the fiber itself.
    */
   patchRuntimeFlags(oldRuntimeFlags: RuntimeFlags.RuntimeFlags, patch: RuntimeFlagsPatch.RuntimeFlagsPatch) {
-    const newRuntimeFlags = pipe(oldRuntimeFlags, _runtimeFlags.patch(patch))
+    const newRuntimeFlags = _runtimeFlags.patch(oldRuntimeFlags, patch)
     globalThis[currentFiberURI] = this
     this._runtimeFlags = newRuntimeFlags
     return newRuntimeFlags
@@ -1093,7 +1092,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     } else {
       const updateFlags = op.update
       const oldRuntimeFlags = this._runtimeFlags
-      const newRuntimeFlags = pipe(oldRuntimeFlags, _runtimeFlags.patch(updateFlags))
+      const newRuntimeFlags = _runtimeFlags.patch(oldRuntimeFlags, updateFlags)
       if (newRuntimeFlags === oldRuntimeFlags) {
         // No change, short circuit
         return op.scope(oldRuntimeFlags)
@@ -1108,7 +1107,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
           // Impossible to short circuit, so record the changes
           this.patchRuntimeFlags(this._runtimeFlags, updateFlags)
           // Since we updated the flags, we need to revert them
-          const revertFlags = pipe(newRuntimeFlags, _runtimeFlags.diff(oldRuntimeFlags))
+          const revertFlags = _runtimeFlags.diff(newRuntimeFlags, oldRuntimeFlags)
           this.pushStack(new core.RevertFlags(revertFlags))
           return op.scope(oldRuntimeFlags)
         }
@@ -2399,8 +2398,8 @@ export const withRuntimeFlagsScoped = (
   return pipe(
     core.runtimeFlags(),
     core.flatMap((runtimeFlags) => {
-      const updatedRuntimeFlags = _runtimeFlags.patch(update)(runtimeFlags)
-      const revertRuntimeFlags = pipe(updatedRuntimeFlags, _runtimeFlags.diff(runtimeFlags))
+      const updatedRuntimeFlags = _runtimeFlags.patch(runtimeFlags, update)
+      const revertRuntimeFlags = _runtimeFlags.diff(updatedRuntimeFlags, runtimeFlags)
       return pipe(
         core.updateRuntimeFlags(update),
         core.zipRight(addFinalizer(() => core.updateRuntimeFlags(revertRuntimeFlags))),
