@@ -4705,18 +4705,6 @@ export const withRuntimeFlagsScoped: (update: RuntimeFlagsPatch.RuntimeFlagsPatc
   fiberRuntime.withRuntimeFlagsScoped
 
 /**
- * Annotates the wrapped effect with a span using the current Tracer.
- *
- * @macro traced
- * @since 1.0.0
- * @category tracing
- */
-export const withSpan: (
-  name: string,
-  attributes?: Record<string, string> | undefined
-) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A> = effect.withSpan
-
-/**
  * @macro traced
  * @since 1.0.0
  * @category constructors
