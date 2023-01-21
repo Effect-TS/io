@@ -224,7 +224,7 @@ to the hub.
 **Signature**
 
 ```ts
-export declare const publish: <A>(value: A) => (self: Hub<A>) => Effect.Effect<never, never, boolean>
+export declare const publish: <A>(self: Hub<A>, value: A) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -237,7 +237,7 @@ were published to the hub.
 **Signature**
 
 ```ts
-export declare const publishAll: <A>(elements: Iterable<A>) => (self: Hub<A>) => Effect.Effect<never, never, boolean>
+export declare const publishAll: <A>(self: Hub<A>, elements: Iterable<A>) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0

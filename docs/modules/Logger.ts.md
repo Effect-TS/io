@@ -23,7 +23,7 @@ Added in v1.0.0
   - [succeed](#succeed)
   - [sync](#sync)
   - [test](#test)
-- [environment](#environment)
+- [context](#context)
   - [add](#add)
   - [minimumLogLevel](#minimumloglevel)
   - [remove](#remove)
@@ -106,7 +106,7 @@ A logger that does nothing in response to logging events.
 **Signature**
 
 ```ts
-export declare const none: () => Logger<unknown, void>
+export declare const none: (_: void) => Logger<unknown, void>
 ```
 
 Added in v1.0.0
@@ -146,7 +146,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const sync: <A>(evaluate: () => A) => Logger<unknown, A>
+export declare const sync: <A>(evaluate: LazyArg<A>) => Logger<unknown, A>
 ```
 
 Added in v1.0.0
@@ -161,7 +161,7 @@ export declare const test: <Message>(input: Message) => <Output>(self: Logger<Me
 
 Added in v1.0.0
 
-# environment
+# context
 
 ## add
 

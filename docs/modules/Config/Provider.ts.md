@@ -18,6 +18,8 @@ Added in v1.0.0
   - [fromMap](#frommap)
   - [make](#make)
   - [makeFlat](#makeflat)
+- [context](#context)
+  - [Tag](#tag)
 - [models](#models)
   - [ConfigProvider (interface)](#configprovider-interface)
 - [mutations](#mutations)
@@ -26,6 +28,8 @@ Added in v1.0.0
 - [symbols](#symbols)
   - [ConfigProviderTypeId](#configprovidertypeid)
   - [ConfigProviderTypeId (type alias)](#configprovidertypeid-type-alias)
+  - [FlatConfigProviderTypeId](#flatconfigprovidertypeid)
+  - [FlatConfigProviderTypeId (type alias)](#flatconfigprovidertypeid-type-alias)
 
 ---
 
@@ -33,7 +37,7 @@ Added in v1.0.0
 
 ## fromEnv
 
-A config provider that loads configuration from environment variables,
+A config provider that loads configuration from context variables,
 using the default System service.
 
 **Signature**
@@ -81,7 +85,8 @@ Creates a new config provider.
 
 ```ts
 export declare const make: (
-  load: <A>(config: Config.Config<A>) => Effect.Effect<never, ConfigError.ConfigError, A>
+  load: <A>(config: Config.Config<A>) => Effect.Effect<never, ConfigError.ConfigError, A>,
+  flatten: () => ConfigProvider.Flat
 ) => ConfigProvider
 ```
 
@@ -107,6 +112,20 @@ export declare const makeFlat: (
 
 Added in v1.0.0
 
+# context
+
+## Tag
+
+The service tag for `ConfigProvider`.
+
+**Signature**
+
+```ts
+export declare const Tag: Context.Tag<ConfigProvider>
+```
+
+Added in v1.0.0
+
 # models
 
 ## ConfigProvider (interface)
@@ -124,6 +143,11 @@ export interface ConfigProvider extends ConfigProvider.Proto {
    * @macro traced
    */
   load<A>(config: Config.Config<A>): Effect.Effect<never, ConfigError.ConfigError, A>
+  /**
+   * Flattens this config provider into a simplified config provider that knows
+   * only how to deal with flat (key/value) properties.
+   */
+  flatten(): ConfigProvider.Flat
 }
 ```
 
@@ -178,6 +202,26 @@ Added in v1.0.0
 
 ```ts
 export type ConfigProviderTypeId = typeof ConfigProviderTypeId
+```
+
+Added in v1.0.0
+
+## FlatConfigProviderTypeId
+
+**Signature**
+
+```ts
+export declare const FlatConfigProviderTypeId: typeof FlatConfigProviderTypeId
+```
+
+Added in v1.0.0
+
+## FlatConfigProviderTypeId (type alias)
+
+**Signature**
+
+```ts
+export type FlatConfigProviderTypeId = typeof FlatConfigProviderTypeId
 ```
 
 Added in v1.0.0

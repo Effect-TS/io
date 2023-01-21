@@ -282,7 +282,7 @@ update value.
 
 ```ts
 export declare const fromConst: <In>(
-  input: () => In
+  input: LazyArg<In>
 ) => <Type, Out>(self: Metric<Type, In, Out>) => Metric<Type, unknown, Out>
 ```
 
@@ -389,7 +389,7 @@ Creates a metric that ignores input and produces constant output.
 **Signature**
 
 ```ts
-export declare const sync: <Out>(evaluate: () => Out) => Metric<void, unknown, Out>
+export declare const sync: <Out>(evaluate: LazyArg<Out>) => Metric<void, unknown, Out>
 ```
 
 Added in v1.0.0
@@ -660,7 +660,7 @@ Unsafely captures a snapshot of all metrics recorded by the application.
 **Signature**
 
 ```ts
-export declare const unsafeSnapshot: () => HashSet.HashSet<MetricPair.MetricPair.Untyped>
+export declare const unsafeSnapshot: (_: void) => HashSet.HashSet<MetricPair.MetricPair.Untyped>
 ```
 
 Added in v1.0.0

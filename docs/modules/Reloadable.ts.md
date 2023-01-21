@@ -18,8 +18,8 @@ Added in v1.0.0
   - [manual](#manual)
   - [reload](#reload)
   - [reloadFork](#reloadfork)
-- [environment](#environment)
-  - [reloadableTag](#reloadabletag)
+- [context](#context)
+  - [tag](#tag)
 - [getters](#getters)
   - [get](#get)
 - [models](#models)
@@ -41,12 +41,11 @@ provided schedule.
 **Signature**
 
 ```ts
-export declare const auto: <Out>(
-  tag: Context.Tag<Out>
-) => <In, E, R, Out2>(
-  layer: Layer.Layer<In, E, Out>,
+export declare const auto: <Out extends Context.Tag<any>, In, E, R, Out2>(
+  tag: Out,
+  layer: Layer.Layer<In, E, Context.Tag.Service<Out>>,
   policy: Schedule.Schedule<R, In, Out2>
-) => Layer.Layer<In | R, E, Reloadable<Out>>
+) => Layer.Layer<In | R, E, Reloadable<Context.Tag.Service<Out>>>
 ```
 
 Added in v1.0.0
@@ -60,12 +59,11 @@ schedule, which is extracted from the input to the layer.
 **Signature**
 
 ```ts
-export declare const autoFromConfig: <Out>(
-  tag: Context.Tag<Out>
-) => <In, E, R, Out2>(
-  layer: Layer.Layer<In, E, Out>,
+export declare const autoFromConfig: <Out extends Context.Tag<any>, In, E, R, Out2>(
+  tag: Out,
+  layer: Layer.Layer<In, E, Context.Tag.Service<Out>>,
   scheduleFromConfig: (context: Context.Context<In>) => Schedule.Schedule<R, In, Out2>
-) => Layer.Layer<In | R, E, Reloadable<Out>>
+) => Layer.Layer<In | R, E, Reloadable<Context.Tag.Service<Out>>>
 ```
 
 Added in v1.0.0
@@ -78,9 +76,10 @@ of a static service.
 **Signature**
 
 ```ts
-export declare const manual: <Out>(
-  tag: Context.Tag<Out>
-) => <In, E>(layer: Layer.Layer<In, E, Out>) => Layer.Layer<In, E, Reloadable<Out>>
+export declare const manual: <Out extends Context.Tag<any>, In, E>(
+  tag: Out,
+  layer: Layer.Layer<In, E, Context.Tag.Service<Out>>
+) => Layer.Layer<In, E, Reloadable<Context.Tag.Service<Out>>>
 ```
 
 Added in v1.0.0
@@ -109,14 +108,14 @@ export declare const reloadFork: <A>(tag: Context.Tag<A>) => Effect.Effect<Reloa
 
 Added in v1.0.0
 
-# environment
+# context
 
-## reloadableTag
+## tag
 
 **Signature**
 
 ```ts
-export declare const reloadableTag: <A>(tag: Context.Tag<A>) => Context.Tag<Reloadable<A>>
+export declare const tag: <A>(tag: Context.Tag<A>) => Context.Tag<Reloadable<A>>
 ```
 
 Added in v1.0.0

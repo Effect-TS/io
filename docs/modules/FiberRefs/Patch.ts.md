@@ -62,7 +62,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const empty: () => FiberRefsPatch
+export declare const empty: (_: void) => FiberRefsPatch
 ```
 
 Added in v1.0.0

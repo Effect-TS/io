@@ -168,7 +168,7 @@ Represents an `Exit` which succeeds with `undefined`.
 **Signature**
 
 ```ts
-export declare const unit: () => Exit<never, void>
+export declare const unit: (_: void) => Exit<never, void>
 ```
 
 Added in v1.0.0

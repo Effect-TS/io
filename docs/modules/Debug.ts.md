@@ -104,7 +104,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const isTraceEnabled: () => boolean
+export declare const isTraceEnabled: (_: void) => boolean
 ```
 
 Added in v1.0.0

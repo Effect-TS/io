@@ -51,12 +51,12 @@ Added in v1.0.0
   - [sync](#sync)
   - [unfold](#unfold)
   - [windowed](#windowed)
+- [context](#context)
+  - [contramapContext](#contramapcontext)
+  - [provideContext](#providecontext)
+  - [provideService](#provideservice)
 - [destructors](#destructors)
   - [run](#run)
-- [environment](#environment)
-  - [provideEnvironment](#provideenvironment)
-  - [provideService](#provideservice)
-  - [provideSomeEnvironment](#providesomeenvironment)
 - [finalization](#finalization)
   - [ensuring](#ensuring)
 - [folding](#folding)
@@ -235,7 +235,7 @@ A schedule that always recurs, which counts the number of recurrences.
 **Signature**
 
 ```ts
-export declare const count: () => Schedule<never, unknown, number>
+export declare const count: (_: void) => Schedule<never, unknown, number>
 ```
 
 Added in v1.0.0
@@ -336,7 +336,7 @@ since the first step.
 **Signature**
 
 ```ts
-export declare const elapsed: () => Schedule<never, unknown, Duration.Duration>
+export declare const elapsed: (_: void) => Schedule<never, unknown, Duration.Duration>
 ```
 
 Added in v1.0.0
@@ -400,7 +400,7 @@ A schedule that always recurs, producing a count of repeats: 0, 1, 2.
 **Signature**
 
 ```ts
-export declare const forever: () => Schedule<never, unknown, number>
+export declare const forever: (_: void) => Schedule<never, unknown, number>
 ```
 
 Added in v1.0.0
@@ -549,7 +549,7 @@ A schedule that recurs one time.
 **Signature**
 
 ```ts
-export declare const once: () => Schedule<never, unknown, void>
+export declare const once: (_: void) => Schedule<never, unknown, void>
 ```
 
 Added in v1.0.0
@@ -575,7 +575,7 @@ state when this schedule is done.
 **Signature**
 
 ```ts
-export declare const repeatForever: () => Schedule<never, unknown, number>
+export declare const repeatForever: (_: void) => Schedule<never, unknown, number>
 ```
 
 Added in v1.0.0
@@ -616,7 +616,7 @@ A schedule that does not recur, it just stops.
 **Signature**
 
 ```ts
-export declare const stop: () => Schedule<never, unknown, void>
+export declare const stop: (_: void) => Schedule<never, unknown, void>
 ```
 
 Added in v1.0.0
@@ -642,7 +642,7 @@ value.
 **Signature**
 
 ```ts
-export declare const sync: <A>(evaluate: () => A) => Schedule<never, unknown, A>
+export declare const sync: <A>(evaluate: LazyArg<A>) => Schedule<never, unknown, A>
 ```
 
 Added in v1.0.0
@@ -682,34 +682,32 @@ export declare const windowed: (interval: Duration.Duration) => Schedule<never, 
 
 Added in v1.0.0
 
-# destructors
+# context
 
-## run
+## contramapContext
 
-Runs a schedule using the provided inputs, and collects all outputs.
+Transforms the context being provided to this schedule with the
+specified function.
 
 **Signature**
 
 ```ts
-export declare const run: <In>(
-  now: number,
-  input: Iterable<In>
-) => <Env, Out>(self: Schedule<Env, In, Out>) => Effect.Effect<Env, never, Chunk.Chunk<Out>>
+export declare const contramapContext: <R0, R>(
+  f: (env0: Context.Context<R0>) => Context.Context<R>
+) => <In, Out>(self: Schedule<R, In, Out>) => Schedule<R0, In, Out>
 ```
 
 Added in v1.0.0
 
-# environment
+## provideContext
 
-## provideEnvironment
-
-Returns a new schedule with its environment provided to it, so the
-resulting schedule does not require any environment.
+Returns a new schedule with its context provided to it, so the
+resulting schedule does not require any context.
 
 **Signature**
 
 ```ts
-export declare const provideEnvironment: <R>(
+export declare const provideContext: <R>(
   context: Context.Context<R>
 ) => <In, Out>(self: Schedule<R, In, Out>) => Schedule<never, In, Out>
 ```
@@ -719,7 +717,7 @@ Added in v1.0.0
 ## provideService
 
 Returns a new schedule with the single service it requires provided to it.
-If the schedule requires multiple services use `provideEnvironment`
+If the schedule requires multiple services use `provideContext`
 instead.
 
 **Signature**
@@ -733,17 +731,19 @@ export declare const provideService: <T, T1 extends T>(
 
 Added in v1.0.0
 
-## provideSomeEnvironment
+# destructors
 
-Transforms the environment being provided to this schedule with the
-specified function.
+## run
+
+Runs a schedule using the provided inputs, and collects all outputs.
 
 **Signature**
 
 ```ts
-export declare const provideSomeEnvironment: <R0, R>(
-  f: (env0: Context.Context<R0>) => Context.Context<R>
-) => <In, Out>(self: Schedule<R, In, Out>) => Schedule<R0, In, Out>
+export declare const run: <In>(
+  now: number,
+  input: Iterable<In>
+) => <Env, Out>(self: Schedule<Env, In, Out>) => Effect.Effect<Env, never, Chunk.Chunk<Out>>
 ```
 
 Added in v1.0.0
@@ -953,11 +953,14 @@ schedules, both for performing retrying, as well as performing repetition.
 
 ```ts
 export interface Schedule<Env, In, Out> extends Schedule.Variance<Env, In, Out> {
-  /** @internal */
+  /**
+   * Initial State
+   */
   readonly initial: any
   /**
+   * Schedule Step
+   *
    * @macro traced
-   * @internal
    */
   readonly step: (
     now: number,

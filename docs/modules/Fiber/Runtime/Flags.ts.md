@@ -21,15 +21,7 @@ Added in v1.0.0
   - [WindDown](#winddown)
   - [make](#make)
   - [none](#none)
-- [conversions](#conversions)
-  - [render](#render)
-  - [toSet](#toset)
-- [diffing](#diffing)
-  - [diff](#diff)
-- [elements](#elements)
-  - [isDisabled](#isdisabled)
-  - [isEnabled](#isenabled)
-- [environment](#environment)
+- [context](#context)
   - [disableCooperativeYielding](#disablecooperativeyielding)
   - [disableInterruption](#disableinterruption)
   - [disableOpSupervision](#disableopsupervision)
@@ -40,6 +32,14 @@ Added in v1.0.0
   - [enableOpSupervision](#enableopsupervision)
   - [enableRuntimeMetrics](#enableruntimemetrics)
   - [enableWindDown](#enablewinddown)
+- [conversions](#conversions)
+  - [render](#render)
+  - [toSet](#toset)
+- [diffing](#diffing)
+  - [diff](#diff)
+- [elements](#elements)
+  - [isDisabled](#isdisabled)
+  - [isEnabled](#isenabled)
 - [getters](#getters)
   - [cooperativeYielding](#cooperativeyielding)
   - [interruptible](#interruptible)
@@ -166,6 +166,108 @@ export declare const none: RuntimeFlags
 
 Added in v1.0.0
 
+# context
+
+## disableCooperativeYielding
+
+**Signature**
+
+```ts
+export declare const disableCooperativeYielding: (_: void) => Layer.Layer<never, never, never>
+```
+
+Added in v1.0.0
+
+## disableInterruption
+
+**Signature**
+
+```ts
+export declare const disableInterruption: (_: void) => Layer.Layer<never, never, never>
+```
+
+Added in v1.0.0
+
+## disableOpSupervision
+
+**Signature**
+
+```ts
+export declare const disableOpSupervision: (_: void) => Layer.Layer<never, never, never>
+```
+
+Added in v1.0.0
+
+## disableRuntimeMetrics
+
+**Signature**
+
+```ts
+export declare const disableRuntimeMetrics: (_: void) => Layer.Layer<never, never, never>
+```
+
+Added in v1.0.0
+
+## disableWindDown
+
+**Signature**
+
+```ts
+export declare const disableWindDown: (_: void) => Layer.Layer<never, never, never>
+```
+
+Added in v1.0.0
+
+## enableCooperativeYielding
+
+**Signature**
+
+```ts
+export declare const enableCooperativeYielding: (_: void) => Layer.Layer<never, never, never>
+```
+
+Added in v1.0.0
+
+## enableInterruption
+
+**Signature**
+
+```ts
+export declare const enableInterruption: (_: void) => Layer.Layer<never, never, never>
+```
+
+Added in v1.0.0
+
+## enableOpSupervision
+
+**Signature**
+
+```ts
+export declare const enableOpSupervision: (_: void) => Layer.Layer<never, never, never>
+```
+
+Added in v1.0.0
+
+## enableRuntimeMetrics
+
+**Signature**
+
+```ts
+export declare const enableRuntimeMetrics: (_: void) => Layer.Layer<never, never, never>
+```
+
+Added in v1.0.0
+
+## enableWindDown
+
+**Signature**
+
+```ts
+export declare const enableWindDown: (_: void) => Layer.Layer<never, never, never>
+```
+
+Added in v1.0.0
+
 # conversions
 
 ## render
@@ -202,7 +304,7 @@ and `that`.
 **Signature**
 
 ```ts
-export declare const diff: (that: RuntimeFlags) => (self: RuntimeFlags) => RuntimeFlagsPatch.RuntimeFlagsPatch
+export declare const diff: (self: RuntimeFlags, that: RuntimeFlags) => RuntimeFlagsPatch.RuntimeFlagsPatch
 ```
 
 Added in v1.0.0
@@ -216,7 +318,7 @@ Returns `true` if the specified `RuntimeFlag` is disabled, `false` otherwise.
 **Signature**
 
 ```ts
-export declare const isDisabled: (flag: RuntimeFlag) => (self: RuntimeFlags) => boolean
+export declare const isDisabled: (self: RuntimeFlags, flag: RuntimeFlag) => boolean
 ```
 
 Added in v1.0.0
@@ -228,109 +330,7 @@ Returns `true` if the specified `RuntimeFlag` is enabled, `false` otherwise.
 **Signature**
 
 ```ts
-export declare const isEnabled: (flag: RuntimeFlag) => (self: RuntimeFlags) => boolean
-```
-
-Added in v1.0.0
-
-# environment
-
-## disableCooperativeYielding
-
-**Signature**
-
-```ts
-export declare const disableCooperativeYielding: () => Layer.Layer<never, never, never>
-```
-
-Added in v1.0.0
-
-## disableInterruption
-
-**Signature**
-
-```ts
-export declare const disableInterruption: () => Layer.Layer<never, never, never>
-```
-
-Added in v1.0.0
-
-## disableOpSupervision
-
-**Signature**
-
-```ts
-export declare const disableOpSupervision: () => Layer.Layer<never, never, never>
-```
-
-Added in v1.0.0
-
-## disableRuntimeMetrics
-
-**Signature**
-
-```ts
-export declare const disableRuntimeMetrics: () => Layer.Layer<never, never, never>
-```
-
-Added in v1.0.0
-
-## disableWindDown
-
-**Signature**
-
-```ts
-export declare const disableWindDown: () => Layer.Layer<never, never, never>
-```
-
-Added in v1.0.0
-
-## enableCooperativeYielding
-
-**Signature**
-
-```ts
-export declare const enableCooperativeYielding: () => Layer.Layer<never, never, never>
-```
-
-Added in v1.0.0
-
-## enableInterruption
-
-**Signature**
-
-```ts
-export declare const enableInterruption: () => Layer.Layer<never, never, never>
-```
-
-Added in v1.0.0
-
-## enableOpSupervision
-
-**Signature**
-
-```ts
-export declare const enableOpSupervision: () => Layer.Layer<never, never, never>
-```
-
-Added in v1.0.0
-
-## enableRuntimeMetrics
-
-**Signature**
-
-```ts
-export declare const enableRuntimeMetrics: () => Layer.Layer<never, never, never>
-```
-
-Added in v1.0.0
-
-## enableWindDown
-
-**Signature**
-
-```ts
-export declare const enableWindDown: () => Layer.Layer<never, never, never>
+export declare const isEnabled: (self: RuntimeFlags, flag: RuntimeFlag) => boolean
 ```
 
 Added in v1.0.0
@@ -461,7 +461,7 @@ Constructs a differ that knows how to diff `RuntimeFlags` values.
 **Signature**
 
 ```ts
-export declare const differ: () => Differ.Differ<RuntimeFlags, RuntimeFlagsPatch.RuntimeFlagsPatch>
+export declare const differ: (_: void) => Differ.Differ<RuntimeFlags, RuntimeFlagsPatch.RuntimeFlagsPatch>
 ```
 
 Added in v1.0.0
@@ -522,7 +522,7 @@ patched set of `RuntimeFlag`s.
 **Signature**
 
 ```ts
-export declare const patch: (patch: RuntimeFlagsPatch.RuntimeFlagsPatch) => (self: RuntimeFlags) => RuntimeFlags
+export declare const patch: (self: RuntimeFlags, patch: RuntimeFlagsPatch.RuntimeFlagsPatch) => RuntimeFlags
 ```
 
 Added in v1.0.0

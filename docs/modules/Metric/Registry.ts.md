@@ -29,7 +29,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const make: () => MetricRegistry
+export declare const make: (_: void) => MetricRegistry
 ```
 
 Added in v1.0.0

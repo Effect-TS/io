@@ -22,6 +22,7 @@ Added in v1.0.0
 - [models](#models)
   - [And (interface)](#and-interface)
   - [ConfigError (type alias)](#configerror-type-alias)
+  - [ConfigErrorReducer (interface)](#configerrorreducer-interface)
   - [InvalidData (interface)](#invaliddata-interface)
   - [MissingData (interface)](#missingdata-interface)
   - [Or (interface)](#or-interface)
@@ -40,6 +41,8 @@ Added in v1.0.0
 - [symbols](#symbols)
   - [ConfigErrorTypeId](#configerrortypeid)
   - [ConfigErrorTypeId (type alias)](#configerrortypeid-type-alias)
+- [utils](#utils)
+  - [isMissingDataOnly](#ismissingdataonly)
 
 ---
 
@@ -133,6 +136,28 @@ The possible ways that loading configuration data may fail.
 
 ```ts
 export type ConfigError = And | Or | InvalidData | MissingData | SourceUnavailable | Unsupported
+```
+
+Added in v1.0.0
+
+## ConfigErrorReducer (interface)
+
+**Signature**
+
+```ts
+export interface ConfigErrorReducer<C, Z> {
+  readonly andCase: (context: C, left: Z, right: Z) => Z
+  readonly orCase: (context: C, left: Z, right: Z) => Z
+  readonly invalidDataCase: (context: C, path: Chunk.Chunk<string>, message: string) => Z
+  readonly missingDataCase: (context: C, path: Chunk.Chunk<string>, message: string) => Z
+  readonly sourceUnavailableCase: (
+    context: C,
+    path: Chunk.Chunk<string>,
+    message: string,
+    cause: Cause.Cause<unknown>
+  ) => Z
+  readonly unsupportedCase: (context: C, path: Chunk.Chunk<string>, message: string) => Z
+}
 ```
 
 Added in v1.0.0
@@ -328,6 +353,20 @@ Added in v1.0.0
 
 ```ts
 export type ConfigErrorTypeId = typeof ConfigErrorTypeId
+```
+
+Added in v1.0.0
+
+# utils
+
+## isMissingDataOnly
+
+Returns `true` if the specified `ConfigError` contains only `MissingData` errors, `false` otherwise.
+
+**Signature**
+
+```ts
+export declare const isMissingDataOnly: (self: ConfigError) => boolean
 ```
 
 Added in v1.0.0

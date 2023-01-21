@@ -314,7 +314,7 @@ Unsafely creates a new `FiberId`.
 **Signature**
 
 ```ts
-export declare const unsafeMake: () => Runtime
+export declare const unsafeMake: (_: void) => Runtime
 ```
 
 Added in v1.0.0

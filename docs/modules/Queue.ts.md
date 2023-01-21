@@ -429,7 +429,7 @@ Places one value in the queue.
 **Signature**
 
 ```ts
-export declare const offer: <A>(value: A) => (self: Enqueue<A>) => Effect.Effect<never, never, boolean>
+export declare const offer: <A>(self: Enqueue<A>, value: A) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -453,7 +453,7 @@ queue but if there is no room it will not enqueue them and return false.
 **Signature**
 
 ```ts
-export declare const offerAll: <A>(iterable: Iterable<A>) => (self: Enqueue<A>) => Effect.Effect<never, never, boolean>
+export declare const offerAll: <A>(self: Enqueue<A>, iterable: Iterable<A>) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -519,10 +519,11 @@ suspends until at least the minimum number of elements have been collected.
 **Signature**
 
 ```ts
-export declare const takeBetween: (
+export declare const takeBetween: <A>(
+  self: Dequeue<A>,
   min: number,
   max: number
-) => <A>(self: Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>>
+) => Effect.Effect<never, never, Chunk.Chunk<A>>
 ```
 
 Added in v1.0.0
@@ -536,7 +537,7 @@ become available.
 **Signature**
 
 ```ts
-export declare const takeN: (n: number) => <A>(self: Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>>
+export declare const takeN: <A>(self: Dequeue<A>, n: number) => Effect.Effect<never, never, Chunk.Chunk<A>>
 ```
 
 Added in v1.0.0
@@ -548,7 +549,7 @@ Takes up to max number of values from the queue.
 **Signature**
 
 ```ts
-export declare const takeUpTo: (max: number) => <A>(self: Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>>
+export declare const takeUpTo: <A>(self: Dequeue<A>, max: number) => Effect.Effect<never, never, Chunk.Chunk<A>>
 ```
 
 Added in v1.0.0

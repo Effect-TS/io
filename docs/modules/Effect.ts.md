@@ -130,6 +130,23 @@ Added in v1.0.0
   - [whileLoop](#whileloop)
   - [withClockScoped](#withclockscoped)
   - [yieldNow](#yieldnow)
+- [context](#context)
+  - [clock](#clock)
+  - [context](#context-1)
+  - [contextWith](#contextwith)
+  - [contextWithEffect](#contextwitheffect)
+  - [contramapContext](#contramapcontext)
+  - [provideContext](#providecontext)
+  - [provideLayer](#providelayer)
+  - [provideService](#provideservice)
+  - [provideServiceEffect](#provideserviceeffect)
+  - [provideSomeLayer](#providesomelayer)
+  - [scope](#scope)
+  - [scoped](#scoped)
+  - [service](#service)
+  - [serviceWith](#servicewith)
+  - [serviceWithEffect](#servicewitheffect)
+  - [updateService](#updateservice)
 - [conversions](#conversions)
   - [either](#either)
   - [fromEither](#fromeither)
@@ -141,6 +158,10 @@ Added in v1.0.0
   - [getOrFailDiscard](#getorfaildiscard)
   - [getOrFailWith](#getorfailwith)
   - [toLayer](#tolayer)
+  - [toLayerContext](#tolayercontext)
+  - [toLayerDiscard](#tolayerdiscard)
+  - [toLayerScoped](#tolayerscoped)
+  - [toLayerScopedDiscard](#tolayerscopeddiscard)
 - [do notation](#do-notation)
   - [Do](#do)
   - [bind](#bind)
@@ -151,23 +172,6 @@ Added in v1.0.0
   - [forAll](#forall)
   - [forEachEffect](#foreacheffect)
   - [forEachOption](#foreachoption)
-- [environment](#environment)
-  - [clock](#clock)
-  - [environment](#environment-1)
-  - [environmentWith](#environmentwith)
-  - [environmentWithEffect](#environmentwitheffect)
-  - [provideEnvironment](#provideenvironment)
-  - [provideLayer](#providelayer)
-  - [provideService](#provideservice)
-  - [provideServiceEffect](#provideserviceeffect)
-  - [provideSomeEnvironment](#providesomeenvironment)
-  - [provideSomeLayer](#providesomelayer)
-  - [scope](#scope)
-  - [scoped](#scoped)
-  - [service](#service)
-  - [serviceWith](#servicewith)
-  - [serviceWithEffect](#servicewitheffect)
-  - [updateService](#updateservice)
 - [error handling](#error-handling)
   - [absolve](#absolve)
   - [absorb](#absorb)
@@ -432,7 +436,6 @@ Added in v1.0.0
   - [EffectTypeId (type alias)](#effecttypeid-type-alias)
 - [tracing](#tracing)
   - [traced](#traced)
-  - [withSpan](#withspan)
 - [traversing](#traversing)
   - [forEachWithIndex](#foreachwithindex)
 - [utilities](#utilities)
@@ -496,7 +499,7 @@ executes the specified effect.
 
 ```ts
 export declare const orElse: <R2, E2, A2>(
-  that: () => Effect<R2, E2, A2>
+  that: LazyArg<Effect<R2, E2, A2>>
 ) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2, A2 | A>
 ```
 
@@ -511,7 +514,7 @@ fails, in which case, it will produce the value of the specified effect.
 
 ```ts
 export declare const orElseEither: <R2, E2, A2>(
-  that: () => Effect<R2, E2, A2>
+  that: LazyArg<Effect<R2, E2, A2>>
 ) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2, Either.Either<A, A2>>
 ```
 
@@ -525,7 +528,7 @@ fails with the specified error.
 **Signature**
 
 ```ts
-export declare const orElseFail: <E2>(evaluate: () => E2) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E2, A>
+export declare const orElseFail: <E2>(evaluate: LazyArg<E2>) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E2, A>
 ```
 
 Added in v1.0.0
@@ -540,7 +543,7 @@ the specified effect.
 
 ```ts
 export declare const orElseOptional: <R, E, A, R2, E2, A2>(
-  that: () => Effect<R2, Option.Option<E2>, A2>
+  that: LazyArg<Effect<R2, Option.Option<E2>, A2>>
 ) => (self: Effect<R, Option.Option<E>, A>) => Effect<R | R2, Option.Option<E | E2>, A | A2>
 ```
 
@@ -554,7 +557,9 @@ otherwise succeeds with the specified value.
 **Signature**
 
 ```ts
-export declare const orElseSucceed: <A2>(evaluate: () => A2) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A2 | A>
+export declare const orElseSucceed: <A2>(
+  evaluate: LazyArg<A2>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A2 | A>
 ```
 
 Added in v1.0.0
@@ -568,7 +573,7 @@ defects, executes `success` in case of successes
 
 ```ts
 export declare const tryOrElse: <R2, E2, A2, A, R3, E3, A3>(
-  that: () => Effect<R2, E2, A2>,
+  that: LazyArg<Effect<R2, E2, A2>>,
   onSuccess: (a: A) => Effect<R3, E3, A3>
 ) => <R, E>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2 | E3, A2 | A3>
 ```
@@ -758,7 +763,7 @@ Note that this allows for interruption to occur in uninterruptible regions.
 **Signature**
 
 ```ts
-export declare const allowInterrupt: () => Effect<never, never, void>
+export declare const allowInterrupt: (_: void) => Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -878,7 +883,7 @@ thrown exceptions into typed failed effects creating with `Effect.fail`.
 **Signature**
 
 ```ts
-export declare const attempt: <A>(evaluate: () => A) => Effect<never, unknown, A>
+export declare const attempt: <A>(evaluate: LazyArg<A>) => Effect<never, unknown, A>
 ```
 
 Added in v1.0.0
@@ -912,7 +917,7 @@ Added in v1.0.0
 
 ## clockWith
 
-Retreives the `Clock` service from the environment and provides it to the
+Retreives the `Clock` service from the context and provides it to the
 specified effectful function.
 
 **Signature**
@@ -1118,7 +1123,11 @@ For effectful conditionals, see `ifEffect`.
 **Signature**
 
 ```ts
-export declare const cond: <E, A>(predicate: () => boolean, result: () => A, error: () => E) => Effect<never, E, A>
+export declare const cond: <E, A>(
+  predicate: LazyArg<boolean>,
+  result: LazyArg<A>,
+  error: LazyArg<E>
+) => Effect<never, E, A>
 ```
 
 Added in v1.0.0
@@ -1130,7 +1139,7 @@ Constructs an effect with information about the current `Fiber`.
 **Signature**
 
 ```ts
-export declare const descriptor: () => Effect<never, never, Fiber.Fiber.Descriptor>
+export declare const descriptor: (_: void) => Effect<never, never, Fiber.Fiber.Descriptor>
 ```
 
 Added in v1.0.0
@@ -1178,7 +1187,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const dieSync: (evaluate: () => unknown) => Effect<never, never, never>
+export declare const dieSync: (evaluate: LazyArg<unknown>) => Effect<never, never, never>
 ```
 
 Added in v1.0.0
@@ -1263,7 +1272,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const failCauseSync: <E>(evaluate: () => Cause.Cause<E>) => Effect<never, E, never>
+export declare const failCauseSync: <E>(evaluate: LazyArg<Cause.Cause<E>>) => Effect<never, E, never>
 ```
 
 Added in v1.0.0
@@ -1273,7 +1282,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const failSync: <E>(evaluate: () => E) => Effect<never, E, never>
+export declare const failSync: <E>(evaluate: LazyArg<E>) => Effect<never, E, never>
 ```
 
 Added in v1.0.0
@@ -1392,7 +1401,7 @@ effect.
 **Signature**
 
 ```ts
-export declare const getFiberRefs: () => Effect<never, never, FiberRefs.FiberRefs>
+export declare const getFiberRefs: (_: void) => Effect<never, never, FiberRefs.FiberRefs>
 ```
 
 Added in v1.0.0
@@ -1568,7 +1577,7 @@ Returns a effect that will never produce anything. The moral equivalent of
 **Signature**
 
 ```ts
-export declare const never: () => Effect<never, never, never>
+export declare const never: (_: void) => Effect<never, never, never>
 ```
 
 Added in v1.0.0
@@ -1650,7 +1659,7 @@ Like `tryPromise` but produces a defect in case of errors.
 **Signature**
 
 ```ts
-export declare const promise: <A>(evaluate: () => Promise<A>) => Effect<never, never, A>
+export declare const promise: <A>(evaluate: LazyArg<Promise<A>>) => Effect<never, never, A>
 ```
 
 Added in v1.0.0
@@ -1669,19 +1678,19 @@ Added in v1.0.0
 
 ## random
 
-Retreives the `Random` service from the environment.
+Retreives the `Random` service from the context.
 
 **Signature**
 
 ```ts
-export declare const random: () => Effect<never, never, Random.Random>
+export declare const random: (_: void) => Effect<never, never, Random.Random>
 ```
 
 Added in v1.0.0
 
 ## randomWith
 
-Retreives the `Random` service from the environment and uses it to run the
+Retreives the `Random` service from the context and uses it to run the
 specified workflow.
 
 **Signature**
@@ -1714,7 +1723,7 @@ govern behavior and features of the runtime system.
 **Signature**
 
 ```ts
-export declare const runtimeFlags: () => Effect<never, never, RuntimeFlags.RuntimeFlags>
+export declare const runtimeFlags: (_: void) => Effect<never, never, RuntimeFlags.RuntimeFlags>
 ```
 
 Added in v1.0.0
@@ -1793,7 +1802,7 @@ Returns an effect which succeeds with `None`.
 **Signature**
 
 ```ts
-export declare const succeedNone: () => Effect<never, never, Option.Option<never>>
+export declare const succeedNone: (_: void) => Effect<never, never, Option.Option<never>>
 ```
 
 Added in v1.0.0
@@ -1825,13 +1834,13 @@ Added in v1.0.0
 ## suspend
 
 Returns a lazily constructed effect, whose construction may itself require
-effects. When no environment is required (i.e., when `R == unknown`) it is
+effects. When no context is required (i.e., when `R == unknown`) it is
 conceptually equivalent to `flatten(succeed(io))`.
 
 **Signature**
 
 ```ts
-export declare const suspend: <R, E, A>(evaluate: () => Effect<R, E, A>) => Effect<R, unknown, A>
+export declare const suspend: <R, E, A>(evaluate: LazyArg<Effect<R, E, A>>) => Effect<R, unknown, A>
 ```
 
 Added in v1.0.0
@@ -1841,7 +1850,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const suspendSucceed: <R, E, A>(effect: () => Effect<R, E, A>) => Effect<R, E, A>
+export declare const suspendSucceed: <R, E, A>(effect: LazyArg<Effect<R, E, A>>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -1851,7 +1860,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const sync: <A>(evaluate: () => A) => Effect<never, never, A>
+export declare const sync: <A>(evaluate: LazyArg<A>) => Effect<never, never, A>
 ```
 
 Added in v1.0.0
@@ -1920,7 +1929,7 @@ thrown exceptions into typed failed effects.
 **Signature**
 
 ```ts
-export declare const tryCatch: <E, A>(attempt: () => A, onThrow: (u: unknown) => E) => Effect<never, E, A>
+export declare const tryCatch: <E, A>(attempt: LazyArg<A>, onThrow: (u: unknown) => E) => Effect<never, E, A>
 ```
 
 Added in v1.0.0
@@ -1934,7 +1943,7 @@ its result, errors will be handled using `onReject`.
 
 ```ts
 export declare const tryCatchPromise: <E, A>(
-  evaluate: () => Promise<A>,
+  evaluate: LazyArg<Promise<A>>,
   onReject: (reason: unknown) => E
 ) => Effect<never, E, A>
 ```
@@ -1964,7 +1973,7 @@ its result, errors will produce failure as `unknown`.
 **Signature**
 
 ```ts
-export declare const tryPromise: <A>(evaluate: () => Promise<A>) => Effect<never, unknown, A>
+export declare const tryPromise: <A>(evaluate: LazyArg<Promise<A>>) => Effect<never, unknown, A>
 ```
 
 Added in v1.0.0
@@ -2040,7 +2049,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const unit: () => Effect<never, never, void>
+export declare const unit: (_: void) => Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -2078,8 +2087,8 @@ Added in v1.0.0
 
 ```ts
 export declare const whileLoop: <R, E, A>(
-  check: () => boolean,
-  body: () => Effect<R, E, A>,
+  check: LazyArg<boolean>,
+  body: LazyArg<Effect<R, E, A>>,
   process: (a: A) => void
 ) => Effect<R, E, void>
 ```
@@ -2105,6 +2114,227 @@ Added in v1.0.0
 
 ```ts
 export declare const yieldNow: (priority?: 'background' | 'normal' | undefined) => Effect<never, never, void>
+```
+
+Added in v1.0.0
+
+# context
+
+## clock
+
+Retreives the `Clock` service from the context
+
+**Signature**
+
+```ts
+export declare const clock: (_: void) => Effect<never, never, Clock.Clock>
+```
+
+Added in v1.0.0
+
+## context
+
+**Signature**
+
+```ts
+export declare const context: <R>() => Effect<R, never, Context.Context<R>>
+```
+
+Added in v1.0.0
+
+## contextWith
+
+Accesses the context of the effect.
+
+**Signature**
+
+```ts
+export declare const contextWith: <R, A>(f: (context: Context.Context<R>) => A) => Effect<R, never, A>
+```
+
+Added in v1.0.0
+
+## contextWithEffect
+
+Effectually accesses the context of the effect.
+
+**Signature**
+
+```ts
+export declare const contextWithEffect: <R, R0, E, A>(
+  f: (context: Context.Context<R0>) => Effect<R, E, A>
+) => Effect<R | R0, E, A>
+```
+
+Added in v1.0.0
+
+## contramapContext
+
+Provides some of the context required to run this effect,
+leaving the remainder `R0`.
+
+**Signature**
+
+```ts
+export declare const contramapContext: <R0, R>(
+  f: (context: Context.Context<R0>) => Context.Context<R>
+) => <E, A>(self: Effect<R, E, A>) => Effect<R0, E, A>
+```
+
+Added in v1.0.0
+
+## provideContext
+
+Provides the effect with its required context, which eliminates its
+dependency on `R`.
+
+**Signature**
+
+```ts
+export declare const provideContext: <R>(
+  context: Context.Context<R>
+) => <E, A>(self: Effect<R, E, A>) => Effect<never, E, A>
+```
+
+Added in v1.0.0
+
+## provideLayer
+
+Provides a layer to the effect, which translates it to another level.
+
+**Signature**
+
+```ts
+export declare const provideLayer: <R, E, A>(
+  layer: Layer.Layer<R, E, A>
+) => <E1, A1>(self: Effect<A, E1, A1>) => Effect<R, E | E1, A1>
+```
+
+Added in v1.0.0
+
+## provideService
+
+Provides the effect with the single service it requires. If the effect
+requires more than one service use `provideContext` instead.
+
+**Signature**
+
+```ts
+export declare const provideService: <T extends Context.Tag<any>>(
+  tag: T,
+  service: Context.Tag.Service<T>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<Exclude<R, Context.Tag.Service<T>>, E, A>
+```
+
+Added in v1.0.0
+
+## provideServiceEffect
+
+Provides the effect with the single service it requires. If the effect
+requires more than one service use `provideContext` instead.
+
+**Signature**
+
+```ts
+export declare const provideServiceEffect: <T extends Context.Tag<any>, R1, E1>(
+  tag: T,
+  effect: Effect<R1, E1, Context.Tag.Service<T>>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | Exclude<R, Context.Tag.Service<T>>, E1 | E, A>
+```
+
+Added in v1.0.0
+
+## provideSomeLayer
+
+Splits the context into two parts, providing one part using the
+specified layer and leaving the remainder `R0`.
+
+**Signature**
+
+```ts
+export declare const provideSomeLayer: <R2, E2, A2>(
+  layer: Layer.Layer<R2, E2, A2>
+) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | Exclude<R, A2>, E2 | E, A>
+```
+
+Added in v1.0.0
+
+## scope
+
+**Signature**
+
+```ts
+export declare const scope: (_: void) => Effect<Scope.Scope, never, Scope.Scope>
+```
+
+Added in v1.0.0
+
+## scoped
+
+Scopes all resources uses in this workflow to the lifetime of the workflow,
+ensuring that their finalizers are run as soon as this workflow completes
+execution, whether by success, failure, or interruption.
+
+**Signature**
+
+```ts
+export declare const scoped: <R, E, A>(effect: Effect<R, E, A>) => Effect<Exclude<R, Scope.Scope>, E, A>
+```
+
+Added in v1.0.0
+
+## service
+
+Extracts the specified service from the context of the effect.
+
+**Signature**
+
+```ts
+export declare const service: <T>(tag: Context.Tag<T>) => Effect<T, never, T>
+```
+
+Added in v1.0.0
+
+## serviceWith
+
+Accesses the specified service in the context of the effect.
+
+**Signature**
+
+```ts
+export declare const serviceWith: <T extends Context.Tag<any>, A>(
+  tag: T,
+  f: (a: Context.Tag.Service<T>) => A
+) => Effect<Context.Tag.Service<T>, never, A>
+```
+
+Added in v1.0.0
+
+## serviceWithEffect
+
+Effectfully accesses the specified service in the context of the effect.
+
+**Signature**
+
+```ts
+export declare const serviceWithEffect: <T extends Context.Tag<any>, R, E, A>(
+  tag: T,
+  f: (a: Context.Tag.Service<T>) => Effect<R, E, A>
+) => Effect<R | Context.Tag.Service<T>, E, A>
+```
+
+Added in v1.0.0
+
+## updateService
+
+Updates the service with the required service entry.
+
+**Signature**
+
+```ts
+export declare const updateService: <T>(
+  tag: Context.Tag<T>
+) => <T1 extends T>(f: (_: T) => T1) => <R, E, A>(self: Effect<R, E, A>) => Effect<T | R, E, A>
 ```
 
 Added in v1.0.0
@@ -2227,7 +2457,7 @@ the specified `e` value.
 **Signature**
 
 ```ts
-export declare const getOrFailWith: <E>(error: () => E) => <A>(option: Option.Option<A>) => Effect<never, E, A>
+export declare const getOrFailWith: <E>(error: LazyArg<E>) => <A>(option: Option.Option<A>) => Effect<never, E, A>
 ```
 
 Added in v1.0.0
@@ -2244,6 +2474,58 @@ export declare const toLayer: <A>(tag: Context.Tag<A>) => <R, E>(self: Effect<R,
 
 Added in v1.0.0
 
+## toLayerContext
+
+Constructs a layer from this effect.
+
+**Signature**
+
+```ts
+export declare const toLayerContext: <R, E, A>(effect: Effect<R, E, Context.Context<A>>) => Layer.Layer<R, E, A>
+```
+
+Added in v1.0.0
+
+## toLayerDiscard
+
+Constructs a layer from this effect.
+
+**Signature**
+
+```ts
+export declare const toLayerDiscard: <R, E, _>(effect: Effect<R, E, _>) => Layer.Layer<R, E, never>
+```
+
+Added in v1.0.0
+
+## toLayerScoped
+
+Constructs a layer from this effect.
+
+**Signature**
+
+```ts
+export declare const toLayerScoped: <A>(
+  tag: Context.Tag<A>
+) => <R, E>(self: Effect<R, E, A>) => Layer.Layer<Exclude<R, Scope.Scope>, E, A>
+```
+
+Added in v1.0.0
+
+## toLayerScopedDiscard
+
+Constructs a layer from this effect.
+
+**Signature**
+
+```ts
+export declare const toLayerScopedDiscard: <R, E, _>(
+  effect: Effect<R, E, _>
+) => Layer.Layer<Exclude<R, Scope.Scope>, E, never>
+```
+
+Added in v1.0.0
+
 # do notation
 
 ## Do
@@ -2251,7 +2533,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const Do: () => Effect<never, never, {}>
+export declare const Do: (_: void) => Effect<never, never, {}>
 ```
 
 Added in v1.0.0
@@ -2362,221 +2644,6 @@ results in a new `Option<B>`.
 export declare const forEachOption: <R, E, A, B>(
   f: (a: A) => Effect<R, E, B>
 ) => (option: Option.Option<A>) => Effect<R, E, Option.Option<B>>
-```
-
-Added in v1.0.0
-
-# environment
-
-## clock
-
-Retreives the `Clock` service from the environment.
-
-**Signature**
-
-```ts
-export declare const clock: () => Effect<never, never, Clock.Clock>
-```
-
-Added in v1.0.0
-
-## environment
-
-**Signature**
-
-```ts
-export declare const environment: <R>() => Effect<R, never, Context.Context<R>>
-```
-
-Added in v1.0.0
-
-## environmentWith
-
-Accesses the environment of the effect.
-
-**Signature**
-
-```ts
-export declare const environmentWith: <R, A>(f: (context: Context.Context<R>) => A) => Effect<R, never, A>
-```
-
-Added in v1.0.0
-
-## environmentWithEffect
-
-Effectually accesses the environment of the effect.
-
-**Signature**
-
-```ts
-export declare const environmentWithEffect: <R, R0, E, A>(
-  f: (context: Context.Context<R0>) => Effect<R, E, A>
-) => Effect<R | R0, E, A>
-```
-
-Added in v1.0.0
-
-## provideEnvironment
-
-Provides the effect with its required environment, which eliminates its
-dependency on `R`.
-
-**Signature**
-
-```ts
-export declare const provideEnvironment: <R>(
-  environment: Context.Context<R>
-) => <E, A>(self: Effect<R, E, A>) => Effect<never, E, A>
-```
-
-Added in v1.0.0
-
-## provideLayer
-
-Provides a layer to the effect, which translates it to another level.
-
-**Signature**
-
-```ts
-export declare const provideLayer: <R, E, A>(
-  layer: Layer.Layer<R, E, A>
-) => <E1, A1>(self: Effect<A, E1, A1>) => Effect<R, E | E1, A1>
-```
-
-Added in v1.0.0
-
-## provideService
-
-Provides the effect with the single service it requires. If the effect
-requires more than one service use `provideEnvironment` instead.
-
-**Signature**
-
-```ts
-export declare const provideService: <T>(
-  tag: Context.Tag<T>
-) => (resource: T) => <R, E, A>(self: Effect<R, E, A>) => Effect<Exclude<R, T>, E, A>
-```
-
-Added in v1.0.0
-
-## provideServiceEffect
-
-Provides the effect with the single service it requires. If the effect
-requires more than one service use `provideEnvironment` instead.
-
-**Signature**
-
-```ts
-export declare const provideServiceEffect: <T>(
-  tag: Context.Tag<T>
-) => <R1, E1>(effect: Effect<R1, E1, T>) => <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | Exclude<R, T>, E1 | E, A>
-```
-
-Added in v1.0.0
-
-## provideSomeEnvironment
-
-Provides some of the environment required to run this effect,
-leaving the remainder `R0`.
-
-**Signature**
-
-```ts
-export declare const provideSomeEnvironment: <R0, R>(
-  f: (context: Context.Context<R0>) => Context.Context<R>
-) => <E, A>(self: Effect<R, E, A>) => Effect<R0, E, A>
-```
-
-Added in v1.0.0
-
-## provideSomeLayer
-
-Splits the environment into two parts, providing one part using the
-specified layer and leaving the remainder `R0`.
-
-**Signature**
-
-```ts
-export declare const provideSomeLayer: <R2, E2, A2>(
-  layer: Layer.Layer<R2, E2, A2>
-) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | Exclude<R, A2>, E2 | E, A>
-```
-
-Added in v1.0.0
-
-## scope
-
-**Signature**
-
-```ts
-export declare const scope: () => Effect<Scope.Scope, never, Scope.Scope>
-```
-
-Added in v1.0.0
-
-## scoped
-
-Scopes all resources uses in this workflow to the lifetime of the workflow,
-ensuring that their finalizers are run as soon as this workflow completes
-execution, whether by success, failure, or interruption.
-
-**Signature**
-
-```ts
-export declare const scoped: <R, E, A>(effect: Effect<R, E, A>) => Effect<Exclude<R, Scope.Scope>, E, A>
-```
-
-Added in v1.0.0
-
-## service
-
-Extracts the specified service from the environment of the effect.
-
-**Signature**
-
-```ts
-export declare const service: <T>(tag: Context.Tag<T>) => Effect<T, never, T>
-```
-
-Added in v1.0.0
-
-## serviceWith
-
-Accesses the specified service in the environment of the effect.
-
-**Signature**
-
-```ts
-export declare const serviceWith: <T>(tag: Context.Tag<T>) => <A>(f: (a: T) => A) => Effect<T, never, A>
-```
-
-Added in v1.0.0
-
-## serviceWithEffect
-
-Effectfully accesses the specified service in the environment of the effect.
-
-**Signature**
-
-```ts
-export declare const serviceWithEffect: <T>(
-  tag: Context.Tag<T>
-) => <R, E, A>(f: (a: T) => Effect<R, E, A>) => Effect<T | R, E, A>
-```
-
-Added in v1.0.0
-
-## updateService
-
-Updates the service with the required service entry.
-
-**Signature**
-
-```ts
-export declare const updateService: <T>(
-  tag: Context.Tag<T>
-) => <T1 extends T>(f: (_: T) => T1) => <R, E, A>(self: Effect<R, E, A>) => Effect<T | R, E, A>
 ```
 
 Added in v1.0.0
@@ -3026,8 +3093,8 @@ defect if the predicate fails.
 
 ```ts
 export declare const filterOrDie: {
-  <A, B extends A>(f: Refinement<A, B>, defect: () => unknown): <R, E>(self: Effect<R, E, A>) => Effect<R, E, B>
-  <A>(f: Predicate<A>, defect: () => unknown): <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <A, B extends A>(f: Refinement<A, B>, defect: LazyArg<unknown>): <R, E>(self: Effect<R, E, A>) => Effect<R, E, B>
+  <A>(f: Predicate<A>, defect: LazyArg<unknown>): <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
 }
 ```
 
@@ -3058,10 +3125,10 @@ of the effect if it is successful, otherwise returns the value of `orElse`.
 
 ```ts
 export declare const filterOrElse: {
-  <A, B extends A, R2, E2, C>(f: Refinement<A, B>, orElse: () => Effect<R2, E2, C>): <R, E>(
+  <A, B extends A, R2, E2, C>(f: Refinement<A, B>, orElse: LazyArg<Effect<R2, E2, C>>): <R, E>(
     self: Effect<R, E, A>
   ) => Effect<R2 | R, E2 | E, B | C>
-  <A, R2, E2, B>(f: Predicate<A>, orElse: () => Effect<R2, E2, B>): <R, E>(
+  <A, R2, E2, B>(f: Predicate<A>, orElse: LazyArg<Effect<R2, E2, B>>): <R, E>(
     self: Effect<R, E, A>
   ) => Effect<R2 | R, E2 | E, A | B>
 }
@@ -3098,8 +3165,8 @@ error if the predicate fails.
 
 ```ts
 export declare const filterOrFail: {
-  <A, B extends A, E2>(f: Refinement<A, B>, error: () => E2): <R, E>(self: Effect<R, E, A>) => Effect<R, E2 | E, B>
-  <A, E2>(f: Predicate<A>, error: () => E2): <R, E>(self: Effect<R, E, A>) => Effect<R, E2 | E, A>
+  <A, B extends A, E2>(f: Refinement<A, B>, error: LazyArg<E2>): <R, E>(self: Effect<R, E, A>) => Effect<R, E2 | E, B>
+  <A, E2>(f: Predicate<A>, error: LazyArg<E2>): <R, E>(self: Effect<R, E, A>) => Effect<R, E2 | E, A>
 }
 ```
 
@@ -3380,7 +3447,7 @@ Retrieves the metric tags associated with the current scope.
 **Signature**
 
 ```ts
-export declare const tags: () => Effect<never, never, HashSet.HashSet<MetricLabel.MetricLabel>>
+export declare const tags: (_: void) => Effect<never, never, HashSet.HashSet<MetricLabel.MetricLabel>>
 ```
 
 Added in v1.0.0
@@ -3427,7 +3494,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const interrupt: () => Effect<never, never, never>
+export declare const interrupt: (_: void) => Effect<never, never, never>
 ```
 
 Added in v1.0.0
@@ -3571,7 +3638,7 @@ Retrieves the log annotations associated with the current scope.
 **Signature**
 
 ```ts
-export declare const logAnnotations: () => Effect<never, never, HashMap.HashMap<string, string>>
+export declare const logAnnotations: (_: void) => Effect<never, never, HashMap.HashMap<string, string>>
 ```
 
 Added in v1.0.0
@@ -4036,7 +4103,6 @@ of executing `Effect` values.
 
 ```ts
 export interface Effect<R, E, A> extends Effect.Variance<R, E, A>, Equal.Equal {
-  /** @internal */
   traced(trace: string | undefined): Effect<R, E, A>
 }
 ```
@@ -5036,7 +5102,7 @@ Extracts the optional value, or returns the given 'orElse'.
 
 ```ts
 export declare const someOrElse: <B>(
-  orElse: () => B
+  orElse: LazyArg<B>
 ) => <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R, E, B | A>
 ```
 
@@ -5050,7 +5116,7 @@ Extracts the optional value, or executes the given 'orElse' effect.
 
 ```ts
 export declare const someOrElseEffect: <R2, E2, A2>(
-  orElse: () => Effect<R2, E2, A2>
+  orElse: LazyArg<Effect<R2, E2, A2>>
 ) => <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R2 | R, E2 | E, A2 | A>
 ```
 
@@ -5064,7 +5130,7 @@ Extracts the optional value, or fails with the given error 'e'.
 
 ```ts
 export declare const someOrFail: <E2>(
-  orFail: () => E2
+  orFail: LazyArg<E2>
 ) => <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R, E2 | E, A>
 ```
 
@@ -5235,7 +5301,7 @@ timeout, it will produce the specified error.
 
 ```ts
 export declare const timeoutFail: <E1>(
-  evaluate: () => E1,
+  evaluate: LazyArg<E1>,
   duration: Duration.Duration
 ) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E1 | E, A>
 ```
@@ -5251,7 +5317,7 @@ timeout, it will produce the specified failure.
 
 ```ts
 export declare const timeoutFailCause: <E1>(
-  evaluate: () => Cause.Cause<E1>,
+  evaluate: LazyArg<Cause.Cause<E1>>,
   duration: Duration.Duration
 ) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E1 | E, A>
 ```
@@ -5323,7 +5389,7 @@ The moral equivalent of `if (!p) exp`.
 
 ```ts
 export declare const unless: (
-  predicate: () => boolean
+  predicate: LazyArg<boolean>
 ) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Option.Option<A>>
 ```
 
@@ -5579,7 +5645,7 @@ The moral equivalent of `if (p) exp`.
 
 ```ts
 export declare const when: (
-  predicate: () => boolean
+  predicate: LazyArg<boolean>
 ) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Option.Option<A>>
 ```
 
@@ -5594,7 +5660,7 @@ value, otherwise does nothing.
 
 ```ts
 export declare const whenCase: <R, E, A, B>(
-  evaluate: () => A,
+  evaluate: LazyArg<A>,
   pf: (a: A) => Option.Option<Effect<R, E, B>>
 ) => Effect<R, E, Option.Option<B>>
 ```
@@ -6117,21 +6183,6 @@ export declare const traced: (trace: string | undefined) => <R, E, A>(self: Effe
 
 Added in v1.0.0
 
-## withSpan
-
-Annotates the wrapped effect with a span using the current Tracer.
-
-**Signature**
-
-```ts
-export declare const withSpan: (
-  name: string,
-  attributes?: Record<string, string> | undefined
-) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
-```
-
-Added in v1.0.0
-
 # traversing
 
 ## forEachWithIndex
@@ -6167,7 +6218,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const fiberId: () => Effect<never, never, FiberId.FiberId>
+export declare const fiberId: (_: void) => Effect<never, never, FiberId.FiberId>
 ```
 
 Added in v1.0.0
