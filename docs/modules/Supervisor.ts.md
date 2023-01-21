@@ -20,7 +20,7 @@ Added in v1.0.0
   - [fromEffect](#fromeffect)
   - [none](#none)
   - [track](#track)
-- [environment](#environment)
+- [context](#context)
   - [addSupervisor](#addsupervisor)
 - [models](#models)
   - [Supervisor (interface)](#supervisor-interface)
@@ -79,12 +79,14 @@ Creates a new supervisor that tracks children in a set.
 **Signature**
 
 ```ts
-export declare const track: () => Effect.Effect<never, never, Supervisor<Chunk.Chunk<Fiber.RuntimeFiber<any, any>>>>
+export declare const track: (
+  _: void
+) => Effect.Effect<never, never, Supervisor<Chunk.Chunk<Fiber.RuntimeFiber<any, any>>>>
 ```
 
 Added in v1.0.0
 
-# environment
+# context
 
 ## addSupervisor
 
@@ -190,7 +192,7 @@ Unsafely creates a new supervisor that tracks children in a set.
 **Signature**
 
 ```ts
-export declare const unsafeTrack: () => Supervisor<Chunk.Chunk<Fiber.RuntimeFiber<any, any>>>
+export declare const unsafeTrack: (_: void) => Supervisor<Chunk.Chunk<Fiber.RuntimeFiber<any, any>>>
 ```
 
 Added in v1.0.0

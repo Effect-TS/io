@@ -51,7 +51,7 @@ not be used for values whose creation require the acquisition of resources.
 **Signature**
 
 ```ts
-export declare const make: <A>(evaluate: () => A) => Effect.Effect<Scope.Scope, never, ScopedRef<A>>
+export declare const make: <A>(evaluate: LazyArg<A>) => Effect.Effect<Scope.Scope, never, ScopedRef<A>>
 ```
 
 Added in v1.0.0
@@ -82,9 +82,10 @@ to acquire a new value fails.
 **Signature**
 
 ```ts
-export declare const set: <R, E, A>(
-  acquire: Effect.Effect<Scope.Scope | R, E, A>
-) => (self: ScopedRef<A>) => Effect.Effect<R, E, void>
+export declare const set: <A, R, E>(
+  self: ScopedRef<A>,
+  acquire: Effect.Effect<R, E, A>
+) => Effect.Effect<Exclude<R, Scope.Scope>, E, void>
 ```
 
 Added in v1.0.0

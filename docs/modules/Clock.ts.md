@@ -17,7 +17,7 @@ Added in v1.0.0
   - [currentTimeMillis](#currenttimemillis)
   - [make](#make)
   - [sleep](#sleep)
-- [environment](#environment)
+- [context](#context)
   - [Tag](#tag)
 - [models](#models)
   - [CancelToken (type alias)](#canceltoken-type-alias)
@@ -47,7 +47,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const currentTimeMillis: () => Effect.Effect<never, never, number>
+export declare const currentTimeMillis: (_: void) => Effect.Effect<never, never, number>
 ```
 
 Added in v1.0.0
@@ -57,7 +57,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const make: () => Clock
+export declare const make: (_: void) => Clock
 ```
 
 Added in v1.0.0
@@ -72,7 +72,7 @@ export declare const sleep: (duration: Duration.Duration) => Effect.Effect<never
 
 Added in v1.0.0
 
-# environment
+# context
 
 ## Tag
 

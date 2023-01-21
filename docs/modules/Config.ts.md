@@ -13,6 +13,7 @@ Added in v1.0.0
 <h2 class="text-delta">Table of contents</h2>
 
 - [constructors](#constructors)
+  - [arrayOf](#arrayof)
   - [bool](#bool)
   - [chunkOf](#chunkof)
   - [date](#date)
@@ -20,7 +21,6 @@ Added in v1.0.0
   - [fail](#fail)
   - [float](#float)
   - [integer](#integer)
-  - [listOf](#listof)
   - [primitive](#primitive)
   - [secret](#secret)
   - [setOf](#setof)
@@ -39,6 +39,7 @@ Added in v1.0.0
   - [nested](#nested)
   - [optional](#optional)
   - [orElse](#orelse)
+  - [orElseIf](#orelseif)
   - [repeat](#repeat)
   - [validate](#validate)
   - [withDefault](#withdefault)
@@ -52,6 +53,18 @@ Added in v1.0.0
 ---
 
 # constructors
+
+## arrayOf
+
+Constructs a config for an array of values.
+
+**Signature**
+
+```ts
+export declare const arrayOf: <A>(config: Config<A>, name?: string | undefined) => Config<readonly A[]>
+```
+
+Added in v1.0.0
 
 ## bool
 
@@ -133,18 +146,6 @@ Constructs a config for a integer value.
 
 ```ts
 export declare const integer: (name?: string | undefined) => Config<number>
-```
-
-Added in v1.0.0
-
-## listOf
-
-Constructs a config for a sequence of values.
-
-**Signature**
-
-```ts
-export declare const listOf: <A>(config: Config<A>, name?: string | undefined) => Config<Chunk.Chunk<A>>
 ```
 
 Added in v1.0.0
@@ -357,6 +358,23 @@ reading from this config.
 
 ```ts
 export declare const orElse: <A2>(that: LazyArg<Config<A2>>) => <A>(self: Config<A>) => Config<A2 | A>
+```
+
+Added in v1.0.0
+
+## orElseIf
+
+Returns configuration which reads from this configuration, but which falls
+back to the specified configuration if reading from this configuration
+fails with an error satisfying the specified predicate.
+
+**Signature**
+
+```ts
+export declare const orElseIf: <A2>(
+  that: LazyArg<Config<A2>>,
+  condition: Predicate<ConfigError.ConfigError>
+) => <A>(self: Config<A>) => Config<A>
 ```
 
 Added in v1.0.0

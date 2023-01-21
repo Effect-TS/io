@@ -93,7 +93,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const getAndSet: <A>(value: A) => (self: Synchronized<A>) => Effect.Effect<never, never, A>
+export declare const getAndSet: <A>(self: Synchronized<A>, value: A) => Effect.Effect<never, never, A>
 ```
 
 Added in v1.0.0
@@ -103,7 +103,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const getAndUpdate: <A>(f: (a: A) => A) => (self: Synchronized<A>) => Effect.Effect<never, never, A>
+export declare const getAndUpdate: <A>(self: Synchronized<A>, f: (a: A) => A) => Effect.Effect<never, never, A>
 ```
 
 Added in v1.0.0
@@ -114,8 +114,9 @@ Added in v1.0.0
 
 ```ts
 export declare const getAndUpdateEffect: <A, R, E>(
+  self: Synchronized<A>,
   f: (a: A) => Effect.Effect<R, E, A>
-) => (self: Synchronized<A>) => Effect.Effect<R, E, A>
+) => Effect.Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -126,8 +127,9 @@ Added in v1.0.0
 
 ```ts
 export declare const getAndUpdateSome: <A>(
+  self: Synchronized<A>,
   f: (a: A) => Option.Option<A>
-) => (self: Synchronized<A>) => Effect.Effect<never, never, A>
+) => Effect.Effect<never, never, A>
 ```
 
 Added in v1.0.0
@@ -138,8 +140,9 @@ Added in v1.0.0
 
 ```ts
 export declare const getAndUpdateSomeEffect: <A, R, E>(
+  self: Synchronized<A>,
   pf: (a: A) => Option.Option<Effect.Effect<R, E, A>>
-) => (self: Synchronized<A>) => Effect.Effect<R, E, A>
+) => Effect.Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -150,8 +153,9 @@ Added in v1.0.0
 
 ```ts
 export declare const modify: <A, B>(
+  self: Synchronized<A>,
   f: (a: A) => readonly [B, A]
-) => (self: Synchronized<A>) => Effect.Effect<never, never, B>
+) => Effect.Effect<never, never, B>
 ```
 
 Added in v1.0.0
@@ -162,8 +166,9 @@ Added in v1.0.0
 
 ```ts
 export declare const modifyEffect: <A, R, E, B>(
+  self: Synchronized<A>,
   f: (a: A) => Effect.Effect<R, E, readonly [B, A]>
-) => (self: Synchronized<A>) => Effect.Effect<R, E, B>
+) => Effect.Effect<R, E, B>
 ```
 
 Added in v1.0.0
@@ -174,9 +179,10 @@ Added in v1.0.0
 
 ```ts
 export declare const modifySome: <A, B>(
+  self: Synchronized<A>,
   fallback: B,
   f: (a: A) => Option.Option<readonly [B, A]>
-) => (self: Synchronized<A>) => Effect.Effect<never, never, B>
+) => Effect.Effect<never, never, B>
 ```
 
 Added in v1.0.0
@@ -186,10 +192,11 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const modifySomeEffect: <B, A, R, E>(
+export declare const modifySomeEffect: <A, B, R, E>(
+  self: Synchronized<A>,
   fallback: B,
   pf: (a: A) => Option.Option<Effect.Effect<R, E, readonly [B, A]>>
-) => (self: Synchronized<A>) => Effect.Effect<R, E, B>
+) => Effect.Effect<R, E, B>
 ```
 
 Added in v1.0.0
@@ -199,7 +206,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const set: <A>(value: A) => (self: Synchronized<A>) => Effect.Effect<never, never, void>
+export declare const set: <A>(self: Synchronized<A>, value: A) => Effect.Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -209,7 +216,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const setAndGet: <A>(value: A) => (self: Synchronized<A>) => Effect.Effect<never, never, A>
+export declare const setAndGet: <A>(self: Synchronized<A>, value: A) => Effect.Effect<never, never, A>
 ```
 
 Added in v1.0.0
@@ -219,7 +226,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const update: <A>(f: (a: A) => A) => (self: Synchronized<A>) => Effect.Effect<never, never, void>
+export declare const update: <A>(self: Synchronized<A>, f: (a: A) => A) => Effect.Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -230,8 +237,9 @@ Added in v1.0.0
 
 ```ts
 export declare const updateAndGetEffect: <A, R, E>(
+  self: Synchronized<A>,
   f: (a: A) => Effect.Effect<R, E, A>
-) => (self: Synchronized<A>) => Effect.Effect<R, E, A>
+) => Effect.Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -242,8 +250,9 @@ Added in v1.0.0
 
 ```ts
 export declare const updateEffect: <A, R, E>(
+  self: Synchronized<A>,
   f: (a: A) => Effect.Effect<R, E, A>
-) => (self: Synchronized<A>) => Effect.Effect<R, E, void>
+) => Effect.Effect<R, E, void>
 ```
 
 Added in v1.0.0
@@ -254,8 +263,9 @@ Added in v1.0.0
 
 ```ts
 export declare const updateSome: <A>(
+  self: Synchronized<A>,
   f: (a: A) => Option.Option<A>
-) => (self: Synchronized<A>) => Effect.Effect<never, never, void>
+) => Effect.Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -266,8 +276,9 @@ Added in v1.0.0
 
 ```ts
 export declare const updateSomeAndGet: <A>(
+  self: Synchronized<A>,
   f: (a: A) => Option.Option<A>
-) => (self: Synchronized<A>) => Effect.Effect<never, never, A>
+) => Effect.Effect<never, never, A>
 ```
 
 Added in v1.0.0
@@ -278,8 +289,9 @@ Added in v1.0.0
 
 ```ts
 export declare const updateSomeAndGetEffect: <A, R, E>(
+  self: Synchronized<A>,
   pf: (a: A) => Option.Option<Effect.Effect<R, E, A>>
-) => (self: Synchronized<A>) => Effect.Effect<R, E, A>
+) => Effect.Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -290,8 +302,9 @@ Added in v1.0.0
 
 ```ts
 export declare const updateSomeEffect: <A, R, E>(
+  self: Synchronized<A>,
   pf: (a: A) => Option.Option<Effect.Effect<R, E, A>>
-) => (self: Synchronized<A>) => Effect.Effect<R, E, void>
+) => Effect.Effect<R, E, void>
 ```
 
 Added in v1.0.0

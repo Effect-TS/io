@@ -800,6 +800,7 @@ provided to a method.
 
 ```ts
 export interface IllegalArgumentException {
+  readonly _tag: 'IllegalArgumentException'
   readonly [IllegalArgumentExceptionTypeId]: IllegalArgumentExceptionTypeId
   readonly message?: string
 }
@@ -831,6 +832,7 @@ Represents a checked exception which occurs when a `Fiber` is interrupted.
 
 ```ts
 export interface InterruptedException {
+  readonly _tag: 'InterruptedException'
   readonly [InterruptedExceptionTypeId]: InterruptedExceptionTypeId
   readonly message?: string
 }
@@ -847,6 +849,7 @@ Represents a checked exception which occurs when attempting to construct a
 
 ```ts
 export interface InvalidHubCapacityException {
+  readonly _tag: 'InvalidHubCapacityException'
   readonly [InvalidHubCapacityExceptionTypeId]: InvalidHubCapacityExceptionTypeId
   readonly message?: string
 }
@@ -863,6 +866,7 @@ unable to be found.
 
 ```ts
 export interface NoSuchElementException {
+  readonly _tag: 'NoSuchElementException'
   readonly [NoSuchElementExceptionTypeId]: NoSuchElementExceptionTypeId
   readonly message?: string
 }
@@ -901,6 +905,7 @@ Represents a generic checked exception which occurs at runtime.
 
 ```ts
 export interface RuntimeException {
+  readonly _tag: 'RuntimeException'
   readonly [RuntimeExceptionTypeId]: RuntimeExceptionTypeId
   readonly message?: string
 }

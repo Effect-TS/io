@@ -179,7 +179,7 @@ A fiber that never fails or succeeds.
 **Signature**
 
 ```ts
-export declare const never: () => Fiber<never, never>
+export declare const never: (_: void) => Fiber<never, never>
 ```
 
 Added in v1.0.0
@@ -191,7 +191,7 @@ Returns a chunk containing all root fibers.
 **Signature**
 
 ```ts
-export declare const roots: () => Effect.Effect<never, never, Chunk.Chunk<RuntimeFiber<any, any>>>
+export declare const roots: (_: void) => Effect.Effect<never, never, Chunk.Chunk<RuntimeFiber<any, any>>>
 ```
 
 Added in v1.0.0
@@ -215,7 +215,7 @@ A fiber that has already succeeded with unit.
 **Signature**
 
 ```ts
-export declare const unit: () => Fiber<never, void>
+export declare const unit: (_: void) => Fiber<never, void>
 ```
 
 Added in v1.0.0
@@ -227,7 +227,7 @@ Returns a chunk containing all root fibers.
 **Signature**
 
 ```ts
-export declare const unsafeRoots: () => Chunk.Chunk<RuntimeFiber<any, any>>
+export declare const unsafeRoots: (_: void) => Chunk.Chunk<RuntimeFiber<any, any>>
 ```
 
 Added in v1.0.0
@@ -680,13 +680,6 @@ export interface RuntimeFiber<E, A> extends Fiber<E, A>, Fiber.RuntimeVariance<E
   unsafeRemoveObserver(observer: (exit: Exit.Exit<E, A>) => void): void
 
   /**
-   * Deletes the specified fiber ref.
-   *
-   * **NOTE**: This method must be invoked by the fiber itself.
-   */
-  unsafeDeleteFiberRef<X>(fiberRef: FiberRef.FiberRef<X>): void
-
-  /**
    * Retrieves all fiber refs of the fiber.
    *
    * **NOTE**: This method is safe to invoke on any fiber, but if not invoked
@@ -694,6 +687,12 @@ export interface RuntimeFiber<E, A> extends Fiber<E, A>, Fiber.RuntimeVariance<E
    * log annotations and log level) may not be up-to-date.
    */
   unsafeGetFiberRefs(): FiberRefs.FiberRefs
+
+  /**
+   * Unsafely observes the fiber, but returns immediately if it is not
+   * already done.
+   */
+  unsafePoll(): Exit.Exit<E, A> | null
 }
 ```
 

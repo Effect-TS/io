@@ -152,8 +152,9 @@ that if you do not need to memoize the result of the specified effect.
 
 ```ts
 export declare const complete: <E, A>(
+  self: Deferred<E, A>,
   effect: Effect.Effect<never, E, A>
-) => (self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
+) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -167,8 +168,9 @@ deferred has already been completed, the method will produce false.
 
 ```ts
 export declare const completeWith: <E, A>(
+  self: Deferred<E, A>,
   effect: Effect.Effect<never, E, A>
-) => (self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
+) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -181,7 +183,7 @@ all fibers waiting on the value of the `Deferred`.
 **Signature**
 
 ```ts
-export declare const die: (defect: unknown) => <E, A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
+export declare const die: <E, A>(self: Deferred<E, A>, defect: unknown) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -194,9 +196,10 @@ all fibers waiting on the value of the `Deferred`.
 **Signature**
 
 ```ts
-export declare const dieSync: (
-  evaluate: () => unknown
-) => <E, A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
+export declare const dieSync: <E, A>(
+  self: Deferred<E, A>,
+  evaluate: LazyArg<unknown>
+) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -209,9 +212,7 @@ propagated to all fibers waiting on the value of the `Deferred`.
 **Signature**
 
 ```ts
-export declare const done: <E, A>(
-  exit: Exit.Exit<E, A>
-) => (self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
+export declare const done: <E, A>(self: Deferred<E, A>, exit: Exit.Exit<E, A>) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -224,7 +225,7 @@ all fibers waiting on the value of the `Deferred`.
 **Signature**
 
 ```ts
-export declare const fail: <E>(error: E) => <A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
+export declare const fail: <E, A>(self: Deferred<E, A>, error: E) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -237,9 +238,10 @@ all fibers waiting on the value of the `Deferred`.
 **Signature**
 
 ```ts
-export declare const failCause: <E>(
+export declare const failCause: <E, A>(
+  self: Deferred<E, A>,
   cause: Cause.Cause<E>
-) => <A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
+) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -252,9 +254,10 @@ all fibers waiting on the value of the `Deferred`.
 **Signature**
 
 ```ts
-export declare const failCauseSync: <E>(
-  evaluate: () => Cause.Cause<E>
-) => <A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
+export declare const failCauseSync: <E, A>(
+  self: Deferred<E, A>,
+  evaluate: LazyArg<Cause.Cause<E>>
+) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -267,9 +270,10 @@ all fibers waiting on the value of the `Deferred`.
 **Signature**
 
 ```ts
-export declare const failSync: <E>(
-  evaluate: () => E
-) => <A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
+export declare const failSync: <E, A>(
+  self: Deferred<E, A>,
+  evaluate: LazyArg<E>
+) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -296,9 +300,10 @@ waiting on the value of the `Deferred` with the specified `FiberId`.
 **Signature**
 
 ```ts
-export declare const interruptWith: (
+export declare const interruptWith: <E, A>(
+  self: Deferred<E, A>,
   fiberId: FiberId.FiberId
-) => <E, A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
+) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -310,7 +315,7 @@ Completes the `Deferred` with the specified value.
 **Signature**
 
 ```ts
-export declare const succeed: <A>(value: A) => <E>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
+export declare const succeed: <E, A>(self: Deferred<E, A>, value: A) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -322,7 +327,7 @@ Completes the `Deferred` with the specified value.
 **Signature**
 
 ```ts
-export declare const sync: <A>(evaluate: () => A) => <E>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
+export declare const sync: <E, A>(self: Deferred<E, A>, evaluate: LazyArg<A>) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -359,7 +364,7 @@ propagated to all fibers waiting on the value of the `Deferred`.
 **Signature**
 
 ```ts
-export declare const unsafeDone: <E, A>(effect: Effect.Effect<never, E, A>) => (self: Deferred<E, A>) => void
+export declare const unsafeDone: <E, A>(self: Deferred<E, A>, effect: Effect.Effect<never, E, A>) => void
 ```
 
 Added in v1.0.0

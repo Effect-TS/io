@@ -79,8 +79,8 @@ functions.
 
 ```ts
 export declare const match: <A>(
-  onSequential: () => A,
-  onParallel: () => A,
+  onSequential: LazyArg<A>,
+  onParallel: LazyArg<A>,
   onParallelN: (n: number) => A
 ) => (self: ExecutionStrategy) => A
 ```

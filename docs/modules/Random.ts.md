@@ -37,7 +37,7 @@ Returns the next numeric value from the pseudo-random number generator.
 **Signature**
 
 ```ts
-export declare const next: () => Effect.Effect<never, never, number>
+export declare const next: (_: void) => Effect.Effect<never, never, number>
 ```
 
 Added in v1.0.0
@@ -49,7 +49,7 @@ Returns the next boolean value from the pseudo-random number generator.
 **Signature**
 
 ```ts
-export declare const nextBoolean: () => Effect.Effect<never, never, boolean>
+export declare const nextBoolean: (_: void) => Effect.Effect<never, never, boolean>
 ```
 
 Added in v1.0.0
@@ -61,7 +61,7 @@ Returns the next integer value from the pseudo-random number generator.
 **Signature**
 
 ```ts
-export declare const nextInt: () => Effect.Effect<never, never, number>
+export declare const nextInt: (_: void) => Effect.Effect<never, never, number>
 ```
 
 Added in v1.0.0
@@ -94,7 +94,7 @@ Added in v1.0.0
 
 ## randomWith
 
-Retreives the `Random` service from the environment and uses it to run the
+Retreives the `Random` service from the context and uses it to run the
 specified workflow.
 
 **Signature**

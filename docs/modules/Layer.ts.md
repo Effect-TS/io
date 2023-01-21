@@ -29,12 +29,12 @@ Added in v1.0.0
 <h2 class="text-delta">Table of contents</h2>
 
 - [constructors](#constructors)
+  - [context](#context)
   - [die](#die)
   - [dieSync](#diesync)
   - [effect](#effect)
+  - [effectContext](#effectcontext)
   - [effectDiscard](#effectdiscard)
-  - [effectEnvironment](#effectenvironment)
-  - [environment](#environment)
   - [fail](#fail)
   - [failCause](#failcause)
   - [failCauseSync](#failcausesync)
@@ -42,14 +42,14 @@ Added in v1.0.0
   - [function](#function)
   - [scope](#scope)
   - [scoped](#scoped)
+  - [scopedContext](#scopedcontext)
   - [scopedDiscard](#scopeddiscard)
-  - [scopedEnvironment](#scopedenvironment)
   - [service](#service)
   - [succeed](#succeed)
-  - [succeedEnvironment](#succeedenvironment)
+  - [succeedContext](#succeedcontext)
   - [suspend](#suspend)
   - [sync](#sync)
-  - [syncEnvironment](#syncenvironment)
+  - [syncContext](#synccontext)
 - [conversions](#conversions)
   - [launch](#launch)
   - [toRuntime](#toruntime)
@@ -80,8 +80,10 @@ Added in v1.0.0
   - [merge](#merge)
   - [passthrough](#passthrough)
   - [project](#project)
-  - [provideTo](#provideto)
-  - [provideToAndMerge](#providetoandmerge)
+  - [provide](#provide)
+  - [provideMerge](#providemerge)
+  - [use](#use)
+  - [useMerge](#usemerge)
 - [retrying](#retrying)
   - [retry](#retry)
 - [sequencing](#sequencing)
@@ -94,11 +96,25 @@ Added in v1.0.0
   - [LayerTypeId](#layertypeid)
   - [LayerTypeId (type alias)](#layertypeid-type-alias)
 - [zipping](#zipping)
+  - [mergeAll](#mergeall)
   - [zipWithPar](#zipwithpar)
 
 ---
 
 # constructors
+
+## context
+
+Constructs a `Layer` that passes along the specified context as an
+output.
+
+**Signature**
+
+```ts
+export declare const context: <R>() => Layer<R, never, R>
+```
+
+Added in v1.0.0
 
 ## die
 
@@ -119,7 +135,7 @@ Constructs a layer that dies with the specified defect.
 **Signature**
 
 ```ts
-export declare const dieSync: (evaluate: () => unknown) => Layer<never, never, unknown>
+export declare const dieSync: (evaluate: LazyArg<unknown>) => Layer<never, never, unknown>
 ```
 
 Added in v1.0.0
@@ -131,7 +147,23 @@ Constructs a layer from the specified effect.
 **Signature**
 
 ```ts
-export declare const effect: <T>(tag: Context.Tag<T>) => <R, E>(effect: Effect.Effect<R, E, T>) => Layer<R, E, T>
+export declare const effect: <T extends Context.Tag<any>, R, E>(
+  tag: T,
+  effect: Effect.Effect<R, E, Context.Tag.Service<T>>
+) => Layer<R, E, Context.Tag.Service<T>>
+```
+
+Added in v1.0.0
+
+## effectContext
+
+Constructs a layer from the specified effect, which must return one or more
+services.
+
+**Signature**
+
+```ts
+export declare const effectContext: <R, E, A>(effect: Effect.Effect<R, E, Context.Context<A>>) => Layer<R, E, A>
 ```
 
 Added in v1.0.0
@@ -144,32 +176,6 @@ Constructs a layer from the specified effect discarding it's output.
 
 ```ts
 export declare const effectDiscard: <R, E, _>(effect: Effect.Effect<R, E, _>) => Layer<R, E, never>
-```
-
-Added in v1.0.0
-
-## effectEnvironment
-
-Constructs a layer from the specified effect, which must return one or more
-services.
-
-**Signature**
-
-```ts
-export declare const effectEnvironment: <R, E, A>(effect: Effect.Effect<R, E, Context.Context<A>>) => Layer<R, E, A>
-```
-
-Added in v1.0.0
-
-## environment
-
-Constructs a `Layer` that passes along the specified environment as an
-output.
-
-**Signature**
-
-```ts
-export declare const environment: <R>() => Layer<R, never, R>
 ```
 
 Added in v1.0.0
@@ -205,7 +211,7 @@ Constructs a layer that fails with the specified cause.
 **Signature**
 
 ```ts
-export declare const failCauseSync: <E>(evaluate: () => Cause.Cause<E>) => Layer<never, E, unknown>
+export declare const failCauseSync: <E>(evaluate: LazyArg<Cause.Cause<E>>) => Layer<never, E, unknown>
 ```
 
 Added in v1.0.0
@@ -217,19 +223,19 @@ Constructs a layer that fails with the specified error.
 **Signature**
 
 ```ts
-export declare const failSync: <E>(evaluate: () => E) => Layer<never, E, unknown>
+export declare const failSync: <E>(evaluate: LazyArg<E>) => Layer<never, E, unknown>
 ```
 
 Added in v1.0.0
 
 ## function
 
-Constructs a layer from the environment using the specified function.
+Constructs a layer from the context using the specified function.
 
 **Signature**
 
 ```ts
-export declare const function: <A, B>(tagA: Context.Tag<A>, tagB: Context.Tag<B>) => (f: (a: A) => B) => Layer<A, never, B>
+export declare const function: <A extends Context.Tag<any>, B extends Context.Tag<any>>(tagA: A, tagB: B, f: (a: Context.Tag.Service<A>) => Context.Tag.Service<B>) => Layer<Context.Tag.Service<A>, never, Context.Tag.Service<B>>
 ```
 
 Added in v1.0.0
@@ -244,7 +250,7 @@ workflow.
 **Signature**
 
 ```ts
-export declare const scope: () => Layer<never, never, Scope.CloseableScope>
+export declare const scope: (_: void) => Layer<never, never, Scope.CloseableScope>
 ```
 
 Added in v1.0.0
@@ -256,9 +262,25 @@ Constructs a layer from the specified scoped effect.
 **Signature**
 
 ```ts
-export declare const scoped: <T>(
-  tag: Context.Tag<T>
-) => <R, E, T1 extends T>(effect: Effect.Effect<R, E, T1>) => Layer<Exclude<R, Scope.Scope>, E, T>
+export declare const scoped: <T extends Context.Tag<any>, R, E>(
+  tag: T,
+  effect: Effect.Effect<R, E, Context.Tag.Service<T>>
+) => Layer<Exclude<R, Scope.Scope>, E, Context.Tag.Service<T>>
+```
+
+Added in v1.0.0
+
+## scopedContext
+
+Constructs a layer from the specified scoped effect, which must return one
+or more services.
+
+**Signature**
+
+```ts
+export declare const scopedContext: <R, E, A>(
+  effect: Effect.Effect<R, E, Context.Context<A>>
+) => Layer<Exclude<R, Scope.Scope>, E, A>
 ```
 
 Added in v1.0.0
@@ -277,25 +299,10 @@ export declare const scopedDiscard: <R, E, T>(
 
 Added in v1.0.0
 
-## scopedEnvironment
-
-Constructs a layer from the specified scoped effect, which must return one
-or more services.
-
-**Signature**
-
-```ts
-export declare const scopedEnvironment: <R, E, A>(
-  effect: Effect.Effect<R, E, Context.Context<A>>
-) => Layer<Exclude<R, Scope.Scope>, E, A>
-```
-
-Added in v1.0.0
-
 ## service
 
 Constructs a layer that accesses and returns the specified service from the
-environment.
+context.
 
 **Signature**
 
@@ -312,12 +319,15 @@ Constructs a layer from the specified value.
 **Signature**
 
 ```ts
-export declare const succeed: <T>(tag: Context.Tag<T>) => (resource: T) => Layer<never, never, T>
+export declare const succeed: <T extends Context.Tag<any>>(
+  tag: T,
+  resource: Context.Tag.Service<T>
+) => Layer<never, never, Context.Tag.Service<T>>
 ```
 
 Added in v1.0.0
 
-## succeedEnvironment
+## succeedContext
 
 Constructs a layer from the specified value, which must return one or more
 services.
@@ -325,7 +335,7 @@ services.
 **Signature**
 
 ```ts
-export declare const succeedEnvironment: <A>(environment: Context.Context<A>) => Layer<never, never, A>
+export declare const succeedContext: <A>(context: Context.Context<A>) => Layer<never, never, A>
 ```
 
 Added in v1.0.0
@@ -338,7 +348,7 @@ creating layers that refer to themselves.
 **Signature**
 
 ```ts
-export declare const suspend: <RIn, E, ROut>(evaluate: () => Layer<RIn, E, ROut>) => Layer<RIn, E, ROut>
+export declare const suspend: <RIn, E, ROut>(evaluate: LazyArg<Layer<RIn, E, ROut>>) => Layer<RIn, E, ROut>
 ```
 
 Added in v1.0.0
@@ -350,12 +360,15 @@ Lazily constructs a layer from the specified value.
 **Signature**
 
 ```ts
-export declare const sync: <T>(tag: Context.Tag<T>) => (evaluate: () => T) => Layer<never, never, T>
+export declare const sync: <T extends Context.Tag<any>>(
+  tag: T,
+  evaluate: LazyArg<Context.Tag.Service<T>>
+) => Layer<never, never, Context.Tag.Service<T>>
 ```
 
 Added in v1.0.0
 
-## syncEnvironment
+## syncContext
 
 Lazily constructs a layer from the specified value, which must return one or more
 services.
@@ -363,7 +376,7 @@ services.
 **Signature**
 
 ```ts
-export declare const syncEnvironment: <A>(evaluate: () => Context.Context<A>) => Layer<never, never, A>
+export declare const syncContext: <A>(evaluate: LazyArg<Context.Context<A>>) => Layer<never, never, A>
 ```
 
 Added in v1.0.0
@@ -484,7 +497,7 @@ executes the specified layer.
 
 ```ts
 export declare const orElse: <R1, E1, A1>(
-  that: () => Layer<R1, E1, A1>
+  that: LazyArg<Layer<R1, E1, A1>>
 ) => <R, E, A>(self: Layer<R, E, A>) => Layer<R1 | R, E1 | E, A & A1>
 ```
 
@@ -686,15 +699,16 @@ specified function.
 **Signature**
 
 ```ts
-export declare const project: <A, B>(
-  tagA: Context.Tag<A>,
-  tagB: Context.Tag<B>
-) => (f: (a: A) => B) => <RIn, E, ROut>(self: Layer<RIn, E, A | ROut>) => Layer<RIn, E, B>
+export declare const project: <A extends Context.Tag<any>, B extends Context.Tag<any>>(
+  tagA: A,
+  tagB: B,
+  f: (a: Context.Tag.Service<A>) => Context.Tag.Service<B>
+) => <RIn, E>(self: Layer<RIn, E, Context.Tag.Service<A>>) => Layer<RIn, E, Context.Tag.Service<B>>
 ```
 
 Added in v1.0.0
 
-## provideTo
+## provide
 
 Feeds the output services of this builder into the input of the specified
 builder, resulting in a new builder with the inputs of this builder as
@@ -703,14 +717,14 @@ well as any leftover inputs, and the outputs of the specified builder.
 **Signature**
 
 ```ts
-export declare const provideTo: <RIn2, E2, ROut2>(
+export declare const provide: <RIn2, E2, ROut2>(
   that: Layer<RIn2, E2, ROut2>
 ) => <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn | Exclude<RIn2, ROut>, E2 | E, ROut2>
 ```
 
 Added in v1.0.0
 
-## provideToAndMerge
+## provideMerge
 
 Feeds the output services of this layer into the input of the specified
 layer, resulting in a new layer with the inputs of this layer, and the
@@ -719,9 +733,41 @@ outputs of both layers.
 **Signature**
 
 ```ts
-export declare const provideToAndMerge: <RIn2, E2, ROut2>(
+export declare const provideMerge: <RIn2, E2, ROut2>(
   that: Layer<RIn2, E2, ROut2>
 ) => <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn | Exclude<RIn2, ROut>, E2 | E, ROut2 | ROut>
+```
+
+Added in v1.0.0
+
+## use
+
+Feeds the output services of this builder into the input of the specified
+builder, resulting in a new builder with the inputs of this builder as
+well as any leftover inputs, and the outputs of the specified builder.
+
+**Signature**
+
+```ts
+export declare const use: <RIn, E, ROut>(
+  self: Layer<RIn, E, ROut>
+) => <RIn2, E2, ROut2>(that: Layer<RIn2, E2, ROut2>) => Layer<RIn | Exclude<RIn2, ROut>, E | E2, ROut2>
+```
+
+Added in v1.0.0
+
+## useMerge
+
+Feeds the output services of this layer into the input of the specified
+layer, resulting in a new layer with the inputs of this layer, and the
+outputs of both layers.
+
+**Signature**
+
+```ts
+export declare const useMerge: <RIn, E, ROut>(
+  self: Layer<RIn, E, ROut>
+) => <RIn2, E2, ROut2>(that: Layer<RIn2, E2, ROut2>) => Layer<RIn | Exclude<RIn2, ROut>, E | E2, ROut | ROut2>
 ```
 
 Added in v1.0.0
@@ -760,7 +806,7 @@ Added in v1.0.0
 
 ## flatten
 
-Flattens layers nested in the environment of an effect.
+Flattens layers nested in the context of an effect.
 
 **Signature**
 
@@ -837,6 +883,24 @@ export type LayerTypeId = typeof LayerTypeId
 Added in v1.0.0
 
 # zipping
+
+## mergeAll
+
+Merges all the layers together in parallel.
+
+**Signature**
+
+```ts
+export declare const mergeAll: <Layers extends [Layer<any, any, any>, ...Layer<any, any, any>[]]>(
+  ...layers: Layers
+) => Layer<
+  { [k in keyof Layers]: Layer.Context<Layers[k]> }[number],
+  { [k in keyof Layers]: Layer.Error<Layers[k]> }[number],
+  { [k in keyof Layers]: Layer.Success<Layers[k]> }[number]
+>
+```
+
+Added in v1.0.0
 
 ## zipWithPar
 
