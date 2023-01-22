@@ -1,6 +1,6 @@
 import type * as Cause from "@effect/io/Cause"
 import type { Trace } from "@effect/io/Debug"
-import { dualWithTrace, methodWithTrace } from "@effect/io/Debug"
+import * as Debug from "@effect/io/Debug"
 import type * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
 import type * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
@@ -223,7 +223,7 @@ export const isEffect = (u: unknown): u is Effect.Effect<unknown, unknown, unkno
   typeof u === "object" && u != null && EffectTypeId in u
 
 /* @internal */
-export const acquireUseRelease = dualWithTrace<
+export const acquireUseRelease = Debug.dualWithTrace<
   <R, E, A, R2, E2, A2, R3, X>(
     acquire: Effect.Effect<R, E, A>,
     use: (a: A) => Effect.Effect<R2, E2, A2>,
@@ -266,18 +266,18 @@ export const acquireUseRelease = dualWithTrace<
     ).traced(trace))
 
 /* @internal */
-export const as = dualWithTrace<
+export const as = Debug.dualWithTrace<
   <R, E, A, B>(self: Effect.Effect<R, E, A>, value: B) => Effect.Effect<R, E, B>,
   <B>(value: B) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, B>
 >(2, (trace) => (self, value) => pipe(self, flatMap(() => succeed(value))).traced(trace))
 
 /* @internal */
-export const asUnit = methodWithTrace((trace) =>
+export const asUnit = Debug.methodWithTrace((trace) =>
   <R, E, A>(self: Effect.Effect<R, E, A>) => pipe(self, as<void>(void 0)).traced(trace)
 )
 
 /* @internal */
-export const async = methodWithTrace((trace) =>
+export const async = Debug.methodWithTrace((trace) =>
   <R, E, A>(
     register: (callback: (_: Effect.Effect<R, E, A>) => void) => void,
     blockingOn: FiberId.FiberId = FiberId.none
@@ -292,7 +292,7 @@ export const async = methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const asyncInterruptEither = methodWithTrace((trace, restore) =>
+export const asyncInterruptEither = Debug.methodWithTrace((trace, restore) =>
   <R, E, A>(
     register: (
       callback: (effect: Effect.Effect<R, E, A>) => void
@@ -319,7 +319,7 @@ export const asyncInterruptEither = methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const asyncInterrupt = methodWithTrace((trace, restore) =>
+export const asyncInterrupt = Debug.methodWithTrace((trace, restore) =>
   <R, E, A>(
     register: (callback: (effect: Effect.Effect<R, E, A>) => void) => Effect.Effect<R, never, void>,
     blockingOn: FiberId.FiberId = FiberId.none
@@ -339,7 +339,7 @@ export const asyncInterrupt = methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const catchAllCause = dualWithTrace<
+export const catchAllCause = Debug.dualWithTrace<
   <R, A, E, R2, E2, A2>(
     self: Effect.Effect<R, E, A>,
     f: (cause: Cause.Cause<E>) => Effect.Effect<R2, E2, A2>
@@ -358,7 +358,7 @@ export const catchAllCause = dualWithTrace<
   })
 
 /* @internal */
-export const catchAll = dualWithTrace<
+export const catchAll = Debug.dualWithTrace<
   <R, A, E, R2, E2, A2>(
     self: Effect.Effect<R, E, A>,
     f: (e: E) => Effect.Effect<R2, E2, A2>
@@ -377,7 +377,7 @@ export const unified = <Args extends ReadonlyArray<any>, Ret extends Effect.Effe
 ) => (...args: Args): Effect.Effect.Unify<Ret> => f(...args)
 
 /* @internal */
-export const catchSome = dualWithTrace<
+export const catchSome = Debug.dualWithTrace<
   <R, A, E, R2, E2, A2>(
     self: Effect.Effect<R, E, A>,
     pf: (e: E) => Option.Option<Effect.Effect<R2, E2, A2>>
@@ -406,7 +406,7 @@ export const catchSome = dualWithTrace<
     ).traced(trace))
 
 /* @internal */
-export const checkInterruptible = methodWithTrace((trace, restore) =>
+export const checkInterruptible = Debug.methodWithTrace((trace, restore) =>
   <R, E, A>(f: (isInterruptible: boolean) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
     withFiberRuntime<R, E, A>(
       (_, status) => restore(f)(_runtimeFlags.interruption(status.runtimeFlags))
@@ -414,23 +414,23 @@ export const checkInterruptible = methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const die = methodWithTrace((trace) =>
+export const die = Debug.methodWithTrace((trace) =>
   (defect: unknown): Effect.Effect<never, never, never> => failCause(internalCause.die(defect)).traced(trace)
 )
 
 /* @internal */
-export const dieSync = methodWithTrace((trace, restore) =>
+export const dieSync = Debug.methodWithTrace((trace, restore) =>
   (evaluate: LazyArg<unknown>): Effect.Effect<never, never, never> =>
     failCauseSync(() => internalCause.die(restore(evaluate)())).traced(trace)
 )
 
 /* @internal */
-export const done = methodWithTrace((trace) =>
+export const done = Debug.methodWithTrace((trace) =>
   <E, A>(exit: Exit.Exit<E, A>): Effect.Effect<never, E, A> => suspendSucceed(() => exit).traced(trace)
 )
 
 /* @internal */
-export const either = methodWithTrace((trace) =>
+export const either = Debug.methodWithTrace((trace) =>
   <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Either.Either<E, A>> =>
     pipe(
       self,
@@ -442,7 +442,7 @@ export const either = methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const context = methodWithTrace((trace) =>
+export const context = Debug.methodWithTrace((trace) =>
   <R>(): Effect.Effect<R, never, Context.Context<R>> =>
     suspendSucceed(
       () => fiberRefGet(currentContext) as Effect.Effect<never, never, Context.Context<R>>
@@ -450,14 +450,14 @@ export const context = methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const contextWithEffect = methodWithTrace((trace, restore) =>
+export const contextWithEffect = Debug.methodWithTrace((trace, restore) =>
   <R, R0, E, A>(
     f: (context: Context.Context<R0>) => Effect.Effect<R, E, A>
   ): Effect.Effect<R | R0, E, A> => pipe(context<R0>(), flatMap(restore(f))).traced(trace)
 )
 
 /* @internal */
-export const exit = methodWithTrace((trace) =>
+export const exit = Debug.methodWithTrace((trace) =>
   <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Exit.Exit<E, A>> =>
     pipe(
       self,
@@ -466,18 +466,18 @@ export const exit = methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const fail = methodWithTrace((trace) =>
+export const fail = Debug.methodWithTrace((trace) =>
   <E>(error: E): Effect.Effect<never, E, never> => failCause(internalCause.fail(error)).traced(trace)
 )
 
 /* @internal */
-export const failSync = methodWithTrace((trace, restore) =>
+export const failSync = Debug.methodWithTrace((trace, restore) =>
   <E>(evaluate: LazyArg<E>): Effect.Effect<never, E, never> =>
     failCauseSync(() => internalCause.fail(restore(evaluate)())).traced(trace)
 )
 
 /* @internal */
-export const failCause = methodWithTrace((trace) =>
+export const failCause = Debug.methodWithTrace((trace) =>
   <E>(cause: Cause.Cause<E>): Effect.Effect<never, E, never> => {
     const effect = Object.create(proto)
     effect._tag = OpCodes.OP_FAILURE
@@ -488,7 +488,7 @@ export const failCause = methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const failCauseSync = methodWithTrace((trace, restore) =>
+export const failCauseSync = Debug.methodWithTrace((trace, restore) =>
   <E>(evaluate: LazyArg<Cause.Cause<E>>): Effect.Effect<never, E, never> =>
     pipe(
       sync(restore(evaluate)),
@@ -497,13 +497,13 @@ export const failCauseSync = methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const fiberId = methodWithTrace((trace) =>
+export const fiberId = Debug.methodWithTrace((trace) =>
   (): Effect.Effect<never, never, FiberId.FiberId> =>
     withFiberRuntime<never, never, FiberId.FiberId>((state) => succeed(state.id())).traced(trace)
 )
 
 /* @internal */
-export const fiberIdWith = methodWithTrace((trace, restore) =>
+export const fiberIdWith = Debug.methodWithTrace((trace, restore) =>
   <R, E, A>(f: (descriptor: FiberId.Runtime) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
     withFiberRuntime<R, E, A>(
       (state) => restore(f)(state.id())
@@ -511,7 +511,7 @@ export const fiberIdWith = methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const flatMap = dualWithTrace<
+export const flatMap = Debug.dualWithTrace<
   <R, E, A, R1, E1, B>(
     self: Effect.Effect<R, E, A>,
     f: (a: A) => Effect.Effect<R1, E1, B>
@@ -530,18 +530,18 @@ export const flatMap = dualWithTrace<
   })
 
 /* @internal */
-export const flatten = methodWithTrace((trace) =>
+export const flatten = Debug.methodWithTrace((trace) =>
   <R, E, R1, E1, A>(self: Effect.Effect<R, E, Effect.Effect<R1, E1, A>>) => pipe(self, flatMap(identity)).traced(trace)
 )
 
 /* @internal */
-export const flip = methodWithTrace((trace) =>
+export const flip = Debug.methodWithTrace((trace) =>
   <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, A, E> =>
     pipe(self, matchEffect(succeed, fail)).traced(trace)
 )
 
 /* @internal */
-export const matchCause = dualWithTrace<
+export const matchCause = Debug.dualWithTrace<
   <R, E, A2, A, A3>(
     self: Effect.Effect<R, E, A>,
     onFailure: (cause: Cause.Cause<E>) => A2,
@@ -562,7 +562,7 @@ export const matchCause = dualWithTrace<
     ).traced(trace))
 
 /* @internal */
-export const matchCauseEffect = dualWithTrace<
+export const matchCauseEffect = Debug.dualWithTrace<
   <R, E, A, R2, E2, A2, R3, E3, A3>(
     self: Effect.Effect<R, E, A>,
     onFailure: (cause: Cause.Cause<E>) => Effect.Effect<R2, E2, A2>,
@@ -584,7 +584,7 @@ export const matchCauseEffect = dualWithTrace<
   })
 
 /* @internal */
-export const matchEffect = dualWithTrace<
+export const matchEffect = Debug.dualWithTrace<
   <R, E, A, R2, E2, A2, R3, E3, A3>(
     self: Effect.Effect<R, E, A>,
     onFailure: (e: E) => Effect.Effect<R2, E2, A2>,
@@ -609,7 +609,7 @@ export const matchEffect = dualWithTrace<
     }, onSuccess).traced(trace))
 
 /* @internal */
-export const forEach = dualWithTrace<
+export const forEach = Debug.dualWithTrace<
   <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, E, Chunk.Chunk<B>>,
   <A, R, E, B>(f: (a: A) => Effect.Effect<R, E, B>) => (self: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<B>>
 >(2, (trace, restore) =>
@@ -631,7 +631,7 @@ export const forEach = dualWithTrace<
     }).traced(trace))
 
 /* @internal */
-export const forEachDiscard = dualWithTrace<
+export const forEachDiscard = Debug.dualWithTrace<
   <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, E, void>,
   <A, R, E, B>(f: (a: A) => Effect.Effect<R, E, B>) => (self: Iterable<A>) => Effect.Effect<R, E, void>
 >(2, (trace, restore) =>
@@ -650,7 +650,7 @@ export const forEachDiscard = dualWithTrace<
     }).traced(trace))
 
 /* @internal */
-export const fromOption = methodWithTrace((trace) =>
+export const fromOption = Debug.methodWithTrace((trace) =>
   <A>(option: Option.Option<A>): Effect.Effect<never, Option.Option<never>, A> => {
     switch (option._tag) {
       case "None": {
@@ -664,7 +664,7 @@ export const fromOption = methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const fromEither = methodWithTrace((trace) =>
+export const fromEither = Debug.methodWithTrace((trace) =>
   <E, A>(either: Either.Either<E, A>): Effect.Effect<never, E, A> => {
     switch (either._tag) {
       case "Left": {
@@ -678,7 +678,7 @@ export const fromEither = methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const ifEffect = dualWithTrace<
+export const ifEffect = Debug.dualWithTrace<
   <R, E, R1, R2, E1, E2, A, A1>(
     self: Effect.Effect<R, E, boolean>,
     onTrue: Effect.Effect<R1, E1, A>,
@@ -696,18 +696,18 @@ export const ifEffect = dualWithTrace<
     ).traced(trace))
 
 /* @internal */
-export const interrupt = methodWithTrace((trace) =>
+export const interrupt = Debug.methodWithTrace((trace) =>
   (): Effect.Effect<never, never, never> => pipe(fiberId(), flatMap((fiberId) => interruptWith(fiberId))).traced(trace)
 )
 
 /* @internal */
-export const interruptWith = methodWithTrace((trace) =>
+export const interruptWith = Debug.methodWithTrace((trace) =>
   (fiberId: FiberId.FiberId): Effect.Effect<never, never, never> =>
     failCause(internalCause.interrupt(fiberId)).traced(trace)
 )
 
 /* @internal */
-export const interruptible = methodWithTrace((trace) =>
+export const interruptible = Debug.methodWithTrace((trace) =>
   <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
     const effect = Object.create(proto)
     effect._tag = OpCodes.OP_UPDATE_RUNTIME_FLAGS
@@ -719,7 +719,7 @@ export const interruptible = methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const interruptibleMask = methodWithTrace((trace, restore) =>
+export const interruptibleMask = Debug.methodWithTrace((trace, restore) =>
   <R, E, A>(
     f: (restore: <RX, EX, AX>(effect: Effect.Effect<RX, EX, AX>) => Effect.Effect<RX, EX, AX>) => Effect.Effect<R, E, A>
   ): Effect.Effect<R, E, A> => {
@@ -736,7 +736,7 @@ export const interruptibleMask = methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const intoDeferred = dualWithTrace<
+export const intoDeferred = Debug.dualWithTrace<
   <R, E, A>(self: Effect.Effect<R, E, A>, deferred: Deferred.Deferred<E, A>) => Effect.Effect<R, never, boolean>,
   <E, A>(deferred: Deferred.Deferred<E, A>) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, boolean>
 >(2, (trace) =>
@@ -750,13 +750,13 @@ export const intoDeferred = dualWithTrace<
     ).traced(trace))
 
 /* @internal */
-export const map = dualWithTrace<
+export const map = Debug.dualWithTrace<
   <R, E, A, B>(self: Effect.Effect<R, E, A>, f: (a: A) => B) => Effect.Effect<R, E, B>,
   <A, B>(f: (a: A) => B) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, B>
 >(2, (trace, restore) => (self, f) => pipe(self, flatMap((a) => sync(() => restore(f)(a)))).traced(trace))
 
 /* @internal */
-export const mapError = dualWithTrace<
+export const mapError = Debug.dualWithTrace<
   <R, A, E, E2>(self: Effect.Effect<R, E, A>, f: (e: E) => E2) => Effect.Effect<R, E2, A>,
   <E, E2>(f: (e: E) => E2) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E2, A>
 >(2, (trace, restore) =>
@@ -774,7 +774,7 @@ export const mapError = dualWithTrace<
     }, succeed).traced(trace))
 
 /* @internal */
-export const never = methodWithTrace((trace) =>
+export const never = Debug.methodWithTrace((trace) =>
   (): Effect.Effect<never, never, never> =>
     asyncInterruptEither<never, never, never>(() => {
       const interval = setInterval(() => {
@@ -785,7 +785,7 @@ export const never = methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const onError = dualWithTrace<
+export const onError = Debug.dualWithTrace<
   <R, A, E, R2, X>(
     self: Effect.Effect<R, E, A>,
     cleanup: (cause: Cause.Cause<E>) => Effect.Effect<R2, never, X>
@@ -805,7 +805,7 @@ export const onError = dualWithTrace<
     ).traced(trace))
 
 /* @internal */
-export const onExit = dualWithTrace<
+export const onExit = Debug.dualWithTrace<
   <R, E, A, R2, X>(
     self: Effect.Effect<R, E, A>,
     cleanup: (exit: Exit.Exit<E, A>) => Effect.Effect<R2, never, X>
@@ -835,7 +835,7 @@ export const onExit = dualWithTrace<
 )
 
 /* @internal */
-export const onInterrupt = dualWithTrace<
+export const onInterrupt = Debug.dualWithTrace<
   <R, E, A, R2, X>(
     self: Effect.Effect<R, E, A>,
     cleanup: (interruptors: HashSet.HashSet<FiberId.FiberId>) => Effect.Effect<R2, never, X>
@@ -857,7 +857,7 @@ export const onInterrupt = dualWithTrace<
     ).traced(trace))
 
 /* @internal */
-export const orElse = dualWithTrace<
+export const orElse = Debug.dualWithTrace<
   <R, E, A, R2, E2, A2>(
     self: Effect.Effect<R, E, A>,
     that: LazyArg<Effect.Effect<R2, E2, A2>>
@@ -868,12 +868,12 @@ export const orElse = dualWithTrace<
 >(2, (trace, restore) => (self, that) => pipe(self, tryOrElse(restore(that), succeed)).traced(trace))
 
 /* @internal */
-export const orDie = methodWithTrace((trace) =>
+export const orDie = Debug.methodWithTrace((trace) =>
   <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, A> => pipe(self, orDieWith(identity)).traced(trace)
 )
 
 /* @internal */
-export const orDieWith = dualWithTrace<
+export const orDieWith = Debug.dualWithTrace<
   <R, E, A>(self: Effect.Effect<R, E, A>, f: (error: E) => unknown) => Effect.Effect<R, never, A>,
   <E>(f: (error: E) => unknown) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, A>
 >(2, (trace, restore) => (self, f) => pipe(self, matchEffect((e) => die(restore(f)(e)), succeed)).traced(trace))
@@ -899,7 +899,7 @@ export const partitionMap = <A, A1, A2>(
   )
 
 /* @internal */
-export const provideContext = dualWithTrace<
+export const provideContext = Debug.dualWithTrace<
   <R, E, A>(self: Effect.Effect<R, E, A>, context: Context.Context<R>) => Effect.Effect<never, E, A>,
   <R>(context: Context.Context<R>) => <E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<never, E, A>
 >(
@@ -910,7 +910,7 @@ export const provideContext = dualWithTrace<
 )
 
 /* @internal */
-export const contramapContext = dualWithTrace<
+export const contramapContext = Debug.dualWithTrace<
   <R0, R, E, A>(
     self: Effect.Effect<R, E, A>,
     f: (context: Context.Context<R0>) => Context.Context<R>
@@ -929,19 +929,19 @@ export const contramapContext = dualWithTrace<
 )
 
 /* @internal */
-export const runtimeFlags = methodWithTrace((trace) =>
+export const runtimeFlags = Debug.methodWithTrace((trace) =>
   (): Effect.Effect<never, never, RuntimeFlags.RuntimeFlags> =>
     withFiberRuntime<never, never, RuntimeFlags.RuntimeFlags>((_, status) => succeed(status.runtimeFlags))
       .traced(trace)
 )
 
 /* @internal */
-export const service = methodWithTrace((trace) =>
+export const service = Debug.methodWithTrace((trace) =>
   <T>(tag: Context.Tag<T>): Effect.Effect<T, never, T> => serviceWithEffect(tag, succeed).traced(trace)
 )
 
 /* @internal */
-export const serviceWith = methodWithTrace((trace, restore) =>
+export const serviceWith = Debug.methodWithTrace((trace, restore) =>
   <T extends Context.Tag<any>, A>(
     tag: T,
     f: (a: Context.Tag.Service<T>) => A
@@ -950,7 +950,7 @@ export const serviceWith = methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const serviceWithEffect = methodWithTrace((trace, restore) =>
+export const serviceWithEffect = Debug.methodWithTrace((trace, restore) =>
   <T extends Context.Tag<any>, R, E, A>(
     tag: T,
     f: (a: Context.Tag.Service<T>) => Effect.Effect<R, E, A>
@@ -964,7 +964,7 @@ export const serviceWithEffect = methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const succeed = methodWithTrace((trace) =>
+export const succeed = Debug.methodWithTrace((trace) =>
   <A>(value: A): Effect.Effect<never, never, A> => {
     const effect = Object.create(proto)
     effect._tag = OpCodes.OP_SUCCESS
@@ -975,7 +975,7 @@ export const succeed = methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const suspendSucceed = methodWithTrace((trace, restore) =>
+export const suspendSucceed = Debug.methodWithTrace((trace, restore) =>
   <R, E, A>(
     effect: LazyArg<Effect.Effect<R, E, A>>
   ): Effect.Effect<R, E, A> =>
@@ -986,7 +986,7 @@ export const suspendSucceed = methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const sync = methodWithTrace((trace, restore) =>
+export const sync = Debug.methodWithTrace((trace, restore) =>
   <A>(evaluate: LazyArg<A>): Effect.Effect<never, never, A> => {
     const effect = Object.create(proto)
     effect._tag = OpCodes.OP_SYNC
@@ -997,12 +997,12 @@ export const sync = methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const tags = methodWithTrace((trace) =>
+export const tags = Debug.methodWithTrace((trace) =>
   (): Effect.Effect<never, never, HashSet.HashSet<MetricLabel.MetricLabel>> => fiberRefGet(currentTags).traced(trace)
 )
 
 /* @internal */
-export const tap = dualWithTrace<
+export const tap = Debug.dualWithTrace<
   <R, E, A, R2, E2, _>(
     self: Effect.Effect<R, E, A>,
     f: (a: A) => Effect.Effect<R2, E2, _>
@@ -1013,7 +1013,7 @@ export const tap = dualWithTrace<
 >(2, (trace, restore) => (self, f) => pipe(self, flatMap((a) => pipe(restore(f)(a), as(a)))).traced(trace))
 
 /* @internal */
-export const transplant = methodWithTrace((trace, restore) =>
+export const transplant = Debug.methodWithTrace((trace, restore) =>
   <R, E, A>(
     f: (grafter: <R2, E2, A2>(effect: Effect.Effect<R2, E2, A2>) => Effect.Effect<R2, E2, A2>) => Effect.Effect<R, E, A>
   ): Effect.Effect<R, E, A> =>
@@ -1025,7 +1025,7 @@ export const transplant = methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const tryOrElse = dualWithTrace<
+export const tryOrElse = Debug.dualWithTrace<
   <R, E, A, R2, E2, A2, R3, E3, A3>(
     self: Effect.Effect<R, E, A>,
     that: LazyArg<Effect.Effect<R2, E2, A2>>,
@@ -1054,7 +1054,7 @@ export const tryOrElse = dualWithTrace<
     ).traced(trace))
 
 /* @internal */
-export const uninterruptible = methodWithTrace((trace) =>
+export const uninterruptible = Debug.methodWithTrace((trace) =>
   <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
     const effect = Object.create(proto)
     effect._tag = OpCodes.OP_UPDATE_RUNTIME_FLAGS
@@ -1066,7 +1066,7 @@ export const uninterruptible = methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const uninterruptibleMask = methodWithTrace((trace, restore) =>
+export const uninterruptibleMask = Debug.methodWithTrace((trace, restore) =>
   <R, E, A>(
     f: (restore: <RX, EX, AX>(effect: Effect.Effect<RX, EX, AX>) => Effect.Effect<RX, EX, AX>) => Effect.Effect<R, E, A>
   ): Effect.Effect<R, E, A> => {
@@ -1084,12 +1084,12 @@ export const uninterruptibleMask = methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const unit = methodWithTrace((trace) =>
+export const unit = Debug.methodWithTrace((trace) =>
   (_: void): Effect.Effect<never, never, void> => succeed(undefined).traced(trace)
 )
 
 /* @internal */
-export const updateRuntimeFlags = methodWithTrace((trace) =>
+export const updateRuntimeFlags = Debug.methodWithTrace((trace) =>
   (patch: RuntimeFlagsPatch.RuntimeFlagsPatch): Effect.Effect<never, never, void> => {
     const effect = Object.create(proto)
     effect._tag = OpCodes.OP_UPDATE_RUNTIME_FLAGS
@@ -1101,7 +1101,7 @@ export const updateRuntimeFlags = methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const whenEffect = dualWithTrace<
+export const whenEffect = Debug.dualWithTrace<
   <R, E, A, R2, E2>(
     self: Effect.Effect<R2, E2, A>,
     predicate: Effect.Effect<R, E, boolean>
@@ -1122,7 +1122,7 @@ export const whenEffect = dualWithTrace<
     ).traced(trace))
 
 /* @internal */
-export const whileLoop = methodWithTrace((trace, restore) =>
+export const whileLoop = Debug.methodWithTrace((trace, restore) =>
   <R, E, A>(
     check: LazyArg<boolean>,
     body: LazyArg<Effect.Effect<R, E, A>>,
@@ -1139,7 +1139,7 @@ export const whileLoop = methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const withFiberRuntime = methodWithTrace((trace, restore) =>
+export const withFiberRuntime = Debug.methodWithTrace((trace, restore) =>
   <R, E, A>(
     withRuntime: (fiber: FiberRuntime.FiberRuntime<E, A>, status: FiberStatus.Running) => Effect.Effect<R, E, A>
   ): Effect.Effect<R, E, A> => {
@@ -1152,7 +1152,7 @@ export const withFiberRuntime = methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const withParallelism = dualWithTrace<
+export const withParallelism = Debug.dualWithTrace<
   <R, E, A>(self: Effect.Effect<R, E, A>, parallelism: number) => Effect.Effect<R, E, A>,
   (parallelism: number) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
 >(2, (trace) =>
@@ -1162,7 +1162,7 @@ export const withParallelism = dualWithTrace<
     ).traced(trace))
 
 /* @internal */
-export const withParallelismUnbounded = methodWithTrace((trace) =>
+export const withParallelismUnbounded = Debug.methodWithTrace((trace) =>
   <R, E, A>(self: Effect.Effect<R, E, A>) =>
     suspendSucceed(
       () => fiberRefLocally(currentParallelism, Option.none as Option.Option<number>)(self)
@@ -1170,7 +1170,7 @@ export const withParallelismUnbounded = methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const withRuntimeFlags = dualWithTrace<
+export const withRuntimeFlags = Debug.dualWithTrace<
   <R, E, A>(self: Effect.Effect<R, E, A>, update: RuntimeFlagsPatch.RuntimeFlagsPatch) => Effect.Effect<R, E, A>,
   (update: RuntimeFlagsPatch.RuntimeFlagsPatch) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
 >(2, (trace) =>
@@ -1184,7 +1184,7 @@ export const withRuntimeFlags = dualWithTrace<
   })
 
 /* @internal */
-export const yieldNow = methodWithTrace((trace) =>
+export const yieldNow = Debug.methodWithTrace((trace) =>
   (priority: "background" | "normal" = "normal"): Effect.Effect<never, never, void> => {
     const effect = Object.create(proto)
     effect._tag = OpCodes.OP_YIELD
@@ -1195,7 +1195,7 @@ export const yieldNow = methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const zip = dualWithTrace<
+export const zip = Debug.dualWithTrace<
   <R, E, A, R2, E2, A2>(
     self: Effect.Effect<R, E, A>,
     that: Effect.Effect<R2, E2, A2>
@@ -1206,7 +1206,7 @@ export const zip = dualWithTrace<
 >(2, (trace) => (self, that) => pipe(self, flatMap((a) => pipe(that, map((b) => [a, b] as const)))).traced(trace))
 
 /* @internal */
-export const zipLeft = dualWithTrace<
+export const zipLeft = Debug.dualWithTrace<
   <R, E, A, R2, E2, A2>(
     self: Effect.Effect<R, E, A>,
     that: Effect.Effect<R2, E2, A2>
@@ -1217,7 +1217,7 @@ export const zipLeft = dualWithTrace<
 >(2, (trace) => (self, that) => pipe(self, flatMap((a) => pipe(that, as(a)))).traced(trace))
 
 /* @internal */
-export const zipRight = dualWithTrace<
+export const zipRight = Debug.dualWithTrace<
   <R, E, A, R2, E2, A2>(
     self: Effect.Effect<R, E, A>,
     that: Effect.Effect<R2, E2, A2>
@@ -1228,7 +1228,7 @@ export const zipRight = dualWithTrace<
 >(2, (trace) => (self, that) => pipe(self, flatMap(() => that)).traced(trace))
 
 /* @internal */
-export const zipWith = dualWithTrace<
+export const zipWith = Debug.dualWithTrace<
   <R, E, R2, E2, A2, A, B>(
     self: Effect.Effect<R, E, A>,
     that: Effect.Effect<R2, E2, A2>,
@@ -1249,7 +1249,7 @@ export const zipWith = dualWithTrace<
 // -----------------------------------------------------------------------------
 
 /* @internal */
-export const interruptFiber = methodWithTrace((trace) =>
+export const interruptFiber = Debug.methodWithTrace((trace) =>
   <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<never, never, Exit.Exit<E, A>> =>
     pipe(
       fiberId(),
@@ -1258,7 +1258,7 @@ export const interruptFiber = methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const interruptAsFiber = dualWithTrace<
+export const interruptAsFiber = Debug.dualWithTrace<
   <E, A>(self: Fiber.Fiber<E, A>, fiberId: FiberId.FiberId) => Effect.Effect<never, never, Exit.Exit<E, A>>,
   (fiberId: FiberId.FiberId) => <E, A>(self: Fiber.Fiber<E, A>) => Effect.Effect<never, never, Exit.Exit<E, A>>
 >(2, (trace) => (self, fiberId) => pipe(self.interruptAsFork(fiberId), flatMap(() => self.await())).traced(trace))
@@ -1349,25 +1349,25 @@ const fiberRefVariance = {
 }
 
 /* @internal */
-export const fiberRefGet = methodWithTrace((trace) =>
+export const fiberRefGet = Debug.methodWithTrace((trace) =>
   <A>(self: FiberRef.FiberRef<A>): Effect.Effect<never, never, A> =>
     fiberRefModify(self, (a) => [a, a] as const).traced(trace)
 )
 
 /* @internal */
-export const fiberRefGetAndSet = methodWithTrace((trace) =>
+export const fiberRefGetAndSet = Debug.methodWithTrace((trace) =>
   <A>(self: FiberRef.FiberRef<A>, value: A): Effect.Effect<never, never, A> =>
     fiberRefModify(self, (v) => [v, value] as const).traced(trace)
 )
 
 /* @internal */
-export const fiberRefGetAndUpdate = methodWithTrace((trace, restore) =>
+export const fiberRefGetAndUpdate = Debug.methodWithTrace((trace, restore) =>
   <A>(self: FiberRef.FiberRef<A>, f: (a: A) => A): Effect.Effect<never, never, A> =>
     fiberRefModify(self, (v) => [v, restore(f)(v)] as const).traced(trace)
 )
 
 /* @internal */
-export const fiberRefGetAndUpdateSome = methodWithTrace((trace, restore) =>
+export const fiberRefGetAndUpdateSome = Debug.methodWithTrace((trace, restore) =>
   <A>(
     self: FiberRef.FiberRef<A>,
     pf: (a: A) => Option.Option<A>
@@ -1376,7 +1376,7 @@ export const fiberRefGetAndUpdateSome = methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const fiberRefGetWith = methodWithTrace((trace, restore) =>
+export const fiberRefGetWith = Debug.methodWithTrace((trace, restore) =>
   <A, R, E, B>(
     self: FiberRef.FiberRef<A>,
     f: (a: A) => Effect.Effect<R, E, B>
@@ -1384,13 +1384,13 @@ export const fiberRefGetWith = methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const fiberRefSet = methodWithTrace((trace) =>
+export const fiberRefSet = Debug.methodWithTrace((trace) =>
   <A>(self: FiberRef.FiberRef<A>, value: A): Effect.Effect<never, never, void> =>
     fiberRefModify(self, () => [undefined, value] as const).traced(trace)
 )
 
 /* @internal */
-export const fiberRefDelete = methodWithTrace((trace) =>
+export const fiberRefDelete = Debug.methodWithTrace((trace) =>
   <A>(self: FiberRef.FiberRef<A>): Effect.Effect<never, never, void> =>
     withFiberRuntime<never, never, void>((state) => {
       state.unsafeDeleteFiberRef(self)
@@ -1399,12 +1399,12 @@ export const fiberRefDelete = methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const fiberRefReset = methodWithTrace((trace) =>
+export const fiberRefReset = Debug.methodWithTrace((trace) =>
   <A>(self: FiberRef.FiberRef<A>): Effect.Effect<never, never, void> => fiberRefSet(self, self.initial).traced(trace)
 )
 
 /* @internal */
-export const fiberRefModify = methodWithTrace((trace, restore) =>
+export const fiberRefModify = Debug.methodWithTrace((trace, restore) =>
   <A, B>(
     self: FiberRef.FiberRef<A>,
     f: (a: A) => readonly [B, A]
@@ -1417,7 +1417,7 @@ export const fiberRefModify = methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const fiberRefModifySome = methodWithTrace((trace, restore) =>
+export const fiberRefModifySome = Debug.methodWithTrace((trace, restore) =>
   <A, B>(
     self: FiberRef.FiberRef<A>,
     def: B,
@@ -1427,13 +1427,13 @@ export const fiberRefModifySome = methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const fiberRefUpdate = methodWithTrace((trace, restore) =>
+export const fiberRefUpdate = Debug.methodWithTrace((trace, restore) =>
   <A>(self: FiberRef.FiberRef<A>, f: (a: A) => A): Effect.Effect<never, never, void> =>
     fiberRefModify(self, (v) => [void 0, restore(f)(v)] as const).traced(trace)
 )
 
 /* @internal */
-export const fiberRefUpdateSome = methodWithTrace((trace, restore) =>
+export const fiberRefUpdateSome = Debug.methodWithTrace((trace, restore) =>
   <A>(
     self: FiberRef.FiberRef<A>,
     pf: (a: A) => Option.Option<A>
@@ -1442,7 +1442,7 @@ export const fiberRefUpdateSome = methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const fiberRefUpdateAndGet = methodWithTrace((trace, restore) =>
+export const fiberRefUpdateAndGet = Debug.methodWithTrace((trace, restore) =>
   <A>(self: FiberRef.FiberRef<A>, f: (a: A) => A): Effect.Effect<never, never, A> =>
     fiberRefModify(self, (v) => {
       const result = restore(f)(v)
@@ -1451,7 +1451,7 @@ export const fiberRefUpdateAndGet = methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const fiberRefUpdateSomeAndGet = methodWithTrace((trace, restore) =>
+export const fiberRefUpdateSomeAndGet = Debug.methodWithTrace((trace, restore) =>
   <A>(
     self: FiberRef.FiberRef<A>,
     pf: (a: A) => Option.Option<A>
@@ -1463,7 +1463,7 @@ export const fiberRefUpdateSomeAndGet = methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const fiberRefLocally = dualWithTrace<
+export const fiberRefLocally = Debug.dualWithTrace<
   <R, E, B, A>(use: Effect.Effect<R, E, B>, self: FiberRef.FiberRef<A>, value: A) => Effect.Effect<R, E, B>,
   <A>(self: FiberRef.FiberRef<A>, value: A) => <R, E, B>(use: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>
 >(3, (trace) =>
@@ -1475,7 +1475,7 @@ export const fiberRefLocally = dualWithTrace<
     ).traced(trace))
 
 /* @internal */
-export const fiberRefLocallyWith = dualWithTrace<
+export const fiberRefLocallyWith = Debug.dualWithTrace<
   <R, E, B, A>(use: Effect.Effect<R, E, B>, self: FiberRef.FiberRef<A>, f: (a: A) => A) => Effect.Effect<R, E, B>,
   <A>(self: FiberRef.FiberRef<A>, f: (a: A) => A) => <R, E, B>(use: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>
 >(
@@ -1603,25 +1603,25 @@ export const CloseableScopeTypeId: Scope.CloseableScopeTypeId = Symbol.for(
 ) as Scope.CloseableScopeTypeId
 
 /* @internal */
-export const scopeAddFinalizer = methodWithTrace((trace) =>
+export const scopeAddFinalizer = Debug.methodWithTrace((trace) =>
   (self: Scope.Scope, finalizer: Effect.Effect<never, never, unknown>): Effect.Effect<never, never, void> =>
     self.addFinalizer(() => asUnit(finalizer)).traced(trace)
 )
 
 /* @internal */
-export const scopeAddFinalizerExit = methodWithTrace((trace, restore) =>
+export const scopeAddFinalizerExit = Debug.methodWithTrace((trace, restore) =>
   (self: Scope.Scope, finalizer: Scope.Scope.Finalizer): Effect.Effect<never, never, void> =>
     self.addFinalizer(restore(finalizer)).traced(trace)
 )
 
 /* @internal */
-export const scopeClose = methodWithTrace((trace) =>
+export const scopeClose = Debug.methodWithTrace((trace) =>
   (self: Scope.Scope.Closeable, exit: Exit.Exit<unknown, unknown>): Effect.Effect<never, never, void> =>
     self.close(exit).traced(trace)
 )
 
 /* @internal */
-export const scopeFork = methodWithTrace((trace) =>
+export const scopeFork = Debug.methodWithTrace((trace) =>
   (
     self: Scope.Scope,
     strategy: ExecutionStrategy.ExecutionStrategy
@@ -1651,7 +1651,7 @@ export interface ReleaseMap {
 }
 
 /* @internal */
-export const releaseMapAdd = dualWithTrace<
+export const releaseMapAdd = Debug.dualWithTrace<
   (self: ReleaseMap, finalizer: Scope.Scope.Finalizer) => Effect.Effect<never, never, Scope.Scope.Finalizer>,
   (finalizer: Scope.Scope.Finalizer) => (self: ReleaseMap) => Effect.Effect<never, never, Scope.Scope.Finalizer>
 >(2, (trace, restore) =>
@@ -1666,7 +1666,7 @@ export const releaseMapAdd = dualWithTrace<
     ).traced(trace))
 
 /* @internal */
-export const releaseMapRelease = dualWithTrace<
+export const releaseMapRelease = Debug.dualWithTrace<
   (self: ReleaseMap, key: number, exit: Exit.Exit<unknown, unknown>) => Effect.Effect<never, never, void>,
   (key: number, exit: Exit.Exit<unknown, unknown>) => (self: ReleaseMap) => Effect.Effect<never, never, void>
 >(3, (trace) =>
@@ -1688,7 +1688,7 @@ export const releaseMapRelease = dualWithTrace<
     }).traced(trace))
 
 /* @internal */
-export const releaseMapAddIfOpen = dualWithTrace<
+export const releaseMapAddIfOpen = Debug.dualWithTrace<
   (self: ReleaseMap, finalizer: Scope.Scope.Finalizer) => Effect.Effect<never, never, Option.Option<number>>,
   (finalizer: Scope.Scope.Finalizer) => (self: ReleaseMap) => Effect.Effect<never, never, Option.Option<number>>
 >(2, (trace, restore) =>
@@ -1709,7 +1709,7 @@ export const releaseMapAddIfOpen = dualWithTrace<
     }).traced(trace))
 
 /* @internal */
-export const releaseMapGet = dualWithTrace<
+export const releaseMapGet = Debug.dualWithTrace<
   (self: ReleaseMap, key: number) => Effect.Effect<never, never, Option.Option<Scope.Scope.Finalizer>>,
   (key: number) => (self: ReleaseMap) => Effect.Effect<never, never, Option.Option<Scope.Scope.Finalizer>>
 >(
@@ -1722,7 +1722,7 @@ export const releaseMapGet = dualWithTrace<
 )
 
 /* @internal */
-export const releaseMapReplace = dualWithTrace<
+export const releaseMapReplace = Debug.dualWithTrace<
   (
     self: ReleaseMap,
     key: number,
@@ -1751,7 +1751,7 @@ export const releaseMapReplace = dualWithTrace<
 )
 
 /* @internal */
-export const releaseMapRemove = dualWithTrace<
+export const releaseMapRemove = Debug.dualWithTrace<
   (self: ReleaseMap, key: number) => Effect.Effect<never, never, Option.Option<Scope.Scope.Finalizer>>,
   (key: number) => (self: ReleaseMap) => Effect.Effect<never, never, Option.Option<Scope.Scope.Finalizer>>
 >(2, (trace) =>
@@ -1766,7 +1766,7 @@ export const releaseMapRemove = dualWithTrace<
     }).traced(trace))
 
 /* @internal */
-export const releaseMapMake = methodWithTrace((trace) =>
+export const releaseMapMake = Debug.methodWithTrace((trace) =>
   (): Effect.Effect<never, never, ReleaseMap> =>
     sync((): ReleaseMap => ({
       state: {
@@ -2198,25 +2198,25 @@ export const deferredUnsafeMake = <E, A>(fiberId: FiberId.FiberId): Deferred.Def
 })
 
 /* @internal */
-export const deferredMake = methodWithTrace((trace) =>
+export const deferredMake = Debug.methodWithTrace((trace) =>
   <E, A>(): Effect.Effect<never, never, Deferred.Deferred<E, A>> =>
     pipe(fiberId(), flatMap((id) => deferredMakeAs<E, A>(id))).traced(trace)
 )
 
 /* @internal */
-export const deferredMakeAs = methodWithTrace((trace) =>
+export const deferredMakeAs = Debug.methodWithTrace((trace) =>
   <E, A>(fiberId: FiberId.FiberId): Effect.Effect<never, never, Deferred.Deferred<E, A>> =>
     sync(() => deferredUnsafeMake<E, A>(fiberId)).traced(trace)
 )
 
 /* @internal */
-export const deferredSucceed = methodWithTrace((trace) =>
+export const deferredSucceed = Debug.methodWithTrace((trace) =>
   <E, A>(self: Deferred.Deferred<E, A>, value: A): Effect.Effect<never, never, boolean> =>
     deferredCompleteWith(self, succeed(value)).traced(trace)
 )
 
 /* @internal */
-export const deferredSync = methodWithTrace((trace, restore) =>
+export const deferredSync = Debug.methodWithTrace((trace, restore) =>
   <E, A>(
     self: Deferred.Deferred<E, A>,
     evaluate: LazyArg<A>
@@ -2224,13 +2224,13 @@ export const deferredSync = methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const deferredFail = methodWithTrace((trace) =>
+export const deferredFail = Debug.methodWithTrace((trace) =>
   <E, A>(self: Deferred.Deferred<E, A>, error: E): Effect.Effect<never, never, boolean> =>
     deferredCompleteWith(self, fail(error)).traced(trace)
 )
 
 /* @internal */
-export const deferredFailSync = methodWithTrace((trace, restore) =>
+export const deferredFailSync = Debug.methodWithTrace((trace, restore) =>
   <E, A>(
     self: Deferred.Deferred<E, A>,
     evaluate: LazyArg<E>
@@ -2238,7 +2238,7 @@ export const deferredFailSync = methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const deferredFailCause = methodWithTrace((trace) =>
+export const deferredFailCause = Debug.methodWithTrace((trace) =>
   <E, A>(
     self: Deferred.Deferred<E, A>,
     cause: Cause.Cause<E>
@@ -2246,7 +2246,7 @@ export const deferredFailCause = methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const deferredFailCauseSync = methodWithTrace((trace, restore) =>
+export const deferredFailCauseSync = Debug.methodWithTrace((trace, restore) =>
   <E, A>(
     self: Deferred.Deferred<E, A>,
     evaluate: LazyArg<Cause.Cause<E>>
@@ -2254,7 +2254,7 @@ export const deferredFailCauseSync = methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const deferredDie = methodWithTrace((trace) =>
+export const deferredDie = Debug.methodWithTrace((trace) =>
   <E, A>(
     self: Deferred.Deferred<E, A>,
     defect: unknown
@@ -2262,7 +2262,7 @@ export const deferredDie = methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const deferredDieSync = methodWithTrace((trace, restore) =>
+export const deferredDieSync = Debug.methodWithTrace((trace, restore) =>
   <E, A>(
     self: Deferred.Deferred<E, A>,
     evaluate: LazyArg<unknown>
@@ -2270,7 +2270,7 @@ export const deferredDieSync = methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const deferredDone = methodWithTrace((trace) =>
+export const deferredDone = Debug.methodWithTrace((trace) =>
   <E, A>(
     self: Deferred.Deferred<E, A>,
     exit: Exit.Exit<E, A>
@@ -2289,7 +2289,7 @@ export const deferredUnsafeDone = <E, A>(self: Deferred.Deferred<E, A>, effect: 
 }
 
 /* @internal */
-export const deferredInterrupt = methodWithTrace((trace) =>
+export const deferredInterrupt = Debug.methodWithTrace((trace) =>
   <E, A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> =>
     pipe(
       fiberId(),
@@ -2298,7 +2298,7 @@ export const deferredInterrupt = methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const deferredInterruptWith = methodWithTrace((trace) =>
+export const deferredInterruptWith = Debug.methodWithTrace((trace) =>
   <E, A>(
     self: Deferred.Deferred<E, A>,
     fiberId: FiberId.FiberId
@@ -2306,7 +2306,7 @@ export const deferredInterruptWith = methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const deferredAwait = methodWithTrace((trace) =>
+export const deferredAwait = Debug.methodWithTrace((trace) =>
   <E, A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, E, A> =>
     asyncInterruptEither<never, E, A>((k) => {
       const state = MutableRef.get(self.state)
@@ -2326,7 +2326,7 @@ export const deferredAwait = methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const deferredComplete = methodWithTrace((trace) =>
+export const deferredComplete = Debug.methodWithTrace((trace) =>
   <E, A>(
     self: Deferred.Deferred<E, A>,
     effect: Effect.Effect<never, E, A>
@@ -2334,7 +2334,7 @@ export const deferredComplete = methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const deferredCompleteWith = methodWithTrace((trace) =>
+export const deferredCompleteWith = Debug.methodWithTrace((trace) =>
   <E, A>(
     self: Deferred.Deferred<E, A>,
     effect: Effect.Effect<never, E, A>
@@ -2357,13 +2357,13 @@ export const deferredCompleteWith = methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const deferredIsDone = methodWithTrace((trace) =>
+export const deferredIsDone = Debug.methodWithTrace((trace) =>
   <E, A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> =>
     sync(() => MutableRef.get(self.state)._tag === DeferredOpCodes.OP_STATE_DONE).traced(trace)
 )
 
 /* @internal */
-export const deferredPoll = methodWithTrace((trace) =>
+export const deferredPoll = Debug.methodWithTrace((trace) =>
   <E, A>(
     self: Deferred.Deferred<E, A>
   ): Effect.Effect<never, never, Option.Option<Effect.Effect<never, E, A>>> =>

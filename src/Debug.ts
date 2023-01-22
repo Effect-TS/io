@@ -31,11 +31,34 @@ export interface Debug {
   parseStack: (error: Error, depth: number) => string | undefined
 }
 
+/**
+ * @since 1.0.0
+ * @category models
+ */
+export interface SourceLocation extends Error {
+  depth: number
+  parsed?: string | undefined
+
+  toString(): string | undefined
+}
+
+/**
+ * @since 1.0.0
+ * @category models
+ */
+export type Trace = SourceLocation | undefined
+
+/**
+ * @since 1.0.0
+ * @category models
+ */
+export type Restore = <F extends (...args: Array<any>) => any>(f: F) => F
+
 const levels = ["All", "Fatal", "Error", "Warning", "Info", "Debug", "Trace", "None"]
 
 /**
- * @category debug
  * @since 1.0.0
+ * @category debug
  */
 export const runtimeDebug: Debug = {
   minumumLogLevel:
@@ -68,7 +91,7 @@ export const runtimeDebug: Debug = {
   }
 }
 
-const restore: <F extends (...args: Array<any>) => any>(f: F) => F = (f): any =>
+const restore: Restore = (f): any =>
   (...args: Array<any>) => {
     if (runtimeDebug.tracingEnabled) {
       return f(...args)
@@ -109,7 +132,7 @@ export const sourceLocation = (error: Error): SourceLocation => {
 export const bodyWithTrace = <A>(
   body: (
     trace: Trace,
-    restore: <F extends (...args: Array<any>) => any>(f: F) => F
+    restore: Restore
   ) => A
 ) => {
   if (!runtimeDebug.tracingEnabled) {
@@ -131,10 +154,7 @@ export const bodyWithTrace = <A>(
  * @since 1.0.0
  */
 export const methodWithTrace = <A extends (...args: Array<any>) => any>(
-  body: ((
-    trace: Trace,
-    restore: <F extends (...args: Array<any>) => any>(f: F) => F
-  ) => A)
+  body: ((trace: Trace, restore: Restore) => A)
 ): A => {
   // @ts-expect-error
   return (...args) => {
@@ -158,10 +178,7 @@ export const methodWithTrace = <A extends (...args: Array<any>) => any>(
  * @since 1.0.0
  */
 export const pipeableWithTrace = <A extends (...args: Array<any>) => any>(
-  body: ((
-    trace: Trace,
-    restore: <F extends (...args: Array<any>) => any>(f: F) => F
-  ) => A)
+  body: ((trace: Trace, restore: Restore) => A)
 ): A => {
   // @ts-expect-error
   return (...args) => {
@@ -188,10 +205,7 @@ export const pipeableWithTrace = <A extends (...args: Array<any>) => any>(
  */
 export const dualWithTrace = <DF extends (...args: Array<any>) => any, P extends (...args: Array<any>) => any>(
   dfLen: Parameters<DF>["length"],
-  body: ((
-    trace: Trace,
-    restore: <F extends (...args: Array<any>) => any>(f: F) => F
-  ) => DF)
+  body: ((trace: Trace, restore: Restore) => DF)
 ): DF & P => {
   // @ts-expect-error
   return (...args) => {
@@ -223,7 +237,7 @@ export const dualWithTrace = <DF extends (...args: Array<any>) => any, P extends
  * @since 1.0.0
  */
 export const untraced = <A>(
-  body: (restore: <F extends (...args: Array<any>) => any>(f: F) => F) => A
+  body: (restore: Restore) => A
 ) => {
   if (!runtimeDebug.tracingEnabled) {
     return body(identity)
@@ -254,20 +268,3 @@ export const untraced = <A>(
 export const getCallTrace = (): undefined => {
   return undefined
 }
-
-/**
- * @since 1.0.0
- * @category models
- */
-export interface SourceLocation extends Error {
-  depth: number
-  parsed?: string | undefined
-
-  toString(): string | undefined
-}
-
-/**
- * @since 1.0.0
- * @category models
- */
-export type Trace = SourceLocation | undefined

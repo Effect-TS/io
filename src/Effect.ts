@@ -1399,6 +1399,8 @@ export const filterOrDie: {
  * @category filtering
  */
 export const filterOrDieMessage: {
+  <R, E, A, B extends A>(self: Effect<R, E, A>, f: Refinement<A, B>, message: string): Effect<R, E, B>
+  <R, E, A>(self: Effect<R, E, A>, f: Predicate<A>, message: string): Effect<R, E, A>
   <A, B extends A>(f: Refinement<A, B>, message: string): <R, E>(self: Effect<R, E, A>) => Effect<R, E, B>
   <A>(f: Predicate<A>, message: string): <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
 } = effect.filterOrDieMessage
@@ -1411,6 +1413,16 @@ export const filterOrDieMessage: {
  * @category filtering
  */
 export const filterOrElse: {
+  <R, E, A, B extends A, R2, E2, C>(
+    self: Effect<R, E, A>,
+    f: Refinement<A, B>,
+    orElse: LazyArg<Effect<R2, E2, C>>
+  ): Effect<R | R2, E | E2, B | C>
+  <R, E, A, R2, E2, B>(
+    self: Effect<R, E, A>,
+    f: Predicate<A>,
+    orElse: LazyArg<Effect<R2, E2, B>>
+  ): Effect<R | R2, E | E2, A | B>
   <A, B extends A, R2, E2, C>(
     f: Refinement<A, B>,
     orElse: LazyArg<Effect<R2, E2, C>>
@@ -1429,6 +1441,16 @@ export const filterOrElse: {
  * @category filtering
  */
 export const filterOrElseWith: {
+  <R, E, A, B extends A, R2, E2, C>(
+    self: Effect<R, E, A>,
+    f: Refinement<A, B>,
+    orElse: (a: A) => Effect<R2, E2, C>
+  ): Effect<R | R2, E | E2, B | C>
+  <R, E, A, R2, E2, B>(
+    self: Effect<R, E, A>,
+    f: Predicate<A>,
+    orElse: (a: A) => Effect<R2, E2, B>
+  ): Effect<R | R2, E | E2, A | B>
   <A, B extends A, R2, E2, C>(
     f: Refinement<A, B>,
     orElse: (a: A) => Effect<R2, E2, C>
@@ -1447,6 +1469,8 @@ export const filterOrElseWith: {
  * @category filtering
  */
 export const filterOrFail: {
+  <R, E, A, B extends A, E2>(self: Effect<R, E, A>, f: Refinement<A, B>, error: LazyArg<E2>): Effect<R, E | E2, B>
+  <R, E, A, E2>(self: Effect<R, E, A>, f: Predicate<A>, error: LazyArg<E2>): Effect<R, E | E2, A>
   <A, B extends A, E2>(f: Refinement<A, B>, error: LazyArg<E2>): <R, E>(self: Effect<R, E, A>) => Effect<R, E2 | E, B>
   <A, E2>(f: Predicate<A>, error: LazyArg<E2>): <R, E>(self: Effect<R, E, A>) => Effect<R, E2 | E, A>
 } = effect.filterOrFail
@@ -4400,9 +4424,17 @@ export const updateRuntimeFlags: (patch: RuntimeFlagsPatch.RuntimeFlagsPatch) =>
  * @since 1.0.0
  * @category context
  */
-export const updateService: <T>(
-  tag: Context.Tag<T>
-) => <T1 extends T>(f: (_: T) => T1) => <R, E, A>(self: Effect<R, E, A>) => Effect<T | R, E, A> = effect.updateService
+export const updateService: {
+  <R, E, A, T extends Context.Tag<any>, T1 extends T>(
+    self: Effect<R, E, A>,
+    tag: T,
+    f: (service: T) => T1
+  ): Effect<R | T, E, A>
+  <T extends Context.Tag<any>, T1 extends T>(
+    tag: T,
+    f: (service: T) => T1
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<T1 | R, E, A>
+} = effect.updateService
 
 /**
  * Sequentially zips the this result with the specified result. Combines both
@@ -4411,9 +4443,10 @@ export const updateService: <T>(
  * @since 1.0.0
  * @category mutations
  */
-export const validate: <R1, E1, B>(
-  that: Effect<R1, E1, B>
-) => <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, readonly [A, B]> = effect.validate
+export const validate: {
+  <R, E, A, R2, E2, B>(self: Effect<R, E, A>, that: Effect<R2, E2, B>): Effect<R | R2, E | E2, readonly [A, B]>
+  <R2, E2, B>(that: Effect<R2, E2, B>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, readonly [A, B]>
+} = effect.validate
 
 /**
  * Returns an effect that executes both this effect and the specified effect,
@@ -4436,9 +4469,10 @@ export const validatePar: <R1, E1, B>(
  * @since 1.0.0
  * @category mutations
  */
-export const validateAll: <R, E, A, B>(
-  f: (a: A) => Effect<R, E, B>
-) => (elements: Iterable<A>) => Effect<R, Chunk.Chunk<E>, Chunk.Chunk<B>> = effect.validateAll
+export const validateAll: {
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, Chunk.Chunk<E>, Chunk.Chunk<B>>
+  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, Chunk.Chunk<E>, Chunk.Chunk<B>>
+} = effect.validateAll
 
 /**
  * Feeds elements of type `A` to `f `and accumulates, in parallel, all errors
@@ -4461,9 +4495,10 @@ export const validateAllPar: <R, E, A, B>(
  * @since 1.0.0
  * @category mutations
  */
-export const validateAllDiscard: <R, E, A, X>(
-  f: (a: A) => Effect<R, E, X>
-) => (elements: Iterable<A>) => Effect<R, Chunk.Chunk<E>, void> = effect.validateAllDiscard
+export const validateAllDiscard: {
+  <R, E, A, X>(elements: Iterable<A>, f: (a: A) => Effect<R, E, X>): Effect<R, Chunk.Chunk<E>, void>
+  <R, E, A, X>(f: (a: A) => Effect<R, E, X>): (elements: Iterable<A>) => Effect<R, Chunk.Chunk<E>, void>
+} = effect.validateAllDiscard
 
 /**
  * Feeds elements of type `A` to `f` in parallel and accumulates all errors,
@@ -4483,9 +4518,10 @@ export const validateAllParDiscard: <R, E, A, B>(
  * @since 1.0.0
  * @category mutations
  */
-export const validateFirst: <R, E, A, B>(
-  f: (a: A) => Effect<R, E, B>
-) => (elements: Iterable<A>) => Effect<R, Chunk.Chunk<E>, B> = effect.validateFirst
+export const validateFirst: {
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, Chunk.Chunk<E>, B>
+  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, Chunk.Chunk<E>, B>
+} = effect.validateFirst
 
 /**
  * Feeds elements of type `A` to `f` until it succeeds. Returns first success
@@ -4505,10 +4541,17 @@ export const validateFirstPar: <R, E, A, B>(
  * @since 1.0.0
  * @category mutations
  */
-export const validateWith: <A, R1, E1, B, C>(
-  that: Effect<R1, E1, B>,
-  f: (a: A, b: B) => C
-) => <R, E>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, C> = effect.validateWith
+export const validateWith: {
+  <R, E, A, R2, E2, B, C>(
+    self: Effect<R, E, A>,
+    that: Effect<R2, E2, B>,
+    f: (a: A, b: B) => C
+  ): Effect<R | R2, E | E2, C>
+  <A, R2, E2, B, C>(
+    that: Effect<R2, E2, B>,
+    f: (a: A, b: B) => C
+  ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, C>
+} = effect.validateWith
 
 /**
  * Returns an effect that executes both this effect and the specified effect,
@@ -4539,8 +4582,10 @@ export const whileLoop: <R, E, A>(
  * @since 1.0.0
  * @category mutations
  */
-export const when: (predicate: LazyArg<boolean>) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Option.Option<A>> =
-  effect.when
+export const when: {
+  <R, E, A>(self: Effect<R, E, A>, predicate: LazyArg<boolean>): Effect<R, E, Option.Option<A>>
+  (predicate: LazyArg<boolean>): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Option.Option<A>>
+} = effect.when
 
 /**
  * Runs an effect when the supplied partial function matches for the given
@@ -4561,9 +4606,15 @@ export const whenCase: <R, E, A, B>(
  * @since 1.0.0
  * @category mutations
  */
-export const whenCaseEffect: <A, R2, E2, A2>(
-  pf: (a: A) => Option.Option<Effect<R2, E2, A2>>
-) => <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, Option.Option<A2>> = effect.whenCaseEffect
+export const whenCaseEffect: {
+  <R, E, A, R2, E2, A2>(
+    self: Effect<R, E, A>,
+    pf: (a: A) => Option.Option<Effect<R2, E2, A2>>
+  ): Effect<R | R2, E | E2, Option.Option<A2>>
+  <A, R2, E2, A2>(
+    pf: (a: A) => Option.Option<Effect<R2, E2, A2>>
+  ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, Option.Option<A2>>
+} = effect.whenCaseEffect
 
 /**
  * @since 1.0.0
@@ -4583,10 +4634,17 @@ export const whenEffect: {
  * @since 1.0.0
  * @category mutations
  */
-export const whenFiberRef: <S>(
-  fiberRef: FiberRef.FiberRef<S>,
-  predicate: Predicate<S>
-) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, readonly [S, Option.Option<A>]> = effect.whenFiberRef
+export const whenFiberRef: {
+  <R, E, A, S>(
+    self: Effect<R, E, A>,
+    fiberRef: FiberRef.FiberRef<S>,
+    predicate: Predicate<S>
+  ): Effect<R, E, readonly [S, Option.Option<A>]>
+  <S>(
+    fiberRef: FiberRef.FiberRef<S>,
+    predicate: Predicate<S>
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, readonly [S, Option.Option<A>]>
+} = effect.whenFiberRef
 
 /**
  * Executes this workflow when the value of the `Ref` satisfies the predicate.
@@ -4594,10 +4652,17 @@ export const whenFiberRef: <S>(
  * @since 1.0.0
  * @category mutations
  */
-export const whenRef: <S>(
-  ref: Ref.Ref<S>,
-  predicate: Predicate<S>
-) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, readonly [S, Option.Option<A>]> = effect.whenRef
+export const whenRef: {
+  <R, E, A, S>(
+    self: Effect<R, E, A>,
+    ref: Ref.Ref<S>,
+    predicate: Predicate<S>
+  ): Effect<R, E, readonly [S, Option.Option<A>]>
+  <S>(
+    ref: Ref.Ref<S>,
+    predicate: Predicate<S>
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, readonly [S, Option.Option<A>]>
+} = effect.whenRef
 
 /**
  * Executes the specified workflow with the specified implementation of the
@@ -4634,9 +4699,10 @@ export const withEarlyRelease: <R, E, A>(
  * @since 1.0.0
  * @category mutations
  */
-export const withMetric: <Type, In, Out>(
-  metric: Metric.Metric<Type, In, Out>
-) => <R, E, A extends In>(self: Effect<R, E, A>) => Effect<R, E, A> = effect.withMetric
+export const withMetric: {
+  <R, E, A extends In, Type, In, Out>(self: Effect<R, E, A>, metric: Metric.Metric<Type, In, Out>): Effect<R, E, A>
+  <Type, In, Out>(metric: Metric.Metric<Type, In, Out>): <R, E, A extends In>(self: Effect<R, E, A>) => Effect<R, E, A>
+} = effect.withMetric
 
 /**
  * @since 1.0.0
