@@ -2284,7 +2284,10 @@ export const loopDiscard: <Z, R, E, X>(
  * @since 1.0.0
  * @category mapping
  */
-export const map: <A, B>(f: (a: A) => B) => <R, E>(self: Effect<R, E, A>) => Effect<R, E, B> = core.map
+export const map: {
+  <R, E, A, B>(self: Effect<R, E, A>, f: (a: A) => B): Effect<R, E, B>
+  <A, B>(f: (a: A) => B): <R, E>(self: Effect<R, E, A>) => Effect<R, E, B>
+} = core.map
 
 /**
  * Statefully and effectfully maps over the elements of this chunk to produce
