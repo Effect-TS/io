@@ -365,7 +365,7 @@ export class TestClockImpl implements TestClock {
             this.live.provide(
               pipe(
                 effect.logWarning(suspendedWarning),
-                core.zipRight(synchronized.set(this.suspendedWarningState, SuspendedWarningData.done)),
+                core.zipRight(ref.set(this.suspendedWarningState, SuspendedWarningData.done)),
                 effect.delay(Duration.seconds(5))
               )
             ),

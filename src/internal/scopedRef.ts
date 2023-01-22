@@ -4,6 +4,7 @@ import * as core from "@effect/io/internal/core"
 import * as effect from "@effect/io/internal/effect"
 import * as circular from "@effect/io/internal/effect/circular"
 import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
+import * as ref from "@effect/io/internal/ref"
 import * as synchronized from "@effect/io/internal/synchronizedRef"
 import type * as Scope from "@effect/io/Scope"
 import type * as ScopedRef from "@effect/io/ScopedRef"
@@ -28,7 +29,7 @@ const scopedRefVariance = {
 const close = <A>(self: ScopedRef.ScopedRef<A>): Effect.Effect<never, never, void> => {
   const trace = getCallTrace()
   return pipe(
-    synchronized.get(self.ref),
+    ref.get(self.ref),
     core.flatMap((tuple) => tuple[0].close(core.exitUnit()))
   ).traced(trace)
 }
@@ -73,7 +74,7 @@ export const fromAcquire = <R, E, A>(
 
 /** @internal */
 export const get = <A>(self: ScopedRef.ScopedRef<A>): Effect.Effect<never, never, A> => {
-  return pipe(synchronized.get(self.ref), core.map((tuple) => tuple[1]))
+  return pipe(ref.get(self.ref), core.map((tuple) => tuple[1]))
 }
 
 /** @internal */

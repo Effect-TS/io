@@ -1,3 +1,4 @@
+import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal/core"
 import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
 import * as layer from "@effect/io/internal/layer"
@@ -14,11 +15,13 @@ import * as HashSet from "@fp-ts/data/HashSet"
 // circular with Logger
 
 /** @internal */
-export const minimumLogLevel = (level: LogLevel.LogLevel) =>
+export const minimumLogLevel = (level: LogLevel.LogLevel): Layer.Layer<never, never, never> =>
   layer.scopedDiscard(fiberRuntime.fiberRefLocallyScoped(fiberRuntime.currentMinimumLogLevel, level))
 
 /** @internal */
-export const withMinimumLogLevel = (level: LogLevel.LogLevel) =>
+export const withMinimumLogLevel = (
+  level: LogLevel.LogLevel
+): <R, E, B>(use: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B> =>
   core.fiberRefLocally(fiberRuntime.currentMinimumLogLevel, level)
 
 /** @internal */

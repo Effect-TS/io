@@ -1235,9 +1235,10 @@ export const either: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Either
  * @since 1.0.0
  * @category finalization
  */
-export const ensuring: <R1, X>(
-  finalizer: Effect<R1, never, X>
-) => <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | R, E, A> = circular.ensuring
+export const ensuring: {
+  <R, E, A, R1, X>(self: Effect<R, E, A>, finalizer: Effect<R1, never, X>): Effect<R | R1, E, A>
+  <R1, X>(finalizer: Effect<R1, never, X>): <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | R, E, A>
+} = circular.ensuring
 
 /**
  * Acts on the children of this fiber (collected into a single fiber),
@@ -1247,9 +1248,15 @@ export const ensuring: <R1, X>(
  * @since 1.0.0
  * @category finalization
  */
-export const ensuringChild: <R2, X>(
-  f: (fiber: Fiber.Fiber<any, Chunk.Chunk<unknown>>) => Effect<R2, never, X>
-) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E, A> = circular.ensuringChild
+export const ensuringChild: {
+  <R, E, A, R2, X>(
+    self: Effect<R, E, A>,
+    f: (fiber: Fiber.Fiber<any, Chunk.Chunk<unknown>>) => Effect<R2, never, X>
+  ): Effect<R | R2, E, A>
+  <R2, X>(
+    f: (fiber: Fiber.Fiber<any, Chunk.Chunk<unknown>>) => Effect<R2, never, X>
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E, A>
+} = circular.ensuringChild
 
 /**
  * Acts on the children of this fiber, guaranteeing the specified callback
@@ -1258,9 +1265,15 @@ export const ensuringChild: <R2, X>(
  * @since 1.0.0
  * @category finalization
  */
-export const ensuringChildren: <R1, X>(
-  children: (fibers: Chunk.Chunk<Fiber.RuntimeFiber<any, any>>) => Effect<R1, never, X>
-) => <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | R, E, A> = circular.ensuringChildren
+export const ensuringChildren: {
+  <R, E, A, R1, X>(
+    self: Effect<R, E, A>,
+    children: (fibers: Chunk.Chunk<Fiber.RuntimeFiber<any, any>>) => Effect<R1, never, X>
+  ): Effect<R | R1, E, A>
+  <R1, X>(
+    children: (fibers: Chunk.Chunk<Fiber.RuntimeFiber<any, any>>) => Effect<R1, never, X>
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | R, E, A>
+} = circular.ensuringChildren
 
 /**
  * Returns an effect that ignores errors and runs repeatedly until it
@@ -1753,9 +1766,10 @@ export const forkAllDiscard: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Ef
  * @since 1.0.0
  * @category supervision
  */
-export const forkIn: (
-  scope: Scope.Scope
-) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Fiber.RuntimeFiber<E, A>> = circular.forkIn
+export const forkIn: {
+  <R, E, A>(self: Effect<R, E, A>, scope: Scope.Scope): Effect<R, never, Fiber.RuntimeFiber<E, A>>
+  (scope: Scope.Scope): <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Fiber.RuntimeFiber<E, A>>
+} = circular.forkIn
 
 /**
  * Forks the fiber in a `Scope`, interrupting it when the scope is closed.
@@ -2875,9 +2889,10 @@ export const provideSomeLayer: <R2, E2, A2>(
  * @since 1.0.0
  * @category mutations
  */
-export const race: <R2, E2, A2>(
-  that: Effect<R2, E2, A2>
-) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2 | A> = circular.race
+export const race: {
+  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, A | A2>
+  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2 | A>
+} = circular.race
 
 /**
  * Returns an effect that races this effect with all the specified effects,
@@ -2898,9 +2913,10 @@ export const raceAll: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R,
  * @since 1.0.0
  * @category mutations
  */
-export const raceAwait: <R2, E2, A2>(
-  that: Effect<R2, E2, A2>
-) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2 | A> = circular.raceAwait
+export const raceAwait: {
+  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, A | A2>
+  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2 | A>
+} = circular.raceAwait
 
 /**
  * Returns an effect that races this effect with the specified effect,
@@ -2913,9 +2929,12 @@ export const raceAwait: <R2, E2, A2>(
  * @since 1.0.0
  * @category mutations
  */
-export const raceEither: <R2, E2, A2>(
-  that: Effect<R2, E2, A2>
-) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, Either.Either<A, A2>> = circular.raceEither
+export const raceEither: {
+  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, Either.Either<A, A2>>
+  <R2, E2, A2>(
+    that: Effect<R2, E2, A2>
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, Either.Either<A, A2>>
+} = circular.raceEither
 
 /**
  * Forks this effect and the specified effect into their own fibers, and races
@@ -2927,11 +2946,19 @@ export const raceEither: <R2, E2, A2>(
  * @since 1.0.0
  * @category mutations
  */
-export const raceFibersWith: <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
-  that: Effect<R1, E1, A1>,
-  selfWins: (winner: Fiber.RuntimeFiber<E, A>, loser: Fiber.RuntimeFiber<E1, A1>) => Effect<R2, E2, A2>,
-  thatWins: (winner: Fiber.RuntimeFiber<E1, A1>, loser: Fiber.RuntimeFiber<E, A>) => Effect<R3, E3, A3>
-) => <R>(self: Effect<R, E, A>) => Effect<R1 | R2 | R3 | R, E2 | E3, A2 | A3> = circular.raceFibersWith
+export const raceFibersWith: {
+  <R, E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
+    self: Effect<R, E, A>,
+    that: Effect<R1, E1, A1>,
+    selfWins: (winner: Fiber.RuntimeFiber<E, A>, loser: Fiber.RuntimeFiber<E1, A1>) => Effect<R2, E2, A2>,
+    thatWins: (winner: Fiber.RuntimeFiber<E1, A1>, loser: Fiber.RuntimeFiber<E, A>) => Effect<R3, E3, A3>
+  ): Effect<R | R1 | R2 | R3, E2 | E3, A2 | A3>
+  <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
+    that: Effect<R1, E1, A1>,
+    selfWins: (winner: Fiber.RuntimeFiber<E, A>, loser: Fiber.RuntimeFiber<E1, A1>) => Effect<R2, E2, A2>,
+    thatWins: (winner: Fiber.RuntimeFiber<E1, A1>, loser: Fiber.RuntimeFiber<E, A>) => Effect<R3, E3, A3>
+  ): <R>(self: Effect<R, E, A>) => Effect<R1 | R2 | R3 | R, E2 | E3, A2 | A3>
+} = circular.raceFibersWith
 
 /**
  * Returns an effect that races this effect with the specified effect,
@@ -2948,9 +2975,10 @@ export const raceFibersWith: <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
  * @since 1.0.0
  * @category mutations
  */
-export const raceFirst: <R2, E2, A2>(
-  that: Effect<R2, E2, A2>
-) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2 | A> = circular.raceFirst
+export const raceFirst: {
+  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, A | A2>
+  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2 | A>
+} = circular.raceFirst
 
 /**
  * Returns an effect that races this effect with the specified effect, calling
@@ -2959,11 +2987,19 @@ export const raceFirst: <R2, E2, A2>(
  * @since 1.0.0
  * @category mutations
  */
-export const raceWith: <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
-  that: Effect<R1, E1, A1>,
-  leftDone: (exit: Exit.Exit<E, A>, fiber: Fiber.Fiber<E1, A1>) => Effect<R2, E2, A2>,
-  rightDone: (exit: Exit.Exit<E1, A1>, fiber: Fiber.Fiber<E, A>) => Effect<R3, E3, A3>
-) => <R>(self: Effect<R, E, A>) => Effect<R1 | R2 | R3 | R, E2 | E3, A2 | A3> = circular.raceWith
+export const raceWith: {
+  <R, E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
+    self: Effect<R, E, A>,
+    that: Effect<R1, E1, A1>,
+    leftDone: (exit: Exit.Exit<E, A>, fiber: Fiber.Fiber<E1, A1>) => Effect<R2, E2, A2>,
+    rightDone: (exit: Exit.Exit<E1, A1>, fiber: Fiber.Fiber<E, A>) => Effect<R3, E3, A3>
+  ): Effect<R | R1 | R2 | R3, E2 | E3, A2 | A3>
+  <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
+    that: Effect<R1, E1, A1>,
+    leftDone: (exit: Exit.Exit<E, A>, fiber: Fiber.Fiber<E1, A1>) => Effect<R2, E2, A2>,
+    rightDone: (exit: Exit.Exit<E1, A1>, fiber: Fiber.Fiber<E, A>) => Effect<R3, E3, A3>
+  ): <R>(self: Effect<R, E, A>) => Effect<R1 | R2 | R3 | R, E2 | E3, A2 | A3>
+} = circular.raceWith
 
 /**
  * Retreives the `Random` service from the context.
@@ -3446,10 +3482,15 @@ export const schedule: <R2, Out>(
  * @since 1.0.0
  * @category mutations
  */
-export const scheduleForked: <R2, Out>(
-  schedule: Schedule.Schedule<R2, unknown, Out>
-) => <R, E, A>(self: Effect<R, E, A>) => Effect<Scope.Scope | R2 | R, never, Fiber.RuntimeFiber<E, Out>> =
-  circular.scheduleForked
+export const scheduleForked: {
+  <R, E, A, R2, Out>(
+    self: Effect<R, E, A>,
+    schedule: Schedule.Schedule<R2, unknown, Out>
+  ): Effect<Scope.Scope | R | R2, never, Fiber.RuntimeFiber<E, Out>>
+  <R2, Out>(
+    schedule: Schedule.Schedule<R2, unknown, Out>
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<Scope.Scope | R2 | R, never, Fiber.RuntimeFiber<E, Out>>
+} = circular.scheduleForked
 
 /**
  * Runs this effect according to the specified schedule starting from the
@@ -3708,9 +3749,10 @@ export const summarized: {
  * @since 1.0.0
  * @category mutations
  */
-export const supervised: <X>(
-  supervisor: Supervisor.Supervisor<X>
-) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A> = circular.supervised
+export const supervised: {
+  <R, E, A, X>(self: Effect<R, E, A>, supervisor: Supervisor.Supervisor<X>): Effect<R, E, A>
+  <X>(supervisor: Supervisor.Supervisor<X>): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+} = circular.supervised
 
 /**
  * Returns a lazily constructed effect, whose construction may itself require
@@ -3962,9 +4004,10 @@ export const timedWith: {
  * @since 1.0.0
  * @category mutations
  */
-export const timeout: (
-  duration: Duration.Duration
-) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Option.Option<A>> = circular.timeout
+export const timeout: {
+  <R, E, A>(self: Effect<R, E, A>, duration: Duration.Duration): Effect<R, E, Option.Option<A>>
+  (duration: Duration.Duration): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Option.Option<A>>
+} = circular.timeout
 
 /**
  * The same as `timeout`, but instead of producing a `None` in the event of
@@ -3973,10 +4016,10 @@ export const timeout: (
  * @since 1.0.0
  * @category mutations
  */
-export const timeoutFail: <E1>(
-  evaluate: LazyArg<E1>,
-  duration: Duration.Duration
-) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E1 | E, A> = circular.timeoutFail
+export const timeoutFail: {
+  <R, E, A, E1>(self: Effect<R, E, A>, evaluate: LazyArg<E1>, duration: Duration.Duration): Effect<R, E | E1, A>
+  <E1>(evaluate: LazyArg<E1>, duration: Duration.Duration): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E1 | E, A>
+} = circular.timeoutFail
 
 /**
  * The same as `timeout`, but instead of producing a `None` in the event of
@@ -3985,10 +4028,17 @@ export const timeoutFail: <E1>(
  * @since 1.0.0
  * @category mutations
  */
-export const timeoutFailCause: <E1>(
-  evaluate: LazyArg<Cause.Cause<E1>>,
-  duration: Duration.Duration
-) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E1 | E, A> = circular.timeoutFailCause
+export const timeoutFailCause: {
+  <R, E, A, E1>(
+    self: Effect<R, E, A>,
+    evaluate: LazyArg<Cause.Cause<E1>>,
+    duration: Duration.Duration
+  ): Effect<R, E | E1, A>
+  <E1>(
+    evaluate: LazyArg<Cause.Cause<E1>>,
+    duration: Duration.Duration
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E1 | E, A>
+} = circular.timeoutFailCause
 
 /**
  * Returns an effect that will timeout this effect, returning either the
@@ -4002,11 +4052,19 @@ export const timeoutFailCause: <E1>(
  * @since 1.0.0
  * @category mutations
  */
-export const timeoutTo: <A, B, B1>(
-  def: B1,
-  f: (a: A) => B,
-  duration: Duration.Duration
-) => <R, E>(self: Effect<R, E, A>) => Effect<R, E, B | B1> = circular.timeoutTo
+export const timeoutTo: {
+  <R, E, A, B, B1>(
+    self: Effect<R, E, A>,
+    def: B1,
+    f: (a: A) => B,
+    duration: Duration.Duration
+  ): Effect<R, E, B | B1>
+  <A, B, B1>(
+    def: B1,
+    f: (a: A) => B,
+    duration: Duration.Duration
+  ): <R, E>(self: Effect<R, E, A>) => Effect<R, E, B | B1>
+} = circular.timeoutTo
 
 /**
  * Constructs a layer from this effect.
@@ -4434,15 +4492,15 @@ export const updateRuntimeFlags: (patch: RuntimeFlagsPatch.RuntimeFlagsPatch) =>
  * @category context
  */
 export const updateService: {
-  <R, E, A, T extends Context.Tag<any>, T1 extends T>(
+  <R, E, A, T extends Context.Tag<any>>(
     self: Effect<R, E, A>,
     tag: T,
-    f: (service: T) => T1
-  ): Effect<R | T, E, A>
-  <T extends Context.Tag<any>, T1 extends T>(
+    f: (service: Context.Tag.Service<T>) => Context.Tag.Service<T>
+  ): Effect<R | Context.Tag.Service<T>, E, A>
+  <T extends Context.Tag<any>>(
     tag: T,
-    f: (service: T) => T1
-  ): <R, E, A>(self: Effect<R, E, A>) => Effect<T1 | R, E, A>
+    f: (service: Context.Tag.Service<T>) => Context.Tag.Service<T>
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<Context.Tag.Service<T> | R, E, A>
 } = effect.updateService
 
 /**
@@ -4570,10 +4628,17 @@ export const validateWith: {
  * @since 1.0.0
  * @category mutations
  */
-export const validateWithPar: <A, R1, E1, B, C>(
-  that: Effect<R1, E1, B>,
-  f: (a: A, b: B) => C
-) => <R, E>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, C> = circular.validateWithPar
+export const validateWithPar: {
+  <R, E, A, R1, E1, B, C>(
+    self: Effect<R, E, A>,
+    that: Effect<R1, E1, B>,
+    f: (a: A, b: B) => C
+  ): Effect<R | R1, E | E1, C>
+  <A, R1, E1, B, C>(
+    that: Effect<R1, E1, B>,
+    f: (a: A, b: B) => C
+  ): <R, E>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, C>
+} = circular.validateWithPar
 
 /**
  * @since 1.0.0
@@ -4803,9 +4868,10 @@ export const zipWith: {
  * @since 1.0.0
  * @category zipping
  */
-export const zipPar: <R2, E2, A2>(
-  that: Effect<R2, E2, A2>
-) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, readonly [A, A2]> = circular.zipPar
+export const zipPar: {
+  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, readonly [A, A2]>
+  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, readonly [A, A2]>
+} = circular.zipPar
 
 /**
  * Returns an effect that executes both this effect and the specified effect,
@@ -4815,9 +4881,10 @@ export const zipPar: <R2, E2, A2>(
  * @since 1.0.0
  * @category zipping
  */
-export const zipParLeft: <R2, E2, A2>(
-  that: Effect<R2, E2, A2>
-) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A> = circular.zipParLeft
+export const zipParLeft: {
+  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, A>
+  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A>
+} = circular.zipParLeft
 
 /**
  * Returns an effect that executes both this effect and the specified effect,
@@ -4827,9 +4894,10 @@ export const zipParLeft: <R2, E2, A2>(
  * @since 1.0.0
  * @category zipping
  */
-export const zipParRight: <R2, E2, A2>(
-  that: Effect<R2, E2, A2>
-) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2> = circular.zipParRight
+export const zipParRight: {
+  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, A2>
+  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2>
+} = circular.zipParRight
 
 /**
  * Sequentially zips this effect with the specified effect using the
@@ -4838,10 +4906,17 @@ export const zipParRight: <R2, E2, A2>(
  * @since 1.0.0
  * @category zipping
  */
-export const zipWithPar: <R2, E2, A2, A, B>(
-  that: Effect<R2, E2, A2>,
-  f: (a: A, b: A2) => B
-) => <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, B> = circular.zipWithPar
+export const zipWithPar: {
+  <R, E, A, R2, E2, A2, B>(
+    self: Effect<R, E, A>,
+    that: Effect<R2, E2, A2>,
+    f: (a: A, b: A2) => B
+  ): Effect<R | R2, E | E2, B>
+  <R2, E2, A2, A, B>(
+    that: Effect<R2, E2, A2>,
+    f: (a: A, b: A2) => B
+  ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, B>
+} = circular.zipWithPar
 
 /**
  * Schedules a potentially blocking effect to occur with background priority.

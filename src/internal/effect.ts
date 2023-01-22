@@ -2746,26 +2746,26 @@ export const updateFiberRefs = Debug.methodWithTrace((trace, restore) =>
 
 /* @internal */
 export const updateService = Debug.dualWithTrace<
-  <R, E, A, T extends Context.Tag<any>, T1 extends T>(
+  <R, E, A, T extends Context.Tag<any>>(
     self: Effect.Effect<R, E, A>,
     tag: T,
-    f: (service: T) => T1
-  ) => Effect.Effect<R | T, E, A>,
-  <T extends Context.Tag<any>, T1 extends T>(
+    f: (service: Context.Tag.Service<T>) => Context.Tag.Service<T>
+  ) => Effect.Effect<R | Context.Tag.Service<T>, E, A>,
+  <T extends Context.Tag<any>>(
     tag: T,
-    f: (service: T) => T1
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | T1, E, A>
+    f: (service: Context.Tag.Service<T>) => Context.Tag.Service<T>
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | Context.Tag.Service<T>, E, A>
 >(3, (trace, restore) =>
-  <R, E, A, T extends Context.Tag<any>, T1 extends T>(
+  <R, E, A, T extends Context.Tag<any>>(
     self: Effect.Effect<R, E, A>,
     tag: T,
-    f: (service: T) => T1
+    f: (service: Context.Tag.Service<T>) => Context.Tag.Service<T>
   ) =>
     core.contramapContext(self, (context) =>
       pipe(
         context,
         Context.add(tag)(restore(f)(pipe(context, Context.unsafeGet(tag))))
-      )).traced(trace) as Effect.Effect<R | T1, E, A>)
+      )).traced(trace) as Effect.Effect<R | Context.Tag.Service<T>, E, A>)
 
 /* @internal */
 export const validate = Debug.dualWithTrace<

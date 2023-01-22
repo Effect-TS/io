@@ -53,12 +53,12 @@ describe.concurrent("Effect", () => {
     pipe(
       Effect.gen(function*($) {
         const a = yield* $(
-          pipe(Effect.service(NumberService), Effect.updateService(NumberService)(({ n }) => ({ n: n + 1 })))
+          pipe(Effect.service(NumberService), Effect.updateService(NumberService, ({ n }) => ({ n: n + 1 })))
         )
         const b = yield* $(Effect.service(NumberService))
         assert.strictEqual(a.n, 1)
         assert.strictEqual(b.n, 0)
       }),
-      Effect.provideContext(pipe(Context.empty(), Context.add(NumberService)({ n: 0 })))
+      Effect.provideContext(pipe(Context.make(NumberService)({ n: 0 })))
     ))
 })
