@@ -1021,7 +1021,7 @@ export const gen: typeof Effect.gen = methodWithTrace((trace, restore) =>
   (f) =>
     refailWithTrace(
       core.suspendSucceed(() => {
-        const iterator = f((self) => new EffectGen(self) as any)
+        const iterator = restore(() => f((self) => new EffectGen(self) as any))()
         const state = restore(() => iterator.next())()
         const run = (
           state: IteratorYieldResult<any> | IteratorReturnResult<any>
