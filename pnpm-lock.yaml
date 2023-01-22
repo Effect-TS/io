@@ -17,7 +17,7 @@ importers:
       '@effect-ts/build-utils': 0.40.7
       '@effect-ts/core': ^0.60.5
       '@effect/core': ^0.0.16
-      '@effect/language-service': ^0.0.16
+      '@effect/language-service': ^0.0.17
       '@effect/vite-plugin': ^0.0.1
       '@fp-ts/core': ~0.0.11
       '@fp-ts/data': ~0.0.40
@@ -72,7 +72,7 @@ importers:
       '@effect-ts/build-utils': 0.40.7_4tiomhbv3rbbenpw35oypunhgu
       '@effect-ts/core': 0.60.5
       '@effect/core': 0.0.16
-      '@effect/language-service': 0.0.16
+      '@effect/language-service': 0.0.17
       '@effect/vite-plugin': 0.0.1_vite@4.0.4
       '@repo-tooling/eslint-plugin-dprint': 0.0.4_delwud2hnnlzcq6m6ihqj3umw4
       '@rollup/pluginutils': 5.0.2
@@ -698,8 +698,8 @@ packages:
       '@tsplus/stdlib': 0.2.8
     dev: true
 
-  /@effect/language-service/0.0.16:
-    resolution: {integrity: sha512-fqqrUS6VvyvVF3+ok6KkxcdDjtjjyHnCkyb9zD6X5gcQ5wPbc3bVilFEe6PAdhNFCoFBAS3qfxhy7iYqVurgIg==}
+  /@effect/language-service/0.0.17:
+    resolution: {integrity: sha512-98c6VtueGDvCGDfkQijsQ5uP/g4J2VhSbI83f/Rv84Gg0uJ+BbA9jno1dQubvaPRGBMIVE+1egZUduSWY6tfEg==}
     dependencies:
       '@fp-ts/core': 0.0.11
       '@fp-ts/data': 0.0.40

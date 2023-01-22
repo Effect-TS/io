@@ -719,20 +719,35 @@ export const filterNot = dualWithTrace<
 )
 
 /* @internal */
-export const filterOrDie: {
-  <A, B extends A>(
-    f: Refinement<A, B>,
-    defect: LazyArg<unknown>
-  ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, B>
-  <A>(
+export const filterOrDie = dualWithTrace<
+  {
+    <R, E, A, B extends A>(
+      self: Effect.Effect<R, E, A>,
+      f: Refinement<A, B>,
+      defect: LazyArg<unknown>
+    ): Effect.Effect<R, E, B>
+    <R, E, A>(
+      self: Effect.Effect<R, E, A>,
+      f: Predicate<A>,
+      defect: LazyArg<unknown>
+    ): Effect.Effect<R, E, A>
+  },
+  {
+    <A, B extends A>(
+      f: Refinement<A, B>,
+      defect: LazyArg<unknown>
+    ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, B>
+    <A>(
+      f: Predicate<A>,
+      defect: LazyArg<unknown>
+    ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  }
+>(3, (trace, restore) =>
+  <R, E, A>(
+    self: Effect.Effect<R, E, A>,
     f: Predicate<A>,
     defect: LazyArg<unknown>
-  ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
-} = pipeableWithTrace((trace, restore) =>
-  <A>(f: Predicate<A>, defect: LazyArg<unknown>) =>
-    <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
-      pipe(self, filterOrElse(restore(f), () => core.dieSync(restore(defect)))).traced(trace)
-)
+  ): Effect.Effect<R, E, A> => pipe(self, filterOrElse(restore(f), () => core.dieSync(restore(defect)))).traced(trace))
 
 /* @internal */
 export const filterOrDieMessage: {

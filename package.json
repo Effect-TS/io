@@ -68,7 +68,7 @@
     "@effect-ts/build-utils": "0.40.7",
     "@effect-ts/core": "^0.60.5",
     "@effect/core": "^0.0.16",
-    "@effect/language-service": "^0.0.16",
+    "@effect/language-service": "^0.0.17",
     "@effect/vite-plugin": "^0.0.1",
     "@repo-tooling/eslint-plugin-dprint": "^0.0.4",
     "@rollup/pluginutils": "^5.0.2",
