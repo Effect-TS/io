@@ -589,9 +589,10 @@ export const awaitAllChildren: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, 
  * @since 1.0.0
  * @category mutations
  */
-export const cached: (
-  timeToLive: Duration.Duration
-) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Effect<never, E, A>> = circular.cached
+export const cached: {
+  <R, E, A>(self: Effect<R, E, A>, timeToLive: Duration.Duration): Effect<R, never, Effect<never, E, A>>
+  (timeToLive: Duration.Duration): <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Effect<never, E, A>>
+} = circular.cached
 
 /**
  * Returns an effect that, if evaluated, will return the cached result of this
@@ -602,10 +603,15 @@ export const cached: (
  * @since 1.0.0
  * @category mutations
  */
-export const cachedInvalidate: (
-  timeToLive: Duration.Duration
-) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, readonly [Effect<never, E, A>, Effect<never, never, void>]> =
-  circular.cachedInvalidate
+export const cachedInvalidate: {
+  <R, E, A>(
+    self: Effect<R, E, A>,
+    timeToLive: Duration.Duration
+  ): Effect<R, never, readonly [Effect<never, E, A>, Effect<never, never, void>]>
+  (
+    timeToLive: Duration.Duration
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, readonly [Effect<never, E, A>, Effect<never, never, void>]>
+} = circular.cachedInvalidate
 
 const _catch: {
   <R, E, A, N extends keyof E, K extends E[N] & string, R1, E1, A1>(

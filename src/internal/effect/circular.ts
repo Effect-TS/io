@@ -1,5 +1,5 @@
 import type * as Cause from "@effect/io/Cause"
-import { getCallTrace } from "@effect/io/Debug"
+import { dualWithTrace, getCallTrace } from "@effect/io/Debug"
 import type * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
 import * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
@@ -118,20 +118,36 @@ export const awaitAllChildren = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.
 }
 
 /** @internal */
-export function cached(timeToLive: Duration.Duration) {
-  const trace = getCallTrace()
-  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Effect.Effect<never, E, A>> => {
-    return pipe(self, cachedInvalidate(timeToLive), core.map((tuple) => tuple[0])).traced(trace)
-  }
-}
+export const cached = dualWithTrace<
+  <R, E, A>(
+    self: Effect.Effect<R, E, A>,
+    timeToLive: Duration.Duration
+  ) => Effect.Effect<R, never, Effect.Effect<never, E, A>>,
+  (
+    timeToLive: Duration.Duration
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, Effect.Effect<never, E, A>>
+>(
+  2,
+  (trace) => (self, timeToLive) => pipe(self, cachedInvalidate(timeToLive), core.map((tuple) => tuple[0])).traced(trace)
+)
 
 /** @internal */
-export const cachedInvalidate = (timeToLive: Duration.Duration) => {
-  const trace = getCallTrace()
-  return <R, E, A>(
+export const cachedInvalidate = dualWithTrace<
+  <R, E, A>(
+    self: Effect.Effect<R, E, A>,
+    timeToLive: Duration.Duration
+  ) => Effect.Effect<R, never, readonly [Effect.Effect<never, E, A>, Effect.Effect<never, never, void>]>,
+  (
+    timeToLive: Duration.Duration
+  ) => <R, E, A>(
     self: Effect.Effect<R, E, A>
-  ): Effect.Effect<R, never, readonly [Effect.Effect<never, E, A>, Effect.Effect<never, never, void>]> => {
-    return pipe(
+  ) => Effect.Effect<R, never, readonly [Effect.Effect<never, E, A>, Effect.Effect<never, never, void>]>
+>(2, (trace) =>
+  <R, E, A>(
+    self: Effect.Effect<R, E, A>,
+    timeToLive: Duration.Duration
+  ): Effect.Effect<R, never, readonly [Effect.Effect<never, E, A>, Effect.Effect<never, never, void>]> =>
+    pipe(
       core.context<R>(),
       core.flatMap((env) =>
         pipe(
@@ -144,9 +160,7 @@ export const cachedInvalidate = (timeToLive: Duration.Duration) => {
           )
         )
       )
-    ).traced(trace)
-  }
-}
+    ).traced(trace))
 
 /** @internal */
 const computeCachedValue = <R, E, A>(
