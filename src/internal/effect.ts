@@ -1,5 +1,6 @@
 import type * as Cause from "@effect/io/Cause"
 import * as Clock from "@effect/io/Clock"
+import type { Trace } from "@effect/io/Debug"
 import { dualWithTrace, getCallTrace, methodWithTrace, pipeableWithTrace } from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
@@ -1007,24 +1008,33 @@ class EffectGen {
   }
 }
 
+/** @internal */
+export const refailWithTrace = dualWithTrace<
+  <R, E, A>(self: Effect.Effect<R, E, A>, trace: Trace) => Effect.Effect<R, E, A>,
+  (trace: Trace) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+>(2, () => (self, trace) => trace ? core.matchCauseEffect(self, core.failCause, core.succeed).traced(trace) : self)
+
 /**
  * Inspired by https://github.com/tusharmath/qio/pull/22 (revised)
   @internal */
 export const gen: typeof Effect.gen = methodWithTrace((trace, restore) =>
   (f) =>
-    core.suspendSucceed(() => {
-      const iterator = f((self) => new EffectGen(self) as any)
-      const state = restore(() => iterator.next())()
-      const run = (
-        state: IteratorYieldResult<any> | IteratorReturnResult<any>
-      ): Effect.Effect<any, any, any> => (state.done ?
-        core.succeed(state.value) :
-        pipe(
-          state.value.value as unknown as Effect.Effect<any, any, any>,
-          core.flatMap((val: any) => run(restore(() => iterator.next(val))()))
-        ))
-      return run(state)
-    }).traced(trace)
+    refailWithTrace(
+      core.suspendSucceed(() => {
+        const iterator = f((self) => new EffectGen(self) as any)
+        const state = restore(() => iterator.next())()
+        const run = (
+          state: IteratorYieldResult<any> | IteratorReturnResult<any>
+        ): Effect.Effect<any, any, any> => (state.done ?
+          core.succeed(state.value) :
+          pipe(
+            state.value.value as unknown as Effect.Effect<any, any, any>,
+            core.flatMap((val: any) => run(restore(() => iterator.next(val))()))
+          ))
+        return run(state)
+      }),
+      trace
+    )
 )
 
 /* @internal */

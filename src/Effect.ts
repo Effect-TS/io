@@ -1815,6 +1815,15 @@ export const gen: <Eff extends EffectGen<any, any, any>, AEff>(
 > = effect.gen
 
 /**
+ * @since 1.0.0
+ * @category utilities
+ */
+export const refailWithTrace: {
+  <R, E, A>(self: Effect<R, E, A>, trace: Trace): Effect<R, E, A>
+  (trace: Trace): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+} = effect.refailWithTrace
+
+/**
  * Returns a collection of all `FiberRef` values for the fiber running this
  * effect.
  *

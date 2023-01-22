@@ -1,6 +1,5 @@
 import * as Debug from "@effect/io/Debug"
 import * as Effect from "@effect/io/Effect"
-import { pipe } from "@fp-ts/data/Function"
 import parser from "error-stack-parser"
 
 Debug.runtimeDebug.parseStack = (error, depth) => {
@@ -12,9 +11,10 @@ Debug.runtimeDebug.parseStack = (error, depth) => {
   }
 }
 
-const program = pipe(
-  Effect.flatMap(Effect.succeed(0), (n) => Effect.succeed(n + 1)),
-  Effect.flatMap((r) => Effect.fail(`r: ${r}`))
-)
+const program = Effect.gen(function*($) {
+  const a = yield* $(Effect.succeed(0))
+  const b = yield* $(Effect.succeed(a + 1))
+  return yield* $(Effect.fail(`r: ${b}`))
+})
 
 Effect.unsafeFork(Effect.catchAllCause(program, Effect.logErrorCause))
