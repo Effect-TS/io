@@ -1,6 +1,5 @@
 import type * as Cause from "@effect/io/Cause"
-import type { Trace } from "@effect/io/Debug"
-import { runtimeDebug } from "@effect/io/Debug"
+import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as FiberId from "@effect/io/Fiber/Id"
 import * as internal from "@effect/io/internal/cause"
@@ -131,7 +130,7 @@ const renderSpan = (span: Option.Option<SpanAnnotation>): ReadonlyArray<string> 
   ]
 }
 
-const renderTraces = (chunk: Chunk.Chunk<Trace>): ReadonlyArray<string> => {
+const renderTraces = (chunk: Chunk.Chunk<Debug.Trace>): ReadonlyArray<string> => {
   const ret: Array<string> = []
   for (const s of chunk) {
     if (s) {
@@ -411,7 +410,7 @@ const causeToSequential = <E>(
               stack,
               Option.map((parent) =>
                 new StackAnnotation(
-                  annotation.stack.length < runtimeDebug.traceStackLimit && parent.stack.length > 0 &&
+                  annotation.stack.length < Debug.runtimeDebug.traceStackLimit && parent.stack.length > 0 &&
                     ((annotation.stack.length > 0 &&
                       Chunk.unsafeLast(parent.stack) !== Chunk.unsafeLast(annotation.stack)) ||
                       annotation.stack.length === 0) ?
@@ -419,10 +418,10 @@ const causeToSequential = <E>(
                       annotation.stack,
                       Chunk.concat(parent.stack),
                       Chunk.dedupeAdjacent,
-                      Chunk.take(runtimeDebug.traceStackLimit)
+                      Chunk.take(Debug.runtimeDebug.traceStackLimit)
                     ) :
                     annotation.stack,
-                  annotation.execution.length < runtimeDebug.traceExecutionLimit && parent.execution.length > 0 &&
+                  annotation.execution.length < Debug.runtimeDebug.traceExecutionLimit && parent.execution.length > 0 &&
                     ((annotation.execution.length > 0 &&
                       Chunk.unsafeLast(parent.execution) !== Chunk.unsafeLast(annotation.execution)) ||
                       annotation.execution.length === 0) ?
@@ -430,7 +429,7 @@ const causeToSequential = <E>(
                       annotation.execution,
                       Chunk.concat(parent.execution),
                       Chunk.dedupeAdjacent,
-                      Chunk.take(runtimeDebug.traceExecutionLimit)
+                      Chunk.take(Debug.runtimeDebug.traceExecutionLimit)
                     ) :
                     annotation.execution
                 )

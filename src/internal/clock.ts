@@ -1,5 +1,5 @@
 import type * as Clock from "@effect/io/Clock"
-import { getCallTrace } from "@effect/io/Debug"
+import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal/core"
 import * as Context from "@fp-ts/data/Context"
@@ -50,21 +50,20 @@ class ClockImpl implements Clock.Clock {
   }
 
   currentTimeMillis(): Effect.Effect<never, never, number> {
-    const trace = getCallTrace()
-    return core.sync(() => this.unsafeCurrentTimeMillis()).traced(trace)
+    return Debug.bodyWithTrace((trace) => core.sync(() => this.unsafeCurrentTimeMillis()).traced(trace))
   }
 
   scheduler(): Effect.Effect<never, never, Clock.ClockScheduler> {
-    const trace = getCallTrace()
-    return core.succeed(globalClockScheduler).traced(trace)
+    return Debug.bodyWithTrace((trace) => core.succeed(globalClockScheduler).traced(trace))
   }
 
   sleep(duration: Duration.Duration): Effect.Effect<never, never, void> {
-    const trace = getCallTrace()
-    return core.asyncInterruptEither<never, never, void>((cb) => {
-      const canceler = globalClockScheduler.unsafeSchedule(() => cb(core.unit()), duration)
-      return Either.left(core.asUnit(core.sync(canceler)))
-    }).traced(trace)
+    return Debug.bodyWithTrace((trace) =>
+      core.asyncInterruptEither<never, never, void>((cb) => {
+        const canceler = globalClockScheduler.unsafeSchedule(() => cb(core.unit()), duration)
+        return Either.left(core.asUnit(core.sync(canceler)))
+      }).traced(trace)
+    )
   }
 }
 
