@@ -3,8 +3,7 @@ import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as FiberId from "@effect/io/Fiber/Id"
 import * as internal from "@effect/io/internal/cause"
-import type { SpanAnnotation } from "@effect/io/internal/cause"
-import { isSpanAnnotation, StackAnnotation } from "@effect/io/internal/cause"
+import { StackAnnotation } from "@effect/io/internal/cause"
 import * as core from "@effect/io/internal/core"
 import * as OpCodes from "@effect/io/internal/opCodes/cause"
 import * as Chunk from "@fp-ts/data/Chunk"
@@ -108,26 +107,10 @@ const renderToString = (u: unknown): string => {
   ) {
     return u["toString"]()
   }
-  return JSON.stringify(u, null, 2)
-}
-
-/** @internal */
-const spanToLines = (span: SpanAnnotation): ReadonlyArray<string> => {
-  return span.currentSpanURI._tag === "Some" ? [span.currentSpanURI.value] : []
-}
-
-/** @internal */
-const renderSpan = (span: Option.Option<SpanAnnotation>): ReadonlyArray<string> => {
-  if (Option.isNone(span)) {
-    return []
+  if (typeof u === "string") {
+    return u
   }
-  const lines = spanToLines(span.value)
-  return lines.length === 0 ? [] : [
-    "Span:",
-    "",
-    ...lines,
-    ""
-  ]
+  return JSON.stringify(u, null, 2)
 }
 
 const renderTraces = (chunk: Chunk.Chunk<Debug.Trace>): ReadonlyArray<string> => {
@@ -148,35 +131,11 @@ const renderStack = (span: Option.Option<StackAnnotation>): ReadonlyArray<string
   if (Option.isNone(span)) {
     return []
   }
+  if (span.value.execution.length > 0) {
+    return renderTraces(Chunk.prepend(Chunk.unsafeHead(span.value.execution))(span.value.stack))
+  }
   if (span.value.stack.length > 0) {
-    const traces = renderTraces(span.value.stack)
-    if (traces.length > 0) {
-      return [
-        "Stack:",
-        "",
-        ...renderTraces(span.value.stack),
-        ""
-      ]
-    }
-  }
-  return []
-}
-
-/** @internal */
-const renderExecution = (span: Option.Option<StackAnnotation>): ReadonlyArray<string> => {
-  if (Option.isNone(span)) {
-    return []
-  }
-  if (Chunk.isNonEmpty(span.value.execution)) {
-    const traces = renderTraces(span.value.execution)
-    if (traces.length > 0) {
-      return [
-        "Execution:",
-        "",
-        ...traces,
-        ""
-      ]
-    }
+    return renderTraces(span.value.stack)
   }
   return []
 }
@@ -184,18 +143,12 @@ const renderExecution = (span: Option.Option<StackAnnotation>): ReadonlyArray<st
 /** @internal */
 const renderFail = (
   error: ReadonlyArray<string>,
-  span: Option.Option<SpanAnnotation>,
   stack: Option.Option<StackAnnotation>
 ): SequentialSegment => {
   return SequentialSegment([
     FailureSegment([
-      "A checked error was not handled.",
-      "",
       ...error,
-      "",
-      ...renderSpan(span),
-      ...renderStack(stack),
-      ...renderExecution(stack)
+      ...renderStack(stack)
     ])
   ])
 }
@@ -203,18 +156,12 @@ const renderFail = (
 /** @internal */
 const renderDie = (
   error: ReadonlyArray<string>,
-  span: Option.Option<SpanAnnotation>,
   stack: Option.Option<StackAnnotation>
 ): SequentialSegment => {
   return SequentialSegment([
     FailureSegment([
-      "An unchecked error was produced.",
-      "",
       ...error,
-      "",
-      ...renderSpan(span),
-      ...renderStack(stack),
-      ...renderExecution(stack)
+      ...renderStack(stack)
     ])
   ])
 }
@@ -222,17 +169,13 @@ const renderDie = (
 /** @internal */
 const renderInterrupt = (
   fiberId: FiberId.FiberId,
-  span: Option.Option<SpanAnnotation>,
   stack: Option.Option<StackAnnotation>
 ): SequentialSegment => {
   const ids = Array.from(FiberId.ids(fiberId)).map((id) => `#${id}`).join(", ")
   return SequentialSegment([
     FailureSegment([
       `An interrupt was produced by ${ids}.`,
-      "",
-      ...renderSpan(span),
-      ...renderStack(stack),
-      ...renderExecution(stack)
+      ...renderStack(stack)
     ])
   ])
 }
@@ -294,22 +237,21 @@ const format = (segment: Segment): ReadonlyArray<string> => {
 const linearSegments = <E>(
   cause: Cause.Cause<E>,
   renderer: Cause.CauseRenderer<E>,
-  span: Option.Option<SpanAnnotation>,
   stack: Option.Option<StackAnnotation>
 ): Effect.Effect<never, never, ReadonlyArray<Step>> => {
   switch (cause._tag) {
     case OpCodes.OP_SEQUENTIAL: {
       return pipe(
-        linearSegments(cause.left, renderer, span, stack),
+        linearSegments(cause.left, renderer, stack),
         core.zipWith(
-          linearSegments(cause.right, renderer, span, stack),
+          linearSegments(cause.right, renderer, stack),
           (left, right) => [...left, ...right]
         )
       )
     }
     default: {
       return pipe(
-        causeToSequential(cause, renderer, span, stack),
+        causeToSequential(cause, renderer, stack),
         core.map((sequential) => sequential.all)
       )
     }
@@ -320,22 +262,21 @@ const linearSegments = <E>(
 const parallelSegments = <E>(
   cause: Cause.Cause<E>,
   renderer: Cause.CauseRenderer<E>,
-  span: Option.Option<SpanAnnotation>,
   stack: Option.Option<StackAnnotation>
 ): Effect.Effect<never, never, ReadonlyArray<SequentialSegment>> => {
   switch (cause._tag) {
     case OpCodes.OP_PARALLEL: {
       return pipe(
-        parallelSegments(cause.left, renderer, span, stack),
+        parallelSegments(cause.left, renderer, stack),
         core.zipWith(
-          parallelSegments(cause.right, renderer, span, stack),
+          parallelSegments(cause.right, renderer, stack),
           (left, right) => [...left, ...right]
         )
       )
     }
     default: {
       return pipe(
-        causeToSequential(cause, renderer, span, stack),
+        causeToSequential(cause, renderer, stack),
         core.map((sequential) => [sequential])
       )
     }
@@ -346,7 +287,6 @@ const parallelSegments = <E>(
 const causeToSequential = <E>(
   cause: Cause.Cause<E>,
   renderer: Cause.CauseRenderer<E>,
-  span: Option.Option<SpanAnnotation>,
   stack: Option.Option<StackAnnotation>
 ): Effect.Effect<never, never, SequentialSegment> => {
   switch (cause._tag) {
@@ -357,55 +297,39 @@ const causeToSequential = <E>(
       return core.succeed(
         renderFail(
           renderer.renderError(cause.error),
-          span,
           stack
         )
       )
     }
     case OpCodes.OP_DIE: {
       return core.succeed(
-        renderDie(
-          renderer.renderUnknown(cause.defect),
-          span,
-          stack
-        )
+        renderDie(renderer.renderUnknown(cause.defect), stack)
       )
     }
     case OpCodes.OP_INTERRUPT: {
       return core.succeed(
-        renderInterrupt(cause.fiberId, span, stack)
+        renderInterrupt(cause.fiberId, stack)
       )
     }
     case OpCodes.OP_SEQUENTIAL: {
       return pipe(
-        linearSegments(cause, renderer, span, stack),
+        linearSegments(cause, renderer, stack),
         core.map((segments) => SequentialSegment(segments))
       )
     }
     case OpCodes.OP_PARALLEL: {
       return pipe(
-        parallelSegments(cause, renderer, span, stack),
+        parallelSegments(cause, renderer, stack),
         core.map((segments) => SequentialSegment([ParallelSegment(segments)]))
       )
     }
     case OpCodes.OP_ANNOTATED: {
       const annotation = cause.annotation
-      if (isSpanAnnotation(annotation)) {
-        return core.suspendSucceed(() =>
-          causeToSequential(
-            cause.cause,
-            renderer,
-            Option.some(annotation),
-            stack
-          )
-        )
-      }
       if (internal.isStackAnnotation(annotation)) {
         return core.suspendSucceed(() =>
           causeToSequential(
             cause.cause,
             renderer,
-            span,
             pipe(
               stack,
               Option.map((parent) =>
@@ -439,7 +363,7 @@ const causeToSequential = <E>(
           )
         )
       }
-      return core.suspendSucceed(() => causeToSequential(cause.cause, renderer, span, stack))
+      return core.suspendSucceed(() => causeToSequential(cause.cause, renderer, stack))
     }
   }
 }
@@ -466,7 +390,6 @@ const prettyDocuments = <E>(
     causeToSequential(
       cause,
       renderer,
-      Option.none,
       Option.none
     ),
     core.map((sequential) => {

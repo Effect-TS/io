@@ -116,19 +116,7 @@ export const StackAnnotationTypeId: unique symbol = internal.StackAnnotationType
  * @since 1.0.0
  * @category symbols
  */
-export const SpanAnnotationTypeId: unique symbol = internal.SpanAnnotationTypeId
-
-/**
- * @since 1.0.0
- * @category symbols
- */
 export type StackAnnotationTypeId = typeof StackAnnotationTypeId
-
-/**
- * @since 1.0.0
- * @category symbols
- */
-export type SpanAnnotationTypeId = typeof SpanAnnotationTypeId
 
 /**
  * A `Cause` represents the full history of a failure resulting from running an
@@ -173,15 +161,6 @@ export declare namespace Cause {
     readonly [StackAnnotationTypeId]: StackAnnotationTypeId
     readonly stack: Chunk.Chunk<Trace>
     readonly execution: Chunk.Chunk<Trace>
-  }
-
-  /**
-   * @since 1.0.0
-   * @category models
-   */
-  export interface SpanAnnotation {
-    readonly [SpanAnnotationTypeId]: SpanAnnotationTypeId
-    readonly currentSpanURI: Option.Option<string>
   }
 }
 

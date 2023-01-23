@@ -65,7 +65,7 @@ export const runtimeDebug: Debug = {
       "Info",
   traceExecutionLimit: process && process.env && process.env["EFFECT_TRACING_EXECUTION_LIMIT"] ?
     Number.parseInt(process.env["EFFECT_TRACING_EXECUTION_LIMIT"]) :
-    5,
+    1,
   traceStackLimit: process && process.env && process.env["EFFECT_TRACING_STACK_LIMIT"] ?
     Number.parseInt(process.env["EFFECT_TRACING_STACK_LIMIT"]) :
     5,
@@ -79,10 +79,7 @@ export const runtimeDebug: Debug = {
       const lines = stack.split("\n")
       for (let i = 0; i < lines.length; i++) {
         if (lines[i]!.startsWith("Error")) {
-          const m = lines[i + depth]?.match(/(file:\/\/)?\/(.*):(\d+):(\d+)/)
-          if (m) {
-            return `/${m[2]}:${m[3]}:${m[4]}`
-          }
+          return lines[i + depth]
         }
       }
     }

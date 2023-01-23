@@ -1108,29 +1108,6 @@ export const isStackAnnotation = (u: unknown): u is Cause.Cause.StackAnnotation 
   return typeof u === "object" && u != null && StackAnnotationTypeId in u
 }
 
-// -----------------------------------------------------------------------------
-// Span Annotations
-// -----------------------------------------------------------------------------
-
-/** @internal */
-export const SpanAnnotationTypeId: Cause.SpanAnnotationTypeId = Symbol.for(
-  "@effect/io/Cause/SpanAnnotation"
-) as Cause.SpanAnnotationTypeId
-
-/** @internal */
-export class SpanAnnotation implements Cause.Cause.SpanAnnotation {
-  readonly [SpanAnnotationTypeId]: Cause.SpanAnnotationTypeId = SpanAnnotationTypeId
-  constructor(
-    readonly currentSpanURI: Option.Option<string>
-  ) {
-  }
-}
-
-/** @internal */
-export const isSpanAnnotation = (u: unknown): u is Cause.Cause.SpanAnnotation => {
-  return typeof u === "object" && u != null && SpanAnnotationTypeId in u
-}
-
 /** @internal */
 const UnAnnotateCauseReducer = <E>(): Cause.CauseReducer<unknown, E, Cause.Cause<E>> => ({
   emptyCase: () => empty,
