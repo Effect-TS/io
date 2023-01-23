@@ -185,7 +185,7 @@ const renderInterrupt = (
 /** @internal */
 const renderError = (error: Error): ReadonlyArray<string> => {
   if (error.stack) {
-    return lines(error.stack).filter(Debug.runtimeDebug.filterStackFrame)
+    return lines(error.stack).filter((s) => !s.match(/^\s+at/) || Debug.runtimeDebug.filterStackFrame(s))
   }
   return lines(String(error))
 }
