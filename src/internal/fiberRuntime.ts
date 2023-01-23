@@ -791,8 +791,6 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    * **NOTE**: This method must be invoked by the fiber itself.
    */
   evaluateEffect(effect0: Effect.Effect<any, any, any>) {
-    const pre = runtimeDebug.tracingEnabled
-    runtimeDebug.tracingEnabled = false
     this.getSupervisor().onResume(this)
     try {
       let effect: Effect.Effect<any, any, any> | null =
@@ -838,7 +836,6 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
         }
       }
     } finally {
-      runtimeDebug.tracingEnabled = pre
       this.getSupervisor().onSuspend(this)
     }
   }

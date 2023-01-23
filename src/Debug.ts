@@ -2,8 +2,6 @@
  * @since 1.0.0
  */
 
-import { identity } from "@fp-ts/data/Function"
-
 /**
  * @since 1.0.0
  * @category models
@@ -91,7 +89,7 @@ export const runtimeDebug: Debug = {
   }
 }
 
-const restore: Restore = (f): any =>
+const restoreOn: Restore = (f): any =>
   (...args: Array<any>) => {
     if (runtimeDebug.tracingEnabled) {
       return f(...args)
@@ -101,6 +99,19 @@ const restore: Restore = (f): any =>
       return f(...args)
     } finally {
       runtimeDebug.tracingEnabled = false
+    }
+  }
+
+const restoreOff: Restore = (f): any =>
+  (...args: Array<any>) => {
+    if (!runtimeDebug.tracingEnabled) {
+      return f(...args)
+    }
+    runtimeDebug.tracingEnabled = false
+    try {
+      return f(...args)
+    } finally {
+      runtimeDebug.tracingEnabled = true
     }
   }
 
@@ -136,7 +147,7 @@ export const bodyWithTrace = <A>(
   ) => A
 ) => {
   if (!runtimeDebug.tracingEnabled) {
-    return body(void 0, identity)
+    return body(void 0, restoreOff)
   }
   runtimeDebug.tracingEnabled = false
   try {
@@ -144,7 +155,7 @@ export const bodyWithTrace = <A>(
     Error.stackTraceLimit = 3
     const source = sourceLocation(new Error())
     Error.stackTraceLimit = limit
-    return body(source as SourceLocation, restore)
+    return body(source as SourceLocation, restoreOn)
   } finally {
     runtimeDebug.tracingEnabled = true
   }
@@ -159,7 +170,7 @@ export const methodWithTrace = <A extends (...args: Array<any>) => any>(
   // @ts-expect-error
   return (...args) => {
     if (!runtimeDebug.tracingEnabled) {
-      return body(void 0, identity)(...args)
+      return body(void 0, restoreOff)(...args)
     }
     runtimeDebug.tracingEnabled = false
     try {
@@ -167,7 +178,7 @@ export const methodWithTrace = <A extends (...args: Array<any>) => any>(
       Error.stackTraceLimit = 2
       const error = sourceLocation(new Error())
       Error.stackTraceLimit = limit
-      return body(error, restore)(...args)
+      return body(error, restoreOn)(...args)
     } finally {
       runtimeDebug.tracingEnabled = true
     }
@@ -183,7 +194,7 @@ export const pipeableWithTrace = <A extends (...args: Array<any>) => any>(
   // @ts-expect-error
   return (...args) => {
     if (!runtimeDebug.tracingEnabled) {
-      const a = body(void 0, identity)
+      const a = body(void 0, restoreOff)
       return ((self: any) => untraced(() => a(...args)(self))) as any
     }
     runtimeDebug.tracingEnabled = false
@@ -192,7 +203,7 @@ export const pipeableWithTrace = <A extends (...args: Array<any>) => any>(
       Error.stackTraceLimit = 2
       const source = sourceLocation(new Error())
       Error.stackTraceLimit = limit
-      const f = body(source, restore)
+      const f = body(source, restoreOn)
       return ((self: any) => untraced(() => f(...args)(self))) as any
     } finally {
       runtimeDebug.tracingEnabled = true
@@ -210,7 +221,7 @@ export const dualWithTrace = <DF extends (...args: Array<any>) => any, P extends
   // @ts-expect-error
   return (...args) => {
     if (!runtimeDebug.tracingEnabled) {
-      const f = body(void 0, identity)
+      const f = body(void 0, restoreOff)
       if (args.length === dfLen) {
         return untraced(() => f(...args))
       }
@@ -222,7 +233,7 @@ export const dualWithTrace = <DF extends (...args: Array<any>) => any, P extends
       Error.stackTraceLimit = 2
       const source = sourceLocation(new Error())
       Error.stackTraceLimit = limit
-      const f = body(source, restore)
+      const f = body(source, restoreOn)
       if (args.length === dfLen) {
         return untraced(() => f(...args))
       }
@@ -240,25 +251,30 @@ export const untraced = <A>(
   body: (restore: Restore) => A
 ) => {
   if (!runtimeDebug.tracingEnabled) {
-    return body(identity)
+    return body(restoreOff)
   }
   runtimeDebug.tracingEnabled = false
   try {
-    return body((f): any =>
-      (...args: Array<any>) => {
-        if (runtimeDebug.tracingEnabled) {
-          return f(...args)
-        }
-        runtimeDebug.tracingEnabled = true
-        try {
-          return f(...args)
-        } finally {
-          runtimeDebug.tracingEnabled = false
-        }
-      }
-    )
+    return body(restoreOn)
   } finally {
     runtimeDebug.tracingEnabled = true
+  }
+}
+
+/**
+ * @since 1.0.0
+ */
+export const traced = <A>(
+  body: (restore: Restore) => A
+) => {
+  if (runtimeDebug.tracingEnabled) {
+    return body(restoreOn)
+  }
+  runtimeDebug.tracingEnabled = true
+  try {
+    return body(restoreOff)
+  } finally {
+    runtimeDebug.tracingEnabled = false
   }
 }
 
