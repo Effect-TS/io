@@ -174,6 +174,22 @@ export const pipeableWithTrace = <A extends (...args: Array<any>) => any>(
 /**
  * @since 1.0.0
  */
+export const dual = <DF extends (...args: Array<any>) => any, P extends (...args: Array<any>) => any>(
+  dfLen: Parameters<DF>["length"],
+  body: DF
+): DF & P => {
+  // @ts-expect-error
+  return (...args) => {
+    if (args.length === dfLen) {
+      return body(...args)
+    }
+    return ((self: any) => body(self, ...args)) as any
+  }
+}
+
+/**
+ * @since 1.0.0
+ */
 export const dualWithTrace = <DF extends (...args: Array<any>) => any, P extends (...args: Array<any>) => any>(
   dfLen: Parameters<DF>["length"],
   body: ((trace: Trace, restore: Restore) => DF)

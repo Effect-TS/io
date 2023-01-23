@@ -242,4 +242,7 @@ export const isUnsupported: (self: ConfigError) => self is Unsupported = interna
  * @since 1.0.0
  * @category mutations
  */
-export const prefixed: (prefix: Chunk.Chunk<string>) => (self: ConfigError) => ConfigError = internal.prefixed
+export const prefixed: {
+  (self: ConfigError, prefix: Chunk.Chunk<string>): ConfigError
+  (prefix: Chunk.Chunk<string>): (self: ConfigError) => ConfigError
+} = internal.prefixed

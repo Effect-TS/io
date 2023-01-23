@@ -1,5 +1,6 @@
 import type * as Cause from "@effect/io/Cause"
 import type * as ConfigError from "@effect/io/Config/Error"
+import * as Debug from "@effect/io/Debug"
 import * as OpCodes from "@effect/io/internal/opCodes/configError"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Either from "@fp-ts/data/Either"
@@ -153,30 +154,34 @@ export const isUnsupported = (self: ConfigError.ConfigError): self is ConfigErro
 }
 
 /** @internal */
-export const prefixed = (prefix: Chunk.Chunk<string>) => {
-  return (self: ConfigError.ConfigError): ConfigError.ConfigError => {
-    switch (self._tag) {
-      case OpCodes.OP_AND: {
-        return And(prefixed(prefix)(self.left), prefixed(prefix)(self.right))
-      }
-      case OpCodes.OP_OR: {
-        return Or(prefixed(prefix)(self.left), prefixed(prefix)(self.right))
-      }
-      case OpCodes.OP_INVALID_DATA: {
-        return InvalidData(pipe(prefix, Chunk.concat(self.path)), self.message)
-      }
-      case OpCodes.OP_MISSING_DATA: {
-        return MissingData(pipe(prefix, Chunk.concat(self.path)), self.message)
-      }
-      case OpCodes.OP_SOURCE_UNAVAILABLE: {
-        return SourceUnavailable(pipe(prefix, Chunk.concat(self.path)), self.message, self.cause)
-      }
-      case OpCodes.OP_UNSUPPORTED: {
-        return Unsupported(pipe(prefix, Chunk.concat(self.path)), self.message)
-      }
+export const prefixed: {
+  (self: ConfigError.ConfigError, prefix: Chunk.Chunk<string>): ConfigError.ConfigError
+  (prefix: Chunk.Chunk<string>): (self: ConfigError.ConfigError) => ConfigError.ConfigError
+} = Debug.dual<
+  (self: ConfigError.ConfigError, prefix: Chunk.Chunk<string>) => ConfigError.ConfigError,
+  (prefix: Chunk.Chunk<string>) => (self: ConfigError.ConfigError) => ConfigError.ConfigError
+>(2, (self, prefix) => {
+  switch (self._tag) {
+    case OpCodes.OP_AND: {
+      return And(prefixed(prefix)(self.left), prefixed(prefix)(self.right))
+    }
+    case OpCodes.OP_OR: {
+      return Or(prefixed(prefix)(self.left), prefixed(prefix)(self.right))
+    }
+    case OpCodes.OP_INVALID_DATA: {
+      return InvalidData(pipe(prefix, Chunk.concat(self.path)), self.message)
+    }
+    case OpCodes.OP_MISSING_DATA: {
+      return MissingData(pipe(prefix, Chunk.concat(self.path)), self.message)
+    }
+    case OpCodes.OP_SOURCE_UNAVAILABLE: {
+      return SourceUnavailable(pipe(prefix, Chunk.concat(self.path)), self.message, self.cause)
+    }
+    case OpCodes.OP_UNSUPPORTED: {
+      return Unsupported(pipe(prefix, Chunk.concat(self.path)), self.message)
     }
   }
-}
+})
 
 /** @internal */
 const IsMissingDataOnlyReducer: ConfigError.ConfigErrorReducer<unknown, boolean> = {
