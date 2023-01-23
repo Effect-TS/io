@@ -32,7 +32,7 @@ class SizedImpl implements Sized {
   withSize(size: number) {
     return Debug.bodyWithTrace((trace) =>
       <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
-        core.fiberRefLocally(this.fiberRef, size)(effect).traced(trace)
+        Debug.untraced(() => core.fiberRefLocally(this.fiberRef, size)(effect).traced(trace))
     )
   }
 }
