@@ -173,15 +173,13 @@ const makeUnboundedHub = <A>(): AtomicHub<A> => {
 }
 
 /** @internal */
-const makeSubscription = <A>(
-  hub: AtomicHub<A>,
-  subscribers: Subscribers<A>,
-  strategy: HubStrategy<A>
-): Effect.Effect<never, never, Queue.Dequeue<A>> => {
-  const trace = Debug.getCallTrace()
-  return pipe(
-    core.deferredMake<never, void>(),
-    core.map((deferred) =>
+const makeSubscription = Debug.methodWithTrace((trace) =>
+  <A>(
+    hub: AtomicHub<A>,
+    subscribers: Subscribers<A>,
+    strategy: HubStrategy<A>
+  ): Effect.Effect<never, never, Queue.Dequeue<A>> =>
+    core.map(core.deferredMake<never, void>(), (deferred) =>
       unsafeMakeSubscription(
         hub,
         subscribers,
@@ -190,10 +188,8 @@ const makeSubscription = <A>(
         deferred,
         MutableRef.make(false),
         strategy
-      )
-    )
-  ).traced(trace)
-}
+      )).traced(trace)
+)
 
 /** @internal */
 export const unsafeMakeSubscription = <A>(
@@ -858,26 +854,22 @@ class SubscriptionImpl<A> implements Queue.Dequeue<A> {
   }
 
   size(): Effect.Effect<never, never, number> {
-    const trace = Debug.getCallTrace()
     return core.suspendSucceed(() =>
       MutableRef.get(this.shutdownFlag)
         ? core.interrupt()
         : core.succeed(this.subscription.size())
-    ).traced(trace)
+    )
   }
 
   isFull(): Effect.Effect<never, never, boolean> {
-    const trace = Debug.getCallTrace()
-    return pipe(this.size(), core.map((size) => size === this.capacity())).traced(trace)
+    return pipe(this.size(), core.map((size) => size === this.capacity()))
   }
 
   isEmpty(): Effect.Effect<never, never, boolean> {
-    const trace = Debug.getCallTrace()
-    return pipe(this.size(), core.map((size) => size === 0)).traced(trace)
+    return pipe(this.size(), core.map((size) => size === 0))
   }
 
   shutdown(): Effect.Effect<never, never, void> {
-    const trace = Debug.getCallTrace()
     return pipe(
       core.withFiberRuntime<never, never, void>((state) => {
         pipe(this.shutdownFlag, MutableRef.set(true))
@@ -891,21 +883,18 @@ class SubscriptionImpl<A> implements Queue.Dequeue<A> {
         )
       }),
       core.uninterruptible
-    ).traced(trace)
+    )
   }
 
   isShutdown(): Effect.Effect<never, never, boolean> {
-    const trace = Debug.getCallTrace()
-    return core.sync(() => MutableRef.get(this.shutdownFlag)).traced(trace)
+    return core.sync(() => MutableRef.get(this.shutdownFlag))
   }
 
   awaitShutdown(): Effect.Effect<never, never, void> {
-    const trace = Debug.getCallTrace()
-    return core.deferredAwait(this.shutdownHook).traced(trace)
+    return core.deferredAwait(this.shutdownHook)
   }
 
   take(): Effect.Effect<never, never, A> {
-    const trace = Debug.getCallTrace()
     return core.withFiberRuntime<never, never, A>((state) => {
       if (MutableRef.get(this.shutdownFlag)) {
         return core.interrupt()
@@ -933,11 +922,10 @@ class SubscriptionImpl<A> implements Queue.Dequeue<A> {
         this.strategy.unsafeOnHubEmptySpace(this.hub, this.subscribers)
         return core.succeed(message)
       }
-    }).traced(trace)
+    })
   }
 
   takeAll(): Effect.Effect<never, never, Chunk.Chunk<A>> {
-    const trace = Debug.getCallTrace()
     return core.suspendSucceed(() => {
       if (MutableRef.get(this.shutdownFlag)) {
         return core.interrupt()
@@ -947,11 +935,10 @@ class SubscriptionImpl<A> implements Queue.Dequeue<A> {
         : Chunk.empty()
       this.strategy.unsafeOnHubEmptySpace(this.hub, this.subscribers)
       return core.succeed(as)
-    }).traced(trace)
+    })
   }
 
   takeUpTo(this: this, max: number): Effect.Effect<never, never, Chunk.Chunk<A>> {
-    const trace = Debug.getCallTrace()
     return core.suspendSucceed(() => {
       if (MutableRef.get(this.shutdownFlag)) {
         return core.interrupt()
@@ -961,12 +948,11 @@ class SubscriptionImpl<A> implements Queue.Dequeue<A> {
         : Chunk.empty()
       this.strategy.unsafeOnHubEmptySpace(this.hub, this.subscribers)
       return core.succeed(as)
-    }).traced(trace)
+    })
   }
 
   takeBetween(min: number, max: number): Effect.Effect<never, never, Chunk.Chunk<A>> {
-    const trace = Debug.getCallTrace()
-    return core.suspendSucceed(() => takeRemainderLoop(this, min, max, Chunk.empty())).traced(trace)
+    return core.suspendSucceed(() => takeRemainderLoop(this, min, max, Chunk.empty()))
   }
 }
 
@@ -1024,38 +1010,44 @@ class HubImpl<A> implements Hub.Hub<A> {
   }
 
   size(): Effect.Effect<never, never, number> {
-    const trace = Debug.getCallTrace()
-    return core.suspendSucceed(() =>
-      MutableRef.get(this.shutdownFlag) ?
-        core.interrupt() :
-        core.sync(() => this.hub.size())
-    ).traced(trace)
+    return Debug.bodyWithTrace((trace) =>
+      core.suspendSucceed(() =>
+        MutableRef.get(this.shutdownFlag) ?
+          core.interrupt() :
+          core.sync(() => this.hub.size())
+      ).traced(trace)
+    )
   }
 
   isFull(): Effect.Effect<never, never, boolean> {
-    const trace = Debug.getCallTrace()
-    return pipe(this.size(), core.map((size) => size === this.capacity())).traced(trace)
+    return Debug.bodyWithTrace((trace) =>
+      pipe(
+        this.size(),
+        core.map((size) => size === this.capacity())
+      ).traced(trace)
+    )
   }
 
   isEmpty(): Effect.Effect<never, never, boolean> {
-    const trace = Debug.getCallTrace()
-    return pipe(this.size(), core.map((size) => size === 0)).traced(trace)
+    return Debug.bodyWithTrace((trace) =>
+      pipe(
+        this.size(),
+        core.map((size) => size === 0)
+      ).traced(trace)
+    )
   }
 
   awaitShutdown(): Effect.Effect<never, never, void> {
-    const trace = Debug.getCallTrace()
-    return core.deferredAwait(this.shutdownHook).traced(trace)
+    return Debug.bodyWithTrace((trace) => core.deferredAwait(this.shutdownHook).traced(trace))
   }
 
   isShutdown(): Effect.Effect<never, never, boolean> {
-    const trace = Debug.getCallTrace()
-    return core.sync(() => MutableRef.get(this.shutdownFlag)).traced(trace)
+    return Debug.bodyWithTrace((trace) => core.sync(() => MutableRef.get(this.shutdownFlag)).traced(trace))
   }
 
   shutdown(): Effect.Effect<never, never, void> {
-    const trace = Debug.getCallTrace()
-    return pipe(
-      core.withFiberRuntime<never, never, void>((state) => {
+    return Debug.bodyWithTrace((trace) =>
+      core.uninterruptible(core.withFiberRuntime<never, never, void>((state) => {
         pipe(this.shutdownFlag, MutableRef.set(true))
         return pipe(
           this.scope.close(core.exitInterrupt(state.id())),
@@ -1063,99 +1055,91 @@ class HubImpl<A> implements Hub.Hub<A> {
           core.whenEffect(core.deferredSucceed(this.shutdownHook, void 0)),
           core.asUnit
         )
-      }),
-      core.uninterruptible
-    ).traced(trace)
+      })).traced(trace)
+    )
   }
 
   publish(value: A): Effect.Effect<never, never, boolean> {
-    const trace = Debug.getCallTrace()
-    return core.suspendSucceed(() => {
-      if (MutableRef.get(this.shutdownFlag)) {
-        return core.interrupt()
-      }
+    return Debug.bodyWithTrace((trace) =>
+      core.suspendSucceed(() => {
+        if (MutableRef.get(this.shutdownFlag)) {
+          return core.interrupt()
+        }
 
-      if ((this.hub as AtomicHub<unknown>).publish(value)) {
-        this.strategy.unsafeCompleteSubscribers(this.hub, this.subscribers)
-        return core.succeed(true)
-      }
+        if ((this.hub as AtomicHub<unknown>).publish(value)) {
+          this.strategy.unsafeCompleteSubscribers(this.hub, this.subscribers)
+          return core.succeed(true)
+        }
 
-      return this.strategy.handleSurplus(
-        this.hub,
-        this.subscribers,
-        Chunk.of(value),
-        this.shutdownFlag
-      )
-    }).traced(trace)
+        return this.strategy.handleSurplus(
+          this.hub,
+          this.subscribers,
+          Chunk.of(value),
+          this.shutdownFlag
+        )
+      }).traced(trace)
+    )
   }
 
   publishAll(elements: Iterable<A>): Effect.Effect<never, never, boolean> {
-    const trace = Debug.getCallTrace()
-    return core.suspendSucceed(() => {
-      if (MutableRef.get(this.shutdownFlag)) {
-        return core.interrupt()
-      }
-      const surplus = unsafePublishAll(this.hub, elements)
-      this.strategy.unsafeCompleteSubscribers(this.hub, this.subscribers)
-      if (Chunk.isEmpty(surplus)) {
-        return core.succeed(true)
-      }
-      return this.strategy.handleSurplus(
-        this.hub,
-        this.subscribers,
-        surplus,
-        this.shutdownFlag
-      )
-    }).traced(trace)
+    return Debug.bodyWithTrace((trace) =>
+      core.suspendSucceed(() => {
+        if (MutableRef.get(this.shutdownFlag)) {
+          return core.interrupt()
+        }
+        const surplus = unsafePublishAll(this.hub, elements)
+        this.strategy.unsafeCompleteSubscribers(this.hub, this.subscribers)
+        if (Chunk.isEmpty(surplus)) {
+          return core.succeed(true)
+        }
+        return this.strategy.handleSurplus(
+          this.hub,
+          this.subscribers,
+          surplus,
+          this.shutdownFlag
+        )
+      }).traced(trace)
+    )
   }
 
   subscribe(): Effect.Effect<Scope.Scope, never, Queue.Dequeue<A>> {
-    const trace = Debug.getCallTrace()
-    return fiberRuntime.acquireRelease(
-      pipe(
-        makeSubscription(this.hub, this.subscribers, this.strategy),
-        core.tap((dequeue) => this.scope.addFinalizer(() => dequeue.shutdown()))
-      ),
-      (dequeue) => dequeue.shutdown()
-    ).traced(trace)
+    return Debug.bodyWithTrace((trace) =>
+      fiberRuntime.acquireRelease(
+        pipe(
+          makeSubscription(this.hub, this.subscribers, this.strategy),
+          core.tap((dequeue) => this.scope.addFinalizer(() => dequeue.shutdown()))
+        ),
+        (dequeue) => dequeue.shutdown()
+      ).traced(trace)
+    )
   }
 
   offer(value: A): Effect.Effect<never, never, boolean> {
-    const trace = Debug.getCallTrace()
-    return this.publish(value).traced(trace)
+    return Debug.bodyWithTrace((trace) => this.publish(value).traced(trace))
   }
 
   offerAll(elements: Iterable<A>): Effect.Effect<never, never, boolean> {
-    const trace = Debug.getCallTrace()
-    return this.publishAll(elements).traced(trace)
+    return Debug.bodyWithTrace((trace) => this.publishAll(elements).traced(trace))
   }
 }
 
 /** @internal */
-export const makeHub = <A>(
-  hub: AtomicHub<A>,
-  strategy: HubStrategy<A>
-): Effect.Effect<never, never, Hub.Hub<A>> => {
-  const trace = Debug.getCallTrace()
-  return pipe(
-    fiberRuntime.scopeMake(),
-    core.flatMap((scope) =>
-      pipe(
-        core.deferredMake<never, void>(),
-        core.map((deferred) =>
-          unsafeMakeHub(
-            hub,
-            new Map(),
-            scope,
-            deferred,
-            MutableRef.make(false),
-            strategy
-          )
-        )
-      )
-    )
-  ).traced(trace)
-}
+export const makeHub = Debug.methodWithTrace((trace) =>
+  <A>(
+    hub: AtomicHub<A>,
+    strategy: HubStrategy<A>
+  ): Effect.Effect<never, never, Hub.Hub<A>> =>
+    core.flatMap(fiberRuntime.scopeMake(), (scope) =>
+      core.map(core.deferredMake<never, void>(), (deferred) =>
+        unsafeMakeHub(
+          hub,
+          new Map(),
+          scope,
+          deferred,
+          MutableRef.make(false),
+          strategy
+        ))).traced(trace)
+)
 
 /** @internal */
 export const unsafeMakeHub = <A>(
@@ -1297,7 +1281,6 @@ class BackPressureStrategy<A> implements HubStrategy<A> {
   > = MutableQueue.unbounded()
 
   shutdown(): Effect.Effect<never, never, void> {
-    const trace = Debug.getCallTrace()
     return pipe(
       core.fiberId(),
       core.flatMap((fiberId) =>
@@ -1315,7 +1298,7 @@ class BackPressureStrategy<A> implements HubStrategy<A> {
           )
         )
       )
-    ).traced(trace)
+    )
   }
 
   handleSurplus(
@@ -1324,7 +1307,6 @@ class BackPressureStrategy<A> implements HubStrategy<A> {
     elements: Iterable<A>,
     isShutdown: MutableRef.MutableRef<boolean>
   ): Effect.Effect<never, never, boolean> {
-    const trace = Debug.getCallTrace()
     return core.withFiberRuntime<never, never, boolean>((state) => {
       const deferred = core.deferredUnsafeMake<never, boolean>(state.id())
       return pipe(
@@ -1338,7 +1320,7 @@ class BackPressureStrategy<A> implements HubStrategy<A> {
         }),
         core.onInterrupt(() => core.sync(() => this.unsafeRemove(deferred)))
       )
-    }).traced(trace)
+    })
   }
 
   unsafeOnHubEmptySpace(
@@ -1421,8 +1403,7 @@ class BackPressureStrategy<A> implements HubStrategy<A> {
  */
 export class DroppingStrategy<A> implements HubStrategy<A> {
   shutdown(): Effect.Effect<never, never, void> {
-    const trace = Debug.getCallTrace()
-    return core.unit().traced(trace)
+    return core.unit()
   }
 
   handleSurplus(
@@ -1431,8 +1412,7 @@ export class DroppingStrategy<A> implements HubStrategy<A> {
     _elements: Iterable<A>,
     _isShutdown: MutableRef.MutableRef<boolean>
   ): Effect.Effect<never, never, boolean> {
-    const trace = Debug.getCallTrace()
-    return core.succeed(false).traced(trace)
+    return core.succeed(false)
   }
 
   unsafeOnHubEmptySpace(
@@ -1467,8 +1447,7 @@ export class DroppingStrategy<A> implements HubStrategy<A> {
  */
 export class SlidingStrategy<A> implements HubStrategy<A> {
   shutdown(): Effect.Effect<never, never, void> {
-    const trace = Debug.getCallTrace()
-    return core.unit().traced(trace)
+    return core.unit()
   }
 
   handleSurplus(
@@ -1477,12 +1456,11 @@ export class SlidingStrategy<A> implements HubStrategy<A> {
     elements: Iterable<A>,
     _isShutdown: MutableRef.MutableRef<boolean>
   ): Effect.Effect<never, never, boolean> {
-    const trace = Debug.getCallTrace()
     return core.sync(() => {
       this.unsafeSlidingPublish(hub, elements)
       this.unsafeCompleteSubscribers(hub, subscribers)
       return true
-    }).traced(trace)
+    })
   }
 
   unsafeOnHubEmptySpace(

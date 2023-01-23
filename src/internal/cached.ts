@@ -47,10 +47,7 @@ export const manual = Debug.methodWithTrace((trace) =>
         core.map((ref) => ({
           [CachedTypeId]: cachedVariance,
           scopedRef: ref,
-          acquire: () => {
-            const trace = Debug.getCallTrace()
-            return pipe(acquire, core.provideContext(env)).traced(trace)
-          }
+          acquire: () => Debug.bodyWithTrace((trace) => core.provideContext(acquire, env).traced(trace))
         }))
       )).traced(trace)
 )

@@ -1,4 +1,4 @@
-import { getCallTrace } from "@effect/io/Debug"
+import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
 import type * as Fiber from "@effect/io/Fiber"
@@ -35,8 +35,7 @@ export class ProxySupervisor<T> implements Supervisor.Supervisor<T> {
   }
 
   value(): Effect.Effect<never, never, T> {
-    const trace = getCallTrace()
-    return this.value0().traced(trace)
+    return Debug.bodyWithTrace((trace) => this.value0().traced(trace))
   }
 
   onStart<R, E, A>(
@@ -84,8 +83,12 @@ export class Zip<T0, T1> implements Supervisor.Supervisor<readonly [T0, T1]> {
   }
 
   value(): Effect.Effect<never, never, readonly [T0, T1]> {
-    const trace = getCallTrace()
-    return pipe(this.left.value(), core.zip(this.right.value())).traced(trace)
+    return Debug.bodyWithTrace((trace) =>
+      core.zip(
+        this.left.value(),
+        this.right.value()
+      ).traced(trace)
+    )
   }
 
   onStart<R, E, A>(
@@ -132,7 +135,7 @@ export class Track implements Supervisor.Supervisor<Chunk.Chunk<Fiber.RuntimeFib
   readonly fibers: Set<Fiber.RuntimeFiber<any, any>> = new Set()
 
   value(): Effect.Effect<never, never, Chunk.Chunk<Fiber.RuntimeFiber<any, any>>> {
-    return core.sync(() => Chunk.fromIterable(this.fibers))
+    return Debug.bodyWithTrace((trace) => core.sync(() => Chunk.fromIterable(this.fibers)).traced(trace))
   }
 
   onStart<R, E, A>(
@@ -178,8 +181,7 @@ export class Const<T> implements Supervisor.Supervisor<T> {
   }
 
   value(): Effect.Effect<never, never, T> {
-    const trace = getCallTrace()
-    return this.effect.traced(trace)
+    return Debug.bodyWithTrace((trace) => this.effect.traced(trace))
   }
 
   onStart<R, E, A>(
@@ -223,8 +225,7 @@ class FibersIn implements Supervisor.Supervisor<SortedSet.SortedSet<Fiber.Runtim
   }
 
   value(): Effect.Effect<never, never, SortedSet.SortedSet<Fiber.RuntimeFiber<any, any>>> {
-    const trace = getCallTrace()
-    return core.sync(() => MutableRef.get(this.ref)).traced(trace)
+    return Debug.bodyWithTrace((trace) => core.sync(() => MutableRef.get(this.ref)).traced(trace))
   }
 
   onStart<R, E, A>(
@@ -269,14 +270,13 @@ export const unsafeTrack = (): Supervisor.Supervisor<Chunk.Chunk<Fiber.RuntimeFi
 }
 
 /** @internal */
-export const track = (): Effect.Effect<
-  never,
-  never,
-  Supervisor.Supervisor<Chunk.Chunk<Fiber.RuntimeFiber<any, any>>>
-> => {
-  const trace = getCallTrace()
-  return core.sync(unsafeTrack).traced(trace)
-}
+export const track = Debug.methodWithTrace((trace) =>
+  (): Effect.Effect<
+    never,
+    never,
+    Supervisor.Supervisor<Chunk.Chunk<Fiber.RuntimeFiber<any, any>>>
+  > => core.sync(unsafeTrack).traced(trace)
+)
 
 /** @internal */
 export const fromEffect = <A>(effect: Effect.Effect<never, never, A>): Supervisor.Supervisor<A> => {
@@ -287,13 +287,12 @@ export const fromEffect = <A>(effect: Effect.Effect<never, never, A>): Superviso
 export const none: Supervisor.Supervisor<void> = fromEffect(core.unit())
 
 /** @internal */
-export const fibersIn = (
-  ref: MutableRef.MutableRef<SortedSet.SortedSet<Fiber.RuntimeFiber<any, any>>>
-): Effect.Effect<
-  never,
-  never,
-  Supervisor.Supervisor<SortedSet.SortedSet<Fiber.RuntimeFiber<any, any>>>
-> => {
-  const trace = getCallTrace()
-  return core.sync(() => new FibersIn(ref)).traced(trace)
-}
+export const fibersIn = Debug.methodWithTrace((trace) =>
+  (
+    ref: MutableRef.MutableRef<SortedSet.SortedSet<Fiber.RuntimeFiber<any, any>>>
+  ): Effect.Effect<
+    never,
+    never,
+    Supervisor.Supervisor<SortedSet.SortedSet<Fiber.RuntimeFiber<any, any>>>
+  > => core.sync(() => new FibersIn(ref)).traced(trace)
+)

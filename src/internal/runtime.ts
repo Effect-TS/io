@@ -1,4 +1,4 @@
-import { getCallTrace } from "@effect/io/Debug"
+import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import * as Fiber from "@effect/io/Fiber"
@@ -225,30 +225,23 @@ export const unsafeRunSyncEither = defaultRuntime.unsafeRunSyncEither
 // circular with Effect
 
 /** @internal */
-export const asyncEffect = <R, E, A, R2, E2, X>(
-  register: (callback: (_: Effect.Effect<R, E, A>) => void) => Effect.Effect<R2, E2, X>
-): Effect.Effect<R | R2, E | E2, A> => {
-  const trace = getCallTrace()
-  return pipe(
-    core.deferredMake<E | E2, A>(),
-    core.flatMap((deferred) =>
-      pipe(
-        runtime<R | R2>(),
-        core.flatMap((runtime) =>
-          core.uninterruptibleMask((restore) =>
-            pipe(
-              restore(
-                pipe(
-                  register((cb) => runtime.unsafeRun(pipe(cb, core.intoDeferred(deferred)))),
-                  core.catchAllCause((cause) => core.deferredFailCause(deferred, cause))
-                )
-              ),
-              FiberRuntime.fork,
-              core.zipRight(restore(core.deferredAwait(deferred)))
-            )
+export const asyncEffect = Debug.methodWithTrace((trace, restoreTrace) =>
+  <R, E, A, R2, E2, X>(
+    register: (callback: (_: Effect.Effect<R, E, A>) => void) => Effect.Effect<R2, E2, X>
+  ): Effect.Effect<R | R2, E | E2, A> =>
+    core.flatMap(core.deferredMake<E | E2, A>(), (deferred) =>
+      core.flatMap(runtime<R | R2>(), (runtime) =>
+        core.uninterruptibleMask((restore) =>
+          core.zipRight(
+            FiberRuntime.fork(restore(
+              core.catchAllCause(
+                restoreTrace(register)((cb) =>
+                  runtime.unsafeRun(pipe(cb, core.intoDeferred(deferred)))
+                ),
+                (cause) => core.deferredFailCause(deferred, cause)
+              )
+            )),
+            restore(core.deferredAwait(deferred))
           )
-        )
-      )
-    )
-  ).traced(trace)
-}
+        ))).traced(trace)
+)

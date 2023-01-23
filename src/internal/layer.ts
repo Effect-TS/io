@@ -602,19 +602,17 @@ export const mapError = <E, E1>(f: (error: E) => E1) => {
 }
 
 /** @internal */
-export const memoize = <RIn, E, ROut>(
-  self: Layer.Layer<RIn, E, ROut>
-): Effect.Effect<Scope.Scope, never, Layer.Layer<RIn, E, ROut>> => {
-  const trace = Debug.getCallTrace()
-  return fiberRuntime.scopeWith((scope) =>
-    pipe(
-      self,
-      buildWithScope(scope),
-      effect.memoize,
-      core.map(fromEffectContext)
-    )
-  ).traced(trace)
-}
+export const memoize = Debug.methodWithTrace((trace) =>
+  <RIn, E, ROut>(
+    self: Layer.Layer<RIn, E, ROut>
+  ): Effect.Effect<Scope.Scope, never, Layer.Layer<RIn, E, ROut>> =>
+    fiberRuntime.scopeWith((scope) =>
+      pipe(
+        effect.memoize(buildWithScope(self, scope)),
+        core.map(fromEffectContext)
+      )
+    ).traced(trace)
+)
 
 /** @internal */
 export const merge = <RIn2, E2, ROut2>(that: Layer.Layer<RIn2, E2, ROut2>) => {

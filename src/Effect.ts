@@ -3197,9 +3197,10 @@ export const rejectEffect: {
  * @since 1.0.0
  * @category mutations
  */
-export const repeat: <R1, A, B>(
-  schedule: Schedule.Schedule<R1, A, B>
-) => <R, E>(self: Effect<R, E, A>) => Effect<R1 | R, E, B> = _schedule.repeat_Effect
+export const repeat: {
+  <R, E, A, R1, B>(self: Effect<R, E, A>, schedule: Schedule.Schedule<R1, A, B>): Effect<R | R1, E, B>
+  <R1, A, B>(schedule: Schedule.Schedule<R1, A, B>): <R, E>(self: Effect<R, E, A>) => Effect<R1 | R, E, B>
+} = _schedule.repeat_Effect
 
 /**
  * Returns a new effect that repeats this effect the specified number of times
@@ -3227,10 +3228,17 @@ export const repeatN: {
  * @since 1.0.0
  * @category mutations
  */
-export const repeatOrElse: <R2, A, B, E, R3, E2>(
-  schedule: Schedule.Schedule<R2, A, B>,
-  orElse: (error: E, option: Option.Option<B>) => Effect<R3, E2, B>
-) => <R>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2, B> = _schedule.repeatOrElse_Effect
+export const repeatOrElse: {
+  <R, E, A, R2, B, R3, E2>(
+    self: Effect<R, E, A>,
+    schedule: Schedule.Schedule<R2, A, B>,
+    orElse: (error: E, option: Option.Option<B>) => Effect<R3, E2, B>
+  ): Effect<R | R2 | R3, E2, B>
+  <R2, A, B, E, R3, E2>(
+    schedule: Schedule.Schedule<R2, A, B>,
+    orElse: (error: E, option: Option.Option<B>) => Effect<R3, E2, B>
+  ): <R>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2, B>
+} = _schedule.repeatOrElse_Effect
 
 /**
  * Returns a new effect that repeats this effect according to the specified
@@ -3244,10 +3252,17 @@ export const repeatOrElse: <R2, A, B, E, R3, E2>(
  * @since 1.0.0
  * @category mutations
  */
-export const repeatOrElseEither: <R2, A, B, E, R3, E2, C>(
-  schedule: Schedule.Schedule<R2, A, B>,
-  orElse: (error: E, option: Option.Option<B>) => Effect<R3, E2, C>
-) => <R>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2, Either.Either<C, B>> = _schedule.repeatOrElseEither_Effect
+export const repeatOrElseEither: {
+  <R, E, A, R2, B, R3, E2, C>(
+    self: Effect<R, E, A>,
+    schedule: Schedule.Schedule<R2, A, B>,
+    orElse: (error: E, option: Option.Option<B>) => Effect<R3, E2, C>
+  ): Effect<R | R2 | R3, E2, Either.Either<C, B>>
+  <R2, A, B, E, R3, E2, C>(
+    schedule: Schedule.Schedule<R2, A, B>,
+    orElse: (error: E, option: Option.Option<B>) => Effect<R3, E2, C>
+  ): <R>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2, Either.Either<C, B>>
+} = _schedule.repeatOrElseEither_Effect
 
 /**
  * Repeats this effect until its value satisfies the specified predicate or
@@ -3256,8 +3271,10 @@ export const repeatOrElseEither: <R2, A, B, E, R3, E2, C>(
  * @since 1.0.0
  * @category mutations
  */
-export const repeatUntil: <A>(f: Predicate<A>) => <R, E>(self: Effect<R, E, A>) => Effect<R, E, A> =
-  _schedule.repeatUntil_Effect
+export const repeatUntil: {
+  <R, E, A>(self: Effect<R, E, A>, f: Predicate<A>): Effect<R, E, A>
+  <A>(f: Predicate<A>): <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
+} = _schedule.repeatUntil_Effect
 
 /**
  * Repeats this effect until its value satisfies the specified effectful
@@ -3266,9 +3283,10 @@ export const repeatUntil: <A>(f: Predicate<A>) => <R, E>(self: Effect<R, E, A>) 
  * @since 1.0.0
  * @category mutations
  */
-export const repeatUntilEffect: <A, R2>(
-  f: (a: A) => Effect<R2, never, boolean>
-) => <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E, A> = _schedule.repeatUntilEffect_Effect
+export const repeatUntilEffect: {
+  <R, E, A, R2>(self: Effect<R, E, A>, f: (a: A) => Effect<R2, never, boolean>): Effect<R | R2, E, A>
+  <A, R2>(f: (a: A) => Effect<R2, never, boolean>): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E, A>
+} = _schedule.repeatUntilEffect_Effect
 
 /**
  * Repeats this effect until its value is equal to the specified value or
@@ -3277,8 +3295,10 @@ export const repeatUntilEffect: <A, R2>(
  * @since 1.0.0
  * @category mutations
  */
-export const repeatUntilEquals: <A>(value: A) => <R, E>(self: Effect<R, E, A>) => Effect<R, E, A> =
-  _schedule.repeatUntilEquals_Effect
+export const repeatUntilEquals: {
+  <R, E, A>(self: Effect<R, E, A>, value: A): Effect<R, E, A>
+  <A>(value: A): <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
+} = _schedule.repeatUntilEquals_Effect
 
 /**
  * Repeats this effect while its value satisfies the specified effectful
@@ -3287,8 +3307,10 @@ export const repeatUntilEquals: <A>(value: A) => <R, E>(self: Effect<R, E, A>) =
  * @since 1.0.0
  * @category mutations
  */
-export const repeatWhile: <A>(f: Predicate<A>) => <R, E>(self: Effect<R, E, A>) => Effect<R, E, A> =
-  _schedule.repeatWhile_Effect
+export const repeatWhile: {
+  <R, E, A>(self: Effect<R, E, A>, f: Predicate<A>): Effect<R, E, A>
+  <A>(f: Predicate<A>): <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
+} = _schedule.repeatWhile_Effect
 
 /**
  * Repeats this effect while its value satisfies the specified effectful
@@ -3297,9 +3319,10 @@ export const repeatWhile: <A>(f: Predicate<A>) => <R, E>(self: Effect<R, E, A>) 
  * @since 1.0.0
  * @category mutations
  */
-export const repeatWhileEffect: <R1, A>(
-  f: (a: A) => Effect<R1, never, boolean>
-) => <R, E>(self: Effect<R, E, A>) => Effect<R1 | R, E, A> = _schedule.repeatWhileEffect_Effect
+export const repeatWhileEffect: {
+  <R, E, R1, A>(self: Effect<R, E, A>, f: (a: A) => Effect<R1, never, boolean>): Effect<R | R1, E, A>
+  <R1, A>(f: (a: A) => Effect<R1, never, boolean>): <R, E>(self: Effect<R, E, A>) => Effect<R1 | R, E, A>
+} = _schedule.repeatWhileEffect_Effect
 
 /**
  * Repeats this effect for as long as its value is equal to the specified
@@ -3308,8 +3331,10 @@ export const repeatWhileEffect: <R1, A>(
  * @since 1.0.0
  * @category mutations
  */
-export const repeatWhileEquals: <A>(value: A) => <R, E>(self: Effect<R, E, A>) => Effect<R, E, A> =
-  _schedule.repeatWhileEquals_Effect
+export const repeatWhileEquals: {
+  <R, E, A>(self: Effect<R, E, A>, value: A): Effect<R, E, A>
+  <A>(value: A): <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
+} = _schedule.repeatWhileEquals_Effect
 
 /**
  * Retries with the specified retry policy. Retries are done following the
@@ -3320,9 +3345,10 @@ export const repeatWhileEquals: <A>(value: A) => <R, E>(self: Effect<R, E, A>) =
  * @since 1.0.0
  * @category mutations
  */
-export const retry: <R1, E, B>(
-  policy: Schedule.Schedule<R1, E, B>
-) => <R, A>(self: Effect<R, E, A>) => Effect<R1 | R, E, A> = _schedule.retry_Effect
+export const retry: {
+  <R, E, A, R1, B>(self: Effect<R, E, A>, policy: Schedule.Schedule<R1, E, B>): Effect<R | R1, E, A>
+  <R1, E, B>(policy: Schedule.Schedule<R1, E, B>): <R, A>(self: Effect<R, E, A>) => Effect<R1 | R, E, A>
+} = _schedule.retry_Effect
 
 /**
  * Retries this effect the specified number of times.
@@ -3330,7 +3356,10 @@ export const retry: <R1, E, B>(
  * @since 1.0.0
  * @category mutations
  */
-export const retryN: (n: number) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A> = _schedule.retryN_Effect
+export const retryN: {
+  <R, E, A>(self: Effect<R, E, A>, n: number): Effect<R, E, A>
+  (n: number): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+} = _schedule.retryN_Effect
 
 /**
  * Retries with the specified schedule, until it fails, and then both the
@@ -3340,10 +3369,17 @@ export const retryN: (n: number) => <R, E, A>(self: Effect<R, E, A>) => Effect<R
  * @since 1.0.0
  * @category mutations
  */
-export const retryOrElse: <R1, E extends E3, A1, R2, E2, A2, E3>(
-  policy: Schedule.Schedule<R1, E3, A1>,
-  orElse: (e: E, out: A1) => Effect<R2, E2, A2>
-) => <R, A>(self: Effect<R, E, A>) => Effect<R1 | R2 | R, E | E2, A2 | A> = _schedule.retryOrElse_Effect
+export const retryOrElse: {
+  <R, E extends E3, A, R1, A1, R2, E2, A2, E3>(
+    self: Effect<R, E, A>,
+    policy: Schedule.Schedule<R1, E3, A1>,
+    orElse: (e: E, out: A1) => Effect<R2, E2, A2>
+  ): Effect<R | R1 | R2, E | E2, A | A2>
+  <R1, E extends E3, A1, R2, E2, A2, E3>(
+    policy: Schedule.Schedule<R1, E3, A1>,
+    orElse: (e: E, out: A1) => Effect<R2, E2, A2>
+  ): <R, A>(self: Effect<R, E, A>) => Effect<R1 | R2 | R, E | E2, A2 | A>
+} = _schedule.retryOrElse_Effect
 
 /**
  * Retries with the specified schedule, until it fails, and then both the
@@ -3353,11 +3389,17 @@ export const retryOrElse: <R1, E extends E3, A1, R2, E2, A2, E3>(
  * @since 1.0.0
  * @category mutations
  */
-export const retryOrElseEither: <R1, E extends E3, A1, R2, E2, A2, E3>(
-  policy: Schedule.Schedule<R1, E3, A1>,
-  orElse: (e: E, out: A1) => Effect<R2, E2, A2>
-) => <R, A>(self: Effect<R, E, A>) => Effect<R1 | R2 | R, E | E2, Either.Either<A2, A>> =
-  _schedule.retryOrElseEither_Effect
+export const retryOrElseEither: {
+  <R, A, E extends E3, R1, A1, R2, E2, A2, E3>(
+    self: Effect<R, E, A>,
+    policy: Schedule.Schedule<R1, E3, A1>,
+    orElse: (e: E, out: A1) => Effect<R2, E2, A2>
+  ): Effect<R | R1 | R2, E | E2, Either.Either<A2, A>>
+  <R1, E extends E3, A1, R2, E2, A2, E3>(
+    policy: Schedule.Schedule<R1, E3, A1>,
+    orElse: (e: E, out: A1) => Effect<R2, E2, A2>
+  ): <R, A>(self: Effect<R, E, A>) => Effect<R1 | R2 | R, E | E2, Either.Either<A2, A>>
+} = _schedule.retryOrElseEither_Effect
 
 /**
  * Retries this effect until its error satisfies the specified predicate.
@@ -3365,8 +3407,10 @@ export const retryOrElseEither: <R1, E extends E3, A1, R2, E2, A2, E3>(
  * @since 1.0.0
  * @category mutations
  */
-export const retryUntil: <E>(f: Predicate<E>) => <R, A>(self: Effect<R, E, A>) => Effect<R, E, A> =
-  _schedule.retryUntil_Effect
+export const retryUntil: {
+  <R, E, A>(self: Effect<R, E, A>, f: Predicate<E>): Effect<R, E, A>
+  <E>(f: Predicate<E>): <R, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+} = _schedule.retryUntil_Effect
 
 /**
  * Retries this effect until its error satisfies the specified effectful
@@ -3375,9 +3419,10 @@ export const retryUntil: <E>(f: Predicate<E>) => <R, A>(self: Effect<R, E, A>) =
  * @since 1.0.0
  * @category mutations
  */
-export const retryUntilEffect: <R1, E>(
-  f: (e: E) => Effect<R1, never, boolean>
-) => <R, A>(self: Effect<R, E, A>) => Effect<R1 | R, E, A> = _schedule.retryUntilEffect_Effect
+export const retryUntilEffect: {
+  <R, E, A, R1>(self: Effect<R, E, A>, f: (e: E) => Effect<R1, never, boolean>): Effect<R | R1, E, A>
+  <R1, E>(f: (e: E) => Effect<R1, never, boolean>): <R, A>(self: Effect<R, E, A>) => Effect<R1 | R, E, A>
+} = _schedule.retryUntilEffect_Effect
 
 /**
  * Retries this effect until its error is equal to the specified error.
@@ -3385,8 +3430,10 @@ export const retryUntilEffect: <R1, E>(
  * @since 1.0.0
  * @category mutations
  */
-export const retryUntilEquals: <E>(e: E) => <R, A>(self: Effect<R, E, A>) => Effect<R, E, A> =
-  _schedule.retryUntilEquals_Effect
+export const retryUntilEquals: {
+  <R, E, A>(self: Effect<R, E, A>, e: E): Effect<R, E, A>
+  <E>(e: E): <R, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+} = _schedule.retryUntilEquals_Effect
 
 /**
  * Retries this effect while its error satisfies the specified predicate.
@@ -3394,8 +3441,10 @@ export const retryUntilEquals: <E>(e: E) => <R, A>(self: Effect<R, E, A>) => Eff
  * @since 1.0.0
  * @category mutations
  */
-export const retryWhile: <E>(f: Predicate<E>) => <R, A>(self: Effect<R, E, A>) => Effect<R, E, A> =
-  _schedule.retryWhile_Effect
+export const retryWhile: {
+  <R, E, A>(self: Effect<R, E, A>, f: Predicate<E>): Effect<R, E, A>
+  <E>(f: Predicate<E>): <R, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+} = _schedule.retryWhile_Effect
 
 /**
  * Retries this effect while its error satisfies the specified effectful
@@ -3404,9 +3453,10 @@ export const retryWhile: <E>(f: Predicate<E>) => <R, A>(self: Effect<R, E, A>) =
  * @since 1.0.0
  * @category mutations
  */
-export const retryWhileEffect: <R1, E>(
-  f: (e: E) => Effect<R1, never, boolean>
-) => <R, A>(self: Effect<R, E, A>) => Effect<R1 | R, E, A> = _schedule.retryWhileEffect_Effect
+export const retryWhileEffect: {
+  <R, E, A, R1>(self: Effect<R, E, A>, f: (e: E) => Effect<R1, never, boolean>): Effect<R | R1, E, A>
+  <R1, E>(f: (e: E) => Effect<R1, never, boolean>): <R, A>(self: Effect<R, E, A>) => Effect<R1 | R, E, A>
+} = _schedule.retryWhileEffect_Effect
 
 /**
  * Retries this effect for as long as its error is equal to the specified
@@ -3415,8 +3465,10 @@ export const retryWhileEffect: <R1, E>(
  * @since 1.0.0
  * @category mutations
  */
-export const retryWhileEquals: <E>(e: E) => <R, A>(self: Effect<R, E, A>) => Effect<R, E, A> =
-  _schedule.retryWhileEquals_Effect
+export const retryWhileEquals: {
+  <R, E, A>(self: Effect<R, E, A>, e: E): Effect<R, E, A>
+  <E>(e: E): <R, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+} = _schedule.retryWhileEquals_Effect
 
 /**
  * Replicates the given effect `n` times.
@@ -3522,9 +3574,10 @@ export const sandbox: <R, E, A>(self: Effect<R, E, A>) => Effect<R, Cause.Cause<
  * @since 1.0.0
  * @category mutations
  */
-export const schedule: <R2, Out>(
-  schedule: Schedule.Schedule<R2, any, Out>
-) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E, Out> = _schedule.schedule_Effect
+export const schedule: {
+  <R, E, A, R2, Out>(self: Effect<R, E, A>, schedule: Schedule.Schedule<R2, any, Out>): Effect<R | R2, E, Out>
+  <R2, Out>(schedule: Schedule.Schedule<R2, any, Out>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E, Out>
+} = _schedule.schedule_Effect
 
 /**
  * Runs this effect according to the specified schedule in a new fiber
@@ -3550,10 +3603,17 @@ export const scheduleForked: {
  * @since 1.0.0
  * @category mutations
  */
-export const scheduleFrom: <R2, In, Out>(
-  initial: In,
-  schedule: Schedule.Schedule<R2, In, Out>
-) => <R, E>(self: Effect<R, E, In>) => Effect<R2 | R, E, Out> = _schedule.scheduleFrom_Effect
+export const scheduleFrom: {
+  <R, E, In, R2, Out>(
+    self: Effect<R, E, In>,
+    initial: In,
+    schedule: Schedule.Schedule<R2, In, Out>
+  ): Effect<R | R2, E, Out>
+  <R2, In, Out>(
+    initial: In,
+    schedule: Schedule.Schedule<R2, In, Out>
+  ): <R, E>(self: Effect<R, E, In>) => Effect<R2 | R, E, Out>
+} = _schedule.scheduleFrom_Effect
 
 /**
  * @since 1.0.0

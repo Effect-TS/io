@@ -227,33 +227,29 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    * background. This can be called to "kick off" execution of a fiber after
    * it has been created.
    */
-  resume<E, A>(effect: Effect.Effect<any, E, A>) {
+  resume<E, A>(effect: Effect.Effect<any, E, A>): void {
     this.tell(FiberMessage.resume(effect))
   }
 
   /**
    * The status of the fiber.
-   *
-   * @macro traced
    */
   status(): Effect.Effect<never, never, FiberStatus.FiberStatus> {
-    const trace = Debug.getCallTrace()
-    return this.ask((_, status) => status).traced(trace)
+    return Debug.untraced(() => this.ask((_, status) => status))
   }
 
   /**
    * Gets the fiber runtime flags.
-   *
-   * @macro traced
    */
   runtimeFlags(): Effect.Effect<never, never, RuntimeFlags.RuntimeFlags> {
-    const trace = Debug.getCallTrace()
-    return this.ask((state, status) => {
-      if (FiberStatus.isDone(status)) {
-        return state._runtimeFlags
-      }
-      return status.runtimeFlags
-    }).traced(trace)
+    return Debug.untraced(() =>
+      this.ask((state, status) => {
+        if (FiberStatus.isDone(status)) {
+          return state._runtimeFlags
+        }
+        return status.runtimeFlags
+      })
+    )
   }
 
   /**
@@ -265,12 +261,9 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
 
   /**
    * Retrieves the immediate children of the fiber.
-   *
-   * @macro traced
    */
   children(): Effect.Effect<never, never, Chunk.Chunk<Fiber.RuntimeFiber<any, any>>> {
-    const trace = Debug.getCallTrace()
-    return this.ask((fiber) => Chunk.fromIterable(fiber.getChildren())).traced(trace)
+    return Debug.untraced(() => this.ask((fiber) => Chunk.fromIterable(fiber.getChildren())))
   }
 
   /**
@@ -308,12 +301,9 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
 
   /**
    * Retrieves the whole set of fiber refs.
-   *
-   * @macro traced
    */
   fiberRefs(): Effect.Effect<never, never, FiberRefs.FiberRefs> {
-    const trace = Debug.getCallTrace()
-    return this.ask((fiber) => fiber.unsafeGetFiberRefs()).traced(trace)
+    return Debug.untraced(() => this.ask((fiber) => fiber.unsafeGetFiberRefs()))
   }
 
   /**
@@ -322,22 +312,21 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    *
    * This allows the outside world to interact safely with mutable fiber state
    * without locks or immutable data.
-   *
-   * @macro traced
    */
   ask<Z>(
     f: (runtime: FiberRuntime<any, any>, status: FiberStatus.FiberStatus) => Z
   ): Effect.Effect<never, never, Z> {
-    const trace = Debug.getCallTrace()
-    return core.suspendSucceed(() => {
-      const deferred = core.deferredUnsafeMake<never, Z>(this._fiberId)
-      this.tell(
-        FiberMessage.stateful((fiber, status) => {
-          core.deferredUnsafeDone(deferred, core.sync(() => f(fiber, status)))
-        })
-      )
-      return core.deferredAwait(deferred)
-    }).traced(trace)
+    return Debug.untraced(() =>
+      core.suspendSucceed(() => {
+        const deferred = core.deferredUnsafeMake<never, Z>(this._fiberId)
+        this.tell(
+          FiberMessage.stateful((fiber, status) => {
+            core.deferredUnsafeDone(deferred, core.sync(() => f(fiber, status)))
+          })
+        )
+        return core.deferredAwait(deferred)
+      })
+    )
   }
 
   /**
@@ -355,61 +344,60 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   }
 
   await(): Effect.Effect<never, never, Exit.Exit<E, A>> {
-    const trace = Debug.getCallTrace()
-    return core.asyncInterrupt<never, never, Exit.Exit<E, A>>((resume) => {
-      const cb = (exit: Exit.Exit<E, A>) => resume(core.succeed(exit))
-      this.tell(
-        FiberMessage.stateful((fiber, _) => {
-          if (fiber._exitValue !== null) {
-            cb(this._exitValue!)
-          } else {
-            fiber.unsafeAddObserver(cb)
-          }
-        })
-      )
-      return core.sync(() =>
+    return Debug.untraced(() =>
+      core.asyncInterrupt<never, never, Exit.Exit<E, A>>((resume) => {
+        const cb = (exit: Exit.Exit<E, A>) => resume(core.succeed(exit))
         this.tell(
           FiberMessage.stateful((fiber, _) => {
-            fiber.unsafeRemoveObserver(cb)
+            if (fiber._exitValue !== null) {
+              cb(this._exitValue!)
+            } else {
+              fiber.unsafeAddObserver(cb)
+            }
           })
         )
-      )
-    }, this.id()).traced(trace)
+        return core.sync(() =>
+          this.tell(
+            FiberMessage.stateful((fiber, _) => {
+              fiber.unsafeRemoveObserver(cb)
+            })
+          )
+        )
+      }, this.id())
+    )
   }
 
   inheritAll(): Effect.Effect<never, never, void> {
-    const trace = Debug.getCallTrace()
-    return core.withFiberRuntime<never, never, void>((parentFiber, parentStatus) => {
-      const parentFiberId = parentFiber.id()
-      const parentFiberRefs = parentFiber.unsafeGetFiberRefs()
-      const parentRuntimeFlags = parentStatus.runtimeFlags
-      const childFiberRefs = this.unsafeGetFiberRefs()
-      const updatedFiberRefs = fiberRefs.joinAs(parentFiberRefs, parentFiberId, childFiberRefs)
+    return Debug.untraced(() =>
+      core.withFiberRuntime<never, never, void>((parentFiber, parentStatus) => {
+        const parentFiberId = parentFiber.id()
+        const parentFiberRefs = parentFiber.unsafeGetFiberRefs()
+        const parentRuntimeFlags = parentStatus.runtimeFlags
+        const childFiberRefs = this.unsafeGetFiberRefs()
+        const updatedFiberRefs = fiberRefs.joinAs(parentFiberRefs, parentFiberId, childFiberRefs)
 
-      parentFiber.setFiberRefs(updatedFiberRefs)
+        parentFiber.setFiberRefs(updatedFiberRefs)
 
-      const updatedRuntimeFlags = parentFiber.getFiberRef(currentRuntimeFlags)
+        const updatedRuntimeFlags = parentFiber.getFiberRef(currentRuntimeFlags)
 
-      const patch = pipe(
-        _runtimeFlags.diff(parentRuntimeFlags, updatedRuntimeFlags),
-        // Do not inherit WindDown or Interruption!
-        RuntimeFlagsPatch.exclude(_runtimeFlags.Interruption),
-        RuntimeFlagsPatch.exclude(_runtimeFlags.WindDown)
-      )
+        const patch = pipe(
+          _runtimeFlags.diff(parentRuntimeFlags, updatedRuntimeFlags),
+          // Do not inherit WindDown or Interruption!
+          RuntimeFlagsPatch.exclude(_runtimeFlags.Interruption),
+          RuntimeFlagsPatch.exclude(_runtimeFlags.WindDown)
+        )
 
-      return core.updateRuntimeFlags(patch)
-    }).traced(trace)
+        return core.updateRuntimeFlags(patch)
+      })
+    )
   }
 
   /**
    * Tentatively observes the fiber, but returns immediately if it is not
    * already done.
-   *
-   * @macro trace
    */
   poll(): Effect.Effect<never, never, Option.Option<Exit.Exit<E, A>>> {
-    const trace = Debug.getCallTrace()
-    return core.sync(() => Option.fromNullable(this._exitValue)).traced(trace)
+    return Debug.untraced(() => core.sync(() => Option.fromNullable(this._exitValue)))
   }
 
   /**
@@ -422,12 +410,11 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
 
   /**
    * In the background, interrupts the fiber as if interrupted from the specified fiber.
-   *
-   * @macro traced
    */
   interruptAsFork(fiberId: FiberId.FiberId): Effect.Effect<never, never, void> {
-    const trace = Debug.getCallTrace()
-    return core.sync(() => this.tell(FiberMessage.interruptSignal(internalCause.interrupt(fiberId)))).traced(trace)
+    return Debug.untraced(() =>
+      core.sync(() => this.tell(FiberMessage.interruptSignal(internalCause.interrupt(fiberId))))
+    )
   }
 
   /**

@@ -230,8 +230,6 @@ export class TestClockImpl implements TestClock {
    * these fibers are not done or suspended. Note that because we cannot
    * synchronize on the status of multiple fibers at the same time this
    * snapshot may not be fully consistent.
-   *
-   * @macro traced
    */
   freeze(): Effect.Effect<never, void, HashMap.HashMap<FiberId.FiberId, FiberStatus.FiberStatus>> {
     return Debug.bodyWithTrace((trace) =>
@@ -265,8 +263,6 @@ export class TestClockImpl implements TestClock {
   /**
    * Forks a fiber that will display a warning message if a test is using time
    * but is not advancing the `TestClock`.
-   *
-   * @macro traced
    */
   warningStart(): Effect.Effect<never, never, void> {
     return Debug.bodyWithTrace((trace) =>
@@ -382,8 +378,6 @@ export class TestClockImpl implements TestClock {
   /**
    * Runs all effects scheduled to occur on or before the specified instant,
    * which may depend on the current time, in order.
-   *
-   * @macro traced
    */
   run(f: (instant: number) => number): Effect.Effect<never, never, void> {
     return Debug.bodyWithTrace((trace, restore) =>
@@ -458,7 +452,6 @@ export const defaultTestClock: Layer.Layer<Annotations.Annotations | Live.Live, 
  * by the specified duration, running any actions scheduled for on or before
  * the new time in order.
  *
- * @macro traced
  * @internal
  */
 export const adjust = Debug.methodWithTrace((trace) =>

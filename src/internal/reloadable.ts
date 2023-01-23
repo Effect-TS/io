@@ -95,13 +95,13 @@ export const manual = <Out extends Context.Tag<any>, In, E>(
           core.map((ref) => ({
             [ReloadableTypeId]: reloadableVariance,
             scopedRef: ref,
-            reload: () => {
-              const trace = Debug.getCallTrace()
-              return pipe(
-                scopedRef.set(ref, pipe(_layer.build(layer), core.map(Context.unsafeGet(tag)))),
-                core.provideContext(env)
-              ).traced(trace)
-            }
+            reload: () =>
+              Debug.bodyWithTrace((trace) =>
+                pipe(
+                  scopedRef.set(ref, pipe(_layer.build(layer), core.map(Context.unsafeGet(tag)))),
+                  core.provideContext(env)
+                ).traced(trace)
+              )
           }))
         )
       )

@@ -1,6 +1,6 @@
 import type * as Cause from "@effect/io/Cause"
 import * as Clock from "@effect/io/Clock"
-import { getCallTrace } from "@effect/io/Debug"
+import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as internalCause from "@effect/io/internal/cause"
 import * as core from "@effect/io/internal/core"
@@ -75,15 +75,17 @@ class ScheduleDriverImpl<Env, In, Out> implements Schedule.ScheduleDriver<Env, I
   }
 
   state(): Effect.Effect<never, never, unknown> {
-    const trace = getCallTrace()
-    return pipe(Ref.get(this.ref), core.map((tuple) => tuple[1])).traced(trace)
+    return Debug.bodyWithTrace((trace) =>
+      core.map(
+        Ref.get(this.ref),
+        (tuple) => tuple[1]
+      ).traced(trace)
+    )
   }
 
   last(): Effect.Effect<never, Cause.NoSuchElementException, Out> {
-    const trace = getCallTrace()
-    return pipe(
-      Ref.get(this.ref),
-      core.flatMap(([element, _]) => {
+    return Debug.bodyWithTrace((trace) =>
+      core.flatMap(Ref.get(this.ref), ([element, _]) => {
         switch (element._tag) {
           case "None": {
             return core.failSync(() => internalCause.NoSuchElementException())
@@ -92,43 +94,47 @@ class ScheduleDriverImpl<Env, In, Out> implements Schedule.ScheduleDriver<Env, I
             return core.succeed(element.value)
           }
         }
-      })
-    ).traced(trace)
+      }).traced(trace)
+    )
   }
 
   reset(): Effect.Effect<never, never, void> {
-    const trace = getCallTrace()
-    return Ref.set(this.ref, [Option.none, this.schedule.initial]).traced(trace)
+    return Debug.bodyWithTrace((trace) =>
+      Ref.set(
+        this.ref,
+        [Option.none, this.schedule.initial]
+      ).traced(trace)
+    )
   }
 
   next(input: In): Effect.Effect<Env, Option.Option<never>, Out> {
-    const trace = getCallTrace()
-    return pipe(
-      Ref.get(this.ref),
-      core.map((tuple) => tuple[1]),
-      core.flatMap((state) =>
-        pipe(
-          Clock.currentTimeMillis(),
-          core.flatMap((now) =>
-            pipe(
-              this.schedule.step(now, input, state),
-              core.flatMap(([state, out, decision]) =>
-                ScheduleDecision.isDone(decision) ?
-                  pipe(
-                    Ref.set(this.ref, [Option.some(out), state] as const),
-                    core.zipRight(core.fail(Option.none))
-                  ) :
-                  pipe(
-                    Ref.set(this.ref, [Option.some(out), state] as const),
-                    core.zipRight(effect.sleep(Duration.millis(Intervals.start(decision.intervals) - now))),
-                    core.as(out)
-                  )
+    return Debug.bodyWithTrace((trace) =>
+      pipe(
+        core.map(Ref.get(this.ref), (tuple) => tuple[1]),
+        core.flatMap((state) =>
+          pipe(
+            Clock.currentTimeMillis(),
+            core.flatMap((now) =>
+              pipe(
+                this.schedule.step(now, input, state),
+                core.flatMap(([state, out, decision]) =>
+                  ScheduleDecision.isDone(decision) ?
+                    pipe(
+                      Ref.set(this.ref, [Option.some(out), state] as const),
+                      core.zipRight(core.fail(Option.none))
+                    ) :
+                    pipe(
+                      Ref.set(this.ref, [Option.some(out), state] as const),
+                      core.zipRight(effect.sleep(Duration.millis(Intervals.start(decision.intervals) - now))),
+                      core.as(out)
+                    )
+                )
               )
             )
           )
         )
-      )
-    ).traced(trace)
+      ).traced(trace)
+    )
   }
 }
 
@@ -188,9 +194,8 @@ export const andThenEither = <Env2, In2, Out2>(that: Schedule.Schedule<Env2, In2
   > => {
     return makeWithState(
       [self.initial, that.initial, true as boolean] as const,
-      (now, input, state) => {
-        const trace = getCallTrace()
-        return state[2] ?
+      (now, input, state) =>
+        state[2] ?
           pipe(
             self.step(now, input, state[0]),
             core.flatMap(([lState, out, decision]) => {
@@ -214,7 +219,7 @@ export const andThenEither = <Env2, In2, Out2>(that: Schedule.Schedule<Env2, In2
                 ] as const
               )
             })
-          ).traced(trace) :
+          ) :
           pipe(
             that.step(now, input, state[1]),
             core.map(([rState, out, decision]) =>
@@ -224,8 +229,7 @@ export const andThenEither = <Env2, In2, Out2>(that: Schedule.Schedule<Env2, In2
                 decision
               ] as const
             )
-          ).traced(trace)
-      }
+          )
     )
   }
 }
@@ -251,9 +255,8 @@ export const bothInOut = <Env2, In2, Out2>(that: Schedule.Schedule<Env2, In2, Ou
     readonly [In, In2],
     readonly [Out, Out2]
   > => {
-    return makeWithState([self.initial, that.initial] as const, (now, [in1, in2], state) => {
-      const trace = getCallTrace()
-      return pipe(
+    return makeWithState([self.initial, that.initial] as const, (now, [in1, in2], state) =>
+      pipe(
         self.step(now, in1, state[0]),
         core.zipWith(
           that.step(now, in2, state[1]),
@@ -269,8 +272,7 @@ export const bothInOut = <Env2, In2, Out2>(that: Schedule.Schedule<Env2, In2, Ou
             return [[lState, rState] as const, [out, out2] as const, ScheduleDecision.done] as const
           }
         )
-      ).traced(trace)
-    })
+      ))
   }
 }
 
@@ -286,9 +288,8 @@ export const checkEffect = <In, Out, Env2>(
   test: (input: In, output: Out) => Effect.Effect<Env2, never, boolean>
 ) => {
   return <Env>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env | Env2, In, Out> => {
-    return makeWithState(self.initial, (now, input, state) => {
-      const trace = getCallTrace()
-      return pipe(
+    return makeWithState(self.initial, (now, input, state) =>
+      pipe(
         self.step(now, input, state),
         core.flatMap(([state, out, decision]) => {
           if (ScheduleDecision.isDone(decision)) {
@@ -303,8 +304,7 @@ export const checkEffect = <In, Out, Env2>(
             )
           )
         })
-      ).traced(trace)
-    })
+      ))
   }
 }
 
@@ -322,13 +322,12 @@ export const choose = <Env2, In2, Out2>(that: Schedule.Schedule<Env2, In2, Out2>
         never,
         readonly [readonly [any, any], Either.Either<Out, Out2>, ScheduleDecision.ScheduleDecision]
       > => {
-        const trace = getCallTrace()
         switch (either._tag) {
           case "Left": {
             return pipe(
               self.step(now, either.left, state[0]),
               core.map(([lState, out, decision]) => [[lState, state[1]] as const, Either.left(out), decision] as const)
-            ).traced(trace)
+            )
           }
           case "Right": {
             return pipe(
@@ -336,7 +335,7 @@ export const choose = <Env2, In2, Out2>(that: Schedule.Schedule<Env2, In2, Out2>
               core.map(([rState, out2, decision]) =>
                 [[state[0], rState] as const, Either.right(out2), decision] as const
               )
-            ).traced(trace)
+            )
           }
         }
       }
@@ -391,9 +390,8 @@ export const collectWhileEffect = <Env, A>(
 /** @internal */
 export const compose = <Env1, Out, Out2>(that: Schedule.Schedule<Env1, Out, Out2>) => {
   return <Env, In>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env | Env1, In, Out2> => {
-    return makeWithState([self.initial, that.initial] as const, (now, input, state) => {
-      const trace = getCallTrace()
-      return pipe(
+    return makeWithState([self.initial, that.initial] as const, (now, input, state) =>
+      pipe(
         self.step(now, input, state[0]),
         core.flatMap(([lState, out, lDecision]) =>
           pipe(
@@ -411,8 +409,7 @@ export const compose = <Env1, Out, Out2>(that: Schedule.Schedule<Env1, Out, Out2
             )
           )
         )
-      ).traced(trace)
-    })
+      ))
   }
 }
 
@@ -426,10 +423,11 @@ export const contramap = <In, In2>(f: (in2: In2) => In) => {
 /** @internal */
 export const contramapEffect = <In, Env1, In2>(f: (in2: In2) => Effect.Effect<Env1, never, In>) => {
   return <Env, Out>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env | Env1, In2, Out> => {
-    return makeWithState(self.initial, (now, input2, state) => {
-      const trace = getCallTrace()
-      return pipe(f(input2), core.flatMap((input) => self.step(now, input, state))).traced(trace)
-    })
+    return makeWithState(self.initial, (now, input2, state) =>
+      core.flatMap(
+        f(input2),
+        (input) => self.step(now, input, state)
+      ))
   }
 }
 
@@ -443,13 +441,12 @@ export const dayOfMonth = (day: number): Schedule.Schedule<never, unknown, numbe
   return makeWithState(
     [Number.NEGATIVE_INFINITY, 0] as readonly [number, number],
     (now, _, state) => {
-      const trace = getCallTrace()
       if (!Number.isInteger(day) || day < 1 || 31 < day) {
         return core.dieSync(() =>
           internalCause.IllegalArgumentException(
             `Invalid argument in: dayOfMonth(${day}). Must be in range 1...31`
           )
-        ).traced(trace)
+        )
       }
       const n = state[1]
       const initial = n === 0
@@ -463,7 +460,7 @@ export const dayOfMonth = (day: number): Schedule.Schedule<never, unknown, numbe
           n,
           ScheduleDecision.continueWith(interval)
         ] as const
-      ).traced(trace)
+      )
     }
   )
 }
@@ -473,13 +470,12 @@ export const dayOfWeek = (day: number): Schedule.Schedule<never, unknown, number
   return makeWithState(
     [Number.MIN_SAFE_INTEGER, 0] as readonly [number, number],
     (now, _, state) => {
-      const trace = getCallTrace()
       if (!Number.isInteger(day) || day < 1 || 7 < day) {
         return core.dieSync(() =>
           internalCause.IllegalArgumentException(
             `Invalid argument in: dayOfWeek(${day}). Must be in range 1 (Monday)...7 (Sunday)`
           )
-        ).traced(trace)
+        )
       }
       const n = state[1]
       const initial = n === 0
@@ -493,7 +489,7 @@ export const dayOfWeek = (day: number): Schedule.Schedule<never, unknown, number
           n,
           ScheduleDecision.continueWith(interval)
         ] as const
-      ).traced(trace)
+      )
     }
   )
 }
@@ -527,8 +523,8 @@ export const delayedSchedule = <Env, In>(
 export const delays = <Env, In, Out>(
   self: Schedule.Schedule<Env, In, Out>
 ): Schedule.Schedule<Env, In, Duration.Duration> => {
-  return makeWithState(self.initial, (now, input, state) => {
-    return pipe(
+  return makeWithState(self.initial, (now, input, state) =>
+    pipe(
       self.step(now, input, state),
       core.flatMap((
         [state, _, decision]
@@ -544,8 +540,7 @@ export const delays = <Env, In, Out>(
           ] as const
         )
       })
-    )
-  })
+    ))
 }
 
 /** @internal */
@@ -568,28 +563,26 @@ export const dimapEffect = <In2, Env2, In, Out, Env3, Out2>(
 }
 
 /** @internal */
-export const driver = <Env, In, Out>(
-  self: Schedule.Schedule<Env, In, Out>
-): Effect.Effect<never, never, Schedule.ScheduleDriver<Env, In, Out>> => {
-  const trace = getCallTrace()
-  return pipe(
-    Ref.make<readonly [Option.Option<Out>, any]>([Option.none, self.initial]),
-    core.map((ref) => new ScheduleDriverImpl(self, ref))
-  ).traced(trace)
-}
+export const driver = Debug.methodWithTrace((trace) =>
+  <Env, In, Out>(
+    self: Schedule.Schedule<Env, In, Out>
+  ): Effect.Effect<never, never, Schedule.ScheduleDriver<Env, In, Out>> =>
+    pipe(
+      Ref.make<readonly [Option.Option<Out>, any]>([Option.none, self.initial]),
+      core.map((ref) => new ScheduleDriverImpl(self, ref))
+    ).traced(trace)
+)
 
 /** @internal */
 export const duration = (
   duration: Duration.Duration
 ): Schedule.Schedule<never, unknown, Duration.Duration> => {
-  return makeWithState(true as boolean, (now, _, state) => {
-    const trace = getCallTrace()
-    return core.succeed(
+  return makeWithState(true as boolean, (now, _, state) =>
+    core.succeed(
       state
         ? [false, duration, ScheduleDecision.continueWith(Interval.after(now + duration.millis))] as const
         : [false, Duration.zero, ScheduleDecision.done] as const
-    ).traced(trace)
-  })
+    ))
 }
 
 /** @internal */
@@ -618,7 +611,6 @@ export const eitherWith = <Env2, In2, Out2, Out, Out3>(
 /** @internal */
 export const elapsed = (): Schedule.Schedule<never, unknown, Duration.Duration> => {
   return makeWithState(Option.none as Option.Option<number>, (now, _, state) => {
-    const trace = getCallTrace()
     switch (state._tag) {
       case "None": {
         return core.succeed(
@@ -627,7 +619,7 @@ export const elapsed = (): Schedule.Schedule<never, unknown, Duration.Duration> 
             Duration.zero,
             ScheduleDecision.continueWith(Interval.after(now))
           ] as const
-        ).traced(trace)
+        )
       }
       case "Some": {
         return core.succeed(
@@ -636,7 +628,7 @@ export const elapsed = (): Schedule.Schedule<never, unknown, Duration.Duration> 
             Duration.millis(now - state.value),
             ScheduleDecision.continueWith(Interval.after(now))
           ] as const
-        ).traced(trace)
+        )
       }
     }
   })
@@ -647,9 +639,8 @@ export const ensuring = <X>(finalizer: Effect.Effect<never, never, X>) => {
   return <Env, In, Out>(
     self: Schedule.Schedule<Env, In, Out>
   ): Schedule.Schedule<Env, In, Out> => {
-    return makeWithState(self.initial, (now, input, state) => {
-      const trace = getCallTrace()
-      return pipe(
+    return makeWithState(self.initial, (now, input, state) =>
+      pipe(
         self.step(now, input, state),
         core.flatMap(([state, out, decision]) =>
           ScheduleDecision.isDone(decision)
@@ -659,8 +650,7 @@ export const ensuring = <X>(finalizer: Effect.Effect<never, never, X>) => {
             )
             : core.succeed([state, out, decision] as const)
         )
-      ).traced(trace)
-    })
+      ))
   }
 }
 
@@ -693,9 +683,8 @@ export const fibonacci = (
 export const fixed = (interval: Duration.Duration): Schedule.Schedule<never, unknown, number> => {
   return makeWithState(
     [Option.none, 0] as readonly [Option.Option<readonly [number, number]>, number],
-    (now, _, [option, n]) => {
-      const trace = getCallTrace()
-      return core.sync(() => {
+    (now, _, [option, n]) =>
+      core.sync(() => {
         const intervalMillis = interval.millis
         switch (option._tag) {
           case "None": {
@@ -720,8 +709,7 @@ export const fixed = (interval: Duration.Duration): Schedule.Schedule<never, unk
             ] as const
           }
         }
-      }).traced(trace)
-    }
+      })
   )
 }
 
@@ -738,17 +726,15 @@ export const reduceEffect = <Out, Env1, Z>(
   f: (z: Z, out: Out) => Effect.Effect<Env1, never, Z>
 ) => {
   return <Env, In>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env | Env1, In, Z> => {
-    return makeWithState([self.initial, zero] as const, (now, input, [s, z]) => {
-      const trace = getCallTrace()
-      return pipe(
+    return makeWithState([self.initial, zero] as const, (now, input, [s, z]) =>
+      pipe(
         self.step(now, input, s),
         core.flatMap(([s, out, decision]) =>
           ScheduleDecision.isDone(decision)
             ? core.succeed([[s, z], z, decision as ScheduleDecision.ScheduleDecision] as const)
             : pipe(f(z, out), core.map((z2) => [[s, z2], z, decision] as const))
         )
-      ).traced(trace)
-    })
+      ))
   }
 }
 
@@ -771,9 +757,8 @@ export const fromDelays = (
 ): Schedule.Schedule<never, unknown, Duration.Duration> => {
   return makeWithState(
     [[delay, ...delays] as Array<Duration.Duration>, true as boolean] as const,
-    (now, _, [durations, cont]) => {
-      const trace = getCallTrace()
-      return core.sync(() => {
+    (now, _, [durations, cont]) =>
+      core.sync(() => {
         if (cont) {
           const x = durations[0]!
           const interval = Interval.after(now + x.millis)
@@ -792,8 +777,7 @@ export const fromDelays = (
           ] as const
         }
         return [[durations, false] as const, Duration.zero, ScheduleDecision.done] as const
-      }).traced(trace)
-    }
+      })
   )
 }
 
@@ -807,13 +791,12 @@ export const hourOfDay = (hour: number): Schedule.Schedule<never, unknown, numbe
   return makeWithState(
     [Number.NEGATIVE_INFINITY, 0] as readonly [number, number],
     (now, _, state) => {
-      const trace = getCallTrace()
       if (!Number.isInteger(hour) || hour < 0 || 23 < hour) {
         return core.dieSync(() =>
           internalCause.IllegalArgumentException(
             `Invalid argument in: hourOfDay(${hour}). Must be in range 0...23`
           )
-        ).traced(trace)
+        )
       }
       const n = state[1]
       const initial = n === 0
@@ -827,23 +810,21 @@ export const hourOfDay = (hour: number): Schedule.Schedule<never, unknown, numbe
           n,
           ScheduleDecision.continueWith(interval)
         ] as const
-      ).traced(trace)
+      )
     }
   )
 }
 
 /** @internal */
 export const identity = <A>(): Schedule.Schedule<never, A, A> => {
-  return makeWithState(void 0, (now, input, state) => {
-    const trace = getCallTrace()
-    return core.succeed(
+  return makeWithState(void 0, (now, input, state) =>
+    core.succeed(
       [
         state,
         input,
         ScheduleDecision.continueWith(Interval.after(now))
       ] as const
-    ).traced(trace)
-  })
+    ))
 }
 
 /** @internal */
@@ -874,9 +855,8 @@ export const intersectWith = <Env2, In2, Out2>(
     In & In2,
     readonly [Out, Out2]
   > =>
-    makeWithState([self.initial, that.initial] as const, (now, input: In & In2, state) => {
-      const trace = getCallTrace()
-      return pipe(
+    makeWithState([self.initial, that.initial] as const, (now, input: In & In2, state) =>
+      pipe(
         self.step(now, input, state[0]),
         core.zipWith(
           that.step(now, input, state[1]),
@@ -908,8 +888,7 @@ export const intersectWith = <Env2, In2, Out2>(
             ] as const
           )
         })
-      ).traced(trace)
-    })
+      ))
 }
 
 /** @internal */
@@ -1037,9 +1016,8 @@ export const map = <Out, Out2>(f: (out: Out) => Out2) => {
 /** @internal */
 export const mapEffect = <Out, Env2, Out2>(f: (out: Out) => Effect.Effect<Env2, never, Out2>) => {
   return <Env, In>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env | Env2, In, Out2> => {
-    return makeWithState(self.initial, (now, input, state) => {
-      const trace = getCallTrace()
-      return pipe(
+    return makeWithState(self.initial, (now, input, state) =>
+      pipe(
         self.step(now, input, state),
         core.flatMap(([state, out, decision]) =>
           pipe(
@@ -1047,8 +1025,7 @@ export const mapEffect = <Out, Env2, Out2>(f: (out: Out) => Effect.Effect<Env2, 
             core.map((out2) => [state, out2, decision] as const)
           )
         )
-      ).traced(trace)
-    })
+      ))
   }
 }
 
@@ -1057,13 +1034,12 @@ export const minuteOfHour = (minute: number): Schedule.Schedule<never, unknown, 
   return makeWithState(
     [Number.MIN_SAFE_INTEGER, 0] as readonly [number, number],
     (now, _, state) => {
-      const trace = getCallTrace()
       if (!Number.isInteger(minute) || minute < 0 || 59 < minute) {
         return core.dieSync(() =>
           internalCause.IllegalArgumentException(
             `Invalid argument in: minuteOfHour(${minute}). Must be in range 0...59`
           )
-        ).traced(trace)
+        )
       }
       const n = state[1]
       const initial = n === 0
@@ -1077,7 +1053,7 @@ export const minuteOfHour = (minute: number): Schedule.Schedule<never, unknown, 
           n,
           ScheduleDecision.continueWith(interval)
         ] as const
-      ).traced(trace)
+      )
     }
   )
 }
@@ -1096,9 +1072,8 @@ export const modifyDelayEffect = <Out, Env2>(
   f: (out: Out, duration: Duration.Duration) => Effect.Effect<Env2, never, Duration.Duration>
 ) => {
   return <Env, In>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env | Env2, In, Out> => {
-    return makeWithState(self.initial, (now, input, state) => {
-      const trace = getCallTrace()
-      return pipe(
+    return makeWithState(self.initial, (now, input, state) =>
+      pipe(
         self.step(now, input, state),
         core.flatMap(([state, out, decision]) => {
           if (ScheduleDecision.isDone(decision)) {
@@ -1118,8 +1093,7 @@ export const modifyDelayEffect = <Out, Env2>(
             })
           )
         })
-      ).traced(trace)
-    })
+      ))
   }
 }
 
@@ -1128,9 +1102,8 @@ export const onDecision = <Out, Env2, X>(
   f: (out: Out, decision: ScheduleDecision.ScheduleDecision) => Effect.Effect<Env2, never, X>
 ) => {
   return <Env, In>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env | Env2, In, Out> => {
-    return makeWithState(self.initial, (now, input, state) => {
-      const trace = getCallTrace()
-      return pipe(
+    return makeWithState(self.initial, (now, input, state) =>
+      pipe(
         self.step(now, input, state),
         core.flatMap(([state, out, decision]) =>
           pipe(
@@ -1138,8 +1111,7 @@ export const onDecision = <Out, Env2, X>(
             core.as([state, out, decision] as const)
           )
         )
-      ).traced(trace)
-    })
+      ))
   }
 }
 
@@ -1152,26 +1124,21 @@ export const once = (): Schedule.Schedule<never, unknown, void> => {
 export const passthrough = <Env, Input, Output>(
   self: Schedule.Schedule<Env, Input, Output>
 ): Schedule.Schedule<Env, Input, Input> => {
-  return makeWithState(self.initial, (now, input, state) => {
-    const trace = getCallTrace()
-    return pipe(
+  return makeWithState(self.initial, (now, input, state) =>
+    pipe(
       self.step(now, input, state),
       core.map(([state, _, decision]) => [state, input, decision] as const)
-    ).traced(trace)
-  })
+    ))
 }
 
 /** @internal */
 export const provideContext = <R>(context: Context.Context<R>) => {
-  return <In, Out>(self: Schedule.Schedule<R, In, Out>): Schedule.Schedule<never, In, Out> => {
-    return makeWithState(self.initial, (now, input, state) => {
-      const trace = getCallTrace()
-      return pipe(
+  return <In, Out>(self: Schedule.Schedule<R, In, Out>): Schedule.Schedule<never, In, Out> =>
+    makeWithState(self.initial, (now, input, state) =>
+      pipe(
         self.step(now, input, state),
         core.provideContext(context)
-      ).traced(trace)
-    })
-  }
+      ))
 }
 
 /** @internal */
@@ -1179,9 +1146,8 @@ export const provideService = <T, T1 extends T>(tag: Context.Tag<T>, service: T1
   return <R, In, Out>(
     self: Schedule.Schedule<R | T, In, Out>
   ): Schedule.Schedule<Exclude<R, T>, In, Out> => {
-    return makeWithState(self.initial, (now, input, state) => {
-      const trace = getCallTrace()
-      return core.contextWithEffect<
+    return makeWithState(self.initial, (now, input, state) =>
+      core.contextWithEffect<
         Exclude<R, T>,
         Exclude<R, T>,
         never,
@@ -1192,19 +1158,18 @@ export const provideService = <T, T1 extends T>(tag: Context.Tag<T>, service: T1
           // @ts-expect-error
           core.provideContext(pipe(env, Context.add(tag)(service)))
         )
-      ).traced(trace)
-    })
+      ))
   }
 }
 
 /** @internal */
 export const contramapContext = <R0, R>(f: (env0: Context.Context<R0>) => Context.Context<R>) => {
-  return <In, Out>(self: Schedule.Schedule<R, In, Out>): Schedule.Schedule<R0, In, Out> => {
-    return makeWithState(self.initial, (now, input, state) => {
-      const trace = getCallTrace()
-      return pipe(self.step(now, input, state), core.contramapContext(f)).traced(trace)
-    })
-  }
+  return <In, Out>(self: Schedule.Schedule<R, In, Out>): Schedule.Schedule<R0, In, Out> =>
+    makeWithState(self.initial, (now, input, state) =>
+      pipe(
+        self.step(now, input, state),
+        core.contramapContext(f)
+      ))
 }
 
 /** @internal */
@@ -1213,11 +1178,9 @@ export const reconsider = <Out, Out2>(
     out: Out,
     decision: ScheduleDecision.ScheduleDecision
   ) => Either.Either<Out2, readonly [Out2, Interval.Interval]>
-) => {
-  return <Env, In>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env, In, Out2> => {
-    return pipe(self, reconsiderEffect((out, decision) => core.sync(() => f(out, decision))))
-  }
-}
+) =>
+  <Env, In>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env, In, Out2> =>
+    pipe(self, reconsiderEffect((out, decision) => core.sync(() => f(out, decision))))
 
 /** @internal */
 export const reconsiderEffect = <Out, Env2, Out2>(
@@ -1225,11 +1188,10 @@ export const reconsiderEffect = <Out, Env2, Out2>(
     out: Out,
     decision: ScheduleDecision.ScheduleDecision
   ) => Effect.Effect<Env2, never, Either.Either<Out2, readonly [Out2, Interval.Interval]>>
-) => {
-  return <Env, In>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env | Env2, In, Out2> => {
-    return makeWithState(self.initial, (now, input, state) => {
-      const trace = getCallTrace()
-      return pipe(
+) =>
+  <Env, In>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env | Env2, In, Out2> =>
+    makeWithState(self.initial, (now, input, state) =>
+      pipe(
         self.step(now, input, state),
         core.flatMap(([state, out, decision]) =>
           ScheduleDecision.isDone(decision)
@@ -1262,10 +1224,7 @@ export const reconsiderEffect = <Out, Env2, Out2>(
               })
             )
         )
-      ).traced(trace)
-    })
-  }
-}
+      ))
 
 /** @internal */
 export const recurUntil = <A>(f: Predicate<A>): Schedule.Schedule<never, A, A> => {
@@ -1317,23 +1276,20 @@ export const recurWhileEquals = <A>(value: A): Schedule.Schedule<never, A, A> =>
 
 /** @internal */
 export const recurs = (n: number): Schedule.Schedule<never, unknown, number> => {
-  return pipe(
-    forever(),
-    whileOutput((out) => out < n)
-  )
+  return pipe(forever(), whileOutput((out) => out < n))
 }
 
 /** @internal */
 export const repeatForever = <Env, In, Out>(
   self: Schedule.Schedule<Env, In, Out>
-): Schedule.Schedule<Env, In, Out> => {
-  return makeWithState(self.initial, (now, input, state) => {
+): Schedule.Schedule<Env, In, Out> =>
+  makeWithState(self.initial, (now, input, state) => {
     const step = (
       now: number,
       input: In,
       state: any
-    ): Effect.Effect<Env, never, readonly [any, Out, ScheduleDecision.ScheduleDecision]> => {
-      return pipe(
+    ): Effect.Effect<Env, never, readonly [any, Out, ScheduleDecision.ScheduleDecision]> =>
+      pipe(
         self.step(now, input, state),
         core.flatMap(([state, out, decision]) =>
           ScheduleDecision.isDone(decision)
@@ -1341,10 +1297,8 @@ export const repeatForever = <Env, In, Out>(
             : core.succeed([state, out, decision])
         )
       )
-    }
     return step(now, input, state)
   })
-}
 
 /** @internal */
 export const repetitions = <Env, In, Out>(
@@ -1368,21 +1322,17 @@ export const resetAfter = (duration: Duration.Duration) => {
 }
 
 /** @internal */
-export const resetWhen = <Out>(f: Predicate<Out>) => {
-  return <Env, In>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env, In, Out> => {
-    return makeWithState(self.initial, (now, input, state) => {
-      const trace = getCallTrace()
-      return pipe(
+export const resetWhen = <Out>(f: Predicate<Out>) =>
+  <Env, In>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env, In, Out> =>
+    makeWithState(self.initial, (now, input, state) =>
+      pipe(
         self.step(now, input, state),
         core.flatMap(([state, out, decision]) =>
           f(out)
             ? self.step(now, input, self.initial)
             : core.succeed([state, out, decision] as const)
         )
-      ).traced(trace)
-    })
-  }
-}
+      ))
 
 /** @internal */
 export const right = <Env, In, Out, X>(
@@ -1392,17 +1342,14 @@ export const right = <Env, In, Out, X>(
 }
 
 /** @internal */
-export const run = <In>(now: number, input: Iterable<In>) => {
-  const trace = getCallTrace()
-  return <Env, Out>(
+export const run = <In>(now: number, input: Iterable<In>) =>
+  <Env, Out>(
     self: Schedule.Schedule<Env, In, Out>
-  ): Effect.Effect<Env, never, Chunk.Chunk<Out>> => {
-    return pipe(
+  ): Effect.Effect<Env, never, Chunk.Chunk<Out>> =>
+    pipe(
       runLoop(self, now, Chunk.fromIterable(input), self.initial, Chunk.empty()),
       core.map((list) => Chunk.reverse(list))
-    ).traced(trace)
-  }
-}
+    )
 
 /** @internal */
 const runLoop = <Env, In, Out>(
@@ -1435,11 +1382,10 @@ const runLoop = <Env, In, Out>(
 }
 
 /** @internal */
-export const secondOfMinute = (second: number): Schedule.Schedule<never, unknown, number> => {
-  return makeWithState(
+export const secondOfMinute = (second: number): Schedule.Schedule<never, unknown, number> =>
+  makeWithState(
     [Number.NEGATIVE_INFINITY, 0] as readonly [number, number],
     (now, _, state) => {
-      const trace = getCallTrace()
       if (!Number.isInteger(second) || second < 0 || 59 < second) {
         return core.dieSync(() =>
           internalCause.IllegalArgumentException(
@@ -1459,82 +1405,67 @@ export const secondOfMinute = (second: number): Schedule.Schedule<never, unknown
           n,
           ScheduleDecision.continueWith(interval)
         ] as const
-      ).traced(trace)
+      )
     }
   )
-}
 
 /** @internal */
-export const spaced = (duration: Duration.Duration): Schedule.Schedule<never, unknown, number> => {
-  return pipe(forever(), addDelay(() => duration))
-}
+export const spaced = (duration: Duration.Duration): Schedule.Schedule<never, unknown, number> =>
+  pipe(forever(), addDelay(() => duration))
 
 /** @internal */
-export const stop = (): Schedule.Schedule<never, unknown, void> => {
-  return asUnit(recurs(0))
-}
+export const stop = (): Schedule.Schedule<never, unknown, void> => asUnit(recurs(0))
 
 /** @internal */
-export const succeed = <A>(value: A): Schedule.Schedule<never, unknown, A> => {
-  return pipe(forever(), map(() => value))
-}
+export const succeed = <A>(value: A): Schedule.Schedule<never, unknown, A> => pipe(forever(), map(() => value))
 
 /** @internal */
-export const sync = <A>(evaluate: LazyArg<A>): Schedule.Schedule<never, unknown, A> => {
-  return pipe(forever(), map(evaluate))
-}
+export const sync = <A>(evaluate: LazyArg<A>): Schedule.Schedule<never, unknown, A> => pipe(forever(), map(evaluate))
 
 /** @internal */
-export const tapInput = <Env2, In2, X>(
-  f: (input: In2) => Effect.Effect<Env2, never, X>
-) => {
-  return <Env, In, Out>(
+export const tapInput = <Env2, In2, X>(f: (input: In2) => Effect.Effect<Env2, never, X>) =>
+  <Env, In, Out>(
     self: Schedule.Schedule<Env, In, Out>
-  ): Schedule.Schedule<Env | Env2, In & In2, Out> => {
-    return makeWithState(self.initial, (now, input, state) => {
-      const trace = getCallTrace()
-      return pipe(f(input), core.zipRight(self.step(now, input, state))).traced(trace)
-    })
-  }
-}
+  ): Schedule.Schedule<Env | Env2, In & In2, Out> =>
+    makeWithState(self.initial, (now, input, state) =>
+      core.zipRight(
+        f(input),
+        self.step(now, input, state)
+      ))
 
 /** @internal */
-export const tapOutput = <Out, Env2, X>(f: (out: Out) => Effect.Effect<Env2, never, X>) => {
-  return <Env, In>(
+export const tapOutput = <Out, Env2, X>(f: (out: Out) => Effect.Effect<Env2, never, X>) =>
+  <Env, In>(
     self: Schedule.Schedule<Env, In, Out>
-  ): Schedule.Schedule<Env | Env2, In, Out> => {
-    return makeWithState(self.initial, (now, input, state) => {
-      const trace = getCallTrace()
-      return pipe(self.step(now, input, state), core.tap(([, out]) => f(out))).traced(trace)
-    })
-  }
-}
+  ): Schedule.Schedule<Env | Env2, In, Out> =>
+    makeWithState(self.initial, (now, input, state) =>
+      pipe(
+        self.step(now, input, state),
+        core.tap(([, out]) => f(out))
+      ))
 
 /** @internal */
 export const unfold = <A>(
   initial: A,
   f: (a: A) => A
-): Schedule.Schedule<never, unknown, A> => {
-  return makeWithState(initial, (now, _, state) => {
-    const trace = getCallTrace()
-    return core.sync(() =>
+): Schedule.Schedule<never, unknown, A> =>
+  makeWithState(initial, (now, _, state) =>
+    core.sync(() =>
       [
         f(state),
         state,
         ScheduleDecision.continueWith(Interval.after(now))
       ] as const
-    ).traced(trace)
-  })
-}
+    ))
 
 /** @internal */
-export const union = <Env2, In2, Out2>(that: Schedule.Schedule<Env2, In2, Out2>) => {
-  return <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<
+export const union = <Env2, In2, Out2>(that: Schedule.Schedule<Env2, In2, Out2>) =>
+  <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<
     Env | Env2,
     In & In2,
     readonly [Out, Out2]
-  > => {
-    return pipe(
+  > =>
+    pipe(
       self,
       unionWith(that, (selfIntervals, thatIntervals) =>
         pipe(
@@ -1542,22 +1473,19 @@ export const union = <Env2, In2, Out2>(that: Schedule.Schedule<Env2, In2, Out2>)
           Intervals.union(thatIntervals)
         ))
     )
-  }
-}
 
 /** @internal */
 export const unionWith = <Env2, In2, Out2>(
   that: Schedule.Schedule<Env2, In2, Out2>,
   f: (x: Intervals.Intervals, y: Intervals.Intervals) => Intervals.Intervals
-) => {
-  return <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<
+) =>
+  <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<
     Env | Env2,
     In & In2,
     readonly [Out, Out2]
   > =>
-    makeWithState([self.initial, that.initial] as const, (now, input, state) => {
-      const trace = getCallTrace()
-      return pipe(
+    makeWithState([self.initial, that.initial] as const, (now, input, state) =>
+      pipe(
         self.step(now, input, state[0]),
         core.zipWith(
           that.step(now, input, state[1]),
@@ -1592,98 +1520,59 @@ export const unionWith = <Env2, In2, Out2>(
             )
           }
         )
-      ).traced(trace)
-    })
-}
+      ))
 
 /** @internal */
-export const untilInput = <In>(f: Predicate<In>) => {
-  return <Env, Out>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env, In, Out> => {
-    return pipe(self, check((input, _) => !f(input)))
-  }
-}
+export const untilInput = <In>(f: Predicate<In>) =>
+  <Env, Out>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env, In, Out> =>
+    pipe(self, check((input, _) => !f(input)))
 
 /** @internal */
-export const untilInputEffect = <In, Env2>(
-  f: (input: In) => Effect.Effect<Env2, never, boolean>
-) => {
-  return <Env, Out>(
-    self: Schedule.Schedule<Env, In, Out>
-  ): Schedule.Schedule<Env | Env2, In, Out> => {
-    return pipe(self, checkEffect((input, _) => effect.negate(f(input))))
-  }
-}
+export const untilInputEffect = <In, Env2>(f: (input: In) => Effect.Effect<Env2, never, boolean>) =>
+  <Env, Out>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env | Env2, In, Out> =>
+    pipe(self, checkEffect((input, _) => effect.negate(f(input))))
 
 /** @internal */
-export const untilOutput = <Out>(f: Predicate<Out>) => {
-  return <Env, In>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env, In, Out> => {
-    return pipe(self, check((_, out) => !f(out)))
-  }
-}
+export const untilOutput = <Out>(f: Predicate<Out>) =>
+  <Env, In>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env, In, Out> =>
+    pipe(self, check((_, out) => !f(out)))
 
 /** @internal */
-export const untilOutputEffect = <Out, Env2>(
-  f: (out: Out) => Effect.Effect<Env2, never, boolean>
-) => {
-  return <Env, In>(
-    self: Schedule.Schedule<Env, In, Out>
-  ): Schedule.Schedule<Env | Env2, In, Out> => {
-    return pipe(self, checkEffect((_, out) => effect.negate(f(out))))
-  }
-}
+export const untilOutputEffect = <Out, Env2>(f: (out: Out) => Effect.Effect<Env2, never, boolean>) =>
+  <Env, In>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env | Env2, In, Out> =>
+    pipe(self, checkEffect((_, out) => effect.negate(f(out))))
 
 /** @internal */
-export const upTo = (duration: Duration.Duration) => {
-  return <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env, In, Out> => {
-    return pipe(self, zipLeft(recurUpTo(duration)))
-  }
-}
+export const upTo = (duration: Duration.Duration) =>
+  <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env, In, Out> =>
+    pipe(self, zipLeft(recurUpTo(duration)))
 
 /** @internal */
-export const whileInput = <In>(f: Predicate<In>) => {
-  return <Env, Out>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env, In, Out> => {
-    return pipe(self, check((input, _) => f(input)))
-  }
-}
+export const whileInput = <In>(f: Predicate<In>) =>
+  <Env, Out>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env, In, Out> =>
+    pipe(self, check((input, _) => f(input)))
 
 /** @internal */
-export const whileInputEffect = <In, Env1>(
-  f: (input: In) => Effect.Effect<Env1, never, boolean>
-) => {
-  return <Env, Out>(
-    self: Schedule.Schedule<Env, In, Out>
-  ): Schedule.Schedule<Env | Env1, In, Out> => {
-    return pipe(self, checkEffect((input, _) => f(input)))
-  }
-}
+export const whileInputEffect = <In, Env1>(f: (input: In) => Effect.Effect<Env1, never, boolean>) =>
+  <Env, Out>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env | Env1, In, Out> =>
+    pipe(self, checkEffect((input, _) => f(input)))
 
 /** @internal */
-export const whileOutput = <Out>(f: Predicate<Out>) => {
-  return <Env, In>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env, In, Out> => {
-    return pipe(self, check((_, out) => f(out)))
-  }
-}
+export const whileOutput = <Out>(f: Predicate<Out>) =>
+  <Env, In>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env, In, Out> =>
+    pipe(self, check((_, out) => f(out)))
 
 /** @internal */
-export const whileOutputEffect = <Out, Env1>(
-  f: (out: Out) => Effect.Effect<Env1, never, boolean>
-) => {
-  return <Env, In>(
-    self: Schedule.Schedule<Env, In, Out>
-  ): Schedule.Schedule<Env | Env1, In, Out> => {
-    return pipe(self, checkEffect((_, out) => f(out)))
-  }
-}
+export const whileOutputEffect = <Out, Env1>(f: (out: Out) => Effect.Effect<Env1, never, boolean>) =>
+  <Env, In>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env | Env1, In, Out> =>
+    pipe(self, checkEffect((_, out) => f(out)))
 
 /** @internal */
-export const windowed = (
-  interval: Duration.Duration
-): Schedule.Schedule<never, unknown, number> => {
+export const windowed = (interval: Duration.Duration): Schedule.Schedule<never, unknown, number> => {
   const millis = interval.millis
   return makeWithState(
     [Option.none, 0] as readonly [Option.Option<number>, number],
     (now, _, [option, n]) => {
-      const trace = getCallTrace()
       switch (option._tag) {
         case "None": {
           return core.succeed(
@@ -1692,7 +1581,7 @@ export const windowed = (
               n,
               ScheduleDecision.continueWith(Interval.after(now + millis))
             ] as const
-          ).traced(trace)
+          )
         }
         case "Some": {
           return core.succeed(
@@ -1703,7 +1592,7 @@ export const windowed = (
                 Interval.after(now + (millis - ((now - option.value) % millis)))
               )
             ] as const
-          ).traced(trace)
+          )
         }
       }
     }
@@ -1711,34 +1600,22 @@ export const windowed = (
 }
 
 /** @internal */
-export const zipLeft = <Env2, In2, Out2>(that: Schedule.Schedule<Env2, In2, Out2>) => {
-  return <Env, In, Out>(
-    self: Schedule.Schedule<Env, In, Out>
-  ): Schedule.Schedule<Env | Env2, In & In2, Out> => {
-    return pipe(self, intersect(that), map((out) => out[0]))
-  }
-}
+export const zipLeft = <Env2, In2, Out2>(that: Schedule.Schedule<Env2, In2, Out2>) =>
+  <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env | Env2, In & In2, Out> =>
+    pipe(self, intersect(that), map((out) => out[0]))
 
 /** @internal */
-export const zipRight = <Env2, In2, Out2>(that: Schedule.Schedule<Env2, In2, Out2>) => {
-  return <Env, In, Out>(
-    self: Schedule.Schedule<Env, In, Out>
-  ): Schedule.Schedule<Env | Env2, In & In2, Out2> => {
-    return pipe(self, intersect(that), map((out) => out[1]))
-  }
-}
+export const zipRight = <Env2, In2, Out2>(that: Schedule.Schedule<Env2, In2, Out2>) =>
+  <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env | Env2, In & In2, Out2> =>
+    pipe(self, intersect(that), map((out) => out[1]))
 
 /** @internal */
-export function zipWith<Env2, In2, Out2, Out, Out3>(
+export const zipWith = <Env2, In2, Out2, Out, Out3>(
   that: Schedule.Schedule<Env2, In2, Out2>,
   f: (out: Out, out2: Out2) => Out3
-) {
-  return <Env, In>(
-    self: Schedule.Schedule<Env, In, Out>
-  ): Schedule.Schedule<Env | Env2, In & In2, Out3> => {
-    return pipe(self, intersect(that), map(([out, out2]) => f(out, out2)))
-  }
-}
+) =>
+  <Env, In>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env | Env2, In & In2, Out3> =>
+    pipe(self, intersect(that), map(([out, out2]) => f(out, out2)))
 
 // -----------------------------------------------------------------------------
 // Seconds
@@ -1916,49 +1793,56 @@ export const findNextMonth = (now: number, day: number, months: number): number 
 // circular with Effect
 
 /** @internal */
-export const repeat_Effect = <R1, A, B>(schedule: Schedule.Schedule<R1, A, B>) => {
-  const trace = getCallTrace()
-  return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1, E, B> => {
-    return pipe(self, repeatOrElse_Effect(schedule, (e, _) => core.fail(e))).traced(trace)
-  }
-}
+export const repeat_Effect = Debug.dualWithTrace<
+  <R, E, A, R1, B>(
+    self: Effect.Effect<R, E, A>,
+    schedule: Schedule.Schedule<R1, A, B>
+  ) => Effect.Effect<R | R1, E, B>,
+  <R1, A, B>(
+    schedule: Schedule.Schedule<R1, A, B>
+  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E, B>
+>(2, (trace) => (self, schedule) => repeatOrElse_Effect(self, schedule, (e, _) => core.fail(e)).traced(trace))
 
 /** @internal */
-export const repeatOrElse_Effect = <R2, A, B, E, R3, E2>(
-  schedule: Schedule.Schedule<R2, A, B>,
-  orElse: (error: E, option: Option.Option<B>) => Effect.Effect<R3, E2, B>
-) => {
-  const trace = getCallTrace()
-  return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2 | R3, E2, B> => {
-    return pipe(
-      self,
-      repeatOrElseEither_Effect(schedule, orElse),
-      core.map(Either.merge)
-    ).traced(trace)
-  }
-}
+export const repeatOrElse_Effect = Debug.dualWithTrace<
+  <R, E, A, R2, B, R3, E2>(
+    self: Effect.Effect<R, E, A>,
+    schedule: Schedule.Schedule<R2, A, B>,
+    orElse: (error: E, option: Option.Option<B>) => Effect.Effect<R3, E2, B>
+  ) => Effect.Effect<R | R2 | R3, E2, B>,
+  <R2, A, B, E, R3, E2>(
+    schedule: Schedule.Schedule<R2, A, B>,
+    orElse: (error: E, option: Option.Option<B>) => Effect.Effect<R3, E2, B>
+  ) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2 | R3, E2, B>
+>(
+  3,
+  (trace, restore) =>
+    (self, schedule, orElse) =>
+      core.map(
+        repeatOrElseEither_Effect(self, schedule, restore(orElse)),
+        Either.merge
+      ).traced(trace)
+)
 
 /** @internal */
-export const repeatOrElseEither_Effect = <R2, A, B, E, R3, E2, C>(
-  schedule: Schedule.Schedule<R2, A, B>,
-  orElse: (error: E, option: Option.Option<B>) => Effect.Effect<R3, E2, C>
-): <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2 | R3, E2, Either.Either<C, B>> => {
-  const trace = getCallTrace()
-  return <R>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2 | R3, E2, Either.Either<C, B>> => {
-    return pipe(
-      driver(schedule),
-      core.flatMap((driver) =>
-        pipe(
-          self,
-          core.matchEffect(
-            (error) => pipe(orElse(error, Option.none), core.map(Either.left)),
-            (value) => repeatOrElseEitherEffectLoop(self, driver, orElse, value)
-          )
-        )
-      )
-    ).traced(trace)
-  }
-}
+export const repeatOrElseEither_Effect = Debug.dualWithTrace<
+  <R, E, A, R2, B, R3, E2, C>(
+    self: Effect.Effect<R, E, A>,
+    schedule: Schedule.Schedule<R2, A, B>,
+    orElse: (error: E, option: Option.Option<B>) => Effect.Effect<R3, E2, C>
+  ) => Effect.Effect<R | R2 | R3, E2, Either.Either<C, B>>,
+  <R2, A, B, E, R3, E2, C>(
+    schedule: Schedule.Schedule<R2, A, B>,
+    orElse: (error: E, option: Option.Option<B>) => Effect.Effect<R3, E2, C>
+  ) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2 | R3, E2, Either.Either<C, B>>
+>(3, (trace, restore) =>
+  (self, schedule, orElse) =>
+    core.flatMap(driver(schedule), (driver) =>
+      core.matchEffect(
+        self,
+        (error) => pipe(restore(orElse)(error, Option.none), core.map(Either.left)),
+        (value) => repeatOrElseEitherEffectLoop(self, driver, restore(orElse), value)
+      )).traced(trace))
 
 /** @internal */
 const repeatOrElseEitherEffectLoop = <R, E, A, R1, B, R2, E2, C>(
@@ -1984,126 +1868,136 @@ const repeatOrElseEitherEffectLoop = <R, E, A, R1, B, R2, E2, C>(
 }
 
 /** @internal */
-export const repeatUntil_Effect = <A>(f: Predicate<A>) => {
-  const trace = getCallTrace()
-  return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-    return pipe(self, repeatUntilEffect_Effect((a) => core.sync(() => f(a)))).traced(trace)
-  }
-}
-
-/** @internal */
-export const repeatUntilEffect_Effect = <A, R2>(f: (a: A) => Effect.Effect<R2, never, boolean>) => {
-  const trace = getCallTrace()
-  return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E, A> => {
-    return pipe(
+export const repeatUntil_Effect = Debug.dualWithTrace<
+  <R, E, A>(self: Effect.Effect<R, E, A>, f: Predicate<A>) => Effect.Effect<R, E, A>,
+  <A>(f: Predicate<A>) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+>(2, (trace, restore) =>
+  (self, f) =>
+    repeatUntilEffect_Effect(
       self,
-      core.flatMap((a) =>
-        pipe(
-          f(a),
-          core.flatMap((result) =>
-            result ?
-              core.succeed(a) :
-              pipe(core.yieldNow(), core.zipRight(pipe(self, repeatUntilEffect_Effect(f))))
-          )
-        )
-      )
-    ).traced(trace)
-  }
-}
+      (a) => core.sync(() => restore(f)(a))
+    ).traced(trace))
 
 /** @internal */
-export const repeatUntilEquals_Effect = <A>(value: A) => {
-  const trace = getCallTrace()
-  return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-    return pipe(self, repeatUntil_Effect((a) => Equal.equals(a, value))).traced(trace)
-  }
-}
+export const repeatUntilEffect_Effect: {
+  <R, E, A, R2>(
+    self: Effect.Effect<R, E, A>,
+    f: (a: A) => Effect.Effect<R2, never, boolean>
+  ): Effect.Effect<R | R2, E, A>
+  <A, R2>(
+    f: (a: A) => Effect.Effect<R2, never, boolean>
+  ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E, A>
+} = Debug.dualWithTrace<
+  <R, E, A, R2>(
+    self: Effect.Effect<R, E, A>,
+    f: (a: A) => Effect.Effect<R2, never, boolean>
+  ) => Effect.Effect<R | R2, E, A>,
+  <A, R2>(
+    f: (a: A) => Effect.Effect<R2, never, boolean>
+  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E, A>
+>(2, (trace, restore) =>
+  (self, f) =>
+    core.flatMap(self, (a) =>
+      core.flatMap(f(a), (result) =>
+        result ?
+          core.succeed(a) :
+          core.zipRight(
+            core.yieldNow(),
+            repeatUntilEffect_Effect(self, restore(f))
+          ))).traced(trace))
 
 /** @internal */
-export const repeatWhile_Effect = <A>(f: Predicate<A>) => {
-  const trace = getCallTrace()
-  return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-    return pipe(self, repeatWhileEffect_Effect((a) => core.sync(() => f(a)))).traced(trace)
-  }
-}
+export const repeatUntilEquals_Effect = Debug.dualWithTrace<
+  <R, E, A>(self: Effect.Effect<R, E, A>, value: A) => Effect.Effect<R, E, A>,
+  <A>(value: A) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+>(2, (trace) => (self, value) => repeatUntil_Effect(self, (a) => Equal.equals(a, value)).traced(trace))
 
 /** @internal */
-export const repeatWhileEffect_Effect = <R1, A>(f: (a: A) => Effect.Effect<R1, never, boolean>) => {
-  const trace = getCallTrace()
-  return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1, E, A> => {
-    return pipe(self, repeatUntilEffect_Effect((a) => effect.negate(f(a)))).traced(trace)
-  }
-}
+export const repeatWhile_Effect = Debug.dualWithTrace<
+  <R, E, A>(self: Effect.Effect<R, E, A>, f: Predicate<A>) => Effect.Effect<R, E, A>,
+  <A>(f: Predicate<A>) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+>(2, (trace, restore) =>
+  (self, f) =>
+    repeatWhileEffect_Effect(
+      self,
+      (a) => core.sync(() => restore(f)(a))
+    ).traced(trace))
 
 /** @internal */
-export const repeatWhileEquals_Effect = <A>(value: A) => {
-  const trace = getCallTrace()
-  return <R, E>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-    return pipe(self, repeatWhile_Effect((a) => Equal.equals(a, value))).traced(trace)
-  }
-}
+export const repeatWhileEffect_Effect = Debug.dualWithTrace<
+  <R, E, R1, A>(
+    self: Effect.Effect<R, E, A>,
+    f: (a: A) => Effect.Effect<R1, never, boolean>
+  ) => Effect.Effect<R | R1, E, A>,
+  <R1, A>(
+    f: (a: A) => Effect.Effect<R1, never, boolean>
+  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E, A>
+>(2, (trace, restore) => (self, f) => repeatUntilEffect_Effect(self, (a) => effect.negate(restore(f)(a))).traced(trace))
 
 /** @internal */
-export const retry_Effect = <R1, E, B>(policy: Schedule.Schedule<R1, E, B>) => {
-  const trace = getCallTrace()
-  return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1, E, A> => {
-    return pipe(self, retryOrElse_Effect(policy, (e, _) => core.fail(e))).traced(trace)
-  }
-}
+export const repeatWhileEquals_Effect = Debug.dualWithTrace<
+  <R, E, A>(self: Effect.Effect<R, E, A>, value: A) => Effect.Effect<R, E, A>,
+  <A>(value: A) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+>(2, (trace) => (self, value) => repeatWhile_Effect(self, (a) => Equal.equals(a, value)).traced(trace))
 
 /** @internal */
-export const retryN_Effect = (n: number) => {
-  const trace = getCallTrace()
-  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-    return retryN_EffectLoop(self, n).traced(trace)
-  }
-}
+export const retry_Effect = Debug.dualWithTrace<
+  <R, E, A, R1, B>(self: Effect.Effect<R, E, A>, policy: Schedule.Schedule<R1, E, B>) => Effect.Effect<R | R1, E, A>,
+  <R1, E, B>(policy: Schedule.Schedule<R1, E, B>) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E, A>
+>(2, (trace) => (self, policy) => retryOrElse_Effect(self, policy, (e, _) => core.fail(e)).traced(trace))
+
+/** @internal */
+export const retryN_Effect = Debug.dualWithTrace<
+  <R, E, A>(self: Effect.Effect<R, E, A>, n: number) => Effect.Effect<R, E, A>,
+  (n: number) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+>(2, (trace) => (self, n) => retryN_EffectLoop(self, n).traced(trace))
 
 /** @internal */
 const retryN_EffectLoop = <R, E, A>(
   self: Effect.Effect<R, E, A>,
   n: number
 ): Effect.Effect<R, E, A> => {
-  return pipe(
-    self,
-    core.catchAll((e) =>
-      n < 0 ?
-        core.fail(e) :
-        pipe(core.yieldNow(), core.flatMap(() => retryN_EffectLoop(self, n - 1)))
-    )
-  )
+  return core.catchAll(self, (e) =>
+    n < 0 ?
+      core.fail(e) :
+      core.flatMap(core.yieldNow(), () => retryN_EffectLoop(self, n - 1)))
 }
 
 /** @internal */
-export const retryOrElse_Effect = <R1, E extends E3, A1, R2, E2, A2, E3>(
-  policy: Schedule.Schedule<R1, E3, A1>,
-  orElse: (e: E, out: A1) => Effect.Effect<R2, E2, A2>
-) => {
-  const trace = getCallTrace()
-  return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1 | R2, E | E2, A | A2> => {
-    return pipe(
-      self,
-      retryOrElseEither_Effect(policy, orElse),
-      core.map(Either.merge)
-    ).traced(trace)
-  }
-}
+export const retryOrElse_Effect = Debug.dualWithTrace<
+  <R, E extends E3, A, R1, A1, R2, E2, A2, E3>(
+    self: Effect.Effect<R, E, A>,
+    policy: Schedule.Schedule<R1, E3, A1>,
+    orElse: (e: E, out: A1) => Effect.Effect<R2, E2, A2>
+  ) => Effect.Effect<R | R1 | R2, E | E2, A | A2>,
+  <R1, E extends E3, A1, R2, E2, A2, E3>(
+    policy: Schedule.Schedule<R1, E3, A1>,
+    orElse: (e: E, out: A1) => Effect.Effect<R2, E2, A2>
+  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1 | R2, E | E2, A | A2>
+>(3, (trace, restore) =>
+  (self, policy, orElse) =>
+    core.map(
+      retryOrElseEither_Effect(self, policy, restore(orElse)),
+      Either.merge
+    ).traced(trace))
 
 /** @internal */
-export const retryOrElseEither_Effect = <R1, E extends E3, A1, R2, E2, A2, E3>(
-  policy: Schedule.Schedule<R1, E3, A1>,
-  orElse: (e: E, out: A1) => Effect.Effect<R2, E2, A2>
-): <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1 | R2, E | E2, Either.Either<A2, A>> => {
-  const trace = getCallTrace()
-  return <R, A>(
-    self: Effect.Effect<R, E, A>
-  ): Effect.Effect<R | R1 | R2, E | E2, Either.Either<A2, A>> => {
-    return pipe(
+export const retryOrElseEither_Effect = Debug.dualWithTrace<
+  <R, A, E extends E3, R1, A1, R2, E2, A2, E3>(
+    self: Effect.Effect<R, E, A>,
+    policy: Schedule.Schedule<R1, E3, A1>,
+    orElse: (e: E, out: A1) => Effect.Effect<R2, E2, A2>
+  ) => Effect.Effect<R | R1 | R2, E | E2, Either.Either<A2, A>>,
+  <R1, E extends E3, A1, R2, E2, A2, E3>(
+    policy: Schedule.Schedule<R1, E3, A1>,
+    orElse: (e: E, out: A1) => Effect.Effect<R2, E2, A2>
+  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1 | R2, E | E2, Either.Either<A2, A>>
+>(3, (trace, restore) =>
+  (self, policy, orElse) =>
+    core.flatMap(
       driver(policy),
-      core.flatMap((driver) => retryOrElseEither_EffectLoop(self, driver, orElse))
-    ).traced(trace)
-  }
-}
+      (driver) => retryOrElseEither_EffectLoop(self, driver, restore(orElse))
+    ).traced(trace))
 
 /** @internal */
 const retryOrElseEither_EffectLoop = <R, E, A, R1, A1, R2, E2, A2>(
@@ -2132,94 +2026,119 @@ const retryOrElseEither_EffectLoop = <R, E, A, R1, A1, R2, E2, A2>(
 }
 
 /** @internal */
-export const retryUntil_Effect = <E>(f: Predicate<E>) => {
-  const trace = getCallTrace()
-  return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-    return pipe(self, retryUntilEffect_Effect((e) => core.sync(() => f(e)))).traced(trace)
-  }
-}
-
-/** @internal */
-export const retryUntilEffect_Effect = <R1, E>(f: (e: E) => Effect.Effect<R1, never, boolean>) => {
-  const trace = getCallTrace()
-  return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1, E, A> => {
-    return pipe(
+export const retryUntil_Effect = Debug.dualWithTrace<
+  <R, E, A>(self: Effect.Effect<R, E, A>, f: Predicate<E>) => Effect.Effect<R, E, A>,
+  <E>(f: Predicate<E>) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+>(2, (trace, restore) =>
+  (self, f) =>
+    retryUntilEffect_Effect(
       self,
-      core.catchAll((e) =>
-        pipe(
-          f(e),
-          core.flatMap((b) =>
-            b ?
-              core.fail(e) :
-              pipe(core.yieldNow(), core.flatMap(() => pipe(self, retryUntilEffect_Effect(f))))
-          )
-        )
-      )
-    ).traced(trace)
-  }
-}
+      (e) => core.sync(() => restore(f)(e))
+    ).traced(trace))
 
 /** @internal */
-export const retryUntilEquals_Effect = <E>(e: E) => {
-  const trace = getCallTrace()
-  return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-    return pipe(self, retryUntil_Effect((_) => Equal.equals(_, e))).traced(trace)
-  }
-}
+export const retryUntilEffect_Effect: {
+  <R, E, A, R1>(
+    self: Effect.Effect<R, E, A>,
+    f: (e: E) => Effect.Effect<R1, never, boolean>
+  ): Effect.Effect<R | R1, E, A>
+  <R1, E>(
+    f: (e: E) => Effect.Effect<R1, never, boolean>
+  ): <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E, A>
+} = Debug.dualWithTrace<
+  <R, E, A, R1>(
+    self: Effect.Effect<R, E, A>,
+    f: (e: E) => Effect.Effect<R1, never, boolean>
+  ) => Effect.Effect<R | R1, E, A>,
+  <R1, E>(
+    f: (e: E) => Effect.Effect<R1, never, boolean>
+  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E, A>
+>(2, (trace, restore) =>
+  (self, f) =>
+    core.catchAll(self, (e) =>
+      core.flatMap(restore(f)(e), (b) =>
+        b ?
+          core.fail(e) :
+          core.flatMap(
+            core.yieldNow(),
+            () => retryUntilEffect_Effect(self, restore(f))
+          ))).traced(trace))
 
 /** @internal */
-export const retryWhile_Effect = <E>(f: Predicate<E>) => {
-  const trace = getCallTrace()
-  return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-    return pipe(self, retryWhileEffect_Effect((e) => core.sync(() => f(e)))).traced(trace)
-  }
-}
+export const retryUntilEquals_Effect = Debug.dualWithTrace<
+  <R, E, A>(self: Effect.Effect<R, E, A>, e: E) => Effect.Effect<R, E, A>,
+  <E>(e: E) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+>(2, (trace) => (self, e) => retryUntil_Effect(self, (_) => Equal.equals(_, e)).traced(trace))
 
 /** @internal */
-export const retryWhileEffect_Effect = <R1, E>(f: (e: E) => Effect.Effect<R1, never, boolean>) => {
-  const trace = getCallTrace()
-  return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R1, E, A> => {
-    return pipe(self, retryUntilEffect_Effect((e) => effect.negate(f(e)))).traced(trace)
-  }
-}
+export const retryWhile_Effect = Debug.dualWithTrace<
+  <R, E, A>(self: Effect.Effect<R, E, A>, f: Predicate<E>) => Effect.Effect<R, E, A>,
+  <E>(f: Predicate<E>) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+>(
+  2,
+  (trace, restore) => (self, f) => retryWhileEffect_Effect(self, (e) => core.sync(() => restore(f)(e))).traced(trace)
+)
 
 /** @internal */
-export const retryWhileEquals_Effect = <E>(e: E) => {
-  const trace = getCallTrace()
-  return <R, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-    return pipe(self, retryWhile_Effect((err) => Equal.equals(e, err))).traced(trace)
-  }
-}
+export const retryWhileEffect_Effect = Debug.dualWithTrace<
+  <R, E, A, R1>(
+    self: Effect.Effect<R, E, A>,
+    f: (e: E) => Effect.Effect<R1, never, boolean>
+  ) => Effect.Effect<R | R1, E, A>,
+  <R1, E>(
+    f: (e: E) => Effect.Effect<R1, never, boolean>
+  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E, A>
+>(2, (trace, restore) => (self, f) => retryUntilEffect_Effect(self, (e) => effect.negate(restore(f)(e))).traced(trace))
 
 /** @internal */
-export const schedule_Effect = <R2, Out>(schedule: Schedule.Schedule<R2, any, Out>) => {
-  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E, Out> => {
-    return pipe(self, scheduleFrom_Effect(void 0 as unknown as A, schedule))
-  }
-}
+export const retryWhileEquals_Effect = Debug.dualWithTrace<
+  <R, E, A>(self: Effect.Effect<R, E, A>, e: E) => Effect.Effect<R, E, A>,
+  <E>(e: E) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+>(2, (trace) => (self, e) => retryWhile_Effect(self, (err) => Equal.equals(e, err)).traced(trace))
 
 /** @internal */
-export const scheduleFrom_Effect = <R2, In, Out>(initial: In, schedule: Schedule.Schedule<R2, In, Out>) => {
-  const trace = getCallTrace()
-  return <R, E>(self: Effect.Effect<R, E, In>): Effect.Effect<R | R2, E, Out> => {
-    return pipe(
+export const schedule_Effect = Debug.dualWithTrace<
+  <R, E, A, R2, Out>(
+    self: Effect.Effect<R, E, A>,
+    schedule: Schedule.Schedule<R2, any, Out>
+  ) => Effect.Effect<R | R2, E, Out>,
+  <R2, Out>(
+    schedule: Schedule.Schedule<R2, any, Out>
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E, Out>
+>(2, (trace) =>
+  <R, E, A, R2, Out>(
+    self: Effect.Effect<R, E, A>,
+    schedule: Schedule.Schedule<R2, any, Out>
+  ) => scheduleFrom_Effect(self, void 0 as unknown as A, schedule).traced(trace))
+
+/** @internal */
+export const scheduleFrom_Effect = Debug.dualWithTrace<
+  <R, E, In, R2, Out>(
+    self: Effect.Effect<R, E, In>,
+    initial: In,
+    schedule: Schedule.Schedule<R2, In, Out>
+  ) => Effect.Effect<R | R2, E, Out>,
+  <R2, In, Out>(
+    initial: In,
+    schedule: Schedule.Schedule<R2, In, Out>
+  ) => <R, E>(self: Effect.Effect<R, E, In>) => Effect.Effect<R | R2, E, Out>
+>(3, (trace) =>
+  (self, initial, schedule) =>
+    core.flatMap(
       driver(schedule),
-      core.flatMap((driver) => scheduleFrom_EffectLoop(self, initial, driver))
-    ).traced(trace)
-  }
-}
+      (driver) => scheduleFrom_EffectLoop(self, initial, driver)
+    ).traced(trace))
 
 /** @internal */
 const scheduleFrom_EffectLoop = <R, E, In, R2, Out>(
   self: Effect.Effect<R, E, In>,
   initial: In,
   driver: Schedule.ScheduleDriver<R2, In, Out>
-): Effect.Effect<R | R2, E, Out> => {
-  return pipe(
+): Effect.Effect<R | R2, E, Out> =>
+  pipe(
     driver.next(initial),
     core.matchEffect(
       () => core.orDie(driver.last()),
       () => pipe(self, core.flatMap((a) => scheduleFrom_EffectLoop(self, a, driver)))
     )
   )
-}

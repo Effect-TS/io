@@ -36,8 +36,6 @@ export interface PollingMetric<Type, In, R, E, Out> {
   readonly metric: Metric.Metric<Type, In, Out>
   /**
    * An effect that polls a value that may be fed to the metric.
-   *
-   * @macro traced
    */
   poll(): Effect.Effect<R, E, In>
 }
@@ -68,7 +66,6 @@ export const collectAll: <R, E, Out>(
  * Returns an effect that will launch the polling metric in a background
  * fiber, using the specified schedule.
  *
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -81,7 +78,6 @@ export const launch: <R2, A2>(
 /**
  * An effect that polls a value that may be fed to the metric.
  *
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -91,7 +87,6 @@ export const poll: <Type, In, R, E, Out>(self: PollingMetric<Type, In, R, E, Out
 /**
  * An effect that polls for a value and uses the value to update the metric.
  *
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
