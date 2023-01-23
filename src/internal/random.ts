@@ -1,4 +1,4 @@
-import { getCallTrace } from "@effect/io/Debug"
+import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal/core"
 import type * as Random from "@effect/io/Random"
@@ -28,33 +28,27 @@ class RandomImpl implements Random.Random {
   }
 
   next(): Effect.Effect<never, never, number> {
-    const trace = getCallTrace()
-    return core.sync(() => this.PRNG.number()).traced(trace)
+    return Debug.bodyWithTrace((trace) => core.sync(() => this.PRNG.number()).traced(trace))
   }
 
   nextBoolean(): Effect.Effect<never, never, boolean> {
-    const trace = getCallTrace()
-    return pipe(this.next(), core.map((n) => n > 0.5)).traced(trace)
+    return Debug.bodyWithTrace((trace) => core.map(this.next(), (n) => n > 0.5).traced(trace))
   }
 
   nextInt(): Effect.Effect<never, never, number> {
-    const trace = getCallTrace()
-    return core.sync(() => this.PRNG.integer(Number.MAX_SAFE_INTEGER)).traced(trace)
+    return Debug.bodyWithTrace((trace) => core.sync(() => this.PRNG.integer(Number.MAX_SAFE_INTEGER)).traced(trace))
   }
 
   nextRange(min: number, max: number): Effect.Effect<never, never, number> {
-    const trace = getCallTrace()
-    return pipe(this.next(), core.map((n) => (max - min) * n + min)).traced(trace)
+    return Debug.bodyWithTrace((trace) => core.map(this.next(), (n) => (max - min) * n + min).traced(trace))
   }
 
   nextIntBetween(min: number, max: number): Effect.Effect<never, never, number> {
-    const trace = getCallTrace()
-    return core.sync(() => this.PRNG.integer(1 + max - min) + min).traced(trace)
+    return Debug.bodyWithTrace((trace) => core.sync(() => this.PRNG.integer(1 + max - min) + min).traced(trace))
   }
 
   shuffle<A>(elements: Iterable<A>): Effect.Effect<never, never, Chunk.Chunk<A>> {
-    const trace = getCallTrace()
-    return shuffleWith(elements, (n) => this.nextIntBetween(0, n)).traced(trace)
+    return Debug.bodyWithTrace((trace) => shuffleWith(elements, (n) => this.nextIntBetween(0, n)).traced(trace))
   }
 }
 

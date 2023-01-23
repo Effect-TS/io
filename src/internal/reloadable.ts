@@ -1,4 +1,4 @@
-import { getCallTrace } from "@effect/io/Debug"
+import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal/core"
 import * as effect from "@effect/io/internal/effect"
@@ -72,10 +72,13 @@ export const autoFromConfig = <Out extends Context.Tag<any>, In, E, R, Out2>(
 }
 
 /** @internal */
-export const get = <A>(tag: Context.Tag<A>): Effect.Effect<Reloadable.Reloadable<A>, never, A> => {
-  const trace = getCallTrace()
-  return core.serviceWithEffect(reloadableTag(tag), (reloadable) => scopedRef.get(reloadable.scopedRef)).traced(trace)
-}
+export const get = Debug.methodWithTrace((trace) =>
+  <A>(tag: Context.Tag<A>): Effect.Effect<Reloadable.Reloadable<A>, never, A> =>
+    core.serviceWithEffect(
+      reloadableTag(tag),
+      (reloadable) => scopedRef.get(reloadable.scopedRef)
+    ).traced(trace)
+)
 
 /** @internal */
 export const manual = <Out extends Context.Tag<any>, In, E>(
@@ -93,7 +96,7 @@ export const manual = <Out extends Context.Tag<any>, In, E>(
             [ReloadableTypeId]: reloadableVariance,
             scopedRef: ref,
             reload: () => {
-              const trace = getCallTrace()
+              const trace = Debug.getCallTrace()
               return pipe(
                 scopedRef.set(ref, pipe(_layer.build(layer), core.map(Context.unsafeGet(tag)))),
                 core.provideContext(env)
@@ -120,19 +123,22 @@ export const reloadableTag = <A>(tag: Context.Tag<A>): Context.Tag<Reloadable.Re
 }
 
 /** @internal */
-export const reload = <A>(tag: Context.Tag<A>): Effect.Effect<Reloadable.Reloadable<A>, unknown, void> => {
-  const trace = getCallTrace()
-  return core.serviceWithEffect(reloadableTag(tag), (reloadable) => reloadable.reload()).traced(trace)
-}
+export const reload = Debug.methodWithTrace((trace) =>
+  <A>(tag: Context.Tag<A>): Effect.Effect<Reloadable.Reloadable<A>, unknown, void> =>
+    core.serviceWithEffect(
+      reloadableTag(tag),
+      (reloadable) => reloadable.reload()
+    ).traced(trace)
+)
 
 /** @internal */
-export const reloadFork = <A>(tag: Context.Tag<A>): Effect.Effect<Reloadable.Reloadable<A>, unknown, void> => {
-  const trace = getCallTrace()
-  return core.serviceWithEffect(reloadableTag(tag), (reloadable) =>
-    pipe(
-      reloadable.reload(),
-      effect.ignoreLogged,
-      fiberRuntime.forkDaemon,
-      core.asUnit
-    ).traced(trace))
-}
+export const reloadFork = Debug.methodWithTrace((trace) =>
+  <A>(tag: Context.Tag<A>): Effect.Effect<Reloadable.Reloadable<A>, unknown, void> =>
+    core.serviceWithEffect(reloadableTag(tag), (reloadable) =>
+      pipe(
+        reloadable.reload(),
+        effect.ignoreLogged,
+        fiberRuntime.forkDaemon,
+        core.asUnit
+      ).traced(trace))
+)

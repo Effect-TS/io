@@ -1,4 +1,4 @@
-import { getCallTrace } from "@effect/io/Debug"
+import * as Debug from "@effect/io/Debug"
 import type * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal/core"
@@ -70,177 +70,197 @@ class QueueImpl<A> implements Queue.Queue<A> {
   }
 
   size(): Effect.Effect<never, never, number> {
-    const trace = getCallTrace()
-    return core.suspendSucceed(() =>
-      MutableRef.get(this.shutdownFlag)
-        ? core.interrupt()
-        : core.succeed(
-          MutableQueue.length(this.queue) -
-            MutableQueue.length(this.takers) +
-            this.strategy.surplusSize()
-        )
-    ).traced(trace)
+    return Debug.bodyWithTrace((trace) =>
+      core.suspendSucceed(() =>
+        MutableRef.get(this.shutdownFlag)
+          ? core.interrupt()
+          : core.succeed(
+            MutableQueue.length(this.queue) -
+              MutableQueue.length(this.takers) +
+              this.strategy.surplusSize()
+          )
+      ).traced(trace)
+    )
   }
 
   isEmpty(): Effect.Effect<never, never, boolean> {
-    const trace = getCallTrace()
-    return pipe(this.size(), core.map((size) => size <= 0)).traced(trace)
+    return Debug.bodyWithTrace((trace) =>
+      core.map(
+        this.size(),
+        (size) => size <= 0
+      ).traced(trace)
+    )
   }
 
   isFull(): Effect.Effect<never, never, boolean> {
-    const trace = getCallTrace()
-    return pipe(this.size(), core.map((size) => size >= this.capacity())).traced(trace)
+    return Debug.bodyWithTrace((trace) =>
+      core.map(
+        this.size(),
+        (size) => size >= this.capacity()
+      ).traced(trace)
+    )
   }
 
   shutdown(): Effect.Effect<never, never, void> {
-    const trace = getCallTrace()
-    return pipe(
-      core.withFiberRuntime<never, never, void>((state) => {
-        pipe(this.shutdownFlag, MutableRef.set(true))
-        return pipe(
-          unsafePollAll(this.takers),
-          fiberRuntime.forEachParDiscard((d) => core.deferredInterruptWith(d, state.id())),
-          core.zipRight(this.strategy.shutdown()),
-          core.whenEffect(core.deferredSucceed(this.shutdownHook, void 0)),
-          core.asUnit
-        )
-      }),
-      core.uninterruptible
-    ).traced(trace)
+    return Debug.bodyWithTrace((trace) =>
+      core.uninterruptible(
+        core.withFiberRuntime<never, never, void>((state) => {
+          pipe(this.shutdownFlag, MutableRef.set(true))
+          return pipe(
+            unsafePollAll(this.takers),
+            fiberRuntime.forEachParDiscard((d) => core.deferredInterruptWith(d, state.id())),
+            core.zipRight(this.strategy.shutdown()),
+            core.whenEffect(core.deferredSucceed(this.shutdownHook, void 0)),
+            core.asUnit
+          )
+        })
+      ).traced(trace)
+    )
   }
 
   isShutdown(): Effect.Effect<never, never, boolean> {
-    const trace = getCallTrace()
-    return core.sync(() => MutableRef.get(this.shutdownFlag)).traced(trace)
+    return Debug.bodyWithTrace((trace) => core.sync(() => MutableRef.get(this.shutdownFlag)).traced(trace))
   }
 
   awaitShutdown(): Effect.Effect<never, never, void> {
-    const trace = getCallTrace()
-    return core.deferredAwait(this.shutdownHook).traced(trace)
+    return Debug.bodyWithTrace((trace) => core.deferredAwait(this.shutdownHook).traced(trace))
   }
 
   offer(value: A): Effect.Effect<never, never, boolean> {
-    const trace = getCallTrace()
-    return core.suspendSucceed(() => {
-      if (MutableRef.get(this.shutdownFlag)) {
-        return core.interrupt()
-      }
-      let noRemaining: boolean
-      if (MutableQueue.isEmpty(this.queue)) {
-        const taker = pipe(
-          this.takers,
-          MutableQueue.poll(MutableQueue.EmptyMutableQueue)
-        )
-        if (taker !== MutableQueue.EmptyMutableQueue) {
-          unsafeCompleteDeferred(taker, value)
-          noRemaining = true
+    return Debug.bodyWithTrace((trace) =>
+      core.suspendSucceed(() => {
+        if (MutableRef.get(this.shutdownFlag)) {
+          return core.interrupt()
+        }
+        let noRemaining: boolean
+        if (MutableQueue.isEmpty(this.queue)) {
+          const taker = pipe(
+            this.takers,
+            MutableQueue.poll(MutableQueue.EmptyMutableQueue)
+          )
+          if (taker !== MutableQueue.EmptyMutableQueue) {
+            unsafeCompleteDeferred(taker, value)
+            noRemaining = true
+          } else {
+            noRemaining = false
+          }
         } else {
           noRemaining = false
         }
-      } else {
-        noRemaining = false
-      }
-      if (noRemaining) {
-        return core.succeed(true)
-      }
-      // Not enough takers, offer to the queue
-      const succeeded = pipe(this.queue, MutableQueue.offer(value))
-      unsafeCompleteTakers(this.strategy, this.queue, this.takers)
-      return succeeded
-        ? core.succeed(true)
-        : this.strategy.handleSurplus([value], this.queue, this.takers, this.shutdownFlag)
-    }).traced(trace)
+        if (noRemaining) {
+          return core.succeed(true)
+        }
+        // Not enough takers, offer to the queue
+        const succeeded = pipe(this.queue, MutableQueue.offer(value))
+        unsafeCompleteTakers(this.strategy, this.queue, this.takers)
+        return succeeded
+          ? core.succeed(true)
+          : this.strategy.handleSurplus([value], this.queue, this.takers, this.shutdownFlag)
+      }).traced(trace)
+    )
   }
 
   offerAll(iterable: Iterable<A>): Effect.Effect<never, never, boolean> {
-    const trace = getCallTrace()
-    return core.suspendSucceed(() => {
-      if (MutableRef.get(this.shutdownFlag)) {
-        return core.interrupt()
-      }
-      const values = ReadonlyArray.fromIterable(iterable)
-      const pTakers = MutableQueue.isEmpty(this.queue)
-        ? ReadonlyArray.fromIterable(unsafePollN(this.takers, values.length))
-        : ReadonlyArray.empty
-      const [forTakers, remaining] = pipe(values, ReadonlyArray.splitAt(pTakers.length))
-      for (let i = 0; i < pTakers.length; i++) {
-        const taker = pTakers[i]
-        const item = forTakers[i]
-        unsafeCompleteDeferred(taker, item)
-      }
-      if (remaining.length === 0) {
-        return core.succeed(true)
-      }
-      // Not enough takers, offer to the queue
-      const surplus = unsafeOfferAll(this.queue, remaining)
-      unsafeCompleteTakers(this.strategy, this.queue, this.takers)
-      return Chunk.isEmpty(surplus)
-        ? core.succeed(true)
-        : this.strategy.handleSurplus(surplus, this.queue, this.takers, this.shutdownFlag)
-    }).traced(trace)
+    return Debug.bodyWithTrace((trace) =>
+      core.suspendSucceed(() => {
+        if (MutableRef.get(this.shutdownFlag)) {
+          return core.interrupt()
+        }
+        const values = ReadonlyArray.fromIterable(iterable)
+        const pTakers = MutableQueue.isEmpty(this.queue)
+          ? ReadonlyArray.fromIterable(unsafePollN(this.takers, values.length))
+          : ReadonlyArray.empty
+        const [forTakers, remaining] = pipe(values, ReadonlyArray.splitAt(pTakers.length))
+        for (let i = 0; i < pTakers.length; i++) {
+          const taker = pTakers[i]
+          const item = forTakers[i]
+          unsafeCompleteDeferred(taker, item)
+        }
+        if (remaining.length === 0) {
+          return core.succeed(true)
+        }
+        // Not enough takers, offer to the queue
+        const surplus = unsafeOfferAll(this.queue, remaining)
+        unsafeCompleteTakers(this.strategy, this.queue, this.takers)
+        return Chunk.isEmpty(surplus)
+          ? core.succeed(true)
+          : this.strategy.handleSurplus(surplus, this.queue, this.takers, this.shutdownFlag)
+      }).traced(trace)
+    )
   }
 
   take(): Effect.Effect<never, never, A> {
-    const trace = getCallTrace()
-    return core.withFiberRuntime<never, never, A>((state) => {
-      if (MutableRef.get(this.shutdownFlag)) {
-        return core.interrupt()
-      }
-      const item = pipe(this.queue, MutableQueue.poll(MutableQueue.EmptyMutableQueue))
-      if (item !== MutableQueue.EmptyMutableQueue) {
-        this.strategy.unsafeOnQueueEmptySpace(this.queue, this.takers)
-        return core.succeed(item)
-      } else {
-        // Add the deferred to takers, then:
-        // - Try to take again in case a value was added since
-        // - Wait for the deferred to be completed
-        // - Clean up resources in case of interruption
-        const deferred = core.deferredUnsafeMake<never, A>(state.id())
-        return pipe(
-          core.suspendSucceed(() => {
-            pipe(this.takers, MutableQueue.offer(deferred))
-            unsafeCompleteTakers(this.strategy, this.queue, this.takers)
-            return MutableRef.get(this.shutdownFlag) ?
-              core.interrupt() :
-              core.deferredAwait(deferred)
-          }),
-          core.onInterrupt(() => {
-            return core.sync(() => unsafeRemove(this.takers, deferred))
-          })
-        )
-      }
-    }).traced(trace)
+    return Debug.bodyWithTrace((trace) =>
+      core.withFiberRuntime<never, never, A>((state) => {
+        if (MutableRef.get(this.shutdownFlag)) {
+          return core.interrupt()
+        }
+        const item = pipe(this.queue, MutableQueue.poll(MutableQueue.EmptyMutableQueue))
+        if (item !== MutableQueue.EmptyMutableQueue) {
+          this.strategy.unsafeOnQueueEmptySpace(this.queue, this.takers)
+          return core.succeed(item)
+        } else {
+          // Add the deferred to takers, then:
+          // - Try to take again in case a value was added since
+          // - Wait for the deferred to be completed
+          // - Clean up resources in case of interruption
+          const deferred = core.deferredUnsafeMake<never, A>(state.id())
+          return pipe(
+            core.suspendSucceed(() => {
+              pipe(this.takers, MutableQueue.offer(deferred))
+              unsafeCompleteTakers(this.strategy, this.queue, this.takers)
+              return MutableRef.get(this.shutdownFlag) ?
+                core.interrupt() :
+                core.deferredAwait(deferred)
+            }),
+            core.onInterrupt(() => {
+              return core.sync(() => unsafeRemove(this.takers, deferred))
+            })
+          )
+        }
+      }).traced(trace)
+    )
   }
 
   takeAll(): Effect.Effect<never, never, Chunk.Chunk<A>> {
-    const trace = getCallTrace()
-    return core.suspendSucceed(() => {
-      return MutableRef.get(this.shutdownFlag)
-        ? core.interrupt()
-        : core.sync(() => {
-          const values = unsafePollAll(this.queue)
-          this.strategy.unsafeOnQueueEmptySpace(this.queue, this.takers)
-          return Chunk.fromIterable(values)
-        })
-    }).traced(trace)
+    return Debug.bodyWithTrace((trace) =>
+      core.suspendSucceed(() => {
+        return MutableRef.get(this.shutdownFlag)
+          ? core.interrupt()
+          : core.sync(() => {
+            const values = unsafePollAll(this.queue)
+            this.strategy.unsafeOnQueueEmptySpace(this.queue, this.takers)
+            return Chunk.fromIterable(values)
+          })
+      }).traced(trace)
+    )
   }
 
   takeUpTo(max: number): Effect.Effect<never, never, Chunk.Chunk<A>> {
-    const trace = getCallTrace()
-    return core.suspendSucceed(() =>
-      MutableRef.get(this.shutdownFlag)
-        ? core.interrupt()
-        : core.sync(() => {
-          const values = unsafePollN(this.queue, max)
-          this.strategy.unsafeOnQueueEmptySpace(this.queue, this.takers)
-          return Chunk.fromIterable(values)
-        })
-    ).traced(trace)
+    return Debug.bodyWithTrace((trace) =>
+      core.suspendSucceed(() =>
+        MutableRef.get(this.shutdownFlag)
+          ? core.interrupt()
+          : core.sync(() => {
+            const values = unsafePollN(this.queue, max)
+            this.strategy.unsafeOnQueueEmptySpace(this.queue, this.takers)
+            return Chunk.fromIterable(values)
+          })
+      ).traced(trace)
+    )
   }
 
   takeBetween(min: number, max: number): Effect.Effect<never, never, Chunk.Chunk<A>> {
-    const trace = getCallTrace()
-    return core.suspendSucceed(() => takeRemainderLoop(this, min, max, Chunk.empty())).traced(trace)
+    return Debug.bodyWithTrace((trace) =>
+      core.suspendSucceed(() =>
+        takeRemainderLoop(
+          this,
+          min,
+          max,
+          Chunk.empty()
+        )
+      ).traced(trace)
+    )
   }
 }
 
@@ -298,46 +318,40 @@ export const isDequeue = (u: unknown): u is Queue.Dequeue<unknown> => {
 }
 
 /** @internal */
-export const bounded = <A>(
-  requestedCapacity: number
-): Effect.Effect<never, never, Queue.Queue<A>> => {
-  const trace = getCallTrace()
-  return pipe(
-    core.sync(() => MutableQueue.bounded<A>(requestedCapacity)),
-    core.flatMap((queue) => make(queue, backPressureStrategy()))
-  ).traced(trace)
-}
+export const bounded = Debug.methodWithTrace((trace) =>
+  <A>(requestedCapacity: number): Effect.Effect<never, never, Queue.Queue<A>> =>
+    pipe(
+      core.sync(() => MutableQueue.bounded<A>(requestedCapacity)),
+      core.flatMap((queue) => make(queue, backPressureStrategy()))
+    ).traced(trace)
+)
 
 /** @internal */
-export const dropping = <A>(
-  requestedCapacity: number
-): Effect.Effect<never, never, Queue.Queue<A>> => {
-  const trace = getCallTrace()
-  return pipe(
-    core.sync(() => MutableQueue.bounded<A>(requestedCapacity)),
-    core.flatMap((queue) => make(queue, droppingStrategy()))
-  ).traced(trace)
-}
+export const dropping = Debug.methodWithTrace((trace) =>
+  <A>(requestedCapacity: number): Effect.Effect<never, never, Queue.Queue<A>> =>
+    pipe(
+      core.sync(() => MutableQueue.bounded<A>(requestedCapacity)),
+      core.flatMap((queue) => make(queue, droppingStrategy()))
+    ).traced(trace)
+)
 
 /** @internal */
-export const sliding = <A>(
-  requestedCapacity: number
-): Effect.Effect<never, never, Queue.Queue<A>> => {
-  const trace = getCallTrace()
-  return pipe(
-    core.sync(() => MutableQueue.bounded<A>(requestedCapacity)),
-    core.flatMap((queue) => make(queue, slidingStrategy()))
-  ).traced(trace)
-}
+export const sliding = Debug.methodWithTrace((trace) =>
+  <A>(requestedCapacity: number): Effect.Effect<never, never, Queue.Queue<A>> =>
+    pipe(
+      core.sync(() => MutableQueue.bounded<A>(requestedCapacity)),
+      core.flatMap((queue) => make(queue, slidingStrategy()))
+    ).traced(trace)
+)
 
 /** @internal */
-export const unbounded = <A>(): Effect.Effect<never, never, Queue.Queue<A>> => {
-  const trace = getCallTrace()
-  return pipe(
-    core.sync(() => MutableQueue.unbounded<A>()),
-    core.flatMap((queue) => make(queue, droppingStrategy()))
-  ).traced(trace)
-}
+export const unbounded = Debug.methodWithTrace((trace) =>
+  <A>(): Effect.Effect<never, never, Queue.Queue<A>> =>
+    pipe(
+      core.sync(() => MutableQueue.unbounded<A>()),
+      core.flatMap((queue) => make(queue, droppingStrategy()))
+    ).traced(trace)
+)
 
 /** @internal */
 const unsafeMake = <A>(
@@ -351,24 +365,24 @@ const unsafeMake = <A>(
 }
 
 /** @internal */
-const make = <A>(
-  queue: MutableQueue.MutableQueue<A>,
-  strategy: Queue.Strategy<A>
-): Effect.Effect<never, never, Queue.Queue<A>> => {
-  const trace = getCallTrace()
-  return pipe(
-    core.deferredMake<never, void>(),
-    core.map((deferred) =>
-      unsafeMake(
-        queue,
-        MutableQueue.unbounded(),
-        deferred,
-        MutableRef.make(false),
-        strategy
+const make = Debug.methodWithTrace((trace) =>
+  <A>(
+    queue: MutableQueue.MutableQueue<A>,
+    strategy: Queue.Strategy<A>
+  ): Effect.Effect<never, never, Queue.Queue<A>> =>
+    pipe(
+      core.deferredMake<never, void>(),
+      core.map((deferred) =>
+        unsafeMake(
+          queue,
+          MutableQueue.unbounded(),
+          deferred,
+          MutableRef.make(false),
+          strategy
+        )
       )
-    )
-  ).traced(trace)
-}
+    ).traced(trace)
+)
 
 /** @internal */
 export const capacity = <A>(self: Queue.Dequeue<A> | Queue.Enqueue<A>): number => {
@@ -376,92 +390,87 @@ export const capacity = <A>(self: Queue.Dequeue<A> | Queue.Enqueue<A>): number =
 }
 
 /** @internal */
-export const size = <A>(self: Queue.Dequeue<A> | Queue.Enqueue<A>): Effect.Effect<never, never, number> => {
-  const trace = getCallTrace()
-  return self.size().traced(trace)
-}
+export const size = Debug.methodWithTrace((trace) =>
+  <A>(self: Queue.Dequeue<A> | Queue.Enqueue<A>): Effect.Effect<never, never, number> => self.size().traced(trace)
+)
 
 /** @internal */
-export const isFull = <A>(self: Queue.Dequeue<A> | Queue.Enqueue<A>): Effect.Effect<never, never, boolean> => {
-  const trace = getCallTrace()
-  return self.isFull().traced(trace)
-}
+export const isFull = Debug.methodWithTrace((trace) =>
+  <A>(self: Queue.Dequeue<A> | Queue.Enqueue<A>): Effect.Effect<never, never, boolean> => self.isFull().traced(trace)
+)
 
 /** @internal */
-export const isEmpty = <A>(self: Queue.Dequeue<A> | Queue.Enqueue<A>): Effect.Effect<never, never, boolean> => {
-  const trace = getCallTrace()
-  return self.isEmpty().traced(trace)
-}
+export const isEmpty = Debug.methodWithTrace((trace) =>
+  <A>(self: Queue.Dequeue<A> | Queue.Enqueue<A>): Effect.Effect<never, never, boolean> => self.isEmpty().traced(trace)
+)
 
 /** @internal */
-export const isShutdown = <A>(self: Queue.Dequeue<A> | Queue.Enqueue<A>): Effect.Effect<never, never, boolean> => {
-  const trace = getCallTrace()
-  return self.isShutdown().traced(trace)
-}
+export const isShutdown = Debug.methodWithTrace((trace) =>
+  <A>(self: Queue.Dequeue<A> | Queue.Enqueue<A>): Effect.Effect<never, never, boolean> =>
+    self.isShutdown().traced(trace)
+)
 
 /** @internal */
-export const awaitShutdown = <A>(self: Queue.Dequeue<A> | Queue.Enqueue<A>): Effect.Effect<never, never, void> => {
-  const trace = getCallTrace()
-  return self.awaitShutdown().traced(trace)
-}
+export const awaitShutdown = Debug.methodWithTrace((trace) =>
+  <A>(self: Queue.Dequeue<A> | Queue.Enqueue<A>): Effect.Effect<never, never, void> =>
+    self.awaitShutdown().traced(trace)
+)
 
 /** @internal */
-export const shutdown = <A>(self: Queue.Dequeue<A> | Queue.Enqueue<A>): Effect.Effect<never, never, void> => {
-  const trace = getCallTrace()
-  return self.shutdown().traced(trace)
-}
+export const shutdown = Debug.methodWithTrace((trace) =>
+  <A>(self: Queue.Dequeue<A> | Queue.Enqueue<A>): Effect.Effect<never, never, void> => self.shutdown().traced(trace)
+)
 
 /** @internal */
-export const offer = <A>(self: Queue.Enqueue<A>, value: A): Effect.Effect<never, never, boolean> => {
-  const trace = getCallTrace()
-  return self.offer(value).traced(trace)
-}
+export const offer = Debug.dualWithTrace<
+  <A>(self: Queue.Enqueue<A>, value: A) => Effect.Effect<never, never, boolean>,
+  <A>(value: A) => (self: Queue.Enqueue<A>) => Effect.Effect<never, never, boolean>
+>(2, (trace) => (self, value) => self.offer(value).traced(trace))
 
 /** @internal */
-export const offerAll = <A>(self: Queue.Enqueue<A>, iterable: Iterable<A>): Effect.Effect<never, never, boolean> => {
-  const trace = getCallTrace()
-  return self.offerAll(iterable).traced(trace)
-}
+export const offerAll = Debug.dualWithTrace<
+  <A>(
+    self: Queue.Enqueue<A>,
+    iterable: Iterable<A>
+  ) => Effect.Effect<never, never, boolean>,
+  <A>(
+    iterable: Iterable<A>
+  ) => (self: Queue.Enqueue<A>) => (self: Queue.Enqueue<A>) => Effect.Effect<never, never, boolean>
+>(2, (trace) => (self, iterable) => self.offerAll(iterable).traced(trace))
 
 /** @internal */
-export const poll = <A>(self: Queue.Dequeue<A>): Effect.Effect<never, never, Option.Option<A>> => {
-  const trace = getCallTrace()
-  return pipe(self.takeUpTo(1), core.map(Chunk.head)).traced(trace)
-}
+export const poll = Debug.methodWithTrace((trace) =>
+  <A>(self: Queue.Dequeue<A>): Effect.Effect<never, never, Option.Option<A>> =>
+    pipe(self.takeUpTo(1), core.map(Chunk.head)).traced(trace)
+)
 
 /** @internal */
-export const take = <A>(self: Queue.Dequeue<A>): Effect.Effect<never, never, A> => {
-  const trace = getCallTrace()
-  return self.take().traced(trace)
-}
+export const take = Debug.methodWithTrace((trace) =>
+  <A>(self: Queue.Dequeue<A>): Effect.Effect<never, never, A> => self.take().traced(trace)
+)
 
 /** @internal */
-export const takeAll = <A>(self: Queue.Dequeue<A>): Effect.Effect<never, never, Chunk.Chunk<A>> => {
-  const trace = getCallTrace()
-  return self.takeAll().traced(trace)
-}
+export const takeAll = Debug.methodWithTrace((trace) =>
+  <A>(self: Queue.Dequeue<A>): Effect.Effect<never, never, Chunk.Chunk<A>> => self.takeAll().traced(trace)
+)
 
 /** @internal */
-export const takeUpTo = <A>(self: Queue.Dequeue<A>, max: number): Effect.Effect<never, never, Chunk.Chunk<A>> => {
-  const trace = getCallTrace()
-  return self.takeUpTo(max).traced(trace)
-}
+export const takeUpTo = Debug.dualWithTrace<
+  <A>(self: Queue.Dequeue<A>, max: number) => Effect.Effect<never, never, Chunk.Chunk<A>>,
+  (max: number) => <A>(self: Queue.Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>>
+>(2, (trace) => (self, max) => self.takeUpTo(max).traced(trace))
 
 /** @internal */
-export const takeBetween = <A>(
-  self: Queue.Dequeue<A>,
-  min: number,
-  max: number
-): Effect.Effect<never, never, Chunk.Chunk<A>> => {
-  const trace = getCallTrace()
-  return self.takeBetween(min, max).traced(trace)
-}
+export const takeBetween = Debug.dualWithTrace<
+  <A>(self: Queue.Dequeue<A>, min: number, max: number) => Effect.Effect<never, never, Chunk.Chunk<A>>,
+  (min: number, max: number) => <A>(self: Queue.Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>>
+>(3, (trace) => (self, min, max) => self.takeBetween(min, max).traced(trace))
 
 /** @internal */
-export const takeN = <A>(self: Queue.Dequeue<A>, n: number): Effect.Effect<never, never, Chunk.Chunk<A>> => {
-  const trace = getCallTrace()
-  return self.takeBetween(n, n).traced(trace)
-}
+export const takeN = Debug.dualWithTrace<
+  <A>(self: Queue.Dequeue<A>, n: number) => Effect.Effect<never, never, Chunk.Chunk<A>>,
+  (n: number) => <A>(self: Queue.Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>>
+>(2, (trace) => (self, n) => self.takeBetween(n, n).traced(trace))
 
 // -----------------------------------------------------------------------------
 // Strategy
@@ -493,7 +502,6 @@ class BackPressureStrategy<A> implements Queue.Strategy<A> {
   }
 
   shutdown(): Effect.Effect<never, never, void> {
-    const trace = getCallTrace()
     return pipe(
       core.fiberId(),
       core.flatMap((fiberId) =>
@@ -504,7 +512,7 @@ class BackPressureStrategy<A> implements Queue.Strategy<A> {
           ))
         )
       )
-    ).traced(trace)
+    )
   }
 
   handleSurplus(
@@ -513,7 +521,6 @@ class BackPressureStrategy<A> implements Queue.Strategy<A> {
     takers: MutableQueue.MutableQueue<Deferred.Deferred<never, A>>,
     isShutdown: MutableRef.MutableRef<boolean>
   ): Effect.Effect<never, never, boolean> {
-    const trace = getCallTrace()
     return core.withFiberRuntime<never, never, boolean>((state) => {
       const deferred = core.deferredUnsafeMake<never, boolean>(state.id())
       return pipe(
@@ -525,7 +532,7 @@ class BackPressureStrategy<A> implements Queue.Strategy<A> {
         }),
         core.onInterrupt(() => core.sync(() => this.unsafeRemove(deferred)))
       )
-    }).traced(trace)
+    })
   }
 
   unsafeOnQueueEmptySpace(
@@ -583,8 +590,7 @@ class DroppingStrategy<A> implements Queue.Strategy<A> {
   }
 
   shutdown(): Effect.Effect<never, never, void> {
-    const trace = getCallTrace()
-    return core.unit().traced(trace)
+    return core.unit()
   }
 
   handleSurplus(
@@ -593,8 +599,7 @@ class DroppingStrategy<A> implements Queue.Strategy<A> {
     _takers: MutableQueue.MutableQueue<Deferred.Deferred<never, A>>,
     _isShutdown: MutableRef.MutableRef<boolean>
   ): Effect.Effect<never, never, boolean> {
-    const trace = getCallTrace()
-    return core.succeed(false).traced(trace)
+    return core.succeed(false)
   }
 
   unsafeOnQueueEmptySpace(
@@ -614,8 +619,7 @@ class SlidingStrategy<A> implements Queue.Strategy<A> {
   }
 
   shutdown(): Effect.Effect<never, never, void> {
-    const trace = getCallTrace()
-    return core.unit().traced(trace)
+    return core.unit()
   }
 
   handleSurplus(
@@ -624,12 +628,11 @@ class SlidingStrategy<A> implements Queue.Strategy<A> {
     takers: MutableQueue.MutableQueue<Deferred.Deferred<never, A>>,
     _isShutdown: MutableRef.MutableRef<boolean>
   ): Effect.Effect<never, never, boolean> {
-    const trace = getCallTrace()
     return core.sync(() => {
       this.unsafeOffer(queue, iterable)
       unsafeCompleteTakers(this, queue, takers)
       return true
-    }).traced(trace)
+    })
   }
 
   unsafeOnQueueEmptySpace(
