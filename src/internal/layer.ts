@@ -1,6 +1,6 @@
 import * as Cause from "@effect/io/Cause"
 import * as Clock from "@effect/io/Clock"
-import { getCallTrace } from "@effect/io/Debug"
+import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
 import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
@@ -202,13 +202,10 @@ class MemoMap {
                         fiberRuntime.scopeMake(),
                         core.flatMap((innerScope) =>
                           pipe(
-                            restore(
-                              pipe(
-                                layer,
-                                withScope(innerScope),
-                                core.flatMap((f) => effect.diffFiberRefs(f(this)))
-                              )
-                            ),
+                            restore(core.flatMap(
+                              withScope(layer, innerScope),
+                              (f) => effect.diffFiberRefs(f(this))
+                            )),
                             core.exit,
                             core.flatMap((exit) => {
                               switch (exit._tag) {
@@ -294,113 +291,116 @@ const makeMemoMap = (): Effect.Effect<never, never, MemoMap> => {
 }
 
 /** @internal */
-export const build = <RIn, E, ROut>(
-  self: Layer.Layer<RIn, E, ROut>
-): Effect.Effect<RIn | Scope.Scope, E, Context.Context<ROut>> => {
-  const trace = getCallTrace()
-  return fiberRuntime.scopeWith(
-    (scope) => pipe(self, buildWithScope(scope))
-  ).traced(trace)
-}
+export const build = Debug.methodWithTrace((trace) =>
+  <RIn, E, ROut>(self: Layer.Layer<RIn, E, ROut>): Effect.Effect<RIn | Scope.Scope, E, Context.Context<ROut>> =>
+    fiberRuntime.scopeWith(
+      (scope) => pipe(self, buildWithScope(scope))
+    ).traced(trace)
+)
 
 /** @internal */
-export const buildWithScope = (scope: Scope.Scope) => {
-  return <RIn, E, ROut>(self: Layer.Layer<RIn, E, ROut>): Effect.Effect<RIn, E, Context.Context<ROut>> => {
-    return pipe(
+export const buildWithScope = Debug.dualWithTrace<
+  <RIn, E, ROut>(
+    self: Layer.Layer<RIn, E, ROut>,
+    scope: Scope.Scope
+  ) => Effect.Effect<RIn, E, Context.Context<ROut>>,
+  (
+    scope: Scope.Scope
+  ) => <RIn, E, ROut>(self: Layer.Layer<RIn, E, ROut>) => Effect.Effect<RIn, E, Context.Context<ROut>>
+>(2, (trace) =>
+  (self, scope) =>
+    core.flatMap(
       makeMemoMap(),
-      core.flatMap((memoMap) =>
-        pipe(
-          self,
-          withScope(scope),
-          core.flatMap((run) => run(memoMap))
-        )
-      )
-    )
-  }
-}
+      (memoMap) => core.flatMap(withScope(self, scope), (run) => run(memoMap))
+    ).traced(trace))
 
-/** @internal */
-export const withScope = (scope: Scope.Scope) => {
-  const trace = getCallTrace()
-  return <RIn, E, ROut>(self: Layer.Layer<RIn, E, ROut>): Effect.Effect<
-    never,
-    never,
-    (memoMap: MemoMap) => Effect.Effect<RIn, E, Context.Context<ROut>>
-  > => {
-    const op = self as Primitive
-    switch (op._tag) {
-      case OpCodes.OP_EXTEND_SCOPE: {
-        return core.sync(() =>
-          (memoMap: MemoMap) =>
-            fiberRuntime.scopeWith(
-              (scope) => memoMap.getOrElseMemoize(op.layer, scope)
-            ) as unknown as Effect.Effect<RIn, E, Context.Context<ROut>>
-        ).traced(trace)
-      }
-      case OpCodes.OP_FOLD: {
-        return core.sync(() =>
-          (memoMap: MemoMap) =>
-            pipe(
-              memoMap.getOrElseMemoize(op.layer, scope),
-              core.matchCauseEffect(
-                (cause) => memoMap.getOrElseMemoize(op.failureK(cause), scope),
-                (value) => memoMap.getOrElseMemoize(op.successK(value), scope)
-              )
+const withScope = <RIn, E, ROut>(
+  self: Layer.Layer<RIn, E, ROut>,
+  scope: Scope.Scope
+): Effect.Effect<never, never, (memoMap: MemoMap) => Effect.Effect<RIn, E, Context.Context<ROut>>> => {
+  const op = self as Primitive
+  switch (op._tag) {
+    case OpCodes.OP_EXTEND_SCOPE: {
+      return core.sync(() =>
+        (memoMap: MemoMap) =>
+          fiberRuntime.scopeWith(
+            (scope) => memoMap.getOrElseMemoize(op.layer, scope)
+          ) as unknown as Effect.Effect<RIn, E, Context.Context<ROut>>
+      )
+    }
+    case OpCodes.OP_FOLD: {
+      return core.sync(() =>
+        (memoMap: MemoMap) =>
+          pipe(
+            memoMap.getOrElseMemoize(op.layer, scope),
+            core.matchCauseEffect(
+              (cause) => memoMap.getOrElseMemoize(op.failureK(cause), scope),
+              (value) => memoMap.getOrElseMemoize(op.successK(value), scope)
             )
-        ).traced(trace)
-      }
-      case OpCodes.OP_FRESH: {
-        return core.sync(() => (_: MemoMap) => pipe(op.layer, buildWithScope(scope))).traced(trace)
-      }
-      case OpCodes.OP_FROM_EFFECT: {
-        return core.sync(() => (_: MemoMap) => op.effect as Effect.Effect<RIn, E, Context.Context<ROut>>).traced(trace)
-      }
-      case OpCodes.OP_PROVIDE_TO: {
-        return core.sync(() =>
-          (memoMap: MemoMap) =>
-            pipe(
-              memoMap.getOrElseMemoize(op.first, scope),
-              core.flatMap((env) =>
-                pipe(
-                  memoMap.getOrElseMemoize(op.second, scope),
-                  core.provideContext(env)
-                )
-              )
-            )
-        ).traced(trace)
-      }
-      case OpCodes.OP_SCOPED: {
-        return core.sync(() =>
-          (_: MemoMap) => fiberRuntime.scopeExtend(scope)(op.effect as Effect.Effect<RIn, E, Context.Context<ROut>>)
-        ).traced(trace)
-      }
-      case OpCodes.OP_SUSPEND: {
-        return core.sync(() => (memoMap: MemoMap) => memoMap.getOrElseMemoize(op.evaluate(), scope)).traced(trace)
-      }
-      case OpCodes.OP_ZIP_WITH: {
-        return core.sync(() =>
-          (memoMap: MemoMap) =>
-            pipe(
-              memoMap.getOrElseMemoize(op.first, scope),
-              core.zipWith(
+          )
+      )
+    }
+    case OpCodes.OP_FRESH: {
+      return core.sync(() => (_: MemoMap) => pipe(op.layer, buildWithScope(scope)))
+    }
+    case OpCodes.OP_FROM_EFFECT: {
+      return core.sync(() => (_: MemoMap) => op.effect as Effect.Effect<RIn, E, Context.Context<ROut>>)
+    }
+    case OpCodes.OP_PROVIDE_TO: {
+      return core.sync(() =>
+        (memoMap: MemoMap) =>
+          pipe(
+            memoMap.getOrElseMemoize(op.first, scope),
+            core.flatMap((env) =>
+              pipe(
                 memoMap.getOrElseMemoize(op.second, scope),
-                op.zipK
+                core.provideContext(env)
               )
             )
-        ).traced(trace)
-      }
-      case OpCodes.OP_ZIP_WITH_PAR: {
-        return core.sync(() =>
-          (memoMap: MemoMap) =>
-            pipe(
-              memoMap.getOrElseMemoize(op.first, scope),
-              circular.zipWithPar(
-                memoMap.getOrElseMemoize(op.second, scope),
-                op.zipK
-              )
+          )
+      )
+    }
+    case OpCodes.OP_SCOPED: {
+      return core.sync(() =>
+        (_: MemoMap) =>
+          fiberRuntime.scopeExtend(
+            op.effect as Effect.Effect<RIn, E, Context.Context<ROut>>,
+            scope
+          )
+      )
+    }
+    case OpCodes.OP_SUSPEND: {
+      return core.sync(() =>
+        (memoMap: MemoMap) =>
+          memoMap.getOrElseMemoize(
+            op.evaluate(),
+            scope
+          )
+      )
+    }
+    case OpCodes.OP_ZIP_WITH: {
+      return core.sync(() =>
+        (memoMap: MemoMap) =>
+          pipe(
+            memoMap.getOrElseMemoize(op.first, scope),
+            core.zipWith(
+              memoMap.getOrElseMemoize(op.second, scope),
+              op.zipK
             )
-        ).traced(trace)
-      }
+          )
+      )
+    }
+    case OpCodes.OP_ZIP_WITH_PAR: {
+      return core.sync(() =>
+        (memoMap: MemoMap) =>
+          pipe(
+            memoMap.getOrElseMemoize(op.first, scope),
+            circular.zipWithPar(
+              memoMap.getOrElseMemoize(op.second, scope),
+              op.zipK
+            )
+          )
+      )
     }
   }
 }
@@ -577,14 +577,15 @@ export const fromFunction = <A extends Context.Tag<any>, B extends Context.Tag<a
 }
 
 /** @internal */
-export const launch = <RIn, E, ROut>(self: Layer.Layer<RIn, E, ROut>): Effect.Effect<RIn, E, never> => {
-  return fiberRuntime.scopedEffect(
-    pipe(
-      fiberRuntime.scopeWith((scope) => pipe(self, buildWithScope(scope))),
-      core.zipRight(core.never())
-    )
-  )
-}
+export const launch = Debug.methodWithTrace((trace) =>
+  <RIn, E, ROut>(self: Layer.Layer<RIn, E, ROut>): Effect.Effect<RIn, E, never> =>
+    fiberRuntime.scopedEffect(
+      core.zipRight(
+        fiberRuntime.scopeWith((scope) => pipe(self, buildWithScope(scope))),
+        core.never()
+      )
+    ).traced(trace)
+)
 
 /** @internal */
 export const map = <A, B>(f: (context: Context.Context<A>) => Context.Context<B>) => {
@@ -604,7 +605,7 @@ export const mapError = <E, E1>(f: (error: E) => E1) => {
 export const memoize = <RIn, E, ROut>(
   self: Layer.Layer<RIn, E, ROut>
 ): Effect.Effect<Scope.Scope, never, Layer.Layer<RIn, E, ROut>> => {
-  const trace = getCallTrace()
+  const trace = Debug.getCallTrace()
   return fiberRuntime.scopeWith((scope) =>
     pipe(
       self,
@@ -956,33 +957,34 @@ export function zipWithPar<R1, E1, A1, A, A2>(
 // circular with Effect
 
 /** @internal */
-export const provideLayer = <R, E, A>(layer: Layer.Layer<R, E, A>) => {
-  const trace = getCallTrace()
-  return <E1, A1>(self: Effect.Effect<A, E1, A1>): Effect.Effect<R, E | E1, A1> => {
-    return core.acquireUseRelease(
+export const provideLayer = Debug.dualWithTrace<
+  <R, E, A, R0, E2>(self: Effect.Effect<R, E, A>, layer: Layer.Layer<R0, E2, R>) => Effect.Effect<R0, E | E2, A>,
+  <R0, E2, R>(layer: Layer.Layer<R0, E2, R>) => <E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R0, E | E2, A>
+>(2, (trace) =>
+  (self, layer) =>
+    core.acquireUseRelease(
       fiberRuntime.scopeMake(),
       (scope) =>
-        pipe(
-          layer,
-          buildWithScope(scope),
-          core.flatMap((context) => pipe(self, core.provideContext(context)))
+        core.flatMap(
+          buildWithScope(layer, scope),
+          (context) => core.provideContext(self, context)
         ),
       (scope, exit) => core.scopeClose(scope, exit)
-    ).traced(trace)
-  }
-}
+    ).traced(trace))
 
 /** @internal */
-export const provideSomeLayer = <R2, E2, A2>(layer: Layer.Layer<R2, E2, A2>) => {
-  const trace = getCallTrace()
-  return <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R2 | Exclude<R, A2>, E | E2, A> => {
+export const provideSomeLayer = Debug.dualWithTrace<
+  <R, E, A, R2, E2, A2>(
+    self: Effect.Effect<R, E, A>,
+    layer: Layer.Layer<R2, E2, A2>
+  ) => Effect.Effect<R2 | Exclude<R, A2>, E | E2, A>,
+  <R2, E2, A2>(
+    layer: Layer.Layer<R2, E2, A2>
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R2 | Exclude<R, A2>, E | E2, A>
+>(2, (trace) =>
+  (self, layer) =>
     // @ts-expect-error
-    return pipe(
-      self,
-      provideLayer(pipe(context(), merge(layer)))
-    ).traced(trace)
-  }
-}
+    provideLayer(self, pipe(context(), merge(layer))).traced(trace))
 
 /** @internal */
 export const toLayer = <A>(tag: Context.Tag<A>) => {

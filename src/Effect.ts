@@ -2854,9 +2854,10 @@ export const provideContext: {
  * @since 1.0.0
  * @category context
  */
-export const provideLayer: <R, E, A>(
-  layer: Layer.Layer<R, E, A>
-) => <E1, A1>(self: Effect<A, E1, A1>) => Effect<R, E | E1, A1> = layer.provideLayer
+export const provideLayer: {
+  <R, E, A, R0, E2>(self: Effect<R, E, A>, layer: Layer.Layer<R0, E2, R>): Effect<R0, E | E2, A>
+  <R0, E2, R>(layer: Layer.Layer<R0, E2, R>): <E, A>(self: Effect<R, E, A>) => Effect<R0, E2 | E, A>
+} = layer.provideLayer
 
 /**
  * Provides the effect with the single service it requires. If the effect
@@ -2915,9 +2916,15 @@ export const contramapContext: {
  * @since 1.0.0
  * @category context
  */
-export const provideSomeLayer: <R2, E2, A2>(
-  layer: Layer.Layer<R2, E2, A2>
-) => <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | Exclude<R, A2>, E2 | E, A> = layer.provideSomeLayer
+export const provideSomeLayer: {
+  <R, E, A, R2, E2, A2>(
+    self: Effect<R, E, A>,
+    layer: Layer.Layer<R2, E2, A2>
+  ): Effect<R2 | Exclude<R, A2>, E | E2, A>
+  <R2, E2, A2>(
+    layer: Layer.Layer<R2, E2, A2>
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | Exclude<R, A2>, E2 | E, A>
+} = layer.provideSomeLayer
 
 /**
  * Returns an effect that races this effect with the specified effect,

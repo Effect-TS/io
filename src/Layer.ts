@@ -122,9 +122,10 @@ export const build: <RIn, E, ROut>(
  * @since 1.0.0
  * @category destructors
  */
-export const buildWithScope: (
-  scope: Scope.Scope
-) => <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Effect.Effect<RIn, E, Context.Context<ROut>> = internal.buildWithScope
+export const buildWithScope: {
+  <RIn, E, ROut>(self: Layer<RIn, E, ROut>, scope: Scope.Scope): Effect.Effect<RIn, E, Context.Context<ROut>>
+  (scope: Scope.Scope): <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Effect.Effect<RIn, E, Context.Context<ROut>>
+} = internal.buildWithScope
 
 /**
  * Recovers from all errors.

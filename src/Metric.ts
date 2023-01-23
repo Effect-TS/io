@@ -210,8 +210,10 @@ export const increment: (self: Metric.Counter<number>) => Effect.Effect<never, n
  * @since 1.0.0
  * @category aspects
  */
-export const incrementBy: (amount: number) => (self: Metric.Counter<number>) => Effect.Effect<never, never, void> =
-  internal.incrementBy
+export const incrementBy: {
+  (self: Metric.Counter<number>, amount: number): Effect.Effect<never, never, void>
+  (amount: number): (self: Metric.Counter<number>) => Effect.Effect<never, never, void>
+} = internal.incrementBy
 
 /**
  * Returns a new metric that is powered by this one, but which outputs a new
@@ -237,7 +239,19 @@ export const mapType: <Type, Type2>(
  * @since 1.0.0
  * @category aspects
  */
-export const set: <In>(value: In) => (self: Metric.Gauge<In>) => Effect.Effect<never, never, void> = internal.set
+export const set: {
+  <In>(self: Metric.Gauge<In>, value: In): Effect.Effect<never, never, void>
+  <In>(value: In): (self: Metric.Gauge<In>) => Effect.Effect<never, never, void>
+} = internal.set
+
+/**
+ * Captures a snapshot of all metrics recorded by the application.
+ *
+ * @since 1.0.0
+ * @category getters
+ */
+export const snapshot: () => Effect.Effect<never, never, HashSet.HashSet<MetricPair.MetricPair.Untyped>> =
+  internal.snapshot
 
 /**
  * Creates a metric that ignores input and produces constant output.
@@ -347,10 +361,17 @@ export const timer: (
  * @since 1.0.0
  * @category aspects
  */
-export const trackAll: <In>(
-  input: In
-) => <Type, Out>(self: Metric<Type, In, Out>) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A> =
-  internal.trackAll
+export const trackAll: {
+  <Type, In, Out>(
+    self: Metric<Type, In, Out>,
+    input: In
+  ): <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  <In>(
+    input: In
+  ): <Type, Out>(
+    self: Metric<Type, In, Out>
+  ) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+} = internal.trackAll
 
 /**
  * Returns an aspect that will update this metric with the defects of the
@@ -359,9 +380,10 @@ export const trackAll: <In>(
  * @since 1.0.0
  * @category aspects
  */
-export const trackDefect: <Type, Out>(
-  self: Metric<Type, unknown, Out>
-) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A> = internal.trackDefect
+export const trackDefect: {
+  <R, E, A, Type, Out>(self: Effect.Effect<R, E, A>, metric: Metric<Type, unknown, Out>): Effect.Effect<R, E, A>
+  <Type, Out>(metric: Metric<Type, unknown, Out>): <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+} = internal.trackDefect
 
 /**
  * Returns an aspect that will update this metric with the result of applying
@@ -371,10 +393,17 @@ export const trackDefect: <Type, Out>(
  * @since 1.0.0
  * @category aspects
  */
-export const trackDefectWith: <In>(
-  f: (defect: unknown) => In
-) => <Type, Out>(self: Metric<Type, In, Out>) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A> =
-  internal.trackDefectWith
+export const trackDefectWith: {
+  <R, E, A, Type, In, Out>(
+    self: Effect.Effect<R, E, A>,
+    metric: Metric<Type, In, Out>,
+    f: (defect: unknown) => In
+  ): Effect.Effect<R, E, A>
+  <Type, In, Out>(
+    metric: Metric<Type, In, Out>,
+    f: (defect: unknown) => In
+  ): <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+} = internal.trackDefectWith
 
 /**
  * Returns an aspect that will update this metric with the duration that the
@@ -384,9 +413,15 @@ export const trackDefectWith: <In>(
  * @since 1.0.0
  * @category aspects
  */
-export const trackDuration: <Type, Out>(
-  self: Metric<Type, Duration.Duration, Out>
-) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A> = internal.trackDuration
+export const trackDuration: {
+  <R, E, A, Type, Out>(
+    self: Effect.Effect<R, E, A>,
+    metric: Metric<Type, Duration.Duration, Out>
+  ): Effect.Effect<R, E, A>
+  <Type, Out>(
+    metric: Metric<Type, Duration.Duration, Out>
+  ): <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+} = internal.trackDuration
 
 /**
  * Returns an aspect that will update this metric with the duration that the
@@ -396,10 +431,17 @@ export const trackDuration: <Type, Out>(
  * @since 1.0.0
  * @category aspects
  */
-export const trackDurationWith: <In>(
-  f: (duration: Duration.Duration) => In
-) => <Type, Out>(self: Metric<Type, In, Out>) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A> =
-  internal.trackDurationWith
+export const trackDurationWith: {
+  <R, E, A, Type, In, Out>(
+    self: Effect.Effect<R, E, A>,
+    metric: Metric<Type, In, Out>,
+    f: (duration: Duration.Duration) => In
+  ): Effect.Effect<R, E, A>
+  <Type, In, Out>(
+    metric: Metric<Type, In, Out>,
+    f: (duration: Duration.Duration) => In
+  ): <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+} = internal.trackDurationWith
 
 /**
  * Returns an aspect that will update this metric with the failure value of
@@ -408,34 +450,15 @@ export const trackDurationWith: <In>(
  * @since 1.0.0
  * @category aspects
  */
-export const trackError: <Type, In, Out>(
-  self: Metric<Type, In, Out>
-) => <R, E extends In, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A> = internal.trackError
-
-/**
- * Returns an aspect that will update this metric with the success value of
- * the effects that it is applied to.
- *
- * @since 1.0.0
- * @category aspects
- */
-export const trackSuccess: <Type, In, Out>(
-  self: Metric<Type, In, Out>
-) => <R, E, A extends In>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A> = internal.trackSuccess
-
-/**
- * Returns an aspect that will update this metric with the result of applying
- * the specified function to the success value of the effects that the aspect is
- * applied to.
- *
- * @since 1.0.0
- * @category aspects
- */
-export const trackSuccessWith: <In, In2>(
-  f: (value: In2) => In
-) => <Type, Out>(
-  self: Metric<Type, In, Out>
-) => <R, E, A extends In2>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A> = internal.trackSuccessWith
+export const trackError: {
+  <R, E extends In, A, Type, In, Out>(
+    self: Effect.Effect<R, E, A>,
+    metric: Metric<Type, In, Out>
+  ): Effect.Effect<R, E, A>
+  <Type, In, Out>(
+    metric: Metric<Type, In, Out>
+  ): <R, E extends In, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+} = internal.trackError
 
 /**
  * Returns an aspect that will update this metric with the result of applying
@@ -445,11 +468,54 @@ export const trackSuccessWith: <In, In2>(
  * @since 1.0.0
  * @category aspects
  */
-export const trackErrorWith: <In, In2>(
-  f: (error: In2) => In
-) => <Type, Out>(
-  self: Metric<Type, In, Out>
-) => <R, E extends In2, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A> = internal.trackErrorWith
+export const trackErrorWith: {
+  <R, E extends In2, A, Type, In, Out, In2>(
+    self: Effect.Effect<R, E, A>,
+    metric: Metric<Type, In, Out>,
+    f: (error: In2) => In
+  ): Effect.Effect<R, E, A>
+  <Type, In, Out, In2>(
+    metric: Metric<Type, In, Out>,
+    f: (error: In2) => In
+  ): <R, E extends In2, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+} = internal.trackErrorWith
+
+/**
+ * Returns an aspect that will update this metric with the success value of
+ * the effects that it is applied to.
+ *
+ * @since 1.0.0
+ * @category aspects
+ */
+export const trackSuccess: {
+  <R, E, A extends In, Type, In, Out>(
+    self: Effect.Effect<R, E, A>,
+    metric: Metric<Type, In, Out>
+  ): Effect.Effect<R, E, A>
+  <Type, In, Out>(
+    metric: Metric<Type, In, Out>
+  ): <R, E, A extends In>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+} = internal.trackSuccess
+
+/**
+ * Returns an aspect that will update this metric with the result of applying
+ * the specified function to the success value of the effects that the aspect is
+ * applied to.
+ *
+ * @since 1.0.0
+ * @category aspects
+ */
+export const trackSuccessWith: {
+  <R, E, A extends In2, Type, In, Out, In2>(
+    self: Effect.Effect<R, E, A>,
+    metric: Metric<Type, In, Out>,
+    f: (value: In2) => In
+  ): Effect.Effect<R, E, A>
+  <Type, In, Out, In2>(
+    metric: Metric<Type, In, Out>,
+    f: (value: In2) => In
+  ): <R, E, A extends In2>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+} = internal.trackSuccessWith
 
 /**
  * Updates the metric with the specified update message. For example, if the
@@ -459,8 +525,10 @@ export const trackErrorWith: <In, In2>(
  * @since 1.0.0
  * @category mutations
  */
-export const update: <In>(input: In) => <Type, Out>(self: Metric<Type, In, Out>) => Effect.Effect<never, never, void> =
-  internal.update
+export const update: {
+  <Type, In, Out>(self: Metric<Type, In, Out>, input: In): Effect.Effect<never, never, void>
+  <In>(input: In): <Type, Out>(self: Metric<Type, In, Out>) => Effect.Effect<never, never, void>
+} = internal.update
 
 /**
  * Retrieves a snapshot of the value of the metric at this moment in time.

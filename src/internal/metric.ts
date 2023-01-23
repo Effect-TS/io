@@ -1,4 +1,4 @@
-import { getCallTrace } from "@effect/io/Debug"
+import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as Cause from "@effect/io/internal/cause"
 import * as core from "@effect/io/internal/core"
@@ -47,13 +47,13 @@ export const make: Metric.MetricApply = function<Type, In, Out>(
   unsafeValue: (extraTags: HashSet.HashSet<MetricLabel.MetricLabel>) => Out
 ): Metric.Metric<Type, In, Out> {
   const metric: Metric.Metric<Type, In, Out> = Object.assign(
-    <R, E, A extends In>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-      const trace = getCallTrace()
-      return pipe(
-        effect,
-        core.tap((a) => core.sync(() => unsafeUpdate(a, HashSet.empty())))
-      ).traced(trace)
-    },
+    <R, E, A extends In>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
+      Debug.bodyWithTrace((trace) =>
+        core.tap(
+          effect,
+          (a) => core.sync(() => unsafeUpdate(a, HashSet.empty()))
+        ).traced(trace)
+      ),
     {
       [MetricTypeId]: metricVariance,
       keyType,
@@ -124,25 +124,16 @@ export const histogram = (name: string, boundaries: MetricBoundaries.MetricBound
   return fromMetricKey(metricKey.histogram(name, boundaries))
 }
 
-/**
- * @macro traced
- * @internal
- */
-export const increment = (self: Metric.Metric.Counter<number>): Effect.Effect<never, never, void> => {
-  const trace = getCallTrace()
-  return pipe(self, update(1)).traced(trace)
-}
+/* @internal */
+export const increment = Debug.methodWithTrace((trace) =>
+  (self: Metric.Metric.Counter<number>): Effect.Effect<never, never, void> => update(self, 1).traced(trace)
+)
 
-/**
- * @macro traced
- * @internal
- */
-export const incrementBy = (amount: number) => {
-  const trace = getCallTrace()
-  return (self: Metric.Metric.Counter<number>): Effect.Effect<never, never, void> => {
-    return pipe(self, update(amount)).traced(trace)
-  }
-}
+/* @internal */
+export const incrementBy = Debug.dualWithTrace<
+  (self: Metric.Metric.Counter<number>, amount: number) => Effect.Effect<never, never, void>,
+  (amount: number) => (self: Metric.Metric.Counter<number>) => Effect.Effect<never, never, void>
+>(2, (trace) => (self, amount) => update(self, amount).traced(trace))
 
 /** @internal */
 export const map = <Out, Out2>(f: (out: Out) => Out2) => {
@@ -162,16 +153,17 @@ export const mapType = <Type, Type2>(f: (type: Type) => Type2) => {
   }
 }
 
-/**
- * @macro traced
- * @internal
- */
-export const set = <In>(value: In) => {
-  const trace = getCallTrace()
-  return (self: Metric.Metric.Gauge<In>): Effect.Effect<never, never, void> => {
-    return pipe(self, update(value)).traced(trace)
-  }
-}
+/* @internal */
+export const set = Debug.dualWithTrace<
+  <In>(self: Metric.Metric.Gauge<In>, value: In) => Effect.Effect<never, never, void>,
+  <In>(value: In) => (self: Metric.Metric.Gauge<In>) => Effect.Effect<never, never, void>
+>(2, (trace) => (self, value) => update(self, value).traced(trace))
+
+/** @internal */
+export const snapshot = Debug.methodWithTrace((trace) =>
+  (): Effect.Effect<never, never, HashSet.HashSet<MetricPair.MetricPair.Untyped>> =>
+    core.sync(unsafeSnapshot).traced(trace)
+)
 
 /** @internal */
 export const succeed = <Out>(out: Out): Metric.Metric<void, unknown, Out> => {
@@ -255,17 +247,23 @@ export const timer = (name: string): Metric.Metric<
   return pipe(base, contramap((duration) => duration.millis))
 }
 
-/**
- * @macro traced
- * @internal
- */
-export const trackAll = <In>(input: In) => {
-  const trace = getCallTrace()
-  return <Type, Out>(self: Metric.Metric<Type, In, Out>) => {
-    return <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-      return pipe(
-        effect,
+/* @internal */
+export const trackAll = Debug.dualWithTrace<
+  <Type, In, Out>(
+    self: Metric.Metric<Type, In, Out>,
+    input: In
+  ) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <In>(
+    input: In
+  ) => <Type, Out>(
+    self: Metric.Metric<Type, In, Out>
+  ) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+>(2, (trace) =>
+  (self, input) =>
+    (effect) =>
+      Debug.untraced(() =>
         core.matchCauseEffect(
+          effect,
           (cause) => {
             self.unsafeUpdate(input, HashSet.empty())
             return core.failCause(cause)
@@ -274,152 +272,183 @@ export const trackAll = <In>(input: In) => {
             self.unsafeUpdate(input, HashSet.empty())
             return core.succeed(value)
           }
-        )
-      ).traced(trace)
-    }
-  }
-}
+        ).traced(trace)
+      ))
 
-/**
- * @macro traced
- * @internal
- */
-export const trackDefect = <Type, Out>(self: Metric.Metric<Type, unknown, Out>) => {
-  const trace = getCallTrace()
-  return <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-    return pipe(effect, pipe(self, trackDefectWith(identity))).traced(trace)
-  }
-}
+/* @internal */
+export const trackDefect = Debug.dualWithTrace<
+  <R, E, A, Type, Out>(
+    self: Effect.Effect<R, E, A>,
+    metric: Metric.Metric<Type, unknown, Out>
+  ) => Effect.Effect<R, E, A>,
+  <Type, Out>(
+    metric: Metric.Metric<Type, unknown, Out>
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+>(2, (trace) => (self, metric) => trackDefectWith(self, metric, identity).traced(trace))
 
-/**
- * @macro traced
- * @internal
- */
-export const trackDefectWith = <In>(f: (defect: unknown) => In) => {
-  const trace = getCallTrace()
-  return <Type, Out>(self: Metric.Metric<Type, In, Out>) => {
-    return <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-      const updater = (defect: unknown): void => self.unsafeUpdate(f(defect), HashSet.empty())
-      return pipe(
-        effect,
-        _effect.tapDefect((cause) =>
-          core.sync(() =>
-            pipe(
-              Cause.defects(cause),
-              Chunk.forEach(updater)
-            )
+/* @internal */
+export const trackDefectWith = Debug.dualWithTrace<
+  <R, E, A, Type, In, Out>(
+    self: Effect.Effect<R, E, A>,
+    metric: Metric.Metric<Type, In, Out>,
+    f: (defect: unknown) => In
+  ) => Effect.Effect<R, E, A>,
+  <Type, In, Out>(
+    metric: Metric.Metric<Type, In, Out>,
+    f: (defect: unknown) => In
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+>(3, (trace, restore) =>
+  (self, metric, f) =>
+    Debug.untraced(() => {
+      const updater = (defect: unknown): void => metric.unsafeUpdate(restore(f)(defect), HashSet.empty())
+      return _effect.tapDefect(self, (cause) =>
+        core.sync(() =>
+          pipe(
+            Cause.defects(cause),
+            Chunk.forEach(updater)
           )
-        )
-      ).traced(trace)
-    }
-  }
-}
+        )).traced(trace)
+    }))
 
-/**
- * @macro traced
- * @internal
- */
-export const trackDuration = <Type, Out>(self: Metric.Metric<Type, Duration.Duration, Out>) => {
-  const trace = getCallTrace()
-  return <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-    return pipe(effect, pipe(self, trackDurationWith(identity))).traced(trace)
-  }
-}
+/* @internal */
+export const trackDuration = Debug.dualWithTrace<
+  <R, E, A, Type, Out>(
+    self: Effect.Effect<R, E, A>,
+    metric: Metric.Metric<Type, Duration.Duration, Out>
+  ) => Effect.Effect<R, E, A>,
+  <Type, Out>(
+    metric: Metric.Metric<Type, Duration.Duration, Out>
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+>(2, (trace) => (self, metric) => trackDurationWith(self, metric, identity).traced(trace))
 
-/**
- * @macro traced
- * @internal
- */
-export const trackDurationWith = <In>(f: (duration: Duration.Duration) => In) => {
-  const trace = getCallTrace()
-  return <Type, Out>(self: Metric.Metric<Type, In, Out>) => {
-    return <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-      return core.suspendSucceed(() => {
+/* @internal */
+export const trackDurationWith = Debug.dualWithTrace<
+  <R, E, A, Type, In, Out>(
+    self: Effect.Effect<R, E, A>,
+    metric: Metric.Metric<Type, In, Out>,
+    f: (duration: Duration.Duration) => In
+  ) => Effect.Effect<R, E, A>,
+  <Type, In, Out>(
+    metric: Metric.Metric<Type, In, Out>,
+    f: (duration: Duration.Duration) => In
+  ) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+>(3, (trace, restore) =>
+  (self, metric, f) =>
+    Debug.untraced(() =>
+      core.suspendSucceed(() => {
         const startTime = Date.now()
-        return pipe(
-          effect,
-          core.map((a) => {
-            const endTime = Date.now()
-            const duration = Duration.millis(endTime - startTime)
-            self.unsafeUpdate(f(duration), HashSet.empty())
-            return a
-          })
-        )
+        return core.map(self, (a) => {
+          const endTime = Date.now()
+          const duration = Duration.millis(endTime - startTime)
+          metric.unsafeUpdate(restore(f)(duration), HashSet.empty())
+          return a
+        })
       }).traced(trace)
-    }
-  }
-}
+    ))
 
-/**
- * @macro traced
- * @internal
- */
-export const trackError = <Type, In, Out>(self: Metric.Metric<Type, In, Out>) => {
-  const trace = getCallTrace()
-  return <R, E extends In, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-    return pipe(effect, pipe(self, trackErrorWith((a: In) => a))).traced(trace)
-  }
-}
+/* @internal */
+export const trackError = Debug.dualWithTrace<
+  <R, E extends In, A, Type, In, Out>(
+    self: Effect.Effect<R, E, A>,
+    metric: Metric.Metric<Type, In, Out>
+  ) => Effect.Effect<R, E, A>,
+  <Type, In, Out>(
+    metric: Metric.Metric<Type, In, Out>
+  ) => <R, E extends In, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+>(
+  2,
+  (trace) =>
+    <R, E extends In, A, Type, In, Out>(self: Effect.Effect<R, E, A>, metric: Metric.Metric<Type, In, Out>) =>
+      trackErrorWith(self, metric, (a: In) => a).traced(trace)
+)
 
-/**
- * @macro traced
- * @internal
- */
-export const trackErrorWith = <In, In2>(f: (error: In2) => In) => {
-  const trace = getCallTrace()
-  return <Type, Out>(self: Metric.Metric<Type, In, Out>) => {
-    return <R, E extends In2, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-      const updater = (error: E): Effect.Effect<never, never, void> => pipe(self, update(f(error)))
-      return pipe(effect, _effect.tapError(updater)).traced(trace)
-    }
-  }
-}
+/* @internal */
+export const trackErrorWith = Debug.dualWithTrace<
+  <R, E extends In2, A, Type, In, Out, In2>(
+    self: Effect.Effect<R, E, A>,
+    metric: Metric.Metric<Type, In, Out>,
+    f: (error: In2) => In
+  ) => Effect.Effect<R, E, A>,
+  <Type, In, Out, In2>(
+    metric: Metric.Metric<Type, In, Out>,
+    f: (error: In2) => In
+  ) => <R, E extends In2, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+>(
+  3,
+  (trace, restore) =>
+    <R, E extends In2, A, Type, In, Out, In2>(
+      self: Effect.Effect<R, E, A>,
+      metric: Metric.Metric<Type, In, Out>,
+      f: (error: In2) => In
+    ) =>
+      Debug.untraced(() => {
+        const updater = (error: E): Effect.Effect<never, never, void> => update(metric, restore(f)(error))
+        return _effect.tapError(self, updater).traced(trace)
+      })
+)
 
-/**
- * @macro traced
- * @internal
- */
-export const trackSuccess = <Type, In, Out>(self: Metric.Metric<Type, In, Out>) => {
-  const trace = getCallTrace()
-  return <R, E, A extends In>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-    return pipe(effect, pipe(self, trackSuccessWith((a: In) => a))).traced(trace)
-  }
-}
+/* @internal */
+export const trackSuccess = Debug.dualWithTrace<
+  <R, E, A extends In, Type, In, Out>(
+    self: Effect.Effect<R, E, A>,
+    metric: Metric.Metric<Type, In, Out>
+  ) => Effect.Effect<R, E, A>,
+  <Type, In, Out>(
+    metric: Metric.Metric<Type, In, Out>
+  ) => <R, E, A extends In>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+>(
+  2,
+  (trace) =>
+    <R, E, A extends In, Type, In, Out>(self: Effect.Effect<R, E, A>, metric: Metric.Metric<Type, In, Out>) =>
+      trackSuccessWith(self, metric, (a: In) => a).traced(trace)
+)
 
-/**
- * @macro traced
- * @internal
- */
-export const trackSuccessWith = <In, In2>(f: (value: In2) => In) => {
-  const trace = getCallTrace()
-  return <Type, Out>(self: Metric.Metric<Type, In, Out>) => {
-    return <R, E, A extends In2>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-      const updater = (value: A): Effect.Effect<never, never, void> => pipe(self, update(f(value)))
-      return pipe(effect, core.tap(updater)).traced(trace)
-    }
-  }
-}
+/* @internal */
+export const trackSuccessWith = Debug.dualWithTrace<
+  <R, E, A extends In2, Type, In, Out, In2>(
+    self: Effect.Effect<R, E, A>,
+    metric: Metric.Metric<Type, In, Out>,
+    f: (value: In2) => In
+  ) => Effect.Effect<R, E, A>,
+  <Type, In, Out, In2>(
+    metric: Metric.Metric<Type, In, Out>,
+    f: (value: In2) => In
+  ) => <R, E, A extends In2>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+>(
+  3,
+  (trace, restore) =>
+    <R, E, A extends In2, Type, In, Out, In2>(
+      self: Effect.Effect<R, E, A>,
+      metric: Metric.Metric<Type, In, Out>,
+      f: (value: In2) => In
+    ) =>
+      Debug.untraced(() => {
+        const updater = (value: A): Effect.Effect<never, never, void> => update(metric, restore(f)(value))
+        return core.tap(self, updater).traced(trace)
+      })
+)
 
-/**
- * @macro traced
- * @internal
- */
-export const update = <In>(input: In) => {
-  const trace = getCallTrace()
-  return <Type, Out>(self: Metric.Metric<Type, In, Out>): Effect.Effect<never, never, void> =>
-    core.fiberRefGetWith(core.currentTags, (tags) => core.sync(() => self.unsafeUpdate(input, tags))).traced(trace)
-}
+/* @internal */
+export const update = Debug.dualWithTrace<
+  <Type, In, Out>(self: Metric.Metric<Type, In, Out>, input: In) => Effect.Effect<never, never, void>,
+  <In>(input: In) => <Type, Out>(self: Metric.Metric<Type, In, Out>) => Effect.Effect<never, never, void>
+>(2, (trace) =>
+  (self, input) =>
+    core.fiberRefGetWith(
+      core.currentTags,
+      (tags) => core.sync(() => self.unsafeUpdate(input, tags))
+    ).traced(trace))
 
-/**
- * @macro traced
- * @internal
- */
-export const value = <Type, In, Out>(
-  self: Metric.Metric<Type, In, Out>
-): Effect.Effect<never, never, Out> => {
-  const trace = getCallTrace()
-  return core.fiberRefGetWith(core.currentTags, (tags) => core.sync(() => self.unsafeValue(tags))).traced(trace)
-}
+/* @internal */
+export const value = Debug.methodWithTrace((trace) =>
+  <Type, In, Out>(
+    self: Metric.Metric<Type, In, Out>
+  ): Effect.Effect<never, never, Out> =>
+    core.fiberRefGetWith(
+      core.currentTags,
+      (tags) => core.sync(() => self.unsafeValue(tags))
+    ).traced(trace)
+)
 
 /** @internal */
 export const withNow = <Type, In, Out>(
