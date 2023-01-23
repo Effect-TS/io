@@ -41,11 +41,11 @@ export const make = (
   load: <A>(config: Config.Config<A>) => Effect.Effect<never, ConfigError.ConfigError, A>,
   flatten: () => ConfigProvider.ConfigProvider.Flat
 ): ConfigProvider.ConfigProvider => {
-  return {
+  return Debug.untraced((restore) => ({
     [ConfigProviderTypeId]: ConfigProviderTypeId,
-    load,
-    flatten
-  }
+    load: restore(load),
+    flatten: restore(flatten)
+  }))
 }
 
 /** @internal */
@@ -58,32 +58,34 @@ export const makeFlat = (
     path: Chunk.Chunk<string>
   ) => Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>>
 ): ConfigProvider.ConfigProvider.Flat => {
-  return {
+  return Debug.untraced((restore) => ({
     [FlatConfigProviderTypeId]: FlatConfigProviderTypeId,
-    load: (path, config) => load(path, config),
-    enumerateChildren: (path) => enumerateChildren(path)
-  }
+    load: restore(load),
+    enumerateChildren: restore(enumerateChildren)
+  }))
 }
 
 /** @internal */
 export const fromFlat = (flat: ConfigProvider.ConfigProvider.Flat): ConfigProvider.ConfigProvider => {
-  return make(
-    (config) =>
-      core.flatMap(fromFlatLoop(flat, Chunk.empty(), config), (chunk) =>
-        pipe(
-          Chunk.head(chunk),
-          Option.match(
-            () =>
-              core.fail(
-                configError.MissingData(
-                  Chunk.empty(),
-                  `Expected a single value having structure: ${config}`
-                )
-              ),
-            core.succeed
-          )
-        )),
-    () => flat
+  return Debug.untraced(() =>
+    make(
+      (config) =>
+        core.flatMap(fromFlatLoop(flat, Chunk.empty(), config), (chunk) =>
+          pipe(
+            Chunk.head(chunk),
+            Option.match(
+              () =>
+                core.fail(
+                  configError.MissingData(
+                    Chunk.empty(),
+                    `Expected a single value having structure: ${config}`
+                  )
+                ),
+              core.succeed
+            )
+          )),
+      () => flat
+    )
   )
 }
 
@@ -132,7 +134,7 @@ export const fromEnv = (
       return HashSet.from(filteredKeyPaths)
     })
 
-  return fromFlat(makeFlat(load, enumerateChildren))
+  return Debug.untraced(() => fromFlat(makeFlat(load, enumerateChildren)))
 }
 
 /** @internal */
@@ -173,7 +175,7 @@ export const fromMap = (
       return HashSet.from(filteredKeyPaths)
     })
 
-  return fromFlat(makeFlat(load, enumerateChildren))
+  return Debug.untraced(() => fromFlat(makeFlat(load, enumerateChildren)))
 }
 
 /** @internal */
@@ -390,73 +392,51 @@ const fromFlatLoopFail = (prefix: Chunk.Chunk<string>, path: string) => {
 /** @internal */
 export const nested = (name: string) => {
   return (self: ConfigProvider.ConfigProvider): ConfigProvider.ConfigProvider =>
-    fromFlat(pipe(self.flatten(), nestedFlat(name)))
+    Debug.untraced(() => fromFlat(pipe(self.flatten(), nestedFlat(name))))
 }
 
 /** @internal */
 const nestedFlat = (name: string) => {
   return (self: ConfigProvider.ConfigProvider.Flat): ConfigProvider.ConfigProvider.Flat =>
-    makeFlat(
-      (path, config) =>
-        Debug.bodyWithTrace((trace) =>
-          self.load(
-            pipe(path, Chunk.prepend(name)),
-            config
-          ).traced(trace)
-        ),
-      (path) => Debug.bodyWithTrace((trace) => self.enumerateChildren(pipe(path, Chunk.prepend(name))).traced(trace))
+    Debug.untraced(() =>
+      makeFlat(
+        (path, config) => self.load(pipe(path, Chunk.prepend(name)), config),
+        (path) => self.enumerateChildren(pipe(path, Chunk.prepend(name)))
+      )
     )
 }
 
 /** @internal */
 export const orElse = (that: LazyArg<ConfigProvider.ConfigProvider>) => {
   return (self: ConfigProvider.ConfigProvider): ConfigProvider.ConfigProvider =>
-    fromFlat(pipe(self.flatten(), orElseFlat(() => that().flatten())))
+    Debug.untraced(() => fromFlat(pipe(self.flatten(), orElseFlat(() => that().flatten()))))
 }
 
 const orElseFlat = (that: LazyArg<ConfigProvider.ConfigProvider.Flat>) => {
   return (self: ConfigProvider.ConfigProvider.Flat): ConfigProvider.ConfigProvider.Flat =>
     makeFlat(
       (path, config) =>
-        Debug.bodyWithTrace((trace) =>
-          pipe(
-            self.load(path, config),
-            core.catchAll((error1) =>
-              pipe(
-                that().load(path, config),
-                core.catchAll((error2) => core.fail(configError.Or(error1, error2)))
-              )
-            )
-          ).traced(trace)
-        ),
+        core.catchAll(self.load(path, config), (error1) =>
+          core.catchAll(that().load(path, config), (error2) => core.fail(configError.Or(error1, error2)))),
       (path) =>
-        Debug.bodyWithTrace((trace) =>
-          pipe(
-            core.either(self.enumerateChildren(path)),
-            core.flatMap((left) =>
-              pipe(
-                core.either(that().enumerateChildren(path)),
-                core.flatMap((right) => {
-                  if (Either.isLeft(left) && Either.isLeft(right)) {
-                    return core.fail(configError.And(left.left, right.left))
-                  }
-                  if (Either.isLeft(left) && Either.isRight(right)) {
-                    return core.fail(left.left)
-                  }
-                  if (Either.isRight(left) && Either.isLeft(right)) {
-                    return core.fail(right.left)
-                  }
-                  if (Either.isRight(left) && Either.isRight(right)) {
-                    return core.succeed(pipe(left.right, HashSet.union(right.right)))
-                  }
-                  throw new Error(
-                    "BUG: ConfigProvider.orElseFlat - please report an issue at https://github.com/Effect-TS/io/issues"
-                  )
-                })
-              )
+        core.flatMap(core.either(self.enumerateChildren(path)), (left) =>
+          core.flatMap(core.either(that().enumerateChildren(path)), (right) => {
+            if (Either.isLeft(left) && Either.isLeft(right)) {
+              return core.fail(configError.And(left.left, right.left))
+            }
+            if (Either.isLeft(left) && Either.isRight(right)) {
+              return core.fail(left.left)
+            }
+            if (Either.isRight(left) && Either.isLeft(right)) {
+              return core.fail(right.left)
+            }
+            if (Either.isRight(left) && Either.isRight(right)) {
+              return core.succeed(pipe(left.right, HashSet.union(right.right)))
+            }
+            throw new Error(
+              "BUG: ConfigProvider.orElseFlat - please report an issue at https://github.com/Effect-TS/io/issues"
             )
-          ).traced(trace)
-        )
+          }))
     )
 }
 
