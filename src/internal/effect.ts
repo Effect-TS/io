@@ -161,7 +161,7 @@ export const _catch = Debug.dualWithTrace<
     A | A1
   >
 >(
-  // @ts-expect-error - TODO: figure out why the above functions do not infer properly
+  // @ts-expect-error - TODO: figure out why the above functions do not infer properly (probably a TS bug DF doesn't extend (...args: any[]) => any), but ofc it does)
   4,
   (trace, restore) =>
     (self, tag, k, f) =>
