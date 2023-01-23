@@ -24,9 +24,13 @@ export interface Debug {
    */
   tracingEnabled: boolean
   /**
-   * Used to extract a source location from an Error with a stack
+   * Used to extract a source location from an Error when rendering a stack
    */
   parseStack: (error: Error, depth: number) => string | undefined
+  /**
+   * Used to filter a source location when rendering a stack
+   */
+  filterStackFrame: (frame: string) => boolean
 }
 
 /**
@@ -83,7 +87,8 @@ export const runtimeDebug: Debug = {
         }
       }
     }
-  }
+  },
+  filterStackFrame: () => true
 }
 
 const restoreOn: Restore = (f): any =>

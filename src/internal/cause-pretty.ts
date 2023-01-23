@@ -132,10 +132,12 @@ const renderStack = (span: Option.Option<StackAnnotation>): ReadonlyArray<string
     return []
   }
   if (span.value.execution.length > 0) {
-    return renderTraces(Chunk.prepend(Chunk.unsafeHead(span.value.execution))(span.value.stack))
+    return renderTraces(
+      Chunk.prepend(Chunk.unsafeHead(span.value.execution))(span.value.stack)
+    ).filter(Debug.runtimeDebug.filterStackFrame)
   }
   if (span.value.stack.length > 0) {
-    return renderTraces(span.value.stack)
+    return renderTraces(span.value.stack).filter(Debug.runtimeDebug.filterStackFrame)
   }
   return []
 }
@@ -182,7 +184,10 @@ const renderInterrupt = (
 
 /** @internal */
 const renderError = (error: Error): ReadonlyArray<string> => {
-  return lines(error.stack ? error.stack : String(error))
+  if (error.stack) {
+    return lines(error.stack).filter(Debug.runtimeDebug.filterStackFrame)
+  }
+  return lines(String(error))
 }
 
 /** @internal */
