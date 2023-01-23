@@ -186,6 +186,10 @@ export const updateEffect: {
   <A, R, E>(f: (a: A) => Effect.Effect<R, E, A>): (self: Synchronized<A>) => Effect.Effect<R, E, void>
 } = internal.updateEffect
 
+/**
+ * @since 1.0.0
+ * @category mutations
+ */
 export const updateAndGet: {
   <A>(self: Synchronized<A>, f: (a: A) => A): Effect.Effect<never, never, A>
   <A>(f: (a: A) => A): (self: Synchronized<A>) => Effect.Effect<never, never, A>

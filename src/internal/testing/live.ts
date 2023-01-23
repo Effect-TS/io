@@ -1,4 +1,4 @@
-import { getCallTrace } from "@effect/io/Debug"
+import * as Debug from "@effect/io/Debug"
 import type * as DefaultServices from "@effect/io/DefaultServices"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal/core"
@@ -21,9 +21,6 @@ export type LiveTypeId = typeof LiveTypeId
  */
 export interface Live {
   readonly [LiveTypeId]: LiveTypeId
-  /**
-   * @macro traced
-   */
   provide<R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A>
 }
 
@@ -35,8 +32,12 @@ class LiveImpl implements Live {
   readonly [LiveTypeId]: LiveTypeId = LiveTypeId
   constructor(readonly services: Context.Context<DefaultServices.DefaultServices>) {}
   provide<R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> {
-    const trace = getCallTrace()
-    return core.fiberRefLocallyWith(defaultServices.currentServices, Context.merge(this.services))(effect).traced(trace)
+    return Debug.bodyWithTrace((trace) =>
+      core.fiberRefLocallyWith(
+        defaultServices.currentServices,
+        Context.merge(this.services)
+      )(effect).traced(trace)
+    )
   }
 }
 

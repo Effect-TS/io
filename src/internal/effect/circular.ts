@@ -945,45 +945,53 @@ export const zipWithFiber = <E2, A, B, C>(that: Fiber.Fiber<E2, B>, f: (a: A, b:
   return <E>(self: Fiber.Fiber<E, A>): Fiber.Fiber<E | E2, C> => ({
     [internalFiber.FiberTypeId]: internalFiber.fiberVariance,
     id: () => pipe(self.id(), FiberId.getOrElse(that.id())),
-    await: () => {
-      const trace = Debug.getCallTrace()
-      return pipe(
-        self.await(),
-        core.flatten,
-        zipWithPar(core.flatten(that.await()), f),
-        core.exit
-      ).traced(trace)
-    },
-    children: () => {
-      const trace = Debug.getCallTrace()
-      return self.children().traced(trace)
-    },
-    inheritAll: () => {
-      const trace = Debug.getCallTrace()
-      return pipe(that.inheritAll(), core.zipRight(self.inheritAll())).traced(trace)
-    },
-    poll: () => {
-      const trace = Debug.getCallTrace()
-      return pipe(
-        self.poll(),
-        core.zipWith(
-          that.poll(),
-          (optionA, optionB) =>
-            pipe(
-              optionA,
-              Option.flatMap((exitA) =>
-                pipe(
-                  optionB,
-                  Option.map((exitB) => pipe(exitA, Exit.zipWith(exitB, f, internalCause.parallel)))
+    await: () =>
+      Debug.bodyWithTrace((trace) =>
+        pipe(
+          self.await(),
+          core.flatten,
+          zipWithPar(core.flatten(that.await()), f),
+          core.exit
+        ).traced(trace)
+      ),
+    children: () => Debug.bodyWithTrace((trace) => self.children().traced(trace)),
+    inheritAll: () =>
+      Debug.bodyWithTrace((trace) =>
+        core.zipRight(
+          that.inheritAll(),
+          self.inheritAll()
+        ).traced(trace)
+      ),
+    poll: () =>
+      Debug.bodyWithTrace((trace) =>
+        pipe(
+          self.poll(),
+          core.zipWith(
+            that.poll(),
+            (optionA, optionB) =>
+              pipe(
+                optionA,
+                Option.flatMap((exitA) =>
+                  pipe(
+                    optionB,
+                    Option.map((exitB) =>
+                      pipe(
+                        exitA,
+                        Exit.zipWith(exitB, f, internalCause.parallel)
+                      )
+                    )
+                  )
                 )
               )
-            )
-        )
-      ).traced(trace)
-    },
-    interruptAsFork: (id) => {
-      const trace = Debug.getCallTrace()
-      return pipe(self.interruptAsFork(id), core.zipRight(that.interruptAsFork(id))).traced(trace)
-    }
+          )
+        ).traced(trace)
+      ),
+    interruptAsFork: (id) =>
+      Debug.bodyWithTrace((trace) =>
+        core.zipRight(
+          self.interruptAsFork(id),
+          that.interruptAsFork(id)
+        ).traced(trace)
+      )
   })
 }

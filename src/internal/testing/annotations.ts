@@ -1,4 +1,4 @@
-import { getCallTrace } from "@effect/io/Debug"
+import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import type * as Fiber from "@effect/io/Fiber"
 import * as core from "@effect/io/internal/core"
@@ -39,23 +39,17 @@ export interface Annotations {
   /**
    * Accesses an `Annotations` instance in the context and retrieves the
    * annotation of the specified type, or its default value if there is none.
-   *
-   * @macro traced
    */
   get<A>(key: TestAnnotation.TestAnnotation<A>): Effect.Effect<never, never, A>
 
   /**
    * Accesses an `Annotations` instance in the context and appends the
    * specified annotation to the annotation map.
-   *
-   * @macro traced
    */
   annotate<A>(key: TestAnnotation.TestAnnotation<A>, value: A): Effect.Effect<never, never, void>
 
   /**
    * Returns the set of all fibers in this test.
-   *
-   * @macro traced
    */
   supervisedFibers(): Effect.Effect<never, never, SortedSet.SortedSet<Fiber.RuntimeFiber<unknown, unknown>>>
 }
@@ -66,41 +60,47 @@ class AnnotationsImpl implements Annotations {
   constructor(readonly ref: Ref.Ref<TestAnnotationMap.TestAnnotationMap>) {
   }
   get<A>(key: TestAnnotation.TestAnnotation<A>): Effect.Effect<never, never, A> {
-    const trace = getCallTrace()
-    return pipe(
-      Ref.get(this.ref),
-      core.map(TestAnnotationMap.get(key))
-    ).traced(trace)
+    return Debug.bodyWithTrace((trace) =>
+      pipe(
+        Ref.get(this.ref),
+        core.map(TestAnnotationMap.get(key))
+      ).traced(trace)
+    )
   }
   annotate<A>(key: TestAnnotation.TestAnnotation<A>, value: A): Effect.Effect<never, never, void> {
-    const trace = getCallTrace()
-    return Ref.update(this.ref, TestAnnotationMap.annotate(key, value)).traced(trace)
+    return Debug.bodyWithTrace((trace) =>
+      Ref.update(
+        this.ref,
+        TestAnnotationMap.annotate(key, value)
+      ).traced(trace)
+    )
   }
   supervisedFibers(): Effect.Effect<never, never, SortedSet.SortedSet<Fiber.RuntimeFiber<unknown, unknown>>> {
-    const trace = getCallTrace()
-    return effect.descriptorWith((descriptor) =>
-      pipe(
-        this.get(TestAnnotation.fibers),
-        core.flatMap((either) => {
-          switch (either._tag) {
-            case "Left": {
-              return core.succeed(SortedSet.empty(fiber.Order))
+    return Debug.bodyWithTrace((trace) =>
+      effect.descriptorWith((descriptor) =>
+        pipe(
+          this.get(TestAnnotation.fibers),
+          core.flatMap((either) => {
+            switch (either._tag) {
+              case "Left": {
+                return core.succeed(SortedSet.empty(fiber.Order))
+              }
+              case "Right": {
+                return pipe(
+                  either.right,
+                  core.forEach((ref) => core.sync(() => MutableRef.get(ref))),
+                  core.map(Chunk.reduce(
+                    SortedSet.empty(fiber.Order),
+                    (a, b) => pipe(a, SortedSet.union(b))
+                  )),
+                  core.map(SortedSet.filter((fiber) => !Equal.equals(fiber.id(), descriptor.id)))
+                )
+              }
             }
-            case "Right": {
-              return pipe(
-                either.right,
-                core.forEach((ref) => core.sync(() => MutableRef.get(ref))),
-                core.map(Chunk.reduce(
-                  SortedSet.empty(fiber.Order),
-                  (a, b) => pipe(a, SortedSet.union(b))
-                )),
-                core.map(SortedSet.filter((fiber) => !Equal.equals(fiber.id(), descriptor.id)))
-              )
-            }
-          }
-        })
-      )
-    ).traced(trace)
+          })
+        )
+      ).traced(trace)
+    )
   }
 }
 

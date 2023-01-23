@@ -1,5 +1,5 @@
 import type * as Cached from "@effect/io/Cached"
-import { getCallTrace } from "@effect/io/Debug"
+import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal/core"
 import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
@@ -24,62 +24,50 @@ const cachedVariance = {
 }
 
 /** @internal */
-export function auto<R, E, A, R2, In, Out>(
-  acquire: Effect.Effect<R, E, A>,
-  policy: Schedule.Schedule<R2, In, Out>
-): Effect.Effect<R | R2 | Scope.Scope, never, Cached.Cached<E, A>> {
-  const trace = getCallTrace()
-  return pipe(
-    manual(acquire),
-    core.tap((manual) =>
+export const auto = Debug.methodWithTrace((trace) =>
+  <R, E, A, R2, In, Out>(
+    acquire: Effect.Effect<R, E, A>,
+    policy: Schedule.Schedule<R2, In, Out>
+  ): Effect.Effect<R | R2 | Scope.Scope, never, Cached.Cached<E, A>> =>
+    core.tap(manual(acquire), (manual) =>
       fiberRuntime.acquireRelease(
         pipe(refresh(manual), _schedule.schedule_Effect(policy), core.interruptible, fiberRuntime.forkDaemon),
         core.interruptFiber
-      )
-    )
-  ).traced(trace)
-}
+      )).traced(trace)
+)
 
 /** @internal */
-export const manual = <R, E, A>(
-  acquire: Effect.Effect<R, E, A>
-): Effect.Effect<R | Scope.Scope, never, Cached.Cached<E, A>> => {
-  const trace = getCallTrace()
-  return pipe(
-    core.context<R>(),
-    core.flatMap((env) =>
+export const manual = Debug.methodWithTrace((trace) =>
+  <R, E, A>(
+    acquire: Effect.Effect<R, E, A>
+  ): Effect.Effect<R | Scope.Scope, never, Cached.Cached<E, A>> =>
+    core.flatMap(core.context<R>(), (env) =>
       pipe(
         scopedRef.fromAcquire(core.exit(acquire)),
         core.map((ref) => ({
           [CachedTypeId]: cachedVariance,
           scopedRef: ref,
           acquire: () => {
-            const trace = getCallTrace()
+            const trace = Debug.getCallTrace()
             return pipe(acquire, core.provideContext(env)).traced(trace)
           }
         }))
-      )
-    )
-  ).traced(trace)
-}
+      )).traced(trace)
+)
 
 /** @internal */
-export const get = <E, A>(self: Cached.Cached<E, A>): Effect.Effect<never, E, A> => {
-  const trace = getCallTrace()
-  return pipe(
-    scopedRef.get(self.scopedRef),
-    core.flatMap(core.done)
-  ).traced(trace)
-}
+export const get = Debug.methodWithTrace((trace) =>
+  <E, A>(self: Cached.Cached<E, A>): Effect.Effect<never, E, A> =>
+    core.flatMap(scopedRef.get(self.scopedRef), core.done).traced(trace)
+)
 
-export const refresh = <E, A>(self: Cached.Cached<E, A>): Effect.Effect<never, E, void> => {
-  const trace = getCallTrace()
-  return scopedRef.set(
-    self.scopedRef,
-    pipe(
-      self.acquire(),
-      core.map(core.exitSucceed)
-    )
-  )
-    .traced(trace)
-}
+export const refresh = Debug.methodWithTrace((trace) =>
+  <E, A>(self: Cached.Cached<E, A>): Effect.Effect<never, E, void> =>
+    scopedRef.set(
+      self.scopedRef,
+      pipe(
+        self.acquire(),
+        core.map(core.exitSucceed)
+      )
+    ).traced(trace)
+)

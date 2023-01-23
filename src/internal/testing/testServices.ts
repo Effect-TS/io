@@ -1,4 +1,4 @@
-import { getCallTrace } from "@effect/io/Debug"
+import * as Debug from "@effect/io/Debug"
 import type * as DefaultServices from "@effect/io/DefaultServices"
 import * as Effect from "@effect/io/Effect"
 import type * as Fiber from "@effect/io/Fiber"
@@ -47,58 +47,56 @@ export const currentServices: FiberRef.FiberRef<Context.Context<TestServices>> =
 /**
  * Retrieves the `Annotations` service for this test.
  *
- * @macro traced
  * @internal
  */
-export const annotations = (): Effect.Effect<never, never, Annotations.Annotations> => {
-  const trace = getCallTrace()
-  return annotationsWith(core.succeed).traced(trace)
-}
+export const annotations = Debug.methodWithTrace((trace) =>
+  (): Effect.Effect<never, never, Annotations.Annotations> => annotationsWith(core.succeed).traced(trace)
+)
 
 /**
  * Retrieves the `Annotations` service for this test and uses it to run the
  * specified workflow.
  *
- * @macro traced
  * @internal
  */
-export const annotationsWith = <R, E, A>(
-  f: (annotations: Annotations.Annotations) => Effect.Effect<R, E, A>
-): Effect.Effect<R, E, A> => {
-  const trace = getCallTrace()
-  return core.fiberRefGetWith(currentServices, (services) => f(pipe(services, Context.get(Annotations.Tag)))).traced(
-    trace
-  )
-}
+export const annotationsWith = Debug.methodWithTrace((trace) =>
+  <R, E, A>(
+    f: (annotations: Annotations.Annotations) => Effect.Effect<R, E, A>
+  ): Effect.Effect<R, E, A> =>
+    core.fiberRefGetWith(
+      currentServices,
+      (services) => f(pipe(services, Context.get(Annotations.Tag)))
+    ).traced(trace)
+)
 
 /**
  * Executes the specified workflow with the specified implementation of the
  * annotations service.
  *
- * @macro traced
  * @internal
  */
-export const withAnnotations = (annotations: Annotations.Annotations) => {
-  const trace = getCallTrace()
-  return <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
-    core.fiberRefLocallyWith(currentServices, Context.add(Annotations.Tag)(annotations))(effect).traced(trace)
-}
+export const withAnnotations = Debug.dualWithTrace<
+  <R, E, A>(effect: Effect.Effect<R, E, A>, annotations: Annotations.Annotations) => Effect.Effect<R, E, A>,
+  (annotations: Annotations.Annotations) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+>(2, (trace) =>
+  (effect, annotations) =>
+    core.fiberRefLocallyWith(
+      currentServices,
+      Context.add(Annotations.Tag)(annotations)
+    )(effect).traced(trace))
 
 /**
  * Sets the implementation of the annotations service to the specified value
  * and restores it to its original value when the scope is closed.
  *
- * @macro traced
  * @internal
  */
-export const withAnnotationsScoped = (
-  annotations: Annotations.Annotations
-): Effect.Effect<Scope.Scope, never, void> => {
-  const trace = getCallTrace()
-  return fiberRuntime.fiberRefLocallyScopedWith(currentServices)(
-    Context.add(Annotations.Tag)(annotations)
-  ).traced(trace)
-}
+export const withAnnotationsScoped = Debug.methodWithTrace((trace) =>
+  (annotations: Annotations.Annotations): Effect.Effect<Scope.Scope, never, void> =>
+    fiberRuntime.fiberRefLocallyScopedWith(currentServices)(
+      Context.add(Annotations.Tag)(annotations)
+    ).traced(trace)
+)
 
 /**
  * Constructs a new `Annotations` service wrapped in a layer.
@@ -119,96 +117,90 @@ export const annotationsLayer = (): Layer.Layer<never, never, Annotations.Annota
  * Accesses an `Annotations` instance in the context and retrieves the
  * annotation of the specified type, or its default value if there is none.
  *
- * @macro traced
  * @internal
  */
-export const get = <A>(key: TestAnnotation.TestAnnotation<A>): Effect.Effect<never, never, A> => {
-  const trace = getCallTrace()
-  return annotationsWith((annotations) => annotations.get(key)).traced(trace)
-}
+export const get = Debug.methodWithTrace((trace) =>
+  <A>(key: TestAnnotation.TestAnnotation<A>): Effect.Effect<never, never, A> =>
+    annotationsWith((annotations) => annotations.get(key)).traced(trace)
+)
 
 /**
  * Accesses an `Annotations` instance in the context and appends the
  * specified annotation to the annotation map.
  *
- * @macro traced
  * @internal
  */
-export const annotate = <A>(
-  key: TestAnnotation.TestAnnotation<A>,
-  value: A
-): Effect.Effect<never, never, void> => {
-  const trace = getCallTrace()
-  return annotationsWith((annotations) => annotations.annotate(key, value)).traced(trace)
-}
+export const annotate = Debug.methodWithTrace((trace) =>
+  <A>(key: TestAnnotation.TestAnnotation<A>, value: A): Effect.Effect<never, never, void> =>
+    annotationsWith((annotations) => annotations.annotate(key, value)).traced(trace)
+)
 
 /**
  * Returns the set of all fibers in this test.
  *
- * @macro traced
  * @internal
  */
-export const supervisedFibers = (): Effect.Effect<
-  never,
-  never,
-  SortedSet.SortedSet<Fiber.RuntimeFiber<unknown, unknown>>
-> => {
-  const trace = getCallTrace()
-  return annotationsWith((annotations) => annotations.supervisedFibers()).traced(trace)
-}
+export const supervisedFibers = Debug.methodWithTrace((trace) =>
+  (): Effect.Effect<
+    never,
+    never,
+    SortedSet.SortedSet<Fiber.RuntimeFiber<unknown, unknown>>
+  > => annotationsWith((annotations) => annotations.supervisedFibers()).traced(trace)
+)
 
 /**
  * Retrieves the `Live` service for this test.
  *
- * @macro traced
  * @internal
  */
-export const live = (): Effect.Effect<never, never, Live.Live> => {
-  const trace = getCallTrace()
-  return liveWith(core.succeed).traced(trace)
-}
+export const live = Debug.methodWithTrace((trace) =>
+  (): Effect.Effect<never, never, Live.Live> => liveWith(core.succeed).traced(trace)
+)
 
 /**
  * Retrieves the `Live` service for this test and uses it to run the specified
  * workflow.
  *
- * @macro traced
  * @internal
  */
-export const liveWith = <R, E, A>(f: (live: Live.Live) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-  const trace = getCallTrace()
-  return core.fiberRefGetWith(currentServices, (services) => f(pipe(services, Context.get(Live.Tag)))).traced(trace)
-}
+export const liveWith = Debug.methodWithTrace((trace, restore) =>
+  <R, E, A>(f: (live: Live.Live) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
+    core.fiberRefGetWith(
+      currentServices,
+      (services) => restore(f)(pipe(services, Context.get(Live.Tag)))
+    ).traced(trace)
+)
 
 /**
  * Executes the specified workflow with the specified implementation of the
  * live service.
  *
- * @macro traced
  * @internal
  */
-export const withLive = (live: Live.Live) => {
-  const trace = getCallTrace()
-  return <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
-    core.fiberRefLocallyWith(currentServices, Context.add(Live.Tag)(live))(effect).traced(trace)
-}
+export const withLive = Debug.dualWithTrace<
+  <R, E, A>(effect: Effect.Effect<R, E, A>, live: Live.Live) => Effect.Effect<R, E, A>,
+  (live: Live.Live) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+>(2, (trace) =>
+  (effect, live) =>
+    core.fiberRefLocallyWith(
+      currentServices,
+      Context.add(Live.Tag)(live)
+    )(effect).traced(trace))
 
 /**
  * Sets the implementation of the live service to the specified value and
  * restores it to its original value when the scope is closed.
  *
- * @macro traced
  * @internal
  */
-export const withLiveScoped = (live: Live.Live): Effect.Effect<Scope.Scope, never, void> => {
-  const trace = getCallTrace()
-  return fiberRuntime.fiberRefLocallyScopedWith(currentServices)(Context.add(Live.Tag)(live)).traced(trace)
-}
+export const withLiveScoped = Debug.methodWithTrace((trace) =>
+  (live: Live.Live): Effect.Effect<Scope.Scope, never, void> =>
+    fiberRuntime.fiberRefLocallyScopedWith(currentServices)(Context.add(Live.Tag)(live)).traced(trace)
+)
 
 /**
  * Constructs a new `Live` service wrapped in a layer.
  *
- * @macro traced
  * @internal
  */
 export const liveLayer = (): Layer.Layer<DefaultServices.DefaultServices, never, Live.Live> =>
@@ -224,79 +216,83 @@ export const liveLayer = (): Layer.Layer<DefaultServices.DefaultServices, never,
 /**
  * Provides a workflow with the "live" default Effect services.
  *
- * @macro traced
  * @internal
  */
-export const provideLive = <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-  const trace = getCallTrace()
-  return liveWith((live) => live.provide(effect)).traced(trace)
-}
+export const provideLive = Debug.methodWithTrace((trace) =>
+  <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
+    liveWith((live) => live.provide(effect)).traced(trace)
+)
 
 /**
  * Runs a transformation function with the live default Effect services while
  * ensuring that the workflow itself is run with the test services.
  *
- * @macro traced
  * @internal
  */
-export const provideWithLive = <R, E, A, R2, E2, A2>(
-  f: (effect: Effect.Effect<R, E, A>) => Effect.Effect<R2, E2, A2>
-) => {
-  const trace = getCallTrace()
-  return (self: Effect.Effect<R, E, A>): Effect.Effect<R | R2, E | E2, A2> =>
+export const provideWithLive = Debug.dualWithTrace<
+  <R, E, A, R2, E2, A2>(
+    self: Effect.Effect<R, E, A>,
+    f: (effect: Effect.Effect<R, E, A>) => Effect.Effect<R2, E2, A2>
+  ) => Effect.Effect<R | R2, E | E2, A2>,
+  <R, E, A, R2, E2, A2>(
+    f: (effect: Effect.Effect<R, E, A>) => Effect.Effect<R2, E2, A2>
+  ) => (self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A2>
+>(2, (trace, restore) =>
+  (self, f) =>
     core.fiberRefGetWith(
       defaultServices.currentServices,
-      (services) => provideLive(f(core.fiberRefLocally(defaultServices.currentServices, services)(self)))
-    ).traced(trace)
-}
+      (services) => provideLive(restore(f)(core.fiberRefLocally(defaultServices.currentServices, services)(self)))
+    ).traced(trace))
 
 /**
  * Retrieves the `Sized` service for this test.
  *
- * @macro traced
  * @internal
  */
-export const sized = (): Effect.Effect<never, never, Sized.Sized> => {
-  const trace = getCallTrace()
-  return sizedWith(core.succeed).traced(trace)
-}
+export const sized = Debug.methodWithTrace((trace) =>
+  (): Effect.Effect<never, never, Sized.Sized> => sizedWith(core.succeed).traced(trace)
+)
 
 /**
  * Retrieves the `Sized` service for this test and uses it to run the
  * specified workflow.
  *
- * @macro traced
  * @internal
  */
-export const sizedWith = <R, E, A>(f: (sized: Sized.Sized) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-  const trace = getCallTrace()
-  return core.fiberRefGetWith(currentServices, (services) => f(pipe(services, Context.get(Sized.Tag)))).traced(trace)
-}
+export const sizedWith = Debug.methodWithTrace((trace, restore) =>
+  <R, E, A>(f: (sized: Sized.Sized) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
+    core.fiberRefGetWith(
+      currentServices,
+      (services) => restore(f)(pipe(services, Context.get(Sized.Tag)))
+    ).traced(trace)
+)
 
 /**
  * Executes the specified workflow with the specified implementation of the
  * sized service.
  *
- * @macro traced
  * @internal
  */
-export const withSized = (sized: Sized.Sized) => {
-  const trace = getCallTrace()
-  return <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
-    core.fiberRefLocallyWith(currentServices, Context.add(Sized.Tag)(sized))(effect).traced(trace)
-}
+export const withSized = Debug.dualWithTrace<
+  <R, E, A>(effect: Effect.Effect<R, E, A>, sized: Sized.Sized) => Effect.Effect<R, E, A>,
+  (sized: Sized.Sized) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+>(2, (trace) =>
+  (effect, sized) =>
+    core.fiberRefLocallyWith(
+      currentServices,
+      Context.add(Sized.Tag)(sized)
+    )(effect).traced(trace))
 
 /**
  * Sets the implementation of the sized service to the specified value and
  * restores it to its original value when the scope is closed.
  *
- * @macro traced
  * @internal
  */
-export const withSizedScoped = (sized: Sized.Sized): Effect.Effect<Scope.Scope, never, void> => {
-  const trace = getCallTrace()
-  return fiberRuntime.fiberRefLocallyScopedWith(currentServices)(Context.add(Sized.Tag)(sized)).traced(trace)
-}
+export const withSizedScoped = Debug.methodWithTrace((trace) =>
+  (sized: Sized.Sized): Effect.Effect<Scope.Scope, never, void> =>
+    fiberRuntime.fiberRefLocallyScopedWith(currentServices)(Context.add(Sized.Tag)(sized)).traced(trace)
+)
 
 /** @internal */
 export const sizedLayer = (size: number): Layer.Layer<never, never, Sized.Sized> =>
@@ -309,76 +305,66 @@ export const sizedLayer = (size: number): Layer.Layer<never, never, Sized.Sized>
     )
   )
 
-/**
- * @macro traced
- * @internal
- */
-export const size = (): Effect.Effect<never, never, number> => {
-  const trace = getCallTrace()
-  return sizedWith((sized) => sized.size()).traced(trace)
-}
+/** @internal */
+export const size = Debug.methodWithTrace((trace) =>
+  (): Effect.Effect<never, never, number> => sizedWith((sized) => sized.size()).traced(trace)
+)
 
-/**
- * @macro traced
- * @internal
- */
-export const withSize = (size: number) => {
-  const trace = getCallTrace()
-  return <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
-    sizedWith((sized) => sized.withSize(size)(effect)).traced(trace)
-}
+/** @internal */
+export const withSize = Debug.dualWithTrace<
+  <R, E, A>(effect: Effect.Effect<R, E, A>, size: number) => Effect.Effect<R, E, A>,
+  (size: number) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+>(2, (trace) => (effect, size) => sizedWith((sized) => sized.withSize(size)(effect)).traced(trace))
 
 /**
  * Retrieves the `TestConfig` service for this test.
  *
- * @macro traced
  * @internal
  */
-export const testConfig = (): Effect.Effect<never, never, TestConfig.TestConfig> => {
-  const trace = getCallTrace()
-  return testConfigWith(core.succeed).traced(trace)
-}
+export const testConfig = Debug.methodWithTrace((trace) =>
+  (): Effect.Effect<never, never, TestConfig.TestConfig> => testConfigWith(core.succeed).traced(trace)
+)
 
 /**
  * Retrieves the `TestConfig` service for this test and uses it to run the
  * specified workflow.
  *
- * @macro traced
  * @internal
  */
-export const testConfigWith = <R, E, A>(
-  f: (config: TestConfig.TestConfig) => Effect.Effect<R, E, A>
-): Effect.Effect<R, E, A> => {
-  const trace = getCallTrace()
-  return core.fiberRefGetWith(currentServices, (services) => f(pipe(services, Context.get(TestConfig.Tag)))).traced(
-    trace
-  )
-}
+export const testConfigWith = Debug.methodWithTrace((trace, restore) =>
+  <R, E, A>(f: (config: TestConfig.TestConfig) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
+    core.fiberRefGetWith(
+      currentServices,
+      (services) => restore(f)(pipe(services, Context.get(TestConfig.Tag)))
+    ).traced(trace)
+)
 
 /**
  * Executes the specified workflow with the specified implementation of the
  * config service.
  *
- * @macro traced
  * @internal
  */
-export const withTestConfig = (config: TestConfig.TestConfig) => {
-  const trace = getCallTrace()
-  return <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
-    core.fiberRefLocallyWith(currentServices, Context.add(TestConfig.Tag)(config))(effect).traced(trace)
-}
+export const withTestConfig = Debug.dualWithTrace<
+  <R, E, A>(effect: Effect.Effect<R, E, A>, config: TestConfig.TestConfig) => Effect.Effect<R, E, A>,
+  (config: TestConfig.TestConfig) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+>(2, (trace) =>
+  (effect, config) =>
+    core.fiberRefLocallyWith(
+      currentServices,
+      Context.add(TestConfig.Tag)(config)
+    )(effect).traced(trace))
 
 /**
  * Sets the implementation of the config service to the specified value and
  * restores it to its original value when the scope is closed.
  *
- * @macro traced
  * @internal
  */
-export const withTestConfigScoped = (config: TestConfig.TestConfig): Effect.Effect<Scope.Scope, never, void> => {
-  const trace = getCallTrace()
-  return fiberRuntime.fiberRefLocallyScopedWith(currentServices)(Context.add(TestConfig.Tag)(config)).traced(trace)
-}
+export const withTestConfigScoped = Debug.methodWithTrace((trace) =>
+  (config: TestConfig.TestConfig): Effect.Effect<Scope.Scope, never, void> =>
+    fiberRuntime.fiberRefLocallyScopedWith(currentServices)(Context.add(TestConfig.Tag)(config)).traced(trace)
+)
 
 /**
  * Constructs a new `TestConfig` service with the specified settings.
@@ -405,43 +391,35 @@ export const testConfigLayer = (params: {
 /**
  * The number of times to repeat tests to ensure they are stable.
  *
- * @macro traced
  * @internal
  */
-export const repeats = (): Effect.Effect<never, never, number> => {
-  const trace = getCallTrace()
-  return testConfigWith((config) => core.succeed(config.repeats)).traced(trace)
-}
+export const repeats = Debug.methodWithTrace((trace) =>
+  (): Effect.Effect<never, never, number> => testConfigWith((config) => core.succeed(config.repeats)).traced(trace)
+)
 
 /**
  * The number of times to retry flaky tests.
  *
- * @macro traced
  * @internal
  */
-export const retries = (): Effect.Effect<never, never, number> => {
-  const trace = getCallTrace()
-  return testConfigWith((config) => core.succeed(config.retries)).traced(trace)
-}
+export const retries = Debug.methodWithTrace((trace) =>
+  (): Effect.Effect<never, never, number> => testConfigWith((config) => core.succeed(config.retries)).traced(trace)
+)
 
 /**
  * The number of sufficient samples to check for a random variable.
  *
- * @macro traced
  * @internal
  */
-export const samples = (): Effect.Effect<never, never, number> => {
-  const trace = getCallTrace()
-  return testConfigWith((config) => core.succeed(config.samples)).traced(trace)
-}
+export const samples = Debug.methodWithTrace((trace) =>
+  (): Effect.Effect<never, never, number> => testConfigWith((config) => core.succeed(config.samples)).traced(trace)
+)
 
 /**
  * The maximum number of shrinkings to minimize large failures.
  *
- * @macro traced
  * @internal
  */
-export const shrinks = (): Effect.Effect<never, never, number> => {
-  const trace = getCallTrace()
-  return testConfigWith((config) => core.succeed(config.shrinks)).traced(trace)
-}
+export const shrinks = Debug.methodWithTrace((trace) =>
+  (): Effect.Effect<never, never, number> => testConfigWith((config) => core.succeed(config.shrinks)).traced(trace)
+)

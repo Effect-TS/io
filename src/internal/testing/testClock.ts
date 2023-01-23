@@ -1,5 +1,10 @@
+/**
+ * Open questions:
+ * - TestClock.adjustWith
+ * - Sized.withSize
+ */
 import type * as Clock from "@effect/io/Clock"
-import { getCallTrace } from "@effect/io/Debug"
+import * as Debug from "@effect/io/Debug"
 import type { Deferred } from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
 import type * as Fiber from "@effect/io/Fiber"
@@ -75,25 +80,10 @@ import type * as SortedSet from "@fp-ts/data/SortedSet"
  * @internal
  */
 export interface TestClock extends Clock.Clock {
-  /**
-   * @macro traced
-   */
   adjust(duration: Duration.Duration): Effect.Effect<never, never, void>
-  /**
-   * @macro traced
-   */
   adjustWith(duration: Duration.Duration): <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
-  /**
-   * @macro traced
-   */
   save(): Effect.Effect<never, never, Effect.Effect<never, never, void>>
-  /**
-   * @macro traced
-   */
   setTime(time: number): Effect.Effect<never, never, void>
-  /**
-   * @macro traced
-   */
   sleeps(): Effect.Effect<never, never, Chunk.Chunk<number>>
 }
 
@@ -133,107 +123,111 @@ export class TestClockImpl implements TestClock {
   }
   /**
    * Returns the current clock time in milliseconds.
-   *
-   * @macro traced
    */
   currentTimeMillis(): Effect.Effect<never, never, number> {
-    const trace = getCallTrace()
-    return pipe(ref.get(this.clockState), core.map((data) => data.instant)).traced(trace)
+    return Debug.bodyWithTrace((trace) =>
+      core.map(
+        ref.get(this.clockState),
+        (data) => data.instant
+      ).traced(trace)
+    )
   }
   /**
    * Saves the `TestClock`'s current state in an effect which, when run, will
    * restore the `TestClock` state to the saved state.
-   *
-   * @macro traced
    */
   save(): Effect.Effect<never, never, Effect.Effect<never, never, void>> {
-    const trace = getCallTrace()
-    return pipe(ref.get(this.clockState), core.map((data) => ref.set(this.clockState, data))).traced(trace)
+    return Debug.bodyWithTrace((trace) =>
+      core.map(
+        ref.get(this.clockState),
+        (data) => ref.set(this.clockState, data)
+      ).traced(trace)
+    )
   }
   /**
    * Sets the current clock time to the specified instant. Any effects that
    * were scheduled to occur on or before the new time will be run in order.
-   *
-   * @macro traced
    */
   setTime(instant: number): Effect.Effect<never, never, void> {
-    const trace = getCallTrace()
-    return pipe(this.warningDone(), core.zipRight(this.run(() => instant))).traced(trace)
+    return Debug.bodyWithTrace((trace) =>
+      core.zipRight(
+        this.warningDone(),
+        this.run(() => instant)
+      ).traced(trace)
+    )
   }
   /**
    * Semantically blocks the current fiber until the clock time is equal to or
    * greater than the specified duration. Once the clock time is adjusted to
    * on or after the duration, the fiber will automatically be resumed.
-   *
-   * @macro traced
    */
   sleep(duration: Duration.Duration): Effect.Effect<never, never, void> {
-    const trace = getCallTrace()
-    return pipe(
-      core.deferredMake<never, void>(),
-      core.flatMap((deferred) =>
-        pipe(
-          ref.modify(this.clockState, (data) => {
-            const end = data.instant + duration.millis
-            if (end > data.instant) {
-              return [
-                true,
-                Data.make(data.instant, pipe(data.sleeps, Chunk.prepend([end, deferred] as const)))
-              ] as const
-            }
-            return [false, data] as const
-          }),
-          core.flatMap((shouldAwait) =>
-            shouldAwait ?
-              pipe(this.warningStart(), core.zipRight(core.deferredAwait(deferred))) :
-              pipe(core.deferredSucceed(deferred, void 0), core.asUnit)
+    return Debug.bodyWithTrace((trace) =>
+      pipe(
+        core.deferredMake<never, void>(),
+        core.flatMap((deferred) =>
+          pipe(
+            ref.modify(this.clockState, (data) => {
+              const end = data.instant + duration.millis
+              if (end > data.instant) {
+                return [
+                  true,
+                  Data.make(data.instant, pipe(data.sleeps, Chunk.prepend([end, deferred] as const)))
+                ] as const
+              }
+              return [false, data] as const
+            }),
+            core.flatMap((shouldAwait) =>
+              shouldAwait ?
+                pipe(this.warningStart(), core.zipRight(core.deferredAwait(deferred))) :
+                pipe(core.deferredSucceed(deferred, void 0), core.asUnit)
+            )
           )
         )
-      )
-    ).traced(trace)
+      ).traced(trace)
+    )
   }
   /**
    * Returns a list of the times at which all queued effects are scheduled to
    * resume.
-   *
-   * @macro traced
    */
   sleeps(): Effect.Effect<never, never, Chunk.Chunk<number>> {
-    const trace = getCallTrace()
-    return pipe(ref.get(this.clockState), core.map((data) => pipe(data.sleeps, Chunk.map((_) => _[0])))).traced(trace)
+    return Debug.bodyWithTrace((trace) =>
+      pipe(
+        ref.get(this.clockState),
+        core.map((data) => pipe(data.sleeps, Chunk.map((_) => _[0])))
+      ).traced(trace)
+    )
   }
   /**
    * Increments the current clock time by the specified duration. Any effects
    * that were scheduled to occur on or before the new time will be run in
    * order.
-   *
-   * @macro traced
    */
   adjust(duration: Duration.Duration): Effect.Effect<never, never, void> {
-    const trace = getCallTrace()
-    return pipe(this.warningDone(), core.zipRight(this.run((n) => n + duration.millis))).traced(trace)
+    return Debug.bodyWithTrace((trace) =>
+      pipe(
+        this.warningDone(),
+        core.zipRight(this.run((n) => n + duration.millis))
+      ).traced(trace)
+    )
   }
   /**
    * Increments the current clock time by the specified duration. Any effects
    * that were scheduled to occur on or before the new time will be run in
    * order.
-   *
-   * @macro traced
    */
   adjustWith(duration: Duration.Duration) {
-    const trace = getCallTrace()
-    return <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-      return pipe(effect, circular.zipParLeft(this.adjust(duration))).traced(trace)
-    }
+    return Debug.bodyWithTrace((trace) =>
+      <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
+        circular.zipParLeft(effect, this.adjust(duration)).traced(trace)
+    )
   }
   /**
    * Returns a set of all fibers in this test.
-   *
-   * @macro traced
    */
   supervisedFibers(): Effect.Effect<never, never, SortedSet.SortedSet<Fiber.RuntimeFiber<unknown, unknown>>> {
-    const trace = getCallTrace()
-    return this.annotations.supervisedFibers().traced(trace)
+    return Debug.bodyWithTrace((trace) => this.annotations.supervisedFibers().traced(trace))
   }
   /**
    * Captures a "snapshot" of the identifier and status of all fibers in this
@@ -245,32 +239,33 @@ export class TestClockImpl implements TestClock {
    * @macro traced
    */
   freeze(): Effect.Effect<never, void, HashMap.HashMap<FiberId.FiberId, FiberStatus.FiberStatus>> {
-    const trace = getCallTrace()
-    return pipe(
-      this.supervisedFibers(),
-      core.flatMap((fibers) =>
-        pipe(
-          fibers,
-          effect.reduce(HashMap.empty<FiberId.FiberId, FiberStatus.FiberStatus>(), (map, fiber) =>
-            pipe(
-              fiber.status(),
-              core.flatMap((status) => {
-                if (FiberStatus.isDone(status)) {
-                  return core.succeed(
-                    pipe(map, HashMap.set(fiber.id() as FiberId.FiberId, status as FiberStatus.FiberStatus))
-                  )
-                }
-                if (FiberStatus.isSuspended(status)) {
-                  return core.succeed(
-                    pipe(map, HashMap.set(fiber.id() as FiberId.FiberId, status as FiberStatus.FiberStatus))
-                  )
-                }
-                return core.fail(void 0)
-              })
-            ))
+    return Debug.bodyWithTrace((trace) =>
+      pipe(
+        this.supervisedFibers(),
+        core.flatMap((fibers) =>
+          pipe(
+            fibers,
+            effect.reduce(HashMap.empty<FiberId.FiberId, FiberStatus.FiberStatus>(), (map, fiber) =>
+              pipe(
+                fiber.status(),
+                core.flatMap((status) => {
+                  if (FiberStatus.isDone(status)) {
+                    return core.succeed(
+                      pipe(map, HashMap.set(fiber.id() as FiberId.FiberId, status as FiberStatus.FiberStatus))
+                    )
+                  }
+                  if (FiberStatus.isSuspended(status)) {
+                    return core.succeed(
+                      pipe(map, HashMap.set(fiber.id() as FiberId.FiberId, status as FiberStatus.FiberStatus))
+                    )
+                  }
+                  return core.fail(void 0)
+                })
+              ))
+          )
         )
-      )
-    ).traced(trace)
+      ).traced(trace)
+    )
   }
   /**
    * Forks a fiber that will display a warning message if a test is using time
@@ -279,119 +274,115 @@ export class TestClockImpl implements TestClock {
    * @macro traced
    */
   warningStart(): Effect.Effect<never, never, void> {
-    const trace = getCallTrace()
-    return synchronized.updateSomeEffect(this.warningState, (data) =>
-      WarningData.isStart(data) ?
-        Option.some(
-          pipe(
-            this.live.provide(pipe(effect.logWarning(warning), effect.delay(Duration.seconds(5)))),
-            core.interruptible,
-            fiberRuntime.fork,
-            core.map((fiber) => WarningData.pending(fiber))
-          )
-        ) :
-        Option.none).traced(trace)
+    return Debug.bodyWithTrace((trace) =>
+      synchronized.updateSomeEffect(this.warningState, (data) =>
+        WarningData.isStart(data) ?
+          Option.some(
+            pipe(
+              this.live.provide(pipe(effect.logWarning(warning), effect.delay(Duration.seconds(5)))),
+              core.interruptible,
+              fiberRuntime.fork,
+              core.map((fiber) => WarningData.pending(fiber))
+            )
+          ) :
+          Option.none).traced(trace)
+    )
   }
   /**
    * Cancels the warning message that is displayed if a test is using time but
    * is not advancing the `TestClock`.
-   *
-   * @macro traced
    */
   warningDone(): Effect.Effect<never, never, void> {
-    const trace = getCallTrace()
-    return synchronized.updateSomeEffect(this.warningState, (warningData) => {
-      if (WarningData.isStart(warningData)) {
-        return Option.some(core.succeed(WarningData.done))
-      }
-      if (WarningData.isPending(warningData)) {
-        return Option.some(pipe(core.interruptFiber(warningData.fiber), core.as(WarningData.done)))
-      }
-      return Option.none
-    }).traced(trace)
+    return Debug.bodyWithTrace((trace) =>
+      synchronized.updateSomeEffect(this.warningState, (warningData) => {
+        if (WarningData.isStart(warningData)) {
+          return Option.some(core.succeed(WarningData.done))
+        }
+        if (WarningData.isPending(warningData)) {
+          return Option.some(pipe(core.interruptFiber(warningData.fiber), core.as(WarningData.done)))
+        }
+        return Option.none
+      }).traced(trace)
+    )
   }
   /**
    * Returns whether all descendants of this fiber are done or suspended.
-   *
-   * @macro traced
    */
   suspended(): Effect.Effect<never, void, HashMap.HashMap<FiberId.FiberId, FiberStatus.FiberStatus>> {
-    const trace = getCallTrace()
-    return pipe(
-      this.freeze(),
-      core.zip(this.live.provide(pipe(effect.sleep(Duration.millis(5)), core.zipRight(this.freeze())))),
-      core.flatMap(([first, last]) =>
-        Equal.equals(first, last) ?
-          core.succeed(first) :
-          core.fail(void 0)
-      )
-    ).traced(trace)
+    return Debug.bodyWithTrace((trace) =>
+      pipe(
+        this.freeze(),
+        core.zip(this.live.provide(pipe(effect.sleep(Duration.millis(5)), core.zipRight(this.freeze())))),
+        core.flatMap(([first, last]) =>
+          Equal.equals(first, last) ?
+            core.succeed(first) :
+            core.fail(void 0)
+        )
+      ).traced(trace)
+    )
   }
   /**
    * Polls until all descendants of this fiber are done or suspended.
-   *
-   * @macro traced
    */
   awaitSuspended(): Effect.Effect<never, never, void> {
-    const trace = getCallTrace()
-    return pipe(
-      this.suspendedWarningStart(),
-      core.zipRight(
-        pipe(
-          this.suspended(),
-          core.zipWith(
-            pipe(this.live.provide(effect.sleep(Duration.millis(10))), core.zipRight(this.suspended())),
-            Equal.equals
-          ),
-          effect.filterOrFail(identity, constVoid),
-          effect.eventually
-        )
-      ),
-      core.zipRight(this.suspendedWarningDone())
-    ).traced(trace)
+    return Debug.bodyWithTrace((trace) =>
+      pipe(
+        this.suspendedWarningStart(),
+        core.zipRight(
+          pipe(
+            this.suspended(),
+            core.zipWith(
+              pipe(this.live.provide(effect.sleep(Duration.millis(10))), core.zipRight(this.suspended())),
+              Equal.equals
+            ),
+            effect.filterOrFail(identity, constVoid),
+            effect.eventually
+          )
+        ),
+        core.zipRight(this.suspendedWarningDone())
+      ).traced(trace)
+    )
   }
   /**
    * Forks a fiber that will display a warning message if a test is advancing
    * the `TestClock` but a fiber is not suspending.
-   *
-   * @macro traced
    */
   suspendedWarningStart(): Effect.Effect<never, never, void> {
-    const trace = getCallTrace()
-    return synchronized.updateSomeEffect(this.suspendedWarningState, (suspendedWarningData) => {
-      if (SuspendedWarningData.isStart(suspendedWarningData)) {
-        return Option.some(
-          pipe(
-            this.live.provide(
-              pipe(
-                effect.logWarning(suspendedWarning),
-                core.zipRight(ref.set(this.suspendedWarningState, SuspendedWarningData.done)),
-                effect.delay(Duration.seconds(5))
-              )
-            ),
-            core.interruptible,
-            fiberRuntime.fork,
-            core.map((fiber) => SuspendedWarningData.pending(fiber))
+    return Debug.bodyWithTrace((trace) =>
+      synchronized.updateSomeEffect(this.suspendedWarningState, (suspendedWarningData) => {
+        if (SuspendedWarningData.isStart(suspendedWarningData)) {
+          return Option.some(
+            pipe(
+              this.live.provide(
+                pipe(
+                  effect.logWarning(suspendedWarning),
+                  core.zipRight(ref.set(this.suspendedWarningState, SuspendedWarningData.done)),
+                  effect.delay(Duration.seconds(5))
+                )
+              ),
+              core.interruptible,
+              fiberRuntime.fork,
+              core.map((fiber) => SuspendedWarningData.pending(fiber))
+            )
           )
-        )
-      }
-      return Option.none
-    }).traced(trace)
+        }
+        return Option.none
+      }).traced(trace)
+    )
   }
   /**
    * Cancels the warning message that is displayed if a test is advancing the
    * `TestClock` but a fiber is not suspending.
-   *
-   * @macro traced
    */
   suspendedWarningDone(): Effect.Effect<never, never, void> {
-    const trace = getCallTrace()
-    return synchronized.updateSomeEffect(this.suspendedWarningState, (suspendedWarningData) => {
-      if (SuspendedWarningData.isPending(suspendedWarningData)) {
-        return Option.some(pipe(core.interruptFiber(suspendedWarningData.fiber), core.as(SuspendedWarningData.start)))
-      }
-      return Option.none
-    }).traced(trace)
+    return Debug.bodyWithTrace((trace) =>
+      synchronized.updateSomeEffect(this.suspendedWarningState, (suspendedWarningData) => {
+        if (SuspendedWarningData.isPending(suspendedWarningData)) {
+          return Option.some(pipe(core.interruptFiber(suspendedWarningData.fiber), core.as(SuspendedWarningData.start)))
+        }
+        return Option.none
+      }).traced(trace)
+    )
   }
   /**
    * Runs all effects scheduled to occur on or before the specified instant,
@@ -400,44 +391,45 @@ export class TestClockImpl implements TestClock {
    * @macro traced
    */
   run(f: (instant: number) => number): Effect.Effect<never, never, void> {
-    const trace = getCallTrace()
-    return pipe(
-      this.awaitSuspended(),
-      core.zipRight(pipe(
-        ref.modify(this.clockState, (data) => {
-          const end = f(data.instant)
-          const sorted = pipe(
-            data.sleeps,
-            Chunk.sort<readonly [number, Deferred<never, void>]>(pipe(number.Order, Order.contramap((_) => _[0])))
-          )
-          if (Chunk.isNonEmpty(sorted)) {
-            const [instant, deferred] = Chunk.headNonEmpty(sorted)
-            if (instant <= end) {
-              return [
-                Option.some([end, deferred] as const),
-                Data.make(instant, Chunk.tailNonEmpty(sorted))
-              ] as const
+    return Debug.bodyWithTrace((trace, restore) =>
+      pipe(
+        this.awaitSuspended(),
+        core.zipRight(pipe(
+          ref.modify(this.clockState, (data) => {
+            const end = restore(f)(data.instant)
+            const sorted = pipe(
+              data.sleeps,
+              Chunk.sort<readonly [number, Deferred<never, void>]>(pipe(number.Order, Order.contramap((_) => _[0])))
+            )
+            if (Chunk.isNonEmpty(sorted)) {
+              const [instant, deferred] = Chunk.headNonEmpty(sorted)
+              if (instant <= end) {
+                return [
+                  Option.some([end, deferred] as const),
+                  Data.make(instant, Chunk.tailNonEmpty(sorted))
+                ] as const
+              }
             }
-          }
-          return [Option.none, Data.make(end, data.sleeps)] as const
-        }),
-        core.flatMap((option) => {
-          switch (option._tag) {
-            case "None": {
-              return core.unit()
+            return [Option.none, Data.make(end, data.sleeps)] as const
+          }),
+          core.flatMap((option) => {
+            switch (option._tag) {
+              case "None": {
+                return core.unit()
+              }
+              case "Some": {
+                const [end, deferred] = option.value
+                return pipe(
+                  core.deferredSucceed(deferred, void 0),
+                  core.zipRight(core.yieldNow()),
+                  core.zipRight(this.run(() => end))
+                )
+              }
             }
-            case "Some": {
-              const [end, deferred] = option.value
-              return pipe(
-                core.deferredSucceed(deferred, void 0),
-                core.zipRight(core.yieldNow()),
-                core.zipRight(this.run(() => end))
-              )
-            }
-          }
-        })
-      ))
-    ).traced(trace)
+          })
+        ))
+      ).traced(trace)
+    )
   }
 }
 
@@ -474,107 +466,102 @@ export const defaultTestClock: Layer.Layer<Annotations.Annotations | Live.Live, 
  * @macro traced
  * @internal
  */
-export const adjust = (duration: Duration.Duration): Effect.Effect<never, never, void> => {
-  const trace = getCallTrace()
-  return testClockWith((testClock) => testClock.adjust(duration)).traced(trace)
-}
+export const adjust = Debug.methodWithTrace((trace) =>
+  (duration: Duration.Duration): Effect.Effect<never, never, void> =>
+    testClockWith((testClock) => testClock.adjust(duration)).traced(trace)
+)
 
-/**
- * @macro traced
- * @internal
- */
-export const adjustWith = (duration: Duration.Duration) => {
-  return <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-    const trace = getCallTrace()
-    return testClockWith((testClock) => testClock.adjustWith(duration)(effect)).traced(trace)
-  }
-}
+/** @internal */
+export const adjustWith = Debug.dualWithTrace<
+  <R, E, A>(effect: Effect.Effect<R, E, A>, duration: Duration.Duration) => Effect.Effect<R, E, A>,
+  (duration: Duration.Duration) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+>(2, (trace) =>
+  (effect, duration) =>
+    testClockWith(
+      (testClock) => testClock.adjustWith(duration)(effect)
+    ).traced(trace))
 
 /**
  * Accesses the current time of a `TestClock` instance in the context in
  * milliseconds.
  *
- * @macro traced
  * @internal
  */
-export const currentTimeMillis = (): Effect.Effect<never, never, number> => {
-  const trace = getCallTrace()
-  return testClockWith((testClock) => testClock.currentTimeMillis()).traced(trace)
-}
+export const currentTimeMillis = Debug.methodWithTrace((trace) =>
+  (): Effect.Effect<never, never, number> =>
+    testClockWith(
+      (testClock) => testClock.currentTimeMillis()
+    ).traced(trace)
+)
 
 /**
  * Accesses a `TestClock` instance in the context and saves the clock
  * state in an effect which, when run, will restore the `TestClock` to the
  * saved state.
  *
- * @macro traced
  * @internal
  */
-export const save = (): Effect.Effect<never, never, Effect.Effect<never, never, void>> => {
-  const trace = getCallTrace()
-  return testClockWith((testClock) => testClock.save()).traced(trace)
-}
+export const save = Debug.methodWithTrace((trace) =>
+  (): Effect.Effect<never, never, Effect.Effect<never, never, void>> =>
+    testClockWith((testClock) => testClock.save()).traced(trace)
+)
 
 /**
  * Accesses a `TestClock` instance in the context and sets the clock time
  * to the specified `Instant`, running any actions scheduled for on or before
  * the new time in order.
  *
- * @macro traced
  * @internal
  */
-export const setTime = (instant: number): Effect.Effect<never, never, void> => {
-  const trace = getCallTrace()
-  return testClockWith((testClock) => testClock.setTime(instant)).traced(trace)
-}
+export const setTime = Debug.methodWithTrace((trace) =>
+  (instant: number): Effect.Effect<never, never, void> =>
+    testClockWith((testClock) => testClock.setTime(instant)).traced(trace)
+)
 
 /**
  * Semantically blocks the current fiber until the clock time is equal to or
  * greater than the specified duration. Once the clock time is adjusted to
  * on or after the duration, the fiber will automatically be resumed.
  *
- * @macro traced
  * @internal
  */
-export const sleep = (duration: Duration.Duration): Effect.Effect<never, never, void> => {
-  const trace = getCallTrace()
-  return testClockWith((testClock) => testClock.sleep(duration)).traced(trace)
-}
+export const sleep = Debug.methodWithTrace((trace) =>
+  (duration: Duration.Duration): Effect.Effect<never, never, void> =>
+    testClockWith((testClock) => testClock.sleep(duration)).traced(trace)
+)
 
 /**
  * Accesses a `TestClock` instance in the context and returns a list of
  * times that effects are scheduled to run.
  *
- * @macro traced
  * @internal
  */
-export const sleeps = (): Effect.Effect<never, never, Chunk.Chunk<number>> => {
-  const trace = getCallTrace()
-  return testClockWith((testClock) => testClock.sleeps()).traced(trace)
-}
+export const sleeps = Debug.methodWithTrace((trace) =>
+  (): Effect.Effect<never, never, Chunk.Chunk<number>> =>
+    testClockWith(
+      (testClock) => testClock.sleeps()
+    ).traced(trace)
+)
 
 /**
  * Retrieves the `TestClock` service for this test.
  *
- * @macro traced
  * @internal
  */
-export const testClock = (): Effect.Effect<never, never, TestClock> => {
-  const trace = getCallTrace()
-  return testClockWith(core.succeed).traced(trace)
-}
+export const testClock = Debug.methodWithTrace((trace) =>
+  (): Effect.Effect<never, never, TestClock> => testClockWith(core.succeed).traced(trace)
+)
 
 /**
  * Retrieves the `TestClock` service for this test and uses it to run the
  * specified workflow.
  *
- * @macro traced
  * @internal
  */
-export const testClockWith = <R, E, A>(f: (testClock: TestClock) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-  const trace = getCallTrace()
-  return core.fiberRefGetWith(
-    defaultServices.currentServices,
-    (services) => f(pipe(services, Context.get(clock.clockTag)) as TestClock)
-  ).traced(trace)
-}
+export const testClockWith = Debug.methodWithTrace((trace) =>
+  <R, E, A>(f: (testClock: TestClock) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
+    core.fiberRefGetWith(
+      defaultServices.currentServices,
+      (services) => f(pipe(services, Context.get(clock.clockTag)) as TestClock)
+    ).traced(trace)
+)

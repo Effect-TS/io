@@ -1,4 +1,4 @@
-import { getCallTrace } from "@effect/io/Debug"
+import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import type * as Fiber from "@effect/io/Fiber"
 import * as core from "@effect/io/internal/core"
@@ -28,10 +28,7 @@ export const make = <Type, In, Out, R, E>(
   return {
     [PollingMetricTypeId]: PollingMetricTypeId,
     metric,
-    poll: () => {
-      const trace = getCallTrace()
-      return poll.traced(trace)
-    }
+    poll: () => Debug.bodyWithTrace((trace) => poll.traced(trace))
   }
 }
 
@@ -51,12 +48,18 @@ export const collectAll = <R, E, Out>(
           pollingMetric.metric.unsafeUpdate(input, extraTags)
         }
       },
-      (extraTags) => Chunk.unsafeFromArray(metrics.map((pollingMetric) => pollingMetric.metric.unsafeValue(extraTags)))
+      (extraTags) =>
+        Chunk.unsafeFromArray(
+          metrics.map((pollingMetric) => pollingMetric.metric.unsafeValue(extraTags))
+        )
     ),
-    poll: () => {
-      const trace = getCallTrace()
-      return pipe(metrics, core.forEach((metric) => metric.poll())).traced(trace)
-    }
+    poll: () =>
+      Debug.bodyWithTrace((trace) =>
+        core.forEach(
+          metrics,
+          (metric) => metric.poll()
+        ).traced(trace)
+      )
   }
 }
 
@@ -74,23 +77,22 @@ export const launch = <R2, A2>(schedule: Schedule.Schedule<R2, unknown, A2>) => 
 }
 
 /** @internal */
-export const poll = <Type, In, R, E, Out>(
-  self: PollingMetric.PollingMetric<Type, In, R, E, Out>
-): Effect.Effect<R, E, In> => {
-  const trace = getCallTrace()
-  return self.poll().traced(trace)
-}
+export const poll = Debug.methodWithTrace((trace) =>
+  <Type, In, R, E, Out>(
+    self: PollingMetric.PollingMetric<Type, In, R, E, Out>
+  ): Effect.Effect<R, E, In> => self.poll().traced(trace)
+)
 
 /** @internal */
-export const pollAndUpdate = <Type, In, R, E, Out>(
-  self: PollingMetric.PollingMetric<Type, In, R, E, Out>
-): Effect.Effect<R, E, void> => {
-  const trace = getCallTrace()
-  return pipe(
-    self.poll(),
-    core.flatMap((value) => pipe(self.metric, metric.update(value)))
-  ).traced(trace)
-}
+export const pollAndUpdate = Debug.methodWithTrace((trace) =>
+  <Type, In, R, E, Out>(
+    self: PollingMetric.PollingMetric<Type, In, R, E, Out>
+  ): Effect.Effect<R, E, void> =>
+    pipe(
+      self.poll(),
+      core.flatMap((value) => pipe(self.metric, metric.update(value)))
+    ).traced(trace)
+)
 
 /** @internal */
 export const retry = <R2, E, _>(policy: Schedule.Schedule<R2, E, _>) => {
@@ -99,10 +101,13 @@ export const retry = <R2, E, _>(policy: Schedule.Schedule<R2, E, _>) => {
   ): PollingMetric.PollingMetric<Type, In, R | R2, E, Out> => ({
     [PollingMetricTypeId]: PollingMetricTypeId,
     metric: self.metric,
-    poll: () => {
-      const trace = getCallTrace()
-      return pipe(self.poll(), schedule.retry_Effect(policy)).traced(trace)
-    }
+    poll: () =>
+      Debug.bodyWithTrace((trace) =>
+        pipe(
+          self.poll(),
+          schedule.retry_Effect(policy)
+        ).traced(trace)
+      )
   })
 }
 
@@ -121,9 +126,12 @@ export const zip = <Type2, In2, R2, E2, Out2>(
   > => ({
     [PollingMetricTypeId]: PollingMetricTypeId,
     metric: pipe(self.metric, metric.zip(that.metric)),
-    poll: () => {
-      const trace = getCallTrace()
-      return pipe(self.poll(), core.zip(that.poll())).traced(trace)
-    }
+    poll: () =>
+      Debug.bodyWithTrace((trace) =>
+        core.zip(
+          self.poll(),
+          that.poll()
+        ).traced(trace)
+      )
   })
 }
