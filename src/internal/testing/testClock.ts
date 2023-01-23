@@ -1,8 +1,3 @@
-/**
- * Open questions:
- * - TestClock.adjustWith
- * - Sized.withSize
- */
 import type * as Clock from "@effect/io/Clock"
 import * as Debug from "@effect/io/Debug"
 import type { Deferred } from "@effect/io/Deferred"
@@ -220,7 +215,7 @@ export class TestClockImpl implements TestClock {
   adjustWith(duration: Duration.Duration) {
     return Debug.bodyWithTrace((trace) =>
       <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
-        circular.zipParLeft(effect, this.adjust(duration)).traced(trace)
+        Debug.untraced(() => circular.zipParLeft(effect, this.adjust(duration)).traced(trace))
     )
   }
   /**

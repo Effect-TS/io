@@ -1,6 +1,6 @@
 import type * as Cause from "@effect/io/Cause"
 import * as Clock from "@effect/io/Clock"
-import { getCallTrace } from "@effect/io/Debug"
+import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import type * as Fiber from "@effect/io/Fiber"
@@ -61,60 +61,41 @@ export const isRuntimeFiber = <E, A>(self: Fiber.Fiber<E, A>): self is Fiber.Run
 }
 
 /** @internal */
-export const _await = <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<never, never, Exit.Exit<E, A>> => {
-  const trace = getCallTrace()
-  return self.await().traced(trace)
-}
+export const _await = Debug.methodWithTrace((trace) =>
+  <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<never, never, Exit.Exit<E, A>> => self.await().traced(trace)
+)
 
 /** @internal */
-export const children = <E, A>(
-  self: Fiber.Fiber<E, A>
-): Effect.Effect<never, never, Chunk.Chunk<Fiber.RuntimeFiber<any, any>>> => {
-  const trace = getCallTrace()
-  return self.children().traced(trace)
-}
+export const children = Debug.methodWithTrace((trace) =>
+  <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<never, never, Chunk.Chunk<Fiber.RuntimeFiber<any, any>>> =>
+    self.children().traced(trace)
+)
 
 /** @internal */
 export const done = <E, A>(exit: Exit.Exit<E, A>): Fiber.Fiber<E, A> => {
   return {
     [FiberTypeId]: fiberVariance,
     id: () => FiberId.none,
-    await: () => {
-      const trace = getCallTrace()
-      return core.succeed(exit).traced(trace)
-    },
-    children: () => {
-      const trace = getCallTrace()
-      return core.succeed(Chunk.empty()).traced(trace)
-    },
-    inheritAll: () => {
-      const trace = getCallTrace()
-      return core.unit().traced(trace)
-    },
-    poll: () => {
-      const trace = getCallTrace()
-      return core.succeed(Option.some(exit)).traced(trace)
-    },
-    interruptAsFork: () => {
-      const trace = getCallTrace()
-      return core.unit().traced(trace)
-    }
+    await: () => Debug.bodyWithTrace((trace) => core.succeed(exit).traced(trace)),
+    children: () => Debug.bodyWithTrace((trace) => core.succeed(Chunk.empty()).traced(trace)),
+    inheritAll: () => Debug.bodyWithTrace((trace) => core.unit().traced(trace)),
+    poll: () => Debug.bodyWithTrace((trace) => core.succeed(Option.some(exit)).traced(trace)),
+    interruptAsFork: () => Debug.bodyWithTrace((trace) => core.unit().traced(trace))
   }
 }
 
 /** @internal */
-export const dump = <E, A>(self: Fiber.RuntimeFiber<E, A>): Effect.Effect<never, never, Fiber.Fiber.Dump> => {
-  const trace = getCallTrace()
-  return pipe(self.status(), core.map((status) => ({ id: self.id(), status }))).traced(trace)
-}
+export const dump = Debug.methodWithTrace((trace) =>
+  <E, A>(self: Fiber.RuntimeFiber<E, A>): Effect.Effect<never, never, Fiber.Fiber.Dump> =>
+    core.map(self.status(), (status) => ({ id: self.id(), status })).traced(trace)
+)
 
 /** @internal */
-export const dumpAll = (
-  fibers: Iterable<Fiber.RuntimeFiber<unknown, unknown>>
-): Effect.Effect<never, never, Chunk.Chunk<Fiber.Fiber.Dump>> => {
-  const trace = getCallTrace()
-  return pipe(fibers, core.forEach(dump)).traced(trace)
-}
+export const dumpAll = Debug.methodWithTrace((trace) =>
+  (
+    fibers: Iterable<Fiber.RuntimeFiber<unknown, unknown>>
+  ): Effect.Effect<never, never, Chunk.Chunk<Fiber.Fiber.Dump>> => core.forEach(fibers, dump).traced(trace)
+)
 
 /** @internal */
 export const fail = <E>(error: E): Fiber.Fiber<E, never> => {
@@ -127,12 +108,10 @@ export const failCause = <E>(cause: Cause.Cause<E>): Fiber.Fiber<E, never> => {
 }
 
 /** @internal */
-export const fromEffect = <E, A>(
-  effect: Effect.Effect<never, E, A>
-): Effect.Effect<never, never, Fiber.Fiber<E, A>> => {
-  const trace = getCallTrace()
-  return pipe(core.exit(effect), core.map(done)).traced(trace)
-}
+export const fromEffect = Debug.methodWithTrace((trace) =>
+  <E, A>(effect: Effect.Effect<never, E, A>): Effect.Effect<never, never, Fiber.Fiber<E, A>> =>
+    core.map(core.exit(effect), done).traced(trace)
+)
 
 /** @internal */
 export const id = <E, A>(self: Fiber.Fiber<E, A>): FiberId.FiberId => {
@@ -140,10 +119,9 @@ export const id = <E, A>(self: Fiber.Fiber<E, A>): FiberId.FiberId => {
 }
 
 /** @internal */
-export const inheritAll = <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<never, never, void> => {
-  const trace = getCallTrace()
-  return self.inheritAll().traced(trace)
-}
+export const inheritAll = Debug.methodWithTrace((trace) =>
+  <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<never, never, void> => self.inheritAll().traced(trace)
+)
 
 /** @internal */
 export const interrupted = (fiberId: FiberId.FiberId): Fiber.Fiber<never, never> => {
@@ -151,38 +129,33 @@ export const interrupted = (fiberId: FiberId.FiberId): Fiber.Fiber<never, never>
 }
 
 /** @internal */
-export const interruptAll = (
-  fibers: Iterable<Fiber.Fiber<any, any>>
-): Effect.Effect<never, never, void> => {
-  const trace = getCallTrace()
-  return pipe(core.fiberId(), core.flatMap((fiberId) => pipe(fibers, interruptAllWith(fiberId)))).traced(trace)
-}
+export const interruptAll = Debug.methodWithTrace((trace) =>
+  (fibers: Iterable<Fiber.Fiber<any, any>>): Effect.Effect<never, never, void> =>
+    core.flatMap(core.fiberId(), (fiberId) => pipe(fibers, interruptAllWith(fiberId))).traced(trace)
+)
 
 /** @internal */
-export const interruptAllWith = (fiberId: FiberId.FiberId) => {
-  const trace = getCallTrace()
-  return (fibers: Iterable<Fiber.Fiber<any, any>>): Effect.Effect<never, never, void> => {
-    return pipe(
-      fibers,
-      core.forEachDiscard(interruptAsFork(fiberId)),
+export const interruptAllWith = Debug.dualWithTrace<
+  (fibers: Iterable<Fiber.Fiber<any, any>>, fiberId: FiberId.FiberId) => Effect.Effect<never, never, void>,
+  (fiberId: FiberId.FiberId) => (fibers: Iterable<Fiber.Fiber<any, any>>) => Effect.Effect<never, never, void>
+>(2, (trace) =>
+  (fibers, fiberId) =>
+    pipe(
+      core.forEachDiscard(fibers, interruptAsFork(fiberId)),
       core.zipRight(pipe(fibers, core.forEachDiscard(_await)))
-    ).traced(trace)
-  }
-}
+    ).traced(trace))
 
 /** @internal */
-export const interruptAsFork = (fiberId: FiberId.FiberId) => {
-  const trace = getCallTrace()
-  return <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<never, never, void> => {
-    return self.interruptAsFork(fiberId).traced(trace)
-  }
-}
+export const interruptAsFork = Debug.dualWithTrace<
+  <E, A>(self: Fiber.Fiber<E, A>, fiberId: FiberId.FiberId) => Effect.Effect<never, never, void>,
+  (fiberId: FiberId.FiberId) => <E, A>(self: Fiber.Fiber<E, A>) => Effect.Effect<never, never, void>
+>(2, (trace) => (self, fiberId) => self.interruptAsFork(fiberId).traced(trace))
 
 /** @internal */
-export const join = <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<never, E, A> => {
-  const trace = getCallTrace()
-  return pipe(self.await(), core.flatten, core.zipLeft(self.inheritAll())).traced(trace)
-}
+export const join = Debug.methodWithTrace((trace) =>
+  <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<never, E, A> =>
+    core.zipLeft(core.flatten(self.await()), self.inheritAll()).traced(trace)
+)
 
 /** @internal */
 export const map = <A, B>(f: (a: A) => B) => {
@@ -197,23 +170,12 @@ export const mapEffect = <A, E2, A2>(f: (a: A) => Effect.Effect<never, E2, A2>) 
     return {
       [FiberTypeId]: fiberVariance,
       id: () => self.id(),
-      await: () => {
-        const trace = getCallTrace()
-        return pipe(self.await(), core.flatMap(Exit.forEachEffect(f))).traced(trace)
-      },
-      children: () => {
-        const trace = getCallTrace()
-        return self.children().traced(trace)
-      },
-      inheritAll: () => {
-        const trace = getCallTrace()
-        return self.inheritAll().traced(trace)
-      },
-      poll: () => {
-        const trace = getCallTrace()
-        return pipe(
-          self.poll(),
-          core.flatMap((result) => {
+      await: () => Debug.bodyWithTrace((trace) => core.flatMap(self.await(), Exit.forEachEffect(f)).traced(trace)),
+      children: () => Debug.bodyWithTrace((trace) => self.children().traced(trace)),
+      inheritAll: () => Debug.bodyWithTrace((trace) => self.inheritAll().traced(trace)),
+      poll: () =>
+        Debug.bodyWithTrace((trace) =>
+          core.flatMap(self.poll(), (result) => {
             switch (result._tag) {
               case "None": {
                 return core.succeed(Option.none)
@@ -222,36 +184,40 @@ export const mapEffect = <A, E2, A2>(f: (a: A) => Effect.Effect<never, E2, A2>) 
                 return pipe(result.value, Exit.forEachEffect(f), core.map(Option.some))
               }
             }
-          })
-        ).traced(trace)
-      },
-      interruptAsFork: (id) => {
-        const trace = getCallTrace()
-        return self.interruptAsFork(id).traced(trace)
-      }
+          }).traced(trace)
+        ),
+      interruptAsFork: (id) => Debug.bodyWithTrace((trace) => self.interruptAsFork(id).traced(trace))
     }
   }
 }
 
 /** @internal */
-export const mapFiber = <E, E1, A, B>(f: (a: A) => Fiber.Fiber<E1, B>) => {
-  const trace = getCallTrace()
-  return (self: Fiber.Fiber<E, A>): Effect.Effect<never, never, Fiber.Fiber<E | E1, B>> => {
-    return pipe(
+export const mapFiber = Debug.dualWithTrace<
+  <E, A, E2, B>(
+    self: Fiber.Fiber<E, A>,
+    f: (a: A) => Fiber.Fiber<E2, B>
+  ) => Effect.Effect<never, never, Fiber.Fiber<E | E2, B>>,
+  <E, E2, A, B>(
+    f: (a: A) => Fiber.Fiber<E2, B>
+  ) => (self: Fiber.Fiber<E, A>) => Effect.Effect<never, never, Fiber.Fiber<E | E2, B>>
+>(2, (trace, restore) =>
+  <E, A, E2, B>(
+    self: Fiber.Fiber<E, A>,
+    f: (a: A) => Fiber.Fiber<E2, B>
+  ) =>
+    core.map(
       self.await(),
-      core.map(Exit.match(
-        (cause): Fiber.Fiber<E | E1, B> => failCause(cause),
-        (a) => f(a)
-      ))
-    ).traced(trace)
-  }
-}
+      Exit.match(
+        (cause): Fiber.Fiber<E | E2, B> => failCause(cause),
+        (a) => restore(f)(a)
+      )
+    ).traced(trace))
 
 /** @internal */
-export function match<E, A, Z>(
+export const match = <E, A, Z>(
   onFiber: (_: Fiber.Fiber<E, A>) => Z,
   onRuntimeFiber: (_: Fiber.RuntimeFiber<E, A>) => Z
-) {
+) => {
   return (self: Fiber.Fiber<E, A>): Z => {
     if (isRuntimeFiber(self)) {
       return onRuntimeFiber(self)
@@ -264,26 +230,11 @@ export function match<E, A, Z>(
 export const never = (): Fiber.Fiber<never, never> => ({
   [FiberTypeId]: fiberVariance,
   id: () => FiberId.none,
-  await: () => {
-    const trace = getCallTrace()
-    return core.never().traced(trace)
-  },
-  children: () => {
-    const trace = getCallTrace()
-    return core.succeed(Chunk.empty()).traced(trace)
-  },
-  inheritAll: () => {
-    const trace = getCallTrace()
-    return core.never().traced(trace)
-  },
-  poll: () => {
-    const trace = getCallTrace()
-    return core.succeed(Option.none).traced(trace)
-  },
-  interruptAsFork: () => {
-    const trace = getCallTrace()
-    return core.never().traced(trace)
-  }
+  await: () => Debug.bodyWithTrace((trace) => core.never().traced(trace)),
+  children: () => Debug.bodyWithTrace((trace) => core.succeed(Chunk.empty()).traced(trace)),
+  inheritAll: () => Debug.bodyWithTrace((trace) => core.never().traced(trace)),
+  poll: () => Debug.bodyWithTrace((trace) => core.succeed(Option.none).traced(trace)),
+  interruptAsFork: () => Debug.bodyWithTrace((trace) => core.never().traced(trace))
 })
 
 /** @internal */
@@ -291,29 +242,20 @@ export const orElse = <E2, A2>(that: Fiber.Fiber<E2, A2>) => {
   return <E, A>(self: Fiber.Fiber<E, A>): Fiber.Fiber<E | E2, A | A2> => ({
     [FiberTypeId]: fiberVariance,
     id: () => pipe(self.id(), FiberId.getOrElse(that.id())),
-    await: () => {
-      const trace = getCallTrace()
-      return pipe(
-        self.await(),
+    await: () =>
+      Debug.bodyWithTrace((trace) =>
         core.zipWith(
+          self.await(),
           that.await(),
           (exit1, exit2) => (Exit.isSuccess(exit1) ? exit1 : exit2)
-        )
-      ).traced(trace)
-    },
-    children: () => {
-      const trace = getCallTrace()
-      return self.children().traced(trace)
-    },
-    inheritAll: () => {
-      const trace = getCallTrace()
-      return pipe(that.inheritAll(), core.zipRight(self.inheritAll())).traced(trace)
-    },
-    poll: () => {
-      const trace = getCallTrace()
-      return pipe(
-        self.poll(),
+        ).traced(trace)
+      ),
+    children: () => Debug.bodyWithTrace((trace) => self.children().traced(trace)),
+    inheritAll: () => Debug.bodyWithTrace((trace) => core.zipRight(that.inheritAll(), self.inheritAll()).traced(trace)),
+    poll: () =>
+      Debug.bodyWithTrace((trace) =>
         core.zipWith(
+          self.poll(),
           that.poll(),
           (option1, option2) => {
             switch (option1._tag) {
@@ -325,18 +267,16 @@ export const orElse = <E2, A2>(that: Fiber.Fiber<E2, A2>) => {
               }
             }
           }
-        )
-      ).traced(trace)
-    },
-    interruptAsFork: (id) => {
-      const trace = getCallTrace()
-      return pipe(
-        self,
-        core.interruptAsFiber(id),
-        core.zipRight(pipe(that, core.interruptAsFiber(id))),
-        core.asUnit
-      ).traced(trace)
-    }
+        ).traced(trace)
+      ),
+    interruptAsFork: (id) =>
+      Debug.bodyWithTrace((trace) =>
+        pipe(
+          core.interruptAsFiber(self, id),
+          core.zipRight(pipe(that, core.interruptAsFiber(id))),
+          core.asUnit
+        ).traced(trace)
+      )
   })
 }
 
@@ -348,12 +288,10 @@ export const orElseEither = <E2, A2>(that: Fiber.Fiber<E2, A2>) => {
 }
 
 /** @internal */
-export const poll = <E, A>(
-  self: Fiber.Fiber<E, A>
-): Effect.Effect<never, never, Option.Option<Exit.Exit<E, A>>> => {
-  const trace = getCallTrace()
-  return self.poll().traced(trace)
-}
+export const poll = Debug.methodWithTrace((trace) =>
+  <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<never, never, Option.Option<Exit.Exit<E, A>>> =>
+    self.poll().traced(trace)
+)
 
 // forked from https://github.com/sindresorhus/parse-ms/blob/4da2ffbdba02c6e288c08236695bdece0adca173/index.js
 // MIT License
@@ -388,42 +326,34 @@ const renderStatus = (status: FiberStatus.FiberStatus): string => {
 }
 
 /** @internal */
-export const pretty = <E, A>(self: Fiber.RuntimeFiber<E, A>): Effect.Effect<never, never, string> => {
-  const trace = getCallTrace()
-  return pipe(
-    Clock.currentTimeMillis(),
-    core.flatMap((now) =>
-      pipe(
-        dump(self),
-        core.map((dump) => {
-          const time = now - dump.id.startTimeMillis
-          const { days, hours, milliseconds, minutes, seconds } = parseMs(time)
-          const lifeMsg = (days === 0 ? "" : `${days}d`) +
-            (days === 0 && hours === 0 ? "" : `${hours}h`) +
-            (days === 0 && hours === 0 && minutes === 0 ? "" : `${minutes}m`) +
-            (days === 0 && hours === 0 && minutes === 0 && seconds === 0 ? "" : `${seconds}s`) +
-            `${milliseconds}ms`
-          const waitMsg = FiberStatus.isSuspended(dump.status) ?
-            (() => {
-              const ids = FiberId.ids(dump.status.blockingOn)
-              return HashSet.size(ids) > 0
-                ? `waiting on ` + Array.from(ids).map((id) => `${id}`).join(", ")
-                : ""
-            })() :
-            ""
-          const statusMsg = renderStatus(dump.status)
-          return `[Fiber](#${dump.id.id}) (${lifeMsg}) ${waitMsg}\n   Status: ${statusMsg}`
-        })
-      )
-    )
-  ).traced(trace)
-}
+export const pretty = Debug.methodWithTrace((trace) =>
+  <E, A>(self: Fiber.RuntimeFiber<E, A>): Effect.Effect<never, never, string> =>
+    core.flatMap(Clock.currentTimeMillis(), (now) =>
+      core.map(dump(self), (dump) => {
+        const time = now - dump.id.startTimeMillis
+        const { days, hours, milliseconds, minutes, seconds } = parseMs(time)
+        const lifeMsg = (days === 0 ? "" : `${days}d`) +
+          (days === 0 && hours === 0 ? "" : `${hours}h`) +
+          (days === 0 && hours === 0 && minutes === 0 ? "" : `${minutes}m`) +
+          (days === 0 && hours === 0 && minutes === 0 && seconds === 0 ? "" : `${seconds}s`) +
+          `${milliseconds}ms`
+        const waitMsg = FiberStatus.isSuspended(dump.status) ?
+          (() => {
+            const ids = FiberId.ids(dump.status.blockingOn)
+            return HashSet.size(ids) > 0
+              ? `waiting on ` + Array.from(ids).map((id) => `${id}`).join(", ")
+              : ""
+          })() :
+          ""
+        const statusMsg = renderStatus(dump.status)
+        return `[Fiber](#${dump.id.id}) (${lifeMsg}) ${waitMsg}\n   Status: ${statusMsg}`
+      })).traced(trace)
+)
 
 /** @internal */
-export const roots = (): Effect.Effect<never, never, Chunk.Chunk<Fiber.RuntimeFiber<any, any>>> => {
-  const trace = getCallTrace()
-  return core.sync(unsafeRoots).traced(trace)
-}
+export const roots = Debug.methodWithTrace((trace) =>
+  (): Effect.Effect<never, never, Chunk.Chunk<Fiber.RuntimeFiber<any, any>>> => core.sync(unsafeRoots).traced(trace)
+)
 
 /** @internal */
 export const unsafeRoots = (): Chunk.Chunk<Fiber.RuntimeFiber<any, any>> => {
@@ -431,12 +361,10 @@ export const unsafeRoots = (): Chunk.Chunk<Fiber.RuntimeFiber<any, any>> => {
 }
 
 /** @internal */
-export const status = <E, A>(
-  self: Fiber.RuntimeFiber<E, A>
-): Effect.Effect<never, never, FiberStatus.FiberStatus> => {
-  const trace = getCallTrace()
-  return self.status().traced(trace)
-}
+export const status = Debug.methodWithTrace((trace) =>
+  <E, A>(self: Fiber.RuntimeFiber<E, A>): Effect.Effect<never, never, FiberStatus.FiberStatus> =>
+    self.status().traced(trace)
+)
 
 /** @internal */
 export const succeed = <A>(value: A): Fiber.Fiber<never, A> => {

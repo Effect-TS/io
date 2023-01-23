@@ -262,15 +262,19 @@ export const locallyWith: {
  * @since 1.0.0
  * @category mutations
  */
-export const locallyScoped: <A>(self: FiberRef<A>, value: A) => Effect.Effect<Scope.Scope, never, void> =
-  fiberRuntime.fiberRefLocallyScoped
+export const locallyScoped: {
+  <A>(self: FiberRef<A>, value: A): Effect.Effect<Scope.Scope, never, void>
+  <A>(value: A): (self: FiberRef<A>) => Effect.Effect<Scope.Scope, never, void>
+} = fiberRuntime.fiberRefLocallyScoped
 
 /**
  * @since 1.0.0
  * @category mutations
  */
-export const locallyScopedWith: <A>(self: FiberRef<A>, value: A) => Effect.Effect<Scope.Scope, never, void> =
-  fiberRuntime.fiberRefLocallyScoped
+export const locallyScopedWith: {
+  <A>(self: FiberRef<A>, f: (a: A) => A): Effect.Effect<Scope.Scope, never, void>
+  <A>(f: (a: A) => A): (self: FiberRef<A>) => Effect.Effect<Scope.Scope, never, void>
+} = fiberRuntime.fiberRefLocallyScopedWith
 
 /**
  * @since 1.0.0

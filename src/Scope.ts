@@ -111,8 +111,8 @@ export const addFinalizerExit: (self: Scope, finalizer: Scope.Finalizer) => Effe
  * Closes a scope with the specified exit value, running all finalizers that
  * have been added to the scope.
  *
- * @category destructors
  * @since 1.0.0
+ * @category destructors
  */
 export const close: (self: CloseableScope, exit: Exit.Exit<unknown, unknown>) => Effect.Effect<never, never, void> =
   core.scopeClose
@@ -123,19 +123,20 @@ export const close: (self: CloseableScope, exit: Exit.Exit<unknown, unknown>) =>
  * workflow completes execution. This allows extending a scoped value into a
  * larger scope.
  *
- * @category mutations
  * @since 1.0.0
+ * @category mutations
  */
-export const extend: (
-  self: Scope
-) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<Exclude<R, Scope>, E, A> = fiberRuntime.scopeExtend
+export const extend: {
+  <R, E, A>(effect: Effect.Effect<R, E, A>, scope: Scope): Effect.Effect<Exclude<R, Scope>, E, A>
+  (scope: Scope): <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<Exclude<R, Scope>, E, A>
+} = fiberRuntime.scopeExtend
 
 /**
  * Forks a new scope that is a child of this scope. The child scope will
  * automatically be closed when this scope is closed.
  *
- * @category mutations
  * @since 1.0.0
+ * @category mutations
  */
 export const fork: (
   self: Scope,
@@ -148,20 +149,21 @@ export const fork: (
  * soon as the workflow completes execution, whether by success, failure, or
  * interruption.
  *
- * @category destructors
  * @since 1.0.0
+ * @category destructors
  */
-export const use: (
-  self: CloseableScope
-) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<Exclude<R, Scope>, E, A> = fiberRuntime.scopeUse
+export const use: {
+  <R, E, A>(effect: Effect.Effect<R, E, A>, scope: CloseableScope): Effect.Effect<Exclude<R, Scope>, E, A>
+  (scope: CloseableScope): <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<Exclude<R, Scope>, E, A>
+} = fiberRuntime.scopeUse
 
 /**
  * Creates a Scope where Finalizers will run according to the `ExecutionStrategy`.
  *
  * If an ExecutionStrategy is not provided `sequential` will be used.
  *
- * @category constructors
  * @since 1.0.0
+ * @category constructors
  */
 export const make: (
   executionStrategy?: ExecutionStrategy.ExecutionStrategy | undefined

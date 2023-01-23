@@ -93,9 +93,7 @@ export const withAnnotations = Debug.dualWithTrace<
  */
 export const withAnnotationsScoped = Debug.methodWithTrace((trace) =>
   (annotations: Annotations.Annotations): Effect.Effect<Scope.Scope, never, void> =>
-    fiberRuntime.fiberRefLocallyScopedWith(currentServices)(
-      Context.add(Annotations.Tag)(annotations)
-    ).traced(trace)
+    fiberRuntime.fiberRefLocallyScopedWith(currentServices, Context.add(Annotations.Tag)(annotations)).traced(trace)
 )
 
 /**
@@ -195,7 +193,7 @@ export const withLive = Debug.dualWithTrace<
  */
 export const withLiveScoped = Debug.methodWithTrace((trace) =>
   (live: Live.Live): Effect.Effect<Scope.Scope, never, void> =>
-    fiberRuntime.fiberRefLocallyScopedWith(currentServices)(Context.add(Live.Tag)(live)).traced(trace)
+    fiberRuntime.fiberRefLocallyScopedWith(currentServices, Context.add(Live.Tag)(live)).traced(trace)
 )
 
 /**
@@ -291,7 +289,7 @@ export const withSized = Debug.dualWithTrace<
  */
 export const withSizedScoped = Debug.methodWithTrace((trace) =>
   (sized: Sized.Sized): Effect.Effect<Scope.Scope, never, void> =>
-    fiberRuntime.fiberRefLocallyScopedWith(currentServices)(Context.add(Sized.Tag)(sized)).traced(trace)
+    fiberRuntime.fiberRefLocallyScopedWith(currentServices, Context.add(Sized.Tag)(sized)).traced(trace)
 )
 
 /** @internal */
@@ -363,7 +361,7 @@ export const withTestConfig = Debug.dualWithTrace<
  */
 export const withTestConfigScoped = Debug.methodWithTrace((trace) =>
   (config: TestConfig.TestConfig): Effect.Effect<Scope.Scope, never, void> =>
-    fiberRuntime.fiberRefLocallyScopedWith(currentServices)(Context.add(TestConfig.Tag)(config)).traced(trace)
+    fiberRuntime.fiberRefLocallyScopedWith(currentServices, Context.add(TestConfig.Tag)(config)).traced(trace)
 )
 
 /**

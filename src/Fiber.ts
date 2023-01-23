@@ -377,9 +377,10 @@ export const interruptAs: {
  * @since 1.0.0
  * @category interruption
  */
-export const interruptAsFork: (
-  fiberId: FiberId.FiberId
-) => <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, void> = internal.interruptAsFork
+export const interruptAsFork: {
+  <E, A>(self: Fiber<E, A>, fiberId: FiberId.FiberId): Effect.Effect<never, never, void>
+  (fiberId: FiberId.FiberId): <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, void>
+} = internal.interruptAsFork
 
 /**
  * Interrupts all fibers, awaiting their interruption.
@@ -397,9 +398,10 @@ export const interruptAll: (fibers: Iterable<Fiber<any, any>>) => Effect.Effect<
  * @since 1.0.0
  * @category interruption
  */
-export const interruptAllWith: (
-  fiberId: FiberId.FiberId
-) => (fibers: Iterable<Fiber<any, any>>) => Effect.Effect<never, never, void> = internal.interruptAllWith
+export const interruptAllWith: {
+  (fibers: Iterable<Fiber<any, any>>, fiberId: FiberId.FiberId): Effect.Effect<never, never, void>
+  (fiberId: FiberId.FiberId): (fibers: Iterable<Fiber<any, any>>) => Effect.Effect<never, never, void>
+} = internal.interruptAllWith
 
 /**
  * Interrupts the fiber from whichever fiber is calling this method. The
@@ -459,9 +461,10 @@ export const mapEffect: <A, E2, A2>(
  * @since 1.0.0
  * @category mapping
  */
-export const mapFiber: <E, E1, A, B>(
-  f: (a: A) => Fiber<E1, B>
-) => (self: Fiber<E, A>) => Effect.Effect<never, never, Fiber<E | E1, B>> = internal.mapFiber
+export const mapFiber: {
+  <E, A, E2, B>(self: Fiber<E, A>, f: (a: A) => Fiber<E2, B>): Effect.Effect<never, never, Fiber<E | E2, B>>
+  <E, E2, A, B>(f: (a: A) => Fiber<E2, B>): (self: Fiber<E, A>) => Effect.Effect<never, never, Fiber<E | E2, B>>
+} = internal.mapFiber
 
 /**
  * Folds over the `Fiber` or `RuntimeFiber`.

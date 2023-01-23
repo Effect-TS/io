@@ -1,5 +1,4 @@
 import type * as Cause from "@effect/io/Cause"
-import type { Trace } from "@effect/io/Debug"
 import * as Debug from "@effect/io/Debug"
 import type * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
@@ -134,7 +133,7 @@ export const proto = {
 /** @internal */
 export type Op<Tag extends string, Body = {}> = Effect.Effect<never, never, never> & Body & {
   readonly _tag: Tag
-  readonly trace?: Trace
+  readonly trace?: Debug.Trace
 }
 
 /** @internal */

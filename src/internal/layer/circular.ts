@@ -27,14 +27,14 @@ export const withMinimumLogLevel = (
 /** @internal */
 export const addLogger = <A>(logger: Logger.Logger<string, A>): Layer.Layer<never, never, never> => {
   return layer.scopedDiscard(
-    fiberRuntime.fiberRefLocallyScopedWith(fiberRuntime.currentLoggers)(HashSet.add(logger))
+    fiberRuntime.fiberRefLocallyScopedWith(fiberRuntime.currentLoggers, HashSet.add(logger))
   )
 }
 
 /** @internal */
 export const removeLogger = <A>(logger: Logger.Logger<string, A>): Layer.Layer<never, never, never> => {
   return layer.scopedDiscard(
-    fiberRuntime.fiberRefLocallyScopedWith(fiberRuntime.currentLoggers)(HashSet.remove(logger))
+    fiberRuntime.fiberRefLocallyScopedWith(fiberRuntime.currentLoggers, HashSet.remove(logger))
   )
 }
 
@@ -49,8 +49,9 @@ export const replaceLogger = <A, B>(
 /** @internal */
 export const addSupervisor = <A>(supervisor: Supervisor.Supervisor<A>): Layer.Layer<never, never, never> => {
   return layer.scopedDiscard(
-    fiberRuntime.fiberRefLocallyScopedWith(fiberRuntime.currentSupervisor)((current) =>
-      new _supervisor.Zip(current, supervisor)
+    fiberRuntime.fiberRefLocallyScopedWith(
+      fiberRuntime.currentSupervisor,
+      (current) => new _supervisor.Zip(current, supervisor)
     )
   )
 }
