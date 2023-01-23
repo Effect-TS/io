@@ -146,7 +146,10 @@ export const awaitShutdown: <A>(self: Hub<A>) => Effect.Effect<never, never, voi
  * @since 1.0.0
  * @category mutations
  */
-export const publish: <A>(self: Hub<A>, value: A) => Effect.Effect<never, never, boolean> = internal.publish
+export const publish: {
+  <A>(self: Hub<A>, value: A): Effect.Effect<never, never, boolean>
+  <A>(value: A): (self: Hub<A>) => Effect.Effect<never, never, boolean>
+} = internal.publish
 
 /**
  * Publishes all of the specified messages to the hub, returning whether they
@@ -155,8 +158,10 @@ export const publish: <A>(self: Hub<A>, value: A) => Effect.Effect<never, never,
  * @since 1.0.0
  * @category mutations
  */
-export const publishAll: <A>(self: Hub<A>, elements: Iterable<A>) => Effect.Effect<never, never, boolean> =
-  internal.publishAll
+export const publishAll: {
+  <A>(self: Hub<A>, elements: Iterable<A>): Effect.Effect<never, never, boolean>
+  <A>(elements: Iterable<A>): (self: Hub<A>) => Effect.Effect<never, never, boolean>
+} = internal.publishAll
 
 /**
  * Subscribes to receive messages from the hub. The resulting subscription can
