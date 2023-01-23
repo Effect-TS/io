@@ -1,7 +1,4 @@
-import * as Debug from "@effect/io/Debug"
 import * as Effect from "@effect/io/Effect"
-
-Debug.runtimeDebug.filterStackFrame = (trace) => trace.includes(__dirname)
 
 const program = Effect.gen(function*($) {
   const a = yield* $(Effect.succeed(0))

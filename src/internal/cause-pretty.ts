@@ -116,11 +116,9 @@ const renderToString = (u: unknown): string => {
 const renderTraces = (chunk: Chunk.Chunk<Debug.Trace>): ReadonlyArray<string> => {
   const ret: Array<string> = []
   for (const s of chunk) {
-    if (s) {
-      const r = s.toString()
-      if (r) {
-        ret.push(r)
-      }
+    const r = s?.toFrame()
+    if (Debug.runtimeDebug.filterStackFrame(r)) {
+      ret.push(renderFrame(r))
     }
   }
   return ret
@@ -134,10 +132,10 @@ const renderStack = (span: Option.Option<StackAnnotation>): ReadonlyArray<string
   if (span.value.execution.length > 0) {
     return renderTraces(
       Chunk.prepend(Chunk.unsafeHead(span.value.execution))(span.value.stack)
-    ).filter(Debug.runtimeDebug.filterStackFrame)
+    )
   }
   if (span.value.stack.length > 0) {
-    return renderTraces(span.value.stack).filter(Debug.runtimeDebug.filterStackFrame)
+    return renderTraces(span.value.stack)
   }
   return []
 }
@@ -185,7 +183,13 @@ const renderInterrupt = (
 /** @internal */
 const renderError = (error: Error): ReadonlyArray<string> => {
   if (error.stack) {
-    return lines(error.stack).filter((s) => !s.match(/^\s+at/) || Debug.runtimeDebug.filterStackFrame(s))
+    const stack = Debug.runtimeDebug.parseStack(error)
+    if (stack) {
+      return [
+        `${error.name}: ${error.message}`,
+        ...stack.filter(Debug.runtimeDebug.filterStackFrame).map(renderFrame)
+      ]
+    }
   }
   return lines(String(error))
 }
@@ -436,3 +440,7 @@ const UnEmptyCauseReducer = <E>(): Cause.CauseReducer<unknown, E, Cause.Cause<E>
   parallelCase: (_, left, right) =>
     internal.isEmptyType(left) ? right : internal.isEmptyType(right) ? left : internal.parallel(left, right)
 })
+
+function renderFrame(r: Debug.Frame | undefined): string {
+  return r ? `    at ${r.fileName}:${r.line}:${r.column}` : `    at <unknown>`
+}
