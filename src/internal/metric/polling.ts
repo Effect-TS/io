@@ -28,7 +28,7 @@ export const make = <Type, In, Out, R, E>(
   return {
     [PollingMetricTypeId]: PollingMetricTypeId,
     metric,
-    poll: () => Debug.bodyWithTrace((trace) => poll.traced(trace))
+    poll: Debug.methodWithTrace((trace) => () => poll.traced(trace))
   }
 }
 
@@ -53,13 +53,13 @@ export const collectAll = <R, E, Out>(
           metrics.map((pollingMetric) => pollingMetric.metric.unsafeValue(extraTags))
         )
     ),
-    poll: () =>
-      Debug.bodyWithTrace((trace) =>
+    poll: Debug.methodWithTrace((trace) =>
+      () =>
         core.forEach(
           metrics,
           (metric) => metric.poll()
         ).traced(trace)
-      )
+    )
   }
 }
 
@@ -101,13 +101,13 @@ export const retry = <R2, E, _>(policy: Schedule.Schedule<R2, E, _>) => {
   ): PollingMetric.PollingMetric<Type, In, R | R2, E, Out> => ({
     [PollingMetricTypeId]: PollingMetricTypeId,
     metric: self.metric,
-    poll: () =>
-      Debug.bodyWithTrace((trace) =>
+    poll: Debug.methodWithTrace((trace) =>
+      () =>
         pipe(
           self.poll(),
           schedule.retry_Effect(policy)
         ).traced(trace)
-      )
+    )
   })
 }
 
@@ -126,12 +126,12 @@ export const zip = <Type2, In2, R2, E2, Out2>(
   > => ({
     [PollingMetricTypeId]: PollingMetricTypeId,
     metric: pipe(self.metric, metric.zip(that.metric)),
-    poll: () =>
-      Debug.bodyWithTrace((trace) =>
+    poll: Debug.methodWithTrace((trace) =>
+      () =>
         core.zip(
           self.poll(),
           that.poll()
         ).traced(trace)
-      )
+    )
   })
 }
