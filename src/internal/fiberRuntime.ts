@@ -126,7 +126,7 @@ const contOpSuccess = {
     if (_runtimeFlags.interruptible(self._runtimeFlags) && self.isInterrupted()) {
       return core.exitFailCause(self.getInterruptedCause())
     } else {
-      return core.succeed(value)
+      return core.exitSucceed(value)
     }
   },
   [OpCodes.OP_WHILE]: (
