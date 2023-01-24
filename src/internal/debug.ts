@@ -4,28 +4,32 @@ import type { Debug, Frame, Restore } from "../Debug"
 const levels = ["All", "Fatal", "Error", "Warning", "Info", "Debug", "Trace", "None"]
 
 /** @internal */
-export const restoreOn: Restore = (f): any =>
-  (...args: Array<any>) => {
+export const restoreOn: Restore = (body): any =>
+  function() {
     if (runtimeDebug.tracingEnabled) {
-      return f(...args)
+      // @ts-expect-error
+      return body.apply(this, arguments)
     }
     runtimeDebug.tracingEnabled = true
     try {
-      return f(...args)
+      // @ts-expect-error
+      return body.apply(this, arguments)
     } finally {
       runtimeDebug.tracingEnabled = false
     }
   }
 
 /** @internal */
-export const restoreOff: Restore = (f): any =>
-  (...args: Array<any>) => {
+export const restoreOff: Restore = (body): any =>
+  function() {
     if (!runtimeDebug.tracingEnabled) {
-      return f(...args)
+      // @ts-expect-error
+      return body.apply(this, arguments)
     }
     runtimeDebug.tracingEnabled = false
     try {
-      return f(...args)
+      // @ts-expect-error
+      return body.apply(this, arguments)
     } finally {
       runtimeDebug.tracingEnabled = true
     }

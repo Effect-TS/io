@@ -132,9 +132,10 @@ export const methodWithTrace = <A extends (...args: Array<any>) => any>(
   body: ((trace: Trace, restore: Restore) => A)
 ): A => {
   // @ts-expect-error
-  return (...args) => {
+  return function() {
     if (!runtimeDebug.tracingEnabled) {
-      return body(void 0, debug.restoreOff)(...args)
+      // @ts-expect-error
+      return body(void 0, debug.restoreOff).apply(this, arguments)
     }
     runtimeDebug.tracingEnabled = false
     try {
@@ -142,7 +143,8 @@ export const methodWithTrace = <A extends (...args: Array<any>) => any>(
       Error.stackTraceLimit = 2
       const error = sourceLocation(new Error())
       Error.stackTraceLimit = limit
-      return body(error, debug.restoreOn)(...args)
+      // @ts-expect-error
+      return body(error, debug.restoreOn).apply(this, arguments)
     } finally {
       runtimeDebug.tracingEnabled = true
     }
@@ -156,10 +158,11 @@ export const pipeableWithTrace = <A extends (...args: Array<any>) => any>(
   body: ((trace: Trace, restore: Restore) => A)
 ): A => {
   // @ts-expect-error
-  return (...args) => {
+  return function() {
     if (!runtimeDebug.tracingEnabled) {
       const a = body(void 0, debug.restoreOff)
-      return ((self: any) => untraced(() => a(...args)(self))) as any
+      // @ts-expect-error
+      return ((self: any) => untraced(() => a.apply(this, arguments)(self))) as any
     }
     runtimeDebug.tracingEnabled = false
     try {
@@ -168,7 +171,8 @@ export const pipeableWithTrace = <A extends (...args: Array<any>) => any>(
       const source = sourceLocation(new Error())
       Error.stackTraceLimit = limit
       const f = body(source, debug.restoreOn)
-      return ((self: any) => untraced(() => f(...args)(self))) as any
+      // @ts-expect-error
+      return ((self: any) => untraced(() => f.apply(this, arguments)(self))) as any
     } finally {
       runtimeDebug.tracingEnabled = true
     }
@@ -183,11 +187,12 @@ export const dual = <DF extends (...args: Array<any>) => any, P extends (...args
   body: DF
 ): DF & P => {
   // @ts-expect-error
-  return (...args) => {
-    if (args.length === dfLen) {
-      return body(...args)
+  return function() {
+    if (arguments.length === dfLen) {
+      // @ts-expect-error
+      return body.apply(this, arguments)
     }
-    return ((self: any) => body(self, ...args)) as any
+    return ((self: any) => body(self, ...arguments)) as any
   }
 }
 
@@ -199,13 +204,14 @@ export const dualWithTrace = <DF extends (...args: Array<any>) => any, P extends
   body: ((trace: Trace, restore: Restore) => DF)
 ): DF & P => {
   // @ts-expect-error
-  return (...args) => {
+  return function() {
     if (!runtimeDebug.tracingEnabled) {
       const f = body(void 0, debug.restoreOff)
-      if (args.length === dfLen) {
-        return untraced(() => f(...args))
+      if (arguments.length === dfLen) {
+        // @ts-expect-error
+        return untraced(() => f.apply(this, arguments))
       }
-      return ((self: any) => untraced(() => f(self, ...args))) as any
+      return ((self: any) => untraced(() => f(self, ...arguments))) as any
     }
     runtimeDebug.tracingEnabled = false
     try {
@@ -214,10 +220,11 @@ export const dualWithTrace = <DF extends (...args: Array<any>) => any, P extends
       const source = sourceLocation(new Error())
       Error.stackTraceLimit = limit
       const f = body(source, debug.restoreOn)
-      if (args.length === dfLen) {
-        return untraced(() => f(...args))
+      if (arguments.length === dfLen) {
+        // @ts-expect-error
+        return untraced(() => f.apply(this, arguments))
       }
-      return ((self: any) => untraced(() => f(self, ...args))) as any
+      return ((self: any) => untraced(() => f(self, ...arguments))) as any
     } finally {
       runtimeDebug.tracingEnabled = true
     }
