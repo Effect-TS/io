@@ -37,9 +37,6 @@ export const runtimeDebug: Debug = {
     process && process.env && process.env["EFFECT_LOG_LEVEL"] && levels.includes(process.env["EFFECT_LOG_LEVEL"]) ?
       process.env["EFFECT_LOG_LEVEL"] as Debug["minumumLogLevel"] :
       "Info",
-  traceExecutionLimit: process && process.env && process.env["EFFECT_TRACING_EXECUTION_LIMIT"] ?
-    Number.parseInt(process.env["EFFECT_TRACING_EXECUTION_LIMIT"]) :
-    1,
   traceStackLimit: process && process.env && process.env["EFFECT_TRACING_STACK_LIMIT"] ?
     Number.parseInt(process.env["EFFECT_TRACING_STACK_LIMIT"]) :
     5,

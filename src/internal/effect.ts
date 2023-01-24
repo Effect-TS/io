@@ -1096,33 +1096,24 @@ class EffectGen {
   }
 }
 
-/** @internal */
-export const refailWithTrace = Debug.dualWithTrace<
-  <R, E, A>(self: Effect.Effect<R, E, A>, trace: Debug.Trace) => Effect.Effect<R, E, A>,
-  (trace: Debug.Trace) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
->(2, () => (self, trace) => trace ? core.matchCauseEffect(self, core.failCause, core.succeed).traced(trace) : self)
-
 /**
  * Inspired by https://github.com/tusharmath/qio/pull/22 (revised)
   @internal */
 export const gen: typeof Effect.gen = Debug.methodWithTrace((trace, restore) =>
   (f) =>
-    refailWithTrace(
-      core.suspendSucceed(() => {
-        const iterator = restore(() => f((self) => new EffectGen(self) as any))()
-        const state = restore(() => iterator.next())()
-        const run = (
-          state: IteratorYieldResult<any> | IteratorReturnResult<any>
-        ): Effect.Effect<any, any, any> => (state.done ?
-          core.succeed(state.value) :
-          pipe(
-            state.value.value as unknown as Effect.Effect<any, any, any>,
-            core.flatMap((val: any) => run(restore(() => iterator.next(val))()))
-          ))
-        return run(state)
-      }),
-      trace
-    )
+    core.suspendSucceed(() => {
+      const iterator = restore(() => f((self) => new EffectGen(self) as any))()
+      const state = restore(() => iterator.next())()
+      const run = (
+        state: IteratorYieldResult<any> | IteratorReturnResult<any>
+      ): Effect.Effect<any, any, any> => (state.done ?
+        core.succeed(state.value) :
+        pipe(
+          state.value.value as unknown as Effect.Effect<any, any, any>,
+          core.flatMap((val: any) => run(restore(() => iterator.next(val))()))
+        ))
+      return run(state)
+    }).traced(trace)
 )
 
 /* @internal */

@@ -119,14 +119,17 @@ export const proto = {
   [Hash.symbol](this: {}) {
     return Hash.random(this)
   },
-  traced(this: Effect.Effect<never, never, never>, trace: string | undefined): Effect.Effect<never, never, never> {
-    if (trace === this["trace"]) {
-      return this
+  traced(this: Effect.Effect<never, never, never>, trace: Debug.Trace): Effect.Effect<never, never, never> {
+    if (trace) {
+      const effect = Object.create(proto)
+      effect._tag = OpCodes.OP_ON_SUCCESS_AND_FAILURE
+      effect.first = this
+      effect.failK = exitFailCause
+      effect.successK = exitSucceed
+      effect.trace = trace
+      return effect
     }
-    const fresh = Object.create(proto)
-    Object.assign(fresh, this)
-    fresh.trace = trace
-    return fresh
+    return this
   }
 }
 
@@ -1805,11 +1808,11 @@ export const exitFail = <E>(error: E): Exit.Exit<E, never> =>
   exitFailCause(internalCause.fail(error)) as Exit.Exit<E, never>
 
 /** @internal */
-export const exitFailCause = <E>(cause: Cause.Cause<E>): Exit.Exit<E, never> => {
+export const exitFailCause = <E>(cause: Cause.Cause<E>, trace?: Debug.Trace): Exit.Exit<E, never> => {
   const exit = Object.create(proto)
   exit._tag = OpCodes.OP_FAILURE
   exit.cause = cause
-  exit.trace = undefined
+  exit.trace = trace
   return exit
 }
 

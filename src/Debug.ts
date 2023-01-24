@@ -18,10 +18,6 @@ export interface Debug {
    */
   traceStackLimit: number
   /**
-   * Sets a limit on how many execution traces should be rendered.
-   */
-  traceExecutionLimit: number
-  /**
    * Enables tracing of execution and stack.
    */
   tracingEnabled: boolean
@@ -32,7 +28,7 @@ export interface Debug {
   /**
    * Used to filter a source location when rendering a stack
    */
-  filterStackFrame: (frame: Frame | undefined) => boolean
+  filterStackFrame: (frame: Frame) => boolean
 }
 
 /**

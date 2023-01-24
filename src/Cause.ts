@@ -160,7 +160,7 @@ export declare namespace Cause {
   export interface StackAnnotation {
     readonly [StackAnnotationTypeId]: StackAnnotationTypeId
     readonly stack: Chunk.Chunk<Trace>
-    readonly execution: Chunk.Chunk<Trace>
+    readonly execution: Trace
   }
 }
 

@@ -32,7 +32,6 @@ import * as OpCodes from "@effect/io/internal/opCodes/effect"
 import * as _runtimeFlags from "@effect/io/internal/runtimeFlags"
 import * as supervisor from "@effect/io/internal/supervisor"
 import * as SupervisorPatch from "@effect/io/internal/supervisor/patch"
-import { RingBuffer } from "@effect/io/internal/support"
 import type { EnforceNonEmptyRecord, TupleEffect } from "@effect/io/internal/types"
 import type { Logger } from "@effect/io/Logger"
 import * as LogLevel from "@effect/io/Logger/Level"
@@ -209,7 +208,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   private _observers = new Array<(exit: Exit.Exit<E, A>) => void>()
   private _running = false
   private _stack: Array<core.Continuation> = []
-  private _executionTrace: RingBuffer<Debug.Trace> | undefined
+  private _lastOpTrace: Debug.Trace | undefined
   private _asyncInterruptor: ((effect: Effect.Effect<any, any, any>) => any) | null = null
   private _asyncBlockingOn: FiberId.FiberId | null = null
   private _exitValue: Exit.Exit<E, A> | null = null
@@ -948,14 +947,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   }
 
   onExecute(_op: core.Primitive) {
-    if (_op.trace) {
-      if (!this._executionTrace) {
-        this._executionTrace = new RingBuffer<Debug.Trace>(
-          Debug.runtimeDebug.traceExecutionLimit
-        )
-      }
-      this._executionTrace.push(_op.trace)
-    }
+    this._lastOpTrace = _op.trace
   }
 
   [OpCodes.OP_SYNC](op: core.Primitive & { _tag: OpCodes.OP_SYNC }) {
@@ -993,12 +985,12 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   [OpCodes.OP_FAILURE](op: core.Primitive & { _tag: OpCodes.OP_FAILURE }) {
     this.onExecute(op)
     let cause = op.cause
-    if (this._tracesInStack > 0 || (this._executionTrace && this._executionTrace.size > 0)) {
+    if (this._tracesInStack > 0 || this._lastOpTrace) {
       if (internalCause.isAnnotatedType(cause) && internalCause.isStackAnnotation(cause.annotation)) {
         const stack = cause.annotation.stack
         const execution = cause.annotation.execution
         const currentStack = this.stackToLines()
-        const currentExecution = this._executionTrace?.toChunkReversed() || Chunk.empty()
+        const currentExecution = this._lastOpTrace
         cause = internalCause.annotated(
           cause.cause,
           new StackAnnotation(
@@ -1016,26 +1008,13 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
               Chunk.dedupeAdjacent,
               Chunk.take(Debug.runtimeDebug.traceStackLimit)
             ),
-            pipe(
-              execution.length === 0 ?
-                currentExecution :
-                currentExecution.length === 0 ?
-                execution :
-                Chunk.unsafeLast(execution) === Chunk.unsafeLast(currentExecution) ?
-                execution :
-                pipe(
-                  execution,
-                  Chunk.concat(currentExecution)
-                ),
-              Chunk.dedupeAdjacent,
-              Chunk.take(Debug.runtimeDebug.traceExecutionLimit)
-            )
+            currentExecution ? currentExecution : execution
           )
         )
       } else {
         cause = internalCause.annotated(
           op.cause,
-          new StackAnnotation(this.stackToLines(), this._executionTrace?.toChunkReversed() || Chunk.empty())
+          new StackAnnotation(this.stackToLines(), this._lastOpTrace)
         )
       }
     }
@@ -1199,7 +1178,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
               internalCause.sequential(internalCause.die(e), internalCause.interrupt(FiberId.none))
             )
           } else {
-            cur = core.failCause(internalCause.die(e))
+            cur = core.exitFailCause(internalCause.die(e), this._lastOpTrace)
           }
         }
       }

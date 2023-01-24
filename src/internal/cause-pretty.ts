@@ -117,8 +117,12 @@ const renderTraces = (chunk: Chunk.Chunk<Debug.Trace>): ReadonlyArray<string> =>
   const ret: Array<string> = []
   for (const s of chunk) {
     const r = s?.toFrame()
-    if (Debug.runtimeDebug.filterStackFrame(r)) {
-      ret.push(renderFrame(r))
+    if (r) {
+      if (Debug.runtimeDebug.filterStackFrame(r)) {
+        ret.push(renderFrame(r))
+      } else {
+        return ret
+      }
     }
   }
   return ret
@@ -129,10 +133,8 @@ const renderStack = (span: Option.Option<StackAnnotation>): ReadonlyArray<string
   if (Option.isNone(span)) {
     return []
   }
-  if (span.value.execution.length > 0) {
-    return renderTraces(
-      Chunk.prepend(Chunk.unsafeHead(span.value.execution))(span.value.stack)
-    )
+  if (span.value.execution) {
+    return renderTraces(Chunk.prepend(span.value.execution)(span.value.stack))
   }
   if (span.value.stack.length > 0) {
     return renderTraces(span.value.stack)
@@ -185,10 +187,22 @@ const renderError = (error: Error): ReadonlyArray<string> => {
   if (error.stack) {
     const stack = Debug.runtimeDebug.parseStack(error)
     if (stack) {
-      return [
-        `${error.name}: ${error.message}`,
-        ...stack.filter(Debug.runtimeDebug.filterStackFrame).map(renderFrame)
-      ]
+      const traces: Array<string> = []
+      for (const frame of stack) {
+        if (frame) {
+          if (Debug.runtimeDebug.filterStackFrame(frame)) {
+            traces.push(renderFrame(frame))
+          } else {
+            break
+          }
+        }
+      }
+      if (traces.length > 0) {
+        return [
+          `${error.name}: ${error.message}`,
+          ...traces
+        ]
+      }
     }
   }
   return lines(String(error))
@@ -354,17 +368,7 @@ const causeToSequential = <E>(
                       Chunk.take(Debug.runtimeDebug.traceStackLimit)
                     ) :
                     annotation.stack,
-                  annotation.execution.length < Debug.runtimeDebug.traceExecutionLimit && parent.execution.length > 0 &&
-                    ((annotation.execution.length > 0 &&
-                      Chunk.unsafeLast(parent.execution) !== Chunk.unsafeLast(annotation.execution)) ||
-                      annotation.execution.length === 0) ?
-                    pipe(
-                      annotation.execution,
-                      Chunk.concat(parent.execution),
-                      Chunk.dedupeAdjacent,
-                      Chunk.take(Debug.runtimeDebug.traceExecutionLimit)
-                    ) :
-                    annotation.execution
+                  annotation.execution ?? parent.execution
                 )
               ),
               Option.orElse(Option.some(annotation))
