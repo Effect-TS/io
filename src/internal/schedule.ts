@@ -139,40 +139,44 @@ class ScheduleDriverImpl<Env, In, Out> implements Schedule.ScheduleDriver<Env, I
 }
 
 /** @internal */
-export const makeWithState = <S, Env, In, Out>(
-  initial: S,
-  step: (
-    now: number,
-    input: In,
-    state: S
-  ) => Effect.Effect<Env, never, readonly [S, Out, ScheduleDecision.ScheduleDecision]>
-): Schedule.Schedule<Env, In, Out> => {
-  return new ScheduleImpl(initial, step)
-}
+export const makeWithState = Debug.untracedMethod((restore) =>
+  <S, Env, In, Out>(
+    initial: S,
+    step: (
+      now: number,
+      input: In,
+      state: S
+    ) => Effect.Effect<Env, never, readonly [S, Out, ScheduleDecision.ScheduleDecision]>
+  ): Schedule.Schedule<Env, In, Out> => new ScheduleImpl(initial, restore(step))
+)
 
 /** @internal */
-export const addDelay = <Out>(f: (out: Out) => Duration.Duration) => {
-  return <Env, In>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env, In, Out> => {
-    return pipe(self, addDelayEffect((out) => core.sync(() => f(out))))
-  }
-}
+export const addDelay = Debug.dual<
+  <Env, In, Out>(
+    self: Schedule.Schedule<Env, In, Out>,
+    f: (out: Out) => Duration.Duration
+  ) => Schedule.Schedule<Env, In, Out>,
+  <Out>(
+    f: (out: Out) => Duration.Duration
+  ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env, In, Out>
+>(2, (self, f) => addDelayEffect(self, (out) => core.sync(() => f(out))))
 
 /** @internal */
-export const addDelayEffect = <Out, Env2>(
-  f: (out: Out) => Effect.Effect<Env2, never, Duration.Duration>
-) => {
-  return <Env, In>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env | Env2, In, Out> => {
-    return pipe(
-      self,
-      modifyDelayEffect((out, duration) =>
-        pipe(
-          f(out),
-          core.map((delay) => Duration.millis(duration.millis + delay.millis))
-        )
-      )
-    )
-  }
-}
+export const addDelayEffect = Debug.untracedDual<
+  <Env, In, Out, Env2>(
+    self: Schedule.Schedule<Env, In, Out>,
+    f: (out: Out) => Effect.Effect<Env2, never, Duration.Duration>
+  ) => Schedule.Schedule<Env | Env2, In, Out>,
+  <Out, Env2>(
+    f: (out: Out) => Effect.Effect<Env2, never, Duration.Duration>
+  ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In, Out>
+>(2, (restore) =>
+  (self, f) =>
+    modifyDelayEffect(self, (out, duration) =>
+      core.map(
+        restore(f)(out),
+        (delay) => Duration.millis(duration.millis + delay.millis)
+      )))
 
 /** @internal */
 export const andThen = <Env1, In1, Out2>(that: Schedule.Schedule<Env1, In1, Out2>) => {
@@ -186,53 +190,62 @@ export const andThen = <Env1, In1, Out2>(that: Schedule.Schedule<Env1, In1, Out2
 }
 
 /** @internal */
-export const andThenEither = <Env2, In2, Out2>(that: Schedule.Schedule<Env2, In2, Out2>) => {
-  return <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<
+export const andThenEither = Debug.dual<
+  <Env, In, Out, Env2, In2, Out2>(
+    self: Schedule.Schedule<Env, In, Out>,
+    that: Schedule.Schedule<Env2, In2, Out2>
+  ) => Schedule.Schedule<
     Env | Env2,
     In & In2,
     Either.Either<Out, Out2>
-  > => {
-    return makeWithState(
-      [self.initial, that.initial, true as boolean] as const,
-      (now, input, state) =>
-        state[2] ?
-          pipe(
-            self.step(now, input, state[0]),
-            core.flatMap(([lState, out, decision]) => {
-              if (ScheduleDecision.isDone(decision)) {
-                return pipe(
-                  that.step(now, input, state[1]),
-                  core.map(([rState, out, decision]) =>
-                    [
-                      [lState, rState, false as boolean] as const,
-                      Either.right(out) as Either.Either<Out, Out2>,
-                      decision as ScheduleDecision.ScheduleDecision
-                    ] as const
-                  )
-                )
-              }
-              return core.succeed(
-                [
-                  [lState, state[1], true as boolean] as const,
-                  Either.left(out),
-                  decision
-                ] as const
-              )
-            })
-          ) :
-          pipe(
-            that.step(now, input, state[1]),
-            core.map(([rState, out, decision]) =>
+  >,
+  <Env2, In2, Out2>(
+    that: Schedule.Schedule<Env2, In2, Out2>
+  ) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<
+    Env | Env2,
+    In & In2,
+    Either.Either<Out, Out2>
+  >
+>(2, <Env, In, Out, Env2, In2, Out2>(
+  self: Schedule.Schedule<Env, In, Out>,
+  that: Schedule.Schedule<Env2, In2, Out2>
+): Schedule.Schedule<
+  Env | Env2,
+  In & In2,
+  Either.Either<Out, Out2>
+> =>
+  makeWithState(
+    [self.initial, that.initial, true as boolean] as const,
+    (now, input, state) =>
+      state[2] ?
+        core.flatMap(self.step(now, input, state[0]), ([lState, out, decision]) => {
+          if (ScheduleDecision.isDone(decision)) {
+            return core.map(that.step(now, input, state[1]), ([rState, out, decision]) =>
               [
-                [state[0], rState, false as boolean] as const,
+                [lState, rState, false as boolean] as const,
                 Either.right(out) as Either.Either<Out, Out2>,
-                decision
-              ] as const
-            )
+                decision as ScheduleDecision.ScheduleDecision
+              ] as const)
+          }
+          return core.succeed(
+            [
+              [lState, state[1], true as boolean] as const,
+              Either.left(out),
+              decision
+            ] as const
           )
-    )
-  }
-}
+        }) :
+        pipe(
+          that.step(now, input, state[1]),
+          core.map(([rState, out, decision]) =>
+            [
+              [state[0], rState, false as boolean] as const,
+              Either.right(out) as Either.Either<Out, Out2>,
+              decision
+            ] as const
+          )
+        )
+  ))
 
 /** @internal */
 export const as = <Out2>(out2: Out2) => {
@@ -1068,22 +1081,28 @@ export const modifyDelay = <Out>(
 }
 
 /** @internal */
-export const modifyDelayEffect = <Out, Env2>(
-  f: (out: Out, duration: Duration.Duration) => Effect.Effect<Env2, never, Duration.Duration>
-) => {
-  return <Env, In>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env | Env2, In, Out> => {
-    return makeWithState(self.initial, (now, input, state) =>
-      pipe(
-        self.step(now, input, state),
-        core.flatMap(([state, out, decision]) => {
-          if (ScheduleDecision.isDone(decision)) {
-            return core.succeed([state, out, decision] as const)
-          }
-          const intervals = decision.intervals
-          const delay = Interval.size(Interval.make(now, Intervals.start(intervals)))
-          return pipe(
-            f(out, delay),
-            core.map((duration) => {
+export const modifyDelayEffect = Debug.untracedDual<
+  <Env, In, Out, Env2>(
+    self: Schedule.Schedule<Env, In, Out>,
+    f: (out: Out, duration: Duration.Duration) => Effect.Effect<Env2, never, Duration.Duration>
+  ) => Schedule.Schedule<Env | Env2, In, Out>,
+  <Out, Env2>(
+    f: (out: Out, duration: Duration.Duration) => Effect.Effect<Env2, never, Duration.Duration>
+  ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In, Out>
+>(
+  2,
+  (restore) =>
+    (self, f) =>
+      makeWithState(
+        self.initial,
+        (now, input, state) =>
+          core.flatMap(self.step(now, input, state), ([state, out, decision]) => {
+            if (ScheduleDecision.isDone(decision)) {
+              return core.succeed([state, out, decision] as const)
+            }
+            const intervals = decision.intervals
+            const delay = Interval.size(Interval.make(now, Intervals.start(intervals)))
+            return core.map(restore(f)(out, delay), (duration) => {
               const oldStart = Intervals.start(intervals)
               const newStart = now + duration.millis
               const delta = newStart - oldStart
@@ -1091,11 +1110,9 @@ export const modifyDelayEffect = <Out, Env2>(
               const newInterval = Interval.make(newStart, newEnd)
               return [state, out, ScheduleDecision.continueWith(newInterval)] as const
             })
-          )
-        })
-      ))
-  }
-}
+          })
+      )
+)
 
 /** @internal */
 export const onDecision = <Out, Env2, X>(
