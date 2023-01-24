@@ -251,6 +251,59 @@ export const untraced = <A>(
 /**
  * @since 1.0.0
  */
+export const untracedDual = <DF extends (...args: Array<any>) => any, P extends (...args: Array<any>) => any>(
+  dfLen: Parameters<DF>["length"],
+  body: ((restore: Restore) => DF)
+): DF & P => {
+  // @ts-expect-error
+  return function() {
+    if (!runtimeDebug.tracingEnabled) {
+      const f = body(debug.restoreOff)
+      if (arguments.length === dfLen) {
+        // @ts-expect-error
+        return untraced(() => f.apply(this, arguments))
+      }
+      return ((self: any) => untraced(() => f(self, ...arguments))) as any
+    }
+    runtimeDebug.tracingEnabled = false
+    try {
+      const f = body(debug.restoreOn)
+      if (arguments.length === dfLen) {
+        // @ts-expect-error
+        return untraced(() => f.apply(this, arguments))
+      }
+      return ((self: any) => untraced(() => f(self, ...arguments))) as any
+    } finally {
+      runtimeDebug.tracingEnabled = true
+    }
+  }
+}
+
+/**
+ * @since 1.0.0
+ */
+export const untracedMethod = <A extends (...args: Array<any>) => any>(
+  body: ((restore: Restore) => A)
+): A => {
+  // @ts-expect-error
+  return function() {
+    if (!runtimeDebug.tracingEnabled) {
+      // @ts-expect-error
+      return untraced(() => body(debug.restoreOff).apply(this, arguments))
+    }
+    runtimeDebug.tracingEnabled = false
+    try {
+      // @ts-expect-error
+      return untraced(() => body(debug.restoreOn).apply(this, arguments))
+    } finally {
+      runtimeDebug.tracingEnabled = true
+    }
+  }
+}
+
+/**
+ * @since 1.0.0
+ */
 export const traced = <A>(
   body: (restore: Restore) => A
 ) => {
