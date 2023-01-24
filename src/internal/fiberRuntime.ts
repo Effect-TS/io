@@ -1008,13 +1008,14 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
               Chunk.dedupeAdjacent,
               Chunk.take(Debug.runtimeDebug.traceStackLimit)
             ),
-            currentExecution ? currentExecution : execution
+            currentExecution ? currentExecution : execution,
+            this.id()
           )
         )
       } else {
         cause = internalCause.annotated(
           op.cause,
-          new StackAnnotation(this.stackToLines(), this._lastOpTrace)
+          new StackAnnotation(this.stackToLines(), this._lastOpTrace, this.id())
         )
       }
     }

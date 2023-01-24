@@ -161,6 +161,7 @@ export declare namespace Cause {
     readonly [StackAnnotationTypeId]: StackAnnotationTypeId
     readonly stack: Chunk.Chunk<Trace>
     readonly execution: Trace
+    readonly fiberId: FiberId.Runtime
   }
 }
 

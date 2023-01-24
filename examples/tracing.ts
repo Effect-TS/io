@@ -6,11 +6,17 @@ const message = (n: number) => {
   }
 }
 
+const mentioned = (n: number) => {
+  if (n < 10) {
+    message(n)
+  }
+}
+
 const program = Effect.gen(function*($) {
   const a = yield* $(Effect.succeed(0))
   const b = yield* $(Effect.succeed(a + 1))
   return yield* $(Effect.sync(() => {
-    return message(b)
+    return mentioned(b)
   }))
 })
 
