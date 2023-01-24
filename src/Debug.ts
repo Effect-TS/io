@@ -24,7 +24,7 @@ export interface Debug {
   /**
    * Used to extract a source location from an Error when rendering a stack
    */
-  parseStack: (error: Error) => ReadonlyArray<Frame | undefined> | undefined
+  parseStack: (error: Error) => ReadonlyArray<Frame | undefined>
   /**
    * Used to filter a source location when rendering a stack
    */
@@ -47,6 +47,7 @@ export interface SourceLocation extends Error {
  * @category models
  */
 export interface Frame {
+  name?: string
   fileName: string
   line: number
   column: number
@@ -77,7 +78,14 @@ const sourceLocationProto = Object.setPrototypeOf(
         return this.parsed
       }
       const stack = runtimeDebug.parseStack(this)
-      this.parsed = stack?.[this.depth - 1]
+      if (stack && stack.length >= 2 && stack[0] && stack[1]) {
+        this.parsed = {
+          ...stack[this.depth - 1]!,
+          name: stack[this.depth - 2]?.name
+        }
+      } else {
+        this.parsed = undefined
+      }
       return this.parsed
     }
   },

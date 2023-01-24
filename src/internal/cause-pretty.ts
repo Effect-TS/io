@@ -186,24 +186,20 @@ const renderInterrupt = (
 const renderError = (error: Error): ReadonlyArray<string> => {
   if (error.stack) {
     const stack = Debug.runtimeDebug.parseStack(error)
-    if (stack) {
-      const traces: Array<string> = []
-      for (const frame of stack) {
-        if (frame) {
-          if (Debug.runtimeDebug.filterStackFrame(frame)) {
-            traces.push(renderFrame(frame))
-          } else {
-            break
-          }
+    const traces: Array<string> = []
+    for (const frame of stack) {
+      if (frame) {
+        if (Debug.runtimeDebug.filterStackFrame(frame)) {
+          traces.push(renderFrame(frame))
+        } else {
+          break
         }
       }
-      if (traces.length > 0) {
-        return [
-          `${error.name}: ${error.message}`,
-          ...traces
-        ]
-      }
     }
+    return [
+      `${error.name}: ${error.message}`,
+      ...traces
+    ]
   }
   return lines(String(error))
 }
@@ -446,5 +442,11 @@ const UnEmptyCauseReducer = <E>(): Cause.CauseReducer<unknown, E, Cause.Cause<E>
 })
 
 function renderFrame(r: Debug.Frame | undefined): string {
-  return r ? `    at ${r.fileName}:${r.line}:${r.column}` : `    at <unknown>`
+  if (r) {
+    if (r.name) {
+      return `    at ${r.name} (${r.fileName}:${r.line}:${r.column})`
+    }
+    return `    at ${r.fileName}:${r.line}:${r.column}`
+  }
+  return `    at <unknown>`
 }

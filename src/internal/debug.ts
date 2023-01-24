@@ -56,19 +56,28 @@ export const runtimeDebug: Debug = {
       }
       const frames: Array<Frame | undefined> = []
       for (let i = starts + 1; i < lines.length; i++) {
-        const matchFrame = lines[i]?.match(/(file:\/\/)?\/(.*):(\d+):(\d+)/)
-        if (matchFrame) {
-          frames.push({
-            fileName: `/${matchFrame[2]}`,
-            line: Number.parseInt(matchFrame[3]),
-            column: Number.parseInt(matchFrame[4])
-          })
+        if (lines[i].includes("at")) {
+          const blocks = lines[i].split(" ").filter((i) => i.length > 0 && i !== "at")
+          const name = blocks.length === 2 ? blocks[0] : undefined
+          const file = blocks.length === 2 ? blocks[1] : blocks[0]
+          const matchFrame = file?.match(/(file:\/\/)?\/(.*):(\d+):(\d+)/)
+          if (matchFrame) {
+            frames.push({
+              name,
+              fileName: `/${matchFrame[2]}`,
+              line: Number.parseInt(matchFrame[3]),
+              column: Number.parseInt(matchFrame[4])
+            })
+          } else {
+            frames.push(undefined)
+          }
         } else {
           frames.push(undefined)
         }
       }
       return frames
     }
+    return []
   },
   filterStackFrame: (_) => _ != null && !_.fileName.match(/\/src\/internal/)
 }
