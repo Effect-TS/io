@@ -135,13 +135,13 @@ const renderStack = (span: Option.Option<StackAnnotation>): ReadonlyArray<string
   }
   if (span.value.execution) {
     return [
-      `    at fiber-${span.value.fiberId.id}`,
+      `    at Fiber #${span.value.fiberId.id}`,
       ...renderTraces(Chunk.prepend(span.value.execution)(span.value.stack))
     ]
   }
   if (span.value.stack.length > 0) {
     return [
-      `    at fiber-${span.value.fiberId.id}`,
+      `    at Fiber ${span.value.fiberId.id}`,
       ...renderTraces(span.value.stack)
     ]
   }
