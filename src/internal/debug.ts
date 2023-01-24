@@ -83,5 +83,5 @@ export const runtimeDebug: Debug = {
     }
     return []
   },
-  filterStackFrame: (_) => _ != null && !_.fileName.match(/\/src\/internal/)
+  filterStackFrame: (_) => _ != null && !_.fileName.match(/\/(src|cjs|mjs)\/internal/)
 }

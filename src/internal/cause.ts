@@ -1098,8 +1098,7 @@ export class StackAnnotation implements Cause.Cause.StackAnnotation {
   readonly [StackAnnotationTypeId]: Cause.StackAnnotationTypeId = StackAnnotationTypeId
   constructor(
     readonly stack: Chunk.Chunk<Debug.Trace>,
-    readonly execution: Debug.Trace,
-    readonly fiberId: FiberId.Runtime
+    readonly execution: Debug.Trace
   ) {
   }
 }

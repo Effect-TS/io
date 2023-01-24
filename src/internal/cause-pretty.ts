@@ -134,16 +134,10 @@ const renderStack = (span: Option.Option<StackAnnotation>): ReadonlyArray<string
     return []
   }
   if (span.value.execution) {
-    return [
-      `    at Fiber #${span.value.fiberId.id}`,
-      ...renderTraces(Chunk.prepend(span.value.execution)(span.value.stack))
-    ]
+    return renderTraces(Chunk.prepend(span.value.execution)(span.value.stack))
   }
   if (span.value.stack.length > 0) {
-    return [
-      `    at Fiber ${span.value.fiberId.id}`,
-      ...renderTraces(span.value.stack)
-    ]
+    return renderTraces(span.value.stack)
   }
   return []
 }
@@ -370,8 +364,7 @@ const causeToSequential = <E>(
                       Chunk.take(Debug.runtimeDebug.traceStackLimit)
                     ) :
                     annotation.stack,
-                  annotation.execution ?? parent.execution,
-                  annotation.fiberId
+                  annotation.execution ?? parent.execution
                 )
               ),
               Option.orElse(Option.some(annotation))
