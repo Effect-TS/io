@@ -1093,24 +1093,33 @@ const intersectWithLoop = <State, State1, Env, In, Out, Env1, In1, Out2>(
 }
 
 /** @internal */
-export const jittered = Debug.untracedDual<
+export const jittered = Debug.untracedMethod(() =>
+  <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env | Random.Random, In, Out> =>
+    jitteredWith(self, { min: 0.8, max: 1.2 })
+)
+
+/** @internal */
+export const jitteredWith = Debug.untracedDual<
   <Env, In, Out>(
     self: Schedule.Schedule<Env, In, Out>,
-    min?: number,
-    max?: number
+    options: { min?: number; max?: number }
   ) => Schedule.Schedule<Env | Random.Random, In, Out>,
-  (
-    min?: number,
+  (options: {
+    min?: number
     max?: number
-  ) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Random.Random, In, Out>
->(3, () =>
-  (self, min = 0.8, max = 1.2) =>
-    delayedEffect(self, (duration) =>
+  }) => <Env, In, Out>(
+    self: Schedule.Schedule<Env, In, Out>
+  ) => Schedule.Schedule<Env | Random.Random, In, Out>
+>(2, () =>
+  (self, options) => {
+    const { max, min } = Object.assign({ min: 0.8, max: 1.2 }, options)
+    return delayedEffect(self, (duration) =>
       core.map(Random.next(), (random) => {
         const d = duration.millis
         const jittered = d * min * (1 - random) + d * max * random
         return Duration.millis(jittered)
-      })))
+      }))
+  })
 
 /** @internal */
 export const left = Debug.untracedMethod(() =>

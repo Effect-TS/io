@@ -58,7 +58,10 @@ export const fromIterable: (intervals: Iterable<Interval.Interval>) => Intervals
  * @since 1.0.0
  * @category mutations
  */
-export const union: (that: Intervals) => (self: Intervals) => Intervals = internal.union
+export const union: {
+  (self: Intervals, that: Intervals): Intervals
+  (that: Intervals): (self: Intervals) => Intervals
+} = internal.union
 
 /**
  * Produces the intersection of this `Intervals` and that `Intervals`.
@@ -66,7 +69,10 @@ export const union: (that: Intervals) => (self: Intervals) => Intervals = intern
  * @since 1.0.0
  * @category mutations
  */
-export const intersect: (that: Intervals) => (self: Intervals) => Intervals = internal.intersect
+export const intersect: {
+  (self: Intervals, that: Intervals): Intervals
+  (that: Intervals): (self: Intervals) => Intervals
+} = internal.intersect
 
 /**
  * The start of the earliest interval in the specified `Intervals`.
@@ -91,7 +97,10 @@ export const end: (self: Intervals) => number = internal.end
  * @since 1.0.0
  * @category ordering
  */
-export const lessThan: (that: Intervals) => (self: Intervals) => boolean = internal.lessThan
+export const lessThan: {
+  (self: Intervals, that: Intervals): boolean
+  (that: Intervals): (self: Intervals) => boolean
+} = internal.lessThan
 
 /**
  * Returns `true` if this `Intervals` is non-empty, `false` otherwise.
@@ -107,4 +116,7 @@ export const isNonEmpty: (self: Intervals) => boolean = internal.isNonEmpty
  * @since 1.0.0
  * @category ordering
  */
-export const max: (that: Intervals) => (self: Intervals) => Intervals = internal.max
+export const max: {
+  (self: Intervals, that: Intervals): Intervals
+  (that: Intervals): (self: Intervals) => Intervals
+} = internal.max

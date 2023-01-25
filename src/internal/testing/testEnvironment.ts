@@ -1,3 +1,4 @@
+import * as Debug from "@effect/io/Debug"
 import type * as DefaultServices from "@effect/io/DefaultServices"
 import * as defaultServices from "@effect/io/internal/defaultServices"
 import * as layer from "@effect/io/internal/layer"
@@ -20,12 +21,16 @@ export const live: Layer.Layer<DefaultServices.DefaultServices, never, TestServi
 )
 
 /** @internal */
-export const liveContext = (): Layer.Layer<never, never, DefaultServices.DefaultServices> =>
-  layer.syncContext(() => defaultServices.liveServices)
+export const liveContext = Debug.untracedMethod(() =>
+  (): Layer.Layer<never, never, DefaultServices.DefaultServices> =>
+    layer.syncContext(() => defaultServices.liveServices)
+)
 
 /** @internal */
-export const testContext = (): Layer.Layer<never, never, TestServices.TestServices> =>
-  pipe(
-    liveContext(),
-    layer.provideMerge(live)
-  )
+export const testContext = Debug.untracedMethod(() =>
+  (): Layer.Layer<never, never, TestServices.TestServices> =>
+    pipe(
+      liveContext(),
+      layer.provideMerge(live)
+    )
+)

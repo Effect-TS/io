@@ -101,15 +101,17 @@ export const withAnnotationsScoped = Debug.methodWithTrace((trace) =>
  *
  * @internal
  */
-export const annotationsLayer = (): Layer.Layer<never, never, Annotations.Annotations> =>
-  layer.scoped(
-    Annotations.Tag,
-    pipe(
-      core.sync(() => ref.unsafeMake(TestAnnotationMap.empty())),
-      core.map(Annotations.make),
-      core.tap(withAnnotationsScoped)
+export const annotationsLayer = Debug.untracedMethod(() =>
+  (): Layer.Layer<never, never, Annotations.Annotations> =>
+    layer.scoped(
+      Annotations.Tag,
+      pipe(
+        core.sync(() => ref.unsafeMake(TestAnnotationMap.empty())),
+        core.map(Annotations.make),
+        core.tap(withAnnotationsScoped)
+      )
     )
-  )
+)
 
 /**
  * Accesses an `Annotations` instance in the context and retrieves the
@@ -201,15 +203,17 @@ export const withLiveScoped = Debug.methodWithTrace((trace) =>
  *
  * @internal
  */
-export const liveLayer = (): Layer.Layer<DefaultServices.DefaultServices, never, Live.Live> =>
-  layer.scoped(
-    Live.Tag,
-    pipe(
-      core.context<DefaultServices.DefaultServices>(),
-      core.map(Live.make),
-      core.tap(withLiveScoped)
+export const liveLayer = Debug.untracedMethod(() =>
+  (): Layer.Layer<DefaultServices.DefaultServices, never, Live.Live> =>
+    layer.scoped(
+      Live.Tag,
+      pipe(
+        core.context<DefaultServices.DefaultServices>(),
+        core.map(Live.make),
+        core.tap(withLiveScoped)
+      )
     )
-  )
+)
 
 /**
  * Provides a workflow with the "live" default Effect services.
@@ -293,15 +297,17 @@ export const withSizedScoped = Debug.methodWithTrace((trace) =>
 )
 
 /** @internal */
-export const sizedLayer = (size: number): Layer.Layer<never, never, Sized.Sized> =>
-  layer.scoped(
-    Sized.Tag,
-    pipe(
-      fiberRuntime.fiberRefMake(size),
-      core.map(Sized.fromFiberRef),
-      core.tap(withSizedScoped)
+export const sizedLayer = Debug.untracedMethod(() =>
+  (size: number): Layer.Layer<never, never, Sized.Sized> =>
+    layer.scoped(
+      Sized.Tag,
+      pipe(
+        fiberRuntime.fiberRefMake(size),
+        core.map(Sized.fromFiberRef),
+        core.tap(withSizedScoped)
+      )
     )
-  )
+)
 
 /** @internal */
 export const size = Debug.methodWithTrace((trace) =>
@@ -369,22 +375,24 @@ export const withTestConfigScoped = Debug.methodWithTrace((trace) =>
  *
  * @internal
  */
-export const testConfigLayer = (params: {
-  readonly repeats: number
-  readonly retries: number
-  readonly samples: number
-  readonly shrinks: number
-}): Layer.Layer<never, never, TestConfig.TestConfig> =>
-  layer.scoped(
-    TestConfig.Tag,
-    Effect.suspendSucceed(() => {
-      const testConfig = TestConfig.make(params)
-      return pipe(
-        withTestConfigScoped(testConfig),
-        core.as(testConfig)
-      )
-    })
-  )
+export const testConfigLayer = Debug.untracedMethod(() =>
+  (params: {
+    readonly repeats: number
+    readonly retries: number
+    readonly samples: number
+    readonly shrinks: number
+  }): Layer.Layer<never, never, TestConfig.TestConfig> =>
+    layer.scoped(
+      TestConfig.Tag,
+      Effect.suspendSucceed(() => {
+        const testConfig = TestConfig.make(params)
+        return pipe(
+          withTestConfigScoped(testConfig),
+          core.as(testConfig)
+        )
+      })
+    )
+)
 
 /**
  * The number of times to repeat tests to ensure they are stable.

@@ -423,24 +423,27 @@ export class TestClockImpl implements TestClock {
 }
 
 /** @internal */
-export const live = (data: Data.Data): Layer.Layer<Annotations.Annotations | Live.Live, never, TestClock> => {
-  return layer.scoped(
-    Tag,
-    effect.gen(function*($) {
-      const live = yield* $(core.service(Live.Tag))
-      const annotations = yield* $(core.service(Annotations.Tag))
-      const clockState = yield* $(core.sync(() => ref.unsafeMake(data)))
-      const warningState = yield* $(circular.makeSynchronized(WarningData.start))
-      const suspendedWarningState = yield* $(circular.makeSynchronized(SuspendedWarningData.start))
-      const testClock = new TestClockImpl(clockState, live, annotations, warningState, suspendedWarningState)
-      yield* $(fiberRuntime.withClockScoped(testClock))
-      yield* $(
-        fiberRuntime.addFinalizer(() => pipe(testClock.warningDone(), core.zipRight(testClock.suspendedWarningDone())))
-      )
-      return testClock
-    })
-  )
-}
+export const live = Debug.untracedMethod(() =>
+  (data: Data.Data): Layer.Layer<Annotations.Annotations | Live.Live, never, TestClock> =>
+    layer.scoped(
+      Tag,
+      effect.gen(function*($) {
+        const live = yield* $(core.service(Live.Tag))
+        const annotations = yield* $(core.service(Annotations.Tag))
+        const clockState = yield* $(core.sync(() => ref.unsafeMake(data)))
+        const warningState = yield* $(circular.makeSynchronized(WarningData.start))
+        const suspendedWarningState = yield* $(circular.makeSynchronized(SuspendedWarningData.start))
+        const testClock = new TestClockImpl(clockState, live, annotations, warningState, suspendedWarningState)
+        yield* $(fiberRuntime.withClockScoped(testClock))
+        yield* $(
+          fiberRuntime.addFinalizer(() =>
+            pipe(testClock.warningDone(), core.zipRight(testClock.suspendedWarningDone()))
+          )
+        )
+        return testClock
+      })
+    )
+)
 
 /** @internal */
 export const defaultTestClock: Layer.Layer<Annotations.Annotations | Live.Live, never, TestClock> = live(

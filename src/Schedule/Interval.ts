@@ -55,7 +55,10 @@ export const empty: Interval = internal.empty
  * @since 1.0.0
  * @category ordering
  */
-export const lessThan: (that: Interval) => (self: Interval) => boolean = internal.lessThan
+export const lessThan: {
+  (self: Interval, that: Interval): boolean
+  (that: Interval): (self: Interval) => boolean
+} = internal.lessThan
 
 /**
  * Returns the minimum of two `Interval`s.
@@ -63,7 +66,10 @@ export const lessThan: (that: Interval) => (self: Interval) => boolean = interna
  * @since 1.0.0
  * @category ordering
  */
-export const min: (that: Interval) => (self: Interval) => Interval = internal.min
+export const min: {
+  (self: Interval, that: Interval): Interval
+  (that: Interval): (self: Interval) => Interval
+} = internal.min
 
 /**
  * Returns the maximum of two `Interval`s.
@@ -71,7 +77,10 @@ export const min: (that: Interval) => (self: Interval) => Interval = internal.mi
  * @since 1.0.0
  * @category ordering
  */
-export const max: (that: Interval) => (self: Interval) => Interval = internal.max
+export const max: {
+  (self: Interval, that: Interval): Interval
+  (that: Interval): (self: Interval) => Interval
+} = internal.max
 
 /**
  * Returns `true` if the specified `Interval` is empty, `false` otherwise.
@@ -96,7 +105,10 @@ export const isNonEmpty: (self: Interval) => boolean = internal.isNonEmpty
  * @since 1.0.0
  * @category ordering
  */
-export const intersect: (that: Interval) => (self: Interval) => Interval = internal.intersect
+export const intersect: {
+  (self: Interval, that: Interval): Interval
+  (that: Interval): (self: Interval) => Interval
+} = internal.intersect
 
 /**
  * Calculates the size of the `Interval` as the `Duration` from the start of the
@@ -115,7 +127,10 @@ export const size: (self: Interval) => Duration.Duration = internal.size
  * @since 1.0.0
  * @category mutations
  */
-export const union: (that: Interval) => (self: Interval) => Option.Option<Interval> = internal.union
+export const union: {
+  (self: Interval, that: Interval): Option.Option<Interval>
+  (that: Interval): (self: Interval) => Option.Option<Interval>
+} = internal.union
 
 /**
  * Construct an `Interval` that includes all time equal to and after the

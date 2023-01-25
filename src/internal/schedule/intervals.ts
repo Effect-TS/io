@@ -1,3 +1,4 @@
+import * as Debug from "@effect/io/Debug"
 import * as Interval from "@effect/io/Schedule/Interval"
 import type * as Intervals from "@effect/io/Schedule/Intervals"
 import * as Chunk from "@fp-ts/data/Chunk"
@@ -23,38 +24,38 @@ export const make = (intervals: Chunk.Chunk<Interval.Interval>): Intervals.Inter
 export const empty: Intervals.Intervals = make(Chunk.empty())
 
 /** @internal */
-export const fromIterable = (intervals: Iterable<Interval.Interval>): Intervals.Intervals => {
-  return Array.from(intervals).reduce(
+export const fromIterable = (intervals: Iterable<Interval.Interval>): Intervals.Intervals =>
+  Array.from(intervals).reduce(
     (intervals, interval) => pipe(intervals, union(make(Chunk.of(interval)))),
     empty
   )
-}
 
 /** @internal */
-export const union = (that: Intervals.Intervals) => {
-  return (self: Intervals.Intervals): Intervals.Intervals => {
-    if (!Chunk.isNonEmpty(that.intervals)) {
-      return self
-    }
-    if (!Chunk.isNonEmpty(self.intervals)) {
-      return that
-    }
-    if (Chunk.headNonEmpty(self.intervals).startMillis < Chunk.headNonEmpty(that.intervals).startMillis) {
-      return unionLoop(
-        Chunk.tailNonEmpty(self.intervals),
-        that.intervals,
-        Chunk.headNonEmpty(self.intervals),
-        Chunk.empty()
-      )
-    }
+export const union = Debug.dual<
+  (self: Intervals.Intervals, that: Intervals.Intervals) => Intervals.Intervals,
+  (that: Intervals.Intervals) => (self: Intervals.Intervals) => Intervals.Intervals
+>(2, (self, that) => {
+  if (!Chunk.isNonEmpty(that.intervals)) {
+    return self
+  }
+  if (!Chunk.isNonEmpty(self.intervals)) {
+    return that
+  }
+  if (Chunk.headNonEmpty(self.intervals).startMillis < Chunk.headNonEmpty(that.intervals).startMillis) {
     return unionLoop(
-      self.intervals,
-      Chunk.tailNonEmpty(that.intervals),
-      Chunk.headNonEmpty(that.intervals),
+      Chunk.tailNonEmpty(self.intervals),
+      that.intervals,
+      Chunk.headNonEmpty(self.intervals),
       Chunk.empty()
     )
   }
-}
+  return unionLoop(
+    self.intervals,
+    Chunk.tailNonEmpty(that.intervals),
+    Chunk.headNonEmpty(that.intervals),
+    Chunk.empty()
+  )
+})
 
 /** @internal */
 const unionLoop = (
@@ -116,10 +117,10 @@ const unionLoop = (
 }
 
 /** @internal */
-export const intersect = (that: Intervals.Intervals) => {
-  return (self: Intervals.Intervals): Intervals.Intervals =>
-    intersectLoop(self.intervals, that.intervals, Chunk.empty())
-}
+export const intersect = Debug.dual<
+  (self: Intervals.Intervals, that: Intervals.Intervals) => Intervals.Intervals,
+  (that: Intervals.Intervals) => (self: Intervals.Intervals) => Intervals.Intervals
+>(2, (self, that) => intersectLoop(self.intervals, that.intervals, Chunk.empty()))
 
 /** @internal */
 const intersectLoop = (
@@ -162,11 +163,10 @@ export const end = (self: Intervals.Intervals): number => {
 }
 
 /** @internal */
-export const lessThan = (that: Intervals.Intervals) => {
-  return (self: Intervals.Intervals): boolean => {
-    return start(self) < start(that)
-  }
-}
+export const lessThan = Debug.dual<
+  (self: Intervals.Intervals, that: Intervals.Intervals) => boolean,
+  (that: Intervals.Intervals) => (self: Intervals.Intervals) => boolean
+>(2, (self, that) => start(self) < start(that))
 
 /** @internal */
 export const isNonEmpty = (self: Intervals.Intervals): boolean => {
@@ -174,8 +174,7 @@ export const isNonEmpty = (self: Intervals.Intervals): boolean => {
 }
 
 /** @internal */
-export const max = (that: Intervals.Intervals) => {
-  return (self: Intervals.Intervals): Intervals.Intervals => {
-    return lessThan(that)(self) ? that : self
-  }
-}
+export const max = Debug.dual<
+  (self: Intervals.Intervals, that: Intervals.Intervals) => Intervals.Intervals,
+  (that: Intervals.Intervals) => (self: Intervals.Intervals) => Intervals.Intervals
+>(2, (self, that) => lessThan(self, that) ? that : self)

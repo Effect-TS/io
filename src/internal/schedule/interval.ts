@@ -1,3 +1,4 @@
+import * as Debug from "@effect/io/Debug"
 import type * as Interval from "@effect/io/Schedule/Interval"
 import * as Duration from "@fp-ts/data/Duration"
 import * as Option from "@fp-ts/data/Option"
@@ -30,28 +31,29 @@ export const make = (startMillis: number, endMillis: number): Interval.Interval 
 }
 
 /** @internal */
-export const lessThan = (that: Interval.Interval) => {
-  return (self: Interval.Interval): boolean => min(that)(self) === self
-}
+export const lessThan = Debug.dual<
+  (self: Interval.Interval, that: Interval.Interval) => boolean,
+  (that: Interval.Interval) => (self: Interval.Interval) => boolean
+>(2, (self, that) => min(self, that) === self)
 
 /** @internal */
-export const min = (that: Interval.Interval) => {
-  return (self: Interval.Interval): Interval.Interval => {
-    if (self.endMillis <= that.startMillis) return self
-    if (that.endMillis <= self.startMillis) return that
-    if (self.startMillis < that.startMillis) return self
-    if (that.startMillis < self.startMillis) return that
-    if (self.endMillis <= that.endMillis) return self
-    return that
-  }
-}
+export const min = Debug.dual<
+  (self: Interval.Interval, that: Interval.Interval) => Interval.Interval,
+  (that: Interval.Interval) => (self: Interval.Interval) => Interval.Interval
+>(2, (self, that) => {
+  if (self.endMillis <= that.startMillis) return self
+  if (that.endMillis <= self.startMillis) return that
+  if (self.startMillis < that.startMillis) return self
+  if (that.startMillis < self.startMillis) return that
+  if (self.endMillis <= that.endMillis) return self
+  return that
+})
 
 /** @internal */
-export const max = (that: Interval.Interval) => {
-  return (self: Interval.Interval): Interval.Interval => {
-    return min(that)(self) === self ? that : self
-  }
-}
+export const max = Debug.dual<
+  (self: Interval.Interval, that: Interval.Interval) => Interval.Interval,
+  (that: Interval.Interval) => (self: Interval.Interval) => Interval.Interval
+>(2, (self, that) => min(self, that) === self ? that : self)
 
 /** @internal */
 export const isEmpty = (self: Interval.Interval): boolean => {
@@ -64,13 +66,14 @@ export const isNonEmpty = (self: Interval.Interval): boolean => {
 }
 
 /** @internal */
-export const intersect = (that: Interval.Interval) => {
-  return (self: Interval.Interval): Interval.Interval => {
-    const start = Math.max(self.startMillis, that.startMillis)
-    const end = Math.min(self.endMillis, that.endMillis)
-    return make(start, end)
-  }
-}
+export const intersect = Debug.dual<
+  (self: Interval.Interval, that: Interval.Interval) => Interval.Interval,
+  (that: Interval.Interval) => (self: Interval.Interval) => Interval.Interval
+>(2, (self, that) => {
+  const start = Math.max(self.startMillis, that.startMillis)
+  const end = Math.min(self.endMillis, that.endMillis)
+  return make(start, end)
+})
 
 /** @internal */
 export const size = (self: Interval.Interval): Duration.Duration => {
@@ -78,13 +81,14 @@ export const size = (self: Interval.Interval): Duration.Duration => {
 }
 
 /** @internal */
-export const union = (that: Interval.Interval) => {
-  return (self: Interval.Interval): Option.Option<Interval.Interval> => {
-    const start = Math.max(self.startMillis, that.startMillis)
-    const end = Math.min(self.endMillis, that.endMillis)
-    return start < end ? Option.none : Option.some(make(start, end))
-  }
-}
+export const union = Debug.dual<
+  (self: Interval.Interval, that: Interval.Interval) => Option.Option<Interval.Interval>,
+  (that: Interval.Interval) => (self: Interval.Interval) => Option.Option<Interval.Interval>
+>(2, (self, that) => {
+  const start = Math.max(self.startMillis, that.startMillis)
+  const end = Math.min(self.endMillis, that.endMillis)
+  return start < end ? Option.none : Option.some(make(start, end))
+})
 
 /** @internal */
 export const after = (startMilliseconds: number): Interval.Interval => {
