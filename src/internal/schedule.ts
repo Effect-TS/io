@@ -71,8 +71,7 @@ class ScheduleDriverImpl<Env, In, Out> implements Schedule.ScheduleDriver<Env, I
   constructor(
     readonly schedule: Schedule.Schedule<Env, In, Out>,
     readonly ref: Ref.Ref<readonly [Option.Option<Out>, any]>
-  ) {
-  }
+  ) {}
 
   state(): Effect.Effect<never, never, unknown> {
     return Debug.bodyWithTrace((trace) =>
@@ -108,7 +107,7 @@ class ScheduleDriverImpl<Env, In, Out> implements Schedule.ScheduleDriver<Env, I
   }
 
   next(input: In): Effect.Effect<Env, Option.Option<never>, Out> {
-    return Debug.bodyWithTrace((trace) =>
+    return Debug.bodyWithTrace((trace, restore) =>
       pipe(
         core.map(Ref.get(this.ref), (tuple) => tuple[1]),
         core.flatMap((state) =>
@@ -116,7 +115,7 @@ class ScheduleDriverImpl<Env, In, Out> implements Schedule.ScheduleDriver<Env, I
             Clock.currentTimeMillis(),
             core.flatMap((now) =>
               pipe(
-                this.schedule.step(now, input, state),
+                core.suspendSucceed(() => restore(() => this.schedule.step(now, input, state))()),
                 core.flatMap(([state, out, decision]) =>
                   ScheduleDecision.isDone(decision) ?
                     pipe(
@@ -198,7 +197,7 @@ export const andThen = Debug.untracedDual<
 >(2, () => (self, that) => pipe(andThenEither(self, that), map(Either.merge)))
 
 /** @internal */
-export const andThenEither = Debug.dual<
+export const andThenEither = Debug.untracedDual<
   <Env, In, Out, Env2, In2, Out2>(
     self: Schedule.Schedule<Env, In, Out>,
     that: Schedule.Schedule<Env2, In2, Out2>
@@ -214,42 +213,43 @@ export const andThenEither = Debug.dual<
     In & In2,
     Either.Either<Out, Out2>
   >
->(2, <Env, In, Out, Env2, In2, Out2>(
-  self: Schedule.Schedule<Env, In, Out>,
-  that: Schedule.Schedule<Env2, In2, Out2>
-): Schedule.Schedule<
-  Env | Env2,
-  In & In2,
-  Either.Either<Out, Out2>
-> =>
-  makeWithState(
-    [self.initial, that.initial, true as boolean] as const,
-    (now, input, state) =>
-      state[2] ?
-        core.flatMap(self.step(now, input, state[0]), ([lState, out, decision]) => {
-          if (ScheduleDecision.isDone(decision)) {
-            return core.map(that.step(now, input, state[1]), ([rState, out, decision]) =>
+>(2, (restore) =>
+  <Env, In, Out, Env2, In2, Out2>(
+    self: Schedule.Schedule<Env, In, Out>,
+    that: Schedule.Schedule<Env2, In2, Out2>
+  ): Schedule.Schedule<
+    Env | Env2,
+    In & In2,
+    Either.Either<Out, Out2>
+  > =>
+    makeWithState(
+      [self.initial, that.initial, true as boolean] as const,
+      (now, input, state) =>
+        state[2] ?
+          core.flatMap(restore(self.step)(now, input, state[0]), ([lState, out, decision]) => {
+            if (ScheduleDecision.isDone(decision)) {
+              return core.map(that.step(now, input, state[1]), ([rState, out, decision]) =>
+                [
+                  [lState, rState, false as boolean] as const,
+                  Either.right(out) as Either.Either<Out, Out2>,
+                  decision as ScheduleDecision.ScheduleDecision
+                ] as const)
+            }
+            return core.succeed(
               [
-                [lState, rState, false as boolean] as const,
-                Either.right(out) as Either.Either<Out, Out2>,
-                decision as ScheduleDecision.ScheduleDecision
-              ] as const)
-          }
-          return core.succeed(
+                [lState, state[1], true as boolean] as const,
+                Either.left(out),
+                decision
+              ] as const
+            )
+          }) :
+          core.map(that.step(now, input, state[1]), ([rState, out, decision]) =>
             [
-              [lState, state[1], true as boolean] as const,
-              Either.left(out),
+              [state[0], rState, false as boolean] as const,
+              Either.right(out) as Either.Either<Out, Out2>,
               decision
-            ] as const
-          )
-        }) :
-        core.map(that.step(now, input, state[1]), ([rState, out, decision]) =>
-          [
-            [state[0], rState, false as boolean] as const,
-            Either.right(out) as Either.Either<Out, Out2>,
-            decision
-          ] as const)
-  ))
+            ] as const)
+    ))
 
 /** @internal */
 export const as = Debug.untracedDual<
@@ -283,12 +283,12 @@ export const bothInOut = Debug.untracedDual<
   >
 >(
   2,
-  () =>
+  (restore) =>
     (self, that) =>
       makeWithState([self.initial, that.initial] as const, (now, [in1, in2], state) =>
         core.zipWith(
-          self.step(now, in1, state[0]),
-          that.step(now, in2, state[1]),
+          restore(self.step)(now, in1, state[0]),
+          restore(that.step)(now, in2, state[1]),
           ([lState, out, lDecision], [rState, out2, rDecision]) => {
             if (ScheduleDecision.isContinue(lDecision) && ScheduleDecision.isContinue(rDecision)) {
               const interval = pipe(lDecision.intervals, Intervals.union(rDecision.intervals))
@@ -330,7 +330,7 @@ export const checkEffect = Debug.untracedDual<
       makeWithState(
         self.initial,
         (now, input, state) =>
-          core.flatMap(self.step(now, input, state), ([state, out, decision]) => {
+          core.flatMap(restore(self.step)(now, input, state), ([state, out, decision]) => {
             if (ScheduleDecision.isDone(decision)) {
               return core.succeed([state, out, ScheduleDecision.done] as const)
             }
@@ -359,7 +359,7 @@ export const choose = Debug.untracedDual<
     Either.Either<In, In2>,
     Either.Either<Out, Out2>
   >
->(2, () =>
+>(2, (restore) =>
   <Env, In, Out, Env2, In2, Out2>(
     self: Schedule.Schedule<Env, In, Out>,
     that: Schedule.Schedule<Env2, In2, Out2>
@@ -377,9 +377,9 @@ export const choose = Debug.untracedDual<
       > => {
         switch (either._tag) {
           case "Left": {
-            return pipe(
-              self.step(now, either.left, state[0]),
-              core.map(([lState, out, decision]) => [[lState, state[1]] as const, Either.left(out), decision] as const)
+            return core.map(
+              restore(self.step)(now, either.left, state[0]),
+              ([lState, out, decision]) => [[lState, state[1]] as const, Either.left(out), decision] as const
             )
           }
           case "Right": {
@@ -403,7 +403,7 @@ export const chooseMerge = Debug.untracedDual<
   <Env2, In2, Out2>(that: Schedule.Schedule<Env2, In2, Out2>) => <Env, In, Out>(
     self: Schedule.Schedule<Env, In, Out>
   ) => Schedule.Schedule<Env | Env2, Either.Either<In, In2>, Out | Out2>
->(2, () => (self, that) => pipe(choose(self, that), map(Either.merge)))
+>(2, () => (self, that) => map(choose(self, that), Either.merge))
 
 /** @internal */
 export const collectAllInputs = Debug.untracedMethod(() =>
@@ -451,13 +451,13 @@ export const compose = Debug.untracedDual<
   <Env2, Out, Out2>(
     that: Schedule.Schedule<Env2, Out, Out2>
   ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In, Out2>
->(2, () =>
+>(2, (restore) =>
   (self, that) =>
     makeWithState(
       [self.initial, that.initial] as const,
       (now, input, state) =>
         core.flatMap(
-          self.step(now, input, state[0]),
+          restore(self.step)(now, input, state[0]),
           ([lState, out, lDecision]) =>
             core.map(that.step(now, out, state[1]), ([rState, out2, rDecision]) =>
               ScheduleDecision.isDone(lDecision)
@@ -498,7 +498,7 @@ export const contramapContext = Debug.untracedDual<
       self.initial,
       (now, input, state) =>
         core.contramapContext(
-          self.step(now, input, state),
+          restore(self.step)(now, input, state),
           restore(f)
         )
     ))
@@ -517,7 +517,7 @@ export const contramapEffect = Debug.untracedDual<
     makeWithState(self.initial, (now, input2, state) =>
       core.flatMap(
         restore(f)(input2),
-        (input) => self.step(now, input, state)
+        (input) => restore(self.step)(now, input, state)
       )))
 
 /** @internal */
@@ -617,13 +617,13 @@ export const delayedSchedule = Debug.untracedMethod(() =>
 )
 
 /** @internal */
-export const delays = Debug.untracedMethod(() =>
+export const delays = Debug.untracedMethod((restore) =>
   <Env, In, Out>(
     self: Schedule.Schedule<Env, In, Out>
   ): Schedule.Schedule<Env, In, Duration.Duration> =>
     makeWithState(self.initial, (now, input, state) =>
       pipe(
-        self.step(now, input, state),
+        restore(self.step)(now, input, state),
         core.flatMap((
           [state, _, decision]
         ): Effect.Effect<never, never, readonly [any, Duration.Duration, ScheduleDecision.ScheduleDecision]> => {
@@ -767,12 +767,12 @@ export const ensuring = Debug.untracedDual<
   ) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env, In, Out>
 >(
   2,
-  () =>
+  (restore) =>
     (self, finalizer) =>
       makeWithState(
         self.initial,
         (now, input, state) =>
-          core.flatMap(self.step(now, input, state), ([state, out, decision]) =>
+          core.flatMap(restore(self.step)(now, input, state), ([state, out, decision]) =>
             ScheduleDecision.isDone(decision)
               ? core.as(finalizer, [state, out, decision as ScheduleDecision.ScheduleDecision] as const)
               : core.succeed([state, out, decision] as const))
@@ -987,8 +987,8 @@ export const intersectWith = Debug.untracedDual<
       makeWithState([self.initial, that.initial] as const, (now, input: In & In2, state) =>
         pipe(
           core.zipWith(
-            self.step(now, input, state[0]),
-            that.step(now, input, state[1]),
+            restore(self.step)(now, input, state[0]),
+            restore(that.step)(now, input, state[1]),
             (a, b) => [a, b] as const
           ),
           core.flatMap(([
@@ -1154,7 +1154,7 @@ export const mapEffect = Debug.untracedDual<
       makeWithState(
         self.initial,
         (now, input, state) =>
-          core.flatMap(self.step(now, input, state), ([state, out, decision]) =>
+          core.flatMap(restore(self.step)(now, input, state), ([state, out, decision]) =>
             core.map(
               restore(f)(out),
               (out2) => [state, out2, decision] as const
@@ -1219,7 +1219,7 @@ export const modifyDelayEffect = Debug.untracedDual<
       makeWithState(
         self.initial,
         (now, input, state) =>
-          core.flatMap(self.step(now, input, state), ([state, out, decision]) => {
+          core.flatMap(restore(self.step)(now, input, state), ([state, out, decision]) => {
             if (ScheduleDecision.isDone(decision)) {
               return core.succeed([state, out, decision] as const)
             }
@@ -1254,7 +1254,7 @@ export const onDecision = Debug.untracedDual<
         self.initial,
         (now, input, state) =>
           core.flatMap(
-            self.step(now, input, state),
+            restore(self.step)(now, input, state),
             ([state, out, decision]) => core.as(restore(f)(out, decision), [state, out, decision] as const)
           )
       )
@@ -1264,13 +1264,13 @@ export const onDecision = Debug.untracedDual<
 export const once = Debug.untracedMethod(() => (): Schedule.Schedule<never, unknown, void> => asUnit(recurs(1)))
 
 /** @internal */
-export const passthrough = Debug.untracedMethod(() =>
+export const passthrough = Debug.untracedMethod((restore) =>
   <Env, Input, Output>(
     self: Schedule.Schedule<Env, Input, Output>
   ): Schedule.Schedule<Env, Input, Input> =>
     makeWithState(self.initial, (now, input, state) =>
       pipe(
-        self.step(now, input, state),
+        restore(self.step)(now, input, state),
         core.map(([state, _, decision]) => [state, input, decision] as const)
       ))
 )
@@ -1284,11 +1284,11 @@ export const provideContext = Debug.untracedDual<
   <Env>(
     context: Context.Context<Env>
   ) => <In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<never, In, Out>
->(2, () =>
+>(2, (restore) =>
   (self, context) =>
     makeWithState(self.initial, (now, input, state) =>
       core.provideContext(
-        self.step(now, input, state),
+        restore(self.step)(now, input, state),
         context
       )))
 
@@ -1303,7 +1303,7 @@ export const provideService = Debug.untracedDual<
     tag: Context.Tag<T>,
     service: T1
   ) => <Env, In, Out>(self: Schedule.Schedule<Env | T, In, Out>) => Schedule.Schedule<Exclude<Env, T>, In, Out>
->(3, () =>
+>(3, (restore) =>
   <Env, T, In, Out, T1 extends T>(
     self: Schedule.Schedule<Env | T, In, Out>,
     tag: Context.Tag<T>,
@@ -1318,7 +1318,7 @@ export const provideService = Debug.untracedDual<
       >((env) =>
         core.provideContext(
           // @ts-expect-error
-          self.step(now, input, state),
+          restore(self.step)(now, input, state),
           pipe(env, Context.add(tag)(service))
         )
       )))
@@ -1362,7 +1362,7 @@ export const reconsiderEffect = Debug.untracedDual<
       makeWithState(
         self.initial,
         (now, input, state) =>
-          core.flatMap(self.step(now, input, state), ([state, out, decision]) =>
+          core.flatMap(restore(self.step)(now, input, state), ([state, out, decision]) =>
             ScheduleDecision.isDone(decision)
               ? core.map(restore(f)(out, decision), (either) => {
                 switch (either._tag) {
@@ -1478,7 +1478,7 @@ export const reduceEffect = Debug.untracedDual<
       makeWithState(
         [self.initial, zero] as const,
         (now, input, [s, z]) =>
-          core.flatMap(self.step(now, input, s), ([s, out, decision]) =>
+          core.flatMap(restore(self.step)(now, input, s), ([s, out, decision]) =>
             ScheduleDecision.isDone(decision)
               ? core.succeed([[s, z], z, decision as ScheduleDecision.ScheduleDecision] as const)
               : core.map(restore(f)(z, out), (z2) => [[s, z2], z, decision] as const))
@@ -1486,7 +1486,7 @@ export const reduceEffect = Debug.untracedDual<
 )
 
 /** @internal */
-export const repeatForever = Debug.untracedMethod(() =>
+export const repeatForever = Debug.untracedMethod((restore) =>
   <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env, In, Out> =>
     makeWithState(self.initial, (now, input, state) => {
       const step = (
@@ -1494,10 +1494,13 @@ export const repeatForever = Debug.untracedMethod(() =>
         input: In,
         state: any
       ): Effect.Effect<Env, never, readonly [any, Out, ScheduleDecision.ScheduleDecision]> =>
-        core.flatMap(self.step(now, input, state), ([state, out, decision]) =>
-          ScheduleDecision.isDone(decision)
-            ? step(now, input, self.initial)
-            : core.succeed([state, out, decision]))
+        core.flatMap(
+          restore(self.step)(now, input, state),
+          ([state, out, decision]) =>
+            ScheduleDecision.isDone(decision)
+              ? step(now, input, self.initial)
+              : core.succeed([state, out, decision])
+        )
       return step(now, input, state)
     })
 )
@@ -1539,9 +1542,9 @@ export const resetWhen = Debug.untracedDual<
       makeWithState(
         self.initial,
         (now, input, state) =>
-          core.flatMap(self.step(now, input, state), ([state, out, decision]) =>
+          core.flatMap(restore(self.step)(now, input, state), ([state, out, decision]) =>
             restore(f)(out)
-              ? self.step(now, input, self.initial)
+              ? restore(self.step)(now, input, self.initial)
               : core.succeed([state, out, decision] as const))
       )
 )
@@ -1660,7 +1663,7 @@ export const tapInput = Debug.untracedDual<
     makeWithState(self.initial, (now, input, state) =>
       core.zipRight(
         restore(f)(input),
-        self.step(now, input, state)
+        restore(self.step)(now, input, state)
       )))
 
 /** @internal */
@@ -1676,7 +1679,7 @@ export const tapOutput = Debug.untracedDual<
   (self, f) =>
     makeWithState(self.initial, (now, input, state) =>
       core.tap(
-        self.step(now, input, state),
+        restore(self.step)(now, input, state),
         ([, out]) => restore(f)(out)
       )))
 
@@ -1746,8 +1749,8 @@ export const unionWith = Debug.untracedDual<
     (self, that, f) =>
       makeWithState([self.initial, that.initial] as const, (now, input, state) =>
         core.zipWith(
-          self.step(now, input, state[0]),
-          that.step(now, input, state[1]),
+          restore(self.step)(now, input, state[0]),
+          restore(that.step)(now, input, state[1]),
           ([lState, l, lDecision], [rState, r, rDecision]) => {
             if (ScheduleDecision.isDone(lDecision) && ScheduleDecision.isDone(rDecision)) {
               return [[lState, rState] as const, [l, r] as const, ScheduleDecision.done] as const
