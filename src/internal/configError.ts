@@ -119,39 +119,30 @@ export const Unsupported = (path: Chunk.Chunk<string>, message: string): ConfigE
 }
 
 /** @internal */
-export const isConfigError = (u: unknown): u is ConfigError.ConfigError => {
-  return typeof u === "object" && u != null && ConfigErrorTypeId in u
-}
+export const isConfigError = (u: unknown): u is ConfigError.ConfigError =>
+  typeof u === "object" && u != null && ConfigErrorTypeId in u
 
 /** @internal */
-export const isAnd = (self: ConfigError.ConfigError): self is ConfigError.And => {
-  return self._tag === OpCodes.OP_AND
-}
+export const isAnd = (self: ConfigError.ConfigError): self is ConfigError.And => self._tag === OpCodes.OP_AND
 
 /** @internal */
-export const isOr = (self: ConfigError.ConfigError): self is ConfigError.Or => {
-  return self._tag === OpCodes.OP_OR
-}
+export const isOr = (self: ConfigError.ConfigError): self is ConfigError.Or => self._tag === OpCodes.OP_OR
 
 /** @internal */
-export const isInvalidData = (self: ConfigError.ConfigError): self is ConfigError.InvalidData => {
-  return self._tag === OpCodes.OP_INVALID_DATA
-}
+export const isInvalidData = (self: ConfigError.ConfigError): self is ConfigError.InvalidData =>
+  self._tag === OpCodes.OP_INVALID_DATA
 
 /** @internal */
-export const isMissingData = (self: ConfigError.ConfigError): self is ConfigError.MissingData => {
-  return self._tag === OpCodes.OP_MISSING_DATA
-}
+export const isMissingData = (self: ConfigError.ConfigError): self is ConfigError.MissingData =>
+  self._tag === OpCodes.OP_MISSING_DATA
 
 /** @internal */
-export const isSourceUnavailable = (self: ConfigError.ConfigError): self is ConfigError.SourceUnavailable => {
-  return self._tag === OpCodes.OP_SOURCE_UNAVAILABLE
-}
+export const isSourceUnavailable = (self: ConfigError.ConfigError): self is ConfigError.SourceUnavailable =>
+  self._tag === OpCodes.OP_SOURCE_UNAVAILABLE
 
 /** @internal */
-export const isUnsupported = (self: ConfigError.ConfigError): self is ConfigError.Unsupported => {
-  return self._tag === OpCodes.OP_UNSUPPORTED
-}
+export const isUnsupported = (self: ConfigError.ConfigError): self is ConfigError.Unsupported =>
+  self._tag === OpCodes.OP_UNSUPPORTED
 
 /** @internal */
 export const prefixed: {
@@ -207,81 +198,82 @@ interface OrCase {
 }
 
 /** @internal */
-export const reduceWithContext = <C, Z>(context: C, reducer: ConfigError.ConfigErrorReducer<C, Z>) => {
-  return (self: ConfigError.ConfigError): Z => {
-    const input: Array<ConfigError.ConfigError> = [self]
-    const output: Array<Either.Either<ConfigErrorCase, Z>> = []
-    while (input.length > 0) {
-      const error = input.pop()!
-      switch (error._tag) {
-        case OpCodes.OP_AND: {
-          input.push(error.right)
-          input.push(error.left)
-          output.push(Either.left({ _tag: "AndCase" }))
-          break
-        }
-        case OpCodes.OP_OR: {
-          input.push(error.right)
-          input.push(error.left)
-          output.push(Either.left({ _tag: "OrCase" }))
-          break
-        }
-        case OpCodes.OP_INVALID_DATA: {
-          output.push(Either.right(reducer.invalidDataCase(context, error.path, error.message)))
-          break
-        }
-        case OpCodes.OP_MISSING_DATA: {
-          output.push(Either.right(reducer.missingDataCase(context, error.path, error.message)))
-          break
-        }
-        case OpCodes.OP_SOURCE_UNAVAILABLE: {
-          output.push(Either.right(reducer.sourceUnavailableCase(context, error.path, error.message, error.cause)))
-          break
-        }
-        case OpCodes.OP_UNSUPPORTED: {
-          output.push(Either.right(reducer.unsupportedCase(context, error.path, error.message)))
-          break
-        }
+export const reduceWithContext = Debug.dual<
+  <C, Z>(self: ConfigError.ConfigError, context: C, reducer: ConfigError.ConfigErrorReducer<C, Z>) => Z,
+  <C, Z>(context: C, reducer: ConfigError.ConfigErrorReducer<C, Z>) => (self: ConfigError.ConfigError) => Z
+>(3, <C, Z>(self: ConfigError.ConfigError, context: C, reducer: ConfigError.ConfigErrorReducer<C, Z>) => {
+  const input: Array<ConfigError.ConfigError> = [self]
+  const output: Array<Either.Either<ConfigErrorCase, Z>> = []
+  while (input.length > 0) {
+    const error = input.pop()!
+    switch (error._tag) {
+      case OpCodes.OP_AND: {
+        input.push(error.right)
+        input.push(error.left)
+        output.push(Either.left({ _tag: "AndCase" }))
+        break
+      }
+      case OpCodes.OP_OR: {
+        input.push(error.right)
+        input.push(error.left)
+        output.push(Either.left({ _tag: "OrCase" }))
+        break
+      }
+      case OpCodes.OP_INVALID_DATA: {
+        output.push(Either.right(reducer.invalidDataCase(context, error.path, error.message)))
+        break
+      }
+      case OpCodes.OP_MISSING_DATA: {
+        output.push(Either.right(reducer.missingDataCase(context, error.path, error.message)))
+        break
+      }
+      case OpCodes.OP_SOURCE_UNAVAILABLE: {
+        output.push(Either.right(reducer.sourceUnavailableCase(context, error.path, error.message, error.cause)))
+        break
+      }
+      case OpCodes.OP_UNSUPPORTED: {
+        output.push(Either.right(reducer.unsupportedCase(context, error.path, error.message)))
+        break
       }
     }
-    const accumulator: Array<Z> = []
-    while (output.length > 0) {
-      const either = output.pop()!
-      switch (either._tag) {
-        case "Left": {
-          switch (either.left._tag) {
-            case "AndCase": {
-              const left = accumulator.pop()!
-              const right = accumulator.pop()!
-              const value = reducer.andCase(context, left, right)
-              accumulator.push(value)
-              break
-            }
-            case "OrCase": {
-              const left = accumulator.pop()!
-              const right = accumulator.pop()!
-              const value = reducer.orCase(context, left, right)
-              accumulator.push(value)
-              break
-            }
-          }
-          break
-        }
-        case "Right": {
-          accumulator.push(either.right)
-          break
-        }
-      }
-    }
-    if (accumulator.length === 0) {
-      throw new Error(
-        "BUG: ConfigError.reduceWithContext - please report an issue at https://github.com/Effect-TS/io/issues"
-      )
-    }
-    return accumulator.pop()!
   }
-}
+  const accumulator: Array<Z> = []
+  while (output.length > 0) {
+    const either = output.pop()!
+    switch (either._tag) {
+      case "Left": {
+        switch (either.left._tag) {
+          case "AndCase": {
+            const left = accumulator.pop()!
+            const right = accumulator.pop()!
+            const value = reducer.andCase(context, left, right)
+            accumulator.push(value)
+            break
+          }
+          case "OrCase": {
+            const left = accumulator.pop()!
+            const right = accumulator.pop()!
+            const value = reducer.orCase(context, left, right)
+            accumulator.push(value)
+            break
+          }
+        }
+        break
+      }
+      case "Right": {
+        accumulator.push(either.right)
+        break
+      }
+    }
+  }
+  if (accumulator.length === 0) {
+    throw new Error(
+      "BUG: ConfigError.reduceWithContext - please report an issue at https://github.com/Effect-TS/io/issues"
+    )
+  }
+  return accumulator.pop()!
+})
 
 /** @internal */
 export const isMissingDataOnly = (self: ConfigError.ConfigError): boolean =>
-  pipe(self, reduceWithContext(void 0, IsMissingDataOnlyReducer))
+  reduceWithContext(self, void 0, IsMissingDataOnlyReducer)

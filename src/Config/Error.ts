@@ -246,3 +246,12 @@ export const prefixed: {
   (self: ConfigError, prefix: Chunk.Chunk<string>): ConfigError
   (prefix: Chunk.Chunk<string>): (self: ConfigError) => ConfigError
 } = internal.prefixed
+
+/**
+ * @since 1.0.0
+ * @category folding
+ */
+export const reduceWithContext: {
+  <C, Z>(self: ConfigError, context: C, reducer: ConfigErrorReducer<C, Z>): Z
+  <C, Z>(context: C, reducer: ConfigErrorReducer<C, Z>): (self: ConfigError) => Z
+} = internal.reduceWithContext
