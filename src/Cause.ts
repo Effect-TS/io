@@ -881,6 +881,13 @@ export const defaultRenderer: CauseRenderer<unknown> = _pretty.defaultRenderer
  */
 export const pretty: <E>(cause: Cause<E>) => string = _pretty_run.pretty
 
+/**
+ * Returns the specified `Cause` as a pretty-printed string using a custom
+ * `CauseRenderer`.
+ *
+ * @since 1.0.0
+ * @category rendering
+ */
 export const prettyWithRenderer: {
   <E>(cause: Cause<E>, renderer: CauseRenderer<E>): string
   <E>(renderer: CauseRenderer<E>): (cause: Cause<E>) => string
