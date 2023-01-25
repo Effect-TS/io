@@ -2234,102 +2234,6 @@ export const deferredMakeAs = Debug.methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const deferredSucceed = Debug.methodWithTrace((trace) =>
-  <E, A>(self: Deferred.Deferred<E, A>, value: A): Effect.Effect<never, never, boolean> =>
-    deferredCompleteWith(self, succeed(value)).traced(trace)
-)
-
-/* @internal */
-export const deferredSync = Debug.methodWithTrace((trace, restore) =>
-  <E, A>(
-    self: Deferred.Deferred<E, A>,
-    evaluate: LazyArg<A>
-  ): Effect.Effect<never, never, boolean> => deferredCompleteWith(self, sync(restore(evaluate))).traced(trace)
-)
-
-/* @internal */
-export const deferredFail = Debug.methodWithTrace((trace) =>
-  <E, A>(self: Deferred.Deferred<E, A>, error: E): Effect.Effect<never, never, boolean> =>
-    deferredCompleteWith(self, fail(error)).traced(trace)
-)
-
-/* @internal */
-export const deferredFailSync = Debug.methodWithTrace((trace, restore) =>
-  <E, A>(
-    self: Deferred.Deferred<E, A>,
-    evaluate: LazyArg<E>
-  ): Effect.Effect<never, never, boolean> => deferredCompleteWith(self, failSync(restore(evaluate))).traced(trace)
-)
-
-/* @internal */
-export const deferredFailCause = Debug.methodWithTrace((trace) =>
-  <E, A>(
-    self: Deferred.Deferred<E, A>,
-    cause: Cause.Cause<E>
-  ): Effect.Effect<never, never, boolean> => deferredCompleteWith(self, failCause(cause)).traced(trace)
-)
-
-/* @internal */
-export const deferredFailCauseSync = Debug.methodWithTrace((trace, restore) =>
-  <E, A>(
-    self: Deferred.Deferred<E, A>,
-    evaluate: LazyArg<Cause.Cause<E>>
-  ): Effect.Effect<never, never, boolean> => deferredCompleteWith(self, failCauseSync(restore(evaluate))).traced(trace)
-)
-
-/* @internal */
-export const deferredDie = Debug.methodWithTrace((trace) =>
-  <E, A>(
-    self: Deferred.Deferred<E, A>,
-    defect: unknown
-  ): Effect.Effect<never, never, boolean> => deferredCompleteWith(self, die(defect)).traced(trace)
-)
-
-/* @internal */
-export const deferredDieSync = Debug.methodWithTrace((trace, restore) =>
-  <E, A>(
-    self: Deferred.Deferred<E, A>,
-    evaluate: LazyArg<unknown>
-  ): Effect.Effect<never, never, boolean> => deferredCompleteWith(self, dieSync(restore(evaluate))).traced(trace)
-)
-
-/* @internal */
-export const deferredDone = Debug.methodWithTrace((trace) =>
-  <E, A>(
-    self: Deferred.Deferred<E, A>,
-    exit: Exit.Exit<E, A>
-  ): Effect.Effect<never, never, boolean> => deferredCompleteWith(self, done(exit)).traced(trace)
-)
-
-/** @internal */
-export const deferredUnsafeDone = <E, A>(self: Deferred.Deferred<E, A>, effect: Effect.Effect<never, E, A>): void => {
-  const state = MutableRef.get(self.state)
-  if (state._tag === DeferredOpCodes.OP_STATE_PENDING) {
-    pipe(self.state, MutableRef.set(deferred.done(effect)))
-    for (let i = state.joiners.length - 1; i >= 0; i--) {
-      state.joiners[i](effect)
-    }
-  }
-}
-
-/* @internal */
-export const deferredInterrupt = Debug.methodWithTrace((trace) =>
-  <E, A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> =>
-    pipe(
-      fiberId(),
-      flatMap((fiberId) => deferredCompleteWith(self, interruptWith(fiberId)))
-    ).traced(trace)
-)
-
-/* @internal */
-export const deferredInterruptWith = Debug.methodWithTrace((trace) =>
-  <E, A>(
-    self: Deferred.Deferred<E, A>,
-    fiberId: FiberId.FiberId
-  ): Effect.Effect<never, never, boolean> => deferredCompleteWith(self, interruptWith(fiberId)).traced(trace)
-)
-
-/* @internal */
 export const deferredAwait = Debug.methodWithTrace((trace) =>
   <E, A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, E, A> =>
     asyncInterruptEither<never, E, A>((k) => {
@@ -2350,19 +2254,17 @@ export const deferredAwait = Debug.methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const deferredComplete = Debug.methodWithTrace((trace) =>
-  <E, A>(
-    self: Deferred.Deferred<E, A>,
-    effect: Effect.Effect<never, E, A>
-  ): Effect.Effect<never, never, boolean> => pipe(effect, intoDeferred(self)).traced(trace)
-)
+export const deferredComplete = Debug.dualWithTrace<
+  <E, A>(self: Deferred.Deferred<E, A>, effect: Effect.Effect<never, E, A>) => Effect.Effect<never, never, boolean>,
+  <E, A>(effect: Effect.Effect<never, E, A>) => (self: Deferred.Deferred<E, A>) => Effect.Effect<never, never, boolean>
+>(2, (trace) => (self, effect) => intoDeferred(effect, self).traced(trace))
 
 /* @internal */
-export const deferredCompleteWith = Debug.methodWithTrace((trace) =>
-  <E, A>(
-    self: Deferred.Deferred<E, A>,
-    effect: Effect.Effect<never, E, A>
-  ): Effect.Effect<never, never, boolean> =>
+export const deferredCompleteWith = Debug.dualWithTrace<
+  <E, A>(self: Deferred.Deferred<E, A>, effect: Effect.Effect<never, E, A>) => Effect.Effect<never, never, boolean>,
+  <E, A>(effect: Effect.Effect<never, E, A>) => (self: Deferred.Deferred<E, A>) => Effect.Effect<never, never, boolean>
+>(2, (trace) =>
+  (self, effect) =>
     sync(() => {
       const state = MutableRef.get(self.state)
       switch (state._tag) {
@@ -2377,8 +2279,64 @@ export const deferredCompleteWith = Debug.methodWithTrace((trace) =>
           return true
         }
       }
-    }).traced(trace)
+    }).traced(trace))
+
+/* @internal */
+export const deferredDone = Debug.dualWithTrace<
+  <E, A>(self: Deferred.Deferred<E, A>, exit: Exit.Exit<E, A>) => Effect.Effect<never, never, boolean>,
+  <E, A>(exit: Exit.Exit<E, A>) => (self: Deferred.Deferred<E, A>) => Effect.Effect<never, never, boolean>
+>(2, (trace) => (self, exit) => deferredCompleteWith(self, done(exit)).traced(trace))
+
+/* @internal */
+export const deferredFail = Debug.dualWithTrace<
+  <E, A>(self: Deferred.Deferred<E, A>, error: E) => Effect.Effect<never, never, boolean>,
+  <E>(error: E) => <A>(self: Deferred.Deferred<E, A>) => Effect.Effect<never, never, boolean>
+>(2, (trace) => (self, error) => deferredCompleteWith(self, fail(error)).traced(trace))
+
+/* @internal */
+export const deferredFailSync = Debug.dualWithTrace<
+  <E, A>(self: Deferred.Deferred<E, A>, evaluate: LazyArg<E>) => Effect.Effect<never, never, boolean>,
+  <E>(evaluate: LazyArg<E>) => <A>(self: Deferred.Deferred<E, A>) => Effect.Effect<never, never, boolean>
+>(2, (trace, restore) => (self, evaluate) => deferredCompleteWith(self, failSync(restore(evaluate))).traced(trace))
+
+/* @internal */
+export const deferredFailCause = Debug.dualWithTrace<
+  <E, A>(self: Deferred.Deferred<E, A>, cause: Cause.Cause<E>) => Effect.Effect<never, never, boolean>,
+  <E>(cause: Cause.Cause<E>) => <A>(self: Deferred.Deferred<E, A>) => Effect.Effect<never, never, boolean>
+>(2, (trace) => (self, cause) => deferredCompleteWith(self, failCause(cause)).traced(trace))
+
+/* @internal */
+export const deferredFailCauseSync = Debug.dualWithTrace<
+  <E, A>(self: Deferred.Deferred<E, A>, evaluate: LazyArg<Cause.Cause<E>>) => Effect.Effect<never, never, boolean>,
+  <E>(evaluate: LazyArg<Cause.Cause<E>>) => <A>(self: Deferred.Deferred<E, A>) => Effect.Effect<never, never, boolean>
+>(2, (trace, restore) => (self, evaluate) => deferredCompleteWith(self, failCauseSync(restore(evaluate))).traced(trace))
+
+/* @internal */
+export const deferredDie = Debug.dualWithTrace<
+  <E, A>(self: Deferred.Deferred<E, A>, defect: unknown) => Effect.Effect<never, never, boolean>,
+  (defect: unknown) => <E, A>(self: Deferred.Deferred<E, A>) => Effect.Effect<never, never, boolean>
+>(2, (trace) => (self, defect) => deferredCompleteWith(self, die(defect)).traced(trace))
+
+/* @internal */
+export const deferredDieSync = Debug.dualWithTrace<
+  <E, A>(self: Deferred.Deferred<E, A>, evaluate: LazyArg<unknown>) => Effect.Effect<never, never, boolean>,
+  (evaluate: LazyArg<unknown>) => <E, A>(self: Deferred.Deferred<E, A>) => Effect.Effect<never, never, boolean>
+>(2, (trace, restore) => (self, evaluate) => deferredCompleteWith(self, dieSync(restore(evaluate))).traced(trace))
+
+/* @internal */
+export const deferredInterrupt = Debug.methodWithTrace((trace) =>
+  <E, A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> =>
+    pipe(
+      fiberId(),
+      flatMap((fiberId) => deferredCompleteWith(self, interruptWith(fiberId)))
+    ).traced(trace)
 )
+
+/* @internal */
+export const deferredInterruptWith = Debug.dualWithTrace<
+  <E, A>(self: Deferred.Deferred<E, A>, fiberId: FiberId.FiberId) => Effect.Effect<never, never, boolean>,
+  (fiberId: FiberId.FiberId) => <E, A>(self: Deferred.Deferred<E, A>) => Effect.Effect<never, never, boolean>
+>(2, (trace) => (self, fiberId) => deferredCompleteWith(self, interruptWith(fiberId)).traced(trace))
 
 /* @internal */
 export const deferredIsDone = Debug.methodWithTrace((trace) =>
@@ -2403,6 +2361,29 @@ export const deferredPoll = Debug.methodWithTrace((trace) =>
       }
     }).traced(trace)
 )
+
+/* @internal */
+export const deferredSucceed = Debug.dualWithTrace<
+  <E, A>(self: Deferred.Deferred<E, A>, value: A) => Effect.Effect<never, never, boolean>,
+  <A>(value: A) => <E>(self: Deferred.Deferred<E, A>) => Effect.Effect<never, never, boolean>
+>(2, (trace) => (self, value) => deferredCompleteWith(self, succeed(value)).traced(trace))
+
+/* @internal */
+export const deferredSync = Debug.dualWithTrace<
+  <E, A>(self: Deferred.Deferred<E, A>, evaluate: LazyArg<A>) => Effect.Effect<never, never, boolean>,
+  <A>(evaluate: LazyArg<A>) => <E>(self: Deferred.Deferred<E, A>) => Effect.Effect<never, never, boolean>
+>(2, (trace, restore) => (self, evaluate) => deferredCompleteWith(self, sync(restore(evaluate))).traced(trace))
+
+/** @internal */
+export const deferredUnsafeDone = <E, A>(self: Deferred.Deferred<E, A>, effect: Effect.Effect<never, E, A>): void => {
+  const state = MutableRef.get(self.state)
+  if (state._tag === DeferredOpCodes.OP_STATE_PENDING) {
+    pipe(self.state, MutableRef.set(deferred.done(effect)))
+    for (let i = state.joiners.length - 1; i >= 0; i--) {
+      state.joiners[i](effect)
+    }
+  }
+}
 
 const deferredInterruptJoiner = <E, A>(
   self: Deferred.Deferred<E, A>,

@@ -1,3 +1,4 @@
+import * as Debug from "@effect/io/Debug"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import * as Equal from "@fp-ts/data/Equal"
 import { pipe } from "@fp-ts/data/Function"
@@ -129,17 +130,18 @@ export const isComposite = (self: FiberId.FiberId): self is FiberId.Composite =>
 }
 
 /** @internal */
-export const combine = (that: FiberId.FiberId) => {
-  return (self: FiberId.FiberId): FiberId.FiberId => {
-    if (self._tag === OP_NONE) {
-      return that
-    }
-    if (that._tag === OP_NONE) {
-      return self
-    }
-    return new Composite(self, that)
+export const combine = Debug.dual<
+  (self: FiberId.FiberId, that: FiberId.FiberId) => FiberId.FiberId,
+  (that: FiberId.FiberId) => (self: FiberId.FiberId) => FiberId.FiberId
+>(2, (self, that) => {
+  if (self._tag === OP_NONE) {
+    return that
   }
-}
+  if (that._tag === OP_NONE) {
+    return self
+  }
+  return new Composite(self, that)
+})
 
 /** @internal */
 export const combineAll = (fiberIds: HashSet.HashSet<FiberId.FiberId>): FiberId.FiberId => {
@@ -147,9 +149,10 @@ export const combineAll = (fiberIds: HashSet.HashSet<FiberId.FiberId>): FiberId.
 }
 
 /** @internal */
-export const getOrElse = (that: FiberId.FiberId) => {
-  return (self: FiberId.FiberId): FiberId.FiberId => isNone(self) ? that : self
-}
+export const getOrElse = Debug.dual<
+  (self: FiberId.FiberId, that: FiberId.FiberId) => FiberId.FiberId,
+  (that: FiberId.FiberId) => (self: FiberId.FiberId) => FiberId.FiberId
+>(2, (self, that) => isNone(self) ? that : self)
 
 /** @internal */
 export const ids = (self: FiberId.FiberId): HashSet.HashSet<number> => {

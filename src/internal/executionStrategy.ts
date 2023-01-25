@@ -1,3 +1,4 @@
+import * as Debug from "@effect/io/Debug"
 import type * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
 import type { LazyArg } from "@fp-ts/data/Function"
 
@@ -46,22 +47,28 @@ export const isParallelN = (self: ExecutionStrategy.ExecutionStrategy): self is 
 }
 
 /** @internal */
-export const match = <A>(
-  onSequential: LazyArg<A>,
-  onParallel: LazyArg<A>,
-  onParallelN: (n: number) => A
-) => {
-  return (self: ExecutionStrategy.ExecutionStrategy): A => {
-    switch (self._tag) {
-      case OP_SEQUENTIAL: {
-        return onSequential()
-      }
-      case OP_PARALLEL: {
-        return onParallel()
-      }
-      case OP_PARALLEL_N: {
-        return onParallelN(self.parallelism)
-      }
+export const match = Debug.dual<
+  <A>(
+    self: ExecutionStrategy.ExecutionStrategy,
+    onSequential: LazyArg<A>,
+    onParallel: LazyArg<A>,
+    onParallelN: (n: number) => A
+  ) => A,
+  <A>(
+    onSequential: LazyArg<A>,
+    onParallel: LazyArg<A>,
+    onParallelN: (n: number) => A
+  ) => (self: ExecutionStrategy.ExecutionStrategy) => A
+>(4, (self, onSequential, onParallel, onParallelN) => {
+  switch (self._tag) {
+    case OP_SEQUENTIAL: {
+      return onSequential()
+    }
+    case OP_PARALLEL: {
+      return onParallel()
+    }
+    case OP_PARALLEL_N: {
+      return onParallelN(self.parallelism)
     }
   }
-}
+})
