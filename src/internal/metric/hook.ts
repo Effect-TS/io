@@ -1,3 +1,4 @@
+import * as Debug from "@effect/io/Debug"
 import * as metricState from "@effect/io/internal/metric/state"
 import type * as MetricHook from "@effect/io/Metric/Hook"
 import type * as MetricKey from "@effect/io/Metric/Key"
@@ -36,16 +37,17 @@ export const make = <In, Out>(
 }
 
 /** @internal */
-export const onUpdate = <In, Out>(f: (input: In) => void) => {
-  return (self: MetricHook.MetricHook<In, Out>): MetricHook.MetricHook<In, Out> => ({
-    [MetricHookTypeId]: metricHookVariance,
-    get: self.get,
-    update: (input) => {
-      self.update(input)
-      return f(input)
-    }
-  })
-}
+export const onUpdate = Debug.dual<
+  <In, Out>(self: MetricHook.MetricHook<In, Out>, f: (input: In) => void) => MetricHook.MetricHook<In, Out>,
+  <In, Out>(f: (input: In) => void) => (self: MetricHook.MetricHook<In, Out>) => MetricHook.MetricHook<In, Out>
+>(2, (self, f) => ({
+  [MetricHookTypeId]: metricHookVariance,
+  get: self.get,
+  update: (input) => {
+    self.update(input)
+    return f(input)
+  }
+}))
 
 /** @internal */
 export const counter = (_key: MetricKey.MetricKey.Counter): MetricHook.MetricHook.Counter => {

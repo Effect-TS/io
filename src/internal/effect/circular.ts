@@ -42,54 +42,56 @@ class Semaphore {
     return this.permits - this.taken
   }
 
-  readonly take = (n: number) =>
-    core.asyncInterruptEither<never, never, number>((resume) => {
-      if (this.free < n) {
-        const observer = () => {
-          if (this.free >= n) {
+  readonly take = (n: number): Effect.Effect<never, never, number> =>
+    Debug.bodyWithTrace((trace) =>
+      core.asyncInterruptEither<never, never, number>((resume) => {
+        if (this.free < n) {
+          const observer = () => {
+            if (this.free >= n) {
+              const observerIndex = this.waiters.findIndex((cb) => cb === observer)
+              if (observerIndex !== -1) {
+                this.waiters.splice(observerIndex, 1)
+              }
+              this.taken += n
+              resume(core.succeed(n))
+            }
+          }
+          this.waiters.push(observer)
+          return Either.left(core.sync(() => {
             const observerIndex = this.waiters.findIndex((cb) => cb === observer)
             if (observerIndex !== -1) {
               this.waiters.splice(observerIndex, 1)
             }
-            this.taken += n
-            resume(core.succeed(n))
-          }
+          }))
         }
-        this.waiters.push(observer)
-        return Either.left(core.sync(() => {
-          const observerIndex = this.waiters.findIndex((cb) => cb === observer)
-          if (observerIndex !== -1) {
-            this.waiters.splice(observerIndex, 1)
-          }
-        }))
-      }
-      this.taken += n
-      return Either.right(core.succeed(n))
-    })
+        this.taken += n
+        return Either.right(core.succeed(n))
+      }).traced(trace)
+    )
 
-  readonly release = (n: number) =>
-    core.withFiberRuntime<never, never, void>((fiber) => {
-      this.taken -= n
-      fiber.getFiberRef(core.currentScheduler).scheduleTask(() => {
-        this.waiters.forEach((wake) => wake())
-      })
-      return core.unit()
-    })
+  readonly release = (n: number): Effect.Effect<never, never, void> =>
+    Debug.bodyWithTrace((trace) =>
+      core.withFiberRuntime<never, never, void>((fiber) => {
+        this.taken -= n
+        fiber.getFiberRef(core.currentScheduler).scheduleTask(() => {
+          this.waiters.forEach((wake) => wake())
+        })
+        return core.unit()
+      }).traced(trace)
+    )
 
   readonly withPermits = (n: number) =>
-    <R, E, A>(self: Effect.Effect<R, E, A>) =>
-      core.uninterruptibleMask((restore) =>
-        pipe(
-          restore(this.take(n)),
-          core.flatMap(
-            (permits) =>
-              pipe(
-                restore(self),
-                ensuring(this.release(permits))
-              )
+    Debug.bodyWithTrace((trace) =>
+      <R, E, A>(self: Effect.Effect<R, E, A>) =>
+        Debug.untraced(() =>
+          core.uninterruptibleMask((restore) =>
+            core.flatMap(
+              restore(this.take(n)),
+              (permits) => ensuring(restore(self), this.release(permits))
+            )
           )
-        )
-      )
+        ).traced(trace)
+    )
 }
 
 /** @internal */
@@ -864,8 +866,7 @@ class SynchronizedImpl<A> implements Synchronized.Synchronized<A> {
   constructor(
     readonly ref: Ref.Ref<A>,
     readonly withLock: <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
-  ) {
-  }
+  ) {}
   modify<B>(f: (a: A) => readonly [B, A]): Effect.Effect<never, never, B> {
     return Debug.bodyWithTrace((trace, restore) => this.modifyEffect((a) => core.succeed(restore(f)(a))).traced(trace))
   }
@@ -920,29 +921,36 @@ export const updateSomeAndGetEffectSynchronized = Debug.dualWithTrace<
 // circular with Fiber
 
 /** @internal */
-export const zipFiber = <E2, A2>(that: Fiber.Fiber<E2, A2>) => {
-  return <E, A>(self: Fiber.Fiber<E, A>): Fiber.Fiber<E | E2, readonly [A, A2]> => {
-    return pipe(self, zipWithFiber(that, (a, b) => [a, b] as const))
-  }
-}
+export const zipFiber = Debug.untracedDual<
+  <E, A, E2, A2>(self: Fiber.Fiber<E, A>, that: Fiber.Fiber<E2, A2>) => Fiber.Fiber<E | E2, readonly [A, A2]>,
+  <E2, A2>(that: Fiber.Fiber<E2, A2>) => <E, A>(self: Fiber.Fiber<E, A>) => Fiber.Fiber<E | E2, readonly [A, A2]>
+>(2, () => (self, that) => zipWithFiber(self, that, (a, b) => [a, b] as const))
 
 /** @internal */
-export const zipLeftFiber = <E2, A2>(that: Fiber.Fiber<E2, A2>) => {
-  return <E, A>(self: Fiber.Fiber<E, A>): Fiber.Fiber<E | E2, A> => {
-    return pipe(self, zipWithFiber(that, (a, _) => a))
-  }
-}
+export const zipLeftFiber = Debug.untracedDual<
+  <E, A, E2, A2>(self: Fiber.Fiber<E, A>, that: Fiber.Fiber<E2, A2>) => Fiber.Fiber<E | E2, A>,
+  <E2, A2>(that: Fiber.Fiber<E2, A2>) => <E, A>(self: Fiber.Fiber<E, A>) => Fiber.Fiber<E | E2, A>
+>(2, () => (self, that) => zipWithFiber(self, that, (a, _) => a))
 
 /** @internal */
-export const zipRightFiber = <E2, A2>(that: Fiber.Fiber<E2, A2>) => {
-  return <E, A>(self: Fiber.Fiber<E, A>): Fiber.Fiber<E | E2, A2> => {
-    return pipe(self, zipWithFiber(that, (_, b) => b))
-  }
-}
+export const zipRightFiber = Debug.untracedDual<
+  <E, A, E2, A2>(self: Fiber.Fiber<E, A>, that: Fiber.Fiber<E2, A2>) => Fiber.Fiber<E | E2, A2>,
+  <E2, A2>(that: Fiber.Fiber<E2, A2>) => <E, A>(self: Fiber.Fiber<E, A>) => Fiber.Fiber<E | E2, A2>
+>(2, () => (self, that) => zipWithFiber(self, that, (_, b) => b))
 
 /** @internal */
-export const zipWithFiber = <E2, A, B, C>(that: Fiber.Fiber<E2, B>, f: (a: A, b: B) => C) => {
-  return <E>(self: Fiber.Fiber<E, A>): Fiber.Fiber<E | E2, C> => ({
+export const zipWithFiber = Debug.untracedDual<
+  <E, A, E2, B, C>(
+    self: Fiber.Fiber<E, A>,
+    that: Fiber.Fiber<E2, B>,
+    f: (a: A, b: B) => C
+  ) => Fiber.Fiber<E | E2, C>,
+  <E2, A, B, C>(
+    that: Fiber.Fiber<E2, B>,
+    f: (a: A, b: B) => C
+  ) => <E>(self: Fiber.Fiber<E, A>) => Fiber.Fiber<E | E2, C>
+>(3, (restore) =>
+  (self, that, f) => ({
     [internalFiber.FiberTypeId]: internalFiber.fiberVariance,
     id: () => pipe(self.id(), FiberId.getOrElse(that.id())),
     await: Debug.methodWithTrace((trace) =>
@@ -950,7 +958,7 @@ export const zipWithFiber = <E2, A, B, C>(that: Fiber.Fiber<E2, B>, f: (a: A, b:
         pipe(
           self.await(),
           core.flatten,
-          zipWithPar(core.flatten(that.await()), f),
+          zipWithPar(core.flatten(that.await()), restore(f)),
           core.exit
         ).traced(trace)
     ),
@@ -964,26 +972,24 @@ export const zipWithFiber = <E2, A, B, C>(that: Fiber.Fiber<E2, B>, f: (a: A, b:
     ),
     poll: Debug.methodWithTrace((trace) =>
       () =>
-        pipe(
+        core.zipWith(
           self.poll(),
-          core.zipWith(
-            that.poll(),
-            (optionA, optionB) =>
-              pipe(
-                optionA,
-                Option.flatMap((exitA) =>
-                  pipe(
-                    optionB,
-                    Option.map((exitB) =>
-                      pipe(
-                        exitA,
-                        Exit.zipWith(exitB, f, internalCause.parallel)
-                      )
+          that.poll(),
+          (optionA, optionB) =>
+            pipe(
+              optionA,
+              Option.flatMap((exitA) =>
+                pipe(
+                  optionB,
+                  Option.map((exitB) =>
+                    pipe(
+                      exitA,
+                      Exit.zipWith(exitB, restore(f), internalCause.parallel)
                     )
                   )
                 )
               )
-          )
+            )
         ).traced(trace)
     ),
     interruptAsFork: Debug.methodWithTrace((trace) =>
@@ -993,5 +999,4 @@ export const zipWithFiber = <E2, A, B, C>(that: Fiber.Fiber<E2, B>, f: (a: A, b:
           that.interruptAsFork(id)
         ).traced(trace)
     )
-  })
-}
+  }))

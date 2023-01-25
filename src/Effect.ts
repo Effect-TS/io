@@ -3913,8 +3913,8 @@ export const tagged: {
  * @category mutations
  */
 export const taggedWithLabels: {
-  <R, E, A>(self: Effect<R, E, A>, labels: ReadonlyArray<MetricLabel.MetricLabel>): Effect<R, E, A>
-  (labels: ReadonlyArray<MetricLabel.MetricLabel>): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, labels: Iterable<MetricLabel.MetricLabel>): Effect<R, E, A>
+  (labels: Iterable<MetricLabel.MetricLabel>): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
 } = effect.taggedWithLabels
 
 /**

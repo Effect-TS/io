@@ -112,8 +112,10 @@ export const minimumLogLevel: (level: LogLevel.LogLevel) => Layer.Layer<never, n
  * @since 1.0.0
  * @category context
  */
-export const withMinimumLogLevel: (level: LogLevel.LogLevel) => <R, E, B>(use: Effect<R, E, B>) => Effect<R, E, B> =
-  circular.withMinimumLogLevel
+export const withMinimumLogLevel: {
+  <R, E, A>(self: Effect<R, E, A>, level: LogLevel.LogLevel): Effect<R, E, A>
+  (level: LogLevel.LogLevel): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+} = circular.withMinimumLogLevel
 
 /**
  * @since 1.0.0

@@ -87,7 +87,10 @@ export const diff: (oldValue: FiberRefs.FiberRefs, newValue: FiberRefs.FiberRefs
  * @since 1.0.0
  * @category constructors
  */
-export const combine: (that: FiberRefsPatch) => (self: FiberRefsPatch) => FiberRefsPatch = internal.combine
+export const combine: {
+  (self: FiberRefsPatch, that: FiberRefsPatch): FiberRefsPatch
+  (self: FiberRefsPatch): (that: FiberRefsPatch) => FiberRefsPatch
+} = internal.combine
 
 /**
  * Applies the changes described by this patch to the specified collection
@@ -96,7 +99,7 @@ export const combine: (that: FiberRefsPatch) => (self: FiberRefsPatch) => FiberR
  * @since 1.0.0
  * @category destructors
  */
-export const patch: (
-  fiberId: FiberId.Runtime,
-  oldValue: FiberRefs.FiberRefs
-) => (self: FiberRefsPatch) => FiberRefs.FiberRefs = internal.patch
+export const patch: {
+  (self: FiberRefsPatch, fiberId: FiberId.Runtime, oldValue: FiberRefs.FiberRefs): FiberRefs.FiberRefs
+  (fiberId: FiberId.Runtime, oldValue: FiberRefs.FiberRefs): (self: FiberRefsPatch) => FiberRefs.FiberRefs
+} = internal.patch

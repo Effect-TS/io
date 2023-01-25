@@ -1,3 +1,4 @@
+import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal/core"
 import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
@@ -15,113 +16,162 @@ import * as HashSet from "@fp-ts/data/HashSet"
 // circular with Logger
 
 /** @internal */
-export const minimumLogLevel = (level: LogLevel.LogLevel): Layer.Layer<never, never, never> =>
-  layer.scopedDiscard(fiberRuntime.fiberRefLocallyScoped(fiberRuntime.currentMinimumLogLevel, level))
-
-/** @internal */
-export const withMinimumLogLevel = (
-  level: LogLevel.LogLevel
-): <R, E, B>(use: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B> =>
-  core.fiberRefLocally(fiberRuntime.currentMinimumLogLevel, level)
-
-/** @internal */
-export const addLogger = <A>(logger: Logger.Logger<string, A>): Layer.Layer<never, never, never> => {
-  return layer.scopedDiscard(
-    fiberRuntime.fiberRefLocallyScopedWith(fiberRuntime.currentLoggers, HashSet.add(logger))
-  )
-}
-
-/** @internal */
-export const removeLogger = <A>(logger: Logger.Logger<string, A>): Layer.Layer<never, never, never> => {
-  return layer.scopedDiscard(
-    fiberRuntime.fiberRefLocallyScopedWith(fiberRuntime.currentLoggers, HashSet.remove(logger))
-  )
-}
-
-/** @internal */
-export const replaceLogger = <A, B>(
-  logger: Logger.Logger<string, A>,
-  that: Logger.Logger<string, B>
-): Layer.Layer<never, never, never> => {
-  return pipe(removeLogger(logger), layer.flatMap(() => addLogger(that)))
-}
-
-/** @internal */
-export const addSupervisor = <A>(supervisor: Supervisor.Supervisor<A>): Layer.Layer<never, never, never> => {
-  return layer.scopedDiscard(
-    fiberRuntime.fiberRefLocallyScopedWith(
-      fiberRuntime.currentSupervisor,
-      (current) => new _supervisor.Zip(current, supervisor)
+export const minimumLogLevel = Debug.untracedMethod(() =>
+  (level: LogLevel.LogLevel): Layer.Layer<never, never, never> =>
+    layer.scopedDiscard(
+      fiberRuntime.fiberRefLocallyScoped(
+        fiberRuntime.currentMinimumLogLevel,
+        level
+      )
     )
-  )
-}
+)
 
 /** @internal */
-export const enableCooperativeYielding = (): Layer.Layer<never, never, never> => {
-  return layer.scopedDiscard(
-    fiberRuntime.withRuntimeFlagsScoped(runtimeFlagsPatch.enable(runtimeFlags.CooperativeYielding))
-  )
-}
+export const withMinimumLogLevel = Debug.dualWithTrace<
+  <R, E, A>(self: Effect.Effect<R, E, A>, level: LogLevel.LogLevel) => Effect.Effect<R, E, A>,
+  (level: LogLevel.LogLevel) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+>(2, (trace) =>
+  (self, level) =>
+    core.fiberRefLocally(
+      fiberRuntime.currentMinimumLogLevel,
+      level
+    )(self).traced(trace))
 
 /** @internal */
-export const enableInterruption = (): Layer.Layer<never, never, never> => {
-  return layer.scopedDiscard(
-    fiberRuntime.withRuntimeFlagsScoped(runtimeFlagsPatch.enable(runtimeFlags.Interruption))
-  )
-}
+export const addLogger = Debug.methodWithTrace((trace) =>
+  <A>(logger: Logger.Logger<string, A>): Layer.Layer<never, never, never> =>
+    layer.scopedDiscard(
+      fiberRuntime.fiberRefLocallyScopedWith(
+        fiberRuntime.currentLoggers,
+        HashSet.add(logger)
+      ).traced(trace)
+    )
+)
 
 /** @internal */
-export const enableOpSupervision = (): Layer.Layer<never, never, never> => {
-  return layer.scopedDiscard(
-    fiberRuntime.withRuntimeFlagsScoped(runtimeFlagsPatch.enable(runtimeFlags.OpSupervision))
-  )
-}
+export const removeLogger = Debug.untracedMethod(() =>
+  <A>(logger: Logger.Logger<string, A>): Layer.Layer<never, never, never> =>
+    layer.scopedDiscard(
+      fiberRuntime.fiberRefLocallyScopedWith(
+        fiberRuntime.currentLoggers,
+        HashSet.remove(logger)
+      )
+    )
+)
 
 /** @internal */
-export const enableRuntimeMetrics = (): Layer.Layer<never, never, never> => {
-  return layer.scopedDiscard(
-    fiberRuntime.withRuntimeFlagsScoped(runtimeFlagsPatch.enable(runtimeFlags.RuntimeMetrics))
-  )
-}
+export const replaceLogger = Debug.untracedMethod(() =>
+  <A, B>(logger: Logger.Logger<string, A>, that: Logger.Logger<string, B>): Layer.Layer<never, never, never> =>
+    pipe(removeLogger(logger), layer.flatMap(() => addLogger(that)))
+)
 
 /** @internal */
-export const enableWindDown = (): Layer.Layer<never, never, never> => {
-  return layer.scopedDiscard(
-    fiberRuntime.withRuntimeFlagsScoped(runtimeFlagsPatch.enable(runtimeFlags.WindDown))
-  )
-}
+export const addSupervisor = Debug.untracedMethod(() =>
+  <A>(supervisor: Supervisor.Supervisor<A>): Layer.Layer<never, never, never> =>
+    layer.scopedDiscard(
+      fiberRuntime.fiberRefLocallyScopedWith(
+        fiberRuntime.currentSupervisor,
+        (current) => new _supervisor.Zip(current, supervisor)
+      )
+    )
+)
 
 /** @internal */
-export const disableCooperativeYielding = (): Layer.Layer<never, never, never> => {
-  return layer.scopedDiscard(
-    fiberRuntime.withRuntimeFlagsScoped(runtimeFlagsPatch.disable(runtimeFlags.CooperativeYielding))
-  )
-}
+export const enableCooperativeYielding = Debug.untracedMethod(() =>
+  (): Layer.Layer<never, never, never> =>
+    layer.scopedDiscard(
+      fiberRuntime.withRuntimeFlagsScoped(
+        runtimeFlagsPatch.enable(runtimeFlags.CooperativeYielding)
+      )
+    )
+)
 
 /** @internal */
-export const disableInterruption = (): Layer.Layer<never, never, never> => {
-  return layer.scopedDiscard(
-    fiberRuntime.withRuntimeFlagsScoped(runtimeFlagsPatch.disable(runtimeFlags.Interruption))
-  )
-}
+export const enableInterruption = Debug.untracedMethod(() =>
+  (): Layer.Layer<never, never, never> =>
+    layer.scopedDiscard(
+      fiberRuntime.withRuntimeFlagsScoped(
+        runtimeFlagsPatch.enable(runtimeFlags.Interruption)
+      )
+    )
+)
 
 /** @internal */
-export const disableOpSupervision = (): Layer.Layer<never, never, never> => {
-  return layer.scopedDiscard(
-    fiberRuntime.withRuntimeFlagsScoped(runtimeFlagsPatch.disable(runtimeFlags.OpSupervision))
-  )
-}
+export const enableOpSupervision = Debug.untracedMethod(() =>
+  (): Layer.Layer<never, never, never> =>
+    layer.scopedDiscard(
+      fiberRuntime.withRuntimeFlagsScoped(
+        runtimeFlagsPatch.enable(runtimeFlags.OpSupervision)
+      )
+    )
+)
 
 /** @internal */
-export const disableRuntimeMetrics = (): Layer.Layer<never, never, never> => {
-  return layer.scopedDiscard(
-    fiberRuntime.withRuntimeFlagsScoped(runtimeFlagsPatch.disable(runtimeFlags.RuntimeMetrics))
-  )
-}
+export const enableRuntimeMetrics = Debug.untracedMethod(() =>
+  (): Layer.Layer<never, never, never> =>
+    layer.scopedDiscard(
+      fiberRuntime.withRuntimeFlagsScoped(
+        runtimeFlagsPatch.enable(runtimeFlags.RuntimeMetrics)
+      )
+    )
+)
 
 /** @internal */
-export const disableWindDown = (): Layer.Layer<never, never, never> => {
-  return layer.scopedDiscard(
-    fiberRuntime.withRuntimeFlagsScoped(runtimeFlagsPatch.disable(runtimeFlags.WindDown))
-  )
-}
+export const enableWindDown = Debug.untracedMethod(() =>
+  (): Layer.Layer<never, never, never> =>
+    layer.scopedDiscard(
+      fiberRuntime.withRuntimeFlagsScoped(
+        runtimeFlagsPatch.enable(runtimeFlags.WindDown)
+      )
+    )
+)
+
+/** @internal */
+export const disableCooperativeYielding = Debug.untracedMethod(() =>
+  (): Layer.Layer<never, never, never> =>
+    layer.scopedDiscard(
+      fiberRuntime.withRuntimeFlagsScoped(
+        runtimeFlagsPatch.disable(runtimeFlags.CooperativeYielding)
+      )
+    )
+)
+
+/** @internal */
+export const disableInterruption = Debug.untracedMethod(() =>
+  (): Layer.Layer<never, never, never> =>
+    layer.scopedDiscard(
+      fiberRuntime.withRuntimeFlagsScoped(
+        runtimeFlagsPatch.disable(runtimeFlags.Interruption)
+      )
+    )
+)
+
+/** @internal */
+export const disableOpSupervision = Debug.untracedMethod(() =>
+  (): Layer.Layer<never, never, never> =>
+    layer.scopedDiscard(
+      fiberRuntime.withRuntimeFlagsScoped(
+        runtimeFlagsPatch.disable(runtimeFlags.OpSupervision)
+      )
+    )
+)
+
+/** @internal */
+export const disableRuntimeMetrics = Debug.untracedMethod(() =>
+  (): Layer.Layer<never, never, never> =>
+    layer.scopedDiscard(
+      fiberRuntime.withRuntimeFlagsScoped(
+        runtimeFlagsPatch.disable(runtimeFlags.RuntimeMetrics)
+      )
+    )
+)
+
+/** @internal */
+export const disableWindDown = Debug.untracedMethod(() =>
+  (): Layer.Layer<never, never, never> =>
+    layer.scopedDiscard(
+      fiberRuntime.withRuntimeFlagsScoped(
+        runtimeFlagsPatch.disable(runtimeFlags.WindDown)
+      )
+    )
+)

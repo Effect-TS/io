@@ -1,3 +1,4 @@
+import * as Debug from "@effect/io/Debug"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRefs from "@effect/io/FiberRefs"
 import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
@@ -78,49 +79,58 @@ export const diff = (
 }
 
 /** @internal */
-export const combine = (that: FiberRefsPatch.FiberRefsPatch) => {
-  return (self: FiberRefsPatch.FiberRefsPatch): FiberRefsPatch.FiberRefsPatch => ({
-    _tag: OP_AND_THEN,
-    first: self,
-    second: that
-  })
-}
+export const combine = Debug.dual<
+  (self: FiberRefsPatch.FiberRefsPatch, that: FiberRefsPatch.FiberRefsPatch) => FiberRefsPatch.FiberRefsPatch,
+  (self: FiberRefsPatch.FiberRefsPatch) => (that: FiberRefsPatch.FiberRefsPatch) => FiberRefsPatch.FiberRefsPatch
+>(2, (self, that) => ({
+  _tag: OP_AND_THEN,
+  first: self,
+  second: that
+}))
 
 /** @internal */
-export const patch = (fiberId: FiberId.Runtime, oldValue: FiberRefs.FiberRefs) => {
-  return (self: FiberRefsPatch.FiberRefsPatch): FiberRefs.FiberRefs => {
-    let fiberRefs = oldValue
-    let patches: ReadonlyArray<FiberRefsPatch.FiberRefsPatch> = Arr.of(self)
-    while (Arr.isNonEmpty(patches)) {
-      const head = Arr.headNonEmpty(patches)
-      const tail = Arr.tailNonEmpty(patches)
-      switch (head._tag) {
-        case OP_EMPTY: {
-          patches = tail
-          break
-        }
-        case OP_ADD: {
-          fiberRefs = _fiberRefs.updatedAs(fiberRefs, fiberId, head.fiberRef, head.value)
-          patches = tail
-          break
-        }
-        case OP_REMOVE: {
-          fiberRefs = _fiberRefs.delete(fiberRefs, head.fiberRef)
-          patches = tail
-          break
-        }
-        case OP_UPDATE: {
-          const value = _fiberRefs.getOrDefault(fiberRefs, head.fiberRef)
-          fiberRefs = _fiberRefs.updatedAs(fiberRefs, fiberId, head.fiberRef, head.fiberRef.patch(head.patch)(value))
-          patches = tail
-          break
-        }
-        case OP_AND_THEN: {
-          patches = Arr.prepend(head.first)(Arr.prepend(head.second)(tail))
-          break
-        }
+export const patch = Debug.dual<
+  (
+    self: FiberRefsPatch.FiberRefsPatch,
+    fiberId: FiberId.Runtime,
+    oldValue: FiberRefs.FiberRefs
+  ) => FiberRefs.FiberRefs,
+  (
+    fiberId: FiberId.Runtime,
+    oldValue: FiberRefs.FiberRefs
+  ) => (self: FiberRefsPatch.FiberRefsPatch) => FiberRefs.FiberRefs
+>(3, (self, fiberId, oldValue) => {
+  let fiberRefs: FiberRefs.FiberRefs = oldValue
+  let patches: ReadonlyArray<FiberRefsPatch.FiberRefsPatch> = Arr.of(self)
+  while (Arr.isNonEmpty(patches)) {
+    const head = Arr.headNonEmpty(patches)
+    const tail = Arr.tailNonEmpty(patches)
+    switch (head._tag) {
+      case OP_EMPTY: {
+        patches = tail
+        break
+      }
+      case OP_ADD: {
+        fiberRefs = _fiberRefs.updatedAs(fiberRefs, fiberId, head.fiberRef, head.value)
+        patches = tail
+        break
+      }
+      case OP_REMOVE: {
+        fiberRefs = _fiberRefs.delete(fiberRefs, head.fiberRef)
+        patches = tail
+        break
+      }
+      case OP_UPDATE: {
+        const value = _fiberRefs.getOrDefault(fiberRefs, head.fiberRef)
+        fiberRefs = _fiberRefs.updatedAs(fiberRefs, fiberId, head.fiberRef, head.fiberRef.patch(head.patch)(value))
+        patches = tail
+        break
+      }
+      case OP_AND_THEN: {
+        patches = Arr.prepend(head.first)(Arr.prepend(head.second)(tail))
+        break
       }
     }
-    return fiberRefs
   }
-}
+  return fiberRefs
+})

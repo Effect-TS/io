@@ -1,3 +1,4 @@
+import * as Debug from "@effect/io/Debug"
 import * as metricKeyType from "@effect/io/internal/metric/keyType"
 import * as metricLabel from "@effect/io/internal/metric/label"
 import type * as MetricBoundaries from "@effect/io/Metric/Boundaries"
@@ -87,31 +88,45 @@ export const summary = (
 }
 
 /** @internal */
-export const tagged = (key: string, value: string) => {
-  return <Type extends MetricKeyType.MetricKeyType<any, any>>(
+export const tagged = Debug.dual<
+  <Type extends MetricKeyType.MetricKeyType<any, any>>(
+    self: MetricKey.MetricKey<Type>,
+    key: string,
+    value: string
+  ) => MetricKey.MetricKey<Type>,
+  (
+    key: string,
+    value: string
+  ) => <Type extends MetricKeyType.MetricKeyType<any, any>>(
     self: MetricKey.MetricKey<Type>
-  ): MetricKey.MetricKey<Type> => {
-    return pipe(self, taggedWithLabelSet(HashSet.make(metricLabel.make(key, value))))
-  }
-}
+  ) => MetricKey.MetricKey<Type>
+>(3, (self, key, value) => taggedWithLabelSet(self, HashSet.make(metricLabel.make(key, value))))
 
 /** @internal */
-export const taggedWithLabels = (extraTags: Iterable<MetricLabel.MetricLabel>) => {
-  return <Type extends MetricKeyType.MetricKeyType<any, any>>(
+export const taggedWithLabels = Debug.dual<
+  <Type extends MetricKeyType.MetricKeyType<any, any>>(
+    self: MetricKey.MetricKey<Type>,
+    extraTags: Iterable<MetricLabel.MetricLabel>
+  ) => MetricKey.MetricKey<Type>,
+  (
+    extraTags: Iterable<MetricLabel.MetricLabel>
+  ) => <Type extends MetricKeyType.MetricKeyType<any, any>>(
     self: MetricKey.MetricKey<Type>
-  ): MetricKey.MetricKey<Type> => {
-    return pipe(self, taggedWithLabelSet(HashSet.from(extraTags)))
-  }
-}
+  ) => MetricKey.MetricKey<Type>
+>(2, (self, extraTags) => taggedWithLabelSet(self, HashSet.from(extraTags)))
 
 /** @internal */
-export const taggedWithLabelSet = (extraTags: HashSet.HashSet<MetricLabel.MetricLabel>) => {
-  return <Type extends MetricKeyType.MetricKeyType<any, any>>(
+export const taggedWithLabelSet = Debug.dual<
+  <Type extends MetricKeyType.MetricKeyType<any, any>>(
+    self: MetricKey.MetricKey<Type>,
+    extraTags: HashSet.HashSet<MetricLabel.MetricLabel>
+  ) => MetricKey.MetricKey<Type>,
+  (
+    extraTags: HashSet.HashSet<MetricLabel.MetricLabel>
+  ) => <Type extends MetricKeyType.MetricKeyType<any, any>>(
     self: MetricKey.MetricKey<Type>
-  ): MetricKey.MetricKey<Type> => {
-    if (HashSet.size(extraTags) === 0) {
-      return self
-    }
-    return new MetricKeyImpl(self.name, self.keyType, pipe(self.tags, HashSet.union(extraTags)))
-  }
-}
+  ) => MetricKey.MetricKey<Type>
+>(2, (self, extraTags) =>
+  HashSet.size(extraTags) === 0
+    ? self
+    : new MetricKeyImpl(self.name, self.keyType, pipe(self.tags, HashSet.union(extraTags))))

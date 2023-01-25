@@ -2272,8 +2272,8 @@ export const tagged = Debug.dualWithTrace<
 
 /* @internal */
 export const taggedWithLabels = Debug.dualWithTrace<
-  <R, E, A>(self: Effect.Effect<R, E, A>, labels: ReadonlyArray<MetricLabel.MetricLabel>) => Effect.Effect<R, E, A>,
-  (labels: ReadonlyArray<MetricLabel.MetricLabel>) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  <R, E, A>(self: Effect.Effect<R, E, A>, labels: Iterable<MetricLabel.MetricLabel>) => Effect.Effect<R, E, A>,
+  (labels: Iterable<MetricLabel.MetricLabel>) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
 >(2, (trace) => (self, labels) => taggedWithLabelSet(self, HashSet.from(labels)).traced(trace))
 
 /* @internal */

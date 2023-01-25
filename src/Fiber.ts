@@ -584,8 +584,10 @@ export const unit: (_: void) => Fiber<never, void> = internal.unit
  * @since 1.0.0
  * @category zipping
  */
-export const zip: <E2, A2>(that: Fiber<E2, A2>) => <E, A>(self: Fiber<E, A>) => Fiber<E2 | E, readonly [A, A2]> =
-  circular.zipFiber
+export const zip: {
+  <E, A, E2, A2>(self: Fiber<E, A>, that: Fiber<E2, A2>): Fiber<E | E2, readonly [A, A2]>
+  <E2, A2>(that: Fiber<E2, A2>): <E, A>(self: Fiber<E, A>) => Fiber<E2 | E, readonly [A, A2]>
+} = circular.zipFiber
 
 /**
  * Same as `zip` but discards the output of that `Fiber`.
@@ -593,8 +595,10 @@ export const zip: <E2, A2>(that: Fiber<E2, A2>) => <E, A>(self: Fiber<E, A>) => 
  * @since 1.0.0
  * @category zipping
  */
-export const zipLeft: <E2, A2>(that: Fiber<E2, A2>) => <E, A>(self: Fiber<E, A>) => Fiber<E2 | E, A> =
-  circular.zipLeftFiber
+export const zipLeft: {
+  <E, A, E2, A2>(self: Fiber<E, A>, that: Fiber<E2, A2>): Fiber<E | E2, A>
+  <E2, A2>(that: Fiber<E2, A2>): <E, A>(self: Fiber<E, A>) => Fiber<E2 | E, A>
+} = circular.zipLeftFiber
 
 /**
  * Same as `zip` but discards the output of this `Fiber`.
@@ -602,8 +606,10 @@ export const zipLeft: <E2, A2>(that: Fiber<E2, A2>) => <E, A>(self: Fiber<E, A>)
  * @since 1.0.0
  * @category zipping
  */
-export const zipRight: <E2, A2>(that: Fiber<E2, A2>) => <E, A>(self: Fiber<E, A>) => Fiber<E2 | E, A2> =
-  circular.zipRightFiber
+export const zipRight: {
+  <E, A, E2, A2>(self: Fiber<E, A>, that: Fiber<E2, A2>): Fiber<E | E2, A2>
+  <E2, A2>(that: Fiber<E2, A2>): <E, A>(self: Fiber<E, A>) => Fiber<E2 | E, A2>
+} = circular.zipRightFiber
 
 /**
  * Zips this fiber with the specified fiber, combining their results using the
@@ -613,7 +619,7 @@ export const zipRight: <E2, A2>(that: Fiber<E2, A2>) => <E, A>(self: Fiber<E, A>
  * @since 1.0.0
  * @category zipping
  */
-export const zipWith: <E2, A, B, C>(
-  that: Fiber<E2, B>,
-  f: (a: A, b: B) => C
-) => <E>(self: Fiber<E, A>) => Fiber<E2 | E, C> = circular.zipWithFiber
+export const zipWith: {
+  <E, A, E2, B, C>(self: Fiber<E, A>, that: Fiber<E2, B>, f: (a: A, b: B) => C): Fiber<E | E2, C>
+  <E2, A, B, C>(that: Fiber<E2, B>, f: (a: A, b: B) => C): <E>(self: Fiber<E, A>) => Fiber<E2 | E, C>
+} = circular.zipWithFiber
