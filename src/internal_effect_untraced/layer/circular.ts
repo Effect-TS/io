@@ -1,3 +1,4 @@
+import type * as ConfigProvider from "@effect/io/Config/Provider"
 import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal_effect_untraced/core"
@@ -172,5 +173,13 @@ export const disableWindDown = Debug.untracedMethod(() =>
       fiberRuntime.withRuntimeFlagsScoped(
         runtimeFlagsPatch.disable(runtimeFlags.WindDown)
       )
+    )
+)
+
+/** @internal */
+export const setConfigProvider = Debug.untracedMethod(() =>
+  (configProvider: ConfigProvider.ConfigProvider): Layer.Layer<never, never, never> =>
+    layer.scopedDiscard(
+      fiberRuntime.withConfigProviderScoped(configProvider)
     )
 )

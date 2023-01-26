@@ -1,6 +1,6 @@
 import type * as Clock from "@effect/io/Clock"
-import type { Config } from "@effect/io/Config"
-import type { ConfigProvider } from "@effect/io/Config/Provider"
+import type * as Config from "@effect/io/Config"
+import type * as ConfigProvider from "@effect/io/Config/Provider"
 import * as Debug from "@effect/io/Debug"
 import type * as DefaultServices from "@effect/io/DefaultServices"
 import type * as Effect from "@effect/io/Effect"
@@ -65,8 +65,8 @@ export const withClock = Debug.dualWithTrace<
 
 /** @internal */
 export const withConfigProvider = Debug.dualWithTrace<
-  <R, E, A>(effect: Effect.Effect<R, E, A>, value: ConfigProvider) => Effect.Effect<R, E, A>,
-  (value: ConfigProvider) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  <R, E, A>(effect: Effect.Effect<R, E, A>, value: ConfigProvider.ConfigProvider) => Effect.Effect<R, E, A>,
+  (value: ConfigProvider.ConfigProvider) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
 >(2, (trace) =>
   (effect, value) =>
     core.fiberRefLocallyWith(
@@ -77,7 +77,7 @@ export const withConfigProvider = Debug.dualWithTrace<
 /** @internal */
 export const configProviderWith = Debug.methodWithTrace((trace, restore) =>
   <R, E, A>(
-    f: (configProvider: ConfigProvider) => Effect.Effect<R, E, A>
+    f: (configProvider: ConfigProvider.ConfigProvider) => Effect.Effect<R, E, A>
   ): Effect.Effect<R, E, A> =>
     core.fiberRefGetWith(
       currentServices,
@@ -87,12 +87,12 @@ export const configProviderWith = Debug.methodWithTrace((trace, restore) =>
 
 /** @internal */
 export const config = Debug.methodWithTrace((trace) =>
-  <A>(config: Config<A>) => configProviderWith((_) => _.load(config)).traced(trace)
+  <A>(config: Config.Config<A>) => configProviderWith((_) => _.load(config)).traced(trace)
 )
 
 /** @internal */
 export const configOrDie = Debug.methodWithTrace((trace) =>
-  <A>(config: Config<A>) => core.orDie(configProviderWith((_) => _.load(config))).traced(trace)
+  <A>(config: Config.Config<A>) => core.orDie(configProviderWith((_) => _.load(config))).traced(trace)
 )
 
 // circular with Random
