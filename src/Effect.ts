@@ -23,6 +23,7 @@ import * as effect from "@effect/io/internal_effect_untraced/effect"
 import * as circular from "@effect/io/internal_effect_untraced/effect/circular"
 import * as fiberRuntime from "@effect/io/internal_effect_untraced/fiberRuntime"
 import * as layer from "@effect/io/internal_effect_untraced/layer"
+import * as circularLayer from "@effect/io/internal_effect_untraced/layer/circular"
 import * as _runtime from "@effect/io/internal_effect_untraced/runtime"
 import * as _schedule from "@effect/io/internal_effect_untraced/schedule"
 import type {
@@ -823,27 +824,6 @@ export const config: <A>(config: Config<A>) => Effect<never, ConfigError, A> = d
  */
 export const configProviderWith: <R, E, A>(f: (configProvider: ConfigProvider) => Effect<R, E, A>) => Effect<R, E, A> =
   defaultServices.configProviderWith
-
-/**
- * Executes the specified workflow with the specified configuration provider.
- *
- * @since 1.0.0
- * @category config
- */
-export const withConfigProvider: {
-  <R, E, A>(effect: Effect<R, E, A>, value: ConfigProvider): Effect<R, E, A>
-  (value: ConfigProvider): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
-} = defaultServices.withConfigProvider
-
-/**
- * Sets the configuration provider to the specified value and restores it to its original value
- * when the scope is closed.
- *
- * @since 1.0.0
- * @category config
- */
-export const withConfigProviderScoped: (value: ConfigProvider) => Effect<Scope.Scope, never, void> =
-  fiberRuntime.withConfigProviderScoped
 
 /**
  * Evaluate each effect in the structure from left to right, collecting the
@@ -3681,6 +3661,15 @@ export const serviceWithEffect: <T extends Context.Tag<any>, R, E, A>(
 ) => Effect<R | Context.Tag.Service<T>, E, A> = core.serviceWithEffect
 
 /**
+ * Sets the current `ConfigProvider`.
+ *
+ * @since 1.0.0
+ * @category mutations
+ */
+export const setConfigProvider: (configProvider: ConfigProvider) => Layer.Layer<never, never, never> =
+  circularLayer.setConfigProvider
+
+/**
  * Sets the `FiberRef` values for the fiber running this effect to the values
  * in the specified collection of `FiberRef` values.
  *
@@ -4891,6 +4880,27 @@ export const withClock: {
  */
 export const withClockScoped: <A extends Clock.Clock>(value: A) => Effect<Scope.Scope, never, void> =
   fiberRuntime.withClockScoped
+
+/**
+ * Executes the specified workflow with the specified configuration provider.
+ *
+ * @since 1.0.0
+ * @category config
+ */
+export const withConfigProvider: {
+  <R, E, A>(effect: Effect<R, E, A>, value: ConfigProvider): Effect<R, E, A>
+  (value: ConfigProvider): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
+} = defaultServices.withConfigProvider
+
+/**
+ * Sets the configuration provider to the specified value and restores it to its original value
+ * when the scope is closed.
+ *
+ * @since 1.0.0
+ * @category config
+ */
+export const withConfigProviderScoped: (value: ConfigProvider) => Effect<Scope.Scope, never, void> =
+  fiberRuntime.withConfigProviderScoped
 
 /**
  * Returns a new scoped workflow that returns the result of this workflow as
