@@ -330,6 +330,14 @@ export const fromEffect: <E, A>(effect: Effect.Effect<never, E, A>) => Effect.Ef
   internal.fromEffect
 
 /**
+ * Gets the current fiber if one is running.
+ *
+ * @since 1.0.0
+ * @category utilities
+ */
+export const getCurrentFiber: () => Option.Option<RuntimeFiber<any, any>> = internal.getCurrentFiber
+
+/**
  * Inherits values from all `FiberRef` instances into current fiber. This
  * will resume immediately.
  *
