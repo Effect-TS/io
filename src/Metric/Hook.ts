@@ -1,7 +1,7 @@
 /**
  * @since 1.0.0
  */
-import * as internal from "@effect/io/internal/metric/hook"
+import * as internal from "@effect/io/internal_effect_untraced/metric/hook"
 import type * as MetricKey from "@effect/io/Metric/Key"
 import type * as MetricState from "@effect/io/Metric/State"
 import type { LazyArg } from "@fp-ts/data/Function"
@@ -125,5 +125,7 @@ export const summary: (key: MetricKey.MetricKey.Summary) => MetricHook.Summary =
  * @since 1.0.0
  * @category mutations
  */
-export const onUpdate: <In, Out>(f: (input: In) => void) => (self: MetricHook<In, Out>) => MetricHook<In, Out> =
-  internal.onUpdate
+export const onUpdate: {
+  <In, Out>(self: MetricHook<In, Out>, f: (input: In) => void): MetricHook<In, Out>
+  <In, Out>(f: (input: In) => void): (self: MetricHook<In, Out>) => MetricHook<In, Out>
+} = internal.onUpdate

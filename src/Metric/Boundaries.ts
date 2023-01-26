@@ -1,7 +1,7 @@
 /**
  * @since 1.0.0
  */
-import * as internal from "@effect/io/internal/metric/boundaries"
+import * as internal from "@effect/io/internal_effect_untraced/metric/boundaries"
 import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as Equal from "@fp-ts/data/Equal"
 

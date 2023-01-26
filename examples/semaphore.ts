@@ -17,6 +17,6 @@ const program = E.gen(function*($) {
 
 E.unsafeRun(program, (ex) => {
   if (Ex.isFailure(ex)) {
-    console.log(Ca.pretty()(ex.cause))
+    console.log(Ca.pretty(ex.cause))
   }
 })

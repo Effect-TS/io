@@ -3,7 +3,7 @@
  */
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
-import * as internal from "@effect/io/internal/cached"
+import * as internal from "@effect/io/internal_effect_untraced/cached"
 import type * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"
 import type * as ScopedRef from "@effect/io/ScopedRef"
@@ -28,14 +28,9 @@ export type CachedTypeId = typeof CachedTypeId
  * @category models
  */
 export interface Cached<E, A> extends Cached.Variance<E, A> {
-  /**
-   * @internal
-   */
+  /** @internal */
   readonly scopedRef: ScopedRef.ScopedRef<Exit.Exit<E, A>>
-  /**
-   * @macro traced
-   * @internal
-   */
+  /** @internal */
   acquire(): Effect.Effect<Scope.Scope, E, A>
 }
 
@@ -62,7 +57,6 @@ export declare namespace Cached {
  * retry policies to the acquisition effect before passing it to this
  * constructor.
  *
- * @macro traced
  * @since 1.0.0
  * @category constructors
  */
@@ -74,7 +68,6 @@ export const auto: <R, E, A, R2, In, Out>(
 /**
  * Retrieves the current value stored in the cache.
  *
- * @macro traced
  * @since 1.0.0
  * @category getters
  */
@@ -87,7 +80,6 @@ export const get: <E, A>(self: Cached<E, A>) => Effect.Effect<never, E, A> = int
  * retry policies to the acquisition effect before passing it to this
  * constructor.
  *
- * @macro traced
  * @since 1.0.0
  * @category constructors
  */
@@ -98,7 +90,6 @@ export const manual: <R, E, A>(acquire: Effect.Effect<R, E, A>) => Effect.Effect
  * Refreshes the cache. This method will not return until either the refresh
  * is successful, or the refresh operation fails.
  *
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */

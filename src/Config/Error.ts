@@ -2,8 +2,8 @@
  * @since 1.0.0
  */
 import type * as Cause from "@effect/io/Cause"
-import * as internal from "@effect/io/internal/configError"
-import type * as OpCodes from "@effect/io/internal/opCodes/configError"
+import * as internal from "@effect/io/internal_effect_untraced/configError"
+import type * as OpCodes from "@effect/io/internal_effect_untraced/opCodes/configError"
 import type * as Chunk from "@fp-ts/data/Chunk"
 
 /**
@@ -242,4 +242,16 @@ export const isUnsupported: (self: ConfigError) => self is Unsupported = interna
  * @since 1.0.0
  * @category mutations
  */
-export const prefixed: (prefix: Chunk.Chunk<string>) => (self: ConfigError) => ConfigError = internal.prefixed
+export const prefixed: {
+  (self: ConfigError, prefix: Chunk.Chunk<string>): ConfigError
+  (prefix: Chunk.Chunk<string>): (self: ConfigError) => ConfigError
+} = internal.prefixed
+
+/**
+ * @since 1.0.0
+ * @category folding
+ */
+export const reduceWithContext: {
+  <C, Z>(self: ConfigError, context: C, reducer: ConfigErrorReducer<C, Z>): Z
+  <C, Z>(context: C, reducer: ConfigErrorReducer<C, Z>): (self: ConfigError) => Z
+} = internal.reduceWithContext

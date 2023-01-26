@@ -1,7 +1,7 @@
 /**
  * @since 1.0.0
  */
-import * as internal from "@effect/io/internal/fiberId"
+import * as internal from "@effect/io/internal_effect_untraced/fiberId"
 import type * as Equal from "@fp-ts/data/Equal"
 import type * as HashSet from "@fp-ts/data/HashSet"
 import type * as Option from "@fp-ts/data/Option"
@@ -112,7 +112,10 @@ export const isComposite: (self: FiberId) => self is Composite = internal.isComp
  * @since 1.0.0
  * @category constructors
  */
-export const combine: (that: FiberId) => (self: FiberId) => FiberId = internal.combine
+export const combine: {
+  (self: FiberId, that: FiberId): FiberId
+  (that: FiberId): (self: FiberId) => FiberId
+} = internal.combine
 
 /**
  * Combines a set of `FiberId`s into a single `FiberId`.
@@ -128,7 +131,10 @@ export const combineAll: (fiberIds: HashSet.HashSet<FiberId>) => FiberId = inter
  * @since 1.0.0
  * @category mutations
  */
-export const getOrElse: (that: FiberId) => (self: FiberId) => FiberId = internal.getOrElse
+export const getOrElse: {
+  (self: FiberId, that: FiberId): FiberId
+  (that: FiberId): (self: FiberId) => FiberId
+} = internal.getOrElse
 
 /**
  * Get the set of identifiers for this `FiberId`.

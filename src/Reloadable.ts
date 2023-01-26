@@ -2,7 +2,7 @@
  * @since 1.0.0
  */
 import type * as Effect from "@effect/io/Effect"
-import * as internal from "@effect/io/internal/reloadable"
+import * as internal from "@effect/io/internal_effect_untraced/reloadable"
 import type * as Layer from "@effect/io/Layer"
 import type * as Schedule from "@effect/io/Schedule"
 import type * as ScopedRef from "@effect/io/ScopedRef"
@@ -33,7 +33,6 @@ export interface Reloadable<A> extends Reloadable.Variance<A> {
    */
   readonly scopedRef: ScopedRef.ScopedRef<A>
   /**
-   * @macro traced
    * @internal
    */
   reload(): Effect.Effect<never, unknown, void>
@@ -85,7 +84,6 @@ export const autoFromConfig: <Out extends Context.Tag<any>, In, E, R, Out2>(
 /**
  * Retrieves the current version of the reloadable service.
  *
- * @macro traced
  * @since 1.0.0
  * @category getters
  */
@@ -106,7 +104,6 @@ export const manual: <Out extends Context.Tag<any>, In, E>(
 /**
  * Reloads the specified service.
  *
- * @macro traced
  * @since 1.0.0
  * @category constructors
  */
@@ -121,7 +118,6 @@ export const tag: <A>(tag: Context.Tag<A>) => Context.Tag<Reloadable<A>> = inter
 /**
  * Forks the reload of the service in the background, ignoring any errors.
  *
- * @macro traced
  * @since 1.0.0
  * @category constructors
  */

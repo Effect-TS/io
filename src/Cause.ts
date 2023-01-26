@@ -21,11 +21,12 @@
  *
  * @since 1.0.0
  */
+import type { Trace } from "@effect/io/Debug"
 import type * as FiberId from "@effect/io/Fiber/Id"
-import * as internal from "@effect/io/internal/cause"
-import * as _pretty from "@effect/io/internal/cause-pretty"
-import * as _pretty_run from "@effect/io/internal/cause-pretty-run"
-import type * as OpCodes from "@effect/io/internal/opCodes/cause"
+import * as internal from "@effect/io/internal_effect_untraced/cause"
+import * as _pretty from "@effect/io/internal_effect_untraced/cause-pretty"
+import * as _pretty_run from "@effect/io/internal_effect_untraced/cause-pretty-run"
+import type * as OpCodes from "@effect/io/internal_effect_untraced/opCodes/cause"
 import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as Either from "@fp-ts/data/Either"
 import type * as Equal from "@fp-ts/data/Equal"
@@ -115,19 +116,7 @@ export const StackAnnotationTypeId: unique symbol = internal.StackAnnotationType
  * @since 1.0.0
  * @category symbols
  */
-export const SpanAnnotationTypeId: unique symbol = internal.SpanAnnotationTypeId
-
-/**
- * @since 1.0.0
- * @category symbols
- */
 export type StackAnnotationTypeId = typeof StackAnnotationTypeId
-
-/**
- * @since 1.0.0
- * @category symbols
- */
-export type SpanAnnotationTypeId = typeof SpanAnnotationTypeId
 
 /**
  * A `Cause` represents the full history of a failure resulting from running an
@@ -170,17 +159,8 @@ export declare namespace Cause {
    */
   export interface StackAnnotation {
     readonly [StackAnnotationTypeId]: StackAnnotationTypeId
-    readonly stack: Chunk.Chunk<string>
-    readonly execution: Chunk.Chunk<string>
-  }
-
-  /**
-   * @since 1.0.0
-   * @category models
-   */
-  export interface SpanAnnotation {
-    readonly [SpanAnnotationTypeId]: SpanAnnotationTypeId
-    readonly currentSpanURI: Option.Option<string>
+    readonly stack: Chunk.Chunk<Trace>
+    readonly execution: Trace
   }
 }
 
@@ -199,20 +179,6 @@ export interface CauseReducer<C, E, Z> {
   readonly annotatedCase: (context: C, value: Z, annotation: unknown) => Z
   readonly sequentialCase: (context: C, left: Z, right: Z) => Z
   readonly parallelCase: (context: C, left: Z, right: Z) => Z
-}
-
-/**
- * Represents the configuration parameters and methods required to pretty-
- * print a `Cause`.
- *
- * @since 1.0.0
- * @category rendering
- */
-export interface CauseRenderer<E = unknown> {
-  readonly lineWidth: number
-  readonly ribbonFraction: number
-  readonly renderError: (error: E) => ReadonlyArray<string>
-  readonly renderUnknown: (error: unknown) => ReadonlyArray<string>
 }
 
 /**
@@ -664,27 +630,37 @@ export const stripFailures: <E>(self: Cause<E>) => Cause<never> = internal.strip
  * @since 1.0.0
  * @category getters
  */
-export const stripSomeDefects: (
-  pf: (defect: unknown) => Option.Option<unknown>
-) => <E>(self: Cause<E>) => Option.Option<Cause<E>> = internal.stripSomeDefects
+export const stripSomeDefects: {
+  <E>(self: Cause<E>, pf: (defect: unknown) => Option.Option<unknown>): Option.Option<Cause<E>>
+  (pf: (defect: unknown) => Option.Option<unknown>): <E>(self: Cause<E>) => Option.Option<Cause<E>>
+} = internal.stripSomeDefects
 
 /**
  * @since 1.0.0
  * @category mapping
  */
-export const as: <E1>(error: E1) => <E>(self: Cause<E>) => Cause<E1> = internal.as
+export const as: {
+  <E, E2>(self: Cause<E>, error: E2): Cause<E2>
+  <E2>(error: E2): <E>(self: Cause<E>) => Cause<E2>
+} = internal.as
 
 /**
  * @since 1.0.0
  * @category mapping
  */
-export const map: <E, E1>(f: (e: E) => E1) => (self: Cause<E>) => Cause<E1> = internal.map
+export const map: {
+  <E, E2>(self: Cause<E>, f: (e: E) => E2): Cause<E2>
+  <E, E2>(f: (e: E) => E2): (self: Cause<E>) => Cause<E2>
+} = internal.map
 
 /**
  * @since 1.0.0
  * @category sequencing
  */
-export const flatMap: <E, E1>(f: (e: E) => Cause<E1>) => (self: Cause<E>) => Cause<E1> = internal.flatMap
+export const flatMap: {
+  <E, E2>(self: Cause<E>, f: (e: E) => Cause<E2>): Cause<E2>
+  <E, E2>(f: (e: E) => Cause<E2>): (self: Cause<E>) => Cause<E2>
+} = internal.flatMap
 
 /**
  * @since 1.0.0
@@ -699,7 +675,10 @@ export const flatten: <E>(self: Cause<Cause<E>>) => Cause<E> = internal.flatten
  * @since 1.0.0
  * @category elements
  */
-export const contains: <E2>(that: Cause<E2>) => <E>(self: Cause<E>) => boolean = internal.contains
+export const contains: {
+  <E, E2>(self: Cause<E>, that: Cause<E2>): boolean
+  <E2>(that: Cause<E2>): <E>(self: Cause<E>) => boolean
+} = internal.contains
 
 /**
  * Squashes a `Cause` down to a single defect, chosen to be the "most important"
@@ -718,7 +697,10 @@ export const squash: <E>(self: Cause<E>) => unknown = internal.squash
  * @since 1.0.0
  * @category destructors
  */
-export const squashWith: <E>(f: (error: E) => unknown) => (self: Cause<E>) => unknown = internal.squashWith
+export const squashWith: {
+  <E>(self: Cause<E>, f: (error: E) => unknown): unknown
+  <E>(f: (error: E) => unknown): (self: Cause<E>) => unknown
+} = internal.squashWith
 
 /**
  * Uses the provided partial function to search the specified cause and attempt
@@ -727,8 +709,10 @@ export const squashWith: <E>(f: (error: E) => unknown) => (self: Cause<E>) => un
  * @since 1.0.0
  * @category elements
  */
-export const find: <E, Z>(pf: (cause: Cause<E>) => Option.Option<Z>) => (self: Cause<E>) => Option.Option<Z> =
-  internal.find
+export const find: {
+  <E, Z>(self: Cause<E>, pf: (cause: Cause<E>) => Option.Option<Z>): Option.Option<Z>
+  <E, Z>(pf: (cause: Cause<E>) => Option.Option<Z>): (self: Cause<E>) => Option.Option<Z>
+} = internal.find
 
 /**
  * Filters causes which match the provided predicate out of the specified cause.
@@ -736,7 +720,10 @@ export const find: <E, Z>(pf: (cause: Cause<E>) => Option.Option<Z>) => (self: C
  * @since 1.0.0
  * @category filtering
  */
-export const filter: <E>(predicate: Predicate<Cause<E>>) => (self: Cause<E>) => Cause<E> = internal.filter
+export const filter: {
+  <E>(self: Cause<E>, predicate: Predicate<Cause<E>>): Cause<E>
+  <E>(predicate: Predicate<Cause<E>>): (self: Cause<E>) => Cause<E>
+} = internal.filter
 
 /**
  * Folds the specified cause into a value of type `Z`.
@@ -744,15 +731,27 @@ export const filter: <E>(predicate: Predicate<Cause<E>>) => (self: Cause<E>) => 
  * @since 1.0.0
  * @category folding
  */
-export const match: <Z, E>(
-  emptyCase: Z,
-  failCase: (error: E) => Z,
-  dieCase: (defect: unknown) => Z,
-  interruptCase: (fiberId: FiberId.FiberId) => Z,
-  annotatedCase: (value: Z, annotation: unknown) => Z,
-  sequentialCase: (left: Z, right: Z) => Z,
-  parallelCase: (left: Z, right: Z) => Z
-) => (self: Cause<E>) => Z = internal.match
+export const match: {
+  <Z, E>(
+    self: Cause<E>,
+    emptyCase: Z,
+    failCase: (error: E) => Z,
+    dieCase: (defect: unknown) => Z,
+    interruptCase: (fiberId: FiberId.FiberId) => Z,
+    annotatedCase: (value: Z, annotation: unknown) => Z,
+    sequentialCase: (left: Z, right: Z) => Z,
+    parallelCase: (left: Z, right: Z) => Z
+  ): Z
+  <Z, E>(
+    emptyCase: Z,
+    failCase: (error: E) => Z,
+    dieCase: (defect: unknown) => Z,
+    interruptCase: (fiberId: FiberId.FiberId) => Z,
+    annotatedCase: (value: Z, annotation: unknown) => Z,
+    sequentialCase: (left: Z, right: Z) => Z,
+    parallelCase: (left: Z, right: Z) => Z
+  ): (self: Cause<E>) => Z
+} = internal.match
 
 /**
  * Reduces the specified cause into a value of type `Z`, beginning with the
@@ -761,10 +760,10 @@ export const match: <Z, E>(
  * @since 1.0.0
  * @category folding
  */
-export const reduce: <Z, E>(
-  zero: Z,
-  pf: (accumulator: Z, cause: Cause<E>) => Option.Option<Z>
-) => (self: Cause<E>) => Z = internal.reduce
+export const reduce: {
+  <Z, E>(self: Cause<E>, zero: Z, pf: (accumulator: Z, cause: Cause<E>) => Option.Option<Z>): Z
+  <Z, E>(zero: Z, pf: (accumulator: Z, cause: Cause<E>) => Option.Option<Z>): (self: Cause<E>) => Z
+} = internal.reduce
 
 /**
  * Reduces the specified cause into a value of type `Z` using a `Cause.Reducer`.
@@ -773,8 +772,10 @@ export const reduce: <Z, E>(
  * @since 1.0.0
  * @category folding
  */
-export const reduceWithContext: <C, E, Z>(context: C, reducer: CauseReducer<C, E, Z>) => (self: Cause<E>) => Z =
-  internal.reduceWithContext
+export const reduceWithContext: {
+  <C, E, Z>(self: Cause<E>, context: C, reducer: CauseReducer<C, E, Z>): Z
+  <C, E, Z>(context: C, reducer: CauseReducer<C, E, Z>): (self: Cause<E>) => Z
+} = internal.reduceWithContext
 
 /**
  * Represents a checked exception which occurs when a `Fiber` is interrupted.
@@ -851,20 +852,12 @@ export const RuntimeException: (message?: string | undefined) => RuntimeExceptio
 export const isRuntimeException: (u: unknown) => u is RuntimeException = internal.isRuntimeException
 
 /**
- * The default `Cause.Renderer`.
- *
- * @since 1.0.0
- * @category rendering
- */
-export const defaultRenderer: CauseRenderer<unknown> = _pretty.defaultRenderer
-
-/**
  * Returns the specified `Cause` as a pretty-printed string.
  *
  * @since 1.0.0
  * @category rendering
  */
-export const pretty: <E>(renderer?: CauseRenderer<E>) => (self: Cause<E>) => string = _pretty_run.pretty
+export const pretty: <E>(cause: Cause<E>) => string = _pretty_run.pretty
 
 /**
  * Checks if an annotation is a StackAnnotation
@@ -872,7 +865,7 @@ export const pretty: <E>(renderer?: CauseRenderer<E>) => (self: Cause<E>) => str
  * @since 1.0.0
  * @category guards
  */
-export const isStackAnnotation = internal.isStackAnnotation
+export const isStackAnnotation: (u: unknown) => u is Cause.StackAnnotation = internal.isStackAnnotation
 
 /**
  * Removes any annotation from the cause
@@ -880,4 +873,4 @@ export const isStackAnnotation = internal.isStackAnnotation
  * @since 1.0.0
  * @category filtering
  */
-export const unannotate = internal.unannotate
+export const unannotate: <E>(cause: Cause<E>) => Cause<E> = internal.unannotate

@@ -2,7 +2,7 @@
  * @since 1.0.0
  */
 import type * as Effect from "@effect/io/Effect"
-import * as internal from "@effect/io/internal/scopedRef"
+import * as internal from "@effect/io/internal_effect_untraced/scopedRef"
 import type * as Synchronized from "@effect/io/Ref/Synchronized"
 import type * as Scope from "@effect/io/Scope"
 import type { LazyArg } from "@fp-ts/data/Function"
@@ -53,7 +53,6 @@ export declare namespace ScopedRef {
  * Creates a new `ScopedRef` from an effect that resourcefully produces a
  * value.
  *
- * @macro traced
  * @since 1.0.0
  * @category constructors
  */
@@ -64,7 +63,6 @@ export const fromAcquire: <R, E, A>(
 /**
  * Retrieves the current value of the scoped reference.
  *
- * @macro traced
  * @since 1.0.0
  * @category getters
  */
@@ -74,7 +72,6 @@ export const get: <A>(self: ScopedRef<A>) => Effect.Effect<never, never, A> = in
  * Creates a new `ScopedRef` from the specified value. This method should
  * not be used for values whose creation require the acquisition of resources.
  *
- * @macro traced
  * @since 1.0.0
  * @category constructors
  */
@@ -88,11 +85,10 @@ export const make: <A>(evaluate: LazyArg<A>) => Effect.Effect<Scope.Scope, never
  * changed to the new value, with old resources released, or until the attempt
  * to acquire a new value fails.
  *
- * @macro traced
  * @since 1.0.0
  * @category getters
  */
-export const set: <A, R, E>(
-  self: ScopedRef<A>,
-  acquire: Effect.Effect<R, E, A>
-) => Effect.Effect<Exclude<R, Scope.Scope>, E, void> = internal.set
+export const set: {
+  <A, R, E>(self: ScopedRef<A>, acquire: Effect.Effect<R, E, A>): Effect.Effect<Exclude<R, Scope.Scope>, E, void>
+  <A, R, E>(acquire: Effect.Effect<R, E, A>): (self: ScopedRef<A>) => Effect.Effect<Exclude<R, Scope.Scope>, E, void>
+} = internal.set

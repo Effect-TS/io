@@ -7,8 +7,8 @@
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
 import type * as Fiber from "@effect/io/Fiber"
-import * as circular from "@effect/io/internal/layer/circular"
-import * as internal from "@effect/io/internal/supervisor"
+import * as circular from "@effect/io/internal_effect_untraced/layer/circular"
+import * as internal from "@effect/io/internal_effect_untraced/supervisor"
 import type * as Layer from "@effect/io/Layer"
 import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as Context from "@fp-ts/data/Context"
@@ -37,7 +37,6 @@ export interface Supervisor<T> extends Supervisor.Variance<T> {
    * Returns an `Effect` that succeeds with the value produced by this
    * supervisor. This value may change over time, reflecting what the supervisor
    * produces as it supervises fibers.
-   * @macro traced
    */
   value(): Effect.Effect<never, never, T>
 
@@ -109,7 +108,6 @@ export const addSupervisor: <A>(supervisor: Supervisor<A>) => Layer.Layer<never,
 /**
  * Creates a new supervisor that tracks children in a set.
  *
- * @macro traced
  * @since 1.0.0
  * @category constructors
  */
@@ -136,7 +134,6 @@ export const none: Supervisor<void> = internal.none
 /**
  * Creates a new supervisor that tracks children in a set.
  *
- * @macro traced
  * @since 1.0.0
  * @category constructors
  */

@@ -25,6 +25,6 @@ const program = pipe(
 
 pipe(program, E.unsafeRunPromiseExit).then((exit) => {
   if (Exit.isFailure(exit)) {
-    console.log(Cause.pretty()(exit.cause))
+    console.log(Cause.pretty(exit.cause))
   }
 })

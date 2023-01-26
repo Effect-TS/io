@@ -1,7 +1,7 @@
 /**
  * @since 1.0.0
  */
-import * as internal from "@effect/io/internal/executionStrategy"
+import * as internal from "@effect/io/internal_effect_untraced/executionStrategy"
 import type { LazyArg } from "@fp-ts/data/Function"
 
 /**

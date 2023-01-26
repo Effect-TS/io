@@ -2,8 +2,8 @@
  * @since 1.0.0
  */
 import type * as Effect from "@effect/io/Effect"
-import * as internal from "@effect/io/internal/clock"
-import * as defaultServices from "@effect/io/internal/defaultServices"
+import * as internal from "@effect/io/internal_effect_untraced/clock"
+import * as defaultServices from "@effect/io/internal_effect_untraced/defaultServices"
 import type * as Context from "@fp-ts/data/Context"
 import type * as Duration from "@fp-ts/data/Duration"
 
@@ -30,12 +30,10 @@ export interface Clock {
   readonly [ClockTypeId]: ClockTypeId
   /**
    * Returns the current time in milliseconds.
-   * @macro traced
    */
   currentTimeMillis(): Effect.Effect<never, never, number>
   /**
    * Asynchronously sleeps for the specified duration.
-   * @macro traced
    */
   sleep(duration: Duration.Duration): Effect.Effect<never, never, void>
 }
@@ -70,21 +68,18 @@ export interface ClockScheduler {
 export const make: (_: void) => Clock = internal.make
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category constructors
  */
 export const sleep: (duration: Duration.Duration) => Effect.Effect<never, never, void> = defaultServices.sleep
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category constructors
  */
 export const currentTimeMillis: (_: void) => Effect.Effect<never, never, number> = defaultServices.currentTimeMillis
 
 /**
- * @macro traced
  * @since 1.0.0
  * @category constructors
  */

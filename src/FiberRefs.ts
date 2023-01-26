@@ -4,7 +4,7 @@
 import type * as Effect from "@effect/io/Effect"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRef from "@effect/io/FiberRef"
-import * as internal from "@effect/io/internal/fiberRefs"
+import * as internal from "@effect/io/internal_effect_untraced/fiberRefs"
 import type * as HashSet from "@fp-ts/data/HashSet"
 import type * as Option from "@fp-ts/data/Option"
 import type * as Arr from "@fp-ts/data/ReadonlyArray"
@@ -35,7 +35,10 @@ export interface FiberRefs {
   readonly locals: Map<FiberRef.FiberRef<any>, Arr.NonEmptyReadonlyArray<readonly [FiberId.Runtime, any]>>
 }
 
-const delete_: <A>(self: FiberRefs, fiberRef: FiberRef.FiberRef<A>) => FiberRefs = internal.delete
+const delete_: {
+  <A>(self: FiberRefs, fiberRef: FiberRef.FiberRef<A>): FiberRefs
+  <A>(fiberRef: FiberRef.FiberRef<A>): (self: FiberRefs) => FiberRefs
+} = internal.delete_
 
 export {
   /**
@@ -63,7 +66,10 @@ export const fiberRefs: (self: FiberRefs) => HashSet.HashSet<FiberRef.FiberRef<a
  * @since 1.0.0
  * @category mutations
  */
-export const forkAs: (self: FiberRefs, childId: FiberId.Runtime) => FiberRefs = internal.forkAs
+export const forkAs: {
+  (self: FiberRefs, childId: FiberId.Runtime): FiberRefs
+  (childId: FiberId.Runtime): (self: FiberRefs) => FiberRefs
+} = internal.forkAs
 
 /**
  * Gets the value of the specified `FiberRef` in this collection of `FiberRef`
@@ -72,7 +78,10 @@ export const forkAs: (self: FiberRefs, childId: FiberId.Runtime) => FiberRefs = 
  * @since 1.0.0
  * @category getters
  */
-export const get: <A>(self: FiberRefs, fiberRef: FiberRef.FiberRef<A>) => Option.Option<A> = internal.get
+export const get: {
+  <A>(self: FiberRefs, fiberRef: FiberRef.FiberRef<A>): Option.Option<A>
+  <A>(fiberRef: FiberRef.FiberRef<A>): (self: FiberRefs) => Option.Option<A>
+} = internal.get
 
 /**
  * Gets the value of the specified `FiberRef` in this collection of `FiberRef`
@@ -81,7 +90,10 @@ export const get: <A>(self: FiberRefs, fiberRef: FiberRef.FiberRef<A>) => Option
  * @since 1.0.0
  * @category getters
  */
-export const getOrDefault: <A>(self: FiberRefs, fiberRef: FiberRef.FiberRef<A>) => A = internal.getOrDefault
+export const getOrDefault: {
+  <A>(self: FiberRefs, fiberRef: FiberRef.FiberRef<A>): A
+  <A>(fiberRef: FiberRef.FiberRef<A>): (self: FiberRefs) => A
+} = internal.getOrDefault
 
 /**
  * Joins this collection of fiber refs to the specified collection, as the
@@ -91,12 +103,14 @@ export const getOrDefault: <A>(self: FiberRefs, fiberRef: FiberRef.FiberRef<A>) 
  * @since 1.0.0
  * @category mutations
  */
-export const joinAs: (self: FiberRefs, fiberId: FiberId.Runtime, that: FiberRefs) => FiberRefs = internal.joinAs
+export const joinAs: {
+  (self: FiberRefs, fiberId: FiberId.Runtime, that: FiberRefs): FiberRefs
+  (fiberId: FiberId.Runtime, that: FiberRefs): (self: FiberRefs) => FiberRefs
+} = internal.joinAs
 
 /**
  * Set each ref to either its value or its default.
  *
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -108,12 +122,10 @@ export const setAll: (self: FiberRefs) => Effect.Effect<never, never, void> = in
  * @since 1.0.0
  * @category mutations
  */
-export const updatedAs: <A>(
-  self: FiberRefs,
-  fiberId: FiberId.Runtime,
-  fiberRef: FiberRef.FiberRef<A>,
-  value: A
-) => FiberRefs = internal.updatedAs
+export const updatedAs: {
+  <A>(self: FiberRefs, fiberId: FiberId.Runtime, fiberRef: FiberRef.FiberRef<A>, value: A): FiberRefs
+  <A>(fiberId: FiberId.Runtime, fiberRef: FiberRef.FiberRef<A>, value: A): (self: FiberRefs) => FiberRefs
+} = internal.updatedAs
 
 /**
  * Note: it will not copy the provided Map, make sure to provide a fresh one.

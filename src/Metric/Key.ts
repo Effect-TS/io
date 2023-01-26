@@ -1,7 +1,7 @@
 /**
  * @since 1.0.0
  */
-import * as internal from "@effect/io/internal/metric/key"
+import * as internal from "@effect/io/internal_effect_untraced/metric/key"
 import type * as MetricBoundaries from "@effect/io/Metric/Boundaries"
 import type * as MetricKeyType from "@effect/io/Metric/KeyType"
 import type * as MetricLabel from "@effect/io/Metric/Label"
@@ -153,10 +153,17 @@ export const summary: (
  * @since 1.0.0
  * @category constructors
  */
-export const tagged: (
-  key: string,
-  value: string
-) => <Type extends MetricKeyType.MetricKeyType<any, any>>(self: MetricKey<Type>) => MetricKey<Type> = internal.tagged
+export const tagged: {
+  <Type extends MetricKeyType.MetricKeyType<any, any>>(
+    self: MetricKey<Type>,
+    key: string,
+    value: string
+  ): MetricKey<Type>
+  (
+    key: string,
+    value: string
+  ): <Type extends MetricKeyType.MetricKeyType<any, any>>(self: MetricKey<Type>) => MetricKey<Type>
+} = internal.tagged
 
 /**
  * Returns a new `MetricKey` with the specified tags appended.
@@ -164,10 +171,15 @@ export const tagged: (
  * @since 1.0.0
  * @category constructors
  */
-export const taggedWithLabels: (
-  extraTags: Iterable<MetricLabel.MetricLabel>
-) => <Type extends MetricKeyType.MetricKeyType<any, any>>(self: MetricKey<Type>) => MetricKey<Type> =
-  internal.taggedWithLabels
+export const taggedWithLabels: {
+  <Type extends MetricKeyType.MetricKeyType<any, any>>(
+    self: MetricKey<Type>,
+    extraTags: Iterable<MetricLabel.MetricLabel>
+  ): MetricKey<Type>
+  (
+    extraTags: Iterable<MetricLabel.MetricLabel>
+  ): <Type extends MetricKeyType.MetricKeyType<any, any>>(self: MetricKey<Type>) => MetricKey<Type>
+} = internal.taggedWithLabels
 
 /**
  * Returns a new `MetricKey` with the specified tags appended.
@@ -175,7 +187,12 @@ export const taggedWithLabels: (
  * @since 1.0.0
  * @category constructors
  */
-export const taggedWithLabelSet: (
-  extraTags: HashSet.HashSet<MetricLabel.MetricLabel>
-) => <Type extends MetricKeyType.MetricKeyType<any, any>>(self: MetricKey<Type>) => MetricKey<Type> =
-  internal.taggedWithLabelSet
+export const taggedWithLabelSet: {
+  <Type extends MetricKeyType.MetricKeyType<any, any>>(
+    self: MetricKey<Type>,
+    extraTags: HashSet.HashSet<MetricLabel.MetricLabel>
+  ): MetricKey<Type>
+  (
+    extraTags: HashSet.HashSet<MetricLabel.MetricLabel>
+  ): <Type extends MetricKeyType.MetricKeyType<any, any>>(self: MetricKey<Type>) => MetricKey<Type>
+} = internal.taggedWithLabelSet

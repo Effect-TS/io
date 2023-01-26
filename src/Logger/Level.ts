@@ -2,7 +2,7 @@
  * @since 1.0.0
  */
 import type * as Effect from "@effect/io/Effect"
-import * as core from "@effect/io/internal/core"
+import * as core from "@effect/io/internal_effect_untraced/core"
 import * as order from "@fp-ts/core/typeclass/Order"
 import { pipe } from "@fp-ts/data/Function"
 import * as number from "@fp-ts/data/Number"

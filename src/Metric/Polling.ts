@@ -3,7 +3,7 @@
  */
 import type * as Effect from "@effect/io/Effect"
 import type * as Fiber from "@effect/io/Fiber"
-import * as internal from "@effect/io/internal/metric/polling"
+import * as internal from "@effect/io/internal_effect_untraced/metric/polling"
 import type * as Metric from "@effect/io/Metric"
 import type * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"
@@ -36,8 +36,6 @@ export interface PollingMetric<Type, In, R, E, Out> {
   readonly metric: Metric.Metric<Type, In, Out>
   /**
    * An effect that polls a value that may be fed to the metric.
-   *
-   * @macro traced
    */
   poll(): Effect.Effect<R, E, In>
 }
@@ -68,20 +66,24 @@ export const collectAll: <R, E, Out>(
  * Returns an effect that will launch the polling metric in a background
  * fiber, using the specified schedule.
  *
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
-export const launch: <R2, A2>(
-  schedule: Schedule.Schedule<R2, unknown, A2>
-) => <Type, In, R, E, Out>(
-  self: PollingMetric<Type, In, R, E, Out>
-) => Effect.Effect<R2 | R | Scope.Scope, never, Fiber.Fiber<E, A2>> = internal.launch
+export const launch: {
+  <Type, In, R, E, Out, R2, A2>(
+    self: PollingMetric<Type, In, R, E, Out>,
+    schedule: Schedule.Schedule<R2, unknown, A2>
+  ): Effect.Effect<R | R2 | Scope.Scope, never, Fiber.Fiber<E, A2>>
+  <R2, A2>(
+    schedule: Schedule.Schedule<R2, unknown, A2>
+  ): <Type, In, R, E, Out>(
+    self: PollingMetric<Type, In, R, E, Out>
+  ) => Effect.Effect<Scope.Scope | R2 | R, never, Fiber.Fiber<E, A2>>
+} = internal.launch
 
 /**
  * An effect that polls a value that may be fed to the metric.
  *
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -91,7 +93,6 @@ export const poll: <Type, In, R, E, Out>(self: PollingMetric<Type, In, R, E, Out
 /**
  * An effect that polls for a value and uses the value to update the metric.
  *
- * @macro traced
  * @since 1.0.0
  * @category mutations
  */
@@ -106,10 +107,15 @@ export const pollAndUpdate: <Type, In, R, E, Out>(
  * @since 1.0.0
  * @category constructors
  */
-export const retry: <R2, E, _>(
-  policy: Schedule.Schedule<R2, E, _>
-) => <Type, In, R, Out>(self: PollingMetric<Type, In, R, E, Out>) => PollingMetric<Type, In, R2 | R, E, Out> =
-  internal.retry
+export const retry: {
+  <Type, In, R, Out, R2, E, _>(
+    self: PollingMetric<Type, In, R, E, Out>,
+    policy: Schedule.Schedule<R2, E, _>
+  ): PollingMetric<Type, In, R | R2, E, Out>
+  <R2, E, _>(
+    policy: Schedule.Schedule<R2, E, _>
+  ): <Type, In, R, Out>(self: PollingMetric<Type, In, R, E, Out>) => PollingMetric<Type, In, R2 | R, E, Out>
+} = internal.retry
 
 /**
  * Zips this polling metric with the specified polling metric.
@@ -117,8 +123,14 @@ export const retry: <R2, E, _>(
  * @since 1.0.0
  * @category mutations
  */
-export const zip: <Type2, In2, R2, E2, Out2>(
-  that: PollingMetric<Type2, In2, R2, E2, Out2>
-) => <Type, In, R, E, Out>(
-  self: PollingMetric<Type, In, R, E, Out>
-) => PollingMetric<readonly [Type, Type2], readonly [In, In2], R2 | R, E2 | E, readonly [Out, Out2]> = internal.zip
+export const zip: {
+  <Type, In, R, E, Out, Type2, In2, R2, E2, Out2>(
+    self: PollingMetric<Type, In, R, E, Out>,
+    that: PollingMetric<Type2, In2, R2, E2, Out2>
+  ): PollingMetric<readonly [Type, Type2], readonly [In, In2], R | R2, E | E2, readonly [Out, Out2]>
+  <Type2, In2, R2, E2, Out2>(
+    that: PollingMetric<Type2, In2, R2, E2, Out2>
+  ): <Type, In, R, E, Out>(
+    self: PollingMetric<Type, In, R, E, Out>
+  ) => PollingMetric<readonly [Type, Type2], readonly [In, In2], R2 | R, E2 | E, readonly [Out, Out2]>
+} = internal.zip

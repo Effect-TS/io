@@ -4,7 +4,7 @@
 import type * as Config from "@effect/io/Config"
 import type * as ConfigError from "@effect/io/Config/Error"
 import type * as Effect from "@effect/io/Effect"
-import * as internal from "@effect/io/internal/configProvider"
+import * as internal from "@effect/io/internal_effect_untraced/configProvider"
 import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as Context from "@fp-ts/data/Context"
 import type { LazyArg } from "@fp-ts/data/Function"
@@ -44,15 +44,13 @@ export type FlatConfigProviderTypeId = typeof FlatConfigProviderTypeId
 export interface ConfigProvider extends ConfigProvider.Proto {
   /**
    * Loads the specified configuration, or fails with a config error.
-   *
-   * @macro traced
    */
   load<A>(config: Config.Config<A>): Effect.Effect<never, ConfigError.ConfigError, A>
   /**
    * Flattens this config provider into a simplified config provider that knows
    * only how to deal with flat (key/value) properties.
    */
-  flatten(): ConfigProvider.Flat
+  flattened: ConfigProvider.Flat
 }
 
 /**
@@ -77,16 +75,10 @@ export declare namespace ConfigProvider {
    */
   export interface Flat {
     readonly [FlatConfigProviderTypeId]: FlatConfigProviderTypeId
-    /**
-     * @macro traced
-     */
     load<A>(
       path: Chunk.Chunk<string>,
       config: Config.Config.Primitive<A>
     ): Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
-    /**
-     * @macro traced
-     */
     enumerateChildren(path: Chunk.Chunk<string>): Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>>
   }
 
@@ -125,7 +117,7 @@ export const Tag: Context.Tag<ConfigProvider> = internal.configProviderTag
  */
 export const make: (
   load: <A>(config: Config.Config<A>) => Effect.Effect<never, ConfigError.ConfigError, A>,
-  flatten: () => ConfigProvider.Flat
+  flattened: ConfigProvider.Flat
 ) => ConfigProvider = internal.make
 
 /**
@@ -181,7 +173,10 @@ export const fromMap: (map: Map<string, string>, config?: Partial<ConfigProvider
  * @since 1.0.0
  * @category mutations
  */
-export const nested: (name: string) => (self: ConfigProvider) => ConfigProvider = internal.nested
+export const nested: {
+  (self: ConfigProvider, name: string): ConfigProvider
+  (name: string): (self: ConfigProvider) => ConfigProvider
+} = internal.nested
 
 /**
  * Returns a new config provider that preferentially loads configuration data
@@ -191,4 +186,7 @@ export const nested: (name: string) => (self: ConfigProvider) => ConfigProvider 
  * @since 1.0.0
  * @category mutations
  */
-export const orElse: (that: LazyArg<ConfigProvider>) => (self: ConfigProvider) => ConfigProvider = internal.orElse
+export const orElse: {
+  (self: ConfigProvider, that: LazyArg<ConfigProvider>): ConfigProvider
+  (that: LazyArg<ConfigProvider>): (self: ConfigProvider) => ConfigProvider
+} = internal.orElse
