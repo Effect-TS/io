@@ -371,6 +371,21 @@ export const timer: (
   internal.timer
 
 /**
+ * Creates a timer metric, based on a histogram created from the provided
+ * boundaries, which keeps track of durations in milliseconds. The unit of time
+ * will automatically be added to the metric as a tag (i.e.
+ * `"time_unit: milliseconds"`).
+ *
+ * @since 1.0.0
+ * @category constructors
+ */
+export const timerWithBoundaries: (
+  name: string,
+  boundaries: Chunk.Chunk<number>
+) => Metric<MetricKeyType.MetricKeyType.Histogram, Duration.Duration, MetricState.MetricState.Histogram> =
+  internal.timerWithBoundaries
+
+/**
  * Returns an aspect that will update this metric with the specified constant
  * value every time the aspect is applied to an effect, regardless of whether
  * that effect fails or succeeds.
