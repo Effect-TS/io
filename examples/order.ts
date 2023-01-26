@@ -81,4 +81,4 @@ const program = Effect.gen(function*($) {
   console.log(result)
 })
 
-Effect.unsafeFork(program)
+Effect.runFork(program)

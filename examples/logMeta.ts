@@ -27,4 +27,4 @@ const main = pipe(
   Effect.provideSomeLayer(Logger.replace(Logger.defaultLogger, customLogger))
 )
 
-Effect.unsafeFork(main)
+Effect.runFork(main)

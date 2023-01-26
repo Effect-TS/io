@@ -24,7 +24,7 @@ export const effect = (() => {
         pipe(
           Effect.suspendSucceed(self),
           Effect.provideLayer(TestEnvironment.testContext()),
-          Effect.unsafeRunPromise
+          Effect.runPromise
         ),
       timeout
     )
@@ -41,7 +41,7 @@ export const effect = (() => {
           pipe(
             Effect.suspendSucceed(self),
             Effect.provideLayer(TestEnvironment.testContext()),
-            Effect.unsafeRunPromise
+            Effect.runPromise
           ),
         timeout
       )
@@ -57,7 +57,7 @@ export const effect = (() => {
           pipe(
             Effect.suspendSucceed(self),
             Effect.provideLayer(TestEnvironment.testContext()),
-            Effect.unsafeRunPromise
+            Effect.runPromise
           ),
         timeout
       )
@@ -75,7 +75,7 @@ export const live = <E, A>(
     () =>
       pipe(
         Effect.suspendSucceed(self),
-        Effect.unsafeRunPromise
+        Effect.runPromise
       ),
     timeout
   )
@@ -110,7 +110,7 @@ export const scoped = <E, A>(
         Effect.suspendSucceed(self),
         Effect.scoped,
         Effect.provideLayer(TestEnvironment.testContext()),
-        Effect.unsafeRunPromise
+        Effect.runPromise
       ),
     timeout
   )
@@ -127,7 +127,7 @@ export const scopedLive = <E, A>(
       pipe(
         Effect.suspendSucceed(self),
         Effect.scoped,
-        Effect.unsafeRunPromise
+        Effect.runPromise
       ),
     timeout
   )

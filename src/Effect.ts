@@ -4491,23 +4491,23 @@ export const makeSemaphore: (permits: number) => Effect<never, never, Semaphore>
  * @since 1.0.0
  * @category execution
  */
-export const unsafeFork: <E, A>(effect: Effect<never, E, A>) => Fiber.RuntimeFiber<E, A> = _runtime.unsafeFork
+export const runFork: <E, A>(effect: Effect<never, E, A>) => Fiber.RuntimeFiber<E, A> = _runtime.unsafeForkEffect
 
 /**
  * @since 1.0.0
  * @category execution
  */
-export const unsafeRun: <E, A>(
+export const runCallback: <E, A>(
   effect: Effect<never, E, A>,
   onExit?: (exit: Exit.Exit<E, A>) => void
-) => Runtime.Cancel<E, A> = _runtime.unsafeRun
+) => Runtime.Cancel<E, A> = _runtime.unsafeRunEffect
 
 /**
  * @since 1.0.0
  * @category execution
  */
-export const unsafeRunPromiseEither: <E, A>(effect: Effect<never, E, A>) => Promise<Either.Either<E, A>> =
-  _runtime.unsafeRunPromiseEither
+export const runPromiseEither: <E, A>(effect: Effect<never, E, A>) => Promise<Either.Either<E, A>> =
+  _runtime.unsafeRunPromiseEitherEffect
 
 /**
  * Runs an `Effect` workflow, returning a `Promise` which resolves with the
@@ -4516,7 +4516,7 @@ export const unsafeRunPromiseEither: <E, A>(effect: Effect<never, E, A>) => Prom
  * @since 1.0.0
  * @category execution
  */
-export const unsafeRunPromise: <E, A>(effect: Effect<never, E, A>) => Promise<A> = _runtime.unsafeRunPromise
+export const runPromise: <E, A>(effect: Effect<never, E, A>) => Promise<A> = _runtime.unsafeRunPromiseEffect
 
 /**
  * Runs an `Effect` workflow, returning a `Promise` which resolves with the
@@ -4525,27 +4525,27 @@ export const unsafeRunPromise: <E, A>(effect: Effect<never, E, A>) => Promise<A>
  * @since 1.0.0
  * @category execution
  */
-export const unsafeRunPromiseExit: <E, A>(effect: Effect<never, E, A>) => Promise<Exit.Exit<E, A>> =
-  _runtime.unsafeRunPromiseExit
+export const runPromiseExit: <E, A>(effect: Effect<never, E, A>) => Promise<Exit.Exit<E, A>> =
+  _runtime.unsafeRunPromiseExitEffect
 
 /**
  * @since 1.0.0
  * @category execution
  */
-export const unsafeRunSync: <E, A>(effect: Effect<never, E, A>) => A = _runtime.unsafeRunSync
+export const runSync: <E, A>(effect: Effect<never, E, A>) => A = _runtime.unsafeRunSyncEffect
 
 /**
  * @since 1.0.0
  * @category execution
  */
-export const unsafeRunSyncExit: <E, A>(effect: Effect<never, E, A>) => Exit.Exit<E, A> = _runtime.unsafeRunSyncExit
+export const runSyncExit: <E, A>(effect: Effect<never, E, A>) => Exit.Exit<E, A> = _runtime.unsafeRunSyncExitEffect
 
 /**
  * @since 1.0.0
  * @category execution
  */
-export const unsafeRunSyncEither: <E, A>(effect: Effect<never, E, A>) => Either.Either<E, A> =
-  _runtime.unsafeRunSyncEither
+export const runSyncEither: <E, A>(effect: Effect<never, E, A>) => Either.Either<E, A> =
+  _runtime.unsafeRunSyncEitherEffect
 
 /**
  * The inverse operation `sandbox(effect)`

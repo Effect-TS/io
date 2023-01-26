@@ -64,8 +64,8 @@ describe.concurrent("Effect", () => {
         )
       )
     })
-    const result = await Effect.unsafeRunPromise(program)
-    await Effect.unsafeRunPromise(Deferred.succeed(awaiter, void 0))
+    const result = await Effect.runPromise(program)
+    await Effect.runPromise(Deferred.succeed(awaiter, void 0))
     assert.strictEqual(result, 42)
   })
   it.effect("acquireUseRelease - use is interruptible", () =>
