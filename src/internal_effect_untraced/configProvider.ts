@@ -393,6 +393,28 @@ const fromFlatLoopFail = (prefix: Chunk.Chunk<string>, path: string) =>
     )
 
 /** @internal */
+export const contramapPath = Debug.untracedDual<
+  (
+    self: ConfigProvider.ConfigProvider,
+    f: (path: string) => string
+  ) => ConfigProvider.ConfigProvider,
+  (
+    f: (path: string) => string
+  ) => (
+    self: ConfigProvider.ConfigProvider
+  ) => ConfigProvider.ConfigProvider
+>(2, (restore) => (self, f) => fromFlat(contramapPathFlat(self.flattened, restore(f))))
+
+const contramapPathFlat = (
+  self: ConfigProvider.ConfigProvider.Flat,
+  f: (path: string) => string
+): ConfigProvider.ConfigProvider.Flat =>
+  makeFlat(
+    (path, config, split = true) => self.load(pipe(path, Chunk.map(f)), config, split),
+    (path) => self.enumerateChildren(pipe(path, Chunk.map(f)))
+  )
+
+/** @internal */
 export const nested = Debug.untracedDual<
   (self: ConfigProvider.ConfigProvider, name: string) => ConfigProvider.ConfigProvider,
   (name: string) => (self: ConfigProvider.ConfigProvider) => ConfigProvider.ConfigProvider
