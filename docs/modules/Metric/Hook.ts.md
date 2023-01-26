@@ -113,7 +113,10 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const onUpdate: <In, Out>(f: (input: In) => void) => (self: MetricHook<In, Out>) => MetricHook<In, Out>
+export declare const onUpdate: {
+  <In, Out>(self: MetricHook<In, Out>, f: (input: In) => void): MetricHook<In, Out>
+  <In, Out>(f: (input: In) => void): (self: MetricHook<In, Out>) => MetricHook<In, Out>
+}
 ```
 
 Added in v1.0.0

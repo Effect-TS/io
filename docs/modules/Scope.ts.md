@@ -93,9 +93,10 @@ interruption.
 **Signature**
 
 ```ts
-export declare const use: (
-  self: CloseableScope
-) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<Exclude<R, Scope>, E, A>
+export declare const use: {
+  <R, E, A>(effect: Effect.Effect<R, E, A>, scope: CloseableScope): Effect.Effect<Exclude<R, Scope>, E, A>
+  (scope: CloseableScope): <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<Exclude<R, Scope>, E, A>
+}
 ```
 
 Added in v1.0.0
@@ -111,7 +112,6 @@ export interface CloseableScope extends Scope {
   readonly [CloseableScopeTypeId]: CloseableScopeTypeId
 
   /**
-   * @macro traced
    * @internal
    */
   readonly close: (exit: Exit.Exit<unknown, unknown>) => Effect.Effect<never, never, void>
@@ -129,12 +129,10 @@ export interface Scope {
   readonly [ScopeTypeId]: ScopeTypeId
 
   /**
-   * @macro traced
    * @internal
    */
   readonly fork: (strategy: ExecutionStrategy.ExecutionStrategy) => Effect.Effect<never, never, Scope.Closeable>
   /**
-   * @macro traced
    * @internal
    */
   readonly addFinalizer: (finalizer: Scope.Finalizer) => Effect.Effect<never, never, void>
@@ -184,9 +182,10 @@ larger scope.
 **Signature**
 
 ```ts
-export declare const extend: (
-  self: Scope
-) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<Exclude<R, Scope>, E, A>
+export declare const extend: {
+  <R, E, A>(effect: Effect.Effect<R, E, A>, scope: Scope): Effect.Effect<Exclude<R, Scope>, E, A>
+  (scope: Scope): <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<Exclude<R, Scope>, E, A>
+}
 ```
 
 Added in v1.0.0

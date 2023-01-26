@@ -88,7 +88,10 @@ fibers, sequentially, from left to right.
 **Signature**
 
 ```ts
-export declare const orElse: <E2, A2>(that: Fiber<E2, A2>) => <E, A>(self: Fiber<E, A>) => Fiber<E2 | E, A2 | A>
+export declare const orElse: {
+  <E, A, E2, A2>(self: Fiber<E, A>, that: Fiber<E2, A2>): Fiber<E | E2, A | A2>
+  <E2, A2>(that: Fiber<E2, A2>): <E, A>(self: Fiber<E, A>) => Fiber<E2 | E, A2 | A>
+}
 ```
 
 Added in v1.0.0
@@ -102,9 +105,10 @@ fibers, sequentially, from left to right.
 **Signature**
 
 ```ts
-export declare const orElseEither: <E2, A2>(
-  that: Fiber<E2, A2>
-) => <E, A>(self: Fiber<E, A>) => Fiber<E2 | E, Either.Either<A, A2>>
+export declare const orElseEither: {
+  <E, A, E2, A2>(self: Fiber<E, A>, that: Fiber<E2, A2>): Fiber<E | E2, Either.Either<A, A2>>
+  <E2, A2>(that: Fiber<E2, A2>): <E, A>(self: Fiber<E, A>) => Fiber<E2 | E, Either.Either<A, A2>>
+}
 ```
 
 Added in v1.0.0
@@ -359,10 +363,12 @@ Folds over the `Fiber` or `RuntimeFiber`.
 **Signature**
 
 ```ts
-export declare const match: <E, A, Z>(
-  onFiber: (_: Fiber<E, A>) => Z,
-  onRuntimeFiber: (_: RuntimeFiber<E, A>) => Z
-) => (self: Fiber<E, A>) => Z
+export declare const match: {
+  <E, A, Z>(self: Fiber<E, A>, onFiber: (fiber: Fiber<E, A>) => Z, onRuntimeFiber: (fiber: RuntimeFiber<E, A>) => Z): Z
+  <E, A, Z>(onFiber: (fiber: Fiber<E, A>) => Z, onRuntimeFiber: (fiber: RuntimeFiber<E, A>) => Z): (
+    self: Fiber<E, A>
+  ) => Z
+}
 ```
 
 Added in v1.0.0
@@ -481,9 +487,10 @@ interruption.
 **Signature**
 
 ```ts
-export declare const interruptAllWith: (
-  fiberId: FiberId.FiberId
-) => (fibers: Iterable<Fiber<any, any>>) => Effect.Effect<never, never, void>
+export declare const interruptAllWith: {
+  (fibers: Iterable<Fiber<any, any>>, fiberId: FiberId.FiberId): Effect.Effect<never, never, void>
+  (fiberId: FiberId.FiberId): (fibers: Iterable<Fiber<any, any>>) => Effect.Effect<never, never, void>
+}
 ```
 
 Added in v1.0.0
@@ -497,9 +504,10 @@ Otherwise, the effect will resume when the fiber exits.
 **Signature**
 
 ```ts
-export declare const interruptAs: (
-  fiberId: FiberId.FiberId
-) => <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, Exit.Exit<E, A>>
+export declare const interruptAs: {
+  <E, A>(self: Fiber<E, A>, fiberId: FiberId.FiberId): Effect.Effect<never, never, Exit.Exit<E, A>>
+  (fiberId: FiberId.FiberId): <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, Exit.Exit<E, A>>
+}
 ```
 
 Added in v1.0.0
@@ -513,9 +521,10 @@ Otherwise, the effect will resume when the fiber exits.
 **Signature**
 
 ```ts
-export declare const interruptAsFork: (
-  fiberId: FiberId.FiberId
-) => <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, void>
+export declare const interruptAsFork: {
+  <E, A>(self: Fiber<E, A>, fiberId: FiberId.FiberId): Effect.Effect<never, never, void>
+  (fiberId: FiberId.FiberId): <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, void>
+}
 ```
 
 Added in v1.0.0
@@ -543,7 +552,10 @@ Maps over the value the Fiber computes.
 **Signature**
 
 ```ts
-export declare const map: <A, B>(f: (a: A) => B) => <E>(self: Fiber<E, A>) => Fiber<E, B>
+export declare const map: {
+  <E, A, B>(self: Fiber<E, A>, f: (a: A) => B): Fiber<E, B>
+  <A, B>(f: (a: A) => B): <E>(self: Fiber<E, A>) => Fiber<E, B>
+}
 ```
 
 Added in v1.0.0
@@ -555,9 +567,10 @@ Effectually maps over the value the fiber computes.
 **Signature**
 
 ```ts
-export declare const mapEffect: <A, E2, A2>(
-  f: (a: A) => Effect.Effect<never, E2, A2>
-) => <E>(self: Fiber<E, A>) => Fiber<E2 | E, A2>
+export declare const mapEffect: {
+  <E, A, E2, A2>(self: Fiber<E, A>, f: (a: A) => Effect.Effect<never, E2, A2>): Fiber<E | E2, A2>
+  <A, E2, A2>(f: (a: A) => Effect.Effect<never, E2, A2>): <E>(self: Fiber<E, A>) => Fiber<E2 | E, A2>
+}
 ```
 
 Added in v1.0.0
@@ -570,9 +583,10 @@ with the fiber that it returns.
 **Signature**
 
 ```ts
-export declare const mapFiber: <E, E1, A, B>(
-  f: (a: A) => Fiber<E1, B>
-) => (self: Fiber<E, A>) => Effect.Effect<never, never, Fiber<E | E1, B>>
+export declare const mapFiber: {
+  <E, A, E2, B>(self: Fiber<E, A>, f: (a: A) => Fiber<E2, B>): Effect.Effect<never, never, Fiber<E | E2, B>>
+  <E, E2, A, B>(f: (a: A) => Fiber<E2, B>): (self: Fiber<E, A>) => Effect.Effect<never, never, Fiber<E | E2, B>>
+}
 ```
 
 Added in v1.0.0
@@ -601,27 +615,23 @@ export interface Fiber<E, A> extends Fiber.Variance<E, A> {
   /**
    * Awaits the fiber, which suspends the awaiting fiber until the result of the
    * fiber has been determined.
-   * @macro traced
    */
   await(): Effect.Effect<never, never, Exit.Exit<E, A>>
 
   /**
    * Retrieves the immediate children of the fiber.
-   * @macro traced
    */
   children(): Effect.Effect<never, never, Chunk.Chunk<Fiber.Runtime<any, any>>>
 
   /**
    * Inherits values from all `FiberRef` instances into current fiber. This
    * will resume immediately.
-   * @macro traced
    */
   inheritAll(): Effect.Effect<never, never, void>
 
   /**
    * Tentatively observes the fiber, but returns immediately if it is not
    * already done.
-   * @macro traced
    */
   poll(): Effect.Effect<never, never, Option.Option<Exit.Exit<E, A>>>
 
@@ -629,7 +639,6 @@ export interface Fiber<E, A> extends Fiber.Variance<E, A> {
    * In the background, interrupts the fiber as if interrupted from the
    * specified fiber. If the fiber has already exited, the returned effect will
    * resume immediately. Otherwise, the effect will resume when the fiber exits.
-   * @macro traced
    */
   interruptAsFork(fiberId: FiberId.FiberId): Effect.Effect<never, never, void>
 }
@@ -653,14 +662,11 @@ export interface RuntimeFiber<E, A> extends Fiber<E, A>, Fiber.RuntimeVariance<E
 
   /**
    * The status of the fiber.
-   * @macro traced
    */
   status(): Effect.Effect<never, never, FiberStatus.FiberStatus>
 
   /**
    * Returns the current `RuntimeFlags` the fiber is running with.
-   *
-   * @macro traced
    */
   runtimeFlags(): Effect.Effect<never, never, RuntimeFlags.RuntimeFlags>
 
@@ -777,7 +783,10 @@ their output.
 **Signature**
 
 ```ts
-export declare const zip: <E2, A2>(that: Fiber<E2, A2>) => <E, A>(self: Fiber<E, A>) => Fiber<E2 | E, readonly [A, A2]>
+export declare const zip: {
+  <E, A, E2, A2>(self: Fiber<E, A>, that: Fiber<E2, A2>): Fiber<E | E2, readonly [A, A2]>
+  <E2, A2>(that: Fiber<E2, A2>): <E, A>(self: Fiber<E, A>) => Fiber<E2 | E, readonly [A, A2]>
+}
 ```
 
 Added in v1.0.0
@@ -789,7 +798,10 @@ Same as `zip` but discards the output of that `Fiber`.
 **Signature**
 
 ```ts
-export declare const zipLeft: <E2, A2>(that: Fiber<E2, A2>) => <E, A>(self: Fiber<E, A>) => Fiber<E2 | E, A>
+export declare const zipLeft: {
+  <E, A, E2, A2>(self: Fiber<E, A>, that: Fiber<E2, A2>): Fiber<E | E2, A>
+  <E2, A2>(that: Fiber<E2, A2>): <E, A>(self: Fiber<E, A>) => Fiber<E2 | E, A>
+}
 ```
 
 Added in v1.0.0
@@ -801,7 +813,10 @@ Same as `zip` but discards the output of this `Fiber`.
 **Signature**
 
 ```ts
-export declare const zipRight: <E2, A2>(that: Fiber<E2, A2>) => <E, A>(self: Fiber<E, A>) => Fiber<E2 | E, A2>
+export declare const zipRight: {
+  <E, A, E2, A2>(self: Fiber<E, A>, that: Fiber<E2, A2>): Fiber<E | E2, A2>
+  <E2, A2>(that: Fiber<E2, A2>): <E, A>(self: Fiber<E, A>) => Fiber<E2 | E, A2>
+}
 ```
 
 Added in v1.0.0
@@ -815,10 +830,10 @@ sequential order from left to right.
 **Signature**
 
 ```ts
-export declare const zipWith: <E2, A, B, C>(
-  that: Fiber<E2, B>,
-  f: (a: A, b: B) => C
-) => <E>(self: Fiber<E, A>) => Fiber<E2 | E, C>
+export declare const zipWith: {
+  <E, A, E2, B, C>(self: Fiber<E, A>, that: Fiber<E2, B>, f: (a: A, b: B) => C): Fiber<E | E2, C>
+  <E2, A, B, C>(that: Fiber<E2, B>, f: (a: A, b: B) => C): <E>(self: Fiber<E, A>) => Fiber<E2 | E, C>
+}
 ```
 
 Added in v1.0.0

@@ -128,34 +128,28 @@ export interface Random {
   readonly [RandomTypeId]: RandomTypeId
   /**
    * Returns the next numeric value from the pseudo-random number generator.
-   * @macro traced
    */
   next(): Effect.Effect<never, never, number>
   /**
    * Returns the next boolean value from the pseudo-random number generator.
-   * @macro traced
    */
   nextBoolean(): Effect.Effect<never, never, boolean>
   /**
    * Returns the next integer value from the pseudo-random number generator.
-   * @macro traced
    */
   nextInt(): Effect.Effect<never, never, number>
   /**
    * Returns the next numeric value in the specified range from the
    * pseudo-random number generator.
-   * @macro traced
    */
   nextRange(min: number, max: number): Effect.Effect<never, never, number>
   /**
    * Returns the next integer value in the specified range from the
    * pseudo-random number generator.
-   * @macro traced
    */
   nextIntBetween(min: number, max: number): Effect.Effect<never, never, number>
   /**
    * Uses the pseudo-random number generator to shuffle the specified iterable.
-   * @macro traced
    */
   shuffle<A>(elements: Iterable<A>): Effect.Effect<never, never, Chunk.Chunk<A>>
 }

@@ -39,7 +39,10 @@ sequentially.
 **Signature**
 
 ```ts
-export declare const combine: (that: FiberRefsPatch) => (self: FiberRefsPatch) => FiberRefsPatch
+export declare const combine: {
+  (self: FiberRefsPatch, that: FiberRefsPatch): FiberRefsPatch
+  (self: FiberRefsPatch): (that: FiberRefsPatch) => FiberRefsPatch
+}
 ```
 
 Added in v1.0.0
@@ -77,10 +80,10 @@ of `FiberRef` values.
 **Signature**
 
 ```ts
-export declare const patch: (
-  fiberId: FiberId.Runtime,
-  oldValue: FiberRefs.FiberRefs
-) => (self: FiberRefsPatch) => FiberRefs.FiberRefs
+export declare const patch: {
+  (self: FiberRefsPatch, fiberId: FiberId.Runtime, oldValue: FiberRefs.FiberRefs): FiberRefs.FiberRefs
+  (fiberId: FiberId.Runtime, oldValue: FiberRefs.FiberRefs): (self: FiberRefsPatch) => FiberRefs.FiberRefs
+}
 ```
 
 Added in v1.0.0

@@ -86,7 +86,7 @@ Creates a new config provider.
 ```ts
 export declare const make: (
   load: <A>(config: Config.Config<A>) => Effect.Effect<never, ConfigError.ConfigError, A>,
-  flatten: () => ConfigProvider.Flat
+  flattened: ConfigProvider.Flat
 ) => ConfigProvider
 ```
 
@@ -139,15 +139,13 @@ of the structure of that configuration.
 export interface ConfigProvider extends ConfigProvider.Proto {
   /**
    * Loads the specified configuration, or fails with a config error.
-   *
-   * @macro traced
    */
   load<A>(config: Config.Config<A>): Effect.Effect<never, ConfigError.ConfigError, A>
   /**
    * Flattens this config provider into a simplified config provider that knows
    * only how to deal with flat (key/value) properties.
    */
-  flatten(): ConfigProvider.Flat
+  flattened: ConfigProvider.Flat
 }
 ```
 
@@ -165,7 +163,10 @@ single configuration value.
 **Signature**
 
 ```ts
-export declare const nested: (name: string) => (self: ConfigProvider) => ConfigProvider
+export declare const nested: {
+  (self: ConfigProvider, name: string): ConfigProvider
+  (name: string): (self: ConfigProvider) => ConfigProvider
+}
 ```
 
 Added in v1.0.0
@@ -179,7 +180,10 @@ if there are any issues loading the configuration from this provider.
 **Signature**
 
 ```ts
-export declare const orElse: (that: LazyArg<ConfigProvider>) => (self: ConfigProvider) => ConfigProvider
+export declare const orElse: {
+  (self: ConfigProvider, that: LazyArg<ConfigProvider>): ConfigProvider
+  (that: LazyArg<ConfigProvider>): (self: ConfigProvider) => ConfigProvider
+}
 ```
 
 Added in v1.0.0

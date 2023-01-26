@@ -111,8 +111,6 @@ Added in v1.0.0
   - [isRuntimeException](#isruntimeexception)
   - [isSequentialType](#issequentialtype)
 - [rendering](#rendering)
-  - [CauseRenderer (interface)](#causerenderer-interface)
-  - [defaultRenderer](#defaultrenderer)
   - [pretty](#pretty)
 - [sequencing](#sequencing)
   - [flatMap](#flatmap)
@@ -130,8 +128,6 @@ Added in v1.0.0
   - [NoSuchElementExceptionTypeId (type alias)](#nosuchelementexceptiontypeid-type-alias)
   - [RuntimeExceptionTypeId](#runtimeexceptiontypeid)
   - [RuntimeExceptionTypeId (type alias)](#runtimeexceptiontypeid-type-alias)
-  - [SpanAnnotationTypeId](#spanannotationtypeid)
-  - [SpanAnnotationTypeId (type alias)](#spanannotationtypeid-type-alias)
   - [StackAnnotationTypeId](#stackannotationtypeid)
   - [StackAnnotationTypeId (type alias)](#stackannotationtypeid-type-alias)
 
@@ -249,7 +245,10 @@ to map the error a defect, and the resulting value will be returned.
 **Signature**
 
 ```ts
-export declare const squashWith: <E>(f: (error: E) => unknown) => (self: Cause<E>) => unknown
+export declare const squashWith: {
+  <E>(self: Cause<E>, f: (error: E) => unknown): unknown
+  <E>(f: (error: E) => unknown): (self: Cause<E>) => unknown
+}
 ```
 
 Added in v1.0.0
@@ -264,7 +263,10 @@ Returns `true` if the `self` cause contains or is equal to `that` cause,
 **Signature**
 
 ```ts
-export declare const contains: <E2>(that: Cause<E2>) => <E>(self: Cause<E>) => boolean
+export declare const contains: {
+  <E, E2>(self: Cause<E>, that: Cause<E2>): boolean
+  <E2>(that: Cause<E2>): <E>(self: Cause<E>) => boolean
+}
 ```
 
 Added in v1.0.0
@@ -277,7 +279,10 @@ to extract information from it.
 **Signature**
 
 ```ts
-export declare const find: <E, Z>(pf: (cause: Cause<E>) => Option.Option<Z>) => (self: Cause<E>) => Option.Option<Z>
+export declare const find: {
+  <E, Z>(self: Cause<E>, pf: (cause: Cause<E>) => Option.Option<Z>): Option.Option<Z>
+  <E, Z>(pf: (cause: Cause<E>) => Option.Option<Z>): (self: Cause<E>) => Option.Option<Z>
+}
 ```
 
 Added in v1.0.0
@@ -343,7 +348,10 @@ Filters causes which match the provided predicate out of the specified cause.
 **Signature**
 
 ```ts
-export declare const filter: <E>(predicate: Predicate<Cause<E>>) => (self: Cause<E>) => Cause<E>
+export declare const filter: {
+  <E>(self: Cause<E>, predicate: Predicate<Cause<E>>): Cause<E>
+  <E>(predicate: Predicate<Cause<E>>): (self: Cause<E>) => Cause<E>
+}
 ```
 
 Added in v1.0.0
@@ -369,15 +377,27 @@ Folds the specified cause into a value of type `Z`.
 **Signature**
 
 ```ts
-export declare const match: <Z, E>(
-  emptyCase: Z,
-  failCase: (error: E) => Z,
-  dieCase: (defect: unknown) => Z,
-  interruptCase: (fiberId: FiberId.FiberId) => Z,
-  annotatedCase: (value: Z, annotation: unknown) => Z,
-  sequentialCase: (left: Z, right: Z) => Z,
-  parallelCase: (left: Z, right: Z) => Z
-) => (self: Cause<E>) => Z
+export declare const match: {
+  <Z, E>(
+    self: Cause<E>,
+    emptyCase: Z,
+    failCase: (error: E) => Z,
+    dieCase: (defect: unknown) => Z,
+    interruptCase: (fiberId: FiberId.FiberId) => Z,
+    annotatedCase: (value: Z, annotation: unknown) => Z,
+    sequentialCase: (left: Z, right: Z) => Z,
+    parallelCase: (left: Z, right: Z) => Z
+  ): Z
+  <Z, E>(
+    emptyCase: Z,
+    failCase: (error: E) => Z,
+    dieCase: (defect: unknown) => Z,
+    interruptCase: (fiberId: FiberId.FiberId) => Z,
+    annotatedCase: (value: Z, annotation: unknown) => Z,
+    sequentialCase: (left: Z, right: Z) => Z,
+    parallelCase: (left: Z, right: Z) => Z
+  ): (self: Cause<E>) => Z
+}
 ```
 
 Added in v1.0.0
@@ -390,10 +410,10 @@ provided `zero` value.
 **Signature**
 
 ```ts
-export declare const reduce: <Z, E>(
-  zero: Z,
-  pf: (accumulator: Z, cause: Cause<E>) => Option.Option<Z>
-) => (self: Cause<E>) => Z
+export declare const reduce: {
+  <Z, E>(self: Cause<E>, zero: Z, pf: (accumulator: Z, cause: Cause<E>) => Option.Option<Z>): Z
+  <Z, E>(zero: Z, pf: (accumulator: Z, cause: Cause<E>) => Option.Option<Z>): (self: Cause<E>) => Z
+}
 ```
 
 Added in v1.0.0
@@ -406,7 +426,10 @@ Also allows for accessing the provided context during reduction.
 **Signature**
 
 ```ts
-export declare const reduceWithContext: <C, E, Z>(context: C, reducer: CauseReducer<C, E, Z>) => (self: Cause<E>) => Z
+export declare const reduceWithContext: {
+  <C, E, Z>(self: Cause<E>, context: C, reducer: CauseReducer<C, E, Z>): Z
+  <C, E, Z>(context: C, reducer: CauseReducer<C, E, Z>): (self: Cause<E>) => Z
+}
 ```
 
 Added in v1.0.0
@@ -640,9 +663,10 @@ remaining causes.
 **Signature**
 
 ```ts
-export declare const stripSomeDefects: (
-  pf: (defect: unknown) => Option.Option<unknown>
-) => <E>(self: Cause<E>) => Option.Option<Cause<E>>
+export declare const stripSomeDefects: {
+  <E>(self: Cause<E>, pf: (defect: unknown) => Option.Option<unknown>): Option.Option<Cause<E>>
+  (pf: (defect: unknown) => Option.Option<unknown>): <E>(self: Cause<E>) => Option.Option<Cause<E>>
+}
 ```
 
 Added in v1.0.0
@@ -668,7 +692,10 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const as: <E1>(error: E1) => <E>(self: Cause<E>) => Cause<E1>
+export declare const as: {
+  <E, E2>(self: Cause<E>, error: E2): Cause<E2>
+  <E2>(error: E2): <E>(self: Cause<E>) => Cause<E2>
+}
 ```
 
 Added in v1.0.0
@@ -678,7 +705,10 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const map: <E, E1>(f: (e: E) => E1) => (self: Cause<E>) => Cause<E1>
+export declare const map: {
+  <E, E2>(self: Cause<E>, f: (e: E) => E2): Cause<E2>
+  <E, E2>(f: (e: E) => E2): (self: Cause<E>) => Cause<E2>
+}
 ```
 
 Added in v1.0.0
@@ -1094,36 +1124,6 @@ Added in v1.0.0
 
 # rendering
 
-## CauseRenderer (interface)
-
-Represents the configuration parameters and methods required to pretty-
-print a `Cause`.
-
-**Signature**
-
-```ts
-export interface CauseRenderer<E = unknown> {
-  readonly lineWidth: number
-  readonly ribbonFraction: number
-  readonly renderError: (error: E) => ReadonlyArray<string>
-  readonly renderUnknown: (error: unknown) => ReadonlyArray<string>
-}
-```
-
-Added in v1.0.0
-
-## defaultRenderer
-
-The default `Cause.Renderer`.
-
-**Signature**
-
-```ts
-export declare const defaultRenderer: CauseRenderer<unknown>
-```
-
-Added in v1.0.0
-
 ## pretty
 
 Returns the specified `Cause` as a pretty-printed string.
@@ -1131,7 +1131,7 @@ Returns the specified `Cause` as a pretty-printed string.
 **Signature**
 
 ```ts
-export declare const pretty: <E>(renderer?: CauseRenderer<E> | undefined) => (self: Cause<E>) => string
+export declare const pretty: <E>(cause: Cause<E>) => string
 ```
 
 Added in v1.0.0
@@ -1143,7 +1143,10 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const flatMap: <E, E1>(f: (e: E) => Cause<E1>) => (self: Cause<E>) => Cause<E1>
+export declare const flatMap: {
+  <E, E2>(self: Cause<E>, f: (e: E) => Cause<E2>): Cause<E2>
+  <E, E2>(f: (e: E) => Cause<E2>): (self: Cause<E>) => Cause<E2>
+}
 ```
 
 Added in v1.0.0
@@ -1276,26 +1279,6 @@ Added in v1.0.0
 
 ```ts
 export type RuntimeExceptionTypeId = typeof RuntimeExceptionTypeId
-```
-
-Added in v1.0.0
-
-## SpanAnnotationTypeId
-
-**Signature**
-
-```ts
-export declare const SpanAnnotationTypeId: typeof SpanAnnotationTypeId
-```
-
-Added in v1.0.0
-
-## SpanAnnotationTypeId (type alias)
-
-**Signature**
-
-```ts
-export type SpanAnnotationTypeId = typeof SpanAnnotationTypeId
 ```
 
 Added in v1.0.0

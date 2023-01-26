@@ -174,16 +174,12 @@ export interface Hub<A> extends Queue.Enqueue<A> {
   /**
    * Publishes a message to the hub, returning whether the message was published
    * to the hub.
-   *
-   * @macro traced
    */
   publish(value: A): Effect.Effect<never, never, boolean>
 
   /**
    * Publishes all of the specified messages to the hub, returning whether they
    * were published to the hub.
-   *
-   * @macro traced
    */
   publishAll(elements: Iterable<A>): Effect.Effect<never, never, boolean>
 
@@ -191,8 +187,6 @@ export interface Hub<A> extends Queue.Enqueue<A> {
    * Subscribes to receive messages from the hub. The resulting subscription can
    * be evaluated multiple times within the scope to take a message from the hub
    * each time.
-   *
-   * @macro traced
    */
   subscribe(): Effect.Effect<Scope.Scope, never, Queue.Dequeue<A>>
 }
@@ -224,7 +218,10 @@ to the hub.
 **Signature**
 
 ```ts
-export declare const publish: <A>(self: Hub<A>, value: A) => Effect.Effect<never, never, boolean>
+export declare const publish: {
+  <A>(self: Hub<A>, value: A): Effect.Effect<never, never, boolean>
+  <A>(value: A): (self: Hub<A>) => Effect.Effect<never, never, boolean>
+}
 ```
 
 Added in v1.0.0
@@ -237,7 +234,10 @@ were published to the hub.
 **Signature**
 
 ```ts
-export declare const publishAll: <A>(self: Hub<A>, elements: Iterable<A>) => Effect.Effect<never, never, boolean>
+export declare const publishAll: {
+  <A>(self: Hub<A>, elements: Iterable<A>): Effect.Effect<never, never, boolean>
+  <A>(elements: Iterable<A>): (self: Hub<A>) => Effect.Effect<never, never, boolean>
+}
 ```
 
 Added in v1.0.0

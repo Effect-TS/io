@@ -287,7 +287,10 @@ a different value, constructed using the specified function.
 **Signature**
 
 ```ts
-export declare const map: <A, B>(f: (a: A) => B) => (self: Config<A>) => Config<B>
+export declare const map: {
+  <A, B>(self: Config<A>, f: (a: A) => B): Config<B>
+  <A, B>(f: (a: A) => B): (self: Config<A>) => Config<B>
+}
 ```
 
 Added in v1.0.0
@@ -301,7 +304,10 @@ may throw exceptions that will be translated into validation errors.
 **Signature**
 
 ```ts
-export declare const mapAttempt: <A, B>(f: (a: A) => B) => (self: Config<A>) => Config<B>
+export declare const mapAttempt: {
+  <A, B>(self: Config<A>, f: (a: A) => B): Config<B>
+  <A, B>(f: (a: A) => B): (self: Config<A>) => Config<B>
+}
 ```
 
 Added in v1.0.0
@@ -315,9 +321,10 @@ function.
 **Signature**
 
 ```ts
-export declare const mapOrFail: <A, B>(
-  f: (a: A) => Either.Either<ConfigError.ConfigError, B>
-) => (self: Config<A>) => Config<B>
+export declare const mapOrFail: {
+  <A, B>(self: Config<A>, f: (a: A) => Either.Either<ConfigError.ConfigError, B>): Config<B>
+  <A, B>(f: (a: A) => Either.Either<ConfigError.ConfigError, B>): (self: Config<A>) => Config<B>
+}
 ```
 
 Added in v1.0.0
@@ -330,7 +337,10 @@ specified name.
 **Signature**
 
 ```ts
-export declare const nested: (name: string) => <A>(self: Config<A>) => Config<A>
+export declare const nested: {
+  <A>(self: Config<A>, name: string): Config<A>
+  (name: string): <A>(self: Config<A>) => Config<A>
+}
 ```
 
 Added in v1.0.0
@@ -357,7 +367,10 @@ reading from this config.
 **Signature**
 
 ```ts
-export declare const orElse: <A2>(that: LazyArg<Config<A2>>) => <A>(self: Config<A>) => Config<A2 | A>
+export declare const orElse: {
+  <A, A2>(self: Config<A>, that: LazyArg<Config<A2>>): Config<A | A2>
+  <A2>(that: LazyArg<Config<A2>>): <A>(self: Config<A>) => Config<A2 | A>
+}
 ```
 
 Added in v1.0.0
@@ -371,10 +384,10 @@ fails with an error satisfying the specified predicate.
 **Signature**
 
 ```ts
-export declare const orElseIf: <A2>(
-  that: LazyArg<Config<A2>>,
-  condition: Predicate<ConfigError.ConfigError>
-) => <A>(self: Config<A>) => Config<A>
+export declare const orElseIf: {
+  <A, A2>(self: Config<A>, that: LazyArg<Config<A2>>, condition: Predicate<ConfigError.ConfigError>): Config<A>
+  <A2>(that: LazyArg<Config<A2>>, condition: Predicate<ConfigError.ConfigError>): <A>(self: Config<A>) => Config<A>
+}
 ```
 
 Added in v1.0.0
@@ -401,6 +414,8 @@ performs validation during loading.
 
 ```ts
 export declare const validate: {
+  <A, B extends A>(self: Config<A>, message: string, f: Refinement<A, B>): Config<B>
+  <A>(self: Config<A>, message: string, f: Predicate<A>): Config<A>
   <A, B extends A>(message: string, f: Refinement<A, B>): (self: Config<A>) => Config<B>
   <A>(message: string, f: Predicate<A>): (self: Config<A>) => Config<A>
 }
@@ -416,7 +431,10 @@ specified default value in case the information cannot be found.
 **Signature**
 
 ```ts
-export declare const withDefault: <A2>(def: A2) => <A>(self: Config<A>) => Config<A2 | A>
+export declare const withDefault: {
+  <A, A2>(self: Config<A>, def: A2): Config<A | A2>
+  <A2>(def: A2): <A>(self: Config<A>) => Config<A2 | A>
+}
 ```
 
 Added in v1.0.0
@@ -428,7 +446,10 @@ Adds a description to this configuration, which is intended for humans.
 **Signature**
 
 ```ts
-export declare const withDescription: (description: string) => <A>(self: Config<A>) => Config<A>
+export declare const withDescription: {
+  <A>(self: Config<A>, description: string): Config<A>
+  (description: string): <A>(self: Config<A>) => Config<A>
+}
 ```
 
 Added in v1.0.0
@@ -441,7 +462,10 @@ config.
 **Signature**
 
 ```ts
-export declare const zip: <B>(that: Config<B>) => <A>(self: Config<A>) => Config<readonly [A, B]>
+export declare const zip: {
+  <A, B>(self: Config<A>, that: Config<B>): Config<readonly [A, B]>
+  <B>(that: Config<B>): <A>(self: Config<A>) => Config<readonly [A, B]>
+}
 ```
 
 Added in v1.0.0
@@ -454,7 +478,10 @@ using the provided function.
 **Signature**
 
 ```ts
-export declare const zipWith: <B, A, C>(that: Config<B>, f: (a: A, b: B) => C) => (self: Config<A>) => Config<C>
+export declare const zipWith: {
+  <A, B, C>(self: Config<A>, that: Config<B>, f: (a: A, b: B) => C): Config<C>
+  <B, A, C>(that: Config<B>, f: (a: A, b: B) => C): (self: Config<A>) => Config<C>
+}
 ```
 
 Added in v1.0.0

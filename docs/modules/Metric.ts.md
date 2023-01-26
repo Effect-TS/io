@@ -39,6 +39,7 @@ Added in v1.0.0
   - [sync](#sync)
   - [timer](#timer)
 - [getters](#getters)
+  - [snapshot](#snapshot)
   - [value](#value)
 - [globals](#globals)
   - [globalMetricRegistry](#globalmetricregistry)
@@ -83,9 +84,10 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const incrementBy: (
-  amount: number
-) => (self: Metric.Counter<number>) => Effect.Effect<never, never, void>
+export declare const incrementBy: {
+  (self: Metric.Counter<number>, amount: number): Effect.Effect<never, never, void>
+  (amount: number): (self: Metric.Counter<number>) => Effect.Effect<never, never, void>
+}
 ```
 
 Added in v1.0.0
@@ -95,7 +97,10 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const set: <In>(value: In) => (self: Metric.Gauge<In>) => Effect.Effect<never, never, void>
+export declare const set: {
+  <In>(self: Metric.Gauge<In>, value: In): Effect.Effect<never, never, void>
+  <In>(value: In): (self: Metric.Gauge<In>) => Effect.Effect<never, never, void>
+}
 ```
 
 Added in v1.0.0
@@ -109,9 +114,14 @@ that effect fails or succeeds.
 **Signature**
 
 ```ts
-export declare const trackAll: <In>(
-  input: In
-) => <Type, Out>(self: Metric<Type, In, Out>) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+export declare const trackAll: {
+  <Type, In, Out>(self: Metric<Type, In, Out>, input: In): <R, E, A>(
+    effect: Effect.Effect<R, E, A>
+  ) => Effect.Effect<R, E, A>
+  <In>(input: In): <Type, Out>(
+    self: Metric<Type, In, Out>
+  ) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+}
 ```
 
 Added in v1.0.0
@@ -124,9 +134,10 @@ effects that it is applied to.
 **Signature**
 
 ```ts
-export declare const trackDefect: <Type, Out>(
-  self: Metric<Type, unknown, Out>
-) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+export declare const trackDefect: {
+  <R, E, A, Type, Out>(self: Effect.Effect<R, E, A>, metric: Metric<Type, unknown, Out>): Effect.Effect<R, E, A>
+  <Type, Out>(metric: Metric<Type, unknown, Out>): <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+}
 ```
 
 Added in v1.0.0
@@ -140,9 +151,16 @@ aspect is applied to.
 **Signature**
 
 ```ts
-export declare const trackDefectWith: <In>(
-  f: (defect: unknown) => In
-) => <Type, Out>(self: Metric<Type, In, Out>) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+export declare const trackDefectWith: {
+  <R, E, A, Type, In, Out>(
+    self: Effect.Effect<R, E, A>,
+    metric: Metric<Type, In, Out>,
+    f: (defect: unknown) => In
+  ): Effect.Effect<R, E, A>
+  <Type, In, Out>(metric: Metric<Type, In, Out>, f: (defect: unknown) => In): <R, E, A>(
+    self: Effect.Effect<R, E, A>
+  ) => Effect.Effect<R, E, A>
+}
 ```
 
 Added in v1.0.0
@@ -156,9 +174,16 @@ must be `Duration`.
 **Signature**
 
 ```ts
-export declare const trackDuration: <Type, Out>(
-  self: Metric<Type, Duration.Duration, Out>
-) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+export declare const trackDuration: {
+  <R, E, A, Type, Out>(self: Effect.Effect<R, E, A>, metric: Metric<Type, Duration.Duration, Out>): Effect.Effect<
+    R,
+    E,
+    A
+  >
+  <Type, Out>(metric: Metric<Type, Duration.Duration, Out>): <R, E, A>(
+    self: Effect.Effect<R, E, A>
+  ) => Effect.Effect<R, E, A>
+}
 ```
 
 Added in v1.0.0
@@ -172,9 +197,16 @@ that can convert the `Duration` to the input type of this metric.
 **Signature**
 
 ```ts
-export declare const trackDurationWith: <In>(
-  f: (duration: Duration.Duration) => In
-) => <Type, Out>(self: Metric<Type, In, Out>) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+export declare const trackDurationWith: {
+  <R, E, A, Type, In, Out>(
+    self: Effect.Effect<R, E, A>,
+    metric: Metric<Type, In, Out>,
+    f: (duration: Duration.Duration) => In
+  ): Effect.Effect<R, E, A>
+  <Type, In, Out>(metric: Metric<Type, In, Out>, f: (duration: Duration.Duration) => In): <R, E, A>(
+    effect: Effect.Effect<R, E, A>
+  ) => Effect.Effect<R, E, A>
+}
 ```
 
 Added in v1.0.0
@@ -187,9 +219,16 @@ the effects that it is applied to.
 **Signature**
 
 ```ts
-export declare const trackError: <Type, In, Out>(
-  self: Metric<Type, In, Out>
-) => <R, E extends In, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+export declare const trackError: {
+  <R, E extends In, A, Type, In, Out>(self: Effect.Effect<R, E, A>, metric: Metric<Type, In, Out>): Effect.Effect<
+    R,
+    E,
+    A
+  >
+  <Type, In, Out>(metric: Metric<Type, In, Out>): <R, E extends In, A>(
+    self: Effect.Effect<R, E, A>
+  ) => Effect.Effect<R, E, A>
+}
 ```
 
 Added in v1.0.0
@@ -203,11 +242,16 @@ applied to.
 **Signature**
 
 ```ts
-export declare const trackErrorWith: <In, In2>(
-  f: (error: In2) => In
-) => <Type, Out>(
-  self: Metric<Type, In, Out>
-) => <R, E extends In2, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+export declare const trackErrorWith: {
+  <R, E extends In2, A, Type, In, Out, In2>(
+    self: Effect.Effect<R, E, A>,
+    metric: Metric<Type, In, Out>,
+    f: (error: In2) => In
+  ): Effect.Effect<R, E, A>
+  <Type, In, Out, In2>(metric: Metric<Type, In, Out>, f: (error: In2) => In): <R, E extends In2, A>(
+    effect: Effect.Effect<R, E, A>
+  ) => Effect.Effect<R, E, A>
+}
 ```
 
 Added in v1.0.0
@@ -220,9 +264,16 @@ the effects that it is applied to.
 **Signature**
 
 ```ts
-export declare const trackSuccess: <Type, In, Out>(
-  self: Metric<Type, In, Out>
-) => <R, E, A extends In>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+export declare const trackSuccess: {
+  <R, E, A extends In, Type, In, Out>(self: Effect.Effect<R, E, A>, metric: Metric<Type, In, Out>): Effect.Effect<
+    R,
+    E,
+    A
+  >
+  <Type, In, Out>(metric: Metric<Type, In, Out>): <R, E, A extends In>(
+    self: Effect.Effect<R, E, A>
+  ) => Effect.Effect<R, E, A>
+}
 ```
 
 Added in v1.0.0
@@ -236,11 +287,16 @@ applied to.
 **Signature**
 
 ```ts
-export declare const trackSuccessWith: <In, In2>(
-  f: (value: In2) => In
-) => <Type, Out>(
-  self: Metric<Type, In, Out>
-) => <R, E, A extends In2>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+export declare const trackSuccessWith: {
+  <R, E, A extends In2, Type, In, Out, In2>(
+    self: Effect.Effect<R, E, A>,
+    metric: Metric<Type, In, Out>,
+    f: (value: In2) => In
+  ): Effect.Effect<R, E, A>
+  <Type, In, Out, In2>(metric: Metric<Type, In, Out>, f: (value: In2) => In): <R, E, A extends In2>(
+    self: Effect.Effect<R, E, A>
+  ) => Effect.Effect<R, E, A>
+}
 ```
 
 Added in v1.0.0
@@ -281,9 +337,10 @@ update value.
 **Signature**
 
 ```ts
-export declare const fromConst: <In>(
-  input: LazyArg<In>
-) => <Type, Out>(self: Metric<Type, In, Out>) => Metric<Type, unknown, Out>
+export declare const fromConst: {
+  <Type, In, Out>(self: Metric<Type, In, Out>, input: LazyArg<In>): Metric<Type, unknown, Out>
+  <In>(input: LazyArg<In>): <Type, Out>(self: Metric<Type, In, Out>) => Metric<Type, unknown, Out>
+}
 ```
 
 Added in v1.0.0
@@ -412,6 +469,18 @@ Added in v1.0.0
 
 # getters
 
+## snapshot
+
+Captures a snapshot of all metrics recorded by the application.
+
+**Signature**
+
+```ts
+export declare const snapshot: () => Effect.Effect<never, never, HashSet.HashSet<MetricPair.MetricPair.Untyped>>
+```
+
+Added in v1.0.0
+
 ## value
 
 Retrieves a snapshot of the value of the metric at this moment in time.
@@ -447,9 +516,10 @@ this metric.
 **Signature**
 
 ```ts
-export declare const contramap: <In, In2>(
-  f: (input: In2) => In
-) => <Type, Out>(self: Metric<Type, In, Out>) => Metric<Type, In2, Out>
+export declare const contramap: {
+  <Type, In, Out, In2>(self: Metric<Type, In, Out>, f: (input: In2) => In): Metric<Type, In2, Out>
+  <In, In2>(f: (input: In2) => In): <Type, Out>(self: Metric<Type, In, Out>) => Metric<Type, In2, Out>
+}
 ```
 
 Added in v1.0.0
@@ -463,9 +533,10 @@ specified function.
 **Signature**
 
 ```ts
-export declare const map: <Out, Out2>(
-  f: (out: Out) => Out2
-) => <Type, In>(self: Metric<Type, In, Out>) => Metric<Type, In, Out2>
+export declare const map: {
+  <Type, In, Out, Out2>(self: Metric<Type, In, Out>, f: (out: Out) => Out2): Metric<Type, In, Out2>
+  <Out, Out2>(f: (out: Out) => Out2): <Type, In>(self: Metric<Type, In, Out>) => Metric<Type, In, Out2>
+}
 ```
 
 Added in v1.0.0
@@ -475,9 +546,10 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const mapType: <Type, Type2>(
-  f: (type: Type) => Type2
-) => <In, Out>(self: Metric<Type, In, Out>) => Metric<Type2, In, Out>
+export declare const mapType: {
+  <Type, In, Out, Type2>(self: Metric<Type, In, Out>, f: (type: Type) => Type2): Metric<Type2, In, Out>
+  <Type, Type2>(f: (type: Type) => Type2): <In, Out>(self: Metric<Type, In, Out>) => Metric<Type2, In, Out>
+}
 ```
 
 Added in v1.0.0
@@ -513,9 +585,7 @@ export interface Metric<Type, In, Out> extends Metric.Variance<Type, In, Out> {
   readonly keyType: Type
   readonly unsafeUpdate: (input: In, extraTags: HashSet.HashSet<MetricLabel.MetricLabel>) => void
   readonly unsafeValue: (extraTags: HashSet.HashSet<MetricLabel.MetricLabel>) => Out
-  /**
-   * @macro traced
-   */
+  /** */
   <R, E, A extends In>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A>
 }
 ```
@@ -548,10 +618,10 @@ the specified tags have been added to the tags of this metric.
 **Signature**
 
 ```ts
-export declare const tagged: <Type, In, Out>(
-  key: string,
-  value: string
-) => (self: Metric<Type, In, Out>) => Metric<Type, In, Out>
+export declare const tagged: {
+  <Type, In, Out>(self: Metric<Type, In, Out>, key: string, value: string): Metric<Type, In, Out>
+  <Type, In, Out>(key: string, value: string): (self: Metric<Type, In, Out>) => Metric<Type, In, Out>
+}
 ```
 
 Added in v1.0.0
@@ -566,9 +636,16 @@ dynamic nature of the added tags.
 **Signature**
 
 ```ts
-export declare const taggedWith: <In>(
-  f: (input: In) => HashSet.HashSet<MetricLabel.MetricLabel>
-) => <Type, Out>(self: Metric<Type, In, Out>) => Metric<Type, In, void>
+export declare const taggedWith: {
+  <Type, In, Out>(self: Metric<Type, In, Out>, f: (input: In) => HashSet.HashSet<MetricLabel.MetricLabel>): Metric<
+    Type,
+    In,
+    void
+  >
+  <In>(f: (input: In) => HashSet.HashSet<MetricLabel.MetricLabel>): <Type, Out>(
+    self: Metric<Type, In, Out>
+  ) => Metric<Type, In, void>
+}
 ```
 
 Added in v1.0.0
@@ -581,9 +658,16 @@ the specified tags have been added to the tags of this metric.
 **Signature**
 
 ```ts
-export declare const taggedWithLabelSet: (
-  extraTags: HashSet.HashSet<MetricLabel.MetricLabel>
-) => <Type, In, Out>(self: Metric<Type, In, Out>) => Metric<Type, In, Out>
+export declare const taggedWithLabelSet: {
+  <Type, In, Out>(self: Metric<Type, In, Out>, extraTags: HashSet.HashSet<MetricLabel.MetricLabel>): Metric<
+    Type,
+    In,
+    Out
+  >
+  (extraTags: HashSet.HashSet<MetricLabel.MetricLabel>): <Type, In, Out>(
+    self: Metric<Type, In, Out>
+  ) => Metric<Type, In, Out>
+}
 ```
 
 Added in v1.0.0
@@ -596,9 +680,10 @@ the specified tags have been added to the tags of this metric.
 **Signature**
 
 ```ts
-export declare const taggedWithLabels: <Type, In, Out>(
-  extraTags: Iterable<MetricLabel.MetricLabel>
-) => (self: Metric<Type, In, Out>) => Metric<Type, In, Out>
+export declare const taggedWithLabels: {
+  <Type, In, Out>(self: Metric<Type, In, Out>, extraTags: Iterable<MetricLabel.MetricLabel>): Metric<Type, In, Out>
+  <Type, In, Out>(extraTags: Iterable<MetricLabel.MetricLabel>): (self: Metric<Type, In, Out>) => Metric<Type, In, Out>
+}
 ```
 
 Added in v1.0.0
@@ -612,9 +697,10 @@ provided amount.
 **Signature**
 
 ```ts
-export declare const update: <In>(
-  input: In
-) => <Type, Out>(self: Metric<Type, In, Out>) => Effect.Effect<never, never, void>
+export declare const update: {
+  <Type, In, Out>(self: Metric<Type, In, Out>, input: In): Effect.Effect<never, never, void>
+  <In>(input: In): <Type, Out>(self: Metric<Type, In, Out>) => Effect.Effect<never, never, void>
+}
 ```
 
 Added in v1.0.0
@@ -672,11 +758,16 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const zip: <Type2, In2, Out2>(
-  that: Metric<Type2, In2, Out2>
-) => <Type, In, Out>(
-  self: Metric<Type, In, Out>
-) => Metric<readonly [Type, Type2], readonly [In, In2], readonly [Out, Out2]>
+export declare const zip: {
+  <Type, In, Out, Type2, In2, Out2>(self: Metric<Type, In, Out>, that: Metric<Type2, In2, Out2>): Metric<
+    readonly [Type, Type2],
+    readonly [In, In2],
+    readonly [Out, Out2]
+  >
+  <Type2, In2, Out2>(that: Metric<Type2, In2, Out2>): <Type, In, Out>(
+    self: Metric<Type, In, Out>
+  ) => Metric<readonly [Type, Type2], readonly [In, In2], readonly [Out, Out2]>
+}
 ```
 
 Added in v1.0.0

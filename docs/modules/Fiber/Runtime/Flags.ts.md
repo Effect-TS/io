@@ -304,7 +304,10 @@ and `that`.
 **Signature**
 
 ```ts
-export declare const diff: (self: RuntimeFlags, that: RuntimeFlags) => RuntimeFlagsPatch.RuntimeFlagsPatch
+export declare const diff: {
+  (self: RuntimeFlags, that: RuntimeFlags): RuntimeFlagsPatch.RuntimeFlagsPatch
+  (that: RuntimeFlags): (self: RuntimeFlags) => RuntimeFlagsPatch.RuntimeFlagsPatch
+}
 ```
 
 Added in v1.0.0
@@ -318,7 +321,10 @@ Returns `true` if the specified `RuntimeFlag` is disabled, `false` otherwise.
 **Signature**
 
 ```ts
-export declare const isDisabled: (self: RuntimeFlags, flag: RuntimeFlag) => boolean
+export declare const isDisabled: {
+  (self: RuntimeFlags, flag: RuntimeFlag): boolean
+  (flag: RuntimeFlag): (self: RuntimeFlags) => boolean
+}
 ```
 
 Added in v1.0.0
@@ -330,7 +336,10 @@ Returns `true` if the specified `RuntimeFlag` is enabled, `false` otherwise.
 **Signature**
 
 ```ts
-export declare const isEnabled: (self: RuntimeFlags, flag: RuntimeFlag) => boolean
+export declare const isEnabled: {
+  (self: RuntimeFlags, flag: RuntimeFlag): boolean
+  (flag: RuntimeFlag): (self: RuntimeFlags) => boolean
+}
 ```
 
 Added in v1.0.0
@@ -473,7 +482,10 @@ Disables the specified `RuntimeFlag`.
 **Signature**
 
 ```ts
-export declare const disable: (flag: RuntimeFlag) => (self: RuntimeFlags) => RuntimeFlags
+export declare const disable: {
+  (self: RuntimeFlags, flag: RuntimeFlag): RuntimeFlags
+  (flag: RuntimeFlag): (self: RuntimeFlags) => RuntimeFlags
+}
 ```
 
 Added in v1.0.0
@@ -485,7 +497,10 @@ Disables all of the `RuntimeFlag`s in the specified set of `RuntimeFlags`.
 **Signature**
 
 ```ts
-export declare const disableAll: (flags: RuntimeFlags) => (self: RuntimeFlags) => RuntimeFlags
+export declare const disableAll: {
+  (self: RuntimeFlags, flags: RuntimeFlags): RuntimeFlags
+  (flags: RuntimeFlags): (self: RuntimeFlags) => RuntimeFlags
+}
 ```
 
 Added in v1.0.0
@@ -497,7 +512,10 @@ Enables the specified `RuntimeFlag`.
 **Signature**
 
 ```ts
-export declare const enable: (flag: RuntimeFlag) => (self: RuntimeFlags) => RuntimeFlags
+export declare const enable: {
+  (self: RuntimeFlags, flag: RuntimeFlag): RuntimeFlags
+  (flag: RuntimeFlag): (self: RuntimeFlags) => RuntimeFlags
+}
 ```
 
 Added in v1.0.0
@@ -509,7 +527,10 @@ Enables all of the `RuntimeFlag`s in the specified set of `RuntimeFlags`.
 **Signature**
 
 ```ts
-export declare const enableAll: (flags: RuntimeFlags) => (self: RuntimeFlags) => RuntimeFlags
+export declare const enableAll: {
+  (self: RuntimeFlags, flags: RuntimeFlags): RuntimeFlags
+  (flags: RuntimeFlags): (self: RuntimeFlags) => RuntimeFlags
+}
 ```
 
 Added in v1.0.0
@@ -522,7 +543,10 @@ patched set of `RuntimeFlag`s.
 **Signature**
 
 ```ts
-export declare const patch: (self: RuntimeFlags, patch: RuntimeFlagsPatch.RuntimeFlagsPatch) => RuntimeFlags
+export declare const patch: {
+  (self: RuntimeFlags, patch: RuntimeFlagsPatch.RuntimeFlagsPatch): RuntimeFlags
+  (patch: RuntimeFlagsPatch.RuntimeFlagsPatch): (self: RuntimeFlags) => RuntimeFlags
+}
 ```
 
 Added in v1.0.0

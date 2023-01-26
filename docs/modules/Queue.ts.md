@@ -212,38 +212,28 @@ export interface BaseQueue {
    * Retrieves the size of the queue, which is equal to the number of elements
    * in the queue. This may be negative if fibers are suspended waiting for
    * elements to be added to the queue.
-   *
-   * @macro traced
    */
   size(): Effect.Effect<never, never, number>
 
   /**
    * Returns `true` if the `Queue` contains at least one element, `false`
    * otherwise.
-   *
-   * @macro traced
    */
   isFull(): Effect.Effect<never, never, boolean>
 
   /**
    * Returns `true` if the `Queue` contains zero elements, `false` otherwise.
-   *
-   * @macro traced
    */
   isEmpty(): Effect.Effect<never, never, boolean>
 
   /**
    * Interrupts any fibers that are suspended on `offer` or `take`. Future calls
    * to `offer*` and `take*` will be interrupted immediately.
-   *
-   * @macro traced
    */
   shutdown(): Effect.Effect<never, never, void>
 
   /**
    * Returns `true` if `shutdown` has been called, otherwise returns `false`.
-   *
-   * @macro traced
    */
   isShutdown(): Effect.Effect<never, never, boolean>
 
@@ -251,8 +241,6 @@ export interface BaseQueue {
    * Waits until the queue is shutdown. The `Effect` returned by this method will
    * not resume until the queue has been shutdown. If the queue is already
    * shutdown, the `Effect` will resume right away.
-   *
-   * @macro traced
    */
   awaitShutdown(): Effect.Effect<never, never, void>
 }
@@ -269,23 +257,17 @@ export interface Dequeue<A> extends Queue.DequeueVariance<A>, BaseQueue {
   /**
    * Takes the oldest value in the queue. If the queue is empty, this will return
    * a computation that resumes when an item has been added to the queue.
-   *
-   * @macro traced
    */
   take(): Effect.Effect<never, never, A>
 
   /**
    * Takes all the values in the queue and returns the values. If the queue is
    * empty returns an empty collection.
-   *
-   * @macro traced
    */
   takeAll(): Effect.Effect<never, never, Chunk.Chunk<A>>
 
   /**
    * Takes up to max number of values from the queue.
-   *
-   * @macro traced
    */
   takeUpTo(max: number): Effect.Effect<never, never, Chunk.Chunk<A>>
 
@@ -293,8 +275,6 @@ export interface Dequeue<A> extends Queue.DequeueVariance<A>, BaseQueue {
    * Takes a number of elements from the queue between the specified minimum and
    * maximum. If there are fewer than the minimum number of elements available,
    * suspends until at least the minimum number of elements have been collected.
-   *
-   * @macro traced
    */
   takeBetween(min: number, max: number): Effect.Effect<never, never, Chunk.Chunk<A>>
 }
@@ -310,8 +290,6 @@ Added in v1.0.0
 export interface Enqueue<A> extends Queue.EnqueueVariance<A>, BaseQueue {
   /**
    * Places one value in the queue.
-   *
-   * @macro traced
    */
   offer(value: A): Effect.Effect<never, never, boolean>
 
@@ -329,8 +307,6 @@ export interface Enqueue<A> extends Queue.EnqueueVariance<A>, BaseQueue {
    *
    * For Dropping Queue: uses `Dropping` Strategy, It places the values in the
    * queue but if there is no room it will not enqueue them and return false.
-   *
-   * @macro traced
    */
   offerAll(iterable: Iterable<A>): Effect.Effect<never, never, boolean>
 }
@@ -374,8 +350,6 @@ export interface Strategy<A> extends Queue.StrategyVariance<A> {
   /**
    * Determines how the `Queue.Strategy` should shut down when the `Queue` is
    * shut down.
-   *
-   * @macro traced
    */
   shutdown(): Effect.Effect<never, never, void>
 
@@ -383,8 +357,6 @@ export interface Strategy<A> extends Queue.StrategyVariance<A> {
    * Determines the behavior of the `Queue.Strategy` when there are surplus
    * values that could not be added to the `Queue` following an `offer`
    * operation.
-   *
-   * @macro traced
    */
   handleSurplus(
     iterable: Iterable<A>,
@@ -429,7 +401,10 @@ Places one value in the queue.
 **Signature**
 
 ```ts
-export declare const offer: <A>(self: Enqueue<A>, value: A) => Effect.Effect<never, never, boolean>
+export declare const offer: {
+  <A>(self: Enqueue<A>, value: A): Effect.Effect<never, never, boolean>
+  <A>(value: A): (self: Enqueue<A>) => Effect.Effect<never, never, boolean>
+}
 ```
 
 Added in v1.0.0
@@ -453,7 +428,10 @@ queue but if there is no room it will not enqueue them and return false.
 **Signature**
 
 ```ts
-export declare const offerAll: <A>(self: Enqueue<A>, iterable: Iterable<A>) => Effect.Effect<never, never, boolean>
+export declare const offerAll: {
+  <A>(self: Enqueue<A>, iterable: Iterable<A>): Effect.Effect<never, never, boolean>
+  <A>(iterable: Iterable<A>): (self: Enqueue<A>) => (self: Enqueue<A>) => Effect.Effect<never, never, boolean>
+}
 ```
 
 Added in v1.0.0
@@ -519,11 +497,10 @@ suspends until at least the minimum number of elements have been collected.
 **Signature**
 
 ```ts
-export declare const takeBetween: <A>(
-  self: Dequeue<A>,
-  min: number,
-  max: number
-) => Effect.Effect<never, never, Chunk.Chunk<A>>
+export declare const takeBetween: {
+  <A>(self: Dequeue<A>, min: number, max: number): Effect.Effect<never, never, Chunk.Chunk<A>>
+  (min: number, max: number): <A>(self: Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>>
+}
 ```
 
 Added in v1.0.0
@@ -537,7 +514,10 @@ become available.
 **Signature**
 
 ```ts
-export declare const takeN: <A>(self: Dequeue<A>, n: number) => Effect.Effect<never, never, Chunk.Chunk<A>>
+export declare const takeN: {
+  <A>(self: Dequeue<A>, n: number): Effect.Effect<never, never, Chunk.Chunk<A>>
+  (n: number): <A>(self: Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>>
+}
 ```
 
 Added in v1.0.0
@@ -549,7 +529,10 @@ Takes up to max number of values from the queue.
 **Signature**
 
 ```ts
-export declare const takeUpTo: <A>(self: Dequeue<A>, max: number) => Effect.Effect<never, never, Chunk.Chunk<A>>
+export declare const takeUpTo: {
+  <A>(self: Dequeue<A>, max: number): Effect.Effect<never, never, Chunk.Chunk<A>>
+  (max: number): <A>(self: Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>>
+}
 ```
 
 Added in v1.0.0

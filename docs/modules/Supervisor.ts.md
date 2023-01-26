@@ -110,7 +110,6 @@ export interface Supervisor<T> extends Supervisor.Variance<T> {
    * Returns an `Effect` that succeeds with the value produced by this
    * supervisor. This value may change over time, reflecting what the supervisor
    * produces as it supervises fibers.
-   * @macro traced
    */
   value(): Effect.Effect<never, never, T>
 

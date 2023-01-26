@@ -150,7 +150,6 @@ export interface Reloadable<A> extends Reloadable.Variance<A> {
    */
   readonly scopedRef: ScopedRef.ScopedRef<A>
   /**
-   * @macro traced
    * @internal
    */
   reload(): Effect.Effect<never, unknown, void>
