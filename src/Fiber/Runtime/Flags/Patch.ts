@@ -58,7 +58,10 @@ export const isEmpty: (patch: RuntimeFlagsPatch) => boolean = internal.isEmpty
  * @since 1.0.0
  * @category elements
  */
-export const isActive: (flag: RuntimeFlagsPatch) => (self: RuntimeFlagsPatch) => boolean = internal.isActive
+export const isActive: {
+  (self: RuntimeFlagsPatch, flag: RuntimeFlagsPatch): boolean
+  (flag: RuntimeFlagsPatch): (self: RuntimeFlagsPatch) => boolean
+} = internal.isActive
 
 /**
  * Returns `true` if the `RuntimeFlagsPatch` describes the specified
@@ -67,7 +70,10 @@ export const isActive: (flag: RuntimeFlagsPatch) => (self: RuntimeFlagsPatch) =>
  * @since 1.0.0
  * @category elements
  */
-export const isEnabled: (flag: RuntimeFlags.RuntimeFlag) => (self: RuntimeFlagsPatch) => boolean = internal.isEnabled
+export const isEnabled: {
+  (self: RuntimeFlagsPatch, flag: RuntimeFlags.RuntimeFlag): boolean
+  (flag: RuntimeFlags.RuntimeFlag): (self: RuntimeFlagsPatch) => boolean
+} = internal.isEnabled
 
 /**
  * Returns `true` if the `RuntimeFlagsPatch` describes the specified
@@ -76,7 +82,10 @@ export const isEnabled: (flag: RuntimeFlags.RuntimeFlag) => (self: RuntimeFlagsP
  * @since 1.0.0
  * @category elements
  */
-export const isDisabled: (flag: RuntimeFlags.RuntimeFlag) => (self: RuntimeFlagsPatch) => boolean = internal.isDisabled
+export const isDisabled: {
+  (self: RuntimeFlagsPatch, flag: RuntimeFlags.RuntimeFlag): boolean
+  (flag: RuntimeFlags.RuntimeFlag): (self: RuntimeFlagsPatch) => boolean
+} = internal.isDisabled
 
 /**
  * Returns `true` if the `RuntimeFlagsPatch` includes the specified
@@ -85,7 +94,10 @@ export const isDisabled: (flag: RuntimeFlags.RuntimeFlag) => (self: RuntimeFlags
  * @since 1.0.0
  * @category elements
  */
-export const includes: (flag: RuntimeFlagsPatch) => (self: RuntimeFlagsPatch) => boolean = internal.isActive
+export const includes: {
+  (self: RuntimeFlagsPatch, flag: RuntimeFlagsPatch): boolean
+  (flag: RuntimeFlagsPatch): (self: RuntimeFlagsPatch) => boolean
+} = internal.isActive
 
 /**
  * Creates a `RuntimeFlagsPatch` describing the application of the `self` patch,
@@ -94,7 +106,10 @@ export const includes: (flag: RuntimeFlagsPatch) => (self: RuntimeFlagsPatch) =>
  * @since 1.0.0
  * @category mutations
  */
-export const andThen: (that: RuntimeFlagsPatch) => (self: RuntimeFlagsPatch) => RuntimeFlagsPatch = internal.andThen
+export const andThen: {
+  (self: RuntimeFlagsPatch, that: RuntimeFlagsPatch): RuntimeFlagsPatch
+  (that: RuntimeFlagsPatch): (self: RuntimeFlagsPatch) => RuntimeFlagsPatch
+} = internal.andThen
 
 /**
  * Creates a `RuntimeFlagsPatch` describing application of both the `self` patch
@@ -103,7 +118,10 @@ export const andThen: (that: RuntimeFlagsPatch) => (self: RuntimeFlagsPatch) => 
  * @since 1.0.0
  * @category mutations
  */
-export const both: (that: RuntimeFlagsPatch) => (self: RuntimeFlagsPatch) => RuntimeFlagsPatch = internal.both
+export const both: {
+  (self: RuntimeFlagsPatch, that: RuntimeFlagsPatch): RuntimeFlagsPatch
+  (that: RuntimeFlagsPatch): (self: RuntimeFlagsPatch) => RuntimeFlagsPatch
+} = internal.both
 
 /**
  * Creates a `RuntimeFlagsPatch` describing application of either the `self`
@@ -112,7 +130,10 @@ export const both: (that: RuntimeFlagsPatch) => (self: RuntimeFlagsPatch) => Run
  * @since 1.0.0
  * @category mutations
  */
-export const either: (that: RuntimeFlagsPatch) => (self: RuntimeFlagsPatch) => RuntimeFlagsPatch = internal.either
+export const either: {
+  (self: RuntimeFlagsPatch, that: RuntimeFlagsPatch): RuntimeFlagsPatch
+  (that: RuntimeFlagsPatch): (self: RuntimeFlagsPatch) => RuntimeFlagsPatch
+} = internal.either
 
 /**
  * Creates a `RuntimeFlagsPatch` which describes exclusion of the specified
@@ -121,8 +142,10 @@ export const either: (that: RuntimeFlagsPatch) => (self: RuntimeFlagsPatch) => R
  * @category mutations
  * @since 1.0.0
  */
-export const exclude: (flag: RuntimeFlags.RuntimeFlag) => (self: RuntimeFlagsPatch) => RuntimeFlagsPatch =
-  internal.exclude
+export const exclude: {
+  (self: RuntimeFlagsPatch, flag: RuntimeFlags.RuntimeFlag): RuntimeFlagsPatch
+  (flag: RuntimeFlags.RuntimeFlag): (self: RuntimeFlagsPatch) => RuntimeFlagsPatch
+} = internal.exclude
 
 /**
  * Creates a `RuntimeFlagsPatch` which describes the inverse of the patch

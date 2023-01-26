@@ -138,9 +138,10 @@ export const make: MetricApply = internal.make
  * @since 1.0.0
  * @category mapping
  */
-export const contramap: <In, In2>(
-  f: (input: In2) => In
-) => <Type, Out>(self: Metric<Type, In, Out>) => Metric<Type, In2, Out> = internal.contramap
+export const contramap: {
+  <Type, In, Out, In2>(self: Metric<Type, In, Out>, f: (input: In2) => In): Metric<Type, In2, Out>
+  <In, In2>(f: (input: In2) => In): <Type, Out>(self: Metric<Type, In, Out>) => Metric<Type, In2, Out>
+} = internal.contramap
 
 /**
  * A counter, which can be incremented by numbers.
@@ -167,9 +168,10 @@ export const frequency: (name: string) => Metric.Frequency<string> = internal.fr
  * @since 1.0.0
  * @category constructors
  */
-export const fromConst: <In>(
-  input: LazyArg<In>
-) => <Type, Out>(self: Metric<Type, In, Out>) => Metric<Type, unknown, Out> = internal.fromConst
+export const fromConst: {
+  <Type, In, Out>(self: Metric<Type, In, Out>, input: LazyArg<In>): Metric<Type, unknown, Out>
+  <In>(input: LazyArg<In>): <Type, Out>(self: Metric<Type, In, Out>) => Metric<Type, unknown, Out>
+} = internal.fromConst
 
 /**
  * @since 1.0.0
@@ -223,17 +225,19 @@ export const incrementBy: {
  * @since 1.0.0
  * @category mapping
  */
-export const map: <Out, Out2>(
-  f: (out: Out) => Out2
-) => <Type, In>(self: Metric<Type, In, Out>) => Metric<Type, In, Out2> = internal.map
+export const map: {
+  <Type, In, Out, Out2>(self: Metric<Type, In, Out>, f: (out: Out) => Out2): Metric<Type, In, Out2>
+  <Out, Out2>(f: (out: Out) => Out2): <Type, In>(self: Metric<Type, In, Out>) => Metric<Type, In, Out2>
+} = internal.map
 
 /**
  * @since 1.0.0
  * @category mapping
  */
-export const mapType: <Type, Type2>(
-  f: (type: Type) => Type2
-) => <In, Out>(self: Metric<Type, In, Out>) => Metric<Type2, In, Out> = internal.mapType
+export const mapType: {
+  <Type, In, Out, Type2>(self: Metric<Type, In, Out>, f: (type: Type) => Type2): Metric<Type2, In, Out>
+  <Type, Type2>(f: (type: Type) => Type2): <In, Out>(self: Metric<Type, In, Out>) => Metric<Type2, In, Out>
+} = internal.mapType
 
 /**
  * @since 1.0.0
@@ -300,10 +304,10 @@ export const summaryTimestamp: (
  * @since 1.0.0
  * @category mutations
  */
-export const tagged: <Type, In, Out>(
-  key: string,
-  value: string
-) => (self: Metric<Type, In, Out>) => Metric<Type, In, Out> = internal.tagged
+export const tagged: {
+  <Type, In, Out>(self: Metric<Type, In, Out>, key: string, value: string): Metric<Type, In, Out>
+  <Type, In, Out>(key: string, value: string): (self: Metric<Type, In, Out>) => Metric<Type, In, Out>
+} = internal.tagged
 
 /**
  * Returns a new metric, which is identical in every way to this one, except
@@ -314,9 +318,15 @@ export const tagged: <Type, In, Out>(
  * @since 1.0.0
  * @category mutations
  */
-export const taggedWith: <In>(
-  f: (input: In) => HashSet.HashSet<MetricLabel.MetricLabel>
-) => <Type, Out>(self: Metric<Type, In, Out>) => Metric<Type, In, void> = internal.taggedWith
+export const taggedWith: {
+  <Type, In, Out>(
+    self: Metric<Type, In, Out>,
+    f: (input: In) => HashSet.HashSet<MetricLabel.MetricLabel>
+  ): Metric<Type, In, void>
+  <In>(
+    f: (input: In) => HashSet.HashSet<MetricLabel.MetricLabel>
+  ): <Type, Out>(self: Metric<Type, In, Out>) => Metric<Type, In, void>
+} = internal.taggedWith
 
 /**
  * Returns a new metric, which is identical in every way to this one, except
@@ -325,9 +335,10 @@ export const taggedWith: <In>(
  * @since 1.0.0
  * @category mutations
  */
-export const taggedWithLabels: <Type, In, Out>(
-  extraTags: Iterable<MetricLabel.MetricLabel>
-) => (self: Metric<Type, In, Out>) => Metric<Type, In, Out> = internal.taggedWithLabels
+export const taggedWithLabels: {
+  <Type, In, Out>(self: Metric<Type, In, Out>, extraTags: Iterable<MetricLabel.MetricLabel>): Metric<Type, In, Out>
+  <Type, In, Out>(extraTags: Iterable<MetricLabel.MetricLabel>): (self: Metric<Type, In, Out>) => Metric<Type, In, Out>
+} = internal.taggedWithLabels
 
 /**
  * Returns a new metric, which is identical in every way to this one, except
@@ -336,9 +347,15 @@ export const taggedWithLabels: <Type, In, Out>(
  * @since 1.0.0
  * @category mutations
  */
-export const taggedWithLabelSet: (
-  extraTags: HashSet.HashSet<MetricLabel.MetricLabel>
-) => <Type, In, Out>(self: Metric<Type, In, Out>) => Metric<Type, In, Out> = internal.taggedWithLabelSet
+export const taggedWithLabelSet: {
+  <Type, In, Out>(
+    self: Metric<Type, In, Out>,
+    extraTags: HashSet.HashSet<MetricLabel.MetricLabel>
+  ): Metric<Type, In, Out>
+  (
+    extraTags: HashSet.HashSet<MetricLabel.MetricLabel>
+  ): <Type, In, Out>(self: Metric<Type, In, Out>) => Metric<Type, In, Out>
+} = internal.taggedWithLabelSet
 
 /**
  * Creates a timer metric, based on a histogram, which keeps track of
@@ -549,11 +566,17 @@ export const withNow: <Type, In, Out>(self: Metric<Type, readonly [In, number], 
  * @since 1.0.0
  * @category zipping
  */
-export const zip: <Type2, In2, Out2>(
-  that: Metric<Type2, In2, Out2>
-) => <Type, In, Out>(
-  self: Metric<Type, In, Out>
-) => Metric<readonly [Type, Type2], readonly [In, In2], readonly [Out, Out2]> = internal.zip
+export const zip: {
+  <Type, In, Out, Type2, In2, Out2>(
+    self: Metric<Type, In, Out>,
+    that: Metric<Type2, In2, Out2>
+  ): Metric<readonly [Type, Type2], readonly [In, In2], readonly [Out, Out2]>
+  <Type2, In2, Out2>(
+    that: Metric<Type2, In2, Out2>
+  ): <Type, In, Out>(
+    self: Metric<Type, In, Out>
+  ) => Metric<readonly [Type, Type2], readonly [In, In2], readonly [Out, Out2]>
+} = internal.zip
 
 /**
  * Unsafely captures a snapshot of all metrics recorded by the application.

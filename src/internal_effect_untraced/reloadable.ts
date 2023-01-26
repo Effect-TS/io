@@ -30,8 +30,8 @@ export const auto = <Out extends Context.Tag<any>, In, E, R, Out2>(
   tag: Out,
   layer: Layer.Layer<In, E, Context.Tag.Service<Out>>,
   policy: Schedule.Schedule<R, In, Out2>
-): Layer.Layer<R | In, E, Reloadable.Reloadable<Context.Tag.Service<Out>>> => {
-  return _layer.scoped(
+): Layer.Layer<R | In, E, Reloadable.Reloadable<Context.Tag.Service<Out>>> =>
+  _layer.scoped(
     reloadableTag(tag),
     pipe(
       _layer.build(manual(tag, layer)),
@@ -49,15 +49,14 @@ export const auto = <Out extends Context.Tag<any>, In, E, R, Out2>(
       )
     )
   )
-}
 
 /** @internal */
 export const autoFromConfig = <Out extends Context.Tag<any>, In, E, R, Out2>(
   tag: Out,
   layer: Layer.Layer<In, E, Context.Tag.Service<Out>>,
   scheduleFromConfig: (context: Context.Context<In>) => Schedule.Schedule<R, In, Out2>
-): Layer.Layer<R | In, E, Reloadable.Reloadable<Context.Tag.Service<Out>>> => {
-  return _layer.scoped(
+): Layer.Layer<R | In, E, Reloadable.Reloadable<Context.Tag.Service<Out>>> =>
+  _layer.scoped(
     reloadableTag(tag),
     pipe(
       core.context<In>(),
@@ -69,7 +68,6 @@ export const autoFromConfig = <Out extends Context.Tag<any>, In, E, R, Out2>(
       )
     )
   )
-}
 
 /** @internal */
 export const get = Debug.methodWithTrace((trace) =>
@@ -84,8 +82,8 @@ export const get = Debug.methodWithTrace((trace) =>
 export const manual = <Out extends Context.Tag<any>, In, E>(
   tag: Out,
   layer: Layer.Layer<In, E, Context.Tag.Service<Out>>
-): Layer.Layer<In, E, Reloadable.Reloadable<Context.Tag.Service<Out>>> => {
-  return _layer.scoped(
+): Layer.Layer<In, E, Reloadable.Reloadable<Context.Tag.Service<Out>>> =>
+  _layer.scoped(
     reloadableTag(tag),
     pipe(
       core.context<In>(),
@@ -107,7 +105,6 @@ export const manual = <Out extends Context.Tag<any>, In, E>(
       )
     )
   )
-}
 
 /** @internal */
 const tagMap = new WeakMap<Context.Tag<any>, Context.Tag<any>>([])

@@ -66,32 +66,28 @@ export const make: Metric.MetricApply = function<Type, In, Out>(
 }
 
 /** @internal */
-export const contramap = <In, In2>(f: (input: In2) => In) => {
-  return <Type, Out>(self: Metric.Metric<Type, In, Out>): Metric.Metric<Type, In2, Out> => {
-    return make(
+export const contramap = Debug.untracedDual<
+  <Type, In, Out, In2>(self: Metric.Metric<Type, In, Out>, f: (input: In2) => In) => Metric.Metric<Type, In2, Out>,
+  <In, In2>(f: (input: In2) => In) => <Type, Out>(self: Metric.Metric<Type, In, Out>) => Metric.Metric<Type, In2, Out>
+>(2, (restore) =>
+  (self, f) =>
+    make(
       self.keyType,
-      (input, extraTags) => self.unsafeUpdate(f(input), extraTags),
+      (input, extraTags) => self.unsafeUpdate(restore(f)(input), extraTags),
       self.unsafeValue
-    )
-  }
-}
+    ))
 
 /** @internal */
-export const counter = (name: string): Metric.Metric.Counter<number> => {
-  return fromMetricKey(metricKey.counter(name))
-}
+export const counter = (name: string): Metric.Metric.Counter<number> => fromMetricKey(metricKey.counter(name))
 
 /** @internal */
-export const frequency = (name: string): Metric.Metric.Frequency<string> => {
-  return fromMetricKey(metricKey.frequency(name))
-}
+export const frequency = (name: string): Metric.Metric.Frequency<string> => fromMetricKey(metricKey.frequency(name))
 
 /** @internal */
-export const fromConst = <In>(input: LazyArg<In>) => {
-  return <Type, Out>(self: Metric.Metric<Type, In, Out>): Metric.Metric<Type, unknown, Out> => {
-    return pipe(self, contramap(input))
-  }
-}
+export const fromConst = Debug.untracedDual<
+  <Type, In, Out>(self: Metric.Metric<Type, In, Out>, input: LazyArg<In>) => Metric.Metric<Type, unknown, Out>,
+  <In>(input: LazyArg<In>) => <Type, Out>(self: Metric.Metric<Type, In, Out>) => Metric.Metric<Type, unknown, Out>
+>(2, (restore) => (self, input) => contramap(self, restore(input)))
 
 /** @internal */
 export const fromMetricKey = <Type extends MetricKeyType.MetricKeyType<any, any>>(
@@ -116,14 +112,11 @@ export const fromMetricKey = <Type extends MetricKeyType.MetricKeyType<any, any>
 }
 
 /** @internal */
-export const gauge = (name: string): Metric.Metric.Gauge<number> => {
-  return fromMetricKey(metricKey.gauge(name))
-}
+export const gauge = (name: string): Metric.Metric.Gauge<number> => fromMetricKey(metricKey.gauge(name))
 
 /** @internal */
-export const histogram = (name: string, boundaries: MetricBoundaries.MetricBoundaries) => {
-  return fromMetricKey(metricKey.histogram(name, boundaries))
-}
+export const histogram = (name: string, boundaries: MetricBoundaries.MetricBoundaries) =>
+  fromMetricKey(metricKey.histogram(name, boundaries))
 
 /* @internal */
 export const increment = Debug.methodWithTrace((trace) =>
@@ -137,22 +130,29 @@ export const incrementBy = Debug.dualWithTrace<
 >(2, (trace) => (self, amount) => update(self, amount).traced(trace))
 
 /** @internal */
-export const map = <Out, Out2>(f: (out: Out) => Out2) => {
-  return <Type, In>(self: Metric.Metric<Type, In, Out>): Metric.Metric<Type, In, Out2> => {
-    return make(
+export const map = Debug.untracedDual<
+  <Type, In, Out, Out2>(self: Metric.Metric<Type, In, Out>, f: (out: Out) => Out2) => Metric.Metric<Type, In, Out2>,
+  <Out, Out2>(f: (out: Out) => Out2) => <Type, In>(self: Metric.Metric<Type, In, Out>) => Metric.Metric<Type, In, Out2>
+>(2, (restore) =>
+  (self, f) =>
+    make(
       self.keyType,
       self.unsafeUpdate,
-      (extraTags) => f(self.unsafeValue(extraTags))
-    )
-  }
-}
+      (extraTags) => restore(f)(self.unsafeValue(extraTags))
+    ))
 
 /** @internal */
-export const mapType = <Type, Type2>(f: (type: Type) => Type2) => {
-  return <In, Out>(self: Metric.Metric<Type, In, Out>): Metric.Metric<Type2, In, Out> => {
-    return make(f(self.keyType), self.unsafeUpdate, self.unsafeValue)
-  }
-}
+export const mapType = Debug.untracedDual<
+  <Type, In, Out, Type2>(
+    self: Metric.Metric<Type, In, Out>,
+    f: (type: Type) => Type2
+  ) => Metric.Metric<Type2, In, Out>,
+  <Type, Type2>(
+    f: (type: Type) => Type2
+  ) => <In, Out>(
+    self: Metric.Metric<Type, In, Out>
+  ) => Metric.Metric<Type2, In, Out>
+>(2, (restore) => (self, f) => make(restore(f)(self.keyType), self.unsafeUpdate, self.unsafeValue))
 
 /* @internal */
 export const set = Debug.dualWithTrace<
@@ -167,14 +167,11 @@ export const snapshot = Debug.methodWithTrace((trace) =>
 )
 
 /** @internal */
-export const succeed = <Out>(out: Out): Metric.Metric<void, unknown, Out> => {
-  return make(void 0 as void, constVoid, () => out)
-}
+export const succeed = <Out>(out: Out): Metric.Metric<void, unknown, Out> => make(void 0 as void, constVoid, () => out)
 
 /** @internal */
-export const sync = <Out>(evaluate: LazyArg<Out>): Metric.Metric<void, unknown, Out> => {
-  return make(void 0 as void, constVoid, evaluate)
-}
+export const sync = <Out>(evaluate: LazyArg<Out>): Metric.Metric<void, unknown, Out> =>
+  make(void 0 as void, constVoid, evaluate)
 
 /** @internal */
 export const summary = (
@@ -183,9 +180,7 @@ export const summary = (
   maxSize: number,
   error: number,
   quantiles: Chunk.Chunk<number>
-): Metric.Metric.Summary<number> => {
-  return withNow(summaryTimestamp(name, maxAge, maxSize, error, quantiles))
-}
+): Metric.Metric.Summary<number> => withNow(summaryTimestamp(name, maxAge, maxSize, error, quantiles))
 
 /** @internal */
 export const summaryTimestamp = (
@@ -194,48 +189,63 @@ export const summaryTimestamp = (
   maxSize: number,
   error: number,
   quantiles: Chunk.Chunk<number>
-): Metric.Metric.Summary<readonly [value: number, timestamp: number]> => {
-  return fromMetricKey(metricKey.summary(name, maxAge, maxSize, error, quantiles))
-}
+): Metric.Metric.Summary<readonly [value: number, timestamp: number]> =>
+  fromMetricKey(metricKey.summary(name, maxAge, maxSize, error, quantiles))
 
 /** @internal */
-export const tagged = <Type, In, Out>(key: string, value: string) => {
-  return (self: Metric.Metric<Type, In, Out>): Metric.Metric<Type, In, Out> => {
-    return pipe(self, taggedWithLabelSet(HashSet.make(metricLabel.make(key, value))))
-  }
-}
+export const tagged = Debug.dual<
+  <Type, In, Out>(self: Metric.Metric<Type, In, Out>, key: string, value: string) => Metric.Metric<Type, In, Out>,
+  <Type, In, Out>(key: string, value: string) => (self: Metric.Metric<Type, In, Out>) => Metric.Metric<Type, In, Out>
+>(3, (self, key, value) => taggedWithLabelSet(self, HashSet.make(metricLabel.make(key, value))))
 
 /** @internal */
-export const taggedWith = <In>(f: (input: In) => HashSet.HashSet<MetricLabel.MetricLabel>) => {
-  return <Type, Out>(self: Metric.Metric<Type, In, Out>): Metric.Metric<Type, In, void> => {
-    return pipe(
-      make<Type, In, Out>(
+export const taggedWith = Debug.untracedDual<
+  <Type, In, Out>(
+    self: Metric.Metric<Type, In, Out>,
+    f: (input: In) => HashSet.HashSet<MetricLabel.MetricLabel>
+  ) => Metric.Metric<Type, In, void>,
+  <In>(
+    f: (input: In) => HashSet.HashSet<MetricLabel.MetricLabel>
+  ) => <Type, Out>(self: Metric.Metric<Type, In, Out>) => Metric.Metric<Type, In, void>
+>(2, (restore) =>
+  (self, f) =>
+    map(
+      make(
         self.keyType,
-        (input, extraTags) => self.unsafeUpdate(input, pipe(f(input), HashSet.union(extraTags))),
+        (input, extraTags) => self.unsafeUpdate(input, pipe(restore(f)(input), HashSet.union(extraTags))),
         self.unsafeValue
       ),
-      map(constVoid)
-    )
-  }
-}
+      constVoid
+    ))
 
 /** @internal */
-export const taggedWithLabels = <Type, In, Out>(extraTags: Iterable<MetricLabel.MetricLabel>) => {
-  return (self: Metric.Metric<Type, In, Out>): Metric.Metric<Type, In, Out> => {
-    return pipe(self, taggedWithLabelSet(HashSet.from(extraTags)))
-  }
-}
+export const taggedWithLabels = Debug.dual<
+  <Type, In, Out>(
+    self: Metric.Metric<Type, In, Out>,
+    extraTags: Iterable<MetricLabel.MetricLabel>
+  ) => Metric.Metric<Type, In, Out>,
+  <Type, In, Out>(
+    extraTags: Iterable<MetricLabel.MetricLabel>
+  ) => (self: Metric.Metric<Type, In, Out>) => Metric.Metric<Type, In, Out>
+>(2, (self, extraTags) => taggedWithLabelSet(self, HashSet.from(extraTags)))
 
 /** @internal */
-export const taggedWithLabelSet = (extraTags: HashSet.HashSet<MetricLabel.MetricLabel>) => {
-  return <Type, In, Out>(self: Metric.Metric<Type, In, Out>): Metric.Metric<Type, In, Out> => {
-    return make(
-      self.keyType,
-      (input, extraTags1) => self.unsafeUpdate(input, pipe(extraTags, HashSet.union(extraTags1))),
-      (extraTags1) => self.unsafeValue(pipe(extraTags, HashSet.union(extraTags1)))
-    )
-  }
-}
+export const taggedWithLabelSet = Debug.dual<
+  <Type, In, Out>(
+    self: Metric.Metric<Type, In, Out>,
+    extraTags: HashSet.HashSet<MetricLabel.MetricLabel>
+  ) => Metric.Metric<Type, In, Out>,
+  (
+    extraTags: HashSet.HashSet<MetricLabel.MetricLabel>
+  ) => <Type, In, Out>(
+    self: Metric.Metric<Type, In, Out>
+  ) => Metric.Metric<Type, In, Out>
+>(2, (self, extraTags) =>
+  make(
+    self.keyType,
+    (input, extraTags1) => self.unsafeUpdate(input, pipe(extraTags, HashSet.union(extraTags1))),
+    (extraTags1) => self.unsafeValue(pipe(extraTags, HashSet.union(extraTags1)))
+  ))
 
 /** @internal */
 export const timer = (name: string): Metric.Metric<
@@ -454,16 +464,23 @@ export const value = Debug.methodWithTrace((trace) =>
 /** @internal */
 export const withNow = <Type, In, Out>(
   self: Metric.Metric<Type, readonly [In, number], Out>
-): Metric.Metric<Type, In, Out> => {
-  return pipe(self, contramap((input: In) => [input, Date.now()] as const))
-}
+): Metric.Metric<Type, In, Out> => contramap(self, (input: In) => [input, Date.now()] as const)
 
 /** @internal */
-export const zip = <Type2, In2, Out2>(that: Metric.Metric<Type2, In2, Out2>) => {
-  return <Type, In, Out>(
+export const zip = Debug.dual<
+  <Type, In, Out, Type2, In2, Out2>(
+    self: Metric.Metric<Type, In, Out>,
+    that: Metric.Metric<Type2, In2, Out2>
+  ) => Metric.Metric<readonly [Type, Type2], readonly [In, In2], readonly [Out, Out2]>,
+  <Type2, In2, Out2>(
+    that: Metric.Metric<Type2, In2, Out2>
+  ) => <Type, In, Out>(
     self: Metric.Metric<Type, In, Out>
-  ): Metric.Metric<readonly [Type, Type2], readonly [In, In2], readonly [Out, Out2]> => {
-    return make(
+  ) => Metric.Metric<readonly [Type, Type2], readonly [In, In2], readonly [Out, Out2]>
+>(
+  2,
+  <Type, In, Out, Type2, In2, Out2>(self: Metric.Metric<Type, In, Out>, that: Metric.Metric<Type2, In2, Out2>) =>
+    make(
       [self.keyType, that.keyType] as const,
       (input: readonly [In, In2], extraTags) => {
         const [l, r] = input
@@ -472,10 +489,7 @@ export const zip = <Type2, In2, Out2>(that: Metric.Metric<Type2, In2, Out2>) => 
       },
       (extraTags) => [self.unsafeValue(extraTags), that.unsafeValue(extraTags)] as const
     )
-  }
-}
+)
 
 /** @internal */
-export function unsafeSnapshot(): HashSet.HashSet<MetricPair.MetricPair.Untyped> {
-  return globalMetricRegistry.snapshot()
-}
+export const unsafeSnapshot = (): HashSet.HashSet<MetricPair.MetricPair.Untyped> => globalMetricRegistry.snapshot()

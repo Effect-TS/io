@@ -10,7 +10,6 @@ import type * as Layer from "@effect/io/Layer"
 import type * as Logger from "@effect/io/Logger"
 import type * as LogLevel from "@effect/io/Logger/Level"
 import type * as Supervisor from "@effect/io/Supervisor"
-import { pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
 
 // circular with Logger
@@ -60,10 +59,10 @@ export const removeLogger = Debug.untracedMethod(() =>
 )
 
 /** @internal */
-export const replaceLogger = Debug.untracedMethod(() =>
-  <A, B>(logger: Logger.Logger<string, A>, that: Logger.Logger<string, B>): Layer.Layer<never, never, never> =>
-    pipe(removeLogger(logger), layer.flatMap(() => addLogger(that)))
-)
+export const replaceLogger = Debug.dual<
+  <A, B>(logger: Logger.Logger<string, A>, that: Logger.Logger<string, B>) => Layer.Layer<never, never, never>,
+  <B>(that: Logger.Logger<string, B>) => <A>(logger: Logger.Logger<string, A>) => Layer.Layer<never, never, never>
+>(2, (logger, that) => layer.flatMap(removeLogger(logger), () => addLogger(that)))
 
 /** @internal */
 export const addSupervisor = Debug.untracedMethod(() =>
