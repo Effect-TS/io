@@ -302,6 +302,16 @@ describe.concurrent("ConfigProvider", () => {
       assert.strictEqual(result, "Hello, World!")
     }))
 
+  it.effect("contramapPath", () =>
+    Effect.gen(function*($) {
+      const configProvider = pipe(
+        ConfigProvider.fromMap(new Map([["KEY", "VALUE"]])),
+        ConfigProvider.contramapPath((path) => path.toUpperCase())
+      )
+      const result = yield* $(configProvider.load(Config.string("key")))
+      assert.strictEqual(result, "VALUE")
+    }))
+
   it.effect("nested", () =>
     Effect.gen(function*($) {
       const configProvider1 = ConfigProvider.fromMap(new Map([["nested.key", "value"]]))
