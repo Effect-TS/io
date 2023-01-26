@@ -464,6 +464,25 @@ export const tuple = <T extends NonEmptyArrayConfig>(...tuple: T): Config.Config
   return result as any
 }
 
+/**
+ * @internal
+ */
+export const unwrap = <A>(wrapped: Config.Wrap<A>): Config.Config<A> => {
+  if (
+    typeof wrapped === "object" &&
+    wrapped != null &&
+    ConfigTypeId in wrapped
+  ) {
+    return wrapped
+  }
+
+  return struct(
+    Object.fromEntries(
+      Object.entries(wrapped).map(([k, a]) => [k, unwrap(a)])
+    )
+  ) as any
+}
+
 /** @internal */
 export const validate = Debug.dual<
   {
