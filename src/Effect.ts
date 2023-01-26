@@ -4183,7 +4183,10 @@ export const timeoutTo: {
  * @since 1.0.0
  * @category conversions
  */
-export const toLayer: <A>(tag: Context.Tag<A>) => <R, E>(self: Effect<R, E, A>) => Layer.Layer<R, E, A> = layer.toLayer
+export const toLayer: {
+  <R, E, A>(self: Effect<R, E, A>, tag: Context.Tag<A>): Layer.Layer<R, E, A>
+  <A>(tag: Context.Tag<A>): <R, E>(self: Effect<R, E, A>) => Layer.Layer<R, E, A>
+} = layer.toLayer
 
 /**
  * Constructs a layer from this effect.
@@ -4218,9 +4221,10 @@ export const toLayerScopedDiscard: <R, E, _>(
  * @since 1.0.0
  * @category conversions
  */
-export const toLayerScoped: <A>(
-  tag: Context.Tag<A>
-) => <R, E>(self: Effect<R, E, A>) => Layer.Layer<Exclude<R, Scope.Scope>, E, A> = layer.toLayerScoped
+export const toLayerScoped: {
+  <R, E, A>(self: Effect<R, E, A>, tag: Context.Tag<A>): Layer.Layer<Exclude<R, Scope.Scope>, E, A>
+  <A>(tag: Context.Tag<A>): <R, E>(self: Effect<R, E, A>) => Layer.Layer<Exclude<R, Scope.Scope>, E, A>
+} = layer.toLayerScoped
 
 /**
  * Transplants specified effects so that when those effects fork other

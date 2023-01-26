@@ -51,14 +51,12 @@ export const Order: order.Order<Fiber.RuntimeFiber<unknown, unknown>> = pipe(
 )
 
 /** @internal */
-export const isFiber = (u: unknown): u is Fiber.Fiber<unknown, unknown> => {
-  return typeof u === "object" && u != null && FiberTypeId in u
-}
+export const isFiber = (u: unknown): u is Fiber.Fiber<unknown, unknown> =>
+  typeof u === "object" && u != null && FiberTypeId in u
 
 /** @internal */
-export const isRuntimeFiber = <E, A>(self: Fiber.Fiber<E, A>): self is Fiber.RuntimeFiber<E, A> => {
-  return RuntimeFiberTypeId in self
-}
+export const isRuntimeFiber = <E, A>(self: Fiber.Fiber<E, A>): self is Fiber.RuntimeFiber<E, A> =>
+  RuntimeFiberTypeId in self
 
 /** @internal */
 export const _await = Debug.methodWithTrace((trace) =>
@@ -72,17 +70,15 @@ export const children = Debug.methodWithTrace((trace) =>
 )
 
 /** @internal */
-export const done = <E, A>(exit: Exit.Exit<E, A>): Fiber.Fiber<E, A> => {
-  return {
-    [FiberTypeId]: fiberVariance,
-    id: () => FiberId.none,
-    await: () => Debug.bodyWithTrace((trace) => core.succeed(exit).traced(trace)),
-    children: () => Debug.bodyWithTrace((trace) => core.succeed(Chunk.empty()).traced(trace)),
-    inheritAll: () => Debug.bodyWithTrace((trace) => core.unit().traced(trace)),
-    poll: () => Debug.bodyWithTrace((trace) => core.succeed(Option.some(exit)).traced(trace)),
-    interruptAsFork: () => Debug.bodyWithTrace((trace) => core.unit().traced(trace))
-  }
-}
+export const done = <E, A>(exit: Exit.Exit<E, A>): Fiber.Fiber<E, A> => ({
+  [FiberTypeId]: fiberVariance,
+  id: () => FiberId.none,
+  await: Debug.methodWithTrace((trace) => () => core.succeed(exit).traced(trace)),
+  children: Debug.methodWithTrace((trace) => () => core.succeed(Chunk.empty()).traced(trace)),
+  inheritAll: Debug.methodWithTrace((trace) => () => core.unit().traced(trace)),
+  poll: Debug.methodWithTrace((trace) => () => core.succeed(Option.some(exit)).traced(trace)),
+  interruptAsFork: Debug.methodWithTrace((trace) => () => core.unit().traced(trace))
+})
 
 /** @internal */
 export const dump = Debug.methodWithTrace((trace) =>
@@ -158,38 +154,40 @@ export const join = Debug.methodWithTrace((trace) =>
 )
 
 /** @internal */
-export const map = <A, B>(f: (a: A) => B) => {
-  return <E>(self: Fiber.Fiber<E, A>): Fiber.Fiber<E, B> => {
-    return pipe(self, mapEffect((a) => core.sync(() => f(a))))
-  }
-}
+export const map = Debug.untracedDual<
+  <E, A, B>(self: Fiber.Fiber<E, A>, f: (a: A) => B) => Fiber.Fiber<E, B>,
+  <A, B>(f: (a: A) => B) => <E>(self: Fiber.Fiber<E, A>) => Fiber.Fiber<E, B>
+>(2, (restore) => (self, f) => mapEffect(self, (a) => core.sync(() => restore(f)(a))))
 
 /** @internal */
-export const mapEffect = <A, E2, A2>(f: (a: A) => Effect.Effect<never, E2, A2>) => {
-  return <E>(self: Fiber.Fiber<E, A>): Fiber.Fiber<E | E2, A2> => {
-    return {
-      [FiberTypeId]: fiberVariance,
-      id: () => self.id(),
-      await: () => Debug.bodyWithTrace((trace) => core.flatMap(self.await(), Exit.forEachEffect(f)).traced(trace)),
-      children: () => Debug.bodyWithTrace((trace) => self.children().traced(trace)),
-      inheritAll: () => Debug.bodyWithTrace((trace) => self.inheritAll().traced(trace)),
-      poll: () =>
-        Debug.bodyWithTrace((trace) =>
-          core.flatMap(self.poll(), (result) => {
-            switch (result._tag) {
-              case "None": {
-                return core.succeed(Option.none)
-              }
-              case "Some": {
-                return pipe(result.value, Exit.forEachEffect(f), core.map(Option.some))
-              }
+export const mapEffect = Debug.untracedDual<
+  <E, A, E2, A2>(self: Fiber.Fiber<E, A>, f: (a: A) => Effect.Effect<never, E2, A2>) => Fiber.Fiber<E | E2, A2>,
+  <A, E2, A2>(f: (a: A) => Effect.Effect<never, E2, A2>) => <E>(self: Fiber.Fiber<E, A>) => Fiber.Fiber<E | E2, A2>
+>(2, (restore) =>
+  (self, f) => ({
+    [FiberTypeId]: fiberVariance,
+    id: () => self.id(),
+    await: Debug.methodWithTrace((trace) => () => core.flatMap(self.await(), Exit.forEachEffect(f)).traced(trace)),
+    children: Debug.methodWithTrace((trace) => () => self.children().traced(trace)),
+    inheritAll: Debug.methodWithTrace((trace) => () => self.inheritAll().traced(trace)),
+    poll: Debug.methodWithTrace((trace) =>
+      () =>
+        core.flatMap(self.poll(), (result) => {
+          switch (result._tag) {
+            case "None": {
+              return core.succeed(Option.none)
             }
-          }).traced(trace)
-        ),
-      interruptAsFork: (id) => Debug.bodyWithTrace((trace) => self.interruptAsFork(id).traced(trace))
-    }
-  }
-}
+            case "Some": {
+              return pipe(
+                Exit.forEachEffect(result.value, restore(f)),
+                core.map(Option.some)
+              )
+            }
+          }
+        }).traced(trace)
+    ),
+    interruptAsFork: Debug.methodWithTrace((trace) => (id) => self.interruptAsFork(id).traced(trace))
+  }))
 
 /** @internal */
 export const mapFiber = Debug.dualWithTrace<
@@ -214,78 +212,84 @@ export const mapFiber = Debug.dualWithTrace<
     ).traced(trace))
 
 /** @internal */
-export const match = <E, A, Z>(
-  onFiber: (_: Fiber.Fiber<E, A>) => Z,
-  onRuntimeFiber: (_: Fiber.RuntimeFiber<E, A>) => Z
-) => {
-  return (self: Fiber.Fiber<E, A>): Z => {
+export const match = Debug.untracedDual<
+  <E, A, Z>(
+    self: Fiber.Fiber<E, A>,
+    onFiber: (fiber: Fiber.Fiber<E, A>) => Z,
+    onRuntimeFiber: (fiber: Fiber.RuntimeFiber<E, A>) => Z
+  ) => Z,
+  <E, A, Z>(
+    onFiber: (fiber: Fiber.Fiber<E, A>) => Z,
+    onRuntimeFiber: (fiber: Fiber.RuntimeFiber<E, A>) => Z
+  ) => (self: Fiber.Fiber<E, A>) => Z
+>(3, (restore) =>
+  (self, onFiber, onRuntimeFiber) => {
     if (isRuntimeFiber(self)) {
-      return onRuntimeFiber(self)
+      return restore(onRuntimeFiber)(self)
     }
-    return onFiber(self)
-  }
-}
+    return restore(onFiber)(self)
+  })
 
 /** @internal */
 export const never = (): Fiber.Fiber<never, never> => ({
   [FiberTypeId]: fiberVariance,
   id: () => FiberId.none,
-  await: () => Debug.bodyWithTrace((trace) => core.never().traced(trace)),
-  children: () => Debug.bodyWithTrace((trace) => core.succeed(Chunk.empty()).traced(trace)),
-  inheritAll: () => Debug.bodyWithTrace((trace) => core.never().traced(trace)),
-  poll: () => Debug.bodyWithTrace((trace) => core.succeed(Option.none).traced(trace)),
-  interruptAsFork: () => Debug.bodyWithTrace((trace) => core.never().traced(trace))
+  await: Debug.methodWithTrace((trace) => () => core.never().traced(trace)),
+  children: Debug.methodWithTrace((trace) => () => core.succeed(Chunk.empty()).traced(trace)),
+  inheritAll: Debug.methodWithTrace((trace) => () => core.never().traced(trace)),
+  poll: Debug.methodWithTrace((trace) => () => core.succeed(Option.none).traced(trace)),
+  interruptAsFork: Debug.methodWithTrace((trace) => () => core.never().traced(trace))
 })
 
 /** @internal */
-export const orElse = <E2, A2>(that: Fiber.Fiber<E2, A2>) => {
-  return <E, A>(self: Fiber.Fiber<E, A>): Fiber.Fiber<E | E2, A | A2> => ({
-    [FiberTypeId]: fiberVariance,
-    id: () => pipe(self.id(), FiberId.getOrElse(that.id())),
-    await: () =>
-      Debug.bodyWithTrace((trace) =>
-        core.zipWith(
-          self.await(),
-          that.await(),
-          (exit1, exit2) => (Exit.isSuccess(exit1) ? exit1 : exit2)
-        ).traced(trace)
-      ),
-    children: () => Debug.bodyWithTrace((trace) => self.children().traced(trace)),
-    inheritAll: () => Debug.bodyWithTrace((trace) => core.zipRight(that.inheritAll(), self.inheritAll()).traced(trace)),
-    poll: () =>
-      Debug.bodyWithTrace((trace) =>
-        core.zipWith(
-          self.poll(),
-          that.poll(),
-          (option1, option2) => {
-            switch (option1._tag) {
-              case "None": {
-                return Option.none
-              }
-              case "Some": {
-                return Exit.isSuccess(option1.value) ? option1 : option2
-              }
+export const orElse = Debug.dual<
+  <E, A, E2, A2>(self: Fiber.Fiber<E, A>, that: Fiber.Fiber<E2, A2>) => Fiber.Fiber<E | E2, A | A2>,
+  <E2, A2>(that: Fiber.Fiber<E2, A2>) => <E, A>(self: Fiber.Fiber<E, A>) => Fiber.Fiber<E | E2, A | A2>
+>(2, (self, that) => ({
+  [FiberTypeId]: fiberVariance,
+  id: () => FiberId.getOrElse(self.id(), that.id()),
+  await: Debug.methodWithTrace((trace) =>
+    () =>
+      core.zipWith(
+        self.await(),
+        that.await(),
+        (exit1, exit2) => (Exit.isSuccess(exit1) ? exit1 : exit2)
+      ).traced(trace)
+  ),
+  children: Debug.methodWithTrace((trace) => () => self.children().traced(trace)),
+  inheritAll: Debug.methodWithTrace((trace) => () => core.zipRight(that.inheritAll(), self.inheritAll()).traced(trace)),
+  poll: Debug.methodWithTrace((trace) =>
+    () =>
+      core.zipWith(
+        self.poll(),
+        that.poll(),
+        (option1, option2) => {
+          switch (option1._tag) {
+            case "None": {
+              return Option.none
+            }
+            case "Some": {
+              return Exit.isSuccess(option1.value) ? option1 : option2
             }
           }
-        ).traced(trace)
-      ),
-    interruptAsFork: (id) =>
-      Debug.bodyWithTrace((trace) =>
-        pipe(
-          core.interruptAsFiber(self, id),
-          core.zipRight(pipe(that, core.interruptAsFiber(id))),
-          core.asUnit
-        ).traced(trace)
-      )
-  })
-}
+        }
+      ).traced(trace)
+  ),
+  interruptAsFork: Debug.methodWithTrace((trace) =>
+    (id) =>
+      pipe(
+        core.interruptAsFiber(self, id),
+        core.zipRight(pipe(that, core.interruptAsFiber(id))),
+        core.asUnit
+      ).traced(trace)
+  )
+}))
 
 /** @internal */
-export const orElseEither = <E2, A2>(that: Fiber.Fiber<E2, A2>) => {
-  return <E, A>(self: Fiber.Fiber<E, A>): Fiber.Fiber<E | E2, Either.Either<A, A2>> => {
-    return pipe(self, map(Either.left), orElse(pipe(that, map(Either.right))))
-  }
-}
+export const orElseEither = Debug.dual<
+  <E, A, E2, A2>(self: Fiber.Fiber<E, A>, that: Fiber.Fiber<E2, A2>) => Fiber.Fiber<E | E2, Either.Either<A, A2>>,
+  <E2, A2>(that: Fiber.Fiber<E2, A2>) => <E, A>(self: Fiber.Fiber<E, A>) => Fiber.Fiber<E | E2, Either.Either<A, A2>>
+>(2, (self, that) => orElse(map(self, Either.left), map(that, Either.right)))
 
 /** @internal */
 export const poll = Debug.methodWithTrace((trace) =>

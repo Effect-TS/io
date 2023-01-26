@@ -442,7 +442,10 @@ export const joinAll: <E, A>(fibers: Iterable<Fiber<E, A>>) => Effect.Effect<nev
  * @since 1.0.0
  * @category mapping
  */
-export const map: <A, B>(f: (a: A) => B) => <E>(self: Fiber<E, A>) => Fiber<E, B> = internal.map
+export const map: {
+  <E, A, B>(self: Fiber<E, A>, f: (a: A) => B): Fiber<E, B>
+  <A, B>(f: (a: A) => B): <E>(self: Fiber<E, A>) => Fiber<E, B>
+} = internal.map
 
 /**
  * Effectually maps over the value the fiber computes.
@@ -450,9 +453,10 @@ export const map: <A, B>(f: (a: A) => B) => <E>(self: Fiber<E, A>) => Fiber<E, B
  * @since 1.0.0
  * @category mapping
  */
-export const mapEffect: <A, E2, A2>(
-  f: (a: A) => Effect.Effect<never, E2, A2>
-) => <E>(self: Fiber<E, A>) => Fiber<E2 | E, A2> = internal.mapEffect
+export const mapEffect: {
+  <E, A, E2, A2>(self: Fiber<E, A>, f: (a: A) => Effect.Effect<never, E2, A2>): Fiber<E | E2, A2>
+  <A, E2, A2>(f: (a: A) => Effect.Effect<never, E2, A2>): <E>(self: Fiber<E, A>) => Fiber<E2 | E, A2>
+} = internal.mapEffect
 
 /**
  * Passes the success of this fiber to the specified callback, and continues
@@ -472,10 +476,17 @@ export const mapFiber: {
  * @since 1.0.0
  * @category folding
  */
-export const match: <E, A, Z>(
-  onFiber: (_: Fiber<E, A>) => Z,
-  onRuntimeFiber: (_: RuntimeFiber<E, A>) => Z
-) => (self: Fiber<E, A>) => Z = internal.match
+export const match: {
+  <E, A, Z>(
+    self: Fiber<E, A>,
+    onFiber: (fiber: Fiber<E, A>) => Z,
+    onRuntimeFiber: (fiber: RuntimeFiber<E, A>) => Z
+  ): Z
+  <E, A, Z>(
+    onFiber: (fiber: Fiber<E, A>) => Z,
+    onRuntimeFiber: (fiber: RuntimeFiber<E, A>) => Z
+  ): (self: Fiber<E, A>) => Z
+} = internal.match
 
 /**
  * A fiber that never fails or succeeds.
@@ -493,8 +504,10 @@ export const never: (_: void) => Fiber<never, never> = internal.never
  * @since 1.0.0
  * @category alternatives
  */
-export const orElse: <E2, A2>(that: Fiber<E2, A2>) => <E, A>(self: Fiber<E, A>) => Fiber<E2 | E, A2 | A> =
-  internal.orElse
+export const orElse: {
+  <E, A, E2, A2>(self: Fiber<E, A>, that: Fiber<E2, A2>): Fiber<E | E2, A | A2>
+  <E2, A2>(that: Fiber<E2, A2>): <E, A>(self: Fiber<E, A>) => Fiber<E2 | E, A2 | A>
+} = internal.orElse
 
 /**
  * Returns a fiber that prefers `this` fiber, but falls back to the `that` one
@@ -504,9 +517,10 @@ export const orElse: <E2, A2>(that: Fiber<E2, A2>) => <E, A>(self: Fiber<E, A>) 
  * @since 1.0.0
  * @category alternatives
  */
-export const orElseEither: <E2, A2>(
-  that: Fiber<E2, A2>
-) => <E, A>(self: Fiber<E, A>) => Fiber<E2 | E, Either.Either<A, A2>> = internal.orElseEither
+export const orElseEither: {
+  <E, A, E2, A2>(self: Fiber<E, A>, that: Fiber<E2, A2>): Fiber<E | E2, Either.Either<A, A2>>
+  <E2, A2>(that: Fiber<E2, A2>): <E, A>(self: Fiber<E, A>) => Fiber<E2 | E, Either.Either<A, A2>>
+} = internal.orElseEither
 
 /**
  * Tentatively observes the fiber, but returns immediately if it is not

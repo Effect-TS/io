@@ -274,7 +274,6 @@ class MemoMap {
   }
 }
 
-/** @internal */
 const makeMemoMap = (): Effect.Effect<never, never, MemoMap> => {
   return pipe(
     circular.makeSynchronized<
@@ -410,36 +409,40 @@ const withScope = <RIn, E, ROut>(
 // -----------------------------------------------------------------------------
 
 /** @internal */
+export const catchAll = Debug.untracedDual<
+  <R, E, A, R2, E2, A2>(
+    self: Layer.Layer<R, E, A>,
+    onError: (error: E) => Layer.Layer<R2, E2, A2>
+  ) => Layer.Layer<R | R2, E2, A & A2>,
+  <E, R2, E2, A2>(
+    onError: (error: E) => Layer.Layer<R2, E2, A2>
+  ) => <R, A>(self: Layer.Layer<R, E, A>) => Layer.Layer<R | R2, E2, A & A2>
+>(2, (restore) => (self, onError) => matchLayer(self, restore(onError), succeedContext))
+
+/** @internal */
+export const catchAllCause = Debug.untracedDual<
+  <R, E, A, R2, E2, A2>(
+    self: Layer.Layer<R, E, A>,
+    onError: (cause: Cause.Cause<E>) => Layer.Layer<R2, E2, A2>
+  ) => Layer.Layer<R | R2, E2, A & A2>,
+  <E, R2, E2, A2>(
+    onError: (cause: Cause.Cause<E>) => Layer.Layer<R2, E2, A2>
+  ) => <R, A>(self: Layer.Layer<R, E, A>) => Layer.Layer<R | R2, E2, A & A2>
+>(2, (restore) => (self, onError) => matchCauseLayer(self, restore(onError), succeedContext))
+
+/** @internal */
+export const die = (defect: unknown): Layer.Layer<never, never, unknown> => failCause(Cause.die(defect))
+
+/** @internal */
+export const dieSync = (evaluate: LazyArg<unknown>): Layer.Layer<never, never, unknown> =>
+  failCauseSync(() => Cause.die(evaluate()))
+
+/** @internal */
 export const discard = <RIn, E, ROut>(self: Layer.Layer<RIn, E, ROut>): Layer.Layer<RIn, E, never> =>
-  pipe(self, map(() => Context.empty()))
+  map(self, () => Context.empty())
 
 /** @internal */
-export const catchAll = <E, R2, E2, A2>(onError: (error: E) => Layer.Layer<R2, E2, A2>) => {
-  return <R, A>(self: Layer.Layer<R, E, A>): Layer.Layer<R | R2, E2, A & A2> => {
-    return pipe(self, matchLayer(onError, succeedContext))
-  }
-}
-
-/** @internal */
-export const catchAllCause = <E, R2, E2, A2>(onError: (cause: Cause.Cause<E>) => Layer.Layer<R2, E2, A2>) => {
-  return <R, A>(self: Layer.Layer<R, E, A>): Layer.Layer<R | R2, E2, A & A2> =>
-    pipe(self, matchCauseLayer(onError, succeedContext))
-}
-
-/** @internal */
-export const die = (defect: unknown): Layer.Layer<never, never, unknown> => {
-  return failCause(Cause.die(defect))
-}
-
-/** @internal */
-export const dieSync = (evaluate: LazyArg<unknown>): Layer.Layer<never, never, unknown> => {
-  return failCauseSync(() => Cause.die(evaluate()))
-}
-
-/** @internal */
-export const context = <R>(): Layer.Layer<R, never, R> => {
-  return fromEffectContext(core.context<R>())
-}
+export const context = <R>(): Layer.Layer<R, never, R> => fromEffectContext(core.context<R>())
 
 /** @internal */
 export const extendScope = <RIn, E, ROut>(
@@ -452,79 +455,43 @@ export const extendScope = <RIn, E, ROut>(
 }
 
 /** @internal */
-export const fail = <E>(error: E): Layer.Layer<never, E, unknown> => {
-  return failCause(Cause.fail(error))
-}
+export const fail = <E>(error: E): Layer.Layer<never, E, unknown> => failCause(Cause.fail(error))
 
 /** @internal */
-export const failSync = <E>(evaluate: LazyArg<E>): Layer.Layer<never, E, unknown> => {
-  return failCauseSync(() => Cause.fail(evaluate()))
-}
+export const failSync = <E>(evaluate: LazyArg<E>): Layer.Layer<never, E, unknown> =>
+  failCauseSync(() => Cause.fail(evaluate()))
 
 /** @internal */
-export const failCause = <E>(cause: Cause.Cause<E>): Layer.Layer<never, E, unknown> => {
-  return fromEffectContext(core.failCause(cause))
-}
+export const failCause = <E>(cause: Cause.Cause<E>): Layer.Layer<never, E, unknown> =>
+  fromEffectContext(core.failCause(cause))
 
 /** @internal */
-export const failCauseSync = <E>(evaluate: LazyArg<Cause.Cause<E>>): Layer.Layer<never, E, unknown> => {
-  return fromEffectContext(core.failCauseSync(evaluate))
-}
+export const failCauseSync = <E>(evaluate: LazyArg<Cause.Cause<E>>): Layer.Layer<never, E, unknown> =>
+  fromEffectContext(core.failCauseSync(evaluate))
 
 /** @internal */
-export const flatMap = <A, R2, E2, A2>(f: (context: Context.Context<A>) => Layer.Layer<R2, E2, A2>) => {
-  return <R, E>(self: Layer.Layer<R, E, A>): Layer.Layer<R | R2, E | E2, A2> => {
-    return pipe(self, matchLayer(fail, f))
-  }
-}
+export const flatMap = Debug.untracedDual<
+  <R, E, A, R2, E2, A2>(
+    self: Layer.Layer<R, E, A>,
+    f: (context: Context.Context<A>) => Layer.Layer<R2, E2, A2>
+  ) => Layer.Layer<R | R2, E | E2, A2>,
+  <A, R2, E2, A2>(
+    f: (context: Context.Context<A>) => Layer.Layer<R2, E2, A2>
+  ) => <R, E>(self: Layer.Layer<R, E, A>) => Layer.Layer<R | R2, E | E2, A2>
+>(2, (restore) => (self, f) => matchLayer(self, fail, restore(f)))
 
 /** @internal */
-export const flatten = <R2, E2, A>(tag: Context.Tag<Layer.Layer<R2, E2, A>>) => {
-  return <R, E>(self: Layer.Layer<R, E, Layer.Layer<R2, E2, A>>): Layer.Layer<R | R2, E | E2, A> => {
-    return pipe(self, flatMap(Context.get(tag)))
-  }
-}
-
-/** @internal */
-export const matchCauseLayer = <E, A, R2, E2, A2, R3, E3, A3>(
-  onFailure: (cause: Cause.Cause<E>) => Layer.Layer<R2, E2, A2>,
-  onSuccess: (context: Context.Context<A>) => Layer.Layer<R3, E3, A3>
-) => {
-  return <R>(self: Layer.Layer<R, E, A>): Layer.Layer<R | R2 | R3, E2 | E3, A2 & A3> => {
-    const fold = Object.create(proto)
-    fold._tag = OpCodes.OP_FOLD
-    fold.layer = self
-    fold.failureK = onFailure
-    fold.successK = onSuccess
-    return fold
-  }
-}
-
-/** @internal */
-export const matchLayer = <E, R2, E2, A2, A, R3, E3, A3>(
-  onFailure: (error: E) => Layer.Layer<R2, E2, A2>,
-  onSuccess: (context: Context.Context<A>) => Layer.Layer<R3, E3, A3>
-) => {
-  return <R>(self: Layer.Layer<R, E, A>): Layer.Layer<R | R2 | R3, E2 | E3, A2 & A3> => {
-    return pipe(
-      self,
-      matchCauseLayer(
-        (cause) => {
-          const failureOrCause = Cause.failureOrCause(cause)
-          switch (failureOrCause._tag) {
-            case "Left": {
-              return onFailure(failureOrCause.left)
-            }
-            case "Right": {
-              return failCause(failureOrCause.right)
-            }
-          }
-        },
-        onSuccess
-      )
-    )
-  }
-}
+export const flatten = Debug.dual<
+  <R, E, A, R2, E2>(
+    self: Layer.Layer<R, E, Layer.Layer<R2, E2, A>>,
+    tag: Context.Tag<Layer.Layer<R2, E2, A>>
+  ) => Layer.Layer<R | R2, E | E2, A>,
+  <R2, E2, A>(
+    tag: Context.Tag<Layer.Layer<R2, E2, A>>
+  ) => <R, E>(
+    self: Layer.Layer<R, E, Layer.Layer<R2, E2, A>>
+  ) => Layer.Layer<R | R2, E | E2, A>
+>(2, (self, tag) => flatMap(self, Context.get(tag)))
 
 /** @internal */
 export const fresh = <R, E, A>(self: Layer.Layer<R, E, A>): Layer.Layer<R, E, A> => {
@@ -535,27 +502,15 @@ export const fresh = <R, E, A>(self: Layer.Layer<R, E, A>): Layer.Layer<R, E, A>
 }
 
 /** @internal */
-export function fromEffect<T extends Context.Tag<any>, R, E>(
+export const fromEffect = <T extends Context.Tag<any>, R, E>(
   tag: T,
   effect: Effect.Effect<R, E, Context.Tag.Service<T>>
-): Layer.Layer<R, E, Context.Tag.Service<T>> {
-  return fromEffectContext(
-    pipe(
-      effect,
-      core.map((service) => pipe(Context.empty(), Context.add(tag)(service)))
-    )
-  )
-}
+): Layer.Layer<R, E, Context.Tag.Service<T>> =>
+  fromEffectContext(core.map(effect, (service) => pipe(Context.empty(), Context.add(tag)(service))))
 
 /** @internal */
-export function fromEffectDiscard<R, E, _>(effect: Effect.Effect<R, E, _>): Layer.Layer<R, E, never> {
-  return fromEffectContext(
-    pipe(
-      effect,
-      core.map(() => Context.empty())
-    )
-  )
-}
+export const fromEffectDiscard = <R, E, _>(effect: Effect.Effect<R, E, _>) =>
+  fromEffectContext(core.map(effect, () => Context.empty()))
 
 /** @internal */
 export function fromEffectContext<R, E, A>(
@@ -572,9 +527,8 @@ export const fromFunction = <A extends Context.Tag<any>, B extends Context.Tag<a
   tagA: A,
   tagB: B,
   f: (a: Context.Tag.Service<A>) => Context.Tag.Service<B>
-): Layer.Layer<Context.Tag.Service<A>, never, Context.Tag.Service<B>> => {
-  return fromEffectContext(core.serviceWith(tagA, (a) => pipe(Context.empty(), Context.add(tagB)(f(a)))))
-}
+): Layer.Layer<Context.Tag.Service<A>, never, Context.Tag.Service<B>> =>
+  fromEffectContext(core.serviceWith(tagA, (a) => pipe(Context.empty(), Context.add(tagB)(f(a)))))
 
 /** @internal */
 export const launch = Debug.methodWithTrace((trace) =>
@@ -588,18 +542,71 @@ export const launch = Debug.methodWithTrace((trace) =>
 )
 
 /** @internal */
-export const map = <A, B>(f: (context: Context.Context<A>) => Context.Context<B>) => {
-  return <R, E>(self: Layer.Layer<R, E, A>): Layer.Layer<R, E, B> => {
-    return pipe(self, flatMap((context) => succeedContext(f(context))))
-  }
-}
+export const map = Debug.untracedDual<
+  <R, E, A, B>(
+    self: Layer.Layer<R, E, A>,
+    f: (context: Context.Context<A>) => Context.Context<B>
+  ) => Layer.Layer<R, E, B>,
+  <A, B>(
+    f: (context: Context.Context<A>) => Context.Context<B>
+  ) => <R, E>(self: Layer.Layer<R, E, A>) => Layer.Layer<R, E, B>
+>(2, (restore) => (self, f) => flatMap(self, (context) => succeedContext(restore(f)(context))))
 
 /** @internal */
-export const mapError = <E, E1>(f: (error: E) => E1) => {
-  return <R, A>(self: Layer.Layer<R, E, A>): Layer.Layer<R, E1, A> => {
-    return pipe(self, catchAll((error) => failSync(() => f(error))))
-  }
-}
+export const mapError = Debug.untracedDual<
+  <R, E, A, E2>(self: Layer.Layer<R, E, A>, f: (error: E) => E2) => Layer.Layer<R, E2, A>,
+  <E, E2>(f: (error: E) => E2) => <R, A>(self: Layer.Layer<R, E, A>) => Layer.Layer<R, E2, A>
+>(2, (restore) => (self, f) => catchAll(self, (error) => failSync(() => restore(f)(error))))
+
+/** @internal */
+export const matchCauseLayer = Debug.untracedDual<
+  <R, E, A, R2, E2, A2, R3, E3, A3>(
+    self: Layer.Layer<R, E, A>,
+    onFailure: (cause: Cause.Cause<E>) => Layer.Layer<R2, E2, A2>,
+    onSuccess: (context: Context.Context<A>) => Layer.Layer<R3, E3, A3>
+  ) => Layer.Layer<R | R2 | R3, E2 | E3, A2 & A3>,
+  <E, A, R2, E2, A2, R3, E3, A3>(
+    onFailure: (cause: Cause.Cause<E>) => Layer.Layer<R2, E2, A2>,
+    onSuccess: (context: Context.Context<A>) => Layer.Layer<R3, E3, A3>
+  ) => <R>(self: Layer.Layer<R, E, A>) => Layer.Layer<R | R2 | R3, E2 | E3, A2 & A3>
+>(3, (restore) =>
+  (self, onFailure, onSuccess) => {
+    const fold = Object.create(proto)
+    fold._tag = OpCodes.OP_FOLD
+    fold.layer = self
+    fold.failureK = restore(onFailure)
+    fold.successK = restore(onSuccess)
+    return fold
+  })
+
+/** @internal */
+export const matchLayer = Debug.untracedDual<
+  <R, E, A, R2, E2, A2, R3, E3, A3>(
+    self: Layer.Layer<R, E, A>,
+    onFailure: (error: E) => Layer.Layer<R2, E2, A2>,
+    onSuccess: (context: Context.Context<A>) => Layer.Layer<R3, E3, A3>
+  ) => Layer.Layer<R | R2 | R3, E2 | E3, A2 & A3>,
+  <E, R2, E2, A2, A, R3, E3, A3>(
+    onFailure: (error: E) => Layer.Layer<R2, E2, A2>,
+    onSuccess: (context: Context.Context<A>) => Layer.Layer<R3, E3, A3>
+  ) => <R>(self: Layer.Layer<R, E, A>) => Layer.Layer<R | R2 | R3, E2 | E3, A2 & A3>
+>(3, (restore) =>
+  (self, onFailure, onSuccess) =>
+    matchCauseLayer(
+      self,
+      (cause) => {
+        const failureOrCause = Cause.failureOrCause(cause)
+        switch (failureOrCause._tag) {
+          case "Left": {
+            return restore(onFailure)(failureOrCause.left)
+          }
+          case "Right": {
+            return failCause(failureOrCause.right)
+          }
+        }
+      },
+      restore(onSuccess)
+    ))
 
 /** @internal */
 export const memoize = Debug.methodWithTrace((trace) =>
@@ -615,146 +622,144 @@ export const memoize = Debug.methodWithTrace((trace) =>
 )
 
 /** @internal */
-export const merge = <RIn2, E2, ROut2>(that: Layer.Layer<RIn2, E2, ROut2>) => {
-  return <RIn, E, ROut>(self: Layer.Layer<RIn, E, ROut>): Layer.Layer<
+export const merge = Debug.dual<
+  <RIn, E, ROut, RIn2, E2, ROut2>(self: Layer.Layer<RIn, E, ROut>, that: Layer.Layer<RIn2, E2, ROut2>) => Layer.Layer<
     RIn | RIn2,
     E | E2,
     ROut | ROut2
-  > => {
-    return pipe(self, zipWithPar(that, (a, b) => pipe(a, Context.merge(b))))
+  >,
+  <RIn2, E2, ROut2>(
+    that: Layer.Layer<RIn2, E2, ROut2>
+  ) => <RIn, E, ROut>(self: Layer.Layer<RIn, E, ROut>) => Layer.Layer<
+    RIn | RIn2,
+    E | E2,
+    ROut | ROut2
+  >
+>(2, (self, that) => zipWithPar(self, that, (a, b) => pipe(a, Context.merge(b))))
+
+/** @internal */
+export const mergeAll = <Layers extends [Layer.Layer<any, any, any>, ...Array<Layer.Layer<any, any, any>>]>(
+  ...layers: Layers
+): Layer.Layer<
+  { [k in keyof Layers]: Layer.Layer.Context<Layers[k]> }[number],
+  { [k in keyof Layers]: Layer.Layer.Error<Layers[k]> }[number],
+  { [k in keyof Layers]: Layer.Layer.Success<Layers[k]> }[number]
+> => {
+  let final = layers[0]
+  for (let i = 1; i < layers.length; i++) {
+    final = merge(layers[i])(final)
   }
+  return final
 }
 
 /** @internal */
-export const orDie = <R, E, A>(self: Layer.Layer<R, E, A>): Layer.Layer<R, never, A> => {
-  return pipe(self, catchAll((defect) => die(defect)))
-}
+export const orDie = <R, E, A>(self: Layer.Layer<R, E, A>): Layer.Layer<R, never, A> =>
+  catchAll(self, (defect) => die(defect))
 
 /** @internal */
-export const orElse = <R1, E1, A1>(that: LazyArg<Layer.Layer<R1, E1, A1>>) => {
-  return <R, E, A>(self: Layer.Layer<R, E, A>): Layer.Layer<R | R1, E | E1, A & A1> => {
-    return pipe(self, catchAll(() => that()))
-  }
-}
+export const orElse = Debug.untracedDual<
+  <R, E, A, R2, E2, A2>(
+    self: Layer.Layer<R, E, A>,
+    that: LazyArg<Layer.Layer<R2, E2, A2>>
+  ) => Layer.Layer<R | R2, E | E2, A & A2>,
+  <R2, E2, A2>(
+    that: LazyArg<Layer.Layer<R2, E2, A2>>
+  ) => <R, E, A>(self: Layer.Layer<R, E, A>) => Layer.Layer<R | R2, E | E2, A & A2>
+>(2, (restore) => (self, that) => catchAll(self, restore(that)))
 
 /** @internal */
-export const passthrough = <RIn, E, ROut>(
-  self: Layer.Layer<RIn, E, ROut>
-): Layer.Layer<RIn, E, RIn | ROut> => {
-  return pipe(context<RIn>(), merge(self))
-}
+export const passthrough = <RIn, E, ROut>(self: Layer.Layer<RIn, E, ROut>): Layer.Layer<RIn, E, RIn | ROut> =>
+  merge(context<RIn>(), self)
 
 /** @internal */
-export const project = <A extends Context.Tag<any>, B extends Context.Tag<any>>(
-  tagA: A,
-  tagB: B,
-  f: (a: Context.Tag.Service<A>) => Context.Tag.Service<B>
+export const project = Debug.untracedDual<
+  <RIn, E, A extends Context.Tag<any>, B extends Context.Tag<any>>(
+    self: Layer.Layer<RIn, E, Context.Tag.Service<A>>,
+    tagA: A,
+    tagB: B,
+    f: (a: Context.Tag.Service<A>) => Context.Tag.Service<B>
+  ) => Layer.Layer<RIn, E, Context.Tag.Service<B>>,
+  <A extends Context.Tag<any>, B extends Context.Tag<any>>(
+    tagA: A,
+    tagB: B,
+    f: (a: Context.Tag.Service<A>) => Context.Tag.Service<B>
+  ) => <RIn, E>(self: Layer.Layer<RIn, E, Context.Tag.Service<A>>) => Layer.Layer<RIn, E, Context.Tag.Service<B>>
+>(4, (restore) =>
+  (self, tagA, tagB, f) =>
+    map(self, (context) =>
+      pipe(
+        Context.empty(),
+        Context.add(tagB)(restore(f)(pipe(context, Context.unsafeGet(tagA))))
+      )))
+
+/** @internal */
+export const provide = Debug.dual<
+  <RIn, E, ROut, RIn2, E2, ROut2>(
+    self: Layer.Layer<RIn, E, ROut>,
+    that: Layer.Layer<RIn2, E2, ROut2>
+  ) => Layer.Layer<RIn | Exclude<RIn2, ROut>, E | E2, ROut2>,
+  <RIn2, E2, ROut2>(
+    that: Layer.Layer<RIn2, E2, ROut2>
+  ) => <RIn, E, ROut>(self: Layer.Layer<RIn, E, ROut>) => Layer.Layer<RIn | Exclude<RIn2, ROut>, E | E2, ROut2>
+>(2, <RIn, E, ROut, RIn2, E2, ROut2>(
+  self: Layer.Layer<RIn, E, ROut>,
+  that: Layer.Layer<RIn2, E2, ROut2>
+) =>
+  suspend(() => {
+    const provideTo = Object.create(proto)
+    provideTo._tag = OpCodes.OP_PROVIDE_TO
+    provideTo.first = Object.create(proto, {
+      _tag: { value: OpCodes.OP_ZIP_WITH, enumerable: true },
+      first: { value: context<Exclude<RIn2, ROut>>(), enumerable: true },
+      second: { value: self },
+      zipK: { value: (a: Context.Context<ROut>, b: Context.Context<ROut2>) => pipe(a, Context.merge(b)) }
+    })
+    provideTo.second = that
+    return provideTo
+  }))
+
+/** @internal */
+export const provideMerge = Debug.dual<
+  <RIn, E, ROut, RIn2, E2, ROut2>(
+    self: Layer.Layer<RIn, E, ROut>,
+    that: Layer.Layer<RIn2, E2, ROut2>
+  ) => Layer.Layer<RIn | Exclude<RIn2, ROut>, E2 | E, ROut | ROut2>,
+  <RIn2, E2, ROut2>(that: Layer.Layer<RIn2, E2, ROut2>) => <RIn, E, ROut>(
+    self: Layer.Layer<RIn, E, ROut>
+  ) => Layer.Layer<RIn | Exclude<RIn2, ROut>, E2 | E, ROut | ROut2>
+>(2, <RIn, E, ROut, RIn2, E2, ROut2>(
+  self: Layer.Layer<RIn, E, ROut>,
+  that: Layer.Layer<RIn2, E2, ROut2>
 ) => {
-  return <RIn, E>(
-    self: Layer.Layer<RIn, E, Context.Tag.Service<A>>
-  ): Layer.Layer<RIn, E, Context.Tag.Service<B>> => {
+  const zipWith = Object.create(proto)
+  zipWith._tag = OpCodes.OP_ZIP_WITH
+  zipWith.first = self
+  zipWith.second = pipe(self, provide(that))
+  zipWith.zipK = (a: Context.Context<ROut>, b: Context.Context<ROut2>): Context.Context<ROut | ROut2> => {
+    return pipe(a, Context.merge(b))
+  }
+  return zipWith
+})
+
+/** @internal */
+export const retry = Debug.dual<
+  <RIn, E, ROut, RIn2, X>(
+    self: Layer.Layer<RIn, E, ROut>,
+    schedule: Schedule.Schedule<RIn2, E, X>
+  ) => Layer.Layer<RIn | RIn2, E, ROut>,
+  <RIn2, E, X>(
+    schedule: Schedule.Schedule<RIn2, E, X>
+  ) => <RIn, ROut>(self: Layer.Layer<RIn, E, ROut>) => Layer.Layer<RIn | RIn2, E, ROut>
+>(2, (self, schedule) =>
+  suspend(() => {
+    const stateTag = Context.Tag<{ state: unknown }>()
     return pipe(
-      self,
-      map((context) =>
-        pipe(
-          Context.empty(),
-          Context.add(tagB)(f(pipe(context, Context.unsafeGet(tagA))))
-        )
+      succeed(stateTag, { state: schedule.initial }),
+      flatMap((env: Context.Context<{ state: unknown }>) =>
+        retryLoop(self, schedule, stateTag, pipe(env, Context.get(stateTag)).state)
       )
     )
-  }
-}
-
-/** @internal */
-export const provide = <RIn2, E2, ROut2>(that: Layer.Layer<RIn2, E2, ROut2>) => {
-  return <RIn, E, ROut>(
-    self: Layer.Layer<RIn, E, ROut>
-  ): Layer.Layer<RIn | Exclude<RIn2, ROut>, E | E2, ROut2> => {
-    return suspend(() => {
-      const provideTo = Object.create(proto)
-      provideTo._tag = OpCodes.OP_PROVIDE_TO
-      provideTo.first = Object.create(proto, {
-        _tag: { value: OpCodes.OP_ZIP_WITH, enumerable: true },
-        first: { value: context<Exclude<RIn2, ROut>>(), enumerable: true },
-        second: { value: self },
-        zipK: { value: (a: Context.Context<ROut>, b: Context.Context<ROut2>) => pipe(a, Context.merge(b)) }
-      })
-      provideTo.second = that
-      return provideTo
-    })
-  }
-}
-
-/** @internal */
-export const use = <RIn, E, ROut>(
-  self: Layer.Layer<RIn, E, ROut>
-) => {
-  return <RIn2, E2, ROut2>(
-    that: Layer.Layer<RIn2, E2, ROut2>
-  ): Layer.Layer<RIn | Exclude<RIn2, ROut>, E | E2, ROut2> => {
-    return suspend(() => {
-      const provideTo = Object.create(proto)
-      provideTo._tag = OpCodes.OP_PROVIDE_TO
-      provideTo.first = Object.create(proto, {
-        _tag: { value: OpCodes.OP_ZIP_WITH, enumerable: true },
-        first: { value: context<Exclude<RIn2, ROut>>(), enumerable: true },
-        second: { value: self },
-        zipK: { value: (a: Context.Context<ROut>, b: Context.Context<ROut2>) => pipe(a, Context.merge(b)) }
-      })
-      provideTo.second = that
-      return provideTo
-    })
-  }
-}
-
-/** @internal */
-export function provideMerge<RIn2, E2, ROut2>(that: Layer.Layer<RIn2, E2, ROut2>) {
-  return <RIn, E, ROut>(
-    self: Layer.Layer<RIn, E, ROut>
-  ): Layer.Layer<RIn | Exclude<RIn2, ROut>, E2 | E, ROut | ROut2> => {
-    const zipWith = Object.create(proto)
-    zipWith._tag = OpCodes.OP_ZIP_WITH
-    zipWith.first = self
-    zipWith.second = pipe(self, provide(that))
-    zipWith.zipK = (a: Context.Context<ROut>, b: Context.Context<ROut2>): Context.Context<ROut | ROut2> => {
-      return pipe(a, Context.merge(b))
-    }
-    return zipWith
-  }
-}
-
-/** @internal */
-export function useMerge<RIn, E, ROut>(
-  self: Layer.Layer<RIn, E, ROut>
-) {
-  return <RIn2, E2, ROut2>(
-    that: Layer.Layer<RIn2, E2, ROut2>
-  ): Layer.Layer<RIn | Exclude<RIn2, ROut>, E2 | E, ROut | ROut2> => {
-    const zipWith = Object.create(proto)
-    zipWith._tag = OpCodes.OP_ZIP_WITH
-    zipWith.first = self
-    zipWith.second = pipe(self, provide(that))
-    zipWith.zipK = (a: Context.Context<ROut>, b: Context.Context<ROut2>): Context.Context<ROut | ROut2> => {
-      return pipe(a, Context.merge(b))
-    }
-    return zipWith
-  }
-}
-
-/** @internal */
-export const retry = <RIn1, E, X>(schedule: Schedule.Schedule<RIn1, E, X>) => {
-  return <RIn, ROut>(self: Layer.Layer<RIn, E, ROut>): Layer.Layer<RIn | RIn1, E, ROut> => {
-    return suspend(() => {
-      const stateTag = Context.Tag<{ state: unknown }>()
-      return pipe(
-        succeed(stateTag, { state: schedule.initial }),
-        flatMap((env: Context.Context<{ state: unknown }>) =>
-          retryLoop(self, schedule, stateTag, pipe(env, Context.get(stateTag)).state)
-        )
-      )
-    })
-  }
-}
+  }))
 
 /** @internal */
 const retryLoop = <RIn, E, ROut, RIn2, X>(
@@ -892,33 +897,47 @@ export const syncContext = <A>(evaluate: LazyArg<Context.Context<A>>): Layer.Lay
 }
 
 /** @internal */
-export const tap = <ROut, RIn2, E2, X>(f: (context: Context.Context<ROut>) => Effect.Effect<RIn2, E2, X>) => {
-  return <RIn, E>(self: Layer.Layer<RIn, E, ROut>): Layer.Layer<RIn | RIn2, E | E2, ROut> => {
-    return pipe(
-      self,
-      flatMap((context) => fromEffectContext(pipe(f(context), core.as(context))))
-    )
-  }
-}
+export const tap = Debug.untracedDual<
+  <RIn, E, ROut, RIn2, E2, X>(
+    self: Layer.Layer<RIn, E, ROut>,
+    f: (context: Context.Context<ROut>) => Effect.Effect<RIn2, E2, X>
+  ) => Layer.Layer<RIn | RIn2, E | E2, ROut>,
+  <ROut, RIn2, E2, X>(
+    f: (context: Context.Context<ROut>) => Effect.Effect<RIn2, E2, X>
+  ) => <RIn, E>(self: Layer.Layer<RIn, E, ROut>) => Layer.Layer<RIn | RIn2, E | E2, ROut>
+>(2, (restore) => (self, f) => flatMap(self, (context) => fromEffectContext(core.as(restore(f)(context), context))))
 
 /** @internal */
-export const tapError = <E, RIn2, E2, X>(f: (e: E) => Effect.Effect<RIn2, E2, X>) => {
-  return <RIn, ROut>(self: Layer.Layer<RIn, E, ROut>): Layer.Layer<RIn | RIn2, E | E2, ROut> => {
-    return pipe(
+export const tapError = Debug.untracedDual<
+  <RIn, E, ROut, RIn2, E2, X>(
+    self: Layer.Layer<RIn, E, ROut>,
+    f: (e: E) => Effect.Effect<RIn2, E2, X>
+  ) => Layer.Layer<RIn | RIn2, E | E2, ROut>,
+  <E, RIn2, E2, X>(
+    f: (e: E) => Effect.Effect<RIn2, E2, X>
+  ) => <RIn, ROut>(self: Layer.Layer<RIn, E, ROut>) => Layer.Layer<RIn | RIn2, E | E2, ROut>
+>(2, (restore) =>
+  (self, f) =>
+    catchAll(
       self,
-      catchAll((e) => fromEffectContext(pipe(f(e), core.flatMap(() => core.fail(e)))))
-    )
-  }
-}
+      (e) => fromEffectContext(core.flatMap(restore(f)(e), () => core.fail(e)))
+    ))
 
 /** @internal */
-export const tapErrorCause = <E, RIn2, E2, X>(f: (cause: Cause.Cause<E>) => Effect.Effect<RIn2, E2, X>) => {
-  return <RIn, ROut>(self: Layer.Layer<RIn, E, ROut>): Layer.Layer<RIn | RIn2, E | E2, ROut> =>
-    pipe(
+export const tapErrorCause = Debug.untracedDual<
+  <RIn, E, ROut, RIn2, E2, X>(
+    self: Layer.Layer<RIn, E, ROut>,
+    f: (cause: Cause.Cause<E>) => Effect.Effect<RIn2, E2, X>
+  ) => Layer.Layer<RIn | RIn2, E | E2, ROut>,
+  <E, RIn2, E2, X>(
+    f: (cause: Cause.Cause<E>) => Effect.Effect<RIn2, E2, X>
+  ) => <RIn, ROut>(self: Layer.Layer<RIn, E, ROut>) => Layer.Layer<RIn | RIn2, E | E2, ROut>
+>(2, (restore) =>
+  (self, f) =>
+    catchAllCause(
       self,
-      catchAllCause((cause) => fromEffectContext(pipe(f(cause), core.flatMap(() => core.failCause(cause)))))
-    )
-}
+      (cause) => fromEffectContext(core.flatMap(restore(f)(cause), () => core.failCause(cause)))
+    ))
 
 /** @internal */
 export const toRuntime = <RIn, E, ROut>(
@@ -936,21 +955,74 @@ export const toRuntime = <RIn, E, ROut>(
 }
 
 /** @internal */
-export function zipWithPar<R1, E1, A1, A, A2>(
-  that: Layer.Layer<R1, E1, A1>,
-  f: (a: Context.Context<A>, b: Context.Context<A1>) => Context.Context<A2>
-) {
-  return <R, E>(self: Layer.Layer<R, E, A>): Layer.Layer<R | R1, E | E1, A2> => {
-    return suspend(() => {
+export const use = Debug.dual<
+  <RIn2, E2, ROut2, RIn, E, ROut>(
+    that: Layer.Layer<RIn2, E2, ROut2>,
+    self: Layer.Layer<RIn, E, ROut>
+  ) => Layer.Layer<RIn | Exclude<RIn2, ROut>, E | E2, ROut2>,
+  <RIn, E, ROut>(
+    self: Layer.Layer<RIn, E, ROut>
+  ) => <RIn2, E2, ROut2>(that: Layer.Layer<RIn2, E2, ROut2>) => Layer.Layer<RIn | Exclude<RIn2, ROut>, E | E2, ROut2>
+>(2, <RIn2, E2, ROut2, RIn, E, ROut>(
+  that: Layer.Layer<RIn2, E2, ROut2>,
+  self: Layer.Layer<RIn, E, ROut>
+) =>
+  suspend(() => {
+    const provideTo = Object.create(proto)
+    provideTo._tag = OpCodes.OP_PROVIDE_TO
+    provideTo.first = Object.create(proto, {
+      _tag: { value: OpCodes.OP_ZIP_WITH, enumerable: true },
+      first: { value: context<Exclude<RIn2, ROut>>(), enumerable: true },
+      second: { value: self },
+      zipK: { value: (a: Context.Context<ROut>, b: Context.Context<ROut2>) => pipe(a, Context.merge(b)) }
+    })
+    provideTo.second = that
+    return provideTo
+  }))
+
+/** @internal */
+export const useMerge = Debug.dual<
+  <RIn2, E2, ROut2, RIn, E, ROut>(
+    that: Layer.Layer<RIn2, E2, ROut2>,
+    self: Layer.Layer<RIn, E, ROut>
+  ) => Layer.Layer<RIn | Exclude<RIn2, ROut>, E2 | E, ROut | ROut2>,
+  <RIn, E, ROut>(
+    self: Layer.Layer<RIn, E, ROut>
+  ) => <RIn2, E2, ROut2>(
+    that: Layer.Layer<RIn2, E2, ROut2>
+  ) => Layer.Layer<RIn | Exclude<RIn2, ROut>, E2 | E, ROut | ROut2>
+>(2, <RIn2, E2, ROut2, RIn, E, ROut>(that: Layer.Layer<RIn2, E2, ROut2>, self: Layer.Layer<RIn, E, ROut>) => {
+  const zipWith = Object.create(proto)
+  zipWith._tag = OpCodes.OP_ZIP_WITH
+  zipWith.first = self
+  zipWith.second = pipe(self, provide(that))
+  zipWith.zipK = (a: Context.Context<ROut>, b: Context.Context<ROut2>): Context.Context<ROut | ROut2> => {
+    return pipe(a, Context.merge(b))
+  }
+  return zipWith
+})
+
+/** @internal */
+export const zipWithPar = Debug.untracedDual<
+  <R, E, R2, E2, B, A, C>(
+    self: Layer.Layer<R, E, A>,
+    that: Layer.Layer<R2, E2, B>,
+    f: (a: Context.Context<A>, b: Context.Context<B>) => Context.Context<C>
+  ) => Layer.Layer<R | R2, E | E2, C>,
+  <R2, E2, B, A, C>(
+    that: Layer.Layer<R2, E2, B>,
+    f: (a: Context.Context<A>, b: Context.Context<B>) => Context.Context<C>
+  ) => <R, E>(self: Layer.Layer<R, E, A>) => Layer.Layer<R | R2, E | E2, C>
+>(3, (restore) =>
+  (self, that, f) =>
+    suspend(() => {
       const zipWithPar = Object.create(proto)
       zipWithPar._tag = OpCodes.OP_ZIP_WITH_PAR
       zipWithPar.first = self
       zipWithPar.second = that
-      zipWithPar.zipK = f
+      zipWithPar.zipK = restore(f)
       return zipWithPar
-    })
-  }
-}
+    }))
 
 // circular with Effect
 
@@ -985,30 +1057,13 @@ export const provideSomeLayer = Debug.dualWithTrace<
     provideLayer(self, pipe(context(), merge(layer))).traced(trace))
 
 /** @internal */
-export const toLayer = <A>(tag: Context.Tag<A>) => {
-  return <R, E>(self: Effect.Effect<R, E, A>): Layer.Layer<R, E, A> => {
-    return fromEffect(tag, self)
-  }
-}
+export const toLayer = Debug.dual<
+  <R, E, A>(self: Effect.Effect<R, E, A>, tag: Context.Tag<A>) => Layer.Layer<R, E, A>,
+  <A>(tag: Context.Tag<A>) => <R, E>(self: Effect.Effect<R, E, A>) => Layer.Layer<R, E, A>
+>(2, (self, tag) => fromEffect(tag, self))
 
 /** @internal */
-export const toLayerScoped = <A>(tag: Context.Tag<A>) => {
-  return <R, E>(self: Effect.Effect<R, E, A>): Layer.Layer<Exclude<R, Scope.Scope>, E, A> => {
-    return scoped(tag, self)
-  }
-}
-
-/** @internal */
-export const mergeAll = <Layers extends [Layer.Layer<any, any, any>, ...Array<Layer.Layer<any, any, any>>]>(
-  ...layers: Layers
-): Layer.Layer<
-  { [k in keyof Layers]: Layer.Layer.Context<Layers[k]> }[number],
-  { [k in keyof Layers]: Layer.Layer.Error<Layers[k]> }[number],
-  { [k in keyof Layers]: Layer.Layer.Success<Layers[k]> }[number]
-> => {
-  let final = layers[0]
-  for (let i = 1; i < layers.length; i++) {
-    final = merge(layers[i])(final)
-  }
-  return final
-}
+export const toLayerScoped = Debug.dual<
+  <R, E, A>(self: Effect.Effect<R, E, A>, tag: Context.Tag<A>) => Layer.Layer<Exclude<R, Scope.Scope>, E, A>,
+  <A>(tag: Context.Tag<A>) => <R, E>(self: Effect.Effect<R, E, A>) => Layer.Layer<Exclude<R, Scope.Scope>, E, A>
+>(2, (self, tag) => scoped(tag, self))

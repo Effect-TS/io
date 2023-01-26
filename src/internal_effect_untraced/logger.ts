@@ -197,14 +197,12 @@ const renderLogSpanLogfmt = (now: number) => {
 }
 
 /** @internal */
-export function contramap<Message, Message2>(f: (message: Message2) => Message) {
-  return <Output>(self: Logger.Logger<Message, Output>): Logger.Logger<Message2, Output> => ({
+export const contramap = <Message, Message2>(f: (message: Message2) => Message) =>
+  <Output>(self: Logger.Logger<Message, Output>): Logger.Logger<Message2, Output> => ({
     [LoggerTypeId]: loggerVariance,
-    log: (fiberId, logLevel, message, cause, context, spans, annotations, runtime) => {
-      return self.log(fiberId, logLevel, f(message), cause, context, spans, annotations, runtime)
-    }
+    log: (fiberId, logLevel, message, cause, context, spans, annotations, runtime) =>
+      self.log(fiberId, logLevel, f(message), cause, context, spans, annotations, runtime)
   })
-}
 
 /** @internal */
 export const filterLogLevel = (f: (logLevel: LogLevel.LogLevel) => boolean) => {

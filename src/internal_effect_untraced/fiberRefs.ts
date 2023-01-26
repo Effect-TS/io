@@ -74,11 +74,10 @@ const findAncestor = (
 }
 
 /** @internal */
-export const joinAs = (
-  self: FiberRefs.FiberRefs,
-  fiberId: FiberId.Runtime,
-  that: FiberRefs.FiberRefs
-): FiberRefs.FiberRefs => {
+export const joinAs = Debug.dual<
+  (self: FiberRefs.FiberRefs, fiberId: FiberId.Runtime, that: FiberRefs.FiberRefs) => FiberRefs.FiberRefs,
+  (fiberId: FiberId.Runtime, that: FiberRefs.FiberRefs) => (self: FiberRefs.FiberRefs) => FiberRefs.FiberRefs
+>(3, (self, fiberId, that) => {
   const parentFiberRefs = new Map(self.locals)
   for (const [fiberRef, childStack] of that.locals) {
     const childValue = Arr.headNonEmpty(childStack)[1]
@@ -121,10 +120,13 @@ export const joinAs = (
     }
   }
   return new FiberRefsImpl(new Map(parentFiberRefs))
-}
+})
 
 /** @internal */
-export const forkAs = (self: FiberRefs.FiberRefs, childId: FiberId.Runtime): FiberRefs.FiberRefs => {
+export const forkAs = Debug.dual<
+  (self: FiberRefs.FiberRefs, childId: FiberId.Runtime) => FiberRefs.FiberRefs,
+  (childId: FiberId.Runtime) => (self: FiberRefs.FiberRefs) => FiberRefs.FiberRefs
+>(2, (self, childId) => {
   const map = new Map<FiberRef.FiberRef<any>, Arr.NonEmptyReadonlyArray<readonly [FiberId.Runtime, unknown]>>()
   for (const [fiberRef, stack] of self.locals.entries()) {
     const oldValue = Arr.headNonEmpty(stack)[1]
@@ -136,7 +138,7 @@ export const forkAs = (self: FiberRefs.FiberRefs, childId: FiberId.Runtime): Fib
     }
   }
   return new FiberRefsImpl(map)
-}
+})
 
 /** @internal */
 export const fiberRefs = (self: FiberRefs.FiberRefs) => HashSet.from(self.locals.keys())
@@ -150,36 +152,47 @@ export const setAll = Debug.methodWithTrace((trace) =>
     ).traced(trace)
 )
 
-const delete_ = <A>(self: FiberRefs.FiberRefs, fiberRef: FiberRef.FiberRef<A>): FiberRefs.FiberRefs => {
+/** @internal */
+export const delete_ = Debug.dual<
+  <A>(self: FiberRefs.FiberRefs, fiberRef: FiberRef.FiberRef<A>) => FiberRefs.FiberRefs,
+  <A>(fiberRef: FiberRef.FiberRef<A>) => (self: FiberRefs.FiberRefs) => FiberRefs.FiberRefs
+>(2, (self, fiberRef) => {
   const locals = new Map(self.locals)
   locals.delete(fiberRef)
   return new FiberRefsImpl(locals)
-}
-
-export {
-  /** @internal */
-  delete_ as delete
-}
+})
 
 /** @internal */
-export const get = <A>(self: FiberRefs.FiberRefs, fiberRef: FiberRef.FiberRef<A>): Option.Option<A> => {
+export const get = Debug.dual<
+  <A>(self: FiberRefs.FiberRefs, fiberRef: FiberRef.FiberRef<A>) => Option.Option<A>,
+  <A>(fiberRef: FiberRef.FiberRef<A>) => (self: FiberRefs.FiberRefs) => Option.Option<A>
+>(2, (self, fiberRef) => {
   if (!self.locals.has(fiberRef)) {
     return Option.none
   }
   return Option.some(Arr.headNonEmpty(self.locals.get(fiberRef)!)[1])
-}
+})
 
 /** @internal */
-export const getOrDefault = <A>(self: FiberRefs.FiberRefs, fiberRef: FiberRef.FiberRef<A>): A =>
-  pipe(get(self, fiberRef), Option.getOrElse(() => fiberRef.initial))
+export const getOrDefault = Debug.dual<
+  <A>(self: FiberRefs.FiberRefs, fiberRef: FiberRef.FiberRef<A>) => A,
+  <A>(fiberRef: FiberRef.FiberRef<A>) => (self: FiberRefs.FiberRefs) => A
+>(2, (self, fiberRef) => pipe(get(self, fiberRef), Option.getOrElse(() => fiberRef.initial)))
 
 /** @internal */
-export const updatedAs = <A>(
-  self: FiberRefs.FiberRefs,
-  fiberId: FiberId.Runtime,
-  fiberRef: FiberRef.FiberRef<A>,
-  value: A
-): FiberRefs.FiberRefs => {
+export const updatedAs = Debug.dual<
+  <A>(
+    self: FiberRefs.FiberRefs,
+    fiberId: FiberId.Runtime,
+    fiberRef: FiberRef.FiberRef<A>,
+    value: A
+  ) => FiberRefs.FiberRefs,
+  <A>(
+    fiberId: FiberId.Runtime,
+    fiberRef: FiberRef.FiberRef<A>,
+    value: A
+  ) => (self: FiberRefs.FiberRefs) => FiberRefs.FiberRefs
+>(4, <A>(self: FiberRefs.FiberRefs, fiberId: FiberId.Runtime, fiberRef: FiberRef.FiberRef<A>, value: A) => {
   const oldStack = self.locals.has(fiberRef) ?
     self.locals.get(fiberRef)! :
     Arr.empty<readonly [FiberId.Runtime, any]>()
@@ -209,4 +222,4 @@ export const updatedAs = <A>(
   return new FiberRefsImpl(
     locals.set(fiberRef, newStack as Arr.NonEmptyReadonlyArray<readonly [FiberId.Runtime, any]>)
   )
-}
+})

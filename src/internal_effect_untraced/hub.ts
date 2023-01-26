@@ -854,105 +854,126 @@ class SubscriptionImpl<A> implements Queue.Dequeue<A> {
   }
 
   size(): Effect.Effect<never, never, number> {
-    return core.suspendSucceed(() =>
-      MutableRef.get(this.shutdownFlag)
-        ? core.interrupt()
-        : core.succeed(this.subscription.size())
+    return Debug.bodyWithTrace((trace) =>
+      core.suspendSucceed(() =>
+        MutableRef.get(this.shutdownFlag)
+          ? core.interrupt()
+          : core.succeed(this.subscription.size())
+      ).traced(trace)
     )
   }
 
   isFull(): Effect.Effect<never, never, boolean> {
-    return pipe(this.size(), core.map((size) => size === this.capacity()))
+    return Debug.bodyWithTrace((trace) =>
+      core.map(
+        this.size(),
+        (size) => size === this.capacity()
+      ).traced(trace)
+    )
   }
 
   isEmpty(): Effect.Effect<never, never, boolean> {
-    return pipe(this.size(), core.map((size) => size === 0))
+    return Debug.bodyWithTrace((trace) =>
+      core.map(
+        this.size(),
+        (size) => size === 0
+      ).traced(trace)
+    )
   }
 
   shutdown(): Effect.Effect<never, never, void> {
-    return pipe(
-      core.withFiberRuntime<never, never, void>((state) => {
-        pipe(this.shutdownFlag, MutableRef.set(true))
-        return pipe(
-          unsafePollAllQueue(this.pollers),
-          fiberRuntime.forEachPar((d) => core.deferredInterruptWith(d, state.id())),
-          core.zipRight(core.sync(() => this.subscription.unsubscribe())),
-          core.zipRight(core.sync(() => this.strategy.unsafeOnHubEmptySpace(this.hub, this.subscribers))),
-          core.whenEffect(core.deferredSucceed(this.shutdownHook, void 0)),
-          core.asUnit
-        )
-      }),
-      core.uninterruptible
+    return Debug.bodyWithTrace((trace) =>
+      core.uninterruptible(
+        core.withFiberRuntime<never, never, void>((state) => {
+          pipe(this.shutdownFlag, MutableRef.set(true))
+          return pipe(
+            unsafePollAllQueue(this.pollers),
+            fiberRuntime.forEachPar((d) => core.deferredInterruptWith(d, state.id())),
+            core.zipRight(core.sync(() => this.subscription.unsubscribe())),
+            core.zipRight(core.sync(() => this.strategy.unsafeOnHubEmptySpace(this.hub, this.subscribers))),
+            core.whenEffect(core.deferredSucceed(this.shutdownHook, void 0)),
+            core.asUnit
+          )
+        }).traced(trace)
+      )
     )
   }
 
   isShutdown(): Effect.Effect<never, never, boolean> {
-    return core.sync(() => MutableRef.get(this.shutdownFlag))
+    return Debug.bodyWithTrace((trace) => core.sync(() => MutableRef.get(this.shutdownFlag)).traced(trace))
   }
 
   awaitShutdown(): Effect.Effect<never, never, void> {
-    return core.deferredAwait(this.shutdownHook)
+    return Debug.bodyWithTrace((trace) => core.deferredAwait(this.shutdownHook).traced(trace))
   }
 
   take(): Effect.Effect<never, never, A> {
-    return core.withFiberRuntime<never, never, A>((state) => {
-      if (MutableRef.get(this.shutdownFlag)) {
-        return core.interrupt()
-      }
-      const message = MutableQueue.isEmpty(this.pollers)
-        ? this.subscription.poll(MutableQueue.EmptyMutableQueue)
-        : MutableQueue.EmptyMutableQueue
-      if (message === MutableQueue.EmptyMutableQueue) {
-        const deferred = core.deferredUnsafeMake<never, A>(state.id())
-        return pipe(
-          core.suspendSucceed(() => {
-            pipe(this.pollers, MutableQueue.offer(deferred))
-            pipe(this.subscribers, addSubscribers(this.subscription, this.pollers))
-            this.strategy.unsafeCompletePollers(
-              this.hub,
-              this.subscribers,
-              this.subscription,
-              this.pollers
-            )
-            return MutableRef.get(this.shutdownFlag) ? core.interrupt() : core.deferredAwait(deferred)
-          }),
-          core.onInterrupt(() => core.sync(() => unsafeRemove(this.pollers, deferred)))
-        )
-      } else {
-        this.strategy.unsafeOnHubEmptySpace(this.hub, this.subscribers)
-        return core.succeed(message)
-      }
-    })
+    return Debug.bodyWithTrace((trace) =>
+      core.withFiberRuntime<never, never, A>((state) => {
+        if (MutableRef.get(this.shutdownFlag)) {
+          return core.interrupt()
+        }
+        const message = MutableQueue.isEmpty(this.pollers)
+          ? this.subscription.poll(MutableQueue.EmptyMutableQueue)
+          : MutableQueue.EmptyMutableQueue
+        if (message === MutableQueue.EmptyMutableQueue) {
+          const deferred = core.deferredUnsafeMake<never, A>(state.id())
+          return pipe(
+            core.suspendSucceed(() => {
+              pipe(this.pollers, MutableQueue.offer(deferred))
+              pipe(this.subscribers, addSubscribers(this.subscription, this.pollers))
+              this.strategy.unsafeCompletePollers(
+                this.hub,
+                this.subscribers,
+                this.subscription,
+                this.pollers
+              )
+              return MutableRef.get(this.shutdownFlag) ? core.interrupt() : core.deferredAwait(deferred)
+            }),
+            core.onInterrupt(() => core.sync(() => unsafeRemove(this.pollers, deferred)))
+          )
+        } else {
+          this.strategy.unsafeOnHubEmptySpace(this.hub, this.subscribers)
+          return core.succeed(message)
+        }
+      }).traced(trace)
+    )
   }
 
   takeAll(): Effect.Effect<never, never, Chunk.Chunk<A>> {
-    return core.suspendSucceed(() => {
-      if (MutableRef.get(this.shutdownFlag)) {
-        return core.interrupt()
-      }
-      const as = MutableQueue.isEmpty(this.pollers)
-        ? unsafePollAllSubscription(this.subscription)
-        : Chunk.empty()
-      this.strategy.unsafeOnHubEmptySpace(this.hub, this.subscribers)
-      return core.succeed(as)
-    })
+    return Debug.bodyWithTrace((trace) =>
+      core.suspendSucceed(() => {
+        if (MutableRef.get(this.shutdownFlag)) {
+          return core.interrupt()
+        }
+        const as = MutableQueue.isEmpty(this.pollers)
+          ? unsafePollAllSubscription(this.subscription)
+          : Chunk.empty()
+        this.strategy.unsafeOnHubEmptySpace(this.hub, this.subscribers)
+        return core.succeed(as)
+      }).traced(trace)
+    )
   }
 
   takeUpTo(this: this, max: number): Effect.Effect<never, never, Chunk.Chunk<A>> {
-    return core.suspendSucceed(() => {
-      if (MutableRef.get(this.shutdownFlag)) {
-        return core.interrupt()
-      }
-      const as = MutableQueue.isEmpty(this.pollers)
-        ? unsafePollN(this.subscription, max)
-        : Chunk.empty()
-      this.strategy.unsafeOnHubEmptySpace(this.hub, this.subscribers)
-      return core.succeed(as)
-    })
+    return Debug.bodyWithTrace((trace) =>
+      core.suspendSucceed(() => {
+        if (MutableRef.get(this.shutdownFlag)) {
+          return core.interrupt()
+        }
+        const as = MutableQueue.isEmpty(this.pollers)
+          ? unsafePollN(this.subscription, max)
+          : Chunk.empty()
+        this.strategy.unsafeOnHubEmptySpace(this.hub, this.subscribers)
+        return core.succeed(as)
+      }).traced(trace)
+    )
   }
 
   takeBetween(min: number, max: number): Effect.Effect<never, never, Chunk.Chunk<A>> {
-    return core.suspendSucceed(() => takeRemainderLoop(this, min, max, Chunk.empty()))
+    return Debug.bodyWithTrace((trace) =>
+      core.suspendSucceed(() => takeRemainderLoop(this, min, max, Chunk.empty())).traced(trace)
+    )
   }
 }
 
@@ -1281,24 +1302,15 @@ class BackPressureStrategy<A> implements HubStrategy<A> {
   > = MutableQueue.unbounded()
 
   shutdown(): Effect.Effect<never, never, void> {
-    return pipe(
-      core.fiberId(),
-      core.flatMap((fiberId) =>
-        pipe(
-          core.sync(() => unsafePollAllQueue(this.publishers)),
-          core.flatMap((publishers) =>
-            pipe(
-              publishers,
-              fiberRuntime.forEachParDiscard(([_, deferred, last]) =>
-                last ?
-                  pipe(core.deferredInterruptWith(deferred, fiberId), core.asUnit) :
-                  core.unit()
-              )
-            )
-          )
-        )
-      )
-    )
+    return core.flatMap(core.fiberId(), (fiberId) =>
+      core.flatMap(
+        core.sync(() => unsafePollAllQueue(this.publishers)),
+        (publishers) =>
+          fiberRuntime.forEachParDiscard(publishers, ([_, deferred, last]) =>
+            last ?
+              pipe(core.deferredInterruptWith(deferred, fiberId), core.asUnit) :
+              core.unit())
+      ))
   }
 
   handleSurplus(

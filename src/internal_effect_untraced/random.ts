@@ -52,7 +52,6 @@ class RandomImpl implements Random.Random {
   }
 }
 
-/** @internal */
 const shuffleWith = <A>(
   elements: Iterable<A>,
   nextIntBounded: (n: number) => Effect.Effect<never, never, number>
@@ -80,7 +79,6 @@ const shuffleWith = <A>(
   )
 }
 
-/** @internal */
 const swap = <A>(buffer: Array<A>, index1: number, index2: number): Array<A> => {
   const tmp = buffer[index1]!
   buffer[index1] = buffer[index2]!
@@ -88,5 +86,4 @@ const swap = <A>(buffer: Array<A>, index1: number, index2: number): Array<A> => 
   return buffer
 }
 
-/** @internal */
 export const make = (seed: number): Random.Random => new RandomImpl(seed)

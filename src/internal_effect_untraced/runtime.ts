@@ -173,17 +173,18 @@ export const make = <R>(
 ): Runtime.Runtime<R> => new RuntimeImpl(context, runtimeFlags, fiberRefs)
 
 /** @internal */
-export const runtime = <R>(): Effect.Effect<R, never, Runtime.Runtime<R>> => {
-  return core.withFiberRuntime<R, never, RuntimeImpl<R>>((state, status) =>
-    core.succeed(
-      new RuntimeImpl<R>(
-        state.getFiberRef(core.currentContext as unknown as FiberRef.FiberRef<Context.Context<R>>),
-        status.runtimeFlags,
-        state.unsafeGetFiberRefs()
+export const runtime = Debug.methodWithTrace((trace) =>
+  <R>(): Effect.Effect<R, never, Runtime.Runtime<R>> =>
+    core.withFiberRuntime<R, never, RuntimeImpl<R>>((state, status) =>
+      core.succeed(
+        new RuntimeImpl<R>(
+          state.getFiberRef(core.currentContext as unknown as FiberRef.FiberRef<Context.Context<R>>),
+          status.runtimeFlags,
+          state.unsafeGetFiberRefs()
+        )
       )
-    )
-  )
-}
+    ).traced(trace)
+)
 
 /** @internal */
 export const defaultRuntimeFlags: RuntimeFlags.RuntimeFlags = runtimeFlags.make(

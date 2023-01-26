@@ -26,8 +26,10 @@ const scopedRefVariance = {
 }
 
 /** @internal  */
-const close = <A>(self: ScopedRef.ScopedRef<A>): Effect.Effect<never, never, void> =>
-  core.flatMap(ref.get(self.ref), (tuple) => tuple[0].close(core.exitUnit()))
+const close = Debug.methodWithTrace((trace) =>
+  <A>(self: ScopedRef.ScopedRef<A>): Effect.Effect<never, never, void> =>
+    core.flatMap(ref.get(self.ref), (tuple) => tuple[0].close(core.exitUnit())).traced(trace)
+)
 
 /** @internal */
 export const fromAcquire = Debug.methodWithTrace((trace) =>

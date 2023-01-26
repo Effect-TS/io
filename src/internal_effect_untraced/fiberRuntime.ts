@@ -456,7 +456,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    * **NOTE**: This method must be invoked by the fiber itself.
    */
   unsafeDeleteFiberRef<X>(fiberRef: FiberRef.FiberRef<X>): void {
-    this._fiberRefs = fiberRefs.delete(this._fiberRefs, fiberRef)
+    this._fiberRefs = fiberRefs.delete_(this._fiberRefs, fiberRef)
   }
 
   /**
@@ -2340,13 +2340,12 @@ export const scopeUse = Debug.dualWithTrace<
 /** @internal */
 export const fiberRefUnsafeMakeSupervisor = (
   initial: Supervisor.Supervisor<any>
-): FiberRef.FiberRef<Supervisor.Supervisor<any>> => {
-  return core.fiberRefUnsafeMakePatch(
+): FiberRef.FiberRef<Supervisor.Supervisor<any>> =>
+  core.fiberRefUnsafeMakePatch(
     initial,
     SupervisorPatch.differ,
     SupervisorPatch.empty
   )
-}
 
 // circular with FiberRef
 
@@ -2436,61 +2435,57 @@ export const fiberAwaitAll = Debug.methodWithTrace((trace) =>
 )
 
 /** @internal */
-export function fiberCollectAll<E, A>(fibers: Iterable<Fiber.Fiber<E, A>>): Fiber.Fiber<E, Chunk.Chunk<A>> {
-  return {
-    [internalFiber.FiberTypeId]: internalFiber.fiberVariance,
-    id: () => Array.from(fibers).reduce((id, fiber) => pipe(id, FiberId.combine(fiber.id())), FiberId.none),
-    await: () =>
-      Debug.bodyWithTrace((trace) =>
-        core.exit(forEachPar(fibers, (fiber) => core.flatten(fiber.await()))).traced(trace)
-      ),
-    children: () =>
-      Debug.bodyWithTrace((trace) =>
-        core.map(forEachPar(fibers, (fiber) => fiber.children()), Chunk.flatten).traced(trace)
-      ),
-    inheritAll: () =>
-      Debug.bodyWithTrace((trace) => core.forEachDiscard(fibers, (fiber) => fiber.inheritAll()).traced(trace)),
-    poll: () =>
-      Debug.bodyWithTrace((trace) =>
-        core.map(
-          core.forEach(fibers, (fiber) => fiber.poll()),
-          Chunk.reduceRight(
-            Option.some<Exit.Exit<E, Chunk.Chunk<A>>>(core.exitSucceed(Chunk.empty())),
-            (optionB, optionA) => {
-              switch (optionA._tag) {
-                case "None": {
-                  return Option.none
-                }
-                case "Some": {
-                  switch (optionB._tag) {
-                    case "None": {
-                      return Option.none
-                    }
-                    case "Some": {
-                      return Option.some(
-                        pipe(
-                          optionA.value,
-                          core.exitZipWith(
-                            optionB.value,
-                            (a, chunk) => pipe(chunk, Chunk.prepend(a)),
-                            internalCause.parallel
-                          )
+export const fiberCollectAll = <E, A>(fibers: Iterable<Fiber.Fiber<E, A>>): Fiber.Fiber<E, Chunk.Chunk<A>> => ({
+  [internalFiber.FiberTypeId]: internalFiber.fiberVariance,
+  id: () => Array.from(fibers).reduce((id, fiber) => FiberId.combine(id, fiber.id()), FiberId.none),
+  await: Debug.methodWithTrace((trace) =>
+    () => core.exit(forEachPar(fibers, (fiber) => core.flatten(fiber.await()))).traced(trace)
+  ),
+  children: Debug.methodWithTrace((trace) =>
+    () => core.map(forEachPar(fibers, (fiber) => fiber.children()), Chunk.flatten).traced(trace)
+  ),
+  inheritAll: Debug.methodWithTrace((trace) =>
+    () => core.forEachDiscard(fibers, (fiber) => fiber.inheritAll()).traced(trace)
+  ),
+  poll: Debug.methodWithTrace((trace) =>
+    () =>
+      core.map(
+        core.forEach(fibers, (fiber) => fiber.poll()),
+        Chunk.reduceRight(
+          Option.some<Exit.Exit<E, Chunk.Chunk<A>>>(core.exitSucceed(Chunk.empty())),
+          (optionB, optionA) => {
+            switch (optionA._tag) {
+              case "None": {
+                return Option.none
+              }
+              case "Some": {
+                switch (optionB._tag) {
+                  case "None": {
+                    return Option.none
+                  }
+                  case "Some": {
+                    return Option.some(
+                      pipe(
+                        optionA.value,
+                        core.exitZipWith(
+                          optionB.value,
+                          (a, chunk) => pipe(chunk, Chunk.prepend(a)),
+                          internalCause.parallel
                         )
                       )
-                    }
+                    )
                   }
                 }
               }
             }
-          )
-        ).traced(trace)
-      ),
-    interruptAsFork: (fiberId) =>
-      Debug.bodyWithTrace((trace) =>
-        core.forEachDiscard(fibers, (fiber) => fiber.interruptAsFork(fiberId)).traced(trace)
-      )
-  }
-}
+          }
+        )
+      ).traced(trace)
+  ),
+  interruptAsFork: Debug.methodWithTrace((trace) =>
+    (fiberId) => core.forEachDiscard(fibers, (fiber) => fiber.interruptAsFork(fiberId)).traced(trace)
+  )
+})
 
 /* @internal */
 export const fiberInterruptFork = Debug.methodWithTrace((trace) =>

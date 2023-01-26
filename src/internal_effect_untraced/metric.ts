@@ -47,13 +47,14 @@ export const make: Metric.MetricApply = function<Type, In, Out>(
   unsafeValue: (extraTags: HashSet.HashSet<MetricLabel.MetricLabel>) => Out
 ): Metric.Metric<Type, In, Out> {
   const metric: Metric.Metric<Type, In, Out> = Object.assign(
-    <R, E, A extends In>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
-      Debug.bodyWithTrace((trace) =>
-        core.tap(
-          effect,
-          (a) => core.sync(() => unsafeUpdate(a, HashSet.empty()))
-        ).traced(trace)
-      ),
+    Debug.methodWithTrace<(<R, E, A extends In>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>)>(
+      (trace, restore) =>
+        <R, E, A extends In>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
+          core.tap(
+            effect,
+            (a) => core.sync(() => restore(unsafeUpdate)(a, HashSet.empty()))
+          ).traced(trace)
+    ),
     {
       [MetricTypeId]: metricVariance,
       keyType,

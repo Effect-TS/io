@@ -116,7 +116,7 @@ export const patch = Debug.dual<
         break
       }
       case OP_REMOVE: {
-        fiberRefs = _fiberRefs.delete(fiberRefs, head.fiberRef)
+        fiberRefs = _fiberRefs.delete_(fiberRefs, head.fiberRef)
         patches = tail
         break
       }
