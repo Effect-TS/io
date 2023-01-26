@@ -1,6 +1,7 @@
 import * as Config from "@effect/io/Config"
 import * as ConfigError from "@effect/io/Config/Error"
 import * as ConfigProvider from "@effect/io/Config/Provider"
+import * as ConfigSecret from "@effect/io/Config/Secret"
 import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import * as it from "@effect/io/test/utils/extend"
@@ -294,6 +295,13 @@ describe.concurrent("ConfigProvider", () => {
       )
     }))
 
+  it.effect("values are not split unless a sequence is expected", () =>
+    Effect.gen(function*($) {
+      const configProvider = ConfigProvider.fromMap(new Map([["greeting", "Hello, World!"]]))
+      const result = yield* $(configProvider.load(Config.string("greeting")))
+      assert.strictEqual(result, "Hello, World!")
+    }))
+
   it.effect("nested", () =>
     Effect.gen(function*($) {
       const configProvider1 = ConfigProvider.fromMap(new Map([["nested.key", "value"]]))
@@ -321,5 +329,13 @@ describe.concurrent("ConfigProvider", () => {
         ).load(config)
       )
       assert.strictEqual(result, "value1")
+    }))
+
+  it.effect("secret", () =>
+    Effect.gen(function*($) {
+      const value = "Hello, World!"
+      const configProvider = ConfigProvider.fromMap(new Map([["greeting", value]]))
+      const result = yield* $(configProvider.load(Config.secret("greeting")))
+      assert.deepStrictEqual(result, ConfigSecret.make(value.split("").map((c) => c.charCodeAt(0))))
     }))
 })

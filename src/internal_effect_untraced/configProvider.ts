@@ -5,7 +5,6 @@ import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as _config from "@effect/io/internal_effect_untraced/config"
 import * as configError from "@effect/io/internal_effect_untraced/configError"
-import * as configSecret from "@effect/io/internal_effect_untraced/configSecret"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as OpCodes from "@effect/io/internal_effect_untraced/opCodes/config"
 import * as Either from "@fp-ts/core/Either"
@@ -53,14 +52,17 @@ export const makeFlat = Debug.untracedMethod((restore) =>
   (
     load: <A>(
       path: Chunk.Chunk<string>,
-      config: Config.Config.Primitive<A>
+      config: Config.Config.Primitive<A>,
+      split: boolean
     ) => Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>,
     enumerateChildren: (
       path: Chunk.Chunk<string>
     ) => Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>>
   ): ConfigProvider.ConfigProvider.Flat => ({
     [FlatConfigProviderTypeId]: FlatConfigProviderTypeId,
-    load: Debug.methodWithTrace((trace) => (path, config) => restore(load)(path, config).traced(trace)),
+    load: Debug.methodWithTrace((trace) =>
+      (path, config, split = true) => restore(load)(path, config, split).traced(trace)
+    ),
     enumerateChildren: Debug.methodWithTrace((trace) => (path) => restore(enumerateChildren)(path).traced(trace))
   })
 )
@@ -70,7 +72,7 @@ export const fromFlat = Debug.untracedMethod(() =>
   (flat: ConfigProvider.ConfigProvider.Flat): ConfigProvider.ConfigProvider =>
     make(
       (config) =>
-        core.flatMap(fromFlatLoop(flat, Chunk.empty(), config), (chunk) =>
+        core.flatMap(fromFlatLoop(flat, Chunk.empty(), config, false), (chunk) =>
           pipe(
             Chunk.head(chunk),
             Option.match(
@@ -100,7 +102,8 @@ export const fromEnv = Debug.untracedMethod(() =>
 
     const load = <A>(
       path: Chunk.Chunk<string>,
-      primitive: Config.Config.Primitive<A>
+      primitive: Config.Config.Primitive<A>,
+      split = true
     ): Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>> => {
       const pathString = makePathString(path)
       const current = getEnv()
@@ -108,7 +111,7 @@ export const fromEnv = Debug.untracedMethod(() =>
       return pipe(
         core.fromOption(valueOpt),
         core.mapError(() => configError.MissingData(path, `Expected ${pathString} to exist in the process context`)),
-        core.flatMap((value) => parsePrimitive(value, path, primitive, seqDelim))
+        core.flatMap((value) => parsePrimitive(value, path, primitive, seqDelim, split))
       )
     }
 
@@ -147,14 +150,15 @@ export const fromMap = Debug.untracedMethod(() =>
     const unmakePathString = (pathString: string): ReadonlyArray<string> => pathString.split(pathDelim)
     const load = <A>(
       path: Chunk.Chunk<string>,
-      primitive: Config.Config.Primitive<A>
+      primitive: Config.Config.Primitive<A>,
+      split = true
     ): Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>> => {
       const pathString = makePathString(path)
       const valueOpt = map.has(pathString) ? Option.some(map.get(pathString)!) : Option.none()
       return pipe(
         core.fromOption(valueOpt),
         core.mapError(() => configError.MissingData(path, `Expected ${pathString} to exist in the provided map`)),
-        core.flatMap((value) => parsePrimitive(value, path, primitive, seqDelim))
+        core.flatMap((value) => parsePrimitive(value, path, primitive, seqDelim, split))
       )
     }
     const enumerateChildren = (
@@ -207,7 +211,8 @@ const extend = <A, B>(
 const fromFlatLoop = <A>(
   flat: ConfigProvider.ConfigProvider.Flat,
   prefix: Chunk.Chunk<string>,
-  config: Config.Config<A>
+  config: Config.Config<A>,
+  split: boolean
 ): Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>> => {
   const op = config as _config.ConfigPrimitive
   switch (op._tag) {
@@ -220,7 +225,7 @@ const fromFlatLoop = <A>(
     }
     case OpCodes.OP_DESCRIBED: {
       return core.suspendSucceed(
-        () => fromFlatLoop(flat, prefix, op.config)
+        () => fromFlatLoop(flat, prefix, op.config, split)
       ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
     }
     case OpCodes.OP_FAIL: {
@@ -232,11 +237,11 @@ const fromFlatLoop = <A>(
     }
     case OpCodes.OP_FALLBACK: {
       return pipe(
-        core.suspendSucceed(() => fromFlatLoop(flat, prefix, op.first)),
+        core.suspendSucceed(() => fromFlatLoop(flat, prefix, op.first, split)),
         core.catchAll((error1) => {
           if (op.condition(error1)) {
             return pipe(
-              fromFlatLoop(flat, prefix, op.second),
+              fromFlatLoop(flat, prefix, op.second, split),
               core.catchAll((error2) => core.fail(configError.Or(error1, error2)))
             )
           }
@@ -245,7 +250,7 @@ const fromFlatLoop = <A>(
       ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
     }
     case OpCodes.OP_LAZY: {
-      return core.suspendSucceed(() => fromFlatLoop(flat, prefix, op.config())) as Effect.Effect<
+      return core.suspendSucceed(() => fromFlatLoop(flat, prefix, op.config(), split)) as Effect.Effect<
         never,
         ConfigError.ConfigError,
         Chunk.Chunk<A>
@@ -254,7 +259,7 @@ const fromFlatLoop = <A>(
     case OpCodes.OP_MAP_OR_FAIL: {
       return core.suspendSucceed(() =>
         pipe(
-          fromFlatLoop(flat, prefix, op.original),
+          fromFlatLoop(flat, prefix, op.original, split),
           core.flatMap(
             core.forEach((a) =>
               pipe(
@@ -271,13 +276,14 @@ const fromFlatLoop = <A>(
         fromFlatLoop(
           flat,
           pipe(prefix, Chunk.concat(Chunk.of(op.name))),
-          op.config
+          op.config,
+          split
         )
       ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
     }
     case OpCodes.OP_PRIMITIVE: {
       return pipe(
-        flat.load(prefix, op),
+        flat.load(prefix, op, split),
         core.flatMap((values) => {
           if (Chunk.isEmpty(values)) {
             const name = pipe(Chunk.last(prefix), Option.getOrElse(() => "<n/a>"))
@@ -290,7 +296,7 @@ const fromFlatLoop = <A>(
     case OpCodes.OP_SEQUENCE: {
       return core.suspendSucceed(() =>
         pipe(
-          fromFlatLoop(flat, prefix, op.config),
+          fromFlatLoop(flat, prefix, op.config, true),
           core.map(Chunk.of)
         )
       ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
@@ -306,7 +312,8 @@ const fromFlatLoop = <A>(
                 fromFlatLoop(
                   flat,
                   pipe(prefix, Chunk.concat(Chunk.of(key))),
-                  op.valueConfig
+                  op.valueConfig,
+                  split
                 )
               ),
               core.map((values) => {
@@ -327,11 +334,11 @@ const fromFlatLoop = <A>(
     case OpCodes.OP_ZIP_WITH: {
       return core.suspendSucceed(() =>
         pipe(
-          fromFlatLoop(flat, prefix, op.left),
+          fromFlatLoop(flat, prefix, op.left, split),
           core.either,
           core.flatMap((left) =>
             pipe(
-              fromFlatLoop(flat, prefix, op.right),
+              fromFlatLoop(flat, prefix, op.right, split),
               core.either,
               core.flatMap((right) => {
                 if (Either.isLeft(left) && Either.isLeft(right)) {
@@ -392,7 +399,7 @@ export const nested = Debug.untracedDual<
 >(2, () =>
   (self, name) =>
     fromFlat(makeFlat(
-      (path, config) => self.flattened.load(pipe(path, Chunk.prepend(name)), config),
+      (path, config) => self.flattened.load(pipe(path, Chunk.prepend(name)), config, true),
       (path) => self.flattened.enumerateChildren(pipe(path, Chunk.prepend(name)))
     )))
 
@@ -414,9 +421,9 @@ const orElseFlat = (
   that: LazyArg<ConfigProvider.ConfigProvider.Flat>
 ): ConfigProvider.ConfigProvider.Flat =>
   makeFlat(
-    (path, config) =>
-      core.catchAll(self.load(path, config), (error1) =>
-        core.catchAll(that().load(path, config), (error2) => core.fail(configError.Or(error1, error2)))),
+    (path, config, split) =>
+      core.catchAll(self.load(path, config, split), (error1) =>
+        core.catchAll(that().load(path, config, split), (error2) => core.fail(configError.Or(error1, error2)))),
     (path) =>
       core.flatMap(core.either(self.enumerateChildren(path)), (left) =>
         core.flatMap(core.either(that().enumerateChildren(path)), (right) => {
@@ -447,11 +454,15 @@ const parsePrimitive = <A>(
   text: string,
   path: Chunk.Chunk<string>,
   primitive: Config.Config.Primitive<A>,
-  delimiter: string
+  delimiter: string,
+  split: boolean
 ): Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>> => {
-  const unsplit = configSecret.isConfigSecret(primitive)
-  if (unsplit) {
-    return pipe(core.fromEither(primitive.parse(text)), core.map(Chunk.of))
+  if (!split) {
+    return pipe(
+      core.fromEither(primitive.parse(text)),
+      core.map(Chunk.of),
+      core.mapError(configError.prefixed(path))
+    )
   }
   return pipe(
     splitPathString(text, delimiter),

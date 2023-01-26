@@ -77,7 +77,8 @@ export declare namespace ConfigProvider {
     readonly [FlatConfigProviderTypeId]: FlatConfigProviderTypeId
     load<A>(
       path: Chunk.Chunk<string>,
-      config: Config.Config.Primitive<A>
+      config: Config.Config.Primitive<A>,
+      split?: boolean
     ): Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
     enumerateChildren(path: Chunk.Chunk<string>): Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>>
   }
