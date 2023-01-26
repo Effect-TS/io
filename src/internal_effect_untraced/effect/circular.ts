@@ -534,15 +534,7 @@ export const raceFibersWith = Debug.dualWithTrace<
         core.async<R | R1 | R2 | R3, E2 | E3, A2 | A3>((cb) => {
           leftFiber.unsafeAddObserver(() => completeRace(leftFiber, rightFiber, restore(selfWins), raceIndicator, cb))
           rightFiber.unsafeAddObserver(() => completeRace(rightFiber, leftFiber, restore(thatWins), raceIndicator, cb))
-        }, pipe(leftFiber.id(), FiberId.combine(rightFiber.id()))),
-        core.onInterrupt(() =>
-          pipe(
-            leftFiber.interruptAsFork(parentFiber.id()),
-            core.zipRight(rightFiber.interruptAsFork(parentFiber.id())),
-            core.zipRight(leftFiber.await()),
-            core.zipRight(rightFiber.await())
-          )
-        )
+        }, pipe(leftFiber.id(), FiberId.combine(rightFiber.id())))
       )
     }).traced(trace))
 
