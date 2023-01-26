@@ -192,14 +192,14 @@ Added in v1.0.0
   - [sandbox](#sandbox)
   - [unrefineWith](#unrefinewith)
 - [execution](#execution)
-  - [unsafeFork](#unsafefork)
-  - [unsafeRun](#unsaferun)
-  - [unsafeRunPromise](#unsaferunpromise)
-  - [unsafeRunPromiseEither](#unsaferunpromiseeither)
-  - [unsafeRunPromiseExit](#unsaferunpromiseexit)
-  - [unsafeRunSync](#unsaferunsync)
-  - [unsafeRunSyncEither](#unsaferunsynceither)
-  - [unsafeRunSyncExit](#unsaferunsyncexit)
+  - [runCallback](#runcallback)
+  - [runFork](#runfork)
+  - [runPromise](#runpromise)
+  - [runPromiseEither](#runpromiseeither)
+  - [runPromiseExit](#runpromiseexit)
+  - [runSync](#runsync)
+  - [runSyncEither](#runsynceither)
+  - [runSyncExit](#runsyncexit)
 - [filtering](#filtering)
   - [filter](#filter)
   - [filterNot](#filternot)
@@ -352,6 +352,7 @@ Added in v1.0.0
   - [scheduleForked](#scheduleforked)
   - [scheduleFrom](#schedulefrom)
   - [sequentialFinalizers](#sequentialfinalizers)
+  - [setConfigProvider](#setconfigprovider)
   - [setFiberRefs](#setfiberrefs)
   - [some](#some)
   - [someOrElse](#someorelse)
@@ -3142,22 +3143,12 @@ Added in v1.0.0
 
 # execution
 
-## unsafeFork
+## runCallback
 
 **Signature**
 
 ```ts
-export declare const unsafeFork: <E, A>(effect: Effect<never, E, A>) => Fiber.RuntimeFiber<E, A>
-```
-
-Added in v1.0.0
-
-## unsafeRun
-
-**Signature**
-
-```ts
-export declare const unsafeRun: <E, A>(
+export declare const runCallback: <E, A>(
   effect: Effect<never, E, A>,
   onExit?: ((exit: Exit.Exit<E, A>) => void) | undefined
 ) => Runtime.Cancel<E, A>
@@ -3165,7 +3156,17 @@ export declare const unsafeRun: <E, A>(
 
 Added in v1.0.0
 
-## unsafeRunPromise
+## runFork
+
+**Signature**
+
+```ts
+export declare const runFork: <E, A>(effect: Effect<never, E, A>) => Fiber.RuntimeFiber<E, A>
+```
+
+Added in v1.0.0
+
+## runPromise
 
 Runs an `Effect` workflow, returning a `Promise` which resolves with the
 result of the workflow or rejects with an error.
@@ -3173,22 +3174,22 @@ result of the workflow or rejects with an error.
 **Signature**
 
 ```ts
-export declare const unsafeRunPromise: <E, A>(effect: Effect<never, E, A>) => Promise<A>
+export declare const runPromise: <E, A>(effect: Effect<never, E, A>) => Promise<A>
 ```
 
 Added in v1.0.0
 
-## unsafeRunPromiseEither
+## runPromiseEither
 
 **Signature**
 
 ```ts
-export declare const unsafeRunPromiseEither: <E, A>(effect: Effect<never, E, A>) => Promise<Either.Either<E, A>>
+export declare const runPromiseEither: <E, A>(effect: Effect<never, E, A>) => Promise<Either.Either<E, A>>
 ```
 
 Added in v1.0.0
 
-## unsafeRunPromiseExit
+## runPromiseExit
 
 Runs an `Effect` workflow, returning a `Promise` which resolves with the
 `Exit` value of the workflow.
@@ -3196,37 +3197,37 @@ Runs an `Effect` workflow, returning a `Promise` which resolves with the
 **Signature**
 
 ```ts
-export declare const unsafeRunPromiseExit: <E, A>(effect: Effect<never, E, A>) => Promise<Exit.Exit<E, A>>
+export declare const runPromiseExit: <E, A>(effect: Effect<never, E, A>) => Promise<Exit.Exit<E, A>>
 ```
 
 Added in v1.0.0
 
-## unsafeRunSync
+## runSync
 
 **Signature**
 
 ```ts
-export declare const unsafeRunSync: <E, A>(effect: Effect<never, E, A>) => A
+export declare const runSync: <E, A>(effect: Effect<never, E, A>) => A
 ```
 
 Added in v1.0.0
 
-## unsafeRunSyncEither
+## runSyncEither
 
 **Signature**
 
 ```ts
-export declare const unsafeRunSyncEither: <E, A>(effect: Effect<never, E, A>) => Either.Either<E, A>
+export declare const runSyncEither: <E, A>(effect: Effect<never, E, A>) => Either.Either<E, A>
 ```
 
 Added in v1.0.0
 
-## unsafeRunSyncExit
+## runSyncExit
 
 **Signature**
 
 ```ts
-export declare const unsafeRunSyncExit: <E, A>(effect: Effect<never, E, A>) => Exit.Exit<E, A>
+export declare const runSyncExit: <E, A>(effect: Effect<never, E, A>) => Exit.Exit<E, A>
 ```
 
 Added in v1.0.0
@@ -5499,6 +5500,18 @@ parallel.
 
 ```ts
 export declare const sequentialFinalizers: <R, E, A>(self: Effect<R, E, A>) => Effect<Scope.Scope | R, E, A>
+```
+
+Added in v1.0.0
+
+## setConfigProvider
+
+Sets the current `ConfigProvider`.
+
+**Signature**
+
+```ts
+export declare const setConfigProvider: (configProvider: ConfigProvider) => Layer.Layer<never, never, never>
 ```
 
 Added in v1.0.0

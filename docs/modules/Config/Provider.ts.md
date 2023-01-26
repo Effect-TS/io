@@ -23,6 +23,7 @@ Added in v1.0.0
 - [models](#models)
   - [ConfigProvider (interface)](#configprovider-interface)
 - [mutations](#mutations)
+  - [contramapPath](#contramappath)
   - [nested](#nested)
   - [orElse](#orelse)
 - [symbols](#symbols)
@@ -152,6 +153,22 @@ export interface ConfigProvider extends ConfigProvider.Proto {
 Added in v1.0.0
 
 # mutations
+
+## contramapPath
+
+Returns a new config provider that will automatically tranform all path
+configuration names with the specified function. This can be utilized to
+adapt the names of configuration properties from one naming convention to
+another.
+
+**Signature**
+
+```ts
+export declare const contramapPath: ((self: ConfigProvider, f: (path: string) => string) => ConfigProvider) &
+  ((f: (path: string) => string) => (self: ConfigProvider) => ConfigProvider)
+```
+
+Added in v1.0.0
 
 ## nested
 
