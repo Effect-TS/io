@@ -16,7 +16,7 @@ const program = pipe(
   )
 )
 
-Effect.unsafeRunPromiseExit(program).then((exit) => {
+Effect.runPromiseExit(program).then((exit) => {
   if (Exit.isFailure(exit)) {
     console.log(Cause.pretty(exit.cause))
   }

@@ -15,7 +15,7 @@ const program = E.gen(function*($) {
   )
 })
 
-E.unsafeRun(program, (ex) => {
+E.runCallback(program, (ex) => {
   if (Ex.isFailure(ex)) {
     console.log(Ca.pretty(ex.cause))
   }

@@ -11,7 +11,7 @@ const program = Effect.gen(function*($) {
   assert.strictEqual(url, "https://example.com") // fails, 'https' does not match 'https://example.com'
 })
 
-Effect.unsafeRun(program, (exit) => {
+Effect.runCallback(program, (exit) => {
   switch (exit._tag) {
     case "Success": {
       console.log(util.inspect(exit.value, { depth: null, colors: true }))

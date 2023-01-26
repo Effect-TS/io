@@ -23,7 +23,7 @@ const program = pipe(
   E.flatMap((res) => E.sync(() => console.log(`res: ${res}`)))
 )
 
-pipe(program, E.unsafeRunPromiseExit).then((exit) => {
+E.runPromiseExit(program).then((exit) => {
   if (Exit.isFailure(exit)) {
     console.log(Cause.pretty(exit.cause))
   }

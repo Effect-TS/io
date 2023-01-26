@@ -428,7 +428,7 @@ describe.concurrent("Effect", () => {
         const right = yield* $(Effect.exit(rightEffect))
         return { left, right }
       })
-      const { left, right } = await Effect.unsafeRunPromise(program)
+      const { left, right } = await Effect.runPromise(program)
       assert.deepStrictEqual(Exit.unannotate(left), Exit.unannotate(right))
     }))
   })

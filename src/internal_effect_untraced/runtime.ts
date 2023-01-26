@@ -10,6 +10,7 @@ import * as internalCause from "@effect/io/internal_effect_untraced/cause"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as FiberRuntime from "@effect/io/internal_effect_untraced/fiberRuntime"
 import * as fiberScope from "@effect/io/internal_effect_untraced/fiberScope"
+import { unsafeRunSync, unsafeRunSyncExit } from "@effect/io/internal_effect_untraced/logger"
 import * as OpCodes from "@effect/io/internal_effect_untraced/opCodes/effect"
 import * as runtimeFlags from "@effect/io/internal_effect_untraced/runtimeFlags"
 import * as _scheduler from "@effect/io/internal_effect_untraced/scheduler"
@@ -22,11 +23,76 @@ import * as Option from "@fp-ts/core/Option"
 import * as Context from "@fp-ts/data/Context"
 
 /** @internal */
-export class AsyncFiber<E, A> implements Runtime.AsyncFiber<E, A> {
-  readonly _tag = "AsyncFiber"
-  constructor(readonly fiber: FiberRuntime.FiberRuntime<E, A>) {
+export const unsafeFork = <R>(runtime: Runtime.Runtime<R>) =>
+  <E, A>(effect: Effect.Effect<R, E, A>, scheduler?: Scheduler.Scheduler | undefined): Fiber.RuntimeFiber<E, A> =>
+    runtime.unsafeFork(effect, scheduler)
+
+/** @internal */
+export const unsafeRunCallback = <R>(runtime: Runtime.Runtime<R>) =>
+  <E, A>(
+    effect: Effect.Effect<R, E, A>,
+    onExit?: (exit: Exit.Exit<E, A>) => void
+  ): ((fiberId?: FiberId.FiberId, onExit?: (exit: Exit.Exit<E, A>) => void) => void) => {
+    const fiberRuntime = unsafeFork(runtime)(effect)
+
+    if (onExit) {
+      fiberRuntime.unsafeAddObserver((exit) => {
+        onExit(exit)
+      })
+    }
+
+    return (id, onExitInterrupt) =>
+      unsafeRunCallback(runtime)(
+        pipe(fiberRuntime, Fiber.interruptAs(id ?? FiberId.none)),
+        onExitInterrupt ?
+          (exit) => {
+            return onExitInterrupt(Exit.flatten(exit))
+          } :
+          void 0
+      )
   }
-}
+
+/** @internal */
+export const unsafeRunSyncEither = <R>(runtime: Runtime.Runtime<R>) =>
+  <E, A>(effect: Effect.Effect<R, E, A>): Either<E, A> =>
+    Debug.untraced(() => unsafeRunSync(runtime)(core.either(effect)))
+
+/** @internal */
+export const unsafeRunPromise = <R>(runtime: Runtime.Runtime<R>) =>
+  <E, A>(
+    effect: Effect.Effect<R, E, A>
+  ): Promise<A> => {
+    return new Promise((resolve, reject) => {
+      unsafeRunCallback(runtime)(effect, (exit) => {
+        switch (exit._tag) {
+          case OpCodes.OP_SUCCESS: {
+            resolve(exit.value)
+            break
+          }
+          case OpCodes.OP_FAILURE: {
+            reject(pipe(exit.cause, internalCause.squashWith(identity)))
+            break
+          }
+        }
+      })
+    })
+  }
+
+/** @internal */
+export const unsafeRunPromiseExit = <R>(runtime: Runtime.Runtime<R>) =>
+  <E, A>(
+    effect: Effect.Effect<R, E, A>
+  ): Promise<Exit.Exit<E, A>> => {
+    return new Promise((resolve) => {
+      unsafeRunCallback(runtime)(effect, (exit) => {
+        resolve(exit)
+      })
+    })
+  }
+
+/** @internal */
+export const unsafeRunPromiseEither = <R>(runtime: Runtime.Runtime<R>) =>
+  <E, A>(effect: Effect.Effect<R, E, A>): Promise<Either<E, A>> => unsafeRunPromise(runtime)(core.either(effect))
 
 /** @internal */
 export class RuntimeImpl<R> implements Runtime.Runtime<R> {
@@ -34,16 +100,12 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
     readonly context: Context.Context<R>,
     readonly runtimeFlags: RuntimeFlags.RuntimeFlags,
     readonly fiberRefs: FiberRefs.FiberRefs
-  ) {
-  }
+  ) {}
 
-  unsafeRunSyncEither: <E, A>(effect: Effect.Effect<R, E, A>) => Either<E, A> = (effect) =>
-    this.unsafeRunSync(core.either(effect))
-
-  unsafeRunPromiseEither: <E, A>(effect: Effect.Effect<R, E, A>) => Promise<Either<E, A>> = (effect) =>
-    this.unsafeRunPromise(core.either(effect))
-
-  unsafeFork = <E, A>(effect: Effect.Effect<R, E, A>, scheduler?: Scheduler.Scheduler) => {
+  unsafeFork<E, A>(
+    effect: Effect.Effect<R, E, A>,
+    scheduler?: Scheduler.Scheduler | undefined
+  ): Fiber.RuntimeFiber<E, A> {
     const fiberId = FiberId.unsafeMake()
 
     let fiberRefs = FiberRefs.updatedAs(
@@ -83,86 +145,6 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
 
     return fiberRuntime
   }
-
-  unsafeRun = <E, A>(
-    effect: Effect.Effect<R, E, A>,
-    onExit?: (exit: Exit.Exit<E, A>) => void
-  ): ((fiberId?: FiberId.FiberId, onExit?: (exit: Exit.Exit<E, A>) => void) => void) => {
-    const fiberRuntime = this.unsafeFork(effect)
-
-    if (onExit) {
-      fiberRuntime.unsafeAddObserver((exit) => {
-        onExit(exit)
-      })
-    }
-
-    return (id, onExitInterrupt) =>
-      this.unsafeRun(
-        pipe(fiberRuntime, Fiber.interruptAs(id ?? FiberId.none)),
-        onExitInterrupt ?
-          (exit) => {
-            return onExitInterrupt(Exit.flatten(exit))
-          } :
-          void 0
-      )
-  }
-
-  unsafeRunSync = <E, A>(
-    effect: Effect.Effect<R, E, A>
-  ): A => {
-    const exit = this.unsafeRunSyncExit(effect)
-    if (exit._tag === OpCodes.OP_FAILURE) {
-      throw pipe(exit.cause, internalCause.squashWith(identity))
-    }
-    return exit.value
-  }
-
-  unsafeRunSyncExit = <E, A>(
-    effect: Effect.Effect<R, E, A>
-  ): Exit.Exit<E, A> => {
-    const scheduler = new _scheduler.SyncScheduler()
-
-    const fiberRuntime = this.unsafeFork(effect, scheduler)
-
-    scheduler.flush()
-
-    const result = fiberRuntime.unsafePoll()
-
-    if (result) {
-      return result
-    }
-
-    return Exit.die(new AsyncFiber(fiberRuntime))
-  }
-
-  unsafeRunPromise = <E, A>(
-    effect: Effect.Effect<R, E, A>
-  ): Promise<A> => {
-    return new Promise((resolve, reject) => {
-      this.unsafeRun(effect, (exit) => {
-        switch (exit._tag) {
-          case OpCodes.OP_SUCCESS: {
-            resolve(exit.value)
-            break
-          }
-          case OpCodes.OP_FAILURE: {
-            reject(pipe(exit.cause, internalCause.squashWith(identity)))
-            break
-          }
-        }
-      })
-    })
-  }
-
-  unsafeRunPromiseExit = <E, A>(
-    effect: Effect.Effect<R, E, A>
-  ): Promise<Exit.Exit<E, A>> => {
-    return new Promise((resolve) => {
-      this.unsafeRun(effect, (exit) => {
-        resolve(exit)
-      })
-    })
-  }
 }
 
 /** @internal */
@@ -200,28 +182,28 @@ export const defaultRuntime = make(
 )
 
 /** @internal */
-export const unsafeRun = defaultRuntime.unsafeRun
+export const unsafeRunEffect = unsafeRunCallback(defaultRuntime)
 
 /** @internal */
-export const unsafeFork = defaultRuntime.unsafeFork
+export const unsafeForkEffect = unsafeFork(defaultRuntime)
 
 /** @internal */
-export const unsafeRunPromise = defaultRuntime.unsafeRunPromise
+export const unsafeRunPromiseEffect = unsafeRunPromise(defaultRuntime)
 
 /** @internal */
-export const unsafeRunPromiseEither = defaultRuntime.unsafeRunPromiseEither
+export const unsafeRunPromiseEitherEffect = unsafeRunPromiseEither(defaultRuntime)
 
 /** @internal */
-export const unsafeRunPromiseExit = defaultRuntime.unsafeRunPromiseExit
+export const unsafeRunPromiseExitEffect = unsafeRunPromiseExit(defaultRuntime)
 
 /** @internal */
-export const unsafeRunSync = defaultRuntime.unsafeRunSync
+export const unsafeRunSyncEffect = unsafeRunSync(defaultRuntime)
 
 /** @internal */
-export const unsafeRunSyncExit = defaultRuntime.unsafeRunSyncExit
+export const unsafeRunSyncExitEffect = unsafeRunSyncExit(defaultRuntime)
 
 /** @internal */
-export const unsafeRunSyncEither = defaultRuntime.unsafeRunSyncEither
+export const unsafeRunSyncEitherEffect = unsafeRunSyncEither(defaultRuntime)
 
 // circular with Effect
 
@@ -237,7 +219,7 @@ export const asyncEffect = Debug.methodWithTrace((trace, restoreTrace) =>
             FiberRuntime.fork(restore(
               core.catchAllCause(
                 restoreTrace(register)((cb) =>
-                  runtime.unsafeRun(pipe(cb, core.intoDeferred(deferred)))
+                  unsafeRunCallback(runtime)(pipe(cb, core.intoDeferred(deferred)))
                 ),
                 (cause) => core.deferredFailCause(deferred, cause)
               )

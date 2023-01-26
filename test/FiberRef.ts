@@ -3,7 +3,7 @@ import * as Deferred from "@effect/io/Deferred"
 import * as Effect from "@effect/io/Effect"
 import * as Fiber from "@effect/io/Fiber"
 import * as FiberRef from "@effect/io/FiberRef"
-import type * as Runtime from "@effect/io/Runtime"
+import * as Runtime from "@effect/io/Runtime"
 import * as it from "@effect/io/test/utils/extend"
 import { constant, constTrue, identity, pipe } from "@fp-ts/core/Function"
 import * as Option from "@fp-ts/core/Option"
@@ -342,7 +342,9 @@ describe.concurrent("FiberRef", () => {
       const runtime: Runtime.Runtime<never> = yield* $(
         pipe(Effect.runtime<never>(), FiberRef.locally(fiberRef, false))
       )
-      yield* $(Effect.sync(() => pipe(FiberRef.get(fiberRef), Effect.intoDeferred(deferred), runtime.unsafeRun)))
+      yield* $(
+        Effect.sync(() => pipe(FiberRef.get(fiberRef), Effect.intoDeferred(deferred), Runtime.runCallback(runtime)))
+      )
       const result = yield* $(Deferred.await(deferred))
       assert.isTrue(result)
     }))

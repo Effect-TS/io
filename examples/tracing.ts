@@ -20,4 +20,4 @@ const program = Effect.tuplePar(
   Effect.delay(Effect.succeed(0), millis(500))
 )
 
-Effect.unsafeFork(Effect.catchAllCause(program, Effect.logErrorCause))
+Effect.runFork(Effect.catchAllCause(program, Effect.logErrorCause))

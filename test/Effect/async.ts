@@ -4,6 +4,7 @@ import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import * as Fiber from "@effect/io/Fiber"
 import * as Ref from "@effect/io/Ref"
+import * as Runtime from "@effect/io/Runtime"
 import * as it from "@effect/io/test/utils/extend"
 import { pipe } from "@fp-ts/core/Function"
 import * as Option from "@fp-ts/core/Option"
@@ -73,14 +74,14 @@ describe.concurrent("Effect", () => {
       const runtime = yield* $(Effect.runtime<never>())
       const fiber = yield* $(pipe(
         Effect.async<never, never, void>((cb) =>
-          runtime.unsafeRun(pipe(
+          Runtime.runCallback(runtime)(pipe(
             Deferred.await(step),
             Effect.zipRight(Effect.sync(() => cb(Ref.update(unexpectedPlace, Chunk.prepend(1)))))
           ))
         ),
         Effect.ensuring(Effect.async<never, never, void>(() => {
           // The callback is never called so this never completes
-          runtime.unsafeRun(Deferred.succeed(step, undefined))
+          Runtime.runCallback(runtime)(Deferred.succeed(step, undefined))
         })),
         Effect.ensuring(Ref.update(unexpectedPlace, Chunk.prepend(2))),
         Effect.forkDaemon
@@ -97,7 +98,7 @@ describe.concurrent("Effect", () => {
       const runtime = yield* $(Effect.runtime<never>())
       const fiber = yield* $(pipe(
         Effect.asyncOption<never, never, void>((cb) => {
-          runtime.unsafeRun(pipe(
+          Runtime.runCallback(runtime)(pipe(
             Deferred.await(step),
             Effect.zipRight(Effect.sync(() => cb(Ref.update(unexpectedPlace, Chunk.prepend(1)))))
           ))
@@ -106,7 +107,7 @@ describe.concurrent("Effect", () => {
         Effect.flatMap(() =>
           Effect.async<never, never, void>(() => {
             // The callback is never called so this never completes
-            runtime.unsafeRun(Deferred.succeed(step, void 0))
+            Runtime.runCallback(runtime)(Deferred.succeed(step, void 0))
           })
         ),
         Effect.ensuring(Ref.update(unexpectedPlace, Chunk.prepend(2))),

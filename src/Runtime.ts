@@ -7,6 +7,7 @@ import type * as Fiber from "@effect/io/Fiber"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import type * as FiberRefs from "@effect/io/FiberRefs"
+import { unsafeRunSync, unsafeRunSyncExit } from "@effect/io/internal_effect_untraced/logger"
 import * as internal from "@effect/io/internal_effect_untraced/runtime"
 import type { Scheduler } from "@effect/io/Scheduler"
 import type { Either } from "@fp-ts/core/Either"
@@ -35,75 +36,135 @@ export interface Cancel<E, A> {
  */
 export interface Runtime<R> {
   /**
+   * The context used as initial for forks
+   */
+  readonly context: Context.Context<R>
+  /**
+   * The runtime flags used as initial for forks
+   */
+  readonly runtimeFlags: RuntimeFlags.RuntimeFlags
+  /**
+   * The fiber references used as initial for forks
+   */
+  readonly fiberRefs: FiberRefs.FiberRefs
+  /**
    * Executes the effect using the provided Scheduler or using the global
    * Scheduler if not provided
    */
-  unsafeFork: <E, A>(effect: Effect.Effect<R, E, A>, scheduler?: Scheduler) => Fiber.RuntimeFiber<E, A>
-
-  /**
-   * Executes the effect asynchronously, eventually passing the exit value to
-   * the specified callback.
-   *
-   * This method is effectful and should only be invoked at the edges of your
-   * program.
-   */
-  unsafeRun: <E, A>(effect: Effect.Effect<R, E, A>, onExit?: (exit: Exit.Exit<E, A>) => void) => Cancel<E, A>
-
-  /**
-   * Executes the effect synchronously throwing in case of errors or async boundaries.
-   *
-   * This method is effectful and should only be invoked at the edges of your
-   * program.
-   */
-  unsafeRunSync: <E, A>(effect: Effect.Effect<R, E, A>) => A
-
-  /**
-   * Executes the effect synchronously returning the exit.
-   *
-   * This method is effectful and should only be invoked at the edges of your
-   * program.
-   */
-  unsafeRunSyncExit: <E, A>(effect: Effect.Effect<R, E, A>) => Exit.Exit<E, A>
-
-  /**
-   * Executes the effect synchronously returning either the result or a failure.
-   *
-   * Throwing in case of defects and interruptions.
-   *
-   * This method is effectful and should only be invoked at the edges of your
-   * program.
-   */
-  unsafeRunSyncEither: <E, A>(effect: Effect.Effect<R, E, A>) => Either<E, A>
-
-  /**
-   * Runs the `Effect`, returning a JavaScript `Promise` that will be resolved
-   * with the value of the effect once the effect has been executed, or will be
-   * rejected with the first error or exception throw by the effect.
-   *
-   * This method is effectful and should only be used at the edges of your
-   * program.
-   */
-  unsafeRunPromise: <E, A>(effect: Effect.Effect<R, E, A>) => Promise<A>
-
-  /**
-   * Runs the `Effect`, returning a JavaScript `Promise` that will be resolved
-   * with the `Exit` state of the effect once the effect has been executed.
-   *
-   * This method is effectful and should only be used at the edges of your
-   * program.
-   */
-  unsafeRunPromiseExit: <E, A>(effect: Effect.Effect<R, E, A>) => Promise<Exit.Exit<E, A>>
-
-  /**
-   * Runs the `Effect`, returning a JavaScript `Promise` that will be resolved
-   * with the either a success or a failure. The promise will be rejected in case
-   * of defects and interruption.
-   *
-   * This method is effectful and should only be used at the edges of your
-   * program.
-   */
-  unsafeRunPromiseEither: <E, A>(effect: Effect.Effect<R, E, A>) => Promise<Either<E, A>>
+  unsafeFork<E, A>(effect: Effect.Effect<R, E, A>, scheduler?: Scheduler): Fiber.RuntimeFiber<E, A>
 }
+
+/**
+ * Executes the effect using the provided Scheduler or using the global
+ * Scheduler if not provided
+ *
+ * @since 1.0.0
+ * @category execution
+ */
+export const runFork: <R>(
+  runtime: Runtime<R>
+) => <E, A>(
+  effect: Effect.Effect<R, E, A>,
+  scheduler?: Scheduler | undefined
+) => Fiber.RuntimeFiber<E, A> = internal.unsafeFork
+
+/**
+ * Executes the effect synchronously returning the exit.
+ *
+ * This method is effectful and should only be invoked at the edges of your
+ * program.
+ *
+ * @since 1.0.0
+ * @category execution
+ */
+export const runSyncExit: <R>(runtime: Runtime<R>) => <E, A>(effect: Effect.Effect<R, E, A>) => Exit.Exit<E, A> =
+  unsafeRunSyncExit
+
+/**
+ * Executes the effect synchronously throwing in case of errors or async boundaries.
+ *
+ * This method is effectful and should only be invoked at the edges of your
+ * program.
+ *
+ * @since 1.0.0
+ * @category execution
+ */
+export const runSync: <R>(runtime: Runtime<R>) => <E, A>(effect: Effect.Effect<R, E, A>) => A = unsafeRunSync
+
+/**
+ * Executes the effect asynchronously, eventually passing the exit value to
+ * the specified callback.
+ *
+ * This method is effectful and should only be invoked at the edges of your
+ * program.
+ *
+ * @since 1.0.0
+ * @category execution
+ */
+export const runCallback: <R>(
+  runtime: Runtime<R>
+) => <E, A>(
+  effect: Effect.Effect<R, E, A>,
+  onExit?: ((exit: Exit.Exit<E, A>) => void) | undefined
+) => (fiberId?: FiberId.FiberId | undefined, onExit?: ((exit: Exit.Exit<E, A>) => void) | undefined) => void =
+  internal.unsafeRunCallback
+
+/**
+ * Executes the effect synchronously returning either the result or a failure.
+ *
+ * Throwing in case of defects and interruptions.
+ *
+ * This method is effectful and should only be invoked at the edges of your
+ * program.
+ *
+ * @since 1.0.0
+ * @category execution
+ */
+export const runSyncEither: <R>(runtime: Runtime<R>) => <E, A>(effect: Effect.Effect<R, E, A>) => Either<E, A> =
+  internal.unsafeRunSyncEither
+
+/**
+ * Runs the `Effect`, returning a JavaScript `Promise` that will be resolved
+ * with the value of the effect once the effect has been executed, or will be
+ * rejected with the first error or exception throw by the effect.
+ *
+ * This method is effectful and should only be used at the edges of your
+ * program.
+ *
+ * @since 1.0.0
+ * @category execution
+ */
+export const runPromise: <R>(runtime: Runtime<R>) => <E, A>(effect: Effect.Effect<R, E, A>) => Promise<A> =
+  internal.unsafeRunPromise
+
+/**
+ * Runs the `Effect`, returning a JavaScript `Promise` that will be resolved
+ * with the `Exit` state of the effect once the effect has been executed.
+ *
+ * This method is effectful and should only be used at the edges of your
+ * program.
+ *
+ * @since 1.0.0
+ * @category execution
+ */
+export const runPromiseExit: <R>(
+  runtime: Runtime<R>
+) => <E, A>(effect: Effect.Effect<R, E, A>) => Promise<Exit.Exit<E, A>> = internal.unsafeRunPromiseExit
+
+/**
+ * Runs the `Effect`, returning a JavaScript `Promise` that will be resolved
+ * with the either a success or a failure. The promise will be rejected in case
+ * of defects and interruption.
+ *
+ * This method is effectful and should only be used at the edges of your
+ * program.
+ *
+ * @since 1.0.0
+ * @category execution
+ */
+export const runPromiseEither: <R>(
+  runtime: Runtime<R>
+) => <E, A>(effect: Effect.Effect<R, E, A>) => Promise<Either<E, A>> = internal.unsafeRunPromiseEither
 
 /**
  * @since 1.0.0

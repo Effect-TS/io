@@ -34,7 +34,7 @@ describe.concurrent("Effect", () => {
     } catch {
       program = Effect.succeed(false)
     }
-    const result = await Effect.unsafeRunPromise(program)
+    const result = await Effect.runPromise(program)
     assert.isTrue(result)
   })
   it.it("suspend - must be lazy", async () => {
@@ -47,7 +47,7 @@ describe.concurrent("Effect", () => {
     } catch {
       program = Effect.succeed(false)
     }
-    const result = await Effect.unsafeRunPromise(program)
+    const result = await Effect.runPromise(program)
     assert.isTrue(result)
   })
   it.effect("suspend - must catch throwable", () =>

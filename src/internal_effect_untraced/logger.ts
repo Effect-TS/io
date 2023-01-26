@@ -1,16 +1,21 @@
 import type * as CauseExt from "@effect/io/Cause"
 import * as Debug from "@effect/io/Debug"
+import type * as Effect from "@effect/io/Effect"
+import * as Exit from "@effect/io/Exit"
+import type * as Fiber from "@effect/io/Fiber"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRefs from "@effect/io/FiberRefs"
 import * as Cause from "@effect/io/internal_effect_untraced/cause"
 import * as Pretty from "@effect/io/internal_effect_untraced/cause-pretty"
 import * as _fiberId from "@effect/io/internal_effect_untraced/fiberId"
+import * as OpCodes from "@effect/io/internal_effect_untraced/opCodes/effect"
+import * as _scheduler from "@effect/io/internal_effect_untraced/scheduler"
 import type * as Logger from "@effect/io/Logger"
 import type * as LogLevel from "@effect/io/Logger/Level"
 import * as LogSpan from "@effect/io/Logger/Span"
-import type { Runtime } from "@effect/io/Runtime"
+import type * as Runtime from "@effect/io/Runtime"
 import type { LazyArg } from "@fp-ts/core/Function"
-import { constVoid, pipe } from "@fp-ts/core/Function"
+import { constVoid, identity, pipe } from "@fp-ts/core/Function"
 import * as Option from "@fp-ts/core/Option"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as HashMap from "@fp-ts/data/HashMap"
@@ -39,7 +44,7 @@ export const makeLogger = <Message, Output>(
     context: FiberRefs.FiberRefs,
     spans: Chunk.Chunk<LogSpan.LogSpan>,
     annotations: HashMap.HashMap<string, string>,
-    runtime: Runtime<never>
+    runtime: Runtime.Runtime<never>
   ) => Output
 ): Logger.Logger<Message, Output> => ({
   [LoggerTypeId]: loggerVariance,
@@ -67,7 +72,7 @@ export const stringLogger: Logger.Logger<string, string> = makeLogger<string, st
 
     if (cause != null && cause != Cause.empty) {
       output = output + " cause="
-      output = appendQuoted(runtime.unsafeRunSync(Pretty.prettySafe(cause)), output)
+      output = appendQuoted(unsafeRunSync(runtime)(Pretty.prettySafe(cause)), output)
     }
 
     if (Chunk.isNonEmpty(spans)) {
@@ -134,7 +139,7 @@ export const logfmtLogger = makeLogger<string, string>(
 
     if (cause != null && cause != Cause.empty) {
       output = output + " cause="
-      output = appendQuotedLogfmt(runtime.unsafeRunSync(Pretty.prettySafe(cause)), output)
+      output = appendQuotedLogfmt(unsafeRunSync(runtime)(Pretty.prettySafe(cause)), output)
     }
 
     if (Chunk.isNonEmpty(spans)) {
@@ -317,3 +322,44 @@ export const zipRight = Debug.dual<
     self: Logger.Logger<Message, Output>
   ) => Logger.Logger<Message & Message2, Output2>
 >(2, (self, that) => map(zip(self, that), (tuple) => tuple[1]))
+
+// circular with runtime
+
+/** @internal */
+export const unsafeRunSyncExit = <R>(runtime: Runtime.Runtime<R>) =>
+  <E, A>(
+    effect: Effect.Effect<R, E, A>
+  ): Exit.Exit<E, A> => {
+    const scheduler = new _scheduler.SyncScheduler()
+
+    const fiberRuntime = runtime.unsafeFork(effect, scheduler)
+
+    scheduler.flush()
+
+    const result = fiberRuntime.unsafePoll()
+
+    if (result) {
+      return result
+    }
+
+    return Exit.die(new AsyncFiber(fiberRuntime))
+  }
+
+/** @internal */
+export class AsyncFiber<E, A> implements Runtime.AsyncFiber<E, A> {
+  readonly _tag = "AsyncFiber"
+  constructor(readonly fiber: Fiber.RuntimeFiber<E, A>) {
+  }
+}
+
+/** @internal */
+export const unsafeRunSync = <R>(runtime: Runtime.Runtime<R>) =>
+  <E, A>(
+    effect: Effect.Effect<R, E, A>
+  ): A => {
+    const exit = unsafeRunSyncExit(runtime)(effect)
+    if (exit._tag === OpCodes.OP_FAILURE) {
+      throw pipe(exit.cause, Cause.squashWith(identity))
+    }
+    return exit.value
+  }

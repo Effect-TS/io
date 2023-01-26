@@ -10,9 +10,6 @@ const program = pipe(
   Effect.flatMap((f) => Fiber.await(f))
 )
 
-pipe(
-  program,
-  Effect.unsafeRunPromise
-).then(() => {
+Effect.runPromise(program).then(() => {
   console.log("done")
 })

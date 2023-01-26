@@ -13,4 +13,4 @@ const program = pipe(
   Effect.provideLayer(Logger.minimumLogLevel(Level.Debug))
 )
 
-Effect.unsafeFork(program)
+Effect.runFork(program)

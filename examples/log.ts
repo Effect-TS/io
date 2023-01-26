@@ -24,4 +24,4 @@ const main = pipe(
   Effect.provideSomeLayer(Logger.minimumLogLevel(LogLevel.Info))
 )
 
-Effect.unsafeFork(main)
+Effect.runFork(main)

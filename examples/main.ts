@@ -6,5 +6,5 @@ pipe(
   Effect.map((hello) => hello + ", world!"),
   Effect.flatMap(Effect.log),
   Effect.tapErrorCause(Effect.logErrorCause),
-  Effect.unsafeFork
+  Effect.runFork
 )
