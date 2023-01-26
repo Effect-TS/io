@@ -156,7 +156,10 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const test: <Message>(input: Message) => <Output>(self: Logger<Message, Output>) => Output
+export declare const test: {
+  <Message, Output>(self: Logger<Message, Output>, input: Message): Output
+  <Message>(input: Message): <Output>(self: Logger<Message, Output>) => Output
+}
 ```
 
 Added in v1.0.0
@@ -198,10 +201,10 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const replace: <A, B>(
-  logger: Logger<string, A>,
-  that: Logger<string, B>
-) => Layer.Layer<never, never, never>
+export declare const replace: {
+  <A, B>(logger: Logger<string, A>, that: Logger<string, B>): Layer.Layer<never, never, never>
+  <B>(that: Logger<string, B>): <A>(logger: Logger<string, A>) => Layer.Layer<never, never, never>
+}
 ```
 
 Added in v1.0.0
@@ -211,9 +214,10 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const withMinimumLogLevel: (
-  level: LogLevel.LogLevel
-) => <R, E, B>(use: Effect<R, E, B>) => Effect<R, E, B>
+export declare const withMinimumLogLevel: {
+  <R, E, A>(self: Effect<R, E, A>, level: LogLevel.LogLevel): Effect<R, E, A>
+  (level: LogLevel.LogLevel): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+}
 ```
 
 Added in v1.0.0
@@ -228,9 +232,15 @@ satisfies the specified predicate.
 **Signature**
 
 ```ts
-export declare const filterLogLevel: (
-  f: (logLevel: LogLevel.LogLevel) => boolean
-) => <Message, Output>(self: Logger<Message, Output>) => Logger<Message, Option.Option<Output>>
+export declare const filterLogLevel: {
+  <Message, Output>(self: Logger<Message, Output>, f: (logLevel: LogLevel.LogLevel) => boolean): Logger<
+    Message,
+    Option.Option<Output>
+  >
+  (f: (logLevel: LogLevel.LogLevel) => boolean): <Message, Output>(
+    self: Logger<Message, Output>
+  ) => Logger<Message, Option.Option<Output>>
+}
 ```
 
 Added in v1.0.0
@@ -242,9 +252,15 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const contramap: <Message, Message2>(
-  f: (message: Message2) => Message
-) => <Output>(self: Logger<Message, Output>) => Logger<Message2, Output>
+export declare const contramap: {
+  <Output, Message, Message2>(self: Logger<Message, Output>, f: (message: Message2) => Message): Logger<
+    Message2,
+    Output
+  >
+  <Message, Message2>(f: (message: Message2) => Message): <Output>(
+    self: Logger<Message, Output>
+  ) => Logger<Message2, Output>
+}
 ```
 
 Added in v1.0.0
@@ -254,9 +270,12 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const map: <Output, Output2>(
-  f: (output: Output) => Output2
-) => <Message>(self: Logger<Message, Output>) => Logger<Message, Output2>
+export declare const map: {
+  <Message, Output, Output2>(self: Logger<Message, Output>, f: (output: Output) => Output2): Logger<Message, Output2>
+  <Output, Output2>(f: (output: Output) => Output2): <Message>(
+    self: Logger<Message, Output>
+  ) => Logger<Message, Output2>
+}
 ```
 
 Added in v1.0.0
@@ -316,9 +335,15 @@ logs to both this logger and that logger.
 **Signature**
 
 ```ts
-export declare const zip: <Message2, Output2>(
-  that: Logger<Message2, Output2>
-) => <Message, Output>(self: Logger<Message, Output>) => Logger<Message & Message2, readonly [Output, Output2]>
+export declare const zip: {
+  <Message, Output, Message2, Output2>(self: Logger<Message, Output>, that: Logger<Message2, Output2>): Logger<
+    Message & Message2,
+    readonly [Output, Output2]
+  >
+  <Message2, Output2>(that: Logger<Message2, Output2>): <Message, Output>(
+    self: Logger<Message, Output>
+  ) => Logger<Message & Message2, readonly [Output, Output2]>
+}
 ```
 
 Added in v1.0.0
@@ -328,9 +353,15 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const zipLeft: <Message2, Output2>(
-  that: Logger<Message2, Output2>
-) => <Message, Output>(self: Logger<Message, Output>) => Logger<Message & Message2, Output>
+export declare const zipLeft: {
+  <Message, Output, Message2, Output2>(self: Logger<Message, Output>, that: Logger<Message2, Output2>): Logger<
+    Message & Message2,
+    Output
+  >
+  <Message2, Output2>(that: Logger<Message2, Output2>): <Message, Output>(
+    self: Logger<Message, Output>
+  ) => Logger<Message & Message2, Output>
+}
 ```
 
 Added in v1.0.0
@@ -340,9 +371,15 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const zipRight: <Message2, Output2>(
-  that: Logger<Message2, Output2>
-) => <Message, Output>(self: Logger<Message, Output>) => Logger<Message & Message2, Output2>
+export declare const zipRight: {
+  <Message, Output, Message2, Output2>(self: Logger<Message, Output>, that: Logger<Message2, Output2>): Logger<
+    Message & Message2,
+    Output2
+  >
+  <Message2, Output2>(that: Logger<Message2, Output2>): <Message, Output>(
+    self: Logger<Message, Output>
+  ) => Logger<Message & Message2, Output2>
+}
 ```
 
 Added in v1.0.0

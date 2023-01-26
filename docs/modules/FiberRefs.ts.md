@@ -54,7 +54,10 @@ values if it exists or `None` otherwise.
 **Signature**
 
 ```ts
-export declare const get: <A>(self: FiberRefs, fiberRef: FiberRef.FiberRef<A>) => Option.Option<A>
+export declare const get: {
+  <A>(self: FiberRefs, fiberRef: FiberRef.FiberRef<A>): Option.Option<A>
+  <A>(fiberRef: FiberRef.FiberRef<A>): (self: FiberRefs) => Option.Option<A>
+}
 ```
 
 Added in v1.0.0
@@ -67,7 +70,10 @@ values if it exists or the `initial` value of the `FiberRef` otherwise.
 **Signature**
 
 ```ts
-export declare const getOrDefault: <A>(self: FiberRefs, fiberRef: FiberRef.FiberRef<A>) => A
+export declare const getOrDefault: {
+  <A>(self: FiberRefs, fiberRef: FiberRef.FiberRef<A>): A
+  <A>(fiberRef: FiberRef.FiberRef<A>): (self: FiberRefs) => A
+}
 ```
 
 Added in v1.0.0
@@ -101,7 +107,7 @@ Deletes the specified `FiberRef` from the `FibterRefs`.
 **Signature**
 
 ```ts
-export declare const delete: <A>(self: FiberRefs, fiberRef: FiberRef.FiberRef<A>) => FiberRefs
+export declare const delete: { <A>(self: FiberRefs, fiberRef: FiberRef.FiberRef<A>): FiberRefs; <A>(fiberRef: FiberRef.FiberRef<A>): (self: FiberRefs) => FiberRefs; }
 ```
 
 Added in v1.0.0
@@ -115,7 +121,10 @@ individual fiber refs that make up the collection.
 **Signature**
 
 ```ts
-export declare const forkAs: (self: FiberRefs, childId: FiberId.Runtime) => FiberRefs
+export declare const forkAs: {
+  (self: FiberRefs, childId: FiberId.Runtime): FiberRefs
+  (childId: FiberId.Runtime): (self: FiberRefs) => FiberRefs
+}
 ```
 
 Added in v1.0.0
@@ -129,7 +138,10 @@ preservation of maximum information from both child and parent refs.
 **Signature**
 
 ```ts
-export declare const joinAs: (self: FiberRefs, fiberId: FiberId.Runtime, that: FiberRefs) => FiberRefs
+export declare const joinAs: {
+  (self: FiberRefs, fiberId: FiberId.Runtime, that: FiberRefs): FiberRefs
+  (fiberId: FiberId.Runtime, that: FiberRefs): (self: FiberRefs) => FiberRefs
+}
 ```
 
 Added in v1.0.0
@@ -153,12 +165,10 @@ Updates the value of the specified `FiberRef` using the provided `FiberId`
 **Signature**
 
 ```ts
-export declare const updatedAs: <A>(
-  self: FiberRefs,
-  fiberId: FiberId.Runtime,
-  fiberRef: FiberRef.FiberRef<A>,
-  value: A
-) => FiberRefs
+export declare const updatedAs: {
+  <A>(self: FiberRefs, fiberId: FiberId.Runtime, fiberRef: FiberRef.FiberRef<A>, value: A): FiberRefs
+  <A>(fiberId: FiberId.Runtime, fiberRef: FiberRef.FiberRef<A>, value: A): (self: FiberRefs) => FiberRefs
+}
 ```
 
 Added in v1.0.0

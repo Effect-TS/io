@@ -108,12 +108,10 @@ export interface Clock {
   readonly [ClockTypeId]: ClockTypeId
   /**
    * Returns the current time in milliseconds.
-   * @macro traced
    */
   currentTimeMillis(): Effect.Effect<never, never, number>
   /**
    * Asynchronously sleeps for the specified duration.
-   * @macro traced
    */
   sleep(duration: Duration.Duration): Effect.Effect<never, never, void>
 }

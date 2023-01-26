@@ -19,6 +19,8 @@ Added in v1.0.0
   - [Or](#or)
   - [SourceUnavailable](#sourceunavailable)
   - [Unsupported](#unsupported)
+- [folding](#folding)
+  - [reduceWithContext](#reducewithcontext)
 - [models](#models)
   - [And (interface)](#and-interface)
   - [ConfigError (type alias)](#configerror-type-alias)
@@ -108,6 +110,21 @@ Added in v1.0.0
 
 ```ts
 export declare const Unsupported: (path: Chunk.Chunk<string>, message: string) => ConfigError
+```
+
+Added in v1.0.0
+
+# folding
+
+## reduceWithContext
+
+**Signature**
+
+```ts
+export declare const reduceWithContext: {
+  <C, Z>(self: ConfigError, context: C, reducer: ConfigErrorReducer<C, Z>): Z
+  <C, Z>(context: C, reducer: ConfigErrorReducer<C, Z>): (self: ConfigError) => Z
+}
 ```
 
 Added in v1.0.0
@@ -240,7 +257,10 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const prefixed: (prefix: Chunk.Chunk<string>) => (self: ConfigError) => ConfigError
+export declare const prefixed: {
+  (self: ConfigError, prefix: Chunk.Chunk<string>): ConfigError
+  (prefix: Chunk.Chunk<string>): (self: ConfigError) => ConfigError
+}
 ```
 
 Added in v1.0.0

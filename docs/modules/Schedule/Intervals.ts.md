@@ -136,7 +136,10 @@ Produces the intersection of this `Intervals` and that `Intervals`.
 **Signature**
 
 ```ts
-export declare const intersect: (that: Intervals) => (self: Intervals) => Intervals
+export declare const intersect: {
+  (self: Intervals, that: Intervals): Intervals
+  (that: Intervals): (self: Intervals) => Intervals
+}
 ```
 
 Added in v1.0.0
@@ -148,7 +151,10 @@ Computes the union of this `Intervals` and that `Intervals`
 **Signature**
 
 ```ts
-export declare const union: (that: Intervals) => (self: Intervals) => Intervals
+export declare const union: {
+  (self: Intervals, that: Intervals): Intervals
+  (that: Intervals): (self: Intervals) => Intervals
+}
 ```
 
 Added in v1.0.0
@@ -163,7 +169,10 @@ Returns `true` if the start of this `Intervals` is before the start of that
 **Signature**
 
 ```ts
-export declare const lessThan: (that: Intervals) => (self: Intervals) => boolean
+export declare const lessThan: {
+  (self: Intervals, that: Intervals): boolean
+  (that: Intervals): (self: Intervals) => boolean
+}
 ```
 
 Added in v1.0.0
@@ -175,7 +184,10 @@ Returns the maximum of the two `Intervals` (i.e. which has the latest start).
 **Signature**
 
 ```ts
-export declare const max: (that: Intervals) => (self: Intervals) => Intervals
+export declare const max: {
+  (self: Intervals, that: Intervals): Intervals
+  (that: Intervals): (self: Intervals) => Intervals
+}
 ```
 
 Added in v1.0.0

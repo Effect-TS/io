@@ -82,10 +82,10 @@ to acquire a new value fails.
 **Signature**
 
 ```ts
-export declare const set: <A, R, E>(
-  self: ScopedRef<A>,
-  acquire: Effect.Effect<R, E, A>
-) => Effect.Effect<Exclude<R, Scope.Scope>, E, void>
+export declare const set: {
+  <A, R, E>(self: ScopedRef<A>, acquire: Effect.Effect<R, E, A>): Effect.Effect<Exclude<R, Scope.Scope>, E, void>
+  <A, R, E>(acquire: Effect.Effect<R, E, A>): (self: ScopedRef<A>) => Effect.Effect<Exclude<R, Scope.Scope>, E, void>
+}
 ```
 
 Added in v1.0.0

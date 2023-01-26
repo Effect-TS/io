@@ -414,10 +414,10 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const locally: <A>(
-  self: FiberRef<A>,
-  value: A
-) => <R, E, B>(use: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>
+export declare const locally: {
+  <R, E, B, A>(use: Effect.Effect<R, E, B>, self: FiberRef<A>, value: A): Effect.Effect<R, E, B>
+  <A>(self: FiberRef<A>, value: A): <R, E, B>(use: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>
+}
 ```
 
 Added in v1.0.0
@@ -427,7 +427,10 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const locallyScoped: <A>(self: FiberRef<A>, value: A) => Effect.Effect<Scope.Scope, never, void>
+export declare const locallyScoped: {
+  <A>(self: FiberRef<A>, value: A): Effect.Effect<Scope.Scope, never, void>
+  <A>(value: A): (self: FiberRef<A>) => Effect.Effect<Scope.Scope, never, void>
+}
 ```
 
 Added in v1.0.0
@@ -437,7 +440,10 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const locallyScopedWith: <A>(self: FiberRef<A>, value: A) => Effect.Effect<Scope.Scope, never, void>
+export declare const locallyScopedWith: {
+  <A>(self: FiberRef<A>, f: (a: A) => A): Effect.Effect<Scope.Scope, never, void>
+  <A>(f: (a: A) => A): (self: FiberRef<A>) => Effect.Effect<Scope.Scope, never, void>
+}
 ```
 
 Added in v1.0.0
@@ -447,10 +453,10 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const locallyWith: <A>(
-  self: FiberRef<A>,
-  f: (a: A) => A
-) => <R, E, B>(use: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>
+export declare const locallyWith: {
+  <R, E, B, A>(use: Effect.Effect<R, E, B>, self: FiberRef<A>, f: (a: A) => A): Effect.Effect<R, E, B>
+  <A>(self: FiberRef<A>, f: (a: A) => A): <R, E, B>(use: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>
+}
 ```
 
 Added in v1.0.0

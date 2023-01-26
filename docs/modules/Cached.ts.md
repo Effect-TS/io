@@ -91,14 +91,9 @@ which can be refreshed either manually or automatically.
 
 ```ts
 export interface Cached<E, A> extends Cached.Variance<E, A> {
-  /**
-   * @internal
-   */
+  /** @internal */
   readonly scopedRef: ScopedRef.ScopedRef<Exit.Exit<E, A>>
-  /**
-   * @macro traced
-   * @internal
-   */
+  /** @internal */
   acquire(): Effect.Effect<Scope.Scope, E, A>
 }
 ```

@@ -135,7 +135,10 @@ form a union.
 **Signature**
 
 ```ts
-export declare const union: (that: Interval) => (self: Interval) => Option.Option<Interval>
+export declare const union: {
+  (self: Interval, that: Interval): Option.Option<Interval>
+  (that: Interval): (self: Interval) => Option.Option<Interval>
+}
 ```
 
 Added in v1.0.0
@@ -150,7 +153,10 @@ that `Interval`.
 **Signature**
 
 ```ts
-export declare const intersect: (that: Interval) => (self: Interval) => Interval
+export declare const intersect: {
+  (self: Interval, that: Interval): Interval
+  (that: Interval): (self: Interval) => Interval
+}
 ```
 
 Added in v1.0.0
@@ -187,7 +193,10 @@ otherwise.
 **Signature**
 
 ```ts
-export declare const lessThan: (that: Interval) => (self: Interval) => boolean
+export declare const lessThan: {
+  (self: Interval, that: Interval): boolean
+  (that: Interval): (self: Interval) => boolean
+}
 ```
 
 Added in v1.0.0
@@ -199,7 +208,7 @@ Returns the maximum of two `Interval`s.
 **Signature**
 
 ```ts
-export declare const max: (that: Interval) => (self: Interval) => Interval
+export declare const max: { (self: Interval, that: Interval): Interval; (that: Interval): (self: Interval) => Interval }
 ```
 
 Added in v1.0.0
@@ -211,7 +220,7 @@ Returns the minimum of two `Interval`s.
 **Signature**
 
 ```ts
-export declare const min: (that: Interval) => (self: Interval) => Interval
+export declare const min: { (self: Interval, that: Interval): Interval; (that: Interval): (self: Interval) => Interval }
 ```
 
 Added in v1.0.0

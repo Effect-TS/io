@@ -137,7 +137,10 @@ Returns `true` if the `RuntimeFlagsPatch` includes the specified
 **Signature**
 
 ```ts
-export declare const includes: (flag: RuntimeFlagsPatch) => (self: RuntimeFlagsPatch) => boolean
+export declare const includes: {
+  (self: RuntimeFlagsPatch, flag: RuntimeFlagsPatch): boolean
+  (flag: RuntimeFlagsPatch): (self: RuntimeFlagsPatch) => boolean
+}
 ```
 
 Added in v1.0.0
@@ -150,7 +153,10 @@ Returns `true` if the `RuntimeFlagsPatch` describes the specified
 **Signature**
 
 ```ts
-export declare const isActive: (flag: RuntimeFlagsPatch) => (self: RuntimeFlagsPatch) => boolean
+export declare const isActive: {
+  (self: RuntimeFlagsPatch, flag: RuntimeFlagsPatch): boolean
+  (flag: RuntimeFlagsPatch): (self: RuntimeFlagsPatch) => boolean
+}
 ```
 
 Added in v1.0.0
@@ -163,7 +169,10 @@ Returns `true` if the `RuntimeFlagsPatch` describes the specified
 **Signature**
 
 ```ts
-export declare const isDisabled: (flag: RuntimeFlags.RuntimeFlag) => (self: RuntimeFlagsPatch) => boolean
+export declare const isDisabled: {
+  (self: RuntimeFlagsPatch, flag: RuntimeFlags.RuntimeFlag): boolean
+  (flag: RuntimeFlags.RuntimeFlag): (self: RuntimeFlagsPatch) => boolean
+}
 ```
 
 Added in v1.0.0
@@ -176,7 +185,10 @@ Returns `true` if the `RuntimeFlagsPatch` describes the specified
 **Signature**
 
 ```ts
-export declare const isEnabled: (flag: RuntimeFlags.RuntimeFlag) => (self: RuntimeFlagsPatch) => boolean
+export declare const isEnabled: {
+  (self: RuntimeFlagsPatch, flag: RuntimeFlags.RuntimeFlag): boolean
+  (flag: RuntimeFlags.RuntimeFlag): (self: RuntimeFlagsPatch) => boolean
+}
 ```
 
 Added in v1.0.0
@@ -219,7 +231,10 @@ followed by `that` patch.
 **Signature**
 
 ```ts
-export declare const andThen: (that: RuntimeFlagsPatch) => (self: RuntimeFlagsPatch) => RuntimeFlagsPatch
+export declare const andThen: {
+  (self: RuntimeFlagsPatch, that: RuntimeFlagsPatch): RuntimeFlagsPatch
+  (that: RuntimeFlagsPatch): (self: RuntimeFlagsPatch) => RuntimeFlagsPatch
+}
 ```
 
 Added in v1.0.0
@@ -232,7 +247,10 @@ and `that` patch.
 **Signature**
 
 ```ts
-export declare const both: (that: RuntimeFlagsPatch) => (self: RuntimeFlagsPatch) => RuntimeFlagsPatch
+export declare const both: {
+  (self: RuntimeFlagsPatch, that: RuntimeFlagsPatch): RuntimeFlagsPatch
+  (that: RuntimeFlagsPatch): (self: RuntimeFlagsPatch) => RuntimeFlagsPatch
+}
 ```
 
 Added in v1.0.0
@@ -245,7 +263,10 @@ patch or `that` patch.
 **Signature**
 
 ```ts
-export declare const either: (that: RuntimeFlagsPatch) => (self: RuntimeFlagsPatch) => RuntimeFlagsPatch
+export declare const either: {
+  (self: RuntimeFlagsPatch, that: RuntimeFlagsPatch): RuntimeFlagsPatch
+  (that: RuntimeFlagsPatch): (self: RuntimeFlagsPatch) => RuntimeFlagsPatch
+}
 ```
 
 Added in v1.0.0
@@ -258,7 +279,10 @@ Creates a `RuntimeFlagsPatch` which describes exclusion of the specified
 **Signature**
 
 ```ts
-export declare const exclude: (flag: RuntimeFlags.RuntimeFlag) => (self: RuntimeFlagsPatch) => RuntimeFlagsPatch
+export declare const exclude: {
+  (self: RuntimeFlagsPatch, flag: RuntimeFlags.RuntimeFlag): RuntimeFlagsPatch
+  (flag: RuntimeFlags.RuntimeFlag): (self: RuntimeFlagsPatch) => RuntimeFlagsPatch
+}
 ```
 
 Added in v1.0.0
