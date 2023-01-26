@@ -1,5 +1,33 @@
 # @effect/io
 
+## 0.1.0
+
+### Minor Changes
+
+- [#211](https://github.com/Effect-TS/io/pull/211) [`668ee25`](https://github.com/Effect-TS/io/commit/668ee254e65353de63e32b0fb51e7aa5625be6a5) Thanks [@IMax153](https://github.com/IMax153)! - add Effect.setConfigProvider
+
+- [#211](https://github.com/Effect-TS/io/pull/211) [`53c3b0c`](https://github.com/Effect-TS/io/commit/53c3b0cb0611e59aed34798b1a10dc234cccfd37) Thanks [@IMax153](https://github.com/IMax153)! - simplify Effect.race
+
+- [#211](https://github.com/Effect-TS/io/pull/211) [`9c9b95d`](https://github.com/Effect-TS/io/commit/9c9b95d31f051cc83a56a73bdd49c7079447c36f) Thanks [@IMax153](https://github.com/IMax153)! - implement ConfigProvider.contramapPath
+
+- [#211](https://github.com/Effect-TS/io/pull/211) [`cb7a2d4`](https://github.com/Effect-TS/io/commit/cb7a2d483ac7d752cb3468f40517d03aeaa24819) Thanks [@IMax153](https://github.com/IMax153)! - avoid splitting values in Config except for sequences
+
+- [#211](https://github.com/Effect-TS/io/pull/211) [`cd51837`](https://github.com/Effect-TS/io/commit/cd51837ef3ab8cdfba258b4b97cd80d58e8d7e8f) Thanks [@IMax153](https://github.com/IMax153)! - add Metric.timerWithBoundaries
+
+- [#211](https://github.com/Effect-TS/io/pull/211) [`21f99a5`](https://github.com/Effect-TS/io/commit/21f99a51bc89fcfe473aec6932d93a2658258bb2) Thanks [@IMax153](https://github.com/IMax153)! - uppercase key paths in ConfigProvider.fromEnv
+
+- [#208](https://github.com/Effect-TS/io/pull/208) [`ad12eb4`](https://github.com/Effect-TS/io/commit/ad12eb44eb8d57d4a16be8f1d858eb319b568243) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Update dependencies
+
+### Patch Changes
+
+- [#212](https://github.com/Effect-TS/io/pull/212) [`090b8f5`](https://github.com/Effect-TS/io/commit/090b8f5d150b0ab060cce487959c18d59b9926c9) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Unbundle runtime
+
+- [#214](https://github.com/Effect-TS/io/pull/214) [`ff5f9f9`](https://github.com/Effect-TS/io/commit/ff5f9f9f15370724c2808e652327880689987633) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Expose getCurrentFiber
+
+- [#203](https://github.com/Effect-TS/io/pull/203) [`3ecf681`](https://github.com/Effect-TS/io/commit/3ecf6810b7c07e34eb58bc7a7eff0fe87e873f03) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Introduce Error based tracing and dual methods
+
+- [#210](https://github.com/Effect-TS/io/pull/210) [`98c04aa`](https://github.com/Effect-TS/io/commit/98c04aa8eeaa7b16ff22a2d944b5f3461cceaddc) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Fix mistaken type
+
 ## 0.0.66
 
 ### Patch Changes
