@@ -16,8 +16,8 @@ import * as TestAnnotationMap from "@effect/io/internal_effect_untraced/testing/
 import * as TestConfig from "@effect/io/internal_effect_untraced/testing/testConfig"
 import type * as Layer from "@effect/io/Layer"
 import type * as Scope from "@effect/io/Scope"
+import { pipe } from "@fp-ts/core/Function"
 import * as Context from "@fp-ts/data/Context"
-import { pipe } from "@fp-ts/data/Function"
 import type * as SortedSet from "@fp-ts/data/SortedSet"
 
 /** @internal */

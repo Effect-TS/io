@@ -5,13 +5,13 @@ import type * as ConfigError from "@effect/io/Config/Error"
 import type * as ConfigSecret from "@effect/io/Config/Secret"
 import * as internal from "@effect/io/internal_effect_untraced/config"
 import type { EnforceNonEmptyRecord, NonEmptyArrayConfig, TupleConfig } from "@effect/io/internal_effect_untraced/types"
+import type * as Either from "@fp-ts/core/Either"
+import type { LazyArg } from "@fp-ts/core/Function"
+import type * as Option from "@fp-ts/core/Option"
+import type { Predicate, Refinement } from "@fp-ts/core/Predicate"
 import type * as Chunk from "@fp-ts/data/Chunk"
-import type * as Either from "@fp-ts/data/Either"
-import type { LazyArg } from "@fp-ts/data/Function"
 import type * as HashMap from "@fp-ts/data/HashMap"
 import type * as HashSet from "@fp-ts/data/HashSet"
-import type * as Option from "@fp-ts/data/Option"
-import type { Predicate, Refinement } from "@fp-ts/data/Predicate"
 
 /**
  * @since 1.0.0

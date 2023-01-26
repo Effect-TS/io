@@ -6,10 +6,10 @@ import * as ConfigSecret from "@effect/io/Config/Secret"
 import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import * as it from "@effect/io/test/utils/extend"
+import { pipe } from "@fp-ts/core/Function"
+import * as Option from "@fp-ts/core/Option"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Equal from "@fp-ts/data/Equal"
-import { pipe } from "@fp-ts/data/Function"
-import * as Option from "@fp-ts/data/Option"
 import { assert, describe } from "vitest"
 
 describe.concurrent("Config", () => {
@@ -83,7 +83,7 @@ describe.concurrent("Config", () => {
         const config = Config.optional(Config.integer("key"))
         const configProvider = ConfigProvider.fromMap(new Map())
         const result = yield* $(configProvider.load(config))
-        assert.deepStrictEqual(result, Option.none)
+        assert.deepStrictEqual(result, Option.none())
       }))
 
     it.effect("does not recover from other errors", () =>
@@ -131,7 +131,7 @@ describe.concurrent("Config", () => {
         )
         const configProvider = ConfigProvider.fromMap(new Map([["key2", "value"]]))
         const result = yield* $(configProvider.load(config))
-        assert.deepStrictEqual(result, Option.none)
+        assert.deepStrictEqual(result, Option.none())
       }))
   })
 

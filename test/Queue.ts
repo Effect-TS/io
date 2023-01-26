@@ -6,10 +6,10 @@ import * as Fiber from "@effect/io/Fiber"
 import * as Queue from "@effect/io/Queue"
 import * as Ref from "@effect/io/Ref"
 import * as it from "@effect/io/test/utils/extend"
+import * as Either from "@fp-ts/core/Either"
+import { pipe } from "@fp-ts/core/Function"
+import * as Option from "@fp-ts/core/Option"
 import * as Chunk from "@fp-ts/data/Chunk"
-import * as Either from "@fp-ts/data/Either"
-import { pipe } from "@fp-ts/data/Function"
-import * as Option from "@fp-ts/data/Option"
 import { assert, describe } from "vitest"
 
 export const waitForValue = <A>(ref: Effect.Effect<never, never, A>, value: A): Effect.Effect<never, never, A> => {
@@ -412,7 +412,7 @@ describe.concurrent("Queue", () => {
     Effect.gen(function*($) {
       const queue = yield* $(Queue.bounded<number>(5))
       const result = yield* $(Queue.poll(queue))
-      assert.deepStrictEqual(result, Option.none)
+      assert.deepStrictEqual(result, Option.none())
     }))
   it.effect("poll on queue just emptied", () =>
     Effect.gen(function*($) {
@@ -420,7 +420,7 @@ describe.concurrent("Queue", () => {
       yield* $(Queue.offerAll(queue, [1, 2, 3, 4]))
       yield* $(Queue.takeAll(queue))
       const result = yield* $(Queue.poll(queue))
-      assert.deepStrictEqual(result, Option.none)
+      assert.deepStrictEqual(result, Option.none())
     }))
   it.effect("multiple polls", () =>
     Effect.gen(function*($) {
@@ -432,8 +432,8 @@ describe.concurrent("Queue", () => {
       const result4 = yield* $(Queue.poll(queue))
       assert.deepStrictEqual(result1, Option.some(1))
       assert.deepStrictEqual(result2, Option.some(2))
-      assert.deepStrictEqual(result3, Option.none)
-      assert.deepStrictEqual(result4, Option.none)
+      assert.deepStrictEqual(result3, Option.none())
+      assert.deepStrictEqual(result4, Option.none())
     }))
   it.effect("shutdown with take fiber", () =>
     Effect.gen(function*($) {

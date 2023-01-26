@@ -21,15 +21,15 @@ import type * as Synchronized from "@effect/io/Ref/Synchronized"
 import type * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
+import * as Either from "@fp-ts/core/Either"
+import type { LazyArg } from "@fp-ts/core/Function"
+import { pipe } from "@fp-ts/core/Function"
+import * as Option from "@fp-ts/core/Option"
 import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as Duration from "@fp-ts/data/Duration"
-import * as Either from "@fp-ts/data/Either"
 import * as Equal from "@fp-ts/data/Equal"
-import type { LazyArg } from "@fp-ts/data/Function"
-import { pipe } from "@fp-ts/data/Function"
 import * as MutableHashMap from "@fp-ts/data/MutableHashMap"
 import * as MutableRef from "@fp-ts/data/MutableRef"
-import * as Option from "@fp-ts/data/Option"
 
 /** @internal */
 class Semaphore {
@@ -148,11 +148,14 @@ export const cachedInvalidate = Debug.dualWithTrace<
       core.flatMap(
         core.context<R>(),
         (env) =>
-          core.map(makeSynchronized<Option.Option<readonly [number, Deferred.Deferred<E, A>]>>(Option.none), (cache) =>
-            [
-              core.provideContext(getCachedValue(self, timeToLive, cache), env),
-              invalidateCache(cache)
-            ] as const)
+          core.map(
+            makeSynchronized<Option.Option<readonly [number, Deferred.Deferred<E, A>]>>(Option.none()),
+            (cache) =>
+              [
+                core.provideContext(getCachedValue(self, timeToLive, cache), env),
+                invalidateCache(cache)
+              ] as const
+          )
       ).traced(trace)
 )
 
@@ -187,7 +190,7 @@ const getCachedValue = <R, E, A>(
               const [end] = option.value
               return end - time <= 0
                 ? Option.some(computeCachedValue(self, timeToLive, time))
-                : Option.none
+                : Option.none()
             }
           }
         })
@@ -205,7 +208,7 @@ const getCachedValue = <R, E, A>(
 /** @internal */
 const invalidateCache = <E, A>(
   cache: Synchronized.Synchronized<Option.Option<readonly [number, Deferred.Deferred<E, A>]>>
-): Effect.Effect<never, never, void> => internalRef.set(cache, Option.none)
+): Effect.Effect<never, never, void> => internalRef.set(cache, Option.none())
 
 /** @internal */
 export const disconnect = Debug.methodWithTrace((trace) =>
@@ -634,7 +637,7 @@ export const supervised = Debug.dualWithTrace<
 export const timeout = Debug.dualWithTrace<
   <R, E, A>(self: Effect.Effect<R, E, A>, duration: Duration.Duration) => Effect.Effect<R, E, Option.Option<A>>,
   (duration: Duration.Duration) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, Option.Option<A>>
->(2, (trace) => (self, duration) => timeoutTo(self, Option.none, Option.some, duration).traced(trace))
+>(2, (trace) => (self, duration) => timeoutTo(self, Option.none(), Option.some, duration).traced(trace))
 
 /** @internal */
 export const timeoutFail = Debug.dualWithTrace<

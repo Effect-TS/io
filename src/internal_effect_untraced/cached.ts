@@ -7,7 +7,7 @@ import * as _schedule from "@effect/io/internal_effect_untraced/schedule"
 import * as scopedRef from "@effect/io/internal_effect_untraced/scopedRef"
 import type * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"
-import { pipe } from "@fp-ts/data/Function"
+import { pipe } from "@fp-ts/core/Function"
 
 /** @internal */
 const CachedSymbolKey = "@effect/io/Cached"

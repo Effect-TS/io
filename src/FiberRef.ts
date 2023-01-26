@@ -13,13 +13,13 @@ import type * as MetricLabel from "@effect/io/Metric/Label"
 import type * as Scheduler from "@effect/io/Scheduler"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
+import type { LazyArg } from "@fp-ts/core/Function"
+import type * as Option from "@fp-ts/core/Option"
 import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as Context from "@fp-ts/data/Context"
 import type * as Differ from "@fp-ts/data/Differ"
-import type { LazyArg } from "@fp-ts/data/Function"
 import type * as HashMap from "@fp-ts/data/HashMap"
 import type * as HashSet from "@fp-ts/data/HashSet"
-import type * as Option from "@fp-ts/data/Option"
 
 /**
  * @since 1.0.0

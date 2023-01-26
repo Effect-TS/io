@@ -3,8 +3,8 @@ import * as Layer from "@effect/io/Layer"
 import * as Reloadable from "@effect/io/Reloadable"
 import * as Counter from "@effect/io/test/utils/counter"
 import * as it from "@effect/io/test/utils/extend"
+import { pipe } from "@fp-ts/core/Function"
 import * as Context from "@fp-ts/data/Context"
-import { pipe } from "@fp-ts/data/Function"
 import { assert, describe } from "vitest"
 
 const DummyServiceTypeId = Symbol.for("@effect/io/test/Reloadable/DummyService")

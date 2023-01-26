@@ -1,7 +1,7 @@
 import * as Debug from "@effect/io/Debug"
 import type * as Interval from "@effect/io/Schedule/Interval"
+import * as Option from "@fp-ts/core/Option"
 import * as Duration from "@fp-ts/data/Duration"
-import * as Option from "@fp-ts/data/Option"
 
 /** @internal */
 const IntervalSymbolKey = "@effect/io/Schedule/Interval"
@@ -87,7 +87,7 @@ export const union = Debug.dual<
 >(2, (self, that) => {
   const start = Math.max(self.startMillis, that.startMillis)
   const end = Math.min(self.endMillis, that.endMillis)
-  return start < end ? Option.none : Option.some(make(start, end))
+  return start < end ? Option.none() : Option.some(make(start, end))
 })
 
 /** @internal */

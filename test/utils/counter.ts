@@ -1,7 +1,7 @@
 import * as Effect from "@effect/io/Effect"
 import * as Ref from "@effect/io/Ref"
 import type * as Scope from "@effect/io/Scope"
-import { pipe } from "@fp-ts/data/Function"
+import { pipe } from "@fp-ts/core/Function"
 
 interface Counter {
   acquire(): Effect.Effect<Scope.Scope, never, number>

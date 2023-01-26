@@ -5,10 +5,10 @@ import * as Exit from "@effect/io/Exit"
 import * as Fiber from "@effect/io/Fiber"
 import * as Ref from "@effect/io/Ref"
 import * as it from "@effect/io/test/utils/extend"
+import { pipe } from "@fp-ts/core/Function"
+import * as Option from "@fp-ts/core/Option"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Duration from "@fp-ts/data/Duration"
-import { pipe } from "@fp-ts/data/Function"
-import * as Option from "@fp-ts/data/Option"
 import * as os from "node:os"
 import { assert, describe } from "vitest"
 
@@ -88,7 +88,7 @@ describe.concurrent("Effect", () => {
       const result = yield* $(pipe(Fiber.interrupt(fiber), Effect.timeout(Duration.seconds(1))))
       const unexpected = yield* $(Ref.get(unexpectedPlace))
       assert.deepStrictEqual(unexpected, Chunk.empty())
-      assert.deepStrictEqual(result, Option.none) // the timeout should happen
+      assert.deepStrictEqual(result, Option.none()) // the timeout should happen
     }))
   it.live("asyncMaybe should not resume fiber twice after synchronous result", () =>
     Effect.gen(function*($) {
@@ -116,7 +116,7 @@ describe.concurrent("Effect", () => {
       const result = yield* $(pipe(Fiber.interrupt(fiber), Effect.timeout(Duration.seconds(1))))
       const unexpected = yield* $(Ref.get(unexpectedPlace))
       assert.deepStrictEqual(unexpected, Chunk.empty())
-      assert.deepStrictEqual(result, Option.none) // timeout should happen
+      assert.deepStrictEqual(result, Option.none()) // timeout should happen
     }))
   it.effect("sleep 0 must return", () =>
     Effect.gen(function*($) {
@@ -158,7 +158,7 @@ describe.concurrent("Effect", () => {
         Effect.exit,
         Effect.map(Exit.match((cause) =>
           pipe(Cause.defects(cause), Chunk.head, Option.map((e) => (e as Error).message)), () =>
-          Option.none))
+          Option.none()))
       ))
       assert.deepStrictEqual(result, Option.some("ouch"))
     }))

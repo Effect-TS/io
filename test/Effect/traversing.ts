@@ -5,10 +5,10 @@ import * as Exit from "@effect/io/Exit"
 import * as Fiber from "@effect/io/Fiber"
 import * as Ref from "@effect/io/Ref"
 import * as it from "@effect/io/test/utils/extend"
+import * as Either from "@fp-ts/core/Either"
+import { constVoid, identity, pipe } from "@fp-ts/core/Function"
+import * as Option from "@fp-ts/core/Option"
 import * as Chunk from "@fp-ts/data/Chunk"
-import * as Either from "@fp-ts/data/Either"
-import { constVoid, identity, pipe } from "@fp-ts/data/Function"
-import * as Option from "@fp-ts/data/Option"
 import { assert, describe } from "vitest"
 
 describe.concurrent("Effect", () => {
@@ -140,9 +140,9 @@ describe.concurrent("Effect", () => {
   it.effect("forEachOption - succeeds with None given None", () =>
     Effect.gen(function*($) {
       const result = yield* $(
-        pipe(Option.none as Option.Option<string>, Effect.forEachOption((s) => Effect.succeed(s.length)))
+        pipe(Option.none() as Option.Option<string>, Effect.forEachOption((s) => Effect.succeed(s.length)))
       )
-      assert.deepStrictEqual(result, Option.none)
+      assert.deepStrictEqual(result, Option.none())
     }))
   it.effect("forEachOption - succeeds with Some given Some", () =>
     Effect.gen(function*($) {

@@ -13,10 +13,10 @@ import type * as Layer from "@effect/io/Layer"
 import type * as LogLevel from "@effect/io/Logger/Level"
 import type * as LogSpan from "@effect/io/Logger/Span"
 import type { Runtime } from "@effect/io/Runtime"
+import type { LazyArg } from "@fp-ts/core/Function"
+import type * as Option from "@fp-ts/core/Option"
 import type * as Chunk from "@fp-ts/data/Chunk"
-import type { LazyArg } from "@fp-ts/data/Function"
 import type * as HashMap from "@fp-ts/data/HashMap"
-import type * as Option from "@fp-ts/data/Option"
 
 /**
  * @since 1.0.0

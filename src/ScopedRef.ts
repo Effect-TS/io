@@ -5,7 +5,7 @@ import type * as Effect from "@effect/io/Effect"
 import * as internal from "@effect/io/internal_effect_untraced/scopedRef"
 import type * as Synchronized from "@effect/io/Ref/Synchronized"
 import type * as Scope from "@effect/io/Scope"
-import type { LazyArg } from "@fp-ts/data/Function"
+import type { LazyArg } from "@fp-ts/core/Function"
 
 /**
  * @since 1.0.0

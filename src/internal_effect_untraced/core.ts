@@ -23,21 +23,21 @@ import type * as LogSpan from "@effect/io/Logger/Span"
 import type * as MetricLabel from "@effect/io/Metric/Label"
 import type * as Scheduler from "@effect/io/Scheduler"
 import type * as Scope from "@effect/io/Scope"
+import * as Either from "@fp-ts/core/Either"
+import type { LazyArg } from "@fp-ts/core/Function"
+import { identity, pipe } from "@fp-ts/core/Function"
+import * as Option from "@fp-ts/core/Option"
+import type { Predicate } from "@fp-ts/core/Predicate"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Context from "@fp-ts/data/Context"
 import * as Differ from "@fp-ts/data/Differ"
 import * as ContextPatch from "@fp-ts/data/Differ/ContextPatch"
 import * as HashSetPatch from "@fp-ts/data/Differ/HashSetPatch"
-import * as Either from "@fp-ts/data/Either"
 import * as Equal from "@fp-ts/data/Equal"
-import type { LazyArg } from "@fp-ts/data/Function"
-import { identity, pipe } from "@fp-ts/data/Function"
 import * as Hash from "@fp-ts/data/Hash"
 import * as HashMap from "@fp-ts/data/HashMap"
 import * as HashSet from "@fp-ts/data/HashSet"
 import * as MutableRef from "@fp-ts/data/MutableRef"
-import * as Option from "@fp-ts/data/Option"
-import type { Predicate } from "@fp-ts/data/Predicate"
 
 // -----------------------------------------------------------------------------
 // Effect
@@ -656,7 +656,7 @@ export const fromOption = Debug.methodWithTrace((trace) =>
   <A>(option: Option.Option<A>): Effect.Effect<never, Option.Option<never>, A> => {
     switch (option._tag) {
       case "None": {
-        return fail(Option.none).traced(trace)
+        return fail(Option.none()).traced(trace)
       }
       case "Some": {
         return succeed(option.value).traced(trace)
@@ -1119,7 +1119,7 @@ export const whenEffect = Debug.dualWithTrace<
         if (b) {
           return pipe(self, map(Option.some))
         }
-        return succeed(Option.none)
+        return succeed(Option.none())
       })
     ).traced(trace))
 
@@ -1167,7 +1167,7 @@ export const withParallelism = Debug.dualWithTrace<
 export const withParallelismUnbounded = Debug.methodWithTrace((trace) =>
   <R, E, A>(self: Effect.Effect<R, E, A>) =>
     suspendSucceed(
-      () => fiberRefLocally(currentParallelism, Option.none as Option.Option<number>)(self)
+      () => fiberRefLocally(currentParallelism, Option.none() as Option.Option<number>)(self)
     ).traced(trace)
 )
 
@@ -1570,7 +1570,7 @@ export const currentScheduler: FiberRef.FiberRef<Scheduler.Scheduler> = fiberRef
 
 /** @internal */
 export const currentParallelism: FiberRef.FiberRef<Option.Option<number>> = fiberRefUnsafeMake<Option.Option<number>>(
-  Option.none
+  Option.none()
 )
 
 /** @internal */
@@ -1580,8 +1580,8 @@ export const currentTags: FiberRef.FiberRef<HashSet.HashSet<MetricLabel.MetricLa
 
 /** @internal */
 export const forkScopeOverride: FiberRef.FiberRef<Option.Option<fiberScope.FiberScope>> = fiberRefUnsafeMake(
-  Option.none,
-  () => Option.none as Option.Option<fiberScope.FiberScope>,
+  Option.none(),
+  () => Option.none() as Option.Option<fiberScope.FiberScope>,
   (parent, _) => parent
 )
 
@@ -1699,7 +1699,7 @@ export const releaseMapAddIfOpen = Debug.dualWithTrace<
       switch (self.state._tag) {
         case "Exited": {
           self.state.nextKey += 1
-          return pipe(restore(finalizer)(self.state.exit), as(Option.none))
+          return pipe(restore(finalizer)(self.state.exit), as(Option.none()))
         }
         case "Running": {
           const key = self.state.nextKey
@@ -1719,7 +1719,7 @@ export const releaseMapGet = Debug.dualWithTrace<
   (trace) =>
     (self, key) =>
       sync((): Option.Option<Scope.Scope.Finalizer> =>
-        self.state._tag === "Running" ? Option.fromNullable(self.state.finalizers.get(key)) : Option.none
+        self.state._tag === "Running" ? Option.fromNullable(self.state.finalizers.get(key)) : Option.none()
       ).traced(trace)
 )
 
@@ -1741,7 +1741,7 @@ export const releaseMapReplace = Debug.dualWithTrace<
       suspendSucceed(() => {
         switch (self.state._tag) {
           case "Exited": {
-            return as(Option.none)(restore(finalizer)(self.state.exit))
+            return as(Option.none())(restore(finalizer)(self.state.exit))
           }
           case "Running": {
             const fin = Option.fromNullable(self.state.finalizers.get(key))
@@ -1760,7 +1760,7 @@ export const releaseMapRemove = Debug.dualWithTrace<
   (self, key) =>
     sync(() => {
       if (self.state._tag === "Exited") {
-        return Option.none
+        return Option.none()
       }
       const fin = Option.fromNullable(self.state.finalizers.get(key))
       self.state.finalizers.delete(key)
@@ -1832,7 +1832,7 @@ export const exitCauseOption = <E, A>(self: Exit.Exit<E, A>): Option.Option<Caus
       return Option.some(self.cause)
     }
     case OpCodes.OP_SUCCESS: {
-      return Option.none
+      return Option.none()
     }
   }
 }
@@ -2189,7 +2189,7 @@ const exitCollectAllInternal = <E, A>(
 ): Option.Option<Exit.Exit<E, Chunk.Chunk<A>>> => {
   const list = Chunk.fromIterable(exits)
   if (!Chunk.isNonEmpty(list)) {
-    return Option.none
+    return Option.none()
   }
   return pipe(
     Chunk.tailNonEmpty(list),
@@ -2356,7 +2356,7 @@ export const deferredPoll = Debug.methodWithTrace((trace) =>
           return Option.some(state.effect)
         }
         case DeferredOpCodes.OP_STATE_PENDING: {
-          return Option.none
+          return Option.none()
         }
       }
     }).traced(trace)

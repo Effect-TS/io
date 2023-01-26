@@ -1,7 +1,7 @@
 import type * as ConfigSecret from "@effect/io/Config/Secret"
+import { pipe } from "@fp-ts/core/Function"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Equal from "@fp-ts/data/Equal"
-import { pipe } from "@fp-ts/data/Function"
 import * as Hash from "@fp-ts/data/Hash"
 
 /** @internal */

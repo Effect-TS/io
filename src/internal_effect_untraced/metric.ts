@@ -16,10 +16,10 @@ import type * as MetricLabel from "@effect/io/Metric/Label"
 import type * as MetricPair from "@effect/io/Metric/Pair"
 import type * as MetricRegistry from "@effect/io/Metric/Registry"
 import type * as MetricState from "@effect/io/Metric/State"
+import type { LazyArg } from "@fp-ts/core/Function"
+import { constVoid, identity, pipe } from "@fp-ts/core/Function"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Duration from "@fp-ts/data/Duration"
-import type { LazyArg } from "@fp-ts/data/Function"
-import { constVoid, identity, pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
 
 /** @internal */

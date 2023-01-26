@@ -1,6 +1,6 @@
 import * as Debug from "@effect/io/Debug"
 import type * as TestAnnotation from "@effect/io/internal_effect_untraced/testing/testAnnotation"
-import { pipe } from "@fp-ts/data/Function"
+import { pipe } from "@fp-ts/core/Function"
 
 /** @internal */
 export const TestAnnotationMapTypeId = Symbol.for("@effect/test/TestAnnotationMap")

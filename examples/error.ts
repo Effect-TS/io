@@ -2,7 +2,7 @@
 // import * as Layer from "@effect/io/Layer"
 // import * as Logger from "@effect/io/Logger"
 // import { Tag } from "@fp-ts/data/Context"
-// import { pipe } from "@fp-ts/data/Function"
+// import { pipe } from "@fp-ts/core/Function"
 
 // interface Config {
 //   message: string

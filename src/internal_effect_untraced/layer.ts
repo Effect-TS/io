@@ -20,10 +20,10 @@ import type * as Schedule from "@effect/io/Schedule"
 import * as ScheduleDecision from "@effect/io/Schedule/Decision"
 import * as Intervals from "@effect/io/Schedule/Intervals"
 import * as Scope from "@effect/io/Scope"
+import type { LazyArg } from "@fp-ts/core/Function"
+import { pipe } from "@fp-ts/core/Function"
 import * as Context from "@fp-ts/data/Context"
 import * as Duration from "@fp-ts/data/Duration"
-import type { LazyArg } from "@fp-ts/data/Function"
-import { pipe } from "@fp-ts/data/Function"
 
 /** @internal */
 const LayerSymbolKey = "@effect/io/Layer"

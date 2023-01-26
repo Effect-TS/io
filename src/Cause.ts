@@ -27,12 +27,12 @@ import * as internal from "@effect/io/internal_effect_untraced/cause"
 import * as _pretty from "@effect/io/internal_effect_untraced/cause-pretty"
 import * as _pretty_run from "@effect/io/internal_effect_untraced/cause-pretty-run"
 import type * as OpCodes from "@effect/io/internal_effect_untraced/opCodes/cause"
+import type * as Either from "@fp-ts/core/Either"
+import type * as Option from "@fp-ts/core/Option"
+import type { Predicate } from "@fp-ts/core/Predicate"
 import type * as Chunk from "@fp-ts/data/Chunk"
-import type * as Either from "@fp-ts/data/Either"
 import type * as Equal from "@fp-ts/data/Equal"
 import type * as HashSet from "@fp-ts/data/HashSet"
-import type * as Option from "@fp-ts/data/Option"
-import type { Predicate } from "@fp-ts/data/Predicate"
 
 /**
  * @since 1.0.0

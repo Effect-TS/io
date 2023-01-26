@@ -3,9 +3,9 @@
  */
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal_effect_untraced/core"
+import { pipe } from "@fp-ts/core/Function"
+import * as number from "@fp-ts/core/Number"
 import * as order from "@fp-ts/core/typeclass/Order"
-import { pipe } from "@fp-ts/data/Function"
-import * as number from "@fp-ts/data/Number"
 
 /**
  * A `LogLevel` represents the log level associated with an individual logging

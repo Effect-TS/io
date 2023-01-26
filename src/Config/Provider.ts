@@ -5,9 +5,9 @@ import type * as Config from "@effect/io/Config"
 import type * as ConfigError from "@effect/io/Config/Error"
 import type * as Effect from "@effect/io/Effect"
 import * as internal from "@effect/io/internal_effect_untraced/configProvider"
+import type { LazyArg } from "@fp-ts/core/Function"
 import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as Context from "@fp-ts/data/Context"
-import type { LazyArg } from "@fp-ts/data/Function"
 import type * as HashSet from "@fp-ts/data/HashSet"
 
 /**

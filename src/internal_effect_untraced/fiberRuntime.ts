@@ -40,13 +40,13 @@ import * as Ref from "@effect/io/Ref"
 import type { Runtime } from "@effect/io/Runtime"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
+import type { LazyArg } from "@fp-ts/core/Function"
+import { identity, pipe } from "@fp-ts/core/Function"
+import * as Option from "@fp-ts/core/Option"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Context from "@fp-ts/data/Context"
-import type { LazyArg } from "@fp-ts/data/Function"
-import { identity, pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
 import * as MutableQueue from "@fp-ts/data/MutableQueue"
-import * as Option from "@fp-ts/data/Option"
 
 const fibersStarted = metric.counter("effect_fiber_started")
 const fiberSuccesses = metric.counter("effect_fiber_successes")
@@ -1350,7 +1350,7 @@ export const collectAllSuccessesPar = Debug.methodWithTrace((trace) =>
   ): Effect.Effect<R, never, Chunk.Chunk<A>> =>
     collectAllWithPar(
       Array.from(elements).map(core.exit),
-      (exit) => (core.exitIsSuccess(exit) ? Option.some(exit.value) : Option.none)
+      (exit) => (core.exitIsSuccess(exit) ? Option.some(exit.value) : Option.none())
     ).traced(trace)
 )
 
@@ -1405,7 +1405,7 @@ export const filterPar = Debug.dualWithTrace<
 >(2, (trace, restore) =>
   (elements, f) =>
     pipe(
-      forEachPar(elements, (a) => core.map(restore(f)(a), (b) => (b ? Option.some(a) : Option.none))),
+      forEachPar(elements, (a) => core.map(restore(f)(a), (b) => (b ? Option.some(a) : Option.none()))),
       core.map(Chunk.compact)
     ).traced(trace))
 
@@ -1920,7 +1920,7 @@ export const reduceAllPar = Debug.dualWithTrace<
       pipe(
         mergeAllPar(
           [zero, ...Array.from(elements)],
-          Option.none as Option.Option<A>,
+          Option.none() as Option.Option<A>,
           (acc, elem) => {
             switch (acc._tag) {
               case "None": {
@@ -1995,7 +1995,7 @@ export const some = Debug.methodWithTrace((trace) =>
       (option) => {
         switch (option._tag) {
           case "None": {
-            return core.fail(Option.none)
+            return core.fail(Option.none())
           }
           case "Some": {
             return core.succeed(option.value)
@@ -2098,7 +2098,7 @@ export const unsome = Debug.methodWithTrace((trace) =>
       (option) => {
         switch (option._tag) {
           case "None": {
-            return core.succeed(Option.none)
+            return core.succeed(Option.none())
           }
           case "Some": {
             return core.fail(option.value)
@@ -2454,12 +2454,12 @@ export const fiberCollectAll = <E, A>(fibers: Iterable<Fiber.Fiber<E, A>>): Fibe
           (optionB, optionA) => {
             switch (optionA._tag) {
               case "None": {
-                return Option.none
+                return Option.none()
               }
               case "Some": {
                 switch (optionB._tag) {
                   case "None": {
-                    return Option.none
+                    return Option.none()
                   }
                   case "Some": {
                     return Option.some(

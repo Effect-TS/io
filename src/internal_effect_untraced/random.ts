@@ -2,9 +2,9 @@ import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import type * as Random from "@effect/io/Random"
+import { pipe } from "@fp-ts/core/Function"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Context from "@fp-ts/data/Context"
-import { pipe } from "@fp-ts/data/Function"
 import * as PCGRandom from "@fp-ts/data/Random"
 
 /** @internal */

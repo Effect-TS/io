@@ -5,10 +5,10 @@ import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import * as core from "@effect/io/internal_effect_untraced/core"
+import type * as Either from "@fp-ts/core/Either"
+import type * as Option from "@fp-ts/core/Option"
+import type { Predicate } from "@fp-ts/core/Predicate"
 import type * as Chunk from "@fp-ts/data/Chunk"
-import type * as Either from "@fp-ts/data/Either"
-import type * as Option from "@fp-ts/data/Option"
-import type { Predicate } from "@fp-ts/data/Predicate"
 
 /**
  * An `Exit<E, A>` describes the result of a executing an `Effect` workflow.

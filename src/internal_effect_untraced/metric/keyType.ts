@@ -1,9 +1,9 @@
 import type * as MetricBoundaries from "@effect/io/Metric/Boundaries"
 import type * as MetricKeyType from "@effect/io/Metric/KeyType"
+import { pipe } from "@fp-ts/core/Function"
 import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as Duration from "@fp-ts/data/Duration"
 import * as Equal from "@fp-ts/data/Equal"
-import { pipe } from "@fp-ts/data/Function"
 import * as Hash from "@fp-ts/data/Hash"
 
 /** @internal */

@@ -56,8 +56,8 @@
     }
   },
   "dependencies": {
-    "@fp-ts/core": "~0.0.11",
-    "@fp-ts/data": "~0.0.40"
+    "@fp-ts/core": "~0.1.1",
+    "@fp-ts/data": "~0.1.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.20.7",
@@ -74,15 +74,15 @@
     "@rollup/pluginutils": "^5.0.2",
     "@types/benchmark": "^2.1.2",
     "@types/chai": "^4.3.4",
-    "@types/glob": "^8.0.0",
-    "@types/jest": "^29.2.5",
+    "@types/glob": "^8.0.1",
+    "@types/jest": "^29.4.0",
     "@types/node": "^18.11.18",
     "@types/prettier": "2.7.2",
     "@types/rimraf": "^3.0.2",
-    "@typescript-eslint/eslint-plugin": "^5.48.2",
-    "@typescript-eslint/parser": "^5.48.2",
+    "@typescript-eslint/eslint-plugin": "^5.49.0",
+    "@typescript-eslint/parser": "^5.49.0",
     "@vitejs/plugin-react": "^3.0.1",
-    "@vitest/coverage-c8": "^0.27.2",
+    "@vitest/coverage-c8": "^0.28.2",
     "babel-plugin-annotate-pure-calls": "^0.4.0",
     "concurrently": "^7.6.0",
     "cpx": "^1.5.0",
@@ -95,12 +95,12 @@
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-simple-import-sort": "^9.0.0",
     "eslint-plugin-sort-destructure-keys": "^1.4.0",
-    "fast-check": "^3.6.0",
+    "fast-check": "^3.6.2",
     "glob": "^8.1.0",
     "madge": "^5.0.1",
     "picocolors": "^1.0.0",
     "prettier": "^2.8.3",
-    "rimraf": "^4.1.1",
+    "rimraf": "^4.1.2",
     "stackframe": "^1.3.4",
     "ts-codemod": "^4.0.4",
     "ts-node": "^10.9.1",
@@ -108,7 +108,7 @@
     "typescript": "https://cdn.jsdelivr.net/npm/@tsplus/installer@0.0.155/compiler/typescript.tgz",
     "ultra-runner": "^3.10.5",
     "vite": "^4.0.4",
-    "vitest": "0.27.2"
+    "vitest": "0.28.2"
   },
   "pnpm": {
     "patchedDependencies": {

@@ -183,7 +183,7 @@ export default function effectPlugin(
             const declaration = signature?.declaration
             if (
               declaration && !ts.isJSDocSignature(declaration) &&
-              findSource(declaration).fileName.includes("@fp-ts/data/Function")
+              findSource(declaration).fileName.includes("@fp-ts/core/Function")
             ) {
               if (declaration.name?.getText() === "pipe") {
                 let expr = ts.visitNode(visited.arguments[0], optimizeVisitor)

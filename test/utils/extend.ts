@@ -3,8 +3,8 @@ import * as TestEnvironment from "@effect/io/internal_effect_untraced/testing/te
 import type * as TestServices from "@effect/io/internal_effect_untraced/testing/testServices"
 import * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"
+import { pipe } from "@fp-ts/core/Function"
 import * as Duration from "@fp-ts/data/Duration"
-import { pipe } from "@fp-ts/data/Function"
 import type { TestAPI } from "vitest"
 import * as V from "vitest"
 

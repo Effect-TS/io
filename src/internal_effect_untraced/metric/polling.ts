@@ -9,8 +9,8 @@ import type * as Metric from "@effect/io/Metric"
 import type * as PollingMetric from "@effect/io/Metric/Polling"
 import type * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"
+import { pipe } from "@fp-ts/core/Function"
 import * as Chunk from "@fp-ts/data/Chunk"
-import { pipe } from "@fp-ts/data/Function"
 
 /** @internal */
 const PollingMetricSymbolKey = "@effect/io/Metric/Polling"

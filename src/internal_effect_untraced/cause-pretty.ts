@@ -5,9 +5,9 @@ import * as internal from "@effect/io/internal_effect_untraced/cause"
 import { StackAnnotation } from "@effect/io/internal_effect_untraced/cause"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as OpCodes from "@effect/io/internal_effect_untraced/opCodes/cause"
+import { pipe } from "@fp-ts/core/Function"
+import * as Option from "@fp-ts/core/Option"
 import * as Chunk from "@fp-ts/data/Chunk"
-import { pipe } from "@fp-ts/data/Function"
-import * as Option from "@fp-ts/data/Option"
 
 // -----------------------------------------------------------------------------
 // Pretty Printing
@@ -187,7 +187,7 @@ export const prettySafe = <E>(cause: Cause.Cause<E>): Effect.Effect<never, never
   if (internal.isInterruptedOnly(cause)) {
     return core.succeed("All fibers interrupted without errors.")
   }
-  return core.map(render(cause, Option.none), (errors) => {
+  return core.map(render(cause, Option.none()), (errors) => {
     const final = errors.join("\r\n\r\n")
     if (!final.includes("\r\n")) {
       return final

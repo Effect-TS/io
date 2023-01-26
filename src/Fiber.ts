@@ -13,11 +13,11 @@ import * as circular from "@effect/io/internal_effect_untraced/effect/circular"
 import * as internal from "@effect/io/internal_effect_untraced/fiber"
 import * as fiberRuntime from "@effect/io/internal_effect_untraced/fiberRuntime"
 import type * as Scope from "@effect/io/Scope"
+import type * as Either from "@fp-ts/core/Either"
+import type * as Option from "@fp-ts/core/Option"
 import type * as order from "@fp-ts/core/typeclass/Order"
 import type * as Chunk from "@fp-ts/data/Chunk"
-import type * as Either from "@fp-ts/data/Either"
 import type * as HashSet from "@fp-ts/data/HashSet"
-import type * as Option from "@fp-ts/data/Option"
 
 /**
  * @since 1.0.0

@@ -2,9 +2,9 @@ import type * as Cause from "@effect/io/Cause"
 import type * as ConfigError from "@effect/io/Config/Error"
 import * as Debug from "@effect/io/Debug"
 import * as OpCodes from "@effect/io/internal_effect_untraced/opCodes/configError"
+import * as Either from "@fp-ts/core/Either"
+import { constFalse, constTrue, pipe } from "@fp-ts/core/Function"
 import * as Chunk from "@fp-ts/data/Chunk"
-import * as Either from "@fp-ts/data/Either"
-import { constFalse, constTrue, pipe } from "@fp-ts/data/Function"
 
 /** @internal */
 const ConfigErrorSymbolKey = "@effect/io/Config/Error"

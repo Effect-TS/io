@@ -4,8 +4,8 @@ import * as Exit from "@effect/io/Exit"
 import * as Fiber from "@effect/io/Fiber"
 import * as Synchronized from "@effect/io/Ref/Synchronized"
 import * as it from "@effect/io/test/utils/extend"
-import { pipe } from "@fp-ts/data/Function"
-import * as Option from "@fp-ts/data/Option"
+import { pipe } from "@fp-ts/core/Function"
+import * as Option from "@fp-ts/core/Option"
 import { assert, describe } from "vitest"
 
 const current = "value"
@@ -60,7 +60,7 @@ describe.concurrent("SynchronizedRef", () => {
       const result1 = yield* $(Synchronized.getAndUpdateSomeEffect(ref, (state) =>
         isClosed(state) ?
           Option.some(Effect.succeed(Changed)) :
-          Option.none))
+          Option.none()))
       const result2 = yield* $(Synchronized.get(ref))
       assert.deepStrictEqual(result1, Active)
       assert.deepStrictEqual(result2, Active)
@@ -71,13 +71,13 @@ describe.concurrent("SynchronizedRef", () => {
       const result1 = yield* $(Synchronized.getAndUpdateSomeEffect(ref, (state) =>
         isActive(state) ?
           Option.some(Effect.succeed(Changed)) :
-          Option.none))
+          Option.none()))
       const result2 = yield* $(Synchronized.getAndUpdateSomeEffect(ref, (state) =>
         isClosed(state)
           ? Option.some(Effect.succeed(Active))
           : isChanged(state)
           ? Option.some(Effect.succeed(Closed))
-          : Option.none))
+          : Option.none()))
       const result3 = yield* $(Synchronized.get(ref))
       assert.deepStrictEqual(result1, Active)
       assert.deepStrictEqual(result2, Changed)
@@ -90,7 +90,7 @@ describe.concurrent("SynchronizedRef", () => {
         Synchronized.getAndUpdateSomeEffect(ref, (state) =>
           isActive(state) ?
             Option.some(Effect.fail(failure)) :
-            Option.none),
+            Option.none()),
         Effect.exit
       ))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(failure))

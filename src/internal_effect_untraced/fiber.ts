@@ -9,13 +9,13 @@ import * as FiberStatus from "@effect/io/Fiber/Status"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as fiberScope from "@effect/io/internal_effect_untraced/fiberScope"
 import * as runtimeFlags from "@effect/io/internal_effect_untraced/runtimeFlags"
+import * as Either from "@fp-ts/core/Either"
+import { pipe } from "@fp-ts/core/Function"
+import * as number from "@fp-ts/core/Number"
+import * as Option from "@fp-ts/core/Option"
 import * as order from "@fp-ts/core/typeclass/Order"
 import * as Chunk from "@fp-ts/data/Chunk"
-import * as Either from "@fp-ts/data/Either"
-import { pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
-import * as number from "@fp-ts/data/Number"
-import * as Option from "@fp-ts/data/Option"
 
 /** @internal */
 const FiberSymbolKey = "@effect/io/Fiber"
@@ -175,7 +175,7 @@ export const mapEffect = Debug.untracedDual<
         core.flatMap(self.poll(), (result) => {
           switch (result._tag) {
             case "None": {
-              return core.succeed(Option.none)
+              return core.succeed(Option.none())
             }
             case "Some": {
               return pipe(
@@ -237,7 +237,7 @@ export const never = (): Fiber.Fiber<never, never> => ({
   await: Debug.methodWithTrace((trace) => () => core.never().traced(trace)),
   children: Debug.methodWithTrace((trace) => () => core.succeed(Chunk.empty()).traced(trace)),
   inheritAll: Debug.methodWithTrace((trace) => () => core.never().traced(trace)),
-  poll: Debug.methodWithTrace((trace) => () => core.succeed(Option.none).traced(trace)),
+  poll: Debug.methodWithTrace((trace) => () => core.succeed(Option.none()).traced(trace)),
   interruptAsFork: Debug.methodWithTrace((trace) => () => core.never().traced(trace))
 })
 
@@ -266,7 +266,7 @@ export const orElse = Debug.dual<
         (option1, option2) => {
           switch (option1._tag) {
             case "None": {
-              return Option.none
+              return Option.none()
             }
             case "Some": {
               return Exit.isSuccess(option1.value) ? option1 : option2

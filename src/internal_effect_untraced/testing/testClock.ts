@@ -22,15 +22,15 @@ import * as WarningData from "@effect/io/internal_effect_untraced/testing/testCl
 import type * as Layer from "@effect/io/Layer"
 import type * as Ref from "@effect/io/Ref"
 import type * as Synchronized from "@effect/io/Ref/Synchronized"
+import { constVoid, identity, pipe } from "@fp-ts/core/Function"
+import * as number from "@fp-ts/core/Number"
+import * as Option from "@fp-ts/core/Option"
 import * as Order from "@fp-ts/core/typeclass/Order"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Context from "@fp-ts/data/Context"
 import * as Duration from "@fp-ts/data/Duration"
 import * as Equal from "@fp-ts/data/Equal"
-import { constVoid, identity, pipe } from "@fp-ts/data/Function"
 import * as HashMap from "@fp-ts/data/HashMap"
-import * as number from "@fp-ts/data/Number"
-import * as Option from "@fp-ts/data/Option"
 import type * as SortedSet from "@fp-ts/data/SortedSet"
 
 /**
@@ -50,7 +50,7 @@ import type * as SortedSet from "@fp-ts/data/SortedSet"
  * import * as Fiber from "@effect/io/Fiber"
  * import * as TestClock from "@effect/test/TestClock"
  * import * as Duration from "@fp-ts/data/Duration"
- * import * as Option from "@fp-ts/data/Option"
+ * import * as Option from "@fp-ts/core/Option"
  *
  * Effect.gen(function*() {
  *   const fiber = yield* pipe(
@@ -60,7 +60,7 @@ import type * as SortedSet from "@fp-ts/data/SortedSet"
  *   )
  *   yield* TestClock.adjust(Duration.minutes(1))
  *   const result = yield* Fiber.join(fiber)
- *   assert.deepStrictEqual(result, Option.none)
+ *   assert.deepStrictEqual(result, Option.none())
  * })
  * ```
  *
@@ -276,7 +276,7 @@ export class TestClockImpl implements TestClock {
               core.map((fiber) => WarningData.pending(fiber))
             )
           ) :
-          Option.none).traced(trace)
+          Option.none()).traced(trace)
     )
   }
   /**
@@ -292,7 +292,7 @@ export class TestClockImpl implements TestClock {
         if (WarningData.isPending(warningData)) {
           return Option.some(pipe(core.interruptFiber(warningData.fiber), core.as(WarningData.done)))
         }
-        return Option.none
+        return Option.none()
       }).traced(trace)
     )
   }
@@ -357,7 +357,7 @@ export class TestClockImpl implements TestClock {
             )
           )
         }
-        return Option.none
+        return Option.none()
       }).traced(trace)
     )
   }
@@ -371,7 +371,7 @@ export class TestClockImpl implements TestClock {
         if (SuspendedWarningData.isPending(suspendedWarningData)) {
           return Option.some(pipe(core.interruptFiber(suspendedWarningData.fiber), core.as(SuspendedWarningData.start)))
         }
-        return Option.none
+        return Option.none()
       }).traced(trace)
     )
   }
@@ -399,7 +399,7 @@ export class TestClockImpl implements TestClock {
                 ] as const
               }
             }
-            return [Option.none, Data.make(end, data.sleeps)] as const
+            return [Option.none(), Data.make(end, data.sleeps)] as const
           }),
           core.flatMap((option) => {
             switch (option._tag) {

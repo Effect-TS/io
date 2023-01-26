@@ -1,7 +1,7 @@
 import * as Effect from "@effect/io/Effect"
 import * as Logger from "@effect/io/Logger"
 import * as LogLevel from "@effect/io/Logger/Level"
-import { pipe } from "@fp-ts/data/Function"
+import { pipe } from "@fp-ts/core/Function"
 
 const program1 = Logger.withMinimumLogLevel(LogLevel.Debug)(
   Effect.gen(function*($) {

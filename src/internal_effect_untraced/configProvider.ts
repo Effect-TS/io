@@ -8,14 +8,14 @@ import * as configError from "@effect/io/internal_effect_untraced/configError"
 import * as configSecret from "@effect/io/internal_effect_untraced/configSecret"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as OpCodes from "@effect/io/internal_effect_untraced/opCodes/config"
+import * as Either from "@fp-ts/core/Either"
+import type { LazyArg } from "@fp-ts/core/Function"
+import { pipe } from "@fp-ts/core/Function"
+import * as Option from "@fp-ts/core/Option"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Context from "@fp-ts/data/Context"
-import * as Either from "@fp-ts/data/Either"
-import type { LazyArg } from "@fp-ts/data/Function"
-import { pipe } from "@fp-ts/data/Function"
 import * as HashMap from "@fp-ts/data/HashMap"
 import * as HashSet from "@fp-ts/data/HashSet"
-import * as Option from "@fp-ts/data/Option"
 
 /** @internal */
 export const configProviderTag: Context.Tag<ConfigProvider.ConfigProvider> = Context.Tag()
@@ -104,7 +104,7 @@ export const fromEnv = Debug.untracedMethod(() =>
     ): Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>> => {
       const pathString = makePathString(path)
       const current = getEnv()
-      const valueOpt = pathString in current ? Option.some(current[pathString]!) : Option.none
+      const valueOpt = pathString in current ? Option.some(current[pathString]!) : Option.none()
       return pipe(
         core.fromOption(valueOpt),
         core.mapError(() => configError.MissingData(path, `Expected ${pathString} to exist in the process context`)),
@@ -150,7 +150,7 @@ export const fromMap = Debug.untracedMethod(() =>
       primitive: Config.Config.Primitive<A>
     ): Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>> => {
       const pathString = makePathString(path)
-      const valueOpt = map.has(pathString) ? Option.some(map.get(pathString)!) : Option.none
+      const valueOpt = map.has(pathString) ? Option.some(map.get(pathString)!) : Option.none()
       return pipe(
         core.fromOption(valueOpt),
         core.mapError(() => configError.MissingData(path, `Expected ${pathString} to exist in the provided map`)),
@@ -189,14 +189,14 @@ const extend = <A, B>(
     left.length,
     (index) =>
       index >= right.length ?
-        Option.none :
+        Option.none() :
         Option.some([leftDef(index), index + 1])
   )
   const rightPad = Chunk.unfold(
     right.length,
     (index) =>
       index >= left.length ?
-        Option.none :
+        Option.none() :
         Option.some([rightDef(index), index + 1])
   )
   const leftExtension = pipe(left, Chunk.concat(leftPad))

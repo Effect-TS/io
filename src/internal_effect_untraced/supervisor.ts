@@ -4,11 +4,11 @@ import type * as Exit from "@effect/io/Exit"
 import type * as Fiber from "@effect/io/Fiber"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import type * as Supervisor from "@effect/io/Supervisor"
+import { pipe } from "@fp-ts/core/Function"
+import type * as Option from "@fp-ts/core/Option"
 import * as Chunk from "@fp-ts/data/Chunk"
 import type * as Context from "@fp-ts/data/Context"
-import { pipe } from "@fp-ts/data/Function"
 import * as MutableRef from "@fp-ts/data/MutableRef"
-import type * as Option from "@fp-ts/data/Option"
 import * as SortedSet from "@fp-ts/data/SortedSet"
 
 /** @internal */

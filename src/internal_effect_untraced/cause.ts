@@ -2,14 +2,14 @@ import type * as Cause from "@effect/io/Cause"
 import * as Debug from "@effect/io/Debug"
 import * as FiberId from "@effect/io/Fiber/Id"
 import * as OpCodes from "@effect/io/internal_effect_untraced/opCodes/cause"
+import * as Either from "@fp-ts/core/Either"
+import { constFalse, constTrue, identity, pipe } from "@fp-ts/core/Function"
+import * as Option from "@fp-ts/core/Option"
+import type { Predicate } from "@fp-ts/core/Predicate"
 import * as Chunk from "@fp-ts/data/Chunk"
-import * as Either from "@fp-ts/data/Either"
 import * as Equal from "@fp-ts/data/Equal"
-import { constFalse, constTrue, identity, pipe } from "@fp-ts/data/Function"
 import * as Hash from "@fp-ts/data/Hash"
 import * as HashSet from "@fp-ts/data/HashSet"
-import * as Option from "@fp-ts/data/Option"
-import type { Predicate } from "@fp-ts/data/Predicate"
 
 // -----------------------------------------------------------------------------
 // Models
@@ -157,7 +157,7 @@ export const isEmpty = <E>(self: Cause.Cause<E>): boolean => {
         return Option.some(false)
       }
       default: {
-        return Option.none
+        return Option.none()
       }
     }
   })
@@ -185,7 +185,7 @@ export const failures = <E>(self: Cause.Cause<E>): Chunk.Chunk<E> =>
       (list, cause) =>
         cause._tag === OpCodes.OP_FAIL ?
           Option.some(pipe(list, Chunk.prepend(cause.error))) :
-          Option.none
+          Option.none()
     )
   )
 
@@ -198,7 +198,7 @@ export const defects = <E>(self: Cause.Cause<E>): Chunk.Chunk<unknown> =>
       (list, cause) =>
         cause._tag === OpCodes.OP_DIE ?
           Option.some(pipe(list, Chunk.prepend(cause.defect))) :
-          Option.none
+          Option.none()
     )
   )
 
@@ -207,14 +207,14 @@ export const interruptors = <E>(self: Cause.Cause<E>): HashSet.HashSet<FiberId.F
   reduce(self, HashSet.empty<FiberId.FiberId>(), (set, cause) =>
     cause._tag === OpCodes.OP_INTERRUPT ?
       Option.some(pipe(set, HashSet.add(cause.fiberId))) :
-      Option.none)
+      Option.none())
 
 /** @internal */
 export const failureOption = <E>(self: Cause.Cause<E>): Option.Option<E> =>
   find<E, E>(self, (cause) =>
     cause._tag === OpCodes.OP_FAIL ?
       Option.some(cause.error) :
-      Option.none)
+      Option.none())
 
 /** @internal */
 export const failureOrCause = <E>(self: Cause.Cause<E>): Either.Either<E, Cause.Cause<never>> => {
@@ -235,7 +235,7 @@ export const dieOption = <E>(self: Cause.Cause<E>): Option.Option<unknown> =>
   find(self, (cause) =>
     cause._tag === OpCodes.OP_DIE ?
       Option.some(cause.defect) :
-      Option.none)
+      Option.none())
 
 /** @internal */
 export const flipCauseOption = <E>(self: Cause.Cause<Option.Option<E>>): Option.Option<Cause.Cause<E>> =>
@@ -256,7 +256,7 @@ export const flipCauseOption = <E>(self: Cause.Cause<Option.Option<E>>): Option.
       if (Option.isSome(left) && Option.isNone(right)) {
         return Option.some(left.value)
       }
-      return Option.none
+      return Option.none()
     },
     (left, right) => {
       if (Option.isSome(left) && Option.isSome(right)) {
@@ -268,7 +268,7 @@ export const flipCauseOption = <E>(self: Cause.Cause<Option.Option<E>>): Option.
       if (Option.isSome(left) && Option.isNone(right)) {
         return Option.some(left.value)
       }
-      return Option.none
+      return Option.none()
     }
   )
 
@@ -277,16 +277,16 @@ export const interruptOption = <E>(self: Cause.Cause<E>): Option.Option<FiberId.
   find(self, (cause) =>
     cause._tag === OpCodes.OP_INTERRUPT ?
       Option.some(cause.fiberId) :
-      Option.none)
+      Option.none())
 
 /** @internal */
 export const keepDefects = <E>(self: Cause.Cause<E>): Option.Option<Cause.Cause<never>> =>
   match<Option.Option<Cause.Cause<never>>, E>(
     self,
-    Option.none,
-    () => Option.none,
+    Option.none(),
+    () => Option.none(),
     (defect) => Option.some(die(defect)),
-    () => Option.none,
+    () => Option.none(),
     (option, annotation) => pipe(option, Option.map((cause) => annotated(cause, annotation))),
     (left, right) => {
       if (Option.isSome(left) && Option.isSome(right)) {
@@ -298,7 +298,7 @@ export const keepDefects = <E>(self: Cause.Cause<E>): Option.Option<Cause.Cause<
       if (Option.isNone(left) && Option.isSome(right)) {
         return Option.some(right.value)
       }
-      return Option.none
+      return Option.none()
     },
     (left, right) => {
       if (Option.isSome(left) && Option.isSome(right)) {
@@ -310,7 +310,7 @@ export const keepDefects = <E>(self: Cause.Cause<E>): Option.Option<Cause.Cause<
       if (Option.isNone(left) && Option.isSome(right)) {
         return Option.some(right.value)
       }
-      return Option.none
+      return Option.none()
     }
   )
 
@@ -369,7 +369,7 @@ export const stripSomeDefects = Debug.dual<
     (error) => Option.some(fail(error)),
     (defect) => {
       const option = pf(defect)
-      return Option.isSome(option) ? Option.none : Option.some(die(defect))
+      return Option.isSome(option) ? Option.none() : Option.some(die(defect))
     },
     (fiberId) => Option.some(interrupt(fiberId)),
     (option, annotation) => pipe(option, Option.map((cause) => annotated(cause, annotation))),
@@ -383,7 +383,7 @@ export const stripSomeDefects = Debug.dual<
       if (Option.isNone(left) && Option.isSome(right)) {
         return Option.some(right.value)
       }
-      return Option.none
+      return Option.none()
     },
     (left, right) => {
       if (Option.isSome(left) && Option.isSome(right)) {
@@ -395,7 +395,7 @@ export const stripSomeDefects = Debug.dual<
       if (Option.isNone(left) && Option.isSome(right)) {
         return Option.some(right.value)
       }
-      return Option.none
+      return Option.none()
     }
   )
 })
@@ -615,7 +615,7 @@ export const find = Debug.dual<
       }
     }
   }
-  return Option.none
+  return Option.none()
 })
 
 // -----------------------------------------------------------------------------

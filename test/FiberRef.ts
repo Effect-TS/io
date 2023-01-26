@@ -5,10 +5,10 @@ import * as Fiber from "@effect/io/Fiber"
 import * as FiberRef from "@effect/io/FiberRef"
 import type * as Runtime from "@effect/io/Runtime"
 import * as it from "@effect/io/test/utils/extend"
+import { constant, constTrue, identity, pipe } from "@fp-ts/core/Function"
+import * as Option from "@fp-ts/core/Option"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Duration from "@fp-ts/data/Duration"
-import { constant, constTrue, identity, pipe } from "@fp-ts/data/Function"
-import * as Option from "@fp-ts/data/Option"
 import { assert, describe } from "vitest"
 
 const initial = "initial"
@@ -57,7 +57,7 @@ describe.concurrent("FiberRef", () => {
   it.scoped("getAndUpdateSome - not changing value", () =>
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(initial))
-      const value1 = yield* $(FiberRef.getAndUpdateSome(fiberRef, () => Option.none))
+      const value1 = yield* $(FiberRef.getAndUpdateSome(fiberRef, () => Option.none()))
       const value2 = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(value1, initial)
       assert.strictEqual(value2, initial)
@@ -95,7 +95,7 @@ describe.concurrent("FiberRef", () => {
   it.scoped("modifySome - not changing the value", () =>
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(initial))
-      const value1 = yield* $(FiberRef.modifySome(fiberRef, 2, () => Option.none))
+      const value1 = yield* $(FiberRef.modifySome(fiberRef, 2, () => Option.none()))
       const value2 = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(value1, 2)
       assert.strictEqual(value2, initial)
@@ -119,7 +119,7 @@ describe.concurrent("FiberRef", () => {
   it.scoped("updateSomeAndGet - not changing the value", () =>
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(initial))
-      const value1 = yield* $(FiberRef.updateSomeAndGet(fiberRef, () => Option.none))
+      const value1 = yield* $(FiberRef.updateSomeAndGet(fiberRef, () => Option.none()))
       const value2 = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(value1, initial)
       assert.strictEqual(value2, initial)

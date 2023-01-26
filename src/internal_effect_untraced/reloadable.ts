@@ -9,8 +9,8 @@ import * as scopedRef from "@effect/io/internal_effect_untraced/scopedRef"
 import type * as Layer from "@effect/io/Layer"
 import type * as Reloadable from "@effect/io/Reloadable"
 import type * as Schedule from "@effect/io/Schedule"
+import { pipe } from "@fp-ts/core/Function"
 import * as Context from "@fp-ts/data/Context"
-import { pipe } from "@fp-ts/data/Function"
 
 /** @internal */
 const ReloadableSymbolKey = "@effect/io/Reloadable"

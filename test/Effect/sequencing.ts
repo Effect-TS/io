@@ -5,10 +5,10 @@ import * as Exit from "@effect/io/Exit"
 import * as Fiber from "@effect/io/Fiber"
 import * as Ref from "@effect/io/Ref"
 import * as it from "@effect/io/test/utils/extend"
-import * as Either from "@fp-ts/data/Either"
-import { constFalse, constTrue, pipe } from "@fp-ts/data/Function"
+import * as Either from "@fp-ts/core/Either"
+import { constFalse, constTrue, pipe } from "@fp-ts/core/Function"
+import * as Option from "@fp-ts/core/Option"
 import * as HashSet from "@fp-ts/data/HashSet"
-import * as Option from "@fp-ts/data/Option"
 import { assert, describe } from "vitest"
 
 describe.concurrent("Effect", () => {
@@ -29,7 +29,7 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("flattenErrorOption - fails with default when given None error", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(Effect.fail(Option.none), Effect.flattenErrorOption("default"), Effect.exit))
+      const result = yield* $(pipe(Effect.fail(Option.none()), Effect.flattenErrorOption("default"), Effect.exit))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail("default"))
     }))
   it.effect("flattenErrorOption - succeeds when given a value", () =>
@@ -112,7 +112,7 @@ describe.concurrent("Effect", () => {
         pipe(
           Ref.set(ref, true),
           Effect.as(42),
-          Effect.tapSome((): Option.Option<Effect.Effect<never, never, never>> => Option.none)
+          Effect.tapSome((): Option.Option<Effect.Effect<never, never, never>> => Option.none())
         )
       )
       const effect = yield* $(Ref.get(ref))
@@ -180,25 +180,25 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("whenCase - executes correct branch only", () =>
     Effect.gen(function*($) {
-      const v1 = Option.none as Option.Option<number>
+      const v1 = Option.none() as Option.Option<number>
       const v2 = Option.some(0)
       const ref = yield* $(Ref.make(false))
       yield* $(Effect.whenCase(() => v1, (option) =>
         option._tag === "Some" ?
           Option.some(Ref.set(ref, true)) :
-          Option.none))
+          Option.none()))
       const res1 = yield* $(Ref.get(ref))
       yield* $(Effect.whenCase(() => v2, (option) =>
         option._tag === "Some" ?
           Option.some(Ref.set(ref, true)) :
-          Option.none))
+          Option.none()))
       const res2 = yield* $(Ref.get(ref))
       assert.isFalse(res1)
       assert.isTrue(res2)
     }))
   it.effect("whenCaseEffect - executes condition effect and correct branch", () =>
     Effect.gen(function*($) {
-      const v1 = Option.none as Option.Option<number>
+      const v1 = Option.none() as Option.Option<number>
       const v2 = Option.some(0)
       const ref = yield* $(Ref.make(false))
       yield* $(pipe(
@@ -206,7 +206,7 @@ describe.concurrent("Effect", () => {
         Effect.whenCaseEffect((option) =>
           option._tag === "Some" ?
             Option.some(Ref.set(ref, true)) :
-            Option.none
+            Option.none()
         )
       ))
       const res1 = yield* $(Ref.get(ref))
@@ -215,7 +215,7 @@ describe.concurrent("Effect", () => {
         Effect.whenCaseEffect((option) =>
           option._tag === "Some" ?
             Option.some(Ref.set(ref, true)) :
-            Option.none
+            Option.none()
         )
       ))
       const res2 = yield* $(Ref.get(ref))

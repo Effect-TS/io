@@ -2,13 +2,13 @@ import * as Debug from "@effect/io/Debug"
 import * as metricState from "@effect/io/internal_effect_untraced/metric/state"
 import type * as MetricHook from "@effect/io/Metric/Hook"
 import type * as MetricKey from "@effect/io/Metric/Key"
+import type { LazyArg } from "@fp-ts/core/Function"
+import { pipe } from "@fp-ts/core/Function"
+import * as number from "@fp-ts/core/Number"
+import * as Option from "@fp-ts/core/Option"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Duration from "@fp-ts/data/Duration"
-import type { LazyArg } from "@fp-ts/data/Function"
-import { pipe } from "@fp-ts/data/Function"
 import * as HashMap from "@fp-ts/data/HashMap"
-import * as number from "@fp-ts/data/Number"
-import * as Option from "@fp-ts/data/Option"
 
 /** @internal */
 const MetricHookSymbolKey = "@effect/io/Metric/Hook"
@@ -264,7 +264,7 @@ const calculateQuantiles = (
         resolveQuantile(
           error,
           sampleCount,
-          Option.none,
+          Option.none(),
           0,
           head,
           sortedSamples
@@ -318,7 +318,7 @@ const resolveQuantile = (
     if (Chunk.isEmpty(rest_1)) {
       return {
         quantile: quantile_1,
-        value: Option.none,
+        value: Option.none(),
         consumed: consumed_1,
         rest: Chunk.empty()
       }

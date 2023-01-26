@@ -1,9 +1,9 @@
 import * as Debug from "@effect/io/Debug"
 import * as Interval from "@effect/io/Schedule/Interval"
 import type * as Intervals from "@effect/io/Schedule/Intervals"
+import { pipe } from "@fp-ts/core/Function"
+import * as Option from "@fp-ts/core/Option"
 import * as Chunk from "@fp-ts/data/Chunk"
-import { pipe } from "@fp-ts/data/Function"
-import * as Option from "@fp-ts/data/Option"
 
 /** @internal */
 const IntervalsSymbolKey = "@effect/io/Schedule/Intervals"

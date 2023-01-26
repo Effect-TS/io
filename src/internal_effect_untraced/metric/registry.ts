@@ -6,10 +6,10 @@ import type * as MetricKey from "@effect/io/Metric/Key"
 import type * as MetricKeyType from "@effect/io/Metric/KeyType"
 import type * as MetricPair from "@effect/io/Metric/Pair"
 import type * as MetricRegistry from "@effect/io/Metric/Registry"
-import { pipe } from "@fp-ts/data/Function"
+import { pipe } from "@fp-ts/core/Function"
+import * as Option from "@fp-ts/core/Option"
 import * as HashSet from "@fp-ts/data/HashSet"
 import * as MutableHashMap from "@fp-ts/data/MutableHashMap"
-import * as Option from "@fp-ts/data/Option"
 
 /** @internal */
 const MetricRegistrySymbolKey = "@effect/io/Metric/Registry"
