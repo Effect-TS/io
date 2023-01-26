@@ -3,7 +3,7 @@
  */
 import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
-import * as internal from "@effect/io/internal/schedule"
+import * as internal from "@effect/io/internal_effect_untraced/schedule"
 import type * as Random from "@effect/io/Random"
 import type * as ScheduleDecision from "@effect/io/Schedule/Decision"
 import type * as Interval from "@effect/io/Schedule/Interval"

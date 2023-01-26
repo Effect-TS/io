@@ -3,8 +3,8 @@
  */
 
 import type * as RuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
-import * as circular from "@effect/io/internal/layer/circular"
-import * as internal from "@effect/io/internal/runtimeFlags"
+import * as circular from "@effect/io/internal_effect_untraced/layer/circular"
+import * as internal from "@effect/io/internal_effect_untraced/runtimeFlags"
 import type * as Layer from "@effect/io/Layer"
 import type * as Differ from "@fp-ts/data/Differ"
 

@@ -2,8 +2,8 @@
  * @since 1.0.0
  */
 import type * as Cause from "@effect/io/Cause"
-import * as internal from "@effect/io/internal/configError"
-import type * as OpCodes from "@effect/io/internal/opCodes/configError"
+import * as internal from "@effect/io/internal_effect_untraced/configError"
+import type * as OpCodes from "@effect/io/internal_effect_untraced/opCodes/configError"
 import type * as Chunk from "@fp-ts/data/Chunk"
 
 /**

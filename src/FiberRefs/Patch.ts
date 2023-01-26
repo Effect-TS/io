@@ -4,7 +4,7 @@
 import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRef from "@effect/io/FiberRef"
 import type * as FiberRefs from "@effect/io/FiberRefs"
-import * as internal from "@effect/io/internal/fiberRefs/patch"
+import * as internal from "@effect/io/internal_effect_untraced/fiberRefs/patch"
 
 /**
  * A `FiberRefsPatch` captures the changes in `FiberRef` values made by a single

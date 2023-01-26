@@ -4,7 +4,7 @@
 import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
 import type * as FiberId from "@effect/io/Fiber/Id"
-import * as core from "@effect/io/internal/core"
+import * as core from "@effect/io/internal_effect_untraced/core"
 import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as Either from "@fp-ts/data/Either"
 import type * as Option from "@fp-ts/data/Option"

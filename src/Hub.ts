@@ -2,7 +2,7 @@
  * @since 1.0.0
  */
 import type * as Effect from "@effect/io/Effect"
-import * as internal from "@effect/io/internal/hub"
+import * as internal from "@effect/io/internal_effect_untraced/hub"
 import type * as Queue from "@effect/io/Queue"
 import type * as Scope from "@effect/io/Scope"
 

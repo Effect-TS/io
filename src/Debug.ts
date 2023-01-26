@@ -2,7 +2,7 @@
  * @since 1.0.0
  */
 
-import * as debug from "@effect/io/internal/debug"
+import * as debug from "@effect/io/internal_effect_untraced/debug"
 
 /**
  * @since 1.0.0

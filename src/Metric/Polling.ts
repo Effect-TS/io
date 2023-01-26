@@ -3,7 +3,7 @@
  */
 import type * as Effect from "@effect/io/Effect"
 import type * as Fiber from "@effect/io/Fiber"
-import * as internal from "@effect/io/internal/metric/polling"
+import * as internal from "@effect/io/internal_effect_untraced/metric/polling"
 import type * as Metric from "@effect/io/Metric"
 import type * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"

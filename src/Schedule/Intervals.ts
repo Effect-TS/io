@@ -1,7 +1,7 @@
 /**
  * @since 1.0.0
  */
-import * as internal from "@effect/io/internal/schedule/intervals"
+import * as internal from "@effect/io/internal_effect_untraced/schedule/intervals"
 import type * as Interval from "@effect/io/Schedule/Interval"
 import type * as Check from "@fp-ts/data/Chunk"
 

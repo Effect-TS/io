@@ -2,8 +2,8 @@
  * @since 1.0.0
  */
 import type * as Effect from "@effect/io/Effect"
-import * as internal from "@effect/io/internal/clock"
-import * as defaultServices from "@effect/io/internal/defaultServices"
+import * as internal from "@effect/io/internal_effect_untraced/clock"
+import * as defaultServices from "@effect/io/internal_effect_untraced/defaultServices"
 import type * as Context from "@fp-ts/data/Context"
 import type * as Duration from "@fp-ts/data/Duration"
 

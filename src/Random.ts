@@ -2,8 +2,8 @@
  * @since 1.0.0
  */
 import type * as Effect from "@effect/io/Effect"
-import * as defaultServices from "@effect/io/internal/defaultServices"
-import * as internal from "@effect/io/internal/random"
+import * as defaultServices from "@effect/io/internal_effect_untraced/defaultServices"
+import * as internal from "@effect/io/internal_effect_untraced/random"
 import type * as Chunk from "@fp-ts/data/Chunk"
 
 /**

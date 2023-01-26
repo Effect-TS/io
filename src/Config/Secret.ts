@@ -1,7 +1,7 @@
 /**
  * @since 1.0.0
  */
-import * as internal from "@effect/io/internal/configSecret"
+import * as internal from "@effect/io/internal_effect_untraced/configSecret"
 import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as Equal from "@fp-ts/data/Equal"
 

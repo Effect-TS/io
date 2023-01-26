@@ -3,8 +3,8 @@
  */
 import type * as ConfigError from "@effect/io/Config/Error"
 import type * as ConfigSecret from "@effect/io/Config/Secret"
-import * as internal from "@effect/io/internal/config"
-import type { EnforceNonEmptyRecord, NonEmptyArrayConfig, TupleConfig } from "@effect/io/internal/types"
+import * as internal from "@effect/io/internal_effect_untraced/config"
+import type { EnforceNonEmptyRecord, NonEmptyArrayConfig, TupleConfig } from "@effect/io/internal_effect_untraced/types"
 import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as Either from "@fp-ts/data/Either"
 import type { LazyArg } from "@fp-ts/data/Function"

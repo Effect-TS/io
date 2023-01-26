@@ -1,7 +1,7 @@
 /**
  * @since 1.0.0
  */
-import * as internal from "@effect/io/internal/logSpan"
+import * as internal from "@effect/io/internal_effect_untraced/logSpan"
 
 /**
  * @since 1.0.0

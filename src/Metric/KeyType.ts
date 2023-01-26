@@ -1,7 +1,7 @@
 /**
  * @since 1.0.0
  */
-import * as internal from "@effect/io/internal/metric/keyType"
+import * as internal from "@effect/io/internal_effect_untraced/metric/keyType"
 import type * as MetricBoundaries from "@effect/io/Metric/Boundaries"
 import type * as MetricState from "@effect/io/Metric/State"
 import type * as Chunk from "@fp-ts/data/Chunk"

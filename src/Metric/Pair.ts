@@ -1,7 +1,7 @@
 /**
  * @since 1.0.0
  */
-import * as internal from "@effect/io/internal/metric/pair"
+import * as internal from "@effect/io/internal_effect_untraced/metric/pair"
 import type * as MetricKey from "@effect/io/Metric/Key"
 import type * as MetricKeyType from "@effect/io/Metric/KeyType"
 import type * as MetricState from "@effect/io/Metric/State"

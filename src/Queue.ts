@@ -3,7 +3,7 @@
  */
 import type * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
-import * as internal from "@effect/io/internal/queue"
+import * as internal from "@effect/io/internal_effect_untraced/queue"
 import type * as Chunk from "@fp-ts/data/Chunk"
 import type * as MutableQueue from "@fp-ts/data/MutableQueue"
 import type * as MutableRef from "@fp-ts/data/MutableRef"
