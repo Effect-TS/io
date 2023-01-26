@@ -234,21 +234,19 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    * The status of the fiber.
    */
   status(): Effect.Effect<never, never, FiberStatus.FiberStatus> {
-    return Debug.untraced(() => this.ask((_, status) => status))
+    return this.ask((_, status) => status)
   }
 
   /**
    * Gets the fiber runtime flags.
    */
   runtimeFlags(): Effect.Effect<never, never, RuntimeFlags.RuntimeFlags> {
-    return Debug.untraced(() =>
-      this.ask((state, status) => {
-        if (FiberStatus.isDone(status)) {
-          return state._runtimeFlags
-        }
-        return status.runtimeFlags
-      })
-    )
+    return this.ask((state, status) => {
+      if (FiberStatus.isDone(status)) {
+        return state._runtimeFlags
+      }
+      return status.runtimeFlags
+    })
   }
 
   /**
@@ -262,7 +260,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    * Retrieves the immediate children of the fiber.
    */
   children(): Effect.Effect<never, never, Chunk.Chunk<Fiber.RuntimeFiber<any, any>>> {
-    return Debug.untraced(() => this.ask((fiber) => Chunk.fromIterable(fiber.getChildren())))
+    return this.ask((fiber) => Chunk.fromIterable(fiber.getChildren()))
   }
 
   /**
@@ -302,7 +300,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    * Retrieves the whole set of fiber refs.
    */
   fiberRefs(): Effect.Effect<never, never, FiberRefs.FiberRefs> {
-    return Debug.untraced(() => this.ask((fiber) => fiber.unsafeGetFiberRefs()))
+    return this.ask((fiber) => fiber.unsafeGetFiberRefs())
   }
 
   /**
@@ -788,7 +786,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
           this._runtimeFlags = pipe(this._runtimeFlags, _runtimeFlags.enable(_runtimeFlags.WindDown))
           const interruption = this.interruptAllChildren()
           if (interruption !== null) {
-            effect = pipe(interruption, core.flatMap(() => exit))
+            effect = Debug.untraced(() => core.flatMap(interruption, () => exit))
           } else {
             if (MutableQueue.isEmpty(this._queue)) {
               // No more messages to process, so we will allow the fiber to end life:
@@ -806,10 +804,10 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
             if ((e as core.Primitive)._tag === OpCodes.OP_YIELD) {
               if (_runtimeFlags.cooperativeYielding(this._runtimeFlags)) {
                 this.tell(FiberMessage.yieldNow((e as core.Yield).priority))
-                this.tell(FiberMessage.resume(core.unit()))
+                this.tell(FiberMessage.resume(core.exitUnit()))
                 effect = null
               } else {
-                effect = core.unit()
+                effect = core.exitUnit()
               }
             } else if ((e as core.Primitive)._tag === OpCodes.OP_ASYNC) {
               // Terminate this evaluation, async resumption will continue evaluation:
@@ -1027,7 +1025,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
             this.onExecute(cont)
             return cont.failK(cause)
           } else {
-            return core.failCause(internalCause.stripFailures(cause))
+            return core.exitFailCause(internalCause.stripFailures(cause))
           }
         }
         case OpCodes.OP_REVERT_FLAGS: {
@@ -1059,7 +1057,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     this.onExecute(op)
     if (op.scope === undefined) {
       this.patchRuntimeFlags(this._runtimeFlags, op.update)
-      return core.unit()
+      return core.exitUnit()
     } else {
       const updateFlags = op.update
       const oldRuntimeFlags = this._runtimeFlags
@@ -1121,7 +1119,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
       this.pushStack(op)
       return body()
     } else {
-      return core.unit()
+      return core.exitUnit()
     }
   }
 
@@ -1172,7 +1170,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
           }
         } else {
           if (core.isEffectError(e)) {
-            cur = core.failCause(e.cause)
+            cur = core.exitFailCause(e.cause)
           } else if (internalCause.isInterruptedException(e)) {
             cur = core.exitFailCause(
               internalCause.sequential(internalCause.die(e), internalCause.interrupt(FiberId.none))
