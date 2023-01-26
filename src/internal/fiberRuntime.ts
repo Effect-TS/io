@@ -5,7 +5,7 @@ import * as Debug from "@effect/io/Debug"
 import * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
 import * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
-import * as Exit from "@effect/io/Exit"
+import type * as Exit from "@effect/io/Exit"
 import type * as Fiber from "@effect/io/Fiber"
 import * as FiberId from "@effect/io/Fiber/Id"
 import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
@@ -1035,7 +1035,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
           if (_runtimeFlags.interruptible(this._runtimeFlags) && this.isInterrupted()) {
             return core.exitFailCause(internalCause.sequential(cause, this.getInterruptedCause()))
           } else {
-            return core.failCause(cause)
+            return core.exitFailCause(cause)
           }
         }
         default: {
@@ -1043,7 +1043,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
         }
       }
     } else {
-      throw Exit.failCause(cause)
+      throw core.exitFailCause(cause)
     }
   }
 

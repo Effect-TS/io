@@ -182,20 +182,6 @@ export interface CauseReducer<C, E, Z> {
 }
 
 /**
- * Represents the configuration parameters and methods required to pretty-
- * print a `Cause`.
- *
- * @since 1.0.0
- * @category rendering
- */
-export interface CauseRenderer<E = unknown> {
-  readonly lineWidth: number
-  readonly ribbonFraction: number
-  readonly renderError: (error: E) => ReadonlyArray<string>
-  readonly renderUnknown: (error: unknown) => ReadonlyArray<string>
-}
-
-/**
  * Represents a generic checked exception which occurs at runtime.
  *
  * @since 1.0.0
@@ -866,32 +852,12 @@ export const RuntimeException: (message?: string | undefined) => RuntimeExceptio
 export const isRuntimeException: (u: unknown) => u is RuntimeException = internal.isRuntimeException
 
 /**
- * The default `Cause.Renderer`.
- *
- * @since 1.0.0
- * @category rendering
- */
-export const defaultRenderer: CauseRenderer<unknown> = _pretty.defaultRenderer
-
-/**
  * Returns the specified `Cause` as a pretty-printed string.
  *
  * @since 1.0.0
  * @category rendering
  */
 export const pretty: <E>(cause: Cause<E>) => string = _pretty_run.pretty
-
-/**
- * Returns the specified `Cause` as a pretty-printed string using a custom
- * `CauseRenderer`.
- *
- * @since 1.0.0
- * @category rendering
- */
-export const prettyWithRenderer: {
-  <E>(cause: Cause<E>, renderer: CauseRenderer<E>): string
-  <E>(renderer: CauseRenderer<E>): (cause: Cause<E>) => string
-} = _pretty_run.prettyWithRenderer
 
 /**
  * Checks if an annotation is a StackAnnotation

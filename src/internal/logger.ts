@@ -66,7 +66,7 @@ export const stringLogger: Logger.Logger<string, string> = makeLogger<string, st
 
     if (cause != null && cause != Cause.empty) {
       output = output + " cause="
-      output = appendQuoted(runtime.unsafeRunSync(Pretty.prettySafe(cause, Pretty.defaultRenderer)), output)
+      output = appendQuoted(runtime.unsafeRunSync(Pretty.prettySafe(cause)), output)
     }
 
     if (Chunk.isNonEmpty(spans)) {
@@ -136,7 +136,7 @@ export const logfmtLogger = makeLogger<string, string>(
 
     if (cause != null && cause != Cause.empty) {
       output = output + " cause="
-      output = appendQuotedLogfmt(runtime.unsafeRunSync(Pretty.prettySafe(cause, Pretty.defaultRenderer)), output)
+      output = appendQuotedLogfmt(runtime.unsafeRunSync(Pretty.prettySafe(cause)), output)
     }
 
     if (Chunk.isNonEmpty(spans)) {
