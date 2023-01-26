@@ -135,6 +135,44 @@ describe.concurrent("Config", () => {
       }))
   })
 
+  describe.concurrent("Wrap", () => {
+    it.effect("unwrap correctly builds config", () =>
+      Effect.gen(function*($) {
+        const wrapper = (
+          _: Config.Wrap<{
+            key1: number
+            list: ReadonlyArray<string>
+            nested: {
+              key2: string
+            }
+          }>
+        ) => Config.unwrap(_)
+
+        const config = wrapper({
+          key1: Config.integer("key1"),
+          list: Config.arrayOf(Config.string(), "items"),
+          nested: {
+            key2: Config.string("key2")
+          }
+        })
+
+        const configProvider = ConfigProvider.fromMap(
+          new Map([["key1", "123"], ["items", "one,two,three"], ["key2", "value"]])
+        )
+        const result = yield* $(configProvider.load(config))
+        assert.deepStrictEqual(
+          result,
+          {
+            key1: 123,
+            list: ["one", "two", "three"],
+            nested: {
+              key2: "value"
+            }
+          }
+        )
+      }))
+  })
+
   describe.concurrent("Secret", () => {
     it.it("chunk constructor", () => {
       const secret = ConfigSecret.fromChunk(Chunk.fromIterable("secret".split("")))
