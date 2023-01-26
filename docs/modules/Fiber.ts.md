@@ -69,6 +69,8 @@ Added in v1.0.0
   - [FiberTypeId (type alias)](#fibertypeid-type-alias)
   - [RuntimeFiberTypeId](#runtimefibertypeid)
   - [RuntimeFiberTypeId (type alias)](#runtimefibertypeid-type-alias)
+- [utilities](#utilities)
+  - [getCurrentFiber](#getcurrentfiber)
 - [zipping](#zipping)
   - [zip](#zip)
   - [zipLeft](#zipleft)
@@ -769,6 +771,20 @@ Added in v1.0.0
 
 ```ts
 export type RuntimeFiberTypeId = typeof RuntimeFiberTypeId
+```
+
+Added in v1.0.0
+
+# utilities
+
+## getCurrentFiber
+
+Gets the current fiber if one is running.
+
+**Signature**
+
+```ts
+export declare const getCurrentFiber: () => Option.Option<RuntimeFiber<any, any>>
 ```
 
 Added in v1.0.0

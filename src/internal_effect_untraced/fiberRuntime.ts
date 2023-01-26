@@ -96,8 +96,6 @@ const absurd = (_: never): never => {
   )
 }
 
-const currentFiberURI = "@effect/io/Fiber/Current"
-
 const contOpSuccess = {
   [OpCodes.OP_ON_SUCCESS]: (
     self: FiberRuntime<any, any>,
@@ -515,8 +513,8 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     let recurse = true
     while (recurse) {
       let evaluationSignal: EvaluationSignal = EvaluationSignalContinue
-      const prev = globalThis[currentFiberURI]
-      globalThis[currentFiberURI] = this
+      const prev = globalThis[internalFiber.currentFiberURI]
+      globalThis[internalFiber.currentFiberURI] = this
       try {
         while (evaluationSignal === EvaluationSignalContinue) {
           evaluationSignal = MutableQueue.isEmpty(this._queue) ?
@@ -525,7 +523,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
         }
       } finally {
         this._running = false
-        globalThis[currentFiberURI] = prev
+        globalThis[internalFiber.currentFiberURI] = prev
       }
       // Maybe someone added something to the queue between us checking, and us
       // giving up the drain. If so, we need to restart the draining, but only
@@ -834,13 +832,13 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   start<R>(effect: Effect.Effect<R, E, A>): void {
     if (!this._running) {
       this._running = true
-      const prev = globalThis[currentFiberURI]
-      globalThis[currentFiberURI] = this
+      const prev = globalThis[internalFiber.currentFiberURI]
+      globalThis[internalFiber.currentFiberURI] = this
       try {
         this.evaluateEffect(effect)
       } finally {
         this._running = false
-        globalThis[currentFiberURI] = prev
+        globalThis[internalFiber.currentFiberURI] = prev
         // Because we're special casing `start`, we have to be responsible
         // for spinning up the fiber if there were new messages added to
         // the queue between the completion of the effect and the transition
@@ -873,7 +871,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    */
   patchRuntimeFlags(oldRuntimeFlags: RuntimeFlags.RuntimeFlags, patch: RuntimeFlagsPatch.RuntimeFlagsPatch) {
     const newRuntimeFlags = _runtimeFlags.patch(oldRuntimeFlags, patch)
-    globalThis[currentFiberURI] = this
+    globalThis[internalFiber.currentFiberURI] = this
     this._runtimeFlags = newRuntimeFlags
     return newRuntimeFlags
   }

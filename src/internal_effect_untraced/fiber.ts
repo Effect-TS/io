@@ -377,3 +377,10 @@ export const succeed = <A>(value: A): Fiber.Fiber<never, A> => {
 
 /** @internal */
 export const unit = (): Fiber.Fiber<never, void> => succeed(void 0)
+
+/** @internal */
+export const currentFiberURI = "@effect/io/Fiber/Current"
+
+/** @internal */
+export const getCurrentFiber = (): Option.Option<Fiber.RuntimeFiber<any, any>> =>
+  Option.fromNullable(global[currentFiberURI])
