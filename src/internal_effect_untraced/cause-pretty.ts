@@ -185,7 +185,7 @@ const render = <E>(
 /** @internal */
 export const prettySafe = <E>(cause: Cause.Cause<E>): Effect.Effect<never, never, string> => {
   if (internal.isInterruptedOnly(cause)) {
-    return core.succeed("All fibers have interrupted without errors.")
+    return core.succeed("All fibers interrupted without errors.")
   }
   return core.map(render(cause, Option.none), (errors) => {
     const final = errors.join("\r\n\r\n")
