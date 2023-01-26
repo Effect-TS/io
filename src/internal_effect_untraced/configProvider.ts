@@ -37,37 +37,37 @@ export const FlatConfigProviderTypeId: ConfigProvider.FlatConfigProviderTypeId =
 ) as ConfigProvider.FlatConfigProviderTypeId
 
 /** @internal */
-export const make = (
-  load: <A>(config: Config.Config<A>) => Effect.Effect<never, ConfigError.ConfigError, A>,
-  flatten: () => ConfigProvider.ConfigProvider.Flat
-): ConfigProvider.ConfigProvider => {
-  return Debug.untraced((restore) => ({
+export const make = Debug.untracedMethod((restore) =>
+  (
+    load: <A>(config: Config.Config<A>) => Effect.Effect<never, ConfigError.ConfigError, A>,
+    flattened: ConfigProvider.ConfigProvider.Flat
+  ): ConfigProvider.ConfigProvider => ({
     [ConfigProviderTypeId]: ConfigProviderTypeId,
-    load: restore(load),
-    flatten: restore(flatten)
-  }))
-}
+    load: Debug.methodWithTrace((trace) => (config) => restore(load)(config).traced(trace)),
+    flattened
+  })
+)
 
 /** @internal */
-export const makeFlat = (
-  load: <A>(
-    path: Chunk.Chunk<string>,
-    config: Config.Config.Primitive<A>
-  ) => Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>,
-  enumerateChildren: (
-    path: Chunk.Chunk<string>
-  ) => Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>>
-): ConfigProvider.ConfigProvider.Flat => {
-  return Debug.untraced((restore) => ({
+export const makeFlat = Debug.untracedMethod((restore) =>
+  (
+    load: <A>(
+      path: Chunk.Chunk<string>,
+      config: Config.Config.Primitive<A>
+    ) => Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>,
+    enumerateChildren: (
+      path: Chunk.Chunk<string>
+    ) => Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>>
+  ): ConfigProvider.ConfigProvider.Flat => ({
     [FlatConfigProviderTypeId]: FlatConfigProviderTypeId,
-    load: restore(load),
-    enumerateChildren: restore(enumerateChildren)
-  }))
-}
+    load: Debug.methodWithTrace((trace) => (path, config) => restore(load)(path, config).traced(trace)),
+    enumerateChildren: Debug.methodWithTrace((trace) => (path) => restore(enumerateChildren)(path).traced(trace))
+  })
+)
 
 /** @internal */
-export const fromFlat = (flat: ConfigProvider.ConfigProvider.Flat): ConfigProvider.ConfigProvider => {
-  return Debug.untraced(() =>
+export const fromFlat = Debug.untracedMethod(() =>
+  (flat: ConfigProvider.ConfigProvider.Flat): ConfigProvider.ConfigProvider =>
     make(
       (config) =>
         core.flatMap(fromFlatLoop(flat, Chunk.empty(), config), (chunk) =>
@@ -84,101 +84,101 @@ export const fromFlat = (flat: ConfigProvider.ConfigProvider.Flat): ConfigProvid
               core.succeed
             )
           )),
-      () => flat
+      flat
     )
-  )
-}
+)
 
 /** @internal */
-export const fromEnv = (
-  config: Partial<ConfigProvider.ConfigProvider.FromEnvConfig> = {}
-): ConfigProvider.ConfigProvider => {
-  const { pathDelim, seqDelim } = Object.assign({}, { pathDelim: "_", seqDelim: "," }, config)
-  const makePathString = (path: Chunk.Chunk<string>): string => pipe(path, Chunk.join(pathDelim))
-  const unmakePathString = (pathString: string): ReadonlyArray<string> => pathString.split(pathDelim)
+export const fromEnv = Debug.untracedMethod(() =>
+  (config: Partial<ConfigProvider.ConfigProvider.FromEnvConfig> = {}): ConfigProvider.ConfigProvider => {
+    const { pathDelim, seqDelim } = Object.assign({}, { pathDelim: "_", seqDelim: "," }, config)
+    const makePathString = (path: Chunk.Chunk<string>): string => pipe(path, Chunk.join(pathDelim))
+    const unmakePathString = (pathString: string): ReadonlyArray<string> => pathString.split(pathDelim)
 
-  const getEnv = () =>
-    typeof process !== "undefined" && "env" in process && typeof process.env === "object" ? process.env : {}
+    const getEnv = () =>
+      typeof process !== "undefined" && "env" in process && typeof process.env === "object" ? process.env : {}
 
-  const load = <A>(
-    path: Chunk.Chunk<string>,
-    primitive: Config.Config.Primitive<A>
-  ): Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>> => {
-    const pathString = makePathString(path)
-    const current = getEnv()
-    const valueOpt = pathString in current ? Option.some(current[pathString]!) : Option.none
-    return pipe(
-      core.fromOption(valueOpt),
-      core.mapError(() => configError.MissingData(path, `Expected ${pathString} to exist in the process context`)),
-      core.flatMap((value) => parsePrimitive(value, path, primitive, seqDelim))
-    )
-  }
-
-  const enumerateChildren = (
-    path: Chunk.Chunk<string>
-  ): Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>> =>
-    core.sync(() => {
+    const load = <A>(
+      path: Chunk.Chunk<string>,
+      primitive: Config.Config.Primitive<A>
+    ): Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>> => {
+      const pathString = makePathString(path)
       const current = getEnv()
-      const keys = Object.keys(current)
-      const keyPaths = Array.from(keys).map(unmakePathString)
-      const filteredKeyPaths = keyPaths.filter((keyPath) => {
-        for (let i = 0; i < path.length; i++) {
-          const pathComponent = pipe(path, Chunk.unsafeGet(i))
-          const currentElement = keyPath[i]
-          if (currentElement === undefined || pathComponent !== currentElement) {
-            return false
+      const valueOpt = pathString in current ? Option.some(current[pathString]!) : Option.none
+      return pipe(
+        core.fromOption(valueOpt),
+        core.mapError(() => configError.MissingData(path, `Expected ${pathString} to exist in the process context`)),
+        core.flatMap((value) => parsePrimitive(value, path, primitive, seqDelim))
+      )
+    }
+
+    const enumerateChildren = (
+      path: Chunk.Chunk<string>
+    ): Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>> =>
+      core.sync(() => {
+        const current = getEnv()
+        const keys = Object.keys(current)
+        const keyPaths = Array.from(keys).map(unmakePathString)
+        const filteredKeyPaths = keyPaths.filter((keyPath) => {
+          for (let i = 0; i < path.length; i++) {
+            const pathComponent = pipe(path, Chunk.unsafeGet(i))
+            const currentElement = keyPath[i]
+            if (currentElement === undefined || pathComponent !== currentElement) {
+              return false
+            }
           }
-        }
-        return true
-      }).flatMap((keyPath) => keyPath.slice(path.length, path.length + 1))
-      return HashSet.from(filteredKeyPaths)
-    })
+          return true
+        }).flatMap((keyPath) => keyPath.slice(path.length, path.length + 1))
+        return HashSet.from(filteredKeyPaths)
+      })
 
-  return Debug.untraced(() => fromFlat(makeFlat(load, enumerateChildren)))
-}
-
-/** @internal */
-export const fromMap = (
-  map: Map<string, string>,
-  config: Partial<ConfigProvider.ConfigProvider.FromMapConfig> = {}
-): ConfigProvider.ConfigProvider => {
-  const { pathDelim, seqDelim } = Object.assign({}, { seqDelim: ",", pathDelim: "." }, config)
-  const makePathString = (path: Chunk.Chunk<string>): string => pipe(path, Chunk.join(pathDelim))
-  const unmakePathString = (pathString: string): ReadonlyArray<string> => pathString.split(pathDelim)
-  const load = <A>(
-    path: Chunk.Chunk<string>,
-    primitive: Config.Config.Primitive<A>
-  ): Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>> => {
-    const pathString = makePathString(path)
-    const valueOpt = map.has(pathString) ? Option.some(map.get(pathString)!) : Option.none
-    return pipe(
-      core.fromOption(valueOpt),
-      core.mapError(() => configError.MissingData(path, `Expected ${pathString} to exist in the provided map`)),
-      core.flatMap((value) => parsePrimitive(value, path, primitive, seqDelim))
-    )
+    return fromFlat(makeFlat(load, enumerateChildren))
   }
-  const enumerateChildren = (
-    path: Chunk.Chunk<string>
-  ): Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>> =>
-    core.sync(() => {
-      const keyPaths = Array.from(map.keys()).map(unmakePathString)
-      const filteredKeyPaths = keyPaths.filter((keyPath) => {
-        for (let i = 0; i < path.length; i++) {
-          const pathComponent = pipe(path, Chunk.unsafeGet(i))
-          const currentElement = keyPath[i]
-          if (currentElement === undefined || pathComponent !== currentElement) {
-            return false
-          }
-        }
-        return true
-      }).flatMap((keyPath) => keyPath.slice(path.length, path.length + 1))
-      return HashSet.from(filteredKeyPaths)
-    })
-
-  return Debug.untraced(() => fromFlat(makeFlat(load, enumerateChildren)))
-}
+)
 
 /** @internal */
+export const fromMap = Debug.untracedMethod(() =>
+  (
+    map: Map<string, string>,
+    config: Partial<ConfigProvider.ConfigProvider.FromMapConfig> = {}
+  ): ConfigProvider.ConfigProvider => {
+    const { pathDelim, seqDelim } = Object.assign({}, { seqDelim: ",", pathDelim: "." }, config)
+    const makePathString = (path: Chunk.Chunk<string>): string => pipe(path, Chunk.join(pathDelim))
+    const unmakePathString = (pathString: string): ReadonlyArray<string> => pathString.split(pathDelim)
+    const load = <A>(
+      path: Chunk.Chunk<string>,
+      primitive: Config.Config.Primitive<A>
+    ): Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>> => {
+      const pathString = makePathString(path)
+      const valueOpt = map.has(pathString) ? Option.some(map.get(pathString)!) : Option.none
+      return pipe(
+        core.fromOption(valueOpt),
+        core.mapError(() => configError.MissingData(path, `Expected ${pathString} to exist in the provided map`)),
+        core.flatMap((value) => parsePrimitive(value, path, primitive, seqDelim))
+      )
+    }
+    const enumerateChildren = (
+      path: Chunk.Chunk<string>
+    ): Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>> =>
+      core.sync(() => {
+        const keyPaths = Array.from(map.keys()).map(unmakePathString)
+        const filteredKeyPaths = keyPaths.filter((keyPath) => {
+          for (let i = 0; i < path.length; i++) {
+            const pathComponent = pipe(path, Chunk.unsafeGet(i))
+            const currentElement = keyPath[i]
+            if (currentElement === undefined || pathComponent !== currentElement) {
+              return false
+            }
+          }
+          return true
+        }).flatMap((keyPath) => keyPath.slice(path.length, path.length + 1))
+        return HashSet.from(filteredKeyPaths)
+      })
+
+    return fromFlat(makeFlat(load, enumerateChildren))
+  }
+)
+
 const extend = <A, B>(
   leftDef: (n: number) => A,
   rightDef: (n: number) => B,
@@ -204,7 +204,6 @@ const extend = <A, B>(
   return [leftExtension, rightExtension]
 }
 
-/** @internal */
 const fromFlatLoop = <A>(
   flat: ConfigProvider.ConfigProvider.Flat,
   prefix: Chunk.Chunk<string>,
@@ -377,68 +376,67 @@ const fromFlatLoop = <A>(
   }
 }
 
-/** @internal */
-const fromFlatLoopFail = (prefix: Chunk.Chunk<string>, path: string) => {
-  return (index: number): Either.Either<ConfigError.ConfigError, unknown> => {
-    return Either.left(
+const fromFlatLoopFail = (prefix: Chunk.Chunk<string>, path: string) =>
+  (index: number): Either.Either<ConfigError.ConfigError, unknown> =>
+    Either.left(
       configError.MissingData(
         prefix,
         `The element at index ${index} in a sequence at path "${path}" was missing`
       )
     )
-  }
-}
 
 /** @internal */
-export const nested = (name: string) => {
-  return (self: ConfigProvider.ConfigProvider): ConfigProvider.ConfigProvider =>
-    Debug.untraced(() => fromFlat(pipe(self.flatten(), nestedFlat(name))))
-}
+export const nested = Debug.untracedDual<
+  (self: ConfigProvider.ConfigProvider, name: string) => ConfigProvider.ConfigProvider,
+  (name: string) => (self: ConfigProvider.ConfigProvider) => ConfigProvider.ConfigProvider
+>(2, () =>
+  (self, name) =>
+    fromFlat(makeFlat(
+      (path, config) => self.flattened.load(pipe(path, Chunk.prepend(name)), config),
+      (path) => self.flattened.enumerateChildren(pipe(path, Chunk.prepend(name)))
+    )))
 
 /** @internal */
-const nestedFlat = (name: string) => {
-  return (self: ConfigProvider.ConfigProvider.Flat): ConfigProvider.ConfigProvider.Flat =>
-    Debug.untraced(() =>
-      makeFlat(
-        (path, config) => self.load(pipe(path, Chunk.prepend(name)), config),
-        (path) => self.enumerateChildren(pipe(path, Chunk.prepend(name)))
-      )
-    )
-}
+export const orElse = Debug.untracedDual<
+  (
+    self: ConfigProvider.ConfigProvider,
+    that: LazyArg<ConfigProvider.ConfigProvider>
+  ) => ConfigProvider.ConfigProvider,
+  (
+    that: LazyArg<ConfigProvider.ConfigProvider>
+  ) => (
+    self: ConfigProvider.ConfigProvider
+  ) => ConfigProvider.ConfigProvider
+>(2, (restore) => (self, that) => fromFlat(orElseFlat(self.flattened, () => restore(that)().flattened)))
 
-/** @internal */
-export const orElse = (that: LazyArg<ConfigProvider.ConfigProvider>) => {
-  return (self: ConfigProvider.ConfigProvider): ConfigProvider.ConfigProvider =>
-    Debug.untraced(() => fromFlat(pipe(self.flatten(), orElseFlat(() => that().flatten()))))
-}
-
-const orElseFlat = (that: LazyArg<ConfigProvider.ConfigProvider.Flat>) => {
-  return (self: ConfigProvider.ConfigProvider.Flat): ConfigProvider.ConfigProvider.Flat =>
-    makeFlat(
-      (path, config) =>
-        core.catchAll(self.load(path, config), (error1) =>
-          core.catchAll(that().load(path, config), (error2) => core.fail(configError.Or(error1, error2)))),
-      (path) =>
-        core.flatMap(core.either(self.enumerateChildren(path)), (left) =>
-          core.flatMap(core.either(that().enumerateChildren(path)), (right) => {
-            if (Either.isLeft(left) && Either.isLeft(right)) {
-              return core.fail(configError.And(left.left, right.left))
-            }
-            if (Either.isLeft(left) && Either.isRight(right)) {
-              return core.fail(left.left)
-            }
-            if (Either.isRight(left) && Either.isLeft(right)) {
-              return core.fail(right.left)
-            }
-            if (Either.isRight(left) && Either.isRight(right)) {
-              return core.succeed(pipe(left.right, HashSet.union(right.right)))
-            }
-            throw new Error(
-              "BUG: ConfigProvider.orElseFlat - please report an issue at https://github.com/Effect-TS/io/issues"
-            )
-          }))
-    )
-}
+const orElseFlat = (
+  self: ConfigProvider.ConfigProvider.Flat,
+  that: LazyArg<ConfigProvider.ConfigProvider.Flat>
+): ConfigProvider.ConfigProvider.Flat =>
+  makeFlat(
+    (path, config) =>
+      core.catchAll(self.load(path, config), (error1) =>
+        core.catchAll(that().load(path, config), (error2) => core.fail(configError.Or(error1, error2)))),
+    (path) =>
+      core.flatMap(core.either(self.enumerateChildren(path)), (left) =>
+        core.flatMap(core.either(that().enumerateChildren(path)), (right) => {
+          if (Either.isLeft(left) && Either.isLeft(right)) {
+            return core.fail(configError.And(left.left, right.left))
+          }
+          if (Either.isLeft(left) && Either.isRight(right)) {
+            return core.fail(left.left)
+          }
+          if (Either.isRight(left) && Either.isLeft(right)) {
+            return core.fail(right.left)
+          }
+          if (Either.isRight(left) && Either.isRight(right)) {
+            return core.succeed(pipe(left.right, HashSet.union(right.right)))
+          }
+          throw new Error(
+            "BUG: ConfigProvider.orElseFlat - please report an issue at https://github.com/Effect-TS/io/issues"
+          )
+        }))
+  )
 
 const splitPathString = (text: string, delim: string): Chunk.Chunk<string> => {
   const split = text.split(new RegExp(`\\s*${escapeRegex(delim)}\\s*`))

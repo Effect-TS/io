@@ -96,34 +96,23 @@ class Suspended implements FiberStatus.Suspended {
 export const done: FiberStatus.FiberStatus = new Done()
 
 /** @internal */
-export const running = (runtimeFlags: RuntimeFlags): FiberStatus.FiberStatus => {
-  return new Running(runtimeFlags)
-}
+export const running = (runtimeFlags: RuntimeFlags): FiberStatus.FiberStatus => new Running(runtimeFlags)
 
 /** @internal */
 export const suspended = (
   runtimeFlags: RuntimeFlags,
   blockingOn: FiberId
-): FiberStatus.FiberStatus => {
-  return new Suspended(runtimeFlags, blockingOn)
-}
+): FiberStatus.FiberStatus => new Suspended(runtimeFlags, blockingOn)
 
 /** @internal */
-export const isFiberStatus = (u: unknown): u is FiberStatus.FiberStatus => {
-  return typeof u === "object" && u != null && FiberStatusTypeId in u
-}
+export const isFiberStatus = (u: unknown): u is FiberStatus.FiberStatus =>
+  typeof u === "object" && u != null && FiberStatusTypeId in u
 
 /** @internal */
-export const isDone = (self: FiberStatus.FiberStatus): self is FiberStatus.Done => {
-  return self._tag === OP_DONE
-}
+export const isDone = (self: FiberStatus.FiberStatus): self is FiberStatus.Done => self._tag === OP_DONE
 
 /** @internal */
-export const isRunning = (self: FiberStatus.FiberStatus): self is FiberStatus.Running => {
-  return self._tag === OP_RUNNING
-}
+export const isRunning = (self: FiberStatus.FiberStatus): self is FiberStatus.Running => self._tag === OP_RUNNING
 
 /** @internal */
-export const isSuspended = (self: FiberStatus.FiberStatus): self is FiberStatus.Suspended => {
-  return self._tag === OP_SUSPENDED
-}
+export const isSuspended = (self: FiberStatus.FiberStatus): self is FiberStatus.Suspended => self._tag === OP_SUSPENDED

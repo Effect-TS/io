@@ -50,7 +50,7 @@ export interface ConfigProvider extends ConfigProvider.Proto {
    * Flattens this config provider into a simplified config provider that knows
    * only how to deal with flat (key/value) properties.
    */
-  flatten(): ConfigProvider.Flat
+  flattened: ConfigProvider.Flat
 }
 
 /**
@@ -117,7 +117,7 @@ export const Tag: Context.Tag<ConfigProvider> = internal.configProviderTag
  */
 export const make: (
   load: <A>(config: Config.Config<A>) => Effect.Effect<never, ConfigError.ConfigError, A>,
-  flatten: () => ConfigProvider.Flat
+  flattened: ConfigProvider.Flat
 ) => ConfigProvider = internal.make
 
 /**
@@ -173,7 +173,10 @@ export const fromMap: (map: Map<string, string>, config?: Partial<ConfigProvider
  * @since 1.0.0
  * @category mutations
  */
-export const nested: (name: string) => (self: ConfigProvider) => ConfigProvider = internal.nested
+export const nested: {
+  (self: ConfigProvider, name: string): ConfigProvider
+  (name: string): (self: ConfigProvider) => ConfigProvider
+} = internal.nested
 
 /**
  * Returns a new config provider that preferentially loads configuration data
@@ -183,4 +186,7 @@ export const nested: (name: string) => (self: ConfigProvider) => ConfigProvider 
  * @since 1.0.0
  * @category mutations
  */
-export const orElse: (that: LazyArg<ConfigProvider>) => (self: ConfigProvider) => ConfigProvider = internal.orElse
+export const orElse: {
+  (self: ConfigProvider, that: LazyArg<ConfigProvider>): ConfigProvider
+  (that: LazyArg<ConfigProvider>): (self: ConfigProvider) => ConfigProvider
+} = internal.orElse
