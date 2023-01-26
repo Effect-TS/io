@@ -258,6 +258,22 @@ export const timer = (name: string): Metric.Metric<
   return pipe(base, contramap((duration) => duration.millis))
 }
 
+/** @internal */
+export const timerWithBoundaries = (
+  name: string,
+  boundaries: Chunk.Chunk<number>
+): Metric.Metric<
+  MetricKeyType.MetricKeyType.Histogram,
+  Duration.Duration,
+  MetricState.MetricState.Histogram
+> => {
+  const base = pipe(
+    histogram(name, metricBoundaries.fromChunk(boundaries)),
+    tagged("time_unit", "milliseconds")
+  )
+  return contramap(base, (duration) => duration.millis)
+}
+
 /* @internal */
 export const trackAll = Debug.dualWithTrace<
   <Type, In, Out>(
