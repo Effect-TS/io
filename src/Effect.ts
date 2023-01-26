@@ -25,7 +25,12 @@ import * as fiberRuntime from "@effect/io/internal_effect_untraced/fiberRuntime"
 import * as layer from "@effect/io/internal_effect_untraced/layer"
 import * as _runtime from "@effect/io/internal_effect_untraced/runtime"
 import * as _schedule from "@effect/io/internal_effect_untraced/schedule"
-import type { EnforceNonEmptyRecord, MergeRecord, NonEmptyArrayEffect, TupleEffect } from "@effect/io/internal_effect_untraced/types"
+import type {
+  EnforceNonEmptyRecord,
+  MergeRecord,
+  NonEmptyArrayEffect,
+  TupleEffect
+} from "@effect/io/internal_effect_untraced/types"
 import type * as Layer from "@effect/io/Layer"
 import type * as Metric from "@effect/io/Metric"
 import type * as MetricLabel from "@effect/io/Metric/Label"

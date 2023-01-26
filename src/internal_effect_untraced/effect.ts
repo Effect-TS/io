@@ -13,7 +13,12 @@ import * as core from "@effect/io/internal_effect_untraced/core"
 import * as fiberRefsPatch from "@effect/io/internal_effect_untraced/fiberRefs/patch"
 import * as metricLabel from "@effect/io/internal_effect_untraced/metric/label"
 import * as SingleShotGen from "@effect/io/internal_effect_untraced/singleShotGen"
-import type { EnforceNonEmptyRecord, MergeRecord, NonEmptyArrayEffect, TupleEffect } from "@effect/io/internal_effect_untraced/types"
+import type {
+  EnforceNonEmptyRecord,
+  MergeRecord,
+  NonEmptyArrayEffect,
+  TupleEffect
+} from "@effect/io/internal_effect_untraced/types"
 import * as LogLevel from "@effect/io/Logger/Level"
 import * as LogSpan from "@effect/io/Logger/Span"
 import type * as Metric from "@effect/io/Metric"

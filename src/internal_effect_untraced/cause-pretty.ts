@@ -14,11 +14,6 @@ import * as Option from "@fp-ts/data/Option"
 // -----------------------------------------------------------------------------
 
 /** @internal */
-const lines = (s: string) => {
-  return s.split("\n").map((s) => s.replace("\r", "")) as ReadonlyArray<string>
-}
-
-/** @internal */
 const renderToString = (u: unknown): string => {
   if (
     typeof u === "object" &&
@@ -30,9 +25,23 @@ const renderToString = (u: unknown): string => {
     return u["toString"]()
   }
   if (typeof u === "string") {
-    return u
+    return `Error: ${u}`
   }
-  return JSON.stringify(u, null, 2)
+  if (typeof u === "object" && u !== null) {
+    if ("message" in u && typeof u["message"] === "string") {
+      const raw = JSON.parse(JSON.stringify(u))
+      const keys = new Set(Object.keys(raw))
+      keys.delete("name")
+      keys.delete("message")
+      keys.delete("_tag")
+      if (keys.size === 0) {
+        return `${"name" in u && typeof u.name === "string" ? u.name : "Error"}${
+          "_tag" in u && typeof u["_tag"] === "string" ? `(${u._tag})` : ``
+        }: ${u.message}`
+      }
+    }
+  }
+  return `Error: ${JSON.stringify(u)}`
 }
 
 const renderTraces = (chunk: Chunk.Chunk<Debug.Trace>): ReadonlyArray<string> => {
@@ -66,28 +75,17 @@ const renderStack = (span: Option.Option<StackAnnotation>): ReadonlyArray<string
 
 /** @internal */
 const renderFail = (
-  error: ReadonlyArray<string>,
+  error: string,
   stack: Option.Option<StackAnnotation>
 ): ReadonlyArray<string> => {
-  return [
-    ...error,
+  return [[
+    error,
     ...renderStack(stack)
-  ]
+  ].join("\r\n")]
 }
 
 /** @internal */
-const renderDie = (
-  error: ReadonlyArray<string>,
-  stack: Option.Option<StackAnnotation>
-): ReadonlyArray<string> => {
-  return [
-    ...error,
-    ...renderStack(stack)
-  ]
-}
-
-/** @internal */
-const renderError = (error: Error): ReadonlyArray<string> => {
+const renderError = (error: Error): string => {
   if (error.stack) {
     const stack = Debug.runtimeDebug.parseStack(error)
     const traces: Array<string> = []
@@ -101,16 +99,19 @@ const renderError = (error: Error): ReadonlyArray<string> => {
       }
     }
     return [
-      `${error.name}: ${error.message}`,
+      renderToString(error),
       ...traces
-    ]
+    ].join("\r\n")
   }
-  return lines(String(error))
+  return String(error)
 }
 
 /** @internal */
 const defaultErrorToLines = (error: unknown) => {
-  return error instanceof Error ? renderError(error) : lines(renderToString(error))
+  if (error instanceof Error) {
+    return renderError(error)
+  }
+  return renderToString(error)
 }
 
 const render = <E>(
@@ -156,7 +157,7 @@ const render = <E>(
       return core.succeed(renderFail(defaultErrorToLines(cause.error), stack))
     }
     case OpCodes.OP_DIE: {
-      return core.succeed(renderDie(defaultErrorToLines(cause.defect), stack))
+      return core.succeed(renderFail(defaultErrorToLines(cause.defect), stack))
     }
     case OpCodes.OP_INTERRUPT: {
       return core.succeed([])
@@ -186,7 +187,13 @@ export const prettySafe = <E>(cause: Cause.Cause<E>): Effect.Effect<never, never
   if (internal.isInterruptedOnly(cause)) {
     return core.succeed("All fibers have interrupted without errors.")
   }
-  return core.map(render(cause, Option.none), (errors) => errors.join("\r\n"))
+  return core.map(render(cause, Option.none), (errors) => {
+    const final = errors.join("\r\n\r\n")
+    if (!final.includes("\r\n")) {
+      return final
+    }
+    return `\r\n${final}\r\n`
+  })
 }
 
 function renderFrame(r: Debug.Frame | undefined): string {
