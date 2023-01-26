@@ -1,11 +1,11 @@
 import * as Debug from "@effect/io/Debug"
 import type * as FiberId from "@effect/io/Fiber/Id"
+import { pipe } from "@fp-ts/core/Function"
+import * as Option from "@fp-ts/core/Option"
 import * as Equal from "@fp-ts/data/Equal"
-import { pipe } from "@fp-ts/data/Function"
 import * as Hash from "@fp-ts/data/Hash"
 import * as HashSet from "@fp-ts/data/HashSet"
 import * as MutableRef from "@fp-ts/data/MutableRef"
-import * as Option from "@fp-ts/data/Option"
 
 /** @internal */
 const FiberIdSymbolKey = "@effect/io/Fiber/Id"
@@ -186,7 +186,7 @@ export const threadName = (self: FiberId.FiberId): string => {
 export const toOption = (self: FiberId.FiberId): Option.Option<FiberId.FiberId> => {
   const fiberIds = toSet(self)
   if (HashSet.size(fiberIds) === 0) {
-    return Option.none
+    return Option.none()
   }
   let first = true
   let acc: FiberId.FiberId

@@ -7,13 +7,13 @@ import * as FiberId from "@effect/io/Fiber/Id"
 import * as Ref from "@effect/io/Ref"
 import * as it from "@effect/io/test/utils/extend"
 import { withLatch, withLatchAwait } from "@effect/io/test/utils/latch"
+import * as Either from "@fp-ts/core/Either"
+import { constVoid, pipe } from "@fp-ts/core/Function"
+import * as Option from "@fp-ts/core/Option"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Duration from "@fp-ts/data/Duration"
-import * as Either from "@fp-ts/data/Either"
-import { constVoid, pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
 import * as MutableRef from "@fp-ts/data/MutableRef"
-import * as Option from "@fp-ts/data/Option"
 import { assert, describe } from "vitest"
 
 describe.concurrent("Effect", () => {
@@ -281,7 +281,7 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("sandbox of interruptible", () =>
     Effect.gen(function*($) {
-      const recovered = yield* $(Ref.make<Option.Option<Either.Either<boolean, never>>>(Option.none))
+      const recovered = yield* $(Ref.make<Option.Option<Either.Either<boolean, never>>>(Option.none()))
       const fiber = yield* $(withLatch((release) =>
         pipe(
           release,
@@ -301,7 +301,7 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("run of interruptible", () =>
     Effect.gen(function*($) {
-      const recovered = yield* $(Ref.make<Option.Option<boolean>>(Option.none))
+      const recovered = yield* $(Ref.make<Option.Option<boolean>>(Option.none()))
       const fiber = yield* $(withLatch((release) =>
         pipe(
           release,

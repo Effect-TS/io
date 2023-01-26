@@ -6,10 +6,10 @@ import * as FiberId from "@effect/io/Fiber/Id"
 import * as Ref from "@effect/io/Ref"
 import { causesArb } from "@effect/io/test/utils/cause"
 import * as it from "@effect/io/test/utils/extend"
+import * as Either from "@fp-ts/core/Either"
+import { constFalse, constTrue, identity, pipe } from "@fp-ts/core/Function"
+import * as Option from "@fp-ts/core/Option"
 import * as Chunk from "@fp-ts/data/Chunk"
-import * as Either from "@fp-ts/data/Either"
-import { constFalse, constTrue, identity, pipe } from "@fp-ts/data/Function"
-import * as Option from "@fp-ts/data/Option"
 import * as fc from "fast-check"
 import { assert, describe } from "vitest"
 
@@ -81,7 +81,7 @@ describe.concurrent("Effect", () => {
         Effect.attempt(() => {
           throw ExampleError
         }),
-        Effect.match(Option.some, () => Option.none)
+        Effect.match(Option.some, () => Option.none())
       ))
       assert.deepStrictEqual(result, Option.some(ExampleError))
     }))
@@ -213,7 +213,7 @@ describe.concurrent("Effect", () => {
         Effect.catchSomeDefect((e) =>
           Cause.isIllegalArgumentException(e)
             ? Option.some(Effect.succeed(e.message))
-            : Option.none
+            : Option.none()
         )
       ))
       assert.strictEqual(result, message)
@@ -226,7 +226,7 @@ describe.concurrent("Effect", () => {
         Effect.catchSomeDefect((e) =>
           Cause.isRuntimeException(e) ?
             Option.some(Effect.succeed(e.message)) :
-            Option.none
+            Option.none()
         ),
         Effect.exit
       ))
@@ -240,7 +240,7 @@ describe.concurrent("Effect", () => {
         Effect.catchSomeDefect((e) =>
           Cause.isIllegalArgumentException(e)
             ? Option.some(Effect.succeed(e.message))
-            : Option.none
+            : Option.none()
         ),
         Effect.exit
       ))
@@ -254,7 +254,7 @@ describe.concurrent("Effect", () => {
         Effect.catchSomeDefect((e) =>
           Cause.isIllegalArgumentException(e)
             ? Option.some(Effect.succeed(e.message))
-            : Option.none
+            : Option.none()
         )
       ))
       assert.deepStrictEqual(result, error)
@@ -267,7 +267,7 @@ describe.concurrent("Effect", () => {
           Effect.continueOrFail("value was not 0", (v) =>
             v === 0 ?
               Option.some(v) :
-              Option.none),
+              Option.none()),
           Effect.sandbox,
           Effect.either
         )))
@@ -275,7 +275,7 @@ describe.concurrent("Effect", () => {
         exactlyOnce(1, (effect) =>
           pipe(
             effect,
-            Effect.continueOrFail("value was not 0", (v) => v === 0 ? Option.some(v) : Option.none)
+            Effect.continueOrFail("value was not 0", (v) => v === 0 ? Option.some(v) : Option.none())
           )),
         Effect.sandbox,
         Effect.either,
@@ -292,7 +292,7 @@ describe.concurrent("Effect", () => {
             effect,
             Effect.continueOrFailEffect(
               "value was not 0",
-              (v) => v === 0 ? Option.some(Effect.succeed(v)) : Option.none
+              (v) => v === 0 ? Option.some(Effect.succeed(v)) : Option.none()
             )
           )),
         Effect.sandbox,
@@ -305,7 +305,7 @@ describe.concurrent("Effect", () => {
             Effect.continueOrFailEffect("predicate failed!", (n) =>
               n === 0 ?
                 Option.some(Effect.fail("partial failed!")) :
-                Option.none)
+                Option.none())
           )),
         Effect.sandbox,
         Effect.either,
@@ -318,7 +318,7 @@ describe.concurrent("Effect", () => {
             Effect.continueOrFailEffect("value was not 0", (v) =>
               v === 0 ?
                 Option.some(Effect.succeed(v)) :
-                Option.none)
+                Option.none())
           )),
         Effect.sandbox,
         Effect.either,
@@ -335,7 +335,7 @@ describe.concurrent("Effect", () => {
           throw ExampleError
         }),
         Effect.sandbox,
-        Effect.match(Option.some, () => Option.none as Option.Option<Cause.Cause<never>>)
+        Effect.match(Option.some, () => Option.none() as Option.Option<Cause.Cause<never>>)
       ))
       assert.deepStrictEqual(pipe(result, Option.map(Cause.unannotate)), Option.some(Cause.die(ExampleError)))
     }))
@@ -456,7 +456,7 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("orElseOptional - produces the value of the specified effect if it fails with none", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(Effect.fail(Option.none), Effect.orElseOptional(() => Effect.succeed("orElse"))))
+      const result = yield* $(pipe(Effect.fail(Option.none()), Effect.orElseOptional(() => Effect.succeed("orElse"))))
       assert.strictEqual(result, "orElse")
     }))
   it.effect("orElseSucceed - executes this effect and returns its value if it succeeds", () =>
@@ -497,14 +497,14 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const goodCase = yield* $(
         pipe(
-          exactlyOnce(0, Effect.reject((n) => (n !== 0 ? Option.some("partial failed!") : Option.none))),
+          exactlyOnce(0, Effect.reject((n) => (n !== 0 ? Option.some("partial failed!") : Option.none()))),
           Effect.sandbox,
           Effect.either
         )
       )
       const badCase = yield* $(
         pipe(
-          exactlyOnce(1, Effect.reject((n) => (n !== 0 ? Option.some("partial failed!") : Option.none))),
+          exactlyOnce(1, Effect.reject((n) => (n !== 0 ? Option.some("partial failed!") : Option.none()))),
           Effect.sandbox,
           Effect.either,
           Effect.map(Either.mapLeft(Cause.failureOrCause))
@@ -518,7 +518,7 @@ describe.concurrent("Effect", () => {
       const goodCase = yield* $(pipe(
         exactlyOnce(
           0,
-          Effect.rejectEffect((n) => n !== 0 ? Option.some(Effect.succeed("partial failed!")) : Option.none)
+          Effect.rejectEffect((n) => n !== 0 ? Option.some(Effect.succeed("partial failed!")) : Option.none())
         ),
         Effect.sandbox,
         Effect.either
@@ -526,7 +526,7 @@ describe.concurrent("Effect", () => {
       const partialBadCase = yield* $(pipe(
         exactlyOnce(
           0,
-          Effect.rejectEffect((n) => n !== 0 ? Option.some(Effect.fail("partial failed!")) : Option.none)
+          Effect.rejectEffect((n) => n !== 0 ? Option.some(Effect.fail("partial failed!")) : Option.none())
         ),
         Effect.sandbox,
         Effect.either,
@@ -535,7 +535,7 @@ describe.concurrent("Effect", () => {
       const badCase = yield* $(pipe(
         exactlyOnce(
           1,
-          Effect.rejectEffect((n) => n !== 0 ? Option.some(Effect.fail("partial failed!")) : Option.none)
+          Effect.rejectEffect((n) => n !== 0 ? Option.some(Effect.fail("partial failed!")) : Option.none())
         ),
         Effect.sandbox,
         Effect.either,
@@ -585,7 +585,7 @@ describe.concurrent("Effect", () => {
         Effect.unrefine((e) =>
           Cause.isIllegalArgumentException(e) ?
             Option.some(e.message) :
-            Option.none
+            Option.none()
         ),
         Effect.exit
       ))
@@ -600,7 +600,7 @@ describe.concurrent("Effect", () => {
         Effect.unrefine((e) =>
           Cause.isRuntimeException(e) ?
             Option.some(e.message) :
-            Option.none
+            Option.none()
         ),
         Effect.exit
       ))
@@ -613,8 +613,8 @@ describe.concurrent("Effect", () => {
       const result = yield* $(pipe(
         defect,
         Effect.unrefineWith(
-          (e) => Cause.isIllegalArgumentException(e) ? Option.some(e.message) : Option.none,
-          () => Option.none
+          (e) => Cause.isIllegalArgumentException(e) ? Option.some(e.message) : Option.none(),
+          () => Option.none()
         ),
         Effect.exit
       ))
@@ -627,8 +627,8 @@ describe.concurrent("Effect", () => {
       const result = yield* $(pipe(
         defect,
         Effect.unrefineWith(
-          (e) => Cause.isRuntimeException(e) ? Option.some(e.message) : Option.none,
-          () => Option.none
+          (e) => Cause.isRuntimeException(e) ? Option.some(e.message) : Option.none(),
+          () => Option.none()
         ),
         Effect.exit
       ))
@@ -641,13 +641,13 @@ describe.concurrent("Effect", () => {
         pipe(
           failure,
           Effect.unrefineWith(
-            (e) => Cause.isIllegalArgumentException(e) ? Option.some(e.message) : Option.none,
-            () => Option.none
+            (e) => Cause.isIllegalArgumentException(e) ? Option.some(e.message) : Option.none(),
+            () => Option.none()
           ),
           Effect.exit
         )
       )
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(Option.none))
+      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(Option.none()))
     }))
   it.effect("unwraps exception", () =>
     Effect.gen(function*($) {

@@ -1,7 +1,7 @@
 import * as Effect from "@effect/io/Effect"
 import * as Ref from "@effect/io/Ref"
 import * as it from "@effect/io/test/utils/extend"
-import { constVoid, pipe } from "@fp-ts/data/Function"
+import { constVoid, pipe } from "@fp-ts/core/Function"
 import { assert, describe } from "vitest"
 
 const deepMapEffect = (n: number): Effect.Effect<never, never, number> => {

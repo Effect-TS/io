@@ -3,8 +3,8 @@ import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRefs from "@effect/io/FiberRefs"
 import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
 import * as _fiberRefs from "@effect/io/internal_effect_untraced/fiberRefs"
+import * as Arr from "@fp-ts/core/ReadonlyArray"
 import { equals } from "@fp-ts/data/Equal"
-import * as Arr from "@fp-ts/data/ReadonlyArray"
 
 /** @internal */
 export const OP_EMPTY = "Empty" as const

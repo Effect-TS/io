@@ -1,9 +1,9 @@
 import * as supervisor from "@effect/io/internal_effect_untraced/supervisor"
 import type * as Supervisor from "@effect/io/Supervisor"
+import { pipe } from "@fp-ts/core/Function"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Differ from "@fp-ts/data/Differ"
 import * as Equal from "@fp-ts/data/Equal"
-import { pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
 
 /** @internal */

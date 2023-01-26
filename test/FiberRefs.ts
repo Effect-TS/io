@@ -6,9 +6,9 @@ import * as FiberRef from "@effect/io/FiberRef"
 import * as FiberRefs from "@effect/io/FiberRefs"
 import * as Queue from "@effect/io/Queue"
 import * as it from "@effect/io/test/utils/extend"
-import { pipe } from "@fp-ts/data/Function"
+import { pipe } from "@fp-ts/core/Function"
+import * as Option from "@fp-ts/core/Option"
 import * as HashMap from "@fp-ts/data/HashMap"
-import * as Option from "@fp-ts/data/Option"
 import { assert, describe } from "vitest"
 
 describe.concurrent("FiberRefs", () => {

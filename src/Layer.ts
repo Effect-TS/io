@@ -23,8 +23,8 @@ import * as internal from "@effect/io/internal_effect_untraced/layer"
 import type * as Runtime from "@effect/io/Runtime"
 import type * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"
+import type { LazyArg } from "@fp-ts/core/Function"
 import type * as Context from "@fp-ts/data/Context"
-import type { LazyArg } from "@fp-ts/data/Function"
 
 /**
  * @since 1.0.0

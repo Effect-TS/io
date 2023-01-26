@@ -1,6 +1,6 @@
 import * as Debug from "@effect/io/Debug"
 import type * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
-import type { LazyArg } from "@fp-ts/data/Function"
+import type { LazyArg } from "@fp-ts/core/Function"
 
 /** @internal */
 export const OP_SEQUENTIAL = "Sequential" as const

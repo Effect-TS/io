@@ -3,9 +3,9 @@ import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import * as FiberId from "@effect/io/Fiber/Id"
 import * as it from "@effect/io/test/utils/extend"
-import * as Either from "@fp-ts/data/Either"
-import { identity, pipe } from "@fp-ts/data/Function"
-import * as Option from "@fp-ts/data/Option"
+import * as Either from "@fp-ts/core/Either"
+import { identity, pipe } from "@fp-ts/core/Function"
+import * as Option from "@fp-ts/core/Option"
 import { assert, describe } from "vitest"
 
 const ExampleError = new Error("Oh noes!")
@@ -31,7 +31,7 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("getOrFail - make a task from an empty option", () =>
     Effect.gen(function*($) {
-      const result = yield* $(Effect.exit(Effect.getOrFail(Option.none)))
+      const result = yield* $(Effect.exit(Effect.getOrFail(Option.none())))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(Cause.NoSuchElementException()))
     }))
   it.effect("getOrFailDiscard - basic option test", () =>
@@ -43,7 +43,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const result = yield* $(
         pipe(
-          Effect.getOrFailDiscard(Option.none),
+          Effect.getOrFailDiscard(Option.none()),
           Effect.catchAll(() => Effect.succeed("controlling unit side-effect"))
         )
       )
@@ -57,7 +57,7 @@ describe.concurrent("Effect", () => {
   it.effect("head - on empty list", () =>
     Effect.gen(function*($) {
       const result = yield* $(pipe(Effect.succeed([] as ReadonlyArray<number>), Effect.head, Effect.either))
-      assert.deepStrictEqual(result, Either.left(Option.none))
+      assert.deepStrictEqual(result, Either.left(Option.none()))
     }))
   it.effect("head - on failure", () =>
     Effect.gen(function*($) {
@@ -102,11 +102,11 @@ describe.concurrent("Effect", () => {
   it.effect("none - on Some fails with None", () =>
     Effect.gen(function*($) {
       const result = yield* $(Effect.exit(Effect.none(Effect.succeed(Option.some(1)))))
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(Option.none))
+      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(Option.none()))
     }))
   it.effect("none - on None succeeds with undefined", () =>
     Effect.gen(function*($) {
-      const result = yield* $(Effect.none(Effect.succeed(Option.none)))
+      const result = yield* $(Effect.none(Effect.succeed(Option.none())))
       assert.isUndefined(result)
     }))
   it.effect("none - fails with Some(ex) when effect fails with ex", () =>
@@ -117,7 +117,7 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("noneOrFail - on None succeeds with Unit", () =>
     Effect.gen(function*($) {
-      const result = yield* $(Effect.noneOrFail(Option.none))
+      const result = yield* $(Effect.noneOrFail(Option.none()))
       assert.isUndefined(result)
     }))
   it.effect("noneOrFail - on Some fails", () =>
@@ -127,7 +127,7 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("noneOrFailWith - on None succeeds with Unit", () =>
     Effect.gen(function*($) {
-      const result = yield* $(Effect.noneOrFailWith(Option.none, identity))
+      const result = yield* $(Effect.noneOrFailWith(Option.none(), identity))
       assert.isUndefined(result)
     }))
   it.effect("noneOrFailWith - on Some fails", () =>
@@ -145,7 +145,7 @@ describe.concurrent("Effect", () => {
   it.effect("option - return failure as None", () =>
     Effect.gen(function*($) {
       const result = yield* $(Effect.option(Effect.fail(123)))
-      assert.deepStrictEqual(result, Option.none)
+      assert.deepStrictEqual(result, Option.none())
     }))
   it.effect("option - not catch throwable", () =>
     Effect.gen(function*($) {
@@ -155,7 +155,7 @@ describe.concurrent("Effect", () => {
   it.effect("option - catch throwable after sandboxing", () =>
     Effect.gen(function*($) {
       const result = yield* $(Effect.option(Effect.sandbox(Effect.die(ExampleError))))
-      assert.deepStrictEqual(result, Option.none)
+      assert.deepStrictEqual(result, Option.none())
     }))
   it.effect("right - on Right value", () =>
     Effect.gen(function*($) {
@@ -179,8 +179,8 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("some - fails on None", () =>
     Effect.gen(function*($) {
-      const result = yield* $(Effect.exit(Effect.some(Effect.succeed(Option.none))))
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(Option.none))
+      const result = yield* $(Effect.exit(Effect.some(Effect.succeed(Option.none()))))
+      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(Option.none()))
     }))
   it.effect("some - fails when given an exception", () =>
     Effect.gen(function*($) {
@@ -195,7 +195,7 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("someOrElse - falls back to the default value if None", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(Effect.succeed(Option.none), Effect.someOrElse(() => 42)))
+      const result = yield* $(pipe(Effect.succeed(Option.none()), Effect.someOrElse(() => 42)))
       assert.strictEqual(result, 42)
     }))
   it.effect("someOrElse - does not change failed state", () =>
@@ -210,7 +210,7 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("someOrElseEffect - falls back to the default effect if None", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(Effect.succeed(Option.none), Effect.someOrElseEffect(() => Effect.succeed(42))))
+      const result = yield* $(pipe(Effect.succeed(Option.none()), Effect.someOrElseEffect(() => Effect.succeed(42))))
       assert.strictEqual(result, 42)
     }))
   it.effect("someOrElseEffect - does not change failed state", () =>
@@ -227,7 +227,7 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("someOrFail - fails when given a None", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(Effect.succeed(Option.none), Effect.someOrFail(() => ExampleError), Effect.exit))
+      const result = yield* $(pipe(Effect.succeed(Option.none()), Effect.someOrFail(() => ExampleError), Effect.exit))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(ExampleError))
     }))
   it.effect("someOrFailException - extracts the optional value", () =>
@@ -237,7 +237,7 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("someOrFailException - fails when given a None", () =>
     Effect.gen(function*($) {
-      const result = yield* $(Effect.exit(Effect.someOrFailException(Effect.succeed(Option.none))))
+      const result = yield* $(Effect.exit(Effect.someOrFailException(Effect.succeed(Option.none()))))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(Cause.NoSuchElementException()))
     }))
   it.effect("unleft - should handle successes with right", () =>
@@ -289,8 +289,8 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("unsome - succeeds with None given None error", () =>
     Effect.gen(function*($) {
-      const result = yield* $(Effect.unsome(Effect.fail(Option.none)))
-      assert.deepStrictEqual(result, Option.none)
+      const result = yield* $(Effect.unsome(Effect.fail(Option.none())))
+      assert.deepStrictEqual(result, Option.none())
     }))
   it.effect("unsome - succeeds with Some given a value", () =>
     Effect.gen(function*($) {

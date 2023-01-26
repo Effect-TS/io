@@ -2,7 +2,7 @@ import * as Effect from "@effect/io/Effect"
 import * as FiberRef from "@effect/io/FiberRef"
 import * as FiberRefs from "@effect/io/FiberRefs"
 import * as Logger from "@effect/io/Logger"
-import { pipe } from "@fp-ts/data/Function"
+import { pipe } from "@fp-ts/core/Function"
 
 type LogMeta = Record<string, string>
 

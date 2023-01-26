@@ -4,9 +4,9 @@ import * as Exit from "@effect/io/Exit"
 import * as Fiber from "@effect/io/Fiber"
 import * as TestClock from "@effect/io/internal_effect_untraced/testing/testClock"
 import * as it from "@effect/io/test/utils/extend"
+import { constFalse, pipe } from "@fp-ts/core/Function"
+import * as Option from "@fp-ts/core/Option"
 import * as Duration from "@fp-ts/data/Duration"
-import { constFalse, pipe } from "@fp-ts/data/Function"
-import * as Option from "@fp-ts/data/Option"
 import { assert, describe } from "vitest"
 
 describe.concurrent("Effect", () => {
@@ -41,7 +41,7 @@ describe.concurrent("Effect", () => {
       const result = yield* $(
         pipe(Effect.unit(), Effect.uninterruptible, Effect.forever, Effect.timeout(Duration.millis(10)))
       )
-      assert.deepStrictEqual(result, Option.none)
+      assert.deepStrictEqual(result, Option.none())
     }))
   it.effect("timeout in uninterruptible region", () =>
     Effect.gen(function*($) {
@@ -66,6 +66,6 @@ describe.concurrent("Effect", () => {
       )
       yield* $(TestClock.adjust(Duration.millis(100)))
       const result = yield* $(Fiber.join(fiber))
-      assert.deepStrictEqual(result, Option.none)
+      assert.deepStrictEqual(result, Option.none())
     }))
 })

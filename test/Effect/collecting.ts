@@ -2,8 +2,8 @@ import * as Cause from "@effect/io/Cause"
 import * as Effect from "@effect/io/Effect"
 import * as Ref from "@effect/io/Ref"
 import * as it from "@effect/io/test/utils/extend"
-import { pipe } from "@fp-ts/data/Function"
-import * as Option from "@fp-ts/data/Option"
+import { pipe } from "@fp-ts/core/Function"
+import * as Option from "@fp-ts/core/Option"
 import { assert, describe } from "vitest"
 
 describe.concurrent("Effect", () => {
@@ -41,7 +41,7 @@ describe.concurrent("Effect", () => {
         Effect.collectFirst((n) =>
           n > 5 ?
             Effect.succeed(Option.some(n)) :
-            Effect.succeed(Option.none)
+            Effect.succeed(Option.none())
         )
       ))
       assert.deepStrictEqual(result, Option.some(6))

@@ -9,8 +9,8 @@ import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import type * as FiberRefs from "@effect/io/FiberRefs"
 import * as internal from "@effect/io/internal_effect_untraced/runtime"
 import type { Scheduler } from "@effect/io/Scheduler"
+import type { Either } from "@fp-ts/core/Either"
 import type * as Context from "@fp-ts/data/Context"
-import type { Either } from "@fp-ts/data/Either"
 
 /**
  * @since 1.0.0

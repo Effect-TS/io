@@ -7,9 +7,9 @@ import type * as Exit from "@effect/io/Exit"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as internal from "@effect/io/internal_effect_untraced/deferred"
-import type { LazyArg } from "@fp-ts/data/Function"
+import type { LazyArg } from "@fp-ts/core/Function"
+import type * as Option from "@fp-ts/core/Option"
 import type * as MutableRef from "@fp-ts/data/MutableRef"
-import type * as Option from "@fp-ts/data/Option"
 
 /**
  * @since 1.0.0

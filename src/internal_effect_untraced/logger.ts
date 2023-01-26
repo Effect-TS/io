@@ -9,11 +9,11 @@ import type * as Logger from "@effect/io/Logger"
 import type * as LogLevel from "@effect/io/Logger/Level"
 import * as LogSpan from "@effect/io/Logger/Span"
 import type { Runtime } from "@effect/io/Runtime"
+import type { LazyArg } from "@fp-ts/core/Function"
+import { constVoid, pipe } from "@fp-ts/core/Function"
+import * as Option from "@fp-ts/core/Option"
 import * as Chunk from "@fp-ts/data/Chunk"
-import type { LazyArg } from "@fp-ts/data/Function"
-import { constVoid, pipe } from "@fp-ts/data/Function"
 import * as HashMap from "@fp-ts/data/HashMap"
-import * as Option from "@fp-ts/data/Option"
 
 /** @internal */
 const LoggerSymbolKey = "@effect/io/Logger"
@@ -230,7 +230,7 @@ export const filterLogLevel = Debug.untracedDual<
               runtime
             )
           )
-          : Option.none
+          : Option.none()
     ))
 
 /** @internal */

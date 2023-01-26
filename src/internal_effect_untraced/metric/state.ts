@@ -1,10 +1,10 @@
 import type * as MetricState from "@effect/io/Metric/State"
+import { pipe } from "@fp-ts/core/Function"
+import type * as Option from "@fp-ts/core/Option"
 import type * as Chunk from "@fp-ts/data/Chunk"
 import * as Equal from "@fp-ts/data/Equal"
-import { pipe } from "@fp-ts/data/Function"
 import * as Hash from "@fp-ts/data/Hash"
 import type * as HashMap from "@fp-ts/data/HashMap"
-import type * as Option from "@fp-ts/data/Option"
 
 /** @internal */
 const MetricStateSymbolKey = "@effect/io/Metric/State"

@@ -16,10 +16,10 @@ import * as _scheduler from "@effect/io/internal_effect_untraced/scheduler"
 import * as _supervisor from "@effect/io/internal_effect_untraced/supervisor"
 import type * as Runtime from "@effect/io/Runtime"
 import type * as Scheduler from "@effect/io/Scheduler"
+import type { Either } from "@fp-ts/core/Either"
+import { identity, pipe } from "@fp-ts/core/Function"
+import * as Option from "@fp-ts/core/Option"
 import * as Context from "@fp-ts/data/Context"
-import type { Either } from "@fp-ts/data/Either"
-import { identity, pipe } from "@fp-ts/data/Function"
-import * as Option from "@fp-ts/data/Option"
 
 /** @internal */
 export class AsyncFiber<E, A> implements Runtime.AsyncFiber<E, A> {
@@ -72,7 +72,7 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
     const supervisor = fiberRuntime.getSupervisor()
 
     if (supervisor !== _supervisor.none) {
-      supervisor.onStart(this.context, effect, Option.none, fiberRuntime)
+      supervisor.onStart(this.context, effect, Option.none(), fiberRuntime)
 
       fiberRuntime.unsafeAddObserver((exit) => supervisor.onEnd(exit, fiberRuntime))
     }

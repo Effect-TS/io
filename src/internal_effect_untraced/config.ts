@@ -6,14 +6,14 @@ import * as configError from "@effect/io/internal_effect_untraced/configError"
 import * as configSecret from "@effect/io/internal_effect_untraced/configSecret"
 import * as OpCodes from "@effect/io/internal_effect_untraced/opCodes/config"
 import type { EnforceNonEmptyRecord, NonEmptyArrayConfig, TupleConfig } from "@effect/io/internal_effect_untraced/types"
+import * as Either from "@fp-ts/core/Either"
+import type { LazyArg } from "@fp-ts/core/Function"
+import { constTrue, pipe } from "@fp-ts/core/Function"
+import * as Option from "@fp-ts/core/Option"
+import type { Predicate, Refinement } from "@fp-ts/core/Predicate"
 import * as Chunk from "@fp-ts/data/Chunk"
-import * as Either from "@fp-ts/data/Either"
-import type { LazyArg } from "@fp-ts/data/Function"
-import { constTrue, pipe } from "@fp-ts/data/Function"
 import type * as HashMap from "@fp-ts/data/HashMap"
 import * as HashSet from "@fp-ts/data/HashSet"
-import * as Option from "@fp-ts/data/Option"
-import type { Predicate, Refinement } from "@fp-ts/data/Predicate"
 
 /** @internal */
 const ConfigSymbolKey = "@effect/io/Config"
@@ -358,7 +358,7 @@ export const optional = <A>(self: Config.Config<A>): Config.Config<Option.Option
   return pipe(
     self,
     map(Option.some),
-    orElseIf(() => succeed(Option.none), ConfigError.isMissingDataOnly)
+    orElseIf(() => succeed(Option.none()), ConfigError.isMissingDataOnly)
   )
 }
 

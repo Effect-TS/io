@@ -3,7 +3,7 @@
  */
 import type * as Effect from "@effect/io/Effect"
 import * as internal from "@effect/io/internal_effect_untraced/ref"
-import type * as Option from "@fp-ts/data/Option"
+import type * as Option from "@fp-ts/core/Option"
 
 /**
  * @since 1.0.0

@@ -5,7 +5,7 @@ import * as layer from "@effect/io/internal_effect_untraced/layer"
 import * as TestClock from "@effect/io/internal_effect_untraced/testing/testClock"
 import * as TestServices from "@effect/io/internal_effect_untraced/testing/testServices"
 import type * as Layer from "@effect/io/Layer"
-import { pipe } from "@fp-ts/data/Function"
+import { pipe } from "@fp-ts/core/Function"
 
 /** @internal */
 export const live: Layer.Layer<DefaultServices.DefaultServices, never, TestServices.TestServices> = pipe(

@@ -1,6 +1,6 @@
 import type * as MetricLabel from "@effect/io/Metric/Label"
+import { pipe } from "@fp-ts/core/Function"
 import * as Equal from "@fp-ts/data/Equal"
-import { pipe } from "@fp-ts/data/Function"
 import * as Hash from "@fp-ts/data/Hash"
 
 /** @internal */

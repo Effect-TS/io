@@ -4,11 +4,11 @@ import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRef from "@effect/io/FiberRef"
 import type * as FiberRefs from "@effect/io/FiberRefs"
 import * as core from "@effect/io/internal_effect_untraced/core"
+import { pipe } from "@fp-ts/core/Function"
+import * as Option from "@fp-ts/core/Option"
+import * as Arr from "@fp-ts/core/ReadonlyArray"
 import * as Equal from "@fp-ts/data/Equal"
-import { pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
-import * as Option from "@fp-ts/data/Option"
-import * as Arr from "@fp-ts/data/ReadonlyArray"
 
 /** @internal */
 export function unsafeMake(
@@ -168,7 +168,7 @@ export const get = Debug.dual<
   <A>(fiberRef: FiberRef.FiberRef<A>) => (self: FiberRefs.FiberRefs) => Option.Option<A>
 >(2, (self, fiberRef) => {
   if (!self.locals.has(fiberRef)) {
-    return Option.none
+    return Option.none()
   }
   return Option.some(Arr.headNonEmpty(self.locals.get(fiberRef)!)[1])
 })

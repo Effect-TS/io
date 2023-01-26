@@ -25,16 +25,16 @@ import type * as Metric from "@effect/io/Metric"
 import type * as MetricLabel from "@effect/io/Metric/Label"
 import * as Random from "@effect/io/Random"
 import * as Ref from "@effect/io/Ref"
+import * as Either from "@fp-ts/core/Either"
+import type { LazyArg } from "@fp-ts/core/Function"
+import { constFalse, constTrue, constVoid, identity, pipe } from "@fp-ts/core/Function"
+import * as Option from "@fp-ts/core/Option"
+import type { Predicate, Refinement } from "@fp-ts/core/Predicate"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Context from "@fp-ts/data/Context"
 import * as Duration from "@fp-ts/data/Duration"
-import * as Either from "@fp-ts/data/Either"
-import type { LazyArg } from "@fp-ts/data/Function"
-import { constFalse, constTrue, constVoid, identity, pipe } from "@fp-ts/data/Function"
 import * as HashMap from "@fp-ts/data/HashMap"
 import * as HashSet from "@fp-ts/data/HashSet"
-import * as Option from "@fp-ts/data/Option"
-import type { Predicate, Refinement } from "@fp-ts/data/Predicate"
 
 /* @internal */
 export const absolve = Debug.methodWithTrace((trace) =>
@@ -350,7 +350,7 @@ export const collectAllSuccesses = Debug.methodWithTrace((trace) =>
   ): Effect.Effect<R, never, Chunk.Chunk<A>> =>
     pipe(
       Array.from(as).map(core.exit),
-      collectAllWith((exit) => (Exit.isSuccess(exit) ? Option.some(exit.value) : Option.none))
+      collectAllWith((exit) => (Exit.isSuccess(exit) ? Option.some(exit.value) : Option.none()))
     ).traced(trace)
 )
 
@@ -383,7 +383,7 @@ const collectFirstLoop = <R, E, A, B>(
 ): Effect.Effect<R, E, Option.Option<B>> => {
   const next = restore(() => iterator.next())()
   return next.done
-    ? core.succeed(Option.none)
+    ? core.succeed(Option.none())
     : pipe(
       f(next.value),
       core.flatMap((option) => {
@@ -906,7 +906,7 @@ export const find = Debug.dualWithTrace<
       if (!next.done) {
         return findLoop(restore, iterator, restore(f), next.value)
       }
-      return core.succeed(Option.none)
+      return core.succeed(Option.none())
     }).traced(trace))
 
 const findLoop = <A, R, E>(
@@ -923,7 +923,7 @@ const findLoop = <A, R, E>(
     if (!next.done) {
       return findLoop(restore, iterator, f, next.value)
     }
-    return core.succeed(Option.none)
+    return core.succeed(Option.none())
   })
 
 /* @internal */
@@ -1021,7 +1021,7 @@ export const forEachEffect = Debug.dualWithTrace<
   (self, f) =>
     core.matchCauseEffect(
       self,
-      () => core.succeed(Option.none),
+      () => core.succeed(Option.none()),
       (a) => core.map(restore(f)(a), Option.some)
     ).traced(trace))
 
@@ -1035,7 +1035,7 @@ export const forEachOption = Debug.dualWithTrace<
   (option, f) => {
     switch (option._tag) {
       case "None": {
-        return core.succeed(Option.none).traced(trace)
+        return core.succeed(Option.none()).traced(trace)
       }
       case "Some": {
         return core.map(restore(f)(option.value), Option.some).traced(trace)
@@ -1169,7 +1169,7 @@ export const head = Debug.methodWithTrace((trace, restore) =>
           const iterator = restore(() => as[Symbol.iterator]())()
           const next = restore(() => iterator.next())()
           if (next.done) {
-            return core.fail(Option.none)
+            return core.fail(Option.none())
           }
           return core.succeed(next.value)
         }
@@ -1279,7 +1279,7 @@ const someDebug = Option.some(LogLevel.Debug)
 export const log = Debug.methodWithTrace((trace) =>
   (message: string): Effect.Effect<never, never, void> =>
     core.withFiberRuntime<never, never, void>((fiberState) => {
-      fiberState.log(message, internalCause.empty, Option.none)
+      fiberState.log(message, internalCause.empty, Option.none())
       return core.unit()
     }).traced(trace)
 )
@@ -1691,7 +1691,7 @@ export const none = Debug.methodWithTrace((trace) =>
               return core.unit()
             }
             case "Some": {
-              return core.fail(Option.none)
+              return core.fail(Option.none())
             }
           }
         }
@@ -1729,7 +1729,7 @@ export const option = Debug.methodWithTrace((trace) =>
     pipe(
       self,
       core.matchEffect(
-        () => core.succeed(Option.none),
+        () => core.succeed(Option.none()),
         (a) => core.succeed(Option.some(a))
       )
     ).traced(trace)
@@ -2204,7 +2204,7 @@ export const succeedLeft = Debug.methodWithTrace((trace) =>
 
 /* @internal */
 export const succeedNone = Debug.methodWithTrace((trace) =>
-  (): Effect.Effect<never, never, Option.Option<never>> => core.succeed(Option.none).traced(trace)
+  (): Effect.Effect<never, never, Option.Option<never>> => core.succeed(Option.none()).traced(trace)
 )
 
 /* @internal */
@@ -2689,7 +2689,7 @@ export const unrefineWith = Debug.dualWithTrace<
           internalCause.find((cause) =>
             internalCause.isDieType(cause) ?
               restore(pf)(cause.defect) :
-              Option.none
+              Option.none()
           )
         )
         switch (option._tag) {
@@ -2838,7 +2838,7 @@ export const when = Debug.dualWithTrace<
     core.suspendSucceed(() =>
       restore(predicate)() ?
         core.map(self, Option.some) :
-        core.succeed(Option.none)
+        core.succeed(Option.none())
     ).traced(trace))
 
 /* @internal */
@@ -2884,7 +2884,7 @@ export const whenFiberRef = Debug.dualWithTrace<
       core.flatMap(core.fiberRefGet(fiberRef), (s) =>
         restore(predicate)(s) ?
           core.map(self, (a) => [s, Option.some(a)] as const) :
-          core.succeed<readonly [S, Option.Option<A>]>([s, Option.none])).traced(trace)
+          core.succeed<readonly [S, Option.Option<A>]>([s, Option.none()])).traced(trace)
 )
 
 /* @internal */
@@ -2905,7 +2905,7 @@ export const whenRef = Debug.dualWithTrace<
       core.flatMap(Ref.get(ref), (s) =>
         restore(predicate)(s) ?
           core.map(self, (a) => [s, Option.some(a)] as const) :
-          core.succeed<readonly [S, Option.Option<A>]>([s, Option.none])).traced(trace)
+          core.succeed<readonly [S, Option.Option<A>]>([s, Option.none()])).traced(trace)
 )
 
 /* @internal */

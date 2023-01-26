@@ -2,7 +2,7 @@ import * as Effect from "@effect/io/Effect"
 import * as Queue from "@effect/io/Queue"
 import * as Ref from "@effect/io/Ref"
 import * as it from "@effect/io/test/utils/extend"
-import { constFalse, constTrue, pipe } from "@fp-ts/data/Function"
+import { constFalse, constTrue, pipe } from "@fp-ts/core/Function"
 import { assert, describe } from "vitest"
 
 describe.concurrent("Effect", () => {

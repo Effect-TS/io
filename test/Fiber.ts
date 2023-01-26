@@ -9,10 +9,10 @@ import * as Queue from "@effect/io/Queue"
 import * as Ref from "@effect/io/Ref"
 import * as it from "@effect/io/test/utils/extend"
 import { withLatch } from "@effect/io/test/utils/latch"
+import { constVoid, identity, pipe } from "@fp-ts/core/Function"
+import * as Option from "@fp-ts/core/Option"
 import * as Chunk from "@fp-ts/data/Chunk"
-import { constVoid, identity, pipe } from "@fp-ts/data/Function"
 import * as HashSet from "@fp-ts/data/HashSet"
-import * as Option from "@fp-ts/data/Option"
 import { assert, describe } from "vitest"
 
 const initial = "initial"
@@ -29,7 +29,7 @@ describe.concurrent("Fiber", () => {
         Effect.continueOrFail(constVoid, (status) =>
           FiberStatus.isSuspended(status)
             ? Option.some(status.blockingOn)
-            : Option.none),
+            : Option.none()),
         Effect.eventually
       ))
       assert.deepStrictEqual(blockingOn, Fiber.id(fiber1))
@@ -41,7 +41,7 @@ describe.concurrent("Fiber", () => {
         Fiber.status(fiber),
         Effect.continueOrFail(
           void 0 as void,
-          (status) => FiberStatus.isSuspended(status) ? Option.some(status.blockingOn) : Option.none
+          (status) => FiberStatus.isSuspended(status) ? Option.some(status.blockingOn) : Option.none()
         ),
         Effect.eventually
       ))

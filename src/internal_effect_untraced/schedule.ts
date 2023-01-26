@@ -11,15 +11,15 @@ import type * as Schedule from "@effect/io/Schedule"
 import * as ScheduleDecision from "@effect/io/Schedule/Decision"
 import * as Interval from "@effect/io/Schedule/Interval"
 import * as Intervals from "@effect/io/Schedule/Intervals"
+import * as Either from "@fp-ts/core/Either"
+import type { LazyArg } from "@fp-ts/core/Function"
+import { constVoid, pipe } from "@fp-ts/core/Function"
+import * as Option from "@fp-ts/core/Option"
+import type { Predicate } from "@fp-ts/core/Predicate"
 import * as Chunk from "@fp-ts/data/Chunk"
 import * as Context from "@fp-ts/data/Context"
 import * as Duration from "@fp-ts/data/Duration"
-import * as Either from "@fp-ts/data/Either"
 import * as Equal from "@fp-ts/data/Equal"
-import type { LazyArg } from "@fp-ts/data/Function"
-import { constVoid, pipe } from "@fp-ts/data/Function"
-import * as Option from "@fp-ts/data/Option"
-import type { Predicate } from "@fp-ts/data/Predicate"
 
 /** @internal */
 const ScheduleSymbolKey = "@effect/io/Schedule"
@@ -101,7 +101,7 @@ class ScheduleDriverImpl<Env, In, Out> implements Schedule.ScheduleDriver<Env, I
     return Debug.bodyWithTrace((trace) =>
       Ref.set(
         this.ref,
-        [Option.none, this.schedule.initial]
+        [Option.none(), this.schedule.initial]
       ).traced(trace)
     )
   }
@@ -120,7 +120,7 @@ class ScheduleDriverImpl<Env, In, Out> implements Schedule.ScheduleDriver<Env, I
                   ScheduleDecision.isDone(decision) ?
                     pipe(
                       Ref.set(this.ref, [Option.some(out), state] as const),
-                      core.zipRight(core.fail(Option.none))
+                      core.zipRight(core.fail(Option.none()))
                     ) :
                     pipe(
                       Ref.set(this.ref, [Option.some(out), state] as const),
@@ -673,7 +673,7 @@ export const driver = Debug.methodWithTrace((trace) =>
     self: Schedule.Schedule<Env, In, Out>
   ): Effect.Effect<never, never, Schedule.ScheduleDriver<Env, In, Out>> =>
     pipe(
-      Ref.make<readonly [Option.Option<Out>, any]>([Option.none, self.initial]),
+      Ref.make<readonly [Option.Option<Out>, any]>([Option.none(), self.initial]),
       core.map((ref) => new ScheduleDriverImpl(self, ref))
     ).traced(trace)
 )
@@ -732,7 +732,7 @@ export const eitherWith = Debug.untracedDual<
 /** @internal */
 export const elapsed = Debug.untracedMethod(() =>
   (): Schedule.Schedule<never, unknown, Duration.Duration> =>
-    makeWithState(Option.none as Option.Option<number>, (now, _, state) => {
+    makeWithState(Option.none() as Option.Option<number>, (now, _, state) => {
       switch (state._tag) {
         case "None": {
           return core.succeed(
@@ -805,7 +805,7 @@ export const fibonacci = Debug.untracedMethod(() =>
 export const fixed = Debug.untracedMethod(() =>
   (interval: Duration.Duration): Schedule.Schedule<never, unknown, number> =>
     makeWithState(
-      [Option.none, 0] as readonly [Option.Option<readonly [number, number]>, number],
+      [Option.none(), 0] as readonly [Option.Option<readonly [number, number]>, number],
       (now, _, [option, n]) =>
         core.sync(() => {
           const intervalMillis = interval.millis
@@ -1877,7 +1877,7 @@ export const windowed = Debug.untracedMethod(() =>
   (interval: Duration.Duration): Schedule.Schedule<never, unknown, number> => {
     const millis = interval.millis
     return makeWithState(
-      [Option.none, 0] as readonly [Option.Option<number>, number],
+      [Option.none(), 0] as readonly [Option.Option<number>, number],
       (now, _, [option, n]) => {
         switch (option._tag) {
           case "None": {
@@ -2164,7 +2164,7 @@ export const repeatOrElseEither_Effect = Debug.dualWithTrace<
     core.flatMap(driver(schedule), (driver) =>
       core.matchEffect(
         self,
-        (error) => pipe(restore(orElse)(error, Option.none), core.map(Either.left)),
+        (error) => pipe(restore(orElse)(error, Option.none()), core.map(Either.left)),
         (value) => repeatOrElseEitherEffectLoop(self, driver, restore(orElse), value)
       )).traced(trace))
 

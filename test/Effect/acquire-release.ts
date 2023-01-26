@@ -3,9 +3,9 @@ import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import * as Ref from "@effect/io/Ref"
 import * as it from "@effect/io/test/utils/extend"
+import { pipe } from "@fp-ts/core/Function"
 import * as Chunk from "@fp-ts/data/Chunk"
 import { equals } from "@fp-ts/data/Equal"
-import { pipe } from "@fp-ts/data/Function"
 import { assert, describe } from "vitest"
 
 describe.concurrent("Effect", () => {
