@@ -121,7 +121,7 @@ export const fromEnv = Debug.untracedMethod(() =>
       core.sync(() => {
         const current = getEnv()
         const keys = Object.keys(current)
-        const keyPaths = Array.from(keys).map(unmakePathString)
+        const keyPaths = Array.from(keys).map((value) => unmakePathString(value.toUpperCase()))
         const filteredKeyPaths = keyPaths.filter((keyPath) => {
           for (let i = 0; i < path.length; i++) {
             const pathComponent = pipe(path, Chunk.unsafeGet(i))
