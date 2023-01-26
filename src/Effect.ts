@@ -4280,10 +4280,17 @@ export const tryCatchPromiseInterrupt: <E, A>(
  * @since 1.0.0
  * @category alternatives
  */
-export const tryOrElse: <R2, E2, A2, A, R3, E3, A3>(
-  that: LazyArg<Effect<R2, E2, A2>>,
-  onSuccess: (a: A) => Effect<R3, E3, A3>
-) => <R, E>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2 | E3, A2 | A3> = core.tryOrElse
+export const tryOrElse: {
+  <R, E, A, R2, E2, A2, R3, E3, A3>(
+    self: Effect<R, E, A>,
+    that: LazyArg<Effect<R2, E2, A2>>,
+    onSuccess: (a: A) => Effect<R3, E3, A3>
+  ): Effect<R | R2 | R3, E2 | E3, A2 | A3>
+  <R2, E2, A2, A, R3, E3, A3>(
+    that: LazyArg<Effect<R2, E2, A2>>,
+    onSuccess: (a: A) => Effect<R3, E3, A3>
+  ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2 | E3, A2 | A3>
+} = core.tryOrElse
 
 /**
  * Create an `Effect` that when executed will construct `promise` and wait for
