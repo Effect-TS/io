@@ -35,16 +35,18 @@ export const restoreOff: Restore = (body): any =>
     }
   }
 
+const hasProcessEnv = typeof process !== "undefined" && process.env
+
 /** @internal */
 export const runtimeDebug: Debug = {
   minumumLogLevel:
-    process && process.env && process.env["EFFECT_LOG_LEVEL"] && levels.includes(process.env["EFFECT_LOG_LEVEL"]) ?
+    hasProcessEnv && process.env["EFFECT_LOG_LEVEL"] && levels.includes(process.env["EFFECT_LOG_LEVEL"]) ?
       process.env["EFFECT_LOG_LEVEL"] as Debug["minumumLogLevel"] :
       "Info",
-  traceStackLimit: process && process.env && process.env["EFFECT_TRACING_STACK_LIMIT"] ?
+  traceStackLimit: hasProcessEnv && process.env["EFFECT_TRACING_STACK_LIMIT"] ?
     Number.parseInt(process.env["EFFECT_TRACING_STACK_LIMIT"]) :
     5,
-  tracingEnabled: process && process.env && process.env["EFFECT_TRACING_ENABLED"] &&
+  tracingEnabled: hasProcessEnv && process.env["EFFECT_TRACING_ENABLED"] &&
       process.env["EFFECT_TRACING_ENABLED"] === "false" ?
     false :
     true,
