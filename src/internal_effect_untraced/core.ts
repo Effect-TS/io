@@ -87,12 +87,14 @@ export type Primitive =
   | While
   | WithRuntime
   | Yield
+  | OpTraced
 
 /** @internal */
 export type Continuation =
   | OnSuccess
   | OnSuccessAndFailure
   | OnFailure
+  | OpTraced
   | While
   | RevertFlags
 
@@ -122,10 +124,8 @@ export const proto = {
   traced(this: Effect.Effect<never, never, never>, trace: Debug.Trace): Effect.Effect<never, never, never> {
     if (trace) {
       const effect = Object.create(proto)
-      effect._tag = OpCodes.OP_ON_SUCCESS_AND_FAILURE
-      effect.first = this
-      effect.failK = exitFailCause
-      effect.successK = exitSucceed
+      effect._tag = OpCodes.OP_TRACED
+      effect.self = this
       effect.trace = trace
       return effect
     }
@@ -169,6 +169,13 @@ export interface OnSuccess extends
   Op<OpCodes.OP_ON_SUCCESS, {
     readonly first: Primitive
     readonly successK: (a: unknown) => Primitive
+  }>
+{}
+
+/** @internal */
+export interface OpTraced extends
+  Op<OpCodes.OP_TRACED, {
+    readonly self: Primitive
   }>
 {}
 
@@ -355,7 +362,10 @@ export const catchAllCause = Debug.dualWithTrace<
     effect._tag = OpCodes.OP_ON_FAILURE
     effect.first = self
     effect.failK = restore(f)
-    effect.trace = trace
+    effect.trace = void 0
+    if (trace) {
+      return effect.traced(trace)
+    }
     return effect
   })
 
@@ -527,7 +537,10 @@ export const flatMap = Debug.dualWithTrace<
     effect._tag = OpCodes.OP_ON_SUCCESS
     effect.first = self
     effect.successK = restore(f)
-    effect.trace = trace
+    effect.trace = void 0
+    if (trace) {
+      return effect.traced(trace)
+    }
     return effect
   })
 
@@ -581,7 +594,10 @@ export const matchCauseEffect = Debug.dualWithTrace<
     effect.first = self
     effect.failK = restore(onFailure)
     effect.successK = restore(onSuccess)
-    effect.trace = trace
+    effect.trace = void 0
+    if (trace) {
+      return effect.traced(trace)
+    }
     return effect
   })
 
