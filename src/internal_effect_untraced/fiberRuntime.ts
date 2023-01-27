@@ -102,7 +102,7 @@ const contOpSuccess = {
     cont: core.OnSuccess,
     value: unknown
   ) => {
-    self.onExecute(cont)
+    self._lastOpTrace = cont.trace
     return cont.successK(value)
   },
   [OpCodes.OP_ON_SUCCESS_AND_FAILURE]: (
@@ -110,7 +110,7 @@ const contOpSuccess = {
     cont: core.OnSuccessAndFailure,
     value: unknown
   ) => {
-    self.onExecute(cont)
+    self._lastOpTrace = cont.trace
     return cont.successK(value)
   },
   [OpCodes.OP_REVERT_FLAGS]: (
@@ -133,7 +133,7 @@ const contOpSuccess = {
     cont.process(value)
     if (cont.check()) {
       self.pushStack(cont)
-      self.onExecute(cont)
+      self._lastOpTrace = cont.trace
       return cont.body()
     } else {
       return core.unit()
@@ -206,7 +206,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   private _observers = new Array<(exit: Exit.Exit<E, A>) => void>()
   private _running = false
   private _stack: Array<core.Continuation> = []
-  private _lastOpTrace: Debug.Trace | undefined
+  public _lastOpTrace: Debug.Trace | undefined
   private _asyncInterruptor: ((effect: Effect.Effect<any, any, any>) => any) | null = null
   private _asyncBlockingOn: FiberId.FiberId | null = null
   private _exitValue: Exit.Exit<E, A> | null = null
@@ -925,7 +925,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   getNextSuccessCont() {
     let frame = this.popStack()
     while (frame) {
-      if (frame._tag !== OpCodes.OP_ON_FAILURE) {
+      if (frame._tag !== OpCodes.OP_ON_FAILURE && frame._tag !== OpCodes.OP_TRACED) {
         return frame
       }
       frame = this.popStack()
@@ -935,19 +935,15 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   getNextFailCont() {
     let frame = this.popStack()
     while (frame) {
-      if (frame._tag !== OpCodes.OP_ON_SUCCESS && frame._tag !== OpCodes.OP_WHILE) {
+      if (frame._tag !== OpCodes.OP_ON_SUCCESS && frame._tag !== OpCodes.OP_WHILE && frame._tag !== OpCodes.OP_TRACED) {
         return frame
       }
       frame = this.popStack()
     }
   }
 
-  onExecute(_op: core.Primitive) {
-    this._lastOpTrace = _op.trace
-  }
-
   [OpCodes.OP_SYNC](op: core.Primitive & { _tag: OpCodes.OP_SYNC }) {
-    this.onExecute(op)
+    this._lastOpTrace = op.trace
     const value = op.evaluate()
     const cont = this.getNextSuccessCont()
     if (cont !== undefined) {
@@ -963,7 +959,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   }
 
   [OpCodes.OP_SUCCESS](op: core.Primitive & { _tag: OpCodes.OP_SUCCESS }) {
-    this.onExecute(op)
+    this._lastOpTrace = op.trace
     const oldCur = op
     const cont = this.getNextSuccessCont()
     if (cont !== undefined) {
@@ -979,7 +975,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   }
 
   [OpCodes.OP_FAILURE](op: core.Primitive & { _tag: OpCodes.OP_FAILURE }) {
-    this.onExecute(op)
+    this._lastOpTrace = op.trace
     let cause = op.cause
     if (this._tracesInStack > 0 || this._lastOpTrace) {
       if (internalCause.isAnnotatedType(cause) && internalCause.isStackAnnotation(cause.annotation)) {
@@ -1020,7 +1016,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
         case OpCodes.OP_ON_FAILURE:
         case OpCodes.OP_ON_SUCCESS_AND_FAILURE: {
           if (!(_runtimeFlags.interruptible(this._runtimeFlags) && this.isInterrupted())) {
-            this.onExecute(cont)
+            this._lastOpTrace = cont.trace
             return cont.failK(cause)
           } else {
             return core.exitFailCause(internalCause.stripFailures(cause))
@@ -1044,7 +1040,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   }
 
   [OpCodes.OP_WITH_RUNTIME](op: core.Primitive & { _tag: OpCodes.OP_WITH_RUNTIME }) {
-    this.onExecute(op)
+    this._lastOpTrace = op.trace
     return op.withRuntime(
       this as FiberRuntime<unknown, unknown>,
       FiberStatus.running(this._runtimeFlags) as FiberStatus.Running
@@ -1052,7 +1048,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   }
 
   [OpCodes.OP_UPDATE_RUNTIME_FLAGS](op: core.Primitive & { _tag: OpCodes.OP_UPDATE_RUNTIME_FLAGS }) {
-    this.onExecute(op)
+    this._lastOpTrace = op.trace
     if (op.scope === undefined) {
       this.patchRuntimeFlags(this._runtimeFlags, op.update)
       return core.exitUnit()
@@ -1087,6 +1083,11 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     return op.first
   }
 
+  [OpCodes.OP_TRACED](op: core.Primitive & { _tag: OpCodes.OP_TRACED }) {
+    this.pushStack(op)
+    return op.self
+  }
+
   [OpCodes.OP_ON_FAILURE](op: core.Primitive & { _tag: OpCodes.OP_ON_FAILURE }) {
     this.pushStack(op)
     return op.first
@@ -1098,14 +1099,14 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   }
 
   [OpCodes.OP_ASYNC](op: core.Primitive & { _tag: OpCodes.OP_ASYNC }) {
-    this.onExecute(op)
+    this._lastOpTrace = op.trace
     this._asyncBlockingOn = op.blockingOn
     this.initiateAsync(this._runtimeFlags, op.register)
     throw op
   }
 
   [OpCodes.OP_YIELD](op: core.Primitive & { op: OpCodes.OP_YIELD }) {
-    this.onExecute(op)
+    this._lastOpTrace = op.trace
     throw op
   }
 
@@ -1113,7 +1114,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     const check = op.check
     const body = op.body
     if (check()) {
-      this.onExecute(op)
+      this._lastOpTrace = op.trace
       this.pushStack(op)
       return body()
     } else {
@@ -1192,6 +1193,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     while (current >= 0 && lines.length < Debug.runtimeDebug.traceStackLimit && seen < this._tracesInStack) {
       const value = this._stack[current]
       switch (value._tag) {
+        case OpCodes.OP_TRACED:
         case OpCodes.OP_ON_FAILURE:
         case OpCodes.OP_ON_SUCCESS:
         case OpCodes.OP_ON_SUCCESS_AND_FAILURE: {

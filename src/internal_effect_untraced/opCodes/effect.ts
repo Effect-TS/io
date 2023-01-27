@@ -35,6 +35,12 @@ export type OP_ON_SUCCESS_AND_FAILURE = typeof OP_ON_SUCCESS_AND_FAILURE
 export const OP_ON_SUCCESS_AND_FAILURE = "OnSuccessAndFailure" as const
 
 /** @internal */
+export type OP_TRACED = typeof OP_TRACED
+
+/** @internal */
+export const OP_TRACED = "OpTraced" as const
+
+/** @internal */
 export type OP_SUCCESS = typeof OP_SUCCESS
 
 /** @internal */
