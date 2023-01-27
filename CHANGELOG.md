@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.1.2
+
+### Patch Changes
+
+- [#218](https://github.com/Effect-TS/io/pull/218) [`0eafe57`](https://github.com/Effect-TS/io/commit/0eafe5788f1c1d064b9f8afb98b2be4279862a19) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Fix tracing of continuations
+
 ## 0.1.1
 
 ### Patch Changes
