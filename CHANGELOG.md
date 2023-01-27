@@ -1,5 +1,13 @@
 # @effect/io
 
+## 0.1.1
+
+### Patch Changes
+
+- [#206](https://github.com/Effect-TS/io/pull/206) [`6f26848`](https://github.com/Effect-TS/io/commit/6f26848f637e1993dddc8374ee9a78e18c0d921c) Thanks [@tim-smart](https://github.com/tim-smart)! - add Config.Wrap and Config.unwrap
+
+- [#217](https://github.com/Effect-TS/io/pull/217) [`4a0e706`](https://github.com/Effect-TS/io/commit/4a0e70659a9eedbbe769459896e1ac17688f5ec5) Thanks [@patroza](https://github.com/patroza)! - Fix 'process' usage inside debug
+
 ## 0.1.0
 
 ### Minor Changes
