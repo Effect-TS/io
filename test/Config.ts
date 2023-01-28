@@ -139,7 +139,7 @@ describe.concurrent("Config", () => {
     it.effect("unwrap correctly builds config", () =>
       Effect.gen(function*($) {
         const wrapper = (
-          _: Config.Wrap<{
+          _: Config.Config.Wrap<{
             key1: number
             list: ReadonlyArray<string>
             nested: {

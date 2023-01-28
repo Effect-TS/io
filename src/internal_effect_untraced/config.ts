@@ -467,7 +467,7 @@ export const tuple = <T extends NonEmptyArrayConfig>(...tuple: T): Config.Config
 /**
  * @internal
  */
-export const unwrap = <A>(wrapped: Config.Wrap<A>): Config.Config<A> => {
+export const unwrap = <A>(wrapped: Config.Config.Wrap<A>): Config.Config<A> => {
   if (
     typeof wrapped === "object" &&
     wrapped != null &&
