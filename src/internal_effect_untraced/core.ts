@@ -136,7 +136,6 @@ export const proto = {
 /** @internal */
 export type Op<Tag extends string, Body = {}> = Effect.Effect<never, never, never> & Body & {
   readonly _tag: Tag
-  readonly trace?: Debug.Trace
 }
 
 /** @internal */
@@ -176,6 +175,7 @@ export interface OnSuccess extends
 export interface OpTraced extends
   Op<OpCodes.OP_TRACED, {
     readonly self: Primitive
+    readonly trace: Debug.Trace
   }>
 {}
 
@@ -295,7 +295,10 @@ export const async = Debug.methodWithTrace((trace) =>
     effect._tag = OpCodes.OP_ASYNC
     effect.register = register
     effect.blockingOn = blockingOn
-    effect.trace = trace
+    effect.trace = void 0
+    if (trace) {
+      return effect.traced(trace)
+    }
     return effect
   }
 )
@@ -494,7 +497,10 @@ export const failCause = Debug.methodWithTrace((trace) =>
     const effect = Object.create(proto)
     effect._tag = OpCodes.OP_FAILURE
     effect.cause = cause
-    effect.trace = trace
+    effect.trace = void 0
+    if (trace) {
+      return effect.traced(trace)
+    }
     return effect
   }
 )
@@ -731,7 +737,10 @@ export const interruptible = Debug.methodWithTrace((trace) =>
     effect._tag = OpCodes.OP_UPDATE_RUNTIME_FLAGS
     effect.update = RuntimeFlagsPatch.enable(_runtimeFlags.Interruption)
     effect.scope = () => self
-    effect.trace = trace
+    effect.trace = void 0
+    if (trace) {
+      return effect.traced(trace)
+    }
     return effect
   }
 )
@@ -748,7 +757,10 @@ export const interruptibleMask = Debug.methodWithTrace((trace, restore) =>
       _runtimeFlags.interruption(oldFlags)
         ? restore(f)(interruptible)
         : restore(f)(uninterruptible)
-    effect.trace = trace
+    effect.trace = void 0
+    if (trace) {
+      return effect.traced(trace)
+    }
     return effect
   }
 )
@@ -987,7 +999,10 @@ export const succeed = Debug.methodWithTrace((trace) =>
     const effect = Object.create(proto)
     effect._tag = OpCodes.OP_SUCCESS
     effect.value = value
-    effect.trace = trace
+    effect.trace = void 0
+    if (trace) {
+      return effect.traced(trace)
+    }
     return effect
   }
 )
@@ -1009,7 +1024,10 @@ export const sync = Debug.methodWithTrace((trace, restore) =>
     const effect = Object.create(proto)
     effect._tag = OpCodes.OP_SYNC
     effect.evaluate = restore(evaluate)
-    effect.trace = trace
+    effect.trace = void 0
+    if (trace) {
+      return effect.traced(trace)
+    }
     return effect
   }
 )
@@ -1078,7 +1096,10 @@ export const uninterruptible = Debug.methodWithTrace((trace) =>
     effect._tag = OpCodes.OP_UPDATE_RUNTIME_FLAGS
     effect.update = RuntimeFlagsPatch.disable(_runtimeFlags.Interruption)
     effect.scope = () => self
-    effect.trace = trace
+    effect.trace = void 0
+    if (trace) {
+      return effect.traced(trace)
+    }
     return effect
   }
 )
@@ -1096,14 +1117,17 @@ export const uninterruptibleMask = Debug.methodWithTrace((trace, restore) =>
         ? restore(f)(interruptible)
         : restore(f)(uninterruptible)
     }
-    effect.trace = trace
+    effect.trace = void 0
+    if (trace) {
+      return effect.traced(trace)
+    }
     return effect
   }
 )
 
 /* @internal */
 export const unit = Debug.methodWithTrace((trace) =>
-  (_: void): Effect.Effect<never, never, void> => succeed(undefined).traced(trace)
+  (_: void): Effect.Effect<never, never, void> => succeed(void 0).traced(trace)
 )
 
 /* @internal */
@@ -1112,8 +1136,11 @@ export const updateRuntimeFlags = Debug.methodWithTrace((trace) =>
     const effect = Object.create(proto)
     effect._tag = OpCodes.OP_UPDATE_RUNTIME_FLAGS
     effect.update = patch
-    effect.scope = undefined
-    effect.trace = trace
+    effect.scope = void 0
+    effect.trace = void 0
+    if (trace) {
+      return effect.traced(trace)
+    }
     return effect
   }
 )
@@ -1151,7 +1178,10 @@ export const whileLoop = Debug.methodWithTrace((trace, restore) =>
     effect.check = restore(check)
     effect.body = restore(body)
     effect.process = restore(process)
-    effect.trace = trace
+    effect.trace = void 0
+    if (trace) {
+      return effect.traced(trace)
+    }
     return effect
   }
 )
@@ -1164,7 +1194,10 @@ export const withFiberRuntime = Debug.methodWithTrace((trace, restore) =>
     const effect = Object.create(proto)
     effect._tag = OpCodes.OP_WITH_RUNTIME
     effect.withRuntime = restore(withRuntime)
-    effect.trace = trace
+    effect.trace = void 0
+    if (trace) {
+      return effect.traced(trace)
+    }
     return effect
   }
 )
@@ -1197,7 +1230,10 @@ export const withRuntimeFlags = Debug.dualWithTrace<
     effect._tag = OpCodes.OP_UPDATE_RUNTIME_FLAGS
     effect.update = update
     effect.scope = () => self
-    effect.trace = trace
+    effect.trace = void 0
+    if (trace) {
+      return effect.traced(trace)
+    }
     return effect
   })
 
@@ -1206,8 +1242,11 @@ export const yieldNow = Debug.methodWithTrace((trace) =>
   (priority: "background" | "normal" = "normal"): Effect.Effect<never, never, void> => {
     const effect = Object.create(proto)
     effect._tag = OpCodes.OP_YIELD
-    effect.trace = trace
     effect.priority = priority
+    effect.trace = void 0
+    if (trace) {
+      return effect.traced(trace)
+    }
     return effect
   }
 )
@@ -1404,7 +1443,7 @@ export const fiberRefGetWith = Debug.methodWithTrace((trace, restore) =>
 /* @internal */
 export const fiberRefSet = Debug.methodWithTrace((trace) =>
   <A>(self: FiberRef.FiberRef<A>, value: A): Effect.Effect<never, never, void> =>
-    fiberRefModify(self, () => [undefined, value] as const).traced(trace)
+    fiberRefModify(self, () => [void 0, value] as const).traced(trace)
 )
 
 /* @internal */
@@ -1697,7 +1736,7 @@ export const releaseMapRelease = Debug.dualWithTrace<
         case "Running": {
           const finalizer = self.state.finalizers.get(key)
           self.state.finalizers.delete(key)
-          if (finalizer !== undefined) {
+          if (finalizer != null) {
             return self.state.update(finalizer)(exit)
           }
           return unit()
@@ -1887,11 +1926,11 @@ export const exitFail = <E>(error: E): Exit.Exit<E, never> =>
   exitFailCause(internalCause.fail(error)) as Exit.Exit<E, never>
 
 /** @internal */
-export const exitFailCause = <E>(cause: Cause.Cause<E>, trace?: Debug.Trace): Exit.Exit<E, never> => {
+export const exitFailCause = <E>(cause: Cause.Cause<E>): Exit.Exit<E, never> => {
   const exit = Object.create(proto)
   exit._tag = OpCodes.OP_FAILURE
   exit.cause = cause
-  exit.trace = trace
+  exit.trace = void 0
   return exit
 }
 
@@ -2109,7 +2148,7 @@ export const exitSucceed = <A>(value: A): Exit.Exit<never, A> => {
   const exit = Object.create(proto)
   exit._tag = OpCodes.OP_SUCCESS
   exit.value = value
-  exit.trace = undefined
+  exit.trace = void 0
   return exit
 }
 
