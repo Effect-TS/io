@@ -55,24 +55,24 @@ export declare namespace Config {
     readonly description: string
     parse(text: string): Either.Either<ConfigError.ConfigError, A>
   }
-}
 
-/**
- * Wraps a nested structure, converting all primitives to a `Config`.
- *
- * `Wrap<{ key: string }>` becomes `{ key: Config<string> }`
- *
- * To create the resulting config, use the `unwrap` constructor.
- *
- * @since 1.0.0
- * @category models
- */
-export type Wrap<A> =
-  | (A extends Record<string, any> ? {
-    [K in keyof A]: Wrap<A[K]>
-  }
-    : never)
-  | Config<A>
+  /**
+   * Wraps a nested structure, converting all primitives to a `Config`.
+   *
+   * `Config.Wrap<{ key: string }>` becomes `{ key: Config<string> }`
+   *
+   * To create the resulting config, use the `unwrap` constructor.
+   *
+   * @since 1.0.0
+   * @category models
+   */
+  export type Wrap<A> =
+    | (A extends Record<string, any> ? {
+      [K in keyof A]: Wrap<A[K]>
+    }
+      : never)
+    | Config<A>
+}
 
 /**
  * Constructs a config for an array of values.
@@ -320,17 +320,17 @@ export const tuple: <T extends NonEmptyArrayConfig>(
  * For example:
  *
  * ```
- * import { Config, Wrap, unwrap } from "@effect/io/Config"
+ * import { Config, unwrap } from "@effect/io/Config"
  *
  * interface Options { key: string }
  *
- * const makeConfig = (config: Wrap<Options>): Config<Options> => unwrap(config)
+ * const makeConfig = (config: Config.Wrap<Options>): Config<Options> => unwrap(config)
  * ```
  *
  * @since 1.0.0
  * @category constructors
  */
-export const unwrap: <A>(wrapped: Wrap<A>) => Config<A> = internal.unwrap
+export const unwrap: <A>(wrapped: Config.Wrap<A>) => Config<A> = internal.unwrap
 
 /**
  * Returns a config that describes the same structure as this one, but which
