@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.1.3
+
+### Patch Changes
+
+- [#221](https://github.com/Effect-TS/io/pull/221) [`41ae20e`](https://github.com/Effect-TS/io/commit/41ae20e07f61f03aeacea1c42a7c115ab78c5aa9) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Standardize tracing via region
+
 ## 0.1.2
 
 ### Patch Changes
