@@ -64,9 +64,6 @@ const renderStack = (span: Option.Option<StackAnnotation>): ReadonlyArray<string
   if (Option.isNone(span)) {
     return []
   }
-  if (span.value.execution) {
-    return renderTraces(Chunk.prepend(span.value.execution)(span.value.stack))
-  }
   if (span.value.stack.length > 0) {
     return renderTraces(span.value.stack)
   }
@@ -139,8 +136,7 @@ const render = <E>(
                       Chunk.dedupeAdjacent,
                       Chunk.take(Debug.runtimeDebug.traceStackLimit)
                     ) :
-                    annotation.stack,
-                  annotation.execution ?? parent.execution
+                    annotation.stack
                 )
               ),
               Option.orElse(Option.some(annotation))
