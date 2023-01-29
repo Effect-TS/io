@@ -1260,7 +1260,20 @@ export const zip = Debug.dualWithTrace<
   <R2, E2, A2>(
     that: Effect.Effect<R2, E2, A2>
   ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, readonly [A, A2]>
->(2, (trace) => (self, that) => pipe(self, flatMap((a) => pipe(that, map((b) => [a, b] as const)))).traced(trace))
+>(2, (trace) => (self, that) => flatMap(self, (a) => map(that, (b) => [a, b] as const)).traced(trace))
+
+/* @internal */
+export const zipFlatten = Debug.dualWithTrace<
+  <R, E, A extends ReadonlyArray<any>, R2, E2, A2>(
+    self: Effect.Effect<R, E, A>,
+    that: Effect.Effect<R2, E2, A2>
+  ) => Effect.Effect<R | R2, E | E2, readonly [...A, A2]>,
+  <R2, E2, A2>(
+    that: Effect.Effect<R2, E2, A2>
+  ) => <R, E, A extends ReadonlyArray<any>>(
+    self: Effect.Effect<R, E, A>
+  ) => Effect.Effect<R | R2, E | E2, readonly [...A, A2]>
+>(2, (trace) => (self, that) => flatMap(self, (a) => map(that, (b) => [...a, b] as const)).traced(trace))
 
 /* @internal */
 export const zipLeft = Debug.dualWithTrace<
@@ -1271,7 +1284,7 @@ export const zipLeft = Debug.dualWithTrace<
   <R2, E2, A2>(
     that: Effect.Effect<R2, E2, A2>
   ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A>
->(2, (trace) => (self, that) => pipe(self, flatMap((a) => pipe(that, as(a)))).traced(trace))
+>(2, (trace) => (self, that) => flatMap(self, (a) => as(that, a)).traced(trace))
 
 /* @internal */
 export const zipRight = Debug.dualWithTrace<
@@ -1282,7 +1295,7 @@ export const zipRight = Debug.dualWithTrace<
   <R2, E2, A2>(
     that: Effect.Effect<R2, E2, A2>
   ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A2>
->(2, (trace) => (self, that) => pipe(self, flatMap(() => that)).traced(trace))
+>(2, (trace) => (self, that) => flatMap(self, () => that).traced(trace))
 
 /* @internal */
 export const zipWith = Debug.dualWithTrace<
@@ -1295,11 +1308,7 @@ export const zipWith = Debug.dualWithTrace<
     that: Effect.Effect<R2, E2, A2>,
     f: (a: A, b: A2) => B
   ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, B>
->(
-  3,
-  (trace, restore) =>
-    (self, that, f) => pipe(self, flatMap((a) => pipe(that, map((b) => restore(f)(a, b))))).traced(trace)
-)
+>(3, (trace, restore) => (self, that, f) => flatMap(self, (a) => map(that, (b) => restore(f)(a, b))).traced(trace))
 
 // -----------------------------------------------------------------------------
 // Fiber
