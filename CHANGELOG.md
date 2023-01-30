@@ -1,5 +1,17 @@
 # @effect/io
 
+## 0.1.4
+
+### Patch Changes
+
+- [#223](https://github.com/Effect-TS/io/pull/223) [`4aaa38d`](https://github.com/Effect-TS/io/commit/4aaa38dc501523c28f857c855c7fa9c516826871) Thanks [@IMax153](https://github.com/IMax153)! - add Effect.zipFlatten
+
+- [#225](https://github.com/Effect-TS/io/pull/225) [`19cbb2e`](https://github.com/Effect-TS/io/commit/19cbb2e448b7a5c3ad8a76898a039d16625859ea) Thanks [@IMax153](https://github.com/IMax153)! - update dependencies
+
+- [#223](https://github.com/Effect-TS/io/pull/223) [`a060be2`](https://github.com/Effect-TS/io/commit/a060be24d9506d2cf7702b324af57182772ca333) Thanks [@IMax153](https://github.com/IMax153)! - implement Pool
+
+- [#220](https://github.com/Effect-TS/io/pull/220) [`94fd6c4`](https://github.com/Effect-TS/io/commit/94fd6c4bdec6be320a1bc3aa9b92800af9ad78e1) Thanks [@tim-smart](https://github.com/tim-smart)! - move Config.Wrap to Config namespace
+
 ## 0.1.3
 
 ### Patch Changes
