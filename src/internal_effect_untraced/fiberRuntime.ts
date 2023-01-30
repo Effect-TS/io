@@ -2023,7 +2023,7 @@ export const taggedScoped = Debug.methodWithTrace((trace) =>
 /* @internal */
 export const taggedScopedWithLabels = Debug.methodWithTrace((trace) =>
   (labels: ReadonlyArray<MetricLabel.MetricLabel>): Effect.Effect<Scope.Scope, never, void> =>
-    taggedScopedWithLabelSet(HashSet.from(labels)).traced(trace)
+    taggedScopedWithLabelSet(HashSet.fromIterable(labels)).traced(trace)
 )
 
 /* @internal */
@@ -2127,13 +2127,13 @@ export const validateFirstPar = Debug.dualWithTrace<
 /* @internal */
 export const withClockScoped = Debug.methodWithTrace((trace) =>
   <A extends Clock.Clock>(value: A) =>
-    fiberRefLocallyScopedWith(defaultServices.currentServices, Context.add(clock.clockTag)(value)).traced(trace)
+    fiberRefLocallyScopedWith(defaultServices.currentServices, Context.add(clock.clockTag, value)).traced(trace)
 )
 
 /* @internal */
 export const withConfigProviderScoped = Debug.methodWithTrace((trace) =>
   (value: ConfigProvider) =>
-    fiberRefLocallyScopedWith(defaultServices.currentServices, Context.add(configProviderTag)(value)).traced(trace)
+    fiberRefLocallyScopedWith(defaultServices.currentServices, Context.add(configProviderTag, value)).traced(trace)
 )
 
 /* @internal */
@@ -2284,7 +2284,7 @@ export const scopeExtend = Debug.dualWithTrace<
       core.contramapContext<Exclude<R, Scope.Scope>, R, E, A>(
         effect,
         // @ts-expect-error
-        Context.merge(Context.make(scopeTag)(scope))
+        Context.merge(Context.make(scopeTag, scope))
       ).traced(trace)
 )
 

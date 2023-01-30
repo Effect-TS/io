@@ -113,7 +113,7 @@ export const taggedWithLabels = Debug.dual<
   ) => <Type extends MetricKeyType.MetricKeyType<any, any>>(
     self: MetricKey.MetricKey<Type>
   ) => MetricKey.MetricKey<Type>
->(2, (self, extraTags) => taggedWithLabelSet(self, HashSet.from(extraTags)))
+>(2, (self, extraTags) => taggedWithLabelSet(self, HashSet.fromIterable(extraTags)))
 
 /** @internal */
 export const taggedWithLabelSet = Debug.dual<

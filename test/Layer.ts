@@ -30,7 +30,7 @@ describe.concurrent("Layer", () => {
         Effect.acquireRelease(
           pipe(
             Deferred.succeed(deferred, void 0),
-            Effect.map((bool) => pipe(Context.empty(), Context.add(BoolTag)(bool)))
+            Effect.map((bool) => Context.make(BoolTag, bool))
           ),
           () => Effect.unit()
         )
@@ -305,9 +305,7 @@ describe.concurrent("Layer", () => {
       const layer2 = Layer.function(StringTag, ServiceBTag, (name) => ({ name }))
       const live = pipe(
         layer1,
-        Layer.map((context) =>
-          pipe(Context.empty(), Context.add(StringTag)(pipe(context, Context.get(ServiceATag)).name))
-        ),
+        Layer.map((context) => Context.make(StringTag, Context.get(context, ServiceATag).name)),
         Layer.provide(layer2)
       )
       const result = yield* $(pipe(Effect.service(ServiceBTag), Effect.provideLayer(live)))
@@ -373,16 +371,13 @@ describe.concurrent("Layer", () => {
       const fooBuilder = pipe(
         Layer.context<string | Ref.Ref<number>>(),
         Layer.map((context) => {
-          const s = pipe(context, Context.get(StringTag))
-          const ref = pipe(context, Context.get(NumberRefTag))
-          return pipe(
-            Context.empty(),
-            Context.add(FooTag)({
-              ref,
-              string: s,
-              get: pipe(Ref.get(ref), Effect.map((i) => [i, s] as const))
-            })
-          )
+          const s = Context.get(context, StringTag)
+          const ref = Context.get(context, NumberRefTag)
+          return Context.make(FooTag, {
+            ref,
+            string: s,
+            get: pipe(Ref.get(ref), Effect.map((i) => [i, s] as const))
+          })
         })
       )
       const provideNumberRef = Layer.effect(NumberRefTag, Ref.make(10))
@@ -413,16 +408,13 @@ describe.concurrent("Layer", () => {
       const fooBuilder = pipe(
         Layer.context<string | Ref.Ref<number>>(),
         Layer.map((context) => {
-          const s = pipe(context, Context.get(StringTag))
-          const ref = pipe(context, Context.get(NumberRefTag))
-          return pipe(
-            Context.empty(),
-            Context.add(FooTag)({
-              ref,
-              string: s,
-              get: pipe(Ref.get(ref), Effect.map((i) => [i, s] as const))
-            })
-          )
+          const s = Context.get(context, StringTag)
+          const ref = Context.get(context, NumberRefTag)
+          return Context.make(FooTag, {
+            ref,
+            string: s,
+            get: pipe(Ref.get(ref), Effect.map((i) => [i, s] as const))
+          })
         })
       )
       const provideNumberRef = Layer.effect(NumberRefTag, Ref.make(10))

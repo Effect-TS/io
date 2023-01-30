@@ -1328,7 +1328,7 @@ export const provideService = Debug.untracedDual<
         core.provideContext(
           // @ts-expect-error
           restore(self.step)(now, input, state),
-          pipe(env, Context.add(tag)(service))
+          pipe(env, Context.add(tag, service))
         )
       )))
 

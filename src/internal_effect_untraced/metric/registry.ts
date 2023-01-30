@@ -33,7 +33,7 @@ class MetricRegistryImpl implements MetricRegistry.MetricRegistry {
     for (const [key, hook] of this.map) {
       result.push(metricPair.unsafeMake(key, hook.get()))
     }
-    return HashSet.from(result)
+    return HashSet.fromIterable(result)
   }
 
   get<Type extends MetricKeyType.MetricKeyType<any, any>>(

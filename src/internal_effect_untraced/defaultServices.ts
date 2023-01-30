@@ -17,9 +17,9 @@ import type * as Duration from "@fp-ts/data/Duration"
 /** @internal */
 export const liveServices: Context.Context<DefaultServices.DefaultServices> = pipe(
   Context.empty(),
-  Context.add(clock.clockTag)(clock.make()),
-  Context.add(random.randomTag)(random.make((Math.random() * 4294967296) >>> 0)),
-  Context.add(configProvider.configProviderTag)(configProvider.fromEnv())
+  Context.add(clock.clockTag, clock.make()),
+  Context.add(random.randomTag, random.make((Math.random() * 4294967296) >>> 0)),
+  Context.add(configProvider.configProviderTag, configProvider.fromEnv())
 )
 
 /**
@@ -58,7 +58,7 @@ export const withClock = Debug.dualWithTrace<
   (effect, value) =>
     core.fiberRefLocallyWith(
       currentServices,
-      Context.add(clock.clockTag)(value)
+      Context.add(clock.clockTag, value)
     )(effect).traced(trace))
 
 // circular with ConfigProvider
@@ -71,7 +71,7 @@ export const withConfigProvider = Debug.dualWithTrace<
   (effect, value) =>
     core.fiberRefLocallyWith(
       currentServices,
-      Context.add(configProvider.configProviderTag)(value)
+      Context.add(configProvider.configProviderTag, value)
     )(effect).traced(trace))
 
 /** @internal */

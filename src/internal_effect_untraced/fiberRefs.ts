@@ -141,7 +141,7 @@ export const forkAs = Debug.dual<
 })
 
 /** @internal */
-export const fiberRefs = (self: FiberRefs.FiberRefs) => HashSet.from(self.locals.keys())
+export const fiberRefs = (self: FiberRefs.FiberRefs) => HashSet.fromIterable(self.locals.keys())
 
 /** @internal */
 export const setAll = Debug.methodWithTrace((trace) =>

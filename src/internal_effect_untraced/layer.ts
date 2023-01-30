@@ -506,7 +506,7 @@ export const fromEffect = <T extends Context.Tag<any>, R, E>(
   tag: T,
   effect: Effect.Effect<R, E, Context.Tag.Service<T>>
 ): Layer.Layer<R, E, Context.Tag.Service<T>> =>
-  fromEffectContext(core.map(effect, (service) => pipe(Context.empty(), Context.add(tag)(service))))
+  fromEffectContext(core.map(effect, (service) => Context.make(tag, service)))
 
 /** @internal */
 export const fromEffectDiscard = <R, E, _>(effect: Effect.Effect<R, E, _>) =>
@@ -528,7 +528,7 @@ export const fromFunction = <A extends Context.Tag<any>, B extends Context.Tag<a
   tagB: B,
   f: (a: Context.Tag.Service<A>) => Context.Tag.Service<B>
 ): Layer.Layer<Context.Tag.Service<A>, never, Context.Tag.Service<B>> =>
-  fromEffectContext(core.serviceWith(tagA, (a) => pipe(Context.empty(), Context.add(tagB)(f(a)))))
+  fromEffectContext(core.serviceWith(tagA, (a) => Context.make(tagB, f(a))))
 
 /** @internal */
 export const launch = Debug.methodWithTrace((trace) =>
@@ -686,11 +686,10 @@ export const project = Debug.untracedDual<
   ) => <RIn, E>(self: Layer.Layer<RIn, E, Context.Tag.Service<A>>) => Layer.Layer<RIn, E, Context.Tag.Service<B>>
 >(4, (restore) =>
   (self, tagA, tagB, f) =>
-    map(self, (context) =>
-      pipe(
-        Context.empty(),
-        Context.add(tagB)(restore(f)(pipe(context, Context.unsafeGet(tagA))))
-      )))
+    map(
+      self,
+      (context) => Context.make(tagB, restore(f)(Context.unsafeGet(context, tagA)))
+    ))
 
 /** @internal */
 export const provide = Debug.dual<
@@ -815,7 +814,7 @@ export const scope = (): Layer.Layer<never, never, Scope.Scope.Closeable> => {
         fiberRuntime.scopeMake(),
         (scope, exit) => scope.close(exit)
       ),
-      core.map((scope) => pipe(Context.empty(), Context.add(Scope.Tag)(scope)))
+      core.map((scope) => Context.make(Scope.Tag, scope))
     )
   )
 }
@@ -825,7 +824,7 @@ export const scoped = <T extends Context.Tag<any>, R, E>(
   tag: T,
   effect: Effect.Effect<R, E, Context.Tag.Service<T>>
 ): Layer.Layer<Exclude<R, Scope.Scope>, E, Context.Tag.Service<T>> => {
-  return scopedContext(pipe(effect, core.map((service) => pipe(Context.empty(), Context.add(tag)(service)))))
+  return scopedContext(core.map(effect, (service) => Context.make(tag, service)))
 }
 
 /** @internal */
@@ -855,10 +854,7 @@ export const succeed = <T extends Context.Tag<any>>(
   tag: T,
   resource: Context.Tag.Service<T>
 ): Layer.Layer<never, never, Context.Tag.Service<T>> => {
-  return fromEffectContext(core.succeed(pipe(
-    Context.empty(),
-    Context.add(tag)(resource)
-  )))
+  return fromEffectContext(core.succeed(Context.make(tag, resource)))
 }
 
 /** @internal */
@@ -883,12 +879,7 @@ export const sync = <T extends Context.Tag<any>>(
   tag: T,
   evaluate: LazyArg<Context.Tag.Service<T>>
 ): Layer.Layer<never, never, Context.Tag.Service<T>> => {
-  return fromEffectContext(core.sync(() =>
-    pipe(
-      Context.empty(),
-      Context.add(tag)(evaluate())
-    )
-  ))
+  return fromEffectContext(core.sync(() => Context.make(tag, evaluate())))
 }
 
 /** @internal */
