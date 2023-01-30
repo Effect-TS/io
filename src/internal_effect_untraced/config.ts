@@ -393,7 +393,7 @@ export const secret = (name?: string): Config.Config<ConfigSecret.ConfigSecret> 
 
 /** @internal */
 export const setOf = <A>(config: Config.Config<A>, name?: string): Config.Config<HashSet.HashSet<A>> => {
-  const newConfig = pipe(chunkOf(config), map(HashSet.from))
+  const newConfig = map(chunkOf(config), HashSet.fromIterable)
   return name === undefined ? newConfig : nested(name)(newConfig)
 }
 

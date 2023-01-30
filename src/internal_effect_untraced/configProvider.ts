@@ -132,7 +132,7 @@ export const fromEnv = Debug.untracedMethod(() =>
           }
           return true
         }).flatMap((keyPath) => keyPath.slice(path.length, path.length + 1))
-        return HashSet.from(filteredKeyPaths)
+        return HashSet.fromIterable(filteredKeyPaths)
       })
 
     return fromFlat(makeFlat(load, enumerateChildren))
@@ -176,7 +176,7 @@ export const fromMap = Debug.untracedMethod(() =>
           }
           return true
         }).flatMap((keyPath) => keyPath.slice(path.length, path.length + 1))
-        return HashSet.from(filteredKeyPaths)
+        return HashSet.fromIterable(filteredKeyPaths)
       })
 
     return fromFlat(makeFlat(load, enumerateChildren))
@@ -323,7 +323,7 @@ const fromFlatLoop = <A>(
                 const matrix = Chunk.toReadonlyArray(values).map(Chunk.toReadonlyArray) as Array<Array<unknown>>
                 return pipe(
                   Chunk.unsafeFromArray(transpose(matrix).map(Chunk.unsafeFromArray)),
-                  Chunk.map((values) => HashMap.from(pipe(Chunk.fromIterable(keys), Chunk.zip(values))))
+                  Chunk.map((values) => HashMap.fromIterable(Chunk.zip(Chunk.fromIterable(keys), values)))
                 )
               })
             )

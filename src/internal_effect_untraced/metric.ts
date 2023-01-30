@@ -227,7 +227,7 @@ export const taggedWithLabels = Debug.dual<
   <Type, In, Out>(
     extraTags: Iterable<MetricLabel.MetricLabel>
   ) => (self: Metric.Metric<Type, In, Out>) => Metric.Metric<Type, In, Out>
->(2, (self, extraTags) => taggedWithLabelSet(self, HashSet.from(extraTags)))
+>(2, (self, extraTags) => taggedWithLabelSet(self, HashSet.fromIterable(extraTags)))
 
 /** @internal */
 export const taggedWithLabelSet = Debug.dual<

@@ -1881,7 +1881,7 @@ export const provideServiceEffect = Debug.dualWithTrace<
     ) =>
       core.contextWithEffect((env: Context.Context<R1 | Exclude<R, Context.Tag.Service<T>>>) =>
         core.flatMap(effect, (service) =>
-          core.provideContext(self, pipe(env, Context.add(tag)(service)) as Context.Context<R | R1>))
+          core.provideContext(self, pipe(env, Context.add(tag, service)) as Context.Context<R | R1>))
       ).traced(trace)
 )
 
@@ -2279,7 +2279,7 @@ export const tagged = Debug.dualWithTrace<
 export const taggedWithLabels = Debug.dualWithTrace<
   <R, E, A>(self: Effect.Effect<R, E, A>, labels: Iterable<MetricLabel.MetricLabel>) => Effect.Effect<R, E, A>,
   (labels: Iterable<MetricLabel.MetricLabel>) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
->(2, (trace) => (self, labels) => taggedWithLabelSet(self, HashSet.from(labels)).traced(trace))
+>(2, (trace) => (self, labels) => taggedWithLabelSet(self, HashSet.fromIterable(labels)).traced(trace))
 
 /* @internal */
 export const taggedWithLabelSet = Debug.dualWithTrace<
@@ -2760,7 +2760,7 @@ export const updateService = Debug.dualWithTrace<
     core.contramapContext(self, (context) =>
       pipe(
         context,
-        Context.add(tag)(restore(f)(pipe(context, Context.unsafeGet(tag))))
+        Context.add(tag, restore(f)(Context.unsafeGet(context, tag)))
       )).traced(trace) as Effect.Effect<R | Context.Tag.Service<T>, E, A>)
 
 /* @internal */

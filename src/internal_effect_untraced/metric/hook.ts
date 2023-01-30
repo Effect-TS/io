@@ -69,7 +69,7 @@ export const frequency = (_key: MetricKey.MetricKey.Frequency): MetricHook.Metri
     const slotCount = values.get(word) ?? 0
     values.set(word, slotCount + 1)
   }
-  const snapshot = () => HashMap.from(Array.from(values.entries()).map(([k, v]) => [k, v] as const))
+  const snapshot = () => HashMap.fromIterable(Array.from(values.entries()).map(([k, v]) => [k, v] as const))
   return make(() => metricState.frequency(snapshot()), update)
 }
 

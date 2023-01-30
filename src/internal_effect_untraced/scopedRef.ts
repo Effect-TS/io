@@ -42,7 +42,7 @@ export const fromAcquire = Debug.methodWithTrace((trace) =>
             restore(
               pipe(
                 acquire,
-                core.contramapContext<R, Scope.Scope | R>(Context.add(fiberRuntime.scopeTag)(newScope))
+                core.contramapContext<R, Scope.Scope | R>(Context.add(fiberRuntime.scopeTag, newScope))
               )
             ),
             core.onError((cause) => newScope.close(core.exitFail(cause))),
@@ -104,7 +104,7 @@ export const set = Debug.dualWithTrace<
                   pipe(
                     acquire,
                     core.contramapContext<Exclude<R, Scope.Scope>, R>(
-                      Context.add(fiberRuntime.scopeTag)(newScope) as any
+                      Context.add(fiberRuntime.scopeTag, newScope) as any
                     )
                   )
                 ),
