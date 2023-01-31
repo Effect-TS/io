@@ -1,5 +1,15 @@
 # @effect/io
 
+## 0.1.5
+
+### Patch Changes
+
+- [#226](https://github.com/Effect-TS/io/pull/226) [`9846c77`](https://github.com/Effect-TS/io/commit/9846c77c868c21cd9419ed22fe7acb787cf2eec7) Thanks [@IMax153](https://github.com/IMax153)! - add Clock.unsafeCurrentTimeMillis to the Clock interface
+
+- [#226](https://github.com/Effect-TS/io/pull/226) [`6148e7b`](https://github.com/Effect-TS/io/commit/6148e7bb941174e6877dde33e5e1899eaf6944fb) Thanks [@IMax153](https://github.com/IMax153)! - add additional ConfigProvider transformers
+
+- [#228](https://github.com/Effect-TS/io/pull/228) [`bd472ce`](https://github.com/Effect-TS/io/commit/bd472ce6cd658f02aa1bb2ceaa24cf3c8b440ea6) Thanks [@IMax153](https://github.com/IMax153)! - add ConfigProvider.constantCase and expose PathPatch
+
 ## 0.1.4
 
 ### Patch Changes
