@@ -75,12 +75,69 @@ export declare namespace ConfigProvider {
    */
   export interface Flat {
     readonly [FlatConfigProviderTypeId]: FlatConfigProviderTypeId
+    patch: ConfigProvider.Flat.PathPatch
     load<A>(
       path: Chunk.Chunk<string>,
       config: Config.Config.Primitive<A>,
       split?: boolean
     ): Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
     enumerateChildren(path: Chunk.Chunk<string>): Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>>
+  }
+
+  /**
+   * @since 1.0.0
+   */
+  export namespace Flat {
+    /**
+     * @since 1.0.0
+     * @category models
+     */
+    export type PathPatch = Empty | AndThen | MapName | Nested | Unnested
+
+    /**
+     * @since 1.0.0
+     * @category models
+     */
+    export interface Empty {
+      readonly _tag: "Empty"
+    }
+
+    /**
+     * @since 1.0.0
+     * @category models
+     */
+    export interface AndThen {
+      readonly _tag: "AndThen"
+      readonly first: PathPatch
+      readonly second: PathPatch
+    }
+
+    /**
+     * @since 1.0.0
+     * @category models
+     */
+    export interface MapName {
+      readonly _tag: "MapName"
+      readonly f: (string: string) => string
+    }
+
+    /**
+     * @since 1.0.0
+     * @category models
+     */
+    export interface Nested {
+      readonly _tag: "Nested"
+      readonly name: string
+    }
+
+    /**
+     * @since 1.0.0
+     * @category models
+     */
+    export interface Unnested {
+      readonly _tag: "Unnested"
+      readonly name: string
+    }
   }
 
   /**
@@ -134,7 +191,8 @@ export const makeFlat: (
   ) => Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>,
   enumerateChildren: (
     path: Chunk.Chunk<string>
-  ) => Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>>
+  ) => Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>>,
+  patch: ConfigProvider.Flat.PathPatch
 ) => ConfigProvider.Flat = internal.makeFlat
 
 /**
@@ -174,7 +232,32 @@ export const fromMap: (map: Map<string, string>, config?: Partial<ConfigProvider
  * @since 1.0.0
  * @category mutations
  */
-export const contramapPath = internal.contramapPath
+export const contramapPath: {
+  (self: ConfigProvider, f: (path: string) => string): ConfigProvider
+  (f: (path: string) => string): (self: ConfigProvider) => ConfigProvider
+} = internal.contramapPath
+
+/**
+ * Returns a new config provider that will automatically convert all property
+ * names to kebab case. This can be utilized to adapt the names of
+ * configuration properties from the default naming convention of camel case
+ * to the naming convention of a config provider.
+ *
+ * @since 1.0.0
+ * @category combinators
+ */
+export const kebabCase: (self: ConfigProvider) => ConfigProvider = internal.kebabCase
+
+/**
+ * Returns a new config provider that will automatically convert all property
+ * names to lower case. This can be utilized to adapt the names of
+ * configuration properties from the default naming convention of camel case
+ * to the naming convention of a config provider.
+ *
+ * @since 1.0.0
+ * @category combinators
+ */
+export const lowerCase: (self: ConfigProvider) => ConfigProvider = internal.lowerCase
 
 /**
  * Returns a new config provider that will automatically nest all
@@ -192,7 +275,7 @@ export const nested: {
 
 /**
  * Returns a new config provider that preferentially loads configuration data
- * from this one, but which will fall back to the specified alterate provider
+ * from this one, but which will fall back to the specified alternate provider
  * if there are any issues loading the configuration from this provider.
  *
  * @since 1.0.0
@@ -202,3 +285,51 @@ export const orElse: {
   (self: ConfigProvider, that: LazyArg<ConfigProvider>): ConfigProvider
   (that: LazyArg<ConfigProvider>): (self: ConfigProvider) => ConfigProvider
 } = internal.orElse
+
+/**
+ * Returns a new config provider that will automatically un-nest all
+ * configuration under the specified property name. This can be utilized to
+ * de-aggregate separate configuration sources that are all required to load a
+ * single configuration value.
+ *
+ * @since 1.0.0
+ * @category mutations
+ */
+export const unnested: {
+  (self: ConfigProvider, name: string): ConfigProvider
+  (name: string): (self: ConfigProvider) => ConfigProvider
+} = internal.unnested
+
+/**
+ * Returns a new config provider that will automatically convert all property
+ * names to upper case. This can be utilized to adapt the names of
+ * configuration properties from the default naming convention of camel case
+ * to the naming convention of a config provider.
+ *
+ * @since 1.0.0
+ * @category combinators
+ */
+export const snakeCase: (self: ConfigProvider) => ConfigProvider = internal.snakeCase
+
+/**
+ * Returns a new config provider that will automatically convert all property
+ * names to upper case. This can be utilized to adapt the names of
+ * configuration properties from the default naming convention of camel case
+ * to the naming convention of a config provider.
+ *
+ * @since 1.0.0
+ * @category combinators
+ */
+export const upperCase: (self: ConfigProvider) => ConfigProvider = internal.upperCase
+
+/**
+ * Returns a new config provider that transforms the config provider with the
+ * specified function within the specified path.
+ *
+ * @since 1.0.0
+ * @category combinators
+ */
+export const within: {
+  (self: ConfigProvider, path: Chunk.Chunk<string>, f: (self: ConfigProvider) => ConfigProvider): ConfigProvider
+  (path: Chunk.Chunk<string>, f: (self: ConfigProvider) => ConfigProvider): (self: ConfigProvider) => ConfigProvider
+} = internal.within
