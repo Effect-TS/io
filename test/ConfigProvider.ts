@@ -302,6 +302,16 @@ describe.concurrent("ConfigProvider", () => {
       assert.strictEqual(result, "Hello, World!")
     }))
 
+  it.effect("constantCase", () =>
+    Effect.gen(function*($) {
+      const configProvider = pipe(
+        ConfigProvider.fromMap(new Map([["CONSTANT_CASE", "value"]])),
+        ConfigProvider.constantCase
+      )
+      const result = yield* $(configProvider.load(Config.string("constant.case")))
+      assert.strictEqual(result, "value")
+    }))
+
   it.effect("contramapPath", () =>
     Effect.gen(function*($) {
       const configProvider = pipe(

@@ -1,5 +1,5 @@
 import type * as ConfigError from "@effect/io/Config/Error"
-import type * as ConfigProvider from "@effect/io/Config/Provider"
+import type * as PathPatch from "@effect/io/Config/Provider/PathPatch"
 import * as Debug from "@effect/io/Debug"
 import * as configError from "@effect/io/internal_effect_untraced/configError"
 import * as Either from "@fp-ts/core/Either"
@@ -10,46 +10,46 @@ import * as Chunk from "@fp-ts/data/Chunk"
 import * as List from "@fp-ts/data/List"
 
 /** @internal */
-export const empty: ConfigProvider.ConfigProvider.Flat.PathPatch = {
+export const empty: PathPatch.PathPatch = {
   _tag: "Empty"
 }
 
 /** @internal */
-export const andThen = (
-  self: ConfigProvider.ConfigProvider.Flat.PathPatch,
-  that: ConfigProvider.ConfigProvider.Flat.PathPatch
-): ConfigProvider.ConfigProvider.Flat.PathPatch => ({
+export const andThen = Debug.dual<
+  (self: PathPatch.PathPatch, that: PathPatch.PathPatch) => PathPatch.PathPatch,
+  (that: PathPatch.PathPatch) => (self: PathPatch.PathPatch) => PathPatch.PathPatch
+>(2, (self, that) => ({
   _tag: "AndThen",
   first: self,
   second: that
-})
+}))
 
 /** @internal */
-export const mapName = (
-  self: ConfigProvider.ConfigProvider.Flat.PathPatch,
-  f: (string: string) => string
-): ConfigProvider.ConfigProvider.Flat.PathPatch => andThen(self, { _tag: "MapName", f })
+export const mapName = Debug.dual<
+  (self: PathPatch.PathPatch, f: (string: string) => string) => PathPatch.PathPatch,
+  (f: (string: string) => string) => (self: PathPatch.PathPatch) => PathPatch.PathPatch
+>(2, (self, f) => andThen(self, { _tag: "MapName", f }))
 
 /** @internal */
-export const nested = (
-  self: ConfigProvider.ConfigProvider.Flat.PathPatch,
-  name: string
-): ConfigProvider.ConfigProvider.Flat.PathPatch => andThen(self, { _tag: "Nested", name })
+export const nested = Debug.dual<
+  (self: PathPatch.PathPatch, name: string) => PathPatch.PathPatch,
+  (name: string) => (self: PathPatch.PathPatch) => PathPatch.PathPatch
+>(2, (self, name) => andThen(self, { _tag: "Nested", name }))
 
 /** @internal */
-export const unnested = (
-  self: ConfigProvider.ConfigProvider.Flat.PathPatch,
-  name: string
-): ConfigProvider.ConfigProvider.Flat.PathPatch => andThen(self, { _tag: "Unnested", name })
+export const unnested = Debug.dual<
+  (self: PathPatch.PathPatch, name: string) => PathPatch.PathPatch,
+  (name: string) => (self: PathPatch.PathPatch) => PathPatch.PathPatch
+>(2, (self, name) => andThen(self, { _tag: "Unnested", name }))
 
 /** @internal */
 export const patch = Debug.dual<
   (
     path: Chunk.Chunk<string>,
-    patch: ConfigProvider.ConfigProvider.Flat.PathPatch
+    patch: PathPatch.PathPatch
   ) => Either.Either<ConfigError.ConfigError, Chunk.Chunk<string>>,
   (
-    patch: ConfigProvider.ConfigProvider.Flat.PathPatch
+    patch: PathPatch.PathPatch
   ) => (
     path: Chunk.Chunk<string>
   ) => Either.Either<ConfigError.ConfigError, Chunk.Chunk<string>>

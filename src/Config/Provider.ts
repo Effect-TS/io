@@ -3,6 +3,7 @@
  */
 import type * as Config from "@effect/io/Config"
 import type * as ConfigError from "@effect/io/Config/Error"
+import type * as PathPatch from "@effect/io/Config/Provider/PathPatch"
 import type * as Effect from "@effect/io/Effect"
 import * as internal from "@effect/io/internal_effect_untraced/configProvider"
 import type { LazyArg } from "@fp-ts/core/Function"
@@ -75,69 +76,13 @@ export declare namespace ConfigProvider {
    */
   export interface Flat {
     readonly [FlatConfigProviderTypeId]: FlatConfigProviderTypeId
-    patch: ConfigProvider.Flat.PathPatch
+    patch: PathPatch.PathPatch
     load<A>(
       path: Chunk.Chunk<string>,
       config: Config.Config.Primitive<A>,
       split?: boolean
     ): Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
     enumerateChildren(path: Chunk.Chunk<string>): Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>>
-  }
-
-  /**
-   * @since 1.0.0
-   */
-  export namespace Flat {
-    /**
-     * @since 1.0.0
-     * @category models
-     */
-    export type PathPatch = Empty | AndThen | MapName | Nested | Unnested
-
-    /**
-     * @since 1.0.0
-     * @category models
-     */
-    export interface Empty {
-      readonly _tag: "Empty"
-    }
-
-    /**
-     * @since 1.0.0
-     * @category models
-     */
-    export interface AndThen {
-      readonly _tag: "AndThen"
-      readonly first: PathPatch
-      readonly second: PathPatch
-    }
-
-    /**
-     * @since 1.0.0
-     * @category models
-     */
-    export interface MapName {
-      readonly _tag: "MapName"
-      readonly f: (string: string) => string
-    }
-
-    /**
-     * @since 1.0.0
-     * @category models
-     */
-    export interface Nested {
-      readonly _tag: "Nested"
-      readonly name: string
-    }
-
-    /**
-     * @since 1.0.0
-     * @category models
-     */
-    export interface Unnested {
-      readonly _tag: "Unnested"
-      readonly name: string
-    }
   }
 
   /**
@@ -192,7 +137,7 @@ export const makeFlat: (
   enumerateChildren: (
     path: Chunk.Chunk<string>
   ) => Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>>,
-  patch: ConfigProvider.Flat.PathPatch
+  patch: PathPatch.PathPatch
 ) => ConfigProvider.Flat = internal.makeFlat
 
 /**
@@ -222,6 +167,17 @@ export const fromFlat: (flat: ConfigProvider.Flat) => ConfigProvider = internal.
  */
 export const fromMap: (map: Map<string, string>, config?: Partial<ConfigProvider.FromMapConfig>) => ConfigProvider =
   internal.fromMap
+
+/**
+ * Returns a new config provider that will automatically convert all property
+ * names to constant case. This can be utilized to adapt the names of
+ * configuration properties from the default naming convention of camel case
+ * to the naming convention of a config provider.
+ *
+ * @since 1.0.0
+ * @category combinators
+ */
+export const constantCase: (self: ConfigProvider) => ConfigProvider = internal.constantCase
 
 /**
  * Returns a new config provider that will automatically tranform all path

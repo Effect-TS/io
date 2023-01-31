@@ -1,6 +1,7 @@
 import type * as Config from "@effect/io/Config"
 import type * as ConfigError from "@effect/io/Config/Error"
 import type * as ConfigProvider from "@effect/io/Config/Provider"
+import type * as PathPatch from "@effect/io/Config/Provider/PathPatch"
 import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as _config from "@effect/io/internal_effect_untraced/config"
@@ -8,6 +9,7 @@ import * as configError from "@effect/io/internal_effect_untraced/configError"
 import * as pathPatch from "@effect/io/internal_effect_untraced/configProvider/pathPatch"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as OpCodes from "@effect/io/internal_effect_untraced/opCodes/config"
+import * as StringUtils from "@effect/io/internal_effect_untraced/string-utils"
 import * as Either from "@fp-ts/core/Either"
 import type { LazyArg } from "@fp-ts/core/Function"
 import { pipe } from "@fp-ts/core/Function"
@@ -59,7 +61,7 @@ export const makeFlat = Debug.untracedMethod((restore) =>
     enumerateChildren: (
       path: Chunk.Chunk<string>
     ) => Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>>,
-    patch: ConfigProvider.ConfigProvider.Flat.PathPatch
+    patch: PathPatch.PathPatch
   ): ConfigProvider.ConfigProvider.Flat => ({
     [FlatConfigProviderTypeId]: FlatConfigProviderTypeId,
     patch,
@@ -526,20 +528,24 @@ const orElseFlat = (
   )
 
 /** @internal */
+export const constantCase = (self: ConfigProvider.ConfigProvider): ConfigProvider.ConfigProvider =>
+  contramapPath(self, StringUtils.constantCase)
+
+/** @internal */
 export const kebabCase = (self: ConfigProvider.ConfigProvider): ConfigProvider.ConfigProvider =>
-  contramapPath(self, toKebabCase)
+  contramapPath(self, StringUtils.kebabCase)
 
 /** @internal */
 export const lowerCase = (self: ConfigProvider.ConfigProvider): ConfigProvider.ConfigProvider =>
-  contramapPath(self, (str) => str.toLowerCase())
+  contramapPath(self, StringUtils.lowerCase)
 
 /** @internal */
 export const snakeCase = (self: ConfigProvider.ConfigProvider): ConfigProvider.ConfigProvider =>
-  contramapPath(self, toSnakeCase)
+  contramapPath(self, StringUtils.snakeCase)
 
 /** @internal */
 export const upperCase = (self: ConfigProvider.ConfigProvider): ConfigProvider.ConfigProvider =>
-  contramapPath(self, (str) => str.toUpperCase())
+  contramapPath(self, StringUtils.upperCase)
 
 /** @internal */
 export const within = Debug.untracedDual<
@@ -558,14 +564,6 @@ export const within = Debug.untracedDual<
     const nest = Chunk.reduceRight(path, f(unnest), (provider, name) => nested(provider, name))
     return orElse(nest, () => self)
   })
-
-const toKebabCase = (str: string) =>
-  str.replace(
-    /[A-Z]+(?![a-z])|[A-Z]/g,
-    (letters: string, ofs) => (ofs ? "-" : "") + letters.toLowerCase()
-  )
-
-const toSnakeCase = (str: string) => str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`)
 
 const splitPathString = (text: string, delim: string): Chunk.Chunk<string> => {
   const split = text.split(new RegExp(`\\s*${escapeRegex(delim)}\\s*`))
