@@ -14,24 +14,25 @@ export const refVariance = {
   _A: (_: never) => _
 }
 
-/** @internal */
-export const unsafeMake = <A>(value: A): Ref.Ref<A> => {
-  const ref = MutableRef.make(value)
-  return {
-    [RefTypeId]: refVariance,
-    modify: (f) =>
-      Debug.bodyWithTrace((trace, restore) =>
-        core.sync(() => {
-          const current = MutableRef.get(ref)
-          const [b, a] = restore(f)(current)
-          if ((current as unknown) !== (a as unknown)) {
-            MutableRef.set(a)(ref)
-          }
-          return b
-        }).traced(trace)
-      )
+class RefImpl<A> implements Ref.Ref<A> {
+  readonly [RefTypeId] = refVariance
+  constructor(readonly ref: MutableRef.MutableRef<A>) {}
+  modify<B>(f: (a: A) => readonly [B, A]): Effect.Effect<never, never, B> {
+    return Debug.bodyWithTrace((trace, restore) =>
+      core.sync(() => {
+        const current = MutableRef.get(this.ref)
+        const [b, a] = restore(f)(current)
+        if ((current as unknown) !== (a as unknown)) {
+          MutableRef.set(a)(this.ref)
+        }
+        return b
+      }).traced(trace)
+    )
   }
 }
+
+/** @internal */
+export const unsafeMake = <A>(value: A): Ref.Ref<A> => new RefImpl(MutableRef.make(value))
 
 /** @internal */
 export const make = Debug.methodWithTrace((trace) =>
@@ -110,7 +111,7 @@ export const modifySome = Debug.dualWithTrace<
       const option = restore(pf)(value)
       switch (option._tag) {
         case "None": {
-          return [fallback, value]
+          return [fallback, value] as const
         }
         case "Some": {
           return option.value
@@ -166,3 +167,6 @@ export const updateSomeAndGet = Debug.dualWithTrace<
         }
       }
     }).traced(trace))
+
+/** @internal */
+export const unsafeGet = <A>(self: Ref.Ref<A>): A => MutableRef.get((self as RefImpl<A>).ref)

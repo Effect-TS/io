@@ -114,8 +114,15 @@ export class TestClockImpl implements TestClock {
     readonly annotations: Annotations.Annotations,
     readonly warningState: Synchronized.Synchronized<WarningData.WarningData>,
     readonly suspendedWarningState: Synchronized.Synchronized<SuspendedWarningData.SuspendedWarningData>
-  ) {
+  ) {}
+
+  /**
+   * Unsafely returns the current time in milliseconds.
+   */
+  unsafeCurrentTimeMillis(): number {
+    return ref.unsafeGet(this.clockState).instant
   }
+
   /**
    * Returns the current clock time in milliseconds.
    */
