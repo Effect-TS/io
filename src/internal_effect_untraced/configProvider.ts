@@ -5,6 +5,7 @@ import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as _config from "@effect/io/internal_effect_untraced/config"
 import * as configError from "@effect/io/internal_effect_untraced/configError"
+import * as pathPatch from "@effect/io/internal_effect_untraced/configProvider/pathPatch"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as OpCodes from "@effect/io/internal_effect_untraced/opCodes/config"
 import * as Either from "@fp-ts/core/Either"
@@ -57,9 +58,11 @@ export const makeFlat = Debug.untracedMethod((restore) =>
     ) => Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>,
     enumerateChildren: (
       path: Chunk.Chunk<string>
-    ) => Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>>
+    ) => Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>>,
+    patch: ConfigProvider.ConfigProvider.Flat.PathPatch
   ): ConfigProvider.ConfigProvider.Flat => ({
     [FlatConfigProviderTypeId]: FlatConfigProviderTypeId,
+    patch,
     load: Debug.methodWithTrace((trace) =>
       (path, config, split = true) => restore(load)(path, config, split).traced(trace)
     ),
@@ -135,7 +138,7 @@ export const fromEnv = Debug.untracedMethod(() =>
         return HashSet.fromIterable(filteredKeyPaths)
       })
 
-    return fromFlat(makeFlat(load, enumerateChildren))
+    return fromFlat(makeFlat(load, enumerateChildren, pathPatch.empty))
   }
 )
 
@@ -179,7 +182,7 @@ export const fromMap = Debug.untracedMethod(() =>
         return HashSet.fromIterable(filteredKeyPaths)
       })
 
-    return fromFlat(makeFlat(load, enumerateChildren))
+    return fromFlat(makeFlat(load, enumerateChildren, pathPatch.empty))
   }
 )
 
@@ -283,14 +286,19 @@ const fromFlatLoop = <A>(
     }
     case OpCodes.OP_PRIMITIVE: {
       return pipe(
-        flat.load(prefix, op, split),
-        core.flatMap((values) => {
-          if (Chunk.isEmpty(values)) {
-            const name = pipe(Chunk.last(prefix), Option.getOrElse(() => "<n/a>"))
-            return core.fail(_config.missingError(name))
-          }
-          return core.succeed(values)
-        })
+        core.fromEither(pathPatch.patch(prefix, flat.patch)),
+        core.flatMap((prefix) =>
+          pipe(
+            flat.load(prefix, op, split),
+            core.flatMap((values) => {
+              if (Chunk.isEmpty(values)) {
+                const name = pipe(Chunk.last(prefix), Option.getOrElse(() => "<n/a>"))
+                return core.fail(_config.missingError(name))
+              }
+              return core.succeed(values)
+            })
+          )
+        )
       ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
     }
     case OpCodes.OP_SEQUENCE: {
@@ -304,30 +312,35 @@ const fromFlatLoop = <A>(
     case OpCodes.OP_TABLE: {
       return core.suspendSucceed(() =>
         pipe(
-          flat.enumerateChildren(prefix),
-          core.flatMap((keys) => {
-            return pipe(
-              keys,
-              core.forEach((key) =>
-                fromFlatLoop(
-                  flat,
-                  pipe(prefix, Chunk.concat(Chunk.of(key))),
-                  op.valueConfig,
-                  split
-                )
-              ),
-              core.map((values) => {
-                if (values.length === 0) {
-                  return Chunk.of(HashMap.empty())
-                }
-                const matrix = Chunk.toReadonlyArray(values).map(Chunk.toReadonlyArray) as Array<Array<unknown>>
+          core.fromEither(pathPatch.patch(prefix, flat.patch)),
+          core.flatMap((prefix) =>
+            pipe(
+              flat.enumerateChildren(prefix),
+              core.flatMap((keys) => {
                 return pipe(
-                  Chunk.unsafeFromArray(transpose(matrix).map(Chunk.unsafeFromArray)),
-                  Chunk.map((values) => HashMap.fromIterable(Chunk.zip(Chunk.fromIterable(keys), values)))
+                  keys,
+                  core.forEach((key) =>
+                    fromFlatLoop(
+                      flat,
+                      pipe(prefix, Chunk.concat(Chunk.of(key))),
+                      op.valueConfig,
+                      split
+                    )
+                  ),
+                  core.map((values) => {
+                    if (values.length === 0) {
+                      return Chunk.of(HashMap.empty())
+                    }
+                    const matrix = Chunk.toReadonlyArray(values).map(Chunk.toReadonlyArray) as Array<Array<unknown>>
+                    return pipe(
+                      Chunk.unsafeFromArray(transpose(matrix).map(Chunk.unsafeFromArray)),
+                      Chunk.map((values) => HashMap.fromIterable(Chunk.zip(Chunk.fromIterable(keys), values)))
+                    )
+                  })
                 )
               })
             )
-          })
+          )
         )
       ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
     }
@@ -410,8 +423,9 @@ const contramapPathFlat = (
   f: (path: string) => string
 ): ConfigProvider.ConfigProvider.Flat =>
   makeFlat(
-    (path, config, split = true) => self.load(pipe(path, Chunk.map(f)), config, split),
-    (path) => self.enumerateChildren(pipe(path, Chunk.map(f)))
+    (path, config, split = true) => self.load(path, config, split),
+    (path) => self.enumerateChildren(path),
+    pathPatch.mapName(self.patch, f)
   )
 
 /** @internal */
@@ -421,8 +435,21 @@ export const nested = Debug.untracedDual<
 >(2, () =>
   (self, name) =>
     fromFlat(makeFlat(
-      (path, config) => self.flattened.load(pipe(path, Chunk.prepend(name)), config, true),
-      (path) => self.flattened.enumerateChildren(pipe(path, Chunk.prepend(name)))
+      (path, config) => self.flattened.load(path, config, true),
+      (path) => self.flattened.enumerateChildren(pipe(path, Chunk.prepend(name))),
+      pathPatch.nested(self.flattened.patch, name)
+    )))
+
+/** @internal */
+export const unnested = Debug.untracedDual<
+  (self: ConfigProvider.ConfigProvider, name: string) => ConfigProvider.ConfigProvider,
+  (name: string) => (self: ConfigProvider.ConfigProvider) => ConfigProvider.ConfigProvider
+>(2, () =>
+  (self, name) =>
+    fromFlat(makeFlat(
+      (path, config) => self.flattened.load(path, config, true),
+      (path) => self.flattened.enumerateChildren(path),
+      pathPatch.unnested(self.flattened.patch, name)
     )))
 
 /** @internal */
@@ -444,28 +471,101 @@ const orElseFlat = (
 ): ConfigProvider.ConfigProvider.Flat =>
   makeFlat(
     (path, config, split) =>
-      core.catchAll(self.load(path, config, split), (error1) =>
-        core.catchAll(that().load(path, config, split), (error2) => core.fail(configError.Or(error1, error2)))),
-    (path) =>
-      core.flatMap(core.either(self.enumerateChildren(path)), (left) =>
-        core.flatMap(core.either(that().enumerateChildren(path)), (right) => {
-          if (Either.isLeft(left) && Either.isLeft(right)) {
-            return core.fail(configError.And(left.left, right.left))
-          }
-          if (Either.isLeft(left) && Either.isRight(right)) {
-            return core.fail(left.left)
-          }
-          if (Either.isRight(left) && Either.isLeft(right)) {
-            return core.fail(right.left)
-          }
-          if (Either.isRight(left) && Either.isRight(right)) {
-            return core.succeed(pipe(left.right, HashSet.union(right.right)))
-          }
-          throw new Error(
-            "BUG: ConfigProvider.orElseFlat - please report an issue at https://github.com/Effect-TS/io/issues"
+      pipe(
+        core.fromEither(pathPatch.patch(path, self.patch)),
+        core.flatMap((patch) => self.load(patch, config, split)),
+        core.catchAll((error1) =>
+          pipe(
+            core.sync(that),
+            core.flatMap((that) =>
+              pipe(
+                core.fromEither(pathPatch.patch(path, that.patch)),
+                core.flatMap((patch) => that.load(patch, config, split)),
+                core.catchAll((error2) => core.fail(configError.Or(error1, error2)))
+              )
+            )
           )
-        }))
+        )
+      ),
+    (path) =>
+      pipe(
+        core.fromEither(pathPatch.patch(path, self.patch)),
+        core.flatMap((patch) => self.enumerateChildren(patch)),
+        core.either,
+        core.flatMap((left) =>
+          pipe(
+            core.sync(that),
+            core.flatMap((that) =>
+              pipe(
+                core.fromEither(pathPatch.patch(path, that.patch)),
+                core.flatMap((patch) => that.enumerateChildren(patch)),
+                core.either,
+                core.flatMap((right) => {
+                  if (Either.isLeft(left) && Either.isLeft(right)) {
+                    return core.fail(configError.And(left.left, right.left))
+                  }
+                  if (Either.isLeft(left) && Either.isRight(right)) {
+                    return core.fail(left.left)
+                  }
+                  if (Either.isRight(left) && Either.isLeft(right)) {
+                    return core.fail(right.left)
+                  }
+                  if (Either.isRight(left) && Either.isRight(right)) {
+                    return core.succeed(pipe(left.right, HashSet.union(right.right)))
+                  }
+                  throw new Error(
+                    "BUG: ConfigProvider.orElseFlat - please report an issue at https://github.com/Effect-TS/io/issues"
+                  )
+                })
+              )
+            )
+          )
+        )
+      ),
+    pathPatch.empty
   )
+
+/** @internal */
+export const kebabCase = (self: ConfigProvider.ConfigProvider): ConfigProvider.ConfigProvider =>
+  contramapPath(self, toKebabCase)
+
+/** @internal */
+export const lowerCase = (self: ConfigProvider.ConfigProvider): ConfigProvider.ConfigProvider =>
+  contramapPath(self, (str) => str.toLowerCase())
+
+/** @internal */
+export const snakeCase = (self: ConfigProvider.ConfigProvider): ConfigProvider.ConfigProvider =>
+  contramapPath(self, toSnakeCase)
+
+/** @internal */
+export const upperCase = (self: ConfigProvider.ConfigProvider): ConfigProvider.ConfigProvider =>
+  contramapPath(self, (str) => str.toUpperCase())
+
+/** @internal */
+export const within = Debug.untracedDual<
+  (
+    self: ConfigProvider.ConfigProvider,
+    path: Chunk.Chunk<string>,
+    f: (self: ConfigProvider.ConfigProvider) => ConfigProvider.ConfigProvider
+  ) => ConfigProvider.ConfigProvider,
+  (
+    path: Chunk.Chunk<string>,
+    f: (self: ConfigProvider.ConfigProvider) => ConfigProvider.ConfigProvider
+  ) => (self: ConfigProvider.ConfigProvider) => ConfigProvider.ConfigProvider
+>(3, () =>
+  (self, path, f) => {
+    const unnest = Chunk.reduce(path, self, (provider, name) => unnested(provider, name))
+    const nest = Chunk.reduceRight(path, f(unnest), (provider, name) => nested(provider, name))
+    return orElse(nest, () => self)
+  })
+
+const toKebabCase = (str: string) =>
+  str.replace(
+    /[A-Z]+(?![a-z])|[A-Z]/g,
+    (letters: string, ofs) => (ofs ? "-" : "") + letters.toLowerCase()
+  )
+
+const toSnakeCase = (str: string) => str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`)
 
 const splitPathString = (text: string, delim: string): Chunk.Chunk<string> => {
   const split = text.split(new RegExp(`\\s*${escapeRegex(delim)}\\s*`))

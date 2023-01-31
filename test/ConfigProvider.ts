@@ -312,6 +312,26 @@ describe.concurrent("ConfigProvider", () => {
       assert.strictEqual(result, "VALUE")
     }))
 
+  it.effect("kebabCase", () =>
+    Effect.gen(function*($) {
+      const configProvider = pipe(
+        ConfigProvider.fromMap(new Map([["kebab-case", "value"]])),
+        ConfigProvider.kebabCase
+      )
+      const result = yield* $(configProvider.load(Config.string("kebabCase")))
+      assert.strictEqual(result, "value")
+    }))
+
+  it.effect("lowerCase", () =>
+    Effect.gen(function*($) {
+      const configProvider = pipe(
+        ConfigProvider.fromMap(new Map([["lowercase", "value"]])),
+        ConfigProvider.lowerCase
+      )
+      const result = yield* $(configProvider.load(Config.string("lowerCase")))
+      assert.strictEqual(result, "value")
+    }))
+
   it.effect("nested", () =>
     Effect.gen(function*($) {
       const configProvider1 = ConfigProvider.fromMap(new Map([["nested.key", "value"]]))
@@ -319,6 +339,26 @@ describe.concurrent("ConfigProvider", () => {
       const configProvider2 = pipe(
         ConfigProvider.fromMap(new Map([["nested.key", "value"]])),
         ConfigProvider.nested("nested")
+      )
+      const config2 = Config.string("key")
+      const result1 = yield* $(configProvider1.load(config1))
+      const result2 = yield* $(configProvider2.load(config2))
+      assert.strictEqual(result1, "value")
+      assert.strictEqual(result2, "value")
+    }))
+
+  it.effect("nested - multiple layers of nesting", () =>
+    Effect.gen(function*($) {
+      const configProvider1 = ConfigProvider.fromMap(new Map([["parent.child.key", "value"]]))
+      const config1 = pipe(
+        Config.string("key"),
+        Config.nested("child"),
+        Config.nested("parent")
+      )
+      const configProvider2 = pipe(
+        ConfigProvider.fromMap(new Map([["parent.child.key", "value"]])),
+        ConfigProvider.nested("child"),
+        ConfigProvider.nested("parent")
       )
       const config2 = Config.string("key")
       const result1 = yield* $(configProvider1.load(config1))
@@ -347,5 +387,112 @@ describe.concurrent("ConfigProvider", () => {
       const configProvider = ConfigProvider.fromMap(new Map([["greeting", value]]))
       const result = yield* $(configProvider.load(Config.secret("greeting")))
       assert.deepStrictEqual(result, ConfigSecret.make(value.split("").map((c) => c.charCodeAt(0))))
+    }))
+
+  it.effect("snakeCase", () =>
+    Effect.gen(function*($) {
+      const configProvider = pipe(
+        ConfigProvider.fromMap(new Map([["snake_case", "value"]])),
+        ConfigProvider.snakeCase
+      )
+      const result = yield* $(configProvider.load(Config.string("snakeCase")))
+      assert.strictEqual(result, "value")
+    }))
+
+  it.effect("unnested", () =>
+    Effect.gen(function*($) {
+      const configProvider1 = ConfigProvider.fromMap(new Map([["key", "value"]]))
+      const config1 = Config.string("key")
+      const configProvider2 = pipe(
+        ConfigProvider.fromMap(new Map([["key", "value"]])),
+        ConfigProvider.unnested("nested")
+      )
+      const config2 = pipe(Config.string("key"), Config.nested("nested"))
+      const result1 = yield* $(configProvider1.load(config1))
+      const result2 = yield* $(configProvider2.load(config2))
+      assert.strictEqual(result1, "value")
+      assert.strictEqual(result2, "value")
+    }))
+
+  it.effect("unnested - multiple layers of nesting", () =>
+    Effect.gen(function*($) {
+      const configProvider1 = ConfigProvider.fromMap(new Map([["key", "value"]]))
+      const config1 = Config.string("key")
+      const configProvider2 = pipe(
+        ConfigProvider.fromMap(new Map([["key", "value"]])),
+        ConfigProvider.unnested("parent"),
+        ConfigProvider.unnested("child")
+      )
+      const config2 = pipe(
+        Config.string("key"),
+        Config.nested("child"),
+        Config.nested("parent")
+      )
+      const result1 = yield* $(configProvider1.load(config1))
+      const result2 = yield* $(configProvider2.load(config2))
+      assert.strictEqual(result1, "value")
+      assert.strictEqual(result2, "value")
+    }))
+
+  it.effect("unnested - failure", () =>
+    Effect.gen(function*($) {
+      const configProvider = pipe(
+        ConfigProvider.fromMap(new Map([["key", "value"]])),
+        ConfigProvider.unnested("nested")
+      )
+      const config = Config.string("key")
+      const result = yield* $(Effect.exit(configProvider.load(config)))
+      const error = ConfigError.MissingData(
+        Chunk.of("key"),
+        "Expected nested to be in path in ConfigProvider#unnested"
+      )
+      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(error))
+    }))
+
+  it.effect("upperCase", () =>
+    Effect.gen(function*($) {
+      const configProvider = pipe(
+        ConfigProvider.fromMap(new Map([["UPPERCASE", "value"]])),
+        ConfigProvider.upperCase
+      )
+      const result = yield* $(configProvider.load(Config.string("upperCase")))
+      assert.strictEqual(result, "value")
+    }))
+
+  it.effect("within", () =>
+    Effect.gen(function*($) {
+      const configProvider = pipe(
+        ConfigProvider.fromMap(new Map([["nesting1.key1", "value1"], ["nesting2.KEY2", "value2"]])),
+        ConfigProvider.within(Chunk.of("nesting2"), ConfigProvider.contramapPath((s) => s.toUpperCase()))
+      )
+      const config = pipe(
+        Config.string("key1"),
+        Config.nested("nesting1"),
+        Config.zip(pipe(
+          Config.string("key2"),
+          Config.nested("nesting2")
+        ))
+      )
+      const result = yield* $(configProvider.load(config))
+      assert.deepStrictEqual(result, ["value1", "value2"])
+    }))
+
+  it.effect("within - multiple layers of nesting", () =>
+    Effect.gen(function*($) {
+      const configProvider = pipe(
+        ConfigProvider.fromMap(new Map([["nesting1.key1", "value1"], ["nesting2.nesting3.KEY2", "value2"]])),
+        ConfigProvider.within(Chunk.make("nesting2", "nesting3"), ConfigProvider.contramapPath((s) => s.toUpperCase()))
+      )
+      const config = pipe(
+        Config.string("key1"),
+        Config.nested("nesting1"),
+        Config.zip(pipe(
+          Config.string("key2"),
+          Config.nested("nesting3"),
+          Config.nested("nesting2")
+        ))
+      )
+      const result = yield* $(configProvider.load(config))
+      assert.deepStrictEqual(result, ["value1", "value2"])
     }))
 })
