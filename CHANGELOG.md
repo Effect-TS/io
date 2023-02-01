@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.1.6
+
+### Patch Changes
+
+- [#229](https://github.com/Effect-TS/io/pull/229) [`ab5eba9`](https://github.com/Effect-TS/io/commit/ab5eba91d3398961d95b1a7c5b65117c079402b9) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Fix tracing of promise based constructors
+
 ## 0.1.5
 
 ### Patch Changes
