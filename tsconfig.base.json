@@ -49,14 +49,7 @@
           "1002": "none"
         }
       }
-    ],
-    "transformers": [
-      {
-        "name": "./plugins/tsPlugin.ts",
-        "trace": { "exclude": ["**/*.ts"] }
-      }
-    ],
-    "tsPlusEnabled": false
+    ]
   },
   "include": [],
   "exclude": ["node_modules", "build", "lib"]
