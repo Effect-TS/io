@@ -1830,8 +1830,8 @@ export const promise = Debug.methodWithTrace((trace, restore) =>
   <A>(evaluate: LazyArg<Promise<A>>): Effect.Effect<never, never, A> =>
     core.async<never, never, A>((resolve) => {
       restore(evaluate)()
-        .then((a) => resolve(core.succeed(a)))
-        .catch((e) => resolve(core.die(e)))
+        .then((a) => resolve(core.exitSucceed(a)))
+        .catch((e) => resolve(core.exitDie(e)))
     }).traced(trace)
 )
 
@@ -1841,8 +1841,8 @@ export const promiseInterrupt = Debug.methodWithTrace((trace, restore) =>
     core.asyncInterruptEither<never, never, A>((resolve) => {
       const controller = new AbortController()
       restore(evaluate)(controller.signal)
-        .then((a) => resolve(core.succeed(a)))
-        .catch((e) => resolve(core.die(e)))
+        .then((a) => resolve(core.exitSucceed(a)))
+        .catch((e) => resolve(core.exitDie(e)))
       return Either.left(core.sync(() => controller.abort()))
     }).traced(trace)
 )
@@ -2513,8 +2513,8 @@ export const tryCatchPromise = Debug.methodWithTrace((trace, restore) =>
     core.flatMap(tryCatch(restore(evaluate), restore(onReject)), (promise) =>
       core.async<never, E, A>((resolve) => {
         promise
-          .then((a) => resolve(core.succeed(a)))
-          .catch((e) => resolve(core.fail(restore(onReject)(e))))
+          .then((a) => resolve(core.exitSucceed(a)))
+          .catch((e) => resolve(core.exitFail(restore(onReject)(e))))
       })).traced(trace)
 )
 
@@ -2531,8 +2531,8 @@ export const tryCatchPromiseInterrupt = Debug.methodWithTrace((trace, restore) =
         core.flatMap((promise) =>
           core.async<never, E, A>((resolve) => {
             promise
-              .then((a) => resolve(core.succeed(a)))
-              .catch((e) => resolve(core.fail(restore(onReject)(e))))
+              .then((a) => resolve(core.exitSucceed(a)))
+              .catch((e) => resolve(core.exitFail(restore(onReject)(e))))
           })
         )
       )
@@ -2545,8 +2545,8 @@ export const tryPromise = Debug.methodWithTrace((trace, restore) =>
     core.flatMap(restore(attempt)(evaluate), (promise) =>
       core.async<never, unknown, A>((resolve) => {
         promise
-          .then((a) => resolve(core.succeed(a)))
-          .catch((e) => resolve(core.fail(e)))
+          .then((a) => resolve(core.exitSucceed(a)))
+          .catch((e) => resolve(core.exitFail(e)))
       })).traced(trace)
 )
 
@@ -2563,8 +2563,8 @@ export const tryPromiseInterrupt = Debug.methodWithTrace((trace, restore) =>
       core.flatMap(([controller, promise]) =>
         core.asyncInterruptEither<never, unknown, A>((resolve) => {
           promise
-            .then((a) => resolve(core.succeed(a)))
-            .catch((e) => resolve(core.fail(e)))
+            .then((a) => resolve(core.exitSucceed(a)))
+            .catch((e) => resolve(core.exitFail(e)))
           return Either.left(core.sync(() => controller.abort()))
         })
       )

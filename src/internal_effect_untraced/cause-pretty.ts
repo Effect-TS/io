@@ -51,8 +51,6 @@ const renderTraces = (chunk: Chunk.Chunk<Debug.Trace>): ReadonlyArray<string> =>
     if (r) {
       if (Debug.runtimeDebug.filterStackFrame(r)) {
         ret.push(renderFrame(r))
-      } else {
-        return ret
       }
     }
   }
