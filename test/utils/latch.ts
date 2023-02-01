@@ -15,7 +15,7 @@ export const withLatch = <R, E, A>(
 }
 
 export const withLatchAwait = <R, E, A>(
-  f: (release: Effect.Effect<never, never, void>, await: Effect.Effect<never, never, void>) => Effect.Effect<R, E, A>
+  f: (release: Effect.Effect<never, never, void>, wait: Effect.Effect<never, never, void>) => Effect.Effect<R, E, A>
 ): Effect.Effect<R, E, A> => {
   return Effect.gen(function*($) {
     const ref = yield* $(Ref.make(true))
