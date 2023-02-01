@@ -64,7 +64,6 @@ importers:
     dependencies:
       '@fp-ts/core': 0.1.1
       '@fp-ts/data': 0.1.1
-      typescript: 4.9.5
     devDependencies:
       '@babel/cli': 7.20.7_@babel+core@7.20.12
       '@babel/core': 7.20.12
@@ -112,6 +111,7 @@ importers:
       ts-codemod: 4.0.4
       ts-node: 10.9.1_bdgp3l2zgaopogaavxusmetvge
       tslint: 6.1.3_typescript@4.9.5
+      typescript: 4.9.5
       ultra-runner: 3.10.5
       vite: 4.0.4_@types+node@18.11.18
       vitest: 0.28.3
@@ -6934,6 +6934,7 @@ packages:
     resolution: {integrity: sha512-1FXk9E2Hm+QzZQ7z+McJiHL4NW1F2EzMu9Nq9i3zAaGqibafqYwCVU6WyWAuyQRRzOlxou8xZSyXLEN8oKj24g==}
     engines: {node: '>=4.2.0'}
     hasBin: true
+    dev: true
 
   /ufo/1.0.1:
     resolution: {integrity: sha512-boAm74ubXHY7KJQZLlXrtMz52qFvpsbOxDcZOnw/Wf+LS4Mmyu7JxmzD4tDLtUQtmZECypJ0FrCz4QIe6dvKRA==}
