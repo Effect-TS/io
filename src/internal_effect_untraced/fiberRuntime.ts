@@ -175,6 +175,8 @@ const drainQueueWhileRunningTable = {
   }
 }
 
+let globalErrorSeq = 0
+
 /** @internal */
 export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   readonly [internalFiber.FiberTypeId] = internalFiber.fiberVariance
@@ -970,32 +972,31 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
 
   [OpCodes.OP_FAILURE](op: core.Primitive & { _tag: OpCodes.OP_FAILURE }) {
     let cause = op.cause
-    if (this._traceStack.length > 0) {
-      if (internalCause.isAnnotatedType(cause) && internalCause.isStackAnnotation(cause.annotation)) {
-        const stack = cause.annotation.stack
-        const currentStack = this.stackToLines()
-        cause = internalCause.annotated(
-          cause.cause,
-          new StackAnnotation(
-            pipe(
-              stack.length === 0 ?
-                currentStack :
-                currentStack.length === 0 ?
-                stack :
-                Chunk.unsafeLast(stack) === Chunk.unsafeLast(currentStack) ?
-                stack :
-                pipe(
-                  stack,
-                  Chunk.concat(currentStack)
-                ),
-              Chunk.dedupeAdjacent,
-              Chunk.take(Debug.runtimeDebug.traceStackLimit)
-            )
-          )
+    if (internalCause.isAnnotatedType(cause) && internalCause.isStackAnnotation(cause.annotation)) {
+      const stack = cause.annotation.stack
+      const currentStack = this.stackToLines()
+      cause = internalCause.annotated(
+        cause.cause,
+        new StackAnnotation(
+          pipe(
+            stack.length === 0 ?
+              currentStack :
+              currentStack.length === 0 ?
+              stack :
+              Chunk.unsafeLast(stack) === Chunk.unsafeLast(currentStack) ?
+              stack :
+              pipe(
+                stack,
+                Chunk.concat(currentStack)
+              ),
+            Chunk.dedupeAdjacent,
+            Chunk.take(Debug.runtimeDebug.traceStackLimit)
+          ),
+          cause.annotation.seq
         )
-      } else {
-        cause = internalCause.annotated(op.cause, new StackAnnotation(this.stackToLines()))
-      }
+      )
+    } else {
+      cause = internalCause.annotated(op.cause, new StackAnnotation(this.stackToLines(), globalErrorSeq++))
     }
     const cont = this.getNextFailCont()
     if (cont !== undefined) {
