@@ -63,15 +63,16 @@ export const runtimeDebug: Debug = {
       for (let i = starts + 1; i < lines.length; i++) {
         if (lines[i].includes("at")) {
           const blocks = lines[i].split(" ").filter((i) => i.length > 0 && i !== "at")
-          const name = blocks.length === 2 ? blocks[0] : undefined
+          const name = blocks.length === 2 && !blocks[0].includes("<anonymous>") ? blocks[0] : undefined
           const file = blocks.length === 2 ? blocks[1] : blocks[0]
-          const matchFrame = file?.match(/(file:\/\/)?\/(.*):(\d+):(\d+)/)
+          console.log(lines[i])
+          const matchFrame = file?.match(/\(?(.*):(\d+):(\d+)/)
           if (matchFrame) {
             frames.push({
               name,
-              fileName: `/${matchFrame[2]}`,
-              line: Number.parseInt(matchFrame[3]),
-              column: Number.parseInt(matchFrame[4])
+              fileName: matchFrame[1],
+              line: Number.parseInt(matchFrame[2]),
+              column: Number.parseInt(matchFrame[3])
             })
           } else {
             frames.push(undefined)
