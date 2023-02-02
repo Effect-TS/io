@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.1.8
+
+### Patch Changes
+
+- [#234](https://github.com/Effect-TS/io/pull/234) [`5cf73fd`](https://github.com/Effect-TS/io/commit/5cf73fde976295fd51ae2952b25347d12d2d379e) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Preserve causal ordering in rendering errors
+
 ## 0.1.7
 
 ### Patch Changes
