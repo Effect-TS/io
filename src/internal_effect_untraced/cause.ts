@@ -1082,7 +1082,7 @@ export const StackAnnotationTypeId: Cause.StackAnnotationTypeId = Symbol.for(
 /** @internal */
 export class StackAnnotation implements Cause.Cause.StackAnnotation {
   readonly [StackAnnotationTypeId]: Cause.StackAnnotationTypeId = StackAnnotationTypeId
-  constructor(readonly stack: Chunk.Chunk<Debug.Trace>) {}
+  constructor(readonly stack: Chunk.Chunk<Debug.Trace>, readonly seq: number) {}
 }
 
 /** @internal */

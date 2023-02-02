@@ -72,11 +72,8 @@ const renderStack = (span: Option.Option<StackAnnotation>): ReadonlyArray<string
 const renderFail = (
   error: string,
   stack: Option.Option<StackAnnotation>
-): ReadonlyArray<string> => {
-  return [[
-    error,
-    ...renderStack(stack)
-  ].join("\r\n")]
+): ReadonlyArray<RenderError> => {
+  return [new RenderError(stack._tag === "Some" ? stack.value.seq : 0, error, renderStack(stack).join("\r\n"))]
 }
 
 /** @internal */
@@ -109,10 +106,14 @@ const defaultErrorToLines = (error: unknown) => {
   return renderToString(error)
 }
 
+class RenderError {
+  constructor(readonly seq: number, readonly message: string, readonly stack: string) {}
+}
+
 const render = <E>(
   cause: Cause.Cause<E>,
   stack: Option.Option<StackAnnotation>
-): Effect.Effect<never, never, ReadonlyArray<string>> => {
+): Effect.Effect<never, never, ReadonlyArray<RenderError>> => {
   switch (cause._tag) {
     case OpCodes.OP_ANNOTATED: {
       const annotation = cause.annotation
@@ -134,7 +135,8 @@ const render = <E>(
                       Chunk.dedupeAdjacent,
                       Chunk.take(Debug.runtimeDebug.traceStackLimit)
                     ) :
-                    annotation.stack
+                    annotation.stack,
+                  annotation.seq
                 )
               ),
               Option.orElse(Option.some(annotation))
@@ -182,7 +184,13 @@ export const prettySafe = <E>(cause: Cause.Cause<E>): Effect.Effect<never, never
     return core.succeed("All fibers interrupted without errors.")
   }
   return core.map(render(cause, Option.none()), (errors) => {
-    const final = errors.join("\r\n\r\n")
+    const final = Array.from(errors).sort((a, b) => a.seq === b.seq ? 0 : a.seq > b.seq ? 1 : -1).map((e) => {
+      let message = e.message
+      if (e.stack && e.stack.length > 0) {
+        message += `\r\n${e.stack}`
+      }
+      return message
+    }).join("\r\n\r\n")
     if (!final.includes("\r\n")) {
       return final
     }
