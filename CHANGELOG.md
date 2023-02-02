@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.1.7
+
+### Patch Changes
+
+- [#232](https://github.com/Effect-TS/io/pull/232) [`bbfcd0e`](https://github.com/Effect-TS/io/commit/bbfcd0e84e26d73f52c7df88c9304cfd46936fca) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Clean anonymous from traces
+
 ## 0.1.6
 
 ### Patch Changes
