@@ -11,6 +11,8 @@ import * as Equal from "@fp-ts/data/Equal"
 import * as Hash from "@fp-ts/data/Hash"
 import * as HashSet from "@fp-ts/data/HashSet"
 
+import * as MRef from "@fp-ts/data/MutableRef"
+
 // -----------------------------------------------------------------------------
 // Models
 // -----------------------------------------------------------------------------
@@ -1080,13 +1082,16 @@ export const StackAnnotationTypeId: Cause.StackAnnotationTypeId = Symbol.for(
 ) as Cause.StackAnnotationTypeId
 
 /** @internal */
-export class StackAnnotation implements Cause.Cause.StackAnnotation {
+export class StackAnnotation implements Cause.StackAnnotation {
   readonly [StackAnnotationTypeId]: Cause.StackAnnotationTypeId = StackAnnotationTypeId
-  constructor(readonly stack: Chunk.Chunk<Debug.Trace>, readonly seq: number) {}
+  constructor(readonly stack: Chunk.Chunk<Debug.SourceLocation>, readonly seq: number) {}
 }
 
 /** @internal */
-export const isStackAnnotation = (u: unknown): u is Cause.Cause.StackAnnotation => {
+export const globalErrorSeq = MRef.make(0)
+
+/** @internal */
+export const isStackAnnotation = (u: unknown): u is Cause.StackAnnotation => {
   return typeof u === "object" && u != null && StackAnnotationTypeId in u
 }
 
