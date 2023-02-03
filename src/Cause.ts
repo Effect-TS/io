@@ -21,7 +21,7 @@
  *
  * @since 1.0.0
  */
-import type { Trace } from "@effect/io/Debug"
+import type { SourceLocation } from "@effect/io/Debug"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import * as internal from "@effect/io/internal_effect_untraced/cause"
 import * as _pretty from "@effect/io/internal_effect_untraced/cause-pretty"
@@ -152,17 +152,37 @@ export declare namespace Cause {
       readonly _E: (_: never) => E
     }
   }
-
-  /**
-   * @since 1.0.0
-   * @category models
-   */
-  export interface StackAnnotation {
-    readonly [StackAnnotationTypeId]: StackAnnotationTypeId
-    readonly stack: Chunk.Chunk<Trace>
-    readonly seq: number
-  }
 }
+
+/**
+ * @since 1.0.0
+ * @category models
+ */
+export interface StackAnnotationConstructor {
+  new(stack: Chunk.Chunk<SourceLocation>, seq: number): StackAnnotation
+}
+
+/**
+ * @since 1.0.0
+ * @category models
+ */
+export interface StackAnnotation {
+  readonly [StackAnnotationTypeId]: StackAnnotationTypeId
+  readonly stack: Chunk.Chunk<SourceLocation>
+  readonly seq: number
+}
+
+/**
+ * @since 1.0.0
+ * @category stack
+ */
+export const StackAnnotation: StackAnnotationConstructor = internal.StackAnnotation
+
+/**
+ * @since 1.0.0
+ * @category stack
+ */
+export const globalErrorSeq = internal.globalErrorSeq
 
 /**
  * Represents a set of methods that can be used to reduce a `Cause<E>` to a
@@ -865,7 +885,7 @@ export const pretty: <E>(cause: Cause<E>) => string = _pretty_run.pretty
  * @since 1.0.0
  * @category guards
  */
-export const isStackAnnotation: (u: unknown) => u is Cause.StackAnnotation = internal.isStackAnnotation
+export const isStackAnnotation: (u: unknown) => u is StackAnnotation = internal.isStackAnnotation
 
 /**
  * Removes any annotation from the cause

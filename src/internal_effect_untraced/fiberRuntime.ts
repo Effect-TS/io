@@ -47,6 +47,7 @@ import * as Chunk from "@fp-ts/data/Chunk"
 import * as Context from "@fp-ts/data/Context"
 import * as HashSet from "@fp-ts/data/HashSet"
 import * as MutableQueue from "@fp-ts/data/MutableQueue"
+import * as MRef from "@fp-ts/data/MutableRef"
 
 const fibersStarted = metric.counter("effect_fiber_started")
 const fiberSuccesses = metric.counter("effect_fiber_successes")
@@ -174,8 +175,6 @@ const drainQueueWhileRunningTable = {
     return pipe(core.yieldNow(_message.priority), core.flatMap(() => cur))
   }
 }
-
-let globalErrorSeq = 0
 
 /** @internal */
 export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
@@ -996,7 +995,10 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
         )
       )
     } else {
-      cause = internalCause.annotated(op.cause, new StackAnnotation(this.stackToLines(), globalErrorSeq++))
+      cause = internalCause.annotated(
+        op.cause,
+        new StackAnnotation(this.stackToLines(), MRef.getAndIncrement(internalCause.globalErrorSeq))
+      )
     }
     const cont = this.getNextFailCont()
     if (cont !== undefined) {
@@ -1164,22 +1166,15 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     }
   }
 
-  stackToLines(): Chunk.Chunk<Debug.Trace> {
+  stackToLines(): Chunk.Chunk<Debug.SourceLocation> {
     if (this._traceStack.length === 0) {
       return Chunk.empty()
     }
-    const lines: Array<Debug.Trace> = []
-    let current = this._stack.length - 1
+    const lines: Array<Debug.SourceLocation> = []
+    let current = this._traceStack.length - 1
     while (current >= 0 && lines.length < Debug.runtimeDebug.traceStackLimit) {
-      const value = this._stack[current]
-      switch (value._tag) {
-        case OpCodes.OP_TRACED: {
-          if (value.trace) {
-            lines.push(value.trace)
-          }
-          break
-        }
-      }
+      const value = this._traceStack[current]!
+      lines.push(value)
       current = current - 1
     }
     return Chunk.unsafeFromArray(lines)
