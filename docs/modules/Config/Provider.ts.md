@@ -12,6 +12,13 @@ Added in v1.0.0
 
 <h2 class="text-delta">Table of contents</h2>
 
+- [combinators](#combinators)
+  - [constantCase](#constantcase)
+  - [kebabCase](#kebabcase)
+  - [lowerCase](#lowercase)
+  - [snakeCase](#snakecase)
+  - [upperCase](#uppercase)
+  - [within](#within)
 - [constructors](#constructors)
   - [fromEnv](#fromenv)
   - [fromFlat](#fromflat)
@@ -26,6 +33,7 @@ Added in v1.0.0
   - [contramapPath](#contramappath)
   - [nested](#nested)
   - [orElse](#orelse)
+  - [unnested](#unnested)
 - [symbols](#symbols)
   - [ConfigProviderTypeId](#configprovidertypeid)
   - [ConfigProviderTypeId (type alias)](#configprovidertypeid-type-alias)
@@ -33,6 +41,99 @@ Added in v1.0.0
   - [FlatConfigProviderTypeId (type alias)](#flatconfigprovidertypeid-type-alias)
 
 ---
+
+# combinators
+
+## constantCase
+
+Returns a new config provider that will automatically convert all property
+names to constant case. This can be utilized to adapt the names of
+configuration properties from the default naming convention of camel case
+to the naming convention of a config provider.
+
+**Signature**
+
+```ts
+export declare const constantCase: (self: ConfigProvider) => ConfigProvider
+```
+
+Added in v1.0.0
+
+## kebabCase
+
+Returns a new config provider that will automatically convert all property
+names to kebab case. This can be utilized to adapt the names of
+configuration properties from the default naming convention of camel case
+to the naming convention of a config provider.
+
+**Signature**
+
+```ts
+export declare const kebabCase: (self: ConfigProvider) => ConfigProvider
+```
+
+Added in v1.0.0
+
+## lowerCase
+
+Returns a new config provider that will automatically convert all property
+names to lower case. This can be utilized to adapt the names of
+configuration properties from the default naming convention of camel case
+to the naming convention of a config provider.
+
+**Signature**
+
+```ts
+export declare const lowerCase: (self: ConfigProvider) => ConfigProvider
+```
+
+Added in v1.0.0
+
+## snakeCase
+
+Returns a new config provider that will automatically convert all property
+names to upper case. This can be utilized to adapt the names of
+configuration properties from the default naming convention of camel case
+to the naming convention of a config provider.
+
+**Signature**
+
+```ts
+export declare const snakeCase: (self: ConfigProvider) => ConfigProvider
+```
+
+Added in v1.0.0
+
+## upperCase
+
+Returns a new config provider that will automatically convert all property
+names to upper case. This can be utilized to adapt the names of
+configuration properties from the default naming convention of camel case
+to the naming convention of a config provider.
+
+**Signature**
+
+```ts
+export declare const upperCase: (self: ConfigProvider) => ConfigProvider
+```
+
+Added in v1.0.0
+
+## within
+
+Returns a new config provider that transforms the config provider with the
+specified function within the specified path.
+
+**Signature**
+
+```ts
+export declare const within: {
+  (self: ConfigProvider, path: Chunk.Chunk<string>, f: (self: ConfigProvider) => ConfigProvider): ConfigProvider
+  (path: Chunk.Chunk<string>, f: (self: ConfigProvider) => ConfigProvider): (self: ConfigProvider) => ConfigProvider
+}
+```
+
+Added in v1.0.0
 
 # constructors
 
@@ -107,7 +208,8 @@ export declare const makeFlat: (
   ) => Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>,
   enumerateChildren: (
     path: Chunk.Chunk<string>
-  ) => Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>>
+  ) => Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>>,
+  patch: PathPatch.PathPatch
 ) => ConfigProvider.Flat
 ```
 
@@ -164,8 +266,10 @@ another.
 **Signature**
 
 ```ts
-export declare const contramapPath: ((self: ConfigProvider, f: (path: string) => string) => ConfigProvider) &
-  ((f: (path: string) => string) => (self: ConfigProvider) => ConfigProvider)
+export declare const contramapPath: {
+  (self: ConfigProvider, f: (path: string) => string): ConfigProvider
+  (f: (path: string) => string): (self: ConfigProvider) => ConfigProvider
+}
 ```
 
 Added in v1.0.0
@@ -191,7 +295,7 @@ Added in v1.0.0
 ## orElse
 
 Returns a new config provider that preferentially loads configuration data
-from this one, but which will fall back to the specified alterate provider
+from this one, but which will fall back to the specified alternate provider
 if there are any issues loading the configuration from this provider.
 
 **Signature**
@@ -200,6 +304,24 @@ if there are any issues loading the configuration from this provider.
 export declare const orElse: {
   (self: ConfigProvider, that: LazyArg<ConfigProvider>): ConfigProvider
   (that: LazyArg<ConfigProvider>): (self: ConfigProvider) => ConfigProvider
+}
+```
+
+Added in v1.0.0
+
+## unnested
+
+Returns a new config provider that will automatically un-nest all
+configuration under the specified property name. This can be utilized to
+de-aggregate separate configuration sources that are all required to load a
+single configuration value.
+
+**Signature**
+
+```ts
+export declare const unnested: {
+  (self: ConfigProvider, name: string): ConfigProvider
+  (name: string): (self: ConfigProvider) => ConfigProvider
 }
 ```
 

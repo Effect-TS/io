@@ -107,6 +107,10 @@ and scheduling.
 export interface Clock {
   readonly [ClockTypeId]: ClockTypeId
   /**
+   * Unsafely returns the current time in milliseconds.
+   */
+  unsafeCurrentTimeMillis(): number
+  /**
    * Returns the current time in milliseconds.
    */
   currentTimeMillis(): Effect.Effect<never, never, number>

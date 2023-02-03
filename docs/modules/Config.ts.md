@@ -30,6 +30,7 @@ Added in v1.0.0
   - [sync](#sync)
   - [table](#table)
   - [tuple](#tuple)
+  - [unwrap](#unwrap)
 - [models](#models)
   - [Config (interface)](#config-interface)
 - [mutations](#mutations)
@@ -259,6 +260,28 @@ Constructs a config from a tuple of configs.
 
 ```ts
 export declare const tuple: <T extends [Config<any>, ...Config<any>[]]>(...tuple: T) => Config<TupleConfig<T>>
+```
+
+Added in v1.0.0
+
+## unwrap
+
+Constructs a config from some configuration wrapped with the `Wrap<A>` utility type.
+
+For example:
+
+```
+import { Config, unwrap } from "@effect/io/Config"
+
+interface Options { key: string }
+
+const makeConfig = (config: Config.Wrap<Options>): Config<Options> => unwrap(config)
+```
+
+**Signature**
+
+```ts
+export declare const unwrap: <A>(wrapped: Config.Wrap<A>) => Config<A>
 ```
 
 Added in v1.0.0

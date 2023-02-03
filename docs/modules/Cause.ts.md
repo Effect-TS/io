@@ -97,6 +97,8 @@ Added in v1.0.0
   - [Parallel (interface)](#parallel-interface)
   - [RuntimeException (interface)](#runtimeexception-interface)
   - [Sequential (interface)](#sequential-interface)
+  - [StackAnnotation (interface)](#stackannotation-interface)
+  - [StackAnnotationConstructor (interface)](#stackannotationconstructor-interface)
 - [refinements](#refinements)
   - [isAnnotatedType](#isannotatedtype)
   - [isCause](#iscause)
@@ -115,6 +117,9 @@ Added in v1.0.0
 - [sequencing](#sequencing)
   - [flatMap](#flatmap)
   - [flatten](#flatten)
+- [stack](#stack)
+  - [StackAnnotation](#stackannotation)
+  - [globalErrorSeq](#globalerrorseq)
 - [symbols](#symbols)
   - [CauseTypeId](#causetypeid)
   - [CauseTypeId (type alias)](#causetypeid-type-alias)
@@ -680,7 +685,7 @@ Checks if an annotation is a StackAnnotation
 **Signature**
 
 ```ts
-export declare const isStackAnnotation: (u: unknown) => u is Cause.StackAnnotation
+export declare const isStackAnnotation: (u: unknown) => u is StackAnnotation
 ```
 
 Added in v1.0.0
@@ -965,6 +970,32 @@ export interface Sequential<E> extends Cause.Variance<E>, Equal.Equal {
 
 Added in v1.0.0
 
+## StackAnnotation (interface)
+
+**Signature**
+
+```ts
+export interface StackAnnotation {
+  readonly [StackAnnotationTypeId]: StackAnnotationTypeId
+  readonly stack: Chunk.Chunk<SourceLocation>
+  readonly seq: number
+}
+```
+
+Added in v1.0.0
+
+## StackAnnotationConstructor (interface)
+
+**Signature**
+
+```ts
+export interface StackAnnotationConstructor {
+  new (stack: Chunk.Chunk<SourceLocation>, seq: number): StackAnnotation
+}
+```
+
+Added in v1.0.0
+
 # refinements
 
 ## isAnnotatedType
@@ -1157,6 +1188,28 @@ Added in v1.0.0
 
 ```ts
 export declare const flatten: <E>(self: Cause<Cause<E>>) => Cause<E>
+```
+
+Added in v1.0.0
+
+# stack
+
+## StackAnnotation
+
+**Signature**
+
+```ts
+export declare const StackAnnotation: StackAnnotationConstructor
+```
+
+Added in v1.0.0
+
+## globalErrorSeq
+
+**Signature**
+
+```ts
+export declare const globalErrorSeq: MutableRef<number>
 ```
 
 Added in v1.0.0
