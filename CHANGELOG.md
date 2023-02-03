@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.1.9
+
+### Patch Changes
+
+- [#236](https://github.com/Effect-TS/io/pull/236) [`23b3047`](https://github.com/Effect-TS/io/commit/23b3047b54f70d80f8328e3282e140beaf4877a1) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Expose cause stack annotation for higher level integrations
+
 ## 0.1.8
 
 ### Patch Changes
