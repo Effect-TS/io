@@ -77,7 +77,7 @@ import * as Effect from '@effect/io/Effect'
 import * as Pool from '@effect/io/Pool'
 import * as Scope from '@effect/io/Scope'
 import { pipe } from '@fp-ts/core/Function'
-import * as Duration from '@fp-ts/data/Duration'
+import * as Duration from '@/data/Duration'
 
 Effect.scoped(
   pipe(

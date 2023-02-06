@@ -1,3 +1,4 @@
+import * as Duration from "@effect/data/Duration"
 import * as Cached from "@effect/io/Cached"
 import * as Effect from "@effect/io/Effect"
 import * as TestClock from "@effect/io/internal_effect_untraced/testing/testClock"
@@ -6,7 +7,6 @@ import * as Schedule from "@effect/io/Schedule"
 import * as it from "@effect/io/test/utils/extend"
 import * as Either from "@fp-ts/core/Either"
 import { pipe } from "@fp-ts/core/Function"
-import * as Duration from "@fp-ts/data/Duration"
 import { assert, describe } from "vitest"
 
 describe.concurrent("Cached", () => {

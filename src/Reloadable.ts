@@ -6,7 +6,7 @@ import * as internal from "@effect/io/internal_effect_untraced/reloadable"
 import type * as Layer from "@effect/io/Layer"
 import type * as Schedule from "@effect/io/Schedule"
 import type * as ScopedRef from "@effect/io/ScopedRef"
-import type * as Context from "@fp-ts/data/Context"
+import type * as Context from "@effect/data/Context"
 
 /**
  * @since 1.0.0

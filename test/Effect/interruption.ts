@@ -1,3 +1,7 @@
+import * as Chunk from "@effect/data/Chunk"
+import * as Duration from "@effect/data/Duration"
+import * as HashSet from "@effect/data/HashSet"
+import * as MutableRef from "@effect/data/MutableRef"
 import * as Cause from "@effect/io/Cause"
 import * as Deferred from "@effect/io/Deferred"
 import * as Effect from "@effect/io/Effect"
@@ -10,10 +14,6 @@ import { withLatch, withLatchAwait } from "@effect/io/test/utils/latch"
 import * as Either from "@fp-ts/core/Either"
 import { constVoid, pipe } from "@fp-ts/core/Function"
 import * as Option from "@fp-ts/core/Option"
-import * as Chunk from "@fp-ts/data/Chunk"
-import * as Duration from "@fp-ts/data/Duration"
-import * as HashSet from "@fp-ts/data/HashSet"
-import * as MutableRef from "@fp-ts/data/MutableRef"
 import { assert, describe } from "vitest"
 
 describe.concurrent("Effect", () => {

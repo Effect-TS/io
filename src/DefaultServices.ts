@@ -6,7 +6,7 @@ import type * as ConfigProvider from "@effect/io/Config/Provider"
 import type * as FiberRef from "@effect/io/FiberRef"
 import * as internal from "@effect/io/internal_effect_untraced/defaultServices"
 import type * as Random from "@effect/io/Random"
-import type * as Context from "@fp-ts/data/Context"
+import type * as Context from "@effect/data/Context"
 
 /**
  * @since 1.0.0

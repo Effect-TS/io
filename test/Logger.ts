@@ -5,9 +5,9 @@ import { logLevelInfo } from "@effect/io/internal_effect_untraced/core"
 import * as LogSpan from "@effect/io/Logger/Span"
 import * as Runtime from "@effect/io/Runtime"
 
+import * as Chunk from "@effect/data/Chunk"
+import * as HashMap from "@effect/data/HashMap"
 import * as Logger from "@effect/io/Logger"
-import * as Chunk from "@fp-ts/data/Chunk"
-import * as HashMap from "@fp-ts/data/HashMap"
 
 import { vi } from "vitest"
 

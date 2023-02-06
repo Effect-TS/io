@@ -30,9 +30,9 @@ import type * as OpCodes from "@effect/io/internal_effect_untraced/opCodes/cause
 import type * as Either from "@fp-ts/core/Either"
 import type * as Option from "@fp-ts/core/Option"
 import type { Predicate } from "@fp-ts/core/Predicate"
-import type * as Chunk from "@fp-ts/data/Chunk"
-import type * as Equal from "@fp-ts/data/Equal"
-import type * as HashSet from "@fp-ts/data/HashSet"
+import type * as Chunk from "@effect/data/Chunk"
+import type * as Equal from "@effect/data/Equal"
+import type * as HashSet from "@effect/data/HashSet"
 
 /**
  * @since 1.0.0

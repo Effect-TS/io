@@ -1,5 +1,5 @@
+import type * as Chunk from "@effect/data/Chunk"
 import type * as Deferred from "@effect/io/Deferred"
-import type * as Chunk from "@fp-ts/data/Chunk"
 
 /**
  * `Data` represents the state of the `TestClock`, including the clock time.

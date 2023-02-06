@@ -1,8 +1,8 @@
+import * as Context from "@effect/data/Context"
 import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import type * as FiberRef from "@effect/io/FiberRef"
 import * as core from "@effect/io/internal_effect_untraced/core"
-import * as Context from "@fp-ts/data/Context"
 
 /** @internal */
 export const SizedTypeId = Symbol.for("@effect/test/Sized")

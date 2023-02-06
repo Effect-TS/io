@@ -1,11 +1,11 @@
+import * as Equal from "@effect/data/Equal"
+import * as Hash from "@effect/data/Hash"
+import * as HashSet from "@effect/data/HashSet"
+import * as MutableRef from "@effect/data/MutableRef"
 import * as Debug from "@effect/io/Debug"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import { pipe } from "@fp-ts/core/Function"
 import * as Option from "@fp-ts/core/Option"
-import * as Equal from "@fp-ts/data/Equal"
-import * as Hash from "@fp-ts/data/Hash"
-import * as HashSet from "@fp-ts/data/HashSet"
-import * as MutableRef from "@fp-ts/data/MutableRef"
 
 /** @internal */
 const FiberIdSymbolKey = "@effect/io/Fiber/Id"

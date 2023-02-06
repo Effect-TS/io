@@ -1,3 +1,5 @@
+import * as Chunk from "@effect/data/Chunk"
+import * as List from "@effect/data/List"
 import type * as ConfigError from "@effect/io/Config/Error"
 import type * as PathPatch from "@effect/io/Config/Provider/PathPatch"
 import * as Debug from "@effect/io/Debug"
@@ -6,8 +8,6 @@ import * as Either from "@fp-ts/core/Either"
 import { pipe } from "@fp-ts/core/Function"
 import * as Option from "@fp-ts/core/Option"
 import * as String from "@fp-ts/core/String"
-import * as Chunk from "@fp-ts/data/Chunk"
-import * as List from "@fp-ts/data/List"
 
 /** @internal */
 export const empty: PathPatch.PathPatch = {

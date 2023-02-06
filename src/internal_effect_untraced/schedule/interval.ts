@@ -1,7 +1,7 @@
+import * as Duration from "@effect/data/Duration"
 import * as Debug from "@effect/io/Debug"
 import type * as Interval from "@effect/io/Schedule/Interval"
 import * as Option from "@fp-ts/core/Option"
-import * as Duration from "@fp-ts/data/Duration"
 
 /** @internal */
 const IntervalSymbolKey = "@effect/io/Schedule/Interval"

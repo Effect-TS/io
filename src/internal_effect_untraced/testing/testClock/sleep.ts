@@ -1,6 +1,6 @@
+import type * as Duration from "@effect/data/Duration"
 import type * as Deferred from "@effect/io/Deferred"
 import type * as FiberId from "@effect/io/Fiber/Id"
-import type * as Duration from "@fp-ts/data/Duration"
 
 /**
  * `Sleep` represents the state of a scheduled effect, including the time the

@@ -1,3 +1,8 @@
+import * as Chunk from "@effect/data/Chunk"
+import * as Context from "@effect/data/Context"
+import * as HashSet from "@effect/data/HashSet"
+import * as MutableQueue from "@effect/data/MutableQueue"
+import * as MRef from "@effect/data/MutableRef"
 import type * as Cause from "@effect/io/Cause"
 import type * as Clock from "@effect/io/Clock"
 import type { ConfigProvider } from "@effect/io/Config/Provider"
@@ -43,11 +48,6 @@ import type * as Supervisor from "@effect/io/Supervisor"
 import type { LazyArg } from "@fp-ts/core/Function"
 import { identity, pipe } from "@fp-ts/core/Function"
 import * as Option from "@fp-ts/core/Option"
-import * as Chunk from "@fp-ts/data/Chunk"
-import * as Context from "@fp-ts/data/Context"
-import * as HashSet from "@fp-ts/data/HashSet"
-import * as MutableQueue from "@fp-ts/data/MutableQueue"
-import * as MRef from "@fp-ts/data/MutableRef"
 
 const fibersStarted = metric.counter("effect_fiber_started")
 const fiberSuccesses = metric.counter("effect_fiber_successes")

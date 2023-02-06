@@ -15,8 +15,8 @@ import type * as LogSpan from "@effect/io/Logger/Span"
 import type { Runtime } from "@effect/io/Runtime"
 import type { LazyArg } from "@fp-ts/core/Function"
 import type * as Option from "@fp-ts/core/Option"
-import type * as Chunk from "@fp-ts/data/Chunk"
-import type * as HashMap from "@fp-ts/data/HashMap"
+import type * as Chunk from "@effect/data/Chunk"
+import type * as HashMap from "@effect/data/HashMap"
 
 /**
  * @since 1.0.0

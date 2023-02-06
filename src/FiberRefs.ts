@@ -7,7 +7,7 @@ import type * as FiberRef from "@effect/io/FiberRef"
 import * as internal from "@effect/io/internal_effect_untraced/fiberRefs"
 import type * as Option from "@fp-ts/core/Option"
 import type * as Arr from "@fp-ts/core/ReadonlyArray"
-import type * as HashSet from "@fp-ts/data/HashSet"
+import type * as HashSet from "@effect/data/HashSet"
 
 /**
  * @since 1.0.0

@@ -1,3 +1,5 @@
+import * as Chunk from "@effect/data/Chunk"
+import * as Equal from "@effect/data/Equal"
 import * as Cause from "@effect/io/Cause"
 import * as Config from "@effect/io/Config"
 import * as ConfigError from "@effect/io/Config/Error"
@@ -8,8 +10,6 @@ import * as Exit from "@effect/io/Exit"
 import * as it from "@effect/io/test/utils/extend"
 import { pipe } from "@fp-ts/core/Function"
 import * as Option from "@fp-ts/core/Option"
-import * as Chunk from "@fp-ts/data/Chunk"
-import * as Equal from "@fp-ts/data/Equal"
 import { assert, describe } from "vitest"
 
 describe.concurrent("Config", () => {

@@ -1,9 +1,9 @@
+import * as Duration from "@effect/data/Duration"
 import * as Cause from "@effect/io/Cause"
 import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import { pipe } from "@fp-ts/core/Function"
 import * as ROArray from "@fp-ts/core/ReadonlyArray"
-import * as Duration from "@fp-ts/data/Duration"
 
 const program = pipe(
   ROArray.range(1, 4),

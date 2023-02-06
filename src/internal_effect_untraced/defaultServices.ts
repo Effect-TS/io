@@ -1,3 +1,6 @@
+import type * as Chunk from "@effect/data/Chunk"
+import * as Context from "@effect/data/Context"
+import type * as Duration from "@effect/data/Duration"
 import type * as Clock from "@effect/io/Clock"
 import type * as Config from "@effect/io/Config"
 import type * as ConfigProvider from "@effect/io/Config/Provider"
@@ -10,9 +13,6 @@ import * as core from "@effect/io/internal_effect_untraced/core"
 import * as random from "@effect/io/internal_effect_untraced/random"
 import type * as Random from "@effect/io/Random"
 import { pipe } from "@fp-ts/core/Function"
-import type * as Chunk from "@fp-ts/data/Chunk"
-import * as Context from "@fp-ts/data/Context"
-import type * as Duration from "@fp-ts/data/Duration"
 
 /** @internal */
 export const liveServices: Context.Context<DefaultServices.DefaultServices> = pipe(

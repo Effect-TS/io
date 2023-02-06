@@ -8,7 +8,7 @@ import * as core from "@effect/io/internal_effect_untraced/core"
 import type * as Either from "@fp-ts/core/Either"
 import type * as Option from "@fp-ts/core/Option"
 import type { Predicate } from "@fp-ts/core/Predicate"
-import type * as Chunk from "@fp-ts/data/Chunk"
+import type * as Chunk from "@effect/data/Chunk"
 
 /**
  * An `Exit<E, A>` describes the result of a executing an `Effect` workflow.

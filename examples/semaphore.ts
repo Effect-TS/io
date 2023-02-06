@@ -1,7 +1,7 @@
+import * as D from "@effect/data/Duration"
 import * as Ca from "@effect/io/Cause"
 import * as E from "@effect/io/Effect"
 import * as Ex from "@effect/io/Exit"
-import * as D from "@fp-ts/data/Duration"
 
 const program = E.gen(function*($) {
   const sem = yield* $(E.makeSemaphore(4))

@@ -1,3 +1,5 @@
+import * as Chunk from "@effect/data/Chunk"
+import * as Duration from "@effect/data/Duration"
 import * as Cause from "@effect/io/Cause"
 import * as Clock from "@effect/io/Clock"
 import * as Deferred from "@effect/io/Deferred"
@@ -13,8 +15,6 @@ import * as it from "@effect/io/test/utils/extend"
 import * as Either from "@fp-ts/core/Either"
 import { constVoid, pipe } from "@fp-ts/core/Function"
 import * as Option from "@fp-ts/core/Option"
-import * as Chunk from "@fp-ts/data/Chunk"
-import * as Duration from "@fp-ts/data/Duration"
 import { assert, describe } from "vitest"
 
 describe.concurrent("Schedule", () => {
@@ -969,7 +969,7 @@ const runManuallyLoop = <Env, In, Out>(
     })
   )
 }
-// TODO(Mike/Max): remove if added to `@fp-ts/data`
+// TODO(Mike/Max): remove if added to `@effect/data`
 const scanLeft = <A, B>(self: Chunk.Chunk<A>, b: B, f: (b: B, a: A) => B): Chunk.Chunk<B> => {
   const len = self.length
   const out = new Array(len + 1)

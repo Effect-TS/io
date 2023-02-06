@@ -1,3 +1,4 @@
+import * as HashSet from "@effect/data/HashSet"
 import type * as ConfigProvider from "@effect/io/Config/Provider"
 import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
@@ -11,7 +12,6 @@ import type * as Layer from "@effect/io/Layer"
 import type * as Logger from "@effect/io/Logger"
 import type * as LogLevel from "@effect/io/Logger/Level"
 import type * as Supervisor from "@effect/io/Supervisor"
-import * as HashSet from "@fp-ts/data/HashSet"
 
 // circular with Logger
 

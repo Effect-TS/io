@@ -1,3 +1,4 @@
+import * as HashMap from "@effect/data/HashMap"
 import * as Cause from "@effect/io/Cause"
 import * as Effect from "@effect/io/Effect"
 import * as Fiber from "@effect/io/Fiber"
@@ -8,7 +9,6 @@ import * as Queue from "@effect/io/Queue"
 import * as it from "@effect/io/test/utils/extend"
 import { pipe } from "@fp-ts/core/Function"
 import * as Option from "@fp-ts/core/Option"
-import * as HashMap from "@fp-ts/data/HashMap"
 import { assert, describe } from "vitest"
 
 describe.concurrent("FiberRefs", () => {
