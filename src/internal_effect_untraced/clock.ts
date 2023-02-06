@@ -1,11 +1,11 @@
+import * as Context from "@effect/data/Context"
+import type * as Duration from "@effect/data/Duration"
 import type * as Clock from "@effect/io/Clock"
 import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as Either from "@fp-ts/core/Either"
 import { constFalse } from "@fp-ts/core/Function"
-import * as Context from "@fp-ts/data/Context"
-import type * as Duration from "@fp-ts/data/Duration"
 
 /** @internal */
 const ClockSymbolKey = "@effect/io/Clock"

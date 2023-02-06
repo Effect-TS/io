@@ -45,12 +45,12 @@ import type * as Either from "@fp-ts/core/Either"
 import type { LazyArg } from "@fp-ts/core/Function"
 import type * as Option from "@fp-ts/core/Option"
 import type { Predicate, Refinement } from "@fp-ts/core/Predicate"
-import type * as Chunk from "@fp-ts/data/Chunk"
-import type * as Context from "@fp-ts/data/Context"
-import type * as Duration from "@fp-ts/data/Duration"
-import type * as Equal from "@fp-ts/data/Equal"
-import type * as HashMap from "@fp-ts/data/HashMap"
-import type * as HashSet from "@fp-ts/data/HashSet"
+import type * as Chunk from "@effect/data/Chunk"
+import type * as Context from "@effect/data/Context"
+import type * as Duration from "@effect/data/Duration"
+import type * as Equal from "@effect/data/Equal"
+import type * as HashMap from "@effect/data/HashMap"
+import type * as HashSet from "@effect/data/HashSet"
 
 /**
  * @since 1.0.0

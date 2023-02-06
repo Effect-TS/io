@@ -1,3 +1,4 @@
+import * as Chunk from "@effect/data/Chunk"
 import * as Deferred from "@effect/io/Deferred"
 import * as Effect from "@effect/io/Effect"
 import * as Fiber from "@effect/io/Fiber"
@@ -5,7 +6,6 @@ import * as Hub from "@effect/io/Hub"
 import * as Queue from "@effect/io/Queue"
 import * as it from "@effect/io/test/utils/extend"
 import { pipe } from "@fp-ts/core/Function"
-import * as Chunk from "@fp-ts/data/Chunk"
 import { assert, describe } from "vitest"
 
 describe.concurrent("Hub", () => {

@@ -1,3 +1,4 @@
+import * as Chunk from "@effect/data/Chunk"
 import * as Cause from "@effect/io/Cause"
 import * as Deferred from "@effect/io/Deferred"
 import * as Effect from "@effect/io/Effect"
@@ -9,7 +10,6 @@ import * as it from "@effect/io/test/utils/extend"
 import * as Either from "@fp-ts/core/Either"
 import { pipe } from "@fp-ts/core/Function"
 import * as Option from "@fp-ts/core/Option"
-import * as Chunk from "@fp-ts/data/Chunk"
 import { assert, describe } from "vitest"
 
 export const waitForValue = <A>(ref: Effect.Effect<never, never, A>, value: A): Effect.Effect<never, never, A> => {

@@ -1,10 +1,10 @@
+import * as Duration from "@effect/data/Duration"
 import * as Effect from "@effect/io/Effect"
 import * as TestEnvironment from "@effect/io/internal_effect_untraced/testing/testEnvironment"
 import type * as TestServices from "@effect/io/internal_effect_untraced/testing/testServices"
 import * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"
 import { pipe } from "@fp-ts/core/Function"
-import * as Duration from "@fp-ts/data/Duration"
 import type { TestAPI } from "vitest"
 import * as V from "vitest"
 

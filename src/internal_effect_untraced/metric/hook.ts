@@ -1,3 +1,6 @@
+import * as Chunk from "@effect/data/Chunk"
+import * as Duration from "@effect/data/Duration"
+import * as HashMap from "@effect/data/HashMap"
 import * as Debug from "@effect/io/Debug"
 import * as metricState from "@effect/io/internal_effect_untraced/metric/state"
 import type * as MetricHook from "@effect/io/Metric/Hook"
@@ -6,9 +9,6 @@ import type { LazyArg } from "@fp-ts/core/Function"
 import { pipe } from "@fp-ts/core/Function"
 import * as number from "@fp-ts/core/Number"
 import * as Option from "@fp-ts/core/Option"
-import * as Chunk from "@fp-ts/data/Chunk"
-import * as Duration from "@fp-ts/data/Duration"
-import * as HashMap from "@fp-ts/data/HashMap"
 
 /** @internal */
 const MetricHookSymbolKey = "@effect/io/Metric/Hook"

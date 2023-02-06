@@ -11,10 +11,10 @@ import * as circular from "@effect/io/internal_effect_untraced/layer/circular"
 import * as internal from "@effect/io/internal_effect_untraced/supervisor"
 import type * as Layer from "@effect/io/Layer"
 import type * as Option from "@fp-ts/core/Option"
-import type * as Chunk from "@fp-ts/data/Chunk"
-import type * as Context from "@fp-ts/data/Context"
-import type * as MutableRef from "@fp-ts/data/MutableRef"
-import type * as SortedSet from "@fp-ts/data/SortedSet"
+import type * as Chunk from "@effect/data/Chunk"
+import type * as Context from "@effect/data/Context"
+import type * as MutableRef from "@effect/data/MutableRef"
+import type * as SortedSet from "@effect/data/SortedSet"
 
 /**
  * @since 1.0.0

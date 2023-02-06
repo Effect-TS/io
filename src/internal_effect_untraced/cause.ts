@@ -1,3 +1,7 @@
+import * as Chunk from "@effect/data/Chunk"
+import * as Equal from "@effect/data/Equal"
+import * as Hash from "@effect/data/Hash"
+import * as HashSet from "@effect/data/HashSet"
 import type * as Cause from "@effect/io/Cause"
 import * as Debug from "@effect/io/Debug"
 import * as FiberId from "@effect/io/Fiber/Id"
@@ -6,12 +10,8 @@ import * as Either from "@fp-ts/core/Either"
 import { constFalse, constTrue, identity, pipe } from "@fp-ts/core/Function"
 import * as Option from "@fp-ts/core/Option"
 import type { Predicate } from "@fp-ts/core/Predicate"
-import * as Chunk from "@fp-ts/data/Chunk"
-import * as Equal from "@fp-ts/data/Equal"
-import * as Hash from "@fp-ts/data/Hash"
-import * as HashSet from "@fp-ts/data/HashSet"
 
-import * as MRef from "@fp-ts/data/MutableRef"
+import * as MRef from "@effect/data/MutableRef"
 
 // -----------------------------------------------------------------------------
 // Models

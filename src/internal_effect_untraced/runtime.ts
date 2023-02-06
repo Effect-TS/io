@@ -1,3 +1,4 @@
+import * as Context from "@effect/data/Context"
 import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
@@ -20,7 +21,6 @@ import type * as Scheduler from "@effect/io/Scheduler"
 import type { Either } from "@fp-ts/core/Either"
 import { identity, pipe } from "@fp-ts/core/Function"
 import * as Option from "@fp-ts/core/Option"
-import * as Context from "@fp-ts/data/Context"
 
 /** @internal */
 export const unsafeFork = <R>(runtime: Runtime.Runtime<R>) =>

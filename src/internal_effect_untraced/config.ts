@@ -1,3 +1,6 @@
+import * as Chunk from "@effect/data/Chunk"
+import type * as HashMap from "@effect/data/HashMap"
+import * as HashSet from "@effect/data/HashSet"
 import type * as Config from "@effect/io/Config"
 import * as ConfigError from "@effect/io/Config/Error"
 import type * as ConfigSecret from "@effect/io/Config/Secret"
@@ -11,9 +14,6 @@ import type { LazyArg } from "@fp-ts/core/Function"
 import { constTrue, pipe } from "@fp-ts/core/Function"
 import * as Option from "@fp-ts/core/Option"
 import type { Predicate, Refinement } from "@fp-ts/core/Predicate"
-import * as Chunk from "@fp-ts/data/Chunk"
-import type * as HashMap from "@fp-ts/data/HashMap"
-import * as HashSet from "@fp-ts/data/HashSet"
 
 /** @internal */
 const ConfigSymbolKey = "@effect/io/Config"

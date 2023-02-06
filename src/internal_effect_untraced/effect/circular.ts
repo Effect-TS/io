@@ -1,3 +1,8 @@
+import type * as Chunk from "@effect/data/Chunk"
+import type * as Duration from "@effect/data/Duration"
+import * as Equal from "@effect/data/Equal"
+import * as MutableHashMap from "@effect/data/MutableHashMap"
+import * as MutableRef from "@effect/data/MutableRef"
 import type * as Cause from "@effect/io/Cause"
 import * as Debug from "@effect/io/Debug"
 import type * as Deferred from "@effect/io/Deferred"
@@ -25,11 +30,6 @@ import * as Either from "@fp-ts/core/Either"
 import type { LazyArg } from "@fp-ts/core/Function"
 import { pipe } from "@fp-ts/core/Function"
 import * as Option from "@fp-ts/core/Option"
-import type * as Chunk from "@fp-ts/data/Chunk"
-import type * as Duration from "@fp-ts/data/Duration"
-import * as Equal from "@fp-ts/data/Equal"
-import * as MutableHashMap from "@fp-ts/data/MutableHashMap"
-import * as MutableRef from "@fp-ts/data/MutableRef"
 
 /** @internal */
 class Semaphore {

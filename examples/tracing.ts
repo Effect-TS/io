@@ -1,5 +1,5 @@
+import { millis } from "@effect/data/Duration"
 import * as Effect from "@effect/io/Effect"
-import { millis } from "@fp-ts/data/Duration"
 
 class MyError extends Error {
   readonly _tag = "A"

@@ -2,11 +2,11 @@
  * @since 1.0.0
  */
 
+import type * as Differ from "@effect/data/Differ"
 import type * as RuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
 import * as circular from "@effect/io/internal_effect_untraced/layer/circular"
 import * as internal from "@effect/io/internal_effect_untraced/runtimeFlags"
 import type * as Layer from "@effect/io/Layer"
-import type * as Differ from "@fp-ts/data/Differ"
 
 /**
  * Represents a set of `RuntimeFlag`s. `RuntimeFlag`s affect the operation of

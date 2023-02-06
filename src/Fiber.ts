@@ -16,8 +16,8 @@ import type * as Scope from "@effect/io/Scope"
 import type * as Either from "@fp-ts/core/Either"
 import type * as Option from "@fp-ts/core/Option"
 import type * as order from "@fp-ts/core/typeclass/Order"
-import type * as Chunk from "@fp-ts/data/Chunk"
-import type * as HashSet from "@fp-ts/data/HashSet"
+import type * as Chunk from "@effect/data/Chunk"
+import type * as HashSet from "@effect/data/HashSet"
 
 /**
  * @since 1.0.0

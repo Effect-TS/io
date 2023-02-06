@@ -1,14 +1,14 @@
 /**
  * @since 1.0.0
  */
+import type * as Chunk from "@effect/data/Chunk"
+import type * as Duration from "@effect/data/Duration"
+import type * as Equal from "@effect/data/Equal"
+import type * as HashSet from "@effect/data/HashSet"
 import * as internal from "@effect/io/internal_effect_untraced/metric/key"
 import type * as MetricBoundaries from "@effect/io/Metric/Boundaries"
 import type * as MetricKeyType from "@effect/io/Metric/KeyType"
 import type * as MetricLabel from "@effect/io/Metric/Label"
-import type * as Chunk from "@fp-ts/data/Chunk"
-import type * as Duration from "@fp-ts/data/Duration"
-import type * as Equal from "@fp-ts/data/Equal"
-import type * as HashSet from "@fp-ts/data/HashSet"
 
 /**
  * @since 1.0.0

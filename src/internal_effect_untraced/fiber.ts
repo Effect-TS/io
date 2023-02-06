@@ -1,3 +1,5 @@
+import * as Chunk from "@effect/data/Chunk"
+import * as HashSet from "@effect/data/HashSet"
 import type * as Cause from "@effect/io/Cause"
 import * as Clock from "@effect/io/Clock"
 import * as Debug from "@effect/io/Debug"
@@ -14,8 +16,6 @@ import { pipe } from "@fp-ts/core/Function"
 import * as number from "@fp-ts/core/Number"
 import * as Option from "@fp-ts/core/Option"
 import * as order from "@fp-ts/core/typeclass/Order"
-import * as Chunk from "@fp-ts/data/Chunk"
-import * as HashSet from "@fp-ts/data/HashSet"
 
 /** @internal */
 const FiberSymbolKey = "@effect/io/Fiber"

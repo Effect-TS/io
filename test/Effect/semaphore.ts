@@ -1,7 +1,7 @@
+import * as D from "@effect/data/Duration"
 import * as Effect from "@effect/io/Effect"
 import * as TestClock from "@effect/io/internal_effect_untraced/testing/testClock"
 import * as it from "@effect/io/test/utils/extend"
-import * as D from "@fp-ts/data/Duration"
 import { assert, describe } from "vitest"
 
 describe.concurrent("Effect", () => {

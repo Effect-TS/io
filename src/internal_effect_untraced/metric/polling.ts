@@ -1,3 +1,4 @@
+import * as Chunk from "@effect/data/Chunk"
 import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import type * as Fiber from "@effect/io/Fiber"
@@ -10,7 +11,6 @@ import type * as PollingMetric from "@effect/io/Metric/Polling"
 import type * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"
 import { pipe } from "@fp-ts/core/Function"
-import * as Chunk from "@fp-ts/data/Chunk"
 
 /** @internal */
 const PollingMetricSymbolKey = "@effect/io/Metric/Polling"

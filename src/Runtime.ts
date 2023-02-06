@@ -11,7 +11,7 @@ import { unsafeRunSync, unsafeRunSyncExit } from "@effect/io/internal_effect_unt
 import * as internal from "@effect/io/internal_effect_untraced/runtime"
 import type { Scheduler } from "@effect/io/Scheduler"
 import type { Either } from "@fp-ts/core/Either"
-import type * as Context from "@fp-ts/data/Context"
+import type * as Context from "@effect/data/Context"
 
 /**
  * @since 1.0.0

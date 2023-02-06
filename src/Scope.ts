@@ -7,7 +7,7 @@ import type * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
 import type * as Exit from "@effect/io/Exit"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as fiberRuntime from "@effect/io/internal_effect_untraced/fiberRuntime"
-import type * as Context from "@fp-ts/data/Context"
+import type * as Context from "@effect/data/Context"
 
 /**
  * @since 1.0.0

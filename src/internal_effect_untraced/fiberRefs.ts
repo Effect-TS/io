@@ -1,3 +1,5 @@
+import * as Equal from "@effect/data/Equal"
+import * as HashSet from "@effect/data/HashSet"
 import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import type * as FiberId from "@effect/io/Fiber/Id"
@@ -7,8 +9,6 @@ import * as core from "@effect/io/internal_effect_untraced/core"
 import { pipe } from "@fp-ts/core/Function"
 import * as Option from "@fp-ts/core/Option"
 import * as Arr from "@fp-ts/core/ReadonlyArray"
-import * as Equal from "@fp-ts/data/Equal"
-import * as HashSet from "@fp-ts/data/HashSet"
 
 /** @internal */
 export function unsafeMake(

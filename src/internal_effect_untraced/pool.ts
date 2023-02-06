@@ -1,3 +1,6 @@
+import * as Context from "@effect/data/Context"
+import type * as Duration from "@effect/data/Duration"
+import * as HashSet from "@effect/data/HashSet"
 import type * as Clock from "@effect/io/Clock"
 import * as Debug from "@effect/io/Debug"
 import * as Effect from "@effect/io/Effect"
@@ -8,9 +11,6 @@ import * as Queue from "@effect/io/Queue"
 import * as Ref from "@effect/io/Ref"
 import * as Scope from "@effect/io/Scope"
 import { pipe } from "@fp-ts/core/Function"
-import * as Context from "@fp-ts/data/Context"
-import type * as Duration from "@fp-ts/data/Duration"
-import * as HashSet from "@fp-ts/data/HashSet"
 
 /** @internal */
 const PoolSymbolKey = "@effect/io/Pool"

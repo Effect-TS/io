@@ -1,10 +1,10 @@
 /**
  * @since 1.0.0
  */
+import type * as Equal from "@effect/data/Equal"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import * as internal from "@effect/io/internal_effect_untraced/fiberStatus"
-import type * as Equal from "@fp-ts/data/Equal"
 
 /**
  * @since 1.0.0

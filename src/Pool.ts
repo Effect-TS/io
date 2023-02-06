@@ -4,7 +4,7 @@
 import type * as Effect from "@effect/io/Effect"
 import * as internal from "@effect/io/internal_effect_untraced/pool"
 import type * as Scope from "@effect/io/Scope"
-import type * as Duration from "@fp-ts/data/Duration"
+import type * as Duration from "@effect/data/Duration"
 
 /**
  * @since 1.0.0
@@ -81,11 +81,11 @@ export const make: <R, E, A>(
  * unspecified order.
  *
  * ```ts
+ * import * as Duration from "@effect/data/Duration"
  * import * as Effect from "@effect/io/Effect"
  * import * as Pool from "@effect/io/Pool"
  * import * as Scope from "@effect/io/Scope"
  * import { pipe } from "@fp-ts/core/Function"
- * import * as Duration from "@fp-ts/data/Duration"
  *
  * Effect.scoped(
  *   pipe(

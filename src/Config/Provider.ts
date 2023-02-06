@@ -1,15 +1,15 @@
 /**
  * @since 1.0.0
  */
+import type * as Chunk from "@effect/data/Chunk"
+import type * as Context from "@effect/data/Context"
+import type * as HashSet from "@effect/data/HashSet"
 import type * as Config from "@effect/io/Config"
 import type * as ConfigError from "@effect/io/Config/Error"
 import type * as PathPatch from "@effect/io/Config/Provider/PathPatch"
 import type * as Effect from "@effect/io/Effect"
 import * as internal from "@effect/io/internal_effect_untraced/configProvider"
 import type { LazyArg } from "@fp-ts/core/Function"
-import type * as Chunk from "@fp-ts/data/Chunk"
-import type * as Context from "@fp-ts/data/Context"
-import type * as HashSet from "@fp-ts/data/HashSet"
 
 /**
  * @since 1.0.0

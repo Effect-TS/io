@@ -1,10 +1,10 @@
+import { equals } from "@effect/data/Equal"
 import * as Debug from "@effect/io/Debug"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRefs from "@effect/io/FiberRefs"
 import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
 import * as _fiberRefs from "@effect/io/internal_effect_untraced/fiberRefs"
 import * as Arr from "@fp-ts/core/ReadonlyArray"
-import { equals } from "@fp-ts/data/Equal"
 
 /** @internal */
 export const OP_EMPTY = "Empty" as const

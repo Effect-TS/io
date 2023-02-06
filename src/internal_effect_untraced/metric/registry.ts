@@ -1,3 +1,5 @@
+import * as HashSet from "@effect/data/HashSet"
+import * as MutableHashMap from "@effect/data/MutableHashMap"
 import * as metricHook from "@effect/io/internal_effect_untraced/metric/hook"
 import * as metricKeyType from "@effect/io/internal_effect_untraced/metric/keyType"
 import * as metricPair from "@effect/io/internal_effect_untraced/metric/pair"
@@ -8,8 +10,6 @@ import type * as MetricPair from "@effect/io/Metric/Pair"
 import type * as MetricRegistry from "@effect/io/Metric/Registry"
 import { pipe } from "@fp-ts/core/Function"
 import * as Option from "@fp-ts/core/Option"
-import * as HashSet from "@fp-ts/data/HashSet"
-import * as MutableHashMap from "@fp-ts/data/MutableHashMap"
 
 /** @internal */
 const MetricRegistrySymbolKey = "@effect/io/Metric/Registry"

@@ -15,11 +15,11 @@ import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
 import type { LazyArg } from "@fp-ts/core/Function"
 import type * as Option from "@fp-ts/core/Option"
-import type * as Chunk from "@fp-ts/data/Chunk"
-import type * as Context from "@fp-ts/data/Context"
-import type * as Differ from "@fp-ts/data/Differ"
-import type * as HashMap from "@fp-ts/data/HashMap"
-import type * as HashSet from "@fp-ts/data/HashSet"
+import type * as Chunk from "@effect/data/Chunk"
+import type * as Context from "@effect/data/Context"
+import type * as Differ from "@effect/data/Differ"
+import type * as HashMap from "@effect/data/HashMap"
+import type * as HashSet from "@effect/data/HashSet"
 
 /**
  * @since 1.0.0

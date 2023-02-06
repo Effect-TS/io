@@ -1,13 +1,13 @@
 /**
  * @since 1.0.0
  */
+import type * as Chunk from "@effect/data/Chunk"
 import type * as Effect from "@effect/io/Effect"
 import type * as Fiber from "@effect/io/Fiber"
 import * as internal from "@effect/io/internal_effect_untraced/metric/polling"
 import type * as Metric from "@effect/io/Metric"
 import type * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"
-import type * as Chunk from "@fp-ts/data/Chunk"
 
 /**
  * @since 1.0.0

@@ -1,9 +1,9 @@
+import * as Context from "@effect/data/Context"
 import * as Debug from "@effect/io/Debug"
 import type * as DefaultServices from "@effect/io/DefaultServices"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as defaultServices from "@effect/io/internal_effect_untraced/defaultServices"
-import * as Context from "@fp-ts/data/Context"
 
 /** @internal */
 export const LiveTypeId = Symbol.for("@effect/test/Live")

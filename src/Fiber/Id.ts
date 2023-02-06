@@ -1,10 +1,10 @@
 /**
  * @since 1.0.0
  */
+import type * as Equal from "@effect/data/Equal"
+import type * as HashSet from "@effect/data/HashSet"
 import * as internal from "@effect/io/internal_effect_untraced/fiberId"
 import type * as Option from "@fp-ts/core/Option"
-import type * as Equal from "@fp-ts/data/Equal"
-import type * as HashSet from "@fp-ts/data/HashSet"
 
 /**
  * @since 1.0.0

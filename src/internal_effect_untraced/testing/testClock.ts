@@ -1,3 +1,9 @@
+import * as Chunk from "@effect/data/Chunk"
+import * as Context from "@effect/data/Context"
+import * as Duration from "@effect/data/Duration"
+import * as Equal from "@effect/data/Equal"
+import * as HashMap from "@effect/data/HashMap"
+import type * as SortedSet from "@effect/data/SortedSet"
 import type * as Clock from "@effect/io/Clock"
 import * as Debug from "@effect/io/Debug"
 import type { Deferred } from "@effect/io/Deferred"
@@ -26,12 +32,6 @@ import { constVoid, identity, pipe } from "@fp-ts/core/Function"
 import * as number from "@fp-ts/core/Number"
 import * as Option from "@fp-ts/core/Option"
 import * as Order from "@fp-ts/core/typeclass/Order"
-import * as Chunk from "@fp-ts/data/Chunk"
-import * as Context from "@fp-ts/data/Context"
-import * as Duration from "@fp-ts/data/Duration"
-import * as Equal from "@fp-ts/data/Equal"
-import * as HashMap from "@fp-ts/data/HashMap"
-import type * as SortedSet from "@fp-ts/data/SortedSet"
 
 /**
  * A `TestClock` makes it easy to deterministically and efficiently test effects
@@ -46,10 +46,10 @@ import type * as SortedSet from "@fp-ts/data/SortedSet"
  * For example, here is how we can test `Effect.timeout` using `TestClock`:
  *
  * ```ts
+ * import * as Duration from "@effect/data/Duration"
  * import * as Effect from "@effect/io/Effect"
  * import * as Fiber from "@effect/io/Fiber"
  * import * as TestClock from "@effect/test/TestClock"
- * import * as Duration from "@fp-ts/data/Duration"
  * import * as Option from "@fp-ts/core/Option"
  *
  * Effect.gen(function*() {

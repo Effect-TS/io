@@ -1,3 +1,5 @@
+import * as Context from "@effect/data/Context"
+import type * as SortedSet from "@effect/data/SortedSet"
 import * as Debug from "@effect/io/Debug"
 import type * as DefaultServices from "@effect/io/DefaultServices"
 import * as Effect from "@effect/io/Effect"
@@ -17,8 +19,6 @@ import * as TestConfig from "@effect/io/internal_effect_untraced/testing/testCon
 import type * as Layer from "@effect/io/Layer"
 import type * as Scope from "@effect/io/Scope"
 import { pipe } from "@fp-ts/core/Function"
-import * as Context from "@fp-ts/data/Context"
-import type * as SortedSet from "@fp-ts/data/SortedSet"
 
 /** @internal */
 export type TestServices =

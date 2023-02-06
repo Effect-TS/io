@@ -1,3 +1,7 @@
+import * as Chunk from "@effect/data/Chunk"
+import * as Context from "@effect/data/Context"
+import * as HashMap from "@effect/data/HashMap"
+import * as HashSet from "@effect/data/HashSet"
 import type * as Config from "@effect/io/Config"
 import type * as ConfigError from "@effect/io/Config/Error"
 import type * as ConfigProvider from "@effect/io/Config/Provider"
@@ -14,10 +18,6 @@ import * as Either from "@fp-ts/core/Either"
 import type { LazyArg } from "@fp-ts/core/Function"
 import { pipe } from "@fp-ts/core/Function"
 import * as Option from "@fp-ts/core/Option"
-import * as Chunk from "@fp-ts/data/Chunk"
-import * as Context from "@fp-ts/data/Context"
-import * as HashMap from "@fp-ts/data/HashMap"
-import * as HashSet from "@fp-ts/data/HashSet"
 
 /** @internal */
 export const configProviderTag: Context.Tag<ConfigProvider.ConfigProvider> = Context.Tag()
