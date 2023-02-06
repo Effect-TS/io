@@ -259,6 +259,51 @@ describe.concurrent("Effect", () => {
       ))
       assert.deepStrictEqual(result, error)
     }))
+  it.effect("catchTags - recovers from one of several tagged errors", () =>
+    Effect.gen(function*($) {
+      interface ErrorA {
+        readonly _tag: "ErrorA"
+      }
+      interface ErrorB {
+        readonly _tag: "ErrorB"
+      }
+      const effect: Effect.Effect<never, ErrorA | ErrorB, never> = Effect.fail({ _tag: "ErrorA" })
+      const result = yield* $(Effect.catchTags(effect, {
+        ErrorA: (e) => Effect.succeed(e)
+      }))
+      assert.deepStrictEqual(result, { _tag: "ErrorA" })
+    }))
+  it.effect("catchTags - does not recover from one of several tagged errors", () =>
+    Effect.gen(function*($) {
+      interface ErrorA {
+        readonly _tag: "ErrorA"
+      }
+      interface ErrorB {
+        readonly _tag: "ErrorB"
+      }
+      const effect: Effect.Effect<never, ErrorA | ErrorB, never> = Effect.fail({ _tag: "ErrorB" })
+      const result = yield* $(Effect.exit(
+        Effect.catchTags(effect, {
+          ErrorA: (e) => Effect.succeed(e)
+        })
+      ))
+      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail<ErrorB>({ _tag: "ErrorB" }))
+    }))
+  it.effect("catchTags - recovers from all tagged errors", () =>
+    Effect.gen(function*($) {
+      interface ErrorA {
+        readonly _tag: "ErrorA"
+      }
+      interface ErrorB {
+        readonly _tag: "ErrorB"
+      }
+      const effect: Effect.Effect<never, ErrorA | ErrorB, never> = Effect.fail({ _tag: "ErrorB" })
+      const result = yield* $(Effect.catchTags(effect, {
+        ErrorA: (e) => Effect.succeed(e),
+        ErrorB: (e) => Effect.succeed(e)
+      }))
+      assert.deepStrictEqual(result, { _tag: "ErrorB" })
+    }))
   it.effect("continueOrFail - returns failure ignoring value", () =>
     Effect.gen(function*($) {
       const goodCase = yield* $(exactlyOnce(0, (effect) =>
