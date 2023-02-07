@@ -1,10 +1,10 @@
 /**
  * @since 1.0.0
  */
+import type * as Duration from "@effect/data/Duration"
 import type * as Effect from "@effect/io/Effect"
 import * as internal from "@effect/io/internal_effect_untraced/pool"
 import type * as Scope from "@effect/io/Scope"
-import type * as Duration from "@effect/data/Duration"
 
 /**
  * @since 1.0.0

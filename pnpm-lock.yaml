@@ -20,7 +20,6 @@ importers:
       '@effect/core': ^0.0.16
       '@effect/data': ~0.0.1
       '@effect/language-service': ^0.0.19
-      '@effect/vite-plugin': ^0.0.1
       '@fp-ts/core': ~0.1.1
       '@repo-tooling/eslint-plugin-dprint': ^0.0.4
       '@rollup/pluginutils': ^5.0.2
@@ -74,7 +73,6 @@ importers:
       '@effect/babel-plugin': 0.1.0_@babel+core@7.20.12
       '@effect/core': 0.0.16
       '@effect/language-service': 0.0.19
-      '@effect/vite-plugin': 0.0.1_vite@4.1.1
       '@repo-tooling/eslint-plugin-dprint': 0.0.4_typescript@4.9.5
       '@rollup/pluginutils': 5.0.2
       '@types/benchmark': 2.1.2
@@ -731,18 +729,6 @@ packages:
     resolution: {integrity: sha512-oTn6U9GCg01E+kYwUBs4LM6k6hVq0pA7ZAYKdj972n2LjYeqg4+We6ZqoYWH2Pw5TDHOavtIEdYqt61uUxiZgg==}
     dependencies:
       '@tsplus/stdlib': 0.2.8
-    dev: true
-
-  /@effect/vite-plugin/0.0.1_vite@4.1.1:
-    resolution: {integrity: sha512-SD4dwsZMSZ5jjeKfTIIy6n1Ft+5/oOuerSZynsLxLTzXUVfpdje/f33Iu5cUhEJq/ats1upYp5mZvQEmL9Y3vQ==}
-    dependencies:
-      '@babel/core': 7.20.12
-      '@rollup/pluginutils': 5.0.2
-      '@vitejs/plugin-react': 3.1.0_vite@4.1.1
-    transitivePeerDependencies:
-      - rollup
-      - supports-color
-      - vite
     dev: true
 
   /@esbuild/android-arm/0.16.17:
