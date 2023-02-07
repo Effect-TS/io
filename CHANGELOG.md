@@ -1,5 +1,13 @@
 # @effect/io
 
+## 0.1.10
+
+### Patch Changes
+
+- [#238](https://github.com/Effect-TS/io/pull/238) [`f43e28d`](https://github.com/Effect-TS/io/commit/f43e28dcf8c10d0a054af23f23fccc04bd7006ad) Thanks [@IMax153](https://github.com/IMax153)! - add Effect.catchTags
+
+- [#240](https://github.com/Effect-TS/io/pull/240) [`f8fe8b6`](https://github.com/Effect-TS/io/commit/f8fe8b6cff6624702285464ef781d855bb3f231d) Thanks [@IMax153](https://github.com/IMax153)! - replace @fp-ts/data with @effect/data
+
 ## 0.1.9
 
 ### Patch Changes
