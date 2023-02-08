@@ -1079,8 +1079,11 @@ export const contextWithEffect: <R, R0, E, A>(
  * @category error handling
  */
 export const continueOrFail: {
-  <E1, A, A2>(error: E1, pf: (a: A) => Option.Option<A2>): <R, E>(self: Effect<R, E, A>) => Effect<R, E1 | E, A2>
-  <R, E, A, E1, A2>(self: Effect<R, E, A>, error: E1, pf: (a: A) => Option.Option<A2>): Effect<R, E | E1, A2>
+  <E1, A, A2>(
+    error: LazyArg<E1>,
+    pf: (a: A) => Option.Option<A2>
+  ): <R, E>(self: Effect<R, E, A>) => Effect<R, E1 | E, A2>
+  <R, E, A, E1, A2>(self: Effect<R, E, A>, error: LazyArg<E1>, pf: (a: A) => Option.Option<A2>): Effect<R, E | E1, A2>
 } = effect.continueOrFail
 
 /**
@@ -1092,12 +1095,12 @@ export const continueOrFail: {
  */
 export const continueOrFailEffect: {
   <E1, A, R2, E2, A2>(
-    error: E1,
+    error: LazyArg<E1>,
     pf: (a: A) => Option.Option<Effect<R2, E2, A2>>
   ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E1 | E2 | E, A2>
   <R, E, A, E1, R2, E2, A2>(
     self: Effect<R, E, A>,
-    error: E1,
+    error: LazyArg<E1>,
     pf: (a: A) => Option.Option<Effect<R2, E2, A2>>
   ): Effect<R | R2, E | E1 | E2, A2>
 } = effect.continueOrFailEffect

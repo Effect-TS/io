@@ -40,7 +40,7 @@ describe.concurrent("Fiber", () => {
       const blockingOn = yield* $(pipe(
         Fiber.status(fiber),
         Effect.continueOrFail(
-          void 0 as void,
+          () => void 0 as void,
           (status) => FiberStatus.isSuspended(status) ? Option.some(status.blockingOn) : Option.none()
         ),
         Effect.eventually
