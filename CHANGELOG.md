@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.1.11
+
+### Patch Changes
+
+- [#242](https://github.com/Effect-TS/io/pull/242) [`93574a7`](https://github.com/Effect-TS/io/commit/93574a75188b50748321e1565786d17aef9d8afc) Thanks [@IMax153](https://github.com/IMax153)! - migrate dual signatures to @fp-ts/core@0.2.0 api
+
 ## 0.1.10
 
 ### Patch Changes
