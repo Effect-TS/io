@@ -82,12 +82,12 @@ export const make = Debug.methodWithTrace((trace, restore) =>
 /** @internal */
 export const set = Debug.dualWithTrace<
   <A, R, E>(
+    acquire: Effect.Effect<R, E, A>
+  ) => (self: ScopedRef.ScopedRef<A>) => Effect.Effect<Exclude<R, Scope.Scope>, E, void>,
+  <A, R, E>(
     self: ScopedRef.ScopedRef<A>,
     acquire: Effect.Effect<R, E, A>
-  ) => Effect.Effect<Exclude<R, Scope.Scope>, E, void>,
-  <A, R, E>(
-    acquire: Effect.Effect<R, E, A>
-  ) => (self: ScopedRef.ScopedRef<A>) => Effect.Effect<Exclude<R, Scope.Scope>, E, void>
+  ) => Effect.Effect<Exclude<R, Scope.Scope>, E, void>
 >(2, (trace) =>
   <A, R, E>(
     self: ScopedRef.ScopedRef<A>,

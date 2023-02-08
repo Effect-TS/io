@@ -1269,12 +1269,12 @@ export const addFinalizer = Debug.methodWithTrace((trace, restore) =>
 /* @internal */
 export const collect = Debug.dualWithTrace<
   <A, R, E, B>(
+    f: (a: A) => Effect.Effect<R, Option.Option<E>, B>
+  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<B>>,
+  <A, R, E, B>(
     elements: Iterable<A>,
     f: (a: A) => Effect.Effect<R, Option.Option<E>, B>
-  ) => Effect.Effect<R, E, Chunk.Chunk<B>>,
-  <A, R, E, B>(
-    f: (a: A) => Effect.Effect<R, Option.Option<E>, B>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<B>>
+  ) => Effect.Effect<R, E, Chunk.Chunk<B>>
 >(2, (trace, restore) =>
   (elements, f) =>
     pipe(
@@ -1285,12 +1285,12 @@ export const collect = Debug.dualWithTrace<
 /* @internal */
 export const collectPar = Debug.dualWithTrace<
   <A, R, E, B>(
+    f: (a: A) => Effect.Effect<R, Option.Option<E>, B>
+  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<B>>,
+  <A, R, E, B>(
     elements: Iterable<A>,
     f: (a: A) => Effect.Effect<R, Option.Option<E>, B>
-  ) => Effect.Effect<R, E, Chunk.Chunk<B>>,
-  <A, R, E, B>(
-    f: (a: A) => Effect.Effect<R, Option.Option<E>, B>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<B>>
+  ) => Effect.Effect<R, E, Chunk.Chunk<B>>
 >(2, (trace, restore) =>
   (elements, f) =>
     pipe(
@@ -1324,13 +1324,13 @@ export const collectAllSuccessesPar = Debug.methodWithTrace((trace) =>
 
 /* @internal */
 export const collectAllWithPar = Debug.dualWithTrace<
+  <A, B>(
+    pf: (a: A) => Option.Option<B>
+  ) => <R, E>(elements: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, Chunk.Chunk<B>>,
   <R, E, A, B>(
     elements: Iterable<Effect.Effect<R, E, A>>,
     pf: (a: A) => Option.Option<B>
-  ) => Effect.Effect<R, E, Chunk.Chunk<B>>,
-  <A, B>(
-    pf: (a: A) => Option.Option<B>
-  ) => <R, E>(elements: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, Chunk.Chunk<B>>
+  ) => Effect.Effect<R, E, Chunk.Chunk<B>>
 >(2, (trace, restore) =>
   (elements, pf) =>
     core.map(
@@ -1351,8 +1351,8 @@ const _existsParFound = Symbol("@effect/io/Effect/existsPar/found")
 
 /* @internal */
 export const existsPar = Debug.dualWithTrace<
-  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, boolean>,
-  <R, E, A>(f: (a: A) => Effect.Effect<R, E, boolean>) => (elements: Iterable<A>) => Effect.Effect<R, E, boolean>
+  <R, E, A>(f: (a: A) => Effect.Effect<R, E, boolean>) => (elements: Iterable<A>) => Effect.Effect<R, E, boolean>,
+  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, boolean>
 >(2, (trace, restore) =>
   (elements, f) =>
     core.matchEffect(
@@ -1368,8 +1368,10 @@ export const existsPar = Debug.dualWithTrace<
 
 /* @internal */
 export const filterPar = Debug.dualWithTrace<
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, Chunk.Chunk<A>>,
-  <A, R, E>(f: (a: A) => Effect.Effect<R, E, boolean>) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<A>>
+  <A, R, E>(
+    f: (a: A) => Effect.Effect<R, E, boolean>
+  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<A>>,
+  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, Chunk.Chunk<A>>
 >(2, (trace, restore) =>
   (elements, f) =>
     pipe(
@@ -1379,8 +1381,10 @@ export const filterPar = Debug.dualWithTrace<
 
 /* @internal */
 export const filterNotPar = Debug.dualWithTrace<
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, Chunk.Chunk<A>>,
-  <A, R, E>(f: (a: A) => Effect.Effect<R, E, boolean>) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<A>>
+  <A, R, E>(
+    f: (a: A) => Effect.Effect<R, E, boolean>
+  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<A>>,
+  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, Chunk.Chunk<A>>
 >(2, (trace, restore) =>
   (elements, f) =>
     filterPar(
@@ -1391,14 +1395,14 @@ export const filterNotPar = Debug.dualWithTrace<
 /* @internal */
 export const forEachExec = Debug.dualWithTrace<
   <R, E, A, B>(
+    f: (a: A) => Effect.Effect<R, E, B>,
+    strategy: ExecutionStrategy.ExecutionStrategy
+  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<B>>,
+  <R, E, A, B>(
     elements: Iterable<A>,
     f: (a: A) => Effect.Effect<R, E, B>,
     strategy: ExecutionStrategy.ExecutionStrategy
-  ) => Effect.Effect<R, E, Chunk.Chunk<B>>,
-  <R, E, A, B>(
-    f: (a: A) => Effect.Effect<R, E, B>,
-    strategy: ExecutionStrategy.ExecutionStrategy
-  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<B>>
+  ) => Effect.Effect<R, E, Chunk.Chunk<B>>
 >(3, (trace, restore) =>
   (elements, f, strategy) =>
     core.suspendSucceed(() =>
@@ -1414,8 +1418,8 @@ export const forEachExec = Debug.dualWithTrace<
 
 /* @internal */
 export const forEachPar = Debug.dualWithTrace<
-  <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, E, Chunk.Chunk<B>>,
-  <A, R, E, B>(f: (a: A) => Effect.Effect<R, E, B>) => (self: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<B>>
+  <A, R, E, B>(f: (a: A) => Effect.Effect<R, E, B>) => (self: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<B>>,
+  <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, E, Chunk.Chunk<B>>
 >(2, (trace, restore) =>
   (self, f) =>
     core.fiberRefGetWith(
@@ -1428,8 +1432,8 @@ export const forEachPar = Debug.dualWithTrace<
 
 /* @internal */
 export const forEachParDiscard = Debug.dualWithTrace<
-  <A, R, E, _>(self: Iterable<A>, f: (a: A) => Effect.Effect<R, E, _>) => Effect.Effect<R, E, void>,
-  <A, R, E, _>(f: (a: A) => Effect.Effect<R, E, _>) => (self: Iterable<A>) => Effect.Effect<R, E, void>
+  <A, R, E, _>(f: (a: A) => Effect.Effect<R, E, _>) => (self: Iterable<A>) => Effect.Effect<R, E, void>,
+  <A, R, E, _>(self: Iterable<A>, f: (a: A) => Effect.Effect<R, E, _>) => Effect.Effect<R, E, void>
 >(2, (trace, restore) =>
   (self, f) =>
     core.fiberRefGetWith(
@@ -1549,12 +1553,12 @@ const forEachParNDiscard = <A, R, E, _>(
 /* @internal */
 export const forEachParWithIndex = Debug.dualWithTrace<
   <R, E, A, B>(
+    f: (a: A, i: number) => Effect.Effect<R, E, B>
+  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<B>>,
+  <R, E, A, B>(
     elements: Iterable<A>,
     f: (a: A, i: number) => Effect.Effect<R, E, B>
-  ) => Effect.Effect<R, E, Chunk.Chunk<B>>,
-  <R, E, A, B>(
-    f: (a: A, i: number) => Effect.Effect<R, E, B>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<B>>
+  ) => Effect.Effect<R, E, Chunk.Chunk<B>>
 >(
   2,
   (trace, restore) =>
@@ -1597,13 +1601,13 @@ export const forkDaemon = Debug.methodWithTrace((trace) =>
 
 /* @internal */
 export const forkWithErrorHandler = Debug.dualWithTrace<
+  <E, X>(
+    handler: (e: E) => Effect.Effect<never, never, X>
+  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>>,
   <R, E, A, X>(
     self: Effect.Effect<R, E, A>,
     handler: (e: E) => Effect.Effect<never, never, X>
-  ) => Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>>,
-  <E, X>(
-    handler: (e: E) => Effect.Effect<never, never, X>
-  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>>
+  ) => Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>>
 >(2, (trace, restore) =>
   (self, handler) =>
     fork(core.onError(self, (cause) => {
@@ -1677,8 +1681,8 @@ const forkWithScopeOverride = <R, E, A>(
 
 /* @internal */
 export const mergeAllPar = Debug.dualWithTrace<
-  <R, E, A, Z>(elements: Iterable<Effect.Effect<R, E, A>>, zero: Z, f: (z: Z, a: A) => Z) => Effect.Effect<R, E, Z>,
-  <Z, A>(zero: Z, f: (z: Z, a: A) => Z) => <R, E>(elements: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, Z>
+  <Z, A>(zero: Z, f: (z: Z, a: A) => Z) => <R, E>(elements: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, Z>,
+  <R, E, A, Z>(elements: Iterable<Effect.Effect<R, E, A>>, zero: Z, f: (z: Z, a: A) => Z) => Effect.Effect<R, E, Z>
 >(3, (trace, restore) =>
   (elements, zero, f) =>
     core.flatMap(Ref.make(zero), (acc) =>
@@ -1692,15 +1696,15 @@ export const mergeAllPar = Debug.dualWithTrace<
 
 /* @internal */
 export const onDone = Debug.dualWithTrace<
+  <E, A, R1, X1, R2, X2>(
+    onError: (e: E) => Effect.Effect<R1, never, X1>,
+    onSuccess: (a: A) => Effect.Effect<R2, never, X2>
+  ) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1 | R2, never, void>,
   <R, E, A, R1, X1, R2, X2>(
     self: Effect.Effect<R, E, A>,
     onError: (e: E) => Effect.Effect<R1, never, X1>,
     onSuccess: (a: A) => Effect.Effect<R2, never, X2>
-  ) => Effect.Effect<R | R1 | R2, never, void>,
-  <E, A, R1, X1, R2, X2>(
-    onError: (e: E) => Effect.Effect<R1, never, X1>,
-    onSuccess: (a: A) => Effect.Effect<R2, never, X2>
-  ) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1 | R2, never, void>
+  ) => Effect.Effect<R | R1 | R2, never, void>
 >(
   3,
   (trace, restoreTrace) =>
@@ -1716,15 +1720,15 @@ export const onDone = Debug.dualWithTrace<
 
 /* @internal */
 export const onDoneCause = Debug.dualWithTrace<
+  <E, A, R1, X1, R2, X2>(
+    onCause: (cause: Cause.Cause<E>) => Effect.Effect<R1, never, X1>,
+    onSuccess: (a: A) => Effect.Effect<R2, never, X2>
+  ) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1 | R2, never, void>,
   <R, E, A, R1, X1, R2, X2>(
     self: Effect.Effect<R, E, A>,
     onCause: (cause: Cause.Cause<E>) => Effect.Effect<R1, never, X1>,
     onSuccess: (a: A) => Effect.Effect<R2, never, X2>
-  ) => Effect.Effect<R | R1 | R2, never, void>,
-  <E, A, R1, X1, R2, X2>(
-    onCause: (cause: Cause.Cause<E>) => Effect.Effect<R1, never, X1>,
-    onSuccess: (a: A) => Effect.Effect<R2, never, X2>
-  ) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1 | R2, never, void>
+  ) => Effect.Effect<R | R1 | R2, never, void>
 >(
   3,
   (trace, restoreTrace) =>
@@ -1741,12 +1745,12 @@ export const onDoneCause = Debug.dualWithTrace<
 /* @internal */
 export const partitionPar = Debug.dualWithTrace<
   <R, E, A, B>(
+    f: (a: A) => Effect.Effect<R, E, B>
+  ) => (elements: Iterable<A>) => Effect.Effect<R, never, readonly [Chunk.Chunk<E>, Chunk.Chunk<B>]>,
+  <R, E, A, B>(
     elements: Iterable<A>,
     f: (a: A) => Effect.Effect<R, E, B>
-  ) => Effect.Effect<R, never, readonly [Chunk.Chunk<E>, Chunk.Chunk<B>]>,
-  <R, E, A, B>(
-    f: (a: A) => Effect.Effect<R, E, B>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, never, readonly [Chunk.Chunk<E>, Chunk.Chunk<B>]>
+  ) => Effect.Effect<R, never, readonly [Chunk.Chunk<E>, Chunk.Chunk<B>]>
 >(2, (trace, restore) =>
   (elements, f) =>
     pipe(
@@ -1870,14 +1874,14 @@ const raceAllArbiter = <E, E1, A, A1>(
 /* @internal */
 export const reduceAllPar = Debug.dualWithTrace<
   <R, E, A>(
+    zero: Effect.Effect<R, E, A>,
+    f: (acc: A, a: A) => A
+  ) => (elements: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, A>,
+  <R, E, A>(
     elements: Iterable<Effect.Effect<R, E, A>>,
     zero: Effect.Effect<R, E, A>,
     f: (acc: A, a: A) => A
-  ) => Effect.Effect<R, E, A>,
-  <R, E, A>(
-    zero: Effect.Effect<R, E, A>,
-    f: (acc: A, a: A) => A
-  ) => (elements: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, A>
+  ) => Effect.Effect<R, E, A>
 >(3, (trace, restore) =>
   <R, E, A>(
     elements: Iterable<Effect.Effect<R, E, A>>,
@@ -1976,12 +1980,12 @@ export const some = Debug.methodWithTrace((trace) =>
 /* @internal */
 export const someWith = Debug.dualWithTrace<
   <R, E, A, R1, E1, A1>(
+    f: (effect: Effect.Effect<R, Option.Option<E>, A>) => Effect.Effect<R1, Option.Option<E1>, A1>
+  ) => (self: Effect.Effect<R, E, Option.Option<A>>) => Effect.Effect<R | R1, E | E1, Option.Option<A1>>,
+  <R, E, A, R1, E1, A1>(
     self: Effect.Effect<R, E, Option.Option<A>>,
     f: (effect: Effect.Effect<R, Option.Option<E>, A>) => Effect.Effect<R1, Option.Option<E1>, A1>
-  ) => Effect.Effect<R | R1, E | E1, Option.Option<A1>>,
-  <R, E, A, R1, E1, A1>(
-    f: (effect: Effect.Effect<R, Option.Option<E>, A>) => Effect.Effect<R1, Option.Option<E1>, A1>
-  ) => (self: Effect.Effect<R, E, Option.Option<A>>) => Effect.Effect<R | R1, E | E1, Option.Option<A1>>
+  ) => Effect.Effect<R | R1, E | E1, Option.Option<A1>>
 >(2, (trace, restore) => (self, f) => core.suspendSucceed(() => unsome(restore(f)(some(self)))).traced(trace))
 
 /* @internal */
@@ -2041,13 +2045,13 @@ export const tuplePar = Debug.methodWithTrace((trace) =>
 
 /* @internal */
 export const using = Debug.dualWithTrace<
+  <A, R2, E2, A2>(
+    use: (a: A) => Effect.Effect<R2, E2, A2>
+  ) => <R, E>(self: Effect.Effect<R | Scope.Scope, E, A>) => Effect.Effect<R | R2, E | E2, A2>,
   <R, E, A, R2, E2, A2>(
     self: Effect.Effect<R | Scope.Scope, E, A>,
     use: (a: A) => Effect.Effect<R2, E2, A2>
-  ) => Effect.Effect<R | R2, E | E2, A2>,
-  <A, R2, E2, A2>(
-    use: (a: A) => Effect.Effect<R2, E2, A2>
-  ) => <R, E>(self: Effect.Effect<R | Scope.Scope, E, A>) => Effect.Effect<R | R2, E | E2, A2>
+  ) => Effect.Effect<R | R2, E | E2, A2>
 >(2, (trace, restore) =>
   (self, use) =>
     core.acquireUseRelease(
@@ -2080,12 +2084,12 @@ export const unsome = Debug.methodWithTrace((trace) =>
 /* @internal */
 export const validateAllPar = Debug.dualWithTrace<
   <R, E, A, B>(
+    f: (a: A) => Effect.Effect<R, E, B>
+  ) => (elements: Iterable<A>) => Effect.Effect<R, Chunk.Chunk<E>, Chunk.Chunk<B>>,
+  <R, E, A, B>(
     elements: Iterable<A>,
     f: (a: A) => Effect.Effect<R, E, B>
-  ) => Effect.Effect<R, Chunk.Chunk<E>, Chunk.Chunk<B>>,
-  <R, E, A, B>(
-    f: (a: A) => Effect.Effect<R, E, B>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, Chunk.Chunk<E>, Chunk.Chunk<B>>
+  ) => Effect.Effect<R, Chunk.Chunk<E>, Chunk.Chunk<B>>
 >(2, (trace, restore) =>
   (elements, f) =>
     core.flatMap(
@@ -2098,8 +2102,10 @@ export const validateAllPar = Debug.dualWithTrace<
 
 /* @internal */
 export const validateAllParDiscard = Debug.dualWithTrace<
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, Chunk.Chunk<E>, void>,
-  <R, E, A, B>(f: (a: A) => Effect.Effect<R, E, B>) => (elements: Iterable<A>) => Effect.Effect<R, Chunk.Chunk<E>, void>
+  <R, E, A, B>(
+    f: (a: A) => Effect.Effect<R, E, B>
+  ) => (elements: Iterable<A>) => Effect.Effect<R, Chunk.Chunk<E>, void>,
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, Chunk.Chunk<E>, void>
 >(2, (trace, restore) =>
   (elements, f) =>
     core.flatMap(
@@ -2112,8 +2118,8 @@ export const validateAllParDiscard = Debug.dualWithTrace<
 
 /* @internal */
 export const validateFirstPar = Debug.dualWithTrace<
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, Chunk.Chunk<E>, B>,
-  <R, E, A, B>(f: (a: A) => Effect.Effect<R, E, B>) => (elements: Iterable<A>) => Effect.Effect<R, Chunk.Chunk<E>, B>
+  <R, E, A, B>(f: (a: A) => Effect.Effect<R, E, B>) => (elements: Iterable<A>) => Effect.Effect<R, Chunk.Chunk<E>, B>,
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, Chunk.Chunk<E>, B>
 >(2, (trace, restore) =>
   (elements, f) =>
     core.flip(
@@ -2271,8 +2277,8 @@ export const scopeMake = Debug.methodWithTrace((trace) =>
 
 /* @internal */
 export const scopeExtend = Debug.dualWithTrace<
-  <R, E, A>(effect: Effect.Effect<R, E, A>, scope: Scope.Scope) => Effect.Effect<Exclude<R, Scope.Scope>, E, A>,
-  (scope: Scope.Scope) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<Exclude<R, Scope.Scope>, E, A>
+  (scope: Scope.Scope) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<Exclude<R, Scope.Scope>, E, A>,
+  <R, E, A>(effect: Effect.Effect<R, E, A>, scope: Scope.Scope) => Effect.Effect<Exclude<R, Scope.Scope>, E, A>
 >(
   2,
   (trace) =>
@@ -2286,13 +2292,13 @@ export const scopeExtend = Debug.dualWithTrace<
 
 /* @internal */
 export const scopeUse = Debug.dualWithTrace<
+  (
+    scope: Scope.Scope.Closeable
+  ) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<Exclude<R, Scope.Scope>, E, A>,
   <R, E, A>(
     effect: Effect.Effect<R, E, A>,
     scope: Scope.Scope.Closeable
-  ) => Effect.Effect<Exclude<R, Scope.Scope>, E, A>,
-  (
-    scope: Scope.Scope.Closeable
-  ) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<Exclude<R, Scope.Scope>, E, A>
+  ) => Effect.Effect<Exclude<R, Scope.Scope>, E, A>
 >(2, (trace) =>
   (effect, scope) =>
     pipe(
@@ -2317,8 +2323,8 @@ export const fiberRefUnsafeMakeSupervisor = (
 
 /* @internal */
 export const fiberRefLocallyScoped = Debug.dualWithTrace<
-  <A>(self: FiberRef.FiberRef<A>, value: A) => Effect.Effect<Scope.Scope, never, void>,
-  <A>(value: A) => (self: FiberRef.FiberRef<A>) => Effect.Effect<Scope.Scope, never, void>
+  <A>(value: A) => (self: FiberRef.FiberRef<A>) => Effect.Effect<Scope.Scope, never, void>,
+  <A>(self: FiberRef.FiberRef<A>, value: A) => Effect.Effect<Scope.Scope, never, void>
 >(2, (trace) =>
   (self, value) =>
     pipe(
@@ -2334,8 +2340,8 @@ export const fiberRefLocallyScoped = Debug.dualWithTrace<
 
 /* @internal */
 export const fiberRefLocallyScopedWith = Debug.dualWithTrace<
-  <A>(self: FiberRef.FiberRef<A>, f: (a: A) => A) => Effect.Effect<Scope.Scope, never, void>,
-  <A>(f: (a: A) => A) => (self: FiberRef.FiberRef<A>) => Effect.Effect<Scope.Scope, never, void>
+  <A>(f: (a: A) => A) => (self: FiberRef.FiberRef<A>) => Effect.Effect<Scope.Scope, never, void>,
+  <A>(self: FiberRef.FiberRef<A>, f: (a: A) => A) => Effect.Effect<Scope.Scope, never, void>
 >(
   2,
   (trace, restore) =>

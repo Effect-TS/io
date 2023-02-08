@@ -1,6 +1,6 @@
 import * as Duration from "@effect/data/Duration"
-import * as Debug from "@effect/io/Debug"
 import type * as Interval from "@effect/io/Schedule/Interval"
+import { dual } from "@fp-ts/core/Function"
 import * as Option from "@fp-ts/core/Option"
 
 /** @internal */
@@ -31,15 +31,15 @@ export const make = (startMillis: number, endMillis: number): Interval.Interval 
 }
 
 /** @internal */
-export const lessThan = Debug.dual<
-  (self: Interval.Interval, that: Interval.Interval) => boolean,
-  (that: Interval.Interval) => (self: Interval.Interval) => boolean
+export const lessThan = dual<
+  (that: Interval.Interval) => (self: Interval.Interval) => boolean,
+  (self: Interval.Interval, that: Interval.Interval) => boolean
 >(2, (self, that) => min(self, that) === self)
 
 /** @internal */
-export const min = Debug.dual<
-  (self: Interval.Interval, that: Interval.Interval) => Interval.Interval,
-  (that: Interval.Interval) => (self: Interval.Interval) => Interval.Interval
+export const min = dual<
+  (that: Interval.Interval) => (self: Interval.Interval) => Interval.Interval,
+  (self: Interval.Interval, that: Interval.Interval) => Interval.Interval
 >(2, (self, that) => {
   if (self.endMillis <= that.startMillis) return self
   if (that.endMillis <= self.startMillis) return that
@@ -50,9 +50,9 @@ export const min = Debug.dual<
 })
 
 /** @internal */
-export const max = Debug.dual<
-  (self: Interval.Interval, that: Interval.Interval) => Interval.Interval,
-  (that: Interval.Interval) => (self: Interval.Interval) => Interval.Interval
+export const max = dual<
+  (that: Interval.Interval) => (self: Interval.Interval) => Interval.Interval,
+  (self: Interval.Interval, that: Interval.Interval) => Interval.Interval
 >(2, (self, that) => min(self, that) === self ? that : self)
 
 /** @internal */
@@ -66,9 +66,9 @@ export const isNonEmpty = (self: Interval.Interval): boolean => {
 }
 
 /** @internal */
-export const intersect = Debug.dual<
-  (self: Interval.Interval, that: Interval.Interval) => Interval.Interval,
-  (that: Interval.Interval) => (self: Interval.Interval) => Interval.Interval
+export const intersect = dual<
+  (that: Interval.Interval) => (self: Interval.Interval) => Interval.Interval,
+  (self: Interval.Interval, that: Interval.Interval) => Interval.Interval
 >(2, (self, that) => {
   const start = Math.max(self.startMillis, that.startMillis)
   const end = Math.min(self.endMillis, that.endMillis)
@@ -81,9 +81,9 @@ export const size = (self: Interval.Interval): Duration.Duration => {
 }
 
 /** @internal */
-export const union = Debug.dual<
-  (self: Interval.Interval, that: Interval.Interval) => Option.Option<Interval.Interval>,
-  (that: Interval.Interval) => (self: Interval.Interval) => Option.Option<Interval.Interval>
+export const union = dual<
+  (that: Interval.Interval) => (self: Interval.Interval) => Option.Option<Interval.Interval>,
+  (self: Interval.Interval, that: Interval.Interval) => Option.Option<Interval.Interval>
 >(2, (self, that) => {
   const start = Math.max(self.startMillis, that.startMillis)
   const end = Math.min(self.endMillis, that.endMillis)

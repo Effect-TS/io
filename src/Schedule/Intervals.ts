@@ -59,8 +59,8 @@ export const fromIterable: (intervals: Iterable<Interval.Interval>) => Intervals
  * @category mutations
  */
 export const union: {
-  (self: Intervals, that: Intervals): Intervals
   (that: Intervals): (self: Intervals) => Intervals
+  (self: Intervals, that: Intervals): Intervals
 } = internal.union
 
 /**
@@ -70,8 +70,8 @@ export const union: {
  * @category mutations
  */
 export const intersect: {
-  (self: Intervals, that: Intervals): Intervals
   (that: Intervals): (self: Intervals) => Intervals
+  (self: Intervals, that: Intervals): Intervals
 } = internal.intersect
 
 /**
@@ -98,8 +98,8 @@ export const end: (self: Intervals) => number = internal.end
  * @category ordering
  */
 export const lessThan: {
-  (self: Intervals, that: Intervals): boolean
   (that: Intervals): (self: Intervals) => boolean
+  (self: Intervals, that: Intervals): boolean
 } = internal.lessThan
 
 /**
@@ -117,6 +117,6 @@ export const isNonEmpty: (self: Intervals) => boolean = internal.isNonEmpty
  * @category ordering
  */
 export const max: {
-  (self: Intervals, that: Intervals): Intervals
   (that: Intervals): (self: Intervals) => Intervals
+  (self: Intervals, that: Intervals): Intervals
 } = internal.max

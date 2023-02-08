@@ -59,8 +59,8 @@ export const isEmpty: (patch: RuntimeFlagsPatch) => boolean = internal.isEmpty
  * @category elements
  */
 export const isActive: {
-  (self: RuntimeFlagsPatch, flag: RuntimeFlagsPatch): boolean
   (flag: RuntimeFlagsPatch): (self: RuntimeFlagsPatch) => boolean
+  (self: RuntimeFlagsPatch, flag: RuntimeFlagsPatch): boolean
 } = internal.isActive
 
 /**
@@ -71,8 +71,8 @@ export const isActive: {
  * @category elements
  */
 export const isEnabled: {
-  (self: RuntimeFlagsPatch, flag: RuntimeFlags.RuntimeFlag): boolean
   (flag: RuntimeFlags.RuntimeFlag): (self: RuntimeFlagsPatch) => boolean
+  (self: RuntimeFlagsPatch, flag: RuntimeFlags.RuntimeFlag): boolean
 } = internal.isEnabled
 
 /**
@@ -83,8 +83,8 @@ export const isEnabled: {
  * @category elements
  */
 export const isDisabled: {
-  (self: RuntimeFlagsPatch, flag: RuntimeFlags.RuntimeFlag): boolean
   (flag: RuntimeFlags.RuntimeFlag): (self: RuntimeFlagsPatch) => boolean
+  (self: RuntimeFlagsPatch, flag: RuntimeFlags.RuntimeFlag): boolean
 } = internal.isDisabled
 
 /**
@@ -95,8 +95,8 @@ export const isDisabled: {
  * @category elements
  */
 export const includes: {
-  (self: RuntimeFlagsPatch, flag: RuntimeFlagsPatch): boolean
   (flag: RuntimeFlagsPatch): (self: RuntimeFlagsPatch) => boolean
+  (self: RuntimeFlagsPatch, flag: RuntimeFlagsPatch): boolean
 } = internal.isActive
 
 /**
@@ -107,8 +107,8 @@ export const includes: {
  * @category mutations
  */
 export const andThen: {
-  (self: RuntimeFlagsPatch, that: RuntimeFlagsPatch): RuntimeFlagsPatch
   (that: RuntimeFlagsPatch): (self: RuntimeFlagsPatch) => RuntimeFlagsPatch
+  (self: RuntimeFlagsPatch, that: RuntimeFlagsPatch): RuntimeFlagsPatch
 } = internal.andThen
 
 /**
@@ -119,8 +119,8 @@ export const andThen: {
  * @category mutations
  */
 export const both: {
-  (self: RuntimeFlagsPatch, that: RuntimeFlagsPatch): RuntimeFlagsPatch
   (that: RuntimeFlagsPatch): (self: RuntimeFlagsPatch) => RuntimeFlagsPatch
+  (self: RuntimeFlagsPatch, that: RuntimeFlagsPatch): RuntimeFlagsPatch
 } = internal.both
 
 /**
@@ -131,8 +131,8 @@ export const both: {
  * @category mutations
  */
 export const either: {
-  (self: RuntimeFlagsPatch, that: RuntimeFlagsPatch): RuntimeFlagsPatch
   (that: RuntimeFlagsPatch): (self: RuntimeFlagsPatch) => RuntimeFlagsPatch
+  (self: RuntimeFlagsPatch, that: RuntimeFlagsPatch): RuntimeFlagsPatch
 } = internal.either
 
 /**
@@ -143,8 +143,8 @@ export const either: {
  * @since 1.0.0
  */
 export const exclude: {
-  (self: RuntimeFlagsPatch, flag: RuntimeFlags.RuntimeFlag): RuntimeFlagsPatch
   (flag: RuntimeFlags.RuntimeFlag): (self: RuntimeFlagsPatch) => RuntimeFlagsPatch
+  (self: RuntimeFlagsPatch, flag: RuntimeFlags.RuntimeFlag): RuntimeFlagsPatch
 } = internal.exclude
 
 /**

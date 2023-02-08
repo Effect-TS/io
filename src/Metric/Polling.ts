@@ -70,15 +70,15 @@ export const collectAll: <R, E, Out>(
  * @category mutations
  */
 export const launch: {
-  <Type, In, R, E, Out, R2, A2>(
-    self: PollingMetric<Type, In, R, E, Out>,
-    schedule: Schedule.Schedule<R2, unknown, A2>
-  ): Effect.Effect<R | R2 | Scope.Scope, never, Fiber.Fiber<E, A2>>
   <R2, A2>(
     schedule: Schedule.Schedule<R2, unknown, A2>
   ): <Type, In, R, E, Out>(
     self: PollingMetric<Type, In, R, E, Out>
-  ) => Effect.Effect<Scope.Scope | R2 | R, never, Fiber.Fiber<E, A2>>
+  ) => Effect.Effect<R2 | R | Scope.Scope, never, Fiber.Fiber<E, A2>>
+  <Type, In, R, E, Out, R2, A2>(
+    self: PollingMetric<Type, In, R, E, Out>,
+    schedule: Schedule.Schedule<R2, unknown, A2>
+  ): Effect.Effect<Scope.Scope | R | R2, never, Fiber.Fiber<E, A2>>
 } = internal.launch
 
 /**
@@ -108,13 +108,13 @@ export const pollAndUpdate: <Type, In, R, E, Out>(
  * @category constructors
  */
 export const retry: {
+  <R2, E, _>(
+    policy: Schedule.Schedule<R2, E, _>
+  ): <Type, In, R, Out>(self: PollingMetric<Type, In, R, E, Out>) => PollingMetric<Type, In, R2 | R, E, Out>
   <Type, In, R, Out, R2, E, _>(
     self: PollingMetric<Type, In, R, E, Out>,
     policy: Schedule.Schedule<R2, E, _>
   ): PollingMetric<Type, In, R | R2, E, Out>
-  <R2, E, _>(
-    policy: Schedule.Schedule<R2, E, _>
-  ): <Type, In, R, Out>(self: PollingMetric<Type, In, R, E, Out>) => PollingMetric<Type, In, R2 | R, E, Out>
 } = internal.retry
 
 /**
@@ -124,13 +124,13 @@ export const retry: {
  * @category mutations
  */
 export const zip: {
-  <Type, In, R, E, Out, Type2, In2, R2, E2, Out2>(
-    self: PollingMetric<Type, In, R, E, Out>,
-    that: PollingMetric<Type2, In2, R2, E2, Out2>
-  ): PollingMetric<readonly [Type, Type2], readonly [In, In2], R | R2, E | E2, readonly [Out, Out2]>
   <Type2, In2, R2, E2, Out2>(
     that: PollingMetric<Type2, In2, R2, E2, Out2>
   ): <Type, In, R, E, Out>(
     self: PollingMetric<Type, In, R, E, Out>
   ) => PollingMetric<readonly [Type, Type2], readonly [In, In2], R2 | R, E2 | E, readonly [Out, Out2]>
+  <Type, In, R, E, Out, Type2, In2, R2, E2, Out2>(
+    self: PollingMetric<Type, In, R, E, Out>,
+    that: PollingMetric<Type2, In2, R2, E2, Out2>
+  ): PollingMetric<readonly [Type, Type2], readonly [In, In2], R | R2, E | E2, readonly [Out, Out2]>
 } = internal.zip

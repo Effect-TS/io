@@ -1,6 +1,12 @@
 /**
  * @since 1.0.0
  */
+import type * as Chunk from "@effect/data/Chunk"
+import type * as Context from "@effect/data/Context"
+import type * as Duration from "@effect/data/Duration"
+import type * as Equal from "@effect/data/Equal"
+import type * as HashMap from "@effect/data/HashMap"
+import type * as HashSet from "@effect/data/HashSet"
 import type * as Cause from "@effect/io/Cause"
 import type * as Clock from "@effect/io/Clock"
 import type { Config } from "@effect/io/Config"
@@ -45,12 +51,6 @@ import type * as Either from "@fp-ts/core/Either"
 import type { LazyArg } from "@fp-ts/core/Function"
 import type * as Option from "@fp-ts/core/Option"
 import type { Predicate, Refinement } from "@fp-ts/core/Predicate"
-import type * as Chunk from "@effect/data/Chunk"
-import type * as Context from "@effect/data/Context"
-import type * as Duration from "@effect/data/Duration"
-import type * as Equal from "@effect/data/Equal"
-import type * as HashMap from "@effect/data/HashMap"
-import type * as HashSet from "@effect/data/HashSet"
 
 /**
  * @since 1.0.0
@@ -227,8 +227,8 @@ export const absorb: <R, E, A>(self: Effect<R, E, A>) => Effect<R, unknown, A> =
  * @category error handling
  */
 export const absorbWith: {
-  <R, E, A>(self: Effect<R, E, A>, f: (error: E) => unknown): Effect<R, unknown, A>
   <E>(f: (error: E) => unknown): <R, A>(self: Effect<R, E, A>) => Effect<R, unknown, A>
+  <R, E, A>(self: Effect<R, E, A>, f: (error: E) => unknown): Effect<R, unknown, A>
 } = effect.absorbWith
 
 /**
@@ -321,15 +321,15 @@ export const acquireReleaseInterruptible: <R, E, A, R2, X>(
  * @category constructors
  */
 export const acquireUseRelease: {
+  <A, R2, E2, A2, R3, X>(
+    use: (a: A) => Effect<R2, E2, A2>,
+    release: (a: A, exit: Exit.Exit<E2, A2>) => Effect<R3, never, X>
+  ): <R, E>(acquire: Effect<R, E, A>) => Effect<R2 | R3 | R, E2 | E, A2>
   <R, E, A, R2, E2, A2, R3, X>(
     acquire: Effect<R, E, A>,
     use: (a: A) => Effect<R2, E2, A2>,
     release: (a: A, exit: Exit.Exit<E2, A2>) => Effect<R3, never, X>
   ): Effect<R | R2 | R3, E | E2, A2>
-  <A, R2, E2, A2, R3, X>(
-    use: (a: A) => Effect<R2, E2, A2>,
-    release: (a: A, exit: Exit.Exit<E2, A2>) => Effect<R3, never, X>
-  ): <R, E>(acquire: Effect<R, E, A>) => Effect<R2 | R3 | R, E2 | E, A2>
 } = core.acquireUseRelease
 
 /**
@@ -362,8 +362,8 @@ export const allowInterrupt: (_: void) => Effect<never, never, void> = effect.al
  * @category mapping
  */
 export const as: {
-  <R, E, A, B>(self: Effect<R, E, A>, value: B): Effect<R, E, B>
   <B>(value: B): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, B>
+  <R, E, A, B>(self: Effect<R, E, A>, value: B): Effect<R, E, B>
 } = core.as
 
 /**
@@ -589,6 +589,16 @@ export const attempt: <A>(evaluate: LazyArg<A>) => Effect<never, unknown, A> = e
 export const awaitAllChildren: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A> = circular.awaitAllChildren
 
 /**
+ * Schedules a potentially blocking effect to occur with background priority.
+ *
+ * **Note**: this is equivalent to `pipe(yieldNow("background"), zipRight(self))`.
+ *
+ * @since 1.0.0
+ * @category constructors
+ */
+export const blocking: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A> = effect.blocking
+
+/**
  * Returns an effect that, if evaluated, will return the cached result of this
  * effect. Cached results will expire after `timeToLive` duration.
  *
@@ -596,8 +606,8 @@ export const awaitAllChildren: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, 
  * @category mutations
  */
 export const cached: {
-  <R, E, A>(self: Effect<R, E, A>, timeToLive: Duration.Duration): Effect<R, never, Effect<never, E, A>>
   (timeToLive: Duration.Duration): <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Effect<never, E, A>>
+  <R, E, A>(self: Effect<R, E, A>, timeToLive: Duration.Duration): Effect<R, never, Effect<never, E, A>>
 } = circular.cached
 
 /**
@@ -610,27 +620,27 @@ export const cached: {
  * @category mutations
  */
 export const cachedInvalidate: {
+  (timeToLive: Duration.Duration): <R, E, A>(
+    self: Effect<R, E, A>
+  ) => Effect<R, never, readonly [Effect<never, E, A>, Effect<never, never, void>]>
   <R, E, A>(
     self: Effect<R, E, A>,
     timeToLive: Duration.Duration
   ): Effect<R, never, readonly [Effect<never, E, A>, Effect<never, never, void>]>
-  (
-    timeToLive: Duration.Duration
-  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, readonly [Effect<never, E, A>, Effect<never, never, void>]>
 } = circular.cachedInvalidate
 
 const _catch: {
+  <N extends keyof E, K extends E[N] & string, E, R1, E1, A1>(
+    tag: N,
+    k: K,
+    f: (error: Extract<E, { [n in N]: K }>) => Effect<R1, E1, A1>
+  ): <R, A>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | Exclude<E, { [n in N]: K }>, A1 | A>
   <R, E, A, N extends keyof E, K extends E[N] & string, R1, E1, A1>(
     self: Effect<R, E, A>,
     tag: N,
     k: K,
     f: (error: Extract<E, { [n in N]: K }>) => Effect<R1, E1, A1>
   ): Effect<R | R1, E1 | Exclude<E, { [n in N]: K }>, A | A1>
-  <N extends keyof E, K extends E[N] & string, E, R1, E1, A1>(
-    tag: N,
-    k: K,
-    f: (error: Extract<E, { [n in N]: K }>) => Effect<R1, E1, A1>
-  ): <R, A>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | Exclude<E, { [n in N]: K }>, A1 | A>
 } = effect._catch
 
 export {
@@ -654,8 +664,8 @@ export {
  * @category error handling
  */
 export const catchAll: {
-  <R, A, E, R2, E2, A2>(self: Effect<R, E, A>, f: (e: E) => Effect<R2, E2, A2>): Effect<R | R2, E2, A | A2>
   <E, R2, E2, A2>(f: (e: E) => Effect<R2, E2, A2>): <R, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2, A2 | A>
+  <R, A, E, R2, E2, A2>(self: Effect<R, E, A>, f: (e: E) => Effect<R2, E2, A2>): Effect<R | R2, E2, A | A2>
 } = core.catchAll
 
 /**
@@ -668,13 +678,13 @@ export const catchAll: {
  * @category error handling
  */
 export const catchAllCause: {
+  <E, R2, E2, A2>(
+    f: (cause: Cause.Cause<E>) => Effect<R2, E2, A2>
+  ): <R, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2, A2 | A>
   <R, A, E, R2, E2, A2>(
     self: Effect<R, E, A>,
     f: (cause: Cause.Cause<E>) => Effect<R2, E2, A2>
   ): Effect<R | R2, E2, A | A2>
-  <E, R2, E2, A2>(
-    f: (cause: Cause.Cause<E>) => Effect<R2, E2, A2>
-  ): <R, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2, A2 | A>
 } = core.catchAllCause
 
 /**
@@ -689,13 +699,13 @@ export const catchAllCause: {
  * @category error handling
  */
 export const catchAllDefect: {
+  <R2, E2, A2>(
+    f: (defect: unknown) => Effect<R2, E2, A2>
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2 | A>
   <R, E, A, R2, E2, A2>(
     self: Effect<R, E, A>,
     f: (defect: unknown) => Effect<R2, E2, A2>
   ): Effect<R | R2, E | E2, A | A2>
-  <R2, E2, A2>(
-    f: (defect: unknown) => Effect<R2, E2, A2>
-  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2 | A>
 } = effect.catchAllDefect
 
 /**
@@ -705,13 +715,13 @@ export const catchAllDefect: {
  * @category error handling
  */
 export const catchSome: {
+  <E, R2, E2, A2>(
+    pf: (e: E) => Option.Option<Effect<R2, E2, A2>>
+  ): <R, A>(self: Effect<R, E, A>) => Effect<R2 | R, E | E2, A2 | A>
   <R, A, E, R2, E2, A2>(
     self: Effect<R, E, A>,
     pf: (e: E) => Option.Option<Effect<R2, E2, A2>>
   ): Effect<R | R2, E | E2, A | A2>
-  <E, R2, E2, A2>(
-    pf: (e: E) => Option.Option<Effect<R2, E2, A2>>
-  ): <R, A>(self: Effect<R, E, A>) => Effect<R2 | R, E | E2, A2 | A>
 } = core.catchSome
 
 /**
@@ -721,13 +731,13 @@ export const catchSome: {
  * @category error handling
  */
 export const catchSomeCause: {
+  <E, R2, E2, A2>(
+    f: (cause: Cause.Cause<E>) => Option.Option<Effect<R2, E2, A2>>
+  ): <R, A>(self: Effect<R, E, A>) => Effect<R2 | R, E | E2, A2 | A>
   <R, E, A, R2, E2, A2>(
     self: Effect<R, E, A>,
     f: (cause: Cause.Cause<E>) => Option.Option<Effect<R2, E2, A2>>
   ): Effect<R | R2, E | E2, A | A2>
-  <E, R2, E2, A2>(
-    f: (cause: Cause.Cause<E>) => Option.Option<Effect<R2, E2, A2>>
-  ): <R, A>(self: Effect<R, E, A>) => Effect<R2 | R, E | E2, A2 | A>
 } = effect.catchSomeCause
 
 /**
@@ -742,13 +752,13 @@ export const catchSomeCause: {
  * @category error handling
  */
 export const catchSomeDefect: {
+  <R2, E2, A2>(
+    pf: (defect: unknown) => Option.Option<Effect<R2, E2, A2>>
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2 | A>
   <R, E, A, R2, E2, A2>(
     self: Effect<R, E, A>,
-    pf: (_: unknown) => Option.Option<Effect<R2, E2, A2>>
+    pf: (defect: unknown) => Option.Option<Effect<R2, E2, A2>>
   ): Effect<R | R2, E | E2, A | A2>
-  <R2, E2, A2>(
-    pf: (_: unknown) => Option.Option<Effect<R2, E2, A2>>
-  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2 | A>
 } = effect.catchSomeDefect
 
 /**
@@ -758,15 +768,15 @@ export const catchSomeDefect: {
  * @category error handling
  */
 export const catchTag: {
+  <K extends E["_tag"] & string, E extends { _tag: string }, R1, E1, A1>(
+    k: K,
+    f: (e: Extract<E, { _tag: K }>) => Effect<R1, E1, A1>
+  ): <R, A>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | Exclude<E, { _tag: K }>, A1 | A>
   <R, E extends { _tag: string }, A, K extends E["_tag"] & string, R1, E1, A1>(
     self: Effect<R, E, A>,
     k: K,
     f: (e: Extract<E, { _tag: K }>) => Effect<R1, E1, A1>
   ): Effect<R | R1, E1 | Exclude<E, { _tag: K }>, A | A1>
-  <K extends E["_tag"] & string, E extends { _tag: string }, R1, E1, A1>(
-    k: K,
-    f: (e: Extract<E, { _tag: K }>) => Effect<R1, E1, A1>
-  ): <R, A>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | Exclude<E, { _tag: K }>, A1 | A>
 } = effect.catchTag
 
 /**
@@ -777,14 +787,13 @@ export const catchTag: {
  */
 export const catchTags: {
   <
-    R,
     E extends { _tag: string },
-    A,
     Cases extends { [K in E["_tag"]]+?: ((error: Extract<E, { _tag: K }>) => Effect<any, any, any>) | undefined }
   >(
-    self: Effect<R, E, A>,
     cases: Cases
-  ): Effect<
+  ): <R, A>(
+    self: Effect<R, E, A>
+  ) => Effect<
     | R
     | {
       [K in keyof Cases]: Cases[K] extends (...args: Array<any>) => Effect<infer R, any, any> ? R : never
@@ -799,13 +808,14 @@ export const catchTags: {
     }[keyof Cases]
   >
   <
+    R,
     E extends { _tag: string },
+    A,
     Cases extends { [K in E["_tag"]]+?: ((error: Extract<E, { _tag: K }>) => Effect<any, any, any>) | undefined }
   >(
+    self: Effect<R, E, A>,
     cases: Cases
-  ): <R, A>(
-    self: Effect<R, E, A>
-  ) => Effect<
+  ): Effect<
     | R
     | {
       [K in keyof Cases]: Cases[K] extends (...args: Array<any>) => Effect<infer R, any, any> ? R : never
@@ -885,8 +895,8 @@ export const configProviderWith: <R, E, A>(f: (configProvider: ConfigProvider) =
  * @category constructors
  */
 export const collect: {
-  <A, R, E, B>(elements: Iterable<A>, f: (a: A) => Effect<R, Option.Option<E>, B>): Effect<R, E, Chunk.Chunk<B>>
   <A, R, E, B>(f: (a: A) => Effect<R, Option.Option<E>, B>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<B>>
+  <A, R, E, B>(elements: Iterable<A>, f: (a: A) => Effect<R, Option.Option<E>, B>): Effect<R, E, Chunk.Chunk<B>>
 } = fiberRuntime.collect
 
 /**
@@ -937,8 +947,8 @@ export const collectAllParDiscard: <R, E, A>(effects: Iterable<Effect<R, E, A>>)
  * @category constructors
  */
 export const collectAllWith: {
-  <R, E, A, B>(elements: Iterable<Effect<R, E, A>>, pf: (a: A) => Option.Option<B>): Effect<R, E, Chunk.Chunk<B>>
   <A, B>(pf: (a: A) => Option.Option<B>): <R, E>(elements: Iterable<Effect<R, E, A>>) => Effect<R, E, Chunk.Chunk<B>>
+  <R, E, A, B>(elements: Iterable<Effect<R, E, A>>, pf: (a: A) => Option.Option<B>): Effect<R, E, Chunk.Chunk<B>>
 } = effect.collectAllWith
 
 /**
@@ -949,8 +959,8 @@ export const collectAllWith: {
  * @category constructors
  */
 export const collectAllWithPar: {
-  <R, E, A, B>(elements: Iterable<Effect<R, E, A>>, pf: (a: A) => Option.Option<B>): Effect<R, E, Chunk.Chunk<B>>
   <A, B>(pf: (a: A) => Option.Option<B>): <R, E>(elements: Iterable<Effect<R, E, A>>) => Effect<R, E, Chunk.Chunk<B>>
+  <R, E, A, B>(elements: Iterable<Effect<R, E, A>>, pf: (a: A) => Option.Option<B>): Effect<R, E, Chunk.Chunk<B>>
 } = fiberRuntime.collectAllWithPar
 
 /**
@@ -961,8 +971,8 @@ export const collectAllWithPar: {
  * @category constructors
  */
 export const collectAllWithEffect: {
-  <A, R, E, B>(elements: Iterable<A>, f: (a: A) => Option.Option<Effect<R, E, B>>): Effect<R, E, Chunk.Chunk<B>>
   <A, R, E, B>(f: (a: A) => Option.Option<Effect<R, E, B>>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<B>>
+  <A, R, E, B>(elements: Iterable<A>, f: (a: A) => Option.Option<Effect<R, E, B>>): Effect<R, E, Chunk.Chunk<B>>
 } = effect.collectAllWithEffect
 
 /**
@@ -987,15 +997,15 @@ export const collectAllSuccessesPar: <R, E, A>(
 ) => Effect<R, never, Chunk.Chunk<A>> = fiberRuntime.collectAllSuccessesPar
 
 /**
- * Collects the first element of the `Collection<A?` for which the effectual
+ * Collects the first element of the `Collection<A>` for which the effectual
  * function `f` returns `Some`.
  *
  * @since 1.0.0
  * @category constructors
  */
 export const collectFirst: {
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, Option.Option<B>>): Effect<R, E, Option.Option<B>>
   <R, E, A, B>(f: (a: A) => Effect<R, E, Option.Option<B>>): (elements: Iterable<A>) => Effect<R, E, Option.Option<B>>
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, Option.Option<B>>): Effect<R, E, Option.Option<B>>
 } = effect.collectFirst
 
 /**
@@ -1006,8 +1016,8 @@ export const collectFirst: {
  * @category constructors
  */
 export const collectPar: {
-  <A, R, E, B>(elements: Iterable<A>, f: (a: A) => Effect<R, Option.Option<E>, B>): Effect<R, E, Chunk.Chunk<B>>
   <A, R, E, B>(f: (a: A) => Effect<R, Option.Option<E>, B>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<B>>
+  <A, R, E, B>(elements: Iterable<A>, f: (a: A) => Effect<R, Option.Option<E>, B>): Effect<R, E, Chunk.Chunk<B>>
 } = fiberRuntime.collectPar
 
 /**
@@ -1018,8 +1028,8 @@ export const collectPar: {
  * @category constructors
  */
 export const collectWhile: {
-  <A, R, E, B>(elements: Iterable<A>, f: (a: A) => Option.Option<Effect<R, E, B>>): Effect<R, E, Chunk.Chunk<B>>
   <A, R, E, B>(f: (a: A) => Option.Option<Effect<R, E, B>>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<B>>
+  <A, R, E, B>(elements: Iterable<A>, f: (a: A) => Option.Option<Effect<R, E, B>>): Effect<R, E, Chunk.Chunk<B>>
 } = effect.collectWhile
 
 /**
@@ -1031,8 +1041,11 @@ export const collectWhile: {
  * @since 1.0.0
  * @category constructors
  */
-export const cond: <E, A>(predicate: LazyArg<boolean>, result: LazyArg<A>, error: LazyArg<E>) => Effect<never, E, A> =
-  effect.cond
+export const cond: <E, A>(
+  predicate: LazyArg<boolean>,
+  result: LazyArg<A>,
+  error: LazyArg<E>
+) => Effect<never, E, A> = effect.cond
 
 /**
  * @since 1.0.0
@@ -1066,8 +1079,8 @@ export const contextWithEffect: <R, R0, E, A>(
  * @category error handling
  */
 export const continueOrFail: {
-  <R, E, A, E1, A2>(self: Effect<R, E, A>, error: E1, pf: (a: A) => Option.Option<A2>): Effect<R, E | E1, A2>
   <E1, A, A2>(error: E1, pf: (a: A) => Option.Option<A2>): <R, E>(self: Effect<R, E, A>) => Effect<R, E1 | E, A2>
+  <R, E, A, E1, A2>(self: Effect<R, E, A>, error: E1, pf: (a: A) => Option.Option<A2>): Effect<R, E | E1, A2>
 } = effect.continueOrFail
 
 /**
@@ -1078,16 +1091,28 @@ export const continueOrFail: {
  * @category error handling
  */
 export const continueOrFailEffect: {
+  <E1, A, R2, E2, A2>(
+    error: E1,
+    pf: (a: A) => Option.Option<Effect<R2, E2, A2>>
+  ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E1 | E2 | E, A2>
   <R, E, A, E1, R2, E2, A2>(
     self: Effect<R, E, A>,
     error: E1,
     pf: (a: A) => Option.Option<Effect<R2, E2, A2>>
   ): Effect<R | R2, E | E1 | E2, A2>
-  <E1, A, R2, E2, A2>(
-    error: E1,
-    pf: (a: A) => Option.Option<Effect<R2, E2, A2>>
-  ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E1 | E2 | E, A2>
 } = effect.continueOrFailEffect
+
+/**
+ * Provides some of the context required to run this effect,
+ * leaving the remainder `R0`.
+ *
+ * @since 1.0.0
+ * @category context
+ */
+export const contramapContext: {
+  <R0, R>(f: (context: Context.Context<R0>) => Context.Context<R>): <E, A>(self: Effect<R, E, A>) => Effect<R0, E, A>
+  <R0, R, E, A>(self: Effect<R, E, A>, f: (context: Context.Context<R0>) => Context.Context<R>): Effect<R0, E, A>
+} = core.contramapContext
 
 /**
  * Returns a new workflow that will not supervise any fibers forked by this
@@ -1106,8 +1131,8 @@ export const daemonChildren: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
  * @category mutations
  */
 export const delay: {
-  <R, E, A>(self: Effect<R, E, A>, duration: Duration.Duration): Effect<R, E, A>
   (duration: Duration.Duration): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, duration: Duration.Duration): Effect<R, E, A>
 } = effect.delay
 
 /**
@@ -1185,15 +1210,15 @@ export const diffFiberRefs: <R, E, A>(
  * @category do notation
  */
 export const bind: {
+  <N extends string, K, R2, E2, A>(
+    tag: Exclude<N, keyof K>,
+    f: (_: K) => Effect<R2, E2, A>
+  ): <R, E>(self: Effect<R, E, K>) => Effect<R2 | R, E2 | E, MergeRecord<K, { [k in N]: A }>>
   <R, E, N extends string, K, R2, E2, A>(
     self: Effect<R, E, K>,
     tag: Exclude<N, keyof K>,
     f: (_: K) => Effect<R2, E2, A>
   ): Effect<R | R2, E | E2, MergeRecord<K, { [k in N]: A }>>
-  <N extends string, K, R2, E2, A>(
-    tag: Exclude<N, keyof K>,
-    f: (_: K) => Effect<R2, E2, A>
-  ): <R, E>(self: Effect<R, E, K>) => Effect<R2 | R, E2 | E, MergeRecord<K, { [k in N]: A }>>
 } = effect.bind
 
 /**
@@ -1203,15 +1228,15 @@ export const bind: {
  * @category do notation
  */
 export const bindValue: {
+  <N extends string, K, A>(
+    tag: Exclude<N, keyof K>,
+    f: (_: K) => A
+  ): <R, E>(self: Effect<R, E, K>) => Effect<R, E, MergeRecord<K, { [k in N]: A }>>
   <R, E, K, N extends string, A>(
     self: Effect<R, E, K>,
     tag: Exclude<N, keyof K>,
     f: (_: K) => A
   ): Effect<R, E, MergeRecord<K, { [k in N]: A }>>
-  <N extends string, K, A>(
-    tag: Exclude<N, keyof K>,
-    f: (_: K) => A
-  ): <R, E>(self: Effect<R, E, K>) => Effect<R, E, MergeRecord<K, { [k in N]: A }>>
 } = effect.bindValue
 
 /**
@@ -1233,8 +1258,8 @@ export const done: <E, A>(exit: Exit.Exit<E, A>) => Effect<never, E, A> = core.d
  * @category mutations
  */
 export const dropUntil: {
-  <A, R, E>(elements: Iterable<A>, predicate: (a: A) => Effect<R, E, boolean>): Effect<R, E, Chunk.Chunk<A>>
   <A, R, E>(predicate: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<A>>
+  <A, R, E>(elements: Iterable<A>, predicate: (a: A) => Effect<R, E, boolean>): Effect<R, E, Chunk.Chunk<A>>
 } = effect.dropUntil
 
 /**
@@ -1244,8 +1269,8 @@ export const dropUntil: {
  * @category constructors
  */
 export const dropWhile: {
-  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, Chunk.Chunk<A>>
   <R, E, A>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<A>>
+  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, Chunk.Chunk<A>>
 } = effect.dropWhile
 
 /**
@@ -1278,8 +1303,8 @@ export const either: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Either
  * @category finalization
  */
 export const ensuring: {
-  <R, E, A, R1, X>(self: Effect<R, E, A>, finalizer: Effect<R1, never, X>): Effect<R | R1, E, A>
   <R1, X>(finalizer: Effect<R1, never, X>): <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | R, E, A>
+  <R, E, A, R1, X>(self: Effect<R, E, A>, finalizer: Effect<R1, never, X>): Effect<R | R1, E, A>
 } = circular.ensuring
 
 /**
@@ -1291,13 +1316,13 @@ export const ensuring: {
  * @category finalization
  */
 export const ensuringChild: {
+  <R2, X>(
+    f: (fiber: Fiber.Fiber<any, Chunk.Chunk<unknown>>) => Effect<R2, never, X>
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E, A>
   <R, E, A, R2, X>(
     self: Effect<R, E, A>,
     f: (fiber: Fiber.Fiber<any, Chunk.Chunk<unknown>>) => Effect<R2, never, X>
   ): Effect<R | R2, E, A>
-  <R2, X>(
-    f: (fiber: Fiber.Fiber<any, Chunk.Chunk<unknown>>) => Effect<R2, never, X>
-  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E, A>
 } = circular.ensuringChild
 
 /**
@@ -1308,13 +1333,13 @@ export const ensuringChild: {
  * @category finalization
  */
 export const ensuringChildren: {
+  <R1, X>(
+    children: (fibers: Chunk.Chunk<Fiber.RuntimeFiber<any, any>>) => Effect<R1, never, X>
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | R, E, A>
   <R, E, A, R1, X>(
     self: Effect<R, E, A>,
     children: (fibers: Chunk.Chunk<Fiber.RuntimeFiber<any, any>>) => Effect<R1, never, X>
   ): Effect<R | R1, E, A>
-  <R1, X>(
-    children: (fibers: Chunk.Chunk<Fiber.RuntimeFiber<any, any>>) => Effect<R1, never, X>
-  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | R, E, A>
 } = circular.ensuringChildren
 
 /**
@@ -1334,8 +1359,8 @@ export const eventually: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, A>
  * @category constructors
  */
 export const exists: {
-  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, boolean>
   <R, E, A>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, boolean>
+  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, boolean>
 } = effect.exists
 
 /**
@@ -1347,8 +1372,8 @@ export const exists: {
  * @category constructors
  */
 export const existsPar: {
-  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, boolean>
   <R, E, A>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, boolean>
+  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, boolean>
 } = fiberRuntime.existsPar
 
 /**
@@ -1401,8 +1426,8 @@ export const fiberIdWith: <R, E, A>(f: (descriptor: FiberId.Runtime) => Effect<R
  * @category filtering
  */
 export const filter: {
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, Chunk.Chunk<A>>
   <A, R, E>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<A>>
+  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, Chunk.Chunk<A>>
 } = effect.filter
 
 /**
@@ -1413,8 +1438,8 @@ export const filter: {
  * @category filtering
  */
 export const filterPar: {
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, Chunk.Chunk<A>>
   <A, R, E>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<A>>
+  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, Chunk.Chunk<A>>
 } = fiberRuntime.filterPar
 
 /**
@@ -1425,8 +1450,8 @@ export const filterPar: {
  * @category filtering
  */
 export const filterNot: {
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, Chunk.Chunk<A>>
   <A, R, E>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<A>>
+  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, Chunk.Chunk<A>>
 } = effect.filterNot
 
 /**
@@ -1437,8 +1462,8 @@ export const filterNot: {
  * @category filtering
  */
 export const filterNotPar: {
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, Chunk.Chunk<A>>
   <A, R, E>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<A>>
+  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, Chunk.Chunk<A>>
 } = fiberRuntime.filterNotPar
 
 /**
@@ -1449,10 +1474,10 @@ export const filterNotPar: {
  * @category filtering
  */
 export const filterOrDie: {
-  <R, E, A, B extends A>(self: Effect<R, E, A>, f: Refinement<A, B>, defect: LazyArg<unknown>): Effect<R, E, B>
-  <R, E, A>(self: Effect<R, E, A>, f: Predicate<A>, defect: LazyArg<unknown>): Effect<R, E, A>
   <A, B extends A>(f: Refinement<A, B>, defect: LazyArg<unknown>): <R, E>(self: Effect<R, E, A>) => Effect<R, E, B>
   <A>(f: Predicate<A>, defect: LazyArg<unknown>): <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A, B extends A>(self: Effect<R, E, A>, f: Refinement<A, B>, defect: LazyArg<unknown>): Effect<R, E, B>
+  <R, E, A>(self: Effect<R, E, A>, f: Predicate<A>, defect: LazyArg<unknown>): Effect<R, E, A>
 } = effect.filterOrDie
 
 /**
@@ -1463,10 +1488,10 @@ export const filterOrDie: {
  * @category filtering
  */
 export const filterOrDieMessage: {
-  <R, E, A, B extends A>(self: Effect<R, E, A>, f: Refinement<A, B>, message: string): Effect<R, E, B>
-  <R, E, A>(self: Effect<R, E, A>, f: Predicate<A>, message: string): Effect<R, E, A>
   <A, B extends A>(f: Refinement<A, B>, message: string): <R, E>(self: Effect<R, E, A>) => Effect<R, E, B>
   <A>(f: Predicate<A>, message: string): <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A, B extends A>(self: Effect<R, E, A>, f: Refinement<A, B>, message: string): Effect<R, E, B>
+  <R, E, A>(self: Effect<R, E, A>, f: Predicate<A>, message: string): Effect<R, E, A>
 } = effect.filterOrDieMessage
 
 /**
@@ -1477,6 +1502,14 @@ export const filterOrDieMessage: {
  * @category filtering
  */
 export const filterOrElse: {
+  <A, B extends A, R2, E2, C>(
+    f: Refinement<A, B>,
+    orElse: LazyArg<Effect<R2, E2, C>>
+  ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, B | C>
+  <A, R2, E2, B>(
+    f: Predicate<A>,
+    orElse: LazyArg<Effect<R2, E2, B>>
+  ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A | B>
   <R, E, A, B extends A, R2, E2, C>(
     self: Effect<R, E, A>,
     f: Refinement<A, B>,
@@ -1487,14 +1520,6 @@ export const filterOrElse: {
     f: Predicate<A>,
     orElse: LazyArg<Effect<R2, E2, B>>
   ): Effect<R | R2, E | E2, A | B>
-  <A, B extends A, R2, E2, C>(
-    f: Refinement<A, B>,
-    orElse: LazyArg<Effect<R2, E2, C>>
-  ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, B | C>
-  <A, R2, E2, B>(
-    f: Predicate<A>,
-    orElse: LazyArg<Effect<R2, E2, B>>
-  ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A | B>
 } = effect.filterOrElse
 
 /**
@@ -1505,6 +1530,14 @@ export const filterOrElse: {
  * @category filtering
  */
 export const filterOrElseWith: {
+  <A, B extends A, R2, E2, C>(
+    f: Refinement<A, B>,
+    orElse: (a: A) => Effect<R2, E2, C>
+  ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, B | C>
+  <A, R2, E2, B>(
+    f: Predicate<A>,
+    orElse: (a: A) => Effect<R2, E2, B>
+  ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A | B>
   <R, E, A, B extends A, R2, E2, C>(
     self: Effect<R, E, A>,
     f: Refinement<A, B>,
@@ -1515,14 +1548,6 @@ export const filterOrElseWith: {
     f: Predicate<A>,
     orElse: (a: A) => Effect<R2, E2, B>
   ): Effect<R | R2, E | E2, A | B>
-  <A, B extends A, R2, E2, C>(
-    f: Refinement<A, B>,
-    orElse: (a: A) => Effect<R2, E2, C>
-  ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, B | C>
-  <A, R2, E2, B>(
-    f: Predicate<A>,
-    orElse: (a: A) => Effect<R2, E2, B>
-  ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A | B>
 } = effect.filterOrElseWith
 
 /**
@@ -1533,10 +1558,10 @@ export const filterOrElseWith: {
  * @category filtering
  */
 export const filterOrFail: {
-  <R, E, A, B extends A, E2>(self: Effect<R, E, A>, f: Refinement<A, B>, error: LazyArg<E2>): Effect<R, E | E2, B>
-  <R, E, A, E2>(self: Effect<R, E, A>, f: Predicate<A>, error: LazyArg<E2>): Effect<R, E | E2, A>
   <A, B extends A, E2>(f: Refinement<A, B>, error: LazyArg<E2>): <R, E>(self: Effect<R, E, A>) => Effect<R, E2 | E, B>
   <A, E2>(f: Predicate<A>, error: LazyArg<E2>): <R, E>(self: Effect<R, E, A>) => Effect<R, E2 | E, A>
+  <R, E, A, B extends A, E2>(self: Effect<R, E, A>, f: Refinement<A, B>, error: LazyArg<E2>): Effect<R, E | E2, B>
+  <R, E, A, E2>(self: Effect<R, E, A>, f: Predicate<A>, error: LazyArg<E2>): Effect<R, E | E2, A>
 } = effect.filterOrFail
 
 /**
@@ -1546,8 +1571,8 @@ export const filterOrFail: {
  * @category elements
  */
 export const find: {
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, Option.Option<A>>
   <A, R, E>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Option.Option<A>>
+  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, Option.Option<A>>
 } = effect.find
 
 /**
@@ -1585,8 +1610,8 @@ export const firstSuccessOf: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Ef
  * @category sequencing
  */
 export const flatMap: {
-  <R, E, A, R1, E1, B>(self: Effect<R, E, A>, f: (a: A) => Effect<R1, E1, B>): Effect<R | R1, E | E1, B>
   <A, R1, E1, B>(f: (a: A) => Effect<R1, E1, B>): <R, E>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, B>
+  <R, E, A, R1, E1, B>(self: Effect<R, E, A>, f: (a: A) => Effect<R1, E1, B>): Effect<R | R1, E | E1, B>
 } = core.flatMap
 
 /**
@@ -1603,8 +1628,8 @@ export const flatten: <R, E, R1, E1, A>(self: Effect<R, E, Effect<R1, E1, A>>) =
  * @category sequencing
  */
 export const flattenErrorOption: {
-  <R, E, A, E1>(self: Effect<R, Option.Option<E>, A>, fallback: E1): Effect<R, E | E1, A>
   <E1>(fallback: E1): <R, E, A>(self: Effect<R, Option.Option<E>, A>) => Effect<R, E1 | E, A>
+  <R, E, A, E1>(self: Effect<R, Option.Option<E>, A>, fallback: E1): Effect<R, E | E1, A>
 } = effect.flattenErrorOption
 
 /**
@@ -1624,10 +1649,13 @@ export const flip: <R, E, A>(self: Effect<R, E, A>) => Effect<R, A, E> = core.fl
  * @category mutations
  */
 export const flipWith: {
-  <R, A, E, R2, A2, E2>(self: Effect<R, E, A>, f: (effect: Effect<R, A, E>) => Effect<R2, A2, E2>): Effect<R2, E2, A2>
   <R, A, E, R2, A2, E2>(
     f: (effect: Effect<R, A, E>) => Effect<R2, A2, E2>
   ): (self: Effect<R, E, A>) => Effect<R2, E2, A2>
+  <R, A, E, R2, A2, E2>(
+    self: Effect<R, E, A>,
+    f: (effect: Effect<R, A, E>) => Effect<R2, A2, E2>
+  ): Effect<R2, E2, A2>
 } = effect.flipWith
 
 /**
@@ -1638,9 +1666,27 @@ export const flipWith: {
  * @category elements
  */
 export const forAll: {
-  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, boolean>
   <R, E, A>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, boolean>
+  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, boolean>
 } = effect.forAll
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const forEach: {
+  <A, R, E, B>(f: (a: A) => Effect<R, E, B>): (self: Iterable<A>) => Effect<R, E, Chunk.Chunk<B>>
+  <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, E, Chunk.Chunk<B>>
+} = core.forEach
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const forEachDiscard: {
+  <A, R, E, B>(f: (a: A) => Effect<R, E, B>): (self: Iterable<A>) => Effect<R, E, void>
+  <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, E, void>
+} = core.forEachDiscard
 
 /**
  * Returns a new effect that will pass the success value of this effect to the
@@ -1650,39 +1696,9 @@ export const forAll: {
  * @category elements
  */
 export const forEachEffect: {
-  <R, E, A, R1, E1, B>(self: Effect<R, E, A>, f: (a: A) => Effect<R1, E1, B>): Effect<R | R1, E1, Option.Option<B>>
   <A, R1, E1, B>(f: (a: A) => Effect<R1, E1, B>): <R, E>(self: Effect<R, E, A>) => Effect<R1 | R, E1, Option.Option<B>>
+  <R, E, A, R1, E1, B>(self: Effect<R, E, A>, f: (a: A) => Effect<R1, E1, B>): Effect<R | R1, E1, Option.Option<B>>
 } = effect.forEachEffect
-
-/**
- * Applies the function `f` if the argument is non-empty and returns the
- * results in a new `Option<B>`.
- *
- * @since 1.0.0
- * @category elements
- */
-export const forEachOption: {
-  <R, E, A, B>(option: Option.Option<A>, f: (a: A) => Effect<R, E, B>): Effect<R, E, Option.Option<B>>
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (option: Option.Option<A>) => Effect<R, E, Option.Option<B>>
-} = effect.forEachOption
-
-/**
- * @since 1.0.0
- * @category constructors
- */
-export const forEach: {
-  <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, E, Chunk.Chunk<B>>
-  <A, R, E, B>(f: (a: A) => Effect<R, E, B>): (self: Iterable<A>) => Effect<R, E, Chunk.Chunk<B>>
-} = core.forEach
-
-/**
- * @since 1.0.0
- * @category constructors
- */
-export const forEachDiscard: {
-  <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, E, void>
-  <A, R, E, B>(f: (a: A) => Effect<R, E, B>): (self: Iterable<A>) => Effect<R, E, void>
-} = core.forEachDiscard
 
 /**
  * Applies the function `f` to each element of the `Collection<A>` and returns
@@ -1693,15 +1709,27 @@ export const forEachDiscard: {
  */
 export const forEachExec: {
   <R, E, A, B>(
+    f: (a: A) => Effect<R, E, B>,
+    strategy: ExecutionStrategy.ExecutionStrategy
+  ): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<B>>
+  <R, E, A, B>(
     elements: Iterable<A>,
     f: (a: A) => Effect<R, E, B>,
     strategy: ExecutionStrategy.ExecutionStrategy
   ): Effect<R, E, Chunk.Chunk<B>>
-  <R, E, A, B>(
-    f: (a: A) => Effect<R, E, B>,
-    strategy: ExecutionStrategy.ExecutionStrategy
-  ): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<B>>
 } = fiberRuntime.forEachExec
+
+/**
+ * Applies the function `f` if the argument is non-empty and returns the
+ * results in a new `Option<B>`.
+ *
+ * @since 1.0.0
+ * @category elements
+ */
+export const forEachOption: {
+  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (option: Option.Option<A>) => Effect<R, E, Option.Option<B>>
+  <R, E, A, B>(option: Option.Option<A>, f: (a: A) => Effect<R, E, B>): Effect<R, E, Option.Option<B>>
+} = effect.forEachOption
 
 /**
  * Same as `forEach`, except that the function `f` is supplied
@@ -1712,8 +1740,8 @@ export const forEachExec: {
  * @category traversing
  */
 export const forEachWithIndex: {
-  <A, R, E, B>(elements: Iterable<A>, f: (a: A, i: number) => Effect<R, E, B>): Effect<R, E, Chunk.Chunk<B>>
   <A, R, E, B>(f: (a: A, i: number) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<B>>
+  <A, R, E, B>(elements: Iterable<A>, f: (a: A, i: number) => Effect<R, E, B>): Effect<R, E, Chunk.Chunk<B>>
 } = effect.forEachWithIndex
 
 /**
@@ -1721,8 +1749,8 @@ export const forEachWithIndex: {
  * @category constructors
  */
 export const forEachPar: {
-  <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, E, Chunk.Chunk<B>>
   <A, R, E, B>(f: (a: A) => Effect<R, E, B>): (self: Iterable<A>) => Effect<R, E, Chunk.Chunk<B>>
+  <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, E, Chunk.Chunk<B>>
 } = fiberRuntime.forEachPar
 
 /**
@@ -1730,8 +1758,8 @@ export const forEachPar: {
  * @category constructors
  */
 export const forEachParDiscard: {
-  <A, R, E, _>(self: Iterable<A>, f: (a: A) => Effect<R, E, _>): Effect<R, E, void>
   <A, R, E, _>(f: (a: A) => Effect<R, E, _>): (self: Iterable<A>) => Effect<R, E, void>
+  <A, R, E, _>(self: Iterable<A>, f: (a: A) => Effect<R, E, _>): Effect<R, E, void>
 } = fiberRuntime.forEachParDiscard
 
 /**
@@ -1743,8 +1771,8 @@ export const forEachParDiscard: {
  * @category constructors
  */
 export const forEachParWithIndex: {
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A, i: number) => Effect<R, E, B>): Effect<R, E, Chunk.Chunk<B>>
   <R, E, A, B>(f: (a: A, i: number) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<B>>
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A, i: number) => Effect<R, E, B>): Effect<R, E, Chunk.Chunk<B>>
 } = fiberRuntime.forEachParWithIndex
 
 /**
@@ -1822,8 +1850,8 @@ export const forkAllDiscard: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Ef
  * @category supervision
  */
 export const forkIn: {
-  <R, E, A>(self: Effect<R, E, A>, scope: Scope.Scope): Effect<R, never, Fiber.RuntimeFiber<E, A>>
   (scope: Scope.Scope): <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Fiber.RuntimeFiber<E, A>>
+  <R, E, A>(self: Effect<R, E, A>, scope: Scope.Scope): Effect<R, never, Fiber.RuntimeFiber<E, A>>
 } = circular.forkIn
 
 /**
@@ -1842,13 +1870,13 @@ export const forkScoped: <R, E, A>(self: Effect<R, E, A>) => Effect<Scope.Scope 
  * @category supervision
  */
 export const forkWithErrorHandler: {
+  <E, X>(
+    handler: (e: E) => Effect<never, never, X>
+  ): <R, A>(self: Effect<R, E, A>) => Effect<R, never, Fiber.RuntimeFiber<E, A>>
   <R, E, A, X>(
     self: Effect<R, E, A>,
     handler: (e: E) => Effect<never, never, X>
   ): Effect<R, never, Fiber.RuntimeFiber<E, A>>
-  <E, X>(
-    handler: (e: E) => Effect<never, never, X>
-  ): <R, A>(self: Effect<R, E, A>) => Effect<R, never, Fiber.RuntimeFiber<E, A>>
 } = fiberRuntime.forkWithErrorHandler
 
 /**
@@ -1957,8 +1985,8 @@ export const getOrFailDiscard: <A>(option: Option.Option<A>) => Effect<never, vo
  * @category conversions
  */
 export const getOrFailWith: {
-  <A, E>(option: Option.Option<A>, error: LazyArg<E>): Effect<never, E, A>
   <E>(error: LazyArg<E>): <A>(option: Option.Option<A>) => Effect<never, E, A>
+  <A, E>(option: Option.Option<A>, error: LazyArg<E>): Effect<never, E, A>
 } = effect.getOrFailWith
 
 /**
@@ -1977,15 +2005,15 @@ export const head: <R, E, A>(self: Effect<R, E, Iterable<A>>) => Effect<R, Optio
  * @category constructors
  */
 export const ifEffect: {
+  <R1, R2, E1, E2, A, A1>(
+    onTrue: Effect<R1, E1, A>,
+    onFalse: Effect<R2, E2, A1>
+  ): <R, E>(self: Effect<R, E, boolean>) => Effect<R1 | R2 | R, E1 | E2 | E, A | A1>
   <R, E, R1, R2, E1, E2, A, A1>(
     self: Effect<R, E, boolean>,
     onTrue: Effect<R1, E1, A>,
     onFalse: Effect<R2, E2, A1>
   ): Effect<R | R1 | R2, E | E1 | E2, A | A1>
-  <R1, R2, E1, E2, A, A1>(
-    onTrue: Effect<R1, E1, A>,
-    onFalse: Effect<R2, E2, A1>
-  ): <R, E>(self: Effect<R, E, boolean>) => Effect<R1 | R2 | R, E1 | E2 | E, A | A1>
 } = core.ifEffect
 
 /**
@@ -2046,8 +2074,8 @@ export const interruptibleMask: <R, E, A>(
  * @category utilities
  */
 export const intoDeferred: {
-  <R, E, A>(self: Effect<R, E, A>, deferred: Deferred.Deferred<E, A>): Effect<R, never, boolean>
   <E, A>(deferred: Deferred.Deferred<E, A>): <R>(self: Effect<R, E, A>) => Effect<R, never, boolean>
+  <R, E, A>(self: Effect<R, E, A>, deferred: Deferred.Deferred<E, A>): Effect<R, never, boolean>
 } = core.intoDeferred
 
 /**
@@ -2107,12 +2135,12 @@ export const left: <R, E, A, B>(self: Effect<R, E, Either.Either<A, B>>) => Effe
  */
 export const leftWith: {
   <R, E, B, A, R1, E1, B1, A1>(
+    f: (effect: Effect<R, Either.Either<E, B>, A>) => Effect<R1, Either.Either<E1, B1>, A1>
+  ): (self: Effect<R, E, Either.Either<A, B>>) => Effect<R | R1, E | E1, Either.Either<A1, B1>>
+  <R, E, B, A, R1, E1, B1, A1>(
     self: Effect<R, E, Either.Either<A, B>>,
     f: (effect: Effect<R, Either.Either<E, B>, A>) => Effect<R1, Either.Either<E1, B1>, A1>
   ): Effect<R | R1, E | E1, Either.Either<A1, B1>>
-  <R, E, B, A, R1, E1, B1, A1>(
-    f: (effect: Effect<R, Either.Either<E, B>, A>) => Effect<R1, Either.Either<E1, B1>, A1>
-  ): (self: Effect<R, E, Either.Either<A, B>>) => Effect<R | R1, E | E1, Either.Either<A1, B1>>
 } = effect.leftWith
 
 /**
@@ -2280,8 +2308,8 @@ export const logTraceCauseMessage: <E>(message: string, cause: Cause.Cause<E>) =
  * @category logging
  */
 export const logSpan: {
-  <R, E, A>(effect: Effect<R, E, A>, label: string): Effect<R, E, A>
   (label: string): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(effect: Effect<R, E, A>, label: string): Effect<R, E, A>
 } = effect.logSpan
 
 /**
@@ -2291,8 +2319,8 @@ export const logSpan: {
  * @category logging
  */
 export const logAnnotate: {
-  <R, E, A>(effect: Effect<R, E, A>, key: string, value: string): Effect<R, E, A>
   (key: string, value: string): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(effect: Effect<R, E, A>, key: string, value: string): Effect<R, E, A>
 } = effect.logAnnotate
 
 /**
@@ -2357,8 +2385,8 @@ export const loopDiscard: <Z, R, E, X>(
  * @category mapping
  */
 export const map: {
-  <R, E, A, B>(self: Effect<R, E, A>, f: (a: A) => B): Effect<R, E, B>
   <A, B>(f: (a: A) => B): <R, E>(self: Effect<R, E, A>) => Effect<R, E, B>
+  <R, E, A, B>(self: Effect<R, E, A>, f: (a: A) => B): Effect<R, E, B>
 } = core.map
 
 /**
@@ -2368,11 +2396,17 @@ export const map: {
  * @since 1.0.0
  * @category mapping
  */
-export const mapAccum: <A, B, R, E, Z>(
-  elements: Iterable<A>,
-  zero: Z,
-  f: (z: Z, a: A) => Effect<R, E, readonly [Z, B]>
-) => Effect<R, E, readonly [Z, Chunk.Chunk<B>]> = effect.mapAccum
+export const mapAccum: {
+  <A, B, R, E, Z>(
+    zero: Z,
+    f: (z: Z, a: A) => Effect<R, E, readonly [Z, B]>
+  ): (elements: Iterable<A>) => Effect<R, E, readonly [Z, Chunk.Chunk<B>]>
+  <A, B, R, E, Z>(
+    elements: Iterable<A>,
+    zero: Z,
+    f: (z: Z, a: A) => Effect<R, E, readonly [Z, B]>
+  ): Effect<R, E, readonly [Z, Chunk.Chunk<B>]>
+} = effect.mapAccum
 
 /**
  * Returns an effect whose failure and success channels have been mapped by
@@ -2382,8 +2416,8 @@ export const mapAccum: <A, B, R, E, Z>(
  * @category mapping
  */
 export const mapBoth: {
-  <R, E, A, E2, A2>(self: Effect<R, E, A>, f: (e: E) => E2, g: (a: A) => A2): Effect<R, E2, A2>
   <E, A, E2, A2>(f: (e: E) => E2, g: (a: A) => A2): <R>(self: Effect<R, E, A>) => Effect<R, E2, A2>
+  <R, E, A, E2, A2>(self: Effect<R, E, A>, f: (e: E) => E2, g: (a: A) => A2): Effect<R, E2, A2>
 } = effect.mapBoth
 
 /**
@@ -2393,8 +2427,8 @@ export const mapBoth: {
  * @category mapping
  */
 export const mapError: {
-  <R, A, E, E2>(self: Effect<R, E, A>, f: (e: E) => E2): Effect<R, E2, A>
   <E, E2>(f: (e: E) => E2): <R, A>(self: Effect<R, E, A>) => Effect<R, E2, A>
+  <R, A, E, E2>(self: Effect<R, E, A>, f: (e: E) => E2): Effect<R, E2, A>
 } = core.mapError
 
 /**
@@ -2409,8 +2443,8 @@ export const mapError: {
  * @category mapping
  */
 export const mapErrorCause: {
-  <R, E, A, E2>(self: Effect<R, E, A>, f: (cause: Cause.Cause<E>) => Cause.Cause<E2>): Effect<R, E2, A>
   <E, E2>(f: (cause: Cause.Cause<E>) => Cause.Cause<E2>): <R, A>(self: Effect<R, E, A>) => Effect<R, E2, A>
+  <R, E, A, E2>(self: Effect<R, E, A>, f: (cause: Cause.Cause<E>) => Cause.Cause<E2>): Effect<R, E2, A>
 } = effect.mapErrorCause
 
 /**
@@ -2421,8 +2455,8 @@ export const mapErrorCause: {
  * @category mapping
  */
 export const mapTryCatch: {
-  <R, E, A, B, E1>(self: Effect<R, E, A>, f: (a: A) => B, onThrow: (u: unknown) => E1): Effect<R, E | E1, B>
   <A, B, E1>(f: (a: A) => B, onThrow: (u: unknown) => E1): <R, E>(self: Effect<R, E, A>) => Effect<R, E1 | E, B>
+  <R, E, A, B, E1>(self: Effect<R, E, A>, f: (a: A) => B, onThrow: (u: unknown) => E1): Effect<R, E | E1, B>
 } = effect.mapTryCatch
 
 /**
@@ -2434,15 +2468,15 @@ export const mapTryCatch: {
  * @category folding
  */
 export const match: {
+  <E, A, A2, A3>(
+    onFailure: (error: E) => A2,
+    onSuccess: (value: A) => A3
+  ): <R>(self: Effect<R, E, A>) => Effect<R, never, A2 | A3>
   <R, E, A, A2, A3>(
     self: Effect<R, E, A>,
     onFailure: (error: E) => A2,
     onSuccess: (value: A) => A3
   ): Effect<R, never, A2 | A3>
-  <E, A, A2, A3>(
-    onFailure: (error: E) => A2,
-    onSuccess: (value: A) => A3
-  ): <R>(self: Effect<R, E, A>) => Effect<R, never, A2 | A3>
 } = effect.match
 
 /**
@@ -2450,15 +2484,15 @@ export const match: {
  * @category error handling
  */
 export const matchCause: {
+  <E, A2, A, A3>(
+    onFailure: (cause: Cause.Cause<E>) => A2,
+    onSuccess: (a: A) => A3
+  ): <R>(self: Effect<R, E, A>) => Effect<R, never, A2 | A3>
   <R, E, A2, A, A3>(
     self: Effect<R, E, A>,
     onFailure: (cause: Cause.Cause<E>) => A2,
     onSuccess: (a: A) => A3
   ): Effect<R, never, A2 | A3>
-  <E, A2, A, A3>(
-    onFailure: (cause: Cause.Cause<E>) => A2,
-    onSuccess: (a: A) => A3
-  ): <R>(self: Effect<R, E, A>) => Effect<R, never, A2 | A3>
 } = core.matchCause
 
 /**
@@ -2466,15 +2500,15 @@ export const matchCause: {
  * @category error handling
  */
 export const matchCauseEffect: {
+  <E, A, R2, E2, A2, R3, E3, A3>(
+    onFailure: (cause: Cause.Cause<E>) => Effect<R2, E2, A2>,
+    onSuccess: (a: A) => Effect<R3, E3, A3>
+  ): <R>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2 | E3, A2 | A3>
   <R, E, A, R2, E2, A2, R3, E3, A3>(
     self: Effect<R, E, A>,
     onFailure: (cause: Cause.Cause<E>) => Effect<R2, E2, A2>,
     onSuccess: (a: A) => Effect<R3, E3, A3>
   ): Effect<R | R2 | R3, E2 | E3, A2 | A3>
-  <E, A, R2, E2, A2, R3, E3, A3>(
-    onFailure: (cause: Cause.Cause<E>) => Effect<R2, E2, A2>,
-    onSuccess: (a: A) => Effect<R3, E3, A3>
-  ): <R>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2 | E3, A2 | A3>
 } = core.matchCauseEffect
 
 /**
@@ -2482,15 +2516,15 @@ export const matchCauseEffect: {
  * @category error handling
  */
 export const matchEffect: {
+  <E, A, R2, E2, A2, R3, E3, A3>(
+    onFailure: (e: E) => Effect<R2, E2, A2>,
+    onSuccess: (a: A) => Effect<R3, E3, A3>
+  ): <R>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2 | E3, A2 | A3>
   <R, E, A, R2, E2, A2, R3, E3, A3>(
     self: Effect<R, E, A>,
     onFailure: (e: E) => Effect<R2, E2, A2>,
     onSuccess: (a: A) => Effect<R3, E3, A3>
   ): Effect<R | R2 | R3, E2 | E3, A2 | A3>
-  <E, A, R2, E2, A2, R3, E3, A3>(
-    onFailure: (e: E) => Effect<R2, E2, A2>,
-    onSuccess: (a: A) => Effect<R3, E3, A3>
-  ): <R>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2 | E3, A2 | A3>
 } = core.matchEffect
 
 /**
@@ -2529,8 +2563,8 @@ export const merge: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, E | A> 
  * @category constructors
  */
 export const mergeAll: {
-  <R, E, Z, A>(elements: Iterable<Effect<R, E, A>>, zero: Z, f: (z: Z, a: A) => Z): Effect<R, E, Z>
   <Z, A>(zero: Z, f: (z: Z, a: A) => Z): <R, E>(elements: Iterable<Effect<R, E, A>>) => Effect<R, E, Z>
+  <R, E, Z, A>(elements: Iterable<Effect<R, E, A>>, zero: Z, f: (z: Z, a: A) => Z): Effect<R, E, Z>
 } = effect.mergeAll
 
 /**
@@ -2602,15 +2636,15 @@ export const noneOrFailWith: <E, A>(option: Option.Option<A>, f: (a: A) => E) =>
  * @category mutations
  */
 export const onDone: {
+  <E, A, R1, X1, R2, X2>(
+    onError: (e: E) => Effect<R1, never, X1>,
+    onSuccess: (a: A) => Effect<R2, never, X2>
+  ): <R>(self: Effect<R, E, A>) => Effect<R1 | R2 | R, never, void>
   <R, E, A, R1, X1, R2, X2>(
     self: Effect<R, E, A>,
     onError: (e: E) => Effect<R1, never, X1>,
     onSuccess: (a: A) => Effect<R2, never, X2>
   ): Effect<R | R1 | R2, never, void>
-  <E, A, R1, X1, R2, X2>(
-    onError: (e: E) => Effect<R1, never, X1>,
-    onSuccess: (a: A) => Effect<R2, never, X2>
-  ): <R>(self: Effect<R, E, A>) => Effect<R1 | R2 | R, never, void>
 } = fiberRuntime.onDone
 
 /**
@@ -2618,15 +2652,15 @@ export const onDone: {
  * @category mutations
  */
 export const onDoneCause: {
+  <E, A, R1, X1, R2, X2>(
+    onCause: (cause: Cause.Cause<E>) => Effect<R1, never, X1>,
+    onSuccess: (a: A) => Effect<R2, never, X2>
+  ): <R>(self: Effect<R, E, A>) => Effect<R1 | R2 | R, never, void>
   <R, E, A, R1, X1, R2, X2>(
     self: Effect<R, E, A>,
     onCause: (cause: Cause.Cause<E>) => Effect<R1, never, X1>,
     onSuccess: (a: A) => Effect<R2, never, X2>
   ): Effect<R | R1 | R2, never, void>
-  <E, A, R1, X1, R2, X2>(
-    onCause: (cause: Cause.Cause<E>) => Effect<R1, never, X1>,
-    onSuccess: (a: A) => Effect<R2, never, X2>
-  ): <R>(self: Effect<R, E, A>) => Effect<R1 | R2 | R, never, void>
 } = fiberRuntime.onDoneCause
 
 /**
@@ -2637,13 +2671,13 @@ export const onDoneCause: {
  * @category mutations
  */
 export const onError: {
+  <E, R2, X>(
+    cleanup: (cause: Cause.Cause<E>) => Effect<R2, never, X>
+  ): <R, A>(self: Effect<R, E, A>) => Effect<R2 | R, E, A>
   <R, A, E, R2, X>(
     self: Effect<R, E, A>,
     cleanup: (cause: Cause.Cause<E>) => Effect<R2, never, X>
   ): Effect<R | R2, E, A>
-  <E, R2, X>(
-    cleanup: (cause: Cause.Cause<E>) => Effect<R2, never, X>
-  ): <R, A>(self: Effect<R, E, A>) => Effect<R2 | R, E, A>
 } = core.onError
 
 /**
@@ -2654,13 +2688,13 @@ export const onError: {
  * @since 1.0.0
  */
 export const onExit: {
+  <E, A, R2, X>(
+    cleanup: (exit: Exit.Exit<E, A>) => Effect<R2, never, X>
+  ): <R>(self: Effect<R, E, A>) => Effect<R2 | R, E, A>
   <R, E, A, R2, X>(
     self: Effect<R, E, A>,
     cleanup: (exit: Exit.Exit<E, A>) => Effect<R2, never, X>
   ): Effect<R | R2, E, A>
-  <E, A, R2, X>(
-    cleanup: (exit: Exit.Exit<E, A>) => Effect<R2, never, X>
-  ): <R>(self: Effect<R, E, A>) => Effect<R2 | R, E, A>
 } = core.onExit
 
 /**
@@ -2668,13 +2702,13 @@ export const onExit: {
  * @category finalization
  */
 export const onInterrupt: {
+  <R2, X>(
+    cleanup: (interruptors: HashSet.HashSet<FiberId.FiberId>) => Effect<R2, never, X>
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E, A>
   <R, E, A, R2, X>(
     self: Effect<R, E, A>,
     cleanup: (interruptors: HashSet.HashSet<FiberId.FiberId>) => Effect<R2, never, X>
   ): Effect<R | R2, E, A>
-  <R2, X>(
-    cleanup: (interruptors: HashSet.HashSet<FiberId.FiberId>) => Effect<R2, never, X>
-  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E, A>
 } = core.onInterrupt
 
 /**
@@ -2712,8 +2746,8 @@ export const orDie: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, A> = co
  * @category alternatives
  */
 export const orDieWith: {
-  <R, E, A>(self: Effect<R, E, A>, f: (error: E) => unknown): Effect<R, never, A>
   <E>(f: (error: E) => unknown): <R, A>(self: Effect<R, E, A>) => Effect<R, never, A>
+  <R, E, A>(self: Effect<R, E, A>, f: (error: E) => unknown): Effect<R, never, A>
 } = core.orDieWith
 
 /**
@@ -2724,8 +2758,8 @@ export const orDieWith: {
  * @category alternatives
  */
 export const orElse: {
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: LazyArg<Effect<R2, E2, A2>>): Effect<R | R2, E2, A | A2>
   <R2, E2, A2>(that: LazyArg<Effect<R2, E2, A2>>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2, A2 | A>
+  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: LazyArg<Effect<R2, E2, A2>>): Effect<R | R2, E2, A | A2>
 } = core.orElse
 
 /**
@@ -2736,13 +2770,13 @@ export const orElse: {
  * @category alternatives
  */
 export const orElseEither: {
+  <R2, E2, A2>(
+    that: LazyArg<Effect<R2, E2, A2>>
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2, Either.Either<A, A2>>
   <R, E, A, R2, E2, A2>(
     self: Effect<R, E, A>,
     that: LazyArg<Effect<R2, E2, A2>>
   ): Effect<R | R2, E2, Either.Either<A, A2>>
-  <R2, E2, A2>(
-    that: LazyArg<Effect<R2, E2, A2>>
-  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2, Either.Either<A, A2>>
 } = effect.orElseEither
 
 /**
@@ -2753,8 +2787,8 @@ export const orElseEither: {
  * @category alternatives
  */
 export const orElseFail: {
-  <R, E, A, E2>(self: Effect<R, E, A>, evaluate: LazyArg<E2>): Effect<R, E2, A>
   <E2>(evaluate: LazyArg<E2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E2, A>
+  <R, E, A, E2>(self: Effect<R, E, A>, evaluate: LazyArg<E2>): Effect<R, E2, A>
 } = effect.orElseFail
 
 /**
@@ -2767,12 +2801,12 @@ export const orElseFail: {
  */
 export const orElseOptional: {
   <R, E, A, R2, E2, A2>(
+    that: LazyArg<Effect<R2, Option.Option<E2>, A2>>
+  ): (self: Effect<R, Option.Option<E>, A>) => Effect<R | R2, Option.Option<E | E2>, A | A2>
+  <R, E, A, R2, E2, A2>(
     self: Effect<R, Option.Option<E>, A>,
     that: LazyArg<Effect<R2, Option.Option<E2>, A2>>
   ): Effect<R | R2, Option.Option<E | E2>, A | A2>
-  <R, E, A, R2, E2, A2>(
-    that: LazyArg<Effect<R2, Option.Option<E2>, A2>>
-  ): (self: Effect<R, Option.Option<E>, A>) => Effect<R | R2, Option.Option<E | E2>, A | A2>
 } = effect.orElseOptional
 
 /**
@@ -2783,8 +2817,8 @@ export const orElseOptional: {
  * @category alternatives
  */
 export const orElseSucceed: {
-  <R, E, A, A2>(self: Effect<R, E, A>, evaluate: LazyArg<A2>): Effect<R, E, A | A2>
   <A2>(evaluate: LazyArg<A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A2 | A>
+  <R, E, A, A2>(self: Effect<R, E, A>, evaluate: LazyArg<A2>): Effect<R, E, A | A2>
 } = effect.orElseSucceed
 
 /**
@@ -2811,12 +2845,12 @@ export const parallelFinalizers: <R, E, A>(self: Effect<R, E, A>) => Effect<Scop
  */
 export const partition: {
   <R, E, A, B>(
+    f: (a: A) => Effect<R, E, B>
+  ): (elements: Iterable<A>) => Effect<R, never, readonly [Chunk.Chunk<E>, Chunk.Chunk<B>]>
+  <R, E, A, B>(
     elements: Iterable<A>,
     f: (a: A) => Effect<R, E, B>
   ): Effect<R, never, readonly [Chunk.Chunk<E>, Chunk.Chunk<B>]>
-  <R, E, A, B>(
-    f: (a: A) => Effect<R, E, B>
-  ): (elements: Iterable<A>) => Effect<R, never, readonly [Chunk.Chunk<E>, Chunk.Chunk<B>]>
 } = effect.partition
 
 /**
@@ -2829,12 +2863,12 @@ export const partition: {
  */
 export const partitionPar: {
   <R, E, A, B>(
+    f: (a: A) => Effect<R, E, B>
+  ): (elements: Iterable<A>) => Effect<R, never, readonly [Chunk.Chunk<E>, Chunk.Chunk<B>]>
+  <R, E, A, B>(
     elements: Iterable<A>,
     f: (a: A) => Effect<R, E, B>
   ): Effect<R, never, readonly [Chunk.Chunk<E>, Chunk.Chunk<B>]>
-  <R, E, A, B>(
-    f: (a: A) => Effect<R, E, B>
-  ): (elements: Iterable<A>) => Effect<R, never, readonly [Chunk.Chunk<E>, Chunk.Chunk<B>]>
 } = fiberRuntime.partitionPar
 
 /**
@@ -2872,8 +2906,8 @@ export const promiseInterrupt: <A>(evaluate: (signal: AbortSignal) => Promise<A>
  * @category context
  */
 export const provideContext: {
-  <R, E, A>(self: Effect<R, E, A>, context: Context.Context<R>): Effect<never, E, A>
   <R>(context: Context.Context<R>): <E, A>(self: Effect<R, E, A>) => Effect<never, E, A>
+  <R, E, A>(self: Effect<R, E, A>, context: Context.Context<R>): Effect<never, E, A>
 } = core.provideContext
 
 /**
@@ -2883,8 +2917,8 @@ export const provideContext: {
  * @category context
  */
 export const provideLayer: {
-  <R, E, A, R0, E2>(self: Effect<R, E, A>, layer: Layer.Layer<R0, E2, R>): Effect<R0, E | E2, A>
   <R0, E2, R>(layer: Layer.Layer<R0, E2, R>): <E, A>(self: Effect<R, E, A>) => Effect<R0, E2 | E, A>
+  <R, E, A, R0, E2>(self: Effect<R, E, A>, layer: Layer.Layer<R0, E2, R>): Effect<R0, E | E2, A>
 } = layer.provideLayer
 
 /**
@@ -2895,15 +2929,15 @@ export const provideLayer: {
  * @category context
  */
 export const provideService: {
+  <T extends Context.Tag<any>>(
+    tag: T,
+    service: Context.Tag.Service<T>
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<Exclude<R, Context.Tag.Service<T>>, E, A>
   <R, E, A, T extends Context.Tag<any>>(
     self: Effect<R, E, A>,
     tag: T,
     service: Context.Tag.Service<T>
   ): Effect<Exclude<R, Context.Tag.Service<T>>, E, A>
-  <T extends Context.Tag<any>>(
-    tag: T,
-    service: Context.Tag.Service<T>
-  ): <R, E, A>(self: Effect<R, E, A>) => Effect<Exclude<R, Context.Tag.Service<T>>, E, A>
 } = effect.provideService
 
 /**
@@ -2914,28 +2948,16 @@ export const provideService: {
  * @category context
  */
 export const provideServiceEffect: {
+  <T extends Context.Tag<any>, R1, E1>(
+    tag: T,
+    effect: Effect<R1, E1, Context.Tag.Service<T>>
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | Exclude<R, Context.Tag.Service<T>>, E1 | E, A>
   <R, E, A, T extends Context.Tag<any>, R1, E1>(
     self: Effect<R, E, A>,
     tag: T,
     effect: Effect<R1, E1, Context.Tag.Service<T>>
   ): Effect<R1 | Exclude<R, Context.Tag.Service<T>>, E | E1, A>
-  <T extends Context.Tag<any>, R1, E1>(
-    tag: T,
-    effect: Effect<R1, E1, Context.Tag.Service<T>>
-  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | Exclude<R, Context.Tag.Service<T>>, E1 | E, A>
 } = effect.provideServiceEffect
-
-/**
- * Provides some of the context required to run this effect,
- * leaving the remainder `R0`.
- *
- * @since 1.0.0
- * @category context
- */
-export const contramapContext: {
-  <R0, R, E, A>(self: Effect<R, E, A>, f: (context: Context.Context<R0>) => Context.Context<R>): Effect<R0, E, A>
-  <R0, R>(f: (context: Context.Context<R0>) => Context.Context<R>): <E, A>(self: Effect<R, E, A>) => Effect<R0, E, A>
-} = core.contramapContext
 
 /**
  * Splits the context into two parts, providing one part using the
@@ -2945,13 +2967,13 @@ export const contramapContext: {
  * @category context
  */
 export const provideSomeLayer: {
+  <R2, E2, A2>(
+    layer: Layer.Layer<R2, E2, A2>
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | Exclude<R, A2>, E2 | E, A>
   <R, E, A, R2, E2, A2>(
     self: Effect<R, E, A>,
     layer: Layer.Layer<R2, E2, A2>
   ): Effect<R2 | Exclude<R, A2>, E | E2, A>
-  <R2, E2, A2>(
-    layer: Layer.Layer<R2, E2, A2>
-  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | Exclude<R, A2>, E2 | E, A>
 } = layer.provideSomeLayer
 
 /**
@@ -2969,8 +2991,8 @@ export const provideSomeLayer: {
  * @category mutations
  */
 export const race: {
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, A | A2>
   <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2 | A>
+  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, A | A2>
 } = circular.race
 
 /**
@@ -2993,8 +3015,8 @@ export const raceAll: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R,
  * @category mutations
  */
 export const raceAwait: {
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, A | A2>
   <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2 | A>
+  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, A | A2>
 } = circular.raceAwait
 
 /**
@@ -3009,10 +3031,15 @@ export const raceAwait: {
  * @category mutations
  */
 export const raceEither: {
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, Either.Either<A, A2>>
   <R2, E2, A2>(
     that: Effect<R2, E2, A2>
-  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, Either.Either<A, A2>>
+  ): <R, E, A>(
+    self: Effect<R, E, A>
+  ) => Effect<R2 | R, E2 | E, Either.Either<A, A2>>
+  <R, E, A, R2, E2, A2>(
+    self: Effect<R, E, A>,
+    that: Effect<R2, E2, A2>
+  ): Effect<R | R2, E | E2, Either.Either<A, A2>>
 } = circular.raceEither
 
 /**
@@ -3026,17 +3053,17 @@ export const raceEither: {
  * @category mutations
  */
 export const raceFibersWith: {
+  <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
+    that: Effect<R1, E1, A1>,
+    selfWins: (winner: Fiber.RuntimeFiber<E, A>, loser: Fiber.RuntimeFiber<E1, A1>) => Effect<R2, E2, A2>,
+    thatWins: (winner: Fiber.RuntimeFiber<E1, A1>, loser: Fiber.RuntimeFiber<E, A>) => Effect<R3, E3, A3>
+  ): <R>(self: Effect<R, E, A>) => Effect<R1 | R2 | R3 | R, E2 | E3, A2 | A3>
   <R, E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
     self: Effect<R, E, A>,
     that: Effect<R1, E1, A1>,
     selfWins: (winner: Fiber.RuntimeFiber<E, A>, loser: Fiber.RuntimeFiber<E1, A1>) => Effect<R2, E2, A2>,
     thatWins: (winner: Fiber.RuntimeFiber<E1, A1>, loser: Fiber.RuntimeFiber<E, A>) => Effect<R3, E3, A3>
   ): Effect<R | R1 | R2 | R3, E2 | E3, A2 | A3>
-  <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
-    that: Effect<R1, E1, A1>,
-    selfWins: (winner: Fiber.RuntimeFiber<E, A>, loser: Fiber.RuntimeFiber<E1, A1>) => Effect<R2, E2, A2>,
-    thatWins: (winner: Fiber.RuntimeFiber<E1, A1>, loser: Fiber.RuntimeFiber<E, A>) => Effect<R3, E3, A3>
-  ): <R>(self: Effect<R, E, A>) => Effect<R1 | R2 | R3 | R, E2 | E3, A2 | A3>
 } = circular.raceFibersWith
 
 /**
@@ -3055,8 +3082,8 @@ export const raceFibersWith: {
  * @category mutations
  */
 export const raceFirst: {
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, A | A2>
   <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2 | A>
+  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, A | A2>
 } = circular.raceFirst
 
 /**
@@ -3067,17 +3094,17 @@ export const raceFirst: {
  * @category mutations
  */
 export const raceWith: {
+  <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
+    that: Effect<R1, E1, A1>,
+    leftDone: (exit: Exit.Exit<E, A>, fiber: Fiber.Fiber<E1, A1>) => Effect<R2, E2, A2>,
+    rightDone: (exit: Exit.Exit<E1, A1>, fiber: Fiber.Fiber<E, A>) => Effect<R3, E3, A3>
+  ): <R>(self: Effect<R, E, A>) => Effect<R1 | R2 | R3 | R, E2 | E3, A2 | A3>
   <R, E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
     self: Effect<R, E, A>,
     that: Effect<R1, E1, A1>,
     leftDone: (exit: Exit.Exit<E, A>, fiber: Fiber.Fiber<E1, A1>) => Effect<R2, E2, A2>,
     rightDone: (exit: Exit.Exit<E1, A1>, fiber: Fiber.Fiber<E, A>) => Effect<R3, E3, A3>
   ): Effect<R | R1 | R2 | R3, E2 | E3, A2 | A3>
-  <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
-    that: Effect<R1, E1, A1>,
-    leftDone: (exit: Exit.Exit<E, A>, fiber: Fiber.Fiber<E1, A1>) => Effect<R2, E2, A2>,
-    rightDone: (exit: Exit.Exit<E1, A1>, fiber: Fiber.Fiber<E, A>) => Effect<R3, E3, A3>
-  ): <R>(self: Effect<R, E, A>) => Effect<R1 | R2 | R3 | R, E2 | E3, A2 | A3>
 } = circular.raceWith
 
 /**
@@ -3105,8 +3132,8 @@ export const randomWith: <R, E, A>(f: (random: Random.Random) => Effect<R, E, A>
  * @category folding
  */
 export const reduce: {
-  <Z, A, R, E>(elements: Iterable<A>, zero: Z, f: (z: Z, a: A) => Effect<R, E, Z>): Effect<R, E, Z>
   <Z, A, R, E>(zero: Z, f: (z: Z, a: A) => Effect<R, E, Z>): (elements: Iterable<A>) => Effect<R, E, Z>
+  <Z, A, R, E>(elements: Iterable<A>, zero: Z, f: (z: Z, a: A) => Effect<R, E, Z>): Effect<R, E, Z>
 } = effect.reduce
 
 /**
@@ -3117,8 +3144,8 @@ export const reduce: {
  * @category folding
  */
 export const reduceAll: {
-  <R, E, A>(elements: Iterable<Effect<R, E, A>>, zero: Effect<R, E, A>, f: (acc: A, a: A) => A): Effect<R, E, A>
   <R, E, A>(zero: Effect<R, E, A>, f: (acc: A, a: A) => A): (elements: Iterable<Effect<R, E, A>>) => Effect<R, E, A>
+  <R, E, A>(elements: Iterable<Effect<R, E, A>>, zero: Effect<R, E, A>, f: (acc: A, a: A) => A): Effect<R, E, A>
 } = effect.reduceAll
 
 /**
@@ -3129,8 +3156,8 @@ export const reduceAll: {
  * @category folding
  */
 export const reduceAllPar: {
-  <R, E, A>(elements: Iterable<Effect<R, E, A>>, zero: Effect<R, E, A>, f: (acc: A, a: A) => A): Effect<R, E, A>
   <R, E, A>(zero: Effect<R, E, A>, f: (acc: A, a: A) => A): (elements: Iterable<Effect<R, E, A>>) => Effect<R, E, A>
+  <R, E, A>(elements: Iterable<Effect<R, E, A>>, zero: Effect<R, E, A>, f: (acc: A, a: A) => A): Effect<R, E, A>
 } = fiberRuntime.reduceAllPar
 
 /**
@@ -3140,8 +3167,8 @@ export const reduceAllPar: {
  * @category folding
  */
 export const reduceRight: {
-  <A, Z, R, E>(elements: Iterable<A>, zero: Z, f: (a: A, z: Z) => Effect<R, E, Z>): Effect<R, E, Z>
   <A, Z, R, E>(zero: Z, f: (a: A, z: Z) => Effect<R, E, Z>): (elements: Iterable<A>) => Effect<R, E, Z>
+  <A, Z, R, E>(elements: Iterable<A>, zero: Z, f: (a: A, z: Z) => Effect<R, E, Z>): Effect<R, E, Z>
 } = effect.reduceRight
 
 /**
@@ -3153,16 +3180,16 @@ export const reduceRight: {
  */
 export const reduceWhile: {
   <A, R, E, Z>(
+    zero: Z,
+    predicate: Predicate<Z>,
+    f: (s: Z, a: A) => Effect<R, E, Z>
+  ): (elements: Iterable<A>) => Effect<R, E, Z>
+  <A, R, E, Z>(
     elements: Iterable<A>,
     zero: Z,
     predicate: Predicate<Z>,
     f: (s: Z, a: A) => Effect<R, E, Z>
   ): Effect<R, E, Z>
-  <A, R, E, Z>(
-    zero: Z,
-    predicate: Predicate<Z>,
-    f: (s: Z, a: A) => Effect<R, E, Z>
-  ): (elements: Iterable<A>) => Effect<R, E, Z>
 } = effect.reduceWhile
 
 /**
@@ -3172,8 +3199,8 @@ export const reduceWhile: {
  * @category mutations
  */
 export const refineOrDie: {
-  <R, E, A, E1>(self: Effect<R, E, A>, pf: (e: E) => Option.Option<E1>): Effect<R, E1, A>
   <E, E1>(pf: (e: E) => Option.Option<E1>): <R, A>(self: Effect<R, E, A>) => Effect<R, E1, A>
+  <R, E, A, E1>(self: Effect<R, E, A>, pf: (e: E) => Option.Option<E1>): Effect<R, E1, A>
 } = effect.refineOrDie
 
 /**
@@ -3184,8 +3211,8 @@ export const refineOrDie: {
  * @category mutations
  */
 export const refineOrDieWith: {
-  <R, E, A, E1>(self: Effect<R, E, A>, pf: (e: E) => Option.Option<E1>, f: (e: E) => unknown): Effect<R, E1, A>
   <E, E1>(pf: (e: E) => Option.Option<E1>, f: (e: E) => unknown): <R, A>(self: Effect<R, E, A>) => Effect<R, E1, A>
+  <R, E, A, E1>(self: Effect<R, E, A>, pf: (e: E) => Option.Option<E1>, f: (e: E) => unknown): Effect<R, E1, A>
 } = effect.refineOrDieWith
 
 /**
@@ -3196,8 +3223,8 @@ export const refineOrDieWith: {
  * @category mutations
  */
 export const reject: {
-  <R, E, A, E1>(self: Effect<R, E, A>, pf: (a: A) => Option.Option<E1>): Effect<R, E | E1, A>
   <A, E1>(pf: (a: A) => Option.Option<E1>): <R, E>(self: Effect<R, E, A>) => Effect<R, E1 | E, A>
+  <R, E, A, E1>(self: Effect<R, E, A>, pf: (a: A) => Option.Option<E1>): Effect<R, E | E1, A>
 } = effect.reject
 
 /**
@@ -3209,10 +3236,15 @@ export const reject: {
  * @category mutations
  */
 export const rejectEffect: {
-  <R, E, A, R1, E1>(self: Effect<R, E, A>, pf: (a: A) => Option.Option<Effect<R1, E1, E1>>): Effect<R | R1, E | E1, A>
   <A, R1, E1>(
     pf: (a: A) => Option.Option<Effect<R1, E1, E1>>
-  ): <R, E>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, A>
+  ): <R, E>(
+    self: Effect<R, E, A>
+  ) => Effect<R1 | R, E1 | E, A>
+  <R, E, A, R1, E1>(
+    self: Effect<R, E, A>,
+    pf: (a: A) => Option.Option<Effect<R1, E1, E1>>
+  ): Effect<R | R1, E | E1, A>
 } = effect.rejectEffect
 
 /**
@@ -3226,8 +3258,8 @@ export const rejectEffect: {
  * @category mutations
  */
 export const repeat: {
-  <R, E, A, R1, B>(self: Effect<R, E, A>, schedule: Schedule.Schedule<R1, A, B>): Effect<R | R1, E, B>
   <R1, A, B>(schedule: Schedule.Schedule<R1, A, B>): <R, E>(self: Effect<R, E, A>) => Effect<R1 | R, E, B>
+  <R, E, A, R1, B>(self: Effect<R, E, A>, schedule: Schedule.Schedule<R1, A, B>): Effect<R | R1, E, B>
 } = _schedule.repeat_Effect
 
 /**
@@ -3240,8 +3272,8 @@ export const repeat: {
  * @category mutations
  */
 export const repeatN: {
-  <R, E, A>(self: Effect<R, E, A>, n: number): Effect<R, E, A>
   (n: number): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, n: number): Effect<R, E, A>
 } = effect.repeatN
 
 /**
@@ -3257,15 +3289,15 @@ export const repeatN: {
  * @category mutations
  */
 export const repeatOrElse: {
+  <R2, A, B, E, R3, E2>(
+    schedule: Schedule.Schedule<R2, A, B>,
+    orElse: (error: E, option: Option.Option<B>) => Effect<R3, E2, B>
+  ): <R>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2, B>
   <R, E, A, R2, B, R3, E2>(
     self: Effect<R, E, A>,
     schedule: Schedule.Schedule<R2, A, B>,
     orElse: (error: E, option: Option.Option<B>) => Effect<R3, E2, B>
   ): Effect<R | R2 | R3, E2, B>
-  <R2, A, B, E, R3, E2>(
-    schedule: Schedule.Schedule<R2, A, B>,
-    orElse: (error: E, option: Option.Option<B>) => Effect<R3, E2, B>
-  ): <R>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2, B>
 } = _schedule.repeatOrElse_Effect
 
 /**
@@ -3281,15 +3313,15 @@ export const repeatOrElse: {
  * @category mutations
  */
 export const repeatOrElseEither: {
+  <R2, A, B, E, R3, E2, C>(
+    schedule: Schedule.Schedule<R2, A, B>,
+    orElse: (error: E, option: Option.Option<B>) => Effect<R3, E2, C>
+  ): <R>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2, Either.Either<C, B>>
   <R, E, A, R2, B, R3, E2, C>(
     self: Effect<R, E, A>,
     schedule: Schedule.Schedule<R2, A, B>,
     orElse: (error: E, option: Option.Option<B>) => Effect<R3, E2, C>
   ): Effect<R | R2 | R3, E2, Either.Either<C, B>>
-  <R2, A, B, E, R3, E2, C>(
-    schedule: Schedule.Schedule<R2, A, B>,
-    orElse: (error: E, option: Option.Option<B>) => Effect<R3, E2, C>
-  ): <R>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2, Either.Either<C, B>>
 } = _schedule.repeatOrElseEither_Effect
 
 /**
@@ -3300,8 +3332,8 @@ export const repeatOrElseEither: {
  * @category mutations
  */
 export const repeatUntil: {
-  <R, E, A>(self: Effect<R, E, A>, f: Predicate<A>): Effect<R, E, A>
   <A>(f: Predicate<A>): <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, f: Predicate<A>): Effect<R, E, A>
 } = _schedule.repeatUntil_Effect
 
 /**
@@ -3312,8 +3344,8 @@ export const repeatUntil: {
  * @category mutations
  */
 export const repeatUntilEffect: {
-  <R, E, A, R2>(self: Effect<R, E, A>, f: (a: A) => Effect<R2, never, boolean>): Effect<R | R2, E, A>
   <A, R2>(f: (a: A) => Effect<R2, never, boolean>): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E, A>
+  <R, E, A, R2>(self: Effect<R, E, A>, f: (a: A) => Effect<R2, never, boolean>): Effect<R | R2, E, A>
 } = _schedule.repeatUntilEffect_Effect
 
 /**
@@ -3324,8 +3356,8 @@ export const repeatUntilEffect: {
  * @category mutations
  */
 export const repeatUntilEquals: {
-  <R, E, A>(self: Effect<R, E, A>, value: A): Effect<R, E, A>
   <A>(value: A): <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, value: A): Effect<R, E, A>
 } = _schedule.repeatUntilEquals_Effect
 
 /**
@@ -3336,8 +3368,8 @@ export const repeatUntilEquals: {
  * @category mutations
  */
 export const repeatWhile: {
-  <R, E, A>(self: Effect<R, E, A>, f: Predicate<A>): Effect<R, E, A>
   <A>(f: Predicate<A>): <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, f: Predicate<A>): Effect<R, E, A>
 } = _schedule.repeatWhile_Effect
 
 /**
@@ -3348,8 +3380,8 @@ export const repeatWhile: {
  * @category mutations
  */
 export const repeatWhileEffect: {
-  <R, E, R1, A>(self: Effect<R, E, A>, f: (a: A) => Effect<R1, never, boolean>): Effect<R | R1, E, A>
   <R1, A>(f: (a: A) => Effect<R1, never, boolean>): <R, E>(self: Effect<R, E, A>) => Effect<R1 | R, E, A>
+  <R, E, R1, A>(self: Effect<R, E, A>, f: (a: A) => Effect<R1, never, boolean>): Effect<R | R1, E, A>
 } = _schedule.repeatWhileEffect_Effect
 
 /**
@@ -3360,8 +3392,8 @@ export const repeatWhileEffect: {
  * @category mutations
  */
 export const repeatWhileEquals: {
-  <R, E, A>(self: Effect<R, E, A>, value: A): Effect<R, E, A>
   <A>(value: A): <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, value: A): Effect<R, E, A>
 } = _schedule.repeatWhileEquals_Effect
 
 /**
@@ -3374,8 +3406,8 @@ export const repeatWhileEquals: {
  * @category mutations
  */
 export const retry: {
-  <R, E, A, R1, B>(self: Effect<R, E, A>, policy: Schedule.Schedule<R1, E, B>): Effect<R | R1, E, A>
   <R1, E, B>(policy: Schedule.Schedule<R1, E, B>): <R, A>(self: Effect<R, E, A>) => Effect<R1 | R, E, A>
+  <R, E, A, R1, B>(self: Effect<R, E, A>, policy: Schedule.Schedule<R1, E, B>): Effect<R | R1, E, A>
 } = _schedule.retry_Effect
 
 /**
@@ -3385,8 +3417,8 @@ export const retry: {
  * @category mutations
  */
 export const retryN: {
-  <R, E, A>(self: Effect<R, E, A>, n: number): Effect<R, E, A>
   (n: number): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, n: number): Effect<R, E, A>
 } = _schedule.retryN_Effect
 
 /**
@@ -3398,15 +3430,15 @@ export const retryN: {
  * @category mutations
  */
 export const retryOrElse: {
+  <R1, E extends E3, A1, R2, E2, A2, E3>(
+    policy: Schedule.Schedule<R1, E3, A1>,
+    orElse: (e: E, out: A1) => Effect<R2, E2, A2>
+  ): <R, A>(self: Effect<R, E, A>) => Effect<R1 | R2 | R, E | E2, A2 | A>
   <R, E extends E3, A, R1, A1, R2, E2, A2, E3>(
     self: Effect<R, E, A>,
     policy: Schedule.Schedule<R1, E3, A1>,
     orElse: (e: E, out: A1) => Effect<R2, E2, A2>
   ): Effect<R | R1 | R2, E | E2, A | A2>
-  <R1, E extends E3, A1, R2, E2, A2, E3>(
-    policy: Schedule.Schedule<R1, E3, A1>,
-    orElse: (e: E, out: A1) => Effect<R2, E2, A2>
-  ): <R, A>(self: Effect<R, E, A>) => Effect<R1 | R2 | R, E | E2, A2 | A>
 } = _schedule.retryOrElse_Effect
 
 /**
@@ -3418,15 +3450,15 @@ export const retryOrElse: {
  * @category mutations
  */
 export const retryOrElseEither: {
+  <R1, E extends E3, A1, R2, E2, A2, E3>(
+    policy: Schedule.Schedule<R1, E3, A1>,
+    orElse: (e: E, out: A1) => Effect<R2, E2, A2>
+  ): <R, A>(self: Effect<R, E, A>) => Effect<R1 | R2 | R, E | E2, Either.Either<A2, A>>
   <R, A, E extends E3, R1, A1, R2, E2, A2, E3>(
     self: Effect<R, E, A>,
     policy: Schedule.Schedule<R1, E3, A1>,
     orElse: (e: E, out: A1) => Effect<R2, E2, A2>
   ): Effect<R | R1 | R2, E | E2, Either.Either<A2, A>>
-  <R1, E extends E3, A1, R2, E2, A2, E3>(
-    policy: Schedule.Schedule<R1, E3, A1>,
-    orElse: (e: E, out: A1) => Effect<R2, E2, A2>
-  ): <R, A>(self: Effect<R, E, A>) => Effect<R1 | R2 | R, E | E2, Either.Either<A2, A>>
 } = _schedule.retryOrElseEither_Effect
 
 /**
@@ -3436,8 +3468,8 @@ export const retryOrElseEither: {
  * @category mutations
  */
 export const retryUntil: {
-  <R, E, A>(self: Effect<R, E, A>, f: Predicate<E>): Effect<R, E, A>
   <E>(f: Predicate<E>): <R, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, f: Predicate<E>): Effect<R, E, A>
 } = _schedule.retryUntil_Effect
 
 /**
@@ -3448,8 +3480,8 @@ export const retryUntil: {
  * @category mutations
  */
 export const retryUntilEffect: {
-  <R, E, A, R1>(self: Effect<R, E, A>, f: (e: E) => Effect<R1, never, boolean>): Effect<R | R1, E, A>
   <R1, E>(f: (e: E) => Effect<R1, never, boolean>): <R, A>(self: Effect<R, E, A>) => Effect<R1 | R, E, A>
+  <R, E, A, R1>(self: Effect<R, E, A>, f: (e: E) => Effect<R1, never, boolean>): Effect<R | R1, E, A>
 } = _schedule.retryUntilEffect_Effect
 
 /**
@@ -3459,8 +3491,8 @@ export const retryUntilEffect: {
  * @category mutations
  */
 export const retryUntilEquals: {
-  <R, E, A>(self: Effect<R, E, A>, e: E): Effect<R, E, A>
   <E>(e: E): <R, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, e: E): Effect<R, E, A>
 } = _schedule.retryUntilEquals_Effect
 
 /**
@@ -3470,8 +3502,8 @@ export const retryUntilEquals: {
  * @category mutations
  */
 export const retryWhile: {
-  <R, E, A>(self: Effect<R, E, A>, f: Predicate<E>): Effect<R, E, A>
   <E>(f: Predicate<E>): <R, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, f: Predicate<E>): Effect<R, E, A>
 } = _schedule.retryWhile_Effect
 
 /**
@@ -3482,8 +3514,8 @@ export const retryWhile: {
  * @category mutations
  */
 export const retryWhileEffect: {
-  <R, E, A, R1>(self: Effect<R, E, A>, f: (e: E) => Effect<R1, never, boolean>): Effect<R | R1, E, A>
   <R1, E>(f: (e: E) => Effect<R1, never, boolean>): <R, A>(self: Effect<R, E, A>) => Effect<R1 | R, E, A>
+  <R, E, A, R1>(self: Effect<R, E, A>, f: (e: E) => Effect<R1, never, boolean>): Effect<R | R1, E, A>
 } = _schedule.retryWhileEffect_Effect
 
 /**
@@ -3494,8 +3526,8 @@ export const retryWhileEffect: {
  * @category mutations
  */
 export const retryWhileEquals: {
-  <R, E, A>(self: Effect<R, E, A>, e: E): Effect<R, E, A>
   <E>(e: E): <R, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, e: E): Effect<R, E, A>
 } = _schedule.retryWhileEquals_Effect
 
 /**
@@ -3515,20 +3547,19 @@ export const replicate: (n: number) => <R, E, A>(self: Effect<R, E, A>) => Chunk
  * @category mutations
  */
 export const replicateEffect: {
-  <R, E, A>(self: Effect<R, E, A>, n: number): Effect<R, E, Chunk.Chunk<A>>
   (n: number): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Chunk.Chunk<A>>
+  <R, E, A>(self: Effect<R, E, A>, n: number): Effect<R, E, Chunk.Chunk<A>>
 } = effect.replicateEffect
 
 /**
- * Performs this effect the specified number of times, discarding the
- * results.
+ * Performs this effect the specified number of times, discarding the results.
  *
  * @since 1.0.0
  * @category mutations
  */
 export const replicateEffectDiscard: {
-  <R, E, A>(self: Effect<R, E, A>, n: number): Effect<R, E, void>
   (n: number): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, void>
+  <R, E, A>(self: Effect<R, E, A>, n: number): Effect<R, E, void>
 } = effect.replicateEffectDiscard
 
 /**
@@ -3558,12 +3589,12 @@ export const right: <R, E, A, B>(self: Effect<R, E, Either.Either<A, B>>) => Eff
  */
 export const rightWith: {
   <R, E, A, A1, B, B1, R1, E1>(
+    f: (effect: Effect<R, Either.Either<A, E>, B>) => Effect<R1, Either.Either<A1, E1>, B1>
+  ): (self: Effect<R, E, Either.Either<A, B>>) => Effect<R | R1, E | E1, Either.Either<A1, B1>>
+  <R, E, A, A1, B, B1, R1, E1>(
     self: Effect<R, E, Either.Either<A, B>>,
     f: (effect: Effect<R, Either.Either<A, E>, B>) => Effect<R1, Either.Either<A1, E1>, B1>
   ): Effect<R | R1, E | E1, Either.Either<A1, B1>>
-  <R, E, A, A1, B, B1, R1, E1>(
-    f: (effect: Effect<R, Either.Either<A, E>, B>) => Effect<R1, Either.Either<A1, E1>, B1>
-  ): (self: Effect<R, E, Either.Either<A, B>>) => Effect<R | R1, E | E1, Either.Either<A1, B1>>
 } = effect.rightWith
 
 /**
@@ -3603,8 +3634,8 @@ export const sandbox: <R, E, A>(self: Effect<R, E, A>) => Effect<R, Cause.Cause<
  * @category mutations
  */
 export const schedule: {
-  <R, E, A, R2, Out, I>(self: Effect<R, E, A>, schedule: Schedule.Schedule<R2, I, Out>): Effect<R | R2, E, Out>
-  <R2, Out, I>(schedule: Schedule.Schedule<R2, I, Out>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E, Out>
+  <R2, Out>(schedule: Schedule.Schedule<R2, any, Out>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E, Out>
+  <R, E, A, R2, Out>(self: Effect<R, E, A>, schedule: Schedule.Schedule<R2, any, Out>): Effect<R | R2, E, Out>
 } = _schedule.schedule_Effect
 
 /**
@@ -3615,13 +3646,13 @@ export const schedule: {
  * @category mutations
  */
 export const scheduleForked: {
+  <R2, Out>(
+    schedule: Schedule.Schedule<R2, unknown, Out>
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<Scope.Scope | R2 | R, never, Fiber.RuntimeFiber<E, Out>>
   <R, E, A, R2, Out>(
     self: Effect<R, E, A>,
     schedule: Schedule.Schedule<R2, unknown, Out>
   ): Effect<Scope.Scope | R | R2, never, Fiber.RuntimeFiber<E, Out>>
-  <R2, Out>(
-    schedule: Schedule.Schedule<R2, unknown, Out>
-  ): <R, E, A>(self: Effect<R, E, A>) => Effect<Scope.Scope | R2 | R, never, Fiber.RuntimeFiber<E, Out>>
 } = circular.scheduleForked
 
 /**
@@ -3632,15 +3663,15 @@ export const scheduleForked: {
  * @category mutations
  */
 export const scheduleFrom: {
+  <R2, In, Out>(
+    initial: In,
+    schedule: Schedule.Schedule<R2, In, Out>
+  ): <R, E>(self: Effect<R, E, In>) => Effect<R2 | R, E, Out>
   <R, E, In, R2, Out>(
     self: Effect<R, E, In>,
     initial: In,
     schedule: Schedule.Schedule<R2, In, Out>
   ): Effect<R | R2, E, Out>
-  <R2, In, Out>(
-    initial: In,
-    schedule: Schedule.Schedule<R2, In, Out>
-  ): <R, E>(self: Effect<R, E, In>) => Effect<R2 | R, E, Out>
 } = _schedule.scheduleFrom_Effect
 
 /**
@@ -3754,8 +3785,8 @@ export const some: <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R, 
  * @category mutations
  */
 export const someOrElse: {
-  <R, E, A, B>(self: Effect<R, E, Option.Option<A>>, orElse: LazyArg<B>): Effect<R, E, A | B>
   <B>(orElse: LazyArg<B>): <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R, E, B | A>
+  <R, E, A, B>(self: Effect<R, E, Option.Option<A>>, orElse: LazyArg<B>): Effect<R, E, A | B>
 } = effect.someOrElse
 
 /**
@@ -3765,13 +3796,13 @@ export const someOrElse: {
  * @category mutations
  */
 export const someOrElseEffect: {
+  <R2, E2, A2>(
+    orElse: LazyArg<Effect<R2, E2, A2>>
+  ): <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R2 | R, E2 | E, A2 | A>
   <R, E, A, R2, E2, A2>(
     self: Effect<R, E, Option.Option<A>>,
     orElse: LazyArg<Effect<R2, E2, A2>>
   ): Effect<R | R2, E | E2, A | A2>
-  <R2, E2, A2>(
-    orElse: LazyArg<Effect<R2, E2, A2>>
-  ): <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R2 | R, E2 | E, A2 | A>
 } = effect.someOrElseEffect
 
 /**
@@ -3781,8 +3812,8 @@ export const someOrElseEffect: {
  * @category mutations
  */
 export const someOrFail: {
-  <R, E, A, E2>(self: Effect<R, E, Option.Option<A>>, orFail: LazyArg<E2>): Effect<R, E | E2, A>
   <E2>(orFail: LazyArg<E2>): <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R, E2 | E, A>
+  <R, E, A, E2>(self: Effect<R, E, Option.Option<A>>, orFail: LazyArg<E2>): Effect<R, E | E2, A>
 } = effect.someOrFail
 
 /**
@@ -3804,12 +3835,12 @@ export const someOrFailException: <R, E, A>(
  */
 export const someWith: {
   <R, E, A, R1, E1, A1>(
+    f: (effect: Effect<R, Option.Option<E>, A>) => Effect<R1, Option.Option<E1>, A1>
+  ): (self: Effect<R, E, Option.Option<A>>) => Effect<R | R1, E | E1, Option.Option<A1>>
+  <R, E, A, R1, E1, A1>(
     self: Effect<R, E, Option.Option<A>>,
     f: (effect: Effect<R, Option.Option<E>, A>) => Effect<R1, Option.Option<E1>, A1>
   ): Effect<R | R1, E | E1, Option.Option<A1>>
-  <R, E, A, R1, E1, A1>(
-    f: (effect: Effect<R, Option.Option<E>, A>) => Effect<R1, Option.Option<E1>, A1>
-  ): (self: Effect<R, E, Option.Option<A>>) => Effect<R | R1, E | E1, Option.Option<A1>>
 } = fiberRuntime.someWith
 
 /**
@@ -3885,15 +3916,15 @@ export const succeedSome: <A>(value: A) => Effect<never, never, Option.Option<A>
  * @category mutations
  */
 export const summarized: {
+  <R2, E2, B, C>(
+    summary: Effect<R2, E2, B>,
+    f: (start: B, end: B) => C
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, readonly [C, A]>
   <R, E, A, R2, E2, B, C>(
     self: Effect<R, E, A>,
     summary: Effect<R2, E2, B>,
     f: (start: B, end: B) => C
   ): Effect<R | R2, E | E2, readonly [C, A]>
-  <R2, E2, B, C>(
-    summary: Effect<R2, E2, B>,
-    f: (start: B, end: B) => C
-  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, readonly [C, A]>
 } = effect.summarized
 
 /**
@@ -3904,8 +3935,8 @@ export const summarized: {
  * @category mutations
  */
 export const supervised: {
-  <R, E, A, X>(self: Effect<R, E, A>, supervisor: Supervisor.Supervisor<X>): Effect<R, E, A>
   <X>(supervisor: Supervisor.Supervisor<X>): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A, X>(self: Effect<R, E, A>, supervisor: Supervisor.Supervisor<X>): Effect<R, E, A>
 } = circular.supervised
 
 /**
@@ -3937,8 +3968,8 @@ export const sync: <A>(evaluate: LazyArg<A>) => Effect<never, never, A> = core.s
  * @category constructors
  */
 export const takeWhile: {
-  <R, E, A>(elements: Iterable<A>, predicate: (a: A) => Effect<R, E, boolean>): Effect<R, E, Chunk.Chunk<A>>
   <R, E, A>(predicate: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<A>>
+  <R, E, A>(elements: Iterable<A>, predicate: (a: A) => Effect<R, E, boolean>): Effect<R, E, Chunk.Chunk<A>>
 } = effect.takeWhile
 
 /**
@@ -3948,8 +3979,8 @@ export const takeWhile: {
  * @category mutations
  */
 export const tagged: {
-  <R, E, A>(self: Effect<R, E, A>, key: string, value: string): Effect<R, E, A>
   (key: string, value: string): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, key: string, value: string): Effect<R, E, A>
 } = effect.tagged
 
 /**
@@ -3959,8 +3990,8 @@ export const tagged: {
  * @category mutations
  */
 export const taggedWithLabels: {
-  <R, E, A>(self: Effect<R, E, A>, labels: Iterable<MetricLabel.MetricLabel>): Effect<R, E, A>
   (labels: Iterable<MetricLabel.MetricLabel>): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, labels: Iterable<MetricLabel.MetricLabel>): Effect<R, E, A>
 } = effect.taggedWithLabels
 
 /**
@@ -3970,8 +4001,8 @@ export const taggedWithLabels: {
  * @category mutations
  */
 export const taggedWithLabelSet: {
-  <R, E, A>(self: Effect<R, E, A>, labels: HashSet.HashSet<MetricLabel.MetricLabel>): Effect<R, E, A>
   (labels: HashSet.HashSet<MetricLabel.MetricLabel>): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, labels: HashSet.HashSet<MetricLabel.MetricLabel>): Effect<R, E, A>
 } = effect.taggedWithLabelSet
 
 /**
@@ -4015,8 +4046,8 @@ export const tags: (_: void) => Effect<never, never, HashSet.HashSet<MetricLabel
  * @category sequencing
  */
 export const tap: {
-  <R, E, A, R2, E2, _>(self: Effect<R, E, A>, f: (a: A) => Effect<R2, E2, _>): Effect<R | R2, E | E2, A>
   <A, R2, E2, _>(f: (a: A) => Effect<R2, E2, _>): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A>
+  <R, E, A, R2, E2, _>(self: Effect<R, E, A>, f: (a: A) => Effect<R2, E2, _>): Effect<R | R2, E | E2, A>
 } = core.tap
 
 /**
@@ -4027,15 +4058,15 @@ export const tap: {
  * @category sequencing
  */
 export const tapBoth: {
+  <E, A, R2, E2, X, R3, E3, X1>(
+    f: (e: E) => Effect<R2, E2, X>,
+    g: (a: A) => Effect<R3, E3, X1>
+  ): <R>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E | E2 | E3, A>
   <R, E, A, R2, E2, X, R3, E3, X1>(
     self: Effect<R, E, A>,
     f: (e: E) => Effect<R2, E2, X>,
     g: (a: A) => Effect<R3, E3, X1>
   ): Effect<R | R2 | R3, E | E2 | E3, A>
-  <E, A, R2, E2, X, R3, E3, X1>(
-    f: (e: E) => Effect<R2, E2, X>,
-    g: (a: A) => Effect<R3, E3, X1>
-  ): <R>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E | E2 | E3, A>
 } = effect.tapBoth
 
 /**
@@ -4045,13 +4076,13 @@ export const tapBoth: {
  * @category sequencing
  */
 export const tapDefect: {
+  <R2, E2, X>(
+    f: (cause: Cause.Cause<never>) => Effect<R2, E2, X>
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A>
   <R, E, A, R2, E2, X>(
     self: Effect<R, E, A>,
     f: (cause: Cause.Cause<never>) => Effect<R2, E2, X>
   ): Effect<R | R2, E | E2, A>
-  <R2, E2, X>(
-    f: (cause: Cause.Cause<never>) => Effect<R2, E2, X>
-  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A>
 } = effect.tapDefect
 
 /**
@@ -4061,13 +4092,13 @@ export const tapDefect: {
  * @category sequencing
  */
 export const tapEither: {
+  <E, A, R2, E2, X>(
+    f: (either: Either.Either<E, A>) => Effect<R2, E2, X>
+  ): <R>(self: Effect<R, E, A>) => Effect<R2 | R, E | E2, A>
   <R, E, A, R2, E2, X>(
     self: Effect<R, E, A>,
     f: (either: Either.Either<E, A>) => Effect<R2, E2, X>
   ): Effect<R | R2, E | E2, A>
-  <E, A, R2, E2, X>(
-    f: (either: Either.Either<E, A>) => Effect<R2, E2, X>
-  ): <R>(self: Effect<R, E, A>) => Effect<R2 | R, E | E2, A>
 } = effect.tapEither
 
 /**
@@ -4077,8 +4108,8 @@ export const tapEither: {
  * @category sequencing
  */
 export const tapError: {
-  <R, E, A, R2, E2, X>(self: Effect<R, E, A>, f: (e: E) => Effect<R2, E2, X>): Effect<R | R2, E | E2, A>
   <E, R2, E2, X>(f: (e: E) => Effect<R2, E2, X>): <R, A>(self: Effect<R, E, A>) => Effect<R2 | R, E | E2, A>
+  <R, E, A, R2, E2, X>(self: Effect<R, E, A>, f: (e: E) => Effect<R2, E2, X>): Effect<R | R2, E | E2, A>
 } = effect.tapError
 
 /**
@@ -4089,13 +4120,13 @@ export const tapError: {
  * @category sequencing
  */
 export const tapErrorCause: {
+  <E, R2, E2, X>(
+    f: (cause: Cause.Cause<E>) => Effect<R2, E2, X>
+  ): <R, A>(self: Effect<R, E, A>) => Effect<R2 | R, E | E2, A>
   <R, E, A, R2, E2, X>(
     self: Effect<R, E, A>,
     f: (cause: Cause.Cause<E>) => Effect<R2, E2, X>
   ): Effect<R | R2, E | E2, A>
-  <E, R2, E2, X>(
-    f: (cause: Cause.Cause<E>) => Effect<R2, E2, X>
-  ): <R, A>(self: Effect<R, E, A>) => Effect<R2 | R, E | E2, A>
 } = effect.tapErrorCause
 
 /**
@@ -4107,10 +4138,15 @@ export const tapErrorCause: {
  * @category sequencing
  */
 export const tapSome: {
-  <R, E, A, R1, E1, X>(self: Effect<R, E, A>, pf: (a: A) => Option.Option<Effect<R1, E1, X>>): Effect<R | R1, E | E1, A>
   <A, R1, E1, X>(
     pf: (a: A) => Option.Option<Effect<R1, E1, X>>
-  ): <R, E>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, A>
+  ): <R, E>(
+    self: Effect<R, E, A>
+  ) => Effect<R1 | R, E1 | E, A>
+  <R, E, A, R1, E1, X>(
+    self: Effect<R, E, A>,
+    pf: (a: A) => Option.Option<Effect<R1, E1, X>>
+  ): Effect<R | R1, E | E1, A>
 } = effect.tapSome
 
 /**
@@ -4128,13 +4164,13 @@ export const timed: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, readonly [D
  * @category mutations
  */
 export const timedWith: {
+  <R1, E1>(
+    milliseconds: Effect<R1, E1, number>
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, readonly [Duration.Duration, A]>
   <R, E, A, R1, E1>(
     self: Effect<R, E, A>,
     milliseconds: Effect<R1, E1, number>
   ): Effect<R | R1, E | E1, readonly [Duration.Duration, A]>
-  <R1, E1>(
-    milliseconds: Effect<R1, E1, number>
-  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, readonly [Duration.Duration, A]>
 } = effect.timedWith
 
 /**
@@ -4157,8 +4193,8 @@ export const timedWith: {
  * @category mutations
  */
 export const timeout: {
-  <R, E, A>(self: Effect<R, E, A>, duration: Duration.Duration): Effect<R, E, Option.Option<A>>
   (duration: Duration.Duration): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Option.Option<A>>
+  <R, E, A>(self: Effect<R, E, A>, duration: Duration.Duration): Effect<R, E, Option.Option<A>>
 } = circular.timeout
 
 /**
@@ -4169,8 +4205,8 @@ export const timeout: {
  * @category mutations
  */
 export const timeoutFail: {
-  <R, E, A, E1>(self: Effect<R, E, A>, evaluate: LazyArg<E1>, duration: Duration.Duration): Effect<R, E | E1, A>
   <E1>(evaluate: LazyArg<E1>, duration: Duration.Duration): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E1 | E, A>
+  <R, E, A, E1>(self: Effect<R, E, A>, evaluate: LazyArg<E1>, duration: Duration.Duration): Effect<R, E | E1, A>
 } = circular.timeoutFail
 
 /**
@@ -4181,15 +4217,15 @@ export const timeoutFail: {
  * @category mutations
  */
 export const timeoutFailCause: {
+  <E1>(
+    evaluate: LazyArg<Cause.Cause<E1>>,
+    duration: Duration.Duration
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E1 | E, A>
   <R, E, A, E1>(
     self: Effect<R, E, A>,
     evaluate: LazyArg<Cause.Cause<E1>>,
     duration: Duration.Duration
   ): Effect<R, E | E1, A>
-  <E1>(
-    evaluate: LazyArg<Cause.Cause<E1>>,
-    duration: Duration.Duration
-  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E1 | E, A>
 } = circular.timeoutFailCause
 
 /**
@@ -4205,17 +4241,19 @@ export const timeoutFailCause: {
  * @category mutations
  */
 export const timeoutTo: {
+  <A, B, B1>(
+    def: B1,
+    f: (a: A) => B,
+    duration: Duration.Duration
+  ): <R, E>(
+    self: Effect<R, E, A>
+  ) => Effect<R, E, B | B1>
   <R, E, A, B, B1>(
     self: Effect<R, E, A>,
     def: B1,
     f: (a: A) => B,
     duration: Duration.Duration
   ): Effect<R, E, B | B1>
-  <A, B, B1>(
-    def: B1,
-    f: (a: A) => B,
-    duration: Duration.Duration
-  ): <R, E>(self: Effect<R, E, A>) => Effect<R, E, B | B1>
 } = circular.timeoutTo
 
 /**
@@ -4225,8 +4263,8 @@ export const timeoutTo: {
  * @category conversions
  */
 export const toLayer: {
-  <R, E, A>(self: Effect<R, E, A>, tag: Context.Tag<A>): Layer.Layer<R, E, A>
   <A>(tag: Context.Tag<A>): <R, E>(self: Effect<R, E, A>) => Layer.Layer<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, tag: Context.Tag<A>): Layer.Layer<R, E, A>
 } = layer.toLayer
 
 /**
@@ -4263,8 +4301,8 @@ export const toLayerScopedDiscard: <R, E, _>(
  * @category conversions
  */
 export const toLayerScoped: {
-  <R, E, A>(self: Effect<R, E, A>, tag: Context.Tag<A>): Layer.Layer<Exclude<R, Scope.Scope>, E, A>
   <A>(tag: Context.Tag<A>): <R, E>(self: Effect<R, E, A>) => Layer.Layer<Exclude<R, Scope.Scope>, E, A>
+  <R, E, A>(self: Effect<R, E, A>, tag: Context.Tag<A>): Layer.Layer<Exclude<R, Scope.Scope>, E, A>
 } = layer.toLayerScoped
 
 /**
@@ -4322,15 +4360,15 @@ export const tryCatchPromiseInterrupt: <E, A>(
  * @category alternatives
  */
 export const tryOrElse: {
+  <R2, E2, A2, A, R3, E3, A3>(
+    that: LazyArg<Effect<R2, E2, A2>>,
+    onSuccess: (a: A) => Effect<R3, E3, A3>
+  ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2 | E3, A2 | A3>
   <R, E, A, R2, E2, A2, R3, E3, A3>(
     self: Effect<R, E, A>,
     that: LazyArg<Effect<R2, E2, A2>>,
     onSuccess: (a: A) => Effect<R3, E3, A3>
   ): Effect<R | R2 | R3, E2 | E3, A2 | A3>
-  <R2, E2, A2, A, R3, E3, A3>(
-    that: LazyArg<Effect<R2, E2, A2>>,
-    onSuccess: (a: A) => Effect<R3, E3, A3>
-  ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2 | E3, A2 | A3>
 } = core.tryOrElse
 
 /**
@@ -4448,8 +4486,8 @@ export const unleft: <R, E, B, A>(self: Effect<R, Either.Either<E, B>, A>) => Ef
  * @category mutations
  */
 export const unless: {
-  <R, E, A>(self: Effect<R, E, A>, predicate: LazyArg<boolean>): Effect<R, E, Option.Option<A>>
   (predicate: LazyArg<boolean>): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Option.Option<A>>
+  <R, E, A>(self: Effect<R, E, A>, predicate: LazyArg<boolean>): Effect<R, E, Option.Option<A>>
 } = effect.unless
 
 /**
@@ -4459,10 +4497,15 @@ export const unless: {
  * @category mutations
  */
 export const unlessEffect: {
-  <R, E, A, R2, E2>(self: Effect<R, E, A>, predicate: Effect<R2, E2, boolean>): Effect<R | R2, E | E2, Option.Option<A>>
   <R2, E2>(
     predicate: Effect<R2, E2, boolean>
-  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, Option.Option<A>>
+  ): <R, E, A>(
+    self: Effect<R, E, A>
+  ) => Effect<R2 | R, E2 | E, Option.Option<A>>
+  <R, E, A, R2, E2>(
+    self: Effect<R, E, A>,
+    predicate: Effect<R2, E2, boolean>
+  ): Effect<R | R2, E | E2, Option.Option<A>>
 } = effect.unlessEffect
 
 /**
@@ -4472,8 +4515,8 @@ export const unlessEffect: {
  * @category mutations
  */
 export const unrefine: {
-  <R, E, A, E1>(self: Effect<R, E, A>, pf: (u: unknown) => Option.Option<E1>): Effect<R, E | E1, A>
   <E1>(pf: (u: unknown) => Option.Option<E1>): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E1 | E, A>
+  <R, E, A, E1>(self: Effect<R, E, A>, pf: (u: unknown) => Option.Option<E1>): Effect<R, E | E1, A>
 } = effect.unrefine
 
 /**
@@ -4484,15 +4527,15 @@ export const unrefine: {
  * @category error handling
  */
 export const unrefineWith: {
+  <E, E1, E2>(
+    pf: (u: unknown) => Option.Option<E1>,
+    f: (e: E) => E2
+  ): <R, A>(self: Effect<R, E, A>) => Effect<R, E1 | E2, A>
   <R, E, A, E1, E2>(
     self: Effect<R, E, A>,
     pf: (u: unknown) => Option.Option<E1>,
     f: (e: E) => E2
   ): Effect<R, E1 | E2, A>
-  <E, E1, E2>(
-    pf: (u: unknown) => Option.Option<E1>,
-    f: (e: E) => E2
-  ): <R, A>(self: Effect<R, E, A>) => Effect<R, E1 | E2, A>
 } = effect.unrefineWith
 
 /**
@@ -4618,13 +4661,13 @@ export const unsandbox: <R, E, A>(self: Effect<R, Cause.Cause<E>, A>) => Effect<
  * @category mutations
  */
 export const using: {
-  <R, E, A, R2, E2, A2>(
-    self: Effect<R | Scope.Scope, E, A>,
-    use: (a: A) => Effect<R2, E2, A2>
-  ): Effect<R | R2, E | E2, A2>
   <A, R2, E2, A2>(
     use: (a: A) => Effect<R2, E2, A2>
   ): <R, E>(self: Effect<Scope.Scope | R, E, A>) => Effect<R2 | R, E2 | E, A2>
+  <R, E, A, R2, E2, A2>(
+    self: Effect<Scope.Scope | R, E, A>,
+    use: (a: A) => Effect<R2, E2, A2>
+  ): Effect<R | R2, E | E2, A2>
 } = fiberRuntime.using
 
 /**
@@ -4661,15 +4704,15 @@ export const updateRuntimeFlags: (patch: RuntimeFlagsPatch.RuntimeFlagsPatch) =>
  * @category context
  */
 export const updateService: {
+  <T extends Context.Tag<any>>(
+    tag: T,
+    f: (service: Context.Tag.Service<T>) => Context.Tag.Service<T>
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<Context.Tag.Service<T> | R, E, A>
   <R, E, A, T extends Context.Tag<any>>(
     self: Effect<R, E, A>,
     tag: T,
     f: (service: Context.Tag.Service<T>) => Context.Tag.Service<T>
   ): Effect<R | Context.Tag.Service<T>, E, A>
-  <T extends Context.Tag<any>>(
-    tag: T,
-    f: (service: Context.Tag.Service<T>) => Context.Tag.Service<T>
-  ): <R, E, A>(self: Effect<R, E, A>) => Effect<Context.Tag.Service<T> | R, E, A>
 } = effect.updateService
 
 /**
@@ -4680,8 +4723,8 @@ export const updateService: {
  * @category mutations
  */
 export const validate: {
-  <R, E, A, R2, E2, B>(self: Effect<R, E, A>, that: Effect<R2, E2, B>): Effect<R | R2, E | E2, readonly [A, B]>
   <R2, E2, B>(that: Effect<R2, E2, B>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, readonly [A, B]>
+  <R, E, A, R2, E2, B>(self: Effect<R, E, A>, that: Effect<R2, E2, B>): Effect<R | R2, E | E2, readonly [A, B]>
 } = effect.validate
 
 /**
@@ -4692,8 +4735,8 @@ export const validate: {
  * @category mutations
  */
 export const validatePar: {
-  <R, E, A, R1, E1, B>(self: Effect<R, E, A>, that: Effect<R1, E1, B>): Effect<R | R1, E | E1, readonly [A, B]>
   <R1, E1, B>(that: Effect<R1, E1, B>): <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, readonly [A, B]>
+  <R, E, A, R1, E1, B>(self: Effect<R, E, A>, that: Effect<R1, E1, B>): Effect<R | R1, E | E1, readonly [A, B]>
 } = circular.validatePar
 
 /**
@@ -4707,8 +4750,8 @@ export const validatePar: {
  * @category mutations
  */
 export const validateAll: {
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, Chunk.Chunk<E>, Chunk.Chunk<B>>
   <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, Chunk.Chunk<E>, Chunk.Chunk<B>>
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, Chunk.Chunk<E>, Chunk.Chunk<B>>
 } = effect.validateAll
 
 /**
@@ -4722,8 +4765,8 @@ export const validateAll: {
  * @category mutations
  */
 export const validateAllPar: {
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, Chunk.Chunk<E>, Chunk.Chunk<B>>
   <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, Chunk.Chunk<E>, Chunk.Chunk<B>>
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, Chunk.Chunk<E>, Chunk.Chunk<B>>
 } = fiberRuntime.validateAllPar
 
 /**
@@ -4734,8 +4777,8 @@ export const validateAllPar: {
  * @category mutations
  */
 export const validateAllDiscard: {
-  <R, E, A, X>(elements: Iterable<A>, f: (a: A) => Effect<R, E, X>): Effect<R, Chunk.Chunk<E>, void>
   <R, E, A, X>(f: (a: A) => Effect<R, E, X>): (elements: Iterable<A>) => Effect<R, Chunk.Chunk<E>, void>
+  <R, E, A, X>(elements: Iterable<A>, f: (a: A) => Effect<R, E, X>): Effect<R, Chunk.Chunk<E>, void>
 } = effect.validateAllDiscard
 
 /**
@@ -4746,8 +4789,8 @@ export const validateAllDiscard: {
  * @category mutations
  */
 export const validateAllParDiscard: {
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, Chunk.Chunk<E>, void>
   <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, Chunk.Chunk<E>, void>
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, Chunk.Chunk<E>, void>
 } = fiberRuntime.validateAllParDiscard
 
 /**
@@ -4758,8 +4801,8 @@ export const validateAllParDiscard: {
  * @category mutations
  */
 export const validateFirst: {
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, Chunk.Chunk<E>, B>
   <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, Chunk.Chunk<E>, B>
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, Chunk.Chunk<E>, B>
 } = effect.validateFirst
 
 /**
@@ -4770,8 +4813,8 @@ export const validateFirst: {
  * @category mutations
  */
 export const validateFirstPar: {
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, Chunk.Chunk<E>, B>
   <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, Chunk.Chunk<E>, B>
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, Chunk.Chunk<E>, B>
 } = fiberRuntime.validateFirstPar
 
 /**
@@ -4782,15 +4825,15 @@ export const validateFirstPar: {
  * @category mutations
  */
 export const validateWith: {
+  <A, R2, E2, B, C>(
+    that: Effect<R2, E2, B>,
+    f: (a: A, b: B) => C
+  ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, C>
   <R, E, A, R2, E2, B, C>(
     self: Effect<R, E, A>,
     that: Effect<R2, E2, B>,
     f: (a: A, b: B) => C
   ): Effect<R | R2, E | E2, C>
-  <A, R2, E2, B, C>(
-    that: Effect<R2, E2, B>,
-    f: (a: A, b: B) => C
-  ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, C>
 } = effect.validateWith
 
 /**
@@ -4802,15 +4845,15 @@ export const validateWith: {
  * @category mutations
  */
 export const validateWithPar: {
+  <A, R1, E1, B, C>(
+    that: Effect<R1, E1, B>,
+    f: (a: A, b: B) => C
+  ): <R, E>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, C>
   <R, E, A, R1, E1, B, C>(
     self: Effect<R, E, A>,
     that: Effect<R1, E1, B>,
     f: (a: A, b: B) => C
   ): Effect<R | R1, E | E1, C>
-  <A, R1, E1, B, C>(
-    that: Effect<R1, E1, B>,
-    f: (a: A, b: B) => C
-  ): <R, E>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, C>
 } = circular.validateWithPar
 
 /**
@@ -4830,8 +4873,8 @@ export const whileLoop: <R, E, A>(
  * @category mutations
  */
 export const when: {
-  <R, E, A>(self: Effect<R, E, A>, predicate: LazyArg<boolean>): Effect<R, E, Option.Option<A>>
   (predicate: LazyArg<boolean>): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Option.Option<A>>
+  <R, E, A>(self: Effect<R, E, A>, predicate: LazyArg<boolean>): Effect<R, E, Option.Option<A>>
 } = effect.when
 
 /**
@@ -4854,13 +4897,13 @@ export const whenCase: <R, E, A, B>(
  * @category mutations
  */
 export const whenCaseEffect: {
+  <A, R2, E2, A2>(
+    pf: (a: A) => Option.Option<Effect<R2, E2, A2>>
+  ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, Option.Option<A2>>
   <R, E, A, R2, E2, A2>(
     self: Effect<R, E, A>,
     pf: (a: A) => Option.Option<Effect<R2, E2, A2>>
   ): Effect<R | R2, E | E2, Option.Option<A2>>
-  <A, R2, E2, A2>(
-    pf: (a: A) => Option.Option<Effect<R2, E2, A2>>
-  ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, Option.Option<A2>>
 } = effect.whenCaseEffect
 
 /**
@@ -4868,10 +4911,15 @@ export const whenCaseEffect: {
  * @category constructors
  */
 export const whenEffect: {
-  <R, E, A, R2, E2>(self: Effect<R2, E2, A>, predicate: Effect<R, E, boolean>): Effect<R | R2, E | E2, Option.Option<A>>
   <R, E>(
     predicate: Effect<R, E, boolean>
-  ): <R2, E2, A>(effect: Effect<R2, E2, A>) => Effect<R | R2, E | E2, Option.Option<A>>
+  ): <R2, E2, A>(
+    effect: Effect<R2, E2, A>
+  ) => Effect<R | R2, E | E2, Option.Option<A>>
+  <R, E, A, R2, E2>(
+    self: Effect<R2, E2, A>,
+    predicate: Effect<R, E, boolean>
+  ): Effect<R | R2, E | E2, Option.Option<A>>
 } = core.whenEffect
 
 /**
@@ -4882,15 +4930,17 @@ export const whenEffect: {
  * @category mutations
  */
 export const whenFiberRef: {
+  <S>(
+    fiberRef: FiberRef.FiberRef<S>,
+    predicate: Predicate<S>
+  ): <R, E, A>(
+    self: Effect<R, E, A>
+  ) => Effect<R, E, readonly [S, Option.Option<A>]>
   <R, E, A, S>(
     self: Effect<R, E, A>,
     fiberRef: FiberRef.FiberRef<S>,
     predicate: Predicate<S>
   ): Effect<R, E, readonly [S, Option.Option<A>]>
-  <S>(
-    fiberRef: FiberRef.FiberRef<S>,
-    predicate: Predicate<S>
-  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, readonly [S, Option.Option<A>]>
 } = effect.whenFiberRef
 
 /**
@@ -4900,15 +4950,17 @@ export const whenFiberRef: {
  * @category mutations
  */
 export const whenRef: {
+  <S>(
+    ref: Ref.Ref<S>,
+    predicate: Predicate<S>
+  ): <R, E, A>(
+    self: Effect<R, E, A>
+  ) => Effect<R, E, readonly [S, Option.Option<A>]>
   <R, E, A, S>(
     self: Effect<R, E, A>,
     ref: Ref.Ref<S>,
     predicate: Predicate<S>
   ): Effect<R, E, readonly [S, Option.Option<A>]>
-  <S>(
-    ref: Ref.Ref<S>,
-    predicate: Predicate<S>
-  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, readonly [S, Option.Option<A>]>
 } = effect.whenRef
 
 /**
@@ -4919,8 +4971,8 @@ export const whenRef: {
  * @category mutations
  */
 export const withClock: {
-  <R, E, A extends Clock.Clock>(effect: Effect<R, E, A>, value: A): Effect<R, E, A>
   <A extends Clock.Clock>(value: A): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A extends Clock.Clock>(effect: Effect<R, E, A>, value: A): Effect<R, E, A>
 } = defaultServices.withClock
 
 /**
@@ -4940,8 +4992,8 @@ export const withClockScoped: <A extends Clock.Clock>(value: A) => Effect<Scope.
  * @category config
  */
 export const withConfigProvider: {
-  <R, E, A>(effect: Effect<R, E, A>, value: ConfigProvider): Effect<R, E, A>
   (value: ConfigProvider): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(effect: Effect<R, E, A>, value: ConfigProvider): Effect<R, E, A>
 } = defaultServices.withConfigProvider
 
 /**
@@ -4970,8 +5022,8 @@ export const withEarlyRelease: <R, E, A>(
  * @category mutations
  */
 export const withMetric: {
-  <R, E, A extends In, Type, In, Out>(self: Effect<R, E, A>, metric: Metric.Metric<Type, In, Out>): Effect<R, E, A>
   <Type, In, Out>(metric: Metric.Metric<Type, In, Out>): <R, E, A extends In>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A extends In, Type, In, Out>(self: Effect<R, E, A>, metric: Metric.Metric<Type, In, Out>): Effect<R, E, A>
 } = effect.withMetric
 
 /**
@@ -4979,8 +5031,8 @@ export const withMetric: {
  * @category concurrency
  */
 export const withParallelism: {
-  <R, E, A>(self: Effect<R, E, A>, parallelism: number): Effect<R, E, A>
   (parallelism: number): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, parallelism: number): Effect<R, E, A>
 } = core.withParallelism
 
 /**
@@ -4998,8 +5050,8 @@ export const withParallelismUnbounded: <R, E, A>(self: Effect<R, E, A>) => Effec
  * @category runtime
  */
 export const withRuntimeFlags: {
-  <R, E, A>(self: Effect<R, E, A>, update: RuntimeFlagsPatch.RuntimeFlagsPatch): Effect<R, E, A>
   (update: RuntimeFlagsPatch.RuntimeFlagsPatch): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, update: RuntimeFlagsPatch.RuntimeFlagsPatch): Effect<R, E, A>
 } = core.withRuntimeFlags
 
 /**
@@ -5020,8 +5072,8 @@ export const yieldNow: (priority?: "background" | "normal" | undefined) => Effec
  * @category products
  */
 export const zip: {
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, readonly [A, A2]>
   <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, readonly [A, A2]>
+  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, readonly [A, A2]>
 } = core.zip
 
 /**
@@ -5029,8 +5081,8 @@ export const zip: {
  * @category products
  */
 export const zipLeft: {
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, A>
   <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A>
+  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, A>
 } = core.zipLeft
 
 /**
@@ -5038,8 +5090,8 @@ export const zipLeft: {
  * @category products
  */
 export const zipRight: {
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, A2>
   <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2>
+  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, A2>
 } = core.zipRight
 
 /**
@@ -5047,15 +5099,15 @@ export const zipRight: {
  * @category products
  */
 export const zipWith: {
+  <R2, E2, A2, A, B>(
+    that: Effect<R2, E2, A2>,
+    f: (a: A, b: A2) => B
+  ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, B>
   <R, E, R2, E2, A2, A, B>(
     self: Effect<R, E, A>,
     that: Effect<R2, E2, A2>,
     f: (a: A, b: A2) => B
   ): Effect<R | R2, E | E2, B>
-  <R2, E2, A2, A, B>(
-    that: Effect<R2, E2, A2>,
-    f: (a: A, b: A2) => B
-  ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, B>
 } = core.zipWith
 
 /**
@@ -5065,8 +5117,8 @@ export const zipWith: {
  * @category zipping
  */
 export const zipPar: {
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, readonly [A, A2]>
   <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, readonly [A, A2]>
+  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, readonly [A, A2]>
 } = circular.zipPar
 
 /**
@@ -5078,8 +5130,8 @@ export const zipPar: {
  * @category zipping
  */
 export const zipParLeft: {
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, A>
   <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A>
+  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, A>
 } = circular.zipParLeft
 
 /**
@@ -5091,8 +5143,8 @@ export const zipParLeft: {
  * @category zipping
  */
 export const zipParRight: {
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, A2>
   <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2>
+  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, A2>
 } = circular.zipParRight
 
 /**
@@ -5103,23 +5155,13 @@ export const zipParRight: {
  * @category zipping
  */
 export const zipWithPar: {
+  <R2, E2, A2, A, B>(
+    that: Effect<R2, E2, A2>,
+    f: (a: A, b: A2) => B
+  ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, B>
   <R, E, A, R2, E2, A2, B>(
     self: Effect<R, E, A>,
     that: Effect<R2, E2, A2>,
     f: (a: A, b: A2) => B
   ): Effect<R | R2, E | E2, B>
-  <R2, E2, A2, A, B>(
-    that: Effect<R2, E2, A2>,
-    f: (a: A, b: A2) => B
-  ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, B>
 } = circular.zipWithPar
-
-/**
- * Schedules a potentially blocking effect to occur with background priority.
- *
- * Note: this is equivalent to pipe(yieldNow("background"), zipRight(self))
- *
- * @since 1.0.0
- * @category constructors
- */
-export const blocking: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A> = effect.blocking

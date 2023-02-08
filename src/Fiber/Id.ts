@@ -113,8 +113,8 @@ export const isComposite: (self: FiberId) => self is Composite = internal.isComp
  * @category constructors
  */
 export const combine: {
-  (self: FiberId, that: FiberId): FiberId
   (that: FiberId): (self: FiberId) => FiberId
+  (self: FiberId, that: FiberId): FiberId
 } = internal.combine
 
 /**
@@ -132,8 +132,8 @@ export const combineAll: (fiberIds: HashSet.HashSet<FiberId>) => FiberId = inter
  * @category mutations
  */
 export const getOrElse: {
-  (self: FiberId, that: FiberId): FiberId
   (that: FiberId): (self: FiberId) => FiberId
+  (self: FiberId, that: FiberId): FiberId
 } = internal.getOrElse
 
 /**

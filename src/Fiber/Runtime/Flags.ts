@@ -108,8 +108,8 @@ export const cooperativeYielding: (self: RuntimeFlags) => boolean = internal.coo
  * @category diffing
  */
 export const diff: {
-  (self: RuntimeFlags, that: RuntimeFlags): RuntimeFlagsPatch.RuntimeFlagsPatch
   (that: RuntimeFlags): (self: RuntimeFlags) => RuntimeFlagsPatch.RuntimeFlagsPatch
+  (self: RuntimeFlags, that: RuntimeFlags): RuntimeFlagsPatch.RuntimeFlagsPatch
 } = internal.diff
 
 /**
@@ -127,8 +127,8 @@ export const differ: (_: void) => Differ.Differ<RuntimeFlags, RuntimeFlagsPatch.
  * @category mutations
  */
 export const disable: {
-  (self: RuntimeFlags, flag: RuntimeFlag): RuntimeFlags
   (flag: RuntimeFlag): (self: RuntimeFlags) => RuntimeFlags
+  (self: RuntimeFlags, flag: RuntimeFlag): RuntimeFlags
 } = internal.disable
 
 /**
@@ -138,8 +138,8 @@ export const disable: {
  * @category mutations
  */
 export const disableAll: {
-  (self: RuntimeFlags, flags: RuntimeFlags): RuntimeFlags
   (flags: RuntimeFlags): (self: RuntimeFlags) => RuntimeFlags
+  (self: RuntimeFlags, flags: RuntimeFlags): RuntimeFlags
 } = internal.disableAll
 
 /**
@@ -180,8 +180,8 @@ export const disableWindDown: (_: void) => Layer.Layer<never, never, never> = ci
  * @category mutations
  */
 export const enable: {
-  (self: RuntimeFlags, flag: RuntimeFlag): RuntimeFlags
   (flag: RuntimeFlag): (self: RuntimeFlags) => RuntimeFlags
+  (self: RuntimeFlags, flag: RuntimeFlag): RuntimeFlags
 } = internal.enable
 
 /**
@@ -191,8 +191,8 @@ export const enable: {
  * @category mutations
  */
 export const enableAll: {
-  (self: RuntimeFlags, flags: RuntimeFlags): RuntimeFlags
   (flags: RuntimeFlags): (self: RuntimeFlags) => RuntimeFlags
+  (self: RuntimeFlags, flags: RuntimeFlags): RuntimeFlags
 } = internal.enableAll
 
 /**
@@ -255,8 +255,8 @@ export const interruption: (self: RuntimeFlags) => boolean = internal.interrupti
  * @category elements
  */
 export const isEnabled: {
-  (self: RuntimeFlags, flag: RuntimeFlag): boolean
   (flag: RuntimeFlag): (self: RuntimeFlags) => boolean
+  (self: RuntimeFlags, flag: RuntimeFlag): boolean
 } = internal.isEnabled
 
 /**
@@ -266,8 +266,8 @@ export const isEnabled: {
  * @category elements
  */
 export const isDisabled: {
-  (self: RuntimeFlags, flag: RuntimeFlag): boolean
   (flag: RuntimeFlag): (self: RuntimeFlags) => boolean
+  (self: RuntimeFlags, flag: RuntimeFlag): boolean
 } = internal.isDisabled
 
 /**
@@ -299,8 +299,8 @@ export const opSupervision: (self: RuntimeFlags) => boolean = internal.opSupervi
  * @category mutations
  */
 export const patch: {
-  (self: RuntimeFlags, patch: RuntimeFlagsPatch.RuntimeFlagsPatch): RuntimeFlags
   (patch: RuntimeFlagsPatch.RuntimeFlagsPatch): (self: RuntimeFlags) => RuntimeFlags
+  (self: RuntimeFlags, patch: RuntimeFlagsPatch.RuntimeFlagsPatch): RuntimeFlags
 } = internal.patch
 
 /**

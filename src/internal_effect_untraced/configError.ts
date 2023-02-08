@@ -1,10 +1,9 @@
 import * as Chunk from "@effect/data/Chunk"
 import type * as Cause from "@effect/io/Cause"
 import type * as ConfigError from "@effect/io/Config/Error"
-import * as Debug from "@effect/io/Debug"
 import * as OpCodes from "@effect/io/internal_effect_untraced/opCodes/configError"
 import * as Either from "@fp-ts/core/Either"
-import { constFalse, constTrue, pipe } from "@fp-ts/core/Function"
+import { constFalse, constTrue, dual, pipe } from "@fp-ts/core/Function"
 
 /** @internal */
 const ConfigErrorSymbolKey = "@effect/io/Config/Error"
@@ -146,11 +145,11 @@ export const isUnsupported = (self: ConfigError.ConfigError): self is ConfigErro
 
 /** @internal */
 export const prefixed: {
-  (self: ConfigError.ConfigError, prefix: Chunk.Chunk<string>): ConfigError.ConfigError
   (prefix: Chunk.Chunk<string>): (self: ConfigError.ConfigError) => ConfigError.ConfigError
-} = Debug.dual<
-  (self: ConfigError.ConfigError, prefix: Chunk.Chunk<string>) => ConfigError.ConfigError,
-  (prefix: Chunk.Chunk<string>) => (self: ConfigError.ConfigError) => ConfigError.ConfigError
+  (self: ConfigError.ConfigError, prefix: Chunk.Chunk<string>): ConfigError.ConfigError
+} = dual<
+  (prefix: Chunk.Chunk<string>) => (self: ConfigError.ConfigError) => ConfigError.ConfigError,
+  (self: ConfigError.ConfigError, prefix: Chunk.Chunk<string>) => ConfigError.ConfigError
 >(2, (self, prefix) => {
   switch (self._tag) {
     case OpCodes.OP_AND: {
@@ -198,9 +197,9 @@ interface OrCase {
 }
 
 /** @internal */
-export const reduceWithContext = Debug.dual<
-  <C, Z>(self: ConfigError.ConfigError, context: C, reducer: ConfigError.ConfigErrorReducer<C, Z>) => Z,
-  <C, Z>(context: C, reducer: ConfigError.ConfigErrorReducer<C, Z>) => (self: ConfigError.ConfigError) => Z
+export const reduceWithContext = dual<
+  <C, Z>(context: C, reducer: ConfigError.ConfigErrorReducer<C, Z>) => (self: ConfigError.ConfigError) => Z,
+  <C, Z>(self: ConfigError.ConfigError, context: C, reducer: ConfigError.ConfigErrorReducer<C, Z>) => Z
 >(3, <C, Z>(self: ConfigError.ConfigError, context: C, reducer: ConfigError.ConfigErrorReducer<C, Z>) => {
   const input: Array<ConfigError.ConfigError> = [self]
   const output: Array<Either.Either<ConfigErrorCase, Z>> = []

@@ -44,20 +44,20 @@ export const get = Debug.methodWithTrace((trace) => <A>(self: Ref.Ref<A>) => sel
 
 /** @internal */
 export const set = Debug.dualWithTrace<
-  <A>(self: Ref.Ref<A>, value: A) => Effect.Effect<never, never, void>,
-  <A>(value: A) => (self: Ref.Ref<A>) => Effect.Effect<never, never, void>
+  <A>(value: A) => (self: Ref.Ref<A>) => Effect.Effect<never, never, void>,
+  <A>(self: Ref.Ref<A>, value: A) => Effect.Effect<never, never, void>
 >(2, (trace) => <A>(self: Ref.Ref<A>, value: A) => self.modify((): [void, A] => [void 0, value]).traced(trace))
 
 /** @internal */
 export const getAndSet = Debug.dualWithTrace<
-  <A>(self: Ref.Ref<A>, value: A) => Effect.Effect<never, never, A>,
-  <A>(value: A) => (self: Ref.Ref<A>) => Effect.Effect<never, never, A>
+  <A>(value: A) => (self: Ref.Ref<A>) => Effect.Effect<never, never, A>,
+  <A>(self: Ref.Ref<A>, value: A) => Effect.Effect<never, never, A>
 >(2, (trace) => <A>(self: Ref.Ref<A>, value: A) => self.modify((a): [A, A] => [a, value]).traced(trace))
 
 /** @internal */
 export const getAndUpdate = Debug.dualWithTrace<
-  <A>(self: Ref.Ref<A>, f: (a: A) => A) => Effect.Effect<never, never, A>,
-  <A>(f: (a: A) => A) => (self: Ref.Ref<A>) => Effect.Effect<never, never, A>
+  <A>(f: (a: A) => A) => (self: Ref.Ref<A>) => Effect.Effect<never, never, A>,
+  <A>(self: Ref.Ref<A>, f: (a: A) => A) => Effect.Effect<never, never, A>
 >(2, (trace, restore) =>
   <A>(self: Ref.Ref<A>, f: (a: A) => A) =>
     self.modify(
@@ -66,8 +66,8 @@ export const getAndUpdate = Debug.dualWithTrace<
 
 /** @internal */
 export const getAndUpdateSome = Debug.dualWithTrace<
-  <A>(self: Ref.Ref<A>, pf: (a: A) => Option.Option<A>) => Effect.Effect<never, never, A>,
-  <A>(pf: (a: A) => Option.Option<A>) => (self: Ref.Ref<A>) => Effect.Effect<never, never, A>
+  <A>(pf: (a: A) => Option.Option<A>) => (self: Ref.Ref<A>) => Effect.Effect<never, never, A>,
+  <A>(self: Ref.Ref<A>, pf: (a: A) => Option.Option<A>) => Effect.Effect<never, never, A>
 >(2, (trace, restore) =>
   <A>(self: Ref.Ref<A>, pf: (a: A) => Option.Option<A>) =>
     self.modify((value): [A, A] => {
@@ -84,27 +84,27 @@ export const getAndUpdateSome = Debug.dualWithTrace<
 
 /** @internal */
 export const setAndGet = Debug.dualWithTrace<
-  <A>(self: Ref.Ref<A>, value: A) => Effect.Effect<never, never, A>,
-  <A>(value: A) => (self: Ref.Ref<A>) => Effect.Effect<never, never, A>
+  <A>(value: A) => (self: Ref.Ref<A>) => Effect.Effect<never, never, A>,
+  <A>(self: Ref.Ref<A>, value: A) => Effect.Effect<never, never, A>
 >(2, (trace) => <A>(self: Ref.Ref<A>, value: A) => self.modify((): [A, A] => [value, value]).traced(trace))
 
 /** @internal */
 export const modify = Debug.dualWithTrace<
-  <A, B>(self: Ref.Ref<A>, f: (a: A) => readonly [B, A]) => Effect.Effect<never, never, B>,
-  <A, B>(f: (a: A) => readonly [B, A]) => (self: Ref.Ref<A>) => Effect.Effect<never, never, B>
+  <A, B>(f: (a: A) => readonly [B, A]) => (self: Ref.Ref<A>) => Effect.Effect<never, never, B>,
+  <A, B>(self: Ref.Ref<A>, f: (a: A) => readonly [B, A]) => Effect.Effect<never, never, B>
 >(2, (trace, restore) => (self, f) => self.modify(restore(f)).traced(trace))
 
 /** @internal */
 export const modifySome = Debug.dualWithTrace<
+  <B, A>(
+    fallback: B,
+    pf: (a: A) => Option.Option<readonly [B, A]>
+  ) => (self: Ref.Ref<A>) => Effect.Effect<never, never, B>,
   <A, B>(
     self: Ref.Ref<A>,
     fallback: B,
     pf: (a: A) => Option.Option<readonly [B, A]>
-  ) => Effect.Effect<never, never, B>,
-  <B, A>(
-    fallback: B,
-    pf: (a: A) => Option.Option<readonly [B, A]>
-  ) => (self: Ref.Ref<A>) => Effect.Effect<never, never, B>
+  ) => Effect.Effect<never, never, B>
 >(3, (trace, restore) =>
   (self, fallback, pf) =>
     self.modify((value) => {
@@ -121,8 +121,8 @@ export const modifySome = Debug.dualWithTrace<
 
 /** @internal */
 export const update = Debug.dualWithTrace<
-  <A>(self: Ref.Ref<A>, f: (a: A) => A) => Effect.Effect<never, never, void>,
-  <A>(f: (a: A) => A) => (self: Ref.Ref<A>) => Effect.Effect<never, never, void>
+  <A>(f: (a: A) => A) => (self: Ref.Ref<A>) => Effect.Effect<never, never, void>,
+  <A>(self: Ref.Ref<A>, f: (a: A) => A) => Effect.Effect<never, never, void>
 >(2, (trace, restore) =>
   <A>(self: Ref.Ref<A>, f: (a: A) => A) =>
     self.modify(
@@ -131,8 +131,8 @@ export const update = Debug.dualWithTrace<
 
 /** @internal */
 export const updateAndGet = Debug.dualWithTrace<
-  <A>(self: Ref.Ref<A>, f: (a: A) => A) => Effect.Effect<never, never, A>,
-  <A>(f: (a: A) => A) => (self: Ref.Ref<A>) => Effect.Effect<never, never, A>
+  <A>(f: (a: A) => A) => (self: Ref.Ref<A>) => Effect.Effect<never, never, A>,
+  <A>(self: Ref.Ref<A>, f: (a: A) => A) => Effect.Effect<never, never, A>
 >(2, (trace, restore) =>
   <A>(self: Ref.Ref<A>, f: (a: A) => A) =>
     self.modify((a): [A, A] => {
@@ -142,8 +142,8 @@ export const updateAndGet = Debug.dualWithTrace<
 
 /** @internal */
 export const updateSome = Debug.dualWithTrace<
-  <A>(self: Ref.Ref<A>, f: (a: A) => Option.Option<A>) => Effect.Effect<never, never, void>,
-  <A>(f: (a: A) => Option.Option<A>) => (self: Ref.Ref<A>) => Effect.Effect<never, never, void>
+  <A>(f: (a: A) => Option.Option<A>) => (self: Ref.Ref<A>) => Effect.Effect<never, never, void>,
+  <A>(self: Ref.Ref<A>, f: (a: A) => Option.Option<A>) => Effect.Effect<never, never, void>
 >(2, (trace, restore) =>
   <A>(self: Ref.Ref<A>, f: (a: A) => Option.Option<A>) =>
     self.modify(
@@ -152,8 +152,8 @@ export const updateSome = Debug.dualWithTrace<
 
 /** @internal */
 export const updateSomeAndGet = Debug.dualWithTrace<
-  <A>(self: Ref.Ref<A>, pf: (a: A) => Option.Option<A>) => Effect.Effect<never, never, A>,
-  <A>(pf: (a: A) => Option.Option<A>) => (self: Ref.Ref<A>) => Effect.Effect<never, never, A>
+  <A>(pf: (a: A) => Option.Option<A>) => (self: Ref.Ref<A>) => Effect.Effect<never, never, A>,
+  <A>(self: Ref.Ref<A>, pf: (a: A) => Option.Option<A>) => Effect.Effect<never, never, A>
 >(2, (trace, restore) =>
   <A>(self: Ref.Ref<A>, pf: (a: A) => Option.Option<A>) =>
     self.modify((value): [A, A] => {

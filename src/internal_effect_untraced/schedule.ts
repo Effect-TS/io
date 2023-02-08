@@ -151,24 +151,24 @@ export const makeWithState = Debug.untracedMethod((restore) =>
 
 /** @internal */
 export const addDelay = Debug.untracedDual<
+  <Out>(
+    f: (out: Out) => Duration.Duration
+  ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env, In, Out>,
   <Env, In, Out>(
     self: Schedule.Schedule<Env, In, Out>,
     f: (out: Out) => Duration.Duration
-  ) => Schedule.Schedule<Env, In, Out>,
-  <Out>(
-    f: (out: Out) => Duration.Duration
-  ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env, In, Out>
+  ) => Schedule.Schedule<Env, In, Out>
 >(2, (restore) => (self, f) => addDelayEffect(self, (out) => core.sync(() => restore(f)(out))))
 
 /** @internal */
 export const addDelayEffect = Debug.untracedDual<
+  <Out, Env2>(
+    f: (out: Out) => Effect.Effect<Env2, never, Duration.Duration>
+  ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In, Out>,
   <Env, In, Out, Env2>(
     self: Schedule.Schedule<Env, In, Out>,
     f: (out: Out) => Effect.Effect<Env2, never, Duration.Duration>
-  ) => Schedule.Schedule<Env | Env2, In, Out>,
-  <Out, Env2>(
-    f: (out: Out) => Effect.Effect<Env2, never, Duration.Duration>
-  ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In, Out>
+  ) => Schedule.Schedule<Env | Env2, In, Out>
 >(2, (restore) =>
   (self, f) =>
     modifyDelayEffect(self, (out, duration) =>
@@ -179,17 +179,17 @@ export const addDelayEffect = Debug.untracedDual<
 
 /** @internal */
 export const andThen = Debug.untracedDual<
-  <Env, In, Out, Env1, In1, Out2>(
-    self: Schedule.Schedule<Env, In, Out>,
+  <Env1, In1, Out2>(
     that: Schedule.Schedule<Env1, In1, Out2>
-  ) => Schedule.Schedule<
+  ) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<
     Env | Env1,
     In & In1,
     Out | Out2
   >,
-  <Env1, In1, Out2>(
+  <Env, In, Out, Env1, In1, Out2>(
+    self: Schedule.Schedule<Env, In, Out>,
     that: Schedule.Schedule<Env1, In1, Out2>
-  ) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<
+  ) => Schedule.Schedule<
     Env | Env1,
     In & In1,
     Out | Out2
@@ -198,17 +198,17 @@ export const andThen = Debug.untracedDual<
 
 /** @internal */
 export const andThenEither = Debug.untracedDual<
-  <Env, In, Out, Env2, In2, Out2>(
-    self: Schedule.Schedule<Env, In, Out>,
+  <Env2, In2, Out2>(
     that: Schedule.Schedule<Env2, In2, Out2>
-  ) => Schedule.Schedule<
+  ) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<
     Env | Env2,
     In & In2,
     Either.Either<Out, Out2>
   >,
-  <Env2, In2, Out2>(
+  <Env, In, Out, Env2, In2, Out2>(
+    self: Schedule.Schedule<Env, In, Out>,
     that: Schedule.Schedule<Env2, In2, Out2>
-  ) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<
+  ) => Schedule.Schedule<
     Env | Env2,
     In & In2,
     Either.Either<Out, Out2>
@@ -253,8 +253,8 @@ export const andThenEither = Debug.untracedDual<
 
 /** @internal */
 export const as = Debug.untracedDual<
-  <Env, In, Out, Out2>(self: Schedule.Schedule<Env, In, Out>, out: Out2) => Schedule.Schedule<Env, In, Out2>,
-  <Out2>(out: Out2) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env, In, Out2>
+  <Out2>(out: Out2) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env, In, Out2>,
+  <Env, In, Out, Out2>(self: Schedule.Schedule<Env, In, Out>, out: Out2) => Schedule.Schedule<Env, In, Out2>
 >(2, () => (self, out) => map(self, () => out))
 
 /** @internal */
@@ -266,17 +266,17 @@ export const asUnit = Debug.untracedMethod(() =>
 
 /** @internal */
 export const bothInOut = Debug.untracedDual<
-  <Env, In, Out, Env2, In2, Out2>(
-    self: Schedule.Schedule<Env, In, Out>,
+  <Env2, In2, Out2>(
     that: Schedule.Schedule<Env2, In2, Out2>
-  ) => Schedule.Schedule<
+  ) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<
     Env | Env2,
     readonly [In, In2],
     readonly [Out, Out2]
   >,
-  <Env2, In2, Out2>(
+  <Env, In, Out, Env2, In2, Out2>(
+    self: Schedule.Schedule<Env, In, Out>,
     that: Schedule.Schedule<Env2, In2, Out2>
-  ) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<
+  ) => Schedule.Schedule<
     Env | Env2,
     readonly [In, In2],
     readonly [Out, Out2]
@@ -305,24 +305,24 @@ export const bothInOut = Debug.untracedDual<
 
 /** @internal */
 export const check = Debug.untracedDual<
+  <In, Out>(
+    test: (input: In, output: Out) => boolean
+  ) => <Env>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env, In, Out>,
   <Env, In, Out>(
     self: Schedule.Schedule<Env, In, Out>,
     test: (input: In, output: Out) => boolean
-  ) => Schedule.Schedule<Env, In, Out>,
-  <In, Out>(
-    test: (input: In, output: Out) => boolean
-  ) => <Env>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env, In, Out>
+  ) => Schedule.Schedule<Env, In, Out>
 >(2, (restore) => (self, test) => checkEffect(self, (input, out) => core.sync(() => restore(test)(input, out))))
 
 /** @internal */
 export const checkEffect = Debug.untracedDual<
+  <In, Out, Env2>(
+    test: (input: In, output: Out) => Effect.Effect<Env2, never, boolean>
+  ) => <Env>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In, Out>,
   <Env, In, Out, Env2>(
     self: Schedule.Schedule<Env, In, Out>,
     test: (input: In, output: Out) => Effect.Effect<Env2, never, boolean>
-  ) => Schedule.Schedule<Env | Env2, In, Out>,
-  <In, Out, Env2>(
-    test: (input: In, output: Out) => Effect.Effect<Env2, never, boolean>
-  ) => <Env>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In, Out>
+  ) => Schedule.Schedule<Env | Env2, In, Out>
 >(
   2,
   (restore) =>
@@ -344,17 +344,17 @@ export const checkEffect = Debug.untracedDual<
 
 /** @internal */
 export const choose = Debug.untracedDual<
-  <Env, In, Out, Env2, In2, Out2>(
-    self: Schedule.Schedule<Env, In, Out>,
+  <Env2, In2, Out2>(
     that: Schedule.Schedule<Env2, In2, Out2>
-  ) => Schedule.Schedule<
+  ) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<
     Env | Env2,
     Either.Either<In, In2>,
     Either.Either<Out, Out2>
   >,
-  <Env2, In2, Out2>(
+  <Env, In, Out, Env2, In2, Out2>(
+    self: Schedule.Schedule<Env, In, Out>,
     that: Schedule.Schedule<Env2, In2, Out2>
-  ) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<
+  ) => Schedule.Schedule<
     Env | Env2,
     Either.Either<In, In2>,
     Either.Either<Out, Out2>
@@ -396,12 +396,12 @@ export const choose = Debug.untracedDual<
 
 /** @internal */
 export const chooseMerge = Debug.untracedDual<
+  <Env2, In2, Out2>(that: Schedule.Schedule<Env2, In2, Out2>) => <Env, In, Out>(
+    self: Schedule.Schedule<Env, In, Out>
+  ) => Schedule.Schedule<Env | Env2, Either.Either<In, In2>, Out | Out2>,
   <Env, In, Out, Env2, In2, Out2>(
     self: Schedule.Schedule<Env, In, Out>,
     that: Schedule.Schedule<Env2, In2, Out2>
-  ) => Schedule.Schedule<Env | Env2, Either.Either<In, In2>, Out | Out2>,
-  <Env2, In2, Out2>(that: Schedule.Schedule<Env2, In2, Out2>) => <Env, In, Out>(
-    self: Schedule.Schedule<Env, In, Out>
   ) => Schedule.Schedule<Env | Env2, Either.Either<In, In2>, Out | Out2>
 >(2, () => (self, that) => map(choose(self, that), Either.merge))
 
@@ -444,13 +444,13 @@ export const collectWhileEffect = Debug.untracedMethod((restore) =>
 
 /** @internal */
 export const compose = Debug.untracedDual<
+  <Env2, Out, Out2>(
+    that: Schedule.Schedule<Env2, Out, Out2>
+  ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In, Out2>,
   <Env, In, Out, Env2, Out2>(
     self: Schedule.Schedule<Env, In, Out>,
     that: Schedule.Schedule<Env2, Out, Out2>
-  ) => Schedule.Schedule<Env | Env2, In, Out2>,
-  <Env2, Out, Out2>(
-    that: Schedule.Schedule<Env2, Out, Out2>
-  ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In, Out2>
+  ) => Schedule.Schedule<Env | Env2, In, Out2>
 >(2, (restore) =>
   (self, that) =>
     makeWithState(
@@ -474,24 +474,24 @@ export const compose = Debug.untracedDual<
 
 /** @internal */
 export const contramap = Debug.untracedDual<
+  <In, In2>(
+    f: (in2: In2) => In
+  ) => <Env, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env, In2, Out>,
   <Env, In, Out, In2>(
     self: Schedule.Schedule<Env, In, Out>,
     f: (in2: In2) => In
-  ) => Schedule.Schedule<Env, In2, Out>,
-  <In, In2>(
-    f: (in2: In2) => In
-  ) => <Env, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env, In2, Out>
+  ) => Schedule.Schedule<Env, In2, Out>
 >(2, (restore) => (self, f) => contramapEffect(self, (input2) => core.sync(() => restore(f)(input2))))
 
 /** @internal */
 export const contramapContext = Debug.untracedDual<
+  <Env0, Env>(
+    f: (env0: Context.Context<Env0>) => Context.Context<Env>
+  ) => <In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env0, In, Out>,
   <Env0, Env, In, Out>(
     self: Schedule.Schedule<Env, In, Out>,
     f: (env0: Context.Context<Env0>) => Context.Context<Env>
-  ) => Schedule.Schedule<Env0, In, Out>,
-  <Env0, Env>(
-    f: (env0: Context.Context<Env0>) => Context.Context<Env>
-  ) => <In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env0, In, Out>
+  ) => Schedule.Schedule<Env0, In, Out>
 >(2, (restore) =>
   (self, f) =>
     makeWithState(
@@ -505,13 +505,13 @@ export const contramapContext = Debug.untracedDual<
 
 /** @internal */
 export const contramapEffect = Debug.untracedDual<
+  <In, Env2, In2>(
+    f: (in2: In2) => Effect.Effect<Env2, never, In>
+  ) => <Env, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In2, Out>,
   <Env, In, Out, Env2, In2>(
     self: Schedule.Schedule<Env, In, Out>,
     f: (in2: In2) => Effect.Effect<Env2, never, In>
-  ) => Schedule.Schedule<Env | Env2, In2, Out>,
-  <In, Env2, In2>(
-    f: (in2: In2) => Effect.Effect<Env2, never, In>
-  ) => <Env, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In2, Out>
+  ) => Schedule.Schedule<Env | Env2, In2, Out>
 >(2, (restore) =>
   (self, f) =>
     makeWithState(self.initial, (now, input2, state) =>
@@ -589,24 +589,24 @@ export const dayOfWeek = Debug.untracedMethod(() =>
 
 /** @internal */
 export const delayed = Debug.untracedDual<
+  (
+    f: (duration: Duration.Duration) => Duration.Duration
+  ) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env, In, Out>,
   <Env, In, Out>(
     self: Schedule.Schedule<Env, In, Out>,
     f: (duration: Duration.Duration) => Duration.Duration
-  ) => Schedule.Schedule<Env, In, Out>,
-  (
-    f: (duration: Duration.Duration) => Duration.Duration
-  ) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env, In, Out>
+  ) => Schedule.Schedule<Env, In, Out>
 >(2, (restore) => (self, f) => delayedEffect(self, (duration) => core.sync(() => restore(f)(duration))))
 
 /** @internal */
 export const delayedEffect = Debug.untracedDual<
+  <Env2>(
+    f: (duration: Duration.Duration) => Effect.Effect<Env2, never, Duration.Duration>
+  ) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In, Out>,
   <Env, In, Out, Env2>(
     self: Schedule.Schedule<Env, In, Out>,
     f: (duration: Duration.Duration) => Effect.Effect<Env2, never, Duration.Duration>
-  ) => Schedule.Schedule<Env | Env2, In, Out>,
-  <Env2>(
-    f: (duration: Duration.Duration) => Effect.Effect<Env2, never, Duration.Duration>
-  ) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In, Out>
+  ) => Schedule.Schedule<Env | Env2, In, Out>
 >(2, (restore) => (self, f) => modifyDelayEffect(self, (_, delay) => restore(f)(delay)))
 
 /** @internal */
@@ -643,28 +643,28 @@ export const delays = Debug.untracedMethod((restore) =>
 
 /** @internal */
 export const dimap = Debug.untracedDual<
+  <In, Out, In2, Out2>(
+    f: (in2: In2) => In,
+    g: (out: Out) => Out2
+  ) => <Env>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env, In2, Out2>,
   <Env, In, Out, In2, Out2>(
     self: Schedule.Schedule<Env, In, Out>,
     f: (in2: In2) => In,
     g: (out: Out) => Out2
-  ) => Schedule.Schedule<Env, In2, Out2>,
-  <In, Out, In2, Out2>(
-    f: (in2: In2) => In,
-    g: (out: Out) => Out2
-  ) => <Env>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env, In2, Out2>
+  ) => Schedule.Schedule<Env, In2, Out2>
 >(3, (restore) => (self, f, g) => pipe(contramap(self, restore(f)), map(restore(g))))
 
 /** @internal */
 export const dimapEffect = Debug.untracedDual<
+  <In2, Env2, In, Out, Env3, Out2>(
+    f: (input: In2) => Effect.Effect<Env2, never, In>,
+    g: (out: Out) => Effect.Effect<Env3, never, Out2>
+  ) => <Env>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2 | Env3, In2, Out2>,
   <Env, In, Out, In2, Env2, Env3, Out2>(
     self: Schedule.Schedule<Env, In, Out>,
     f: (input: In2) => Effect.Effect<Env2, never, In>,
     g: (out: Out) => Effect.Effect<Env3, never, Out2>
-  ) => Schedule.Schedule<Env | Env2 | Env3, In2, Out2>,
-  <In2, Env2, In, Out, Env3, Out2>(
-    f: (input: In2) => Effect.Effect<Env2, never, In>,
-    g: (out: Out) => Effect.Effect<Env3, never, Out2>
-  ) => <Env>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2 | Env3, In2, Out2>
+  ) => Schedule.Schedule<Env | Env2 | Env3, In2, Out2>
 >(3, (restore) => (self, f, g) => pipe(contramapEffect(self, restore(f)), mapEffect(restore(g))))
 
 /** @internal */
@@ -691,17 +691,17 @@ export const duration = Debug.untracedMethod(() =>
 
 /** @internal */
 export const either = Debug.untracedDual<
-  <Env, In, Out, Env2, In2, Out2>(
-    self: Schedule.Schedule<Env, In, Out>,
+  <Env2, In2, Out2>(
     that: Schedule.Schedule<Env2, In2, Out2>
-  ) => Schedule.Schedule<
+  ) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<
     Env | Env2,
     In & In2,
     readonly [Out, Out2]
   >,
-  <Env2, In2, Out2>(
+  <Env, In, Out, Env2, In2, Out2>(
+    self: Schedule.Schedule<Env, In, Out>,
     that: Schedule.Schedule<Env2, In2, Out2>
-  ) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<
+  ) => Schedule.Schedule<
     Env | Env2,
     In & In2,
     readonly [Out, Out2]
@@ -710,19 +710,19 @@ export const either = Debug.untracedDual<
 
 /** @internal */
 export const eitherWith = Debug.untracedDual<
+  <Env2, In2, Out2>(
+    that: Schedule.Schedule<Env2, In2, Out2>,
+    f: (x: Intervals.Intervals, y: Intervals.Intervals) => Intervals.Intervals
+  ) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<
+    Env | Env2,
+    In & In2,
+    readonly [Out, Out2]
+  >,
   <Env, In, Out, Env2, In2, Out2>(
     self: Schedule.Schedule<Env, In, Out>,
     that: Schedule.Schedule<Env2, In2, Out2>,
     f: (x: Intervals.Intervals, y: Intervals.Intervals) => Intervals.Intervals
   ) => Schedule.Schedule<
-    Env | Env2,
-    In & In2,
-    readonly [Out, Out2]
-  >,
-  <Env2, In2, Out2>(
-    that: Schedule.Schedule<Env2, In2, Out2>,
-    f: (x: Intervals.Intervals, y: Intervals.Intervals) => Intervals.Intervals
-  ) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<
     Env | Env2,
     In & In2,
     readonly [Out, Out2]
@@ -758,13 +758,13 @@ export const elapsed = Debug.untracedMethod(() =>
 
 /** @internal */
 export const ensuring = Debug.untracedDual<
+  <X>(
+    finalizer: Effect.Effect<never, never, X>
+  ) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env, In, Out>,
   <Env, In, Out, X>(
     self: Schedule.Schedule<Env, In, Out>,
     finalizer: Effect.Effect<never, never, X>
-  ) => Schedule.Schedule<Env, In, Out>,
-  <X>(
-    finalizer: Effect.Effect<never, never, X>
-  ) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env, In, Out>
+  ) => Schedule.Schedule<Env, In, Out>
 >(
   2,
   (restore) =>
@@ -930,17 +930,17 @@ export const identity = Debug.untracedMethod(() =>
 
 /** @internal */
 export const intersect = Debug.untracedDual<
-  <Env, In, Out, Env2, In2, Out2>(
-    self: Schedule.Schedule<Env, In, Out>,
+  <Env2, In2, Out2>(
     that: Schedule.Schedule<Env2, In2, Out2>
-  ) => Schedule.Schedule<
+  ) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<
     Env | Env2,
     In & In2,
     readonly [Out, Out2]
   >,
-  <Env2, In2, Out2>(
+  <Env, In, Out, Env2, In2, Out2>(
+    self: Schedule.Schedule<Env, In, Out>,
     that: Schedule.Schedule<Env2, In2, Out2>
-  ) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<
+  ) => Schedule.Schedule<
     Env | Env2,
     In & In2,
     readonly [Out, Out2]
@@ -955,19 +955,19 @@ export const intersect = Debug.untracedDual<
 
 /** @internal */
 export const intersectWith = Debug.untracedDual<
+  <Env2, In2, Out2>(
+    that: Schedule.Schedule<Env2, In2, Out2>,
+    f: (x: Intervals.Intervals, y: Intervals.Intervals) => Intervals.Intervals
+  ) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<
+    Env | Env2,
+    In & In2,
+    readonly [Out, Out2]
+  >,
   <Env, In, Out, Env2, In2, Out2>(
     self: Schedule.Schedule<Env, In, Out>,
     that: Schedule.Schedule<Env2, In2, Out2>,
     f: (x: Intervals.Intervals, y: Intervals.Intervals) => Intervals.Intervals
   ) => Schedule.Schedule<
-    Env | Env2,
-    In & In2,
-    readonly [Out, Out2]
-  >,
-  <Env2, In2, Out2>(
-    that: Schedule.Schedule<Env2, In2, Out2>,
-    f: (x: Intervals.Intervals, y: Intervals.Intervals) => Intervals.Intervals
-  ) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<
     Env | Env2,
     In & In2,
     readonly [Out, Out2]
@@ -1100,15 +1100,12 @@ export const jittered = Debug.untracedMethod(() =>
 
 /** @internal */
 export const jitteredWith = Debug.untracedDual<
+  (options: { min?: number; max?: number }) => <Env, In, Out>(
+    self: Schedule.Schedule<Env, In, Out>
+  ) => Schedule.Schedule<Env | Random.Random, In, Out>,
   <Env, In, Out>(
     self: Schedule.Schedule<Env, In, Out>,
     options: { min?: number; max?: number }
-  ) => Schedule.Schedule<Env | Random.Random, In, Out>,
-  (options: {
-    min?: number
-    max?: number
-  }) => <Env, In, Out>(
-    self: Schedule.Schedule<Env, In, Out>
   ) => Schedule.Schedule<Env | Random.Random, In, Out>
 >(2, () =>
   (self, options) => {
@@ -1138,24 +1135,24 @@ export const linear = Debug.untracedMethod(() =>
 
 /** @internal */
 export const map = Debug.untracedDual<
+  <Out, Out2>(
+    f: (out: Out) => Out2
+  ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env, In, Out2>,
   <Env, In, Out, Out2>(
     self: Schedule.Schedule<Env, In, Out>,
     f: (out: Out) => Out2
-  ) => Schedule.Schedule<Env, In, Out2>,
-  <Out, Out2>(
-    f: (out: Out) => Out2
-  ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env, In, Out2>
+  ) => Schedule.Schedule<Env, In, Out2>
 >(2, (restore) => (self, f) => mapEffect(self, (out) => core.sync(() => restore(f)(out))))
 
 /** @internal */
 export const mapEffect = Debug.untracedDual<
+  <Out, Env2, Out2>(
+    f: (out: Out) => Effect.Effect<Env2, never, Out2>
+  ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In, Out2>,
   <Env, In, Out, Env2, Out2>(
     self: Schedule.Schedule<Env, In, Out>,
     f: (out: Out) => Effect.Effect<Env2, never, Out2>
-  ) => Schedule.Schedule<Env | Env2, In, Out2>,
-  <Out, Env2, Out2>(
-    f: (out: Out) => Effect.Effect<Env2, never, Out2>
-  ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In, Out2>
+  ) => Schedule.Schedule<Env | Env2, In, Out2>
 >(
   2,
   (restore) =>
@@ -1203,24 +1200,24 @@ export const minuteOfHour = Debug.untracedMethod(() =>
 
 /** @internal */
 export const modifyDelay = Debug.untracedDual<
+  <Out>(
+    f: (out: Out, duration: Duration.Duration) => Duration.Duration
+  ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env, In, Out>,
   <Env, In, Out>(
     self: Schedule.Schedule<Env, In, Out>,
     f: (out: Out, duration: Duration.Duration) => Duration.Duration
-  ) => Schedule.Schedule<Env, In, Out>,
-  <Out>(
-    f: (out: Out, duration: Duration.Duration) => Duration.Duration
-  ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env, In, Out>
+  ) => Schedule.Schedule<Env, In, Out>
 >(2, (restore) => (self, f) => modifyDelayEffect(self, (out, duration) => core.sync(() => restore(f)(out, duration))))
 
 /** @internal */
 export const modifyDelayEffect = Debug.untracedDual<
+  <Out, Env2>(
+    f: (out: Out, duration: Duration.Duration) => Effect.Effect<Env2, never, Duration.Duration>
+  ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In, Out>,
   <Env, In, Out, Env2>(
     self: Schedule.Schedule<Env, In, Out>,
     f: (out: Out, duration: Duration.Duration) => Effect.Effect<Env2, never, Duration.Duration>
-  ) => Schedule.Schedule<Env | Env2, In, Out>,
-  <Out, Env2>(
-    f: (out: Out, duration: Duration.Duration) => Effect.Effect<Env2, never, Duration.Duration>
-  ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In, Out>
+  ) => Schedule.Schedule<Env | Env2, In, Out>
 >(
   2,
   (restore) =>
@@ -1248,13 +1245,13 @@ export const modifyDelayEffect = Debug.untracedDual<
 
 /** @internal */
 export const onDecision = Debug.untracedDual<
+  <Out, Env2, X>(
+    f: (out: Out, decision: ScheduleDecision.ScheduleDecision) => Effect.Effect<Env2, never, X>
+  ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In, Out>,
   <Env, In, Out, Env2, X>(
     self: Schedule.Schedule<Env, In, Out>,
     f: (out: Out, decision: ScheduleDecision.ScheduleDecision) => Effect.Effect<Env2, never, X>
-  ) => Schedule.Schedule<Env | Env2, In, Out>,
-  <Out, Env2, X>(
-    f: (out: Out, decision: ScheduleDecision.ScheduleDecision) => Effect.Effect<Env2, never, X>
-  ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In, Out>
+  ) => Schedule.Schedule<Env | Env2, In, Out>
 >(
   2,
   (restore) =>
@@ -1286,13 +1283,13 @@ export const passthrough = Debug.untracedMethod((restore) =>
 
 /** @internal */
 export const provideContext = Debug.untracedDual<
+  <Env>(
+    context: Context.Context<Env>
+  ) => <In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<never, In, Out>,
   <Env, In, Out>(
     self: Schedule.Schedule<Env, In, Out>,
     context: Context.Context<Env>
-  ) => Schedule.Schedule<never, In, Out>,
-  <Env>(
-    context: Context.Context<Env>
-  ) => <In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<never, In, Out>
+  ) => Schedule.Schedule<never, In, Out>
 >(2, (restore) =>
   (self, context) =>
     makeWithState(self.initial, (now, input, state) =>
@@ -1303,15 +1300,15 @@ export const provideContext = Debug.untracedDual<
 
 /** @internal */
 export const provideService = Debug.untracedDual<
+  <T, T1 extends T>(
+    tag: Context.Tag<T>,
+    service: T1
+  ) => <Env, In, Out>(self: Schedule.Schedule<Env | T, In, Out>) => Schedule.Schedule<Exclude<Env, T>, In, Out>,
   <Env, T, In, Out, T1 extends T>(
     self: Schedule.Schedule<Env | T, In, Out>,
     tag: Context.Tag<T>,
     service: T1
-  ) => Schedule.Schedule<Exclude<Env, T>, In, Out>,
-  <T, T1 extends T>(
-    tag: Context.Tag<T>,
-    service: T1
-  ) => <Env, In, Out>(self: Schedule.Schedule<Env | T, In, Out>) => Schedule.Schedule<Exclude<Env, T>, In, Out>
+  ) => Schedule.Schedule<Exclude<Env, T>, In, Out>
 >(3, (restore) =>
   <Env, T, In, Out, T1 extends T>(
     self: Schedule.Schedule<Env | T, In, Out>,
@@ -1334,36 +1331,36 @@ export const provideService = Debug.untracedDual<
 
 /** @internal */
 export const reconsider = Debug.untracedDual<
+  <Out, Out2>(
+    f: (
+      out: Out,
+      decision: ScheduleDecision.ScheduleDecision
+    ) => Either.Either<Out2, readonly [Out2, Interval.Interval]>
+  ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env, In, Out2>,
   <Env, In, Out, Out2>(
     self: Schedule.Schedule<Env, In, Out>,
     f: (
       out: Out,
       decision: ScheduleDecision.ScheduleDecision
     ) => Either.Either<Out2, readonly [Out2, Interval.Interval]>
-  ) => Schedule.Schedule<Env, In, Out2>,
-  <Out, Out2>(
-    f: (
-      out: Out,
-      decision: ScheduleDecision.ScheduleDecision
-    ) => Either.Either<Out2, readonly [Out2, Interval.Interval]>
-  ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env, In, Out2>
+  ) => Schedule.Schedule<Env, In, Out2>
 >(2, (restore) => (self, f) => reconsiderEffect(self, (out, decision) => core.sync(() => restore(f)(out, decision))))
 
 /** @internal */
 export const reconsiderEffect = Debug.untracedDual<
+  <Out, Env2, Out2>(
+    f: (
+      out: Out,
+      decision: ScheduleDecision.ScheduleDecision
+    ) => Effect.Effect<Env2, never, Either.Either<Out2, readonly [Out2, Interval.Interval]>>
+  ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In, Out2>,
   <Env, In, Out, Env2, Out2>(
     self: Schedule.Schedule<Env, In, Out>,
     f: (
       out: Out,
       decision: ScheduleDecision.ScheduleDecision
     ) => Effect.Effect<Env2, never, Either.Either<Out2, readonly [Out2, Interval.Interval]>>
-  ) => Schedule.Schedule<Env | Env2, In, Out2>,
-  <Out, Env2, Out2>(
-    f: (
-      out: Out,
-      decision: ScheduleDecision.ScheduleDecision
-    ) => Effect.Effect<Env2, never, Either.Either<Out2, readonly [Out2, Interval.Interval]>>
-  ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In, Out2>
+  ) => Schedule.Schedule<Env | Env2, In, Out2>
 >(
   2,
   (restore) =>
@@ -1458,28 +1455,28 @@ export const recurs = Debug.untracedMethod(() =>
 
 /** @internal */
 export const reduce = Debug.untracedDual<
+  <Out, Z>(
+    zero: Z,
+    f: (z: Z, out: Out) => Z
+  ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env, In, Z>,
   <Env, In, Out, Z>(
     self: Schedule.Schedule<Env, In, Out>,
     zero: Z,
     f: (z: Z, out: Out) => Z
-  ) => Schedule.Schedule<Env, In, Z>,
-  <Out, Z>(
-    zero: Z,
-    f: (z: Z, out: Out) => Z
-  ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env, In, Z>
+  ) => Schedule.Schedule<Env, In, Z>
 >(3, (restore) => (self, zero, f) => reduceEffect(self, zero, (z, out) => core.sync(() => restore(f)(z, out))))
 
 /** @internal */
 export const reduceEffect = Debug.untracedDual<
+  <Out, Env1, Z>(
+    zero: Z,
+    f: (z: Z, out: Out) => Effect.Effect<Env1, never, Z>
+  ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env1, In, Z>,
   <Env, In, Out, Env1, Z>(
     self: Schedule.Schedule<Env, In, Out>,
     zero: Z,
     f: (z: Z, out: Out) => Effect.Effect<Env1, never, Z>
-  ) => Schedule.Schedule<Env | Env1, In, Z>,
-  <Out, Env1, Z>(
-    zero: Z,
-    f: (z: Z, out: Out) => Effect.Effect<Env1, never, Z>
-  ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env1, In, Z>
+  ) => Schedule.Schedule<Env | Env1, In, Z>
 >(
   3,
   (restore) =>
@@ -1522,14 +1519,14 @@ export const repetitions = Debug.untracedMethod(() =>
 
 /** @internal */
 export const resetAfter = Debug.untracedDual<
-  <Env, In, Out>(
-    self: Schedule.Schedule<Env, In, Out>,
-    duration: Duration.Duration
-  ) => Schedule.Schedule<Env, In, Out>,
   (
     duration: Duration.Duration
   ) => <Env, In, Out>(
     self: Schedule.Schedule<Env, In, Out>
+  ) => Schedule.Schedule<Env, In, Out>,
+  <Env, In, Out>(
+    self: Schedule.Schedule<Env, In, Out>,
+    duration: Duration.Duration
   ) => Schedule.Schedule<Env, In, Out>
 >(2, () =>
   (self, duration) =>
@@ -1542,8 +1539,8 @@ export const resetAfter = Debug.untracedDual<
 
 /** @internal */
 export const resetWhen = Debug.untracedDual<
-  <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>, f: Predicate<Out>) => Schedule.Schedule<Env, In, Out>,
-  <Out>(f: Predicate<Out>) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env, In, Out>
+  <Out>(f: Predicate<Out>) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env, In, Out>,
+  <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>, f: Predicate<Out>) => Schedule.Schedule<Env, In, Out>
 >(
   2,
   (restore) =>
@@ -1567,15 +1564,15 @@ export const right = Debug.untracedMethod(() =>
 
 /** @internal */
 export const run = Debug.dualWithTrace<
+  <In>(
+    now: number,
+    input: Iterable<In>
+  ) => <Env, Out>(self: Schedule.Schedule<Env, In, Out>) => Effect.Effect<Env, never, Chunk.Chunk<Out>>,
   <Env, In, Out>(
     self: Schedule.Schedule<Env, In, Out>,
     now: number,
     input: Iterable<In>
-  ) => Effect.Effect<Env, never, Chunk.Chunk<Out>>,
-  <In>(
-    now: number,
-    input: Iterable<In>
-  ) => <Env, Out>(self: Schedule.Schedule<Env, In, Out>) => Effect.Effect<Env, never, Chunk.Chunk<Out>>
+  ) => Effect.Effect<Env, never, Chunk.Chunk<Out>>
 >(3, (trace) =>
   (self, now, input) =>
     pipe(
@@ -1660,13 +1657,13 @@ export const sync = Debug.untracedMethod((restore) =>
 
 /** @internal */
 export const tapInput = Debug.untracedDual<
+  <Env2, In2, X>(
+    f: (input: In2) => Effect.Effect<Env2, never, X>
+  ) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In & In2, Out>,
   <Env, In, Out, Env2, In2, X>(
     self: Schedule.Schedule<Env, In, Out>,
     f: (input: In2) => Effect.Effect<Env2, never, X>
-  ) => Schedule.Schedule<Env | Env2, In & In2, Out>,
-  <Env2, In2, X>(
-    f: (input: In2) => Effect.Effect<Env2, never, X>
-  ) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In & In2, Out>
+  ) => Schedule.Schedule<Env | Env2, In & In2, Out>
 >(2, (restore) =>
   (self, f) =>
     makeWithState(self.initial, (now, input, state) =>
@@ -1677,13 +1674,13 @@ export const tapInput = Debug.untracedDual<
 
 /** @internal */
 export const tapOutput = Debug.untracedDual<
+  <Out, Env2, X>(
+    f: (out: Out) => Effect.Effect<Env2, never, X>
+  ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In, Out>,
   <Env, In, Out, Env2, X>(
     self: Schedule.Schedule<Env, In, Out>,
     f: (out: Out) => Effect.Effect<Env2, never, X>
-  ) => Schedule.Schedule<Env | Env2, In, Out>,
-  <Out, Env2, X>(
-    f: (out: Out) => Effect.Effect<Env2, never, X>
-  ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In, Out>
+  ) => Schedule.Schedule<Env | Env2, In, Out>
 >(2, (restore) =>
   (self, f) =>
     makeWithState(self.initial, (now, input, state) =>
@@ -1710,17 +1707,17 @@ export const unfold = Debug.untracedMethod((restore) =>
 
 /** @internal */
 export const union = Debug.untracedDual<
-  <Env, In, Out, Env2, In2, Out2>(
-    self: Schedule.Schedule<Env, In, Out>,
+  <Env2, In2, Out2>(
     that: Schedule.Schedule<Env2, In2, Out2>
-  ) => Schedule.Schedule<
+  ) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<
     Env | Env2,
     In & In2,
     readonly [Out, Out2]
   >,
-  <Env2, In2, Out2>(
+  <Env, In, Out, Env2, In2, Out2>(
+    self: Schedule.Schedule<Env, In, Out>,
     that: Schedule.Schedule<Env2, In2, Out2>
-  ) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<
+  ) => Schedule.Schedule<
     Env | Env2,
     In & In2,
     readonly [Out, Out2]
@@ -1735,19 +1732,19 @@ export const union = Debug.untracedDual<
 
 /** @internal */
 export const unionWith = Debug.untracedDual<
+  <Env2, In2, Out2>(
+    that: Schedule.Schedule<Env2, In2, Out2>,
+    f: (x: Intervals.Intervals, y: Intervals.Intervals) => Intervals.Intervals
+  ) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<
+    Env | Env2,
+    In & In2,
+    readonly [Out, Out2]
+  >,
   <Env, In, Out, Env2, In2, Out2>(
     self: Schedule.Schedule<Env, In, Out>,
     that: Schedule.Schedule<Env2, In2, Out2>,
     f: (x: Intervals.Intervals, y: Intervals.Intervals) => Intervals.Intervals
   ) => Schedule.Schedule<
-    Env | Env2,
-    In & In2,
-    readonly [Out, Out2]
-  >,
-  <Env2, In2, Out2>(
-    that: Schedule.Schedule<Env2, In2, Out2>,
-    f: (x: Intervals.Intervals, y: Intervals.Intervals) => Intervals.Intervals
-  ) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<
     Env | Env2,
     In & In2,
     readonly [Out, Out2]
@@ -1795,81 +1792,81 @@ export const unionWith = Debug.untracedDual<
 
 /** @internal */
 export const untilInput = Debug.untracedDual<
-  <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>, f: Predicate<In>) => Schedule.Schedule<Env, In, Out>,
-  <In>(f: Predicate<In>) => <Env, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env, In, Out>
+  <In>(f: Predicate<In>) => <Env, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env, In, Out>,
+  <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>, f: Predicate<In>) => Schedule.Schedule<Env, In, Out>
 >(2, (restore) => (self, f) => check(self, (input, _) => !restore(f)(input)))
 
 /** @internal */
 export const untilInputEffect = Debug.untracedDual<
+  <In, Env2>(
+    f: (input: In) => Effect.Effect<Env2, never, boolean>
+  ) => <Env, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In, Out>,
   <Env, In, Out, Env2>(
     self: Schedule.Schedule<Env, In, Out>,
     f: (input: In) => Effect.Effect<Env2, never, boolean>
-  ) => Schedule.Schedule<Env | Env2, In, Out>,
-  <In, Env2>(
-    f: (input: In) => Effect.Effect<Env2, never, boolean>
-  ) => <Env, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In, Out>
+  ) => Schedule.Schedule<Env | Env2, In, Out>
 >(2, (restore) => (self, f) => checkEffect(self, (input, _) => effect.negate(restore(f)(input))))
 
 /** @internal */
 export const untilOutput = Debug.untracedDual<
-  <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>, f: Predicate<Out>) => Schedule.Schedule<Env, In, Out>,
-  <Out>(f: Predicate<Out>) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env, In, Out>
+  <Out>(f: Predicate<Out>) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env, In, Out>,
+  <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>, f: Predicate<Out>) => Schedule.Schedule<Env, In, Out>
 >(2, (restore) => (self, f) => check(self, (_, out) => !restore(f)(out)))
 
 /** @internal */
 export const untilOutputEffect = Debug.untracedDual<
+  <Out, Env2>(
+    f: (out: Out) => Effect.Effect<Env2, never, boolean>
+  ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In, Out>,
   <Env, In, Out, Env2>(
     self: Schedule.Schedule<Env, In, Out>,
     f: (out: Out) => Effect.Effect<Env2, never, boolean>
-  ) => Schedule.Schedule<Env | Env2, In, Out>,
-  <Out, Env2>(
-    f: (out: Out) => Effect.Effect<Env2, never, boolean>
-  ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In, Out>
+  ) => Schedule.Schedule<Env | Env2, In, Out>
 >(2, (restore) => (self, f) => checkEffect(self, (_, out) => effect.negate(restore(f)(out))))
 
 /** @internal */
 export const upTo = Debug.untracedDual<
+  (duration: Duration.Duration) => <Env, In, Out>(
+    self: Schedule.Schedule<Env, In, Out>
+  ) => Schedule.Schedule<Env, In, Out>,
   <Env, In, Out>(
     self: Schedule.Schedule<Env, In, Out>,
     duration: Duration.Duration
-  ) => Schedule.Schedule<Env, In, Out>,
-  (duration: Duration.Duration) => <Env, In, Out>(
-    self: Schedule.Schedule<Env, In, Out>
   ) => Schedule.Schedule<Env, In, Out>
 >(2, () => (self, duration) => zipLeft(self, recurUpTo(duration)))
 
 /** @internal */
 export const whileInput = Debug.untracedDual<
-  <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>, f: Predicate<In>) => Schedule.Schedule<Env, In, Out>,
-  <In>(f: Predicate<In>) => <Env, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env, In, Out>
+  <In>(f: Predicate<In>) => <Env, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env, In, Out>,
+  <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>, f: Predicate<In>) => Schedule.Schedule<Env, In, Out>
 >(2, (restore) => (self, f) => check(self, (input, _) => restore(f)(input)))
 
 /** @internal */
 export const whileInputEffect = Debug.untracedDual<
+  <In, Env2>(
+    f: (input: In) => Effect.Effect<Env2, never, boolean>
+  ) => <Env, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In, Out>,
   <Env, In, Out, Env2>(
     self: Schedule.Schedule<Env, In, Out>,
     f: (input: In) => Effect.Effect<Env2, never, boolean>
-  ) => Schedule.Schedule<Env | Env2, In, Out>,
-  <In, Env2>(
-    f: (input: In) => Effect.Effect<Env2, never, boolean>
-  ) => <Env, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In, Out>
+  ) => Schedule.Schedule<Env | Env2, In, Out>
 >(2, (restore) => (self, f) => checkEffect(self, (input, _) => restore(f)(input)))
 
 /** @internal */
 export const whileOutput = Debug.untracedDual<
-  <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>, f: Predicate<Out>) => Schedule.Schedule<Env, In, Out>,
-  <Out>(f: Predicate<Out>) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env, In, Out>
+  <Out>(f: Predicate<Out>) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env, In, Out>,
+  <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>, f: Predicate<Out>) => Schedule.Schedule<Env, In, Out>
 >(2, (restore) => (self, f) => check(self, (_, out) => restore(f)(out)))
 
 /** @internal */
 export const whileOutputEffect = Debug.untracedDual<
+  <Out, Env1>(
+    f: (out: Out) => Effect.Effect<Env1, never, boolean>
+  ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env1, In, Out>,
   <Env, In, Out, Env1>(
     self: Schedule.Schedule<Env, In, Out>,
     f: (out: Out) => Effect.Effect<Env1, never, boolean>
-  ) => Schedule.Schedule<Env | Env1, In, Out>,
-  <Out, Env1>(
-    f: (out: Out) => Effect.Effect<Env1, never, boolean>
-  ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env1, In, Out>
+  ) => Schedule.Schedule<Env | Env1, In, Out>
 >(2, (restore) => (self, f) => checkEffect(self, (_, out) => restore(f)(out)))
 
 /** @internal */
@@ -1908,37 +1905,37 @@ export const windowed = Debug.untracedMethod(() =>
 
 /** @internal */
 export const zipLeft = Debug.untracedDual<
+  <Env2, In2, Out2>(
+    that: Schedule.Schedule<Env2, In2, Out2>
+  ) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In & In2, Out>,
   <Env, In, Out, Env2, In2, Out2>(
     self: Schedule.Schedule<Env, In, Out>,
     that: Schedule.Schedule<Env2, In2, Out2>
-  ) => Schedule.Schedule<Env | Env2, In & In2, Out>,
-  <Env2, In2, Out2>(
-    that: Schedule.Schedule<Env2, In2, Out2>
-  ) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In & In2, Out>
+  ) => Schedule.Schedule<Env | Env2, In & In2, Out>
 >(2, () => (self, that) => pipe(intersect(self, that), map((out) => out[0])))
 
 /** @internal */
 export const zipRight = Debug.untracedDual<
+  <Env2, In2, Out2>(
+    that: Schedule.Schedule<Env2, In2, Out2>
+  ) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In & In2, Out2>,
   <Env, In, Out, Env2, In2, Out2>(
     self: Schedule.Schedule<Env, In, Out>,
     that: Schedule.Schedule<Env2, In2, Out2>
-  ) => Schedule.Schedule<Env | Env2, In & In2, Out2>,
-  <Env2, In2, Out2>(
-    that: Schedule.Schedule<Env2, In2, Out2>
-  ) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In & In2, Out2>
+  ) => Schedule.Schedule<Env | Env2, In & In2, Out2>
 >(2, () => (self, that) => pipe(intersect(self, that), map((out) => out[1])))
 
 /** @internal */
 export const zipWith = Debug.untracedDual<
+  <Env2, In2, Out2, Out, Out3>(
+    that: Schedule.Schedule<Env2, In2, Out2>,
+    f: (out: Out, out2: Out2) => Out3
+  ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In & In2, Out3>,
   <Env, In, Out, Env2, In2, Out2, Out3>(
     self: Schedule.Schedule<Env, In, Out>,
     that: Schedule.Schedule<Env2, In2, Out2>,
     f: (out: Out, out2: Out2) => Out3
-  ) => Schedule.Schedule<Env | Env2, In & In2, Out3>,
-  <Env2, In2, Out2, Out, Out3>(
-    that: Schedule.Schedule<Env2, In2, Out2>,
-    f: (out: Out, out2: Out2) => Out3
-  ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In & In2, Out3>
+  ) => Schedule.Schedule<Env | Env2, In & In2, Out3>
 >(3, (restore) => (self, that, f) => pipe(intersect(self, that), map(([out, out2]) => restore(f)(out, out2))))
 
 // -----------------------------------------------------------------------------
@@ -2118,26 +2115,26 @@ export const findNextMonth = (now: number, day: number, months: number): number 
 
 /** @internal */
 export const repeat_Effect = Debug.dualWithTrace<
+  <R1, A, B>(
+    schedule: Schedule.Schedule<R1, A, B>
+  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E, B>,
   <R, E, A, R1, B>(
     self: Effect.Effect<R, E, A>,
     schedule: Schedule.Schedule<R1, A, B>
-  ) => Effect.Effect<R | R1, E, B>,
-  <R1, A, B>(
-    schedule: Schedule.Schedule<R1, A, B>
-  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E, B>
+  ) => Effect.Effect<R | R1, E, B>
 >(2, (trace) => (self, schedule) => repeatOrElse_Effect(self, schedule, (e, _) => core.fail(e)).traced(trace))
 
 /** @internal */
 export const repeatOrElse_Effect = Debug.dualWithTrace<
+  <R2, A, B, E, R3, E2>(
+    schedule: Schedule.Schedule<R2, A, B>,
+    orElse: (error: E, option: Option.Option<B>) => Effect.Effect<R3, E2, B>
+  ) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2 | R3, E2, B>,
   <R, E, A, R2, B, R3, E2>(
     self: Effect.Effect<R, E, A>,
     schedule: Schedule.Schedule<R2, A, B>,
     orElse: (error: E, option: Option.Option<B>) => Effect.Effect<R3, E2, B>
-  ) => Effect.Effect<R | R2 | R3, E2, B>,
-  <R2, A, B, E, R3, E2>(
-    schedule: Schedule.Schedule<R2, A, B>,
-    orElse: (error: E, option: Option.Option<B>) => Effect.Effect<R3, E2, B>
-  ) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2 | R3, E2, B>
+  ) => Effect.Effect<R | R2 | R3, E2, B>
 >(
   3,
   (trace, restore) =>
@@ -2150,15 +2147,15 @@ export const repeatOrElse_Effect = Debug.dualWithTrace<
 
 /** @internal */
 export const repeatOrElseEither_Effect = Debug.dualWithTrace<
+  <R2, A, B, E, R3, E2, C>(
+    schedule: Schedule.Schedule<R2, A, B>,
+    orElse: (error: E, option: Option.Option<B>) => Effect.Effect<R3, E2, C>
+  ) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2 | R3, E2, Either.Either<C, B>>,
   <R, E, A, R2, B, R3, E2, C>(
     self: Effect.Effect<R, E, A>,
     schedule: Schedule.Schedule<R2, A, B>,
     orElse: (error: E, option: Option.Option<B>) => Effect.Effect<R3, E2, C>
-  ) => Effect.Effect<R | R2 | R3, E2, Either.Either<C, B>>,
-  <R2, A, B, E, R3, E2, C>(
-    schedule: Schedule.Schedule<R2, A, B>,
-    orElse: (error: E, option: Option.Option<B>) => Effect.Effect<R3, E2, C>
-  ) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2 | R3, E2, Either.Either<C, B>>
+  ) => Effect.Effect<R | R2 | R3, E2, Either.Either<C, B>>
 >(3, (trace, restore) =>
   (self, schedule, orElse) =>
     core.flatMap(driver(schedule), (driver) =>
@@ -2193,8 +2190,8 @@ const repeatOrElseEitherEffectLoop = <R, E, A, R1, B, R2, E2, C>(
 
 /** @internal */
 export const repeatUntil_Effect = Debug.dualWithTrace<
-  <R, E, A>(self: Effect.Effect<R, E, A>, f: Predicate<A>) => Effect.Effect<R, E, A>,
-  <A>(f: Predicate<A>) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  <A>(f: Predicate<A>) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(self: Effect.Effect<R, E, A>, f: Predicate<A>) => Effect.Effect<R, E, A>
 >(2, (trace, restore) =>
   (self, f) =>
     repeatUntilEffect_Effect(
@@ -2204,21 +2201,21 @@ export const repeatUntil_Effect = Debug.dualWithTrace<
 
 /** @internal */
 export const repeatUntilEffect_Effect: {
+  <A, R2>(
+    f: (a: A) => Effect.Effect<R2, never, boolean>
+  ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E, A>
   <R, E, A, R2>(
     self: Effect.Effect<R, E, A>,
     f: (a: A) => Effect.Effect<R2, never, boolean>
   ): Effect.Effect<R | R2, E, A>
+} = Debug.dualWithTrace<
   <A, R2>(
     f: (a: A) => Effect.Effect<R2, never, boolean>
-  ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E, A>
-} = Debug.dualWithTrace<
+  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E, A>,
   <R, E, A, R2>(
     self: Effect.Effect<R, E, A>,
     f: (a: A) => Effect.Effect<R2, never, boolean>
-  ) => Effect.Effect<R | R2, E, A>,
-  <A, R2>(
-    f: (a: A) => Effect.Effect<R2, never, boolean>
-  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E, A>
+  ) => Effect.Effect<R | R2, E, A>
 >(2, (trace, restore) =>
   (self, f) =>
     core.flatMap(self, (a) =>
@@ -2232,14 +2229,14 @@ export const repeatUntilEffect_Effect: {
 
 /** @internal */
 export const repeatUntilEquals_Effect = Debug.dualWithTrace<
-  <R, E, A>(self: Effect.Effect<R, E, A>, value: A) => Effect.Effect<R, E, A>,
-  <A>(value: A) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  <A>(value: A) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(self: Effect.Effect<R, E, A>, value: A) => Effect.Effect<R, E, A>
 >(2, (trace) => (self, value) => repeatUntil_Effect(self, (a) => Equal.equals(a, value)).traced(trace))
 
 /** @internal */
 export const repeatWhile_Effect = Debug.dualWithTrace<
-  <R, E, A>(self: Effect.Effect<R, E, A>, f: Predicate<A>) => Effect.Effect<R, E, A>,
-  <A>(f: Predicate<A>) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  <A>(f: Predicate<A>) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(self: Effect.Effect<R, E, A>, f: Predicate<A>) => Effect.Effect<R, E, A>
 >(2, (trace, restore) =>
   (self, f) =>
     repeatWhileEffect_Effect(
@@ -2249,31 +2246,33 @@ export const repeatWhile_Effect = Debug.dualWithTrace<
 
 /** @internal */
 export const repeatWhileEffect_Effect = Debug.dualWithTrace<
+  <R1, A>(
+    f: (a: A) => Effect.Effect<R1, never, boolean>
+  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E, A>,
   <R, E, R1, A>(
     self: Effect.Effect<R, E, A>,
     f: (a: A) => Effect.Effect<R1, never, boolean>
-  ) => Effect.Effect<R | R1, E, A>,
-  <R1, A>(
-    f: (a: A) => Effect.Effect<R1, never, boolean>
-  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E, A>
+  ) => Effect.Effect<R | R1, E, A>
 >(2, (trace, restore) => (self, f) => repeatUntilEffect_Effect(self, (a) => effect.negate(restore(f)(a))).traced(trace))
 
 /** @internal */
 export const repeatWhileEquals_Effect = Debug.dualWithTrace<
-  <R, E, A>(self: Effect.Effect<R, E, A>, value: A) => Effect.Effect<R, E, A>,
-  <A>(value: A) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  <A>(value: A) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(self: Effect.Effect<R, E, A>, value: A) => Effect.Effect<R, E, A>
 >(2, (trace) => (self, value) => repeatWhile_Effect(self, (a) => Equal.equals(a, value)).traced(trace))
 
 /** @internal */
 export const retry_Effect = Debug.dualWithTrace<
-  <R, E, A, R1, B>(self: Effect.Effect<R, E, A>, policy: Schedule.Schedule<R1, E, B>) => Effect.Effect<R | R1, E, A>,
-  <R1, E, B>(policy: Schedule.Schedule<R1, E, B>) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E, A>
+  <R1, E, B>(
+    policy: Schedule.Schedule<R1, E, B>
+  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E, A>,
+  <R, E, A, R1, B>(self: Effect.Effect<R, E, A>, policy: Schedule.Schedule<R1, E, B>) => Effect.Effect<R | R1, E, A>
 >(2, (trace) => (self, policy) => retryOrElse_Effect(self, policy, (e, _) => core.fail(e)).traced(trace))
 
 /** @internal */
 export const retryN_Effect = Debug.dualWithTrace<
-  <R, E, A>(self: Effect.Effect<R, E, A>, n: number) => Effect.Effect<R, E, A>,
-  (n: number) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  (n: number) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(self: Effect.Effect<R, E, A>, n: number) => Effect.Effect<R, E, A>
 >(2, (trace) => (self, n) => retryN_EffectLoop(self, n).traced(trace))
 
 /** @internal */
@@ -2289,15 +2288,15 @@ const retryN_EffectLoop = <R, E, A>(
 
 /** @internal */
 export const retryOrElse_Effect = Debug.dualWithTrace<
+  <R1, E extends E3, A1, R2, E2, A2, E3>(
+    policy: Schedule.Schedule<R1, E3, A1>,
+    orElse: (e: E, out: A1) => Effect.Effect<R2, E2, A2>
+  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1 | R2, E | E2, A | A2>,
   <R, E extends E3, A, R1, A1, R2, E2, A2, E3>(
     self: Effect.Effect<R, E, A>,
     policy: Schedule.Schedule<R1, E3, A1>,
     orElse: (e: E, out: A1) => Effect.Effect<R2, E2, A2>
-  ) => Effect.Effect<R | R1 | R2, E | E2, A | A2>,
-  <R1, E extends E3, A1, R2, E2, A2, E3>(
-    policy: Schedule.Schedule<R1, E3, A1>,
-    orElse: (e: E, out: A1) => Effect.Effect<R2, E2, A2>
-  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1 | R2, E | E2, A | A2>
+  ) => Effect.Effect<R | R1 | R2, E | E2, A | A2>
 >(3, (trace, restore) =>
   (self, policy, orElse) =>
     core.map(
@@ -2307,15 +2306,15 @@ export const retryOrElse_Effect = Debug.dualWithTrace<
 
 /** @internal */
 export const retryOrElseEither_Effect = Debug.dualWithTrace<
+  <R1, E extends E3, A1, R2, E2, A2, E3>(
+    policy: Schedule.Schedule<R1, E3, A1>,
+    orElse: (e: E, out: A1) => Effect.Effect<R2, E2, A2>
+  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1 | R2, E | E2, Either.Either<A2, A>>,
   <R, A, E extends E3, R1, A1, R2, E2, A2, E3>(
     self: Effect.Effect<R, E, A>,
     policy: Schedule.Schedule<R1, E3, A1>,
     orElse: (e: E, out: A1) => Effect.Effect<R2, E2, A2>
-  ) => Effect.Effect<R | R1 | R2, E | E2, Either.Either<A2, A>>,
-  <R1, E extends E3, A1, R2, E2, A2, E3>(
-    policy: Schedule.Schedule<R1, E3, A1>,
-    orElse: (e: E, out: A1) => Effect.Effect<R2, E2, A2>
-  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1 | R2, E | E2, Either.Either<A2, A>>
+  ) => Effect.Effect<R | R1 | R2, E | E2, Either.Either<A2, A>>
 >(3, (trace, restore) =>
   (self, policy, orElse) =>
     core.flatMap(
@@ -2351,8 +2350,8 @@ const retryOrElseEither_EffectLoop = <R, E, A, R1, A1, R2, E2, A2>(
 
 /** @internal */
 export const retryUntil_Effect = Debug.dualWithTrace<
-  <R, E, A>(self: Effect.Effect<R, E, A>, f: Predicate<E>) => Effect.Effect<R, E, A>,
-  <E>(f: Predicate<E>) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  <E>(f: Predicate<E>) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(self: Effect.Effect<R, E, A>, f: Predicate<E>) => Effect.Effect<R, E, A>
 >(2, (trace, restore) =>
   (self, f) =>
     retryUntilEffect_Effect(
@@ -2362,21 +2361,21 @@ export const retryUntil_Effect = Debug.dualWithTrace<
 
 /** @internal */
 export const retryUntilEffect_Effect: {
+  <R1, E>(
+    f: (e: E) => Effect.Effect<R1, never, boolean>
+  ): <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E, A>
   <R, E, A, R1>(
     self: Effect.Effect<R, E, A>,
     f: (e: E) => Effect.Effect<R1, never, boolean>
   ): Effect.Effect<R | R1, E, A>
+} = Debug.dualWithTrace<
   <R1, E>(
     f: (e: E) => Effect.Effect<R1, never, boolean>
-  ): <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E, A>
-} = Debug.dualWithTrace<
+  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E, A>,
   <R, E, A, R1>(
     self: Effect.Effect<R, E, A>,
     f: (e: E) => Effect.Effect<R1, never, boolean>
-  ) => Effect.Effect<R | R1, E, A>,
-  <R1, E>(
-    f: (e: E) => Effect.Effect<R1, never, boolean>
-  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E, A>
+  ) => Effect.Effect<R | R1, E, A>
 >(2, (trace, restore) =>
   (self, f) =>
     core.catchAll(self, (e) =>
@@ -2390,14 +2389,14 @@ export const retryUntilEffect_Effect: {
 
 /** @internal */
 export const retryUntilEquals_Effect = Debug.dualWithTrace<
-  <R, E, A>(self: Effect.Effect<R, E, A>, e: E) => Effect.Effect<R, E, A>,
-  <E>(e: E) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  <E>(e: E) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(self: Effect.Effect<R, E, A>, e: E) => Effect.Effect<R, E, A>
 >(2, (trace) => (self, e) => retryUntil_Effect(self, (_) => Equal.equals(_, e)).traced(trace))
 
 /** @internal */
 export const retryWhile_Effect = Debug.dualWithTrace<
-  <R, E, A>(self: Effect.Effect<R, E, A>, f: Predicate<E>) => Effect.Effect<R, E, A>,
-  <E>(f: Predicate<E>) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  <E>(f: Predicate<E>) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(self: Effect.Effect<R, E, A>, f: Predicate<E>) => Effect.Effect<R, E, A>
 >(
   2,
   (trace, restore) => (self, f) => retryWhileEffect_Effect(self, (e) => core.sync(() => restore(f)(e))).traced(trace)
@@ -2405,30 +2404,30 @@ export const retryWhile_Effect = Debug.dualWithTrace<
 
 /** @internal */
 export const retryWhileEffect_Effect = Debug.dualWithTrace<
+  <R1, E>(
+    f: (e: E) => Effect.Effect<R1, never, boolean>
+  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E, A>,
   <R, E, A, R1>(
     self: Effect.Effect<R, E, A>,
     f: (e: E) => Effect.Effect<R1, never, boolean>
-  ) => Effect.Effect<R | R1, E, A>,
-  <R1, E>(
-    f: (e: E) => Effect.Effect<R1, never, boolean>
-  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E, A>
+  ) => Effect.Effect<R | R1, E, A>
 >(2, (trace, restore) => (self, f) => retryUntilEffect_Effect(self, (e) => effect.negate(restore(f)(e))).traced(trace))
 
 /** @internal */
 export const retryWhileEquals_Effect = Debug.dualWithTrace<
-  <R, E, A>(self: Effect.Effect<R, E, A>, e: E) => Effect.Effect<R, E, A>,
-  <E>(e: E) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  <E>(e: E) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(self: Effect.Effect<R, E, A>, e: E) => Effect.Effect<R, E, A>
 >(2, (trace) => (self, e) => retryWhile_Effect(self, (err) => Equal.equals(e, err)).traced(trace))
 
 /** @internal */
 export const schedule_Effect = Debug.dualWithTrace<
+  <R2, Out>(
+    schedule: Schedule.Schedule<R2, any, Out>
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E, Out>,
   <R, E, A, R2, Out>(
     self: Effect.Effect<R, E, A>,
     schedule: Schedule.Schedule<R2, any, Out>
-  ) => Effect.Effect<R | R2, E, Out>,
-  <R2, Out>(
-    schedule: Schedule.Schedule<R2, any, Out>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E, Out>
+  ) => Effect.Effect<R | R2, E, Out>
 >(2, (trace) =>
   <R, E, A, R2, Out>(
     self: Effect.Effect<R, E, A>,
@@ -2437,15 +2436,15 @@ export const schedule_Effect = Debug.dualWithTrace<
 
 /** @internal */
 export const scheduleFrom_Effect = Debug.dualWithTrace<
+  <R2, In, Out>(
+    initial: In,
+    schedule: Schedule.Schedule<R2, In, Out>
+  ) => <R, E>(self: Effect.Effect<R, E, In>) => Effect.Effect<R | R2, E, Out>,
   <R, E, In, R2, Out>(
     self: Effect.Effect<R, E, In>,
     initial: In,
     schedule: Schedule.Schedule<R2, In, Out>
-  ) => Effect.Effect<R | R2, E, Out>,
-  <R2, In, Out>(
-    initial: In,
-    schedule: Schedule.Schedule<R2, In, Out>
-  ) => <R, E>(self: Effect.Effect<R, E, In>) => Effect.Effect<R | R2, E, Out>
+  ) => Effect.Effect<R | R2, E, Out>
 >(3, (trace) =>
   (self, initial, schedule) =>
     core.flatMap(

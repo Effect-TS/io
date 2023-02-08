@@ -1,6 +1,8 @@
 /**
  * @since 1.0.0
  */
+import type * as Chunk from "@effect/data/Chunk"
+import type * as HashSet from "@effect/data/HashSet"
 import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
@@ -16,8 +18,6 @@ import type * as Scope from "@effect/io/Scope"
 import type * as Either from "@fp-ts/core/Either"
 import type * as Option from "@fp-ts/core/Option"
 import type * as order from "@fp-ts/core/typeclass/Order"
-import type * as Chunk from "@effect/data/Chunk"
-import type * as HashSet from "@effect/data/HashSet"
 
 /**
  * @since 1.0.0
@@ -373,8 +373,8 @@ export const interrupted: (fiberId: FiberId.FiberId) => Fiber<never, never> = in
  * @category interruption
  */
 export const interruptAs: {
-  <E, A>(self: Fiber<E, A>, fiberId: FiberId.FiberId): Effect.Effect<never, never, Exit.Exit<E, A>>
   (fiberId: FiberId.FiberId): <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, Exit.Exit<E, A>>
+  <E, A>(self: Fiber<E, A>, fiberId: FiberId.FiberId): Effect.Effect<never, never, Exit.Exit<E, A>>
 } = core.interruptAsFiber
 
 /**
@@ -386,8 +386,8 @@ export const interruptAs: {
  * @category interruption
  */
 export const interruptAsFork: {
-  <E, A>(self: Fiber<E, A>, fiberId: FiberId.FiberId): Effect.Effect<never, never, void>
   (fiberId: FiberId.FiberId): <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, void>
+  <E, A>(self: Fiber<E, A>, fiberId: FiberId.FiberId): Effect.Effect<never, never, void>
 } = internal.interruptAsFork
 
 /**
@@ -406,10 +406,10 @@ export const interruptAll: (fibers: Iterable<Fiber<any, any>>) => Effect.Effect<
  * @since 1.0.0
  * @category interruption
  */
-export const interruptAllWith: {
-  (fibers: Iterable<Fiber<any, any>>, fiberId: FiberId.FiberId): Effect.Effect<never, never, void>
+export const interruptAllAs: {
   (fiberId: FiberId.FiberId): (fibers: Iterable<Fiber<any, any>>) => Effect.Effect<never, never, void>
-} = internal.interruptAllWith
+  (fibers: Iterable<Fiber<any, any>>, fiberId: FiberId.FiberId): Effect.Effect<never, never, void>
+} = internal.interruptAllAs
 
 /**
  * Interrupts the fiber from whichever fiber is calling this method. The
@@ -451,8 +451,8 @@ export const joinAll: <E, A>(fibers: Iterable<Fiber<E, A>>) => Effect.Effect<nev
  * @category mapping
  */
 export const map: {
-  <E, A, B>(self: Fiber<E, A>, f: (a: A) => B): Fiber<E, B>
   <A, B>(f: (a: A) => B): <E>(self: Fiber<E, A>) => Fiber<E, B>
+  <E, A, B>(self: Fiber<E, A>, f: (a: A) => B): Fiber<E, B>
 } = internal.map
 
 /**
@@ -462,8 +462,8 @@ export const map: {
  * @category mapping
  */
 export const mapEffect: {
-  <E, A, E2, A2>(self: Fiber<E, A>, f: (a: A) => Effect.Effect<never, E2, A2>): Fiber<E | E2, A2>
   <A, E2, A2>(f: (a: A) => Effect.Effect<never, E2, A2>): <E>(self: Fiber<E, A>) => Fiber<E2 | E, A2>
+  <E, A, E2, A2>(self: Fiber<E, A>, f: (a: A) => Effect.Effect<never, E2, A2>): Fiber<E | E2, A2>
 } = internal.mapEffect
 
 /**
@@ -474,8 +474,8 @@ export const mapEffect: {
  * @category mapping
  */
 export const mapFiber: {
-  <E, A, E2, B>(self: Fiber<E, A>, f: (a: A) => Fiber<E2, B>): Effect.Effect<never, never, Fiber<E | E2, B>>
   <E, E2, A, B>(f: (a: A) => Fiber<E2, B>): (self: Fiber<E, A>) => Effect.Effect<never, never, Fiber<E | E2, B>>
+  <E, A, E2, B>(self: Fiber<E, A>, f: (a: A) => Fiber<E2, B>): Effect.Effect<never, never, Fiber<E | E2, B>>
 } = internal.mapFiber
 
 /**
@@ -486,14 +486,14 @@ export const mapFiber: {
  */
 export const match: {
   <E, A, Z>(
+    onFiber: (fiber: Fiber<E, A>) => Z,
+    onRuntimeFiber: (fiber: RuntimeFiber<E, A>) => Z
+  ): (self: Fiber<E, A>) => Z
+  <E, A, Z>(
     self: Fiber<E, A>,
     onFiber: (fiber: Fiber<E, A>) => Z,
     onRuntimeFiber: (fiber: RuntimeFiber<E, A>) => Z
   ): Z
-  <E, A, Z>(
-    onFiber: (fiber: Fiber<E, A>) => Z,
-    onRuntimeFiber: (fiber: RuntimeFiber<E, A>) => Z
-  ): (self: Fiber<E, A>) => Z
 } = internal.match
 
 /**
@@ -513,8 +513,8 @@ export const never: (_: void) => Fiber<never, never> = internal.never
  * @category alternatives
  */
 export const orElse: {
-  <E, A, E2, A2>(self: Fiber<E, A>, that: Fiber<E2, A2>): Fiber<E | E2, A | A2>
   <E2, A2>(that: Fiber<E2, A2>): <E, A>(self: Fiber<E, A>) => Fiber<E2 | E, A2 | A>
+  <E, A, E2, A2>(self: Fiber<E, A>, that: Fiber<E2, A2>): Fiber<E | E2, A | A2>
 } = internal.orElse
 
 /**
@@ -526,8 +526,8 @@ export const orElse: {
  * @category alternatives
  */
 export const orElseEither: {
-  <E, A, E2, A2>(self: Fiber<E, A>, that: Fiber<E2, A2>): Fiber<E | E2, Either.Either<A, A2>>
   <E2, A2>(that: Fiber<E2, A2>): <E, A>(self: Fiber<E, A>) => Fiber<E2 | E, Either.Either<A, A2>>
+  <E, A, E2, A2>(self: Fiber<E, A>, that: Fiber<E2, A2>): Fiber<E | E2, Either.Either<A, A2>>
 } = internal.orElseEither
 
 /**
@@ -607,8 +607,8 @@ export const unit: (_: void) => Fiber<never, void> = internal.unit
  * @category zipping
  */
 export const zip: {
-  <E, A, E2, A2>(self: Fiber<E, A>, that: Fiber<E2, A2>): Fiber<E | E2, readonly [A, A2]>
   <E2, A2>(that: Fiber<E2, A2>): <E, A>(self: Fiber<E, A>) => Fiber<E2 | E, readonly [A, A2]>
+  <E, A, E2, A2>(self: Fiber<E, A>, that: Fiber<E2, A2>): Fiber<E | E2, readonly [A, A2]>
 } = circular.zipFiber
 
 /**
@@ -618,8 +618,8 @@ export const zip: {
  * @category zipping
  */
 export const zipLeft: {
-  <E, A, E2, A2>(self: Fiber<E, A>, that: Fiber<E2, A2>): Fiber<E | E2, A>
   <E2, A2>(that: Fiber<E2, A2>): <E, A>(self: Fiber<E, A>) => Fiber<E2 | E, A>
+  <E, A, E2, A2>(self: Fiber<E, A>, that: Fiber<E2, A2>): Fiber<E | E2, A>
 } = circular.zipLeftFiber
 
 /**
@@ -629,8 +629,8 @@ export const zipLeft: {
  * @category zipping
  */
 export const zipRight: {
-  <E, A, E2, A2>(self: Fiber<E, A>, that: Fiber<E2, A2>): Fiber<E | E2, A2>
   <E2, A2>(that: Fiber<E2, A2>): <E, A>(self: Fiber<E, A>) => Fiber<E2 | E, A2>
+  <E, A, E2, A2>(self: Fiber<E, A>, that: Fiber<E2, A2>): Fiber<E | E2, A2>
 } = circular.zipRightFiber
 
 /**
@@ -642,6 +642,6 @@ export const zipRight: {
  * @category zipping
  */
 export const zipWith: {
-  <E, A, E2, B, C>(self: Fiber<E, A>, that: Fiber<E2, B>, f: (a: A, b: B) => C): Fiber<E | E2, C>
   <E2, A, B, C>(that: Fiber<E2, B>, f: (a: A, b: B) => C): <E>(self: Fiber<E, A>) => Fiber<E2 | E, C>
+  <E, A, E2, B, C>(self: Fiber<E, A>, that: Fiber<E2, B>, f: (a: A, b: B) => C): Fiber<E | E2, C>
 } = circular.zipWithFiber

@@ -6,7 +6,7 @@ import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRef from "@effect/io/FiberRef"
 import type * as FiberRefs from "@effect/io/FiberRefs"
 import * as core from "@effect/io/internal_effect_untraced/core"
-import { pipe } from "@fp-ts/core/Function"
+import { dual, pipe } from "@fp-ts/core/Function"
 import * as Option from "@fp-ts/core/Option"
 import * as Arr from "@fp-ts/core/ReadonlyArray"
 
@@ -74,9 +74,9 @@ const findAncestor = (
 }
 
 /** @internal */
-export const joinAs = Debug.dual<
-  (self: FiberRefs.FiberRefs, fiberId: FiberId.Runtime, that: FiberRefs.FiberRefs) => FiberRefs.FiberRefs,
-  (fiberId: FiberId.Runtime, that: FiberRefs.FiberRefs) => (self: FiberRefs.FiberRefs) => FiberRefs.FiberRefs
+export const joinAs = dual<
+  (fiberId: FiberId.Runtime, that: FiberRefs.FiberRefs) => (self: FiberRefs.FiberRefs) => FiberRefs.FiberRefs,
+  (self: FiberRefs.FiberRefs, fiberId: FiberId.Runtime, that: FiberRefs.FiberRefs) => FiberRefs.FiberRefs
 >(3, (self, fiberId, that) => {
   const parentFiberRefs = new Map(self.locals)
   for (const [fiberRef, childStack] of that.locals) {
@@ -123,9 +123,9 @@ export const joinAs = Debug.dual<
 })
 
 /** @internal */
-export const forkAs = Debug.dual<
-  (self: FiberRefs.FiberRefs, childId: FiberId.Runtime) => FiberRefs.FiberRefs,
-  (childId: FiberId.Runtime) => (self: FiberRefs.FiberRefs) => FiberRefs.FiberRefs
+export const forkAs = dual<
+  (childId: FiberId.Runtime) => (self: FiberRefs.FiberRefs) => FiberRefs.FiberRefs,
+  (self: FiberRefs.FiberRefs, childId: FiberId.Runtime) => FiberRefs.FiberRefs
 >(2, (self, childId) => {
   const map = new Map<FiberRef.FiberRef<any>, Arr.NonEmptyReadonlyArray<readonly [FiberId.Runtime, unknown]>>()
   for (const [fiberRef, stack] of self.locals.entries()) {
@@ -153,9 +153,9 @@ export const setAll = Debug.methodWithTrace((trace) =>
 )
 
 /** @internal */
-export const delete_ = Debug.dual<
-  <A>(self: FiberRefs.FiberRefs, fiberRef: FiberRef.FiberRef<A>) => FiberRefs.FiberRefs,
-  <A>(fiberRef: FiberRef.FiberRef<A>) => (self: FiberRefs.FiberRefs) => FiberRefs.FiberRefs
+export const delete_ = dual<
+  <A>(fiberRef: FiberRef.FiberRef<A>) => (self: FiberRefs.FiberRefs) => FiberRefs.FiberRefs,
+  <A>(self: FiberRefs.FiberRefs, fiberRef: FiberRef.FiberRef<A>) => FiberRefs.FiberRefs
 >(2, (self, fiberRef) => {
   const locals = new Map(self.locals)
   locals.delete(fiberRef)
@@ -163,9 +163,9 @@ export const delete_ = Debug.dual<
 })
 
 /** @internal */
-export const get = Debug.dual<
-  <A>(self: FiberRefs.FiberRefs, fiberRef: FiberRef.FiberRef<A>) => Option.Option<A>,
-  <A>(fiberRef: FiberRef.FiberRef<A>) => (self: FiberRefs.FiberRefs) => Option.Option<A>
+export const get = dual<
+  <A>(fiberRef: FiberRef.FiberRef<A>) => (self: FiberRefs.FiberRefs) => Option.Option<A>,
+  <A>(self: FiberRefs.FiberRefs, fiberRef: FiberRef.FiberRef<A>) => Option.Option<A>
 >(2, (self, fiberRef) => {
   if (!self.locals.has(fiberRef)) {
     return Option.none()
@@ -174,24 +174,24 @@ export const get = Debug.dual<
 })
 
 /** @internal */
-export const getOrDefault = Debug.dual<
-  <A>(self: FiberRefs.FiberRefs, fiberRef: FiberRef.FiberRef<A>) => A,
-  <A>(fiberRef: FiberRef.FiberRef<A>) => (self: FiberRefs.FiberRefs) => A
+export const getOrDefault = dual<
+  <A>(fiberRef: FiberRef.FiberRef<A>) => (self: FiberRefs.FiberRefs) => A,
+  <A>(self: FiberRefs.FiberRefs, fiberRef: FiberRef.FiberRef<A>) => A
 >(2, (self, fiberRef) => pipe(get(self, fiberRef), Option.getOrElse(() => fiberRef.initial)))
 
 /** @internal */
-export const updatedAs = Debug.dual<
+export const updatedAs = dual<
+  <A>(
+    fiberId: FiberId.Runtime,
+    fiberRef: FiberRef.FiberRef<A>,
+    value: A
+  ) => (self: FiberRefs.FiberRefs) => FiberRefs.FiberRefs,
   <A>(
     self: FiberRefs.FiberRefs,
     fiberId: FiberId.Runtime,
     fiberRef: FiberRef.FiberRef<A>,
     value: A
-  ) => FiberRefs.FiberRefs,
-  <A>(
-    fiberId: FiberId.Runtime,
-    fiberRef: FiberRef.FiberRef<A>,
-    value: A
-  ) => (self: FiberRefs.FiberRefs) => FiberRefs.FiberRefs
+  ) => FiberRefs.FiberRefs
 >(4, <A>(self: FiberRefs.FiberRefs, fiberId: FiberId.Runtime, fiberRef: FiberRef.FiberRef<A>, value: A) => {
   const oldStack = self.locals.has(fiberRef) ?
     self.locals.get(fiberRef)! :

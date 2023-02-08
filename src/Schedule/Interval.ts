@@ -56,8 +56,8 @@ export const empty: Interval = internal.empty
  * @category ordering
  */
 export const lessThan: {
-  (self: Interval, that: Interval): boolean
   (that: Interval): (self: Interval) => boolean
+  (self: Interval, that: Interval): boolean
 } = internal.lessThan
 
 /**
@@ -67,8 +67,8 @@ export const lessThan: {
  * @category ordering
  */
 export const min: {
-  (self: Interval, that: Interval): Interval
   (that: Interval): (self: Interval) => Interval
+  (self: Interval, that: Interval): Interval
 } = internal.min
 
 /**
@@ -78,8 +78,8 @@ export const min: {
  * @category ordering
  */
 export const max: {
-  (self: Interval, that: Interval): Interval
   (that: Interval): (self: Interval) => Interval
+  (self: Interval, that: Interval): Interval
 } = internal.max
 
 /**
@@ -106,8 +106,8 @@ export const isNonEmpty: (self: Interval) => boolean = internal.isNonEmpty
  * @category ordering
  */
 export const intersect: {
-  (self: Interval, that: Interval): Interval
   (that: Interval): (self: Interval) => Interval
+  (self: Interval, that: Interval): Interval
 } = internal.intersect
 
 /**
@@ -128,8 +128,8 @@ export const size: (self: Interval) => Duration.Duration = internal.size
  * @category mutations
  */
 export const union: {
-  (self: Interval, that: Interval): Option.Option<Interval>
   (that: Interval): (self: Interval) => Option.Option<Interval>
+  (self: Interval, that: Interval): Option.Option<Interval>
 } = internal.union
 
 /**

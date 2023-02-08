@@ -1,12 +1,11 @@
 import * as Chunk from "@effect/data/Chunk"
 import * as Duration from "@effect/data/Duration"
 import * as HashMap from "@effect/data/HashMap"
-import * as Debug from "@effect/io/Debug"
 import * as metricState from "@effect/io/internal_effect_untraced/metric/state"
 import type * as MetricHook from "@effect/io/Metric/Hook"
 import type * as MetricKey from "@effect/io/Metric/Key"
 import type { LazyArg } from "@fp-ts/core/Function"
-import { pipe } from "@fp-ts/core/Function"
+import { dual, pipe } from "@fp-ts/core/Function"
 import * as number from "@fp-ts/core/Number"
 import * as Option from "@fp-ts/core/Option"
 
@@ -37,9 +36,9 @@ export const make = <In, Out>(
 }
 
 /** @internal */
-export const onUpdate = Debug.dual<
-  <In, Out>(self: MetricHook.MetricHook<In, Out>, f: (input: In) => void) => MetricHook.MetricHook<In, Out>,
-  <In, Out>(f: (input: In) => void) => (self: MetricHook.MetricHook<In, Out>) => MetricHook.MetricHook<In, Out>
+export const onUpdate = dual<
+  <In, Out>(f: (input: In) => void) => (self: MetricHook.MetricHook<In, Out>) => MetricHook.MetricHook<In, Out>,
+  <In, Out>(self: MetricHook.MetricHook<In, Out>, f: (input: In) => void) => MetricHook.MetricHook<In, Out>
 >(2, (self, f) => ({
   [MetricHookTypeId]: metricHookVariance,
   get: self.get,

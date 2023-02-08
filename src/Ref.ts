@@ -54,8 +54,8 @@ export const get: <A>(self: Ref<A>) => Effect.Effect<never, never, A> = internal
  * @category mutations
  */
 export const getAndSet: {
-  <A>(self: Ref<A>, value: A): Effect.Effect<never, never, A>
   <A>(value: A): (self: Ref<A>) => Effect.Effect<never, never, A>
+  <A>(self: Ref<A>, value: A): Effect.Effect<never, never, A>
 } = internal.getAndSet
 
 /**
@@ -63,8 +63,8 @@ export const getAndSet: {
  * @category mutations
  */
 export const getAndUpdate: {
-  <A>(self: Ref<A>, f: (a: A) => A): Effect.Effect<never, never, A>
   <A>(f: (a: A) => A): (self: Ref<A>) => Effect.Effect<never, never, A>
+  <A>(self: Ref<A>, f: (a: A) => A): Effect.Effect<never, never, A>
 } = internal.getAndUpdate
 
 /**
@@ -72,8 +72,8 @@ export const getAndUpdate: {
  * @category mutations
  */
 export const getAndUpdateSome: {
-  <A>(self: Ref<A>, pf: (a: A) => Option.Option<A>): Effect.Effect<never, never, A>
   <A>(pf: (a: A) => Option.Option<A>): (self: Ref<A>) => Effect.Effect<never, never, A>
+  <A>(self: Ref<A>, pf: (a: A) => Option.Option<A>): Effect.Effect<never, never, A>
 } = internal.getAndUpdateSome
 
 /**
@@ -81,8 +81,8 @@ export const getAndUpdateSome: {
  * @category mutations
  */
 export const modify: {
-  <A, B>(self: Ref<A>, f: (a: A) => readonly [B, A]): Effect.Effect<never, never, B>
   <A, B>(f: (a: A) => readonly [B, A]): (self: Ref<A>) => Effect.Effect<never, never, B>
+  <A, B>(self: Ref<A>, f: (a: A) => readonly [B, A]): Effect.Effect<never, never, B>
 } = internal.modify
 
 /**
@@ -90,8 +90,8 @@ export const modify: {
  * @category mutations
  */
 export const modifySome: {
-  <A, B>(self: Ref<A>, fallback: B, pf: (a: A) => Option.Option<readonly [B, A]>): Effect.Effect<never, never, B>
   <B, A>(fallback: B, pf: (a: A) => Option.Option<readonly [B, A]>): (self: Ref<A>) => Effect.Effect<never, never, B>
+  <A, B>(self: Ref<A>, fallback: B, pf: (a: A) => Option.Option<readonly [B, A]>): Effect.Effect<never, never, B>
 } = internal.modifySome
 
 /**
@@ -99,8 +99,8 @@ export const modifySome: {
  * @category mutations
  */
 export const set: {
-  <A>(self: Ref<A>, value: A): Effect.Effect<never, never, void>
   <A>(value: A): (self: Ref<A>) => Effect.Effect<never, never, void>
+  <A>(self: Ref<A>, value: A): Effect.Effect<never, never, void>
 } = internal.set
 
 /**
@@ -108,8 +108,8 @@ export const set: {
  * @category mutations
  */
 export const setAndGet: {
-  <A>(self: Ref<A>, value: A): Effect.Effect<never, never, A>
   <A>(value: A): (self: Ref<A>) => Effect.Effect<never, never, A>
+  <A>(self: Ref<A>, value: A): Effect.Effect<never, never, A>
 } = internal.setAndGet
 
 /**
@@ -117,8 +117,8 @@ export const setAndGet: {
  * @category mutations
  */
 export const update: {
-  <A>(self: Ref<A>, f: (a: A) => A): Effect.Effect<never, never, void>
   <A>(f: (a: A) => A): (self: Ref<A>) => Effect.Effect<never, never, void>
+  <A>(self: Ref<A>, f: (a: A) => A): Effect.Effect<never, never, void>
 } = internal.update
 
 /**
@@ -126,8 +126,8 @@ export const update: {
  * @category mutations
  */
 export const updateAndGet: {
-  <A>(self: Ref<A>, f: (a: A) => A): Effect.Effect<never, never, A>
   <A>(f: (a: A) => A): (self: Ref<A>) => Effect.Effect<never, never, A>
+  <A>(self: Ref<A>, f: (a: A) => A): Effect.Effect<never, never, A>
 } = internal.updateAndGet
 
 /**
@@ -135,8 +135,8 @@ export const updateAndGet: {
  * @category mutations
  */
 export const updateSome: {
-  <A>(self: Ref<A>, f: (a: A) => Option.Option<A>): Effect.Effect<never, never, void>
   <A>(f: (a: A) => Option.Option<A>): (self: Ref<A>) => Effect.Effect<never, never, void>
+  <A>(self: Ref<A>, f: (a: A) => Option.Option<A>): Effect.Effect<never, never, void>
 } = internal.updateSome
 
 /**
@@ -144,8 +144,8 @@ export const updateSome: {
  * @category mutations
  */
 export const updateSomeAndGet: {
-  <A>(self: Ref<A>, pf: (a: A) => Option.Option<A>): Effect.Effect<never, never, A>
   <A>(pf: (a: A) => Option.Option<A>): (self: Ref<A>) => Effect.Effect<never, never, A>
+  <A>(self: Ref<A>, pf: (a: A) => Option.Option<A>): Effect.Effect<never, never, A>
 } = internal.updateSomeAndGet
 
 /**

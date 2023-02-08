@@ -1,13 +1,13 @@
 /**
  * @since 1.0.0
  */
+import type * as Chunk from "@effect/data/Chunk"
+import type * as MutableQueue from "@effect/data/MutableQueue"
+import type * as MutableRef from "@effect/data/MutableRef"
 import type * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
 import * as internal from "@effect/io/internal_effect_untraced/queue"
 import type * as Option from "@fp-ts/core/Option"
-import type * as Chunk from "@effect/data/Chunk"
-import type * as MutableQueue from "@effect/data/MutableQueue"
-import type * as MutableRef from "@effect/data/MutableRef"
 
 /**
  * @since 1.0.0
@@ -408,8 +408,8 @@ export const shutdown: <A>(self: Dequeue<A> | Enqueue<A>) => Effect.Effect<never
  * @category mutations
  */
 export const offer: {
-  <A>(self: Enqueue<A>, value: A): Effect.Effect<never, never, boolean>
   <A>(value: A): (self: Enqueue<A>) => Effect.Effect<never, never, boolean>
+  <A>(self: Enqueue<A>, value: A): Effect.Effect<never, never, boolean>
 } = internal.offer
 
 /**
@@ -431,8 +431,8 @@ export const offer: {
  * @category mutations
  */
 export const offerAll: {
-  <A>(self: Enqueue<A>, iterable: Iterable<A>): Effect.Effect<never, never, boolean>
   <A>(iterable: Iterable<A>): (self: Enqueue<A>) => (self: Enqueue<A>) => Effect.Effect<never, never, boolean>
+  <A>(self: Enqueue<A>, iterable: Iterable<A>): Effect.Effect<never, never, boolean>
 } = internal.offerAll
 
 /**
@@ -469,8 +469,8 @@ export const takeAll: <A>(self: Dequeue<A>) => Effect.Effect<never, never, Chunk
  * @category mutations
  */
 export const takeUpTo: {
-  <A>(self: Dequeue<A>, max: number): Effect.Effect<never, never, Chunk.Chunk<A>>
   (max: number): <A>(self: Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>>
+  <A>(self: Dequeue<A>, max: number): Effect.Effect<never, never, Chunk.Chunk<A>>
 } = internal.takeUpTo
 
 /**
@@ -482,8 +482,8 @@ export const takeUpTo: {
  * @category mutations
  */
 export const takeBetween: {
-  <A>(self: Dequeue<A>, min: number, max: number): Effect.Effect<never, never, Chunk.Chunk<A>>
   (min: number, max: number): <A>(self: Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>>
+  <A>(self: Dequeue<A>, min: number, max: number): Effect.Effect<never, never, Chunk.Chunk<A>>
 } = internal.takeBetween
 
 /**
@@ -495,6 +495,6 @@ export const takeBetween: {
  * @category mutations
  */
 export const takeN: {
-  <A>(self: Dequeue<A>, n: number): Effect.Effect<never, never, Chunk.Chunk<A>>
   (n: number): <A>(self: Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>>
+  <A>(self: Dequeue<A>, n: number): Effect.Effect<never, never, Chunk.Chunk<A>>
 } = internal.takeN

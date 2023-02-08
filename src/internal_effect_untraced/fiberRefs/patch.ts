@@ -1,9 +1,9 @@
 import { equals } from "@effect/data/Equal"
-import * as Debug from "@effect/io/Debug"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRefs from "@effect/io/FiberRefs"
 import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
 import * as _fiberRefs from "@effect/io/internal_effect_untraced/fiberRefs"
+import { dual } from "@fp-ts/core/Function"
 import * as Arr from "@fp-ts/core/ReadonlyArray"
 
 /** @internal */
@@ -79,9 +79,9 @@ export const diff = (
 }
 
 /** @internal */
-export const combine = Debug.dual<
-  (self: FiberRefsPatch.FiberRefsPatch, that: FiberRefsPatch.FiberRefsPatch) => FiberRefsPatch.FiberRefsPatch,
-  (self: FiberRefsPatch.FiberRefsPatch) => (that: FiberRefsPatch.FiberRefsPatch) => FiberRefsPatch.FiberRefsPatch
+export const combine = dual<
+  (that: FiberRefsPatch.FiberRefsPatch) => (self: FiberRefsPatch.FiberRefsPatch) => FiberRefsPatch.FiberRefsPatch,
+  (self: FiberRefsPatch.FiberRefsPatch, that: FiberRefsPatch.FiberRefsPatch) => FiberRefsPatch.FiberRefsPatch
 >(2, (self, that) => ({
   _tag: OP_AND_THEN,
   first: self,
@@ -89,16 +89,16 @@ export const combine = Debug.dual<
 }))
 
 /** @internal */
-export const patch = Debug.dual<
+export const patch = dual<
+  (
+    fiberId: FiberId.Runtime,
+    oldValue: FiberRefs.FiberRefs
+  ) => (self: FiberRefsPatch.FiberRefsPatch) => FiberRefs.FiberRefs,
   (
     self: FiberRefsPatch.FiberRefsPatch,
     fiberId: FiberId.Runtime,
     oldValue: FiberRefs.FiberRefs
-  ) => FiberRefs.FiberRefs,
-  (
-    fiberId: FiberId.Runtime,
-    oldValue: FiberRefs.FiberRefs
-  ) => (self: FiberRefsPatch.FiberRefsPatch) => FiberRefs.FiberRefs
+  ) => FiberRefs.FiberRefs
 >(3, (self, fiberId, oldValue) => {
   let fiberRefs: FiberRefs.FiberRefs = oldValue
   let patches: ReadonlyArray<FiberRefsPatch.FiberRefsPatch> = Arr.of(self)

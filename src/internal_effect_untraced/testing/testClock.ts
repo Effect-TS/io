@@ -471,8 +471,8 @@ export const adjust = Debug.methodWithTrace((trace) =>
 
 /** @internal */
 export const adjustWith = Debug.dualWithTrace<
-  <R, E, A>(effect: Effect.Effect<R, E, A>, duration: Duration.Duration) => Effect.Effect<R, E, A>,
-  (duration: Duration.Duration) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  (duration: Duration.Duration) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(effect: Effect.Effect<R, E, A>, duration: Duration.Duration) => Effect.Effect<R, E, A>
 >(2, (trace) =>
   (effect, duration) =>
     testClockWith(

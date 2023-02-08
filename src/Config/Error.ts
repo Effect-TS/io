@@ -243,8 +243,8 @@ export const isUnsupported: (self: ConfigError) => self is Unsupported = interna
  * @category mutations
  */
 export const prefixed: {
-  (self: ConfigError, prefix: Chunk.Chunk<string>): ConfigError
   (prefix: Chunk.Chunk<string>): (self: ConfigError) => ConfigError
+  (self: ConfigError, prefix: Chunk.Chunk<string>): ConfigError
 } = internal.prefixed
 
 /**
@@ -252,6 +252,6 @@ export const prefixed: {
  * @category folding
  */
 export const reduceWithContext: {
-  <C, Z>(self: ConfigError, context: C, reducer: ConfigErrorReducer<C, Z>): Z
   <C, Z>(context: C, reducer: ConfigErrorReducer<C, Z>): (self: ConfigError) => Z
+  <C, Z>(self: ConfigError, context: C, reducer: ConfigErrorReducer<C, Z>): Z
 } = internal.reduceWithContext

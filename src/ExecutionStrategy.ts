@@ -105,8 +105,7 @@ export const isParallelN: (self: ExecutionStrategy) => self is ParallelN = inter
  * @since 1.0.0
  * @category folding
  */
-export const match: <A>(
-  onSequential: LazyArg<A>,
-  onParallel: LazyArg<A>,
-  onParallelN: (n: number) => A
-) => (self: ExecutionStrategy) => A = internal.match
+export const match: {
+  <A>(onSequential: LazyArg<A>, onParallel: LazyArg<A>, onParallelN: (n: number) => A): (self: ExecutionStrategy) => A
+  <A>(self: ExecutionStrategy, onSequential: LazyArg<A>, onParallel: LazyArg<A>, onParallelN: (n: number) => A): A
+} = internal.match

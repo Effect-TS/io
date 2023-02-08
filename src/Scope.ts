@@ -2,12 +2,12 @@
  * @since 1.0.0
  */
 
+import type * as Context from "@effect/data/Context"
 import type * as Effect from "@effect/io/Effect"
 import type * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
 import type * as Exit from "@effect/io/Exit"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as fiberRuntime from "@effect/io/internal_effect_untraced/fiberRuntime"
-import type * as Context from "@effect/data/Context"
 
 /**
  * @since 1.0.0
@@ -127,8 +127,8 @@ export const close: (self: CloseableScope, exit: Exit.Exit<unknown, unknown>) =>
  * @category mutations
  */
 export const extend: {
-  <R, E, A>(effect: Effect.Effect<R, E, A>, scope: Scope): Effect.Effect<Exclude<R, Scope>, E, A>
   (scope: Scope): <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<Exclude<R, Scope>, E, A>
+  <R, E, A>(effect: Effect.Effect<R, E, A>, scope: Scope): Effect.Effect<Exclude<R, Scope>, E, A>
 } = fiberRuntime.scopeExtend
 
 /**
@@ -153,8 +153,8 @@ export const fork: (
  * @category destructors
  */
 export const use: {
-  <R, E, A>(effect: Effect.Effect<R, E, A>, scope: CloseableScope): Effect.Effect<Exclude<R, Scope>, E, A>
   (scope: CloseableScope): <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<Exclude<R, Scope>, E, A>
+  <R, E, A>(effect: Effect.Effect<R, E, A>, scope: CloseableScope): Effect.Effect<Exclude<R, Scope>, E, A>
 } = fiberRuntime.scopeUse
 
 /**
@@ -166,5 +166,5 @@ export const use: {
  * @category constructors
  */
 export const make: (
-  executionStrategy?: ExecutionStrategy.ExecutionStrategy | undefined
+  executionStrategy?: ExecutionStrategy.ExecutionStrategy
 ) => Effect.Effect<never, never, CloseableScope> = fiberRuntime.scopeMake

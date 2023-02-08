@@ -68,8 +68,8 @@ export const empty: PathPatch = internal.empty
  * @category constructors
  */
 export const andThen: {
-  (self: PathPatch, that: PathPatch): PathPatch
   (that: PathPatch): (self: PathPatch) => PathPatch
+  (self: PathPatch, that: PathPatch): PathPatch
 } = internal.andThen
 
 /**
@@ -77,8 +77,8 @@ export const andThen: {
  * @category constructors
  */
 export const mapName: {
-  (self: PathPatch, f: (string: string) => string): PathPatch
   (f: (string: string) => string): (self: PathPatch) => PathPatch
+  (self: PathPatch, f: (string: string) => string): PathPatch
 } = internal.mapName
 
 /**
@@ -86,8 +86,8 @@ export const mapName: {
  * @category constructors
  */
 export const nested: {
-  (self: PathPatch, name: string): PathPatch
   (name: string): (self: PathPatch) => PathPatch
+  (self: PathPatch, name: string): PathPatch
 } = internal.nested
 
 /**
@@ -95,6 +95,6 @@ export const nested: {
  * @category constructors
  */
 export const unnested: {
-  (self: PathPatch, name: string): PathPatch
   (name: string): (self: PathPatch) => PathPatch
+  (self: PathPatch, name: string): PathPatch
 } = internal.unnested

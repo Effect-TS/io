@@ -182,27 +182,13 @@ export const pipeableWithTrace = <A extends (...args: Array<any>) => any>(
 /**
  * @since 1.0.0
  */
-export const dual = <DF extends (...args: Array<any>) => any, P extends (...args: Array<any>) => any>(
-  dfLen: Parameters<DF>["length"],
-  body: DF
-): DF & P => {
-  // @ts-expect-error
-  return function() {
-    if (arguments.length === dfLen) {
-      // @ts-expect-error
-      return body.apply(this, arguments)
-    }
-    return ((self: any) => body(self, ...arguments)) as any
-  }
-}
-
-/**
- * @since 1.0.0
- */
-export const dualWithTrace = <DF extends (...args: Array<any>) => any, P extends (...args: Array<any>) => any>(
-  dfLen: Parameters<DF>["length"],
-  body: ((trace: Trace, restore: Restore) => DF)
-): DF & P => {
+export const dualWithTrace = <
+  DataLast extends (...args: Array<any>) => any,
+  DataFirst extends (...args: Array<any>) => any
+>(
+  dfLen: Parameters<DataFirst>["length"],
+  body: ((trace: Trace, restore: Restore) => DataFirst)
+): DataLast & DataFirst => {
   // @ts-expect-error
   return function() {
     if (!runtimeDebug.tracingEnabled) {
@@ -251,10 +237,13 @@ export const untraced = <A>(
 /**
  * @since 1.0.0
  */
-export const untracedDual = <DF extends (...args: Array<any>) => any, P extends (...args: Array<any>) => any>(
-  dfLen: Parameters<DF>["length"],
-  body: ((restore: Restore) => DF)
-): DF & P => {
+export const untracedDual = <
+  DataLast extends (...args: Array<any>) => any,
+  DataFirst extends (...args: Array<any>) => any
+>(
+  dfLen: Parameters<DataFirst>["length"],
+  body: ((restore: Restore) => DataFirst)
+): DataLast & DataFirst => {
   // @ts-expect-error
   return function() {
     if (!runtimeDebug.tracingEnabled) {

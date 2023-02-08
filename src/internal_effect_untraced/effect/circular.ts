@@ -121,25 +121,25 @@ export const awaitAllChildren = Debug.methodWithTrace((trace) =>
 
 /** @internal */
 export const cached = Debug.dualWithTrace<
+  (
+    timeToLive: Duration.Duration
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, Effect.Effect<never, E, A>>,
   <R, E, A>(
     self: Effect.Effect<R, E, A>,
     timeToLive: Duration.Duration
-  ) => Effect.Effect<R, never, Effect.Effect<never, E, A>>,
-  (
-    timeToLive: Duration.Duration
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, Effect.Effect<never, E, A>>
+  ) => Effect.Effect<R, never, Effect.Effect<never, E, A>>
 >(2, (trace) => (self, timeToLive) => core.map(cachedInvalidate(self, timeToLive), (tuple) => tuple[0]).traced(trace))
 
 /** @internal */
 export const cachedInvalidate = Debug.dualWithTrace<
-  <R, E, A>(
-    self: Effect.Effect<R, E, A>,
-    timeToLive: Duration.Duration
-  ) => Effect.Effect<R, never, readonly [Effect.Effect<never, E, A>, Effect.Effect<never, never, void>]>,
   (
     timeToLive: Duration.Duration
   ) => <R, E, A>(
     self: Effect.Effect<R, E, A>
+  ) => Effect.Effect<R, never, readonly [Effect.Effect<never, E, A>, Effect.Effect<never, never, void>]>,
+  <R, E, A>(
+    self: Effect.Effect<R, E, A>,
+    timeToLive: Duration.Duration
   ) => Effect.Effect<R, never, readonly [Effect.Effect<never, E, A>, Effect.Effect<never, never, void>]>
 >(
   2,
@@ -226,10 +226,15 @@ export const disconnect = Debug.methodWithTrace((trace) =>
 
 /** @internal */
 export const ensuring = Debug.dualWithTrace<
-  <R, E, A, R1, X>(self: Effect.Effect<R, E, A>, finalizer: Effect.Effect<R1, never, X>) => Effect.Effect<R | R1, E, A>,
   <R1, X>(
     finalizer: Effect.Effect<R1, never, X>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E, A>
+  ) => <R, E, A>(
+    self: Effect.Effect<R, E, A>
+  ) => Effect.Effect<R | R1, E, A>,
+  <R, E, A, R1, X>(
+    self: Effect.Effect<R, E, A>,
+    finalizer: Effect.Effect<R1, never, X>
+  ) => Effect.Effect<R | R1, E, A>
 >(2, (trace) =>
   (self, finalizer) =>
     core.uninterruptibleMask((restore) =>
@@ -247,13 +252,15 @@ export const ensuring = Debug.dualWithTrace<
 
 /** @internal */
 export const ensuringChild = Debug.dualWithTrace<
+  <R2, X>(
+    f: (fiber: Fiber.Fiber<any, Chunk.Chunk<unknown>>) => Effect.Effect<R2, never, X>
+  ) => <R, E, A>(
+    self: Effect.Effect<R, E, A>
+  ) => Effect.Effect<R | R2, E, A>,
   <R, E, A, R2, X>(
     self: Effect.Effect<R, E, A>,
     f: (fiber: Fiber.Fiber<any, Chunk.Chunk<unknown>>) => Effect.Effect<R2, never, X>
-  ) => Effect.Effect<R | R2, E, A>,
-  <R2, X>(
-    f: (fiber: Fiber.Fiber<any, Chunk.Chunk<unknown>>) => Effect.Effect<R2, never, X>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E, A>
+  ) => Effect.Effect<R | R2, E, A>
 >(
   2,
   (trace, restore) =>
@@ -266,13 +273,13 @@ export const ensuringChild = Debug.dualWithTrace<
 
 /** @internal */
 export const ensuringChildren = Debug.dualWithTrace<
+  <R1, X>(
+    children: (fibers: Chunk.Chunk<Fiber.RuntimeFiber<any, any>>) => Effect.Effect<R1, never, X>
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E, A>,
   <R, E, A, R1, X>(
     self: Effect.Effect<R, E, A>,
     children: (fibers: Chunk.Chunk<Fiber.RuntimeFiber<any, any>>) => Effect.Effect<R1, never, X>
-  ) => Effect.Effect<R | R1, E, A>,
-  <R1, X>(
-    children: (fibers: Chunk.Chunk<Fiber.RuntimeFiber<any, any>>) => Effect.Effect<R1, never, X>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E, A>
+  ) => Effect.Effect<R | R1, E, A>
 >(2, (trace, restore) =>
   (self, children) =>
     core.flatMap(supervisor.track(), (supervisor) =>
@@ -292,8 +299,8 @@ export const forkAll = Debug.methodWithTrace((trace) =>
 
 /** @internal */
 export const forkIn = Debug.dualWithTrace<
-  <R, E, A>(self: Effect.Effect<R, E, A>, scope: Scope.Scope) => Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>>,
-  (scope: Scope.Scope) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>>
+  (scope: Scope.Scope) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>>,
+  <R, E, A>(self: Effect.Effect<R, E, A>, scope: Scope.Scope) => Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>>
 >(
   2,
   (trace) =>
@@ -375,13 +382,15 @@ export const memoizeFunction = Debug.methodWithTrace((trace) =>
 
 /** @internal */
 export const race = Debug.dualWithTrace<
+  <R2, E2, A2>(
+    that: Effect.Effect<R2, E2, A2>
+  ) => <R, E, A>(
+    self: Effect.Effect<R, E, A>
+  ) => Effect.Effect<R | R2, E | E2, A | A2>,
   <R, E, A, R2, E2, A2>(
     self: Effect.Effect<R, E, A>,
     that: Effect.Effect<R2, E2, A2>
-  ) => Effect.Effect<R | R2, E | E2, A | A2>,
-  <R2, E2, A2>(
-    that: Effect.Effect<R2, E2, A2>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A | A2>
+  ) => Effect.Effect<R | R2, E | E2, A | A2>
 >(2, (trace) =>
   (self, that) =>
     core.checkInterruptible((isInterruptible) =>
@@ -402,13 +411,15 @@ const raceDisconnect = <R, E, A>(
 
 /** @internal */
 export const raceAwait = Debug.dualWithTrace<
+  <R2, E2, A2>(
+    that: Effect.Effect<R2, E2, A2>
+  ) => <R, E, A>(
+    self: Effect.Effect<R, E, A>
+  ) => Effect.Effect<R | R2, E | E2, A | A2>,
   <R, E, A, R2, E2, A2>(
     self: Effect.Effect<R, E, A>,
     that: Effect.Effect<R2, E2, A2>
-  ) => Effect.Effect<R | R2, E | E2, A | A2>,
-  <R2, E2, A2>(
-    that: Effect.Effect<R2, E2, A2>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A | A2>
+  ) => Effect.Effect<R | R2, E | E2, A | A2>
 >(2, (trace) =>
   (self, that) =>
     core.fiberIdWith((parentFiberId) =>
@@ -456,24 +467,28 @@ export const raceAwait = Debug.dualWithTrace<
 
 /** @internal */
 export const raceEither = Debug.dualWithTrace<
+  <R2, E2, A2>(
+    that: Effect.Effect<R2, E2, A2>
+  ) => <R, E, A>(
+    self: Effect.Effect<R, E, A>
+  ) => Effect.Effect<R | R2, E | E2, Either.Either<A, A2>>,
   <R, E, A, R2, E2, A2>(
     self: Effect.Effect<R, E, A>,
     that: Effect.Effect<R2, E2, A2>
-  ) => Effect.Effect<R | R2, E | E2, Either.Either<A, A2>>,
-  <R2, E2, A2>(
-    that: Effect.Effect<R2, E2, A2>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, Either.Either<A, A2>>
+  ) => Effect.Effect<R | R2, E | E2, Either.Either<A, A2>>
 >(2, (trace) => (self, that) => race(core.map(self, Either.left), core.map(that, Either.right)).traced(trace))
 
 /** @internal */
 export const raceFirst = Debug.dualWithTrace<
+  <R2, E2, A2>(
+    that: Effect.Effect<R2, E2, A2>
+  ) => <R, E, A>(
+    self: Effect.Effect<R, E, A>
+  ) => Effect.Effect<R | R2, E2 | E, A2 | A>,
   <R, E, A, R2, E2, A2>(
     self: Effect.Effect<R, E, A>,
     that: Effect.Effect<R2, E2, A2>
-  ) => Effect.Effect<R | R2, E2 | E, A2 | A>,
-  <R2, E2, A2>(
-    that: Effect.Effect<R2, E2, A2>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E2 | E, A2 | A>
+  ) => Effect.Effect<R | R2, E2 | E, A2 | A>
 >(2, (trace) =>
   <R, E, A, R2, E2, A2>(
     self: Effect.Effect<R, E, A>,
@@ -487,21 +502,21 @@ export const raceFirst = Debug.dualWithTrace<
 
 /** @internal */
 export const raceFibersWith = Debug.dualWithTrace<
+  <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
+    that: Effect.Effect<R1, E1, A1>,
+    selfWins: (winner: Fiber.RuntimeFiber<E, A>, loser: Fiber.RuntimeFiber<E1, A1>) => Effect.Effect<R2, E2, A2>,
+    thatWins: (winner: Fiber.RuntimeFiber<E1, A1>, loser: Fiber.RuntimeFiber<E, A>) => Effect.Effect<R3, E3, A3>
+  ) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<
+    R | R1 | R2 | R3,
+    E2 | E3,
+    A2 | A3
+  >,
   <R, E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
     self: Effect.Effect<R, E, A>,
     that: Effect.Effect<R1, E1, A1>,
     selfWins: (winner: Fiber.RuntimeFiber<E, A>, loser: Fiber.RuntimeFiber<E1, A1>) => Effect.Effect<R2, E2, A2>,
     thatWins: (winner: Fiber.RuntimeFiber<E1, A1>, loser: Fiber.RuntimeFiber<E, A>) => Effect.Effect<R3, E3, A3>
   ) => Effect.Effect<
-    R | R1 | R2 | R3,
-    E2 | E3,
-    A2 | A3
-  >,
-  <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
-    that: Effect.Effect<R1, E1, A1>,
-    selfWins: (winner: Fiber.RuntimeFiber<E, A>, loser: Fiber.RuntimeFiber<E1, A1>) => Effect.Effect<R2, E2, A2>,
-    thatWins: (winner: Fiber.RuntimeFiber<E1, A1>, loser: Fiber.RuntimeFiber<E, A>) => Effect.Effect<R3, E3, A3>
-  ) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<
     R | R1 | R2 | R3,
     E2 | E3,
     A2 | A3
@@ -553,17 +568,17 @@ const completeRace = <R, R1, R2, E2, A2, R3, E3, A3>(
 
 /** @internal */
 export const raceWith = Debug.dualWithTrace<
+  <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
+    that: Effect.Effect<R1, E1, A1>,
+    leftDone: (exit: Exit.Exit<E, A>, fiber: Fiber.Fiber<E1, A1>) => Effect.Effect<R2, E2, A2>,
+    rightDone: (exit: Exit.Exit<E1, A1>, fiber: Fiber.Fiber<E, A>) => Effect.Effect<R3, E3, A3>
+  ) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1 | R2 | R3, E2 | E3, A2 | A3>,
   <R, E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
     self: Effect.Effect<R, E, A>,
     that: Effect.Effect<R1, E1, A1>,
     leftDone: (exit: Exit.Exit<E, A>, fiber: Fiber.Fiber<E1, A1>) => Effect.Effect<R2, E2, A2>,
     rightDone: (exit: Exit.Exit<E1, A1>, fiber: Fiber.Fiber<E, A>) => Effect.Effect<R3, E3, A3>
-  ) => Effect.Effect<R | R1 | R2 | R3, E2 | E3, A2 | A3>,
-  <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
-    that: Effect.Effect<R1, E1, A1>,
-    leftDone: (exit: Exit.Exit<E, A>, fiber: Fiber.Fiber<E1, A1>) => Effect.Effect<R2, E2, A2>,
-    rightDone: (exit: Exit.Exit<E1, A1>, fiber: Fiber.Fiber<E, A>) => Effect.Effect<R3, E3, A3>
-  ) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1 | R2 | R3, E2 | E3, A2 | A3>
+  ) => Effect.Effect<R | R1 | R2 | R3, E2 | E3, A2 | A3>
 >(4, (trace, restore) =>
   <R, E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
     self: Effect.Effect<R, E, A>,
@@ -606,19 +621,21 @@ export const raceWith = Debug.dualWithTrace<
 
 /** @internal */
 export const scheduleForked = Debug.dualWithTrace<
+  <R2, Out>(
+    schedule: Schedule.Schedule<R2, unknown, Out>
+  ) => <R, E, A>(
+    self: Effect.Effect<R, E, A>
+  ) => Effect.Effect<R | R2 | Scope.Scope, never, Fiber.RuntimeFiber<E, Out>>,
   <R, E, A, R2, Out>(
     self: Effect.Effect<R, E, A>,
     schedule: Schedule.Schedule<R2, unknown, Out>
-  ) => Effect.Effect<R | R2 | Scope.Scope, never, Fiber.RuntimeFiber<E, Out>>,
-  <R2, Out>(
-    schedule: Schedule.Schedule<R2, unknown, Out>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2 | Scope.Scope, never, Fiber.RuntimeFiber<E, Out>>
+  ) => Effect.Effect<R | R2 | Scope.Scope, never, Fiber.RuntimeFiber<E, Out>>
 >(2, (trace) => (self, schedule) => pipe(self, _schedule.schedule_Effect(schedule), forkScoped).traced(trace))
 
 /** @internal */
 export const supervised = Debug.dualWithTrace<
-  <R, E, A, X>(self: Effect.Effect<R, E, A>, supervisor: Supervisor.Supervisor<X>) => Effect.Effect<R, E, A>,
-  <X>(supervisor: Supervisor.Supervisor<X>) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  <X>(supervisor: Supervisor.Supervisor<X>) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A, X>(self: Effect.Effect<R, E, A>, supervisor: Supervisor.Supervisor<X>) => Effect.Effect<R, E, A>
 >(2, (trace) =>
   (self, supervisor) => {
     const supervise = core.fiberRefLocallyWith(fiberRuntime.currentSupervisor, (s) => s.zip(supervisor))
@@ -627,21 +644,21 @@ export const supervised = Debug.dualWithTrace<
 
 /** @internal */
 export const timeout = Debug.dualWithTrace<
-  <R, E, A>(self: Effect.Effect<R, E, A>, duration: Duration.Duration) => Effect.Effect<R, E, Option.Option<A>>,
-  (duration: Duration.Duration) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, Option.Option<A>>
+  (duration: Duration.Duration) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, Option.Option<A>>,
+  <R, E, A>(self: Effect.Effect<R, E, A>, duration: Duration.Duration) => Effect.Effect<R, E, Option.Option<A>>
 >(2, (trace) => (self, duration) => timeoutTo(self, Option.none(), Option.some, duration).traced(trace))
 
 /** @internal */
 export const timeoutFail = Debug.dualWithTrace<
+  <E1>(
+    evaluate: LazyArg<E1>,
+    duration: Duration.Duration
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E | E1, A>,
   <R, E, A, E1>(
     self: Effect.Effect<R, E, A>,
     evaluate: LazyArg<E1>,
     duration: Duration.Duration
-  ) => Effect.Effect<R, E | E1, A>,
-  <E1>(
-    evaluate: LazyArg<E1>,
-    duration: Duration.Duration
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E | E1, A>
+  ) => Effect.Effect<R, E | E1, A>
 >(
   3,
   (trace, restore) =>
@@ -651,15 +668,15 @@ export const timeoutFail = Debug.dualWithTrace<
 
 /** @internal */
 export const timeoutFailCause = Debug.dualWithTrace<
+  <E1>(
+    evaluate: LazyArg<Cause.Cause<E1>>,
+    duration: Duration.Duration
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E | E1, A>,
   <R, E, A, E1>(
     self: Effect.Effect<R, E, A>,
     evaluate: LazyArg<Cause.Cause<E1>>,
     duration: Duration.Duration
-  ) => Effect.Effect<R, E | E1, A>,
-  <E1>(
-    evaluate: LazyArg<Cause.Cause<E1>>,
-    duration: Duration.Duration
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E | E1, A>
+  ) => Effect.Effect<R, E | E1, A>
 >(
   3,
   (trace, restore) =>
@@ -669,17 +686,17 @@ export const timeoutFailCause = Debug.dualWithTrace<
 
 /** @internal */
 export const timeoutTo = Debug.dualWithTrace<
+  <A, B, B1>(
+    def: B1,
+    f: (a: A) => B,
+    duration: Duration.Duration
+  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, B | B1>,
   <R, E, A, B, B1>(
     self: Effect.Effect<R, E, A>,
     def: B1,
     f: (a: A) => B,
     duration: Duration.Duration
-  ) => Effect.Effect<R, E, B | B1>,
-  <A, B, B1>(
-    def: B1,
-    f: (a: A) => B,
-    duration: Duration.Duration
-  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, B | B1>
+  ) => Effect.Effect<R, E, B | B1>
 >(4, (trace, restore) =>
   (self, def, f, duration) =>
     raceFirst(
@@ -693,26 +710,26 @@ export const timeoutTo = Debug.dualWithTrace<
 
 /** @internal */
 export const validatePar = Debug.dualWithTrace<
+  <R1, E1, B>(
+    that: Effect.Effect<R1, E1, B>
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E | E1, readonly [A, B]>,
   <R, E, A, R1, E1, B>(
     self: Effect.Effect<R, E, A>,
     that: Effect.Effect<R1, E1, B>
-  ) => Effect.Effect<R | R1, E | E1, readonly [A, B]>,
-  <R1, E1, B>(
-    that: Effect.Effect<R1, E1, B>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E | E1, readonly [A, B]>
+  ) => Effect.Effect<R | R1, E | E1, readonly [A, B]>
 >(2, (trace) => (self, that) => validateWithPar(self, that, (a, b) => [a, b] as const).traced(trace))
 
 /** @internal */
 export const validateWithPar = Debug.dualWithTrace<
+  <A, R1, E1, B, C>(
+    that: Effect.Effect<R1, E1, B>,
+    f: (a: A, b: B) => C
+  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E | E1, C>,
   <R, E, A, R1, E1, B, C>(
     self: Effect.Effect<R, E, A>,
     that: Effect.Effect<R1, E1, B>,
     f: (a: A, b: B) => C
-  ) => Effect.Effect<R | R1, E | E1, C>,
-  <A, R1, E1, B, C>(
-    that: Effect.Effect<R1, E1, B>,
-    f: (a: A, b: B) => C
-  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E | E1, C>
+  ) => Effect.Effect<R | R1, E | E1, C>
 >(3, (trace, restore) =>
   (self, that, f) =>
     core.flatten(zipWithPar(
@@ -723,48 +740,54 @@ export const validateWithPar = Debug.dualWithTrace<
 
 /** @internal */
 export const zipPar = Debug.dualWithTrace<
+  <R2, E2, A2>(
+    that: Effect.Effect<R2, E2, A2>
+  ) => <R, E, A>(
+    self: Effect.Effect<R, E, A>
+  ) => Effect.Effect<R | R2, E | E2, readonly [A, A2]>,
   <R, E, A, R2, E2, A2>(
     self: Effect.Effect<R, E, A>,
     that: Effect.Effect<R2, E2, A2>
-  ) => Effect.Effect<R | R2, E | E2, readonly [A, A2]>,
-  <R2, E2, A2>(
-    that: Effect.Effect<R2, E2, A2>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, readonly [A, A2]>
+  ) => Effect.Effect<R | R2, E | E2, readonly [A, A2]>
 >(2, (trace) => (self, that) => zipWithPar(self, that, (a, b) => [a, b] as const).traced(trace))
 
 /** @internal */
 export const zipParLeft = Debug.dualWithTrace<
+  <R2, E2, A2>(
+    that: Effect.Effect<R2, E2, A2>
+  ) => <R, E, A>(
+    self: Effect.Effect<R, E, A>
+  ) => Effect.Effect<R | R2, E | E2, A>,
   <R, E, A, R2, E2, A2>(
     self: Effect.Effect<R, E, A>,
     that: Effect.Effect<R2, E2, A2>
-  ) => Effect.Effect<R | R2, E | E2, A>,
-  <R2, E2, A2>(
-    that: Effect.Effect<R2, E2, A2>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A>
+  ) => Effect.Effect<R | R2, E | E2, A>
 >(2, (trace) => (self, that) => zipWithPar(self, that, (a, _) => a).traced(trace))
 
 /** @internal */
 export const zipParRight = Debug.dualWithTrace<
+  <R2, E2, A2>(
+    that: Effect.Effect<R2, E2, A2>
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A2>,
   <R, E, A, R2, E2, A2>(
     self: Effect.Effect<R, E, A>,
     that: Effect.Effect<R2, E2, A2>
-  ) => Effect.Effect<R | R2, E | E2, A2>,
-  <R2, E2, A2>(
-    that: Effect.Effect<R2, E2, A2>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A2>
+  ) => Effect.Effect<R | R2, E | E2, A2>
 >(2, (trace) => (self, that) => zipWithPar(self, that, (_, b) => b).traced(trace))
 
 /** @internal */
 export const zipWithPar = Debug.dualWithTrace<
+  <R2, E2, A2, A, B>(
+    that: Effect.Effect<R2, E2, A2>,
+    f: (a: A, b: A2) => B
+  ) => <R, E>(
+    self: Effect.Effect<R, E, A>
+  ) => Effect.Effect<R | R2, E | E2, B>,
   <R, E, A, R2, E2, A2, B>(
     self: Effect.Effect<R, E, A>,
     that: Effect.Effect<R2, E2, A2>,
     f: (a: A, b: A2) => B
-  ) => Effect.Effect<R | R2, E | E2, B>,
-  <R2, E2, A2, A, B>(
-    that: Effect.Effect<R2, E2, A2>,
-    f: (a: A, b: A2) => B
-  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, B>
+  ) => Effect.Effect<R | R2, E | E2, B>
 >(3, (trace, restoreTrace) =>
   (self, that, f) =>
     core.uninterruptibleMask((restore) =>
@@ -893,12 +916,12 @@ export const unsafeMakeSynchronized = <A>(value: A): Synchronized.Synchronized<A
 /** @internal */
 export const updateSomeAndGetEffectSynchronized = Debug.dualWithTrace<
   <A, R, E>(
+    pf: (a: A) => Option.Option<Effect.Effect<R, E, A>>
+  ) => (self: Synchronized.Synchronized<A>) => Effect.Effect<R, E, A>,
+  <A, R, E>(
     self: Synchronized.Synchronized<A>,
     pf: (a: A) => Option.Option<Effect.Effect<R, E, A>>
-  ) => Effect.Effect<R, E, A>,
-  <A, R, E>(
-    pf: (a: A) => Option.Option<Effect.Effect<R, E, A>>
-  ) => (self: Synchronized.Synchronized<A>) => Effect.Effect<R, E, A>
+  ) => Effect.Effect<R, E, A>
 >(2, (trace, restore) =>
   (self, pf) =>
     self.modifyEffect((value) => {
@@ -917,33 +940,33 @@ export const updateSomeAndGetEffectSynchronized = Debug.dualWithTrace<
 
 /** @internal */
 export const zipFiber = Debug.untracedDual<
-  <E, A, E2, A2>(self: Fiber.Fiber<E, A>, that: Fiber.Fiber<E2, A2>) => Fiber.Fiber<E | E2, readonly [A, A2]>,
-  <E2, A2>(that: Fiber.Fiber<E2, A2>) => <E, A>(self: Fiber.Fiber<E, A>) => Fiber.Fiber<E | E2, readonly [A, A2]>
+  <E2, A2>(that: Fiber.Fiber<E2, A2>) => <E, A>(self: Fiber.Fiber<E, A>) => Fiber.Fiber<E | E2, readonly [A, A2]>,
+  <E, A, E2, A2>(self: Fiber.Fiber<E, A>, that: Fiber.Fiber<E2, A2>) => Fiber.Fiber<E | E2, readonly [A, A2]>
 >(2, () => (self, that) => zipWithFiber(self, that, (a, b) => [a, b] as const))
 
 /** @internal */
 export const zipLeftFiber = Debug.untracedDual<
-  <E, A, E2, A2>(self: Fiber.Fiber<E, A>, that: Fiber.Fiber<E2, A2>) => Fiber.Fiber<E | E2, A>,
-  <E2, A2>(that: Fiber.Fiber<E2, A2>) => <E, A>(self: Fiber.Fiber<E, A>) => Fiber.Fiber<E | E2, A>
+  <E2, A2>(that: Fiber.Fiber<E2, A2>) => <E, A>(self: Fiber.Fiber<E, A>) => Fiber.Fiber<E | E2, A>,
+  <E, A, E2, A2>(self: Fiber.Fiber<E, A>, that: Fiber.Fiber<E2, A2>) => Fiber.Fiber<E | E2, A>
 >(2, () => (self, that) => zipWithFiber(self, that, (a, _) => a))
 
 /** @internal */
 export const zipRightFiber = Debug.untracedDual<
-  <E, A, E2, A2>(self: Fiber.Fiber<E, A>, that: Fiber.Fiber<E2, A2>) => Fiber.Fiber<E | E2, A2>,
-  <E2, A2>(that: Fiber.Fiber<E2, A2>) => <E, A>(self: Fiber.Fiber<E, A>) => Fiber.Fiber<E | E2, A2>
+  <E2, A2>(that: Fiber.Fiber<E2, A2>) => <E, A>(self: Fiber.Fiber<E, A>) => Fiber.Fiber<E | E2, A2>,
+  <E, A, E2, A2>(self: Fiber.Fiber<E, A>, that: Fiber.Fiber<E2, A2>) => Fiber.Fiber<E | E2, A2>
 >(2, () => (self, that) => zipWithFiber(self, that, (_, b) => b))
 
 /** @internal */
 export const zipWithFiber = Debug.untracedDual<
+  <E2, A, B, C>(
+    that: Fiber.Fiber<E2, B>,
+    f: (a: A, b: B) => C
+  ) => <E>(self: Fiber.Fiber<E, A>) => Fiber.Fiber<E | E2, C>,
   <E, A, E2, B, C>(
     self: Fiber.Fiber<E, A>,
     that: Fiber.Fiber<E2, B>,
     f: (a: A, b: B) => C
-  ) => Fiber.Fiber<E | E2, C>,
-  <E2, A, B, C>(
-    that: Fiber.Fiber<E2, B>,
-    f: (a: A, b: B) => C
-  ) => <E>(self: Fiber.Fiber<E, A>) => Fiber.Fiber<E | E2, C>
+  ) => Fiber.Fiber<E | E2, C>
 >(3, (restore) =>
   (self, that, f) => ({
     [internalFiber.FiberTypeId]: internalFiber.fiberVariance,

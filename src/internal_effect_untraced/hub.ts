@@ -140,14 +140,14 @@ export const awaitShutdown = Debug.methodWithTrace((trace) =>
 
 /** @internal */
 export const publish = Debug.dualWithTrace<
-  <A>(self: Hub.Hub<A>, value: A) => Effect.Effect<never, never, boolean>,
-  <A>(value: A) => (self: Hub.Hub<A>) => Effect.Effect<never, never, boolean>
+  <A>(value: A) => (self: Hub.Hub<A>) => Effect.Effect<never, never, boolean>,
+  <A>(self: Hub.Hub<A>, value: A) => Effect.Effect<never, never, boolean>
 >(2, (trace) => (self, value) => self.publish(value).traced(trace))
 
 /** @internal */
 export const publishAll = Debug.dualWithTrace<
-  <A>(self: Hub.Hub<A>, elements: Iterable<A>) => Effect.Effect<never, never, boolean>,
-  <A>(elements: Iterable<A>) => (self: Hub.Hub<A>) => Effect.Effect<never, never, boolean>
+  <A>(elements: Iterable<A>) => (self: Hub.Hub<A>) => Effect.Effect<never, never, boolean>,
+  <A>(self: Hub.Hub<A>, elements: Iterable<A>) => Effect.Effect<never, never, boolean>
 >(2, (trace) => (self, elements) => self.publishAll(elements).traced(trace))
 
 /** @internal */

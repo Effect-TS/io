@@ -76,8 +76,8 @@ export const annotationsWith = Debug.methodWithTrace((trace) =>
  * @internal
  */
 export const withAnnotations = Debug.dualWithTrace<
-  <R, E, A>(effect: Effect.Effect<R, E, A>, annotations: Annotations.Annotations) => Effect.Effect<R, E, A>,
-  (annotations: Annotations.Annotations) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  (annotations: Annotations.Annotations) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(effect: Effect.Effect<R, E, A>, annotations: Annotations.Annotations) => Effect.Effect<R, E, A>
 >(2, (trace) =>
   (effect, annotations) =>
     core.fiberRefLocallyWith(
@@ -181,8 +181,8 @@ export const liveWith = Debug.methodWithTrace((trace, restore) =>
  * @internal
  */
 export const withLive = Debug.dualWithTrace<
-  <R, E, A>(effect: Effect.Effect<R, E, A>, live: Live.Live) => Effect.Effect<R, E, A>,
-  (live: Live.Live) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  (live: Live.Live) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(effect: Effect.Effect<R, E, A>, live: Live.Live) => Effect.Effect<R, E, A>
 >(2, (trace) =>
   (effect, live) =>
     core.fiberRefLocallyWith(
@@ -236,12 +236,12 @@ export const provideLive = Debug.methodWithTrace((trace) =>
  */
 export const provideWithLive = Debug.dualWithTrace<
   <R, E, A, R2, E2, A2>(
+    f: (effect: Effect.Effect<R, E, A>) => Effect.Effect<R2, E2, A2>
+  ) => (self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A2>,
+  <R, E, A, R2, E2, A2>(
     self: Effect.Effect<R, E, A>,
     f: (effect: Effect.Effect<R, E, A>) => Effect.Effect<R2, E2, A2>
-  ) => Effect.Effect<R | R2, E | E2, A2>,
-  <R, E, A, R2, E2, A2>(
-    f: (effect: Effect.Effect<R, E, A>) => Effect.Effect<R2, E2, A2>
-  ) => (self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A2>
+  ) => Effect.Effect<R | R2, E | E2, A2>
 >(2, (trace, restore) =>
   (self, f) =>
     core.fiberRefGetWith(
@@ -279,8 +279,8 @@ export const sizedWith = Debug.methodWithTrace((trace, restore) =>
  * @internal
  */
 export const withSized = Debug.dualWithTrace<
-  <R, E, A>(effect: Effect.Effect<R, E, A>, sized: Sized.Sized) => Effect.Effect<R, E, A>,
-  (sized: Sized.Sized) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  (sized: Sized.Sized) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(effect: Effect.Effect<R, E, A>, sized: Sized.Sized) => Effect.Effect<R, E, A>
 >(2, (trace) =>
   (effect, sized) =>
     core.fiberRefLocallyWith(
@@ -319,8 +319,8 @@ export const size = Debug.methodWithTrace((trace) =>
 
 /** @internal */
 export const withSize = Debug.dualWithTrace<
-  <R, E, A>(effect: Effect.Effect<R, E, A>, size: number) => Effect.Effect<R, E, A>,
-  (size: number) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  (size: number) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(effect: Effect.Effect<R, E, A>, size: number) => Effect.Effect<R, E, A>
 >(2, (trace) => (effect, size) => sizedWith((sized) => sized.withSize(size)(effect)).traced(trace))
 
 /**
@@ -353,8 +353,8 @@ export const testConfigWith = Debug.methodWithTrace((trace, restore) =>
  * @internal
  */
 export const withTestConfig = Debug.dualWithTrace<
-  <R, E, A>(effect: Effect.Effect<R, E, A>, config: TestConfig.TestConfig) => Effect.Effect<R, E, A>,
-  (config: TestConfig.TestConfig) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  (config: TestConfig.TestConfig) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(effect: Effect.Effect<R, E, A>, config: TestConfig.TestConfig) => Effect.Effect<R, E, A>
 >(2, (trace) =>
   (effect, config) =>
     core.fiberRefLocallyWith(

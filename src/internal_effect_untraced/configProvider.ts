@@ -409,15 +409,8 @@ const fromFlatLoopFail = (prefix: Chunk.Chunk<string>, path: string) =>
 
 /** @internal */
 export const contramapPath = Debug.untracedDual<
-  (
-    self: ConfigProvider.ConfigProvider,
-    f: (path: string) => string
-  ) => ConfigProvider.ConfigProvider,
-  (
-    f: (path: string) => string
-  ) => (
-    self: ConfigProvider.ConfigProvider
-  ) => ConfigProvider.ConfigProvider
+  (f: (path: string) => string) => (self: ConfigProvider.ConfigProvider) => ConfigProvider.ConfigProvider,
+  (self: ConfigProvider.ConfigProvider, f: (path: string) => string) => ConfigProvider.ConfigProvider
 >(2, (restore) => (self, f) => fromFlat(contramapPathFlat(self.flattened, restore(f))))
 
 const contramapPathFlat = (
@@ -432,8 +425,8 @@ const contramapPathFlat = (
 
 /** @internal */
 export const nested = Debug.untracedDual<
-  (self: ConfigProvider.ConfigProvider, name: string) => ConfigProvider.ConfigProvider,
-  (name: string) => (self: ConfigProvider.ConfigProvider) => ConfigProvider.ConfigProvider
+  (name: string) => (self: ConfigProvider.ConfigProvider) => ConfigProvider.ConfigProvider,
+  (self: ConfigProvider.ConfigProvider, name: string) => ConfigProvider.ConfigProvider
 >(2, () =>
   (self, name) =>
     fromFlat(makeFlat(
@@ -444,8 +437,8 @@ export const nested = Debug.untracedDual<
 
 /** @internal */
 export const unnested = Debug.untracedDual<
-  (self: ConfigProvider.ConfigProvider, name: string) => ConfigProvider.ConfigProvider,
-  (name: string) => (self: ConfigProvider.ConfigProvider) => ConfigProvider.ConfigProvider
+  (name: string) => (self: ConfigProvider.ConfigProvider) => ConfigProvider.ConfigProvider,
+  (self: ConfigProvider.ConfigProvider, name: string) => ConfigProvider.ConfigProvider
 >(2, () =>
   (self, name) =>
     fromFlat(makeFlat(
@@ -457,13 +450,13 @@ export const unnested = Debug.untracedDual<
 /** @internal */
 export const orElse = Debug.untracedDual<
   (
-    self: ConfigProvider.ConfigProvider,
-    that: LazyArg<ConfigProvider.ConfigProvider>
-  ) => ConfigProvider.ConfigProvider,
-  (
     that: LazyArg<ConfigProvider.ConfigProvider>
   ) => (
     self: ConfigProvider.ConfigProvider
+  ) => ConfigProvider.ConfigProvider,
+  (
+    self: ConfigProvider.ConfigProvider,
+    that: LazyArg<ConfigProvider.ConfigProvider>
   ) => ConfigProvider.ConfigProvider
 >(2, (restore) => (self, that) => fromFlat(orElseFlat(self.flattened, () => restore(that)().flattened)))
 
@@ -550,14 +543,14 @@ export const upperCase = (self: ConfigProvider.ConfigProvider): ConfigProvider.C
 /** @internal */
 export const within = Debug.untracedDual<
   (
+    path: Chunk.Chunk<string>,
+    f: (self: ConfigProvider.ConfigProvider) => ConfigProvider.ConfigProvider
+  ) => (self: ConfigProvider.ConfigProvider) => ConfigProvider.ConfigProvider,
+  (
     self: ConfigProvider.ConfigProvider,
     path: Chunk.Chunk<string>,
     f: (self: ConfigProvider.ConfigProvider) => ConfigProvider.ConfigProvider
-  ) => ConfigProvider.ConfigProvider,
-  (
-    path: Chunk.Chunk<string>,
-    f: (self: ConfigProvider.ConfigProvider) => ConfigProvider.ConfigProvider
-  ) => (self: ConfigProvider.ConfigProvider) => ConfigProvider.ConfigProvider
+  ) => ConfigProvider.ConfigProvider
 >(3, () =>
   (self, path, f) => {
     const unnest = Chunk.reduce(path, self, (provider, name) => unnested(provider, name))

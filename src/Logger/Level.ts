@@ -1,6 +1,7 @@
 /**
  * @since 1.0.0
  */
+import * as debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import { pipe } from "@fp-ts/core/Function"
@@ -157,16 +158,19 @@ export const None: LogLevel = core.logLevelNone
  * @since 1.0.0
  * @category mutations
  */
-export const locally: (
-  value: LogLevel
-) => <R, E, B>(use: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B> = (level) =>
-  core.fiberRefLocally(core.currentLogLevel, level)
+export const locally: {
+  (self: LogLevel): <R, E, B>(use: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>
+  <R, E, B>(use: Effect.Effect<R, E, B>, self: LogLevel): Effect.Effect<R, E, B>
+} = debug.dualWithTrace<
+  (self: LogLevel) => <R, E, B>(use: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>,
+  <R, E, B>(use: Effect.Effect<R, E, B>, self: LogLevel) => Effect.Effect<R, E, B>
+>(2, (trace) => (use, self) => core.fiberRefLocally(use, core.currentLogLevel, self).traced(trace))
 
 /**
  * @since 1.0.0
  * @category instances
  */
-export const Order = pipe(
+export const Order: order.Order<LogLevel> = pipe(
   number.Order,
   order.contramap((level: LogLevel) => level.ordinal)
 )
@@ -175,25 +179,37 @@ export const Order = pipe(
  * @since 1.0.0
  * @category ordering
  */
-export const lessThan = order.lessThan(Order)
+export const lessThan: {
+  (that: LogLevel): (self: LogLevel) => boolean
+  (self: LogLevel, that: LogLevel): boolean
+} = order.lessThan(Order)
 
 /**
  * @since 1.0.0
  * @category ordering
  */
-export const lessThanEqual = order.lessThanOrEqualTo(Order)
+export const lessThanEqual: {
+  (that: LogLevel): (self: LogLevel) => boolean
+  (self: LogLevel, that: LogLevel): boolean
+} = order.lessThanOrEqualTo(Order)
 
 /**
  * @since 1.0.0
  * @category ordering
  */
-export const greaterThan = order.greaterThan(Order)
+export const greaterThan: {
+  (that: LogLevel): (self: LogLevel) => boolean
+  (self: LogLevel, that: LogLevel): boolean
+} = order.greaterThan(Order)
 
 /**
  * @since 1.0.0
  * @category ordering
  */
-export const greaterThanEqual = order.greaterThanOrEqualTo(Order)
+export const greaterThanEqual: {
+  (that: LogLevel): (self: LogLevel) => boolean
+  (self: LogLevel, that: LogLevel): boolean
+} = order.greaterThanOrEqualTo(Order)
 
 /**
  * @since 1.0.0

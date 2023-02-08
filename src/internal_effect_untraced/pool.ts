@@ -457,6 +457,7 @@ export const get = Debug.methodWithTrace((trace) =>
 )
 
 /** @internal */
-export const invalidate = Debug.methodWithTrace((trace) =>
-  <E, A>(self: Pool.Pool<E, A>, a: A): Effect.Effect<Scope.Scope, never, void> => self.invalidate(a).traced(trace)
-)
+export const invalidate = Debug.dualWithTrace<
+  <A>(value: A) => <E>(self: Pool.Pool<E, A>) => Effect.Effect<Scope.Scope, never, void>,
+  <E, A>(self: Pool.Pool<E, A>, value: A) => Effect.Effect<Scope.Scope, never, void>
+>(2, (trace) => (self, value) => self.invalidate(value).traced(trace))

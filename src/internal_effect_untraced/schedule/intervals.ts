@@ -1,8 +1,7 @@
 import * as Chunk from "@effect/data/Chunk"
-import * as Debug from "@effect/io/Debug"
 import * as Interval from "@effect/io/Schedule/Interval"
 import type * as Intervals from "@effect/io/Schedule/Intervals"
-import { pipe } from "@fp-ts/core/Function"
+import { dual, pipe } from "@fp-ts/core/Function"
 import * as Option from "@fp-ts/core/Option"
 
 /** @internal */
@@ -31,9 +30,9 @@ export const fromIterable = (intervals: Iterable<Interval.Interval>): Intervals.
   )
 
 /** @internal */
-export const union = Debug.dual<
-  (self: Intervals.Intervals, that: Intervals.Intervals) => Intervals.Intervals,
-  (that: Intervals.Intervals) => (self: Intervals.Intervals) => Intervals.Intervals
+export const union = dual<
+  (that: Intervals.Intervals) => (self: Intervals.Intervals) => Intervals.Intervals,
+  (self: Intervals.Intervals, that: Intervals.Intervals) => Intervals.Intervals
 >(2, (self, that) => {
   if (!Chunk.isNonEmpty(that.intervals)) {
     return self
@@ -117,9 +116,9 @@ const unionLoop = (
 }
 
 /** @internal */
-export const intersect = Debug.dual<
-  (self: Intervals.Intervals, that: Intervals.Intervals) => Intervals.Intervals,
-  (that: Intervals.Intervals) => (self: Intervals.Intervals) => Intervals.Intervals
+export const intersect = dual<
+  (that: Intervals.Intervals) => (self: Intervals.Intervals) => Intervals.Intervals,
+  (self: Intervals.Intervals, that: Intervals.Intervals) => Intervals.Intervals
 >(2, (self, that) => intersectLoop(self.intervals, that.intervals, Chunk.empty()))
 
 /** @internal */
@@ -163,9 +162,9 @@ export const end = (self: Intervals.Intervals): number => {
 }
 
 /** @internal */
-export const lessThan = Debug.dual<
-  (self: Intervals.Intervals, that: Intervals.Intervals) => boolean,
-  (that: Intervals.Intervals) => (self: Intervals.Intervals) => boolean
+export const lessThan = dual<
+  (that: Intervals.Intervals) => (self: Intervals.Intervals) => boolean,
+  (self: Intervals.Intervals, that: Intervals.Intervals) => boolean
 >(2, (self, that) => start(self) < start(that))
 
 /** @internal */
@@ -174,7 +173,7 @@ export const isNonEmpty = (self: Intervals.Intervals): boolean => {
 }
 
 /** @internal */
-export const max = Debug.dual<
-  (self: Intervals.Intervals, that: Intervals.Intervals) => Intervals.Intervals,
-  (that: Intervals.Intervals) => (self: Intervals.Intervals) => Intervals.Intervals
+export const max = dual<
+  (that: Intervals.Intervals) => (self: Intervals.Intervals) => Intervals.Intervals,
+  (self: Intervals.Intervals, that: Intervals.Intervals) => Intervals.Intervals
 >(2, (self, that) => lessThan(self, that) ? that : self)

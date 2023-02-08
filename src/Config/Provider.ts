@@ -189,8 +189,8 @@ export const constantCase: (self: ConfigProvider) => ConfigProvider = internal.c
  * @category mutations
  */
 export const contramapPath: {
-  (self: ConfigProvider, f: (path: string) => string): ConfigProvider
   (f: (path: string) => string): (self: ConfigProvider) => ConfigProvider
+  (self: ConfigProvider, f: (path: string) => string): ConfigProvider
 } = internal.contramapPath
 
 /**
@@ -225,8 +225,8 @@ export const lowerCase: (self: ConfigProvider) => ConfigProvider = internal.lowe
  * @category mutations
  */
 export const nested: {
-  (self: ConfigProvider, name: string): ConfigProvider
   (name: string): (self: ConfigProvider) => ConfigProvider
+  (self: ConfigProvider, name: string): ConfigProvider
 } = internal.nested
 
 /**
@@ -238,8 +238,8 @@ export const nested: {
  * @category mutations
  */
 export const orElse: {
-  (self: ConfigProvider, that: LazyArg<ConfigProvider>): ConfigProvider
   (that: LazyArg<ConfigProvider>): (self: ConfigProvider) => ConfigProvider
+  (self: ConfigProvider, that: LazyArg<ConfigProvider>): ConfigProvider
 } = internal.orElse
 
 /**
@@ -252,8 +252,8 @@ export const orElse: {
  * @category mutations
  */
 export const unnested: {
-  (self: ConfigProvider, name: string): ConfigProvider
   (name: string): (self: ConfigProvider) => ConfigProvider
+  (self: ConfigProvider, name: string): ConfigProvider
 } = internal.unnested
 
 /**
@@ -286,6 +286,6 @@ export const upperCase: (self: ConfigProvider) => ConfigProvider = internal.uppe
  * @category combinators
  */
 export const within: {
-  (self: ConfigProvider, path: Chunk.Chunk<string>, f: (self: ConfigProvider) => ConfigProvider): ConfigProvider
   (path: Chunk.Chunk<string>, f: (self: ConfigProvider) => ConfigProvider): (self: ConfigProvider) => ConfigProvider
+  (self: ConfigProvider, path: Chunk.Chunk<string>, f: (self: ConfigProvider) => ConfigProvider): ConfigProvider
 } = internal.within
