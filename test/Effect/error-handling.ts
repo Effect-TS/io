@@ -309,7 +309,7 @@ describe.concurrent("Effect", () => {
       const goodCase = yield* $(exactlyOnce(0, (effect) =>
         pipe(
           effect,
-          Effect.continueOrFail("value was not 0", (v) =>
+          Effect.continueOrFail(() => "value was not 0", (v) =>
             v === 0 ?
               Option.some(v) :
               Option.none()),
@@ -320,7 +320,7 @@ describe.concurrent("Effect", () => {
         exactlyOnce(1, (effect) =>
           pipe(
             effect,
-            Effect.continueOrFail("value was not 0", (v) => v === 0 ? Option.some(v) : Option.none())
+            Effect.continueOrFail(() => "value was not 0", (v) => v === 0 ? Option.some(v) : Option.none())
           )),
         Effect.sandbox,
         Effect.either,
@@ -336,7 +336,7 @@ describe.concurrent("Effect", () => {
           pipe(
             effect,
             Effect.continueOrFailEffect(
-              "value was not 0",
+              () => "value was not 0",
               (v) => v === 0 ? Option.some(Effect.succeed(v)) : Option.none()
             )
           )),
@@ -347,7 +347,7 @@ describe.concurrent("Effect", () => {
         exactlyOnce(0, (effect) =>
           pipe(
             effect,
-            Effect.continueOrFailEffect("predicate failed!", (n) =>
+            Effect.continueOrFailEffect(() => "predicate failed!", (n) =>
               n === 0 ?
                 Option.some(Effect.fail("partial failed!")) :
                 Option.none())
@@ -360,7 +360,7 @@ describe.concurrent("Effect", () => {
         exactlyOnce(1, (effect) =>
           pipe(
             effect,
-            Effect.continueOrFailEffect("value was not 0", (v) =>
+            Effect.continueOrFailEffect(() => "value was not 0", (v) =>
               v === 0 ?
                 Option.some(Effect.succeed(v)) :
                 Option.none())

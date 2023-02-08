@@ -521,40 +521,40 @@ export const cond = Debug.methodWithTrace((trace, restore) =>
 /* @internal */
 export const continueOrFail = Debug.dualWithTrace<
   <E1, A, A2>(
-    error: E1,
+    error: LazyArg<E1>,
     pf: (a: A) => Option.Option<A2>
   ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E | E1, A2>,
   <R, E, A, E1, A2>(
     self: Effect.Effect<R, E, A>,
-    error: E1,
+    error: LazyArg<E1>,
     pf: (a: A) => Option.Option<A2>
   ) => Effect.Effect<R, E | E1, A2>
 >(
   3,
   (trace, restore) =>
     (self, error, pf) =>
-      continueOrFailEffect(self, error, (a) => pipe(restore(pf)(a), Option.map(core.succeed))).traced(trace)
+      continueOrFailEffect(self, error, (a) => Option.map(restore(pf)(a), core.succeed)).traced(trace)
 )
 
 /* @internal */
 export const continueOrFailEffect = Debug.dualWithTrace<
   <E1, A, R2, E2, A2>(
-    error: E1,
+    error: LazyArg<E1>,
     pf: (a: A) => Option.Option<Effect.Effect<R2, E2, A2>>
   ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E1 | E2, A2>,
   <R, E, A, E1, R2, E2, A2>(
     self: Effect.Effect<R, E, A>,
-    error: E1,
+    error: LazyArg<E1>,
     pf: (a: A) => Option.Option<Effect.Effect<R2, E2, A2>>
   ) => Effect.Effect<R | R2, E | E1 | E2, A2>
 >(3, (trace, restore) =>
   <R, E, A, E1, R2, E2, A2>(
     self: Effect.Effect<R, E, A>,
-    error: E1,
+    error: LazyArg<E1>,
     pf: (a: A) => Option.Option<Effect.Effect<R2, E2, A2>>
   ) =>
     core.flatMap(self, (value): Effect.Effect<R2, E1 | E2, A2> =>
-      pipe(restore(pf)(value), Option.getOrElse(() => core.fail(error)))).traced(trace))
+      Option.getOrElse(restore(pf)(value), () => core.failSync(error))).traced(trace))
 
 /* @internal */
 export const delay = Debug.dualWithTrace<
