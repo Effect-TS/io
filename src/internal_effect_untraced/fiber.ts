@@ -12,7 +12,7 @@ import * as core from "@effect/io/internal_effect_untraced/core"
 import * as fiberScope from "@effect/io/internal_effect_untraced/fiberScope"
 import * as runtimeFlags from "@effect/io/internal_effect_untraced/runtimeFlags"
 import * as Either from "@fp-ts/core/Either"
-import { pipe } from "@fp-ts/core/Function"
+import { dual, pipe } from "@fp-ts/core/Function"
 import * as number from "@fp-ts/core/Number"
 import * as Option from "@fp-ts/core/Option"
 import * as order from "@fp-ts/core/typeclass/Order"
@@ -127,13 +127,13 @@ export const interrupted = (fiberId: FiberId.FiberId): Fiber.Fiber<never, never>
 /** @internal */
 export const interruptAll = Debug.methodWithTrace((trace) =>
   (fibers: Iterable<Fiber.Fiber<any, any>>): Effect.Effect<never, never, void> =>
-    core.flatMap(core.fiberId(), (fiberId) => pipe(fibers, interruptAllWith(fiberId))).traced(trace)
+    core.flatMap(core.fiberId(), (fiberId) => pipe(fibers, interruptAllAs(fiberId))).traced(trace)
 )
 
 /** @internal */
-export const interruptAllWith = Debug.dualWithTrace<
-  (fibers: Iterable<Fiber.Fiber<any, any>>, fiberId: FiberId.FiberId) => Effect.Effect<never, never, void>,
-  (fiberId: FiberId.FiberId) => (fibers: Iterable<Fiber.Fiber<any, any>>) => Effect.Effect<never, never, void>
+export const interruptAllAs = Debug.dualWithTrace<
+  (fiberId: FiberId.FiberId) => (fibers: Iterable<Fiber.Fiber<any, any>>) => Effect.Effect<never, never, void>,
+  (fibers: Iterable<Fiber.Fiber<any, any>>, fiberId: FiberId.FiberId) => Effect.Effect<never, never, void>
 >(2, (trace) =>
   (fibers, fiberId) =>
     pipe(
@@ -143,8 +143,8 @@ export const interruptAllWith = Debug.dualWithTrace<
 
 /** @internal */
 export const interruptAsFork = Debug.dualWithTrace<
-  <E, A>(self: Fiber.Fiber<E, A>, fiberId: FiberId.FiberId) => Effect.Effect<never, never, void>,
-  (fiberId: FiberId.FiberId) => <E, A>(self: Fiber.Fiber<E, A>) => Effect.Effect<never, never, void>
+  (fiberId: FiberId.FiberId) => <E, A>(self: Fiber.Fiber<E, A>) => Effect.Effect<never, never, void>,
+  <E, A>(self: Fiber.Fiber<E, A>, fiberId: FiberId.FiberId) => Effect.Effect<never, never, void>
 >(2, (trace) => (self, fiberId) => self.interruptAsFork(fiberId).traced(trace))
 
 /** @internal */
@@ -155,14 +155,14 @@ export const join = Debug.methodWithTrace((trace) =>
 
 /** @internal */
 export const map = Debug.untracedDual<
-  <E, A, B>(self: Fiber.Fiber<E, A>, f: (a: A) => B) => Fiber.Fiber<E, B>,
-  <A, B>(f: (a: A) => B) => <E>(self: Fiber.Fiber<E, A>) => Fiber.Fiber<E, B>
+  <A, B>(f: (a: A) => B) => <E>(self: Fiber.Fiber<E, A>) => Fiber.Fiber<E, B>,
+  <E, A, B>(self: Fiber.Fiber<E, A>, f: (a: A) => B) => Fiber.Fiber<E, B>
 >(2, (restore) => (self, f) => mapEffect(self, (a) => core.sync(() => restore(f)(a))))
 
 /** @internal */
 export const mapEffect = Debug.untracedDual<
-  <E, A, E2, A2>(self: Fiber.Fiber<E, A>, f: (a: A) => Effect.Effect<never, E2, A2>) => Fiber.Fiber<E | E2, A2>,
-  <A, E2, A2>(f: (a: A) => Effect.Effect<never, E2, A2>) => <E>(self: Fiber.Fiber<E, A>) => Fiber.Fiber<E | E2, A2>
+  <A, E2, A2>(f: (a: A) => Effect.Effect<never, E2, A2>) => <E>(self: Fiber.Fiber<E, A>) => Fiber.Fiber<E | E2, A2>,
+  <E, A, E2, A2>(self: Fiber.Fiber<E, A>, f: (a: A) => Effect.Effect<never, E2, A2>) => Fiber.Fiber<E | E2, A2>
 >(2, (restore) =>
   (self, f) => ({
     [FiberTypeId]: fiberVariance,
@@ -191,13 +191,13 @@ export const mapEffect = Debug.untracedDual<
 
 /** @internal */
 export const mapFiber = Debug.dualWithTrace<
+  <E, E2, A, B>(
+    f: (a: A) => Fiber.Fiber<E2, B>
+  ) => (self: Fiber.Fiber<E, A>) => Effect.Effect<never, never, Fiber.Fiber<E | E2, B>>,
   <E, A, E2, B>(
     self: Fiber.Fiber<E, A>,
     f: (a: A) => Fiber.Fiber<E2, B>
-  ) => Effect.Effect<never, never, Fiber.Fiber<E | E2, B>>,
-  <E, E2, A, B>(
-    f: (a: A) => Fiber.Fiber<E2, B>
-  ) => (self: Fiber.Fiber<E, A>) => Effect.Effect<never, never, Fiber.Fiber<E | E2, B>>
+  ) => Effect.Effect<never, never, Fiber.Fiber<E | E2, B>>
 >(2, (trace, restore) =>
   <E, A, E2, B>(
     self: Fiber.Fiber<E, A>,
@@ -214,14 +214,14 @@ export const mapFiber = Debug.dualWithTrace<
 /** @internal */
 export const match = Debug.untracedDual<
   <E, A, Z>(
+    onFiber: (fiber: Fiber.Fiber<E, A>) => Z,
+    onRuntimeFiber: (fiber: Fiber.RuntimeFiber<E, A>) => Z
+  ) => (self: Fiber.Fiber<E, A>) => Z,
+  <E, A, Z>(
     self: Fiber.Fiber<E, A>,
     onFiber: (fiber: Fiber.Fiber<E, A>) => Z,
     onRuntimeFiber: (fiber: Fiber.RuntimeFiber<E, A>) => Z
-  ) => Z,
-  <E, A, Z>(
-    onFiber: (fiber: Fiber.Fiber<E, A>) => Z,
-    onRuntimeFiber: (fiber: Fiber.RuntimeFiber<E, A>) => Z
-  ) => (self: Fiber.Fiber<E, A>) => Z
+  ) => Z
 >(3, (restore) =>
   (self, onFiber, onRuntimeFiber) => {
     if (isRuntimeFiber(self)) {
@@ -242,9 +242,9 @@ export const never = (): Fiber.Fiber<never, never> => ({
 })
 
 /** @internal */
-export const orElse = Debug.dual<
-  <E, A, E2, A2>(self: Fiber.Fiber<E, A>, that: Fiber.Fiber<E2, A2>) => Fiber.Fiber<E | E2, A | A2>,
-  <E2, A2>(that: Fiber.Fiber<E2, A2>) => <E, A>(self: Fiber.Fiber<E, A>) => Fiber.Fiber<E | E2, A | A2>
+export const orElse = dual<
+  <E2, A2>(that: Fiber.Fiber<E2, A2>) => <E, A>(self: Fiber.Fiber<E, A>) => Fiber.Fiber<E | E2, A | A2>,
+  <E, A, E2, A2>(self: Fiber.Fiber<E, A>, that: Fiber.Fiber<E2, A2>) => Fiber.Fiber<E | E2, A | A2>
 >(2, (self, that) => ({
   [FiberTypeId]: fiberVariance,
   id: () => FiberId.getOrElse(self.id(), that.id()),
@@ -286,9 +286,9 @@ export const orElse = Debug.dual<
 }))
 
 /** @internal */
-export const orElseEither = Debug.dual<
-  <E, A, E2, A2>(self: Fiber.Fiber<E, A>, that: Fiber.Fiber<E2, A2>) => Fiber.Fiber<E | E2, Either.Either<A, A2>>,
-  <E2, A2>(that: Fiber.Fiber<E2, A2>) => <E, A>(self: Fiber.Fiber<E, A>) => Fiber.Fiber<E | E2, Either.Either<A, A2>>
+export const orElseEither = dual<
+  <E2, A2>(that: Fiber.Fiber<E2, A2>) => <E, A>(self: Fiber.Fiber<E, A>) => Fiber.Fiber<E | E2, Either.Either<A, A2>>,
+  <E, A, E2, A2>(self: Fiber.Fiber<E, A>, that: Fiber.Fiber<E2, A2>) => Fiber.Fiber<E | E2, Either.Either<A, A2>>
 >(2, (self, that) => orElse(map(self, Either.left), map(that, Either.right)))
 
 /** @internal */

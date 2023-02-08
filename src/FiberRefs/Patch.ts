@@ -88,8 +88,8 @@ export const diff: (oldValue: FiberRefs.FiberRefs, newValue: FiberRefs.FiberRefs
  * @category constructors
  */
 export const combine: {
+  (that: FiberRefsPatch): (self: FiberRefsPatch) => FiberRefsPatch
   (self: FiberRefsPatch, that: FiberRefsPatch): FiberRefsPatch
-  (self: FiberRefsPatch): (that: FiberRefsPatch) => FiberRefsPatch
 } = internal.combine
 
 /**
@@ -100,6 +100,6 @@ export const combine: {
  * @category destructors
  */
 export const patch: {
-  (self: FiberRefsPatch, fiberId: FiberId.Runtime, oldValue: FiberRefs.FiberRefs): FiberRefs.FiberRefs
   (fiberId: FiberId.Runtime, oldValue: FiberRefs.FiberRefs): (self: FiberRefsPatch) => FiberRefs.FiberRefs
+  (self: FiberRefsPatch, fiberId: FiberId.Runtime, oldValue: FiberRefs.FiberRefs): FiberRefs.FiberRefs
 } = internal.patch

@@ -3,11 +3,11 @@ import * as Equal from "@effect/data/Equal"
 import * as Hash from "@effect/data/Hash"
 import * as HashSet from "@effect/data/HashSet"
 import type * as Cause from "@effect/io/Cause"
-import * as Debug from "@effect/io/Debug"
+import type * as Debug from "@effect/io/Debug"
 import * as FiberId from "@effect/io/Fiber/Id"
 import * as OpCodes from "@effect/io/internal_effect_untraced/opCodes/cause"
 import * as Either from "@fp-ts/core/Either"
-import { constFalse, constTrue, identity, pipe } from "@fp-ts/core/Function"
+import { constFalse, constTrue, dual, identity, pipe } from "@fp-ts/core/Function"
 import * as Option from "@fp-ts/core/Option"
 import type { Predicate } from "@fp-ts/core/Predicate"
 
@@ -361,9 +361,9 @@ export const stripFailures = <E>(self: Cause.Cause<E>): Cause.Cause<never> =>
   )
 
 /** @internal */
-export const stripSomeDefects = Debug.dual<
-  <E>(self: Cause.Cause<E>, pf: (defect: unknown) => Option.Option<unknown>) => Option.Option<Cause.Cause<E>>,
-  (pf: (defect: unknown) => Option.Option<unknown>) => <E>(self: Cause.Cause<E>) => Option.Option<Cause.Cause<E>>
+export const stripSomeDefects = dual<
+  (pf: (defect: unknown) => Option.Option<unknown>) => <E>(self: Cause.Cause<E>) => Option.Option<Cause.Cause<E>>,
+  <E>(self: Cause.Cause<E>, pf: (defect: unknown) => Option.Option<unknown>) => Option.Option<Cause.Cause<E>>
 >(2, <E>(self: Cause.Cause<E>, pf: (defect: unknown) => Option.Option<unknown>) => {
   return match(
     self,
@@ -407,15 +407,15 @@ export const stripSomeDefects = Debug.dual<
 // -----------------------------------------------------------------------------
 
 /** @internal */
-export const as = Debug.dual<
-  <E, E2>(self: Cause.Cause<E>, error: E2) => Cause.Cause<E2>,
-  <E2>(error: E2) => <E>(self: Cause.Cause<E>) => Cause.Cause<E2>
+export const as = dual<
+  <E2>(error: E2) => <E>(self: Cause.Cause<E>) => Cause.Cause<E2>,
+  <E, E2>(self: Cause.Cause<E>, error: E2) => Cause.Cause<E2>
 >(2, (self, error) => map(self, () => error))
 
 /** @internal */
-export const map = Debug.dual<
-  <E, E2>(self: Cause.Cause<E>, f: (e: E) => E2) => Cause.Cause<E2>,
-  <E, E2>(f: (e: E) => E2) => (self: Cause.Cause<E>) => Cause.Cause<E2>
+export const map = dual<
+  <E, E2>(f: (e: E) => E2) => (self: Cause.Cause<E>) => Cause.Cause<E2>,
+  <E, E2>(self: Cause.Cause<E>, f: (e: E) => E2) => Cause.Cause<E2>
 >(2, (self, f) => flatMap(self, (e) => fail(f(e))))
 
 // -----------------------------------------------------------------------------
@@ -423,9 +423,9 @@ export const map = Debug.dual<
 // -----------------------------------------------------------------------------
 
 /** @internal */
-export const flatMap = Debug.dual<
-  <E, E2>(self: Cause.Cause<E>, f: (e: E) => Cause.Cause<E2>) => Cause.Cause<E2>,
-  <E, E2>(f: (e: E) => Cause.Cause<E2>) => (self: Cause.Cause<E>) => Cause.Cause<E2>
+export const flatMap = dual<
+  <E, E2>(f: (e: E) => Cause.Cause<E2>) => (self: Cause.Cause<E>) => Cause.Cause<E2>,
+  <E, E2>(self: Cause.Cause<E>, f: (e: E) => Cause.Cause<E2>) => Cause.Cause<E2>
 >(2, (self, f) =>
   match(
     self,
@@ -446,9 +446,9 @@ export const flatten = <E>(self: Cause.Cause<Cause.Cause<E>>): Cause.Cause<E> =>
 // -----------------------------------------------------------------------------
 
 /** @internal */
-export const contains = Debug.dual<
-  <E, E2>(self: Cause.Cause<E>, that: Cause.Cause<E2>) => boolean,
-  <E2>(that: Cause.Cause<E2>) => <E>(self: Cause.Cause<E>) => boolean
+export const contains = dual<
+  <E2>(that: Cause.Cause<E2>) => <E>(self: Cause.Cause<E>) => boolean,
+  <E, E2>(self: Cause.Cause<E>, that: Cause.Cause<E2>) => boolean
 >(2, (self, that) => {
   if (that._tag === OpCodes.OP_EMPTY || self === that) {
     return true
@@ -559,9 +559,9 @@ export const squash = <E>(self: Cause.Cause<E>): unknown => {
 }
 
 /** @internal */
-export const squashWith = Debug.dual<
-  <E>(self: Cause.Cause<E>, f: (error: E) => unknown) => unknown,
-  <E>(f: (error: E) => unknown) => (self: Cause.Cause<E>) => unknown
+export const squashWith = dual<
+  <E>(f: (error: E) => unknown) => (self: Cause.Cause<E>) => unknown,
+  <E>(self: Cause.Cause<E>, f: (error: E) => unknown) => unknown
 >(2, (self, f) => {
   const option = pipe(self, failureOption, Option.map(f))
   switch (option._tag) {
@@ -588,9 +588,9 @@ export const squashWith = Debug.dual<
 // -----------------------------------------------------------------------------
 
 /** @internal */
-export const find = Debug.dual<
-  <E, Z>(self: Cause.Cause<E>, pf: (cause: Cause.Cause<E>) => Option.Option<Z>) => Option.Option<Z>,
-  <E, Z>(pf: (cause: Cause.Cause<E>) => Option.Option<Z>) => (self: Cause.Cause<E>) => Option.Option<Z>
+export const find = dual<
+  <E, Z>(pf: (cause: Cause.Cause<E>) => Option.Option<Z>) => (self: Cause.Cause<E>) => Option.Option<Z>,
+  <E, Z>(self: Cause.Cause<E>, pf: (cause: Cause.Cause<E>) => Option.Option<Z>) => Option.Option<Z>
 >(2, <E, Z>(self: Cause.Cause<E>, pf: (cause: Cause.Cause<E>) => Option.Option<Z>) => {
   const stack: Array<Cause.Cause<E>> = [self]
   while (stack.length > 0) {
@@ -625,9 +625,9 @@ export const find = Debug.dual<
 // -----------------------------------------------------------------------------
 
 /** @internal */
-export const filter = Debug.dual<
-  <E>(self: Cause.Cause<E>, predicate: Predicate<Cause.Cause<E>>) => Cause.Cause<E>,
-  <E>(predicate: Predicate<Cause.Cause<E>>) => (self: Cause.Cause<E>) => Cause.Cause<E>
+export const filter = dual<
+  <E>(predicate: Predicate<Cause.Cause<E>>) => (self: Cause.Cause<E>) => Cause.Cause<E>,
+  <E>(self: Cause.Cause<E>, predicate: Predicate<Cause.Cause<E>>) => Cause.Cause<E>
 >(2, (self, predicate) => reduceWithContext(self, void 0, FilterCauseReducer(predicate)))
 
 // -----------------------------------------------------------------------------
@@ -810,7 +810,16 @@ interface AnnotatedCase {
 }
 
 /** @internal */
-export const match = Debug.dual<
+export const match = dual<
+  <Z, E>(
+    emptyCase: Z,
+    failCase: (error: E) => Z,
+    dieCase: (defect: unknown) => Z,
+    interruptCase: (fiberId: FiberId.FiberId) => Z,
+    annotatedCase: (value: Z, annotation: unknown) => Z,
+    sequentialCase: (left: Z, right: Z) => Z,
+    parallelCase: (left: Z, right: Z) => Z
+  ) => (self: Cause.Cause<E>) => Z,
   <Z, E>(
     self: Cause.Cause<E>,
     emptyCase: Z,
@@ -820,16 +829,7 @@ export const match = Debug.dual<
     annotatedCase: (value: Z, annotation: unknown) => Z,
     sequentialCase: (left: Z, right: Z) => Z,
     parallelCase: (left: Z, right: Z) => Z
-  ) => Z,
-  <Z, E>(
-    emptyCase: Z,
-    failCase: (error: E) => Z,
-    dieCase: (defect: unknown) => Z,
-    interruptCase: (fiberId: FiberId.FiberId) => Z,
-    annotatedCase: (value: Z, annotation: unknown) => Z,
-    sequentialCase: (left: Z, right: Z) => Z,
-    parallelCase: (left: Z, right: Z) => Z
-  ) => (self: Cause.Cause<E>) => Z
+  ) => Z
 >(8, (self, emptyCase, failCase, dieCase, interruptCase, annotatedCase, sequentialCase, parallelCase) => {
   return reduceWithContext(self, void 0, {
     emptyCase: () => emptyCase,
@@ -843,9 +843,9 @@ export const match = Debug.dual<
 })
 
 /** @internal */
-export const reduce = Debug.dual<
-  <Z, E>(self: Cause.Cause<E>, zero: Z, pf: (accumulator: Z, cause: Cause.Cause<E>) => Option.Option<Z>) => Z,
-  <Z, E>(zero: Z, pf: (accumulator: Z, cause: Cause.Cause<E>) => Option.Option<Z>) => (self: Cause.Cause<E>) => Z
+export const reduce = dual<
+  <Z, E>(zero: Z, pf: (accumulator: Z, cause: Cause.Cause<E>) => Option.Option<Z>) => (self: Cause.Cause<E>) => Z,
+  <Z, E>(self: Cause.Cause<E>, zero: Z, pf: (accumulator: Z, cause: Cause.Cause<E>) => Option.Option<Z>) => Z
 >(3, <Z, E>(self: Cause.Cause<E>, zero: Z, pf: (accumulator: Z, cause: Cause.Cause<E>) => Option.Option<Z>) => {
   let accumulator: Z = zero
   let cause: Cause.Cause<E> | undefined = self
@@ -881,9 +881,9 @@ export const reduce = Debug.dual<
 })
 
 /** @internal */
-export const reduceWithContext = Debug.dual<
-  <C, E, Z>(self: Cause.Cause<E>, context: C, reducer: Cause.CauseReducer<C, E, Z>) => Z,
-  <C, E, Z>(context: C, reducer: Cause.CauseReducer<C, E, Z>) => (self: Cause.Cause<E>) => Z
+export const reduceWithContext = dual<
+  <C, E, Z>(context: C, reducer: Cause.CauseReducer<C, E, Z>) => (self: Cause.Cause<E>) => Z,
+  <C, E, Z>(self: Cause.Cause<E>, context: C, reducer: Cause.CauseReducer<C, E, Z>) => Z
 >(3, <C, E, Z>(self: Cause.Cause<E>, context: C, reducer: Cause.CauseReducer<C, E, Z>) => {
   const input: Array<Cause.Cause<E>> = [self]
   const output: Array<Either.Either<CauseCase, Z>> = []

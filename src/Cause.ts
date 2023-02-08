@@ -21,6 +21,9 @@
  *
  * @since 1.0.0
  */
+import type * as Chunk from "@effect/data/Chunk"
+import type * as Equal from "@effect/data/Equal"
+import type * as HashSet from "@effect/data/HashSet"
 import type { SourceLocation } from "@effect/io/Debug"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import * as internal from "@effect/io/internal_effect_untraced/cause"
@@ -30,9 +33,6 @@ import type * as OpCodes from "@effect/io/internal_effect_untraced/opCodes/cause
 import type * as Either from "@fp-ts/core/Either"
 import type * as Option from "@fp-ts/core/Option"
 import type { Predicate } from "@fp-ts/core/Predicate"
-import type * as Chunk from "@effect/data/Chunk"
-import type * as Equal from "@effect/data/Equal"
-import type * as HashSet from "@effect/data/HashSet"
 
 /**
  * @since 1.0.0
@@ -651,8 +651,8 @@ export const stripFailures: <E>(self: Cause<E>) => Cause<never> = internal.strip
  * @category getters
  */
 export const stripSomeDefects: {
-  <E>(self: Cause<E>, pf: (defect: unknown) => Option.Option<unknown>): Option.Option<Cause<E>>
   (pf: (defect: unknown) => Option.Option<unknown>): <E>(self: Cause<E>) => Option.Option<Cause<E>>
+  <E>(self: Cause<E>, pf: (defect: unknown) => Option.Option<unknown>): Option.Option<Cause<E>>
 } = internal.stripSomeDefects
 
 /**
@@ -660,8 +660,8 @@ export const stripSomeDefects: {
  * @category mapping
  */
 export const as: {
-  <E, E2>(self: Cause<E>, error: E2): Cause<E2>
   <E2>(error: E2): <E>(self: Cause<E>) => Cause<E2>
+  <E, E2>(self: Cause<E>, error: E2): Cause<E2>
 } = internal.as
 
 /**
@@ -669,8 +669,8 @@ export const as: {
  * @category mapping
  */
 export const map: {
-  <E, E2>(self: Cause<E>, f: (e: E) => E2): Cause<E2>
   <E, E2>(f: (e: E) => E2): (self: Cause<E>) => Cause<E2>
+  <E, E2>(self: Cause<E>, f: (e: E) => E2): Cause<E2>
 } = internal.map
 
 /**
@@ -678,8 +678,8 @@ export const map: {
  * @category sequencing
  */
 export const flatMap: {
-  <E, E2>(self: Cause<E>, f: (e: E) => Cause<E2>): Cause<E2>
   <E, E2>(f: (e: E) => Cause<E2>): (self: Cause<E>) => Cause<E2>
+  <E, E2>(self: Cause<E>, f: (e: E) => Cause<E2>): Cause<E2>
 } = internal.flatMap
 
 /**
@@ -696,8 +696,8 @@ export const flatten: <E>(self: Cause<Cause<E>>) => Cause<E> = internal.flatten
  * @category elements
  */
 export const contains: {
-  <E, E2>(self: Cause<E>, that: Cause<E2>): boolean
   <E2>(that: Cause<E2>): <E>(self: Cause<E>) => boolean
+  <E, E2>(self: Cause<E>, that: Cause<E2>): boolean
 } = internal.contains
 
 /**
@@ -718,8 +718,8 @@ export const squash: <E>(self: Cause<E>) => unknown = internal.squash
  * @category destructors
  */
 export const squashWith: {
-  <E>(self: Cause<E>, f: (error: E) => unknown): unknown
   <E>(f: (error: E) => unknown): (self: Cause<E>) => unknown
+  <E>(self: Cause<E>, f: (error: E) => unknown): unknown
 } = internal.squashWith
 
 /**
@@ -730,8 +730,8 @@ export const squashWith: {
  * @category elements
  */
 export const find: {
-  <E, Z>(self: Cause<E>, pf: (cause: Cause<E>) => Option.Option<Z>): Option.Option<Z>
   <E, Z>(pf: (cause: Cause<E>) => Option.Option<Z>): (self: Cause<E>) => Option.Option<Z>
+  <E, Z>(self: Cause<E>, pf: (cause: Cause<E>) => Option.Option<Z>): Option.Option<Z>
 } = internal.find
 
 /**
@@ -741,8 +741,8 @@ export const find: {
  * @category filtering
  */
 export const filter: {
-  <E>(self: Cause<E>, predicate: Predicate<Cause<E>>): Cause<E>
   <E>(predicate: Predicate<Cause<E>>): (self: Cause<E>) => Cause<E>
+  <E>(self: Cause<E>, predicate: Predicate<Cause<E>>): Cause<E>
 } = internal.filter
 
 /**
@@ -753,6 +753,15 @@ export const filter: {
  */
 export const match: {
   <Z, E>(
+    emptyCase: Z,
+    failCase: (error: E) => Z,
+    dieCase: (defect: unknown) => Z,
+    interruptCase: (fiberId: FiberId.FiberId) => Z,
+    annotatedCase: (value: Z, annotation: unknown) => Z,
+    sequentialCase: (left: Z, right: Z) => Z,
+    parallelCase: (left: Z, right: Z) => Z
+  ): (self: Cause<E>) => Z
+  <Z, E>(
     self: Cause<E>,
     emptyCase: Z,
     failCase: (error: E) => Z,
@@ -762,15 +771,6 @@ export const match: {
     sequentialCase: (left: Z, right: Z) => Z,
     parallelCase: (left: Z, right: Z) => Z
   ): Z
-  <Z, E>(
-    emptyCase: Z,
-    failCase: (error: E) => Z,
-    dieCase: (defect: unknown) => Z,
-    interruptCase: (fiberId: FiberId.FiberId) => Z,
-    annotatedCase: (value: Z, annotation: unknown) => Z,
-    sequentialCase: (left: Z, right: Z) => Z,
-    parallelCase: (left: Z, right: Z) => Z
-  ): (self: Cause<E>) => Z
 } = internal.match
 
 /**
@@ -781,8 +781,8 @@ export const match: {
  * @category folding
  */
 export const reduce: {
-  <Z, E>(self: Cause<E>, zero: Z, pf: (accumulator: Z, cause: Cause<E>) => Option.Option<Z>): Z
   <Z, E>(zero: Z, pf: (accumulator: Z, cause: Cause<E>) => Option.Option<Z>): (self: Cause<E>) => Z
+  <Z, E>(self: Cause<E>, zero: Z, pf: (accumulator: Z, cause: Cause<E>) => Option.Option<Z>): Z
 } = internal.reduce
 
 /**
@@ -793,8 +793,8 @@ export const reduce: {
  * @category folding
  */
 export const reduceWithContext: {
-  <C, E, Z>(self: Cause<E>, context: C, reducer: CauseReducer<C, E, Z>): Z
   <C, E, Z>(context: C, reducer: CauseReducer<C, E, Z>): (self: Cause<E>) => Z
+  <C, E, Z>(self: Cause<E>, context: C, reducer: CauseReducer<C, E, Z>): Z
 } = internal.reduceWithContext
 
 /**

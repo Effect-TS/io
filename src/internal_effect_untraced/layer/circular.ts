@@ -12,6 +12,7 @@ import type * as Layer from "@effect/io/Layer"
 import type * as Logger from "@effect/io/Logger"
 import type * as LogLevel from "@effect/io/Logger/Level"
 import type * as Supervisor from "@effect/io/Supervisor"
+import { dual } from "@fp-ts/core/Function"
 
 // circular with Logger
 
@@ -28,8 +29,8 @@ export const minimumLogLevel = Debug.untracedMethod(() =>
 
 /** @internal */
 export const withMinimumLogLevel = Debug.dualWithTrace<
-  <R, E, A>(self: Effect.Effect<R, E, A>, level: LogLevel.LogLevel) => Effect.Effect<R, E, A>,
-  (level: LogLevel.LogLevel) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  (level: LogLevel.LogLevel) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(self: Effect.Effect<R, E, A>, level: LogLevel.LogLevel) => Effect.Effect<R, E, A>
 >(2, (trace) =>
   (self, level) =>
     core.fiberRefLocally(
@@ -60,10 +61,10 @@ export const removeLogger = Debug.untracedMethod(() =>
 )
 
 /** @internal */
-export const replaceLogger = Debug.dual<
-  <A, B>(logger: Logger.Logger<string, A>, that: Logger.Logger<string, B>) => Layer.Layer<never, never, never>,
-  <B>(that: Logger.Logger<string, B>) => <A>(logger: Logger.Logger<string, A>) => Layer.Layer<never, never, never>
->(2, (logger, that) => layer.flatMap(removeLogger(logger), () => addLogger(that)))
+export const replaceLogger = dual<
+  <B>(that: Logger.Logger<string, B>) => <A>(self: Logger.Logger<string, A>) => Layer.Layer<never, never, never>,
+  <A, B>(self: Logger.Logger<string, A>, that: Logger.Logger<string, B>) => Layer.Layer<never, never, never>
+>(2, (self, that) => layer.flatMap(removeLogger(self), () => addLogger(that)))
 
 /** @internal */
 export const addSupervisor = Debug.untracedMethod(() =>

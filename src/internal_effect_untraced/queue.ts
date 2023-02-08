@@ -423,19 +423,19 @@ export const shutdown = Debug.methodWithTrace((trace) =>
 
 /** @internal */
 export const offer = Debug.dualWithTrace<
-  <A>(self: Queue.Enqueue<A>, value: A) => Effect.Effect<never, never, boolean>,
-  <A>(value: A) => (self: Queue.Enqueue<A>) => Effect.Effect<never, never, boolean>
+  <A>(value: A) => (self: Queue.Enqueue<A>) => Effect.Effect<never, never, boolean>,
+  <A>(self: Queue.Enqueue<A>, value: A) => Effect.Effect<never, never, boolean>
 >(2, (trace) => (self, value) => self.offer(value).traced(trace))
 
 /** @internal */
 export const offerAll = Debug.dualWithTrace<
   <A>(
+    iterable: Iterable<A>
+  ) => (self: Queue.Enqueue<A>) => (self: Queue.Enqueue<A>) => Effect.Effect<never, never, boolean>,
+  <A>(
     self: Queue.Enqueue<A>,
     iterable: Iterable<A>
-  ) => Effect.Effect<never, never, boolean>,
-  <A>(
-    iterable: Iterable<A>
-  ) => (self: Queue.Enqueue<A>) => (self: Queue.Enqueue<A>) => Effect.Effect<never, never, boolean>
+  ) => Effect.Effect<never, never, boolean>
 >(2, (trace) => (self, iterable) => self.offerAll(iterable).traced(trace))
 
 /** @internal */
@@ -456,20 +456,20 @@ export const takeAll = Debug.methodWithTrace((trace) =>
 
 /** @internal */
 export const takeUpTo = Debug.dualWithTrace<
-  <A>(self: Queue.Dequeue<A>, max: number) => Effect.Effect<never, never, Chunk.Chunk<A>>,
-  (max: number) => <A>(self: Queue.Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>>
+  (max: number) => <A>(self: Queue.Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>>,
+  <A>(self: Queue.Dequeue<A>, max: number) => Effect.Effect<never, never, Chunk.Chunk<A>>
 >(2, (trace) => (self, max) => self.takeUpTo(max).traced(trace))
 
 /** @internal */
 export const takeBetween = Debug.dualWithTrace<
-  <A>(self: Queue.Dequeue<A>, min: number, max: number) => Effect.Effect<never, never, Chunk.Chunk<A>>,
-  (min: number, max: number) => <A>(self: Queue.Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>>
+  (min: number, max: number) => <A>(self: Queue.Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>>,
+  <A>(self: Queue.Dequeue<A>, min: number, max: number) => Effect.Effect<never, never, Chunk.Chunk<A>>
 >(3, (trace) => (self, min, max) => self.takeBetween(min, max).traced(trace))
 
 /** @internal */
 export const takeN = Debug.dualWithTrace<
-  <A>(self: Queue.Dequeue<A>, n: number) => Effect.Effect<never, never, Chunk.Chunk<A>>,
-  (n: number) => <A>(self: Queue.Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>>
+  (n: number) => <A>(self: Queue.Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>>,
+  <A>(self: Queue.Dequeue<A>, n: number) => Effect.Effect<never, never, Chunk.Chunk<A>>
 >(2, (trace) => (self, n) => self.takeBetween(n, n).traced(trace))
 
 // -----------------------------------------------------------------------------

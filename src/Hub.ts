@@ -147,8 +147,8 @@ export const awaitShutdown: <A>(self: Hub<A>) => Effect.Effect<never, never, voi
  * @category mutations
  */
 export const publish: {
-  <A>(self: Hub<A>, value: A): Effect.Effect<never, never, boolean>
   <A>(value: A): (self: Hub<A>) => Effect.Effect<never, never, boolean>
+  <A>(self: Hub<A>, value: A): Effect.Effect<never, never, boolean>
 } = internal.publish
 
 /**
@@ -159,8 +159,8 @@ export const publish: {
  * @category mutations
  */
 export const publishAll: {
-  <A>(self: Hub<A>, elements: Iterable<A>): Effect.Effect<never, never, boolean>
   <A>(elements: Iterable<A>): (self: Hub<A>) => Effect.Effect<never, never, boolean>
+  <A>(self: Hub<A>, elements: Iterable<A>): Effect.Effect<never, never, boolean>
 } = internal.publishAll
 
 /**

@@ -52,8 +52,8 @@ export const clockWith = Debug.methodWithTrace((trace, restore) =>
 
 /** @internal */
 export const withClock = Debug.dualWithTrace<
-  <R, E, A extends Clock.Clock>(effect: Effect.Effect<R, E, A>, value: A) => Effect.Effect<R, E, A>,
-  <A extends Clock.Clock>(value: A) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  <A extends Clock.Clock>(value: A) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A extends Clock.Clock>(effect: Effect.Effect<R, E, A>, value: A) => Effect.Effect<R, E, A>
 >(2, (trace) =>
   (effect, value) =>
     core.fiberRefLocallyWith(
@@ -65,8 +65,8 @@ export const withClock = Debug.dualWithTrace<
 
 /** @internal */
 export const withConfigProvider = Debug.dualWithTrace<
-  <R, E, A>(effect: Effect.Effect<R, E, A>, value: ConfigProvider.ConfigProvider) => Effect.Effect<R, E, A>,
-  (value: ConfigProvider.ConfigProvider) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  (value: ConfigProvider.ConfigProvider) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(effect: Effect.Effect<R, E, A>, value: ConfigProvider.ConfigProvider) => Effect.Effect<R, E, A>
 >(2, (trace) =>
   (effect, value) =>
     core.fiberRefLocallyWith(

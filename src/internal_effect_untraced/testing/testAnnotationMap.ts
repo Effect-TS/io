@@ -1,6 +1,5 @@
-import * as Debug from "@effect/io/Debug"
 import type * as TestAnnotation from "@effect/io/internal_effect_untraced/testing/testAnnotation"
-import { pipe } from "@fp-ts/core/Function"
+import { dual, pipe } from "@fp-ts/core/Function"
 
 /** @internal */
 export const TestAnnotationMapTypeId = Symbol.for("@effect/test/TestAnnotationMap")
@@ -40,9 +39,9 @@ export const make = (map: ReadonlyMap<TestAnnotation.TestAnnotation<unknown>, un
 }
 
 /** @internal */
-export const overwrite = Debug.dual<
-  <A>(self: TestAnnotationMap, key: TestAnnotation.TestAnnotation<A>, value: A) => TestAnnotationMap,
-  <A>(key: TestAnnotation.TestAnnotation<A>, value: A) => (self: TestAnnotationMap) => TestAnnotationMap
+export const overwrite = dual<
+  <A>(key: TestAnnotation.TestAnnotation<A>, value: A) => (self: TestAnnotationMap) => TestAnnotationMap,
+  <A>(self: TestAnnotationMap, key: TestAnnotation.TestAnnotation<A>, value: A) => TestAnnotationMap
 >(3, (self, key, value) =>
   make(
     (self.map as Map<TestAnnotation.TestAnnotation<unknown>, unknown>)
@@ -50,9 +49,9 @@ export const overwrite = Debug.dual<
   ))
 
 /** @internal */
-export const update = Debug.dual<
-  <A>(self: TestAnnotationMap, key: TestAnnotation.TestAnnotation<A>, f: (value: A) => A) => TestAnnotationMap,
-  <A>(key: TestAnnotation.TestAnnotation<A>, f: (value: A) => A) => (self: TestAnnotationMap) => TestAnnotationMap
+export const update = dual<
+  <A>(key: TestAnnotation.TestAnnotation<A>, f: (value: A) => A) => (self: TestAnnotationMap) => TestAnnotationMap,
+  <A>(self: TestAnnotationMap, key: TestAnnotation.TestAnnotation<A>, f: (value: A) => A) => TestAnnotationMap
 >(3, <A>(self: TestAnnotationMap, key: TestAnnotation.TestAnnotation<A>, f: (value: A) => A) => {
   let value = self.map.get(key as TestAnnotation.TestAnnotation<unknown>)
   if (value === undefined) {
@@ -67,9 +66,9 @@ export const update = Debug.dual<
  *
  * @internal
  */
-export const get = Debug.dual<
-  <A>(self: TestAnnotationMap, key: TestAnnotation.TestAnnotation<A>) => A,
-  <A>(key: TestAnnotation.TestAnnotation<A>) => (self: TestAnnotationMap) => A
+export const get = dual<
+  <A>(key: TestAnnotation.TestAnnotation<A>) => (self: TestAnnotationMap) => A,
+  <A>(self: TestAnnotationMap, key: TestAnnotation.TestAnnotation<A>) => A
 >(2, <A>(self: TestAnnotationMap, key: TestAnnotation.TestAnnotation<A>) => {
   const value = self.map.get(key as TestAnnotation.TestAnnotation<unknown>)
   if (value === undefined) {
@@ -83,15 +82,15 @@ export const get = Debug.dual<
  *
  * @internal
  */
-export const annotate = Debug.dual<
-  <A>(self: TestAnnotationMap, key: TestAnnotation.TestAnnotation<A>, value: A) => TestAnnotationMap,
-  <A>(key: TestAnnotation.TestAnnotation<A>, value: A) => (self: TestAnnotationMap) => TestAnnotationMap
+export const annotate = dual<
+  <A>(key: TestAnnotation.TestAnnotation<A>, value: A) => (self: TestAnnotationMap) => TestAnnotationMap,
+  <A>(self: TestAnnotationMap, key: TestAnnotation.TestAnnotation<A>, value: A) => TestAnnotationMap
 >(3, (self, key, value) => update(self, key, (_) => key.combine(_, value)))
 
 /** @internal */
-export const combine = Debug.dual<
-  (self: TestAnnotationMap, that: TestAnnotationMap) => TestAnnotationMap,
-  (that: TestAnnotationMap) => (self: TestAnnotationMap) => TestAnnotationMap
+export const combine = dual<
+  (that: TestAnnotationMap) => (self: TestAnnotationMap) => TestAnnotationMap,
+  (self: TestAnnotationMap, that: TestAnnotationMap) => TestAnnotationMap
 >(2, (self, that) => {
   const result = new Map<TestAnnotation.TestAnnotation<unknown>, unknown>(self.map)
   for (const entry of that.map) {

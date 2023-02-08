@@ -1,6 +1,9 @@
 /**
  * @since 1.0.0
  */
+import type * as Chunk from "@effect/data/Chunk"
+import type * as Duration from "@effect/data/Duration"
+import type * as HashSet from "@effect/data/HashSet"
 import type * as Effect from "@effect/io/Effect"
 import * as internal from "@effect/io/internal_effect_untraced/metric"
 import type * as MetricBoundaries from "@effect/io/Metric/Boundaries"
@@ -11,9 +14,6 @@ import type * as MetricPair from "@effect/io/Metric/Pair"
 import type * as MetricRegistry from "@effect/io/Metric/Registry"
 import type * as MetricState from "@effect/io/Metric/State"
 import type { LazyArg } from "@fp-ts/core/Function"
-import type * as Chunk from "@effect/data/Chunk"
-import type * as Duration from "@effect/data/Duration"
-import type * as HashSet from "@effect/data/HashSet"
 
 /**
  * @since 1.0.0
@@ -139,8 +139,8 @@ export const make: MetricApply = internal.make
  * @category mapping
  */
 export const contramap: {
-  <Type, In, Out, In2>(self: Metric<Type, In, Out>, f: (input: In2) => In): Metric<Type, In2, Out>
   <In, In2>(f: (input: In2) => In): <Type, Out>(self: Metric<Type, In, Out>) => Metric<Type, In2, Out>
+  <Type, In, Out, In2>(self: Metric<Type, In, Out>, f: (input: In2) => In): Metric<Type, In2, Out>
 } = internal.contramap
 
 /**
@@ -169,8 +169,8 @@ export const frequency: (name: string) => Metric.Frequency<string> = internal.fr
  * @category constructors
  */
 export const fromConst: {
-  <Type, In, Out>(self: Metric<Type, In, Out>, input: LazyArg<In>): Metric<Type, unknown, Out>
   <In>(input: LazyArg<In>): <Type, Out>(self: Metric<Type, In, Out>) => Metric<Type, unknown, Out>
+  <Type, In, Out>(self: Metric<Type, In, Out>, input: LazyArg<In>): Metric<Type, unknown, Out>
 } = internal.fromConst
 
 /**
@@ -213,8 +213,8 @@ export const increment: (self: Metric.Counter<number>) => Effect.Effect<never, n
  * @category aspects
  */
 export const incrementBy: {
-  (self: Metric.Counter<number>, amount: number): Effect.Effect<never, never, void>
   (amount: number): (self: Metric.Counter<number>) => Effect.Effect<never, never, void>
+  (self: Metric.Counter<number>, amount: number): Effect.Effect<never, never, void>
 } = internal.incrementBy
 
 /**
@@ -226,8 +226,8 @@ export const incrementBy: {
  * @category mapping
  */
 export const map: {
-  <Type, In, Out, Out2>(self: Metric<Type, In, Out>, f: (out: Out) => Out2): Metric<Type, In, Out2>
   <Out, Out2>(f: (out: Out) => Out2): <Type, In>(self: Metric<Type, In, Out>) => Metric<Type, In, Out2>
+  <Type, In, Out, Out2>(self: Metric<Type, In, Out>, f: (out: Out) => Out2): Metric<Type, In, Out2>
 } = internal.map
 
 /**
@@ -235,8 +235,8 @@ export const map: {
  * @category mapping
  */
 export const mapType: {
-  <Type, In, Out, Type2>(self: Metric<Type, In, Out>, f: (type: Type) => Type2): Metric<Type2, In, Out>
   <Type, Type2>(f: (type: Type) => Type2): <In, Out>(self: Metric<Type, In, Out>) => Metric<Type2, In, Out>
+  <Type, In, Out, Type2>(self: Metric<Type, In, Out>, f: (type: Type) => Type2): Metric<Type2, In, Out>
 } = internal.mapType
 
 /**
@@ -244,8 +244,8 @@ export const mapType: {
  * @category aspects
  */
 export const set: {
-  <In>(self: Metric.Gauge<In>, value: In): Effect.Effect<never, never, void>
   <In>(value: In): (self: Metric.Gauge<In>) => Effect.Effect<never, never, void>
+  <In>(self: Metric.Gauge<In>, value: In): Effect.Effect<never, never, void>
 } = internal.set
 
 /**
@@ -305,8 +305,8 @@ export const summaryTimestamp: (
  * @category mutations
  */
 export const tagged: {
-  <Type, In, Out>(self: Metric<Type, In, Out>, key: string, value: string): Metric<Type, In, Out>
   <Type, In, Out>(key: string, value: string): (self: Metric<Type, In, Out>) => Metric<Type, In, Out>
+  <Type, In, Out>(self: Metric<Type, In, Out>, key: string, value: string): Metric<Type, In, Out>
 } = internal.tagged
 
 /**
@@ -319,13 +319,13 @@ export const tagged: {
  * @category mutations
  */
 export const taggedWith: {
+  <In>(
+    f: (input: In) => HashSet.HashSet<MetricLabel.MetricLabel>
+  ): <Type, Out>(self: Metric<Type, In, Out>) => Metric<Type, In, void>
   <Type, In, Out>(
     self: Metric<Type, In, Out>,
     f: (input: In) => HashSet.HashSet<MetricLabel.MetricLabel>
   ): Metric<Type, In, void>
-  <In>(
-    f: (input: In) => HashSet.HashSet<MetricLabel.MetricLabel>
-  ): <Type, Out>(self: Metric<Type, In, Out>) => Metric<Type, In, void>
 } = internal.taggedWith
 
 /**
@@ -336,8 +336,8 @@ export const taggedWith: {
  * @category mutations
  */
 export const taggedWithLabels: {
-  <Type, In, Out>(self: Metric<Type, In, Out>, extraTags: Iterable<MetricLabel.MetricLabel>): Metric<Type, In, Out>
   <Type, In, Out>(extraTags: Iterable<MetricLabel.MetricLabel>): (self: Metric<Type, In, Out>) => Metric<Type, In, Out>
+  <Type, In, Out>(self: Metric<Type, In, Out>, extraTags: Iterable<MetricLabel.MetricLabel>): Metric<Type, In, Out>
 } = internal.taggedWithLabels
 
 /**
@@ -348,13 +348,13 @@ export const taggedWithLabels: {
  * @category mutations
  */
 export const taggedWithLabelSet: {
+  (
+    extraTags: HashSet.HashSet<MetricLabel.MetricLabel>
+  ): <Type, In, Out>(self: Metric<Type, In, Out>) => Metric<Type, In, Out>
   <Type, In, Out>(
     self: Metric<Type, In, Out>,
     extraTags: HashSet.HashSet<MetricLabel.MetricLabel>
   ): Metric<Type, In, Out>
-  (
-    extraTags: HashSet.HashSet<MetricLabel.MetricLabel>
-  ): <Type, In, Out>(self: Metric<Type, In, Out>) => Metric<Type, In, Out>
 } = internal.taggedWithLabelSet
 
 /**
@@ -394,15 +394,13 @@ export const timerWithBoundaries: (
  * @category aspects
  */
 export const trackAll: {
+  <In>(
+    input: In
+  ): <Type, Out>(self: Metric<Type, In, Out>) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
   <Type, In, Out>(
     self: Metric<Type, In, Out>,
     input: In
   ): <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
-  <In>(
-    input: In
-  ): <Type, Out>(
-    self: Metric<Type, In, Out>
-  ) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
 } = internal.trackAll
 
 /**
@@ -413,8 +411,8 @@ export const trackAll: {
  * @category aspects
  */
 export const trackDefect: {
-  <R, E, A, Type, Out>(self: Effect.Effect<R, E, A>, metric: Metric<Type, unknown, Out>): Effect.Effect<R, E, A>
   <Type, Out>(metric: Metric<Type, unknown, Out>): <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  <R, E, A, Type, Out>(self: Effect.Effect<R, E, A>, metric: Metric<Type, unknown, Out>): Effect.Effect<R, E, A>
 } = internal.trackDefect
 
 /**
@@ -426,15 +424,15 @@ export const trackDefect: {
  * @category aspects
  */
 export const trackDefectWith: {
+  <Type, In, Out>(
+    metric: Metric<Type, In, Out>,
+    f: (defect: unknown) => In
+  ): <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
   <R, E, A, Type, In, Out>(
     self: Effect.Effect<R, E, A>,
     metric: Metric<Type, In, Out>,
     f: (defect: unknown) => In
   ): Effect.Effect<R, E, A>
-  <Type, In, Out>(
-    metric: Metric<Type, In, Out>,
-    f: (defect: unknown) => In
-  ): <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
 } = internal.trackDefectWith
 
 /**
@@ -446,13 +444,13 @@ export const trackDefectWith: {
  * @category aspects
  */
 export const trackDuration: {
+  <Type, Out>(
+    metric: Metric<Type, Duration.Duration, Out>
+  ): <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
   <R, E, A, Type, Out>(
     self: Effect.Effect<R, E, A>,
     metric: Metric<Type, Duration.Duration, Out>
   ): Effect.Effect<R, E, A>
-  <Type, Out>(
-    metric: Metric<Type, Duration.Duration, Out>
-  ): <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
 } = internal.trackDuration
 
 /**
@@ -464,15 +462,15 @@ export const trackDuration: {
  * @category aspects
  */
 export const trackDurationWith: {
+  <Type, In, Out>(
+    metric: Metric<Type, In, Out>,
+    f: (duration: Duration.Duration) => In
+  ): <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
   <R, E, A, Type, In, Out>(
     self: Effect.Effect<R, E, A>,
     metric: Metric<Type, In, Out>,
     f: (duration: Duration.Duration) => In
   ): Effect.Effect<R, E, A>
-  <Type, In, Out>(
-    metric: Metric<Type, In, Out>,
-    f: (duration: Duration.Duration) => In
-  ): <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
 } = internal.trackDurationWith
 
 /**
@@ -483,13 +481,13 @@ export const trackDurationWith: {
  * @category aspects
  */
 export const trackError: {
+  <Type, In, Out>(
+    metric: Metric<Type, In, Out>
+  ): <R, E extends In, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
   <R, E extends In, A, Type, In, Out>(
     self: Effect.Effect<R, E, A>,
     metric: Metric<Type, In, Out>
   ): Effect.Effect<R, E, A>
-  <Type, In, Out>(
-    metric: Metric<Type, In, Out>
-  ): <R, E extends In, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
 } = internal.trackError
 
 /**
@@ -501,15 +499,15 @@ export const trackError: {
  * @category aspects
  */
 export const trackErrorWith: {
+  <Type, In, Out, In2>(
+    metric: Metric<Type, In, Out>,
+    f: (error: In2) => In
+  ): <R, E extends In2, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
   <R, E extends In2, A, Type, In, Out, In2>(
     self: Effect.Effect<R, E, A>,
     metric: Metric<Type, In, Out>,
     f: (error: In2) => In
   ): Effect.Effect<R, E, A>
-  <Type, In, Out, In2>(
-    metric: Metric<Type, In, Out>,
-    f: (error: In2) => In
-  ): <R, E extends In2, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
 } = internal.trackErrorWith
 
 /**
@@ -520,13 +518,13 @@ export const trackErrorWith: {
  * @category aspects
  */
 export const trackSuccess: {
+  <Type, In, Out>(
+    metric: Metric<Type, In, Out>
+  ): <R, E, A extends In>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
   <R, E, A extends In, Type, In, Out>(
     self: Effect.Effect<R, E, A>,
     metric: Metric<Type, In, Out>
   ): Effect.Effect<R, E, A>
-  <Type, In, Out>(
-    metric: Metric<Type, In, Out>
-  ): <R, E, A extends In>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
 } = internal.trackSuccess
 
 /**
@@ -538,15 +536,15 @@ export const trackSuccess: {
  * @category aspects
  */
 export const trackSuccessWith: {
+  <Type, In, Out, In2>(
+    metric: Metric<Type, In, Out>,
+    f: (value: In2) => In
+  ): <R, E, A extends In2>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
   <R, E, A extends In2, Type, In, Out, In2>(
     self: Effect.Effect<R, E, A>,
     metric: Metric<Type, In, Out>,
     f: (value: In2) => In
   ): Effect.Effect<R, E, A>
-  <Type, In, Out, In2>(
-    metric: Metric<Type, In, Out>,
-    f: (value: In2) => In
-  ): <R, E, A extends In2>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
 } = internal.trackSuccessWith
 
 /**
@@ -558,8 +556,8 @@ export const trackSuccessWith: {
  * @category mutations
  */
 export const update: {
-  <Type, In, Out>(self: Metric<Type, In, Out>, input: In): Effect.Effect<never, never, void>
   <In>(input: In): <Type, Out>(self: Metric<Type, In, Out>) => Effect.Effect<never, never, void>
+  <Type, In, Out>(self: Metric<Type, In, Out>, input: In): Effect.Effect<never, never, void>
 } = internal.update
 
 /**
@@ -582,15 +580,15 @@ export const withNow: <Type, In, Out>(self: Metric<Type, readonly [In, number], 
  * @category zipping
  */
 export const zip: {
-  <Type, In, Out, Type2, In2, Out2>(
-    self: Metric<Type, In, Out>,
-    that: Metric<Type2, In2, Out2>
-  ): Metric<readonly [Type, Type2], readonly [In, In2], readonly [Out, Out2]>
   <Type2, In2, Out2>(
     that: Metric<Type2, In2, Out2>
   ): <Type, In, Out>(
     self: Metric<Type, In, Out>
   ) => Metric<readonly [Type, Type2], readonly [In, In2], readonly [Out, Out2]>
+  <Type, In, Out, Type2, In2, Out2>(
+    self: Metric<Type, In, Out>,
+    that: Metric<Type2, In2, Out2>
+  ): Metric<readonly [Type, Type2], readonly [In, In2], readonly [Out, Out2]>
 } = internal.zip
 
 /**

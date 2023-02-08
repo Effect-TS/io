@@ -126,6 +126,6 @@ export const summary: (key: MetricKey.MetricKey.Summary) => MetricHook.Summary =
  * @category mutations
  */
 export const onUpdate: {
-  <In, Out>(self: MetricHook<In, Out>, f: (input: In) => void): MetricHook<In, Out>
   <In, Out>(f: (input: In) => void): (self: MetricHook<In, Out>) => MetricHook<In, Out>
+  <In, Out>(self: MetricHook<In, Out>, f: (input: In) => void): MetricHook<In, Out>
 } = internal.onUpdate

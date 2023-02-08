@@ -20,7 +20,7 @@ import type * as MetricPair from "@effect/io/Metric/Pair"
 import type * as MetricRegistry from "@effect/io/Metric/Registry"
 import type * as MetricState from "@effect/io/Metric/State"
 import type { LazyArg } from "@fp-ts/core/Function"
-import { constVoid, identity, pipe } from "@fp-ts/core/Function"
+import { constVoid, dual, identity, pipe } from "@fp-ts/core/Function"
 
 /** @internal */
 const MetricSymbolKey = "@effect/io/Metric"
@@ -67,8 +67,8 @@ export const make: Metric.MetricApply = function<Type, In, Out>(
 
 /** @internal */
 export const contramap = Debug.untracedDual<
-  <Type, In, Out, In2>(self: Metric.Metric<Type, In, Out>, f: (input: In2) => In) => Metric.Metric<Type, In2, Out>,
-  <In, In2>(f: (input: In2) => In) => <Type, Out>(self: Metric.Metric<Type, In, Out>) => Metric.Metric<Type, In2, Out>
+  <In, In2>(f: (input: In2) => In) => <Type, Out>(self: Metric.Metric<Type, In, Out>) => Metric.Metric<Type, In2, Out>,
+  <Type, In, Out, In2>(self: Metric.Metric<Type, In, Out>, f: (input: In2) => In) => Metric.Metric<Type, In2, Out>
 >(2, (restore) =>
   (self, f) =>
     make(
@@ -85,8 +85,8 @@ export const frequency = (name: string): Metric.Metric.Frequency<string> => from
 
 /** @internal */
 export const fromConst = Debug.untracedDual<
-  <Type, In, Out>(self: Metric.Metric<Type, In, Out>, input: LazyArg<In>) => Metric.Metric<Type, unknown, Out>,
-  <In>(input: LazyArg<In>) => <Type, Out>(self: Metric.Metric<Type, In, Out>) => Metric.Metric<Type, unknown, Out>
+  <In>(input: LazyArg<In>) => <Type, Out>(self: Metric.Metric<Type, In, Out>) => Metric.Metric<Type, unknown, Out>,
+  <Type, In, Out>(self: Metric.Metric<Type, In, Out>, input: LazyArg<In>) => Metric.Metric<Type, unknown, Out>
 >(2, (restore) => (self, input) => contramap(self, restore(input)))
 
 /** @internal */
@@ -125,14 +125,14 @@ export const increment = Debug.methodWithTrace((trace) =>
 
 /* @internal */
 export const incrementBy = Debug.dualWithTrace<
-  (self: Metric.Metric.Counter<number>, amount: number) => Effect.Effect<never, never, void>,
-  (amount: number) => (self: Metric.Metric.Counter<number>) => Effect.Effect<never, never, void>
+  (amount: number) => (self: Metric.Metric.Counter<number>) => Effect.Effect<never, never, void>,
+  (self: Metric.Metric.Counter<number>, amount: number) => Effect.Effect<never, never, void>
 >(2, (trace) => (self, amount) => update(self, amount).traced(trace))
 
 /** @internal */
 export const map = Debug.untracedDual<
-  <Type, In, Out, Out2>(self: Metric.Metric<Type, In, Out>, f: (out: Out) => Out2) => Metric.Metric<Type, In, Out2>,
-  <Out, Out2>(f: (out: Out) => Out2) => <Type, In>(self: Metric.Metric<Type, In, Out>) => Metric.Metric<Type, In, Out2>
+  <Out, Out2>(f: (out: Out) => Out2) => <Type, In>(self: Metric.Metric<Type, In, Out>) => Metric.Metric<Type, In, Out2>,
+  <Type, In, Out, Out2>(self: Metric.Metric<Type, In, Out>, f: (out: Out) => Out2) => Metric.Metric<Type, In, Out2>
 >(2, (restore) =>
   (self, f) =>
     make(
@@ -143,21 +143,21 @@ export const map = Debug.untracedDual<
 
 /** @internal */
 export const mapType = Debug.untracedDual<
-  <Type, In, Out, Type2>(
-    self: Metric.Metric<Type, In, Out>,
-    f: (type: Type) => Type2
-  ) => Metric.Metric<Type2, In, Out>,
   <Type, Type2>(
     f: (type: Type) => Type2
   ) => <In, Out>(
     self: Metric.Metric<Type, In, Out>
+  ) => Metric.Metric<Type2, In, Out>,
+  <Type, In, Out, Type2>(
+    self: Metric.Metric<Type, In, Out>,
+    f: (type: Type) => Type2
   ) => Metric.Metric<Type2, In, Out>
 >(2, (restore) => (self, f) => make(restore(f)(self.keyType), self.unsafeUpdate, self.unsafeValue))
 
 /* @internal */
 export const set = Debug.dualWithTrace<
-  <In>(self: Metric.Metric.Gauge<In>, value: In) => Effect.Effect<never, never, void>,
-  <In>(value: In) => (self: Metric.Metric.Gauge<In>) => Effect.Effect<never, never, void>
+  <In>(value: In) => (self: Metric.Metric.Gauge<In>) => Effect.Effect<never, never, void>,
+  <In>(self: Metric.Metric.Gauge<In>, value: In) => Effect.Effect<never, never, void>
 >(2, (trace) => (self, value) => update(self, value).traced(trace))
 
 /** @internal */
@@ -193,20 +193,20 @@ export const summaryTimestamp = (
   fromMetricKey(metricKey.summary(name, maxAge, maxSize, error, quantiles))
 
 /** @internal */
-export const tagged = Debug.dual<
-  <Type, In, Out>(self: Metric.Metric<Type, In, Out>, key: string, value: string) => Metric.Metric<Type, In, Out>,
-  <Type, In, Out>(key: string, value: string) => (self: Metric.Metric<Type, In, Out>) => Metric.Metric<Type, In, Out>
+export const tagged = dual<
+  <Type, In, Out>(key: string, value: string) => (self: Metric.Metric<Type, In, Out>) => Metric.Metric<Type, In, Out>,
+  <Type, In, Out>(self: Metric.Metric<Type, In, Out>, key: string, value: string) => Metric.Metric<Type, In, Out>
 >(3, (self, key, value) => taggedWithLabelSet(self, HashSet.make(metricLabel.make(key, value))))
 
 /** @internal */
 export const taggedWith = Debug.untracedDual<
+  <In>(
+    f: (input: In) => HashSet.HashSet<MetricLabel.MetricLabel>
+  ) => <Type, Out>(self: Metric.Metric<Type, In, Out>) => Metric.Metric<Type, In, void>,
   <Type, In, Out>(
     self: Metric.Metric<Type, In, Out>,
     f: (input: In) => HashSet.HashSet<MetricLabel.MetricLabel>
-  ) => Metric.Metric<Type, In, void>,
-  <In>(
-    f: (input: In) => HashSet.HashSet<MetricLabel.MetricLabel>
-  ) => <Type, Out>(self: Metric.Metric<Type, In, Out>) => Metric.Metric<Type, In, void>
+  ) => Metric.Metric<Type, In, void>
 >(2, (restore) =>
   (self, f) =>
     map(
@@ -219,26 +219,26 @@ export const taggedWith = Debug.untracedDual<
     ))
 
 /** @internal */
-export const taggedWithLabels = Debug.dual<
+export const taggedWithLabels = dual<
+  <Type, In, Out>(
+    extraTags: Iterable<MetricLabel.MetricLabel>
+  ) => (self: Metric.Metric<Type, In, Out>) => Metric.Metric<Type, In, Out>,
   <Type, In, Out>(
     self: Metric.Metric<Type, In, Out>,
     extraTags: Iterable<MetricLabel.MetricLabel>
-  ) => Metric.Metric<Type, In, Out>,
-  <Type, In, Out>(
-    extraTags: Iterable<MetricLabel.MetricLabel>
-  ) => (self: Metric.Metric<Type, In, Out>) => Metric.Metric<Type, In, Out>
+  ) => Metric.Metric<Type, In, Out>
 >(2, (self, extraTags) => taggedWithLabelSet(self, HashSet.fromIterable(extraTags)))
 
 /** @internal */
-export const taggedWithLabelSet = Debug.dual<
-  <Type, In, Out>(
-    self: Metric.Metric<Type, In, Out>,
-    extraTags: HashSet.HashSet<MetricLabel.MetricLabel>
-  ) => Metric.Metric<Type, In, Out>,
+export const taggedWithLabelSet = dual<
   (
     extraTags: HashSet.HashSet<MetricLabel.MetricLabel>
   ) => <Type, In, Out>(
     self: Metric.Metric<Type, In, Out>
+  ) => Metric.Metric<Type, In, Out>,
+  <Type, In, Out>(
+    self: Metric.Metric<Type, In, Out>,
+    extraTags: HashSet.HashSet<MetricLabel.MetricLabel>
   ) => Metric.Metric<Type, In, Out>
 >(2, (self, extraTags) =>
   make(
@@ -276,14 +276,14 @@ export const timerWithBoundaries = (
 
 /* @internal */
 export const trackAll = Debug.dualWithTrace<
-  <Type, In, Out>(
-    self: Metric.Metric<Type, In, Out>,
-    input: In
-  ) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
   <In>(
     input: In
   ) => <Type, Out>(
     self: Metric.Metric<Type, In, Out>
+  ) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <Type, In, Out>(
+    self: Metric.Metric<Type, In, Out>,
+    input: In
   ) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
 >(2, (trace) =>
   (self, input) =>
@@ -304,26 +304,26 @@ export const trackAll = Debug.dualWithTrace<
 
 /* @internal */
 export const trackDefect = Debug.dualWithTrace<
+  <Type, Out>(
+    metric: Metric.Metric<Type, unknown, Out>
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
   <R, E, A, Type, Out>(
     self: Effect.Effect<R, E, A>,
     metric: Metric.Metric<Type, unknown, Out>
-  ) => Effect.Effect<R, E, A>,
-  <Type, Out>(
-    metric: Metric.Metric<Type, unknown, Out>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  ) => Effect.Effect<R, E, A>
 >(2, (trace) => (self, metric) => trackDefectWith(self, metric, identity).traced(trace))
 
 /* @internal */
 export const trackDefectWith = Debug.dualWithTrace<
+  <Type, In, Out>(
+    metric: Metric.Metric<Type, In, Out>,
+    f: (defect: unknown) => In
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
   <R, E, A, Type, In, Out>(
     self: Effect.Effect<R, E, A>,
     metric: Metric.Metric<Type, In, Out>,
     f: (defect: unknown) => In
-  ) => Effect.Effect<R, E, A>,
-  <Type, In, Out>(
-    metric: Metric.Metric<Type, In, Out>,
-    f: (defect: unknown) => In
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  ) => Effect.Effect<R, E, A>
 >(3, (trace, restore) =>
   (self, metric, f) =>
     Debug.untraced(() => {
@@ -339,26 +339,26 @@ export const trackDefectWith = Debug.dualWithTrace<
 
 /* @internal */
 export const trackDuration = Debug.dualWithTrace<
+  <Type, Out>(
+    metric: Metric.Metric<Type, Duration.Duration, Out>
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
   <R, E, A, Type, Out>(
     self: Effect.Effect<R, E, A>,
     metric: Metric.Metric<Type, Duration.Duration, Out>
-  ) => Effect.Effect<R, E, A>,
-  <Type, Out>(
-    metric: Metric.Metric<Type, Duration.Duration, Out>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  ) => Effect.Effect<R, E, A>
 >(2, (trace) => (self, metric) => trackDurationWith(self, metric, identity).traced(trace))
 
 /* @internal */
 export const trackDurationWith = Debug.dualWithTrace<
+  <Type, In, Out>(
+    metric: Metric.Metric<Type, In, Out>,
+    f: (duration: Duration.Duration) => In
+  ) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
   <R, E, A, Type, In, Out>(
     self: Effect.Effect<R, E, A>,
     metric: Metric.Metric<Type, In, Out>,
     f: (duration: Duration.Duration) => In
-  ) => Effect.Effect<R, E, A>,
-  <Type, In, Out>(
-    metric: Metric.Metric<Type, In, Out>,
-    f: (duration: Duration.Duration) => In
-  ) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  ) => Effect.Effect<R, E, A>
 >(3, (trace, restore) =>
   (self, metric, f) =>
     Debug.untraced(() =>
@@ -375,13 +375,13 @@ export const trackDurationWith = Debug.dualWithTrace<
 
 /* @internal */
 export const trackError = Debug.dualWithTrace<
+  <Type, In, Out>(
+    metric: Metric.Metric<Type, In, Out>
+  ) => <R, E extends In, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
   <R, E extends In, A, Type, In, Out>(
     self: Effect.Effect<R, E, A>,
     metric: Metric.Metric<Type, In, Out>
-  ) => Effect.Effect<R, E, A>,
-  <Type, In, Out>(
-    metric: Metric.Metric<Type, In, Out>
-  ) => <R, E extends In, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  ) => Effect.Effect<R, E, A>
 >(
   2,
   (trace) =>
@@ -391,15 +391,15 @@ export const trackError = Debug.dualWithTrace<
 
 /* @internal */
 export const trackErrorWith = Debug.dualWithTrace<
+  <Type, In, Out, In2>(
+    metric: Metric.Metric<Type, In, Out>,
+    f: (error: In2) => In
+  ) => <R, E extends In2, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
   <R, E extends In2, A, Type, In, Out, In2>(
     self: Effect.Effect<R, E, A>,
     metric: Metric.Metric<Type, In, Out>,
     f: (error: In2) => In
-  ) => Effect.Effect<R, E, A>,
-  <Type, In, Out, In2>(
-    metric: Metric.Metric<Type, In, Out>,
-    f: (error: In2) => In
-  ) => <R, E extends In2, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  ) => Effect.Effect<R, E, A>
 >(
   3,
   (trace, restore) =>
@@ -416,13 +416,13 @@ export const trackErrorWith = Debug.dualWithTrace<
 
 /* @internal */
 export const trackSuccess = Debug.dualWithTrace<
+  <Type, In, Out>(
+    metric: Metric.Metric<Type, In, Out>
+  ) => <R, E, A extends In>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
   <R, E, A extends In, Type, In, Out>(
     self: Effect.Effect<R, E, A>,
     metric: Metric.Metric<Type, In, Out>
-  ) => Effect.Effect<R, E, A>,
-  <Type, In, Out>(
-    metric: Metric.Metric<Type, In, Out>
-  ) => <R, E, A extends In>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  ) => Effect.Effect<R, E, A>
 >(
   2,
   (trace) =>
@@ -432,15 +432,15 @@ export const trackSuccess = Debug.dualWithTrace<
 
 /* @internal */
 export const trackSuccessWith = Debug.dualWithTrace<
+  <Type, In, Out, In2>(
+    metric: Metric.Metric<Type, In, Out>,
+    f: (value: In2) => In
+  ) => <R, E, A extends In2>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
   <R, E, A extends In2, Type, In, Out, In2>(
     self: Effect.Effect<R, E, A>,
     metric: Metric.Metric<Type, In, Out>,
     f: (value: In2) => In
-  ) => Effect.Effect<R, E, A>,
-  <Type, In, Out, In2>(
-    metric: Metric.Metric<Type, In, Out>,
-    f: (value: In2) => In
-  ) => <R, E, A extends In2>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  ) => Effect.Effect<R, E, A>
 >(
   3,
   (trace, restore) =>
@@ -457,8 +457,8 @@ export const trackSuccessWith = Debug.dualWithTrace<
 
 /* @internal */
 export const update = Debug.dualWithTrace<
-  <Type, In, Out>(self: Metric.Metric<Type, In, Out>, input: In) => Effect.Effect<never, never, void>,
-  <In>(input: In) => <Type, Out>(self: Metric.Metric<Type, In, Out>) => Effect.Effect<never, never, void>
+  <In>(input: In) => <Type, Out>(self: Metric.Metric<Type, In, Out>) => Effect.Effect<never, never, void>,
+  <Type, In, Out>(self: Metric.Metric<Type, In, Out>, input: In) => Effect.Effect<never, never, void>
 >(2, (trace) =>
   (self, input) =>
     core.fiberRefGetWith(
@@ -483,15 +483,15 @@ export const withNow = <Type, In, Out>(
 ): Metric.Metric<Type, In, Out> => contramap(self, (input: In) => [input, Date.now()] as const)
 
 /** @internal */
-export const zip = Debug.dual<
-  <Type, In, Out, Type2, In2, Out2>(
-    self: Metric.Metric<Type, In, Out>,
-    that: Metric.Metric<Type2, In2, Out2>
-  ) => Metric.Metric<readonly [Type, Type2], readonly [In, In2], readonly [Out, Out2]>,
+export const zip = dual<
   <Type2, In2, Out2>(
     that: Metric.Metric<Type2, In2, Out2>
   ) => <Type, In, Out>(
     self: Metric.Metric<Type, In, Out>
+  ) => Metric.Metric<readonly [Type, Type2], readonly [In, In2], readonly [Out, Out2]>,
+  <Type, In, Out, Type2, In2, Out2>(
+    self: Metric.Metric<Type, In, Out>,
+    that: Metric.Metric<Type2, In2, Out2>
   ) => Metric.Metric<readonly [Type, Type2], readonly [In, In2], readonly [Out, Out2]>
 >(
   2,

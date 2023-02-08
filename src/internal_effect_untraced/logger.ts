@@ -17,7 +17,7 @@ import type * as LogLevel from "@effect/io/Logger/Level"
 import * as LogSpan from "@effect/io/Logger/Span"
 import type * as Runtime from "@effect/io/Runtime"
 import type { LazyArg } from "@fp-ts/core/Function"
-import { constVoid, identity, pipe } from "@fp-ts/core/Function"
+import { constVoid, dual, identity, pipe } from "@fp-ts/core/Function"
 import * as Option from "@fp-ts/core/Option"
 
 /** @internal */
@@ -195,13 +195,13 @@ const renderLogSpanLogfmt = (now: number) =>
 
 /** @internal */
 export const contramap = Debug.untracedDual<
+  <Message, Message2>(
+    f: (message: Message2) => Message
+  ) => <Output>(self: Logger.Logger<Message, Output>) => Logger.Logger<Message2, Output>,
   <Output, Message, Message2>(
     self: Logger.Logger<Message, Output>,
     f: (message: Message2) => Message
-  ) => Logger.Logger<Message2, Output>,
-  <Message, Message2>(
-    f: (message: Message2) => Message
-  ) => <Output>(self: Logger.Logger<Message, Output>) => Logger.Logger<Message2, Output>
+  ) => Logger.Logger<Message2, Output>
 >(2, (restore) =>
   (self, f) =>
     makeLogger(
@@ -211,13 +211,13 @@ export const contramap = Debug.untracedDual<
 
 /** @internal */
 export const filterLogLevel = Debug.untracedDual<
+  (
+    f: (logLevel: LogLevel.LogLevel) => boolean
+  ) => <Message, Output>(self: Logger.Logger<Message, Output>) => Logger.Logger<Message, Option.Option<Output>>,
   <Message, Output>(
     self: Logger.Logger<Message, Output>,
     f: (logLevel: LogLevel.LogLevel) => boolean
-  ) => Logger.Logger<Message, Option.Option<Output>>,
-  (
-    f: (logLevel: LogLevel.LogLevel) => boolean
-  ) => <Message, Output>(self: Logger.Logger<Message, Output>) => Logger.Logger<Message, Option.Option<Output>>
+  ) => Logger.Logger<Message, Option.Option<Output>>
 >(2, (restore) =>
   (self, f) =>
     makeLogger(
@@ -240,13 +240,13 @@ export const filterLogLevel = Debug.untracedDual<
 
 /** @internal */
 export const map = Debug.untracedDual<
+  <Output, Output2>(
+    f: (output: Output) => Output2
+  ) => <Message>(self: Logger.Logger<Message, Output>) => Logger.Logger<Message, Output2>,
   <Message, Output, Output2>(
     self: Logger.Logger<Message, Output>,
     f: (output: Output) => Output2
-  ) => Logger.Logger<Message, Output2>,
-  <Output, Output2>(
-    f: (output: Output) => Output2
-  ) => <Message>(self: Logger.Logger<Message, Output>) => Logger.Logger<Message, Output2>
+  ) => Logger.Logger<Message, Output2>
 >(2, (restore) =>
   (self, f) =>
     makeLogger(
@@ -279,15 +279,15 @@ export const sync = <A>(evaluate: LazyArg<A>): Logger.Logger<unknown, A> => {
 }
 
 /** @internal */
-export const zip = Debug.dual<
-  <Message, Output, Message2, Output2>(
-    self: Logger.Logger<Message, Output>,
-    that: Logger.Logger<Message2, Output2>
-  ) => Logger.Logger<Message & Message2, readonly [Output, Output2]>,
+export const zip = dual<
   <Message2, Output2>(
     that: Logger.Logger<Message2, Output2>
   ) => <Message, Output>(
     self: Logger.Logger<Message, Output>
+  ) => Logger.Logger<Message & Message2, readonly [Output, Output2]>,
+  <Message, Output, Message2, Output2>(
+    self: Logger.Logger<Message, Output>,
+    that: Logger.Logger<Message2, Output2>
   ) => Logger.Logger<Message & Message2, readonly [Output, Output2]>
 >(2, (self, that) =>
   makeLogger((fiberId, logLevel, message, cause, context, spans, annotations, runtime) =>
@@ -298,28 +298,28 @@ export const zip = Debug.dual<
   ))
 
 /** @internal */
-export const zipLeft = Debug.dual<
-  <Message, Output, Message2, Output2>(
-    self: Logger.Logger<Message, Output>,
-    that: Logger.Logger<Message2, Output2>
-  ) => Logger.Logger<Message & Message2, Output>,
+export const zipLeft = dual<
   <Message2, Output2>(
     that: Logger.Logger<Message2, Output2>
   ) => <Message, Output>(
     self: Logger.Logger<Message, Output>
+  ) => Logger.Logger<Message & Message2, Output>,
+  <Message, Output, Message2, Output2>(
+    self: Logger.Logger<Message, Output>,
+    that: Logger.Logger<Message2, Output2>
   ) => Logger.Logger<Message & Message2, Output>
 >(2, (self, that) => map(zip(self, that), (tuple) => tuple[0]))
 
 /** @internal */
-export const zipRight = Debug.dual<
-  <Message, Output, Message2, Output2>(
-    self: Logger.Logger<Message, Output>,
-    that: Logger.Logger<Message2, Output2>
-  ) => Logger.Logger<Message & Message2, Output2>,
+export const zipRight = dual<
   <Message2, Output2>(
     that: Logger.Logger<Message2, Output2>
   ) => <Message, Output>(
     self: Logger.Logger<Message, Output>
+  ) => Logger.Logger<Message & Message2, Output2>,
+  <Message, Output, Message2, Output2>(
+    self: Logger.Logger<Message, Output>,
+    that: Logger.Logger<Message2, Output2>
   ) => Logger.Logger<Message & Message2, Output2>
 >(2, (self, that) => map(zip(self, that), (tuple) => tuple[1]))
 

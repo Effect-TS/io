@@ -2,10 +2,9 @@ import * as Chunk from "@effect/data/Chunk"
 import * as List from "@effect/data/List"
 import type * as ConfigError from "@effect/io/Config/Error"
 import type * as PathPatch from "@effect/io/Config/Provider/PathPatch"
-import * as Debug from "@effect/io/Debug"
 import * as configError from "@effect/io/internal_effect_untraced/configError"
 import * as Either from "@fp-ts/core/Either"
-import { pipe } from "@fp-ts/core/Function"
+import { dual, pipe } from "@fp-ts/core/Function"
 import * as Option from "@fp-ts/core/Option"
 import * as String from "@fp-ts/core/String"
 
@@ -15,9 +14,9 @@ export const empty: PathPatch.PathPatch = {
 }
 
 /** @internal */
-export const andThen = Debug.dual<
-  (self: PathPatch.PathPatch, that: PathPatch.PathPatch) => PathPatch.PathPatch,
-  (that: PathPatch.PathPatch) => (self: PathPatch.PathPatch) => PathPatch.PathPatch
+export const andThen = dual<
+  (that: PathPatch.PathPatch) => (self: PathPatch.PathPatch) => PathPatch.PathPatch,
+  (self: PathPatch.PathPatch, that: PathPatch.PathPatch) => PathPatch.PathPatch
 >(2, (self, that) => ({
   _tag: "AndThen",
   first: self,
@@ -25,33 +24,33 @@ export const andThen = Debug.dual<
 }))
 
 /** @internal */
-export const mapName = Debug.dual<
-  (self: PathPatch.PathPatch, f: (string: string) => string) => PathPatch.PathPatch,
-  (f: (string: string) => string) => (self: PathPatch.PathPatch) => PathPatch.PathPatch
+export const mapName = dual<
+  (f: (string: string) => string) => (self: PathPatch.PathPatch) => PathPatch.PathPatch,
+  (self: PathPatch.PathPatch, f: (string: string) => string) => PathPatch.PathPatch
 >(2, (self, f) => andThen(self, { _tag: "MapName", f }))
 
 /** @internal */
-export const nested = Debug.dual<
-  (self: PathPatch.PathPatch, name: string) => PathPatch.PathPatch,
-  (name: string) => (self: PathPatch.PathPatch) => PathPatch.PathPatch
+export const nested = dual<
+  (name: string) => (self: PathPatch.PathPatch) => PathPatch.PathPatch,
+  (self: PathPatch.PathPatch, name: string) => PathPatch.PathPatch
 >(2, (self, name) => andThen(self, { _tag: "Nested", name }))
 
 /** @internal */
-export const unnested = Debug.dual<
-  (self: PathPatch.PathPatch, name: string) => PathPatch.PathPatch,
-  (name: string) => (self: PathPatch.PathPatch) => PathPatch.PathPatch
+export const unnested = dual<
+  (name: string) => (self: PathPatch.PathPatch) => PathPatch.PathPatch,
+  (self: PathPatch.PathPatch, name: string) => PathPatch.PathPatch
 >(2, (self, name) => andThen(self, { _tag: "Unnested", name }))
 
 /** @internal */
-export const patch = Debug.dual<
-  (
-    path: Chunk.Chunk<string>,
-    patch: PathPatch.PathPatch
-  ) => Either.Either<ConfigError.ConfigError, Chunk.Chunk<string>>,
+export const patch = dual<
   (
     patch: PathPatch.PathPatch
   ) => (
     path: Chunk.Chunk<string>
+  ) => Either.Either<ConfigError.ConfigError, Chunk.Chunk<string>>,
+  (
+    path: Chunk.Chunk<string>,
+    patch: PathPatch.PathPatch
   ) => Either.Either<ConfigError.ConfigError, Chunk.Chunk<string>>
 >(2, (path, patch) => {
   let input = List.of(patch)

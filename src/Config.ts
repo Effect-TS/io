@@ -1,6 +1,9 @@
 /**
  * @since 1.0.0
  */
+import type * as Chunk from "@effect/data/Chunk"
+import type * as HashMap from "@effect/data/HashMap"
+import type * as HashSet from "@effect/data/HashSet"
 import type * as ConfigError from "@effect/io/Config/Error"
 import type * as ConfigSecret from "@effect/io/Config/Secret"
 import * as internal from "@effect/io/internal_effect_untraced/config"
@@ -9,9 +12,6 @@ import type * as Either from "@fp-ts/core/Either"
 import type { LazyArg } from "@fp-ts/core/Function"
 import type * as Option from "@fp-ts/core/Option"
 import type { Predicate, Refinement } from "@fp-ts/core/Predicate"
-import type * as Chunk from "@effect/data/Chunk"
-import type * as HashMap from "@effect/data/HashMap"
-import type * as HashSet from "@effect/data/HashSet"
 
 /**
  * @since 1.0.0
@@ -146,8 +146,8 @@ export const integer: (name?: string | undefined) => Config<number> = internal.i
  * @category mutations
  */
 export const map: {
-  <A, B>(self: Config<A>, f: (a: A) => B): Config<B>
   <A, B>(f: (a: A) => B): (self: Config<A>) => Config<B>
+  <A, B>(self: Config<A>, f: (a: A) => B): Config<B>
 } = internal.map
 
 /**
@@ -159,8 +159,8 @@ export const map: {
  * @category mutations
  */
 export const mapAttempt: {
-  <A, B>(self: Config<A>, f: (a: A) => B): Config<B>
   <A, B>(f: (a: A) => B): (self: Config<A>) => Config<B>
+  <A, B>(self: Config<A>, f: (a: A) => B): Config<B>
 } = internal.mapAttempt
 
 /**
@@ -172,8 +172,8 @@ export const mapAttempt: {
  * @category mutations
  */
 export const mapOrFail: {
-  <A, B>(self: Config<A>, f: (a: A) => Either.Either<ConfigError.ConfigError, B>): Config<B>
   <A, B>(f: (a: A) => Either.Either<ConfigError.ConfigError, B>): (self: Config<A>) => Config<B>
+  <A, B>(self: Config<A>, f: (a: A) => Either.Either<ConfigError.ConfigError, B>): Config<B>
 } = internal.mapOrFail
 
 /**
@@ -184,8 +184,8 @@ export const mapOrFail: {
  * @category mutations
  */
 export const nested: {
-  <A>(self: Config<A>, name: string): Config<A>
   (name: string): <A>(self: Config<A>) => Config<A>
+  <A>(self: Config<A>, name: string): Config<A>
 } = internal.nested
 
 /**
@@ -197,8 +197,8 @@ export const nested: {
  * @category mutations
  */
 export const orElse: {
-  <A, A2>(self: Config<A>, that: LazyArg<Config<A2>>): Config<A | A2>
   <A2>(that: LazyArg<Config<A2>>): <A>(self: Config<A>) => Config<A2 | A>
+  <A, A2>(self: Config<A>, that: LazyArg<Config<A2>>): Config<A | A2>
 } = internal.orElse
 
 /**
@@ -210,8 +210,8 @@ export const orElse: {
  * @category mutations
  */
 export const orElseIf: {
-  <A, A2>(self: Config<A>, that: LazyArg<Config<A2>>, condition: Predicate<ConfigError.ConfigError>): Config<A>
   <A2>(that: LazyArg<Config<A2>>, condition: Predicate<ConfigError.ConfigError>): <A>(self: Config<A>) => Config<A>
+  <A, A2>(self: Config<A>, that: LazyArg<Config<A2>>, condition: Predicate<ConfigError.ConfigError>): Config<A>
 } = internal.orElseIf
 
 /**
@@ -340,10 +340,10 @@ export const unwrap: <A>(wrapped: Config.Wrap<A>) => Config<A> = internal.unwrap
  * @category mutations
  */
 export const validate: {
-  <A, B extends A>(self: Config<A>, message: string, f: Refinement<A, B>): Config<B>
-  <A>(self: Config<A>, message: string, f: Predicate<A>): Config<A>
   <A, B extends A>(message: string, f: Refinement<A, B>): (self: Config<A>) => Config<B>
   <A>(message: string, f: Predicate<A>): (self: Config<A>) => Config<A>
+  <A, B extends A>(self: Config<A>, message: string, f: Refinement<A, B>): Config<B>
+  <A>(self: Config<A>, message: string, f: Predicate<A>): Config<A>
 } = internal.validate
 
 /**
@@ -354,8 +354,8 @@ export const validate: {
  * @category mutations
  */
 export const withDefault: {
-  <A, A2>(self: Config<A>, def: A2): Config<A | A2>
   <A2>(def: A2): <A>(self: Config<A>) => Config<A2 | A>
+  <A, A2>(self: Config<A>, def: A2): Config<A | A2>
 } = internal.withDefault
 
 /**
@@ -365,8 +365,8 @@ export const withDefault: {
  * @category mutations
  */
 export const withDescription: {
-  <A>(self: Config<A>, description: string): Config<A>
   (description: string): <A>(self: Config<A>) => Config<A>
+  <A>(self: Config<A>, description: string): Config<A>
 } = internal.withDescription
 
 /**
@@ -377,8 +377,8 @@ export const withDescription: {
  * @category mutations
  */
 export const zip: {
-  <A, B>(self: Config<A>, that: Config<B>): Config<readonly [A, B]>
   <B>(that: Config<B>): <A>(self: Config<A>) => Config<readonly [A, B]>
+  <A, B>(self: Config<A>, that: Config<B>): Config<readonly [A, B]>
 } = internal.zip
 
 /**
@@ -389,6 +389,6 @@ export const zip: {
  * @category mutations
  */
 export const zipWith: {
-  <A, B, C>(self: Config<A>, that: Config<B>, f: (a: A, b: B) => C): Config<C>
   <B, A, C>(that: Config<B>, f: (a: A, b: B) => C): (self: Config<A>) => Config<C>
+  <A, B, C>(self: Config<A>, that: Config<B>, f: (a: A, b: B) => C): Config<C>
 } = internal.zipWith

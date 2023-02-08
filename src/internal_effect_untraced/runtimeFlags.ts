@@ -1,8 +1,8 @@
 import * as Differ from "@effect/data/Differ"
-import * as Debug from "@effect/io/Debug"
 import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import type * as RuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
 import * as runtimeFlagsPatch from "@effect/io/internal_effect_untraced/runtimeFlagsPatch"
+import { dual } from "@fp-ts/core/Function"
 
 /** @internal */
 export const None: RuntimeFlags.RuntimeFlag = 0 as RuntimeFlags.RuntimeFlag
@@ -36,27 +36,27 @@ export const allFlags: ReadonlyArray<RuntimeFlags.RuntimeFlag> = [
 export const cooperativeYielding = (self: RuntimeFlags.RuntimeFlags): boolean => isEnabled(self, CooperativeYielding)
 
 /** @internal */
-export const disable = Debug.dual<
-  (self: RuntimeFlags.RuntimeFlags, flag: RuntimeFlags.RuntimeFlag) => RuntimeFlags.RuntimeFlags,
-  (flag: RuntimeFlags.RuntimeFlag) => (self: RuntimeFlags.RuntimeFlags) => RuntimeFlags.RuntimeFlags
+export const disable = dual<
+  (flag: RuntimeFlags.RuntimeFlag) => (self: RuntimeFlags.RuntimeFlags) => RuntimeFlags.RuntimeFlags,
+  (self: RuntimeFlags.RuntimeFlags, flag: RuntimeFlags.RuntimeFlag) => RuntimeFlags.RuntimeFlags
 >(2, (self, flag) => (self & ~flag) as RuntimeFlags.RuntimeFlags)
 
 /** @internal */
-export const disableAll = Debug.dual<
-  (self: RuntimeFlags.RuntimeFlags, flags: RuntimeFlags.RuntimeFlags) => RuntimeFlags.RuntimeFlags,
-  (flags: RuntimeFlags.RuntimeFlags) => (self: RuntimeFlags.RuntimeFlags) => RuntimeFlags.RuntimeFlags
+export const disableAll = dual<
+  (flags: RuntimeFlags.RuntimeFlags) => (self: RuntimeFlags.RuntimeFlags) => RuntimeFlags.RuntimeFlags,
+  (self: RuntimeFlags.RuntimeFlags, flags: RuntimeFlags.RuntimeFlags) => RuntimeFlags.RuntimeFlags
 >(2, (self, flags) => (self & ~flags) as RuntimeFlags.RuntimeFlags)
 
 /** @internal */
-export const enable = Debug.dual<
-  (self: RuntimeFlags.RuntimeFlags, flag: RuntimeFlags.RuntimeFlag) => RuntimeFlags.RuntimeFlags,
-  (flag: RuntimeFlags.RuntimeFlag) => (self: RuntimeFlags.RuntimeFlags) => RuntimeFlags.RuntimeFlags
+export const enable = dual<
+  (flag: RuntimeFlags.RuntimeFlag) => (self: RuntimeFlags.RuntimeFlags) => RuntimeFlags.RuntimeFlags,
+  (self: RuntimeFlags.RuntimeFlags, flag: RuntimeFlags.RuntimeFlag) => RuntimeFlags.RuntimeFlags
 >(2, (self, flag) => (self | flag) as RuntimeFlags.RuntimeFlags)
 
 /** @internal */
-export const enableAll = Debug.dual<
-  (self: RuntimeFlags.RuntimeFlags, flags: RuntimeFlags.RuntimeFlags) => RuntimeFlags.RuntimeFlags,
-  (flags: RuntimeFlags.RuntimeFlags) => (self: RuntimeFlags.RuntimeFlags) => RuntimeFlags.RuntimeFlags
+export const enableAll = dual<
+  (flags: RuntimeFlags.RuntimeFlags) => (self: RuntimeFlags.RuntimeFlags) => RuntimeFlags.RuntimeFlags,
+  (self: RuntimeFlags.RuntimeFlags, flags: RuntimeFlags.RuntimeFlags) => RuntimeFlags.RuntimeFlags
 >(2, (self, flags) => (self | flags) as RuntimeFlags.RuntimeFlags)
 
 /** @internal */
@@ -66,15 +66,15 @@ export const interruptible = (self: RuntimeFlags.RuntimeFlags): boolean => inter
 export const interruption = (self: RuntimeFlags.RuntimeFlags): boolean => isEnabled(self, Interruption)
 
 /** @internal */
-export const isDisabled = Debug.dual<
-  (self: RuntimeFlags.RuntimeFlags, flag: RuntimeFlags.RuntimeFlag) => boolean,
-  (flag: RuntimeFlags.RuntimeFlag) => (self: RuntimeFlags.RuntimeFlags) => boolean
+export const isDisabled = dual<
+  (flag: RuntimeFlags.RuntimeFlag) => (self: RuntimeFlags.RuntimeFlags) => boolean,
+  (self: RuntimeFlags.RuntimeFlags, flag: RuntimeFlags.RuntimeFlag) => boolean
 >(2, (self, flag) => !isEnabled(self, flag))
 
 /** @internal */
-export const isEnabled = Debug.dual<
-  (self: RuntimeFlags.RuntimeFlags, flag: RuntimeFlags.RuntimeFlag) => boolean,
-  (flag: RuntimeFlags.RuntimeFlag) => (self: RuntimeFlags.RuntimeFlags) => boolean
+export const isEnabled = dual<
+  (flag: RuntimeFlags.RuntimeFlag) => (self: RuntimeFlags.RuntimeFlags) => boolean,
+  (self: RuntimeFlags.RuntimeFlags, flag: RuntimeFlags.RuntimeFlag) => boolean
 >(2, (self, flag) => (self & flag) !== 0)
 
 /** @internal */
@@ -118,15 +118,15 @@ export const disabledSet = (self: RuntimeFlagsPatch.RuntimeFlagsPatch): Readonly
   toSet((runtimeFlagsPatch.active(self) & ~runtimeFlagsPatch.enabled(self)) as RuntimeFlags.RuntimeFlags)
 
 /** @internal */
-export const diff = Debug.dual<
-  (self: RuntimeFlags.RuntimeFlags, that: RuntimeFlags.RuntimeFlags) => RuntimeFlagsPatch.RuntimeFlagsPatch,
-  (that: RuntimeFlags.RuntimeFlags) => (self: RuntimeFlags.RuntimeFlags) => RuntimeFlagsPatch.RuntimeFlagsPatch
+export const diff = dual<
+  (that: RuntimeFlags.RuntimeFlags) => (self: RuntimeFlags.RuntimeFlags) => RuntimeFlagsPatch.RuntimeFlagsPatch,
+  (self: RuntimeFlags.RuntimeFlags, that: RuntimeFlags.RuntimeFlags) => RuntimeFlagsPatch.RuntimeFlagsPatch
 >(2, (self, that) => runtimeFlagsPatch.make(self ^ that, that))
 
 /** @internal */
-export const patch = Debug.dual<
-  (self: RuntimeFlags.RuntimeFlags, patch: RuntimeFlagsPatch.RuntimeFlagsPatch) => RuntimeFlags.RuntimeFlags,
-  (patch: RuntimeFlagsPatch.RuntimeFlagsPatch) => (self: RuntimeFlags.RuntimeFlags) => RuntimeFlags.RuntimeFlags
+export const patch = dual<
+  (patch: RuntimeFlagsPatch.RuntimeFlagsPatch) => (self: RuntimeFlags.RuntimeFlags) => RuntimeFlags.RuntimeFlags,
+  (self: RuntimeFlags.RuntimeFlags, patch: RuntimeFlagsPatch.RuntimeFlagsPatch) => RuntimeFlags.RuntimeFlags
 >(2, (self, patch) =>
   (
     (self & (runtimeFlagsPatch.invert(runtimeFlagsPatch.active(patch)) | runtimeFlagsPatch.enabled(patch))) |

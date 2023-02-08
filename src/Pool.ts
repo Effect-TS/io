@@ -130,4 +130,7 @@ export const get: <E, A>(self: Pool<E, A>) => Effect.Effect<Scope.Scope, E, A> =
  * @since 1.0.0
  * @category combinators
  */
-export const invalidate: <E, A>(self: Pool<E, A>, a: A) => Effect.Effect<Scope.Scope, never, void> = internal.invalidate
+export const invalidate: {
+  <A>(value: A): <E>(self: Pool<E, A>) => Effect.Effect<Scope.Scope, never, void>
+  <E, A>(self: Pool<E, A>, value: A): Effect.Effect<Scope.Scope, never, void>
+} = internal.invalidate

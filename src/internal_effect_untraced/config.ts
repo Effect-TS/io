@@ -4,14 +4,13 @@ import * as HashSet from "@effect/data/HashSet"
 import type * as Config from "@effect/io/Config"
 import * as ConfigError from "@effect/io/Config/Error"
 import type * as ConfigSecret from "@effect/io/Config/Secret"
-import * as Debug from "@effect/io/Debug"
 import * as configError from "@effect/io/internal_effect_untraced/configError"
 import * as configSecret from "@effect/io/internal_effect_untraced/configSecret"
 import * as OpCodes from "@effect/io/internal_effect_untraced/opCodes/config"
 import type { EnforceNonEmptyRecord, NonEmptyArrayConfig, TupleConfig } from "@effect/io/internal_effect_untraced/types"
 import * as Either from "@fp-ts/core/Either"
 import type { LazyArg } from "@fp-ts/core/Function"
-import { constTrue, pipe } from "@fp-ts/core/Function"
+import { constTrue, dual, pipe } from "@fp-ts/core/Function"
 import * as Option from "@fp-ts/core/Option"
 import type { Predicate, Refinement } from "@fp-ts/core/Predicate"
 
@@ -266,15 +265,15 @@ export const integer = (name?: string): Config.Config<number> => {
 }
 
 /** @internal */
-export const map = Debug.dual<
-  <A, B>(self: Config.Config<A>, f: (a: A) => B) => Config.Config<B>,
-  <A, B>(f: (a: A) => B) => (self: Config.Config<A>) => Config.Config<B>
+export const map = dual<
+  <A, B>(f: (a: A) => B) => (self: Config.Config<A>) => Config.Config<B>,
+  <A, B>(self: Config.Config<A>, f: (a: A) => B) => Config.Config<B>
 >(2, (self, f) => mapOrFail(self, (a) => Either.right(f(a))))
 
 /** @internal */
-export const mapAttempt = Debug.dual<
-  <A, B>(self: Config.Config<A>, f: (a: A) => B) => Config.Config<B>,
-  <A, B>(f: (a: A) => B) => (self: Config.Config<A>) => Config.Config<B>
+export const mapAttempt = dual<
+  <A, B>(f: (a: A) => B) => (self: Config.Config<A>) => Config.Config<B>,
+  <A, B>(self: Config.Config<A>, f: (a: A) => B) => Config.Config<B>
 >(2, (self, f) =>
   mapOrFail(self, (a) => {
     try {
@@ -290,9 +289,9 @@ export const mapAttempt = Debug.dual<
   }))
 
 /** @internal */
-export const mapOrFail = Debug.dual<
-  <A, B>(self: Config.Config<A>, f: (a: A) => Either.Either<ConfigError.ConfigError, B>) => Config.Config<B>,
-  <A, B>(f: (a: A) => Either.Either<ConfigError.ConfigError, B>) => (self: Config.Config<A>) => Config.Config<B>
+export const mapOrFail = dual<
+  <A, B>(f: (a: A) => Either.Either<ConfigError.ConfigError, B>) => (self: Config.Config<A>) => Config.Config<B>,
+  <A, B>(self: Config.Config<A>, f: (a: A) => Either.Either<ConfigError.ConfigError, B>) => Config.Config<B>
 >(2, (self, f) => {
   const mapOrFail = Object.create(proto)
   mapOrFail._tag = OpCodes.OP_MAP_OR_FAIL
@@ -309,9 +308,9 @@ export const missingError = (name: string) => {
 }
 
 /** @internal */
-export const nested = Debug.dual<
-  <A>(self: Config.Config<A>, name: string) => Config.Config<A>,
-  (name: string) => <A>(self: Config.Config<A>) => Config.Config<A>
+export const nested = dual<
+  (name: string) => <A>(self: Config.Config<A>) => Config.Config<A>,
+  <A>(self: Config.Config<A>, name: string) => Config.Config<A>
 >(2, (self, name) => {
   const nested = Object.create(proto)
   nested._tag = OpCodes.OP_NESTED
@@ -321,9 +320,9 @@ export const nested = Debug.dual<
 })
 
 /** @internal */
-export const orElse = Debug.dual<
-  <A, A2>(self: Config.Config<A>, that: LazyArg<Config.Config<A2>>) => Config.Config<A | A2>,
-  <A2>(that: LazyArg<Config.Config<A2>>) => <A>(self: Config.Config<A>) => Config.Config<A | A2>
+export const orElse = dual<
+  <A2>(that: LazyArg<Config.Config<A2>>) => <A>(self: Config.Config<A>) => Config.Config<A | A2>,
+  <A, A2>(self: Config.Config<A>, that: LazyArg<Config.Config<A2>>) => Config.Config<A | A2>
 >(2, (self, that) => {
   const fallback = Object.create(proto)
   fallback._tag = OpCodes.OP_FALLBACK
@@ -334,16 +333,16 @@ export const orElse = Debug.dual<
 })
 
 /** @internal */
-export const orElseIf = Debug.dual<
+export const orElseIf = dual<
+  <A2>(
+    that: LazyArg<Config.Config<A2>>,
+    condition: Predicate<ConfigError.ConfigError>
+  ) => <A>(self: Config.Config<A>) => Config.Config<A>,
   <A, A2>(
     self: Config.Config<A>,
     that: LazyArg<Config.Config<A2>>,
     condition: Predicate<ConfigError.ConfigError>
-  ) => Config.Config<A>,
-  <A2>(
-    that: LazyArg<Config.Config<A2>>,
-    condition: Predicate<ConfigError.ConfigError>
-  ) => <A>(self: Config.Config<A>) => Config.Config<A>
+  ) => Config.Config<A>
 >(3, (self, that, condition) => {
   const fallback = Object.create(proto)
   fallback._tag = OpCodes.OP_FALLBACK
@@ -484,14 +483,14 @@ export const unwrap = <A>(wrapped: Config.Config.Wrap<A>): Config.Config<A> => {
 }
 
 /** @internal */
-export const validate = Debug.dual<
-  {
-    <A, B extends A>(self: Config.Config<A>, message: string, f: Refinement<A, B>): Config.Config<B>
-    <A>(self: Config.Config<A>, message: string, f: Predicate<A>): Config.Config<A>
-  },
+export const validate = dual<
   {
     <A, B extends A>(message: string, f: Refinement<A, B>): (self: Config.Config<A>) => Config.Config<B>
     <A>(message: string, f: Predicate<A>): (self: Config.Config<A>) => Config.Config<A>
+  },
+  {
+    <A, B extends A>(self: Config.Config<A>, message: string, f: Refinement<A, B>): Config.Config<B>
+    <A>(self: Config.Config<A>, message: string, f: Predicate<A>): Config.Config<A>
   }
 >(3, <A>(self: Config.Config<A>, message: string, f: Predicate<A>) =>
   mapOrFail(self, (a) => {
@@ -502,15 +501,15 @@ export const validate = Debug.dual<
   }))
 
 /** @internal */
-export const withDefault = Debug.dual<
-  <A, A2>(self: Config.Config<A>, def: A2) => Config.Config<A | A2>,
-  <A2>(def: A2) => <A>(self: Config.Config<A>) => Config.Config<A | A2>
+export const withDefault = dual<
+  <A2>(def: A2) => <A>(self: Config.Config<A>) => Config.Config<A | A2>,
+  <A, A2>(self: Config.Config<A>, def: A2) => Config.Config<A | A2>
 >(2, (self, def) => orElseIf(self, () => succeed(def), ConfigError.isMissingDataOnly))
 
 /** @internal */
-export const withDescription = Debug.dual<
-  <A>(self: Config.Config<A>, description: string) => Config.Config<A>,
-  (description: string) => <A>(self: Config.Config<A>) => Config.Config<A>
+export const withDescription = dual<
+  (description: string) => <A>(self: Config.Config<A>) => Config.Config<A>,
+  <A>(self: Config.Config<A>, description: string) => Config.Config<A>
 >(2, (self, description) => {
   const described = Object.create(proto)
   described._tag = OpCodes.OP_DESCRIBED
@@ -520,15 +519,15 @@ export const withDescription = Debug.dual<
 })
 
 /** @internal */
-export const zip = Debug.dual<
-  <A, B>(self: Config.Config<A>, that: Config.Config<B>) => Config.Config<readonly [A, B]>,
-  <B>(that: Config.Config<B>) => <A>(self: Config.Config<A>) => Config.Config<readonly [A, B]>
+export const zip = dual<
+  <B>(that: Config.Config<B>) => <A>(self: Config.Config<A>) => Config.Config<readonly [A, B]>,
+  <A, B>(self: Config.Config<A>, that: Config.Config<B>) => Config.Config<readonly [A, B]>
 >(2, (self, that) => zipWith(self, that, (a, b) => [a, b]))
 
 /** @internal */
-export const zipWith = Debug.dual<
-  <A, B, C>(self: Config.Config<A>, that: Config.Config<B>, f: (a: A, b: B) => C) => Config.Config<C>,
-  <B, A, C>(that: Config.Config<B>, f: (a: A, b: B) => C) => (self: Config.Config<A>) => Config.Config<C>
+export const zipWith = dual<
+  <B, A, C>(that: Config.Config<B>, f: (a: A, b: B) => C) => (self: Config.Config<A>) => Config.Config<C>,
+  <A, B, C>(self: Config.Config<A>, that: Config.Config<B>, f: (a: A, b: B) => C) => Config.Config<C>
 >(3, (self, that, f) => {
   const zipWith = Object.create(proto)
   zipWith._tag = OpCodes.OP_ZIP_WITH

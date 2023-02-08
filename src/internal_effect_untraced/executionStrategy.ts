@@ -1,5 +1,5 @@
-import * as Debug from "@effect/io/Debug"
 import type * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
+import { dual } from "@fp-ts/core/Function"
 import type { LazyArg } from "@fp-ts/core/Function"
 
 /** @internal */
@@ -47,18 +47,18 @@ export const isParallelN = (self: ExecutionStrategy.ExecutionStrategy): self is 
 }
 
 /** @internal */
-export const match = Debug.dual<
+export const match = dual<
+  <A>(
+    onSequential: LazyArg<A>,
+    onParallel: LazyArg<A>,
+    onParallelN: (n: number) => A
+  ) => (self: ExecutionStrategy.ExecutionStrategy) => A,
   <A>(
     self: ExecutionStrategy.ExecutionStrategy,
     onSequential: LazyArg<A>,
     onParallel: LazyArg<A>,
     onParallelN: (n: number) => A
-  ) => A,
-  <A>(
-    onSequential: LazyArg<A>,
-    onParallel: LazyArg<A>,
-    onParallelN: (n: number) => A
-  ) => (self: ExecutionStrategy.ExecutionStrategy) => A
+  ) => A
 >(4, (self, onSequential, onParallel, onParallelN) => {
   switch (self._tag) {
     case OP_SEQUENTIAL: {

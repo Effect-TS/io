@@ -3,14 +3,13 @@ import type * as Duration from "@effect/data/Duration"
 import * as Equal from "@effect/data/Equal"
 import * as Hash from "@effect/data/Hash"
 import * as HashSet from "@effect/data/HashSet"
-import * as Debug from "@effect/io/Debug"
 import * as metricKeyType from "@effect/io/internal_effect_untraced/metric/keyType"
 import * as metricLabel from "@effect/io/internal_effect_untraced/metric/label"
 import type * as MetricBoundaries from "@effect/io/Metric/Boundaries"
 import type * as MetricKey from "@effect/io/Metric/Key"
 import type * as MetricKeyType from "@effect/io/Metric/KeyType"
 import type * as MetricLabel from "@effect/io/Metric/Label"
-import { pipe } from "@fp-ts/core/Function"
+import { dual, pipe } from "@fp-ts/core/Function"
 
 /** @internal */
 const MetricKeySymbolKey = "@effect/io/Metric/Key"
@@ -88,43 +87,43 @@ export const summary = (
 }
 
 /** @internal */
-export const tagged = Debug.dual<
-  <Type extends MetricKeyType.MetricKeyType<any, any>>(
-    self: MetricKey.MetricKey<Type>,
-    key: string,
-    value: string
-  ) => MetricKey.MetricKey<Type>,
+export const tagged = dual<
   (
     key: string,
     value: string
   ) => <Type extends MetricKeyType.MetricKeyType<any, any>>(
     self: MetricKey.MetricKey<Type>
+  ) => MetricKey.MetricKey<Type>,
+  <Type extends MetricKeyType.MetricKeyType<any, any>>(
+    self: MetricKey.MetricKey<Type>,
+    key: string,
+    value: string
   ) => MetricKey.MetricKey<Type>
 >(3, (self, key, value) => taggedWithLabelSet(self, HashSet.make(metricLabel.make(key, value))))
 
 /** @internal */
-export const taggedWithLabels = Debug.dual<
-  <Type extends MetricKeyType.MetricKeyType<any, any>>(
-    self: MetricKey.MetricKey<Type>,
-    extraTags: Iterable<MetricLabel.MetricLabel>
-  ) => MetricKey.MetricKey<Type>,
+export const taggedWithLabels = dual<
   (
     extraTags: Iterable<MetricLabel.MetricLabel>
   ) => <Type extends MetricKeyType.MetricKeyType<any, any>>(
     self: MetricKey.MetricKey<Type>
+  ) => MetricKey.MetricKey<Type>,
+  <Type extends MetricKeyType.MetricKeyType<any, any>>(
+    self: MetricKey.MetricKey<Type>,
+    extraTags: Iterable<MetricLabel.MetricLabel>
   ) => MetricKey.MetricKey<Type>
 >(2, (self, extraTags) => taggedWithLabelSet(self, HashSet.fromIterable(extraTags)))
 
 /** @internal */
-export const taggedWithLabelSet = Debug.dual<
-  <Type extends MetricKeyType.MetricKeyType<any, any>>(
-    self: MetricKey.MetricKey<Type>,
-    extraTags: HashSet.HashSet<MetricLabel.MetricLabel>
-  ) => MetricKey.MetricKey<Type>,
+export const taggedWithLabelSet = dual<
   (
     extraTags: HashSet.HashSet<MetricLabel.MetricLabel>
   ) => <Type extends MetricKeyType.MetricKeyType<any, any>>(
     self: MetricKey.MetricKey<Type>
+  ) => MetricKey.MetricKey<Type>,
+  <Type extends MetricKeyType.MetricKeyType<any, any>>(
+    self: MetricKey.MetricKey<Type>,
+    extraTags: HashSet.HashSet<MetricLabel.MetricLabel>
   ) => MetricKey.MetricKey<Type>
 >(2, (self, extraTags) =>
   HashSet.size(extraTags) === 0

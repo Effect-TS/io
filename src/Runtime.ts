@@ -1,6 +1,7 @@
 /**
  * @since 1.0.0
  */
+import type * as Context from "@effect/data/Context"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
 import type * as Fiber from "@effect/io/Fiber"
@@ -11,7 +12,6 @@ import { unsafeRunSync, unsafeRunSyncExit } from "@effect/io/internal_effect_unt
 import * as internal from "@effect/io/internal_effect_untraced/runtime"
 import type { Scheduler } from "@effect/io/Scheduler"
 import type { Either } from "@fp-ts/core/Either"
-import type * as Context from "@effect/data/Context"
 
 /**
  * @since 1.0.0

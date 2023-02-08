@@ -17,6 +17,7 @@
  *
  * @since 1.0.0
  */
+import type * as Context from "@effect/data/Context"
 import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
 import * as internal from "@effect/io/internal_effect_untraced/layer"
@@ -24,7 +25,6 @@ import type * as Runtime from "@effect/io/Runtime"
 import type * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"
 import type { LazyArg } from "@fp-ts/core/Function"
-import type * as Context from "@effect/data/Context"
 
 /**
  * @since 1.0.0
@@ -114,8 +114,8 @@ export const build: <RIn, E, ROut>(
  * @category destructors
  */
 export const buildWithScope: {
-  <RIn, E, ROut>(self: Layer<RIn, E, ROut>, scope: Scope.Scope): Effect.Effect<RIn, E, Context.Context<ROut>>
   (scope: Scope.Scope): <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Effect.Effect<RIn, E, Context.Context<ROut>>
+  <RIn, E, ROut>(self: Layer<RIn, E, ROut>, scope: Scope.Scope): Effect.Effect<RIn, E, Context.Context<ROut>>
 } = internal.buildWithScope
 
 /**
@@ -125,8 +125,8 @@ export const buildWithScope: {
  * @category error handling
  */
 export const catchAll: {
-  <R, E, A, R2, E2, A2>(self: Layer<R, E, A>, onError: (error: E) => Layer<R2, E2, A2>): Layer<R | R2, E2, A & A2>
   <E, R2, E2, A2>(onError: (error: E) => Layer<R2, E2, A2>): <R, A>(self: Layer<R, E, A>) => Layer<R2 | R, E2, A & A2>
+  <R, E, A, R2, E2, A2>(self: Layer<R, E, A>, onError: (error: E) => Layer<R2, E2, A2>): Layer<R | R2, E2, A & A2>
 } = internal.catchAll
 
 /**
@@ -136,13 +136,13 @@ export const catchAll: {
  * @category error handling
  */
 export const catchAllCause: {
+  <E, R2, E2, A2>(
+    onError: (cause: Cause.Cause<E>) => Layer<R2, E2, A2>
+  ): <R, A>(self: Layer<R, E, A>) => Layer<R2 | R, E2, A & A2>
   <R, E, A, R2, E2, A2>(
     self: Layer<R, E, A>,
     onError: (cause: Cause.Cause<E>) => Layer<R2, E2, A2>
   ): Layer<R | R2, E2, A & A2>
-  <E, R2, E2, A2>(
-    onError: (cause: Cause.Cause<E>) => Layer<R2, E2, A2>
-  ): <R, A>(self: Layer<R, E, A>) => Layer<R2 | R, E2, A & A2>
 } = internal.catchAllCause
 
 /**
@@ -259,13 +259,13 @@ export const failCauseSync: <E>(evaluate: LazyArg<Cause.Cause<E>>) => Layer<neve
  * @category sequencing
  */
 export const flatMap: {
+  <A, R2, E2, A2>(
+    f: (context: Context.Context<A>) => Layer<R2, E2, A2>
+  ): <R, E>(self: Layer<R, E, A>) => Layer<R2 | R, E2 | E, A2>
   <R, E, A, R2, E2, A2>(
     self: Layer<R, E, A>,
     f: (context: Context.Context<A>) => Layer<R2, E2, A2>
   ): Layer<R | R2, E | E2, A2>
-  <A, R2, E2, A2>(
-    f: (context: Context.Context<A>) => Layer<R2, E2, A2>
-  ): <R, E>(self: Layer<R, E, A>) => Layer<R2 | R, E2 | E, A2>
 } = internal.flatMap
 
 /**
@@ -275,10 +275,15 @@ export const flatMap: {
  * @category sequencing
  */
 export const flatten: {
-  <R, E, A, R2, E2>(self: Layer<R, E, Layer<R2, E2, A>>, tag: Context.Tag<Layer<R2, E2, A>>): Layer<R | R2, E | E2, A>
   <R2, E2, A>(
     tag: Context.Tag<Layer<R2, E2, A>>
-  ): <R, E>(self: Layer<R, E, Layer<R2, E2, A>>) => Layer<R2 | R, E2 | E, A>
+  ): <R, E>(
+    self: Layer<R, E, Layer<R2, E2, A>>
+  ) => Layer<R2 | R, E2 | E, A>
+  <R, E, A, R2, E2>(
+    self: Layer<R, E, Layer<R2, E2, A>>,
+    tag: Context.Tag<Layer<R2, E2, A>>
+  ): Layer<R | R2, E | E2, A>
 } = internal.flatten
 
 /**
@@ -321,8 +326,8 @@ export const launch: <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Effect.Effect<
  * @category mapping
  */
 export const map: {
-  <R, E, A, B>(self: Layer<R, E, A>, f: (context: Context.Context<A>) => Context.Context<B>): Layer<R, E, B>
   <A, B>(f: (context: Context.Context<A>) => Context.Context<B>): <R, E>(self: Layer<R, E, A>) => Layer<R, E, B>
+  <R, E, A, B>(self: Layer<R, E, A>, f: (context: Context.Context<A>) => Context.Context<B>): Layer<R, E, B>
 } = internal.map
 
 /**
@@ -332,8 +337,8 @@ export const map: {
  * @category mapping
  */
 export const mapError: {
-  <R, E, A, E2>(self: Layer<R, E, A>, f: (error: E) => E2): Layer<R, E2, A>
   <E, E2>(f: (error: E) => E2): <R, A>(self: Layer<R, E, A>) => Layer<R, E2, A>
+  <R, E, A, E2>(self: Layer<R, E, A>, f: (error: E) => E2): Layer<R, E2, A>
 } = internal.mapError
 
 /**
@@ -345,15 +350,15 @@ export const mapError: {
  * @category folding
  */
 export const matchLayer: {
+  <E, R2, E2, A2, A, R3, E3, A3>(
+    onFailure: (error: E) => Layer<R2, E2, A2>,
+    onSuccess: (context: Context.Context<A>) => Layer<R3, E3, A3>
+  ): <R>(self: Layer<R, E, A>) => Layer<R2 | R3 | R, E2 | E3, A2 & A3>
   <R, E, A, R2, E2, A2, R3, E3, A3>(
     self: Layer<R, E, A>,
     onFailure: (error: E) => Layer<R2, E2, A2>,
     onSuccess: (context: Context.Context<A>) => Layer<R3, E3, A3>
   ): Layer<R | R2 | R3, E2 | E3, A2 & A3>
-  <E, R2, E2, A2, A, R3, E3, A3>(
-    onFailure: (error: E) => Layer<R2, E2, A2>,
-    onSuccess: (context: Context.Context<A>) => Layer<R3, E3, A3>
-  ): <R>(self: Layer<R, E, A>) => Layer<R2 | R3 | R, E2 | E3, A2 & A3>
 } = internal.matchLayer
 
 /**
@@ -365,15 +370,15 @@ export const matchLayer: {
  * @category folding
  */
 export const matchCauseLayer: {
+  <E, A, R2, E2, A2, R3, E3, A3>(
+    onFailure: (cause: Cause.Cause<E>) => Layer<R2, E2, A2>,
+    onSuccess: (context: Context.Context<A>) => Layer<R3, E3, A3>
+  ): <R>(self: Layer<R, E, A>) => Layer<R2 | R3 | R, E2 | E3, A2 & A3>
   <R, E, A, R2, E2, A2, R3, E3, A3>(
     self: Layer<R, E, A>,
     onFailure: (cause: Cause.Cause<E>) => Layer<R2, E2, A2>,
     onSuccess: (context: Context.Context<A>) => Layer<R3, E3, A3>
   ): Layer<R | R2 | R3, E2 | E3, A2 & A3>
-  <E, A, R2, E2, A2, R3, E3, A3>(
-    onFailure: (cause: Cause.Cause<E>) => Layer<R2, E2, A2>,
-    onSuccess: (context: Context.Context<A>) => Layer<R3, E3, A3>
-  ): <R>(self: Layer<R, E, A>) => Layer<R2 | R3 | R, E2 | E3, A2 & A3>
 } = internal.matchCauseLayer
 
 /**
@@ -395,13 +400,13 @@ export const memoize: <RIn, E, ROut>(
  * @category mutations
  */
 export const merge: {
+  <RIn2, E2, ROut2>(
+    that: Layer<RIn2, E2, ROut2>
+  ): <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn2 | RIn, E2 | E, ROut2 | ROut>
   <RIn, E, ROut, RIn2, E2, ROut2>(
     self: Layer<RIn, E, ROut>,
     that: Layer<RIn2, E2, ROut2>
   ): Layer<RIn | RIn2, E | E2, ROut | ROut2>
-  <RIn2, E2, ROut2>(
-    that: Layer<RIn2, E2, ROut2>
-  ): <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn2 | RIn, E2 | E, ROut2 | ROut>
 } = internal.merge
 
 /**
@@ -435,8 +440,8 @@ export const orDie: <R, E, A>(self: Layer<R, E, A>) => Layer<R, never, A> = inte
  * @category error handling
  */
 export const orElse: {
-  <R, E, A, R2, E2, A2>(self: Layer<R, E, A>, that: LazyArg<Layer<R2, E2, A2>>): Layer<R | R2, E | E2, A & A2>
   <R2, E2, A2>(that: LazyArg<Layer<R2, E2, A2>>): <R, E, A>(self: Layer<R, E, A>) => Layer<R2 | R, E2 | E, A & A2>
+  <R, E, A, R2, E2, A2>(self: Layer<R, E, A>, that: LazyArg<Layer<R2, E2, A2>>): Layer<R | R2, E | E2, A & A2>
 } = internal.orElse
 
 /**
@@ -456,17 +461,17 @@ export const passthrough: <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn
  * @category mutations
  */
 export const project: {
+  <A extends Context.Tag<any>, B extends Context.Tag<any>>(
+    tagA: A,
+    tagB: B,
+    f: (a: Context.Tag.Service<A>) => Context.Tag.Service<B>
+  ): <RIn, E>(self: Layer<RIn, E, Context.Tag.Service<A>>) => Layer<RIn, E, Context.Tag.Service<B>>
   <RIn, E, A extends Context.Tag<any>, B extends Context.Tag<any>>(
     self: Layer<RIn, E, Context.Tag.Service<A>>,
     tagA: A,
     tagB: B,
     f: (a: Context.Tag.Service<A>) => Context.Tag.Service<B>
   ): Layer<RIn, E, Context.Tag.Service<B>>
-  <A extends Context.Tag<any>, B extends Context.Tag<any>>(
-    tagA: A,
-    tagB: B,
-    f: (a: Context.Tag.Service<A>) => Context.Tag.Service<B>
-  ): <RIn, E>(self: Layer<RIn, E, Context.Tag.Service<A>>) => Layer<RIn, E, Context.Tag.Service<B>>
 } = internal.project
 
 /**
@@ -478,13 +483,13 @@ export const project: {
  * @category mutations
  */
 export const provide: {
+  <RIn2, E2, ROut2>(
+    that: Layer<RIn2, E2, ROut2>
+  ): <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn | Exclude<RIn2, ROut>, E2 | E, ROut2>
   <RIn, E, ROut, RIn2, E2, ROut2>(
     self: Layer<RIn, E, ROut>,
     that: Layer<RIn2, E2, ROut2>
   ): Layer<RIn | Exclude<RIn2, ROut>, E | E2, ROut2>
-  <RIn2, E2, ROut2>(
-    that: Layer<RIn2, E2, ROut2>
-  ): <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn | Exclude<RIn2, ROut>, E2 | E, ROut2>
 } = internal.provide
 
 /**
@@ -496,13 +501,13 @@ export const provide: {
  * @category mutations
  */
 export const provideMerge: {
+  <RIn2, E2, ROut2>(
+    that: Layer<RIn2, E2, ROut2>
+  ): <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn | Exclude<RIn2, ROut>, E2 | E, ROut2 | ROut>
   <RIn, E, ROut, RIn2, E2, ROut2>(
     self: Layer<RIn, E, ROut>,
     that: Layer<RIn2, E2, ROut2>
   ): Layer<RIn | Exclude<RIn2, ROut>, E | E2, ROut | ROut2>
-  <RIn2, E2, ROut2>(
-    that: Layer<RIn2, E2, ROut2>
-  ): <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn | Exclude<RIn2, ROut>, E2 | E, ROut2 | ROut>
 } = internal.provideMerge
 
 /**
@@ -512,13 +517,13 @@ export const provideMerge: {
  * @category retrying
  */
 export const retry: {
+  <RIn2, E, X>(
+    schedule: Schedule.Schedule<RIn2, E, X>
+  ): <RIn, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn2 | RIn, E, ROut>
   <RIn, E, ROut, RIn2, X>(
     self: Layer<RIn, E, ROut>,
     schedule: Schedule.Schedule<RIn2, E, X>
   ): Layer<RIn | RIn2, E, ROut>
-  <RIn2, E, X>(
-    schedule: Schedule.Schedule<RIn2, E, X>
-  ): <RIn, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn2 | RIn, E, ROut>
 } = internal.retry
 
 /**
@@ -628,13 +633,13 @@ export const syncContext: <A>(evaluate: LazyArg<Context.Context<A>>) => Layer<ne
  * @category sequencing
  */
 export const tap: {
+  <ROut, RIn2, E2, X>(
+    f: (context: Context.Context<ROut>) => Effect.Effect<RIn2, E2, X>
+  ): <RIn, E>(self: Layer<RIn, E, ROut>) => Layer<RIn2 | RIn, E2 | E, ROut>
   <RIn, E, ROut, RIn2, E2, X>(
     self: Layer<RIn, E, ROut>,
     f: (context: Context.Context<ROut>) => Effect.Effect<RIn2, E2, X>
   ): Layer<RIn | RIn2, E | E2, ROut>
-  <ROut, RIn2, E2, X>(
-    f: (context: Context.Context<ROut>) => Effect.Effect<RIn2, E2, X>
-  ): <RIn, E>(self: Layer<RIn, E, ROut>) => Layer<RIn2 | RIn, E2 | E, ROut>
 } = internal.tap
 
 /**
@@ -644,13 +649,13 @@ export const tap: {
  * @category sequencing
  */
 export const tapError: {
+  <E, RIn2, E2, X>(
+    f: (e: E) => Effect.Effect<RIn2, E2, X>
+  ): <RIn, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn2 | RIn, E | E2, ROut>
   <RIn, E, ROut, RIn2, E2, X>(
     self: Layer<RIn, E, ROut>,
     f: (e: E) => Effect.Effect<RIn2, E2, X>
   ): Layer<RIn | RIn2, E | E2, ROut>
-  <E, RIn2, E2, X>(
-    f: (e: E) => Effect.Effect<RIn2, E2, X>
-  ): <RIn, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn2 | RIn, E | E2, ROut>
 } = internal.tapError
 
 /**
@@ -660,13 +665,13 @@ export const tapError: {
  * @category sequencing
  */
 export const tapErrorCause: {
+  <E, RIn2, E2, X>(
+    f: (cause: Cause.Cause<E>) => Effect.Effect<RIn2, E2, X>
+  ): <RIn, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn2 | RIn, E | E2, ROut>
   <RIn, E, ROut, RIn2, E2, X>(
     self: Layer<RIn, E, ROut>,
     f: (cause: Cause.Cause<E>) => Effect.Effect<RIn2, E2, X>
   ): Layer<RIn | RIn2, E | E2, ROut>
-  <E, RIn2, E2, X>(
-    f: (cause: Cause.Cause<E>) => Effect.Effect<RIn2, E2, X>
-  ): <RIn, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn2 | RIn, E | E2, ROut>
 } = internal.tapErrorCause
 
 /**
@@ -689,13 +694,13 @@ export const toRuntime: <RIn, E, ROut>(
  * @category mutations
  */
 export const use: {
+  <RIn, E, ROut>(
+    self: Layer<RIn, E, ROut>
+  ): <RIn2, E2, ROut2>(that: Layer<RIn2, E2, ROut2>) => Layer<RIn | Exclude<RIn2, ROut>, E | E2, ROut2>
   <RIn2, E2, ROut2, RIn, E, ROut>(
     that: Layer<RIn2, E2, ROut2>,
     self: Layer<RIn, E, ROut>
   ): Layer<RIn | Exclude<RIn2, ROut>, E2 | E, ROut2>
-  <RIn, E, ROut>(
-    self: Layer<RIn, E, ROut>
-  ): <RIn2, E2, ROut2>(that: Layer<RIn2, E2, ROut2>) => Layer<RIn | Exclude<RIn2, ROut>, E | E2, ROut2>
 } = internal.use
 
 /**
@@ -707,13 +712,13 @@ export const use: {
  * @category mutations
  */
 export const useMerge: {
+  <RIn, E, ROut>(
+    self: Layer<RIn, E, ROut>
+  ): <RIn2, E2, ROut2>(that: Layer<RIn2, E2, ROut2>) => Layer<RIn | Exclude<RIn2, ROut>, E | E2, ROut | ROut2>
   <RIn2, E2, ROut2, RIn, E, ROut>(
     that: Layer<RIn2, E2, ROut2>,
     self: Layer<RIn, E, ROut>
   ): Layer<RIn | Exclude<RIn2, ROut>, E2 | E, ROut2 | ROut>
-  <RIn, E, ROut>(
-    self: Layer<RIn, E, ROut>
-  ): <RIn2, E2, ROut2>(that: Layer<RIn2, E2, ROut2>) => Layer<RIn | Exclude<RIn2, ROut>, E | E2, ROut | ROut2>
 } = internal.useMerge
 
 /**
@@ -725,13 +730,13 @@ export const useMerge: {
  * @category zipping
  */
 export const zipWithPar: {
+  <R2, E2, B, A, C>(
+    that: Layer<R2, E2, B>,
+    f: (a: Context.Context<A>, b: Context.Context<B>) => Context.Context<C>
+  ): <R, E>(self: Layer<R, E, A>) => Layer<R2 | R, E2 | E, C>
   <R, E, R2, E2, B, A, C>(
     self: Layer<R, E, A>,
     that: Layer<R2, E2, B>,
     f: (a: Context.Context<A>, b: Context.Context<B>) => Context.Context<C>
   ): Layer<R | R2, E | E2, C>
-  <R2, E2, B, A, C>(
-    that: Layer<R2, E2, B>,
-    f: (a: Context.Context<A>, b: Context.Context<B>) => Context.Context<C>
-  ): <R, E>(self: Layer<R, E, A>) => Layer<R2 | R, E2 | E, C>
 } = internal.zipWithPar

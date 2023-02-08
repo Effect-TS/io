@@ -65,14 +65,14 @@ export const collectAll = <R, E, Out>(
 
 /** @internal */
 export const launch = Debug.dualWithTrace<
-  <Type, In, R, E, Out, R2, A2>(
-    self: PollingMetric.PollingMetric<Type, In, R, E, Out>,
-    schedule: Schedule.Schedule<R2, unknown, A2>
-  ) => Effect.Effect<R | R2 | Scope.Scope, never, Fiber.Fiber<E, A2>>,
   <R2, A2>(
     schedule: Schedule.Schedule<R2, unknown, A2>
   ) => <Type, In, R, E, Out>(
     self: PollingMetric.PollingMetric<Type, In, R, E, Out>
+  ) => Effect.Effect<R | R2 | Scope.Scope, never, Fiber.Fiber<E, A2>>,
+  <Type, In, R, E, Out, R2, A2>(
+    self: PollingMetric.PollingMetric<Type, In, R, E, Out>,
+    schedule: Schedule.Schedule<R2, unknown, A2>
   ) => Effect.Effect<R | R2 | Scope.Scope, never, Fiber.Fiber<E, A2>>
 >(2, (trace) =>
   (self, schedule) =>
@@ -102,14 +102,14 @@ export const pollAndUpdate = Debug.methodWithTrace((trace) =>
 
 /** @internal */
 export const retry = Debug.untracedDual<
-  <Type, In, R, Out, R2, E, _>(
-    self: PollingMetric.PollingMetric<Type, In, R, E, Out>,
-    policy: Schedule.Schedule<R2, E, _>
-  ) => PollingMetric.PollingMetric<Type, In, R | R2, E, Out>,
   <R2, E, _>(
     policy: Schedule.Schedule<R2, E, _>
   ) => <Type, In, R, Out>(
     self: PollingMetric.PollingMetric<Type, In, R, E, Out>
+  ) => PollingMetric.PollingMetric<Type, In, R | R2, E, Out>,
+  <Type, In, R, Out, R2, E, _>(
+    self: PollingMetric.PollingMetric<Type, In, R, E, Out>,
+    policy: Schedule.Schedule<R2, E, _>
   ) => PollingMetric.PollingMetric<Type, In, R | R2, E, Out>
 >(2, () =>
   (self, policy) => ({
@@ -126,9 +126,10 @@ export const retry = Debug.untracedDual<
 
 /** @internal */
 export const zip = Debug.untracedDual<
-  <Type, In, R, E, Out, Type2, In2, R2, E2, Out2>(
-    self: PollingMetric.PollingMetric<Type, In, R, E, Out>,
+  <Type2, In2, R2, E2, Out2>(
     that: PollingMetric.PollingMetric<Type2, In2, R2, E2, Out2>
+  ) => <Type, In, R, E, Out>(
+    self: PollingMetric.PollingMetric<Type, In, R, E, Out>
   ) => PollingMetric.PollingMetric<
     readonly [Type, Type2],
     readonly [In, In2],
@@ -136,10 +137,9 @@ export const zip = Debug.untracedDual<
     E | E2,
     readonly [Out, Out2]
   >,
-  <Type2, In2, R2, E2, Out2>(
+  <Type, In, R, E, Out, Type2, In2, R2, E2, Out2>(
+    self: PollingMetric.PollingMetric<Type, In, R, E, Out>,
     that: PollingMetric.PollingMetric<Type2, In2, R2, E2, Out2>
-  ) => <Type, In, R, E, Out>(
-    self: PollingMetric.PollingMetric<Type, In, R, E, Out>
   ) => PollingMetric.PollingMetric<
     readonly [Type, Type2],
     readonly [In, In2],

@@ -122,8 +122,7 @@ const render = <E>(
           render(
             cause.cause,
             pipe(
-              stack,
-              Option.map((parent) =>
+              Option.map(stack, (parent) =>
                 new StackAnnotation(
                   annotation.stack.length < Debug.runtimeDebug.traceStackLimit && parent.stack.length > 0 &&
                     ((annotation.stack.length > 0 &&
@@ -137,9 +136,8 @@ const render = <E>(
                     ) :
                     annotation.stack,
                   annotation.seq
-                )
-              ),
-              Option.orElse(Option.some(annotation))
+                )),
+              Option.orElse(() => Option.some(annotation))
             )
           )
         )

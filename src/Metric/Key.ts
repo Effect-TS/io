@@ -154,15 +154,15 @@ export const summary: (
  * @category constructors
  */
 export const tagged: {
+  (
+    key: string,
+    value: string
+  ): <Type extends MetricKeyType.MetricKeyType<any, any>>(self: MetricKey<Type>) => MetricKey<Type>
   <Type extends MetricKeyType.MetricKeyType<any, any>>(
     self: MetricKey<Type>,
     key: string,
     value: string
   ): MetricKey<Type>
-  (
-    key: string,
-    value: string
-  ): <Type extends MetricKeyType.MetricKeyType<any, any>>(self: MetricKey<Type>) => MetricKey<Type>
 } = internal.tagged
 
 /**
@@ -172,13 +172,13 @@ export const tagged: {
  * @category constructors
  */
 export const taggedWithLabels: {
+  (
+    extraTags: Iterable<MetricLabel.MetricLabel>
+  ): <Type extends MetricKeyType.MetricKeyType<any, any>>(self: MetricKey<Type>) => MetricKey<Type>
   <Type extends MetricKeyType.MetricKeyType<any, any>>(
     self: MetricKey<Type>,
     extraTags: Iterable<MetricLabel.MetricLabel>
   ): MetricKey<Type>
-  (
-    extraTags: Iterable<MetricLabel.MetricLabel>
-  ): <Type extends MetricKeyType.MetricKeyType<any, any>>(self: MetricKey<Type>) => MetricKey<Type>
 } = internal.taggedWithLabels
 
 /**
@@ -188,11 +188,11 @@ export const taggedWithLabels: {
  * @category constructors
  */
 export const taggedWithLabelSet: {
+  (
+    extraTags: HashSet.HashSet<MetricLabel.MetricLabel>
+  ): <Type extends MetricKeyType.MetricKeyType<any, any>>(self: MetricKey<Type>) => MetricKey<Type>
   <Type extends MetricKeyType.MetricKeyType<any, any>>(
     self: MetricKey<Type>,
     extraTags: HashSet.HashSet<MetricLabel.MetricLabel>
   ): MetricKey<Type>
-  (
-    extraTags: HashSet.HashSet<MetricLabel.MetricLabel>
-  ): <Type extends MetricKeyType.MetricKeyType<any, any>>(self: MetricKey<Type>) => MetricKey<Type>
 } = internal.taggedWithLabelSet

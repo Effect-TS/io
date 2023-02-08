@@ -49,8 +49,8 @@ export const absorb = Debug.methodWithTrace((trace) =>
 
 /* @internal */
 export const absorbWith = Debug.dualWithTrace<
-  <R, E, A>(self: Effect.Effect<R, E, A>, f: (error: E) => unknown) => Effect.Effect<R, unknown, A>,
-  <E>(f: (error: E) => unknown) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, unknown, A>
+  <E>(f: (error: E) => unknown) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, unknown, A>,
+  <R, E, A>(self: Effect.Effect<R, E, A>, f: (error: E) => unknown) => Effect.Effect<R, unknown, A>
 >(
   2,
   (trace, restore) =>
@@ -150,12 +150,6 @@ export const blocking = Debug.methodWithTrace((trace) =>
 
 /* @internal */
 export const _catch = Debug.dualWithTrace<
-  <R, E, A, N extends keyof E, K extends E[N] & string, R1, E1, A1>(
-    self: Effect.Effect<R, E, A>,
-    tag: N,
-    k: K,
-    f: (error: Extract<E, { [n in N]: K }>) => Effect.Effect<R1, E1, A1>
-  ) => Effect.Effect<R | R1, Exclude<E, { [n in N]: K }> | E1, A | A1>,
   <N extends keyof E, K extends E[N] & string, E, R1, E1, A1>(
     tag: N,
     k: K,
@@ -164,9 +158,15 @@ export const _catch = Debug.dualWithTrace<
     R | R1,
     Exclude<E, { [n in N]: K }> | E1,
     A | A1
-  >
+  >,
+  <R, E, A, N extends keyof E, K extends E[N] & string, R1, E1, A1>(
+    self: Effect.Effect<R, E, A>,
+    tag: N,
+    k: K,
+    f: (error: Extract<E, { [n in N]: K }>) => Effect.Effect<R1, E1, A1>
+  ) => Effect.Effect<R | R1, Exclude<E, { [n in N]: K }> | E1, A | A1>
 >(
-  // @ts-expect-error - TODO: figure out why the above functions do not infer properly (probably a TS bug DF doesn't extend (...args: any[]) => any), but ofc it does)
+  // @ts-expect-error - probably a TS bug - infers to never because "DF does not extend (...args: any[]) => any)" but, of course, it does)
   4,
   (trace, restore) =>
     (self, tag, k, f) =>
@@ -180,24 +180,24 @@ export const _catch = Debug.dualWithTrace<
 
 /* @internal */
 export const catchAllDefect = Debug.dualWithTrace<
+  <R2, E2, A2>(
+    f: (defect: unknown) => Effect.Effect<R2, E2, A2>
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A | A2>,
   <R, E, A, R2, E2, A2>(
     self: Effect.Effect<R, E, A>,
     f: (defect: unknown) => Effect.Effect<R2, E2, A2>
-  ) => Effect.Effect<R | R2, E | E2, A | A2>,
-  <R2, E2, A2>(
-    f: (defect: unknown) => Effect.Effect<R2, E2, A2>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A | A2>
+  ) => Effect.Effect<R | R2, E | E2, A | A2>
 >(2, (trace, restore) => (self, f) => catchSomeDefect(self, (defect) => Option.some(restore(f)(defect))).traced(trace))
 
 /* @internal */
 export const catchSomeCause = Debug.dualWithTrace<
+  <E, R2, E2, A2>(
+    f: (cause: Cause.Cause<E>) => Option.Option<Effect.Effect<R2, E2, A2>>
+  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A | A2>,
   <R, E, A, R2, E2, A2>(
     self: Effect.Effect<R, E, A>,
     f: (cause: Cause.Cause<E>) => Option.Option<Effect.Effect<R2, E2, A2>>
-  ) => Effect.Effect<R | R2, E | E2, A | A2>,
-  <E, R2, E2, A2>(
-    f: (cause: Cause.Cause<E>) => Option.Option<Effect.Effect<R2, E2, A2>>
-  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A | A2>
+  ) => Effect.Effect<R | R2, E | E2, A | A2>
 >(
   2,
   (trace, restore) =>
@@ -224,13 +224,13 @@ export const catchSomeCause = Debug.dualWithTrace<
 
 /* @internal */
 export const catchSomeDefect = Debug.dualWithTrace<
+  <R2, E2, A2>(
+    pf: (defect: unknown) => Option.Option<Effect.Effect<R2, E2, A2>>
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A | A2>,
   <R, E, A, R2, E2, A2>(
     self: Effect.Effect<R, E, A>,
-    pf: (_: unknown) => Option.Option<Effect.Effect<R2, E2, A2>>
-  ) => Effect.Effect<R | R2, E | E2, A | A2>,
-  <R2, E2, A2>(
-    pf: (_: unknown) => Option.Option<Effect.Effect<R2, E2, A2>>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A | A2>
+    pf: (defect: unknown) => Option.Option<Effect.Effect<R2, E2, A2>>
+  ) => Effect.Effect<R | R2, E | E2, A | A2>
 >(
   2,
   (trace, restore) =>
@@ -243,15 +243,15 @@ export const catchSomeDefect = Debug.dualWithTrace<
 
 /* @internal */
 export const catchTag = Debug.dualWithTrace<
+  <K extends E["_tag"] & string, E extends { _tag: string }, R1, E1, A1>(
+    k: K,
+    f: (e: Extract<E, { _tag: K }>) => Effect.Effect<R1, E1, A1>
+  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, Exclude<E, { _tag: K }> | E1, A | A1>,
   <R, E extends { _tag: string }, A, K extends E["_tag"] & string, R1, E1, A1>(
     self: Effect.Effect<R, E, A>,
     k: K,
     f: (e: Extract<E, { _tag: K }>) => Effect.Effect<R1, E1, A1>
-  ) => Effect.Effect<R | R1, Exclude<E, { _tag: K }> | E1, A | A1>,
-  <K extends E["_tag"] & string, E extends { _tag: string }, R1, E1, A1>(
-    k: K,
-    f: (e: Extract<E, { _tag: K }>) => Effect.Effect<R1, E1, A1>
-  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, Exclude<E, { _tag: K }> | E1, A | A1>
+  ) => Effect.Effect<R | R1, Exclude<E, { _tag: K }> | E1, A | A1>
 >(3, (trace, restore) =>
   (self, k, f) =>
     core.catchAll(self, (e) => {
@@ -264,16 +264,13 @@ export const catchTag = Debug.dualWithTrace<
 /** @internal */
 export const catchTags = Debug.dualWithTrace<
   <
-    R,
     E extends { _tag: string },
-    A,
     Cases extends {
       [K in E["_tag"]]+?: (error: Extract<E, { _tag: K }>) => Effect.Effect<any, any, any>
     }
   >(
-    self: Effect.Effect<R, E, A>,
     cases: Cases
-  ) => Effect.Effect<
+  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<
     | R
     | {
       [K in keyof Cases]: Cases[K] extends ((...args: Array<any>) => Effect.Effect<infer R, any, any>) ? R : never
@@ -288,13 +285,16 @@ export const catchTags = Debug.dualWithTrace<
     }[keyof Cases]
   >,
   <
+    R,
     E extends { _tag: string },
+    A,
     Cases extends {
       [K in E["_tag"]]+?: (error: Extract<E, { _tag: K }>) => Effect.Effect<any, any, any>
     }
   >(
+    self: Effect.Effect<R, E, A>,
     cases: Cases
-  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<
+  ) => Effect.Effect<
     | R
     | {
       [K in keyof Cases]: Cases[K] extends ((...args: Array<any>) => Effect.Effect<infer R, any, any>) ? R : never
@@ -350,24 +350,24 @@ export const collectAllDiscard = Debug.methodWithTrace((trace) =>
 
 /* @internal */
 export const collectAllWith = Debug.dualWithTrace<
+  <A, B>(
+    pf: (a: A) => Option.Option<B>
+  ) => <R, E>(elements: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, Chunk.Chunk<B>>,
   <R, E, A, B>(
     elements: Iterable<Effect.Effect<R, E, A>>,
     pf: (a: A) => Option.Option<B>
-  ) => Effect.Effect<R, E, Chunk.Chunk<B>>,
-  <A, B>(
-    pf: (a: A) => Option.Option<B>
-  ) => <R, E>(elements: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, Chunk.Chunk<B>>
+  ) => Effect.Effect<R, E, Chunk.Chunk<B>>
 >(2, (trace, restore) => (elements, pf) => core.map(collectAll(elements), Chunk.filterMap(restore(pf))).traced(trace))
 
 /* @internal */
 export const collectAllWithEffect = Debug.dualWithTrace<
   <A, R, E, B>(
+    f: (a: A) => Option.Option<Effect.Effect<R, E, B>>
+  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<B>>,
+  <A, R, E, B>(
     elements: Iterable<A>,
     f: (a: A) => Option.Option<Effect.Effect<R, E, B>>
-  ) => Effect.Effect<R, E, Chunk.Chunk<B>>,
-  <A, R, E, B>(
-    f: (a: A) => Option.Option<Effect.Effect<R, E, B>>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<B>>
+  ) => Effect.Effect<R, E, Chunk.Chunk<B>>
 >(2, (trace, restore) =>
   <A, R, E, B>(
     elements: Iterable<A>,
@@ -415,12 +415,12 @@ export const collectAllSuccesses = Debug.methodWithTrace((trace) =>
 /* @internal */
 export const collectFirst = Debug.dualWithTrace<
   <R, E, A, B>(
+    f: (a: A) => Effect.Effect<R, E, Option.Option<B>>
+  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Option.Option<B>>,
+  <R, E, A, B>(
     elements: Iterable<A>,
     f: (a: A) => Effect.Effect<R, E, Option.Option<B>>
-  ) => Effect.Effect<R, E, Option.Option<B>>,
-  <R, E, A, B>(
-    f: (a: A) => Effect.Effect<R, E, Option.Option<B>>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Option.Option<B>>
+  ) => Effect.Effect<R, E, Option.Option<B>>
 >(
   2,
   (trace, restore) =>
@@ -460,12 +460,12 @@ const collectFirstLoop = <R, E, A, B>(
 /* @internal */
 export const collectWhile = Debug.dualWithTrace<
   <A, R, E, B>(
+    f: (a: A) => Option.Option<Effect.Effect<R, E, B>>
+  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<B>>,
+  <A, R, E, B>(
     elements: Iterable<A>,
     f: (a: A) => Option.Option<Effect.Effect<R, E, B>>
-  ) => Effect.Effect<R, E, Chunk.Chunk<B>>,
-  <A, R, E, B>(
-    f: (a: A) => Option.Option<Effect.Effect<R, E, B>>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<B>>
+  ) => Effect.Effect<R, E, Chunk.Chunk<B>>
 >(2, (trace, restore) =>
   <A, R, E, B>(
     elements: Iterable<A>,
@@ -520,15 +520,15 @@ export const cond = Debug.methodWithTrace((trace, restore) =>
 
 /* @internal */
 export const continueOrFail = Debug.dualWithTrace<
+  <E1, A, A2>(
+    error: E1,
+    pf: (a: A) => Option.Option<A2>
+  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E | E1, A2>,
   <R, E, A, E1, A2>(
     self: Effect.Effect<R, E, A>,
     error: E1,
     pf: (a: A) => Option.Option<A2>
-  ) => Effect.Effect<R, E | E1, A2>,
-  <E1, A, A2>(
-    error: E1,
-    pf: (a: A) => Option.Option<A2>
-  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E | E1, A2>
+  ) => Effect.Effect<R, E | E1, A2>
 >(
   3,
   (trace, restore) =>
@@ -538,15 +538,15 @@ export const continueOrFail = Debug.dualWithTrace<
 
 /* @internal */
 export const continueOrFailEffect = Debug.dualWithTrace<
+  <E1, A, R2, E2, A2>(
+    error: E1,
+    pf: (a: A) => Option.Option<Effect.Effect<R2, E2, A2>>
+  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E1 | E2, A2>,
   <R, E, A, E1, R2, E2, A2>(
     self: Effect.Effect<R, E, A>,
     error: E1,
     pf: (a: A) => Option.Option<Effect.Effect<R2, E2, A2>>
-  ) => Effect.Effect<R | R2, E | E1 | E2, A2>,
-  <E1, A, R2, E2, A2>(
-    error: E1,
-    pf: (a: A) => Option.Option<Effect.Effect<R2, E2, A2>>
-  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E1 | E2, A2>
+  ) => Effect.Effect<R | R2, E | E1 | E2, A2>
 >(3, (trace, restore) =>
   <R, E, A, E1, R2, E2, A2>(
     self: Effect.Effect<R, E, A>,
@@ -558,8 +558,8 @@ export const continueOrFailEffect = Debug.dualWithTrace<
 
 /* @internal */
 export const delay = Debug.dualWithTrace<
-  <R, E, A>(self: Effect.Effect<R, E, A>, duration: Duration.Duration) => Effect.Effect<R, E, A>,
-  (duration: Duration.Duration) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  (duration: Duration.Duration) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(self: Effect.Effect<R, E, A>, duration: Duration.Duration) => Effect.Effect<R, E, A>
 >(2, (trace) => (self, duration) => core.zipRight(Clock.sleep(duration), self).traced(trace))
 
 /* @internal */
@@ -602,19 +602,19 @@ export const Do = Debug.methodWithTrace((trace) =>
 
 /* @internal */
 export const bind = Debug.dualWithTrace<
+  <N extends string, K, R2, E2, A>(
+    tag: Exclude<N, keyof K>,
+    f: (_: K) => Effect.Effect<R2, E2, A>
+  ) => <R, E>(self: Effect.Effect<R, E, K>) => Effect.Effect<
+    R | R2,
+    E | E2,
+    MergeRecord<K, { [k in N]: A }>
+  >,
   <R, E, N extends string, K, R2, E2, A>(
     self: Effect.Effect<R, E, K>,
     tag: Exclude<N, keyof K>,
     f: (_: K) => Effect.Effect<R2, E2, A>
   ) => Effect.Effect<
-    R | R2,
-    E | E2,
-    MergeRecord<K, { [k in N]: A }>
-  >,
-  <N extends string, K, R2, E2, A>(
-    tag: Exclude<N, keyof K>,
-    f: (_: K) => Effect.Effect<R2, E2, A>
-  ) => <R, E>(self: Effect.Effect<R, E, K>) => Effect.Effect<
     R | R2,
     E | E2,
     MergeRecord<K, { [k in N]: A }>
@@ -633,19 +633,19 @@ export const bind = Debug.dualWithTrace<
 
 /* @internal */
 export const bindValue = Debug.dualWithTrace<
+  <N extends string, K, A>(
+    tag: Exclude<N, keyof K>,
+    f: (_: K) => A
+  ) => <R, E>(self: Effect.Effect<R, E, K>) => Effect.Effect<
+    R,
+    E,
+    MergeRecord<K, { [k in N]: A }>
+  >,
   <R, E, K, N extends string, A>(
     self: Effect.Effect<R, E, K>,
     tag: Exclude<N, keyof K>,
     f: (_: K) => A
   ) => Effect.Effect<
-    R,
-    E,
-    MergeRecord<K, { [k in N]: A }>
-  >,
-  <N extends string, K, A>(
-    tag: Exclude<N, keyof K>,
-    f: (_: K) => A
-  ) => <R, E>(self: Effect.Effect<R, E, K>) => Effect.Effect<
     R,
     E,
     MergeRecord<K, { [k in N]: A }>
@@ -663,12 +663,12 @@ export const bindValue = Debug.dualWithTrace<
 /* @internal */
 export const dropUntil = Debug.dualWithTrace<
   <A, R, E>(
+    predicate: (a: A) => Effect.Effect<R, E, boolean>
+  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<A>>,
+  <A, R, E>(
     elements: Iterable<A>,
     predicate: (a: A) => Effect.Effect<R, E, boolean>
-  ) => Effect.Effect<R, E, Chunk.Chunk<A>>,
-  <A, R, E>(
-    predicate: (a: A) => Effect.Effect<R, E, boolean>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<A>>
+  ) => Effect.Effect<R, E, Chunk.Chunk<A>>
 >(2, (trace, restore) =>
   <A, R, E>(
     elements: Iterable<A>,
@@ -694,8 +694,10 @@ export const dropUntil = Debug.dualWithTrace<
 
 /* @internal */
 export const dropWhile = Debug.dualWithTrace<
-  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, Chunk.Chunk<A>>,
-  <R, E, A>(f: (a: A) => Effect.Effect<R, E, boolean>) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<A>>
+  <R, E, A>(
+    f: (a: A) => Effect.Effect<R, E, boolean>
+  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<A>>,
+  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, Chunk.Chunk<A>>
 >(
   2,
   (trace, restore) =>
@@ -727,8 +729,8 @@ export const contextWith = Debug.methodWithTrace((trace) =>
 
 /* @internal */
 export const exists = Debug.dualWithTrace<
-  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, boolean>,
-  <R, E, A>(f: (a: A) => Effect.Effect<R, E, boolean>) => (elements: Iterable<A>) => Effect.Effect<R, E, boolean>
+  <R, E, A>(f: (a: A) => Effect.Effect<R, E, boolean>) => (elements: Iterable<A>) => Effect.Effect<R, E, boolean>,
+  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, boolean>
 >(
   2,
   (trace, restore) =>
@@ -762,8 +764,10 @@ export const eventually = Debug.methodWithTrace((trace) =>
 
 /* @internal */
 export const filter = Debug.dualWithTrace<
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, Chunk.Chunk<A>>,
-  <A, R, E>(f: (a: A) => Effect.Effect<R, E, boolean>) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<A>>
+  <A, R, E>(
+    f: (a: A) => Effect.Effect<R, E, boolean>
+  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<A>>,
+  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, Chunk.Chunk<A>>
 >(
   2,
   (trace, restore) =>
@@ -783,8 +787,10 @@ export const filter = Debug.dualWithTrace<
 
 /* @internal */
 export const filterNot = Debug.dualWithTrace<
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, Chunk.Chunk<A>>,
-  <A, R, E>(f: (a: A) => Effect.Effect<R, E, boolean>) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<A>>
+  <A, R, E>(
+    f: (a: A) => Effect.Effect<R, E, boolean>
+  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<A>>,
+  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, Chunk.Chunk<A>>
 >(
   2,
   (trace, restore) => (elements, f) => filter(elements, (a) => core.map(restore(f)(a), (b) => !b)).traced(trace)
@@ -792,6 +798,16 @@ export const filterNot = Debug.dualWithTrace<
 
 /* @internal */
 export const filterOrDie = Debug.dualWithTrace<
+  {
+    <A, B extends A>(
+      f: Refinement<A, B>,
+      defect: LazyArg<unknown>
+    ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, B>
+    <A>(
+      f: Predicate<A>,
+      defect: LazyArg<unknown>
+    ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  },
   {
     <R, E, A, B extends A>(
       self: Effect.Effect<R, E, A>,
@@ -803,16 +819,6 @@ export const filterOrDie = Debug.dualWithTrace<
       f: Predicate<A>,
       defect: LazyArg<unknown>
     ): Effect.Effect<R, E, A>
-  },
-  {
-    <A, B extends A>(
-      f: Refinement<A, B>,
-      defect: LazyArg<unknown>
-    ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, B>
-    <A>(
-      f: Predicate<A>,
-      defect: LazyArg<unknown>
-    ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
   }
 >(
   3,
@@ -827,6 +833,16 @@ export const filterOrDie = Debug.dualWithTrace<
 /* @internal */
 export const filterOrDieMessage = Debug.dualWithTrace<
   {
+    <A, B extends A>(
+      f: Refinement<A, B>,
+      message: string
+    ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, B>
+    <A>(
+      f: Predicate<A>,
+      message: string
+    ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  },
+  {
     <R, E, A, B extends A>(
       self: Effect.Effect<R, E, A>,
       f: Refinement<A, B>,
@@ -837,16 +853,6 @@ export const filterOrDieMessage = Debug.dualWithTrace<
       f: Predicate<A>,
       message: string
     ): Effect.Effect<R, E, A>
-  },
-  {
-    <A, B extends A>(
-      f: Refinement<A, B>,
-      message: string
-    ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, B>
-    <A>(
-      f: Predicate<A>,
-      message: string
-    ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
   }
 >(3, (trace, restore) =>
   <R, E, A>(
@@ -858,6 +864,16 @@ export const filterOrDieMessage = Debug.dualWithTrace<
 /* @internal */
 export const filterOrElse = Debug.dualWithTrace<
   {
+    <A, B extends A, R2, E2, C>(
+      f: Refinement<A, B>,
+      orElse: LazyArg<Effect.Effect<R2, E2, C>>
+    ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, B | C>
+    <A, R2, E2, B>(
+      f: Predicate<A>,
+      orElse: LazyArg<Effect.Effect<R2, E2, B>>
+    ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A | B>
+  },
+  {
     <R, E, A, B extends A, R2, E2, C>(
       self: Effect.Effect<R, E, A>,
       f: Refinement<A, B>,
@@ -868,16 +884,6 @@ export const filterOrElse = Debug.dualWithTrace<
       f: Predicate<A>,
       orElse: LazyArg<Effect.Effect<R2, E2, B>>
     ): Effect.Effect<R | R2, E | E2, A | B>
-  },
-  {
-    <A, B extends A, R2, E2, C>(
-      f: Refinement<A, B>,
-      orElse: LazyArg<Effect.Effect<R2, E2, C>>
-    ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, B | C>
-    <A, R2, E2, B>(
-      f: Predicate<A>,
-      orElse: LazyArg<Effect.Effect<R2, E2, B>>
-    ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A | B>
   }
 >(3, (trace, restore) =>
   <R, E, A, R2, E2, B>(
@@ -889,6 +895,16 @@ export const filterOrElse = Debug.dualWithTrace<
 /* @internal */
 export const filterOrElseWith = Debug.dualWithTrace<
   {
+    <A, B extends A, R2, E2, C>(
+      f: Refinement<A, B>,
+      orElse: (a: A) => Effect.Effect<R2, E2, C>
+    ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, B | C>
+    <A, R2, E2, B>(
+      f: Predicate<A>,
+      orElse: (a: A) => Effect.Effect<R2, E2, B>
+    ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A | B>
+  },
+  {
     <R, E, A, B extends A, R2, E2, C>(
       self: Effect.Effect<R, E, A>,
       f: Refinement<A, B>,
@@ -899,16 +915,6 @@ export const filterOrElseWith = Debug.dualWithTrace<
       f: Predicate<A>,
       orElse: (a: A) => Effect.Effect<R2, E2, B>
     ): Effect.Effect<R | R2, E | E2, A | B>
-  },
-  {
-    <A, B extends A, R2, E2, C>(
-      f: Refinement<A, B>,
-      orElse: (a: A) => Effect.Effect<R2, E2, C>
-    ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, B | C>
-    <A, R2, E2, B>(
-      f: Predicate<A>,
-      orElse: (a: A) => Effect.Effect<R2, E2, B>
-    ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A | B>
   }
 >(3, (trace, restore) =>
   <R, E, A, R2, E2, B>(
@@ -921,6 +927,16 @@ export const filterOrElseWith = Debug.dualWithTrace<
 /* @internal */
 export const filterOrFail = Debug.dualWithTrace<
   {
+    <A, B extends A, E2>(
+      f: Refinement<A, B>,
+      error: LazyArg<E2>
+    ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E | E2, B>
+    <A, E2>(
+      f: Predicate<A>,
+      error: LazyArg<E2>
+    ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E | E2, A>
+  },
+  {
     <R, E, A, B extends A, E2>(
       self: Effect.Effect<R, E, A>,
       f: Refinement<A, B>,
@@ -931,16 +947,6 @@ export const filterOrFail = Debug.dualWithTrace<
       f: Predicate<A>,
       error: LazyArg<E2>
     ): Effect.Effect<R, E | E2, A>
-  },
-  {
-    <A, B extends A, E2>(
-      f: Refinement<A, B>,
-      error: LazyArg<E2>
-    ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E | E2, B>
-    <A, E2>(
-      f: Predicate<A>,
-      error: LazyArg<E2>
-    ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E | E2, A>
   }
 >(3, (trace, restore) =>
   <R, E, A, E2>(
@@ -951,10 +957,10 @@ export const filterOrFail = Debug.dualWithTrace<
 
 /* @internal */
 export const find = Debug.dualWithTrace<
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, Option.Option<A>>,
   <A, R, E>(
     f: (a: A) => Effect.Effect<R, E, boolean>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Option.Option<A>>
+  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Option.Option<A>>,
+  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, Option.Option<A>>
 >(2, (trace, restore) =>
   (elements, f) =>
     core.suspendSucceed(() => {
@@ -1001,32 +1007,32 @@ export const firstSuccessOf = Debug.methodWithTrace((trace) =>
 
 /* @internal */
 export const flattenErrorOption = Debug.dualWithTrace<
-  <R, E, A, E1>(self: Effect.Effect<R, Option.Option<E>, A>, fallback: E1) => Effect.Effect<R, E | E1, A>,
-  <E1>(fallback: E1) => <R, E, A>(self: Effect.Effect<R, Option.Option<E>, A>) => Effect.Effect<R, E | E1, A>
+  <E1>(fallback: E1) => <R, E, A>(self: Effect.Effect<R, Option.Option<E>, A>) => Effect.Effect<R, E | E1, A>,
+  <R, E, A, E1>(self: Effect.Effect<R, Option.Option<E>, A>, fallback: E1) => Effect.Effect<R, E | E1, A>
 >(2, (trace) => (self, fallback) => core.mapError(self, Option.getOrElse(() => fallback)).traced(trace))
 
 /* @internal */
 export const flipWith = Debug.dualWithTrace<
   <R, A, E, R2, A2, E2>(
+    f: (effect: Effect.Effect<R, A, E>) => Effect.Effect<R2, A2, E2>
+  ) => (self: Effect.Effect<R, E, A>) => Effect.Effect<R2, E2, A2>,
+  <R, A, E, R2, A2, E2>(
     self: Effect.Effect<R, E, A>,
     f: (effect: Effect.Effect<R, A, E>) => Effect.Effect<R2, A2, E2>
-  ) => Effect.Effect<R2, E2, A2>,
-  <R, A, E, R2, A2, E2>(
-    f: (effect: Effect.Effect<R, A, E>) => Effect.Effect<R2, A2, E2>
-  ) => (self: Effect.Effect<R, E, A>) => Effect.Effect<R2, E2, A2>
+  ) => Effect.Effect<R2, E2, A2>
 >(2, (trace, restore) => (self, f) => core.flip(restore(f)(core.flip(self))).traced(trace))
 
 /* @internal */
 export const match = Debug.dualWithTrace<
+  <E, A, A2, A3>(
+    onFailure: (error: E) => A2,
+    onSuccess: (value: A) => A3
+  ) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, A2 | A3>,
   <R, E, A, A2, A3>(
     self: Effect.Effect<R, E, A>,
     onFailure: (error: E) => A2,
     onSuccess: (value: A) => A3
-  ) => Effect.Effect<R, never, A2 | A3>,
-  <E, A, A2, A3>(
-    onFailure: (error: E) => A2,
-    onSuccess: (value: A) => A3
-  ) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, A2 | A3>
+  ) => Effect.Effect<R, never, A2 | A3>
 >(3, (trace, restore) =>
   (self, onFailure, onSuccess) =>
     core.matchEffect(
@@ -1037,8 +1043,8 @@ export const match = Debug.dualWithTrace<
 
 /* @internal */
 export const forAll = Debug.dualWithTrace<
-  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, boolean>,
-  <R, E, A>(f: (a: A) => Effect.Effect<R, E, boolean>) => (elements: Iterable<A>) => Effect.Effect<R, E, boolean>
+  <R, E, A>(f: (a: A) => Effect.Effect<R, E, boolean>) => (elements: Iterable<A>) => Effect.Effect<R, E, boolean>,
+  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, boolean>
 >(
   2,
   (trace, restore) =>
@@ -1068,13 +1074,13 @@ const forAllLoop = <R, E, A>(
 
 /* @internal */
 export const forEachEffect = Debug.dualWithTrace<
+  <A, R1, E1, B>(
+    f: (a: A) => Effect.Effect<R1, E1, B>
+  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E1, Option.Option<B>>,
   <R, E, A, R1, E1, B>(
     self: Effect.Effect<R, E, A>,
     f: (a: A) => Effect.Effect<R1, E1, B>
-  ) => Effect.Effect<R | R1, E1, Option.Option<B>>,
-  <A, R1, E1, B>(
-    f: (a: A) => Effect.Effect<R1, E1, B>
-  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E1, Option.Option<B>>
+  ) => Effect.Effect<R | R1, E1, Option.Option<B>>
 >(2, (trace, restore) =>
   (self, f) =>
     core.matchCauseEffect(
@@ -1085,10 +1091,10 @@ export const forEachEffect = Debug.dualWithTrace<
 
 /* @internal */
 export const forEachOption = Debug.dualWithTrace<
-  <R, E, A, B>(option: Option.Option<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, E, Option.Option<B>>,
   <R, E, A, B>(
     f: (a: A) => Effect.Effect<R, E, B>
-  ) => (option: Option.Option<A>) => Effect.Effect<R, E, Option.Option<B>>
+  ) => (option: Option.Option<A>) => Effect.Effect<R, E, Option.Option<B>>,
+  <R, E, A, B>(option: Option.Option<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, E, Option.Option<B>>
 >(2, (trace, restore) =>
   (option, f) => {
     switch (option._tag) {
@@ -1104,12 +1110,12 @@ export const forEachOption = Debug.dualWithTrace<
 /* @internal */
 export const forEachWithIndex = Debug.dualWithTrace<
   <A, R, E, B>(
+    f: (a: A, i: number) => Effect.Effect<R, E, B>
+  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<B>>,
+  <A, R, E, B>(
     elements: Iterable<A>,
     f: (a: A, i: number) => Effect.Effect<R, E, B>
-  ) => Effect.Effect<R, E, Chunk.Chunk<B>>,
-  <A, R, E, B>(
-    f: (a: A, i: number) => Effect.Effect<R, E, B>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<B>>
+  ) => Effect.Effect<R, E, Chunk.Chunk<B>>
 >(
   2,
   (trace, restore) =>
@@ -1200,8 +1206,8 @@ export const getOrFailDiscard = Debug.methodWithTrace((trace) =>
 
 /* @internal */
 export const getOrFailWith = Debug.dualWithTrace<
-  <A, E>(option: Option.Option<A>, error: LazyArg<E>) => Effect.Effect<never, E, A>,
-  <E>(error: LazyArg<E>) => <A>(option: Option.Option<A>) => Effect.Effect<never, E, A>
+  <E>(error: LazyArg<E>) => <A>(option: Option.Option<A>) => Effect.Effect<never, E, A>,
+  <A, E>(option: Option.Option<A>, error: LazyArg<E>) => Effect.Effect<never, E, A>
 >(2, (trace, restore) =>
   (option, error) => {
     switch (option._tag) {
@@ -1312,12 +1318,12 @@ export const left = Debug.methodWithTrace((trace) =>
 /* @internal */
 export const leftWith = Debug.dualWithTrace<
   <R, E, B, A, R1, E1, B1, A1>(
+    f: (effect: Effect.Effect<R, Either.Either<E, B>, A>) => Effect.Effect<R1, Either.Either<E1, B1>, A1>
+  ) => (self: Effect.Effect<R, E, Either.Either<A, B>>) => Effect.Effect<R | R1, E | E1, Either.Either<A1, B1>>,
+  <R, E, B, A, R1, E1, B1, A1>(
     self: Effect.Effect<R, E, Either.Either<A, B>>,
     f: (effect: Effect.Effect<R, Either.Either<E, B>, A>) => Effect.Effect<R1, Either.Either<E1, B1>, A1>
-  ) => Effect.Effect<R | R1, E | E1, Either.Either<A1, B1>>,
-  <R, E, B, A, R1, E1, B1, A1>(
-    f: (effect: Effect.Effect<R, Either.Either<E, B>, A>) => Effect.Effect<R1, Either.Either<E1, B1>, A1>
-  ) => (self: Effect.Effect<R, E, Either.Either<A, B>>) => Effect.Effect<R | R1, E | E1, Either.Either<A1, B1>>
+  ) => Effect.Effect<R | R1, E | E1, Either.Either<A1, B1>>
 >(2, (trace, restore) => (self, f) => core.suspendSucceed(() => unleft(restore(f)(left(self)))).traced(trace))
 
 /** @internal */
@@ -1524,8 +1530,8 @@ export const logTraceCauseMessage = Debug.methodWithTrace((trace) =>
 
 /* @internal */
 export const logSpan = Debug.dualWithTrace<
-  <R, E, A>(effect: Effect.Effect<R, E, A>, label: string) => Effect.Effect<R, E, A>,
-  (label: string) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  (label: string) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(effect: Effect.Effect<R, E, A>, label: string) => Effect.Effect<R, E, A>
 >(
   2,
   (trace) =>
@@ -1546,8 +1552,8 @@ export const logSpan = Debug.dualWithTrace<
 
 /* @internal */
 export const logAnnotate = Debug.dualWithTrace<
-  <R, E, A>(effect: Effect.Effect<R, E, A>, key: string, value: string) => Effect.Effect<R, E, A>,
-  (key: string, value: string) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  (key: string, value: string) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(effect: Effect.Effect<R, E, A>, key: string, value: string) => Effect.Effect<R, E, A>
 >(
   3,
   (trace) =>
@@ -1614,12 +1620,22 @@ export const loopDiscard = Debug.methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const mapAccum = Debug.methodWithTrace((trace, restore) =>
+export const mapAccum = Debug.dualWithTrace<
+  <A, B, R, E, Z>(
+    zero: Z,
+    f: (z: Z, a: A) => Effect.Effect<R, E, readonly [Z, B]>
+  ) => (elements: Iterable<A>) => Effect.Effect<R, E, readonly [Z, Chunk.Chunk<B>]>,
   <A, B, R, E, Z>(
     elements: Iterable<A>,
     zero: Z,
     f: (z: Z, a: A) => Effect.Effect<R, E, readonly [Z, B]>
-  ): Effect.Effect<R, E, readonly [Z, Chunk.Chunk<B>]> =>
+  ) => Effect.Effect<R, E, readonly [Z, Chunk.Chunk<B>]>
+>(3, (trace, restore) =>
+  <A, B, R, E, Z>(
+    elements: Iterable<A>,
+    zero: Z,
+    f: (z: Z, a: A) => Effect.Effect<R, E, readonly [Z, B]>
+  ) =>
     core.suspendSucceed(() => {
       const iterator = restore(() => elements[Symbol.iterator]())()
       const builder: Array<B> = []
@@ -1640,13 +1656,12 @@ export const mapAccum = Debug.methodWithTrace((trace, restore) =>
         )
       }
       return core.map(result, (z) => [z, Chunk.unsafeFromArray(builder)] as const)
-    }).traced(trace)
-)
+    }).traced(trace))
 
 /* @internal */
 export const mapBoth = Debug.dualWithTrace<
-  <R, E, A, E2, A2>(self: Effect.Effect<R, E, A>, f: (e: E) => E2, g: (a: A) => A2) => Effect.Effect<R, E2, A2>,
-  <E, A, E2, A2>(f: (e: E) => E2, g: (a: A) => A2) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E2, A2>
+  <E, A, E2, A2>(f: (e: E) => E2, g: (a: A) => A2) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E2, A2>,
+  <R, E, A, E2, A2>(self: Effect.Effect<R, E, A>, f: (e: E) => E2, g: (a: A) => A2) => Effect.Effect<R, E2, A2>
 >(3, (trace, restore) =>
   (self, f, g) =>
     core.matchEffect(
@@ -1657,10 +1672,10 @@ export const mapBoth = Debug.dualWithTrace<
 
 /* @internal */
 export const mapErrorCause = Debug.dualWithTrace<
-  <R, E, A, E2>(self: Effect.Effect<R, E, A>, f: (cause: Cause.Cause<E>) => Cause.Cause<E2>) => Effect.Effect<R, E2, A>,
   <E, E2>(
     f: (cause: Cause.Cause<E>) => Cause.Cause<E2>
-  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E2, A>
+  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E2, A>,
+  <R, E, A, E2>(self: Effect.Effect<R, E, A>, f: (cause: Cause.Cause<E>) => Cause.Cause<E2>) => Effect.Effect<R, E2, A>
 >(
   2,
   (trace, restore) =>
@@ -1669,15 +1684,15 @@ export const mapErrorCause = Debug.dualWithTrace<
 
 /* @internal */
 export const mapTryCatch = Debug.dualWithTrace<
+  <A, B, E1>(
+    f: (a: A) => B,
+    onThrow: (u: unknown) => E1
+  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E | E1, B>,
   <R, E, A, B, E1>(
     self: Effect.Effect<R, E, A>,
     f: (a: A) => B,
     onThrow: (u: unknown) => E1
-  ) => Effect.Effect<R, E | E1, B>,
-  <A, B, E1>(
-    f: (a: A) => B,
-    onThrow: (u: unknown) => E1
-  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E | E1, B>
+  ) => Effect.Effect<R, E | E1, B>
 >(3, (trace) => (self, f, onThrow) => core.flatMap(self, (a) => tryCatch(() => f(a), onThrow)).traced(trace))
 
 /* @internal */
@@ -1716,8 +1731,8 @@ export const merge = Debug.methodWithTrace((trace) =>
 
 /* @internal */
 export const mergeAll = Debug.dualWithTrace<
-  <R, E, Z, A>(elements: Iterable<Effect.Effect<R, E, A>>, zero: Z, f: (z: Z, a: A) => Z) => Effect.Effect<R, E, Z>,
-  <Z, A>(zero: Z, f: (z: Z, a: A) => Z) => <R, E>(elements: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, Z>
+  <Z, A>(zero: Z, f: (z: Z, a: A) => Z) => <R, E>(elements: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, Z>,
+  <R, E, Z, A>(elements: Iterable<Effect.Effect<R, E, A>>, zero: Z, f: (z: Z, a: A) => Z) => Effect.Effect<R, E, Z>
 >(
   3,
   (trace, restore) =>
@@ -1795,13 +1810,13 @@ export const option = Debug.methodWithTrace((trace) =>
 
 /* @internal */
 export const orElseEither = Debug.dualWithTrace<
+  <R2, E2, A2>(
+    that: LazyArg<Effect.Effect<R2, E2, A2>>
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E2, Either.Either<A, A2>>,
   <R, E, A, R2, E2, A2>(
     self: Effect.Effect<R, E, A>,
     that: LazyArg<Effect.Effect<R2, E2, A2>>
-  ) => Effect.Effect<R | R2, E2, Either.Either<A, A2>>,
-  <R2, E2, A2>(
-    that: LazyArg<Effect.Effect<R2, E2, A2>>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E2, Either.Either<A, A2>>
+  ) => Effect.Effect<R | R2, E2, Either.Either<A, A2>>
 >(2, (trace, restore) =>
   (self, that) =>
     core.tryOrElse(
@@ -1812,20 +1827,20 @@ export const orElseEither = Debug.dualWithTrace<
 
 /* @internal */
 export const orElseFail = Debug.dualWithTrace<
-  <R, E, A, E2>(self: Effect.Effect<R, E, A>, evaluate: LazyArg<E2>) => Effect.Effect<R, E2, A>,
-  <E2>(evaluate: LazyArg<E2>) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E2, A>
+  <E2>(evaluate: LazyArg<E2>) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E2, A>,
+  <R, E, A, E2>(self: Effect.Effect<R, E, A>, evaluate: LazyArg<E2>) => Effect.Effect<R, E2, A>
 >(2, (trace, restore) => (self, evaluate) => core.orElse(self, () => core.failSync(restore(evaluate))).traced(trace))
 
 /* @internal */
 export const orElseOptional = Debug.dualWithTrace<
   <R, E, A, R2, E2, A2>(
-    self: Effect.Effect<R, Option.Option<E>, A>,
-    that: LazyArg<Effect.Effect<R2, Option.Option<E2>, A2>>
-  ) => Effect.Effect<R | R2, Option.Option<E | E2>, A | A2>,
-  <R, E, A, R2, E2, A2>(
     that: LazyArg<Effect.Effect<R2, Option.Option<E2>, A2>>
   ) => (
     self: Effect.Effect<R, Option.Option<E>, A>
+  ) => Effect.Effect<R | R2, Option.Option<E | E2>, A | A2>,
+  <R, E, A, R2, E2, A2>(
+    self: Effect.Effect<R, Option.Option<E>, A>,
+    that: LazyArg<Effect.Effect<R2, Option.Option<E2>, A2>>
   ) => Effect.Effect<R | R2, Option.Option<E | E2>, A | A2>
 >(2, (trace, restore) =>
   <R, E, A, R2, E2, A2>(
@@ -1845,8 +1860,8 @@ export const orElseOptional = Debug.dualWithTrace<
 
 /* @internal */
 export const orElseSucceed = Debug.dualWithTrace<
-  <R, E, A, A2>(self: Effect.Effect<R, E, A>, evaluate: LazyArg<A2>) => Effect.Effect<R, E, A | A2>,
-  <A2>(evaluate: LazyArg<A2>) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A | A2>
+  <A2>(evaluate: LazyArg<A2>) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A | A2>,
+  <R, E, A, A2>(self: Effect.Effect<R, E, A>, evaluate: LazyArg<A2>) => Effect.Effect<R, E, A | A2>
 >(2, (trace, restore) => (self, evaluate) => core.orElse(self, () => core.sync(restore(evaluate))).traced(trace))
 
 /* @internal */
@@ -1864,12 +1879,12 @@ export const parallelErrors = Debug.methodWithTrace((trace) =>
 /* @internal */
 export const partition = Debug.dualWithTrace<
   <R, E, A, B>(
+    f: (a: A) => Effect.Effect<R, E, B>
+  ) => (elements: Iterable<A>) => Effect.Effect<R, never, readonly [Chunk.Chunk<E>, Chunk.Chunk<B>]>,
+  <R, E, A, B>(
     elements: Iterable<A>,
     f: (a: A) => Effect.Effect<R, E, B>
-  ) => Effect.Effect<R, never, readonly [Chunk.Chunk<E>, Chunk.Chunk<B>]>,
-  <R, E, A, B>(
-    f: (a: A) => Effect.Effect<R, E, B>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, never, readonly [Chunk.Chunk<E>, Chunk.Chunk<B>]>
+  ) => Effect.Effect<R, never, readonly [Chunk.Chunk<E>, Chunk.Chunk<B>]>
 >(2, (trace, restore) =>
   (elements, f) =>
     pipe(
@@ -1907,28 +1922,28 @@ export const promiseInterrupt = Debug.methodWithTrace((trace, restore) =>
 
 /* @internal */
 export const provideService = Debug.dualWithTrace<
+  <T extends Context.Tag<any>>(
+    tag: T,
+    service: Context.Tag.Service<T>
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<Exclude<R, Context.Tag.Service<T>>, E, A>,
   <R, E, A, T extends Context.Tag<any>>(
     self: Effect.Effect<R, E, A>,
     tag: T,
     service: Context.Tag.Service<T>
-  ) => Effect.Effect<Exclude<R, Context.Tag.Service<T>>, E, A>,
-  <T extends Context.Tag<any>>(
-    tag: T,
-    service: Context.Tag.Service<T>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<Exclude<R, Context.Tag.Service<T>>, E, A>
+  ) => Effect.Effect<Exclude<R, Context.Tag.Service<T>>, E, A>
 >(3, (trace) => (self, tag, service) => provideServiceEffect(self, tag, core.succeed(service)).traced(trace))
 
 /* @internal */
 export const provideServiceEffect = Debug.dualWithTrace<
+  <T extends Context.Tag<any>, R1, E1>(
+    tag: T,
+    effect: Effect.Effect<R1, E1, Context.Tag.Service<T>>
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R1 | Exclude<R, Context.Tag.Service<T>>, E | E1, A>,
   <R, E, A, T extends Context.Tag<any>, R1, E1>(
     self: Effect.Effect<R, E, A>,
     tag: T,
     effect: Effect.Effect<R1, E1, Context.Tag.Service<T>>
-  ) => Effect.Effect<R1 | Exclude<R, Context.Tag.Service<T>>, E | E1, A>,
-  <T extends Context.Tag<any>, R1, E1>(
-    tag: T,
-    effect: Effect.Effect<R1, E1, Context.Tag.Service<T>>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R1 | Exclude<R, Context.Tag.Service<T>>, E | E1, A>
+  ) => Effect.Effect<R1 | Exclude<R, Context.Tag.Service<T>>, E | E1, A>
 >(
   3,
   (trace) =>
@@ -1954,8 +1969,8 @@ export const randomWith: <R, E, A>(f: (random: Random.Random) => Effect.Effect<R
 
 /* @internal */
 export const reduce = Debug.dualWithTrace<
-  <Z, A, R, E>(elements: Iterable<A>, zero: Z, f: (z: Z, a: A) => Effect.Effect<R, E, Z>) => Effect.Effect<R, E, Z>,
-  <Z, A, R, E>(zero: Z, f: (z: Z, a: A) => Effect.Effect<R, E, Z>) => (elements: Iterable<A>) => Effect.Effect<R, E, Z>
+  <Z, A, R, E>(zero: Z, f: (z: Z, a: A) => Effect.Effect<R, E, Z>) => (elements: Iterable<A>) => Effect.Effect<R, E, Z>,
+  <Z, A, R, E>(elements: Iterable<A>, zero: Z, f: (z: Z, a: A) => Effect.Effect<R, E, Z>) => Effect.Effect<R, E, Z>
 >(
   3,
   (trace, restore) =>
@@ -1969,14 +1984,14 @@ export const reduce = Debug.dualWithTrace<
 /* @internal */
 export const reduceAll = Debug.dualWithTrace<
   <R, E, A>(
+    zero: Effect.Effect<R, E, A>,
+    f: (acc: A, a: A) => A
+  ) => (elements: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, A>,
+  <R, E, A>(
     elements: Iterable<Effect.Effect<R, E, A>>,
     zero: Effect.Effect<R, E, A>,
     f: (acc: A, a: A) => A
-  ) => Effect.Effect<R, E, A>,
-  <R, E, A>(
-    zero: Effect.Effect<R, E, A>,
-    f: (acc: A, a: A) => A
-  ) => (elements: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, A>
+  ) => Effect.Effect<R, E, A>
 >(
   3,
   (trace, restore) =>
@@ -1985,8 +2000,8 @@ export const reduceAll = Debug.dualWithTrace<
 
 /* @internal */
 export const reduceRight = Debug.dualWithTrace<
-  <A, Z, R, E>(elements: Iterable<A>, zero: Z, f: (a: A, z: Z) => Effect.Effect<R, E, Z>) => Effect.Effect<R, E, Z>,
-  <A, Z, R, E>(zero: Z, f: (a: A, z: Z) => Effect.Effect<R, E, Z>) => (elements: Iterable<A>) => Effect.Effect<R, E, Z>
+  <A, Z, R, E>(zero: Z, f: (a: A, z: Z) => Effect.Effect<R, E, Z>) => (elements: Iterable<A>) => Effect.Effect<R, E, Z>,
+  <A, Z, R, E>(elements: Iterable<A>, zero: Z, f: (a: A, z: Z) => Effect.Effect<R, E, Z>) => Effect.Effect<R, E, Z>
 >(
   3,
   (trace, restore) =>
@@ -2000,16 +2015,16 @@ export const reduceRight = Debug.dualWithTrace<
 /* @internal */
 export const reduceWhile = Debug.dualWithTrace<
   <A, R, E, Z>(
+    zero: Z,
+    predicate: Predicate<Z>,
+    f: (s: Z, a: A) => Effect.Effect<R, E, Z>
+  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Z>,
+  <A, R, E, Z>(
     elements: Iterable<A>,
     zero: Z,
     predicate: Predicate<Z>,
     f: (s: Z, a: A) => Effect.Effect<R, E, Z>
-  ) => Effect.Effect<R, E, Z>,
-  <A, R, E, Z>(
-    zero: Z,
-    predicate: Predicate<Z>,
-    f: (s: Z, a: A) => Effect.Effect<R, E, Z>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Z>
+  ) => Effect.Effect<R, E, Z>
 >(
   4,
   (trace, restore) =>
@@ -2044,21 +2059,21 @@ const reduceWhileLoop = <A, R, E, Z>(
 
 /* @internal */
 export const refineOrDie = Debug.dualWithTrace<
-  <R, E, A, E1>(self: Effect.Effect<R, E, A>, pf: (e: E) => Option.Option<E1>) => Effect.Effect<R, E1, A>,
-  <E, E1>(pf: (e: E) => Option.Option<E1>) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E1, A>
+  <E, E1>(pf: (e: E) => Option.Option<E1>) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E1, A>,
+  <R, E, A, E1>(self: Effect.Effect<R, E, A>, pf: (e: E) => Option.Option<E1>) => Effect.Effect<R, E1, A>
 >(2, (trace) => (self, pf) => refineOrDieWith(self, pf, identity).traced(trace))
 
 /* @internal */
 export const refineOrDieWith = Debug.dualWithTrace<
+  <E, E1>(
+    pf: (e: E) => Option.Option<E1>,
+    f: (e: E) => unknown
+  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E1, A>,
   <R, E, A, E1>(
     self: Effect.Effect<R, E, A>,
     pf: (e: E) => Option.Option<E1>,
     f: (e: E) => unknown
-  ) => Effect.Effect<R, E1, A>,
-  <E, E1>(
-    pf: (e: E) => Option.Option<E1>,
-    f: (e: E) => unknown
-  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E1, A>
+  ) => Effect.Effect<R, E1, A>
 >(3, (trace, restore) =>
   (self, pf, f) =>
     core.catchAll(self, (e) => {
@@ -2075,8 +2090,8 @@ export const refineOrDieWith = Debug.dualWithTrace<
 
 /* @internal */
 export const reject = Debug.dualWithTrace<
-  <R, E, A, E1>(self: Effect.Effect<R, E, A>, pf: (a: A) => Option.Option<E1>) => Effect.Effect<R, E | E1, A>,
-  <A, E1>(pf: (a: A) => Option.Option<E1>) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E | E1, A>
+  <A, E1>(pf: (a: A) => Option.Option<E1>) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E | E1, A>,
+  <R, E, A, E1>(self: Effect.Effect<R, E, A>, pf: (a: A) => Option.Option<E1>) => Effect.Effect<R, E | E1, A>
 >(2, (trace, restore) =>
   (self, pf) =>
     rejectEffect(
@@ -2086,13 +2101,13 @@ export const reject = Debug.dualWithTrace<
 
 /* @internal */
 export const rejectEffect = Debug.dualWithTrace<
+  <A, R1, E1>(
+    pf: (a: A) => Option.Option<Effect.Effect<R1, E1, E1>>
+  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E | E1, A>,
   <R, E, A, R1, E1>(
     self: Effect.Effect<R, E, A>,
     pf: (a: A) => Option.Option<Effect.Effect<R1, E1, E1>>
-  ) => Effect.Effect<R | R1, E | E1, A>,
-  <A, R1, E1>(
-    pf: (a: A) => Option.Option<Effect.Effect<R1, E1, E1>>
-  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E | E1, A>
+  ) => Effect.Effect<R | R1, E | E1, A>
 >(2, (trace, restore) =>
   (self, pf) =>
     core.flatMap(self, (a) => {
@@ -2109,8 +2124,8 @@ export const rejectEffect = Debug.dualWithTrace<
 
 /* @internal */
 export const repeatN = Debug.dualWithTrace<
-  <R, E, A>(self: Effect.Effect<R, E, A>, n: number) => Effect.Effect<R, E, A>,
-  (n: number) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  (n: number) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(self: Effect.Effect<R, E, A>, n: number) => Effect.Effect<R, E, A>
 >(2, (trace) => (self, n) => core.suspendSucceed(() => repeatNLoop(self, n)).traced(trace))
 
 /* @internal */
@@ -2131,14 +2146,14 @@ export const replicate = (n: number) => {
 
 /* @internal */
 export const replicateEffect = Debug.dualWithTrace<
-  <R, E, A>(self: Effect.Effect<R, E, A>, n: number) => Effect.Effect<R, E, Chunk.Chunk<A>>,
-  (n: number) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, Chunk.Chunk<A>>
+  (n: number) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, Chunk.Chunk<A>>,
+  <R, E, A>(self: Effect.Effect<R, E, A>, n: number) => Effect.Effect<R, E, Chunk.Chunk<A>>
 >(2, (trace) => (self, n) => collectAll(replicate(n)(self)).traced(trace))
 
 /* @internal */
 export const replicateEffectDiscard = Debug.dualWithTrace<
-  <R, E, A>(self: Effect.Effect<R, E, A>, n: number) => Effect.Effect<R, E, void>,
-  (n: number) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, void>
+  (n: number) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, void>,
+  <R, E, A>(self: Effect.Effect<R, E, A>, n: number) => Effect.Effect<R, E, void>
 >(2, (trace) => (self, n) => collectAllDiscard(replicate(n)(self)).traced(trace))
 
 /* @internal */
@@ -2171,12 +2186,12 @@ export const right = Debug.methodWithTrace((trace) =>
 /* @internal */
 export const rightWith = Debug.dualWithTrace<
   <R, E, A, A1, B, B1, R1, E1>(
+    f: (effect: Effect.Effect<R, Either.Either<A, E>, B>) => Effect.Effect<R1, Either.Either<A1, E1>, B1>
+  ) => (self: Effect.Effect<R, E, Either.Either<A, B>>) => Effect.Effect<R | R1, E | E1, Either.Either<A1, B1>>,
+  <R, E, A, A1, B, B1, R1, E1>(
     self: Effect.Effect<R, E, Either.Either<A, B>>,
     f: (effect: Effect.Effect<R, Either.Either<A, E>, B>) => Effect.Effect<R1, Either.Either<A1, E1>, B1>
-  ) => Effect.Effect<R | R1, E | E1, Either.Either<A1, B1>>,
-  <R, E, A, A1, B, B1, R1, E1>(
-    f: (effect: Effect.Effect<R, Either.Either<A, E>, B>) => Effect.Effect<R1, Either.Either<A1, E1>, B1>
-  ) => (self: Effect.Effect<R, E, Either.Either<A, B>>) => Effect.Effect<R | R1, E | E1, Either.Either<A1, B1>>
+  ) => Effect.Effect<R | R1, E | E1, Either.Either<A1, B1>>
 >(2, (trace, restore) => (self, f) => core.suspendSucceed(() => unright(restore(f)(right(self)))).traced(trace))
 
 /* @internal */
@@ -2196,8 +2211,8 @@ export const sleep: (duration: Duration.Duration) => Effect.Effect<never, never,
 
 /* @internal */
 export const someOrElse = Debug.dualWithTrace<
-  <R, E, A, B>(self: Effect.Effect<R, E, Option.Option<A>>, orElse: LazyArg<B>) => Effect.Effect<R, E, A | B>,
-  <B>(orElse: LazyArg<B>) => <R, E, A>(self: Effect.Effect<R, E, Option.Option<A>>) => Effect.Effect<R, E, A | B>
+  <B>(orElse: LazyArg<B>) => <R, E, A>(self: Effect.Effect<R, E, Option.Option<A>>) => Effect.Effect<R, E, A | B>,
+  <R, E, A, B>(self: Effect.Effect<R, E, Option.Option<A>>, orElse: LazyArg<B>) => Effect.Effect<R, E, A | B>
 >(2, (trace, restore) =>
   (self, orElse) =>
     core.map(self, (option) => {
@@ -2213,13 +2228,13 @@ export const someOrElse = Debug.dualWithTrace<
 
 /* @internal */
 export const someOrElseEffect = Debug.dualWithTrace<
+  <R2, E2, A2>(
+    orElse: LazyArg<Effect.Effect<R2, E2, A2>>
+  ) => <R, E, A>(self: Effect.Effect<R, E, Option.Option<A>>) => Effect.Effect<R | R2, E | E2, A | A2>,
   <R, E, A, R2, E2, A2>(
     self: Effect.Effect<R, E, Option.Option<A>>,
     orElse: LazyArg<Effect.Effect<R2, E2, A2>>
-  ) => Effect.Effect<R | R2, E | E2, A | A2>,
-  <R2, E2, A2>(
-    orElse: LazyArg<Effect.Effect<R2, E2, A2>>
-  ) => <R, E, A>(self: Effect.Effect<R, E, Option.Option<A>>) => Effect.Effect<R | R2, E | E2, A | A2>
+  ) => Effect.Effect<R | R2, E | E2, A | A2>
 >(
   2,
   (trace, restore) =>
@@ -2232,8 +2247,8 @@ export const someOrElseEffect = Debug.dualWithTrace<
 
 /* @internal */
 export const someOrFail = Debug.dualWithTrace<
-  <R, E, A, E2>(self: Effect.Effect<R, E, Option.Option<A>>, orFail: LazyArg<E2>) => Effect.Effect<R, E | E2, A>,
-  <E2>(orFail: LazyArg<E2>) => <R, E, A>(self: Effect.Effect<R, E, Option.Option<A>>) => Effect.Effect<R, E | E2, A>
+  <E2>(orFail: LazyArg<E2>) => <R, E, A>(self: Effect.Effect<R, E, Option.Option<A>>) => Effect.Effect<R, E | E2, A>,
+  <R, E, A, E2>(self: Effect.Effect<R, E, Option.Option<A>>, orFail: LazyArg<E2>) => Effect.Effect<R, E | E2, A>
 >(2, (trace, restore) =>
   (self, orFail) =>
     core.flatMap(self, (option) => {
@@ -2277,15 +2292,15 @@ export const succeedSome = Debug.methodWithTrace((trace) =>
 
 /* @internal */
 export const summarized = Debug.dualWithTrace<
+  <R2, E2, B, C>(
+    summary: Effect.Effect<R2, E2, B>,
+    f: (start: B, end: B) => C
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, readonly [C, A]>,
   <R, E, A, R2, E2, B, C>(
     self: Effect.Effect<R, E, A>,
     summary: Effect.Effect<R2, E2, B>,
     f: (start: B, end: B) => C
-  ) => Effect.Effect<R | R2, E | E2, readonly [C, A]>,
-  <R2, E2, B, C>(
-    summary: Effect.Effect<R2, E2, B>,
-    f: (start: B, end: B) => C
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, readonly [C, A]>
+  ) => Effect.Effect<R | R2, E | E2, readonly [C, A]>
 >(
   3,
   (trace, restore) =>
@@ -2329,22 +2344,22 @@ export const struct = Debug.methodWithTrace(
 
 /* @internal */
 export const tagged = Debug.dualWithTrace<
-  <R, E, A>(self: Effect.Effect<R, E, A>, key: string, value: string) => Effect.Effect<R, E, A>,
-  (key: string, value: string) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  (key: string, value: string) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(self: Effect.Effect<R, E, A>, key: string, value: string) => Effect.Effect<R, E, A>
 >(3, (trace) => (self, key, value) => taggedWithLabels(self, [metricLabel.make(key, value)]).traced(trace))
 
 /* @internal */
 export const taggedWithLabels = Debug.dualWithTrace<
-  <R, E, A>(self: Effect.Effect<R, E, A>, labels: Iterable<MetricLabel.MetricLabel>) => Effect.Effect<R, E, A>,
-  (labels: Iterable<MetricLabel.MetricLabel>) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  (labels: Iterable<MetricLabel.MetricLabel>) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(self: Effect.Effect<R, E, A>, labels: Iterable<MetricLabel.MetricLabel>) => Effect.Effect<R, E, A>
 >(2, (trace) => (self, labels) => taggedWithLabelSet(self, HashSet.fromIterable(labels)).traced(trace))
 
 /* @internal */
 export const taggedWithLabelSet = Debug.dualWithTrace<
-  <R, E, A>(self: Effect.Effect<R, E, A>, labels: HashSet.HashSet<MetricLabel.MetricLabel>) => Effect.Effect<R, E, A>,
-  (
-    labels: HashSet.HashSet<MetricLabel.MetricLabel>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  (labels: HashSet.HashSet<MetricLabel.MetricLabel>) => <R, E, A>(
+    self: Effect.Effect<R, E, A>
+  ) => Effect.Effect<R, E, A>,
+  <R, E, A>(self: Effect.Effect<R, E, A>, labels: HashSet.HashSet<MetricLabel.MetricLabel>) => Effect.Effect<R, E, A>
 >(2, (trace) =>
   (self, labels) =>
     pipe(
@@ -2355,12 +2370,12 @@ export const taggedWithLabelSet = Debug.dualWithTrace<
 /* @internal */
 export const takeWhile = Debug.dualWithTrace<
   <R, E, A>(
+    predicate: (a: A) => Effect.Effect<R, E, boolean>
+  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<A>>,
+  <R, E, A>(
     elements: Iterable<A>,
     predicate: (a: A) => Effect.Effect<R, E, boolean>
-  ) => Effect.Effect<R, E, Chunk.Chunk<A>>,
-  <R, E, A>(
-    predicate: (a: A) => Effect.Effect<R, E, boolean>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<A>>
+  ) => Effect.Effect<R, E, Chunk.Chunk<A>>
 >(
   2,
   (trace, restore) =>
@@ -2389,15 +2404,15 @@ export const takeWhile = Debug.dualWithTrace<
 
 /* @internal */
 export const tapBoth = Debug.dualWithTrace<
+  <E, A, R2, E2, X, R3, E3, X1>(
+    f: (e: E) => Effect.Effect<R2, E2, X>,
+    g: (a: A) => Effect.Effect<R3, E3, X1>
+  ) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2 | R3, E | E2 | E3, A>,
   <R, E, A, R2, E2, X, R3, E3, X1>(
     self: Effect.Effect<R, E, A>,
     f: (e: E) => Effect.Effect<R2, E2, X>,
     g: (a: A) => Effect.Effect<R3, E3, X1>
-  ) => Effect.Effect<R | R2 | R3, E | E2 | E3, A>,
-  <E, A, R2, E2, X, R3, E3, X1>(
-    f: (e: E) => Effect.Effect<R2, E2, X>,
-    g: (a: A) => Effect.Effect<R3, E3, X1>
-  ) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2 | R3, E | E2 | E3, A>
+  ) => Effect.Effect<R | R2 | R3, E | E2 | E3, A>
 >(3, (trace, restore) =>
   (self, f, g) =>
     core.matchCauseEffect(
@@ -2418,13 +2433,13 @@ export const tapBoth = Debug.dualWithTrace<
 
 /* @internal */
 export const tapDefect = Debug.dualWithTrace<
+  <R2, E2, X>(
+    f: (cause: Cause.Cause<never>) => Effect.Effect<R2, E2, X>
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A>,
   <R, E, A, R2, E2, X>(
     self: Effect.Effect<R, E, A>,
     f: (cause: Cause.Cause<never>) => Effect.Effect<R2, E2, X>
-  ) => Effect.Effect<R | R2, E | E2, A>,
-  <R2, E2, X>(
-    f: (cause: Cause.Cause<never>) => Effect.Effect<R2, E2, X>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A>
+  ) => Effect.Effect<R | R2, E | E2, A>
 >(2, (trace, restore) =>
   (self, f) =>
     core.catchAllCause(self, (cause) =>
@@ -2438,13 +2453,13 @@ export const tapDefect = Debug.dualWithTrace<
 
 /* @internal */
 export const tapEither = Debug.dualWithTrace<
+  <E, A, R2, E2, X>(
+    f: (either: Either.Either<E, A>) => Effect.Effect<R2, E2, X>
+  ) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A>,
   <R, E, A, R2, E2, X>(
     self: Effect.Effect<R, E, A>,
     f: (either: Either.Either<E, A>) => Effect.Effect<R2, E2, X>
-  ) => Effect.Effect<R | R2, E | E2, A>,
-  <E, A, R2, E2, X>(
-    f: (either: Either.Either<E, A>) => Effect.Effect<R2, E2, X>
-  ) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A>
+  ) => Effect.Effect<R | R2, E | E2, A>
 >(2, (trace, restore) =>
   (self, f) =>
     core.matchCauseEffect(
@@ -2465,13 +2480,13 @@ export const tapEither = Debug.dualWithTrace<
 
 /* @internal */
 export const tapError = Debug.dualWithTrace<
+  <E, R2, E2, X>(
+    f: (e: E) => Effect.Effect<R2, E2, X>
+  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A>,
   <R, E, A, R2, E2, X>(
     self: Effect.Effect<R, E, A>,
     f: (e: E) => Effect.Effect<R2, E2, X>
-  ) => Effect.Effect<R | R2, E | E2, A>,
-  <E, R2, E2, X>(
-    f: (e: E) => Effect.Effect<R2, E2, X>
-  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A>
+  ) => Effect.Effect<R | R2, E | E2, A>
 >(2, (trace, restore) =>
   (self, f) =>
     core.matchCauseEffect(
@@ -2492,13 +2507,13 @@ export const tapError = Debug.dualWithTrace<
 
 /* @internal */
 export const tapErrorCause = Debug.dualWithTrace<
+  <E, R2, E2, X>(
+    f: (cause: Cause.Cause<E>) => Effect.Effect<R2, E2, X>
+  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A>,
   <R, E, A, R2, E2, X>(
     self: Effect.Effect<R, E, A>,
     f: (cause: Cause.Cause<E>) => Effect.Effect<R2, E2, X>
-  ) => Effect.Effect<R | R2, E | E2, A>,
-  <E, R2, E2, X>(
-    f: (cause: Cause.Cause<E>) => Effect.Effect<R2, E2, X>
-  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A>
+  ) => Effect.Effect<R | R2, E | E2, A>
 >(2, (trace, restore) =>
   (self, f) =>
     core.matchCauseEffect(
@@ -2509,13 +2524,13 @@ export const tapErrorCause = Debug.dualWithTrace<
 
 /* @internal */
 export const tapSome = Debug.dualWithTrace<
+  <A, R1, E1, X>(
+    pf: (a: A) => Option.Option<Effect.Effect<R1, E1, X>>
+  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E | E1, A>,
   <R, E, A, R1, E1, X>(
     self: Effect.Effect<R, E, A>,
     pf: (a: A) => Option.Option<Effect.Effect<R1, E1, X>>
-  ) => Effect.Effect<R | R1, E | E1, A>,
-  <A, R1, E1, X>(
-    pf: (a: A) => Option.Option<Effect.Effect<R1, E1, X>>
-  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E | E1, A>
+  ) => Effect.Effect<R | R1, E | E1, A>
 >(2, (trace, restore) =>
   (self, pf) =>
     core.tap(self, (a) =>
@@ -2534,13 +2549,13 @@ export const timed = Debug.methodWithTrace((trace) =>
 
 /* @internal */
 export const timedWith = Debug.dualWithTrace<
+  <R1, E1>(
+    milliseconds: Effect.Effect<R1, E1, number>
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E | E1, readonly [Duration.Duration, A]>,
   <R, E, A, R1, E1>(
     self: Effect.Effect<R, E, A>,
     milliseconds: Effect.Effect<R1, E1, number>
-  ) => Effect.Effect<R | R1, E | E1, readonly [Duration.Duration, A]>,
-  <R1, E1>(
-    milliseconds: Effect.Effect<R1, E1, number>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E | E1, readonly [Duration.Duration, A]>
+  ) => Effect.Effect<R | R1, E | E1, readonly [Duration.Duration, A]>
 >(
   2,
   (trace) =>
@@ -2695,8 +2710,8 @@ export const unleft = Debug.methodWithTrace((trace) =>
 
 /* @internal */
 export const unless = Debug.dualWithTrace<
-  <R, E, A>(self: Effect.Effect<R, E, A>, predicate: LazyArg<boolean>) => Effect.Effect<R, E, Option.Option<A>>,
-  (predicate: LazyArg<boolean>) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, Option.Option<A>>
+  (predicate: LazyArg<boolean>) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, Option.Option<A>>,
+  <R, E, A>(self: Effect.Effect<R, E, A>, predicate: LazyArg<boolean>) => Effect.Effect<R, E, Option.Option<A>>
 >(2, (trace, restore) =>
   (self, predicate) =>
     core.suspendSucceed(() =>
@@ -2707,32 +2722,32 @@ export const unless = Debug.dualWithTrace<
 
 /* @internal */
 export const unlessEffect = Debug.dualWithTrace<
+  <R2, E2>(
+    predicate: Effect.Effect<R2, E2, boolean>
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, Option.Option<A>>,
   <R, E, A, R2, E2>(
     self: Effect.Effect<R, E, A>,
     predicate: Effect.Effect<R2, E2, boolean>
-  ) => Effect.Effect<R | R2, E | E2, Option.Option<A>>,
-  <R2, E2>(
-    predicate: Effect.Effect<R2, E2, boolean>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, Option.Option<A>>
+  ) => Effect.Effect<R | R2, E | E2, Option.Option<A>>
 >(2, (trace) => (self, predicate) => core.flatMap(predicate, (b) => (b ? succeedNone() : asSome(self))).traced(trace))
 
 /* @internal */
 export const unrefine = Debug.dualWithTrace<
-  <R, E, A, E1>(self: Effect.Effect<R, E, A>, pf: (u: unknown) => Option.Option<E1>) => Effect.Effect<R, E | E1, A>,
-  <E1>(pf: (u: unknown) => Option.Option<E1>) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E | E1, A>
+  <E1>(pf: (u: unknown) => Option.Option<E1>) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E | E1, A>,
+  <R, E, A, E1>(self: Effect.Effect<R, E, A>, pf: (u: unknown) => Option.Option<E1>) => Effect.Effect<R, E | E1, A>
 >(2, (trace, restore) => (self, pf) => unrefineWith(self, restore(pf), identity).traced(trace))
 
 /* @internal */
 export const unrefineWith = Debug.dualWithTrace<
+  <E, E1, E2>(
+    pf: (u: unknown) => Option.Option<E1>,
+    f: (e: E) => E2
+  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E1 | E2, A>,
   <R, E, A, E1, E2>(
     self: Effect.Effect<R, E, A>,
     pf: (u: unknown) => Option.Option<E1>,
     f: (e: E) => E2
-  ) => Effect.Effect<R, E1 | E2, A>,
-  <E, E1, E2>(
-    pf: (u: unknown) => Option.Option<E1>,
-    f: (e: E) => E2
-  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E1 | E2, A>
+  ) => Effect.Effect<R, E1 | E2, A>
 >(3, (trace, restore) =>
   <R, E, A, E1, E2>(
     self: Effect.Effect<R, E, A>,
@@ -2800,15 +2815,15 @@ export const updateFiberRefs = Debug.methodWithTrace((trace, restore) =>
 
 /* @internal */
 export const updateService = Debug.dualWithTrace<
+  <T extends Context.Tag<any>>(
+    tag: T,
+    f: (service: Context.Tag.Service<T>) => Context.Tag.Service<T>
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | Context.Tag.Service<T>, E, A>,
   <R, E, A, T extends Context.Tag<any>>(
     self: Effect.Effect<R, E, A>,
     tag: T,
     f: (service: Context.Tag.Service<T>) => Context.Tag.Service<T>
-  ) => Effect.Effect<R | Context.Tag.Service<T>, E, A>,
-  <T extends Context.Tag<any>>(
-    tag: T,
-    f: (service: Context.Tag.Service<T>) => Context.Tag.Service<T>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | Context.Tag.Service<T>, E, A>
+  ) => Effect.Effect<R | Context.Tag.Service<T>, E, A>
 >(3, (trace, restore) =>
   <R, E, A, T extends Context.Tag<any>>(
     self: Effect.Effect<R, E, A>,
@@ -2823,24 +2838,24 @@ export const updateService = Debug.dualWithTrace<
 
 /* @internal */
 export const validate = Debug.dualWithTrace<
+  <R2, E2, B>(
+    that: Effect.Effect<R2, E2, B>
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, readonly [A, B]>,
   <R, E, A, R2, E2, B>(
     self: Effect.Effect<R, E, A>,
     that: Effect.Effect<R2, E2, B>
-  ) => Effect.Effect<R | R2, E | E2, readonly [A, B]>,
-  <R2, E2, B>(
-    that: Effect.Effect<R2, E2, B>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, readonly [A, B]>
+  ) => Effect.Effect<R | R2, E | E2, readonly [A, B]>
 >(2, (trace) => (self, that) => validateWith(self, that, (a, b) => [a, b] as const).traced(trace))
 
 /* @internal */
 export const validateAll = Debug.dualWithTrace<
   <R, E, A, B>(
+    f: (a: A) => Effect.Effect<R, E, B>
+  ) => (elements: Iterable<A>) => Effect.Effect<R, Chunk.Chunk<E>, Chunk.Chunk<B>>,
+  <R, E, A, B>(
     elements: Iterable<A>,
     f: (a: A) => Effect.Effect<R, E, B>
-  ) => Effect.Effect<R, Chunk.Chunk<E>, Chunk.Chunk<B>>,
-  <R, E, A, B>(
-    f: (a: A) => Effect.Effect<R, E, B>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, Chunk.Chunk<E>, Chunk.Chunk<B>>
+  ) => Effect.Effect<R, Chunk.Chunk<E>, Chunk.Chunk<B>>
 >(2, (trace, restore) =>
   (elements, f) =>
     core.flatMap(partition(elements, restore(f)), ([es, bs]) =>
@@ -2850,8 +2865,10 @@ export const validateAll = Debug.dualWithTrace<
 
 /* @internal */
 export const validateAllDiscard = Debug.dualWithTrace<
-  <R, E, A, X>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, X>) => Effect.Effect<R, Chunk.Chunk<E>, void>,
-  <R, E, A, X>(f: (a: A) => Effect.Effect<R, E, X>) => (elements: Iterable<A>) => Effect.Effect<R, Chunk.Chunk<E>, void>
+  <R, E, A, X>(
+    f: (a: A) => Effect.Effect<R, E, X>
+  ) => (elements: Iterable<A>) => Effect.Effect<R, Chunk.Chunk<E>, void>,
+  <R, E, A, X>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, X>) => Effect.Effect<R, Chunk.Chunk<E>, void>
 >(2, (trace, restore) =>
   (elements, f) =>
     core.flatMap(partition(elements, restore(f)), ([es, _]) =>
@@ -2861,8 +2878,8 @@ export const validateAllDiscard = Debug.dualWithTrace<
 
 /* @internal */
 export const validateFirst = Debug.dualWithTrace<
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, Chunk.Chunk<E>, B>,
-  <R, E, A, B>(f: (a: A) => Effect.Effect<R, E, B>) => (elements: Iterable<A>) => Effect.Effect<R, Chunk.Chunk<E>, B>
+  <R, E, A, B>(f: (a: A) => Effect.Effect<R, E, B>) => (elements: Iterable<A>) => Effect.Effect<R, Chunk.Chunk<E>, B>,
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, Chunk.Chunk<E>, B>
 >(
   2,
   (trace, restore) => (elements, f) => core.flip(core.forEach(elements, (a) => core.flip(restore(f)(a)))).traced(trace)
@@ -2870,15 +2887,15 @@ export const validateFirst = Debug.dualWithTrace<
 
 /* @internal */
 export const validateWith = Debug.dualWithTrace<
+  <A, R2, E2, B, C>(
+    that: Effect.Effect<R2, E2, B>,
+    f: (a: A, b: B) => C
+  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, C>,
   <R, E, A, R2, E2, B, C>(
     self: Effect.Effect<R, E, A>,
     that: Effect.Effect<R2, E2, B>,
     f: (a: A, b: B) => C
-  ) => Effect.Effect<R | R2, E | E2, C>,
-  <A, R2, E2, B, C>(
-    that: Effect.Effect<R2, E2, B>,
-    f: (a: A, b: B) => C
-  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, C>
+  ) => Effect.Effect<R | R2, E | E2, C>
 >(3, (trace, restore) =>
   (self, that, f) =>
     core.flatten(core.zipWith(
@@ -2889,8 +2906,8 @@ export const validateWith = Debug.dualWithTrace<
 
 /* @internal */
 export const when = Debug.dualWithTrace<
-  <R, E, A>(self: Effect.Effect<R, E, A>, predicate: LazyArg<boolean>) => Effect.Effect<R, E, Option.Option<A>>,
-  (predicate: LazyArg<boolean>) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, Option.Option<A>>
+  (predicate: LazyArg<boolean>) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, Option.Option<A>>,
+  <R, E, A>(self: Effect.Effect<R, E, A>, predicate: LazyArg<boolean>) => Effect.Effect<R, E, Option.Option<A>>
 >(2, (trace, restore) =>
   (self, predicate) =>
     core.suspendSucceed(() =>
@@ -2915,26 +2932,26 @@ export const whenCase = Debug.methodWithTrace((trace, restore) =>
 
 /* @internal */
 export const whenCaseEffect = Debug.dualWithTrace<
+  <A, R2, E2, A2>(
+    pf: (a: A) => Option.Option<Effect.Effect<R2, E2, A2>>
+  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, Option.Option<A2>>,
   <R, E, A, R2, E2, A2>(
     self: Effect.Effect<R, E, A>,
     pf: (a: A) => Option.Option<Effect.Effect<R2, E2, A2>>
-  ) => Effect.Effect<R | R2, E | E2, Option.Option<A2>>,
-  <A, R2, E2, A2>(
-    pf: (a: A) => Option.Option<Effect.Effect<R2, E2, A2>>
-  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, Option.Option<A2>>
+  ) => Effect.Effect<R | R2, E | E2, Option.Option<A2>>
 >(2, (trace, restore) => (self, pf) => core.flatMap(self, (a) => whenCase(() => a, restore(pf))).traced(trace))
 
 /* @internal */
 export const whenFiberRef = Debug.dualWithTrace<
+  <S>(
+    fiberRef: FiberRef.FiberRef<S>,
+    predicate: Predicate<S>
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, readonly [S, Option.Option<A>]>,
   <R, E, A, S>(
     self: Effect.Effect<R, E, A>,
     fiberRef: FiberRef.FiberRef<S>,
     predicate: Predicate<S>
-  ) => Effect.Effect<R, E, readonly [S, Option.Option<A>]>,
-  <S>(
-    fiberRef: FiberRef.FiberRef<S>,
-    predicate: Predicate<S>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, readonly [S, Option.Option<A>]>
+  ) => Effect.Effect<R, E, readonly [S, Option.Option<A>]>
 >(
   3,
   (trace, restore) =>
@@ -2947,15 +2964,15 @@ export const whenFiberRef = Debug.dualWithTrace<
 
 /* @internal */
 export const whenRef = Debug.dualWithTrace<
+  <S>(
+    ref: Ref.Ref<S>,
+    predicate: Predicate<S>
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, readonly [S, Option.Option<A>]>,
   <R, E, A, S>(
     self: Effect.Effect<R, E, A>,
     ref: Ref.Ref<S>,
     predicate: Predicate<S>
-  ) => Effect.Effect<R, E, readonly [S, Option.Option<A>]>,
-  <S>(
-    ref: Ref.Ref<S>,
-    predicate: Predicate<S>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, readonly [S, Option.Option<A>]>
+  ) => Effect.Effect<R, E, readonly [S, Option.Option<A>]>
 >(
   3,
   (trace, restore) =>
@@ -2968,11 +2985,11 @@ export const whenRef = Debug.dualWithTrace<
 
 /* @internal */
 export const withMetric = Debug.dualWithTrace<
+  <Type, In, Out>(
+    metric: Metric.Metric<Type, In, Out>
+  ) => <R, E, A extends In>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
   <R, E, A extends In, Type, In, Out>(
     self: Effect.Effect<R, E, A>,
     metric: Metric.Metric<Type, In, Out>
-  ) => Effect.Effect<R, E, A>,
-  <Type, In, Out>(
-    metric: Metric.Metric<Type, In, Out>
-  ) => <R, E, A extends In>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  ) => Effect.Effect<R, E, A>
 >(2, (trace) => (self, metric) => metric(self).traced(trace))
