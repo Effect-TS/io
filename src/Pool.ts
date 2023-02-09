@@ -1,6 +1,7 @@
 /**
  * @since 1.0.0
  */
+import type * as Data from "@effect/data/Data"
 import type * as Duration from "@effect/data/Duration"
 import type * as Effect from "@effect/io/Effect"
 import * as internal from "@effect/io/internal_effect_untraced/pool"
@@ -26,7 +27,7 @@ export type PoolTypeId = typeof PoolTypeId
  * @since 1.0.0
  * @category models
  */
-export interface Pool<E, A> extends Pool.Variance<E, A> {
+export interface Pool<E, A> extends Data.Case, Pool.Variance<E, A> {
   /**
    * Retrieves an item from the pool in a scoped effect. Note that if
    * acquisition fails, then the returned effect will fail for that same reason.
@@ -57,6 +58,14 @@ export declare namespace Pool {
     }
   }
 }
+
+/**
+ * Returns `true` if the specified value is a `Pool`, `false` otherwise.
+ *
+ * @since 1.0.0
+ * @category refinements
+ */
+export const isPool: (u: unknown) => u is Pool<unknown, unknown> = internal.isPool
 
 /**
  * Makes a new pool of the specified fixed size. The pool is returned in a

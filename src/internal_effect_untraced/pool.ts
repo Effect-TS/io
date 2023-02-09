@@ -1,5 +1,7 @@
 import * as Context from "@effect/data/Context"
 import type * as Duration from "@effect/data/Duration"
+import * as Equal from "@effect/data/Equal"
+import * as Hash from "@effect/data/Hash"
 import * as HashSet from "@effect/data/HashSet"
 import type * as Clock from "@effect/io/Clock"
 import * as Debug from "@effect/io/Debug"
@@ -142,6 +144,31 @@ class PoolImpl<E, A> implements Pool.Pool<E, A> {
     readonly invalidated: Ref.Ref<HashSet.HashSet<A>>,
     readonly track: (exit: Exit.Exit<E, A>) => Effect.Effect<never, never, unknown>
   ) {}
+
+  [Hash.symbol](): number {
+    return pipe(
+      Hash.hash(this.creator),
+      Hash.combine(Hash.number(this.min)),
+      Hash.combine(Hash.number(this.max)),
+      Hash.combine(Hash.hash(this.isShuttingDown)),
+      Hash.combine(Hash.hash(this.state)),
+      Hash.combine(Hash.hash(this.items)),
+      Hash.combine(Hash.hash(this.invalidated)),
+      Hash.combine(Hash.hash(this.track))
+    )
+  }
+
+  [Equal.symbol](that: unknown): boolean {
+    return isPool(that) &&
+      Equal.equals(this.creator, (that as PoolImpl<E, A>).creator) &&
+      this.min === (that as PoolImpl<E, A>).min &&
+      this.max === (that as PoolImpl<E, A>).max &&
+      Equal.equals(this.isShuttingDown, (that as PoolImpl<E, A>).isShuttingDown) &&
+      Equal.equals(this.state, (that as PoolImpl<E, A>).state) &&
+      Equal.equals(this.items, (that as PoolImpl<E, A>).items) &&
+      Equal.equals(this.invalidated, (that as PoolImpl<E, A>).invalidated) &&
+      Equal.equals(this.track, (that as PoolImpl<E, A>).track)
+  }
 
   get(): Effect.Effect<Scope.Scope, E, A> {
     return Debug.bodyWithTrace((trace) => {
@@ -433,6 +460,10 @@ const makeWith = Debug.methodWithTrace((trace) =>
       )
     ).traced(trace)
 )
+
+/** @internal */
+export const isPool = (u: unknown): u is Pool.Pool<unknown, unknown> =>
+  typeof u === "object" && u != null && PoolTypeId in u
 
 /** @internal */
 export const make = Debug.methodWithTrace((trace) =>
