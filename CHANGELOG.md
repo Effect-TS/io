@@ -1,5 +1,15 @@
 # @effect/io
 
+## 0.1.12
+
+### Patch Changes
+
+- [#244](https://github.com/Effect-TS/io/pull/244) [`fb07cc2`](https://github.com/Effect-TS/io/commit/fb07cc2ae166c5d142975630a13dfb14f484cf47) Thanks [@IMax153](https://github.com/IMax153)! - make Effect.continueOrFail\* variants lazy on error
+
+- [#248](https://github.com/Effect-TS/io/pull/248) [`7e48373`](https://github.com/Effect-TS/io/commit/7e483733245722c4b8033cc210b442854ed1d18a) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Fix Config.tuple
+
+- [#246](https://github.com/Effect-TS/io/pull/246) [`7088c7e`](https://github.com/Effect-TS/io/commit/7088c7e5fd8ff70dcb954d3e1d7db2929e636897) Thanks [@IMax153](https://github.com/IMax153)! - add KeyedPool
+
 ## 0.1.11
 
 ### Patch Changes
