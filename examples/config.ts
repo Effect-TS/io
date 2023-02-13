@@ -1,25 +1,38 @@
+import * as Context from "@effect/data/Context"
 import * as Config from "@effect/io/Config"
 import * as Effect from "@effect/io/Effect"
-import * as assert from "node:assert"
-import * as util from "node:util"
+import * as Layer from "@effect/io/Layer"
+import { pipe } from "@fp-ts/core/Function"
 
-const UrlConfig = Config.string("URL")
+export interface HttpServer {
+  readonly host: string
+  readonly port: number
+}
 
-const program = Effect.gen(function*($) {
-  yield* $(Effect.sync(() => console.log(process.env)))
-  const url = yield* $(Effect.config(UrlConfig))
-  assert.strictEqual(url, "https://example.com") // fails, 'https' does not match 'https://example.com'
+export const HttpServer = Context.Tag<HttpServer>()
+
+export const HttpServerLive = Layer.effect(
+  HttpServer,
+  Effect.gen(function*($) {
+    const [host, port] = yield* $(Effect.config(
+      Config.tuple(Config.string("HOST"), Config.integer("PORT"))
+    ))
+    return {
+      host,
+      port
+    }
+  })
+)
+
+export const program = Effect.gen(function*($) {
+  const { host, port } = yield* $(Effect.service(HttpServer))
+  yield* $(Effect.log(`Host: ${host}`))
+  yield* $(Effect.log(`Port: ${port}`))
 })
 
-Effect.runCallback(program, (exit) => {
-  switch (exit._tag) {
-    case "Success": {
-      console.log(util.inspect(exit.value, { depth: null, colors: true }))
-      break
-    }
-    case "Failure": {
-      console.log(util.inspect(exit.cause, { depth: null, colors: true }))
-      break
-    }
-  }
-})
+pipe(
+  program,
+  Effect.provideSomeLayer(HttpServerLive),
+  Effect.catchAllCause(Effect.logErrorCause),
+  Effect.runFork
+)

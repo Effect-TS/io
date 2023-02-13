@@ -455,10 +455,13 @@ export const tuple = <T extends NonEmptyArrayConfig>(...tuple: T): Config.Config
   if (tuple.length === 1) {
     return tuple[0]
   }
-  let result = tuple[0]
+  let result = map(tuple[0], (x) => [x])
   const rest = tuple.slice(1)
   for (const config of rest) {
-    result = pipe(result, zipWith(config, (tuple, value) => [...tuple, value])) as any
+    result = pipe(
+      result,
+      zipWith(config, (tuple, value) => [...tuple, value])
+    ) as any
   }
   return result as any
 }
