@@ -108,7 +108,7 @@ export const scoped = <E, A>(
     () =>
       pipe(
         Effect.suspendSucceed(self),
-        Effect.scoped,
+        Effect.scoped(),
         Effect.provideLayer(TestEnvironment.testContext()),
         Effect.runPromise
       ),
@@ -126,7 +126,7 @@ export const scopedLive = <E, A>(
     () =>
       pipe(
         Effect.suspendSucceed(self),
-        Effect.scoped,
+        Effect.scoped(),
         Effect.runPromise
       ),
     timeout

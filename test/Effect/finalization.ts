@@ -34,7 +34,7 @@ describe.concurrent("Effect", () => {
         Effect.ensuring(Effect.sync(() => {
           finalized = true
         })),
-        Effect.exit
+        Effect.exit()
       ))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(ExampleError))
       assert.isTrue(finalized)
@@ -49,7 +49,7 @@ describe.concurrent("Effect", () => {
             finalized = true
           })
         ),
-        Effect.exit
+        Effect.exit()
       ))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(ExampleError))
       assert.isTrue(finalized)
@@ -63,7 +63,7 @@ describe.concurrent("Effect", () => {
           Effect.fail(ExampleError),
           Effect.ensuring(Effect.die(e2)),
           Effect.ensuring(Effect.die(e3)),
-          Effect.sandbox,
+          Effect.sandbox(),
           Effect.flip,
           Effect.map((cause) => cause)
         )
@@ -102,21 +102,30 @@ describe.concurrent("Effect", () => {
   it.effect("error in just acquisition", () =>
     Effect.gen(function*($) {
       const result = yield* $(
-        pipe(Effect.acquireUseRelease(Effect.fail(ExampleError), () => Effect.unit(), () => Effect.unit()), Effect.exit)
+        pipe(
+          Effect.acquireUseRelease(Effect.fail(ExampleError), () => Effect.unit(), () => Effect.unit()),
+          Effect.exit()
+        )
       )
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(ExampleError))
     }))
   it.effect("error in just release", () =>
     Effect.gen(function*($) {
       const result = yield* $(
-        pipe(Effect.acquireUseRelease(Effect.unit(), () => Effect.unit(), () => Effect.die(ExampleError)), Effect.exit)
+        pipe(
+          Effect.acquireUseRelease(Effect.unit(), () => Effect.unit(), () => Effect.die(ExampleError)),
+          Effect.exit()
+        )
       )
       assert.deepStrictEqual(Exit.unannotate(result), Exit.die(ExampleError))
     }))
   it.effect("error in just usage", () =>
     Effect.gen(function*($) {
       const result = yield* $(
-        pipe(Effect.acquireUseRelease(Effect.unit(), () => Effect.fail(ExampleError), () => Effect.unit()), Effect.exit)
+        pipe(
+          Effect.acquireUseRelease(Effect.unit(), () => Effect.fail(ExampleError), () => Effect.unit()),
+          Effect.exit()
+        )
       )
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(ExampleError))
     }))
@@ -124,8 +133,8 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const result = yield* $(pipe(
         Effect.acquireUseRelease(Effect.fail(ExampleError), () => Effect.unit(), () => Effect.unit()),
-        Effect.either,
-        Effect.absolve,
+        Effect.either(),
+        Effect.absolve(),
         Effect.flip
       ))
       assert.deepEqual(result, ExampleError)
@@ -133,7 +142,10 @@ describe.concurrent("Effect", () => {
   it.effect("rethrown caught error in release", () =>
     Effect.gen(function*($) {
       const result = yield* $(
-        pipe(Effect.acquireUseRelease(Effect.unit(), () => Effect.unit(), () => Effect.die(ExampleError)), Effect.exit)
+        pipe(
+          Effect.acquireUseRelease(Effect.unit(), () => Effect.unit(), () => Effect.die(ExampleError)),
+          Effect.exit()
+        )
       )
       assert.deepStrictEqual(Exit.unannotate(result), Exit.die(ExampleError))
     }))
@@ -141,9 +153,9 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const result = yield* $(pipe(
         Effect.acquireUseRelease(Effect.unit(), () => Effect.fail(ExampleError), () => Effect.unit()),
-        Effect.either,
-        Effect.absolve,
-        Effect.exit
+        Effect.either(),
+        Effect.absolve(),
+        Effect.exit()
       ))
       assert.deepEqual(Exit.unannotate(result), Exit.fail(ExampleError))
     }))
@@ -157,8 +169,8 @@ describe.concurrent("Effect", () => {
       )
       const a1 = yield* $(Effect.exit(io1))
       const a2 = yield* $(Effect.exit(io2))
-      const a3 = yield* $(pipe(io1, Effect.either, Effect.absolve, Effect.exit))
-      const a4 = yield* $(pipe(io2, Effect.either, Effect.absolve, Effect.exit))
+      const a3 = yield* $(pipe(io1, Effect.either(), Effect.absolve(), Effect.exit()))
+      const a4 = yield* $(pipe(io2, Effect.either(), Effect.absolve(), Effect.exit()))
       assert.deepStrictEqual(Exit.unannotate(a1), Exit.fail(ExampleError))
       assert.deepStrictEqual(Exit.unannotate(a2), Exit.fail(ExampleError))
       assert.deepStrictEqual(Exit.unannotate(a3), Exit.fail(ExampleError))
@@ -251,7 +263,7 @@ describe.concurrent("Effect", () => {
             Ref.set(ref, true) :
             Effect.unit()
         ),
-        Effect.sandbox,
+        Effect.sandbox(),
         Effect.ignore
       ))
       const result = yield* $(Ref.get(ref))
@@ -267,7 +279,7 @@ describe.concurrent("Effect", () => {
           Effect.zipRight(Effect.never()),
           Effect.onExit((exit) =>
             Exit.isFailure(exit) && Cause.isInterrupted(exit.cause) ?
-              pipe(Deferred.succeed(latch2, void 0), Effect.asUnit) :
+              pipe(Deferred.succeed(latch2, void 0), Effect.asUnit()) :
               Effect.unit()
           ),
           Effect.fork

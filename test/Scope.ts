@@ -68,8 +68,8 @@ describe.concurrent("Scope", () => {
         Effect.addFinalizer(() => Deferred.succeed(deferred, void 0)),
         Effect.zipRight(Effect.addFinalizer(() => Deferred.await(deferred))),
         Effect.parallelFinalizers,
-        Effect.scoped,
-        Effect.asUnit
+        Effect.scoped(),
+        Effect.asUnit()
       ))
       assert.isUndefined(result)
     }))
@@ -133,7 +133,7 @@ describe.concurrent("Scope", () => {
           pipe(Ref.update(ref1, (actions) => [...actions, use(1)]), Effect.zipRight(resource(2, ref2)))
         ),
         Effect.zipRight(Ref.update(ref2, (actions) => [...actions, use(2)])),
-        Effect.scoped
+        Effect.scoped()
       ))
       const actions1 = yield* $(Ref.get(ref1))
       const actions2 = yield* $(Ref.get(ref2))

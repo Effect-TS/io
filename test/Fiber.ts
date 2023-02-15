@@ -30,7 +30,7 @@ describe.concurrent("Fiber", () => {
           FiberStatus.isSuspended(status)
             ? Option.some(status.blockingOn)
             : Option.none()),
-        Effect.eventually
+        Effect.eventually()
       ))
       assert.deepStrictEqual(blockingOn, Fiber.id(fiber1))
     }))
@@ -43,7 +43,7 @@ describe.concurrent("Fiber", () => {
           () => void 0 as void,
           (status) => FiberStatus.isSuspended(status) ? Option.some(status.blockingOn) : Option.none()
         ),
-        Effect.eventually
+        Effect.eventually()
       ))
       assert.strictEqual(HashSet.size(FiberId.toSet(blockingOn)), 2)
     }))
@@ -108,7 +108,7 @@ describe.concurrent("Fiber", () => {
   it.effect("join on interrupted Fiber is an inner interruption", () =>
     Effect.gen(function*($) {
       const fiberId = FiberId.make(0, 123)
-      const result = yield* $(pipe(Fiber.interrupted(fiberId), Fiber.join, Effect.exit))
+      const result = yield* $(pipe(Fiber.interrupted(fiberId), Fiber.join, Effect.exit()))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.interrupt(fiberId))
     }))
   it.effect("scoped should create a new Fiber and scope it", () =>
@@ -154,7 +154,7 @@ describe.concurrent("Fiber", () => {
         if (n === 100) {
           return pipe(Queue.shutdown(queue), Effect.zipRight(Effect.fail("fail")))
         }
-        return pipe(Queue.offer(queue, n), Effect.asUnit)
+        return pipe(Queue.offer(queue, n), Effect.asUnit())
       }
       const queue = yield* $(Queue.unbounded<number>())
       yield* $(Queue.offerAll(queue, Array.from(Array(100), (_, i) => i + 1)))
@@ -231,7 +231,7 @@ describe.concurrent("Fiber", () => {
     }), 10000)
   it.effect("collectAll - stack safety", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(Fiber.join(Fiber.collectAll(fibers)), Effect.asUnit))
+      const result = yield* $(pipe(Fiber.join(Fiber.collectAll(fibers)), Effect.asUnit()))
       assert.isUndefined(result)
     }), 10000)
 })

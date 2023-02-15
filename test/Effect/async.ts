@@ -59,7 +59,7 @@ describe.concurrent("Effect", () => {
             () => Deferred.succeed(release, void 0)
           )
         ),
-        Effect.disconnect,
+        Effect.disconnect(),
         Effect.fork
       ))
       yield* $(Deferred.await(acquire))
@@ -156,7 +156,7 @@ describe.concurrent("Effect", () => {
             throw new Error("ouch")
           })
         ),
-        Effect.exit,
+        Effect.exit(),
         Effect.map(Exit.match((cause) =>
           pipe(Cause.defects(cause), Chunk.head, Option.map((e) => (e as Error).message)), () =>
           Option.none()))

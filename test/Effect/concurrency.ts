@@ -54,7 +54,7 @@ describe.concurrent("Effect", () => {
           Effect.acquireUseRelease(
             Deferred.succeed(acquire, void 0),
             () => Effect.never(),
-            () => pipe(Deferred.succeed(release, 42), Effect.asUnit)
+            () => pipe(Deferred.succeed(release, 42), Effect.asUnit())
           )
         ),
         Effect.fork
@@ -151,7 +151,7 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("race of fail with success", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(Effect.fail(42), Effect.race(Effect.succeed(24)), Effect.either))
+      const result = yield* $(pipe(Effect.fail(42), Effect.race(Effect.succeed(24)), Effect.either()))
       assert.deepStrictEqual(result, Either.right(24))
     }))
   it.effect("race of terminate with success", () =>
@@ -161,7 +161,7 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("race of fail with fail", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(Effect.fail(42), Effect.race(Effect.fail(24)), Effect.either))
+      const result = yield* $(pipe(Effect.fail(42), Effect.race(Effect.fail(24)), Effect.either()))
       assert.deepStrictEqual(result, Either.left(42))
     }))
   it.effect("race of value and never", () =>
@@ -219,7 +219,7 @@ describe.concurrent("Effect", () => {
           Effect.fail(0),
           Effect.succeed(100)
         ]),
-        Effect.either
+        Effect.either()
       ))
       assert.deepStrictEqual(result, Either.right(100))
     }))
@@ -230,7 +230,7 @@ describe.concurrent("Effect", () => {
           pipe(Effect.fail(0), Effect.delay(Duration.millis(10))),
           Effect.fail(101)
         ]),
-        Effect.either
+        Effect.either()
       ))
       assert.deepStrictEqual(result, Either.left(101))
     }))
@@ -241,7 +241,7 @@ describe.concurrent("Effect", () => {
           Effect.fail(0),
           pipe(Effect.succeed(102), Effect.delay(Duration.millis(1)))
         ]),
-        Effect.either
+        Effect.either()
       ))
       assert.deepStrictEqual(result, Either.right(102))
     }))
@@ -269,7 +269,7 @@ describe.concurrent("Effect", () => {
         () => Effect.never(),
         () => Deferred.succeed(effect, 42)
       )
-      yield* $(pipe(winner, Effect.raceFirst(loser), Effect.either))
+      yield* $(pipe(winner, Effect.raceFirst(loser), Effect.either()))
       const result = yield* $(Deferred.await(effect))
       assert.strictEqual(result, 42)
     }))
@@ -306,12 +306,12 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("timeout of failure", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(Effect.fail("uh oh"), Effect.timeout(Duration.hours(1)), Effect.exit))
+      const result = yield* $(pipe(Effect.fail("uh oh"), Effect.timeout(Duration.hours(1)), Effect.exit()))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail("uh oh"))
     }))
   it.effect("timeout of terminate", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(Effect.die(ExampleError), Effect.timeout(Duration.hours(1)), Effect.exit))
+      const result = yield* $(pipe(Effect.die(ExampleError), Effect.timeout(Duration.hours(1)), Effect.exit()))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.die(ExampleError))
     }))
 })

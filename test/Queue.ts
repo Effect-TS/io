@@ -462,7 +462,7 @@ describe.concurrent("Queue", () => {
       const fiberId = yield* $(Effect.fiberId())
       const queue = yield* $(Queue.bounded<number>(1))
       yield* $(Queue.shutdown(queue))
-      const result = yield* $(pipe(Queue.offer(queue, 1), Effect.sandbox, Effect.either))
+      const result = yield* $(pipe(Queue.offer(queue, 1), Effect.sandbox(), Effect.either()))
       assert.deepStrictEqual(pipe(result, Either.mapLeft(Cause.unannotate)), Either.left(Cause.interrupt(fiberId)))
     }))
   it.effect("shutdown with take", () =>
@@ -470,7 +470,7 @@ describe.concurrent("Queue", () => {
       const fiberId = yield* $(Effect.fiberId())
       const queue = yield* $(Queue.bounded<number>(1))
       yield* $(Queue.shutdown(queue))
-      const result = yield* $(pipe(Queue.take(queue), Effect.sandbox, Effect.either))
+      const result = yield* $(pipe(Queue.take(queue), Effect.sandbox(), Effect.either()))
       assert.deepStrictEqual(pipe(result, Either.mapLeft(Cause.unannotate)), Either.left(Cause.interrupt(fiberId)))
     }))
   it.effect("shutdown with takeAll", () =>
@@ -478,7 +478,7 @@ describe.concurrent("Queue", () => {
       const fiberId = yield* $(Effect.fiberId())
       const queue = yield* $(Queue.bounded<number>(1))
       yield* $(Queue.shutdown(queue))
-      const result = yield* $(pipe(Queue.takeAll(queue), Effect.sandbox, Effect.either))
+      const result = yield* $(pipe(Queue.takeAll(queue), Effect.sandbox(), Effect.either()))
       assert.deepStrictEqual(pipe(result, Either.mapLeft(Cause.unannotate)), Either.left(Cause.interrupt(fiberId)))
     }))
   it.effect("shutdown with takeUpTo", () =>
@@ -486,7 +486,7 @@ describe.concurrent("Queue", () => {
       const fiberId = yield* $(Effect.fiberId())
       const queue = yield* $(Queue.bounded<number>(1))
       yield* $(Queue.shutdown(queue))
-      const result = yield* $(pipe(Queue.takeUpTo(queue, 1), Effect.sandbox, Effect.either))
+      const result = yield* $(pipe(Queue.takeUpTo(queue, 1), Effect.sandbox(), Effect.either()))
       assert.deepStrictEqual(pipe(result, Either.mapLeft(Cause.unannotate)), Either.left(Cause.interrupt(fiberId)))
     }))
   it.effect("shutdown with size", () =>
@@ -494,7 +494,7 @@ describe.concurrent("Queue", () => {
       const fiberId = yield* $(Effect.fiberId())
       const queue = yield* $(Queue.bounded<number>(1))
       yield* $(Queue.shutdown(queue))
-      const result = yield* $(pipe(Queue.size(queue), Effect.sandbox, Effect.either))
+      const result = yield* $(pipe(Queue.size(queue), Effect.sandbox(), Effect.either()))
       assert.deepStrictEqual(pipe(result, Either.mapLeft(Cause.unannotate)), Either.left(Cause.interrupt(fiberId)))
     }))
   it.effect("shutdown race condition with offer", () =>

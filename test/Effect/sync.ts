@@ -57,7 +57,7 @@ describe.concurrent("Effect", () => {
         Effect.suspend<never, never, never>(() => {
           throw error
         }),
-        Effect.either
+        Effect.either()
       ))
       assert.deepStrictEqual(result, Either.left(error))
     }))
@@ -73,8 +73,8 @@ describe.concurrent("Effect", () => {
         Effect.suspendSucceed<never, never, never>(() => {
           throw error
         }),
-        Effect.sandbox,
-        Effect.either,
+        Effect.sandbox(),
+        Effect.either(),
         Effect.map(Either.mapLeft(Cause.unannotate))
       ))
       assert.deepStrictEqual(result, Either.left(Cause.die(error)))

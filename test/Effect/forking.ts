@@ -50,7 +50,7 @@ describe.concurrent("Effect", () => {
       const deferred = yield* $(Deferred.make<never, void>())
       yield* $(pipe(
         Effect.fail<void>(void 0),
-        Effect.forkWithErrorHandler((e) => pipe(Deferred.succeed(deferred, e), Effect.asUnit))
+        Effect.forkWithErrorHandler((e) => pipe(Deferred.succeed(deferred, e), Effect.asUnit()))
       ))
       const result = yield* $(Deferred.await(deferred))
       assert.isUndefined(result)
@@ -91,7 +91,7 @@ describe.concurrent("Effect", () => {
       const boom = new Error("boom")
       const die = Effect.die(boom)
       const joinDefect = (fiber: Fiber.Fiber<never, unknown>) => {
-        return pipe(fiber, Fiber.join, Effect.sandbox, Effect.flip)
+        return pipe(fiber, Fiber.join, Effect.sandbox(), Effect.flip)
       }
       const fiber1 = yield* $(Effect.forkAll([die]))
       const fiber2 = yield* $(Effect.forkAll([die, Effect.succeed(42)]))

@@ -18,7 +18,7 @@ describe("KeyedPool", () => {
       yield* $(pipe(
         KeyedPool.get(pool, "key1"),
         Effect.repeatN(3),
-        Effect.asUnit
+        Effect.asUnit()
       ))
       const fiber = yield* $(Effect.fork(
         Effect.forEachParDiscard(Chunk.range(1, N), () =>

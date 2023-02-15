@@ -66,7 +66,7 @@ describe.concurrent("ScopedRef", () => {
             Effect.zipRight(ScopedRef.set(ref, counter.acquire()))
           )
         ),
-        Effect.scoped
+        Effect.scoped()
       ))
       const acquired = yield* $(counter.acquired())
       const released = yield* $(counter.released())

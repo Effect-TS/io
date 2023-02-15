@@ -83,7 +83,7 @@ describe("Pool", () => {
       yield* $(Effect.collectAll(Effect.replicate(10)(Pool.get(pool))))
       const result = yield* $(TestServices.provideLive(pipe(
         Effect.scoped(Pool.get(pool)),
-        Effect.disconnect,
+        Effect.disconnect(),
         Effect.timeout(Duration.millis(1))
       )))
       expect(result).toEqual(Option.none())

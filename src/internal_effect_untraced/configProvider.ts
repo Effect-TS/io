@@ -350,11 +350,11 @@ const fromFlatLoop = <A>(
       return core.suspendSucceed(() =>
         pipe(
           fromFlatLoop(flat, prefix, op.left, split),
-          core.either,
+          core.either(),
           core.flatMap((left) =>
             pipe(
               fromFlatLoop(flat, prefix, op.right, split),
-              core.either,
+              core.either(),
               core.flatMap((right) => {
                 if (Either.isLeft(left) && Either.isLeft(right)) {
                   return core.fail(configError.And(left.left, right.left))
@@ -486,7 +486,7 @@ const orElseFlat = (
       pipe(
         core.fromEither(pathPatch.patch(path, self.patch)),
         core.flatMap((patch) => self.enumerateChildren(patch)),
-        core.either,
+        core.either(),
         core.flatMap((left) =>
           pipe(
             core.sync(that),
@@ -494,7 +494,7 @@ const orElseFlat = (
               pipe(
                 core.fromEither(pathPatch.patch(path, that.patch)),
                 core.flatMap((patch) => that.enumerateChildren(patch)),
-                core.either,
+                core.either(),
                 core.flatMap((right) => {
                   if (Either.isLeft(left) && Either.isLeft(right)) {
                     return core.fail(configError.And(left.left, right.left))

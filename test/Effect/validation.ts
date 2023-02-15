@@ -13,8 +13,8 @@ describe.concurrent("Effect", () => {
         pipe(
           Effect.succeed(1),
           Effect.validate(Effect.fail(2)),
-          Effect.sandbox,
-          Effect.either,
+          Effect.sandbox(),
+          Effect.either(),
           Effect.map(Either.mapLeft(Cause.unannotate))
         )
       )
@@ -26,8 +26,8 @@ describe.concurrent("Effect", () => {
         pipe(
           Effect.fail(1),
           Effect.validate(Effect.fail(2)),
-          Effect.sandbox,
-          Effect.either,
+          Effect.sandbox(),
+          Effect.either(),
           Effect.map(Either.mapLeft(Cause.unannotate))
         )
       )

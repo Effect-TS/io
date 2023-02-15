@@ -55,7 +55,7 @@ export const manual = Debug.methodWithTrace((trace) =>
 /** @internal */
 export const get = Debug.methodWithTrace((trace) =>
   <E, A>(self: Cached.Cached<E, A>): Effect.Effect<never, E, A> =>
-    core.flatMap(scopedRef.get(self.scopedRef), core.done).traced(trace)
+    core.flatMap(scopedRef.get(self.scopedRef), core.done()).traced(trace)
 )
 
 export const refresh = Debug.methodWithTrace((trace) =>

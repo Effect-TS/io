@@ -105,19 +105,26 @@ export const makeSemaphore = Debug.methodWithTrace((trace) =>
 )
 
 /** @internal */
-export const acquireReleaseInterruptible = Debug.methodWithTrace((trace, restore) =>
+export const acquireReleaseInterruptible = Debug.dualWithTrace<
+  <A, R2, X>(
+    release: (exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>
+  ) => <R, E>(acquire: Effect.Effect<R, E, A>) => Effect.Effect<Scope.Scope | R | R2, E, A>,
+  <R, E, A, R2, X>(
+    acquire: Effect.Effect<R, E, A>,
+    release: (exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>
+  ) => Effect.Effect<Scope.Scope | R | R2, E, A>
+>(2, (trace, restore) =>
   <R, E, A, R2, X>(
     acquire: Effect.Effect<R, E, A>,
     release: (exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>
   ): Effect.Effect<R | R2 | Scope.Scope, E, A> =>
-    ensuring(acquire, fiberRuntime.addFinalizer(restore(release))).traced(trace)
-)
+    ensuring(acquire, fiberRuntime.addFinalizer(restore(release))).traced(trace))
 
 /** @internal */
-export const awaitAllChildren = Debug.methodWithTrace((trace) =>
-  <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
-    ensuringChildren(self, fiberRuntime.fiberAwaitAll).traced(trace)
-)
+export const awaitAllChildren = Debug.dualWithTrace<
+  () => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+>(1, (trace) => (self) => ensuringChildren(self, fiberRuntime.fiberAwaitAll).traced(trace))
 
 /** @internal */
 export const cached = Debug.dualWithTrace<
@@ -211,17 +218,22 @@ const invalidateCache = <E, A>(
 ): Effect.Effect<never, never, void> => internalRef.set(cache, Option.none())
 
 /** @internal */
-export const disconnect = Debug.methodWithTrace((trace) =>
-  <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
-    core.uninterruptibleMask((restore) =>
-      core.fiberIdWith((fiberId) =>
-        core.flatMap(fiberRuntime.forkDaemon(restore(self)), (fiber) =>
-          pipe(
-            restore(internalFiber.join(fiber)),
-            core.onInterrupt(() => pipe(fiber, internalFiber.interruptAsFork(fiberId)))
-          ))
-      )
-    ).traced(trace)
+export const disconnect = Debug.dualWithTrace<
+  () => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+>(
+  1,
+  (trace) =>
+    (self) =>
+      core.uninterruptibleMask((restore) =>
+        core.fiberIdWith((fiberId) =>
+          core.flatMap(fiberRuntime.forkDaemon(restore(self)), (fiber) =>
+            pipe(
+              restore(internalFiber.join(fiber)),
+              core.onInterrupt(() => pipe(fiber, internalFiber.interruptAsFork(fiberId)))
+            ))
+        )
+      ).traced(trace)
 )
 
 /** @internal */
@@ -977,7 +989,7 @@ export const zipWithFiber = Debug.untracedDual<
           self.await(),
           core.flatten,
           zipWithPar(core.flatten(that.await()), restore(f)),
-          core.exit
+          core.exit()
         ).traced(trace)
     ),
     children: Debug.methodWithTrace((trace) => () => self.children().traced(trace)),

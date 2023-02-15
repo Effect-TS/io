@@ -23,13 +23,13 @@ describe.concurrent("Effect", () => {
   it.effect("flattenErrorOption - fails when given Some error", () =>
     Effect.gen(function*($) {
       const result = yield* $(
-        pipe(Effect.fail(Option.some("error")), Effect.flattenErrorOption("default"), Effect.exit)
+        pipe(Effect.fail(Option.some("error")), Effect.flattenErrorOption("default"), Effect.exit())
       )
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail("error"))
     }))
   it.effect("flattenErrorOption - fails with default when given None error", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(Effect.fail(Option.none()), Effect.flattenErrorOption("default"), Effect.exit))
+      const result = yield* $(pipe(Effect.fail(Option.none()), Effect.flattenErrorOption("default"), Effect.exit()))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail("default"))
     }))
   it.effect("flattenErrorOption - succeeds when given a value", () =>
@@ -52,7 +52,7 @@ describe.concurrent("Effect", () => {
       Effect.gen(function*($) {
         const ref = yield* $(Ref.make(false))
         const result = yield* $(
-          pipe(Effect.dieMessage("die"), Effect.tapErrorCause(() => Ref.set(ref, true)), Effect.exit)
+          pipe(Effect.dieMessage("die"), Effect.tapErrorCause(() => Ref.set(ref, true)), Effect.exit())
         )
         const effect = yield* $(Ref.get(ref))
         assert.isTrue(Exit.isFailure(result) && Option.isSome(Cause.dieOption(result.cause)))
@@ -65,7 +65,7 @@ describe.concurrent("Effect", () => {
       const result = yield* $(pipe(
         Effect.dieMessage("die"),
         Effect.tapDefect(() => Ref.set(ref, true)),
-        Effect.exit
+        Effect.exit()
       ))
       const effect = yield* $(Ref.get(ref))
       assert.isTrue(Exit.isFailure(result) && Option.isSome(Cause.dieOption(result.cause)))
@@ -77,7 +77,7 @@ describe.concurrent("Effect", () => {
       const result = yield* $(pipe(
         Effect.fail("fail"),
         Effect.tapDefect(() => Ref.set(ref, true)),
-        Effect.exit
+        Effect.exit()
       ))
       const effect = yield* $(Ref.get(ref))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail("fail"))
@@ -89,7 +89,7 @@ describe.concurrent("Effect", () => {
       yield* $(pipe(
         Effect.fail(42),
         Effect.tapEither(Either.match((n) => Ref.set(ref, n), () => Ref.set(ref, -1))),
-        Effect.exit
+        Effect.exit()
       ))
       const result = yield* $(Ref.get(ref))
       assert.strictEqual(result, 42)
@@ -100,7 +100,7 @@ describe.concurrent("Effect", () => {
       yield* $(pipe(
         Effect.succeed(42),
         Effect.tapEither(Either.match(() => Ref.set(ref, -1), (n) => Ref.set(ref, n))),
-        Effect.exit
+        Effect.exit()
       ))
       const result = yield* $(Ref.get(ref))
       assert.strictEqual(result, 42)
@@ -138,7 +138,7 @@ describe.concurrent("Effect", () => {
       const v2 = yield* $(Ref.get(ref))
       const failure = new Error("expected")
       yield* $(pipe(Effect.fail(failure), Effect.unless(constTrue)))
-      const failed = yield* $(pipe(Effect.fail(failure), Effect.unless(constFalse), Effect.either))
+      const failed = yield* $(pipe(Effect.fail(failure), Effect.unless(constFalse), Effect.either()))
       assert.strictEqual(v1, 0)
       assert.strictEqual(v2, 2)
       assert.deepStrictEqual(failed, Either.left(failure))
@@ -157,7 +157,7 @@ describe.concurrent("Effect", () => {
       const c2 = yield* $(Ref.get(conditionRef))
       const failure = new Error("expected")
       yield* $(pipe(Effect.fail(failure), Effect.unlessEffect(conditionTrue)))
-      const failed = yield* $(pipe(Effect.fail(failure), Effect.unlessEffect(conditionFalse), Effect.either))
+      const failed = yield* $(pipe(Effect.fail(failure), Effect.unlessEffect(conditionFalse), Effect.either()))
       assert.strictEqual(v1, 0)
       assert.strictEqual(c1, 1)
       assert.strictEqual(v2, 2)
@@ -173,7 +173,7 @@ describe.concurrent("Effect", () => {
       const v2 = yield* $(Ref.get(ref))
       const failure = new Error("expected")
       yield* $(pipe(Effect.fail(failure), Effect.when(constFalse)))
-      const failed = yield* $(pipe(Effect.fail(failure), Effect.when(constTrue), Effect.either))
+      const failed = yield* $(pipe(Effect.fail(failure), Effect.when(constTrue), Effect.either()))
       assert.strictEqual(v1, 0)
       assert.strictEqual(v2, 2)
       assert.deepStrictEqual(failed, Either.left(failure))
@@ -236,7 +236,7 @@ describe.concurrent("Effect", () => {
       const c2 = yield* $(Ref.get(conditionRef))
       const failure = new Error("expected")
       yield* $(pipe(Effect.fail(failure), Effect.whenEffect(conditionFalse)))
-      const failed = yield* $(pipe(Effect.fail(failure), Effect.whenEffect(conditionTrue), Effect.either))
+      const failed = yield* $(pipe(Effect.fail(failure), Effect.whenEffect(conditionTrue), Effect.either()))
       assert.strictEqual(v1, 0)
       assert.strictEqual(c1, 1)
       assert.strictEqual(v2, 2)
@@ -259,7 +259,7 @@ describe.concurrent("Effect", () => {
         pipe(
           Effect.interrupt(),
           Effect.zipPar(Effect.interrupt()),
-          Effect.exit,
+          Effect.exit(),
           Effect.map((exit) =>
             pipe(Exit.causeOption(exit), Option.map(Cause.interruptors), Option.getOrElse(() => HashSet.empty()))
           )
@@ -273,8 +273,8 @@ describe.concurrent("Effect", () => {
         pipe(
           Effect.interrupt(),
           Effect.zipPar(Effect.succeed(1)),
-          Effect.sandbox,
-          Effect.either,
+          Effect.sandbox(),
+          Effect.either(),
           Effect.map(Either.mapLeft(Cause.isInterrupted))
         )
       )

@@ -892,7 +892,7 @@ class SubscriptionImpl<A> implements Queue.Dequeue<A> {
             core.zipRight(core.sync(() => this.subscription.unsubscribe())),
             core.zipRight(core.sync(() => this.strategy.unsafeOnHubEmptySpace(this.hub, this.subscribers))),
             core.whenEffect(core.deferredSucceed(this.shutdownHook, void 0)),
-            core.asUnit
+            core.asUnit()
           )
         }).traced(trace)
       )
@@ -1074,7 +1074,7 @@ class HubImpl<A> implements Hub.Hub<A> {
           this.scope.close(core.exitInterrupt(state.id())),
           core.zipRight(this.strategy.shutdown()),
           core.whenEffect(core.deferredSucceed(this.shutdownHook, void 0)),
-          core.asUnit
+          core.asUnit()
         )
       })).traced(trace)
     )
@@ -1308,7 +1308,7 @@ class BackPressureStrategy<A> implements HubStrategy<A> {
         (publishers) =>
           fiberRuntime.forEachParDiscard(publishers, ([_, deferred, last]) =>
             last ?
-              pipe(core.deferredInterruptWith(deferred, fiberId), core.asUnit) :
+              pipe(core.deferredInterruptWith(deferred, fiberId), core.asUnit()) :
               core.unit())
       ))
   }

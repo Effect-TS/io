@@ -136,6 +136,6 @@ export const reloadFork = Debug.methodWithTrace((trace) =>
         reloadable.reload(),
         effect.ignoreLogged,
         fiberRuntime.forkDaemon,
-        core.asUnit
+        core.asUnit()
       ).traced(trace))
 )

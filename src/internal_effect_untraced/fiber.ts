@@ -280,7 +280,7 @@ export const orElse = dual<
       pipe(
         core.interruptAsFiber(self, id),
         core.zipRight(pipe(that, core.interruptAsFiber(id))),
-        core.asUnit
+        core.asUnit()
       ).traced(trace)
   )
 }))

@@ -108,7 +108,7 @@ export const set = Debug.dualWithTrace<
                     )
                   )
                 ),
-                core.exit,
+                core.exit(),
                 core.flatMap(
                   core.exitMatch(
                     (cause) =>

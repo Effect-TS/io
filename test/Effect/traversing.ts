@@ -28,7 +28,7 @@ describe.concurrent("Effect", () => {
         pipe(
           [1, 1, 1],
           Effect.dropWhile(() => Effect.fail("Ouch")),
-          Effect.either
+          Effect.either()
         )
       )
       assert.deepStrictEqual(result, Either.left("Ouch"))
@@ -117,7 +117,7 @@ describe.concurrent("Effect", () => {
             return n
           })
         ),
-        Effect.exit
+        Effect.exit()
       ))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.die(Cause.IllegalArgumentException()))
     }))
@@ -162,7 +162,7 @@ describe.concurrent("Effect", () => {
             return n
           })
         ),
-        Effect.exit
+        Effect.exit()
       ))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.die(Cause.IllegalArgumentException()))
     }))
@@ -211,7 +211,7 @@ describe.concurrent("Effect", () => {
       const result = yield* $(pipe(
         Array.from({ length: 10 }, (_, i) => i + 1),
         Effect.forEachPar((n) => n === 5 ? Effect.dieMessage("boom") : Effect.succeed(n * 2)),
-        Effect.exit
+        Effect.exit()
       ))
       assert.isTrue(Exit.isFailure(result) && Cause.isDie(result.cause))
     }))
@@ -220,7 +220,7 @@ describe.concurrent("Effect", () => {
       const result = yield* $(pipe(
         Array.from({ length: 10 }, (_, i) => i + 1),
         Effect.forEachPar((n) => n === 5 ? Effect.interrupt() : Effect.succeed(n * 2)),
-        Effect.exit
+        Effect.exit()
       ))
       assert.isTrue(Exit.isInterrupted(result))
     }))
@@ -233,7 +233,7 @@ describe.concurrent("Effect", () => {
             throw new Error(n.toString())
           })
         ),
-        Effect.exit
+        Effect.exit()
       ))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.die(new Error("1")))
     }))
@@ -322,7 +322,7 @@ describe.concurrent("Effect", () => {
         [1, 2, 3, 4, 5, 6],
         Effect.forEachPar((n) => n % 2 !== 0 ? Effect.succeed(n) : Effect.fail("not odd")),
         Effect.withParallelism(4),
-        Effect.either
+        Effect.either()
       ))
       assert.deepStrictEqual(result, Either.left("not odd"))
     }))
@@ -333,7 +333,7 @@ describe.concurrent("Effect", () => {
         Effect.succeed(1),
         Effect.fail("C")
       ]
-      const result = yield* $(pipe(actions, Effect.forEachPar(identity), Effect.withParallelism(4), Effect.either))
+      const result = yield* $(pipe(actions, Effect.forEachPar(identity), Effect.withParallelism(4), Effect.either()))
       assert.deepStrictEqual(result, Either.left("C"))
     }))
   it.effect("forEachParDiscard - accumulates errors", () =>
@@ -411,7 +411,7 @@ describe.concurrent("Effect", () => {
   it.effect("mergeAll - return error if it exists in list", () =>
     Effect.gen(function*($) {
       const effects: ReadonlyArray<Effect.Effect<never, number, void>> = [Effect.unit(), Effect.fail(1)]
-      const result = yield* $(pipe(effects, Effect.mergeAll(void 0 as void, constVoid), Effect.exit))
+      const result = yield* $(pipe(effects, Effect.mergeAll(void 0 as void, constVoid), Effect.exit()))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(1))
     }))
   it.effect("mergeAllPar - return zero element on empty input", () =>
@@ -431,7 +431,7 @@ describe.concurrent("Effect", () => {
   it.effect("mergeAllPar - return error if it exists in list", () =>
     Effect.gen(function*($) {
       const effects: ReadonlyArray<Effect.Effect<never, number, void>> = [Effect.unit(), Effect.fail(1)]
-      const result = yield* $(pipe(effects, Effect.mergeAllPar(void 0 as void, constVoid), Effect.exit))
+      const result = yield* $(pipe(effects, Effect.mergeAllPar(void 0 as void, constVoid), Effect.exit()))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.failCause(Cause.parallel(Cause.empty, Cause.fail(1))))
     }))
   it.effect("partition - collects only successes", () =>
@@ -520,7 +520,7 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("reduce - with a failing step function returns a failed IO", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe([1, 2, 3, 4, 5], Effect.reduce(0, () => Effect.fail("fail")), Effect.exit))
+      const result = yield* $(pipe([1, 2, 3, 4, 5], Effect.reduce(0, () => Effect.fail("fail")), Effect.exit()))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail("fail"))
     }))
   it.effect("reduce - run sequentially from left to right", () =>
@@ -537,7 +537,7 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("reduceRight - with a failing step function returns a failed IO", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe([1, 2, 3, 4, 5], Effect.reduceRight(0, () => Effect.fail("fail")), Effect.exit))
+      const result = yield* $(pipe([1, 2, 3, 4, 5], Effect.reduceRight(0, () => Effect.fail("fail")), Effect.exit()))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail("fail"))
     }))
   it.effect("reduceRight - run sequentially from right to left", () =>
@@ -570,7 +570,7 @@ describe.concurrent("Effect", () => {
   it.effect("reduceAllPar - return error if zero is an error", () =>
     Effect.gen(function*($) {
       const result = yield* $(
-        pipe([Effect.unit(), Effect.unit()], Effect.reduceAllPar(Effect.fail(1), constVoid), Effect.exit)
+        pipe([Effect.unit(), Effect.unit()], Effect.reduceAllPar(Effect.fail(1), constVoid), Effect.exit())
       )
       assert.deepStrictEqual(Exit.unannotate(result), Exit.failCause(Cause.parallel(Cause.empty, Cause.fail(1))))
     }))
@@ -578,7 +578,11 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const effects: ReadonlyArray<Effect.Effect<never, number, void>> = [Effect.unit(), Effect.fail(1)]
       const result = yield* $(
-        pipe(effects, Effect.reduceAllPar(Effect.unit() as Effect.Effect<never, number, void>, constVoid), Effect.exit)
+        pipe(
+          effects,
+          Effect.reduceAllPar(Effect.unit() as Effect.Effect<never, number, void>, constVoid),
+          Effect.exit()
+        )
       )
       assert.deepStrictEqual(Exit.unannotate(result), Exit.failCause(Cause.parallel(Cause.empty, Cause.fail(1))))
     }))
@@ -598,7 +602,7 @@ describe.concurrent("Effect", () => {
         pipe(
           [1, 1, 1],
           Effect.takeWhile(() => Effect.fail("Ouch")),
-          Effect.either
+          Effect.either()
         )
       )
       assert.deepStrictEqual(result, Either.left("Ouch"))

@@ -236,7 +236,7 @@ class PoolImpl<E, A> implements Pool.Pool<E, A> {
       return pipe(
         Effect.acquireRelease(acquire(), release),
         Effect.withEarlyRelease,
-        Effect.disconnect,
+        Effect.disconnect(),
         Effect.flatMap(([release, attempted]) =>
           pipe(
             Effect.when(release, () => isFailure(attempted)),

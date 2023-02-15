@@ -10,7 +10,7 @@ const program = pipe(
   Effect.forEach((n) =>
     pipe(
       Effect.sync(() => console.log(n)),
-      Effect.blocking,
+      Effect.blocking(),
       Effect.delay(Duration.millis(200))
     )
   )

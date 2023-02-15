@@ -25,7 +25,7 @@ describe.concurrent("Hub", () => {
               Effect.zipRight(pipe(values, Effect.forEach(() => Queue.take(subscription))))
             )
           ),
-          Effect.scoped,
+          Effect.scoped(),
           Effect.fork
         )
       )
@@ -52,7 +52,7 @@ describe.concurrent("Hub", () => {
               Effect.zipRight(pipe(values, Effect.forEach(() => Queue.take(subscription))))
             )
           ),
-          Effect.scoped,
+          Effect.scoped(),
           Effect.fork
         )
       )
@@ -66,7 +66,7 @@ describe.concurrent("Hub", () => {
               Effect.zipRight(pipe(values, Effect.forEach(() => Queue.take(subscription))))
             )
           ),
-          Effect.scoped,
+          Effect.scoped(),
           Effect.fork
         )
       )
@@ -92,7 +92,7 @@ describe.concurrent("Hub", () => {
             Effect.zipRight(pipe(values, Effect.forEach((_) => Queue.take(subscription))))
           )
         ),
-        Effect.scoped,
+        Effect.scoped(),
         Effect.fork
       ))
       yield* $(Deferred.await(deferred))
@@ -118,7 +118,7 @@ describe.concurrent("Hub", () => {
             Effect.zipRight(pipe(values, Effect.forEach((_) => Queue.take(subscription))))
           )
         ),
-        Effect.scoped,
+        Effect.scoped(),
         Effect.fork
       ))
       const subscriber2 = yield* $(pipe(
@@ -129,7 +129,7 @@ describe.concurrent("Hub", () => {
             Effect.zipRight(pipe(values, Effect.forEach((_) => Queue.take(subscription))))
           )
         ),
-        Effect.scoped,
+        Effect.scoped(),
         Effect.fork
       ))
       yield* $(Deferred.await(deferred1))
@@ -162,7 +162,7 @@ describe.concurrent("Hub", () => {
             ))
           )
         ),
-        Effect.scoped,
+        Effect.scoped(),
         Effect.fork
       ))
       const subscriber2 = yield* $(pipe(
@@ -177,7 +177,7 @@ describe.concurrent("Hub", () => {
             ))
           )
         ),
-        Effect.scoped,
+        Effect.scoped(),
         Effect.fork
       ))
       yield* $(Deferred.await(deferred1))
@@ -209,7 +209,7 @@ describe.concurrent("Hub", () => {
             Effect.zipRight(pipe(values, Effect.forEach((_) => Queue.take(subscription))))
           )
         ),
-        Effect.scoped,
+        Effect.scoped(),
         Effect.fork
       ))
       yield* $(Deferred.await(deferred))
@@ -235,7 +235,7 @@ describe.concurrent("Hub", () => {
             Effect.zipRight(pipe(values, Effect.forEach((_) => Queue.take(subscription))))
           )
         ),
-        Effect.scoped,
+        Effect.scoped(),
         Effect.fork
       ))
       const subscriber2 = yield* $(pipe(
@@ -246,7 +246,7 @@ describe.concurrent("Hub", () => {
             Effect.zipRight(pipe(values, Effect.forEach((_) => Queue.take(subscription))))
           )
         ),
-        Effect.scoped,
+        Effect.scoped(),
         Effect.fork
       ))
       yield* $(Deferred.await(deferred1))
@@ -279,7 +279,7 @@ describe.concurrent("Hub", () => {
             ))
           )
         ),
-        Effect.scoped,
+        Effect.scoped(),
         Effect.fork
       ))
       const subscriber2 = yield* $(pipe(
@@ -294,7 +294,7 @@ describe.concurrent("Hub", () => {
             ))
           )
         ),
-        Effect.scoped,
+        Effect.scoped(),
         Effect.fork
       ))
       yield* $(Deferred.await(deferred1))
@@ -326,7 +326,7 @@ describe.concurrent("Hub", () => {
             Effect.zipRight(pipe(values, Effect.forEach((_) => Queue.take(subscription))))
           )
         ),
-        Effect.scoped,
+        Effect.scoped(),
         Effect.fork
       ))
       yield* $(Deferred.await(deferred))
@@ -352,7 +352,7 @@ describe.concurrent("Hub", () => {
             Effect.zipRight(pipe(values, Effect.forEach((_) => Queue.take(subscription))))
           )
         ),
-        Effect.scoped,
+        Effect.scoped(),
         Effect.fork
       ))
       const subscriber2 = yield* $(pipe(
@@ -363,7 +363,7 @@ describe.concurrent("Hub", () => {
             Effect.zipRight(pipe(values, Effect.forEach((_) => Queue.take(subscription))))
           )
         ),
-        Effect.scoped,
+        Effect.scoped(),
         Effect.fork
       ))
       yield* $(Deferred.await(deferred1))
@@ -396,7 +396,7 @@ describe.concurrent("Hub", () => {
             ))
           )
         ),
-        Effect.scoped,
+        Effect.scoped(),
         Effect.fork
       ))
       const subscriber2 = yield* $(pipe(
@@ -411,7 +411,7 @@ describe.concurrent("Hub", () => {
             ))
           )
         ),
-        Effect.scoped,
+        Effect.scoped(),
         Effect.fork
       ))
       yield* $(Deferred.await(deferred1))
@@ -443,7 +443,7 @@ describe.concurrent("Hub", () => {
             Effect.zipRight(pipe(values, Effect.forEach((_) => Queue.take(subscription))))
           )
         ),
-        Effect.scoped,
+        Effect.scoped(),
         Effect.fork
       ))
       yield* $(Deferred.await(deferred))
@@ -469,7 +469,7 @@ describe.concurrent("Hub", () => {
             Effect.zipRight(pipe(values, Effect.forEach((_) => Queue.take(subscription))))
           )
         ),
-        Effect.scoped,
+        Effect.scoped(),
         Effect.fork
       ))
       const subscriber2 = yield* $(pipe(
@@ -480,7 +480,7 @@ describe.concurrent("Hub", () => {
             Effect.zipRight(pipe(values, Effect.forEach((_) => Queue.take(subscription))))
           )
         ),
-        Effect.scoped,
+        Effect.scoped(),
         Effect.fork
       ))
       yield* $(Deferred.await(deferred1))
@@ -513,7 +513,7 @@ describe.concurrent("Hub", () => {
             ))
           )
         ),
-        Effect.scoped,
+        Effect.scoped(),
         Effect.fork
       ))
       const subscriber2 = yield* $(pipe(
@@ -528,7 +528,7 @@ describe.concurrent("Hub", () => {
             ))
           )
         ),
-        Effect.scoped,
+        Effect.scoped(),
         Effect.fork
       ))
       yield* $(Deferred.await(deferred1))

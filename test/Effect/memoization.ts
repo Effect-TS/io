@@ -34,7 +34,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(0))
       const effect: Effect.Effect<never, never, void> = yield* $(pipe(Ref.update(ref, (n) => n + 1), Effect.once))
-      yield* $(pipe(effect, Effect.replicate(100), Effect.collectAllPar))
+      yield* $(pipe(effect, Effect.replicate(100), Effect.collectAllPar()))
       const result = yield* $(Ref.get(ref))
       assert.strictEqual(result, 1)
     }))

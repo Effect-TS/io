@@ -57,17 +57,17 @@ const exactlyOnce = <R, A, A1>(
 describe.concurrent("Effect", () => {
   it.effect("absolve", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(Effect.succeed(Either.right("test")), Effect.absolve))
+      const result = yield* $(pipe(Effect.succeed(Either.right("test")), Effect.absolve()))
       assert.strictEqual(result, "test")
     }))
   it.effect("absorbWith - on fail", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(ExampleErrorFail, Effect.absorbWith(Option.some), Effect.exit))
+      const result = yield* $(pipe(ExampleErrorFail, Effect.absorbWith(Option.some), Effect.exit()))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(Option.some(ExampleError)))
     }))
   it.effect("absorbWith - on die", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(ExampleErrorDie, Effect.absorbWith(() => "never"), Effect.exit))
+      const result = yield* $(pipe(ExampleErrorDie, Effect.absorbWith(() => "never"), Effect.exit()))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(ExampleError))
     }))
   it.effect("absorbWith - on success", () =>
@@ -109,8 +109,8 @@ describe.concurrent("Effect", () => {
         Effect.sync(() => {
           throw ExampleError
         }),
-        Effect.sandbox,
-        Effect.either
+        Effect.sandbox(),
+        Effect.either()
       ))
       assert.deepStrictEqual(pipe(result, Either.mapLeft(Cause.unannotate)), Either.left(Cause.die(ExampleError)))
     }))
@@ -120,7 +120,7 @@ describe.concurrent("Effect", () => {
         Effect.sync(() => {
           throw ExampleError
         }),
-        Effect.sandbox,
+        Effect.sandbox(),
         Effect.merge
       ))
       assert.deepStrictEqual(Cause.unannotate(result), Cause.die(ExampleError))
@@ -138,7 +138,7 @@ describe.concurrent("Effect", () => {
         Effect.ensuring(Effect.sync(() => {
           throw InterruptError3
         })),
-        Effect.exit
+        Effect.exit()
       ))
       const expected = Cause.sequential(
         Cause.sequential(
@@ -162,7 +162,7 @@ describe.concurrent("Effect", () => {
         Effect.ensuring(Effect.sync(() => {
           throw InterruptError3
         })),
-        Effect.exit
+        Effect.exit()
       ))
       const expected = Cause.sequential(
         Cause.sequential(
@@ -193,7 +193,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const error = Cause.IllegalArgumentException("division by zero")
       const result = yield* $(
-        pipe(Effect.fail(error), Effect.catchAllDefect((e) => Effect.succeed((e as Error).message)), Effect.exit)
+        pipe(Effect.fail(error), Effect.catchAllDefect((e) => Effect.succeed((e as Error).message)), Effect.exit())
       )
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(error))
     }))
@@ -228,7 +228,7 @@ describe.concurrent("Effect", () => {
             Option.some(Effect.succeed(e.message)) :
             Option.none()
         ),
-        Effect.exit
+        Effect.exit()
       ))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.die(error))
     }))
@@ -242,7 +242,7 @@ describe.concurrent("Effect", () => {
             ? Option.some(Effect.succeed(e.message))
             : Option.none()
         ),
-        Effect.exit
+        Effect.exit()
       ))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(error))
     }))
@@ -313,8 +313,8 @@ describe.concurrent("Effect", () => {
             v === 0 ?
               Option.some(v) :
               Option.none()),
-          Effect.sandbox,
-          Effect.either
+          Effect.sandbox(),
+          Effect.either()
         )))
       const badCase = yield* $(pipe(
         exactlyOnce(1, (effect) =>
@@ -322,8 +322,8 @@ describe.concurrent("Effect", () => {
             effect,
             Effect.continueOrFail(() => "value was not 0", (v) => v === 0 ? Option.some(v) : Option.none())
           )),
-        Effect.sandbox,
-        Effect.either,
+        Effect.sandbox(),
+        Effect.either(),
         Effect.map(Either.mapLeft(Cause.failureOrCause))
       ))
       assert.deepStrictEqual(goodCase, Either.right(0))
@@ -340,8 +340,8 @@ describe.concurrent("Effect", () => {
               (v) => v === 0 ? Option.some(Effect.succeed(v)) : Option.none()
             )
           )),
-        Effect.sandbox,
-        Effect.either
+        Effect.sandbox(),
+        Effect.either()
       ))
       const partialBadCase = yield* $(pipe(
         exactlyOnce(0, (effect) =>
@@ -352,8 +352,8 @@ describe.concurrent("Effect", () => {
                 Option.some(Effect.fail("partial failed!")) :
                 Option.none())
           )),
-        Effect.sandbox,
-        Effect.either,
+        Effect.sandbox(),
+        Effect.either(),
         Effect.map(Either.mapLeft(Cause.failureOrCause))
       ))
       const badCase = yield* $(pipe(
@@ -365,8 +365,8 @@ describe.concurrent("Effect", () => {
                 Option.some(Effect.succeed(v)) :
                 Option.none())
           )),
-        Effect.sandbox,
-        Effect.either,
+        Effect.sandbox(),
+        Effect.either(),
         Effect.map(Either.mapLeft(Cause.failureOrCause))
       ))
       assert.deepStrictEqual(goodCase, Either.right(0))
@@ -379,7 +379,7 @@ describe.concurrent("Effect", () => {
         Effect.sync(() => {
           throw ExampleError
         }),
-        Effect.sandbox,
+        Effect.sandbox(),
         Effect.match(Option.some, () => Option.none() as Option.Option<Cause.Cause<never>>)
       ))
       assert.deepStrictEqual(pipe(result, Option.map(Cause.unannotate)), Option.some(Cause.die(ExampleError)))
@@ -405,10 +405,10 @@ describe.concurrent("Effect", () => {
       const fiberId = FiberId.make(0, 123)
       const bothCause = Cause.parallel(Cause.interrupt(fiberId), Cause.die(error))
       const thenCause = Cause.sequential(Cause.interrupt(fiberId), Cause.die(error))
-      const plain = yield* $(pipe(Effect.die(error), Effect.orElse(Effect.unit), Effect.exit))
-      const both = yield* $(pipe(Effect.failCause(bothCause), Effect.orElse(Effect.unit), Effect.exit))
-      const then = yield* $(pipe(Effect.failCause(thenCause), Effect.orElse(Effect.unit), Effect.exit))
-      const fail = yield* $(pipe(Effect.fail(error), Effect.orElse(Effect.unit), Effect.exit))
+      const plain = yield* $(pipe(Effect.die(error), Effect.orElse(Effect.unit), Effect.exit()))
+      const both = yield* $(pipe(Effect.failCause(bothCause), Effect.orElse(Effect.unit), Effect.exit()))
+      const then = yield* $(pipe(Effect.failCause(thenCause), Effect.orElse(Effect.unit), Effect.exit()))
+      const fail = yield* $(pipe(Effect.fail(error), Effect.orElse(Effect.unit), Effect.exit()))
       assert.deepStrictEqual(Exit.unannotate(plain), Exit.die(error))
       assert.deepStrictEqual(Exit.unannotate(both), Exit.die(error))
       assert.deepStrictEqual(Exit.unannotate(then), Exit.die(error))
@@ -495,7 +495,7 @@ describe.concurrent("Effect", () => {
   it.effect("orElseOptional - produces the value of this effect if it fails with some error", () =>
     Effect.gen(function*($) {
       const result = yield* $(
-        pipe(Effect.fail(Option.some("fail")), Effect.orElseOptional(() => Effect.succeed("orElse")), Effect.exit)
+        pipe(Effect.fail(Option.some("fail")), Effect.orElseOptional(() => Effect.succeed("orElse")), Effect.exit())
       )
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(Option.some("fail")))
     }))
@@ -534,7 +534,7 @@ describe.concurrent("Effect", () => {
         Effect.promise(() => {
           throw ExampleError
         }),
-        Effect.exit
+        Effect.exit()
       ))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.die(ExampleError))
     }))
@@ -543,15 +543,15 @@ describe.concurrent("Effect", () => {
       const goodCase = yield* $(
         pipe(
           exactlyOnce(0, Effect.reject((n) => (n !== 0 ? Option.some("partial failed!") : Option.none()))),
-          Effect.sandbox,
-          Effect.either
+          Effect.sandbox(),
+          Effect.either()
         )
       )
       const badCase = yield* $(
         pipe(
           exactlyOnce(1, Effect.reject((n) => (n !== 0 ? Option.some("partial failed!") : Option.none()))),
-          Effect.sandbox,
-          Effect.either,
+          Effect.sandbox(),
+          Effect.either(),
           Effect.map(Either.mapLeft(Cause.failureOrCause))
         )
       )
@@ -565,16 +565,16 @@ describe.concurrent("Effect", () => {
           0,
           Effect.rejectEffect((n) => n !== 0 ? Option.some(Effect.succeed("partial failed!")) : Option.none())
         ),
-        Effect.sandbox,
-        Effect.either
+        Effect.sandbox(),
+        Effect.either()
       ))
       const partialBadCase = yield* $(pipe(
         exactlyOnce(
           0,
           Effect.rejectEffect((n) => n !== 0 ? Option.some(Effect.fail("partial failed!")) : Option.none())
         ),
-        Effect.sandbox,
-        Effect.either,
+        Effect.sandbox(),
+        Effect.either(),
         Effect.map(Either.mapLeft(Cause.failureOrCause))
       ))
       const badCase = yield* $(pipe(
@@ -582,8 +582,8 @@ describe.concurrent("Effect", () => {
           1,
           Effect.rejectEffect((n) => n !== 0 ? Option.some(Effect.fail("partial failed!")) : Option.none())
         ),
-        Effect.sandbox,
-        Effect.either,
+        Effect.sandbox(),
+        Effect.either(),
         Effect.map(Either.mapLeft(Cause.failureOrCause))
       ))
       assert.deepStrictEqual(goodCase, Either.right(0))
@@ -597,7 +597,7 @@ describe.concurrent("Effect", () => {
         Effect.tryCatch(() => {
           throw message
         }, identity),
-        Effect.exit
+        Effect.exit()
       ))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(message))
     }))
@@ -612,7 +612,7 @@ describe.concurrent("Effect", () => {
         Effect.sync(() => {
           throw ExampleError
         }),
-        Effect.exit
+        Effect.exit()
       ))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.die(ExampleError))
     }))
@@ -632,7 +632,7 @@ describe.concurrent("Effect", () => {
       const effect: Effect.Effect<never, ErrorA | ErrorB, never> = Effect.fail({ _tag: "ErrorA" })
       const result = yield* $(pipe(
         Effect.refineTagOrDie(effect, "ErrorA"),
-        Effect.exit
+        Effect.exit()
       ))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail({ _tag: "ErrorA" }))
     }))
@@ -647,7 +647,7 @@ describe.concurrent("Effect", () => {
       const effect: Effect.Effect<never, ErrorA | ErrorB, never> = Effect.fail({ _tag: "ErrorA" })
       const result = yield* $(pipe(
         Effect.refineTagOrDie(effect, "ErrorB"),
-        Effect.exit
+        Effect.exit()
       ))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.die({ _tag: "ErrorA" }))
     }))
@@ -663,7 +663,7 @@ describe.concurrent("Effect", () => {
       const effect: Effect.Effect<never, ErrorA | ErrorB, never> = Effect.fail({ _tag: "ErrorA", a: "a" })
       const result = yield* $(pipe(
         Effect.refineTagOrDieWith(effect, "ErrorB", (e) => e.a),
-        Effect.exit
+        Effect.exit()
       ))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.die("a"))
     }))
@@ -678,7 +678,7 @@ describe.concurrent("Effect", () => {
             Option.some(e.message) :
             Option.none()
         ),
-        Effect.exit
+        Effect.exit()
       ))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(message))
     }))
@@ -693,7 +693,7 @@ describe.concurrent("Effect", () => {
             Option.some(e.message) :
             Option.none()
         ),
-        Effect.exit
+        Effect.exit()
       ))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.die(error))
     }))
@@ -707,7 +707,7 @@ describe.concurrent("Effect", () => {
           (e) => Cause.isIllegalArgumentException(e) ? Option.some(e.message) : Option.none(),
           () => Option.none()
         ),
-        Effect.exit
+        Effect.exit()
       ))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(message))
     }))
@@ -721,7 +721,7 @@ describe.concurrent("Effect", () => {
           (e) => Cause.isRuntimeException(e) ? Option.some(e.message) : Option.none(),
           () => Option.none()
         ),
-        Effect.exit
+        Effect.exit()
       ))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.die(error))
     }))
@@ -735,7 +735,7 @@ describe.concurrent("Effect", () => {
             (e) => Cause.isIllegalArgumentException(e) ? Option.some(e.message) : Option.none(),
             () => Option.none()
           ),
-          Effect.exit
+          Effect.exit()
         )
       )
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(Option.none()))
@@ -759,7 +759,7 @@ describe.concurrent("Effect", () => {
         return pipe(effect, Effect.matchCauseEffect(Effect.succeed, Effect.fail))
       }
       const expectedCause = Cause.fail("oh no")
-      const result = yield* $(cause(pipe(Effect.failCause(expectedCause), Effect.sandbox, Effect.unsandbox)))
+      const result = yield* $(cause(pipe(Effect.failCause(expectedCause), Effect.sandbox(), Effect.unsandbox)))
       assert.deepStrictEqual(Cause.unannotate(result), expectedCause)
     }))
 })

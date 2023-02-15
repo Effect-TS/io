@@ -42,7 +42,7 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("mapBoth - maps over both error and value channels", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(Effect.fail(10), Effect.mapBoth((n) => n.toString(), identity), Effect.either))
+      const result = yield* $(pipe(Effect.fail(10), Effect.mapBoth((n) => n.toString(), identity), Effect.either()))
       assert.deepStrictEqual(result, Either.left("10"))
     }))
   it.effect("mapTryCatch - returns an effect whose success is mapped by the specified side effecting function", () =>
@@ -52,7 +52,7 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("mapTryCatch - translates any thrown exceptions into typed failed effects", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(Effect.succeed("hello"), Effect.mapTryCatch(parseInt, identity), Effect.exit))
+      const result = yield* $(pipe(Effect.succeed("hello"), Effect.mapTryCatch(parseInt, identity), Effect.exit()))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(Cause.IllegalArgumentException()))
     }))
   it.effect("negate - on true returns false", () =>

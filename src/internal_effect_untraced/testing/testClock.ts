@@ -182,7 +182,7 @@ export class TestClockImpl implements TestClock {
             core.flatMap((shouldAwait) =>
               shouldAwait ?
                 pipe(this.warningStart(), core.zipRight(core.deferredAwait(deferred))) :
-                pipe(core.deferredSucceed(deferred, void 0), core.asUnit)
+                pipe(core.deferredSucceed(deferred, void 0), core.asUnit())
             )
           )
         )
@@ -334,7 +334,7 @@ export class TestClockImpl implements TestClock {
               Equal.equals
             ),
             effect.filterOrFail(identity, constVoid),
-            effect.eventually
+            effect.eventually()
           )
         ),
         core.zipRight(this.suspendedWarningDone())

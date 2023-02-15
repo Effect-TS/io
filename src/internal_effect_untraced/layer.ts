@@ -206,7 +206,7 @@ class MemoMap {
                               withScope(layer, innerScope),
                               (f) => effect.diffFiberRefs(f(this))
                             )),
-                            core.exit,
+                            core.exit(),
                             core.flatMap((exit) => {
                               switch (exit._tag) {
                                 case EffectOpCodes.OP_FAILURE: {

@@ -310,7 +310,7 @@ describe.concurrent("FiberRef", () => {
       const winner1 = pipe(
         FiberRef.set(fiberRef, update1),
         Effect.zipRight(Deferred.succeed(latch, void 0)),
-        Effect.asUnit
+        Effect.asUnit()
       )
       const losers1 = pipe(
         Deferred.await(latch),

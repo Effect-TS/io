@@ -108,7 +108,7 @@ describe.concurrent("Effect", () => {
             () => Effect.unit(),
             () => Deferred.await(deferred3)
           ),
-          Effect.disconnect,
+          Effect.disconnect(),
           Effect.fork
         )
       )
@@ -121,7 +121,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const fiber = yield* $(pipe(
         Effect.acquireUseRelease(Effect.unit(), () => Effect.never(), () => Effect.unit()),
-        Effect.disconnect,
+        Effect.disconnect(),
         Effect.fork
       ))
       const result = yield* $(Fiber.interrupt(fiber))
@@ -138,7 +138,7 @@ describe.concurrent("Effect", () => {
             () => pipe(Deferred.succeed(deferred1, void 0), Effect.zipRight(Effect.never())),
             () => pipe(Deferred.succeed(deferred2, void 0), Effect.zipRight(Effect.unit()))
           ),
-          Effect.disconnect,
+          Effect.disconnect(),
           Effect.fork
         )
       )
@@ -207,9 +207,9 @@ describe.concurrent("Effect", () => {
                   Effect.onExit((exit) => Ref.update(exits, Chunk.prepend(exit)))
                 )
               ),
-              Effect.asUnit
+              Effect.asUnit()
             )),
-            Effect.exit,
+            Effect.exit(),
             Effect.flatMap((exit) => Ref.update(exits, Chunk.prepend(exit)))
           )
         ),
@@ -286,8 +286,8 @@ describe.concurrent("Effect", () => {
         pipe(
           release,
           Effect.zipRight(pipe(Effect.never(), Effect.interruptible)),
-          Effect.sandbox,
-          Effect.either,
+          Effect.sandbox(),
+          Effect.either(),
           Effect.flatMap((either) =>
             Ref.set(recovered, Option.some(pipe(either, Either.mapLeft(Cause.isInterrupted))))
           ),
@@ -306,7 +306,7 @@ describe.concurrent("Effect", () => {
         pipe(
           release,
           Effect.zipRight(pipe(Effect.never(), Effect.interruptible)),
-          Effect.exit,
+          Effect.exit(),
           Effect.flatMap((exit) => Ref.set(recovered, Option.some(Exit.isInterrupted(exit)))),
           Effect.uninterruptible,
           Effect.fork
@@ -322,11 +322,11 @@ describe.concurrent("Effect", () => {
       const fiber = yield* $(withLatch((release) =>
         pipe(
           release,
-          Effect.zipRight(pipe(Effect.never(), Effect.interruptible, Effect.exit)),
+          Effect.zipRight(pipe(Effect.never(), Effect.interruptible, Effect.exit())),
           Effect.zipRight(Ref.update(counter, (n) => n + 1)),
           Effect.uninterruptible,
           Effect.interruptible,
-          Effect.exit,
+          Effect.exit(),
           Effect.zipRight(Ref.update(counter, (n) => n + 1)),
           Effect.uninterruptible,
           Effect.fork
@@ -344,7 +344,7 @@ describe.concurrent("Effect", () => {
           Effect.attempt(() => {
             throw new Error()
           }),
-          Effect.exit,
+          Effect.exit(),
           Effect.zipRight(release),
           Effect.zipRight(Effect.never()),
           Effect.ensuring(Ref.set(ref, true)),
@@ -363,7 +363,7 @@ describe.concurrent("Effect", () => {
           Effect.attempt(() => {
             throw new Error()
           }),
-          Effect.exit,
+          Effect.exit(),
           Effect.zipRight(release),
           Effect.zipRight(pipe(Effect.unit(), Effect.forever)),
           Effect.ensuring(Ref.set(ref, true)),
@@ -382,7 +382,7 @@ describe.concurrent("Effect", () => {
           Deferred.succeed(deferred, void 0),
           Effect.zipRight(Effect.never()),
           Effect.ensuring(Effect.never()),
-          Effect.disconnect,
+          Effect.disconnect(),
           Effect.fork
         )
       )
@@ -406,7 +406,7 @@ describe.concurrent("Effect", () => {
               Effect.zipRight(Deferred.succeed(deferred2, void 0))
             )
           ),
-          Effect.disconnect,
+          Effect.disconnect(),
           Effect.fork
         )
       )
@@ -459,7 +459,7 @@ describe.concurrent("Effect", () => {
             Deferred.await(latch2),
             Effect.zipRight(Effect.sleep(Duration.millis(10))),
             Effect.zipRight(Ref.set(ref, true)),
-            Effect.asUnit
+            Effect.asUnit()
           ), () => Effect.unit()),
         Effect.uninterruptible,
         Effect.fork
@@ -477,7 +477,7 @@ describe.concurrent("Effect", () => {
         pipe(
           release,
           Effect.zipRight(Effect.sleep(Duration.millis(10))),
-          Effect.zipRight(pipe(Ref.set(ref, true), Effect.asUnit)),
+          Effect.zipRight(pipe(Ref.set(ref, true), Effect.asUnit())),
           Effect.uninterruptible,
           Effect.fork
         )
@@ -543,7 +543,7 @@ describe.concurrent("Effect", () => {
   it.effect("running an effect swallows inner interruption", () =>
     Effect.gen(function*($) {
       const deferred = yield* $(Deferred.make<never, number>())
-      yield* $(pipe(Effect.interrupt(), Effect.exit, Effect.zipRight(Deferred.succeed(deferred, 42))))
+      yield* $(pipe(Effect.interrupt(), Effect.exit(), Effect.zipRight(Deferred.succeed(deferred, 42))))
       const result = yield* $(Deferred.await(deferred))
       assert.strictEqual(result, 42)
     }))

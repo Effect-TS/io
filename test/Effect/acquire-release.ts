@@ -24,7 +24,7 @@ describe.concurrent("Effect", () => {
       const release = yield* $(Ref.make(false))
       const result = yield* $(pipe(
         Effect.acquireUseRelease(Effect.succeed(42), (n) => Effect.succeed(n + 1), () => Ref.set(release, true)),
-        Effect.disconnect
+        Effect.disconnect()
       ))
       const released = yield* $(Ref.get(release))
       assert.strictEqual(result, 43)
@@ -35,7 +35,7 @@ describe.concurrent("Effect", () => {
       const releaseDied = Cause.RuntimeException("release died")
       const exit = yield* $(pipe(
         Effect.acquireUseRelease(Effect.succeed(42), () => Effect.fail("use failed"), () => Effect.die(releaseDied)),
-        Effect.exit
+        Effect.exit()
       ))
       const result = yield* $(pipe(
         exit,
@@ -49,8 +49,8 @@ describe.concurrent("Effect", () => {
       const releaseDied = Cause.RuntimeException("release died")
       const exit = yield* $(pipe(
         Effect.acquireUseRelease(Effect.succeed(42), () => Effect.fail("use failed"), () => Effect.die(releaseDied)),
-        Effect.disconnect,
-        Effect.exit
+        Effect.disconnect(),
+        Effect.exit()
       ))
       const result = yield* $(pipe(
         exit,
@@ -72,8 +72,8 @@ describe.concurrent("Effect", () => {
             },
             () => Ref.set(release, true)
           ),
-          Effect.disconnect,
-          Effect.exit
+          Effect.disconnect(),
+          Effect.exit()
         )
       )
       const result = yield* $(

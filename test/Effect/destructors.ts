@@ -16,9 +16,9 @@ describe.concurrent("Effect", () => {
       const fiberId = FiberId.make(0, 123)
       const error = ExampleError
       const completed = yield* $(Effect.done(Exit.succeed(1)))
-      const interrupted = yield* $(pipe(Effect.done(Exit.interrupt(fiberId)), Effect.exit))
-      const terminated = yield* $(pipe(Effect.done(Exit.die(error)), Effect.exit))
-      const failed = yield* $(pipe(Effect.done(Exit.fail(error)), Effect.exit))
+      const interrupted = yield* $(pipe(Effect.done(Exit.interrupt(fiberId)), Effect.exit()))
+      const terminated = yield* $(pipe(Effect.done(Exit.die(error)), Effect.exit()))
+      const failed = yield* $(pipe(Effect.done(Exit.fail(error)), Effect.exit()))
       assert.strictEqual(completed, 1)
       assert.deepStrictEqual(Exit.unannotate(interrupted), Exit.interrupt(fiberId))
       assert.deepStrictEqual(Exit.unannotate(terminated), Exit.die(error))
@@ -51,17 +51,17 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("head - on non empty list", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(Effect.succeed([1, 2, 3]), Effect.head, Effect.either))
+      const result = yield* $(pipe(Effect.succeed([1, 2, 3]), Effect.head, Effect.either()))
       assert.deepStrictEqual(result, Either.right(1))
     }))
   it.effect("head - on empty list", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(Effect.succeed([] as ReadonlyArray<number>), Effect.head, Effect.either))
+      const result = yield* $(pipe(Effect.succeed([] as ReadonlyArray<number>), Effect.head, Effect.either()))
       assert.deepStrictEqual(result, Either.left(Option.none()))
     }))
   it.effect("head - on failure", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(Effect.fail("fail"), Effect.head, Effect.either))
+      const result = yield* $(pipe(Effect.fail("fail"), Effect.head, Effect.either()))
       assert.deepStrictEqual(result, Either.left(Option.some("fail")))
     }))
   it.effect("isFailure - returns true when the effect is a failure", () =>
@@ -200,7 +200,7 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("someOrElse - does not change failed state", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(Effect.fail(ExampleError), Effect.someOrElse(() => 42), Effect.exit))
+      const result = yield* $(pipe(Effect.fail(ExampleError), Effect.someOrElse(() => 42), Effect.exit()))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(ExampleError))
     }))
   it.effect("someOrElseEffect - extracts the value from Some", () =>
@@ -216,7 +216,7 @@ describe.concurrent("Effect", () => {
   it.effect("someOrElseEffect - does not change failed state", () =>
     Effect.gen(function*($) {
       const result = yield* $(
-        pipe(Effect.fail(ExampleError), Effect.someOrElseEffect(() => Effect.succeed(42)), Effect.exit)
+        pipe(Effect.fail(ExampleError), Effect.someOrElseEffect(() => Effect.succeed(42)), Effect.exit())
       )
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(ExampleError))
     }))
@@ -227,7 +227,7 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("someOrFail - fails when given a None", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(Effect.succeed(Option.none()), Effect.someOrFail(() => ExampleError), Effect.exit))
+      const result = yield* $(pipe(Effect.succeed(Option.none()), Effect.someOrFail(() => ExampleError), Effect.exit()))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(ExampleError))
     }))
   it.effect("someOrFailException - extracts the optional value", () =>
@@ -243,42 +243,42 @@ describe.concurrent("Effect", () => {
   it.effect("unleft - should handle successes with right", () =>
     Effect.gen(function*($) {
       const effect = Effect.succeed(Either.right(42))
-      const result = yield* $(pipe(effect, Effect.left, Effect.unleft, Effect.exit))
+      const result = yield* $(pipe(effect, Effect.left, Effect.unleft, Effect.exit()))
       const expected = yield* $(Effect.exit(effect))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.unannotate(expected))
     }))
   it.effect("unleft - should handle successes with left", () =>
     Effect.gen(function*($) {
       const effect = Effect.succeed(Either.left(42))
-      const result = yield* $(pipe(effect, Effect.left, Effect.unleft, Effect.exit))
+      const result = yield* $(pipe(effect, Effect.left, Effect.unleft, Effect.exit()))
       const expected = yield* $(Effect.exit(effect))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.unannotate(expected))
     }))
   it.effect("unleft - should handle failures", () =>
     Effect.gen(function*($) {
       const effect = Effect.fail(42)
-      const result = yield* $(pipe(effect, Effect.left, Effect.unleft, Effect.exit))
+      const result = yield* $(pipe(effect, Effect.left, Effect.unleft, Effect.exit()))
       const expected = yield* $(Effect.exit(effect))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.unannotate(expected))
     }))
   it.effect("unright - should handle successes with right", () =>
     Effect.gen(function*($) {
       const effect = Effect.succeed(Either.right(42))
-      const result = yield* $(pipe(effect, Effect.right, Effect.unright, Effect.exit))
+      const result = yield* $(pipe(effect, Effect.right(), Effect.unright, Effect.exit()))
       const expected = yield* $(Effect.exit(effect))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.unannotate(expected))
     }))
   it.effect("unright - should handle successes with left", () =>
     Effect.gen(function*($) {
       const effect = Effect.succeed(Either.left(42))
-      const result = yield* $(pipe(effect, Effect.right, Effect.unright, Effect.exit))
+      const result = yield* $(pipe(effect, Effect.right(), Effect.unright, Effect.exit()))
       const expected = yield* $(Effect.exit(effect))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.unannotate(expected))
     }))
   it.effect("unright - should handle failures", () =>
     Effect.gen(function*($) {
       const effect = Effect.fail(42)
-      const result = yield* $(pipe(effect, Effect.right, Effect.unright, Effect.exit))
+      const result = yield* $(pipe(effect, Effect.right(), Effect.unright, Effect.exit()))
       const expected = yield* $(Effect.exit(effect))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.unannotate(expected))
     }))

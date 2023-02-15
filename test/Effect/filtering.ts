@@ -74,8 +74,8 @@ describe.concurrent("Effect", () => {
             effect,
             Effect.filterOrElseWith((n) => n === 0, (n) => Effect.fail(`${n} was not 0`))
           )),
-        Effect.sandbox,
-        Effect.either
+        Effect.sandbox(),
+        Effect.either()
       ))
       const badCase = yield* $(pipe(
         exactlyOnce(1, (effect) =>
@@ -83,8 +83,8 @@ describe.concurrent("Effect", () => {
             effect,
             Effect.filterOrElseWith((n) => n === 0, (n) => Effect.fail(`${n} was not 0`))
           )),
-        Effect.sandbox,
-        Effect.either,
+        Effect.sandbox(),
+        Effect.either(),
         Effect.map(Either.mapLeft(Cause.failureOrCause))
       ))
       assert.deepStrictEqual(goodCase, Either.right(0))
@@ -98,8 +98,8 @@ describe.concurrent("Effect", () => {
             effect,
             Effect.filterOrElse((n) => n === 0, () => Effect.fail("predicate failed!"))
           )),
-        Effect.sandbox,
-        Effect.either
+        Effect.sandbox(),
+        Effect.either()
       ))
       const badCase = yield* $(pipe(
         exactlyOnce(1, (effect) =>
@@ -107,8 +107,8 @@ describe.concurrent("Effect", () => {
             effect,
             Effect.filterOrElse((n) => n === 0, () => Effect.fail("predicate failed!"))
           )),
-        Effect.sandbox,
-        Effect.either,
+        Effect.sandbox(),
+        Effect.either(),
         Effect.map(Either.mapLeft(Cause.failureOrCause))
       ))
       assert.deepStrictEqual(goodCase, Either.right(0))
@@ -118,8 +118,8 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const goodCase = yield* $(pipe(
         exactlyOnce(0, (effect) => pipe(effect, Effect.filterOrFail((n) => n === 0, () => "predicate failed!"))),
-        Effect.sandbox,
-        Effect.either
+        Effect.sandbox(),
+        Effect.either()
       ))
       const badCase = yield* $(pipe(
         exactlyOnce(1, (effect) =>
@@ -127,8 +127,8 @@ describe.concurrent("Effect", () => {
             effect,
             Effect.filterOrFail((n) => n === 0, () => "predicate failed!")
           )),
-        Effect.sandbox,
-        Effect.either,
+        Effect.sandbox(),
+        Effect.either(),
         Effect.map(Either.mapLeft(Cause.failureOrCause))
       ))
       assert.deepStrictEqual(goodCase, Either.right(0))

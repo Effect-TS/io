@@ -17,7 +17,7 @@ describe.concurrent("Effect", () => {
           Effect.sleep(Duration.seconds(5)),
           Effect.zipRight(Effect.succeed(true)),
           Effect.timeoutFail(constFalse, Duration.millis(10)),
-          Effect.exit
+          Effect.exit()
         )
       )
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(false))
@@ -30,7 +30,7 @@ describe.concurrent("Effect", () => {
           Effect.sleep(Duration.seconds(5)),
           Effect.zipRight(Effect.succeed(true)),
           Effect.timeoutFailCause(() => cause, Duration.millis(10)),
-          Effect.sandbox,
+          Effect.sandbox(),
           Effect.flip
         )
       )
@@ -50,7 +50,7 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("timeout - disconnect - returns `Some` with the produced value if the effect completes before the timeout elapses", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(Effect.unit(), Effect.disconnect, Effect.timeout(Duration.millis(100))))
+      const result = yield* $(pipe(Effect.unit(), Effect.disconnect(), Effect.timeout(Duration.millis(100))))
       assert.deepStrictEqual(result, Option.some(void 0))
     }))
   it.effect("timeout - disconnect - returns `None` otherwise", () =>
@@ -59,7 +59,7 @@ describe.concurrent("Effect", () => {
         pipe(
           Effect.never(),
           Effect.uninterruptible,
-          Effect.disconnect,
+          Effect.disconnect(),
           Effect.timeout(Duration.millis(100)),
           Effect.fork
         )
