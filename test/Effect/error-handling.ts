@@ -621,6 +621,36 @@ describe.concurrent("Effect", () => {
       const result = yield* $(Effect.exit(deepErrorEffect(100)))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(ExampleError))
     }))
+  it.effect("refineTagOrDie - leaves the tagged error as failure", () =>
+    Effect.gen(function*($) {
+      interface ErrorA {
+        readonly _tag: "ErrorA"
+      }
+      interface ErrorB {
+        readonly _tag: "ErrorB"
+      }
+      const effect: Effect.Effect<never, ErrorA | ErrorB, never> = Effect.fail({ _tag: "ErrorA" })
+      const result = yield* $(pipe(
+        Effect.refineTagOrDie(effect, "ErrorA"),
+        Effect.exit
+      ))
+      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail({ _tag: "ErrorA" }))
+    }))
+  it.effect("refineTagOrDie - converts the rest to defects", () =>
+    Effect.gen(function*($) {
+      interface ErrorA {
+        readonly _tag: "ErrorA"
+      }
+      interface ErrorB {
+        readonly _tag: "ErrorB"
+      }
+      const effect: Effect.Effect<never, ErrorA | ErrorB, never> = Effect.fail({ _tag: "ErrorA" })
+      const result = yield* $(pipe(
+        Effect.refineTagOrDie(effect, "ErrorB"),
+        Effect.exit
+      ))
+      assert.deepStrictEqual(Exit.unannotate(result), Exit.die({ _tag: "ErrorA" }))
+    }))
   it.effect("unrefine - converts some fiber failures into errors", () =>
     Effect.gen(function*($) {
       const message = "division by zero"
