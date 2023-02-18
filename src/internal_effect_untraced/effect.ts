@@ -2089,6 +2089,37 @@ export const refineOrDieWith = Debug.dualWithTrace<
     }).traced(trace))
 
 /* @internal */
+export const refineTagOrDie = Debug.dualWithTrace<
+  <R, E extends { _tag: string }, A, K extends E["_tag"] & string>(
+    k: K
+  ) => (self: Effect.Effect<R, E, A>) => Effect.Effect<R, Extract<E, { _tag: K }>, A>,
+  <R, E extends { _tag: string }, A, K extends E["_tag"] & string>(
+    self: Effect.Effect<R, E, A>,
+    k: K
+  ) => Effect.Effect<R, Extract<E, { _tag: K }>, A>
+>(2, (trace) => (self, k) => refineTagOrDieWith(self, k, identity).traced(trace))
+
+/* @internal */
+export const refineTagOrDieWith = Debug.dualWithTrace<
+  <R, E extends { _tag: string }, A, K extends E["_tag"] & string>(
+    k: K,
+    f: (e: E) => unknown
+  ) => (self: Effect.Effect<R, E, A>) => Effect.Effect<R, Extract<E, { _tag: K }>, A>,
+  <R, E extends { _tag: string }, A, K extends E["_tag"] & string>(
+    self: Effect.Effect<R, E, A>,
+    k: K,
+    f: (e: E) => unknown
+  ) => Effect.Effect<R, Extract<E, { _tag: K }>, A>
+>(3, (trace, restore) =>
+  (self, k, f) =>
+    core.catchAll(self, (e) => {
+      if ("_tag" in e && e["_tag"] === k) {
+        return core.fail(e as any)
+      }
+      return core.die(restore(f)(e))
+    }).traced(trace))
+
+/* @internal */
 export const reject = Debug.dualWithTrace<
   <A, E1>(pf: (a: A) => Option.Option<E1>) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E | E1, A>,
   <R, E, A, E1>(self: Effect.Effect<R, E, A>, pf: (a: A) => Option.Option<E1>) => Effect.Effect<R, E | E1, A>

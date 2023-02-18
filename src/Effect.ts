@@ -3219,6 +3219,42 @@ export const refineOrDieWith: {
 } = effect.refineOrDieWith
 
 /**
+ * Keeps only the error matching the specified tag, and terminates the fiber
+ * with the rest
+ *
+ * @since 1.0.0
+ * @category mutations
+ */
+export const refineTagOrDie: {
+  <R, E extends { _tag: string }, A, K extends E["_tag"] & string>(
+    k: K,
+  ): (self: Effect<R, E, A>,)  => Effect<R, Extract<E, { _tag: K }>, A>,
+  <R, E extends { _tag: string }, A, K extends E["_tag"] & string>(
+    self: Effect<R, E, A>,
+    k: K,
+  ): Effect<R, Extract<E, { _tag: K }>, A>
+} = effect.refineTagOrDie
+
+/**
+ * Keeps only the error matching the specified tag, and terminates the fiber
+ * with the rest, using the specified function to convert the `E` into a defect.
+ *
+ * @since 1.0.0
+ * @category mutations
+ */
+export const refineTagOrDieWith: {
+  <R, E extends { _tag: string }, A, K extends E["_tag"] & string>(
+    k: K,
+    f: (e: E) => unknown
+  ): (self: Effect<R, E, A>)  => Effect<R, Extract<E, { _tag: K }>, A>,
+  <R, E extends { _tag: string }, A, K extends E["_tag"] & string>(
+    self: Effect<R, E, A>,
+    k: K,
+    f: (e: E) => unknown
+  ): Effect<R, Extract<E, { _tag: K }>, A>
+} = effect.refineTagOrDieWith
+
+/**
  * Fail with the returned value if the `PartialFunction` matches, otherwise
  * continue with our held value.
  *
