@@ -3245,12 +3245,12 @@ export const refineTagOrDie: {
 export const refineTagOrDieWith: {
   <R, E extends { _tag: string }, A, K extends E["_tag"] & string>(
     k: K,
-    f: (e: E) => unknown
+    f: (e: Exclude<E, { _tag: K }>) => unknown
   ): (self: Effect<R, E, A>)  => Effect<R, Extract<E, { _tag: K }>, A>,
   <R, E extends { _tag: string }, A, K extends E["_tag"] & string>(
     self: Effect<R, E, A>,
     k: K,
-    f: (e: E) => unknown
+    f: (e: Exclude<E, { _tag: K }>) => unknown
   ): Effect<R, Extract<E, { _tag: K }>, A>
 } = effect.refineTagOrDieWith
 
