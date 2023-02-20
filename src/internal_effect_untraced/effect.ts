@@ -2103,12 +2103,12 @@ export const refineTagOrDie = Debug.dualWithTrace<
 export const refineTagOrDieWith = Debug.dualWithTrace<
   <R, E extends { _tag: string }, A, K extends E["_tag"] & string>(
     k: K,
-    f: (e: E) => unknown
+    f: (e: Exclude<E, { _tag: K }>) => unknown
   ) => (self: Effect.Effect<R, E, A>) => Effect.Effect<R, Extract<E, { _tag: K }>, A>,
   <R, E extends { _tag: string }, A, K extends E["_tag"] & string>(
     self: Effect.Effect<R, E, A>,
     k: K,
-    f: (e: E) => unknown
+    f: (e: Exclude<E, { _tag: K }>) => unknown
   ) => Effect.Effect<R, Extract<E, { _tag: K }>, A>
 >(3, (trace, restore) =>
   (self, k, f) =>
@@ -2116,7 +2116,7 @@ export const refineTagOrDieWith = Debug.dualWithTrace<
       if ("_tag" in e && e["_tag"] === k) {
         return core.fail(e as any)
       }
-      return core.die(restore(f)(e))
+      return core.die(restore(f)(e as any))
     }).traced(trace))
 
 /* @internal */
