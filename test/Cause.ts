@@ -113,4 +113,11 @@ describe.concurrent("Cause", () => {
       assert.isTrue(Equal.equals(stripped, Option.none()))
     })
   })
+
+  describe("InterruptedException", () => {
+    it("renders as string", () => {
+      const ex = Cause.InterruptedException("my message")
+      expect(ex.toString()).toEqual("InterruptedException: my message")
+    })
+  })
 })

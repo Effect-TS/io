@@ -980,11 +980,8 @@ const makeException = <T extends { _tag: string; message?: string }>(
   }
   const protoWithToString = {
     ...proto,
-    toString: {
-      value(this: { message?: string; _tag: string }) {
-        return `${this._tag}: ${this.message}`
-      },
-      enumerable: false
+    toString(this: { _tag: string; message?: string }): string {
+      return `${this._tag}: ${this.message}`
     }
   }
   return (message?: string): T =>
