@@ -43,8 +43,7 @@ export const makeLogger = <Message, Output>(
     cause: CauseExt.Cause<unknown>,
     context: FiberRefs.FiberRefs,
     spans: Chunk.Chunk<LogSpan.LogSpan>,
-    annotations: HashMap.HashMap<string, string>,
-    runtime: Runtime.Runtime<never>
+    annotations: HashMap.HashMap<string, string>
   ) => Output
 ): Logger.Logger<Message, Output> => ({
   [LoggerTypeId]: loggerVariance,
@@ -53,7 +52,7 @@ export const makeLogger = <Message, Output>(
 
 /** @internal */
 export const stringLogger: Logger.Logger<string, string> = makeLogger<string, string>(
-  (fiberId, logLevel, message, cause, _context, spans, annotations, runtime) => {
+  (fiberId, logLevel, message, cause, _context, spans, annotations) => {
     const now = new Date()
     const nowMillis = now.getTime()
 
@@ -72,7 +71,7 @@ export const stringLogger: Logger.Logger<string, string> = makeLogger<string, st
 
     if (cause != null && cause != Cause.empty) {
       output = output + " cause="
-      output = appendQuoted(unsafeRunSync(runtime)(Pretty.prettySafe(cause)), output)
+      output = appendQuoted(Pretty.pretty(cause), output)
     }
 
     if (Chunk.isNonEmpty(spans)) {
@@ -120,7 +119,7 @@ const appendQuoted = (label: string, output: string): string =>
 
 /** @internal */
 export const logfmtLogger = makeLogger<string, string>(
-  (fiberId, logLevel, message, cause, _context, spans, annotations, runtime) => {
+  (fiberId, logLevel, message, cause, _context, spans, annotations) => {
     const now = new Date()
     const nowMillis = now.getTime()
 
@@ -139,7 +138,7 @@ export const logfmtLogger = makeLogger<string, string>(
 
     if (cause != null && cause != Cause.empty) {
       output = output + " cause="
-      output = appendQuotedLogfmt(unsafeRunSync(runtime)(Pretty.prettySafe(cause)), output)
+      output = appendQuotedLogfmt(Pretty.pretty(cause), output)
     }
 
     if (Chunk.isNonEmpty(spans)) {
@@ -205,8 +204,8 @@ export const contramap = Debug.untracedDual<
 >(2, (restore) =>
   (self, f) =>
     makeLogger(
-      (fiberId, logLevel, message, cause, context, spans, annotations, runtime) =>
-        self.log(fiberId, logLevel, restore(f)(message), cause, context, spans, annotations, runtime)
+      (fiberId, logLevel, message, cause, context, spans, annotations) =>
+        self.log(fiberId, logLevel, restore(f)(message), cause, context, spans, annotations)
     ))
 
 /** @internal */
@@ -221,7 +220,7 @@ export const filterLogLevel = Debug.untracedDual<
 >(2, (restore) =>
   (self, f) =>
     makeLogger(
-      (fiberId, logLevel, message, cause, context, spans, annotations, runtime) =>
+      (fiberId, logLevel, message, cause, context, spans, annotations) =>
         restore(f)(logLevel)
           ? Option.some(
             self.log(
@@ -231,8 +230,7 @@ export const filterLogLevel = Debug.untracedDual<
               cause,
               context,
               spans,
-              annotations,
-              runtime
+              annotations
             )
           )
           : Option.none()
@@ -250,8 +248,8 @@ export const map = Debug.untracedDual<
 >(2, (restore) =>
   (self, f) =>
     makeLogger(
-      (fiberId, logLevel, message, cause, context, spans, annotations, runtime) =>
-        restore(f)(self.log(fiberId, logLevel, message, cause, context, spans, annotations, runtime))
+      (fiberId, logLevel, message, cause, context, spans, annotations) =>
+        restore(f)(self.log(fiberId, logLevel, message, cause, context, spans, annotations))
     ))
 
 /** @internal */
@@ -290,10 +288,10 @@ export const zip = dual<
     that: Logger.Logger<Message2, Output2>
   ) => Logger.Logger<Message & Message2, readonly [Output, Output2]>
 >(2, (self, that) =>
-  makeLogger((fiberId, logLevel, message, cause, context, spans, annotations, runtime) =>
+  makeLogger((fiberId, logLevel, message, cause, context, spans, annotations) =>
     [
-      self.log(fiberId, logLevel, message, cause, context, spans, annotations, runtime),
-      that.log(fiberId, logLevel, message, cause, context, spans, annotations, runtime)
+      self.log(fiberId, logLevel, message, cause, context, spans, annotations),
+      that.log(fiberId, logLevel, message, cause, context, spans, annotations)
     ] as const
   ))
 

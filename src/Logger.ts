@@ -14,7 +14,6 @@ import * as internalCircular from "@effect/io/internal_effect_untraced/logger-ci
 import type * as Layer from "@effect/io/Layer"
 import type * as LogLevel from "@effect/io/Logger/Level"
 import type * as LogSpan from "@effect/io/Logger/Span"
-import type { Runtime } from "@effect/io/Runtime"
 import type { LazyArg } from "@fp-ts/core/Function"
 import type * as Option from "@fp-ts/core/Option"
 
@@ -42,8 +41,7 @@ export interface Logger<Message, Output> extends Logger.Variance<Message, Output
     cause: Cause.Cause<unknown>,
     context: FiberRefs.FiberRefs,
     spans: Chunk.Chunk<LogSpan.LogSpan>,
-    annotations: HashMap.HashMap<string, string>,
-    runtime: Runtime<never>
+    annotations: HashMap.HashMap<string, string>
   ) => Output
 }
 
@@ -75,8 +73,7 @@ export const make: <Message, Output>(
     cause: Cause.Cause<unknown>,
     context: FiberRefs.FiberRefs,
     spans: Chunk.Chunk<LogSpan.LogSpan>,
-    annotations: HashMap.HashMap<string, string>,
-    runtime: Runtime<never>
+    annotations: HashMap.HashMap<string, string>
   ) => Output
 ) => Logger<Message, Output> = internal.makeLogger
 

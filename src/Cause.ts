@@ -28,7 +28,6 @@ import type { SourceLocation } from "@effect/io/Debug"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import * as internal from "@effect/io/internal_effect_untraced/cause"
 import * as _pretty from "@effect/io/internal_effect_untraced/cause-pretty"
-import * as _pretty_run from "@effect/io/internal_effect_untraced/cause-pretty-run"
 import type * as OpCodes from "@effect/io/internal_effect_untraced/opCodes/cause"
 import type * as Either from "@fp-ts/core/Either"
 import type * as Option from "@fp-ts/core/Option"
@@ -877,7 +876,7 @@ export const isRuntimeException: (u: unknown) => u is RuntimeException = interna
  * @since 1.0.0
  * @category rendering
  */
-export const pretty: <E>(cause: Cause<E>) => string = _pretty_run.pretty
+export const pretty: <E>(cause: Cause<E>) => string = _pretty.pretty
 
 /**
  * Checks if an annotation is a StackAnnotation
