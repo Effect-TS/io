@@ -4,7 +4,6 @@ import * as Cause from "@effect/io/Cause"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as _fiberId from "@effect/io/internal_effect_untraced/fiberId"
 import * as fiberRefs from "@effect/io/internal_effect_untraced/fiberRefs"
-import { defaultRuntime } from "@effect/io/internal_effect_untraced/runtime"
 import type * as Logger from "@effect/io/Logger"
 import { dual } from "@fp-ts/core/Function"
 
@@ -20,6 +19,5 @@ export const test = dual<
     Cause.empty,
     fiberRefs.unsafeMake(new Map()),
     Chunk.empty(),
-    HashMap.empty(),
-    defaultRuntime
+    HashMap.empty()
   ))

@@ -3,7 +3,6 @@ import * as FiberId from "@effect/io/Fiber/Id"
 import * as FiberRefs from "@effect/io/FiberRefs"
 import { logLevelInfo } from "@effect/io/internal_effect_untraced/core"
 import * as LogSpan from "@effect/io/Logger/Span"
-import * as Runtime from "@effect/io/Runtime"
 
 import * as Chunk from "@effect/data/Chunk"
 import * as HashMap from "@effect/data/HashMap"
@@ -36,8 +35,7 @@ describe("stringLogger", () => {
       Cause.empty,
       FiberRefs.unsafeMake(new Map()),
       spans,
-      annotations,
-      Runtime.defaultRuntime
+      annotations
     )
 
     expect(result).toEqual(
@@ -63,8 +61,7 @@ describe("stringLogger", () => {
       Cause.empty,
       FiberRefs.unsafeMake(new Map()),
       spans,
-      annotations,
-      Runtime.defaultRuntime
+      annotations
     )
 
     expect(result).toEqual(
@@ -100,8 +97,7 @@ describe("logfmtLogger", () => {
       Cause.empty,
       FiberRefs.unsafeMake(new Map()),
       spans,
-      annotations,
-      Runtime.defaultRuntime
+      annotations
     )
 
     expect(result).toEqual(
@@ -127,8 +123,7 @@ describe("logfmtLogger", () => {
       Cause.empty,
       FiberRefs.unsafeMake(new Map()),
       spans,
-      annotations,
-      Runtime.defaultRuntime
+      annotations
     )
 
     expect(result).toEqual(

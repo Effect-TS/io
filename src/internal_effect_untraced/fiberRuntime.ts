@@ -717,7 +717,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     pipe(
       loggers,
       HashSet.forEach((logger) => {
-        logger.log(this.id(), logLevel, message, cause, contextMap, spans, annotations, this.runtime)
+        logger.log(this.id(), logLevel, message, cause, contextMap, spans, annotations)
       })
     )
   }
@@ -1194,7 +1194,7 @@ export const currentMinimumLogLevel: FiberRef.FiberRef<LogLevel.LogLevel> = core
 
 /** @internal */
 export const defaultLogger: Logger<string, void> = internalLogger.makeLogger(
-  (fiberId, logLevel, message, cause, context, spans, annotations, runtime) => {
+  (fiberId, logLevel, message, cause, context, spans, annotations) => {
     const formatted = internalLogger.stringLogger.log(
       fiberId,
       logLevel,
@@ -1202,8 +1202,7 @@ export const defaultLogger: Logger<string, void> = internalLogger.makeLogger(
       cause,
       context,
       spans,
-      annotations,
-      runtime
+      annotations
     )
     const filter = fiberRefs.getOrDefault(context, currentMinimumLogLevel)
     if (LogLevel.greaterThanEqual(filter)(logLevel)) {
@@ -1214,7 +1213,7 @@ export const defaultLogger: Logger<string, void> = internalLogger.makeLogger(
 
 /** @internal */
 export const logFmtLogger: Logger<string, void> = internalLogger.makeLogger(
-  (fiberId, logLevel, message, cause, context, spans, annotations, runtime) => {
+  (fiberId, logLevel, message, cause, context, spans, annotations) => {
     const formatted = internalLogger.logfmtLogger.log(
       fiberId,
       logLevel,
@@ -1222,8 +1221,7 @@ export const logFmtLogger: Logger<string, void> = internalLogger.makeLogger(
       cause,
       context,
       spans,
-      annotations,
-      runtime
+      annotations
     )
     const filter = fiberRefs.getOrDefault(context, currentMinimumLogLevel)
     if (LogLevel.greaterThanEqual(filter)(logLevel)) {

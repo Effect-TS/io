@@ -1,11 +1,8 @@
 import * as Chunk from "@effect/data/Chunk"
 import type * as Cause from "@effect/io/Cause"
 import * as Debug from "@effect/io/Debug"
-import type * as Effect from "@effect/io/Effect"
 import * as internal from "@effect/io/internal_effect_untraced/cause"
 import { StackAnnotation } from "@effect/io/internal_effect_untraced/cause"
-import * as core from "@effect/io/internal_effect_untraced/core"
-import * as OpCodes from "@effect/io/internal_effect_untraced/opCodes/cause"
 import { pipe } from "@fp-ts/core/Function"
 import * as Option from "@fp-ts/core/Option"
 
@@ -107,93 +104,62 @@ const defaultErrorToLines = (error: unknown) => {
 }
 
 class RenderError {
-  constructor(readonly seq: number, readonly message: string, readonly stack: string) {}
+  constructor(public seq: number, public message: string, public stack: string) {}
 }
 
-const render = <E>(
-  cause: Cause.Cause<E>,
-  stack: Option.Option<StackAnnotation>
-): Effect.Effect<never, never, ReadonlyArray<RenderError>> => {
-  switch (cause._tag) {
-    case OpCodes.OP_ANNOTATED: {
-      const annotation = cause.annotation
-      if (internal.isStackAnnotation(annotation)) {
-        return core.suspendSucceed(() =>
-          render(
-            cause.cause,
-            pipe(
-              Option.map(stack, (parent) =>
-                new StackAnnotation(
-                  annotation.stack.length < Debug.runtimeDebug.traceStackLimit && parent.stack.length > 0 &&
-                    ((annotation.stack.length > 0 &&
-                      Chunk.unsafeLast(parent.stack) !== Chunk.unsafeLast(annotation.stack)) ||
-                      annotation.stack.length === 0) ?
-                    pipe(
-                      annotation.stack,
-                      Chunk.concat(parent.stack),
-                      Chunk.dedupeAdjacent,
-                      Chunk.take(Debug.runtimeDebug.traceStackLimit)
-                    ) :
-                    annotation.stack,
-                  annotation.seq
-                )),
-              Option.orElse(() => Option.some(annotation))
-            )
-          )
-        )
-      }
-      return core.suspendSucceed(() => render(cause.cause, stack))
-    }
-    case OpCodes.OP_EMPTY: {
-      return core.succeed([])
-    }
-    case OpCodes.OP_FAIL: {
-      return core.succeed(renderFail(defaultErrorToLines(cause.error), stack))
-    }
-    case OpCodes.OP_DIE: {
-      return core.succeed(renderFail(defaultErrorToLines(cause.defect), stack))
-    }
-    case OpCodes.OP_INTERRUPT: {
-      return core.succeed([])
-    }
-    case OpCodes.OP_SEQUENTIAL: {
-      return core.zipWith(
-        core.suspendSucceed(() => render(cause.left, stack)),
-        core.suspendSucceed(() => render(cause.right, stack)),
-        (left, right) => [...left, ...right]
-      )
-    }
-    case OpCodes.OP_PARALLEL: {
-      return core.zipWith(
-        core.suspendSucceed(() => render(cause.left, stack)),
-        core.suspendSucceed(() => render(cause.right, stack)),
-        (left, right) => [...left, ...right]
-      )
-    }
-    default: {
-      return core.succeed([])
-    }
-  }
+class RenderErrorTmp {
+  constructor(readonly message: string, readonly stack: Option.Option<Cause.StackAnnotation>) {}
 }
 
 /** @internal */
-export const prettySafe = <E>(cause: Cause.Cause<E>): Effect.Effect<never, never, string> => {
+export const pretty = <E>(cause: Cause.Cause<E>): string => {
   if (internal.isInterruptedOnly(cause)) {
-    return core.succeed("All fibers interrupted without errors.")
+    return "All fibers interrupted without errors."
   }
-  return core.map(render(cause, Option.none()), (errors) => {
-    const final = Array.from(errors).sort((a, b) => a.seq === b.seq ? 0 : a.seq > b.seq ? 1 : -1).map((e) => {
-      let message = e.message
-      if (e.stack && e.stack.length > 0) {
-        message += `\r\n${e.stack}`
-      }
-      return message
-    }).join("\r\n\r\n")
-    if (!final.includes("\r\n")) {
-      return final
+  const errors = internal.reduceWithContext(cause, void 0, {
+    emptyCase: (): ReadonlyArray<RenderErrorTmp> => [],
+    dieCase: (_, defect) => [{ message: defaultErrorToLines(defect), stack: Option.none() }],
+    failCase: (_, defect) => [{ message: defaultErrorToLines(defect), stack: Option.none() }],
+    interruptCase: () => [],
+    parallelCase: (_, l, r) => [...l, ...r],
+    sequentialCase: (_, l, r) => [...l, ...r],
+    annotatedCase: (_, v, parent) =>
+      internal.isStackAnnotation(parent) ?
+        v.map((r) => ({
+          message: r.message,
+          stack: pipe(
+            Option.map(r.stack, (annotation) =>
+              new StackAnnotation(
+                annotation.stack.length < Debug.runtimeDebug.traceStackLimit && parent.stack.length > 0 &&
+                  ((annotation.stack.length > 0 &&
+                    Chunk.unsafeLast(parent.stack) !== Chunk.unsafeLast(annotation.stack)) ||
+                    annotation.stack.length === 0) ?
+                  pipe(
+                    annotation.stack,
+                    Chunk.concat(parent.stack),
+                    Chunk.dedupeAdjacent,
+                    Chunk.take(Debug.runtimeDebug.traceStackLimit)
+                  ) :
+                  annotation.stack,
+                annotation.seq
+              )),
+            Option.orElse(() => Option.some(parent))
+          )
+        })) :
+        v
+  }).flatMap((r) => renderFail(r.message, r.stack))
+
+  const final = Array.from(errors).sort((a, b) => a.seq === b.seq ? 0 : a.seq > b.seq ? 1 : -1).map((e) => {
+    let message = e.message
+    if (e.stack && e.stack.length > 0) {
+      message += `\r\n${e.stack}`
     }
-    return `\r\n${final}\r\n`
-  })
+    return message
+  }).join("\r\n\r\n")
+  if (!final.includes("\r\n")) {
+    return final
+  }
+  return `\r\n${final}\r\n`
 }
 
 function renderFrame(r: Debug.Frame | undefined): string {
