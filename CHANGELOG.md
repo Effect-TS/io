@@ -1,5 +1,17 @@
 # @effect/io
 
+## 0.1.13
+
+### Patch Changes
+
+- [#252](https://github.com/Effect-TS/io/pull/252) [`54c3c42`](https://github.com/Effect-TS/io/commit/54c3c423939cacf6d10a6d958db10ea02c420350) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Detach Cause.pretty from runtime
+
+- [#253](https://github.com/Effect-TS/io/pull/253) [`8b9783a`](https://github.com/Effect-TS/io/commit/8b9783a47228ddb57cd250d0a246d9b672f68c68) Thanks [@pigoz](https://github.com/pigoz)! - refineTagOrDieWith: narrow callback argument type
+
+- [#254](https://github.com/Effect-TS/io/pull/254) [`f3cd1c1`](https://github.com/Effect-TS/io/commit/f3cd1c106c8547499038c99833b38103d50411d2) Thanks [@patroza](https://github.com/patroza)! - cause: fix exception toString
+
+- [#250](https://github.com/Effect-TS/io/pull/250) [`bb7c80d`](https://github.com/Effect-TS/io/commit/bb7c80d5127fb94159c7745638356309f3558c0c) Thanks [@pigoz](https://github.com/pigoz)! - feat(effect): add refineTagOrDie\* operators
+
 ## 0.1.12
 
 ### Patch Changes
