@@ -1,12 +1,12 @@
 import * as Duration from "@effect/data/Duration"
+import { constFalse, pipe } from "@effect/data/Function"
+import * as Option from "@effect/data/Option"
 import * as Cause from "@effect/io/Cause"
 import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import * as Fiber from "@effect/io/Fiber"
 import * as TestClock from "@effect/io/internal_effect_untraced/testing/testClock"
 import * as it from "@effect/io/test/utils/extend"
-import { constFalse, pipe } from "@fp-ts/core/Function"
-import * as Option from "@fp-ts/core/Option"
 import { assert, describe } from "vitest"
 
 describe.concurrent("Effect", () => {

@@ -1,5 +1,8 @@
 import * as Chunk from "@effect/data/Chunk"
+import type { LazyArg } from "@effect/data/Function"
+import { constVoid, dual, identity, pipe } from "@effect/data/Function"
 import * as HashMap from "@effect/data/HashMap"
+import * as Option from "@effect/data/Option"
 import type * as CauseExt from "@effect/io/Cause"
 import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
@@ -16,9 +19,6 @@ import type * as Logger from "@effect/io/Logger"
 import type * as LogLevel from "@effect/io/Logger/Level"
 import * as LogSpan from "@effect/io/Logger/Span"
 import type * as Runtime from "@effect/io/Runtime"
-import type { LazyArg } from "@fp-ts/core/Function"
-import { constVoid, dual, identity, pipe } from "@fp-ts/core/Function"
-import * as Option from "@fp-ts/core/Option"
 
 /** @internal */
 const LoggerSymbolKey = "@effect/io/Logger"

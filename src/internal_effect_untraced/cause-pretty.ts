@@ -1,10 +1,10 @@
 import * as Chunk from "@effect/data/Chunk"
+import { pipe } from "@effect/data/Function"
+import * as Option from "@effect/data/Option"
 import type * as Cause from "@effect/io/Cause"
 import * as Debug from "@effect/io/Debug"
 import * as internal from "@effect/io/internal_effect_untraced/cause"
 import { StackAnnotation } from "@effect/io/internal_effect_untraced/cause"
-import { pipe } from "@fp-ts/core/Function"
-import * as Option from "@fp-ts/core/Option"
 
 // -----------------------------------------------------------------------------
 // Pretty Printing

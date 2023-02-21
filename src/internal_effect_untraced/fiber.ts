@@ -1,5 +1,10 @@
 import * as Chunk from "@effect/data/Chunk"
+import * as Either from "@effect/data/Either"
+import { dual, pipe } from "@effect/data/Function"
 import * as HashSet from "@effect/data/HashSet"
+import * as number from "@effect/data/Number"
+import * as Option from "@effect/data/Option"
+import * as order from "@effect/data/typeclass/Order"
 import type * as Cause from "@effect/io/Cause"
 import * as Clock from "@effect/io/Clock"
 import * as Debug from "@effect/io/Debug"
@@ -11,11 +16,6 @@ import * as FiberStatus from "@effect/io/Fiber/Status"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as fiberScope from "@effect/io/internal_effect_untraced/fiberScope"
 import * as runtimeFlags from "@effect/io/internal_effect_untraced/runtimeFlags"
-import * as Either from "@fp-ts/core/Either"
-import { dual, pipe } from "@fp-ts/core/Function"
-import * as number from "@fp-ts/core/Number"
-import * as Option from "@fp-ts/core/Option"
-import * as order from "@fp-ts/core/typeclass/Order"
 
 /** @internal */
 const FiberSymbolKey = "@effect/io/Fiber"
@@ -41,7 +41,7 @@ export const RuntimeFiberTypeId: Fiber.RuntimeFiberTypeId = Symbol.for(
 
 /** @internal */
 export const Order: order.Order<Fiber.RuntimeFiber<unknown, unknown>> = pipe(
-  order.tuple(number.Order, number.Order),
+  order.tuple<readonly [order.Order<number>, order.Order<number>]>(number.Order, number.Order),
   order.contramap((fiber: Fiber.RuntimeFiber<unknown, unknown>) =>
     [
       (fiber.id() as FiberId.Runtime).startTimeMillis,

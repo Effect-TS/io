@@ -1,4 +1,6 @@
 import * as Duration from "@effect/data/Duration"
+import { pipe } from "@effect/data/Function"
+import * as Option from "@effect/data/Option"
 import * as Deferred from "@effect/io/Deferred"
 import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
@@ -9,8 +11,6 @@ import * as Pool from "@effect/io/Pool"
 import * as Ref from "@effect/io/Ref"
 import * as Scope from "@effect/io/Scope"
 import * as it from "@effect/io/test/utils/extend"
-import { pipe } from "@fp-ts/core/Function"
-import * as Option from "@fp-ts/core/Option"
 import { describe, expect } from "vitest"
 
 describe("Pool", () => {

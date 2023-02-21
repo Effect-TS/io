@@ -1,10 +1,10 @@
 import type * as Chunk from "@effect/data/Chunk"
 import type * as Duration from "@effect/data/Duration"
 import * as Equal from "@effect/data/Equal"
+import { pipe } from "@effect/data/Function"
 import * as Hash from "@effect/data/Hash"
 import type * as MetricBoundaries from "@effect/io/Metric/Boundaries"
 import type * as MetricKeyType from "@effect/io/Metric/KeyType"
-import { pipe } from "@fp-ts/core/Function"
 
 /** @internal */
 const MetricKeyTypeSymbolKey = "@effect/io/Metric/KeyType"

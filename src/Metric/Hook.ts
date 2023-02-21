@@ -1,10 +1,10 @@
 /**
  * @since 1.0.0
  */
+import type { LazyArg } from "@effect/data/Function"
 import * as internal from "@effect/io/internal_effect_untraced/metric/hook"
 import type * as MetricKey from "@effect/io/Metric/Key"
 import type * as MetricState from "@effect/io/Metric/State"
-import type { LazyArg } from "@fp-ts/core/Function"
 
 /**
  * @since 1.0.0

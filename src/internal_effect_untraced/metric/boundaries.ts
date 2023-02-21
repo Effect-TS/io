@@ -1,8 +1,8 @@
 import * as Chunk from "@effect/data/Chunk"
 import * as Equal from "@effect/data/Equal"
+import { pipe } from "@effect/data/Function"
 import * as Hash from "@effect/data/Hash"
 import type * as MetricBoundaries from "@effect/io/Metric/Boundaries"
-import { pipe } from "@fp-ts/core/Function"
 
 /** @internal */
 const MetricBoundariesSymbolKey = "@effect/io/Metric/Boundaries"

@@ -2,7 +2,9 @@
  * @since 1.0.0
  */
 import type * as Chunk from "@effect/data/Chunk"
+import type { LazyArg } from "@effect/data/Function"
 import type * as HashMap from "@effect/data/HashMap"
+import type * as Option from "@effect/data/Option"
 import type * as Cause from "@effect/io/Cause"
 import type { Effect } from "@effect/io/Effect"
 import type * as FiberId from "@effect/io/Fiber/Id"
@@ -14,8 +16,6 @@ import * as internalCircular from "@effect/io/internal_effect_untraced/logger-ci
 import type * as Layer from "@effect/io/Layer"
 import type * as LogLevel from "@effect/io/Logger/Level"
 import type * as LogSpan from "@effect/io/Logger/Span"
-import type { LazyArg } from "@fp-ts/core/Function"
-import type * as Option from "@fp-ts/core/Option"
 
 /**
  * @since 1.0.0

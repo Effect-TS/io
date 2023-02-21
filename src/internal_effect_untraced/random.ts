@@ -1,11 +1,11 @@
 import * as Chunk from "@effect/data/Chunk"
 import * as Context from "@effect/data/Context"
+import { pipe } from "@effect/data/Function"
 import * as PCGRandom from "@effect/data/Random"
 import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import type * as Random from "@effect/io/Random"
-import { pipe } from "@fp-ts/core/Function"
 
 /** @internal */
 const RandomSymbolKey = "@effect/io/Random"

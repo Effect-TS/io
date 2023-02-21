@@ -2,16 +2,16 @@
  * @since 1.0.0
  */
 import type * as Chunk from "@effect/data/Chunk"
+import type * as Either from "@effect/data/Either"
+import type { LazyArg } from "@effect/data/Function"
 import type * as HashMap from "@effect/data/HashMap"
 import type * as HashSet from "@effect/data/HashSet"
+import type * as Option from "@effect/data/Option"
+import type { Predicate, Refinement } from "@effect/data/Predicate"
 import type * as ConfigError from "@effect/io/Config/Error"
 import type * as ConfigSecret from "@effect/io/Config/Secret"
 import * as internal from "@effect/io/internal_effect_untraced/config"
 import type { EnforceNonEmptyRecord, NonEmptyArrayConfig, TupleConfig } from "@effect/io/internal_effect_untraced/types"
-import type * as Either from "@fp-ts/core/Either"
-import type { LazyArg } from "@fp-ts/core/Function"
-import type * as Option from "@fp-ts/core/Option"
-import type { Predicate, Refinement } from "@fp-ts/core/Predicate"
 
 /**
  * @since 1.0.0

@@ -1,9 +1,9 @@
 /**
  * @since 1.0.0
  */
+import type * as Option from "@effect/data/Option"
 import type * as Effect from "@effect/io/Effect"
 import * as internal from "@effect/io/internal_effect_untraced/ref"
-import type * as Option from "@fp-ts/core/Option"
 
 /**
  * @since 1.0.0

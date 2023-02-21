@@ -1,10 +1,10 @@
 import { equals } from "@effect/data/Equal"
+import { dual } from "@effect/data/Function"
+import * as Arr from "@effect/data/ReadonlyArray"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRefs from "@effect/io/FiberRefs"
 import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
 import * as _fiberRefs from "@effect/io/internal_effect_untraced/fiberRefs"
-import { dual } from "@fp-ts/core/Function"
-import * as Arr from "@fp-ts/core/ReadonlyArray"
 
 /** @internal */
 export const OP_EMPTY = "Empty" as const
@@ -102,7 +102,7 @@ export const patch = dual<
 >(3, (self, fiberId, oldValue) => {
   let fiberRefs: FiberRefs.FiberRefs = oldValue
   let patches: ReadonlyArray<FiberRefsPatch.FiberRefsPatch> = Arr.of(self)
-  while (Arr.isNonEmpty(patches)) {
+  while (Arr.isNonEmptyReadonlyArray(patches)) {
     const head = Arr.headNonEmpty(patches)
     const tail = Arr.tailNonEmpty(patches)
     switch (head._tag) {

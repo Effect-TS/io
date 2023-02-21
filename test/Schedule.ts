@@ -1,5 +1,8 @@
 import * as Chunk from "@effect/data/Chunk"
 import * as Duration from "@effect/data/Duration"
+import * as Either from "@effect/data/Either"
+import { constVoid, pipe } from "@effect/data/Function"
+import * as Option from "@effect/data/Option"
 import * as Cause from "@effect/io/Cause"
 import * as Clock from "@effect/io/Clock"
 import * as Deferred from "@effect/io/Deferred"
@@ -12,9 +15,6 @@ import * as Schedule from "@effect/io/Schedule"
 import * as ScheduleDecision from "@effect/io/Schedule/Decision"
 import * as Intervals from "@effect/io/Schedule/Intervals"
 import * as it from "@effect/io/test/utils/extend"
-import * as Either from "@fp-ts/core/Either"
-import { constVoid, pipe } from "@fp-ts/core/Function"
-import * as Option from "@fp-ts/core/Option"
 import { assert, describe } from "vitest"
 
 describe.concurrent("Schedule", () => {

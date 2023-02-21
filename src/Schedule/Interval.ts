@@ -2,8 +2,8 @@
  * @since 1.0.0
  */
 import type * as Duration from "@effect/data/Duration"
+import type * as Option from "@effect/data/Option"
 import * as internal from "@effect/io/internal_effect_untraced/schedule/interval"
-import type * as Option from "@fp-ts/core/Option"
 
 /**
  * @since 1.0.0

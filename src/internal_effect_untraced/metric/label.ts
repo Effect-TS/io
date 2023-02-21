@@ -1,7 +1,7 @@
 import * as Equal from "@effect/data/Equal"
+import { pipe } from "@effect/data/Function"
 import * as Hash from "@effect/data/Hash"
 import type * as MetricLabel from "@effect/io/Metric/Label"
-import { pipe } from "@fp-ts/core/Function"
 
 /** @internal */
 const MetricLabelSymbolKey = "@effect/io/Metric/Label"

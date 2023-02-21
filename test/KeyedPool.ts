@@ -1,5 +1,6 @@
 import * as Chunk from "@effect/data/Chunk"
 import * as Duration from "@effect/data/Duration"
+import { pipe } from "@effect/data/Function"
 import * as Effect from "@effect/io/Effect"
 import * as Fiber from "@effect/io/Fiber"
 import * as TestClock from "@effect/io/internal_effect_untraced/testing/testClock"
@@ -7,7 +8,6 @@ import * as KeyedPool from "@effect/io/KeyedPool"
 import * as Random from "@effect/io/Random"
 import * as Ref from "@effect/io/Ref"
 import * as it from "@effect/io/test/utils/extend"
-import { pipe } from "@fp-ts/core/Function"
 import { describe, expect } from "vitest"
 
 describe("KeyedPool", () => {

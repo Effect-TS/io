@@ -1,9 +1,9 @@
 import * as Equal from "@effect/data/Equal"
+import { pipe } from "@effect/data/Function"
 import * as Hash from "@effect/data/Hash"
 import type { FiberId } from "@effect/io/Fiber/Id"
 import type { RuntimeFlags } from "@effect/io/Fiber/Runtime/Flags"
 import type * as FiberStatus from "@effect/io/Fiber/Status"
-import { pipe } from "@fp-ts/core/Function"
 
 const FiberStatusSymbolKey = "@effect/io/Fiber/Status"
 

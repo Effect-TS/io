@@ -3,8 +3,8 @@
  */
 import type * as Equal from "@effect/data/Equal"
 import type * as HashSet from "@effect/data/HashSet"
+import type * as Option from "@effect/data/Option"
 import * as internal from "@effect/io/internal_effect_untraced/fiberId"
-import type * as Option from "@fp-ts/core/Option"
 
 /**
  * @since 1.0.0

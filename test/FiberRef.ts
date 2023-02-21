@@ -1,5 +1,7 @@
 import * as Chunk from "@effect/data/Chunk"
 import * as Duration from "@effect/data/Duration"
+import { constant, constTrue, identity, pipe } from "@effect/data/Function"
+import * as Option from "@effect/data/Option"
 import * as Clock from "@effect/io/Clock"
 import * as Deferred from "@effect/io/Deferred"
 import * as Effect from "@effect/io/Effect"
@@ -7,8 +9,6 @@ import * as Fiber from "@effect/io/Fiber"
 import * as FiberRef from "@effect/io/FiberRef"
 import * as Runtime from "@effect/io/Runtime"
 import * as it from "@effect/io/test/utils/extend"
-import { constant, constTrue, identity, pipe } from "@fp-ts/core/Function"
-import * as Option from "@fp-ts/core/Option"
 import { assert, describe } from "vitest"
 
 const initial = "initial"
@@ -352,11 +352,9 @@ describe.concurrent("FiberRef", () => {
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make<boolean>(true, constTrue))
       const deferred = yield* $(Deferred.make<never, boolean>())
-      const runtime: Runtime.Runtime<never> = yield* $(
-        pipe(Effect.runtime<never>(), FiberRef.locally(fiberRef, false))
-      )
+      const runtime: Runtime.Runtime<never> = yield* $(FiberRef.locally(Effect.runtime<never>(), fiberRef, false))
       const fiber = yield* $(
-        Effect.sync(() => pipe(FiberRef.get(fiberRef), Effect.intoDeferred(deferred), runtime.unsafeFork))
+        Effect.sync(() => runtime.unsafeFork(Effect.intoDeferred(FiberRef.get(fiberRef), deferred)))
       )
       yield* $(Fiber.join(fiber))
       const result = yield* $(Deferred.await(deferred))

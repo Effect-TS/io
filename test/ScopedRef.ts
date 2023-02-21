@@ -1,8 +1,8 @@
+import { pipe } from "@effect/data/Function"
 import * as Effect from "@effect/io/Effect"
 import * as ScopedRef from "@effect/io/ScopedRef"
 import * as Counter from "@effect/io/test/utils/counter"
 import * as it from "@effect/io/test/utils/extend"
-import { pipe } from "@fp-ts/core/Function"
 import { assert, describe } from "vitest"
 
 describe.concurrent("ScopedRef", () => {

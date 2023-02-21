@@ -4,10 +4,10 @@
 import type * as Chunk from "@effect/data/Chunk"
 import type * as MutableQueue from "@effect/data/MutableQueue"
 import type * as MutableRef from "@effect/data/MutableRef"
+import type * as Option from "@effect/data/Option"
 import type * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
 import * as internal from "@effect/io/internal_effect_untraced/queue"
-import type * as Option from "@fp-ts/core/Option"
 
 /**
  * @since 1.0.0

@@ -1,4 +1,7 @@
 import * as Chunk from "@effect/data/Chunk"
+import * as Either from "@effect/data/Either"
+import { constVoid, identity, pipe } from "@effect/data/Function"
+import * as Option from "@effect/data/Option"
 import * as Cause from "@effect/io/Cause"
 import * as Deferred from "@effect/io/Deferred"
 import * as Effect from "@effect/io/Effect"
@@ -6,9 +9,6 @@ import * as Exit from "@effect/io/Exit"
 import * as Fiber from "@effect/io/Fiber"
 import * as Ref from "@effect/io/Ref"
 import * as it from "@effect/io/test/utils/extend"
-import * as Either from "@fp-ts/core/Either"
-import { constVoid, identity, pipe } from "@fp-ts/core/Function"
-import * as Option from "@fp-ts/core/Option"
 import { assert, describe } from "vitest"
 
 describe.concurrent("Effect", () => {

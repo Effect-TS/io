@@ -1,6 +1,7 @@
 import * as Chunk from "@effect/data/Chunk"
 import * as Context from "@effect/data/Context"
 import * as Equal from "@effect/data/Equal"
+import { pipe } from "@effect/data/Function"
 import * as MutableRef from "@effect/data/MutableRef"
 import * as SortedSet from "@effect/data/SortedSet"
 import * as Debug from "@effect/io/Debug"
@@ -12,7 +13,6 @@ import * as fiber from "@effect/io/internal_effect_untraced/fiber"
 import * as TestAnnotation from "@effect/io/internal_effect_untraced/testing/testAnnotation"
 import * as TestAnnotationMap from "@effect/io/internal_effect_untraced/testing/testAnnotationMap"
 import * as Ref from "@effect/io/Ref"
-import { pipe } from "@fp-ts/core/Function"
 
 /** @internal */
 export const AnnotationsTypeId = Symbol.for("@effect/test/Annotations")

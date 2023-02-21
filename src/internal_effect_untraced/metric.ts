@@ -1,5 +1,7 @@
 import * as Chunk from "@effect/data/Chunk"
 import * as Duration from "@effect/data/Duration"
+import type { LazyArg } from "@effect/data/Function"
+import { constVoid, dual, identity, pipe } from "@effect/data/Function"
 import * as HashSet from "@effect/data/HashSet"
 import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
@@ -19,8 +21,6 @@ import type * as MetricLabel from "@effect/io/Metric/Label"
 import type * as MetricPair from "@effect/io/Metric/Pair"
 import type * as MetricRegistry from "@effect/io/Metric/Registry"
 import type * as MetricState from "@effect/io/Metric/State"
-import type { LazyArg } from "@fp-ts/core/Function"
-import { constVoid, dual, identity, pipe } from "@fp-ts/core/Function"
 
 /** @internal */
 const MetricSymbolKey = "@effect/io/Metric"

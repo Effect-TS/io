@@ -1,6 +1,7 @@
 import type * as Chunk from "@effect/data/Chunk"
 import type * as Duration from "@effect/data/Duration"
 import * as Equal from "@effect/data/Equal"
+import { dual, pipe } from "@effect/data/Function"
 import * as Hash from "@effect/data/Hash"
 import * as HashSet from "@effect/data/HashSet"
 import * as metricKeyType from "@effect/io/internal_effect_untraced/metric/keyType"
@@ -9,7 +10,6 @@ import type * as MetricBoundaries from "@effect/io/Metric/Boundaries"
 import type * as MetricKey from "@effect/io/Metric/Key"
 import type * as MetricKeyType from "@effect/io/Metric/KeyType"
 import type * as MetricLabel from "@effect/io/Metric/Label"
-import { dual, pipe } from "@fp-ts/core/Function"
 
 /** @internal */
 const MetricKeySymbolKey = "@effect/io/Metric/Key"

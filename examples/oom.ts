@@ -1,7 +1,7 @@
 import type * as Context from "@effect/data/Context"
+import { pipe } from "@effect/data/Function"
 import * as Effect from "@effect/io/Effect"
 import * as Fiber from "@effect/io/Fiber"
-import { pipe } from "@fp-ts/core/Function"
 
 const program = pipe(
   Effect.contextWith((_: Context.Context<never>) => _),

@@ -94,7 +94,7 @@ export const make: <R, E, A>(
  * import * as Effect from "@effect/io/Effect"
  * import * as Pool from "@effect/io/Pool"
  * import * as Scope from "@effect/io/Scope"
- * import { pipe } from "@fp-ts/core/Function"
+ * import { pipe } from "@effect/data/Function"
  *
  * Effect.scoped(
  *   pipe(

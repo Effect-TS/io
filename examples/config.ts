@@ -1,8 +1,8 @@
 import * as Context from "@effect/data/Context"
+import { pipe } from "@effect/data/Function"
 import * as Config from "@effect/io/Config"
 import * as Effect from "@effect/io/Effect"
 import * as Layer from "@effect/io/Layer"
-import { pipe } from "@fp-ts/core/Function"
 
 export interface HttpServer {
   readonly host: string

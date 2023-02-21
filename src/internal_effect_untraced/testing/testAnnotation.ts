@@ -1,13 +1,13 @@
 import * as Chunk from "@effect/data/Chunk"
 import * as Context from "@effect/data/Context"
+import * as Either from "@effect/data/Either"
 import * as Equal from "@effect/data/Equal"
+import { pipe } from "@effect/data/Function"
 import * as Hash from "@effect/data/Hash"
 import * as HashSet from "@effect/data/HashSet"
 import type * as MutableRef from "@effect/data/MutableRef"
 import type * as SortedSet from "@effect/data/SortedSet"
 import type * as Fiber from "@effect/io/Fiber"
-import * as Either from "@fp-ts/core/Either"
-import { pipe } from "@fp-ts/core/Function"
 
 /** @internal */
 const TestAnnotationSymbolKey = "@effect/test/TestAnnotation"

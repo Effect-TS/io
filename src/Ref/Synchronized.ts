@@ -1,12 +1,12 @@
 /**
  * @since 1.0.0
  */
+import type * as Option from "@effect/data/Option"
 import type * as Effect from "@effect/io/Effect"
 import * as circular from "@effect/io/internal_effect_untraced/effect/circular"
 import * as ref from "@effect/io/internal_effect_untraced/ref"
 import * as internal from "@effect/io/internal_effect_untraced/synchronizedRef"
 import type * as Ref from "@effect/io/Ref"
-import type * as Option from "@fp-ts/core/Option"
 
 /**
  * @since 1.0.0

@@ -4,8 +4,10 @@
 import type * as Chunk from "@effect/data/Chunk"
 import type * as Context from "@effect/data/Context"
 import type * as Differ from "@effect/data/Differ"
+import type { LazyArg } from "@effect/data/Function"
 import type * as HashMap from "@effect/data/HashMap"
 import type * as HashSet from "@effect/data/HashSet"
+import type * as Option from "@effect/data/Option"
 import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
 import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
@@ -18,8 +20,6 @@ import type * as MetricLabel from "@effect/io/Metric/Label"
 import type * as Scheduler from "@effect/io/Scheduler"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
-import type { LazyArg } from "@fp-ts/core/Function"
-import type * as Option from "@fp-ts/core/Option"
 
 /**
  * @since 1.0.0
