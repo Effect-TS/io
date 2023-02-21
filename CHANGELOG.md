@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.2.0
+
+### Minor Changes
+
+- [#255](https://github.com/Effect-TS/io/pull/255) [`c1bfbb7`](https://github.com/Effect-TS/io/commit/c1bfbb75213a0a5e7e5a7f3792eb75da4c1b5708) Thanks [@IMax153](https://github.com/IMax153)! - remove @fp-ts/core following merge into @effect/data
+
 ## 0.1.13
 
 ### Patch Changes
