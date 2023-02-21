@@ -1,5 +1,7 @@
 import * as Context from "@effect/data/Context"
 import * as Duration from "@effect/data/Duration"
+import type { LazyArg } from "@effect/data/Function"
+import { dual, pipe } from "@effect/data/Function"
 import * as Cause from "@effect/io/Cause"
 import * as Clock from "@effect/io/Clock"
 import * as Debug from "@effect/io/Debug"
@@ -22,8 +24,6 @@ import type * as Schedule from "@effect/io/Schedule"
 import * as ScheduleDecision from "@effect/io/Schedule/Decision"
 import * as Intervals from "@effect/io/Schedule/Intervals"
 import * as Scope from "@effect/io/Scope"
-import type { LazyArg } from "@fp-ts/core/Function"
-import { dual, pipe } from "@fp-ts/core/Function"
 
 /** @internal */
 const LayerSymbolKey = "@effect/io/Layer"

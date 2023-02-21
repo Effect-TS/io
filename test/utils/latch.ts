@@ -1,7 +1,7 @@
+import { pipe } from "@effect/data/Function"
 import * as Deferred from "@effect/io/Deferred"
 import * as Effect from "@effect/io/Effect"
 import * as Ref from "@effect/io/Ref"
-import { pipe } from "@fp-ts/core/Function"
 
 export const withLatch = <R, E, A>(
   f: (release: Effect.Effect<never, never, void>) => Effect.Effect<R, E, A>

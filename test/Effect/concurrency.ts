@@ -1,4 +1,6 @@
 import * as Duration from "@effect/data/Duration"
+import * as Either from "@effect/data/Either"
+import { pipe } from "@effect/data/Function"
 import * as Deferred from "@effect/io/Deferred"
 import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
@@ -7,8 +9,6 @@ import * as FiberId from "@effect/io/Fiber/Id"
 import * as Ref from "@effect/io/Ref"
 import * as it from "@effect/io/test/utils/extend"
 import { withLatch } from "@effect/io/test/utils/latch"
-import * as Either from "@fp-ts/core/Either"
-import { pipe } from "@fp-ts/core/Function"
 import { assert, describe } from "vitest"
 
 export const ExampleError = new Error("Oh noes!")

@@ -3,11 +3,16 @@ import * as Context from "@effect/data/Context"
 import * as Differ from "@effect/data/Differ"
 import * as ContextPatch from "@effect/data/Differ/ContextPatch"
 import * as HashSetPatch from "@effect/data/Differ/HashSetPatch"
+import * as Either from "@effect/data/Either"
 import * as Equal from "@effect/data/Equal"
+import type { LazyArg } from "@effect/data/Function"
+import { dual, identity, pipe } from "@effect/data/Function"
 import * as Hash from "@effect/data/Hash"
 import * as HashMap from "@effect/data/HashMap"
 import * as HashSet from "@effect/data/HashSet"
 import * as MutableRef from "@effect/data/MutableRef"
+import * as Option from "@effect/data/Option"
+import type { Predicate } from "@effect/data/Predicate"
 import type * as Cause from "@effect/io/Cause"
 import * as Debug from "@effect/io/Debug"
 import type * as Deferred from "@effect/io/Deferred"
@@ -33,11 +38,6 @@ import type * as LogSpan from "@effect/io/Logger/Span"
 import type * as MetricLabel from "@effect/io/Metric/Label"
 import type * as Scheduler from "@effect/io/Scheduler"
 import type * as Scope from "@effect/io/Scope"
-import * as Either from "@fp-ts/core/Either"
-import type { LazyArg } from "@fp-ts/core/Function"
-import { dual, identity, pipe } from "@fp-ts/core/Function"
-import * as Option from "@fp-ts/core/Option"
-import type { Predicate } from "@fp-ts/core/Predicate"
 
 // -----------------------------------------------------------------------------
 // Effect
@@ -1550,7 +1550,7 @@ export const fiberRefLocally = Debug.dualWithTrace<
 >(3, (trace) =>
   (use, self, value) =>
     acquireUseRelease(
-      pipe(fiberRefGet(self), zipLeft(fiberRefSet(self, value))),
+      zipLeft(fiberRefGet(self), fiberRefSet(self, value)),
       () => use,
       (oldValue) => fiberRefSet(self, oldValue)
     ).traced(trace))

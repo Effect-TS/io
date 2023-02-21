@@ -36,10 +36,10 @@ const DEFAULT_STRIP_REGEXP = /[^A-Z0-9]+/gi
  */
 const noCase = (input: string, options: Options = {}): string => {
   const {
+    delimiter = " ",
     splitRegexp = DEFAULT_SPLIT_REGEXP,
     stripRegexp = DEFAULT_STRIP_REGEXP,
-    transform = lowerCase,
-    delimiter = " "
+    transform = lowerCase
   } = options
   const result = replace(replace(input, splitRegexp, "$1\0$2"), stripRegexp, "\0")
   let start = 0

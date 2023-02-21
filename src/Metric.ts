@@ -3,6 +3,7 @@
  */
 import type * as Chunk from "@effect/data/Chunk"
 import type * as Duration from "@effect/data/Duration"
+import type { LazyArg } from "@effect/data/Function"
 import type * as HashSet from "@effect/data/HashSet"
 import type * as Effect from "@effect/io/Effect"
 import * as internal from "@effect/io/internal_effect_untraced/metric"
@@ -13,7 +14,6 @@ import type * as MetricLabel from "@effect/io/Metric/Label"
 import type * as MetricPair from "@effect/io/Metric/Pair"
 import type * as MetricRegistry from "@effect/io/Metric/Registry"
 import type * as MetricState from "@effect/io/Metric/State"
-import type { LazyArg } from "@fp-ts/core/Function"
 
 /**
  * @since 1.0.0

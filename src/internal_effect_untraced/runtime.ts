@@ -1,4 +1,7 @@
 import * as Context from "@effect/data/Context"
+import type { Either } from "@effect/data/Either"
+import { identity, pipe } from "@effect/data/Function"
+import * as Option from "@effect/data/Option"
 import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
@@ -18,9 +21,6 @@ import * as _scheduler from "@effect/io/internal_effect_untraced/scheduler"
 import * as _supervisor from "@effect/io/internal_effect_untraced/supervisor"
 import type * as Runtime from "@effect/io/Runtime"
 import type * as Scheduler from "@effect/io/Scheduler"
-import type { Either } from "@fp-ts/core/Either"
-import { identity, pipe } from "@fp-ts/core/Function"
-import * as Option from "@fp-ts/core/Option"
 
 /** @internal */
 export const unsafeFork = <R>(runtime: Runtime.Runtime<R>) =>

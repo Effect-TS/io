@@ -1,7 +1,7 @@
+import { pipe } from "@effect/data/Function"
 import * as Cause from "@effect/io/Cause"
 import * as E from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
-import { pipe } from "@fp-ts/core/Function"
 
 const program = pipe(
   E.Do(),

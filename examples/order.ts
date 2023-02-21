@@ -1,9 +1,9 @@
 import * as Chunk from "@effect/data/Chunk"
 import * as Context from "@effect/data/Context"
+import { pipe } from "@effect/data/Function"
 import * as Effect from "@effect/io/Effect"
 import * as Layer from "@effect/io/Layer"
 import * as Ref from "@effect/io/Ref"
-import { pipe } from "@fp-ts/core/Function"
 
 export const acquire1 = "Acquiring Module 1"
 export const acquire2 = "Acquiring Module 2"

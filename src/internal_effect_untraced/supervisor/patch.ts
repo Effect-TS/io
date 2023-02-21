@@ -1,10 +1,10 @@
 import * as Chunk from "@effect/data/Chunk"
 import * as Differ from "@effect/data/Differ"
 import * as Equal from "@effect/data/Equal"
+import { pipe } from "@effect/data/Function"
 import * as HashSet from "@effect/data/HashSet"
 import * as supervisor from "@effect/io/internal_effect_untraced/supervisor"
 import type * as Supervisor from "@effect/io/Supervisor"
-import { pipe } from "@fp-ts/core/Function"
 
 /** @internal */
 export type SupervisorPatch = Empty | AddSupervisor | RemoveSupervisor | AndThen

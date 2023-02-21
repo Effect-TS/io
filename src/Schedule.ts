@@ -4,6 +4,10 @@
 import type * as Chunk from "@effect/data/Chunk"
 import type * as Context from "@effect/data/Context"
 import type * as Duration from "@effect/data/Duration"
+import type * as Either from "@effect/data/Either"
+import type { LazyArg } from "@effect/data/Function"
+import type * as Option from "@effect/data/Option"
+import type { Predicate } from "@effect/data/Predicate"
 import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
 import * as internal from "@effect/io/internal_effect_untraced/schedule"
@@ -11,10 +15,6 @@ import type * as Random from "@effect/io/Random"
 import type * as ScheduleDecision from "@effect/io/Schedule/Decision"
 import type * as Interval from "@effect/io/Schedule/Interval"
 import type * as Intervals from "@effect/io/Schedule/Intervals"
-import type * as Either from "@fp-ts/core/Either"
-import type { LazyArg } from "@fp-ts/core/Function"
-import type * as Option from "@fp-ts/core/Option"
-import type { Predicate } from "@fp-ts/core/Predicate"
 
 /**
  * @since 1.0.0

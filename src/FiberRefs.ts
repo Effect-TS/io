@@ -2,12 +2,12 @@
  * @since 1.0.0
  */
 import type * as HashSet from "@effect/data/HashSet"
+import type * as Option from "@effect/data/Option"
+import type * as Arr from "@effect/data/ReadonlyArray"
 import type * as Effect from "@effect/io/Effect"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRef from "@effect/io/FiberRef"
 import * as internal from "@effect/io/internal_effect_untraced/fiberRefs"
-import type * as Option from "@fp-ts/core/Option"
-import type * as Arr from "@fp-ts/core/ReadonlyArray"
 
 /**
  * @since 1.0.0

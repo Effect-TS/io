@@ -1,15 +1,15 @@
 import * as Chunk from "@effect/data/Chunk"
+import { pipe } from "@effect/data/Function"
 import * as MutableQueue from "@effect/data/MutableQueue"
 import * as MutableRef from "@effect/data/MutableRef"
+import type * as Option from "@effect/data/Option"
+import * as ReadonlyArray from "@effect/data/ReadonlyArray"
 import * as Debug from "@effect/io/Debug"
 import type * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as fiberRuntime from "@effect/io/internal_effect_untraced/fiberRuntime"
 import type * as Queue from "@effect/io/Queue"
-import { pipe } from "@fp-ts/core/Function"
-import type * as Option from "@fp-ts/core/Option"
-import * as ReadonlyArray from "@fp-ts/core/ReadonlyArray"
 
 /** @internal */
 const EnqueueSymbolKey = "@effect/io/Queue/Enqueue"

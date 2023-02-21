@@ -1,5 +1,6 @@
 import * as Chunk from "@effect/data/Chunk"
 import * as Duration from "@effect/data/Duration"
+import { pipe } from "@effect/data/Function"
 import * as HashMap from "@effect/data/HashMap"
 import * as HashSet from "@effect/data/HashSet"
 import * as Clock from "@effect/io/Clock"
@@ -12,7 +13,6 @@ import * as PollingMetric from "@effect/io/Metric/Polling"
 import * as MetricState from "@effect/io/Metric/State"
 import * as Schedule from "@effect/io/Schedule"
 import * as it from "@effect/io/test/utils/extend"
-import { pipe } from "@fp-ts/core/Function"
 
 const labels = Chunk.make(MetricLabel.make("x", "a"), MetricLabel.make("y", "b"))
 

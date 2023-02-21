@@ -1,9 +1,9 @@
 import { seconds } from "@effect/data/Duration"
+import { pipe } from "@effect/data/Function"
+import { range } from "@effect/data/ReadonlyArray"
 import * as Effect from "@effect/io/Effect"
 import * as Logger from "@effect/io/Logger"
 import * as Level from "@effect/io/Logger/Level"
-import { pipe } from "@fp-ts/core/Function"
-import { range } from "@fp-ts/core/ReadonlyArray"
 
 const program = pipe(
   range(0, 20),

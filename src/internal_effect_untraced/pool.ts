@@ -1,6 +1,7 @@
 import * as Context from "@effect/data/Context"
 import type * as Duration from "@effect/data/Duration"
 import * as Equal from "@effect/data/Equal"
+import { pipe } from "@effect/data/Function"
 import * as Hash from "@effect/data/Hash"
 import * as HashSet from "@effect/data/HashSet"
 import type * as Clock from "@effect/io/Clock"
@@ -12,7 +13,6 @@ import type * as Pool from "@effect/io/Pool"
 import * as Queue from "@effect/io/Queue"
 import * as Ref from "@effect/io/Ref"
 import * as Scope from "@effect/io/Scope"
-import { pipe } from "@fp-ts/core/Function"
 
 /** @internal */
 const PoolSymbolKey = "@effect/io/Pool"

@@ -2,7 +2,10 @@
  * @since 1.0.0
  */
 import type * as Chunk from "@effect/data/Chunk"
+import type * as Either from "@effect/data/Either"
 import type * as HashSet from "@effect/data/HashSet"
+import type * as Option from "@effect/data/Option"
+import type * as order from "@effect/data/typeclass/Order"
 import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
@@ -15,9 +18,6 @@ import * as circular from "@effect/io/internal_effect_untraced/effect/circular"
 import * as internal from "@effect/io/internal_effect_untraced/fiber"
 import * as fiberRuntime from "@effect/io/internal_effect_untraced/fiberRuntime"
 import type * as Scope from "@effect/io/Scope"
-import type * as Either from "@fp-ts/core/Either"
-import type * as Option from "@fp-ts/core/Option"
-import type * as order from "@fp-ts/core/typeclass/Order"
 
 /**
  * @since 1.0.0

@@ -3,13 +3,13 @@
  */
 import type * as Chunk from "@effect/data/Chunk"
 import type * as Context from "@effect/data/Context"
+import type { LazyArg } from "@effect/data/Function"
 import type * as HashSet from "@effect/data/HashSet"
 import type * as Config from "@effect/io/Config"
 import type * as ConfigError from "@effect/io/Config/Error"
 import type * as PathPatch from "@effect/io/Config/Provider/PathPatch"
 import type * as Effect from "@effect/io/Effect"
 import * as internal from "@effect/io/internal_effect_untraced/configProvider"
-import type { LazyArg } from "@fp-ts/core/Function"
 
 /**
  * @since 1.0.0

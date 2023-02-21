@@ -1,10 +1,10 @@
+import { pipe } from "@effect/data/Function"
 import * as MutableRef from "@effect/data/MutableRef"
+import * as Option from "@effect/data/Option"
 import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import type * as Ref from "@effect/io/Ref"
-import { pipe } from "@fp-ts/core/Function"
-import * as Option from "@fp-ts/core/Option"
 
 /** @internal */
 export const RefTypeId: Ref.RefTypeId = Symbol.for("@effect/io/Ref") as Ref.RefTypeId

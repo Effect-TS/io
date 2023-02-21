@@ -1,4 +1,5 @@
 import * as Chunk from "@effect/data/Chunk"
+import { pipe } from "@effect/data/Function"
 import * as MutableQueue from "@effect/data/MutableQueue"
 import * as MutableRef from "@effect/data/MutableRef"
 import * as Debug from "@effect/io/Debug"
@@ -11,7 +12,6 @@ import * as fiberRuntime from "@effect/io/internal_effect_untraced/fiberRuntime"
 import * as queue from "@effect/io/internal_effect_untraced/queue"
 import type * as Queue from "@effect/io/Queue"
 import type * as Scope from "@effect/io/Scope"
-import { pipe } from "@fp-ts/core/Function"
 
 /** @internal */
 export interface AtomicHub<A> {

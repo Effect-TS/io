@@ -1,4 +1,6 @@
 import * as Context from "@effect/data/Context"
+import type { LazyArg } from "@effect/data/Function"
+import { pipe } from "@effect/data/Function"
 import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal_effect_untraced/core"
@@ -9,8 +11,6 @@ import * as ref from "@effect/io/internal_effect_untraced/ref"
 import * as synchronized from "@effect/io/internal_effect_untraced/synchronizedRef"
 import type * as Scope from "@effect/io/Scope"
 import type * as ScopedRef from "@effect/io/ScopedRef"
-import type { LazyArg } from "@fp-ts/core/Function"
-import { pipe } from "@fp-ts/core/Function"
 
 /** @internal */
 const ScopedRefSymbolKey = "@effect/io/ScopedRef"

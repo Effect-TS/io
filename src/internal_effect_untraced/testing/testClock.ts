@@ -2,8 +2,12 @@ import * as Chunk from "@effect/data/Chunk"
 import * as Context from "@effect/data/Context"
 import * as Duration from "@effect/data/Duration"
 import * as Equal from "@effect/data/Equal"
+import { constVoid, identity, pipe } from "@effect/data/Function"
 import * as HashMap from "@effect/data/HashMap"
+import * as number from "@effect/data/Number"
+import * as Option from "@effect/data/Option"
 import type * as SortedSet from "@effect/data/SortedSet"
+import * as Order from "@effect/data/typeclass/Order"
 import type * as Clock from "@effect/io/Clock"
 import * as Debug from "@effect/io/Debug"
 import type { Deferred } from "@effect/io/Deferred"
@@ -28,10 +32,6 @@ import * as WarningData from "@effect/io/internal_effect_untraced/testing/testCl
 import type * as Layer from "@effect/io/Layer"
 import type * as Ref from "@effect/io/Ref"
 import type * as Synchronized from "@effect/io/Ref/Synchronized"
-import { constVoid, identity, pipe } from "@fp-ts/core/Function"
-import * as number from "@fp-ts/core/Number"
-import * as Option from "@fp-ts/core/Option"
-import * as Order from "@fp-ts/core/typeclass/Order"
 
 /**
  * A `TestClock` makes it easy to deterministically and efficiently test effects
@@ -50,7 +50,7 @@ import * as Order from "@fp-ts/core/typeclass/Order"
  * import * as Effect from "@effect/io/Effect"
  * import * as Fiber from "@effect/io/Fiber"
  * import * as TestClock from "@effect/test/TestClock"
- * import * as Option from "@fp-ts/core/Option"
+ * import * as Option from "@effect/data/Option"
  *
  * Effect.gen(function*() {
  *   const fiber = yield* pipe(

@@ -1,12 +1,12 @@
 /**
  * @since 1.0.0
  */
+import { pipe } from "@effect/data/Function"
+import * as number from "@effect/data/Number"
+import * as order from "@effect/data/typeclass/Order"
 import * as debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal_effect_untraced/core"
-import { pipe } from "@fp-ts/core/Function"
-import * as number from "@fp-ts/core/Number"
-import * as order from "@fp-ts/core/typeclass/Order"
 
 /**
  * A `LogLevel` represents the log level associated with an individual logging

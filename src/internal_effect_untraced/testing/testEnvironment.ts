@@ -1,3 +1,4 @@
+import { pipe } from "@effect/data/Function"
 import * as Debug from "@effect/io/Debug"
 import type * as DefaultServices from "@effect/io/DefaultServices"
 import * as defaultServices from "@effect/io/internal_effect_untraced/defaultServices"
@@ -5,7 +6,6 @@ import * as layer from "@effect/io/internal_effect_untraced/layer"
 import * as TestClock from "@effect/io/internal_effect_untraced/testing/testClock"
 import * as TestServices from "@effect/io/internal_effect_untraced/testing/testServices"
 import type * as Layer from "@effect/io/Layer"
-import { pipe } from "@fp-ts/core/Function"
 
 /** @internal */
 export const live: Layer.Layer<DefaultServices.DefaultServices, never, TestServices.TestServices> = pipe(

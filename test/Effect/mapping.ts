@@ -1,10 +1,10 @@
+import * as Either from "@effect/data/Either"
+import { identity, pipe } from "@effect/data/Function"
 import * as Cause from "@effect/io/Cause"
 import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import * as Ref from "@effect/io/Ref"
 import * as it from "@effect/io/test/utils/extend"
-import * as Either from "@fp-ts/core/Either"
-import { identity, pipe } from "@fp-ts/core/Function"
 import { assert, describe } from "vitest"
 
 const ExampleError = new Error("Oh noes!")

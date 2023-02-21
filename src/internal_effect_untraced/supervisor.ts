@@ -1,6 +1,8 @@
 import * as Chunk from "@effect/data/Chunk"
 import type * as Context from "@effect/data/Context"
+import { pipe } from "@effect/data/Function"
 import * as MutableRef from "@effect/data/MutableRef"
+import type * as Option from "@effect/data/Option"
 import * as SortedSet from "@effect/data/SortedSet"
 import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
@@ -8,8 +10,6 @@ import type * as Exit from "@effect/io/Exit"
 import type * as Fiber from "@effect/io/Fiber"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import type * as Supervisor from "@effect/io/Supervisor"
-import { pipe } from "@fp-ts/core/Function"
-import type * as Option from "@fp-ts/core/Option"
 
 /** @internal */
 const SupervisorSymbolKey = "@effect/io/Supervisor"

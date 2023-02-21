@@ -1,9 +1,9 @@
 import * as Equal from "@effect/data/Equal"
+import { pipe } from "@effect/data/Function"
 import * as Hash from "@effect/data/Hash"
+import * as Option from "@effect/data/Option"
 import * as Cause from "@effect/io/Cause"
 import { causes, equalCauses, errorCauseFunctions, errors } from "@effect/io/test/utils/cause"
-import { pipe } from "@fp-ts/core/Function"
-import * as Option from "@fp-ts/core/Option"
 import * as fc from "fast-check"
 import { assert, describe } from "vitest"
 

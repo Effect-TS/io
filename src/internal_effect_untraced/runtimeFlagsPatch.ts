@@ -1,6 +1,6 @@
+import { dual } from "@effect/data/Function"
 import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import type * as RuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
-import { dual } from "@fp-ts/core/Function"
 
 /** @internal */
 const BIT_MASK = 0xff

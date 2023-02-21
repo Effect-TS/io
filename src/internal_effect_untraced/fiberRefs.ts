@@ -1,14 +1,14 @@
 import * as Equal from "@effect/data/Equal"
+import { dual, pipe } from "@effect/data/Function"
 import * as HashSet from "@effect/data/HashSet"
+import * as Option from "@effect/data/Option"
+import * as Arr from "@effect/data/ReadonlyArray"
 import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRef from "@effect/io/FiberRef"
 import type * as FiberRefs from "@effect/io/FiberRefs"
 import * as core from "@effect/io/internal_effect_untraced/core"
-import { dual, pipe } from "@fp-ts/core/Function"
-import * as Option from "@fp-ts/core/Option"
-import * as Arr from "@fp-ts/core/ReadonlyArray"
 
 /** @internal */
 export function unsafeMake(
@@ -45,7 +45,7 @@ const findAncestor = (
   let childModified = _childModified
   let ret: readonly [unknown, boolean] | undefined = undefined
   while (ret === undefined) {
-    if (Arr.isNonEmpty(parentStack) && Arr.isNonEmpty(childStack)) {
+    if (Arr.isNonEmptyReadonlyArray(parentStack) && Arr.isNonEmptyReadonlyArray(childStack)) {
       const parentFiberId = Arr.headNonEmpty(parentStack)[0]
       const parentAncestors = Arr.tailNonEmpty(parentStack)
       const childFiberId = Arr.headNonEmpty(childStack)[0]
@@ -199,7 +199,7 @@ export const updatedAs = dual<
 
   let newStack: ReadonlyArray<readonly [FiberId.Runtime, A]> | undefined
 
-  if (Arr.isEmpty(oldStack)) {
+  if (Arr.isEmptyReadonlyArray(oldStack)) {
     newStack = Arr.of([fiberId, value] as const)
   } else {
     const [currentId, currentValue] = Arr.headNonEmpty(

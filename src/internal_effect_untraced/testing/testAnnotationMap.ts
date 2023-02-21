@@ -1,5 +1,5 @@
+import { dual, pipe } from "@effect/data/Function"
 import type * as TestAnnotation from "@effect/io/internal_effect_untraced/testing/testAnnotation"
-import { dual, pipe } from "@fp-ts/core/Function"
 
 /** @internal */
 export const TestAnnotationMapTypeId = Symbol.for("@effect/test/TestAnnotationMap")

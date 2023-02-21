@@ -1,9 +1,9 @@
+import { pipe } from "@effect/data/Function"
 import * as Deferred from "@effect/io/Deferred"
 import * as Effect from "@effect/io/Effect"
 import * as Ref from "@effect/io/Ref"
 import type * as Scope from "@effect/io/Scope"
 import * as it from "@effect/io/test/utils/extend"
-import { pipe } from "@fp-ts/core/Function"
 import { assert, describe } from "vitest"
 
 type Action = Acquire | Use | Release
