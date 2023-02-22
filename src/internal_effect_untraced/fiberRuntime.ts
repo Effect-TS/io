@@ -45,7 +45,6 @@ import type { Logger } from "@effect/io/Logger"
 import * as LogLevel from "@effect/io/Logger/Level"
 import type * as MetricLabel from "@effect/io/Metric/Label"
 import * as Ref from "@effect/io/Ref"
-import type { Runtime } from "@effect/io/Runtime"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
 
@@ -188,8 +187,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   constructor(
     fiberId: FiberId.Runtime,
     fiberRefs0: FiberRefs.FiberRefs,
-    runtimeFlags0: RuntimeFlags.RuntimeFlags,
-    readonly runtime: Runtime<never>
+    runtimeFlags0: RuntimeFlags.RuntimeFlags
   ) {
     this._runtimeFlags = runtimeFlags0
     this._fiberId = fiberId
@@ -1642,7 +1640,7 @@ export const unsafeMakeChildFiber = <R, E, A, E2, B>(
   const childId = FiberId.unsafeMake()
   const parentFiberRefs = parentFiber.unsafeGetFiberRefs()
   const childFiberRefs = fiberRefs.forkAs(parentFiberRefs, childId)
-  const childFiber = new FiberRuntime<E, A>(childId, childFiberRefs, parentRuntimeFlags, parentFiber.runtime)
+  const childFiber = new FiberRuntime<E, A>(childId, childFiberRefs, parentRuntimeFlags)
   const childContext = fiberRefs.getOrDefault(
     childFiberRefs,
     core.currentContext as unknown as FiberRef.FiberRef<Context.Context<R>>

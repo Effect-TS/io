@@ -1,24 +1,18 @@
 import * as Chunk from "@effect/data/Chunk"
 import type { LazyArg } from "@effect/data/Function"
-import { constVoid, dual, identity, pipe } from "@effect/data/Function"
+import { constVoid, dual, pipe } from "@effect/data/Function"
 import * as HashMap from "@effect/data/HashMap"
 import * as Option from "@effect/data/Option"
 import type * as CauseExt from "@effect/io/Cause"
 import * as Debug from "@effect/io/Debug"
-import type * as Effect from "@effect/io/Effect"
-import * as Exit from "@effect/io/Exit"
-import type * as Fiber from "@effect/io/Fiber"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRefs from "@effect/io/FiberRefs"
 import * as Cause from "@effect/io/internal_effect_untraced/cause"
 import * as Pretty from "@effect/io/internal_effect_untraced/cause-pretty"
 import * as _fiberId from "@effect/io/internal_effect_untraced/fiberId"
-import * as OpCodes from "@effect/io/internal_effect_untraced/opCodes/effect"
-import * as _scheduler from "@effect/io/internal_effect_untraced/scheduler"
 import type * as Logger from "@effect/io/Logger"
 import type * as LogLevel from "@effect/io/Logger/Level"
 import * as LogSpan from "@effect/io/Logger/Span"
-import type * as Runtime from "@effect/io/Runtime"
 
 /** @internal */
 const LoggerSymbolKey = "@effect/io/Logger"
@@ -320,44 +314,3 @@ export const zipRight = dual<
     that: Logger.Logger<Message2, Output2>
   ) => Logger.Logger<Message & Message2, Output2>
 >(2, (self, that) => map(zip(self, that), (tuple) => tuple[1]))
-
-// circular with runtime
-
-/** @internal */
-export const unsafeRunSyncExit = <R>(runtime: Runtime.Runtime<R>) =>
-  <E, A>(
-    effect: Effect.Effect<R, E, A>
-  ): Exit.Exit<E, A> => {
-    const scheduler = new _scheduler.SyncScheduler()
-
-    const fiberRuntime = runtime.unsafeFork(effect, scheduler)
-
-    scheduler.flush()
-
-    const result = fiberRuntime.unsafePoll()
-
-    if (result) {
-      return result
-    }
-
-    return Exit.die(new AsyncFiber(fiberRuntime))
-  }
-
-/** @internal */
-export class AsyncFiber<E, A> implements Runtime.AsyncFiber<E, A> {
-  readonly _tag = "AsyncFiber"
-  constructor(readonly fiber: Fiber.RuntimeFiber<E, A>) {
-  }
-}
-
-/** @internal */
-export const unsafeRunSync = <R>(runtime: Runtime.Runtime<R>) =>
-  <E, A>(
-    effect: Effect.Effect<R, E, A>
-  ): A => {
-    const exit = unsafeRunSyncExit(runtime)(effect)
-    if (exit._tag === OpCodes.OP_FAILURE) {
-      throw pipe(exit.cause, Cause.squashWith(identity))
-    }
-    return exit.value
-  }
