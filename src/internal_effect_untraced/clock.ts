@@ -11,12 +11,10 @@ import * as core from "@effect/io/internal_effect_untraced/core"
 const ClockSymbolKey = "@effect/io/Clock"
 
 /** @internal */
-export const ClockTypeId: Clock.ClockTypeId = Symbol.for(
-  ClockSymbolKey
-) as Clock.ClockTypeId
+export const ClockTypeId: Clock.ClockTypeId = Symbol.for(ClockSymbolKey) as Clock.ClockTypeId
 
 /** @internal */
-export const clockTag: Context.Tag<Clock.Clock> = Context.Tag()
+export const clockTag: Context.Tag<Clock.Clock> = Context.Tag(ClockTypeId)
 
 /** @internal */
 export const MAX_TIMER_MILLIS = 2 ** 31 - 1

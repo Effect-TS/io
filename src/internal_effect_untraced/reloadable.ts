@@ -107,15 +107,15 @@ export const manual = <Out extends Context.Tag<any>, In, E>(
   )
 
 /** @internal */
-const tagMap = new WeakMap<Context.Tag<any>, Context.Tag<any>>([])
+const tagMap = new Map<unknown, Context.Tag<any>>([])
 
 /** @internal */
 export const reloadableTag = <A>(tag: Context.Tag<A>): Context.Tag<Reloadable.Reloadable<A>> => {
-  if (tagMap.has(tag)) {
-    return tagMap.get(tag)!
+  if (tagMap.has(tag.key)) {
+    return tagMap.get(tag.key)!
   }
   const newTag = Context.Tag<Reloadable.Reloadable<A>>()
-  tagMap.set(tag, newTag)
+  tagMap.set(tag.key, newTag)
   return newTag
 }
 
