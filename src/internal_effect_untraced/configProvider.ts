@@ -20,15 +20,15 @@ import * as OpCodes from "@effect/io/internal_effect_untraced/opCodes/config"
 import * as StringUtils from "@effect/io/internal_effect_untraced/string-utils"
 
 /** @internal */
-export const configProviderTag: Context.Tag<ConfigProvider.ConfigProvider> = Context.Tag()
-
-/** @internal */
 const ConfigProviderSymbolKey = "@effect/io/Config/Provider"
 
 /** @internal */
 export const ConfigProviderTypeId: ConfigProvider.ConfigProviderTypeId = Symbol.for(
   ConfigProviderSymbolKey
 ) as ConfigProvider.ConfigProviderTypeId
+
+/** @internal */
+export const configProviderTag: Context.Tag<ConfigProvider.ConfigProvider> = Context.Tag(ConfigProviderTypeId)
 
 /** @internal */
 const FlatConfigProviderSymbolKey = "@effect/io/Config/Provider/Flat"
