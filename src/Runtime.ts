@@ -9,7 +9,6 @@ import type * as Fiber from "@effect/io/Fiber"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import type * as FiberRefs from "@effect/io/FiberRefs"
-import { unsafeRunSync, unsafeRunSyncExit } from "@effect/io/internal_effect_untraced/logger"
 import * as internal from "@effect/io/internal_effect_untraced/runtime"
 import type { Scheduler } from "@effect/io/Scheduler"
 
@@ -47,11 +46,6 @@ export interface Runtime<R> {
    * The fiber references used as initial for forks
    */
   readonly fiberRefs: FiberRefs.FiberRefs
-  /**
-   * Executes the effect using the provided Scheduler or using the global
-   * Scheduler if not provided
-   */
-  unsafeFork<E, A>(effect: Effect.Effect<R, E, A>, scheduler?: Scheduler): Fiber.RuntimeFiber<E, A>
 }
 
 /**
@@ -78,7 +72,7 @@ export const runFork: <R>(
  * @category execution
  */
 export const runSyncExit: <R>(runtime: Runtime<R>) => <E, A>(effect: Effect.Effect<R, E, A>) => Exit.Exit<E, A> =
-  unsafeRunSyncExit
+  internal.unsafeRunSyncExit
 
 /**
  * Executes the effect synchronously throwing in case of errors or async boundaries.
@@ -89,7 +83,7 @@ export const runSyncExit: <R>(runtime: Runtime<R>) => <E, A>(effect: Effect.Effe
  * @since 1.0.0
  * @category execution
  */
-export const runSync: <R>(runtime: Runtime<R>) => <E, A>(effect: Effect.Effect<R, E, A>) => A = unsafeRunSync
+export const runSync: <R>(runtime: Runtime<R>) => <E, A>(effect: Effect.Effect<R, E, A>) => A = internal.unsafeRunSync
 
 /**
  * Executes the effect asynchronously, eventually passing the exit value to

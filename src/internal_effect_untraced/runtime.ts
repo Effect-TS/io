@@ -14,7 +14,6 @@ import * as internalCause from "@effect/io/internal_effect_untraced/cause"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as FiberRuntime from "@effect/io/internal_effect_untraced/fiberRuntime"
 import * as fiberScope from "@effect/io/internal_effect_untraced/fiberScope"
-import { unsafeRunSync, unsafeRunSyncExit } from "@effect/io/internal_effect_untraced/logger"
 import * as OpCodes from "@effect/io/internal_effect_untraced/opCodes/effect"
 import * as runtimeFlags from "@effect/io/internal_effect_untraced/runtimeFlags"
 import * as _scheduler from "@effect/io/internal_effect_untraced/scheduler"
@@ -24,8 +23,45 @@ import type * as Scheduler from "@effect/io/Scheduler"
 
 /** @internal */
 export const unsafeFork = <R>(runtime: Runtime.Runtime<R>) =>
-  <E, A>(effect: Effect.Effect<R, E, A>, scheduler?: Scheduler.Scheduler | undefined): Fiber.RuntimeFiber<E, A> =>
-    runtime.unsafeFork(effect, scheduler)
+  <E, A>(effect: Effect.Effect<R, E, A>, scheduler?: Scheduler.Scheduler | undefined): Fiber.RuntimeFiber<E, A> => {
+    const fiberId = FiberId.unsafeMake()
+
+    let fiberRefs = FiberRefs.updatedAs(
+      runtime.fiberRefs,
+      fiberId,
+      core.currentContext,
+      runtime.context as Context.Context<never>
+    )
+
+    if (scheduler) {
+      fiberRefs = FiberRefs.updatedAs(
+        fiberRefs,
+        fiberId,
+        core.currentScheduler,
+        scheduler
+      )
+    }
+
+    const fiberRuntime: FiberRuntime.FiberRuntime<E, A> = new FiberRuntime.FiberRuntime<E, A>(
+      fiberId,
+      FiberRefs.forkAs(fiberRefs, fiberId),
+      runtime.runtimeFlags
+    )
+
+    const supervisor = fiberRuntime.getSupervisor()
+
+    if (supervisor !== _supervisor.none) {
+      supervisor.onStart(runtime.context, effect, Option.none(), fiberRuntime)
+
+      fiberRuntime.unsafeAddObserver((exit) => supervisor.onEnd(exit, fiberRuntime))
+    }
+
+    fiberScope.globalScope.add(runtime.runtimeFlags, fiberRuntime)
+
+    fiberRuntime.start(effect)
+
+    return fiberRuntime
+  }
 
 /** @internal */
 export const unsafeRunCallback = <R>(runtime: Runtime.Runtime<R>) =>
@@ -50,6 +86,45 @@ export const unsafeRunCallback = <R>(runtime: Runtime.Runtime<R>) =>
           } :
           void 0
       )
+  }
+
+/** @internal */
+export const unsafeRunSyncExit = <R>(runtime: Runtime.Runtime<R>) =>
+  <E, A>(
+    effect: Effect.Effect<R, E, A>
+  ): Exit.Exit<E, A> => {
+    const scheduler = new _scheduler.SyncScheduler()
+
+    const fiberRuntime = unsafeFork(runtime)(effect, scheduler)
+
+    scheduler.flush()
+
+    const result = fiberRuntime.unsafePoll()
+
+    if (result) {
+      return result
+    }
+
+    return Exit.die(new AsyncFiber(fiberRuntime))
+  }
+
+/** @internal */
+export class AsyncFiber<E, A> implements Runtime.AsyncFiber<E, A> {
+  readonly _tag = "AsyncFiber"
+  constructor(readonly fiber: Fiber.RuntimeFiber<E, A>) {
+  }
+}
+
+/** @internal */
+export const unsafeRunSync = <R>(runtime: Runtime.Runtime<R>) =>
+  <E, A>(
+    effect: Effect.Effect<R, E, A>
+  ): A => {
+    const exit = unsafeRunSyncExit(runtime)(effect)
+    if (exit._tag === OpCodes.OP_FAILURE) {
+      throw pipe(exit.cause, internalCause.squashWith(identity))
+    }
+    return exit.value
   }
 
 /** @internal */
@@ -101,50 +176,6 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
     readonly runtimeFlags: RuntimeFlags.RuntimeFlags,
     readonly fiberRefs: FiberRefs.FiberRefs
   ) {}
-
-  unsafeFork<E, A>(
-    effect: Effect.Effect<R, E, A>,
-    scheduler?: Scheduler.Scheduler | undefined
-  ): Fiber.RuntimeFiber<E, A> {
-    const fiberId = FiberId.unsafeMake()
-
-    let fiberRefs = FiberRefs.updatedAs(
-      this.fiberRefs,
-      fiberId,
-      core.currentContext,
-      this.context as Context.Context<never>
-    )
-
-    if (scheduler) {
-      fiberRefs = FiberRefs.updatedAs(
-        fiberRefs,
-        fiberId,
-        core.currentScheduler,
-        scheduler
-      )
-    }
-
-    const fiberRuntime: FiberRuntime.FiberRuntime<E, A> = new FiberRuntime.FiberRuntime<E, A>(
-      fiberId,
-      FiberRefs.forkAs(fiberRefs, fiberId),
-      this.runtimeFlags,
-      this
-    )
-
-    const supervisor = fiberRuntime.getSupervisor()
-
-    if (supervisor !== _supervisor.none) {
-      supervisor.onStart(this.context, effect, Option.none(), fiberRuntime)
-
-      fiberRuntime.unsafeAddObserver((exit) => supervisor.onEnd(exit, fiberRuntime))
-    }
-
-    fiberScope.globalScope.add(this.runtimeFlags, fiberRuntime)
-
-    fiberRuntime.start(effect)
-
-    return fiberRuntime
-  }
 }
 
 /** @internal */

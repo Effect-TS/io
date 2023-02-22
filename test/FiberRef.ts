@@ -354,7 +354,7 @@ describe.concurrent("FiberRef", () => {
       const deferred = yield* $(Deferred.make<never, boolean>())
       const runtime: Runtime.Runtime<never> = yield* $(FiberRef.locally(Effect.runtime<never>(), fiberRef, false))
       const fiber = yield* $(
-        Effect.sync(() => runtime.unsafeFork(Effect.intoDeferred(FiberRef.get(fiberRef), deferred)))
+        Effect.sync(() => Runtime.runFork(runtime)(Effect.intoDeferred(FiberRef.get(fiberRef), deferred)))
       )
       yield* $(Fiber.join(fiber))
       const result = yield* $(Deferred.await(deferred))
