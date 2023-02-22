@@ -1,5 +1,15 @@
 # @effect/io
 
+## 0.3.0
+
+### Minor Changes
+
+- [#257](https://github.com/Effect-TS/io/pull/257) [`27a2271`](https://github.com/Effect-TS/io/commit/27a2271ddaedacb5cfced7e96db57702726e2130) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Update to effect/data@0.2.0
+
+### Patch Changes
+
+- [#259](https://github.com/Effect-TS/io/pull/259) [`4f0abc1`](https://github.com/Effect-TS/io/commit/4f0abc14a09a6b0f931b507c8a3467ef78191041) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Unbundle unsafeFork from runtime
+
 ## 0.2.0
 
 ### Minor Changes
