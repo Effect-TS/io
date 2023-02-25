@@ -36,8 +36,8 @@ Added in v1.0.0
 
 ```ts
 export declare const andThen: {
-  (self: PathPatch, that: PathPatch): PathPatch
   (that: PathPatch): (self: PathPatch) => PathPatch
+  (self: PathPatch, that: PathPatch): PathPatch
 }
 ```
 
@@ -59,8 +59,8 @@ Added in v1.0.0
 
 ```ts
 export declare const mapName: {
-  (self: PathPatch, f: (string: string) => string): PathPatch
   (f: (string: string) => string): (self: PathPatch) => PathPatch
+  (self: PathPatch, f: (string: string) => string): PathPatch
 }
 ```
 
@@ -72,8 +72,8 @@ Added in v1.0.0
 
 ```ts
 export declare const nested: {
-  (self: PathPatch, name: string): PathPatch
   (name: string): (self: PathPatch) => PathPatch
+  (self: PathPatch, name: string): PathPatch
 }
 ```
 
@@ -85,8 +85,8 @@ Added in v1.0.0
 
 ```ts
 export declare const unnested: {
-  (self: PathPatch, name: string): PathPatch
   (name: string): (self: PathPatch) => PathPatch
+  (self: PathPatch, name: string): PathPatch
 }
 ```
 

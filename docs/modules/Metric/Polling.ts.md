@@ -1,6 +1,6 @@
 ---
 title: Metric/Polling.ts
-nav_order: 35
+nav_order: 36
 parent: Modules
 ---
 
@@ -70,13 +70,13 @@ specified retry policy.
 
 ```ts
 export declare const retry: {
+  <R2, E, _>(policy: Schedule.Schedule<R2, E, _>): <Type, In, R, Out>(
+    self: PollingMetric<Type, In, R, E, Out>
+  ) => PollingMetric<Type, In, R2 | R, E, Out>
   <Type, In, R, Out, R2, E, _>(
     self: PollingMetric<Type, In, R, E, Out>,
     policy: Schedule.Schedule<R2, E, _>
   ): PollingMetric<Type, In, R | R2, E, Out>
-  <R2, E, _>(policy: Schedule.Schedule<R2, E, _>): <Type, In, R, Out>(
-    self: PollingMetric<Type, In, R, E, Out>
-  ) => PollingMetric<Type, In, R2 | R, E, Out>
 }
 ```
 
@@ -118,13 +118,13 @@ fiber, using the specified schedule.
 
 ```ts
 export declare const launch: {
+  <R2, A2>(schedule: Schedule.Schedule<R2, unknown, A2>): <Type, In, R, E, Out>(
+    self: PollingMetric<Type, In, R, E, Out>
+  ) => Effect.Effect<Scope.Scope | R2 | R, never, Fiber.Fiber<E, A2>>
   <Type, In, R, E, Out, R2, A2>(
     self: PollingMetric<Type, In, R, E, Out>,
     schedule: Schedule.Schedule<R2, unknown, A2>
   ): Effect.Effect<Scope.Scope | R | R2, never, Fiber.Fiber<E, A2>>
-  <R2, A2>(schedule: Schedule.Schedule<R2, unknown, A2>): <Type, In, R, E, Out>(
-    self: PollingMetric<Type, In, R, E, Out>
-  ) => Effect.Effect<Scope.Scope | R2 | R, never, Fiber.Fiber<E, A2>>
 }
 ```
 
@@ -164,13 +164,13 @@ Zips this polling metric with the specified polling metric.
 
 ```ts
 export declare const zip: {
+  <Type2, In2, R2, E2, Out2>(that: PollingMetric<Type2, In2, R2, E2, Out2>): <Type, In, R, E, Out>(
+    self: PollingMetric<Type, In, R, E, Out>
+  ) => PollingMetric<readonly [Type, Type2], readonly [In, In2], R2 | R, E2 | E, readonly [Out, Out2]>
   <Type, In, R, E, Out, Type2, In2, R2, E2, Out2>(
     self: PollingMetric<Type, In, R, E, Out>,
     that: PollingMetric<Type2, In2, R2, E2, Out2>
   ): PollingMetric<readonly [Type, Type2], readonly [In, In2], R | R2, E | E2, readonly [Out, Out2]>
-  <Type2, In2, R2, E2, Out2>(that: PollingMetric<Type2, In2, R2, E2, Out2>): <Type, In, R, E, Out>(
-    self: PollingMetric<Type, In, R, E, Out>
-  ) => PollingMetric<readonly [Type, Type2], readonly [In, In2], R2 | R, E2 | E, readonly [Out, Out2]>
 }
 ```
 

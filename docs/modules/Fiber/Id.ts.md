@@ -53,7 +53,7 @@ Combine two `FiberId`s.
 **Signature**
 
 ```ts
-export declare const combine: { (self: FiberId, that: FiberId): FiberId; (that: FiberId): (self: FiberId) => FiberId }
+export declare const combine: { (that: FiberId): (self: FiberId) => FiberId; (self: FiberId, that: FiberId): FiberId }
 ```
 
 Added in v1.0.0
@@ -227,7 +227,7 @@ Returns this `FiberId` if it is not `None`, otherwise returns that `FiberId`.
 **Signature**
 
 ```ts
-export declare const getOrElse: { (self: FiberId, that: FiberId): FiberId; (that: FiberId): (self: FiberId) => FiberId }
+export declare const getOrElse: { (that: FiberId): (self: FiberId) => FiberId; (self: FiberId, that: FiberId): FiberId }
 ```
 
 Added in v1.0.0

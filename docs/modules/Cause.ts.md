@@ -251,8 +251,8 @@ to map the error a defect, and the resulting value will be returned.
 
 ```ts
 export declare const squashWith: {
-  <E>(self: Cause<E>, f: (error: E) => unknown): unknown
   <E>(f: (error: E) => unknown): (self: Cause<E>) => unknown
+  <E>(self: Cause<E>, f: (error: E) => unknown): unknown
 }
 ```
 
@@ -269,8 +269,8 @@ Returns `true` if the `self` cause contains or is equal to `that` cause,
 
 ```ts
 export declare const contains: {
-  <E, E2>(self: Cause<E>, that: Cause<E2>): boolean
   <E2>(that: Cause<E2>): <E>(self: Cause<E>) => boolean
+  <E, E2>(self: Cause<E>, that: Cause<E2>): boolean
 }
 ```
 
@@ -285,8 +285,8 @@ to extract information from it.
 
 ```ts
 export declare const find: {
-  <E, Z>(self: Cause<E>, pf: (cause: Cause<E>) => Option.Option<Z>): Option.Option<Z>
   <E, Z>(pf: (cause: Cause<E>) => Option.Option<Z>): (self: Cause<E>) => Option.Option<Z>
+  <E, Z>(self: Cause<E>, pf: (cause: Cause<E>) => Option.Option<Z>): Option.Option<Z>
 }
 ```
 
@@ -354,8 +354,8 @@ Filters causes which match the provided predicate out of the specified cause.
 
 ```ts
 export declare const filter: {
-  <E>(self: Cause<E>, predicate: Predicate<Cause<E>>): Cause<E>
   <E>(predicate: Predicate<Cause<E>>): (self: Cause<E>) => Cause<E>
+  <E>(self: Cause<E>, predicate: Predicate<Cause<E>>): Cause<E>
 }
 ```
 
@@ -384,6 +384,15 @@ Folds the specified cause into a value of type `Z`.
 ```ts
 export declare const match: {
   <Z, E>(
+    emptyCase: Z,
+    failCase: (error: E) => Z,
+    dieCase: (defect: unknown) => Z,
+    interruptCase: (fiberId: FiberId.FiberId) => Z,
+    annotatedCase: (value: Z, annotation: unknown) => Z,
+    sequentialCase: (left: Z, right: Z) => Z,
+    parallelCase: (left: Z, right: Z) => Z
+  ): (self: Cause<E>) => Z
+  <Z, E>(
     self: Cause<E>,
     emptyCase: Z,
     failCase: (error: E) => Z,
@@ -393,15 +402,6 @@ export declare const match: {
     sequentialCase: (left: Z, right: Z) => Z,
     parallelCase: (left: Z, right: Z) => Z
   ): Z
-  <Z, E>(
-    emptyCase: Z,
-    failCase: (error: E) => Z,
-    dieCase: (defect: unknown) => Z,
-    interruptCase: (fiberId: FiberId.FiberId) => Z,
-    annotatedCase: (value: Z, annotation: unknown) => Z,
-    sequentialCase: (left: Z, right: Z) => Z,
-    parallelCase: (left: Z, right: Z) => Z
-  ): (self: Cause<E>) => Z
 }
 ```
 
@@ -416,8 +416,8 @@ provided `zero` value.
 
 ```ts
 export declare const reduce: {
-  <Z, E>(self: Cause<E>, zero: Z, pf: (accumulator: Z, cause: Cause<E>) => Option.Option<Z>): Z
   <Z, E>(zero: Z, pf: (accumulator: Z, cause: Cause<E>) => Option.Option<Z>): (self: Cause<E>) => Z
+  <Z, E>(self: Cause<E>, zero: Z, pf: (accumulator: Z, cause: Cause<E>) => Option.Option<Z>): Z
 }
 ```
 
@@ -432,8 +432,8 @@ Also allows for accessing the provided context during reduction.
 
 ```ts
 export declare const reduceWithContext: {
-  <C, E, Z>(self: Cause<E>, context: C, reducer: CauseReducer<C, E, Z>): Z
   <C, E, Z>(context: C, reducer: CauseReducer<C, E, Z>): (self: Cause<E>) => Z
+  <C, E, Z>(self: Cause<E>, context: C, reducer: CauseReducer<C, E, Z>): Z
 }
 ```
 
@@ -669,8 +669,8 @@ remaining causes.
 
 ```ts
 export declare const stripSomeDefects: {
-  <E>(self: Cause<E>, pf: (defect: unknown) => Option.Option<unknown>): Option.Option<Cause<E>>
   (pf: (defect: unknown) => Option.Option<unknown>): <E>(self: Cause<E>) => Option.Option<Cause<E>>
+  <E>(self: Cause<E>, pf: (defect: unknown) => Option.Option<unknown>): Option.Option<Cause<E>>
 }
 ```
 
@@ -698,8 +698,8 @@ Added in v1.0.0
 
 ```ts
 export declare const as: {
-  <E, E2>(self: Cause<E>, error: E2): Cause<E2>
   <E2>(error: E2): <E>(self: Cause<E>) => Cause<E2>
+  <E, E2>(self: Cause<E>, error: E2): Cause<E2>
 }
 ```
 
@@ -711,8 +711,8 @@ Added in v1.0.0
 
 ```ts
 export declare const map: {
-  <E, E2>(self: Cause<E>, f: (e: E) => E2): Cause<E2>
   <E, E2>(f: (e: E) => E2): (self: Cause<E>) => Cause<E2>
+  <E, E2>(self: Cause<E>, f: (e: E) => E2): Cause<E2>
 }
 ```
 
@@ -1175,8 +1175,8 @@ Added in v1.0.0
 
 ```ts
 export declare const flatMap: {
-  <E, E2>(self: Cause<E>, f: (e: E) => Cause<E2>): Cause<E2>
   <E, E2>(f: (e: E) => Cause<E2>): (self: Cause<E>) => Cause<E2>
+  <E, E2>(self: Cause<E>, f: (e: E) => Cause<E2>): Cause<E2>
 }
 ```
 

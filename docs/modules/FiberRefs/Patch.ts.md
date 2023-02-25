@@ -40,8 +40,8 @@ sequentially.
 
 ```ts
 export declare const combine: {
+  (that: FiberRefsPatch): (self: FiberRefsPatch) => FiberRefsPatch
   (self: FiberRefsPatch, that: FiberRefsPatch): FiberRefsPatch
-  (self: FiberRefsPatch): (that: FiberRefsPatch) => FiberRefsPatch
 }
 ```
 
@@ -81,8 +81,8 @@ of `FiberRef` values.
 
 ```ts
 export declare const patch: {
-  (self: FiberRefsPatch, fiberId: FiberId.Runtime, oldValue: FiberRefs.FiberRefs): FiberRefs.FiberRefs
   (fiberId: FiberId.Runtime, oldValue: FiberRefs.FiberRefs): (self: FiberRefsPatch) => FiberRefs.FiberRefs
+  (self: FiberRefsPatch, fiberId: FiberId.Runtime, oldValue: FiberRefs.FiberRefs): FiberRefs.FiberRefs
 }
 ```
 

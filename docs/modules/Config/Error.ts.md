@@ -122,8 +122,8 @@ Added in v1.0.0
 
 ```ts
 export declare const reduceWithContext: {
-  <C, Z>(self: ConfigError, context: C, reducer: ConfigErrorReducer<C, Z>): Z
   <C, Z>(context: C, reducer: ConfigErrorReducer<C, Z>): (self: ConfigError) => Z
+  <C, Z>(self: ConfigError, context: C, reducer: ConfigErrorReducer<C, Z>): Z
 }
 ```
 
@@ -258,8 +258,8 @@ Added in v1.0.0
 
 ```ts
 export declare const prefixed: {
-  (self: ConfigError, prefix: Chunk.Chunk<string>): ConfigError
   (prefix: Chunk.Chunk<string>): (self: ConfigError) => ConfigError
+  (self: ConfigError, prefix: Chunk.Chunk<string>): ConfigError
 }
 ```
 

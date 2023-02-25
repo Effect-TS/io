@@ -1,6 +1,6 @@
 ---
 title: Pool.ts
-nav_order: 38
+nav_order: 39
 parent: Modules
 ---
 
@@ -21,6 +21,8 @@ Added in v1.0.0
   - [get](#get)
 - [models](#models)
   - [Pool (interface)](#pool-interface)
+- [refinements](#refinements)
+  - [isPool](#ispool)
 - [symbols](#symbols)
   - [PoolTypeId](#pooltypeid)
   - [PoolTypeId (type alias)](#pooltypeid-type-alias)
@@ -38,7 +40,10 @@ than eagerly.
 **Signature**
 
 ```ts
-export declare const invalidate: <E, A>(self: Pool<E, A>, a: A) => Effect.Effect<Scope.Scope, never, void>
+export declare const invalidate: {
+  <A>(value: A): <E>(self: Pool<E, A>) => Effect.Effect<Scope.Scope, never, void>
+  <E, A>(self: Pool<E, A>, value: A): Effect.Effect<Scope.Scope, never, void>
+}
 ```
 
 Added in v1.0.0
@@ -73,11 +78,11 @@ used, the individual items allocated by the pool will be released in some
 unspecified order.
 
 ```ts
+import * as Duration from '@effect/data/Duration'
 import * as Effect from '@effect/io/Effect'
 import * as Pool from '@effect/io/Pool'
 import * as Scope from '@effect/io/Scope'
-import { pipe } from '@fp-ts/core/Function'
-import * as Duration from '@/data/Duration'
+import { pipe } from '@effect/data/Function'
 
 Effect.scoped(
   pipe(
@@ -134,7 +139,7 @@ an item `A` from a pool may fail with an error of type `E`.
 **Signature**
 
 ```ts
-export interface Pool<E, A> extends Pool.Variance<E, A> {
+export interface Pool<E, A> extends Data.Case, Pool.Variance<E, A> {
   /**
    * Retrieves an item from the pool in a scoped effect. Note that if
    * acquisition fails, then the returned effect will fail for that same reason.
@@ -149,6 +154,20 @@ export interface Pool<E, A> extends Pool.Variance<E, A> {
    */
   invalidate(item: A): Effect.Effect<never, never, void>
 }
+```
+
+Added in v1.0.0
+
+# refinements
+
+## isPool
+
+Returns `true` if the specified value is a `Pool`, `false` otherwise.
+
+**Signature**
+
+```ts
+export declare const isPool: (u: unknown) => u is Pool<unknown, unknown>
 ```
 
 Added in v1.0.0

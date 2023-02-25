@@ -305,8 +305,8 @@ and `that`.
 
 ```ts
 export declare const diff: {
-  (self: RuntimeFlags, that: RuntimeFlags): RuntimeFlagsPatch.RuntimeFlagsPatch
   (that: RuntimeFlags): (self: RuntimeFlags) => RuntimeFlagsPatch.RuntimeFlagsPatch
+  (self: RuntimeFlags, that: RuntimeFlags): RuntimeFlagsPatch.RuntimeFlagsPatch
 }
 ```
 
@@ -322,8 +322,8 @@ Returns `true` if the specified `RuntimeFlag` is disabled, `false` otherwise.
 
 ```ts
 export declare const isDisabled: {
-  (self: RuntimeFlags, flag: RuntimeFlag): boolean
   (flag: RuntimeFlag): (self: RuntimeFlags) => boolean
+  (self: RuntimeFlags, flag: RuntimeFlag): boolean
 }
 ```
 
@@ -337,8 +337,8 @@ Returns `true` if the specified `RuntimeFlag` is enabled, `false` otherwise.
 
 ```ts
 export declare const isEnabled: {
-  (self: RuntimeFlags, flag: RuntimeFlag): boolean
   (flag: RuntimeFlag): (self: RuntimeFlags) => boolean
+  (self: RuntimeFlags, flag: RuntimeFlag): boolean
 }
 ```
 
@@ -483,8 +483,8 @@ Disables the specified `RuntimeFlag`.
 
 ```ts
 export declare const disable: {
-  (self: RuntimeFlags, flag: RuntimeFlag): RuntimeFlags
   (flag: RuntimeFlag): (self: RuntimeFlags) => RuntimeFlags
+  (self: RuntimeFlags, flag: RuntimeFlag): RuntimeFlags
 }
 ```
 
@@ -498,8 +498,8 @@ Disables all of the `RuntimeFlag`s in the specified set of `RuntimeFlags`.
 
 ```ts
 export declare const disableAll: {
-  (self: RuntimeFlags, flags: RuntimeFlags): RuntimeFlags
   (flags: RuntimeFlags): (self: RuntimeFlags) => RuntimeFlags
+  (self: RuntimeFlags, flags: RuntimeFlags): RuntimeFlags
 }
 ```
 
@@ -513,8 +513,8 @@ Enables the specified `RuntimeFlag`.
 
 ```ts
 export declare const enable: {
-  (self: RuntimeFlags, flag: RuntimeFlag): RuntimeFlags
   (flag: RuntimeFlag): (self: RuntimeFlags) => RuntimeFlags
+  (self: RuntimeFlags, flag: RuntimeFlag): RuntimeFlags
 }
 ```
 
@@ -528,8 +528,8 @@ Enables all of the `RuntimeFlag`s in the specified set of `RuntimeFlags`.
 
 ```ts
 export declare const enableAll: {
-  (self: RuntimeFlags, flags: RuntimeFlags): RuntimeFlags
   (flags: RuntimeFlags): (self: RuntimeFlags) => RuntimeFlags
+  (self: RuntimeFlags, flags: RuntimeFlags): RuntimeFlags
 }
 ```
 
@@ -544,8 +544,8 @@ patched set of `RuntimeFlag`s.
 
 ```ts
 export declare const patch: {
-  (self: RuntimeFlags, patch: RuntimeFlagsPatch.RuntimeFlagsPatch): RuntimeFlags
   (patch: RuntimeFlagsPatch.RuntimeFlagsPatch): (self: RuntimeFlags) => RuntimeFlags
+  (self: RuntimeFlags, patch: RuntimeFlagsPatch.RuntimeFlagsPatch): RuntimeFlags
 }
 ```
 

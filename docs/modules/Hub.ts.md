@@ -219,8 +219,8 @@ to the hub.
 
 ```ts
 export declare const publish: {
-  <A>(self: Hub<A>, value: A): Effect.Effect<never, never, boolean>
   <A>(value: A): (self: Hub<A>) => Effect.Effect<never, never, boolean>
+  <A>(self: Hub<A>, value: A): Effect.Effect<never, never, boolean>
 }
 ```
 
@@ -235,8 +235,8 @@ were published to the hub.
 
 ```ts
 export declare const publishAll: {
-  <A>(self: Hub<A>, elements: Iterable<A>): Effect.Effect<never, never, boolean>
   <A>(elements: Iterable<A>): (self: Hub<A>) => Effect.Effect<never, never, boolean>
+  <A>(self: Hub<A>, elements: Iterable<A>): Effect.Effect<never, never, boolean>
 }
 ```
 

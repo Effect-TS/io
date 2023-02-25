@@ -1,6 +1,6 @@
 ---
 title: Runtime.ts
-nav_order: 44
+nav_order: 45
 parent: Modules
 ---
 
@@ -252,11 +252,6 @@ export interface Runtime<R> {
    * The fiber references used as initial for forks
    */
   readonly fiberRefs: FiberRefs.FiberRefs
-  /**
-   * Executes the effect using the provided Scheduler or using the global
-   * Scheduler if not provided
-   */
-  unsafeFork<E, A>(effect: Effect.Effect<R, E, A>, scheduler?: Scheduler): Fiber.RuntimeFiber<E, A>
 }
 ```
 

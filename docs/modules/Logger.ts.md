@@ -1,6 +1,6 @@
 ---
 title: Logger.ts
-nav_order: 25
+nav_order: 26
 parent: Modules
 ---
 
@@ -91,8 +91,7 @@ export declare const make: <Message, Output>(
     cause: Cause.Cause<unknown>,
     context: FiberRefs.FiberRefs,
     spans: Chunk.Chunk<LogSpan.LogSpan>,
-    annotations: HashMap.HashMap<string, string>,
-    runtime: Runtime<never>
+    annotations: HashMap.HashMap<string, string>
   ) => Output
 ) => Logger<Message, Output>
 ```
@@ -157,8 +156,8 @@ Added in v1.0.0
 
 ```ts
 export declare const test: {
-  <Message, Output>(self: Logger<Message, Output>, input: Message): Output
   <Message>(input: Message): <Output>(self: Logger<Message, Output>) => Output
+  <Message, Output>(self: Logger<Message, Output>, input: Message): Output
 }
 ```
 
@@ -202,8 +201,8 @@ Added in v1.0.0
 
 ```ts
 export declare const replace: {
-  <A, B>(logger: Logger<string, A>, that: Logger<string, B>): Layer.Layer<never, never, never>
-  <B>(that: Logger<string, B>): <A>(logger: Logger<string, A>) => Layer.Layer<never, never, never>
+  <B>(that: Logger<string, B>): <A>(self: Logger<string, A>) => Layer.Layer<never, never, never>
+  <A, B>(self: Logger<string, A>, that: Logger<string, B>): Layer.Layer<never, never, never>
 }
 ```
 
@@ -215,8 +214,8 @@ Added in v1.0.0
 
 ```ts
 export declare const withMinimumLogLevel: {
-  <R, E, A>(self: Effect<R, E, A>, level: LogLevel.LogLevel): Effect<R, E, A>
   (level: LogLevel.LogLevel): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, level: LogLevel.LogLevel): Effect<R, E, A>
 }
 ```
 
@@ -233,13 +232,13 @@ satisfies the specified predicate.
 
 ```ts
 export declare const filterLogLevel: {
+  (f: (logLevel: LogLevel.LogLevel) => boolean): <Message, Output>(
+    self: Logger<Message, Output>
+  ) => Logger<Message, Option.Option<Output>>
   <Message, Output>(self: Logger<Message, Output>, f: (logLevel: LogLevel.LogLevel) => boolean): Logger<
     Message,
     Option.Option<Output>
   >
-  (f: (logLevel: LogLevel.LogLevel) => boolean): <Message, Output>(
-    self: Logger<Message, Output>
-  ) => Logger<Message, Option.Option<Output>>
 }
 ```
 
@@ -253,13 +252,13 @@ Added in v1.0.0
 
 ```ts
 export declare const contramap: {
+  <Message, Message2>(f: (message: Message2) => Message): <Output>(
+    self: Logger<Message, Output>
+  ) => Logger<Message2, Output>
   <Output, Message, Message2>(self: Logger<Message, Output>, f: (message: Message2) => Message): Logger<
     Message2,
     Output
   >
-  <Message, Message2>(f: (message: Message2) => Message): <Output>(
-    self: Logger<Message, Output>
-  ) => Logger<Message2, Output>
 }
 ```
 
@@ -271,10 +270,10 @@ Added in v1.0.0
 
 ```ts
 export declare const map: {
-  <Message, Output, Output2>(self: Logger<Message, Output>, f: (output: Output) => Output2): Logger<Message, Output2>
   <Output, Output2>(f: (output: Output) => Output2): <Message>(
     self: Logger<Message, Output>
   ) => Logger<Message, Output2>
+  <Message, Output, Output2>(self: Logger<Message, Output>, f: (output: Output) => Output2): Logger<Message, Output2>
 }
 ```
 
@@ -295,8 +294,7 @@ export interface Logger<Message, Output> extends Logger.Variance<Message, Output
     cause: Cause.Cause<unknown>,
     context: FiberRefs.FiberRefs,
     spans: Chunk.Chunk<LogSpan.LogSpan>,
-    annotations: HashMap.HashMap<string, string>,
-    runtime: Runtime<never>
+    annotations: HashMap.HashMap<string, string>
   ) => Output
 }
 ```
@@ -336,13 +334,13 @@ logs to both this logger and that logger.
 
 ```ts
 export declare const zip: {
+  <Message2, Output2>(that: Logger<Message2, Output2>): <Message, Output>(
+    self: Logger<Message, Output>
+  ) => Logger<Message & Message2, readonly [Output, Output2]>
   <Message, Output, Message2, Output2>(self: Logger<Message, Output>, that: Logger<Message2, Output2>): Logger<
     Message & Message2,
     readonly [Output, Output2]
   >
-  <Message2, Output2>(that: Logger<Message2, Output2>): <Message, Output>(
-    self: Logger<Message, Output>
-  ) => Logger<Message & Message2, readonly [Output, Output2]>
 }
 ```
 
@@ -354,13 +352,13 @@ Added in v1.0.0
 
 ```ts
 export declare const zipLeft: {
+  <Message2, Output2>(that: Logger<Message2, Output2>): <Message, Output>(
+    self: Logger<Message, Output>
+  ) => Logger<Message & Message2, Output>
   <Message, Output, Message2, Output2>(self: Logger<Message, Output>, that: Logger<Message2, Output2>): Logger<
     Message & Message2,
     Output
   >
-  <Message2, Output2>(that: Logger<Message2, Output2>): <Message, Output>(
-    self: Logger<Message, Output>
-  ) => Logger<Message & Message2, Output>
 }
 ```
 
@@ -372,13 +370,13 @@ Added in v1.0.0
 
 ```ts
 export declare const zipRight: {
+  <Message2, Output2>(that: Logger<Message2, Output2>): <Message, Output>(
+    self: Logger<Message, Output>
+  ) => Logger<Message & Message2, Output2>
   <Message, Output, Message2, Output2>(self: Logger<Message, Output>, that: Logger<Message2, Output2>): Logger<
     Message & Message2,
     Output2
   >
-  <Message2, Output2>(that: Logger<Message2, Output2>): <Message, Output>(
-    self: Logger<Message, Output>
-  ) => Logger<Message & Message2, Output2>
 }
 ```
 

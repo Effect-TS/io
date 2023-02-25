@@ -1,6 +1,6 @@
 ---
 title: Metric.ts
-nav_order: 28
+nav_order: 29
 parent: Modules
 ---
 
@@ -86,8 +86,8 @@ Added in v1.0.0
 
 ```ts
 export declare const incrementBy: {
-  (self: Metric.Counter<number>, amount: number): Effect.Effect<never, never, void>
   (amount: number): (self: Metric.Counter<number>) => Effect.Effect<never, never, void>
+  (self: Metric.Counter<number>, amount: number): Effect.Effect<never, never, void>
 }
 ```
 
@@ -99,8 +99,8 @@ Added in v1.0.0
 
 ```ts
 export declare const set: {
-  <In>(self: Metric.Gauge<In>, value: In): Effect.Effect<never, never, void>
   <In>(value: In): (self: Metric.Gauge<In>) => Effect.Effect<never, never, void>
+  <In>(self: Metric.Gauge<In>, value: In): Effect.Effect<never, never, void>
 }
 ```
 
@@ -116,12 +116,12 @@ that effect fails or succeeds.
 
 ```ts
 export declare const trackAll: {
-  <Type, In, Out>(self: Metric<Type, In, Out>, input: In): <R, E, A>(
-    effect: Effect.Effect<R, E, A>
-  ) => Effect.Effect<R, E, A>
   <In>(input: In): <Type, Out>(
     self: Metric<Type, In, Out>
   ) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  <Type, In, Out>(self: Metric<Type, In, Out>, input: In): <R, E, A>(
+    effect: Effect.Effect<R, E, A>
+  ) => Effect.Effect<R, E, A>
 }
 ```
 
@@ -136,8 +136,8 @@ effects that it is applied to.
 
 ```ts
 export declare const trackDefect: {
-  <R, E, A, Type, Out>(self: Effect.Effect<R, E, A>, metric: Metric<Type, unknown, Out>): Effect.Effect<R, E, A>
   <Type, Out>(metric: Metric<Type, unknown, Out>): <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  <R, E, A, Type, Out>(self: Effect.Effect<R, E, A>, metric: Metric<Type, unknown, Out>): Effect.Effect<R, E, A>
 }
 ```
 
@@ -153,14 +153,14 @@ aspect is applied to.
 
 ```ts
 export declare const trackDefectWith: {
+  <Type, In, Out>(metric: Metric<Type, In, Out>, f: (defect: unknown) => In): <R, E, A>(
+    self: Effect.Effect<R, E, A>
+  ) => Effect.Effect<R, E, A>
   <R, E, A, Type, In, Out>(
     self: Effect.Effect<R, E, A>,
     metric: Metric<Type, In, Out>,
     f: (defect: unknown) => In
   ): Effect.Effect<R, E, A>
-  <Type, In, Out>(metric: Metric<Type, In, Out>, f: (defect: unknown) => In): <R, E, A>(
-    self: Effect.Effect<R, E, A>
-  ) => Effect.Effect<R, E, A>
 }
 ```
 
@@ -176,14 +176,14 @@ must be `Duration`.
 
 ```ts
 export declare const trackDuration: {
+  <Type, Out>(metric: Metric<Type, Duration.Duration, Out>): <R, E, A>(
+    self: Effect.Effect<R, E, A>
+  ) => Effect.Effect<R, E, A>
   <R, E, A, Type, Out>(self: Effect.Effect<R, E, A>, metric: Metric<Type, Duration.Duration, Out>): Effect.Effect<
     R,
     E,
     A
   >
-  <Type, Out>(metric: Metric<Type, Duration.Duration, Out>): <R, E, A>(
-    self: Effect.Effect<R, E, A>
-  ) => Effect.Effect<R, E, A>
 }
 ```
 
@@ -199,14 +199,14 @@ that can convert the `Duration` to the input type of this metric.
 
 ```ts
 export declare const trackDurationWith: {
+  <Type, In, Out>(metric: Metric<Type, In, Out>, f: (duration: Duration.Duration) => In): <R, E, A>(
+    effect: Effect.Effect<R, E, A>
+  ) => Effect.Effect<R, E, A>
   <R, E, A, Type, In, Out>(
     self: Effect.Effect<R, E, A>,
     metric: Metric<Type, In, Out>,
     f: (duration: Duration.Duration) => In
   ): Effect.Effect<R, E, A>
-  <Type, In, Out>(metric: Metric<Type, In, Out>, f: (duration: Duration.Duration) => In): <R, E, A>(
-    effect: Effect.Effect<R, E, A>
-  ) => Effect.Effect<R, E, A>
 }
 ```
 
@@ -221,14 +221,14 @@ the effects that it is applied to.
 
 ```ts
 export declare const trackError: {
+  <Type, In, Out>(metric: Metric<Type, In, Out>): <R, E extends In, A>(
+    self: Effect.Effect<R, E, A>
+  ) => Effect.Effect<R, E, A>
   <R, E extends In, A, Type, In, Out>(self: Effect.Effect<R, E, A>, metric: Metric<Type, In, Out>): Effect.Effect<
     R,
     E,
     A
   >
-  <Type, In, Out>(metric: Metric<Type, In, Out>): <R, E extends In, A>(
-    self: Effect.Effect<R, E, A>
-  ) => Effect.Effect<R, E, A>
 }
 ```
 
@@ -244,14 +244,14 @@ applied to.
 
 ```ts
 export declare const trackErrorWith: {
+  <Type, In, Out, In2>(metric: Metric<Type, In, Out>, f: (error: In2) => In): <R, E extends In2, A>(
+    effect: Effect.Effect<R, E, A>
+  ) => Effect.Effect<R, E, A>
   <R, E extends In2, A, Type, In, Out, In2>(
     self: Effect.Effect<R, E, A>,
     metric: Metric<Type, In, Out>,
     f: (error: In2) => In
   ): Effect.Effect<R, E, A>
-  <Type, In, Out, In2>(metric: Metric<Type, In, Out>, f: (error: In2) => In): <R, E extends In2, A>(
-    effect: Effect.Effect<R, E, A>
-  ) => Effect.Effect<R, E, A>
 }
 ```
 
@@ -266,14 +266,14 @@ the effects that it is applied to.
 
 ```ts
 export declare const trackSuccess: {
+  <Type, In, Out>(metric: Metric<Type, In, Out>): <R, E, A extends In>(
+    self: Effect.Effect<R, E, A>
+  ) => Effect.Effect<R, E, A>
   <R, E, A extends In, Type, In, Out>(self: Effect.Effect<R, E, A>, metric: Metric<Type, In, Out>): Effect.Effect<
     R,
     E,
     A
   >
-  <Type, In, Out>(metric: Metric<Type, In, Out>): <R, E, A extends In>(
-    self: Effect.Effect<R, E, A>
-  ) => Effect.Effect<R, E, A>
 }
 ```
 
@@ -289,14 +289,14 @@ applied to.
 
 ```ts
 export declare const trackSuccessWith: {
+  <Type, In, Out, In2>(metric: Metric<Type, In, Out>, f: (value: In2) => In): <R, E, A extends In2>(
+    self: Effect.Effect<R, E, A>
+  ) => Effect.Effect<R, E, A>
   <R, E, A extends In2, Type, In, Out, In2>(
     self: Effect.Effect<R, E, A>,
     metric: Metric<Type, In, Out>,
     f: (value: In2) => In
   ): Effect.Effect<R, E, A>
-  <Type, In, Out, In2>(metric: Metric<Type, In, Out>, f: (value: In2) => In): <R, E, A extends In2>(
-    self: Effect.Effect<R, E, A>
-  ) => Effect.Effect<R, E, A>
 }
 ```
 
@@ -339,8 +339,8 @@ update value.
 
 ```ts
 export declare const fromConst: {
-  <Type, In, Out>(self: Metric<Type, In, Out>, input: LazyArg<In>): Metric<Type, unknown, Out>
   <In>(input: LazyArg<In>): <Type, Out>(self: Metric<Type, In, Out>) => Metric<Type, unknown, Out>
+  <Type, In, Out>(self: Metric<Type, In, Out>, input: LazyArg<In>): Metric<Type, unknown, Out>
 }
 ```
 
@@ -536,8 +536,8 @@ this metric.
 
 ```ts
 export declare const contramap: {
-  <Type, In, Out, In2>(self: Metric<Type, In, Out>, f: (input: In2) => In): Metric<Type, In2, Out>
   <In, In2>(f: (input: In2) => In): <Type, Out>(self: Metric<Type, In, Out>) => Metric<Type, In2, Out>
+  <Type, In, Out, In2>(self: Metric<Type, In, Out>, f: (input: In2) => In): Metric<Type, In2, Out>
 }
 ```
 
@@ -553,8 +553,8 @@ specified function.
 
 ```ts
 export declare const map: {
-  <Type, In, Out, Out2>(self: Metric<Type, In, Out>, f: (out: Out) => Out2): Metric<Type, In, Out2>
   <Out, Out2>(f: (out: Out) => Out2): <Type, In>(self: Metric<Type, In, Out>) => Metric<Type, In, Out2>
+  <Type, In, Out, Out2>(self: Metric<Type, In, Out>, f: (out: Out) => Out2): Metric<Type, In, Out2>
 }
 ```
 
@@ -566,8 +566,8 @@ Added in v1.0.0
 
 ```ts
 export declare const mapType: {
-  <Type, In, Out, Type2>(self: Metric<Type, In, Out>, f: (type: Type) => Type2): Metric<Type2, In, Out>
   <Type, Type2>(f: (type: Type) => Type2): <In, Out>(self: Metric<Type, In, Out>) => Metric<Type2, In, Out>
+  <Type, In, Out, Type2>(self: Metric<Type, In, Out>, f: (type: Type) => Type2): Metric<Type2, In, Out>
 }
 ```
 
@@ -638,8 +638,8 @@ the specified tags have been added to the tags of this metric.
 
 ```ts
 export declare const tagged: {
-  <Type, In, Out>(self: Metric<Type, In, Out>, key: string, value: string): Metric<Type, In, Out>
   <Type, In, Out>(key: string, value: string): (self: Metric<Type, In, Out>) => Metric<Type, In, Out>
+  <Type, In, Out>(self: Metric<Type, In, Out>, key: string, value: string): Metric<Type, In, Out>
 }
 ```
 
@@ -656,14 +656,14 @@ dynamic nature of the added tags.
 
 ```ts
 export declare const taggedWith: {
+  <In>(f: (input: In) => HashSet.HashSet<MetricLabel.MetricLabel>): <Type, Out>(
+    self: Metric<Type, In, Out>
+  ) => Metric<Type, In, void>
   <Type, In, Out>(self: Metric<Type, In, Out>, f: (input: In) => HashSet.HashSet<MetricLabel.MetricLabel>): Metric<
     Type,
     In,
     void
   >
-  <In>(f: (input: In) => HashSet.HashSet<MetricLabel.MetricLabel>): <Type, Out>(
-    self: Metric<Type, In, Out>
-  ) => Metric<Type, In, void>
 }
 ```
 
@@ -678,14 +678,14 @@ the specified tags have been added to the tags of this metric.
 
 ```ts
 export declare const taggedWithLabelSet: {
+  (extraTags: HashSet.HashSet<MetricLabel.MetricLabel>): <Type, In, Out>(
+    self: Metric<Type, In, Out>
+  ) => Metric<Type, In, Out>
   <Type, In, Out>(self: Metric<Type, In, Out>, extraTags: HashSet.HashSet<MetricLabel.MetricLabel>): Metric<
     Type,
     In,
     Out
   >
-  (extraTags: HashSet.HashSet<MetricLabel.MetricLabel>): <Type, In, Out>(
-    self: Metric<Type, In, Out>
-  ) => Metric<Type, In, Out>
 }
 ```
 
@@ -700,8 +700,8 @@ the specified tags have been added to the tags of this metric.
 
 ```ts
 export declare const taggedWithLabels: {
-  <Type, In, Out>(self: Metric<Type, In, Out>, extraTags: Iterable<MetricLabel.MetricLabel>): Metric<Type, In, Out>
   <Type, In, Out>(extraTags: Iterable<MetricLabel.MetricLabel>): (self: Metric<Type, In, Out>) => Metric<Type, In, Out>
+  <Type, In, Out>(self: Metric<Type, In, Out>, extraTags: Iterable<MetricLabel.MetricLabel>): Metric<Type, In, Out>
 }
 ```
 
@@ -717,8 +717,8 @@ provided amount.
 
 ```ts
 export declare const update: {
-  <Type, In, Out>(self: Metric<Type, In, Out>, input: In): Effect.Effect<never, never, void>
   <In>(input: In): <Type, Out>(self: Metric<Type, In, Out>) => Effect.Effect<never, never, void>
+  <Type, In, Out>(self: Metric<Type, In, Out>, input: In): Effect.Effect<never, never, void>
 }
 ```
 
@@ -778,14 +778,14 @@ Added in v1.0.0
 
 ```ts
 export declare const zip: {
+  <Type2, In2, Out2>(that: Metric<Type2, In2, Out2>): <Type, In, Out>(
+    self: Metric<Type, In, Out>
+  ) => Metric<readonly [Type, Type2], readonly [In, In2], readonly [Out, Out2]>
   <Type, In, Out, Type2, In2, Out2>(self: Metric<Type, In, Out>, that: Metric<Type2, In2, Out2>): Metric<
     readonly [Type, Type2],
     readonly [In, In2],
     readonly [Out, Out2]
   >
-  <Type2, In2, Out2>(that: Metric<Type2, In2, Out2>): <Type, In, Out>(
-    self: Metric<Type, In, Out>
-  ) => Metric<readonly [Type, Type2], readonly [In, In2], readonly [Out, Out2]>
 }
 ```
 

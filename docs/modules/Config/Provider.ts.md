@@ -128,8 +128,8 @@ specified function within the specified path.
 
 ```ts
 export declare const within: {
-  (self: ConfigProvider, path: Chunk.Chunk<string>, f: (self: ConfigProvider) => ConfigProvider): ConfigProvider
   (path: Chunk.Chunk<string>, f: (self: ConfigProvider) => ConfigProvider): (self: ConfigProvider) => ConfigProvider
+  (self: ConfigProvider, path: Chunk.Chunk<string>, f: (self: ConfigProvider) => ConfigProvider): ConfigProvider
 }
 ```
 
@@ -267,8 +267,8 @@ another.
 
 ```ts
 export declare const contramapPath: {
-  (self: ConfigProvider, f: (path: string) => string): ConfigProvider
   (f: (path: string) => string): (self: ConfigProvider) => ConfigProvider
+  (self: ConfigProvider, f: (path: string) => string): ConfigProvider
 }
 ```
 
@@ -285,8 +285,8 @@ single configuration value.
 
 ```ts
 export declare const nested: {
-  (self: ConfigProvider, name: string): ConfigProvider
   (name: string): (self: ConfigProvider) => ConfigProvider
+  (self: ConfigProvider, name: string): ConfigProvider
 }
 ```
 
@@ -302,8 +302,8 @@ if there are any issues loading the configuration from this provider.
 
 ```ts
 export declare const orElse: {
-  (self: ConfigProvider, that: LazyArg<ConfigProvider>): ConfigProvider
   (that: LazyArg<ConfigProvider>): (self: ConfigProvider) => ConfigProvider
+  (self: ConfigProvider, that: LazyArg<ConfigProvider>): ConfigProvider
 }
 ```
 
@@ -320,8 +320,8 @@ single configuration value.
 
 ```ts
 export declare const unnested: {
-  (self: ConfigProvider, name: string): ConfigProvider
   (name: string): (self: ConfigProvider) => ConfigProvider
+  (self: ConfigProvider, name: string): ConfigProvider
 }
 ```
 

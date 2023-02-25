@@ -1,6 +1,6 @@
 ---
 title: Logger/Level.ts
-nav_order: 26
+nav_order: 27
 parent: Modules
 ---
 
@@ -300,7 +300,10 @@ to the previous `LogLevel` after the `Effect` workflow completes.
 **Signature**
 
 ```ts
-export declare const locally: (value: LogLevel) => <R, E, B>(use: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>
+export declare const locally: {
+  (self: LogLevel): <R, E, B>(use: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>
+  <R, E, B>(use: Effect.Effect<R, E, B>, self: LogLevel): Effect.Effect<R, E, B>
+}
 ```
 
 Added in v1.0.0
@@ -312,7 +315,10 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const greaterThan: (that: LogLevel) => (self: LogLevel) => boolean
+export declare const greaterThan: {
+  (that: LogLevel): (self: LogLevel) => boolean
+  (self: LogLevel, that: LogLevel): boolean
+}
 ```
 
 Added in v1.0.0
@@ -322,7 +328,10 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const greaterThanEqual: (that: LogLevel) => (self: LogLevel) => boolean
+export declare const greaterThanEqual: {
+  (that: LogLevel): (self: LogLevel) => boolean
+  (self: LogLevel, that: LogLevel): boolean
+}
 ```
 
 Added in v1.0.0
@@ -332,7 +341,10 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const lessThan: (that: LogLevel) => (self: LogLevel) => boolean
+export declare const lessThan: {
+  (that: LogLevel): (self: LogLevel) => boolean
+  (self: LogLevel, that: LogLevel): boolean
+}
 ```
 
 Added in v1.0.0
@@ -342,7 +354,10 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const lessThanEqual: (that: LogLevel) => (self: LogLevel) => boolean
+export declare const lessThanEqual: {
+  (that: LogLevel): (self: LogLevel) => boolean
+  (self: LogLevel, that: LogLevel): boolean
+}
 ```
 
 Added in v1.0.0

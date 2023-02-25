@@ -1,6 +1,6 @@
 ---
 title: Queue.ts
-nav_order: 39
+nav_order: 40
 parent: Modules
 ---
 
@@ -402,8 +402,8 @@ Places one value in the queue.
 
 ```ts
 export declare const offer: {
-  <A>(self: Enqueue<A>, value: A): Effect.Effect<never, never, boolean>
   <A>(value: A): (self: Enqueue<A>) => Effect.Effect<never, never, boolean>
+  <A>(self: Enqueue<A>, value: A): Effect.Effect<never, never, boolean>
 }
 ```
 
@@ -429,8 +429,8 @@ queue but if there is no room it will not enqueue them and return false.
 
 ```ts
 export declare const offerAll: {
-  <A>(self: Enqueue<A>, iterable: Iterable<A>): Effect.Effect<never, never, boolean>
   <A>(iterable: Iterable<A>): (self: Enqueue<A>) => (self: Enqueue<A>) => Effect.Effect<never, never, boolean>
+  <A>(self: Enqueue<A>, iterable: Iterable<A>): Effect.Effect<never, never, boolean>
 }
 ```
 
@@ -498,8 +498,8 @@ suspends until at least the minimum number of elements have been collected.
 
 ```ts
 export declare const takeBetween: {
-  <A>(self: Dequeue<A>, min: number, max: number): Effect.Effect<never, never, Chunk.Chunk<A>>
   (min: number, max: number): <A>(self: Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>>
+  <A>(self: Dequeue<A>, min: number, max: number): Effect.Effect<never, never, Chunk.Chunk<A>>
 }
 ```
 
@@ -515,8 +515,8 @@ become available.
 
 ```ts
 export declare const takeN: {
-  <A>(self: Dequeue<A>, n: number): Effect.Effect<never, never, Chunk.Chunk<A>>
   (n: number): <A>(self: Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>>
+  <A>(self: Dequeue<A>, n: number): Effect.Effect<never, never, Chunk.Chunk<A>>
 }
 ```
 
@@ -530,8 +530,8 @@ Takes up to max number of values from the queue.
 
 ```ts
 export declare const takeUpTo: {
-  <A>(self: Dequeue<A>, max: number): Effect.Effect<never, never, Chunk.Chunk<A>>
   (max: number): <A>(self: Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>>
+  <A>(self: Dequeue<A>, max: number): Effect.Effect<never, never, Chunk.Chunk<A>>
 }
 ```
 

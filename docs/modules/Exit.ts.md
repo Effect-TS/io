@@ -210,8 +210,8 @@ Executes the predicate on the value of the specified exit if it is a
 
 ```ts
 export declare const exists: {
-  <E, A>(self: Exit<E, A>, predicate: Predicate<A>): boolean
   <A>(predicate: Predicate<A>): <E>(self: Exit<E, A>) => boolean
+  <E, A>(self: Exit<E, A>, predicate: Predicate<A>): boolean
 }
 ```
 
@@ -239,8 +239,8 @@ Added in v1.0.0
 
 ```ts
 export declare const match: {
-  <E, A, Z>(self: Exit<E, A>, onFailure: (cause: Cause.Cause<E>) => Z, onSuccess: (a: A) => Z): Z
   <E, A, Z>(onFailure: (cause: Cause.Cause<E>) => Z, onSuccess: (a: A) => Z): (self: Exit<E, A>) => Z
+  <E, A, Z>(self: Exit<E, A>, onFailure: (cause: Cause.Cause<E>) => Z, onSuccess: (a: A) => Z): Z
 }
 ```
 
@@ -253,14 +253,14 @@ Added in v1.0.0
 ```ts
 export declare const matchEffect: {
   <E, A, R, E2, A2, R2, E3, A3>(
+    onFailure: (cause: Cause.Cause<E>) => Effect.Effect<R, E2, A2>,
+    onSuccess: (a: A) => Effect.Effect<R2, E3, A3>
+  ): (self: Exit<E, A>) => Effect.Effect<R | R2, E3, A3>
+  <E, A, R, E2, A2, R2, E3, A3>(
     self: Exit<E, A>,
     onFailure: (cause: Cause.Cause<E>) => Effect.Effect<R, E2, A2>,
     onSuccess: (a: A) => Effect.Effect<R2, E3, A3>
   ): Effect.Effect<R | R2, E2 | E3, A2 | A3>
-  <E, A, R, E2, A2, R2, E3, A3>(
-    onFailure: (cause: Cause.Cause<E>) => Effect.Effect<R, E2, A2>,
-    onSuccess: (a: A) => Effect.Effect<R2, E3, A3>
-  ): (self: Exit<E, A>) => Effect.Effect<R | R2, E3, A3>
 }
 ```
 
@@ -291,8 +291,8 @@ alternate `A` value computed from the specified function which receives the
 
 ```ts
 export declare const getOrElse: {
-  <E, A>(self: Exit<E, A>, orElse: (cause: Cause.Cause<E>) => A): A
   <E, A>(orElse: (cause: Cause.Cause<E>) => A): (self: Exit<E, A>) => A
+  <E, A>(self: Exit<E, A>, orElse: (cause: Cause.Cause<E>) => A): A
 }
 ```
 
@@ -322,8 +322,8 @@ value.
 
 ```ts
 export declare const as: {
-  <E, A, A2>(self: Exit<E, A>, value: A2): Exit<E, A2>
   <A2>(value: A2): <E, A>(self: Exit<E, A>) => Exit<E, A2>
+  <E, A, A2>(self: Exit<E, A>, value: A2): Exit<E, A2>
 }
 ```
 
@@ -350,8 +350,8 @@ function.
 
 ```ts
 export declare const map: {
-  <E, A, B>(self: Exit<E, A>, f: (a: A) => B): Exit<E, B>
   <A, B>(f: (a: A) => B): <E>(self: Exit<E, A>) => Exit<E, B>
+  <E, A, B>(self: Exit<E, A>, f: (a: A) => B): Exit<E, B>
 }
 ```
 
@@ -366,8 +366,8 @@ provided functions.
 
 ```ts
 export declare const mapBoth: {
-  <E, A, E2, A2>(self: Exit<E, A>, onFailure: (e: E) => E2, onSuccess: (a: A) => A2): Exit<E2, A2>
   <E, A, E2, A2>(onFailure: (e: E) => E2, onSuccess: (a: A) => A2): (self: Exit<E, A>) => Exit<E2, A2>
+  <E, A, E2, A2>(self: Exit<E, A>, onFailure: (e: E) => E2, onSuccess: (a: A) => A2): Exit<E2, A2>
 }
 ```
 
@@ -382,8 +382,8 @@ the provided function.
 
 ```ts
 export declare const mapError: {
-  <E, A, E2>(self: Exit<E, A>, f: (e: E) => E2): Exit<E2, A>
   <E, E2>(f: (e: E) => E2): <A>(self: Exit<E, A>) => Exit<E2, A>
+  <E, A, E2>(self: Exit<E, A>, f: (e: E) => E2): Exit<E2, A>
 }
 ```
 
@@ -398,8 +398,8 @@ the provided function.
 
 ```ts
 export declare const mapErrorCause: {
-  <E, A, E2>(self: Exit<E, A>, f: (cause: Cause.Cause<E>) => Cause.Cause<E2>): Exit<E2, A>
   <E, E2>(f: (cause: Cause.Cause<E>) => Cause.Cause<E2>): <A>(self: Exit<E, A>) => Exit<E2, A>
+  <E, A, E2>(self: Exit<E, A>, f: (cause: Cause.Cause<E>) => Cause.Cause<E2>): Exit<E2, A>
 }
 ```
 
@@ -502,8 +502,8 @@ Added in v1.0.0
 
 ```ts
 export declare const flatMap: {
-  <E, A, E2, A2>(self: Exit<E, A>, f: (a: A) => Exit<E2, A2>): Exit<E | E2, A2>
   <A, E2, A2>(f: (a: A) => Exit<E2, A2>): <E>(self: Exit<E, A>) => Exit<E2 | E, A2>
+  <E, A, E2, A2>(self: Exit<E, A>, f: (a: A) => Exit<E2, A2>): Exit<E | E2, A2>
 }
 ```
 
@@ -515,10 +515,10 @@ Added in v1.0.0
 
 ```ts
 export declare const flatMapEffect: {
-  <E, A, R, E2, A2>(self: Exit<E, A>, f: (a: A) => Effect.Effect<R, E2, Exit<E, A2>>): Effect.Effect<R, E2, Exit<E, A2>>
   <E, A, R, E2, A2>(f: (a: A) => Effect.Effect<R, E2, Exit<E, A2>>): (
     self: Exit<E, A>
   ) => Effect.Effect<R, E2, Exit<E, A2>>
+  <E, A, R, E2, A2>(self: Exit<E, A>, f: (a: A) => Effect.Effect<R, E2, Exit<E, A2>>): Effect.Effect<R, E2, Exit<E, A2>>
 }
 ```
 
@@ -542,8 +542,8 @@ Added in v1.0.0
 
 ```ts
 export declare const forEachEffect: {
-  <E, A, R, E2, B>(self: Exit<E, A>, f: (a: A) => Effect.Effect<R, E2, B>): Effect.Effect<R, never, Exit<E | E2, B>>
   <A, R, E2, B>(f: (a: A) => Effect.Effect<R, E2, B>): <E>(self: Exit<E, A>) => Effect.Effect<R, never, Exit<E2 | E, B>>
+  <E, A, R, E2, B>(self: Exit<E, A>, f: (a: A) => Effect.Effect<R, E2, B>): Effect.Effect<R, never, Exit<E | E2, B>>
 }
 ```
 
@@ -560,8 +560,8 @@ the failed `Cause<E | E2>`.
 
 ```ts
 export declare const zip: {
-  <E, A, E2, A2>(self: Exit<E, A>, that: Exit<E2, A2>): Exit<E | E2, readonly [A, A2]>
   <E2, A2>(that: Exit<E2, A2>): <E, A>(self: Exit<E, A>) => Exit<E2 | E, readonly [A, A2]>
+  <E, A, E2, A2>(self: Exit<E, A>, that: Exit<E2, A2>): Exit<E | E2, readonly [A, A2]>
 }
 ```
 
@@ -576,8 +576,8 @@ second element of the tuple or else returns the failed `Cause<E | E2>`.
 
 ```ts
 export declare const zipLeft: {
-  <E, A, E2, A2>(self: Exit<E, A>, that: Exit<E2, A2>): Exit<E | E2, A>
   <E2, A2>(that: Exit<E2, A2>): <E, A>(self: Exit<E, A>) => Exit<E2 | E, A>
+  <E, A, E2, A2>(self: Exit<E, A>, that: Exit<E2, A2>): Exit<E | E2, A>
 }
 ```
 
@@ -592,8 +592,8 @@ the failed `Cause<E | E2>`.
 
 ```ts
 export declare const zipPar: {
-  <E, A, E2, A2>(self: Exit<E, A>, that: Exit<E2, A2>): Exit<E | E2, readonly [A, A2]>
   <E2, A2>(that: Exit<E2, A2>): <E, A>(self: Exit<E, A>) => Exit<E2 | E, readonly [A, A2]>
+  <E, A, E2, A2>(self: Exit<E, A>, that: Exit<E2, A2>): Exit<E | E2, readonly [A, A2]>
 }
 ```
 
@@ -608,8 +608,8 @@ second element of the tuple or else returns the failed `Cause<E | E2>`.
 
 ```ts
 export declare const zipParLeft: {
-  <E, A, E2, A2>(self: Exit<E, A>, that: Exit<E2, A2>): Exit<E | E2, A>
   <E2, A2>(that: Exit<E2, A2>): <E, A>(self: Exit<E, A>) => Exit<E2 | E, A>
+  <E, A, E2, A2>(self: Exit<E, A>, that: Exit<E2, A2>): Exit<E | E2, A>
 }
 ```
 
@@ -624,8 +624,8 @@ first element of the tuple or else returns the failed `Cause<E | E2>`.
 
 ```ts
 export declare const zipParRight: {
-  <E, A, E2, A2>(self: Exit<E, A>, that: Exit<E2, A2>): Exit<E | E2, A2>
   <E2, A2>(that: Exit<E2, A2>): <E, A>(self: Exit<E, A>) => Exit<E2 | E, A2>
+  <E, A, E2, A2>(self: Exit<E, A>, that: Exit<E2, A2>): Exit<E | E2, A2>
 }
 ```
 
@@ -640,8 +640,8 @@ first element of the tuple or else returns the failed `Cause<E | E2>`.
 
 ```ts
 export declare const zipRight: {
-  <E, A, E2, A2>(self: Exit<E, A>, that: Exit<E2, A2>): Exit<E | E2, A2>
   <E2, A2>(that: Exit<E2, A2>): <E, A>(self: Exit<E, A>) => Exit<E2 | E, A2>
+  <E, A, E2, A2>(self: Exit<E, A>, that: Exit<E2, A2>): Exit<E | E2, A2>
 }
 ```
 
@@ -657,16 +657,16 @@ functions.
 ```ts
 export declare const zipWith: {
   <E, E2, A, B, C>(
+    that: Exit<E2, B>,
+    f: (a: A, b: B) => C,
+    g: (cause: Cause.Cause<E>, cause2: Cause.Cause<E2>) => Cause.Cause<E | E2>
+  ): (self: Exit<E, A>) => Exit<E | E2, C>
+  <E, E2, A, B, C>(
     self: Exit<E, A>,
     that: Exit<E2, B>,
     f: (a: A, b: B) => C,
     g: (cause: Cause.Cause<E>, cause2: Cause.Cause<E2>) => Cause.Cause<E | E2>
   ): Exit<E | E2, C>
-  <E, E2, A, B, C>(
-    that: Exit<E2, B>,
-    f: (a: A, b: B) => C,
-    g: (cause: Cause.Cause<E>, cause2: Cause.Cause<E2>) => Cause.Cause<E | E2>
-  ): (self: Exit<E, A>) => Exit<E | E2, C>
 }
 ```
 

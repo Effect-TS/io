@@ -1,6 +1,6 @@
 ---
 title: Scope.ts
-nav_order: 50
+nav_order: 51
 parent: Modules
 ---
 
@@ -47,7 +47,11 @@ If an ExecutionStrategy is not provided `sequential` will be used.
 
 ```ts
 export declare const make: (
-  executionStrategy?: ExecutionStrategy.ExecutionStrategy | undefined
+  executionStrategy?:
+    | ExecutionStrategy.Sequential
+    | ExecutionStrategy.Parallel
+    | ExecutionStrategy.ParallelN
+    | undefined
 ) => Effect.Effect<never, never, CloseableScope>
 ```
 
@@ -94,8 +98,8 @@ interruption.
 
 ```ts
 export declare const use: {
-  <R, E, A>(effect: Effect.Effect<R, E, A>, scope: CloseableScope): Effect.Effect<Exclude<R, Scope>, E, A>
   (scope: CloseableScope): <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<Exclude<R, Scope>, E, A>
+  <R, E, A>(effect: Effect.Effect<R, E, A>, scope: CloseableScope): Effect.Effect<Exclude<R, Scope>, E, A>
 }
 ```
 
@@ -183,8 +187,8 @@ larger scope.
 
 ```ts
 export declare const extend: {
-  <R, E, A>(effect: Effect.Effect<R, E, A>, scope: Scope): Effect.Effect<Exclude<R, Scope>, E, A>
   (scope: Scope): <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<Exclude<R, Scope>, E, A>
+  <R, E, A>(effect: Effect.Effect<R, E, A>, scope: Scope): Effect.Effect<Exclude<R, Scope>, E, A>
 }
 ```
 
