@@ -2677,17 +2677,21 @@ export const tryPromiseInterrupt = Debug.methodWithTrace((trace, restore) =>
 
 /* @internal */
 export const sequential = Debug.methodWithTrace((trace): {
-  <T extends ReadonlyArray<Effect.Effect<any, any, any>>>(
+  <R, E, A, T extends ReadonlyArray<Effect.Effect<any, any, any>>>(
+    self: Effect.Effect<R, E, A>,
     ...args: T
   ): Effect.Effect<
-    T["length"] extends 0 ? never
+    R | T["length"] extends 0 ? never
       : [T[number]] extends [{ [Effect.EffectTypeId]: { _R: (_: never) => infer R } }] ? R
       : never,
-    T["length"] extends 0 ? never
+    E | T["length"] extends 0 ? never
       : [T[number]] extends [{ [Effect.EffectTypeId]: { _E: (_: never) => infer E } }] ? E
       : never,
-    T["length"] extends 0 ? []
-      : Readonly<{ [K in keyof T]: [T[K]] extends [Effect.Effect<any, any, infer A>] ? A : never }>
+    readonly [
+      A,
+      ...(T["length"] extends 0 ? []
+        : Readonly<{ [K in keyof T]: [T[K]] extends [Effect.Effect<any, any, infer A>] ? A : never }>)
+    ]
   >
   <T extends ReadonlyArray<Effect.Effect<any, any, any>>>(
     args: T
