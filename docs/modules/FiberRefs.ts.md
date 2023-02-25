@@ -55,8 +55,8 @@ values if it exists or `None` otherwise.
 
 ```ts
 export declare const get: {
-  <A>(self: FiberRefs, fiberRef: FiberRef.FiberRef<A>): Option.Option<A>
   <A>(fiberRef: FiberRef.FiberRef<A>): (self: FiberRefs) => Option.Option<A>
+  <A>(self: FiberRefs, fiberRef: FiberRef.FiberRef<A>): Option.Option<A>
 }
 ```
 
@@ -71,8 +71,8 @@ values if it exists or the `initial` value of the `FiberRef` otherwise.
 
 ```ts
 export declare const getOrDefault: {
-  <A>(self: FiberRefs, fiberRef: FiberRef.FiberRef<A>): A
   <A>(fiberRef: FiberRef.FiberRef<A>): (self: FiberRefs) => A
+  <A>(self: FiberRefs, fiberRef: FiberRef.FiberRef<A>): A
 }
 ```
 
@@ -107,7 +107,7 @@ Deletes the specified `FiberRef` from the `FibterRefs`.
 **Signature**
 
 ```ts
-export declare const delete: { <A>(self: FiberRefs, fiberRef: FiberRef.FiberRef<A>): FiberRefs; <A>(fiberRef: FiberRef.FiberRef<A>): (self: FiberRefs) => FiberRefs; }
+export declare const delete: { <A>(fiberRef: FiberRef.FiberRef<A>): (self: FiberRefs) => FiberRefs; <A>(self: FiberRefs, fiberRef: FiberRef.FiberRef<A>): FiberRefs; }
 ```
 
 Added in v1.0.0
@@ -122,8 +122,8 @@ individual fiber refs that make up the collection.
 
 ```ts
 export declare const forkAs: {
-  (self: FiberRefs, childId: FiberId.Runtime): FiberRefs
   (childId: FiberId.Runtime): (self: FiberRefs) => FiberRefs
+  (self: FiberRefs, childId: FiberId.Runtime): FiberRefs
 }
 ```
 
@@ -139,8 +139,8 @@ preservation of maximum information from both child and parent refs.
 
 ```ts
 export declare const joinAs: {
-  (self: FiberRefs, fiberId: FiberId.Runtime, that: FiberRefs): FiberRefs
   (fiberId: FiberId.Runtime, that: FiberRefs): (self: FiberRefs) => FiberRefs
+  (self: FiberRefs, fiberId: FiberId.Runtime, that: FiberRefs): FiberRefs
 }
 ```
 
@@ -166,8 +166,8 @@ Updates the value of the specified `FiberRef` using the provided `FiberId`
 
 ```ts
 export declare const updatedAs: {
-  <A>(self: FiberRefs, fiberId: FiberId.Runtime, fiberRef: FiberRef.FiberRef<A>, value: A): FiberRefs
   <A>(fiberId: FiberId.Runtime, fiberRef: FiberRef.FiberRef<A>, value: A): (self: FiberRefs) => FiberRefs
+  <A>(self: FiberRefs, fiberId: FiberId.Runtime, fiberRef: FiberRef.FiberRef<A>, value: A): FiberRefs
 }
 ```
 

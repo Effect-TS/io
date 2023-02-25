@@ -138,8 +138,8 @@ Returns `true` if the `RuntimeFlagsPatch` includes the specified
 
 ```ts
 export declare const includes: {
-  (self: RuntimeFlagsPatch, flag: RuntimeFlagsPatch): boolean
   (flag: RuntimeFlagsPatch): (self: RuntimeFlagsPatch) => boolean
+  (self: RuntimeFlagsPatch, flag: RuntimeFlagsPatch): boolean
 }
 ```
 
@@ -154,8 +154,8 @@ Returns `true` if the `RuntimeFlagsPatch` describes the specified
 
 ```ts
 export declare const isActive: {
-  (self: RuntimeFlagsPatch, flag: RuntimeFlagsPatch): boolean
   (flag: RuntimeFlagsPatch): (self: RuntimeFlagsPatch) => boolean
+  (self: RuntimeFlagsPatch, flag: RuntimeFlagsPatch): boolean
 }
 ```
 
@@ -170,8 +170,8 @@ Returns `true` if the `RuntimeFlagsPatch` describes the specified
 
 ```ts
 export declare const isDisabled: {
-  (self: RuntimeFlagsPatch, flag: RuntimeFlags.RuntimeFlag): boolean
   (flag: RuntimeFlags.RuntimeFlag): (self: RuntimeFlagsPatch) => boolean
+  (self: RuntimeFlagsPatch, flag: RuntimeFlags.RuntimeFlag): boolean
 }
 ```
 
@@ -186,8 +186,8 @@ Returns `true` if the `RuntimeFlagsPatch` describes the specified
 
 ```ts
 export declare const isEnabled: {
-  (self: RuntimeFlagsPatch, flag: RuntimeFlags.RuntimeFlag): boolean
   (flag: RuntimeFlags.RuntimeFlag): (self: RuntimeFlagsPatch) => boolean
+  (self: RuntimeFlagsPatch, flag: RuntimeFlags.RuntimeFlag): boolean
 }
 ```
 
@@ -232,8 +232,8 @@ followed by `that` patch.
 
 ```ts
 export declare const andThen: {
-  (self: RuntimeFlagsPatch, that: RuntimeFlagsPatch): RuntimeFlagsPatch
   (that: RuntimeFlagsPatch): (self: RuntimeFlagsPatch) => RuntimeFlagsPatch
+  (self: RuntimeFlagsPatch, that: RuntimeFlagsPatch): RuntimeFlagsPatch
 }
 ```
 
@@ -248,8 +248,8 @@ and `that` patch.
 
 ```ts
 export declare const both: {
-  (self: RuntimeFlagsPatch, that: RuntimeFlagsPatch): RuntimeFlagsPatch
   (that: RuntimeFlagsPatch): (self: RuntimeFlagsPatch) => RuntimeFlagsPatch
+  (self: RuntimeFlagsPatch, that: RuntimeFlagsPatch): RuntimeFlagsPatch
 }
 ```
 
@@ -264,8 +264,8 @@ patch or `that` patch.
 
 ```ts
 export declare const either: {
-  (self: RuntimeFlagsPatch, that: RuntimeFlagsPatch): RuntimeFlagsPatch
   (that: RuntimeFlagsPatch): (self: RuntimeFlagsPatch) => RuntimeFlagsPatch
+  (self: RuntimeFlagsPatch, that: RuntimeFlagsPatch): RuntimeFlagsPatch
 }
 ```
 
@@ -280,8 +280,8 @@ Creates a `RuntimeFlagsPatch` which describes exclusion of the specified
 
 ```ts
 export declare const exclude: {
-  (self: RuntimeFlagsPatch, flag: RuntimeFlags.RuntimeFlag): RuntimeFlagsPatch
   (flag: RuntimeFlags.RuntimeFlag): (self: RuntimeFlagsPatch) => RuntimeFlagsPatch
+  (self: RuntimeFlagsPatch, flag: RuntimeFlags.RuntimeFlag): RuntimeFlagsPatch
 }
 ```
 

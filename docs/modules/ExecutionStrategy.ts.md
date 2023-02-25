@@ -78,11 +78,10 @@ functions.
 **Signature**
 
 ```ts
-export declare const match: <A>(
-  onSequential: LazyArg<A>,
-  onParallel: LazyArg<A>,
-  onParallelN: (n: number) => A
-) => (self: ExecutionStrategy) => A
+export declare const match: {
+  <A>(onSequential: LazyArg<A>, onParallel: LazyArg<A>, onParallelN: (n: number) => A): (self: ExecutionStrategy) => A
+  <A>(self: ExecutionStrategy, onSequential: LazyArg<A>, onParallel: LazyArg<A>, onParallelN: (n: number) => A): A
+}
 ```
 
 Added in v1.0.0

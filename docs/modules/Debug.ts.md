@@ -22,7 +22,6 @@ Added in v1.0.0
   - [Trace (type alias)](#trace-type-alias)
 - [utils](#utils)
   - [bodyWithTrace](#bodywithtrace)
-  - [dual](#dual)
   - [dualWithTrace](#dualwithtrace)
   - [methodWithTrace](#methodwithtrace)
   - [pipeableWithTrace](#pipeablewithtrace)
@@ -141,28 +140,18 @@ export declare const bodyWithTrace: <A>(body: (trace: Trace, restore: Restore) =
 
 Added in v1.0.0
 
-## dual
-
-**Signature**
-
-```ts
-export declare const dual: <DF extends (...args: Array<any>) => any, P extends (...args: Array<any>) => any>(
-  dfLen: Parameters<DF>['length'],
-  body: DF
-) => DF & P
-```
-
-Added in v1.0.0
-
 ## dualWithTrace
 
 **Signature**
 
 ```ts
-export declare const dualWithTrace: <DF extends (...args: Array<any>) => any, P extends (...args: Array<any>) => any>(
-  dfLen: Parameters<DF>['length'],
-  body: (trace: Trace, restore: Restore) => DF
-) => DF & P
+export declare const dualWithTrace: <
+  DataLast extends (...args: Array<any>) => any,
+  DataFirst extends (...args: Array<any>) => any
+>(
+  dfLen: Parameters<DataFirst>['length'],
+  body: (trace: Trace, restore: Restore) => DataFirst
+) => DataLast & DataFirst
 ```
 
 Added in v1.0.0
@@ -226,10 +215,13 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const untracedDual: <DF extends (...args: Array<any>) => any, P extends (...args: Array<any>) => any>(
-  dfLen: Parameters<DF>['length'],
-  body: (restore: Restore) => DF
-) => DF & P
+export declare const untracedDual: <
+  DataLast extends (...args: Array<any>) => any,
+  DataFirst extends (...args: Array<any>) => any
+>(
+  dfLen: Parameters<DataFirst>['length'],
+  body: (restore: Restore) => DataFirst
+) => DataLast & DataFirst
 ```
 
 Added in v1.0.0

@@ -1,6 +1,6 @@
 ---
 title: Schedule.ts
-nav_order: 45
+nav_order: 46
 parent: Modules
 ---
 
@@ -150,14 +150,14 @@ schedule, or feeding inputs to the specified schedule.
 
 ```ts
 export declare const choose: {
+  <Env2, In2, Out2>(that: Schedule<Env2, In2, Out2>): <Env, In, Out>(
+    self: Schedule<Env, In, Out>
+  ) => Schedule<Env2 | Env, Either.Either<In, In2>, Either.Either<Out, Out2>>
   <Env, In, Out, Env2, In2, Out2>(self: Schedule<Env, In, Out>, that: Schedule<Env2, In2, Out2>): Schedule<
     Env | Env2,
     Either.Either<In, In2>,
     Either.Either<Out, Out2>
   >
-  <Env2, In2, Out2>(that: Schedule<Env2, In2, Out2>): <Env, In, Out>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Env2 | Env, Either.Either<In, In2>, Either.Either<Out, Out2>>
 }
 ```
 
@@ -172,14 +172,14 @@ output.
 
 ```ts
 export declare const chooseMerge: {
+  <Env2, In2, Out2>(that: Schedule<Env2, In2, Out2>): <Env, In, Out>(
+    self: Schedule<Env, In, Out>
+  ) => Schedule<Env2 | Env, Either.Either<In, In2>, Out2 | Out>
   <Env, In, Out, Env2, In2, Out2>(self: Schedule<Env, In, Out>, that: Schedule<Env2, In2, Out2>): Schedule<
     Env | Env2,
     Either.Either<In, In2>,
     Out | Out2
   >
-  <Env2, In2, Out2>(that: Schedule<Env2, In2, Out2>): <Env, In, Out>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Env2 | Env, Either.Either<In, In2>, Out2 | Out>
 }
 ```
 
@@ -194,14 +194,14 @@ defined by both schedules.
 
 ```ts
 export declare const either: {
+  <Env2, In2, Out2>(that: Schedule<Env2, In2, Out2>): <Env, In, Out>(
+    self: Schedule<Env, In, Out>
+  ) => Schedule<Env2 | Env, In & In2, readonly [Out, Out2]>
   <Env, In, Out, Env2, In2, Out2>(self: Schedule<Env, In, Out>, that: Schedule<Env2, In2, Out2>): Schedule<
     Env | Env2,
     In & In2,
     readonly [Out, Out2]
   >
-  <Env2, In2, Out2>(that: Schedule<Env2, In2, Out2>): <Env, In, Out>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Env2 | Env, In & In2, readonly [Out, Out2]>
 }
 ```
 
@@ -215,15 +215,15 @@ The same as `either` followed by `map`.
 
 ```ts
 export declare const eitherWith: {
+  <Env2, In2, Out2>(
+    that: Schedule<Env2, In2, Out2>,
+    f: (x: Intervals.Intervals, y: Intervals.Intervals) => Intervals.Intervals
+  ): <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env, In & In2, readonly [Out, Out2]>
   <Env, In, Out, Env2, In2, Out2>(
     self: Schedule<Env, In, Out>,
     that: Schedule<Env2, In2, Out2>,
     f: (x: Intervals.Intervals, y: Intervals.Intervals) => Intervals.Intervals
   ): Schedule<Env | Env2, In & In2, readonly [Out, Out2]>
-  <Env2, In2, Out2>(
-    that: Schedule<Env2, In2, Out2>,
-    f: (x: Intervals.Intervals, y: Intervals.Intervals) => Intervals.Intervals
-  ): <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env, In & In2, readonly [Out, Out2]>
 }
 ```
 
@@ -309,13 +309,13 @@ before the start of each interval produced by this schedule.
 
 ```ts
 export declare const delayedEffect: {
+  <Env2>(f: (duration: Duration.Duration) => Effect.Effect<Env2, never, Duration.Duration>): <Env, In, Out>(
+    self: Schedule<Env, In, Out>
+  ) => Schedule<Env2 | Env, In, Out>
   <Env, In, Out, Env2>(
     self: Schedule<Env, In, Out>,
     f: (duration: Duration.Duration) => Effect.Effect<Env2, never, Duration.Duration>
   ): Schedule<Env | Env2, In, Out>
-  <Env2>(f: (duration: Duration.Duration) => Effect.Effect<Env2, never, Duration.Duration>): <Env, In, Out>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Env2 | Env, In, Out>
 }
 ```
 
@@ -537,13 +537,14 @@ interval size`.
 
 ```ts
 export declare const jitteredWith: {
-  <Env, In, Out>(
-    self: Schedule<Env, In, Out>,
-    options: { min?: number | undefined; max?: number | undefined }
-  ): Schedule<Random.Random | Env, In, Out>
-  (options: { min?: number | undefined; max?: number | undefined }): <Env, In, Out>(
+  (options: { min?: number; max?: number }): <Env, In, Out>(
     self: Schedule<Env, In, Out>
   ) => Schedule<Random.Random | Env, In, Out>
+  <Env, In, Out>(self: Schedule<Env, In, Out>, options: { min?: number; max?: number }): Schedule<
+    Random.Random | Env,
+    In,
+    Out
+  >
 }
 ```
 
@@ -749,13 +750,13 @@ specified function.
 
 ```ts
 export declare const contramapContext: {
+  <Env0, Env>(f: (env0: Context.Context<Env0>) => Context.Context<Env>): <In, Out>(
+    self: Schedule<Env, In, Out>
+  ) => Schedule<Env0, In, Out>
   <Env0, Env, In, Out>(
     self: Schedule<Env, In, Out>,
     f: (env0: Context.Context<Env0>) => Context.Context<Env>
   ): Schedule<Env0, In, Out>
-  <Env0, Env>(f: (env0: Context.Context<Env0>) => Context.Context<Env>): <In, Out>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Env0, In, Out>
 }
 ```
 
@@ -770,8 +771,8 @@ resulting schedule does not require any context.
 
 ```ts
 export declare const provideContext: {
-  <Env, In, Out>(self: Schedule<Env, In, Out>, context: Context.Context<Env>): Schedule<never, In, Out>
   <Env>(context: Context.Context<Env>): <In, Out>(self: Schedule<Env, In, Out>) => Schedule<never, In, Out>
+  <Env, In, Out>(self: Schedule<Env, In, Out>, context: Context.Context<Env>): Schedule<never, In, Out>
 }
 ```
 
@@ -787,14 +788,14 @@ instead.
 
 ```ts
 export declare const provideService: {
+  <T, T1 extends T>(tag: Context.Tag<T>, service: T1): <Env, In, Out>(
+    self: Schedule<T | Env, In, Out>
+  ) => Schedule<Exclude<Env, T>, In, Out>
   <Env, T, In, Out, T1 extends T>(self: Schedule<Env | T, In, Out>, tag: Context.Tag<T>, service: T1): Schedule<
     Exclude<Env, T>,
     In,
     Out
   >
-  <T, T1 extends T>(tag: Context.Tag<T>, service: T1): <Env, In, Out>(
-    self: Schedule<T | Env, In, Out>
-  ) => Schedule<Exclude<Env, T>, In, Out>
 }
 ```
 
@@ -810,14 +811,14 @@ Runs a schedule using the provided inputs, and collects all outputs.
 
 ```ts
 export declare const run: {
+  <In>(now: number, input: Iterable<In>): <Env, Out>(
+    self: Schedule<Env, In, Out>
+  ) => Effect.Effect<Env, never, Chunk.Chunk<Out>>
   <Env, In, Out>(self: Schedule<Env, In, Out>, now: number, input: Iterable<In>): Effect.Effect<
     Env,
     never,
     Chunk.Chunk<Out>
   >
-  <In>(now: number, input: Iterable<In>): <Env, Out>(
-    self: Schedule<Env, In, Out>
-  ) => Effect.Effect<Env, never, Chunk.Chunk<Out>>
 }
 ```
 
@@ -837,8 +838,8 @@ the driver of the schedule may not run to completion. However, if the
 
 ```ts
 export declare const ensuring: {
-  <Env, In, Out, X>(self: Schedule<Env, In, Out>, finalizer: Effect.Effect<never, never, X>): Schedule<Env, In, Out>
   <X>(finalizer: Effect.Effect<never, never, X>): <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out>
+  <Env, In, Out, X>(self: Schedule<Env, In, Out>, finalizer: Effect.Effect<never, never, X>): Schedule<Env, In, Out>
 }
 ```
 
@@ -854,8 +855,8 @@ Returns a new schedule that folds over the outputs of this one.
 
 ```ts
 export declare const reduce: {
-  <Env, In, Out, Z>(self: Schedule<Env, In, Out>, zero: Z, f: (z: Z, out: Out) => Z): Schedule<Env, In, Z>
   <Out, Z>(zero: Z, f: (z: Z, out: Out) => Z): <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Z>
+  <Env, In, Out, Z>(self: Schedule<Env, In, Out>, zero: Z, f: (z: Z, out: Out) => Z): Schedule<Env, In, Z>
 }
 ```
 
@@ -869,14 +870,14 @@ Returns a new schedule that effectfully folds over the outputs of this one.
 
 ```ts
 export declare const reduceEffect: {
+  <Out, Env1, Z>(zero: Z, f: (z: Z, out: Out) => Effect.Effect<Env1, never, Z>): <Env, In>(
+    self: Schedule<Env, In, Out>
+  ) => Schedule<Env1 | Env, In, Z>
   <Env, In, Out, Env1, Z>(
     self: Schedule<Env, In, Out>,
     zero: Z,
     f: (z: Z, out: Out) => Effect.Effect<Env1, never, Z>
   ): Schedule<Env | Env1, In, Z>
-  <Out, Env1, Z>(zero: Z, f: (z: Z, out: Out) => Effect.Effect<Env1, never, Z>): <Env, In>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Env1 | Env, In, Z>
 }
 ```
 
@@ -909,8 +910,8 @@ Returns a new schedule that maps this schedule to a constant output.
 
 ```ts
 export declare const as: {
-  <Env, In, Out, Out2>(self: Schedule<Env, In, Out>, out: Out2): Schedule<Env, In, Out2>
   <Out2>(out: Out2): <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out2>
+  <Env, In, Out, Out2>(self: Schedule<Env, In, Out>, out: Out2): Schedule<Env, In, Out2>
 }
 ```
 
@@ -925,8 +926,8 @@ schedule.
 
 ```ts
 export declare const contramap: {
-  <Env, In, Out, In2>(self: Schedule<Env, In, Out>, f: (in2: In2) => In): Schedule<Env, In2, Out>
   <In, In2>(f: (in2: In2) => In): <Env, Out>(self: Schedule<Env, In, Out>) => Schedule<Env, In2, Out>
+  <Env, In, Out, In2>(self: Schedule<Env, In, Out>, f: (in2: In2) => In): Schedule<Env, In2, Out>
 }
 ```
 
@@ -941,14 +942,14 @@ schedule.
 
 ```ts
 export declare const contramapEffect: {
+  <In, Env2, In2>(f: (in2: In2) => Effect.Effect<Env2, never, In>): <Env, Out>(
+    self: Schedule<Env, In, Out>
+  ) => Schedule<Env2 | Env, In2, Out>
   <Env, In, Out, Env2, In2>(self: Schedule<Env, In, Out>, f: (in2: In2) => Effect.Effect<Env2, never, In>): Schedule<
     Env | Env2,
     In2,
     Out
   >
-  <In, Env2, In2>(f: (in2: In2) => Effect.Effect<Env2, never, In>): <Env, Out>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Env2 | Env, In2, Out>
 }
 ```
 
@@ -962,14 +963,14 @@ Returns a new schedule that contramaps the input and maps the output.
 
 ```ts
 export declare const dimap: {
+  <In, Out, In2, Out2>(f: (in2: In2) => In, g: (out: Out) => Out2): <Env>(
+    self: Schedule<Env, In, Out>
+  ) => Schedule<Env, In2, Out2>
   <Env, In, Out, In2, Out2>(self: Schedule<Env, In, Out>, f: (in2: In2) => In, g: (out: Out) => Out2): Schedule<
     Env,
     In2,
     Out2
   >
-  <In, Out, In2, Out2>(f: (in2: In2) => In, g: (out: Out) => Out2): <Env>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Env, In2, Out2>
 }
 ```
 
@@ -983,15 +984,15 @@ Returns a new schedule that contramaps the input and maps the output.
 
 ```ts
 export declare const dimapEffect: {
+  <In2, Env2, In, Out, Env3, Out2>(
+    f: (input: In2) => Effect.Effect<Env2, never, In>,
+    g: (out: Out) => Effect.Effect<Env3, never, Out2>
+  ): <Env>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env3 | Env, In2, Out2>
   <Env, In, Out, In2, Env2, Env3, Out2>(
     self: Schedule<Env, In, Out>,
     f: (input: In2) => Effect.Effect<Env2, never, In>,
     g: (out: Out) => Effect.Effect<Env3, never, Out2>
   ): Schedule<Env | Env2 | Env3, In2, Out2>
-  <In2, Env2, In, Out, Env3, Out2>(
-    f: (input: In2) => Effect.Effect<Env2, never, In>,
-    g: (out: Out) => Effect.Effect<Env3, never, Out2>
-  ): <Env>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env3 | Env, In2, Out2>
 }
 ```
 
@@ -1006,8 +1007,8 @@ specified function.
 
 ```ts
 export declare const map: {
-  <Env, In, Out, Out2>(self: Schedule<Env, In, Out>, f: (out: Out) => Out2): Schedule<Env, In, Out2>
   <Out, Out2>(f: (out: Out) => Out2): <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out2>
+  <Env, In, Out, Out2>(self: Schedule<Env, In, Out>, f: (out: Out) => Out2): Schedule<Env, In, Out2>
 }
 ```
 
@@ -1022,14 +1023,14 @@ specified effectful function.
 
 ```ts
 export declare const mapEffect: {
+  <Out, Env2, Out2>(f: (out: Out) => Effect.Effect<Env2, never, Out2>): <Env, In>(
+    self: Schedule<Env, In, Out>
+  ) => Schedule<Env2 | Env, In, Out2>
   <Env, In, Out, Env2, Out2>(self: Schedule<Env, In, Out>, f: (out: Out) => Effect.Effect<Env2, never, Out2>): Schedule<
     Env | Env2,
     In,
     Out2
   >
-  <Out, Env2, Out2>(f: (out: Out) => Effect.Effect<Env2, never, Out2>): <Env, In>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Env2 | Env, In, Out2>
 }
 ```
 
@@ -1112,8 +1113,8 @@ by this schedule.
 
 ```ts
 export declare const addDelay: {
-  <Env, In, Out>(self: Schedule<Env, In, Out>, f: (out: Out) => Duration.Duration): Schedule<Env, In, Out>
   <Out>(f: (out: Out) => Duration.Duration): <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out>
+  <Env, In, Out>(self: Schedule<Env, In, Out>, f: (out: Out) => Duration.Duration): Schedule<Env, In, Out>
 }
 ```
 
@@ -1128,13 +1129,13 @@ every interval defined by this schedule.
 
 ```ts
 export declare const addDelayEffect: {
+  <Out, Env2>(f: (out: Out) => Effect.Effect<Env2, never, Duration.Duration>): <Env, In>(
+    self: Schedule<Env, In, Out>
+  ) => Schedule<Env2 | Env, In, Out>
   <Env, In, Out, Env2>(
     self: Schedule<Env, In, Out>,
     f: (out: Out) => Effect.Effect<Env2, never, Duration.Duration>
   ): Schedule<Env | Env2, In, Out>
-  <Out, Env2>(f: (out: Out) => Effect.Effect<Env2, never, Duration.Duration>): <Env, In>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Env2 | Env, In, Out>
 }
 ```
 
@@ -1149,14 +1150,14 @@ specified schedule.
 
 ```ts
 export declare const bothInOut: {
+  <Env2, In2, Out2>(that: Schedule<Env2, In2, Out2>): <Env, In, Out>(
+    self: Schedule<Env, In, Out>
+  ) => Schedule<Env2 | Env, readonly [In, In2], readonly [Out, Out2]>
   <Env, In, Out, Env2, In2, Out2>(self: Schedule<Env, In, Out>, that: Schedule<Env2, In2, Out2>): Schedule<
     Env | Env2,
     readonly [In, In2],
     readonly [Out, Out2]
   >
-  <Env2, In2, Out2>(that: Schedule<Env2, In2, Out2>): <Env, In, Out>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Env2 | Env, readonly [In, In2], readonly [Out, Out2]>
 }
 ```
 
@@ -1172,8 +1173,8 @@ based on the return value of the function.
 
 ```ts
 export declare const check: {
-  <Env, In, Out>(self: Schedule<Env, In, Out>, test: (input: In, output: Out) => boolean): Schedule<Env, In, Out>
   <In, Out>(test: (input: In, output: Out) => boolean): <Env>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out>
+  <Env, In, Out>(self: Schedule<Env, In, Out>, test: (input: In, output: Out) => boolean): Schedule<Env, In, Out>
 }
 ```
 
@@ -1189,13 +1190,13 @@ based on the return value of the function.
 
 ```ts
 export declare const checkEffect: {
+  <In, Out, Env2>(test: (input: In, output: Out) => Effect.Effect<Env2, never, boolean>): <Env>(
+    self: Schedule<Env, In, Out>
+  ) => Schedule<Env2 | Env, In, Out>
   <Env, In, Out, Env2>(
     self: Schedule<Env, In, Out>,
     test: (input: In, output: Out) => Effect.Effect<Env2, never, boolean>
   ): Schedule<Env | Env2, In, Out>
-  <In, Out, Env2>(test: (input: In, output: Out) => Effect.Effect<Env2, never, boolean>): <Env>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Env2 | Env, In, Out>
 }
 ```
 
@@ -1282,14 +1283,14 @@ described by the second schedule.
 
 ```ts
 export declare const compose: {
+  <Env2, Out, Out2>(that: Schedule<Env2, Out, Out2>): <Env, In>(
+    self: Schedule<Env, In, Out>
+  ) => Schedule<Env2 | Env, In, Out2>
   <Env, In, Out, Env2, Out2>(self: Schedule<Env, In, Out>, that: Schedule<Env2, Out, Out2>): Schedule<
     Env | Env2,
     In,
     Out2
   >
-  <Env2, Out, Out2>(that: Schedule<Env2, Out, Out2>): <Env, In>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Env2 | Env, In, Out2>
 }
 ```
 
@@ -1304,14 +1305,14 @@ before the start of each interval produced by this schedule.
 
 ```ts
 export declare const delayed: {
+  (f: (duration: Duration.Duration) => Duration.Duration): <Env, In, Out>(
+    self: Schedule<Env, In, Out>
+  ) => Schedule<Env, In, Out>
   <Env, In, Out>(self: Schedule<Env, In, Out>, f: (duration: Duration.Duration) => Duration.Duration): Schedule<
     Env,
     In,
     Out
   >
-  (f: (duration: Duration.Duration) => Duration.Duration): <Env, In, Out>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Env, In, Out>
 }
 ```
 
@@ -1326,14 +1327,14 @@ intervals defined by both schedules.
 
 ```ts
 export declare const intersect: {
+  <Env2, In2, Out2>(that: Schedule<Env2, In2, Out2>): <Env, In, Out>(
+    self: Schedule<Env, In, Out>
+  ) => Schedule<Env2 | Env, In & In2, readonly [Out, Out2]>
   <Env, In, Out, Env2, In2, Out2>(self: Schedule<Env, In, Out>, that: Schedule<Env2, In2, Out2>): Schedule<
     Env | Env2,
     In & In2,
     readonly [Out, Out2]
   >
-  <Env2, In2, Out2>(that: Schedule<Env2, In2, Out2>): <Env, In, Out>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Env2 | Env, In & In2, readonly [Out, Out2]>
 }
 ```
 
@@ -1349,15 +1350,15 @@ the next intervals according to the specified merge function.
 
 ```ts
 export declare const intersectWith: {
+  <Env2, In2, Out2>(
+    that: Schedule<Env2, In2, Out2>,
+    f: (x: Intervals.Intervals, y: Intervals.Intervals) => Intervals.Intervals
+  ): <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env, In & In2, readonly [Out, Out2]>
   <Env, In, Out, Env2, In2, Out2>(
     self: Schedule<Env, In, Out>,
     that: Schedule<Env2, In2, Out2>,
     f: (x: Intervals.Intervals, y: Intervals.Intervals) => Intervals.Intervals
   ): Schedule<Env | Env2, In & In2, readonly [Out, Out2]>
-  <Env2, In2, Out2>(
-    that: Schedule<Env2, In2, Out2>,
-    f: (x: Intervals.Intervals, y: Intervals.Intervals) => Intervals.Intervals
-  ): <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env, In & In2, readonly [Out, Out2]>
 }
 ```
 
@@ -1388,13 +1389,13 @@ function.
 
 ```ts
 export declare const modifyDelay: {
+  <Out>(f: (out: Out, duration: Duration.Duration) => Duration.Duration): <Env, In>(
+    self: Schedule<Env, In, Out>
+  ) => Schedule<Env, In, Out>
   <Env, In, Out>(
     self: Schedule<Env, In, Out>,
     f: (out: Out, duration: Duration.Duration) => Duration.Duration
   ): Schedule<Env, In, Out>
-  <Out>(f: (out: Out, duration: Duration.Duration) => Duration.Duration): <Env, In>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Env, In, Out>
 }
 ```
 
@@ -1409,13 +1410,13 @@ effectual function.
 
 ```ts
 export declare const modifyDelayEffect: {
+  <Out, Env2>(f: (out: Out, duration: Duration.Duration) => Effect.Effect<Env2, never, Duration.Duration>): <Env, In>(
+    self: Schedule<Env, In, Out>
+  ) => Schedule<Env2 | Env, In, Out>
   <Env, In, Out, Env2>(
     self: Schedule<Env, In, Out>,
     f: (out: Out, duration: Duration.Duration) => Effect.Effect<Env2, never, Duration.Duration>
   ): Schedule<Env | Env2, In, Out>
-  <Out, Env2>(f: (out: Out, duration: Duration.Duration) => Effect.Effect<Env2, never, Duration.Duration>): <Env, In>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Env2 | Env, In, Out>
 }
 ```
 
@@ -1431,16 +1432,16 @@ schedules that log failures, decisions, or computed values.
 
 ```ts
 export declare const onDecision: {
-  <Env, In, Out, Env2, X>(
-    self: Schedule<Env, In, Out>,
-    f: (out: Out, decision: ScheduleDecision.ScheduleDecision) => Effect.Effect<Env2, never, X>
-  ): Schedule<Env | Env2, In, Out>
   <Out, Env2, X>(f: (out: Out, decision: ScheduleDecision.ScheduleDecision) => Effect.Effect<Env2, never, X>): <
     Env,
     In
   >(
     self: Schedule<Env, In, Out>
   ) => Schedule<Env2 | Env, In, Out>
+  <Env, In, Out, Env2, X>(
+    self: Schedule<Env, In, Out>,
+    f: (out: Out, decision: ScheduleDecision.ScheduleDecision) => Effect.Effect<Env2, never, X>
+  ): Schedule<Env | Env2, In, Out>
 }
 ```
 
@@ -1470,6 +1471,12 @@ process.
 
 ```ts
 export declare const reconsider: {
+  <Out, Out2>(
+    f: (
+      out: Out,
+      decision: ScheduleDecision.ScheduleDecision
+    ) => Either.Either<Out2, readonly [Out2, Interval.Interval]>
+  ): <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out2>
   <Env, In, Out, Out2>(
     self: Schedule<Env, In, Out>,
     f: (
@@ -1477,12 +1484,6 @@ export declare const reconsider: {
       decision: ScheduleDecision.ScheduleDecision
     ) => Either.Either<Out2, readonly [Out2, Interval.Interval]>
   ): Schedule<Env, In, Out2>
-  <Out, Out2>(
-    f: (
-      out: Out,
-      decision: ScheduleDecision.ScheduleDecision
-    ) => Either.Either<Out2, readonly [Out2, Interval.Interval]>
-  ): <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out2>
 }
 ```
 
@@ -1498,6 +1499,12 @@ the process.
 
 ```ts
 export declare const reconsiderEffect: {
+  <Out, Env2, Out2>(
+    f: (
+      out: Out,
+      decision: ScheduleDecision.ScheduleDecision
+    ) => Effect.Effect<Env2, never, Either.Either<Out2, readonly [Out2, Interval.Interval]>>
+  ): <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env, In, Out2>
   <Env, In, Out, Env2, Out2>(
     self: Schedule<Env, In, Out>,
     f: (
@@ -1505,12 +1512,6 @@ export declare const reconsiderEffect: {
       decision: ScheduleDecision.ScheduleDecision
     ) => Effect.Effect<Env2, never, Either.Either<Out2, readonly [Out2, Interval.Interval]>>
   ): Schedule<Env | Env2, In, Out2>
-  <Out, Env2, Out2>(
-    f: (
-      out: Out,
-      decision: ScheduleDecision.ScheduleDecision
-    ) => Effect.Effect<Env2, never, Either.Either<Out2, readonly [Out2, Interval.Interval]>>
-  ): <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env, In, Out2>
 }
 ```
 
@@ -1636,8 +1637,8 @@ state after some time of inactivity defined by `duration`.
 
 ```ts
 export declare const resetAfter: {
-  <Env, In, Out>(self: Schedule<Env, In, Out>, duration: Duration.Duration): Schedule<Env, In, Out>
   (duration: Duration.Duration): <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out>
+  <Env, In, Out>(self: Schedule<Env, In, Out>, duration: Duration.Duration): Schedule<Env, In, Out>
 }
 ```
 
@@ -1652,8 +1653,8 @@ evaluates to true.
 
 ```ts
 export declare const resetWhen: {
-  <Env, In, Out>(self: Schedule<Env, In, Out>, f: Predicate<Out>): Schedule<Env, In, Out>
   <Out>(f: Predicate<Out>): <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out>
+  <Env, In, Out>(self: Schedule<Env, In, Out>, f: Predicate<Out>): Schedule<Env, In, Out>
 }
 ```
 
@@ -1684,14 +1685,14 @@ defined by both schedules.
 
 ```ts
 export declare const union: {
+  <Env2, In2, Out2>(that: Schedule<Env2, In2, Out2>): <Env, In, Out>(
+    self: Schedule<Env, In, Out>
+  ) => Schedule<Env2 | Env, In & In2, readonly [Out, Out2]>
   <Env, In, Out, Env2, In2, Out2>(self: Schedule<Env, In, Out>, that: Schedule<Env2, In2, Out2>): Schedule<
     Env | Env2,
     In & In2,
     readonly [Out, Out2]
   >
-  <Env2, In2, Out2>(that: Schedule<Env2, In2, Out2>): <Env, In, Out>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Env2 | Env, In & In2, readonly [Out, Out2]>
 }
 ```
 
@@ -1707,15 +1708,15 @@ merging the next intervals according to the specified merge function.
 
 ```ts
 export declare const unionWith: {
+  <Env2, In2, Out2>(
+    that: Schedule<Env2, In2, Out2>,
+    f: (x: Intervals.Intervals, y: Intervals.Intervals) => Intervals.Intervals
+  ): <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env, In & In2, readonly [Out, Out2]>
   <Env, In, Out, Env2, In2, Out2>(
     self: Schedule<Env, In, Out>,
     that: Schedule<Env2, In2, Out2>,
     f: (x: Intervals.Intervals, y: Intervals.Intervals) => Intervals.Intervals
   ): Schedule<Env | Env2, In & In2, readonly [Out, Out2]>
-  <Env2, In2, Out2>(
-    that: Schedule<Env2, In2, Out2>,
-    f: (x: Intervals.Intervals, y: Intervals.Intervals) => Intervals.Intervals
-  ): <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env, In & In2, readonly [Out, Out2]>
 }
 ```
 
@@ -1730,8 +1731,8 @@ input evaluates to true.
 
 ```ts
 export declare const untilInput: {
-  <Env, In, Out>(self: Schedule<Env, In, Out>, f: Predicate<In>): Schedule<Env, In, Out>
   <In>(f: Predicate<In>): <Env, Out>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out>
+  <Env, In, Out>(self: Schedule<Env, In, Out>, f: Predicate<In>): Schedule<Env, In, Out>
 }
 ```
 
@@ -1746,14 +1747,14 @@ predicate on the input evaluates to true.
 
 ```ts
 export declare const untilInputEffect: {
+  <In, Env2>(f: (input: In) => Effect.Effect<Env2, never, boolean>): <Env, Out>(
+    self: Schedule<Env, In, Out>
+  ) => Schedule<Env2 | Env, In, Out>
   <Env, In, Out, Env2>(self: Schedule<Env, In, Out>, f: (input: In) => Effect.Effect<Env2, never, boolean>): Schedule<
     Env | Env2,
     In,
     Out
   >
-  <In, Env2>(f: (input: In) => Effect.Effect<Env2, never, boolean>): <Env, Out>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Env2 | Env, In, Out>
 }
 ```
 
@@ -1768,8 +1769,8 @@ output evaluates to true.
 
 ```ts
 export declare const untilOutput: {
-  <Env, In, Out>(self: Schedule<Env, In, Out>, f: Predicate<Out>): Schedule<Env, In, Out>
   <Out>(f: Predicate<Out>): <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out>
+  <Env, In, Out>(self: Schedule<Env, In, Out>, f: Predicate<Out>): Schedule<Env, In, Out>
 }
 ```
 
@@ -1784,14 +1785,14 @@ predicate on the output evaluates to true.
 
 ```ts
 export declare const untilOutputEffect: {
+  <Out, Env2>(f: (out: Out) => Effect.Effect<Env2, never, boolean>): <Env, In>(
+    self: Schedule<Env, In, Out>
+  ) => Schedule<Env2 | Env, In, Out>
   <Env, In, Out, Env2>(self: Schedule<Env, In, Out>, f: (out: Out) => Effect.Effect<Env2, never, boolean>): Schedule<
     Env | Env2,
     In,
     Out
   >
-  <Out, Env2>(f: (out: Out) => Effect.Effect<Env2, never, boolean>): <Env, In>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Env2 | Env, In, Out>
 }
 ```
 
@@ -1805,8 +1806,8 @@ A schedule that recurs during the given duration.
 
 ```ts
 export declare const upTo: {
-  <Env, In, Out>(self: Schedule<Env, In, Out>, duration: Duration.Duration): Schedule<Env, In, Out>
   (duration: Duration.Duration): <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out>
+  <Env, In, Out>(self: Schedule<Env, In, Out>, duration: Duration.Duration): Schedule<Env, In, Out>
 }
 ```
 
@@ -1821,8 +1822,8 @@ on the input evaluates to true.
 
 ```ts
 export declare const whileInput: {
-  <Env, In, Out>(self: Schedule<Env, In, Out>, f: Predicate<In>): Schedule<Env, In, Out>
   <In>(f: Predicate<In>): <Env, Out>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out>
+  <Env, In, Out>(self: Schedule<Env, In, Out>, f: Predicate<In>): Schedule<Env, In, Out>
 }
 ```
 
@@ -1837,14 +1838,14 @@ predicate on the input evaluates to true.
 
 ```ts
 export declare const whileInputEffect: {
+  <In, Env2>(f: (input: In) => Effect.Effect<Env2, never, boolean>): <Env, Out>(
+    self: Schedule<Env, In, Out>
+  ) => Schedule<Env2 | Env, In, Out>
   <Env, In, Out, Env2>(self: Schedule<Env, In, Out>, f: (input: In) => Effect.Effect<Env2, never, boolean>): Schedule<
     Env | Env2,
     In,
     Out
   >
-  <In, Env2>(f: (input: In) => Effect.Effect<Env2, never, boolean>): <Env, Out>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Env2 | Env, In, Out>
 }
 ```
 
@@ -1859,8 +1860,8 @@ on the output evaluates to true.
 
 ```ts
 export declare const whileOutput: {
-  <Env, In, Out>(self: Schedule<Env, In, Out>, f: Predicate<Out>): Schedule<Env, In, Out>
   <Out>(f: Predicate<Out>): <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out>
+  <Env, In, Out>(self: Schedule<Env, In, Out>, f: Predicate<Out>): Schedule<Env, In, Out>
 }
 ```
 
@@ -1875,14 +1876,14 @@ predicate on the output evaluates to true.
 
 ```ts
 export declare const whileOutputEffect: {
+  <Out, Env1>(f: (out: Out) => Effect.Effect<Env1, never, boolean>): <Env, In>(
+    self: Schedule<Env, In, Out>
+  ) => Schedule<Env1 | Env, In, Out>
   <Env, In, Out, Env1>(self: Schedule<Env, In, Out>, f: (out: Out) => Effect.Effect<Env1, never, boolean>): Schedule<
     Env | Env1,
     In,
     Out
   >
-  <Out, Env1>(f: (out: Out) => Effect.Effect<Env1, never, boolean>): <Env, In>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Env1 | Env, In, Out>
 }
 ```
 
@@ -1898,14 +1899,14 @@ The same as `andThenEither`, but merges the output.
 
 ```ts
 export declare const andThen: {
+  <Env1, In1, Out2>(that: Schedule<Env1, In1, Out2>): <Env, In, Out>(
+    self: Schedule<Env, In, Out>
+  ) => Schedule<Env1 | Env, In & In1, Out2 | Out>
   <Env, In, Out, Env1, In1, Out2>(self: Schedule<Env, In, Out>, that: Schedule<Env1, In1, Out2>): Schedule<
     Env | Env1,
     In & In1,
     Out | Out2
   >
-  <Env1, In1, Out2>(that: Schedule<Env1, In1, Out2>): <Env, In, Out>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Env1 | Env, In & In1, Out2 | Out>
 }
 ```
 
@@ -1920,14 +1921,14 @@ then executes the specified schedule to completion.
 
 ```ts
 export declare const andThenEither: {
+  <Env2, In2, Out2>(that: Schedule<Env2, In2, Out2>): <Env, In, Out>(
+    self: Schedule<Env, In, Out>
+  ) => Schedule<Env2 | Env, In & In2, Either.Either<Out, Out2>>
   <Env, In, Out, Env2, In2, Out2>(self: Schedule<Env, In, Out>, that: Schedule<Env2, In2, Out2>): Schedule<
     Env | Env2,
     In & In2,
     Either.Either<Out, Out2>
   >
-  <Env2, In2, Out2>(that: Schedule<Env2, In2, Out2>): <Env, In, Out>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Env2 | Env, In & In2, Either.Either<Out, Out2>>
 }
 ```
 
@@ -1942,13 +1943,13 @@ schedule.
 
 ```ts
 export declare const tapInput: {
+  <Env2, In2, X>(f: (input: In2) => Effect.Effect<Env2, never, X>): <Env, In, Out>(
+    self: Schedule<Env, In, Out>
+  ) => Schedule<Env2 | Env, In & In2, Out>
   <Env, In, Out, Env2, In2, X>(
     self: Schedule<Env, In, Out>,
     f: (input: In2) => Effect.Effect<Env2, never, X>
   ): Schedule<Env | Env2, In & In2, Out>
-  <Env2, In2, X>(f: (input: In2) => Effect.Effect<Env2, never, X>): <Env, In, Out>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Env2 | Env, In & In2, Out>
 }
 ```
 
@@ -1963,14 +1964,14 @@ schedule.
 
 ```ts
 export declare const tapOutput: {
+  <Out, Env2, X>(f: (out: Out) => Effect.Effect<Env2, never, X>): <Env, In>(
+    self: Schedule<Env, In, Out>
+  ) => Schedule<Env2 | Env, In, Out>
   <Env, In, Out, Env2, X>(self: Schedule<Env, In, Out>, f: (out: Out) => Effect.Effect<Env2, never, X>): Schedule<
     Env | Env2,
     In,
     Out
   >
-  <Out, Env2, X>(f: (out: Out) => Effect.Effect<Env2, never, X>): <Env, In>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Env2 | Env, In, Out>
 }
 ```
 
@@ -2028,14 +2029,14 @@ The same as `intersect` but ignores the right output.
 
 ```ts
 export declare const zipLeft: {
+  <Env2, In2, Out2>(that: Schedule<Env2, In2, Out2>): <Env, In, Out>(
+    self: Schedule<Env, In, Out>
+  ) => Schedule<Env2 | Env, In & In2, Out>
   <Env, In, Out, Env2, In2, Out2>(self: Schedule<Env, In, Out>, that: Schedule<Env2, In2, Out2>): Schedule<
     Env | Env2,
     In & In2,
     Out
   >
-  <Env2, In2, Out2>(that: Schedule<Env2, In2, Out2>): <Env, In, Out>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Env2 | Env, In & In2, Out>
 }
 ```
 
@@ -2049,14 +2050,14 @@ The same as `intersect` but ignores the left output.
 
 ```ts
 export declare const zipRight: {
+  <Env2, In2, Out2>(that: Schedule<Env2, In2, Out2>): <Env, In, Out>(
+    self: Schedule<Env, In, Out>
+  ) => Schedule<Env2 | Env, In & In2, Out2>
   <Env, In, Out, Env2, In2, Out2>(self: Schedule<Env, In, Out>, that: Schedule<Env2, In2, Out2>): Schedule<
     Env | Env2,
     In & In2,
     Out2
   >
-  <Env2, In2, Out2>(that: Schedule<Env2, In2, Out2>): <Env, In, Out>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Env2 | Env, In & In2, Out2>
 }
 ```
 
@@ -2070,14 +2071,14 @@ Equivalent to `intersect` followed by `map`.
 
 ```ts
 export declare const zipWith: {
+  <Env2, In2, Out2, Out, Out3>(that: Schedule<Env2, In2, Out2>, f: (out: Out, out2: Out2) => Out3): <Env, In>(
+    self: Schedule<Env, In, Out>
+  ) => Schedule<Env2 | Env, In & In2, Out3>
   <Env, In, Out, Env2, In2, Out2, Out3>(
     self: Schedule<Env, In, Out>,
     that: Schedule<Env2, In2, Out2>,
     f: (out: Out, out2: Out2) => Out3
   ): Schedule<Env | Env2, In & In2, Out3>
-  <Env2, In2, Out2, Out, Out3>(that: Schedule<Env2, In2, Out2>, f: (out: Out, out2: Out2) => Out3): <Env, In>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Env2 | Env, In & In2, Out3>
 }
 ```
 

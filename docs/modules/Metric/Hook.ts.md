@@ -1,6 +1,6 @@
 ---
 title: Metric/Hook.ts
-nav_order: 30
+nav_order: 31
 parent: Modules
 ---
 
@@ -114,8 +114,8 @@ Added in v1.0.0
 
 ```ts
 export declare const onUpdate: {
-  <In, Out>(self: MetricHook<In, Out>, f: (input: In) => void): MetricHook<In, Out>
   <In, Out>(f: (input: In) => void): (self: MetricHook<In, Out>) => MetricHook<In, Out>
+  <In, Out>(self: MetricHook<In, Out>, f: (input: In) => void): MetricHook<In, Out>
 }
 ```
 

@@ -1,6 +1,6 @@
 ---
 title: Schedule/Interval.ts
-nav_order: 47
+nav_order: 48
 parent: Modules
 ---
 
@@ -136,8 +136,8 @@ form a union.
 
 ```ts
 export declare const union: {
-  (self: Interval, that: Interval): Option.Option<Interval>
   (that: Interval): (self: Interval) => Option.Option<Interval>
+  (self: Interval, that: Interval): Option.Option<Interval>
 }
 ```
 
@@ -154,8 +154,8 @@ that `Interval`.
 
 ```ts
 export declare const intersect: {
-  (self: Interval, that: Interval): Interval
   (that: Interval): (self: Interval) => Interval
+  (self: Interval, that: Interval): Interval
 }
 ```
 
@@ -194,8 +194,8 @@ otherwise.
 
 ```ts
 export declare const lessThan: {
-  (self: Interval, that: Interval): boolean
   (that: Interval): (self: Interval) => boolean
+  (self: Interval, that: Interval): boolean
 }
 ```
 
@@ -208,7 +208,7 @@ Returns the maximum of two `Interval`s.
 **Signature**
 
 ```ts
-export declare const max: { (self: Interval, that: Interval): Interval; (that: Interval): (self: Interval) => Interval }
+export declare const max: { (that: Interval): (self: Interval) => Interval; (self: Interval, that: Interval): Interval }
 ```
 
 Added in v1.0.0
@@ -220,7 +220,7 @@ Returns the minimum of two `Interval`s.
 **Signature**
 
 ```ts
-export declare const min: { (self: Interval, that: Interval): Interval; (that: Interval): (self: Interval) => Interval }
+export declare const min: { (that: Interval): (self: Interval) => Interval; (self: Interval, that: Interval): Interval }
 ```
 
 Added in v1.0.0

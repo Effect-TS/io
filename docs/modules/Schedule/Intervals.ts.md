@@ -1,6 +1,6 @@
 ---
 title: Schedule/Intervals.ts
-nav_order: 48
+nav_order: 49
 parent: Modules
 ---
 
@@ -137,8 +137,8 @@ Produces the intersection of this `Intervals` and that `Intervals`.
 
 ```ts
 export declare const intersect: {
-  (self: Intervals, that: Intervals): Intervals
   (that: Intervals): (self: Intervals) => Intervals
+  (self: Intervals, that: Intervals): Intervals
 }
 ```
 
@@ -152,8 +152,8 @@ Computes the union of this `Intervals` and that `Intervals`
 
 ```ts
 export declare const union: {
-  (self: Intervals, that: Intervals): Intervals
   (that: Intervals): (self: Intervals) => Intervals
+  (self: Intervals, that: Intervals): Intervals
 }
 ```
 
@@ -170,8 +170,8 @@ Returns `true` if the start of this `Intervals` is before the start of that
 
 ```ts
 export declare const lessThan: {
-  (self: Intervals, that: Intervals): boolean
   (that: Intervals): (self: Intervals) => boolean
+  (self: Intervals, that: Intervals): boolean
 }
 ```
 
@@ -185,8 +185,8 @@ Returns the maximum of the two `Intervals` (i.e. which has the latest start).
 
 ```ts
 export declare const max: {
-  (self: Intervals, that: Intervals): Intervals
   (that: Intervals): (self: Intervals) => Intervals
+  (self: Intervals, that: Intervals): Intervals
 }
 ```
 
