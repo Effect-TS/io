@@ -32,11 +32,6 @@ describe.concurrent("Effect", () => {
         assert.strictEqual(a, 0)
         assert.strictEqual(b, 1)
       }))
-    it.effect("should work with no arguments", () =>
-      Effect.gen(function*($) {
-        const x = yield* $(Effect.sequential())
-        assert.deepEqual(x, [])
-      }))
     it.effect("should work with one empty record", () =>
       Effect.gen(function*($) {
         const x = yield* $(Effect.sequential({}))
@@ -66,11 +61,6 @@ describe.concurrent("Effect", () => {
         const { a, b } = yield* $(Effect.parallel({ a: Effect.succeed(0), b: Effect.succeed(1) }))
         assert.strictEqual(a, 0)
         assert.strictEqual(b, 1)
-      }))
-    it.effect("should work with no arguments", () =>
-      Effect.gen(function*($) {
-        const x = yield* $(Effect.parallel())
-        assert.deepEqual(x, [])
       }))
     it.effect("should work with one empty record", () =>
       Effect.gen(function*($) {

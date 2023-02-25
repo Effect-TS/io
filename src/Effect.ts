@@ -4437,16 +4437,21 @@ export const tryPromiseInterrupt: <A>(evaluate: (signal: AbortSignal) => Promise
  * @category constructors
  */
 export const sequential: {
-  <T extends ReadonlyArray<Effect<any, any, any>>>(
+  <R, E, A, T extends ReadonlyArray<Effect<any, any, any>>>(
+    self: Effect<R, E, A>,
     ...args: T
   ): Effect<
-    T["length"] extends 0 ? never
+    R | T["length"] extends 0 ? never
       : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
       : never,
-    T["length"] extends 0 ? never
+    E | T["length"] extends 0 ? never
       : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
       : never,
-    T["length"] extends 0 ? [] : Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>
+    readonly [
+      A,
+      ...(T["length"] extends 0 ? []
+        : Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>)
+    ]
   >
   <T extends ReadonlyArray<Effect<any, any, any>>>(
     args: T
@@ -4457,7 +4462,8 @@ export const sequential: {
     T[number] extends never ? never
       : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
       : never,
-    T[number] extends never ? [] : Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>
+    T[number] extends never ? []
+      : Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>
   >
   <T extends Readonly<{ [K: string]: Effect<any, any, any> }>>(
     args: T
@@ -4507,16 +4513,21 @@ export const tuplePar: <T extends NonEmptyArrayEffect>(...t: T) => Effect<
  * @category constructors
  */
 export const parallel: {
-  <T extends ReadonlyArray<Effect<any, any, any>>>(
+  <R, E, A, T extends ReadonlyArray<Effect<any, any, any>>>(
+    self: Effect<R, E, A>,
     ...args: T
   ): Effect<
-    T["length"] extends 0 ? never
+    R | T["length"] extends 0 ? never
       : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
       : never,
-    T["length"] extends 0 ? never
+    E | T["length"] extends 0 ? never
       : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
       : never,
-    T["length"] extends 0 ? [] : Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>
+    readonly [
+      A,
+      ...(T["length"] extends 0 ? []
+        : Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>)
+    ]
   >
   <T extends ReadonlyArray<Effect<any, any, any>>>(
     args: T
@@ -4527,7 +4538,8 @@ export const parallel: {
     T[number] extends never ? never
       : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
       : never,
-    T[number] extends never ? [] : Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>
+    T[number] extends never ? []
+      : Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>
   >
   <T extends Readonly<{ [K: string]: Effect<any, any, any> }>>(
     args: T
