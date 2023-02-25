@@ -2011,6 +2011,70 @@ export const structPar = Debug.methodWithTrace((trace) =>
 )
 
 /* @internal */
+export const parallel = Debug.methodWithTrace((trace): {
+  <T extends ReadonlyArray<Effect.Effect<any, any, any>>>(
+    ...args: T
+  ): Effect.Effect<
+    T["length"] extends 0 ? never
+      : [T[number]] extends [{ [Effect.EffectTypeId]: { _R: (_: never) => infer R } }] ? R
+      : never,
+    T["length"] extends 0 ? never
+      : [T[number]] extends [{ [Effect.EffectTypeId]: { _E: (_: never) => infer E } }] ? E
+      : never,
+    T["length"] extends 0 ? []
+      : Readonly<{ [K in keyof T]: [T[K]] extends [Effect.Effect<any, any, infer A>] ? A : never }>
+  >
+  <T extends ReadonlyArray<Effect.Effect<any, any, any>>>(
+    args: T
+  ): Effect.Effect<
+    T[number] extends never ? never
+      : [T[number]] extends [{ [Effect.EffectTypeId]: { _R: (_: never) => infer R } }] ? R
+      : never,
+    T[number] extends never ? never
+      : [T[number]] extends [{ [Effect.EffectTypeId]: { _E: (_: never) => infer E } }] ? E
+      : never,
+    T[number] extends never ? []
+      : Readonly<{ [K in keyof T]: [T[K]] extends [Effect.Effect<any, any, infer A>] ? A : never }>
+  >
+  <T extends Readonly<{ [K: string]: Effect.Effect<any, any, any> }>>(
+    args: T
+  ): Effect.Effect<
+    T["length"] extends 0 ? never
+      : [T[number]] extends [{ [Effect.EffectTypeId]: { _R: (_: never) => infer R } }] ? R
+      : never,
+    T["length"] extends 0 ? never
+      : [T[number]] extends [{ [Effect.EffectTypeId]: { _E: (_: never) => infer E } }] ? E
+      : never,
+    Readonly<{ [K in keyof T]: [T[K]] extends [Effect.Effect<any, any, infer A>] ? A : never }>
+  >
+} =>
+  function() {
+    if (arguments.length === 1) {
+      if (core.isEffect(arguments[0])) {
+        return core.map(arguments[0], (x) => [x])
+      } else if (Array.isArray(arguments[0])) {
+        return core.map(collectAllPar(arguments[0]), Chunk.toReadonlyArray).traced(trace)
+      } else {
+        return pipe(
+          forEachPar(
+            Object.entries(arguments[0] as Readonly<{ [K: string]: Effect.Effect<any, any, any> }>),
+            ([_, e]) => core.map(e, (a) => [_, a] as const)
+          ),
+          core.map((values) => {
+            const res = {}
+            for (const [k, v] of values) {
+              res[k] = v
+            }
+            return res
+          })
+        ).traced(trace) as any
+      }
+    }
+    return core.map(collectAllPar(arguments), Chunk.toReadonlyArray).traced(trace)
+  }
+)
+
+/* @internal */
 export const taggedScoped = Debug.methodWithTrace((trace) =>
   (key: string, value: string): Effect.Effect<Scope.Scope, never, void> =>
     taggedScopedWithLabels([metricLabel.make(key, value)]).traced(trace)
