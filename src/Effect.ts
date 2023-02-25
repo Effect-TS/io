@@ -4429,6 +4429,50 @@ export const tryPromiseInterrupt: <A>(evaluate: (signal: AbortSignal) => Promise
   effect.tryPromiseInterrupt
 
 /**
+ * Runs all the provided effects in sequence respecting the structure provided in input.
+ *
+ * Supports multiple arguments, a single argument tuple / array or record / struct.
+ *
+ * @since 1.0.0
+ * @category constructors
+ */
+export const sequential: {
+  <T extends ReadonlyArray<Effect<any, any, any>>>(
+    ...args: T
+  ): Effect<
+    T["length"] extends 0 ? never
+      : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
+      : never,
+    T["length"] extends 0 ? never
+      : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
+      : never,
+    T["length"] extends 0 ? [] : Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>
+  >
+  <T extends ReadonlyArray<Effect<any, any, any>>>(
+    args: T
+  ): Effect<
+    T[number] extends never ? never
+      : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
+      : never,
+    T[number] extends never ? never
+      : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
+      : never,
+    T[number] extends never ? [] : Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>
+  >
+  <T extends Readonly<{ [K: string]: Effect<any, any, any> }>>(
+    args: T
+  ): Effect<
+    T["length"] extends 0 ? never
+      : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
+      : never,
+    T["length"] extends 0 ? never
+      : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
+      : never,
+    Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>
+  >
+} = effect.sequential
+
+/**
  * Like `forEach` + `identity` with a tuple type.
  *
  * @since 1.0.0
@@ -4453,6 +4497,50 @@ export const tuplePar: <T extends NonEmptyArrayEffect>(...t: T) => Effect<
   [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E : never,
   TupleEffect<T>
 > = fiberRuntime.tuplePar
+
+/**
+ * Runs all the provided effects in parallel respecting the structure provided in input.
+ *
+ * Supports multiple arguments, a single argument tuple / array or record / struct.
+ *
+ * @since 1.0.0
+ * @category constructors
+ */
+export const parallel: {
+  <T extends ReadonlyArray<Effect<any, any, any>>>(
+    ...args: T
+  ): Effect<
+    T["length"] extends 0 ? never
+      : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
+      : never,
+    T["length"] extends 0 ? never
+      : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
+      : never,
+    T["length"] extends 0 ? [] : Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>
+  >
+  <T extends ReadonlyArray<Effect<any, any, any>>>(
+    args: T
+  ): Effect<
+    T[number] extends never ? never
+      : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
+      : never,
+    T[number] extends never ? never
+      : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
+      : never,
+    T[number] extends never ? [] : Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>
+  >
+  <T extends Readonly<{ [K: string]: Effect<any, any, any> }>>(
+    args: T
+  ): Effect<
+    T["length"] extends 0 ? never
+      : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
+      : never,
+    T["length"] extends 0 ? never
+      : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
+      : never,
+    Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>
+  >
+} = fiberRuntime.parallel
 
 /**
  * Used to unify functions that would otherwise return `Effect<A, B, C> | Effect<D, E, F>`
