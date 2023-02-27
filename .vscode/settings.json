@@ -43,5 +43,6 @@
   "files.watcherExclude": {
     "**/target": true
   },
-  "files.insertFinalNewline": true
+  "files.insertFinalNewline": true,
+  "nixEnvSelector.nixFile": "${workspaceRoot}/flake.nix"
 }
