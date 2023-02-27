@@ -145,13 +145,16 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const dualWithTrace: <
-  DataLast extends (...args: Array<any>) => any,
-  DataFirst extends (...args: Array<any>) => any
->(
-  dfLen: Parameters<DataFirst>['length'],
-  body: (trace: Trace, restore: Restore) => DataFirst
-) => DataLast & DataFirst
+export declare const dualWithTrace: {
+  <DataLast extends (...args: Array<any>) => any, DataFirst extends (...args: Array<any>) => any>(
+    dfLen: Parameters<DataFirst>['length'],
+    body: (trace: Trace, restore: Restore) => DataFirst
+  ): DataLast & DataFirst
+  <DataLast extends (...args: Array<any>) => any, DataFirst extends (...args: Array<any>) => any>(
+    isDataFirst: (args: IArguments) => boolean,
+    body: (trace: Trace, restore: Restore) => DataFirst
+  ): DataLast & DataFirst
+}
 ```
 
 Added in v1.0.0

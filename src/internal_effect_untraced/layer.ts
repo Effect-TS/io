@@ -1040,18 +1040,15 @@ export const provideLayer = Debug.dualWithTrace<
     ).traced(trace))
 
 /** @internal */
-export const provideSomeLayer = Debug.dualWithTrace<
+export const provideSomeLayer: {
   <R2, E2, A2>(
     layer: Layer.Layer<R2, E2, A2>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R2 | Exclude<R, A2>, E | E2, A>,
+  ): <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R2 | Exclude<R, A2>, E | E2, A>
   <R, E, A, R2, E2, A2>(
     self: Effect.Effect<R, E, A>,
     layer: Layer.Layer<R2, E2, A2>
-  ) => Effect.Effect<R2 | Exclude<R, A2>, E | E2, A>
->(2, (trace) =>
-  (self, layer) =>
-    // @ts-expect-error
-    provideLayer(self, pipe(context(), merge(layer))).traced(trace))
+  ): Effect.Effect<R2 | Exclude<R, A2>, E | E2, A>
+} = Debug.dualWithTrace(2, (trace) => (self, layer) => provideLayer(self, pipe(context(), merge(layer))).traced(trace))
 
 /** @internal */
 export const toLayer = dual<

@@ -262,7 +262,7 @@ export const catchTag = Debug.dualWithTrace<
     }).traced(trace))
 
 /** @internal */
-export const catchTags = Debug.dualWithTrace<
+export const catchTags: {
   <
     E extends { _tag: string },
     Cases extends {
@@ -270,31 +270,7 @@ export const catchTags = Debug.dualWithTrace<
     }
   >(
     cases: Cases
-  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<
-    | R
-    | {
-      [K in keyof Cases]: Cases[K] extends ((...args: Array<any>) => Effect.Effect<infer R, any, any>) ? R : never
-    }[keyof Cases],
-    | Exclude<E, { _tag: keyof Cases }>
-    | {
-      [K in keyof Cases]: Cases[K] extends ((...args: Array<any>) => Effect.Effect<any, infer E, any>) ? E : never
-    }[keyof Cases],
-    | A
-    | {
-      [K in keyof Cases]: Cases[K] extends ((...args: Array<any>) => Effect.Effect<any, any, infer A>) ? A : never
-    }[keyof Cases]
-  >,
-  <
-    R,
-    E extends { _tag: string },
-    A,
-    Cases extends {
-      [K in E["_tag"]]+?: (error: Extract<E, { _tag: K }>) => Effect.Effect<any, any, any>
-    }
-  >(
-    self: Effect.Effect<R, E, A>,
-    cases: Cases
-  ) => Effect.Effect<
+  ): <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<
     | R
     | {
       [K in keyof Cases]: Cases[K] extends ((...args: Array<any>) => Effect.Effect<infer R, any, any>) ? R : never
@@ -308,10 +284,33 @@ export const catchTags = Debug.dualWithTrace<
       [K in keyof Cases]: Cases[K] extends ((...args: Array<any>) => Effect.Effect<any, any, infer A>) ? A : never
     }[keyof Cases]
   >
->(2, (trace, restore) =>
+  <
+    R,
+    E extends { _tag: string },
+    A,
+    Cases extends {
+      [K in E["_tag"]]+?: (error: Extract<E, { _tag: K }>) => Effect.Effect<any, any, any>
+    }
+  >(
+    self: Effect.Effect<R, E, A>,
+    cases: Cases
+  ): Effect.Effect<
+    | R
+    | {
+      [K in keyof Cases]: Cases[K] extends ((...args: Array<any>) => Effect.Effect<infer R, any, any>) ? R : never
+    }[keyof Cases],
+    | Exclude<E, { _tag: keyof Cases }>
+    | {
+      [K in keyof Cases]: Cases[K] extends ((...args: Array<any>) => Effect.Effect<any, infer E, any>) ? E : never
+    }[keyof Cases],
+    | A
+    | {
+      [K in keyof Cases]: Cases[K] extends ((...args: Array<any>) => Effect.Effect<any, any, infer A>) ? A : never
+    }[keyof Cases]
+  >
+} = Debug.dualWithTrace(2, (trace, restore) =>
   (self, cases) =>
-    // @ts-expect-error
-    core.catchAll(self, (e) => {
+    core.catchAll(self, (e: any) => {
       const keys = Object.keys(cases)
       if ("_tag" in e && keys.includes(e["_tag"])) {
         return restore(cases[e["_tag"]])(e as any)

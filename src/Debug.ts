@@ -182,18 +182,23 @@ export const pipeableWithTrace = <A extends (...args: Array<any>) => any>(
 /**
  * @since 1.0.0
  */
-export const dualWithTrace = <
-  DataLast extends (...args: Array<any>) => any,
-  DataFirst extends (...args: Array<any>) => any
->(
-  dfLen: Parameters<DataFirst>["length"],
-  body: ((trace: Trace, restore: Restore) => DataFirst)
-): DataLast & DataFirst => {
-  // @ts-expect-error
+export const dualWithTrace: {
+  <DataLast extends (...args: Array<any>) => any, DataFirst extends (...args: Array<any>) => any>(
+    dfLen: Parameters<DataFirst>["length"],
+    body: (trace: Trace, restore: Restore) => DataFirst
+  ): DataLast & DataFirst
+  <DataLast extends (...args: Array<any>) => any, DataFirst extends (...args: Array<any>) => any>(
+    isDataFirst: (args: IArguments) => boolean,
+    body: (trace: Trace, restore: Restore) => DataFirst
+  ): DataLast & DataFirst
+} = (dfLen, body) => {
+  const isDataFirst: (args: IArguments) => boolean = typeof dfLen === "number" ?
+    ((args) => args.length === dfLen) :
+    dfLen
   return function() {
     if (!runtimeDebug.tracingEnabled) {
       const f = body(void 0, debug.restoreOff)
-      if (arguments.length === dfLen) {
+      if (isDataFirst(arguments)) {
         // @ts-expect-error
         return untraced(() => f.apply(this, arguments))
       }
@@ -206,7 +211,7 @@ export const dualWithTrace = <
       const source = sourceLocation(new Error())
       Error.stackTraceLimit = limit
       const f = body(source, debug.restoreOn)
-      if (arguments.length === dfLen) {
+      if (isDataFirst(arguments)) {
         // @ts-expect-error
         return untraced(() => f.apply(this, arguments))
       }
