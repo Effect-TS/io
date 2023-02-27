@@ -1,5 +1,15 @@
 # @effect/io
 
+## 0.3.1
+
+### Patch Changes
+
+- [#263](https://github.com/Effect-TS/io/pull/263) [`75b2bbc`](https://github.com/Effect-TS/io/commit/75b2bbcb9887ef8ba708c71a2b5c8e3770130250) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Forbid empty calls to sequential / parallel
+
+- [#265](https://github.com/Effect-TS/io/pull/265) [`09f9561`](https://github.com/Effect-TS/io/commit/09f9561e0c80638b9befdcf23cce56d8d71f176a) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Allow custom arg selector in dual
+
+- [#261](https://github.com/Effect-TS/io/pull/261) [`b41122b`](https://github.com/Effect-TS/io/commit/b41122b5323c9a657d8fc963f3ddb88a9f158e69) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Introduce Effect.sequential and Effect.parallel
+
 ## 0.3.0
 
 ### Minor Changes
