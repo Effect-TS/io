@@ -173,7 +173,7 @@ class MemoMap {
     layer: Layer.Layer<RIn, E, ROut>,
     scope: Scope.Scope
   ): Effect.Effect<RIn, E, Context.Context<ROut>> {
-    return pipe(
+    return core.flatten(
       synchronized.modifyEffect(this.ref, (map) => {
         const inMap = map.get(layer)
         if (inMap !== undefined) {
@@ -268,8 +268,7 @@ class MemoMap {
             )
           )
         )
-      }),
-      core.flatten
+      })
     )
   }
 }

@@ -1850,15 +1850,14 @@ const raceAllArbiter = <E, E1, A, A1>(
       exit,
       core.exitMatchEffect(
         (cause) =>
-          pipe(
+          core.flatten(
             Ref.modify(fails, (fails) =>
               [
                 fails === 0 ?
                   pipe(core.deferredFailCause(deferred, cause), core.asUnit()) :
                   core.unit(),
                 fails - 1
-              ] as const),
-            core.flatten
+              ] as const)
           ),
         (value): Effect.Effect<never, never, void> =>
           pipe(

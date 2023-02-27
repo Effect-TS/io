@@ -986,8 +986,7 @@ export const zipWithFiber = Debug.untracedDual<
     await: Debug.methodWithTrace((trace) =>
       () =>
         pipe(
-          self.await(),
-          core.flatten,
+          core.flatten(self.await()),
           zipWithPar(core.flatten(that.await()), restore(f)),
           core.exit()
         ).traced(trace)
