@@ -162,7 +162,7 @@ export const set = Debug.dualWithTrace<
 
 /** @internal */
 export const snapshot = Debug.methodWithTrace((trace) =>
-  (): Effect.Effect<never, never, HashSet.HashSet<MetricPair.MetricPair.Untyped>> =>
+  (_: void): Effect.Effect<never, never, HashSet.HashSet<MetricPair.MetricPair.Untyped>> =>
     core.sync(unsafeSnapshot).traced(trace)
 )
 
@@ -467,7 +467,7 @@ export const update = Debug.dualWithTrace<
     ).traced(trace))
 
 /* @internal */
-export const value = Debug.methodWithTrace((trace) =>
+export const value = Debug.zeroArgsDualWithTrace((trace) =>
   <Type, In, Out>(
     self: Metric.Metric<Type, In, Out>
   ): Effect.Effect<never, never, Out> =>

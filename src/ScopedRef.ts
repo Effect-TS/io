@@ -66,7 +66,10 @@ export const fromAcquire: <R, E, A>(
  * @since 1.0.0
  * @category getters
  */
-export const get: <A>(self: ScopedRef<A>) => Effect.Effect<never, never, A> = internal.get
+export const get: {
+  <A>(self: ScopedRef<A>): Effect.Effect<never, never, A>
+  (): <A>(self: ScopedRef<A>) => Effect.Effect<never, never, A>
+} = internal.get
 
 /**
  * Creates a new `ScopedRef` from the specified value. This method should
@@ -75,7 +78,10 @@ export const get: <A>(self: ScopedRef<A>) => Effect.Effect<never, never, A> = in
  * @since 1.0.0
  * @category constructors
  */
-export const make: <A>(evaluate: LazyArg<A>) => Effect.Effect<Scope.Scope, never, ScopedRef<A>> = internal.make
+export const make: {
+  <A>(evaluate: LazyArg<A>): Effect.Effect<Scope.Scope, never, ScopedRef<A>>
+  (): <A>(evaluate: LazyArg<A>) => Effect.Effect<Scope.Scope, never, ScopedRef<A>>
+} = internal.make
 
 /**
  * Sets the value of this reference to the specified resourcefully-created

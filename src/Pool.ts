@@ -129,7 +129,10 @@ export const makeWithTTL: <R, E, A>(
  * @since 1.0.0
  * @category getters
  */
-export const get: <E, A>(self: Pool<E, A>) => Effect.Effect<Scope.Scope, E, A> = internal.get
+export const get: {
+  <E, A>(self: Pool<E, A>): Effect.Effect<Scope.Scope, E, A>
+  (): <E, A>(self: Pool<E, A>) => Effect.Effect<Scope.Scope, E, A>
+} = internal.get
 
 /**
  * Invalidates the specified item. This will cause the pool to eventually

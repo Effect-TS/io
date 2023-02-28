@@ -140,7 +140,7 @@ export const nextIntBetween = Debug.methodWithTrace((trace) =>
 )
 
 /** @internal */
-export const shuffle = Debug.methodWithTrace((trace) =>
+export const shuffle = Debug.zeroArgsDualWithTrace((trace) =>
   <A>(elements: Iterable<A>): Effect.Effect<never, never, Chunk.Chunk<A>> =>
     randomWith((random) => random.shuffle(elements)).traced(trace)
 )

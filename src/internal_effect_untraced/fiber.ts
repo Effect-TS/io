@@ -59,12 +59,12 @@ export const isRuntimeFiber = <E, A>(self: Fiber.Fiber<E, A>): self is Fiber.Run
   RuntimeFiberTypeId in self
 
 /** @internal */
-export const _await = Debug.methodWithTrace((trace) =>
+export const _await = Debug.zeroArgsDualWithTrace((trace) =>
   <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<never, never, Exit.Exit<E, A>> => self.await().traced(trace)
 )
 
 /** @internal */
-export const children = Debug.methodWithTrace((trace) =>
+export const children = Debug.zeroArgsDualWithTrace((trace) =>
   <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<never, never, Chunk.Chunk<Fiber.RuntimeFiber<any, any>>> =>
     self.children().traced(trace)
 )
@@ -81,16 +81,16 @@ export const done = <E, A>(exit: Exit.Exit<E, A>): Fiber.Fiber<E, A> => ({
 })
 
 /** @internal */
-export const dump = Debug.methodWithTrace((trace) =>
+export const dump = Debug.zeroArgsDualWithTrace((trace) =>
   <E, A>(self: Fiber.RuntimeFiber<E, A>): Effect.Effect<never, never, Fiber.Fiber.Dump> =>
     core.map(self.status(), (status) => ({ id: self.id(), status })).traced(trace)
 )
 
 /** @internal */
-export const dumpAll = Debug.methodWithTrace((trace) =>
+export const dumpAll = Debug.zeroArgsDualWithTrace((trace) =>
   (
     fibers: Iterable<Fiber.RuntimeFiber<unknown, unknown>>
-  ): Effect.Effect<never, never, Chunk.Chunk<Fiber.Fiber.Dump>> => core.forEach(fibers, dump).traced(trace)
+  ): Effect.Effect<never, never, Chunk.Chunk<Fiber.Fiber.Dump>> => core.forEach(fibers, dump()).traced(trace)
 )
 
 /** @internal */
@@ -104,7 +104,7 @@ export const failCause = <E>(cause: Cause.Cause<E>): Fiber.Fiber<E, never> => {
 }
 
 /** @internal */
-export const fromEffect = Debug.methodWithTrace((trace) =>
+export const fromEffect = Debug.zeroArgsDualWithTrace((trace) =>
   <E, A>(effect: Effect.Effect<never, E, A>): Effect.Effect<never, never, Fiber.Fiber<E, A>> =>
     core.map(core.exit(effect), done).traced(trace)
 )
@@ -115,7 +115,7 @@ export const id = <E, A>(self: Fiber.Fiber<E, A>): FiberId.FiberId => {
 }
 
 /** @internal */
-export const inheritAll = Debug.methodWithTrace((trace) =>
+export const inheritAll = Debug.zeroArgsDualWithTrace((trace) =>
   <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<never, never, void> => self.inheritAll().traced(trace)
 )
 
@@ -125,7 +125,7 @@ export const interrupted = (fiberId: FiberId.FiberId): Fiber.Fiber<never, never>
 }
 
 /** @internal */
-export const interruptAll = Debug.methodWithTrace((trace) =>
+export const interruptAll = Debug.zeroArgsDualWithTrace((trace) =>
   (fibers: Iterable<Fiber.Fiber<any, any>>): Effect.Effect<never, never, void> =>
     core.flatMap(core.fiberId(), (fiberId) => pipe(fibers, interruptAllAs(fiberId))).traced(trace)
 )
@@ -138,7 +138,7 @@ export const interruptAllAs = Debug.dualWithTrace<
   (fibers, fiberId) =>
     pipe(
       core.forEachDiscard(fibers, interruptAsFork(fiberId)),
-      core.zipRight(pipe(fibers, core.forEachDiscard(_await)))
+      core.zipRight(core.forEachDiscard(fibers, _await()))
     ).traced(trace))
 
 /** @internal */
@@ -148,7 +148,7 @@ export const interruptAsFork = Debug.dualWithTrace<
 >(2, (trace) => (self, fiberId) => self.interruptAsFork(fiberId).traced(trace))
 
 /** @internal */
-export const join = Debug.methodWithTrace((trace) =>
+export const join = Debug.zeroArgsDualWithTrace((trace) =>
   <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<never, E, A> =>
     core.zipLeft(core.flatten(self.await()), self.inheritAll()).traced(trace)
 )
@@ -292,7 +292,7 @@ export const orElseEither = dual<
 >(2, (self, that) => orElse(map(self, Either.left), map(that, Either.right)))
 
 /** @internal */
-export const poll = Debug.methodWithTrace((trace) =>
+export const poll = Debug.zeroArgsDualWithTrace((trace) =>
   <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<never, never, Option.Option<Exit.Exit<E, A>>> =>
     self.poll().traced(trace)
 )
@@ -330,7 +330,7 @@ const renderStatus = (status: FiberStatus.FiberStatus): string => {
 }
 
 /** @internal */
-export const pretty = Debug.methodWithTrace((trace) =>
+export const pretty = Debug.zeroArgsDualWithTrace((trace) =>
   <E, A>(self: Fiber.RuntimeFiber<E, A>): Effect.Effect<never, never, string> =>
     core.flatMap(Clock.currentTimeMillis(), (now) =>
       core.map(dump(self), (dump) => {
@@ -365,7 +365,7 @@ export const unsafeRoots = (): Chunk.Chunk<Fiber.RuntimeFiber<any, any>> => {
 }
 
 /** @internal */
-export const status = Debug.methodWithTrace((trace) =>
+export const status = Debug.zeroArgsDualWithTrace((trace) =>
   <E, A>(self: Fiber.RuntimeFiber<E, A>): Effect.Effect<never, never, FiberStatus.FiberStatus> =>
     self.status().traced(trace)
 )
@@ -382,5 +382,5 @@ export const unit = (): Fiber.Fiber<never, void> => succeed(void 0)
 export const currentFiberURI = "@effect/io/Fiber/Current"
 
 /** @internal */
-export const getCurrentFiber = (): Option.Option<Fiber.RuntimeFiber<any, any>> =>
+export const getCurrentFiber = (_: void): Option.Option<Fiber.RuntimeFiber<any, any>> =>
   Option.fromNullable(global[currentFiberURI])

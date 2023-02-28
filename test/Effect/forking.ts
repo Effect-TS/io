@@ -12,7 +12,7 @@ import { assert, describe } from "vitest"
 describe.concurrent("Effect", () => {
   it.effect("fork - propagates interruption", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(Effect.never(), Effect.fork(), Effect.flatMap(Fiber.interrupt)))
+      const result = yield* $(pipe(Effect.never(), Effect.fork(), Effect.flatMap(Fiber.interrupt())))
       assert.isTrue(Exit.isInterrupted(result))
     }))
   it.effect("fork - propagates interruption with zip of defect", () =>
@@ -57,7 +57,11 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("forkAll - returns the list of results in the same order", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe([1, 2, 3].map(Effect.succeed()), Effect.forkAll(), Effect.flatMap(Fiber.join)))
+      const result = yield* $(pipe(
+        [1, 2, 3].map(Effect.succeed()),
+        Effect.forkAll(),
+        Effect.flatMap(Fiber.join())
+      ))
       assert.deepStrictEqual(Array.from(result), [1, 2, 3])
     }))
   it.effect("forkAll - happy-path", () =>
@@ -65,7 +69,7 @@ describe.concurrent("Effect", () => {
       const result = yield* $(pipe(
         Array.from({ length: 1000 }, (_, i) => i + 1).map(Effect.succeed()),
         Effect.forkAll(),
-        Effect.flatMap(Fiber.join)
+        Effect.flatMap(Fiber.join())
       ))
       assert.deepStrictEqual(
         Array.from(result),
@@ -75,7 +79,7 @@ describe.concurrent("Effect", () => {
   it.effect("forkAll - empty input", () =>
     Effect.gen(function*($) {
       const result = yield* $(
-        pipe([] as ReadonlyArray<Effect.Effect<never, never, number>>, Effect.forkAll(), Effect.flatMap(Fiber.join))
+        pipe([] as ReadonlyArray<Effect.Effect<never, never, number>>, Effect.forkAll(), Effect.flatMap(Fiber.join()))
       )
       assert.strictEqual(result.length, 0)
     }))
@@ -91,7 +95,7 @@ describe.concurrent("Effect", () => {
       const boom = new Error("boom")
       const die = Effect.die(boom)
       const joinDefect = (fiber: Fiber.Fiber<never, unknown>) => {
-        return pipe(fiber, Fiber.join, Effect.sandbox(), Effect.flip())
+        return Effect.flip(Effect.sandbox(Fiber.join(fiber)))
       }
       const fiber1 = yield* $(Effect.forkAll([die]))
       const fiber2 = yield* $(Effect.forkAll([die, Effect.succeed(42)]))

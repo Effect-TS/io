@@ -64,7 +64,7 @@ export declare namespace Deferred {
  * @since 1.0.0
  * @category constructors
  */
-export const make: <E, A>() => Effect.Effect<never, never, Deferred<E, A>> = core.deferredMake
+export const make: <E, A>(_: void) => Effect.Effect<never, never, Deferred<E, A>> = core.deferredMake
 
 /**
  * Creates a new `Deferred` from the specified `FiberId`.
@@ -72,10 +72,15 @@ export const make: <E, A>() => Effect.Effect<never, never, Deferred<E, A>> = cor
  * @since 1.0.0
  * @category constructors
  */
-export const makeAs: <E, A>(fiberId: FiberId.FiberId) => Effect.Effect<never, never, Deferred<E, A>> =
-  core.deferredMakeAs
+export const makeAs: {
+  <E, A>(fiberId: FiberId.FiberId): Effect.Effect<never, never, Deferred<E, A>>
+  (): <E, A>(fiberId: FiberId.FiberId) => Effect.Effect<never, never, Deferred<E, A>>
+} = core.deferredMakeAs
 
-const _await: <E, A>(self: Deferred<E, A>) => Effect.Effect<never, E, A> = core.deferredAwait
+const _await: {
+  <E, A>(self: Deferred<E, A>): Effect.Effect<never, E, A>
+  (): <E, A>(self: Deferred<E, A>) => Effect.Effect<never, E, A>
+} = core.deferredAwait
 
 export {
   /**
@@ -207,7 +212,10 @@ export const dieSync: {
  * @since 1.0.0
  * @category mutations
  */
-export const interrupt: <E, A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean> = core.deferredInterrupt
+export const interrupt: {
+  <E, A>(self: Deferred<E, A>): Effect.Effect<never, never, boolean>
+  (): <E, A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
+} = core.deferredInterrupt
 
 /**
  * Completes the `Deferred` with interruption. This will interrupt all fibers
@@ -228,7 +236,10 @@ export const interruptWith: {
  * @since 1.0.0
  * @category getters
  */
-export const isDone: <E, A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean> = core.deferredIsDone
+export const isDone: {
+  <E, A>(self: Deferred<E, A>): Effect.Effect<never, never, boolean>
+  (): <E, A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
+} = core.deferredIsDone
 
 /**
  * Returns a `Some<Effect<R, E, A>>` from the `Deferred` if this `Deferred` has
@@ -237,9 +248,10 @@ export const isDone: <E, A>(self: Deferred<E, A>) => Effect.Effect<never, never,
  * @since 1.0.0
  * @category getters
  */
-export const poll: <E, A>(
-  self: Deferred<E, A>
-) => Effect.Effect<never, never, Option.Option<Effect.Effect<never, E, A>>> = core.deferredPoll
+export const poll: {
+  <E, A>(self: Deferred<E, A>): Effect.Effect<never, never, Option.Option<Effect.Effect<never, E, A>>>
+  (): <E, A>(self: Deferred<E, A>) => Effect.Effect<never, never, Option.Option<Effect.Effect<never, E, A>>>
+} = core.deferredPoll
 
 /**
  * Completes the `Deferred` with the specified value.

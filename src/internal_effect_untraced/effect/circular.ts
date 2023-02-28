@@ -123,7 +123,7 @@ export const acquireReleaseInterruptible = Debug.dualWithTrace<
 /** @internal */
 export const awaitAllChildren = Debug.zeroArgsDualWithTrace((trace) =>
   <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
-    ensuringChildren(self, fiberRuntime.fiberAwaitAll).traced(trace)
+    ensuringChildren(self, fiberRuntime.fiberAwaitAll()).traced(trace)
 )
 
 /** @internal */
@@ -351,7 +351,7 @@ export const fromFiber = Debug.zeroArgsDualWithTrace((trace) =>
 /** @internal */
 export const fromFiberEffect = Debug.zeroArgsDualWithTrace((trace) =>
   <R, E, A>(fiber: Effect.Effect<R, E, Fiber.Fiber<E, A>>): Effect.Effect<R, E, A> =>
-    core.suspendSucceed(() => core.flatMap(fiber, internalFiber.join)).traced(trace)
+    core.suspendSucceed(() => core.flatMap(fiber, internalFiber.join())).traced(trace)
 )
 
 /** @internal */
@@ -378,7 +378,7 @@ export const memoizeFunction = Debug.zeroArgsDualWithTrace((trace) =>
               }
               return core.succeed([result.value, map] as const)
             }),
-            core.flatMap(core.deferredAwait),
+            core.flatMap(core.deferredAwait()),
             core.flatMap(([patch, b]) => core.as(effect.patchFiberRefs(patch), b))
           )
       )

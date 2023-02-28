@@ -520,14 +520,14 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const fiber1 = yield* $(Effect.fork(Effect.fail("error1")))
       const fiber2 = yield* $(Effect.fork(Effect.succeed("success1")))
-      const result = yield* $(pipe(fiber1, Fiber.zip(fiber2), Fiber.join, Effect.parallelErrors(), Effect.flip()))
+      const result = yield* $(Effect.flip(Effect.parallelErrors(Fiber.join(Fiber.zip(fiber1, fiber2)))))
       assert.deepStrictEqual(Array.from(result), ["error1"])
     }))
   it.effect("parallelErrors - all failures", () =>
     Effect.gen(function*($) {
       const fiber1 = yield* $(Effect.fork(Effect.fail("error1")))
       const fiber2 = yield* $(Effect.fork(Effect.fail("error2")))
-      const result = yield* $(pipe(fiber1, Fiber.zip(fiber2), Fiber.join, Effect.parallelErrors(), Effect.flip()))
+      const result = yield* $(Effect.flip(Effect.parallelErrors(Fiber.join(Fiber.zip(fiber1, fiber2)))))
       assert.deepStrictEqual(Array.from(result), ["error1", "error2"])
     }))
   it.effect("promise - exception does not kill fiber", () =>

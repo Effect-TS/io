@@ -53,7 +53,7 @@ describe.concurrent("Fiber", () => {
       const child = yield* $(
         withLatch((release) => pipe(FiberRef.set(fiberRef, update), Effect.zipRight(release), Effect.fork()))
       )
-      yield* $(pipe(child, Fiber.map(constVoid), Fiber.inheritAll))
+      yield* $(Fiber.inheritAll(Fiber.map(child, constVoid)))
       const result = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(result, update)
     }))
@@ -77,7 +77,7 @@ describe.concurrent("Fiber", () => {
         )
       )
       yield* $(pipe(Deferred.await(latch1), Effect.zipRight(Deferred.await(latch2))))
-      yield* $(pipe(child1, Fiber.orElse(child2), Fiber.inheritAll))
+      yield* $(Fiber.inheritAll(Fiber.orElse(child1, child2)))
       const result = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(result, "child1")
     }))
@@ -101,14 +101,14 @@ describe.concurrent("Fiber", () => {
         )
       )
       yield* $(pipe(Deferred.await(latch1), Effect.zipRight(Deferred.await(latch2))))
-      yield* $(pipe(child1, Fiber.zip(child2), Fiber.inheritAll))
+      yield* $(Fiber.inheritAll(Fiber.zip(child1, child2)))
       const result = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(result, "child1")
     }))
   it.effect("join on interrupted Fiber is an inner interruption", () =>
     Effect.gen(function*($) {
       const fiberId = FiberId.make(0, 123)
-      const result = yield* $(pipe(Fiber.interrupted(fiberId), Fiber.join, Effect.exit()))
+      const result = yield* $(Effect.exit(Fiber.join(Fiber.interrupted(fiberId))))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.interrupt(fiberId))
     }))
   it.effect("scoped should create a new Fiber and scope it", () =>
@@ -146,7 +146,7 @@ describe.concurrent("Fiber", () => {
         )
         return pipe(
           Effect.forkAll(Array.from({ length: n }, () => worker1)),
-          Effect.flatMap(Fiber.join),
+          Effect.flatMap(Fiber.join()),
           Effect.zipRight(Effect.never())
         )
       }

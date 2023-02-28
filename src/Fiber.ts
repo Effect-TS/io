@@ -242,7 +242,11 @@ export const isRuntimeFiber: <E, A>(self: Fiber<E, A>) => self is RuntimeFiber<E
  */
 export const id: <E, A>(self: Fiber<E, A>) => FiberId.FiberId = internal.id
 
-const _await: <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, Exit.Exit<E, A>> = internal._await
+const _await: {
+  <E, A>(self: Fiber<E, A>): Effect.Effect<never, never, Exit.Exit<E, A>>
+  (): <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, Exit.Exit<E, A>>
+} = internal._await
+
 export {
   /**
    * Awaits the fiber, which suspends the awaiting fiber until the result of the
@@ -260,8 +264,10 @@ export {
  * @since 1.0.0
  * @category destructors
  */
-export const awaitAll: (fibers: Iterable<Fiber<any, any>>) => Effect.Effect<never, never, void> =
-  fiberRuntime.fiberAwaitAll
+export const awaitAll: {
+  (fibers: Iterable<Fiber<any, any>>): Effect.Effect<never, never, void>
+  (): (fibers: Iterable<Fiber<any, any>>) => Effect.Effect<never, never, void>
+} = fiberRuntime.fiberAwaitAll
 
 /**
  * Retrieves the immediate children of the fiber.
@@ -269,8 +275,10 @@ export const awaitAll: (fibers: Iterable<Fiber<any, any>>) => Effect.Effect<neve
  * @since 1.0.0
  * @category getters
  */
-export const children: <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, Chunk.Chunk<RuntimeFiber<any, any>>> =
-  internal.children
+export const children: {
+  <E, A>(self: Fiber<E, A>): Effect.Effect<never, never, Chunk.Chunk<RuntimeFiber<any, any>>>
+  (): <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, Chunk.Chunk<RuntimeFiber<any, any>>>
+} = internal.children
 
 /**
  * Collects all fibers into a single fiber producing an in-order list of the
@@ -294,15 +302,19 @@ export const done: <E, A>(exit: Exit.Exit<E, A>) => Fiber<E, A> = internal.done
  * @since 1.0.0
  * @category destructors
  */
-export const dump: <E, A>(self: RuntimeFiber<E, A>) => Effect.Effect<never, never, Fiber.Dump> = internal.dump
+export const dump: {
+  <E, A>(self: RuntimeFiber<E, A>): Effect.Effect<never, never, Fiber.Dump>
+  (): <E, A>(self: RuntimeFiber<E, A>) => Effect.Effect<never, never, Fiber.Dump>
+} = internal.dump
 
 /**
  * @since 1.0.0
  * @category destructors
  */
-export const dumpAll: (
-  fibers: Iterable<RuntimeFiber<unknown, unknown>>
-) => Effect.Effect<never, never, Chunk.Chunk<Fiber.Dump>> = internal.dumpAll
+export const dumpAll: {
+  (fibers: Iterable<RuntimeFiber<unknown, unknown>>): Effect.Effect<never, never, Chunk.Chunk<Fiber.Dump>>
+  (): (fibers: Iterable<RuntimeFiber<unknown, unknown>>) => Effect.Effect<never, never, Chunk.Chunk<Fiber.Dump>>
+} = internal.dumpAll
 
 /**
  * A fiber that has already failed with the specified value.
@@ -326,8 +338,10 @@ export const failCause: <E>(cause: Cause.Cause<E>) => Fiber<E, never> = internal
  * @since 1.0.0
  * @category conversions
  */
-export const fromEffect: <E, A>(effect: Effect.Effect<never, E, A>) => Effect.Effect<never, never, Fiber<E, A>> =
-  internal.fromEffect
+export const fromEffect: {
+  <E, A>(effect: Effect.Effect<never, E, A>): Effect.Effect<never, never, Fiber<E, A>>
+  (): <E, A>(effect: Effect.Effect<never, E, A>) => Effect.Effect<never, never, Fiber<E, A>>
+} = internal.fromEffect
 
 /**
  * Gets the current fiber if one is running.
@@ -335,7 +349,7 @@ export const fromEffect: <E, A>(effect: Effect.Effect<never, E, A>) => Effect.Ef
  * @since 1.0.0
  * @category utilities
  */
-export const getCurrentFiber: () => Option.Option<RuntimeFiber<any, any>> = internal.getCurrentFiber
+export const getCurrentFiber: (_: void) => Option.Option<RuntimeFiber<any, any>> = internal.getCurrentFiber
 
 /**
  * Inherits values from all `FiberRef` instances into current fiber. This
@@ -344,7 +358,10 @@ export const getCurrentFiber: () => Option.Option<RuntimeFiber<any, any>> = inte
  * @since 1.0.0
  * @category destructors
  */
-export const inheritAll: <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, void> = internal.inheritAll
+export const inheritAll: {
+  <E, A>(self: Fiber<E, A>): Effect.Effect<never, never, void>
+  (): <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, void>
+} = internal.inheritAll
 
 /**
  * Interrupts the fiber from whichever fiber is calling this method. If the
@@ -355,8 +372,8 @@ export const inheritAll: <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never
  * @category interruption
  */
 export const interrupt: {
-  (): <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, Exit.Exit<E, A>>
   <E, A>(self: Fiber<E, A>): Effect.Effect<never, never, Exit.Exit<E, A>>
+  (): <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, Exit.Exit<E, A>>
 } = core.interruptFiber
 
 /**
@@ -399,8 +416,10 @@ export const interruptAsFork: {
  * @since 1.0.0
  * @category interruption
  */
-export const interruptAll: (fibers: Iterable<Fiber<any, any>>) => Effect.Effect<never, never, void> =
-  internal.interruptAll
+export const interruptAll: {
+  (fibers: Iterable<Fiber<any, any>>): Effect.Effect<never, never, void>
+  (): (fibers: Iterable<Fiber<any, any>>) => Effect.Effect<never, never, void>
+} = internal.interruptAll
 
 /**
  * Interrupts all fibers as by the specified fiber, awaiting their
@@ -422,8 +441,10 @@ export const interruptAllAs: {
  * @since 1.0.0
  * @category interruption
  */
-export const interruptFork: <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, void> =
-  fiberRuntime.fiberInterruptFork
+export const interruptFork: {
+  <E, A>(self: Fiber<E, A>): Effect.Effect<never, never, void>
+  (): <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, void>
+} = fiberRuntime.fiberInterruptFork
 
 /**
  * Joins the fiber, which suspends the joining fiber until the result of the
@@ -435,7 +456,10 @@ export const interruptFork: <E, A>(self: Fiber<E, A>) => Effect.Effect<never, ne
  * @since 1.0.0
  * @category destructors
  */
-export const join: <E, A>(self: Fiber<E, A>) => Effect.Effect<never, E, A> = internal.join
+export const join: {
+  <E, A>(self: Fiber<E, A>): Effect.Effect<never, E, A>
+  (): <E, A>(self: Fiber<E, A>) => Effect.Effect<never, E, A>
+} = internal.join
 
 /**
  * Joins all fibers, awaiting their _successful_ completion. Attempting to
@@ -445,7 +469,10 @@ export const join: <E, A>(self: Fiber<E, A>) => Effect.Effect<never, E, A> = int
  * @since 1.0.0
  * @category destructors
  */
-export const joinAll: <E, A>(fibers: Iterable<Fiber<E, A>>) => Effect.Effect<never, E, void> = fiberRuntime.fiberJoinAll
+export const joinAll: {
+  <E, A>(fibers: Iterable<Fiber<E, A>>): Effect.Effect<never, E, void>
+  (): <E, A>(fibers: Iterable<Fiber<E, A>>) => Effect.Effect<never, E, void>
+} = fiberRuntime.fiberJoinAll
 
 /**
  * Maps over the value the Fiber computes.
@@ -540,8 +567,10 @@ export const orElseEither: {
  * @since 1.0.0
  * @category getters
  */
-export const poll: <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, Option.Option<Exit.Exit<E, A>>> =
-  internal.poll
+export const poll: {
+  <E, A>(self: Fiber<E, A>): Effect.Effect<never, never, Option.Option<Exit.Exit<E, A>>>
+  (): <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, Option.Option<Exit.Exit<E, A>>>
+} = internal.poll
 
 /**
  * Pretty-prints a `RuntimeFiber`.
@@ -549,7 +578,10 @@ export const poll: <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, Opti
  * @since 1.0.0
  * @category destructors
  */
-export const pretty: <E, A>(self: RuntimeFiber<E, A>) => Effect.Effect<never, never, string> = internal.pretty
+export const pretty: {
+  <E, A>(self: RuntimeFiber<E, A>): Effect.Effect<never, never, string>
+  (): <E, A>(self: RuntimeFiber<E, A>) => Effect.Effect<never, never, string>
+} = internal.pretty
 
 /**
  * Returns a chunk containing all root fibers.
@@ -574,8 +606,10 @@ export const unsafeRoots: (_: void) => Chunk.Chunk<RuntimeFiber<any, any>> = int
  * @since 1.0.0
  * @category destructors
  */
-export const scoped: <E, A>(self: Fiber<E, A>) => Effect.Effect<Scope.Scope, never, Fiber<E, A>> =
-  fiberRuntime.fiberScoped
+export const scoped: {
+  <E, A>(self: Fiber<E, A>): Effect.Effect<Scope.Scope, never, Fiber<E, A>>
+  (): <E, A>(self: Fiber<E, A>) => Effect.Effect<Scope.Scope, never, Fiber<E, A>>
+} = fiberRuntime.fiberScoped
 
 /**
  * Returns the `FiberStatus` of a `RuntimeFiber`.
@@ -583,8 +617,10 @@ export const scoped: <E, A>(self: Fiber<E, A>) => Effect.Effect<Scope.Scope, nev
  * @since 1.0.0
  * @category getters
  */
-export const status: <E, A>(self: RuntimeFiber<E, A>) => Effect.Effect<never, never, FiberStatus.FiberStatus> =
-  internal.status
+export const status: {
+  <E, A>(self: RuntimeFiber<E, A>): Effect.Effect<never, never, FiberStatus.FiberStatus>
+  (): <E, A>(self: RuntimeFiber<E, A>) => Effect.Effect<never, never, FiberStatus.FiberStatus>
+} = internal.status
 
 /**
  * Returns a fiber that has already succeeded with the specified value.

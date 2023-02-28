@@ -35,12 +35,14 @@ class RefImpl<A> implements Ref.Ref<A> {
 export const unsafeMake = <A>(value: A): Ref.Ref<A> => new RefImpl(MutableRef.make(value))
 
 /** @internal */
-export const make = Debug.methodWithTrace((trace) =>
+export const make = Debug.zeroArgsDualWithTrace((trace) =>
   <A>(value: A): Effect.Effect<never, never, Ref.Ref<A>> => core.sync(() => unsafeMake(value)).traced(trace)
 )
 
 /** @internal */
-export const get = Debug.methodWithTrace((trace) => <A>(self: Ref.Ref<A>) => self.modify((a) => [a, a]).traced(trace))
+export const get = Debug.zeroArgsDualWithTrace((trace) =>
+  <A>(self: Ref.Ref<A>) => self.modify((a) => [a, a]).traced(trace)
+)
 
 /** @internal */
 export const set = Debug.dualWithTrace<

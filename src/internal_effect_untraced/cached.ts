@@ -37,7 +37,7 @@ export const auto = Debug.methodWithTrace((trace) =>
 )
 
 /** @internal */
-export const manual = Debug.methodWithTrace((trace) =>
+export const manual = Debug.zeroArgsDualWithTrace((trace) =>
   <R, E, A>(
     acquire: Effect.Effect<R, E, A>
   ): Effect.Effect<R | Scope.Scope, never, Cached.Cached<E, A>> =>
@@ -53,12 +53,12 @@ export const manual = Debug.methodWithTrace((trace) =>
 )
 
 /** @internal */
-export const get = Debug.methodWithTrace((trace) =>
+export const get = Debug.zeroArgsDualWithTrace((trace) =>
   <E, A>(self: Cached.Cached<E, A>): Effect.Effect<never, E, A> =>
     core.flatMap(scopedRef.get(self.scopedRef), core.done()).traced(trace)
 )
 
-export const refresh = Debug.methodWithTrace((trace) =>
+export const refresh = Debug.zeroArgsDualWithTrace((trace) =>
   <E, A>(self: Cached.Cached<E, A>): Effect.Effect<never, E, void> =>
     scopedRef.set(
       self.scopedRef,

@@ -318,7 +318,7 @@ export const isDequeue = (u: unknown): u is Queue.Dequeue<unknown> => {
 }
 
 /** @internal */
-export const bounded = Debug.methodWithTrace((trace) =>
+export const bounded = Debug.zeroArgsDualWithTrace((trace) =>
   <A>(requestedCapacity: number): Effect.Effect<never, never, Queue.Queue<A>> =>
     pipe(
       core.sync(() => MutableQueue.bounded<A>(requestedCapacity)),
@@ -327,7 +327,7 @@ export const bounded = Debug.methodWithTrace((trace) =>
 )
 
 /** @internal */
-export const dropping = Debug.methodWithTrace((trace) =>
+export const dropping = Debug.zeroArgsDualWithTrace((trace) =>
   <A>(requestedCapacity: number): Effect.Effect<never, never, Queue.Queue<A>> =>
     pipe(
       core.sync(() => MutableQueue.bounded<A>(requestedCapacity)),
@@ -336,7 +336,7 @@ export const dropping = Debug.methodWithTrace((trace) =>
 )
 
 /** @internal */
-export const sliding = Debug.methodWithTrace((trace) =>
+export const sliding = Debug.zeroArgsDualWithTrace((trace) =>
   <A>(requestedCapacity: number): Effect.Effect<never, never, Queue.Queue<A>> =>
     pipe(
       core.sync(() => MutableQueue.bounded<A>(requestedCapacity)),
@@ -346,7 +346,7 @@ export const sliding = Debug.methodWithTrace((trace) =>
 
 /** @internal */
 export const unbounded = Debug.methodWithTrace((trace) =>
-  <A>(): Effect.Effect<never, never, Queue.Queue<A>> =>
+  <A>(_: void): Effect.Effect<never, never, Queue.Queue<A>> =>
     pipe(
       core.sync(() => MutableQueue.unbounded<A>()),
       core.flatMap((queue) => make(queue, droppingStrategy()))
@@ -390,34 +390,34 @@ export const capacity = <A>(self: Queue.Dequeue<A> | Queue.Enqueue<A>): number =
 }
 
 /** @internal */
-export const size = Debug.methodWithTrace((trace) =>
+export const size = Debug.zeroArgsDualWithTrace((trace) =>
   <A>(self: Queue.Dequeue<A> | Queue.Enqueue<A>): Effect.Effect<never, never, number> => self.size().traced(trace)
 )
 
 /** @internal */
-export const isFull = Debug.methodWithTrace((trace) =>
+export const isFull = Debug.zeroArgsDualWithTrace((trace) =>
   <A>(self: Queue.Dequeue<A> | Queue.Enqueue<A>): Effect.Effect<never, never, boolean> => self.isFull().traced(trace)
 )
 
 /** @internal */
-export const isEmpty = Debug.methodWithTrace((trace) =>
+export const isEmpty = Debug.zeroArgsDualWithTrace((trace) =>
   <A>(self: Queue.Dequeue<A> | Queue.Enqueue<A>): Effect.Effect<never, never, boolean> => self.isEmpty().traced(trace)
 )
 
 /** @internal */
-export const isShutdown = Debug.methodWithTrace((trace) =>
+export const isShutdown = Debug.zeroArgsDualWithTrace((trace) =>
   <A>(self: Queue.Dequeue<A> | Queue.Enqueue<A>): Effect.Effect<never, never, boolean> =>
     self.isShutdown().traced(trace)
 )
 
 /** @internal */
-export const awaitShutdown = Debug.methodWithTrace((trace) =>
+export const awaitShutdown = Debug.zeroArgsDualWithTrace((trace) =>
   <A>(self: Queue.Dequeue<A> | Queue.Enqueue<A>): Effect.Effect<never, never, void> =>
     self.awaitShutdown().traced(trace)
 )
 
 /** @internal */
-export const shutdown = Debug.methodWithTrace((trace) =>
+export const shutdown = Debug.zeroArgsDualWithTrace((trace) =>
   <A>(self: Queue.Dequeue<A> | Queue.Enqueue<A>): Effect.Effect<never, never, void> => self.shutdown().traced(trace)
 )
 
@@ -439,18 +439,18 @@ export const offerAll = Debug.dualWithTrace<
 >(2, (trace) => (self, iterable) => self.offerAll(iterable).traced(trace))
 
 /** @internal */
-export const poll = Debug.methodWithTrace((trace) =>
+export const poll = Debug.zeroArgsDualWithTrace((trace) =>
   <A>(self: Queue.Dequeue<A>): Effect.Effect<never, never, Option.Option<A>> =>
     pipe(self.takeUpTo(1), core.map(Chunk.head)).traced(trace)
 )
 
 /** @internal */
-export const take = Debug.methodWithTrace((trace) =>
+export const take = Debug.zeroArgsDualWithTrace((trace) =>
   <A>(self: Queue.Dequeue<A>): Effect.Effect<never, never, A> => self.take().traced(trace)
 )
 
 /** @internal */
-export const takeAll = Debug.methodWithTrace((trace) =>
+export const takeAll = Debug.zeroArgsDualWithTrace((trace) =>
   <A>(self: Queue.Dequeue<A>): Effect.Effect<never, never, Chunk.Chunk<A>> => self.takeAll().traced(trace)
 )
 

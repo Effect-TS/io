@@ -68,13 +68,13 @@ export const fromAcquire = Debug.methodWithTrace((trace) =>
 )
 
 /** @internal */
-export const get = Debug.methodWithTrace((trace) =>
+export const get = Debug.zeroArgsDualWithTrace((trace) =>
   <A>(self: ScopedRef.ScopedRef<A>): Effect.Effect<never, never, A> =>
     pipe(ref.get(self.ref), core.map((tuple) => tuple[1])).traced(trace)
 )
 
 /** @internal */
-export const make = Debug.methodWithTrace((trace, restore) =>
+export const make = Debug.zeroArgsDualWithTrace((trace, restore) =>
   <A>(evaluate: LazyArg<A>): Effect.Effect<Scope.Scope, never, ScopedRef.ScopedRef<A>> =>
     fromAcquire(core.sync(restore(evaluate))).traced(trace)
 )

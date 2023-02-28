@@ -1301,15 +1301,13 @@ export const zipWith = Debug.dualWithTrace<
 // -----------------------------------------------------------------------------
 
 /* @internal */
-export const interruptFiber = Debug.dualWithTrace<
-  () => <E, A>(self: Fiber.Fiber<E, A>) => Effect.Effect<never, never, Exit.Exit<E, A>>,
-  <E, A>(self: Fiber.Fiber<E, A>) => Effect.Effect<never, never, Exit.Exit<E, A>>
->(1, (trace) =>
-  (self) =>
+export const interruptFiber = Debug.zeroArgsDualWithTrace((trace) =>
+  <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<never, never, Exit.Exit<E, A>> =>
     flatMap(
       fiberId(),
       (fiberId) => pipe(self, interruptAsFiber(fiberId))
-    ).traced(trace))
+    ).traced(trace)
+)
 
 /* @internal */
 export const interruptAsFiber = Debug.dualWithTrace<
@@ -1403,7 +1401,7 @@ const fiberRefVariance = {
 }
 
 /* @internal */
-export const fiberRefGet = Debug.methodWithTrace((trace) =>
+export const fiberRefGet = Debug.zeroArgsDualWithTrace((trace) =>
   <A>(self: FiberRef.FiberRef<A>): Effect.Effect<never, never, A> =>
     fiberRefModify(self, (a) => [a, a] as const).traced(trace)
 )
@@ -1448,7 +1446,7 @@ export const fiberRefSet = Debug.dualWithTrace<
 >(2, (trace) => (self, value) => fiberRefModify(self, () => [void 0, value] as const).traced(trace))
 
 /* @internal */
-export const fiberRefDelete = Debug.methodWithTrace((trace) =>
+export const fiberRefDelete = Debug.zeroArgsDualWithTrace((trace) =>
   <A>(self: FiberRef.FiberRef<A>): Effect.Effect<never, never, void> =>
     withFiberRuntime<never, never, void>((state) => {
       state.unsafeDeleteFiberRef(self)
@@ -1457,7 +1455,7 @@ export const fiberRefDelete = Debug.methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const fiberRefReset = Debug.methodWithTrace((trace) =>
+export const fiberRefReset = Debug.zeroArgsDualWithTrace((trace) =>
   <A>(self: FiberRef.FiberRef<A>): Effect.Effect<never, never, void> => fiberRefSet(self, self.initial).traced(trace)
 )
 
@@ -1666,30 +1664,35 @@ export const CloseableScopeTypeId: Scope.CloseableScopeTypeId = Symbol.for(
 ) as Scope.CloseableScopeTypeId
 
 /* @internal */
-export const scopeAddFinalizer = Debug.methodWithTrace((trace) =>
-  (self: Scope.Scope, finalizer: Effect.Effect<never, never, unknown>): Effect.Effect<never, never, void> =>
-    self.addFinalizer(() => asUnit(finalizer)).traced(trace)
-)
+export const scopeAddFinalizer = Debug.dualWithTrace<
+  (finalizer: Effect.Effect<never, never, unknown>) => (self: Scope.Scope) => Effect.Effect<never, never, void>,
+  (self: Scope.Scope, finalizer: Effect.Effect<never, never, unknown>) => Effect.Effect<never, never, void>
+>(2, (trace) => (self, finalizer) => self.addFinalizer(() => asUnit(finalizer)).traced(trace))
 
 /* @internal */
-export const scopeAddFinalizerExit = Debug.methodWithTrace((trace, restore) =>
-  (self: Scope.Scope, finalizer: Scope.Scope.Finalizer): Effect.Effect<never, never, void> =>
-    self.addFinalizer(restore(finalizer)).traced(trace)
-)
+export const scopeAddFinalizerExit = Debug.dualWithTrace<
+  (finalizer: Scope.Scope.Finalizer) => (self: Scope.Scope) => Effect.Effect<never, never, void>,
+  (self: Scope.Scope, finalizer: Scope.Scope.Finalizer) => Effect.Effect<never, never, void>
+>(2, (trace, restore) => (self, finalizer) => self.addFinalizer(restore(finalizer)).traced(trace))
 
 /* @internal */
-export const scopeClose = Debug.methodWithTrace((trace) =>
-  (self: Scope.Scope.Closeable, exit: Exit.Exit<unknown, unknown>): Effect.Effect<never, never, void> =>
-    self.close(exit).traced(trace)
-)
+export const scopeClose = Debug.dualWithTrace<
+  (exit: Exit.Exit<unknown, unknown>) => (self: Scope.Scope.Closeable) => Effect.Effect<never, never, void>,
+  (self: Scope.Scope.Closeable, exit: Exit.Exit<unknown, unknown>) => Effect.Effect<never, never, void>
+>(2, (trace) => (self, exit) => self.close(exit).traced(trace))
 
 /* @internal */
-export const scopeFork = Debug.methodWithTrace((trace) =>
+export const scopeFork = Debug.dualWithTrace<
+  (
+    strategy: ExecutionStrategy.ExecutionStrategy
+  ) => (
+    self: Scope.Scope
+  ) => Effect.Effect<never, never, Scope.Scope.Closeable>,
   (
     self: Scope.Scope,
     strategy: ExecutionStrategy.ExecutionStrategy
-  ): Effect.Effect<never, never, Scope.Scope.Closeable> => self.fork(strategy).traced(trace)
-)
+  ) => Effect.Effect<never, never, Scope.Scope.Closeable>
+>(2, (trace) => (self, strategy) => self.fork(strategy).traced(trace))
 
 // -----------------------------------------------------------------------------
 // ReleaseMap
@@ -2284,18 +2287,18 @@ export const deferredUnsafeMake = <E, A>(fiberId: FiberId.FiberId): Deferred.Def
 
 /* @internal */
 export const deferredMake = Debug.methodWithTrace((trace) =>
-  <E, A>(): Effect.Effect<never, never, Deferred.Deferred<E, A>> =>
-    pipe(fiberId(), flatMap((id) => deferredMakeAs<E, A>(id))).traced(trace)
+  <E, A>(_: void): Effect.Effect<never, never, Deferred.Deferred<E, A>> =>
+    flatMap(fiberId(), (id) => deferredMakeAs<E, A>(id)).traced(trace)
 )
 
 /* @internal */
-export const deferredMakeAs = Debug.methodWithTrace((trace) =>
+export const deferredMakeAs = Debug.zeroArgsDualWithTrace((trace) =>
   <E, A>(fiberId: FiberId.FiberId): Effect.Effect<never, never, Deferred.Deferred<E, A>> =>
     sync(() => deferredUnsafeMake<E, A>(fiberId)).traced(trace)
 )
 
 /* @internal */
-export const deferredAwait = Debug.methodWithTrace((trace) =>
+export const deferredAwait = Debug.zeroArgsDualWithTrace((trace) =>
   <E, A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, E, A> =>
     asyncInterruptEither<never, E, A>((k) => {
       const state = MutableRef.get(self.state)
@@ -2385,11 +2388,11 @@ export const deferredDieSync = Debug.dualWithTrace<
 >(2, (trace, restore) => (self, evaluate) => deferredCompleteWith(self, dieSync(restore(evaluate))).traced(trace))
 
 /* @internal */
-export const deferredInterrupt = Debug.methodWithTrace((trace) =>
+export const deferredInterrupt = Debug.zeroArgsDualWithTrace((trace) =>
   <E, A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> =>
-    pipe(
+    flatMap(
       fiberId(),
-      flatMap((fiberId) => deferredCompleteWith(self, interruptWith(fiberId)))
+      (fiberId) => deferredCompleteWith(self, interruptWith(fiberId))
     ).traced(trace)
 )
 
@@ -2400,13 +2403,13 @@ export const deferredInterruptWith = Debug.dualWithTrace<
 >(2, (trace) => (self, fiberId) => deferredCompleteWith(self, interruptWith(fiberId)).traced(trace))
 
 /* @internal */
-export const deferredIsDone = Debug.methodWithTrace((trace) =>
+export const deferredIsDone = Debug.zeroArgsDualWithTrace((trace) =>
   <E, A>(self: Deferred.Deferred<E, A>): Effect.Effect<never, never, boolean> =>
     sync(() => MutableRef.get(self.state)._tag === DeferredOpCodes.OP_STATE_DONE).traced(trace)
 )
 
 /* @internal */
-export const deferredPoll = Debug.methodWithTrace((trace) =>
+export const deferredPoll = Debug.zeroArgsDualWithTrace((trace) =>
   <E, A>(
     self: Deferred.Deferred<E, A>
   ): Effect.Effect<never, never, Option.Option<Effect.Effect<never, E, A>>> =>

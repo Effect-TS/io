@@ -70,7 +70,7 @@ export const autoFromConfig = <Out extends Context.Tag<any>, In, E, R, Out2>(
   )
 
 /** @internal */
-export const get = Debug.methodWithTrace((trace) =>
+export const get = Debug.zeroArgsDualWithTrace((trace) =>
   <A>(tag: Context.Tag<A>): Effect.Effect<Reloadable.Reloadable<A>, never, A> =>
     core.serviceWithEffect(
       reloadableTag(tag),
@@ -120,7 +120,7 @@ export const reloadableTag = <A>(tag: Context.Tag<A>): Context.Tag<Reloadable.Re
 }
 
 /** @internal */
-export const reload = Debug.methodWithTrace((trace) =>
+export const reload = Debug.zeroArgsDualWithTrace((trace) =>
   <A>(tag: Context.Tag<A>): Effect.Effect<Reloadable.Reloadable<A>, unknown, void> =>
     core.serviceWithEffect(
       reloadableTag(tag),
@@ -129,7 +129,7 @@ export const reload = Debug.methodWithTrace((trace) =>
 )
 
 /** @internal */
-export const reloadFork = Debug.methodWithTrace((trace) =>
+export const reloadFork = Debug.zeroArgsDualWithTrace((trace) =>
   <A>(tag: Context.Tag<A>): Effect.Effect<Reloadable.Reloadable<A>, unknown, void> =>
     core.serviceWithEffect(
       reloadableTag(tag),

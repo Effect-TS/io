@@ -68,7 +68,7 @@ const removeSubscribers = <A>(
   }
 
 /** @internal */
-export const bounded = Debug.methodWithTrace((trace) =>
+export const bounded = Debug.zeroArgsDualWithTrace((trace) =>
   <A>(requestedCapacity: number): Effect.Effect<never, never, Hub.Hub<A>> =>
     pipe(
       core.sync(() => makeBoundedHub<A>(requestedCapacity)),
@@ -77,7 +77,7 @@ export const bounded = Debug.methodWithTrace((trace) =>
 )
 
 /** @internal */
-export const dropping = Debug.methodWithTrace((trace) =>
+export const dropping = Debug.zeroArgsDualWithTrace((trace) =>
   <A>(requestedCapacity: number): Effect.Effect<never, never, Hub.Hub<A>> =>
     pipe(
       core.sync(() => makeBoundedHub<A>(requestedCapacity)),
@@ -86,7 +86,7 @@ export const dropping = Debug.methodWithTrace((trace) =>
 )
 
 /** @internal */
-export const sliding = Debug.methodWithTrace((trace) =>
+export const sliding = Debug.zeroArgsDualWithTrace((trace) =>
   <A>(requestedCapacity: number): Effect.Effect<never, never, Hub.Hub<A>> =>
     pipe(
       core.sync(() => makeBoundedHub<A>(requestedCapacity)),
@@ -96,7 +96,7 @@ export const sliding = Debug.methodWithTrace((trace) =>
 
 /** @internal */
 export const unbounded = Debug.methodWithTrace((trace) =>
-  <A>(): Effect.Effect<never, never, Hub.Hub<A>> =>
+  <A>(_: void): Effect.Effect<never, never, Hub.Hub<A>> =>
     pipe(
       core.sync(() => makeUnboundedHub<A>()),
       core.flatMap((atomicHub) => makeHub(atomicHub, new DroppingStrategy()))
@@ -104,37 +104,35 @@ export const unbounded = Debug.methodWithTrace((trace) =>
 )
 
 /** @internal */
-export const capacity = <A>(self: Hub.Hub<A>): number => {
-  return self.capacity()
-}
+export const capacity = <A>(self: Hub.Hub<A>): number => self.capacity()
 
 /** @internal */
-export const size = Debug.methodWithTrace((trace) =>
+export const size = Debug.zeroArgsDualWithTrace((trace) =>
   <A>(self: Hub.Hub<A>): Effect.Effect<never, never, number> => self.size().traced(trace)
 )
 
 /** @internal */
-export const isFull = Debug.methodWithTrace((trace) =>
+export const isFull = Debug.zeroArgsDualWithTrace((trace) =>
   <A>(self: Hub.Hub<A>): Effect.Effect<never, never, boolean> => self.isFull().traced(trace)
 )
 
 /** @internal */
-export const isEmpty = Debug.methodWithTrace((trace) =>
+export const isEmpty = Debug.zeroArgsDualWithTrace((trace) =>
   <A>(self: Hub.Hub<A>): Effect.Effect<never, never, boolean> => self.isEmpty().traced(trace)
 )
 
 /** @internal */
-export const shutdown = Debug.methodWithTrace((trace) =>
+export const shutdown = Debug.zeroArgsDualWithTrace((trace) =>
   <A>(self: Hub.Hub<A>): Effect.Effect<never, never, void> => self.shutdown().traced(trace)
 )
 
 /** @internal */
-export const isShutdown = Debug.methodWithTrace((trace) =>
+export const isShutdown = Debug.zeroArgsDualWithTrace((trace) =>
   <A>(self: Hub.Hub<A>): Effect.Effect<never, never, boolean> => self.isShutdown().traced(trace)
 )
 
 /** @internal */
-export const awaitShutdown = Debug.methodWithTrace((trace) =>
+export const awaitShutdown = Debug.zeroArgsDualWithTrace((trace) =>
   <A>(self: Hub.Hub<A>): Effect.Effect<never, never, void> => self.awaitShutdown().traced(trace)
 )
 
@@ -151,7 +149,7 @@ export const publishAll = Debug.dualWithTrace<
 >(2, (trace) => (self, elements) => self.publishAll(elements).traced(trace))
 
 /** @internal */
-export const subscribe = Debug.methodWithTrace((trace) =>
+export const subscribe = Debug.zeroArgsDualWithTrace((trace) =>
   <A>(self: Hub.Hub<A>): Effect.Effect<Scope.Scope, never, Queue.Dequeue<A>> => self.subscribe().traced(trace)
 )
 

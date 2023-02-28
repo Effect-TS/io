@@ -424,7 +424,10 @@ describe.concurrent("Layer", () => {
       const result = yield* $(pipe(
         Effect.serviceWithEffect(FooTag, (foo) => foo.get),
         Effect.flatMap(([i1, s]) =>
-          pipe(Effect.serviceWithEffect(NumberRefTag, Ref.get), Effect.map((i2) => [i1, i2, s] as const))
+          pipe(
+            Effect.serviceWithEffect(NumberRefTag, Ref.get()),
+            Effect.map((i2) => [i1, i2, s] as const)
+          )
         ),
         Effect.provideLayer(layer)
       ))

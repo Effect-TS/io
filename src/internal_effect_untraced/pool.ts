@@ -483,7 +483,7 @@ export const makeWithTTL = Debug.methodWithTrace((trace) =>
 )
 
 /** @internal */
-export const get = Debug.methodWithTrace((trace) =>
+export const get = Debug.zeroArgsDualWithTrace((trace) =>
   <E, A>(self: Pool.Pool<E, A>): Effect.Effect<Scope.Scope, E, A> => self.get().traced(trace)
 )
 

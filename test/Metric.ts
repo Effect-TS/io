@@ -80,7 +80,7 @@ describe.concurrent("Metric", () => {
               Metric.counter("c4"),
               Metric.taggedWithLabels(labels),
               Metric.fromConst(() => 1),
-              Metric.value
+              Metric.value()
             ))
           )
         )
@@ -91,11 +91,19 @@ describe.concurrent("Metric", () => {
         const result = yield* $(
           pipe(
             Effect.succeed(10),
-            Effect.withMetric(pipe(Metric.counter("c5"), Metric.taggedWithLabels(labels))),
-            Effect.zipRight(
-              pipe(Effect.succeed(5), Effect.withMetric(pipe(Metric.counter("c5"), Metric.taggedWithLabels(labels))))
-            ),
-            Effect.zipRight(pipe(Metric.counter("c5"), Metric.taggedWithLabels(labels), Metric.value))
+            Effect.withMetric(pipe(
+              Metric.counter("c5"),
+              Metric.taggedWithLabels(labels)
+            )),
+            Effect.zipRight(pipe(
+              Effect.succeed(5),
+              Effect.withMetric(pipe(Metric.counter("c5"), Metric.taggedWithLabels(labels)))
+            )),
+            Effect.zipRight(pipe(
+              Metric.counter("c5"),
+              Metric.taggedWithLabels(labels),
+              Metric.value()
+            ))
           )
         )
         assert.deepStrictEqual(result, MetricState.counter(15))
@@ -124,7 +132,11 @@ describe.concurrent("Metric", () => {
                 )
               )
             ),
-            Effect.zipRight(pipe(Metric.counter("c6"), Metric.taggedWithLabels(labels), Metric.value))
+            Effect.zipRight(pipe(
+              Metric.counter("c6"),
+              Metric.taggedWithLabels(labels),
+              Metric.value()
+            ))
           )
         )
         assert.deepStrictEqual(result, MetricState.counter(6))
@@ -152,7 +164,7 @@ describe.concurrent("Metric", () => {
             Effect.withMetric(counter),
             Effect.zipRight(pipe(Effect.succeed("!"), Effect.withMetric(counter))),
             Effect.zipRight(pipe(Effect.succeed("!"), Effect.withMetric(counter))),
-            Effect.zipRight(pipe(base, Metric.tagged("dyn", "!"), Metric.value))
+            Effect.zipRight(pipe(base, Metric.tagged("dyn", "!"), Metric.value()))
           )
         )
         assert.deepStrictEqual(result, MetricState.counter(2))
@@ -167,7 +179,7 @@ describe.concurrent("Metric", () => {
             pipe(
               counter,
               Metric.tagged("key", "value"),
-              Metric.value
+              Metric.value()
             )
           )
         ))
@@ -233,8 +245,8 @@ describe.concurrent("Metric", () => {
             Effect.zipRight(pipe(Effect.succeed("world"), Effect.withMetric(frequency))),
             Effect.zipRight(Effect.struct({
               result1: Metric.value(base),
-              result2: pipe(base, Metric.tagged("dyn", "hello"), Metric.value),
-              result3: pipe(base, Metric.tagged("dyn", "world"), Metric.value)
+              result2: pipe(base, Metric.tagged("dyn", "hello"), Metric.value()),
+              result3: pipe(base, Metric.tagged("dyn", "world"), Metric.value())
             }))
           )
         )
@@ -288,7 +300,7 @@ describe.concurrent("Metric", () => {
             Effect.withMetric(gauge),
             Effect.zipRight(pipe(Effect.succeed("!"), Effect.withMetric(gauge))),
             Effect.zipRight(pipe(Effect.succeed("!"), Effect.withMetric(gauge))),
-            Effect.zipRight(pipe(base, Metric.tagged("dyn", "!"), Metric.value))
+            Effect.zipRight(pipe(base, Metric.tagged("dyn", "!"), Metric.value()))
           )
         )
         assert.deepStrictEqual(result, MetricState.gauge(1))
@@ -390,8 +402,8 @@ describe.concurrent("Metric", () => {
             Effect.zipRight(pipe(Effect.succeed("xyz"), Effect.withMetric(histogram))),
             Effect.zipRight(Effect.struct({
               result1: Metric.value(base),
-              result2: pipe(base, Metric.tagged("dyn", "x"), Metric.value),
-              result3: pipe(base, Metric.tagged("dyn", "xyz"), Metric.value)
+              result2: pipe(base, Metric.tagged("dyn", "x"), Metric.value()),
+              result3: pipe(base, Metric.tagged("dyn", "xyz"), Metric.value())
             }))
           )
         )
@@ -474,8 +486,8 @@ describe.concurrent("Metric", () => {
             Effect.zipRight(pipe(Effect.succeed("xyz"), Effect.withMetric(summary))),
             Effect.zipRight(Effect.struct({
               result1: Metric.value(base),
-              result2: pipe(base, Metric.tagged("dyn", "x"), Metric.value),
-              result3: pipe(base, Metric.tagged("dyn", "xyz"), Metric.value)
+              result2: pipe(base, Metric.tagged("dyn", "x"), Metric.value()),
+              result3: pipe(base, Metric.tagged("dyn", "xyz"), Metric.value())
             }))
           )
         )

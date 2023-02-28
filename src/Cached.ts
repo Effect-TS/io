@@ -71,7 +71,10 @@ export const auto: <R, E, A, R2, In, Out>(
  * @since 1.0.0
  * @category getters
  */
-export const get: <E, A>(self: Cached<E, A>) => Effect.Effect<never, E, A> = internal.get
+export const get: {
+  <E, A>(self: Cached<E, A>): Effect.Effect<never, E, A>
+  (): <E, A>(self: Cached<E, A>) => Effect.Effect<never, E, A>
+} = internal.get
 
 /**
  * Creates a new `Cached` value that must be manually refreshed by calling
@@ -83,8 +86,10 @@ export const get: <E, A>(self: Cached<E, A>) => Effect.Effect<never, E, A> = int
  * @since 1.0.0
  * @category constructors
  */
-export const manual: <R, E, A>(acquire: Effect.Effect<R, E, A>) => Effect.Effect<Scope.Scope | R, never, Cached<E, A>> =
-  internal.manual
+export const manual: {
+  <R, E, A>(acquire: Effect.Effect<R, E, A>): Effect.Effect<Scope.Scope | R, never, Cached<E, A>>
+  (): <R, E, A>(acquire: Effect.Effect<R, E, A>) => Effect.Effect<Scope.Scope | R, never, Cached<E, A>>
+} = internal.manual
 
 /**
  * Refreshes the cache. This method will not return until either the refresh
@@ -93,4 +98,7 @@ export const manual: <R, E, A>(acquire: Effect.Effect<R, E, A>) => Effect.Effect
  * @since 1.0.0
  * @category mutations
  */
-export const refresh: <E, A>(self: Cached<E, A>) => Effect.Effect<never, E, void> = internal.refresh
+export const refresh: {
+  <E, A>(self: Cached<E, A>): Effect.Effect<never, E, void>
+  (): <E, A>(self: Cached<E, A>) => Effect.Effect<never, E, void>
+} = internal.refresh

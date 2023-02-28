@@ -87,7 +87,10 @@ export const autoFromConfig: <Out extends Context.Tag<any>, In, E, R, Out2>(
  * @since 1.0.0
  * @category getters
  */
-export const get: <A>(tag: Context.Tag<A>) => Effect.Effect<Reloadable<A>, never, A> = internal.get
+export const get: {
+  <A>(tag: Context.Tag<A>): Effect.Effect<Reloadable<A>, never, A>
+  (): <A>(tag: Context.Tag<A>) => Effect.Effect<Reloadable<A>, never, A>
+} = internal.get
 
 /**
  * Makes a new reloadable service from a layer that describes the construction
@@ -107,7 +110,10 @@ export const manual: <Out extends Context.Tag<any>, In, E>(
  * @since 1.0.0
  * @category constructors
  */
-export const reload: <A>(tag: Context.Tag<A>) => Effect.Effect<Reloadable<A>, unknown, void> = internal.reload
+export const reload: {
+  <A>(tag: Context.Tag<A>): Effect.Effect<Reloadable<A>, unknown, void>
+  (): <A>(tag: Context.Tag<A>) => Effect.Effect<Reloadable<A>, unknown, void>
+} = internal.reload
 
 /**
  * @since 1.0.0
@@ -121,4 +127,7 @@ export const tag: <A>(tag: Context.Tag<A>) => Context.Tag<Reloadable<A>> = inter
  * @since 1.0.0
  * @category constructors
  */
-export const reloadFork: <A>(tag: Context.Tag<A>) => Effect.Effect<Reloadable<A>, unknown, void> = internal.reloadFork
+export const reloadFork: {
+  <A>(tag: Context.Tag<A>): Effect.Effect<Reloadable<A>, unknown, void>
+  (): <A>(tag: Context.Tag<A>) => Effect.Effect<Reloadable<A>, unknown, void>
+} = internal.reloadFork

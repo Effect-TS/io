@@ -44,7 +44,7 @@ class KeyedPoolImpl<K, E, A> implements KeyedPool.KeyedPool<K, E, A> {
     return Debug.bodyWithTrace((trace) =>
       core.flatMap(
         this.getOrCreatePool(key),
-        pool.get
+        pool.get()
       ).traced(trace)
     )
   }

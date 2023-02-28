@@ -282,7 +282,7 @@ describe.concurrent("Effect", () => {
         Array.from({ length: 100 }, (_, i) => i + 1),
         Effect.forEachPar(() => pipe(Ref.update(ref, (_) => _ + 1), Effect.fork()))
       ))
-      yield* $(pipe(fibers, Effect.forEach(Fiber.await)))
+      yield* $(Effect.forEach(fibers, Fiber.await()))
       const result = yield* $(Ref.get(ref))
       assert.strictEqual(result, 100)
     }))

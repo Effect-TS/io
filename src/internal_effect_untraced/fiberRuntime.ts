@@ -2430,7 +2430,7 @@ export const fiberRefMake = Debug.methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const fiberRefMakeWith = Debug.methodWithTrace((trace, restore) =>
+export const fiberRefMakeWith = Debug.zeroArgsDualWithTrace((trace, restore) =>
   <Value>(
     ref: LazyArg<FiberRef.FiberRef<Value>>
   ): Effect.Effect<Scope.Scope, never, FiberRef.FiberRef<Value>> =>
@@ -2444,7 +2444,7 @@ export const fiberRefMakeWith = Debug.methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const fiberRefMakeContext = Debug.methodWithTrace((trace) =>
+export const fiberRefMakeContext = Debug.zeroArgsDualWithTrace((trace) =>
   <A>(
     initial: Context.Context<A>
   ): Effect.Effect<Scope.Scope, never, FiberRef.FiberRef<Context.Context<A>>> =>
@@ -2452,7 +2452,7 @@ export const fiberRefMakeContext = Debug.methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const fiberRefMakeRuntimeFlags = Debug.methodWithTrace((trace) =>
+export const fiberRefMakeRuntimeFlags = Debug.zeroArgsDualWithTrace((trace) =>
   (
     initial: RuntimeFlags.RuntimeFlags
   ): Effect.Effect<Scope.Scope, never, FiberRef.FiberRef<RuntimeFlags.RuntimeFlags>> =>
@@ -2472,7 +2472,7 @@ export const currentSupervisor: FiberRef.FiberRef<Supervisor.Supervisor<any>> = 
 // circular with Fiber
 
 /* @internal */
-export const fiberAwaitAll = Debug.methodWithTrace((trace) =>
+export const fiberAwaitAll = Debug.zeroArgsDualWithTrace((trace) =>
   (fibers: Iterable<Fiber.Fiber<any, any>>): Effect.Effect<never, never, void> =>
     core.asUnit(internalFiber._await(fiberCollectAll(fibers))).traced(trace)
 )
@@ -2531,19 +2531,19 @@ export const fiberCollectAll = <E, A>(fibers: Iterable<Fiber.Fiber<E, A>>): Fibe
 })
 
 /* @internal */
-export const fiberInterruptFork = Debug.methodWithTrace((trace) =>
+export const fiberInterruptFork = Debug.zeroArgsDualWithTrace((trace) =>
   <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<never, never, void> =>
     core.asUnit(forkDaemon(core.interruptFiber(self))).traced(trace)
 )
 
 /* @internal */
-export const fiberJoinAll = Debug.methodWithTrace((trace) =>
+export const fiberJoinAll = Debug.zeroArgsDualWithTrace((trace) =>
   <E, A>(fibers: Iterable<Fiber.Fiber<E, A>>): Effect.Effect<never, E, void> =>
     core.asUnit(internalFiber.join(fiberCollectAll(fibers))).traced(trace)
 )
 
 /* @internal */
-export const fiberScoped = Debug.methodWithTrace((trace) =>
+export const fiberScoped = Debug.zeroArgsDualWithTrace((trace) =>
   <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<Scope.Scope, never, Fiber.Fiber<E, A>> =>
     acquireRelease(core.succeed(self), core.interruptFiber()).traced(trace)
 )

@@ -90,8 +90,10 @@ export const currentTimeMillis: (_: void) => Effect.Effect<never, never, number>
  * @since 1.0.0
  * @category constructors
  */
-export const clockWith: <R, E, A>(f: (clock: Clock) => Effect.Effect<R, E, A>) => Effect.Effect<R, E, A> =
-  defaultServices.clockWith
+export const clockWith: {
+  <R, E, A>(f: (clock: Clock) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A>
+  (): <R, E, A>(f: (clock: Clock) => Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+} = defaultServices.clockWith
 
 /**
  * @since 1.0.0

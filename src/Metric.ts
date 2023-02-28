@@ -254,7 +254,7 @@ export const set: {
  * @since 1.0.0
  * @category getters
  */
-export const snapshot: () => Effect.Effect<never, never, HashSet.HashSet<MetricPair.MetricPair.Untyped>> =
+export const snapshot: (_: void) => Effect.Effect<never, never, HashSet.HashSet<MetricPair.MetricPair.Untyped>> =
   internal.snapshot
 
 /**
@@ -566,7 +566,10 @@ export const update: {
  * @since 1.0.0
  * @category getters
  */
-export const value: <Type, In, Out>(self: Metric<Type, In, Out>) => Effect.Effect<never, never, Out> = internal.value
+export const value: {
+  <Type, In, Out>(self: Metric<Type, In, Out>): Effect.Effect<never, never, Out>
+  (): <Type, In, Out>(self: Metric<Type, In, Out>) => Effect.Effect<never, never, Out>
+} = internal.value
 
 /**
  * @since 1.0.0

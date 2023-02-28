@@ -186,7 +186,7 @@ describe.concurrent("FiberRef", () => {
   it.scoped("fork function is applied on fork - 2", () =>
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(0, increment))
-      const child = yield* $(pipe(Effect.unit(), Effect.fork(), Effect.flatMap(Fiber.join), Effect.fork()))
+      const child = yield* $(Effect.fork(Effect.flatMap(Effect.fork(Effect.unit()), Fiber.join())))
       yield* $(Fiber.join(child))
       const result = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(result, 2)

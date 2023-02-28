@@ -36,7 +36,7 @@ const concurrentFib = (n: number): Effect.Effect<never, never, number> => {
 describe.concurrent("Effect", () => {
   it.effect("shallow fork/join identity", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(Effect.succeed(42), Effect.fork(), Effect.flatMap(Fiber.join)))
+      const result = yield* $(pipe(Effect.fork(Effect.succeed(42)), Effect.flatMap(Fiber.join())))
       assert.strictEqual(result, 42)
     }))
   it.effect("deep fork/join identity", () =>
@@ -172,7 +172,7 @@ describe.concurrent("Effect", () => {
   it.effect("race in uninterruptible region", () =>
     Effect.gen(function*($) {
       const awaiter = Deferred.unsafeMake<never, void>(FiberId.none)
-      const program = pipe(Effect.unit(), Effect.race(pipe(awaiter, Deferred.await)), Effect.uninterruptible())
+      const program = Effect.uninterruptible(Effect.race(Effect.unit(), Deferred.await(awaiter)))
       const result = yield* $(program)
       yield* $(Deferred.succeed(awaiter, void 0))
       assert.isUndefined(result)

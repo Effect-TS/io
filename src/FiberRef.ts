@@ -76,24 +76,28 @@ export const make: <A>(
  * @since 1.0.0
  * @category constructors
  */
-export const makeWith: <Value>(ref: LazyArg<FiberRef<Value>>) => Effect.Effect<Scope.Scope, never, FiberRef<Value>> =
-  fiberRuntime.fiberRefMakeWith
+export const makeWith: {
+  <Value>(ref: LazyArg<FiberRef<Value>>): Effect.Effect<Scope.Scope, never, FiberRef<Value>>
+  (): <Value>(ref: LazyArg<FiberRef<Value>>) => Effect.Effect<Scope.Scope, never, FiberRef<Value>>
+} = fiberRuntime.fiberRefMakeWith
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const makeContext: <A>(
-  initial: Context.Context<A>
-) => Effect.Effect<Scope.Scope, never, FiberRef<Context.Context<A>>> = fiberRuntime.fiberRefMakeContext
+export const makeContext: {
+  <A>(initial: Context.Context<A>): Effect.Effect<Scope.Scope, never, FiberRef<Context.Context<A>>>
+  (): <A>(initial: Context.Context<A>) => Effect.Effect<Scope.Scope, never, FiberRef<Context.Context<A>>>
+} = fiberRuntime.fiberRefMakeContext
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const makeRuntimeFlags: (
-  initial: RuntimeFlags.RuntimeFlags
-) => Effect.Effect<Scope.Scope, never, FiberRef<RuntimeFlags.RuntimeFlags>> = fiberRuntime.fiberRefMakeRuntimeFlags
+export const makeRuntimeFlags: {
+  (initial: RuntimeFlags.RuntimeFlags): Effect.Effect<Scope.Scope, never, FiberRef<RuntimeFlags.RuntimeFlags>>
+  (): (initial: RuntimeFlags.RuntimeFlags) => Effect.Effect<Scope.Scope, never, FiberRef<RuntimeFlags.RuntimeFlags>>
+} = fiberRuntime.fiberRefMakeRuntimeFlags
 
 /**
  * @since 1.0.0
@@ -141,7 +145,10 @@ export const unsafeMakePatch: <Value, Patch>(
  * @since 1.0.0
  * @category getters
  */
-export const get: <A>(self: FiberRef<A>) => Effect.Effect<never, never, A> = core.fiberRefGet
+export const get: {
+  <A>(self: FiberRef<A>): Effect.Effect<never, never, A>
+  (): <A>(self: FiberRef<A>) => Effect.Effect<never, never, A>
+} = core.fiberRefGet
 
 /**
  * @since 1.0.0
@@ -188,7 +195,10 @@ export const set: {
   <A>(self: FiberRef<A>, value: A): Effect.Effect<never, never, void>
 } = core.fiberRefSet
 
-const _delete: <A>(self: FiberRef<A>) => Effect.Effect<never, never, void> = core.fiberRefDelete
+const _delete: {
+  <A>(self: FiberRef<A>): Effect.Effect<never, never, void>
+  (): <A>(self: FiberRef<A>) => Effect.Effect<never, never, void>
+} = core.fiberRefDelete
 
 export {
   /**
@@ -202,7 +212,10 @@ export {
  * @since 1.0.0
  * @category mutations
  */
-export const reset: <A>(self: FiberRef<A>) => Effect.Effect<never, never, void> = core.fiberRefReset
+export const reset: {
+  <A>(self: FiberRef<A>): Effect.Effect<never, never, void>
+  (): <A>(self: FiberRef<A>) => Effect.Effect<never, never, void>
+} = core.fiberRefReset
 
 /**
  * @since 1.0.0

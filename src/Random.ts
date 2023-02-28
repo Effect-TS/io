@@ -101,8 +101,10 @@ export const nextIntBetween: (min: number, max: number) => Effect.Effect<never, 
  * @since 1.0.0
  * @category constructors
  */
-export const shuffle: <A>(elements: Iterable<A>) => Effect.Effect<never, never, Chunk.Chunk<A>> =
-  defaultServices.shuffle
+export const shuffle: {
+  <A>(elements: Iterable<A>): Effect.Effect<never, never, Chunk.Chunk<A>>
+  (): <A>(elements: Iterable<A>) => Effect.Effect<never, never, Chunk.Chunk<A>>
+} = defaultServices.shuffle
 
 /**
  * Retreives the `Random` service from the context and uses it to run the
@@ -111,5 +113,7 @@ export const shuffle: <A>(elements: Iterable<A>) => Effect.Effect<never, never, 
  * @since 1.0.0
  * @category constructors
  */
-export const randomWith: <R, E, A>(f: (random: Random) => Effect.Effect<R, E, A>) => Effect.Effect<R, E, A> =
-  defaultServices.randomWith
+export const randomWith: {
+  <R, E, A>(f: (random: Random) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A>
+  (): <R, E, A>(f: (random: Random) => Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+} = defaultServices.randomWith

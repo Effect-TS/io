@@ -41,13 +41,19 @@ export namespace Ref {
  * @since 1.0.0
  * @category constructors
  */
-export const make: <A>(value: A) => Effect.Effect<never, never, Ref<A>> = internal.make
+export const make: {
+  <A>(value: A): Effect.Effect<never, never, Ref<A>>
+  (): <A>(value: A) => Effect.Effect<never, never, Ref<A>>
+} = internal.make
 
 /**
  * @since 1.0.0
  * @category getters
  */
-export const get: <A>(self: Ref<A>) => Effect.Effect<never, never, A> = internal.get
+export const get: {
+  <A>(self: Ref<A>): Effect.Effect<never, never, A>
+  (): <A>(self: Ref<A>) => Effect.Effect<never, never, A>
+} = internal.get
 
 /**
  * @since 1.0.0

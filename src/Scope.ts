@@ -92,10 +92,10 @@ export declare namespace Scope {
  * @since 1.0.0
  * @category mutations
  */
-export const addFinalizer: (
-  self: Scope,
-  finalizer: Effect.Effect<never, never, unknown>
-) => Effect.Effect<never, never, void> = core.scopeAddFinalizer
+export const addFinalizer: {
+  (finalizer: Effect.Effect<never, never, unknown>): (self: Scope) => Effect.Effect<never, never, void>
+  (self: Scope, finalizer: Effect.Effect<never, never, unknown>): Effect.Effect<never, never, void>
+} = core.scopeAddFinalizer
 
 /**
  * A simplified version of `addFinalizerWith` when the `finalizer` does not
@@ -104,8 +104,10 @@ export const addFinalizer: (
  * @since 1.0.0
  * @category mutations
  */
-export const addFinalizerExit: (self: Scope, finalizer: Scope.Finalizer) => Effect.Effect<never, never, void> =
-  core.scopeAddFinalizerExit
+export const addFinalizerExit: {
+  (finalizer: Scope.Finalizer): (self: Scope) => Effect.Effect<never, never, void>
+  (self: Scope, finalizer: Scope.Finalizer): Effect.Effect<never, never, void>
+} = core.scopeAddFinalizerExit
 
 /**
  * Closes a scope with the specified exit value, running all finalizers that
@@ -114,8 +116,10 @@ export const addFinalizerExit: (self: Scope, finalizer: Scope.Finalizer) => Effe
  * @since 1.0.0
  * @category destructors
  */
-export const close: (self: CloseableScope, exit: Exit.Exit<unknown, unknown>) => Effect.Effect<never, never, void> =
-  core.scopeClose
+export const close: {
+  (exit: Exit.Exit<unknown, unknown>): (self: CloseableScope) => Effect.Effect<never, never, void>
+  (self: CloseableScope, exit: Exit.Exit<unknown, unknown>): Effect.Effect<never, never, void>
+} = core.scopeClose
 
 /**
  * Extends the scope of an `Effect` workflow that needs a scope into this
@@ -138,10 +142,10 @@ export const extend: {
  * @since 1.0.0
  * @category mutations
  */
-export const fork: (
-  self: Scope,
-  strategy: ExecutionStrategy.ExecutionStrategy
-) => Effect.Effect<never, never, CloseableScope> = core.scopeFork
+export const fork: {
+  (strategy: ExecutionStrategy.ExecutionStrategy): (self: Scope) => Effect.Effect<never, never, CloseableScope>
+  (self: Scope, strategy: ExecutionStrategy.ExecutionStrategy): Effect.Effect<never, never, CloseableScope>
+} = core.scopeFork
 
 /**
  * Uses the scope by providing it to an `Effect` workflow that needs a scope,

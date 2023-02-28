@@ -1,4 +1,3 @@
-import { pipe } from "@effect/data/Function"
 import * as Option from "@effect/data/Option"
 import * as Effect from "@effect/io/Effect"
 import * as Ref from "@effect/io/Ref"
@@ -33,7 +32,7 @@ const isClosed = (self: State): boolean => self._tag === "Closed"
 describe.concurrent("Ref", () => {
   it.effect("get", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(Ref.make(current), Effect.flatMap(Ref.get)))
+      const result = yield* $(Effect.flatMap(Ref.make(current), Ref.get()))
       assert.strictEqual(result, current)
     }))
   it.effect("getAndSet", () =>

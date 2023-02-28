@@ -866,7 +866,7 @@ export const run = <R, E, A>(
   return pipe(
     Effect.fork(effect),
     Effect.tap(() => TestClock.setTime(Number.POSITIVE_INFINITY)),
-    Effect.flatMap(Fiber.join)
+    Effect.flatMap(Fiber.join())
   )
 }
 export const runCollect = <Env, In, Out>(

@@ -144,7 +144,7 @@ export const forkAs = dual<
 export const fiberRefs = (self: FiberRefs.FiberRefs) => HashSet.fromIterable(self.locals.keys())
 
 /** @internal */
-export const setAll = Debug.methodWithTrace((trace) =>
+export const setAll = Debug.zeroArgsDualWithTrace((trace) =>
   (self: FiberRefs.FiberRefs): Effect.Effect<never, never, void> =>
     core.forEachDiscard(
       fiberRefs(self),
