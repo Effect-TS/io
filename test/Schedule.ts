@@ -189,7 +189,7 @@ describe.concurrent("Schedule", () => {
         const result = yield* $(
           pipe(
             alwaysFail(ref),
-            Effect.matchEffect(Effect.succeed, () => Effect.succeed("it should never be a success"))
+            Effect.matchEffect(Effect.succeed(), () => Effect.succeed("it should never be a success"))
           )
         )
         assert.strictEqual(result, "Error: 1")
@@ -418,7 +418,7 @@ describe.concurrent("Schedule", () => {
           pipe(
             alwaysFail(ref),
             Effect.retryOrElse(Schedule.once(), ioFail),
-            Effect.matchEffect(Effect.succeed, () => Effect.succeed("it should not be a success"))
+            Effect.matchEffect(Effect.succeed(), () => Effect.succeed("it should not be a success"))
           )
         )
         assert.strictEqual(result, "OrElseFailed")
@@ -436,7 +436,7 @@ describe.concurrent("Schedule", () => {
           pipe(
             alwaysFail(ref),
             Effect.retryOrElseEither(Schedule.once(), ioFail),
-            Effect.matchEffect(Effect.succeed, () => Effect.succeed("it should not be a success"))
+            Effect.matchEffect(Effect.succeed(), () => Effect.succeed("it should not be a success"))
           )
         )
         assert.strictEqual(result, "OrElseFailed")
@@ -455,7 +455,7 @@ describe.concurrent("Schedule", () => {
           pipe(
             alwaysFail(ref),
             Effect.retry(Schedule.recurs(0)),
-            Effect.matchEffect(Effect.succeed, () => Effect.succeed("it should not be a success"))
+            Effect.matchEffect(Effect.succeed(), () => Effect.succeed("it should not be a success"))
           )
         )
         assert.strictEqual(result, "Error: 1")
@@ -478,7 +478,7 @@ describe.concurrent("Schedule", () => {
           pipe(
             alwaysFail(ref),
             Effect.retry(Schedule.once()),
-            Effect.matchEffect(Effect.succeed, () => Effect.succeed("it should not be a success"))
+            Effect.matchEffect(Effect.succeed(), () => Effect.succeed("it should not be a success"))
           )
         )
         assert.strictEqual(result, "Error: 2")

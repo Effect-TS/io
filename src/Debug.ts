@@ -182,6 +182,13 @@ export const pipeableWithTrace = <A extends (...args: Array<any>) => any>(
 /**
  * @since 1.0.0
  */
+export const zeroArgsDualWithTrace = <DataFirst extends (...args: Array<any>) => any>(
+  body: (trace: Trace, restore: Restore) => DataFirst
+): DataFirst & { (): DataFirst } => dualWithTrace(1, body)
+
+/**
+ * @since 1.0.0
+ */
 export const dualWithTrace: {
   <DataLast extends (...args: Array<any>) => any, DataFirst extends (...args: Array<any>) => any>(
     dfLen: Parameters<DataFirst>["length"],
@@ -193,7 +200,7 @@ export const dualWithTrace: {
   ): DataLast & DataFirst
 } = (dfLen, body) => {
   const isDataFirst: (args: IArguments) => boolean = typeof dfLen === "number" ?
-    ((args) => args.length === dfLen) :
+    ((args) => args.length >= dfLen) :
     dfLen
   return function() {
     if (!runtimeDebug.tracingEnabled) {

@@ -157,7 +157,7 @@ describe.concurrent("Effect", () => {
         pipe(
           Deferred.succeed(latch, void 0),
           Effect.zipRight(Effect.never()),
-          Effect.catchAll(Effect.fail),
+          Effect.catchAll(Effect.fail()),
           Effect.ensuring(Deferred.succeed(deferred, true)),
           Effect.fork()
         )

@@ -24,8 +24,8 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const array = Array.from({ length: 10000 }, (_, i) => i)
       const result = yield* $(array.reduce(
-        (acc, _) => pipe(acc, Effect.matchEffect(Effect.die, Effect.succeed), Effect.either(), Effect.asUnit()),
-        pipe(Effect.attempt(constVoid), Effect.matchEffect(Effect.die, Effect.succeed))
+        (acc, _) => pipe(acc, Effect.matchEffect(Effect.die(), Effect.succeed()), Effect.either(), Effect.asUnit()),
+        pipe(Effect.attempt(constVoid), Effect.matchEffect(Effect.die(), Effect.succeed()))
       ))
       assert.isUndefined(result)
     }))

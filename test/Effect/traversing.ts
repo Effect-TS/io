@@ -437,14 +437,14 @@ describe.concurrent("Effect", () => {
   it.effect("partition - collects only successes", () =>
     Effect.gen(function*($) {
       const array = Array.from({ length: 10 }, (_, i) => i)
-      const [left, right] = yield* $(pipe(array, Effect.partition(Effect.succeed)))
+      const [left, right] = yield* $(pipe(array, Effect.partition(Effect.succeed())))
       assert.deepStrictEqual(Array.from(left), [])
       assert.deepStrictEqual(Array.from(right), array)
     }))
   it.effect("partition - collects only failures", () =>
     Effect.gen(function*($) {
       const array = Array.from({ length: 10 }, () => 0)
-      const [left, right] = yield* $(pipe(array, Effect.partition(Effect.fail)))
+      const [left, right] = yield* $(pipe(array, Effect.partition(Effect.fail())))
       assert.deepStrictEqual(Array.from(left), array)
       assert.deepStrictEqual(Array.from(right), [])
     }))
@@ -468,14 +468,14 @@ describe.concurrent("Effect", () => {
   it.effect("partitionPar - collects successes", () =>
     Effect.gen(function*($) {
       const array = Array.from({ length: 1000 }, (_, i) => i)
-      const [left, right] = yield* $(pipe(array, Effect.partitionPar(Effect.succeed)))
+      const [left, right] = yield* $(pipe(array, Effect.partitionPar(Effect.succeed())))
       assert.deepStrictEqual(Array.from(left), [])
       assert.deepStrictEqual(Array.from(right), array)
     }))
   it.effect("partitionPar - collects failures", () =>
     Effect.gen(function*($) {
       const array = Array.from({ length: 10 }, () => 0)
-      const [left, right] = yield* $(pipe(array, Effect.partitionPar(Effect.fail)))
+      const [left, right] = yield* $(pipe(array, Effect.partitionPar(Effect.fail())))
       assert.deepStrictEqual(Array.from(left), array)
       assert.deepStrictEqual(Array.from(right), [])
     }))
@@ -491,14 +491,14 @@ describe.concurrent("Effect", () => {
   it.effect("partitionPar - parallelism - collects successes", () =>
     Effect.gen(function*($) {
       const array = Array.from({ length: 1000 }, (_, i) => i)
-      const [left, right] = yield* $(pipe(array, Effect.partitionPar(Effect.succeed), Effect.withParallelism(3)))
+      const [left, right] = yield* $(pipe(array, Effect.partitionPar(Effect.succeed()), Effect.withParallelism(3)))
       assert.deepStrictEqual(Array.from(left), [])
       assert.deepStrictEqual(Array.from(right), array)
     }))
   it.effect("partitionPar - parallelism - collects failures", () =>
     Effect.gen(function*($) {
       const array = Array.from({ length: 10 }, () => 0)
-      const [left, right] = yield* $(pipe(array, Effect.partitionPar(Effect.fail), Effect.withParallelism(3)))
+      const [left, right] = yield* $(pipe(array, Effect.partitionPar(Effect.fail()), Effect.withParallelism(3)))
       assert.deepStrictEqual(Array.from(left), array)
       assert.deepStrictEqual(Array.from(right), [])
     }))

@@ -431,10 +431,9 @@ export const checkInterruptible = Debug.methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const die = Debug.dualWithTrace<
-  () => (defect: unknown) => Effect.Effect<never, never, never>,
-  (defect: unknown) => Effect.Effect<never, never, never>
->(1, (trace) => (defect) => failCause(internalCause.die(defect)).traced(trace))
+export const die = Debug.zeroArgsDualWithTrace((trace) =>
+  (defect: unknown): Effect.Effect<never, never, never> => failCause(internalCause.die(defect)).traced(trace)
+)
 
 /* @internal */
 export const dieSync = Debug.dualWithTrace<
@@ -485,10 +484,9 @@ export const exit = Debug.dualWithTrace<
     ).traced(trace) as Effect.Effect<R, never, Exit.Exit<E, A>>)
 
 /* @internal */
-export const fail = Debug.dualWithTrace<
-  () => <E>(error: E) => Effect.Effect<never, E, never>,
-  <E>(error: E) => Effect.Effect<never, E, never>
->(1, (trace) => (error) => failCause(internalCause.fail(error)).traced(trace))
+export const fail = Debug.zeroArgsDualWithTrace((trace) =>
+  <E>(error: E): Effect.Effect<never, E, never> => failCause(internalCause.fail(error)).traced(trace)
+)
 
 /* @internal */
 export const failSync = Debug.dualWithTrace<
@@ -1003,11 +1001,8 @@ export const serviceWithEffect = Debug.methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const succeed = Debug.dualWithTrace<
-  () => <A>(value: A) => Effect.Effect<never, never, A>,
-  <A>(value: A) => Effect.Effect<never, never, A>
->(1, (trace) =>
-  (value) => {
+export const succeed = Debug.zeroArgsDualWithTrace((trace) =>
+  <A>(value: A): Effect.Effect<never, never, A> => {
     const effect = Object.create(proto)
     effect._tag = OpCodes.OP_SUCCESS
     effect.value = value
@@ -1016,7 +1011,8 @@ export const succeed = Debug.dualWithTrace<
       return effect.traced(trace)
     }
     return effect
-  })
+  }
+)
 
 /* @internal */
 export const suspendSucceed = Debug.dualWithTrace<

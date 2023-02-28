@@ -61,7 +61,7 @@ describe("Pool", () => {
       const get = Effect.acquireRelease(
         Effect.flatMap(
           Ref.updateAndGet(count, (n) => n + 1),
-          Effect.fail
+          Effect.fail()
         ),
         () => Ref.update(count, (n) => n - 1)
       )

@@ -1240,8 +1240,8 @@ export const descriptorWith: <R, E, A>(f: (descriptor: Fiber.Fiber.Descriptor) =
  * @category constructors
  */
 export const die: {
-  (): (defect: unknown) => Effect<never, never, never>
   (defect: unknown): Effect<never, never, never>
+  (): (defect: unknown) => Effect<never, never, never>
 } = core.die
 
 /**
@@ -1495,8 +1495,8 @@ export const exit: {
  * @category constructors
  */
 export const fail: {
-  (): <E>(error: E) => Effect<never, E, never>
   <E>(error: E): Effect<never, E, never>
+  (): <E>(error: E) => Effect<never, E, never>
 } = core.fail
 
 /**
@@ -4203,8 +4203,8 @@ export const structPar: <NER extends Record<string, Effect<any, any, any>>>(
  * @category constructors
  */
 export const succeed: {
-  (): <A>(value: A) => Effect<never, never, A>
   <A>(value: A): Effect<never, never, A>
+  (): <A>(value: A) => Effect<never, never, A>
 } = core.succeed
 
 /**

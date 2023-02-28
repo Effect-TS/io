@@ -122,7 +122,7 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("noneOrFail - on Some fails", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(Effect.noneOrFail(Option.some("some")), Effect.catchAll(Effect.succeed)))
+      const result = yield* $(pipe(Effect.noneOrFail(Option.some("some")), Effect.catchAll(Effect.succeed())))
       assert.strictEqual(result, "some")
     }))
   it.effect("noneOrFailWith - on None succeeds with Unit", () =>
@@ -133,7 +133,7 @@ describe.concurrent("Effect", () => {
   it.effect("noneOrFailWith - on Some fails", () =>
     Effect.gen(function*($) {
       const result = yield* $(
-        pipe(Effect.noneOrFailWith(Option.some("some"), (s) => s + s), Effect.catchAll(Effect.succeed))
+        pipe(Effect.noneOrFailWith(Option.some("some"), (s) => s + s), Effect.catchAll(Effect.succeed()))
       )
       assert.strictEqual(result, "somesome")
     }))
