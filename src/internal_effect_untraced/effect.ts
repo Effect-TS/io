@@ -37,16 +37,15 @@ import * as Random from "@effect/io/Random"
 import * as Ref from "@effect/io/Ref"
 
 /* @internal */
-export const absolve = Debug.dualWithTrace<
-  () => <R, E, A>(self: Effect.Effect<R, E, Either.Either<E, A>>) => Effect.Effect<R, E, A>,
-  <R, E, A>(self: Effect.Effect<R, E, Either.Either<E, A>>) => Effect.Effect<R, E, A>
->(1, (trace) => (self) => core.flatMap(self, core.fromEither()).traced(trace))
+export const absolve = Debug.zeroArgsDualWithTrace((trace) =>
+  <R, E, A>(self: Effect.Effect<R, E, Either.Either<E, A>>): Effect.Effect<R, E, A> =>
+    core.flatMap(self, core.fromEither()).traced(trace)
+)
 
 /* @internal */
-export const absorb = Debug.dualWithTrace<
-  () => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, unknown, A>,
-  <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, unknown, A>
->(1, (trace) => (self) => absorbWith(self, identity).traced(trace))
+export const absorb = Debug.zeroArgsDualWithTrace((trace) =>
+  <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, unknown, A> => absorbWith(self, identity).traced(trace)
+)
 
 /* @internal */
 export const absorbWith = Debug.dualWithTrace<
@@ -75,40 +74,40 @@ export const allowInterrupt = Debug.methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const asLeft = Debug.dualWithTrace<
-  () => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, Either.Either<A, never>>,
-  <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, Either.Either<A, never>>
->(1, (trace) => (self) => pipe(self, core.map(Either.left)).traced(trace))
+export const asLeft = Debug.zeroArgsDualWithTrace((trace) =>
+  <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, Either.Either<A, never>> =>
+    core.map(self, Either.left).traced(trace)
+)
 
 /* @internal */
-export const asLeftError = Debug.dualWithTrace<
-  () => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, Either.Either<E, never>, A>,
-  <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, Either.Either<E, never>, A>
->(1, (trace) => (self) => pipe(self, core.mapError(Either.left)).traced(trace))
+export const asLeftError = Debug.zeroArgsDualWithTrace((trace) =>
+  <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, Either.Either<E, never>, A> =>
+    core.mapError(self, Either.left).traced(trace)
+)
 
 /* @internal */
-export const asRight = Debug.dualWithTrace<
-  () => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, Either.Either<never, A>>,
-  <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, Either.Either<never, A>>
->(1, (trace) => (self) => pipe(self, core.map(Either.right)).traced(trace))
+export const asRight = Debug.zeroArgsDualWithTrace((trace) =>
+  <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, Either.Either<never, A>> =>
+    core.map(self, Either.right).traced(trace)
+)
 
 /* @internal */
-export const asRightError = Debug.dualWithTrace<
-  () => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, Either.Either<never, E>, A>,
-  <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, Either.Either<never, E>, A>
->(1, (trace) => (self) => pipe(self, core.mapError(Either.right)).traced(trace))
+export const asRightError = Debug.zeroArgsDualWithTrace((trace) =>
+  <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, Either.Either<never, E>, A> =>
+    core.mapError(self, Either.right).traced(trace)
+)
 
 /* @internal */
-export const asSome = Debug.dualWithTrace<
-  () => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, Option.Option<A>>,
-  <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, Option.Option<A>>
->(1, (trace) => (self) => pipe(self, core.map(Option.some)).traced(trace))
+export const asSome = Debug.zeroArgsDualWithTrace((trace) =>
+  <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, Option.Option<A>> =>
+    core.map(self, Option.some).traced(trace)
+)
 
 /* @internal */
-export const asSomeError = Debug.dualWithTrace<
-  () => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, Option.Option<E>, A>,
-  <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, Option.Option<E>, A>
->(1, (trace) => (self) => pipe(self, core.mapError(Option.some)).traced(trace))
+export const asSomeError = Debug.zeroArgsDualWithTrace((trace) =>
+  <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, Option.Option<E>, A> =>
+    core.mapError(self, Option.some).traced(trace)
+)
 
 /* @internal */
 export const asyncOption = Debug.methodWithTrace((trace, restore) =>
@@ -133,10 +132,7 @@ export const asyncOption = Debug.methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const attempt = Debug.dualWithTrace<
-  () => <A>(evaluate: LazyArg<A>) => Effect.Effect<never, unknown, A>,
-  <A>(evaluate: LazyArg<A>) => Effect.Effect<never, unknown, A>
->(1, (trace, restore) =>
+export const attempt = Debug.zeroArgsDualWithTrace((trace, restore) =>
   <A>(evaluate: LazyArg<A>): Effect.Effect<never, unknown, A> =>
     core.sync(() => {
       try {
@@ -144,13 +140,14 @@ export const attempt = Debug.dualWithTrace<
       } catch (error) {
         throw core.makeEffectError(internalCause.fail(error))
       }
-    }).traced(trace))
+    }).traced(trace)
+)
 
 /* @internal */
-export const blocking = Debug.dualWithTrace<
-  () => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
-  <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
->(1, (trace) => (self) => core.zipRight(core.yieldNow("background"), self).traced(trace))
+export const blocking = Debug.zeroArgsDualWithTrace((trace) =>
+  <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
+    core.zipRight(core.yieldNow("background"), self).traced(trace)
+)
 
 /* @internal */
 export const _catch = Debug.dualWithTrace<
@@ -323,10 +320,10 @@ export const catchTags: {
     }).traced(trace))
 
 /* @internal */
-export const cause = Debug.dualWithTrace<
-  () => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, Cause.Cause<E>>,
-  <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, Cause.Cause<E>>
->(1, (trace) => (self) => pipe(self, core.matchCause(identity, () => internalCause.empty)).traced(trace))
+export const cause = Debug.zeroArgsDualWithTrace((trace) =>
+  <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Cause.Cause<E>> =>
+    core.matchCause(self, identity, () => internalCause.empty).traced(trace)
+)
 
 /* @internal */
 export const clock = Debug.methodWithTrace((trace) =>
@@ -338,16 +335,16 @@ export const clockWith: <R, E, A>(f: (clock: Clock.Clock) => Effect.Effect<R, E,
   Clock.clockWith
 
 /* @internal */
-export const collectAll = Debug.dualWithTrace<
-  () => <R, E, A>(effects: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, Chunk.Chunk<A>>,
-  <R, E, A>(effects: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, Chunk.Chunk<A>>
->(1, (trace) => (effects) => core.forEach(effects, identity).traced(trace))
+export const collectAll = Debug.zeroArgsDualWithTrace((trace) =>
+  <R, E, A>(effects: Iterable<Effect.Effect<R, E, A>>): Effect.Effect<R, E, Chunk.Chunk<A>> =>
+    core.forEach(effects, identity).traced(trace)
+)
 
 /* @internal */
-export const collectAllDiscard = Debug.dualWithTrace<
-  () => <R, E, A>(effects: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, void>,
-  <R, E, A>(effects: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, void>
->(1, (trace) => (effects) => core.forEachDiscard(effects, identity).traced(trace))
+export const collectAllDiscard = Debug.zeroArgsDualWithTrace((trace) =>
+  <R, E, A>(effects: Iterable<Effect.Effect<R, E, A>>): Effect.Effect<R, E, void> =>
+    core.forEachDiscard(effects, identity).traced(trace)
+)
 
 /* @internal */
 export const collectAllWith = Debug.dualWithTrace<
@@ -403,15 +400,13 @@ export const collectAllWithEffect = Debug.dualWithTrace<
   })
 
 /* @internal */
-export const collectAllSuccesses = Debug.dualWithTrace<
-  () => <R, E, A>(as: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, never, Chunk.Chunk<A>>,
-  <R, E, A>(as: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, never, Chunk.Chunk<A>>
->(1, (trace) =>
-  (as) =>
+export const collectAllSuccesses = Debug.zeroArgsDualWithTrace((trace) =>
+  <R, E, A>(elements: Iterable<Effect.Effect<R, E, A>>): Effect.Effect<R, never, Chunk.Chunk<A>> =>
     pipe(
-      Array.from(as).map(core.exit()),
+      Array.from(elements).map(core.exit()),
       collectAllWith((exit) => (Exit.isSuccess(exit) ? Option.some(exit.value) : Option.none()))
-    ).traced(trace))
+    ).traced(trace)
+)
 
 /* @internal */
 export const collectFirst = Debug.dualWithTrace<
@@ -587,20 +582,18 @@ export const descriptorWith = Debug.methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const dieMessage = Debug.dualWithTrace<
-  () => (message: string) => Effect.Effect<never, never, never>,
-  (message: string) => Effect.Effect<never, never, never>
->(1, (trace) =>
-  (message) =>
+export const dieMessage = Debug.zeroArgsDualWithTrace((trace) =>
+  (message: string): Effect.Effect<never, never, never> =>
     core.failCauseSync(
       () => internalCause.die(internalCause.RuntimeException(message))
-    ).traced(trace))
+    ).traced(trace)
+)
 
 /* @internal */
-export const diffFiberRefs = Debug.dualWithTrace<
-  () => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, readonly [FiberRefsPatch.FiberRefsPatch, A]>,
-  <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, readonly [FiberRefsPatch.FiberRefsPatch, A]>
->(1, (trace) => (self) => pipe(self, summarized(getFiberRefs(), fiberRefsPatch.diff)).traced(trace))
+export const diffFiberRefs = Debug.zeroArgsDualWithTrace((trace) =>
+  <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, readonly [FiberRefsPatch.FiberRefsPatch, A]> =>
+    summarized(self, getFiberRefs(), fiberRefsPatch.diff).traced(trace)
+)
 
 /* @internal */
 export const Do = Debug.methodWithTrace((trace) =>
@@ -765,15 +758,12 @@ const existsLoop = <R, E, A>(
 
 /* @internal */
 export const eventually: {
-  (): <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, A>
   <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, A>
-} = Debug.dualWithTrace<
-  () => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, A>,
-  <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, A>
->(
-  1,
+  (): <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, A>
+} = Debug.zeroArgsDualWithTrace(
   (trace) =>
-    (self) => core.orElse(self, () => pipe(core.yieldNow(), core.flatMap(() => eventually(self)))).traced(trace)
+    <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, A> =>
+      core.orElse(self, () => pipe(core.yieldNow(), core.flatMap(() => eventually(self)))).traced(trace)
 )
 
 /* @internal */
@@ -1151,21 +1141,16 @@ export const forEachWithIndex = Debug.dualWithTrace<
 )
 
 /* @internal */
-export const forever = Debug.dualWithTrace<
-  () => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, never>,
-  <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, never>
->(1, (trace) =>
+export const forever = Debug.zeroArgsDualWithTrace((trace) =>
   <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, never> => {
     const loop: Effect.Effect<R, E, never> = pipe(core.flatMap(self, () => core.yieldNow()), core.flatMap(() => loop))
     return loop.traced(trace)
-  })
+  }
+)
 
 /* @internal */
-export const fromEitherCause = Debug.dualWithTrace<
-  () => <E, A>(either: Either.Either<Cause.Cause<E>, A>) => Effect.Effect<never, E, A>,
-  <E, A>(either: Either.Either<Cause.Cause<E>, A>) => Effect.Effect<never, E, A>
->(1, (trace) =>
-  (either) => {
+export const fromEitherCause = Debug.zeroArgsDualWithTrace((trace) =>
+  <E, A>(either: Either.Either<Cause.Cause<E>, A>): Effect.Effect<never, E, A> => {
     switch (either._tag) {
       case "Left": {
         return core.failCause(either.left).traced(trace)
@@ -1174,7 +1159,8 @@ export const fromEitherCause = Debug.dualWithTrace<
         return core.succeed(either.right).traced(trace)
       }
     }
-  })
+  }
+)
 
 /** @internal */
 class EffectGen {
@@ -1214,16 +1200,15 @@ export const getFiberRefs = Debug.methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const getOrFail = Debug.dualWithTrace<
-  () => <A>(option: Option.Option<A>) => Effect.Effect<never, Cause.NoSuchElementException, A>,
-  <A>(option: Option.Option<A>) => Effect.Effect<never, Cause.NoSuchElementException, A>
->(1, (trace) => (option) => pipe(option, getOrFailWith(() => internalCause.NoSuchElementException())).traced(trace))
+export const getOrFail = Debug.zeroArgsDualWithTrace((trace) =>
+  <A>(option: Option.Option<A>): Effect.Effect<never, Cause.NoSuchElementException, A> =>
+    getOrFailWith(option, () => internalCause.NoSuchElementException()).traced(trace)
+)
 
 /* @internal */
-export const getOrFailDiscard = Debug.dualWithTrace<
-  () => <A>(option: Option.Option<A>) => Effect.Effect<never, void, A>,
-  <A>(option: Option.Option<A>) => Effect.Effect<never, void, A>
->(1, (trace) => (option) => getOrFailWith(option, constVoid).traced(trace))
+export const getOrFailDiscard = Debug.zeroArgsDualWithTrace((trace) =>
+  <A>(option: Option.Option<A>): Effect.Effect<never, void, A> => getOrFailWith(option, constVoid).traced(trace)
+)
 
 /* @internal */
 export const getOrFailWith = Debug.dualWithTrace<
@@ -1242,14 +1227,7 @@ export const getOrFailWith = Debug.dualWithTrace<
   })
 
 /* @internal */
-export const head = Debug.dualWithTrace<
-  () => <R, E, A>(
-    self: Effect.Effect<R, E, Iterable<A>>
-  ) => Effect.Effect<R, Option.Option<E>, A>,
-  <R, E, A>(
-    self: Effect.Effect<R, E, Iterable<A>>
-  ) => Effect.Effect<R, Option.Option<E>, A>
->(1, (trace, restore) =>
+export const head = Debug.zeroArgsDualWithTrace((trace, restore) =>
   <R, E, A>(
     self: Effect.Effect<R, E, Iterable<A>>
   ): Effect.Effect<R, Option.Option<E>, A> =>
@@ -1264,20 +1242,18 @@ export const head = Debug.dualWithTrace<
         }
         return core.succeed(next.value)
       }
-    ).traced(trace))
+    ).traced(trace)
+)
 
 /* @internal */
-export const ignore = Debug.dualWithTrace<
-  () => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, void>,
-  <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, void>
->(1, (trace) => (self) => match(self, constVoid, constVoid).traced(trace))
+export const ignore = Debug.zeroArgsDualWithTrace((trace) =>
+  <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, void> =>
+    match(self, constVoid, constVoid).traced(trace)
+)
 
 /* @internal */
-export const ignoreLogged = Debug.dualWithTrace<
-  () => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, void>,
-  <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, void>
->(1, (trace) =>
-  (self) =>
+export const ignoreLogged = Debug.zeroArgsDualWithTrace((trace) =>
+  <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, void> =>
     core.matchCauseEffect(
       self,
       (cause) =>
@@ -1286,32 +1262,29 @@ export const ignoreLogged = Debug.dualWithTrace<
           cause
         ),
       () => core.unit()
-    ).traced(trace))
+    ).traced(trace)
+)
 
 /* @internal */
-export const inheritFiberRefs = Debug.dualWithTrace<
-  () => (childFiberRefs: FiberRefs.FiberRefs) => Effect.Effect<never, never, void>,
-  (childFiberRefs: FiberRefs.FiberRefs) => Effect.Effect<never, never, void>
->(
-  1,
+export const inheritFiberRefs = Debug.zeroArgsDualWithTrace(
   (trace) =>
-    (childFiberRefs) =>
+    (childFiberRefs: FiberRefs.FiberRefs): Effect.Effect<never, never, void> =>
       updateFiberRefs((parentFiberId, parentFiberRefs) =>
         FiberRefs.joinAs(parentFiberRefs, parentFiberId, childFiberRefs)
       ).traced(trace)
 )
 
 /* @internal */
-export const isFailure = Debug.dualWithTrace<
-  () => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, boolean>,
-  <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, boolean>
->(1, (trace) => (self) => match(self, constTrue, constFalse).traced(trace))
+export const isFailure = Debug.zeroArgsDualWithTrace((trace) =>
+  <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, boolean> =>
+    match(self, constTrue, constFalse).traced(trace)
+)
 
 /* @internal */
-export const isSuccess = Debug.dualWithTrace<
-  () => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, boolean>,
-  <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, boolean>
->(1, (trace) => (self) => match(self, constFalse, constTrue).traced(trace))
+export const isSuccess = Debug.zeroArgsDualWithTrace((trace) =>
+  <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, boolean> =>
+    match(self, constFalse, constTrue).traced(trace)
+)
 
 /* @internal */
 export const iterate = Debug.methodWithTrace((trace, restore) =>
@@ -1329,11 +1302,8 @@ export const iterate = Debug.methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const left = Debug.dualWithTrace<
-  () => <R, E, A, B>(self: Effect.Effect<R, E, Either.Either<A, B>>) => Effect.Effect<R, Either.Either<E, B>, A>,
-  <R, E, A, B>(self: Effect.Effect<R, E, Either.Either<A, B>>) => Effect.Effect<R, Either.Either<E, B>, A>
->(1, (trace) =>
-  (self) =>
+export const left = Debug.zeroArgsDualWithTrace((trace) =>
+  <R, E, A, B>(self: Effect.Effect<R, E, Either.Either<A, B>>): Effect.Effect<R, Either.Either<E, B>, A> =>
     core.matchEffect(
       self,
       (e) => core.fail(Either.left(e)),
@@ -1347,7 +1317,8 @@ export const left = Debug.dualWithTrace<
           }
         }
       }
-    ).traced(trace))
+    ).traced(trace)
+)
 
 /* @internal */
 export const leftWith = Debug.dualWithTrace<
@@ -1374,37 +1345,31 @@ const someInfo = Option.some(LogLevel.Info)
 const someDebug = Option.some(LogLevel.Debug)
 
 /* @internal */
-export const log = Debug.dualWithTrace<
-  () => (message: string) => Effect.Effect<never, never, void>,
-  (message: string) => Effect.Effect<never, never, void>
->(1, (trace) =>
-  (message) =>
+export const log = Debug.zeroArgsDualWithTrace((trace) =>
+  (message: string): Effect.Effect<never, never, void> =>
     core.withFiberRuntime<never, never, void>((fiberState) => {
       fiberState.log(message, internalCause.empty, Option.none())
       return core.unit()
-    }).traced(trace))
+    }).traced(trace)
+)
 
 /* @internal */
-export const logDebug = Debug.dualWithTrace<
-  () => (message: string) => Effect.Effect<never, never, void>,
-  (message: string) => Effect.Effect<never, never, void>
->(1, (trace) =>
-  (message) =>
+export const logDebug = Debug.zeroArgsDualWithTrace((trace) =>
+  (message: string): Effect.Effect<never, never, void> =>
     core.withFiberRuntime<never, never, void>((fiberState) => {
       fiberState.log(message, internalCause.empty, someDebug)
       return core.unit()
-    }).traced(trace))
+    }).traced(trace)
+)
 
 /* @internal */
-export const logDebugCause = Debug.dualWithTrace<
-  () => <E>(cause: Cause.Cause<E>) => Effect.Effect<never, never, void>,
-  <E>(cause: Cause.Cause<E>) => Effect.Effect<never, never, void>
->(1, (trace) =>
-  (cause) =>
+export const logDebugCause = Debug.zeroArgsDualWithTrace((trace) =>
+  <E>(cause: Cause.Cause<E>): Effect.Effect<never, never, void> =>
     core.withFiberRuntime<never, never, void>((fiberState) => {
       fiberState.log("", cause, someDebug)
       return core.unit()
-    }).traced(trace))
+    }).traced(trace)
+)
 
 /* @internal */
 export const logDebugCauseMessage = Debug.methodWithTrace((trace) =>
@@ -1419,26 +1384,22 @@ export const logDebugCauseMessage = Debug.methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const logError = Debug.dualWithTrace<
-  () => (message: string) => Effect.Effect<never, never, void>,
-  (message: string) => Effect.Effect<never, never, void>
->(1, (trace) =>
-  (message) =>
+export const logError = Debug.zeroArgsDualWithTrace((trace) =>
+  (message: string): Effect.Effect<never, never, void> =>
     core.withFiberRuntime<never, never, void>((fiberState) => {
       fiberState.log(message, internalCause.empty, someError)
       return core.unit()
-    }).traced(trace))
+    }).traced(trace)
+)
 
 /* @internal */
-export const logErrorCause = Debug.dualWithTrace<
-  () => <E>(cause: Cause.Cause<E>) => Effect.Effect<never, never, void>,
-  <E>(cause: Cause.Cause<E>) => Effect.Effect<never, never, void>
->(1, (trace) =>
-  (cause) =>
+export const logErrorCause = Debug.zeroArgsDualWithTrace((trace) =>
+  <E>(cause: Cause.Cause<E>): Effect.Effect<never, never, void> =>
     core.withFiberRuntime<never, never, void>((fiberState) => {
       fiberState.log("", cause, someError)
       return core.unit()
-    }).traced(trace))
+    }).traced(trace)
+)
 
 /* @internal */
 export const logErrorCauseMessage = Debug.methodWithTrace((trace) =>
@@ -1453,26 +1414,22 @@ export const logErrorCauseMessage = Debug.methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const logFatal = Debug.dualWithTrace<
-  () => (message: string) => Effect.Effect<never, never, void>,
-  (message: string) => Effect.Effect<never, never, void>
->(1, (trace) =>
-  (message) =>
+export const logFatal = Debug.zeroArgsDualWithTrace((trace) =>
+  (message: string): Effect.Effect<never, never, void> =>
     core.withFiberRuntime<never, never, void>((fiberState) => {
       fiberState.log(message, internalCause.empty, someFatal)
       return core.unit()
-    }).traced(trace))
+    }).traced(trace)
+)
 
 /* @internal */
-export const logFatalCause = Debug.dualWithTrace<
-  () => <E>(cause: Cause.Cause<E>) => Effect.Effect<never, never, void>,
-  <E>(cause: Cause.Cause<E>) => Effect.Effect<never, never, void>
->(1, (trace) =>
-  (cause) =>
+export const logFatalCause = Debug.zeroArgsDualWithTrace((trace) =>
+  <E>(cause: Cause.Cause<E>): Effect.Effect<never, never, void> =>
     core.withFiberRuntime<never, never, void>((fiberState) => {
       fiberState.log("", cause, someFatal)
       return core.unit()
-    }).traced(trace))
+    }).traced(trace)
+)
 
 /* @internal */
 export const logFatalCauseMessage = Debug.methodWithTrace((trace) =>
@@ -1487,26 +1444,22 @@ export const logFatalCauseMessage = Debug.methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const logInfo = Debug.dualWithTrace<
-  () => (message: string) => Effect.Effect<never, never, void>,
-  (message: string) => Effect.Effect<never, never, void>
->(1, (trace) =>
-  (message) =>
+export const logInfo = Debug.zeroArgsDualWithTrace((trace) =>
+  (message: string): Effect.Effect<never, never, void> =>
     core.withFiberRuntime<never, never, void>((fiberState) => {
       fiberState.log(message, internalCause.empty, someInfo)
       return core.unit()
-    }).traced(trace))
+    }).traced(trace)
+)
 
 /* @internal */
-export const logInfoCause = Debug.dualWithTrace<
-  () => <E>(cause: Cause.Cause<E>) => Effect.Effect<never, never, void>,
-  <E>(cause: Cause.Cause<E>) => Effect.Effect<never, never, void>
->(1, (trace) =>
-  (cause) =>
+export const logInfoCause = Debug.zeroArgsDualWithTrace((trace) =>
+  <E>(cause: Cause.Cause<E>): Effect.Effect<never, never, void> =>
     core.withFiberRuntime<never, never, void>((fiberState) => {
       fiberState.log("", cause, someInfo)
       return core.unit()
-    }).traced(trace))
+    }).traced(trace)
+)
 
 /* @internal */
 export const logInfoCauseMessage = Debug.methodWithTrace((trace) =>
@@ -1521,26 +1474,22 @@ export const logInfoCauseMessage = Debug.methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const logWarning = Debug.dualWithTrace<
-  () => (message: string) => Effect.Effect<never, never, void>,
-  (message: string) => Effect.Effect<never, never, void>
->(1, (trace) =>
-  (message) =>
+export const logWarning = Debug.zeroArgsDualWithTrace((trace) =>
+  (message: string): Effect.Effect<never, never, void> =>
     core.withFiberRuntime<never, never, void>((fiberState) => {
       fiberState.log(message, internalCause.empty, someWarning)
       return core.unit()
-    }).traced(trace))
+    }).traced(trace)
+)
 
 /* @internal */
-export const logWarningCause = Debug.dualWithTrace<
-  () => <E>(cause: Cause.Cause<E>) => Effect.Effect<never, never, void>,
-  <E>(cause: Cause.Cause<E>) => Effect.Effect<never, never, void>
->(1, (trace) =>
-  (cause) =>
+export const logWarningCause = Debug.zeroArgsDualWithTrace((trace) =>
+  <E>(cause: Cause.Cause<E>): Effect.Effect<never, never, void> =>
     core.withFiberRuntime<never, never, void>((fiberState) => {
       fiberState.log("", cause, someWarning)
       return core.unit()
-    }).traced(trace))
+    }).traced(trace)
+)
 
 /* @internal */
 export const logWarningCauseMessage = Debug.methodWithTrace((trace) =>
@@ -1555,26 +1504,22 @@ export const logWarningCauseMessage = Debug.methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const logTrace = Debug.dualWithTrace<
-  () => (message: string) => Effect.Effect<never, never, void>,
-  (message: string) => Effect.Effect<never, never, void>
->(1, (trace) =>
-  (message) =>
+export const logTrace = Debug.zeroArgsDualWithTrace((trace) =>
+  (message: string): Effect.Effect<never, never, void> =>
     core.withFiberRuntime<never, never, void>((fiberState) => {
       fiberState.log(message, internalCause.empty, someTrace)
       return core.unit()
-    }).traced(trace))
+    }).traced(trace)
+)
 
 /* @internal */
-export const logTraceCause = Debug.dualWithTrace<
-  () => <E>(cause: Cause.Cause<E>) => Effect.Effect<never, never, void>,
-  <E>(cause: Cause.Cause<E>) => Effect.Effect<never, never, void>
->(1, (trace) =>
-  (cause) =>
+export const logTraceCause = Debug.zeroArgsDualWithTrace((trace) =>
+  <E>(cause: Cause.Cause<E>): Effect.Effect<never, never, void> =>
     core.withFiberRuntime<never, never, void>((fiberState) => {
       fiberState.log("", cause, someTrace)
       return core.unit()
-    }).traced(trace))
+    }).traced(trace)
+)
 
 /* @internal */
 export const logTraceCauseMessage = Debug.methodWithTrace((trace) =>
@@ -1629,7 +1574,7 @@ export const logAnnotate = Debug.dualWithTrace<
 
 /* @internal */
 export const logAnnotations = Debug.methodWithTrace((trace) =>
-  (): Effect.Effect<never, never, HashMap.HashMap<string, string>> =>
+  (_: void): Effect.Effect<never, never, HashMap.HashMap<string, string>> =>
     core.fiberRefGet(core.currentLogAnnotations).traced(trace)
 )
 
@@ -1761,14 +1706,7 @@ export const mapTryCatch = Debug.dualWithTrace<
 >(3, (trace) => (self, f, onThrow) => core.flatMap(self, (a) => tryCatch(() => f(a), onThrow)).traced(trace))
 
 /* @internal */
-export const memoize = Debug.dualWithTrace<
-  () => <R, E, A>(
-    self: Effect.Effect<R, E, A>
-  ) => Effect.Effect<never, never, Effect.Effect<R, E, A>>,
-  <R, E, A>(
-    self: Effect.Effect<R, E, A>
-  ) => Effect.Effect<never, never, Effect.Effect<R, E, A>>
->(1, (trace) =>
+export const memoize = Debug.zeroArgsDualWithTrace((trace) =>
   <R, E, A>(
     self: Effect.Effect<R, E, A>
   ): Effect.Effect<never, never, Effect.Effect<R, E, A>> =>
@@ -1790,13 +1728,14 @@ export const memoize = Debug.dualWithTrace<
           )
         )
       )
-    ).traced(trace))
+    ).traced(trace)
+)
 
 /* @internal */
-export const merge = Debug.dualWithTrace<
-  () => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, E | A>,
-  <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, E | A>
->(1, (trace) => (self) => core.matchEffect(self, core.succeed(), core.succeed()).traced(trace))
+export const merge = Debug.zeroArgsDualWithTrace((trace) =>
+  <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, E | A> =>
+    core.matchEffect(self, core.succeed(), core.succeed()).traced(trace)
+)
 
 /* @internal */
 export const mergeAll = Debug.dualWithTrace<
@@ -1813,21 +1752,15 @@ export const mergeAll = Debug.dualWithTrace<
 )
 
 /* @internal */
-export const negate = Debug.dualWithTrace<
-  () => <R, E>(self: Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, boolean>,
-  <R, E>(self: Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, boolean>
->(1, (trace) => (self) => core.map(self, (b) => !b).traced(trace))
+export const negate = Debug.zeroArgsDualWithTrace((trace) =>
+  <R, E>(self: Effect.Effect<R, E, boolean>): Effect.Effect<R, E, boolean> => core.map(self, (b) => !b).traced(trace)
+)
 
 /* @internal */
-export const none = Debug.dualWithTrace<
-  () => <R, E, A>(
-    self: Effect.Effect<R, E, Option.Option<A>>
-  ) => Effect.Effect<R, Option.Option<E>, void>,
+export const none = Debug.zeroArgsDualWithTrace((trace) =>
   <R, E, A>(
     self: Effect.Effect<R, E, Option.Option<A>>
-  ) => Effect.Effect<R, Option.Option<E>, void>
->(1, (trace) =>
-  (self) =>
+  ): Effect.Effect<R, Option.Option<E>, void> =>
     core.matchEffect(
       self,
       (e) => core.fail(Option.some(e)),
@@ -1841,13 +1774,13 @@ export const none = Debug.dualWithTrace<
           }
         }
       }
-    ).traced(trace))
+    ).traced(trace)
+)
 
 /* @internal */
-export const noneOrFail = Debug.dualWithTrace<
-  () => <E>(option: Option.Option<E>) => Effect.Effect<never, E, void>,
-  <E>(option: Option.Option<E>) => Effect.Effect<never, E, void>
->(1, (trace) => (option) => core.flip(getOrFailDiscard(option)).traced(trace))
+export const noneOrFail = Debug.zeroArgsDualWithTrace((trace) =>
+  <E>(option: Option.Option<E>): Effect.Effect<never, E, void> => core.flip(getOrFailDiscard(option)).traced(trace)
+)
 
 /* @internal */
 export const noneOrFailWith = Debug.dualWithTrace<
@@ -1866,31 +1799,25 @@ export const noneOrFailWith = Debug.dualWithTrace<
     ).traced(trace))
 
 /* @internal */
-export const once = Debug.dualWithTrace<
-  () => <R, E, A>(
-    self: Effect.Effect<R, E, A>
-  ) => Effect.Effect<never, never, Effect.Effect<R, E, void>>,
+export const once = Debug.zeroArgsDualWithTrace((trace) =>
   <R, E, A>(
     self: Effect.Effect<R, E, A>
-  ) => Effect.Effect<never, never, Effect.Effect<R, E, void>>
->(1, (trace) =>
-  (self) =>
+  ): Effect.Effect<never, never, Effect.Effect<R, E, void>> =>
     core.map(
       Ref.make(true),
       (ref) => core.asUnit(core.whenEffect(self, Ref.getAndSet(ref, false)))
-    ).traced(trace))
+    ).traced(trace)
+)
 
 /* @internal */
-export const option = Debug.dualWithTrace<
-  () => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, Option.Option<A>>,
-  <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, Option.Option<A>>
->(1, (trace) =>
-  (self) =>
+export const option = Debug.zeroArgsDualWithTrace((trace) =>
+  <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Option.Option<A>> =>
     core.matchEffect(
       self,
       () => core.succeed(Option.none()),
       (a) => core.succeed(Option.some(a))
-    ).traced(trace))
+    ).traced(trace)
+)
 
 /* @internal */
 export const orElseEither = Debug.dualWithTrace<
@@ -1949,18 +1876,16 @@ export const orElseSucceed = Debug.dualWithTrace<
 >(2, (trace, restore) => (self, evaluate) => core.orElse(self, () => core.sync(restore(evaluate))).traced(trace))
 
 /* @internal */
-export const parallelErrors = Debug.dualWithTrace<
-  () => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, Chunk.Chunk<E>, A>,
-  <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, Chunk.Chunk<E>, A>
->(1, (trace) =>
-  (self) =>
+export const parallelErrors = Debug.zeroArgsDualWithTrace((trace) =>
+  <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, Chunk.Chunk<E>, A> =>
     core.matchCauseEffect(self, (cause) => {
       const errors = Chunk.fromIterable(internalCause.failures(cause))
       return errors.length === 0
         ? core.failCause(cause as Cause.Cause<never>)
         : core.fail(errors)
     }, core.succeed())
-      .traced(trace))
+      .traced(trace)
+)
 
 /* @internal */
 export const partition = Debug.dualWithTrace<
@@ -1979,33 +1904,25 @@ export const partition = Debug.dualWithTrace<
     ).traced(trace))
 
 /* @internal */
-export const patchFiberRefs = Debug.dualWithTrace<
-  () => (patch: FiberRefsPatch.FiberRefsPatch) => Effect.Effect<never, never, void>,
-  (patch: FiberRefsPatch.FiberRefsPatch) => Effect.Effect<never, never, void>
->(1, (trace) =>
-  (patch) =>
+export const patchFiberRefs = Debug.zeroArgsDualWithTrace((trace) =>
+  (patch: FiberRefsPatch.FiberRefsPatch): Effect.Effect<never, never, void> =>
     updateFiberRefs(
       (fiberId, fiberRefs) => fiberRefsPatch.patch(patch, fiberId, fiberRefs)
-    ).traced(trace))
+    ).traced(trace)
+)
 
 /* @internal */
-export const promise = Debug.dualWithTrace<
-  () => <A>(evaluate: LazyArg<Promise<A>>) => Effect.Effect<never, never, A>,
-  <A>(evaluate: LazyArg<Promise<A>>) => Effect.Effect<never, never, A>
->(1, (trace, restore) =>
-  <A>(evaluate: LazyArg<Promise<A>>) =>
+export const promise = Debug.zeroArgsDualWithTrace((trace, restore) =>
+  <A>(evaluate: LazyArg<Promise<A>>): Effect.Effect<never, never, A> =>
     core.async<never, never, A>((resolve) => {
       restore(evaluate)()
         .then((a) => resolve(core.exitSucceed(a)))
         .catch((e) => resolve(core.exitDie(e)))
-    }).traced(trace))
+    }).traced(trace)
+)
 
 /* @internal */
-export const promiseInterrupt = Debug.dualWithTrace<
-  () => <A>(evaluate: (signal: AbortSignal) => Promise<A>) => Effect.Effect<never, never, A>,
-  <A>(evaluate: (signal: AbortSignal) => Promise<A>) => Effect.Effect<never, never, A>
->(
-  1,
+export const promiseInterrupt = Debug.zeroArgsDualWithTrace(
   (trace, restore) =>
     <A>(evaluate: (signal: AbortSignal) => Promise<A>): Effect.Effect<never, never, A> =>
       core.asyncInterruptEither<never, never, A>((resolve) => {
@@ -2284,16 +2201,13 @@ export const replicateEffectDiscard = Debug.dualWithTrace<
 >(2, (trace) => (self, n) => collectAllDiscard(replicate(self, n)).traced(trace))
 
 /* @internal */
-export const resurrect = Debug.dualWithTrace<
-  () => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, unknown, A>,
-  <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, unknown, A>
->(1, (trace) => (self) => unrefineWith(self, Option.some, identity).traced(trace))
+export const resurrect = Debug.zeroArgsDualWithTrace((trace) =>
+  <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, unknown, A> =>
+    unrefineWith(self, Option.some, identity).traced(trace)
+)
 
 /* @internal */
-export const right = Debug.dualWithTrace<
-  () => <R, E, A, B>(self: Effect.Effect<R, E, Either.Either<A, B>>) => Effect.Effect<R, Either.Either<A, E>, B>,
-  <R, E, A, B>(self: Effect.Effect<R, E, Either.Either<A, B>>) => Effect.Effect<R, Either.Either<A, E>, B>
->(1, (trace) =>
+export const right = Debug.zeroArgsDualWithTrace((trace) =>
   <R, E, A, B>(
     self: Effect.Effect<R, E, Either.Either<A, B>>
   ): Effect.Effect<R, Either.Either<A, E>, B> =>
@@ -2310,7 +2224,8 @@ export const right = Debug.dualWithTrace<
           }
         }
       }
-    ).traced(trace))
+    ).traced(trace)
+)
 
 /* @internal */
 export const rightWith = Debug.dualWithTrace<
@@ -2324,21 +2239,16 @@ export const rightWith = Debug.dualWithTrace<
 >(2, (trace, restore) => (self, f) => core.suspendSucceed(() => unright(restore(f)(right(self)))).traced(trace))
 
 /* @internal */
-export const sandbox = Debug.dualWithTrace<
-  () => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, Cause.Cause<E>, A>,
-  <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, Cause.Cause<E>, A>
->(
-  1,
-  (trace) =>
-    <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, Cause.Cause<E>, A> =>
-      core.matchCauseEffect(self, core.fail(), core.succeed()).traced(trace)
+export const sandbox = Debug.zeroArgsDualWithTrace((trace) =>
+  <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, Cause.Cause<E>, A> =>
+    core.matchCauseEffect(self, core.fail(), core.succeed()).traced(trace)
 )
 
 /* @internal */
-export const setFiberRefs = Debug.dualWithTrace<
-  () => (fiberRefs: FiberRefs.FiberRefs) => Effect.Effect<never, never, void>,
-  (fiberRefs: FiberRefs.FiberRefs) => Effect.Effect<never, never, void>
->(1, (trace) => (fiberRefs) => core.suspendSucceed(() => FiberRefs.setAll(fiberRefs)).traced(trace))
+export const setFiberRefs = Debug.zeroArgsDualWithTrace((trace) =>
+  (fiberRefs: FiberRefs.FiberRefs): Effect.Effect<never, never, void> =>
+    core.suspendSucceed(() => FiberRefs.setAll(fiberRefs)).traced(trace)
+)
 
 /* @internal */
 export const someOrElse = Debug.dualWithTrace<
@@ -2394,20 +2304,17 @@ export const someOrFail = Debug.dualWithTrace<
     }).traced(trace))
 
 /* @internal */
-export const someOrFailException = Debug.dualWithTrace<
-  () => <R, E, A>(
-    self: Effect.Effect<R, E, Option.Option<A>>
-  ) => Effect.Effect<R, E | Cause.NoSuchElementException, A>,
+export const someOrFailException = Debug.zeroArgsDualWithTrace((trace) =>
   <R, E, A>(
     self: Effect.Effect<R, E, Option.Option<A>>
-  ) => Effect.Effect<R, E | Cause.NoSuchElementException, A>
->(1, (trace) => (self) => someOrFail(self, () => internalCause.NoSuchElementException()).traced(trace))
+  ): Effect.Effect<R, E | Cause.NoSuchElementException, A> =>
+    someOrFail(self, () => internalCause.NoSuchElementException()).traced(trace)
+)
 
 /* @internal */
-export const succeedLeft = Debug.dualWithTrace<
-  () => <A>(value: A) => Effect.Effect<never, never, Either.Either<A, never>>,
-  <A>(value: A) => Effect.Effect<never, never, Either.Either<A, never>>
->(1, (trace) => (value) => core.succeed(Either.left(value)).traced(trace))
+export const succeedLeft = Debug.zeroArgsDualWithTrace((trace) =>
+  <A>(value: A): Effect.Effect<never, never, Either.Either<A, never>> => core.succeed(Either.left(value)).traced(trace)
+)
 
 /* @internal */
 export const succeedNone = Debug.methodWithTrace((trace) =>
@@ -2415,16 +2322,14 @@ export const succeedNone = Debug.methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const succeedRight = Debug.dualWithTrace<
-  () => <A>(value: A) => Effect.Effect<never, never, Either.Either<never, A>>,
-  <A>(value: A) => Effect.Effect<never, never, Either.Either<never, A>>
->(1, (trace) => (value) => core.succeed(Either.right(value)).traced(trace))
+export const succeedRight = Debug.zeroArgsDualWithTrace((trace) =>
+  <A>(value: A): Effect.Effect<never, never, Either.Either<never, A>> => core.succeed(Either.right(value)).traced(trace)
+)
 
 /* @internal */
-export const succeedSome = Debug.dualWithTrace<
-  () => <A>(value: A) => Effect.Effect<never, never, Option.Option<A>>,
-  <A>(value: A) => Effect.Effect<never, never, Option.Option<A>>
->(1, (trace) => (value) => core.succeed(Option.some(value)).traced(trace))
+export const succeedSome = Debug.zeroArgsDualWithTrace((trace) =>
+  <A>(value: A): Effect.Effect<never, never, Option.Option<A>> => core.succeed(Option.some(value)).traced(trace)
+)
 
 /* @internal */
 export const summarized = Debug.dualWithTrace<
@@ -2448,10 +2353,10 @@ export const summarized = Debug.dualWithTrace<
 )
 
 /* @internal */
-export const suspend = Debug.dualWithTrace<
-  () => <R, E, A>(evaluate: LazyArg<Effect.Effect<R, E, A>>) => Effect.Effect<R, unknown, A>,
-  <R, E, A>(evaluate: LazyArg<Effect.Effect<R, E, A>>) => Effect.Effect<R, unknown, A>
->(1, (trace, restore) => (evaluate) => core.flatMap(attempt(restore(evaluate)), identity).traced(trace))
+export const suspend = Debug.zeroArgsDualWithTrace((trace, restore) =>
+  <R, E, A>(evaluate: LazyArg<Effect.Effect<R, E, A>>): Effect.Effect<R, unknown, A> =>
+    core.flatMap(attempt(restore(evaluate)), identity).traced(trace)
+)
 
 /* @internal */
 export const struct = Debug.methodWithTrace(
@@ -2676,10 +2581,10 @@ export const tapSome = Debug.dualWithTrace<
       )).traced(trace))
 
 /* @internal */
-export const timed = Debug.dualWithTrace<
-  () => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, readonly [Duration.Duration, A]>,
-  <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, readonly [Duration.Duration, A]>
->(1, (trace) => (self) => timedWith(self, Clock.currentTimeMillis()).traced(trace))
+export const timed = Debug.zeroArgsDualWithTrace((trace) =>
+  <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, readonly [Duration.Duration, A]> =>
+    timedWith(self, Clock.currentTimeMillis()).traced(trace)
+)
 
 /* @internal */
 export const timedWith = Debug.dualWithTrace<
@@ -2747,13 +2652,9 @@ export const tryCatchPromiseInterrupt = Debug.methodWithTrace((trace, restore) =
 )
 
 /* @internal */
-export const tryPromise = Debug.dualWithTrace<
-  () => <A>(evaluate: LazyArg<Promise<A>>) => Effect.Effect<never, unknown, A>,
-  <A>(evaluate: LazyArg<Promise<A>>) => Effect.Effect<never, unknown, A>
->(
-  1,
+export const tryPromise = Debug.zeroArgsDualWithTrace(
   (trace, restore) =>
-    <A>(evaluate: LazyArg<Promise<A>>) =>
+    <A>(evaluate: LazyArg<Promise<A>>): Effect.Effect<never, unknown, A> =>
       core.flatMap(restore(attempt)(evaluate), (promise) =>
         core.async<never, unknown, A>((resolve) => {
           promise
@@ -2763,14 +2664,7 @@ export const tryPromise = Debug.dualWithTrace<
 )
 
 /* @internal */
-export const tryPromiseInterrupt = Debug.dualWithTrace<
-  () => <A>(
-    evaluate: (signal: AbortSignal) => Promise<A>
-  ) => Effect.Effect<never, unknown, A>,
-  <A>(
-    evaluate: (signal: AbortSignal) => Promise<A>
-  ) => Effect.Effect<never, unknown, A>
->(1, (trace, restore) =>
+export const tryPromiseInterrupt = Debug.zeroArgsDualWithTrace((trace, restore) =>
   <A>(
     evaluate: (signal: AbortSignal) => Promise<A>
   ): Effect.Effect<never, unknown, A> =>
@@ -2787,7 +2681,8 @@ export const tryPromiseInterrupt = Debug.dualWithTrace<
           return Either.left(core.sync(() => controller.abort()))
         })
       )
-    ).traced(trace))
+    ).traced(trace)
+)
 
 /* @internal */
 export const sequential = Debug.methodWithTrace((trace): {
@@ -2869,15 +2764,13 @@ export const tuple = Debug.methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const uncause = Debug.dualWithTrace<
-  () => <R, E>(self: Effect.Effect<R, never, Cause.Cause<E>>) => Effect.Effect<R, E, void>,
-  <R, E>(self: Effect.Effect<R, never, Cause.Cause<E>>) => Effect.Effect<R, E, void>
->(1, (trace) =>
-  (self) =>
+export const uncause = Debug.zeroArgsDualWithTrace((trace) =>
+  <R, E>(self: Effect.Effect<R, never, Cause.Cause<E>>): Effect.Effect<R, E, void> =>
     core.flatMap(self, (cause) =>
       internalCause.isEmpty(cause) ?
         core.unit() :
-        core.failCause(cause)).traced(trace))
+        core.failCause(cause)).traced(trace)
+)
 
 /* @internal */
 export const unfold = Debug.methodWithTrace((trace, restore) =>
@@ -2903,11 +2796,8 @@ const unfoldLoop = <A, R, E, S>(
   })
 
 /* @internal */
-export const unleft = Debug.dualWithTrace<
-  () => <R, E, B, A>(self: Effect.Effect<R, Either.Either<E, B>, A>) => Effect.Effect<R, E, Either.Either<A, B>>,
-  <R, E, B, A>(self: Effect.Effect<R, Either.Either<E, B>, A>) => Effect.Effect<R, E, Either.Either<A, B>>
->(1, (trace) =>
-  (self) =>
+export const unleft = Debug.zeroArgsDualWithTrace((trace) =>
+  <R, E, B, A>(self: Effect.Effect<R, Either.Either<E, B>, A>): Effect.Effect<R, E, Either.Either<A, B>> =>
     core.matchEffect(
       self,
       (either) => {
@@ -2921,7 +2811,8 @@ export const unleft = Debug.dualWithTrace<
         }
       },
       (a) => core.succeed(Either.left(a))
-    ).traced(trace))
+    ).traced(trace)
+)
 
 /* @internal */
 export const unless = Debug.dualWithTrace<
@@ -2992,11 +2883,8 @@ export const unrefineWith = Debug.dualWithTrace<
     ).traced(trace))
 
 /* @internal */
-export const unright = Debug.dualWithTrace<
-  () => <R, B, E, A>(self: Effect.Effect<R, Either.Either<B, E>, A>) => Effect.Effect<R, E, Either.Either<B, A>>,
-  <R, B, E, A>(self: Effect.Effect<R, Either.Either<B, E>, A>) => Effect.Effect<R, E, Either.Either<B, A>>
->(1, (trace) =>
-  (self) =>
+export const unright = Debug.zeroArgsDualWithTrace((trace) =>
+  <R, B, E, A>(self: Effect.Effect<R, Either.Either<B, E>, A>): Effect.Effect<R, E, Either.Either<B, A>> =>
     core.matchEffect(
       self,
       (either) => {
@@ -3010,13 +2898,14 @@ export const unright = Debug.dualWithTrace<
         }
       },
       (a) => core.succeed(Either.right(a))
-    ).traced(trace))
+    ).traced(trace)
+)
 
 /* @internal */
-export const unsandbox = Debug.dualWithTrace<
-  () => <R, E, A>(self: Effect.Effect<R, Cause.Cause<E>, A>) => Effect.Effect<R, E, A>,
-  <R, E, A>(self: Effect.Effect<R, Cause.Cause<E>, A>) => Effect.Effect<R, E, A>
->(1, (trace) => (self) => mapErrorCause(self, internalCause.flatten).traced(trace))
+export const unsandbox = Debug.zeroArgsDualWithTrace((trace) =>
+  <R, E, A>(self: Effect.Effect<R, Cause.Cause<E>, A>): Effect.Effect<R, E, A> =>
+    mapErrorCause(self, internalCause.flatten).traced(trace)
+)
 
 /* @internal */
 export const updateFiberRefs = Debug.methodWithTrace((trace, restore) =>

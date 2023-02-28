@@ -99,10 +99,10 @@ class Semaphore {
 export const unsafeMakeSemaphore = (leases: number) => new Semaphore(leases)
 
 /** @internal */
-export const makeSemaphore = Debug.dualWithTrace<
-  () => (permits: number) => Effect.Effect<never, never, Semaphore>,
-  (permits: number) => Effect.Effect<never, never, Semaphore>
->(1, (trace) => (permits) => core.sync(() => unsafeMakeSemaphore(permits)).traced(trace))
+export const makeSemaphore = Debug.zeroArgsDualWithTrace((trace) =>
+  (permits: number): Effect.Effect<never, never, Semaphore> =>
+    core.sync(() => unsafeMakeSemaphore(permits)).traced(trace)
+)
 
 /** @internal */
 export const acquireReleaseInterruptible = Debug.dualWithTrace<
@@ -121,10 +121,10 @@ export const acquireReleaseInterruptible = Debug.dualWithTrace<
     ensuring(acquire, fiberRuntime.addFinalizer(restore(release))).traced(trace))
 
 /** @internal */
-export const awaitAllChildren = Debug.dualWithTrace<
-  () => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
-  <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
->(1, (trace) => (self) => ensuringChildren(self, fiberRuntime.fiberAwaitAll).traced(trace))
+export const awaitAllChildren = Debug.zeroArgsDualWithTrace((trace) =>
+  <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
+    ensuringChildren(self, fiberRuntime.fiberAwaitAll).traced(trace)
+)
 
 /** @internal */
 export const cached = Debug.dualWithTrace<
@@ -218,13 +218,9 @@ const invalidateCache = <E, A>(
 ): Effect.Effect<never, never, void> => internalRef.set(cache, Option.none())
 
 /** @internal */
-export const disconnect = Debug.dualWithTrace<
-  () => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
-  <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
->(
-  1,
+export const disconnect = Debug.zeroArgsDualWithTrace(
   (trace) =>
-    (self) =>
+    <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
       core.uninterruptibleMask((restore) =>
         core.fiberIdWith((fiberId) =>
           core.flatMap(fiberRuntime.forkDaemon(restore(self)), (fiber) =>
@@ -302,19 +298,15 @@ export const ensuringChildren = Debug.dualWithTrace<
       )).traced(trace))
 
 /** @internal */
-export const forkAll = Debug.dualWithTrace<
-  () => <R, E, A>(
-    effects: Iterable<Effect.Effect<R, E, A>>
-  ) => Effect.Effect<R, never, Fiber.Fiber<E, Chunk.Chunk<A>>>,
+export const forkAll = Debug.zeroArgsDualWithTrace((trace) =>
   <R, E, A>(
     effects: Iterable<Effect.Effect<R, E, A>>
-  ) => Effect.Effect<R, never, Fiber.Fiber<E, Chunk.Chunk<A>>>
->(1, (trace) =>
-  (effects) =>
+  ): Effect.Effect<R, never, Fiber.Fiber<E, Chunk.Chunk<A>>> =>
     core.map(
       core.forEach(effects, fiberRuntime.fork()),
       fiberRuntime.fiberCollectAll
-    ).traced(trace))
+    ).traced(trace)
+)
 
 /** @internal */
 export const forkIn = Debug.dualWithTrace<
@@ -344,26 +336,23 @@ export const forkIn = Debug.dualWithTrace<
 )
 
 /** @internal */
-export const forkScoped = Debug.dualWithTrace<
-  () => <R, E, A>(
-    self: Effect.Effect<R, E, A>
-  ) => Effect.Effect<R | Scope.Scope, never, Fiber.RuntimeFiber<E, A>>,
+export const forkScoped = Debug.zeroArgsDualWithTrace((trace) =>
   <R, E, A>(
     self: Effect.Effect<R, E, A>
-  ) => Effect.Effect<R | Scope.Scope, never, Fiber.RuntimeFiber<E, A>>
->(1, (trace) => (self) => fiberRuntime.scopeWith((scope) => forkIn(self, scope)).traced(trace))
+  ): Effect.Effect<R | Scope.Scope, never, Fiber.RuntimeFiber<E, A>> =>
+    fiberRuntime.scopeWith((scope) => forkIn(self, scope)).traced(trace)
+)
 
 /** @internal */
-export const fromFiber = Debug.dualWithTrace<
-  () => <E, A>(fiber: Fiber.Fiber<E, A>) => Effect.Effect<never, E, A>,
-  <E, A>(fiber: Fiber.Fiber<E, A>) => Effect.Effect<never, E, A>
->(1, (trace) => (fiber) => internalFiber.join(fiber).traced(trace))
+export const fromFiber = Debug.zeroArgsDualWithTrace((trace) =>
+  <E, A>(fiber: Fiber.Fiber<E, A>): Effect.Effect<never, E, A> => internalFiber.join(fiber).traced(trace)
+)
 
 /** @internal */
-export const fromFiberEffect = Debug.dualWithTrace<
-  () => <R, E, A>(fiber: Effect.Effect<R, E, Fiber.Fiber<E, A>>) => Effect.Effect<R, E, A>,
-  <R, E, A>(fiber: Effect.Effect<R, E, Fiber.Fiber<E, A>>) => Effect.Effect<R, E, A>
->(1, (trace) => (fiber) => core.suspendSucceed(() => core.flatMap(fiber, internalFiber.join)).traced(trace))
+export const fromFiberEffect = Debug.zeroArgsDualWithTrace((trace) =>
+  <R, E, A>(fiber: Effect.Effect<R, E, Fiber.Fiber<E, A>>): Effect.Effect<R, E, A> =>
+    core.suspendSucceed(() => core.flatMap(fiber, internalFiber.join)).traced(trace)
+)
 
 /** @internal */
 export const memoizeFunction = Debug.methodWithTrace((trace) =>

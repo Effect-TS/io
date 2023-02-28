@@ -224,7 +224,7 @@ class MemoMap {
                                         core.whenEffect(
                                           ref.modify(observers, (n) => [n === 1, n - 1] as const)
                                         ),
-                                        core.asUnit
+                                        core.asUnit()
                                       )),
                                     core.zipRight(ref.update(observers, (n) => n + 1)),
                                     core.zipRight(

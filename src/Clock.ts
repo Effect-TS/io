@@ -75,7 +75,10 @@ export const make: (_: void) => Clock = internal.make
  * @since 1.0.0
  * @category constructors
  */
-export const sleep: (duration: Duration.Duration) => Effect.Effect<never, never, void> = defaultServices.sleep
+export const sleep: {
+  (duration: Duration.Duration): Effect.Effect<never, never, void>
+  (): (duration: Duration.Duration) => Effect.Effect<never, never, void>
+} = defaultServices.sleep
 
 /**
  * @since 1.0.0

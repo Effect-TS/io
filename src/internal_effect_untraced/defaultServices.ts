@@ -39,11 +39,7 @@ export const currentTimeMillis = Debug.methodWithTrace((trace) =>
 )
 
 /** @internal */
-export const sleep = Debug.dualWithTrace<
-  () => (duration: Duration.Duration) => Effect.Effect<never, never, void>,
-  (duration: Duration.Duration) => Effect.Effect<never, never, void>
->(
-  1,
+export const sleep = Debug.zeroArgsDualWithTrace(
   (trace) =>
     (duration: Duration.Duration): Effect.Effect<never, never, void> =>
       clockWith((clock) => clock.sleep(duration)).traced(trace)
@@ -92,16 +88,16 @@ export const configProviderWith = Debug.methodWithTrace((trace, restore) =>
 )
 
 /** @internal */
-export const config = Debug.dualWithTrace<
-  () => <A>(config: Config.Config<A>) => Effect.Effect<never, ConfigError.ConfigError, A>,
-  <A>(config: Config.Config<A>) => Effect.Effect<never, ConfigError.ConfigError, A>
->(1, (trace) => (config) => configProviderWith((_) => _.load(config)).traced(trace))
+export const config = Debug.zeroArgsDualWithTrace((trace) =>
+  <A>(config: Config.Config<A>): Effect.Effect<never, ConfigError.ConfigError, A> =>
+    configProviderWith((_) => _.load(config)).traced(trace)
+)
 
 /** @internal */
-export const configOrDie = Debug.dualWithTrace<
-  () => <A>(config: Config.Config<A>) => Effect.Effect<never, never, A>,
-  <A>(config: Config.Config<A>) => Effect.Effect<never, never, A>
->(1, (trace) => (config) => core.orDie(configProviderWith((_) => _.load(config))).traced(trace))
+export const configOrDie = Debug.zeroArgsDualWithTrace((trace) =>
+  <A>(config: Config.Config<A>): Effect.Effect<never, never, A> =>
+    core.orDie(configProviderWith((_) => _.load(config))).traced(trace)
+)
 
 // circular with Random
 
