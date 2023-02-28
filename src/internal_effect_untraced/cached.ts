@@ -31,8 +31,8 @@ export const auto = Debug.methodWithTrace((trace) =>
   ): Effect.Effect<R | R2 | Scope.Scope, never, Cached.Cached<E, A>> =>
     core.tap(manual(acquire), (manual) =>
       fiberRuntime.acquireRelease(
-        pipe(refresh(manual), _schedule.schedule_Effect(policy), core.interruptible, fiberRuntime.forkDaemon),
-        core.interruptFiber
+        fiberRuntime.forkDaemon(core.interruptible(_schedule.schedule_Effect(refresh(manual), policy))),
+        core.interruptFiber()
       )).traced(trace)
 )
 

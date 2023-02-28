@@ -36,7 +36,7 @@ describe.concurrent("Layer", () => {
         )
       )
       const env = pipe(layer1, Layer.merge(layer2), Layer.build)
-      const fiber = yield* $(pipe(Effect.scoped(env), Effect.forkDaemon))
+      const fiber = yield* $(pipe(Effect.scoped(env), Effect.forkDaemon()))
       yield* $(Deferred.await(deferred))
       const result = yield* $(pipe(Fiber.interrupt(fiber), Effect.asUnit()))
       assert.isUndefined(result)
@@ -239,7 +239,7 @@ describe.concurrent("Layer", () => {
       const layer1 = makeLayer1(ref)
       const layer2 = makeLayer2(ref)
       const env = pipe(layer1, Layer.merge(layer2), Layer.build)
-      const fiber = yield* $(pipe(Effect.scoped(env), Effect.fork))
+      const fiber = yield* $(pipe(Effect.scoped(env), Effect.fork()))
       yield* $(Fiber.interrupt(fiber))
       const result = yield* $(pipe(Ref.get(ref), Effect.map((chunk) => Array.from(chunk))))
       if (result.find((s) => s === acquire1) !== undefined) {
@@ -255,7 +255,7 @@ describe.concurrent("Layer", () => {
       const layer1 = makeLayer1(ref)
       const layer2 = makeLayer2(ref)
       const env = pipe(layer1, Layer.provide(layer2), Layer.build)
-      const fiber = yield* $(pipe(Effect.scoped(env), Effect.fork))
+      const fiber = yield* $(pipe(Effect.scoped(env), Effect.fork()))
       yield* $(Fiber.interrupt(fiber))
       const result = yield* $(pipe(Ref.get(ref), Effect.map((chunk) => Array.from(chunk))))
       if (result.find((s) => s === acquire1) !== undefined) {
@@ -276,7 +276,7 @@ describe.concurrent("Layer", () => {
         Layer.provide(pipe(layer2, Layer.merge(pipe(layer1, Layer.provide(layer3))))),
         Layer.build
       )
-      const fiber = yield* $(pipe(Effect.scoped(env), Effect.fork))
+      const fiber = yield* $(pipe(Effect.scoped(env), Effect.fork()))
       yield* $(Fiber.interrupt(fiber))
       const result = yield* $(pipe(Ref.get(ref), Effect.map((chunk) => Array.from(chunk))))
       if (result.find((s) => s === acquire1) !== undefined) {

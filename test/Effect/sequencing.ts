@@ -313,7 +313,7 @@ describe.concurrent("Effect", () => {
           Deferred.await(latch2),
           Effect.zipRight(Deferred.await(latch3)),
           Effect.zipRight(Deferred.succeed(latch1, void 0)),
-          Effect.fork
+          Effect.fork()
         )
       )
       const result = yield* $(pipe(Effect.fork(left), Effect.zipPar(right)))

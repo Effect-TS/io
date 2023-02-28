@@ -15,7 +15,7 @@ describe.concurrent("Effect", () => {
       const result = yield* $(
         pipe(
           Effect.raceAll([pipe(Effect.sleep(Duration.millis(100)), Effect.zipRight(Effect.fail(24))), Effect.fail(25)]),
-          Effect.flip
+          Effect.flip()
         )
       )
       assert.strictEqual(result, 24)

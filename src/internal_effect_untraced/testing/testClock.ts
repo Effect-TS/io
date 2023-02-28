@@ -277,9 +277,16 @@ export class TestClockImpl implements TestClock {
         WarningData.isStart(data) ?
           Option.some(
             pipe(
-              this.live.provide(pipe(effect.logWarning(warning), effect.delay(Duration.seconds(5)))),
-              core.interruptible,
-              fiberRuntime.fork,
+              fiberRuntime.fork(
+                core.interruptible(
+                  this.live.provide(
+                    effect.delay(
+                      effect.logWarning(warning),
+                      Duration.seconds(5)
+                    )
+                  )
+                )
+              ),
               core.map((fiber) => WarningData.pending(fiber))
             )
           ) :
@@ -310,7 +317,7 @@ export class TestClockImpl implements TestClock {
     return Debug.bodyWithTrace((trace) =>
       pipe(
         this.freeze(),
-        core.zip(this.live.provide(pipe(effect.sleep(Duration.millis(5)), core.zipRight(this.freeze())))),
+        core.zip(this.live.provide(pipe(defaultServices.sleep(Duration.millis(5)), core.zipRight(this.freeze())))),
         core.flatMap(([first, last]) =>
           Equal.equals(first, last) ?
             core.succeed(first) :
@@ -330,7 +337,7 @@ export class TestClockImpl implements TestClock {
           pipe(
             this.suspended(),
             core.zipWith(
-              pipe(this.live.provide(effect.sleep(Duration.millis(10))), core.zipRight(this.suspended())),
+              pipe(this.live.provide(defaultServices.sleep(Duration.millis(10))), core.zipRight(this.suspended())),
               Equal.equals
             ),
             effect.filterOrFail(identity, constVoid),
@@ -358,8 +365,8 @@ export class TestClockImpl implements TestClock {
                   effect.delay(Duration.seconds(5))
                 )
               ),
-              core.interruptible,
-              fiberRuntime.fork,
+              core.interruptible(),
+              fiberRuntime.fork(),
               core.map((fiber) => SuspendedWarningData.pending(fiber))
             )
           )
@@ -547,7 +554,7 @@ export const sleeps = Debug.methodWithTrace((trace) =>
  * @internal
  */
 export const testClock = Debug.methodWithTrace((trace) =>
-  (): Effect.Effect<never, never, TestClock> => testClockWith(core.succeed).traced(trace)
+  (): Effect.Effect<never, never, TestClock> => testClockWith(core.succeed()).traced(trace)
 )
 
 /**

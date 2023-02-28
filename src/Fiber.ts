@@ -354,7 +354,10 @@ export const inheritAll: <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never
  * @since 1.0.0
  * @category interruption
  */
-export const interrupt: <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, Exit.Exit<E, A>> = core.interruptFiber
+export const interrupt: {
+  (): <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, Exit.Exit<E, A>>
+  <E, A>(self: Fiber<E, A>): Effect.Effect<never, never, Exit.Exit<E, A>>
+} = core.interruptFiber
 
 /**
  * Constructrs a `Fiber` that is already interrupted.

@@ -94,7 +94,7 @@ export const flakyTest = <R, E, A>(
         Schedule.whileOutput(Duration.lessThanOrEqualTo(timeout))
       )
     ),
-    Effect.orDie
+    Effect.orDie()
   )
 }
 

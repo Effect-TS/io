@@ -64,7 +64,7 @@ describe.concurrent("Effect", () => {
           Effect.ensuring(Effect.die(e2)),
           Effect.ensuring(Effect.die(e3)),
           Effect.sandbox(),
-          Effect.flip,
+          Effect.flip(),
           Effect.map((cause) => cause)
         )
       )
@@ -78,7 +78,7 @@ describe.concurrent("Effect", () => {
         pipe(
           Effect.succeed(42),
           Effect.ensuring(Effect.die(ExampleError)),
-          Effect.fork,
+          Effect.fork(),
           Effect.flatMap((fiber) =>
             pipe(
               Fiber.await(fiber),
@@ -135,7 +135,7 @@ describe.concurrent("Effect", () => {
         Effect.acquireUseRelease(Effect.fail(ExampleError), () => Effect.unit(), () => Effect.unit()),
         Effect.either(),
         Effect.absolve(),
-        Effect.flip
+        Effect.flip()
       ))
       assert.deepEqual(result, ExampleError)
     }))
@@ -199,9 +199,13 @@ describe.concurrent("Effect", () => {
           ),
           () => Effect.unit(),
           () =>
-            pipe(log("start 2"), Effect.zipRight(Effect.sleep(Duration.millis(10))), Effect.zipRight(log("release 2")))
+            pipe(
+              log("start 2"),
+              Effect.zipRight(Effect.sleep(Duration.millis(10))),
+              Effect.zipRight(log("release 2"))
+            )
         ),
-        Effect.fork
+        Effect.fork()
       ))
       yield* $(pipe(
         Ref.get(ref),
@@ -238,7 +242,7 @@ describe.concurrent("Effect", () => {
           Deferred.succeed(deferred1, void 0),
           Effect.zipRight(Deferred.await(deferred2)),
           Effect.ensuring(pipe(Ref.set(ref, true), Effect.zipRight(Effect.sleep(Duration.millis(10))))),
-          Effect.fork
+          Effect.fork()
         )
       )
       yield* $(Deferred.await(deferred1))
@@ -264,7 +268,7 @@ describe.concurrent("Effect", () => {
             Effect.unit()
         ),
         Effect.sandbox(),
-        Effect.ignore
+        Effect.ignore()
       ))
       const result = yield* $(Ref.get(ref))
       assert.isTrue(result)
@@ -282,7 +286,7 @@ describe.concurrent("Effect", () => {
               pipe(Deferred.succeed(latch2, void 0), Effect.asUnit()) :
               Effect.unit()
           ),
-          Effect.fork
+          Effect.fork()
         )
       )
       yield* $(Deferred.await(latch1))

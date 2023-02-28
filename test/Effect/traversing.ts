@@ -187,7 +187,7 @@ describe.concurrent("Effect", () => {
       const result = yield* $(pipe(
         Array.from({ length: 10 }, (_, i) => i + 1),
         Effect.forEachPar((n) => n === 5 ? Effect.fail("boom") : Effect.succeed(n * 2)),
-        Effect.flip
+        Effect.flip()
       ))
       assert.strictEqual(result, "boom")
     }))
@@ -202,7 +202,7 @@ describe.concurrent("Effect", () => {
             ? Effect.fail("boom2")
             : Effect.succeed(n * 2)
         ),
-        Effect.flip
+        Effect.flip()
       ))
       assert.isTrue(result === "boom1" || result === "boom2")
     }))
@@ -246,7 +246,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const deferred = yield* $(Deferred.make<never, void>())
       yield* $(
-        pipe([Effect.never(), Deferred.succeed(deferred, void 0)], Effect.forEachPar(identity), Effect.fork)
+        pipe([Effect.never(), Deferred.succeed(deferred, void 0)], Effect.forEachPar(identity), Effect.fork())
       )
       const result = yield* $(Deferred.await(deferred))
       assert.isUndefined(result)
@@ -256,7 +256,7 @@ describe.concurrent("Effect", () => {
       const result = yield* $(pipe(
         [1, 2, 3, 4, 5, 6],
         Effect.forEachPar((n) => n % 2 !== 0 ? Effect.succeed(n) : Effect.fail("not odd")),
-        Effect.flip
+        Effect.flip()
       ))
       assert.strictEqual(result, "not odd")
     }))
@@ -270,7 +270,7 @@ describe.concurrent("Effect", () => {
         Effect.fail("C"),
         pipe(Deferred.await(deferred), Effect.zipRight(Ref.set(ref, true)), Effect.as(1))
       ]
-      const error = yield* $(pipe(actions, Effect.forEachPar(identity), Effect.flip))
+      const error = yield* $(pipe(actions, Effect.forEachPar(identity), Effect.flip()))
       const value = yield* $(Ref.get(ref))
       assert.strictEqual(error, "C")
       assert.isFalse(value)
@@ -280,7 +280,7 @@ describe.concurrent("Effect", () => {
       const ref = yield* $(Ref.make(0))
       const fibers = yield* $(pipe(
         Array.from({ length: 100 }, (_, i) => i + 1),
-        Effect.forEachPar(() => pipe(Ref.update(ref, (_) => _ + 1), Effect.fork))
+        Effect.forEachPar(() => pipe(Ref.update(ref, (_) => _ + 1), Effect.fork()))
       ))
       yield* $(pipe(fibers, Effect.forEach(Fiber.await)))
       const result = yield* $(Ref.get(ref))
@@ -310,7 +310,7 @@ describe.concurrent("Effect", () => {
           [Effect.never(), Deferred.succeed(deferred, void 0)],
           Effect.forEachPar(identity),
           Effect.withParallelism(2),
-          Effect.fork
+          Effect.fork()
         )
       )
       const result = yield* $(Deferred.await(deferred))
@@ -359,7 +359,7 @@ describe.concurrent("Effect", () => {
       const trigger = yield* $(Deferred.make<never, void>())
       const result = yield* $(pipe(
         [1, 2, 3],
-        Effect.forEachParDiscard((n) => pipe(task(started, trigger, n), Effect.uninterruptible)),
+        Effect.forEachParDiscard((n) => pipe(task(started, trigger, n), Effect.uninterruptible())),
         Effect.matchCause(Cause.failures, () => Chunk.empty<number>())
       ))
       assert.deepStrictEqual(Array.from(result), [1, 2, 3])
@@ -405,7 +405,7 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("mergeAll - merge list using function", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe([3, 5, 7].map(Effect.succeed), Effect.mergeAll(1, (b, a) => b + a)))
+      const result = yield* $(pipe([3, 5, 7].map(Effect.succeed()), Effect.mergeAll(1, (b, a) => b + a)))
       assert.strictEqual(result, 1 + 3 + 5 + 7)
     }))
   it.effect("mergeAll - return error if it exists in list", () =>
@@ -425,7 +425,7 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("mergeAllPar - merge list using function", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe([3, 5, 7].map(Effect.succeed), Effect.mergeAllPar(1, (b, a) => b + a)))
+      const result = yield* $(pipe([3, 5, 7].map(Effect.succeed()), Effect.mergeAllPar(1, (b, a) => b + a)))
       assert.strictEqual(result, 1 + 3 + 5 + 7)
     }))
   it.effect("mergeAllPar - return error if it exists in list", () =>
@@ -563,7 +563,7 @@ describe.concurrent("Effect", () => {
   it.effect("reduceAllPar - reduce list using function", () =>
     Effect.gen(function*($) {
       const result = yield* $(
-        pipe([3, 5, 7].map(Effect.succeed), Effect.reduceAllPar(Effect.succeed(1), (acc, a) => acc + a))
+        pipe([3, 5, 7].map(Effect.succeed()), Effect.reduceAllPar(Effect.succeed(1), (acc, a) => acc + a))
       )
       assert.strictEqual(result, 1 + 3 + 5 + 7)
     }))

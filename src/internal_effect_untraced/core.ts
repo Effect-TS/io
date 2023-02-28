@@ -382,7 +382,7 @@ export const catchAll = Debug.dualWithTrace<
     self: Effect.Effect<R, E, A>,
     f: (e: E) => Effect.Effect<R2, E2, A2>
   ) => Effect.Effect<R2 | R, E2, A2 | A>
->(2, (trace, restore) => (self, f) => matchEffect(self, restore(f), (a) => succeed(a)).traced(trace))
+>(2, (trace, restore) => (self, f) => matchEffect(self, restore(f), succeed()).traced(trace))
 
 /**
  * @macro identity
@@ -419,7 +419,7 @@ export const catchSome = Debug.dualWithTrace<
           }
         }
       }),
-      (a) => succeed(a)
+      succeed()
     ).traced(trace))
 
 /* @internal */
@@ -807,7 +807,7 @@ export const mapError = Debug.dualWithTrace<
           return failCause(either.right)
         }
       }
-    }, (a) => succeed(a)).traced(trace))
+    }, succeed()).traced(trace))
 
 /* @internal */
 export const never = Debug.methodWithTrace((trace) =>
@@ -901,7 +901,7 @@ export const orElse = Debug.dualWithTrace<
     self: Effect.Effect<R, E, A>,
     that: LazyArg<Effect.Effect<R2, E2, A2>>
   ) => Effect.Effect<R | R2, E2, A | A2>
->(2, (trace, restore) => (self, that) => tryOrElse(self, restore(that), (a) => succeed(a)).traced(trace))
+>(2, (trace, restore) => (self, that) => tryOrElse(self, restore(that), succeed()).traced(trace))
 
 /* @internal */
 export const orDie = Debug.dualWithTrace<
@@ -913,7 +913,7 @@ export const orDie = Debug.dualWithTrace<
 export const orDieWith = Debug.dualWithTrace<
   <E>(f: (error: E) => unknown) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, A>,
   <R, E, A>(self: Effect.Effect<R, E, A>, f: (error: E) => unknown) => Effect.Effect<R, never, A>
->(2, (trace, restore) => (self, f) => matchEffect(self, (e) => die(restore(f)(e)), (a) => succeed(a)).traced(trace))
+>(2, (trace, restore) => (self, f) => matchEffect(self, (e) => die(restore(f)(e)), succeed()).traced(trace))
 
 /* @internal */
 export const partitionMap = <A, A1, A2>(
@@ -977,7 +977,7 @@ export const runtimeFlags = Debug.methodWithTrace((trace) =>
 export const service = Debug.dualWithTrace<
   () => <T>(tag: Context.Tag<T>) => Effect.Effect<T, never, T>,
   <T>(tag: Context.Tag<T>) => Effect.Effect<T, never, T>
->(1, (trace) => (tag) => serviceWithEffect(tag, (a) => succeed(a)).traced(trace))
+>(1, (trace) => (tag) => serviceWithEffect(tag, succeed()).traced(trace))
 
 /* @internal */
 export const serviceWith = Debug.methodWithTrace((trace, restore) =>

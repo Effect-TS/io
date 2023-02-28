@@ -113,8 +113,7 @@ export const set = Debug.dualWithTrace<
                   core.exitMatch(
                     (cause) =>
                       pipe(
-                        newScope.close(core.exitUnit()),
-                        effect.ignore,
+                        effect.ignore(newScope.close(core.exitUnit())),
                         core.as(
                           [
                             core.failCause(cause) as unknown as Effect.Effect<never, never, void>,
@@ -124,8 +123,7 @@ export const set = Debug.dualWithTrace<
                       ),
                     (value) =>
                       pipe(
-                        oldScope.close(core.exitUnit()),
-                        effect.ignore,
+                        effect.ignore(oldScope.close(core.exitUnit())),
                         core.as([core.unit(), [newScope, value] as const] as const)
                       )
                   )

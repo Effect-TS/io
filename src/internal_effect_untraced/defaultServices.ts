@@ -4,6 +4,7 @@ import type * as Duration from "@effect/data/Duration"
 import { pipe } from "@effect/data/Function"
 import type * as Clock from "@effect/io/Clock"
 import type * as Config from "@effect/io/Config"
+import type * as ConfigError from "@effect/io/Config/Error"
 import type * as ConfigProvider from "@effect/io/Config/Provider"
 import * as Debug from "@effect/io/Debug"
 import type * as DefaultServices from "@effect/io/DefaultServices"
@@ -38,9 +39,14 @@ export const currentTimeMillis = Debug.methodWithTrace((trace) =>
 )
 
 /** @internal */
-export const sleep = Debug.methodWithTrace((trace) =>
-  (duration: Duration.Duration): Effect.Effect<never, never, void> =>
-    clockWith((clock) => clock.sleep(duration)).traced(trace)
+export const sleep = Debug.dualWithTrace<
+  () => (duration: Duration.Duration) => Effect.Effect<never, never, void>,
+  (duration: Duration.Duration) => Effect.Effect<never, never, void>
+>(
+  1,
+  (trace) =>
+    (duration: Duration.Duration): Effect.Effect<never, never, void> =>
+      clockWith((clock) => clock.sleep(duration)).traced(trace)
 )
 
 /** @internal */
@@ -86,14 +92,16 @@ export const configProviderWith = Debug.methodWithTrace((trace, restore) =>
 )
 
 /** @internal */
-export const config = Debug.methodWithTrace((trace) =>
-  <A>(config: Config.Config<A>) => configProviderWith((_) => _.load(config)).traced(trace)
-)
+export const config = Debug.dualWithTrace<
+  () => <A>(config: Config.Config<A>) => Effect.Effect<never, ConfigError.ConfigError, A>,
+  <A>(config: Config.Config<A>) => Effect.Effect<never, ConfigError.ConfigError, A>
+>(1, (trace) => (config) => configProviderWith((_) => _.load(config)).traced(trace))
 
 /** @internal */
-export const configOrDie = Debug.methodWithTrace((trace) =>
-  <A>(config: Config.Config<A>) => core.orDie(configProviderWith((_) => _.load(config))).traced(trace)
-)
+export const configOrDie = Debug.dualWithTrace<
+  () => <A>(config: Config.Config<A>) => Effect.Effect<never, never, A>,
+  <A>(config: Config.Config<A>) => Effect.Effect<never, never, A>
+>(1, (trace) => (config) => core.orDie(configProviderWith((_) => _.load(config))).traced(trace))
 
 // circular with Random
 

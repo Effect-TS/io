@@ -22,8 +22,8 @@ const fibers = Array.from({ length: 10000 }, Fiber.unit)
 describe.concurrent("Fiber", () => {
   it.effect("should track blockingOn in await", () =>
     Effect.gen(function*($) {
-      const fiber1 = yield* $(pipe(Effect.never(), Effect.fork))
-      const fiber2 = yield* $(pipe(Fiber.await(fiber1), Effect.fork))
+      const fiber1 = yield* $(pipe(Effect.never(), Effect.fork()))
+      const fiber2 = yield* $(pipe(Fiber.await(fiber1), Effect.fork()))
       const blockingOn = yield* $(pipe(
         Fiber.status(fiber2),
         Effect.continueOrFail(constVoid, (status) =>
@@ -36,7 +36,7 @@ describe.concurrent("Fiber", () => {
     }))
   it.effect("should track blockingOn in race", () =>
     Effect.gen(function*($) {
-      const fiber = yield* $(pipe(Effect.never(), Effect.race(Effect.never()), Effect.fork))
+      const fiber = yield* $(pipe(Effect.never(), Effect.race(Effect.never()), Effect.fork()))
       const blockingOn = yield* $(pipe(
         Fiber.status(fiber),
         Effect.continueOrFail(
@@ -51,7 +51,7 @@ describe.concurrent("Fiber", () => {
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(initial))
       const child = yield* $(
-        withLatch((release) => pipe(FiberRef.set(fiberRef, update), Effect.zipRight(release), Effect.fork))
+        withLatch((release) => pipe(FiberRef.set(fiberRef, update), Effect.zipRight(release), Effect.fork()))
       )
       yield* $(pipe(child, Fiber.map(constVoid), Fiber.inheritAll))
       const result = yield* $(FiberRef.get(fiberRef))
@@ -66,14 +66,14 @@ describe.concurrent("Fiber", () => {
         pipe(
           FiberRef.set(fiberRef, "child1"),
           Effect.zipRight(Deferred.succeed(latch1, void 0)),
-          Effect.fork
+          Effect.fork()
         )
       )
       const child2 = yield* $(
         pipe(
           FiberRef.set(fiberRef, "child2"),
           Effect.zipRight(Deferred.succeed(latch2, void 0)),
-          Effect.fork
+          Effect.fork()
         )
       )
       yield* $(pipe(Deferred.await(latch1), Effect.zipRight(Deferred.await(latch2))))
@@ -90,14 +90,14 @@ describe.concurrent("Fiber", () => {
         pipe(
           FiberRef.set(fiberRef, "child1"),
           Effect.zipRight(Deferred.succeed(latch1, void 0)),
-          Effect.fork
+          Effect.fork()
         )
       )
       const child2 = yield* $(
         pipe(
           FiberRef.set(fiberRef, "child2"),
           Effect.zipRight(Deferred.succeed(latch2, void 0)),
-          Effect.fork
+          Effect.fork()
         )
       )
       yield* $(pipe(Deferred.await(latch1), Effect.zipRight(Deferred.await(latch2))))
@@ -124,7 +124,7 @@ describe.concurrent("Fiber", () => {
             () => Effect.never(),
             (_, __) => Ref.set(ref, true)
           ),
-          Effect.fork
+          Effect.fork()
         )
       ))
       yield* $(Effect.scoped(Fiber.scoped(fiber)))
@@ -142,7 +142,7 @@ describe.concurrent("Fiber", () => {
         const worker1 = pipe(
           Queue.take(queue),
           Effect.flatMap((a) => Effect.uninterruptible(worker(a))),
-          Effect.forever
+          Effect.forever()
         )
         return pipe(
           Effect.forkAll(Array.from({ length: n }, () => worker1)),
@@ -168,7 +168,7 @@ describe.concurrent("Fiber", () => {
       const child = pipe(
         Effect.interruptible(Effect.never()),
         Effect.onInterrupt(() => Deferred.succeed(latch, void 0)),
-        Effect.fork
+        Effect.fork()
       )
       yield* $(Effect.uninterruptible(Effect.fork(child)))
       const result = yield* $(Deferred.await(latch))
@@ -194,14 +194,14 @@ describe.concurrent("Fiber", () => {
       const deferred1 = yield* $(Deferred.make<never, void>())
       const deferred2 = yield* $(Deferred.make<never, void>())
       const fiber1 = yield* $(
-        pipe(Deferred.succeed(deferred1, void 0), Effect.zipRight(Effect.never()), Effect.forkDaemon)
+        pipe(Deferred.succeed(deferred1, void 0), Effect.zipRight(Effect.never()), Effect.forkDaemon())
       )
       const fiber2 = yield* $(
         pipe(
           Deferred.succeed(deferred2, void 0),
           Effect.zipRight(Fiber.await(fiber1)),
-          Effect.uninterruptible,
-          Effect.forkDaemon
+          Effect.uninterruptible(),
+          Effect.forkDaemon()
         )
       )
       yield* $(Deferred.await(deferred1))

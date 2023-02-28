@@ -97,7 +97,7 @@ describe.concurrent("Schedule", () => {
       const schedule = pipe(Schedule.recurs(5), Schedule.resetAfter(Duration.seconds(5)))
       const retriesCounter = yield* $(Ref.make(-1))
       const latch = yield* $(Deferred.make<never, void>())
-      const fiber = yield* $(pipe(io(retriesCounter, latch), Effect.retry(schedule), Effect.fork))
+      const fiber = yield* $(pipe(io(retriesCounter, latch), Effect.retry(schedule), Effect.fork()))
       yield* $(Deferred.await(latch))
       yield* $(TestClock.adjust(Duration.seconds(10)))
       yield* $(Fiber.join(fiber))
@@ -608,7 +608,7 @@ describe.concurrent("Schedule", () => {
             Effect.fail("oh no"),
             Effect.retry(Schedule.recurs(2)),
             Effect.ensuring(Deferred.succeed(deferred, void 0)),
-            Effect.option
+            Effect.option()
           )
         )
         const finalizerValue = yield* $(Deferred.poll(deferred))
@@ -749,7 +749,7 @@ describe.concurrent("Schedule", () => {
           TestClock.currentTimeMillis(),
           Effect.tap((instant) => Ref.update(ref, (seconds) => [...seconds, instant / 1000])),
           Effect.repeat(schedule),
-          Effect.fork
+          Effect.fork()
         ))
         yield* $(TestClock.adjust(Duration.minutes(2)))
         const result = yield* $(Ref.get(ref))

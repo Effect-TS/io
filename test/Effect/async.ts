@@ -60,7 +60,7 @@ describe.concurrent("Effect", () => {
           )
         ),
         Effect.disconnect(),
-        Effect.fork
+        Effect.fork()
       ))
       yield* $(Deferred.await(acquire))
       yield* $(Fiber.interruptFork(fiber))
@@ -84,7 +84,7 @@ describe.concurrent("Effect", () => {
           Runtime.runCallback(runtime)(Deferred.succeed(step, undefined))
         })),
         Effect.ensuring(Ref.update(unexpectedPlace, Chunk.prepend(2))),
-        Effect.forkDaemon
+        Effect.forkDaemon()
       ))
       const result = yield* $(pipe(Fiber.interrupt(fiber), Effect.timeout(Duration.seconds(1))))
       const unexpected = yield* $(Ref.get(unexpectedPlace))
@@ -111,8 +111,8 @@ describe.concurrent("Effect", () => {
           })
         ),
         Effect.ensuring(Ref.update(unexpectedPlace, Chunk.prepend(2))),
-        Effect.uninterruptible,
-        Effect.forkDaemon
+        Effect.uninterruptible(),
+        Effect.forkDaemon()
       ))
       const result = yield* $(pipe(Fiber.interrupt(fiber), Effect.timeout(Duration.seconds(1))))
       const unexpected = yield* $(Ref.get(unexpectedPlace))
@@ -140,11 +140,10 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("asyncEffect can fail before registering", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(
+      const result = yield* $(Effect.flip(
         Effect.asyncEffect<never, unknown, unknown, never, string, never>((_) => {
           return Effect.fail("ouch")
-        }),
-        Effect.flip
+        })
       ))
       assert.strictEqual(result, "ouch")
     }))

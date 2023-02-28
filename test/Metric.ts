@@ -136,7 +136,7 @@ describe.concurrent("Metric", () => {
           pipe(
             Effect.unit(),
             Effect.withMetric(counter),
-            Effect.zipRight(pipe(Effect.fail("error"), Effect.withMetric(counter), Effect.ignore)),
+            Effect.zipRight(pipe(Effect.fail("error"), Effect.withMetric(counter), Effect.ignore())),
             Effect.zipRight(Metric.value(counter))
           )
         )

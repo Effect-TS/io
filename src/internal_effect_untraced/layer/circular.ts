@@ -178,9 +178,11 @@ export const disableWindDown = Debug.untracedMethod(() =>
 )
 
 /** @internal */
-export const setConfigProvider = Debug.untracedMethod(() =>
+export const setConfigProvider = Debug.untracedDual<
+  () => (configProvider: ConfigProvider.ConfigProvider) => Layer.Layer<never, never, never>,
+  (configProvider: ConfigProvider.ConfigProvider) => Layer.Layer<never, never, never>
+>(1, () =>
   (configProvider: ConfigProvider.ConfigProvider): Layer.Layer<never, never, never> =>
     layer.scopedDiscard(
       fiberRuntime.withConfigProviderScoped(configProvider)
-    )
-)
+    ))

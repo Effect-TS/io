@@ -1249,9 +1249,11 @@ export const acquireRelease = Debug.dualWithTrace<
     acquire: Effect.Effect<R, E, A>,
     release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>
   ): Effect.Effect<R | R2 | Scope.Scope, E, A> =>
-    pipe(
-      core.tap(acquire, (a) => addFinalizer((exit) => restore(release)(a, exit))),
-      core.uninterruptible
+    core.uninterruptible(
+      core.tap(
+        acquire,
+        (a) => addFinalizer((exit) => restore(release)(a, exit))
+      )
     ).traced(trace))
 
 /* @internal */
@@ -1416,13 +1418,11 @@ export const forEachExec = Debug.dualWithTrace<
 >(3, (trace, restore) =>
   (elements, f, strategy) =>
     core.suspendSucceed(() =>
-      pipe(
+      ExecutionStrategy.match(
         strategy,
-        ExecutionStrategy.match(
-          () => pipe(elements, core.forEach(restore(f))),
-          () => pipe(elements, forEachPar(restore(f)), core.withParallelismUnbounded),
-          (parallelism) => pipe(elements, forEachPar(restore(f)), core.withParallelism(parallelism))
-        )
+        () => core.forEach(elements, restore(f)),
+        () => core.withParallelismUnbounded(forEachPar(elements, restore(f))),
+        (parallelism) => core.withParallelism(forEachPar(elements, restore(f)), parallelism)
       )
     ).traced(trace))
 
@@ -1484,10 +1484,10 @@ const forEachParUnboundedDiscard = <R, E, A, _>(
       let ref = 0
       const process = core.transplant((graft) =>
         core.forEach(as, (a) =>
-          pipe(
-            graft(pipe(
-              restore(core.suspendSucceed(() => f(a))),
+          forkDaemon(
+            graft(
               core.matchCauseEffect(
+                restore(core.suspendSucceed(() => f(a))),
                 (cause) =>
                   core.zipRight(
                     core.deferredFail(deferred, void 0),
@@ -1502,8 +1502,7 @@ const forEachParUnboundedDiscard = <R, E, A, _>(
                   return core.unit()
                 }
               )
-            )),
-            forkDaemon
+            )
           ))
       )
       return core.flatMap(process, (fibers) =>
@@ -1511,7 +1510,7 @@ const forEachParUnboundedDiscard = <R, E, A, _>(
           restore(core.deferredAwait(deferred)),
           (cause) =>
             core.flatMap(
-              forEachParUnbounded(fibers, core.interruptFiber),
+              forEachParUnbounded(fibers, core.interruptFiber()),
               (exits) => {
                 const exit = core.exitCollectAllPar(exits)
                 if (exit._tag === "Some" && core.exitIsFailure(exit.value)) {
@@ -1590,23 +1589,33 @@ export const forEachParWithIndex = Debug.dualWithTrace<
 )
 
 /* @internal */
-export const fork = Debug.methodWithTrace((trace) =>
-  <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>> =>
-    core.withFiberRuntime<R, never, Fiber.RuntimeFiber<E, A>>((state, status) =>
-      core.succeed(unsafeFork(self, state, status.runtimeFlags))
-    ).traced(trace)
+export const fork = Debug.dualWithTrace<
+  () => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>>,
+  <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>>
+>(
+  1,
+  (trace) =>
+    <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>> =>
+      core.withFiberRuntime<R, never, Fiber.RuntimeFiber<E, A>>((state, status) =>
+        core.succeed(unsafeFork(self, state, status.runtimeFlags))
+      ).traced(trace)
 )
 
 /* @internal */
-export const forkAllDiscard = Debug.methodWithTrace((trace) =>
-  <R, E, A>(effects: Iterable<Effect.Effect<R, E, A>>): Effect.Effect<R, never, void> =>
-    core.forEachDiscard(effects, fork).traced(trace)
-)
+export const forkAllDiscard = Debug.dualWithTrace<
+  () => <R, E, A>(effects: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, never, void>,
+  <R, E, A>(effects: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, never, void>
+>(1, (trace) => (effects) => core.forEachDiscard(effects, fork()).traced(trace))
 
 /* @internal */
-export const forkDaemon = Debug.methodWithTrace((trace) =>
-  <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>> =>
-    forkWithScopeOverride(self, fiberScope.globalScope).traced(trace)
+export const forkDaemon = Debug.dualWithTrace<
+  () => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>>,
+  <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>>
+>(
+  1,
+  (trace) =>
+    <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>> =>
+      forkWithScopeOverride(self, fiberScope.globalScope).traced(trace)
 )
 
 /* @internal */
@@ -1769,7 +1778,10 @@ export const partitionPar = Debug.dualWithTrace<
     ).traced(trace))
 
 /* @internal */
-export const raceAll = Debug.methodWithTrace((trace) =>
+export const raceAll = Debug.dualWithTrace<
+  () => <R, E, A>(all: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, A>,
+  <R, E, A>(all: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, A>
+>(1, (trace) =>
   <R, E, A>(all: Iterable<Effect.Effect<R, E, A>>) => {
     const list = Chunk.fromIterable(all)
     if (!Chunk.isNonEmpty(list)) {
@@ -1800,16 +1812,14 @@ export const raceAll = Debug.methodWithTrace((trace) =>
                       pipe(
                         fibers,
                         Chunk.reduce(core.unit(), (effect, fiber) =>
-                          pipe(
+                          core.zipRight(
                             effect,
-                            core.zipRight(
-                              pipe(
+                            core.asUnit(fork(
+                              core.flatMap(
                                 internalFiber._await(fiber),
-                                core.flatMap(raceAllArbiter(fibers, fiber, done, fails)),
-                                fork,
-                                core.asUnit()
+                                raceAllArbiter(fibers, fiber, done, fails)
                               )
-                            )
+                            ))
                           ))
                       )
                     ),
@@ -1835,8 +1845,7 @@ export const raceAll = Debug.methodWithTrace((trace) =>
         )
       )
     ).traced(trace)
-  }
-)
+  })
 
 /* @internal */
 const raceAllArbiter = <E, E1, A, A1>(
@@ -1929,14 +1938,19 @@ export const reduceAllPar = Debug.dualWithTrace<
     ).traced(trace))
 
 /* @internal */
-export const parallelFinalizers = Debug.methodWithTrace((trace) =>
-  <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | Scope.Scope, E, A> =>
-    core.flatMap(scope(), (outerScope) =>
-      core.flatMap(scopeMake(ExecutionStrategy.parallel), (innerScope) =>
-        pipe(
-          outerScope.addFinalizer((exit) => innerScope.close(exit)),
-          core.zipRight(pipe(self, scopeExtend(innerScope)))
-        ))).traced(trace)
+export const parallelFinalizers = Debug.dualWithTrace<
+  () => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | Scope.Scope, E, A>,
+  <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | Scope.Scope, E, A>
+>(
+  1,
+  (trace) =>
+    (self) =>
+      core.flatMap(scope(), (outerScope) =>
+        core.flatMap(scopeMake(ExecutionStrategy.parallel), (innerScope) =>
+          pipe(
+            outerScope.addFinalizer((exit) => innerScope.close(exit)),
+            core.zipRight(pipe(self, scopeExtend(innerScope)))
+          ))).traced(trace)
 )
 
 /* @internal */
@@ -1970,8 +1984,11 @@ export const sequentialFinalizers = Debug.dualWithTrace<
     ).traced(trace))
 
 /* @internal */
-export const some = Debug.methodWithTrace((trace) =>
-  <R, E, A>(self: Effect.Effect<R, E, Option.Option<A>>): Effect.Effect<R, Option.Option<E>, A> =>
+export const some = Debug.dualWithTrace<
+  () => <R, E, A>(self: Effect.Effect<R, E, Option.Option<A>>) => Effect.Effect<R, Option.Option<E>, A>,
+  <R, E, A>(self: Effect.Effect<R, E, Option.Option<A>>) => Effect.Effect<R, Option.Option<E>, A>
+>(1, (trace) =>
+  (self) =>
     core.matchEffect(
       self,
       (e) => core.fail(Option.some(e)),
@@ -1985,8 +2002,7 @@ export const some = Debug.methodWithTrace((trace) =>
           }
         }
       }
-    ).traced(trace)
-)
+    ).traced(trace))
 
 /* @internal */
 export const someWith = Debug.dualWithTrace<
@@ -2100,16 +2116,21 @@ export const taggedScoped = Debug.methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const taggedScopedWithLabels = Debug.methodWithTrace((trace) =>
-  (labels: ReadonlyArray<MetricLabel.MetricLabel>): Effect.Effect<Scope.Scope, never, void> =>
-    taggedScopedWithLabelSet(HashSet.fromIterable(labels)).traced(trace)
-)
+export const taggedScopedWithLabels = Debug.dualWithTrace<
+  () => (labels: ReadonlyArray<MetricLabel.MetricLabel>) => Effect.Effect<Scope.Scope, never, void>,
+  (labels: ReadonlyArray<MetricLabel.MetricLabel>) => Effect.Effect<Scope.Scope, never, void>
+>(1, (trace) => (labels) => taggedScopedWithLabelSet(HashSet.fromIterable(labels)).traced(trace))
 
 /* @internal */
-export const taggedScopedWithLabelSet = Debug.methodWithTrace((trace) =>
-  (labels: HashSet.HashSet<MetricLabel.MetricLabel>): Effect.Effect<Scope.Scope, never, void> =>
-    fiberRefLocallyScopedWith(core.currentTags, (set) => pipe(set, HashSet.union(labels))).traced(trace)
-)
+export const taggedScopedWithLabelSet = Debug.dualWithTrace<
+  () => (labels: HashSet.HashSet<MetricLabel.MetricLabel>) => Effect.Effect<Scope.Scope, never, void>,
+  (labels: HashSet.HashSet<MetricLabel.MetricLabel>) => Effect.Effect<Scope.Scope, never, void>
+>(1, (trace) =>
+  (labels) =>
+    fiberRefLocallyScopedWith(
+      core.currentTags,
+      (set) => pipe(set, HashSet.union(labels))
+    ).traced(trace))
 
 /* @internal */
 export const tuplePar = Debug.methodWithTrace((trace) =>
@@ -2140,10 +2161,11 @@ export const using = Debug.dualWithTrace<
     ).traced(trace))
 
 /* @internal */
-export const unsome = Debug.methodWithTrace((trace) =>
-  <R, E, A>(
-    self: Effect.Effect<R, Option.Option<E>, A>
-  ): Effect.Effect<R, E, Option.Option<A>> =>
+export const unsome = Debug.dualWithTrace<
+  () => <R, E, A>(self: Effect.Effect<R, Option.Option<E>, A>) => Effect.Effect<R, E, Option.Option<A>>,
+  <R, E, A>(self: Effect.Effect<R, Option.Option<E>, A>) => Effect.Effect<R, E, Option.Option<A>>
+>(1, (trace) =>
+  (self) =>
     core.matchEffect(
       self,
       (option) => {
@@ -2157,8 +2179,7 @@ export const unsome = Debug.methodWithTrace((trace) =>
         }
       },
       (a) => core.succeed(Option.some(a))
-    ).traced(trace)
-)
+    ).traced(trace))
 
 /* @internal */
 export const validateAllPar = Debug.dualWithTrace<
@@ -2206,46 +2227,65 @@ export const validateFirstPar = Debug.dualWithTrace<
     ).traced(trace))
 
 /* @internal */
-export const withClockScoped = Debug.methodWithTrace((trace) =>
-  <A extends Clock.Clock>(value: A) =>
-    fiberRefLocallyScopedWith(defaultServices.currentServices, Context.add(clock.clockTag, value)).traced(trace)
-)
+export const withClockScoped = Debug.dualWithTrace<
+  () => <A extends Clock.Clock>(value: A) => Effect.Effect<Scope.Scope, never, void>,
+  <A extends Clock.Clock>(value: A) => Effect.Effect<Scope.Scope, never, void>
+>(1, (trace) =>
+  (value) =>
+    fiberRefLocallyScopedWith(
+      defaultServices.currentServices,
+      Context.add(clock.clockTag, value)
+    ).traced(trace))
 
 /* @internal */
-export const withConfigProviderScoped = Debug.methodWithTrace((trace) =>
-  (value: ConfigProvider) =>
-    fiberRefLocallyScopedWith(defaultServices.currentServices, Context.add(configProviderTag, value)).traced(trace)
-)
+export const withConfigProviderScoped = Debug.dualWithTrace<
+  () => (value: ConfigProvider) => Effect.Effect<Scope.Scope, never, void>,
+  (value: ConfigProvider) => Effect.Effect<Scope.Scope, never, void>
+>(1, (trace) =>
+  (value) =>
+    fiberRefLocallyScopedWith(
+      defaultServices.currentServices,
+      Context.add(configProviderTag, value)
+    ).traced(trace))
 
 /* @internal */
-export const withEarlyRelease = Debug.methodWithTrace((trace) =>
+export const withEarlyRelease = Debug.dualWithTrace<
+  () => <R, E, A>(
+    self: Effect.Effect<R, E, A>
+  ) => Effect.Effect<R | Scope.Scope, E, readonly [Effect.Effect<never, never, void>, A]>,
   <R, E, A>(
     self: Effect.Effect<R, E, A>
-  ): Effect.Effect<R | Scope.Scope, E, readonly [Effect.Effect<never, never, void>, A]> =>
-    scopeWith((parent) =>
-      core.flatMap(core.scopeFork(parent, ExecutionStrategy.sequential), (child) =>
-        pipe(
-          self,
-          scopeExtend(child),
-          core.map((value) =>
-            [
-              core.fiberIdWith((fiberId) => core.scopeClose(child, core.exitInterrupt(fiberId))),
-              value
-            ] as const
-          )
-        ))
-    ).traced(trace)
+  ) => Effect.Effect<R | Scope.Scope, E, readonly [Effect.Effect<never, never, void>, A]>
+>(
+  1,
+  (trace) =>
+    (self) =>
+      scopeWith((parent) =>
+        core.flatMap(core.scopeFork(parent, ExecutionStrategy.sequential), (child) =>
+          pipe(
+            self,
+            scopeExtend(child),
+            core.map((value) =>
+              [
+                core.fiberIdWith((fiberId) => core.scopeClose(child, core.exitInterrupt(fiberId))),
+                value
+              ] as const
+            )
+          ))
+      ).traced(trace)
 )
 
 /* @internal */
-export const withRuntimeFlagsScoped = Debug.methodWithTrace((trace) =>
-  (update: RuntimeFlagsPatch.RuntimeFlagsPatch): Effect.Effect<Scope.Scope, never, void> => {
+export const withRuntimeFlagsScoped = Debug.dualWithTrace<
+  () => (update: RuntimeFlagsPatch.RuntimeFlagsPatch) => Effect.Effect<Scope.Scope, never, void>,
+  (update: RuntimeFlagsPatch.RuntimeFlagsPatch) => Effect.Effect<Scope.Scope, never, void>
+>(1, (trace) =>
+  (update) => {
     if (update === RuntimeFlagsPatch.empty) {
       return core.unit()
     }
-    return pipe(
-      core.runtimeFlags(),
-      core.flatMap((runtimeFlags) => {
+    return core.uninterruptible(
+      core.flatMap(core.runtimeFlags(), (runtimeFlags) => {
         const updatedRuntimeFlags = _runtimeFlags.patch(runtimeFlags, update)
         const revertRuntimeFlags = _runtimeFlags.diff(updatedRuntimeFlags, runtimeFlags)
         return pipe(
@@ -2253,11 +2293,9 @@ export const withRuntimeFlagsScoped = Debug.methodWithTrace((trace) =>
           core.zipRight(addFinalizer(() => core.updateRuntimeFlags(revertRuntimeFlags))),
           core.asUnit()
         )
-      }),
-      core.uninterruptible
+      })
     ).traced(trace)
-  }
-)
+  })
 
 // circular with ReleaseMap
 
@@ -2541,7 +2579,7 @@ export const fiberCollectAll = <E, A>(fibers: Iterable<Fiber.Fiber<E, A>>): Fibe
 /* @internal */
 export const fiberInterruptFork = Debug.methodWithTrace((trace) =>
   <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<never, never, void> =>
-    pipe(core.interruptFiber(self), forkDaemon, core.asUnit()).traced(trace)
+    core.asUnit(forkDaemon(core.interruptFiber(self))).traced(trace)
 )
 
 /* @internal */
@@ -2553,5 +2591,5 @@ export const fiberJoinAll = Debug.methodWithTrace((trace) =>
 /* @internal */
 export const fiberScoped = Debug.methodWithTrace((trace) =>
   <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<Scope.Scope, never, Fiber.Fiber<E, A>> =>
-    acquireRelease(core.succeed(self), core.interruptFiber).traced(trace)
+    acquireRelease(core.succeed(self), core.interruptFiber()).traced(trace)
 )

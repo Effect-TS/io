@@ -38,13 +38,13 @@ export const auto = <Out extends Context.Tag<any>, In, E, R, Out2>(
       core.map(Context.unsafeGet(reloadableTag(tag))),
       core.tap((reloadable) =>
         fiberRuntime.acquireRelease(
-          pipe(
-            reloadable.reload(),
-            effect.ignoreLogged,
-            _schedule.schedule_Effect(policy),
-            fiberRuntime.forkDaemon
+          fiberRuntime.forkDaemon(
+            _schedule.schedule_Effect(
+              effect.ignoreLogged(reloadable.reload()),
+              policy
+            )
           ),
-          core.interruptFiber
+          core.interruptFiber()
         )
       )
     )
@@ -131,11 +131,13 @@ export const reload = Debug.methodWithTrace((trace) =>
 /** @internal */
 export const reloadFork = Debug.methodWithTrace((trace) =>
   <A>(tag: Context.Tag<A>): Effect.Effect<Reloadable.Reloadable<A>, unknown, void> =>
-    core.serviceWithEffect(reloadableTag(tag), (reloadable) =>
-      pipe(
-        reloadable.reload(),
-        effect.ignoreLogged,
-        fiberRuntime.forkDaemon,
-        core.asUnit()
-      ).traced(trace))
+    core.serviceWithEffect(
+      reloadableTag(tag),
+      (reloadable) =>
+        core.asUnit(
+          fiberRuntime.forkDaemon(
+            effect.ignoreLogged(reloadable.reload())
+          )
+        ).traced(trace)
+    )
 )

@@ -88,7 +88,7 @@ export const fromFlat = Debug.untracedMethod(() =>
                     `Expected a single value having structure: ${config}`
                   )
                 ),
-              core.succeed
+              core.succeed()
             )
           )),
       flat

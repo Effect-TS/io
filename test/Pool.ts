@@ -145,7 +145,7 @@ describe("Pool", () => {
       const result = yield* $(pipe(
         Effect.scoped(Effect.retryN(Pool.get(pool), 5)),
         Effect.timeoutFail(() => "timeout", Duration.seconds(1)),
-        Effect.flip,
+        Effect.flip(),
         TestServices.provideLive
       ))
       expect(result).toBe("error")
@@ -182,7 +182,7 @@ describe("Pool", () => {
           Pool.get(pool),
           Deferred.await(deferred)
         )),
-        Effect.fork,
+        Effect.fork(),
         Effect.repeatN(14)
       ))
       yield* $(Effect.repeatUntil(Ref.get(count), (n) => n === 15))
@@ -205,7 +205,7 @@ describe("Pool", () => {
       const pool = yield* $(Scope.extend(Pool.make(get, 10), scope))
       yield* $(pipe(
         Effect.scoped(Pool.get(pool)),
-        Effect.fork,
+        Effect.fork(),
         Effect.repeatN(99)
       ))
       yield* $(Scope.close(scope, Exit.succeed(void 0)))

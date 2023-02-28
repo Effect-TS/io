@@ -13,6 +13,7 @@ import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as internalCause from "@effect/io/internal_effect_untraced/cause"
 import * as core from "@effect/io/internal_effect_untraced/core"
+import * as defaultServices from "@effect/io/internal_effect_untraced/defaultServices"
 import * as effect from "@effect/io/internal_effect_untraced/effect"
 import * as Random from "@effect/io/Random"
 import * as Ref from "@effect/io/Ref"
@@ -124,7 +125,7 @@ class ScheduleDriverImpl<Env, In, Out> implements Schedule.ScheduleDriver<Env, I
                     ) :
                     pipe(
                       Ref.set(this.ref, [Option.some(out), state] as const),
-                      core.zipRight(effect.sleep(Duration.millis(Intervals.start(decision.intervals) - now))),
+                      core.zipRight(defaultServices.sleep(Duration.millis(Intervals.start(decision.intervals) - now))),
                       core.as(out)
                     )
                 )
@@ -2332,17 +2333,14 @@ const retryOrElseEither_EffectLoop = <R, E, A, R1, A1, R2, E2, A2>(
     self,
     core.map(Either.right),
     core.catchAll((e) =>
-      pipe(
+      core.matchEffect(
         driver.next(e),
-        core.matchEffect(
-          () =>
-            pipe(
-              driver.last(),
-              core.orDie,
-              core.flatMap((out) => pipe(orElse(e, out), core.map(Either.left)))
-            ),
-          () => retryOrElseEither_EffectLoop(self, driver, orElse)
-        )
+        () =>
+          core.flatMap(
+            core.orDie(driver.last()),
+            (out) => core.map(orElse(e, out), Either.left)
+          ),
+        () => retryOrElseEither_EffectLoop(self, driver, orElse)
       )
     )
   )

@@ -121,7 +121,7 @@ describe.concurrent("Effect", () => {
           throw ExampleError
         }),
         Effect.sandbox(),
-        Effect.merge
+        Effect.merge()
       ))
       assert.deepStrictEqual(Cause.unannotate(result), Cause.die(ExampleError))
     }))
@@ -175,9 +175,11 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("catchAllCause", () =>
     Effect.gen(function*($) {
-      const result = yield* $(
-        pipe(Effect.succeed(42), Effect.zipRight(Effect.fail("uh oh")), Effect.catchAllCause(Effect.succeed))
-      )
+      const result = yield* $(pipe(
+        Effect.succeed(42),
+        Effect.zipRight(Effect.fail("uh oh")),
+        Effect.catchAllCause(Effect.succeed())
+      ))
       assert.deepStrictEqual(Cause.unannotate(result), Cause.fail("uh oh"))
     }))
   it.effect("catchAllDefect - recovers from all defects", () =>
@@ -484,7 +486,7 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("orElseFail - otherwise fails with the specified error", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(Effect.fail(false), Effect.orElseFail(constTrue), Effect.flip))
+      const result = yield* $(pipe(Effect.fail(false), Effect.orElseFail(constTrue), Effect.flip()))
       assert.isTrue(result)
     }))
   it.effect("orElseOptional - produces the value of this effect if it succeeds", () =>
@@ -518,14 +520,14 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const fiber1 = yield* $(Effect.fork(Effect.fail("error1")))
       const fiber2 = yield* $(Effect.fork(Effect.succeed("success1")))
-      const result = yield* $(pipe(fiber1, Fiber.zip(fiber2), Fiber.join, Effect.parallelErrors, Effect.flip))
+      const result = yield* $(pipe(fiber1, Fiber.zip(fiber2), Fiber.join, Effect.parallelErrors(), Effect.flip()))
       assert.deepStrictEqual(Array.from(result), ["error1"])
     }))
   it.effect("parallelErrors - all failures", () =>
     Effect.gen(function*($) {
       const fiber1 = yield* $(Effect.fork(Effect.fail("error1")))
       const fiber2 = yield* $(Effect.fork(Effect.fail("error2")))
-      const result = yield* $(pipe(fiber1, Fiber.zip(fiber2), Fiber.join, Effect.parallelErrors, Effect.flip))
+      const result = yield* $(pipe(fiber1, Fiber.zip(fiber2), Fiber.join, Effect.parallelErrors(), Effect.flip()))
       assert.deepStrictEqual(Array.from(result), ["error1", "error2"])
     }))
   it.effect("promise - exception does not kill fiber", () =>
@@ -746,7 +748,7 @@ describe.concurrent("Effect", () => {
       const success = Effect.succeed(100)
       const message = yield* $(pipe(
         failure,
-        Effect.unsandbox,
+        Effect.unsandbox(),
         Effect.matchEffect((e) => Effect.succeed(e.message), () => Effect.succeed("unexpected"))
       ))
       const result = yield* $(Effect.unsandbox(success))
@@ -756,10 +758,10 @@ describe.concurrent("Effect", () => {
   it.effect("no information is lost during composition", () =>
     Effect.gen(function*($) {
       const cause = <R, E>(effect: Effect.Effect<R, E, never>): Effect.Effect<R, never, Cause.Cause<E>> => {
-        return pipe(effect, Effect.matchCauseEffect(Effect.succeed, Effect.fail))
+        return pipe(effect, Effect.matchCauseEffect(Effect.succeed(), Effect.fail()))
       }
       const expectedCause = Cause.fail("oh no")
-      const result = yield* $(cause(pipe(Effect.failCause(expectedCause), Effect.sandbox(), Effect.unsandbox)))
+      const result = yield* $(cause(pipe(Effect.failCause(expectedCause), Effect.sandbox(), Effect.unsandbox())))
       assert.deepStrictEqual(Cause.unannotate(result), expectedCause)
     }))
 })

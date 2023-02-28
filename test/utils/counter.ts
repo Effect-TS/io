@@ -19,7 +19,7 @@ class CounterImpl implements Counter {
       this.incrementAcquire(),
       Effect.zipRight(Effect.addFinalizer(() => this.incrementRelease())),
       Effect.zipRight(this.acquired()),
-      Effect.uninterruptible
+      Effect.uninterruptible()
     )
   }
 

@@ -50,7 +50,7 @@ export const currentServices: FiberRef.FiberRef<Context.Context<TestServices>> =
  * @internal
  */
 export const annotations = Debug.methodWithTrace((trace) =>
-  (): Effect.Effect<never, never, Annotations.Annotations> => annotationsWith(core.succeed).traced(trace)
+  (): Effect.Effect<never, never, Annotations.Annotations> => annotationsWith(core.succeed()).traced(trace)
 )
 
 /**
@@ -157,7 +157,7 @@ export const supervisedFibers = Debug.methodWithTrace((trace) =>
  * @internal
  */
 export const live = Debug.methodWithTrace((trace) =>
-  (): Effect.Effect<never, never, Live.Live> => liveWith(core.succeed).traced(trace)
+  (): Effect.Effect<never, never, Live.Live> => liveWith(core.succeed()).traced(trace)
 )
 
 /**
@@ -255,7 +255,7 @@ export const provideWithLive = Debug.dualWithTrace<
  * @internal
  */
 export const sized = Debug.methodWithTrace((trace) =>
-  (): Effect.Effect<never, never, Sized.Sized> => sizedWith(core.succeed).traced(trace)
+  (): Effect.Effect<never, never, Sized.Sized> => sizedWith(core.succeed()).traced(trace)
 )
 
 /**
@@ -329,7 +329,7 @@ export const withSize = Debug.dualWithTrace<
  * @internal
  */
 export const testConfig = Debug.methodWithTrace((trace) =>
-  (): Effect.Effect<never, never, TestConfig.TestConfig> => testConfigWith(core.succeed).traced(trace)
+  (): Effect.Effect<never, never, TestConfig.TestConfig> => testConfigWith(core.succeed()).traced(trace)
 )
 
 /**

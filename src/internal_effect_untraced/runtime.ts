@@ -187,7 +187,7 @@ export const make = <R>(
 
 /** @internal */
 export const runtime = Debug.methodWithTrace((trace) =>
-  <R>(): Effect.Effect<R, never, Runtime.Runtime<R>> =>
+  <R>(_: void): Effect.Effect<R, never, Runtime.Runtime<R>> =>
     core.withFiberRuntime<R, never, RuntimeImpl<R>>((state, status) =>
       core.succeed(
         new RuntimeImpl<R>(

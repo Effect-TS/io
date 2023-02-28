@@ -18,6 +18,7 @@ import * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
 import * as internalCause from "@effect/io/internal_effect_untraced/cause"
 import * as core from "@effect/io/internal_effect_untraced/core"
+import * as defaultServices from "@effect/io/internal_effect_untraced/defaultServices"
 import * as effect from "@effect/io/internal_effect_untraced/effect"
 import * as internalFiber from "@effect/io/internal_effect_untraced/fiber"
 import * as fiberRuntime from "@effect/io/internal_effect_untraced/fiberRuntime"
@@ -95,14 +96,13 @@ class Semaphore {
 }
 
 /** @internal */
-export const unsafeMakeSemaphore = (leases: number) => {
-  return new Semaphore(leases)
-}
+export const unsafeMakeSemaphore = (leases: number) => new Semaphore(leases)
 
 /** @internal */
-export const makeSemaphore = Debug.methodWithTrace((trace) =>
-  (permits: number) => core.sync(() => unsafeMakeSemaphore(permits)).traced(trace)
-)
+export const makeSemaphore = Debug.dualWithTrace<
+  () => (permits: number) => Effect.Effect<never, never, Semaphore>,
+  (permits: number) => Effect.Effect<never, never, Semaphore>
+>(1, (trace) => (permits) => core.sync(() => unsafeMakeSemaphore(permits)).traced(trace))
 
 /** @internal */
 export const acquireReleaseInterruptible = Debug.dualWithTrace<
@@ -302,12 +302,19 @@ export const ensuringChildren = Debug.dualWithTrace<
       )).traced(trace))
 
 /** @internal */
-export const forkAll = Debug.methodWithTrace((trace) =>
+export const forkAll = Debug.dualWithTrace<
+  () => <R, E, A>(
+    effects: Iterable<Effect.Effect<R, E, A>>
+  ) => Effect.Effect<R, never, Fiber.Fiber<E, Chunk.Chunk<A>>>,
   <R, E, A>(
     effects: Iterable<Effect.Effect<R, E, A>>
-  ): Effect.Effect<R, never, Fiber.Fiber<E, Chunk.Chunk<A>>> =>
-    core.map(core.forEach(effects, fiberRuntime.fork), fiberRuntime.fiberCollectAll).traced(trace)
-)
+  ) => Effect.Effect<R, never, Fiber.Fiber<E, Chunk.Chunk<A>>>
+>(1, (trace) =>
+  (effects) =>
+    core.map(
+      core.forEach(effects, fiberRuntime.fork()),
+      fiberRuntime.fiberCollectAll
+    ).traced(trace))
 
 /** @internal */
 export const forkIn = Debug.dualWithTrace<
@@ -322,7 +329,7 @@ export const forkIn = Debug.dualWithTrace<
           pipe(
             restore(self),
             core.onExit((exit) => child.close(exit)),
-            fiberRuntime.forkDaemon,
+            fiberRuntime.forkDaemon(),
             core.tap((fiber) =>
               child.addFinalizer(() =>
                 core.fiberIdWith((fiberId) =>
@@ -337,23 +344,26 @@ export const forkIn = Debug.dualWithTrace<
 )
 
 /** @internal */
-export const forkScoped = Debug.methodWithTrace((trace) =>
+export const forkScoped = Debug.dualWithTrace<
+  () => <R, E, A>(
+    self: Effect.Effect<R, E, A>
+  ) => Effect.Effect<R | Scope.Scope, never, Fiber.RuntimeFiber<E, A>>,
   <R, E, A>(
     self: Effect.Effect<R, E, A>
-  ): Effect.Effect<R | Scope.Scope, never, Fiber.RuntimeFiber<E, A>> =>
-    fiberRuntime.scopeWith((scope) => forkIn(self, scope)).traced(trace)
-)
+  ) => Effect.Effect<R | Scope.Scope, never, Fiber.RuntimeFiber<E, A>>
+>(1, (trace) => (self) => fiberRuntime.scopeWith((scope) => forkIn(self, scope)).traced(trace))
 
 /** @internal */
-export const fromFiber = Debug.methodWithTrace((trace) =>
-  <E, A>(fiber: Fiber.Fiber<E, A>): Effect.Effect<never, E, A> => internalFiber.join(fiber).traced(trace)
-)
+export const fromFiber = Debug.dualWithTrace<
+  () => <E, A>(fiber: Fiber.Fiber<E, A>) => Effect.Effect<never, E, A>,
+  <E, A>(fiber: Fiber.Fiber<E, A>) => Effect.Effect<never, E, A>
+>(1, (trace) => (fiber) => internalFiber.join(fiber).traced(trace))
 
 /** @internal */
-export const fromFiberEffect = Debug.methodWithTrace((trace) =>
-  <R, E, A>(fiber: Effect.Effect<R, E, Fiber.Fiber<E, A>>): Effect.Effect<R, E, A> =>
-    core.suspendSucceed(() => core.flatMap(fiber, internalFiber.join)).traced(trace)
-)
+export const fromFiberEffect = Debug.dualWithTrace<
+  () => <R, E, A>(fiber: Effect.Effect<R, E, Fiber.Fiber<E, A>>) => Effect.Effect<R, E, A>,
+  <R, E, A>(fiber: Effect.Effect<R, E, Fiber.Fiber<E, A>>) => Effect.Effect<R, E, A>
+>(1, (trace) => (fiber) => core.suspendSucceed(() => core.flatMap(fiber, internalFiber.join)).traced(trace))
 
 /** @internal */
 export const memoizeFunction = Debug.methodWithTrace((trace) =>
@@ -373,20 +383,14 @@ export const memoizeFunction = Debug.methodWithTrace((trace) =>
               if (Option.isNone(result)) {
                 return pipe(
                   core.deferredMake<E, readonly [FiberRefsPatch.FiberRefsPatch, B]>(),
-                  core.tap((deferred) =>
-                    pipe(
-                      effect.diffFiberRefs(f(a)),
-                      core.intoDeferred(deferred),
-                      fiberRuntime.fork
-                    )
-                  ),
-                  core.map((deferred) => [deferred, pipe(map, MutableHashMap.set(a, deferred))] as const)
+                  core.tap((deferred) => fiberRuntime.fork(core.intoDeferred(effect.diffFiberRefs(f(a)), deferred))),
+                  core.map((deferred) => [deferred, MutableHashMap.set(map, a, deferred)] as const)
                 )
               }
               return core.succeed([result.value, map] as const)
             }),
             core.flatMap(core.deferredAwait),
-            core.flatMap(([patch, b]) => pipe(effect.patchFiberRefs(patch), core.as(b)))
+            core.flatMap(([patch, b]) => core.as(effect.patchFiberRefs(patch), b))
           )
       )
     ).traced(trace)
@@ -642,7 +646,7 @@ export const scheduleForked = Debug.dualWithTrace<
     self: Effect.Effect<R, E, A>,
     schedule: Schedule.Schedule<R2, unknown, Out>
   ) => Effect.Effect<R | R2 | Scope.Scope, never, Fiber.RuntimeFiber<E, Out>>
->(2, (trace) => (self, schedule) => pipe(self, _schedule.schedule_Effect(schedule), forkScoped).traced(trace))
+>(2, (trace) => (self, schedule) => forkScoped(_schedule.schedule_Effect(self, schedule)).traced(trace))
 
 /** @internal */
 export const supervised = Debug.dualWithTrace<
@@ -675,7 +679,7 @@ export const timeoutFail = Debug.dualWithTrace<
   3,
   (trace, restore) =>
     (self, evaluate, duration) =>
-      core.flatten(timeoutTo(self, core.failSync(restore(evaluate)), core.succeed, duration)).traced(trace)
+      core.flatten(timeoutTo(self, core.failSync(restore(evaluate)), core.succeed(), duration)).traced(trace)
 )
 
 /** @internal */
@@ -693,7 +697,7 @@ export const timeoutFailCause = Debug.dualWithTrace<
   3,
   (trace, restore) =>
     (self, evaluate, duration) =>
-      core.flatten(timeoutTo(self, core.failCauseSync(restore(evaluate)), core.succeed, duration)).traced(trace)
+      core.flatten(timeoutTo(self, core.failCauseSync(restore(evaluate)), core.succeed(), duration)).traced(trace)
 )
 
 /** @internal */
@@ -713,11 +717,7 @@ export const timeoutTo = Debug.dualWithTrace<
   (self, def, f, duration) =>
     raceFirst(
       core.map(self, restore(f)),
-      pipe(
-        effect.sleep(duration),
-        core.as(def),
-        core.interruptible
-      )
+      core.interruptible(core.as(defaultServices.sleep(duration), def))
     ).traced(trace))
 
 /** @internal */

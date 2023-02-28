@@ -43,7 +43,7 @@ const resource = (id: number, ref: Ref.Ref<ReadonlyArray<Action>>): Effect.Effec
   return pipe(
     Ref.update(ref, (actions) => [...actions, acquire(id)]),
     Effect.as(id),
-    Effect.uninterruptible,
+    Effect.uninterruptible(),
     Effect.ensuring(
       Effect.scopeWith((scope) => scope.addFinalizer(() => Ref.update(ref, (actions) => [...actions, release(id)])))
     )
@@ -67,7 +67,7 @@ describe.concurrent("Scope", () => {
       const result = yield* $(pipe(
         Effect.addFinalizer(() => Deferred.succeed(deferred, void 0)),
         Effect.zipRight(Effect.addFinalizer(() => Deferred.await(deferred))),
-        Effect.parallelFinalizers,
+        Effect.parallelFinalizers(),
         Effect.scoped(),
         Effect.asUnit()
       ))

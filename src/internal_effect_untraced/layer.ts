@@ -512,9 +512,9 @@ export const fromEffectDiscard = <R, E, _>(effect: Effect.Effect<R, E, _>) =>
   fromEffectContext(core.map(effect, () => Context.empty()))
 
 /** @internal */
-export function fromEffectContext<R, E, A>(
+export const fromEffectContext = <R, E, A>(
   effect: Effect.Effect<R, E, Context.Context<A>>
-): Layer.Layer<R, E, A> {
+): Layer.Layer<R, E, A> => {
   const fromEffect = Object.create(proto)
   fromEffect._tag = OpCodes.OP_FROM_EFFECT
   fromEffect.effect = effect
