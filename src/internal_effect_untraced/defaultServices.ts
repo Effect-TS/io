@@ -46,10 +46,12 @@ export const sleep = Debug.zeroArgsDualWithTrace(
 )
 
 /** @internal */
-export const clockWith = Debug.methodWithTrace((trace, restore) =>
+export const clockWith = Debug.zeroArgsDualWithTrace((trace, restore) =>
   <R, E, A>(f: (clock: Clock.Clock) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
-    core.fiberRefGetWith(currentServices, (services) => restore(f)(pipe(services, Context.get(clock.clockTag))))
-      .traced(trace)
+    core.fiberRefGetWith(
+      currentServices,
+      (services) => restore(f)(pipe(services, Context.get(clock.clockTag)))
+    ).traced(trace)
 )
 
 /** @internal */
@@ -77,7 +79,7 @@ export const withConfigProvider = Debug.dualWithTrace<
     )(effect).traced(trace))
 
 /** @internal */
-export const configProviderWith = Debug.methodWithTrace((trace, restore) =>
+export const configProviderWith = Debug.zeroArgsDualWithTrace((trace, restore) =>
   <R, E, A>(
     f: (configProvider: ConfigProvider.ConfigProvider) => Effect.Effect<R, E, A>
   ): Effect.Effect<R, E, A> =>
@@ -102,7 +104,7 @@ export const configOrDie = Debug.zeroArgsDualWithTrace((trace) =>
 // circular with Random
 
 /** @internal */
-export const randomWith = Debug.methodWithTrace((trace, restore) =>
+export const randomWith = Debug.zeroArgsDualWithTrace((trace, restore) =>
   <R, E, A>(f: (random: Random.Random) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
     core.fiberRefGetWith(
       currentServices,

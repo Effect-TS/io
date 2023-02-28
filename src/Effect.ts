@@ -188,8 +188,8 @@ export const addFinalizer: {
  * @category error handling
  */
 export const absolve: {
-  (): <R, E, A>(self: Effect<R, E, Either.Either<E, A>>) => Effect<R, E, A>
   <R, E, A>(self: Effect<R, E, Either.Either<E, A>>): Effect<R, E, A>
+  (): <R, E, A>(self: Effect<R, E, Either.Either<E, A>>) => Effect<R, E, A>
 } = effect.absolve
 
 /**
@@ -900,8 +900,10 @@ export const cause: {
  * @since 1.0.0
  * @category constructors
  */
-export const checkInterruptible: <R, E, A>(f: (isInterruptible: boolean) => Effect<R, E, A>) => Effect<R, E, A> =
-  core.checkInterruptible
+export const checkInterruptible: {
+  <R, E, A>(f: (isInterruptible: boolean) => Effect<R, E, A>): Effect<R, E, A>
+  (): <R, E, A>(f: (isInterruptible: boolean) => Effect<R, E, A>) => Effect<R, E, A>
+} = core.checkInterruptible
 
 /**
  * Retreives the `Clock` service from the context
@@ -918,7 +920,10 @@ export const clock: (_: void) => Effect<never, never, Clock.Clock> = effect.cloc
  * @since 1.0.0
  * @category constructors
  */
-export const clockWith: <R, E, A>(f: (clock: Clock.Clock) => Effect<R, E, A>) => Effect<R, E, A> = effect.clockWith
+export const clockWith: {
+  <R, E, A>(f: (clock: Clock.Clock) => Effect<R, E, A>): Effect<R, E, A>
+  (): <R, E, A>(f: (clock: Clock.Clock) => Effect<R, E, A>) => Effect<R, E, A>
+} = defaultServices.clockWith
 
 /**
  * Uses the default config provider to load the specified config, or fail with
@@ -952,8 +957,10 @@ export const configOrDie: {
  * @since 1.0.0
  * @category config
  */
-export const configProviderWith: <R, E, A>(f: (configProvider: ConfigProvider) => Effect<R, E, A>) => Effect<R, E, A> =
-  defaultServices.configProviderWith
+export const configProviderWith: {
+  <R, E, A>(f: (configProvider: ConfigProvider) => Effect<R, E, A>): Effect<R, E, A>
+  (): <R, E, A>(f: (configProvider: ConfigProvider) => Effect<R, E, A>) => Effect<R, E, A>
+} = defaultServices.configProviderWith
 
 /**
  * Evaluate each effect in the structure from left to right, collecting the
@@ -1138,7 +1145,10 @@ export const context: <R>(_: void) => Effect<R, never, Context.Context<R>> = cor
  * @since 1.0.0
  * @category context
  */
-export const contextWith: <R, A>(f: (context: Context.Context<R>) => A) => Effect<R, never, A> = effect.contextWith
+export const contextWith: {
+  <R, A>(f: (context: Context.Context<R>) => A): Effect<R, never, A>
+  (): <R, A>(f: (context: Context.Context<R>) => A) => Effect<R, never, A>
+} = effect.contextWith
 
 /**
  * Effectually accesses the context of the effect.
@@ -1146,9 +1156,10 @@ export const contextWith: <R, A>(f: (context: Context.Context<R>) => A) => Effec
  * @since 1.0.0
  * @category context
  */
-export const contextWithEffect: <R, R0, E, A>(
-  f: (context: Context.Context<R0>) => Effect<R, E, A>
-) => Effect<R | R0, E, A> = core.contextWithEffect
+export const contextWithEffect: {
+  <R, R0, E, A>(f: (context: Context.Context<R0>) => Effect<R, E, A>): Effect<R | R0, E, A>
+  (): <R, R0, E, A>(f: (context: Context.Context<R0>) => Effect<R, E, A>) => Effect<R | R0, E, A>
+} = core.contextWithEffect
 
 /**
  * Fail with the specifed `error` if the supplied partial function does not
@@ -1234,8 +1245,10 @@ export const descriptor: (_: void) => Effect<never, never, Fiber.Fiber.Descripto
  * @since 1.0.0
  * @category constructors
  */
-export const descriptorWith: <R, E, A>(f: (descriptor: Fiber.Fiber.Descriptor) => Effect<R, E, A>) => Effect<R, E, A> =
-  effect.descriptorWith
+export const descriptorWith: {
+  <R, E, A>(f: (descriptor: Fiber.Fiber.Descriptor) => Effect<R, E, A>): Effect<R, E, A>
+  (): <R, E, A>(f: (descriptor: Fiber.Fiber.Descriptor) => Effect<R, E, A>) => Effect<R, E, A>
+} = effect.descriptorWith
 
 /**
  * @since 1.0.0
@@ -1538,8 +1551,10 @@ export const fiberId: (_: void) => Effect<never, never, FiberId.FiberId> = core.
  * @since 1.0.0
  * @category constructors
  */
-export const fiberIdWith: <R, E, A>(f: (descriptor: FiberId.Runtime) => Effect<R, E, A>) => Effect<R, E, A> =
-  core.fiberIdWith
+export const fiberIdWith: {
+  <R, E, A>(f: (descriptor: FiberId.Runtime) => Effect<R, E, A>): Effect<R, E, A>
+  (): <R, E, A>(f: (descriptor: FiberId.Runtime) => Effect<R, E, A>) => Effect<R, E, A>
+} = core.fiberIdWith
 
 /**
  * Filters the collection using the specified effectful predicate.
@@ -2243,9 +2258,14 @@ export const interruptible: {
  * @since 1.0.0
  * @category interruption
  */
-export const interruptibleMask: <R, E, A>(
-  f: (restore: <RX, EX, AX>(effect: Effect<RX, EX, AX>) => Effect<RX, EX, AX>) => Effect<R, E, A>
-) => Effect<R, E, A> = core.interruptibleMask
+export const interruptibleMask: {
+  <R, E, A>(
+    f: (restore: <RX, EX, AX>(effect: Effect<RX, EX, AX>) => Effect<RX, EX, AX>) => Effect<R, E, A>
+  ): Effect<R, E, A>
+  (): <R, E, A>(
+    f: (restore: <RX, EX, AX>(effect: Effect<RX, EX, AX>) => Effect<RX, EX, AX>) => Effect<R, E, A>
+  ) => Effect<R, E, A>
+} = core.interruptibleMask
 
 /**
  * @since 1.0.0
@@ -2770,9 +2790,10 @@ export const memoize: {
  * @since 1.0.0
  * @category constructors
  */
-export const memoizeFunction: <R, E, A, B>(
-  f: (a: A) => Effect<R, E, B>
-) => Effect<never, never, (a: A) => Effect<R, E, B>> = circular.memoizeFunction
+export const memoizeFunction: {
+  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): Effect<never, never, (a: A) => Effect<R, E, B>>
+  (): <R, E, A, B>(f: (a: A) => Effect<R, E, B>) => Effect<never, never, (a: A) => Effect<R, E, B>>
+} = circular.memoizeFunction
 
 /**
  * Returns a new effect where the error channel has been merged into the
@@ -3388,7 +3409,10 @@ export const random: (_: void) => Effect<never, never, Random.Random> = effect.r
  * @since 1.0.0
  * @category constructors
  */
-export const randomWith: <R, E, A>(f: (random: Random.Random) => Effect<R, E, A>) => Effect<R, E, A> = effect.randomWith
+export const randomWith: {
+  <R, E, A>(f: (random: Random.Random) => Effect<R, E, A>): Effect<R, E, A>
+  (): <R, E, A>(f: (random: Random.Random) => Effect<R, E, A>) => Effect<R, E, A>
+} = defaultServices.randomWith
 
 /**
  * Folds an `Iterable<A>` using an effectual function f, working sequentially
@@ -3998,8 +4022,10 @@ export const scope: (_: void) => Effect<Scope.Scope, never, Scope.Scope> = fiber
  * @since 1.0.0
  * @category scoping
  */
-export const scopeWith: <R, E, A>(f: (scope: Scope.Scope) => Effect<R, E, A>) => Effect<R | Scope.Scope, E, A> =
-  fiberRuntime.scopeWith
+export const scopeWith: {
+  <R, E, A>(f: (scope: Scope.Scope) => Effect<R, E, A>): Effect<R | Scope.Scope, E, A>
+  (): <R, E, A>(f: (scope: Scope.Scope) => Effect<R, E, A>) => Effect<R | Scope.Scope, E, A>
+} = fiberRuntime.scopeWith
 
 /**
  * Scopes all resources uses in this workflow to the lifetime of the workflow,
@@ -4671,9 +4697,14 @@ export const toLayerScoped: {
  * @since 1.0.0
  * @category mutations
  */
-export const transplant: <R, E, A>(
-  f: (grafter: <R2, E2, A2>(effect: Effect<R2, E2, A2>) => Effect<R2, E2, A2>) => Effect<R, E, A>
-) => Effect<R, E, A> = core.transplant
+export const transplant: {
+  <R, E, A>(
+    f: (grafter: <R2, E2, A2>(effect: Effect<R2, E2, A2>) => Effect<R2, E2, A2>) => Effect<R, E, A>
+  ): Effect<R, E, A>
+  (): <R, E, A>(
+    f: (grafter: <R2, E2, A2>(effect: Effect<R2, E2, A2>) => Effect<R2, E2, A2>) => Effect<R, E, A>
+  ) => Effect<R, E, A>
+} = core.transplant
 
 /**
  * Imports a synchronous side-effect into a pure value, translating any
@@ -4925,9 +4956,14 @@ export const uninterruptible: {
  * @since 1.0.0
  * @category interruption
  */
-export const uninterruptibleMask: <R, E, A>(
-  f: (restore: <RX, EX, AX>(effect: Effect<RX, EX, AX>) => Effect<RX, EX, AX>) => Effect<R, E, A>
-) => Effect<R, E, A> = core.uninterruptibleMask
+export const uninterruptibleMask: {
+  <R, E, A>(
+    f: (restore: <RX, EX, AX>(effect: Effect<RX, EX, AX>) => Effect<RX, EX, AX>) => Effect<R, E, A>
+  ): Effect<R, E, A>
+  (): <R, E, A>(
+    f: (restore: <RX, EX, AX>(effect: Effect<RX, EX, AX>) => Effect<RX, EX, AX>) => Effect<R, E, A>
+  ) => Effect<R, E, A>
+} = core.uninterruptibleMask
 
 /**
  * @since 1.0.0
@@ -5164,9 +5200,17 @@ export const unsome: {
  * @since 1.0.0
  * @category constructors
  */
-export const updateFiberRefs: (
-  f: (fiberId: FiberId.Runtime, fiberRefs: FiberRefs.FiberRefs) => FiberRefs.FiberRefs
-) => Effect<never, never, void> = effect.updateFiberRefs
+export const updateFiberRefs: {
+  (
+    f: (
+      fiberId: FiberId.Runtime,
+      fiberRefs: FiberRefs.FiberRefs
+    ) => FiberRefs.FiberRefs
+  ): Effect<never, never, void>
+  (): (
+    f: (fiberId: FiberId.Runtime, fiberRefs: FiberRefs.FiberRefs) => FiberRefs.FiberRefs
+  ) => Effect<never, never, void>
+} = effect.updateFiberRefs
 
 /**
  * @since 1.0.0

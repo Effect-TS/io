@@ -186,7 +186,7 @@ const getCachedValue = <R, E, A>(
 ): Effect.Effect<R, E, A> =>
   core.uninterruptibleMask<R, E, A>((restore) =>
     pipe(
-      effect.clockWith((clock) => clock.currentTimeMillis()),
+      defaultServices.clockWith((clock) => clock.currentTimeMillis()),
       core.flatMap((time) =>
         updateSomeAndGetEffectSynchronized(cache, (option) => {
           switch (option._tag) {
@@ -355,7 +355,7 @@ export const fromFiberEffect = Debug.zeroArgsDualWithTrace((trace) =>
 )
 
 /** @internal */
-export const memoizeFunction = Debug.methodWithTrace((trace) =>
+export const memoizeFunction = Debug.zeroArgsDualWithTrace((trace) =>
   <R, E, A, B>(
     f: (a: A) => Effect.Effect<R, E, B>
   ): Effect.Effect<never, never, (a: A) => Effect.Effect<R, E, B>> =>

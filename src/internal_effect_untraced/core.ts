@@ -422,7 +422,7 @@ export const catchSome = Debug.dualWithTrace<
     ).traced(trace))
 
 /* @internal */
-export const checkInterruptible = Debug.methodWithTrace((trace, restore) =>
+export const checkInterruptible = Debug.zeroArgsDualWithTrace((trace, restore) =>
   <R, E, A>(f: (isInterruptible: boolean) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
     withFiberRuntime<R, E, A>(
       (_, status) => restore(f)(_runtimeFlags.interruption(status.runtimeFlags))
@@ -462,7 +462,7 @@ export const context = Debug.methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const contextWithEffect = Debug.methodWithTrace((trace, restore) =>
+export const contextWithEffect = Debug.zeroArgsDualWithTrace((trace, restore) =>
   <R, R0, E, A>(
     f: (context: Context.Context<R0>) => Effect.Effect<R, E, A>
   ): Effect.Effect<R | R0, E, A> => flatMap(context<R0>(), restore(f)).traced(trace)
@@ -512,7 +512,7 @@ export const fiberId = Debug.methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const fiberIdWith = Debug.methodWithTrace((trace, restore) =>
+export const fiberIdWith = Debug.zeroArgsDualWithTrace((trace, restore) =>
   <R, E, A>(f: (descriptor: FiberId.Runtime) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
     withFiberRuntime<R, E, A>(
       (state) => restore(f)(state.id())
@@ -732,7 +732,7 @@ export const interruptible = Debug.zeroArgsDualWithTrace((trace) =>
 )
 
 /* @internal */
-export const interruptibleMask = Debug.methodWithTrace((trace, restore) =>
+export const interruptibleMask = Debug.zeroArgsDualWithTrace((trace, restore) =>
   <R, E, A>(
     f: (restore: <RX, EX, AX>(effect: Effect.Effect<RX, EX, AX>) => Effect.Effect<RX, EX, AX>) => Effect.Effect<R, E, A>
   ): Effect.Effect<R, E, A> => {
@@ -1031,7 +1031,7 @@ export const tap = Debug.dualWithTrace<
 >(2, (trace, restore) => (self, f) => pipe(self, flatMap((a) => pipe(restore(f)(a), as(a)))).traced(trace))
 
 /* @internal */
-export const transplant = Debug.methodWithTrace((trace, restore) =>
+export const transplant = Debug.zeroArgsDualWithTrace((trace, restore) =>
   <R, E, A>(
     f: (grafter: <R2, E2, A2>(effect: Effect.Effect<R2, E2, A2>) => Effect.Effect<R2, E2, A2>) => Effect.Effect<R, E, A>
   ): Effect.Effect<R, E, A> =>
@@ -1087,7 +1087,7 @@ export const uninterruptible = Debug.zeroArgsDualWithTrace((trace) =>
 )
 
 /* @internal */
-export const uninterruptibleMask = Debug.methodWithTrace((trace, restore) =>
+export const uninterruptibleMask = Debug.zeroArgsDualWithTrace((trace, restore) =>
   <R, E, A>(
     f: (restore: <RX, EX, AX>(effect: Effect.Effect<RX, EX, AX>) => Effect.Effect<RX, EX, AX>) => Effect.Effect<R, E, A>
   ): Effect.Effect<R, E, A> => {

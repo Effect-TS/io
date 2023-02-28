@@ -20,6 +20,7 @@ import * as FiberRefs from "@effect/io/FiberRefs"
 import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
 import * as internalCause from "@effect/io/internal_effect_untraced/cause"
 import * as core from "@effect/io/internal_effect_untraced/core"
+import * as defaultServices from "@effect/io/internal_effect_untraced/defaultServices"
 import * as fiberRefsPatch from "@effect/io/internal_effect_untraced/fiberRefs/patch"
 import * as metricLabel from "@effect/io/internal_effect_untraced/metric/label"
 import * as SingleShotGen from "@effect/io/internal_effect_untraced/singleShotGen"
@@ -33,7 +34,7 @@ import * as LogLevel from "@effect/io/Logger/Level"
 import * as LogSpan from "@effect/io/Logger/Span"
 import type * as Metric from "@effect/io/Metric"
 import type * as MetricLabel from "@effect/io/Metric/Label"
-import * as Random from "@effect/io/Random"
+import type * as Random from "@effect/io/Random"
 import * as Ref from "@effect/io/Ref"
 
 /* @internal */
@@ -327,12 +328,8 @@ export const cause = Debug.zeroArgsDualWithTrace((trace) =>
 
 /* @internal */
 export const clock = Debug.methodWithTrace((trace) =>
-  (): Effect.Effect<never, never, Clock.Clock> => clockWith(core.succeed()).traced(trace)
+  (): Effect.Effect<never, never, Clock.Clock> => defaultServices.clockWith(core.succeed()).traced(trace)
 )
-
-/* @internal */
-export const clockWith: <R, E, A>(f: (clock: Clock.Clock) => Effect.Effect<R, E, A>) => Effect.Effect<R, E, A> =
-  Clock.clockWith
 
 /* @internal */
 export const collectAll = Debug.zeroArgsDualWithTrace((trace) =>
@@ -568,7 +565,7 @@ export const descriptor = Debug.methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const descriptorWith = Debug.methodWithTrace((trace, restore) =>
+export const descriptorWith = Debug.zeroArgsDualWithTrace((trace, restore) =>
   <R, E, A>(
     f: (descriptor: Fiber.Fiber.Descriptor) => Effect.Effect<R, E, A>
   ): Effect.Effect<R, E, A> =>
@@ -722,7 +719,7 @@ export const dropWhile = Debug.dualWithTrace<
 )
 
 /* @internal */
-export const contextWith = Debug.methodWithTrace((trace) =>
+export const contextWith = Debug.zeroArgsDualWithTrace((trace) =>
   <R, A>(f: (context: Context.Context<R>) => A): Effect.Effect<R, never, A> =>
     core.map(core.context<R>(), f).traced(trace)
 )
@@ -1974,12 +1971,8 @@ export const provideServiceEffect = Debug.dualWithTrace<
 
 /* @internal */
 export const random = Debug.methodWithTrace((trace) =>
-  (): Effect.Effect<never, never, Random.Random> => randomWith(core.succeed()).traced(trace)
+  (): Effect.Effect<never, never, Random.Random> => defaultServices.randomWith(core.succeed()).traced(trace)
 )
-
-/* @internal */
-export const randomWith: <R, E, A>(f: (random: Random.Random) => Effect.Effect<R, E, A>) => Effect.Effect<R, E, A> =
-  Random.randomWith
 
 /* @internal */
 export const reduce = Debug.dualWithTrace<
@@ -2908,7 +2901,7 @@ export const unsandbox = Debug.zeroArgsDualWithTrace((trace) =>
 )
 
 /* @internal */
-export const updateFiberRefs = Debug.methodWithTrace((trace, restore) =>
+export const updateFiberRefs = Debug.zeroArgsDualWithTrace((trace, restore) =>
   (
     f: (fiberId: FiberId.Runtime, fiberRefs: FiberRefs.FiberRefs) => FiberRefs.FiberRefs
   ): Effect.Effect<never, never, void> =>

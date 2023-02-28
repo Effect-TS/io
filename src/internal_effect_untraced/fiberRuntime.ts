@@ -1930,11 +1930,11 @@ export const parallelFinalizers = Debug.zeroArgsDualWithTrace(
 
 /* @internal */
 export const scope = Debug.methodWithTrace((trace) =>
-  (): Effect.Effect<Scope.Scope, never, Scope.Scope> => core.service(scopeTag).traced(trace)
+  (_: void): Effect.Effect<Scope.Scope, never, Scope.Scope> => core.service(scopeTag).traced(trace)
 )
 
 /* @internal */
-export const scopeWith = Debug.methodWithTrace((trace, restore) =>
+export const scopeWith = Debug.zeroArgsDualWithTrace((trace, restore) =>
   <R, E, A>(f: (scope: Scope.Scope) => Effect.Effect<R, E, A>): Effect.Effect<R | Scope.Scope, E, A> =>
     core.serviceWithEffect(scopeTag, restore(f)).traced(trace)
 )
