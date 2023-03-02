@@ -794,7 +794,7 @@ export const fibonacci = Debug.untracedMethod(() =>
       pipe(
         unfold(
           [one, one] as const,
-          ([a, b]) => [b, pipe(a, Duration.add(b))] as const
+          ([a, b]) => [b, Duration.sum(a, b)] as const
         ),
         map((out) => out[0])
       )
