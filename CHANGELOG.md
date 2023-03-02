@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.4.0
+
+### Minor Changes
+
+- [#266](https://github.com/Effect-TS/io/pull/266) [`76b6796`](https://github.com/Effect-TS/io/commit/76b679603daa3083f622eca2c7fceb2ac6235890) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Update @effect/data to 0.3
+
 ## 0.3.1
 
 ### Patch Changes
