@@ -621,15 +621,15 @@ export const matchEffect = Debug.dualWithTrace<
 >(3, (trace, restore) =>
   (self, onFailure, onSuccess) =>
     matchCauseEffect(self, (cause) => {
-      const either = internalCause.failureOrCause(cause)
-      switch (either._tag) {
-        case "Left": {
-          return restore(onFailure)(either.left)
-        }
-        case "Right": {
-          return restore(failCause)(either.right)
-        }
+      const failures = internalCause.failures(cause)
+      const defects = internalCause.defects(cause)
+      if (defects.length > 0) {
+        return failCause(internalCause.electFailures(cause))
       }
+      if (failures.length > 0) {
+        return restore(onFailure)(Chunk.unsafeHead(failures))
+      }
+      return failCause(cause as Cause.Cause<never>)
     }, onSuccess).traced(trace))
 
 /* @internal */
@@ -1078,15 +1078,11 @@ export const tryOrElse = Debug.dualWithTrace<
     matchCauseEffect(
       self,
       (cause) => {
-        const option = internalCause.keepDefects(cause)
-        switch (option._tag) {
-          case "None": {
-            return restore(that)()
-          }
-          case "Some": {
-            return failCause(option.value)
-          }
+        const defects = internalCause.defects(cause)
+        if (defects.length > 0) {
+          return failCause(Option.getOrThrow(internalCause.keepDefectsAndElectFailures(cause)))
         }
+        return restore(that)()
       },
       restore(onSuccess)
     ).traced(trace))
