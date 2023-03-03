@@ -43,7 +43,6 @@ Added in v1.0.0
   - [asyncInterruptEither](#asyncinterrupteither)
   - [asyncOption](#asyncoption)
   - [attempt](#attempt)
-  - [blocking](#blocking)
   - [checkInterruptible](#checkinterruptible)
   - [clockWith](#clockwith)
   - [collect](#collect)
@@ -1014,20 +1013,6 @@ thrown exceptions into typed failed effects creating with `Effect.fail`.
 
 ```ts
 export declare const attempt: <A>(evaluate: LazyArg<A>) => Effect<never, unknown, A>
-```
-
-Added in v1.0.0
-
-## blocking
-
-Schedules a potentially blocking effect to occur with background priority.
-
-**Note**: this is equivalent to `pipe(yieldNow("background"), zipRight(self))`.
-
-**Signature**
-
-```ts
-export declare const blocking: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -2219,7 +2204,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const yieldNow: (priority?: 'background' | 'normal' | undefined) => Effect<never, never, void>
+export declare const yieldNow: () => Effect<never, never, void>
 ```
 
 Added in v1.0.0

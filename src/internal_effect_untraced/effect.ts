@@ -138,11 +138,6 @@ export const attempt = Debug.methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const blocking = Debug.methodWithTrace((trace) =>
-  <R, E, A>(self: Effect.Effect<R, E, A>) => core.zipRight(core.yieldNow("background"), self).traced(trace)
-)
-
-/* @internal */
 export const _catch = Debug.dualWithTrace<
   <N extends keyof E, K extends E[N] & string, E, R1, E1, A1>(
     tag: N,

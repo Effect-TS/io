@@ -32,7 +32,6 @@ import * as FiberMessage from "@effect/io/internal_effect_untraced/fiberMessage"
 import * as fiberRefs from "@effect/io/internal_effect_untraced/fiberRefs"
 import * as fiberScope from "@effect/io/internal_effect_untraced/fiberScope"
 import * as internalLogger from "@effect/io/internal_effect_untraced/logger"
-import { yieldBackgroundOrContinue } from "@effect/io/internal_effect_untraced/main-thread"
 import * as metric from "@effect/io/internal_effect_untraced/metric"
 import * as metricBoundaries from "@effect/io/internal_effect_untraced/metric/boundaries"
 import * as metricLabel from "@effect/io/internal_effect_untraced/metric/label"
@@ -57,7 +56,6 @@ type EvaluationSignal =
   | EvaluationSignalContinue
   | EvaluationSignalDone
   | EvaluationSignalYieldNow
-  | EvaluationSignalYieldNowInBackground
 
 /** @internal */
 const EvaluationSignalContinue = "Continue" as const
@@ -76,12 +74,6 @@ const EvaluationSignalYieldNow = "Yield" as const
 
 /** @internal */
 type EvaluationSignalYieldNow = typeof EvaluationSignalYieldNow
-
-/** @internal */
-const EvaluationSignalYieldNowInBackground = "YieldInBackground" as const
-
-/** @internal */
-type EvaluationSignalYieldNowInBackground = typeof EvaluationSignalYieldNowInBackground
 
 /** @internal */
 export const runtimeFiberVariance = {
@@ -170,7 +162,7 @@ const drainQueueWhileRunningTable = {
     cur: Effect.Effect<any, any, any>,
     _message: FiberMessage.FiberMessage & { _tag: FiberMessage.OP_YIELD_NOW }
   ) => {
-    return pipe(core.yieldNow(_message.priority), core.flatMap(() => cur))
+    return pipe(core.yieldNow(), core.flatMap(() => cur))
   }
 }
 
@@ -328,7 +320,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     )
     if (!this._running) {
       this._running = true
-      this.drainQueueLaterOnExecutor("normal")
+      this.drainQueueLaterOnExecutor()
     }
   }
 
@@ -525,10 +517,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
       if (!MutableQueue.isEmpty(this._queue) && !this._running) {
         this._running = true
         if (evaluationSignal === EvaluationSignalYieldNow) {
-          this.drainQueueLaterOnExecutor("normal")
-          recurse = false
-        } else if (evaluationSignal === EvaluationSignalYieldNowInBackground) {
-          this.drainQueueLaterOnExecutor("background")
+          this.drainQueueLaterOnExecutor()
           recurse = false
         } else {
           recurse = true
@@ -548,14 +537,8 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    *
    * **NOTE**: This method must be invoked by the fiber itself.
    */
-  drainQueueLaterOnExecutor(priority: "background" | "normal") {
-    if (priority === "normal") {
-      this.getFiberRef(core.currentScheduler).scheduleTask(this.run)
-    } else {
-      yieldBackgroundOrContinue().then(() => {
-        this.run()
-      })
-    }
+  drainQueueLaterOnExecutor() {
+    this.getFiberRef(core.currentScheduler).scheduleTask(this.run)
   }
 
   /**
@@ -729,7 +712,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   evaluateMessageWhileSuspended(message: FiberMessage.FiberMessage): EvaluationSignal {
     switch (message._tag) {
       case FiberMessage.OP_YIELD_NOW: {
-        return message.priority === "background" ? EvaluationSignalYieldNowInBackground : EvaluationSignalYieldNow
+        return EvaluationSignalYieldNow
       }
       case FiberMessage.OP_INTERRUPT_SIGNAL: {
         this.processNewInterruptSignal(message.cause)
@@ -795,7 +778,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
           if (core.isEffect(e)) {
             if ((e as core.Primitive)._tag === OpCodes.OP_YIELD) {
               if (_runtimeFlags.cooperativeYielding(this._runtimeFlags)) {
-                this.tell(FiberMessage.yieldNow((e as core.Yield).priority))
+                this.tell(FiberMessage.yieldNow())
                 this.tell(FiberMessage.resume(core.exitUnit()))
                 effect = null
               } else {
@@ -838,7 +821,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
         // the queue between the completion of the effect and the transition
         // to the not running state.
         if (!MutableQueue.isEmpty(this._queue)) {
-          this.drainQueueLaterOnExecutor("normal")
+          this.drainQueueLaterOnExecutor()
         }
       }
     } else {

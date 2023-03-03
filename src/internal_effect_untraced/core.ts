@@ -223,9 +223,7 @@ export interface WithRuntime extends
 {}
 
 /** @internal */
-export interface Yield extends Op<OpCodes.OP_YIELD> {
-  readonly priority: "normal" | "background"
-}
+export interface Yield extends Op<OpCodes.OP_YIELD> {}
 
 /** @internal */
 export const isEffect = (u: unknown): u is Effect.Effect<unknown, unknown, unknown> =>
@@ -1239,10 +1237,9 @@ export const withRuntimeFlags = Debug.dualWithTrace<
 
 /* @internal */
 export const yieldNow = Debug.methodWithTrace((trace) =>
-  (priority: "background" | "normal" = "normal"): Effect.Effect<never, never, void> => {
+  (): Effect.Effect<never, never, void> => {
     const effect = Object.create(proto)
     effect._tag = OpCodes.OP_YIELD
-    effect.priority = priority
     effect.trace = void 0
     if (trace) {
       return effect.traced(trace)
