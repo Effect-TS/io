@@ -317,6 +317,41 @@ export const keepDefects = <E>(self: Cause.Cause<E>): Option.Option<Cause.Cause<
   )
 
 /** @internal */
+export const keepDefectsAndElectFailures = <E>(self: Cause.Cause<E>): Option.Option<Cause.Cause<never>> =>
+  match<Option.Option<Cause.Cause<never>>, E>(
+    self,
+    Option.none(),
+    (failure) => Option.some(die(failure)),
+    (defect) => Option.some(die(defect)),
+    () => Option.none(),
+    (option, annotation) => pipe(option, Option.map((cause) => annotated(cause, annotation))),
+    (left, right) => {
+      if (Option.isSome(left) && Option.isSome(right)) {
+        return Option.some(sequential(left.value, right.value))
+      }
+      if (Option.isSome(left) && Option.isNone(right)) {
+        return Option.some(left.value)
+      }
+      if (Option.isNone(left) && Option.isSome(right)) {
+        return Option.some(right.value)
+      }
+      return Option.none()
+    },
+    (left, right) => {
+      if (Option.isSome(left) && Option.isSome(right)) {
+        return Option.some(parallel(left.value, right.value))
+      }
+      if (Option.isSome(left) && Option.isNone(right)) {
+        return Option.some(left.value)
+      }
+      if (Option.isNone(left) && Option.isSome(right)) {
+        return Option.some(right.value)
+      }
+      return Option.none()
+    }
+  )
+
+/** @internal */
 export const linearize = <E>(self: Cause.Cause<E>): HashSet.HashSet<Cause.Cause<E>> =>
   match(
     self,
@@ -353,6 +388,19 @@ export const stripFailures = <E>(self: Cause.Cause<E>): Cause.Cause<never> =>
     self,
     empty,
     () => empty,
+    (defect) => die(defect),
+    (fiberId) => interrupt(fiberId),
+    (cause, annotation) => isEmptyType(cause) ? cause : annotated(cause, annotation),
+    (left, right) => sequential(left, right),
+    (left, right) => parallel(left, right)
+  )
+
+/** @internal */
+export const electFailures = <E>(self: Cause.Cause<E>): Cause.Cause<never> =>
+  match(
+    self,
+    empty,
+    (failure) => die(failure),
     (defect) => die(defect),
     (fiberId) => interrupt(fiberId),
     (cause, annotation) => isEmptyType(cause) ? cause : annotated(cause, annotation),
