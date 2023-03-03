@@ -1,5 +1,13 @@
 # @effect/io
 
+## 0.5.0
+
+### Minor Changes
+
+- [#268](https://github.com/Effect-TS/io/pull/268) [`965970a`](https://github.com/Effect-TS/io/commit/965970a09e63306ea5d146029708fab3f626e140) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Standardize tuple-struct into all/allPar
+
+- [#271](https://github.com/Effect-TS/io/pull/271) [`78f31ee`](https://github.com/Effect-TS/io/commit/78f31ee73f1616cd1d394fff2849dd33c6e128e2) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Improve error semantics
+
 ## 0.4.0
 
 ### Minor Changes
