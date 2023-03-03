@@ -2,6 +2,7 @@ import * as Chunk from "@effect/data/Chunk"
 import * as Duration from "@effect/data/Duration"
 import type { LazyArg } from "@effect/data/Function"
 import { constVoid, dual, identity, pipe } from "@effect/data/Function"
+import { globalValue } from "@effect/data/Global"
 import * as HashSet from "@effect/data/HashSet"
 import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
@@ -38,7 +39,10 @@ const metricVariance = {
 }
 
 /** @internal */
-export const globalMetricRegistry: MetricRegistry.MetricRegistry = metricRegistry.make()
+export const globalMetricRegistry: MetricRegistry.MetricRegistry = globalValue(
+  Symbol.for("@effect/io/Metric/globalMetricRegistry"),
+  () => metricRegistry.make()
+)
 
 /** @internal */
 export const make: Metric.MetricApply = function<Type, In, Out>(

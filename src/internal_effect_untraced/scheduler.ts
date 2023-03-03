@@ -1,3 +1,4 @@
+import { globalValue } from "@effect/data/Global"
 import type * as Scheduler from "@effect/io/Scheduler"
 
 /** @internal */
@@ -40,7 +41,10 @@ export class HighPriorityScheduler implements Scheduler.Scheduler {
 }
 
 /** @internal */
-export const defaultScheduler: Scheduler.Scheduler = new HighPriorityScheduler()
+export const defaultScheduler: Scheduler.Scheduler = globalValue(
+  Symbol.for("@effect/io/Scheduler/defaultScheduler"),
+  () => new HighPriorityScheduler()
+)
 
 /** @internal */
 export class SyncScheduler implements Scheduler.Scheduler {
