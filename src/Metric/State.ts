@@ -98,13 +98,13 @@ export declare namespace MetricState {
    * @since 1.0.0
    * @category models
    */
-  export type Untyped = MetricState<any>
+  export interface Untyped extends MetricState<any> {}
 
   /**
    * @since 1.0.0
    * @category models
    */
-  export type Counter = MetricState<MetricKeyType.MetricKeyType.Counter> & {
+  export interface Counter extends MetricState<MetricKeyType.MetricKeyType.Counter> {
     readonly [CounterStateTypeId]: CounterStateTypeId
     readonly count: number
   }
@@ -113,7 +113,7 @@ export declare namespace MetricState {
    * @since 1.0.0
    * @category models
    */
-  export type Frequency = MetricState<MetricKeyType.MetricKeyType.Frequency> & {
+  export interface Frequency extends MetricState<MetricKeyType.MetricKeyType.Frequency> {
     readonly [FrequencyStateTypeId]: FrequencyStateTypeId
     readonly occurrences: HashMap.HashMap<string, number>
   }
@@ -122,7 +122,7 @@ export declare namespace MetricState {
    * @since 1.0.0
    * @category models
    */
-  export type Gauge = MetricState<MetricKeyType.MetricKeyType.Gauge> & {
+  export interface Gauge extends MetricState<MetricKeyType.MetricKeyType.Gauge> {
     readonly [GaugeStateTypeId]: GaugeStateTypeId
     readonly value: number
   }
@@ -131,7 +131,7 @@ export declare namespace MetricState {
    * @since 1.0.0
    * @category models
    */
-  export type Histogram = MetricState<MetricKeyType.MetricKeyType.Histogram> & {
+  export interface Histogram extends MetricState<MetricKeyType.MetricKeyType.Histogram> {
     readonly [HistogramStateTypeId]: HistogramStateTypeId
     readonly buckets: Chunk.Chunk<readonly [number, number]>
     readonly count: number
@@ -144,7 +144,7 @@ export declare namespace MetricState {
    * @since 1.0.0
    * @category models
    */
-  export type Summary = MetricState<MetricKeyType.MetricKeyType.Summary> & {
+  export interface Summary extends MetricState<MetricKeyType.MetricKeyType.Summary> {
     readonly [SummaryStateTypeId]: SummaryStateTypeId
     readonly error: number
     readonly quantiles: Chunk.Chunk<readonly [number, Option.Option<number>]>
