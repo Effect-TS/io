@@ -79,31 +79,39 @@ export declare namespace Metric {
    * @since 1.0.0
    * @category models
    */
-  export type Counter<In> = Metric<MetricKeyType.MetricKeyType.Counter, In, MetricState.MetricState.Counter>
+  export interface Counter<In>
+    extends Metric<MetricKeyType.MetricKeyType.Counter, In, MetricState.MetricState.Counter>
+  {}
 
   /**
    * @since 1.0.0
    * @category models
    */
-  export type Gauge<In> = Metric<MetricKeyType.MetricKeyType.Gauge, In, MetricState.MetricState.Gauge>
+  export interface Gauge<In> extends Metric<MetricKeyType.MetricKeyType.Gauge, In, MetricState.MetricState.Gauge> {}
 
   /**
    * @since 1.0.0
    * @category models
    */
-  export type Frequency<In> = Metric<MetricKeyType.MetricKeyType.Frequency, In, MetricState.MetricState.Frequency>
+  export interface Frequency<In>
+    extends Metric<MetricKeyType.MetricKeyType.Frequency, In, MetricState.MetricState.Frequency>
+  {}
 
   /**
    * @since 1.0.0
    * @category models
    */
-  export type Histogram<In> = Metric<MetricKeyType.MetricKeyType.Histogram, In, MetricState.MetricState.Histogram>
+  export interface Histogram<In>
+    extends Metric<MetricKeyType.MetricKeyType.Histogram, In, MetricState.MetricState.Histogram>
+  {}
 
   /**
    * @since 1.0.0
    * @category models
    */
-  export type Summary<In> = Metric<MetricKeyType.MetricKeyType.Summary, In, MetricState.MetricState.Summary>
+  export interface Summary<In>
+    extends Metric<MetricKeyType.MetricKeyType.Summary, In, MetricState.MetricState.Summary>
+  {}
 
   /**
    * @since 1.0.0
