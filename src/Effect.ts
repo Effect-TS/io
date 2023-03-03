@@ -593,16 +593,6 @@ export const attempt: <A>(evaluate: LazyArg<A>) => Effect<never, unknown, A> = e
 export const awaitAllChildren: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A> = circular.awaitAllChildren
 
 /**
- * Schedules a potentially blocking effect to occur with background priority.
- *
- * **Note**: this is equivalent to `pipe(yieldNow("background"), zipRight(self))`.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const blocking: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A> = effect.blocking
-
-/**
  * Returns an effect that, if evaluated, will return the cached result of this
  * effect. Cached results will expire after `timeToLive` duration.
  *
@@ -5156,7 +5146,7 @@ export const withRuntimeFlagsScoped: (update: RuntimeFlagsPatch.RuntimeFlagsPatc
  * @since 1.0.0
  * @category constructors
  */
-export const yieldNow: (priority?: "background" | "normal" | undefined) => Effect<never, never, void> = core.yieldNow
+export const yieldNow: () => Effect<never, never, void> = core.yieldNow
 
 /**
  * @since 1.0.0
