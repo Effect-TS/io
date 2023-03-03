@@ -36,12 +36,6 @@ import * as layer from "@effect/io/internal_effect_untraced/layer"
 import * as circularLayer from "@effect/io/internal_effect_untraced/layer/circular"
 import * as _runtime from "@effect/io/internal_effect_untraced/runtime"
 import * as _schedule from "@effect/io/internal_effect_untraced/schedule"
-import type {
-  EnforceNonEmptyRecord,
-  MergeRecord,
-  NonEmptyArrayEffect,
-  TupleEffect
-} from "@effect/io/internal_effect_untraced/types"
 import type * as Layer from "@effect/io/Layer"
 import type * as Metric from "@effect/io/Metric"
 import type * as MetricLabel from "@effect/io/Metric/Label"
@@ -51,6 +45,16 @@ import type * as Runtime from "@effect/io/Runtime"
 import type * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
+
+/**
+ * @since 1.0.0
+ */
+export type MergeRecord<K, H> = {
+  readonly [k in keyof K | keyof H]: k extends keyof K ? K[k]
+    : k extends keyof H ? H[k]
+    : never
+} extends infer X ? X
+  : never
 
 /**
  * @since 1.0.0
@@ -3886,32 +3890,6 @@ export const someWith: {
  * @since 1.0.0
  * @category constructors
  */
-export const struct: <NER extends Record<string, Effect<any, any, any>>>(
-  r: EnforceNonEmptyRecord<NER> | Record<string, Effect<any, any, any>>
-) => Effect<
-  [NER[keyof NER]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R : never,
-  [NER[keyof NER]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E : never,
-  {
-    [K in keyof NER]: [NER[K]] extends [{ [EffectTypeId]: { _A: (_: never) => infer A } }] ? A : never
-  }
-> = effect.struct
-
-/**
- * @since 1.0.0
- * @category constructors
- */
-export const structPar: <NER extends Record<string, Effect<any, any, any>>>(
-  r: Record<string, Effect<any, any, any>> | EnforceNonEmptyRecord<NER>
-) => Effect<
-  [NER[keyof NER]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R : never,
-  [NER[keyof NER]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E : never,
-  { [K in keyof NER]: [NER[K]] extends [{ [EffectTypeId]: { _A: (_: never) => infer A } }] ? A : never }
-> = fiberRuntime.structPar
-
-/**
- * @since 1.0.0
- * @category constructors
- */
 export const succeed: <A>(value: A) => Effect<never, never, A> = core.succeed
 
 /**
@@ -4436,7 +4414,7 @@ export const tryPromiseInterrupt: <A>(evaluate: (signal: AbortSignal) => Promise
  * @since 1.0.0
  * @category constructors
  */
-export const sequential: {
+export const all: {
   <R, E, A, T extends ReadonlyArray<Effect<any, any, any>>>(
     self: Effect<R, E, A>,
     ...args: T
@@ -4454,7 +4432,7 @@ export const sequential: {
     ]
   >
   <T extends ReadonlyArray<Effect<any, any, any>>>(
-    args: T
+    args: [...T]
   ): Effect<
     T[number] extends never ? never
       : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
@@ -4476,33 +4454,7 @@ export const sequential: {
       : never,
     Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>
   >
-} = effect.sequential
-
-/**
- * Like `forEach` + `identity` with a tuple type.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const tuple: <T extends NonEmptyArrayEffect>(
-  ...t: T
-) => Effect<
-  [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R : never,
-  [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E : never,
-  TupleEffect<T>
-> = effect.tuple
-
-/**
- * Like tuple but parallel, same as `forEachPar` + `identity` with a tuple type.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const tuplePar: <T extends NonEmptyArrayEffect>(...t: T) => Effect<
-  [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R : never,
-  [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E : never,
-  TupleEffect<T>
-> = fiberRuntime.tuplePar
+} = effect.all
 
 /**
  * Runs all the provided effects in parallel respecting the structure provided in input.
@@ -4512,7 +4464,7 @@ export const tuplePar: <T extends NonEmptyArrayEffect>(...t: T) => Effect<
  * @since 1.0.0
  * @category constructors
  */
-export const parallel: {
+export const allPar: {
   <R, E, A, T extends ReadonlyArray<Effect<any, any, any>>>(
     self: Effect<R, E, A>,
     ...args: T
@@ -4530,7 +4482,7 @@ export const parallel: {
     ]
   >
   <T extends ReadonlyArray<Effect<any, any, any>>>(
-    args: T
+    args: [...T]
   ): Effect<
     T[number] extends never ? never
       : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
@@ -4552,7 +4504,7 @@ export const parallel: {
       : never,
     Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>
   >
-} = fiberRuntime.parallel
+} = fiberRuntime.allPar
 
 /**
  * Used to unify functions that would otherwise return `Effect<A, B, C> | Effect<D, E, F>`

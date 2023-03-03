@@ -40,7 +40,6 @@ import * as OpCodes from "@effect/io/internal_effect_untraced/opCodes/effect"
 import * as _runtimeFlags from "@effect/io/internal_effect_untraced/runtimeFlags"
 import * as supervisor from "@effect/io/internal_effect_untraced/supervisor"
 import * as SupervisorPatch from "@effect/io/internal_effect_untraced/supervisor/patch"
-import type { EnforceNonEmptyRecord, TupleEffect } from "@effect/io/internal_effect_untraced/types"
 import type { Logger } from "@effect/io/Logger"
 import * as LogLevel from "@effect/io/Logger/Level"
 import type * as MetricLabel from "@effect/io/Metric/Label"
@@ -1985,33 +1984,7 @@ export const someWith = Debug.dualWithTrace<
 >(2, (trace, restore) => (self, f) => core.suspendSucceed(() => unsome(restore(f)(some(self)))).traced(trace))
 
 /* @internal */
-export const structPar = Debug.methodWithTrace((trace) =>
-  <NER extends Record<string, Effect.Effect<any, any, any>>>(
-    r: EnforceNonEmptyRecord<NER> | Record<string, Effect.Effect<any, any, any>>
-  ): Effect.Effect<
-    [NER[keyof NER]] extends [{ [core.EffectTypeId]: { _R: (_: never) => infer R } }] ? R : never,
-    [NER[keyof NER]] extends [{ [core.EffectTypeId]: { _E: (_: never) => infer E } }] ? E : never,
-    {
-      [K in keyof NER]: [NER[K]] extends [{ [core.EffectTypeId]: { _A: (_: never) => infer A } }] ? A : never
-    }
-  > =>
-    pipe(
-      forEachPar(
-        Object.entries(r),
-        ([_, e]) => core.map(e, (a) => [_, a] as const)
-      ),
-      core.map((values) => {
-        const res = {}
-        for (const [k, v] of values) {
-          res[k] = v
-        }
-        return res
-      })
-    ).traced(trace) as any
-)
-
-/* @internal */
-export const parallel = Debug.methodWithTrace((trace): {
+export const allPar = Debug.methodWithTrace((trace): {
   <R, E, A, T extends ReadonlyArray<Effect.Effect<any, any, any>>>(
     self: Effect.Effect<R, E, A>,
     ...args: T
@@ -2029,7 +2002,7 @@ export const parallel = Debug.methodWithTrace((trace): {
     ]
   >
   <T extends ReadonlyArray<Effect.Effect<any, any, any>>>(
-    args: T
+    args: [...T]
   ): Effect.Effect<
     T[number] extends never ? never
       : [T[number]] extends [{ [Effect.EffectTypeId]: { _R: (_: never) => infer R } }] ? R
@@ -2094,17 +2067,6 @@ export const taggedScopedWithLabels = Debug.methodWithTrace((trace) =>
 export const taggedScopedWithLabelSet = Debug.methodWithTrace((trace) =>
   (labels: HashSet.HashSet<MetricLabel.MetricLabel>): Effect.Effect<Scope.Scope, never, void> =>
     fiberRefLocallyScopedWith(core.currentTags, (set) => pipe(set, HashSet.union(labels))).traced(trace)
-)
-
-/* @internal */
-export const tuplePar = Debug.methodWithTrace((trace) =>
-  <T extends [Effect.Effect<any, any, any>, ...Array<Effect.Effect<any, any, any>>]>(
-    ...t: T
-  ): Effect.Effect<
-    [T[number]] extends [{ [core.EffectTypeId]: { _R: (_: never) => infer R } }] ? R : never,
-    [T[number]] extends [{ [core.EffectTypeId]: { _E: (_: never) => infer E } }] ? E : never,
-    TupleEffect<T>
-  > => pipe(collectAllPar(t), core.map(Chunk.toReadonlyArray)).traced(trace) as any
 )
 
 /* @internal */

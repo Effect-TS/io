@@ -20,7 +20,7 @@ const program2 = Logger.withMinimumLogLevel(LogLevel.Info)(
 )
 
 const main = pipe(
-  Effect.tuple(program1, program2),
+  Effect.all(program1, program2),
   Effect.provideSomeLayer(Logger.minimumLogLevel(LogLevel.Info))
 )
 

@@ -11,7 +11,18 @@ import type { Predicate, Refinement } from "@effect/data/Predicate"
 import type * as ConfigError from "@effect/io/Config/Error"
 import type * as ConfigSecret from "@effect/io/Config/Secret"
 import * as internal from "@effect/io/internal_effect_untraced/config"
-import type { EnforceNonEmptyRecord, NonEmptyArrayConfig, TupleConfig } from "@effect/io/internal_effect_untraced/types"
+
+/**
+ * @since 1.0.0
+ */
+export type NonEmptyArrayConfig = [Config<any>, ...Array<Config<any>>]
+
+/**
+ * @since 1.0.0
+ */
+export type TupleConfig<T extends NonEmptyArrayConfig> = {
+  [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never
+}
 
 /**
  * @since 1.0.0
@@ -137,6 +148,25 @@ export const float: (name?: string | undefined) => Config<number> = internal.flo
  * @category constructors
  */
 export const integer: (name?: string | undefined) => Config<number> = internal.integer
+
+/**
+ * This function returns `true` if the specified value is an `Config` value,
+ * `false` otherwise.
+ *
+ * This function can be useful for checking the type of a value before
+ * attempting to operate on it as an `Config` value. For example, you could
+ * use `isConfig` to check the type of a value before using it as an
+ * argument to a function that expects an `Config` value.
+ *
+ * @param u - The value to check for being a `Config` value.
+ *
+ * @returns `true` if the specified value is a `Config` value, `false`
+ * otherwise.
+ *
+ * @since 1.0.0
+ * @category refinements
+ */
+export const isConfig: (u: unknown) => u is Config<unknown> = internal.isConfig
 
 /**
  * Returns a  config whose structure is the same as this one, but which produces
@@ -268,18 +298,6 @@ export const setOf: <A>(config: Config<A>, name?: string | undefined) => Config<
 export const string: (name?: string | undefined) => Config<string> = internal.string
 
 /**
- * Constructs a config from a record of configs.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const struct: <NER extends Record<string, Config<any>>>(
-  r: EnforceNonEmptyRecord<NER> | Record<string, Config<any>>
-) => Config<
-  { [K in keyof NER]: [NER[K]] extends [{ [ConfigTypeId]: { _A: (_: never) => infer A } }] ? A : never }
-> = internal.struct
-
-/**
  * Constructs a config which contains the specified value.
  *
  * @since 1.0.0
@@ -305,14 +323,34 @@ export const table: <A>(config: Config<A>, name?: string | undefined) => Config<
   internal.table
 
 /**
- * Constructs a config from a tuple of configs.
+ * Constructs a config from a tuple / struct / arguments of configs.
  *
  * @since 1.0.0
  * @category constructors
  */
-export const tuple: <T extends NonEmptyArrayConfig>(
-  ...tuple: T
-) => Config<TupleConfig<T>> = internal.tuple
+export const all: {
+  <A, T extends ReadonlyArray<Config<any>>>(
+    self: Config<A>,
+    ...args: T
+  ): Config<
+    readonly [
+      A,
+      ...(T["length"] extends 0 ? []
+        : Readonly<{ [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never }>)
+    ]
+  >
+  <T extends ReadonlyArray<Config<any>>>(
+    args: [...T]
+  ): Config<
+    T[number] extends never ? []
+      : Readonly<{ [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never }>
+  >
+  <T extends Readonly<{ [K: string]: Config<any> }>>(
+    args: T
+  ): Config<
+    Readonly<{ [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never }>
+  >
+} = internal.all
 
 /**
  * Constructs a config from some configuration wrapped with the `Wrap<A>` utility type.

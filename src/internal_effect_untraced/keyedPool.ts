@@ -104,7 +104,7 @@ const makeWith = Debug.methodWithTrace((trace) =>
     timeToLive: (key: K) => Option.Option<Duration.Duration>
   ): Effect.Effect<R | Scope.Scope, never, KeyedPool.KeyedPool<K, E, A>> =>
     pipe(
-      effect.tuple(
+      effect.all(
         core.context<R>(),
         core.fiberId(),
         core.sync(() => MutableRef.make(HashMap.empty<K, MapValue<E, A>>())),

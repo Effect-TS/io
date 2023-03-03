@@ -13,6 +13,7 @@ Added in v1.0.0
 <h2 class="text-delta">Table of contents</h2>
 
 - [constructors](#constructors)
+  - [all](#all)
   - [arrayOf](#arrayof)
   - [bool](#bool)
   - [chunkOf](#chunkof)
@@ -25,11 +26,9 @@ Added in v1.0.0
   - [secret](#secret)
   - [setOf](#setof)
   - [string](#string)
-  - [struct](#struct)
   - [succeed](#succeed)
   - [sync](#sync)
   - [table](#table)
-  - [tuple](#tuple)
   - [unwrap](#unwrap)
 - [models](#models)
   - [Config (interface)](#config-interface)
@@ -47,13 +46,43 @@ Added in v1.0.0
   - [withDescription](#withdescription)
   - [zip](#zip)
   - [zipWith](#zipwith)
+- [refinements](#refinements)
+  - [isConfig](#isconfig)
 - [symbols](#symbols)
   - [ConfigTypeId](#configtypeid)
   - [ConfigTypeId (type alias)](#configtypeid-type-alias)
+- [utils](#utils)
+  - [NonEmptyArrayConfig (type alias)](#nonemptyarrayconfig-type-alias)
+  - [TupleConfig (type alias)](#tupleconfig-type-alias)
 
 ---
 
 # constructors
+
+## all
+
+Constructs a config from a tuple / struct / arguments of configs.
+
+**Signature**
+
+```ts
+export declare const all: {
+  <A, T extends readonly Config<any>[]>(self: Config<A>, ...args: T): Config<
+    readonly [
+      A,
+      ...(T['length'] extends 0 ? [] : Readonly<{ [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never }>)
+    ]
+  >
+  <T extends readonly Config<any>[]>(args: [...T]): Config<
+    T[number] extends never ? [] : Readonly<{ [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never }>
+  >
+  <T extends Readonly<{ [K: string]: Config<any> }>>(args: T): Config<
+    Readonly<{ [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never }>
+  >
+}
+```
+
+Added in v1.0.0
 
 ## arrayOf
 
@@ -202,20 +231,6 @@ export declare const string: (name?: string | undefined) => Config<string>
 
 Added in v1.0.0
 
-## struct
-
-Constructs a config from a record of configs.
-
-**Signature**
-
-```ts
-export declare const struct: <NER extends Record<string, Config<any>>>(
-  r: Record<string, Config<any>> | EnforceNonEmptyRecord<NER>
-) => Config<{ [K in keyof NER]: [NER[K]] extends [{ [ConfigTypeId]: { _A: (_: never) => infer A } }] ? A : never }>
-```
-
-Added in v1.0.0
-
 ## succeed
 
 Constructs a config which contains the specified value.
@@ -248,18 +263,6 @@ Constructs a config for a sequence of values.
 
 ```ts
 export declare const table: <A>(config: Config<A>, name?: string | undefined) => Config<HashMap.HashMap<string, A>>
-```
-
-Added in v1.0.0
-
-## tuple
-
-Constructs a config from a tuple of configs.
-
-**Signature**
-
-```ts
-export declare const tuple: <T extends [Config<any>, ...Config<any>[]]>(...tuple: T) => Config<TupleConfig<T>>
 ```
 
 Added in v1.0.0
@@ -509,6 +512,26 @@ export declare const zipWith: {
 
 Added in v1.0.0
 
+# refinements
+
+## isConfig
+
+This function returns `true` if the specified value is an `Config` value,
+`false` otherwise.
+
+This function can be useful for checking the type of a value before
+attempting to operate on it as an `Config` value. For example, you could
+use `isConfig` to check the type of a value before using it as an
+argument to a function that expects an `Config` value.
+
+**Signature**
+
+```ts
+export declare const isConfig: (u: unknown) => u is Config<unknown>
+```
+
+Added in v1.0.0
+
 # symbols
 
 ## ConfigTypeId
@@ -527,6 +550,30 @@ Added in v1.0.0
 
 ```ts
 export type ConfigTypeId = typeof ConfigTypeId
+```
+
+Added in v1.0.0
+
+# utils
+
+## NonEmptyArrayConfig (type alias)
+
+**Signature**
+
+```ts
+export type NonEmptyArrayConfig = [Config<any>, ...Array<Config<any>>]
+```
+
+Added in v1.0.0
+
+## TupleConfig (type alias)
+
+**Signature**
+
+```ts
+export type TupleConfig<T extends NonEmptyArrayConfig> = {
+  [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never
+}
 ```
 
 Added in v1.0.0

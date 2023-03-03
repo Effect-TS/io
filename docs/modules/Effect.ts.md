@@ -34,6 +34,8 @@ Added in v1.0.0
   - [acquireRelease](#acquirerelease)
   - [acquireReleaseInterruptible](#acquirereleaseinterruptible)
   - [acquireUseRelease](#acquireuserelease)
+  - [all](#all)
+  - [allPar](#allpar)
   - [allowInterrupt](#allowinterrupt)
   - [async](#async)
   - [asyncEffect](#asynceffect)
@@ -92,7 +94,6 @@ Added in v1.0.0
   - [none](#none)
   - [noneOrFail](#noneorfail)
   - [noneOrFailWith](#noneorfailwith)
-  - [parallel](#parallel)
   - [partition](#partition)
   - [partitionPar](#partitionpar)
   - [promise](#promise)
@@ -101,10 +102,7 @@ Added in v1.0.0
   - [randomWith](#randomwith)
   - [runtime](#runtime)
   - [runtimeFlags](#runtimeflags)
-  - [sequential](#sequential)
   - [sleep](#sleep)
-  - [struct](#struct)
-  - [structPar](#structpar)
   - [succeed](#succeed)
   - [succeedLeft](#succeedleft)
   - [succeedNone](#succeednone)
@@ -122,8 +120,6 @@ Added in v1.0.0
   - [tryCatchPromiseInterrupt](#trycatchpromiseinterrupt)
   - [tryPromise](#trypromise)
   - [tryPromiseInterrupt](#trypromiseinterrupt)
-  - [tuple](#tuple)
-  - [tuplePar](#tuplepar)
   - [unfold](#unfold)
   - [unit](#unit)
   - [updateFiberRefs](#updatefiberrefs)
@@ -446,6 +442,8 @@ Added in v1.0.0
   - [fiberId](#fiberid)
   - [intoDeferred](#intodeferred)
   - [unified](#unified)
+- [utils](#utils)
+  - [MergeRecord (type alias)](#mergerecord-type-alias)
 - [zipping](#zipping)
   - [zipPar](#zippar)
   - [zipParLeft](#zipparleft)
@@ -778,6 +776,108 @@ export declare const acquireUseRelease: {
     use: (a: A) => Effect<R2, E2, A2>,
     release: (a: A, exit: Exit.Exit<E2, A2>) => Effect<R3, never, X>
   ): Effect<R | R2 | R3, E | E2, A2>
+}
+```
+
+Added in v1.0.0
+
+## all
+
+Runs all the provided effects in sequence respecting the structure provided in input.
+
+Supports multiple arguments, a single argument tuple / array or record / struct.
+
+**Signature**
+
+```ts
+export declare const all: {
+  <R, E, A, T extends readonly Effect<any, any, any>[]>(self: Effect<R, E, A>, ...args: T): Effect<
+    R | T['length'] extends 0
+      ? never
+      : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }]
+      ? R
+      : never,
+    E | T['length'] extends 0
+      ? never
+      : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }]
+      ? E
+      : never,
+    readonly [
+      A,
+      ...(T['length'] extends 0
+        ? []
+        : Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>)
+    ]
+  >
+  <T extends readonly Effect<any, any, any>[]>(args: [...T]): Effect<
+    T[number] extends never
+      ? never
+      : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }]
+      ? R
+      : never,
+    T[number] extends never
+      ? never
+      : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }]
+      ? E
+      : never,
+    T[number] extends never ? [] : Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>
+  >
+  <T extends Readonly<{ [K: string]: Effect<any, any, any> }>>(args: T): Effect<
+    T['length'] extends 0 ? never : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R : never,
+    T['length'] extends 0 ? never : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E : never,
+    Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>
+  >
+}
+```
+
+Added in v1.0.0
+
+## allPar
+
+Runs all the provided effects in parallel respecting the structure provided in input.
+
+Supports multiple arguments, a single argument tuple / array or record / struct.
+
+**Signature**
+
+```ts
+export declare const allPar: {
+  <R, E, A, T extends readonly Effect<any, any, any>[]>(self: Effect<R, E, A>, ...args: T): Effect<
+    R | T['length'] extends 0
+      ? never
+      : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }]
+      ? R
+      : never,
+    E | T['length'] extends 0
+      ? never
+      : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }]
+      ? E
+      : never,
+    readonly [
+      A,
+      ...(T['length'] extends 0
+        ? []
+        : Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>)
+    ]
+  >
+  <T extends readonly Effect<any, any, any>[]>(args: [...T]): Effect<
+    T[number] extends never
+      ? never
+      : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }]
+      ? R
+      : never,
+    T[number] extends never
+      ? never
+      : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }]
+      ? E
+      : never,
+    T[number] extends never ? [] : Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>
+  >
+  <T extends Readonly<{ [K: string]: Effect<any, any, any> }>>(args: T): Effect<
+    T['length'] extends 0 ? never : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R : never,
+    T['length'] extends 0 ? never : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E : never,
+    Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>
+  >
 }
 ```
 
@@ -1679,57 +1779,6 @@ export declare const noneOrFailWith: <E, A>(option: Option.Option<A>, f: (a: A) 
 
 Added in v1.0.0
 
-## parallel
-
-Runs all the provided effects in parallel respecting the structure provided in input.
-
-Supports multiple arguments, a single argument tuple / array or record / struct.
-
-**Signature**
-
-```ts
-export declare const parallel: {
-  <R, E, A, T extends readonly Effect<any, any, any>[]>(self: Effect<R, E, A>, ...args: T): Effect<
-    R | T['length'] extends 0
-      ? never
-      : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }]
-      ? R
-      : never,
-    E | T['length'] extends 0
-      ? never
-      : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }]
-      ? E
-      : never,
-    readonly [
-      A,
-      ...(T['length'] extends 0
-        ? []
-        : Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>)
-    ]
-  >
-  <T extends readonly Effect<any, any, any>[]>(args: T): Effect<
-    T[number] extends never
-      ? never
-      : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }]
-      ? R
-      : never,
-    T[number] extends never
-      ? never
-      : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }]
-      ? E
-      : never,
-    T[number] extends never ? [] : Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>
-  >
-  <T extends Readonly<{ [K: string]: Effect<any, any, any> }>>(args: T): Effect<
-    T['length'] extends 0 ? never : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R : never,
-    T['length'] extends 0 ? never : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E : never,
-    Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>
-  >
-}
-```
-
-Added in v1.0.0
-
 ## partition
 
 Feeds elements of type `A` to a function `f` that returns an effect.
@@ -1851,57 +1900,6 @@ export declare const runtimeFlags: (_: void) => Effect<never, never, RuntimeFlag
 
 Added in v1.0.0
 
-## sequential
-
-Runs all the provided effects in sequence respecting the structure provided in input.
-
-Supports multiple arguments, a single argument tuple / array or record / struct.
-
-**Signature**
-
-```ts
-export declare const sequential: {
-  <R, E, A, T extends readonly Effect<any, any, any>[]>(self: Effect<R, E, A>, ...args: T): Effect<
-    R | T['length'] extends 0
-      ? never
-      : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }]
-      ? R
-      : never,
-    E | T['length'] extends 0
-      ? never
-      : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }]
-      ? E
-      : never,
-    readonly [
-      A,
-      ...(T['length'] extends 0
-        ? []
-        : Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>)
-    ]
-  >
-  <T extends readonly Effect<any, any, any>[]>(args: T): Effect<
-    T[number] extends never
-      ? never
-      : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }]
-      ? R
-      : never,
-    T[number] extends never
-      ? never
-      : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }]
-      ? E
-      : never,
-    T[number] extends never ? [] : Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>
-  >
-  <T extends Readonly<{ [K: string]: Effect<any, any, any> }>>(args: T): Effect<
-    T['length'] extends 0 ? never : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R : never,
-    T['length'] extends 0 ? never : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E : never,
-    Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>
-  >
-}
-```
-
-Added in v1.0.0
-
 ## sleep
 
 Returns an effect that suspends for the specified duration. This method is
@@ -1911,38 +1909,6 @@ asynchronous, and does not actually block the fiber executing the effect.
 
 ```ts
 export declare const sleep: (duration: Duration.Duration) => Effect<never, never, void>
-```
-
-Added in v1.0.0
-
-## struct
-
-**Signature**
-
-```ts
-export declare const struct: <NER extends Record<string, Effect<any, any, any>>>(
-  r: Record<string, Effect<any, any, any>> | EnforceNonEmptyRecord<NER>
-) => Effect<
-  [NER[keyof NER]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R : never,
-  [NER[keyof NER]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E : never,
-  { [K in keyof NER]: [NER[K]] extends [{ [EffectTypeId]: { _A: (_: never) => infer A } }] ? A : never }
->
-```
-
-Added in v1.0.0
-
-## structPar
-
-**Signature**
-
-```ts
-export declare const structPar: <NER extends Record<string, Effect<any, any, any>>>(
-  r: Record<string, Effect<any, any, any>> | EnforceNonEmptyRecord<NER>
-) => Effect<
-  [NER[keyof NER]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R : never,
-  [NER[keyof NER]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E : never,
-  { [K in keyof NER]: [NER[K]] extends [{ [EffectTypeId]: { _A: (_: never) => infer A } }] ? A : never }
->
 ```
 
 Added in v1.0.0
@@ -2161,42 +2127,6 @@ Like `tryPromise` but allows for interruption via AbortSignal
 export declare const tryPromiseInterrupt: <A>(
   evaluate: (signal: AbortSignal) => Promise<A>
 ) => Effect<never, unknown, A>
-```
-
-Added in v1.0.0
-
-## tuple
-
-Like `forEach` + `identity` with a tuple type.
-
-**Signature**
-
-```ts
-export declare const tuple: <T extends [Effect<any, any, any>, ...Effect<any, any, any>[]]>(
-  ...t: T
-) => Effect<
-  [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R : never,
-  [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E : never,
-  TupleEffect<T>
->
-```
-
-Added in v1.0.0
-
-## tuplePar
-
-Like tuple but parallel, same as `forEachPar` + `identity` with a tuple type.
-
-**Signature**
-
-```ts
-export declare const tuplePar: <T extends [Effect<any, any, any>, ...Effect<any, any, any>[]]>(
-  ...t: T
-) => Effect<
-  [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R : never,
-  [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E : never,
-  TupleEffect<T>
->
 ```
 
 Added in v1.0.0
@@ -7041,6 +6971,22 @@ Used to unify functions that would otherwise return `Effect<A, B, C> | Effect<D,
 export declare const unified: <Args extends readonly any[], Ret extends Effect<any, any, any>>(
   f: (...args: Args) => Ret
 ) => (...args: Args) => Effect.Unify<Ret>
+```
+
+Added in v1.0.0
+
+# utils
+
+## MergeRecord (type alias)
+
+**Signature**
+
+```ts
+export type MergeRecord<K, H> = {
+  readonly [k in keyof K | keyof H]: k extends keyof K ? K[k] : k extends keyof H ? H[k] : never
+} extends infer X
+  ? X
+  : never
 ```
 
 Added in v1.0.0

@@ -343,7 +343,7 @@ describe.concurrent("Layer", () => {
     Effect.gen(function*($) {
       const NumberTag = Context.Tag<number>()
       const StringTag = Context.Tag<string>()
-      const needsNumberAndString = Effect.tuple(Effect.service(NumberTag), Effect.service(StringTag))
+      const needsNumberAndString = Effect.all(Effect.service(NumberTag), Effect.service(StringTag))
       const providesNumber = Layer.succeed(NumberTag, 10)
       const providesString = Layer.succeed(StringTag, "hi")
       const needsString = pipe(needsNumberAndString, Effect.provideSomeLayer(providesNumber))
@@ -447,7 +447,7 @@ describe.concurrent("Layer", () => {
       }))
       const live = pipe(Layer.succeed(NumberTag, { value: 1 }), Layer.provide(Layer.passthrough(layer)))
       const { i, s } = yield* $(pipe(
-        Effect.struct({
+        Effect.all({
           i: Effect.service(NumberTag),
           s: Effect.service(ToStringTag)
         }),

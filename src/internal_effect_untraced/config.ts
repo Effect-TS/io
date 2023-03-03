@@ -12,7 +12,6 @@ import type * as ConfigSecret from "@effect/io/Config/Secret"
 import * as configError from "@effect/io/internal_effect_untraced/configError"
 import * as configSecret from "@effect/io/internal_effect_untraced/configSecret"
 import * as OpCodes from "@effect/io/internal_effect_untraced/opCodes/config"
-import type { EnforceNonEmptyRecord, NonEmptyArrayConfig, TupleConfig } from "@effect/io/internal_effect_untraced/types"
 
 /** @internal */
 const ConfigSymbolKey = "@effect/io/Config"
@@ -405,10 +404,42 @@ export const string = (name?: string): Config.Config<string> => {
   return name === undefined ? config : nested(name)(config)
 }
 
-/** @internal */
-export const struct = <NER extends Record<string, Config.Config<any>>>(
-  r: EnforceNonEmptyRecord<NER> | Record<string, Config.Config<any>>
-): Config.Config<
+export const all: {
+  <A, T extends ReadonlyArray<Config.Config<any>>>(
+    self: Config.Config<A>,
+    ...args: T
+  ): Config.Config<
+    readonly [
+      A,
+      ...(T["length"] extends 0 ? []
+        : Readonly<{ [K in keyof T]: [T[K]] extends [Config.Config<infer A>] ? A : never }>)
+    ]
+  >
+  <T extends ReadonlyArray<Config.Config<any>>>(
+    args: [...T]
+  ): Config.Config<
+    T[number] extends never ? []
+      : Readonly<{ [K in keyof T]: [T[K]] extends [Config.Config<infer A>] ? A : never }>
+  >
+  <T extends Readonly<{ [K: string]: Config.Config<any> }>>(
+    args: T
+  ): Config.Config<
+    Readonly<{ [K in keyof T]: [T[K]] extends [Config.Config<infer A>] ? A : never }>
+  >
+} = function() {
+  if (arguments.length === 1) {
+    if (typeof arguments[0] === "object" && arguments[0] !== null && isConfig(arguments[0])) {
+      return map(arguments[0], (x) => [x])
+    } else if (Array.isArray(arguments[0])) {
+      return tuple(arguments)
+    } else {
+      return struct(arguments[0] as Readonly<{ [K: string]: Config.Config<any> }>)
+    }
+  }
+  return tuple(arguments)
+} as any
+
+const struct = <NER extends Record<string, Config.Config<any>>>(r: NER): Config.Config<
   {
     [K in keyof NER]: [NER[K]] extends [{ [ConfigTypeId]: { _A: (_: never) => infer A } }] ? A : never
   }
@@ -451,13 +482,24 @@ export const table = <A>(config: Config.Config<A>, name?: string): Config.Config
 }
 
 /** @internal */
-export const tuple = <T extends NonEmptyArrayConfig>(...tuple: T): Config.Config<TupleConfig<T>> => {
+export const isConfig = (u: unknown): u is Config.Config<unknown> =>
+  typeof u === "object" && u != null && ConfigTypeId in u
+
+/** @internal */
+const tuple = <T extends ArrayLike<Config.Config<any>>>(tuple: T): Config.Config<
+  {
+    [K in keyof T]: [T[K]] extends [Config.Config<infer A>] ? A : never
+  }
+> => {
+  if (tuple.length === 0) {
+    return succeed([]) as any
+  }
   if (tuple.length === 1) {
-    return tuple[0]
+    return map(tuple[0], (x) => [x]) as any
   }
   let result = map(tuple[0], (x) => [x])
-  const rest = tuple.slice(1)
-  for (const config of rest) {
+  for (let i = 1; i < tuple.length; i++) {
+    const config = tuple[i]
     result = pipe(
       result,
       zipWith(config, (tuple, value) => [...tuple, value])
@@ -470,14 +512,9 @@ export const tuple = <T extends NonEmptyArrayConfig>(...tuple: T): Config.Config
  * @internal
  */
 export const unwrap = <A>(wrapped: Config.Config.Wrap<A>): Config.Config<A> => {
-  if (
-    typeof wrapped === "object" &&
-    wrapped != null &&
-    ConfigTypeId in wrapped
-  ) {
+  if (isConfig(wrapped)) {
     return wrapped
   }
-
   return struct(
     Object.fromEntries(
       Object.entries(wrapped).map(([k, a]) => [k, unwrap(a)])

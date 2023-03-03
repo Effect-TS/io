@@ -23,12 +23,6 @@ import * as core from "@effect/io/internal_effect_untraced/core"
 import * as fiberRefsPatch from "@effect/io/internal_effect_untraced/fiberRefs/patch"
 import * as metricLabel from "@effect/io/internal_effect_untraced/metric/label"
 import * as SingleShotGen from "@effect/io/internal_effect_untraced/singleShotGen"
-import type {
-  EnforceNonEmptyRecord,
-  MergeRecord,
-  NonEmptyArrayEffect,
-  TupleEffect
-} from "@effect/io/internal_effect_untraced/types"
 import * as LogLevel from "@effect/io/Logger/Level"
 import * as LogSpan from "@effect/io/Logger/Span"
 import type * as Metric from "@effect/io/Metric"
@@ -607,7 +601,7 @@ export const bind = Debug.dualWithTrace<
   ) => <R, E>(self: Effect.Effect<R, E, K>) => Effect.Effect<
     R | R2,
     E | E2,
-    MergeRecord<K, { [k in N]: A }>
+    Effect.MergeRecord<K, { [k in N]: A }>
   >,
   <R, E, N extends string, K, R2, E2, A>(
     self: Effect.Effect<R, E, K>,
@@ -616,7 +610,7 @@ export const bind = Debug.dualWithTrace<
   ) => Effect.Effect<
     R | R2,
     E | E2,
-    MergeRecord<K, { [k in N]: A }>
+    Effect.MergeRecord<K, { [k in N]: A }>
   >
 >(3, (trace, restore) =>
   <R, E, N extends string, K, R2, E2, A>(
@@ -627,7 +621,7 @@ export const bind = Debug.dualWithTrace<
     core.flatMap(self, (k) =>
       core.map(
         restore(f)(k),
-        (a): MergeRecord<K, { [k in N]: A }> => ({ ...k, [tag]: a } as any)
+        (a): Effect.MergeRecord<K, { [k in N]: A }> => ({ ...k, [tag]: a } as any)
       )).traced(trace))
 
 /* @internal */
@@ -638,7 +632,7 @@ export const bindValue = Debug.dualWithTrace<
   ) => <R, E>(self: Effect.Effect<R, E, K>) => Effect.Effect<
     R,
     E,
-    MergeRecord<K, { [k in N]: A }>
+    Effect.MergeRecord<K, { [k in N]: A }>
   >,
   <R, E, K, N extends string, A>(
     self: Effect.Effect<R, E, K>,
@@ -647,7 +641,7 @@ export const bindValue = Debug.dualWithTrace<
   ) => Effect.Effect<
     R,
     E,
-    MergeRecord<K, { [k in N]: A }>
+    Effect.MergeRecord<K, { [k in N]: A }>
   >
 >(
   3,
@@ -655,7 +649,7 @@ export const bindValue = Debug.dualWithTrace<
     <R, E, K, N extends string, A>(self: Effect.Effect<R, E, K>, tag: Exclude<N, keyof K>, f: (_: K) => A) =>
       core.map(
         self,
-        (k): MergeRecord<K, { [k in N]: A }> => ({ ...k, [tag]: restore(f)(k) } as any)
+        (k): Effect.MergeRecord<K, { [k in N]: A }> => ({ ...k, [tag]: restore(f)(k) } as any)
       ).traced(trace)
 )
 
@@ -2349,30 +2343,6 @@ export const suspend = Debug.methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const struct = Debug.methodWithTrace(
-  (trace) =>
-    <NER extends Record<string, Effect.Effect<any, any, any>>>(
-      r: EnforceNonEmptyRecord<NER> | Record<string, Effect.Effect<any, any, any>>
-    ): Effect.Effect<
-      [NER[keyof NER]] extends [{ [core.EffectTypeId]: { _R: (_: never) => infer R } }] ? R : never,
-      [NER[keyof NER]] extends [{ [core.EffectTypeId]: { _E: (_: never) => infer E } }] ? E : never,
-      {
-        [K in keyof NER]: [NER[K]] extends [{ [core.EffectTypeId]: { _A: (_: never) => infer A } }] ? A : never
-      }
-    > =>
-      pipe(
-        core.forEach(Object.entries(r), ([_, e]) => core.map(e, (a) => [_, a] as const)),
-        core.map((values) => {
-          const res = {}
-          for (const [k, v] of values) {
-            res[k] = v
-          }
-          return res
-        })
-      ).traced(trace) as any
-)
-
-/* @internal */
 export const tagged = Debug.dualWithTrace<
   (key: string, value: string) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
   <R, E, A>(self: Effect.Effect<R, E, A>, key: string, value: string) => Effect.Effect<R, E, A>
@@ -2675,7 +2645,7 @@ export const tryPromiseInterrupt = Debug.methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const sequential = Debug.methodWithTrace((trace): {
+export const all = Debug.methodWithTrace((trace): {
   <R, E, A, T extends ReadonlyArray<Effect.Effect<any, any, any>>>(
     self: Effect.Effect<R, E, A>,
     ...args: T
@@ -2693,7 +2663,7 @@ export const sequential = Debug.methodWithTrace((trace): {
     ]
   >
   <T extends ReadonlyArray<Effect.Effect<any, any, any>>>(
-    args: T
+    args: [...T]
   ): Effect.Effect<
     T[number] extends never ? never
       : [T[number]] extends [{ [Effect.EffectTypeId]: { _R: (_: never) => infer R } }] ? R
@@ -2740,17 +2710,6 @@ export const sequential = Debug.methodWithTrace((trace): {
     }
     return core.map(collectAll(arguments), Chunk.toReadonlyArray).traced(trace)
   }
-)
-
-/* @internal */
-export const tuple = Debug.methodWithTrace((trace) =>
-  <T extends NonEmptyArrayEffect>(
-    ...t: T
-  ): Effect.Effect<
-    [T[number]] extends [{ [core.EffectTypeId]: { _R: (_: never) => infer R } }] ? R : never,
-    [T[number]] extends [{ [core.EffectTypeId]: { _E: (_: never) => infer E } }] ? E : never,
-    TupleEffect<T>
-  > => core.map(collectAll(t), Chunk.toReadonlyArray).traced(trace) as any
 )
 
 /* @internal */
