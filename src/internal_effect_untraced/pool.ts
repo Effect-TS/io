@@ -420,7 +420,7 @@ const makeWith = Debug.methodWithTrace((trace) =>
   ): Effect.Effect<R | R2 | Scope.Scope, never, Pool.Pool<E, A>> =>
     Effect.uninterruptibleMask((restore) =>
       pipe(
-        Effect.tuple(
+        Effect.all(
           Effect.context<R>(),
           Ref.make(false),
           Ref.make<PoolState>({ size: 0, free: 0 }),

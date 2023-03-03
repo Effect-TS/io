@@ -231,7 +231,7 @@ describe.concurrent("Metric", () => {
             Effect.withMetric(frequency),
             Effect.zipRight(pipe(Effect.succeed("hello"), Effect.withMetric(frequency))),
             Effect.zipRight(pipe(Effect.succeed("world"), Effect.withMetric(frequency))),
-            Effect.zipRight(Effect.struct({
+            Effect.zipRight(Effect.all({
               result1: Metric.value(base),
               result2: pipe(base, Metric.tagged("dyn", "hello"), Metric.value),
               result3: pipe(base, Metric.tagged("dyn", "world"), Metric.value)
@@ -388,7 +388,7 @@ describe.concurrent("Metric", () => {
             Effect.succeed("x"),
             Effect.withMetric(histogram),
             Effect.zipRight(pipe(Effect.succeed("xyz"), Effect.withMetric(histogram))),
-            Effect.zipRight(Effect.struct({
+            Effect.zipRight(Effect.all({
               result1: Metric.value(base),
               result2: pipe(base, Metric.tagged("dyn", "x"), Metric.value),
               result3: pipe(base, Metric.tagged("dyn", "xyz"), Metric.value)
@@ -472,7 +472,7 @@ describe.concurrent("Metric", () => {
             Effect.succeed("x"),
             Effect.withMetric(summary),
             Effect.zipRight(pipe(Effect.succeed("xyz"), Effect.withMetric(summary))),
-            Effect.zipRight(Effect.struct({
+            Effect.zipRight(Effect.all({
               result1: Metric.value(base),
               result2: pipe(base, Metric.tagged("dyn", "x"), Metric.value),
               result3: pipe(base, Metric.tagged("dyn", "xyz"), Metric.value)

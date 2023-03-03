@@ -12,7 +12,7 @@ class MyError extends Error {
   }
 }
 
-const program = Effect.tuplePar(
+const program = Effect.allPar(
   Effect.delay(Effect.succeed(0), millis(500)),
   Effect.onInterrupt(Effect.delay(Effect.failSync(() => new MyError("welp")), millis(1000)), () => Effect.die("oki")),
   Effect.delay(Effect.succeed(0), millis(500)),

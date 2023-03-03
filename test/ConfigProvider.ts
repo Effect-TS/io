@@ -16,7 +16,7 @@ interface HostPort {
   readonly port: number
 }
 
-const hostPortConfig: Config.Config<HostPort> = Config.struct({
+const hostPortConfig: Config.Config<HostPort> = Config.all({
   host: Config.string("host"),
   port: Config.integer("port")
 })
@@ -25,7 +25,7 @@ interface HostPorts {
   readonly hostPorts: ReadonlyArray<HostPort>
 }
 
-const hostPortsConfig: Config.Config<HostPorts> = Config.struct({
+const hostPortsConfig: Config.Config<HostPorts> = Config.all({
   hostPorts: Config.arrayOf(hostPortConfig, "hostPorts")
 })
 
@@ -34,7 +34,7 @@ interface ServiceConfig {
   readonly timeout: number
 }
 
-const serviceConfigConfig: Config.Config<ServiceConfig> = Config.struct({
+const serviceConfigConfig: Config.Config<ServiceConfig> = Config.all({
   hostPort: pipe(hostPortConfig, Config.nested("hostPort")),
   timeout: Config.integer("timeout")
 })
@@ -48,7 +48,7 @@ interface StockDay {
   readonly volume: number
 }
 
-const stockDayConfig: Config.Config<StockDay> = Config.struct({
+const stockDayConfig: Config.Config<StockDay> = Config.all({
   date: Config.date("date"),
   open: Config.float("open"),
   close: Config.float("close"),
@@ -61,7 +61,7 @@ interface SNP500 {
   readonly stockDays: HashMap.HashMap<string, StockDay>
 }
 
-const snp500Config: Config.Config<SNP500> = Config.struct({
+const snp500Config: Config.Config<SNP500> = Config.all({
   stockDays: Config.table(stockDayConfig)
 })
 
@@ -69,11 +69,11 @@ interface WebScrapingTargets {
   readonly targets: HashSet.HashSet<string>
 }
 
-const webScrapingTargetsConfig: Config.Config<WebScrapingTargets> = Config.struct({
+const webScrapingTargetsConfig: Config.Config<WebScrapingTargets> = Config.all({
   targets: Config.setOf(Config.string(), "targets")
 })
 
-const webScrapingTargetsConfigWithDefault = Config.struct({
+const webScrapingTargetsConfigWithDefault = Config.all({
   targets: pipe(
     Config.chunkOf(Config.string()),
     Config.withDefault(Chunk.make("https://effect.website2", "https://github.com/Effect-TS2"))
