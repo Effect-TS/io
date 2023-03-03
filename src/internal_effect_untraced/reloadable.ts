@@ -1,5 +1,6 @@
 import * as Context from "@effect/data/Context"
 import { pipe } from "@effect/data/Function"
+import { globalValue } from "@effect/data/Global"
 import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal_effect_untraced/core"
@@ -107,7 +108,10 @@ export const manual = <Out extends Context.Tag<any>, In, E>(
   )
 
 /** @internal */
-const tagMap = new WeakMap<Context.Tag<any>, Context.Tag<any>>([])
+const tagMap = globalValue(
+  Symbol.for("@effect/io/Reloadable/tagMap"),
+  () => new WeakMap<Context.Tag<any>, Context.Tag<any>>([])
+)
 
 /** @internal */
 export const reloadableTag = <A>(tag: Context.Tag<A>): Context.Tag<Reloadable.Reloadable<A>> => {

@@ -1,5 +1,6 @@
 import * as Equal from "@effect/data/Equal"
 import { dual, pipe } from "@effect/data/Function"
+import { globalValue } from "@effect/data/Global"
 import * as Hash from "@effect/data/Hash"
 import * as HashSet from "@effect/data/HashSet"
 import * as MutableRef from "@effect/data/MutableRef"
@@ -168,7 +169,10 @@ export const ids = (self: FiberId.FiberId): HashSet.HashSet<number> => {
   }
 }
 
-const _fiberCounter = MutableRef.make(0)
+const _fiberCounter = globalValue(
+  Symbol.for("@effect/io/Fiber/Id/_fiberCounter"),
+  () => MutableRef.make(0)
+)
 
 /** @internal */
 export const make = (id: number, startTimeSeconds: number): FiberId.FiberId => {

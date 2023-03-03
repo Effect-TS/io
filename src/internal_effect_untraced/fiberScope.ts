@@ -1,3 +1,4 @@
+import { globalValue } from "@effect/data/Global"
 import * as FiberId from "@effect/io/Fiber/Id"
 import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import * as FiberMessage from "@effect/io/internal_effect_untraced/fiberMessage"
@@ -26,8 +27,6 @@ export interface FiberScope {
   add(runtimeFlags: RuntimeFlags.RuntimeFlags, child: FiberRuntime.FiberRuntime<any, any>): void
 }
 
-const globalFiberScopeURI = "@effect/io/FiberScope/Global"
-
 /** @internal */
 class Global implements FiberScope {
   readonly [FiberScopeTypeId]: FiberScopeTypeId = FiberScopeTypeId
@@ -38,13 +37,6 @@ class Global implements FiberScope {
     child.unsafeAddObserver(() => {
       this.roots.delete(child)
     })
-  }
-  constructor() {
-    if (typeof globalThis[globalFiberScopeURI] === "undefined") {
-      globalThis[globalFiberScopeURI] = this
-    } else {
-      throw new Error("Bug: FiberScope.Global initialized twice (maybe coming from a duplicated module)")
-    }
   }
 }
 
@@ -74,4 +66,7 @@ export const unsafeMake = (fiber: FiberRuntime.FiberRuntime<any, any>): FiberSco
 }
 
 /** @internal */
-export const globalScope = new Global()
+export const globalScope = globalValue(
+  Symbol.for("@effect/io/FiberScope/Global"),
+  () => new Global()
+)
