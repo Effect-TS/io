@@ -1,5 +1,15 @@
 # @effect/io
 
+## 0.6.0
+
+### Minor Changes
+
+- [#274](https://github.com/Effect-TS/io/pull/274) [`ff78681`](https://github.com/Effect-TS/io/commit/ff78681dec14035839b71dccacb9789eb471c286) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Remove background yielding
+
+### Patch Changes
+
+- [#272](https://github.com/Effect-TS/io/pull/272) [`e04f064`](https://github.com/Effect-TS/io/commit/e04f06431e42bbfb4b69d284deea0dbff8cb2522) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Preserve global state across module reloads
+
 ## 0.5.0
 
 ### Minor Changes
