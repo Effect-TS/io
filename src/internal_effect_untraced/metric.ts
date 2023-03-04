@@ -88,10 +88,10 @@ export const counter = (name: string): Metric.Metric.Counter<number> => fromMetr
 export const frequency = (name: string): Metric.Metric.Frequency<string> => fromMetricKey(metricKey.frequency(name))
 
 /** @internal */
-export const fromConst = Debug.untracedDual<
-  <In>(input: LazyArg<In>) => <Type, Out>(self: Metric.Metric<Type, In, Out>) => Metric.Metric<Type, unknown, Out>,
-  <Type, In, Out>(self: Metric.Metric<Type, In, Out>, input: LazyArg<In>) => Metric.Metric<Type, unknown, Out>
->(2, (restore) => (self, input) => contramap(self, restore(input)))
+export const withConstantInput = Debug.untracedDual<
+  <In>(input: In) => <Type, Out>(self: Metric.Metric<Type, In, Out>) => Metric.Metric<Type, unknown, Out>,
+  <Type, In, Out>(self: Metric.Metric<Type, In, Out>, input: In) => Metric.Metric<Type, unknown, Out>
+>(2, () => (self, input) => contramap(self, () => input))
 
 /** @internal */
 export const fromMetricKey = <Type extends MetricKeyType.MetricKeyType<any, any>>(
@@ -200,23 +200,24 @@ export const summaryTimestamp = (
 export const tagged = dual<
   <Type, In, Out>(key: string, value: string) => (self: Metric.Metric<Type, In, Out>) => Metric.Metric<Type, In, Out>,
   <Type, In, Out>(self: Metric.Metric<Type, In, Out>, key: string, value: string) => Metric.Metric<Type, In, Out>
->(3, (self, key, value) => taggedWithLabelSet(self, HashSet.make(metricLabel.make(key, value))))
+>(3, (self, key, value) => taggedWithLabels(self, HashSet.make(metricLabel.make(key, value))))
 
 /** @internal */
-export const taggedWith = Debug.untracedDual<
+export const taggedWithLabelsInput = Debug.untracedDual<
   <In>(
-    f: (input: In) => HashSet.HashSet<MetricLabel.MetricLabel>
+    f: (input: In) => Iterable<MetricLabel.MetricLabel>
   ) => <Type, Out>(self: Metric.Metric<Type, In, Out>) => Metric.Metric<Type, In, void>,
   <Type, In, Out>(
     self: Metric.Metric<Type, In, Out>,
-    f: (input: In) => HashSet.HashSet<MetricLabel.MetricLabel>
+    f: (input: In) => Iterable<MetricLabel.MetricLabel>
   ) => Metric.Metric<Type, In, void>
 >(2, (restore) =>
   (self, f) =>
     map(
       make(
         self.keyType,
-        (input, extraTags) => self.unsafeUpdate(input, pipe(restore(f)(input), HashSet.union(extraTags))),
+        (input, extraTags) =>
+          self.unsafeUpdate(input, HashSet.union(HashSet.fromIterable(restore(f)(input)), extraTags)),
         self.unsafeValue
       ),
       constVoid
@@ -231,25 +232,14 @@ export const taggedWithLabels = dual<
     self: Metric.Metric<Type, In, Out>,
     extraTags: Iterable<MetricLabel.MetricLabel>
   ) => Metric.Metric<Type, In, Out>
->(2, (self, extraTags) => taggedWithLabelSet(self, HashSet.fromIterable(extraTags)))
-
-/** @internal */
-export const taggedWithLabelSet = dual<
-  (
-    extraTags: HashSet.HashSet<MetricLabel.MetricLabel>
-  ) => <Type, In, Out>(
-    self: Metric.Metric<Type, In, Out>
-  ) => Metric.Metric<Type, In, Out>,
-  <Type, In, Out>(
-    self: Metric.Metric<Type, In, Out>,
-    extraTags: HashSet.HashSet<MetricLabel.MetricLabel>
-  ) => Metric.Metric<Type, In, Out>
->(2, (self, extraTags) =>
-  make(
+>(2, (self, extraTagsIterable) => {
+  const extraTags = HashSet.isHashSet(extraTagsIterable) ? extraTagsIterable : HashSet.fromIterable(extraTagsIterable)
+  return make(
     self.keyType,
     (input, extraTags1) => self.unsafeUpdate(input, pipe(extraTags, HashSet.union(extraTags1))),
     (extraTags1) => self.unsafeValue(pipe(extraTags, HashSet.union(extraTags1)))
-  ))
+  )
+})
 
 /** @internal */
 export const timer = (name: string): Metric.Metric<

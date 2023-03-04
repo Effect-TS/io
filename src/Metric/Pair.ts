@@ -35,7 +35,7 @@ export declare namespace MetricPair {
    * @since 1.0.0
    * @category models
    */
-  export type Untyped = MetricPair<MetricKeyType.MetricKeyType<any, any>>
+  export interface Untyped extends MetricPair<MetricKeyType.MetricKeyType<any, any>> {}
 
   /**
    * @since 1.0.0
