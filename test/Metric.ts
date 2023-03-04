@@ -26,7 +26,7 @@ describe.concurrent("Metric", () => {
   describe.concurrent("Counter", () => {
     it.effect("custom increment as aspect", () =>
       Effect.gen(function*($) {
-        const counter = pipe(Metric.counter("c1"), Metric.taggedWithLabels(labels), Metric.fromConst(() => 1))
+        const counter = pipe(Metric.counter("c1"), Metric.taggedWithLabels(labels), Metric.withConstantInput(1))
         const result = yield* $(
           pipe(counter(Effect.unit()), Effect.zipRight(counter(Effect.unit())), Effect.zipRight(Metric.value(counter)))
         )
@@ -64,7 +64,7 @@ describe.concurrent("Metric", () => {
             Effect.withMetric(pipe(
               Metric.counter("c4"),
               Metric.taggedWithLabels(labels),
-              Metric.fromConst(() => 1)
+              Metric.withConstantInput(1)
             )),
             Effect.zipRight(
               pipe(
@@ -72,14 +72,14 @@ describe.concurrent("Metric", () => {
                 Effect.withMetric(pipe(
                   Metric.counter("c4"),
                   Metric.taggedWithLabels(labels),
-                  Metric.fromConst(() => 1)
+                  Metric.withConstantInput(1)
                 ))
               )
             ),
             Effect.zipRight(pipe(
               Metric.counter("c4"),
               Metric.taggedWithLabels(labels),
-              Metric.fromConst(() => 1),
+              Metric.withConstantInput(1),
               Metric.value
             ))
           )
@@ -131,7 +131,7 @@ describe.concurrent("Metric", () => {
       }))
     it.effect("does not count errors", () =>
       Effect.gen(function*($) {
-        const counter = pipe(Metric.counter("c7"), Metric.fromConst(() => 1))
+        const counter = pipe(Metric.counter("c7"), Metric.withConstantInput(1))
         const result = yield* $(
           pipe(
             Effect.unit(),
@@ -144,8 +144,11 @@ describe.concurrent("Metric", () => {
       }))
     it.effect("count + taggedWith", () =>
       Effect.gen(function*($) {
-        const base = pipe(Metric.counter("c8"), Metric.tagged("static", "0"), Metric.fromConst(() => 1))
-        const counter = pipe(base, Metric.taggedWith((input: string) => HashSet.make(MetricLabel.make("dyn", input))))
+        const base = pipe(Metric.counter("c8"), Metric.tagged("static", "0"), Metric.withConstantInput(1))
+        const counter = pipe(
+          base,
+          Metric.taggedWithLabelsInput((input: string) => HashSet.make(MetricLabel.make("dyn", input)))
+        )
         const result = yield* $(
           pipe(
             Effect.succeed("hello"),
@@ -224,7 +227,10 @@ describe.concurrent("Metric", () => {
     it.effect("occurences + taggedWith", () =>
       Effect.gen(function*($) {
         const base = pipe(Metric.frequency("f4"), Metric.taggedWithLabels(labels))
-        const frequency = pipe(base, Metric.taggedWith((s: string) => HashSet.make(MetricLabel.make("dyn", s))))
+        const frequency = pipe(
+          base,
+          Metric.taggedWithLabelsInput((s: string) => HashSet.make(MetricLabel.make("dyn", s)))
+        )
         const { result1, result2, result3 } = yield* $(
           pipe(
             Effect.succeed("hello"),
@@ -281,7 +287,10 @@ describe.concurrent("Metric", () => {
     it.effect("gauge + taggedWith", () =>
       Effect.gen(function*($) {
         const base = pipe(Metric.gauge("g4"), Metric.tagged("static", "0"), Metric.contramap((s: string) => s.length))
-        const gauge = pipe(base, Metric.taggedWith((input: string) => HashSet.make(MetricLabel.make("dyn", input))))
+        const gauge = pipe(
+          base,
+          Metric.taggedWithLabelsInput((input: string) => HashSet.make(MetricLabel.make("dyn", input)))
+        )
         const result = yield* $(
           pipe(
             Effect.succeed("hello"),
@@ -382,7 +391,10 @@ describe.concurrent("Metric", () => {
           Metric.taggedWithLabels(labels),
           Metric.contramap((s: string) => s.length)
         )
-        const histogram = pipe(base, Metric.taggedWith((input: string) => HashSet.make(MetricLabel.make("dyn", input))))
+        const histogram = pipe(
+          base,
+          Metric.taggedWithLabelsInput((input: string) => HashSet.make(MetricLabel.make("dyn", input)))
+        )
         const { result1, result2, result3 } = yield* $(
           pipe(
             Effect.succeed("x"),
@@ -466,7 +478,10 @@ describe.concurrent("Metric", () => {
           Metric.taggedWithLabels(labels),
           Metric.contramap((s: string) => s.length)
         )
-        const summary = pipe(base, Metric.taggedWith((input: string) => HashSet.make(MetricLabel.make("dyn", input))))
+        const summary = pipe(
+          base,
+          Metric.taggedWithLabelsInput((input: string) => HashSet.make(MetricLabel.make("dyn", input)))
+        )
         const { result1, result2, result3 } = yield* $(
           pipe(
             Effect.succeed("x"),

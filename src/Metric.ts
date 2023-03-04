@@ -176,10 +176,10 @@ export const frequency: (name: string) => Metric.Frequency<string> = internal.fr
  * @since 1.0.0
  * @category constructors
  */
-export const fromConst: {
-  <In>(input: LazyArg<In>): <Type, Out>(self: Metric<Type, In, Out>) => Metric<Type, unknown, Out>
-  <Type, In, Out>(self: Metric<Type, In, Out>, input: LazyArg<In>): Metric<Type, unknown, Out>
-} = internal.fromConst
+export const withConstantInput: {
+  <In>(input: In): <Type, Out>(self: Metric<Type, In, Out>) => Metric<Type, unknown, Out>
+  <Type, In, Out>(self: Metric<Type, In, Out>, input: In): Metric<Type, unknown, Out>
+} = internal.withConstantInput
 
 /**
  * @since 1.0.0
@@ -326,15 +326,15 @@ export const tagged: {
  * @since 1.0.0
  * @category mutations
  */
-export const taggedWith: {
+export const taggedWithLabelsInput: {
   <In>(
-    f: (input: In) => HashSet.HashSet<MetricLabel.MetricLabel>
+    f: (input: In) => Iterable<MetricLabel.MetricLabel>
   ): <Type, Out>(self: Metric<Type, In, Out>) => Metric<Type, In, void>
   <Type, In, Out>(
     self: Metric<Type, In, Out>,
-    f: (input: In) => HashSet.HashSet<MetricLabel.MetricLabel>
+    f: (input: In) => Iterable<MetricLabel.MetricLabel>
   ): Metric<Type, In, void>
-} = internal.taggedWith
+} = internal.taggedWithLabelsInput
 
 /**
  * Returns a new metric, which is identical in every way to this one, except
@@ -347,23 +347,6 @@ export const taggedWithLabels: {
   <Type, In, Out>(extraTags: Iterable<MetricLabel.MetricLabel>): (self: Metric<Type, In, Out>) => Metric<Type, In, Out>
   <Type, In, Out>(self: Metric<Type, In, Out>, extraTags: Iterable<MetricLabel.MetricLabel>): Metric<Type, In, Out>
 } = internal.taggedWithLabels
-
-/**
- * Returns a new metric, which is identical in every way to this one, except
- * the specified tags have been added to the tags of this metric.
- *
- * @since 1.0.0
- * @category mutations
- */
-export const taggedWithLabelSet: {
-  (
-    extraTags: HashSet.HashSet<MetricLabel.MetricLabel>
-  ): <Type, In, Out>(self: Metric<Type, In, Out>) => Metric<Type, In, Out>
-  <Type, In, Out>(
-    self: Metric<Type, In, Out>,
-    extraTags: HashSet.HashSet<MetricLabel.MetricLabel>
-  ): Metric<Type, In, Out>
-} = internal.taggedWithLabelSet
 
 /**
  * Creates a timer metric, based on a histogram, which keeps track of
