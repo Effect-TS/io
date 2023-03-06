@@ -28,7 +28,6 @@ Added in v1.0.0
 - [constructors](#constructors)
   - [counter](#counter)
   - [frequency](#frequency)
-  - [fromConst](#fromconst)
   - [fromMetricKey](#frommetrickey)
   - [gauge](#gauge)
   - [histogram](#histogram)
@@ -39,6 +38,7 @@ Added in v1.0.0
   - [sync](#sync)
   - [timer](#timer)
   - [timerWithBoundaries](#timerwithboundaries)
+  - [withConstantInput](#withconstantinput)
 - [getters](#getters)
   - [snapshot](#snapshot)
   - [value](#value)
@@ -53,9 +53,8 @@ Added in v1.0.0
   - [MetricApply (interface)](#metricapply-interface)
 - [mutations](#mutations)
   - [tagged](#tagged)
-  - [taggedWith](#taggedwith)
-  - [taggedWithLabelSet](#taggedwithlabelset)
   - [taggedWithLabels](#taggedwithlabels)
+  - [taggedWithLabelsInput](#taggedwithlabelsinput)
   - [update](#update)
   - [withNow](#withnow)
 - [symbols](#symbols)
@@ -329,23 +328,6 @@ export declare const frequency: (name: string) => Metric.Frequency<string>
 
 Added in v1.0.0
 
-## fromConst
-
-Returns a new metric that is powered by this one, but which accepts updates
-of any type, and translates them to updates with the specified constant
-update value.
-
-**Signature**
-
-```ts
-export declare const fromConst: {
-  <In>(input: LazyArg<In>): <Type, Out>(self: Metric<Type, In, Out>) => Metric<Type, unknown, Out>
-  <Type, In, Out>(self: Metric<Type, In, Out>, input: LazyArg<In>): Metric<Type, unknown, Out>
-}
-```
-
-Added in v1.0.0
-
 ## fromMetricKey
 
 **Signature**
@@ -482,6 +464,23 @@ export declare const timerWithBoundaries: (
   name: string,
   boundaries: Chunk.Chunk<number>
 ) => Metric<MetricKeyType.MetricKeyType.Histogram, Duration.Duration, MetricState.MetricState.Histogram>
+```
+
+Added in v1.0.0
+
+## withConstantInput
+
+Returns a new metric that is powered by this one, but which accepts updates
+of any type, and translates them to updates with the specified constant
+update value.
+
+**Signature**
+
+```ts
+export declare const withConstantInput: {
+  <In>(input: In): <Type, Out>(self: Metric<Type, In, Out>) => Metric<Type, unknown, Out>
+  <Type, In, Out>(self: Metric<Type, In, Out>, input: In): Metric<Type, unknown, Out>
+}
 ```
 
 Added in v1.0.0
@@ -645,52 +644,6 @@ export declare const tagged: {
 
 Added in v1.0.0
 
-## taggedWith
-
-Returns a new metric, which is identical in every way to this one, except
-dynamic tags are added based on the update values. Note that the metric
-returned by this method does not return any useful information, due to the
-dynamic nature of the added tags.
-
-**Signature**
-
-```ts
-export declare const taggedWith: {
-  <In>(f: (input: In) => HashSet.HashSet<MetricLabel.MetricLabel>): <Type, Out>(
-    self: Metric<Type, In, Out>
-  ) => Metric<Type, In, void>
-  <Type, In, Out>(self: Metric<Type, In, Out>, f: (input: In) => HashSet.HashSet<MetricLabel.MetricLabel>): Metric<
-    Type,
-    In,
-    void
-  >
-}
-```
-
-Added in v1.0.0
-
-## taggedWithLabelSet
-
-Returns a new metric, which is identical in every way to this one, except
-the specified tags have been added to the tags of this metric.
-
-**Signature**
-
-```ts
-export declare const taggedWithLabelSet: {
-  (extraTags: HashSet.HashSet<MetricLabel.MetricLabel>): <Type, In, Out>(
-    self: Metric<Type, In, Out>
-  ) => Metric<Type, In, Out>
-  <Type, In, Out>(self: Metric<Type, In, Out>, extraTags: HashSet.HashSet<MetricLabel.MetricLabel>): Metric<
-    Type,
-    In,
-    Out
-  >
-}
-```
-
-Added in v1.0.0
-
 ## taggedWithLabels
 
 Returns a new metric, which is identical in every way to this one, except
@@ -702,6 +655,30 @@ the specified tags have been added to the tags of this metric.
 export declare const taggedWithLabels: {
   <Type, In, Out>(extraTags: Iterable<MetricLabel.MetricLabel>): (self: Metric<Type, In, Out>) => Metric<Type, In, Out>
   <Type, In, Out>(self: Metric<Type, In, Out>, extraTags: Iterable<MetricLabel.MetricLabel>): Metric<Type, In, Out>
+}
+```
+
+Added in v1.0.0
+
+## taggedWithLabelsInput
+
+Returns a new metric, which is identical in every way to this one, except
+dynamic tags are added based on the update values. Note that the metric
+returned by this method does not return any useful information, due to the
+dynamic nature of the added tags.
+
+**Signature**
+
+```ts
+export declare const taggedWithLabelsInput: {
+  <In>(f: (input: In) => Iterable<MetricLabel.MetricLabel>): <Type, Out>(
+    self: Metric<Type, In, Out>
+  ) => Metric<Type, In, void>
+  <Type, In, Out>(self: Metric<Type, In, Out>, f: (input: In) => Iterable<MetricLabel.MetricLabel>): Metric<
+    Type,
+    In,
+    void
+  >
 }
 ```
 

@@ -32,10 +32,10 @@ import type * as fiberScope from "@effect/io/internal_effect_untraced/fiberScope
 import * as DeferredOpCodes from "@effect/io/internal_effect_untraced/opCodes/deferred"
 import * as OpCodes from "@effect/io/internal_effect_untraced/opCodes/effect"
 import * as _runtimeFlags from "@effect/io/internal_effect_untraced/runtimeFlags"
-import * as scheduler from "@effect/io/internal_effect_untraced/scheduler"
 import type * as LogLevel from "@effect/io/Logger/Level"
 import type * as LogSpan from "@effect/io/Logger/Span"
 import type * as MetricLabel from "@effect/io/Metric/Label"
+import * as scheduler from "@effect/io/Scheduler"
 import type * as Scheduler from "@effect/io/Scheduler"
 import type * as Scope from "@effect/io/Scope"
 

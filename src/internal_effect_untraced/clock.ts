@@ -5,6 +5,7 @@ import { constFalse } from "@effect/data/Function"
 import type * as Clock from "@effect/io/Clock"
 import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
+import * as internalCause from "@effect/io/internal_effect_untraced/cause"
 import * as core from "@effect/io/internal_effect_untraced/core"
 
 /** @internal */
@@ -57,13 +58,34 @@ class ClockImpl implements Clock.Clock {
 
   sleep(duration: Duration.Duration): Effect.Effect<never, never, void> {
     return Debug.bodyWithTrace((trace) =>
-      core.asyncInterruptEither<never, never, void>((cb) => {
+      dieOnSync(core.asyncInterruptEither<never, never, void>((cb) => {
         const canceler = globalClockScheduler.unsafeSchedule(() => cb(core.unit()), duration)
         return Either.left(core.asUnit(core.sync(canceler)))
-      }).traced(trace)
+      })).traced(trace)
     )
   }
 }
 
 /** @internal */
 export const make = (): Clock.Clock => new ClockImpl()
+
+//
+// Circular with effect
+//
+/* @internal */
+export const dieMessage = Debug.methodWithTrace((trace) =>
+  (message: string): Effect.Effect<never, never, never> =>
+    core.failCauseSync(() => internalCause.die(internalCause.RuntimeException(message))).traced(trace)
+)
+
+/* @internal */
+export const dieOnSync = Debug.methodWithTrace((trace) =>
+  <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
+    core.withFiberRuntime<R, E, A>((runtime) => {
+      const scheduler = runtime.getFiberRef(core.currentScheduler)
+      if (scheduler.executionMode === "Sync") {
+        return dieMessage("effect is forbidden to run in Sync mode")
+      }
+      return self
+    }).traced(trace)
+)
