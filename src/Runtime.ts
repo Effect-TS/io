@@ -75,6 +75,20 @@ export const runSyncExit: <R>(runtime: Runtime<R>) => <E, A>(effect: Effect.Effe
   internal.unsafeRunSyncExit
 
 /**
+ * Executes the effect synchronously returning the exit or the fiber if async.
+ *
+ * This method is effectful and should only be invoked at the edges of your
+ * program.
+ *
+ * @since 1.0.0
+ * @category execution
+ */
+export const runSyncExitOrFiber: <R>(
+  runtime: Runtime<R>
+) => <E, A>(effect: Effect.Effect<R, E, A>) => Either<Fiber.Fiber<E, A>, Exit.Exit<E, A>> =
+  internal.unsafeRunSyncExitOrFiber
+
+/**
  * Executes the effect synchronously throwing in case of errors or async boundaries.
  *
  * This method is effectful and should only be invoked at the edges of your

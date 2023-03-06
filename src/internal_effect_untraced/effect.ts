@@ -19,6 +19,7 @@ import type * as FiberRef from "@effect/io/FiberRef"
 import * as FiberRefs from "@effect/io/FiberRefs"
 import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
 import * as internalCause from "@effect/io/internal_effect_untraced/cause"
+import { dieMessage, dieOnSync } from "@effect/io/internal_effect_untraced/clock"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as fiberRefsPatch from "@effect/io/internal_effect_untraced/fiberRefs/patch"
 import * as metricLabel from "@effect/io/internal_effect_untraced/metric/label"
@@ -29,6 +30,9 @@ import type * as Metric from "@effect/io/Metric"
 import type * as MetricLabel from "@effect/io/Metric/Label"
 import * as Random from "@effect/io/Random"
 import * as Ref from "@effect/io/Ref"
+
+/* @internal */
+export { dieMessage, dieOnSync } from "@effect/io/internal_effect_untraced/clock"
 
 /* @internal */
 export const absolve = Debug.methodWithTrace((trace) =>
@@ -567,12 +571,6 @@ export const descriptorWith = Debug.methodWithTrace((trace, restore) =>
         interruptors: internalCause.interruptors(state.getFiberRef(core.interruptedCause))
       })
     ).traced(trace) as Effect.Effect<R, E, A>
-)
-
-/* @internal */
-export const dieMessage = Debug.methodWithTrace((trace) =>
-  (message: string): Effect.Effect<never, never, never> =>
-    core.failCauseSync(() => internalCause.die(internalCause.RuntimeException(message))).traced(trace)
 )
 
 /* @internal */
@@ -1889,23 +1887,23 @@ export const patchFiberRefs = Debug.methodWithTrace((trace) =>
 /* @internal */
 export const promise = Debug.methodWithTrace((trace, restore) =>
   <A>(evaluate: LazyArg<Promise<A>>): Effect.Effect<never, never, A> =>
-    core.async<never, never, A>((resolve) => {
+    dieOnSync(core.async<never, never, A>((resolve) => {
       restore(evaluate)()
         .then((a) => resolve(core.exitSucceed(a)))
         .catch((e) => resolve(core.exitDie(e)))
-    }).traced(trace)
+    })).traced(trace)
 )
 
 /* @internal */
 export const promiseInterrupt = Debug.methodWithTrace((trace, restore) =>
   <A>(evaluate: (signal: AbortSignal) => Promise<A>): Effect.Effect<never, never, A> =>
-    core.asyncInterruptEither<never, never, A>((resolve) => {
+    dieOnSync(core.asyncInterruptEither<never, never, A>((resolve) => {
       const controller = new AbortController()
       restore(evaluate)(controller.signal)
         .then((a) => resolve(core.exitSucceed(a)))
         .catch((e) => resolve(core.exitDie(e)))
       return Either.left(core.sync(() => controller.abort()))
-    }).traced(trace)
+    })).traced(trace)
 )
 
 /* @internal */
@@ -2578,12 +2576,12 @@ export const tryCatchPromise = Debug.methodWithTrace((trace, restore) =>
     evaluate: LazyArg<Promise<A>>,
     onReject: (reason: unknown) => E
   ): Effect.Effect<never, E, A> =>
-    core.flatMap(tryCatch(restore(evaluate), restore(onReject)), (promise) =>
+    dieOnSync(core.flatMap(tryCatch(restore(evaluate), restore(onReject)), (promise) =>
       core.async<never, E, A>((resolve) => {
         promise
           .then((a) => resolve(core.exitSucceed(a)))
           .catch((e) => resolve(core.exitFail(restore(onReject)(e))))
-      })).traced(trace)
+      }))).traced(trace)
 )
 
 /* @internal */
@@ -2592,7 +2590,7 @@ export const tryCatchPromiseInterrupt = Debug.methodWithTrace((trace, restore) =
     evaluate: (signal: AbortSignal) => Promise<A>,
     onReject: (reason: unknown) => E
   ): Effect.Effect<never, E, A> =>
-    core.suspendSucceed(() => {
+    dieOnSync(core.suspendSucceed(() => {
       const controller = new AbortController()
       return pipe(
         tryCatch(() => restore(evaluate)(controller.signal), restore(onReject)),
@@ -2604,39 +2602,36 @@ export const tryCatchPromiseInterrupt = Debug.methodWithTrace((trace, restore) =
           })
         )
       )
-    }).traced(trace)
+    })).traced(trace)
 )
 
 /* @internal */
 export const tryPromise = Debug.methodWithTrace((trace, restore) =>
   <A>(evaluate: LazyArg<Promise<A>>): Effect.Effect<never, unknown, A> =>
-    core.flatMap(restore(attempt)(evaluate), (promise) =>
+    dieOnSync(core.flatMap(restore(attempt)(evaluate), (promise) =>
       core.async<never, unknown, A>((resolve) => {
         promise
           .then((a) => resolve(core.exitSucceed(a)))
           .catch((e) => resolve(core.exitFail(e)))
-      })).traced(trace)
+      }))).traced(trace)
 )
 
 /* @internal */
 export const tryPromiseInterrupt = Debug.methodWithTrace((trace, restore) =>
-  <A>(
-    evaluate: (signal: AbortSignal) => Promise<A>
-  ): Effect.Effect<never, unknown, A> =>
-    pipe(
+  <A>(evaluate: (signal: AbortSignal) => Promise<A>): Effect.Effect<never, unknown, A> =>
+    dieOnSync(core.flatMap(
       attempt(() => {
         const controller = new AbortController()
         return [controller, restore(evaluate)(controller.signal)] as const
       }),
-      core.flatMap(([controller, promise]) =>
+      ([controller, promise]) =>
         core.asyncInterruptEither<never, unknown, A>((resolve) => {
           promise
             .then((a) => resolve(core.exitSucceed(a)))
             .catch((e) => resolve(core.exitFail(e)))
           return Either.left(core.sync(() => controller.abort()))
         })
-      )
-    ).traced(trace)
+    )).traced(trace)
 )
 
 /* @internal */

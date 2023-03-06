@@ -198,6 +198,7 @@ Added in v1.0.0
   - [runSync](#runsync)
   - [runSyncEither](#runsynceither)
   - [runSyncExit](#runsyncexit)
+  - [runSyncExitOrFiber](#runsyncexitorfiber)
 - [filtering](#filtering)
   - [filter](#filter)
   - [filterNot](#filternot)
@@ -3308,6 +3309,18 @@ Added in v1.0.0
 
 ```ts
 export declare const runSyncExit: <E, A>(effect: Effect<never, E, A>) => Exit.Exit<E, A>
+```
+
+Added in v1.0.0
+
+## runSyncExitOrFiber
+
+**Signature**
+
+```ts
+export declare const runSyncExitOrFiber: <E, A>(
+  effect: Effect<never, E, A>
+) => Either.Either<Fiber.Fiber<E, A>, Exit.Exit<E, A>>
 ```
 
 Added in v1.0.0
