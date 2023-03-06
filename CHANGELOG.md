@@ -1,5 +1,17 @@
 # @effect/io
 
+## 0.7.0
+
+### Minor Changes
+
+- [#279](https://github.com/Effect-TS/io/pull/279) [`9f5c9ba`](https://github.com/Effect-TS/io/commit/9f5c9bad7a448f20bfb7929f9fdf0cb13dd55d0c) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Improve Scheduler
+
+### Patch Changes
+
+- [#275](https://github.com/Effect-TS/io/pull/275) [`20cb53a`](https://github.com/Effect-TS/io/commit/20cb53a8a707a3685e05e8cf1c3347414bc1b1c8) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Improve metrics types
+
+- [#277](https://github.com/Effect-TS/io/pull/277) [`dadde68`](https://github.com/Effect-TS/io/commit/dadde68e31a23e415ee3c8d6878a70be8bcb4bce) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Unify taggedWith to use Iterable and improve naming
+
 ## 0.6.0
 
 ### Minor Changes
