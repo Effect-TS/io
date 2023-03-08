@@ -412,7 +412,7 @@ export const collectAllSuccesses = Debug.methodWithTrace((trace) =>
   ): Effect.Effect<R, never, Chunk.Chunk<A>> =>
     pipe(
       Array.from(as).map(core.exit),
-      collectAllWith((exit) => (Exit.isSuccess(exit) ? Option.some(exit.value) : Option.none()))
+      collectAllWith((exit) => (Exit.isSuccess(exit) ? Option.some(exit.i0) : Option.none()))
     ).traced(trace)
 )
 

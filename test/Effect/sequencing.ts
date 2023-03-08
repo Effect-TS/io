@@ -55,7 +55,7 @@ describe.concurrent("Effect", () => {
           pipe(Effect.dieMessage("die"), Effect.tapErrorCause(() => Ref.set(ref, true)), Effect.exit)
         )
         const effect = yield* $(Ref.get(ref))
-        assert.isTrue(Exit.isFailure(result) && Option.isSome(Cause.dieOption(result.cause)))
+        assert.isTrue(Exit.isFailure(result) && Option.isSome(Cause.dieOption(result.i0)))
         assert.isTrue(effect)
       }))
   })
@@ -68,7 +68,7 @@ describe.concurrent("Effect", () => {
         Effect.exit
       ))
       const effect = yield* $(Ref.get(ref))
-      assert.isTrue(Exit.isFailure(result) && Option.isSome(Cause.dieOption(result.cause)))
+      assert.isTrue(Exit.isFailure(result) && Option.isSome(Cause.dieOption(result.i0)))
       assert.isTrue(effect)
     }))
   it.effect("tapDefect - leaves failures", () =>

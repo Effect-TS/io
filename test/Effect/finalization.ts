@@ -247,7 +247,7 @@ describe.concurrent("Effect", () => {
       yield* $(pipe(
         Effect.die(Cause.RuntimeException),
         Effect.onExit((exit) =>
-          Exit.isFailure(exit) && Cause.isDie(exit.cause) ?
+          Exit.isFailure(exit) && Cause.isDie(exit.i0) ?
             Ref.set(ref, true) :
             Effect.unit()
         ),
@@ -266,7 +266,7 @@ describe.concurrent("Effect", () => {
           Deferred.succeed(latch1, void 0),
           Effect.zipRight(Effect.never()),
           Effect.onExit((exit) =>
-            Exit.isFailure(exit) && Cause.isInterrupted(exit.cause) ?
+            Exit.isFailure(exit) && Cause.isInterrupted(exit.i0) ?
               pipe(Deferred.succeed(latch2, void 0), Effect.asUnit) :
               Effect.unit()
           ),

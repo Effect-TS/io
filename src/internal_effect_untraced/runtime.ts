@@ -169,9 +169,9 @@ export const unsafeRunSync = <R>(runtime: Runtime.Runtime<R>) =>
     <E, A>(effect: Effect.Effect<R, E, A>): A => {
       const exit = unsafeRunSyncExit(runtime)(effect.traced(trace))
       if (exit._tag === OpCodes.OP_FAILURE) {
-        throw new FiberFailure(exit.cause)
+        throw new FiberFailure(exit.i0)
       }
-      return exit.value
+      return exit.i0
     }
   )
 
@@ -187,11 +187,11 @@ export const unsafeRunPromise = <R>(runtime: Runtime.Runtime<R>) =>
       unsafeRunCallback(runtime)(effect, (exit) => {
         switch (exit._tag) {
           case OpCodes.OP_SUCCESS: {
-            resolve(exit.value)
+            resolve(exit.i0)
             break
           }
           case OpCodes.OP_FAILURE: {
-            reject(new FiberFailure(exit.cause))
+            reject(new FiberFailure(exit.i0))
             break
           }
         }
