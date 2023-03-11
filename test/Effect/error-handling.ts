@@ -60,6 +60,20 @@ describe.concurrent("Effect", () => {
       const result = yield* $(pipe(Effect.succeed(Either.right("test")), Effect.absolve))
       assert.strictEqual(result, "test")
     }))
+  it.effect("absolveWith right", () =>
+    Effect.gen(function*($) {
+      const result = yield* $(
+        pipe(Effect.succeed(Either.right("test")), Effect.absolveWith(() => Either.right("absolveRight")))
+      )
+      assert.strictEqual(result, "absolveRight")
+    }))
+  it.effect("absolveWith left", () =>
+    Effect.gen(function*($) {
+      const result = yield* $(
+        pipe(Effect.succeed("test"), Effect.absolveWith(() => Either.left("absolveLeft" as const)), Effect.exit)
+      )
+      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail("absolveLeft"))
+    }))
   it.effect("absorbWith - on fail", () =>
     Effect.gen(function*($) {
       const result = yield* $(pipe(ExampleErrorFail, Effect.absorbWith(Option.some), Effect.exit))

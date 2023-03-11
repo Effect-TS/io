@@ -189,6 +189,32 @@ export const addFinalizer: <R, X>(
 export const absolve: <R, E, A>(self: Effect<R, E, Either.Either<E, A>>) => Effect<R, E, A> = effect.absolve
 
 /**
+ * This function takes a mapping function f that maps over `Effect` value
+ * and returns `Either` and returns a new function that submerges the error
+ * case of an `Either` value into an `Effect` value.
+ * It is the inverse operation of `either`.
+ *
+ * If the `Either` value is a `Right` value, then the `Effect` value will
+ * succeed with the value contained in the `Right`. If the `Either` value
+ * is a `Left` value, then the `Effect` value will fail with the error
+ * contained in the `Left`.
+ *
+ * @param self - The `Effect` value that contains an `Either` value as its
+ * result.
+ *
+ * @returns A new `Effect` value that has the same context as the original
+ * `Effect` value, but has the error case of the `Either` value submerged
+ * into it.
+ *
+ * @since 1.0.0
+ * @category error handling
+ */
+export const absolveWith: {
+  <A, E2, A2>(f: (a: A) => Either.Either<E2, A2>): <R, E>(self: Effect<R, E, A>) => Effect<R, E | E2, A2>
+  <R, E, E2, A, A2>(self: Effect<R, E, A>, f: (a: A) => Either.Either<E2, A2>): Effect<R, E | E2, A2>
+} = effect.absolveWith
+
+/**
  * This function transforms an `Effect` value that may fail with a defect
  * into a new `Effect` value that may fail with an unknown error.
  *

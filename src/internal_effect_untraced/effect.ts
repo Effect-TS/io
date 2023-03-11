@@ -37,7 +37,19 @@ export { dieMessage, dieOnSync } from "@effect/io/internal_effect_untraced/clock
 /* @internal */
 export const absolve = Debug.methodWithTrace((trace) =>
   <R, E, A>(self: Effect.Effect<R, E, Either.Either<E, A>>): Effect.Effect<R, E, A> =>
-    core.flatMap(self, core.fromEither).traced(trace)
+    absolveWith(self, identity).traced(trace)
+)
+
+/* @internal */
+export const absolveWith = Debug.dualWithTrace<
+  <A, E2, A2>(
+    f: (a: A) => Either.Either<E2, A2>
+  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E | E2, A2>,
+  <R, E, E2, A, A2>(self: Effect.Effect<R, E, A>, f: (a: A) => Either.Either<E2, A2>) => Effect.Effect<R, E | E2, A2>
+>(
+  2,
+  (trace, restore) =>
+    (self, f) => pipe(self, core.flatMap((value) => pipe(value, restore(f), core.fromEither))).traced(trace)
 )
 
 /* @internal */
