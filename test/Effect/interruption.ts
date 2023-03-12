@@ -21,13 +21,13 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const fiber = yield* $(pipe(Effect.succeed(1), Effect.forever, Effect.fork))
       const result = yield* $(Fiber.interrupt(fiber))
-      assert.isTrue(Exit.isFailure(result) && Cause.isInterruptedOnly(result.cause))
+      assert.isTrue(Exit.isFailure(result) && Cause.isInterruptedOnly(result.i0))
     }))
   it.effect("interrupt of never is interrupted with cause", () =>
     Effect.gen(function*($) {
       const fiber = yield* $(pipe(Effect.never(), Effect.fork))
       const result = yield* $(Fiber.interrupt(fiber))
-      assert.isTrue(Exit.isFailure(result) && Cause.isInterruptedOnly(result.cause))
+      assert.isTrue(Exit.isFailure(result) && Cause.isInterruptedOnly(result.i0))
     }))
   it.effect("asyncEffect is interruptible", () =>
     Effect.gen(function*($) {
@@ -35,13 +35,13 @@ describe.concurrent("Effect", () => {
         pipe(Effect.asyncEffect<never, never, never, never, never, never>(() => Effect.never()), Effect.fork)
       )
       const result = yield* $(Fiber.interrupt(fiber))
-      assert.isTrue(Exit.isFailure(result) && Cause.isInterruptedOnly(result.cause))
+      assert.isTrue(Exit.isFailure(result) && Cause.isInterruptedOnly(result.i0))
     }))
   it.effect("async is interruptible", () =>
     Effect.gen(function*($) {
       const fiber = yield* $(pipe(Effect.async<never, never, void>(constVoid), Effect.fork))
       const result = yield* $(Fiber.interrupt(fiber))
-      assert.isTrue(Exit.isFailure(result) && Cause.isInterruptedOnly(result.cause))
+      assert.isTrue(Exit.isFailure(result) && Cause.isInterruptedOnly(result.i0))
     }))
   it.it("acquireUseRelease - acquire is uninterruptible", async () => {
     const awaiter = Deferred.unsafeMake<never, void>(FiberId.none)
@@ -220,7 +220,7 @@ describe.concurrent("Effect", () => {
       assert.strictEqual(Array.from(result).length, 2)
       assert.isTrue(pipe(
         result,
-        Chunk.reduce(true, (acc, curr) => acc && Exit.isFailure(curr) && Cause.isInterruptedOnly(curr.cause))
+        Chunk.reduce(true, (acc, curr) => acc && Exit.isFailure(curr) && Cause.isInterruptedOnly(curr.i0))
       ))
     }))
   it.effect("interruption of raced", () =>
@@ -538,7 +538,7 @@ describe.concurrent("Effect", () => {
       )
       yield* $(Deferred.await(deferred))
       const result = yield* $(Fiber.interrupt(fiber))
-      assert.isTrue(Exit.isFailure(result) && Exit.isInterrupted(result) && Cause.isInterruptedOnly(result.cause))
+      assert.isTrue(Exit.isFailure(result) && Exit.isInterrupted(result) && Cause.isInterruptedOnly(result.i0))
     }))
   it.effect("running an effect swallows inner interruption", () =>
     Effect.gen(function*($) {

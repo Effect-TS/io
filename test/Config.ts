@@ -38,8 +38,8 @@ describe.concurrent("Config", () => {
         ))
         assert.isTrue(
           Exit.isFailure(result) &&
-            Cause.isFailType(result.cause) &&
-            ConfigError.isInvalidData(result.cause.error)
+            Cause.isFailType(result.i0) &&
+            ConfigError.isInvalidData(result.i0.error)
         )
       }))
 
@@ -57,10 +57,10 @@ describe.concurrent("Config", () => {
         ))
         assert.isTrue(
           Exit.isFailure(result) &&
-            Cause.isFailType(result.cause) &&
-            ConfigError.isAnd(result.cause.error) &&
-            ConfigError.isMissingData(result.cause.error.left) &&
-            ConfigError.isInvalidData(result.cause.error.right)
+            Cause.isFailType(result.i0) &&
+            ConfigError.isAnd(result.i0.error) &&
+            ConfigError.isMissingData(result.i0.error.left) &&
+            ConfigError.isInvalidData(result.i0.error.right)
         )
       }))
 
@@ -96,8 +96,8 @@ describe.concurrent("Config", () => {
         ))
         assert.isTrue(
           Exit.isFailure(result) &&
-            Cause.isFailType(result.cause) &&
-            ConfigError.isInvalidData(result.cause.error)
+            Cause.isFailType(result.i0) &&
+            ConfigError.isInvalidData(result.i0.error)
         )
       }))
 
@@ -115,10 +115,10 @@ describe.concurrent("Config", () => {
         ))
         assert.isTrue(
           Exit.isFailure(result) &&
-            Cause.isFailType(result.cause) &&
-            ConfigError.isAnd(result.cause.error) &&
-            ConfigError.isMissingData(result.cause.error.left) &&
-            ConfigError.isInvalidData(result.cause.error.right)
+            Cause.isFailType(result.i0) &&
+            ConfigError.isAnd(result.i0.error) &&
+            ConfigError.isMissingData(result.i0.error.left) &&
+            ConfigError.isInvalidData(result.i0.error.right)
         )
       }))
 

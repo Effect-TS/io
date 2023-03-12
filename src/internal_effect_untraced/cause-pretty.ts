@@ -68,13 +68,20 @@ const renderStack = (span: Option.Option<StackAnnotation>): ReadonlyArray<string
 /** @internal */
 const renderFail = (
   error: string,
+  errorStack: string | undefined,
   stack: Option.Option<StackAnnotation>
 ): ReadonlyArray<RenderError> => {
-  return [new RenderError(stack._tag === "Some" ? stack.value.seq : 0, error, renderStack(stack).join("\r\n"))]
+  return [
+    new RenderError(
+      stack._tag === "Some" ? stack.value.seq : 0,
+      error,
+      errorStack ? errorStack + "\r\n" + renderStack(stack).join("\r\n") : renderStack(stack).join("\r\n")
+    )
+  ]
 }
 
 /** @internal */
-const renderError = (error: Error): string => {
+const renderError = (error: Error): [string, string | undefined] => {
   if (error.stack) {
     const stack = Debug.runtimeDebug.parseStack(error)
     const traces: Array<string> = []
@@ -89,18 +96,18 @@ const renderError = (error: Error): string => {
     }
     return [
       renderToString(error),
-      ...traces
-    ].join("\r\n")
+      traces.join("\r\n")
+    ]
   }
-  return String(error)
+  return [String(error), void 0]
 }
 
 /** @internal */
-const defaultErrorToLines = (error: unknown) => {
+const defaultErrorToLines = (error: unknown): [string, string | undefined] => {
   if (error instanceof Error) {
     return renderError(error)
   }
-  return renderToString(error)
+  return [renderToString(error), void 0]
 }
 
 class RenderError {
@@ -108,7 +115,11 @@ class RenderError {
 }
 
 class RenderErrorTmp {
-  constructor(readonly message: string, readonly stack: Option.Option<Cause.StackAnnotation>) {}
+  constructor(
+    readonly message: string,
+    readonly errorSack: string | undefined,
+    readonly fiberStack: Option.Option<Cause.StackAnnotation>
+  ) {}
 }
 
 /** @internal */
@@ -116,10 +127,33 @@ export const pretty = <E>(cause: Cause.Cause<E>): string => {
   if (internal.isInterruptedOnly(cause)) {
     return "All fibers interrupted without errors."
   }
-  const errors = internal.reduceWithContext(cause, void 0, {
+  const errors = prettyErrors<E>(cause)
+
+  const final = Array.from(errors).sort((a, b) => a.seq === b.seq ? 0 : a.seq > b.seq ? 1 : -1).map((e) => {
+    let message = e.message
+    if (e.stack && e.stack.length > 0) {
+      message += `\r\n${e.stack}`
+    }
+    return message
+  }).join("\r\n\r\n")
+  if (!final.includes("\r\n")) {
+    return final
+  }
+  return `\r\n${final}\r\n`
+}
+
+/** @internal */
+export const prettyErrors = <E>(cause: Cause.Cause<E>) =>
+  internal.reduceWithContext(cause, void 0, {
     emptyCase: (): ReadonlyArray<RenderErrorTmp> => [],
-    dieCase: (_, defect) => [{ message: defaultErrorToLines(defect), stack: Option.none() }],
-    failCase: (_, defect) => [{ message: defaultErrorToLines(defect), stack: Option.none() }],
+    dieCase: (_, err) => {
+      const rendered = defaultErrorToLines(err)
+      return [{ message: rendered[0], errorSack: rendered[1], fiberStack: Option.none() }]
+    },
+    failCase: (_, err) => {
+      const rendered = defaultErrorToLines(err)
+      return [{ message: rendered[0], errorSack: rendered[1], fiberStack: Option.none() }]
+    },
     interruptCase: () => [],
     parallelCase: (_, l, r) => [...l, ...r],
     sequentialCase: (_, l, r) => [...l, ...r],
@@ -127,8 +161,9 @@ export const pretty = <E>(cause: Cause.Cause<E>): string => {
       internal.isStackAnnotation(parent) ?
         v.map((r) => ({
           message: r.message,
-          stack: pipe(
-            Option.map(r.stack, (annotation) =>
+          errorSack: r.errorSack,
+          fiberStack: pipe(
+            Option.map(r.fiberStack, (annotation) =>
               new StackAnnotation(
                 annotation.stack.length < Debug.runtimeDebug.traceStackLimit && parent.stack.length > 0 &&
                   ((annotation.stack.length > 0 &&
@@ -147,20 +182,7 @@ export const pretty = <E>(cause: Cause.Cause<E>): string => {
           )
         })) :
         v
-  }).flatMap((r) => renderFail(r.message, r.stack))
-
-  const final = Array.from(errors).sort((a, b) => a.seq === b.seq ? 0 : a.seq > b.seq ? 1 : -1).map((e) => {
-    let message = e.message
-    if (e.stack && e.stack.length > 0) {
-      message += `\r\n${e.stack}`
-    }
-    return message
-  }).join("\r\n\r\n")
-  if (!final.includes("\r\n")) {
-    return final
-  }
-  return `\r\n${final}\r\n`
-}
+  }).flatMap((r) => renderFail(r.message, r.errorSack, r.fiberStack))
 
 function renderFrame(r: Debug.Frame | undefined): string {
   if (r) {

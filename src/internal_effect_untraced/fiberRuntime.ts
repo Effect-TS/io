@@ -93,14 +93,14 @@ const contOpSuccess = {
     cont: core.OnSuccess,
     value: unknown
   ) => {
-    return cont.successK(value)
+    return cont.i1(value)
   },
   [OpCodes.OP_ON_SUCCESS_AND_FAILURE]: (
     _: FiberRuntime<any, any>,
     cont: core.OnSuccessAndFailure,
     value: unknown
   ) => {
-    return cont.successK(value)
+    return cont.i2(value)
   },
   [OpCodes.OP_REVERT_FLAGS]: (
     self: FiberRuntime<any, any>,
@@ -119,10 +119,10 @@ const contOpSuccess = {
     cont: core.While,
     value: unknown
   ) => {
-    cont.process(value)
-    if (cont.check()) {
+    cont.i2(value)
+    if (cont.i0()) {
       self.pushStack(cont)
-      return cont.body()
+      return cont.i1()
     } else {
       return core.unit()
     }
@@ -920,7 +920,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   }
 
   [OpCodes.OP_SYNC](op: core.Primitive & { _tag: OpCodes.OP_SYNC }) {
-    const value = op.evaluate()
+    const value = op.i0()
     const cont = this.getNextSuccessCont()
     if (cont !== undefined) {
       if (!(cont._tag in contOpSuccess)) {
@@ -943,14 +943,14 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
         absurd(cont)
       }
       // @ts-expect-error
-      return contOpSuccess[cont._tag](this, cont, oldCur.value)
+      return contOpSuccess[cont._tag](this, cont, oldCur.i0)
     } else {
       throw oldCur
     }
   }
 
   [OpCodes.OP_FAILURE](op: core.Primitive & { _tag: OpCodes.OP_FAILURE }) {
-    let cause = op.cause
+    let cause = op.i0
     if (internalCause.isAnnotatedType(cause) && internalCause.isStackAnnotation(cause.annotation)) {
       const stack = cause.annotation.stack
       const currentStack = this.stackToLines()
@@ -976,7 +976,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
       )
     } else {
       cause = internalCause.annotated(
-        op.cause,
+        op.i0,
         new StackAnnotation(this.stackToLines(), MRef.getAndIncrement(internalCause.globalErrorSeq))
       )
     }
@@ -986,7 +986,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
         case OpCodes.OP_ON_FAILURE:
         case OpCodes.OP_ON_SUCCESS_AND_FAILURE: {
           if (!(_runtimeFlags.interruptible(this._runtimeFlags) && this.isInterrupted())) {
-            return cont.failK(cause)
+            return cont.i1(cause)
           } else {
             return core.exitFailCause(internalCause.stripFailures(cause))
           }
@@ -1009,23 +1009,23 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   }
 
   [OpCodes.OP_WITH_RUNTIME](op: core.Primitive & { _tag: OpCodes.OP_WITH_RUNTIME }) {
-    return op.withRuntime(
+    return op.i0(
       this as FiberRuntime<unknown, unknown>,
       FiberStatus.running(this._runtimeFlags) as FiberStatus.Running
     )
   }
 
   [OpCodes.OP_UPDATE_RUNTIME_FLAGS](op: core.Primitive & { _tag: OpCodes.OP_UPDATE_RUNTIME_FLAGS }) {
-    if (op.scope === undefined) {
-      this.patchRuntimeFlags(this._runtimeFlags, op.update)
+    if (op.i1 === undefined) {
+      this.patchRuntimeFlags(this._runtimeFlags, op.i0)
       return core.exitUnit()
     } else {
-      const updateFlags = op.update
+      const updateFlags = op.i0
       const oldRuntimeFlags = this._runtimeFlags
       const newRuntimeFlags = _runtimeFlags.patch(oldRuntimeFlags, updateFlags)
       if (newRuntimeFlags === oldRuntimeFlags) {
         // No change, short circuit
-        return op.scope(oldRuntimeFlags)
+        return op.i1(oldRuntimeFlags)
       } else {
         // One more chance to short circuit: if we're immediately going
         // to interrupt. Interruption will cause immediate reversion of
@@ -1039,7 +1039,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
           // Since we updated the flags, we need to revert them
           const revertFlags = _runtimeFlags.diff(newRuntimeFlags, oldRuntimeFlags)
           this.pushStack(new core.RevertFlags(revertFlags))
-          return op.scope(oldRuntimeFlags)
+          return op.i1(oldRuntimeFlags)
         }
       }
     }
@@ -1047,27 +1047,27 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
 
   [OpCodes.OP_ON_SUCCESS](op: core.Primitive & { _tag: OpCodes.OP_ON_SUCCESS }) {
     this.pushStack(op)
-    return op.first
+    return op.i0
   }
 
   [OpCodes.OP_TRACED](op: core.Primitive & { _tag: OpCodes.OP_TRACED }) {
     this.pushStack(op)
-    return op.self
+    return op.i0
   }
 
   [OpCodes.OP_ON_FAILURE](op: core.Primitive & { _tag: OpCodes.OP_ON_FAILURE }) {
     this.pushStack(op)
-    return op.first
+    return op.i0
   }
 
   [OpCodes.OP_ON_SUCCESS_AND_FAILURE](op: core.Primitive & { _tag: OpCodes.OP_ON_SUCCESS_AND_FAILURE }) {
     this.pushStack(op)
-    return op.first
+    return op.i0
   }
 
   [OpCodes.OP_ASYNC](op: core.Primitive & { _tag: OpCodes.OP_ASYNC }) {
-    this._asyncBlockingOn = op.blockingOn
-    this.initiateAsync(this._runtimeFlags, op.register)
+    this._asyncBlockingOn = op.i1
+    this.initiateAsync(this._runtimeFlags, op.i0)
     throw op
   }
 
@@ -1076,8 +1076,8 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   }
 
   [OpCodes.OP_WHILE](op: core.Primitive & { _tag: OpCodes.OP_WHILE }) {
-    const check = op.check
-    const body = op.body
+    const check = op.i0
+    const body = op.i1
     if (check()) {
       this.pushStack(op)
       return body()
@@ -1296,7 +1296,7 @@ export const collectAllSuccessesPar = Debug.methodWithTrace((trace) =>
   ): Effect.Effect<R, never, Chunk.Chunk<A>> =>
     collectAllWithPar(
       Array.from(elements).map(core.exit),
-      (exit) => (core.exitIsSuccess(exit) ? Option.some(exit.value) : Option.none())
+      (exit) => (core.exitIsSuccess(exit) ? Option.some(exit.i0) : Option.none())
     ).traced(trace)
 )
 
@@ -1484,7 +1484,7 @@ const forEachParUnboundedDiscard = <R, E, A, _>(
                 const exit = core.exitCollectAllPar(exits)
                 if (exit._tag === "Some" && core.exitIsFailure(exit.value)) {
                   return core.failCause(
-                    internalCause.parallel(internalCause.stripFailures(cause), exit.value.cause)
+                    internalCause.parallel(internalCause.stripFailures(cause), exit.value.i0)
                   )
                 } else {
                   return core.failCause(internalCause.stripFailures(cause))

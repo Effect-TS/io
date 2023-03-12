@@ -213,7 +213,7 @@ describe.concurrent("Effect", () => {
         Effect.forEachPar((n) => n === 5 ? Effect.dieMessage("boom") : Effect.succeed(n * 2)),
         Effect.exit
       ))
-      assert.isTrue(Exit.isFailure(result) && Cause.isDie(result.cause))
+      assert.isTrue(Exit.isFailure(result) && Cause.isDie(result.i0))
     }))
   it.effect("forEachPar - runs a task that is interrupted", () =>
     Effect.gen(function*($) {

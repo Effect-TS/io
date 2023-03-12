@@ -146,17 +146,23 @@ export class AsyncFiber<E, A> implements Runtime.AsyncFiber<E, A> {
   }
 }
 
-class FiberFailure {
+class FiberFailure extends Error {
   readonly _tag = "FiberFailure"
   readonly _id = Symbol.for("@effect/io/Runtime/FiberFailure")
-  constructor(readonly cause: Cause.Cause<unknown>) {
+  constructor(readonly originalCause: Cause.Cause<unknown>) {
+    const limit = Error.stackTraceLimit
+    Error.stackTraceLimit = 0
+    super()
+    Error.stackTraceLimit = limit
+    const pretty = CausePretty.prettyErrors(this.originalCause)
+    if (pretty.length > 0) {
+      this.name = pretty[0].message.split(":")[0]
+      this.message = pretty[0].message.substring(this.name.length + 2)
+      this.stack = pretty[0].stack
+    }
   }
-  get stack() {
-    return CausePretty.pretty(this.cause)
-  }
-  readonly message = "Fiber ended with a failure"
   toString() {
-    return `${this.message}\n${this.stack}`
+    return CausePretty.pretty(this.originalCause)
   }
   [Symbol.for("nodejs.util.inspect.custom")]() {
     return this.toString()
@@ -169,9 +175,9 @@ export const unsafeRunSync = <R>(runtime: Runtime.Runtime<R>) =>
     <E, A>(effect: Effect.Effect<R, E, A>): A => {
       const exit = unsafeRunSyncExit(runtime)(effect.traced(trace))
       if (exit._tag === OpCodes.OP_FAILURE) {
-        throw new FiberFailure(exit.cause)
+        throw new FiberFailure(exit.i0)
       }
-      return exit.value
+      return exit.i0
     }
   )
 
@@ -187,11 +193,11 @@ export const unsafeRunPromise = <R>(runtime: Runtime.Runtime<R>) =>
       unsafeRunCallback(runtime)(effect, (exit) => {
         switch (exit._tag) {
           case OpCodes.OP_SUCCESS: {
-            resolve(exit.value)
+            resolve(exit.i0)
             break
           }
           case OpCodes.OP_FAILURE: {
-            reject(new FiberFailure(exit.cause))
+            reject(new FiberFailure(exit.i0))
             break
           }
         }
