@@ -170,6 +170,7 @@ Added in v1.0.0
   - [forEachOption](#foreachoption)
 - [error handling](#error-handling)
   - [absolve](#absolve)
+  - [absolveWith](#absolvewith)
   - [absorb](#absorb)
   - [absorbWith](#absorbwith)
   - [catch](#catch)
@@ -823,8 +824,16 @@ export declare const all: {
     T[number] extends never ? [] : Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>
   >
   <T extends Readonly<{ [K: string]: Effect<any, any, any> }>>(args: T): Effect<
-    T['length'] extends 0 ? never : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R : never,
-    T['length'] extends 0 ? never : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E : never,
+    keyof T extends never
+      ? never
+      : [T[keyof T]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }]
+      ? R
+      : never,
+    keyof T extends never
+      ? never
+      : [T[keyof T]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }]
+      ? E
+      : never,
     Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>
   >
 }
@@ -874,8 +883,16 @@ export declare const allPar: {
     T[number] extends never ? [] : Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>
   >
   <T extends Readonly<{ [K: string]: Effect<any, any, any> }>>(args: T): Effect<
-    T['length'] extends 0 ? never : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R : never,
-    T['length'] extends 0 ? never : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E : never,
+    keyof T extends never
+      ? never
+      : [T[keyof T]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }]
+      ? R
+      : never,
+    keyof T extends never
+      ? never
+      : [T[keyof T]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }]
+      ? E
+      : never,
     Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>
   >
 }
@@ -2804,6 +2821,29 @@ contained in the `Left`.
 
 ```ts
 export declare const absolve: <R, E, A>(self: Effect<R, E, Either.Either<E, A>>) => Effect<R, E, A>
+```
+
+Added in v1.0.0
+
+## absolveWith
+
+This function takes a mapping function f that maps over `Effect` value
+and returns `Either` and returns a new function that submerges the error
+case of an `Either` value into an `Effect` value.
+It is the inverse operation of `either`.
+
+If the `Either` value is a `Right` value, then the `Effect` value will
+succeed with the value contained in the `Right`. If the `Either` value
+is a `Left` value, then the `Effect` value will fail with the error
+contained in the `Left`.
+
+**Signature**
+
+```ts
+export declare const absolveWith: {
+  <A, E2, A2>(f: (a: A) => Either.Either<E2, A2>): <R, E>(self: Effect<R, E, A>) => Effect<R, E2 | E, A2>
+  <R, E, E2, A, A2>(self: Effect<R, E, A>, f: (a: A) => Either.Either<E2, A2>): Effect<R, E | E2, A2>
+}
 ```
 
 Added in v1.0.0

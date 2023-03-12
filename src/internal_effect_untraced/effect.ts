@@ -2679,11 +2679,11 @@ export const all = Debug.methodWithTrace((trace): {
   <T extends Readonly<{ [K: string]: Effect.Effect<any, any, any> }>>(
     args: T
   ): Effect.Effect<
-    T["length"] extends 0 ? never
-      : [T[number]] extends [{ [Effect.EffectTypeId]: { _R: (_: never) => infer R } }] ? R
+    keyof T extends never ? never
+      : [T[keyof T]] extends [{ [Effect.EffectTypeId]: { _R: (_: never) => infer R } }] ? R
       : never,
-    T["length"] extends 0 ? never
-      : [T[number]] extends [{ [Effect.EffectTypeId]: { _E: (_: never) => infer E } }] ? E
+    keyof T extends never ? never
+      : [T[keyof T]] extends [{ [Effect.EffectTypeId]: { _E: (_: never) => infer E } }] ? E
       : never,
     Readonly<{ [K in keyof T]: [T[K]] extends [Effect.Effect<any, any, infer A>] ? A : never }>
   >
