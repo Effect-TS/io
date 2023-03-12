@@ -4462,11 +4462,11 @@ export const all: {
   <T extends Readonly<{ [K: string]: Effect<any, any, any> }>>(
     args: T
   ): Effect<
-    T["length"] extends 0 ? never
-      : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
+    keyof T extends never ? never
+      : [T[keyof T]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
       : never,
-    T["length"] extends 0 ? never
-      : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
+    keyof T extends never ? never
+      : [T[keyof T]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
       : never,
     Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>
   >
@@ -4512,11 +4512,11 @@ export const allPar: {
   <T extends Readonly<{ [K: string]: Effect<any, any, any> }>>(
     args: T
   ): Effect<
-    T["length"] extends 0 ? never
-      : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
+    keyof T extends never ? never
+      : [T[keyof T]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
       : never,
-    T["length"] extends 0 ? never
-      : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
+    keyof T extends never ? never
+      : [T[keyof T]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
       : never,
     Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>
   >
