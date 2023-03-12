@@ -31,6 +31,8 @@ export type Exit<E, A> = Failure<E> | Success<A>
  */
 export interface Failure<E> extends Effect.Effect<never, E, never> {
   readonly _tag: "Failure"
+  readonly cause: Cause.Cause<E>
+  /** @internal */
   readonly i0: Cause.Cause<E>
 }
 
@@ -43,6 +45,8 @@ export interface Failure<E> extends Effect.Effect<never, E, never> {
  */
 export interface Success<A> extends Effect.Effect<never, never, A> {
   readonly _tag: "Success"
+  readonly value: A
+  /** @internal */
   readonly i0: A
 }
 

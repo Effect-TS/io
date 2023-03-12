@@ -146,17 +146,23 @@ export class AsyncFiber<E, A> implements Runtime.AsyncFiber<E, A> {
   }
 }
 
-class FiberFailure {
+class FiberFailure extends Error {
   readonly _tag = "FiberFailure"
   readonly _id = Symbol.for("@effect/io/Runtime/FiberFailure")
-  constructor(readonly cause: Cause.Cause<unknown>) {
+  constructor(readonly originalCause: Cause.Cause<unknown>) {
+    const limit = Error.stackTraceLimit
+    Error.stackTraceLimit = 0
+    super()
+    Error.stackTraceLimit = limit
+    const pretty = CausePretty.prettyErrors(this.originalCause)
+    if (pretty.length > 0) {
+      this.name = pretty[0].message.split(":")[0]
+      this.message = pretty[0].message.substring(this.name.length + 2)
+      this.stack = pretty[0].stack
+    }
   }
-  get stack() {
-    return CausePretty.pretty(this.cause)
-  }
-  readonly message = "Fiber ended with a failure"
   toString() {
-    return `${this.message}\n${this.stack}`
+    return CausePretty.pretty(this.originalCause)
   }
   [Symbol.for("nodejs.util.inspect.custom")]() {
     return this.toString()

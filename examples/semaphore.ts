@@ -17,6 +17,6 @@ const program = E.gen(function*($) {
 
 E.runCallback(program, (ex) => {
   if (Ex.isFailure(ex)) {
-    console.log(Ca.pretty(ex.i0))
+    console.log(Ca.pretty(ex.cause))
   }
 })

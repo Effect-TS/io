@@ -131,6 +131,62 @@ class EffectPrimitive {
 }
 
 /** @internal */
+class EffectPrimitiveFailure {
+  public i0 = undefined
+  public i1 = undefined
+  public i2 = undefined
+  public trace = undefined;
+  [EffectTypeId] = effectVariance
+  constructor(readonly _tag: Primitive["_tag"]) {}
+  [Equal.symbol](this: {}, that: unknown) {
+    return this === that
+  }
+  [Hash.symbol](this: {}) {
+    return Hash.random(this)
+  }
+  get cause() {
+    return this.i0
+  }
+  traced(this: Effect.Effect<never, never, never>, trace: Debug.Trace): Effect.Effect<never, never, never> {
+    if (trace) {
+      const effect = new EffectPrimitive(OpCodes.OP_TRACED) as any
+      effect.i0 = this
+      effect.trace = trace
+      return effect
+    }
+    return this
+  }
+}
+
+/** @internal */
+class EffectPrimitiveSuccess {
+  public i0 = undefined
+  public i1 = undefined
+  public i2 = undefined
+  public trace = undefined;
+  [EffectTypeId] = effectVariance
+  constructor(readonly _tag: Primitive["_tag"]) {}
+  [Equal.symbol](this: {}, that: unknown) {
+    return this === that
+  }
+  [Hash.symbol](this: {}) {
+    return Hash.random(this)
+  }
+  get value() {
+    return this.i0
+  }
+  traced(this: Effect.Effect<never, never, never>, trace: Debug.Trace): Effect.Effect<never, never, never> {
+    if (trace) {
+      const effect = new EffectPrimitive(OpCodes.OP_TRACED) as any
+      effect.i0 = this
+      effect.trace = trace
+      return effect
+    }
+    return this
+  }
+}
+
+/** @internal */
 const effectVariance = {
   _R: (_: never) => _,
   _E: (_: never) => _,
@@ -500,7 +556,7 @@ export const failSync = Debug.methodWithTrace((trace, restore) =>
 /* @internal */
 export const failCause = Debug.methodWithTrace((trace) =>
   <E>(cause: Cause.Cause<E>): Effect.Effect<never, E, never> => {
-    const effect = new EffectPrimitive(OpCodes.OP_FAILURE) as any
+    const effect = new EffectPrimitiveFailure(OpCodes.OP_FAILURE) as any
     effect.i0 = cause
     if (trace) {
       return effect.traced(trace)
@@ -991,7 +1047,7 @@ export const serviceWithEffect = Debug.methodWithTrace((trace, restore) =>
 /* @internal */
 export const succeed = Debug.methodWithTrace((trace) =>
   <A>(value: A): Effect.Effect<never, never, A> => {
-    const effect = new EffectPrimitive(OpCodes.OP_SUCCESS) as any
+    const effect = new EffectPrimitiveSuccess(OpCodes.OP_SUCCESS) as any
     effect.i0 = value
     if (trace) {
       return effect.traced(trace)
@@ -1921,7 +1977,7 @@ export const exitFail = <E>(error: E): Exit.Exit<E, never> =>
 
 /** @internal */
 export const exitFailCause = <E>(cause: Cause.Cause<E>): Exit.Exit<E, never> => {
-  const effect = new EffectPrimitive(OpCodes.OP_FAILURE) as any
+  const effect = new EffectPrimitiveFailure(OpCodes.OP_FAILURE) as any
   effect.i0 = cause
   return effect
 }
@@ -2137,7 +2193,7 @@ export const exitMatchEffect = dual<
 
 /** @internal */
 export const exitSucceed = <A>(value: A): Exit.Exit<never, A> => {
-  const effect = new EffectPrimitive(OpCodes.OP_SUCCESS) as any
+  const effect = new EffectPrimitiveSuccess(OpCodes.OP_SUCCESS) as any
   effect.i0 = value
   return effect
 }
