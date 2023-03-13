@@ -1,5 +1,19 @@
 # @effect/io
 
+## 0.8.0
+
+### Minor Changes
+
+- [#280](https://github.com/Effect-TS/io/pull/280) [`7874207`](https://github.com/Effect-TS/io/commit/7874207dbe64338141c36d8c2aea43fbe132ffb5) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Improve primitive design to allow monomorphic field access
+
+- [#284](https://github.com/Effect-TS/io/pull/284) [`ac1f763`](https://github.com/Effect-TS/io/commit/ac1f763c83b214d1f3401b3d4b0b5e5cde0d05bb) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Update effect/data
+
+### Patch Changes
+
+- [#282](https://github.com/Effect-TS/io/pull/282) [`1367020`](https://github.com/Effect-TS/io/commit/1367020952740faf25797ce694353096dda70a4f) Thanks [@KhraksMamtsov](https://github.com/KhraksMamtsov)! - add absolveWith combinator
+
+- [#285](https://github.com/Effect-TS/io/pull/285) [`3ba868f`](https://github.com/Effect-TS/io/commit/3ba868fa4ed225407ffcf66aa9c6852204dc59a2) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Fix Effect.all/allPar signature
+
 ## 0.7.0
 
 ### Minor Changes
