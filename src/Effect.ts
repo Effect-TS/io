@@ -283,10 +283,15 @@ export const absorbWith: {
  * @since 1.0.0
  * @category constructors
  */
-export const acquireRelease: <R, E, A, R2, X>(
-  acquire: Effect<R, E, A>,
-  release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect<R2, never, X>
-) => Effect<Scope.Scope | R | R2, E, A> = fiberRuntime.acquireRelease
+export const acquireRelease: {
+  <A, R2, X>(
+    release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect<R2, never, X>
+  ): <R, E>(acquire: Effect<R, E, A>) => Effect<Scope.Scope | R2 | R, E, A>
+  <R, E, A, R2, X>(
+    acquire: Effect<R, E, A>,
+    release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect<R2, never, X>
+  ): Effect<Scope.Scope | R | R2, E, A>
+} = fiberRuntime.acquireRelease
 
 /**
  * This function is a variant of `acquireRelease` that allows the `acquire`
