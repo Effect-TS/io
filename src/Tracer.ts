@@ -13,9 +13,28 @@ import type * as Exit from "@effect/io/Exit"
 /**
  * @since 1.0.0
  */
+export const TracerTypeId = Symbol.for("@effect/io/Tracer")
+
+/**
+ * @since 1.0.0
+ */
+export type TracerTypeId = typeof TracerTypeId
+
+/**
+ * @since 1.0.0
+ */
 export interface Tracer {
-  createSpan: (name: string, parent: Option.Option<ParentSpan>, startTime: number) => Span
+  readonly [TracerTypeId]: TracerTypeId
+  readonly span: (name: string, parent: Option.Option<ParentSpan>, startTime: number) => Span
 }
+
+/**
+ * @since 1.0.0
+ */
+export const make = (options: Omit<Tracer, TracerTypeId>): Tracer => ({
+  [TracerTypeId]: TracerTypeId,
+  ...options
+})
 
 /**
  * @since 1.0.0
@@ -53,24 +72,6 @@ export interface ExternalSpan {
 /**
  * @since 1.0.0
  */
-export type SpanEvent = {
-  readonly _tag: "Create"
-  readonly time: number
-  readonly attributes: Record<string, string>
-} | {
-  readonly _tag: "End"
-  readonly time: number
-  readonly exit: Exit.Exit<unknown, unknown>
-} | {
-  readonly _tag: "AddAttribute"
-  readonly time: number
-  readonly key: string
-  readonly value: string
-}
-
-/**
- * @since 1.0.0
- */
 export interface Span {
   readonly _tag: "Span"
   readonly name: string
@@ -79,8 +80,8 @@ export interface Span {
   readonly parent: Option.Option<ParentSpan>
   readonly status: SpanStatus
   readonly attributes: ReadonlyMap<string, string>
-  readonly setStatus: (status: SpanStatus) => void
-  readonly setAttribute: (key: string, value: string) => void
+  readonly end: (endTime: number, exit: Exit.Exit<unknown, unknown>) => void
+  readonly attribute: (key: string, value: string) => void
 }
 
 const ids = globalValue("@effect/io/Tracer/SpanId.ids", () => MutableRef.make(0))
@@ -106,14 +107,23 @@ class NativeSpan implements Span {
     this.spanId = `span${MutableRef.incrementAndGet(ids)}`
   }
 
-  setStatus = (status: SpanStatus): void => {
-    this.status = status
+  end = (endTime: number, exit: Exit.Exit<unknown, unknown>): void => {
+    this.status = {
+      _tag: "Ended",
+      endTime,
+      exit,
+      startTime: this.status.startTime
+    }
   }
 
-  setAttribute = (key: string, value: string): void => {
+  attribute = (key: string, value: string): void => {
     this.attributes.set(key, value)
   }
 }
+
+const nativeTracer: Tracer = make({
+  span: (name, parent, startTime) => new NativeSpan(name, parent, startTime)
+})
 
 /**
  * @since 1.0.0
@@ -149,33 +159,30 @@ export const withSpan: {
   (self, name, options) =>
     Effect.acquireUseRelease(
       Effect.flatMap(Clock.currentTimeMillis(), (startTime) =>
-        Effect.contextWith((_: Context.Context<never>): Span => {
-          const tracer: Tracer = Option.getOrElse(Context.getOption(_, Tracer), (): Tracer => ({
-            createSpan: (name, parent, startTime) => new NativeSpan(name, parent, startTime)
-          }))
+        Effect.contextWith((context: Context.Context<never>): Span => {
+          const tracer: Tracer = Option.getOrElse(
+            Context.getOption(context, Tracer),
+            () => nativeTracer
+          )
 
           const parent = Option.orElse(
             Option.fromNullable(options?.parent),
-            () => options?.root === true ? Option.none() : Context.getOption(_, Span)
+            () => options?.root === true ? Option.none() : Context.getOption(context, Span)
           )
 
-          const span = tracer.createSpan(name, parent, startTime)
+          const span = tracer.span(name, parent, startTime)
 
           Object.entries(options?.attributes ?? {}).forEach(([k, v]) => {
-            span.setAttribute(k, v)
+            span.attribute(k, v)
           })
 
           return span
         })),
-      (span) => Effect.provideService(Span, span)(self),
+      (span) =>
+        Effect.provideService(Span, span)(self),
       (span, exit) =>
-        Effect.flatMap(Clock.currentTimeMillis(), (endTime) =>
-          Effect.sync(() => {
-            span.setStatus({
-              _tag: "Ended",
-              startTime: span.status.startTime,
-              endTime,
-              exit
-            })
-          }))
+        Effect.flatMap(
+          Clock.currentTimeMillis(),
+          (endTime) => Effect.sync(() => span.end(endTime, exit))
+        )
     ))
