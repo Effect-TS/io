@@ -102,7 +102,7 @@ describe.concurrent("Effect", () => {
   it.effect("attempt - fail", () =>
     Effect.gen(function*($) {
       const io1 = Effect.either(ExampleErrorFail)
-      const io2 = Effect.suspendSucceed(() => Effect.either(Effect.suspendSucceed(() => ExampleErrorFail)))
+      const io2 = Effect.suspend(() => Effect.either(Effect.suspend(() => ExampleErrorFail)))
       const [first, second] = yield* $(pipe(io1, Effect.zip(io2)))
       assert.deepStrictEqual(first, Either.left(ExampleError))
       assert.deepStrictEqual(second, Either.left(ExampleError))
@@ -608,7 +608,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const message = "hello"
       const result = yield* $(pipe(
-        Effect.tryCatch(() => {
+        Effect.attemptCatch(() => {
           throw message
         }, identity),
         Effect.exit

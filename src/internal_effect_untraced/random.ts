@@ -56,7 +56,7 @@ const shuffleWith = <A>(
   elements: Iterable<A>,
   nextIntBounded: (n: number) => Effect.Effect<never, never, number>
 ): Effect.Effect<never, never, Chunk.Chunk<A>> => {
-  return core.suspendSucceed(() =>
+  return core.suspend(() =>
     pipe(
       core.sync(() => Array.from(elements)),
       core.flatMap((buffer) => {

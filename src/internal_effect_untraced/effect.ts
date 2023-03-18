@@ -429,7 +429,7 @@ export const collectFirst = Debug.dualWithTrace<
   2,
   (trace, restore) =>
     (elements, f) =>
-      core.suspendSucceed(() =>
+      core.suspend(() =>
         collectFirstLoop(
           restore,
           elements[Symbol.iterator](),
@@ -515,7 +515,7 @@ export const cond = Debug.methodWithTrace((trace, restore) =>
     result: LazyArg<A>,
     error: LazyArg<E>
   ): Effect.Effect<never, E, A> =>
-    core.suspendSucceed(() =>
+    core.suspend(() =>
       restore(predicate)() ?
         core.sync(restore(result)) :
         core.failSync(restore(error))
@@ -672,7 +672,7 @@ export const dropUntil = Debug.dualWithTrace<
     elements: Iterable<A>,
     predicate: (a: A) => Effect.Effect<R, E, boolean>
   ) =>
-    core.suspendSucceed(() => {
+    core.suspend(() => {
       const iterator = elements[Symbol.iterator]()
       const builder: Array<A> = []
       let next: IteratorResult<A, any>
@@ -700,7 +700,7 @@ export const dropWhile = Debug.dualWithTrace<
   2,
   (trace, restore) =>
     <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) =>
-      core.suspendSucceed(() => {
+      core.suspend(() => {
         const iterator = elements[Symbol.iterator]()
         const builder: Array<A> = []
         let next
@@ -733,7 +733,7 @@ export const exists = Debug.dualWithTrace<
   2,
   (trace, restore) =>
     (elements, f) =>
-      core.suspendSucceed(() =>
+      core.suspend(() =>
         existsLoop(
           restore,
           elements[Symbol.iterator](),
@@ -770,12 +770,12 @@ export const filter = Debug.dualWithTrace<
   2,
   (trace, restore) =>
     <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) =>
-      core.suspendSucceed(() =>
+      core.suspend(() =>
         Array.from(elements).reduceRight(
           (effect, a) =>
             core.zipWith(
               effect,
-              core.suspendSucceed(() => restore(f)(a)),
+              core.suspend(() => restore(f)(a)),
               (list, b) => b ? pipe(list, Chunk.prepend(a)) : list
             ),
           core.sync(() => Chunk.empty<A>()) as Effect.Effect<R, E, Chunk.Chunk<A>>
@@ -961,7 +961,7 @@ export const find = Debug.dualWithTrace<
   <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, Option.Option<A>>
 >(2, (trace, restore) =>
   (elements, f) =>
-    core.suspendSucceed(() => {
+    core.suspend(() => {
       const array = Array.from(elements)
       const iterator = array[Symbol.iterator]()
       const next = restore(() => iterator.next())()
@@ -991,7 +991,7 @@ const findLoop = <A, R, E>(
 /* @internal */
 export const firstSuccessOf = Debug.methodWithTrace((trace) =>
   <R, E, A>(effects: Iterable<Effect.Effect<R, E, A>>): Effect.Effect<R, E, A> =>
-    core.suspendSucceed(() => {
+    core.suspend(() => {
       const list = Chunk.fromIterable(effects)
       if (!Chunk.isNonEmpty(list)) {
         return core.dieSync(() => internalCause.IllegalArgumentException(`Received an empty collection of effects`))
@@ -1047,7 +1047,7 @@ export const forAll = Debug.dualWithTrace<
   2,
   (trace, restore) =>
     (elements, f) =>
-      core.suspendSucceed(() =>
+      core.suspend(() =>
         forAllLoop(
           restore,
           elements[Symbol.iterator](),
@@ -1118,7 +1118,7 @@ export const forEachWithIndex = Debug.dualWithTrace<
   2,
   (trace, restore) =>
     <A, R, E, B>(elements: Iterable<A>, f: (a: A, i: number) => Effect.Effect<R, E, B>) =>
-      core.suspendSucceed(() => {
+      core.suspend(() => {
         let index = 0
         const acc: Array<B> = []
         return pipe(
@@ -1168,7 +1168,7 @@ class EffectGen {
   @internal */
 export const gen: typeof Effect.gen = Debug.methodWithTrace((trace, restore) =>
   (f) =>
-    core.suspendSucceed(() => {
+    core.suspend(() => {
       const iterator = restore(() => f((self) => new EffectGen(self) as any))()
       const state = restore(() => iterator.next())()
       const run = (
@@ -1286,7 +1286,7 @@ export const iterate = Debug.methodWithTrace((trace, restore) =>
     cont: (z: Z) => boolean,
     body: (z: Z) => Effect.Effect<R, E, Z>
   ): Effect.Effect<R, E, Z> =>
-    core.suspendSucceed<R, E, Z>(() => {
+    core.suspend<R, E, Z>(() => {
       if (restore(cont)(initial)) {
         return core.flatMap(restore(body)(initial), (z2) => iterate(z2, restore(cont), restore(body)))
       }
@@ -1322,7 +1322,7 @@ export const leftWith = Debug.dualWithTrace<
     self: Effect.Effect<R, E, Either.Either<A, B>>,
     f: (effect: Effect.Effect<R, Either.Either<E, B>, A>) => Effect.Effect<R1, Either.Either<E1, B1>, A1>
   ) => Effect.Effect<R | R1, E | E1, Either.Either<A1, B1>>
->(2, (trace, restore) => (self, f) => core.suspendSucceed(() => unleft(restore(f)(left(self)))).traced(trace))
+>(2, (trace, restore) => (self, f) => core.suspend(() => unleft(restore(f)(left(self)))).traced(trace))
 
 /** @internal */
 const someFatal = Option.some(LogLevel.Fatal)
@@ -1538,7 +1538,7 @@ export const logSpan = Debug.dualWithTrace<
         core.fiberRefGet(core.currentLogSpan),
         (stack) =>
           core.flatMap(Clock.currentTimeMillis(), (now) =>
-            core.suspendSucceed(() => {
+            core.suspend(() => {
               const logSpan = LogSpan.make(label, now)
               return core.fiberRefLocally(
                 core.currentLogSpan,
@@ -1557,7 +1557,7 @@ export const logAnnotate = Debug.dualWithTrace<
   (trace) =>
     (effect, key, value) =>
       core.flatMap(core.fiberRefGet(core.currentLogAnnotations), (annotations) =>
-        core.suspendSucceed(() =>
+        core.suspend(() =>
           pipe(
             effect,
             core.fiberRefLocally(core.currentLogAnnotations, pipe(annotations, HashMap.set(key, value)))
@@ -1588,7 +1588,7 @@ const loopInternal = <Z, R, E, A>(
   inc: (z: Z) => Z,
   body: (z: Z) => Effect.Effect<R, E, A>
 ): Effect.Effect<R, E, Chunk.Chunk<A>> => {
-  return core.suspendSucceed(() => {
+  return core.suspend(() => {
     return cont(initial)
       ? core.flatMap(body(initial), (a) =>
         core.map(
@@ -1607,7 +1607,7 @@ export const loopDiscard = Debug.methodWithTrace((trace, restore) =>
     inc: (z: Z) => Z,
     body: (z: Z) => Effect.Effect<R, E, X>
   ): Effect.Effect<R, E, void> =>
-    core.suspendSucceed(() =>
+    core.suspend(() =>
       restore(cont)(initial)
         ? core.flatMap(
           restore(body)(initial),
@@ -1634,7 +1634,7 @@ export const mapAccum = Debug.dualWithTrace<
     zero: Z,
     f: (z: Z, a: A) => Effect.Effect<R, E, readonly [Z, B]>
   ) =>
-    core.suspendSucceed(() => {
+    core.suspend(() => {
       const iterator = restore(() => elements[Symbol.iterator]())()
       const builder: Array<B> = []
       let result: Effect.Effect<R, E, Z> = core.succeed(zero)
@@ -1691,7 +1691,7 @@ export const mapTryCatch = Debug.dualWithTrace<
     f: (a: A) => B,
     onThrow: (u: unknown) => E1
   ) => Effect.Effect<R, E | E1, B>
->(3, (trace) => (self, f, onThrow) => core.flatMap(self, (a) => tryCatch(() => f(a), onThrow)).traced(trace))
+>(3, (trace) => (self, f, onThrow) => core.flatMap(self, (a) => attemptCatch(() => f(a), onThrow)).traced(trace))
 
 /* @internal */
 export const memoize = Debug.methodWithTrace((trace) =>
@@ -1817,7 +1817,7 @@ export const orElseEither = Debug.dualWithTrace<
   ) => Effect.Effect<R | R2, E2, Either.Either<A, A2>>
 >(2, (trace, restore) =>
   (self, that) =>
-    core.tryOrElse(
+    core.attemptOrElse(
       self,
       () => core.map(restore(that)(), Either.right),
       (a) => core.succeed(Either.left(a))
@@ -2155,7 +2155,7 @@ export const rejectEffect = Debug.dualWithTrace<
 export const repeatN = Debug.dualWithTrace<
   (n: number) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
   <R, E, A>(self: Effect.Effect<R, E, A>, n: number) => Effect.Effect<R, E, A>
->(2, (trace) => (self, n) => core.suspendSucceed(() => repeatNLoop(self, n)).traced(trace))
+>(2, (trace) => (self, n) => core.suspend(() => repeatNLoop(self, n)).traced(trace))
 
 /* @internal */
 const repeatNLoop = Debug.methodWithTrace((trace) =>
@@ -2221,7 +2221,7 @@ export const rightWith = Debug.dualWithTrace<
     self: Effect.Effect<R, E, Either.Either<A, B>>,
     f: (effect: Effect.Effect<R, Either.Either<A, E>, B>) => Effect.Effect<R1, Either.Either<A1, E1>, B1>
   ) => Effect.Effect<R | R1, E | E1, Either.Either<A1, B1>>
->(2, (trace, restore) => (self, f) => core.suspendSucceed(() => unright(restore(f)(right(self)))).traced(trace))
+>(2, (trace, restore) => (self, f) => core.suspend(() => unright(restore(f)(right(self)))).traced(trace))
 
 /* @internal */
 export const sandbox = Debug.methodWithTrace((trace) =>
@@ -2232,7 +2232,7 @@ export const sandbox = Debug.methodWithTrace((trace) =>
 /* @internal */
 export const setFiberRefs = Debug.methodWithTrace((trace) =>
   (fiberRefs: FiberRefs.FiberRefs): Effect.Effect<never, never, void> =>
-    core.suspendSucceed(() => FiberRefs.setAll(fiberRefs)).traced(trace)
+    core.suspend(() => FiberRefs.setAll(fiberRefs)).traced(trace)
 )
 
 /* @internal */
@@ -2341,7 +2341,7 @@ export const summarized = Debug.dualWithTrace<
 )
 
 /* @internal */
-export const suspend = Debug.methodWithTrace((trace, restore) =>
+export const attemptSuspend = Debug.methodWithTrace((trace, restore) =>
   <R, E, A>(
     evaluate: LazyArg<Effect.Effect<R, E, A>>
   ): Effect.Effect<R, unknown, A> => core.flatMap(attempt(restore(evaluate)), identity).traced(trace)
@@ -2385,7 +2385,7 @@ export const takeWhile = Debug.dualWithTrace<
   2,
   (trace, restore) =>
     <R, E, A>(elements: Iterable<A>, predicate: (a: A) => Effect.Effect<R, E, boolean>) =>
-      core.suspendSucceed(() => {
+      core.suspend(() => {
         const iterator = elements[Symbol.iterator]()
         const builder: Array<A> = []
         let next: IteratorResult<A, any>
@@ -2568,7 +2568,7 @@ export const timedWith = Debug.dualWithTrace<
 )
 
 /* @internal */
-export const tryCatch = Debug.methodWithTrace((trace, restore) =>
+export const attemptCatch = Debug.methodWithTrace((trace, restore) =>
   <E, A>(
     attempt: LazyArg<A>,
     onThrow: (u: unknown) => E
@@ -2583,12 +2583,12 @@ export const tryCatch = Debug.methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const tryCatchPromise = Debug.methodWithTrace((trace, restore) =>
+export const attemptCatchPromise = Debug.methodWithTrace((trace, restore) =>
   <E, A>(
     evaluate: LazyArg<Promise<A>>,
     onReject: (reason: unknown) => E
   ): Effect.Effect<never, E, A> =>
-    dieOnSync(core.flatMap(tryCatch(restore(evaluate), restore(onReject)), (promise) =>
+    dieOnSync(core.flatMap(attemptCatch(restore(evaluate), restore(onReject)), (promise) =>
       core.async<never, E, A>((resolve) => {
         promise
           .then((a) => resolve(core.exitSucceed(a)))
@@ -2597,15 +2597,15 @@ export const tryCatchPromise = Debug.methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const tryCatchPromiseInterrupt = Debug.methodWithTrace((trace, restore) =>
+export const attemptCatchPromiseInterrupt = Debug.methodWithTrace((trace, restore) =>
   <E, A>(
     evaluate: (signal: AbortSignal) => Promise<A>,
     onReject: (reason: unknown) => E
   ): Effect.Effect<never, E, A> =>
-    dieOnSync(core.suspendSucceed(() => {
+    dieOnSync(core.suspend(() => {
       const controller = new AbortController()
       return pipe(
-        tryCatch(() => restore(evaluate)(controller.signal), restore(onReject)),
+        attemptCatch(() => restore(evaluate)(controller.signal), restore(onReject)),
         core.flatMap((promise) =>
           core.async<never, E, A>((resolve) => {
             promise
@@ -2618,7 +2618,7 @@ export const tryCatchPromiseInterrupt = Debug.methodWithTrace((trace, restore) =
 )
 
 /* @internal */
-export const tryPromise = Debug.methodWithTrace((trace, restore) =>
+export const attemptPromise = Debug.methodWithTrace((trace, restore) =>
   <A>(evaluate: LazyArg<Promise<A>>): Effect.Effect<never, unknown, A> =>
     dieOnSync(core.flatMap(restore(attempt)(evaluate), (promise) =>
       core.async<never, unknown, A>((resolve) => {
@@ -2629,7 +2629,7 @@ export const tryPromise = Debug.methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const tryPromiseInterrupt = Debug.methodWithTrace((trace, restore) =>
+export const attemptPromiseInterrupt = Debug.methodWithTrace((trace, restore) =>
   <A>(evaluate: (signal: AbortSignal) => Promise<A>): Effect.Effect<never, unknown, A> =>
     dieOnSync(core.flatMap(
       attempt(() => {
@@ -2773,7 +2773,7 @@ export const unless = Debug.dualWithTrace<
   <R, E, A>(self: Effect.Effect<R, E, A>, predicate: LazyArg<boolean>) => Effect.Effect<R, E, Option.Option<A>>
 >(2, (trace, restore) =>
   (self, predicate) =>
-    core.suspendSucceed(() =>
+    core.suspend(() =>
       restore(predicate)() ?
         succeedNone() :
         asSome(self)
@@ -2969,7 +2969,7 @@ export const when = Debug.dualWithTrace<
   <R, E, A>(self: Effect.Effect<R, E, A>, predicate: LazyArg<boolean>) => Effect.Effect<R, E, Option.Option<A>>
 >(2, (trace, restore) =>
   (self, predicate) =>
-    core.suspendSucceed(() =>
+    core.suspend(() =>
       restore(predicate)() ?
         core.map(self, Option.some) :
         core.succeed(Option.none())

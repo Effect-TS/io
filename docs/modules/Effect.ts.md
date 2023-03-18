@@ -13,6 +13,7 @@ Added in v1.0.0
 <h2 class="text-delta">Table of contents</h2>
 
 - [alternatives](#alternatives)
+  - [attemptOrElse](#attemptorelse)
   - [orDie](#ordie)
   - [orDieWith](#ordiewith)
   - [orElse](#orelse)
@@ -20,7 +21,6 @@ Added in v1.0.0
   - [orElseFail](#orelsefail)
   - [orElseOptional](#orelseoptional)
   - [orElseSucceed](#orelsesucceed)
-  - [tryOrElse](#tryorelse)
 - [aspects](#aspects)
   - [withParallelismUnbounded](#withparallelismunbounded)
 - [concurrency](#concurrency)
@@ -43,6 +43,12 @@ Added in v1.0.0
   - [asyncInterruptEither](#asyncinterrupteither)
   - [asyncOption](#asyncoption)
   - [attempt](#attempt)
+  - [attemptCatch](#attemptcatch)
+  - [attemptCatchPromise](#attemptcatchpromise)
+  - [attemptCatchPromiseInterrupt](#attemptcatchpromiseinterrupt)
+  - [attemptPromise](#attemptpromise)
+  - [attemptPromiseInterrupt](#attemptpromiseinterrupt)
+  - [attemptSuspend](#attemptsuspend)
   - [checkInterruptible](#checkinterruptible)
   - [clockWith](#clockwith)
   - [collect](#collect)
@@ -108,17 +114,11 @@ Added in v1.0.0
   - [succeedRight](#succeedright)
   - [succeedSome](#succeedsome)
   - [suspend](#suspend)
-  - [suspendSucceed](#suspendsucceed)
   - [sync](#sync)
   - [taggedScoped](#taggedscoped)
   - [taggedScopedWithLabelSet](#taggedscopedwithlabelset)
   - [taggedScopedWithLabels](#taggedscopedwithlabels)
   - [takeWhile](#takewhile)
-  - [tryCatch](#trycatch)
-  - [tryCatchPromise](#trycatchpromise)
-  - [tryCatchPromiseInterrupt](#trycatchpromiseinterrupt)
-  - [tryPromise](#trypromise)
-  - [tryPromiseInterrupt](#trypromiseinterrupt)
   - [unfold](#unfold)
   - [unit](#unit)
   - [updateFiberRefs](#updatefiberrefs)
@@ -455,6 +455,28 @@ Added in v1.0.0
 
 # alternatives
 
+## attemptOrElse
+
+Executed `that` in case `self` fails with a `Cause` that doesn't contain
+defects, executes `success` in case of successes
+
+**Signature**
+
+```ts
+export declare const attemptOrElse: {
+  <R2, E2, A2, A, R3, E3, A3>(that: LazyArg<Effect<R2, E2, A2>>, onSuccess: (a: A) => Effect<R3, E3, A3>): <R, E>(
+    self: Effect<R, E, A>
+  ) => Effect<R2 | R3 | R, E2 | E3, A2 | A3>
+  <R, E, A, R2, E2, A2, R3, E3, A3>(
+    self: Effect<R, E, A>,
+    that: LazyArg<Effect<R2, E2, A2>>,
+    onSuccess: (a: A) => Effect<R3, E3, A3>
+  ): Effect<R | R2 | R3, E2 | E3, A2 | A3>
+}
+```
+
+Added in v1.0.0
+
 ## orDie
 
 Translates effect failure into death of the fiber, making all failures
@@ -572,28 +594,6 @@ otherwise succeeds with the specified value.
 export declare const orElseSucceed: {
   <A2>(evaluate: LazyArg<A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A2 | A>
   <R, E, A, A2>(self: Effect<R, E, A>, evaluate: LazyArg<A2>): Effect<R, E, A | A2>
-}
-```
-
-Added in v1.0.0
-
-## tryOrElse
-
-Executed `that` in case `self` fails with a `Cause` that doesn't contain
-defects, executes `success` in case of successes
-
-**Signature**
-
-```ts
-export declare const tryOrElse: {
-  <R2, E2, A2, A, R3, E3, A3>(that: LazyArg<Effect<R2, E2, A2>>, onSuccess: (a: A) => Effect<R3, E3, A3>): <R, E>(
-    self: Effect<R, E, A>
-  ) => Effect<R2 | R3 | R, E2 | E3, A2 | A3>
-  <R, E, A, R2, E2, A2, R3, E3, A3>(
-    self: Effect<R, E, A>,
-    that: LazyArg<Effect<R2, E2, A2>>,
-    onSuccess: (a: A) => Effect<R3, E3, A3>
-  ): Effect<R | R2 | R3, E2 | E3, A2 | A3>
 }
 ```
 
@@ -1036,6 +1036,91 @@ thrown exceptions into typed failed effects creating with `Effect.fail`.
 
 ```ts
 export declare const attempt: <A>(evaluate: LazyArg<A>) => Effect<never, unknown, A>
+```
+
+Added in v1.0.0
+
+## attemptCatch
+
+Imports a synchronous side-effect into a pure value, translating any
+thrown exceptions into typed failed effects.
+
+**Signature**
+
+```ts
+export declare const attemptCatch: <E, A>(attempt: LazyArg<A>, onThrow: (u: unknown) => E) => Effect<never, E, A>
+```
+
+Added in v1.0.0
+
+## attemptCatchPromise
+
+Create an `Effect` that when executed will construct `promise` and wait for
+its result, errors will be handled using `onReject`.
+
+**Signature**
+
+```ts
+export declare const attemptCatchPromise: <E, A>(
+  evaluate: LazyArg<Promise<A>>,
+  onReject: (reason: unknown) => E
+) => Effect<never, E, A>
+```
+
+Added in v1.0.0
+
+## attemptCatchPromiseInterrupt
+
+Like `tryCatchPromise` but allows for interruption via AbortSignal
+
+**Signature**
+
+```ts
+export declare const attemptCatchPromiseInterrupt: <E, A>(
+  evaluate: (signal: AbortSignal) => Promise<A>,
+  onReject: (reason: unknown) => E
+) => Effect<never, E, A>
+```
+
+Added in v1.0.0
+
+## attemptPromise
+
+Create an `Effect` that when executed will construct `promise` and wait for
+its result, errors will produce failure as `unknown`.
+
+**Signature**
+
+```ts
+export declare const attemptPromise: <A>(evaluate: LazyArg<Promise<A>>) => Effect<never, unknown, A>
+```
+
+Added in v1.0.0
+
+## attemptPromiseInterrupt
+
+Like `tryPromise` but allows for interruption via AbortSignal
+
+**Signature**
+
+```ts
+export declare const attemptPromiseInterrupt: <A>(
+  evaluate: (signal: AbortSignal) => Promise<A>
+) => Effect<never, unknown, A>
+```
+
+Added in v1.0.0
+
+## attemptSuspend
+
+Returns a lazily constructed effect, whose construction may itself require
+effects. When no context is required (i.e., when `R == unknown`) it is
+conceptually equivalent to `flatten(succeed(io))`.
+
+**Signature**
+
+```ts
+export declare const attemptSuspend: <R, E, A>(evaluate: LazyArg<Effect<R, E, A>>) => Effect<R, unknown, A>
 ```
 
 Added in v1.0.0
@@ -1835,7 +1920,7 @@ Added in v1.0.0
 
 ## promise
 
-Like `tryPromise` but produces a defect in case of errors.
+Like `attemptPromise` but produces a defect in case of errors.
 
 **Signature**
 
@@ -1982,24 +2067,10 @@ Added in v1.0.0
 
 ## suspend
 
-Returns a lazily constructed effect, whose construction may itself require
-effects. When no context is required (i.e., when `R == unknown`) it is
-conceptually equivalent to `flatten(succeed(io))`.
-
 **Signature**
 
 ```ts
-export declare const suspend: <R, E, A>(evaluate: LazyArg<Effect<R, E, A>>) => Effect<R, unknown, A>
-```
-
-Added in v1.0.0
-
-## suspendSucceed
-
-**Signature**
-
-```ts
-export declare const suspendSucceed: <R, E, A>(effect: LazyArg<Effect<R, E, A>>) => Effect<R, E, A>
+export declare const suspend: <R, E, A>(effect: LazyArg<Effect<R, E, A>>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -2065,77 +2136,6 @@ export declare const takeWhile: {
   <R, E, A>(predicate: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<A>>
   <R, E, A>(elements: Iterable<A>, predicate: (a: A) => Effect<R, E, boolean>): Effect<R, E, Chunk.Chunk<A>>
 }
-```
-
-Added in v1.0.0
-
-## tryCatch
-
-Imports a synchronous side-effect into a pure value, translating any
-thrown exceptions into typed failed effects.
-
-**Signature**
-
-```ts
-export declare const tryCatch: <E, A>(attempt: LazyArg<A>, onThrow: (u: unknown) => E) => Effect<never, E, A>
-```
-
-Added in v1.0.0
-
-## tryCatchPromise
-
-Create an `Effect` that when executed will construct `promise` and wait for
-its result, errors will be handled using `onReject`.
-
-**Signature**
-
-```ts
-export declare const tryCatchPromise: <E, A>(
-  evaluate: LazyArg<Promise<A>>,
-  onReject: (reason: unknown) => E
-) => Effect<never, E, A>
-```
-
-Added in v1.0.0
-
-## tryCatchPromiseInterrupt
-
-Like `tryCatchPromise` but allows for interruption via AbortSignal
-
-**Signature**
-
-```ts
-export declare const tryCatchPromiseInterrupt: <E, A>(
-  evaluate: (signal: AbortSignal) => Promise<A>,
-  onReject: (reason: unknown) => E
-) => Effect<never, E, A>
-```
-
-Added in v1.0.0
-
-## tryPromise
-
-Create an `Effect` that when executed will construct `promise` and wait for
-its result, errors will produce failure as `unknown`.
-
-**Signature**
-
-```ts
-export declare const tryPromise: <A>(evaluate: LazyArg<Promise<A>>) => Effect<never, unknown, A>
-```
-
-Added in v1.0.0
-
-## tryPromiseInterrupt
-
-Like `tryPromise` but allows for interruption via AbortSignal
-
-**Signature**
-
-```ts
-export declare const tryPromiseInterrupt: <A>(
-  evaluate: (signal: AbortSignal) => Promise<A>
-) => Effect<never, unknown, A>
 ```
 
 Added in v1.0.0

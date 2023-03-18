@@ -40,7 +40,7 @@ describe.concurrent("Effect", () => {
   it.it("suspend - must be lazy", async () => {
     let program
     try {
-      program = Effect.suspend(() => {
+      program = Effect.attemptSuspend(() => {
         throw new Error("shouldn't happen!")
       })
       program = Effect.succeed(true)
@@ -54,7 +54,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const error = new Error("woops")
       const result = yield* $(pipe(
-        Effect.suspend<never, never, never>(() => {
+        Effect.attemptSuspend<never, never, never>(() => {
           throw error
         }),
         Effect.either
@@ -63,14 +63,14 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("suspendSucceed - must be evaluatable", () =>
     Effect.gen(function*($) {
-      const result = yield* $(Effect.suspendSucceed(() => Effect.succeed(42)))
+      const result = yield* $(Effect.suspend(() => Effect.succeed(42)))
       assert.strictEqual(result, 42)
     }))
   it.effect("suspendSucceed - must not catch throwable", () =>
     Effect.gen(function*($) {
       const error = new Error("woops")
       const result = yield* $(pipe(
-        Effect.suspendSucceed<never, never, never>(() => {
+        Effect.suspend<never, never, never>(() => {
           throw error
         }),
         Effect.sandbox,

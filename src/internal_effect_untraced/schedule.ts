@@ -115,7 +115,7 @@ class ScheduleDriverImpl<Env, In, Out> implements Schedule.ScheduleDriver<Env, I
             Clock.currentTimeMillis(),
             core.flatMap((now) =>
               pipe(
-                core.suspendSucceed(restore(() => this.schedule.step(now, input, state))),
+                core.suspend(restore(() => this.schedule.step(now, input, state))),
                 core.flatMap(([state, out, decision]) =>
                   ScheduleDecision.isDone(decision) ?
                     pipe(
