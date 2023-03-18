@@ -1218,7 +1218,15 @@ export const currentLoggers: FiberRef.FiberRef<
 // circular with Effect
 
 /* @internal */
-export const acquireRelease = Debug.methodWithTrace((trace, restore) =>
+export const acquireRelease = Debug.dualWithTrace<
+  <A, R2, X>(
+    release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>
+  ) => <R, E>(acquire: Effect.Effect<R, E, A>) => Effect.Effect<R | R2 | Scope.Scope, E, A>,
+  <R, E, A, R2, X>(
+    acquire: Effect.Effect<R, E, A>,
+    release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>
+  ) => Effect.Effect<R | R2 | Scope.Scope, E, A>
+>(2, (trace, restore) =>
   <R, E, A, R2, X>(
     acquire: Effect.Effect<R, E, A>,
     release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>
@@ -1226,8 +1234,7 @@ export const acquireRelease = Debug.methodWithTrace((trace, restore) =>
     pipe(
       core.tap(acquire, (a) => addFinalizer((exit) => restore(release)(a, exit))),
       core.uninterruptible
-    ).traced(trace)
-)
+    ).traced(trace))
 
 /* @internal */
 export const addFinalizer = Debug.methodWithTrace((trace, restore) =>
