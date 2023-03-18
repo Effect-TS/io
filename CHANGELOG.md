@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.9.1
+
+### Patch Changes
+
+- [#288](https://github.com/Effect-TS/io/pull/288) [`c4a1ed1`](https://github.com/Effect-TS/io/commit/c4a1ed1ea21a87d92912629b9acfb008ed51600e) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Update to TS5
+
 ## 0.9.0
 
 ### Minor Changes
