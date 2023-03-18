@@ -383,4 +383,4 @@ export const currentFiberURI = "@effect/io/Fiber/Current"
 
 /** @internal */
 export const getCurrentFiber = (): Option.Option<Fiber.RuntimeFiber<any, any>> =>
-  Option.fromNullable(global[currentFiberURI])
+  Option.fromNullable((globalThis as any)[currentFiberURI])

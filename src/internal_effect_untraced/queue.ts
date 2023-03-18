@@ -172,7 +172,7 @@ class QueueImpl<A> implements Queue.Queue<A> {
           : ReadonlyArray.empty
         const [forTakers, remaining] = pipe(values, ReadonlyArray.splitAt(pTakers.length))
         for (let i = 0; i < pTakers.length; i++) {
-          const taker = pTakers[i]
+          const taker = (pTakers as any)[i]
           const item = forTakers[i]
           unsafeCompleteDeferred(taker, item)
         }

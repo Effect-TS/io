@@ -499,8 +499,8 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     let recurse = true
     while (recurse) {
       let evaluationSignal: EvaluationSignal = EvaluationSignalContinue
-      const prev = globalThis[internalFiber.currentFiberURI]
-      globalThis[internalFiber.currentFiberURI] = this
+      const prev = (globalThis as any)[internalFiber.currentFiberURI]
+      ;(globalThis as any)[internalFiber.currentFiberURI] = this
       try {
         while (evaluationSignal === EvaluationSignalContinue) {
           evaluationSignal = MutableQueue.isEmpty(this._queue) ?
@@ -509,7 +509,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
         }
       } finally {
         this._running = false
-        globalThis[internalFiber.currentFiberURI] = prev
+        ;(globalThis as any)[internalFiber.currentFiberURI] = prev
       }
       // Maybe someone added something to the queue between us checking, and us
       // giving up the drain. If so, we need to restart the draining, but only
@@ -809,13 +809,13 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   start<R>(effect: Effect.Effect<R, E, A>): void {
     if (!this._running) {
       this._running = true
-      const prev = globalThis[internalFiber.currentFiberURI]
-      globalThis[internalFiber.currentFiberURI] = this
+      const prev = (globalThis as any)[internalFiber.currentFiberURI]
+      ;(globalThis as any)[internalFiber.currentFiberURI] = this
       try {
         this.evaluateEffect(effect)
       } finally {
         this._running = false
-        globalThis[internalFiber.currentFiberURI] = prev
+        ;(globalThis as any)[internalFiber.currentFiberURI] = prev
         // Because we're special casing `start`, we have to be responsible
         // for spinning up the fiber if there were new messages added to
         // the queue between the completion of the effect and the transition
@@ -848,7 +848,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    */
   patchRuntimeFlags(oldRuntimeFlags: RuntimeFlags.RuntimeFlags, patch: RuntimeFlagsPatch.RuntimeFlagsPatch) {
     const newRuntimeFlags = _runtimeFlags.patch(oldRuntimeFlags, patch)
-    globalThis[internalFiber.currentFiberURI] = this
+    ;(globalThis as any)[internalFiber.currentFiberURI] = this
     this._runtimeFlags = newRuntimeFlags
     return newRuntimeFlags
   }
@@ -2023,7 +2023,7 @@ export const allPar = Debug.methodWithTrace((trace): {
           core.map((values) => {
             const res = {}
             for (const [k, v] of values) {
-              res[k] = v
+              ;(res as any)[k] = v
             }
             return res
           })

@@ -585,7 +585,7 @@ const parsePrimitive = <A>(
 }
 
 const transpose = <A>(array: Array<Array<A>>): Array<Array<A>> => {
-  return Object.keys(array[0]).map((column) => array.map((row) => row[column]))
+  return Object.keys(array[0]).map((column) => array.map((row) => row[column as any]))
 }
 
 const escapeRegex = (string: string): string => {
