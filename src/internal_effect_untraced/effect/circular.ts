@@ -4,9 +4,11 @@ import * as Either from "@effect/data/Either"
 import * as Equal from "@effect/data/Equal"
 import type { LazyArg } from "@effect/data/Function"
 import { pipe } from "@effect/data/Function"
+import * as Hash from "@effect/data/Hash"
 import * as MutableHashMap from "@effect/data/MutableHashMap"
 import * as MutableRef from "@effect/data/MutableRef"
 import * as Option from "@effect/data/Option"
+import type { Equivalence } from "@effect/data/typeclass/Equivalence"
 import type * as Cause from "@effect/io/Cause"
 import * as Debug from "@effect/io/Debug"
 import type * as Deferred from "@effect/io/Deferred"
@@ -343,21 +345,42 @@ export const fromFiberEffect = Debug.methodWithTrace((trace) =>
     core.suspendSucceed(() => core.flatMap(fiber, internalFiber.join)).traced(trace)
 )
 
+const memoKeySymbol = Symbol.for("@effect/io/Effect/memoizeFunction.key")
+
+class Key<A> implements Equal.Equal {
+  [memoKeySymbol] = memoKeySymbol
+  constructor(readonly a: A, readonly eq?: Equivalence<A>) {}
+  [Equal.symbol](that: Equal.Equal) {
+    if (typeof that === "object" && that !== null && memoKeySymbol in that) {
+      if (this.eq) {
+        return this.eq(this.a, (that as unknown as Key<A>).a)
+      } else {
+        return Equal.equals(this.a, (that as unknown as Key<A>).a)
+      }
+    }
+    return false
+  }
+  [Hash.symbol]() {
+    return this.eq ? 0 : Hash.hash(this.a)
+  }
+}
+
 /** @internal */
 export const memoizeFunction = Debug.methodWithTrace((trace) =>
   <R, E, A, B>(
-    f: (a: A) => Effect.Effect<R, E, B>
-  ): Effect.Effect<never, never, (a: A) => Effect.Effect<R, E, B>> =>
-    pipe(
-      core.sync(() => {
-        return MutableHashMap.empty<A, Deferred.Deferred<E, readonly [FiberRefsPatch.FiberRefsPatch, B]>>()
-      }),
+    f: (a: A) => Effect.Effect<R, E, B>,
+    eq?: Equivalence<A>
+  ): Effect.Effect<never, never, (a: A) => Effect.Effect<R, E, B>> => {
+    return pipe(
+      core.sync(() =>
+        MutableHashMap.empty<Key<A>, Deferred.Deferred<E, readonly [FiberRefsPatch.FiberRefsPatch, B]>>()
+      ),
       core.flatMap(makeSynchronized),
       core.map((ref) =>
         (a: A) =>
           pipe(
             ref.modifyEffect((map) => {
-              const result = pipe(map, MutableHashMap.get(a))
+              const result = pipe(map, MutableHashMap.get(new Key(a, eq)))
               if (Option.isNone(result)) {
                 return pipe(
                   core.deferredMake<E, readonly [FiberRefsPatch.FiberRefsPatch, B]>(),
@@ -368,7 +391,7 @@ export const memoizeFunction = Debug.methodWithTrace((trace) =>
                       fiberRuntime.fork
                     )
                   ),
-                  core.map((deferred) => [deferred, pipe(map, MutableHashMap.set(a, deferred))] as const)
+                  core.map((deferred) => [deferred, pipe(map, MutableHashMap.set(new Key(a, eq), deferred))] as const)
                 )
               }
               return core.succeed([result.value, map] as const)
@@ -378,6 +401,7 @@ export const memoizeFunction = Debug.methodWithTrace((trace) =>
           )
       )
     ).traced(trace)
+  }
 )
 
 /** @internal */
