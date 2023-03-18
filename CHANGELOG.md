@@ -1,5 +1,13 @@
 # @effect/io
 
+## 0.9.0
+
+### Minor Changes
+
+- [#278](https://github.com/Effect-TS/io/pull/278) [`f6599bd`](https://github.com/Effect-TS/io/commit/f6599bdea8e3ae2b53e40d9b90e3156ca708aec3) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Introduce Native Tracer
+
+- [#287](https://github.com/Effect-TS/io/pull/287) [`3770a3f`](https://github.com/Effect-TS/io/commit/3770a3f17d7f8338fd217e7e64b4f82253cfabf7) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Improve native tracer
+
 ## 0.8.0
 
 ### Minor Changes
