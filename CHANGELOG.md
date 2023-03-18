@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.9.2
+
+### Patch Changes
+
+- [#290](https://github.com/Effect-TS/io/pull/290) [`16c6d14`](https://github.com/Effect-TS/io/commit/16c6d14c608cbf057c1d14fbb6173197cfa72e76) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Accept explicit Equivalence in memoizeFunction
+
 ## 0.9.1
 
 ### Patch Changes
