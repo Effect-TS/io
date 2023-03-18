@@ -2703,7 +2703,7 @@ export const all = Debug.methodWithTrace((trace): {
           core.map((values) => {
             const res = {}
             for (const [k, v] of values) {
-              res[k] = v
+              ;(res as any)[k] = v
             }
             return res
           })

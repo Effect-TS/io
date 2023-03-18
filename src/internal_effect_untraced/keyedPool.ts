@@ -76,7 +76,7 @@ class Complete<E, A> implements Equal.Equal {
 }
 
 const isComplete = (u: unknown): u is Complete<unknown, unknown> =>
-  typeof u === "object" && u != null && KeyedPoolMapValueSymbol in u && u["_tag"] === "Complete"
+  typeof u === "object" && u != null && KeyedPoolMapValueSymbol in u && "_tag" in u && u["_tag"] === "Complete"
 
 class Pending<E, A> implements Equal.Equal {
   readonly _tag = "Pending"
@@ -94,7 +94,7 @@ class Pending<E, A> implements Equal.Equal {
 }
 
 const isPending = (u: unknown): u is Pending<unknown, unknown> =>
-  typeof u === "object" && u != null && KeyedPoolMapValueSymbol in u && u["_tag"] === "Pending"
+  typeof u === "object" && u != null && KeyedPoolMapValueSymbol in u && "_tag" in u && u["_tag"] === "Pending"
 
 const makeWith = Debug.methodWithTrace((trace) =>
   <K, R, E, A>(

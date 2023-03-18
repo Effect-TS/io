@@ -94,7 +94,7 @@ describe("Tracer", () => {
 
         assert.deepEqual(span.name, "A")
         assert.deepEqual(span.status.startTime, 0)
-        assert.deepEqual(span.status["endTime"], 1000)
+        assert.deepEqual((span.status as any)["endTime"], 1000)
         assert.deepEqual(span.status._tag, "Ended")
       }))
   })
