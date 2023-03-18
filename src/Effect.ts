@@ -11,6 +11,7 @@ import type * as HashMap from "@effect/data/HashMap"
 import type * as HashSet from "@effect/data/HashSet"
 import type * as Option from "@effect/data/Option"
 import type { Predicate, Refinement } from "@effect/data/Predicate"
+import type { Equivalence } from "@effect/data/typeclass/Equivalence"
 import type * as Cause from "@effect/io/Cause"
 import type * as Clock from "@effect/io/Clock"
 import type { Config } from "@effect/io/Config"
@@ -2566,7 +2567,8 @@ export const memoize: <R, E, A>(self: Effect<R, E, A>) => Effect<never, never, E
  * @category constructors
  */
 export const memoizeFunction: <R, E, A, B>(
-  f: (a: A) => Effect<R, E, B>
+  f: (a: A) => Effect<R, E, B>,
+  eq?: Equivalence<A>
 ) => Effect<never, never, (a: A) => Effect<R, E, B>> = circular.memoizeFunction
 
 /**

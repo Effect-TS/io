@@ -1684,7 +1684,8 @@ Returns a memoized version of the specified effectual function.
 
 ```ts
 export declare const memoizeFunction: <R, E, A, B>(
-  f: (a: A) => Effect<R, E, B>
+  f: (a: A) => Effect<R, E, B>,
+  eq?: Equivalence<A> | undefined
 ) => Effect<never, never, (a: A) => Effect<R, E, B>>
 ```
 
