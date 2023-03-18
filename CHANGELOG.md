@@ -1,5 +1,13 @@
 # @effect/io
 
+## 0.10.0
+
+### Minor Changes
+
+- [#295](https://github.com/Effect-TS/io/pull/295) [`36f6413`](https://github.com/Effect-TS/io/commit/36f6413814a166fac73ef16a7fb35a99feb9a2a8) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Rename try* to attempt*
+
+- [#297](https://github.com/Effect-TS/io/pull/297) [`cb8fd91`](https://github.com/Effect-TS/io/commit/cb8fd910117b94d6d9b1964ca14fce7f7f4a1983) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Update effect/data to 0.5.0
+
 ## 0.9.3
 
 ### Patch Changes
