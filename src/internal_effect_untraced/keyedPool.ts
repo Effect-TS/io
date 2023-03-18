@@ -112,7 +112,7 @@ const makeWith = Debug.methodWithTrace((trace) =>
       ),
       core.map(([context, fiberId, map, scope]) => {
         const getOrCreatePool = (key: K): Effect.Effect<never, never, Pool.Pool<E, A>> =>
-          core.suspendSucceed(() => {
+          core.suspend(() => {
             let value: MapValue<E, A> | undefined = Option.getOrUndefined(HashMap.get(MutableRef.get(map), key))
             if (value === undefined) {
               return core.uninterruptibleMask((restore) => {
@@ -178,7 +178,7 @@ const makeWith = Debug.methodWithTrace((trace) =>
             }
           })
         const activePools = (): Effect.Effect<never, never, Chunk.Chunk<Pool.Pool<E, A>>> =>
-          core.suspendSucceed(() =>
+          core.suspend(() =>
             core.forEach(Array.from(HashMap.values(MutableRef.get(map))), (value) => {
               switch (value._tag) {
                 case "Complete": {

@@ -342,7 +342,7 @@ export const fromFiber = Debug.methodWithTrace((trace) =>
 /** @internal */
 export const fromFiberEffect = Debug.methodWithTrace((trace) =>
   <R, E, A>(fiber: Effect.Effect<R, E, Fiber.Fiber<E, A>>): Effect.Effect<R, E, A> =>
-    core.suspendSucceed(() => core.flatMap(fiber, internalFiber.join)).traced(trace)
+    core.suspend(() => core.flatMap(fiber, internalFiber.join)).traced(trace)
 )
 
 const memoKeySymbol = Symbol.for("@effect/io/Effect/memoizeFunction.key")

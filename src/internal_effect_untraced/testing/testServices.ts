@@ -387,7 +387,7 @@ export const testConfigLayer = Debug.untracedMethod(() =>
   }): Layer.Layer<never, never, TestConfig.TestConfig> =>
     layer.scoped(
       TestConfig.Tag,
-      Effect.suspendSucceed(() => {
+      Effect.suspend(() => {
         const testConfig = TestConfig.make(params)
         return pipe(
           withTestConfigScoped(testConfig),

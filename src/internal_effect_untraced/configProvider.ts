@@ -229,7 +229,7 @@ const fromFlatLoop = <A>(
       >
     }
     case OpCodes.OP_DESCRIBED: {
-      return core.suspendSucceed(
+      return core.suspend(
         () => fromFlatLoop(flat, prefix, op.config, split)
       ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
     }
@@ -242,7 +242,7 @@ const fromFlatLoop = <A>(
     }
     case OpCodes.OP_FALLBACK: {
       return pipe(
-        core.suspendSucceed(() => fromFlatLoop(flat, prefix, op.first, split)),
+        core.suspend(() => fromFlatLoop(flat, prefix, op.first, split)),
         core.catchAll((error1) => {
           if (op.condition(error1)) {
             return pipe(
@@ -255,14 +255,14 @@ const fromFlatLoop = <A>(
       ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
     }
     case OpCodes.OP_LAZY: {
-      return core.suspendSucceed(() => fromFlatLoop(flat, prefix, op.config(), split)) as Effect.Effect<
+      return core.suspend(() => fromFlatLoop(flat, prefix, op.config(), split)) as Effect.Effect<
         never,
         ConfigError.ConfigError,
         Chunk.Chunk<A>
       >
     }
     case OpCodes.OP_MAP_OR_FAIL: {
-      return core.suspendSucceed(() =>
+      return core.suspend(() =>
         pipe(
           fromFlatLoop(flat, prefix, op.original, split),
           core.flatMap(
@@ -277,7 +277,7 @@ const fromFlatLoop = <A>(
       ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
     }
     case OpCodes.OP_NESTED: {
-      return core.suspendSucceed(() =>
+      return core.suspend(() =>
         fromFlatLoop(
           flat,
           pipe(prefix, Chunk.concat(Chunk.of(op.name))),
@@ -304,7 +304,7 @@ const fromFlatLoop = <A>(
       ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
     }
     case OpCodes.OP_SEQUENCE: {
-      return core.suspendSucceed(() =>
+      return core.suspend(() =>
         pipe(
           fromFlatLoop(flat, prefix, op.config, true),
           core.map(Chunk.of)
@@ -312,7 +312,7 @@ const fromFlatLoop = <A>(
       ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
     }
     case OpCodes.OP_TABLE: {
-      return core.suspendSucceed(() =>
+      return core.suspend(() =>
         pipe(
           core.fromEither(pathPatch.patch(prefix, flat.patch)),
           core.flatMap((prefix) =>
@@ -347,7 +347,7 @@ const fromFlatLoop = <A>(
       ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
     }
     case OpCodes.OP_ZIP_WITH: {
-      return core.suspendSucceed(() =>
+      return core.suspend(() =>
         pipe(
           fromFlatLoop(flat, prefix, op.left, split),
           core.either,

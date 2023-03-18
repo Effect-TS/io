@@ -298,7 +298,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     f: (runtime: FiberRuntime<any, any>, status: FiberStatus.FiberStatus) => Z
   ): Effect.Effect<never, never, Z> {
     return Debug.untraced(() =>
-      core.suspendSucceed(() => {
+      core.suspend(() => {
         const deferred = core.deferredUnsafeMake<never, Z>(this._fiberId)
         this.tell(
           FiberMessage.stateful((fiber, status) => {
@@ -1390,7 +1390,7 @@ export const forEachExec = Debug.dualWithTrace<
   ) => Effect.Effect<R, E, Chunk.Chunk<B>>
 >(3, (trace, restore) =>
   (elements, f, strategy) =>
-    core.suspendSucceed(() =>
+    core.suspend(() =>
       pipe(
         strategy,
         ExecutionStrategy.match(
@@ -1434,7 +1434,7 @@ const forEachParUnbounded = <A, R, E, B>(
   self: Iterable<A>,
   f: (a: A) => Effect.Effect<R, E, B>
 ): Effect.Effect<R, E, Chunk.Chunk<B>> =>
-  core.suspendSucceed(() => {
+  core.suspend(() => {
     const as = Array.from(self).map((v, i) => [v, i] as const)
     const array = new Array<B>(as.length)
     const fn = ([a, i]: readonly [A, number]) => core.flatMap(f(a), (b) => core.sync(() => array[i] = b))
@@ -1446,7 +1446,7 @@ const forEachParUnboundedDiscard = <R, E, A, _>(
   self: Iterable<A>,
   f: (a: A) => Effect.Effect<R, E, _>
 ): Effect.Effect<R, E, void> =>
-  core.suspendSucceed(() => {
+  core.suspend(() => {
     const as = Array.from(self)
     const size = as.length
     if (size === 0) {
@@ -1461,7 +1461,7 @@ const forEachParUnboundedDiscard = <R, E, A, _>(
         core.forEach(as, (a) =>
           pipe(
             graft(pipe(
-              restore(core.suspendSucceed(() => f(a))),
+              restore(core.suspend(() => f(a))),
               core.matchCauseEffect(
                 (cause) =>
                   core.zipRight(
@@ -1509,7 +1509,7 @@ const forEachParN = <A, R, E, B>(
   n: number,
   f: (a: A) => Effect.Effect<R, E, B>
 ): Effect.Effect<R, E, Chunk.Chunk<B>> =>
-  core.suspendSucceed(() => {
+  core.suspend(() => {
     const as = Array.from(self).map((v, i) => [v, i] as const)
     const array = new Array<B>(as.length)
     const fn = ([a, i]: readonly [A, number]) => core.map(f(a), (b) => array[i] = b)
@@ -1522,7 +1522,7 @@ const forEachParNDiscard = <A, R, E, _>(
   n: number,
   f: (a: A) => Effect.Effect<R, E, _>
 ): Effect.Effect<R, E, void> =>
-  core.suspendSucceed(() => {
+  core.suspend(() => {
     const iterator = self[Symbol.iterator]()
     const worker: Effect.Effect<R, E, void> = core.flatMap(
       core.sync(() => iterator.next()),
@@ -1548,13 +1548,13 @@ export const forEachParWithIndex = Debug.dualWithTrace<
   2,
   (trace, restore) =>
     <R, E, A, B>(elements: Iterable<A>, f: (a: A, i: number) => Effect.Effect<R, E, B>) =>
-      core.suspendSucceed(() =>
+      core.suspend(() =>
         core.flatMap(core.sync<Array<B>>(() => []), (array) =>
           core.map(
             forEachParDiscard(
               Array.from(elements).map((a, i) => [a, i] as [A, number]),
               ([a, i]) =>
-                core.flatMap(core.suspendSucceed(() => restore(f)(a, i)), (b) =>
+                core.flatMap(core.suspend(() => restore(f)(a, i)), (b) =>
                   core.sync(() => {
                     array[i] = b
                   }))
@@ -1873,7 +1873,7 @@ export const reduceAllPar = Debug.dualWithTrace<
     zero: Effect.Effect<R, E, A>,
     f: (acc: A, a: A) => A
   ) =>
-    core.suspendSucceed(() =>
+    core.suspend(() =>
       pipe(
         mergeAllPar(
           [zero, ...Array.from(elements)],
@@ -1971,7 +1971,7 @@ export const someWith = Debug.dualWithTrace<
     self: Effect.Effect<R, E, Option.Option<A>>,
     f: (effect: Effect.Effect<R, Option.Option<E>, A>) => Effect.Effect<R1, Option.Option<E1>, A1>
   ) => Effect.Effect<R | R1, E | E1, Option.Option<A1>>
->(2, (trace, restore) => (self, f) => core.suspendSucceed(() => unsome(restore(f)(some(self)))).traced(trace))
+>(2, (trace, restore) => (self, f) => core.suspend(() => unsome(restore(f)(some(self)))).traced(trace))
 
 /* @internal */
 export const allPar = Debug.methodWithTrace((trace): {
@@ -2204,7 +2204,7 @@ export const releaseMapReleaseAll = (
   exit: Exit.Exit<unknown, unknown>
 ) =>
   (self: core.ReleaseMap): Effect.Effect<never, never, void> =>
-    core.suspendSucceed(() => {
+    core.suspend(() => {
       switch (self.state._tag) {
         case "Exited": {
           return core.unit()

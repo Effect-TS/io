@@ -855,7 +855,7 @@ class SubscriptionImpl<A> implements Queue.Dequeue<A> {
 
   size(): Effect.Effect<never, never, number> {
     return Debug.bodyWithTrace((trace) =>
-      core.suspendSucceed(() =>
+      core.suspend(() =>
         MutableRef.get(this.shutdownFlag)
           ? core.interrupt()
           : core.succeed(this.subscription.size())
@@ -919,7 +919,7 @@ class SubscriptionImpl<A> implements Queue.Dequeue<A> {
         if (message === MutableQueue.EmptyMutableQueue) {
           const deferred = core.deferredUnsafeMake<never, A>(state.id())
           return pipe(
-            core.suspendSucceed(() => {
+            core.suspend(() => {
               pipe(this.pollers, MutableQueue.offer(deferred))
               pipe(this.subscribers, addSubscribers(this.subscription, this.pollers))
               this.strategy.unsafeCompletePollers(
@@ -942,7 +942,7 @@ class SubscriptionImpl<A> implements Queue.Dequeue<A> {
 
   takeAll(): Effect.Effect<never, never, Chunk.Chunk<A>> {
     return Debug.bodyWithTrace((trace) =>
-      core.suspendSucceed(() => {
+      core.suspend(() => {
         if (MutableRef.get(this.shutdownFlag)) {
           return core.interrupt()
         }
@@ -957,7 +957,7 @@ class SubscriptionImpl<A> implements Queue.Dequeue<A> {
 
   takeUpTo(this: this, max: number): Effect.Effect<never, never, Chunk.Chunk<A>> {
     return Debug.bodyWithTrace((trace) =>
-      core.suspendSucceed(() => {
+      core.suspend(() => {
         if (MutableRef.get(this.shutdownFlag)) {
           return core.interrupt()
         }
@@ -972,7 +972,7 @@ class SubscriptionImpl<A> implements Queue.Dequeue<A> {
 
   takeBetween(min: number, max: number): Effect.Effect<never, never, Chunk.Chunk<A>> {
     return Debug.bodyWithTrace((trace) =>
-      core.suspendSucceed(() => takeRemainderLoop(this, min, max, Chunk.empty())).traced(trace)
+      core.suspend(() => takeRemainderLoop(this, min, max, Chunk.empty())).traced(trace)
     )
   }
 }
@@ -1032,7 +1032,7 @@ class HubImpl<A> implements Hub.Hub<A> {
 
   size(): Effect.Effect<never, never, number> {
     return Debug.bodyWithTrace((trace) =>
-      core.suspendSucceed(() =>
+      core.suspend(() =>
         MutableRef.get(this.shutdownFlag) ?
           core.interrupt() :
           core.sync(() => this.hub.size())
@@ -1082,7 +1082,7 @@ class HubImpl<A> implements Hub.Hub<A> {
 
   publish(value: A): Effect.Effect<never, never, boolean> {
     return Debug.bodyWithTrace((trace) =>
-      core.suspendSucceed(() => {
+      core.suspend(() => {
         if (MutableRef.get(this.shutdownFlag)) {
           return core.interrupt()
         }
@@ -1104,7 +1104,7 @@ class HubImpl<A> implements Hub.Hub<A> {
 
   publishAll(elements: Iterable<A>): Effect.Effect<never, never, boolean> {
     return Debug.bodyWithTrace((trace) =>
-      core.suspendSucceed(() => {
+      core.suspend(() => {
         if (MutableRef.get(this.shutdownFlag)) {
           return core.interrupt()
         }
@@ -1322,7 +1322,7 @@ class BackPressureStrategy<A> implements HubStrategy<A> {
     return core.withFiberRuntime<never, never, boolean>((state) => {
       const deferred = core.deferredUnsafeMake<never, boolean>(state.id())
       return pipe(
-        core.suspendSucceed(() => {
+        core.suspend(() => {
           this.unsafeOffer(elements, deferred)
           this.unsafeOnHubEmptySpace(hub, subscribers)
           this.unsafeCompleteSubscribers(hub, subscribers)

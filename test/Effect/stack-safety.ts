@@ -9,7 +9,7 @@ const deepMapEffect = (n: number): Effect.Effect<never, never, number> => {
     if (n <= 0) {
       return acc
     }
-    return Effect.suspendSucceed(() => loop(n - 1, pipe(acc, Effect.map((n) => n + 1))))
+    return Effect.suspend(() => loop(n - 1, pipe(acc, Effect.map((n) => n + 1))))
   }
   return loop(n, Effect.succeed(0))
 }

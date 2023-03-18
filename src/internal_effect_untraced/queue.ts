@@ -71,7 +71,7 @@ class QueueImpl<A> implements Queue.Queue<A> {
 
   size(): Effect.Effect<never, never, number> {
     return Debug.bodyWithTrace((trace) =>
-      core.suspendSucceed(() =>
+      core.suspend(() =>
         MutableRef.get(this.shutdownFlag)
           ? core.interrupt()
           : core.succeed(
@@ -128,7 +128,7 @@ class QueueImpl<A> implements Queue.Queue<A> {
 
   offer(value: A): Effect.Effect<never, never, boolean> {
     return Debug.bodyWithTrace((trace) =>
-      core.suspendSucceed(() => {
+      core.suspend(() => {
         if (MutableRef.get(this.shutdownFlag)) {
           return core.interrupt()
         }
@@ -162,7 +162,7 @@ class QueueImpl<A> implements Queue.Queue<A> {
 
   offerAll(iterable: Iterable<A>): Effect.Effect<never, never, boolean> {
     return Debug.bodyWithTrace((trace) =>
-      core.suspendSucceed(() => {
+      core.suspend(() => {
         if (MutableRef.get(this.shutdownFlag)) {
           return core.interrupt()
         }
@@ -206,7 +206,7 @@ class QueueImpl<A> implements Queue.Queue<A> {
           // - Clean up resources in case of interruption
           const deferred = core.deferredUnsafeMake<never, A>(state.id())
           return pipe(
-            core.suspendSucceed(() => {
+            core.suspend(() => {
               pipe(this.takers, MutableQueue.offer(deferred))
               unsafeCompleteTakers(this.strategy, this.queue, this.takers)
               return MutableRef.get(this.shutdownFlag) ?
@@ -224,7 +224,7 @@ class QueueImpl<A> implements Queue.Queue<A> {
 
   takeAll(): Effect.Effect<never, never, Chunk.Chunk<A>> {
     return Debug.bodyWithTrace((trace) =>
-      core.suspendSucceed(() => {
+      core.suspend(() => {
         return MutableRef.get(this.shutdownFlag)
           ? core.interrupt()
           : core.sync(() => {
@@ -238,7 +238,7 @@ class QueueImpl<A> implements Queue.Queue<A> {
 
   takeUpTo(max: number): Effect.Effect<never, never, Chunk.Chunk<A>> {
     return Debug.bodyWithTrace((trace) =>
-      core.suspendSucceed(() =>
+      core.suspend(() =>
         MutableRef.get(this.shutdownFlag)
           ? core.interrupt()
           : core.sync(() => {
@@ -252,7 +252,7 @@ class QueueImpl<A> implements Queue.Queue<A> {
 
   takeBetween(min: number, max: number): Effect.Effect<never, never, Chunk.Chunk<A>> {
     return Debug.bodyWithTrace((trace) =>
-      core.suspendSucceed(() =>
+      core.suspend(() =>
         takeRemainderLoop(
           this,
           min,
@@ -524,7 +524,7 @@ class BackPressureStrategy<A> implements Queue.Strategy<A> {
     return core.withFiberRuntime<never, never, boolean>((state) => {
       const deferred = core.deferredUnsafeMake<never, boolean>(state.id())
       return pipe(
-        core.suspendSucceed(() => {
+        core.suspend(() => {
           this.unsafeOffer(iterable, deferred)
           this.unsafeOnQueueEmptySpace(queue, takers)
           unsafeCompleteTakers(this, queue, takers)

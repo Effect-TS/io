@@ -315,11 +315,11 @@ export const acquireUseRelease = Debug.dualWithTrace<
         acquire,
         flatMap((a) =>
           pipe(
-            suspendSucceed(() => restore(restoreTracing(use)(a))),
+            suspend(() => restore(restoreTracing(use)(a))),
             exit,
             flatMap((exit) =>
               pipe(
-                suspendSucceed(() => restoreTracing(release)(a, exit)),
+                suspend(() => restoreTracing(release)(a, exit)),
                 matchCauseEffect(
                   (cause) => {
                     switch (exit._tag) {
@@ -375,7 +375,7 @@ export const asyncInterruptEither = Debug.methodWithTrace((trace, restore) =>
     ) => Either.Either<Effect.Effect<R, never, void>, Effect.Effect<R, E, A>>,
     blockingOn: FiberId.FiberId = FiberId.none
   ): Effect.Effect<R, E, A> =>
-    suspendSucceed(() => {
+    suspend(() => {
       let cancelerRef: Effect.Effect<R, never, void> = unit()
       return pipe(
         async<R, E, A>(
@@ -400,7 +400,7 @@ export const asyncInterrupt = Debug.methodWithTrace((trace, restore) =>
     register: (callback: (effect: Effect.Effect<R, E, A>) => void) => Effect.Effect<R, never, void>,
     blockingOn: FiberId.FiberId = FiberId.none
   ): Effect.Effect<R, E, A> =>
-    suspendSucceed(() => {
+    suspend(() => {
       let cancelerRef: Effect.Effect<R, never, void> = unit()
       return pipe(
         async<R, E, A>(
@@ -503,7 +503,7 @@ export const dieSync = Debug.methodWithTrace((trace, restore) =>
 
 /* @internal */
 export const done = Debug.methodWithTrace((trace) =>
-  <E, A>(exit: Exit.Exit<E, A>): Effect.Effect<never, E, A> => suspendSucceed(() => exit).traced(trace)
+  <E, A>(exit: Exit.Exit<E, A>): Effect.Effect<never, E, A> => suspend(() => exit).traced(trace)
 )
 
 /* @internal */
@@ -521,7 +521,7 @@ export const either = Debug.methodWithTrace((trace) =>
 /* @internal */
 export const context = Debug.methodWithTrace((trace) =>
   <R>(): Effect.Effect<R, never, Context.Context<R>> =>
-    suspendSucceed(
+    suspend(
       () => fiberRefGet(currentContext) as Effect.Effect<never, never, Context.Context<R>>
     ).traced(trace)
 )
@@ -691,7 +691,7 @@ export const forEach = Debug.dualWithTrace<
   <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, E, Chunk.Chunk<B>>
 >(2, (trace, restore) =>
   (self, f) =>
-    suspendSucceed(() => {
+    suspend(() => {
       const arr = Array.from(self)
       const ret = new Array(arr.length)
       let i = 0
@@ -713,7 +713,7 @@ export const forEachDiscard = Debug.dualWithTrace<
   <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, E, void>
 >(2, (trace, restore) =>
   (self, f) =>
-    suspendSucceed(() => {
+    suspend(() => {
       const arr = Array.from(self)
       let i = 0
 
@@ -946,7 +946,7 @@ export const orElse = Debug.dualWithTrace<
     self: Effect.Effect<R, E, A>,
     that: LazyArg<Effect.Effect<R2, E2, A2>>
   ) => Effect.Effect<R | R2, E2, A | A2>
->(2, (trace, restore) => (self, that) => pipe(self, tryOrElse(restore(that), succeed)).traced(trace))
+>(2, (trace, restore) => (self, that) => pipe(self, attemptOrElse(restore(that), succeed)).traced(trace))
 
 /* @internal */
 export const orDie = Debug.methodWithTrace((trace) =>
@@ -1036,7 +1036,7 @@ export const serviceWithEffect = Debug.methodWithTrace((trace, restore) =>
     tag: T,
     f: (a: Context.Tag.Service<T>) => Effect.Effect<R, E, A>
   ): Effect.Effect<R | Context.Tag.Service<T>, E, A> =>
-    suspendSucceed(() =>
+    suspend(() =>
       pipe(
         fiberRefGet(currentContext),
         flatMap((env) => restore(f)(pipe(env, Context.unsafeGet(tag))))
@@ -1057,7 +1057,7 @@ export const succeed = Debug.methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const suspendSucceed = Debug.methodWithTrace((trace, restore) =>
+export const suspend = Debug.methodWithTrace((trace, restore) =>
   <R, E, A>(
     effect: LazyArg<Effect.Effect<R, E, A>>
   ): Effect.Effect<R, E, A> =>
@@ -1108,7 +1108,7 @@ export const transplant = Debug.methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const tryOrElse = Debug.dualWithTrace<
+export const attemptOrElse = Debug.dualWithTrace<
   <R2, E2, A2, A, R3, E3, A3>(
     that: LazyArg<Effect.Effect<R2, E2, A2>>,
     onSuccess: (a: A) => Effect.Effect<R3, E3, A3>
@@ -1243,14 +1243,14 @@ export const withParallelism = Debug.dualWithTrace<
   <R, E, A>(self: Effect.Effect<R, E, A>, parallelism: number) => Effect.Effect<R, E, A>
 >(2, (trace) =>
   (self, parallelism) =>
-    suspendSucceed(
+    suspend(
       () => fiberRefLocally(currentParallelism, Option.some(parallelism))(self)
     ).traced(trace))
 
 /* @internal */
 export const withParallelismUnbounded = Debug.methodWithTrace((trace) =>
   <R, E, A>(self: Effect.Effect<R, E, A>) =>
-    suspendSucceed(
+    suspend(
       () => fiberRefLocally(currentParallelism, Option.none() as Option.Option<number>)(self)
     ).traced(trace)
 )
@@ -1778,7 +1778,7 @@ export const releaseMapRelease = Debug.dualWithTrace<
   (self: ReleaseMap, key: number, exit: Exit.Exit<unknown, unknown>) => Effect.Effect<never, never, void>
 >(3, (trace) =>
   (self, key, exit) =>
-    suspendSucceed(() => {
+    suspend(() => {
       switch (self.state._tag) {
         case "Exited": {
           return unit()
@@ -1800,7 +1800,7 @@ export const releaseMapAddIfOpen = Debug.dualWithTrace<
   (self: ReleaseMap, finalizer: Scope.Scope.Finalizer) => Effect.Effect<never, never, Option.Option<number>>
 >(2, (trace, restore) =>
   (self, finalizer) =>
-    suspendSucceed(() => {
+    suspend(() => {
       switch (self.state._tag) {
         case "Exited": {
           self.state.nextKey += 1
@@ -1843,7 +1843,7 @@ export const releaseMapReplace = Debug.dualWithTrace<
   3,
   (trace, restore) =>
     (self, key, finalizer) =>
-      suspendSucceed(() => {
+      suspend(() => {
         switch (self.state._tag) {
           case "Exited": {
             return as(Option.none())(restore(finalizer)(self.state.exit))
