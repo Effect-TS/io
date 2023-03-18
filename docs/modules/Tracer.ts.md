@@ -17,8 +17,12 @@ Added in v1.0.0
   - [ParentSpan (type alias)](#parentspan-type-alias)
   - [Span](#span)
   - [Span (interface)](#span-interface)
-  - [SpanEvent (type alias)](#spanevent-type-alias)
   - [SpanStatus (type alias)](#spanstatus-type-alias)
+  - [Tracer](#tracer)
+  - [Tracer (interface)](#tracer-interface)
+  - [TracerTypeId](#tracertypeid)
+  - [TracerTypeId (type alias)](#tracertypeid-type-alias)
+  - [make](#make)
   - [withSpan](#withspan)
 
 ---
@@ -68,31 +72,14 @@ Added in v1.0.0
 export interface Span {
   readonly _tag: 'Span'
   readonly name: string
+  readonly spanId: string
+  readonly traceId: string
   readonly parent: Option.Option<ParentSpan>
-  readonly status: MutableRef.MutableRef<SpanStatus>
-  readonly attributes: Map<string, string>
-  readonly events: Array<SpanEvent>
+  readonly status: SpanStatus
+  readonly attributes: ReadonlyMap<string, string>
+  readonly end: (endTime: number, exit: Exit.Exit<unknown, unknown>) => void
+  readonly attribute: (key: string, value: string) => void
 }
-```
-
-Added in v1.0.0
-
-## SpanEvent (type alias)
-
-**Signature**
-
-```ts
-export type SpanEvent =
-  | {
-      readonly _tag: 'Create'
-      readonly time: number
-      readonly attributes: Record<string, string>
-    }
-  | {
-      readonly _tag: 'End'
-      readonly time: number
-      readonly exit: Exit.Exit<unknown, unknown>
-    }
 ```
 
 Added in v1.0.0
@@ -113,6 +100,59 @@ export type SpanStatus =
       endTime: number
       exit: Exit.Exit<unknown, unknown>
     }
+```
+
+Added in v1.0.0
+
+## Tracer
+
+**Signature**
+
+```ts
+export declare const Tracer: Context.Tag<Tracer>
+```
+
+Added in v1.0.0
+
+## Tracer (interface)
+
+**Signature**
+
+```ts
+export interface Tracer {
+  readonly [TracerTypeId]: TracerTypeId
+  readonly span: (name: string, parent: Option.Option<ParentSpan>, startTime: number) => Span
+}
+```
+
+Added in v1.0.0
+
+## TracerTypeId
+
+**Signature**
+
+```ts
+export declare const TracerTypeId: typeof TracerTypeId
+```
+
+Added in v1.0.0
+
+## TracerTypeId (type alias)
+
+**Signature**
+
+```ts
+export type TracerTypeId = typeof TracerTypeId
+```
+
+Added in v1.0.0
+
+## make
+
+**Signature**
+
+```ts
+export declare const make: (options: Omit<Tracer, TracerTypeId>) => Tracer
 ```
 
 Added in v1.0.0
