@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.9.3
+
+### Patch Changes
+
+- [#293](https://github.com/Effect-TS/io/pull/293) [`efdf326`](https://github.com/Effect-TS/io/commit/efdf326341afd411d142cd0b0e22ed7e656da20b) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - make Effect.acquireRelease dual
+
 ## 0.9.2
 
 ### Patch Changes
