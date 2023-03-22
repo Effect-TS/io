@@ -2222,9 +2222,9 @@ export const repeatUntilEffect_Effect: {
       core.flatMap(f(a), (result) =>
         result ?
           core.succeed(a) :
-          core.zipRight(
+          core.flatMap(
             core.yieldNow(),
-            repeatUntilEffect_Effect(self, restore(f))
+            () => repeatUntilEffect_Effect(self, restore(f))
           ))).traced(trace))
 
 /** @internal */
