@@ -2422,17 +2422,17 @@ export const retryWhileEquals_Effect = Debug.dualWithTrace<
 /** @internal */
 export const schedule_Effect = Debug.dualWithTrace<
   <R2, Out>(
-    schedule: Schedule.Schedule<R2, any, Out>
+    schedule: Schedule.Schedule<R2, unknown, Out>
   ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E, Out>,
   <R, E, A, R2, Out>(
     self: Effect.Effect<R, E, A>,
-    schedule: Schedule.Schedule<R2, any, Out>
+    schedule: Schedule.Schedule<R2, unknown, Out>
   ) => Effect.Effect<R | R2, E, Out>
 >(2, (trace) =>
   <R, E, A, R2, Out>(
     self: Effect.Effect<R, E, A>,
-    schedule: Schedule.Schedule<R2, any, Out>
-  ) => scheduleFrom_Effect(self, void 0 as unknown as A, schedule).traced(trace))
+    schedule: Schedule.Schedule<R2, unknown, Out>
+  ) => scheduleFrom_Effect(self, void 0, schedule).traced(trace))
 
 /** @internal */
 export const scheduleFrom_Effect = Debug.dualWithTrace<

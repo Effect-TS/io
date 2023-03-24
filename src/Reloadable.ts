@@ -61,11 +61,11 @@ export declare namespace Reloadable {
  * @since 1.0.0
  * @category constructors
  */
-export const auto: <Out extends Context.Tag<any>, In, E, R, Out2>(
+export const auto: <Out extends Context.Tag<any>, In, E, R>(
   tag: Out,
   layer: Layer.Layer<In, E, Context.Tag.Service<Out>>,
-  policy: Schedule.Schedule<R, In, Out2>
-) => Layer.Layer<In | R, E, Reloadable<Context.Tag.Service<Out>>> = internal.auto
+  policy: Schedule.Schedule<R, unknown, unknown>
+) => Layer.Layer<In | R, E, Reloadable<any>> = internal.auto
 
 /**
  * Makes a new reloadable service from a layer that describes the construction
@@ -75,11 +75,11 @@ export const auto: <Out extends Context.Tag<any>, In, E, R, Out2>(
  * @since 1.0.0
  * @category constructors
  */
-export const autoFromConfig: <Out extends Context.Tag<any>, In, E, R, Out2>(
+export const autoFromConfig: <Out extends Context.Tag<any>, In, E, R>(
   tag: Out,
   layer: Layer.Layer<In, E, Context.Tag.Service<Out>>,
-  scheduleFromConfig: (context: Context.Context<In>) => Schedule.Schedule<R, In, Out2>
-) => Layer.Layer<In | R, E, Reloadable<Context.Tag.Service<Out>>> = internal.autoFromConfig
+  scheduleFromConfig: (context: Context.Context<In>) => Schedule.Schedule<R, unknown, unknown>
+) => Layer.Layer<In | R, E, Reloadable<any>> = internal.autoFromConfig
 
 /**
  * Retrieves the current version of the reloadable service.

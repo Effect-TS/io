@@ -25,9 +25,9 @@ const cachedVariance = {
 
 /** @internal */
 export const auto = Debug.methodWithTrace((trace) =>
-  <R, E, A, R2, In, Out>(
+  <R, E, A, R2, Out>(
     acquire: Effect.Effect<R, E, A>,
-    policy: Schedule.Schedule<R2, In, Out>
+    policy: Schedule.Schedule<R2, unknown, Out>
   ): Effect.Effect<R | R2 | Scope.Scope, never, Cached.Cached<E, A>> =>
     core.tap(manual(acquire), (manual) =>
       fiberRuntime.acquireRelease(

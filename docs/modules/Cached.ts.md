@@ -40,9 +40,9 @@ constructor.
 **Signature**
 
 ```ts
-export declare const auto: <R, E, A, R2, In, Out>(
+export declare const auto: <R, E, A, R2, Out>(
   acquire: Effect.Effect<R, E, A>,
-  policy: Schedule.Schedule<R2, In, Out>
+  policy: Schedule.Schedule<R2, unknown, Out>
 ) => Effect.Effect<Scope.Scope | R | R2, never, Cached<E, A>>
 ```
 

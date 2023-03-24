@@ -5624,8 +5624,8 @@ depend on the result of this effect.
 
 ```ts
 export declare const schedule: {
-  <R2, Out>(schedule: Schedule.Schedule<R2, any, Out>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E, Out>
-  <R, E, A, R2, Out>(self: Effect<R, E, A>, schedule: Schedule.Schedule<R2, any, Out>): Effect<R | R2, E, Out>
+  <R2, Out>(schedule: Schedule.Schedule<R2, unknown, Out>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E, Out>
+  <R, E, A, R2, Out>(self: Effect<R, E, A>, schedule: Schedule.Schedule<R2, unknown, Out>): Effect<R | R2, E, Out>
 }
 ```
 
