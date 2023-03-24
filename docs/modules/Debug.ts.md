@@ -60,6 +60,10 @@ export interface Debug {
   /**
    * Sets a limit on how many stack traces should be rendered.
    */
+  reportUnhandled: boolean
+  /**
+   * Sets a limit on how many stack traces should be rendered.
+   */
   traceStackLimit: number
   /**
    * Enables tracing of execution and stack.

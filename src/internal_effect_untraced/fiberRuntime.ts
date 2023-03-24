@@ -659,6 +659,9 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
         }
       }
     }
+    if (exit._tag === "Failure" && Debug.runtimeDebug.reportUnhandled) {
+      this.log("Fiber terminated with a non handled error", exit.cause, Option.some(LogLevel.Error))
+    }
   }
 
   setExitValue(exit: Exit.Exit<E, A>) {

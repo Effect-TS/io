@@ -37,6 +37,7 @@ export const restoreOff: Restore = (body): any =>
 export const runtimeDebug: Debug = globalValue(
   Symbol.for("@effect/io/Debug/runtimeDebug"),
   () => ({
+    reportUnhandled: true,
     minumumLogLevel: "Info",
     traceStackLimit: 5,
     tracingEnabled: true,
