@@ -1,5 +1,17 @@
 # @effect/io
 
+## 0.11.0
+
+### Minor Changes
+
+- [#301](https://github.com/Effect-TS/io/pull/301) [`611f781`](https://github.com/Effect-TS/io/commit/611f7816dfdf8542f48ada3579344f244e6a576e) Thanks [@patroza](https://github.com/patroza)! - Improve design of FiberFailure to be a normal Error
+
+### Patch Changes
+
+- [#302](https://github.com/Effect-TS/io/pull/302) [`69b53fe`](https://github.com/Effect-TS/io/commit/69b53fe7be6c1d263df9bfc4fc7a391105c1b50f) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Fix schedule types
+
+- [#299](https://github.com/Effect-TS/io/pull/299) [`8210523`](https://github.com/Effect-TS/io/commit/8210523bc2e3aca02c061f4802cd5938b22f4b6e) Thanks [@IMax153](https://github.com/IMax153)! - fix stack safety of Effect.repeat\* combinators
+
 ## 0.10.0
 
 ### Minor Changes
