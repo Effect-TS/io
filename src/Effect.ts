@@ -4757,7 +4757,15 @@ export const runSyncExit: <E, A>(effect: Effect<never, E, A>) => Exit.Exit<E, A>
  */
 export const runSyncExitOrFiber: <E, A>(
   effect: Effect<never, E, A>
-) => Either.Either<Fiber.Fiber<E, A>, Exit.Exit<E, A>> = _runtime.unsafeRunSyncExitOrFiberEffect
+) => Either.Either<Fiber.Fiber<never, Exit.Exit<E, A>>, Exit.Exit<E, A>> = _runtime.unsafeRunSyncExitOrFiberEffect
+
+/**
+ * @since 1.0.0
+ * @category execution
+ */
+export const runSyncFiber: <R>(
+  runtime: Runtime.Runtime<R>
+) => <E, A>(effect: Effect<R, E, A>) => Either.Either<Fiber.Fiber<E, A>, A> = _runtime.unsafeRunSyncOrFiber
 
 /**
  * @since 1.0.0

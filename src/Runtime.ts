@@ -86,8 +86,21 @@ export const runSyncExit: <R>(runtime: Runtime<R>) => <E, A>(effect: Effect.Effe
  */
 export const runSyncExitOrFiber: <R>(
   runtime: Runtime<R>
-) => <E, A>(effect: Effect.Effect<R, E, A>) => Either<Fiber.Fiber<E, A>, Exit.Exit<E, A>> =
+) => <E, A>(effect: Effect.Effect<R, E, A>) => Either<Fiber.Fiber<never, Exit.Exit<E, A>>, Exit.Exit<E, A>> =
   internal.unsafeRunSyncExitOrFiber
+
+/**
+ * Executes the effect synchronously returning the exit or the fiber if async.
+ *
+ * This method is effectful and should only be invoked at the edges of your
+ * program.
+ *
+ * @since 1.0.0
+ * @category execution
+ */
+export const runSyncOrFiber: <R>(
+  runtime: Runtime<R>
+) => <E, A>(effect: Effect.Effect<R, E, A>) => Either<Fiber.Fiber<E, A>, A> = internal.unsafeRunSyncOrFiber
 
 /**
  * Executes the effect synchronously throwing in case of errors or async boundaries.
@@ -247,3 +260,9 @@ export type NodePrint = typeof NodePrint
  * @category guards
  */
 export const isFiberFailure: (u: unknown) => u is FiberFailure = internal.isFiberFailure
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const makeFiberFailure: <E>(cause: Cause<E>) => FiberFailure = internal.fiberFailure
