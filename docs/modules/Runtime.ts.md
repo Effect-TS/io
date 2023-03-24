@@ -26,10 +26,21 @@ Added in v1.0.0
   - [runSyncEither](#runsynceither)
   - [runSyncExit](#runsyncexit)
   - [runSyncExitOrFiber](#runsyncexitorfiber)
+- [exports](#exports)
+  - [FiberFailureCauseId (type alias)](#fiberfailurecauseid-type-alias)
+- [guards](#guards)
+  - [isFiberFailure](#isfiberfailure)
 - [models](#models)
   - [AsyncFiber (interface)](#asyncfiber-interface)
   - [Cancel (interface)](#cancel-interface)
+  - [FiberFailure (interface)](#fiberfailure-interface)
   - [Runtime (interface)](#runtime-interface)
+- [symbols](#symbols)
+  - [FiberFailureCauseId](#fiberfailurecauseid)
+  - [FiberFailureId](#fiberfailureid)
+  - [FiberFailureId (type alias)](#fiberfailureid-type-alias)
+  - [NodePrint](#nodeprint)
+  - [NodePrint (type alias)](#nodeprint-type-alias)
 
 ---
 
@@ -225,6 +236,30 @@ export declare const runSyncExitOrFiber: <R>(
 
 Added in v1.0.0
 
+# exports
+
+## FiberFailureCauseId (type alias)
+
+**Signature**
+
+```ts
+export type FiberFailureCauseId = typeof FiberFailureCauseId
+```
+
+Added in v1.0.0
+
+# guards
+
+## isFiberFailure
+
+**Signature**
+
+```ts
+export declare const isFiberFailure: (u: unknown) => u is FiberFailure
+```
+
+Added in v1.0.0
+
 # models
 
 ## AsyncFiber (interface)
@@ -252,6 +287,20 @@ export interface Cancel<E, A> {
 
 Added in v1.0.0
 
+## FiberFailure (interface)
+
+**Signature**
+
+```ts
+export interface FiberFailure extends Error {
+  readonly [FiberFailureId]: FiberFailureId
+  readonly [FiberFailureCauseId]: Cause<unknown>
+  readonly [NodePrint]: () => string
+}
+```
+
+Added in v1.0.0
+
 ## Runtime (interface)
 
 **Signature**
@@ -271,6 +320,58 @@ export interface Runtime<R> {
    */
   readonly fiberRefs: FiberRefs.FiberRefs
 }
+```
+
+Added in v1.0.0
+
+# symbols
+
+## FiberFailureCauseId
+
+**Signature**
+
+```ts
+export declare const FiberFailureCauseId: typeof FiberFailureCauseId
+```
+
+Added in v1.0.0
+
+## FiberFailureId
+
+**Signature**
+
+```ts
+export declare const FiberFailureId: typeof FiberFailureId
+```
+
+Added in v1.0.0
+
+## FiberFailureId (type alias)
+
+**Signature**
+
+```ts
+export type FiberFailureId = typeof FiberFailureId
+```
+
+Added in v1.0.0
+
+## NodePrint
+
+**Signature**
+
+```ts
+export declare const NodePrint: typeof NodePrint
+```
+
+Added in v1.0.0
+
+## NodePrint (type alias)
+
+**Signature**
+
+```ts
+export type NodePrint = typeof NodePrint
 ```
 
 Added in v1.0.0

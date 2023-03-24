@@ -3,6 +3,7 @@
  */
 import type * as Context from "@effect/data/Context"
 import type { Either } from "@effect/data/Either"
+import type { Cause } from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
 import type * as Fiber from "@effect/io/Fiber"
@@ -195,3 +196,54 @@ export const make: <R>(
   runtimeFlags: RuntimeFlags.RuntimeFlags,
   fiberRefs: FiberRefs.FiberRefs
 ) => Runtime<R> = internal.make
+
+/**
+ * @since 1.0.0
+ * @category symbols
+ */
+export const FiberFailureId = Symbol.for("@effect/io/Runtime/FiberFailure")
+/**
+ * @since 1.0.0
+ * @category symbols
+ */
+export type FiberFailureId = typeof FiberFailureId
+
+/**
+ * @since 1.0.0
+ * @category symbols
+ */
+export const FiberFailureCauseId: unique symbol = internal.FiberFailureCauseId
+
+/**
+ * @since 1.0.0
+ * @category exports
+ */
+export type FiberFailureCauseId = typeof FiberFailureCauseId
+
+/**
+ * @since 1.0.0
+ * @category models
+ */
+export interface FiberFailure extends Error {
+  readonly [FiberFailureId]: FiberFailureId
+  readonly [FiberFailureCauseId]: Cause<unknown>
+  readonly [NodePrint]: () => string
+}
+
+/**
+ * @since 1.0.0
+ * @category symbols
+ */
+export const NodePrint: unique symbol = internal.NodePrint
+
+/**
+ * @since 1.0.0
+ * @category symbols
+ */
+export type NodePrint = typeof NodePrint
+
+/**
+ * @since 1.0.0
+ * @category guards
+ */
+export const isFiberFailure: (u: unknown) => u is FiberFailure = internal.isFiberFailure
