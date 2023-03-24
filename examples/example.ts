@@ -18,6 +18,6 @@ const L = Layer.effect(
 
 const main = Effect.provideSomeLayer(L)(Effect.serviceWithEffect(N, (n) => Effect.logDebug(`n: ${n}`)))
 
-Effect.runFork(
+Effect.runSync(
   Logger.withMinimumLogLevel(LogLevel.Debug)(main)
 )
