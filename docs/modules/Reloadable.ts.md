@@ -41,11 +41,11 @@ provided schedule.
 **Signature**
 
 ```ts
-export declare const auto: <Out extends Context.Tag<any>, In, E, R, Out2>(
+export declare const auto: <Out extends Context.Tag<any>, In, E, R>(
   tag: Out,
   layer: Layer.Layer<In, E, Context.Tag.Service<Out>>,
-  policy: Schedule.Schedule<R, In, Out2>
-) => Layer.Layer<In | R, E, Reloadable<Context.Tag.Service<Out>>>
+  policy: Schedule.Schedule<R, unknown, unknown>
+) => Layer.Layer<In | R, E, Reloadable<any>>
 ```
 
 Added in v1.0.0
@@ -59,11 +59,11 @@ schedule, which is extracted from the input to the layer.
 **Signature**
 
 ```ts
-export declare const autoFromConfig: <Out extends Context.Tag<any>, In, E, R, Out2>(
+export declare const autoFromConfig: <Out extends Context.Tag<any>, In, E, R>(
   tag: Out,
   layer: Layer.Layer<In, E, Context.Tag.Service<Out>>,
-  scheduleFromConfig: (context: Context.Context<In>) => Schedule.Schedule<R, In, Out2>
-) => Layer.Layer<In | R, E, Reloadable<Context.Tag.Service<Out>>>
+  scheduleFromConfig: (context: Context.Context<In>) => Schedule.Schedule<R, unknown, unknown>
+) => Layer.Layer<In | R, E, Reloadable<any>>
 ```
 
 Added in v1.0.0
