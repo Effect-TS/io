@@ -146,28 +146,44 @@ export class AsyncFiber<E, A> implements Runtime.AsyncFiber<E, A> {
   }
 }
 
-class FiberFailure extends Error {
-  readonly _tag = "FiberFailure"
-  readonly _id = Symbol.for("@effect/io/Runtime/FiberFailure")
-  constructor(readonly originalCause: Cause.Cause<unknown>) {
-    const limit = Error.stackTraceLimit
-    Error.stackTraceLimit = 0
-    super()
-    Error.stackTraceLimit = limit
-    const pretty = CausePretty.prettyErrors(this.originalCause)
-    if (pretty.length > 0) {
-      this.name = pretty[0].message.split(":")[0]
-      this.message = pretty[0].message.substring(this.name.length + 2)
-      this.stack = pretty[0].stack
-    }
-  }
-  toString() {
-    return CausePretty.pretty(this.originalCause)
-  }
-  [Symbol.for("nodejs.util.inspect.custom")]() {
-    return this.toString()
-  }
+/** @internal */
+export const FiberFailureId: Runtime.FiberFailureId = Symbol.for("@effect/io/Runtime/FiberFailure") as any
+/** @internal */
+export const FiberFailureCauseId: Runtime.FiberFailureCauseId = Symbol.for(
+  "@effect/io/Runtime/FiberFailure/Cause"
+) as any
+
+type Mutable<A> = {
+  -readonly [k in keyof A]: A[k]
 }
+/** @internal */
+export const NodePrint: Runtime.NodePrint = Symbol.for("nodejs.util.inspect.custom") as any
+
+const fiberFailure = (cause: Cause.Cause<unknown>): Runtime.FiberFailure => {
+  const limit = Error.stackTraceLimit
+  Error.stackTraceLimit = 0
+  const error = (new Error()) as Mutable<Runtime.FiberFailure>
+  Error.stackTraceLimit = limit
+  const pretty = CausePretty.prettyErrors(cause)
+  if (pretty.length > 0) {
+    error.name = pretty[0].message.split(":")[0]
+    error.message = pretty[0].message.substring(error.name.length + 2)
+    error.stack = `${error.name}: ${error.message}\n${pretty[0].stack}`
+  }
+  error[FiberFailureId] = FiberFailureId
+  error[FiberFailureCauseId] = cause
+  error.toString = () => {
+    return CausePretty.pretty(cause)
+  }
+  error[NodePrint] = () => {
+    return error.toString()
+  }
+  return error
+}
+
+/** @internal */
+export const isFiberFailure = (u: unknown): u is Runtime.FiberFailure =>
+  typeof u === "object" && u !== null && FiberFailureId in u
 
 /** @internal */
 export const unsafeRunSync = <R>(runtime: Runtime.Runtime<R>) =>
@@ -175,7 +191,7 @@ export const unsafeRunSync = <R>(runtime: Runtime.Runtime<R>) =>
     <E, A>(effect: Effect.Effect<R, E, A>): A => {
       const exit = unsafeRunSyncExit(runtime)(effect.traced(trace))
       if (exit._tag === OpCodes.OP_FAILURE) {
-        throw new FiberFailure(exit.i0)
+        throw fiberFailure(exit.i0)
       }
       return exit.i0
     }
@@ -197,7 +213,7 @@ export const unsafeRunPromise = <R>(runtime: Runtime.Runtime<R>) =>
             break
           }
           case OpCodes.OP_FAILURE: {
-            reject(new FiberFailure(exit.i0))
+            reject(fiberFailure(exit.i0))
             break
           }
         }
