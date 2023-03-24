@@ -14,7 +14,7 @@ export interface Debug {
    */
   minumumLogLevel: "All" | "Fatal" | "Error" | "Warning" | "Info" | "Debug" | "Trace" | "None"
   /**
-   * Sets a limit on how many stack traces should be rendered.
+   * When enabled not handled errors are reported by the effect fiber via the logger.
    */
   reportUnhandled: boolean
   /**
