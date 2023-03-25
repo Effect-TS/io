@@ -117,7 +117,7 @@ export const isEmpty: <A>(self: Hub<A>) => Effect.Effect<never, never, boolean> 
  * to `offer*` and `take*` will be interrupted immediately.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const shutdown: <A>(self: Hub<A>) => Effect.Effect<never, never, void> = internal.shutdown
 
@@ -135,7 +135,7 @@ export const isShutdown: <A>(self: Hub<A>) => Effect.Effect<never, never, boolea
  * shutdown, the `Effect` will resume right away.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const awaitShutdown: <A>(self: Hub<A>) => Effect.Effect<never, never, void> = internal.awaitShutdown
 
@@ -144,7 +144,7 @@ export const awaitShutdown: <A>(self: Hub<A>) => Effect.Effect<never, never, voi
  * to the hub.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const publish: {
   <A>(value: A): (self: Hub<A>) => Effect.Effect<never, never, boolean>
@@ -156,7 +156,7 @@ export const publish: {
  * were published to the hub.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const publishAll: {
   <A>(elements: Iterable<A>): (self: Hub<A>) => Effect.Effect<never, never, boolean>
@@ -169,6 +169,6 @@ export const publishAll: {
  * each time.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const subscribe: <A>(self: Hub<A>) => Effect.Effect<Scope.Scope, never, Queue.Dequeue<A>> = internal.subscribe

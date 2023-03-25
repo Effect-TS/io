@@ -173,7 +173,7 @@ export const isConfig: (u: unknown) => u is Config<unknown> = internal.isConfig
  * a different value, constructed using the specified function.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const map: {
   <A, B>(f: (a: A) => B): (self: Config<A>) => Config<B>
@@ -186,7 +186,7 @@ export const map: {
  * may throw exceptions that will be translated into validation errors.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const mapAttempt: {
   <A, B>(f: (a: A) => B): (self: Config<A>) => Config<B>
@@ -199,7 +199,7 @@ export const mapAttempt: {
  * function.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const mapOrFail: {
   <A, B>(f: (a: A) => Either.Either<ConfigError.ConfigError, B>): (self: Config<A>) => Config<B>
@@ -211,7 +211,7 @@ export const mapOrFail: {
  * specified name.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const nested: {
   (name: string): <A>(self: Config<A>) => Config<A>
@@ -224,7 +224,7 @@ export const nested: {
  * reading from this config.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const orElse: {
   <A2>(that: LazyArg<Config<A2>>): <A>(self: Config<A>) => Config<A2 | A>
@@ -237,7 +237,7 @@ export const orElse: {
  * fails with an error satisfying the specified predicate.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const orElseIf: {
   <A2>(that: LazyArg<Config<A2>>, condition: Predicate<ConfigError.ConfigError>): <A>(self: Config<A>) => Config<A>
@@ -249,7 +249,7 @@ export const orElseIf: {
  * data is missing from configuration, and `Some` otherwise.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const optional: <A>(self: Config<A>) => Config<Option.Option<A>> = internal.optional
 
@@ -269,7 +269,7 @@ export const primitive: <A>(
  * structure of this config.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const repeat: <A>(self: Config<A>) => Config<Chunk.Chunk<A>> = internal.repeat
 
@@ -375,7 +375,7 @@ export const unwrap: <A>(wrapped: Config.Wrap<A>) => Config<A> = internal.unwrap
  * performs validation during loading.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const validate: {
   <A, B extends A>(message: string, f: Refinement<A, B>): (self: Config<A>) => Config<B>
@@ -389,7 +389,7 @@ export const validate: {
  * specified default value in case the information cannot be found.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const withDefault: {
   <A2>(def: A2): <A>(self: Config<A>) => Config<A2 | A>
@@ -400,7 +400,7 @@ export const withDefault: {
  * Adds a description to this configuration, which is intended for humans.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const withDescription: {
   (description: string): <A>(self: Config<A>) => Config<A>
@@ -412,7 +412,7 @@ export const withDescription: {
  * config.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const zip: {
   <B>(that: Config<B>): <A>(self: Config<A>) => Config<readonly [A, B]>
@@ -424,7 +424,7 @@ export const zip: {
  * using the provided function.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const zipWith: {
   <B, A, C>(that: Config<B>, f: (a: A, b: B) => C): (self: Config<A>) => Config<C>

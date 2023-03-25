@@ -104,7 +104,7 @@ export const includes: {
  * followed by `that` patch.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const andThen: {
   (that: RuntimeFlagsPatch): (self: RuntimeFlagsPatch) => RuntimeFlagsPatch
@@ -116,7 +116,7 @@ export const andThen: {
  * and `that` patch.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const both: {
   (that: RuntimeFlagsPatch): (self: RuntimeFlagsPatch) => RuntimeFlagsPatch
@@ -128,7 +128,7 @@ export const both: {
  * patch or `that` patch.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const either: {
   (that: RuntimeFlagsPatch): (self: RuntimeFlagsPatch) => RuntimeFlagsPatch
@@ -139,7 +139,7 @@ export const either: {
  * Creates a `RuntimeFlagsPatch` which describes exclusion of the specified
  * `RuntimeFlag` from the set of `RuntimeFlags`.
  *
- * @category mutations
+ * @category utils
  * @since 1.0.0
  */
 export const exclude: {
@@ -152,7 +152,7 @@ export const exclude: {
  * specified by the provided `RuntimeFlagsPatch`.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const inverse: (patch: RuntimeFlagsPatch) => RuntimeFlagsPatch = internal.inverse
 

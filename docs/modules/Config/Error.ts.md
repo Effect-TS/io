@@ -30,8 +30,6 @@ Added in v1.0.0
   - [Or (interface)](#or-interface)
   - [SourceUnavailable (interface)](#sourceunavailable-interface)
   - [Unsupported (interface)](#unsupported-interface)
-- [mutations](#mutations)
-  - [prefixed](#prefixed)
 - [refinements](#refinements)
   - [isAnd](#isand)
   - [isConfigError](#isconfigerror)
@@ -45,6 +43,7 @@ Added in v1.0.0
   - [ConfigErrorTypeId (type alias)](#configerrortypeid-type-alias)
 - [utils](#utils)
   - [isMissingDataOnly](#ismissingdataonly)
+  - [prefixed](#prefixed)
 
 ---
 
@@ -250,21 +249,6 @@ export interface Unsupported extends ConfigError.Proto {
 
 Added in v1.0.0
 
-# mutations
-
-## prefixed
-
-**Signature**
-
-```ts
-export declare const prefixed: {
-  (prefix: Chunk.Chunk<string>): (self: ConfigError) => ConfigError
-  (self: ConfigError, prefix: Chunk.Chunk<string>): ConfigError
-}
-```
-
-Added in v1.0.0
-
 # refinements
 
 ## isAnd
@@ -387,6 +371,19 @@ Returns `true` if the specified `ConfigError` contains only `MissingData` errors
 
 ```ts
 export declare const isMissingDataOnly: (self: ConfigError) => boolean
+```
+
+Added in v1.0.0
+
+## prefixed
+
+**Signature**
+
+```ts
+export declare const prefixed: {
+  (prefix: Chunk.Chunk<string>): (self: ConfigError) => ConfigError
+  (self: ConfigError, prefix: Chunk.Chunk<string>): ConfigError
+}
 ```
 
 Added in v1.0.0

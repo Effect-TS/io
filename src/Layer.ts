@@ -215,7 +215,7 @@ export const effectContext: <R, E, A>(effect: Effect.Effect<R, E, Context.Contex
  * effect depends on is closed.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const extendScope: <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Layer<Scope.Scope | RIn, E, ROut> =
   internal.extendScope
@@ -290,7 +290,7 @@ export const flatten: {
  * Creates a fresh version of this layer that will not be shared.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const fresh: <R, E, A>(self: Layer<R, E, A>) => Layer<R, E, A> = internal.fresh
 
@@ -386,7 +386,7 @@ export const matchCauseLayer: {
  * result of this layer.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const memoize: <RIn, E, ROut>(
   self: Layer<RIn, E, ROut>
@@ -397,7 +397,7 @@ export const memoize: <RIn, E, ROut>(
  * has the inputs and outputs of both.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const merge: {
   <RIn2, E2, ROut2>(
@@ -449,7 +449,7 @@ export const orElse: {
  * passes through the inputs.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const passthrough: <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn, E, RIn | ROut> = internal.passthrough
 
@@ -458,7 +458,7 @@ export const passthrough: <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn
  * specified function.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const project: {
   <A extends Context.Tag<any>, B extends Context.Tag<any>>(
@@ -480,7 +480,7 @@ export const project: {
  * well as any leftover inputs, and the outputs of the specified builder.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const provide: {
   <RIn2, E2, ROut2>(
@@ -498,7 +498,7 @@ export const provide: {
  * outputs of both layers.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const provideMerge: {
   <RIn2, E2, ROut2>(
@@ -691,7 +691,7 @@ export const toRuntime: <RIn, E, ROut>(
  * well as any leftover inputs, and the outputs of the specified builder.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const use: {
   <RIn, E, ROut>(
@@ -709,7 +709,7 @@ export const use: {
  * outputs of both layers.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const useMerge: {
   <RIn, E, ROut>(

@@ -116,7 +116,7 @@ export const diff: {
  * Constructs a differ that knows how to diff `RuntimeFlags` values.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const differ: (_: void) => Differ.Differ<RuntimeFlags, RuntimeFlagsPatch.RuntimeFlagsPatch> = internal.differ
 
@@ -124,7 +124,7 @@ export const differ: (_: void) => Differ.Differ<RuntimeFlags, RuntimeFlagsPatch.
  * Disables the specified `RuntimeFlag`.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const disable: {
   (flag: RuntimeFlag): (self: RuntimeFlags) => RuntimeFlags
@@ -135,7 +135,7 @@ export const disable: {
  * Disables all of the `RuntimeFlag`s in the specified set of `RuntimeFlags`.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const disableAll: {
   (flags: RuntimeFlags): (self: RuntimeFlags) => RuntimeFlags
@@ -177,7 +177,7 @@ export const disableWindDown: (_: void) => Layer.Layer<never, never, never> = ci
  * Enables the specified `RuntimeFlag`.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const enable: {
   (flag: RuntimeFlag): (self: RuntimeFlags) => RuntimeFlags
@@ -188,7 +188,7 @@ export const enable: {
  * Enables all of the `RuntimeFlag`s in the specified set of `RuntimeFlags`.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const enableAll: {
   (flags: RuntimeFlags): (self: RuntimeFlags) => RuntimeFlags
@@ -296,7 +296,7 @@ export const opSupervision: (self: RuntimeFlags) => boolean = internal.opSupervi
  * patched set of `RuntimeFlag`s.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const patch: {
   (patch: RuntimeFlagsPatch.RuntimeFlagsPatch): (self: RuntimeFlags) => RuntimeFlags

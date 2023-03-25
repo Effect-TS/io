@@ -90,7 +90,7 @@ export declare namespace Scope {
  * the scope is closed.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const addFinalizer: (
   self: Scope,
@@ -102,7 +102,7 @@ export const addFinalizer: (
  * depend on the `Exit` value that the scope is closed with.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const addFinalizerExit: (self: Scope, finalizer: Scope.Finalizer) => Effect.Effect<never, never, void> =
   core.scopeAddFinalizerExit
@@ -124,7 +124,7 @@ export const close: (self: CloseableScope, exit: Exit.Exit<unknown, unknown>) =>
  * larger scope.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const extend: {
   (scope: Scope): <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<Exclude<R, Scope>, E, A>
@@ -136,7 +136,7 @@ export const extend: {
  * automatically be closed when this scope is closed.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const fork: (
   self: Scope,

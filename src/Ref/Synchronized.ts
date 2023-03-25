@@ -57,7 +57,7 @@ export const get: <A>(self: Synchronized<A>) => Effect.Effect<never, never, A> =
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const getAndSet: {
   <A>(value: A): (self: Ref.Ref<A>) => Effect.Effect<never, never, A>
@@ -66,7 +66,7 @@ export const getAndSet: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const getAndUpdate: {
   <A>(f: (a: A) => A): (self: Ref.Ref<A>) => Effect.Effect<never, never, A>
@@ -75,7 +75,7 @@ export const getAndUpdate: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const getAndUpdateEffect: {
   <A, R, E>(f: (a: A) => Effect.Effect<R, E, A>): (self: Synchronized<A>) => Effect.Effect<R, E, A>
@@ -84,7 +84,7 @@ export const getAndUpdateEffect: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const getAndUpdateSome: {
   <A>(pf: (a: A) => Option.Option<A>): (self: Ref.Ref<A>) => Effect.Effect<never, never, A>
@@ -93,7 +93,7 @@ export const getAndUpdateSome: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const getAndUpdateSomeEffect: {
   <A, R, E>(pf: (a: A) => Option.Option<Effect.Effect<R, E, A>>): (self: Synchronized<A>) => Effect.Effect<R, E, A>
@@ -102,7 +102,7 @@ export const getAndUpdateSomeEffect: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const modify: {
   <A, B>(f: (a: A) => readonly [B, A]): (self: Synchronized<A>) => Effect.Effect<never, never, B>
@@ -111,7 +111,7 @@ export const modify: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const modifyEffect: {
   <A, R, E, B>(f: (a: A) => Effect.Effect<R, E, readonly [B, A]>): (self: Synchronized<A>) => Effect.Effect<R, E, B>
@@ -120,7 +120,7 @@ export const modifyEffect: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const modifySome: {
   <B, A>(
@@ -136,7 +136,7 @@ export const modifySome: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const modifySomeEffect: {
   <A, B, R, E>(
@@ -152,7 +152,7 @@ export const modifySomeEffect: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const set: {
   <A>(value: A): (self: Ref.Ref<A>) => Effect.Effect<never, never, void>
@@ -161,7 +161,7 @@ export const set: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const setAndGet: {
   <A>(value: A): (self: Ref.Ref<A>) => Effect.Effect<never, never, A>
@@ -170,7 +170,7 @@ export const setAndGet: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const update: {
   <A>(f: (a: A) => A): (self: Ref.Ref<A>) => Effect.Effect<never, never, void>
@@ -179,7 +179,7 @@ export const update: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const updateEffect: {
   <A, R, E>(f: (a: A) => Effect.Effect<R, E, A>): (self: Synchronized<A>) => Effect.Effect<R, E, void>
@@ -188,7 +188,7 @@ export const updateEffect: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const updateAndGet: {
   <A>(f: (a: A) => A): (self: Ref.Ref<A>) => Effect.Effect<never, never, A>
@@ -197,7 +197,7 @@ export const updateAndGet: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const updateAndGetEffect: {
   <A, R, E>(f: (a: A) => Effect.Effect<R, E, A>): (self: Synchronized<A>) => Effect.Effect<R, E, A>
@@ -206,7 +206,7 @@ export const updateAndGetEffect: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const updateSome: {
   <A>(f: (a: A) => Option.Option<A>): (self: Ref.Ref<A>) => Effect.Effect<never, never, void>
@@ -215,7 +215,7 @@ export const updateSome: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const updateSomeEffect: {
   <A, R, E>(pf: (a: A) => Option.Option<Effect.Effect<R, E, A>>): (self: Synchronized<A>) => Effect.Effect<R, E, void>
@@ -224,7 +224,7 @@ export const updateSomeEffect: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const updateSomeAndGet: {
   <A>(pf: (a: A) => Option.Option<A>): (self: Ref.Ref<A>) => Effect.Effect<never, never, A>
@@ -233,7 +233,7 @@ export const updateSomeAndGet: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const updateSomeAndGetEffect: {
   <A, R, E>(pf: (a: A) => Option.Option<Effect.Effect<R, E, A>>): (self: Synchronized<A>) => Effect.Effect<R, E, A>

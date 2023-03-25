@@ -1674,6 +1674,12 @@ export const currentLogSpan: FiberRef.FiberRef<Chunk.Chunk<LogSpan.LogSpan>> = f
 export const currentScheduler: FiberRef.FiberRef<Scheduler.Scheduler> = fiberRefUnsafeMake(scheduler.defaultScheduler)
 
 /** @internal */
+export const withScheduler = Debug.dualWithTrace<
+  (scheduler: Scheduler.Scheduler) => <R, E, B>(self: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>,
+  <R, E, B>(self: Effect.Effect<R, E, B>, scheduler: Scheduler.Scheduler) => Effect.Effect<R, E, B>
+>(2, (trace) => (self, scheduler) => fiberRefLocally(self, currentScheduler, scheduler).traced(trace))
+
+/** @internal */
 export const currentParallelism: FiberRef.FiberRef<Option.Option<number>> = fiberRefUnsafeMake<Option.Option<number>>(
   Option.none()
 )

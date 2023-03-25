@@ -18,7 +18,12 @@ Added in v1.0.0
   - [get](#get)
 - [models](#models)
   - [Synchronized (interface)](#synchronized-interface)
-- [mutations](#mutations)
+- [symbols](#symbols)
+  - [SynchronizedTypeId](#synchronizedtypeid)
+  - [SynchronizedTypeId (type alias)](#synchronizedtypeid-type-alias)
+- [unsafe](#unsafe)
+  - [unsafeMake](#unsafemake)
+- [utils](#utils)
   - [getAndSet](#getandset)
   - [getAndUpdate](#getandupdate)
   - [getAndUpdateEffect](#getandupdateeffect)
@@ -38,11 +43,6 @@ Added in v1.0.0
   - [updateSomeAndGet](#updatesomeandget)
   - [updateSomeAndGetEffect](#updatesomeandgeteffect)
   - [updateSomeEffect](#updatesomeeffect)
-- [symbols](#symbols)
-  - [SynchronizedTypeId](#synchronizedtypeid)
-  - [SynchronizedTypeId (type alias)](#synchronizedtypeid-type-alias)
-- [unsafe](#unsafe)
-  - [unsafeMake](#unsafemake)
 
 ---
 
@@ -84,7 +84,41 @@ export interface Synchronized<A> extends Synchronized.Variance<A>, Ref.Ref<A> {
 
 Added in v1.0.0
 
-# mutations
+# symbols
+
+## SynchronizedTypeId
+
+**Signature**
+
+```ts
+export declare const SynchronizedTypeId: typeof SynchronizedTypeId
+```
+
+Added in v1.0.0
+
+## SynchronizedTypeId (type alias)
+
+**Signature**
+
+```ts
+export type SynchronizedTypeId = typeof SynchronizedTypeId
+```
+
+Added in v1.0.0
+
+# unsafe
+
+## unsafeMake
+
+**Signature**
+
+```ts
+export declare const unsafeMake: <A>(value: A) => Synchronized<A>
+```
+
+Added in v1.0.0
+
+# utils
 
 ## getAndSet
 
@@ -337,40 +371,6 @@ export declare const updateSomeEffect: {
   <A, R, E>(pf: (a: A) => Option.Option<Effect.Effect<R, E, A>>): (self: Synchronized<A>) => Effect.Effect<R, E, void>
   <A, R, E>(self: Synchronized<A>, pf: (a: A) => Option.Option<Effect.Effect<R, E, A>>): Effect.Effect<R, E, void>
 }
-```
-
-Added in v1.0.0
-
-# symbols
-
-## SynchronizedTypeId
-
-**Signature**
-
-```ts
-export declare const SynchronizedTypeId: typeof SynchronizedTypeId
-```
-
-Added in v1.0.0
-
-## SynchronizedTypeId (type alias)
-
-**Signature**
-
-```ts
-export type SynchronizedTypeId = typeof SynchronizedTypeId
-```
-
-Added in v1.0.0
-
-# unsafe
-
-## unsafeMake
-
-**Signature**
-
-```ts
-export declare const unsafeMake: <A>(value: A) => Synchronized<A>
 ```
 
 Added in v1.0.0

@@ -91,6 +91,6 @@ export const manual: <R, E, A>(acquire: Effect.Effect<R, E, A>) => Effect.Effect
  * is successful, or the refresh operation fails.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const refresh: <E, A>(self: Cached<E, A>) => Effect.Effect<never, E, void> = internal.refresh

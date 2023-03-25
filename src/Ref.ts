@@ -51,7 +51,7 @@ export const get: <A>(self: Ref<A>) => Effect.Effect<never, never, A> = internal
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const getAndSet: {
   <A>(value: A): (self: Ref<A>) => Effect.Effect<never, never, A>
@@ -60,7 +60,7 @@ export const getAndSet: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const getAndUpdate: {
   <A>(f: (a: A) => A): (self: Ref<A>) => Effect.Effect<never, never, A>
@@ -69,7 +69,7 @@ export const getAndUpdate: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const getAndUpdateSome: {
   <A>(pf: (a: A) => Option.Option<A>): (self: Ref<A>) => Effect.Effect<never, never, A>
@@ -78,7 +78,7 @@ export const getAndUpdateSome: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const modify: {
   <A, B>(f: (a: A) => readonly [B, A]): (self: Ref<A>) => Effect.Effect<never, never, B>
@@ -87,7 +87,7 @@ export const modify: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const modifySome: {
   <B, A>(fallback: B, pf: (a: A) => Option.Option<readonly [B, A]>): (self: Ref<A>) => Effect.Effect<never, never, B>
@@ -96,7 +96,7 @@ export const modifySome: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const set: {
   <A>(value: A): (self: Ref<A>) => Effect.Effect<never, never, void>
@@ -105,7 +105,7 @@ export const set: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const setAndGet: {
   <A>(value: A): (self: Ref<A>) => Effect.Effect<never, never, A>
@@ -114,7 +114,7 @@ export const setAndGet: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const update: {
   <A>(f: (a: A) => A): (self: Ref<A>) => Effect.Effect<never, never, void>
@@ -123,7 +123,7 @@ export const update: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const updateAndGet: {
   <A>(f: (a: A) => A): (self: Ref<A>) => Effect.Effect<never, never, A>
@@ -132,7 +132,7 @@ export const updateAndGet: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const updateSome: {
   <A>(f: (a: A) => Option.Option<A>): (self: Ref<A>) => Effect.Effect<never, never, void>
@@ -141,7 +141,7 @@ export const updateSome: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const updateSomeAndGet: {
   <A>(pf: (a: A) => Option.Option<A>): (self: Ref<A>) => Effect.Effect<never, never, A>

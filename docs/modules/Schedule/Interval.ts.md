@@ -21,8 +21,6 @@ Added in v1.0.0
   - [size](#size)
 - [models](#models)
   - [Interval (interface)](#interval-interface)
-- [mutations](#mutations)
-  - [union](#union)
 - [ordering](#ordering)
   - [intersect](#intersect)
   - [isEmpty](#isempty)
@@ -33,6 +31,8 @@ Added in v1.0.0
 - [symbols](#symbols)
   - [IntervalTypeId](#intervaltypeid)
   - [IntervalTypeId (type alias)](#intervaltypeid-type-alias)
+- [utils](#utils)
+  - [union](#union)
 
 ---
 
@@ -119,25 +119,6 @@ export interface Interval {
   readonly [IntervalTypeId]: IntervalTypeId
   readonly startMillis: number
   readonly endMillis: number
-}
-```
-
-Added in v1.0.0
-
-# mutations
-
-## union
-
-Computes a new `Interval` which is the union of this `Interval` and that
-`Interval` as a `Some`, otherwise returns `None` if the two intervals cannot
-form a union.
-
-**Signature**
-
-```ts
-export declare const union: {
-  (that: Interval): (self: Interval) => Option.Option<Interval>
-  (self: Interval, that: Interval): Option.Option<Interval>
 }
 ```
 
@@ -243,6 +224,25 @@ Added in v1.0.0
 
 ```ts
 export type IntervalTypeId = typeof IntervalTypeId
+```
+
+Added in v1.0.0
+
+# utils
+
+## union
+
+Computes a new `Interval` which is the union of this `Interval` and that
+`Interval` as a `Some`, otherwise returns `None` if the two intervals cannot
+form a union.
+
+**Signature**
+
+```ts
+export declare const union: {
+  (that: Interval): (self: Interval) => Option.Option<Interval>
+  (self: Interval, that: Interval): Option.Option<Interval>
+}
 ```
 
 Added in v1.0.0

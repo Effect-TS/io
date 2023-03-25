@@ -35,13 +35,13 @@ Added in v1.0.0
   - [None (interface)](#none-interface)
   - [Trace (interface)](#trace-interface)
   - [Warning (interface)](#warning-interface)
-- [mutations](#mutations)
-  - [locally](#locally)
 - [ordering](#ordering)
   - [greaterThan](#greaterthan)
   - [greaterThanEqual](#greaterthanequal)
   - [lessThan](#lessthan)
   - [lessThanEqual](#lessthanequal)
+- [utils](#utils)
+  - [locally](#locally)
 
 ---
 
@@ -290,24 +290,6 @@ export interface Warning {
 
 Added in v1.0.0
 
-# mutations
-
-## locally
-
-Locally applies the specified `LogLevel` to an `Effect` workflow, reverting
-to the previous `LogLevel` after the `Effect` workflow completes.
-
-**Signature**
-
-```ts
-export declare const locally: {
-  (self: LogLevel): <R, E, B>(use: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>
-  <R, E, B>(use: Effect.Effect<R, E, B>, self: LogLevel): Effect.Effect<R, E, B>
-}
-```
-
-Added in v1.0.0
-
 # ordering
 
 ## greaterThan
@@ -357,6 +339,24 @@ Added in v1.0.0
 export declare const lessThanEqual: {
   (that: LogLevel): (self: LogLevel) => boolean
   (self: LogLevel, that: LogLevel): boolean
+}
+```
+
+Added in v1.0.0
+
+# utils
+
+## locally
+
+Locally applies the specified `LogLevel` to an `Effect` workflow, reverting
+to the previous `LogLevel` after the `Effect` workflow completes.
+
+**Signature**
+
+```ts
+export declare const locally: {
+  (self: LogLevel): <R, E, B>(use: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>
+  <R, E, B>(use: Effect.Effect<R, E, B>, self: LogLevel): Effect.Effect<R, E, B>
 }
 ```
 

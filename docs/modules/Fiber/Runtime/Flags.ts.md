@@ -50,7 +50,7 @@ Added in v1.0.0
 - [models](#models)
   - [RuntimeFlag (type alias)](#runtimeflag-type-alias)
   - [RuntimeFlags (type alias)](#runtimeflags-type-alias)
-- [mutations](#mutations)
+- [utils](#utils)
   - [differ](#differ)
   - [disable](#disable)
   - [disableAll](#disableall)
@@ -461,7 +461,7 @@ export type RuntimeFlags = number & {
 
 Added in v1.0.0
 
-# mutations
+# utils
 
 ## differ
 

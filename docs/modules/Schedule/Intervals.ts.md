@@ -22,15 +22,15 @@ Added in v1.0.0
   - [start](#start)
 - [models](#models)
   - [Intervals (interface)](#intervals-interface)
-- [mutations](#mutations)
-  - [intersect](#intersect)
-  - [union](#union)
 - [ordering](#ordering)
   - [lessThan](#lessthan)
   - [max](#max)
 - [symbols](#symbols)
   - [IntervalsTypeId](#intervalstypeid)
   - [IntervalsTypeId (type alias)](#intervalstypeid-type-alias)
+- [utils](#utils)
+  - [intersect](#intersect)
+  - [union](#union)
 
 ---
 
@@ -127,38 +127,6 @@ export interface Intervals {
 
 Added in v1.0.0
 
-# mutations
-
-## intersect
-
-Produces the intersection of this `Intervals` and that `Intervals`.
-
-**Signature**
-
-```ts
-export declare const intersect: {
-  (that: Intervals): (self: Intervals) => Intervals
-  (self: Intervals, that: Intervals): Intervals
-}
-```
-
-Added in v1.0.0
-
-## union
-
-Computes the union of this `Intervals` and that `Intervals`
-
-**Signature**
-
-```ts
-export declare const union: {
-  (that: Intervals): (self: Intervals) => Intervals
-  (self: Intervals, that: Intervals): Intervals
-}
-```
-
-Added in v1.0.0
-
 # ordering
 
 ## lessThan
@@ -210,6 +178,38 @@ Added in v1.0.0
 
 ```ts
 export type IntervalsTypeId = typeof IntervalsTypeId
+```
+
+Added in v1.0.0
+
+# utils
+
+## intersect
+
+Produces the intersection of this `Intervals` and that `Intervals`.
+
+**Signature**
+
+```ts
+export declare const intersect: {
+  (that: Intervals): (self: Intervals) => Intervals
+  (self: Intervals, that: Intervals): Intervals
+}
+```
+
+Added in v1.0.0
+
+## union
+
+Computes the union of this `Intervals` and that `Intervals`
+
+**Signature**
+
+```ts
+export declare const union: {
+  (that: Intervals): (self: Intervals) => Intervals
+  (self: Intervals, that: Intervals): Intervals
+}
 ```
 
 Added in v1.0.0

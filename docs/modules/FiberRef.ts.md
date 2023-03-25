@@ -42,7 +42,10 @@ Added in v1.0.0
   - [FiberRef (interface)](#fiberref-interface)
 - [models](#models)
   - [Variance (interface)](#variance-interface)
-- [mutations](#mutations)
+- [symbols](#symbols)
+  - [FiberRefTypeId](#fiberreftypeid)
+  - [FiberRefTypeId (type alias)](#fiberreftypeid-type-alias)
+- [utils](#utils)
   - [delete](#delete)
   - [getAndSet](#getandset)
   - [getAndUpdate](#getandupdate)
@@ -60,9 +63,6 @@ Added in v1.0.0
   - [updateAndGet](#updateandget)
   - [updateSome](#updatesome)
   - [updateSomeAndGet](#updatesomeandget)
-- [symbols](#symbols)
-  - [FiberRefTypeId](#fiberreftypeid)
-  - [FiberRefTypeId (type alias)](#fiberreftypeid-type-alias)
 
 ---
 
@@ -362,7 +362,29 @@ export interface Variance<A> {
 
 Added in v1.0.0
 
-# mutations
+# symbols
+
+## FiberRefTypeId
+
+**Signature**
+
+```ts
+export declare const FiberRefTypeId: typeof FiberRefTypeId
+```
+
+Added in v1.0.0
+
+## FiberRefTypeId (type alias)
+
+**Signature**
+
+```ts
+export type FiberRefTypeId = typeof FiberRefTypeId
+```
+
+Added in v1.0.0
+
+# utils
 
 ## delete
 
@@ -576,28 +598,6 @@ export declare const updateSomeAndGet: {
   <A>(pf: (a: A) => Option.Option<A>): (self: FiberRef<A>) => Effect.Effect<never, never, A>
   <A>(self: FiberRef<A>, pf: (a: A) => Option.Option<A>): Effect.Effect<never, never, A>
 }
-```
-
-Added in v1.0.0
-
-# symbols
-
-## FiberRefTypeId
-
-**Signature**
-
-```ts
-export declare const FiberRefTypeId: typeof FiberRefTypeId
-```
-
-Added in v1.0.0
-
-## FiberRefTypeId (type alias)
-
-**Signature**
-
-```ts
-export type FiberRefTypeId = typeof FiberRefTypeId
 ```
 
 Added in v1.0.0

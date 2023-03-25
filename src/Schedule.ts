@@ -140,7 +140,7 @@ export const makeWithState: <S, Env, In, Out>(
  * by this schedule.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const addDelay: {
   <Out>(f: (out: Out) => Duration.Duration): <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out>
@@ -152,7 +152,7 @@ export const addDelay: {
  * every interval defined by this schedule.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const addDelayEffect: {
   <Out, Env2>(
@@ -221,7 +221,7 @@ export const asUnit: <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<En
  * specified schedule.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const bothInOut: {
   <Env2, In2, Out2>(
@@ -239,7 +239,7 @@ export const bothInOut: {
  * based on the return value of the function.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const check: {
   <In, Out>(test: (input: In, output: Out) => boolean): <Env>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out>
@@ -252,7 +252,7 @@ export const check: {
  * based on the return value of the function.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const checkEffect: {
   <In, Out, Env2>(
@@ -312,7 +312,7 @@ export const collectAllInputs: <A>() => Schedule<never, A, Chunk.Chunk<A>> = int
  * Returns a new schedule that collects the outputs of this one into a chunk.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const collectAllOutputs: <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Chunk.Chunk<Out>> =
   internal.collectAllOutputs
@@ -322,7 +322,7 @@ export const collectAllOutputs: <Env, In, Out>(self: Schedule<Env, In, Out>) => 
  * into a list.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const collectUntil: <A>(f: Predicate<A>) => Schedule<never, A, Chunk.Chunk<A>> = internal.collectUntil
 
@@ -331,7 +331,7 @@ export const collectUntil: <A>(f: Predicate<A>) => Schedule<never, A, Chunk.Chun
  * all inputs into a list.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const collectUntilEffect: <Env, A>(
   f: (a: A) => Effect.Effect<Env, never, boolean>
@@ -342,7 +342,7 @@ export const collectUntilEffect: <Env, A>(
  * inputs into a list.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const collectWhile: <A>(f: Predicate<A>) => Schedule<never, A, Chunk.Chunk<A>> = internal.collectWhile
 
@@ -350,7 +350,7 @@ export const collectWhile: <A>(f: Predicate<A>) => Schedule<never, A, Chunk.Chun
  * A schedule that recurs as long as the effectful condition holds, collecting
  * all inputs into a list.
  *
- * @category mutations
+ * @category utils
  * @since 1.0.0
  */
 export const collectWhileEffect: <Env, A>(
@@ -364,7 +364,7 @@ export const collectWhileEffect: <Env, A>(
  * described by the second schedule.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const compose: {
   <Env2, Out, Out2>(
@@ -460,7 +460,7 @@ export const dayOfWeek: (day: number) => Schedule<never, unknown, number> = inte
  * before the start of each interval produced by this schedule.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const delayed: {
   (
@@ -724,7 +724,7 @@ export const identity: <A>() => Schedule<never, A, A> = internal.identity
  * intervals defined by both schedules.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const intersect: {
   <Env2, In2, Out2>(
@@ -742,7 +742,7 @@ export const intersect: {
  * the next intervals according to the specified merge function.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const intersectWith: {
   <Env2, In2, Out2>(
@@ -797,7 +797,7 @@ export const jitteredWith: {
  * channel on demand.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const left: <Env, In, Out, X>(
   self: Schedule<Env, In, Out>
@@ -859,7 +859,7 @@ export const minuteOfHour: (minute: number) => Schedule<never, unknown, number> 
  * function.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const modifyDelay: {
   <Out>(
@@ -876,7 +876,7 @@ export const modifyDelay: {
  * effectual function.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const modifyDelayEffect: {
   <Out, Env2>(
@@ -894,7 +894,7 @@ export const modifyDelayEffect: {
  * schedules that log failures, decisions, or computed values.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const onDecision: {
   <Out, Env2, X>(
@@ -918,7 +918,7 @@ export const once: (_: void) => Schedule<never, unknown, void> = internal.once
  * Returns a new schedule that passes through the inputs of this schedule.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const passthrough: <Env, Input, Output>(self: Schedule<Env, Input, Output>) => Schedule<Env, Input, Input> =
   internal.passthrough
@@ -961,7 +961,7 @@ export const provideService: {
  * process.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const reconsider: {
   <Out, Out2>(
@@ -985,7 +985,7 @@ export const reconsider: {
  * the process.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const reconsiderEffect: {
   <Out, Env2, Out2>(
@@ -1007,7 +1007,7 @@ export const reconsiderEffect: {
  * A schedule that recurs for until the predicate evaluates to true.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const recurUntil: <A>(f: Predicate<A>) => Schedule<never, A, A> = internal.recurUntil
 
@@ -1015,7 +1015,7 @@ export const recurUntil: <A>(f: Predicate<A>) => Schedule<never, A, A> = interna
  * A schedule that recurs for until the predicate evaluates to true.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const recurUntilEffect: <Env, A>(f: (a: A) => Effect.Effect<Env, never, boolean>) => Schedule<Env, A, A> =
   internal.recurUntilEffect
@@ -1024,7 +1024,7 @@ export const recurUntilEffect: <Env, A>(f: (a: A) => Effect.Effect<Env, never, b
  * A schedule that recurs for until the predicate is equal.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const recurUntilEquals: <A>(value: A) => Schedule<never, A, A> = internal.recurUntilEquals
 
@@ -1033,7 +1033,7 @@ export const recurUntilEquals: <A>(value: A) => Schedule<never, A, A> = internal
  * partial function and then map that value with given function.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const recurUntilOption: <A, B>(pf: (a: A) => Option.Option<B>) => Schedule<never, A, Option.Option<B>> =
   internal.recurUntilOption
@@ -1042,7 +1042,7 @@ export const recurUntilOption: <A, B>(pf: (a: A) => Option.Option<B>) => Schedul
  * A schedule that recurs during the given duration.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const recurUpTo: (duration: Duration.Duration) => Schedule<never, unknown, Duration.Duration> =
   internal.recurUpTo
@@ -1051,7 +1051,7 @@ export const recurUpTo: (duration: Duration.Duration) => Schedule<never, unknown
  * A schedule that recurs for as long as the predicate evaluates to true.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const recurWhile: <A>(f: Predicate<A>) => Schedule<never, A, A> = internal.recurWhile
 
@@ -1060,7 +1060,7 @@ export const recurWhile: <A>(f: Predicate<A>) => Schedule<never, A, A> = interna
  * true.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const recurWhileEffect: <Env, A>(f: (a: A) => Effect.Effect<Env, never, boolean>) => Schedule<Env, A, A> =
   internal.recurWhileEffect
@@ -1070,7 +1070,7 @@ export const recurWhileEffect: <Env, A>(f: (a: A) => Effect.Effect<Env, never, b
  * specified value.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const recurWhileEquals: <A>(value: A) => Schedule<never, A, A> = internal.recurWhileEquals
 
@@ -1125,7 +1125,7 @@ export const repeatForever: (_: void) => Schedule<never, unknown, number> = inte
  * Returns a new schedule that outputs the number of repetitions of this one.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const repetitions: <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env, In, number> =
   internal.repetitions
@@ -1135,7 +1135,7 @@ export const repetitions: <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedu
  * state after some time of inactivity defined by `duration`.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const resetAfter: {
   (duration: Duration.Duration): <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out>
@@ -1147,7 +1147,7 @@ export const resetAfter: {
  * evaluates to true.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const resetWhen: {
   <Out>(f: Predicate<Out>): <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out>
@@ -1160,7 +1160,7 @@ export const resetWhen: {
  * channel on demand.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const right: <Env, In, Out, X>(
   self: Schedule<Env, In, Out>
@@ -1279,7 +1279,7 @@ export const unfold: <A>(initial: A, f: (a: A) => A) => Schedule<never, unknown,
  * defined by both schedules.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const union: {
   <Env2, In2, Out2>(
@@ -1297,7 +1297,7 @@ export const union: {
  * merging the next intervals according to the specified merge function.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const unionWith: {
   <Env2, In2, Out2>(
@@ -1316,7 +1316,7 @@ export const unionWith: {
  * input evaluates to true.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const untilInput: {
   <In>(f: Predicate<In>): <Env, Out>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out>
@@ -1328,7 +1328,7 @@ export const untilInput: {
  * predicate on the input evaluates to true.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const untilInputEffect: {
   <In, Env2>(
@@ -1345,7 +1345,7 @@ export const untilInputEffect: {
  * output evaluates to true.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const untilOutput: {
   <Out>(f: Predicate<Out>): <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out>
@@ -1357,7 +1357,7 @@ export const untilOutput: {
  * predicate on the output evaluates to true.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const untilOutputEffect: {
   <Out, Env2>(
@@ -1373,7 +1373,7 @@ export const untilOutputEffect: {
  * A schedule that recurs during the given duration.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const upTo: {
   (duration: Duration.Duration): <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out>
@@ -1385,7 +1385,7 @@ export const upTo: {
  * on the input evaluates to true.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const whileInput: {
   <In>(f: Predicate<In>): <Env, Out>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out>
@@ -1397,7 +1397,7 @@ export const whileInput: {
  * predicate on the input evaluates to true.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const whileInputEffect: {
   <In, Env2>(
@@ -1414,7 +1414,7 @@ export const whileInputEffect: {
  * on the output evaluates to true.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const whileOutput: {
   <Out>(f: Predicate<Out>): <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out>
@@ -1426,7 +1426,7 @@ export const whileOutput: {
  * predicate on the output evaluates to true.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const whileOutputEffect: {
   <Out, Env1>(

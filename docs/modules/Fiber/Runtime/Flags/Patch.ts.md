@@ -30,7 +30,7 @@ Added in v1.0.0
   - [isEmpty](#isempty)
 - [models](#models)
   - [RuntimeFlagsPatch (type alias)](#runtimeflagspatch-type-alias)
-- [mutations](#mutations)
+- [utils](#utils)
   - [andThen](#andthen)
   - [both](#both)
   - [either](#either)
@@ -221,7 +221,7 @@ export type RuntimeFlagsPatch = number & {
 
 Added in v1.0.0
 
-# mutations
+# utils
 
 ## andThen
 

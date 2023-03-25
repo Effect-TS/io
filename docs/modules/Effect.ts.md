@@ -288,7 +288,51 @@ Added in v1.0.0
 - [models](#models)
   - [Effect (interface)](#effect-interface)
   - [EffectGen (interface)](#effectgen-interface)
-- [mutations](#mutations)
+- [products](#products)
+  - [zip](#zip)
+  - [zipLeft](#zipleft)
+  - [zipRight](#zipright)
+  - [zipWith](#zipwith)
+- [refinements](#refinements)
+  - [isEffect](#iseffect)
+- [runtime](#runtime-1)
+  - [updateRuntimeFlags](#updateruntimeflags)
+  - [withRuntimeFlags](#withruntimeflags)
+  - [withRuntimeFlagsScoped](#withruntimeflagsscoped)
+- [scoping](#scoping)
+  - [scopeWith](#scopewith)
+- [sequencing](#sequencing)
+  - [flatMap](#flatmap)
+  - [flatten](#flatten)
+  - [flattenErrorOption](#flattenerroroption)
+  - [tap](#tap)
+  - [tapBoth](#tapboth)
+  - [tapDefect](#tapdefect)
+  - [tapEither](#tapeither)
+  - [tapError](#taperror)
+  - [tapErrorCause](#taperrorcause)
+  - [tapSome](#tapsome)
+- [supervision](#supervision)
+  - [daemonChildren](#daemonchildren)
+  - [fork](#fork)
+  - [forkAll](#forkall)
+  - [forkAllDiscard](#forkalldiscard)
+  - [forkDaemon](#forkdaemon)
+  - [forkIn](#forkin)
+  - [forkScoped](#forkscoped)
+  - [forkWithErrorHandler](#forkwitherrorhandler)
+- [symbols](#symbols)
+  - [EffectTypeId](#effecttypeid)
+  - [EffectTypeId (type alias)](#effecttypeid-type-alias)
+- [traversing](#traversing)
+  - [forEachWithIndex](#foreachwithindex)
+- [utilities](#utilities)
+  - [exit](#exit)
+  - [fiberId](#fiberid)
+  - [intoDeferred](#intodeferred)
+  - [unified](#unified)
+- [utils](#utils)
+  - [MergeRecord (type alias)](#mergerecord-type-alias)
   - [awaitAllChildren](#awaitallchildren)
   - [cached](#cached)
   - [cachedInvalidate](#cachedinvalidate)
@@ -402,51 +446,7 @@ Added in v1.0.0
   - [withEarlyRelease](#withearlyrelease)
   - [withMetric](#withmetric)
   - [withReportUnhandled](#withreportunhandled)
-- [products](#products)
-  - [zip](#zip)
-  - [zipLeft](#zipleft)
-  - [zipRight](#zipright)
-  - [zipWith](#zipwith)
-- [refinements](#refinements)
-  - [isEffect](#iseffect)
-- [runtime](#runtime-1)
-  - [updateRuntimeFlags](#updateruntimeflags)
-  - [withRuntimeFlags](#withruntimeflags)
-  - [withRuntimeFlagsScoped](#withruntimeflagsscoped)
-- [scoping](#scoping)
-  - [scopeWith](#scopewith)
-- [sequencing](#sequencing)
-  - [flatMap](#flatmap)
-  - [flatten](#flatten)
-  - [flattenErrorOption](#flattenerroroption)
-  - [tap](#tap)
-  - [tapBoth](#tapboth)
-  - [tapDefect](#tapdefect)
-  - [tapEither](#tapeither)
-  - [tapError](#taperror)
-  - [tapErrorCause](#taperrorcause)
-  - [tapSome](#tapsome)
-- [supervision](#supervision)
-  - [daemonChildren](#daemonchildren)
-  - [fork](#fork)
-  - [forkAll](#forkall)
-  - [forkAllDiscard](#forkalldiscard)
-  - [forkDaemon](#forkdaemon)
-  - [forkIn](#forkin)
-  - [forkScoped](#forkscoped)
-  - [forkWithErrorHandler](#forkwitherrorhandler)
-- [symbols](#symbols)
-  - [EffectTypeId](#effecttypeid)
-  - [EffectTypeId (type alias)](#effecttypeid-type-alias)
-- [traversing](#traversing)
-  - [forEachWithIndex](#foreachwithindex)
-- [utilities](#utilities)
-  - [exit](#exit)
-  - [fiberId](#fiberid)
-  - [intoDeferred](#intodeferred)
-  - [unified](#unified)
-- [utils](#utils)
-  - [MergeRecord (type alias)](#mergerecord-type-alias)
+  - [withScheduler](#withscheduler)
 - [zipping](#zipping)
   - [zipPar](#zippar)
   - [zipParLeft](#zipparleft)
@@ -4567,7 +4567,557 @@ export interface EffectGen<R, E, A> {
 
 Added in v1.0.0
 
-# mutations
+# products
+
+## zip
+
+**Signature**
+
+```ts
+export declare const zip: {
+  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, readonly [A, A2]>
+  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, readonly [A, A2]>
+}
+```
+
+Added in v1.0.0
+
+## zipLeft
+
+**Signature**
+
+```ts
+export declare const zipLeft: {
+  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A>
+  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, A>
+}
+```
+
+Added in v1.0.0
+
+## zipRight
+
+**Signature**
+
+```ts
+export declare const zipRight: {
+  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2>
+  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, A2>
+}
+```
+
+Added in v1.0.0
+
+## zipWith
+
+**Signature**
+
+```ts
+export declare const zipWith: {
+  <R2, E2, A2, A, B>(that: Effect<R2, E2, A2>, f: (a: A, b: A2) => B): <R, E>(
+    self: Effect<R, E, A>
+  ) => Effect<R2 | R, E2 | E, B>
+  <R, E, R2, E2, A2, A, B>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>, f: (a: A, b: A2) => B): Effect<
+    R | R2,
+    E | E2,
+    B
+  >
+}
+```
+
+Added in v1.0.0
+
+# refinements
+
+## isEffect
+
+This function returns `true` if the specified value is an `Effect` value,
+`false` otherwise.
+
+This function can be useful for checking the type of a value before
+attempting to operate on it as an `Effect` value. For example, you could
+use `isEffect` to check the type of a value before using it as an
+argument to a function that expects an `Effect` value.
+
+**Signature**
+
+```ts
+export declare const isEffect: (u: unknown) => u is Effect<unknown, unknown, unknown>
+```
+
+Added in v1.0.0
+
+# runtime
+
+## updateRuntimeFlags
+
+**Signature**
+
+```ts
+export declare const updateRuntimeFlags: (patch: RuntimeFlagsPatch.RuntimeFlagsPatch) => Effect<never, never, void>
+```
+
+Added in v1.0.0
+
+## withRuntimeFlags
+
+**Signature**
+
+```ts
+export declare const withRuntimeFlags: {
+  (update: RuntimeFlagsPatch.RuntimeFlagsPatch): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, update: RuntimeFlagsPatch.RuntimeFlagsPatch): Effect<R, E, A>
+}
+```
+
+Added in v1.0.0
+
+## withRuntimeFlagsScoped
+
+**Signature**
+
+```ts
+export declare const withRuntimeFlagsScoped: (
+  update: RuntimeFlagsPatch.RuntimeFlagsPatch
+) => Effect<Scope.Scope, never, void>
+```
+
+Added in v1.0.0
+
+# scoping
+
+## scopeWith
+
+Accesses the current scope and uses it to perform the specified effect.
+
+**Signature**
+
+```ts
+export declare const scopeWith: <R, E, A>(f: (scope: Scope.Scope) => Effect<R, E, A>) => Effect<Scope.Scope | R, E, A>
+```
+
+Added in v1.0.0
+
+# sequencing
+
+## flatMap
+
+This function is a pipeable operator that maps over an `Effect` value,
+flattening the result of the mapping function into a new `Effect` value.
+
+**Signature**
+
+```ts
+export declare const flatMap: {
+  <A, R1, E1, B>(f: (a: A) => Effect<R1, E1, B>): <R, E>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, B>
+  <R, E, A, R1, E1, B>(self: Effect<R, E, A>, f: (a: A) => Effect<R1, E1, B>): Effect<R | R1, E | E1, B>
+}
+```
+
+Added in v1.0.0
+
+## flatten
+
+**Signature**
+
+```ts
+export declare const flatten: <R, E, R1, E1, A>(self: Effect<R, E, Effect<R1, E1, A>>) => Effect<R | R1, E | E1, A>
+```
+
+Added in v1.0.0
+
+## flattenErrorOption
+
+Unwraps the optional error, defaulting to the provided value.
+
+**Signature**
+
+```ts
+export declare const flattenErrorOption: {
+  <E1>(fallback: E1): <R, E, A>(self: Effect<R, Option.Option<E>, A>) => Effect<R, E1 | E, A>
+  <R, E, A, E1>(self: Effect<R, Option.Option<E>, A>, fallback: E1): Effect<R, E | E1, A>
+}
+```
+
+Added in v1.0.0
+
+## tap
+
+**Signature**
+
+```ts
+export declare const tap: {
+  <A, R2, E2, _>(f: (a: A) => Effect<R2, E2, _>): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A>
+  <R, E, A, R2, E2, _>(self: Effect<R, E, A>, f: (a: A) => Effect<R2, E2, _>): Effect<R | R2, E | E2, A>
+}
+```
+
+Added in v1.0.0
+
+## tapBoth
+
+Returns an effect that effectfully "peeks" at the failure or success of
+this effect.
+
+**Signature**
+
+```ts
+export declare const tapBoth: {
+  <E, A, R2, E2, X, R3, E3, X1>(f: (e: E) => Effect<R2, E2, X>, g: (a: A) => Effect<R3, E3, X1>): <R>(
+    self: Effect<R, E, A>
+  ) => Effect<R2 | R3 | R, E | E2 | E3, A>
+  <R, E, A, R2, E2, X, R3, E3, X1>(
+    self: Effect<R, E, A>,
+    f: (e: E) => Effect<R2, E2, X>,
+    g: (a: A) => Effect<R3, E3, X1>
+  ): Effect<R | R2 | R3, E | E2 | E3, A>
+}
+```
+
+Added in v1.0.0
+
+## tapDefect
+
+Returns an effect that effectually "peeks" at the defect of this effect.
+
+**Signature**
+
+```ts
+export declare const tapDefect: {
+  <R2, E2, X>(f: (cause: Cause.Cause<never>) => Effect<R2, E2, X>): <R, E, A>(
+    self: Effect<R, E, A>
+  ) => Effect<R2 | R, E2 | E, A>
+  <R, E, A, R2, E2, X>(self: Effect<R, E, A>, f: (cause: Cause.Cause<never>) => Effect<R2, E2, X>): Effect<
+    R | R2,
+    E | E2,
+    A
+  >
+}
+```
+
+Added in v1.0.0
+
+## tapEither
+
+Returns an effect that effectfully "peeks" at the result of this effect.
+
+**Signature**
+
+```ts
+export declare const tapEither: {
+  <E, A, R2, E2, X>(f: (either: Either.Either<E, A>) => Effect<R2, E2, X>): <R>(
+    self: Effect<R, E, A>
+  ) => Effect<R2 | R, E | E2, A>
+  <R, E, A, R2, E2, X>(self: Effect<R, E, A>, f: (either: Either.Either<E, A>) => Effect<R2, E2, X>): Effect<
+    R | R2,
+    E | E2,
+    A
+  >
+}
+```
+
+Added in v1.0.0
+
+## tapError
+
+Returns an effect that effectfully "peeks" at the failure of this effect.
+
+**Signature**
+
+```ts
+export declare const tapError: {
+  <E, R2, E2, X>(f: (e: E) => Effect<R2, E2, X>): <R, A>(self: Effect<R, E, A>) => Effect<R2 | R, E | E2, A>
+  <R, E, A, R2, E2, X>(self: Effect<R, E, A>, f: (e: E) => Effect<R2, E2, X>): Effect<R | R2, E | E2, A>
+}
+```
+
+Added in v1.0.0
+
+## tapErrorCause
+
+Returns an effect that effectually "peeks" at the cause of the failure of
+this effect.
+
+**Signature**
+
+```ts
+export declare const tapErrorCause: {
+  <E, R2, E2, X>(f: (cause: Cause.Cause<E>) => Effect<R2, E2, X>): <R, A>(
+    self: Effect<R, E, A>
+  ) => Effect<R2 | R, E | E2, A>
+  <R, E, A, R2, E2, X>(self: Effect<R, E, A>, f: (cause: Cause.Cause<E>) => Effect<R2, E2, X>): Effect<
+    R | R2,
+    E | E2,
+    A
+  >
+}
+```
+
+Added in v1.0.0
+
+## tapSome
+
+Returns an effect that effectfully "peeks" at the success of this effect.
+If the partial function isn't defined at the input, the result is
+equivalent to the original effect.
+
+**Signature**
+
+```ts
+export declare const tapSome: {
+  <A, R1, E1, X>(pf: (a: A) => Option.Option<Effect<R1, E1, X>>): <R, E>(
+    self: Effect<R, E, A>
+  ) => Effect<R1 | R, E1 | E, A>
+  <R, E, A, R1, E1, X>(self: Effect<R, E, A>, pf: (a: A) => Option.Option<Effect<R1, E1, X>>): Effect<R | R1, E | E1, A>
+}
+```
+
+Added in v1.0.0
+
+# supervision
+
+## daemonChildren
+
+Returns a new workflow that will not supervise any fibers forked by this
+workflow.
+
+**Signature**
+
+```ts
+export declare const daemonChildren: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+```
+
+Added in v1.0.0
+
+## fork
+
+Returns an effect that forks this effect into its own separate fiber,
+returning the fiber immediately, without waiting for it to begin executing
+the effect.
+
+You can use the `fork` method whenever you want to execute an effect in a
+new fiber, concurrently and without "blocking" the fiber executing other
+effects. Using fibers can be tricky, so instead of using this method
+directly, consider other higher-level methods, such as `raceWith`,
+`zipPar`, and so forth.
+
+The fiber returned by this method has methods to interrupt the fiber and to
+wait for it to finish executing the effect. See `Fiber` for more
+information.
+
+Whenever you use this method to launch a new fiber, the new fiber is
+attached to the parent fiber's scope. This means when the parent fiber
+terminates, the child fiber will be terminated as well, ensuring that no
+fibers leak. This behavior is called "auto supervision", and if this
+behavior is not desired, you may use the `forkDaemon` or `forkIn` methods.
+
+**Signature**
+
+```ts
+export declare const fork: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Fiber.RuntimeFiber<E, A>>
+```
+
+Added in v1.0.0
+
+## forkAll
+
+Returns an effect that forks all of the specified values, and returns a
+composite fiber that produces a list of their results, in order.
+
+**Signature**
+
+```ts
+export declare const forkAll: <R, E, A>(
+  effects: Iterable<Effect<R, E, A>>
+) => Effect<R, never, Fiber.Fiber<E, Chunk.Chunk<A>>>
+```
+
+Added in v1.0.0
+
+## forkAllDiscard
+
+Returns an effect that forks all of the specified values, and returns a
+composite fiber that produces unit. This version is faster than `forkAll`
+in cases where the results of the forked fibers are not needed.
+
+**Signature**
+
+```ts
+export declare const forkAllDiscard: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, never, void>
+```
+
+Added in v1.0.0
+
+## forkDaemon
+
+Forks the effect into a new fiber attached to the global scope. Because the
+new fiber is attached to the global scope, when the fiber executing the
+returned effect terminates, the forked fiber will continue running.
+
+**Signature**
+
+```ts
+export declare const forkDaemon: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Fiber.RuntimeFiber<E, A>>
+```
+
+Added in v1.0.0
+
+## forkIn
+
+Forks the effect in the specified scope. The fiber will be interrupted
+when the scope is closed.
+
+**Signature**
+
+```ts
+export declare const forkIn: {
+  (scope: Scope.Scope): <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Fiber.RuntimeFiber<E, A>>
+  <R, E, A>(self: Effect<R, E, A>, scope: Scope.Scope): Effect<R, never, Fiber.RuntimeFiber<E, A>>
+}
+```
+
+Added in v1.0.0
+
+## forkScoped
+
+Forks the fiber in a `Scope`, interrupting it when the scope is closed.
+
+**Signature**
+
+```ts
+export declare const forkScoped: <R, E, A>(
+  self: Effect<R, E, A>
+) => Effect<Scope.Scope | R, never, Fiber.RuntimeFiber<E, A>>
+```
+
+Added in v1.0.0
+
+## forkWithErrorHandler
+
+Like fork but handles an error with the provided handler.
+
+**Signature**
+
+```ts
+export declare const forkWithErrorHandler: {
+  <E, X>(handler: (e: E) => Effect<never, never, X>): <R, A>(
+    self: Effect<R, E, A>
+  ) => Effect<R, never, Fiber.RuntimeFiber<E, A>>
+  <R, E, A, X>(self: Effect<R, E, A>, handler: (e: E) => Effect<never, never, X>): Effect<
+    R,
+    never,
+    Fiber.RuntimeFiber<E, A>
+  >
+}
+```
+
+Added in v1.0.0
+
+# symbols
+
+## EffectTypeId
+
+**Signature**
+
+```ts
+export declare const EffectTypeId: typeof EffectTypeId
+```
+
+Added in v1.0.0
+
+## EffectTypeId (type alias)
+
+**Signature**
+
+```ts
+export type EffectTypeId = typeof EffectTypeId
+```
+
+Added in v1.0.0
+
+# traversing
+
+## forEachWithIndex
+
+Same as `forEach`, except that the function `f` is supplied
+a second argument that corresponds to the index (starting from 0)
+of the current element being iterated over.
+
+**Signature**
+
+```ts
+export declare const forEachWithIndex: {
+  <A, R, E, B>(f: (a: A, i: number) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<B>>
+  <A, R, E, B>(elements: Iterable<A>, f: (a: A, i: number) => Effect<R, E, B>): Effect<R, E, Chunk.Chunk<B>>
+}
+```
+
+Added in v1.0.0
+
+# utilities
+
+## exit
+
+**Signature**
+
+```ts
+export declare const exit: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Exit.Exit<E, A>>
+```
+
+Added in v1.0.0
+
+## fiberId
+
+**Signature**
+
+```ts
+export declare const fiberId: (_: void) => Effect<never, never, FiberId.FiberId>
+```
+
+Added in v1.0.0
+
+## intoDeferred
+
+**Signature**
+
+```ts
+export declare const intoDeferred: {
+  <E, A>(deferred: Deferred.Deferred<E, A>): <R>(self: Effect<R, E, A>) => Effect<R, never, boolean>
+  <R, E, A>(self: Effect<R, E, A>, deferred: Deferred.Deferred<E, A>): Effect<R, never, boolean>
+}
+```
+
+Added in v1.0.0
+
+## unified
+
+Used to unify functions that would otherwise return `Effect<A, B, C> | Effect<D, E, F>`
+
+**Signature**
+
+```ts
+export declare const unified: <Args extends readonly any[], Ret extends Effect<any, any, any>>(
+  f: (...args: Args) => Ret
+) => (...args: Args) => Effect.Unify<Ret>
+```
+
+Added in v1.0.0
+
+# utils
+
+## MergeRecord (type alias)
+
+**Signature**
+
+```ts
+export type MergeRecord<K, H> = {
+  readonly [k in keyof K | keyof H]: k extends keyof K ? K[k] : k extends keyof H ? H[k] : never
+} extends infer X
+  ? X
+  : never
+```
+
+Added in v1.0.0
 
 ## awaitAllChildren
 
@@ -6512,554 +7062,17 @@ export declare const withReportUnhandled: {
 
 Added in v1.0.0
 
-# products
+## withScheduler
 
-## zip
+Sets the provided scheduler for usage in the wrapped effect
 
 **Signature**
 
 ```ts
-export declare const zip: {
-  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, readonly [A, A2]>
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, readonly [A, A2]>
+export declare const withScheduler: {
+  (scheduler: Scheduler): <R, E, B>(self: Effect<R, E, B>) => Effect<R, E, B>
+  <R, E, B>(self: Effect<R, E, B>, scheduler: Scheduler): Effect<R, E, B>
 }
-```
-
-Added in v1.0.0
-
-## zipLeft
-
-**Signature**
-
-```ts
-export declare const zipLeft: {
-  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A>
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, A>
-}
-```
-
-Added in v1.0.0
-
-## zipRight
-
-**Signature**
-
-```ts
-export declare const zipRight: {
-  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2>
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, A2>
-}
-```
-
-Added in v1.0.0
-
-## zipWith
-
-**Signature**
-
-```ts
-export declare const zipWith: {
-  <R2, E2, A2, A, B>(that: Effect<R2, E2, A2>, f: (a: A, b: A2) => B): <R, E>(
-    self: Effect<R, E, A>
-  ) => Effect<R2 | R, E2 | E, B>
-  <R, E, R2, E2, A2, A, B>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>, f: (a: A, b: A2) => B): Effect<
-    R | R2,
-    E | E2,
-    B
-  >
-}
-```
-
-Added in v1.0.0
-
-# refinements
-
-## isEffect
-
-This function returns `true` if the specified value is an `Effect` value,
-`false` otherwise.
-
-This function can be useful for checking the type of a value before
-attempting to operate on it as an `Effect` value. For example, you could
-use `isEffect` to check the type of a value before using it as an
-argument to a function that expects an `Effect` value.
-
-**Signature**
-
-```ts
-export declare const isEffect: (u: unknown) => u is Effect<unknown, unknown, unknown>
-```
-
-Added in v1.0.0
-
-# runtime
-
-## updateRuntimeFlags
-
-**Signature**
-
-```ts
-export declare const updateRuntimeFlags: (patch: RuntimeFlagsPatch.RuntimeFlagsPatch) => Effect<never, never, void>
-```
-
-Added in v1.0.0
-
-## withRuntimeFlags
-
-**Signature**
-
-```ts
-export declare const withRuntimeFlags: {
-  (update: RuntimeFlagsPatch.RuntimeFlagsPatch): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(self: Effect<R, E, A>, update: RuntimeFlagsPatch.RuntimeFlagsPatch): Effect<R, E, A>
-}
-```
-
-Added in v1.0.0
-
-## withRuntimeFlagsScoped
-
-**Signature**
-
-```ts
-export declare const withRuntimeFlagsScoped: (
-  update: RuntimeFlagsPatch.RuntimeFlagsPatch
-) => Effect<Scope.Scope, never, void>
-```
-
-Added in v1.0.0
-
-# scoping
-
-## scopeWith
-
-Accesses the current scope and uses it to perform the specified effect.
-
-**Signature**
-
-```ts
-export declare const scopeWith: <R, E, A>(f: (scope: Scope.Scope) => Effect<R, E, A>) => Effect<Scope.Scope | R, E, A>
-```
-
-Added in v1.0.0
-
-# sequencing
-
-## flatMap
-
-This function is a pipeable operator that maps over an `Effect` value,
-flattening the result of the mapping function into a new `Effect` value.
-
-**Signature**
-
-```ts
-export declare const flatMap: {
-  <A, R1, E1, B>(f: (a: A) => Effect<R1, E1, B>): <R, E>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, B>
-  <R, E, A, R1, E1, B>(self: Effect<R, E, A>, f: (a: A) => Effect<R1, E1, B>): Effect<R | R1, E | E1, B>
-}
-```
-
-Added in v1.0.0
-
-## flatten
-
-**Signature**
-
-```ts
-export declare const flatten: <R, E, R1, E1, A>(self: Effect<R, E, Effect<R1, E1, A>>) => Effect<R | R1, E | E1, A>
-```
-
-Added in v1.0.0
-
-## flattenErrorOption
-
-Unwraps the optional error, defaulting to the provided value.
-
-**Signature**
-
-```ts
-export declare const flattenErrorOption: {
-  <E1>(fallback: E1): <R, E, A>(self: Effect<R, Option.Option<E>, A>) => Effect<R, E1 | E, A>
-  <R, E, A, E1>(self: Effect<R, Option.Option<E>, A>, fallback: E1): Effect<R, E | E1, A>
-}
-```
-
-Added in v1.0.0
-
-## tap
-
-**Signature**
-
-```ts
-export declare const tap: {
-  <A, R2, E2, _>(f: (a: A) => Effect<R2, E2, _>): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A>
-  <R, E, A, R2, E2, _>(self: Effect<R, E, A>, f: (a: A) => Effect<R2, E2, _>): Effect<R | R2, E | E2, A>
-}
-```
-
-Added in v1.0.0
-
-## tapBoth
-
-Returns an effect that effectfully "peeks" at the failure or success of
-this effect.
-
-**Signature**
-
-```ts
-export declare const tapBoth: {
-  <E, A, R2, E2, X, R3, E3, X1>(f: (e: E) => Effect<R2, E2, X>, g: (a: A) => Effect<R3, E3, X1>): <R>(
-    self: Effect<R, E, A>
-  ) => Effect<R2 | R3 | R, E | E2 | E3, A>
-  <R, E, A, R2, E2, X, R3, E3, X1>(
-    self: Effect<R, E, A>,
-    f: (e: E) => Effect<R2, E2, X>,
-    g: (a: A) => Effect<R3, E3, X1>
-  ): Effect<R | R2 | R3, E | E2 | E3, A>
-}
-```
-
-Added in v1.0.0
-
-## tapDefect
-
-Returns an effect that effectually "peeks" at the defect of this effect.
-
-**Signature**
-
-```ts
-export declare const tapDefect: {
-  <R2, E2, X>(f: (cause: Cause.Cause<never>) => Effect<R2, E2, X>): <R, E, A>(
-    self: Effect<R, E, A>
-  ) => Effect<R2 | R, E2 | E, A>
-  <R, E, A, R2, E2, X>(self: Effect<R, E, A>, f: (cause: Cause.Cause<never>) => Effect<R2, E2, X>): Effect<
-    R | R2,
-    E | E2,
-    A
-  >
-}
-```
-
-Added in v1.0.0
-
-## tapEither
-
-Returns an effect that effectfully "peeks" at the result of this effect.
-
-**Signature**
-
-```ts
-export declare const tapEither: {
-  <E, A, R2, E2, X>(f: (either: Either.Either<E, A>) => Effect<R2, E2, X>): <R>(
-    self: Effect<R, E, A>
-  ) => Effect<R2 | R, E | E2, A>
-  <R, E, A, R2, E2, X>(self: Effect<R, E, A>, f: (either: Either.Either<E, A>) => Effect<R2, E2, X>): Effect<
-    R | R2,
-    E | E2,
-    A
-  >
-}
-```
-
-Added in v1.0.0
-
-## tapError
-
-Returns an effect that effectfully "peeks" at the failure of this effect.
-
-**Signature**
-
-```ts
-export declare const tapError: {
-  <E, R2, E2, X>(f: (e: E) => Effect<R2, E2, X>): <R, A>(self: Effect<R, E, A>) => Effect<R2 | R, E | E2, A>
-  <R, E, A, R2, E2, X>(self: Effect<R, E, A>, f: (e: E) => Effect<R2, E2, X>): Effect<R | R2, E | E2, A>
-}
-```
-
-Added in v1.0.0
-
-## tapErrorCause
-
-Returns an effect that effectually "peeks" at the cause of the failure of
-this effect.
-
-**Signature**
-
-```ts
-export declare const tapErrorCause: {
-  <E, R2, E2, X>(f: (cause: Cause.Cause<E>) => Effect<R2, E2, X>): <R, A>(
-    self: Effect<R, E, A>
-  ) => Effect<R2 | R, E | E2, A>
-  <R, E, A, R2, E2, X>(self: Effect<R, E, A>, f: (cause: Cause.Cause<E>) => Effect<R2, E2, X>): Effect<
-    R | R2,
-    E | E2,
-    A
-  >
-}
-```
-
-Added in v1.0.0
-
-## tapSome
-
-Returns an effect that effectfully "peeks" at the success of this effect.
-If the partial function isn't defined at the input, the result is
-equivalent to the original effect.
-
-**Signature**
-
-```ts
-export declare const tapSome: {
-  <A, R1, E1, X>(pf: (a: A) => Option.Option<Effect<R1, E1, X>>): <R, E>(
-    self: Effect<R, E, A>
-  ) => Effect<R1 | R, E1 | E, A>
-  <R, E, A, R1, E1, X>(self: Effect<R, E, A>, pf: (a: A) => Option.Option<Effect<R1, E1, X>>): Effect<R | R1, E | E1, A>
-}
-```
-
-Added in v1.0.0
-
-# supervision
-
-## daemonChildren
-
-Returns a new workflow that will not supervise any fibers forked by this
-workflow.
-
-**Signature**
-
-```ts
-export declare const daemonChildren: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
-```
-
-Added in v1.0.0
-
-## fork
-
-Returns an effect that forks this effect into its own separate fiber,
-returning the fiber immediately, without waiting for it to begin executing
-the effect.
-
-You can use the `fork` method whenever you want to execute an effect in a
-new fiber, concurrently and without "blocking" the fiber executing other
-effects. Using fibers can be tricky, so instead of using this method
-directly, consider other higher-level methods, such as `raceWith`,
-`zipPar`, and so forth.
-
-The fiber returned by this method has methods to interrupt the fiber and to
-wait for it to finish executing the effect. See `Fiber` for more
-information.
-
-Whenever you use this method to launch a new fiber, the new fiber is
-attached to the parent fiber's scope. This means when the parent fiber
-terminates, the child fiber will be terminated as well, ensuring that no
-fibers leak. This behavior is called "auto supervision", and if this
-behavior is not desired, you may use the `forkDaemon` or `forkIn` methods.
-
-**Signature**
-
-```ts
-export declare const fork: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Fiber.RuntimeFiber<E, A>>
-```
-
-Added in v1.0.0
-
-## forkAll
-
-Returns an effect that forks all of the specified values, and returns a
-composite fiber that produces a list of their results, in order.
-
-**Signature**
-
-```ts
-export declare const forkAll: <R, E, A>(
-  effects: Iterable<Effect<R, E, A>>
-) => Effect<R, never, Fiber.Fiber<E, Chunk.Chunk<A>>>
-```
-
-Added in v1.0.0
-
-## forkAllDiscard
-
-Returns an effect that forks all of the specified values, and returns a
-composite fiber that produces unit. This version is faster than `forkAll`
-in cases where the results of the forked fibers are not needed.
-
-**Signature**
-
-```ts
-export declare const forkAllDiscard: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, never, void>
-```
-
-Added in v1.0.0
-
-## forkDaemon
-
-Forks the effect into a new fiber attached to the global scope. Because the
-new fiber is attached to the global scope, when the fiber executing the
-returned effect terminates, the forked fiber will continue running.
-
-**Signature**
-
-```ts
-export declare const forkDaemon: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Fiber.RuntimeFiber<E, A>>
-```
-
-Added in v1.0.0
-
-## forkIn
-
-Forks the effect in the specified scope. The fiber will be interrupted
-when the scope is closed.
-
-**Signature**
-
-```ts
-export declare const forkIn: {
-  (scope: Scope.Scope): <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Fiber.RuntimeFiber<E, A>>
-  <R, E, A>(self: Effect<R, E, A>, scope: Scope.Scope): Effect<R, never, Fiber.RuntimeFiber<E, A>>
-}
-```
-
-Added in v1.0.0
-
-## forkScoped
-
-Forks the fiber in a `Scope`, interrupting it when the scope is closed.
-
-**Signature**
-
-```ts
-export declare const forkScoped: <R, E, A>(
-  self: Effect<R, E, A>
-) => Effect<Scope.Scope | R, never, Fiber.RuntimeFiber<E, A>>
-```
-
-Added in v1.0.0
-
-## forkWithErrorHandler
-
-Like fork but handles an error with the provided handler.
-
-**Signature**
-
-```ts
-export declare const forkWithErrorHandler: {
-  <E, X>(handler: (e: E) => Effect<never, never, X>): <R, A>(
-    self: Effect<R, E, A>
-  ) => Effect<R, never, Fiber.RuntimeFiber<E, A>>
-  <R, E, A, X>(self: Effect<R, E, A>, handler: (e: E) => Effect<never, never, X>): Effect<
-    R,
-    never,
-    Fiber.RuntimeFiber<E, A>
-  >
-}
-```
-
-Added in v1.0.0
-
-# symbols
-
-## EffectTypeId
-
-**Signature**
-
-```ts
-export declare const EffectTypeId: typeof EffectTypeId
-```
-
-Added in v1.0.0
-
-## EffectTypeId (type alias)
-
-**Signature**
-
-```ts
-export type EffectTypeId = typeof EffectTypeId
-```
-
-Added in v1.0.0
-
-# traversing
-
-## forEachWithIndex
-
-Same as `forEach`, except that the function `f` is supplied
-a second argument that corresponds to the index (starting from 0)
-of the current element being iterated over.
-
-**Signature**
-
-```ts
-export declare const forEachWithIndex: {
-  <A, R, E, B>(f: (a: A, i: number) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<B>>
-  <A, R, E, B>(elements: Iterable<A>, f: (a: A, i: number) => Effect<R, E, B>): Effect<R, E, Chunk.Chunk<B>>
-}
-```
-
-Added in v1.0.0
-
-# utilities
-
-## exit
-
-**Signature**
-
-```ts
-export declare const exit: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Exit.Exit<E, A>>
-```
-
-Added in v1.0.0
-
-## fiberId
-
-**Signature**
-
-```ts
-export declare const fiberId: (_: void) => Effect<never, never, FiberId.FiberId>
-```
-
-Added in v1.0.0
-
-## intoDeferred
-
-**Signature**
-
-```ts
-export declare const intoDeferred: {
-  <E, A>(deferred: Deferred.Deferred<E, A>): <R>(self: Effect<R, E, A>) => Effect<R, never, boolean>
-  <R, E, A>(self: Effect<R, E, A>, deferred: Deferred.Deferred<E, A>): Effect<R, never, boolean>
-}
-```
-
-Added in v1.0.0
-
-## unified
-
-Used to unify functions that would otherwise return `Effect<A, B, C> | Effect<D, E, F>`
-
-**Signature**
-
-```ts
-export declare const unified: <Args extends readonly any[], Ret extends Effect<any, any, any>>(
-  f: (...args: Args) => Ret
-) => (...args: Args) => Effect.Unify<Ret>
-```
-
-Added in v1.0.0
-
-# utils
-
-## MergeRecord (type alias)
-
-**Signature**
-
-```ts
-export type MergeRecord<K, H> = {
-  readonly [k in keyof K | keyof H]: k extends keyof K ? K[k] : k extends keyof H ? H[k] : never
-} extends infer X
-  ? X
-  : never
 ```
 
 Added in v1.0.0

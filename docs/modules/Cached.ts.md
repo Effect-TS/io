@@ -19,11 +19,11 @@ Added in v1.0.0
   - [get](#get)
 - [models](#models)
   - [Cached (interface)](#cached-interface)
-- [mutations](#mutations)
-  - [refresh](#refresh)
 - [symbols](#symbols)
   - [CachedTypeId](#cachedtypeid)
   - [CachedTypeId (type alias)](#cachedtypeid-type-alias)
+- [utils](#utils)
+  - [refresh](#refresh)
 
 ---
 
@@ -100,21 +100,6 @@ export interface Cached<E, A> extends Cached.Variance<E, A> {
 
 Added in v1.0.0
 
-# mutations
-
-## refresh
-
-Refreshes the cache. This method will not return until either the refresh
-is successful, or the refresh operation fails.
-
-**Signature**
-
-```ts
-export declare const refresh: <E, A>(self: Cached<E, A>) => Effect.Effect<never, E, void>
-```
-
-Added in v1.0.0
-
 # symbols
 
 ## CachedTypeId
@@ -133,6 +118,21 @@ Added in v1.0.0
 
 ```ts
 export type CachedTypeId = typeof CachedTypeId
+```
+
+Added in v1.0.0
+
+# utils
+
+## refresh
+
+Refreshes the cache. This method will not return until either the refresh
+is successful, or the refresh operation fails.
+
+**Signature**
+
+```ts
+export declare const refresh: <E, A>(self: Cached<E, A>) => Effect.Effect<never, E, void>
 ```
 
 Added in v1.0.0

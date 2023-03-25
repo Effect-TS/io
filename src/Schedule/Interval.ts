@@ -125,7 +125,7 @@ export const size: (self: Interval) => Duration.Duration = internal.size
  * form a union.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const union: {
   (that: Interval): (self: Interval) => Option.Option<Interval>
