@@ -15,17 +15,12 @@ export type Task = () => void
  * @category models
  */
 export interface Scheduler {
-  get executionMode(): "PreferSync" | "PreferAsync" | "Sync"
   scheduleTask(task: Task): void
 }
 
 class DefaultScheduler implements Scheduler {
   running = false
   tasks: Array<Task> = []
-
-  get executionMode(): "PreferSync" | "PreferAsync" | "Sync" {
-    return "PreferAsync"
-  }
 
   starveInternal(depth: number) {
     const toRun = this.tasks
@@ -97,16 +92,6 @@ export class SyncScheduler implements Scheduler {
     } else {
       this.tasks.push(task)
     }
-  }
-
-  /**
-   * @since 1.0.0
-   */
-  get executionMode(): "PreferSync" | "PreferAsync" | "Sync" {
-    if (this.deferred) {
-      return defaultScheduler.executionMode
-    }
-    return this.initialMode
   }
 
   /**
