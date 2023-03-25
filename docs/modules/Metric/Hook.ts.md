@@ -21,11 +21,11 @@ Added in v1.0.0
   - [summary](#summary)
 - [models](#models)
   - [MetricHook (interface)](#metrichook-interface)
-- [mutations](#mutations)
-  - [onUpdate](#onupdate)
 - [symbols](#symbols)
   - [MetricHookTypeId](#metrichooktypeid)
   - [MetricHookTypeId (type alias)](#metrichooktypeid-type-alias)
+- [utils](#utils)
+  - [onUpdate](#onupdate)
 
 ---
 
@@ -106,21 +106,6 @@ export interface MetricHook<In, Out> extends MetricHook.Variance<In, Out> {
 
 Added in v1.0.0
 
-# mutations
-
-## onUpdate
-
-**Signature**
-
-```ts
-export declare const onUpdate: {
-  <In, Out>(f: (input: In) => void): (self: MetricHook<In, Out>) => MetricHook<In, Out>
-  <In, Out>(self: MetricHook<In, Out>, f: (input: In) => void): MetricHook<In, Out>
-}
-```
-
-Added in v1.0.0
-
 # symbols
 
 ## MetricHookTypeId
@@ -139,6 +124,21 @@ Added in v1.0.0
 
 ```ts
 export type MetricHookTypeId = typeof MetricHookTypeId
+```
+
+Added in v1.0.0
+
+# utils
+
+## onUpdate
+
+**Signature**
+
+```ts
+export declare const onUpdate: {
+  <In, Out>(f: (input: In) => void): (self: MetricHook<In, Out>) => MetricHook<In, Out>
+  <In, Out>(self: MetricHook<In, Out>, f: (input: In) => void): MetricHook<In, Out>
+}
 ```
 
 Added in v1.0.0

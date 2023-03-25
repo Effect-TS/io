@@ -44,6 +44,7 @@ import type * as Random from "@effect/io/Random"
 import type * as Ref from "@effect/io/Ref"
 import type * as Runtime from "@effect/io/Runtime"
 import type * as Schedule from "@effect/io/Schedule"
+import type { Scheduler } from "@effect/io/Scheduler"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
 
@@ -620,7 +621,7 @@ export const attempt: <A>(evaluate: LazyArg<A>) => Effect<never, unknown, A> = e
  * waiting for the end of all child fibers forked by the effect.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const awaitAllChildren: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A> = circular.awaitAllChildren
 
@@ -629,7 +630,7 @@ export const awaitAllChildren: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, 
  * effect. Cached results will expire after `timeToLive` duration.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const cached: {
   (timeToLive: Duration.Duration): <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Effect<never, E, A>>
@@ -643,7 +644,7 @@ export const cached: {
  * cached value before the `timeToLive` duration expires.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const cachedInvalidate: {
   (timeToLive: Duration.Duration): <R, E, A>(
@@ -1157,7 +1158,7 @@ export const daemonChildren: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
  * `Duration`.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const delay: {
   (duration: Duration.Duration): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
@@ -1226,7 +1227,7 @@ export const disconnect: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A> = c
  * `FiberRef` values.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const diffFiberRefs: <R, E, A>(
   self: Effect<R, E, A>
@@ -1284,7 +1285,7 @@ export const done: <E, A>(exit: Exit.Exit<E, A>) => Effect<never, E, A> = core.d
  * Drops all elements until the effectful predicate returns true.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const dropUntil: {
   <A, R, E>(predicate: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<A>>
@@ -1376,7 +1377,7 @@ export const ensuringChildren: {
  * eventually succeeds.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const eventually: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, A> = effect.eventually
 
@@ -1666,7 +1667,7 @@ export const flattenErrorOption: {
  * use all methods on the error channel, possibly before flipping back.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const flip: <R, E, A>(self: Effect<R, E, A>) => Effect<R, A, E> = core.flip
 
@@ -1675,7 +1676,7 @@ export const flip: <R, E, A>(self: Effect<R, E, A>) => Effect<R, A, E> = core.fl
  * parameters back
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const flipWith: {
   <R, A, E, R2, A2, E2>(
@@ -1808,7 +1809,7 @@ export const forEachParWithIndex: {
  * Repeats this effect forever (until the first error).
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const forever: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, never> = effect.forever
 
@@ -2023,7 +2024,7 @@ export const getOrFailWith: {
  * is non-empty, or fails with the error `None` if the collection is empty.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const head: <R, E, A>(self: Effect<R, E, Iterable<A>>) => Effect<R, Option.Option<E>, A> = effect.head
 
@@ -2049,7 +2050,7 @@ export const ifEffect: {
  * Returns a new effect that ignores the success or failure of this effect.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const ignore: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, void> = effect.ignore
 
@@ -2059,7 +2060,7 @@ export const ignore: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, void> 
  * turns out to be important.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const ignoreLogged: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, void> = effect.ignoreLogged
 
@@ -2150,7 +2151,7 @@ export const iterate: <Z, R, E>(
  * possibility that the value is a `Right` to the error channel.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const left: <R, E, A, B>(self: Effect<R, E, Either.Either<A, B>>) => Effect<R, Either.Either<E, B>, A> =
   effect.left
@@ -2160,7 +2161,7 @@ export const left: <R, E, A, B>(self: Effect<R, E, Either.Either<A, B>>) => Effe
  * `Either`.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const leftWith: {
   <R, E, B, A, R1, E1, B1, A1>(
@@ -2561,7 +2562,7 @@ export const matchEffect: {
  * result of this effect.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const memoize: <R, E, A>(self: Effect<R, E, A>) => Effect<never, never, Effect<R, E, A>> = effect.memoize
 
@@ -2581,7 +2582,7 @@ export const memoizeFunction: <R, E, A, B>(
  * success channel to their common combined type.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const merge: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, E | A> = effect.merge
 
@@ -2663,7 +2664,7 @@ export const noneOrFailWith: <E, A>(option: Option.Option<A>, f: (a: A) => E) =>
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const onDone: {
   <E, A, R1, X1, R2, X2>(
@@ -2679,7 +2680,7 @@ export const onDone: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const onDoneCause: {
   <E, A, R1, X1, R2, X2>(
@@ -2698,7 +2699,7 @@ export const onDoneCause: {
  * effect if it exists. The provided effect will not be interrupted.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const onError: {
   <E, R2, X>(
@@ -2746,7 +2747,7 @@ export const onInterrupt: {
  * evaluated multiple times.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const once: <R, E, A>(self: Effect<R, E, A>) => Effect<never, never, Effect<R, E, void>> = effect.once
 
@@ -2755,7 +2756,7 @@ export const once: <R, E, A>(self: Effect<R, E, A>) => Effect<never, never, Effe
  * success.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const option: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Option.Option<A>> = effect.option
 
@@ -2855,13 +2856,13 @@ export const orElseSucceed: {
  * Exposes all parallel errors in a single call.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const parallelErrors: <R, E, A>(self: Effect<R, E, A>) => Effect<R, Chunk.Chunk<E>, A> = effect.parallelErrors
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const parallelFinalizers: <R, E, A>(self: Effect<R, E, A>) => Effect<Scope.Scope | R, E, A> =
   fiberRuntime.parallelFinalizers
@@ -2906,7 +2907,7 @@ export const partitionPar: {
  * running this workflow.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const patchFiberRefs: (patch: FiberRefsPatch.FiberRefsPatch) => Effect<never, never, void> =
   effect.patchFiberRefs
@@ -3018,7 +3019,7 @@ export const provideSomeLayer: {
  * disconnect or interrupt losers.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const race: {
   <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2 | A>
@@ -3031,7 +3032,7 @@ export const race: {
  * the race will be interrupted immediately
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const raceAll: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, E, A> = fiberRuntime.raceAll
 
@@ -3042,7 +3043,7 @@ export const raceAll: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R,
  * effect will fail with some error.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const raceAwait: {
   <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2 | A>
@@ -3058,7 +3059,7 @@ export const raceAwait: {
  * resume until the loser has been cleanly terminated.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const raceEither: {
   <R2, E2, A2>(
@@ -3080,7 +3081,7 @@ export const raceEither: {
  * higher-level operators like `race`.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const raceFibersWith: {
   <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
@@ -3109,7 +3110,7 @@ export const raceFibersWith: {
  * in the background.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const raceFirst: {
   <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2 | A>
@@ -3121,7 +3122,7 @@ export const raceFirst: {
  * the specified finisher as soon as one result or the other has been computed.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const raceWith: {
   <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
@@ -3226,7 +3227,7 @@ export const reduceWhile: {
  * Keeps some of the errors, and terminates the fiber with the rest
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const refineOrDie: {
   <E, E1>(pf: (e: E) => Option.Option<E1>): <R, A>(self: Effect<R, E, A>) => Effect<R, E1, A>
@@ -3238,7 +3239,7 @@ export const refineOrDie: {
  * the specified function to convert the `E` into a defect.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const refineOrDieWith: {
   <E, E1>(pf: (e: E) => Option.Option<E1>, f: (e: E) => unknown): <R, A>(self: Effect<R, E, A>) => Effect<R, E1, A>
@@ -3250,7 +3251,7 @@ export const refineOrDieWith: {
  * with the rest
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const refineTagOrDie: {
   <R, E extends { _tag: string }, A, K extends E["_tag"] & string>(
@@ -3267,7 +3268,7 @@ export const refineTagOrDie: {
  * with the rest, using the specified function to convert the `E` into a defect.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const refineTagOrDieWith: {
   <R, E extends { _tag: string }, A, K extends E["_tag"] & string>(
@@ -3286,7 +3287,7 @@ export const refineTagOrDieWith: {
  * continue with our held value.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const reject: {
   <A, E1>(pf: (a: A) => Option.Option<E1>): <R, E>(self: Effect<R, E, A>) => Effect<R, E1 | E, A>
@@ -3299,7 +3300,7 @@ export const reject: {
  * our held value.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const rejectEffect: {
   <A, R1, E1>(
@@ -3321,7 +3322,7 @@ export const rejectEffect: {
  * time.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const repeat: {
   <R1, A, B>(schedule: Schedule.Schedule<R1, A, B>): <R, E>(self: Effect<R, E, A>) => Effect<R1 | R, E, B>
@@ -3335,7 +3336,7 @@ export const repeat: {
  * that succeeds, executes `io` an additional time.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const repeatN: {
   (n: number): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
@@ -3352,7 +3353,7 @@ export const repeatN: {
  * `effect`, and then if that succeeds, executes `effect` an additional time.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const repeatOrElse: {
   <R2, A, B, E, R3, E2>(
@@ -3376,7 +3377,7 @@ export const repeatOrElse: {
  * `effect`, and then if that succeeds, executes `effect` an additional time.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const repeatOrElseEither: {
   <R2, A, B, E, R3, E2, C>(
@@ -3395,7 +3396,7 @@ export const repeatOrElseEither: {
  * until the first failure.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const repeatUntil: {
   <A>(f: Predicate<A>): <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
@@ -3407,7 +3408,7 @@ export const repeatUntil: {
  * predicate or until the first failure.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const repeatUntilEffect: {
   <A, R2>(f: (a: A) => Effect<R2, never, boolean>): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E, A>
@@ -3419,7 +3420,7 @@ export const repeatUntilEffect: {
  * until the first failure.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const repeatUntilEquals: {
   <A>(value: A): <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
@@ -3431,7 +3432,7 @@ export const repeatUntilEquals: {
  * predicate or until the first failure.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const repeatWhile: {
   <A>(f: Predicate<A>): <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
@@ -3443,7 +3444,7 @@ export const repeatWhile: {
  * predicate or until the first failure.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const repeatWhileEffect: {
   <R1, A>(f: (a: A) => Effect<R1, never, boolean>): <R, E>(self: Effect<R, E, A>) => Effect<R1 | R, E, A>
@@ -3455,7 +3456,7 @@ export const repeatWhileEffect: {
  * value or until the first failure.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const repeatWhileEquals: {
   <A>(value: A): <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
@@ -3469,7 +3470,7 @@ export const repeatWhileEquals: {
  * and in case of failure, try again once".
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const retry: {
   <R1, E, B>(policy: Schedule.Schedule<R1, E, B>): <R, A>(self: Effect<R, E, A>) => Effect<R1 | R, E, A>
@@ -3480,7 +3481,7 @@ export const retry: {
  * Retries this effect the specified number of times.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const retryN: {
   (n: number): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
@@ -3493,7 +3494,7 @@ export const retryN: {
  * the recovery function.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const retryOrElse: {
   <R1, E extends E3, A1, R2, E2, A2, E3>(
@@ -3513,7 +3514,7 @@ export const retryOrElse: {
  * the recovery function.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const retryOrElseEither: {
   <R1, E extends E3, A1, R2, E2, A2, E3>(
@@ -3531,7 +3532,7 @@ export const retryOrElseEither: {
  * Retries this effect until its error satisfies the specified predicate.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const retryUntil: {
   <E>(f: Predicate<E>): <R, A>(self: Effect<R, E, A>) => Effect<R, E, A>
@@ -3543,7 +3544,7 @@ export const retryUntil: {
  * predicate.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const retryUntilEffect: {
   <R1, E>(f: (e: E) => Effect<R1, never, boolean>): <R, A>(self: Effect<R, E, A>) => Effect<R1 | R, E, A>
@@ -3554,7 +3555,7 @@ export const retryUntilEffect: {
  * Retries this effect until its error is equal to the specified error.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const retryUntilEquals: {
   <E>(e: E): <R, A>(self: Effect<R, E, A>) => Effect<R, E, A>
@@ -3565,7 +3566,7 @@ export const retryUntilEquals: {
  * Retries this effect while its error satisfies the specified predicate.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const retryWhile: {
   <E>(f: Predicate<E>): <R, A>(self: Effect<R, E, A>) => Effect<R, E, A>
@@ -3577,7 +3578,7 @@ export const retryWhile: {
  * predicate.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const retryWhileEffect: {
   <R1, E>(f: (e: E) => Effect<R1, never, boolean>): <R, A>(self: Effect<R, E, A>) => Effect<R1 | R, E, A>
@@ -3589,7 +3590,7 @@ export const retryWhileEffect: {
  * error.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const retryWhileEquals: {
   <E>(e: E): <R, A>(self: Effect<R, E, A>) => Effect<R, E, A>
@@ -3600,7 +3601,7 @@ export const retryWhileEquals: {
  * Replicates the given effect `n` times.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const replicate: (n: number) => <R, E, A>(self: Effect<R, E, A>) => Chunk.Chunk<Effect<R, E, A>> =
   effect.replicate
@@ -3610,7 +3611,7 @@ export const replicate: (n: number) => <R, E, A>(self: Effect<R, E, A>) => Chunk
  * results.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const replicateEffect: {
   (n: number): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Chunk.Chunk<A>>
@@ -3621,7 +3622,7 @@ export const replicateEffect: {
  * Performs this effect the specified number of times, discarding the results.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const replicateEffectDiscard: {
   (n: number): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, void>
@@ -3632,7 +3633,7 @@ export const replicateEffectDiscard: {
  * Unearth the unchecked failure of the effect (opposite of `orDie`).
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const resurrect: <R, E, A>(self: Effect<R, E, A>) => Effect<R, unknown, A> = effect.resurrect
 
@@ -3697,7 +3698,7 @@ export const sandbox: <R, E, A>(self: Effect<R, E, A>) => Effect<R, Cause.Cause<
  * depend on the result of this effect.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const schedule: {
   <R2, Out>(schedule: Schedule.Schedule<R2, unknown, Out>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E, Out>
@@ -3709,7 +3710,7 @@ export const schedule: {
  * attached to the current scope.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const scheduleForked: {
   <R2, Out>(
@@ -3726,7 +3727,7 @@ export const scheduleForked: {
  * specified input value.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const scheduleFrom: {
   <R2, In, Out>(
@@ -3774,7 +3775,7 @@ export const scoped: <R, E, A>(effect: Effect<R, E, A>) => Effect<Exclude<R, Sco
  * parallel.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const sequentialFinalizers: <R, E, A>(self: Effect<R, E, A>) => Effect<R | Scope.Scope, E, A> =
   fiberRuntime.sequentialFinalizers
@@ -3813,7 +3814,7 @@ export const serviceWithEffect: <T extends Context.Tag<any>, R, E, A>(
  * Sets the current `ConfigProvider`.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const setConfigProvider: (configProvider: ConfigProvider) => Layer.Layer<never, never, never> =
   circularLayer.setConfigProvider
@@ -3823,7 +3824,7 @@ export const setConfigProvider: (configProvider: ConfigProvider) => Layer.Layer<
  * in the specified collection of `FiberRef` values.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const setFiberRefs: (fiberRefs: FiberRefs.FiberRefs) => Effect<never, never, void> = effect.setFiberRefs
 
@@ -3840,7 +3841,7 @@ export const sleep: (duration: Duration.Duration) => Effect<never, never, void> 
  * Converts an option on values into an option on errors.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const some: <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R, Option.Option<E>, A> = fiberRuntime.some
 
@@ -3848,7 +3849,7 @@ export const some: <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R, 
  * Extracts the optional value, or returns the given 'orElse'.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const someOrElse: {
   <B>(orElse: LazyArg<B>): <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R, E, B | A>
@@ -3859,7 +3860,7 @@ export const someOrElse: {
  * Extracts the optional value, or executes the given 'orElse' effect.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const someOrElseEffect: {
   <R2, E2, A2>(
@@ -3875,7 +3876,7 @@ export const someOrElseEffect: {
  * Extracts the optional value, or fails with the given error 'e'.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const someOrFail: {
   <E2>(orFail: LazyArg<E2>): <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R, E2 | E, A>
@@ -3886,7 +3887,7 @@ export const someOrFail: {
  * Extracts the optional value, or fails with a `NoSuchElementException`.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const someOrFailException: <R, E, A>(
   self: Effect<R, E, Option.Option<A>>
@@ -3897,7 +3898,7 @@ export const someOrFailException: <R, E, A>(
  * `Option`.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const someWith: {
   <R, E, A, R1, E1, A1>(
@@ -3953,7 +3954,7 @@ export const succeedSome: <A>(value: A) => Effect<never, never, Option.Option<A>
  * execution.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const summarized: {
   <R2, E2, B, C>(
@@ -3972,7 +3973,7 @@ export const summarized: {
  * forked in the effect are reported to the specified supervisor.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const supervised: {
   <X>(supervisor: Supervisor.Supervisor<X>): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
@@ -4017,7 +4018,7 @@ export const takeWhile: {
  * Tags each metric in this effect with the specific tag.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const tagged: {
   (key: string, value: string): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
@@ -4028,7 +4029,7 @@ export const tagged: {
  * Tags each metric in this effect with the specific tag.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const taggedWithLabels: {
   (labels: Iterable<MetricLabel.MetricLabel>): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
@@ -4039,7 +4040,7 @@ export const taggedWithLabels: {
  * Tags each metric in this effect with the specific tag.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const taggedWithLabelSet: {
   (labels: HashSet.HashSet<MetricLabel.MetricLabel>): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
@@ -4194,7 +4195,7 @@ export const tapSome: {
  * Returns a new effect that executes this one and times the execution.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const timed: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, readonly [Duration.Duration, A]> = effect.timed
 
@@ -4202,7 +4203,7 @@ export const timed: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, readonly [D
  * A more powerful variation of `timed` that allows specifying the clock.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const timedWith: {
   <R1, E1>(
@@ -4231,7 +4232,7 @@ export const timedWith: {
  * has been successfully interrupted.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const timeout: {
   (duration: Duration.Duration): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Option.Option<A>>
@@ -4243,7 +4244,7 @@ export const timeout: {
  * timeout, it will produce the specified error.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const timeoutFail: {
   <E1>(evaluate: LazyArg<E1>, duration: Duration.Duration): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E1 | E, A>
@@ -4255,7 +4256,7 @@ export const timeoutFail: {
  * timeout, it will produce the specified failure.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const timeoutFailCause: {
   <E1>(
@@ -4279,7 +4280,7 @@ export const timeoutFailCause: {
  * be safely interrupted.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const timeoutTo: {
   <A, B, B1>(
@@ -4355,7 +4356,7 @@ export const toLayerScoped: {
  * effectively extending their lifespans into the parent scope.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const transplant: <R, E, A>(
   f: (grafter: <R2, E2, A2>(effect: Effect<R2, E2, A2>) => Effect<R2, E2, A2>) => Effect<R, E, A>
@@ -4549,7 +4550,7 @@ export const unified: <Args extends ReadonlyArray<any>, Ret extends Effect<any, 
  * This operation is the opposite of `cause`.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const uncause: <R, E>(self: Effect<R, never, Cause.Cause<E>>) => Effect<R, E, void> = effect.uncause
 
@@ -4599,7 +4600,7 @@ export const unleft: <R, E, B, A>(self: Effect<R, Either.Either<E, B>, A>) => Ef
  * The moral equivalent of `if (!p) exp`.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const unless: {
   (predicate: LazyArg<boolean>): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Option.Option<A>>
@@ -4610,7 +4611,7 @@ export const unless: {
  * The moral equivalent of `if (!p) exp` when `p` has side-effects.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const unlessEffect: {
   <R2, E2>(
@@ -4628,7 +4629,7 @@ export const unlessEffect: {
  * Takes some fiber failures and converts them into errors.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const unrefine: {
   <E1>(pf: (u: unknown) => Option.Option<E1>): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E1 | E, A>
@@ -4659,7 +4660,7 @@ export const unrefineWith: {
  * The inverse of `right`.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const unright: <R, B, E, A>(self: Effect<R, Either.Either<B, E>, A>) => Effect<R, E, Either.Either<B, A>> =
   effect.unright
@@ -4781,7 +4782,7 @@ export const runSyncEither: <E, A>(effect: Effect<never, E, A>) => Either.Either
  * exists. Otherwise extracts the contained `Effect< R, E, A>`
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const unsandbox: <R, E, A>(self: Effect<R, Cause.Cause<E>, A>) => Effect<R, E, A> = effect.unsandbox
 
@@ -4790,7 +4791,7 @@ export const unsandbox: <R, E, A>(self: Effect<R, Cause.Cause<E>, A>) => Effect<
  * without effecting the scope of any resources acquired by `use`.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const using: {
   <A, R2, E2, A2>(
@@ -4806,7 +4807,7 @@ export const using: {
  * Converts an option on errors into an option on values.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const unsome: <R, E, A>(self: Effect<R, Option.Option<E>, A>) => Effect<R, E, Option.Option<A>> =
   fiberRuntime.unsome
@@ -4852,7 +4853,7 @@ export const updateService: {
  * `Cause`s when both effects fail.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const validate: {
   <R2, E2, B>(that: Effect<R2, E2, B>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, readonly [A, B]>
@@ -4864,7 +4865,7 @@ export const validate: {
  * in parallel. Combines both Cause<E1>` when both effects fail.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const validatePar: {
   <R1, E1, B>(that: Effect<R1, E1, B>): <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, readonly [A, B]>
@@ -4879,7 +4880,7 @@ export const validatePar: {
  * will be lost. To retain all information please use `partition`.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const validateAll: {
   <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, Chunk.Chunk<E>, Chunk.Chunk<B>>
@@ -4894,7 +4895,7 @@ export const validateAll: {
  * will be lost. To retain all information please use [[partitionPar]].
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const validateAllPar: {
   <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, Chunk.Chunk<E>, Chunk.Chunk<B>>
@@ -4906,7 +4907,7 @@ export const validateAllPar: {
  * the successes.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const validateAllDiscard: {
   <R, E, A, X>(f: (a: A) => Effect<R, E, X>): (elements: Iterable<A>) => Effect<R, Chunk.Chunk<E>, void>
@@ -4918,7 +4919,7 @@ export const validateAllDiscard: {
  * discarding the successes.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const validateAllParDiscard: {
   <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, Chunk.Chunk<E>, void>
@@ -4930,7 +4931,7 @@ export const validateAllParDiscard: {
  * or the accumulation of all errors.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const validateFirst: {
   <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, Chunk.Chunk<E>, B>
@@ -4942,7 +4943,7 @@ export const validateFirst: {
  * or the accumulation of all errors.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const validateFirstPar: {
   <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, Chunk.Chunk<E>, B>
@@ -4954,7 +4955,7 @@ export const validateFirstPar: {
  * combiner function. Combines the causes in case both effect fail.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const validateWith: {
   <A, R2, E2, B, C>(
@@ -4974,7 +4975,7 @@ export const validateWith: {
  * both sides fail, then the cause will be combined.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const validateWithPar: {
   <A, R1, E1, B, C>(
@@ -5002,7 +5003,7 @@ export const whileLoop: <R, E, A>(
  * The moral equivalent of `if (p) exp`.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const when: {
   (predicate: LazyArg<boolean>): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Option.Option<A>>
@@ -5014,7 +5015,7 @@ export const when: {
  * value, otherwise does nothing.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const whenCase: <R, E, A, B>(
   evaluate: LazyArg<A>,
@@ -5026,7 +5027,7 @@ export const whenCase: <R, E, A, B>(
  * value, otherwise does nothing.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const whenCaseEffect: {
   <A, R2, E2, A2>(
@@ -5059,7 +5060,7 @@ export const whenEffect: {
  * predicate.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const whenFiberRef: {
   <S>(
@@ -5079,7 +5080,7 @@ export const whenFiberRef: {
  * Executes this workflow when the value of the `Ref` satisfies the predicate.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const whenRef: {
   <S>(
@@ -5100,12 +5101,34 @@ export const whenRef: {
  * clock service.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const withClock: {
   <A extends Clock.Clock>(value: A): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
   <R, E, A extends Clock.Clock>(effect: Effect<R, E, A>, value: A): Effect<R, E, A>
 } = defaultServices.withClock
+
+/**
+ * Decides wether child fibers will report or not unhandled errors via the logger
+ *
+ * @since 1.0.0
+ * @category utils
+ */
+export const withReportUnhandled: {
+  (enabled: boolean): <R, E, B>(use: Effect<R, E, B>) => Effect<R, E, B>
+  <R, E, B>(use: Effect<R, E, B>, enabled: boolean): Effect<R, E, B>
+} = core.withReportUnhandled
+
+/**
+ * Sets the provided scheduler for usage in the wrapped effect
+ *
+ * @since 1.0.0
+ * @category utils
+ */
+export const withScheduler: {
+  (scheduler: Scheduler): <R, E, B>(self: Effect<R, E, B>) => Effect<R, E, B>
+  <R, E, B>(self: Effect<R, E, B>, scheduler: Scheduler): Effect<R, E, B>
+} = core.withScheduler
 
 /**
  * Sets the implementation of the clock service to the specified value and
@@ -5143,7 +5166,7 @@ export const withConfigProviderScoped: (value: ConfigProvider) => Effect<Scope.S
  * well as a finalizer that can be run to close the scope of this workflow.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const withEarlyRelease: <R, E, A>(
   self: Effect<R, E, A>
@@ -5151,7 +5174,7 @@ export const withEarlyRelease: <R, E, A>(
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const withMetric: {
   <Type, In, Out>(metric: Metric.Metric<Type, In, Out>): <R, E, A extends In>(self: Effect<R, E, A>) => Effect<R, E, A>

@@ -29,8 +29,6 @@ Added in v1.0.0
   - [FiberId (type alias)](#fiberid-type-alias)
   - [None (interface)](#none-interface)
   - [Runtime (interface)](#runtime-interface)
-- [mutations](#mutations)
-  - [getOrElse](#getorelse)
 - [refinements](#refinements)
   - [isComposite](#iscomposite)
   - [isFiberId](#isfiberid)
@@ -41,6 +39,8 @@ Added in v1.0.0
   - [FiberIdTypeId (type alias)](#fiberidtypeid-type-alias)
 - [unsafe](#unsafe)
   - [unsafeMake](#unsafemake)
+- [utils](#utils)
+  - [getOrElse](#getorelse)
 
 ---
 
@@ -218,20 +218,6 @@ export interface Runtime extends Equal.Equal {
 
 Added in v1.0.0
 
-# mutations
-
-## getOrElse
-
-Returns this `FiberId` if it is not `None`, otherwise returns that `FiberId`.
-
-**Signature**
-
-```ts
-export declare const getOrElse: { (that: FiberId): (self: FiberId) => FiberId; (self: FiberId, that: FiberId): FiberId }
-```
-
-Added in v1.0.0
-
 # refinements
 
 ## isComposite
@@ -315,6 +301,20 @@ Unsafely creates a new `FiberId`.
 
 ```ts
 export declare const unsafeMake: (_: void) => Runtime
+```
+
+Added in v1.0.0
+
+# utils
+
+## getOrElse
+
+Returns this `FiberId` if it is not `None`, otherwise returns that `FiberId`.
+
+**Signature**
+
+```ts
+export declare const getOrElse: { (that: FiberId): (self: FiberId) => FiberId; (self: FiberId, that: FiberId): FiberId }
 ```
 
 Added in v1.0.0

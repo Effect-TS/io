@@ -30,6 +30,7 @@ Added in v1.0.0
   - [currentLoggers](#currentloggers)
   - [currentMinimumLogLevel](#currentminimumloglevel)
   - [currentParallelism](#currentparallelism)
+  - [currentReportUnhandled](#currentreportunhandled)
   - [currentRuntimeFlags](#currentruntimeflags)
   - [currentScheduler](#currentscheduler)
   - [currentSupervisor](#currentsupervisor)
@@ -41,7 +42,10 @@ Added in v1.0.0
   - [FiberRef (interface)](#fiberref-interface)
 - [models](#models)
   - [Variance (interface)](#variance-interface)
-- [mutations](#mutations)
+- [symbols](#symbols)
+  - [FiberRefTypeId](#fiberreftypeid)
+  - [FiberRefTypeId (type alias)](#fiberreftypeid-type-alias)
+- [utils](#utils)
   - [delete](#delete)
   - [getAndSet](#getandset)
   - [getAndUpdate](#getandupdate)
@@ -59,9 +63,6 @@ Added in v1.0.0
   - [updateAndGet](#updateandget)
   - [updateSome](#updatesome)
   - [updateSomeAndGet](#updatesomeandget)
-- [symbols](#symbols)
-  - [FiberRefTypeId](#fiberreftypeid)
-  - [FiberRefTypeId (type alias)](#fiberreftypeid-type-alias)
 
 ---
 
@@ -248,6 +249,16 @@ export declare const currentParallelism: FiberRef<Option.Option<number>>
 
 Added in v1.0.0
 
+## currentReportUnhandled
+
+**Signature**
+
+```ts
+export declare const currentReportUnhandled: FiberRef<{ readonly enabled: boolean }>
+```
+
+Added in v1.0.0
+
 ## currentRuntimeFlags
 
 **Signature**
@@ -351,7 +362,29 @@ export interface Variance<A> {
 
 Added in v1.0.0
 
-# mutations
+# symbols
+
+## FiberRefTypeId
+
+**Signature**
+
+```ts
+export declare const FiberRefTypeId: typeof FiberRefTypeId
+```
+
+Added in v1.0.0
+
+## FiberRefTypeId (type alias)
+
+**Signature**
+
+```ts
+export type FiberRefTypeId = typeof FiberRefTypeId
+```
+
+Added in v1.0.0
+
+# utils
 
 ## delete
 
@@ -565,28 +598,6 @@ export declare const updateSomeAndGet: {
   <A>(pf: (a: A) => Option.Option<A>): (self: FiberRef<A>) => Effect.Effect<never, never, A>
   <A>(self: FiberRef<A>, pf: (a: A) => Option.Option<A>): Effect.Effect<never, never, A>
 }
-```
-
-Added in v1.0.0
-
-# symbols
-
-## FiberRefTypeId
-
-**Signature**
-
-```ts
-export declare const FiberRefTypeId: typeof FiberRefTypeId
-```
-
-Added in v1.0.0
-
-## FiberRefTypeId (type alias)
-
-**Signature**
-
-```ts
-export type FiberRefTypeId = typeof FiberRefTypeId
 ```
 
 Added in v1.0.0

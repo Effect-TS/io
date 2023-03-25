@@ -51,17 +51,17 @@ Added in v1.0.0
 - [models](#models)
   - [Metric (interface)](#metric-interface)
   - [MetricApply (interface)](#metricapply-interface)
-- [mutations](#mutations)
-  - [tagged](#tagged)
-  - [taggedWithLabels](#taggedwithlabels)
-  - [taggedWithLabelsInput](#taggedwithlabelsinput)
-  - [update](#update)
-  - [withNow](#withnow)
 - [symbols](#symbols)
   - [MetricTypeId](#metrictypeid)
   - [MetricTypeId (type alias)](#metrictypeid-type-alias)
 - [unsafe](#unsafe)
   - [unsafeSnapshot](#unsafesnapshot)
+- [utils](#utils)
+  - [tagged](#tagged)
+  - [taggedWithLabels](#taggedwithlabels)
+  - [taggedWithLabelsInput](#taggedwithlabelsinput)
+  - [update](#update)
+  - [withNow](#withnow)
 - [zipping](#zipping)
   - [zip](#zip)
 
@@ -626,7 +626,43 @@ export interface MetricApply {
 
 Added in v1.0.0
 
-# mutations
+# symbols
+
+## MetricTypeId
+
+**Signature**
+
+```ts
+export declare const MetricTypeId: typeof MetricTypeId
+```
+
+Added in v1.0.0
+
+## MetricTypeId (type alias)
+
+**Signature**
+
+```ts
+export type MetricTypeId = typeof MetricTypeId
+```
+
+Added in v1.0.0
+
+# unsafe
+
+## unsafeSnapshot
+
+Unsafely captures a snapshot of all metrics recorded by the application.
+
+**Signature**
+
+```ts
+export declare const unsafeSnapshot: (_: void) => HashSet.HashSet<MetricPair.MetricPair.Untyped>
+```
+
+Added in v1.0.0
+
+# utils
 
 ## tagged
 
@@ -707,42 +743,6 @@ Added in v1.0.0
 
 ```ts
 export declare const withNow: <Type, In, Out>(self: Metric<Type, readonly [In, number], Out>) => Metric<Type, In, Out>
-```
-
-Added in v1.0.0
-
-# symbols
-
-## MetricTypeId
-
-**Signature**
-
-```ts
-export declare const MetricTypeId: typeof MetricTypeId
-```
-
-Added in v1.0.0
-
-## MetricTypeId (type alias)
-
-**Signature**
-
-```ts
-export type MetricTypeId = typeof MetricTypeId
-```
-
-Added in v1.0.0
-
-# unsafe
-
-## unsafeSnapshot
-
-Unsafely captures a snapshot of all metrics recorded by the application.
-
-**Signature**
-
-```ts
-export declare const unsafeSnapshot: (_: void) => HashSet.HashSet<MetricPair.MetricPair.Untyped>
 ```
 
 Added in v1.0.0

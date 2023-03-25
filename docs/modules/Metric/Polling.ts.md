@@ -18,14 +18,14 @@ Added in v1.0.0
   - [retry](#retry)
 - [models](#models)
   - [PollingMetric (interface)](#pollingmetric-interface)
-- [mutations](#mutations)
+- [symbols](#symbols)
+  - [PollingMetricTypeId](#pollingmetrictypeid)
+  - [PollingMetricTypeId (type alias)](#pollingmetrictypeid-type-alias)
+- [utils](#utils)
   - [launch](#launch)
   - [poll](#poll)
   - [pollAndUpdate](#pollandupdate)
   - [zip](#zip)
-- [symbols](#symbols)
-  - [PollingMetricTypeId](#pollingmetrictypeid)
-  - [PollingMetricTypeId (type alias)](#pollingmetrictypeid-type-alias)
 
 ---
 
@@ -107,7 +107,29 @@ export interface PollingMetric<Type, In, R, E, Out> {
 
 Added in v1.0.0
 
-# mutations
+# symbols
+
+## PollingMetricTypeId
+
+**Signature**
+
+```ts
+export declare const PollingMetricTypeId: typeof PollingMetricTypeId
+```
+
+Added in v1.0.0
+
+## PollingMetricTypeId (type alias)
+
+**Signature**
+
+```ts
+export type PollingMetricTypeId = typeof PollingMetricTypeId
+```
+
+Added in v1.0.0
+
+# utils
 
 ## launch
 
@@ -172,28 +194,6 @@ export declare const zip: {
     that: PollingMetric<Type2, In2, R2, E2, Out2>
   ): PollingMetric<readonly [Type, Type2], readonly [In, In2], R | R2, E | E2, readonly [Out, Out2]>
 }
-```
-
-Added in v1.0.0
-
-# symbols
-
-## PollingMetricTypeId
-
-**Signature**
-
-```ts
-export declare const PollingMetricTypeId: typeof PollingMetricTypeId
-```
-
-Added in v1.0.0
-
-## PollingMetricTypeId (type alias)
-
-**Signature**
-
-```ts
-export type PollingMetricTypeId = typeof PollingMetricTypeId
 ```
 
 Added in v1.0.0

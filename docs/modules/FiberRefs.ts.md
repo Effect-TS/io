@@ -18,17 +18,17 @@ Added in v1.0.0
   - [getOrDefault](#getordefault)
 - [models](#models)
   - [FiberRefs (interface)](#fiberrefs-interface)
-- [mutations](#mutations)
-  - [delete](#delete)
-  - [forkAs](#forkas)
-  - [joinAs](#joinas)
-  - [setAll](#setall)
-  - [updatedAs](#updatedas)
 - [symbols](#symbols)
   - [FiberRefsSym](#fiberrefssym)
   - [FiberRefsSym (type alias)](#fiberrefssym-type-alias)
 - [unsafe](#unsafe)
   - [unsafeMake](#unsafemake)
+- [utils](#utils)
+  - [delete](#delete)
+  - [forkAs](#forkas)
+  - [joinAs](#joinas)
+  - [setAll](#setall)
+  - [updatedAs](#updatedas)
 
 ---
 
@@ -98,7 +98,45 @@ export interface FiberRefs {
 
 Added in v1.0.0
 
-# mutations
+# symbols
+
+## FiberRefsSym
+
+**Signature**
+
+```ts
+export declare const FiberRefsSym: typeof FiberRefsSym
+```
+
+Added in v1.0.0
+
+## FiberRefsSym (type alias)
+
+**Signature**
+
+```ts
+export type FiberRefsSym = typeof FiberRefsSym
+```
+
+Added in v1.0.0
+
+# unsafe
+
+## unsafeMake
+
+Note: it will not copy the provided Map, make sure to provide a fresh one.
+
+**Signature**
+
+```ts
+export declare const unsafeMake: (
+  fiberRefLocals: Map<FiberRef.FiberRef<any>, Arr.NonEmptyReadonlyArray<readonly [FiberId.Runtime, any]>>
+) => FiberRefs
+```
+
+Added in v1.0.0
+
+# utils
 
 ## delete
 
@@ -169,44 +207,6 @@ export declare const updatedAs: {
   <A>(fiberId: FiberId.Runtime, fiberRef: FiberRef.FiberRef<A>, value: A): (self: FiberRefs) => FiberRefs
   <A>(self: FiberRefs, fiberId: FiberId.Runtime, fiberRef: FiberRef.FiberRef<A>, value: A): FiberRefs
 }
-```
-
-Added in v1.0.0
-
-# symbols
-
-## FiberRefsSym
-
-**Signature**
-
-```ts
-export declare const FiberRefsSym: typeof FiberRefsSym
-```
-
-Added in v1.0.0
-
-## FiberRefsSym (type alias)
-
-**Signature**
-
-```ts
-export type FiberRefsSym = typeof FiberRefsSym
-```
-
-Added in v1.0.0
-
-# unsafe
-
-## unsafeMake
-
-Note: it will not copy the provided Map, make sure to provide a fresh one.
-
-**Signature**
-
-```ts
-export declare const unsafeMake: (
-  fiberRefLocals: Map<FiberRef.FiberRef<any>, Arr.NonEmptyReadonlyArray<readonly [FiberId.Runtime, any]>>
-) => FiberRefs
 ```
 
 Added in v1.0.0

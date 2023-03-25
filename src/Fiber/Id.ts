@@ -129,7 +129,7 @@ export const combineAll: (fiberIds: HashSet.HashSet<FiberId>) => FiberId = inter
  * Returns this `FiberId` if it is not `None`, otherwise returns that `FiberId`.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const getOrElse: {
   (that: FiberId): (self: FiberId) => FiberId

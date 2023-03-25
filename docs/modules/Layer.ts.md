@@ -73,17 +73,6 @@ Added in v1.0.0
   - [mapError](#maperror)
 - [models](#models)
   - [Layer (interface)](#layer-interface)
-- [mutations](#mutations)
-  - [extendScope](#extendscope)
-  - [fresh](#fresh)
-  - [memoize](#memoize)
-  - [merge](#merge)
-  - [passthrough](#passthrough)
-  - [project](#project)
-  - [provide](#provide)
-  - [provideMerge](#providemerge)
-  - [use](#use)
-  - [useMerge](#usemerge)
 - [retrying](#retrying)
   - [retry](#retry)
 - [sequencing](#sequencing)
@@ -95,6 +84,17 @@ Added in v1.0.0
 - [symbols](#symbols)
   - [LayerTypeId](#layertypeid)
   - [LayerTypeId (type alias)](#layertypeid-type-alias)
+- [utils](#utils)
+  - [extendScope](#extendscope)
+  - [fresh](#fresh)
+  - [memoize](#memoize)
+  - [merge](#merge)
+  - [passthrough](#passthrough)
+  - [project](#project)
+  - [provide](#provide)
+  - [provideMerge](#providemerge)
+  - [use](#use)
+  - [useMerge](#usemerge)
 - [zipping](#zipping)
   - [mergeAll](#mergeall)
   - [zipWithPar](#zipwithpar)
@@ -647,7 +647,153 @@ export interface Layer<RIn, E, ROut> extends Layer.Variance<RIn, E, ROut> {}
 
 Added in v1.0.0
 
-# mutations
+# retrying
+
+## retry
+
+Retries constructing this layer according to the specified schedule.
+
+**Signature**
+
+```ts
+export declare const retry: {
+  <RIn2, E, X>(schedule: Schedule.Schedule<RIn2, E, X>): <RIn, ROut>(
+    self: Layer<RIn, E, ROut>
+  ) => Layer<RIn2 | RIn, E, ROut>
+  <RIn, E, ROut, RIn2, X>(self: Layer<RIn, E, ROut>, schedule: Schedule.Schedule<RIn2, E, X>): Layer<
+    RIn | RIn2,
+    E,
+    ROut
+  >
+}
+```
+
+Added in v1.0.0
+
+# sequencing
+
+## flatMap
+
+Constructs a layer dynamically based on the output of this layer.
+
+**Signature**
+
+```ts
+export declare const flatMap: {
+  <A, R2, E2, A2>(f: (context: Context.Context<A>) => Layer<R2, E2, A2>): <R, E>(
+    self: Layer<R, E, A>
+  ) => Layer<R2 | R, E2 | E, A2>
+  <R, E, A, R2, E2, A2>(self: Layer<R, E, A>, f: (context: Context.Context<A>) => Layer<R2, E2, A2>): Layer<
+    R | R2,
+    E | E2,
+    A2
+  >
+}
+```
+
+Added in v1.0.0
+
+## flatten
+
+Flattens layers nested in the context of an effect.
+
+**Signature**
+
+```ts
+export declare const flatten: {
+  <R2, E2, A>(tag: Context.Tag<Layer<R2, E2, A>>): <R, E>(
+    self: Layer<R, E, Layer<R2, E2, A>>
+  ) => Layer<R2 | R, E2 | E, A>
+  <R, E, A, R2, E2>(self: Layer<R, E, Layer<R2, E2, A>>, tag: Context.Tag<Layer<R2, E2, A>>): Layer<R | R2, E | E2, A>
+}
+```
+
+Added in v1.0.0
+
+## tap
+
+Performs the specified effect if this layer succeeds.
+
+**Signature**
+
+```ts
+export declare const tap: {
+  <ROut, RIn2, E2, X>(f: (context: Context.Context<ROut>) => Effect.Effect<RIn2, E2, X>): <RIn, E>(
+    self: Layer<RIn, E, ROut>
+  ) => Layer<RIn2 | RIn, E2 | E, ROut>
+  <RIn, E, ROut, RIn2, E2, X>(
+    self: Layer<RIn, E, ROut>,
+    f: (context: Context.Context<ROut>) => Effect.Effect<RIn2, E2, X>
+  ): Layer<RIn | RIn2, E | E2, ROut>
+}
+```
+
+Added in v1.0.0
+
+## tapError
+
+Performs the specified effect if this layer fails.
+
+**Signature**
+
+```ts
+export declare const tapError: {
+  <E, RIn2, E2, X>(f: (e: E) => Effect.Effect<RIn2, E2, X>): <RIn, ROut>(
+    self: Layer<RIn, E, ROut>
+  ) => Layer<RIn2 | RIn, E | E2, ROut>
+  <RIn, E, ROut, RIn2, E2, X>(self: Layer<RIn, E, ROut>, f: (e: E) => Effect.Effect<RIn2, E2, X>): Layer<
+    RIn | RIn2,
+    E | E2,
+    ROut
+  >
+}
+```
+
+Added in v1.0.0
+
+## tapErrorCause
+
+Performs the specified effect if this layer fails.
+
+**Signature**
+
+```ts
+export declare const tapErrorCause: {
+  <E, RIn2, E2, X>(f: (cause: Cause.Cause<E>) => Effect.Effect<RIn2, E2, X>): <RIn, ROut>(
+    self: Layer<RIn, E, ROut>
+  ) => Layer<RIn2 | RIn, E | E2, ROut>
+  <RIn, E, ROut, RIn2, E2, X>(
+    self: Layer<RIn, E, ROut>,
+    f: (cause: Cause.Cause<E>) => Effect.Effect<RIn2, E2, X>
+  ): Layer<RIn | RIn2, E | E2, ROut>
+}
+```
+
+Added in v1.0.0
+
+# symbols
+
+## LayerTypeId
+
+**Signature**
+
+```ts
+export declare const LayerTypeId: typeof LayerTypeId
+```
+
+Added in v1.0.0
+
+## LayerTypeId (type alias)
+
+**Signature**
+
+```ts
+export type LayerTypeId = typeof LayerTypeId
+```
+
+Added in v1.0.0
+
+# utils
 
 ## extendScope
 
@@ -839,152 +985,6 @@ export declare const useMerge: {
     ROut2 | ROut
   >
 }
-```
-
-Added in v1.0.0
-
-# retrying
-
-## retry
-
-Retries constructing this layer according to the specified schedule.
-
-**Signature**
-
-```ts
-export declare const retry: {
-  <RIn2, E, X>(schedule: Schedule.Schedule<RIn2, E, X>): <RIn, ROut>(
-    self: Layer<RIn, E, ROut>
-  ) => Layer<RIn2 | RIn, E, ROut>
-  <RIn, E, ROut, RIn2, X>(self: Layer<RIn, E, ROut>, schedule: Schedule.Schedule<RIn2, E, X>): Layer<
-    RIn | RIn2,
-    E,
-    ROut
-  >
-}
-```
-
-Added in v1.0.0
-
-# sequencing
-
-## flatMap
-
-Constructs a layer dynamically based on the output of this layer.
-
-**Signature**
-
-```ts
-export declare const flatMap: {
-  <A, R2, E2, A2>(f: (context: Context.Context<A>) => Layer<R2, E2, A2>): <R, E>(
-    self: Layer<R, E, A>
-  ) => Layer<R2 | R, E2 | E, A2>
-  <R, E, A, R2, E2, A2>(self: Layer<R, E, A>, f: (context: Context.Context<A>) => Layer<R2, E2, A2>): Layer<
-    R | R2,
-    E | E2,
-    A2
-  >
-}
-```
-
-Added in v1.0.0
-
-## flatten
-
-Flattens layers nested in the context of an effect.
-
-**Signature**
-
-```ts
-export declare const flatten: {
-  <R2, E2, A>(tag: Context.Tag<Layer<R2, E2, A>>): <R, E>(
-    self: Layer<R, E, Layer<R2, E2, A>>
-  ) => Layer<R2 | R, E2 | E, A>
-  <R, E, A, R2, E2>(self: Layer<R, E, Layer<R2, E2, A>>, tag: Context.Tag<Layer<R2, E2, A>>): Layer<R | R2, E | E2, A>
-}
-```
-
-Added in v1.0.0
-
-## tap
-
-Performs the specified effect if this layer succeeds.
-
-**Signature**
-
-```ts
-export declare const tap: {
-  <ROut, RIn2, E2, X>(f: (context: Context.Context<ROut>) => Effect.Effect<RIn2, E2, X>): <RIn, E>(
-    self: Layer<RIn, E, ROut>
-  ) => Layer<RIn2 | RIn, E2 | E, ROut>
-  <RIn, E, ROut, RIn2, E2, X>(
-    self: Layer<RIn, E, ROut>,
-    f: (context: Context.Context<ROut>) => Effect.Effect<RIn2, E2, X>
-  ): Layer<RIn | RIn2, E | E2, ROut>
-}
-```
-
-Added in v1.0.0
-
-## tapError
-
-Performs the specified effect if this layer fails.
-
-**Signature**
-
-```ts
-export declare const tapError: {
-  <E, RIn2, E2, X>(f: (e: E) => Effect.Effect<RIn2, E2, X>): <RIn, ROut>(
-    self: Layer<RIn, E, ROut>
-  ) => Layer<RIn2 | RIn, E | E2, ROut>
-  <RIn, E, ROut, RIn2, E2, X>(self: Layer<RIn, E, ROut>, f: (e: E) => Effect.Effect<RIn2, E2, X>): Layer<
-    RIn | RIn2,
-    E | E2,
-    ROut
-  >
-}
-```
-
-Added in v1.0.0
-
-## tapErrorCause
-
-Performs the specified effect if this layer fails.
-
-**Signature**
-
-```ts
-export declare const tapErrorCause: {
-  <E, RIn2, E2, X>(f: (cause: Cause.Cause<E>) => Effect.Effect<RIn2, E2, X>): <RIn, ROut>(
-    self: Layer<RIn, E, ROut>
-  ) => Layer<RIn2 | RIn, E | E2, ROut>
-  <RIn, E, ROut, RIn2, E2, X>(
-    self: Layer<RIn, E, ROut>,
-    f: (cause: Cause.Cause<E>) => Effect.Effect<RIn2, E2, X>
-  ): Layer<RIn | RIn2, E | E2, ROut>
-}
-```
-
-Added in v1.0.0
-
-# symbols
-
-## LayerTypeId
-
-**Signature**
-
-```ts
-export declare const LayerTypeId: typeof LayerTypeId
-```
-
-Added in v1.0.0
-
-## LayerTypeId (type alias)
-
-**Signature**
-
-```ts
-export type LayerTypeId = typeof LayerTypeId
 ```
 
 Added in v1.0.0

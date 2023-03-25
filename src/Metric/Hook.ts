@@ -123,7 +123,7 @@ export const summary: (key: MetricKey.MetricKey.Summary) => MetricHook.Summary =
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const onUpdate: {
   <In, Out>(f: (input: In) => void): (self: MetricHook<In, Out>) => MetricHook<In, Out>

@@ -145,7 +145,7 @@ export const get: <A>(self: FiberRef<A>) => Effect.Effect<never, never, A> = cor
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const getAndSet: {
   <A>(value: A): (self: FiberRef<A>) => Effect.Effect<never, never, A>
@@ -154,7 +154,7 @@ export const getAndSet: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const getAndUpdate: {
   <A>(f: (a: A) => A): (self: FiberRef<A>) => Effect.Effect<never, never, A>
@@ -163,7 +163,7 @@ export const getAndUpdate: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const getAndUpdateSome: {
   <A>(pf: (a: A) => Option.Option<A>): (self: FiberRef<A>) => Effect.Effect<never, never, A>
@@ -172,7 +172,7 @@ export const getAndUpdateSome: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const getWith: {
   <A, R, E, B>(f: (a: A) => Effect.Effect<R, E, B>): (self: FiberRef<A>) => Effect.Effect<R, E, B>
@@ -181,7 +181,7 @@ export const getWith: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const set: {
   <A>(value: A): (self: FiberRef<A>) => Effect.Effect<never, never, void>
@@ -193,20 +193,20 @@ const _delete: <A>(self: FiberRef<A>) => Effect.Effect<never, never, void> = cor
 export {
   /**
    * @since 1.0.0
-   * @category mutations
+   * @category utils
    */
   _delete as delete
 }
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const reset: <A>(self: FiberRef<A>) => Effect.Effect<never, never, void> = core.fiberRefReset
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const modify: {
   <A, B>(f: (a: A) => readonly [B, A]): (self: FiberRef<A>) => Effect.Effect<never, never, B>
@@ -215,7 +215,7 @@ export const modify: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const modifySome: <A, B>(
   self: FiberRef<A>,
@@ -225,7 +225,7 @@ export const modifySome: <A, B>(
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const update: {
   <A>(f: (a: A) => A): (self: FiberRef<A>) => Effect.Effect<never, never, void>
@@ -234,7 +234,7 @@ export const update: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const updateSome: {
   <A>(pf: (a: A) => Option.Option<A>): (self: FiberRef<A>) => Effect.Effect<never, never, void>
@@ -243,7 +243,7 @@ export const updateSome: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const updateAndGet: {
   <A>(f: (a: A) => A): (self: FiberRef<A>) => Effect.Effect<never, never, A>
@@ -252,7 +252,7 @@ export const updateAndGet: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const updateSomeAndGet: {
   <A>(pf: (a: A) => Option.Option<A>): (self: FiberRef<A>) => Effect.Effect<never, never, A>
@@ -261,7 +261,7 @@ export const updateSomeAndGet: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const locally: {
   <A>(self: FiberRef<A>, value: A): <R, E, B>(use: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>
@@ -270,7 +270,7 @@ export const locally: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const locallyWith: {
   <A>(self: FiberRef<A>, f: (a: A) => A): <R, E, B>(use: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>
@@ -279,7 +279,7 @@ export const locallyWith: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const locallyScoped: {
   <A>(value: A): (self: FiberRef<A>) => Effect.Effect<Scope.Scope, never, void>
@@ -288,7 +288,7 @@ export const locallyScoped: {
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const locallyScopedWith: {
   <A>(f: (a: A) => A): (self: FiberRef<A>) => Effect.Effect<Scope.Scope, never, void>
@@ -300,6 +300,12 @@ export const locallyScopedWith: {
  * @category fiberRefs
  */
 export const currentContext: FiberRef<Context.Context<never>> = core.currentContext
+
+/**
+ * @since 1.0.0
+ * @category fiberRefs
+ */
+export const currentReportUnhandled: FiberRef<{ readonly enabled: boolean }> = core.currentReportUnhandled
 
 /**
  * @since 1.0.0

@@ -11,6 +11,7 @@ import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import * as Fiber from "@effect/io/Fiber"
 import * as FiberId from "@effect/io/Fiber/Id"
+import * as TestClock from "@effect/io/internal_effect_untraced/testing/testClock"
 import * as Ref from "@effect/io/Ref"
 import * as it from "@effect/io/test/utils/extend"
 import { withLatch, withLatchAwait } from "@effect/io/test/utils/latch"
@@ -43,31 +44,33 @@ describe.concurrent("Effect", () => {
       const result = yield* $(Fiber.interrupt(fiber))
       assert.isTrue(Exit.isFailure(result) && Cause.isInterruptedOnly(result.i0))
     }))
-  it.it("acquireUseRelease - acquire is uninterruptible", async () => {
-    const awaiter = Deferred.unsafeMake<never, void>(FiberId.none)
-    const program = Effect.gen(function*($) {
-      const deferred = yield* $(Deferred.make<never, void>())
-      const fiber = yield* $(
-        pipe(
-          Effect.acquireUseRelease(
-            pipe(Deferred.succeed(deferred, void 0), Effect.zipLeft(Deferred.await(awaiter))),
-            () => Effect.unit(),
-            () => Effect.unit()
-          ),
-          Effect.forkDaemon
+  it.effect("acquireUseRelease - acquire is uninterruptible", () =>
+    Effect.gen(function*($) {
+      const awaiter = Deferred.unsafeMake<never, void>(FiberId.none)
+      const program = Effect.gen(function*($) {
+        const deferred = yield* $(Deferred.make<never, void>())
+        const fiber = yield* $(
+          pipe(
+            Effect.acquireUseRelease(
+              pipe(Deferred.succeed(deferred, void 0), Effect.zipLeft(Deferred.await(awaiter))),
+              () => Effect.unit(),
+              () => Effect.unit()
+            ),
+            Effect.forkDaemon
+          )
         )
-      )
-      return yield* $(
-        pipe(
-          Deferred.await(deferred),
-          Effect.zipRight(pipe(Fiber.interrupt(fiber), Effect.timeoutTo(42, () => 0, Duration.seconds(1))))
+        return yield* $(
+          pipe(
+            Deferred.await(deferred),
+            Effect.zipRight(pipe(Fiber.interrupt(fiber), Effect.timeoutTo(42, () => 0, Duration.millis(500)))),
+            Effect.zipParLeft(TestClock.adjust(Duration.seconds(1)))
+          )
         )
-      )
-    })
-    const result = await Effect.runPromise(program)
-    await Effect.runPromise(Deferred.succeed(awaiter, void 0))
-    assert.strictEqual(result, 42)
-  })
+      })
+      const result = yield* $(program)
+      yield* $(Deferred.succeed(awaiter, void 0))
+      assert.strictEqual(result, 42)
+    }))
   it.effect("acquireUseRelease - use is interruptible", () =>
     Effect.gen(function*($) {
       const fiber = yield* $(

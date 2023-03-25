@@ -77,7 +77,17 @@ Added in v1.0.0
   - [Schedule (interface)](#schedule-interface)
 - [models](#models)
   - [ScheduleDriver (interface)](#scheduledriver-interface)
-- [mutations](#mutations)
+- [sequencing](#sequencing)
+  - [andThen](#andthen)
+  - [andThenEither](#andtheneither)
+  - [tapInput](#tapinput)
+  - [tapOutput](#tapoutput)
+- [symbols](#symbols)
+  - [ScheduleDriverTypeId](#scheduledrivertypeid)
+  - [ScheduleDriverTypeId (type alias)](#scheduledrivertypeid-type-alias)
+  - [ScheduleTypeId](#scheduletypeid)
+  - [ScheduleTypeId (type alias)](#scheduletypeid-type-alias)
+- [utils](#utils)
   - [addDelay](#adddelay)
   - [addDelayEffect](#adddelayeffect)
   - [bothInOut](#bothinout)
@@ -122,16 +132,6 @@ Added in v1.0.0
   - [whileInputEffect](#whileinputeffect)
   - [whileOutput](#whileoutput)
   - [whileOutputEffect](#whileoutputeffect)
-- [sequencing](#sequencing)
-  - [andThen](#andthen)
-  - [andThenEither](#andtheneither)
-  - [tapInput](#tapinput)
-  - [tapOutput](#tapoutput)
-- [symbols](#symbols)
-  - [ScheduleDriverTypeId](#scheduledrivertypeid)
-  - [ScheduleDriverTypeId (type alias)](#scheduledrivertypeid-type-alias)
-  - [ScheduleTypeId](#scheduletypeid)
-  - [ScheduleTypeId (type alias)](#scheduletypeid-type-alias)
 - [zipping](#zipping)
   - [zipLeft](#zipleft)
   - [zipRight](#zipright)
@@ -1102,7 +1102,137 @@ export interface ScheduleDriver<Env, In, Out> extends Schedule.DriverVariance<En
 
 Added in v1.0.0
 
-# mutations
+# sequencing
+
+## andThen
+
+The same as `andThenEither`, but merges the output.
+
+**Signature**
+
+```ts
+export declare const andThen: {
+  <Env1, In1, Out2>(that: Schedule<Env1, In1, Out2>): <Env, In, Out>(
+    self: Schedule<Env, In, Out>
+  ) => Schedule<Env1 | Env, In & In1, Out2 | Out>
+  <Env, In, Out, Env1, In1, Out2>(self: Schedule<Env, In, Out>, that: Schedule<Env1, In1, Out2>): Schedule<
+    Env | Env1,
+    In & In1,
+    Out | Out2
+  >
+}
+```
+
+Added in v1.0.0
+
+## andThenEither
+
+Returns a new schedule that first executes this schedule to completion, and
+then executes the specified schedule to completion.
+
+**Signature**
+
+```ts
+export declare const andThenEither: {
+  <Env2, In2, Out2>(that: Schedule<Env2, In2, Out2>): <Env, In, Out>(
+    self: Schedule<Env, In, Out>
+  ) => Schedule<Env2 | Env, In & In2, Either.Either<Out, Out2>>
+  <Env, In, Out, Env2, In2, Out2>(self: Schedule<Env, In, Out>, that: Schedule<Env2, In2, Out2>): Schedule<
+    Env | Env2,
+    In & In2,
+    Either.Either<Out, Out2>
+  >
+}
+```
+
+Added in v1.0.0
+
+## tapInput
+
+Returns a new schedule that effectfully processes every input to this
+schedule.
+
+**Signature**
+
+```ts
+export declare const tapInput: {
+  <Env2, In2, X>(f: (input: In2) => Effect.Effect<Env2, never, X>): <Env, In, Out>(
+    self: Schedule<Env, In, Out>
+  ) => Schedule<Env2 | Env, In & In2, Out>
+  <Env, In, Out, Env2, In2, X>(
+    self: Schedule<Env, In, Out>,
+    f: (input: In2) => Effect.Effect<Env2, never, X>
+  ): Schedule<Env | Env2, In & In2, Out>
+}
+```
+
+Added in v1.0.0
+
+## tapOutput
+
+Returns a new schedule that effectfully processes every output from this
+schedule.
+
+**Signature**
+
+```ts
+export declare const tapOutput: {
+  <Out, Env2, X>(f: (out: Out) => Effect.Effect<Env2, never, X>): <Env, In>(
+    self: Schedule<Env, In, Out>
+  ) => Schedule<Env2 | Env, In, Out>
+  <Env, In, Out, Env2, X>(self: Schedule<Env, In, Out>, f: (out: Out) => Effect.Effect<Env2, never, X>): Schedule<
+    Env | Env2,
+    In,
+    Out
+  >
+}
+```
+
+Added in v1.0.0
+
+# symbols
+
+## ScheduleDriverTypeId
+
+**Signature**
+
+```ts
+export declare const ScheduleDriverTypeId: typeof ScheduleDriverTypeId
+```
+
+Added in v1.0.0
+
+## ScheduleDriverTypeId (type alias)
+
+**Signature**
+
+```ts
+export type ScheduleDriverTypeId = typeof ScheduleDriverTypeId
+```
+
+Added in v1.0.0
+
+## ScheduleTypeId
+
+**Signature**
+
+```ts
+export declare const ScheduleTypeId: typeof ScheduleTypeId
+```
+
+Added in v1.0.0
+
+## ScheduleTypeId (type alias)
+
+**Signature**
+
+```ts
+export type ScheduleTypeId = typeof ScheduleTypeId
+```
+
+Added in v1.0.0
+
+# utils
 
 ## addDelay
 
@@ -1885,136 +2015,6 @@ export declare const whileOutputEffect: {
     Out
   >
 }
-```
-
-Added in v1.0.0
-
-# sequencing
-
-## andThen
-
-The same as `andThenEither`, but merges the output.
-
-**Signature**
-
-```ts
-export declare const andThen: {
-  <Env1, In1, Out2>(that: Schedule<Env1, In1, Out2>): <Env, In, Out>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Env1 | Env, In & In1, Out2 | Out>
-  <Env, In, Out, Env1, In1, Out2>(self: Schedule<Env, In, Out>, that: Schedule<Env1, In1, Out2>): Schedule<
-    Env | Env1,
-    In & In1,
-    Out | Out2
-  >
-}
-```
-
-Added in v1.0.0
-
-## andThenEither
-
-Returns a new schedule that first executes this schedule to completion, and
-then executes the specified schedule to completion.
-
-**Signature**
-
-```ts
-export declare const andThenEither: {
-  <Env2, In2, Out2>(that: Schedule<Env2, In2, Out2>): <Env, In, Out>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Env2 | Env, In & In2, Either.Either<Out, Out2>>
-  <Env, In, Out, Env2, In2, Out2>(self: Schedule<Env, In, Out>, that: Schedule<Env2, In2, Out2>): Schedule<
-    Env | Env2,
-    In & In2,
-    Either.Either<Out, Out2>
-  >
-}
-```
-
-Added in v1.0.0
-
-## tapInput
-
-Returns a new schedule that effectfully processes every input to this
-schedule.
-
-**Signature**
-
-```ts
-export declare const tapInput: {
-  <Env2, In2, X>(f: (input: In2) => Effect.Effect<Env2, never, X>): <Env, In, Out>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Env2 | Env, In & In2, Out>
-  <Env, In, Out, Env2, In2, X>(
-    self: Schedule<Env, In, Out>,
-    f: (input: In2) => Effect.Effect<Env2, never, X>
-  ): Schedule<Env | Env2, In & In2, Out>
-}
-```
-
-Added in v1.0.0
-
-## tapOutput
-
-Returns a new schedule that effectfully processes every output from this
-schedule.
-
-**Signature**
-
-```ts
-export declare const tapOutput: {
-  <Out, Env2, X>(f: (out: Out) => Effect.Effect<Env2, never, X>): <Env, In>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Env2 | Env, In, Out>
-  <Env, In, Out, Env2, X>(self: Schedule<Env, In, Out>, f: (out: Out) => Effect.Effect<Env2, never, X>): Schedule<
-    Env | Env2,
-    In,
-    Out
-  >
-}
-```
-
-Added in v1.0.0
-
-# symbols
-
-## ScheduleDriverTypeId
-
-**Signature**
-
-```ts
-export declare const ScheduleDriverTypeId: typeof ScheduleDriverTypeId
-```
-
-Added in v1.0.0
-
-## ScheduleDriverTypeId (type alias)
-
-**Signature**
-
-```ts
-export type ScheduleDriverTypeId = typeof ScheduleDriverTypeId
-```
-
-Added in v1.0.0
-
-## ScheduleTypeId
-
-**Signature**
-
-```ts
-export declare const ScheduleTypeId: typeof ScheduleTypeId
-```
-
-Added in v1.0.0
-
-## ScheduleTypeId (type alias)
-
-**Signature**
-
-```ts
-export type ScheduleTypeId = typeof ScheduleTypeId
 ```
 
 Added in v1.0.0

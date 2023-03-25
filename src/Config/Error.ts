@@ -240,7 +240,7 @@ export const isUnsupported: (self: ConfigError) => self is Unsupported = interna
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const prefixed: {
   (prefix: Chunk.Chunk<string>): (self: ConfigError) => ConfigError

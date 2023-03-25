@@ -22,16 +22,16 @@ Added in v1.0.0
 - [models](#models)
   - [CloseableScope (interface)](#closeablescope-interface)
   - [Scope (interface)](#scope-interface)
-- [mutations](#mutations)
-  - [addFinalizer](#addfinalizer)
-  - [addFinalizerExit](#addfinalizerexit)
-  - [extend](#extend)
-  - [fork](#fork)
 - [symbols](#symbols)
   - [CloseableScopeTypeId](#closeablescopetypeid)
   - [CloseableScopeTypeId (type alias)](#closeablescopetypeid-type-alias)
   - [ScopeTypeId](#scopetypeid)
   - [ScopeTypeId (type alias)](#scopetypeid-type-alias)
+- [utils](#utils)
+  - [addFinalizer](#addfinalizer)
+  - [addFinalizerExit](#addfinalizerexit)
+  - [extend](#extend)
+  - [fork](#fork)
 
 ---
 
@@ -145,7 +145,49 @@ export interface Scope {
 
 Added in v1.0.0
 
-# mutations
+# symbols
+
+## CloseableScopeTypeId
+
+**Signature**
+
+```ts
+export declare const CloseableScopeTypeId: typeof CloseableScopeTypeId
+```
+
+Added in v1.0.0
+
+## CloseableScopeTypeId (type alias)
+
+**Signature**
+
+```ts
+export type CloseableScopeTypeId = typeof CloseableScopeTypeId
+```
+
+Added in v1.0.0
+
+## ScopeTypeId
+
+**Signature**
+
+```ts
+export declare const ScopeTypeId: typeof ScopeTypeId
+```
+
+Added in v1.0.0
+
+## ScopeTypeId (type alias)
+
+**Signature**
+
+```ts
+export type ScopeTypeId = typeof ScopeTypeId
+```
+
+Added in v1.0.0
+
+# utils
 
 ## addFinalizer
 
@@ -206,48 +248,6 @@ export declare const fork: (
   self: Scope,
   strategy: ExecutionStrategy.ExecutionStrategy
 ) => Effect.Effect<never, never, CloseableScope>
-```
-
-Added in v1.0.0
-
-# symbols
-
-## CloseableScopeTypeId
-
-**Signature**
-
-```ts
-export declare const CloseableScopeTypeId: typeof CloseableScopeTypeId
-```
-
-Added in v1.0.0
-
-## CloseableScopeTypeId (type alias)
-
-**Signature**
-
-```ts
-export type CloseableScopeTypeId = typeof CloseableScopeTypeId
-```
-
-Added in v1.0.0
-
-## ScopeTypeId
-
-**Signature**
-
-```ts
-export declare const ScopeTypeId: typeof ScopeTypeId
-```
-
-Added in v1.0.0
-
-## ScopeTypeId (type alias)
-
-**Signature**
-
-```ts
-export type ScopeTypeId = typeof ScopeTypeId
 ```
 
 Added in v1.0.0

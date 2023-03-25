@@ -21,7 +21,13 @@ Added in v1.0.0
   - [poll](#poll)
 - [models](#models)
   - [Deferred (interface)](#deferred-interface)
-- [mutations](#mutations)
+- [symbols](#symbols)
+  - [DeferredTypeId](#deferredtypeid)
+  - [DeferredTypeId (type alias)](#deferredtypeid-type-alias)
+- [unsafe](#unsafe)
+  - [unsafeDone](#unsafedone)
+  - [unsafeMake](#unsafemake)
+- [utils](#utils)
   - [complete](#complete)
   - [completeWith](#completewith)
   - [die](#die)
@@ -35,12 +41,6 @@ Added in v1.0.0
   - [interruptWith](#interruptwith)
   - [succeed](#succeed)
   - [sync](#sync)
-- [symbols](#symbols)
-  - [DeferredTypeId](#deferredtypeid)
-  - [DeferredTypeId (type alias)](#deferredtypeid-type-alias)
-- [unsafe](#unsafe)
-  - [unsafeDone](#unsafedone)
-  - [unsafeMake](#unsafemake)
 
 ---
 
@@ -138,7 +138,56 @@ export interface Deferred<E, A> extends Deferred.Variance<E, A> {
 
 Added in v1.0.0
 
-# mutations
+# symbols
+
+## DeferredTypeId
+
+**Signature**
+
+```ts
+export declare const DeferredTypeId: typeof DeferredTypeId
+```
+
+Added in v1.0.0
+
+## DeferredTypeId (type alias)
+
+**Signature**
+
+```ts
+export type DeferredTypeId = typeof DeferredTypeId
+```
+
+Added in v1.0.0
+
+# unsafe
+
+## unsafeDone
+
+Unsafely exits the `Deferred` with the specified `Exit` value, which will be
+propagated to all fibers waiting on the value of the `Deferred`.
+
+**Signature**
+
+```ts
+export declare const unsafeDone: <E, A>(self: Deferred<E, A>, effect: Effect.Effect<never, E, A>) => void
+```
+
+Added in v1.0.0
+
+## unsafeMake
+
+Unsafely creates a new `Deferred` from the specified `FiberId`.
+
+**Signature**
+
+```ts
+export declare const unsafeMake: <E, A>(fiberId: FiberId.FiberId) => Deferred<E, A>
+```
+
+Added in v1.0.0
+
+# utils
 
 ## complete
 
@@ -343,55 +392,6 @@ export declare const sync: {
   <A>(evaluate: LazyArg<A>): <E>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
   <E, A>(self: Deferred<E, A>, evaluate: LazyArg<A>): Effect.Effect<never, never, boolean>
 }
-```
-
-Added in v1.0.0
-
-# symbols
-
-## DeferredTypeId
-
-**Signature**
-
-```ts
-export declare const DeferredTypeId: typeof DeferredTypeId
-```
-
-Added in v1.0.0
-
-## DeferredTypeId (type alias)
-
-**Signature**
-
-```ts
-export type DeferredTypeId = typeof DeferredTypeId
-```
-
-Added in v1.0.0
-
-# unsafe
-
-## unsafeDone
-
-Unsafely exits the `Deferred` with the specified `Exit` value, which will be
-propagated to all fibers waiting on the value of the `Deferred`.
-
-**Signature**
-
-```ts
-export declare const unsafeDone: <E, A>(self: Deferred<E, A>, effect: Effect.Effect<never, E, A>) => void
-```
-
-Added in v1.0.0
-
-## unsafeMake
-
-Unsafely creates a new `Deferred` from the specified `FiberId`.
-
-**Signature**
-
-```ts
-export declare const unsafeMake: <E, A>(fiberId: FiberId.FiberId) => Deferred<E, A>
 ```
 
 Added in v1.0.0

@@ -96,7 +96,7 @@ export {
  * that if you do not need to memoize the result of the specified effect.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const complete: {
   <E, A>(effect: Effect.Effect<never, E, A>): (self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
@@ -108,7 +108,7 @@ export const complete: {
  * deferred has already been completed, the method will produce false.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const completeWith: {
   <E, A>(effect: Effect.Effect<never, E, A>): (self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
@@ -120,7 +120,7 @@ export const completeWith: {
  * propagated to all fibers waiting on the value of the `Deferred`.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const done: {
   <E, A>(exit: Exit.Exit<E, A>): (self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
@@ -132,7 +132,7 @@ export const done: {
  * all fibers waiting on the value of the `Deferred`.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const fail: {
   <E>(error: E): <A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
@@ -144,7 +144,7 @@ export const fail: {
  * all fibers waiting on the value of the `Deferred`.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const failSync: {
   <E>(evaluate: LazyArg<E>): <A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
@@ -156,7 +156,7 @@ export const failSync: {
  * all fibers waiting on the value of the `Deferred`.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const failCause: {
   <E>(cause: Cause.Cause<E>): <A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
@@ -168,7 +168,7 @@ export const failCause: {
  * all fibers waiting on the value of the `Deferred`.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const failCauseSync: {
   <E>(evaluate: LazyArg<Cause.Cause<E>>): <A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
@@ -180,7 +180,7 @@ export const failCauseSync: {
  * all fibers waiting on the value of the `Deferred`.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const die: {
   (defect: unknown): <E, A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
@@ -192,7 +192,7 @@ export const die: {
  * all fibers waiting on the value of the `Deferred`.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const dieSync: {
   (evaluate: LazyArg<unknown>): <E, A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
@@ -205,7 +205,7 @@ export const dieSync: {
  * calling this method.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const interrupt: <E, A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean> = core.deferredInterrupt
 
@@ -214,7 +214,7 @@ export const interrupt: <E, A>(self: Deferred<E, A>) => Effect.Effect<never, nev
  * waiting on the value of the `Deferred` with the specified `FiberId`.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const interruptWith: {
   (fiberId: FiberId.FiberId): <E, A>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
@@ -245,7 +245,7 @@ export const poll: <E, A>(
  * Completes the `Deferred` with the specified value.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const succeed: {
   <A>(value: A): <E>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean>
@@ -256,7 +256,7 @@ export const succeed: {
  * Completes the `Deferred` with the specified lazily evaluated value.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const sync: {
   <A>(evaluate: LazyArg<A>): <E>(self: Deferred<E, A>) => Effect.Effect<never, never, boolean>

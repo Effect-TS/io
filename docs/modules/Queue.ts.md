@@ -29,17 +29,6 @@ Added in v1.0.0
   - [Enqueue (interface)](#enqueue-interface)
   - [Queue (interface)](#queue-interface)
   - [Strategy (interface)](#strategy-interface)
-- [mutations](#mutations)
-  - [awaitShutdown](#awaitshutdown)
-  - [offer](#offer)
-  - [offerAll](#offerall)
-  - [poll](#poll)
-  - [shutdown](#shutdown)
-  - [take](#take)
-  - [takeAll](#takeall)
-  - [takeBetween](#takebetween)
-  - [takeN](#taken)
-  - [takeUpTo](#takeupto)
 - [refinements](#refinements)
   - [isDequeue](#isdequeue)
   - [isEnqueue](#isenqueue)
@@ -55,6 +44,17 @@ Added in v1.0.0
   - [EnqueueTypeId (type alias)](#enqueuetypeid-type-alias)
   - [QueueStrategyTypeId](#queuestrategytypeid)
   - [QueueStrategyTypeId (type alias)](#queuestrategytypeid-type-alias)
+- [utils](#utils)
+  - [awaitShutdown](#awaitshutdown)
+  - [offer](#offer)
+  - [offerAll](#offerall)
+  - [poll](#poll)
+  - [shutdown](#shutdown)
+  - [take](#take)
+  - [takeAll](#takeall)
+  - [takeBetween](#takebetween)
+  - [takeN](#taken)
+  - [takeUpTo](#takeupto)
 
 ---
 
@@ -378,7 +378,139 @@ export interface Strategy<A> extends Queue.StrategyVariance<A> {
 
 Added in v1.0.0
 
-# mutations
+# refinements
+
+## isDequeue
+
+Returns `true` if the specified value is a `Dequeue`, `false` otherwise.
+
+**Signature**
+
+```ts
+export declare const isDequeue: (u: unknown) => u is Dequeue<unknown>
+```
+
+Added in v1.0.0
+
+## isEnqueue
+
+Returns `true` if the specified value is a `Enqueue`, `false` otherwise.
+
+**Signature**
+
+```ts
+export declare const isEnqueue: (u: unknown) => u is Enqueue<unknown>
+```
+
+Added in v1.0.0
+
+## isQueue
+
+Returns `true` if the specified value is a `Queue`, `false` otherwise.
+
+**Signature**
+
+```ts
+export declare const isQueue: (u: unknown) => u is Queue<unknown>
+```
+
+Added in v1.0.0
+
+# strategies
+
+## backPressureStrategy
+
+**Signature**
+
+```ts
+export declare const backPressureStrategy: <A>() => Strategy<A>
+```
+
+Added in v1.0.0
+
+## droppingStrategy
+
+**Signature**
+
+```ts
+export declare const droppingStrategy: <A>() => Strategy<A>
+```
+
+Added in v1.0.0
+
+## slidingStrategy
+
+**Signature**
+
+```ts
+export declare const slidingStrategy: <A>() => Strategy<A>
+```
+
+Added in v1.0.0
+
+# symbols
+
+## DequeueTypeId
+
+**Signature**
+
+```ts
+export declare const DequeueTypeId: typeof DequeueTypeId
+```
+
+Added in v1.0.0
+
+## DequeueTypeId (type alias)
+
+**Signature**
+
+```ts
+export type DequeueTypeId = typeof DequeueTypeId
+```
+
+Added in v1.0.0
+
+## EnqueueTypeId
+
+**Signature**
+
+```ts
+export declare const EnqueueTypeId: typeof EnqueueTypeId
+```
+
+Added in v1.0.0
+
+## EnqueueTypeId (type alias)
+
+**Signature**
+
+```ts
+export type EnqueueTypeId = typeof EnqueueTypeId
+```
+
+Added in v1.0.0
+
+## QueueStrategyTypeId
+
+**Signature**
+
+```ts
+export declare const QueueStrategyTypeId: typeof QueueStrategyTypeId
+```
+
+Added in v1.0.0
+
+## QueueStrategyTypeId (type alias)
+
+**Signature**
+
+```ts
+export type QueueStrategyTypeId = typeof QueueStrategyTypeId
+```
+
+Added in v1.0.0
+
+# utils
 
 ## awaitShutdown
 
@@ -533,138 +665,6 @@ export declare const takeUpTo: {
   (max: number): <A>(self: Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>>
   <A>(self: Dequeue<A>, max: number): Effect.Effect<never, never, Chunk.Chunk<A>>
 }
-```
-
-Added in v1.0.0
-
-# refinements
-
-## isDequeue
-
-Returns `true` if the specified value is a `Dequeue`, `false` otherwise.
-
-**Signature**
-
-```ts
-export declare const isDequeue: (u: unknown) => u is Dequeue<unknown>
-```
-
-Added in v1.0.0
-
-## isEnqueue
-
-Returns `true` if the specified value is a `Enqueue`, `false` otherwise.
-
-**Signature**
-
-```ts
-export declare const isEnqueue: (u: unknown) => u is Enqueue<unknown>
-```
-
-Added in v1.0.0
-
-## isQueue
-
-Returns `true` if the specified value is a `Queue`, `false` otherwise.
-
-**Signature**
-
-```ts
-export declare const isQueue: (u: unknown) => u is Queue<unknown>
-```
-
-Added in v1.0.0
-
-# strategies
-
-## backPressureStrategy
-
-**Signature**
-
-```ts
-export declare const backPressureStrategy: <A>() => Strategy<A>
-```
-
-Added in v1.0.0
-
-## droppingStrategy
-
-**Signature**
-
-```ts
-export declare const droppingStrategy: <A>() => Strategy<A>
-```
-
-Added in v1.0.0
-
-## slidingStrategy
-
-**Signature**
-
-```ts
-export declare const slidingStrategy: <A>() => Strategy<A>
-```
-
-Added in v1.0.0
-
-# symbols
-
-## DequeueTypeId
-
-**Signature**
-
-```ts
-export declare const DequeueTypeId: typeof DequeueTypeId
-```
-
-Added in v1.0.0
-
-## DequeueTypeId (type alias)
-
-**Signature**
-
-```ts
-export type DequeueTypeId = typeof DequeueTypeId
-```
-
-Added in v1.0.0
-
-## EnqueueTypeId
-
-**Signature**
-
-```ts
-export declare const EnqueueTypeId: typeof EnqueueTypeId
-```
-
-Added in v1.0.0
-
-## EnqueueTypeId (type alias)
-
-**Signature**
-
-```ts
-export type EnqueueTypeId = typeof EnqueueTypeId
-```
-
-Added in v1.0.0
-
-## QueueStrategyTypeId
-
-**Signature**
-
-```ts
-export declare const QueueStrategyTypeId: typeof QueueStrategyTypeId
-```
-
-Added in v1.0.0
-
-## QueueStrategyTypeId (type alias)
-
-**Signature**
-
-```ts
-export type QueueStrategyTypeId = typeof QueueStrategyTypeId
 ```
 
 Added in v1.0.0

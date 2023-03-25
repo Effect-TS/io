@@ -156,7 +156,7 @@ export const None: LogLevel = core.logLevelNone
  * to the previous `LogLevel` after the `Effect` workflow completes.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const locally: {
   (self: LogLevel): <R, E, B>(use: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>

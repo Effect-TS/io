@@ -186,7 +186,7 @@ export const constantCase: (self: ConfigProvider) => ConfigProvider = internal.c
  * another.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const contramapPath: {
   (f: (path: string) => string): (self: ConfigProvider) => ConfigProvider
@@ -222,7 +222,7 @@ export const lowerCase: (self: ConfigProvider) => ConfigProvider = internal.lowe
  * single configuration value.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const nested: {
   (name: string): (self: ConfigProvider) => ConfigProvider
@@ -235,7 +235,7 @@ export const nested: {
  * if there are any issues loading the configuration from this provider.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const orElse: {
   (that: LazyArg<ConfigProvider>): (self: ConfigProvider) => ConfigProvider
@@ -249,7 +249,7 @@ export const orElse: {
  * single configuration value.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const unnested: {
   (name: string): (self: ConfigProvider) => ConfigProvider

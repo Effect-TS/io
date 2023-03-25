@@ -25,7 +25,7 @@ Added in v1.0.0
   - [size](#size)
 - [models](#models)
   - [Hub (interface)](#hub-interface)
-- [mutations](#mutations)
+- [utils](#utils)
   - [awaitShutdown](#awaitshutdown)
   - [publish](#publish)
   - [publishAll](#publishall)
@@ -194,7 +194,7 @@ export interface Hub<A> extends Queue.Enqueue<A> {
 
 Added in v1.0.0
 
-# mutations
+# utils
 
 ## awaitShutdown
 

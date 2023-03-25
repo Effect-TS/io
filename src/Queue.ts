@@ -387,7 +387,7 @@ export const isShutdown: <A>(self: Dequeue<A> | Enqueue<A>) => Effect.Effect<nev
  * shutdown, the `Effect` will resume right away.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const awaitShutdown: <A>(self: Dequeue<A> | Enqueue<A>) => Effect.Effect<never, never, void> =
   internal.awaitShutdown
@@ -397,7 +397,7 @@ export const awaitShutdown: <A>(self: Dequeue<A> | Enqueue<A>) => Effect.Effect<
  * to `offer*` and `take*` will be interrupted immediately.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const shutdown: <A>(self: Dequeue<A> | Enqueue<A>) => Effect.Effect<never, never, void> = internal.shutdown
 
@@ -405,7 +405,7 @@ export const shutdown: <A>(self: Dequeue<A> | Enqueue<A>) => Effect.Effect<never
  * Places one value in the queue.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const offer: {
   <A>(value: A): (self: Enqueue<A>) => Effect.Effect<never, never, boolean>
@@ -428,7 +428,7 @@ export const offer: {
  * queue but if there is no room it will not enqueue them and return false.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const offerAll: {
   <A>(iterable: Iterable<A>): (self: Enqueue<A>) => (self: Enqueue<A>) => Effect.Effect<never, never, boolean>
@@ -440,7 +440,7 @@ export const offerAll: {
  * is empty.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const poll: <A>(self: Dequeue<A>) => Effect.Effect<never, never, Option.Option<A>> = internal.poll
 
@@ -449,7 +449,7 @@ export const poll: <A>(self: Dequeue<A>) => Effect.Effect<never, never, Option.O
  * a computation that resumes when an item has been added to the queue.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const take: <A>(self: Dequeue<A>) => Effect.Effect<never, never, A> = internal.take
 
@@ -458,7 +458,7 @@ export const take: <A>(self: Dequeue<A>) => Effect.Effect<never, never, A> = int
  * empty returns an empty collection.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const takeAll: <A>(self: Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>> = internal.takeAll
 
@@ -466,7 +466,7 @@ export const takeAll: <A>(self: Dequeue<A>) => Effect.Effect<never, never, Chunk
  * Takes up to max number of values from the queue.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const takeUpTo: {
   (max: number): <A>(self: Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>>
@@ -479,7 +479,7 @@ export const takeUpTo: {
  * suspends until at least the minimum number of elements have been collected.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const takeBetween: {
   (min: number, max: number): <A>(self: Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>>
@@ -492,7 +492,7 @@ export const takeBetween: {
  * become available.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const takeN: {
   (n: number): <A>(self: Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>>

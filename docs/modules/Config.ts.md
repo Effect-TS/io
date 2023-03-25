@@ -32,7 +32,14 @@ Added in v1.0.0
   - [unwrap](#unwrap)
 - [models](#models)
   - [Config (interface)](#config-interface)
-- [mutations](#mutations)
+- [refinements](#refinements)
+  - [isConfig](#isconfig)
+- [symbols](#symbols)
+  - [ConfigTypeId](#configtypeid)
+  - [ConfigTypeId (type alias)](#configtypeid-type-alias)
+- [utils](#utils)
+  - [NonEmptyArrayConfig (type alias)](#nonemptyarrayconfig-type-alias)
+  - [TupleConfig (type alias)](#tupleconfig-type-alias)
   - [map](#map)
   - [mapAttempt](#mapattempt)
   - [mapOrFail](#maporfail)
@@ -46,14 +53,6 @@ Added in v1.0.0
   - [withDescription](#withdescription)
   - [zip](#zip)
   - [zipWith](#zipwith)
-- [refinements](#refinements)
-  - [isConfig](#isconfig)
-- [symbols](#symbols)
-  - [ConfigTypeId](#configtypeid)
-  - [ConfigTypeId (type alias)](#configtypeid-type-alias)
-- [utils](#utils)
-  - [NonEmptyArrayConfig (type alias)](#nonemptyarrayconfig-type-alias)
-  - [TupleConfig (type alias)](#tupleconfig-type-alias)
 
 ---
 
@@ -303,7 +302,71 @@ export interface Config<A> extends Config.Variance<A> {}
 
 Added in v1.0.0
 
-# mutations
+# refinements
+
+## isConfig
+
+This function returns `true` if the specified value is an `Config` value,
+`false` otherwise.
+
+This function can be useful for checking the type of a value before
+attempting to operate on it as an `Config` value. For example, you could
+use `isConfig` to check the type of a value before using it as an
+argument to a function that expects an `Config` value.
+
+**Signature**
+
+```ts
+export declare const isConfig: (u: unknown) => u is Config<unknown>
+```
+
+Added in v1.0.0
+
+# symbols
+
+## ConfigTypeId
+
+**Signature**
+
+```ts
+export declare const ConfigTypeId: typeof ConfigTypeId
+```
+
+Added in v1.0.0
+
+## ConfigTypeId (type alias)
+
+**Signature**
+
+```ts
+export type ConfigTypeId = typeof ConfigTypeId
+```
+
+Added in v1.0.0
+
+# utils
+
+## NonEmptyArrayConfig (type alias)
+
+**Signature**
+
+```ts
+export type NonEmptyArrayConfig = [Config<any>, ...Array<Config<any>>]
+```
+
+Added in v1.0.0
+
+## TupleConfig (type alias)
+
+**Signature**
+
+```ts
+export type TupleConfig<T extends NonEmptyArrayConfig> = {
+  [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never
+}
+```
+
+Added in v1.0.0
 
 ## map
 
@@ -507,72 +570,6 @@ using the provided function.
 export declare const zipWith: {
   <B, A, C>(that: Config<B>, f: (a: A, b: B) => C): (self: Config<A>) => Config<C>
   <A, B, C>(self: Config<A>, that: Config<B>, f: (a: A, b: B) => C): Config<C>
-}
-```
-
-Added in v1.0.0
-
-# refinements
-
-## isConfig
-
-This function returns `true` if the specified value is an `Config` value,
-`false` otherwise.
-
-This function can be useful for checking the type of a value before
-attempting to operate on it as an `Config` value. For example, you could
-use `isConfig` to check the type of a value before using it as an
-argument to a function that expects an `Config` value.
-
-**Signature**
-
-```ts
-export declare const isConfig: (u: unknown) => u is Config<unknown>
-```
-
-Added in v1.0.0
-
-# symbols
-
-## ConfigTypeId
-
-**Signature**
-
-```ts
-export declare const ConfigTypeId: typeof ConfigTypeId
-```
-
-Added in v1.0.0
-
-## ConfigTypeId (type alias)
-
-**Signature**
-
-```ts
-export type ConfigTypeId = typeof ConfigTypeId
-```
-
-Added in v1.0.0
-
-# utils
-
-## NonEmptyArrayConfig (type alias)
-
-**Signature**
-
-```ts
-export type NonEmptyArrayConfig = [Config<any>, ...Array<Config<any>>]
-```
-
-Added in v1.0.0
-
-## TupleConfig (type alias)
-
-**Signature**
-
-```ts
-export type TupleConfig<T extends NonEmptyArrayConfig> = {
-  [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never
 }
 ```
 

@@ -18,7 +18,12 @@ Added in v1.0.0
   - [get](#get)
 - [models](#models)
   - [Ref (interface)](#ref-interface)
-- [mutations](#mutations)
+- [symbols](#symbols)
+  - [RefTypeId](#reftypeid)
+  - [RefTypeId (type alias)](#reftypeid-type-alias)
+- [unsafe](#unsafe)
+  - [unsafeMake](#unsafemake)
+- [utils](#utils)
   - [getAndSet](#getandset)
   - [getAndUpdate](#getandupdate)
   - [getAndUpdateSome](#getandupdatesome)
@@ -30,11 +35,6 @@ Added in v1.0.0
   - [updateAndGet](#updateandget)
   - [updateSome](#updatesome)
   - [updateSomeAndGet](#updatesomeandget)
-- [symbols](#symbols)
-  - [RefTypeId](#reftypeid)
-  - [RefTypeId (type alias)](#reftypeid-type-alias)
-- [unsafe](#unsafe)
-  - [unsafeMake](#unsafemake)
 
 ---
 
@@ -76,7 +76,41 @@ export interface Ref<A> extends Ref.Variance<A> {
 
 Added in v1.0.0
 
-# mutations
+# symbols
+
+## RefTypeId
+
+**Signature**
+
+```ts
+export declare const RefTypeId: typeof RefTypeId
+```
+
+Added in v1.0.0
+
+## RefTypeId (type alias)
+
+**Signature**
+
+```ts
+export type RefTypeId = typeof RefTypeId
+```
+
+Added in v1.0.0
+
+# unsafe
+
+## unsafeMake
+
+**Signature**
+
+```ts
+export declare const unsafeMake: <A>(value: A) => Ref<A>
+```
+
+Added in v1.0.0
+
+# utils
 
 ## getAndSet
 
@@ -217,40 +251,6 @@ export declare const updateSomeAndGet: {
   <A>(pf: (a: A) => Option.Option<A>): (self: Ref<A>) => Effect.Effect<never, never, A>
   <A>(self: Ref<A>, pf: (a: A) => Option.Option<A>): Effect.Effect<never, never, A>
 }
-```
-
-Added in v1.0.0
-
-# symbols
-
-## RefTypeId
-
-**Signature**
-
-```ts
-export declare const RefTypeId: typeof RefTypeId
-```
-
-Added in v1.0.0
-
-## RefTypeId (type alias)
-
-**Signature**
-
-```ts
-export type RefTypeId = typeof RefTypeId
-```
-
-Added in v1.0.0
-
-# unsafe
-
-## unsafeMake
-
-**Signature**
-
-```ts
-export declare const unsafeMake: <A>(value: A) => Ref<A>
 ```
 
 Added in v1.0.0

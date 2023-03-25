@@ -45,7 +45,7 @@ export {
    * Deletes the specified `FiberRef` from the `FibterRefs`.
    *
    * @since 1.0.0
-   * @category mutations
+   * @category utils
    */
   delete_ as delete
 }
@@ -64,7 +64,7 @@ export const fiberRefs: (self: FiberRefs) => HashSet.HashSet<FiberRef.FiberRef<a
  * individual fiber refs that make up the collection.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const forkAs: {
   (childId: FiberId.Runtime): (self: FiberRefs) => FiberRefs
@@ -101,7 +101,7 @@ export const getOrDefault: {
  * preservation of maximum information from both child and parent refs.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const joinAs: {
   (fiberId: FiberId.Runtime, that: FiberRefs): (self: FiberRefs) => FiberRefs
@@ -112,7 +112,7 @@ export const joinAs: {
  * Set each ref to either its value or its default.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const setAll: (self: FiberRefs) => Effect.Effect<never, never, void> = internal.setAll
 
@@ -120,7 +120,7 @@ export const setAll: (self: FiberRefs) => Effect.Effect<never, never, void> = in
  * Updates the value of the specified `FiberRef` using the provided `FiberId`
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const updatedAs: {
   <A>(fiberId: FiberId.Runtime, fiberRef: FiberRef.FiberRef<A>, value: A): (self: FiberRefs) => FiberRefs

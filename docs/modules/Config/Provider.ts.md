@@ -29,16 +29,16 @@ Added in v1.0.0
   - [Tag](#tag)
 - [models](#models)
   - [ConfigProvider (interface)](#configprovider-interface)
-- [mutations](#mutations)
-  - [contramapPath](#contramappath)
-  - [nested](#nested)
-  - [orElse](#orelse)
-  - [unnested](#unnested)
 - [symbols](#symbols)
   - [ConfigProviderTypeId](#configprovidertypeid)
   - [ConfigProviderTypeId (type alias)](#configprovidertypeid-type-alias)
   - [FlatConfigProviderTypeId](#flatconfigprovidertypeid)
   - [FlatConfigProviderTypeId (type alias)](#flatconfigprovidertypeid-type-alias)
+- [utils](#utils)
+  - [contramapPath](#contramappath)
+  - [nested](#nested)
+  - [orElse](#orelse)
+  - [unnested](#unnested)
 
 ---
 
@@ -254,7 +254,49 @@ export interface ConfigProvider extends ConfigProvider.Proto {
 
 Added in v1.0.0
 
-# mutations
+# symbols
+
+## ConfigProviderTypeId
+
+**Signature**
+
+```ts
+export declare const ConfigProviderTypeId: typeof ConfigProviderTypeId
+```
+
+Added in v1.0.0
+
+## ConfigProviderTypeId (type alias)
+
+**Signature**
+
+```ts
+export type ConfigProviderTypeId = typeof ConfigProviderTypeId
+```
+
+Added in v1.0.0
+
+## FlatConfigProviderTypeId
+
+**Signature**
+
+```ts
+export declare const FlatConfigProviderTypeId: typeof FlatConfigProviderTypeId
+```
+
+Added in v1.0.0
+
+## FlatConfigProviderTypeId (type alias)
+
+**Signature**
+
+```ts
+export type FlatConfigProviderTypeId = typeof FlatConfigProviderTypeId
+```
+
+Added in v1.0.0
+
+# utils
 
 ## contramapPath
 
@@ -323,48 +365,6 @@ export declare const unnested: {
   (name: string): (self: ConfigProvider) => ConfigProvider
   (self: ConfigProvider, name: string): ConfigProvider
 }
-```
-
-Added in v1.0.0
-
-# symbols
-
-## ConfigProviderTypeId
-
-**Signature**
-
-```ts
-export declare const ConfigProviderTypeId: typeof ConfigProviderTypeId
-```
-
-Added in v1.0.0
-
-## ConfigProviderTypeId (type alias)
-
-**Signature**
-
-```ts
-export type ConfigProviderTypeId = typeof ConfigProviderTypeId
-```
-
-Added in v1.0.0
-
-## FlatConfigProviderTypeId
-
-**Signature**
-
-```ts
-export declare const FlatConfigProviderTypeId: typeof FlatConfigProviderTypeId
-```
-
-Added in v1.0.0
-
-## FlatConfigProviderTypeId (type alias)
-
-**Signature**
-
-```ts
-export type FlatConfigProviderTypeId = typeof FlatConfigProviderTypeId
 ```
 
 Added in v1.0.0

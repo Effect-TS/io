@@ -67,7 +67,7 @@ export const collectAll: <R, E, Out>(
  * fiber, using the specified schedule.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const launch: {
   <R2, A2>(
@@ -85,7 +85,7 @@ export const launch: {
  * An effect that polls a value that may be fed to the metric.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const poll: <Type, In, R, E, Out>(self: PollingMetric<Type, In, R, E, Out>) => Effect.Effect<R, E, In> =
   internal.poll
@@ -94,7 +94,7 @@ export const poll: <Type, In, R, E, Out>(self: PollingMetric<Type, In, R, E, Out
  * An effect that polls for a value and uses the value to update the metric.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const pollAndUpdate: <Type, In, R, E, Out>(
   self: PollingMetric<Type, In, R, E, Out>
@@ -121,7 +121,7 @@ export const retry: {
  * Zips this polling metric with the specified polling metric.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const zip: {
   <Type2, In2, R2, E2, Out2>(

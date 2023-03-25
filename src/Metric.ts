@@ -310,7 +310,7 @@ export const summaryTimestamp: (
  * the specified tags have been added to the tags of this metric.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const tagged: {
   <Type, In, Out>(key: string, value: string): (self: Metric<Type, In, Out>) => Metric<Type, In, Out>
@@ -324,7 +324,7 @@ export const tagged: {
  * dynamic nature of the added tags.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const taggedWithLabelsInput: {
   <In>(
@@ -341,7 +341,7 @@ export const taggedWithLabelsInput: {
  * the specified tags have been added to the tags of this metric.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const taggedWithLabels: {
   <Type, In, Out>(extraTags: Iterable<MetricLabel.MetricLabel>): (self: Metric<Type, In, Out>) => Metric<Type, In, Out>
@@ -544,7 +544,7 @@ export const trackSuccessWith: {
  * provided amount.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const update: {
   <In>(input: In): <Type, Out>(self: Metric<Type, In, Out>) => Effect.Effect<never, never, void>
@@ -561,7 +561,7 @@ export const value: <Type, In, Out>(self: Metric<Type, In, Out>) => Effect.Effec
 
 /**
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const withNow: <Type, In, Out>(self: Metric<Type, readonly [In, number], Out>) => Metric<Type, In, Out> =
   internal.withNow

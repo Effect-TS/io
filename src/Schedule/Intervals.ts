@@ -56,7 +56,7 @@ export const fromIterable: (intervals: Iterable<Interval.Interval>) => Intervals
  * Computes the union of this `Intervals` and  that `Intervals`
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const union: {
   (that: Intervals): (self: Intervals) => Intervals
@@ -67,7 +67,7 @@ export const union: {
  * Produces the intersection of this `Intervals` and that `Intervals`.
  *
  * @since 1.0.0
- * @category mutations
+ * @category utils
  */
 export const intersect: {
   (that: Intervals): (self: Intervals) => Intervals
