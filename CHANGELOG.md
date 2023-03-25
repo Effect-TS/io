@@ -1,5 +1,13 @@
 # @effect/io
 
+## 0.12.1
+
+### Patch Changes
+
+- [#306](https://github.com/Effect-TS/io/pull/306) [`7d1d997`](https://github.com/Effect-TS/io/commit/7d1d9978b2b539862b813cf5a617be2b4304b3c1) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Support local override of report unhandled
+
+- [#306](https://github.com/Effect-TS/io/pull/306) [`7d1d997`](https://github.com/Effect-TS/io/commit/7d1d9978b2b539862b813cf5a617be2b4304b3c1) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Update effect/data
+
 ## 0.12.0
 
 ### Minor Changes
