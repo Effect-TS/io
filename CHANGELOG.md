@@ -1,5 +1,13 @@
 # @effect/io
 
+## 0.12.0
+
+### Minor Changes
+
+- [#305](https://github.com/Effect-TS/io/pull/305) [`47a8aa8`](https://github.com/Effect-TS/io/commit/47a8aa8168ccfaa90570068897bad7808d1d98aa) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Fix docs comment, expose makeFiberFailure, avoid unhandled in runExit variants
+
+- [#303](https://github.com/Effect-TS/io/pull/303) [`7f11db3`](https://github.com/Effect-TS/io/commit/7f11db397b07994342db1e56a040f45145f0325c) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Report non handled failures
+
 ## 0.11.0
 
 ### Minor Changes
