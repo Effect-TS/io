@@ -16,6 +16,7 @@ Added in v1.0.0
   - [defaultRuntime](#defaultruntime)
   - [defaultRuntimeFlags](#defaultruntimeflags)
   - [make](#make)
+  - [makeFiberFailure](#makefiberfailure)
 - [execution](#execution)
   - [runCallback](#runcallback)
   - [runFork](#runfork)
@@ -26,6 +27,7 @@ Added in v1.0.0
   - [runSyncEither](#runsynceither)
   - [runSyncExit](#runsyncexit)
   - [runSyncExitOrFiber](#runsyncexitorfiber)
+  - [runSyncOrFiber](#runsyncorfiber)
 - [exports](#exports)
   - [FiberFailureCauseId (type alias)](#fiberfailurecauseid-type-alias)
 - [guards](#guards)
@@ -76,6 +78,16 @@ export declare const make: <R>(
   runtimeFlags: RuntimeFlags.RuntimeFlags,
   fiberRefs: FiberRefs.FiberRefs
 ) => Runtime<R>
+```
+
+Added in v1.0.0
+
+## makeFiberFailure
+
+**Signature**
+
+```ts
+export declare const makeFiberFailure: <E>(cause: Cause<E>) => FiberFailure
 ```
 
 Added in v1.0.0
@@ -231,7 +243,24 @@ program.
 ```ts
 export declare const runSyncExitOrFiber: <R>(
   runtime: Runtime<R>
-) => <E, A>(effect: Effect.Effect<R, E, A>) => Either<Fiber.Fiber<E, A>, Exit.Exit<E, A>>
+) => <E, A>(effect: Effect.Effect<R, E, A>) => Either<Fiber.Fiber<never, Exit.Exit<E, A>>, Exit.Exit<E, A>>
+```
+
+Added in v1.0.0
+
+## runSyncOrFiber
+
+Executes the effect synchronously returning the exit or the fiber if async.
+
+This method is effectful and should only be invoked at the edges of your
+program.
+
+**Signature**
+
+```ts
+export declare const runSyncOrFiber: <R>(
+  runtime: Runtime<R>
+) => <E, A>(effect: Effect.Effect<R, E, A>) => Either<Fiber.Fiber<E, A>, A>
 ```
 
 Added in v1.0.0

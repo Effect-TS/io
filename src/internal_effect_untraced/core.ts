@@ -1679,6 +1679,19 @@ export const currentParallelism: FiberRef.FiberRef<Option.Option<number>> = fibe
 )
 
 /** @internal */
+export const currentReportUnhandled: FiberRef.FiberRef<{ get enabled(): boolean }> = fiberRefUnsafeMake({
+  get enabled() {
+    return Debug.runtimeDebug.reportUnhandled
+  }
+})
+
+/** @internal */
+export const withReportUnhandled = Debug.dualWithTrace<
+  (enabled: boolean) => <R, E, B>(use: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>,
+  <R, E, B>(use: Effect.Effect<R, E, B>, enabled: boolean) => Effect.Effect<R, E, B>
+>(2, (trace) => (self, enabled) => fiberRefLocally(self, currentReportUnhandled, { enabled }).traced(trace))
+
+/** @internal */
 export const currentTags: FiberRef.FiberRef<HashSet.HashSet<MetricLabel.MetricLabel>> = fiberRefUnsafeMakeHashSet(
   HashSet.empty()
 )

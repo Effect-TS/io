@@ -305,6 +305,12 @@ export const currentContext: FiberRef<Context.Context<never>> = core.currentCont
  * @since 1.0.0
  * @category fiberRefs
  */
+export const currentReportUnhandled: FiberRef<{ readonly enabled: boolean }> = core.currentReportUnhandled
+
+/**
+ * @since 1.0.0
+ * @category fiberRefs
+ */
 export const currentLogAnnotations: FiberRef<HashMap.HashMap<string, string>> = core.currentLogAnnotations
 
 /**

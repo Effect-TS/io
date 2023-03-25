@@ -5108,6 +5108,17 @@ export const withClock: {
 } = defaultServices.withClock
 
 /**
+ * Decides wether child fibers will report or not unhandled errors via the logger
+ *
+ * @since 1.0.0
+ * @category mutations
+ */
+export const withReportUnhandled: {
+  (enabled: boolean): <R, E, B>(use: Effect<R, E, B>) => Effect<R, E, B>
+  <R, E, B>(use: Effect<R, E, B>, enabled: boolean): Effect<R, E, B>
+} = core.withReportUnhandled
+
+/**
  * Sets the implementation of the clock service to the specified value and
  * restores it to its original value when the scope is closed.
  *

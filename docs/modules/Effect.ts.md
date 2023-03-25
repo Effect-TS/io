@@ -200,6 +200,7 @@ Added in v1.0.0
   - [runSyncEither](#runsynceither)
   - [runSyncExit](#runsyncexit)
   - [runSyncExitOrFiber](#runsyncexitorfiber)
+  - [runSyncFiber](#runsyncfiber)
 - [filtering](#filtering)
   - [filter](#filter)
   - [filterNot](#filternot)
@@ -400,6 +401,7 @@ Added in v1.0.0
   - [withClock](#withclock)
   - [withEarlyRelease](#withearlyrelease)
   - [withMetric](#withmetric)
+  - [withReportUnhandled](#withreportunhandled)
 - [products](#products)
   - [zip](#zip)
   - [zipLeft](#zipleft)
@@ -3366,7 +3368,19 @@ Added in v1.0.0
 ```ts
 export declare const runSyncExitOrFiber: <E, A>(
   effect: Effect<never, E, A>
-) => Either.Either<Fiber.Fiber<E, A>, Exit.Exit<E, A>>
+) => Either.Either<Fiber.Fiber<never, Exit.Exit<E, A>>, Exit.Exit<E, A>>
+```
+
+Added in v1.0.0
+
+## runSyncFiber
+
+**Signature**
+
+```ts
+export declare const runSyncFiber: <R>(
+  runtime: Runtime.Runtime<R>
+) => <E, A>(effect: Effect<R, E, A>) => Either.Either<Fiber.Fiber<E, A>, A>
 ```
 
 Added in v1.0.0
@@ -6478,6 +6492,21 @@ Added in v1.0.0
 export declare const withMetric: {
   <Type, In, Out>(metric: Metric.Metric<Type, In, Out>): <R, E, A extends In>(self: Effect<R, E, A>) => Effect<R, E, A>
   <R, E, A extends In, Type, In, Out>(self: Effect<R, E, A>, metric: Metric.Metric<Type, In, Out>): Effect<R, E, A>
+}
+```
+
+Added in v1.0.0
+
+## withReportUnhandled
+
+Decides wether child fibers will report or not unhandled errors via the logger
+
+**Signature**
+
+```ts
+export declare const withReportUnhandled: {
+  (enabled: boolean): <R, E, B>(use: Effect<R, E, B>) => Effect<R, E, B>
+  <R, E, B>(use: Effect<R, E, B>, enabled: boolean): Effect<R, E, B>
 }
 ```
 
