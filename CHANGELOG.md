@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.12.2
+
+### Patch Changes
+
+- [#308](https://github.com/Effect-TS/io/pull/308) [`c6b703a`](https://github.com/Effect-TS/io/commit/c6b703a56fe55e3bef134c97f680988221fac159) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Update effect/data
+
 ## 0.12.1
 
 ### Patch Changes
