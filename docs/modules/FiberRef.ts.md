@@ -30,12 +30,12 @@ Added in v1.0.0
   - [currentLoggers](#currentloggers)
   - [currentMinimumLogLevel](#currentminimumloglevel)
   - [currentParallelism](#currentparallelism)
-  - [currentReportUnhandled](#currentreportunhandled)
   - [currentRuntimeFlags](#currentruntimeflags)
   - [currentScheduler](#currentscheduler)
   - [currentSupervisor](#currentsupervisor)
   - [currentTags](#currenttags)
   - [interruptedCause](#interruptedcause)
+  - [unhandledErrorLogLevel](#unhandlederrorloglevel)
 - [getters](#getters)
   - [get](#get)
 - [model](#model)
@@ -249,16 +249,6 @@ export declare const currentParallelism: FiberRef<Option.Option<number>>
 
 Added in v1.0.0
 
-## currentReportUnhandled
-
-**Signature**
-
-```ts
-export declare const currentReportUnhandled: FiberRef<{ readonly enabled: boolean }>
-```
-
-Added in v1.0.0
-
 ## currentRuntimeFlags
 
 **Signature**
@@ -305,6 +295,16 @@ Added in v1.0.0
 
 ```ts
 export declare const interruptedCause: FiberRef<Cause.Cause<never>>
+```
+
+Added in v1.0.0
+
+## unhandledErrorLogLevel
+
+**Signature**
+
+```ts
+export declare const unhandledErrorLogLevel: FiberRef<Option.Option<LogLevel.LogLevel>>
 ```
 
 Added in v1.0.0

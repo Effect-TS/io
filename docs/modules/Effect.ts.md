@@ -443,8 +443,8 @@ Added in v1.0.0
   - [withClock](#withclock)
   - [withEarlyRelease](#withearlyrelease)
   - [withMetric](#withmetric)
-  - [withReportUnhandled](#withreportunhandled)
   - [withScheduler](#withscheduler)
+  - [withUnhandledErrorLogLevel](#withunhandlederrorloglevel)
 - [zipping](#zipping)
   - [zipPar](#zippar)
   - [zipParLeft](#zipparleft)
@@ -7023,21 +7023,6 @@ export declare const withMetric: {
 
 Added in v1.0.0
 
-## withReportUnhandled
-
-Decides wether child fibers will report or not unhandled errors via the logger
-
-**Signature**
-
-```ts
-export declare const withReportUnhandled: {
-  (enabled: boolean): <R, E, B>(use: Effect<R, E, B>) => Effect<R, E, B>
-  <R, E, B>(use: Effect<R, E, B>, enabled: boolean): Effect<R, E, B>
-}
-```
-
-Added in v1.0.0
-
 ## withScheduler
 
 Sets the provided scheduler for usage in the wrapped effect
@@ -7048,6 +7033,21 @@ Sets the provided scheduler for usage in the wrapped effect
 export declare const withScheduler: {
   (scheduler: Scheduler): <R, E, B>(self: Effect<R, E, B>) => Effect<R, E, B>
   <R, E, B>(self: Effect<R, E, B>, scheduler: Scheduler): Effect<R, E, B>
+}
+```
+
+Added in v1.0.0
+
+## withUnhandledErrorLogLevel
+
+Decides wether child fibers will report or not unhandled errors via the logger
+
+**Signature**
+
+```ts
+export declare const withUnhandledErrorLogLevel: {
+  (level: Option.Option<LogLevel>): <R, E, B>(self: Effect<R, E, B>) => Effect<R, E, B>
+  <R, E, B>(self: Effect<R, E, B>, level: Option.Option<LogLevel>): Effect<R, E, B>
 }
 ```
 

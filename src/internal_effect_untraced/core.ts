@@ -1690,17 +1690,17 @@ export const currentParallelism: FiberRef.FiberRef<Option.Option<number>> = fibe
 )
 
 /** @internal */
-export const currentReportUnhandled: FiberRef.FiberRef<{ get enabled(): boolean }> = fiberRefUnsafeMake({
-  get enabled() {
-    return Debug.runtimeDebug.reportUnhandled
-  }
-})
+export const unhandledErrorLogLevel: FiberRef.FiberRef<Option.Option<LogLevel.LogLevel>> = fiberRefUnsafeMake(
+  Option.some<LogLevel.LogLevel>(logLevelDebug),
+  (_) => _,
+  (_, x) => x
+)
 
 /** @internal */
-export const withReportUnhandled = Debug.dualWithTrace<
-  (enabled: boolean) => <R, E, B>(use: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>,
-  <R, E, B>(use: Effect.Effect<R, E, B>, enabled: boolean) => Effect.Effect<R, E, B>
->(2, (trace) => (self, enabled) => fiberRefLocally(self, currentReportUnhandled, { enabled }).traced(trace))
+export const withUnhandledErrorLogLevel = Debug.dualWithTrace<
+  (level: Option.Option<LogLevel.LogLevel>) => <R, E, B>(self: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>,
+  <R, E, B>(self: Effect.Effect<R, E, B>, level: Option.Option<LogLevel.LogLevel>) => Effect.Effect<R, E, B>
+>(2, (trace) => (self, level) => fiberRefLocally(self, unhandledErrorLogLevel, level).traced(trace))
 
 /** @internal */
 export const currentTags: FiberRef.FiberRef<HashSet.HashSet<MetricLabel.MetricLabel>> = fiberRefUnsafeMakeHashSet(

@@ -80,11 +80,11 @@ export const unsafeRunCallback = <R>(runtime: Runtime.Runtime<R>) =>
       effect: Effect.Effect<R, E, A>,
       onExit?: (exit: Exit.Exit<E, A>) => void
     ): ((fiberId?: FiberId.FiberId, onExit?: (exit: Exit.Exit<E, A>) => void) => void) => {
-      const fiberRuntime = unsafeFork(runtime)(core.exit(effect).traced(trace))
+      const fiberRuntime = unsafeFork(runtime)(effect.traced(trace))
 
       if (onExit) {
         fiberRuntime.unsafeAddObserver((exit) => {
-          onExit(Exit.flatten(exit))
+          onExit(exit)
         })
       }
 
@@ -92,7 +92,7 @@ export const unsafeRunCallback = <R>(runtime: Runtime.Runtime<R>) =>
         unsafeRunCallback(runtime)(
           pipe(fiberRuntime, Fiber.interruptAs(id ?? FiberId.none)),
           onExitInterrupt ?
-            (exit) => onExitInterrupt(Exit.flatten(Exit.flatten(exit))) :
+            (exit) => onExitInterrupt(Exit.flatten(exit)) :
             void 0
         )
     }
@@ -103,15 +103,14 @@ export const unsafeRunSync = <R>(runtime: Runtime.Runtime<R>) =>
   Debug.methodWithTrace((trace) =>
     <E, A>(effect: Effect.Effect<R, E, A>): A => {
       const scheduler = new _scheduler.SyncScheduler()
-      const fiberRuntime = unsafeFork(runtime)(core.exit(effect).traced(trace), { scheduler })
+      const fiberRuntime = unsafeFork(runtime)(effect.traced(trace), { scheduler })
       scheduler.flush()
       const result = fiberRuntime.unsafePoll()
       if (result) {
-        const exit = Exit.flatten(result)
-        if (exit._tag === "Failure") {
-          throw fiberFailure(exit.i0)
+        if (result._tag === "Failure") {
+          throw fiberFailure(result.i0)
         } else {
-          return exit.i0
+          return result.i0
         }
       }
       throw new AsyncFiber(fiberRuntime)
@@ -199,16 +198,15 @@ export const unsafeRunPromise = <R>(runtime: Runtime.Runtime<R>) =>
   Debug.methodWithTrace((trace) =>
     <E, A>(effect: Effect.Effect<R, E, A>): Promise<A> =>
       new Promise((resolve, reject) => {
-        unsafeFork(runtime)(core.exit(effect).traced(trace))
+        unsafeFork(runtime)(effect.traced(trace))
           .unsafeAddObserver((result) => {
-            const exit = Exit.flatten(result)
-            switch (exit._tag) {
+            switch (result._tag) {
               case OpCodes.OP_SUCCESS: {
-                resolve(exit.i0)
+                resolve(result.i0)
                 break
               }
               case OpCodes.OP_FAILURE: {
-                reject(fiberFailure(exit.i0))
+                reject(fiberFailure(result.i0))
                 break
               }
             }

@@ -305,7 +305,7 @@ export const currentContext: FiberRef<Context.Context<never>> = core.currentCont
  * @since 1.0.0
  * @category fiberRefs
  */
-export const currentReportUnhandled: FiberRef<{ readonly enabled: boolean }> = core.currentReportUnhandled
+export const unhandledErrorLogLevel: FiberRef<Option.Option<LogLevel.LogLevel>> = core.unhandledErrorLogLevel
 
 /**
  * @since 1.0.0
