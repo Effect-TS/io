@@ -1,5 +1,17 @@
 # @effect/io
 
+## 0.13.0
+
+### Minor Changes
+
+- [#312](https://github.com/Effect-TS/io/pull/312) [`e5c5109`](https://github.com/Effect-TS/io/commit/e5c510931862c6797cb7179af65dcc6f14f65847) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Avoid logging final errors when using runPromise/runSync/runCallback, remove conditional orFiber
+
+- [#313](https://github.com/Effect-TS/io/pull/313) [`64e5c4c`](https://github.com/Effect-TS/io/commit/64e5c4ccf23fcd96623a16f03426620fe823002f) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Add runFork options
+
+### Patch Changes
+
+- [#310](https://github.com/Effect-TS/io/pull/310) [`a2a08be`](https://github.com/Effect-TS/io/commit/a2a08be7abb83c5ef9da5de595b11c1b84edff5c) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Remove tracking of execution mode
+
 ## 0.12.2
 
 ### Patch Changes
