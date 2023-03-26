@@ -659,8 +659,11 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
         }
       }
     }
-    if (exit._tag === "Failure" && this.getFiberRef(core.currentReportUnhandled).enabled) {
-      this.log("Fiber terminated with a non handled error", exit.cause, Option.some(LogLevel.Error))
+    if (exit._tag === "Failure") {
+      const level = this.getFiberRef(core.unhandledErrorLogLevel)
+      if (!internalCause.isInterruptedOnly(exit.cause) && level._tag === "Some") {
+        this.log("Fiber terminated with a non handled error", exit.cause, level)
+      }
     }
   }
 

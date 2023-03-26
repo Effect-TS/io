@@ -38,6 +38,7 @@ import * as circularLayer from "@effect/io/internal_effect_untraced/layer/circul
 import * as _runtime from "@effect/io/internal_effect_untraced/runtime"
 import * as _schedule from "@effect/io/internal_effect_untraced/schedule"
 import type * as Layer from "@effect/io/Layer"
+import type { LogLevel } from "@effect/io/Logger/Level"
 import type * as Metric from "@effect/io/Metric"
 import type * as MetricLabel from "@effect/io/Metric/Label"
 import type * as Random from "@effect/io/Random"
@@ -5110,10 +5111,10 @@ export const withClock: {
  * @since 1.0.0
  * @category utils
  */
-export const withReportUnhandled: {
-  (enabled: boolean): <R, E, B>(use: Effect<R, E, B>) => Effect<R, E, B>
-  <R, E, B>(use: Effect<R, E, B>, enabled: boolean): Effect<R, E, B>
-} = core.withReportUnhandled
+export const withUnhandledErrorLogLevel: {
+  (level: Option.Option<LogLevel>): <R, E, B>(self: Effect<R, E, B>) => Effect<R, E, B>
+  <R, E, B>(self: Effect<R, E, B>, level: Option.Option<LogLevel>): Effect<R, E, B>
+} = core.withUnhandledErrorLogLevel
 
 /**
  * Sets the provided scheduler for usage in the wrapped effect
