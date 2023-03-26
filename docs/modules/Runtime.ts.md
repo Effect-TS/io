@@ -34,6 +34,7 @@ Added in v1.0.0
   - [AsyncFiber (interface)](#asyncfiber-interface)
   - [Cancel (interface)](#cancel-interface)
   - [FiberFailure (interface)](#fiberfailure-interface)
+  - [RunForkOptions (interface)](#runforkoptions-interface)
   - [Runtime (interface)](#runtime-interface)
 - [symbols](#symbols)
   - [FiberFailureCauseId](#fiberfailurecauseid)
@@ -123,7 +124,7 @@ Scheduler if not provided
 ```ts
 export declare const runFork: <R>(
   runtime: Runtime<R>
-) => <E, A>(effect: Effect.Effect<R, E, A>, scheduler?: Scheduler | undefined) => Fiber.RuntimeFiber<E, A>
+) => <E, A>(self: Effect.Effect<R, E, A>, options?: RunForkOptions | undefined) => Fiber.RuntimeFiber<E, A>
 ```
 
 Added in v1.0.0
@@ -289,6 +290,19 @@ export interface FiberFailure extends Error {
   readonly [FiberFailureId]: FiberFailureId
   readonly [FiberFailureCauseId]: Cause<unknown>
   readonly [NodePrint]: () => string
+}
+```
+
+Added in v1.0.0
+
+## RunForkOptions (interface)
+
+**Signature**
+
+```ts
+export interface RunForkOptions {
+  scheduler?: Scheduler
+  updateRefs?: (refs: FiberRefs.FiberRefs, fiberId: FiberId.Runtime) => FiberRefs.FiberRefs
 }
 ```
 

@@ -50,6 +50,15 @@ export interface Runtime<R> {
 }
 
 /**
+ * @since 1.0.0
+ * @category models
+ */
+export interface RunForkOptions {
+  scheduler?: Scheduler
+  updateRefs?: (refs: FiberRefs.FiberRefs, fiberId: FiberId.Runtime) => FiberRefs.FiberRefs
+}
+
+/**
  * Executes the effect using the provided Scheduler or using the global
  * Scheduler if not provided
  *
@@ -58,10 +67,8 @@ export interface Runtime<R> {
  */
 export const runFork: <R>(
   runtime: Runtime<R>
-) => <E, A>(
-  effect: Effect.Effect<R, E, A>,
-  scheduler?: Scheduler | undefined
-) => Fiber.RuntimeFiber<E, A> = internal.unsafeFork
+) => <E, A>(self: Effect.Effect<R, E, A>, options?: RunForkOptions | undefined) => Fiber.RuntimeFiber<E, A> =
+  internal.unsafeFork
 
 /**
  * Executes the effect synchronously returning the exit.
