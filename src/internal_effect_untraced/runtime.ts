@@ -20,12 +20,14 @@ import * as runtimeFlags from "@effect/io/internal_effect_untraced/runtimeFlags"
 import * as _supervisor from "@effect/io/internal_effect_untraced/supervisor"
 import type * as Runtime from "@effect/io/Runtime"
 import * as _scheduler from "@effect/io/Scheduler"
-import type * as Scheduler from "@effect/io/Scheduler"
 
 /** @internal */
 export const unsafeFork = <R>(runtime: Runtime.Runtime<R>) =>
   Debug.methodWithTrace((trace) =>
-    <E, A>(self: Effect.Effect<R, E, A>, scheduler?: Scheduler.Scheduler | undefined): Fiber.RuntimeFiber<E, A> => {
+    <E, A>(
+      self: Effect.Effect<R, E, A>,
+      options?: Runtime.RunForkOptions
+    ): Fiber.RuntimeFiber<E, A> => {
       const fiberId = FiberId.unsafeMake()
       const effect = self.traced(trace)
 
@@ -36,13 +38,17 @@ export const unsafeFork = <R>(runtime: Runtime.Runtime<R>) =>
         runtime.context as Context.Context<never>
       )
 
-      if (scheduler) {
+      if (options?.scheduler) {
         fiberRefs = FiberRefs.updatedAs(
           fiberRefs,
           fiberId,
           core.currentScheduler,
-          scheduler
+          options.scheduler
         )
+      }
+
+      if (options?.updateRefs) {
+        fiberRefs = options.updateRefs(fiberRefs, fiberId)
       }
 
       const fiberRuntime: FiberRuntime.FiberRuntime<E, A> = new FiberRuntime.FiberRuntime<E, A>(
@@ -97,7 +103,7 @@ export const unsafeRunSync = <R>(runtime: Runtime.Runtime<R>) =>
   Debug.methodWithTrace((trace) =>
     <E, A>(effect: Effect.Effect<R, E, A>): A => {
       const scheduler = new _scheduler.SyncScheduler()
-      const fiberRuntime = unsafeFork(runtime)(core.exit(effect).traced(trace), scheduler)
+      const fiberRuntime = unsafeFork(runtime)(core.exit(effect).traced(trace), { scheduler })
       scheduler.flush()
       const result = fiberRuntime.unsafePoll()
       if (result) {
@@ -169,7 +175,7 @@ export const unsafeRunSyncExit = <R>(runtime: Runtime.Runtime<R>) =>
   Debug.methodWithTrace((trace) =>
     <E, A>(effect: Effect.Effect<R, E, A>) => {
       const scheduler = new _scheduler.SyncScheduler()
-      const fiberRuntime = unsafeFork(runtime)(core.exit(effect).traced(trace), scheduler)
+      const fiberRuntime = unsafeFork(runtime)(core.exit(effect).traced(trace), { scheduler })
       scheduler.flush()
       const result = fiberRuntime.unsafePoll()
       if (result) {
