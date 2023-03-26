@@ -22,7 +22,7 @@ export type TestAnnotationTypeId = typeof TestAnnotationTypeId
 export interface TestAnnotation<A> extends Equal.Equal {
   readonly [TestAnnotationTypeId]: TestAnnotationTypeId
   readonly identifier: string
-  readonly tag: Context.Tag<A>
+  readonly tag: Context.Tag<A, A>
   readonly initial: A
   readonly combine: (a: A, b: A) => A
 }
@@ -32,7 +32,7 @@ class TestAnnotationImpl<A> implements Equal.Equal {
   readonly [TestAnnotationTypeId]: TestAnnotationTypeId = TestAnnotationTypeId
   constructor(
     readonly identifier: string,
-    readonly tag: Context.Tag<A>,
+    readonly tag: Context.Tag<A, A>,
     readonly initial: A,
     readonly combine: (a: A, b: A) => A
   ) {}
@@ -58,7 +58,7 @@ export const isTestAnnotation = (u: unknown): u is TestAnnotation<unknown> => {
 /** @internal */
 export const make = <A>(
   identifier: string,
-  tag: Context.Tag<A>,
+  tag: Context.Tag<A, A>,
   initial: A,
   combine: (a: A, b: A) => A
 ): TestAnnotation<A> => {

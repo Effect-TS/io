@@ -147,10 +147,10 @@ Constructs a layer from the specified effect.
 **Signature**
 
 ```ts
-export declare const effect: <T extends Context.Tag<any>, R, E>(
+export declare const effect: <T extends Context.Tag<any, any>, R, E>(
   tag: T,
   effect: Effect.Effect<R, E, Context.Tag.Service<T>>
-) => Layer<R, E, Context.Tag.Service<T>>
+) => Layer<R, E, Context.Tag.Identifier<T>>
 ```
 
 Added in v1.0.0
@@ -235,7 +235,7 @@ Constructs a layer from the context using the specified function.
 **Signature**
 
 ```ts
-export declare const function: <A extends Context.Tag<any>, B extends Context.Tag<any>>(tagA: A, tagB: B, f: (a: Context.Tag.Service<A>) => Context.Tag.Service<B>) => Layer<Context.Tag.Service<A>, never, Context.Tag.Service<B>>
+export declare const function: <A extends Context.Tag<any, any>, B extends Context.Tag<any, any>>(tagA: A, tagB: B, f: (a: Context.Tag.Service<A>) => Context.Tag.Service<B>) => Layer<Context.Tag.Identifier<A>, never, Context.Tag.Identifier<B>>
 ```
 
 Added in v1.0.0
@@ -262,10 +262,10 @@ Constructs a layer from the specified scoped effect.
 **Signature**
 
 ```ts
-export declare const scoped: <T extends Context.Tag<any>, R, E>(
+export declare const scoped: <T extends Context.Tag<any, any>, R, E>(
   tag: T,
   effect: Effect.Effect<R, E, Context.Tag.Service<T>>
-) => Layer<Exclude<R, Scope.Scope>, E, Context.Tag.Service<T>>
+) => Layer<Exclude<R, Scope.Scope>, E, Context.Tag.Identifier<T>>
 ```
 
 Added in v1.0.0
@@ -307,7 +307,9 @@ context.
 **Signature**
 
 ```ts
-export declare const service: <T>(tag: Context.Tag<T>) => Layer<T, never, T>
+export declare const service: <T extends Context.Tag<any, any>>(
+  tag: T
+) => Layer<Context.Tag.Identifier<T>, never, Context.Tag.Identifier<T>>
 ```
 
 Added in v1.0.0
@@ -319,10 +321,10 @@ Constructs a layer from the specified value.
 **Signature**
 
 ```ts
-export declare const succeed: <T extends Context.Tag<any>>(
+export declare const succeed: <T extends Context.Tag<any, any>>(
   tag: T,
   resource: Context.Tag.Service<T>
-) => Layer<never, never, Context.Tag.Service<T>>
+) => Layer<never, never, Context.Tag.Identifier<T>>
 ```
 
 Added in v1.0.0
@@ -360,10 +362,10 @@ Lazily constructs a layer from the specified value.
 **Signature**
 
 ```ts
-export declare const sync: <T extends Context.Tag<any>>(
+export declare const sync: <T extends Context.Tag<any, any>>(
   tag: T,
   evaluate: LazyArg<Context.Tag.Service<T>>
-) => Layer<never, never, Context.Tag.Service<T>>
+) => Layer<never, never, Context.Tag.Identifier<T>>
 ```
 
 Added in v1.0.0
@@ -701,10 +703,8 @@ Flattens layers nested in the context of an effect.
 
 ```ts
 export declare const flatten: {
-  <R2, E2, A>(tag: Context.Tag<Layer<R2, E2, A>>): <R, E>(
-    self: Layer<R, E, Layer<R2, E2, A>>
-  ) => Layer<R2 | R, E2 | E, A>
-  <R, E, A, R2, E2>(self: Layer<R, E, Layer<R2, E2, A>>, tag: Context.Tag<Layer<R2, E2, A>>): Layer<R | R2, E | E2, A>
+  <R2, E2, A, I>(tag: Context.Tag<I, Layer<R2, E2, A>>): <R, E>(self: Layer<R, E, I>) => Layer<R2 | R, E2 | E, A>
+  <R, E, A, R2, E2, I>(self: Layer<R, E, I>, tag: Context.Tag<I, Layer<R2, E2, A>>): Layer<R | R2, E | E2, A>
 }
 ```
 
@@ -881,17 +881,17 @@ specified function.
 
 ```ts
 export declare const project: {
-  <A extends Context.Tag<any>, B extends Context.Tag<any>>(
+  <A extends Context.Tag<any, any>, B extends Context.Tag<any, any>>(
     tagA: A,
     tagB: B,
     f: (a: Context.Tag.Service<A>) => Context.Tag.Service<B>
-  ): <RIn, E>(self: Layer<RIn, E, Context.Tag.Service<A>>) => Layer<RIn, E, Context.Tag.Service<B>>
-  <RIn, E, A extends Context.Tag<any>, B extends Context.Tag<any>>(
-    self: Layer<RIn, E, Context.Tag.Service<A>>,
+  ): <RIn, E>(self: Layer<RIn, E, Context.Tag.Identifier<A>>) => Layer<RIn, E, Context.Tag.Identifier<B>>
+  <RIn, E, A extends Context.Tag<any, any>, B extends Context.Tag<any, any>>(
+    self: Layer<RIn, E, Context.Tag.Identifier<A>>,
     tagA: A,
     tagB: B,
     f: (a: Context.Tag.Service<A>) => Context.Tag.Service<B>
-  ): Layer<RIn, E, Context.Tag.Service<B>>
+  ): Layer<RIn, E, Context.Tag.Identifier<B>>
 }
 ```
 

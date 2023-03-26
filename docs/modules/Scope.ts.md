@@ -64,7 +64,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const Tag: Context.Tag<Scope>
+export declare const Tag: Context.Tag<Scope, Scope>
 ```
 
 Added in v1.0.0

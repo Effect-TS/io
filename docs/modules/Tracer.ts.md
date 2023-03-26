@@ -59,7 +59,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const Span: Context.Tag<Span>
+export declare const Span: Context.Tag<Span, Span>
 ```
 
 Added in v1.0.0
@@ -109,7 +109,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const Tracer: Context.Tag<Tracer>
+export declare const Tracer: Context.Tag<Tracer, Tracer>
 ```
 
 Added in v1.0.0

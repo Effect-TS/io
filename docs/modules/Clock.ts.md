@@ -79,7 +79,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const Tag: Context.Tag<Clock>
+export declare const Tag: Context.Tag<Clock, Clock>
 ```
 
 Added in v1.0.0

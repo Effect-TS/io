@@ -20,7 +20,7 @@ export interface Sized {
 }
 
 /** @internal */
-export const Tag: Context.Tag<Sized> = Context.Tag(SizedTypeId)
+export const Tag: Context.Tag<Sized, Sized> = Context.Tag(SizedTypeId)
 
 /** @internal */
 class SizedImpl implements Sized {

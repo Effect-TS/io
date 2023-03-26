@@ -1300,25 +1300,27 @@ export const provideContext = Debug.untracedDual<
 
 /** @internal */
 export const provideService = Debug.untracedDual<
-  <T, T1 extends T>(
-    tag: Context.Tag<T>,
-    service: T1
-  ) => <Env, In, Out>(self: Schedule.Schedule<Env | T, In, Out>) => Schedule.Schedule<Exclude<Env, T>, In, Out>,
-  <Env, T, In, Out, T1 extends T>(
-    self: Schedule.Schedule<Env | T, In, Out>,
-    tag: Context.Tag<T>,
-    service: T1
-  ) => Schedule.Schedule<Exclude<Env, T>, In, Out>
+  <T extends Context.Tag<any, any>>(
+    tag: T,
+    service: Context.Tag.Service<T>
+  ) => <R, In, Out>(
+    self: Schedule.Schedule<R, In, Out>
+  ) => Schedule.Schedule<Exclude<R, Context.Tag.Identifier<T>>, In, Out>,
+  <R, In, Out, T extends Context.Tag<any, any>>(
+    self: Schedule.Schedule<R, In, Out>,
+    tag: T,
+    service: Context.Tag.Service<T>
+  ) => Schedule.Schedule<Exclude<R, Context.Tag.Identifier<T>>, In, Out>
 >(3, (restore) =>
-  <Env, T, In, Out, T1 extends T>(
-    self: Schedule.Schedule<Env | T, In, Out>,
-    tag: Context.Tag<T>,
-    service: T1
-  ): Schedule.Schedule<Exclude<Env, T>, In, Out> =>
+  <R, In, Out, T extends Context.Tag<any, any>>(
+    self: Schedule.Schedule<R, In, Out>,
+    tag: T,
+    service: Context.Tag.Service<T>
+  ): Schedule.Schedule<Exclude<R, Context.Tag.Identifier<T>>, In, Out> =>
     makeWithState(self.initial, (now, input, state) =>
       core.contextWithEffect<
-        Exclude<Env, T>,
-        Exclude<Env, T>,
+        Exclude<R, Context.Tag.Identifier<T>>,
+        Exclude<R, Context.Tag.Identifier<T>>,
         never,
         readonly [any, Out, ScheduleDecision.ScheduleDecision]
       >((env) =>

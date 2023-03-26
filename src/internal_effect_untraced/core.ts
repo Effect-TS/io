@@ -88,6 +88,7 @@ export type Primitive =
   | WithRuntime
   | Yield
   | OpTraced
+  | OpTag
 
 /** @internal */
 export type Continuation =
@@ -212,6 +213,9 @@ export interface Failure extends
     readonly i0: Cause.Cause<unknown>
   }>
 {}
+
+/** @internal */
+export interface OpTag extends Op<OpCodes.OP_TAG, {}> {}
 
 export interface Commit extends
   Op<OpCodes.OP_COMMIT, {
@@ -1018,24 +1022,25 @@ export const runtimeFlags = Debug.methodWithTrace((trace) =>
 
 /* @internal */
 export const service = Debug.methodWithTrace((trace) =>
-  <T>(tag: Context.Tag<T>): Effect.Effect<T, never, T> => serviceWithEffect(tag, succeed).traced(trace)
+  <T extends Context.Tag<any, any>>(tag: T): Effect.Effect<Context.Tag.Identifier<T>, never, Context.Tag.Service<T>> =>
+    serviceWithEffect(tag, succeed).traced(trace)
 )
 
 /* @internal */
 export const serviceWith = Debug.methodWithTrace((trace, restore) =>
-  <T extends Context.Tag<any>, A>(
+  <T extends Context.Tag<any, any>, A>(
     tag: T,
     f: (a: Context.Tag.Service<T>) => A
-  ): Effect.Effect<Context.Tag.Service<T>, never, A> =>
+  ): Effect.Effect<Context.Tag.Identifier<T>, never, A> =>
     serviceWithEffect(tag, (a) => sync(() => restore(f)(a))).traced(trace)
 )
 
 /* @internal */
 export const serviceWithEffect = Debug.methodWithTrace((trace, restore) =>
-  <T extends Context.Tag<any>, R, E, A>(
+  <T extends Context.Tag<any, any>, R, E, A>(
     tag: T,
     f: (a: Context.Tag.Service<T>) => Effect.Effect<R, E, A>
-  ): Effect.Effect<R | Context.Tag.Service<T>, E, A> =>
+  ): Effect.Effect<R | Context.Tag.Identifier<T>, E, A> =>
     suspend(() =>
       pipe(
         fiberRefGet(currentContext),

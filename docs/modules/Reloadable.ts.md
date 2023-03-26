@@ -41,11 +41,11 @@ provided schedule.
 **Signature**
 
 ```ts
-export declare const auto: <Out extends Context.Tag<any>, In, E, R>(
+export declare const auto: <Out extends Context.Tag<any, any>, In, E, R>(
   tag: Out,
-  layer: Layer.Layer<In, E, Context.Tag.Service<Out>>,
+  layer: Layer.Layer<In, E, Context.Tag.Identifier<Out>>,
   policy: Schedule.Schedule<R, unknown, unknown>
-) => Layer.Layer<In | R, E, Reloadable<any>>
+) => Layer.Layer<In | R, E, Reloadable<Context.Tag.Identifier<Out>>>
 ```
 
 Added in v1.0.0
@@ -59,11 +59,11 @@ schedule, which is extracted from the input to the layer.
 **Signature**
 
 ```ts
-export declare const autoFromConfig: <Out extends Context.Tag<any>, In, E, R>(
+export declare const autoFromConfig: <Out extends Context.Tag<any, any>, In, E, R>(
   tag: Out,
-  layer: Layer.Layer<In, E, Context.Tag.Service<Out>>,
+  layer: Layer.Layer<In, E, Context.Tag.Identifier<Out>>,
   scheduleFromConfig: (context: Context.Context<In>) => Schedule.Schedule<R, unknown, unknown>
-) => Layer.Layer<In | R, E, Reloadable<any>>
+) => Layer.Layer<In | R, E, Reloadable<Context.Tag.Identifier<Out>>>
 ```
 
 Added in v1.0.0
@@ -76,10 +76,10 @@ of a static service.
 **Signature**
 
 ```ts
-export declare const manual: <Out extends Context.Tag<any>, In, E>(
+export declare const manual: <Out extends Context.Tag<any, any>, In, E>(
   tag: Out,
-  layer: Layer.Layer<In, E, Context.Tag.Service<Out>>
-) => Layer.Layer<In, E, Reloadable<Context.Tag.Service<Out>>>
+  layer: Layer.Layer<In, E, Context.Tag.Identifier<Out>>
+) => Layer.Layer<In, E, Reloadable<Context.Tag.Identifier<Out>>>
 ```
 
 Added in v1.0.0
@@ -91,7 +91,9 @@ Reloads the specified service.
 **Signature**
 
 ```ts
-export declare const reload: <A>(tag: Context.Tag<A>) => Effect.Effect<Reloadable<A>, unknown, void>
+export declare const reload: <T extends Context.Tag<any, any>>(
+  tag: T
+) => Effect.Effect<Reloadable<Context.Tag.Identifier<T>>, unknown, void>
 ```
 
 Added in v1.0.0
@@ -103,7 +105,9 @@ Forks the reload of the service in the background, ignoring any errors.
 **Signature**
 
 ```ts
-export declare const reloadFork: <A>(tag: Context.Tag<A>) => Effect.Effect<Reloadable<A>, unknown, void>
+export declare const reloadFork: <T extends Context.Tag<any, any>>(
+  tag: T
+) => Effect.Effect<Reloadable<Context.Tag.Identifier<T>>, unknown, void>
 ```
 
 Added in v1.0.0
@@ -115,7 +119,9 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const tag: <A>(tag: Context.Tag<A>) => Context.Tag<Reloadable<A>>
+export declare const tag: <T extends Context.Tag<any, any>>(
+  tag: T
+) => Context.Tag<Reloadable<Context.Tag.Identifier<T>>, Reloadable<Context.Tag.Service<T>>>
 ```
 
 Added in v1.0.0
@@ -129,7 +135,9 @@ Retrieves the current version of the reloadable service.
 **Signature**
 
 ```ts
-export declare const get: <A>(tag: Context.Tag<A>) => Effect.Effect<Reloadable<A>, never, A>
+export declare const get: <T extends Context.Tag<any, any>>(
+  tag: T
+) => Effect.Effect<Reloadable<Context.Tag.Identifier<T>>, never, Context.Tag.Service<T>>
 ```
 
 Added in v1.0.0

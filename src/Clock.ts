@@ -94,4 +94,4 @@ export const clockWith: <R, E, A>(f: (clock: Clock) => Effect.Effect<R, E, A>) =
  * @since 1.0.0
  * @category context
  */
-export const Tag: Context.Tag<Clock> = internal.clockTag
+export const Tag: Context.Tag<Clock, Clock> = internal.clockTag
