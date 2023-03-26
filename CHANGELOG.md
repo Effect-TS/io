@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.14.1
+
+### Patch Changes
+
+- [#316](https://github.com/Effect-TS/io/pull/316) [`dabb808`](https://github.com/Effect-TS/io/commit/dabb808877ed4cce332f5909c431885ef7b59ec6) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Fix unhandled error report as debug
+
 ## 0.14.0
 
 ### Minor Changes
