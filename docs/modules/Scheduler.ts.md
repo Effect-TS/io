@@ -61,14 +61,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare class ControlledScheduler {
-  constructor(
-    /**
-     * @since 1.0.0
-     */
-    readonly currentMode: () => 'PreferSync' | 'PreferAsync' | 'Sync'
-  )
-}
+export declare class ControlledScheduler
 ```
 
 Added in v1.0.0
@@ -118,14 +111,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare class SyncScheduler {
-  constructor(
-    /**
-     * @since 1.0.0
-     */
-    readonly initialMode: 'PreferSync' | 'PreferAsync' | 'Sync'
-  )
-}
+export declare class SyncScheduler
 ```
 
 Added in v1.0.0

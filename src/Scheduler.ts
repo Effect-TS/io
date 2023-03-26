@@ -76,13 +76,6 @@ export class SyncScheduler implements Scheduler {
    */
   deferred = false
 
-  constructor(
-    /**
-     * @since 1.0.0
-     */
-    readonly initialMode: "PreferSync" | "PreferAsync" | "Sync"
-  ) {}
-
   /**
    * @since 1.0.0
    */
@@ -124,13 +117,6 @@ export class ControlledScheduler implements Scheduler {
    */
   deferred = false
 
-  constructor(
-    /**
-     * @since 1.0.0
-     */
-    readonly currentMode: () => "PreferSync" | "PreferAsync" | "Sync"
-  ) {}
-
   /**
    * @since 1.0.0
    */
@@ -140,13 +126,6 @@ export class ControlledScheduler implements Scheduler {
     } else {
       this.tasks.push(task)
     }
-  }
-
-  /**
-   * @since 1.0.0
-   */
-  get executionMode(): "PreferSync" | "PreferAsync" | "Sync" {
-    return this.currentMode()
   }
 
   /**

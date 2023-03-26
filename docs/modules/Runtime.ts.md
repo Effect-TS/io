@@ -26,8 +26,6 @@ Added in v1.0.0
   - [runSync](#runsync)
   - [runSyncEither](#runsynceither)
   - [runSyncExit](#runsyncexit)
-  - [runSyncExitOrFiber](#runsyncexitorfiber)
-  - [runSyncOrFiber](#runsyncorfiber)
 - [exports](#exports)
   - [FiberFailureCauseId (type alias)](#fiberfailurecauseid-type-alias)
 - [guards](#guards)
@@ -227,40 +225,6 @@ program.
 
 ```ts
 export declare const runSyncExit: <R>(runtime: Runtime<R>) => <E, A>(effect: Effect.Effect<R, E, A>) => Exit.Exit<E, A>
-```
-
-Added in v1.0.0
-
-## runSyncExitOrFiber
-
-Executes the effect synchronously returning the exit or the fiber if async.
-
-This method is effectful and should only be invoked at the edges of your
-program.
-
-**Signature**
-
-```ts
-export declare const runSyncExitOrFiber: <R>(
-  runtime: Runtime<R>
-) => <E, A>(effect: Effect.Effect<R, E, A>) => Either<Fiber.Fiber<never, Exit.Exit<E, A>>, Exit.Exit<E, A>>
-```
-
-Added in v1.0.0
-
-## runSyncOrFiber
-
-Executes the effect synchronously returning the exit or the fiber if async.
-
-This method is effectful and should only be invoked at the edges of your
-program.
-
-**Signature**
-
-```ts
-export declare const runSyncOrFiber: <R>(
-  runtime: Runtime<R>
-) => <E, A>(effect: Effect.Effect<R, E, A>) => Either<Fiber.Fiber<E, A>, A>
 ```
 
 Added in v1.0.0
