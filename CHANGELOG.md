@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.14.0
+
+### Minor Changes
+
+- [`cfbe60d`](https://github.com/Effect-TS/io/commit/cfbe60d78522166eead6b3c214a141abd90dd119) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Support new Tag with Identifier and Service
+
 ## 0.13.0
 
 ### Minor Changes
