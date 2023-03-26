@@ -788,10 +788,10 @@ instead.
 
 ```ts
 export declare const provideService: {
-  <T, T1 extends T>(tag: Context.Tag<T>, service: T1): <Env, In, Out>(
+  <T, T1 extends T>(tag: any, service: T1): <Env, In, Out>(
     self: Schedule<T | Env, In, Out>
   ) => Schedule<Exclude<Env, T>, In, Out>
-  <Env, T, In, Out, T1 extends T>(self: Schedule<Env | T, In, Out>, tag: Context.Tag<T>, service: T1): Schedule<
+  <Env, T, In, Out, T1 extends T>(self: Schedule<Env | T, In, Out>, tag: any, service: T1): Schedule<
     Exclude<Env, T>,
     In,
     Out

@@ -922,6 +922,10 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     }
   }
 
+  [OpCodes.OP_TAG](op: core.Primitive & { _tag: OpCodes.OP_SYNC }) {
+    return core.service(op as any)
+  }
+
   [OpCodes.OP_SYNC](op: core.Primitive & { _tag: OpCodes.OP_SYNC }) {
     const value = op.i0()
     const cont = this.getNextSuccessCont()

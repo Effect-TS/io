@@ -83,7 +83,7 @@ export interface TestClock extends Clock.Clock {
 }
 
 /** @internal */
-export const Tag: Context.Tag<TestClock> = Context.Tag<TestClock>()
+export const Tag: Context.Tag<TestClock, TestClock> = Context.Tag<TestClock>()
 
 /**
  * The warning message that will be displayed if a test is using time but is

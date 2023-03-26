@@ -482,16 +482,16 @@ export const flatMap = Debug.untracedDual<
 
 /** @internal */
 export const flatten = dual<
-  <R2, E2, A>(
-    tag: Context.Tag<Layer.Layer<R2, E2, A>>
+  <R2, E2, A, I>(
+    tag: Context.Tag<I, Layer.Layer<R2, E2, A>>
   ) => <R, E>(
-    self: Layer.Layer<R, E, Layer.Layer<R2, E2, A>>
+    self: Layer.Layer<R, E, I>
   ) => Layer.Layer<R | R2, E | E2, A>,
-  <R, E, A, R2, E2>(
-    self: Layer.Layer<R, E, Layer.Layer<R2, E2, A>>,
-    tag: Context.Tag<Layer.Layer<R2, E2, A>>
+  <R, E, A, R2, E2, I>(
+    self: Layer.Layer<R, E, I>,
+    tag: Context.Tag<I, Layer.Layer<R2, E2, A>>
   ) => Layer.Layer<R | R2, E | E2, A>
->(2, (self, tag) => flatMap(self, Context.get(tag)))
+>(2, (self, tag) => flatMap(self, Context.get(tag as any) as any))
 
 /** @internal */
 export const fresh = <R, E, A>(self: Layer.Layer<R, E, A>): Layer.Layer<R, E, A> => {
@@ -502,10 +502,10 @@ export const fresh = <R, E, A>(self: Layer.Layer<R, E, A>): Layer.Layer<R, E, A>
 }
 
 /** @internal */
-export const fromEffect = <T extends Context.Tag<any>, R, E>(
+export const fromEffect = <T extends Context.Tag<any, any>, R, E>(
   tag: T,
   effect: Effect.Effect<R, E, Context.Tag.Service<T>>
-): Layer.Layer<R, E, Context.Tag.Service<T>> =>
+): Layer.Layer<R, E, Context.Tag.Identifier<T>> =>
   fromEffectContext(core.map(effect, (service) => Context.make(tag, service)))
 
 /** @internal */
@@ -523,11 +523,11 @@ export function fromEffectContext<R, E, A>(
 }
 
 /** @internal */
-export const fromFunction = <A extends Context.Tag<any>, B extends Context.Tag<any>>(
+export const fromFunction = <A extends Context.Tag<any, any>, B extends Context.Tag<any, any>>(
   tagA: A,
   tagB: B,
   f: (a: Context.Tag.Service<A>) => Context.Tag.Service<B>
-): Layer.Layer<Context.Tag.Service<A>, never, Context.Tag.Service<B>> =>
+): Layer.Layer<Context.Tag.Identifier<A>, never, Context.Tag.Identifier<B>> =>
   fromEffectContext(core.serviceWith(tagA, (a) => Context.make(tagB, f(a))))
 
 /** @internal */
@@ -673,17 +673,17 @@ export const passthrough = <RIn, E, ROut>(self: Layer.Layer<RIn, E, ROut>): Laye
 
 /** @internal */
 export const project = Debug.untracedDual<
-  <A extends Context.Tag<any>, B extends Context.Tag<any>>(
+  <A extends Context.Tag<any, any>, B extends Context.Tag<any, any>>(
     tagA: A,
     tagB: B,
     f: (a: Context.Tag.Service<A>) => Context.Tag.Service<B>
-  ) => <RIn, E>(self: Layer.Layer<RIn, E, Context.Tag.Service<A>>) => Layer.Layer<RIn, E, Context.Tag.Service<B>>,
-  <RIn, E, A extends Context.Tag<any>, B extends Context.Tag<any>>(
-    self: Layer.Layer<RIn, E, Context.Tag.Service<A>>,
+  ) => <RIn, E>(self: Layer.Layer<RIn, E, Context.Tag.Identifier<A>>) => Layer.Layer<RIn, E, Context.Tag.Identifier<B>>,
+  <RIn, E, A extends Context.Tag<any, any>, B extends Context.Tag<any, any>>(
+    self: Layer.Layer<RIn, E, Context.Tag.Identifier<A>>,
     tagA: A,
     tagB: B,
     f: (a: Context.Tag.Service<A>) => Context.Tag.Service<B>
-  ) => Layer.Layer<RIn, E, Context.Tag.Service<B>>
+  ) => Layer.Layer<RIn, E, Context.Tag.Identifier<B>>
 >(4, (restore) =>
   (self, tagA, tagB, f) =>
     map(
@@ -768,7 +768,7 @@ export const retry = dual<
 const retryLoop = <RIn, E, ROut, RIn2, X>(
   self: Layer.Layer<RIn, E, ROut>,
   schedule: Schedule.Schedule<RIn2, E, X>,
-  stateTag: Context.Tag<{ state: unknown }>,
+  stateTag: Context.Tag<{ state: unknown }, { state: unknown }>,
   state: unknown
 ): Layer.Layer<RIn | RIn2, E, ROut> => {
   return pipe(
@@ -785,7 +785,7 @@ const retryLoop = <RIn, E, ROut, RIn2, X>(
 /** @internal */
 const retryUpdate = <RIn, E, X>(
   schedule: Schedule.Schedule<RIn, E, X>,
-  stateTag: Context.Tag<{ state: unknown }>,
+  stateTag: Context.Tag<{ state: unknown }, { state: unknown }>,
   error: E,
   state: unknown
 ): Layer.Layer<RIn, E, { state: unknown }> => {
@@ -824,10 +824,10 @@ export const scope = (): Layer.Layer<never, never, Scope.Scope.Closeable> => {
 }
 
 /** @internal */
-export const scoped = <T extends Context.Tag<any>, R, E>(
+export const scoped = <T extends Context.Tag<any, any>, R, E>(
   tag: T,
   effect: Effect.Effect<R, E, Context.Tag.Service<T>>
-): Layer.Layer<Exclude<R, Scope.Scope>, E, Context.Tag.Service<T>> => {
+): Layer.Layer<Exclude<R, Scope.Scope>, E, Context.Tag.Identifier<T>> => {
   return scopedContext(core.map(effect, (service) => Context.make(tag, service)))
 }
 
@@ -849,15 +849,17 @@ export const scopedContext = <R, E, A>(
 }
 
 /** @internal */
-export const service = <T>(tag: Context.Tag<T>): Layer.Layer<T, never, T> => {
+export const service = <T extends Context.Tag<any, any>>(
+  tag: T
+): Layer.Layer<Context.Tag.Identifier<T>, never, Context.Tag.Identifier<T>> => {
   return fromEffect(tag, core.service(tag))
 }
 
 /** @internal */
-export const succeed = <T extends Context.Tag<any>>(
+export const succeed = <T extends Context.Tag<any, any>>(
   tag: T,
   resource: Context.Tag.Service<T>
-): Layer.Layer<never, never, Context.Tag.Service<T>> => {
+): Layer.Layer<never, never, Context.Tag.Identifier<T>> => {
   return fromEffectContext(core.succeed(Context.make(tag, resource)))
 }
 
@@ -879,10 +881,10 @@ export const suspend = <RIn, E, ROut>(
 }
 
 /** @internal */
-export const sync = <T extends Context.Tag<any>>(
+export const sync = <T extends Context.Tag<any, any>>(
   tag: T,
   evaluate: LazyArg<Context.Tag.Service<T>>
-): Layer.Layer<never, never, Context.Tag.Service<T>> => {
+): Layer.Layer<never, never, Context.Tag.Identifier<T>> => {
   return fromEffectContext(core.sync(() => Context.make(tag, evaluate())))
 }
 
@@ -1052,12 +1054,12 @@ export const provideSomeLayer: {
 
 /** @internal */
 export const toLayer = dual<
-  <A>(tag: Context.Tag<A>) => <R, E>(self: Effect.Effect<R, E, A>) => Layer.Layer<R, E, A>,
-  <R, E, A>(self: Effect.Effect<R, E, A>, tag: Context.Tag<A>) => Layer.Layer<R, E, A>
+  <I, A>(tag: Context.Tag<I, A>) => <R, E>(self: Effect.Effect<R, E, A>) => Layer.Layer<R, E, I>,
+  <R, E, A, I>(self: Effect.Effect<R, E, A>, tag: Context.Tag<I, A>) => Layer.Layer<R, E, I>
 >(2, (self, tag) => fromEffect(tag, self))
 
 /** @internal */
 export const toLayerScoped = dual<
-  <A>(tag: Context.Tag<A>) => <R, E>(self: Effect.Effect<R, E, A>) => Layer.Layer<Exclude<R, Scope.Scope>, E, A>,
-  <R, E, A>(self: Effect.Effect<R, E, A>, tag: Context.Tag<A>) => Layer.Layer<Exclude<R, Scope.Scope>, E, A>
+  <I, A>(tag: Context.Tag<I, A>) => <R, E>(self: Effect.Effect<R, E, A>) => Layer.Layer<Exclude<R, Scope.Scope>, E, I>,
+  <R, E, I, A>(self: Effect.Effect<R, E, A>, tag: Context.Tag<I, A>) => Layer.Layer<Exclude<R, Scope.Scope>, E, I>
 >(2, (self, tag) => scoped(tag, self))

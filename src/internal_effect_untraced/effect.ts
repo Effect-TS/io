@@ -1920,37 +1920,37 @@ export const promiseInterrupt = Debug.methodWithTrace((trace, restore) =>
 
 /* @internal */
 export const provideService = Debug.dualWithTrace<
-  <T extends Context.Tag<any>>(
+  <T extends Context.Tag<any, any>>(
     tag: T,
     service: Context.Tag.Service<T>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<Exclude<R, Context.Tag.Service<T>>, E, A>,
-  <R, E, A, T extends Context.Tag<any>>(
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<Exclude<R, Context.Tag.Identifier<T>>, E, A>,
+  <R, E, A, T extends Context.Tag<any, any>>(
     self: Effect.Effect<R, E, A>,
     tag: T,
     service: Context.Tag.Service<T>
-  ) => Effect.Effect<Exclude<R, Context.Tag.Service<T>>, E, A>
+  ) => Effect.Effect<Exclude<R, Context.Tag.Identifier<T>>, E, A>
 >(3, (trace) => (self, tag, service) => provideServiceEffect(self, tag, core.succeed(service)).traced(trace))
 
 /* @internal */
 export const provideServiceEffect = Debug.dualWithTrace<
-  <T extends Context.Tag<any>, R1, E1>(
+  <T extends Context.Tag<any, any>, R1, E1>(
     tag: T,
     effect: Effect.Effect<R1, E1, Context.Tag.Service<T>>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R1 | Exclude<R, Context.Tag.Service<T>>, E | E1, A>,
-  <R, E, A, T extends Context.Tag<any>, R1, E1>(
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R1 | Exclude<R, Context.Tag.Identifier<T>>, E | E1, A>,
+  <R, E, A, T extends Context.Tag<any, any>, R1, E1>(
     self: Effect.Effect<R, E, A>,
     tag: T,
     effect: Effect.Effect<R1, E1, Context.Tag.Service<T>>
-  ) => Effect.Effect<R1 | Exclude<R, Context.Tag.Service<T>>, E | E1, A>
+  ) => Effect.Effect<R1 | Exclude<R, Context.Tag.Identifier<T>>, E | E1, A>
 >(
   3,
   (trace) =>
-    <R, E, A, T extends Context.Tag<any>, R1, E1>(
+    <R, E, A, T extends Context.Tag<any, any>, R1, E1>(
       self: Effect.Effect<R, E, A>,
       tag: T,
       effect: Effect.Effect<R1, E1, Context.Tag.Service<T>>
     ) =>
-      core.contextWithEffect((env: Context.Context<R1 | Exclude<R, Context.Tag.Service<T>>>) =>
+      core.contextWithEffect((env: Context.Context<R1 | Exclude<R, Context.Tag.Identifier<T>>>) =>
         core.flatMap(effect, (service) =>
           core.provideContext(self, pipe(env, Context.add(tag, service)) as Context.Context<R | R1>))
       ).traced(trace)
@@ -2874,17 +2874,17 @@ export const updateFiberRefs = Debug.methodWithTrace((trace, restore) =>
 
 /* @internal */
 export const updateService = Debug.dualWithTrace<
-  <T extends Context.Tag<any>>(
+  <T extends Context.Tag<any, any>>(
     tag: T,
     f: (service: Context.Tag.Service<T>) => Context.Tag.Service<T>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | Context.Tag.Service<T>, E, A>,
-  <R, E, A, T extends Context.Tag<any>>(
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | Context.Tag.Identifier<T>, E, A>,
+  <R, E, A, T extends Context.Tag<any, any>>(
     self: Effect.Effect<R, E, A>,
     tag: T,
     f: (service: Context.Tag.Service<T>) => Context.Tag.Service<T>
-  ) => Effect.Effect<R | Context.Tag.Service<T>, E, A>
+  ) => Effect.Effect<R | Context.Tag.Identifier<T>, E, A>
 >(3, (trace, restore) =>
-  <R, E, A, T extends Context.Tag<any>>(
+  <R, E, A, T extends Context.Tag<any, any>>(
     self: Effect.Effect<R, E, A>,
     tag: T,
     f: (service: Context.Tag.Service<T>) => Context.Tag.Service<T>
@@ -2893,7 +2893,7 @@ export const updateService = Debug.dualWithTrace<
       pipe(
         context,
         Context.add(tag, restore(f)(Context.unsafeGet(context, tag)))
-      )).traced(trace) as Effect.Effect<R | Context.Tag.Service<T>, E, A>)
+      )).traced(trace) as Effect.Effect<R | Context.Tag.Identifier<T>, E, A>)
 
 /* @internal */
 export const validate = Debug.dualWithTrace<

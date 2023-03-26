@@ -90,6 +90,16 @@ export interface Effect<R, E, A> extends Effect.Variance<R, E, A>, Equal.Equal {
   traced(trace: Trace): Effect<R, E, A>
 }
 
+// TODO(Mike): after traced() is removed as a method
+
+// /**
+//  * @since 1.0.0
+//  * @category models
+//  */
+// declare module "@effect/data/Context" {
+//   interface Tag<Identifier, Service> extends Effect<Identifier, never, Service> {}
+// }
+
 /**
  * @since 1.0.0
  */
@@ -2960,15 +2970,15 @@ export const provideLayer: {
  * @category context
  */
 export const provideService: {
-  <T extends Context.Tag<any>>(
+  <T extends Context.Tag<any, any>>(
     tag: T,
     service: Context.Tag.Service<T>
-  ): <R, E, A>(self: Effect<R, E, A>) => Effect<Exclude<R, Context.Tag.Service<T>>, E, A>
-  <R, E, A, T extends Context.Tag<any>>(
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<Exclude<R, Context.Tag.Identifier<T>>, E, A>
+  <R, E, A, T extends Context.Tag<any, any>>(
     self: Effect<R, E, A>,
     tag: T,
     service: Context.Tag.Service<T>
-  ): Effect<Exclude<R, Context.Tag.Service<T>>, E, A>
+  ): Effect<Exclude<R, Context.Tag.Identifier<T>>, E, A>
 } = effect.provideService
 
 /**
@@ -2979,15 +2989,15 @@ export const provideService: {
  * @category context
  */
 export const provideServiceEffect: {
-  <T extends Context.Tag<any>, R1, E1>(
+  <T extends Context.Tag<any, any>, R1, E1>(
     tag: T,
     effect: Effect<R1, E1, Context.Tag.Service<T>>
-  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | Exclude<R, Context.Tag.Service<T>>, E1 | E, A>
-  <R, E, A, T extends Context.Tag<any>, R1, E1>(
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | Exclude<R, Context.Tag.Identifier<T>>, E1 | E, A>
+  <R, E, A, T extends Context.Tag<any, any>, R1, E1>(
     self: Effect<R, E, A>,
     tag: T,
     effect: Effect<R1, E1, Context.Tag.Service<T>>
-  ): Effect<R1 | Exclude<R, Context.Tag.Service<T>>, E | E1, A>
+  ): Effect<R1 | Exclude<R, Context.Tag.Identifier<T>>, E | E1, A>
 } = effect.provideServiceEffect
 
 /**
@@ -3786,7 +3796,9 @@ export const sequentialFinalizers: <R, E, A>(self: Effect<R, E, A>) => Effect<R 
  * @since 1.0.0
  * @category context
  */
-export const service: <T>(tag: Context.Tag<T>) => Effect<T, never, T> = core.service
+export const service: <T extends Context.Tag<any, any>>(
+  tag: T
+) => Effect<Context.Tag.Identifier<T>, never, Context.Tag.Service<T>> = core.service
 
 /**
  * Accesses the specified service in the context of the effect.
@@ -3794,10 +3806,10 @@ export const service: <T>(tag: Context.Tag<T>) => Effect<T, never, T> = core.ser
  * @since 1.0.0
  * @category context
  */
-export const serviceWith: <T extends Context.Tag<any>, A>(
+export const serviceWith: <T extends Context.Tag<any, any>, A>(
   tag: T,
   f: (a: Context.Tag.Service<T>) => A
-) => Effect<Context.Tag.Service<T>, never, A> = core.serviceWith
+) => Effect<Context.Tag.Identifier<T>, never, A> = core.serviceWith
 
 /**
  * Effectfully accesses the specified service in the context of the effect.
@@ -3805,10 +3817,10 @@ export const serviceWith: <T extends Context.Tag<any>, A>(
  * @since 1.0.0
  * @category context
  */
-export const serviceWithEffect: <T extends Context.Tag<any>, R, E, A>(
+export const serviceWithEffect: <T extends Context.Tag<any, any>, R, E, A>(
   tag: T,
   f: (a: Context.Tag.Service<T>) => Effect<R, E, A>
-) => Effect<R | Context.Tag.Service<T>, E, A> = core.serviceWithEffect
+) => Effect<R | Context.Tag.Identifier<T>, E, A> = core.serviceWithEffect
 
 /**
  * Sets the current `ConfigProvider`.
@@ -4305,8 +4317,8 @@ export const timeoutTo: {
  * @category conversions
  */
 export const toLayer: {
-  <A>(tag: Context.Tag<A>): <R, E>(self: Effect<R, E, A>) => Layer.Layer<R, E, A>
-  <R, E, A>(self: Effect<R, E, A>, tag: Context.Tag<A>): Layer.Layer<R, E, A>
+  <I, A>(tag: Context.Tag<I, A>): <R, E>(self: Effect<R, E, A>) => Layer.Layer<R, E, I>
+  <R, E, A, I>(self: Effect<R, E, A>, tag: Context.Tag<I, A>): Layer.Layer<R, E, I>
 } = layer.toLayer
 
 /**
@@ -4343,8 +4355,8 @@ export const toLayerScopedDiscard: <R, E, _>(
  * @category conversions
  */
 export const toLayerScoped: {
-  <A>(tag: Context.Tag<A>): <R, E>(self: Effect<R, E, A>) => Layer.Layer<Exclude<R, Scope.Scope>, E, A>
-  <R, E, A>(self: Effect<R, E, A>, tag: Context.Tag<A>): Layer.Layer<Exclude<R, Scope.Scope>, E, A>
+  <I, A>(tag: Context.Tag<I, A>): <R, E>(self: Effect<R, E, A>) => Layer.Layer<Exclude<R, Scope.Scope>, E, I>
+  <R, E, I, A>(self: Effect<R, E, A>, tag: Context.Tag<I, A>): Layer.Layer<Exclude<R, Scope.Scope>, E, I>
 } = layer.toLayerScoped
 
 /**
@@ -4821,15 +4833,15 @@ export const updateRuntimeFlags: (patch: RuntimeFlagsPatch.RuntimeFlagsPatch) =>
  * @category context
  */
 export const updateService: {
-  <T extends Context.Tag<any>>(
+  <T extends Context.Tag<any, any>>(
     tag: T,
     f: (service: Context.Tag.Service<T>) => Context.Tag.Service<T>
-  ): <R, E, A>(self: Effect<R, E, A>) => Effect<Context.Tag.Service<T> | R, E, A>
-  <R, E, A, T extends Context.Tag<any>>(
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R | Context.Tag.Identifier<T>, E, A>
+  <R, E, A, T extends Context.Tag<any, any>>(
     self: Effect<R, E, A>,
     tag: T,
     f: (service: Context.Tag.Service<T>) => Context.Tag.Service<T>
-  ): Effect<R | Context.Tag.Service<T>, E, A>
+  ): Effect<R | Context.Tag.Identifier<T>, E, A>
 } = effect.updateService
 
 /**

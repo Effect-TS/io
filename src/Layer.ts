@@ -185,10 +185,10 @@ export const discard: <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn, E,
  * @since 1.0.0
  * @category constructors
  */
-export const effect: <T extends Context.Tag<any>, R, E>(
+export const effect: <T extends Context.Tag<any, any>, R, E>(
   tag: T,
   effect: Effect.Effect<R, E, Context.Tag.Service<T>>
-) => Layer<R, E, Context.Tag.Service<T>> = internal.fromEffect
+) => Layer<R, E, Context.Tag.Identifier<T>> = internal.fromEffect
 
 /**
  * Constructs a layer from the specified effect discarding it's output.
@@ -275,15 +275,8 @@ export const flatMap: {
  * @category sequencing
  */
 export const flatten: {
-  <R2, E2, A>(
-    tag: Context.Tag<Layer<R2, E2, A>>
-  ): <R, E>(
-    self: Layer<R, E, Layer<R2, E2, A>>
-  ) => Layer<R2 | R, E2 | E, A>
-  <R, E, A, R2, E2>(
-    self: Layer<R, E, Layer<R2, E2, A>>,
-    tag: Context.Tag<Layer<R2, E2, A>>
-  ): Layer<R | R2, E | E2, A>
+  <R2, E2, A, I>(tag: Context.Tag<I, Layer<R2, E2, A>>): <R, E>(self: Layer<R, E, I>) => Layer<R2 | R, E2 | E, A>
+  <R, E, A, R2, E2, I>(self: Layer<R, E, I>, tag: Context.Tag<I, Layer<R2, E2, A>>): Layer<R | R2, E | E2, A>
 } = internal.flatten
 
 /**
@@ -294,11 +287,11 @@ export const flatten: {
  */
 export const fresh: <R, E, A>(self: Layer<R, E, A>) => Layer<R, E, A> = internal.fresh
 
-const fromFunction: <A extends Context.Tag<any>, B extends Context.Tag<any>>(
+const fromFunction: <A extends Context.Tag<any, any>, B extends Context.Tag<any, any>>(
   tagA: A,
   tagB: B,
   f: (a: Context.Tag.Service<A>) => Context.Tag.Service<B>
-) => Layer<Context.Tag.Service<A>, never, Context.Tag.Service<B>> = internal.fromFunction
+) => Layer<Context.Tag.Identifier<A>, never, Context.Tag.Identifier<B>> = internal.fromFunction
 
 export {
   /**
@@ -461,17 +454,17 @@ export const passthrough: <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn
  * @category utils
  */
 export const project: {
-  <A extends Context.Tag<any>, B extends Context.Tag<any>>(
+  <A extends Context.Tag<any, any>, B extends Context.Tag<any, any>>(
     tagA: A,
     tagB: B,
     f: (a: Context.Tag.Service<A>) => Context.Tag.Service<B>
-  ): <RIn, E>(self: Layer<RIn, E, Context.Tag.Service<A>>) => Layer<RIn, E, Context.Tag.Service<B>>
-  <RIn, E, A extends Context.Tag<any>, B extends Context.Tag<any>>(
-    self: Layer<RIn, E, Context.Tag.Service<A>>,
+  ): <RIn, E>(self: Layer<RIn, E, Context.Tag.Identifier<A>>) => Layer<RIn, E, Context.Tag.Identifier<B>>
+  <RIn, E, A extends Context.Tag<any, any>, B extends Context.Tag<any, any>>(
+    self: Layer<RIn, E, Context.Tag.Identifier<A>>,
     tagA: A,
     tagB: B,
     f: (a: Context.Tag.Service<A>) => Context.Tag.Service<B>
-  ): Layer<RIn, E, Context.Tag.Service<B>>
+  ): Layer<RIn, E, Context.Tag.Identifier<B>>
 } = internal.project
 
 /**
@@ -543,10 +536,10 @@ export const scope: (_: void) => Layer<never, never, Scope.CloseableScope> = int
  * @since 1.0.0
  * @category constructors
  */
-export const scoped: <T extends Context.Tag<any>, R, E>(
+export const scoped: <T extends Context.Tag<any, any>, R, E>(
   tag: T,
   effect: Effect.Effect<R, E, Context.Tag.Service<T>>
-) => Layer<Exclude<R, Scope.Scope>, E, Context.Tag.Service<T>> = internal.scoped
+) => Layer<Exclude<R, Scope.Scope>, E, Context.Tag.Identifier<T>> = internal.scoped
 
 /**
  * Constructs a layer from the specified scoped effect.
@@ -575,7 +568,9 @@ export const scopedContext: <R, E, A>(
  * @since 1.0.0
  * @category constructors
  */
-export const service: <T>(tag: Context.Tag<T>) => Layer<T, never, T> = internal.service
+export const service: <T extends Context.Tag<any, any>>(
+  tag: T
+) => Layer<Context.Tag.Identifier<T>, never, Context.Tag.Identifier<T>> = internal.service
 
 /**
  * Constructs a layer from the specified value.
@@ -583,10 +578,10 @@ export const service: <T>(tag: Context.Tag<T>) => Layer<T, never, T> = internal.
  * @since 1.0.0
  * @category constructors
  */
-export const succeed: <T extends Context.Tag<any>>(
+export const succeed: <T extends Context.Tag<any, any>>(
   tag: T,
   resource: Context.Tag.Service<T>
-) => Layer<never, never, Context.Tag.Service<T>> = internal.succeed
+) => Layer<never, never, Context.Tag.Identifier<T>> = internal.succeed
 
 /**
  * Constructs a layer from the specified value, which must return one or more
@@ -612,10 +607,10 @@ export const suspend: <RIn, E, ROut>(evaluate: LazyArg<Layer<RIn, E, ROut>>) => 
  * @since 1.0.0
  * @category constructors
  */
-export const sync: <T extends Context.Tag<any>>(
+export const sync: <T extends Context.Tag<any, any>>(
   tag: T,
   evaluate: LazyArg<Context.Tag.Service<T>>
-) => Layer<never, never, Context.Tag.Service<T>> = internal.sync
+) => Layer<never, never, Context.Tag.Identifier<T>> = internal.sync
 
 /**
  * Lazily constructs a layer from the specified value, which must return one or more

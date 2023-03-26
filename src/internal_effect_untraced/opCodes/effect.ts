@@ -53,6 +53,12 @@ export type OP_SYNC = typeof OP_SYNC
 export const OP_SYNC = "Sync" as const
 
 /** @internal */
+export const OP_TAG = "Tag" as const
+
+/** @internal */
+export type OP_TAG = typeof OP_TAG
+
+/** @internal */
 export type OP_UPDATE_RUNTIME_FLAGS = typeof OP_UPDATE_RUNTIME_FLAGS
 
 /** @internal */

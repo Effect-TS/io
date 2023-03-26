@@ -2339,11 +2339,11 @@ requires more than one service use `provideContext` instead.
 
 ```ts
 export declare const provideService: {
-  <T extends Context.Tag<any>>(tag: T, service: Context.Tag.Service<T>): <R, E, A>(
+  <T extends Context.Tag<any, any>>(tag: T, service: Context.Tag.Service<T>): <R, E, A>(
     self: Effect<R, E, A>
-  ) => Effect<Exclude<R, Context.Tag.Service<T>>, E, A>
-  <R, E, A, T extends Context.Tag<any>>(self: Effect<R, E, A>, tag: T, service: Context.Tag.Service<T>): Effect<
-    Exclude<R, Context.Tag.Service<T>>,
+  ) => Effect<Exclude<R, Context.Tag.Identifier<T>>, E, A>
+  <R, E, A, T extends Context.Tag<any, any>>(self: Effect<R, E, A>, tag: T, service: Context.Tag.Service<T>): Effect<
+    Exclude<R, Context.Tag.Identifier<T>>,
     E,
     A
   >
@@ -2361,14 +2361,14 @@ requires more than one service use `provideContext` instead.
 
 ```ts
 export declare const provideServiceEffect: {
-  <T extends Context.Tag<any>, R1, E1>(tag: T, effect: Effect<R1, E1, Context.Tag.Service<T>>): <R, E, A>(
+  <T extends Context.Tag<any, any>, R1, E1>(tag: T, effect: Effect<R1, E1, Context.Tag.Service<T>>): <R, E, A>(
     self: Effect<R, E, A>
-  ) => Effect<R1 | Exclude<R, Context.Tag.Service<T>>, E1 | E, A>
-  <R, E, A, T extends Context.Tag<any>, R1, E1>(
+  ) => Effect<R1 | Exclude<R, Context.Tag.Identifier<T>>, E1 | E, A>
+  <R, E, A, T extends Context.Tag<any, any>, R1, E1>(
     self: Effect<R, E, A>,
     tag: T,
     effect: Effect<R1, E1, Context.Tag.Service<T>>
-  ): Effect<R1 | Exclude<R, Context.Tag.Service<T>>, E | E1, A>
+  ): Effect<R1 | Exclude<R, Context.Tag.Identifier<T>>, E | E1, A>
 }
 ```
 
@@ -2423,7 +2423,9 @@ Extracts the specified service from the context of the effect.
 **Signature**
 
 ```ts
-export declare const service: <T>(tag: Context.Tag<T>) => Effect<T, never, T>
+export declare const service: <T extends Context.Tag<any, any>>(
+  tag: T
+) => Effect<Context.Tag.Identifier<T>, never, Context.Tag.Service<T>>
 ```
 
 Added in v1.0.0
@@ -2435,10 +2437,10 @@ Accesses the specified service in the context of the effect.
 **Signature**
 
 ```ts
-export declare const serviceWith: <T extends Context.Tag<any>, A>(
+export declare const serviceWith: <T extends Context.Tag<any, any>, A>(
   tag: T,
   f: (a: Context.Tag.Service<T>) => A
-) => Effect<Context.Tag.Service<T>, never, A>
+) => Effect<Context.Tag.Identifier<T>, never, A>
 ```
 
 Added in v1.0.0
@@ -2450,10 +2452,10 @@ Effectfully accesses the specified service in the context of the effect.
 **Signature**
 
 ```ts
-export declare const serviceWithEffect: <T extends Context.Tag<any>, R, E, A>(
+export declare const serviceWithEffect: <T extends Context.Tag<any, any>, R, E, A>(
   tag: T,
   f: (a: Context.Tag.Service<T>) => Effect<R, E, A>
-) => Effect<R | Context.Tag.Service<T>, E, A>
+) => Effect<R | Context.Tag.Identifier<T>, E, A>
 ```
 
 Added in v1.0.0
@@ -2466,14 +2468,14 @@ Updates the service with the required service entry.
 
 ```ts
 export declare const updateService: {
-  <T extends Context.Tag<any>>(tag: T, f: (service: Context.Tag.Service<T>) => Context.Tag.Service<T>): <R, E, A>(
+  <T extends Context.Tag<any, any>>(tag: T, f: (service: Context.Tag.Service<T>) => Context.Tag.Service<T>): <R, E, A>(
     self: Effect<R, E, A>
-  ) => Effect<Context.Tag.Service<T> | R, E, A>
-  <R, E, A, T extends Context.Tag<any>>(
+  ) => Effect<R | Context.Tag.Identifier<T>, E, A>
+  <R, E, A, T extends Context.Tag<any, any>>(
     self: Effect<R, E, A>,
     tag: T,
     f: (service: Context.Tag.Service<T>) => Context.Tag.Service<T>
-  ): Effect<R | Context.Tag.Service<T>, E, A>
+  ): Effect<R | Context.Tag.Identifier<T>, E, A>
 }
 ```
 
@@ -2613,8 +2615,8 @@ Constructs a layer from this effect.
 
 ```ts
 export declare const toLayer: {
-  <A>(tag: Context.Tag<A>): <R, E>(self: Effect<R, E, A>) => Layer.Layer<R, E, A>
-  <R, E, A>(self: Effect<R, E, A>, tag: Context.Tag<A>): Layer.Layer<R, E, A>
+  <I, A>(tag: Context.Tag<I, A>): <R, E>(self: Effect<R, E, A>) => Layer.Layer<R, E, I>
+  <R, E, A, I>(self: Effect<R, E, A>, tag: Context.Tag<I, A>): Layer.Layer<R, E, I>
 }
 ```
 
@@ -2652,8 +2654,8 @@ Constructs a layer from this effect.
 
 ```ts
 export declare const toLayerScoped: {
-  <A>(tag: Context.Tag<A>): <R, E>(self: Effect<R, E, A>) => Layer.Layer<Exclude<R, Scope.Scope>, E, A>
-  <R, E, A>(self: Effect<R, E, A>, tag: Context.Tag<A>): Layer.Layer<Exclude<R, Scope.Scope>, E, A>
+  <I, A>(tag: Context.Tag<I, A>): <R, E>(self: Effect<R, E, A>) => Layer.Layer<Exclude<R, Scope.Scope>, E, I>
+  <R, E, I, A>(self: Effect<R, E, A>, tag: Context.Tag<I, A>): Layer.Layer<Exclude<R, Scope.Scope>, E, I>
 }
 ```
 

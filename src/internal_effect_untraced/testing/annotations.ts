@@ -105,7 +105,7 @@ class AnnotationsImpl implements Annotations {
 }
 
 /** @internal */
-export const Tag: Context.Tag<Annotations> = Context.Tag<Annotations>()
+export const Tag: Context.Tag<Annotations, Annotations> = Context.Tag<Annotations>()
 
 /** @internal */
 export const isAnnotations = (u: unknown): u is Annotations => {

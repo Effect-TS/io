@@ -224,7 +224,7 @@ The service tag for `ConfigProvider`.
 **Signature**
 
 ```ts
-export declare const Tag: Context.Tag<ConfigProvider>
+export declare const Tag: Context.Tag<ConfigProvider, ConfigProvider>
 ```
 
 Added in v1.0.0

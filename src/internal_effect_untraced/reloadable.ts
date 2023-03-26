@@ -27,14 +27,14 @@ const reloadableVariance = {
 }
 
 /** @internal */
-export const auto = <Out extends Context.Tag<any>, In, E, R>(
+export const auto = <Out extends Context.Tag<any, any>, In, E, R>(
   tag: Out,
-  layer: Layer.Layer<In, E, Context.Tag.Service<Out>>,
+  layer: Layer.Layer<In, E, Context.Tag.Identifier<Out>>,
   policy: Schedule.Schedule<R, unknown, unknown>
 ): Layer.Layer<
   R | In,
   E,
-  Reloadable.Reloadable<any>
+  Reloadable.Reloadable<Context.Tag.Identifier<Out>>
 > =>
   _layer.scoped(
     reloadableTag(tag),
@@ -56,14 +56,14 @@ export const auto = <Out extends Context.Tag<any>, In, E, R>(
   )
 
 /** @internal */
-export const autoFromConfig = <Out extends Context.Tag<any>, In, E, R>(
+export const autoFromConfig = <Out extends Context.Tag<any, any>, In, E, R>(
   tag: Out,
-  layer: Layer.Layer<In, E, Context.Tag.Service<Out>>,
+  layer: Layer.Layer<In, E, Context.Tag.Identifier<Out>>,
   scheduleFromConfig: (context: Context.Context<In>) => Schedule.Schedule<R, unknown, unknown>
 ): Layer.Layer<
   R | In,
   E,
-  Reloadable.Reloadable<any>
+  Reloadable.Reloadable<Context.Tag.Identifier<Out>>
 > =>
   _layer.scoped(
     reloadableTag(tag),
@@ -80,7 +80,9 @@ export const autoFromConfig = <Out extends Context.Tag<any>, In, E, R>(
 
 /** @internal */
 export const get = Debug.methodWithTrace((trace) =>
-  <A>(tag: Context.Tag<A>): Effect.Effect<Reloadable.Reloadable<A>, never, A> =>
+  <T extends Context.Tag<any, any>>(
+    tag: T
+  ): Effect.Effect<Reloadable.Reloadable<Context.Tag.Identifier<T>>, never, Context.Tag.Service<T>> =>
     core.serviceWithEffect(
       reloadableTag(tag),
       (reloadable) => scopedRef.get(reloadable.scopedRef)
@@ -88,11 +90,11 @@ export const get = Debug.methodWithTrace((trace) =>
 )
 
 /** @internal */
-export const manual = <Out extends Context.Tag<any>, In, E>(
+export const manual = <Out extends Context.Tag<any, any>, In, E>(
   tag: Out,
-  layer: Layer.Layer<In, E, Context.Tag.Service<Out>>
-): Layer.Layer<In, E, Reloadable.Reloadable<Context.Tag.Service<Out>>> =>
-  _layer.scoped(
+  layer: Layer.Layer<In, E, Context.Tag.Identifier<Out>>
+): Layer.Layer<In, E, Reloadable.Reloadable<Context.Tag.Identifier<Out>>> => {
+  return _layer.scoped(
     reloadableTag(tag),
     pipe(
       core.context<In>(),
@@ -114,26 +116,34 @@ export const manual = <Out extends Context.Tag<any>, In, E>(
       )
     )
   )
+}
 
 /** @internal */
 const tagMap = globalValue(
   Symbol.for("@effect/io/Reloadable/tagMap"),
-  () => new WeakMap<Context.Tag<any>, Context.Tag<any>>([])
+  () => new WeakMap<Context.Tag<any, any>, Context.Tag<any, any>>([])
 )
 
 /** @internal */
-export const reloadableTag = <A>(tag: Context.Tag<A>): Context.Tag<Reloadable.Reloadable<A>> => {
+export const reloadableTag = <T extends Context.Tag<any, any>>(
+  tag: T
+): Context.Tag<Reloadable.Reloadable<Context.Tag.Identifier<T>>, Reloadable.Reloadable<Context.Tag.Service<T>>> => {
   if (tagMap.has(tag)) {
     return tagMap.get(tag)!
   }
-  const newTag = Context.Tag<Reloadable.Reloadable<A>>()
+  const newTag = Context.Tag<
+    Reloadable.Reloadable<Context.Tag.Identifier<T>>,
+    Reloadable.Reloadable<Context.Tag.Service<T>>
+  >()
   tagMap.set(tag, newTag)
   return newTag
 }
 
 /** @internal */
 export const reload = Debug.methodWithTrace((trace) =>
-  <A>(tag: Context.Tag<A>): Effect.Effect<Reloadable.Reloadable<A>, unknown, void> =>
+  <T extends Context.Tag<any, any>>(
+    tag: T
+  ): Effect.Effect<Reloadable.Reloadable<Context.Tag.Identifier<T>>, unknown, void> =>
     core.serviceWithEffect(
       reloadableTag(tag),
       (reloadable) => reloadable.reload()
@@ -142,7 +152,9 @@ export const reload = Debug.methodWithTrace((trace) =>
 
 /** @internal */
 export const reloadFork = Debug.methodWithTrace((trace) =>
-  <A>(tag: Context.Tag<A>): Effect.Effect<Reloadable.Reloadable<A>, unknown, void> =>
+  <T extends Context.Tag<any, any>>(
+    tag: T
+  ): Effect.Effect<Reloadable.Reloadable<Context.Tag.Identifier<T>>, unknown, void> =>
     core.serviceWithEffect(reloadableTag(tag), (reloadable) =>
       pipe(
         reloadable.reload(),
