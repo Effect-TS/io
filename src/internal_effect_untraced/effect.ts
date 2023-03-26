@@ -19,7 +19,7 @@ import type * as FiberRef from "@effect/io/FiberRef"
 import * as FiberRefs from "@effect/io/FiberRefs"
 import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
 import * as internalCause from "@effect/io/internal_effect_untraced/cause"
-import { dieMessage, dieOnSync } from "@effect/io/internal_effect_untraced/clock"
+import { dieMessage } from "@effect/io/internal_effect_untraced/clock"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as fiberRefsPatch from "@effect/io/internal_effect_untraced/fiberRefs/patch"
 import * as metricLabel from "@effect/io/internal_effect_untraced/metric/label"
@@ -32,7 +32,7 @@ import * as Random from "@effect/io/Random"
 import * as Ref from "@effect/io/Ref"
 
 /* @internal */
-export { dieMessage, dieOnSync } from "@effect/io/internal_effect_untraced/clock"
+export { dieMessage } from "@effect/io/internal_effect_untraced/clock"
 
 /* @internal */
 export const absolve = Debug.methodWithTrace((trace) =>
@@ -1899,23 +1899,23 @@ export const patchFiberRefs = Debug.methodWithTrace((trace) =>
 /* @internal */
 export const promise = Debug.methodWithTrace((trace, restore) =>
   <A>(evaluate: LazyArg<Promise<A>>): Effect.Effect<never, never, A> =>
-    dieOnSync(core.async<never, never, A>((resolve) => {
+    core.async<never, never, A>((resolve) => {
       restore(evaluate)()
         .then((a) => resolve(core.exitSucceed(a)))
         .catch((e) => resolve(core.exitDie(e)))
-    })).traced(trace)
+    }).traced(trace)
 )
 
 /* @internal */
 export const promiseInterrupt = Debug.methodWithTrace((trace, restore) =>
   <A>(evaluate: (signal: AbortSignal) => Promise<A>): Effect.Effect<never, never, A> =>
-    dieOnSync(core.asyncInterruptEither<never, never, A>((resolve) => {
+    core.asyncInterruptEither<never, never, A>((resolve) => {
       const controller = new AbortController()
       restore(evaluate)(controller.signal)
         .then((a) => resolve(core.exitSucceed(a)))
         .catch((e) => resolve(core.exitDie(e)))
       return Either.left(core.sync(() => controller.abort()))
-    })).traced(trace)
+    }).traced(trace)
 )
 
 /* @internal */
@@ -2588,12 +2588,12 @@ export const attemptCatchPromise = Debug.methodWithTrace((trace, restore) =>
     evaluate: LazyArg<Promise<A>>,
     onReject: (reason: unknown) => E
   ): Effect.Effect<never, E, A> =>
-    dieOnSync(core.flatMap(attemptCatch(restore(evaluate), restore(onReject)), (promise) =>
+    core.flatMap(attemptCatch(restore(evaluate), restore(onReject)), (promise) =>
       core.async<never, E, A>((resolve) => {
         promise
           .then((a) => resolve(core.exitSucceed(a)))
           .catch((e) => resolve(core.exitFail(restore(onReject)(e))))
-      }))).traced(trace)
+      })).traced(trace)
 )
 
 /* @internal */
@@ -2602,7 +2602,7 @@ export const attemptCatchPromiseInterrupt = Debug.methodWithTrace((trace, restor
     evaluate: (signal: AbortSignal) => Promise<A>,
     onReject: (reason: unknown) => E
   ): Effect.Effect<never, E, A> =>
-    dieOnSync(core.suspend(() => {
+    core.suspend(() => {
       const controller = new AbortController()
       return pipe(
         attemptCatch(() => restore(evaluate)(controller.signal), restore(onReject)),
@@ -2614,24 +2614,24 @@ export const attemptCatchPromiseInterrupt = Debug.methodWithTrace((trace, restor
           })
         )
       )
-    })).traced(trace)
+    }).traced(trace)
 )
 
 /* @internal */
 export const attemptPromise = Debug.methodWithTrace((trace, restore) =>
   <A>(evaluate: LazyArg<Promise<A>>): Effect.Effect<never, unknown, A> =>
-    dieOnSync(core.flatMap(restore(attempt)(evaluate), (promise) =>
+    core.flatMap(restore(attempt)(evaluate), (promise) =>
       core.async<never, unknown, A>((resolve) => {
         promise
           .then((a) => resolve(core.exitSucceed(a)))
           .catch((e) => resolve(core.exitFail(e)))
-      }))).traced(trace)
+      })).traced(trace)
 )
 
 /* @internal */
 export const attemptPromiseInterrupt = Debug.methodWithTrace((trace, restore) =>
   <A>(evaluate: (signal: AbortSignal) => Promise<A>): Effect.Effect<never, unknown, A> =>
-    dieOnSync(core.flatMap(
+    core.flatMap(
       attempt(() => {
         const controller = new AbortController()
         return [controller, restore(evaluate)(controller.signal)] as const
@@ -2643,7 +2643,7 @@ export const attemptPromiseInterrupt = Debug.methodWithTrace((trace, restore) =>
             .catch((e) => resolve(core.exitFail(e)))
           return Either.left(core.sync(() => controller.abort()))
         })
-    )).traced(trace)
+    ).traced(trace)
 )
 
 /* @internal */

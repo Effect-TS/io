@@ -38,6 +38,8 @@ Added in v1.0.0
 
 ```ts
 export interface Scheduler {
+  scheduleTask(task: Task): void
+}
 ```
 
 Added in v1.0.0
