@@ -83,7 +83,7 @@ export interface TestClock extends Clock.Clock {
 }
 
 /** @internal */
-export const Tag: Context.Tag<TestClock, TestClock> = Context.Tag<TestClock>()
+export const TestClock: Context.Tag<TestClock, TestClock> = Context.Tag<TestClock>()
 
 /**
  * The warning message that will be displayed if a test is using time but is
@@ -433,10 +433,10 @@ export class TestClockImpl implements TestClock {
 export const live = Debug.untracedMethod(() =>
   (data: Data.Data): Layer.Layer<Annotations.Annotations | Live.Live, never, TestClock> =>
     layer.scoped(
-      Tag,
+      TestClock,
       effect.gen(function*($) {
-        const live = yield* $(Live.Tag)
-        const annotations = yield* $(Annotations.Tag)
+        const live = yield* $(Live.Live)
+        const annotations = yield* $(Annotations.Annotations)
         const clockState = yield* $(core.sync(() => ref.unsafeMake(data)))
         const warningState = yield* $(circular.makeSynchronized(WarningData.start))
         const suspendedWarningState = yield* $(circular.makeSynchronized(SuspendedWarningData.start))

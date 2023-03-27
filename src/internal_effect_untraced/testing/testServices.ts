@@ -33,10 +33,10 @@ export type TestServices =
  * @internal
  */
 export const liveServices: Context.Context<TestServices> = pipe(
-  Context.make(Annotations.Tag, Annotations.make(ref.unsafeMake(TestAnnotationMap.empty()))),
-  Context.add(Live.Tag, Live.make(defaultServices.liveServices)),
-  Context.add(Sized.Tag, Sized.make(100)),
-  Context.add(TestConfig.Tag, TestConfig.make({ repeats: 100, retries: 100, samples: 200, shrinks: 1000 }))
+  Context.make(Annotations.Annotations, Annotations.make(ref.unsafeMake(TestAnnotationMap.empty()))),
+  Context.add(Live.Live, Live.make(defaultServices.liveServices)),
+  Context.add(Sized.Sized, Sized.make(100)),
+  Context.add(TestConfig.TestClock, TestConfig.make({ repeats: 100, retries: 100, samples: 200, shrinks: 1000 }))
 )
 
 /** @internal */
@@ -65,7 +65,7 @@ export const annotationsWith = Debug.methodWithTrace((trace) =>
   ): Effect.Effect<R, E, A> =>
     core.fiberRefGetWith(
       currentServices,
-      (services) => f(pipe(services, Context.get(Annotations.Tag)))
+      (services) => f(pipe(services, Context.get(Annotations.Annotations)))
     ).traced(trace)
 )
 
@@ -82,7 +82,7 @@ export const withAnnotations = Debug.dualWithTrace<
   (effect, annotations) =>
     core.fiberRefLocallyWith(
       currentServices,
-      Context.add(Annotations.Tag, annotations)
+      Context.add(Annotations.Annotations, annotations)
     )(effect).traced(trace))
 
 /**
@@ -95,7 +95,7 @@ export const withAnnotationsScoped = Debug.methodWithTrace((trace) =>
   (annotations: Annotations.Annotations): Effect.Effect<Scope.Scope, never, void> =>
     fiberRuntime.fiberRefLocallyScopedWith(
       currentServices,
-      Context.add(Annotations.Tag, annotations)
+      Context.add(Annotations.Annotations, annotations)
     ).traced(trace)
 )
 
@@ -107,7 +107,7 @@ export const withAnnotationsScoped = Debug.methodWithTrace((trace) =>
 export const annotationsLayer = Debug.untracedMethod(() =>
   (): Layer.Layer<never, never, Annotations.Annotations> =>
     layer.scoped(
-      Annotations.Tag,
+      Annotations.Annotations,
       pipe(
         core.sync(() => ref.unsafeMake(TestAnnotationMap.empty())),
         core.map(Annotations.make),
@@ -170,7 +170,7 @@ export const liveWith = Debug.methodWithTrace((trace, restore) =>
   <R, E, A>(f: (live: Live.Live) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
     core.fiberRefGetWith(
       currentServices,
-      (services) => restore(f)(pipe(services, Context.get(Live.Tag)))
+      (services) => restore(f)(pipe(services, Context.get(Live.Live)))
     ).traced(trace)
 )
 
@@ -187,7 +187,7 @@ export const withLive = Debug.dualWithTrace<
   (effect, live) =>
     core.fiberRefLocallyWith(
       currentServices,
-      Context.add(Live.Tag, live)
+      Context.add(Live.Live, live)
     )(effect).traced(trace))
 
 /**
@@ -198,7 +198,7 @@ export const withLive = Debug.dualWithTrace<
  */
 export const withLiveScoped = Debug.methodWithTrace((trace) =>
   (live: Live.Live): Effect.Effect<Scope.Scope, never, void> =>
-    fiberRuntime.fiberRefLocallyScopedWith(currentServices, Context.add(Live.Tag, live)).traced(trace)
+    fiberRuntime.fiberRefLocallyScopedWith(currentServices, Context.add(Live.Live, live)).traced(trace)
 )
 
 /**
@@ -209,7 +209,7 @@ export const withLiveScoped = Debug.methodWithTrace((trace) =>
 export const liveLayer = Debug.untracedMethod(() =>
   (): Layer.Layer<DefaultServices.DefaultServices, never, Live.Live> =>
     layer.scoped(
-      Live.Tag,
+      Live.Live,
       pipe(
         core.context<DefaultServices.DefaultServices>(),
         core.map(Live.make),
@@ -268,7 +268,7 @@ export const sizedWith = Debug.methodWithTrace((trace, restore) =>
   <R, E, A>(f: (sized: Sized.Sized) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
     core.fiberRefGetWith(
       currentServices,
-      (services) => restore(f)(pipe(services, Context.get(Sized.Tag)))
+      (services) => restore(f)(pipe(services, Context.get(Sized.Sized)))
     ).traced(trace)
 )
 
@@ -285,7 +285,7 @@ export const withSized = Debug.dualWithTrace<
   (effect, sized) =>
     core.fiberRefLocallyWith(
       currentServices,
-      Context.add(Sized.Tag, sized)
+      Context.add(Sized.Sized, sized)
     )(effect).traced(trace))
 
 /**
@@ -296,14 +296,14 @@ export const withSized = Debug.dualWithTrace<
  */
 export const withSizedScoped = Debug.methodWithTrace((trace) =>
   (sized: Sized.Sized): Effect.Effect<Scope.Scope, never, void> =>
-    fiberRuntime.fiberRefLocallyScopedWith(currentServices, Context.add(Sized.Tag, sized)).traced(trace)
+    fiberRuntime.fiberRefLocallyScopedWith(currentServices, Context.add(Sized.Sized, sized)).traced(trace)
 )
 
 /** @internal */
 export const sizedLayer = Debug.untracedMethod(() =>
   (size: number): Layer.Layer<never, never, Sized.Sized> =>
     layer.scoped(
-      Sized.Tag,
+      Sized.Sized,
       pipe(
         fiberRuntime.fiberRefMake(size),
         core.map(Sized.fromFiberRef),
@@ -342,7 +342,7 @@ export const testConfigWith = Debug.methodWithTrace((trace, restore) =>
   <R, E, A>(f: (config: TestConfig.TestConfig) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
     core.fiberRefGetWith(
       currentServices,
-      (services) => restore(f)(pipe(services, Context.get(TestConfig.Tag)))
+      (services) => restore(f)(pipe(services, Context.get(TestConfig.TestClock)))
     ).traced(trace)
 )
 
@@ -359,7 +359,7 @@ export const withTestConfig = Debug.dualWithTrace<
   (effect, config) =>
     core.fiberRefLocallyWith(
       currentServices,
-      Context.add(TestConfig.Tag, config)
+      Context.add(TestConfig.TestClock, config)
     )(effect).traced(trace))
 
 /**
@@ -370,7 +370,7 @@ export const withTestConfig = Debug.dualWithTrace<
  */
 export const withTestConfigScoped = Debug.methodWithTrace((trace) =>
   (config: TestConfig.TestConfig): Effect.Effect<Scope.Scope, never, void> =>
-    fiberRuntime.fiberRefLocallyScopedWith(currentServices, Context.add(TestConfig.Tag, config)).traced(trace)
+    fiberRuntime.fiberRefLocallyScopedWith(currentServices, Context.add(TestConfig.TestClock, config)).traced(trace)
 )
 
 /**
@@ -386,7 +386,7 @@ export const testConfigLayer = Debug.untracedMethod(() =>
     readonly shrinks: number
   }): Layer.Layer<never, never, TestConfig.TestConfig> =>
     layer.scoped(
-      TestConfig.Tag,
+      TestConfig.TestClock,
       Effect.suspend(() => {
         const testConfig = TestConfig.make(params)
         return pipe(

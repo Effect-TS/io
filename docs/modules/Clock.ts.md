@@ -18,7 +18,7 @@ Added in v1.0.0
   - [make](#make)
   - [sleep](#sleep)
 - [context](#context)
-  - [Tag](#tag)
+  - [Clock](#clock)
 - [models](#models)
   - [CancelToken (type alias)](#canceltoken-type-alias)
   - [Clock (interface)](#clock-interface)
@@ -74,12 +74,12 @@ Added in v1.0.0
 
 # context
 
-## Tag
+## Clock
 
 **Signature**
 
 ```ts
-export declare const Tag: Context.Tag<Clock, Clock>
+export declare const Clock: Context.Tag<Clock, Clock>
 ```
 
 Added in v1.0.0
