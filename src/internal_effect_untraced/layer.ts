@@ -818,7 +818,7 @@ export const scope = (): Layer.Layer<never, never, Scope.Scope.Closeable> => {
         fiberRuntime.scopeMake(),
         (scope, exit) => scope.close(exit)
       ),
-      core.map((scope) => Context.make(Scope.Tag, scope))
+      core.map((scope) => Context.make(Scope.Scope, scope))
     )
   )
 }

@@ -26,7 +26,7 @@ Added in v1.0.0
   - [make](#make)
   - [makeFlat](#makeflat)
 - [context](#context)
-  - [Tag](#tag)
+  - [ConfigProvider](#configprovider)
 - [models](#models)
   - [ConfigProvider (interface)](#configprovider-interface)
 - [symbols](#symbols)
@@ -217,14 +217,14 @@ Added in v1.0.0
 
 # context
 
-## Tag
+## ConfigProvider
 
 The service tag for `ConfigProvider`.
 
 **Signature**
 
 ```ts
-export declare const Tag: Context.Tag<ConfigProvider, ConfigProvider>
+export declare const ConfigProvider: Context.Tag<ConfigProvider, ConfigProvider>
 ```
 
 Added in v1.0.0

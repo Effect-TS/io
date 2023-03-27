@@ -15,7 +15,7 @@ Added in v1.0.0
 - [constructors](#constructors)
   - [make](#make)
 - [context](#context)
-  - [Tag](#tag)
+  - [Scope](#scope)
 - [destructors](#destructors)
   - [close](#close)
   - [use](#use)
@@ -59,12 +59,12 @@ Added in v1.0.0
 
 # context
 
-## Tag
+## Scope
 
 **Signature**
 
 ```ts
-export declare const Tag: Context.Tag<Scope, Scope>
+export declare const Scope: Context.Tag<Scope, Scope>
 ```
 
 Added in v1.0.0
