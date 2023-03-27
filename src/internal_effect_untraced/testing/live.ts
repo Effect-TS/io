@@ -1,5 +1,5 @@
 import * as Context from "@effect/data/Context"
-import * as Debug from "@effect/io/Debug"
+import * as Debug from "@effect/data/Debug"
 import type * as DefaultServices from "@effect/io/DefaultServices"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal_effect_untraced/core"

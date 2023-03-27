@@ -2,11 +2,11 @@
  * @since 1.0.0
  */
 import * as Context from "@effect/data/Context"
+import { dualWithTrace } from "@effect/data/Debug"
 import { globalValue } from "@effect/data/Global"
 import * as MutableRef from "@effect/data/MutableRef"
 import * as Option from "@effect/data/Option"
 import * as Clock from "@effect/io/Clock"
-import { dualWithTrace } from "@effect/io/Debug"
 import * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
 

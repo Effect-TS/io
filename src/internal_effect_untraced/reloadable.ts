@@ -1,7 +1,7 @@
 import * as Context from "@effect/data/Context"
+import * as Debug from "@effect/data/Debug"
 import { pipe } from "@effect/data/Function"
 import { globalValue } from "@effect/data/Global"
-import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as effect from "@effect/io/internal_effect_untraced/effect"

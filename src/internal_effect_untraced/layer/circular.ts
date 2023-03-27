@@ -1,7 +1,7 @@
+import * as Debug from "@effect/data/Debug"
 import { dual } from "@effect/data/Function"
 import * as HashSet from "@effect/data/HashSet"
 import type * as ConfigProvider from "@effect/io/Config/Provider"
-import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as fiberRuntime from "@effect/io/internal_effect_untraced/fiberRuntime"

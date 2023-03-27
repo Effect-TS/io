@@ -38,7 +38,7 @@
     "build-pack": "concurrently \"pnpm build-cjs\" \"pnpm build-mjs\" && pnpm build-post",
     "build-all": "tsc -b tsconfig.json",
     "build-watch": "tsc -b tsconfig.json --watch",
-    "lint": "eslint --ext .ts,.tsx src/**/* test/**/*",
+    "lint": "eslint src/**/* test/**/* examples/**/*",
     "autofix": "pnpm lint --fix",
     "tc": "tsc --noEmit",
     "docs": "docs-ts",
@@ -56,7 +56,7 @@
     }
   },
   "dependencies": {
-    "@effect/data": "~0.7.2"
+    "@effect/data": "~0.7.3"
   },
   "devDependencies": {
     "@babel/cli": "^7.21.0",

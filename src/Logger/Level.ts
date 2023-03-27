@@ -1,10 +1,10 @@
 /**
  * @since 1.0.0
  */
+import * as debug from "@effect/data/Debug"
 import { pipe } from "@effect/data/Function"
 import * as number from "@effect/data/Number"
 import * as order from "@effect/data/typeclass/Order"
-import * as debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal_effect_untraced/core"
 

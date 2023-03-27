@@ -1,6 +1,6 @@
 import * as Chunk from "@effect/data/Chunk"
+import * as Debug from "@effect/data/Debug"
 import { pipe } from "@effect/data/Function"
-import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import type * as Fiber from "@effect/io/Fiber"
 import * as core from "@effect/io/internal_effect_untraced/core"
