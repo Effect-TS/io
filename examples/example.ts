@@ -16,7 +16,7 @@ const L = Layer.effect(
   })
 )
 
-const main = Effect.provideSomeLayer(L)(Effect.serviceWithEffect(N, (n) => Effect.logDebug(`n: ${n}`)))
+const main = Effect.provideSomeLayer(L)(Effect.flatMap(N, (n) => Effect.logDebug(`n: ${n}`)))
 
 Effect.runSync(
   Logger.withMinimumLogLevel(LogLevel.Debug)(main)

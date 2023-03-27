@@ -83,7 +83,7 @@ export const get = Debug.methodWithTrace((trace) =>
   <T extends Context.Tag<any, any>>(
     tag: T
   ): Effect.Effect<Reloadable.Reloadable<Context.Tag.Identifier<T>>, never, Context.Tag.Service<T>> =>
-    core.serviceWithEffect(
+    core.flatMap(
       reloadableTag(tag),
       (reloadable) => scopedRef.get(reloadable.scopedRef)
     ).traced(trace)
@@ -144,7 +144,7 @@ export const reload = Debug.methodWithTrace((trace) =>
   <T extends Context.Tag<any, any>>(
     tag: T
   ): Effect.Effect<Reloadable.Reloadable<Context.Tag.Identifier<T>>, unknown, void> =>
-    core.serviceWithEffect(
+    core.flatMap(
       reloadableTag(tag),
       (reloadable) => reloadable.reload()
     ).traced(trace)
@@ -155,7 +155,7 @@ export const reloadFork = Debug.methodWithTrace((trace) =>
   <T extends Context.Tag<any, any>>(
     tag: T
   ): Effect.Effect<Reloadable.Reloadable<Context.Tag.Identifier<T>>, unknown, void> =>
-    core.serviceWithEffect(reloadableTag(tag), (reloadable) =>
+    core.flatMap(reloadableTag(tag), (reloadable) =>
       pipe(
         reloadable.reload(),
         effect.ignoreLogged,

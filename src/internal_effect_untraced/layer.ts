@@ -528,7 +528,7 @@ export const fromFunction = <A extends Context.Tag<any, any>, B extends Context.
   tagB: B,
   f: (a: Context.Tag.Service<A>) => Context.Tag.Service<B>
 ): Layer.Layer<Context.Tag.Identifier<A>, never, Context.Tag.Identifier<B>> =>
-  fromEffectContext(core.serviceWith(tagA, (a) => Context.make(tagB, f(a))))
+  fromEffectContext(core.map(tagA, (a) => Context.make(tagB, f(a))))
 
 /** @internal */
 export const launch = Debug.methodWithTrace((trace) =>
@@ -852,7 +852,7 @@ export const scopedContext = <R, E, A>(
 export const service = <T extends Context.Tag<any, any>>(
   tag: T
 ): Layer.Layer<Context.Tag.Identifier<T>, never, Context.Tag.Identifier<T>> => {
-  return fromEffect(tag, core.service(tag))
+  return fromEffect(tag, tag)
 }
 
 /** @internal */

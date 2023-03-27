@@ -308,7 +308,7 @@ describe.concurrent("Layer", () => {
         Layer.map((context) => Context.make(StringTag, Context.get(context, ServiceATag).name)),
         Layer.provide(layer2)
       )
-      const result = yield* $(pipe(Effect.service(ServiceBTag), Effect.provideLayer(live)))
+      const result = yield* $(pipe(ServiceBTag, Effect.provideLayer(live)))
       assert.strictEqual(result.name, "name")
     }))
   it.effect("memoizes acquisition of resources", () =>
@@ -343,7 +343,7 @@ describe.concurrent("Layer", () => {
     Effect.gen(function*($) {
       const NumberTag = Context.Tag<number>()
       const StringTag = Context.Tag<string>()
-      const needsNumberAndString = Effect.all(Effect.service(NumberTag), Effect.service(StringTag))
+      const needsNumberAndString = Effect.all(NumberTag, StringTag)
       const providesNumber = Layer.succeed(NumberTag, 10)
       const providesString = Layer.succeed(StringTag, "hi")
       const needsString = pipe(needsNumberAndString, Effect.provideSomeLayer(providesNumber))
@@ -384,7 +384,7 @@ describe.concurrent("Layer", () => {
       const provideString = Layer.succeed(StringTag, "hi")
       const needsString = pipe(provideNumberRef, Layer.provide(fooBuilder))
       const layer = pipe(provideString, Layer.provide(needsString))
-      const result = yield* $(pipe(Effect.serviceWithEffect(FooTag, (_) => _.get), Effect.provideLayer(layer)))
+      const result = yield* $(pipe(Effect.flatMap(FooTag, (_) => _.get), Effect.provideLayer(layer)))
       assert.strictEqual(result[0], 10)
       assert.strictEqual(result[1], "hi")
     }))
@@ -422,9 +422,9 @@ describe.concurrent("Layer", () => {
       const needsString = pipe(provideNumberRef, Layer.provideMerge(fooBuilder))
       const layer = pipe(provideString, Layer.provideMerge(needsString))
       const result = yield* $(pipe(
-        Effect.serviceWithEffect(FooTag, (foo) => foo.get),
+        Effect.flatMap(FooTag, (foo) => foo.get),
         Effect.flatMap(([i1, s]) =>
-          pipe(Effect.serviceWithEffect(NumberRefTag, Ref.get), Effect.map((i2) => [i1, i2, s] as const))
+          pipe(Effect.flatMap(NumberRefTag, Ref.get), Effect.map((i2) => [i1, i2, s] as const))
         ),
         Effect.provideLayer(layer)
       ))
@@ -448,8 +448,8 @@ describe.concurrent("Layer", () => {
       const live = pipe(Layer.succeed(NumberTag, { value: 1 }), Layer.provide(Layer.passthrough(layer)))
       const { i, s } = yield* $(pipe(
         Effect.all({
-          i: Effect.service(NumberTag),
-          s: Effect.service(ToStringTag)
+          i: NumberTag,
+          s: ToStringTag
         }),
         Effect.provideLayer(live)
       ))
@@ -468,7 +468,7 @@ describe.concurrent("Layer", () => {
       const AgeTag = Context.Tag<AgeService>()
       const personLayer = Layer.succeed(PersonTag, { name: "User", age: 42 })
       const ageLayer = pipe(personLayer, Layer.project(PersonTag, AgeTag, (_) => ({ age: _.age })))
-      const { age } = yield* $(pipe(Effect.service(AgeTag), Effect.provideLayer(ageLayer)))
+      const { age } = yield* $(pipe(AgeTag, Effect.provideLayer(ageLayer)))
       assert.strictEqual(age, 42)
     }))
   it.effect("sharing with provideTo", () =>

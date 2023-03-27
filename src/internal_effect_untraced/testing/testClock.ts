@@ -435,8 +435,8 @@ export const live = Debug.untracedMethod(() =>
     layer.scoped(
       Tag,
       effect.gen(function*($) {
-        const live = yield* $(core.service(Live.Tag))
-        const annotations = yield* $(core.service(Annotations.Tag))
+        const live = yield* $(Live.Tag)
+        const annotations = yield* $(Annotations.Tag)
         const clockState = yield* $(core.sync(() => ref.unsafeMake(data)))
         const warningState = yield* $(circular.makeSynchronized(WarningData.start))
         const suspendedWarningState = yield* $(circular.makeSynchronized(SuspendedWarningData.start))

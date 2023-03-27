@@ -25,7 +25,7 @@ export const HttpServerLive = Layer.effect(
 )
 
 export const program = Effect.gen(function*($) {
-  const { host, port } = yield* $(Effect.service(HttpServer))
+  const { host, port } = yield* $(HttpServer)
   yield* $(Effect.log(`Host: ${host}`))
   yield* $(Effect.log(`Port: ${port}`))
 })

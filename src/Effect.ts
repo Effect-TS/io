@@ -91,15 +91,14 @@ export interface Effect<R, E, A> extends Effect.Variance<R, E, A>, Equal.Equal {
   traced(trace: Trace): Effect<R, E, A>
 }
 
-// TODO(Mike): after traced() is removed as a method
-
-// /**
-//  * @since 1.0.0
-//  * @category models
-//  */
-// declare module "@effect/data/Context" {
-//   interface Tag<Identifier, Service> extends Effect<Identifier, never, Service> {}
-// }
+/**
+ * @since 1.0.0
+ * @category models
+ */
+declare module "@effect/data/Context" {
+  interface Tag<Identifier, Service> extends Effect<Identifier, never, Service> {}
+  interface TracedTag<Identifier, Service> extends Effect<Identifier, never, Service> {}
+}
 
 /**
  * @since 1.0.0
@@ -3790,38 +3789,6 @@ export const scoped: <R, E, A>(effect: Effect<R, E, A>) => Effect<Exclude<R, Sco
  */
 export const sequentialFinalizers: <R, E, A>(self: Effect<R, E, A>) => Effect<R | Scope.Scope, E, A> =
   fiberRuntime.sequentialFinalizers
-
-/**
- * Extracts the specified service from the context of the effect.
- *
- * @since 1.0.0
- * @category context
- */
-export const service: <T extends Context.Tag<any, any>>(
-  tag: T
-) => Effect<Context.Tag.Identifier<T>, never, Context.Tag.Service<T>> = core.service
-
-/**
- * Accesses the specified service in the context of the effect.
- *
- * @since 1.0.0
- * @category context
- */
-export const serviceWith: <T extends Context.Tag<any, any>, A>(
-  tag: T,
-  f: (a: Context.Tag.Service<T>) => A
-) => Effect<Context.Tag.Identifier<T>, never, A> = core.serviceWith
-
-/**
- * Effectfully accesses the specified service in the context of the effect.
- *
- * @since 1.0.0
- * @category context
- */
-export const serviceWithEffect: <T extends Context.Tag<any, any>, R, E, A>(
-  tag: T,
-  f: (a: Context.Tag.Service<T>) => Effect<R, E, A>
-) => Effect<R | Context.Tag.Identifier<T>, E, A> = core.serviceWithEffect
 
 /**
  * Sets the current `ConfigProvider`.

@@ -139,9 +139,6 @@ Added in v1.0.0
   - [provideSomeLayer](#providesomelayer)
   - [scope](#scope)
   - [scoped](#scoped)
-  - [service](#service)
-  - [serviceWith](#servicewith)
-  - [serviceWithEffect](#servicewitheffect)
   - [updateService](#updateservice)
 - [conversions](#conversions)
   - [either](#either)
@@ -2412,50 +2409,6 @@ execution, whether by success, failure, or interruption.
 
 ```ts
 export declare const scoped: <R, E, A>(effect: Effect<R, E, A>) => Effect<Exclude<R, Scope.Scope>, E, A>
-```
-
-Added in v1.0.0
-
-## service
-
-Extracts the specified service from the context of the effect.
-
-**Signature**
-
-```ts
-export declare const service: <T extends Context.Tag<any, any>>(
-  tag: T
-) => Effect<Context.Tag.Identifier<T>, never, Context.Tag.Service<T>>
-```
-
-Added in v1.0.0
-
-## serviceWith
-
-Accesses the specified service in the context of the effect.
-
-**Signature**
-
-```ts
-export declare const serviceWith: <T extends Context.Tag<any, any>, A>(
-  tag: T,
-  f: (a: Context.Tag.Service<T>) => A
-) => Effect<Context.Tag.Identifier<T>, never, A>
-```
-
-Added in v1.0.0
-
-## serviceWithEffect
-
-Effectfully accesses the specified service in the context of the effect.
-
-**Signature**
-
-```ts
-export declare const serviceWithEffect: <T extends Context.Tag<any, any>, R, E, A>(
-  tag: T,
-  f: (a: Context.Tag.Service<T>) => Effect<R, E, A>
-) => Effect<R | Context.Tag.Identifier<T>, E, A>
 ```
 
 Added in v1.0.0

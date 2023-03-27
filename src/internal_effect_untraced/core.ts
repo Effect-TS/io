@@ -1021,35 +1021,6 @@ export const runtimeFlags = Debug.methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const service = Debug.methodWithTrace((trace) =>
-  <T extends Context.Tag<any, any>>(tag: T): Effect.Effect<Context.Tag.Identifier<T>, never, Context.Tag.Service<T>> =>
-    serviceWithEffect(tag, succeed).traced(trace)
-)
-
-/* @internal */
-export const serviceWith = Debug.methodWithTrace((trace, restore) =>
-  <T extends Context.Tag<any, any>, A>(
-    tag: T,
-    f: (a: Context.Tag.Service<T>) => A
-  ): Effect.Effect<Context.Tag.Identifier<T>, never, A> =>
-    serviceWithEffect(tag, (a) => sync(() => restore(f)(a))).traced(trace)
-)
-
-/* @internal */
-export const serviceWithEffect = Debug.methodWithTrace((trace, restore) =>
-  <T extends Context.Tag<any, any>, R, E, A>(
-    tag: T,
-    f: (a: Context.Tag.Service<T>) => Effect.Effect<R, E, A>
-  ): Effect.Effect<R | Context.Tag.Identifier<T>, E, A> =>
-    suspend(() =>
-      pipe(
-        fiberRefGet(currentContext),
-        flatMap((env) => restore(f)(pipe(env, Context.unsafeGet(tag))))
-      )
-    ).traced(trace)
-)
-
-/* @internal */
 export const succeed = Debug.methodWithTrace((trace) =>
   <A>(value: A): Effect.Effect<never, never, A> => {
     const effect = new EffectPrimitiveSuccess(OpCodes.OP_SUCCESS) as any
