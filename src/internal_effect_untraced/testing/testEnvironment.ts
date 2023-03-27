@@ -1,5 +1,5 @@
+import * as Debug from "@effect/data/Debug"
 import { pipe } from "@effect/data/Function"
-import * as Debug from "@effect/io/Debug"
 import type * as DefaultServices from "@effect/io/DefaultServices"
 import * as defaultServices from "@effect/io/internal_effect_untraced/defaultServices"
 import * as layer from "@effect/io/internal_effect_untraced/layer"

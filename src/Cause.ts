@@ -22,12 +22,12 @@
  * @since 1.0.0
  */
 import type * as Chunk from "@effect/data/Chunk"
+import type { SourceLocation } from "@effect/data/Debug"
 import type * as Either from "@effect/data/Either"
 import type * as Equal from "@effect/data/Equal"
 import type * as HashSet from "@effect/data/HashSet"
 import type * as Option from "@effect/data/Option"
 import type { Predicate } from "@effect/data/Predicate"
-import type { SourceLocation } from "@effect/io/Debug"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import * as internal from "@effect/io/internal_effect_untraced/cause"
 import * as _pretty from "@effect/io/internal_effect_untraced/cause-pretty"

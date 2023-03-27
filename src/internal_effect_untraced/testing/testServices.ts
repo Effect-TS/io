@@ -1,7 +1,7 @@
 import * as Context from "@effect/data/Context"
+import * as Debug from "@effect/data/Debug"
 import { pipe } from "@effect/data/Function"
 import type * as SortedSet from "@effect/data/SortedSet"
-import * as Debug from "@effect/io/Debug"
 import type * as DefaultServices from "@effect/io/DefaultServices"
 import * as Effect from "@effect/io/Effect"
 import type * as Fiber from "@effect/io/Fiber"

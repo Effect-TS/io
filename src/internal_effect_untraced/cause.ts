@@ -1,4 +1,5 @@
 import * as Chunk from "@effect/data/Chunk"
+import type * as Debug from "@effect/data/Debug"
 import * as Either from "@effect/data/Either"
 import * as Equal from "@effect/data/Equal"
 import { constFalse, constTrue, dual, identity, pipe } from "@effect/data/Function"
@@ -7,7 +8,6 @@ import * as HashSet from "@effect/data/HashSet"
 import * as Option from "@effect/data/Option"
 import type { Predicate } from "@effect/data/Predicate"
 import type * as Cause from "@effect/io/Cause"
-import type * as Debug from "@effect/io/Debug"
 import * as FiberId from "@effect/io/Fiber/Id"
 import * as OpCodes from "@effect/io/internal_effect_untraced/opCodes/cause"
 

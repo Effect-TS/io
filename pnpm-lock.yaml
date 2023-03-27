@@ -18,7 +18,7 @@ importers:
       '@effect-ts/core': ^0.60.5
       '@effect/babel-plugin': ^0.2.0
       '@effect/core': ^0.0.16
-      '@effect/data': ~0.7.2
+      '@effect/data': ~0.7.3
       '@effect/language-service': ^0.0.19
       '@repo-tooling/eslint-plugin-dprint': ^0.0.4
       '@rollup/pluginutils': ^5.0.2
@@ -58,7 +58,7 @@ importers:
       vite: ^4.2.1
       vitest: 0.29.7
     dependencies:
-      '@effect/data': 0.7.2
+      '@effect/data': 0.7.3
     devDependencies:
       '@babel/cli': 7.21.0_@babel+core@7.21.3
       '@babel/core': 7.21.3
@@ -709,8 +709,8 @@ packages:
       '@tsplus/stdlib': 0.2.8
     dev: true
 
-  /@effect/data/0.7.2:
-    resolution: {integrity: sha512-zGmp4vszshYVv7NT2tBaCAadJRBlHjgieBeVIVLNZtJfn6501NmiRvOXeevSiN+OXzPsf3mIfoCMKMVzOYdkCQ==}
+  /@effect/data/0.7.3:
+    resolution: {integrity: sha512-8cfgo9nNijImQj2kPCakVK71L8m8sUVUzEmEP5a92dSOk45FZCKErWFI9xPmkmzRSVtVQb4KBcuQblm0CPjuDw==}
     dev: false
 
   /@effect/language-service/0.0.19:

@@ -1,6 +1,6 @@
+import * as Debug from "@effect/data/Debug"
 import { pipe } from "@effect/data/Function"
 import type * as Cached from "@effect/io/Cached"
-import * as Debug from "@effect/io/Debug"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as fiberRuntime from "@effect/io/internal_effect_untraced/fiberRuntime"
