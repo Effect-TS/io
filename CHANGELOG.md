@@ -1,5 +1,15 @@
 # @effect/io
 
+## 0.15.0
+
+### Minor Changes
+
+- [#318](https://github.com/Effect-TS/io/pull/318) [`a81731e`](https://github.com/Effect-TS/io/commit/a81731e5784fe68637c9347c6da328cb0a4bfb4c) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Make Context.Tag a valid Effect
+
+- [#321](https://github.com/Effect-TS/io/pull/321) [`914f71f`](https://github.com/Effect-TS/io/commit/914f71fc9fd74fbd59382e1ebec6d2bc2ac14377) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Use Service Name as Tag Name
+
+- [#320](https://github.com/Effect-TS/io/pull/320) [`14b82b5`](https://github.com/Effect-TS/io/commit/14b82b564d2b3d03db135a44ead6e51a2baff55b) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Depend on effect/data for Debug
+
 ## 0.14.1
 
 ### Patch Changes
