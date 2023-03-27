@@ -926,7 +926,10 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   }
 
   [OpCodes.OP_TAG](op: core.Primitive & { _tag: OpCodes.OP_SYNC }) {
-    return core.service(op as any)
+    return core.map(
+      core.fiberRefGet(core.currentContext),
+      (context) => Context.unsafeGet(context, op as unknown as Context.Tag<any, any>)
+    )
   }
 
   [OpCodes.OP_SYNC](op: core.Primitive & { _tag: OpCodes.OP_SYNC }) {
@@ -1927,13 +1930,13 @@ export const parallelFinalizers = Debug.methodWithTrace((trace) =>
 
 /* @internal */
 export const scope = Debug.methodWithTrace((trace) =>
-  (): Effect.Effect<Scope.Scope, never, Scope.Scope> => core.service(scopeTag).traced(trace)
+  (): Effect.Effect<Scope.Scope, never, Scope.Scope> => scopeTag.traced(trace)
 )
 
 /* @internal */
 export const scopeWith = Debug.methodWithTrace((trace, restore) =>
   <R, E, A>(f: (scope: Scope.Scope) => Effect.Effect<R, E, A>): Effect.Effect<R | Scope.Scope, E, A> =>
-    core.serviceWithEffect(scopeTag, restore(f)).traced(trace)
+    core.flatMap(scopeTag, restore(f)).traced(trace)
 )
 
 /* @internal */

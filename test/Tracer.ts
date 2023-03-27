@@ -12,9 +12,7 @@ describe("Tracer", () => {
     it.effect("no parent", () =>
       Effect.gen(function*($) {
         const span = yield* $(
-          Tracer.withSpan("A")(
-            Effect.service(Tracer.Span)
-          )
+          Tracer.withSpan("A")(Tracer.Span)
         )
 
         assert.deepEqual(span.name, "A")
@@ -25,9 +23,7 @@ describe("Tracer", () => {
       Effect.gen(function*($) {
         const span = yield* $(
           Tracer.withSpan("B")(
-            Tracer.withSpan("A")(
-              Effect.service(Tracer.Span)
-            )
+            Tracer.withSpan("A")(Tracer.Span)
           )
         )
 
@@ -38,11 +34,7 @@ describe("Tracer", () => {
     it.effect("parent when root is set", () =>
       Effect.gen(function*($) {
         const span = yield* $(
-          Tracer.withSpan("B")(
-            Tracer.withSpan("A", { root: true })(
-              Effect.service(Tracer.Span)
-            )
-          )
+          Tracer.withSpan("B")(Tracer.withSpan("A", { root: true })(Tracer.Span))
         )
 
         assert.deepEqual(span.name, "A")
@@ -52,40 +44,22 @@ describe("Tracer", () => {
     it.effect("external parent", () =>
       Effect.gen(function*($) {
         const span = yield* $(
-          Tracer.withSpan("A", {
-            parent: {
-              _tag: "ExternalSpan",
-              name: "external",
-              spanId: "000",
-              traceId: "111"
-            }
-          })(
-            Effect.service(Tracer.Span)
-          )
+          Tracer.withSpan(
+            "A",
+            { parent: { _tag: "ExternalSpan", name: "external", spanId: "000", traceId: "111" } }
+          )(Tracer.Span)
         )
-
         assert.deepEqual(span.name, "A")
         assert.deepEqual(
           span.parent,
-          Option.some<Tracer.ExternalSpan>({
-            _tag: "ExternalSpan",
-            name: "external",
-            spanId: "000",
-            traceId: "111"
-          })
+          Option.some<Tracer.ExternalSpan>({ _tag: "ExternalSpan", name: "external", spanId: "000", traceId: "111" })
         )
       }))
 
     it.effect("correct time", () =>
       Effect.gen(function*($) {
         const spanFiber = yield* $(
-          Effect.fork(
-            Tracer.withSpan("A")(
-              Effect.delay(seconds(1))(
-                Effect.service(Tracer.Span)
-              )
-            )
-          )
+          Effect.fork(Tracer.withSpan("A")(Effect.delay(seconds(1))(Tracer.Span)))
         )
 
         yield* $(TestClock.adjust(seconds(2)))
