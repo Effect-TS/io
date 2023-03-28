@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.15.1
+
+### Patch Changes
+
+- [#322](https://github.com/Effect-TS/io/pull/322) [`77ac50b`](https://github.com/Effect-TS/io/commit/77ac50baa9a094f8f0ff2c53d2fb017dd0c2a0ad) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Fix OpTraced
+
 ## 0.15.0
 
 ### Minor Changes
