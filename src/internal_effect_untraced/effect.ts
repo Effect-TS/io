@@ -1169,7 +1169,11 @@ class EffectGen {
 export const gen: typeof Effect.gen = Debug.methodWithTrace((trace, restore) =>
   (f) =>
     core.suspend(() => {
-      const iterator = restore(() => f((self) => new EffectGen(self) as any))()
+      const iterator = restore(() =>
+        f((...args: [Effect.Effect<unknown, unknown, unknown>]) => {
+          return new EffectGen(pipe(...(args))) as any
+        })
+      )()
       const state = restore(() => iterator.next())()
       const run = (
         state: IteratorYieldResult<any> | IteratorReturnResult<any>
