@@ -36,7 +36,7 @@ export const liveServices: Context.Context<TestServices> = pipe(
   Context.make(Annotations.Annotations, Annotations.make(ref.unsafeMake(TestAnnotationMap.empty()))),
   Context.add(Live.Live, Live.make(defaultServices.liveServices)),
   Context.add(Sized.Sized, Sized.make(100)),
-  Context.add(TestConfig.TestClock, TestConfig.make({ repeats: 100, retries: 100, samples: 200, shrinks: 1000 }))
+  Context.add(TestConfig.TestConfig, TestConfig.make({ repeats: 100, retries: 100, samples: 200, shrinks: 1000 }))
 )
 
 /** @internal */
@@ -342,7 +342,7 @@ export const testConfigWith = Debug.methodWithTrace((trace, restore) =>
   <R, E, A>(f: (config: TestConfig.TestConfig) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
     core.fiberRefGetWith(
       currentServices,
-      (services) => restore(f)(pipe(services, Context.get(TestConfig.TestClock)))
+      (services) => restore(f)(pipe(services, Context.get(TestConfig.TestConfig)))
     ).traced(trace)
 )
 
@@ -359,7 +359,7 @@ export const withTestConfig = Debug.dualWithTrace<
   (effect, config) =>
     core.fiberRefLocallyWith(
       currentServices,
-      Context.add(TestConfig.TestClock, config)
+      Context.add(TestConfig.TestConfig, config)
     )(effect).traced(trace))
 
 /**
@@ -370,7 +370,7 @@ export const withTestConfig = Debug.dualWithTrace<
  */
 export const withTestConfigScoped = Debug.methodWithTrace((trace) =>
   (config: TestConfig.TestConfig): Effect.Effect<Scope.Scope, never, void> =>
-    fiberRuntime.fiberRefLocallyScopedWith(currentServices, Context.add(TestConfig.TestClock, config)).traced(trace)
+    fiberRuntime.fiberRefLocallyScopedWith(currentServices, Context.add(TestConfig.TestConfig, config)).traced(trace)
 )
 
 /**
@@ -386,7 +386,7 @@ export const testConfigLayer = Debug.untracedMethod(() =>
     readonly shrinks: number
   }): Layer.Layer<never, never, TestConfig.TestConfig> =>
     layer.scoped(
-      TestConfig.TestClock,
+      TestConfig.TestConfig,
       Effect.suspend(() => {
         const testConfig = TestConfig.make(params)
         return pipe(

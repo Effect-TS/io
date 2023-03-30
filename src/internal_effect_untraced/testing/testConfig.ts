@@ -29,7 +29,7 @@ export interface TestConfig {
 }
 
 /** @internal */
-export const TestClock: Context.Tag<TestConfig, TestConfig> = Context.Tag<TestConfig>()
+export const TestConfig: Context.Tag<TestConfig, TestConfig> = Context.Tag<TestConfig>()
 
 /** @internal */
 export const make = (params: {
