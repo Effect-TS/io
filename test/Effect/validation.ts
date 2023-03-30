@@ -35,19 +35,19 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("validateWith - succeeds", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(Effect.succeed(1), Effect.validateWith(Effect.succeed(2), (a, b) => a + b)))
+      const result = yield* $(Effect.succeed(1), Effect.validateWith(Effect.succeed(2), (a, b) => a + b))
       assert.strictEqual(result, 3)
     }))
   it.effect("validateAll - accumulate successes", () =>
     Effect.gen(function*($) {
       const array = Array.from({ length: 10 }, (_, i) => i)
-      const result = yield* $(pipe(array, Effect.validateAll(Effect.succeed)))
+      const result = yield* $(array, Effect.validateAll(Effect.succeed))
       assert.deepStrictEqual(Array.from(result), array)
     }))
   it.effect("validateAll - returns all errors if never valid", () =>
     Effect.gen(function*($) {
       const array = Array.from({ length: 10 }, () => 0)
-      const result = yield* $(pipe(array, Effect.validateAll(Effect.fail), Effect.flip))
+      const result = yield* $(array, Effect.validateAll(Effect.fail), Effect.flip)
       assert.deepStrictEqual(Array.from(result), array)
     }))
   it.effect("validateAll - accumulate errors and ignore successes", () =>
@@ -61,13 +61,13 @@ describe.concurrent("Effect", () => {
   it.effect("validateAllDiscard - returns all errors if never valid", () =>
     Effect.gen(function*($) {
       const array = Array.from({ length: 10 }, () => 0)
-      const result = yield* $(pipe(array, Effect.validateAllDiscard(Effect.fail), Effect.flip))
+      const result = yield* $(array, Effect.validateAllDiscard(Effect.fail), Effect.flip)
       assert.deepStrictEqual(Array.from(result), array)
     }))
   it.effect("validateAllPar - returns all errors if never valid", () =>
     Effect.gen(function*($) {
       const array = Array.from({ length: 1000 }, () => 0)
-      const result = yield* $(pipe(array, Effect.validateAllPar(Effect.fail), Effect.flip))
+      const result = yield* $(array, Effect.validateAllPar(Effect.fail), Effect.flip)
       assert.deepStrictEqual(Array.from(result), array)
     }))
   it.effect("validateAllPar - accumulate errors and ignore successes", () =>
@@ -81,19 +81,19 @@ describe.concurrent("Effect", () => {
   it.effect("validateAllPar - accumulate successes", () =>
     Effect.gen(function*($) {
       const array = Array.from({ length: 10 }, (_, i) => i)
-      const result = yield* $(pipe(array, Effect.validateAllPar(Effect.succeed)))
+      const result = yield* $(array, Effect.validateAllPar(Effect.succeed))
       assert.deepStrictEqual(Array.from(result), array)
     }))
   it.effect("validateAllParDiscard - returns all errors if never valid", () =>
     Effect.gen(function*($) {
       const array = Array.from({ length: 10 }, () => 0)
-      const result = yield* $(pipe(array, Effect.validateAllParDiscard(Effect.fail), Effect.flip))
+      const result = yield* $(array, Effect.validateAllParDiscard(Effect.fail), Effect.flip)
       assert.deepStrictEqual(Array.from(result), array)
     }))
   it.effect("validateFirst - returns all errors if never valid", () =>
     Effect.gen(function*($) {
       const array = Array.from({ length: 10 }, () => 0)
-      const result = yield* $(pipe(array, Effect.validateFirst(Effect.fail), Effect.flip))
+      const result = yield* $(array, Effect.validateFirst(Effect.fail), Effect.flip)
       assert.deepStrictEqual(Array.from(result), array)
     }))
   it.effect("validateFirst - runs sequentially and short circuits on first success validation", () =>
@@ -120,14 +120,14 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("validateFirst - returns errors in correct order", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe([2, 4, 6, 3, 5, 6], Effect.validateFirst(Effect.fail), Effect.flip))
+      const result = yield* $([2, 4, 6, 3, 5, 6], Effect.validateFirst(Effect.fail), Effect.flip)
       assert.deepStrictEqual(Array.from(result), [2, 4, 6, 3, 5, 6])
     }))
   describe.concurrent("", () => {
     it.effect("validateFirstPar - returns all errors if never valid", () =>
       Effect.gen(function*($) {
         const array = Array.from({ length: 1000 }, () => 0)
-        const result = yield* $(pipe(array, Effect.validateFirstPar(Effect.fail), Effect.flip))
+        const result = yield* $(array, Effect.validateFirstPar(Effect.fail), Effect.flip)
         assert.deepStrictEqual(Array.from(result), array)
       }))
     it.effect("validateFirstPar - returns success if valid", () =>
@@ -136,7 +136,7 @@ describe.concurrent("Effect", () => {
           return n === 6 ? Effect.succeed(n) : Effect.fail(n)
         }
         const array = Array.from({ length: 10 }, (_, i) => i + 1)
-        const result = yield* $(pipe(array, Effect.validateFirstPar(f)))
+        const result = yield* $(array, Effect.validateFirstPar(f))
         assert.strictEqual(result, 6)
       }))
   })

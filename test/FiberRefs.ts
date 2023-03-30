@@ -17,17 +17,15 @@ describe.concurrent("FiberRefs", () => {
       const fiberRef = yield* $(FiberRef.make(false))
       const queue = yield* $(Queue.unbounded<FiberRefs.FiberRefs>())
       const producer = yield* $(
-        pipe(
-          FiberRef.set(fiberRef, true),
-          Effect.zipRight(pipe(Effect.getFiberRefs(), Effect.flatMap((a) => Queue.offer(queue, a)))),
-          Effect.fork
-        )
+        FiberRef.set(fiberRef, true),
+        Effect.zipRight(pipe(Effect.getFiberRefs(), Effect.flatMap((a) => Queue.offer(queue, a)))),
+        Effect.fork
       )
-      const consumer = yield* $(pipe(
+      const consumer = yield* $(
         Queue.take(queue),
         Effect.flatMap((fiberRefs) => pipe(Effect.setFiberRefs(fiberRefs), Effect.zipRight(FiberRef.get(fiberRef)))),
         Effect.fork
-      ))
+      )
       yield* $(Fiber.join(producer))
       const result = yield* $(Fiber.join(consumer))
       assert.isTrue(result)

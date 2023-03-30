@@ -28,7 +28,7 @@ export const withLatchAwait = <R, E, A>(
         )
       )
     )
-    yield* $(pipe(Deferred.await(latch), Effect.whenEffect(Ref.get(ref))))
+    yield* $(Deferred.await(latch), Effect.whenEffect(Ref.get(ref)))
     return result
   })
 }

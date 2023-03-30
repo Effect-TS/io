@@ -1,4 +1,3 @@
-import { pipe } from "@effect/data/Function"
 import * as Option from "@effect/data/Option"
 import * as Deferred from "@effect/io/Deferred"
 import * as Effect from "@effect/io/Effect"
@@ -49,7 +48,7 @@ describe.concurrent("Deferred", () => {
     Effect.gen(function*($) {
       const deferred = yield* $(Deferred.make<string, number>())
       const success = yield* $(Deferred.fail(deferred, "error with fail"))
-      const result = yield* $(pipe(deferred, Deferred.await, Effect.exit))
+      const result = yield* $(deferred, Deferred.await, Effect.exit)
       assert.isTrue(success)
       assert.isTrue(Exit.isFailure(result))
     }))
@@ -60,8 +59,8 @@ describe.concurrent("Deferred", () => {
       const success = yield* $(
         Deferred.complete(deferred, Effect.flip(Ref.modify(ref, (as) => [as[0]!, as.slice(1)])))
       )
-      const result1 = yield* $(pipe(deferred, Deferred.await, Effect.exit))
-      const result2 = yield* $(pipe(deferred, Deferred.await, Effect.exit))
+      const result1 = yield* $(deferred, Deferred.await, Effect.exit)
+      const result2 = yield* $(deferred, Deferred.await, Effect.exit)
       assert.isTrue(success)
       assert.isTrue(Exit.isFailure(result1))
       assert.isTrue(Exit.isFailure(result2))
@@ -78,8 +77,8 @@ describe.concurrent("Deferred", () => {
           )
         )
       )
-      const result1 = yield* $(pipe(deferred, Deferred.await, Effect.exit))
-      const result2 = yield* $(pipe(deferred, Deferred.await, Effect.exit))
+      const result1 = yield* $(deferred, Deferred.await, Effect.exit)
+      const result2 = yield* $(deferred, Deferred.await, Effect.exit)
       assert.isTrue(success)
       assert.isTrue(Exit.isFailure(result1))
       assert.isTrue(Exit.isFailure(result2))
@@ -115,7 +114,10 @@ describe.concurrent("Deferred", () => {
       const deferred = yield* $(Deferred.make<string, number>())
       yield* $(Deferred.succeed(deferred, 12))
       const result = yield* $(
-        pipe(Deferred.poll(deferred), Effect.someOrFail(() => "fail"), Effect.flatten, Effect.exit)
+        Deferred.poll(deferred),
+        Effect.someOrFail(() => "fail"),
+        Effect.flatten,
+        Effect.exit
       )
       assert.deepStrictEqual(result, Exit.succeed(12))
     }))
@@ -124,7 +126,10 @@ describe.concurrent("Deferred", () => {
       const deferred = yield* $(Deferred.make<string, number>())
       yield* $(Deferred.fail(deferred, "failure"))
       const result = yield* $(
-        pipe(Deferred.poll(deferred), Effect.someOrFail(() => "fail"), Effect.flatten, Effect.exit)
+        Deferred.poll(deferred),
+        Effect.someOrFail(() => "fail"),
+        Effect.flatten,
+        Effect.exit
       )
       assert.isTrue(Exit.isFailure(result))
     }))
@@ -133,7 +138,10 @@ describe.concurrent("Deferred", () => {
       const deferred = yield* $(Deferred.make<string, number>())
       yield* $(Deferred.interrupt(deferred))
       const result = yield* $(
-        pipe(Deferred.poll(deferred), Effect.someOrFail(() => "fail"), Effect.flatten, Effect.exit)
+        Deferred.poll(deferred),
+        Effect.someOrFail(() => "fail"),
+        Effect.flatten,
+        Effect.exit
       )
       assert.isTrue(Exit.isInterrupted(result))
     }))

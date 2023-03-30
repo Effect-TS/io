@@ -12,61 +12,59 @@ import { assert, describe } from "vitest"
 describe.concurrent("Effect", () => {
   it.effect("fork - propagates interruption", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(Effect.never(), Effect.fork, Effect.flatMap(Fiber.interrupt)))
+      const result = yield* $(Effect.never(), Effect.fork, Effect.flatMap(Fiber.interrupt))
       assert.isTrue(Exit.isInterrupted(result))
     }))
   it.effect("fork - propagates interruption with zip of defect", () =>
     Effect.gen(function*($) {
       const latch = yield* $(Deferred.make<never, void>())
       const fiber = yield* $(
-        pipe(
-          Deferred.succeed(latch, void 0),
-          Effect.zipRight(Effect.die(new Error())),
-          Effect.zipPar(Effect.never()),
-          Effect.fork
-        )
+        Deferred.succeed(latch, void 0),
+        Effect.zipRight(Effect.die(new Error())),
+        Effect.zipPar(Effect.never()),
+        Effect.fork
       )
       yield* $(Deferred.await(latch))
-      const result = yield* $(pipe(Fiber.interrupt(fiber), Effect.map(Exit.mapErrorCause((cause) => cause))))
+      const result = yield* $(Fiber.interrupt(fiber), Effect.map(Exit.mapErrorCause((cause) => cause)))
       assert.isTrue(Exit.isInterrupted(result))
     }))
   it.effect("fork - interruption status is heritable", () =>
     Effect.gen(function*($) {
       const latch = yield* $(Deferred.make<never, void>())
       const ref = yield* $(Ref.make(true))
-      yield* $(pipe(
+      yield* $(
         Effect.checkInterruptible((isInterruptible) =>
           pipe(Ref.set(ref, isInterruptible), Effect.zipRight(Deferred.succeed(latch, void 0)))
         ),
         Effect.fork,
         Effect.zipRight(Deferred.await(latch)),
         Effect.uninterruptible
-      ))
+      )
       const result = yield* $(Ref.get(ref))
       assert.isFalse(result)
     }))
   it.effect("forkWithErrorHandler - calls provided function when task fails", () =>
     Effect.gen(function*($) {
       const deferred = yield* $(Deferred.make<never, void>())
-      yield* $(pipe(
+      yield* $(
         Effect.fail<void>(void 0),
         Effect.forkWithErrorHandler((e) => pipe(Deferred.succeed(deferred, e), Effect.asUnit))
-      ))
+      )
       const result = yield* $(Deferred.await(deferred))
       assert.isUndefined(result)
     }))
   it.effect("forkAll - returns the list of results in the same order", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe([1, 2, 3].map(Effect.succeed), Effect.forkAll, Effect.flatMap(Fiber.join)))
+      const result = yield* $([1, 2, 3].map(Effect.succeed), Effect.forkAll, Effect.flatMap(Fiber.join))
       assert.deepStrictEqual(Array.from(result), [1, 2, 3])
     }))
   it.effect("forkAll - happy-path", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(
+      const result = yield* $(
         Array.from({ length: 1000 }, (_, i) => i + 1).map(Effect.succeed),
         Effect.forkAll,
         Effect.flatMap(Fiber.join)
-      ))
+      )
       assert.deepStrictEqual(
         Array.from(result),
         Array.from({ length: 1000 }, (_, i) => i + 1)
@@ -75,7 +73,9 @@ describe.concurrent("Effect", () => {
   it.effect("forkAll - empty input", () =>
     Effect.gen(function*($) {
       const result = yield* $(
-        pipe([] as ReadonlyArray<Effect.Effect<never, never, number>>, Effect.forkAll, Effect.flatMap(Fiber.join))
+        [] as ReadonlyArray<Effect.Effect<never, never, number>>,
+        Effect.forkAll,
+        Effect.flatMap(Fiber.join)
       )
       assert.strictEqual(result.length, 0)
     }))
@@ -83,7 +83,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const boom = new Error()
       const fail = Effect.fail(boom)
-      const result = yield* $(pipe([fail], Effect.forkAll, Effect.flatMap((fiber) => Effect.flip(Fiber.join(fiber)))))
+      const result = yield* $([fail], Effect.forkAll, Effect.flatMap((fiber) => Effect.flip(Fiber.join(fiber))))
       assert.strictEqual(result, boom)
     }))
   it.effect("forkAll - propagates defects", () =>
@@ -96,9 +96,9 @@ describe.concurrent("Effect", () => {
       const fiber1 = yield* $(Effect.forkAll([die]))
       const fiber2 = yield* $(Effect.forkAll([die, Effect.succeed(42)]))
       const fiber3 = yield* $(Effect.forkAll([die, Effect.succeed(42), Effect.never()]))
-      const result1 = yield* $(pipe(joinDefect(fiber1), Effect.map((cause) => cause)))
-      const result2 = yield* $(pipe(joinDefect(fiber2), Effect.map((cause) => cause)))
-      const result3 = yield* $(pipe(joinDefect(fiber3), Effect.map((cause) => cause)))
+      const result1 = yield* $(joinDefect(fiber1), Effect.map((cause) => cause))
+      const result2 = yield* $(joinDefect(fiber2), Effect.map((cause) => cause))
+      const result3 = yield* $(joinDefect(fiber3), Effect.map((cause) => cause))
       assert.deepStrictEqual(Cause.dieOption(result1), Option.some(boom))
       assert.deepStrictEqual(Cause.dieOption(result2), Option.some(boom))
       assert.deepStrictEqual(Cause.dieOption(result3), Option.some(boom))

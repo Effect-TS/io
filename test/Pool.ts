@@ -142,12 +142,12 @@ describe("Pool", () => {
     Effect.gen(function*($) {
       const get = Effect.as(Effect.fail("error"), 1)
       const pool = yield* $(Pool.makeWithTTL(get, 0, 1, Duration.infinity))
-      const result = yield* $(pipe(
+      const result = yield* $(
         Effect.scoped(Effect.retryN(Pool.get(pool), 5)),
         Effect.timeoutFail(() => "timeout", Duration.seconds(1)),
         Effect.flip,
         TestServices.provideLive
-      ))
+      )
       expect(result).toBe("error")
     }))
 
@@ -177,14 +177,14 @@ describe("Pool", () => {
         () => Ref.update(count, (n) => n - 1)
       )
       const pool = yield* $(Pool.makeWithTTL(get, 10, 15, Duration.seconds(60)))
-      yield* $(pipe(
+      yield* $(
         Effect.scoped(Effect.zipRight(
           Pool.get(pool),
           Deferred.await(deferred)
         )),
         Effect.fork,
         Effect.repeatN(14)
-      ))
+      )
       yield* $(Effect.repeatUntil(Ref.get(count), (n) => n === 15))
       yield* $(Deferred.succeed(deferred, void 0))
       const max = yield* $(Ref.get(count))
@@ -203,11 +203,11 @@ describe("Pool", () => {
       )
       const scope = yield* $(Scope.make())
       const pool = yield* $(Scope.extend(Pool.make(get, 10), scope))
-      yield* $(pipe(
+      yield* $(
         Effect.scoped(Pool.get(pool)),
         Effect.fork,
         Effect.repeatN(99)
-      ))
+      )
       yield* $(Scope.close(scope, Exit.succeed(void 0)))
       const result = yield* $(Effect.repeatUntil(Ref.get(count), (n) => n === 0))
       expect(result).toBe(0)

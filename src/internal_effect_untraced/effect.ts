@@ -1170,8 +1170,9 @@ export const gen: typeof Effect.gen = Debug.methodWithTrace((trace, restore) =>
   (f) =>
     core.suspend(() => {
       const iterator = restore(() =>
-        f((...args: [Effect.Effect<unknown, unknown, unknown>]) => {
-          return new EffectGen(pipe(...(args))) as any
+        f((...args: Array<any>) => {
+          const finalEffect = pipe.apply(null, args as any) as Effect.Effect<unknown, unknown, unknown>
+          return new EffectGen(finalEffect) as any
         })
       )()
       const state = restore(() => iterator.next())()

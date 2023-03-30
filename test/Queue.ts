@@ -117,7 +117,7 @@ describe.concurrent("Queue", () => {
     Effect.gen(function*($) {
       const queue = yield* $(Queue.bounded<number>(3))
       const deferred = yield* $(Deferred.make<never, boolean>())
-      yield* $(pipe(Queue.awaitShutdown(queue), Effect.zipRight(Deferred.succeed(deferred, true)), Effect.fork))
+      yield* $(Queue.awaitShutdown(queue), Effect.zipRight(Deferred.succeed(deferred, true)), Effect.fork)
       yield* $(Queue.shutdown(queue))
       const result = yield* $(Deferred.await(deferred))
       assert.isTrue(result)
@@ -127,8 +127,8 @@ describe.concurrent("Queue", () => {
       const queue = yield* $(Queue.bounded<number>(3))
       const deferred1 = yield* $(Deferred.make<never, boolean>())
       const deferred2 = yield* $(Deferred.make<never, boolean>())
-      yield* $(pipe(Queue.awaitShutdown(queue), Effect.zipRight(Deferred.succeed(deferred1, true)), Effect.fork))
-      yield* $(pipe(Queue.awaitShutdown(queue), Effect.zipRight(Deferred.succeed(deferred2, true)), Effect.fork))
+      yield* $(Queue.awaitShutdown(queue), Effect.zipRight(Deferred.succeed(deferred1, true)), Effect.fork)
+      yield* $(Queue.awaitShutdown(queue), Effect.zipRight(Deferred.succeed(deferred2, true)), Effect.fork)
       yield* $(Queue.shutdown(queue))
       const result1 = yield* $(Deferred.await(deferred1))
       const result2 = yield* $(Deferred.await(deferred2))
@@ -139,8 +139,8 @@ describe.concurrent("Queue", () => {
     Effect.gen(function*($) {
       const queue = yield* $(Queue.bounded<number>(10))
       const ref = yield* $(Ref.make(true))
-      yield* $(pipe(queue.offer(1), Effect.repeatN(9)))
-      const fiber = yield* $(pipe(Queue.offer(queue, 2), Effect.zipRight(Ref.set(ref, false)), Effect.fork))
+      yield* $(queue.offer(1), Effect.repeatN(9))
+      const fiber = yield* $(Queue.offer(queue, 2), Effect.zipRight(Ref.set(ref, false)), Effect.fork)
       yield* $(waitForSize(queue, 11))
       const result = yield* $(Ref.get(ref))
       yield* $(Fiber.interrupt(fiber))
@@ -153,11 +153,11 @@ describe.concurrent("Queue", () => {
       const values = Array.from(new Array(10), (_, i) => i + 1)
       const fiber = yield* $(Effect.forkAll(values.map((n) => Queue.offer(queue, n))))
       yield* $(waitForSize(queue, 10))
-      yield* $(pipe(
+      yield* $(
         Queue.take(queue),
         Effect.flatMap((n) => Ref.update(ref, (values) => [...values, n])),
         Effect.repeatN(9)
-      ))
+      )
       const result = yield* $(Ref.get(ref))
       yield* $(Fiber.join(fiber))
       assert.deepStrictEqual(result, values)
@@ -166,7 +166,7 @@ describe.concurrent("Queue", () => {
     Effect.gen(function*($) {
       const queue = yield* $(Queue.bounded<number>(2))
       yield* $(Queue.offerAll(queue, [1, 2]))
-      const fiber = yield* $(pipe(Queue.offer(queue, 3), Effect.fork))
+      const fiber = yield* $(Queue.offer(queue, 3), Effect.fork)
       yield* $(waitForSize(queue, 3))
       const result1 = yield* $(Queue.take(queue))
       const result2 = yield* $(Queue.take(queue))
@@ -178,7 +178,7 @@ describe.concurrent("Queue", () => {
     Effect.gen(function*($) {
       const queue = yield* $(Queue.bounded<number>(2))
       yield* $(Queue.offerAll(queue, [1, 2]))
-      const fiber = yield* $(pipe(Queue.offer(queue, 3), Effect.fork))
+      const fiber = yield* $(Queue.offer(queue, 3), Effect.fork)
       yield* $(waitForSize(queue, 3))
       const result = yield* $(Queue.takeAll(queue))
       yield* $(Fiber.join(fiber))
@@ -188,7 +188,7 @@ describe.concurrent("Queue", () => {
     Effect.gen(function*($) {
       const queue = yield* $(Queue.bounded<number>(2))
       yield* $(Queue.offerAll(queue, [1, 2]))
-      const fiber = yield* $(pipe(Queue.offer(queue, 3), Effect.fork))
+      const fiber = yield* $(Queue.offer(queue, 3), Effect.fork)
       yield* $(waitForSize(queue, 3))
       const result = yield* $(Queue.takeUpTo(queue, 2))
       yield* $(Fiber.join(fiber))
@@ -198,7 +198,7 @@ describe.concurrent("Queue", () => {
     Effect.gen(function*($) {
       const queue = yield* $(Queue.bounded<number>(2))
       yield* $(Queue.offerAll(queue, [1, 2]))
-      const fiber = yield* $(pipe(Queue.offerAll(queue, [3, 4, 5]), Effect.fork))
+      const fiber = yield* $(Queue.offerAll(queue, [3, 4, 5]), Effect.fork)
       yield* $(waitForSize(queue, 5))
       const result1 = yield* $(Queue.takeAll(queue))
       const result2 = yield* $(Queue.takeAll(queue))
@@ -222,7 +222,7 @@ describe.concurrent("Queue", () => {
       const queue = yield* $(Queue.bounded<number>(2))
       yield* $(Queue.offer(queue, 1))
       yield* $(Queue.offer(queue, 1))
-      const fiber = yield* $(pipe(Queue.offer(queue, 1), Effect.fork))
+      const fiber = yield* $(Queue.offer(queue, 1), Effect.fork)
       yield* $(waitForSize(queue, 3))
       yield* $(Fiber.interrupt(fiber))
       const result = yield* $(Queue.size(queue))
@@ -241,7 +241,7 @@ describe.concurrent("Queue", () => {
     Effect.gen(function*($) {
       const queue = yield* $(Queue.bounded<number>(2))
       const values = Chunk.range(1, 3)
-      const fiber = yield* $(pipe(Queue.offerAll(queue, values), Effect.fork))
+      const fiber = yield* $(Queue.offerAll(queue, values), Effect.fork)
       const size = yield* $(waitForSize(queue, 3))
       const result = yield* $(Queue.takeAll(queue))
       yield* $(Fiber.interrupt(fiber))
@@ -254,7 +254,7 @@ describe.concurrent("Queue", () => {
       const values1 = Chunk.range(1, 2)
       const values2 = Chunk.range(3, 4)
       yield* $(Queue.offerAll(queue, values1))
-      const fiber = yield* $(pipe(Queue.offerAll(queue, values2), Effect.fork))
+      const fiber = yield* $(Queue.offerAll(queue, values2), Effect.fork)
       yield* $(waitForSize(queue, 4))
       yield* $(Fiber.interrupt(fiber))
       const result1 = yield* $(Queue.takeAll(queue))
@@ -265,7 +265,7 @@ describe.concurrent("Queue", () => {
   it.effect("offerAll with takeAll and back pressure, check ordering", () =>
     Effect.gen(function*($) {
       const queue = yield* $(Queue.bounded<number>(64))
-      const fiber = yield* $(pipe(Queue.offerAll(queue, Array.from(Array(128), (_, i) => i + 1)), Effect.fork))
+      const fiber = yield* $(Queue.offerAll(queue, Array.from(Array(128), (_, i) => i + 1)), Effect.fork)
       yield* $(waitForSize(queue, 128))
       const result = yield* $(Queue.takeAll(queue))
       yield* $(Fiber.interrupt(fiber))
@@ -310,7 +310,7 @@ describe.concurrent("Queue", () => {
   it.effect("offerAll with take and back pressure", () =>
     Effect.gen(function*($) {
       const queue = yield* $(Queue.bounded<number>(2))
-      yield* $(pipe(Queue.offerAll(queue, [1, 2, 3]), Effect.fork))
+      yield* $(Queue.offerAll(queue, [1, 2, 3]), Effect.fork)
       yield* $(waitForSize(queue, 3))
       const result1 = yield* $(Queue.take(queue))
       const result2 = yield* $(Queue.take(queue))
@@ -322,9 +322,9 @@ describe.concurrent("Queue", () => {
   it.effect("offerAll multiple with back pressure", () =>
     Effect.gen(function*($) {
       const queue = yield* $(Queue.bounded<number>(2))
-      yield* $(pipe(Queue.offerAll(queue, [1, 2, 3]), Effect.fork))
+      yield* $(Queue.offerAll(queue, [1, 2, 3]), Effect.fork)
       yield* $(waitForSize(queue, 3))
-      yield* $(pipe(Queue.offerAll(queue, [4, 5]), Effect.fork))
+      yield* $(Queue.offerAll(queue, [4, 5]), Effect.fork)
       yield* $(waitForSize(queue, 5))
       const result1 = yield* $(Queue.take(queue))
       const result2 = yield* $(Queue.take(queue))
@@ -351,7 +351,7 @@ describe.concurrent("Queue", () => {
       const queue = yield* $(Queue.bounded<number>(32))
       yield* $(Queue.offer(queue, 1))
       yield* $(Queue.offer(queue, 2))
-      yield* $(pipe(Queue.offerAll(queue, Chunk.range(3, 35)), Effect.fork))
+      yield* $(Queue.offerAll(queue, Chunk.range(3, 35)), Effect.fork)
       yield* $(waitForSize(queue, 35))
       const result1 = yield* $(Queue.takeAll(queue))
       const result2 = yield* $(Queue.take(queue))
@@ -379,11 +379,11 @@ describe.concurrent("Queue", () => {
       const fiber = yield* $(Effect.forkAll(Array.from({ length: 10 }, (_, i) => Queue.offer(queue, i + 1))))
       yield* $(waitForSize(queue, 10))
       const ref = yield* $(Ref.make<ReadonlyArray<number>>([]))
-      yield* $(pipe(
+      yield* $(
         Queue.take(queue),
         Effect.flatMap((n) => Ref.update(ref, (ns) => [...ns, n])),
         Effect.repeatN(9)
-      ))
+      )
       const result = yield* $(Ref.get(ref))
       yield* $(Fiber.join(fiber))
       assert.deepStrictEqual(result, Array.from({ length: 10 }, (_, i) => i + 1))
@@ -403,8 +403,8 @@ describe.concurrent("Queue", () => {
   it.effect("sequential take and offer", () =>
     Effect.gen(function*($) {
       const queue = yield* $(Queue.bounded<string>(100))
-      const fiber = yield* $(pipe(Queue.take(queue), Effect.zipWith(Queue.take(queue), (a, b) => a + b), Effect.fork))
-      yield* $(pipe(Queue.offer(queue, "don't "), Effect.zipRight(Queue.offer(queue, "give up :D"))))
+      const fiber = yield* $(Queue.take(queue), Effect.zipWith(Queue.take(queue), (a, b) => a + b), Effect.fork)
+      yield* $(Queue.offer(queue, "don't "), Effect.zipRight(Queue.offer(queue, "give up :D")))
       const result = yield* $(Fiber.join(fiber))
       assert.strictEqual(result, "don't give up :D")
     }))
@@ -451,7 +451,7 @@ describe.concurrent("Queue", () => {
       const queue = yield* $(Queue.bounded<number>(2))
       yield* $(Queue.offer(queue, 1))
       yield* $(Queue.offer(queue, 1))
-      const fiber = yield* $(pipe(Queue.offer(queue, 1), Effect.fork))
+      const fiber = yield* $(Queue.offer(queue, 1), Effect.fork)
       yield* $(waitForSize(queue, 3))
       yield* $(Queue.shutdown(queue))
       const result = yield* $(Effect.either(Effect.sandbox(Fiber.join(fiber))))
@@ -462,7 +462,7 @@ describe.concurrent("Queue", () => {
       const fiberId = yield* $(Effect.fiberId())
       const queue = yield* $(Queue.bounded<number>(1))
       yield* $(Queue.shutdown(queue))
-      const result = yield* $(pipe(Queue.offer(queue, 1), Effect.sandbox, Effect.either))
+      const result = yield* $(Queue.offer(queue, 1), Effect.sandbox, Effect.either)
       assert.deepStrictEqual(pipe(result, Either.mapLeft(Cause.unannotate)), Either.left(Cause.interrupt(fiberId)))
     }))
   it.effect("shutdown with take", () =>
@@ -470,7 +470,7 @@ describe.concurrent("Queue", () => {
       const fiberId = yield* $(Effect.fiberId())
       const queue = yield* $(Queue.bounded<number>(1))
       yield* $(Queue.shutdown(queue))
-      const result = yield* $(pipe(Queue.take(queue), Effect.sandbox, Effect.either))
+      const result = yield* $(Queue.take(queue), Effect.sandbox, Effect.either)
       assert.deepStrictEqual(pipe(result, Either.mapLeft(Cause.unannotate)), Either.left(Cause.interrupt(fiberId)))
     }))
   it.effect("shutdown with takeAll", () =>
@@ -478,7 +478,7 @@ describe.concurrent("Queue", () => {
       const fiberId = yield* $(Effect.fiberId())
       const queue = yield* $(Queue.bounded<number>(1))
       yield* $(Queue.shutdown(queue))
-      const result = yield* $(pipe(Queue.takeAll(queue), Effect.sandbox, Effect.either))
+      const result = yield* $(Queue.takeAll(queue), Effect.sandbox, Effect.either)
       assert.deepStrictEqual(pipe(result, Either.mapLeft(Cause.unannotate)), Either.left(Cause.interrupt(fiberId)))
     }))
   it.effect("shutdown with takeUpTo", () =>
@@ -486,7 +486,7 @@ describe.concurrent("Queue", () => {
       const fiberId = yield* $(Effect.fiberId())
       const queue = yield* $(Queue.bounded<number>(1))
       yield* $(Queue.shutdown(queue))
-      const result = yield* $(pipe(Queue.takeUpTo(queue, 1), Effect.sandbox, Effect.either))
+      const result = yield* $(Queue.takeUpTo(queue, 1), Effect.sandbox, Effect.either)
       assert.deepStrictEqual(pipe(result, Either.mapLeft(Cause.unannotate)), Either.left(Cause.interrupt(fiberId)))
     }))
   it.effect("shutdown with size", () =>
@@ -494,13 +494,13 @@ describe.concurrent("Queue", () => {
       const fiberId = yield* $(Effect.fiberId())
       const queue = yield* $(Queue.bounded<number>(1))
       yield* $(Queue.shutdown(queue))
-      const result = yield* $(pipe(Queue.size(queue), Effect.sandbox, Effect.either))
+      const result = yield* $(Queue.size(queue), Effect.sandbox, Effect.either)
       assert.deepStrictEqual(pipe(result, Either.mapLeft(Cause.unannotate)), Either.left(Cause.interrupt(fiberId)))
     }))
   it.effect("shutdown race condition with offer", () =>
     Effect.gen(function*($) {
       const queue = yield* $(Queue.bounded<number>(2))
-      const fiber = yield* $(pipe(Queue.offer(queue, 1), Effect.forever, Effect.fork))
+      const fiber = yield* $(Queue.offer(queue, 1), Effect.forever, Effect.fork)
       yield* $(Queue.shutdown(queue))
       const result = yield* $(Fiber.await(fiber))
       assert.isTrue(Exit.isFailure(result))
@@ -510,7 +510,7 @@ describe.concurrent("Queue", () => {
       const queue = yield* $(Queue.bounded<number>(2))
       yield* $(Queue.offer(queue, 1))
       yield* $(Queue.offer(queue, 1))
-      const fiber = yield* $(pipe(Queue.take(queue), Effect.forever, Effect.fork))
+      const fiber = yield* $(Queue.take(queue), Effect.forever, Effect.fork)
       yield* $(Queue.shutdown(queue))
       const result = yield* $(Fiber.await(fiber))
       assert.isTrue(Exit.isFailure(result))
@@ -557,7 +557,7 @@ describe.concurrent("Queue", () => {
           .map((n) => Queue.offer(queue, n))
           .reduce((acc, curr) => pipe(acc, Effect.zipRight(curr)), Effect.succeed(false))
       )
-      yield* $(pipe(Queue.offer(queue, 5), Effect.fork))
+      yield* $(Queue.offer(queue, 5), Effect.fork)
       yield* $(waitForSize(queue, 5))
       const result1 = yield* $(Queue.takeAll(queue))
       const result2 = yield* $(Queue.take(queue))
@@ -596,14 +596,14 @@ describe.concurrent("Queue", () => {
       const queue = yield* $(Queue.bounded<number>(100))
       const updater = pipe(Queue.offer(queue, 10), Effect.forever)
       const getter = Queue.takeBetween(queue, 5, 10)
-      const result = yield* $(pipe(getter, Effect.race(updater)))
+      const result = yield* $(getter, Effect.race(updater))
       assert.isAtLeast(result.length, 5)
     }))
   it.effect("takeBetween returns elements in the correct order", () =>
     Effect.gen(function*($) {
       const values = [-10, -7, -4, -1, 5, 10]
       const queue = yield* $(Queue.bounded<number>(100))
-      const fiber = yield* $(pipe(values, Effect.forEach((n) => Queue.offer(queue, n)), Effect.fork))
+      const fiber = yield* $(values, Effect.forEach((n) => Queue.offer(queue, n)), Effect.fork)
       const result = yield* $(Queue.takeBetween(queue, values.length, values.length))
       yield* $(Fiber.interrupt(fiber))
       assert.deepStrictEqual(Array.from(result), values)
@@ -629,7 +629,7 @@ describe.concurrent("Queue", () => {
       const queue = yield* $(Queue.bounded<number>(100))
       const updater = pipe(Queue.offer(queue, 10), Effect.forever)
       const getter = Queue.takeN(queue, 5)
-      const result = yield* $(pipe(getter, Effect.race(updater)))
+      const result = yield* $(getter, Effect.race(updater))
       assert.strictEqual(result.length, 5)
     }))
   it.effect("should return the specified number of elements from a non-empty queue", () =>
@@ -731,7 +731,7 @@ describe.concurrent("Queue", () => {
           .map((n) => Queue.offer(queue, n))
           .reduce((acc, curr) => pipe(acc, Effect.zipRight(curr)), Effect.succeed(false))
       )
-      const fiber = yield* $(pipe(Queue.offer(queue, 5), Effect.fork))
+      const fiber = yield* $(Queue.offer(queue, 5), Effect.fork)
       yield* $(waitForSize(queue, 5))
       const result = yield* $(Queue.takeUpTo(queue, 5))
       yield* $(Fiber.interrupt(fiber))

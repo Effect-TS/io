@@ -9,13 +9,13 @@ describe.concurrent("Effect", () => {
   it.effect("non-memoized returns new instances on repeated calls", () =>
     it.flakyTest(Effect.gen(function*($) {
       const random = Random.nextInt()
-      const [first, second] = yield* $(pipe(random, Effect.zip(random)))
+      const [first, second] = yield* $(random, Effect.zip(random))
       assert.notStrictEqual(first, second)
     })))
   it.effect("memoized returns the same instance on repeated calls", () =>
     it.flakyTest(Effect.gen(function*($) {
       const memo = Effect.memoize(Random.nextInt())
-      const [first, second] = yield* $(pipe(memo, Effect.flatMap((effect) => pipe(effect, Effect.zip(effect)))))
+      const [first, second] = yield* $(memo, Effect.flatMap((effect) => pipe(effect, Effect.zip(effect))))
       assert.strictEqual(first, second)
     })))
   it.effect("memoized function returns the same instance on repeated calls", () =>
@@ -33,8 +33,8 @@ describe.concurrent("Effect", () => {
   it.effect("once returns an effect that will only be executed once", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(0))
-      const effect: Effect.Effect<never, never, void> = yield* $(pipe(Ref.update(ref, (n) => n + 1), Effect.once))
-      yield* $(pipe(effect, Effect.replicate(100), Effect.collectAllPar))
+      const effect: Effect.Effect<never, never, void> = yield* $(Ref.update(ref, (n) => n + 1), Effect.once)
+      yield* $(effect, Effect.replicate(100), Effect.collectAllPar)
       const result = yield* $(Ref.get(ref))
       assert.strictEqual(result, 1)
     }))

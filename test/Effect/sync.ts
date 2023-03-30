@@ -53,12 +53,12 @@ describe.concurrent("Effect", () => {
   it.effect("suspend - must catch throwable", () =>
     Effect.gen(function*($) {
       const error = new Error("woops")
-      const result = yield* $(pipe(
+      const result = yield* $(
         Effect.attemptSuspend<never, never, never>(() => {
           throw error
         }),
         Effect.either
-      ))
+      )
       assert.deepStrictEqual(result, Either.left(error))
     }))
   it.effect("suspendSucceed - must be evaluatable", () =>
@@ -69,14 +69,14 @@ describe.concurrent("Effect", () => {
   it.effect("suspendSucceed - must not catch throwable", () =>
     Effect.gen(function*($) {
       const error = new Error("woops")
-      const result = yield* $(pipe(
+      const result = yield* $(
         Effect.suspend<never, never, never>(() => {
           throw error
         }),
         Effect.sandbox,
         Effect.either,
         Effect.map(Either.mapLeft(Cause.unannotate))
-      ))
+      )
       assert.deepStrictEqual(result, Either.left(Cause.die(error)))
     }))
 })
