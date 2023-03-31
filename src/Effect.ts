@@ -10,9 +10,23 @@ import type * as Equal from "@effect/data/Equal"
 import type { LazyArg } from "@effect/data/Function"
 import type * as HashMap from "@effect/data/HashMap"
 import type * as HashSet from "@effect/data/HashSet"
+import type { TypeLambda } from "@effect/data/HKT"
 import type * as Option from "@effect/data/Option"
 import type { Predicate, Refinement } from "@effect/data/Predicate"
+import type * as applicative from "@effect/data/typeclass/Applicative"
+import type * as bicovariant from "@effect/data/typeclass/Bicovariant"
+import type * as chainable from "@effect/data/typeclass/Chainable"
+import * as covariant from "@effect/data/typeclass/Covariant"
 import type { Equivalence } from "@effect/data/typeclass/Equivalence"
+import type * as flatMap_ from "@effect/data/typeclass/FlatMap"
+import type * as invariant from "@effect/data/typeclass/Invariant"
+import type * as monad from "@effect/data/typeclass/Monad"
+import type * as pointed from "@effect/data/typeclass/Pointed"
+import type * as product_ from "@effect/data/typeclass/Product"
+import type * as semiAlternative from "@effect/data/typeclass/SemiAlternative"
+import type * as semiApplicative from "@effect/data/typeclass/SemiApplicative"
+import type * as semiCoproduct from "@effect/data/typeclass/SemiCoproduct"
+import type * as semiProduct from "@effect/data/typeclass/SemiProduct"
 import type * as Cause from "@effect/io/Cause"
 import type * as Clock from "@effect/io/Clock"
 import type { Config } from "@effect/io/Config"
@@ -89,6 +103,14 @@ export type EffectTypeId = typeof EffectTypeId
  */
 export interface Effect<R, E, A> extends Effect.Variance<R, E, A>, Equal.Equal {
   traced(trace: Trace): Effect<R, E, A>
+}
+
+/**
+ * @category type lambdas
+ * @since 1.0.0
+ */
+export interface EffectTypeLambda extends TypeLambda {
+  readonly type: Effect<this["Out2"], this["Out1"], this["Target"]>
 }
 
 /**
@@ -618,15 +640,24 @@ export const asyncInterrupt: <R, E, A>(
 ) => Effect<R, E, A> = core.asyncInterrupt
 
 const try_: <A>(evaluate: LazyArg<A>) => Effect<never, unknown, A> = effect.attempt
+export { try_ as try }
 export {
   /**
-   * Imports a synchronous side-effect into a pure `Effect` value, translating any
-   * thrown exceptions into typed failed effects creating with `Effect.fail`.
+   * Recovers from specified error.
    *
    * @since 1.0.0
-   * @category constructors
+   * @category error handling
    */
-  try_ as try
+  _catch as catch
+}
+export {
+  /**
+   * Like bind for values
+   *
+   * @since 1.0.0
+   * @category do notation
+   */
+  bindValue_ as let
 }
 
 /**
@@ -662,11 +693,11 @@ export const cached: {
 export const cachedInvalidate: {
   (timeToLive: Duration.Duration): <R, E, A>(
     self: Effect<R, E, A>
-  ) => Effect<R, never, readonly [Effect<never, E, A>, Effect<never, never, void>]>
+  ) => Effect<R, never, [Effect<never, E, A>, Effect<never, never, void>]>
   <R, E, A>(
     self: Effect<R, E, A>,
     timeToLive: Duration.Duration
-  ): Effect<R, never, readonly [Effect<never, E, A>, Effect<never, never, void>]>
+  ): Effect<R, never, [Effect<never, E, A>, Effect<never, never, void>]>
 } = circular.cachedInvalidate
 
 const _catch: {
@@ -682,16 +713,6 @@ const _catch: {
     f: (error: Extract<E, { [n in N]: K }>) => Effect<R1, E1, A1>
   ): Effect<R | R1, E1 | Exclude<E, { [n in N]: K }>, A | A1>
 } = effect._catch
-
-export {
-  /**
-   * Recovers from specified error.
-   *
-   * @since 1.0.0
-   * @category error handling
-   */
-  _catch as catch
-}
 
 /**
  * Recovers from all recoverable errors.
@@ -1293,16 +1314,6 @@ const bindValue_: {
     f: (_: K) => A
   ): Effect<R, E, MergeRecord<K, { [k in N]: A }>>
 } = effect.bindValue
-
-export {
-  /**
-   * Like bind for values
-   *
-   * @since 1.0.0
-   * @category do notation
-   */
-  bindValue_ as let
-}
 
 /**
  * Like bind for values
@@ -5499,8 +5510,8 @@ export const yieldNow: () => Effect<never, never, void> = core.yieldNow
  * @category products
  */
 export const zip: {
-  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, readonly [A, A2]>
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, readonly [A, A2]>
+  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, [A, A2]>
+  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, [A, A2]>
 } = core.zip
 
 /**
@@ -5544,8 +5555,8 @@ export const zipWith: {
  * @category zipping
  */
 export const zipPar: {
-  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, readonly [A, A2]>
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, readonly [A, A2]>
+  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, [A, A2]>
+  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, [A, A2]>
 } = circular.zipPar
 
 /**
@@ -5592,3 +5603,136 @@ export const zipWithPar: {
     f: (a: A, b: A2) => B
   ): Effect<R | R2, E | E2, B>
 } = circular.zipWithPar
+
+/**
+ * @category instances
+ * @since 1.0.0
+ */
+export const Bicovariant: bicovariant.Bicovariant<EffectTypeLambda> = {
+  bimap: mapBoth
+}
+
+const imap = covariant.imap<EffectTypeLambda>(map)
+
+/**
+ * @category instances
+ * @since 1.0.0
+ */
+export const Covariant: covariant.Covariant<EffectTypeLambda> = {
+  imap,
+  map
+}
+
+/**
+ * @category instances
+ * @since 1.0.0
+ */
+export const Invariant: invariant.Invariant<EffectTypeLambda> = {
+  imap
+}
+
+/**
+ * @category instances
+ * @since 1.0.0
+ */
+export const Pointed: pointed.Pointed<EffectTypeLambda> = {
+  of: succeed,
+  imap,
+  map
+}
+
+/**
+ * @category instances
+ * @since 1.0.0
+ */
+export const FlatMap: flatMap_.FlatMap<EffectTypeLambda> = {
+  flatMap
+}
+
+/**
+ * @category instances
+ * @since 1.0.0
+ */
+export const Chainable: chainable.Chainable<EffectTypeLambda> = {
+  imap,
+  map,
+  flatMap
+}
+
+/**
+ * @category instances
+ * @since 1.0.0
+ */
+export const Monad: monad.Monad<EffectTypeLambda> = {
+  imap,
+  of: succeed,
+  map,
+  flatMap
+}
+
+/**
+ * @category instances
+ * @since 1.0.0
+ */
+export const SemiProduct: semiProduct.SemiProduct<EffectTypeLambda> = {
+  imap,
+  product: zip,
+  productMany: (self, rest) => flatMap(self, (a) => map(collectAll(rest), (r) => [a, ...r]))
+}
+
+/**
+ * @category instances
+ * @since 1.0.0
+ */
+export const Product: product_.Product<EffectTypeLambda> = {
+  of: succeed,
+  imap,
+  product: SemiProduct.product,
+  productMany: SemiProduct.productMany,
+  productAll: (rest) => map(collectAll(rest), (x) => Array.from(x))
+}
+
+/**
+ * @category instances
+ * @since 1.0.0
+ */
+export const SemiApplicative: semiApplicative.SemiApplicative<EffectTypeLambda> = {
+  imap,
+  map,
+  product: SemiProduct.product,
+  productMany: SemiProduct.productMany
+}
+
+/**
+ * @category instances
+ * @since 1.0.0
+ */
+export const Applicative: applicative.Applicative<EffectTypeLambda> = {
+  imap,
+  of: succeed,
+  map,
+  product: SemiProduct.product,
+  productMany: SemiProduct.productMany,
+  productAll: Product.productAll
+}
+
+/**
+ * @category instances
+ * @since 1.0.0
+ */
+export const SemiCoproduct: semiCoproduct.SemiCoproduct<EffectTypeLambda> = {
+  imap,
+  coproduct: (self, that) => orElse(self, () => that),
+  coproductMany: (self, rest) => firstSuccessOf([self, ...rest])
+}
+
+/**
+ * @category instances
+ * @since 1.0.0
+ */
+export const SemiAlternative: semiAlternative.SemiAlternative<EffectTypeLambda> = {
+  map,
+  imap,
+  coproduct: SemiCoproduct.coproduct,
+  coproductMany: SemiCoproduct.coproductMany
+}
