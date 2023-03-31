@@ -91,7 +91,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const fibEffect = (n: number): Effect.Effect<never, unknown, number> => {
         if (n <= 1) {
-          return Effect.attempt(() => n)
+          return Effect.try(() => n)
         }
         return pipe(fibEffect(n - 1), Effect.zipWith(fibEffect(n - 2), (a, b) => a + b))
       }
@@ -103,10 +103,10 @@ describe.concurrent("Effect", () => {
       const fibEffect = (n: number): Effect.Effect<never, unknown, number> => {
         if (n <= 1) {
           return pipe(
-            Effect.attempt(() => {
+            Effect.try(() => {
               throw ExampleError
             }),
-            Effect.catchAll(() => Effect.attempt(() => n))
+            Effect.catchAll(() => Effect.try(() => n))
           )
         }
         return pipe(fibEffect(n - 1), Effect.zipWith(fibEffect(n - 2), (a, b) => a + b))

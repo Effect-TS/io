@@ -617,14 +617,17 @@ export const asyncInterrupt: <R, E, A>(
   blockingOn?: FiberId.FiberId
 ) => Effect<R, E, A> = core.asyncInterrupt
 
-/**
- * Imports a synchronous side-effect into a pure `Effect` value, translating any
- * thrown exceptions into typed failed effects creating with `Effect.fail`.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const attempt: <A>(evaluate: LazyArg<A>) => Effect<never, unknown, A> = effect.attempt
+const try_: <A>(evaluate: LazyArg<A>) => Effect<never, unknown, A> = effect.attempt
+export {
+  /**
+   * Imports a synchronous side-effect into a pure `Effect` value, translating any
+   * thrown exceptions into typed failed effects creating with `Effect.fail`.
+   *
+   * @since 1.0.0
+   * @category constructors
+   */
+  try_ as try
+}
 
 /**
  * Returns a new effect that will not succeed with its value before first
@@ -4234,8 +4237,7 @@ export const supervised: {
  * @since 1.0.0
  * @category constructors
  */
-export const attemptSuspend: <R, E, A>(evaluate: LazyArg<Effect<R, E, A>>) => Effect<R, unknown, A> =
-  effect.attemptSuspend
+export const trySuspend: <R, E, A>(evaluate: LazyArg<Effect<R, E, A>>) => Effect<R, unknown, A> = effect.attemptSuspend
 
 /**
  * @since 1.0.0
@@ -4615,7 +4617,7 @@ export const transplant: <R, E, A>(
  * @since 1.0.0
  * @category constructors
  */
-export const attemptCatch: <E, A>(attempt: LazyArg<A>, onThrow: (u: unknown) => E) => Effect<never, E, A> =
+export const tryCatch: <E, A>(attempt: LazyArg<A>, onThrow: (u: unknown) => E) => Effect<never, E, A> =
   effect.attemptCatch
 
 /**
@@ -4625,7 +4627,7 @@ export const attemptCatch: <E, A>(attempt: LazyArg<A>, onThrow: (u: unknown) => 
  * @since 1.0.0
  * @category constructors
  */
-export const attemptCatchPromise: <E, A>(
+export const tryCatchPromise: <E, A>(
   evaluate: LazyArg<Promise<A>>,
   onReject: (reason: unknown) => E
 ) => Effect<never, E, A> = effect.attemptCatchPromise
@@ -4636,7 +4638,7 @@ export const attemptCatchPromise: <E, A>(
  * @since 1.0.0
  * @category constructors
  */
-export const attemptCatchPromiseInterrupt: <E, A>(
+export const tryCatchPromiseInterrupt: <E, A>(
   evaluate: (signal: AbortSignal) => Promise<A>,
   onReject: (reason: unknown) => E
 ) => Effect<never, E, A> = effect.attemptCatchPromiseInterrupt
@@ -4648,7 +4650,7 @@ export const attemptCatchPromiseInterrupt: <E, A>(
  * @since 1.0.0
  * @category alternatives
  */
-export const attemptOrElse: {
+export const tryOrElse: {
   <R2, E2, A2, A, R3, E3, A3>(
     that: LazyArg<Effect<R2, E2, A2>>,
     onSuccess: (a: A) => Effect<R3, E3, A3>
@@ -4667,7 +4669,7 @@ export const attemptOrElse: {
  * @since 1.0.0
  * @category constructors
  */
-export const attemptPromise: <A>(evaluate: LazyArg<Promise<A>>) => Effect<never, unknown, A> = effect.attemptPromise
+export const tryPromise: <A>(evaluate: LazyArg<Promise<A>>) => Effect<never, unknown, A> = effect.attemptPromise
 
 /**
  * Like `tryPromise` but allows for interruption via AbortSignal
@@ -4675,7 +4677,7 @@ export const attemptPromise: <A>(evaluate: LazyArg<Promise<A>>) => Effect<never,
  * @since 1.0.0
  * @category constructors
  */
-export const attemptPromiseInterrupt: <A>(evaluate: (signal: AbortSignal) => Promise<A>) => Effect<never, unknown, A> =
+export const tryPromiseInterrupt: <A>(evaluate: (signal: AbortSignal) => Promise<A>) => Effect<never, unknown, A> =
   effect.attemptPromiseInterrupt
 
 /**
