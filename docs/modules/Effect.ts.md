@@ -159,6 +159,7 @@ Added in v1.0.0
   - [Do](#do)
   - [bind](#bind)
   - [bindDiscard](#binddiscard)
+  - [bindTo](#bindto)
   - [let](#let)
   - [letDiscard](#letdiscard)
 - [elements](#elements)
@@ -357,6 +358,9 @@ Added in v1.0.0
   - [flip](#flip)
   - [flipWith](#flipwith)
   - [forever](#forever)
+  - [getFailureMonoid](#getfailuremonoid)
+  - [getFailureSemigroup](#getfailuresemigroup)
+  - [getFirstSuccessSemigroup](#getfirstsuccesssemigroup)
   - [head](#head)
   - [ignore](#ignore)
   - [ignoreLogged](#ignorelogged)
@@ -364,6 +368,8 @@ Added in v1.0.0
   - [leftWith](#leftwith)
   - [memoize](#memoize)
   - [merge](#merge)
+  - [nonEmptyStruct](#nonemptystruct)
+  - [nonEmptyTuple](#nonemptytuple)
   - [onDone](#ondone)
   - [onDoneCause](#ondonecause)
   - [onError](#onerror)
@@ -2683,6 +2689,19 @@ export declare const bindDiscard: {
     E | E2,
     MergeRecord<K, { [k in N]: A }>
   >
+}
+```
+
+Added in v1.0.0
+
+## bindTo
+
+**Signature**
+
+```ts
+export declare const bindTo: {
+  <N extends string>(name: N): <O, E, A>(self: Effect<O, E, A>) => Effect<O, E, { [K in N]: A }>
+  <O_1, E_1, A_1, N_1 extends string>(self: Effect<O_1, E_1, A_1>, name: N_1): Effect<O_1, E_1, { [K_1 in N_1]: A_1 }>
 }
 ```
 
@@ -5665,6 +5684,36 @@ export declare const forever: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, n
 
 Added in v1.0.0
 
+## getFailureMonoid
+
+**Signature**
+
+```ts
+export declare const getFailureMonoid: <A, O, E>(M: Monoid<A>) => Monoid<Effect<O, E, A>>
+```
+
+Added in v1.0.0
+
+## getFailureSemigroup
+
+**Signature**
+
+```ts
+export declare const getFailureSemigroup: <A, O, E>(S: Semigroup<A>) => Semigroup<Effect<O, E, A>>
+```
+
+Added in v1.0.0
+
+## getFirstSuccessSemigroup
+
+**Signature**
+
+```ts
+export declare const getFirstSuccessSemigroup: <R, O, E, A>() => Semigroup<Effect<O, E, A>>
+```
+
+Added in v1.0.0
+
 ## head
 
 Returns a successful effect with the head of the collection if the collection
@@ -5760,6 +5809,38 @@ success channel to their common combined type.
 
 ```ts
 export declare const merge: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, E | A>
+```
+
+Added in v1.0.0
+
+## nonEmptyStruct
+
+**Signature**
+
+```ts
+export declare const nonEmptyStruct: <R extends { readonly [x: string]: Effect<any, any, any> }>(
+  fields: (keyof R extends never ? never : R) & { readonly [x: string]: Effect<any, any, any> }
+) => Effect<
+  [R[keyof R]] extends [Effect<infer O, any, any>] ? O : never,
+  [R[keyof R]] extends [Effect<any, infer E, any>] ? E : never,
+  { [K in keyof R]: [R[K]] extends [Effect<any, any, infer A>] ? A : never }
+>
+```
+
+Added in v1.0.0
+
+## nonEmptyTuple
+
+**Signature**
+
+```ts
+export declare const nonEmptyTuple: <T extends readonly [Effect<any, any, any>, ...Effect<any, any, any>[]]>(
+  ...elements: T
+) => Effect<
+  [T[number]] extends [Effect<infer O, any, any>] ? O : never,
+  [T[number]] extends [Effect<any, infer E, any>] ? E : never,
+  { [I in keyof T]: [T[I]] extends [Effect<any, any, infer A>] ? A : never }
+>
 ```
 
 Added in v1.0.0

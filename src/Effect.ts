@@ -13,20 +13,22 @@ import type * as HashSet from "@effect/data/HashSet"
 import type { TypeLambda } from "@effect/data/HKT"
 import type * as Option from "@effect/data/Option"
 import type { Predicate, Refinement } from "@effect/data/Predicate"
-import type * as applicative from "@effect/data/typeclass/Applicative"
+import * as applicative from "@effect/data/typeclass/Applicative"
 import type * as bicovariant from "@effect/data/typeclass/Bicovariant"
 import type * as chainable from "@effect/data/typeclass/Chainable"
 import * as covariant from "@effect/data/typeclass/Covariant"
 import type { Equivalence } from "@effect/data/typeclass/Equivalence"
 import type * as flatMap_ from "@effect/data/typeclass/FlatMap"
-import type * as invariant from "@effect/data/typeclass/Invariant"
+import * as invariant from "@effect/data/typeclass/Invariant"
 import type * as monad from "@effect/data/typeclass/Monad"
+import type { Monoid } from "@effect/data/typeclass/Monoid"
 import type * as pointed from "@effect/data/typeclass/Pointed"
 import type * as product_ from "@effect/data/typeclass/Product"
 import type * as semiAlternative from "@effect/data/typeclass/SemiAlternative"
-import type * as semiApplicative from "@effect/data/typeclass/SemiApplicative"
-import type * as semiCoproduct from "@effect/data/typeclass/SemiCoproduct"
-import type * as semiProduct from "@effect/data/typeclass/SemiProduct"
+import * as semiApplicative from "@effect/data/typeclass/SemiApplicative"
+import * as semiCoproduct from "@effect/data/typeclass/SemiCoproduct"
+import type { Semigroup } from "@effect/data/typeclass/Semigroup"
+import * as semiProduct from "@effect/data/typeclass/SemiProduct"
 import type * as Cause from "@effect/io/Cause"
 import type * as Clock from "@effect/io/Clock"
 import type { Config } from "@effect/io/Config"
@@ -5691,6 +5693,27 @@ export const SemiProduct: semiProduct.SemiProduct<EffectTypeLambda> = {
  * @category instances
  * @since 1.0.0
  */
+export const SemiCoproduct: semiCoproduct.SemiCoproduct<EffectTypeLambda> = {
+  imap,
+  coproduct: (self, that) => orElse(self, () => that),
+  coproductMany: (self, rest) => firstSuccessOf([self, ...rest])
+}
+
+/**
+ * @category instances
+ * @since 1.0.0
+ */
+export const SemiAlternative: semiAlternative.SemiAlternative<EffectTypeLambda> = {
+  map,
+  imap,
+  coproduct: SemiCoproduct.coproduct,
+  coproductMany: SemiCoproduct.coproductMany
+}
+
+/**
+ * @category instances
+ * @since 1.0.0
+ */
 export const Product: product_.Product<EffectTypeLambda> = {
   of: succeed,
   imap,
@@ -5724,22 +5747,63 @@ export const Applicative: applicative.Applicative<EffectTypeLambda> = {
 }
 
 /**
- * @category instances
+ * @category do notation
  * @since 1.0.0
  */
-export const SemiCoproduct: semiCoproduct.SemiCoproduct<EffectTypeLambda> = {
-  imap,
-  coproduct: (self, that) => orElse(self, () => that),
-  coproductMany: (self, rest) => firstSuccessOf([self, ...rest])
-}
+export const bindTo: {
+  <N extends string>(name: N): <O, E, A>(self: Effect<O, E, A>) => Effect<O, E, { [K in N]: A }>
+  <O_1, E_1, A_1, N_1 extends string>(
+    self: Effect<O_1, E_1, A_1>,
+    name: N_1
+  ): Effect<O_1, E_1, { [K_1 in N_1]: A_1 }>
+} = invariant.bindTo(SemiProduct)
 
 /**
- * @category instances
+ * @category utils
  * @since 1.0.0
  */
-export const SemiAlternative: semiAlternative.SemiAlternative<EffectTypeLambda> = {
-  map,
-  imap,
-  coproduct: SemiCoproduct.coproduct,
-  coproductMany: SemiCoproduct.coproductMany
-}
+export const nonEmptyStruct: <R extends { readonly [x: string]: Effect<any, any, any> }>(
+  fields: (keyof R extends never ? never : R) & { readonly [x: string]: Effect<any, any, any> }
+) => Effect<
+  [R[keyof R]] extends [Effect<infer O, any, any>] ? O : never,
+  [R[keyof R]] extends [Effect<any, infer E, any>] ? E : never,
+  { [K in keyof R]: [R[K]] extends [Effect<any, any, infer A>] ? A : never }
+> = semiProduct.nonEmptyStruct(SemiProduct)
+
+/**
+ * @category utils
+ * @since 1.0.0
+ */
+export const nonEmptyTuple: <T extends readonly [Effect<any, any, any>, ...Array<Effect<any, any, any>>]>(
+  ...elements: T
+) => Effect<
+  [T[number]] extends [Effect<infer O, any, any>] ? O : never,
+  [T[number]] extends [Effect<any, infer E, any>] ? E : never,
+  { [I in keyof T]: [T[I]] extends [Effect<any, any, infer A>] ? A : never }
+> = semiProduct.nonEmptyTuple(SemiProduct)
+
+/**
+ * @category utils
+ * @since 1.0.0
+ */
+export const getFailureSemigroup: <A, O, E>(S: Semigroup<A>) => Semigroup<Effect<O, E, A>> = semiApplicative
+  .getSemigroup(
+    SemiApplicative
+  )
+
+/**
+ * @category utils
+ * @since 1.0.0
+ */
+export const getFirstSuccessSemigroup = semiCoproduct
+  .getSemigroup(
+    SemiCoproduct
+  )
+
+/**
+ * @category utils
+ * @since 1.0.0
+ */
+export const getFailureMonoid: <A, O, E>(M: Monoid<A>) => Monoid<Effect<O, E, A>> = applicative.getMonoid(
+  Applicative
+)
