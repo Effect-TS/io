@@ -15,11 +15,11 @@ describe("KeyedPool", () => {
     Effect.gen(function*($) {
       const N = 10
       const pool = yield* $(KeyedPool.makeSized((key: string) => Effect.succeed(key), 4))
-      yield* $(pipe(
+      yield* $(
         KeyedPool.get(pool, "key1"),
         Effect.repeatN(3),
         Effect.asUnit
-      ))
+      )
       const fiber = yield* $(Effect.fork(
         Effect.forEachParDiscard(Chunk.range(1, N), () =>
           Effect.scoped(

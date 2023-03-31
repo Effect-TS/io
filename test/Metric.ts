@@ -163,7 +163,7 @@ describe.concurrent("Metric", () => {
     it.effect("tags are a region setting", () =>
       Effect.gen(function*($) {
         const counter = Metric.counter("c9")
-        const result = yield* $(pipe(
+        const result = yield* $(
           Metric.increment(counter),
           Effect.tagged("key", "value"),
           Effect.zipRight(
@@ -173,7 +173,7 @@ describe.concurrent("Metric", () => {
               Metric.value
             )
           )
-        ))
+        )
         assert.deepStrictEqual(result, MetricState.counter(1))
       }))
   })
@@ -348,8 +348,8 @@ describe.concurrent("Metric", () => {
         )
         // NOTE: trackDuration always uses the **real** Clock
         const start = yield* $(Effect.sync(() => Date.now()))
-        yield* $(pipe(Effect.sleep(Duration.millis(100)), Metric.trackDuration(histogram)))
-        yield* $(pipe(Effect.sleep(Duration.millis(300)), Metric.trackDuration(histogram)))
+        yield* $(Effect.sleep(Duration.millis(100)), Metric.trackDuration(histogram))
+        yield* $(Effect.sleep(Duration.millis(300)), Metric.trackDuration(histogram))
         const end = yield* $(Effect.sync(() => Date.now()))
         const elapsed = end - start
         const result = yield* $(Metric.value(histogram))
@@ -502,19 +502,19 @@ describe.concurrent("Metric", () => {
   describe.concurrent("Polling", () => {
     it.scopedLive("launch should be interruptible", () =>
       Effect.gen(function*($) {
-        const name = yield* $(pipe(Clock.currentTimeMillis(), Effect.map((now) => `gauge-${now}`)))
+        const name = yield* $(Clock.currentTimeMillis(), Effect.map((now) => `gauge-${now}`))
         const [gauge, metric] = makePollingGauge(name, 1)
         const schedule = pipe(Schedule.forever(), Schedule.delayed(() => Duration.millis(250)))
-        const fiber = yield* $(pipe(metric, PollingMetric.launch(schedule)))
+        const fiber = yield* $(metric, PollingMetric.launch(schedule))
         yield* $(Fiber.interrupt(fiber))
         const result = yield* $(Metric.value(gauge))
         assert.strictEqual(result.value, 0)
       }))
     it.scoped("launch should update the internal metric using the provided Schedule", () =>
       Effect.gen(function*($) {
-        const name = yield* $(pipe(Clock.currentTimeMillis(), Effect.map((now) => `gauge-${now}`)))
+        const name = yield* $(Clock.currentTimeMillis(), Effect.map((now) => `gauge-${now}`))
         const [gauge, metric] = makePollingGauge(name, 1)
-        const fiber = yield* $(pipe(metric, PollingMetric.launch(Schedule.once())))
+        const fiber = yield* $(metric, PollingMetric.launch(Schedule.once()))
         yield* $(Fiber.join(fiber))
         const result = yield* $(Metric.value(gauge))
         assert.strictEqual(result.value, 1)
@@ -524,12 +524,12 @@ describe.concurrent("Metric", () => {
         const gaugeIncrement1 = 1
         const gaugeIncrement2 = 2
         const pollingCount = 2
-        const name1 = yield* $(pipe(Clock.currentTimeMillis(), Effect.map((now) => `gauge1-${now}`)))
-        const name2 = yield* $(pipe(Clock.currentTimeMillis(), Effect.map((now) => `gauge2-${now}`)))
+        const name1 = yield* $(Clock.currentTimeMillis(), Effect.map((now) => `gauge1-${now}`))
+        const name2 = yield* $(Clock.currentTimeMillis(), Effect.map((now) => `gauge2-${now}`))
         const [gauge1, metric1] = makePollingGauge(name1, gaugeIncrement1)
         const [gauge2, metric2] = makePollingGauge(name2, gaugeIncrement2)
         const metric = PollingMetric.collectAll([metric1, metric2])
-        const fiber = yield* $(pipe(metric, PollingMetric.launch(Schedule.recurs(pollingCount))))
+        const fiber = yield* $(metric, PollingMetric.launch(Schedule.recurs(pollingCount)))
         yield* $(Fiber.join(fiber))
         const result1 = yield* $(Metric.value(gauge1))
         const result2 = yield* $(Metric.value(gauge2))

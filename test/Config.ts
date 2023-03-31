@@ -32,10 +32,10 @@ describe.concurrent("Config", () => {
           Config.withDefault(0)
         )
         const configProvider = ConfigProvider.fromMap(new Map([["key", "value"]]))
-        const result = yield* $(pipe(
+        const result = yield* $(
           Effect.exit(configProvider.load(config)),
           Effect.map(Exit.unannotate)
-        ))
+        )
         assert.isTrue(
           Exit.isFailure(result) &&
             Cause.isFailType(result.i0) &&
@@ -51,10 +51,10 @@ describe.concurrent("Config", () => {
           Config.withDefault<readonly [number, number]>([0, 0])
         )
         const configProvider = ConfigProvider.fromMap(new Map([["key2", "value"]]))
-        const result = yield* $(pipe(
+        const result = yield* $(
           Effect.exit(configProvider.load(config)),
           Effect.map(Exit.unannotate)
-        ))
+        )
         assert.isTrue(
           Exit.isFailure(result) &&
             Cause.isFailType(result.i0) &&
@@ -90,10 +90,10 @@ describe.concurrent("Config", () => {
       Effect.gen(function*($) {
         const config = Config.optional(Config.integer("key"))
         const configProvider = ConfigProvider.fromMap(new Map([["key", "value"]]))
-        const result = yield* $(pipe(
+        const result = yield* $(
           Effect.exit(configProvider.load(config)),
           Effect.map(Exit.unannotate)
-        ))
+        )
         assert.isTrue(
           Exit.isFailure(result) &&
             Cause.isFailType(result.i0) &&
@@ -109,10 +109,10 @@ describe.concurrent("Config", () => {
           Config.optional
         )
         const configProvider = ConfigProvider.fromMap(new Map([["key2", "value"]]))
-        const result = yield* $(pipe(
+        const result = yield* $(
           Effect.exit(configProvider.load(config)),
           Effect.map(Exit.unannotate)
-        ))
+        )
         assert.isTrue(
           Exit.isFailure(result) &&
             Cause.isFailType(result.i0) &&

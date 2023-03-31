@@ -31,32 +31,32 @@ describe.concurrent("Effect", () => {
     ))
   it.effect("environment - async can use environment", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(
+      const result = yield* $(
         Effect.async<NumberService, never, number>((cb) => cb(Effect.map(NumberService, ({ n }) => n))),
         Effect.provideContext(Context.make(NumberService, { n: 10 }))
-      ))
+      )
       assert.strictEqual(result, 10)
     }))
   it.effect("serviceWith - effectfully accesses a service in the environment", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(
+      const result = yield* $(
         Effect.flatMap(NumberService, ({ n }) => Effect.succeed(n + 3)),
         Effect.provideContext(Context.make(NumberService, { n: 0 }))
-      ))
+      )
       assert.strictEqual(result, 3)
     }))
   it.effect("serviceWith - traced tag", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(
+      const result = yield* $(
         Effect.flatMap(NumberService.traced(sourceLocation(new Error())), ({ n }) => Effect.succeed(n + 3)),
         Effect.provideContext(Context.make(NumberService, { n: 0 }))
-      ))
+      )
       assert.strictEqual(result, 3)
     }))
   it.effect("updateService - updates a service in the environment", () =>
     pipe(
       Effect.gen(function*($) {
-        const a = yield* $(pipe(NumberService, Effect.updateService(NumberService, ({ n }) => ({ n: n + 1 }))))
+        const a = yield* $(NumberService, Effect.updateService(NumberService, ({ n }) => ({ n: n + 1 })))
         const b = yield* $(NumberService)
         assert.strictEqual(a.n, 1)
         assert.strictEqual(b.n, 0)

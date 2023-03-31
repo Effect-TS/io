@@ -29,20 +29,20 @@ describe.concurrent("Effect", () => {
   it.effect("fail ensuring", () =>
     Effect.gen(function*($) {
       let finalized = false
-      const result = yield* $(pipe(
+      const result = yield* $(
         Effect.fail(ExampleError),
         Effect.ensuring(Effect.sync(() => {
           finalized = true
         })),
         Effect.exit
-      ))
+      )
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(ExampleError))
       assert.isTrue(finalized)
     }))
   it.effect("fail on error", () =>
     Effect.gen(function*($) {
       let finalized = false
-      const result = yield* $(pipe(
+      const result = yield* $(
         Effect.fail(ExampleError),
         Effect.onError(() =>
           Effect.sync(() => {
@@ -50,7 +50,7 @@ describe.concurrent("Effect", () => {
           })
         ),
         Effect.exit
-      ))
+      )
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(ExampleError))
       assert.isTrue(finalized)
     }))
@@ -122,12 +122,12 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("rethrown caught error in acquisition", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(
+      const result = yield* $(
         Effect.acquireUseRelease(Effect.fail(ExampleError), () => Effect.unit(), () => Effect.unit()),
         Effect.either,
         Effect.absolve,
         Effect.flip
-      ))
+      )
       assert.deepEqual(result, ExampleError)
     }))
   it.effect("rethrown caught error in release", () =>
@@ -139,12 +139,12 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("rethrown caught error in usage", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(
+      const result = yield* $(
         Effect.acquireUseRelease(Effect.unit(), () => Effect.fail(ExampleError), () => Effect.unit()),
         Effect.either,
         Effect.absolve,
         Effect.exit
-      ))
+      )
       assert.deepEqual(Exit.unannotate(result), Exit.fail(ExampleError))
     }))
   it.effect("test eval of async fail", () =>
@@ -157,8 +157,8 @@ describe.concurrent("Effect", () => {
       )
       const a1 = yield* $(Effect.exit(io1))
       const a2 = yield* $(Effect.exit(io2))
-      const a3 = yield* $(pipe(io1, Effect.either, Effect.absolve, Effect.exit))
-      const a4 = yield* $(pipe(io2, Effect.either, Effect.absolve, Effect.exit))
+      const a3 = yield* $(io1, Effect.either, Effect.absolve, Effect.exit)
+      const a4 = yield* $(io2, Effect.either, Effect.absolve, Effect.exit)
       assert.deepStrictEqual(Exit.unannotate(a1), Exit.fail(ExampleError))
       assert.deepStrictEqual(Exit.unannotate(a2), Exit.fail(ExampleError))
       assert.deepStrictEqual(Exit.unannotate(a3), Exit.fail(ExampleError))
@@ -173,7 +173,7 @@ describe.concurrent("Effect", () => {
       }
       const ref = yield* $(Ref.make(Chunk.empty<string>()))
       const log = makeLogger(ref)
-      const fiber = yield* $(pipe(
+      const fiber = yield* $(
         Effect.acquireUseRelease(
           Effect.acquireUseRelease(
             Effect.unit(),
@@ -187,21 +187,25 @@ describe.concurrent("Effect", () => {
           ),
           () => Effect.unit(),
           () =>
-            pipe(log("start 2"), Effect.zipRight(Effect.sleep(Duration.millis(10))), Effect.zipRight(log("release 2")))
+            pipe(
+              log("start 2"),
+              Effect.zipRight(Effect.sleep(Duration.millis(10))),
+              Effect.zipRight(log("release 2"))
+            )
         ),
         Effect.fork
-      ))
-      yield* $(pipe(
+      )
+      yield* $(
         Ref.get(ref),
         Effect.zipLeft(Effect.sleep(Duration.millis(1))),
         Effect.repeatUntil((list) => pipe(list, Chunk.findFirst((s) => s === "start 1"), Option.isSome))
-      ))
+      )
       yield* $(Fiber.interrupt(fiber))
-      yield* $(pipe(
+      yield* $(
         Ref.get(ref),
         Effect.zipLeft(Effect.sleep(Duration.millis(1))),
         Effect.repeatUntil((list) => pipe(list, Chunk.findFirst((s) => s === "release 2"), Option.isSome))
-      ))
+      )
       const result = yield* $(Ref.get(ref))
       assert.isTrue(pipe(
         result,
@@ -237,14 +241,14 @@ describe.concurrent("Effect", () => {
   it.effect("onExit - executes that a cleanup function runs when effect succeeds", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(false))
-      yield* $(pipe(Effect.unit(), Effect.onExit(Exit.match(() => Effect.unit(), () => Ref.set(ref, true)))))
+      yield* $(Effect.unit(), Effect.onExit(Exit.match(() => Effect.unit(), () => Ref.set(ref, true))))
       const result = yield* $(Ref.get(ref))
       assert.isTrue(result)
     }))
   it.effect("onExit - ensures that a cleanup function runs when an effect fails", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(false))
-      yield* $(pipe(
+      yield* $(
         Effect.die(Cause.RuntimeException),
         Effect.onExit((exit) =>
           Exit.isFailure(exit) && Cause.isDie(exit.i0) ?
@@ -253,7 +257,7 @@ describe.concurrent("Effect", () => {
         ),
         Effect.sandbox,
         Effect.ignore
-      ))
+      )
       const result = yield* $(Ref.get(ref))
       assert.isTrue(result)
     }))

@@ -22,10 +22,10 @@ describe.concurrent("Effect", () => {
   it.effect("acquireUseRelease - happy path + disconnect", () =>
     Effect.gen(function*($) {
       const release = yield* $(Ref.make(false))
-      const result = yield* $(pipe(
+      const result = yield* $(
         Effect.acquireUseRelease(Effect.succeed(42), (n) => Effect.succeed(n + 1), () => Ref.set(release, true)),
         Effect.disconnect
-      ))
+      )
       const released = yield* $(Ref.get(release))
       assert.strictEqual(result, 43)
       assert.isTrue(released)
@@ -33,29 +33,29 @@ describe.concurrent("Effect", () => {
   it.effect("acquireUseRelease - error handling", () =>
     Effect.gen(function*($) {
       const releaseDied = Cause.RuntimeException("release died")
-      const exit = yield* $(pipe(
+      const exit = yield* $(
         Effect.acquireUseRelease(Effect.succeed(42), () => Effect.fail("use failed"), () => Effect.die(releaseDied)),
         Effect.exit
-      ))
-      const result = yield* $(pipe(
+      )
+      const result = yield* $(
         exit,
         Exit.matchEffect(Effect.succeed, () => Effect.fail("effect should have failed"))
-      ))
+      )
       assert.isTrue(equals(Cause.failures(result), Chunk.of("use failed")))
       assert.isTrue(equals(Cause.defects(result), Chunk.of(releaseDied)))
     }))
   it.effect("acquireUseRelease - error handling + disconnect", () =>
     Effect.gen(function*($) {
       const releaseDied = Cause.RuntimeException("release died")
-      const exit = yield* $(pipe(
+      const exit = yield* $(
         Effect.acquireUseRelease(Effect.succeed(42), () => Effect.fail("use failed"), () => Effect.die(releaseDied)),
         Effect.disconnect,
         Effect.exit
-      ))
-      const result = yield* $(pipe(
+      )
+      const result = yield* $(
         exit,
         Exit.matchEffect(Effect.succeed, () => Effect.fail("effect should have failed"))
-      ))
+      )
       assert.isTrue(equals(Cause.failures(result), Chunk.of("use failed")))
       assert.isTrue(equals(Cause.defects(result), Chunk.of(releaseDied)))
     }))

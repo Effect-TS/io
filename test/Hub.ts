@@ -30,7 +30,7 @@ describe.concurrent("Hub", () => {
         )
       )
       yield* $(Deferred.await(deferred1))
-      yield* $(pipe(values, Effect.forEach((n) => Hub.publish(hub, n))))
+      yield* $(values, Effect.forEach((n) => Hub.publish(hub, n)))
       yield* $(Deferred.succeed(deferred2, void 0))
       const result = yield* $(Fiber.join(subscriber))
       assert.deepStrictEqual(result, values)
@@ -72,7 +72,7 @@ describe.concurrent("Hub", () => {
       )
       yield* $(Deferred.await(deferred1))
       yield* $(Deferred.await(deferred2))
-      yield* $(pipe(values, Effect.forEach((n) => Hub.publish(hub, n))))
+      yield* $(values, Effect.forEach((n) => Hub.publish(hub, n)))
       yield* $(Deferred.succeed(deferred3, undefined))
       const result1 = yield* $(Fiber.join(subscriber1))
       const result2 = yield* $(Fiber.join(subscriber2))
@@ -84,7 +84,7 @@ describe.concurrent("Hub", () => {
       const values = Chunk.range(0, 64)
       const deferred = yield* $(Deferred.make<never, void>())
       const hub = yield* $(Hub.bounded<number>(64))
-      const subscriber = yield* $(pipe(
+      const subscriber = yield* $(
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
@@ -94,13 +94,13 @@ describe.concurrent("Hub", () => {
         ),
         Effect.scoped,
         Effect.fork
-      ))
+      )
       yield* $(Deferred.await(deferred))
-      yield* $(pipe(
+      yield* $(
         values,
         Effect.forEach((n) => Hub.publish(hub, n)),
         Effect.fork
-      ))
+      )
       const result = yield* $(Fiber.join(subscriber))
       assert.deepStrictEqual(result, values)
     }))
@@ -110,7 +110,7 @@ describe.concurrent("Hub", () => {
       const deferred1 = yield* $(Deferred.make<never, void>())
       const deferred2 = yield* $(Deferred.make<never, void>())
       const hub = yield* $(Hub.bounded<number>(64))
-      const subscriber1 = yield* $(pipe(
+      const subscriber1 = yield* $(
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
@@ -120,8 +120,8 @@ describe.concurrent("Hub", () => {
         ),
         Effect.scoped,
         Effect.fork
-      ))
-      const subscriber2 = yield* $(pipe(
+      )
+      const subscriber2 = yield* $(
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
@@ -131,14 +131,14 @@ describe.concurrent("Hub", () => {
         ),
         Effect.scoped,
         Effect.fork
-      ))
+      )
       yield* $(Deferred.await(deferred1))
       yield* $(Deferred.await(deferred2))
-      yield* $(pipe(
+      yield* $(
         values,
         Effect.forEach((n) => Hub.publish(hub, n)),
         Effect.fork
-      ))
+      )
       const result1 = yield* $(Fiber.join(subscriber1))
       const result2 = yield* $(Fiber.join(subscriber2))
       assert.deepStrictEqual(result1, values)
@@ -150,7 +150,7 @@ describe.concurrent("Hub", () => {
       const deferred1 = yield* $(Deferred.make<never, void>())
       const deferred2 = yield* $(Deferred.make<never, void>())
       const hub = yield* $(Hub.bounded<number>(64 * 2))
-      const subscriber1 = yield* $(pipe(
+      const subscriber1 = yield* $(
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
@@ -164,8 +164,8 @@ describe.concurrent("Hub", () => {
         ),
         Effect.scoped,
         Effect.fork
-      ))
-      const subscriber2 = yield* $(pipe(
+      )
+      const subscriber2 = yield* $(
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
@@ -179,15 +179,15 @@ describe.concurrent("Hub", () => {
         ),
         Effect.scoped,
         Effect.fork
-      ))
+      )
       yield* $(Deferred.await(deferred1))
       yield* $(Deferred.await(deferred2))
-      const fiber = yield* $(pipe(
+      const fiber = yield* $(
         values,
         Effect.forEach((n) => Hub.publish(hub, n)),
         Effect.fork
-      ))
-      yield* $(pipe(values, Chunk.map((n) => -n), Effect.forEach((n) => Hub.publish(hub, n)), Effect.fork))
+      )
+      yield* $(values, Chunk.map((n) => -n), Effect.forEach((n) => Hub.publish(hub, n)), Effect.fork)
       const result1 = yield* $(Fiber.join(subscriber1))
       const result2 = yield* $(Fiber.join(subscriber2))
       yield* $(Fiber.join(fiber))
@@ -201,7 +201,7 @@ describe.concurrent("Hub", () => {
       const values = Chunk.range(0, 64)
       const deferred = yield* $(Deferred.make<never, void>())
       const hub = yield* $(Hub.dropping<number>(64))
-      const subscriber = yield* $(pipe(
+      const subscriber = yield* $(
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
@@ -211,13 +211,13 @@ describe.concurrent("Hub", () => {
         ),
         Effect.scoped,
         Effect.fork
-      ))
+      )
       yield* $(Deferred.await(deferred))
-      yield* $(pipe(
+      yield* $(
         values,
         Effect.forEach((n) => Hub.publish(hub, n)),
         Effect.fork
-      ))
+      )
       const result = yield* $(Fiber.join(subscriber))
       assert.deepStrictEqual(result, values)
     }))
@@ -227,7 +227,7 @@ describe.concurrent("Hub", () => {
       const deferred1 = yield* $(Deferred.make<never, void>())
       const deferred2 = yield* $(Deferred.make<never, void>())
       const hub = yield* $(Hub.dropping<number>(64))
-      const subscriber1 = yield* $(pipe(
+      const subscriber1 = yield* $(
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
@@ -237,8 +237,8 @@ describe.concurrent("Hub", () => {
         ),
         Effect.scoped,
         Effect.fork
-      ))
-      const subscriber2 = yield* $(pipe(
+      )
+      const subscriber2 = yield* $(
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
@@ -248,14 +248,14 @@ describe.concurrent("Hub", () => {
         ),
         Effect.scoped,
         Effect.fork
-      ))
+      )
       yield* $(Deferred.await(deferred1))
       yield* $(Deferred.await(deferred2))
-      yield* $(pipe(
+      yield* $(
         values,
         Effect.forEach((n) => Hub.publish(hub, n)),
         Effect.fork
-      ))
+      )
       const result1 = yield* $(Fiber.join(subscriber1))
       const result2 = yield* $(Fiber.join(subscriber2))
       assert.deepStrictEqual(result1, values)
@@ -267,7 +267,7 @@ describe.concurrent("Hub", () => {
       const deferred1 = yield* $(Deferred.make<never, void>())
       const deferred2 = yield* $(Deferred.make<never, void>())
       const hub = yield* $(Hub.dropping<number>(64 * 2))
-      const subscriber1 = yield* $(pipe(
+      const subscriber1 = yield* $(
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
@@ -281,8 +281,8 @@ describe.concurrent("Hub", () => {
         ),
         Effect.scoped,
         Effect.fork
-      ))
-      const subscriber2 = yield* $(pipe(
+      )
+      const subscriber2 = yield* $(
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
@@ -296,15 +296,15 @@ describe.concurrent("Hub", () => {
         ),
         Effect.scoped,
         Effect.fork
-      ))
+      )
       yield* $(Deferred.await(deferred1))
       yield* $(Deferred.await(deferred2))
-      const fiber = yield* $(pipe(
+      const fiber = yield* $(
         values,
         Effect.forEach((n) => Hub.publish(hub, n)),
         Effect.fork
-      ))
-      yield* $(pipe(values, Chunk.map((n) => -n), Effect.forEach((n) => Hub.publish(hub, n)), Effect.fork))
+      )
+      yield* $(values, Chunk.map((n) => -n), Effect.forEach((n) => Hub.publish(hub, n)), Effect.fork)
       const result1 = yield* $(Fiber.join(subscriber1))
       const result2 = yield* $(Fiber.join(subscriber2))
       yield* $(Fiber.join(fiber))
@@ -318,7 +318,7 @@ describe.concurrent("Hub", () => {
       const values = Chunk.range(0, 64)
       const deferred = yield* $(Deferred.make<never, void>())
       const hub = yield* $(Hub.sliding<number>(64))
-      const subscriber = yield* $(pipe(
+      const subscriber = yield* $(
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
@@ -328,13 +328,13 @@ describe.concurrent("Hub", () => {
         ),
         Effect.scoped,
         Effect.fork
-      ))
+      )
       yield* $(Deferred.await(deferred))
-      yield* $(pipe(
+      yield* $(
         values,
         Effect.forEach((n) => Hub.publish(hub, n)),
         Effect.fork
-      ))
+      )
       const result = yield* $(Fiber.join(subscriber))
       assert.deepStrictEqual(result, values)
     }))
@@ -344,7 +344,7 @@ describe.concurrent("Hub", () => {
       const deferred1 = yield* $(Deferred.make<never, void>())
       const deferred2 = yield* $(Deferred.make<never, void>())
       const hub = yield* $(Hub.sliding<number>(64))
-      const subscriber1 = yield* $(pipe(
+      const subscriber1 = yield* $(
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
@@ -354,8 +354,8 @@ describe.concurrent("Hub", () => {
         ),
         Effect.scoped,
         Effect.fork
-      ))
-      const subscriber2 = yield* $(pipe(
+      )
+      const subscriber2 = yield* $(
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
@@ -365,14 +365,14 @@ describe.concurrent("Hub", () => {
         ),
         Effect.scoped,
         Effect.fork
-      ))
+      )
       yield* $(Deferred.await(deferred1))
       yield* $(Deferred.await(deferred2))
-      yield* $(pipe(
+      yield* $(
         values,
         Effect.forEach((n) => Hub.publish(hub, n)),
         Effect.fork
-      ))
+      )
       const result1 = yield* $(Fiber.join(subscriber1))
       const result2 = yield* $(Fiber.join(subscriber2))
       assert.deepStrictEqual(result1, values)
@@ -384,7 +384,7 @@ describe.concurrent("Hub", () => {
       const deferred1 = yield* $(Deferred.make<never, void>())
       const deferred2 = yield* $(Deferred.make<never, void>())
       const hub = yield* $(Hub.sliding<number>(64 * 2))
-      const subscriber1 = yield* $(pipe(
+      const subscriber1 = yield* $(
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
@@ -398,8 +398,8 @@ describe.concurrent("Hub", () => {
         ),
         Effect.scoped,
         Effect.fork
-      ))
-      const subscriber2 = yield* $(pipe(
+      )
+      const subscriber2 = yield* $(
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
@@ -413,15 +413,15 @@ describe.concurrent("Hub", () => {
         ),
         Effect.scoped,
         Effect.fork
-      ))
+      )
       yield* $(Deferred.await(deferred1))
       yield* $(Deferred.await(deferred2))
-      const fiber = yield* $(pipe(
+      const fiber = yield* $(
         values,
         Effect.forEach((n) => Hub.publish(hub, n)),
         Effect.fork
-      ))
-      yield* $(pipe(values, Chunk.map((n) => -n), Effect.forEach((n) => Hub.publish(hub, n)), Effect.fork))
+      )
+      yield* $(values, Chunk.map((n) => -n), Effect.forEach((n) => Hub.publish(hub, n)), Effect.fork)
       const result1 = yield* $(Fiber.join(subscriber1))
       const result2 = yield* $(Fiber.join(subscriber2))
       yield* $(Fiber.join(fiber))
@@ -435,7 +435,7 @@ describe.concurrent("Hub", () => {
       const values = Chunk.range(0, 64)
       const deferred = yield* $(Deferred.make<never, void>())
       const hub = yield* $(Hub.unbounded<number>())
-      const subscriber = yield* $(pipe(
+      const subscriber = yield* $(
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
@@ -445,13 +445,14 @@ describe.concurrent("Hub", () => {
         ),
         Effect.scoped,
         Effect.fork
-      ))
+      )
       yield* $(Deferred.await(deferred))
-      yield* $(pipe(
+      yield* $(
         values,
         Effect.forEach((n) => Hub.publish(hub, n)),
         Effect.fork
-      ))
+      )
+
       const result = yield* $(Fiber.join(subscriber))
       assert.deepStrictEqual(result, values)
     }))
@@ -461,7 +462,7 @@ describe.concurrent("Hub", () => {
       const deferred1 = yield* $(Deferred.make<never, void>())
       const deferred2 = yield* $(Deferred.make<never, void>())
       const hub = yield* $(Hub.unbounded<number>())
-      const subscriber1 = yield* $(pipe(
+      const subscriber1 = yield* $(
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
@@ -471,8 +472,8 @@ describe.concurrent("Hub", () => {
         ),
         Effect.scoped,
         Effect.fork
-      ))
-      const subscriber2 = yield* $(pipe(
+      )
+      const subscriber2 = yield* $(
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
@@ -482,14 +483,14 @@ describe.concurrent("Hub", () => {
         ),
         Effect.scoped,
         Effect.fork
-      ))
+      )
       yield* $(Deferred.await(deferred1))
       yield* $(Deferred.await(deferred2))
-      yield* $(pipe(
+      yield* $(
         values,
         Effect.forEach((n) => Hub.publish(hub, n)),
         Effect.fork
-      ))
+      )
       const result1 = yield* $(Fiber.join(subscriber1))
       const result2 = yield* $(Fiber.join(subscriber2))
       assert.deepStrictEqual(result1, values)
@@ -501,7 +502,7 @@ describe.concurrent("Hub", () => {
       const deferred1 = yield* $(Deferred.make<never, void>())
       const deferred2 = yield* $(Deferred.make<never, void>())
       const hub = yield* $(Hub.unbounded<number>())
-      const subscriber1 = yield* $(pipe(
+      const subscriber1 = yield* $(
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
@@ -515,8 +516,9 @@ describe.concurrent("Hub", () => {
         ),
         Effect.scoped,
         Effect.fork
-      ))
-      const subscriber2 = yield* $(pipe(
+      )
+
+      const subscriber2 = yield* $(
         Hub.subscribe(hub),
         Effect.flatMap((subscription) =>
           pipe(
@@ -530,15 +532,15 @@ describe.concurrent("Hub", () => {
         ),
         Effect.scoped,
         Effect.fork
-      ))
+      )
       yield* $(Deferred.await(deferred1))
       yield* $(Deferred.await(deferred2))
-      const fiber = yield* $(pipe(
+      const fiber = yield* $(
         values,
         Effect.forEach((n) => Hub.publish(hub, n)),
         Effect.fork
-      ))
-      yield* $(pipe(values, Chunk.map((n) => -n), Effect.forEach((n) => Hub.publish(hub, n)), Effect.fork))
+      )
+      yield* $(values, Chunk.map((n) => -n), Effect.forEach((n) => Hub.publish(hub, n)), Effect.fork)
       const result1 = yield* $(Fiber.join(subscriber1))
       const result2 = yield* $(Fiber.join(subscriber2))
       yield* $(Fiber.join(fiber))
