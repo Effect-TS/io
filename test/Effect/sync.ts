@@ -40,7 +40,7 @@ describe.concurrent("Effect", () => {
   it.it("suspend - must be lazy", async () => {
     let program
     try {
-      program = Effect.attemptSuspend(() => {
+      program = Effect.trySuspend(() => {
         throw new Error("shouldn't happen!")
       })
       program = Effect.succeed(true)
@@ -54,7 +54,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const error = new Error("woops")
       const result = yield* $(
-        Effect.attemptSuspend<never, never, never>(() => {
+        Effect.trySuspend<never, never, never>(() => {
           throw error
         }),
         Effect.either

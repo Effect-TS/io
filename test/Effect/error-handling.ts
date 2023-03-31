@@ -27,7 +27,7 @@ const ExampleErrorDie = Effect.dieSync(() => {
 
 const deepErrorEffect = (n: number): Effect.Effect<never, unknown, void> => {
   if (n === 0) {
-    return Effect.attempt(() => {
+    return Effect.try(() => {
       throw ExampleError
     })
   }
@@ -92,7 +92,7 @@ describe.concurrent("Effect", () => {
   it.effect("attempt - error in sync effect", () =>
     Effect.gen(function*($) {
       const result = yield* $(
-        Effect.attempt(() => {
+        Effect.try(() => {
           throw ExampleError
         }),
         Effect.match(Option.some, () => Option.none())
@@ -608,7 +608,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const message = "hello"
       const result = yield* $(
-        Effect.attemptCatch(() => {
+        Effect.tryCatch(() => {
           throw message
         }, identity),
         Effect.exit

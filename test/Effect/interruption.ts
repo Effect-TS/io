@@ -344,7 +344,7 @@ describe.concurrent("Effect", () => {
       const ref = yield* $(Ref.make(false))
       const fiber = yield* $(withLatch((release) =>
         pipe(
-          Effect.attempt(() => {
+          Effect.try(() => {
             throw new Error()
           }),
           Effect.exit,
@@ -363,7 +363,7 @@ describe.concurrent("Effect", () => {
       const ref = yield* $(Ref.make(false))
       const fiber = yield* $(withLatch((release) =>
         pipe(
-          Effect.attempt(() => {
+          Effect.try(() => {
             throw new Error()
           }),
           Effect.exit,

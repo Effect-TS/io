@@ -84,7 +84,7 @@ describe.concurrent("Layer", () => {
       const layer = Layer.succeed(Service1Tag, service1)
       const env = pipe(layer, Layer.merge(layer), Layer.merge(layer), Layer.build)
       const result = yield* $(
-        pipe(env, Effect.flatMap((context) => Effect.attempt(() => pipe(context, Context.get(Service1Tag)))))
+        pipe(env, Effect.flatMap((context) => Effect.try(() => pipe(context, Context.get(Service1Tag)))))
       )
       assert.strictEqual(result, service1)
     }))
