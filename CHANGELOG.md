@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.15.2
+
+### Patch Changes
+
+- [#326](https://github.com/Effect-TS/io/pull/326) [`84bee24`](https://github.com/Effect-TS/io/commit/84bee24f3cb66c3cce9e6d4540758210af9182e9) Thanks [@TylorS](https://github.com/TylorS)! - Rename TestConfig Tag to TestConfig
+
 ## 0.15.1
 
 ### Patch Changes
