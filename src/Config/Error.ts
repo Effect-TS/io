@@ -4,7 +4,6 @@
 import type * as Chunk from "@effect/data/Chunk"
 import type * as Cause from "@effect/io/Cause"
 import * as internal from "@effect/io/internal_effect_untraced/configError"
-import type * as OpCodes from "@effect/io/internal_effect_untraced/opCodes/configError"
 
 /**
  * @since 1.0.0
@@ -74,7 +73,7 @@ export interface ConfigErrorReducer<C, Z> {
  * @category models
  */
 export interface And extends ConfigError.Proto {
-  readonly _tag: OpCodes.OP_AND
+  readonly _tag: "And"
   readonly left: ConfigError
   readonly right: ConfigError
 }
@@ -84,7 +83,7 @@ export interface And extends ConfigError.Proto {
  * @category models
  */
 export interface Or extends ConfigError.Proto {
-  readonly _tag: OpCodes.OP_OR
+  readonly _tag: "Or"
   readonly left: ConfigError
   readonly right: ConfigError
 }
@@ -94,7 +93,7 @@ export interface Or extends ConfigError.Proto {
  * @category models
  */
 export interface InvalidData extends ConfigError.Proto {
-  readonly _tag: OpCodes.OP_INVALID_DATA
+  readonly _tag: "InvalidData"
   readonly path: Chunk.Chunk<string>
   readonly message: string
 }
@@ -104,7 +103,7 @@ export interface InvalidData extends ConfigError.Proto {
  * @category models
  */
 export interface MissingData extends ConfigError.Proto {
-  readonly _tag: OpCodes.OP_MISSING_DATA
+  readonly _tag: "MissingData"
   readonly path: Chunk.Chunk<string>
   readonly message: string
 }
@@ -114,7 +113,7 @@ export interface MissingData extends ConfigError.Proto {
  * @category models
  */
 export interface SourceUnavailable extends ConfigError.Proto {
-  readonly _tag: OpCodes.OP_SOURCE_UNAVAILABLE
+  readonly _tag: "SourceUnavailable"
   readonly path: Chunk.Chunk<string>
   readonly message: string
   readonly cause: Cause.Cause<unknown>
@@ -125,7 +124,7 @@ export interface SourceUnavailable extends ConfigError.Proto {
  * @category models
  */
 export interface Unsupported extends ConfigError.Proto {
-  readonly _tag: OpCodes.OP_UNSUPPORTED
+  readonly _tag: "Unsupported"
   readonly path: Chunk.Chunk<string>
   readonly message: string
 }

@@ -21,13 +21,13 @@ export type State<E, A> = Pending<E, A> | Done<E, A>
 
 /** @internal */
 export interface Pending<E, A> {
-  readonly _tag: OpCodes.OP_STATE_PENDING
+  readonly _tag: "Pending"
   readonly joiners: Array<(effect: Effect.Effect<never, E, A>) => void>
 }
 
 /** @internal */
 export interface Done<E, A> {
-  readonly _tag: OpCodes.OP_STATE_DONE
+  readonly _tag: "Done"
   readonly effect: Effect.Effect<never, E, A>
 }
 
