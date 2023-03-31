@@ -80,7 +80,7 @@ describe.concurrent("Effect", () => {
       }
       const left = pipe(Ref.make(0), Effect.flatMap((ref) => incLeft(100, ref)), Effect.map((n) => n === 0))
       const right = pipe(Ref.make(0), Effect.flatMap((ref) => incRight(1000, ref)), Effect.map((n) => n === 1000))
-      const result = yield* $(pipe(left, Effect.zipWith(right, (a, b) => a && b)))
+      const result = yield* $(left, Effect.zipWith(right, (a, b) => a && b))
       assert.isTrue(result)
     }))
 })

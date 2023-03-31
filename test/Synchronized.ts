@@ -37,7 +37,7 @@ const isClosed = (self: State): boolean => self._tag === "Closed"
 describe.concurrent("SynchronizedRef", () => {
   it.effect("get", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(Synchronized.make(current), Effect.flatMap(Synchronized.get)))
+      const result = yield* $(Synchronized.make(current), Effect.flatMap(Synchronized.get))
       assert.strictEqual(result, current)
     }))
   it.effect("getAndUpdateEffect - happy path", () =>
@@ -51,7 +51,7 @@ describe.concurrent("SynchronizedRef", () => {
   it.effect("getAndUpdateEffect - with failure", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Synchronized.make(current))
-      const result = yield* $(pipe(Synchronized.getAndUpdateEffect(ref, (_) => Effect.fail(failure)), Effect.exit))
+      const result = yield* $(Synchronized.getAndUpdateEffect(ref, (_) => Effect.fail(failure)), Effect.exit)
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(failure))
     }))
   it.effect("getAndUpdateSomeEffect - happy path", () =>
@@ -86,13 +86,13 @@ describe.concurrent("SynchronizedRef", () => {
   it.effect("getAndUpdateSomeEffect - with failure", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Synchronized.make<State>(Active))
-      const result = yield* $(pipe(
+      const result = yield* $(
         Synchronized.getAndUpdateSomeEffect(ref, (state) =>
           isActive(state) ?
             Option.some(Effect.fail(failure)) :
             Option.none()),
         Effect.exit
-      ))
+      )
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(failure))
     }))
   it.effect("getAndUpdateSomeEffect - interrupt parent fiber and update", () =>

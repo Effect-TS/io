@@ -18,10 +18,10 @@ describe.concurrent("ScopedRef", () => {
     Effect.gen(function*($) {
       const counter = yield* $(Counter.make())
       const ref = yield* $(ScopedRef.make(() => 0))
-      yield* $(pipe(
+      yield* $(
         ScopedRef.set(ref, counter.acquire()),
         Effect.zipRight(ScopedRef.set(ref, counter.acquire()))
-      ))
+      )
       const result = yield* $(ScopedRef.get(ref))
       assert.strictEqual(result, 2)
     }))
@@ -29,10 +29,11 @@ describe.concurrent("ScopedRef", () => {
     Effect.gen(function*($) {
       const counter = yield* $(Counter.make())
       const ref = yield* $(ScopedRef.make(() => 0))
-      yield* $(pipe(
+      yield* $(
         ScopedRef.set(ref, counter.acquire()),
         Effect.zipRight(ScopedRef.set(ref, counter.acquire()))
-      ))
+      )
+
       const acquired = yield* $(counter.acquired())
       const released = yield* $(counter.released())
       assert.strictEqual(acquired, 2)
@@ -57,7 +58,7 @@ describe.concurrent("ScopedRef", () => {
   it.effect("full release", () =>
     Effect.gen(function*($) {
       const counter = yield* $(Counter.make())
-      yield* $(pipe(
+      yield* $(
         ScopedRef.make(() => 0),
         Effect.flatMap((ref) =>
           pipe(
@@ -67,7 +68,7 @@ describe.concurrent("ScopedRef", () => {
           )
         ),
         Effect.scoped
-      ))
+      )
       const acquired = yield* $(counter.acquired())
       const released = yield* $(counter.released())
       assert.strictEqual(acquired, 3)

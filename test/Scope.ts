@@ -64,13 +64,13 @@ describe.concurrent("Scope", () => {
   it.effect("runs finalizers in parallel", () =>
     Effect.gen(function*($) {
       const deferred = yield* $(Deferred.make<never, void>())
-      const result = yield* $(pipe(
+      const result = yield* $(
         Effect.addFinalizer(() => Deferred.succeed(deferred, void 0)),
         Effect.zipRight(Effect.addFinalizer(() => Deferred.await(deferred))),
         Effect.parallelFinalizers,
         Effect.scoped,
         Effect.asUnit
-      ))
+      )
       assert.isUndefined(result)
     }))
   it.effect("runs finalizers in parallel when the scope is closed", () =>
@@ -117,7 +117,7 @@ describe.concurrent("Scope", () => {
       const ref = yield* $(Ref.make<ReadonlyArray<Action>>([]))
       const left = resource(1, ref)
       const right = Effect.withEarlyRelease(resource(2, ref))
-      yield* $(pipe(left, Effect.zipRight(pipe(right, Effect.flatMap(([release, _]) => release)))))
+      yield* $(left, Effect.zipRight(pipe(right, Effect.flatMap(([release, _]) => release))))
       const actions = yield* $(Ref.get(ref))
       assert.deepStrictEqual(actions[0], acquire(1))
       assert.deepStrictEqual(actions[1], acquire(2))
@@ -127,14 +127,14 @@ describe.concurrent("Scope", () => {
     Effect.gen(function*($) {
       const ref1 = yield* $(Ref.make<ReadonlyArray<Action>>([]))
       const ref2 = yield* $(Ref.make<ReadonlyArray<Action>>([]))
-      yield* $(pipe(
+      yield* $(
         resource(1, ref1),
         Effect.using(() =>
           pipe(Ref.update(ref1, (actions) => [...actions, use(1)]), Effect.zipRight(resource(2, ref2)))
         ),
         Effect.zipRight(Ref.update(ref2, (actions) => [...actions, use(2)])),
         Effect.scoped
-      ))
+      )
       const actions1 = yield* $(Ref.get(ref1))
       const actions2 = yield* $(Ref.get(ref2))
       assert.deepStrictEqual(actions1, [acquire(1), use(1), release(1)])

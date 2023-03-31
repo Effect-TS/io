@@ -43,14 +43,14 @@ describe.concurrent("Effect", () => {
         return count < 0 ? Effect.succeed(42) : asyncIO(stackIOs(count - 1))
       }
       const procNum = Effect.sync(() => os.cpus().length)
-      const result = yield* $(pipe(procNum, Effect.flatMap(stackIOs)))
+      const result = yield* $(procNum, Effect.flatMap(stackIOs))
       assert.strictEqual(result, 42)
     }))
   it.effect("interrupt of asyncEffect register", () =>
     Effect.gen(function*($) {
       const release = yield* $(Deferred.make<never, void>())
       const acquire = yield* $(Deferred.make<never, void>())
-      const fiber = yield* $(pipe(
+      const fiber = yield* $(
         Effect.asyncEffect<never, unknown, unknown, never, never, never>(() =>
           // This will never complete because we never call the callback
           Effect.acquireUseRelease(
@@ -61,7 +61,8 @@ describe.concurrent("Effect", () => {
         ),
         Effect.disconnect,
         Effect.fork
-      ))
+      )
+
       yield* $(Deferred.await(acquire))
       yield* $(Fiber.interruptFork(fiber))
       const result = yield* $(Deferred.await(release))
@@ -72,7 +73,7 @@ describe.concurrent("Effect", () => {
       const step = yield* $(Deferred.make<never, void>())
       const unexpectedPlace = yield* $(Ref.make(Chunk.empty<number>()))
       const runtime = yield* $(Effect.runtime<never>())
-      const fiber = yield* $(pipe(
+      const fiber = yield* $(
         Effect.async<never, never, void>((cb) =>
           Runtime.runCallback(runtime)(pipe(
             Deferred.await(step),
@@ -85,8 +86,8 @@ describe.concurrent("Effect", () => {
         })),
         Effect.ensuring(Ref.update(unexpectedPlace, Chunk.prepend(2))),
         Effect.forkDaemon
-      ))
-      const result = yield* $(pipe(Fiber.interrupt(fiber), Effect.timeout(Duration.seconds(1))))
+      )
+      const result = yield* $(Fiber.interrupt(fiber), Effect.timeout(Duration.seconds(1)))
       const unexpected = yield* $(Ref.get(unexpectedPlace))
       assert.deepStrictEqual(unexpected, Chunk.empty())
       assert.deepStrictEqual(result, Option.none()) // the timeout should happen
@@ -96,7 +97,7 @@ describe.concurrent("Effect", () => {
       const step = yield* $(Deferred.make<never, void>())
       const unexpectedPlace = yield* $(Ref.make(Chunk.empty<number>()))
       const runtime = yield* $(Effect.runtime<never>())
-      const fiber = yield* $(pipe(
+      const fiber = yield* $(
         Effect.asyncOption<never, never, void>((cb) => {
           Runtime.runCallback(runtime)(pipe(
             Deferred.await(step),
@@ -113,8 +114,8 @@ describe.concurrent("Effect", () => {
         Effect.ensuring(Ref.update(unexpectedPlace, Chunk.prepend(2))),
         Effect.uninterruptible,
         Effect.forkDaemon
-      ))
-      const result = yield* $(pipe(Fiber.interrupt(fiber), Effect.timeout(Duration.seconds(1))))
+      )
+      const result = yield* $(Fiber.interrupt(fiber), Effect.timeout(Duration.seconds(1)))
       const unexpected = yield* $(Ref.get(unexpectedPlace))
       assert.deepStrictEqual(unexpected, Chunk.empty())
       assert.deepStrictEqual(result, Option.none()) // timeout should happen
@@ -140,17 +141,17 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("asyncEffect can fail before registering", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(
+      const result = yield* $(
         Effect.asyncEffect<never, unknown, unknown, never, string, never>((_) => {
           return Effect.fail("ouch")
         }),
         Effect.flip
-      ))
+      )
       assert.strictEqual(result, "ouch")
     }))
   it.effect("asyncEffect can defect before registering", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(
+      const result = yield* $(
         Effect.asyncEffect<never, unknown, unknown, never, string, never>((_) =>
           Effect.sync(() => {
             throw new Error("ouch")
@@ -158,9 +159,12 @@ describe.concurrent("Effect", () => {
         ),
         Effect.exit,
         Effect.map(Exit.match((cause) =>
-          pipe(Cause.defects(cause), Chunk.head, Option.map((e) => (e as Error).message)), () =>
-          Option.none()))
-      ))
+          pipe(
+            Cause.defects(cause),
+            Chunk.head,
+            Option.map((e) => (e as Error).message)
+          ), () => Option.none()))
+      )
       assert.deepStrictEqual(result, Option.some("ouch"))
     }))
 })

@@ -281,6 +281,7 @@ Added in v1.0.0
   - [mapTryCatch](#maptrycatch)
   - [negate](#negate)
 - [models](#models)
+  - [Adapter (interface)](#adapter-interface)
   - [Effect (interface)](#effect-interface)
   - [EffectGen (interface)](#effectgen-interface)
 - [products](#products)
@@ -1624,7 +1625,7 @@ Added in v1.0.0
 
 ```ts
 export declare const gen: <Eff extends EffectGen<any, any, any>, AEff>(
-  f: (resume: <R, E, A>(self: Effect<R, E, A>) => EffectGen<R, E, A>) => Generator<Eff, AEff, any>
+  f: (resume: Adapter) => Generator<Eff, AEff, any>
 ) => Effect<
   [Eff] extends [never] ? never : [Eff] extends [EffectGen<infer R, any, any>] ? R : never,
   [Eff] extends [never] ? never : [Eff] extends [EffectGen<any, infer E, any>] ? E : never,
@@ -4454,6 +4455,276 @@ export declare const negate: <R, E>(self: Effect<R, E, boolean>) => Effect<R, E,
 Added in v1.0.0
 
 # models
+
+## Adapter (interface)
+
+**Signature**
+
+```ts
+export interface Adapter {
+  <R, E, A>(self: Effect<R, E, A>): EffectGen<R, E, A>
+  <A, _R, _E, _A>(a: A, ab: (a: A) => Effect<_R, _E, _A>): EffectGen<_R, _E, _A>
+  <A, B, _R, _E, _A>(a: A, ab: (a: A) => B, bc: (b: B) => Effect<_R, _E, _A>): EffectGen<_R, _E, _A>
+  <A, B, C, _R, _E, _A>(a: A, ab: (a: A) => B, bc: (b: B) => C, cd: (c: C) => Effect<_R, _E, _A>): EffectGen<_R, _E, _A>
+  <A, B, C, D, _R, _E, _A>(
+    a: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => Effect<_R, _E, _A>
+  ): EffectGen<_R, _E, _A>
+  <A, B, C, D, E, _R, _E, _A>(
+    a: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => Effect<_R, _E, _A>
+  ): EffectGen<_R, _E, _A>
+  <A, B, C, D, E, F, _R, _E, _A>(
+    a: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => Effect<_R, _E, _A>
+  ): EffectGen<_R, _E, _A>
+  <A, B, C, D, E, F, G, _R, _E, _A>(
+    a: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: F) => Effect<_R, _E, _A>
+  ): EffectGen<_R, _E, _A>
+  <A, B, C, D, E, F, G, H, _R, _E, _A>(
+    a: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (g: H) => Effect<_R, _E, _A>
+  ): EffectGen<_R, _E, _A>
+  <A, B, C, D, E, F, G, H, I, _R, _E, _A>(
+    a: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => Effect<_R, _E, _A>
+  ): EffectGen<_R, _E, _A>
+  <A, B, C, D, E, F, G, H, I, J, _R, _E, _A>(
+    a: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => Effect<_R, _E, _A>
+  ): EffectGen<_R, _E, _A>
+  <A, B, C, D, E, F, G, H, I, J, K, _R, _E, _A>(
+    a: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+    kl: (k: K) => Effect<_R, _E, _A>
+  ): EffectGen<_R, _E, _A>
+  <A, B, C, D, E, F, G, H, I, J, K, L, _R, _E, _A>(
+    a: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+    kl: (k: K) => L,
+    lm: (l: L) => Effect<_R, _E, _A>
+  ): EffectGen<_R, _E, _A>
+  <A, B, C, D, E, F, G, H, I, J, K, L, M, _R, _E, _A>(
+    a: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+    kl: (k: K) => L,
+    lm: (l: L) => M,
+    mn: (m: M) => Effect<_R, _E, _A>
+  ): EffectGen<_R, _E, _A>
+  <A, B, C, D, E, F, G, H, I, J, K, L, M, N, _R, _E, _A>(
+    a: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+    kl: (k: K) => L,
+    lm: (l: L) => M,
+    mn: (m: M) => N,
+    no: (n: N) => Effect<_R, _E, _A>
+  ): EffectGen<_R, _E, _A>
+  <A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, _R, _E, _A>(
+    a: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+    kl: (k: K) => L,
+    lm: (l: L) => M,
+    mn: (m: M) => N,
+    no: (n: N) => O,
+    op: (o: O) => Effect<_R, _E, _A>
+  ): EffectGen<_R, _E, _A>
+  <A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, _R, _E, _A>(
+    a: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+    kl: (k: K) => L,
+    lm: (l: L) => M,
+    mn: (m: M) => N,
+    no: (n: N) => O,
+    op: (o: O) => P,
+    pq: (p: P) => Effect<_R, _E, _A>
+  ): EffectGen<_R, _E, _A>
+  <A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, _R, _E, _A>(
+    a: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+    kl: (k: K) => L,
+    lm: (l: L) => M,
+    mn: (m: M) => N,
+    no: (n: N) => O,
+    op: (o: O) => P,
+    pq: (p: P) => Q,
+    qr: (q: Q) => Effect<_R, _E, _A>
+  ): EffectGen<_R, _E, _A>
+  <A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, _R, _E, _A>(
+    a: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+    kl: (k: K) => L,
+    lm: (l: L) => M,
+    mn: (m: M) => N,
+    no: (n: N) => O,
+    op: (o: O) => P,
+    pq: (p: P) => Q,
+    qr: (q: Q) => R,
+    rs: (r: R) => Effect<_R, _E, _A>
+  ): EffectGen<_R, _E, _A>
+  <A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, _R, _E, _A>(
+    a: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+    kl: (k: K) => L,
+    lm: (l: L) => M,
+    mn: (m: M) => N,
+    no: (n: N) => O,
+    op: (o: O) => P,
+    pq: (p: P) => Q,
+    qr: (q: Q) => R,
+    rs: (r: R) => S,
+    st: (s: S) => Effect<_R, _E, _A>
+  ): EffectGen<_R, _E, _A>
+  <A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, _R, _E, _A>(
+    a: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+    kl: (k: K) => L,
+    lm: (l: L) => M,
+    mn: (m: M) => N,
+    no: (n: N) => O,
+    op: (o: O) => P,
+    pq: (p: P) => Q,
+    qr: (q: Q) => R,
+    rs: (r: R) => S,
+    st: (s: S) => T,
+    tu: (s: T) => Effect<_R, _E, _A>
+  ): EffectGen<_R, _E, _A>
+}
+```
+
+Added in v1.0.0
 
 ## Effect (interface)
 

@@ -45,12 +45,12 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("timeout in uninterruptible region", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(Effect.unit(), Effect.timeout(Duration.seconds(20)), Effect.uninterruptible))
+      const result = yield* $(Effect.unit(), Effect.timeout(Duration.seconds(20)), Effect.uninterruptible)
       assert.deepStrictEqual(result, Option.some(void 0))
     }))
   it.effect("timeout - disconnect - returns `Some` with the produced value if the effect completes before the timeout elapses", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(Effect.unit(), Effect.disconnect, Effect.timeout(Duration.millis(100))))
+      const result = yield* $(Effect.unit(), Effect.disconnect, Effect.timeout(Duration.millis(100)))
       assert.deepStrictEqual(result, Option.some(void 0))
     }))
   it.effect("timeout - disconnect - returns `None` otherwise", () =>

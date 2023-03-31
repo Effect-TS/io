@@ -1163,13 +1163,21 @@ class EffectGen {
   }
 }
 
+const adapter = function() {
+  let x = arguments[0]
+  for (let i = 1; i < arguments.length; i++) {
+    x = arguments[i](x)
+  }
+  return new EffectGen(x) as any
+}
+
 /**
  * Inspired by https://github.com/tusharmath/qio/pull/22 (revised)
   @internal */
 export const gen: typeof Effect.gen = Debug.methodWithTrace((trace, restore) =>
   (f) =>
     core.suspend(() => {
-      const iterator = restore(() => f((self) => new EffectGen(self) as any))()
+      const iterator = restore(() => f(adapter))()
       const state = restore(() => iterator.next())()
       const run = (
         state: IteratorYieldResult<any> | IteratorReturnResult<any>

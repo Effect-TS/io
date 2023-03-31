@@ -23,11 +23,11 @@ describe.concurrent("FiberRefs", () => {
           Effect.fork
         )
       )
-      const consumer = yield* $(pipe(
+      const consumer = yield* $(
         Queue.take(queue),
         Effect.flatMap((fiberRefs) => pipe(Effect.setFiberRefs(fiberRefs), Effect.zipRight(FiberRef.get(fiberRef)))),
         Effect.fork
-      ))
+      )
       yield* $(Fiber.join(producer))
       const result = yield* $(Fiber.join(consumer))
       assert.isTrue(result)

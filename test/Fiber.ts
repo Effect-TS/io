@@ -22,29 +22,29 @@ const fibers = Array.from({ length: 10000 }, Fiber.unit)
 describe.concurrent("Fiber", () => {
   it.effect("should track blockingOn in await", () =>
     Effect.gen(function*($) {
-      const fiber1 = yield* $(pipe(Effect.never(), Effect.fork))
-      const fiber2 = yield* $(pipe(Fiber.await(fiber1), Effect.fork))
-      const blockingOn = yield* $(pipe(
+      const fiber1 = yield* $(Effect.never(), Effect.fork)
+      const fiber2 = yield* $(Fiber.await(fiber1), Effect.fork)
+      const blockingOn = yield* $(
         Fiber.status(fiber2),
         Effect.continueOrFail(constVoid, (status) =>
           FiberStatus.isSuspended(status)
             ? Option.some(status.blockingOn)
             : Option.none()),
         Effect.eventually
-      ))
+      )
       assert.deepStrictEqual(blockingOn, Fiber.id(fiber1))
     }))
   it.effect("should track blockingOn in race", () =>
     Effect.gen(function*($) {
-      const fiber = yield* $(pipe(Effect.never(), Effect.race(Effect.never()), Effect.fork))
-      const blockingOn = yield* $(pipe(
+      const fiber = yield* $(Effect.never(), Effect.race(Effect.never()), Effect.fork)
+      const blockingOn = yield* $(
         Fiber.status(fiber),
         Effect.continueOrFail(
           () => void 0 as void,
           (status) => FiberStatus.isSuspended(status) ? Option.some(status.blockingOn) : Option.none()
         ),
         Effect.eventually
-      ))
+      )
       assert.strictEqual(HashSet.size(FiberId.toSet(blockingOn)), 2)
     }))
   it.scoped("inheritLocals works for Fiber created using map", () =>
@@ -53,7 +53,7 @@ describe.concurrent("Fiber", () => {
       const child = yield* $(
         withLatch((release) => pipe(FiberRef.set(fiberRef, update), Effect.zipRight(release), Effect.fork))
       )
-      yield* $(pipe(child, Fiber.map(constVoid), Fiber.inheritAll))
+      yield* $(child, Fiber.map(constVoid), Fiber.inheritAll)
       const result = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(result, update)
     }))
@@ -63,21 +63,17 @@ describe.concurrent("Fiber", () => {
       const latch1 = yield* $(Deferred.make<never, void>())
       const latch2 = yield* $(Deferred.make<never, void>())
       const child1 = yield* $(
-        pipe(
-          FiberRef.set(fiberRef, "child1"),
-          Effect.zipRight(Deferred.succeed(latch1, void 0)),
-          Effect.fork
-        )
+        FiberRef.set(fiberRef, "child1"),
+        Effect.zipRight(Deferred.succeed(latch1, void 0)),
+        Effect.fork
       )
       const child2 = yield* $(
-        pipe(
-          FiberRef.set(fiberRef, "child2"),
-          Effect.zipRight(Deferred.succeed(latch2, void 0)),
-          Effect.fork
-        )
+        FiberRef.set(fiberRef, "child2"),
+        Effect.zipRight(Deferred.succeed(latch2, void 0)),
+        Effect.fork
       )
-      yield* $(pipe(Deferred.await(latch1), Effect.zipRight(Deferred.await(latch2))))
-      yield* $(pipe(child1, Fiber.orElse(child2), Fiber.inheritAll))
+      yield* $(Deferred.await(latch1), Effect.zipRight(Deferred.await(latch2)))
+      yield* $(child1, Fiber.orElse(child2), Fiber.inheritAll)
       const result = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(result, "child1")
     }))
@@ -87,28 +83,24 @@ describe.concurrent("Fiber", () => {
       const latch1 = yield* $(Deferred.make<never, void>())
       const latch2 = yield* $(Deferred.make<never, void>())
       const child1 = yield* $(
-        pipe(
-          FiberRef.set(fiberRef, "child1"),
-          Effect.zipRight(Deferred.succeed(latch1, void 0)),
-          Effect.fork
-        )
+        FiberRef.set(fiberRef, "child1"),
+        Effect.zipRight(Deferred.succeed(latch1, void 0)),
+        Effect.fork
       )
       const child2 = yield* $(
-        pipe(
-          FiberRef.set(fiberRef, "child2"),
-          Effect.zipRight(Deferred.succeed(latch2, void 0)),
-          Effect.fork
-        )
+        FiberRef.set(fiberRef, "child2"),
+        Effect.zipRight(Deferred.succeed(latch2, void 0)),
+        Effect.fork
       )
-      yield* $(pipe(Deferred.await(latch1), Effect.zipRight(Deferred.await(latch2))))
-      yield* $(pipe(child1, Fiber.zip(child2), Fiber.inheritAll))
+      yield* $(Deferred.await(latch1), Effect.zipRight(Deferred.await(latch2)))
+      yield* $(child1, Fiber.zip(child2), Fiber.inheritAll)
       const result = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(result, "child1")
     }))
   it.effect("join on interrupted Fiber is an inner interruption", () =>
     Effect.gen(function*($) {
       const fiberId = FiberId.make(0, 123)
-      const result = yield* $(pipe(Fiber.interrupted(fiberId), Fiber.join, Effect.exit))
+      const result = yield* $(Fiber.interrupted(fiberId), Fiber.join, Effect.exit)
       assert.deepStrictEqual(Exit.unannotate(result), Exit.interrupt(fiberId))
     }))
   it.effect("scoped should create a new Fiber and scope it", () =>
@@ -181,12 +173,12 @@ describe.concurrent("Fiber", () => {
       }
       const fiber1 = yield* $(Effect.forkDaemon(Effect.never()))
       const fiber2 = yield* $(Effect.forkDaemon(Effect.never()))
-      yield* $(pipe(
+      yield* $(
         rootContains(fiber1),
         Effect.flatMap((a) => a ? rootContains(fiber2) : Effect.succeed(false)),
         Effect.repeatUntil(identity)
-      ))
-      const result = yield* $(pipe(Fiber.interrupt(fiber1), Effect.zipRight(Fiber.interrupt(fiber2))))
+      )
+      const result = yield* $(Fiber.interrupt(fiber1), Effect.zipRight(Fiber.interrupt(fiber2)))
       assert.isTrue(Exit.isInterrupted(result))
     }))
   it.effect("interruptAll interrupts fibers in parallel", () =>
@@ -231,7 +223,7 @@ describe.concurrent("Fiber", () => {
     }), 10000)
   it.effect("collectAll - stack safety", () =>
     Effect.gen(function*($) {
-      const result = yield* $(pipe(Fiber.join(Fiber.collectAll(fibers)), Effect.asUnit))
+      const result = yield* $(Fiber.join(Fiber.collectAll(fibers)), Effect.asUnit)
       assert.isUndefined(result)
     }), 10000)
 })
