@@ -1,5 +1,17 @@
 # @effect/io
 
+## 0.16.0
+
+### Minor Changes
+
+- [#333](https://github.com/Effect-TS/io/pull/333) [`02a5880`](https://github.com/Effect-TS/io/commit/02a5880c2fe9e3c4341fa916dd85358448a071cb) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Rename bindValue to let
+
+- [#330](https://github.com/Effect-TS/io/pull/330) [`fa6fc43`](https://github.com/Effect-TS/io/commit/fa6fc43cfa09ed99d9e044bf3888b70397d8d8d0) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Rename attempt to try
+
+### Patch Changes
+
+- [#332](https://github.com/Effect-TS/io/pull/332) [`985dca4`](https://github.com/Effect-TS/io/commit/985dca4cd210baa4e066af4a43b35b1a43502090) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Remove OpCodes from public types
+
 ## 0.15.3
 
 ### Patch Changes
