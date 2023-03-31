@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.16.2
+
+### Patch Changes
+
+- [#336](https://github.com/Effect-TS/io/pull/336) [`1578175`](https://github.com/Effect-TS/io/commit/15781752a923ee35fb3cd022fd1464161dc94cd1) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Add missing typeclass derived functions
+
 ## 0.16.1
 
 ### Patch Changes
