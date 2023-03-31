@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.15.3
+
+### Patch Changes
+
+- [#328](https://github.com/Effect-TS/io/pull/328) [`fa21e64`](https://github.com/Effect-TS/io/commit/fa21e640e6e7fb558a4d96c8c6e361f8c7445c75) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Make Effect.gen's Adapter pipeable
+
 ## 0.15.2
 
 ### Patch Changes
