@@ -230,6 +230,20 @@ Added in v1.0.0
   - [rightWith](#rightwith)
   - [tags](#tags)
   - [unleft](#unleft)
+- [instances](#instances)
+  - [Applicative](#applicative)
+  - [Bicovariant](#bicovariant)
+  - [Chainable](#chainable)
+  - [Covariant](#covariant)
+  - [FlatMap](#flatmap)
+  - [Invariant](#invariant)
+  - [Monad](#monad)
+  - [Pointed](#pointed)
+  - [Product](#product)
+  - [SemiAlternative](#semialternative)
+  - [SemiApplicative](#semiapplicative)
+  - [SemiCoproduct](#semicoproduct)
+  - [SemiProduct](#semiproduct)
 - [interruption](#interruption)
   - [disconnect](#disconnect)
   - [interrupt](#interrupt)
@@ -324,6 +338,8 @@ Added in v1.0.0
   - [EffectTypeId (type alias)](#effecttypeid-type-alias)
 - [traversing](#traversing)
   - [forEachWithIndex](#foreachwithindex)
+- [type lambdas](#type-lambdas)
+  - [EffectTypeLambda (interface)](#effecttypelambda-interface)
 - [utilities](#utilities)
   - [exit](#exit)
   - [fiberId](#fiberid)
@@ -808,7 +824,7 @@ export declare const all: {
       : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }]
       ? E
       : never,
-    readonly [
+    [
       A,
       ...(T['length'] extends 0
         ? []
@@ -826,7 +842,7 @@ export declare const all: {
       : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }]
       ? E
       : never,
-    T[number] extends never ? [] : Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>
+    T[number] extends never ? [] : { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
   >
   <T extends Readonly<{ [K: string]: Effect<any, any, any> }>>(args: T): Effect<
     keyof T extends never
@@ -839,7 +855,7 @@ export declare const all: {
       : [T[keyof T]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }]
       ? E
       : never,
-    Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>
+    { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
   >
 }
 ```
@@ -867,12 +883,7 @@ export declare const allPar: {
       : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }]
       ? E
       : never,
-    readonly [
-      A,
-      ...(T['length'] extends 0
-        ? []
-        : Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>)
-    ]
+    [A, ...(T['length'] extends 0 ? [] : { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never })]
   >
   <T extends readonly Effect<any, any, any>[]>(args: [...T]): Effect<
     T[number] extends never
@@ -885,7 +896,7 @@ export declare const allPar: {
       : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }]
       ? E
       : never,
-    T[number] extends never ? [] : Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>
+    T[number] extends never ? [] : { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
   >
   <T extends Readonly<{ [K: string]: Effect<any, any, any> }>>(args: T): Effect<
     keyof T extends never
@@ -898,7 +909,7 @@ export declare const allPar: {
       : [T[keyof T]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }]
       ? E
       : never,
-    Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>
+    { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
   >
 }
 ```
@@ -1786,12 +1797,8 @@ Collects all successes and failures in a tupled fashion.
 export declare const partition: {
   <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (
     elements: Iterable<A>
-  ) => Effect<R, never, readonly [Chunk.Chunk<E>, Chunk.Chunk<B>]>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<
-    R,
-    never,
-    readonly [Chunk.Chunk<E>, Chunk.Chunk<B>]
-  >
+  ) => Effect<R, never, [Chunk.Chunk<E>, Chunk.Chunk<B>]>
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, never, [Chunk.Chunk<E>, Chunk.Chunk<B>]>
 }
 ```
 
@@ -1809,12 +1816,8 @@ tuple.
 export declare const partitionPar: {
   <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (
     elements: Iterable<A>
-  ) => Effect<R, never, readonly [Chunk.Chunk<E>, Chunk.Chunk<B>]>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<
-    R,
-    never,
-    readonly [Chunk.Chunk<E>, Chunk.Chunk<B>]
-  >
+  ) => Effect<R, never, [Chunk.Chunk<E>, Chunk.Chunk<B>]>
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, never, [Chunk.Chunk<E>, Chunk.Chunk<B>]>
 }
 ```
 
@@ -3859,6 +3862,138 @@ export declare const unleft: <R, E, B, A>(self: Effect<R, Either.Either<E, B>, A
 
 Added in v1.0.0
 
+# instances
+
+## Applicative
+
+**Signature**
+
+```ts
+export declare const Applicative: applicative.Applicative<EffectTypeLambda>
+```
+
+Added in v1.0.0
+
+## Bicovariant
+
+**Signature**
+
+```ts
+export declare const Bicovariant: bicovariant.Bicovariant<EffectTypeLambda>
+```
+
+Added in v1.0.0
+
+## Chainable
+
+**Signature**
+
+```ts
+export declare const Chainable: chainable.Chainable<EffectTypeLambda>
+```
+
+Added in v1.0.0
+
+## Covariant
+
+**Signature**
+
+```ts
+export declare const Covariant: covariant.Covariant<EffectTypeLambda>
+```
+
+Added in v1.0.0
+
+## FlatMap
+
+**Signature**
+
+```ts
+export declare const FlatMap: flatMap_.FlatMap<EffectTypeLambda>
+```
+
+Added in v1.0.0
+
+## Invariant
+
+**Signature**
+
+```ts
+export declare const Invariant: invariant.Invariant<EffectTypeLambda>
+```
+
+Added in v1.0.0
+
+## Monad
+
+**Signature**
+
+```ts
+export declare const Monad: monad.Monad<EffectTypeLambda>
+```
+
+Added in v1.0.0
+
+## Pointed
+
+**Signature**
+
+```ts
+export declare const Pointed: pointed.Pointed<EffectTypeLambda>
+```
+
+Added in v1.0.0
+
+## Product
+
+**Signature**
+
+```ts
+export declare const Product: product_.Product<EffectTypeLambda>
+```
+
+Added in v1.0.0
+
+## SemiAlternative
+
+**Signature**
+
+```ts
+export declare const SemiAlternative: semiAlternative.SemiAlternative<EffectTypeLambda>
+```
+
+Added in v1.0.0
+
+## SemiApplicative
+
+**Signature**
+
+```ts
+export declare const SemiApplicative: semiApplicative.SemiApplicative<EffectTypeLambda>
+```
+
+Added in v1.0.0
+
+## SemiCoproduct
+
+**Signature**
+
+```ts
+export declare const SemiCoproduct: semiCoproduct.SemiCoproduct<EffectTypeLambda>
+```
+
+Added in v1.0.0
+
+## SemiProduct
+
+**Signature**
+
+```ts
+export declare const SemiProduct: semiProduct.SemiProduct<EffectTypeLambda>
+```
+
+Added in v1.0.0
+
 # interruption
 
 ## disconnect
@@ -4408,11 +4543,11 @@ new elements.
 export declare const mapAccum: {
   <A, B, R, E, Z>(zero: Z, f: (z: Z, a: A) => Effect<R, E, readonly [Z, B]>): (
     elements: Iterable<A>
-  ) => Effect<R, E, readonly [Z, Chunk.Chunk<B>]>
+  ) => Effect<R, E, [Z, Chunk.Chunk<B>]>
   <A, B, R, E, Z>(elements: Iterable<A>, zero: Z, f: (z: Z, a: A) => Effect<R, E, readonly [Z, B]>): Effect<
     R,
     E,
-    readonly [Z, Chunk.Chunk<B>]
+    [Z, Chunk.Chunk<B>]
   >
 }
 ```
@@ -4819,8 +4954,8 @@ Added in v1.0.0
 
 ```ts
 export declare const zip: {
-  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, readonly [A, A2]>
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, readonly [A, A2]>
+  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, [A, A2]>
+  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, [A, A2]>
 }
 ```
 
@@ -5298,6 +5433,20 @@ export declare const forEachWithIndex: {
 
 Added in v1.0.0
 
+# type lambdas
+
+## EffectTypeLambda (interface)
+
+**Signature**
+
+```ts
+export interface EffectTypeLambda extends TypeLambda {
+  readonly type: Effect<this['Out2'], this['Out1'], this['Target']>
+}
+```
+
+Added in v1.0.0
+
 # utilities
 
 ## exit
@@ -5355,7 +5504,7 @@ Added in v1.0.0
 
 ```ts
 export type MergeRecord<K, H> = {
-  readonly [k in keyof K | keyof H]: k extends keyof K ? K[k] : k extends keyof H ? H[k] : never
+  [k in keyof K | keyof H]: k extends keyof K ? K[k] : k extends keyof H ? H[k] : never
 } extends infer X
   ? X
   : never
@@ -5405,11 +5554,11 @@ cached value before the `timeToLive` duration expires.
 export declare const cachedInvalidate: {
   (timeToLive: Duration.Duration): <R, E, A>(
     self: Effect<R, E, A>
-  ) => Effect<R, never, readonly [Effect<never, E, A>, Effect<never, never, void>]>
+  ) => Effect<R, never, [Effect<never, E, A>, Effect<never, never, void>]>
   <R, E, A>(self: Effect<R, E, A>, timeToLive: Duration.Duration): Effect<
     R,
     never,
-    readonly [Effect<never, E, A>, Effect<never, never, void>]
+    [Effect<never, E, A>, Effect<never, never, void>]
   >
 }
 ```
@@ -5440,9 +5589,7 @@ Returns a new workflow that executes this one and captures the changes in
 **Signature**
 
 ```ts
-export declare const diffFiberRefs: <R, E, A>(
-  self: Effect<R, E, A>
-) => Effect<R, E, readonly [FiberRefsPatch.FiberRefsPatch, A]>
+export declare const diffFiberRefs: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, [FiberRefsPatch.FiberRefsPatch, A]>
 ```
 
 Added in v1.0.0
@@ -6634,11 +6781,11 @@ execution.
 export declare const summarized: {
   <R2, E2, B, C>(summary: Effect<R2, E2, B>, f: (start: B, end: B) => C): <R, E, A>(
     self: Effect<R, E, A>
-  ) => Effect<R2 | R, E2 | E, readonly [C, A]>
+  ) => Effect<R2 | R, E2 | E, [C, A]>
   <R, E, A, R2, E2, B, C>(self: Effect<R, E, A>, summary: Effect<R2, E2, B>, f: (start: B, end: B) => C): Effect<
     R | R2,
     E | E2,
-    readonly [C, A]
+    [C, A]
   >
 }
 ```
@@ -6713,7 +6860,7 @@ Returns a new effect that executes this one and times the execution.
 **Signature**
 
 ```ts
-export declare const timed: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, readonly [Duration.Duration, A]>
+export declare const timed: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, [Duration.Duration, A]>
 ```
 
 Added in v1.0.0
@@ -6728,11 +6875,11 @@ A more powerful variation of `timed` that allows specifying the clock.
 export declare const timedWith: {
   <R1, E1>(milliseconds: Effect<R1, E1, number>): <R, E, A>(
     self: Effect<R, E, A>
-  ) => Effect<R1 | R, E1 | E, readonly [Duration.Duration, A]>
+  ) => Effect<R1 | R, E1 | E, [Duration.Duration, A]>
   <R, E, A, R1, E1>(self: Effect<R, E, A>, milliseconds: Effect<R1, E1, number>): Effect<
     R | R1,
     E | E1,
-    readonly [Duration.Duration, A]
+    [Duration.Duration, A]
   >
 }
 ```
@@ -6981,8 +7128,8 @@ Sequentially zips the this result with the specified result. Combines both
 
 ```ts
 export declare const validate: {
-  <R2, E2, B>(that: Effect<R2, E2, B>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, readonly [A, B]>
-  <R, E, A, R2, E2, B>(self: Effect<R, E, A>, that: Effect<R2, E2, B>): Effect<R | R2, E | E2, readonly [A, B]>
+  <R2, E2, B>(that: Effect<R2, E2, B>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, [A, B]>
+  <R, E, A, R2, E2, B>(self: Effect<R, E, A>, that: Effect<R2, E2, B>): Effect<R | R2, E | E2, [A, B]>
 }
 ```
 
@@ -7099,8 +7246,8 @@ in parallel. Combines both Cause<E1>` when both effects fail.
 
 ```ts
 export declare const validatePar: {
-  <R1, E1, B>(that: Effect<R1, E1, B>): <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, readonly [A, B]>
-  <R, E, A, R1, E1, B>(self: Effect<R, E, A>, that: Effect<R1, E1, B>): Effect<R | R1, E | E1, readonly [A, B]>
+  <R1, E1, B>(that: Effect<R1, E1, B>): <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, [A, B]>
+  <R, E, A, R1, E1, B>(self: Effect<R, E, A>, that: Effect<R1, E1, B>): Effect<R | R1, E | E1, [A, B]>
 }
 ```
 
@@ -7215,11 +7362,11 @@ predicate.
 export declare const whenFiberRef: {
   <S>(fiberRef: FiberRef.FiberRef<S>, predicate: Predicate<S>): <R, E, A>(
     self: Effect<R, E, A>
-  ) => Effect<R, E, readonly [S, Option.Option<A>]>
+  ) => Effect<R, E, [S, Option.Option<A>]>
   <R, E, A, S>(self: Effect<R, E, A>, fiberRef: FiberRef.FiberRef<S>, predicate: Predicate<S>): Effect<
     R,
     E,
-    readonly [S, Option.Option<A>]
+    [S, Option.Option<A>]
   >
 }
 ```
@@ -7234,14 +7381,8 @@ Executes this workflow when the value of the `Ref` satisfies the predicate.
 
 ```ts
 export declare const whenRef: {
-  <S>(ref: Ref.Ref<S>, predicate: Predicate<S>): <R, E, A>(
-    self: Effect<R, E, A>
-  ) => Effect<R, E, readonly [S, Option.Option<A>]>
-  <R, E, A, S>(self: Effect<R, E, A>, ref: Ref.Ref<S>, predicate: Predicate<S>): Effect<
-    R,
-    E,
-    readonly [S, Option.Option<A>]
-  >
+  <S>(ref: Ref.Ref<S>, predicate: Predicate<S>): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, [S, Option.Option<A>]>
+  <R, E, A, S>(self: Effect<R, E, A>, ref: Ref.Ref<S>, predicate: Predicate<S>): Effect<R, E, [S, Option.Option<A>]>
 }
 ```
 
@@ -7273,7 +7414,7 @@ well as a finalizer that can be run to close the scope of this workflow.
 ```ts
 export declare const withEarlyRelease: <R, E, A>(
   self: Effect<R, E, A>
-) => Effect<Scope.Scope | R, E, readonly [Effect<never, never, void>, A]>
+) => Effect<Scope.Scope | R, E, [Effect<never, never, void>, A]>
 ```
 
 Added in v1.0.0
@@ -7331,8 +7472,8 @@ Zips this effect and that effect in parallel.
 
 ```ts
 export declare const zipPar: {
-  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, readonly [A, A2]>
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, readonly [A, A2]>
+  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, [A, A2]>
+  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, [A, A2]>
 }
 ```
 

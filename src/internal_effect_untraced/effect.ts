@@ -9,6 +9,7 @@ import * as HashMap from "@effect/data/HashMap"
 import * as HashSet from "@effect/data/HashSet"
 import * as Option from "@effect/data/Option"
 import type { Predicate, Refinement } from "@effect/data/Predicate"
+import { tuple } from "@effect/data/ReadonlyArray"
 import type * as Cause from "@effect/io/Cause"
 import * as Clock from "@effect/io/Clock"
 import type * as Effect from "@effect/io/Effect"
@@ -589,7 +590,7 @@ export const descriptorWith = Debug.methodWithTrace((trace, restore) =>
 export const diffFiberRefs = Debug.methodWithTrace((trace) =>
   <R, E, A>(
     self: Effect.Effect<R, E, A>
-  ): Effect.Effect<R, E, readonly [FiberRefsPatch.FiberRefsPatch, A]> =>
+  ): Effect.Effect<R, E, [FiberRefsPatch.FiberRefsPatch, A]> =>
     pipe(self, summarized(getFiberRefs(), fiberRefsPatch.diff)).traced(trace)
 )
 
@@ -1687,12 +1688,12 @@ export const mapAccum = Debug.dualWithTrace<
   <A, B, R, E, Z>(
     zero: Z,
     f: (z: Z, a: A) => Effect.Effect<R, E, readonly [Z, B]>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, E, readonly [Z, Chunk.Chunk<B>]>,
+  ) => (elements: Iterable<A>) => Effect.Effect<R, E, [Z, Chunk.Chunk<B>]>,
   <A, B, R, E, Z>(
     elements: Iterable<A>,
     zero: Z,
     f: (z: Z, a: A) => Effect.Effect<R, E, readonly [Z, B]>
-  ) => Effect.Effect<R, E, readonly [Z, Chunk.Chunk<B>]>
+  ) => Effect.Effect<R, E, [Z, Chunk.Chunk<B>]>
 >(3, (trace, restore) =>
   <A, B, R, E, Z>(
     elements: Iterable<A>,
@@ -1718,7 +1719,7 @@ export const mapAccum = Debug.dualWithTrace<
           )
         )
       }
-      return core.map(result, (z) => [z, Chunk.unsafeFromArray(builder)] as const)
+      return core.map(result, (z) => tuple(z, Chunk.unsafeFromArray(builder)))
     }).traced(trace))
 
 /* @internal */
@@ -1943,11 +1944,11 @@ export const parallelErrors = Debug.methodWithTrace((trace) =>
 export const partition = Debug.dualWithTrace<
   <R, E, A, B>(
     f: (a: A) => Effect.Effect<R, E, B>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, never, readonly [Chunk.Chunk<E>, Chunk.Chunk<B>]>,
+  ) => (elements: Iterable<A>) => Effect.Effect<R, never, [Chunk.Chunk<E>, Chunk.Chunk<B>]>,
   <R, E, A, B>(
     elements: Iterable<A>,
     f: (a: A) => Effect.Effect<R, E, B>
-  ) => Effect.Effect<R, never, readonly [Chunk.Chunk<E>, Chunk.Chunk<B>]>
+  ) => Effect.Effect<R, never, [Chunk.Chunk<E>, Chunk.Chunk<B>]>
 >(2, (trace, restore) =>
   (elements, f) =>
     pipe(
@@ -2389,19 +2390,19 @@ export const summarized = Debug.dualWithTrace<
   <R2, E2, B, C>(
     summary: Effect.Effect<R2, E2, B>,
     f: (start: B, end: B) => C
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, readonly [C, A]>,
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, [C, A]>,
   <R, E, A, R2, E2, B, C>(
     self: Effect.Effect<R, E, A>,
     summary: Effect.Effect<R2, E2, B>,
     f: (start: B, end: B) => C
-  ) => Effect.Effect<R | R2, E | E2, readonly [C, A]>
+  ) => Effect.Effect<R | R2, E | E2, [C, A]>
 >(
   3,
   (trace, restore) =>
     (self, summary, f) =>
       core.flatMap(
         summary,
-        (start) => core.flatMap(self, (value) => core.map(summary, (end) => [restore(f)(start, end), value] as const))
+        (start) => core.flatMap(self, (value) => core.map(summary, (end) => tuple(restore(f)(start, end), value)))
       ).traced(trace)
 )
 
@@ -2614,18 +2615,18 @@ export const tapSome = Debug.dualWithTrace<
 export const timed = Debug.methodWithTrace((trace) =>
   <R, E, A>(
     self: Effect.Effect<R, E, A>
-  ): Effect.Effect<R, E, readonly [Duration.Duration, A]> => timedWith(self, Clock.currentTimeMillis()).traced(trace)
+  ): Effect.Effect<R, E, [Duration.Duration, A]> => timedWith(self, Clock.currentTimeMillis()).traced(trace)
 )
 
 /* @internal */
 export const timedWith = Debug.dualWithTrace<
   <R1, E1>(
     milliseconds: Effect.Effect<R1, E1, number>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E | E1, readonly [Duration.Duration, A]>,
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E | E1, [Duration.Duration, A]>,
   <R, E, A, R1, E1>(
     self: Effect.Effect<R, E, A>,
     milliseconds: Effect.Effect<R1, E1, number>
-  ) => Effect.Effect<R | R1, E | E1, readonly [Duration.Duration, A]>
+  ) => Effect.Effect<R | R1, E | E1, [Duration.Duration, A]>
 >(
   2,
   (trace) =>
@@ -2723,10 +2724,10 @@ export const all = Debug.methodWithTrace((trace): {
     E | T["length"] extends 0 ? never
       : [T[number]] extends [{ [Effect.EffectTypeId]: { _E: (_: never) => infer E } }] ? E
       : never,
-    readonly [
+    [
       A,
       ...(T["length"] extends 0 ? []
-        : Readonly<{ [K in keyof T]: [T[K]] extends [Effect.Effect<any, any, infer A>] ? A : never }>)
+        : { [K in keyof T]: [T[K]] extends [Effect.Effect<any, any, infer A>] ? A : never })
     ]
   >
   <T extends ReadonlyArray<Effect.Effect<any, any, any>>>(
@@ -2739,7 +2740,7 @@ export const all = Debug.methodWithTrace((trace): {
       : [T[number]] extends [{ [Effect.EffectTypeId]: { _E: (_: never) => infer E } }] ? E
       : never,
     T[number] extends never ? []
-      : Readonly<{ [K in keyof T]: [T[K]] extends [Effect.Effect<any, any, infer A>] ? A : never }>
+      : { [K in keyof T]: [T[K]] extends [Effect.Effect<any, any, infer A>] ? A : never }
   >
   <T extends Readonly<{ [K: string]: Effect.Effect<any, any, any> }>>(
     args: T
@@ -2750,7 +2751,7 @@ export const all = Debug.methodWithTrace((trace): {
     keyof T extends never ? never
       : [T[keyof T]] extends [{ [Effect.EffectTypeId]: { _E: (_: never) => infer E } }] ? E
       : never,
-    Readonly<{ [K in keyof T]: [T[K]] extends [Effect.Effect<any, any, infer A>] ? A : never }>
+    { [K in keyof T]: [T[K]] extends [Effect.Effect<any, any, infer A>] ? A : never }
   >
 } =>
   function() {
@@ -2964,12 +2965,12 @@ export const updateService = Debug.dualWithTrace<
 export const validate = Debug.dualWithTrace<
   <R2, E2, B>(
     that: Effect.Effect<R2, E2, B>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, readonly [A, B]>,
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, [A, B]>,
   <R, E, A, R2, E2, B>(
     self: Effect.Effect<R, E, A>,
     that: Effect.Effect<R2, E2, B>
-  ) => Effect.Effect<R | R2, E | E2, readonly [A, B]>
->(2, (trace) => (self, that) => validateWith(self, that, (a, b) => [a, b] as const).traced(trace))
+  ) => Effect.Effect<R | R2, E | E2, [A, B]>
+>(2, (trace) => (self, that) => validateWith(self, that, (a, b) => tuple(a, b)).traced(trace))
 
 /* @internal */
 export const validateAll = Debug.dualWithTrace<
@@ -3070,20 +3071,20 @@ export const whenFiberRef = Debug.dualWithTrace<
   <S>(
     fiberRef: FiberRef.FiberRef<S>,
     predicate: Predicate<S>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, readonly [S, Option.Option<A>]>,
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, [S, Option.Option<A>]>,
   <R, E, A, S>(
     self: Effect.Effect<R, E, A>,
     fiberRef: FiberRef.FiberRef<S>,
     predicate: Predicate<S>
-  ) => Effect.Effect<R, E, readonly [S, Option.Option<A>]>
+  ) => Effect.Effect<R, E, [S, Option.Option<A>]>
 >(
   3,
   (trace, restore) =>
     <R, E, A, S>(self: Effect.Effect<R, E, A>, fiberRef: FiberRef.FiberRef<S>, predicate: Predicate<S>) =>
       core.flatMap(core.fiberRefGet(fiberRef), (s) =>
         restore(predicate)(s) ?
-          core.map(self, (a) => [s, Option.some(a)] as const) :
-          core.succeed<readonly [S, Option.Option<A>]>([s, Option.none()])).traced(trace)
+          core.map(self, (a) => tuple(s, Option.some(a))) :
+          core.succeed<[S, Option.Option<A>]>([s, Option.none()])).traced(trace)
 )
 
 /* @internal */
@@ -3091,20 +3092,20 @@ export const whenRef = Debug.dualWithTrace<
   <S>(
     ref: Ref.Ref<S>,
     predicate: Predicate<S>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, readonly [S, Option.Option<A>]>,
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, [S, Option.Option<A>]>,
   <R, E, A, S>(
     self: Effect.Effect<R, E, A>,
     ref: Ref.Ref<S>,
     predicate: Predicate<S>
-  ) => Effect.Effect<R, E, readonly [S, Option.Option<A>]>
+  ) => Effect.Effect<R, E, [S, Option.Option<A>]>
 >(
   3,
   (trace, restore) =>
     <R, E, A, S>(self: Effect.Effect<R, E, A>, ref: Ref.Ref<S>, predicate: Predicate<S>) =>
       core.flatMap(Ref.get(ref), (s) =>
         restore(predicate)(s) ?
-          core.map(self, (a) => [s, Option.some(a)] as const) :
-          core.succeed<readonly [S, Option.Option<A>]>([s, Option.none()])).traced(trace)
+          core.map(self, (a) => tuple(s, Option.some(a))) :
+          core.succeed<[S, Option.Option<A>]>([s, Option.none()])).traced(trace)
 )
 
 /* @internal */

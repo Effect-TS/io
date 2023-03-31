@@ -9,6 +9,7 @@ import * as Hash from "@effect/data/Hash"
 import * as MutableHashMap from "@effect/data/MutableHashMap"
 import * as MutableRef from "@effect/data/MutableRef"
 import * as Option from "@effect/data/Option"
+import { tuple } from "@effect/data/ReadonlyArray"
 import type { Equivalence } from "@effect/data/typeclass/Equivalence"
 import type * as Cause from "@effect/io/Cause"
 import type * as Deferred from "@effect/io/Deferred"
@@ -736,12 +737,12 @@ export const timeoutTo = Debug.dualWithTrace<
 export const validatePar = Debug.dualWithTrace<
   <R1, E1, B>(
     that: Effect.Effect<R1, E1, B>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E | E1, readonly [A, B]>,
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E | E1, [A, B]>,
   <R, E, A, R1, E1, B>(
     self: Effect.Effect<R, E, A>,
     that: Effect.Effect<R1, E1, B>
-  ) => Effect.Effect<R | R1, E | E1, readonly [A, B]>
->(2, (trace) => (self, that) => validateWithPar(self, that, (a, b) => [a, b] as const).traced(trace))
+  ) => Effect.Effect<R | R1, E | E1, [A, B]>
+>(2, (trace) => (self, that) => validateWithPar(self, that, (a, b) => tuple(a, b)).traced(trace))
 
 /** @internal */
 export const validateWithPar = Debug.dualWithTrace<

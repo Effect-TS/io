@@ -967,20 +967,20 @@ export const orDieWith = Debug.dualWithTrace<
 export const partitionMap = <A, A1, A2>(
   elements: Iterable<A>,
   f: (a: A) => Either.Either<A1, A2>
-): readonly [Chunk.Chunk<A1>, Chunk.Chunk<A2>] =>
+): [Chunk.Chunk<A1>, Chunk.Chunk<A2>] =>
   Array.from(elements).reduceRight(
     ([lefts, rights], current) => {
       const either = f(current)
       switch (either._tag) {
         case "Left": {
-          return [pipe(lefts, Chunk.prepend(either.left)), rights] as const
+          return [pipe(lefts, Chunk.prepend(either.left)), rights]
         }
         case "Right": {
-          return [lefts, pipe(rights, Chunk.prepend(either.right))] as const
+          return [lefts, pipe(rights, Chunk.prepend(either.right))]
         }
       }
     },
-    [Chunk.empty<A1>(), Chunk.empty<A2>()] as const
+    [Chunk.empty<A1>(), Chunk.empty<A2>()]
   )
 
 /* @internal */
