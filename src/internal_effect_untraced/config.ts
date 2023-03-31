@@ -121,10 +121,7 @@ export interface Sequence extends
   }>
 {}
 
-/**
- * @since 1.0.0
- * @category models
- */
+/** @internal */
 export interface Table extends
   Op<OpCodes.OP_TABLE, {
     readonly op: OpCodes.OP_TABLE
@@ -132,10 +129,7 @@ export interface Table extends
   }>
 {}
 
-/**
- * @since 1.0.0
- * @category models
- */
+/** @internal */
 export interface Zipped extends
   Op<OpCodes.OP_ZIP_WITH, {
     readonly op: OpCodes.OP_ZIP_WITH
