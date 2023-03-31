@@ -9,6 +9,7 @@ import * as Hash from "@effect/data/Hash"
 import * as MutableHashMap from "@effect/data/MutableHashMap"
 import * as MutableRef from "@effect/data/MutableRef"
 import * as Option from "@effect/data/Option"
+import { tuple } from "@effect/data/ReadonlyArray"
 import type { Equivalence } from "@effect/data/typeclass/Equivalence"
 import type * as Cause from "@effect/io/Cause"
 import type * as Deferred from "@effect/io/Deferred"
@@ -138,11 +139,11 @@ export const cachedInvalidate = Debug.dualWithTrace<
     timeToLive: Duration.Duration
   ) => <R, E, A>(
     self: Effect.Effect<R, E, A>
-  ) => Effect.Effect<R, never, readonly [Effect.Effect<never, E, A>, Effect.Effect<never, never, void>]>,
+  ) => Effect.Effect<R, never, [Effect.Effect<never, E, A>, Effect.Effect<never, never, void>]>,
   <R, E, A>(
     self: Effect.Effect<R, E, A>,
     timeToLive: Duration.Duration
-  ) => Effect.Effect<R, never, readonly [Effect.Effect<never, E, A>, Effect.Effect<never, never, void>]>
+  ) => Effect.Effect<R, never, [Effect.Effect<never, E, A>, Effect.Effect<never, never, void>]>
 >(
   2,
   (trace) =>
@@ -151,12 +152,12 @@ export const cachedInvalidate = Debug.dualWithTrace<
         core.context<R>(),
         (env) =>
           core.map(
-            makeSynchronized<Option.Option<readonly [number, Deferred.Deferred<E, A>]>>(Option.none()),
+            makeSynchronized<Option.Option<[number, Deferred.Deferred<E, A>]>>(Option.none()),
             (cache) =>
               [
                 core.provideContext(getCachedValue(self, timeToLive, cache), env),
                 invalidateCache(cache)
-              ] as const
+              ] as [Effect.Effect<never, E, A>, Effect.Effect<never, never, void>]
           )
       ).traced(trace)
 )
@@ -736,12 +737,12 @@ export const timeoutTo = Debug.dualWithTrace<
 export const validatePar = Debug.dualWithTrace<
   <R1, E1, B>(
     that: Effect.Effect<R1, E1, B>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E | E1, readonly [A, B]>,
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E | E1, [A, B]>,
   <R, E, A, R1, E1, B>(
     self: Effect.Effect<R, E, A>,
     that: Effect.Effect<R1, E1, B>
-  ) => Effect.Effect<R | R1, E | E1, readonly [A, B]>
->(2, (trace) => (self, that) => validateWithPar(self, that, (a, b) => [a, b] as const).traced(trace))
+  ) => Effect.Effect<R | R1, E | E1, [A, B]>
+>(2, (trace) => (self, that) => validateWithPar(self, that, (a, b) => tuple(a, b)).traced(trace))
 
 /** @internal */
 export const validateWithPar = Debug.dualWithTrace<
@@ -768,12 +769,16 @@ export const zipPar = Debug.dualWithTrace<
     that: Effect.Effect<R2, E2, A2>
   ) => <R, E, A>(
     self: Effect.Effect<R, E, A>
-  ) => Effect.Effect<R | R2, E | E2, readonly [A, A2]>,
+  ) => Effect.Effect<R | R2, E | E2, [A, A2]>,
   <R, E, A, R2, E2, A2>(
     self: Effect.Effect<R, E, A>,
     that: Effect.Effect<R2, E2, A2>
-  ) => Effect.Effect<R | R2, E | E2, readonly [A, A2]>
->(2, (trace) => (self, that) => zipWithPar(self, that, (a, b) => [a, b] as const).traced(trace))
+  ) => Effect.Effect<R | R2, E | E2, [A, A2]>
+>(2, (trace) =>
+  <R, E, A, R2, E2, A2>(
+    self: Effect.Effect<R, E, A>,
+    that: Effect.Effect<R2, E2, A2>
+  ): Effect.Effect<R | R2, E | E2, [A, A2]> => zipWithPar(self, that, (a, b) => [a, b] as [A, A2]).traced(trace))
 
 /** @internal */
 export const zipParLeft = Debug.dualWithTrace<

@@ -7,6 +7,7 @@ import * as HashSet from "@effect/data/HashSet"
 import * as MutableQueue from "@effect/data/MutableQueue"
 import * as MRef from "@effect/data/MutableRef"
 import * as Option from "@effect/data/Option"
+import { tuple } from "@effect/data/ReadonlyArray"
 import type * as Cause from "@effect/io/Cause"
 import type * as Clock from "@effect/io/Clock"
 import type { ConfigProvider } from "@effect/io/Config/Provider"
@@ -1744,11 +1745,11 @@ export const onDoneCause = Debug.dualWithTrace<
 export const partitionPar = Debug.dualWithTrace<
   <R, E, A, B>(
     f: (a: A) => Effect.Effect<R, E, B>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, never, readonly [Chunk.Chunk<E>, Chunk.Chunk<B>]>,
+  ) => (elements: Iterable<A>) => Effect.Effect<R, never, [Chunk.Chunk<E>, Chunk.Chunk<B>]>,
   <R, E, A, B>(
     elements: Iterable<A>,
     f: (a: A) => Effect.Effect<R, E, B>
-  ) => Effect.Effect<R, never, readonly [Chunk.Chunk<E>, Chunk.Chunk<B>]>
+  ) => Effect.Effect<R, never, [Chunk.Chunk<E>, Chunk.Chunk<B>]>
 >(2, (trace, restore) =>
   (elements, f) =>
     pipe(
@@ -1998,7 +1999,7 @@ export const allPar = Debug.methodWithTrace((trace): {
     E | T["length"] extends 0 ? never
       : [T[number]] extends [{ [Effect.EffectTypeId]: { _E: (_: never) => infer E } }] ? E
       : never,
-    readonly [
+    [
       A,
       ...(T["length"] extends 0 ? []
         : Readonly<{ [K in keyof T]: [T[K]] extends [Effect.Effect<any, any, infer A>] ? A : never }>)
@@ -2014,7 +2015,7 @@ export const allPar = Debug.methodWithTrace((trace): {
       : [T[number]] extends [{ [Effect.EffectTypeId]: { _E: (_: never) => infer E } }] ? E
       : never,
     T[number] extends never ? []
-      : Readonly<{ [K in keyof T]: [T[K]] extends [Effect.Effect<any, any, infer A>] ? A : never }>
+      : { [K in keyof T]: [T[K]] extends [Effect.Effect<any, any, infer A>] ? A : never }
   >
   <T extends Readonly<{ [K: string]: Effect.Effect<any, any, any> }>>(
     args: T
@@ -2025,7 +2026,7 @@ export const allPar = Debug.methodWithTrace((trace): {
     keyof T extends never ? never
       : [T[keyof T]] extends [{ [Effect.EffectTypeId]: { _E: (_: never) => infer E } }] ? E
       : never,
-    Readonly<{ [K in keyof T]: [T[K]] extends [Effect.Effect<any, any, infer A>] ? A : never }>
+    { [K in keyof T]: [T[K]] extends [Effect.Effect<any, any, infer A>] ? A : never }
   >
 } =>
   function() {
@@ -2171,17 +2172,14 @@ export const withConfigProviderScoped = Debug.methodWithTrace((trace) =>
 export const withEarlyRelease = Debug.methodWithTrace((trace) =>
   <R, E, A>(
     self: Effect.Effect<R, E, A>
-  ): Effect.Effect<R | Scope.Scope, E, readonly [Effect.Effect<never, never, void>, A]> =>
+  ): Effect.Effect<R | Scope.Scope, E, [Effect.Effect<never, never, void>, A]> =>
     scopeWith((parent) =>
       core.flatMap(core.scopeFork(parent, ExecutionStrategy.sequential), (child) =>
         pipe(
           self,
           scopeExtend(child),
           core.map((value) =>
-            [
-              core.fiberIdWith((fiberId) => core.scopeClose(child, core.exitInterrupt(fiberId))),
-              value
-            ] as const
+            tuple(core.fiberIdWith((fiberId) => core.scopeClose(child, core.exitInterrupt(fiberId))), value)
           )
         ))
     ).traced(trace)

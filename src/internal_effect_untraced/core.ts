@@ -967,20 +967,20 @@ export const orDieWith = Debug.dualWithTrace<
 export const partitionMap = <A, A1, A2>(
   elements: Iterable<A>,
   f: (a: A) => Either.Either<A1, A2>
-): readonly [Chunk.Chunk<A1>, Chunk.Chunk<A2>] =>
+): [Chunk.Chunk<A1>, Chunk.Chunk<A2>] =>
   Array.from(elements).reduceRight(
     ([lefts, rights], current) => {
       const either = f(current)
       switch (either._tag) {
         case "Left": {
-          return [pipe(lefts, Chunk.prepend(either.left)), rights] as const
+          return [pipe(lefts, Chunk.prepend(either.left)), rights]
         }
         case "Right": {
-          return [lefts, pipe(rights, Chunk.prepend(either.right))] as const
+          return [lefts, pipe(rights, Chunk.prepend(either.right))]
         }
       }
     },
-    [Chunk.empty<A1>(), Chunk.empty<A2>()] as const
+    [Chunk.empty<A1>(), Chunk.empty<A2>()]
   )
 
 /* @internal */
@@ -1263,12 +1263,16 @@ export const zip = Debug.dualWithTrace<
     that: Effect.Effect<R2, E2, A2>
   ) => <R, E, A>(
     self: Effect.Effect<R, E, A>
-  ) => Effect.Effect<R | R2, E | E2, readonly [A, A2]>,
+  ) => Effect.Effect<R | R2, E | E2, [A, A2]>,
   <R, E, A, R2, E2, A2>(
     self: Effect.Effect<R, E, A>,
     that: Effect.Effect<R2, E2, A2>
-  ) => Effect.Effect<R | R2, E | E2, readonly [A, A2]>
->(2, (trace) => (self, that) => flatMap(self, (a) => map(that, (b) => [a, b] as const)).traced(trace))
+  ) => Effect.Effect<R | R2, E | E2, [A, A2]>
+>(2, (trace) =>
+  <R, E, A, R2, E2, A2>(
+    self: Effect.Effect<R, E, A>,
+    that: Effect.Effect<R2, E2, A2>
+  ): Effect.Effect<R | R2, E | E2, [A, A2]> => flatMap(self, (a) => map(that, (b) => [a, b] as [A, A2])).traced(trace))
 
 /* @internal */
 export const zipFlatten = Debug.dualWithTrace<
@@ -1276,12 +1280,17 @@ export const zipFlatten = Debug.dualWithTrace<
     that: Effect.Effect<R2, E2, A2>
   ) => <R, E, A extends ReadonlyArray<any>>(
     self: Effect.Effect<R, E, A>
-  ) => Effect.Effect<R | R2, E | E2, readonly [...A, A2]>,
+  ) => Effect.Effect<R | R2, E | E2, [...A, A2]>,
   <R, E, A extends ReadonlyArray<any>, R2, E2, A2>(
     self: Effect.Effect<R, E, A>,
     that: Effect.Effect<R2, E2, A2>
-  ) => Effect.Effect<R | R2, E | E2, readonly [...A, A2]>
->(2, (trace) => (self, that) => flatMap(self, (a) => map(that, (b) => [...a, b] as const)).traced(trace))
+  ) => Effect.Effect<R | R2, E | E2, [...A, A2]>
+>(2, (trace) =>
+  <R, E, A extends ReadonlyArray<any>, R2, E2, A2>(
+    self: Effect.Effect<R, E, A>,
+    that: Effect.Effect<R2, E2, A2>
+  ): Effect.Effect<R | R2, E | E2, [...A, A2]> =>
+    flatMap(self, (a) => map(that, (b) => [...a, b] as [...A, A2])).traced(trace))
 
 /* @internal */
 export const zipLeft = Debug.dualWithTrace<

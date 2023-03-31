@@ -10,9 +10,23 @@ import type * as Equal from "@effect/data/Equal"
 import type { LazyArg } from "@effect/data/Function"
 import type * as HashMap from "@effect/data/HashMap"
 import type * as HashSet from "@effect/data/HashSet"
+import type { TypeLambda } from "@effect/data/HKT"
 import type * as Option from "@effect/data/Option"
 import type { Predicate, Refinement } from "@effect/data/Predicate"
+import type * as applicative from "@effect/data/typeclass/Applicative"
+import type * as bicovariant from "@effect/data/typeclass/Bicovariant"
+import type * as chainable from "@effect/data/typeclass/Chainable"
+import * as covariant from "@effect/data/typeclass/Covariant"
 import type { Equivalence } from "@effect/data/typeclass/Equivalence"
+import type * as flatMap_ from "@effect/data/typeclass/FlatMap"
+import type * as invariant from "@effect/data/typeclass/Invariant"
+import type * as monad from "@effect/data/typeclass/Monad"
+import type * as pointed from "@effect/data/typeclass/Pointed"
+import type * as product_ from "@effect/data/typeclass/Product"
+import type * as semiAlternative from "@effect/data/typeclass/SemiAlternative"
+import type * as semiApplicative from "@effect/data/typeclass/SemiApplicative"
+import type * as semiCoproduct from "@effect/data/typeclass/SemiCoproduct"
+import type * as semiProduct from "@effect/data/typeclass/SemiProduct"
 import type * as Cause from "@effect/io/Cause"
 import type * as Clock from "@effect/io/Clock"
 import type { Config } from "@effect/io/Config"
@@ -53,7 +67,7 @@ import type * as Supervisor from "@effect/io/Supervisor"
  * @since 1.0.0
  */
 export type MergeRecord<K, H> = {
-  readonly [k in keyof K | keyof H]: k extends keyof K ? K[k]
+  [k in keyof K | keyof H]: k extends keyof K ? K[k]
     : k extends keyof H ? H[k]
     : never
 } extends infer X ? X
@@ -89,6 +103,14 @@ export type EffectTypeId = typeof EffectTypeId
  */
 export interface Effect<R, E, A> extends Effect.Variance<R, E, A>, Equal.Equal {
   traced(trace: Trace): Effect<R, E, A>
+}
+
+/**
+ * @category type lambdas
+ * @since 1.0.0
+ */
+export interface EffectTypeLambda extends TypeLambda {
+  readonly type: Effect<this["Out2"], this["Out1"], this["Target"]>
 }
 
 /**
@@ -629,6 +651,25 @@ export {
   try_ as try
 }
 
+export {
+  /**
+   * Recovers from specified error.
+   *
+   * @since 1.0.0
+   * @category error handling
+   */
+  _catch as catch
+}
+export {
+  /**
+   * Like bind for values
+   *
+   * @since 1.0.0
+   * @category do notation
+   */
+  bindValue_ as let
+}
+
 /**
  * Returns a new effect that will not succeed with its value before first
  * waiting for the end of all child fibers forked by the effect.
@@ -662,11 +703,11 @@ export const cached: {
 export const cachedInvalidate: {
   (timeToLive: Duration.Duration): <R, E, A>(
     self: Effect<R, E, A>
-  ) => Effect<R, never, readonly [Effect<never, E, A>, Effect<never, never, void>]>
+  ) => Effect<R, never, [Effect<never, E, A>, Effect<never, never, void>]>
   <R, E, A>(
     self: Effect<R, E, A>,
     timeToLive: Duration.Duration
-  ): Effect<R, never, readonly [Effect<never, E, A>, Effect<never, never, void>]>
+  ): Effect<R, never, [Effect<never, E, A>, Effect<never, never, void>]>
 } = circular.cachedInvalidate
 
 const _catch: {
@@ -682,16 +723,6 @@ const _catch: {
     f: (error: Extract<E, { [n in N]: K }>) => Effect<R1, E1, A1>
   ): Effect<R | R1, E1 | Exclude<E, { [n in N]: K }>, A | A1>
 } = effect._catch
-
-export {
-  /**
-   * Recovers from specified error.
-   *
-   * @since 1.0.0
-   * @category error handling
-   */
-  _catch as catch
-}
 
 /**
  * Recovers from all recoverable errors.
@@ -1244,7 +1275,7 @@ export const disconnect: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A> = c
  */
 export const diffFiberRefs: <R, E, A>(
   self: Effect<R, E, A>
-) => Effect<R, E, readonly [FiberRefsPatch.FiberRefsPatch, A]> = effect.diffFiberRefs
+) => Effect<R, E, [FiberRefsPatch.FiberRefsPatch, A]> = effect.diffFiberRefs
 
 /**
  * Binds an effectful value in a `do` scope
@@ -1293,16 +1324,6 @@ const bindValue_: {
     f: (_: K) => A
   ): Effect<R, E, MergeRecord<K, { [k in N]: A }>>
 } = effect.bindValue
-
-export {
-  /**
-   * Like bind for values
-   *
-   * @since 1.0.0
-   * @category do notation
-   */
-  bindValue_ as let
-}
 
 /**
  * Like bind for values
@@ -2749,12 +2770,12 @@ export const mapAccum: {
   <A, B, R, E, Z>(
     zero: Z,
     f: (z: Z, a: A) => Effect<R, E, readonly [Z, B]>
-  ): (elements: Iterable<A>) => Effect<R, E, readonly [Z, Chunk.Chunk<B>]>
+  ): (elements: Iterable<A>) => Effect<R, E, [Z, Chunk.Chunk<B>]>
   <A, B, R, E, Z>(
     elements: Iterable<A>,
     zero: Z,
     f: (z: Z, a: A) => Effect<R, E, readonly [Z, B]>
-  ): Effect<R, E, readonly [Z, Chunk.Chunk<B>]>
+  ): Effect<R, E, [Z, Chunk.Chunk<B>]>
 } = effect.mapAccum
 
 /**
@@ -3196,11 +3217,8 @@ export const parallelFinalizers: <R, E, A>(self: Effect<R, E, A>) => Effect<Scop
 export const partition: {
   <R, E, A, B>(
     f: (a: A) => Effect<R, E, B>
-  ): (elements: Iterable<A>) => Effect<R, never, readonly [Chunk.Chunk<E>, Chunk.Chunk<B>]>
-  <R, E, A, B>(
-    elements: Iterable<A>,
-    f: (a: A) => Effect<R, E, B>
-  ): Effect<R, never, readonly [Chunk.Chunk<E>, Chunk.Chunk<B>]>
+  ): (elements: Iterable<A>) => Effect<R, never, [Chunk.Chunk<E>, Chunk.Chunk<B>]>
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, never, [Chunk.Chunk<E>, Chunk.Chunk<B>]>
 } = effect.partition
 
 /**
@@ -3214,11 +3232,11 @@ export const partition: {
 export const partitionPar: {
   <R, E, A, B>(
     f: (a: A) => Effect<R, E, B>
-  ): (elements: Iterable<A>) => Effect<R, never, readonly [Chunk.Chunk<E>, Chunk.Chunk<B>]>
+  ): (elements: Iterable<A>) => Effect<R, never, [Chunk.Chunk<E>, Chunk.Chunk<B>]>
   <R, E, A, B>(
     elements: Iterable<A>,
     f: (a: A) => Effect<R, E, B>
-  ): Effect<R, never, readonly [Chunk.Chunk<E>, Chunk.Chunk<B>]>
+  ): Effect<R, never, [Chunk.Chunk<E>, Chunk.Chunk<B>]>
 } = fiberRuntime.partitionPar
 
 /**
@@ -4249,12 +4267,12 @@ export const summarized: {
   <R2, E2, B, C>(
     summary: Effect<R2, E2, B>,
     f: (start: B, end: B) => C
-  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, readonly [C, A]>
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, [C, A]>
   <R, E, A, R2, E2, B, C>(
     self: Effect<R, E, A>,
     summary: Effect<R2, E2, B>,
     f: (start: B, end: B) => C
-  ): Effect<R | R2, E | E2, readonly [C, A]>
+  ): Effect<R | R2, E | E2, [C, A]>
 } = effect.summarized
 
 /**
@@ -4485,7 +4503,7 @@ export const tapSome: {
  * @since 1.0.0
  * @category utils
  */
-export const timed: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, readonly [Duration.Duration, A]> = effect.timed
+export const timed: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, [Duration.Duration, A]> = effect.timed
 
 /**
  * A more powerful variation of `timed` that allows specifying the clock.
@@ -4496,11 +4514,11 @@ export const timed: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, readonly [D
 export const timedWith: {
   <R1, E1>(
     milliseconds: Effect<R1, E1, number>
-  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, readonly [Duration.Duration, A]>
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, [Duration.Duration, A]>
   <R, E, A, R1, E1>(
     self: Effect<R, E, A>,
     milliseconds: Effect<R1, E1, number>
-  ): Effect<R | R1, E | E1, readonly [Duration.Duration, A]>
+  ): Effect<R | R1, E | E1, [Duration.Duration, A]>
 } = effect.timedWith
 
 /**
@@ -4739,7 +4757,7 @@ export const all: {
     E | T["length"] extends 0 ? never
       : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
       : never,
-    readonly [
+    [
       A,
       ...(T["length"] extends 0 ? []
         : Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>)
@@ -4755,7 +4773,7 @@ export const all: {
       : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
       : never,
     T[number] extends never ? []
-      : Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>
+      : { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
   >
   <T extends Readonly<{ [K: string]: Effect<any, any, any> }>>(
     args: T
@@ -4766,7 +4784,7 @@ export const all: {
     keyof T extends never ? never
       : [T[keyof T]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
       : never,
-    Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>
+    { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
   >
 } = effect.all
 
@@ -4789,10 +4807,10 @@ export const allPar: {
     E | T["length"] extends 0 ? never
       : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
       : never,
-    readonly [
+    [
       A,
       ...(T["length"] extends 0 ? []
-        : Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>)
+        : { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never })
     ]
   >
   <T extends ReadonlyArray<Effect<any, any, any>>>(
@@ -4805,7 +4823,7 @@ export const allPar: {
       : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
       : never,
     T[number] extends never ? []
-      : Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>
+      : { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
   >
   <T extends Readonly<{ [K: string]: Effect<any, any, any> }>>(
     args: T
@@ -4816,7 +4834,7 @@ export const allPar: {
     keyof T extends never ? never
       : [T[keyof T]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
       : never,
-    Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>
+    { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
   >
 } = fiberRuntime.allPar
 
@@ -5128,8 +5146,8 @@ export const updateService: {
  * @category utils
  */
 export const validate: {
-  <R2, E2, B>(that: Effect<R2, E2, B>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, readonly [A, B]>
-  <R, E, A, R2, E2, B>(self: Effect<R, E, A>, that: Effect<R2, E2, B>): Effect<R | R2, E | E2, readonly [A, B]>
+  <R2, E2, B>(that: Effect<R2, E2, B>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, [A, B]>
+  <R, E, A, R2, E2, B>(self: Effect<R, E, A>, that: Effect<R2, E2, B>): Effect<R | R2, E | E2, [A, B]>
 } = effect.validate
 
 /**
@@ -5140,8 +5158,8 @@ export const validate: {
  * @category utils
  */
 export const validatePar: {
-  <R1, E1, B>(that: Effect<R1, E1, B>): <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, readonly [A, B]>
-  <R, E, A, R1, E1, B>(self: Effect<R, E, A>, that: Effect<R1, E1, B>): Effect<R | R1, E | E1, readonly [A, B]>
+  <R1, E1, B>(that: Effect<R1, E1, B>): <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, [A, B]>
+  <R, E, A, R1, E1, B>(self: Effect<R, E, A>, that: Effect<R1, E1, B>): Effect<R | R1, E | E1, [A, B]>
 } = circular.validatePar
 
 /**
@@ -5340,12 +5358,12 @@ export const whenFiberRef: {
     predicate: Predicate<S>
   ): <R, E, A>(
     self: Effect<R, E, A>
-  ) => Effect<R, E, readonly [S, Option.Option<A>]>
+  ) => Effect<R, E, [S, Option.Option<A>]>
   <R, E, A, S>(
     self: Effect<R, E, A>,
     fiberRef: FiberRef.FiberRef<S>,
     predicate: Predicate<S>
-  ): Effect<R, E, readonly [S, Option.Option<A>]>
+  ): Effect<R, E, [S, Option.Option<A>]>
 } = effect.whenFiberRef
 
 /**
@@ -5360,12 +5378,12 @@ export const whenRef: {
     predicate: Predicate<S>
   ): <R, E, A>(
     self: Effect<R, E, A>
-  ) => Effect<R, E, readonly [S, Option.Option<A>]>
+  ) => Effect<R, E, [S, Option.Option<A>]>
   <R, E, A, S>(
     self: Effect<R, E, A>,
     ref: Ref.Ref<S>,
     predicate: Predicate<S>
-  ): Effect<R, E, readonly [S, Option.Option<A>]>
+  ): Effect<R, E, [S, Option.Option<A>]>
 } = effect.whenRef
 
 /**
@@ -5442,7 +5460,7 @@ export const withConfigProviderScoped: (value: ConfigProvider) => Effect<Scope.S
  */
 export const withEarlyRelease: <R, E, A>(
   self: Effect<R, E, A>
-) => Effect<Scope.Scope | R, E, readonly [Effect<never, never, void>, A]> = fiberRuntime.withEarlyRelease
+) => Effect<Scope.Scope | R, E, [Effect<never, never, void>, A]> = fiberRuntime.withEarlyRelease
 
 /**
  * @since 1.0.0
@@ -5499,8 +5517,8 @@ export const yieldNow: () => Effect<never, never, void> = core.yieldNow
  * @category products
  */
 export const zip: {
-  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, readonly [A, A2]>
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, readonly [A, A2]>
+  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, [A, A2]>
+  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, [A, A2]>
 } = core.zip
 
 /**
@@ -5544,8 +5562,8 @@ export const zipWith: {
  * @category zipping
  */
 export const zipPar: {
-  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, readonly [A, A2]>
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, readonly [A, A2]>
+  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, [A, A2]>
+  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, [A, A2]>
 } = circular.zipPar
 
 /**
@@ -5592,3 +5610,136 @@ export const zipWithPar: {
     f: (a: A, b: A2) => B
   ): Effect<R | R2, E | E2, B>
 } = circular.zipWithPar
+
+/**
+ * @category instances
+ * @since 1.0.0
+ */
+export const Bicovariant: bicovariant.Bicovariant<EffectTypeLambda> = {
+  bimap: mapBoth
+}
+
+const imap = covariant.imap<EffectTypeLambda>(map)
+
+/**
+ * @category instances
+ * @since 1.0.0
+ */
+export const Covariant: covariant.Covariant<EffectTypeLambda> = {
+  imap,
+  map
+}
+
+/**
+ * @category instances
+ * @since 1.0.0
+ */
+export const Invariant: invariant.Invariant<EffectTypeLambda> = {
+  imap
+}
+
+/**
+ * @category instances
+ * @since 1.0.0
+ */
+export const Pointed: pointed.Pointed<EffectTypeLambda> = {
+  of: succeed,
+  imap,
+  map
+}
+
+/**
+ * @category instances
+ * @since 1.0.0
+ */
+export const FlatMap: flatMap_.FlatMap<EffectTypeLambda> = {
+  flatMap
+}
+
+/**
+ * @category instances
+ * @since 1.0.0
+ */
+export const Chainable: chainable.Chainable<EffectTypeLambda> = {
+  imap,
+  map,
+  flatMap
+}
+
+/**
+ * @category instances
+ * @since 1.0.0
+ */
+export const Monad: monad.Monad<EffectTypeLambda> = {
+  imap,
+  of: succeed,
+  map,
+  flatMap
+}
+
+/**
+ * @category instances
+ * @since 1.0.0
+ */
+export const SemiProduct: semiProduct.SemiProduct<EffectTypeLambda> = {
+  imap,
+  product: zip,
+  productMany: (self, rest) => flatMap(self, (a) => map(collectAll(rest), (r) => [a, ...r]))
+}
+
+/**
+ * @category instances
+ * @since 1.0.0
+ */
+export const Product: product_.Product<EffectTypeLambda> = {
+  of: succeed,
+  imap,
+  product: SemiProduct.product,
+  productMany: SemiProduct.productMany,
+  productAll: (rest) => map(collectAll(rest), (x) => Array.from(x))
+}
+
+/**
+ * @category instances
+ * @since 1.0.0
+ */
+export const SemiApplicative: semiApplicative.SemiApplicative<EffectTypeLambda> = {
+  imap,
+  map,
+  product: SemiProduct.product,
+  productMany: SemiProduct.productMany
+}
+
+/**
+ * @category instances
+ * @since 1.0.0
+ */
+export const Applicative: applicative.Applicative<EffectTypeLambda> = {
+  imap,
+  of: succeed,
+  map,
+  product: SemiProduct.product,
+  productMany: SemiProduct.productMany,
+  productAll: Product.productAll
+}
+
+/**
+ * @category instances
+ * @since 1.0.0
+ */
+export const SemiCoproduct: semiCoproduct.SemiCoproduct<EffectTypeLambda> = {
+  imap,
+  coproduct: (self, that) => orElse(self, () => that),
+  coproductMany: (self, rest) => firstSuccessOf([self, ...rest])
+}
+
+/**
+ * @category instances
+ * @since 1.0.0
+ */
+export const SemiAlternative: semiAlternative.SemiAlternative<EffectTypeLambda> = {
+  map,
+  imap,
+  coproduct: SemiCoproduct.coproduct,
+  coproductMany: SemiCoproduct.coproductMany
+}
