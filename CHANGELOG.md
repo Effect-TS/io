@@ -1,5 +1,13 @@
 # @effect/io
 
+## 0.16.1
+
+### Patch Changes
+
+- [#334](https://github.com/Effect-TS/io/pull/334) [`7a9d26a`](https://github.com/Effect-TS/io/commit/7a9d26a04a24936451c7fd434c895a98197e8c5a) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Expose typeclass instances for Effect
+
+- [#334](https://github.com/Effect-TS/io/pull/334) [`7a9d26a`](https://github.com/Effect-TS/io/commit/7a9d26a04a24936451c7fd434c895a98197e8c5a) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Relax readonly
+
 ## 0.16.0
 
 ### Minor Changes
