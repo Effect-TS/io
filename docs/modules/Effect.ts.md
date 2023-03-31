@@ -158,7 +158,9 @@ Added in v1.0.0
 - [do notation](#do-notation)
   - [Do](#do)
   - [bind](#bind)
-  - [bindValue](#bindvalue)
+  - [bindDiscard](#binddiscard)
+  - [let](#let)
+  - [letDiscard](#letdiscard)
 - [elements](#elements)
   - [find](#find)
   - [firstSuccessOf](#firstsuccessof)
@@ -2662,18 +2664,60 @@ export declare const bind: {
 
 Added in v1.0.0
 
-## bindValue
+## bindDiscard
+
+Binds an effectful value in a `do` scope
+
+**Signature**
+
+```ts
+export declare const bindDiscard: {
+  <N extends string, K, R2, E2, A>(tag: Exclude<N, keyof K>, f: Effect<R2, E2, A>): <R, E>(
+    self: Effect<R, E, K>
+  ) => Effect<R2 | R, E2 | E, MergeRecord<K, { [k in N]: A }>>
+  <R, E, N extends string, K, R2, E2, A>(self: Effect<R, E, K>, tag: Exclude<N, keyof K>, f: Effect<R2, E2, A>): Effect<
+    R | R2,
+    E | E2,
+    MergeRecord<K, { [k in N]: A }>
+  >
+}
+```
+
+Added in v1.0.0
+
+## let
 
 Like bind for values
 
 **Signature**
 
 ```ts
-export declare const bindValue: {
+export declare const let: {
   <N extends string, K, A>(tag: Exclude<N, keyof K>, f: (_: K) => A): <R, E>(
     self: Effect<R, E, K>
   ) => Effect<R, E, MergeRecord<K, { [k in N]: A }>>
   <R, E, K, N extends string, A>(self: Effect<R, E, K>, tag: Exclude<N, keyof K>, f: (_: K) => A): Effect<
+    R,
+    E,
+    MergeRecord<K, { [k in N]: A }>
+  >
+}
+```
+
+Added in v1.0.0
+
+## letDiscard
+
+Like bind for values
+
+**Signature**
+
+```ts
+export declare const letDiscard: {
+  <N extends string, K, A>(tag: Exclude<N, keyof K>, f: A): <R, E>(
+    self: Effect<R, E, K>
+  ) => Effect<R, E, MergeRecord<K, { [k in N]: A }>>
+  <R, E, K, N extends string, A>(self: Effect<R, E, K>, tag: Exclude<N, keyof K>, f: A): Effect<
     R,
     E,
     MergeRecord<K, { [k in N]: A }>

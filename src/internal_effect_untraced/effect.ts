@@ -630,6 +630,34 @@ export const bind = Debug.dualWithTrace<
       )).traced(trace))
 
 /* @internal */
+export const bindDiscard = Debug.dualWithTrace<
+  <N extends string, K, R2, E2, A>(
+    tag: Exclude<N, keyof K>,
+    f: Effect.Effect<R2, E2, A>
+  ) => <R, E>(self: Effect.Effect<R, E, K>) => Effect.Effect<
+    R | R2,
+    E | E2,
+    Effect.MergeRecord<K, { [k in N]: A }>
+  >,
+  <R, E, N extends string, K, R2, E2, A>(
+    self: Effect.Effect<R, E, K>,
+    tag: Exclude<N, keyof K>,
+    f: Effect.Effect<R2, E2, A>
+  ) => Effect.Effect<
+    R | R2,
+    E | E2,
+    Effect.MergeRecord<K, { [k in N]: A }>
+  >
+>(3, (trace) =>
+  <R, E, N extends string, K, R2, E2, A>(
+    self: Effect.Effect<R, E, K>,
+    tag: Exclude<N, keyof K>,
+    f: Effect.Effect<R2, E2, A>
+  ) =>
+    core.flatMap(self, (k) => core.map(f, (a): Effect.MergeRecord<K, { [k in N]: A }> => ({ ...k, [tag]: a } as any)))
+      .traced(trace))
+
+/* @internal */
 export const bindValue = Debug.dualWithTrace<
   <N extends string, K, A>(
     tag: Exclude<N, keyof K>,
@@ -655,6 +683,35 @@ export const bindValue = Debug.dualWithTrace<
       core.map(
         self,
         (k): Effect.MergeRecord<K, { [k in N]: A }> => ({ ...k, [tag]: restore(f)(k) } as any)
+      ).traced(trace)
+)
+
+/* @internal */
+export const bindValueDiscard = Debug.dualWithTrace<
+  <N extends string, K, A>(
+    tag: Exclude<N, keyof K>,
+    f: A
+  ) => <R, E>(self: Effect.Effect<R, E, K>) => Effect.Effect<
+    R,
+    E,
+    Effect.MergeRecord<K, { [k in N]: A }>
+  >,
+  <R, E, K, N extends string, A>(
+    self: Effect.Effect<R, E, K>,
+    tag: Exclude<N, keyof K>,
+    f: A
+  ) => Effect.Effect<
+    R,
+    E,
+    Effect.MergeRecord<K, { [k in N]: A }>
+  >
+>(
+  3,
+  (trace) =>
+    <R, E, K, N extends string, A>(self: Effect.Effect<R, E, K>, tag: Exclude<N, keyof K>, f: A) =>
+      core.map(
+        self,
+        (k): Effect.MergeRecord<K, { [k in N]: A }> => ({ ...k, [tag]: f } as any)
       ).traced(trace)
 )
 
