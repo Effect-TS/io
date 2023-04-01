@@ -89,6 +89,8 @@ export type Primitive =
   | Yield
   | OpTraced
   | OpTag
+  | Either.Either<any, any>
+  | Option.Option<any>
 
 /** @internal */
 export type Continuation =

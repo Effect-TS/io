@@ -126,6 +126,38 @@ declare module "@effect/data/Context" {
 
 /**
  * @since 1.0.0
+ * @category models
+ */
+declare module "@effect/data/Either" {
+  interface Left<E> extends Effect<never, E, never> {
+    readonly _tag: "Left"
+  }
+  interface Right<A> extends Effect<never, never, A> {
+    readonly _tag: "Right"
+  }
+  interface TracedEither<E, A> extends Effect<never, E, A> {
+    readonly _tag: "Traced"
+  }
+}
+
+/**
+ * @since 1.0.0
+ * @category models
+ */
+declare module "@effect/data/Option" {
+  interface None extends Effect<never, Cause.NoSuchElementException, never> {
+    readonly _tag: "None"
+  }
+  interface Some<A> extends Effect<never, never, A> {
+    readonly _tag: "Some"
+  }
+  interface TracedOption<A> extends Effect<never, Cause.NoSuchElementException, A> {
+    readonly _tag: "Traced"
+  }
+}
+
+/**
+ * @since 1.0.0
  */
 export declare namespace Effect {
   /**
