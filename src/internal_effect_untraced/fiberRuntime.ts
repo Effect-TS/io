@@ -933,6 +933,22 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     )
   }
 
+  ["Left"](op: core.Primitive & { _tag: "Left" }) {
+    return core.exitFail((op as any).i0)
+  }
+
+  ["None"](_: core.Primitive & { _tag: "None" }) {
+    return core.exitFail(internalCause.NoSuchElementException())
+  }
+
+  ["Right"](op: core.Primitive & { _tag: "Right" }) {
+    return core.exitSucceed((op as any).i0)
+  }
+
+  ["Some"](op: core.Primitive & { _tag: "Some" }) {
+    return core.exitSucceed((op as any).i0)
+  }
+
   [OpCodes.OP_SYNC](op: core.Primitive & { _tag: OpCodes.OP_SYNC }) {
     const value = op.i0()
     const cont = this.getNextSuccessCont()
