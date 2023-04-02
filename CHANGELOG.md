@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.17.0
+
+### Minor Changes
+
+- [#338](https://github.com/Effect-TS/io/pull/338) [`b3c6247`](https://github.com/Effect-TS/io/commit/b3c624778096a0496a8487e25e6a7b52fddd9939) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Integrate Option and Either as valid Effects
+
 ## 0.16.2
 
 ### Patch Changes
