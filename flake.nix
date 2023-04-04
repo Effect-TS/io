@@ -25,12 +25,14 @@
   in {
     formatter = forAllSystems (system: nixpkgsFor.${system}.alejandra);
 
-    devShells = forAllSystems (system: {
+    devShells = forAllSystems (system: let
+      pkgs = nixpkgs.legacyPackages.${system};
+      nodePackages = import ./infra/default.nix { inherit pkgs; };
+    in {
       default = nixpkgsFor.${system}.mkShell {
-        buildInputs = with nixpkgsFor.${system}; [
-          nodejs-16_x
-          nodePackages.pnpm
-        ];
+        buildInputs = [
+          nixpkgsFor.${system}.nodejs-16_x
+        ] ++ builtins.attrValues nodePackages;
       };
     });
   };

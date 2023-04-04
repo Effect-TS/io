@@ -56,7 +56,7 @@
     }
   },
   "dependencies": {
-    "@effect/data": "~0.10.2"
+    "@effect/data": "~0.10.3"
   },
   "devDependencies": {
     "@babel/cli": "^7.21.0",
@@ -67,7 +67,6 @@
     "@effect-ts/build-utils": "0.40.7",
     "@effect-ts/core": "^0.60.5",
     "@effect/babel-plugin": "^0.2.0",
-    "@effect/core": "^0.0.16",
     "@effect/language-service": "^0.0.19",
     "@repo-tooling/eslint-plugin-dprint": "^0.0.4",
     "@rollup/pluginutils": "^5.0.2",
@@ -77,8 +76,8 @@
     "@types/jest": "^29.5.0",
     "@types/node": "^18.15.11",
     "@types/prettier": "2.7.2",
-    "@typescript-eslint/eslint-plugin": "^5.57.0",
-    "@typescript-eslint/parser": "^5.57.0",
+    "@typescript-eslint/eslint-plugin": "^5.57.1",
+    "@typescript-eslint/parser": "^5.57.1",
     "@vitejs/plugin-react": "^3.1.0",
     "@vitest/coverage-c8": "^0.29.8",
     "babel-plugin-annotate-pure-calls": "^0.4.0",
@@ -94,7 +93,7 @@
     "eslint-plugin-simple-import-sort": "^10.0.0",
     "eslint-plugin-sort-destructure-keys": "^1.5.0",
     "fast-check": "^3.8.0",
-    "glob": "^9.3.2",
+    "glob": "^9.3.4",
     "madge": "^6.0.0",
     "picocolors": "^1.0.0",
     "prettier": "^2.8.7",
