@@ -8,6 +8,7 @@ import type * as Duration from "@effect/data/Duration"
 import type * as Either from "@effect/data/Either"
 import type * as Equal from "@effect/data/Equal"
 import type { LazyArg } from "@effect/data/Function"
+import { identity } from "@effect/data/Function"
 import type * as HashMap from "@effect/data/HashMap"
 import type * as HashSet from "@effect/data/HashSet"
 import type { TypeLambda } from "@effect/data/HKT"
@@ -2419,6 +2420,28 @@ export const ifEffect: {
     onFalse: Effect<R2, E2, A1>
   ): Effect<R | R1 | R2, E | E1 | E2, A | A1>
 } = core.ifEffect
+
+const if_: {
+  <R1, R2, E1, E2, A, A1>(
+    onTrue: Effect<R1, E1, A>,
+    onFalse: Effect<R2, E2, A1>
+  ): (self: boolean) => Effect<R1 | R2, E1 | E2, A | A1>
+  <R, E, R1, R2, E1, E2, A, A1>(
+    self: boolean,
+    onTrue: Effect<R1, E1, A>,
+    onFalse: Effect<R2, E2, A1>
+  ): Effect<R | R1 | R2, E | E1 | E2, A | A1>
+} = core.if_
+
+export {
+  /**
+   * Runs `onTrue` if the result of `self` is `true` and `onFalse` otherwise.
+   *
+   * @since 1.0.0
+   * @category constructors
+   */
+  if_ as if
+}
 
 /**
  * Returns a new effect that ignores the success or failure of this effect.
@@ -4880,9 +4903,17 @@ export const allPar: {
  * @category utilities
  * @since 1.0.0
  */
-export const unified: <Args extends ReadonlyArray<any>, Ret extends Effect<any, any, any>>(
+export const unifiedFn: <Args extends ReadonlyArray<any>, Ret extends Effect<any, any, any>>(
   f: (...args: Args) => Ret
 ) => (...args: Args) => Effect.Unify<Ret> = core.unified
+
+/**
+ * Used to unify effects that would otherwise be `Effect<A, B, C> | Effect<D, E, F>`
+ *
+ * @category utilities
+ * @since 1.0.0
+ */
+export const unified: <Ret extends Effect<any, any, any>>(f: Ret) => Effect.Unify<Ret> = identity
 
 /**
  * When this effect succeeds with a cause, then this method returns a new
