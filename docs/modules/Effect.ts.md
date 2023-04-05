@@ -80,6 +80,7 @@ Added in v1.0.0
   - [forEachParWithIndex](#foreachparwithindex)
   - [gen](#gen)
   - [getFiberRefs](#getfiberrefs)
+  - [if](#if)
   - [ifEffect](#ifeffect)
   - [inheritFiberRefs](#inheritfiberrefs)
   - [iterate](#iterate)
@@ -346,6 +347,7 @@ Added in v1.0.0
   - [fiberId](#fiberid)
   - [intoDeferred](#intodeferred)
   - [unified](#unified)
+  - [unifiedFn](#unifiedfn)
 - [utils](#utils)
   - [MergeRecord (type alias)](#mergerecord-type-alias)
   - [awaitAllChildren](#awaitallchildren)
@@ -1565,6 +1567,18 @@ effect.
 
 ```ts
 export declare const getFiberRefs: (_: void) => Effect<never, never, FiberRefs.FiberRefs>
+```
+
+Added in v1.0.0
+
+## if
+
+Runs `onTrue` if the result of `self` is `true` and `onFalse` otherwise.
+
+**Signature**
+
+```ts
+export declare const if: { <R1, R2, E1, E2, A, A1>(onTrue: Effect<R1, E1, A>, onFalse: Effect<R2, E2, A1>): (self: boolean) => Effect<R1 | R2, E1 | E2, A | A1>; <R, E, R1, R2, E1, E2, A, A1>(self: boolean, onTrue: Effect<R1, E1, A>, onFalse: Effect<R2, E2, A1>): Effect<R | R1 | R2, E | E1 | E2, A | A1>; }
 ```
 
 Added in v1.0.0
@@ -5503,12 +5517,24 @@ Added in v1.0.0
 
 ## unified
 
+Used to unify effects that would otherwise be `Effect<A, B, C> | Effect<D, E, F>`
+
+**Signature**
+
+```ts
+export declare const unified: <Ret extends Effect<any, any, any>>(f: Ret) => Effect.Unify<Ret>
+```
+
+Added in v1.0.0
+
+## unifiedFn
+
 Used to unify functions that would otherwise return `Effect<A, B, C> | Effect<D, E, F>`
 
 **Signature**
 
 ```ts
-export declare const unified: <Args extends readonly any[], Ret extends Effect<any, any, any>>(
+export declare const unifiedFn: <Args extends readonly any[], Ret extends Effect<any, any, any>>(
   f: (...args: Args) => Ret
 ) => (...args: Args) => Effect.Unify<Ret>
 ```
