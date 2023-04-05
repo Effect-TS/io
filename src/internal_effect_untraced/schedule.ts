@@ -2117,24 +2117,24 @@ export const findNextMonth = (now: number, day: number, months: number): number 
 
 /** @internal */
 export const repeat_Effect = Debug.dualWithTrace<
-  <R1, A, B>(
+  <R1, A extends A0, A0, B>(
     schedule: Schedule.Schedule<R1, A, B>
   ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E, B>,
-  <R, E, A, R1, B>(
+  <R, E, A extends A0, A0, R1, B>(
     self: Effect.Effect<R, E, A>,
-    schedule: Schedule.Schedule<R1, A, B>
+    schedule: Schedule.Schedule<R1, A0, B>
   ) => Effect.Effect<R | R1, E, B>
 >(2, (trace) => (self, schedule) => repeatOrElse_Effect(self, schedule, (e, _) => core.fail(e)).traced(trace))
 
 /** @internal */
 export const repeatOrElse_Effect = Debug.dualWithTrace<
-  <R2, A, B, E, R3, E2>(
+  <R2, A extends A0, A0, B, E, R3, E2>(
     schedule: Schedule.Schedule<R2, A, B>,
     orElse: (error: E, option: Option.Option<B>) => Effect.Effect<R3, E2, B>
   ) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2 | R3, E2, B>,
-  <R, E, A, R2, B, R3, E2>(
+  <R, E, A extends A0, A0, R2, B, R3, E2>(
     self: Effect.Effect<R, E, A>,
-    schedule: Schedule.Schedule<R2, A, B>,
+    schedule: Schedule.Schedule<R2, A0, B>,
     orElse: (error: E, option: Option.Option<B>) => Effect.Effect<R3, E2, B>
   ) => Effect.Effect<R | R2 | R3, E2, B>
 >(
@@ -2149,13 +2149,13 @@ export const repeatOrElse_Effect = Debug.dualWithTrace<
 
 /** @internal */
 export const repeatOrElseEither_Effect = Debug.dualWithTrace<
-  <R2, A, B, E, R3, E2, C>(
-    schedule: Schedule.Schedule<R2, A, B>,
+  <R2, A extends A0, A0, B, E, R3, E2, C>(
+    schedule: Schedule.Schedule<R2, A0, B>,
     orElse: (error: E, option: Option.Option<B>) => Effect.Effect<R3, E2, C>
   ) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2 | R3, E2, Either.Either<C, B>>,
-  <R, E, A, R2, B, R3, E2, C>(
+  <R, E, A extends A0, A0, R2, B, R3, E2, C>(
     self: Effect.Effect<R, E, A>,
-    schedule: Schedule.Schedule<R2, A, B>,
+    schedule: Schedule.Schedule<R2, A0, B>,
     orElse: (error: E, option: Option.Option<B>) => Effect.Effect<R3, E2, C>
   ) => Effect.Effect<R | R2 | R3, E2, Either.Either<C, B>>
 >(3, (trace, restore) =>
@@ -2168,9 +2168,9 @@ export const repeatOrElseEither_Effect = Debug.dualWithTrace<
       )).traced(trace))
 
 /** @internal */
-const repeatOrElseEitherEffectLoop = <R, E, A, R1, B, R2, E2, C>(
+const repeatOrElseEitherEffectLoop = <R, E, A extends A0, A0, R1, B, R2, E2, C>(
   self: Effect.Effect<R, E, A>,
-  driver: Schedule.ScheduleDriver<R1, A, B>,
+  driver: Schedule.ScheduleDriver<R1, A0, B>,
   orElse: (error: E, option: Option.Option<B>) => Effect.Effect<R2, E2, C>,
   value: A
 ): Effect.Effect<R | R1 | R2, E2, Either.Either<C, B>> => {
@@ -2265,10 +2265,13 @@ export const repeatWhileEquals_Effect = Debug.dualWithTrace<
 
 /** @internal */
 export const retry_Effect = Debug.dualWithTrace<
-  <R1, E, B>(
-    policy: Schedule.Schedule<R1, E, B>
+  <R1, E extends E0, E0, B>(
+    policy: Schedule.Schedule<R1, E0, B>
   ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E, A>,
-  <R, E, A, R1, B>(self: Effect.Effect<R, E, A>, policy: Schedule.Schedule<R1, E, B>) => Effect.Effect<R | R1, E, A>
+  <R, E extends E0, E0, A, R1, B>(
+    self: Effect.Effect<R, E, A>,
+    policy: Schedule.Schedule<R1, E0, B>
+  ) => Effect.Effect<R | R1, E, A>
 >(2, (trace) => (self, policy) => retryOrElse_Effect(self, policy, (e, _) => core.fail(e)).traced(trace))
 
 /** @internal */
