@@ -6243,8 +6243,10 @@ time.
 
 ```ts
 export declare const repeat: {
-  <R1, A, B>(schedule: Schedule.Schedule<R1, A, B>): <R, E>(self: Effect<R, E, A>) => Effect<R1 | R, E, B>
-  <R, E, A, R1, B>(self: Effect<R, E, A>, schedule: Schedule.Schedule<R1, A, B>): Effect<R | R1, E, B>
+  <R1, A extends A0, A0, B>(schedule: Schedule.Schedule<R1, A, B>): <R, E>(
+    self: Effect<R, E, A>
+  ) => Effect<R1 | R, E, B>
+  <R, E, A extends A0, A0, R1, B>(self: Effect<R, E, A>, schedule: Schedule.Schedule<R1, A0, B>): Effect<R | R1, E, B>
 }
 ```
 
@@ -6282,13 +6284,13 @@ Scheduled recurrences are in addition to the first execution, so that
 
 ```ts
 export declare const repeatOrElse: {
-  <R2, A, B, E, R3, E2>(
+  <R2, A extends A0, A0, B, E, R3, E2>(
     schedule: Schedule.Schedule<R2, A, B>,
     orElse: (error: E, option: Option.Option<B>) => Effect<R3, E2, B>
   ): <R>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2, B>
-  <R, E, A, R2, B, R3, E2>(
+  <R, E, A extends A0, A0, R2, B, R3, E2>(
     self: Effect<R, E, A>,
-    schedule: Schedule.Schedule<R2, A, B>,
+    schedule: Schedule.Schedule<R2, A0, B>,
     orElse: (error: E, option: Option.Option<B>) => Effect<R3, E2, B>
   ): Effect<R | R2 | R3, E2, B>
 }
@@ -6310,13 +6312,13 @@ Scheduled recurrences are in addition to the first execution, so that
 
 ```ts
 export declare const repeatOrElseEither: {
-  <R2, A, B, E, R3, E2, C>(
-    schedule: Schedule.Schedule<R2, A, B>,
+  <R2, A extends A0, A0, B, E, R3, E2, C>(
+    schedule: Schedule.Schedule<R2, A0, B>,
     orElse: (error: E, option: Option.Option<B>) => Effect<R3, E2, C>
   ): <R>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2, Either.Either<C, B>>
-  <R, E, A, R2, B, R3, E2, C>(
+  <R, E, A extends A0, A0, R2, B, R3, E2, C>(
     self: Effect<R, E, A>,
-    schedule: Schedule.Schedule<R2, A, B>,
+    schedule: Schedule.Schedule<R2, A0, B>,
     orElse: (error: E, option: Option.Option<B>) => Effect<R3, E2, C>
   ): Effect<R | R2 | R3, E2, Either.Either<C, B>>
 }
@@ -6486,8 +6488,8 @@ and in case of failure, try again once".
 
 ```ts
 export declare const retry: {
-  <R1, E, B>(policy: Schedule.Schedule<R1, E, B>): <R, A>(self: Effect<R, E, A>) => Effect<R1 | R, E, A>
-  <R, E, A, R1, B>(self: Effect<R, E, A>, policy: Schedule.Schedule<R1, E, B>): Effect<R | R1, E, A>
+  <R1, E extends E0, E0, B>(policy: Schedule.Schedule<R1, E0, B>): <R, A>(self: Effect<R, E, A>) => Effect<R1 | R, E, A>
+  <R, E extends E0, E0, A, R1, B>(self: Effect<R, E, A>, policy: Schedule.Schedule<R1, E0, B>): Effect<R | R1, E, A>
 }
 ```
 
