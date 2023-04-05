@@ -1,5 +1,15 @@
 # @effect/io
 
+## 0.18.0
+
+### Minor Changes
+
+- [#343](https://github.com/Effect-TS/io/pull/343) [`685c0ee`](https://github.com/Effect-TS/io/commit/685c0ee9197356131a2471f6fc6c68b210ac18fc) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Rename Effect.unified to Effect.unifiedFn, expose Effect.unified, add Effect.if
+
+### Patch Changes
+
+- [#341](https://github.com/Effect-TS/io/pull/341) [`e0de3a1`](https://github.com/Effect-TS/io/commit/e0de3a1ef410921aa491d0d3408c6e63a758cebe) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Fix Schedule related types in Effect
+
 ## 0.17.0
 
 ### Minor Changes
