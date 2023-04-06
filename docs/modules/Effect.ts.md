@@ -421,6 +421,8 @@ Added in v1.0.0
   - [scheduleForked](#scheduleforked)
   - [scheduleFrom](#schedulefrom)
   - [sequentialFinalizers](#sequentialfinalizers)
+  - [serviceFunction](#servicefunction)
+  - [serviceFunctionEffect](#servicefunctioneffect)
   - [setConfigProvider](#setconfigprovider)
   - [setFiberRefs](#setfiberrefs)
   - [some](#some)
@@ -1578,7 +1580,7 @@ Runs `onTrue` if the result of `self` is `true` and `onFalse` otherwise.
 **Signature**
 
 ```ts
-export declare const if: { <R1, R2, E1, E2, A, A1>(onTrue: Effect<R1, E1, A>, onFalse: Effect<R2, E2, A1>): (self: boolean) => Effect<R1 | R2, E1 | E2, A | A1>; <R, E, R1, R2, E1, E2, A, A1>(self: boolean, onTrue: Effect<R1, E1, A>, onFalse: Effect<R2, E2, A1>): Effect<R | R1 | R2, E | E1 | E2, A | A1>; }
+export declare const if: { <R1, R2, E1, E2, A, A1>(onTrue: Effect<R1, E1, A>, onFalse: Effect<R2, E2, A1>): (self: boolean) => Effect<R1 | R2, E1 | E2, A | A1>; <R1, R2, E1, E2, A, A1>(self: boolean, onTrue: Effect<R1, E1, A>, onFalse: Effect<R2, E2, A1>): Effect<R1 | R2, E1 | E2, A | A1>; }
 ```
 
 Added in v1.0.0
@@ -6751,6 +6753,32 @@ parallel.
 
 ```ts
 export declare const sequentialFinalizers: <R, E, A>(self: Effect<R, E, A>) => Effect<Scope.Scope | R, E, A>
+```
+
+Added in v1.0.0
+
+## serviceFunction
+
+**Signature**
+
+```ts
+export declare const serviceFunction: <T extends Context.Tag<any, any>, Args extends any[], A>(
+  service: T,
+  f: (_: Context.Tag.Service<T>) => (...args: Args) => A
+) => (...args: Args) => Effect<Context.Tag.Identifier<T>, never, A>
+```
+
+Added in v1.0.0
+
+## serviceFunctionEffect
+
+**Signature**
+
+```ts
+export declare const serviceFunctionEffect: <T extends Context.Tag<any, any>, Args extends any[], R, E, A>(
+  service: T,
+  f: (_: Context.Tag.Service<T>) => (...args: Args) => Effect<R, E, A>
+) => (...args: Args) => Effect<R | Context.Tag.Identifier<T>, E, A>
 ```
 
 Added in v1.0.0

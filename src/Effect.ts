@@ -2426,11 +2426,11 @@ const if_: {
     onTrue: Effect<R1, E1, A>,
     onFalse: Effect<R2, E2, A1>
   ): (self: boolean) => Effect<R1 | R2, E1 | E2, A | A1>
-  <R, E, R1, R2, E1, E2, A, A1>(
+  <R1, R2, E1, E2, A, A1>(
     self: boolean,
     onTrue: Effect<R1, E1, A>,
     onFalse: Effect<R2, E2, A1>
-  ): Effect<R | R1 | R2, E | E1 | E2, A | A1>
+  ): Effect<R1 | R2, E1 | E2, A | A1>
 } = core.if_
 
 export {
@@ -5131,6 +5131,24 @@ export const runSyncExit: <E, A>(effect: Effect<never, E, A>) => Exit.Exit<E, A>
  */
 export const runSyncEither: <E, A>(effect: Effect<never, E, A>) => Either.Either<E, A> =
   _runtime.unsafeRunSyncEitherEffect
+
+/**
+ * @since 1.0.0
+ * @category utils
+ */
+export const serviceFunction: <T extends Context.Tag<any, any>, Args extends Array<any>, A>(
+  service: T,
+  f: (_: Context.Tag.Service<T>) => (...args: Args) => A
+) => (...args: Args) => Effect<Context.Tag.Identifier<T>, never, A> = effect.serviceFunction
+
+/**
+ * @since 1.0.0
+ * @category utils
+ */
+export const serviceFunctionEffect: <T extends Context.Tag<any, any>, Args extends Array<any>, R, E, A>(
+  service: T,
+  f: (_: Context.Tag.Service<T>) => (...args: Args) => Effect<R, E, A>
+) => (...args: Args) => Effect<R | Context.Tag.Identifier<T>, E, A> = effect.serviceFunctionEffect
 
 /**
  * The inverse operation `sandbox(effect)`
