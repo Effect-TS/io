@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.19.0
+
+### Minor Changes
+
+- [#344](https://github.com/Effect-TS/io/pull/344) [`9384f98`](https://github.com/Effect-TS/io/commit/9384f9888a82aaf7158332cff91bcad05ba050bd) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Update effect/data, resolve pipeable subtyping
+
 ## 0.18.0
 
 ### Minor Changes
