@@ -130,10 +130,10 @@ declare module "@effect/data/Context" {
  * @category models
  */
 declare module "@effect/data/Either" {
-  interface Left<E> extends Effect<never, E, never> {
+  interface Left<E, A> extends Effect<never, E, A> {
     readonly _tag: "Left"
   }
-  interface Right<A> extends Effect<never, never, A> {
+  interface Right<E, A> extends Effect<never, E, A> {
     readonly _tag: "Right"
   }
   interface TracedEither<E, A> extends Effect<never, E, A> {
@@ -146,7 +146,7 @@ declare module "@effect/data/Either" {
  * @category models
  */
 declare module "@effect/data/Option" {
-  interface None extends Effect<never, Cause.NoSuchElementException, never> {
+  interface None<A> extends Effect<never, Cause.NoSuchElementException, A> {
     readonly _tag: "None"
   }
   interface Some<A> extends Effect<never, never, A> {

@@ -20,7 +20,7 @@ import * as core from "@effect/io/internal_effect_untraced/core"
  * @since 1.0.0
  * @category models
  */
-export type Exit<E, A> = Failure<E> | Success<A>
+export type Exit<E, A> = Failure<E, A> | Success<E, A>
 
 /**
  * Represents a failed `Effect` workflow containing the `Cause` of the failure
@@ -29,7 +29,7 @@ export type Exit<E, A> = Failure<E> | Success<A>
  * @since 1.0.0
  * @category models
  */
-export interface Failure<E> extends Effect.Effect<never, E, never> {
+export interface Failure<E, A> extends Effect.Effect<never, E, A> {
   readonly _tag: "Failure"
   readonly cause: Cause.Cause<E>
   /** @internal */
@@ -43,7 +43,7 @@ export interface Failure<E> extends Effect.Effect<never, E, never> {
  * @since 1.0.0
  * @category models
  */
-export interface Success<A> extends Effect.Effect<never, never, A> {
+export interface Success<E, A> extends Effect.Effect<never, E, A> {
   readonly _tag: "Success"
   readonly value: A
   /** @internal */
@@ -64,7 +64,7 @@ export const isExit: (u: unknown) => u is Exit<unknown, unknown> = core.exitIsEx
  * @since 1.0.0
  * @category refinements
  */
-export const isFailure: <E, A>(self: Exit<E, A>) => self is Failure<E> = core.exitIsFailure
+export const isFailure: <E, A>(self: Exit<E, A>) => self is Failure<E, A> = core.exitIsFailure
 
 /**
  * Returns `true` if the specified `Exit` is a `Success`, `false` otherwise.
@@ -72,7 +72,7 @@ export const isFailure: <E, A>(self: Exit<E, A>) => self is Failure<E> = core.ex
  * @since 1.0.0
  * @category refinements
  */
-export const isSuccess: <E, A>(self: Exit<E, A>) => self is Success<A> = core.exitIsSuccess
+export const isSuccess: <E, A>(self: Exit<E, A>) => self is Success<E, A> = core.exitIsSuccess
 
 /**
  * Returns `true` if the specified exit is a `Failure` **and** the `Cause` of

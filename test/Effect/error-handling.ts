@@ -473,8 +473,8 @@ describe.concurrent("Effect", () => {
     const causes = causesArb(1, smallInts, fc.string())
     const successes = smallInts.map(Effect.succeed)
     const exits = fc.oneof(
-      causes.map(Either.left) as fc.Arbitrary<Either.Either<Cause.Cause<number>, number>>,
-      successes.map(Either.right) as fc.Arbitrary<Either.Either<Cause.Cause<number>, number>>
+      causes.map((s): Either.Either<Cause.Cause<number>, Effect.Effect<never, never, number>> => Either.left(s)),
+      successes.map((s): Either.Either<Cause.Cause<number>, Effect.Effect<never, never, number>> => Either.right(s))
     ).map(Either.match(Exit.failCause, Exit.succeed))
     await fc.assert(fc.asyncProperty(exits, exits, exits, async (exit1, exit2, exit3) => {
       const effect1 = Effect.done(exit1)

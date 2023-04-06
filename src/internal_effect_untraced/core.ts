@@ -544,8 +544,8 @@ export const exit = Debug.methodWithTrace((trace) =>
   <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Exit.Exit<E, A>> =>
     pipe(
       self,
-      matchCause(failCause, succeed)
-    ).traced(trace) as Effect.Effect<R, never, Exit.Exit<E, A>>
+      matchCause((cause) => exitFailCause(cause), (a) => exitSucceed(a))
+    ).traced(trace)
 )
 
 /* @internal */
@@ -1913,10 +1913,10 @@ export const exitIsExit = (u: unknown): u is Exit.Exit<unknown, unknown> =>
   isEffect(u) && "_tag" in u && (u._tag === "Success" || u._tag === "Failure")
 
 /** @internal */
-export const exitIsFailure = <E, A>(self: Exit.Exit<E, A>): self is Exit.Failure<E> => self._tag === "Failure"
+export const exitIsFailure = <E, A>(self: Exit.Exit<E, A>): self is Exit.Failure<E, A> => self._tag === "Failure"
 
 /** @internal */
-export const exitIsSuccess = <E, A>(self: Exit.Exit<E, A>): self is Exit.Success<A> => self._tag === "Success"
+export const exitIsSuccess = <E, A>(self: Exit.Exit<E, A>): self is Exit.Success<E, A> => self._tag === "Success"
 
 /** @internal */
 export const exitIsInterrupted = <E, A>(self: Exit.Exit<E, A>): boolean => {
@@ -1937,7 +1937,7 @@ export const exitAs = dual<
 >(2, <E, A, A2>(self: Exit.Exit<E, A>, value: A2) => {
   switch (self._tag) {
     case OpCodes.OP_FAILURE: {
-      return self as Exit.Exit<E, A2>
+      return exitFailCause(self.i0)
     }
     case OpCodes.OP_SUCCESS: {
       return exitSucceed(value) as Exit.Exit<E, A2>
@@ -2008,7 +2008,7 @@ export const exitFlatMap = dual<
 >(2, <E, A, E2, A2>(self: Exit.Exit<E, A>, f: (a: A) => Exit.Exit<E2, A2>) => {
   switch (self._tag) {
     case OpCodes.OP_FAILURE: {
-      return self as Exit.Exit<E | E2, A2>
+      return exitFailCause(self.i0) as Exit.Exit<E | E2, A2>
     }
     case OpCodes.OP_SUCCESS: {
       return f(self.i0) as Exit.Exit<E | E2, A2>
@@ -2029,7 +2029,7 @@ export const exitFlatMapEffect = Debug.dualWithTrace<
   (self, f) => {
     switch (self._tag) {
       case OpCodes.OP_FAILURE: {
-        return succeed(self).traced(trace)
+        return succeed(exitFailCause(self.i0)).traced(trace)
       }
       case OpCodes.OP_SUCCESS: {
         return restore(f)(self.i0).traced(trace)
@@ -2113,7 +2113,7 @@ export const exitMap = dual<
 >(2, <E, A, B>(self: Exit.Exit<E, A>, f: (a: A) => B) => {
   switch (self._tag) {
     case OpCodes.OP_FAILURE: {
-      return self as Exit.Exit<E, B>
+      return exitFailCause(self.i0) as Exit.Exit<E, B>
     }
     case OpCodes.OP_SUCCESS: {
       return exitSucceed(f(self.i0)) as Exit.Exit<E, B>
@@ -2153,7 +2153,7 @@ export const exitMapError = dual<
       return exitFailCause(pipe(self.i0, internalCause.map(f))) as Exit.Exit<E2, A>
     }
     case OpCodes.OP_SUCCESS: {
-      return self as Exit.Exit<E2, A>
+      return exitSucceed(self.i0) as Exit.Exit<E2, A>
     }
   }
 })
@@ -2168,7 +2168,7 @@ export const exitMapErrorCause = dual<
       return exitFailCause(f(self.i0)) as Exit.Exit<E2, A>
     }
     case OpCodes.OP_SUCCESS: {
-      return self as Exit.Exit<E2, A>
+      return exitSucceed(self.i0) as Exit.Exit<E2, A>
     }
   }
 })
@@ -2283,7 +2283,7 @@ export const exitZipWith = dual<
     case OpCodes.OP_FAILURE: {
       switch (that._tag) {
         case OpCodes.OP_SUCCESS: {
-          return self as Exit.Exit<E | E2, C>
+          return exitFailCause(self.i0)
         }
         case OpCodes.OP_FAILURE: {
           return exitFailCause(g(self.i0, that.i0)) as Exit.Exit<E | E2, C>
@@ -2296,7 +2296,7 @@ export const exitZipWith = dual<
           return exitSucceed(f(self.i0, that.i0)) as Exit.Exit<E | E2, C>
         }
         case OpCodes.OP_FAILURE: {
-          return that as Exit.Exit<E | E2, C>
+          return exitFailCause(that.i0)
         }
       }
     }
