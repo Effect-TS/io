@@ -5,6 +5,7 @@ import type * as Chunk from "@effect/data/Chunk"
 import type * as Either from "@effect/data/Either"
 import type * as Option from "@effect/data/Option"
 import type { Predicate } from "@effect/data/Predicate"
+import type * as Unify from "@effect/data/Unify"
 import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
 import type * as FiberId from "@effect/io/Fiber/Id"
@@ -29,11 +30,19 @@ export type Exit<E, A> = Failure<E, A> | Success<E, A>
  * @since 1.0.0
  * @category models
  */
-export interface Failure<E, A> extends Effect.Effect<never, E, A> {
+export interface Failure<E, A> extends ExitUnify<E, A> {
   readonly _tag: "Failure"
   readonly cause: Cause.Cause<E>
   /** @internal */
   readonly i0: Cause.Cause<E>
+}
+
+// @ts-expect-error
+interface ExitUnify<E, A> extends Effect.Effect<never, E, A> {
+  [Unify.typeSymbol]?: unknown
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  [Unify.unifySymbol]?: () => this[Unify.typeSymbol] extends Exit<infer E0, infer A0> | infer Z ? Exit<E0, A0>
+    : never
 }
 
 /**
@@ -43,7 +52,7 @@ export interface Failure<E, A> extends Effect.Effect<never, E, A> {
  * @since 1.0.0
  * @category models
  */
-export interface Success<E, A> extends Effect.Effect<never, E, A> {
+export interface Success<E, A> extends ExitUnify<E, A> {
   readonly _tag: "Success"
   readonly value: A
   /** @internal */

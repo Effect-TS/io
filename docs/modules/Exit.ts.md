@@ -432,7 +432,7 @@ of type `E`.
 **Signature**
 
 ```ts
-export interface Failure<E, A> extends Effect.Effect<never, E, A> {
+export interface Failure<E, A> extends ExitUnify<E, A> {
   readonly _tag: 'Failure'
   readonly cause: Cause.Cause<E>
   /** @internal */
@@ -450,7 +450,7 @@ of type `A`.
 **Signature**
 
 ```ts
-export interface Success<E, A> extends Effect.Effect<never, E, A> {
+export interface Success<E, A> extends ExitUnify<E, A> {
   readonly _tag: 'Success'
   readonly value: A
   /** @internal */
