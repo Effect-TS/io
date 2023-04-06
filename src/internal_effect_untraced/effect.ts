@@ -3118,3 +3118,15 @@ export const withMetric = Debug.dualWithTrace<
     metric: Metric.Metric<Type, In, Out>
   ) => Effect.Effect<R, E, A>
 >(2, (trace) => (self, metric) => metric(self).traced(trace))
+
+/** @internal */
+export const serviceFunctionEffect = <T extends Context.Tag<any, any>, Args extends Array<any>, R, E, A>(
+  service: T,
+  f: (_: Context.Tag.Service<T>) => (...args: Args) => Effect.Effect<R, E, A>
+) => (...args: Args): Effect.Effect<R | Context.Tag.Identifier<T>, E, A> => core.flatMap(service, (a) => f(a)(...args))
+
+/** @internal */
+export const serviceFunction = <T extends Context.Tag<any, any>, Args extends Array<any>, A>(
+  service: T,
+  f: (_: Context.Tag.Service<T>) => (...args: Args) => A
+) => (...args: Args): Effect.Effect<Context.Tag.Identifier<T>, never, A> => core.map(service, (a) => f(a)(...args))

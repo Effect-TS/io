@@ -786,11 +786,11 @@ export const if_ = Debug.dualWithTrace<
     onTrue: Effect.Effect<R1, E1, A>,
     onFalse: Effect.Effect<R2, E2, A1>
   ) => (self: boolean) => Effect.Effect<R1 | R2, E1 | E2, A | A1>,
-  <R, E, R1, R2, E1, E2, A, A1>(
+  <R1, R2, E1, E2, A, A1>(
     self: boolean,
     onTrue: Effect.Effect<R1, E1, A>,
     onFalse: Effect.Effect<R2, E2, A1>
-  ) => Effect.Effect<R1 | R2 | R, E1 | E2 | E, A | A1>
+  ) => Effect.Effect<R1 | R2, E1 | E2, A | A1>
 >(3, (trace) => (self, onTrue, onFalse) => (self ? onTrue : onFalse).traced(trace))
 
 /* @internal */
