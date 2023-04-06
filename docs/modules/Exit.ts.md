@@ -419,7 +419,7 @@ There are two possible values for an `Exit<E, A>`:
 **Signature**
 
 ```ts
-export type Exit<E, A> = Failure<E> | Success<A>
+export type Exit<E, A> = Failure<E, A> | Success<E, A>
 ```
 
 Added in v1.0.0
@@ -432,7 +432,7 @@ of type `E`.
 **Signature**
 
 ```ts
-export interface Failure<E> extends Effect.Effect<never, E, never> {
+export interface Failure<E, A> extends Effect.Effect<never, E, A> {
   readonly _tag: 'Failure'
   readonly cause: Cause.Cause<E>
   /** @internal */
@@ -450,7 +450,7 @@ of type `A`.
 **Signature**
 
 ```ts
-export interface Success<A> extends Effect.Effect<never, never, A> {
+export interface Success<E, A> extends Effect.Effect<never, E, A> {
   readonly _tag: 'Success'
   readonly value: A
   /** @internal */
@@ -481,7 +481,7 @@ Returns `true` if the specified `Exit` is a `Failure`, `false` otherwise.
 **Signature**
 
 ```ts
-export declare const isFailure: <E, A>(self: Exit<E, A>) => self is Failure<E>
+export declare const isFailure: <E, A>(self: Exit<E, A>) => self is Failure<E, A>
 ```
 
 Added in v1.0.0
@@ -493,7 +493,7 @@ Returns `true` if the specified `Exit` is a `Success`, `false` otherwise.
 **Signature**
 
 ```ts
-export declare const isSuccess: <E, A>(self: Exit<E, A>) => self is Success<A>
+export declare const isSuccess: <E, A>(self: Exit<E, A>) => self is Success<E, A>
 ```
 
 Added in v1.0.0

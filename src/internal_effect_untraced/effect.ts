@@ -2539,7 +2539,7 @@ export const tapEither = Debug.dualWithTrace<
         const either = internalCause.failureOrCause(cause)
         switch (either._tag) {
           case "Left": {
-            return core.zipRight(restore(f)(either), core.failCause(cause))
+            return core.zipRight(restore(f)(Either.left(either.left)), core.failCause(cause))
           }
           case "Right": {
             return core.failCause(cause)
@@ -2825,7 +2825,7 @@ export const unleft = Debug.methodWithTrace((trace) =>
             return core.fail(either.left)
           }
           case "Right": {
-            return core.succeed(either)
+            return core.succeed(Either.right(either.right))
           }
         }
       },
