@@ -1,5 +1,13 @@
 # @effect/io
 
+## 0.19.1
+
+### Patch Changes
+
+- [#346](https://github.com/Effect-TS/io/pull/346) [`64f3198`](https://github.com/Effect-TS/io/commit/64f3198d2eda8c62d91272f350c8e3f1f47575f4) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Add Effect.serviceFunction and Effect.serviceFunctionEffect
+
+- [#346](https://github.com/Effect-TS/io/pull/346) [`64f3198`](https://github.com/Effect-TS/io/commit/64f3198d2eda8c62d91272f350c8e3f1f47575f4) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Fix Effect.if signature
+
 ## 0.19.0
 
 ### Minor Changes
