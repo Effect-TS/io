@@ -4959,6 +4959,12 @@ of executing `Effect` values.
 ```ts
 export interface Effect<R, E, A> extends Effect.Variance<R, E, A>, Equal.Equal {
   traced(trace: Trace): Effect<R, E, A>
+
+  [Unify.typeSymbol]?: unknown
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  [Unify.unifySymbol]?: () => this[Unify.typeSymbol] extends Effect<infer R0, infer E0, infer A0> | infer Z
+    ? Effect<R0, E0, A0>
+    : never
 }
 ```
 

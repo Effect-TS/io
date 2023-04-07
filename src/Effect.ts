@@ -30,6 +30,7 @@ import * as semiApplicative from "@effect/data/typeclass/SemiApplicative"
 import * as semiCoproduct from "@effect/data/typeclass/SemiCoproduct"
 import type { Semigroup } from "@effect/data/typeclass/Semigroup"
 import * as semiProduct from "@effect/data/typeclass/SemiProduct"
+import type * as Unify from "@effect/data/Unify"
 import type * as Cause from "@effect/io/Cause"
 import type * as Clock from "@effect/io/Clock"
 import type { Config } from "@effect/io/Config"
@@ -106,6 +107,12 @@ export type EffectTypeId = typeof EffectTypeId
  */
 export interface Effect<R, E, A> extends Effect.Variance<R, E, A>, Equal.Equal {
   traced(trace: Trace): Effect<R, E, A>
+
+  [Unify.typeSymbol]?: unknown
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  [Unify.unifySymbol]?: () => this[Unify.typeSymbol] extends Effect<infer R0, infer E0, infer A0> | infer Z
+    ? Effect<R0, E0, A0>
+    : never
 }
 
 /**

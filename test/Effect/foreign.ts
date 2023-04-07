@@ -2,8 +2,11 @@ import * as Context from "@effect/data/Context"
 import * as Either from "@effect/data/Either"
 import { pipe } from "@effect/data/Function"
 import * as Option from "@effect/data/Option"
+import { unify } from "@effect/data/Unify"
 import * as Cause from "@effect/io/Cause"
 import * as Effect from "@effect/io/Effect"
+import * as Exit from "@effect/io/Exit"
+import { nextInt } from "@effect/io/Random"
 import * as it from "@effect/io/test/utils/extend"
 import { assert, describe } from "vitest"
 
@@ -12,6 +15,13 @@ describe.concurrent("Foreign", () => {
     const fa = Effect.fromEither(Either.right(1))
     expect(Effect.runSyncEither(fa)).toEqual(Either.right(1))
   })
+  it.effect("Unify", () =>
+    Effect.gen(function*($) {
+      const unifiedEffect = unify((yield* $(nextInt())) > 1 ? Effect.succeed(0) : Effect.fail(1))
+      const unifiedExit = unify((yield* $(nextInt())) > 1 ? Exit.succeed(0) : Exit.fail(1))
+      assert.deepEqual(yield* $(unifiedEffect), 0)
+      assert.deepEqual(yield* $(unifiedExit), 0)
+    }))
   it.effect("Tag", () =>
     Effect.gen(function*($) {
       const tag = Context.Tag<number>()
