@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.19.2
+
+### Patch Changes
+
+- [#348](https://github.com/Effect-TS/io/pull/348) [`a4421aa`](https://github.com/Effect-TS/io/commit/a4421aa613867de29b784e2e90bc892c4c2d9ccf) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Implement Unify in Effect
+
 ## 0.19.1
 
 ### Patch Changes
