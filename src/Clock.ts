@@ -20,7 +20,7 @@ export const ClockTypeId: unique symbol = internal.ClockTypeId
 export type ClockTypeId = typeof ClockTypeId
 
 /**
- * Represents a time-based cloock which provides functionality related to time
+ * Represents a time-based clock which provides functionality related to time
  * and scheduling.
  *
  * @since 1.0.0
