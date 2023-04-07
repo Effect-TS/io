@@ -10,8 +10,8 @@ importers:
   .:
     dependencies:
       '@effect/data':
-        specifier: ~0.11.4
-        version: 0.11.4
+        specifier: ~0.11.5
+        version: 0.11.5
     devDependencies:
       '@babel/cli':
         specifier: ^7.21.0
@@ -754,8 +754,8 @@ packages:
       '@babel/core': 7.21.4
     dev: true
 
-  /@effect/data@0.11.4:
-    resolution: {integrity: sha512-1f8oLfWkPw4VHklKI0MarlVRnCrQjNoRmojWRLn8p4vMxVM0EnW+ERzUPMMk4CRgjaZrkusaO8Li9zmV3FlOXA==}
+  /@effect/data@0.11.5:
+    resolution: {integrity: sha512-IRnimtB3/Z3VC9iQUfu3xm9njHXozrTyhOY0nK+0K1XqF/ZcXvONEm4AQ48kjXZTSHFkrKqUn9XwwtmikLCPvA==}
     dev: false
 
   /@effect/language-service@0.0.19:
