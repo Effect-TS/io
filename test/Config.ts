@@ -64,7 +64,7 @@ describe.concurrent("Config", () => {
         )
       }))
 
-    it.effect("recovers from missing data or other error", () =>
+    it.effect("does not recover from missing data or other error", () =>
       Effect.gen(function*($) {
         const config = pipe(
           Config.integer("key1"),
@@ -72,8 +72,21 @@ describe.concurrent("Config", () => {
           Config.withDefault(0)
         )
         const configProvider = ConfigProvider.fromMap(new Map([["key2", "value"]]))
-        const result = yield* $(configProvider.load(config))
-        assert.strictEqual(result, 0)
+        const result = yield* $(
+          Effect.exit(configProvider.load(config)),
+          Effect.map(Exit.unannotate)
+        )
+        assert.isTrue(
+          Exit.isFailure(result) &&
+            Cause.isFailType(result.i0) &&
+            ConfigError.isOr(result.i0.error) &&
+            ConfigError.isMissingData(result.i0.error.left) &&
+            result.i0.error.left.message === "Expected key1 to exist in the provided map" &&
+            Equal.equals(result.i0.error.left.path, Chunk.of("key1")) &&
+            ConfigError.isInvalidData(result.i0.error.right) &&
+            result.i0.error.right.message === "Expected an integer value but received value" &&
+            Equal.equals(result.i0.error.right.path, Chunk.of("key2"))
+        )
       }))
   })
 
@@ -122,7 +135,7 @@ describe.concurrent("Config", () => {
         )
       }))
 
-    it.effect("recovers from missing data or other error", () =>
+    it.effect("does not recover from missing data or other error", () =>
       Effect.gen(function*($) {
         const config = pipe(
           Config.integer("key1"),
@@ -130,8 +143,21 @@ describe.concurrent("Config", () => {
           Config.optional
         )
         const configProvider = ConfigProvider.fromMap(new Map([["key2", "value"]]))
-        const result = yield* $(configProvider.load(config))
-        assert.deepStrictEqual(result, Option.none())
+        const result = yield* $(
+          Effect.exit(configProvider.load(config)),
+          Effect.map(Exit.unannotate)
+        )
+        assert.isTrue(
+          Exit.isFailure(result) &&
+            Cause.isFailType(result.i0) &&
+            ConfigError.isOr(result.i0.error) &&
+            ConfigError.isMissingData(result.i0.error.left) &&
+            result.i0.error.left.message === "Expected key1 to exist in the provided map" &&
+            Equal.equals(result.i0.error.left.path, Chunk.of("key1")) &&
+            ConfigError.isInvalidData(result.i0.error.right) &&
+            result.i0.error.right.message === "Expected an integer value but received value" &&
+            Equal.equals(result.i0.error.right.path, Chunk.of("key2"))
+        )
       }))
   })
 

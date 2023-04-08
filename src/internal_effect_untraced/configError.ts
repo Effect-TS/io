@@ -176,7 +176,7 @@ export const prefixed: {
 /** @internal */
 const IsMissingDataOnlyReducer: ConfigError.ConfigErrorReducer<unknown, boolean> = {
   andCase: (_, left, right) => left && right,
-  orCase: (_, left, right) => left || right,
+  orCase: (_, left, right) => left && right,
   invalidDataCase: constFalse,
   missingDataCase: constTrue,
   sourceUnavailableCase: constFalse,
