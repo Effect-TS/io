@@ -311,7 +311,6 @@ export const nested = dual<
   (name: string) => <A>(self: Config.Config<A>) => Config.Config<A>,
   <A>(self: Config.Config<A>, name: string) => Config.Config<A>
 >(2, (self, name) => {
-  // Config.defer(Config.Nested(name, names.foldRight(self)((name, config) => Config.Nested(name, config))))
   const nested = Object.create(proto)
   nested._tag = OpCodes.OP_NESTED
   nested.name = name

@@ -13,7 +13,7 @@ import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import * as LogLevel from "@effect/io/Logger/Level"
 import * as it from "@effect/io/test/utils/extend"
-import { assert, describe } from "vitest"
+import { assert, describe, expect } from "vitest"
 
 interface HostPort {
   readonly host: string
@@ -496,6 +496,54 @@ describe.concurrent("ConfigProvider", () => {
       expect(result).toEqual([expectedEmployees, expectedEmployees])
     }))
 
+  it.effect("indexed sequence - multiple product types nested", () =>
+    Effect.gen(function*($) {
+      const employee = Config.all({
+        age: Config.integer("age"),
+        id: Config.integer("id")
+      })
+      const config = Config.arrayOf(employee, "employees")
+      const map = new Map([
+        ["parent.child.employees[0].age", "1"],
+        ["parent.child.employees[0].id", "2"],
+        ["parent.child.employees[1].age", "3"],
+        ["parent.child.employees[1].id", "4"]
+      ])
+      const provider = pipe(
+        ConfigProvider.fromMap(map),
+        ConfigProvider.nested("child"),
+        ConfigProvider.nested("parent")
+      )
+      const result = yield* $(provider.load(config))
+      expect(result).toEqual([{ age: 1, id: 2 }, { age: 3, id: 4 }])
+    }))
+
+  it.effect("indexed sequence - multiple product types unnested", () =>
+    Effect.gen(function*($) {
+      const employee = Config.all({
+        age: Config.integer("age"),
+        id: Config.integer("id")
+      })
+      const config = pipe(
+        Config.arrayOf(employee, "employees"),
+        Config.nested("child"),
+        Config.nested("parent")
+      )
+      const map = new Map([
+        ["employees[0].age", "1"],
+        ["employees[0].id", "2"],
+        ["employees[1].age", "3"],
+        ["employees[1].id", "4"]
+      ])
+      const provider = pipe(
+        ConfigProvider.fromMap(map),
+        ConfigProvider.unnested("parent"),
+        ConfigProvider.unnested("child")
+      )
+      const result = yield* $(provider.load(config))
+      expect(result).toEqual([{ age: 1, id: 2 }, { age: 3, id: 4 }])
+    }))
+
   it.effect("logLevel", () =>
     Effect.gen(function*($) {
       const config = Config.logLevel("level")
@@ -503,12 +551,6 @@ describe.concurrent("ConfigProvider", () => {
       const result = yield* $(ConfigProvider.fromMap(map).load(config))
       expect(result).toEqual(LogLevel.Error)
     }))
-  // test("logLevel") {
-  //   for {
-  //     _      <- TestSystem.putProperty("level", "ERROR")
-  //     result <- ZIO.config(Config.logLevel.nested("level"))
-  //   } yield assertTrue(result == LogLevel.Error)
-  // } +
 
   it.effect("accessing a non-existent key fails", () =>
     Effect.gen(function*($) {

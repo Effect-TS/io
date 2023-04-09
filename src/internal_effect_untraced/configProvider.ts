@@ -315,25 +315,33 @@ const fromFlatLoop = <A>(
     }
     case OpCodes.OP_SEQUENCE: {
       return pipe(
-        flat.enumerateChildren(prefix),
-        core.flatMap(indicesFrom),
-        core.flatMap((indices) => {
-          if (Chunk.isEmpty(indices)) {
-            return core.suspend(() =>
-              core.map(fromFlatLoop(flat, prefix, op.config, true), Chunk.of)
-            ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
-          }
-          return pipe(
-            core.forEach(indices, (index) => fromFlatLoop(flat, Chunk.append(prefix, `[${index}]`), op.config, true)),
-            core.map((chunkChunk) => {
-              const flattened = Chunk.flatten(chunkChunk)
-              if (Chunk.isEmpty(flattened)) {
-                return Chunk.of(Chunk.empty<A>())
+        pathPatch.patch(prefix, flat.patch),
+        core.flatMap((patchedPrefix) =>
+          pipe(
+            flat.enumerateChildren(patchedPrefix),
+            core.flatMap(indicesFrom),
+            core.flatMap((indices) => {
+              if (Chunk.isEmpty(indices)) {
+                return core.suspend(() =>
+                  core.map(fromFlatLoop(flat, patchedPrefix, op.config, true), Chunk.of)
+                ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
               }
-              return Chunk.of(flattened)
+              return pipe(
+                core.forEach(
+                  indices,
+                  (index) => fromFlatLoop(flat, Chunk.append(prefix, `[${index}]`), op.config, true)
+                ),
+                core.map((chunkChunk) => {
+                  const flattened = Chunk.flatten(chunkChunk)
+                  if (Chunk.isEmpty(flattened)) {
+                    return Chunk.of(Chunk.empty<A>())
+                  }
+                  return Chunk.of(flattened)
+                })
+              ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
             })
-          ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
-        })
+          )
+        )
       )
     }
     case OpCodes.OP_TABLE: {
@@ -456,7 +464,7 @@ export const nested = Debug.untracedDual<
   (self, name) =>
     fromFlat(makeFlat(
       (path, config) => self.flattened.load(path, config, true),
-      (path) => self.flattened.enumerateChildren(pipe(path, Chunk.prepend(name))),
+      (path) => self.flattened.enumerateChildren(path),
       pathPatch.nested(self.flattened.patch, name)
     )))
 
