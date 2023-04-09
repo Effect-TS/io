@@ -203,14 +203,6 @@ export const date = (name?: string): Config.Config<Date> => {
 }
 
 /** @internal */
-export const defer = <A>(config: LazyArg<Config.Config<A>>): Config.Config<A> => {
-  const lazy = Object.create(proto)
-  lazy._tag = OpCodes.OP_LAZY
-  lazy.config = config
-  return lazy
-}
-
-/** @internal */
 export const fail = (message: string): Config.Config<never> => {
   const fail = Object.create(proto)
   fail._tag = OpCodes.OP_FAIL
@@ -319,6 +311,7 @@ export const nested = dual<
   (name: string) => <A>(self: Config.Config<A>) => Config.Config<A>,
   <A>(self: Config.Config<A>, name: string) => Config.Config<A>
 >(2, (self, name) => {
+  // Config.defer(Config.Nested(name, names.foldRight(self)((name, config) => Config.Nested(name, config))))
   const nested = Object.create(proto)
   nested._tag = OpCodes.OP_NESTED
   nested.name = name
@@ -334,7 +327,7 @@ export const orElse = dual<
   const fallback = Object.create(proto)
   fallback._tag = OpCodes.OP_FALLBACK
   fallback.first = self
-  fallback.second = defer(that)
+  fallback.second = suspend(that)
   fallback.condition = constTrue
   return fallback
 })
@@ -354,7 +347,7 @@ export const orElseIf = dual<
   const fallback = Object.create(proto)
   fallback._tag = OpCodes.OP_FALLBACK
   fallback.first = self
-  fallback.second = defer(that)
+  fallback.second = suspend(that)
   fallback.condition = condition
   return fallback
 })
@@ -477,8 +470,16 @@ export const succeed = <A>(value: A): Config.Config<A> => {
 }
 
 /** @internal */
+export const suspend = <A>(config: LazyArg<Config.Config<A>>): Config.Config<A> => {
+  const lazy = Object.create(proto)
+  lazy._tag = OpCodes.OP_LAZY
+  lazy.config = config
+  return lazy
+}
+
+/** @internal */
 export const sync = <A>(value: LazyArg<A>): Config.Config<A> => {
-  return defer(() => succeed(value()))
+  return suspend(() => succeed(value()))
 }
 
 /** @internal */

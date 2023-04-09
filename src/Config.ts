@@ -149,14 +149,6 @@ export const chunkOf: <A>(config: Config<A>, name?: string | undefined) => Confi
 export const date: (name?: string | undefined) => Config<Date> = internal.date
 
 /**
- * Lazily constructs a config.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const defer: <A>(config: LazyArg<Config<A>>) => Config<A> = internal.defer
-
-/**
  * Constructs a config that fails with the specified message.
  *
  * @since 1.0.0
@@ -343,6 +335,14 @@ export const string: (name?: string | undefined) => Config<string> = internal.st
  * @category constructors
  */
 export const succeed: <A>(value: A) => Config<A> = internal.succeed
+
+/**
+ * Lazily constructs a config.
+ *
+ * @since 1.0.0
+ * @category constructors
+ */
+export const suspend: <A>(config: LazyArg<Config<A>>) => Config<A> = internal.suspend
 
 /**
  * Constructs a config which contains the specified lazy value.
