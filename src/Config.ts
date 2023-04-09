@@ -11,6 +11,7 @@ import type { Predicate, Refinement } from "@effect/data/Predicate"
 import type * as ConfigError from "@effect/io/Config/Error"
 import type * as ConfigSecret from "@effect/io/Config/Secret"
 import * as internal from "@effect/io/internal_effect_untraced/config"
+import type * as LogLevel from "@effect/io/Logger/Level"
 
 /**
  * @since 1.0.0
@@ -86,6 +87,36 @@ export declare namespace Config {
 }
 
 /**
+ * Constructs a config from a tuple / struct / arguments of configs.
+ *
+ * @since 1.0.0
+ * @category constructors
+ */
+export const all: {
+  <A, T extends ReadonlyArray<Config<any>>>(
+    self: Config<A>,
+    ...args: T
+  ): Config<
+    [
+      A,
+      ...(T["length"] extends 0 ? []
+        : { [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never })
+    ]
+  >
+  <T extends ReadonlyArray<Config<any>>>(
+    args: [...T]
+  ): Config<
+    T[number] extends never ? []
+      : { [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never }
+  >
+  <T extends Readonly<{ [K: string]: Config<any> }>>(
+    args: T
+  ): Config<
+    { [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never }
+  >
+} = internal.all
+
+/**
  * Constructs a config for an array of values.
  *
  * @since 1.0.0
@@ -148,6 +179,14 @@ export const float: (name?: string | undefined) => Config<number> = internal.flo
  * @category constructors
  */
 export const integer: (name?: string | undefined) => Config<number> = internal.integer
+
+/**
+ * Constructs a config for a `LogLevel` value.
+ *
+ * @since 1.0.0
+ * @category constructors
+ */
+export const logLevel: (name?: string | undefined) => Config<LogLevel.LogLevel> = internal.logLevel
 
 /**
  * This function returns `true` if the specified value is an `Config` value,
@@ -321,36 +360,6 @@ export const sync: <A>(value: LazyArg<A>) => Config<A> = internal.sync
  */
 export const table: <A>(config: Config<A>, name?: string | undefined) => Config<HashMap.HashMap<string, A>> =
   internal.table
-
-/**
- * Constructs a config from a tuple / struct / arguments of configs.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const all: {
-  <A, T extends ReadonlyArray<Config<any>>>(
-    self: Config<A>,
-    ...args: T
-  ): Config<
-    [
-      A,
-      ...(T["length"] extends 0 ? []
-        : { [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never })
-    ]
-  >
-  <T extends ReadonlyArray<Config<any>>>(
-    args: [...T]
-  ): Config<
-    T[number] extends never ? []
-      : { [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never }
-  >
-  <T extends Readonly<{ [K: string]: Config<any> }>>(
-    args: T
-  ): Config<
-    { [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never }
-  >
-} = internal.all
 
 /**
  * Constructs a config from some configuration wrapped with the `Wrap<A>` utility type.

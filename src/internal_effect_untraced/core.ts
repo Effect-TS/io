@@ -1441,6 +1441,18 @@ export const logLevelNone: LogLevel.LogLevel = {
   ordinal: Number.MAX_SAFE_INTEGER
 }
 
+/** @internal */
+export const allLogLevels: ReadonlyArray<LogLevel.LogLevel> = [
+  logLevelAll,
+  logLevelTrace,
+  logLevelDebug,
+  logLevelInfo,
+  logLevelWarning,
+  logLevelError,
+  logLevelFatal,
+  logLevelNone
+]
+
 // -----------------------------------------------------------------------------
 // FiberRef
 // -----------------------------------------------------------------------------

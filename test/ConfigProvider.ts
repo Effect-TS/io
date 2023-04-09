@@ -11,6 +11,7 @@ import * as ConfigProvider from "@effect/io/Config/Provider"
 import * as ConfigSecret from "@effect/io/Config/Secret"
 import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
+import * as LogLevel from "@effect/io/Logger/Level"
 import * as it from "@effect/io/test/utils/extend"
 import { assert, describe } from "vitest"
 
@@ -432,9 +433,6 @@ describe.concurrent("ConfigProvider", () => {
 
   it.effect("indexed sequence - map of indexed sequences", () =>
     Effect.gen(function*($) {
-      //   val employee = Config.int("age").zip(Config.int("id"))
-
-      //   val config = Config.table("departments", Config.listOf("employees", employee))
       const employee = Config.all({
         age: Config.integer("age"),
         id: Config.integer("id")
@@ -497,6 +495,20 @@ describe.concurrent("ConfigProvider", () => {
       const expectedEmployees = [{ age: 10, id: 0 }, { age: 20, id: 1 }]
       expect(result).toEqual([expectedEmployees, expectedEmployees])
     }))
+
+  it.effect("logLevel", () =>
+    Effect.gen(function*($) {
+      const config = Config.logLevel("level")
+      const map = new Map([["level", "ERROR"]])
+      const result = yield* $(ConfigProvider.fromMap(map).load(config))
+      expect(result).toEqual(LogLevel.Error)
+    }))
+  // test("logLevel") {
+  //   for {
+  //     _      <- TestSystem.putProperty("level", "ERROR")
+  //     result <- ZIO.config(Config.logLevel.nested("level"))
+  //   } yield assertTrue(result == LogLevel.Error)
+  // } +
 
   it.effect("accessing a non-existent key fails", () =>
     Effect.gen(function*($) {

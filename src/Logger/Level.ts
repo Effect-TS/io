@@ -115,41 +115,54 @@ export interface None {
  * @category constructors
  */
 export const All: LogLevel = core.logLevelAll
+
 /**
  * @since 1.0.0
  * @category constructors
  */
 export const Fatal: LogLevel = core.logLevelFatal
+
 /**
  * @since 1.0.0
  * @category constructors
  */
 export const Error: LogLevel = core.logLevelError
+
 /**
  * @since 1.0.0
  * @category constructors
  */
 export const Warning: LogLevel = core.logLevelWarning
+
 /**
  * @since 1.0.0
  * @category constructors
  */
 export const Info: LogLevel = core.logLevelInfo
+
 /**
  * @since 1.0.0
  * @category constructors
  */
 export const Debug: LogLevel = core.logLevelDebug
+
 /**
  * @since 1.0.0
  * @category constructors
  */
 export const Trace: LogLevel = core.logLevelTrace
+
 /**
  * @since 1.0.0
  * @category constructors
  */
 export const None: LogLevel = core.logLevelNone
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const allLevels = core.allLogLevels
 
 /**
  * Locally applies the specified `LogLevel` to an `Effect` workflow, reverting

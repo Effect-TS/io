@@ -11,7 +11,9 @@ import * as ConfigError from "@effect/io/Config/Error"
 import type * as ConfigSecret from "@effect/io/Config/Secret"
 import * as configError from "@effect/io/internal_effect_untraced/configError"
 import * as configSecret from "@effect/io/internal_effect_untraced/configSecret"
+import * as core from "@effect/io/internal_effect_untraced/core"
 import * as OpCodes from "@effect/io/internal_effect_untraced/opCodes/config"
+import type * as LogLevel from "@effect/io/Logger/Level"
 
 /** @internal */
 const ConfigSymbolKey = "@effect/io/Config"
@@ -255,6 +257,18 @@ export const integer = (name?: string): Config.Config<number> => {
     }
   )
   return name === undefined ? config : nested(name)(config)
+}
+
+/** @internal */
+export const logLevel = (name?: string): Config.Config<LogLevel.LogLevel> => {
+  const config = mapOrFail(string(), (value) => {
+    const label = value.toUpperCase()
+    const level = core.allLogLevels.find((level) => level.label === label)
+    return level === undefined
+      ? Either.left(configError.InvalidData(Chunk.empty(), `Expected a log level, but found: ${value}`))
+      : Either.right(level)
+  })
+  return name === undefined ? config : nested(config, name)
 }
 
 /** @internal */
