@@ -1,7 +1,10 @@
 import * as Chunk from "@effect/data/Chunk"
+import * as Equal from "@effect/data/Equal"
 import { pipe } from "@effect/data/Function"
 import * as HashMap from "@effect/data/HashMap"
 import * as HashSet from "@effect/data/HashSet"
+import * as Option from "@effect/data/Option"
+import * as Cause from "@effect/io/Cause"
 import * as Config from "@effect/io/Config"
 import * as ConfigError from "@effect/io/Config/Error"
 import * as ConfigProvider from "@effect/io/Config/Provider"
@@ -272,6 +275,227 @@ describe.concurrent("ConfigProvider", () => {
       assert.deepStrictEqual(result, {
         targets: Chunk.make("https://effect.website2", "https://github.com/Effect-TS2")
       })
+    }))
+
+  it.effect("indexed - simple", () =>
+    Effect.gen(function*($) {
+      const config = Config.arrayOf(Config.integer(), "id")
+      const map = new Map([
+        ["id[0]", "1"],
+        ["id[1]", "2"],
+        ["id[2]", "3"]
+      ])
+      const result = yield* $(ConfigProvider.fromMap(map).load(config))
+      expect(result).toEqual([1, 2, 3])
+    }))
+
+  it.effect("indexed sequence - simple with list values", () =>
+    Effect.gen(function*($) {
+      const config = Config.arrayOf(Config.arrayOf(Config.integer()), "id")
+      const map = new Map([
+        ["id[0]", "1, 2"],
+        ["id[1]", "3, 4"],
+        ["id[2]", "5, 6"]
+      ])
+      const result = yield* $(ConfigProvider.fromMap(map).load(config))
+      expect(result).toEqual([[1, 2], [3, 4], [5, 6]])
+    }))
+
+  it.effect("indexed sequence - one product type", () =>
+    Effect.gen(function*($) {
+      const config = Config.arrayOf(
+        Config.all({
+          age: Config.integer("age"),
+          id: Config.integer("id")
+        }),
+        "employees"
+      )
+      const map = new Map([
+        ["employees[0].age", "1"],
+        ["employees[0].id", "1"]
+      ])
+      const result = yield* $(ConfigProvider.fromMap(map).load(config))
+      expect(result).toEqual([{ age: 1, id: 1 }])
+    }))
+
+  it.effect("indexed sequence - multiple product types", () =>
+    Effect.gen(function*($) {
+      const config = Config.arrayOf(
+        Config.all({
+          age: Config.integer("age"),
+          id: Config.integer("id")
+        }),
+        "employees"
+      )
+      const map = new Map([
+        ["employees[0].age", "1"],
+        ["employees[0].id", "2"],
+        ["employees[1].age", "3"],
+        ["employees[1].id", "4"]
+      ])
+      const result = yield* $(ConfigProvider.fromMap(map).load(config))
+      expect(result).toEqual([{ age: 1, id: 2 }, { age: 3, id: 4 }])
+    }))
+
+  it.effect("indexed sequence - multiple product types with missing fields", () =>
+    Effect.gen(function*($) {
+      const config = Config.arrayOf(
+        Config.all({
+          age: Config.integer("age"),
+          id: Config.integer("id")
+        }),
+        "employees"
+      )
+      const map = new Map([
+        ["employees[0].age", "1"],
+        ["employees[0].id", "2"],
+        ["employees[1].age", "3"],
+        ["employees[1]", "4"]
+      ])
+      const result = yield* $(
+        Effect.exit(ConfigProvider.fromMap(map).load(config)),
+        Effect.map(Exit.unannotate)
+      )
+      assert.isTrue(
+        Exit.isFailure(result) &&
+          Cause.isFailType(result.i0) &&
+          ConfigError.isMissingData(result.i0.error) &&
+          // TODO: fix error message to not include `.[index]`
+          result.i0.error.message === "Expected employees.[1].id to exist in the provided map" &&
+          Equal.equals(result.i0.error.path, Chunk.make("employees", "[1]", "id"))
+      )
+    }))
+
+  it.effect("indexed sequence - multiple product types with optional fields", () =>
+    Effect.gen(function*($) {
+      const config = Config.arrayOf(
+        Config.all({
+          age: Config.optional(Config.integer("age")),
+          id: Config.integer("id")
+        }),
+        "employees"
+      )
+      const map = new Map([
+        ["employees[0].age", "1"],
+        ["employees[0].id", "2"],
+        ["employees[1].id", "4"]
+      ])
+      const result = yield* $(ConfigProvider.fromMap(map).load(config))
+      expect(result).toEqual([{ age: Option.some(1), id: 2 }, { age: Option.none(), id: 4 }])
+    }))
+
+  it.effect("indexed sequence - multiple product types with sequence fields", () =>
+    Effect.gen(function*($) {
+      const config = Config.arrayOf(
+        Config.all({
+          refunds: Config.arrayOf(Config.integer(), "refunds"),
+          id: Config.integer("id")
+        }),
+        "employees"
+      )
+      const map = new Map([
+        ["employees[0].refunds", "1,2,3"],
+        ["employees[0].id", "0"],
+        ["employees[1].id", "1"],
+        ["employees[1].refunds", "4,5,6"]
+      ])
+      const result = yield* $(ConfigProvider.fromMap(map).load(config))
+      expect(result).toEqual([{ refunds: [1, 2, 3], id: 0 }, { refunds: [4, 5, 6], id: 1 }])
+    }))
+
+  it.effect("indexed sequence - product type of indexed sequences with reusable config", () =>
+    Effect.gen(function*($) {
+      const idAndAge = Config.all({
+        id: Config.integer("id"),
+        age: Config.integer("age")
+      })
+      const config = Config.all({
+        employees: Config.arrayOf(idAndAge, "employees"),
+        students: Config.arrayOf(idAndAge, "students")
+      })
+      const map = new Map([
+        ["employees[0].id", "0"],
+        ["employees[1].id", "1"],
+        ["employees[0].age", "10"],
+        ["employees[1].age", "11"],
+        ["students[0].id", "20"],
+        ["students[1].id", "30"],
+        ["students[0].age", "2"],
+        ["students[1].age", "3"]
+      ])
+      const result = yield* $(ConfigProvider.fromMap(map).load(config))
+      expect(result).toEqual({
+        employees: [{ id: 0, age: 10 }, { id: 1, age: 11 }],
+        students: [{ id: 20, age: 2 }, { id: 30, age: 3 }]
+      })
+    }))
+
+  it.effect("indexed sequence - map of indexed sequences", () =>
+    Effect.gen(function*($) {
+      //   val employee = Config.int("age").zip(Config.int("id"))
+
+      //   val config = Config.table("departments", Config.listOf("employees", employee))
+      const employee = Config.all({
+        age: Config.integer("age"),
+        id: Config.integer("id")
+      })
+      const config = Config.table(Config.arrayOf(employee, "employees"), "departments")
+      const map = new Map([
+        ["departments.department1.employees[0].age", "10"],
+        ["departments.department1.employees[0].id", "0"],
+        ["departments.department1.employees[1].age", "20"],
+        ["departments.department1.employees[1].id", "1"],
+        ["departments.department2.employees[0].age", "10"],
+        ["departments.department2.employees[0].id", "0"],
+        ["departments.department2.employees[1].age", "20"],
+        ["departments.department2.employees[1].id", "1"]
+      ])
+      const result = yield* $(ConfigProvider.fromMap(map).load(config))
+      const expectedEmployees = [{ age: 10, id: 0 }, { age: 20, id: 1 }]
+      expect(Array.from(result)).toEqual([
+        ["department1", expectedEmployees],
+        ["department2", expectedEmployees]
+      ])
+    }))
+
+  it.effect("indexed sequence - map", () =>
+    Effect.gen(function*($) {
+      const employee = Config.table(Config.integer(), "details")
+      const config = Config.arrayOf(employee, "employees")
+      const map = new Map([
+        ["employees[0].details.age", "10"],
+        ["employees[0].details.id", "0"],
+        ["employees[1].details.age", "20"],
+        ["employees[1].details.id", "1"]
+      ])
+      const result = yield* $(ConfigProvider.fromMap(map).load(config))
+      expect(result.map((table) => Array.from(table))).toEqual([
+        [["age", 10], ["id", 0]],
+        [["age", 20], ["id", 1]]
+      ])
+    }))
+
+  it.effect("indexed sequence - indexed sequences", () =>
+    Effect.gen(function*($) {
+      const employee = Config.all({
+        age: Config.integer("age"),
+        id: Config.integer("id")
+      })
+      const department = Config.arrayOf(employee, "employees")
+      const config = Config.arrayOf(department, "departments")
+      const map = new Map([
+        ["departments[0].employees[0].age", "10"],
+        ["departments[0].employees[0].id", "0"],
+        ["departments[0].employees[1].age", "20"],
+        ["departments[0].employees[1].id", "1"],
+        ["departments[1].employees[0].age", "10"],
+        ["departments[1].employees[0].id", "0"],
+        ["departments[1].employees[1].age", "20"],
+        ["departments[1].employees[1].id", "1"]
+      ])
+      const result = yield* $(ConfigProvider.fromMap(map).load(config))
+      const expectedEmployees = [{ age: 10, id: 0 }, { age: 20, id: 1 }]
+      expect(result).toEqual([expectedEmployees, expectedEmployees])
     }))
 
   it.effect("accessing a non-existent key fails", () =>

@@ -403,22 +403,22 @@ export const all: {
     self: Config.Config<A>,
     ...args: T
   ): Config.Config<
-    readonly [
+    [
       A,
       ...(T["length"] extends 0 ? []
-        : Readonly<{ [K in keyof T]: [T[K]] extends [Config.Config<infer A>] ? A : never }>)
+        : { [K in keyof T]: [T[K]] extends [Config.Config<infer A>] ? A : never })
     ]
   >
   <T extends ReadonlyArray<Config.Config<any>>>(
     args: [...T]
   ): Config.Config<
     T[number] extends never ? []
-      : Readonly<{ [K in keyof T]: [T[K]] extends [Config.Config<infer A>] ? A : never }>
+      : { [K in keyof T]: [T[K]] extends [Config.Config<infer A>] ? A : never }
   >
   <T extends Readonly<{ [K: string]: Config.Config<any> }>>(
     args: T
   ): Config.Config<
-    Readonly<{ [K in keyof T]: [T[K]] extends [Config.Config<infer A>] ? A : never }>
+    { [K in keyof T]: [T[K]] extends [Config.Config<infer A>] ? A : never }
   >
 } = function() {
   if (arguments.length === 1) {

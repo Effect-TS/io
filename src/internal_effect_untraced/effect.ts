@@ -1723,18 +1723,6 @@ export const mapAccum = Debug.dualWithTrace<
     }).traced(trace))
 
 /* @internal */
-export const mapBoth = Debug.dualWithTrace<
-  <E, A, E2, A2>(f: (e: E) => E2, g: (a: A) => A2) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E2, A2>,
-  <R, E, A, E2, A2>(self: Effect.Effect<R, E, A>, f: (e: E) => E2, g: (a: A) => A2) => Effect.Effect<R, E2, A2>
->(3, (trace, restore) =>
-  (self, f, g) =>
-    core.matchEffect(
-      self,
-      (e) => core.failSync(() => restore(f)(e)),
-      (a) => core.sync(() => restore(g)(a))
-    ).traced(trace))
-
-/* @internal */
 export const mapErrorCause = Debug.dualWithTrace<
   <E, E2>(
     f: (cause: Cause.Cause<E>) => Cause.Cause<E2>

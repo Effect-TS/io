@@ -333,22 +333,22 @@ export const all: {
     self: Config<A>,
     ...args: T
   ): Config<
-    readonly [
+    [
       A,
       ...(T["length"] extends 0 ? []
-        : Readonly<{ [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never }>)
+        : { [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never })
     ]
   >
   <T extends ReadonlyArray<Config<any>>>(
     args: [...T]
   ): Config<
     T[number] extends never ? []
-      : Readonly<{ [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never }>
+      : { [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never }
   >
   <T extends Readonly<{ [K: string]: Config<any> }>>(
     args: T
   ): Config<
-    Readonly<{ [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never }>
+    { [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never }
   >
 } = internal.all
 
