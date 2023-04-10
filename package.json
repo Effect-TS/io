@@ -56,7 +56,7 @@
     }
   },
   "dependencies": {
-    "@effect/data": "~0.11.5"
+    "@effect/data": "~0.11.8"
   },
   "devDependencies": {
     "@babel/cli": "^7.21.0",
@@ -79,32 +79,32 @@
     "@typescript-eslint/eslint-plugin": "^5.57.1",
     "@typescript-eslint/parser": "^5.57.1",
     "@vitejs/plugin-react": "^3.1.0",
-    "@vitest/coverage-c8": "^0.29.8",
+    "@vitest/coverage-c8": "^0.30.0",
     "babel-plugin-annotate-pure-calls": "^0.4.0",
     "concurrently": "^8.0.1",
     "cpx": "^1.5.0",
     "docs-ts": "0.6.10",
     "error-stack-parser": "^2.1.4",
-    "eslint": "^8.37.0",
+    "eslint": "^8.38.0",
     "eslint-import-resolver-typescript": "^3.5.5",
     "eslint-plugin-codegen": "0.17.0",
-    "eslint-plugin-deprecation": "^1.4.0",
+    "eslint-plugin-deprecation": "^1.4.1",
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-simple-import-sort": "^10.0.0",
     "eslint-plugin-sort-destructure-keys": "^1.5.0",
     "fast-check": "^3.8.0",
-    "glob": "^9.3.4",
+    "glob": "^10.0.0",
     "madge": "^6.0.0",
     "picocolors": "^1.0.0",
     "prettier": "^2.8.7",
-    "rimraf": "^4.4.1",
+    "rimraf": "^5.0.0",
     "stackframe": "^1.3.4",
     "ts-codemod": "^4.0.4",
     "ts-node": "^10.9.1",
-    "typescript": "^5.0.3",
+    "typescript": "^5.0.4",
     "ultra-runner": "^3.10.5",
     "vite": "^4.2.1",
-    "vitest": "0.29.8"
+    "vitest": "0.30.0"
   },
   "pnpm": {
     "patchedDependencies": {

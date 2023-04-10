@@ -137,6 +137,7 @@ Added in v1.0.0
   - [provideLayer](#providelayer)
   - [provideService](#provideservice)
   - [provideServiceEffect](#provideserviceeffect)
+  - [provideSomeContext](#providesomecontext)
   - [provideSomeLayer](#providesomelayer)
   - [scope](#scope)
   - [scoped](#scoped)
@@ -2394,6 +2395,22 @@ export declare const provideServiceEffect: {
     tag: T,
     effect: Effect<R1, E1, Context.Tag.Service<T>>
   ): Effect<R1 | Exclude<R, Context.Tag.Identifier<T>>, E | E1, A>
+}
+```
+
+Added in v1.0.0
+
+## provideSomeContext
+
+Splits the context into two parts, providing one part using the
+specified layer and leaving the remainder `R0`.
+
+**Signature**
+
+```ts
+export declare const provideSomeContext: {
+  <R>(context: Context.Context<R>): <R1, E, A>(self: Effect<R1, E, A>) => Effect<Exclude<R1, R>, E, A>
+  <R, R1, E, A>(self: Effect<R1, E, A>, context: Context.Context<R>): Effect<Exclude<R1, R>, E, A>
 }
 ```
 

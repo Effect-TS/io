@@ -1010,6 +1010,20 @@ export const provideContext = Debug.dualWithTrace<
 )
 
 /* @internal */
+export const provideSomeContext = Debug.dualWithTrace<
+  <R>(context: Context.Context<R>) => <R1, E, A>(self: Effect.Effect<R1, E, A>) => Effect.Effect<Exclude<R1, R>, E, A>,
+  <R, R1, E, A>(self: Effect.Effect<R1, E, A>, context: Context.Context<R>) => Effect.Effect<Exclude<R1, R>, E, A>
+>(
+  2,
+  (trace) =>
+    <R1, R, E, A>(self: Effect.Effect<R1, E, A>, context: Context.Context<R>) =>
+      pipe(
+        self as Effect.Effect<never, E, A>,
+        fiberRefLocallyWith(currentContext, (parent) => Context.merge(parent, context))
+      ).traced(trace)
+)
+
+/* @internal */
 export const contramapContext = Debug.dualWithTrace<
   <R0, R>(
     f: (context: Context.Context<R0>) => Context.Context<R>
