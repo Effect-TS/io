@@ -3343,6 +3343,18 @@ export const provideContext: {
 } = core.provideContext
 
 /**
+ * Splits the context into two parts, providing one part using the
+ * specified layer and leaving the remainder `R0`.
+ *
+ * @since 1.0.0
+ * @category context
+ */
+export const provideSomeContext: {
+  <R>(context: Context.Context<R>): <R1, E, A>(self: Effect<R1, E, A>) => Effect<Exclude<R1, R>, E, A>
+  <R, R1, E, A>(self: Effect<R1, E, A>, context: Context.Context<R>): Effect<Exclude<R1, R>, E, A>
+} = core.provideSomeContext
+
+/**
  * Provides a layer to the effect, which translates it to another level.
  *
  * @since 1.0.0

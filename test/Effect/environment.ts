@@ -11,6 +11,12 @@ interface NumberService {
 
 const NumberService = Context.Tag<NumberService>()
 
+interface StringService {
+  readonly s: string
+}
+
+const StringService = Context.Tag<StringService>()
+
 describe.concurrent("Effect", () => {
   it.effect("environment - provide is modular", () =>
     pipe(
@@ -28,6 +34,18 @@ describe.concurrent("Effect", () => {
         assert.strictEqual(v3.n, 4)
       }),
       Effect.provideContext(Context.make(NumberService, { n: 4 }))
+    ))
+  it.effect("environment - provideSomeContext provides context in the right order", () =>
+    pipe(
+      Effect.gen(function*($) {
+        const v1 = yield* $(NumberService)
+        const v2 = yield* $(StringService)
+        assert.strictEqual(v1.n, 1)
+        assert.strictEqual(v2.s, "ok")
+      }),
+      Effect.provideSomeContext(Context.make(NumberService, { n: 1 })),
+      Effect.provideSomeContext(Context.make(NumberService, { n: 2 })),
+      Effect.provideSomeContext(Context.make(StringService, { s: "ok" }))
     ))
   it.effect("environment - async can use environment", () =>
     Effect.gen(function*($) {
