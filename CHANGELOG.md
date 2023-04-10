@@ -1,5 +1,21 @@
 # @effect/io
 
+## 0.19.3
+
+### Patch Changes
+
+- [#352](https://github.com/Effect-TS/io/pull/352) [`8bced84`](https://github.com/Effect-TS/io/commit/8bced840d3529d1d2eaab9d1f45904512b006570) Thanks [@IMax153](https://github.com/IMax153)! - only recover in Config.optional when all errors are MissingData errors
+
+- [#352](https://github.com/Effect-TS/io/pull/352) [`8bced84`](https://github.com/Effect-TS/io/commit/8bced840d3529d1d2eaab9d1f45904512b006570) Thanks [@IMax153](https://github.com/IMax153)! - add Config.logLevel
+
+- [#352](https://github.com/Effect-TS/io/pull/352) [`8bced84`](https://github.com/Effect-TS/io/commit/8bced840d3529d1d2eaab9d1f45904512b006570) Thanks [@IMax153](https://github.com/IMax153)! - handle indexed sequences in ConfigProvider.fromMap
+
+- [#352](https://github.com/Effect-TS/io/pull/352) [`8bced84`](https://github.com/Effect-TS/io/commit/8bced840d3529d1d2eaab9d1f45904512b006570) Thanks [@IMax153](https://github.com/IMax153)! - Fix nesting for ConfigProvider
+
+- [#353](https://github.com/Effect-TS/io/pull/353) [`c7a1772`](https://github.com/Effect-TS/io/commit/c7a17720c79553313dde54a1b21082741ab3d153) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Add Effect.provideSomeContext
+
+- [#352](https://github.com/Effect-TS/io/pull/352) [`8bced84`](https://github.com/Effect-TS/io/commit/8bced840d3529d1d2eaab9d1f45904512b006570) Thanks [@IMax153](https://github.com/IMax153)! - rename Config.defer to Config.suspend
+
 ## 0.19.2
 
 ### Patch Changes
