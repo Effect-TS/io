@@ -9,7 +9,7 @@
     "type": "git",
     "url": "https://github.com/Effect-TS/io.git"
   },
-  "author": "Michael Arnaldi <ma@matechs.com>",
+  "author": "Michael Arnaldi <michael.arnaldi@effectful.co>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/Effect-TS/io/issues"
