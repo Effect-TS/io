@@ -856,6 +856,18 @@ export const map = Debug.dualWithTrace<
 >(2, (trace, restore) => (self, f) => pipe(self, flatMap((a) => sync(() => restore(f)(a)))).traced(trace))
 
 /* @internal */
+export const mapBoth = Debug.dualWithTrace<
+  <E, A, E2, A2>(f: (e: E) => E2, g: (a: A) => A2) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E2, A2>,
+  <R, E, A, E2, A2>(self: Effect.Effect<R, E, A>, f: (e: E) => E2, g: (a: A) => A2) => Effect.Effect<R, E2, A2>
+>(3, (trace, restore) =>
+  (self, f, g) =>
+    matchEffect(
+      self,
+      (e) => failSync(() => restore(f)(e)),
+      (a) => sync(() => restore(g)(a))
+    ).traced(trace))
+
+/* @internal */
 export const mapError = Debug.dualWithTrace<
   <E, E2>(f: (e: E) => E2) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E2, A>,
   <R, A, E, E2>(self: Effect.Effect<R, E, A>, f: (e: E) => E2) => Effect.Effect<R, E2, A>
@@ -1442,6 +1454,18 @@ export const logLevelNone: LogLevel.LogLevel = {
   label: "OFF",
   ordinal: Number.MAX_SAFE_INTEGER
 }
+
+/** @internal */
+export const allLogLevels: ReadonlyArray<LogLevel.LogLevel> = [
+  logLevelAll,
+  logLevelTrace,
+  logLevelDebug,
+  logLevelInfo,
+  logLevelWarning,
+  logLevelError,
+  logLevelFatal,
+  logLevelNone
+]
 
 // -----------------------------------------------------------------------------
 // FiberRef

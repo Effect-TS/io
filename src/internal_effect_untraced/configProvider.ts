@@ -6,6 +6,7 @@ import type { LazyArg } from "@effect/data/Function"
 import { pipe } from "@effect/data/Function"
 import * as HashMap from "@effect/data/HashMap"
 import * as HashSet from "@effect/data/HashSet"
+import * as number from "@effect/data/Number"
 import * as Option from "@effect/data/Option"
 import type * as Config from "@effect/io/Config"
 import type * as ConfigError from "@effect/io/Config/Error"
@@ -155,13 +156,20 @@ export const fromMap = Debug.untracedMethod(() =>
     const { pathDelim, seqDelim } = Object.assign({}, { seqDelim: ",", pathDelim: "." }, config)
     const makePathString = (path: Chunk.Chunk<string>): string => pipe(path, Chunk.join(pathDelim))
     const unmakePathString = (pathString: string): ReadonlyArray<string> => pathString.split(pathDelim)
+    const mapWithIndexSplit = splitIndexInKeys(
+      map,
+      (str) => Chunk.unsafeFromArray(unmakePathString(str)),
+      makePathString
+    )
     const load = <A>(
       path: Chunk.Chunk<string>,
       primitive: Config.Config.Primitive<A>,
       split = true
     ): Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>> => {
       const pathString = makePathString(path)
-      const valueOpt = map.has(pathString) ? Option.some(map.get(pathString)!) : Option.none()
+      const valueOpt = mapWithIndexSplit.has(pathString) ?
+        Option.some(mapWithIndexSplit.get(pathString)!) :
+        Option.none()
       return pipe(
         core.fromOption(valueOpt),
         core.mapError(() => configError.MissingData(path, `Expected ${pathString} to exist in the provided map`)),
@@ -172,7 +180,7 @@ export const fromMap = Debug.untracedMethod(() =>
       path: Chunk.Chunk<string>
     ): Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>> =>
       core.sync(() => {
-        const keyPaths = Array.from(map.keys()).map(unmakePathString)
+        const keyPaths = Array.from(mapWithIndexSplit.keys()).map(unmakePathString)
         const filteredKeyPaths = keyPaths.filter((keyPath) => {
           for (let i = 0; i < path.length; i++) {
             const pathComponent = pipe(path, Chunk.unsafeGet(i))
@@ -282,7 +290,7 @@ const fromFlatLoop = <A>(
       return core.suspend(() =>
         fromFlatLoop(
           flat,
-          pipe(prefix, Chunk.concat(Chunk.of(op.name))),
+          Chunk.concat(prefix, Chunk.of(op.name)),
           op.config,
           split
         )
@@ -306,12 +314,35 @@ const fromFlatLoop = <A>(
       ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
     }
     case OpCodes.OP_SEQUENCE: {
-      return core.suspend(() =>
-        pipe(
-          fromFlatLoop(flat, prefix, op.config, true),
-          core.map(Chunk.of)
+      return pipe(
+        pathPatch.patch(prefix, flat.patch),
+        core.flatMap((patchedPrefix) =>
+          pipe(
+            flat.enumerateChildren(patchedPrefix),
+            core.flatMap(indicesFrom),
+            core.flatMap((indices) => {
+              if (Chunk.isEmpty(indices)) {
+                return core.suspend(() =>
+                  core.map(fromFlatLoop(flat, patchedPrefix, op.config, true), Chunk.of)
+                ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
+              }
+              return pipe(
+                core.forEach(
+                  indices,
+                  (index) => fromFlatLoop(flat, Chunk.append(prefix, `[${index}]`), op.config, true)
+                ),
+                core.map((chunkChunk) => {
+                  const flattened = Chunk.flatten(chunkChunk)
+                  if (Chunk.isEmpty(flattened)) {
+                    return Chunk.of(Chunk.empty<A>())
+                  }
+                  return Chunk.of(flattened)
+                })
+              ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
+            })
+          )
         )
-      ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
+      )
     }
     case OpCodes.OP_TABLE: {
       return core.suspend(() =>
@@ -433,7 +464,7 @@ export const nested = Debug.untracedDual<
   (self, name) =>
     fromFlat(makeFlat(
       (path, config) => self.flattened.load(path, config, true),
-      (path) => self.flattened.enumerateChildren(pipe(path, Chunk.prepend(name))),
+      (path) => self.flattened.enumerateChildren(path),
       pathPatch.nested(self.flattened.patch, name)
     )))
 
@@ -592,4 +623,77 @@ const transpose = <A>(array: Array<Array<A>>): Array<Array<A>> => {
 
 const escapeRegex = (string: string): string => {
   return string.replace(/[/\-\\^$*+?.()|[\]{}]/g, "\\$&")
+}
+
+const indicesFrom = (quotedIndices: HashSet.HashSet<string>): Effect.Effect<never, never, Chunk.Chunk<number>> =>
+  pipe(
+    core.forEach(quotedIndices, parseQuotedIndex),
+    core.mapBoth(() => Chunk.empty<number>(), Chunk.sort(number.Order)),
+    core.either,
+    core.map(Either.merge)
+  )
+
+const STR_INDEX_REGEX = /(^.+)(\[(\d+)\])$/
+const QUOTED_INDEX_REGEX = /^(\[(\d+)\])$/
+
+const parseQuotedIndex = (str: string): Option.Option<number> => {
+  const match = str.match(QUOTED_INDEX_REGEX)
+  if (match !== null) {
+    const matchedIndex = match[2]
+    return pipe(
+      matchedIndex !== undefined && matchedIndex.length > 0 ?
+        Option.some(matchedIndex) :
+        Option.none(),
+      Option.flatMap(parseInteger)
+    )
+  }
+  return Option.none()
+}
+
+const splitIndexInKeys = (
+  map: Map<string, string>,
+  unmakePathString: (str: string) => Chunk.Chunk<string>,
+  makePathString: (chunk: Chunk.Chunk<string>) => string
+): Map<string, string> => {
+  const newMap: Map<string, string> = new Map()
+  for (const [pathString, value] of map) {
+    const keyWithIndex = pipe(
+      unmakePathString(pathString),
+      Chunk.flatMap((key) =>
+        Option.match(
+          splitIndexFrom(key),
+          () => Chunk.of(key),
+          ([key, index]) => Chunk.make(key, `[${index}]`)
+        )
+      )
+    )
+    newMap.set(makePathString(keyWithIndex), value)
+  }
+  return newMap
+}
+
+const splitIndexFrom = (key: string): Option.Option<readonly [string, number]> => {
+  const match = key.match(STR_INDEX_REGEX)
+  if (match !== null) {
+    const matchedString = match[1]
+    const matchedIndex = match[3]
+    const optionalString = matchedString !== undefined && matchedString.length > 0 ?
+      Option.some(matchedString) :
+      Option.none()
+    const optionalIndex = pipe(
+      matchedIndex !== undefined && matchedIndex.length > 0 ?
+        Option.some(matchedIndex) :
+        Option.none(),
+      Option.flatMap(parseInteger)
+    )
+    return Option.tuple(optionalString, optionalIndex)
+  }
+  return Option.none()
+}
+
+const parseInteger = (str: string): Option.Option<number> => {
+  const parsedIndex = Number.parseInt(str)
+  return Number.isNaN(parsedIndex) ?
+    Option.none() :
+    Option.some(parsedIndex)
 }

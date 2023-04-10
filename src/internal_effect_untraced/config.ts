@@ -11,7 +11,9 @@ import * as ConfigError from "@effect/io/Config/Error"
 import type * as ConfigSecret from "@effect/io/Config/Secret"
 import * as configError from "@effect/io/internal_effect_untraced/configError"
 import * as configSecret from "@effect/io/internal_effect_untraced/configSecret"
+import * as core from "@effect/io/internal_effect_untraced/core"
 import * as OpCodes from "@effect/io/internal_effect_untraced/opCodes/config"
+import type * as LogLevel from "@effect/io/Logger/Level"
 
 /** @internal */
 const ConfigSymbolKey = "@effect/io/Config"
@@ -201,14 +203,6 @@ export const date = (name?: string): Config.Config<Date> => {
 }
 
 /** @internal */
-export const defer = <A>(config: LazyArg<Config.Config<A>>): Config.Config<A> => {
-  const lazy = Object.create(proto)
-  lazy._tag = OpCodes.OP_LAZY
-  lazy.config = config
-  return lazy
-}
-
-/** @internal */
 export const fail = (message: string): Config.Config<never> => {
   const fail = Object.create(proto)
   fail._tag = OpCodes.OP_FAIL
@@ -255,6 +249,18 @@ export const integer = (name?: string): Config.Config<number> => {
     }
   )
   return name === undefined ? config : nested(name)(config)
+}
+
+/** @internal */
+export const logLevel = (name?: string): Config.Config<LogLevel.LogLevel> => {
+  const config = mapOrFail(string(), (value) => {
+    const label = value.toUpperCase()
+    const level = core.allLogLevels.find((level) => level.label === label)
+    return level === undefined
+      ? Either.left(configError.InvalidData(Chunk.empty(), `Expected a log level, but found: ${value}`))
+      : Either.right(level)
+  })
+  return name === undefined ? config : nested(config, name)
 }
 
 /** @internal */
@@ -320,7 +326,7 @@ export const orElse = dual<
   const fallback = Object.create(proto)
   fallback._tag = OpCodes.OP_FALLBACK
   fallback.first = self
-  fallback.second = defer(that)
+  fallback.second = suspend(that)
   fallback.condition = constTrue
   return fallback
 })
@@ -340,7 +346,7 @@ export const orElseIf = dual<
   const fallback = Object.create(proto)
   fallback._tag = OpCodes.OP_FALLBACK
   fallback.first = self
-  fallback.second = defer(that)
+  fallback.second = suspend(that)
   fallback.condition = condition
   return fallback
 })
@@ -403,22 +409,22 @@ export const all: {
     self: Config.Config<A>,
     ...args: T
   ): Config.Config<
-    readonly [
+    [
       A,
       ...(T["length"] extends 0 ? []
-        : Readonly<{ [K in keyof T]: [T[K]] extends [Config.Config<infer A>] ? A : never }>)
+        : { [K in keyof T]: [T[K]] extends [Config.Config<infer A>] ? A : never })
     ]
   >
   <T extends ReadonlyArray<Config.Config<any>>>(
     args: [...T]
   ): Config.Config<
     T[number] extends never ? []
-      : Readonly<{ [K in keyof T]: [T[K]] extends [Config.Config<infer A>] ? A : never }>
+      : { [K in keyof T]: [T[K]] extends [Config.Config<infer A>] ? A : never }
   >
   <T extends Readonly<{ [K: string]: Config.Config<any> }>>(
     args: T
   ): Config.Config<
-    Readonly<{ [K in keyof T]: [T[K]] extends [Config.Config<infer A>] ? A : never }>
+    { [K in keyof T]: [T[K]] extends [Config.Config<infer A>] ? A : never }
   >
 } = function() {
   if (arguments.length === 1) {
@@ -463,8 +469,16 @@ export const succeed = <A>(value: A): Config.Config<A> => {
 }
 
 /** @internal */
+export const suspend = <A>(config: LazyArg<Config.Config<A>>): Config.Config<A> => {
+  const lazy = Object.create(proto)
+  lazy._tag = OpCodes.OP_LAZY
+  lazy.config = config
+  return lazy
+}
+
+/** @internal */
 export const sync = <A>(value: LazyArg<A>): Config.Config<A> => {
-  return defer(() => succeed(value()))
+  return suspend(() => succeed(value()))
 }
 
 /** @internal */

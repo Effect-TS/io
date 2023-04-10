@@ -11,6 +11,7 @@ import type { Predicate, Refinement } from "@effect/data/Predicate"
 import type * as ConfigError from "@effect/io/Config/Error"
 import type * as ConfigSecret from "@effect/io/Config/Secret"
 import * as internal from "@effect/io/internal_effect_untraced/config"
+import type * as LogLevel from "@effect/io/Logger/Level"
 
 /**
  * @since 1.0.0
@@ -86,6 +87,36 @@ export declare namespace Config {
 }
 
 /**
+ * Constructs a config from a tuple / struct / arguments of configs.
+ *
+ * @since 1.0.0
+ * @category constructors
+ */
+export const all: {
+  <A, T extends ReadonlyArray<Config<any>>>(
+    self: Config<A>,
+    ...args: T
+  ): Config<
+    [
+      A,
+      ...(T["length"] extends 0 ? []
+        : { [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never })
+    ]
+  >
+  <T extends ReadonlyArray<Config<any>>>(
+    args: [...T]
+  ): Config<
+    T[number] extends never ? []
+      : { [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never }
+  >
+  <T extends Readonly<{ [K: string]: Config<any> }>>(
+    args: T
+  ): Config<
+    { [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never }
+  >
+} = internal.all
+
+/**
  * Constructs a config for an array of values.
  *
  * @since 1.0.0
@@ -118,14 +149,6 @@ export const chunkOf: <A>(config: Config<A>, name?: string | undefined) => Confi
 export const date: (name?: string | undefined) => Config<Date> = internal.date
 
 /**
- * Lazily constructs a config.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const defer: <A>(config: LazyArg<Config<A>>) => Config<A> = internal.defer
-
-/**
  * Constructs a config that fails with the specified message.
  *
  * @since 1.0.0
@@ -148,6 +171,14 @@ export const float: (name?: string | undefined) => Config<number> = internal.flo
  * @category constructors
  */
 export const integer: (name?: string | undefined) => Config<number> = internal.integer
+
+/**
+ * Constructs a config for a `LogLevel` value.
+ *
+ * @since 1.0.0
+ * @category constructors
+ */
+export const logLevel: (name?: string | undefined) => Config<LogLevel.LogLevel> = internal.logLevel
 
 /**
  * This function returns `true` if the specified value is an `Config` value,
@@ -306,6 +337,14 @@ export const string: (name?: string | undefined) => Config<string> = internal.st
 export const succeed: <A>(value: A) => Config<A> = internal.succeed
 
 /**
+ * Lazily constructs a config.
+ *
+ * @since 1.0.0
+ * @category constructors
+ */
+export const suspend: <A>(config: LazyArg<Config<A>>) => Config<A> = internal.suspend
+
+/**
  * Constructs a config which contains the specified lazy value.
  *
  * @since 1.0.0
@@ -321,36 +360,6 @@ export const sync: <A>(value: LazyArg<A>) => Config<A> = internal.sync
  */
 export const table: <A>(config: Config<A>, name?: string | undefined) => Config<HashMap.HashMap<string, A>> =
   internal.table
-
-/**
- * Constructs a config from a tuple / struct / arguments of configs.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const all: {
-  <A, T extends ReadonlyArray<Config<any>>>(
-    self: Config<A>,
-    ...args: T
-  ): Config<
-    readonly [
-      A,
-      ...(T["length"] extends 0 ? []
-        : Readonly<{ [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never }>)
-    ]
-  >
-  <T extends ReadonlyArray<Config<any>>>(
-    args: [...T]
-  ): Config<
-    T[number] extends never ? []
-      : Readonly<{ [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never }>
-  >
-  <T extends Readonly<{ [K: string]: Config<any> }>>(
-    args: T
-  ): Config<
-    Readonly<{ [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never }>
-  >
-} = internal.all
 
 /**
  * Constructs a config from some configuration wrapped with the `Wrap<A>` utility type.
