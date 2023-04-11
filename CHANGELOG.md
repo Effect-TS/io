@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.20.0
+
+### Minor Changes
+
+- [#356](https://github.com/Effect-TS/io/pull/356) [`4cb45cc`](https://github.com/Effect-TS/io/commit/4cb45ccc3522660cbd08f8012a0640dffdb66644) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Update unify
+
 ## 0.19.3
 
 ### Patch Changes
