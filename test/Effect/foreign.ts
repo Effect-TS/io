@@ -19,8 +19,12 @@ describe.concurrent("Foreign", () => {
     Effect.gen(function*($) {
       const unifiedEffect = unify((yield* $(nextInt())) > 1 ? Effect.succeed(0) : Effect.fail(1))
       const unifiedExit = unify((yield* $(nextInt())) > 1 ? Exit.succeed(0) : Exit.fail(1))
+      const unifiedEither = unify((yield* $(nextInt())) > 1 ? Either.right(0) : Either.left(1))
+      const unifiedOption = unify((yield* $(nextInt())) > 1 ? Option.some(0) : Option.none())
       assert.deepEqual(yield* $(unifiedEffect), 0)
       assert.deepEqual(yield* $(unifiedExit), 0)
+      assert.deepEqual(yield* $(unifiedEither), 0)
+      assert.deepEqual(yield* $(unifiedOption), 0)
     }))
   it.effect("Tag", () =>
     Effect.gen(function*($) {

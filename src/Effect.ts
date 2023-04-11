@@ -109,10 +109,28 @@ export interface Effect<R, E, A> extends Effect.Variance<R, E, A>, Equal.Equal {
   traced(trace: Trace): Effect<R, E, A>
 
   [Unify.typeSymbol]?: unknown
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  [Unify.unifySymbol]?: () => this[Unify.typeSymbol] extends Effect<infer R0, infer E0, infer A0> | infer Z
-    ? Effect<R0, E0, A0>
-    : never
+  [Unify.unifySymbol]?: EffectUnify<this>
+  [Unify.blacklistSymbol]?: EffectUnifyBlacklist
+}
+
+/**
+ * @since 1.0.0
+ * @category models
+ */
+export interface EffectUnify<A extends { [Unify.typeSymbol]?: any }>
+  extends Either.EitherUnify<A>, Option.OptionUnify<A>, Context.TagUnify<A>
+{
+  Effect?: () => A[Unify.typeSymbol] extends Effect<infer R0, infer E0, infer A0> | infer _ ? Effect<R0, E0, A0> : never
+}
+
+/**
+ * @category models
+ * @since 1.0.0
+ */
+export interface EffectUnifyBlacklist {
+  Tag?: true
+  Option?: true
+  Either?: true
 }
 
 /**
@@ -130,6 +148,11 @@ export interface EffectTypeLambda extends TypeLambda {
 declare module "@effect/data/Context" {
   interface Tag<Identifier, Service> extends Effect<Identifier, never, Service> {}
   interface TracedTag<Identifier, Service> extends Effect<Identifier, never, Service> {}
+  interface TagUnifyBlacklist {
+    Effect?: true
+    Either?: true
+    Option?: true
+  }
 }
 
 /**
@@ -146,6 +169,11 @@ declare module "@effect/data/Either" {
   interface TracedEither<E, A> extends Effect<never, E, A> {
     readonly _tag: "Traced"
   }
+  interface EitherUnifyBlacklist {
+    Effect?: true
+    Tag?: true
+    Option?: true
+  }
 }
 
 /**
@@ -161,6 +189,11 @@ declare module "@effect/data/Option" {
   }
   interface TracedOption<A> extends Effect<never, Cause.NoSuchElementException, A> {
     readonly _tag: "Traced"
+  }
+  interface OptionUnifyBlacklist {
+    Effect?: true
+    Tag?: true
+    Either?: true
   }
 }
 

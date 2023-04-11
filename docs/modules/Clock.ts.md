@@ -98,7 +98,7 @@ Added in v1.0.0
 
 ## Clock (interface)
 
-Represents a time-based cloock which provides functionality related to time
+Represents a time-based clock which provides functionality related to time
 and scheduling.
 
 **Signature**

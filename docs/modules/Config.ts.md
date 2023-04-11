@@ -18,15 +18,16 @@ Added in v1.0.0
   - [bool](#bool)
   - [chunkOf](#chunkof)
   - [date](#date)
-  - [defer](#defer)
   - [fail](#fail)
   - [float](#float)
   - [integer](#integer)
+  - [logLevel](#loglevel)
   - [primitive](#primitive)
   - [secret](#secret)
   - [setOf](#setof)
   - [string](#string)
   - [succeed](#succeed)
+  - [suspend](#suspend)
   - [sync](#sync)
   - [table](#table)
   - [unwrap](#unwrap)
@@ -67,17 +68,14 @@ Constructs a config from a tuple / struct / arguments of configs.
 ```ts
 export declare const all: {
   <A, T extends readonly Config<any>[]>(self: Config<A>, ...args: T): Config<
-    readonly [
-      A,
-      ...(T['length'] extends 0 ? [] : Readonly<{ [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never }>)
-    ]
+    [A, ...(T['length'] extends 0 ? [] : { [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never })]
   >
   <T extends readonly Config<any>[]>(args: [...T]): Config<
-    T[number] extends never ? [] : Readonly<{ [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never }>
+    T[number] extends never ? [] : { [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never }
   >
-  <T extends Readonly<{ [K: string]: Config<any> }>>(args: T): Config<
-    Readonly<{ [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never }>
-  >
+  <T extends Readonly<{ [K: string]: Config<any> }>>(args: T): Config<{
+    [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never
+  }>
 }
 ```
 
@@ -131,18 +129,6 @@ export declare const date: (name?: string | undefined) => Config<Date>
 
 Added in v1.0.0
 
-## defer
-
-Lazily constructs a config.
-
-**Signature**
-
-```ts
-export declare const defer: <A>(config: LazyArg<Config<A>>) => Config<A>
-```
-
-Added in v1.0.0
-
 ## fail
 
 Constructs a config that fails with the specified message.
@@ -175,6 +161,18 @@ Constructs a config for a integer value.
 
 ```ts
 export declare const integer: (name?: string | undefined) => Config<number>
+```
+
+Added in v1.0.0
+
+## logLevel
+
+Constructs a config for a `LogLevel` value.
+
+**Signature**
+
+```ts
+export declare const logLevel: (name?: string | undefined) => Config<LogLevel.LogLevel>
 ```
 
 Added in v1.0.0
@@ -238,6 +236,18 @@ Constructs a config which contains the specified value.
 
 ```ts
 export declare const succeed: <A>(value: A) => Config<A>
+```
+
+Added in v1.0.0
+
+## suspend
+
+Lazily constructs a config.
+
+**Signature**
+
+```ts
+export declare const suspend: <A>(config: LazyArg<Config<A>>) => Config<A>
 ```
 
 Added in v1.0.0

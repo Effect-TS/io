@@ -21,6 +21,7 @@ Added in v1.0.0
   - [None](#none)
   - [Trace](#trace)
   - [Warning](#warning)
+  - [allLevels](#alllevels)
 - [conversions](#conversions)
   - [fromLiteral](#fromliteral)
 - [instances](#instances)
@@ -123,6 +124,16 @@ Added in v1.0.0
 
 ```ts
 export declare const Warning: LogLevel
+```
+
+Added in v1.0.0
+
+## allLevels
+
+**Signature**
+
+```ts
+export declare const allLevels: readonly LogLevel[]
 ```
 
 Added in v1.0.0
