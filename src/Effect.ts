@@ -46,6 +46,7 @@ import type * as RuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
 import type * as FiberRef from "@effect/io/FiberRef"
 import type * as FiberRefs from "@effect/io/FiberRefs"
 import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
+import * as _cache from "@effect/io/internal_effect_untraced/cache"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as defaultServices from "@effect/io/internal_effect_untraced/defaultServices"
 import * as effect from "@effect/io/internal_effect_untraced/effect"
@@ -53,6 +54,7 @@ import * as circular from "@effect/io/internal_effect_untraced/effect/circular"
 import * as fiberRuntime from "@effect/io/internal_effect_untraced/fiberRuntime"
 import * as layer from "@effect/io/internal_effect_untraced/layer"
 import * as circularLayer from "@effect/io/internal_effect_untraced/layer/circular"
+import * as query from "@effect/io/internal_effect_untraced/query"
 import * as _runtime from "@effect/io/internal_effect_untraced/runtime"
 import * as _schedule from "@effect/io/internal_effect_untraced/schedule"
 import type * as Layer from "@effect/io/Layer"
@@ -61,6 +63,10 @@ import type * as Metric from "@effect/io/Metric"
 import type * as MetricLabel from "@effect/io/Metric/Label"
 import type * as Random from "@effect/io/Random"
 import type * as Ref from "@effect/io/Ref"
+import type { Request } from "@effect/io/Request"
+import type { RequestBlock } from "@effect/io/RequestBlock"
+import type { RequestCache } from "@effect/io/RequestCache"
+import type { RequestResolver } from "@effect/io/RequestResolver"
 import type * as Runtime from "@effect/io/Runtime"
 import type * as Schedule from "@effect/io/Schedule"
 import type { Scheduler } from "@effect/io/Scheduler"
@@ -139,6 +145,16 @@ export interface EffectUnifyBlacklist {
  */
 export interface EffectTypeLambda extends TypeLambda {
   readonly type: Effect<this["Out2"], this["Out1"], this["Target"]>
+}
+
+/**
+ * @since 1.0.0
+ * @category models
+ */
+export interface Blocked<R, E, A> extends Effect<R, E, A> {
+  readonly _tag: "Blocked"
+  readonly i0: RequestBlock<R>
+  readonly i1: Effect<R, E, A>
 }
 
 /**
@@ -1315,7 +1331,7 @@ export const die: (defect: unknown) => Effect<never, never, never> = core.die
  * @since 1.0.0
  * @category constructors
  */
-export const dieMessage: (message: string) => Effect<never, never, never> = effect.dieMessage
+export const dieMessage: (message: string) => Effect<never, never, never> = core.dieMessage
 
 /**
  * @since 1.0.0
@@ -4261,7 +4277,7 @@ export const sleep: (duration: Duration.Duration) => Effect<never, never, void> 
  * @since 1.0.0
  * @category utils
  */
-export const some: <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R, Option.Option<E>, A> = fiberRuntime.some
+export const some: <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R, Option.Option<E>, A> = _cache.some
 
 /**
  * Extracts the optional value, or returns the given 'orElse'.
@@ -5942,3 +5958,56 @@ export const getFirstSuccessSemigroup = semiCoproduct
 export const getFailureMonoid: <A, O, E>(M: Monoid<A>) => Monoid<Effect<O, E, A>> = applicative.getMonoid(
   Applicative
 )
+
+/**
+ * @category utils
+ * @since 1.0.0
+ */
+export const blocked: <R, E, A>(blockedRequests: RequestBlock<R>, _continue: Effect<R, E, A>) => Blocked<R, E, A> =
+  core.blocked
+
+/**
+ * @category utils
+ * @since 1.0.0
+ */
+export const step: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Exit.Exit<E, A> | Blocked<R, E, A>> = core.step
+
+/**
+ * @category utils
+ * @since 1.0.0
+ */
+export const flatMapStep: <R, E, A, R1, E1, B>(
+  self: Effect<R, E, A>,
+  f: (step: Exit.Exit<E, A> | Blocked<R, E, A>) => Effect<R1, E1, B>
+) => Effect<R | R1, E1, B> = core.flatMapStep
+
+/**
+ * @since 1.0.0
+ * @category requests
+ */
+export const request: <R, A extends Request<any, any>, A2 extends A>(
+  request: A,
+  dataSource: RequestResolver<R, A2>
+) => Effect<
+  R,
+  Request.Error<A>,
+  Request.Success<A>
+> = query.fromRequest
+
+/**
+ * @since 1.0.0
+ * @category requests
+ */
+export const withRequestCache: {
+  (strategy: "on" | "off" | "new" | RequestCache): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, strategy: "on" | "off" | "new" | RequestCache): Effect<R, E, A>
+} = query.withRequestCache
+
+/**
+ * @since 1.0.0
+ * @category requests
+ */
+export const withRequestBatching: {
+  (strategy: "on" | "off"): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, strategy: "on" | "off"): Effect<R, E, A>
+} = query.withRequestBatching

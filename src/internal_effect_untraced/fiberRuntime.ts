@@ -22,9 +22,12 @@ import * as RuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
 import * as FiberStatus from "@effect/io/Fiber/Status"
 import type * as FiberRef from "@effect/io/FiberRef"
 import type * as FiberRefs from "@effect/io/FiberRefs"
+import * as _RequestBlock from "@effect/io/internal_effect_untraced/blockedRequests"
+import { some } from "@effect/io/internal_effect_untraced/cache"
 import * as internalCause from "@effect/io/internal_effect_untraced/cause"
 import { StackAnnotation } from "@effect/io/internal_effect_untraced/cause"
 import * as clock from "@effect/io/internal_effect_untraced/clock"
+import * as completedRequestMap from "@effect/io/internal_effect_untraced/completedRequestMap"
 import { configProviderTag } from "@effect/io/internal_effect_untraced/configProvider"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as defaultServices from "@effect/io/internal_effect_untraced/defaultServices"
@@ -44,6 +47,10 @@ import type { Logger } from "@effect/io/Logger"
 import * as LogLevel from "@effect/io/Logger/Level"
 import type * as MetricLabel from "@effect/io/Metric/Label"
 import * as Ref from "@effect/io/Ref"
+import type { Request } from "@effect/io/Request"
+import type * as RequestBlock from "@effect/io/RequestBlock"
+import * as Cache from "@effect/io/RequestCache"
+import type { RequestResolver } from "@effect/io/RequestResolver"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
 
@@ -95,6 +102,13 @@ const contOpSuccess = {
     value: unknown
   ) => {
     return cont.i1(value)
+  },
+  ["OnResult"]: (
+    _: FiberRuntime<any, any>,
+    cont: core.OnResult,
+    value: unknown
+  ) => {
+    return cont.i1(core.exitSucceed(value))
   },
   [OpCodes.OP_ON_SUCCESS_AND_FAILURE]: (
     _: FiberRuntime<any, any>,
@@ -167,6 +181,68 @@ const drainQueueWhileRunningTable = {
   }
 }
 
+/**
+ * @internal
+ */
+export const currentRequestCache = core.fiberRefUnsafeMake(Cache.unsafeMake())
+
+/**
+ * @internal
+ */
+export const currentRequestCacheEnabled = core.fiberRefUnsafeMake(false)
+
+/**
+ * @internal
+ */
+export const currentRequestBatchingEnabled = core.fiberRefUnsafeMake(false)
+
+class LeftoverRequestsException {
+  readonly _tag = "LeftoverRequestsException"
+  constructor(readonly requests: HashSet.HashSet<Request<any, any>>) {}
+}
+
+/**
+ * Executes all requests, submitting requests to each data source in parallel.
+ */
+const runBlockedRequests = <R>(self: RequestBlock.RequestBlock<R>) => {
+  return core.forEachDiscard(
+    _RequestBlock.flatten(self),
+    (requestsByRequestResolver) =>
+      forEachParDiscard(
+        _RequestBlock.sequentialCollectionToChunk(requestsByRequestResolver),
+        ([dataSource, sequential]) =>
+          core.flatMap(
+            dataSource.runAll(
+              Chunk.map(
+                sequential,
+                (blockedRequests) => Chunk.map(blockedRequests, (blockedRequest) => blockedRequest.request)
+              )
+            ),
+            (completedRequests) => {
+              const blockedRequests: Chunk.Chunk<RequestBlock.Entry<unknown>> = Chunk.flatten(sequential)
+              const leftovers = pipe(
+                completedRequestMap.requests(completedRequests),
+                HashSet.difference(
+                  Chunk.map(
+                    blockedRequests,
+                    (blockedRequest) => blockedRequest.request as Request<unknown, unknown>
+                  )
+                )
+              )
+              if (HashSet.size(leftovers) > 0) {
+                return core.die(new LeftoverRequestsException(leftovers))
+              }
+              return core.forEachDiscard(blockedRequests, (blockedRequest) =>
+                core.deferredComplete(
+                  blockedRequest.result,
+                  completedRequestMap.getOrThrow(completedRequests, blockedRequest.request)
+                ))
+            }
+          )
+      )
+  )
+}
+
 /** @internal */
 export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   readonly [internalFiber.FiberTypeId] = internalFiber.fiberVariance
@@ -198,6 +274,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   private _asyncBlockingOn: FiberId.FiberId | null = null
   private _exitValue: Exit.Exit<E, A> | null = null
   private _traceStack: Array<NonNullable<Debug.Trace>> = []
+  private _canUnwindBlocked = 0
 
   /**
    * The identity of the fiber.
@@ -890,6 +967,9 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
 
   pushStack(cont: core.Continuation) {
     this._stack.push(cont)
+    if (cont._tag === "OnResult") {
+      this._canUnwindBlocked++
+    }
     if ("trace" in cont && cont.trace) {
       this._traceStack.push(cont.trace)
     }
@@ -898,6 +978,9 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   popStack() {
     const item = this._stack.pop()
     if (item) {
+      if (item._tag === "OnResult") {
+        this._canUnwindBlocked--
+      }
       if ("trace" in item && item.trace) {
         this._traceStack.pop()
       }
@@ -1021,6 +1104,13 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
             return core.exitFailCause(internalCause.stripFailures(cause))
           }
         }
+        case "OnResult": {
+          if (!(_runtimeFlags.interruptible(this._runtimeFlags) && this.isInterrupted())) {
+            return cont.i1(core.exitFailCause(cause))
+          } else {
+            return core.exitFailCause(internalCause.stripFailures(cause))
+          }
+        }
         case OpCodes.OP_REVERT_FLAGS: {
           this.patchRuntimeFlags(this._runtimeFlags, cont.patch)
           if (_runtimeFlags.interruptible(this._runtimeFlags) && this.isInterrupted()) {
@@ -1045,37 +1135,83 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     )
   }
 
-  [OpCodes.OP_UPDATE_RUNTIME_FLAGS](op: core.Primitive & { _tag: OpCodes.OP_UPDATE_RUNTIME_FLAGS }) {
-    if (op.i1 === undefined) {
-      this.patchRuntimeFlags(this._runtimeFlags, op.i0)
-      return core.exitUnit()
-    } else {
-      const updateFlags = op.i0
-      const oldRuntimeFlags = this._runtimeFlags
-      const newRuntimeFlags = _runtimeFlags.patch(oldRuntimeFlags, updateFlags)
-      if (newRuntimeFlags === oldRuntimeFlags) {
-        // No change, short circuit
-        return op.i1(oldRuntimeFlags)
-      } else {
-        // One more chance to short circuit: if we're immediately going
-        // to interrupt. Interruption will cause immediate reversion of
-        // the flag, so as long as we "peek ahead", there's no need to
-        // set them to begin with.
-        if (_runtimeFlags.interruptible(newRuntimeFlags) && this.isInterrupted()) {
-          return core.exitFailCause(this.getInterruptedCause())
-        } else {
-          // Impossible to short circuit, so record the changes
-          this.patchRuntimeFlags(this._runtimeFlags, updateFlags)
-          // Since we updated the flags, we need to revert them
-          const revertFlags = _runtimeFlags.diff(newRuntimeFlags, oldRuntimeFlags)
-          this.pushStack(new core.RevertFlags(revertFlags))
-          return op.i1(oldRuntimeFlags)
+  ["Blocked"](op: core.Primitive & { _tag: "Blocked" }) {
+    if (this._canUnwindBlocked > 0 && this.getFiberRef(currentRequestBatchingEnabled) === true) {
+      const nextOp = this.popStack()
+      if (nextOp) {
+        switch (nextOp._tag) {
+          case "OnResult": {
+            return nextOp.i1(op)
+          }
+          case "OnSuccess": {
+            return core.blocked(op.i0, core.flatMap(op.i1, nextOp.i1))
+          }
+          case "OnSuccessAndFailure": {
+            return core.blocked(op.i0, core.matchCauseEffect(op.i1, nextOp.i1, nextOp.i2))
+          }
+          case "OnFailure": {
+            return core.blocked(op.i0, core.catchAllCause(op.i1, nextOp.i1))
+          }
+          case "Traced": {
+            return core.blocked(op.i0, op.i1.traced(nextOp.trace))
+          }
+          case "While": {
+            return core.blocked(
+              op.i0,
+              core.flatMap(op.i1, (a) => {
+                nextOp.i2(a)
+                if (nextOp.i0()) {
+                  return nextOp.i1()
+                }
+                return core.unit()
+              })
+            )
+          }
+          case "RevertFlags": {
+            this.patchRuntimeFlags(this._runtimeFlags, nextOp.patch)
+            if (_runtimeFlags.interruptible(this._runtimeFlags) && this.isInterrupted()) {
+              this.patchRuntimeFlags(this._runtimeFlags, RuntimeFlagsPatch.inverse(nextOp.patch))
+              this.pushStack(nextOp)
+              break
+            } else {
+              return core.blocked(
+                core.requestBlockPatchRuntimeFlags(op.i0, nextOp.op.i0),
+                core.withRuntimeFlags(op.i1, nextOp.op.i0)
+              )
+            }
+          }
         }
       }
+    }
+    return core.flatMap(core.uninterruptible(runBlockedRequests(op.i0)), () => op.i1)
+  }
+
+  [OpCodes.OP_UPDATE_RUNTIME_FLAGS](op: core.Primitive & { _tag: OpCodes.OP_UPDATE_RUNTIME_FLAGS }) {
+    const updateFlags = op.i0
+    const oldRuntimeFlags = this._runtimeFlags
+    const newRuntimeFlags = _runtimeFlags.patch(oldRuntimeFlags, updateFlags)
+    // One more chance to short circuit: if we're immediately going
+    // to interrupt. Interruption will cause immediate reversion of
+    // the flag, so as long as we "peek ahead", there's no need to
+    // set them to begin with.
+    if (_runtimeFlags.interruptible(newRuntimeFlags) && this.isInterrupted()) {
+      return core.exitFailCause(this.getInterruptedCause())
+    } else {
+      // Impossible to short circuit, so record the changes
+      this.patchRuntimeFlags(this._runtimeFlags, updateFlags)
+      // Since we updated the flags, we need to revert them
+      const revertFlags = _runtimeFlags.diff(newRuntimeFlags, oldRuntimeFlags)
+      this.pushStack(new core.RevertFlags(revertFlags, op))
+      return op.i1 ? op.i1(oldRuntimeFlags) : core.exitUnit()
     }
   }
 
   [OpCodes.OP_ON_SUCCESS](op: core.Primitive & { _tag: OpCodes.OP_ON_SUCCESS }) {
+    this.pushStack(op)
+    return op.i0
+  }
+
+  ["OnResult"](op: core.Primitive & { _tag: "OnResult" }) {
     this.pushStack(op)
     return op.i0
   }
@@ -1471,6 +1607,43 @@ const forEachParUnbounded = <A, R, E, B>(
     return core.zipRight(forEachParUnboundedDiscard(as, fn), core.succeed(Chunk.unsafeFromArray(array)))
   })
 
+/** @internal */
+export const resolverInterrupt = Debug.untracedMethod(() =>
+  <R, B extends Request<any, any>>(
+    self: RequestResolver<R, B>
+  ): RequestResolver<R, B> =>
+    new core.RequestResolverImpl<R, B>(
+      (requests) => {
+        return core.fiberIdWith((id) => {
+          const result = completedRequestMap.empty()
+          for (const seq of requests) {
+            for (const par of seq) {
+              completedRequestMap.set(par, core.exitInterrupt(id) as any)
+            }
+          }
+          return core.exitSucceed(result)
+        })
+      },
+      Chunk.make("Interrupt", self)
+    )
+)
+
+/** @internal */
+export const requestBlockInterrupt = <R>(
+  self: RequestBlock.RequestBlock<R>
+): RequestBlock.RequestBlock<R> => _RequestBlock.reduce(self, InterruptReduucer())
+
+const InterruptReduucer = <R>(): RequestBlock.RequestBlock.Reducer<R, RequestBlock.RequestBlock<R>> => ({
+  emptyCase: () => _RequestBlock.empty,
+  parCase: (left, right) => _RequestBlock.par(left, right),
+  seqCase: (left, right) => _RequestBlock.seq(left, right),
+  singleCase: (dataSource, blockedRequest) =>
+    _RequestBlock.single(
+      resolverInterrupt(dataSource),
+      blockedRequest
+    )
+})
+
 /* @internal */
 const forEachParUnboundedDiscard = <R, E, A, _>(
   self: Iterable<A>,
@@ -1485,26 +1658,61 @@ const forEachParUnboundedDiscard = <R, E, A, _>(
       return core.asUnit(f(as[0]))
     }
     return core.uninterruptibleMask((restore) => {
-      const deferred = core.deferredUnsafeMake<void, void>(FiberId.none)
+      const deferred = core.deferredUnsafeMake<void, Effect.Effect<any, any, any>>(FiberId.none)
       let ref = 0
+      const residual: Array<Effect.Blocked<any, any, any>> = []
       const process = core.transplant((graft) =>
         core.forEach(as, (a) =>
           pipe(
             graft(pipe(
-              restore(core.suspend(() => f(a))),
-              core.matchCauseEffect(
-                (cause) =>
-                  core.zipRight(
-                    core.deferredFail(deferred, void 0),
-                    core.failCause(cause)
-                  ),
-                () => {
-                  if (ref + 1 === size) {
-                    core.deferredUnsafeDone(deferred, core.unit())
-                  } else {
-                    ref = ref + 1
+              core.suspend(() => core.step(restore(f(a)))),
+              core.flatMap(
+                (exit) => {
+                  switch (exit._tag) {
+                    case "Failure": {
+                      if (residual.length > 0) {
+                        const requests = residual.map((blocked) => blocked.i0).reduce(_RequestBlock.par)
+                        const _continue = forEachParUnboundedDiscard(residual, (blocked) => blocked.i1)
+                        return core.blocked(
+                          requestBlockInterrupt(requests),
+                          core.matchCauseEffect(
+                            _continue,
+                            (cause) =>
+                              core.zipRight(
+                                core.deferredFail(deferred, void 0),
+                                core.failCause(internalCause.parallel(cause, exit.cause))
+                              ),
+                            () =>
+                              core.zipRight(
+                                core.deferredFail(deferred, void 0),
+                                core.failCause(exit.cause)
+                              )
+                          )
+                        )
+                      }
+                      return core.zipRight(
+                        core.deferredFail(deferred, void 0),
+                        core.failCause(exit.cause)
+                      )
+                    }
+                    default: {
+                      if (exit._tag === "Blocked") {
+                        residual.push(exit)
+                      }
+                      if (ref + 1 === size) {
+                        if (residual.length > 0) {
+                          const requests = residual.map((blocked) => blocked.i0).reduce(_RequestBlock.par)
+                          const _continue = forEachParUnboundedDiscard(residual, (blocked) => blocked.i1)
+                          return core.deferredSucceed(deferred, core.blocked(requests, _continue))
+                        } else {
+                          core.deferredUnsafeDone(deferred, core.exitSucceed(core.exitUnit()))
+                        }
+                      } else {
+                        ref = ref + 1
+                      }
+                      return core.unit()
+                    }
                   }
-                  return core.unit()
                 }
               )
             )),
@@ -1528,7 +1736,7 @@ const forEachParUnboundedDiscard = <R, E, A, _>(
                 }
               }
             ),
-          () => core.forEachDiscard(fibers, (f) => f.inheritAll())
+          (rest) => core.flatMap(rest, () => core.forEachDiscard(fibers, (f) => f.inheritAll()))
         ))
     })
   })
@@ -1554,15 +1762,46 @@ const forEachParNDiscard = <A, R, E, _>(
 ): Effect.Effect<R, E, void> =>
   core.suspend(() => {
     const iterator = self[Symbol.iterator]()
+    const residual: Array<Effect.Blocked<any, any, any>> = []
     const worker: Effect.Effect<R, E, void> = core.flatMap(
       core.sync(() => iterator.next()),
-      (next) => next.done ? core.unit() : core.flatMap(core.asUnit(f(next.value)), () => worker)
+      (next) =>
+        next.done ? core.unit() : core.flatMapStep(core.asUnit(f(next.value)), (res) => {
+          switch (res._tag) {
+            case "Blocked": {
+              residual.push(res)
+              return worker
+            }
+            case "Failure": {
+              return res
+            }
+            case "Success":
+              return worker
+          }
+        })
     )
     const effects: Array<Effect.Effect<R, E, void>> = []
     for (let i = 0; i < n; i++) {
       effects.push(worker)
     }
-    return forEachParUnboundedDiscard(effects, identity)
+    return core.flatMap(core.exit(forEachParUnboundedDiscard(effects, identity)), (exit) => {
+      if (residual.length === 0) {
+        return exit
+      }
+      const requests = residual.map((blocked) => blocked.i0).reduce(_RequestBlock.par)
+      const _continue = forEachParNDiscard(residual, n, (blocked) => blocked.i1)
+      if (exit._tag === "Failure") {
+        return core.blocked(
+          requestBlockInterrupt(requests),
+          core.matchCauseEffect(
+            _continue,
+            (cause) => core.exitFailCause(internalCause.parallel(exit.cause, cause)),
+            () => exit
+          )
+        )
+      }
+      return core.blocked(requests, _continue)
+    })
   })
 
 /* @internal */
@@ -1970,25 +2209,6 @@ export const sequentialFinalizers = Debug.methodWithTrace((trace) =>
         core.scopeFork(scope, ExecutionStrategy.sequential),
         core.flatMap((scope) => scopeExtend(scope)(self))
       )
-    ).traced(trace)
-)
-
-/* @internal */
-export const some = Debug.methodWithTrace((trace) =>
-  <R, E, A>(self: Effect.Effect<R, E, Option.Option<A>>): Effect.Effect<R, Option.Option<E>, A> =>
-    core.matchEffect(
-      self,
-      (e) => core.fail(Option.some(e)),
-      (option) => {
-        switch (option._tag) {
-          case "None": {
-            return core.fail(Option.none())
-          }
-          case "Some": {
-            return core.succeed(option.value)
-          }
-        }
-      }
     ).traced(trace)
 )
 

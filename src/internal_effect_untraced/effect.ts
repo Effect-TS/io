@@ -20,7 +20,6 @@ import type * as FiberRef from "@effect/io/FiberRef"
 import * as FiberRefs from "@effect/io/FiberRefs"
 import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
 import * as internalCause from "@effect/io/internal_effect_untraced/cause"
-import { dieMessage } from "@effect/io/internal_effect_untraced/clock"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as fiberRefsPatch from "@effect/io/internal_effect_untraced/fiberRefs/patch"
 import * as metricLabel from "@effect/io/internal_effect_untraced/metric/label"
@@ -31,9 +30,6 @@ import type * as Metric from "@effect/io/Metric"
 import type * as MetricLabel from "@effect/io/Metric/Label"
 import * as Random from "@effect/io/Random"
 import * as Ref from "@effect/io/Ref"
-
-/* @internal */
-export { dieMessage } from "@effect/io/internal_effect_untraced/clock"
 
 /* @internal */
 export const absolve = Debug.methodWithTrace((trace) =>
@@ -915,7 +911,7 @@ export const filterOrDieMessage = Debug.dualWithTrace<
     self: Effect.Effect<R, E, A>,
     f: Predicate<A>,
     message: string
-  ): Effect.Effect<R, E, A> => filterOrElse(self, restore(f), () => dieMessage(message)).traced(trace))
+  ): Effect.Effect<R, E, A> => filterOrElse(self, restore(f), () => core.dieMessage(message)).traced(trace))
 
 /* @internal */
 export const filterOrElse = Debug.dualWithTrace<

@@ -301,6 +301,7 @@ Added in v1.0.0
   - [negate](#negate)
 - [models](#models)
   - [Adapter (interface)](#adapter-interface)
+  - [Blocked (interface)](#blocked-interface)
   - [Effect (interface)](#effect-interface)
   - [EffectGen (interface)](#effectgen-interface)
   - [EffectUnify (interface)](#effectunify-interface)
@@ -312,6 +313,10 @@ Added in v1.0.0
   - [zipWith](#zipwith)
 - [refinements](#refinements)
   - [isEffect](#iseffect)
+- [requests](#requests)
+  - [request](#request)
+  - [withRequestBatching](#withrequestbatching)
+  - [withRequestCache](#withrequestcache)
 - [runtime](#runtime-1)
   - [updateRuntimeFlags](#updateruntimeflags)
   - [withRuntimeFlags](#withruntimeflags)
@@ -354,12 +359,14 @@ Added in v1.0.0
 - [utils](#utils)
   - [MergeRecord (type alias)](#mergerecord-type-alias)
   - [awaitAllChildren](#awaitallchildren)
+  - [blocked](#blocked)
   - [cached](#cached)
   - [cachedInvalidate](#cachedinvalidate)
   - [delay](#delay)
   - [diffFiberRefs](#difffiberrefs)
   - [dropUntil](#dropuntil)
   - [eventually](#eventually)
+  - [flatMapStep](#flatmapstep)
   - [flip](#flip)
   - [flipWith](#flipwith)
   - [forever](#forever)
@@ -434,6 +441,7 @@ Added in v1.0.0
   - [someOrFail](#someorfail)
   - [someOrFailException](#someorfailexception)
   - [someWith](#somewith)
+  - [step](#step)
   - [summarized](#summarized)
   - [supervised](#supervised)
   - [tagged](#tagged)
@@ -4959,6 +4967,20 @@ export interface Adapter {
 
 Added in v1.0.0
 
+## Blocked (interface)
+
+**Signature**
+
+```ts
+export interface Blocked<R, E, A> extends Effect<R, E, A> {
+  readonly _tag: 'Blocked'
+  readonly i0: RequestBlock<R>
+  readonly i1: Effect<R, E, A>
+}
+```
+
+Added in v1.0.0
+
 ## Effect (interface)
 
 The `Effect` interface defines a value that lazily describes a workflow or job.
@@ -5109,6 +5131,47 @@ argument to a function that expects an `Effect` value.
 
 ```ts
 export declare const isEffect: (u: unknown) => u is Effect<unknown, unknown, unknown>
+```
+
+Added in v1.0.0
+
+# requests
+
+## request
+
+**Signature**
+
+```ts
+export declare const request: <R, A extends Request<any, any>, A2 extends A>(
+  request: A,
+  dataSource: RequestResolver<R, A2>
+) => Effect<R, Request.Error<A>, Request.Success<A>>
+```
+
+Added in v1.0.0
+
+## withRequestBatching
+
+**Signature**
+
+```ts
+export declare const withRequestBatching: {
+  (strategy: 'on' | 'off'): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, strategy: 'on' | 'off'): Effect<R, E, A>
+}
+```
+
+Added in v1.0.0
+
+## withRequestCache
+
+**Signature**
+
+```ts
+export declare const withRequestCache: {
+  (strategy: 'on' | 'off' | 'new' | RequestCache): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, strategy: 'on' | 'off' | 'new' | RequestCache): Effect<R, E, A>
+}
 ```
 
 Added in v1.0.0
@@ -5624,6 +5687,19 @@ export declare const awaitAllChildren: <R, E, A>(self: Effect<R, E, A>) => Effec
 
 Added in v1.0.0
 
+## blocked
+
+**Signature**
+
+```ts
+export declare const blocked: <R, E, A>(
+  blockedRequests: RequestBlock<R>,
+  _continue: Effect<R, E, A>
+) => Blocked<R, E, A>
+```
+
+Added in v1.0.0
+
 ## cached
 
 Returns an effect that, if evaluated, will return the cached result of this
@@ -5717,6 +5793,19 @@ eventually succeeds.
 
 ```ts
 export declare const eventually: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, A>
+```
+
+Added in v1.0.0
+
+## flatMapStep
+
+**Signature**
+
+```ts
+export declare const flatMapStep: <R, E, A, R1, E1, B>(
+  self: Effect<R, E, A>,
+  f: (step: Exit.Failure<E, A> | Exit.Success<E, A> | Blocked<R, E, A>) => Effect<R1, E1, B>
+) => Effect<R | R1, E1, B>
 ```
 
 Added in v1.0.0
@@ -6954,6 +7043,18 @@ export declare const someWith: {
     f: (effect: Effect<R, Option.Option<E>, A>) => Effect<R1, Option.Option<E1>, A1>
   ): Effect<R | R1, E | E1, Option.Option<A1>>
 }
+```
+
+Added in v1.0.0
+
+## step
+
+**Signature**
+
+```ts
+export declare const step: <R, E, A>(
+  self: Effect<R, E, A>
+) => Effect<R, E, Exit.Failure<E, A> | Exit.Success<E, A> | Blocked<R, E, A>>
 ```
 
 Added in v1.0.0
