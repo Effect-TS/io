@@ -30,19 +30,30 @@ export type Exit<E, A> = Failure<E, A> | Success<E, A>
  * @since 1.0.0
  * @category models
  */
-export interface Failure<E, A> extends ExitUnify<E, A> {
+export interface Failure<E, A> extends Effect.Effect<never, E, A> {
   readonly _tag: "Failure"
   readonly cause: Cause.Cause<E>
+  [Unify.typeSymbol]?: unknown
+  [Unify.unifySymbol]?: ExitUnify<this>
+  [Unify.blacklistSymbol]?: ExitUnifyBlackList
   /** @internal */
   readonly i0: Cause.Cause<E>
 }
 
-// @ts-expect-error
-interface ExitUnify<E, A> extends Effect.Effect<never, E, A> {
-  [Unify.typeSymbol]?: unknown
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  [Unify.unifySymbol]?: () => this[Unify.typeSymbol] extends Exit<infer E0, infer A0> | infer Z ? Exit<E0, A0>
-    : never
+/**
+ * @category models
+ * @since 1.0.0
+ */
+export interface ExitUnify<A extends { [Unify.typeSymbol]?: any }> extends Effect.EffectUnify<A> {
+  Exit?: () => A[Unify.typeSymbol] extends Exit<infer E0, infer A0> | infer _ ? Exit<E0, A0> : never
+}
+
+/**
+ * @category models
+ * @since 1.0.0
+ */
+export interface ExitUnifyBlackList extends Effect.EffectUnifyBlacklist {
+  Effect?: true
 }
 
 /**
@@ -52,9 +63,12 @@ interface ExitUnify<E, A> extends Effect.Effect<never, E, A> {
  * @since 1.0.0
  * @category models
  */
-export interface Success<E, A> extends ExitUnify<E, A> {
+export interface Success<E, A> extends Effect.Effect<never, E, A> {
   readonly _tag: "Success"
   readonly value: A
+  [Unify.typeSymbol]?: unknown
+  [Unify.unifySymbol]?: ExitUnify<this>
+  [Unify.blacklistSymbol]?: ExitUnifyBlackList
   /** @internal */
   readonly i0: A
 }

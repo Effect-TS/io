@@ -303,6 +303,8 @@ Added in v1.0.0
   - [Adapter (interface)](#adapter-interface)
   - [Effect (interface)](#effect-interface)
   - [EffectGen (interface)](#effectgen-interface)
+  - [EffectUnify (interface)](#effectunify-interface)
+  - [EffectUnifyBlacklist (interface)](#effectunifyblacklist-interface)
 - [products](#products)
   - [zip](#zip)
   - [zipLeft](#zipleft)
@@ -4978,10 +4980,8 @@ export interface Effect<R, E, A> extends Effect.Variance<R, E, A>, Equal.Equal {
   traced(trace: Trace): Effect<R, E, A>
 
   [Unify.typeSymbol]?: unknown
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  [Unify.unifySymbol]?: () => this[Unify.typeSymbol] extends Effect<infer R0, infer E0, infer A0> | infer Z
-    ? Effect<R0, E0, A0>
-    : never
+  [Unify.unifySymbol]?: EffectUnify<this>
+  [Unify.blacklistSymbol]?: EffectUnifyBlacklist
 }
 ```
 
@@ -4999,6 +4999,35 @@ export interface EffectGen<R, E, A> {
   readonly value: Effect<R, E, A>
 
   [Symbol.iterator](): Generator<EffectGen<R, E, A>, A>
+}
+```
+
+Added in v1.0.0
+
+## EffectUnify (interface)
+
+**Signature**
+
+```ts
+export interface EffectUnify<A extends { [Unify.typeSymbol]?: any }>
+  extends Either.EitherUnify<A>,
+    Option.OptionUnify<A>,
+    Context.TagUnify<A> {
+  Effect?: () => A[Unify.typeSymbol] extends Effect<infer R0, infer E0, infer A0> | infer _ ? Effect<R0, E0, A0> : never
+}
+```
+
+Added in v1.0.0
+
+## EffectUnifyBlacklist (interface)
+
+**Signature**
+
+```ts
+export interface EffectUnifyBlacklist {
+  Tag?: true
+  Option?: true
+  Either?: true
 }
 ```
 

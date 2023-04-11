@@ -44,6 +44,8 @@ Added in v1.0.0
   - [mapErrorCause](#maperrorcause)
 - [models](#models)
   - [Exit (type alias)](#exit-type-alias)
+  - [ExitUnify (interface)](#exitunify-interface)
+  - [ExitUnifyBlackList (interface)](#exitunifyblacklist-interface)
   - [Failure (interface)](#failure-interface)
   - [Success (interface)](#success-interface)
 - [refinements](#refinements)
@@ -424,6 +426,30 @@ export type Exit<E, A> = Failure<E, A> | Success<E, A>
 
 Added in v1.0.0
 
+## ExitUnify (interface)
+
+**Signature**
+
+```ts
+export interface ExitUnify<A extends { [Unify.typeSymbol]?: any }> extends Effect.EffectUnify<A> {
+  Exit?: () => A[Unify.typeSymbol] extends Exit<infer E0, infer A0> | infer _ ? Exit<E0, A0> : never
+}
+```
+
+Added in v1.0.0
+
+## ExitUnifyBlackList (interface)
+
+**Signature**
+
+```ts
+export interface ExitUnifyBlackList extends Effect.EffectUnifyBlacklist {
+  Effect?: true
+}
+```
+
+Added in v1.0.0
+
 ## Failure (interface)
 
 Represents a failed `Effect` workflow containing the `Cause` of the failure
@@ -432,9 +458,12 @@ of type `E`.
 **Signature**
 
 ```ts
-export interface Failure<E, A> extends ExitUnify<E, A> {
+export interface Failure<E, A> extends Effect.Effect<never, E, A> {
   readonly _tag: 'Failure'
   readonly cause: Cause.Cause<E>
+  [Unify.typeSymbol]?: unknown
+  [Unify.unifySymbol]?: ExitUnify<this>
+  [Unify.blacklistSymbol]?: ExitUnifyBlackList
   /** @internal */
   readonly i0: Cause.Cause<E>
 }
@@ -450,9 +479,12 @@ of type `A`.
 **Signature**
 
 ```ts
-export interface Success<E, A> extends ExitUnify<E, A> {
+export interface Success<E, A> extends Effect.Effect<never, E, A> {
   readonly _tag: 'Success'
   readonly value: A
+  [Unify.typeSymbol]?: unknown
+  [Unify.unifySymbol]?: ExitUnify<this>
+  [Unify.blacklistSymbol]?: ExitUnifyBlackList
   /** @internal */
   readonly i0: A
 }
