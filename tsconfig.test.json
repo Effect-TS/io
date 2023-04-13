@@ -4,7 +4,12 @@
     "tsBuildInfoFile": "build/tsbuildinfo/test.tsbuildinfo",
     "rootDir": "./",
     "noEmit": true,
-    "types": ["vitest/globals", "node"]
+    "types": [
+      "vitest/globals"
+    ]
   },
-  "include": ["test/**/*.ts", "src/**/*.ts"]
+  "include": [
+    "test/**/*.ts",
+    "src/**/*.ts"
+  ]
 }

@@ -13,7 +13,8 @@
     "moduleResolution": "node",
     "noEmit": false,
     "lib": [
-      "ES2021"
+      "ES2021",
+      "DOM"
     ],
     "sourceMap": true,
     "declarationMap": true,
