@@ -98,7 +98,7 @@ export type Primitive =
   | Failure
   | OnFailure
   | OnSuccess
-  | OnResult
+  | OnStep
   | OnSuccessAndFailure
   | Success
   | Sync
@@ -115,7 +115,7 @@ export type Primitive =
 /** @internal */
 export type Continuation =
   | OnSuccess
-  | OnResult
+  | OnStep
   | OnSuccessAndFailure
   | OnFailure
   | OpTraced
@@ -274,8 +274,8 @@ export interface OnSuccess extends
 {}
 
 /** @internal */
-export interface OnResult extends
-  Op<"OnResult", {
+export interface OnStep extends
+  Op<"OnStep", {
     readonly i0: Primitive
     readonly i1: (result: Exit.Exit<any, any> | Blocked) => Primitive
   }>
@@ -660,7 +660,7 @@ export const flatMap = Debug.dualWithTrace<
 /* @internal */
 export const step = Debug.methodWithTrace((trace) =>
   <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, Exit.Exit<E, A> | Effect.Blocked<R, E, A>> => {
-    const effect = new EffectPrimitive("OnResult") as any
+    const effect = new EffectPrimitive("OnStep") as any
     effect.i0 = self
     effect.i1 = exitSucceed
     if (trace) {
@@ -676,7 +676,7 @@ export const flatMapStep = Debug.methodWithTrace((trace) =>
     self: Effect.Effect<R, E, A>,
     f: (step: Exit.Exit<E, A> | Effect.Blocked<R, E, A>) => Effect.Effect<R1, E1, B>
   ): Effect.Effect<R | R1, E1, B> => {
-    const effect = new EffectPrimitive("OnResult") as any
+    const effect = new EffectPrimitive("OnStep") as any
     effect.i0 = self
     effect.i1 = f
     if (trace) {

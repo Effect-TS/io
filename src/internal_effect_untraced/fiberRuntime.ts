@@ -101,9 +101,9 @@ const contOpSuccess = {
   ) => {
     return cont.i1(value)
   },
-  ["OnResult"]: (
+  ["OnStep"]: (
     _: FiberRuntime<any, any>,
-    cont: core.OnResult,
+    cont: core.OnStep,
     value: unknown
   ) => {
     return cont.i1(core.exitSucceed(value))
@@ -955,7 +955,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
 
   pushStack(cont: core.Continuation) {
     this._stack.push(cont)
-    if (cont._tag === "OnResult") {
+    if (cont._tag === "OnStep") {
       this._canUnwindBlocked++
     }
     if ("trace" in cont && cont.trace) {
@@ -966,7 +966,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   popStack() {
     const item = this._stack.pop()
     if (item) {
-      if (item._tag === "OnResult") {
+      if (item._tag === "OnStep") {
         this._canUnwindBlocked--
       }
       if ("trace" in item && item.trace) {
@@ -1092,7 +1092,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
             return core.exitFailCause(internalCause.stripFailures(cause))
           }
         }
-        case "OnResult": {
+        case "OnStep": {
           if (!(_runtimeFlags.interruptible(this._runtimeFlags) && this.isInterrupted())) {
             return cont.i1(core.exitFailCause(cause))
           } else {
@@ -1128,7 +1128,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
       const nextOp = this.popStack()
       if (nextOp) {
         switch (nextOp._tag) {
-          case "OnResult": {
+          case "OnStep": {
             return nextOp.i1(op)
           }
           case "OnSuccess": {
@@ -1190,7 +1190,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     return op.i0
   }
 
-  ["OnResult"](op: core.Primitive & { _tag: "OnResult" }) {
+  ["OnStep"](op: core.Primitive & { _tag: "OnStep" }) {
     this.pushStack(op)
     return op.i0
   }
