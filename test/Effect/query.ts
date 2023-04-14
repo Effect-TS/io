@@ -98,16 +98,9 @@ export const print = (request: UserRequest): string => {
   }
 }
 
-const provideEnv: <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<Exclude<R, UserCache | Counter>, E, A> = (
-  self
-) =>
-  pipe(
-    self,
-    Effect.tap(() => Effect.flatMap(UserCache, (cache) => cache.invalidateAll())),
-    Effect.provideSomeLayer(
-      Layer.mergeAll(UserCacheLive, Layer.sync(Counter, () => ({ count: 0 })))
-    )
-  )
+const provideEnv = Effect.provideSomeLayer(
+  Layer.mergeAll(UserCacheLive, Layer.sync(Counter, () => ({ count: 0 })))
+)
 
 describe("Effect", () => {
   it.effect("requests are executed correctly", () =>
