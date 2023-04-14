@@ -2,7 +2,7 @@
  * @since 1.0.0
  */
 import type * as Chunk from "@effect/data/Chunk"
-import type * as Context from "@effect/data/Context"
+import * as Context from "@effect/data/Context"
 import type { Trace } from "@effect/data/Debug"
 import type * as Duration from "@effect/data/Duration"
 import type * as Either from "@effect/data/Either"
@@ -6030,3 +6030,10 @@ export const withRequestBatching: {
   (strategy: "on" | "off"): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
   <R, E, A>(self: Effect<R, E, A>, strategy: "on" | "off"): Effect<R, E, A>
 } = query.withRequestBatching
+
+/**
+ * @since 1.0.0
+ * @category utils
+ */
+export const serviceOption: <I, A>(tag: Context.Tag<I, A>) => Effect<never, never, Option.Option<A>> = (tag) =>
+  contextWith((_: Context.Context<never>) => Context.getOption(_, tag))

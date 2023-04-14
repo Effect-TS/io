@@ -432,6 +432,7 @@ Added in v1.0.0
   - [sequentialFinalizers](#sequentialfinalizers)
   - [serviceFunction](#servicefunction)
   - [serviceFunctionEffect](#servicefunctioneffect)
+  - [serviceOption](#serviceoption)
   - [setConfigProvider](#setconfigprovider)
   - [setFiberRefs](#setfiberrefs)
   - [some](#some)
@@ -6924,6 +6925,16 @@ export declare const serviceFunctionEffect: <T extends Context.Tag<any, any>, Ar
   service: T,
   f: (_: Context.Tag.Service<T>) => (...args: Args) => Effect<R, E, A>
 ) => (...args: Args) => Effect<R | Context.Tag.Identifier<T>, E, A>
+```
+
+Added in v1.0.0
+
+## serviceOption
+
+**Signature**
+
+```ts
+export declare const serviceOption: <I, A>(tag: Context.Tag<I, A>) => Effect<never, never, Option.Option<A>>
 ```
 
 Added in v1.0.0

@@ -68,16 +68,20 @@ export const UserResolver = Resolver.makeBatched((requests: Chunk.Chunk<UserRequ
   })
 )
 
-export const getAllUserIds = Effect.flatMap(UserCache, (cache) =>
-  Effect.request(
-    GetAllIds({}),
-    UserResolver,
-    cache
-  ))
+export const getAllUserIds = Effect.request(
+  GetAllIds({}),
+  UserResolver,
+  Effect.serviceOption(UserCache)
+)
 
 export const interrupts = FiberRef.unsafeMake({ interrupts: 0 })
 
-export const getUserNameById = (id: number) => Effect.request(GetNameById({ id }), UserResolver, UserCache)
+export const getUserNameById = (id: number) =>
+  Effect.request(
+    GetNameById({ id }),
+    UserResolver,
+    Effect.serviceOption(UserCache)
+  )
 
 export const getAllUserNames = pipe(
   getAllUserIds,
