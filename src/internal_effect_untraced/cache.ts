@@ -289,15 +289,15 @@ export const makeEntryStats = (loadedMillis: number): Cache.EntryStats => ({
   loadedMillis
 })
 
-class CacheImpl<Environment, Key, Error, Value> implements Cache.Cache<Key, Error, Value> {
+class CacheImpl<Key, Error, Value> implements Cache.Cache<Key, Error, Value> {
   readonly [CacheTypeId] = cacheVariance
   readonly cacheState: CacheState<Key, Error, Value>
   constructor(
     readonly capacity: number,
     readonly clock: Clock.Clock,
-    readonly context: Context.Context<Environment>,
+    readonly context: Context.Context<any>,
     readonly fiberId: FiberId.FiberId,
-    readonly lookup: Cache.Lookup<Key, Environment, Error, Value>,
+    readonly lookup: Cache.Lookup<Key, any, Error, Value>,
     readonly timeToLive: (exit: Exit.Exit<Error, Value>) => Duration.Duration
   ) {
     this.cacheState = initialCacheState()
@@ -465,7 +465,11 @@ class CacheImpl<Environment, Key, Error, Value> implements Cache.Cache<Key, Erro
     )
   }
 
-  set(key: Key, value: Value): Effect.Effect<never, never, void> {
+  set<Key, Error, Value>(
+    this: CacheImpl<Key, Error, Value>,
+    key: Key,
+    value: Value
+  ): Effect.Effect<never, never, void> {
     return Debug.bodyWithTrace((trace) =>
       core.sync(() => {
         const now = this.clock.unsafeCurrentTimeMillis()
@@ -508,7 +512,7 @@ class CacheImpl<Environment, Key, Error, Value> implements Cache.Cache<Key, Erro
     )
   }
 
-  entries(): Effect.Effect<never, never, Array<[Key, Value]>> {
+  entries<Key, Error, Value>(this: CacheImpl<Key, Error, Value>): Effect.Effect<never, never, Array<[Key, Value]>> {
     return Debug.bodyWithTrace((trace) =>
       core.sync(() => {
         const values: Array<[Key, Value]> = []
@@ -522,7 +526,7 @@ class CacheImpl<Environment, Key, Error, Value> implements Cache.Cache<Key, Erro
     )
   }
 
-  keys(): Effect.Effect<never, never, Array<Key>> {
+  keys<Key, Error, Value>(this: CacheImpl<Key, Error, Value>): Effect.Effect<never, never, Array<Key>> {
     return Debug.bodyWithTrace((trace) =>
       core.sync(() => {
         const keys: Array<Key> = []

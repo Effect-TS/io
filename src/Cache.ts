@@ -41,7 +41,57 @@ export type CacheTypeId = typeof CacheTypeId
  * @since 1.0.0
  * @category models
  */
-export interface Cache<Key, Error, Value> extends Cache.Variance<Key, Error, Value> {
+export interface Cache<Key, Error, Value> extends ConsumerCache<Key, Error, Value> {
+  /**
+   * Retrieves the value associated with the specified key if it exists.
+   * Otherwise computes the value with the lookup function, puts it in the
+   * cache, and returns it.
+   */
+  get(key: Key): Effect.Effect<never, Error, Value>
+
+  /**
+   * Retrieves the value associated with the specified key if it exists as a left.
+   * Otherwise computes the value with the lookup function, puts it in the
+   * cache, and returns it as a right.
+   */
+  getEither(key: Key): Effect.Effect<never, Error, Either<Value, Value>>
+
+  /**
+   * Computes the value associated with the specified key, with the lookup
+   * function, and puts it in the cache. The difference between this and
+   * `get` method is that `refresh` triggers (re)computation of the value
+   * without invalidating it in the cache, so any request to the associated
+   * key can still be served while the value is being re-computed/retrieved
+   * by the lookup function. Additionally, `refresh` always triggers the
+   * lookup function, disregarding the last `Error`.
+   */
+  refresh(key: Key): Effect.Effect<never, Error, void>
+
+  /**
+   * Associates the specified value with the specified key in the cache.
+   */
+  set<Key, Error, Value>(this: Cache<Key, Error, Value>, key: Key, value: Value): Effect.Effect<never, never, void>
+
+  /**
+   * Returns an approximation of the values in the cache.
+   */
+  values(): Effect.Effect<never, never, Array<Value>>
+
+  /**
+   * Returns an approximation of the values in the cache.
+   */
+  entries<Key, Error, Value>(this: Cache<Key, Error, Value>): Effect.Effect<never, never, Array<[Key, Value]>>
+}
+
+/**
+ * A ConsumerCache models a portion of a cache which is safe to share without allowing to create new values or access existing ones.
+ *
+ * It can be used safely to give over control for request management without leaking writer side details.
+ *
+ * @since 1.0.0
+ * @category models
+ */
+export interface ConsumerCache<Key, Error, Value> extends Cache.Variance<Key, Error, Value> {
   /**
    * Returns statistics for this cache.
    */
@@ -59,20 +109,6 @@ export interface Cache<Key, Error, Value> extends Cache.Variance<Key, Error, Val
   entryStats(key: Key): Effect.Effect<never, never, Option.Option<EntryStats>>
 
   /**
-   * Retrieves the value associated with the specified key if it exists.
-   * Otherwise computes the value with the lookup function, puts it in the
-   * cache, and returns it.
-   */
-  get(key: Key): Effect.Effect<never, Error, Value>
-
-  /**
-   * Retrieves the value associated with the specified key if it exists as a left.
-   * Otherwise computes the value with the lookup function, puts it in the
-   * cache, and returns it as a right.
-   */
-  getEither(key: Key): Effect.Effect<never, Error, Either<Value, Value>>
-
-  /**
    * Invalidates the value associated with the specified key.
    */
   invalidate(key: Key): Effect.Effect<never, never, void>
@@ -83,22 +119,6 @@ export interface Cache<Key, Error, Value> extends Cache.Variance<Key, Error, Val
   invalidateAll(): Effect.Effect<never, never, void>
 
   /**
-   * Computes the value associated with the specified key, with the lookup
-   * function, and puts it in the cache. The difference between this and
-   * `get` method is that `refresh` triggers (re)computation of the value
-   * without invalidating it in the cache, so any request to the associated
-   * key can still be served while the value is being re-computed/retrieved
-   * by the lookup function. Additionally, `refresh` always triggers the
-   * lookup function, disregarding the last `Error`.
-   */
-  refresh(key: Key): Effect.Effect<never, Error, void>
-
-  /**
-   * Associates the specified value with the specified key in the cache.
-   */
-  set(key: Key, value: Value): Effect.Effect<never, never, void>
-
-  /**
    * Returns the approximate number of values in the cache.
    */
   size(): Effect.Effect<never, never, number>
@@ -106,17 +126,7 @@ export interface Cache<Key, Error, Value> extends Cache.Variance<Key, Error, Val
   /**
    * Returns an approximation of the values in the cache.
    */
-  values(): Effect.Effect<never, never, Array<Value>>
-
-  /**
-   * Returns an approximation of the values in the cache.
-   */
-  keys(): Effect.Effect<never, never, Array<Key>>
-
-  /**
-   * Returns an approximation of the values in the cache.
-   */
-  entries(): Effect.Effect<never, never, Array<[Key, Value]>>
+  keys<Key, Error, Value>(this: ConsumerCache<Key, Error, Value>): Effect.Effect<never, never, Array<Key>>
 }
 
 /**

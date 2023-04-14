@@ -20,6 +20,7 @@ Added in v1.0.0
 - [models](#models)
   - [Cache (interface)](#cache-interface)
   - [CacheStats (interface)](#cachestats-interface)
+  - [ConsumerCache (interface)](#consumercache-interface)
   - [EntryStats (interface)](#entrystats-interface)
   - [Lookup (type alias)](#lookup-type-alias)
 - [symbols](#symbols)
@@ -113,23 +114,7 @@ will be returned to all fibers.
 **Signature**
 
 ```ts
-export interface Cache<Key, Error, Value> extends Cache.Variance<Key, Error, Value> {
-  /**
-   * Returns statistics for this cache.
-   */
-  cacheStats(): Effect.Effect<never, never, CacheStats>
-
-  /**
-   * Returns whether a value associated with the specified key exists in the
-   * cache.
-   */
-  contains(key: Key): Effect.Effect<never, never, boolean>
-
-  /**
-   * Returns statistics for the specified entry.
-   */
-  entryStats(key: Key): Effect.Effect<never, never, Option.Option<EntryStats>>
-
+export interface Cache<Key, Error, Value> extends ConsumerCache<Key, Error, Value> {
   /**
    * Retrieves the value associated with the specified key if it exists.
    * Otherwise computes the value with the lookup function, puts it in the
@@ -145,16 +130,6 @@ export interface Cache<Key, Error, Value> extends Cache.Variance<Key, Error, Val
   getEither(key: Key): Effect.Effect<never, Error, Either<Value, Value>>
 
   /**
-   * Invalidates the value associated with the specified key.
-   */
-  invalidate(key: Key): Effect.Effect<never, never, void>
-
-  /**
-   * Invalidates all values in the cache.
-   */
-  invalidateAll(): Effect.Effect<never, never, void>
-
-  /**
    * Computes the value associated with the specified key, with the lookup
    * function, and puts it in the cache. The difference between this and
    * `get` method is that `refresh` triggers (re)computation of the value
@@ -168,12 +143,7 @@ export interface Cache<Key, Error, Value> extends Cache.Variance<Key, Error, Val
   /**
    * Associates the specified value with the specified key in the cache.
    */
-  set(key: Key, value: Value): Effect.Effect<never, never, void>
-
-  /**
-   * Returns the approximate number of values in the cache.
-   */
-  size(): Effect.Effect<never, never, number>
+  set<Key, Error, Value>(this: Cache<Key, Error, Value>, key: Key, value: Value): Effect.Effect<never, never, void>
 
   /**
    * Returns an approximation of the values in the cache.
@@ -183,12 +153,7 @@ export interface Cache<Key, Error, Value> extends Cache.Variance<Key, Error, Val
   /**
    * Returns an approximation of the values in the cache.
    */
-  keys(): Effect.Effect<never, never, Array<Key>>
-
-  /**
-   * Returns an approximation of the values in the cache.
-   */
-  entries(): Effect.Effect<never, never, Array<[Key, Value]>>
+  entries<Key, Error, Value>(this: Cache<Key, Error, Value>): Effect.Effect<never, never, Array<[Key, Value]>>
 }
 ```
 
@@ -206,6 +171,56 @@ export interface CacheStats {
   readonly hits: number
   readonly misses: number
   readonly size: number
+}
+```
+
+Added in v1.0.0
+
+## ConsumerCache (interface)
+
+A ConsumerCache models a portion of a cache which is safe to share without allowing to create new values or access existing ones.
+
+It can be used safely to give over control for request management without leaking writer side details.
+
+**Signature**
+
+```ts
+export interface ConsumerCache<Key, Error, Value> extends Cache.Variance<Key, Error, Value> {
+  /**
+   * Returns statistics for this cache.
+   */
+  cacheStats(): Effect.Effect<never, never, CacheStats>
+
+  /**
+   * Returns whether a value associated with the specified key exists in the
+   * cache.
+   */
+  contains(key: Key): Effect.Effect<never, never, boolean>
+
+  /**
+   * Returns statistics for the specified entry.
+   */
+  entryStats(key: Key): Effect.Effect<never, never, Option.Option<EntryStats>>
+
+  /**
+   * Invalidates the value associated with the specified key.
+   */
+  invalidate(key: Key): Effect.Effect<never, never, void>
+
+  /**
+   * Invalidates all values in the cache.
+   */
+  invalidateAll(): Effect.Effect<never, never, void>
+
+  /**
+   * Returns the approximate number of values in the cache.
+   */
+  size(): Effect.Effect<never, never, number>
+
+  /**
+   * Returns an approximation of the values in the cache.
+   */
+  keys<Key, Error, Value>(this: ConsumerCache<Key, Error, Value>): Effect.Effect<never, never, Array<Key>>
 }
 ```
 

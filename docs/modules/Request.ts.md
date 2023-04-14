@@ -69,43 +69,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface Cache<R = unknown> extends Cache.Variance<R> {
-  /**
-   * Returns statistics for this cache.
-   */
-  cacheStats(): Effect.Effect<never, never, _Cache.CacheStats>
-
-  /**
-   * Returns whether a value associated with the specified key exists in the
-   * cache.
-   */
-  contains(key: R): Effect.Effect<never, never, boolean>
-
-  /**
-   * Returns statistics for the specified entry.
-   */
-  entryStats(key: R): Effect.Effect<never, never, Option.Option<_Cache.EntryStats>>
-
-  /**
-   * Invalidates the value associated with the specified key.
-   */
-  invalidate(key: R): Effect.Effect<never, never, void>
-
-  /**
-   * Invalidates all values in the cache.
-   */
-  invalidateAll(): Effect.Effect<never, never, void>
-
-  /**
-   * Returns the approximate number of values in the cache.
-   */
-  size(): Effect.Effect<never, never, number>
-
-  /**
-   * Returns the approximate number of values in the cache.
-   */
-  keys<R1>(this: Cache<R1>): Effect.Effect<never, never, Array<R1>>
-}
+export interface Cache<R = unknown> extends _Cache.ConsumerCache<R, never, Deferred<unknown, unknown>> {}
 ```
 
 Added in v1.0.0
