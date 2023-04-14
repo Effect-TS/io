@@ -42,6 +42,7 @@ Added in v1.0.0
   - [asyncInterrupt](#asyncinterrupt)
   - [asyncInterruptEither](#asyncinterrupteither)
   - [asyncOption](#asyncoption)
+  - [cachedFunction](#cachedfunction)
   - [checkInterruptible](#checkinterruptible)
   - [clockWith](#clockwith)
   - [collect](#collect)
@@ -86,7 +87,6 @@ Added in v1.0.0
   - [iterate](#iterate)
   - [loop](#loop)
   - [loopDiscard](#loopdiscard)
-  - [memoizeFunction](#memoizefunction)
   - [mergeAll](#mergeall)
   - [mergeAllPar](#mergeallpar)
   - [never](#never)
@@ -360,7 +360,8 @@ Added in v1.0.0
   - [awaitAllChildren](#awaitallchildren)
   - [blocked](#blocked)
   - [cached](#cached)
-  - [cachedInvalidate](#cachedinvalidate)
+  - [cachedInvalidateWithTTL](#cachedinvalidatewithttl)
+  - [cachedWithTTL](#cachedwithttl)
   - [delay](#delay)
   - [diffFiberRefs](#difffiberrefs)
   - [dropUntil](#dropuntil)
@@ -377,7 +378,6 @@ Added in v1.0.0
   - [ignoreLogged](#ignorelogged)
   - [left](#left)
   - [leftWith](#leftwith)
-  - [memoize](#memoize)
   - [merge](#merge)
   - [nonEmptyStruct](#nonemptystruct)
   - [nonEmptyTuple](#nonemptytuple)
@@ -1058,6 +1058,21 @@ export declare const asyncOption: <R, E, A>(
 
 Added in v1.0.0
 
+## cachedFunction
+
+Returns a memoized version of the specified effectual function.
+
+**Signature**
+
+```ts
+export declare const cachedFunction: <R, E, A, B>(
+  f: (a: A) => Effect<R, E, B>,
+  eq?: Equivalence<A> | undefined
+) => Effect<never, never, (a: A) => Effect<R, E, B>>
+```
+
+Added in v1.0.0
+
 ## checkInterruptible
 
 Checks the interrupt status, and produces the effect returned by the
@@ -1707,21 +1722,6 @@ export declare const loopDiscard: <Z, R, E, X>(
   inc: (z: Z) => Z,
   body: (z: Z) => Effect<R, E, X>
 ) => Effect<R, E, void>
-```
-
-Added in v1.0.0
-
-## memoizeFunction
-
-Returns a memoized version of the specified effectual function.
-
-**Signature**
-
-```ts
-export declare const memoizeFunction: <R, E, A, B>(
-  f: (a: A) => Effect<R, E, B>,
-  eq?: Equivalence<A> | undefined
-) => Effect<never, never, (a: A) => Effect<R, E, B>>
 ```
 
 Added in v1.0.0
@@ -5701,21 +5701,18 @@ Added in v1.0.0
 
 ## cached
 
-Returns an effect that, if evaluated, will return the cached result of this
-effect. Cached results will expire after `timeToLive` duration.
+Returns an effect that, if evaluated, will return the lazily computed
+result of this effect.
 
 **Signature**
 
 ```ts
-export declare const cached: {
-  (timeToLive: Duration.Duration): <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Effect<never, E, A>>
-  <R, E, A>(self: Effect<R, E, A>, timeToLive: Duration.Duration): Effect<R, never, Effect<never, E, A>>
-}
+export declare const cached: <R, E, A>(self: Effect<R, E, A>) => Effect<never, never, Effect<R, E, A>>
 ```
 
 Added in v1.0.0
 
-## cachedInvalidate
+## cachedInvalidateWithTTL
 
 Returns an effect that, if evaluated, will return the cached result of this
 effect. Cached results will expire after `timeToLive` duration. In
@@ -5725,7 +5722,7 @@ cached value before the `timeToLive` duration expires.
 **Signature**
 
 ```ts
-export declare const cachedInvalidate: {
+export declare const cachedInvalidateWithTTL: {
   (timeToLive: Duration.Duration): <R, E, A>(
     self: Effect<R, E, A>
   ) => Effect<R, never, [Effect<never, E, A>, Effect<never, never, void>]>
@@ -5734,6 +5731,22 @@ export declare const cachedInvalidate: {
     never,
     [Effect<never, E, A>, Effect<never, never, void>]
   >
+}
+```
+
+Added in v1.0.0
+
+## cachedWithTTL
+
+Returns an effect that, if evaluated, will return the cached result of this
+effect. Cached results will expire after `timeToLive` duration.
+
+**Signature**
+
+```ts
+export declare const cachedWithTTL: {
+  (timeToLive: Duration.Duration): <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Effect<never, E, A>>
+  <R, E, A>(self: Effect<R, E, A>, timeToLive: Duration.Duration): Effect<R, never, Effect<never, E, A>>
 }
 ```
 
@@ -5951,19 +5964,6 @@ export declare const leftWith: {
     f: (effect: Effect<R, Either.Either<E, B>, A>) => Effect<R1, Either.Either<E1, B1>, A1>
   ): Effect<R | R1, E | E1, Either.Either<A1, B1>>
 }
-```
-
-Added in v1.0.0
-
-## memoize
-
-Returns an effect that, if evaluated, will return the lazily computed
-result of this effect.
-
-**Signature**
-
-```ts
-export declare const memoize: <R, E, A>(self: Effect<R, E, A>) => Effect<never, never, Effect<R, E, A>>
 ```
 
 Added in v1.0.0

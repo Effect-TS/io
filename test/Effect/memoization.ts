@@ -14,14 +14,14 @@ describe.concurrent("Effect", () => {
     })))
   it.effect("memoized returns the same instance on repeated calls", () =>
     it.flakyTest(Effect.gen(function*($) {
-      const memo = Effect.memoize(Random.nextInt())
+      const memo = Effect.cached(Random.nextInt())
       const [first, second] = yield* $(memo, Effect.flatMap((effect) => pipe(effect, Effect.zip(effect))))
       assert.strictEqual(first, second)
     })))
   it.effect("memoized function returns the same instance on repeated calls", () =>
     it.flakyTest(Effect.gen(function*($) {
       const randomNumber = (n: number) => Random.nextIntBetween(n, n + n)
-      const memoized = yield* $(Effect.memoizeFunction(randomNumber))
+      const memoized = yield* $(Effect.cachedFunction(randomNumber))
       const a = yield* $(memoized(10))
       const b = yield* $(memoized(10))
       const c = yield* $(memoized(11))

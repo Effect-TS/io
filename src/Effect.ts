@@ -776,7 +776,7 @@ export const awaitAllChildren: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, 
  * @since 1.0.0
  * @category utils
  */
-export const cached: {
+export const cachedWithTTL: {
   (timeToLive: Duration.Duration): <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Effect<never, E, A>>
   <R, E, A>(self: Effect<R, E, A>, timeToLive: Duration.Duration): Effect<R, never, Effect<never, E, A>>
 } = circular.cached
@@ -790,7 +790,7 @@ export const cached: {
  * @since 1.0.0
  * @category utils
  */
-export const cachedInvalidate: {
+export const cachedInvalidateWithTTL: {
   (timeToLive: Duration.Duration): <R, E, A>(
     self: Effect<R, E, A>
   ) => Effect<R, never, [Effect<never, E, A>, Effect<never, never, void>]>
@@ -3016,7 +3016,7 @@ export const matchEffect: {
  * @since 1.0.0
  * @category utils
  */
-export const memoize: <R, E, A>(self: Effect<R, E, A>) => Effect<never, never, Effect<R, E, A>> = effect.memoize
+export const cached: <R, E, A>(self: Effect<R, E, A>) => Effect<never, never, Effect<R, E, A>> = effect.memoize
 
 /**
  * Returns a memoized version of the specified effectual function.
@@ -3024,7 +3024,7 @@ export const memoize: <R, E, A>(self: Effect<R, E, A>) => Effect<never, never, E
  * @since 1.0.0
  * @category constructors
  */
-export const memoizeFunction: <R, E, A, B>(
+export const cachedFunction: <R, E, A, B>(
   f: (a: A) => Effect<R, E, B>,
   eq?: Equivalence<A>
 ) => Effect<never, never, (a: A) => Effect<R, E, B>> = circular.memoizeFunction
