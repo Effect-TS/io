@@ -1,6 +1,6 @@
 ---
 title: Effect.ts
-nav_order: 11
+nav_order: 12
 parent: Modules
 ---
 
@@ -316,7 +316,6 @@ Added in v1.0.0
 - [requests](#requests)
   - [request](#request)
   - [withRequestBatching](#withrequestbatching)
-  - [withRequestCache](#withrequestcache)
 - [runtime](#runtime-1)
   - [updateRuntimeFlags](#updateruntimeflags)
   - [withRuntimeFlags](#withruntimeflags)
@@ -5142,10 +5141,23 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const request: <R, A extends Request<any, any>, A2 extends A>(
-  request: A,
-  dataSource: RequestResolver<R, A2>
-) => Effect<R, Request.Error<A>, Request.Success<A>>
+export declare const request: {
+  <R, A extends Request<any, any>, A2 extends A>(request: A, dataSource: RequestResolver<R, A2>): Effect<
+    R,
+    Request.Error<A>,
+    Request.Success<A>
+  >
+  <R, A extends Request<any, any>, A2 extends A>(request: A, dataSource: RequestResolver<R, A2>, cache: Cache): Effect<
+    R,
+    Request.Error<A>,
+    Request.Success<A>
+  >
+  <R, R1, E1, A extends Request<any, any>, A2 extends A>(
+    request: A,
+    dataSource: RequestResolver<R, A2>,
+    cache: Effect<R1, E1, Cache>
+  ): Effect<R | R1, E1 | Request.Error<A>, Request.Success<A>>
+}
 ```
 
 Added in v1.0.0
@@ -5158,19 +5170,6 @@ Added in v1.0.0
 export declare const withRequestBatching: {
   (strategy: 'on' | 'off'): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
   <R, E, A>(self: Effect<R, E, A>, strategy: 'on' | 'off'): Effect<R, E, A>
-}
-```
-
-Added in v1.0.0
-
-## withRequestCache
-
-**Signature**
-
-```ts
-export declare const withRequestCache: {
-  (strategy: 'on' | 'off' | 'new' | RequestCache): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(self: Effect<R, E, A>, strategy: 'on' | 'off' | 'new' | RequestCache): Effect<R, E, A>
 }
 ```
 

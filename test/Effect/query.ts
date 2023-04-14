@@ -1,11 +1,13 @@
 import * as Chunk from "@effect/data/Chunk"
 import * as Context from "@effect/data/Context"
+import { seconds } from "@effect/data/Duration"
 import { pipe } from "@effect/data/Function"
 import * as ReadonlyArray from "@effect/data/ReadonlyArray"
 import * as Cause from "@effect/io/Cause"
 import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import * as FiberRef from "@effect/io/FiberRef"
+import * as Layer from "@effect/io/Layer"
 import * as Request from "@effect/io/Request"
 import * as Resolver from "@effect/io/RequestResolver"
 import * as it from "@effect/io/test/utils/extend"
@@ -14,6 +16,12 @@ interface Counter {
   readonly _: unique symbol
 }
 const Counter = Context.Tag<Counter, { count: number }>()
+
+interface UserCache {
+  readonly _: unique symbol
+}
+const UserCache = Context.Tag<UserCache, Request.Cache>()
+const UserCacheLive = Layer.effect(UserCache, Request.makeCache(10_000, seconds(60)))
 
 export const userIds: ReadonlyArray<number> = ReadonlyArray.range(1, 26)
 
@@ -60,11 +68,16 @@ export const UserResolver = Resolver.makeBatched((requests: Chunk.Chunk<UserRequ
   })
 )
 
-export const getAllUserIds = Effect.request(GetAllIds({}), UserResolver)
+export const getAllUserIds = Effect.flatMap(UserCache, (cache) =>
+  Effect.request(
+    GetAllIds({}),
+    UserResolver,
+    cache
+  ))
 
 export const interrupts = FiberRef.unsafeMake({ interrupts: 0 })
 
-export const getUserNameById = (id: number) => Effect.request(GetNameById({ id }), UserResolver)
+export const getUserNameById = (id: number) => Effect.request(GetNameById({ id }), UserResolver, UserCache)
 
 export const getAllUserNames = pipe(
   getAllUserIds,
@@ -85,21 +98,20 @@ export const print = (request: UserRequest): string => {
   }
 }
 
+const provideEnv: <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<Exclude<R, UserCache | Counter>, E, A> = (
+  self
+) =>
+  pipe(
+    self,
+    Effect.tap(() => Effect.flatMap(UserCache, (cache) => cache.invalidateAll())),
+    Effect.provideSomeLayer(
+      Layer.mergeAll(UserCacheLive, Layer.sync(Counter, () => ({ count: 0 })))
+    )
+  )
+
 describe("Effect", () => {
-  it.effect("requests are cached when specified", () =>
-    Effect.provideService(Counter, { count: 0 })(
-      Effect.withRequestCache("new")(
-        Effect.gen(function*($) {
-          yield* $(getAllUserIds)
-          yield* $(getAllUserIds)
-          yield* $(getAllUserIds, Effect.withRequestCache("off"))
-          yield* $(getAllUserIds, Effect.withRequestCache("off"), Effect.provideService(Counter, { count: 0 }))
-          expect(yield* $(Counter)).toEqual({ count: 2 })
-        })
-      )
-    ))
   it.effect("requests are executed correctly", () =>
-    Effect.provideService(Counter, { count: 0 })(
+    provideEnv(
       Effect.gen(function*($) {
         const names = yield* $(getAllUserNames)
         const count = yield* $(Counter)
@@ -109,7 +121,7 @@ describe("Effect", () => {
       })
     ))
   it.effect("batching composes", () =>
-    Effect.provideService(Counter, { count: 0 })(
+    provideEnv(
       Effect.gen(function*($) {
         const names = yield* $(
           Effect.zipPar(getAllUserNames, getAllUserNames),
@@ -123,7 +135,7 @@ describe("Effect", () => {
       })
     ))
   it.effect("batching is independent from parallelism", () =>
-    Effect.provideService(Counter, { count: 0 })(
+    provideEnv(
       Effect.gen(function*($) {
         const names = yield* $(getAllUserNames, Effect.withParallelism(5))
         const count = yield* $(Counter)
@@ -134,7 +146,7 @@ describe("Effect", () => {
     ))
   it.effect("batching doesn't break interruption", () =>
     FiberRef.locally(interrupts, { interrupts: 0 })(
-      Effect.provideService(Counter, { count: 0 })(
+      provideEnv(
         Effect.gen(function*($) {
           const exit = yield* $(getAllUserNames, Effect.zipParLeft(Effect.interrupt()), Effect.exit)
           expect(exit._tag).toEqual("Failure")
@@ -147,7 +159,7 @@ describe("Effect", () => {
     ))
   it.effect("batching doesn't break interruption when limited", () =>
     FiberRef.locally(interrupts, { interrupts: 0 })(
-      Effect.provideService(Counter, { count: 0 })(
+      provideEnv(
         Effect.gen(function*($) {
           const exit = yield* $(
             getAllUserNames,
@@ -165,7 +177,7 @@ describe("Effect", () => {
       )
     ))
   it.effect("zipPar is batched when specified", () =>
-    Effect.provideService(Counter, { count: 0 })(
+    provideEnv(
       Effect.gen(function*($) {
         const [a, b] = yield* $(
           Effect.zipPar(
@@ -181,7 +193,7 @@ describe("Effect", () => {
       })
     ))
   it.effect("zipPar is not batched by default", () =>
-    Effect.provideService(Counter, { count: 0 })(
+    provideEnv(
       Effect.gen(function*($) {
         const [a, b] = yield* $(
           Effect.zipPar(
@@ -195,12 +207,12 @@ describe("Effect", () => {
         expect(b).toEqual(userNames.get(userIds[1]))
       })
     ))
-  it.effect("requests are not cached by default", () =>
-    Effect.provideService(Counter, { count: 0 })(
+  it.effect("requests are cached when possible", () =>
+    provideEnv(
       Effect.gen(function*($) {
         yield* $(getAllUserIds)
         yield* $(getAllUserIds)
-        expect(yield* $(Counter)).toEqual({ count: 2 })
+        expect(yield* $(Counter)).toEqual({ count: 1 })
       })
     ))
 })

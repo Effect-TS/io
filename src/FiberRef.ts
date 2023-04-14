@@ -17,7 +17,6 @@ import type * as Logger from "@effect/io/Logger"
 import type * as LogLevel from "@effect/io/Logger/Level"
 import type * as LogSpan from "@effect/io/Logger/Span"
 import type * as MetricLabel from "@effect/io/Metric/Label"
-import type { RequestCache } from "@effect/io/RequestCache"
 import type * as Scheduler from "@effect/io/Scheduler"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
@@ -300,19 +299,7 @@ export const locallyScopedWith: {
  * @since 1.0.0
  * @category fiberRefs
  */
-export const currentRequestCache: FiberRef<RequestCache> = fiberRuntime.currentRequestCache
-
-/**
- * @since 1.0.0
- * @category fiberRefs
- */
 export const currentRequestBatchingEnabled: FiberRef<boolean> = fiberRuntime.currentRequestBatchingEnabled
-
-/**
- * @since 1.0.0
- * @category fiberRefs
- */
-export const currentRequestCacheEnabled: FiberRef<boolean> = fiberRuntime.currentRequestCacheEnabled
 
 /**
  * @since 1.0.0

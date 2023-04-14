@@ -23,7 +23,6 @@ import * as FiberStatus from "@effect/io/Fiber/Status"
 import type * as FiberRef from "@effect/io/FiberRef"
 import type * as FiberRefs from "@effect/io/FiberRefs"
 import * as _RequestBlock from "@effect/io/internal_effect_untraced/blockedRequests"
-import { some } from "@effect/io/internal_effect_untraced/cache"
 import * as internalCause from "@effect/io/internal_effect_untraced/cause"
 import { StackAnnotation } from "@effect/io/internal_effect_untraced/cause"
 import * as clock from "@effect/io/internal_effect_untraced/clock"
@@ -31,6 +30,7 @@ import * as completedRequestMap from "@effect/io/internal_effect_untraced/comple
 import { configProviderTag } from "@effect/io/internal_effect_untraced/configProvider"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as defaultServices from "@effect/io/internal_effect_untraced/defaultServices"
+import { some } from "@effect/io/internal_effect_untraced/effect"
 import * as internalFiber from "@effect/io/internal_effect_untraced/fiber"
 import * as FiberMessage from "@effect/io/internal_effect_untraced/fiberMessage"
 import * as fiberRefs from "@effect/io/internal_effect_untraced/fiberRefs"
@@ -49,7 +49,6 @@ import type * as MetricLabel from "@effect/io/Metric/Label"
 import * as Ref from "@effect/io/Ref"
 import type { Request } from "@effect/io/Request"
 import type * as RequestBlock from "@effect/io/RequestBlock"
-import * as Cache from "@effect/io/RequestCache"
 import type { RequestResolver } from "@effect/io/RequestResolver"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
@@ -180,16 +179,6 @@ const drainQueueWhileRunningTable = {
     return pipe(core.yieldNow(), core.flatMap(() => cur))
   }
 }
-
-/**
- * @internal
- */
-export const currentRequestCache = core.fiberRefUnsafeMake(Cache.unsafeMake())
-
-/**
- * @internal
- */
-export const currentRequestCacheEnabled = core.fiberRefUnsafeMake(false)
 
 /**
  * @internal

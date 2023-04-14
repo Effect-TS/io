@@ -2,9 +2,14 @@
  * @since 1.0.0
  */
 import type * as Data from "@effect/data/Data"
+import type { Duration } from "@effect/data/Duration"
 import type * as Option from "@effect/data/Option"
+import type * as _Cache from "@effect/io/Cache"
+import type { Deferred } from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
+import * as cache from "@effect/io/internal_effect_untraced/cache"
+import * as core from "@effect/io/internal_effect_untraced/core"
 import * as internal from "@effect/io/internal_effect_untraced/request"
 import type * as RequestCompletionMap from "@effect/io/RequestCompletionMap"
 
@@ -178,3 +183,18 @@ export const succeed: {
     value: Request.Success<A>
   ): Effect.Effect<RequestCompletionMap.RequestCompletionMap, never, void>
 } = internal.succeed
+
+/**
+ * @category models
+ * @since 1.0.0
+ */
+export interface Cache extends _Cache.Cache<unknown, never, Deferred<any, any>> {}
+
+/**
+ * @since 1.0.0
+ * @category models
+ */
+export const makeCache = (
+  capacity: number,
+  timeToLive: Duration
+): Effect.Effect<never, never, Cache> => cache.make(capacity, timeToLive, () => core.deferredMake())

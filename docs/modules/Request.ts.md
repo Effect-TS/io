@@ -1,6 +1,6 @@
 ---
 title: Request.ts
-nav_order: 44
+nav_order: 45
 parent: Modules
 ---
 
@@ -16,7 +16,9 @@ Added in v1.0.0
   - [of](#of)
   - [tagged](#tagged)
 - [models](#models)
+  - [Cache (interface)](#cache-interface)
   - [Request (interface)](#request-interface)
+  - [makeCache](#makecache)
 - [refinements](#refinements)
   - [isRequest](#isrequest)
 - [request completion](#request-completion)
@@ -60,6 +62,16 @@ Added in v1.0.0
 
 # models
 
+## Cache (interface)
+
+**Signature**
+
+```ts
+export interface Cache extends _Cache.Cache<unknown, never, Deferred<any, any>> {}
+```
+
+Added in v1.0.0
+
 ## Request (interface)
 
 A `Request<E, A>` is a request from a data source for a value of type `A`
@@ -69,6 +81,16 @@ that may fail with an `E`.
 
 ```ts
 export interface Request<E, A> extends Request.Variance<E, A>, Data.Case {}
+```
+
+Added in v1.0.0
+
+## makeCache
+
+**Signature**
+
+```ts
+export declare const makeCache: (capacity: number, timeToLive: Duration) => Effect.Effect<never, never, Cache>
 ```
 
 Added in v1.0.0

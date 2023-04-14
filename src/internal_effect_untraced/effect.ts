@@ -2289,6 +2289,25 @@ export const setFiberRefs = Debug.methodWithTrace((trace) =>
 export const sleep: (duration: Duration.Duration) => Effect.Effect<never, never, void> = Clock.sleep
 
 /* @internal */
+export const some = Debug.methodWithTrace((trace) =>
+  <R, E, A>(self: Effect.Effect<R, E, Option.Option<A>>): Effect.Effect<R, Option.Option<E>, A> =>
+    core.matchEffect(
+      self,
+      (e) => core.fail(Option.some(e)),
+      (option) => {
+        switch (option._tag) {
+          case "None": {
+            return core.fail(Option.none())
+          }
+          case "Some": {
+            return core.succeed(option.value)
+          }
+        }
+      }
+    ).traced(trace)
+)
+
+/* @internal */
 export const someOrElse = Debug.dualWithTrace<
   <B>(orElse: LazyArg<B>) => <R, E, A>(self: Effect.Effect<R, E, Option.Option<A>>) => Effect.Effect<R, E, A | B>,
   <R, E, A, B>(self: Effect.Effect<R, E, Option.Option<A>>, orElse: LazyArg<B>) => Effect.Effect<R, E, A | B>

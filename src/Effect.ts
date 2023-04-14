@@ -63,9 +63,8 @@ import type * as Metric from "@effect/io/Metric"
 import type * as MetricLabel from "@effect/io/Metric/Label"
 import type * as Random from "@effect/io/Random"
 import type * as Ref from "@effect/io/Ref"
-import type { Request } from "@effect/io/Request"
+import type { Cache, Request } from "@effect/io/Request"
 import type { RequestBlock } from "@effect/io/RequestBlock"
-import type { RequestCache } from "@effect/io/RequestCache"
 import type { RequestResolver } from "@effect/io/RequestResolver"
 import type * as Runtime from "@effect/io/Runtime"
 import type * as Schedule from "@effect/io/Schedule"
@@ -4277,7 +4276,7 @@ export const sleep: (duration: Duration.Duration) => Effect<never, never, void> 
  * @since 1.0.0
  * @category utils
  */
-export const some: <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R, Option.Option<E>, A> = _cache.some
+export const some: <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R, Option.Option<E>, A> = effect.some
 
 /**
  * Extracts the optional value, or returns the given 'orElse'.
@@ -5985,23 +5984,34 @@ export const flatMapStep: <R, E, A, R1, E1, B>(
  * @since 1.0.0
  * @category requests
  */
-export const request: <R, A extends Request<any, any>, A2 extends A>(
-  request: A,
-  dataSource: RequestResolver<R, A2>
-) => Effect<
-  R,
-  Request.Error<A>,
-  Request.Success<A>
-> = query.fromRequest
-
-/**
- * @since 1.0.0
- * @category requests
- */
-export const withRequestCache: {
-  (strategy: "on" | "off" | "new" | RequestCache): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(self: Effect<R, E, A>, strategy: "on" | "off" | "new" | RequestCache): Effect<R, E, A>
-} = query.withRequestCache
+export const request: {
+  <R, A extends Request<any, any>, A2 extends A>(
+    request: A,
+    dataSource: RequestResolver<R, A2>
+  ): Effect<
+    R,
+    Request.Error<A>,
+    Request.Success<A>
+  >
+  <R, A extends Request<any, any>, A2 extends A>(
+    request: A,
+    dataSource: RequestResolver<R, A2>,
+    cache: Cache
+  ): Effect<
+    R,
+    Request.Error<A>,
+    Request.Success<A>
+  >
+  <R, R1, E1, A extends Request<any, any>, A2 extends A>(
+    request: A,
+    dataSource: RequestResolver<R, A2>,
+    cache: Effect<R1, E1, Cache>
+  ): Effect<
+    R | R1,
+    Request.Error<A> | E1,
+    Request.Success<A>
+  >
+} = query.fromRequest
 
 /**
  * @since 1.0.0
