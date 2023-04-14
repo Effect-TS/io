@@ -6011,6 +6011,15 @@ export const request: {
     Request.Error<A> | E1,
     Request.Success<A>
   >
+  <R, R1, E1, A extends Request<any, any>, A2 extends A, A3 extends A>(
+    request: A,
+    dataSource: RequestResolver<R, A2>,
+    cache: Effect<R1, E1, Option.Option<Cache<A3>>>
+  ): Effect<
+    R | R1,
+    Request.Error<A> | E1,
+    Request.Success<A>
+  >
 } = query.fromRequest as any
 
 /**

@@ -27,6 +27,8 @@ Added in v1.0.0
   - [fail](#fail)
   - [succeed](#succeed)
 - [symbols](#symbols)
+  - [CacheTypeId](#cachetypeid)
+  - [CacheTypeId (type alias)](#cachetypeid-type-alias)
   - [RequestTypeId](#requesttypeid)
   - [RequestTypeId (type alias)](#requesttypeid-type-alias)
 
@@ -67,7 +69,43 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface Cache extends _Cache.Cache<unknown, never, Deferred<any, any>> {}
+export interface Cache<R = unknown> extends Cache.Variance<R> {
+  /**
+   * Returns statistics for this cache.
+   */
+  cacheStats(): Effect.Effect<never, never, _Cache.CacheStats>
+
+  /**
+   * Returns whether a value associated with the specified key exists in the
+   * cache.
+   */
+  contains(key: R): Effect.Effect<never, never, boolean>
+
+  /**
+   * Returns statistics for the specified entry.
+   */
+  entryStats(key: R): Effect.Effect<never, never, Option.Option<_Cache.EntryStats>>
+
+  /**
+   * Invalidates the value associated with the specified key.
+   */
+  invalidate(key: R): Effect.Effect<never, never, void>
+
+  /**
+   * Invalidates all values in the cache.
+   */
+  invalidateAll(): Effect.Effect<never, never, void>
+
+  /**
+   * Returns the approximate number of values in the cache.
+   */
+  size(): Effect.Effect<never, never, number>
+
+  /**
+   * Returns the approximate number of values in the cache.
+   */
+  keys<R1>(this: Cache<R1>): Effect.Effect<never, never, Array<R1>>
+}
 ```
 
 Added in v1.0.0
@@ -90,7 +128,10 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const makeCache: (capacity: number, timeToLive: Duration) => Effect.Effect<never, never, Cache>
+export declare const makeCache: <R = unknown>(
+  capacity: number,
+  timeToLive: Duration
+) => Effect.Effect<never, never, Cache<R>>
 ```
 
 Added in v1.0.0
@@ -197,6 +238,26 @@ export declare const succeed: {
 Added in v1.0.0
 
 # symbols
+
+## CacheTypeId
+
+**Signature**
+
+```ts
+export declare const CacheTypeId: typeof CacheTypeId
+```
+
+Added in v1.0.0
+
+## CacheTypeId (type alias)
+
+**Signature**
+
+```ts
+export type CacheTypeId = typeof CacheTypeId
+```
+
+Added in v1.0.0
 
 ## RequestTypeId
 
