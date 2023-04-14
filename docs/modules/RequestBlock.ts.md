@@ -48,12 +48,10 @@ Added in v1.0.0
   - [SequentialCollectionTypeId (type alias)](#sequentialcollectiontypeid-type-alias)
 - [utils](#utils)
   - [contramapContext](#contramapcontext)
-  - [interrupt](#interrupt)
   - [locally](#locally)
   - [parallelCollectionCombine](#parallelcollectioncombine)
   - [parallelCollectionIsEmpty](#parallelcollectionisempty)
   - [parallelCollectionKeys](#parallelcollectionkeys)
-  - [patchRuntimeFlags](#patchruntimeflags)
   - [sequentialCollectionCombine](#sequentialcollectioncombine)
   - [sequentialCollectionIsEmpty](#sequentialcollectionisempty)
   - [sequentialCollectionKeys](#sequentialcollectionkeys)
@@ -465,18 +463,6 @@ export declare const contramapContext: <R0, R>(
 
 Added in v1.0.0
 
-## interrupt
-
-Interrupts every request before execution.
-
-**Signature**
-
-```ts
-export declare const interrupt: <R>(self: RequestBlock<R>) => RequestBlock<R>
-```
-
-Added in v1.0.0
-
 ## locally
 
 Provides each data source with a fiber ref value.
@@ -529,18 +515,6 @@ collection are from.
 export declare const parallelCollectionKeys: <R>(
   self: ParallelCollection<R>
 ) => Chunk.Chunk<RequestResolver.RequestResolver<R, unknown>>
-```
-
-Added in v1.0.0
-
-## patchRuntimeFlags
-
-Provides each data source with a patch for runtime flags.
-
-**Signature**
-
-```ts
-export declare const patchRuntimeFlags: <R>(self: RequestBlock<R>, patch: RuntimeFlagsPatch) => RequestBlock<R>
 ```
 
 Added in v1.0.0

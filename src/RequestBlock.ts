@@ -6,12 +6,10 @@ import type * as Context from "@effect/data/Context"
 import type * as HashMap from "@effect/data/HashMap"
 import type * as List from "@effect/data/List"
 import type * as Deferred from "@effect/io/Deferred"
-import type { RuntimeFlagsPatch } from "@effect/io/Fiber/Runtime/Flags/Patch"
 import type { FiberRef } from "@effect/io/FiberRef"
 import * as _RequestBlock from "@effect/io/internal_effect_untraced/blockedRequests"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as _dataSource from "@effect/io/internal_effect_untraced/dataSource"
-import * as fiberRuntime from "@effect/io/internal_effect_untraced/fiberRuntime"
 import type * as Request from "@effect/io/Request"
 import type * as RequestResolver from "@effect/io/RequestResolver"
 
@@ -169,27 +167,6 @@ const ContramapContextReducer = <R0, R>(
  */
 export const locally: <R, A>(self: RequestBlock<R>, ref: FiberRef<A>, value: A) => RequestBlock<R> =
   core.requestBlockLocally
-
-/**
- * Provides each data source with a patch for runtime flags.
- *
- * @since 1.0.0
- * @category utils
- */
-export const patchRuntimeFlags: <R>(
-  self: RequestBlock<R>,
-  patch: RuntimeFlagsPatch
-) => RequestBlock<R> = core.requestBlockPatchRuntimeFlags
-
-/**
- * Interrupts every request before execution.
- *
- * @since 1.0.0
- * @category utils
- */
-export const interrupt: <R>(
-  self: RequestBlock<R>
-) => RequestBlock<R> = fiberRuntime.requestBlockInterrupt
 
 /**
  * @since 1.0.0

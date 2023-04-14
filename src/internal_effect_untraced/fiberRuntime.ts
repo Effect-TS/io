@@ -49,7 +49,6 @@ import type * as MetricLabel from "@effect/io/Metric/Label"
 import * as Ref from "@effect/io/Ref"
 import type { Request } from "@effect/io/Request"
 import type * as RequestBlock from "@effect/io/RequestBlock"
-import type { RequestResolver } from "@effect/io/RequestResolver"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
 
@@ -1587,43 +1586,6 @@ const forEachParUnbounded = <A, R, E, B>(
     return core.zipRight(forEachParUnboundedDiscard(as, fn), core.succeed(Chunk.unsafeFromArray(array)))
   })
 
-/** @internal */
-export const resolverInterrupt = Debug.untracedMethod(() =>
-  <R, B extends Request<any, any>>(
-    self: RequestResolver<R, B>
-  ): RequestResolver<R, B> =>
-    new core.RequestResolverImpl<R, B>(
-      (requests) => {
-        return core.fiberIdWith((id) => {
-          const result = completedRequestMap.empty()
-          for (const seq of requests) {
-            for (const par of seq) {
-              completedRequestMap.set(par, core.exitInterrupt(id) as any)
-            }
-          }
-          return core.exitSucceed(result)
-        })
-      },
-      Chunk.make("Interrupt", self)
-    )
-)
-
-/** @internal */
-export const requestBlockInterrupt = <R>(
-  self: RequestBlock.RequestBlock<R>
-): RequestBlock.RequestBlock<R> => _RequestBlock.reduce(self, InterruptReduucer())
-
-const InterruptReduucer = <R>(): RequestBlock.RequestBlock.Reducer<R, RequestBlock.RequestBlock<R>> => ({
-  emptyCase: () => _RequestBlock.empty,
-  parCase: (left, right) => _RequestBlock.par(left, right),
-  seqCase: (left, right) => _RequestBlock.seq(left, right),
-  singleCase: (dataSource, blockedRequest) =>
-    _RequestBlock.single(
-      resolverInterrupt(dataSource),
-      blockedRequest
-    )
-})
-
 /* @internal */
 const forEachParUnboundedDiscard = <R, E, A, _>(
   self: Iterable<A>,
@@ -1654,7 +1616,7 @@ const forEachParUnboundedDiscard = <R, E, A, _>(
                         const requests = residual.map((blocked) => blocked.i0).reduce(_RequestBlock.par)
                         const _continue = forEachParUnboundedDiscard(residual, (blocked) => blocked.i1)
                         return core.blocked(
-                          requestBlockInterrupt(requests),
+                          requests,
                           core.matchCauseEffect(
                             _continue,
                             (cause) =>
@@ -1772,7 +1734,7 @@ const forEachParNDiscard = <A, R, E, _>(
       const _continue = forEachParNDiscard(residual, n, (blocked) => blocked.i1)
       if (exit._tag === "Failure") {
         return core.blocked(
-          requestBlockInterrupt(requests),
+          requests,
           core.matchCauseEffect(
             _continue,
             (cause) => core.exitFailCause(internalCause.parallel(exit.cause, cause)),

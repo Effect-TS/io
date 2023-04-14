@@ -8,11 +8,9 @@ import type * as Either from "@effect/data/Either"
 import type * as Equal from "@effect/data/Equal"
 import type * as Option from "@effect/data/Option"
 import type * as Effect from "@effect/io/Effect"
-import type { RuntimeFlagsPatch } from "@effect/io/Fiber/Runtime/Flags/Patch"
 import type { FiberRef } from "@effect/io/FiberRef"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as internal from "@effect/io/internal_effect_untraced/dataSource"
-import * as fiberRuntime from "@effect/io/internal_effect_untraced/fiberRuntime"
 import type * as Request from "@effect/io/Request"
 import type * as RequestCompletionMap from "@effect/io/RequestCompletionMap"
 
@@ -406,28 +404,3 @@ export const locally: {
     value: A
   ): RequestResolver<R, B>
 } = core.resolverLocally
-
-/**
- * Returns a new data source that interrupts requests before execution
- *
- * @since 1.0.0
- * @category combinators
- */
-export const interrupt: <R, B extends Request.Request<any, any>>(self: RequestResolver<R, B>) => RequestResolver<R, B> =
-  fiberRuntime.resolverInterrupt
-
-/**
- * Returns a new data source with patched runtime flags
- *
- * @since 1.0.0
- * @category combinators
- */
-export const patchRuntimeFlags: {
-  (
-    patch: RuntimeFlagsPatch
-  ): <R, B extends Request.Request<any, any>>(self: RequestResolver<R, B>) => RequestResolver<R, B>
-  <R, B extends Request.Request<any, any>>(
-    self: RequestResolver<R, B>,
-    patch: RuntimeFlagsPatch
-  ): RequestResolver<R, B>
-} = core.resolverPatchRuntimeFlags

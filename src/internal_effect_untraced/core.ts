@@ -1753,31 +1753,6 @@ export const resolverLocally = Debug.untracedDual<
     ))
 
 /** @internal */
-export const resolverPatchRuntimeFlags = Debug.untracedDual<
-  (
-    patch: RuntimeFlagsPatch.RuntimeFlagsPatch
-  ) => <R, B extends Request.Request<any, any>>(
-    self: RequestResolver.RequestResolver<R, B>
-  ) => RequestResolver.RequestResolver<R, B>,
-  <R, B extends Request.Request<any, any>>(
-    self: RequestResolver.RequestResolver<R, B>,
-    patch: RuntimeFlagsPatch.RuntimeFlagsPatch
-  ) => RequestResolver.RequestResolver<R, B>
->(2, (restore) =>
-  <R, B extends Request.Request<any, any>>(
-    self: RequestResolver.RequestResolver<R, B>,
-    patch: RuntimeFlagsPatch.RuntimeFlagsPatch
-  ): RequestResolver.RequestResolver<R, B> =>
-    new RequestResolverImpl<R, B>(
-      (requests) =>
-        withRuntimeFlags(
-          restore(self.runAll)(requests),
-          patch
-        ),
-      Chunk.make("PatchRuntimeFlags", self, patch)
-    ))
-
-/** @internal */
 export const requestBlockLocally = <R, A>(
   self: BlockedRequests.RequestBlock<R>,
   ref: FiberRef.FiberRef<A>,
@@ -1794,25 +1769,6 @@ const LocallyReducer = <R, A>(
   singleCase: (dataSource, blockedRequest) =>
     _blockedRequests.single(
       resolverLocally(dataSource, ref, value),
-      blockedRequest
-    )
-})
-
-/** @internal */
-export const requestBlockPatchRuntimeFlags = <R>(
-  self: BlockedRequests.RequestBlock<R>,
-  patch: RuntimeFlagsPatch.RuntimeFlagsPatch
-): BlockedRequests.RequestBlock<R> => _blockedRequests.reduce(self, PatchRuntimeFlags(patch))
-
-const PatchRuntimeFlags = <R>(
-  patch: RuntimeFlagsPatch.RuntimeFlagsPatch
-): BlockedRequests.RequestBlock.Reducer<R, BlockedRequests.RequestBlock<R>> => ({
-  emptyCase: () => _blockedRequests.empty,
-  parCase: (left, right) => _blockedRequests.par(left, right),
-  seqCase: (left, right) => _blockedRequests.seq(left, right),
-  singleCase: (dataSource, blockedRequest) =>
-    _blockedRequests.single(
-      resolverPatchRuntimeFlags(dataSource, patch),
       blockedRequest
     )
 })

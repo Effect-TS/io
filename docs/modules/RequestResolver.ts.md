@@ -18,9 +18,7 @@ Added in v1.0.0
   - [contramap](#contramap)
   - [contramapEffect](#contramapeffect)
   - [eitherWith](#eitherwith)
-  - [interrupt](#interrupt)
   - [locally](#locally)
-  - [patchRuntimeFlags](#patchruntimeflags)
   - [race](#race)
 - [constructors](#constructors)
   - [fromFunction](#fromfunction)
@@ -162,20 +160,6 @@ export declare const eitherWith: {
 
 Added in v1.0.0
 
-## interrupt
-
-Returns a new data source that interrupts requests before execution
-
-**Signature**
-
-```ts
-export declare const interrupt: <R, B extends Request.Request<any, any>>(
-  self: RequestResolver<R, B>
-) => RequestResolver<R, B>
-```
-
-Added in v1.0.0
-
 ## locally
 
 Returns a new data source with a localized FiberRef
@@ -191,23 +175,6 @@ export declare const locally: {
     R,
     B
   >
-}
-```
-
-Added in v1.0.0
-
-## patchRuntimeFlags
-
-Returns a new data source with patched runtime flags
-
-**Signature**
-
-```ts
-export declare const patchRuntimeFlags: {
-  (patch: RuntimeFlagsPatch): <R, B extends Request.Request<any, any>>(
-    self: RequestResolver<R, B>
-  ) => RequestResolver<R, B>
-  <R, B extends Request.Request<any, any>>(self: RequestResolver<R, B>, patch: RuntimeFlagsPatch): RequestResolver<R, B>
 }
 ```
 
