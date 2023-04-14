@@ -9,7 +9,7 @@ import * as Schedule from "@effect/io/Schedule"
 import * as it from "@effect/io/test/utils/extend"
 import { assert, describe } from "vitest"
 
-describe.concurrent("Cached", () => {
+describe.concurrent("Resource", () => {
   it.scoped("manual", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(0))
