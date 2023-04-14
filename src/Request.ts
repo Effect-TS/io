@@ -5,7 +5,6 @@ import type * as Data from "@effect/data/Data"
 import type { Duration } from "@effect/data/Duration"
 import type * as Option from "@effect/data/Option"
 import type * as _Cache from "@effect/io/Cache"
-import type { Deferred } from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
 import * as cache from "@effect/io/internal_effect_untraced/cache"
@@ -185,16 +184,78 @@ export const succeed: {
 } = internal.succeed
 
 /**
+ * @category symbols
+ * @since 1.0.0
+ */
+export const CacheTypeId: unique symbol = Symbol.for("@effect/io/Request/Cache")
+
+/**
+ * @category symbols
+ * @since 1.0.0
+ */
+export type CacheTypeId = typeof CacheTypeId
+
+/**
  * @category models
  * @since 1.0.0
  */
-export interface Cache extends _Cache.Cache<unknown, never, Deferred<any, any>> {}
+export interface Cache<R = unknown> extends Cache.Variance<R> {
+  /**
+   * Returns statistics for this cache.
+   */
+  cacheStats(): Effect.Effect<never, never, _Cache.CacheStats>
+
+  /**
+   * Returns whether a value associated with the specified key exists in the
+   * cache.
+   */
+  contains(key: R): Effect.Effect<never, never, boolean>
+
+  /**
+   * Returns statistics for the specified entry.
+   */
+  entryStats(key: R): Effect.Effect<never, never, Option.Option<_Cache.EntryStats>>
+
+  /**
+   * Invalidates the value associated with the specified key.
+   */
+  invalidate(key: R): Effect.Effect<never, never, void>
+
+  /**
+   * Invalidates all values in the cache.
+   */
+  invalidateAll(): Effect.Effect<never, never, void>
+
+  /**
+   * Returns the approximate number of values in the cache.
+   */
+  size(): Effect.Effect<never, never, number>
+
+  /**
+   * Returns the approximate number of values in the cache.
+   */
+  keys<R1>(this: Cache<R1>): Effect.Effect<never, never, Array<R1>>
+}
 
 /**
  * @since 1.0.0
  * @category models
  */
-export const makeCache = (
+export declare namespace Cache {
+  /**
+   * @since 1.0.0
+   * @category models
+   */
+  export interface Variance<R> {
+    readonly [CacheTypeId]: (_: R) => void
+  }
+}
+
+/**
+ * @since 1.0.0
+ * @category models
+ */
+export const makeCache = <R = unknown>(
   capacity: number,
   timeToLive: Duration
-): Effect.Effect<never, never, Cache> => cache.make(capacity, timeToLive, () => core.deferredMake())
+): Effect.Effect<never, never, Cache<R>> => cache.make(capacity, timeToLive, () => core.deferredMake()) as any

@@ -5993,25 +5993,25 @@ export const request: {
     Request.Error<A>,
     Request.Success<A>
   >
-  <R, A extends Request<any, any>, A2 extends A>(
+  <R, A extends Request<any, any>, A2 extends A, A3 extends A>(
     request: A,
     dataSource: RequestResolver<R, A2>,
-    cache: Cache
+    cache: Cache<A3>
   ): Effect<
     R,
     Request.Error<A>,
     Request.Success<A>
   >
-  <R, R1, E1, A extends Request<any, any>, A2 extends A>(
+  <R, R1, E1, A extends Request<any, any>, A2 extends A, A3 extends A>(
     request: A,
     dataSource: RequestResolver<R, A2>,
-    cache: Effect<R1, E1, Cache>
+    cache: Effect<R1, E1, Cache<A3>>
   ): Effect<
     R | R1,
     Request.Error<A> | E1,
     Request.Success<A>
   >
-} = query.fromRequest
+} = query.fromRequest as any
 
 /**
  * @since 1.0.0

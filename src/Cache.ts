@@ -111,6 +111,11 @@ export interface Cache<Key, Error, Value> extends Cache.Variance<Key, Error, Val
   /**
    * Returns an approximation of the values in the cache.
    */
+  keys(): Effect.Effect<never, never, Array<Key>>
+
+  /**
+   * Returns an approximation of the values in the cache.
+   */
   entries(): Effect.Effect<never, never, Array<[Key, Value]>>
 }
 

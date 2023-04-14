@@ -20,7 +20,7 @@ const Counter = Context.Tag<Counter, { count: number }>()
 interface UserCache {
   readonly _: unique symbol
 }
-const UserCache = Context.Tag<UserCache, Request.Cache>()
+const UserCache = Context.Tag<UserCache, Request.Cache<UserRequest>>()
 const UserCacheLive = Layer.effect(UserCache, Request.makeCache(10_000, seconds(60)))
 
 export const userIds: ReadonlyArray<number> = ReadonlyArray.range(1, 26)
@@ -205,7 +205,12 @@ describe("Effect", () => {
       Effect.gen(function*($) {
         yield* $(getAllUserIds)
         yield* $(getAllUserIds)
-        expect(yield* $(Counter)).toEqual({ count: 1 })
+        yield* $(UserCache, Effect.flatMap((_) => _.invalidateAll()))
+        yield* $(getAllUserIds)
+        yield* $(getAllUserIds)
+        const requests = yield* $(UserCache, Effect.flatMap((_) => _.keys()))
+        expect(requests.map((_) => _._tag)).toEqual(["GetAllIds"])
+        expect(yield* $(Counter)).toEqual({ count: 2 })
       })
     ))
 })

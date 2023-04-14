@@ -522,6 +522,20 @@ class CacheImpl<Environment, Key, Error, Value> implements Cache.Cache<Key, Erro
     )
   }
 
+  keys(): Effect.Effect<never, never, Array<Key>> {
+    return Debug.bodyWithTrace((trace) =>
+      core.sync(() => {
+        const keys: Array<Key> = []
+        for (const entry of this.cacheState.map) {
+          if (entry[1]._tag === "Complete" && entry[1].exit._tag === "Success") {
+            keys.push(entry[0])
+          }
+        }
+        return keys
+      }).traced(trace)
+    )
+  }
+
   trackHit(): void {
     this.cacheState.hits = this.cacheState.hits + 1
   }
