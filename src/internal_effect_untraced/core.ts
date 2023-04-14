@@ -1248,7 +1248,6 @@ export const uninterruptibleMask = Debug.methodWithTrace((trace, restore) =>
       _runtimeFlags.interruption(oldFlags)
         ? restore(f)(interruptible)
         : restore(f)(uninterruptible)
-
     if (trace) {
       return effect.traced(trace)
     }

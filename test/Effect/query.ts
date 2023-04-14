@@ -87,8 +87,7 @@ export const getAllUserNames = pipe(
   getAllUserIds,
   Effect.flatMap(Effect.forEachPar(getUserNameById)),
   Effect.onInterrupt(() => FiberRef.getWith(interrupts, (i) => Effect.sync(() => i.interrupts++))),
-  Effect.map(Chunk.toReadonlyArray),
-  Effect.withRequestBatching("on")
+  Effect.map(Chunk.toReadonlyArray)
 )
 
 export const print = (request: UserRequest): string => {
@@ -173,7 +172,7 @@ describe("Effect", () => {
         })
       )
     ))
-  it.effect("zipPar is batched when specified", () =>
+  it.effect("zipPar is not batched when specified", () =>
     provideEnv(
       Effect.gen(function*($) {
         const [a, b] = yield* $(
@@ -181,15 +180,15 @@ describe("Effect", () => {
             getUserNameById(userIds[0]),
             getUserNameById(userIds[1])
           ),
-          Effect.withRequestBatching("on")
+          Effect.withRequestBatching("off")
         )
         const count = yield* $(Counter)
-        expect(count.count).toEqual(1)
+        expect(count.count).toEqual(2)
         expect(a).toEqual(userNames.get(userIds[0]))
         expect(b).toEqual(userNames.get(userIds[1]))
       })
     ))
-  it.effect("zipPar is not batched by default", () =>
+  it.effect("zipPar is batched by default", () =>
     provideEnv(
       Effect.gen(function*($) {
         const [a, b] = yield* $(
@@ -199,7 +198,7 @@ describe("Effect", () => {
           )
         )
         const count = yield* $(Counter)
-        expect(count.count).toEqual(2)
+        expect(count.count).toEqual(1)
         expect(a).toEqual(userNames.get(userIds[0]))
         expect(b).toEqual(userNames.get(userIds[1]))
       })

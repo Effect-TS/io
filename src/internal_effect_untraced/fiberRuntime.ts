@@ -183,7 +183,7 @@ const drainQueueWhileRunningTable = {
 /**
  * @internal
  */
-export const currentRequestBatchingEnabled = core.fiberRefUnsafeMake(false)
+export const currentRequestBatchingEnabled = core.fiberRefUnsafeMake(true)
 
 class LeftoverRequestsException {
   readonly _tag = "LeftoverRequestsException"
@@ -1157,17 +1157,8 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
             )
           }
           case "RevertFlags": {
-            this.patchRuntimeFlags(this._runtimeFlags, nextOp.patch)
-            if (_runtimeFlags.interruptible(this._runtimeFlags) && this.isInterrupted()) {
-              this.patchRuntimeFlags(this._runtimeFlags, RuntimeFlagsPatch.inverse(nextOp.patch))
-              this.pushStack(nextOp)
-              break
-            } else {
-              return core.blocked(
-                core.requestBlockPatchRuntimeFlags(op.i0, nextOp.op.i0),
-                core.withRuntimeFlags(op.i1, nextOp.op.i0)
-              )
-            }
+            this.pushStack(nextOp)
+            break
           }
         }
       }
@@ -1654,7 +1645,7 @@ const forEachParUnboundedDiscard = <R, E, A, _>(
         core.forEach(as, (a) =>
           pipe(
             graft(pipe(
-              core.suspend(() => core.step(restore(f(a)))),
+              core.suspend(() => restore(core.step(f(a)))),
               core.flatMap(
                 (exit) => {
                   switch (exit._tag) {
