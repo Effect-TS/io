@@ -1,6 +1,6 @@
 ---
 title: Ref/Synchronized.ts
-nav_order: 43
+nav_order: 42
 parent: Modules
 ---
 

@@ -3,7 +3,7 @@
  */
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
-import * as internal from "@effect/io/internal_effect_untraced/cached"
+import * as internal from "@effect/io/internal_effect_untraced/resource"
 import type * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"
 import type * as ScopedRef from "@effect/io/ScopedRef"
@@ -12,22 +12,22 @@ import type * as ScopedRef from "@effect/io/ScopedRef"
  * @since 1.0.0
  * @category symbols
  */
-export const CachedTypeId: unique symbol = internal.CachedTypeId
+export const ResourceTypeId: unique symbol = internal.ResourceTypeId
 
 /**
  * @since 1.0.0
  * @category symbols
  */
-export type CachedTypeId = typeof CachedTypeId
+export type ResourceTypeId = typeof ResourceTypeId
 
 /**
- * A `Cached` is a possibly resourceful value that is loaded into memory, and
+ * A `Resource` is a possibly resourceful value that is loaded into memory, and
  * which can be refreshed either manually or automatically.
  *
  * @since 1.0.0
  * @category models
  */
-export interface Cached<E, A> extends Cached.Variance<E, A> {
+export interface Resource<E, A> extends Resource.Variance<E, A> {
   /** @internal */
   readonly scopedRef: ScopedRef.ScopedRef<Exit.Exit<E, A>>
   /** @internal */
@@ -37,13 +37,13 @@ export interface Cached<E, A> extends Cached.Variance<E, A> {
 /**
  * @since 1.0.0
  */
-export declare namespace Cached {
+export declare namespace Resource {
   /**
    * @since 1.0.0
    * @category models
    */
   export interface Variance<E, A> {
-    readonly [CachedTypeId]: {
+    readonly [ResourceTypeId]: {
       _E: (_: never) => E
       _A: (_: never) => A
     }
@@ -51,7 +51,7 @@ export declare namespace Cached {
 }
 
 /**
- * Creates a new `Cached` value that is automatically refreshed according to
+ * Creates a new `Resource` value that is automatically refreshed according to
  * the specified policy. Note that error retrying is not performed
  * automatically, so if you want to retry on errors, you should first apply
  * retry policies to the acquisition effect before passing it to this
@@ -63,7 +63,7 @@ export declare namespace Cached {
 export const auto: <R, E, A, R2, Out>(
   acquire: Effect.Effect<R, E, A>,
   policy: Schedule.Schedule<R2, unknown, Out>
-) => Effect.Effect<Scope.Scope | R | R2, never, Cached<E, A>> = internal.auto
+) => Effect.Effect<Scope.Scope | R | R2, never, Resource<E, A>> = internal.auto
 
 /**
  * Retrieves the current value stored in the cache.
@@ -71,10 +71,10 @@ export const auto: <R, E, A, R2, Out>(
  * @since 1.0.0
  * @category getters
  */
-export const get: <E, A>(self: Cached<E, A>) => Effect.Effect<never, E, A> = internal.get
+export const get: <E, A>(self: Resource<E, A>) => Effect.Effect<never, E, A> = internal.get
 
 /**
- * Creates a new `Cached` value that must be manually refreshed by calling
+ * Creates a new `Resource` value that must be manually refreshed by calling
  * the refresh method. Note that error retrying is not performed
  * automatically, so if you want to retry on errors, you should first apply
  * retry policies to the acquisition effect before passing it to this
@@ -83,8 +83,9 @@ export const get: <E, A>(self: Cached<E, A>) => Effect.Effect<never, E, A> = int
  * @since 1.0.0
  * @category constructors
  */
-export const manual: <R, E, A>(acquire: Effect.Effect<R, E, A>) => Effect.Effect<Scope.Scope | R, never, Cached<E, A>> =
-  internal.manual
+export const manual: <R, E, A>(
+  acquire: Effect.Effect<R, E, A>
+) => Effect.Effect<Scope.Scope | R, never, Resource<E, A>> = internal.manual
 
 /**
  * Refreshes the cache. This method will not return until either the refresh
@@ -93,4 +94,4 @@ export const manual: <R, E, A>(acquire: Effect.Effect<R, E, A>) => Effect.Effect
  * @since 1.0.0
  * @category utils
  */
-export const refresh: <E, A>(self: Cached<E, A>) => Effect.Effect<never, E, void> = internal.refresh
+export const refresh: <E, A>(self: Resource<E, A>) => Effect.Effect<never, E, void> = internal.refresh

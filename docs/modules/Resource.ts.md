@@ -1,10 +1,10 @@
 ---
-title: Cached.ts
-nav_order: 2
+title: Resource.ts
+nav_order: 48
 parent: Modules
 ---
 
-## Cached overview
+## Resource overview
 
 Added in v1.0.0
 
@@ -18,10 +18,10 @@ Added in v1.0.0
 - [getters](#getters)
   - [get](#get)
 - [models](#models)
-  - [Cached (interface)](#cached-interface)
+  - [Resource (interface)](#resource-interface)
 - [symbols](#symbols)
-  - [CachedTypeId](#cachedtypeid)
-  - [CachedTypeId (type alias)](#cachedtypeid-type-alias)
+  - [ResourceTypeId](#resourcetypeid)
+  - [ResourceTypeId (type alias)](#resourcetypeid-type-alias)
 - [utils](#utils)
   - [refresh](#refresh)
 
@@ -31,7 +31,7 @@ Added in v1.0.0
 
 ## auto
 
-Creates a new `Cached` value that is automatically refreshed according to
+Creates a new `Resource` value that is automatically refreshed according to
 the specified policy. Note that error retrying is not performed
 automatically, so if you want to retry on errors, you should first apply
 retry policies to the acquisition effect before passing it to this
@@ -43,14 +43,14 @@ constructor.
 export declare const auto: <R, E, A, R2, Out>(
   acquire: Effect.Effect<R, E, A>,
   policy: Schedule.Schedule<R2, unknown, Out>
-) => Effect.Effect<Scope.Scope | R | R2, never, Cached<E, A>>
+) => Effect.Effect<Scope.Scope | R | R2, never, Resource<E, A>>
 ```
 
 Added in v1.0.0
 
 ## manual
 
-Creates a new `Cached` value that must be manually refreshed by calling
+Creates a new `Resource` value that must be manually refreshed by calling
 the refresh method. Note that error retrying is not performed
 automatically, so if you want to retry on errors, you should first apply
 retry policies to the acquisition effect before passing it to this
@@ -61,7 +61,7 @@ constructor.
 ```ts
 export declare const manual: <R, E, A>(
   acquire: Effect.Effect<R, E, A>
-) => Effect.Effect<Scope.Scope | R, never, Cached<E, A>>
+) => Effect.Effect<Scope.Scope | R, never, Resource<E, A>>
 ```
 
 Added in v1.0.0
@@ -75,22 +75,22 @@ Retrieves the current value stored in the cache.
 **Signature**
 
 ```ts
-export declare const get: <E, A>(self: Cached<E, A>) => Effect.Effect<never, E, A>
+export declare const get: <E, A>(self: Resource<E, A>) => Effect.Effect<never, E, A>
 ```
 
 Added in v1.0.0
 
 # models
 
-## Cached (interface)
+## Resource (interface)
 
-A `Cached` is a possibly resourceful value that is loaded into memory, and
+A `Resource` is a possibly resourceful value that is loaded into memory, and
 which can be refreshed either manually or automatically.
 
 **Signature**
 
 ```ts
-export interface Cached<E, A> extends Cached.Variance<E, A> {
+export interface Resource<E, A> extends Resource.Variance<E, A> {
   /** @internal */
   readonly scopedRef: ScopedRef.ScopedRef<Exit.Exit<E, A>>
   /** @internal */
@@ -102,22 +102,22 @@ Added in v1.0.0
 
 # symbols
 
-## CachedTypeId
+## ResourceTypeId
 
 **Signature**
 
 ```ts
-export declare const CachedTypeId: typeof CachedTypeId
+export declare const ResourceTypeId: typeof ResourceTypeId
 ```
 
 Added in v1.0.0
 
-## CachedTypeId (type alias)
+## ResourceTypeId (type alias)
 
 **Signature**
 
 ```ts
-export type CachedTypeId = typeof CachedTypeId
+export type ResourceTypeId = typeof ResourceTypeId
 ```
 
 Added in v1.0.0
@@ -132,7 +132,7 @@ is successful, or the refresh operation fails.
 **Signature**
 
 ```ts
-export declare const refresh: <E, A>(self: Cached<E, A>) => Effect.Effect<never, E, void>
+export declare const refresh: <E, A>(self: Resource<E, A>) => Effect.Effect<never, E, void>
 ```
 
 Added in v1.0.0
