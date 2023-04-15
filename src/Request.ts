@@ -185,18 +185,6 @@ export const succeed: {
 } = internal.succeed
 
 /**
- * @category symbols
- * @since 1.0.0
- */
-export const CacheTypeId: unique symbol = Symbol.for("@effect/io/Request/Cache")
-
-/**
- * @category symbols
- * @since 1.0.0
- */
-export type CacheTypeId = typeof CacheTypeId
-
-/**
  * @category models
  * @since 1.0.0
  */

@@ -27,8 +27,6 @@ Added in v1.0.0
   - [fail](#fail)
   - [succeed](#succeed)
 - [symbols](#symbols)
-  - [CacheTypeId](#cachetypeid)
-  - [CacheTypeId (type alias)](#cachetypeid-type-alias)
   - [RequestTypeId](#requesttypeid)
   - [RequestTypeId (type alias)](#requesttypeid-type-alias)
 
@@ -202,26 +200,6 @@ export declare const succeed: {
 Added in v1.0.0
 
 # symbols
-
-## CacheTypeId
-
-**Signature**
-
-```ts
-export declare const CacheTypeId: typeof CacheTypeId
-```
-
-Added in v1.0.0
-
-## CacheTypeId (type alias)
-
-**Signature**
-
-```ts
-export type CacheTypeId = typeof CacheTypeId
-```
-
-Added in v1.0.0
 
 ## RequestTypeId
 
