@@ -1,4 +1,3 @@
-import * as Chunk from "@effect/data/Chunk"
 import * as Debug from "@effect/data/Debug"
 import { pipe } from "@effect/data/Function"
 import type * as Effect from "@effect/io/Effect"
@@ -35,21 +34,21 @@ export const make = <Type, In, Out, R, E>(
 /** @internal */
 export const collectAll = <R, E, Out>(
   iterable: Iterable<PollingMetric.PollingMetric<any, any, R, E, Out>>
-): PollingMetric.PollingMetric<Chunk.Chunk<any>, Chunk.Chunk<any>, R, E, Chunk.Chunk<Out>> => {
+): PollingMetric.PollingMetric<Array<any>, Array<any>, R, E, Array<Out>> => {
   const metrics = Array.from(iterable)
   return {
     [PollingMetricTypeId]: PollingMetricTypeId,
     metric: metric.make(
-      Chunk.of<any>(void 0) as Chunk.Chunk<any>,
-      (inputs: Chunk.Chunk<any>, extraTags) => {
+      Array.of<any>(void 0) as Array<any>,
+      (inputs: Array<any>, extraTags) => {
         for (let i = 0; i < inputs.length; i++) {
           const pollingMetric = metrics[i]!
-          const input = pipe(inputs, Chunk.unsafeGet(i))
+          const input = pipe(inputs, (x) => x[i])
           pollingMetric.metric.unsafeUpdate(input, extraTags)
         }
       },
       (extraTags) =>
-        Chunk.unsafeFromArray(
+        Array.from(
           metrics.map((pollingMetric) => pollingMetric.metric.unsafeValue(extraTags))
         )
     ),

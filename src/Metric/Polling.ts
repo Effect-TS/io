@@ -1,7 +1,6 @@
 /**
  * @since 1.0.0
  */
-import type * as Chunk from "@effect/data/Chunk"
 import type * as Effect from "@effect/io/Effect"
 import type * as Fiber from "@effect/io/Fiber"
 import * as internal from "@effect/io/internal_effect_untraced/metric/polling"
@@ -60,7 +59,7 @@ export const make: <Type, In, Out, R, E>(
  */
 export const collectAll: <R, E, Out>(
   iterable: Iterable<PollingMetric<any, any, R, E, Out>>
-) => PollingMetric<Chunk.Chunk<any>, Chunk.Chunk<any>, R, E, Chunk.Chunk<Out>> = internal.collectAll
+) => PollingMetric<Array<any>, Array<any>, R, E, Array<Out>> = internal.collectAll
 
 /**
  * Returns an effect that will launch the polling metric in a background

@@ -1,4 +1,5 @@
 import * as Chunk from "@effect/data/Chunk"
+import { runtimeDebug } from "@effect/data/Debug"
 import * as Equal from "@effect/data/Equal"
 import { pipe } from "@effect/data/Function"
 import * as HashMap from "@effect/data/HashMap"
@@ -14,6 +15,8 @@ import * as Exit from "@effect/io/Exit"
 import * as LogLevel from "@effect/io/Logger/Level"
 import * as it from "@effect/io/test/utils/extend"
 import { assert, describe, expect } from "vitest"
+
+runtimeDebug.filterStackFrame = () => true
 
 interface HostPort {
   readonly host: string
@@ -198,7 +201,7 @@ describe.concurrent("ConfigProvider", () => {
         Exit.unannotate(result),
         Exit.fail(
           ConfigError.MissingData(
-            Chunk.unsafeFromArray(["hostPorts"]),
+            ["hostPorts"],
             "The element at index 1 in a sequence at path \"hostPorts\" was missing"
           )
         )
@@ -363,7 +366,7 @@ describe.concurrent("ConfigProvider", () => {
           ConfigError.isMissingData(result.i0.error) &&
           // TODO: fix error message to not include `.[index]`
           result.i0.error.message === "Expected employees.[1].id to exist in the provided map" &&
-          Equal.equals(result.i0.error.path, Chunk.make("employees", "[1]", "id"))
+          Equal.equals(Chunk.unsafeFromArray(result.i0.error.path), Chunk.make("employees", "[1]", "id"))
       )
     }))
 
@@ -566,7 +569,7 @@ describe.concurrent("ConfigProvider", () => {
         Exit.unannotate(result),
         Exit.fail(
           ConfigError.MissingData(
-            Chunk.unsafeFromArray(["k1", "k2"]),
+            ["k1", "k2"],
             "Expected k1.k2 to exist in the provided map"
           )
         )
@@ -731,7 +734,7 @@ describe.concurrent("ConfigProvider", () => {
       const config = Config.string("key")
       const result = yield* $(Effect.exit(configProvider.load(config)))
       const error = ConfigError.MissingData(
-        Chunk.of("key"),
+        ["key"],
         "Expected nested to be in path in ConfigProvider#unnested"
       )
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(error))
@@ -751,7 +754,7 @@ describe.concurrent("ConfigProvider", () => {
     Effect.gen(function*($) {
       const configProvider = pipe(
         ConfigProvider.fromMap(new Map([["nesting1.key1", "value1"], ["nesting2.KEY2", "value2"]])),
-        ConfigProvider.within(Chunk.of("nesting2"), ConfigProvider.contramapPath((s) => s.toUpperCase()))
+        ConfigProvider.within(["nesting2"], ConfigProvider.contramapPath((s) => s.toUpperCase()))
       )
       const config = pipe(
         Config.string("key1"),
@@ -769,7 +772,7 @@ describe.concurrent("ConfigProvider", () => {
     Effect.gen(function*($) {
       const configProvider = pipe(
         ConfigProvider.fromMap(new Map([["nesting1.key1", "value1"], ["nesting2.nesting3.KEY2", "value2"]])),
-        ConfigProvider.within(Chunk.make("nesting2", "nesting3"), ConfigProvider.contramapPath((s) => s.toUpperCase()))
+        ConfigProvider.within(["nesting2", "nesting3"], ConfigProvider.contramapPath((s) => s.toUpperCase()))
       )
       const config = pipe(
         Config.string("key1"),

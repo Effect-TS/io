@@ -1,4 +1,3 @@
-import type * as Chunk from "@effect/data/Chunk"
 import * as Debug from "@effect/data/Debug"
 import * as Duration from "@effect/data/Duration"
 import * as Equal from "@effect/data/Equal"
@@ -38,7 +37,7 @@ class KeyedPoolImpl<K, E, A> implements KeyedPool.KeyedPool<K, E, A> {
   readonly [KeyedPoolTypeId] = keyedPoolVariance
   constructor(
     readonly getOrCreatePool: (key: K) => Effect.Effect<never, never, Pool.Pool<E, A>>,
-    readonly activePools: () => Effect.Effect<never, never, Chunk.Chunk<Pool.Pool<E, A>>>
+    readonly activePools: () => Effect.Effect<never, never, Array<Pool.Pool<E, A>>>
   ) {}
   get(key: K): Effect.Effect<Scope.Scope, E, A> {
     return Debug.bodyWithTrace((trace) =>
@@ -177,7 +176,7 @@ const makeWith = Debug.methodWithTrace((trace) =>
               }
             }
           })
-        const activePools = (): Effect.Effect<never, never, Chunk.Chunk<Pool.Pool<E, A>>> =>
+        const activePools = (): Effect.Effect<never, never, Array<Pool.Pool<E, A>>> =>
           core.suspend(() =>
             core.forEach(Array.from(HashMap.values(MutableRef.get(map))), (value) => {
               switch (value._tag) {

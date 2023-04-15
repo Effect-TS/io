@@ -1,8 +1,8 @@
-import * as Chunk from "@effect/data/Chunk"
 import * as Either from "@effect/data/Either"
 import { dual, pipe } from "@effect/data/Function"
 import * as List from "@effect/data/List"
 import * as Option from "@effect/data/Option"
+import * as RA from "@effect/data/ReadonlyArray"
 import * as String from "@effect/data/String"
 import type * as ConfigError from "@effect/io/Config/Error"
 import type * as PathPatch from "@effect/io/Config/Provider/PathPatch"
@@ -46,15 +46,15 @@ export const patch = dual<
   (
     patch: PathPatch.PathPatch
   ) => (
-    path: Chunk.Chunk<string>
-  ) => Either.Either<ConfigError.ConfigError, Chunk.Chunk<string>>,
+    path: Array<string>
+  ) => Either.Either<ConfigError.ConfigError, Array<string>>,
   (
-    path: Chunk.Chunk<string>,
+    path: Array<string>,
     patch: PathPatch.PathPatch
-  ) => Either.Either<ConfigError.ConfigError, Chunk.Chunk<string>>
+  ) => Either.Either<ConfigError.ConfigError, Array<string>>
 >(2, (path, patch) => {
   let input = List.of(patch)
-  let output: Chunk.Chunk<string> = path
+  let output: Array<string> = path
   while (List.isCons(input)) {
     const patch = input.head
     switch (patch._tag) {
@@ -67,22 +67,22 @@ export const patch = dual<
         break
       }
       case "MapName": {
-        output = Chunk.map(output, patch.f)
+        output = RA.map(output, patch.f)
         input = input.tail
         break
       }
       case "Nested": {
-        output = Chunk.prepend(output, patch.name)
+        output = RA.prepend(output, patch.name)
         input = input.tail
         break
       }
       case "Unnested": {
         const containsName = pipe(
-          Chunk.head(output),
+          RA.head(output),
           Option.contains(String.Equivalence)(patch.name)
         )
         if (containsName) {
-          output = Chunk.tailNonEmpty(output as Chunk.NonEmptyChunk<string>)
+          output = RA.tailNonEmpty(output as RA.NonEmptyArray<string>)
           input = input.tail
         } else {
           return Either.left(configError.MissingData(

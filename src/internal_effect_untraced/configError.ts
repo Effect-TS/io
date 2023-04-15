@@ -1,6 +1,6 @@
-import * as Chunk from "@effect/data/Chunk"
 import * as Either from "@effect/data/Either"
 import { constFalse, constTrue, dual, pipe } from "@effect/data/Function"
+import * as RA from "@effect/data/ReadonlyArray"
 import type * as Cause from "@effect/io/Cause"
 import type * as ConfigError from "@effect/io/Config/Error"
 import * as OpCodes from "@effect/io/internal_effect_untraced/opCodes/configError"
@@ -49,7 +49,7 @@ export const Or = (self: ConfigError.ConfigError, that: ConfigError.ConfigError)
 }
 
 /** @internal */
-export const InvalidData = (path: Chunk.Chunk<string>, message: string): ConfigError.ConfigError => {
+export const InvalidData = (path: Array<string>, message: string): ConfigError.ConfigError => {
   const error = Object.create(proto)
   error._tag = OpCodes.OP_INVALID_DATA
   error.path = path
@@ -57,7 +57,7 @@ export const InvalidData = (path: Chunk.Chunk<string>, message: string): ConfigE
   Object.defineProperty(error, "toString", {
     enumerable: false,
     value(this: ConfigError.InvalidData) {
-      const path = pipe(this.path, Chunk.join("."))
+      const path = pipe(this.path, RA.join("."))
       return `(Invalid data at ${path}: "${this.message}")`
     }
   })
@@ -65,7 +65,7 @@ export const InvalidData = (path: Chunk.Chunk<string>, message: string): ConfigE
 }
 
 /** @internal */
-export const MissingData = (path: Chunk.Chunk<string>, message: string): ConfigError.ConfigError => {
+export const MissingData = (path: Array<string>, message: string): ConfigError.ConfigError => {
   const error = Object.create(proto)
   error._tag = OpCodes.OP_MISSING_DATA
   error.path = path
@@ -73,7 +73,7 @@ export const MissingData = (path: Chunk.Chunk<string>, message: string): ConfigE
   Object.defineProperty(error, "toString", {
     enumerable: false,
     value(this: ConfigError.MissingData) {
-      const path = pipe(this.path, Chunk.join("."))
+      const path = pipe(this.path, RA.join("."))
       return `(Missing data at ${path}: "${this.message}")`
     }
   })
@@ -82,7 +82,7 @@ export const MissingData = (path: Chunk.Chunk<string>, message: string): ConfigE
 
 /** @internal */
 export const SourceUnavailable = (
-  path: Chunk.Chunk<string>,
+  path: Array<string>,
   message: string,
   cause: Cause.Cause<unknown>
 ): ConfigError.ConfigError => {
@@ -94,7 +94,7 @@ export const SourceUnavailable = (
   Object.defineProperty(error, "toString", {
     enumerable: false,
     value(this: ConfigError.SourceUnavailable) {
-      const path = pipe(this.path, Chunk.join("."))
+      const path = pipe(this.path, RA.join("."))
       return `(Source unavailable at ${path}: "${this.message}")`
     }
   })
@@ -102,7 +102,7 @@ export const SourceUnavailable = (
 }
 
 /** @internal */
-export const Unsupported = (path: Chunk.Chunk<string>, message: string): ConfigError.ConfigError => {
+export const Unsupported = (path: Array<string>, message: string): ConfigError.ConfigError => {
   const error = Object.create(proto)
   error._tag = OpCodes.OP_UNSUPPORTED
   error.path = path
@@ -110,7 +110,7 @@ export const Unsupported = (path: Chunk.Chunk<string>, message: string): ConfigE
   Object.defineProperty(error, "toString", {
     enumerable: false,
     value(this: ConfigError.Unsupported) {
-      const path = pipe(this.path, Chunk.join("."))
+      const path = pipe(this.path, RA.join("."))
       return `(Unsupported operation at ${path}: "${this.message}")`
     }
   })
@@ -145,11 +145,11 @@ export const isUnsupported = (self: ConfigError.ConfigError): self is ConfigErro
 
 /** @internal */
 export const prefixed: {
-  (prefix: Chunk.Chunk<string>): (self: ConfigError.ConfigError) => ConfigError.ConfigError
-  (self: ConfigError.ConfigError, prefix: Chunk.Chunk<string>): ConfigError.ConfigError
+  (prefix: Array<string>): (self: ConfigError.ConfigError) => ConfigError.ConfigError
+  (self: ConfigError.ConfigError, prefix: Array<string>): ConfigError.ConfigError
 } = dual<
-  (prefix: Chunk.Chunk<string>) => (self: ConfigError.ConfigError) => ConfigError.ConfigError,
-  (self: ConfigError.ConfigError, prefix: Chunk.Chunk<string>) => ConfigError.ConfigError
+  (prefix: Array<string>) => (self: ConfigError.ConfigError) => ConfigError.ConfigError,
+  (self: ConfigError.ConfigError, prefix: Array<string>) => ConfigError.ConfigError
 >(2, (self, prefix) => {
   switch (self._tag) {
     case OpCodes.OP_AND: {
@@ -159,16 +159,16 @@ export const prefixed: {
       return Or(prefixed(prefix)(self.left), prefixed(prefix)(self.right))
     }
     case OpCodes.OP_INVALID_DATA: {
-      return InvalidData(pipe(prefix, Chunk.concat(self.path)), self.message)
+      return InvalidData([...prefix, ...self.path], self.message)
     }
     case OpCodes.OP_MISSING_DATA: {
-      return MissingData(pipe(prefix, Chunk.concat(self.path)), self.message)
+      return MissingData([...prefix, ...self.path], self.message)
     }
     case OpCodes.OP_SOURCE_UNAVAILABLE: {
-      return SourceUnavailable(pipe(prefix, Chunk.concat(self.path)), self.message, self.cause)
+      return SourceUnavailable([...prefix, ...self.path], self.message, self.cause)
     }
     case OpCodes.OP_UNSUPPORTED: {
-      return Unsupported(pipe(prefix, Chunk.concat(self.path)), self.message)
+      return Unsupported([...prefix, ...self.path], self.message)
     }
   }
 })

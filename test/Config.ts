@@ -82,10 +82,10 @@ describe.concurrent("Config", () => {
             ConfigError.isOr(result.i0.error) &&
             ConfigError.isMissingData(result.i0.error.left) &&
             result.i0.error.left.message === "Expected key1 to exist in the provided map" &&
-            Equal.equals(result.i0.error.left.path, Chunk.of("key1")) &&
+            Equal.equals(Chunk.unsafeFromArray(result.i0.error.left.path), Chunk.of("key1")) &&
             ConfigError.isInvalidData(result.i0.error.right) &&
             result.i0.error.right.message === "Expected an integer value but received value" &&
-            Equal.equals(result.i0.error.right.path, Chunk.of("key2"))
+            Equal.equals(Chunk.unsafeFromArray(result.i0.error.right.path), Chunk.of("key2"))
         )
       }))
   })
@@ -153,10 +153,10 @@ describe.concurrent("Config", () => {
             ConfigError.isOr(result.i0.error) &&
             ConfigError.isMissingData(result.i0.error.left) &&
             result.i0.error.left.message === "Expected key1 to exist in the provided map" &&
-            Equal.equals(result.i0.error.left.path, Chunk.of("key1")) &&
+            Equal.equals(Chunk.unsafeFromArray(result.i0.error.left.path), Chunk.of("key1")) &&
             ConfigError.isInvalidData(result.i0.error.right) &&
             result.i0.error.right.message === "Expected an integer value but received value" &&
-            Equal.equals(result.i0.error.right.path, Chunk.of("key2"))
+            Equal.equals(Chunk.unsafeFromArray(result.i0.error.right.path), Chunk.of("key2"))
         )
       }))
   })

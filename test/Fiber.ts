@@ -169,7 +169,7 @@ describe.concurrent("Fiber", () => {
   it.effect("dual roots", () =>
     Effect.gen(function*($) {
       const rootContains = (fiber: Fiber.RuntimeFiber<any, any>): Effect.Effect<never, never, boolean> => {
-        return pipe(Fiber.roots(), Effect.map(Chunk.elem(fiber)))
+        return pipe(Fiber.roots(), Effect.map(Chunk.unsafeFromArray), Effect.map(Chunk.elem(fiber)))
       }
       const fiber1 = yield* $(Effect.forkDaemon(Effect.never()))
       const fiber2 = yield* $(Effect.forkDaemon(Effect.never()))

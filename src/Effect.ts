@@ -1,8 +1,7 @@
 /**
  * @since 1.0.0
  */
-import type * as Chunk from "@effect/data/Chunk"
-import type * as Context from "@effect/data/Context"
+import * as Context from "@effect/data/Context"
 import type { Trace } from "@effect/data/Debug"
 import type * as Duration from "@effect/data/Duration"
 import type * as Either from "@effect/data/Either"
@@ -53,6 +52,7 @@ import * as circular from "@effect/io/internal_effect_untraced/effect/circular"
 import * as fiberRuntime from "@effect/io/internal_effect_untraced/fiberRuntime"
 import * as layer from "@effect/io/internal_effect_untraced/layer"
 import * as circularLayer from "@effect/io/internal_effect_untraced/layer/circular"
+import * as query from "@effect/io/internal_effect_untraced/query"
 import * as _runtime from "@effect/io/internal_effect_untraced/runtime"
 import * as _schedule from "@effect/io/internal_effect_untraced/schedule"
 import type * as Layer from "@effect/io/Layer"
@@ -61,6 +61,9 @@ import type * as Metric from "@effect/io/Metric"
 import type * as MetricLabel from "@effect/io/Metric/Label"
 import type * as Random from "@effect/io/Random"
 import type * as Ref from "@effect/io/Ref"
+import type { Cache, Request } from "@effect/io/Request"
+import type { RequestBlock } from "@effect/io/RequestBlock"
+import type { RequestResolver } from "@effect/io/RequestResolver"
 import type * as Runtime from "@effect/io/Runtime"
 import type * as Schedule from "@effect/io/Schedule"
 import type { Scheduler } from "@effect/io/Scheduler"
@@ -145,6 +148,16 @@ export interface EffectTypeLambda extends TypeLambda {
  * @since 1.0.0
  * @category models
  */
+export interface Blocked<R, E, A> extends Effect<R, E, A> {
+  readonly _tag: "Blocked"
+  readonly i0: RequestBlock<R>
+  readonly i1: Effect<R, E, A>
+}
+
+/**
+ * @since 1.0.0
+ * @category models
+ */
 declare module "@effect/data/Context" {
   interface Tag<Identifier, Service> extends Effect<Identifier, never, Service> {}
   interface TracedTag<Identifier, Service> extends Effect<Identifier, never, Service> {}
@@ -184,7 +197,7 @@ declare module "@effect/data/Option" {
   interface None<A> extends Effect<never, Cause.NoSuchElementException, A> {
     readonly _tag: "None"
   }
-  interface Some<A> extends Effect<never, never, A> {
+  interface Some<A> extends Effect<never, Cause.NoSuchElementException, A> {
     readonly _tag: "Some"
   }
   interface TracedOption<A> extends Effect<never, Cause.NoSuchElementException, A> {
@@ -725,7 +738,6 @@ export {
    */
   try_ as try
 }
-
 export {
   /**
    * Recovers from specified error.
@@ -744,6 +756,15 @@ export {
    */
   bindValue_ as let
 }
+export {
+  /**
+   * Runs `onTrue` if the result of `self` is `true` and `onFalse` otherwise.
+   *
+   * @since 1.0.0
+   * @category constructors
+   */
+  if_ as if
+}
 
 /**
  * Returns a new effect that will not succeed with its value before first
@@ -761,7 +782,7 @@ export const awaitAllChildren: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, 
  * @since 1.0.0
  * @category utils
  */
-export const cached: {
+export const cachedWithTTL: {
   (timeToLive: Duration.Duration): <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Effect<never, E, A>>
   <R, E, A>(self: Effect<R, E, A>, timeToLive: Duration.Duration): Effect<R, never, Effect<never, E, A>>
 } = circular.cached
@@ -775,7 +796,7 @@ export const cached: {
  * @since 1.0.0
  * @category utils
  */
-export const cachedInvalidate: {
+export const cachedInvalidateWithTTL: {
   (timeToLive: Duration.Duration): <R, E, A>(
     self: Effect<R, E, A>
   ) => Effect<R, never, [Effect<never, E, A>, Effect<never, never, void>]>
@@ -1034,56 +1055,23 @@ export const configProviderWith: <R, E, A>(f: (configProvider: ConfigProvider) =
   defaultServices.configProviderWith
 
 /**
- * Evaluate each effect in the structure from left to right, collecting the
- * the successful values and discarding the empty cases. For a parallel version, see `collectPar`.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const collect: {
-  <A, R, E, B>(f: (a: A) => Effect<R, Option.Option<E>, B>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<B>>
-  <A, R, E, B>(elements: Iterable<A>, f: (a: A) => Effect<R, Option.Option<E>, B>): Effect<R, E, Chunk.Chunk<B>>
-} = fiberRuntime.collect
-
-/**
- * Evaluate each effect in the structure from left to right, and collect the
- * results. For a parallel version, see `collectAllPar`.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const collectAll: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, E, Chunk.Chunk<A>> =
-  effect.collectAll
-
-/**
  * Evaluate each effect in the structure from left to right, and discard the
  * results. For a parallel version, see `collectAllParDiscard`.
  *
  * @since 1.0.0
  * @category constructors
  */
-export const collectAllDiscard: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, E, void> =
-  effect.collectAllDiscard
+export const allDiscard: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, E, void> = effect.allDiscard
 
 /**
  * Evaluate each effect in the structure in parallel, and collect the results.
- * For a sequential version, see `collectAll`.
+ * For a sequential version, see `all`.
  *
  * @since 1.0.0
  * @category constructors
  */
-export const collectAllPar: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, E, Chunk.Chunk<A>> =
-  fiberRuntime.collectAllPar
-
-/**
- * Evaluate each effect in the structure in parallel, and discard the results.
- * For a sequential version, see `collectAllDiscard`.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const collectAllParDiscard: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, E, void> =
-  fiberRuntime.collectAllParDiscard
+export const allParDiscard: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, E, void> =
+  fiberRuntime.allParDiscard
 
 /**
  * Evaluate each effect in the structure with `collectAll`, and collect the
@@ -1092,10 +1080,10 @@ export const collectAllParDiscard: <R, E, A>(effects: Iterable<Effect<R, E, A>>)
  * @since 1.0.0
  * @category constructors
  */
-export const collectAllWith: {
-  <A, B>(pf: (a: A) => Option.Option<B>): <R, E>(elements: Iterable<Effect<R, E, A>>) => Effect<R, E, Chunk.Chunk<B>>
-  <R, E, A, B>(elements: Iterable<Effect<R, E, A>>, pf: (a: A) => Option.Option<B>): Effect<R, E, Chunk.Chunk<B>>
-} = effect.collectAllWith
+export const allFilterMap: {
+  <A, B>(pf: (a: A) => Option.Option<B>): <R, E>(elements: Iterable<Effect<R, E, A>>) => Effect<R, E, Array<B>>
+  <R, E, A, B>(elements: Iterable<Effect<R, E, A>>, pf: (a: A) => Option.Option<B>): Effect<R, E, Array<B>>
+} = effect.allFilterMap
 
 /**
  * Evaluate each effect in the structure with `collectAllPar`, and collect
@@ -1104,10 +1092,10 @@ export const collectAllWith: {
  * @since 1.0.0
  * @category constructors
  */
-export const collectAllWithPar: {
-  <A, B>(pf: (a: A) => Option.Option<B>): <R, E>(elements: Iterable<Effect<R, E, A>>) => Effect<R, E, Chunk.Chunk<B>>
-  <R, E, A, B>(elements: Iterable<Effect<R, E, A>>, pf: (a: A) => Option.Option<B>): Effect<R, E, Chunk.Chunk<B>>
-} = fiberRuntime.collectAllWithPar
+export const allFilterMapPar: {
+  <A, B>(pf: (a: A) => Option.Option<B>): <R, E>(elements: Iterable<Effect<R, E, A>>) => Effect<R, E, Array<B>>
+  <R, E, A, B>(elements: Iterable<Effect<R, E, A>>, pf: (a: A) => Option.Option<B>): Effect<R, E, Array<B>>
+} = fiberRuntime.allFilterMapPar
 
 /**
  * Returns a filtered, mapped subset of the elements of the iterable based on a
@@ -1116,10 +1104,10 @@ export const collectAllWithPar: {
  * @since 1.0.0
  * @category constructors
  */
-export const collectAllWithEffect: {
-  <A, R, E, B>(f: (a: A) => Option.Option<Effect<R, E, B>>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<B>>
-  <A, R, E, B>(elements: Iterable<A>, f: (a: A) => Option.Option<Effect<R, E, B>>): Effect<R, E, Chunk.Chunk<B>>
-} = effect.collectAllWithEffect
+export const filterMapEffect: {
+  <A, R, E, B>(f: (a: A) => Option.Option<Effect<R, E, B>>): (elements: Iterable<A>) => Effect<R, E, Array<B>>
+  <A, R, E, B>(elements: Iterable<A>, f: (a: A) => Option.Option<Effect<R, E, B>>): Effect<R, E, Array<B>>
+} = effect.filterMapEffect
 
 /**
  * Evaluate and run each effect in the structure and collect the results,
@@ -1128,7 +1116,7 @@ export const collectAllWithEffect: {
  * @since 1.0.0
  * @category constructors
  */
-export const collectAllSuccesses: <R, E, A>(as: Iterable<Effect<R, E, A>>) => Effect<R, never, Chunk.Chunk<A>> =
+export const allSuccesses: <R, E, A>(as: Iterable<Effect<R, E, A>>) => Effect<R, never, Array<A>> =
   effect.collectAllSuccesses
 
 /**
@@ -1138,9 +1126,26 @@ export const collectAllSuccesses: <R, E, A>(as: Iterable<Effect<R, E, A>>) => Ef
  * @since 1.0.0
  * @category constructors
  */
-export const collectAllSuccessesPar: <R, E, A>(
-  elements: Iterable<Effect<R, E, A>>
-) => Effect<R, never, Chunk.Chunk<A>> = fiberRuntime.collectAllSuccessesPar
+export const allSuccessesPar: <R, E, A>(elements: Iterable<Effect<R, E, A>>) => Effect<R, never, Array<A>> =
+  fiberRuntime.collectAllSuccessesPar
+
+/**
+ * Collects the all element of the `Collection<A>` for which the effect returns a value.
+ *
+ * @since 1.0.0
+ * @category constructors
+ */
+export const collectAll: <R, E, A>(elements: Iterable<Effect<R, E, Option.Option<A>>>) => Effect<R, E, Array<A>> =
+  effect.collectAll
+
+/**
+ * Collects the all element of the `Collection<A>` for which the effect returns a value.
+ *
+ * @since 1.0.0
+ * @category constructors
+ */
+export const collectAllPar: <R, E, A>(elements: Iterable<Effect<R, E, Option.Option<A>>>) => Effect<R, E, Array<A>> =
+  fiberRuntime.collectAllPar
 
 /**
  * Collects the first element of the `Collection<A>` for which the effectual
@@ -1155,18 +1160,6 @@ export const collectFirst: {
 } = effect.collectFirst
 
 /**
- * Evaluate each effect in the structure in parallel, collecting the successful
- * values and discarding the empty cases.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const collectPar: {
-  <A, R, E, B>(f: (a: A) => Effect<R, Option.Option<E>, B>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<B>>
-  <A, R, E, B>(elements: Iterable<A>, f: (a: A) => Effect<R, Option.Option<E>, B>): Effect<R, E, Chunk.Chunk<B>>
-} = fiberRuntime.collectPar
-
-/**
  * Transforms all elements of the chunk for as long as the specified partial
  * function is defined.
  *
@@ -1174,8 +1167,8 @@ export const collectPar: {
  * @category constructors
  */
 export const collectWhile: {
-  <A, R, E, B>(f: (a: A) => Option.Option<Effect<R, E, B>>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<B>>
-  <A, R, E, B>(elements: Iterable<A>, f: (a: A) => Option.Option<Effect<R, E, B>>): Effect<R, E, Chunk.Chunk<B>>
+  <A, R, E, B>(f: (a: A) => Option.Option<Effect<R, E, B>>): (elements: Iterable<A>) => Effect<R, E, Array<B>>
+  <A, R, E, B>(elements: Iterable<A>, f: (a: A) => Option.Option<Effect<R, E, B>>): Effect<R, E, Array<B>>
 } = effect.collectWhile
 
 /**
@@ -1315,7 +1308,7 @@ export const die: (defect: unknown) => Effect<never, never, never> = core.die
  * @since 1.0.0
  * @category constructors
  */
-export const dieMessage: (message: string) => Effect<never, never, never> = effect.dieMessage
+export const dieMessage: (message: string) => Effect<never, never, never> = core.dieMessage
 
 /**
  * @since 1.0.0
@@ -1437,8 +1430,8 @@ export const done: <E, A>(exit: Exit.Exit<E, A>) => Effect<never, E, A> = core.d
  * @category utils
  */
 export const dropUntil: {
-  <A, R, E>(predicate: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<A>>
-  <A, R, E>(elements: Iterable<A>, predicate: (a: A) => Effect<R, E, boolean>): Effect<R, E, Chunk.Chunk<A>>
+  <A, R, E>(predicate: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Array<A>>
+  <A, R, E>(elements: Iterable<A>, predicate: (a: A) => Effect<R, E, boolean>): Effect<R, E, Array<A>>
 } = effect.dropUntil
 
 /**
@@ -1448,8 +1441,8 @@ export const dropUntil: {
  * @category constructors
  */
 export const dropWhile: {
-  <R, E, A>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<A>>
-  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, Chunk.Chunk<A>>
+  <R, E, A>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Array<A>>
+  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, Array<A>>
 } = effect.dropWhile
 
 /**
@@ -1496,11 +1489,11 @@ export const ensuring: {
  */
 export const ensuringChild: {
   <R2, X>(
-    f: (fiber: Fiber.Fiber<any, Chunk.Chunk<unknown>>) => Effect<R2, never, X>
+    f: (fiber: Fiber.Fiber<any, Array<unknown>>) => Effect<R2, never, X>
   ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E, A>
   <R, E, A, R2, X>(
     self: Effect<R, E, A>,
-    f: (fiber: Fiber.Fiber<any, Chunk.Chunk<unknown>>) => Effect<R2, never, X>
+    f: (fiber: Fiber.Fiber<any, Array<unknown>>) => Effect<R2, never, X>
   ): Effect<R | R2, E, A>
 } = circular.ensuringChild
 
@@ -1513,11 +1506,11 @@ export const ensuringChild: {
  */
 export const ensuringChildren: {
   <R1, X>(
-    children: (fibers: Chunk.Chunk<Fiber.RuntimeFiber<any, any>>) => Effect<R1, never, X>
+    children: (fibers: Array<Fiber.RuntimeFiber<any, any>>) => Effect<R1, never, X>
   ): <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | R, E, A>
   <R, E, A, R1, X>(
     self: Effect<R, E, A>,
-    children: (fibers: Chunk.Chunk<Fiber.RuntimeFiber<any, any>>) => Effect<R1, never, X>
+    children: (fibers: Array<Fiber.RuntimeFiber<any, any>>) => Effect<R1, never, X>
   ): Effect<R | R1, E, A>
 } = circular.ensuringChildren
 
@@ -1605,8 +1598,8 @@ export const fiberIdWith: <R, E, A>(f: (descriptor: FiberId.Runtime) => Effect<R
  * @category filtering
  */
 export const filter: {
-  <A, R, E>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<A>>
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, Chunk.Chunk<A>>
+  <A, R, E>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Array<A>>
+  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, Array<A>>
 } = effect.filter
 
 /**
@@ -1617,8 +1610,8 @@ export const filter: {
  * @category filtering
  */
 export const filterPar: {
-  <A, R, E>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<A>>
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, Chunk.Chunk<A>>
+  <A, R, E>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Array<A>>
+  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, Array<A>>
 } = fiberRuntime.filterPar
 
 /**
@@ -1629,8 +1622,8 @@ export const filterPar: {
  * @category filtering
  */
 export const filterNot: {
-  <A, R, E>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<A>>
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, Chunk.Chunk<A>>
+  <A, R, E>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Array<A>>
+  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, Array<A>>
 } = effect.filterNot
 
 /**
@@ -1641,8 +1634,8 @@ export const filterNot: {
  * @category filtering
  */
 export const filterNotPar: {
-  <A, R, E>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<A>>
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, Chunk.Chunk<A>>
+  <A, R, E>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Array<A>>
+  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, Array<A>>
 } = fiberRuntime.filterNotPar
 
 /**
@@ -1854,8 +1847,8 @@ export const forAll: {
  * @category constructors
  */
 export const forEach: {
-  <A, R, E, B>(f: (a: A) => Effect<R, E, B>): (self: Iterable<A>) => Effect<R, E, Chunk.Chunk<B>>
-  <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, E, Chunk.Chunk<B>>
+  <A, R, E, B>(f: (a: A) => Effect<R, E, B>): (self: Iterable<A>) => Effect<R, E, Array<B>>
+  <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, E, Array<B>>
 } = core.forEach
 
 /**
@@ -1881,7 +1874,7 @@ export const forEachEffect: {
 
 /**
  * Applies the function `f` to each element of the `Collection<A>` and returns
- * the result in a new `Chunk<B>` using the specified execution strategy.
+ * the result in a new `Arrat<B>` using the specified execution strategy.
  *
  * @since 1.0.0
  * @category constructors
@@ -1890,12 +1883,12 @@ export const forEachExec: {
   <R, E, A, B>(
     f: (a: A) => Effect<R, E, B>,
     strategy: ExecutionStrategy.ExecutionStrategy
-  ): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<B>>
+  ): (elements: Iterable<A>) => Effect<R, E, Array<B>>
   <R, E, A, B>(
     elements: Iterable<A>,
     f: (a: A) => Effect<R, E, B>,
     strategy: ExecutionStrategy.ExecutionStrategy
-  ): Effect<R, E, Chunk.Chunk<B>>
+  ): Effect<R, E, Array<B>>
 } = fiberRuntime.forEachExec
 
 /**
@@ -1919,8 +1912,8 @@ export const forEachOption: {
  * @category traversing
  */
 export const forEachWithIndex: {
-  <A, R, E, B>(f: (a: A, i: number) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<B>>
-  <A, R, E, B>(elements: Iterable<A>, f: (a: A, i: number) => Effect<R, E, B>): Effect<R, E, Chunk.Chunk<B>>
+  <A, R, E, B>(f: (a: A, i: number) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, E, Array<B>>
+  <A, R, E, B>(elements: Iterable<A>, f: (a: A, i: number) => Effect<R, E, B>): Effect<R, E, Array<B>>
 } = effect.forEachWithIndex
 
 /**
@@ -1928,8 +1921,8 @@ export const forEachWithIndex: {
  * @category constructors
  */
 export const forEachPar: {
-  <A, R, E, B>(f: (a: A) => Effect<R, E, B>): (self: Iterable<A>) => Effect<R, E, Chunk.Chunk<B>>
-  <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, E, Chunk.Chunk<B>>
+  <A, R, E, B>(f: (a: A) => Effect<R, E, B>): (self: Iterable<A>) => Effect<R, E, Array<B>>
+  <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, E, Array<B>>
 } = fiberRuntime.forEachPar
 
 /**
@@ -1950,8 +1943,8 @@ export const forEachParDiscard: {
  * @category constructors
  */
 export const forEachParWithIndex: {
-  <R, E, A, B>(f: (a: A, i: number) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<B>>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A, i: number) => Effect<R, E, B>): Effect<R, E, Chunk.Chunk<B>>
+  <R, E, A, B>(f: (a: A, i: number) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, E, Array<B>>
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A, i: number) => Effect<R, E, B>): Effect<R, E, Array<B>>
 } = fiberRuntime.forEachParWithIndex
 
 /**
@@ -2006,9 +1999,8 @@ export const forkDaemon: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Fi
  * @since 1.0.0
  * @category supervision
  */
-export const forkAll: <R, E, A>(
-  effects: Iterable<Effect<R, E, A>>
-) => Effect<R, never, Fiber.Fiber<E, Chunk.Chunk<A>>> = circular.forkAll
+export const forkAll: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, never, Fiber.Fiber<E, Array<A>>> =
+  circular.forkAll
 
 /**
  * Returns an effect that forks all of the specified values, and returns a
@@ -2059,14 +2051,6 @@ export const forkWithErrorHandler: {
 } = fiberRuntime.forkWithErrorHandler
 
 /**
- * Lifts an `Either<E, A>` into an `Effect<never, E, A>`.
- *
- * @since 1.0.0
- * @category conversions
- */
-export const fromEither: <E, A>(either: Either.Either<E, A>) => Effect<never, E, A> = core.fromEither
-
-/**
  * Lifts an `Either<Cause<E>, A>` into an `Effect<never, E, A>`.
  *
  * @since 1.0.0
@@ -2093,15 +2077,6 @@ export const fromFiber: <E, A>(fiber: Fiber.Fiber<E, A>) => Effect<never, E, A> 
  */
 export const fromFiberEffect: <R, E, A>(fiber: Effect<R, E, Fiber.Fiber<E, A>>) => Effect<R, E, A> =
   circular.fromFiberEffect
-
-/**
- * Lifts an `Option` into an `Effect` but preserves the error as an option in
- * the error channel, making it easier to compose in some scenarios.
- *
- * @since 1.0.0
- * @category conversions
- */
-export const fromOption: <A>(option: Option.Option<A>) => Effect<never, Option.Option<never>, A> = core.fromOption
 
 /**
  * @category models
@@ -2473,16 +2448,6 @@ const if_: {
   ): Effect<R1 | R2, E1 | E2, A | A1>
 } = core.if_
 
-export {
-  /**
-   * Runs `onTrue` if the result of `self` is `true` and `onFalse` otherwise.
-   *
-   * @since 1.0.0
-   * @category constructors
-   */
-  if_ as if
-}
-
 /**
  * Returns a new effect that ignores the success or failure of this effect.
  *
@@ -2822,7 +2787,7 @@ export const loop: <Z, R, E, A>(
   cont: (z: Z) => boolean,
   inc: (z: Z) => Z,
   body: (z: Z) => Effect<R, E, A>
-) => Effect<R, E, Chunk.Chunk<A>> = effect.loop
+) => Effect<R, E, Array<A>> = effect.loop
 
 /**
  * Loops with the specified effectual function purely for its effects. The
@@ -2867,12 +2832,12 @@ export const mapAccum: {
   <A, B, R, E, Z>(
     zero: Z,
     f: (z: Z, a: A) => Effect<R, E, readonly [Z, B]>
-  ): (elements: Iterable<A>) => Effect<R, E, [Z, Chunk.Chunk<B>]>
+  ): (elements: Iterable<A>) => Effect<R, E, [Z, Array<B>]>
   <A, B, R, E, Z>(
     elements: Iterable<A>,
     zero: Z,
     f: (z: Z, a: A) => Effect<R, E, readonly [Z, B]>
-  ): Effect<R, E, [Z, Chunk.Chunk<B>]>
+  ): Effect<R, E, [Z, Array<B>]>
 } = effect.mapAccum
 
 /**
@@ -3001,7 +2966,7 @@ export const matchEffect: {
  * @since 1.0.0
  * @category utils
  */
-export const memoize: <R, E, A>(self: Effect<R, E, A>) => Effect<never, never, Effect<R, E, A>> = effect.memoize
+export const cached: <R, E, A>(self: Effect<R, E, A>) => Effect<never, never, Effect<R, E, A>> = effect.memoize
 
 /**
  * Returns a memoized version of the specified effectual function.
@@ -3009,7 +2974,7 @@ export const memoize: <R, E, A>(self: Effect<R, E, A>) => Effect<never, never, E
  * @since 1.0.0
  * @category constructors
  */
-export const memoizeFunction: <R, E, A, B>(
+export const cachedFunction: <R, E, A, B>(
   f: (a: A) => Effect<R, E, B>,
   eq?: Equivalence<A>
 ) => Effect<never, never, (a: A) => Effect<R, E, B>> = circular.memoizeFunction
@@ -3295,7 +3260,7 @@ export const orElseSucceed: {
  * @since 1.0.0
  * @category utils
  */
-export const parallelErrors: <R, E, A>(self: Effect<R, E, A>) => Effect<R, Chunk.Chunk<E>, A> = effect.parallelErrors
+export const parallelErrors: <R, E, A>(self: Effect<R, E, A>) => Effect<R, Array<E>, A> = effect.parallelErrors
 
 /**
  * @since 1.0.0
@@ -3312,10 +3277,8 @@ export const parallelFinalizers: <R, E, A>(self: Effect<R, E, A>) => Effect<Scop
  * @category constructors
  */
 export const partition: {
-  <R, E, A, B>(
-    f: (a: A) => Effect<R, E, B>
-  ): (elements: Iterable<A>) => Effect<R, never, [Chunk.Chunk<E>, Chunk.Chunk<B>]>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, never, [Chunk.Chunk<E>, Chunk.Chunk<B>]>
+  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, never, [Array<E>, Array<B>]>
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, never, [Array<E>, Array<B>]>
 } = effect.partition
 
 /**
@@ -3327,13 +3290,8 @@ export const partition: {
  * @category constructors
  */
 export const partitionPar: {
-  <R, E, A, B>(
-    f: (a: A) => Effect<R, E, B>
-  ): (elements: Iterable<A>) => Effect<R, never, [Chunk.Chunk<E>, Chunk.Chunk<B>]>
-  <R, E, A, B>(
-    elements: Iterable<A>,
-    f: (a: A) => Effect<R, E, B>
-  ): Effect<R, never, [Chunk.Chunk<E>, Chunk.Chunk<B>]>
+  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, never, [Array<E>, Array<B>]>
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, never, [Array<E>, Array<B>]>
 } = fiberRuntime.partitionPar
 
 /**
@@ -4051,8 +4009,7 @@ export const retryWhileEquals: {
  * @since 1.0.0
  * @category utils
  */
-export const replicate: (n: number) => <R, E, A>(self: Effect<R, E, A>) => Chunk.Chunk<Effect<R, E, A>> =
-  effect.replicate
+export const replicate: (n: number) => <R, E, A>(self: Effect<R, E, A>) => Array<Effect<R, E, A>> = effect.replicate
 
 /**
  * Performs this effect the specified number of times and collects the
@@ -4062,8 +4019,8 @@ export const replicate: (n: number) => <R, E, A>(self: Effect<R, E, A>) => Chunk
  * @category utils
  */
 export const replicateEffect: {
-  (n: number): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Chunk.Chunk<A>>
-  <R, E, A>(self: Effect<R, E, A>, n: number): Effect<R, E, Chunk.Chunk<A>>
+  (n: number): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Array<A>>
+  <R, E, A>(self: Effect<R, E, A>, n: number): Effect<R, E, Array<A>>
 } = effect.replicateEffect
 
 /**
@@ -4261,7 +4218,7 @@ export const sleep: (duration: Duration.Duration) => Effect<never, never, void> 
  * @since 1.0.0
  * @category utils
  */
-export const some: <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R, Option.Option<E>, A> = fiberRuntime.some
+export const some: <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R, Option.Option<E>, A> = effect.some
 
 /**
  * Extracts the optional value, or returns the given 'orElse'.
@@ -4427,8 +4384,8 @@ export const sync: <A>(evaluate: LazyArg<A>) => Effect<never, never, A> = core.s
  * @category constructors
  */
 export const takeWhile: {
-  <R, E, A>(predicate: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<A>>
-  <R, E, A>(elements: Iterable<A>, predicate: (a: A) => Effect<R, E, boolean>): Effect<R, E, Chunk.Chunk<A>>
+  <R, E, A>(predicate: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Array<A>>
+  <R, E, A>(elements: Iterable<A>, predicate: (a: A) => Effect<R, E, boolean>): Effect<R, E, Array<A>>
 } = effect.takeWhile
 
 /**
@@ -4886,6 +4843,16 @@ export const all: {
     T[number] extends never ? []
       : { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
   >
+  <T extends Iterable<Effect<any, any, any>>>(
+    args: T
+  ): Effect<
+    [T] extends [Iterable<{ [EffectTypeId]: { _R: (_: never) => infer R } }>] ? R
+      : never,
+    [T] extends [Iterable<{ [EffectTypeId]: { _E: (_: never) => infer E } }>] ? E
+      : never,
+    [T] extends [Iterable<{ [EffectTypeId]: { _A: (_: never) => infer A } }>] ? Array<A>
+      : never
+  >
   <T extends Readonly<{ [K: string]: Effect<any, any, any> }>>(
     args: T
   ): Effect<
@@ -4936,6 +4903,16 @@ export const allPar: {
     T[number] extends never ? []
       : { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
   >
+  <T extends Iterable<Effect<any, any, any>>>(
+    args: T
+  ): Effect<
+    [T] extends [Iterable<{ [EffectTypeId]: { _R: (_: never) => infer R } }>] ? R
+      : never,
+    [T] extends [Iterable<{ [EffectTypeId]: { _E: (_: never) => infer E } }>] ? E
+      : never,
+    [T] extends [Iterable<{ [EffectTypeId]: { _A: (_: never) => infer A } }>] ? Array<A>
+      : never
+  >
   <T extends Readonly<{ [K: string]: Effect<any, any, any> }>>(
     args: T
   ): Effect<
@@ -4980,7 +4957,7 @@ export const unified: <Ret extends Effect<any, any, any>>(f: Ret) => Effect.Unif
 export const uncause: <R, E>(self: Effect<R, never, Cause.Cause<E>>) => Effect<R, E, void> = effect.uncause
 
 /**
- * Constructs a `Chunk` by repeatedly applying the effectual function `f` as
+ * Constructs a `Arrat` by repeatedly applying the effectual function `f` as
  * long as it returns `Some`.
  *
  * @since 1.0.0
@@ -4989,7 +4966,7 @@ export const uncause: <R, E>(self: Effect<R, never, Cause.Cause<E>>) => Effect<R
 export const unfold: <A, R, E, S>(
   s: S,
   f: (s: S) => Effect<R, E, Option.Option<readonly [A, S]>>
-) => Effect<R, E, Chunk.Chunk<A>> = effect.unfold
+) => Effect<R, E, Array<A>> = effect.unfold
 
 /**
  * @since 1.0.0
@@ -5310,8 +5287,8 @@ export const validatePar: {
  * @category utils
  */
 export const validateAll: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, Chunk.Chunk<E>, Chunk.Chunk<B>>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, Chunk.Chunk<E>, Chunk.Chunk<B>>
+  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, Array<E>, Array<B>>
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, Array<E>, Array<B>>
 } = effect.validateAll
 
 /**
@@ -5325,8 +5302,8 @@ export const validateAll: {
  * @category utils
  */
 export const validateAllPar: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, Chunk.Chunk<E>, Chunk.Chunk<B>>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, Chunk.Chunk<E>, Chunk.Chunk<B>>
+  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, Array<E>, Array<B>>
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, Array<E>, Array<B>>
 } = fiberRuntime.validateAllPar
 
 /**
@@ -5337,8 +5314,8 @@ export const validateAllPar: {
  * @category utils
  */
 export const validateAllDiscard: {
-  <R, E, A, X>(f: (a: A) => Effect<R, E, X>): (elements: Iterable<A>) => Effect<R, Chunk.Chunk<E>, void>
-  <R, E, A, X>(elements: Iterable<A>, f: (a: A) => Effect<R, E, X>): Effect<R, Chunk.Chunk<E>, void>
+  <R, E, A, X>(f: (a: A) => Effect<R, E, X>): (elements: Iterable<A>) => Effect<R, Array<E>, void>
+  <R, E, A, X>(elements: Iterable<A>, f: (a: A) => Effect<R, E, X>): Effect<R, Array<E>, void>
 } = effect.validateAllDiscard
 
 /**
@@ -5349,8 +5326,8 @@ export const validateAllDiscard: {
  * @category utils
  */
 export const validateAllParDiscard: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, Chunk.Chunk<E>, void>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, Chunk.Chunk<E>, void>
+  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, Array<E>, void>
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, Array<E>, void>
 } = fiberRuntime.validateAllParDiscard
 
 /**
@@ -5361,8 +5338,8 @@ export const validateAllParDiscard: {
  * @category utils
  */
 export const validateFirst: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, Chunk.Chunk<E>, B>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, Chunk.Chunk<E>, B>
+  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, Array<E>, B>
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, Array<E>, B>
 } = effect.validateFirst
 
 /**
@@ -5373,8 +5350,8 @@ export const validateFirst: {
  * @category utils
  */
 export const validateFirstPar: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, Chunk.Chunk<E>, B>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, Chunk.Chunk<E>, B>
+  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, Array<E>, B>
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, Array<E>, B>
 } = fiberRuntime.validateFirstPar
 
 /**
@@ -5821,7 +5798,7 @@ export const Monad: monad.Monad<EffectTypeLambda> = {
 export const SemiProduct: semiProduct.SemiProduct<EffectTypeLambda> = {
   imap,
   product: zip,
-  productMany: (self, rest) => flatMap(self, (a) => map(collectAll(rest), (r) => [a, ...r]))
+  productMany: (self, rest) => flatMap(self, (a) => map(all(rest), (r) => [a, ...r]))
 }
 
 /**
@@ -5854,7 +5831,7 @@ export const Product: product_.Product<EffectTypeLambda> = {
   imap,
   product: SemiProduct.product,
   productMany: SemiProduct.productMany,
-  productAll: (rest) => map(collectAll(rest), (x) => Array.from(x))
+  productAll: (rest) => map(all(rest), (x) => Array.from(x))
 }
 
 /**
@@ -5942,3 +5919,83 @@ export const getFirstSuccessSemigroup = semiCoproduct
 export const getFailureMonoid: <A, O, E>(M: Monoid<A>) => Monoid<Effect<O, E, A>> = applicative.getMonoid(
   Applicative
 )
+
+/**
+ * @category utils
+ * @since 1.0.0
+ */
+export const blocked: <R, E, A>(blockedRequests: RequestBlock<R>, _continue: Effect<R, E, A>) => Blocked<R, E, A> =
+  core.blocked
+
+/**
+ * @category utils
+ * @since 1.0.0
+ */
+export const step: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Exit.Exit<E, A> | Blocked<R, E, A>> = core.step
+
+/**
+ * @category utils
+ * @since 1.0.0
+ */
+export const flatMapStep: <R, E, A, R1, E1, B>(
+  self: Effect<R, E, A>,
+  f: (step: Exit.Exit<E, A> | Blocked<R, E, A>) => Effect<R1, E1, B>
+) => Effect<R | R1, E1, B> = core.flatMapStep
+
+/**
+ * @since 1.0.0
+ * @category requests
+ */
+export const request: {
+  <R, A extends Request<any, any>, A2 extends A>(
+    request: A,
+    dataSource: RequestResolver<R, A2>
+  ): Effect<
+    R,
+    Request.Error<A>,
+    Request.Success<A>
+  >
+  <R, A extends Request<any, any>, A2 extends A, A3 extends A>(
+    request: A,
+    dataSource: RequestResolver<R, A2>,
+    cache: Cache<A3>
+  ): Effect<
+    R,
+    Request.Error<A>,
+    Request.Success<A>
+  >
+  <R, R1, E1, A extends Request<any, any>, A2 extends A, A3 extends A>(
+    request: A,
+    dataSource: RequestResolver<R, A2>,
+    cache: Effect<R1, E1, Cache<A3>>
+  ): Effect<
+    R | R1,
+    Request.Error<A> | E1,
+    Request.Success<A>
+  >
+  <R, R1, E1, A extends Request<any, any>, A2 extends A, A3 extends A>(
+    request: A,
+    dataSource: RequestResolver<R, A2>,
+    cache: Effect<R1, E1, Option.Option<Cache<A3>>>
+  ): Effect<
+    R | R1,
+    Request.Error<A> | E1,
+    Request.Success<A>
+  >
+} = query.fromRequest as any
+
+/**
+ * @since 1.0.0
+ * @category requests
+ */
+export const withRequestBatching: {
+  (strategy: "on" | "off"): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, strategy: "on" | "off"): Effect<R, E, A>
+} = query.withRequestBatching
+
+/**
+ * @since 1.0.0
+ * @category utils
+ */
+export const serviceOption: <I, A>(tag: Context.Tag<I, A>) => Effect<never, never, Option.Option<A>> = (tag) =>
+  contextWith((_: Context.Context<never>) => Context.getOption(_, tag))

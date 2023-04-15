@@ -33,7 +33,7 @@ describe.concurrent("Hub", () => {
       yield* $(values, Effect.forEach((n) => Hub.publish(hub, n)))
       yield* $(Deferred.succeed(deferred2, void 0))
       const result = yield* $(Fiber.join(subscriber))
-      assert.deepStrictEqual(result, values)
+      assert.deepStrictEqual(Chunk.unsafeFromArray(result), values)
     }))
   it.effect("sequential publishers and subscribers with one publisher and two subscribers", () =>
     Effect.gen(function*($) {
@@ -76,8 +76,8 @@ describe.concurrent("Hub", () => {
       yield* $(Deferred.succeed(deferred3, undefined))
       const result1 = yield* $(Fiber.join(subscriber1))
       const result2 = yield* $(Fiber.join(subscriber2))
-      assert.deepStrictEqual(result1, values)
-      assert.deepStrictEqual(result2, values)
+      assert.deepStrictEqual(Chunk.unsafeFromArray(result1), values)
+      assert.deepStrictEqual(Chunk.unsafeFromArray(result2), values)
     }))
   it.effect("backpressured concurrent publishers and subscribers - one to one", () =>
     Effect.gen(function*($) {
@@ -102,7 +102,7 @@ describe.concurrent("Hub", () => {
         Effect.fork
       )
       const result = yield* $(Fiber.join(subscriber))
-      assert.deepStrictEqual(result, values)
+      assert.deepStrictEqual(Chunk.unsafeFromArray(result), values)
     }))
   it.effect("backpressured concurrent publishers and subscribers - one to many", () =>
     Effect.gen(function*($) {
@@ -141,8 +141,8 @@ describe.concurrent("Hub", () => {
       )
       const result1 = yield* $(Fiber.join(subscriber1))
       const result2 = yield* $(Fiber.join(subscriber2))
-      assert.deepStrictEqual(result1, values)
-      assert.deepStrictEqual(result2, values)
+      assert.deepStrictEqual(Chunk.unsafeFromArray(result1), values)
+      assert.deepStrictEqual(Chunk.unsafeFromArray(result2), values)
     }))
   it.effect("backpressured concurrent publishers and subscribers - many to many", () =>
     Effect.gen(function*($) {
@@ -191,10 +191,16 @@ describe.concurrent("Hub", () => {
       const result1 = yield* $(Fiber.join(subscriber1))
       const result2 = yield* $(Fiber.join(subscriber2))
       yield* $(Fiber.join(fiber))
-      assert.deepStrictEqual(pipe(result1, Chunk.filter((n) => n > 0)), values)
-      assert.deepStrictEqual(pipe(result1, Chunk.filter((n) => n < 0)), pipe(values, Chunk.map((n) => -n)))
-      assert.deepStrictEqual(pipe(result2, Chunk.filter((n) => n > 0)), values)
-      assert.deepStrictEqual(pipe(result2, Chunk.filter((n) => n < 0)), pipe(values, Chunk.map((n) => -n)))
+      assert.deepStrictEqual(pipe(Chunk.unsafeFromArray(result1), Chunk.filter((n) => n > 0)), values)
+      assert.deepStrictEqual(
+        pipe(Chunk.unsafeFromArray(result1), Chunk.filter((n) => n < 0)),
+        pipe(values, Chunk.map((n) => -n))
+      )
+      assert.deepStrictEqual(pipe(Chunk.unsafeFromArray(result2), Chunk.filter((n) => n > 0)), values)
+      assert.deepStrictEqual(
+        pipe(Chunk.unsafeFromArray(result2), Chunk.filter((n) => n < 0)),
+        pipe(values, Chunk.map((n) => -n))
+      )
     }))
   it.effect("dropping concurrent publishers and subscribers - one to one", () =>
     Effect.gen(function*($) {
@@ -219,7 +225,7 @@ describe.concurrent("Hub", () => {
         Effect.fork
       )
       const result = yield* $(Fiber.join(subscriber))
-      assert.deepStrictEqual(result, values)
+      assert.deepStrictEqual(Chunk.unsafeFromArray(result), values)
     }))
   it.effect("dropping concurrent publishers and subscribers - one to many", () =>
     Effect.gen(function*($) {
@@ -258,8 +264,8 @@ describe.concurrent("Hub", () => {
       )
       const result1 = yield* $(Fiber.join(subscriber1))
       const result2 = yield* $(Fiber.join(subscriber2))
-      assert.deepStrictEqual(result1, values)
-      assert.deepStrictEqual(result2, values)
+      assert.deepStrictEqual(Chunk.unsafeFromArray(result1), values)
+      assert.deepStrictEqual(Chunk.unsafeFromArray(result2), values)
     }))
   it.effect("dropping concurrent publishers and subscribers - many to many", () =>
     Effect.gen(function*($) {
@@ -308,10 +314,16 @@ describe.concurrent("Hub", () => {
       const result1 = yield* $(Fiber.join(subscriber1))
       const result2 = yield* $(Fiber.join(subscriber2))
       yield* $(Fiber.join(fiber))
-      assert.deepStrictEqual(pipe(result1, Chunk.filter((n) => n > 0)), values)
-      assert.deepStrictEqual(pipe(result1, Chunk.filter((n) => n < 0)), pipe(values, Chunk.map((n) => -n)))
-      assert.deepStrictEqual(pipe(result2, Chunk.filter((n) => n > 0)), values)
-      assert.deepStrictEqual(pipe(result2, Chunk.filter((n) => n < 0)), pipe(values, Chunk.map((n) => -n)))
+      assert.deepStrictEqual(pipe(Chunk.unsafeFromArray(result1), Chunk.filter((n) => n > 0)), values)
+      assert.deepStrictEqual(
+        pipe(Chunk.unsafeFromArray(result1), Chunk.filter((n) => n < 0)),
+        pipe(values, Chunk.map((n) => -n))
+      )
+      assert.deepStrictEqual(pipe(Chunk.unsafeFromArray(result2), Chunk.filter((n) => n > 0)), values)
+      assert.deepStrictEqual(
+        pipe(Chunk.unsafeFromArray(result2), Chunk.filter((n) => n < 0)),
+        pipe(values, Chunk.map((n) => -n))
+      )
     }))
   it.effect("sliding concurrent publishers and subscribers - one to one", () =>
     Effect.gen(function*($) {
@@ -336,7 +348,7 @@ describe.concurrent("Hub", () => {
         Effect.fork
       )
       const result = yield* $(Fiber.join(subscriber))
-      assert.deepStrictEqual(result, values)
+      assert.deepStrictEqual(Chunk.unsafeFromArray(result), values)
     }))
   it.effect("sliding concurrent publishers and subscribers - one to many", () =>
     Effect.gen(function*($) {
@@ -375,8 +387,8 @@ describe.concurrent("Hub", () => {
       )
       const result1 = yield* $(Fiber.join(subscriber1))
       const result2 = yield* $(Fiber.join(subscriber2))
-      assert.deepStrictEqual(result1, values)
-      assert.deepStrictEqual(result2, values)
+      assert.deepStrictEqual(Chunk.unsafeFromArray(result1), values)
+      assert.deepStrictEqual(Chunk.unsafeFromArray(result2), values)
     }))
   it.effect("sliding concurrent publishers and subscribers - many to many", () =>
     Effect.gen(function*($) {
@@ -425,10 +437,16 @@ describe.concurrent("Hub", () => {
       const result1 = yield* $(Fiber.join(subscriber1))
       const result2 = yield* $(Fiber.join(subscriber2))
       yield* $(Fiber.join(fiber))
-      assert.deepStrictEqual(pipe(result1, Chunk.filter((n) => n > 0)), values)
-      assert.deepStrictEqual(pipe(result1, Chunk.filter((n) => n < 0)), pipe(values, Chunk.map((n) => -n)))
-      assert.deepStrictEqual(pipe(result2, Chunk.filter((n) => n > 0)), values)
-      assert.deepStrictEqual(pipe(result2, Chunk.filter((n) => n < 0)), pipe(values, Chunk.map((n) => -n)))
+      assert.deepStrictEqual(pipe(Chunk.unsafeFromArray(result1), Chunk.filter((n) => n > 0)), values)
+      assert.deepStrictEqual(
+        pipe(Chunk.unsafeFromArray(result1), Chunk.filter((n) => n < 0)),
+        pipe(values, Chunk.map((n) => -n))
+      )
+      assert.deepStrictEqual(pipe(Chunk.unsafeFromArray(result2), Chunk.filter((n) => n > 0)), values)
+      assert.deepStrictEqual(
+        pipe(Chunk.unsafeFromArray(result2), Chunk.filter((n) => n < 0)),
+        pipe(values, Chunk.map((n) => -n))
+      )
     }))
   it.effect("unbounded concurrent publishers and subscribers - one to one", () =>
     Effect.gen(function*($) {
@@ -454,7 +472,7 @@ describe.concurrent("Hub", () => {
       )
 
       const result = yield* $(Fiber.join(subscriber))
-      assert.deepStrictEqual(result, values)
+      assert.deepStrictEqual(Chunk.unsafeFromArray(result), values)
     }))
   it.effect("unbounded concurrent publishers and subscribers - one to many", () =>
     Effect.gen(function*($) {
@@ -493,8 +511,8 @@ describe.concurrent("Hub", () => {
       )
       const result1 = yield* $(Fiber.join(subscriber1))
       const result2 = yield* $(Fiber.join(subscriber2))
-      assert.deepStrictEqual(result1, values)
-      assert.deepStrictEqual(result2, values)
+      assert.deepStrictEqual(Chunk.unsafeFromArray(result1), values)
+      assert.deepStrictEqual(Chunk.unsafeFromArray(result2), values)
     }))
   it.effect("unbounded concurrent publishers and subscribers - many to many", () =>
     Effect.gen(function*($) {
@@ -544,9 +562,15 @@ describe.concurrent("Hub", () => {
       const result1 = yield* $(Fiber.join(subscriber1))
       const result2 = yield* $(Fiber.join(subscriber2))
       yield* $(Fiber.join(fiber))
-      assert.deepStrictEqual(pipe(result1, Chunk.filter((n) => n > 0)), values)
-      assert.deepStrictEqual(pipe(result1, Chunk.filter((n) => n < 0)), pipe(values, Chunk.map((n) => -n)))
-      assert.deepStrictEqual(pipe(result2, Chunk.filter((n) => n > 0)), values)
-      assert.deepStrictEqual(pipe(result2, Chunk.filter((n) => n < 0)), pipe(values, Chunk.map((n) => -n)))
+      assert.deepStrictEqual(pipe(Chunk.unsafeFromArray(result1), Chunk.filter((n) => n > 0)), values)
+      assert.deepStrictEqual(
+        pipe(Chunk.unsafeFromArray(result1), Chunk.filter((n) => n < 0)),
+        pipe(values, Chunk.map((n) => -n))
+      )
+      assert.deepStrictEqual(pipe(Chunk.unsafeFromArray(result2), Chunk.filter((n) => n > 0)), values)
+      assert.deepStrictEqual(
+        pipe(Chunk.unsafeFromArray(result2), Chunk.filter((n) => n < 0)),
+        pipe(values, Chunk.map((n) => -n))
+      )
     }))
 })

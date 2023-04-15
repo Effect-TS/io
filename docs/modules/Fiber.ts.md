@@ -125,7 +125,7 @@ results.
 **Signature**
 
 ```ts
-export declare const collectAll: <E, A>(fibers: Iterable<Fiber<E, A>>) => Fiber<E, Chunk.Chunk<A>>
+export declare const collectAll: <E, A>(fibers: Iterable<Fiber<E, A>>) => Fiber<E, A[]>
 ```
 
 Added in v1.0.0
@@ -197,7 +197,7 @@ Returns a chunk containing all root fibers.
 **Signature**
 
 ```ts
-export declare const roots: (_: void) => Effect.Effect<never, never, Chunk.Chunk<RuntimeFiber<any, any>>>
+export declare const roots: (_: void) => Effect.Effect<never, never, Array<RuntimeFiber<any, any>>>
 ```
 
 Added in v1.0.0
@@ -233,7 +233,7 @@ Returns a chunk containing all root fibers.
 **Signature**
 
 ```ts
-export declare const unsafeRoots: (_: void) => Chunk.Chunk<RuntimeFiber<any, any>>
+export declare const unsafeRoots: (_: void) => Array<RuntimeFiber<any, any>>
 ```
 
 Added in v1.0.0
@@ -283,7 +283,7 @@ Added in v1.0.0
 ```ts
 export declare const dumpAll: (
   fibers: Iterable<RuntimeFiber<unknown, unknown>>
-) => Effect.Effect<never, never, Chunk.Chunk<Fiber.Dump>>
+) => Effect.Effect<never, never, Array<Fiber.Dump>>
 ```
 
 Added in v1.0.0
@@ -397,9 +397,7 @@ Retrieves the immediate children of the fiber.
 **Signature**
 
 ```ts
-export declare const children: <E, A>(
-  self: Fiber<E, A>
-) => Effect.Effect<never, never, Chunk.Chunk<RuntimeFiber<any, any>>>
+export declare const children: <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, Array<RuntimeFiber<any, any>>>
 ```
 
 Added in v1.0.0
@@ -623,7 +621,7 @@ export interface Fiber<E, A> extends Fiber.Variance<E, A> {
   /**
    * Retrieves the immediate children of the fiber.
    */
-  children(): Effect.Effect<never, never, Chunk.Chunk<Fiber.Runtime<any, any>>>
+  children(): Effect.Effect<never, never, Array<Fiber.Runtime<any, any>>>
 
   /**
    * Inherits values from all `FiberRef` instances into current fiber. This

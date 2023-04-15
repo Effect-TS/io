@@ -499,7 +499,7 @@ structure of this config.
 **Signature**
 
 ```ts
-export declare const repeat: <A>(self: Config<A>) => Config<Chunk.Chunk<A>>
+export declare const repeat: <A>(self: Config<A>) => Config<A[]>
 ```
 
 Added in v1.0.0

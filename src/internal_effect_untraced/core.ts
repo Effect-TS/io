@@ -25,6 +25,7 @@ import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import * as RuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
 import type * as FiberStatus from "@effect/io/Fiber/Status"
 import type * as FiberRef from "@effect/io/FiberRef"
+import * as _blockedRequests from "@effect/io/internal_effect_untraced/blockedRequests"
 import * as internalCause from "@effect/io/internal_effect_untraced/cause"
 import * as deferred from "@effect/io/internal_effect_untraced/deferred"
 import type * as FiberRuntime from "@effect/io/internal_effect_untraced/fiberRuntime"
@@ -35,6 +36,10 @@ import * as _runtimeFlags from "@effect/io/internal_effect_untraced/runtimeFlags
 import type * as LogLevel from "@effect/io/Logger/Level"
 import type * as LogSpan from "@effect/io/Logger/Span"
 import type * as MetricLabel from "@effect/io/Metric/Label"
+import type * as Request from "@effect/io/Request"
+import type * as BlockedRequests from "@effect/io/RequestBlock"
+import type { RequestCompletionMap } from "@effect/io/RequestCompletionMap"
+import type * as RequestResolver from "@effect/io/RequestResolver"
 import * as scheduler from "@effect/io/Scheduler"
 import type * as Scheduler from "@effect/io/Scheduler"
 import type * as Scope from "@effect/io/Scope"
@@ -70,6 +75,19 @@ export const makeEffectError = <E>(cause: Cause.Cause<E>): EffectError<E> => ({
   cause
 })
 
+/**
+ * @internal
+ */
+export const blocked = <R, E, A>(
+  blockedRequests: BlockedRequests.RequestBlock<R>,
+  _continue: Effect.Effect<R, E, A>
+): Effect.Blocked<R, E, A> => {
+  const effect = new EffectPrimitive("Blocked") as any
+  effect.i0 = blockedRequests
+  effect.i1 = _continue
+  return effect
+}
+
 /** @internal */
 export const EffectTypeId: Effect.EffectTypeId = Symbol.for("@effect/io/Effect") as Effect.EffectTypeId
 
@@ -80,6 +98,7 @@ export type Primitive =
   | Failure
   | OnFailure
   | OnSuccess
+  | OnStep
   | OnSuccessAndFailure
   | Success
   | Sync
@@ -89,12 +108,14 @@ export type Primitive =
   | Yield
   | OpTraced
   | OpTag
+  | Blocked
   | Either.Either<any, any>
   | Option.Option<any>
 
 /** @internal */
 export type Continuation =
   | OnSuccess
+  | OnStep
   | OnSuccessAndFailure
   | OnFailure
   | OpTraced
@@ -104,7 +125,10 @@ export type Continuation =
 /** @internal */
 export class RevertFlags {
   readonly _tag = OpCodes.OP_REVERT_FLAGS
-  constructor(readonly patch: RuntimeFlagsPatch.RuntimeFlagsPatch) {
+  constructor(
+    readonly patch: RuntimeFlagsPatch.RuntimeFlagsPatch,
+    readonly op: Primitive & { _tag: OpCodes.OP_UPDATE_RUNTIME_FLAGS }
+  ) {
   }
 }
 
@@ -210,6 +234,14 @@ export interface Async extends
 {}
 
 /** @internal */
+export interface Blocked<R = any, E = any, A = any> extends
+  Op<"Blocked", {
+    readonly i0: BlockedRequests.RequestBlock<R>
+    readonly i1: Effect.Effect<R, E, A>
+  }>
+{}
+
+/** @internal */
 export interface Failure extends
   Op<OpCodes.OP_FAILURE, {
     readonly i0: Cause.Cause<unknown>
@@ -238,6 +270,14 @@ export interface OnSuccess extends
   Op<OpCodes.OP_ON_SUCCESS, {
     readonly i0: Primitive
     readonly i1: (a: unknown) => Primitive
+  }>
+{}
+
+/** @internal */
+export interface OnStep extends
+  Op<"OnStep", {
+    readonly i0: Primitive
+    readonly i1: (result: Exit.Exit<any, any> | Blocked) => Primitive
   }>
 {}
 
@@ -502,6 +542,12 @@ export const die = Debug.methodWithTrace((trace) =>
 )
 
 /* @internal */
+export const dieMessage = Debug.methodWithTrace((trace) =>
+  (message: string): Effect.Effect<never, never, never> =>
+    failCauseSync(() => internalCause.die(internalCause.RuntimeException(message))).traced(trace)
+)
+
+/* @internal */
 export const dieSync = Debug.methodWithTrace((trace, restore) =>
   (evaluate: LazyArg<unknown>): Effect.Effect<never, never, never> =>
     failCauseSync(() => internalCause.die(restore(evaluate)())).traced(trace)
@@ -612,6 +658,35 @@ export const flatMap = Debug.dualWithTrace<
   })
 
 /* @internal */
+export const step = Debug.methodWithTrace((trace) =>
+  <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, Exit.Exit<E, A> | Effect.Blocked<R, E, A>> => {
+    const effect = new EffectPrimitive("OnStep") as any
+    effect.i0 = self
+    effect.i1 = exitSucceed
+    if (trace) {
+      return effect.traced(trace)
+    }
+    return effect
+  }
+)
+
+/* @internal */
+export const flatMapStep = Debug.methodWithTrace((trace) =>
+  <R, E, A, R1, E1, B>(
+    self: Effect.Effect<R, E, A>,
+    f: (step: Exit.Exit<E, A> | Effect.Blocked<R, E, A>) => Effect.Effect<R1, E1, B>
+  ): Effect.Effect<R | R1, E1, B> => {
+    const effect = new EffectPrimitive("OnStep") as any
+    effect.i0 = self
+    effect.i1 = f
+    if (trace) {
+      return effect.traced(trace)
+    }
+    return effect
+  }
+)
+
+/* @internal */
 export const flatten = Debug.methodWithTrace((trace) =>
   <R, E, R1, E1, A>(self: Effect.Effect<R, E, Effect.Effect<R1, E1, A>>) => flatMap(self, identity).traced(trace)
 )
@@ -693,8 +768,8 @@ export const matchEffect = Debug.dualWithTrace<
 
 /* @internal */
 export const forEach = Debug.dualWithTrace<
-  <A, R, E, B>(f: (a: A) => Effect.Effect<R, E, B>) => (self: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<B>>,
-  <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, E, Chunk.Chunk<B>>
+  <A, R, E, B>(f: (a: A) => Effect.Effect<R, E, B>) => (self: Iterable<A>) => Effect.Effect<R, E, Array<B>>,
+  <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, E, Array<B>>
 >(2, (trace, restore) =>
   (self, f) =>
     suspend(() => {
@@ -709,7 +784,7 @@ export const forEach = Debug.dualWithTrace<
             ret[i++] = b
           }
         ),
-        as(Chunk.unsafeFromArray(ret))
+        as(ret)
       )
     }).traced(trace))
 
@@ -731,34 +806,6 @@ export const forEachDiscard = Debug.dualWithTrace<
         }
       )
     }).traced(trace))
-
-/* @internal */
-export const fromOption = Debug.methodWithTrace((trace) =>
-  <A>(option: Option.Option<A>): Effect.Effect<never, Option.Option<never>, A> => {
-    switch (option._tag) {
-      case "None": {
-        return fail(Option.none()).traced(trace)
-      }
-      case "Some": {
-        return succeed(option.value).traced(trace)
-      }
-    }
-  }
-)
-
-/* @internal */
-export const fromEither = Debug.methodWithTrace((trace) =>
-  <E, A>(either: Either.Either<E, A>): Effect.Effect<never, E, A> => {
-    switch (either._tag) {
-      case "Left": {
-        return fail(either.left).traced(trace)
-      }
-      case "Right": {
-        return succeed(either.right).traced(trace)
-      }
-    }
-  }
-)
 
 /* @internal */
 export const ifEffect = Debug.dualWithTrace<
@@ -994,20 +1041,20 @@ export const orDieWith = Debug.dualWithTrace<
 export const partitionMap = <A, A1, A2>(
   elements: Iterable<A>,
   f: (a: A) => Either.Either<A1, A2>
-): [Chunk.Chunk<A1>, Chunk.Chunk<A2>] =>
+): [Array<A1>, Array<A2>] =>
   Array.from(elements).reduceRight(
     ([lefts, rights], current) => {
       const either = f(current)
       switch (either._tag) {
         case "Left": {
-          return [pipe(lefts, Chunk.prepend(either.left)), rights]
+          return [[either.left, ...lefts], rights]
         }
         case "Right": {
-          return [lefts, pipe(rights, Chunk.prepend(either.right))]
+          return [lefts, [either.right, ...rights]]
         }
       }
     },
-    [Chunk.empty<A1>(), Chunk.empty<A2>()]
+    [new Array<A1>(), new Array<A2>()]
   )
 
 /* @internal */
@@ -1173,7 +1220,6 @@ export const uninterruptibleMask = Debug.methodWithTrace((trace, restore) =>
       _runtimeFlags.interruption(oldFlags)
         ? restore(f)(interruptible)
         : restore(f)(uninterruptible)
-
     if (trace) {
       return effect.traced(trace)
     }
@@ -1607,16 +1653,119 @@ export const fiberRefUpdateSomeAndGet = Debug.dualWithTrace<
       return [result, result] as const
     }).traced(trace))
 
+// circular
+/** @internal */
+const RequestResolverSymbolKey = "@effect/io/RequestResolver"
+
+/** @internal */
+export const RequestResolverTypeId: RequestResolver.RequestResolverTypeId = Symbol.for(
+  RequestResolverSymbolKey
+) as RequestResolver.RequestResolverTypeId
+
+const dataSourceVariance = {
+  _R: (_: never) => _,
+  _A: (_: never) => _
+}
+
+/** @internal */
+export class RequestResolverImpl<R, A> implements RequestResolver.RequestResolver<R, A> {
+  readonly [RequestResolverTypeId] = dataSourceVariance
+  constructor(
+    readonly runAll: (
+      requests: Array<Array<A>>
+    ) => Effect.Effect<R, never, RequestCompletionMap>,
+    readonly target?: unknown
+  ) {}
+  [Hash.symbol](): number {
+    return this.target ? Hash.hash(this.target) : Hash.random(this)
+  }
+  [Equal.symbol](that: unknown): boolean {
+    return this.target ?
+      isRequestResolver(that) && Equal.equals(this.target, (that as RequestResolverImpl<any, any>).target) :
+      this === that
+  }
+  identified(...ids: Array<unknown>): RequestResolver.RequestResolver<R, A> {
+    return new RequestResolverImpl(this.runAll, Chunk.fromIterable(ids))
+  }
+}
+
+/** @internal */
+export const isRequestResolver = (u: unknown): u is RequestResolver.RequestResolver<unknown, unknown> =>
+  typeof u === "object" && u != null && RequestResolverTypeId in u
+
+// end
+
+/** @internal */
+export const resolverLocally = Debug.untracedDual<
+  <A>(
+    self: FiberRef.FiberRef<A>,
+    value: A
+  ) => <R, B extends Request.Request<any, any>>(
+    use: RequestResolver.RequestResolver<R, B>
+  ) => RequestResolver.RequestResolver<R, B>,
+  <R, B extends Request.Request<any, any>, A>(
+    use: RequestResolver.RequestResolver<R, B>,
+    self: FiberRef.FiberRef<A>,
+    value: A
+  ) => RequestResolver.RequestResolver<R, B>
+>(3, (restore) =>
+  <R, B extends Request.Request<any, any>, A>(
+    use: RequestResolver.RequestResolver<R, B>,
+    self: FiberRef.FiberRef<A>,
+    value: A
+  ): RequestResolver.RequestResolver<R, B> =>
+    new RequestResolverImpl<R, B>(
+      (requests) =>
+        fiberRefLocally(
+          restore(use.runAll)(requests),
+          self,
+          value
+        ),
+      Chunk.make("Locally", use, self, value)
+    ))
+
+/** @internal */
+export const requestBlockLocally = <R, A>(
+  self: BlockedRequests.RequestBlock<R>,
+  ref: FiberRef.FiberRef<A>,
+  value: A
+): BlockedRequests.RequestBlock<R> => _blockedRequests.reduce(self, LocallyReducer(ref, value))
+
+const LocallyReducer = <R, A>(
+  ref: FiberRef.FiberRef<A>,
+  value: A
+): BlockedRequests.RequestBlock.Reducer<R, BlockedRequests.RequestBlock<R>> => ({
+  emptyCase: () => _blockedRequests.empty,
+  parCase: (left, right) => _blockedRequests.par(left, right),
+  seqCase: (left, right) => _blockedRequests.seq(left, right),
+  singleCase: (dataSource, blockedRequest) =>
+    _blockedRequests.single(
+      resolverLocally(dataSource, ref, value),
+      blockedRequest
+    )
+})
+
 /* @internal */
-export const fiberRefLocally = Debug.dualWithTrace<
+export const fiberRefLocally: {
+  <A>(self: FiberRef.FiberRef<A>, value: A): <R, E, B>(use: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>
+  <R, E, B, A>(use: Effect.Effect<R, E, B>, self: FiberRef.FiberRef<A>, value: A): Effect.Effect<R, E, B>
+} = Debug.dualWithTrace<
   <A>(self: FiberRef.FiberRef<A>, value: A) => <R, E, B>(use: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>,
   <R, E, B, A>(use: Effect.Effect<R, E, B>, self: FiberRef.FiberRef<A>, value: A) => Effect.Effect<R, E, B>
 >(3, (trace) =>
   (use, self, value) =>
-    acquireUseRelease(
-      zipLeft(fiberRefGet(self), fiberRefSet(self, value)),
-      () => use,
-      (oldValue) => fiberRefSet(self, oldValue)
+    flatMap(
+      acquireUseRelease(
+        zipLeft(fiberRefGet(self), fiberRefSet(self, value)),
+        () => step(use),
+        (oldValue) => fiberRefSet(self, oldValue)
+      ),
+      (res) => {
+        if (res._tag === "Blocked") {
+          return blocked(requestBlockLocally(res.i0, self, value), fiberRefLocally(res.i1, self, value))
+        }
+        return res
+      }
     ).traced(trace))
 
 /* @internal */
@@ -2002,12 +2151,12 @@ export const exitCauseOption = <E, A>(self: Exit.Exit<E, A>): Option.Option<Caus
 /** @internal */
 export const exitCollectAll = <E, A>(
   exits: Iterable<Exit.Exit<E, A>>
-): Option.Option<Exit.Exit<E, Chunk.Chunk<A>>> => exitCollectAllInternal(exits, internalCause.sequential)
+): Option.Option<Exit.Exit<E, Array<A>>> => exitCollectAllInternal(exits, internalCause.sequential)
 
 /** @internal */
 export const exitCollectAllPar = <E, A>(
   exits: Iterable<Exit.Exit<E, A>>
-): Option.Option<Exit.Exit<E, Chunk.Chunk<A>>> => exitCollectAllInternal(exits, internalCause.parallel)
+): Option.Option<Exit.Exit<E, Array<A>>> => exitCollectAllInternal(exits, internalCause.parallel)
 
 /** @internal */
 export const exitDie = (defect: unknown): Exit.Exit<never, never> =>
@@ -2344,7 +2493,7 @@ export const exitZipWith = dual<
 const exitCollectAllInternal = <E, A>(
   exits: Iterable<Exit.Exit<E, A>>,
   combineCauses: (causeA: Cause.Cause<E>, causeB: Cause.Cause<E>) => Cause.Cause<E>
-): Option.Option<Exit.Exit<E, Chunk.Chunk<A>>> => {
+): Option.Option<Exit.Exit<E, Array<A>>> => {
   const list = Chunk.fromIterable(exits)
   if (!Chunk.isNonEmpty(list)) {
     return Option.none()
@@ -2364,6 +2513,7 @@ const exitCollectAllInternal = <E, A>(
         )
     ),
     exitMap(Chunk.reverse),
+    exitMap((chunk) => Array.from(chunk)),
     Option.some
   )
 }

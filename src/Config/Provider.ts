@@ -1,7 +1,6 @@
 /**
  * @since 1.0.0
  */
-import type * as Chunk from "@effect/data/Chunk"
 import type * as Context from "@effect/data/Context"
 import type { LazyArg } from "@effect/data/Function"
 import type * as HashSet from "@effect/data/HashSet"
@@ -78,11 +77,11 @@ export declare namespace ConfigProvider {
     readonly [FlatConfigProviderTypeId]: FlatConfigProviderTypeId
     patch: PathPatch.PathPatch
     load<A>(
-      path: Chunk.Chunk<string>,
+      path: Array<string>,
       config: Config.Config.Primitive<A>,
       split?: boolean
-    ): Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
-    enumerateChildren(path: Chunk.Chunk<string>): Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>>
+    ): Effect.Effect<never, ConfigError.ConfigError, Array<A>>
+    enumerateChildren(path: Array<string>): Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>>
   }
 
   /**
@@ -131,11 +130,11 @@ export const make: (
  */
 export const makeFlat: (
   load: <A>(
-    path: Chunk.Chunk<string>,
+    path: Array<string>,
     config: Config.Config.Primitive<A>
-  ) => Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>,
+  ) => Effect.Effect<never, ConfigError.ConfigError, Array<A>>,
   enumerateChildren: (
-    path: Chunk.Chunk<string>
+    path: Array<string>
   ) => Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>>,
   patch: PathPatch.PathPatch
 ) => ConfigProvider.Flat = internal.makeFlat
@@ -286,6 +285,6 @@ export const upperCase: (self: ConfigProvider) => ConfigProvider = internal.uppe
  * @category combinators
  */
 export const within: {
-  (path: Chunk.Chunk<string>, f: (self: ConfigProvider) => ConfigProvider): (self: ConfigProvider) => ConfigProvider
-  (self: ConfigProvider, path: Chunk.Chunk<string>, f: (self: ConfigProvider) => ConfigProvider): ConfigProvider
+  (path: Array<string>, f: (self: ConfigProvider) => ConfigProvider): (self: ConfigProvider) => ConfigProvider
+  (self: ConfigProvider, path: Array<string>, f: (self: ConfigProvider) => ConfigProvider): ConfigProvider
 } = internal.within

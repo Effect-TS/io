@@ -35,27 +35,25 @@ Added in v1.0.0
   - [acquireReleaseInterruptible](#acquirereleaseinterruptible)
   - [acquireUseRelease](#acquireuserelease)
   - [all](#all)
+  - [allDiscard](#alldiscard)
+  - [allFilterMap](#allfiltermap)
+  - [allFilterMapPar](#allfiltermappar)
   - [allPar](#allpar)
+  - [allParDiscard](#allpardiscard)
+  - [allSuccesses](#allsuccesses)
+  - [allSuccessesPar](#allsuccessespar)
   - [allowInterrupt](#allowinterrupt)
   - [async](#async)
   - [asyncEffect](#asynceffect)
   - [asyncInterrupt](#asyncinterrupt)
   - [asyncInterruptEither](#asyncinterrupteither)
   - [asyncOption](#asyncoption)
+  - [cachedFunction](#cachedfunction)
   - [checkInterruptible](#checkinterruptible)
   - [clockWith](#clockwith)
-  - [collect](#collect)
   - [collectAll](#collectall)
-  - [collectAllDiscard](#collectalldiscard)
   - [collectAllPar](#collectallpar)
-  - [collectAllParDiscard](#collectallpardiscard)
-  - [collectAllSuccesses](#collectallsuccesses)
-  - [collectAllSuccessesPar](#collectallsuccessespar)
-  - [collectAllWith](#collectallwith)
-  - [collectAllWithEffect](#collectallwitheffect)
-  - [collectAllWithPar](#collectallwithpar)
   - [collectFirst](#collectfirst)
-  - [collectPar](#collectpar)
   - [collectWhile](#collectwhile)
   - [cond](#cond)
   - [descriptor](#descriptor)
@@ -72,6 +70,7 @@ Added in v1.0.0
   - [failCauseSync](#failcausesync)
   - [failSync](#failsync)
   - [fiberIdWith](#fiberidwith)
+  - [filterMapEffect](#filtermapeffect)
   - [forEach](#foreach)
   - [forEachDiscard](#foreachdiscard)
   - [forEachExec](#foreachexec)
@@ -86,7 +85,6 @@ Added in v1.0.0
   - [iterate](#iterate)
   - [loop](#loop)
   - [loopDiscard](#loopdiscard)
-  - [memoizeFunction](#memoizefunction)
   - [mergeAll](#mergeall)
   - [mergeAllPar](#mergeallpar)
   - [never](#never)
@@ -144,11 +142,9 @@ Added in v1.0.0
   - [updateService](#updateservice)
 - [conversions](#conversions)
   - [either](#either)
-  - [fromEither](#fromeither)
   - [fromEitherCause](#fromeithercause)
   - [fromFiber](#fromfiber)
   - [fromFiberEffect](#fromfibereffect)
-  - [fromOption](#fromoption)
   - [getOrFail](#getorfail)
   - [getOrFailDiscard](#getorfaildiscard)
   - [getOrFailWith](#getorfailwith)
@@ -301,6 +297,7 @@ Added in v1.0.0
   - [negate](#negate)
 - [models](#models)
   - [Adapter (interface)](#adapter-interface)
+  - [Blocked (interface)](#blocked-interface)
   - [Effect (interface)](#effect-interface)
   - [EffectGen (interface)](#effectgen-interface)
   - [EffectUnify (interface)](#effectunify-interface)
@@ -312,6 +309,9 @@ Added in v1.0.0
   - [zipWith](#zipwith)
 - [refinements](#refinements)
   - [isEffect](#iseffect)
+- [requests](#requests)
+  - [request](#request)
+  - [withRequestBatching](#withrequestbatching)
 - [runtime](#runtime-1)
   - [updateRuntimeFlags](#updateruntimeflags)
   - [withRuntimeFlags](#withruntimeflags)
@@ -354,12 +354,15 @@ Added in v1.0.0
 - [utils](#utils)
   - [MergeRecord (type alias)](#mergerecord-type-alias)
   - [awaitAllChildren](#awaitallchildren)
+  - [blocked](#blocked)
   - [cached](#cached)
-  - [cachedInvalidate](#cachedinvalidate)
+  - [cachedInvalidateWithTTL](#cachedinvalidatewithttl)
+  - [cachedWithTTL](#cachedwithttl)
   - [delay](#delay)
   - [diffFiberRefs](#difffiberrefs)
   - [dropUntil](#dropuntil)
   - [eventually](#eventually)
+  - [flatMapStep](#flatmapstep)
   - [flip](#flip)
   - [flipWith](#flipwith)
   - [forever](#forever)
@@ -371,7 +374,6 @@ Added in v1.0.0
   - [ignoreLogged](#ignorelogged)
   - [left](#left)
   - [leftWith](#leftwith)
-  - [memoize](#memoize)
   - [merge](#merge)
   - [nonEmptyStruct](#nonemptystruct)
   - [nonEmptyTuple](#nonemptytuple)
@@ -426,6 +428,7 @@ Added in v1.0.0
   - [sequentialFinalizers](#sequentialfinalizers)
   - [serviceFunction](#servicefunction)
   - [serviceFunctionEffect](#servicefunctioneffect)
+  - [serviceOption](#serviceoption)
   - [setConfigProvider](#setconfigprovider)
   - [setFiberRefs](#setfiberrefs)
   - [some](#some)
@@ -434,6 +437,7 @@ Added in v1.0.0
   - [someOrFail](#someorfail)
   - [someOrFailException](#someorfailexception)
   - [someWith](#somewith)
+  - [step](#step)
   - [summarized](#summarized)
   - [supervised](#supervised)
   - [tagged](#tagged)
@@ -857,6 +861,11 @@ export declare const all: {
       : never,
     T[number] extends never ? [] : { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
   >
+  <T extends Iterable<Effect<any, any, any>>>(args: T): Effect<
+    [T] extends [Iterable<{ [EffectTypeId]: { _R: (_: never) => infer R } }>] ? R : never,
+    [T] extends [Iterable<{ [EffectTypeId]: { _E: (_: never) => infer E } }>] ? E : never,
+    [T] extends [Iterable<{ [EffectTypeId]: { _A: (_: never) => infer A } }>] ? A[] : never
+  >
   <T extends Readonly<{ [K: string]: Effect<any, any, any> }>>(args: T): Effect<
     keyof T extends never
       ? never
@@ -870,6 +879,51 @@ export declare const all: {
       : never,
     { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
   >
+}
+```
+
+Added in v1.0.0
+
+## allDiscard
+
+Evaluate each effect in the structure from left to right, and discard the
+results. For a parallel version, see `collectAllParDiscard`.
+
+**Signature**
+
+```ts
+export declare const allDiscard: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, E, void>
+```
+
+Added in v1.0.0
+
+## allFilterMap
+
+Evaluate each effect in the structure with `collectAll`, and collect the
+results with given partial function.
+
+**Signature**
+
+```ts
+export declare const allFilterMap: {
+  <A, B>(pf: (a: A) => Option.Option<B>): <R, E>(elements: Iterable<Effect<R, E, A>>) => Effect<R, E, B[]>
+  <R, E, A, B>(elements: Iterable<Effect<R, E, A>>, pf: (a: A) => Option.Option<B>): Effect<R, E, B[]>
+}
+```
+
+Added in v1.0.0
+
+## allFilterMapPar
+
+Evaluate each effect in the structure with `collectAllPar`, and collect
+the results with given partial function.
+
+**Signature**
+
+```ts
+export declare const allFilterMapPar: {
+  <A, B>(pf: (a: A) => Option.Option<B>): <R, E>(elements: Iterable<Effect<R, E, A>>) => Effect<R, E, B[]>
+  <R, E, A, B>(elements: Iterable<Effect<R, E, A>>, pf: (a: A) => Option.Option<B>): Effect<R, E, B[]>
 }
 ```
 
@@ -911,6 +965,11 @@ export declare const allPar: {
       : never,
     T[number] extends never ? [] : { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
   >
+  <T extends Iterable<Effect<any, any, any>>>(args: T): Effect<
+    [T] extends [Iterable<{ [EffectTypeId]: { _R: (_: never) => infer R } }>] ? R : never,
+    [T] extends [Iterable<{ [EffectTypeId]: { _E: (_: never) => infer E } }>] ? E : never,
+    [T] extends [Iterable<{ [EffectTypeId]: { _A: (_: never) => infer A } }>] ? A[] : never
+  >
   <T extends Readonly<{ [K: string]: Effect<any, any, any> }>>(args: T): Effect<
     keyof T extends never
       ? never
@@ -925,6 +984,45 @@ export declare const allPar: {
     { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
   >
 }
+```
+
+Added in v1.0.0
+
+## allParDiscard
+
+Evaluate each effect in the structure in parallel, and collect the results.
+For a sequential version, see `all`.
+
+**Signature**
+
+```ts
+export declare const allParDiscard: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, E, void>
+```
+
+Added in v1.0.0
+
+## allSuccesses
+
+Evaluate and run each effect in the structure and collect the results,
+discarding results from failed effects.
+
+**Signature**
+
+```ts
+export declare const allSuccesses: <R, E, A>(as: Iterable<Effect<R, E, A>>) => Effect<R, never, A[]>
+```
+
+Added in v1.0.0
+
+## allSuccessesPar
+
+Evaluate and run each effect in the structure in parallel and collect the
+results, discarding results from failed effects.
+
+**Signature**
+
+```ts
+export declare const allSuccessesPar: <R, E, A>(elements: Iterable<Effect<R, E, A>>) => Effect<R, never, A[]>
 ```
 
 Added in v1.0.0
@@ -1051,6 +1149,21 @@ export declare const asyncOption: <R, E, A>(
 
 Added in v1.0.0
 
+## cachedFunction
+
+Returns a memoized version of the specified effectual function.
+
+**Signature**
+
+```ts
+export declare const cachedFunction: <R, E, A, B>(
+  f: (a: A) => Effect<R, E, B>,
+  eq?: Equivalence<A> | undefined
+) => Effect<never, never, (a: A) => Effect<R, E, B>>
+```
+
+Added in v1.0.0
+
 ## checkInterruptible
 
 Checks the interrupt status, and produces the effect returned by the
@@ -1077,146 +1190,26 @@ export declare const clockWith: <R, E, A>(f: (clock: Clock.Clock) => Effect<R, E
 
 Added in v1.0.0
 
-## collect
-
-Evaluate each effect in the structure from left to right, collecting the
-the successful values and discarding the empty cases. For a parallel version, see `collectPar`.
-
-**Signature**
-
-```ts
-export declare const collect: {
-  <A, R, E, B>(f: (a: A) => Effect<R, Option.Option<E>, B>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<B>>
-  <A, R, E, B>(elements: Iterable<A>, f: (a: A) => Effect<R, Option.Option<E>, B>): Effect<R, E, Chunk.Chunk<B>>
-}
-```
-
-Added in v1.0.0
-
 ## collectAll
 
-Evaluate each effect in the structure from left to right, and collect the
-results. For a parallel version, see `collectAllPar`.
+Collects the all element of the `Collection<A>` for which the effect returns a value.
 
 **Signature**
 
 ```ts
-export declare const collectAll: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, E, Chunk.Chunk<A>>
-```
-
-Added in v1.0.0
-
-## collectAllDiscard
-
-Evaluate each effect in the structure from left to right, and discard the
-results. For a parallel version, see `collectAllParDiscard`.
-
-**Signature**
-
-```ts
-export declare const collectAllDiscard: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, E, void>
+export declare const collectAll: <R, E, A>(elements: Iterable<Effect<R, E, Option.Option<A>>>) => Effect<R, E, A[]>
 ```
 
 Added in v1.0.0
 
 ## collectAllPar
 
-Evaluate each effect in the structure in parallel, and collect the results.
-For a sequential version, see `collectAll`.
+Collects the all element of the `Collection<A>` for which the effect returns a value.
 
 **Signature**
 
 ```ts
-export declare const collectAllPar: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, E, Chunk.Chunk<A>>
-```
-
-Added in v1.0.0
-
-## collectAllParDiscard
-
-Evaluate each effect in the structure in parallel, and discard the results.
-For a sequential version, see `collectAllDiscard`.
-
-**Signature**
-
-```ts
-export declare const collectAllParDiscard: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, E, void>
-```
-
-Added in v1.0.0
-
-## collectAllSuccesses
-
-Evaluate and run each effect in the structure and collect the results,
-discarding results from failed effects.
-
-**Signature**
-
-```ts
-export declare const collectAllSuccesses: <R, E, A>(as: Iterable<Effect<R, E, A>>) => Effect<R, never, Chunk.Chunk<A>>
-```
-
-Added in v1.0.0
-
-## collectAllSuccessesPar
-
-Evaluate and run each effect in the structure in parallel and collect the
-results, discarding results from failed effects.
-
-**Signature**
-
-```ts
-export declare const collectAllSuccessesPar: <R, E, A>(
-  elements: Iterable<Effect<R, E, A>>
-) => Effect<R, never, Chunk.Chunk<A>>
-```
-
-Added in v1.0.0
-
-## collectAllWith
-
-Evaluate each effect in the structure with `collectAll`, and collect the
-results with given partial function.
-
-**Signature**
-
-```ts
-export declare const collectAllWith: {
-  <A, B>(pf: (a: A) => Option.Option<B>): <R, E>(elements: Iterable<Effect<R, E, A>>) => Effect<R, E, Chunk.Chunk<B>>
-  <R, E, A, B>(elements: Iterable<Effect<R, E, A>>, pf: (a: A) => Option.Option<B>): Effect<R, E, Chunk.Chunk<B>>
-}
-```
-
-Added in v1.0.0
-
-## collectAllWithEffect
-
-Returns a filtered, mapped subset of the elements of the iterable based on a
-partial function.
-
-**Signature**
-
-```ts
-export declare const collectAllWithEffect: {
-  <A, R, E, B>(f: (a: A) => Option.Option<Effect<R, E, B>>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<B>>
-  <A, R, E, B>(elements: Iterable<A>, f: (a: A) => Option.Option<Effect<R, E, B>>): Effect<R, E, Chunk.Chunk<B>>
-}
-```
-
-Added in v1.0.0
-
-## collectAllWithPar
-
-Evaluate each effect in the structure with `collectAllPar`, and collect
-the results with given partial function.
-
-**Signature**
-
-```ts
-export declare const collectAllWithPar: {
-  <A, B>(pf: (a: A) => Option.Option<B>): <R, E>(elements: Iterable<Effect<R, E, A>>) => Effect<R, E, Chunk.Chunk<B>>
-  <R, E, A, B>(elements: Iterable<Effect<R, E, A>>, pf: (a: A) => Option.Option<B>): Effect<R, E, Chunk.Chunk<B>>
-}
+export declare const collectAllPar: <R, E, A>(elements: Iterable<Effect<R, E, Option.Option<A>>>) => Effect<R, E, A[]>
 ```
 
 Added in v1.0.0
@@ -1237,22 +1230,6 @@ export declare const collectFirst: {
 
 Added in v1.0.0
 
-## collectPar
-
-Evaluate each effect in the structure in parallel, collecting the successful
-values and discarding the empty cases.
-
-**Signature**
-
-```ts
-export declare const collectPar: {
-  <A, R, E, B>(f: (a: A) => Effect<R, Option.Option<E>, B>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<B>>
-  <A, R, E, B>(elements: Iterable<A>, f: (a: A) => Effect<R, Option.Option<E>, B>): Effect<R, E, Chunk.Chunk<B>>
-}
-```
-
-Added in v1.0.0
-
 ## collectWhile
 
 Transforms all elements of the chunk for as long as the specified partial
@@ -1262,8 +1239,8 @@ function is defined.
 
 ```ts
 export declare const collectWhile: {
-  <A, R, E, B>(f: (a: A) => Option.Option<Effect<R, E, B>>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<B>>
-  <A, R, E, B>(elements: Iterable<A>, f: (a: A) => Option.Option<Effect<R, E, B>>): Effect<R, E, Chunk.Chunk<B>>
+  <A, R, E, B>(f: (a: A) => Option.Option<Effect<R, E, B>>): (elements: Iterable<A>) => Effect<R, E, B[]>
+  <A, R, E, B>(elements: Iterable<A>, f: (a: A) => Option.Option<Effect<R, E, B>>): Effect<R, E, B[]>
 }
 ```
 
@@ -1366,8 +1343,8 @@ Drops all elements so long as the predicate returns true.
 
 ```ts
 export declare const dropWhile: {
-  <R, E, A>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<A>>
-  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, Chunk.Chunk<A>>
+  <R, E, A>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, A[]>
+  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, A[]>
 }
 ```
 
@@ -1456,14 +1433,30 @@ export declare const fiberIdWith: <R, E, A>(f: (descriptor: FiberId.Runtime) => 
 
 Added in v1.0.0
 
+## filterMapEffect
+
+Returns a filtered, mapped subset of the elements of the iterable based on a
+partial function.
+
+**Signature**
+
+```ts
+export declare const filterMapEffect: {
+  <A, R, E, B>(f: (a: A) => Option.Option<Effect<R, E, B>>): (elements: Iterable<A>) => Effect<R, E, B[]>
+  <A, R, E, B>(elements: Iterable<A>, f: (a: A) => Option.Option<Effect<R, E, B>>): Effect<R, E, B[]>
+}
+```
+
+Added in v1.0.0
+
 ## forEach
 
 **Signature**
 
 ```ts
 export declare const forEach: {
-  <A, R, E, B>(f: (a: A) => Effect<R, E, B>): (self: Iterable<A>) => Effect<R, E, Chunk.Chunk<B>>
-  <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, E, Chunk.Chunk<B>>
+  <A, R, E, B>(f: (a: A) => Effect<R, E, B>): (self: Iterable<A>) => Effect<R, E, B[]>
+  <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, E, B[]>
 }
 ```
 
@@ -1485,7 +1478,7 @@ Added in v1.0.0
 ## forEachExec
 
 Applies the function `f` to each element of the `Collection<A>` and returns
-the result in a new `Chunk<B>` using the specified execution strategy.
+the result in a new `Arrat<B>` using the specified execution strategy.
 
 **Signature**
 
@@ -1493,12 +1486,12 @@ the result in a new `Chunk<B>` using the specified execution strategy.
 export declare const forEachExec: {
   <R, E, A, B>(f: (a: A) => Effect<R, E, B>, strategy: ExecutionStrategy.ExecutionStrategy): (
     elements: Iterable<A>
-  ) => Effect<R, E, Chunk.Chunk<B>>
+  ) => Effect<R, E, B[]>
   <R, E, A, B>(
     elements: Iterable<A>,
     f: (a: A) => Effect<R, E, B>,
     strategy: ExecutionStrategy.ExecutionStrategy
-  ): Effect<R, E, Chunk.Chunk<B>>
+  ): Effect<R, E, B[]>
 }
 ```
 
@@ -1510,8 +1503,8 @@ Added in v1.0.0
 
 ```ts
 export declare const forEachPar: {
-  <A, R, E, B>(f: (a: A) => Effect<R, E, B>): (self: Iterable<A>) => Effect<R, E, Chunk.Chunk<B>>
-  <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, E, Chunk.Chunk<B>>
+  <A, R, E, B>(f: (a: A) => Effect<R, E, B>): (self: Iterable<A>) => Effect<R, E, B[]>
+  <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, E, B[]>
 }
 ```
 
@@ -1540,8 +1533,8 @@ of the current element being iterated over.
 
 ```ts
 export declare const forEachParWithIndex: {
-  <R, E, A, B>(f: (a: A, i: number) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<B>>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A, i: number) => Effect<R, E, B>): Effect<R, E, Chunk.Chunk<B>>
+  <R, E, A, B>(f: (a: A, i: number) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, E, B[]>
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A, i: number) => Effect<R, E, B>): Effect<R, E, B[]>
 }
 ```
 
@@ -1672,7 +1665,7 @@ export declare const loop: <Z, R, E, A>(
   cont: (z: Z) => boolean,
   inc: (z: Z) => Z,
   body: (z: Z) => Effect<R, E, A>
-) => Effect<R, E, Chunk.Chunk<A>>
+) => Effect<R, E, A[]>
 ```
 
 Added in v1.0.0
@@ -1700,21 +1693,6 @@ export declare const loopDiscard: <Z, R, E, X>(
   inc: (z: Z) => Z,
   body: (z: Z) => Effect<R, E, X>
 ) => Effect<R, E, void>
-```
-
-Added in v1.0.0
-
-## memoizeFunction
-
-Returns a memoized version of the specified effectual function.
-
-**Signature**
-
-```ts
-export declare const memoizeFunction: <R, E, A, B>(
-  f: (a: A) => Effect<R, E, B>,
-  eq?: Equivalence<A> | undefined
-) => Effect<never, never, (a: A) => Effect<R, E, B>>
 ```
 
 Added in v1.0.0
@@ -1820,10 +1798,8 @@ Collects all successes and failures in a tupled fashion.
 
 ```ts
 export declare const partition: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (
-    elements: Iterable<A>
-  ) => Effect<R, never, [Chunk.Chunk<E>, Chunk.Chunk<B>]>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, never, [Chunk.Chunk<E>, Chunk.Chunk<B>]>
+  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, never, [E[], B[]]>
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, never, [E[], B[]]>
 }
 ```
 
@@ -1839,10 +1815,8 @@ tuple.
 
 ```ts
 export declare const partitionPar: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (
-    elements: Iterable<A>
-  ) => Effect<R, never, [Chunk.Chunk<E>, Chunk.Chunk<B>]>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, never, [Chunk.Chunk<E>, Chunk.Chunk<B>]>
+  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, never, [E[], B[]]>
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, never, [E[], B[]]>
 }
 ```
 
@@ -2063,8 +2037,8 @@ Takes all elements so long as the effectual predicate returns true.
 
 ```ts
 export declare const takeWhile: {
-  <R, E, A>(predicate: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<A>>
-  <R, E, A>(elements: Iterable<A>, predicate: (a: A) => Effect<R, E, boolean>): Effect<R, E, Chunk.Chunk<A>>
+  <R, E, A>(predicate: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, A[]>
+  <R, E, A>(elements: Iterable<A>, predicate: (a: A) => Effect<R, E, boolean>): Effect<R, E, A[]>
 }
 ```
 
@@ -2170,7 +2144,7 @@ Added in v1.0.0
 
 ## unfold
 
-Constructs a `Chunk` by repeatedly applying the effectual function `f` as
+Constructs a `Arrat` by repeatedly applying the effectual function `f` as
 long as it returns `Some`.
 
 **Signature**
@@ -2179,7 +2153,7 @@ long as it returns `Some`.
 export declare const unfold: <A, R, E, S>(
   s: S,
   f: (s: S) => Effect<R, E, Option.Option<readonly [A, S]>>
-) => Effect<R, E, Chunk.Chunk<A>>
+) => Effect<R, E, A[]>
 ```
 
 Added in v1.0.0
@@ -2502,18 +2476,6 @@ export declare const either: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never
 
 Added in v1.0.0
 
-## fromEither
-
-Lifts an `Either<E, A>` into an `Effect<never, E, A>`.
-
-**Signature**
-
-```ts
-export declare const fromEither: <E, A>(either: Either.Either<E, A>) => Effect<never, E, A>
-```
-
-Added in v1.0.0
-
 ## fromEitherCause
 
 Lifts an `Either<Cause<E>, A>` into an `Effect<never, E, A>`.
@@ -2548,19 +2510,6 @@ fiber.
 
 ```ts
 export declare const fromFiberEffect: <R, E, A>(fiber: Effect<R, E, Fiber.Fiber<E, A>>) => Effect<R, E, A>
-```
-
-Added in v1.0.0
-
-## fromOption
-
-Lifts an `Option` into an `Effect` but preserves the error as an option in
-the error channel, making it easier to compose in some scenarios.
-
-**Signature**
-
-```ts
-export declare const fromOption: <A>(option: Option.Option<A>) => Effect<never, Option.Option<never>, A>
 ```
 
 Added in v1.0.0
@@ -3426,8 +3375,8 @@ Filters the collection using the specified effectful predicate.
 
 ```ts
 export declare const filter: {
-  <A, R, E>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<A>>
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, Chunk.Chunk<A>>
+  <A, R, E>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, A[]>
+  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, A[]>
 }
 ```
 
@@ -3442,8 +3391,8 @@ all elements that satisfy the predicate.
 
 ```ts
 export declare const filterNot: {
-  <A, R, E>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<A>>
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, Chunk.Chunk<A>>
+  <A, R, E>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, A[]>
+  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, A[]>
 }
 ```
 
@@ -3458,8 +3407,8 @@ See `filterNot` for a sequential version.
 
 ```ts
 export declare const filterNotPar: {
-  <A, R, E>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<A>>
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, Chunk.Chunk<A>>
+  <A, R, E>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, A[]>
+  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, A[]>
 }
 ```
 
@@ -3588,8 +3537,8 @@ See `filter` for a sequential version of it.
 
 ```ts
 export declare const filterPar: {
-  <A, R, E>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<A>>
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, Chunk.Chunk<A>>
+  <A, R, E>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, A[]>
+  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, A[]>
 }
 ```
 
@@ -3646,13 +3595,14 @@ effect succeeds.
 
 ```ts
 export declare const ensuringChild: {
-  <R2, X>(f: (fiber: Fiber.Fiber<any, Chunk.Chunk<unknown>>) => Effect<R2, never, X>): <R, E, A>(
+  <R2, X>(f: (fiber: Fiber.Fiber<any, Array<unknown>>) => Effect<R2, never, X>): <R, E, A>(
     self: Effect<R, E, A>
   ) => Effect<R2 | R, E, A>
-  <R, E, A, R2, X>(
-    self: Effect<R, E, A>,
-    f: (fiber: Fiber.Fiber<any, Chunk.Chunk<unknown>>) => Effect<R2, never, X>
-  ): Effect<R | R2, E, A>
+  <R, E, A, R2, X>(self: Effect<R, E, A>, f: (fiber: Fiber.Fiber<any, Array<unknown>>) => Effect<R2, never, X>): Effect<
+    R | R2,
+    E,
+    A
+  >
 }
 ```
 
@@ -3667,12 +3617,12 @@ will be invoked, whether or not this effect succeeds.
 
 ```ts
 export declare const ensuringChildren: {
-  <R1, X>(children: (fibers: Chunk.Chunk<Fiber.RuntimeFiber<any, any>>) => Effect<R1, never, X>): <R, E, A>(
+  <R1, X>(children: (fibers: Array<Fiber.RuntimeFiber<any, any>>) => Effect<R1, never, X>): <R, E, A>(
     self: Effect<R, E, A>
   ) => Effect<R1 | R, E, A>
   <R, E, A, R1, X>(
     self: Effect<R, E, A>,
-    children: (fibers: Chunk.Chunk<Fiber.RuntimeFiber<any, any>>) => Effect<R1, never, X>
+    children: (fibers: Array<Fiber.RuntimeFiber<any, any>>) => Effect<R1, never, X>
   ): Effect<R | R1, E, A>
 }
 ```
@@ -4597,11 +4547,11 @@ new elements.
 export declare const mapAccum: {
   <A, B, R, E, Z>(zero: Z, f: (z: Z, a: A) => Effect<R, E, readonly [Z, B]>): (
     elements: Iterable<A>
-  ) => Effect<R, E, [Z, Chunk.Chunk<B>]>
+  ) => Effect<R, E, [Z, B[]]>
   <A, B, R, E, Z>(elements: Iterable<A>, zero: Z, f: (z: Z, a: A) => Effect<R, E, readonly [Z, B]>): Effect<
     R,
     E,
-    [Z, Chunk.Chunk<B>]
+    [Z, B[]]
   >
 }
 ```
@@ -4959,6 +4909,20 @@ export interface Adapter {
 
 Added in v1.0.0
 
+## Blocked (interface)
+
+**Signature**
+
+```ts
+export interface Blocked<R, E, A> extends Effect<R, E, A> {
+  readonly _tag: 'Blocked'
+  readonly i0: RequestBlock<R>
+  readonly i1: Effect<R, E, A>
+}
+```
+
+Added in v1.0.0
+
 ## Effect (interface)
 
 The `Effect` interface defines a value that lazily describes a workflow or job.
@@ -5109,6 +5073,52 @@ argument to a function that expects an `Effect` value.
 
 ```ts
 export declare const isEffect: (u: unknown) => u is Effect<unknown, unknown, unknown>
+```
+
+Added in v1.0.0
+
+# requests
+
+## request
+
+**Signature**
+
+```ts
+export declare const request: {
+  <R, A extends Request<any, any>, A2 extends A>(request: A, dataSource: RequestResolver<R, A2>): Effect<
+    R,
+    Request.Error<A>,
+    Request.Success<A>
+  >
+  <R, A extends Request<any, any>, A2 extends A, A3 extends A>(
+    request: A,
+    dataSource: RequestResolver<R, A2>,
+    cache: Cache<A3>
+  ): Effect<R, Request.Error<A>, Request.Success<A>>
+  <R, R1, E1, A extends Request<any, any>, A2 extends A, A3 extends A>(
+    request: A,
+    dataSource: RequestResolver<R, A2>,
+    cache: Effect<R1, E1, Cache<A3>>
+  ): Effect<R | R1, E1 | Request.Error<A>, Request.Success<A>>
+  <R, R1, E1, A extends Request<any, any>, A2 extends A, A3 extends A>(
+    request: A,
+    dataSource: RequestResolver<R, A2>,
+    cache: Effect<R1, E1, Option.Option<Cache<A3>>>
+  ): Effect<R | R1, E1 | Request.Error<A>, Request.Success<A>>
+}
+```
+
+Added in v1.0.0
+
+## withRequestBatching
+
+**Signature**
+
+```ts
+export declare const withRequestBatching: {
+  (strategy: 'on' | 'off'): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, strategy: 'on' | 'off'): Effect<R, E, A>
+}
 ```
 
 Added in v1.0.0
@@ -5393,9 +5403,7 @@ composite fiber that produces a list of their results, in order.
 **Signature**
 
 ```ts
-export declare const forkAll: <R, E, A>(
-  effects: Iterable<Effect<R, E, A>>
-) => Effect<R, never, Fiber.Fiber<E, Chunk.Chunk<A>>>
+export declare const forkAll: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, never, Fiber.Fiber<E, A[]>>
 ```
 
 Added in v1.0.0
@@ -5513,8 +5521,8 @@ of the current element being iterated over.
 
 ```ts
 export declare const forEachWithIndex: {
-  <A, R, E, B>(f: (a: A, i: number) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<B>>
-  <A, R, E, B>(elements: Iterable<A>, f: (a: A, i: number) => Effect<R, E, B>): Effect<R, E, Chunk.Chunk<B>>
+  <A, R, E, B>(f: (a: A, i: number) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, E, B[]>
+  <A, R, E, B>(elements: Iterable<A>, f: (a: A, i: number) => Effect<R, E, B>): Effect<R, E, B[]>
 }
 ```
 
@@ -5624,23 +5632,33 @@ export declare const awaitAllChildren: <R, E, A>(self: Effect<R, E, A>) => Effec
 
 Added in v1.0.0
 
-## cached
-
-Returns an effect that, if evaluated, will return the cached result of this
-effect. Cached results will expire after `timeToLive` duration.
+## blocked
 
 **Signature**
 
 ```ts
-export declare const cached: {
-  (timeToLive: Duration.Duration): <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Effect<never, E, A>>
-  <R, E, A>(self: Effect<R, E, A>, timeToLive: Duration.Duration): Effect<R, never, Effect<never, E, A>>
-}
+export declare const blocked: <R, E, A>(
+  blockedRequests: RequestBlock<R>,
+  _continue: Effect<R, E, A>
+) => Blocked<R, E, A>
 ```
 
 Added in v1.0.0
 
-## cachedInvalidate
+## cached
+
+Returns an effect that, if evaluated, will return the lazily computed
+result of this effect.
+
+**Signature**
+
+```ts
+export declare const cached: <R, E, A>(self: Effect<R, E, A>) => Effect<never, never, Effect<R, E, A>>
+```
+
+Added in v1.0.0
+
+## cachedInvalidateWithTTL
 
 Returns an effect that, if evaluated, will return the cached result of this
 effect. Cached results will expire after `timeToLive` duration. In
@@ -5650,7 +5668,7 @@ cached value before the `timeToLive` duration expires.
 **Signature**
 
 ```ts
-export declare const cachedInvalidate: {
+export declare const cachedInvalidateWithTTL: {
   (timeToLive: Duration.Duration): <R, E, A>(
     self: Effect<R, E, A>
   ) => Effect<R, never, [Effect<never, E, A>, Effect<never, never, void>]>
@@ -5659,6 +5677,22 @@ export declare const cachedInvalidate: {
     never,
     [Effect<never, E, A>, Effect<never, never, void>]
   >
+}
+```
+
+Added in v1.0.0
+
+## cachedWithTTL
+
+Returns an effect that, if evaluated, will return the cached result of this
+effect. Cached results will expire after `timeToLive` duration.
+
+**Signature**
+
+```ts
+export declare const cachedWithTTL: {
+  (timeToLive: Duration.Duration): <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Effect<never, E, A>>
+  <R, E, A>(self: Effect<R, E, A>, timeToLive: Duration.Duration): Effect<R, never, Effect<never, E, A>>
 }
 ```
 
@@ -5701,8 +5735,8 @@ Drops all elements until the effectful predicate returns true.
 
 ```ts
 export declare const dropUntil: {
-  <A, R, E>(predicate: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Chunk.Chunk<A>>
-  <A, R, E>(elements: Iterable<A>, predicate: (a: A) => Effect<R, E, boolean>): Effect<R, E, Chunk.Chunk<A>>
+  <A, R, E>(predicate: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, A[]>
+  <A, R, E>(elements: Iterable<A>, predicate: (a: A) => Effect<R, E, boolean>): Effect<R, E, A[]>
 }
 ```
 
@@ -5717,6 +5751,19 @@ eventually succeeds.
 
 ```ts
 export declare const eventually: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, A>
+```
+
+Added in v1.0.0
+
+## flatMapStep
+
+**Signature**
+
+```ts
+export declare const flatMapStep: <R, E, A, R1, E1, B>(
+  self: Effect<R, E, A>,
+  f: (step: Exit.Failure<E, A> | Exit.Success<E, A> | Blocked<R, E, A>) => Effect<R1, E1, B>
+) => Effect<R | R1, E1, B>
 ```
 
 Added in v1.0.0
@@ -5867,19 +5914,6 @@ export declare const leftWith: {
 
 Added in v1.0.0
 
-## memoize
-
-Returns an effect that, if evaluated, will return the lazily computed
-result of this effect.
-
-**Signature**
-
-```ts
-export declare const memoize: <R, E, A>(self: Effect<R, E, A>) => Effect<never, never, Effect<R, E, A>>
-```
-
-Added in v1.0.0
-
 ## merge
 
 Returns a new effect where the error channel has been merged into the
@@ -6019,7 +6053,7 @@ Exposes all parallel errors in a single call.
 **Signature**
 
 ```ts
-export declare const parallelErrors: <R, E, A>(self: Effect<R, E, A>) => Effect<R, Chunk.Chunk<E>, A>
+export declare const parallelErrors: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E[], A>
 ```
 
 Added in v1.0.0
@@ -6509,7 +6543,7 @@ Replicates the given effect `n` times.
 **Signature**
 
 ```ts
-export declare const replicate: (n: number) => <R, E, A>(self: Effect<R, E, A>) => Chunk.Chunk<Effect<R, E, A>>
+export declare const replicate: (n: number) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>[]
 ```
 
 Added in v1.0.0
@@ -6523,8 +6557,8 @@ results.
 
 ```ts
 export declare const replicateEffect: {
-  (n: number): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Chunk.Chunk<A>>
-  <R, E, A>(self: Effect<R, E, A>, n: number): Effect<R, E, Chunk.Chunk<A>>
+  (n: number): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A[]>
+  <R, E, A>(self: Effect<R, E, A>, n: number): Effect<R, E, A[]>
 }
 ```
 
@@ -6835,6 +6869,16 @@ export declare const serviceFunctionEffect: <T extends Context.Tag<any, any>, Ar
 
 Added in v1.0.0
 
+## serviceOption
+
+**Signature**
+
+```ts
+export declare const serviceOption: <I, A>(tag: Context.Tag<I, A>) => Effect<never, never, Option.Option<A>>
+```
+
+Added in v1.0.0
+
 ## setConfigProvider
 
 Sets the current `ConfigProvider`.
@@ -6954,6 +6998,18 @@ export declare const someWith: {
     f: (effect: Effect<R, Option.Option<E>, A>) => Effect<R1, Option.Option<E1>, A1>
   ): Effect<R | R1, E | E1, Option.Option<A1>>
 }
+```
+
+Added in v1.0.0
+
+## step
+
+**Signature**
+
+```ts
+export declare const step: <R, E, A>(
+  self: Effect<R, E, A>
+) => Effect<R, E, Exit.Failure<E, A> | Exit.Success<E, A> | Blocked<R, E, A>>
 ```
 
 Added in v1.0.0
@@ -7336,8 +7392,8 @@ will be lost. To retain all information please use `partition`.
 
 ```ts
 export declare const validateAll: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, Chunk.Chunk<E>, Chunk.Chunk<B>>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, Chunk.Chunk<E>, Chunk.Chunk<B>>
+  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, E[], B[]>
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, E[], B[]>
 }
 ```
 
@@ -7352,8 +7408,8 @@ the successes.
 
 ```ts
 export declare const validateAllDiscard: {
-  <R, E, A, X>(f: (a: A) => Effect<R, E, X>): (elements: Iterable<A>) => Effect<R, Chunk.Chunk<E>, void>
-  <R, E, A, X>(elements: Iterable<A>, f: (a: A) => Effect<R, E, X>): Effect<R, Chunk.Chunk<E>, void>
+  <R, E, A, X>(f: (a: A) => Effect<R, E, X>): (elements: Iterable<A>) => Effect<R, E[], void>
+  <R, E, A, X>(elements: Iterable<A>, f: (a: A) => Effect<R, E, X>): Effect<R, E[], void>
 }
 ```
 
@@ -7371,8 +7427,8 @@ will be lost. To retain all information please use [[partitionPar]].
 
 ```ts
 export declare const validateAllPar: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, Chunk.Chunk<E>, Chunk.Chunk<B>>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, Chunk.Chunk<E>, Chunk.Chunk<B>>
+  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, E[], B[]>
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, E[], B[]>
 }
 ```
 
@@ -7387,8 +7443,8 @@ discarding the successes.
 
 ```ts
 export declare const validateAllParDiscard: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, Chunk.Chunk<E>, void>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, Chunk.Chunk<E>, void>
+  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, E[], void>
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, E[], void>
 }
 ```
 
@@ -7403,8 +7459,8 @@ or the accumulation of all errors.
 
 ```ts
 export declare const validateFirst: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, Chunk.Chunk<E>, B>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, Chunk.Chunk<E>, B>
+  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, E[], B>
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, E[], B>
 }
 ```
 
@@ -7419,8 +7475,8 @@ or the accumulation of all errors.
 
 ```ts
 export declare const validateFirstPar: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, Chunk.Chunk<E>, B>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, Chunk.Chunk<E>, B>
+  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, E[], B>
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, E[], B>
 }
 ```
 

@@ -12,7 +12,7 @@ describe.concurrent("Effect", () => {
       const ref = yield* $(Ref.make(0))
       const cache = yield* $(
         Ref.updateAndGet(ref, (n) => n + 1),
-        Effect.cached(Duration.minutes(60))
+        Effect.cachedWithTTL(Duration.minutes(60))
       )
       const a = yield* $(cache)
       yield* $(TestClock.adjust(Duration.minutes(59)))
@@ -30,7 +30,7 @@ describe.concurrent("Effect", () => {
       const ref = yield* $(Ref.make(0))
       const cached = yield* $(
         Ref.modify(ref, (curr) => [curr, curr + 1]),
-        Effect.cached(Duration.infinity)
+        Effect.cachedWithTTL(Duration.infinity)
       )
       const a = yield* $(cached)
       const b = yield* $(cached)
@@ -45,7 +45,7 @@ describe.concurrent("Effect", () => {
       const [cached, invalidate] = yield* $(
         pipe(
           Ref.updateAndGet(ref, (n) => n + 1),
-          Effect.cachedInvalidate(Duration.minutes(60))
+          Effect.cachedInvalidateWithTTL(Duration.minutes(60))
         )
       )
       const a = yield* $(cached)

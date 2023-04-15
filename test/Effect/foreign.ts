@@ -12,8 +12,7 @@ import { assert, describe } from "vitest"
 
 describe.concurrent("Foreign", () => {
   it.it("Sync Either", () => {
-    const fa = Effect.fromEither(Either.right(1))
-    expect(Effect.runSyncEither(fa)).toEqual(Either.right(1))
+    expect(Effect.runSyncEither(Either.right(1))).toEqual(Either.right(1))
   })
   it.effect("Unify", () =>
     Effect.gen(function*($) {

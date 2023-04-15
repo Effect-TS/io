@@ -1,4 +1,3 @@
-import * as Chunk from "@effect/data/Chunk"
 import * as Debug from "@effect/data/Debug"
 import * as Either from "@effect/data/Either"
 import { dual, pipe } from "@effect/data/Function"
@@ -65,7 +64,7 @@ export const _await = Debug.methodWithTrace((trace) =>
 
 /** @internal */
 export const children = Debug.methodWithTrace((trace) =>
-  <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<never, never, Chunk.Chunk<Fiber.RuntimeFiber<any, any>>> =>
+  <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<never, never, Array<Fiber.RuntimeFiber<any, any>>> =>
     self.children().traced(trace)
 )
 
@@ -74,7 +73,7 @@ export const done = <E, A>(exit: Exit.Exit<E, A>): Fiber.Fiber<E, A> => ({
   [FiberTypeId]: fiberVariance,
   id: () => FiberId.none,
   await: Debug.methodWithTrace((trace) => () => core.succeed(exit).traced(trace)),
-  children: Debug.methodWithTrace((trace) => () => core.succeed(Chunk.empty()).traced(trace)),
+  children: Debug.methodWithTrace((trace) => () => core.succeed([]).traced(trace)),
   inheritAll: Debug.methodWithTrace((trace) => () => core.unit().traced(trace)),
   poll: Debug.methodWithTrace((trace) => () => core.succeed(Option.some(exit)).traced(trace)),
   interruptAsFork: Debug.methodWithTrace((trace) => () => core.unit().traced(trace))
@@ -90,7 +89,7 @@ export const dump = Debug.methodWithTrace((trace) =>
 export const dumpAll = Debug.methodWithTrace((trace) =>
   (
     fibers: Iterable<Fiber.RuntimeFiber<unknown, unknown>>
-  ): Effect.Effect<never, never, Chunk.Chunk<Fiber.Fiber.Dump>> => core.forEach(fibers, dump).traced(trace)
+  ): Effect.Effect<never, never, Array<Fiber.Fiber.Dump>> => core.forEach(fibers, dump).traced(trace)
 )
 
 /** @internal */
@@ -235,7 +234,7 @@ export const never = (): Fiber.Fiber<never, never> => ({
   [FiberTypeId]: fiberVariance,
   id: () => FiberId.none,
   await: Debug.methodWithTrace((trace) => () => core.never().traced(trace)),
-  children: Debug.methodWithTrace((trace) => () => core.succeed(Chunk.empty()).traced(trace)),
+  children: Debug.methodWithTrace((trace) => () => core.succeed([]).traced(trace)),
   inheritAll: Debug.methodWithTrace((trace) => () => core.never().traced(trace)),
   poll: Debug.methodWithTrace((trace) => () => core.succeed(Option.none()).traced(trace)),
   interruptAsFork: Debug.methodWithTrace((trace) => () => core.never().traced(trace))
@@ -356,12 +355,12 @@ export const pretty = Debug.methodWithTrace((trace) =>
 
 /** @internal */
 export const roots = Debug.methodWithTrace((trace) =>
-  (): Effect.Effect<never, never, Chunk.Chunk<Fiber.RuntimeFiber<any, any>>> => core.sync(unsafeRoots).traced(trace)
+  (): Effect.Effect<never, never, Array<Fiber.RuntimeFiber<any, any>>> => core.sync(unsafeRoots).traced(trace)
 )
 
 /** @internal */
-export const unsafeRoots = (): Chunk.Chunk<Fiber.RuntimeFiber<any, any>> => {
-  return Chunk.fromIterable(fiberScope.globalScope.roots)
+export const unsafeRoots = (): Array<Fiber.RuntimeFiber<any, any>> => {
+  return Array.from(fiberScope.globalScope.roots)
 }
 
 /** @internal */

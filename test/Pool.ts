@@ -67,7 +67,7 @@ describe("Pool", () => {
       )
       const pool = yield* $(Pool.make(get, 10))
       yield* $(Effect.repeatUntil(Ref.get(count), (n) => n === 10))
-      const values = yield* $(Effect.collectAll(Effect.replicate(9)(Effect.flip(Pool.get(pool)))))
+      const values = yield* $(Effect.all(Effect.replicate(9)(Effect.flip(Pool.get(pool)))))
       expect(Array.from(values)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9])
     }))
 
@@ -80,7 +80,7 @@ describe("Pool", () => {
       )
       const pool = yield* $(Pool.make(get, 10))
       yield* $(Effect.repeatUntil(Ref.get(count), (n) => n === 10))
-      yield* $(Effect.collectAll(Effect.replicate(10)(Pool.get(pool))))
+      yield* $(Effect.all(Effect.replicate(10)(Pool.get(pool))))
       const result = yield* $(TestServices.provideLive(pipe(
         Effect.scoped(Pool.get(pool)),
         Effect.disconnect,

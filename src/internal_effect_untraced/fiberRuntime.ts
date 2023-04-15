@@ -7,6 +7,7 @@ import * as HashSet from "@effect/data/HashSet"
 import * as MutableQueue from "@effect/data/MutableQueue"
 import * as MRef from "@effect/data/MutableRef"
 import * as Option from "@effect/data/Option"
+import * as RA from "@effect/data/ReadonlyArray"
 import { tuple } from "@effect/data/ReadonlyArray"
 import type * as Cause from "@effect/io/Cause"
 import type * as Clock from "@effect/io/Clock"
@@ -22,12 +23,15 @@ import * as RuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
 import * as FiberStatus from "@effect/io/Fiber/Status"
 import type * as FiberRef from "@effect/io/FiberRef"
 import type * as FiberRefs from "@effect/io/FiberRefs"
+import * as _RequestBlock from "@effect/io/internal_effect_untraced/blockedRequests"
 import * as internalCause from "@effect/io/internal_effect_untraced/cause"
 import { StackAnnotation } from "@effect/io/internal_effect_untraced/cause"
 import * as clock from "@effect/io/internal_effect_untraced/clock"
+import * as completedRequestMap from "@effect/io/internal_effect_untraced/completedRequestMap"
 import { configProviderTag } from "@effect/io/internal_effect_untraced/configProvider"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as defaultServices from "@effect/io/internal_effect_untraced/defaultServices"
+import { some } from "@effect/io/internal_effect_untraced/effect"
 import * as internalFiber from "@effect/io/internal_effect_untraced/fiber"
 import * as FiberMessage from "@effect/io/internal_effect_untraced/fiberMessage"
 import * as fiberRefs from "@effect/io/internal_effect_untraced/fiberRefs"
@@ -44,6 +48,8 @@ import type { Logger } from "@effect/io/Logger"
 import * as LogLevel from "@effect/io/Logger/Level"
 import type * as MetricLabel from "@effect/io/Metric/Label"
 import * as Ref from "@effect/io/Ref"
+import type { Request } from "@effect/io/Request"
+import type * as RequestBlock from "@effect/io/RequestBlock"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
 
@@ -95,6 +101,13 @@ const contOpSuccess = {
     value: unknown
   ) => {
     return cont.i1(value)
+  },
+  ["OnStep"]: (
+    _: FiberRuntime<any, any>,
+    cont: core.OnStep,
+    value: unknown
+  ) => {
+    return cont.i1(core.exitSucceed(value))
   },
   [OpCodes.OP_ON_SUCCESS_AND_FAILURE]: (
     _: FiberRuntime<any, any>,
@@ -167,6 +180,58 @@ const drainQueueWhileRunningTable = {
   }
 }
 
+/**
+ * @internal
+ */
+export const currentRequestBatchingEnabled = core.fiberRefUnsafeMake(true)
+
+class LeftoverRequestsException {
+  readonly _tag = "LeftoverRequestsException"
+  constructor(readonly requests: HashSet.HashSet<Request<any, any>>) {}
+}
+
+/**
+ * Executes all requests, submitting requests to each data source in parallel.
+ */
+const runBlockedRequests = <R>(self: RequestBlock.RequestBlock<R>) => {
+  return core.forEachDiscard(
+    _RequestBlock.flatten(self),
+    (requestsByRequestResolver) =>
+      forEachParDiscard(
+        _RequestBlock.sequentialCollectionToChunk(requestsByRequestResolver),
+        ([dataSource, sequential]) =>
+          core.flatMap(
+            dataSource.runAll(
+              RA.map(
+                sequential,
+                (blockedRequests) => RA.map(blockedRequests, (blockedRequest) => blockedRequest.request)
+              )
+            ),
+            (completedRequests) => {
+              const blockedRequests: Array<RequestBlock.Entry<unknown>> = RA.flatten(sequential)
+              const leftovers = pipe(
+                completedRequestMap.requests(completedRequests),
+                HashSet.difference(
+                  RA.map(
+                    blockedRequests,
+                    (blockedRequest) => blockedRequest.request as Request<unknown, unknown>
+                  )
+                )
+              )
+              if (HashSet.size(leftovers) > 0) {
+                return core.die(new LeftoverRequestsException(leftovers))
+              }
+              return core.forEachDiscard(blockedRequests, (blockedRequest) =>
+                core.deferredComplete(
+                  blockedRequest.result,
+                  completedRequestMap.getOrThrow(completedRequests, blockedRequest.request)
+                ))
+            }
+          )
+      )
+  )
+}
+
 /** @internal */
 export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   readonly [internalFiber.FiberTypeId] = internalFiber.fiberVariance
@@ -198,6 +263,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   private _asyncBlockingOn: FiberId.FiberId | null = null
   private _exitValue: Exit.Exit<E, A> | null = null
   private _traceStack: Array<NonNullable<Debug.Trace>> = []
+  private _canUnwindBlocked = 0
 
   /**
    * The identity of the fiber.
@@ -244,8 +310,8 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   /**
    * Retrieves the immediate children of the fiber.
    */
-  children(): Effect.Effect<never, never, Chunk.Chunk<Fiber.RuntimeFiber<any, any>>> {
-    return this.ask((fiber) => Chunk.fromIterable(fiber.getChildren()))
+  children(): Effect.Effect<never, never, Array<Fiber.RuntimeFiber<any, any>>> {
+    return this.ask((fiber) => Array.from(fiber.getChildren()))
   }
 
   /**
@@ -890,6 +956,9 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
 
   pushStack(cont: core.Continuation) {
     this._stack.push(cont)
+    if (cont._tag === "OnStep") {
+      this._canUnwindBlocked++
+    }
     if ("trace" in cont && cont.trace) {
       this._traceStack.push(cont.trace)
     }
@@ -898,6 +967,9 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   popStack() {
     const item = this._stack.pop()
     if (item) {
+      if (item._tag === "OnStep") {
+        this._canUnwindBlocked--
+      }
       if ("trace" in item && item.trace) {
         this._traceStack.pop()
       }
@@ -929,7 +1001,14 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   [OpCodes.OP_TAG](op: core.Primitive & { _tag: OpCodes.OP_SYNC }) {
     return core.map(
       core.fiberRefGet(core.currentContext),
-      (context) => Context.unsafeGet(context, op as unknown as Context.Tag<any, any>)
+      (context) => {
+        try {
+          return Context.unsafeGet(context, op as unknown as Context.Tag<any, any>)
+        } catch (e) {
+          console.log(op)
+          throw e
+        }
+      }
     )
   }
 
@@ -1021,6 +1100,13 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
             return core.exitFailCause(internalCause.stripFailures(cause))
           }
         }
+        case "OnStep": {
+          if (!(_runtimeFlags.interruptible(this._runtimeFlags) && this.isInterrupted())) {
+            return cont.i1(core.exitFailCause(cause))
+          } else {
+            return core.exitFailCause(internalCause.stripFailures(cause))
+          }
+        }
         case OpCodes.OP_REVERT_FLAGS: {
           this.patchRuntimeFlags(this._runtimeFlags, cont.patch)
           if (_runtimeFlags.interruptible(this._runtimeFlags) && this.isInterrupted()) {
@@ -1045,37 +1131,74 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     )
   }
 
-  [OpCodes.OP_UPDATE_RUNTIME_FLAGS](op: core.Primitive & { _tag: OpCodes.OP_UPDATE_RUNTIME_FLAGS }) {
-    if (op.i1 === undefined) {
-      this.patchRuntimeFlags(this._runtimeFlags, op.i0)
-      return core.exitUnit()
-    } else {
-      const updateFlags = op.i0
-      const oldRuntimeFlags = this._runtimeFlags
-      const newRuntimeFlags = _runtimeFlags.patch(oldRuntimeFlags, updateFlags)
-      if (newRuntimeFlags === oldRuntimeFlags) {
-        // No change, short circuit
-        return op.i1(oldRuntimeFlags)
-      } else {
-        // One more chance to short circuit: if we're immediately going
-        // to interrupt. Interruption will cause immediate reversion of
-        // the flag, so as long as we "peek ahead", there's no need to
-        // set them to begin with.
-        if (_runtimeFlags.interruptible(newRuntimeFlags) && this.isInterrupted()) {
-          return core.exitFailCause(this.getInterruptedCause())
-        } else {
-          // Impossible to short circuit, so record the changes
-          this.patchRuntimeFlags(this._runtimeFlags, updateFlags)
-          // Since we updated the flags, we need to revert them
-          const revertFlags = _runtimeFlags.diff(newRuntimeFlags, oldRuntimeFlags)
-          this.pushStack(new core.RevertFlags(revertFlags))
-          return op.i1(oldRuntimeFlags)
+  ["Blocked"](op: core.Primitive & { _tag: "Blocked" }) {
+    if (this._canUnwindBlocked > 0 && this.getFiberRef(currentRequestBatchingEnabled) === true) {
+      const nextOp = this.popStack()
+      if (nextOp) {
+        switch (nextOp._tag) {
+          case "OnStep": {
+            return nextOp.i1(op)
+          }
+          case "OnSuccess": {
+            return core.blocked(op.i0, core.flatMap(op.i1, nextOp.i1))
+          }
+          case "OnSuccessAndFailure": {
+            return core.blocked(op.i0, core.matchCauseEffect(op.i1, nextOp.i1, nextOp.i2))
+          }
+          case "OnFailure": {
+            return core.blocked(op.i0, core.catchAllCause(op.i1, nextOp.i1))
+          }
+          case "Traced": {
+            return core.blocked(op.i0, op.i1.traced(nextOp.trace))
+          }
+          case "While": {
+            return core.blocked(
+              op.i0,
+              core.flatMap(op.i1, (a) => {
+                nextOp.i2(a)
+                if (nextOp.i0()) {
+                  return nextOp.i1()
+                }
+                return core.unit()
+              })
+            )
+          }
+          case "RevertFlags": {
+            this.pushStack(nextOp)
+            break
+          }
         }
       }
+    }
+    return core.flatMap(core.uninterruptible(runBlockedRequests(op.i0)), () => op.i1)
+  }
+
+  [OpCodes.OP_UPDATE_RUNTIME_FLAGS](op: core.Primitive & { _tag: OpCodes.OP_UPDATE_RUNTIME_FLAGS }) {
+    const updateFlags = op.i0
+    const oldRuntimeFlags = this._runtimeFlags
+    const newRuntimeFlags = _runtimeFlags.patch(oldRuntimeFlags, updateFlags)
+    // One more chance to short circuit: if we're immediately going
+    // to interrupt. Interruption will cause immediate reversion of
+    // the flag, so as long as we "peek ahead", there's no need to
+    // set them to begin with.
+    if (_runtimeFlags.interruptible(newRuntimeFlags) && this.isInterrupted()) {
+      return core.exitFailCause(this.getInterruptedCause())
+    } else {
+      // Impossible to short circuit, so record the changes
+      this.patchRuntimeFlags(this._runtimeFlags, updateFlags)
+      // Since we updated the flags, we need to revert them
+      const revertFlags = _runtimeFlags.diff(newRuntimeFlags, oldRuntimeFlags)
+      this.pushStack(new core.RevertFlags(revertFlags, op))
+      return op.i1 ? op.i1(oldRuntimeFlags) : core.exitUnit()
     }
   }
 
   [OpCodes.OP_ON_SUCCESS](op: core.Primitive & { _tag: OpCodes.OP_ON_SUCCESS }) {
+    this.pushStack(op)
+    return op.i0
+  }
+
+  ["OnStep"](op: core.Primitive & { _tag: "OnStep" }) {
     this.pushStack(op)
     return op.i0
   }
@@ -1282,45 +1405,7 @@ export const addFinalizer = Debug.methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const collect = Debug.dualWithTrace<
-  <A, R, E, B>(
-    f: (a: A) => Effect.Effect<R, Option.Option<E>, B>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<B>>,
-  <A, R, E, B>(
-    elements: Iterable<A>,
-    f: (a: A) => Effect.Effect<R, Option.Option<E>, B>
-  ) => Effect.Effect<R, E, Chunk.Chunk<B>>
->(2, (trace, restore) =>
-  (elements, f) =>
-    pipe(
-      core.forEach(elements, (a) => unsome(restore(f)(a))),
-      core.map(Chunk.compact)
-    ).traced(trace))
-
-/* @internal */
-export const collectPar = Debug.dualWithTrace<
-  <A, R, E, B>(
-    f: (a: A) => Effect.Effect<R, Option.Option<E>, B>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<B>>,
-  <A, R, E, B>(
-    elements: Iterable<A>,
-    f: (a: A) => Effect.Effect<R, Option.Option<E>, B>
-  ) => Effect.Effect<R, E, Chunk.Chunk<B>>
->(2, (trace, restore) =>
-  (elements, f) =>
-    pipe(
-      forEachPar(elements, (a) => unsome(restore(f)(a))),
-      core.map(Chunk.compact)
-    ).traced(trace))
-
-/* @internal */
-export const collectAllPar = Debug.methodWithTrace((trace) =>
-  <R, E, A>(effects: Iterable<Effect.Effect<R, E, A>>): Effect.Effect<R, E, Chunk.Chunk<A>> =>
-    forEachPar(effects, identity).traced(trace)
-)
-
-/* @internal */
-export const collectAllParDiscard = Debug.methodWithTrace((trace) =>
+export const allParDiscard = Debug.methodWithTrace((trace) =>
   <R, E, A>(
     effects: Iterable<Effect.Effect<R, E, A>>
   ): Effect.Effect<R, E, void> => forEachParDiscard(effects, identity).traced(trace)
@@ -1330,28 +1415,33 @@ export const collectAllParDiscard = Debug.methodWithTrace((trace) =>
 export const collectAllSuccessesPar = Debug.methodWithTrace((trace) =>
   <R, E, A>(
     elements: Iterable<Effect.Effect<R, E, A>>
-  ): Effect.Effect<R, never, Chunk.Chunk<A>> =>
-    collectAllWithPar(
+  ): Effect.Effect<R, never, Array<A>> =>
+    allFilterMapPar(
       Array.from(elements).map(core.exit),
       (exit) => (core.exitIsSuccess(exit) ? Option.some(exit.i0) : Option.none())
     ).traced(trace)
 )
 
 /* @internal */
-export const collectAllWithPar = Debug.dualWithTrace<
+export const allFilterMapPar = Debug.dualWithTrace<
   <A, B>(
     pf: (a: A) => Option.Option<B>
-  ) => <R, E>(elements: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, Chunk.Chunk<B>>,
+  ) => <R, E>(elements: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, Array<B>>,
   <R, E, A, B>(
     elements: Iterable<Effect.Effect<R, E, A>>,
     pf: (a: A) => Option.Option<B>
-  ) => Effect.Effect<R, E, Chunk.Chunk<B>>
+  ) => Effect.Effect<R, E, Array<B>>
 >(2, (trace, restore) =>
   (elements, pf) =>
     core.map(
-      collectAllPar(elements),
-      Chunk.filterMap(restore(pf))
+      allPar(elements),
+      RA.filterMap(restore(pf))
     ).traced(trace))
+
+/* @internal */
+export const collectAllPar = Debug.methodWithTrace<
+  <R, E, A>(elements: Iterable<Effect.Effect<R, E, Option.Option<A>>>) => Effect.Effect<R, E, Array<A>>
+>((trace) => (elements) => core.map(allPar(elements), RA.filterMap(identity)).traced(trace))
 
 /* @internal */
 export const daemonChildren = Debug.methodWithTrace((trace) =>
@@ -1385,21 +1475,21 @@ export const existsPar = Debug.dualWithTrace<
 export const filterPar = Debug.dualWithTrace<
   <A, R, E>(
     f: (a: A) => Effect.Effect<R, E, boolean>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<A>>,
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, Chunk.Chunk<A>>
+  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Array<A>>,
+  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, Array<A>>
 >(2, (trace, restore) =>
   (elements, f) =>
     pipe(
       forEachPar(elements, (a) => core.map(restore(f)(a), (b) => (b ? Option.some(a) : Option.none()))),
-      core.map(Chunk.compact)
+      core.map(RA.compact)
     ).traced(trace))
 
 /* @internal */
 export const filterNotPar = Debug.dualWithTrace<
   <A, R, E>(
     f: (a: A) => Effect.Effect<R, E, boolean>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<A>>,
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, Chunk.Chunk<A>>
+  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Array<A>>,
+  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, Array<A>>
 >(2, (trace, restore) =>
   (elements, f) =>
     filterPar(
@@ -1412,12 +1502,12 @@ export const forEachExec = Debug.dualWithTrace<
   <R, E, A, B>(
     f: (a: A) => Effect.Effect<R, E, B>,
     strategy: ExecutionStrategy.ExecutionStrategy
-  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<B>>,
+  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Array<B>>,
   <R, E, A, B>(
     elements: Iterable<A>,
     f: (a: A) => Effect.Effect<R, E, B>,
     strategy: ExecutionStrategy.ExecutionStrategy
-  ) => Effect.Effect<R, E, Chunk.Chunk<B>>
+  ) => Effect.Effect<R, E, Array<B>>
 >(3, (trace, restore) =>
   (elements, f, strategy) =>
     core.suspend(() =>
@@ -1433,8 +1523,8 @@ export const forEachExec = Debug.dualWithTrace<
 
 /* @internal */
 export const forEachPar = Debug.dualWithTrace<
-  <A, R, E, B>(f: (a: A) => Effect.Effect<R, E, B>) => (self: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<B>>,
-  <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, E, Chunk.Chunk<B>>
+  <A, R, E, B>(f: (a: A) => Effect.Effect<R, E, B>) => (self: Iterable<A>) => Effect.Effect<R, E, Array<B>>,
+  <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, E, Array<B>>
 >(2, (trace, restore) =>
   (self, f) =>
     core.fiberRefGetWith(
@@ -1463,12 +1553,12 @@ export const forEachParDiscard = Debug.dualWithTrace<
 const forEachParUnbounded = <A, R, E, B>(
   self: Iterable<A>,
   f: (a: A) => Effect.Effect<R, E, B>
-): Effect.Effect<R, E, Chunk.Chunk<B>> =>
+): Effect.Effect<R, E, Array<B>> =>
   core.suspend(() => {
     const as = Array.from(self).map((v, i) => [v, i] as const)
     const array = new Array<B>(as.length)
     const fn = ([a, i]: readonly [A, number]) => core.flatMap(f(a), (b) => core.sync(() => array[i] = b))
-    return core.zipRight(forEachParUnboundedDiscard(as, fn), core.succeed(Chunk.unsafeFromArray(array)))
+    return core.zipRight(forEachParUnboundedDiscard(as, fn), core.succeed(array))
   })
 
 /* @internal */
@@ -1485,26 +1575,61 @@ const forEachParUnboundedDiscard = <R, E, A, _>(
       return core.asUnit(f(as[0]))
     }
     return core.uninterruptibleMask((restore) => {
-      const deferred = core.deferredUnsafeMake<void, void>(FiberId.none)
+      const deferred = core.deferredUnsafeMake<void, Effect.Effect<any, any, any>>(FiberId.none)
       let ref = 0
+      const residual: Array<Effect.Blocked<any, any, any>> = []
       const process = core.transplant((graft) =>
         core.forEach(as, (a) =>
           pipe(
             graft(pipe(
-              restore(core.suspend(() => f(a))),
-              core.matchCauseEffect(
-                (cause) =>
-                  core.zipRight(
-                    core.deferredFail(deferred, void 0),
-                    core.failCause(cause)
-                  ),
-                () => {
-                  if (ref + 1 === size) {
-                    core.deferredUnsafeDone(deferred, core.unit())
-                  } else {
-                    ref = ref + 1
+              core.suspend(() => restore(core.step(f(a)))),
+              core.flatMap(
+                (exit) => {
+                  switch (exit._tag) {
+                    case "Failure": {
+                      if (residual.length > 0) {
+                        const requests = residual.map((blocked) => blocked.i0).reduce(_RequestBlock.par)
+                        const _continue = forEachParUnboundedDiscard(residual, (blocked) => blocked.i1)
+                        return core.blocked(
+                          requests,
+                          core.matchCauseEffect(
+                            _continue,
+                            (cause) =>
+                              core.zipRight(
+                                core.deferredFail(deferred, void 0),
+                                core.failCause(internalCause.parallel(cause, exit.cause))
+                              ),
+                            () =>
+                              core.zipRight(
+                                core.deferredFail(deferred, void 0),
+                                core.failCause(exit.cause)
+                              )
+                          )
+                        )
+                      }
+                      return core.zipRight(
+                        core.deferredFail(deferred, void 0),
+                        core.failCause(exit.cause)
+                      )
+                    }
+                    default: {
+                      if (exit._tag === "Blocked") {
+                        residual.push(exit)
+                      }
+                      if (ref + 1 === size) {
+                        if (residual.length > 0) {
+                          const requests = residual.map((blocked) => blocked.i0).reduce(_RequestBlock.par)
+                          const _continue = forEachParUnboundedDiscard(residual, (blocked) => blocked.i1)
+                          return core.deferredSucceed(deferred, core.blocked(requests, _continue))
+                        } else {
+                          core.deferredUnsafeDone(deferred, core.exitSucceed(core.exitUnit()))
+                        }
+                      } else {
+                        ref = ref + 1
+                      }
+                      return core.unit()
+                    }
                   }
-                  return core.unit()
                 }
               )
             )),
@@ -1528,7 +1653,7 @@ const forEachParUnboundedDiscard = <R, E, A, _>(
                 }
               }
             ),
-          () => core.forEachDiscard(fibers, (f) => f.inheritAll())
+          (rest) => core.flatMap(rest, () => core.forEachDiscard(fibers, (f) => f.inheritAll()))
         ))
     })
   })
@@ -1538,12 +1663,12 @@ const forEachParN = <A, R, E, B>(
   self: Iterable<A>,
   n: number,
   f: (a: A) => Effect.Effect<R, E, B>
-): Effect.Effect<R, E, Chunk.Chunk<B>> =>
+): Effect.Effect<R, E, Array<B>> =>
   core.suspend(() => {
     const as = Array.from(self).map((v, i) => [v, i] as const)
     const array = new Array<B>(as.length)
     const fn = ([a, i]: readonly [A, number]) => core.map(f(a), (b) => array[i] = b)
-    return core.zipRight(forEachParNDiscard(as, n, fn), core.succeed(Chunk.unsafeFromArray(array)))
+    return core.zipRight(forEachParNDiscard(as, n, fn), core.succeed(array))
   })
 
 /* @internal */
@@ -1554,26 +1679,57 @@ const forEachParNDiscard = <A, R, E, _>(
 ): Effect.Effect<R, E, void> =>
   core.suspend(() => {
     const iterator = self[Symbol.iterator]()
+    const residual: Array<Effect.Blocked<any, any, any>> = []
     const worker: Effect.Effect<R, E, void> = core.flatMap(
       core.sync(() => iterator.next()),
-      (next) => next.done ? core.unit() : core.flatMap(core.asUnit(f(next.value)), () => worker)
+      (next) =>
+        next.done ? core.unit() : core.flatMapStep(core.asUnit(f(next.value)), (res) => {
+          switch (res._tag) {
+            case "Blocked": {
+              residual.push(res)
+              return worker
+            }
+            case "Failure": {
+              return res
+            }
+            case "Success":
+              return worker
+          }
+        })
     )
     const effects: Array<Effect.Effect<R, E, void>> = []
     for (let i = 0; i < n; i++) {
       effects.push(worker)
     }
-    return forEachParUnboundedDiscard(effects, identity)
+    return core.flatMap(core.exit(forEachParUnboundedDiscard(effects, identity)), (exit) => {
+      if (residual.length === 0) {
+        return exit
+      }
+      const requests = residual.map((blocked) => blocked.i0).reduce(_RequestBlock.par)
+      const _continue = forEachParNDiscard(residual, n, (blocked) => blocked.i1)
+      if (exit._tag === "Failure") {
+        return core.blocked(
+          requests,
+          core.matchCauseEffect(
+            _continue,
+            (cause) => core.exitFailCause(internalCause.parallel(exit.cause, cause)),
+            () => exit
+          )
+        )
+      }
+      return core.blocked(requests, _continue)
+    })
   })
 
 /* @internal */
 export const forEachParWithIndex = Debug.dualWithTrace<
   <R, E, A, B>(
     f: (a: A, i: number) => Effect.Effect<R, E, B>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<B>>,
+  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Array<B>>,
   <R, E, A, B>(
     elements: Iterable<A>,
     f: (a: A, i: number) => Effect.Effect<R, E, B>
-  ) => Effect.Effect<R, E, Chunk.Chunk<B>>
+  ) => Effect.Effect<R, E, Array<B>>
 >(
   2,
   (trace, restore) =>
@@ -1589,7 +1745,7 @@ export const forEachParWithIndex = Debug.dualWithTrace<
                     array[i] = b
                   }))
             ),
-            () => Chunk.unsafeFromArray(array)
+            () => array
           ))
       ).traced(trace)
 )
@@ -1761,11 +1917,11 @@ export const onDoneCause = Debug.dualWithTrace<
 export const partitionPar = Debug.dualWithTrace<
   <R, E, A, B>(
     f: (a: A) => Effect.Effect<R, E, B>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, never, [Chunk.Chunk<E>, Chunk.Chunk<B>]>,
+  ) => (elements: Iterable<A>) => Effect.Effect<R, never, [Array<E>, Array<B>]>,
   <R, E, A, B>(
     elements: Iterable<A>,
     f: (a: A) => Effect.Effect<R, E, B>
-  ) => Effect.Effect<R, never, [Chunk.Chunk<E>, Chunk.Chunk<B>]>
+  ) => Effect.Effect<R, never, [Array<E>, Array<B>]>
 >(2, (trace, restore) =>
   (elements, f) =>
     pipe(
@@ -1800,6 +1956,7 @@ export const raceAll = Debug.methodWithTrace((trace) =>
                   pipe(
                     effects,
                     core.forEach((effect) => fork(core.interruptible(effect))),
+                    core.map(Chunk.unsafeFromArray),
                     core.map((tail) => pipe(tail, Chunk.prepend(head)) as Chunk.Chunk<Fiber.RuntimeFiber<E, A>>),
                     core.tap((fibers) =>
                       pipe(
@@ -1845,7 +2002,7 @@ export const raceAll = Debug.methodWithTrace((trace) =>
 
 /* @internal */
 const raceAllArbiter = <E, E1, A, A1>(
-  fibers: Chunk.Chunk<Fiber.Fiber<E | E1, A | A1>>,
+  fibers: Iterable<Fiber.Fiber<E | E1, A | A1>>,
   winner: Fiber.Fiber<E | E1, A | A1>,
   deferred: Deferred.Deferred<E | E1, readonly [A | A1, Fiber.Fiber<E | E1, A | A1>]>,
   fails: Ref.Ref<number>
@@ -1871,7 +2028,7 @@ const raceAllArbiter = <E, E1, A, A1>(
             core.flatMap((set) =>
               set ?
                 pipe(
-                  fibers,
+                  Chunk.fromIterable(fibers),
                   Chunk.reduce(
                     core.unit(),
                     (effect, fiber) =>
@@ -1974,25 +2131,6 @@ export const sequentialFinalizers = Debug.methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const some = Debug.methodWithTrace((trace) =>
-  <R, E, A>(self: Effect.Effect<R, E, Option.Option<A>>): Effect.Effect<R, Option.Option<E>, A> =>
-    core.matchEffect(
-      self,
-      (e) => core.fail(Option.some(e)),
-      (option) => {
-        switch (option._tag) {
-          case "None": {
-            return core.fail(Option.none())
-          }
-          case "Some": {
-            return core.succeed(option.value)
-          }
-        }
-      }
-    ).traced(trace)
-)
-
-/* @internal */
 export const someWith = Debug.dualWithTrace<
   <R, E, A, R1, E1, A1>(
     f: (effect: Effect.Effect<R, Option.Option<E>, A>) => Effect.Effect<R1, Option.Option<E1>, A1>
@@ -2033,6 +2171,16 @@ export const allPar = Debug.methodWithTrace((trace): {
     T[number] extends never ? []
       : { [K in keyof T]: [T[K]] extends [Effect.Effect<any, any, infer A>] ? A : never }
   >
+  <T extends Iterable<Effect.Effect<any, any, any>>>(
+    args: T
+  ): Effect.Effect<
+    [T] extends [Iterable<{ [Effect.EffectTypeId]: { _R: (_: never) => infer R } }>] ? R
+      : never,
+    [T] extends [Iterable<{ [Effect.EffectTypeId]: { _E: (_: never) => infer E } }>] ? E
+      : never,
+    [T] extends [Iterable<{ [Effect.EffectTypeId]: { _A: (_: never) => infer A } }>] ? Array<A>
+      : never
+  >
   <T extends Readonly<{ [K: string]: Effect.Effect<any, any, any> }>>(
     args: T
   ): Effect.Effect<
@@ -2049,8 +2197,8 @@ export const allPar = Debug.methodWithTrace((trace): {
     if (arguments.length === 1) {
       if (core.isEffect(arguments[0])) {
         return core.map(arguments[0], (x) => [x])
-      } else if (Array.isArray(arguments[0])) {
-        return core.map(collectAllPar(arguments[0]), Chunk.toReadonlyArray).traced(trace)
+      } else if (Array.isArray(arguments[0]) || Symbol.iterator in arguments[0]) {
+        return forEachPar(arguments[0], identity as any).traced(trace)
       } else {
         return pipe(
           forEachPar(
@@ -2067,7 +2215,7 @@ export const allPar = Debug.methodWithTrace((trace): {
         ).traced(trace) as any
       }
     }
-    return core.map(collectAllPar(arguments), Chunk.toReadonlyArray).traced(trace)
+    return forEachPar(arguments, identity as any).traced(trace)
   }
 )
 
@@ -2131,17 +2279,17 @@ export const unsome = Debug.methodWithTrace((trace) =>
 export const validateAllPar = Debug.dualWithTrace<
   <R, E, A, B>(
     f: (a: A) => Effect.Effect<R, E, B>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, Chunk.Chunk<E>, Chunk.Chunk<B>>,
+  ) => (elements: Iterable<A>) => Effect.Effect<R, Array<E>, Array<B>>,
   <R, E, A, B>(
     elements: Iterable<A>,
     f: (a: A) => Effect.Effect<R, E, B>
-  ) => Effect.Effect<R, Chunk.Chunk<E>, Chunk.Chunk<B>>
+  ) => Effect.Effect<R, Array<E>, Array<B>>
 >(2, (trace, restore) =>
   (elements, f) =>
     core.flatMap(
       partitionPar(elements, restore(f)),
       ([es, bs]) =>
-        Chunk.isEmpty(es)
+        es.length === 0
           ? core.succeed(bs)
           : core.fail(es)
     ).traced(trace))
@@ -2150,22 +2298,22 @@ export const validateAllPar = Debug.dualWithTrace<
 export const validateAllParDiscard = Debug.dualWithTrace<
   <R, E, A, B>(
     f: (a: A) => Effect.Effect<R, E, B>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, Chunk.Chunk<E>, void>,
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, Chunk.Chunk<E>, void>
+  ) => (elements: Iterable<A>) => Effect.Effect<R, Array<E>, void>,
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, Array<E>, void>
 >(2, (trace, restore) =>
   (elements, f) =>
     core.flatMap(
       partitionPar(elements, restore(f)),
       ([es, _]) =>
-        Chunk.isEmpty(es)
+        es.length === 0
           ? core.unit()
           : core.fail(es)
     ).traced(trace))
 
 /* @internal */
 export const validateFirstPar = Debug.dualWithTrace<
-  <R, E, A, B>(f: (a: A) => Effect.Effect<R, E, B>) => (elements: Iterable<A>) => Effect.Effect<R, Chunk.Chunk<E>, B>,
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, Chunk.Chunk<E>, B>
+  <R, E, A, B>(f: (a: A) => Effect.Effect<R, E, B>) => (elements: Iterable<A>) => Effect.Effect<R, Array<E>, B>,
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, Array<E>, B>
 >(2, (trace, restore) =>
   (elements, f) =>
     core.flip(
@@ -2450,14 +2598,14 @@ export const fiberAwaitAll = Debug.methodWithTrace((trace) =>
 )
 
 /** @internal */
-export const fiberCollectAll = <E, A>(fibers: Iterable<Fiber.Fiber<E, A>>): Fiber.Fiber<E, Chunk.Chunk<A>> => ({
+export const fiberCollectAll = <E, A>(fibers: Iterable<Fiber.Fiber<E, A>>): Fiber.Fiber<E, Array<A>> => ({
   [internalFiber.FiberTypeId]: internalFiber.fiberVariance,
   id: () => Array.from(fibers).reduce((id, fiber) => FiberId.combine(id, fiber.id()), FiberId.none),
   await: Debug.methodWithTrace((trace) =>
     () => core.exit(forEachPar(fibers, (fiber) => core.flatten(fiber.await()))).traced(trace)
   ),
   children: Debug.methodWithTrace((trace) =>
-    () => core.map(forEachPar(fibers, (fiber) => fiber.children()), Chunk.flatten).traced(trace)
+    () => core.map(forEachPar(fibers, (fiber) => fiber.children()), RA.flatten).traced(trace)
   ),
   inheritAll: Debug.methodWithTrace((trace) =>
     () => core.forEachDiscard(fibers, (fiber) => fiber.inheritAll()).traced(trace)
@@ -2466,8 +2614,8 @@ export const fiberCollectAll = <E, A>(fibers: Iterable<Fiber.Fiber<E, A>>): Fibe
     () =>
       core.map(
         core.forEach(fibers, (fiber) => fiber.poll()),
-        Chunk.reduceRight(
-          Option.some<Exit.Exit<E, Chunk.Chunk<A>>>(core.exitSucceed(Chunk.empty())),
+        RA.reduceRight(
+          Option.some<Exit.Exit<E, Array<A>>>(core.exitSucceed(new Array())),
           (optionB, optionA) => {
             switch (optionA._tag) {
               case "None": {
@@ -2484,7 +2632,7 @@ export const fiberCollectAll = <E, A>(fibers: Iterable<Fiber.Fiber<E, A>>): Fibe
                         optionA.value,
                         core.exitZipWith(
                           optionB.value,
-                          (a, chunk) => pipe(chunk, Chunk.prepend(a)),
+                          (a, chunk) => [a, ...chunk],
                           internalCause.parallel
                         )
                       )

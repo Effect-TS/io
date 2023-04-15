@@ -1,4 +1,3 @@
-import * as Chunk from "@effect/data/Chunk"
 import type * as Context from "@effect/data/Context"
 import * as Debug from "@effect/data/Debug"
 import { pipe } from "@effect/data/Function"
@@ -129,13 +128,13 @@ export class Zip<T0, T1> implements Supervisor.Supervisor<readonly [T0, T1]> {
   }
 }
 
-export class Track implements Supervisor.Supervisor<Chunk.Chunk<Fiber.RuntimeFiber<any, any>>> {
+export class Track implements Supervisor.Supervisor<Array<Fiber.RuntimeFiber<any, any>>> {
   readonly [SupervisorTypeId] = supervisorVariance
 
   readonly fibers: Set<Fiber.RuntimeFiber<any, any>> = new Set()
 
-  value(): Effect.Effect<never, never, Chunk.Chunk<Fiber.RuntimeFiber<any, any>>> {
-    return Debug.bodyWithTrace((trace) => core.sync(() => Chunk.fromIterable(this.fibers)).traced(trace))
+  value(): Effect.Effect<never, never, Array<Fiber.RuntimeFiber<any, any>>> {
+    return Debug.bodyWithTrace((trace) => core.sync(() => Array.from(this.fibers)).traced(trace))
   }
 
   onStart<R, E, A>(
@@ -163,13 +162,13 @@ export class Track implements Supervisor.Supervisor<Chunk.Chunk<Fiber.RuntimeFib
     //
   }
 
-  map<B>(f: (a: Chunk.Chunk<Fiber.RuntimeFiber<any, any>>) => B): Supervisor.Supervisor<B> {
+  map<B>(f: (a: Array<Fiber.RuntimeFiber<any, any>>) => B): Supervisor.Supervisor<B> {
     return new ProxySupervisor(this, () => pipe(this.value(), core.map(f)))
   }
 
   zip<A>(
     right: Supervisor.Supervisor<A>
-  ): Supervisor.Supervisor<readonly [Chunk.Chunk<Fiber.RuntimeFiber<any, any>>, A]> {
+  ): Supervisor.Supervisor<readonly [Array<Fiber.RuntimeFiber<any, any>>, A]> {
     return new Zip(this, right)
   }
 }
@@ -265,7 +264,7 @@ class FibersIn implements Supervisor.Supervisor<SortedSet.SortedSet<Fiber.Runtim
 }
 
 /** @internal */
-export const unsafeTrack = (): Supervisor.Supervisor<Chunk.Chunk<Fiber.RuntimeFiber<any, any>>> => {
+export const unsafeTrack = (): Supervisor.Supervisor<Array<Fiber.RuntimeFiber<any, any>>> => {
   return new Track()
 }
 
@@ -274,7 +273,7 @@ export const track = Debug.methodWithTrace((trace) =>
   (): Effect.Effect<
     never,
     never,
-    Supervisor.Supervisor<Chunk.Chunk<Fiber.RuntimeFiber<any, any>>>
+    Supervisor.Supervisor<Array<Fiber.RuntimeFiber<any, any>>>
   > => core.sync(unsafeTrack).traced(trace)
 )
 

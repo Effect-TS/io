@@ -1,4 +1,3 @@
-import * as Chunk from "@effect/data/Chunk"
 import * as Context from "@effect/data/Context"
 import * as Debug from "@effect/data/Debug"
 import * as Either from "@effect/data/Either"
@@ -8,6 +7,7 @@ import * as HashMap from "@effect/data/HashMap"
 import * as HashSet from "@effect/data/HashSet"
 import * as number from "@effect/data/Number"
 import * as Option from "@effect/data/Option"
+import * as RA from "@effect/data/ReadonlyArray"
 import type * as Config from "@effect/io/Config"
 import type * as ConfigError from "@effect/io/Config/Error"
 import type * as ConfigProvider from "@effect/io/Config/Provider"
@@ -19,6 +19,8 @@ import * as pathPatch from "@effect/io/internal_effect_untraced/configProvider/p
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as OpCodes from "@effect/io/internal_effect_untraced/opCodes/config"
 import * as StringUtils from "@effect/io/internal_effect_untraced/string-utils"
+
+const concat = <A, B>(l: Array<A>, r: Array<B>): Array<A | B> => [...l, ...r]
 
 /** @internal */
 const ConfigProviderSymbolKey = "@effect/io/Config/Provider"
@@ -57,12 +59,12 @@ export const make = Debug.untracedMethod((restore) =>
 export const makeFlat = Debug.untracedMethod((restore) =>
   (
     load: <A>(
-      path: Chunk.Chunk<string>,
+      path: Array<string>,
       config: Config.Config.Primitive<A>,
       split: boolean
-    ) => Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>,
+    ) => Effect.Effect<never, ConfigError.ConfigError, Array<A>>,
     enumerateChildren: (
-      path: Chunk.Chunk<string>
+      path: Array<string>
     ) => Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>>,
     patch: PathPatch.PathPatch
   ): ConfigProvider.ConfigProvider.Flat => ({
@@ -80,14 +82,14 @@ export const fromFlat = Debug.untracedMethod(() =>
   (flat: ConfigProvider.ConfigProvider.Flat): ConfigProvider.ConfigProvider =>
     make(
       (config) =>
-        core.flatMap(fromFlatLoop(flat, Chunk.empty(), config, false), (chunk) =>
+        core.flatMap(fromFlatLoop(flat, RA.empty(), config, false), (chunk) =>
           pipe(
-            Chunk.head(chunk),
+            RA.head(chunk),
             Option.match(
               () =>
                 core.fail(
                   configError.MissingData(
-                    Chunk.empty(),
+                    RA.empty(),
                     `Expected a single value having structure: ${config}`
                   )
                 ),
@@ -102,29 +104,29 @@ export const fromFlat = Debug.untracedMethod(() =>
 export const fromEnv = Debug.untracedMethod(() =>
   (config: Partial<ConfigProvider.ConfigProvider.FromEnvConfig> = {}): ConfigProvider.ConfigProvider => {
     const { pathDelim, seqDelim } = Object.assign({}, { pathDelim: "_", seqDelim: "," }, config)
-    const makePathString = (path: Chunk.Chunk<string>): string => pipe(path, Chunk.join(pathDelim))
+    const makePathString = (path: Array<string>): string => pipe(path, RA.join(pathDelim))
     const unmakePathString = (pathString: string): ReadonlyArray<string> => pathString.split(pathDelim)
 
     const getEnv = () =>
       typeof process !== "undefined" && "env" in process && typeof process.env === "object" ? process.env : {}
 
     const load = <A>(
-      path: Chunk.Chunk<string>,
+      path: Array<string>,
       primitive: Config.Config.Primitive<A>,
       split = true
-    ): Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>> => {
+    ): Effect.Effect<never, ConfigError.ConfigError, Array<A>> => {
       const pathString = makePathString(path)
       const current = getEnv()
       const valueOpt = pathString in current ? Option.some(current[pathString]!) : Option.none()
       return pipe(
-        core.fromOption(valueOpt),
+        valueOpt,
         core.mapError(() => configError.MissingData(path, `Expected ${pathString} to exist in the process context`)),
         core.flatMap((value) => parsePrimitive(value, path, primitive, seqDelim, split))
       )
     }
 
     const enumerateChildren = (
-      path: Chunk.Chunk<string>
+      path: Array<string>
     ): Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>> =>
       core.sync(() => {
         const current = getEnv()
@@ -132,7 +134,7 @@ export const fromEnv = Debug.untracedMethod(() =>
         const keyPaths = Array.from(keys).map((value) => unmakePathString(value.toUpperCase()))
         const filteredKeyPaths = keyPaths.filter((keyPath) => {
           for (let i = 0; i < path.length; i++) {
-            const pathComponent = pipe(path, Chunk.unsafeGet(i))
+            const pathComponent = pipe(path, RA.unsafeGet(i))
             const currentElement = keyPath[i]
             if (currentElement === undefined || pathComponent !== currentElement) {
               return false
@@ -154,36 +156,36 @@ export const fromMap = Debug.untracedMethod(() =>
     config: Partial<ConfigProvider.ConfigProvider.FromMapConfig> = {}
   ): ConfigProvider.ConfigProvider => {
     const { pathDelim, seqDelim } = Object.assign({}, { seqDelim: ",", pathDelim: "." }, config)
-    const makePathString = (path: Chunk.Chunk<string>): string => pipe(path, Chunk.join(pathDelim))
+    const makePathString = (path: Array<string>): string => pipe(path, RA.join(pathDelim))
     const unmakePathString = (pathString: string): ReadonlyArray<string> => pathString.split(pathDelim)
     const mapWithIndexSplit = splitIndexInKeys(
       map,
-      (str) => Chunk.unsafeFromArray(unmakePathString(str)),
+      (str) => Array.from(unmakePathString(str)),
       makePathString
     )
     const load = <A>(
-      path: Chunk.Chunk<string>,
+      path: Array<string>,
       primitive: Config.Config.Primitive<A>,
       split = true
-    ): Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>> => {
+    ): Effect.Effect<never, ConfigError.ConfigError, Array<A>> => {
       const pathString = makePathString(path)
       const valueOpt = mapWithIndexSplit.has(pathString) ?
         Option.some(mapWithIndexSplit.get(pathString)!) :
         Option.none()
       return pipe(
-        core.fromOption(valueOpt),
+        valueOpt,
         core.mapError(() => configError.MissingData(path, `Expected ${pathString} to exist in the provided map`)),
         core.flatMap((value) => parsePrimitive(value, path, primitive, seqDelim, split))
       )
     }
     const enumerateChildren = (
-      path: Chunk.Chunk<string>
+      path: Array<string>
     ): Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>> =>
       core.sync(() => {
         const keyPaths = Array.from(mapWithIndexSplit.keys()).map(unmakePathString)
         const filteredKeyPaths = keyPaths.filter((keyPath) => {
           for (let i = 0; i < path.length; i++) {
-            const pathComponent = pipe(path, Chunk.unsafeGet(i))
+            const pathComponent = pipe(path, RA.unsafeGet(i))
             const currentElement = keyPath[i]
             if (currentElement === undefined || pathComponent !== currentElement) {
               return false
@@ -201,53 +203,53 @@ export const fromMap = Debug.untracedMethod(() =>
 const extend = <A, B>(
   leftDef: (n: number) => A,
   rightDef: (n: number) => B,
-  left: Chunk.Chunk<A>,
-  right: Chunk.Chunk<B>
-): readonly [Chunk.Chunk<A>, Chunk.Chunk<B>] => {
-  const leftPad = Chunk.unfold(
+  left: Array<A>,
+  right: Array<B>
+): readonly [Array<A>, Array<B>] => {
+  const leftPad = RA.unfold(
     left.length,
     (index) =>
       index >= right.length ?
         Option.none() :
         Option.some([leftDef(index), index + 1])
   )
-  const rightPad = Chunk.unfold(
+  const rightPad = RA.unfold(
     right.length,
     (index) =>
       index >= left.length ?
         Option.none() :
         Option.some([rightDef(index), index + 1])
   )
-  const leftExtension = pipe(left, Chunk.concat(leftPad))
-  const rightExtension = pipe(right, Chunk.concat(rightPad))
+  const leftExtension = concat(left, leftPad)
+  const rightExtension = concat(right, rightPad)
   return [leftExtension, rightExtension]
 }
 
 const fromFlatLoop = <A>(
   flat: ConfigProvider.ConfigProvider.Flat,
-  prefix: Chunk.Chunk<string>,
+  prefix: Array<string>,
   config: Config.Config<A>,
   split: boolean
-): Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>> => {
+): Effect.Effect<never, ConfigError.ConfigError, Array<A>> => {
   const op = config as _config.ConfigPrimitive
   switch (op._tag) {
     case OpCodes.OP_CONSTANT: {
-      return core.succeed(Chunk.of(op.value)) as Effect.Effect<
+      return core.succeed(RA.of(op.value)) as Effect.Effect<
         never,
         ConfigError.ConfigError,
-        Chunk.Chunk<A>
+        Array<A>
       >
     }
     case OpCodes.OP_DESCRIBED: {
       return core.suspend(
         () => fromFlatLoop(flat, prefix, op.config, split)
-      ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
+      ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Array<A>>
     }
     case OpCodes.OP_FAIL: {
       return core.fail(configError.MissingData(prefix, op.message)) as Effect.Effect<
         never,
         ConfigError.ConfigError,
-        Chunk.Chunk<A>
+        Array<A>
       >
     }
     case OpCodes.OP_FALLBACK: {
@@ -262,13 +264,13 @@ const fromFlatLoop = <A>(
           }
           return core.fail(error1)
         })
-      ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
+      ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Array<A>>
     }
     case OpCodes.OP_LAZY: {
       return core.suspend(() => fromFlatLoop(flat, prefix, op.config(), split)) as Effect.Effect<
         never,
         ConfigError.ConfigError,
-        Chunk.Chunk<A>
+        Array<A>
       >
     }
     case OpCodes.OP_MAP_OR_FAIL: {
@@ -278,40 +280,40 @@ const fromFlatLoop = <A>(
           core.flatMap(
             core.forEach((a) =>
               pipe(
-                core.fromEither(op.mapOrFail(a)),
+                op.mapOrFail(a),
                 core.mapError(configError.prefixed(prefix))
               )
             )
           )
         )
-      ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
+      ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Array<A>>
     }
     case OpCodes.OP_NESTED: {
       return core.suspend(() =>
         fromFlatLoop(
           flat,
-          Chunk.concat(prefix, Chunk.of(op.name)),
+          concat(prefix, RA.of(op.name)),
           op.config,
           split
         )
-      ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
+      ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Array<A>>
     }
     case OpCodes.OP_PRIMITIVE: {
       return pipe(
-        core.fromEither(pathPatch.patch(prefix, flat.patch)),
+        pathPatch.patch(prefix, flat.patch),
         core.flatMap((prefix) =>
           pipe(
             flat.load(prefix, op, split),
             core.flatMap((values) => {
-              if (Chunk.isEmpty(values)) {
-                const name = pipe(Chunk.last(prefix), Option.getOrElse(() => "<n/a>"))
+              if (values.length === 0) {
+                const name = pipe(RA.last(prefix), Option.getOrElse(() => "<n/a>"))
                 return core.fail(_config.missingError(name))
               }
               return core.succeed(values)
             })
           )
         )
-      ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
+      ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Array<A>>
     }
     case OpCodes.OP_SEQUENCE: {
       return pipe(
@@ -321,24 +323,24 @@ const fromFlatLoop = <A>(
             flat.enumerateChildren(patchedPrefix),
             core.flatMap(indicesFrom),
             core.flatMap((indices) => {
-              if (Chunk.isEmpty(indices)) {
+              if (indices.length === 0) {
                 return core.suspend(() =>
-                  core.map(fromFlatLoop(flat, patchedPrefix, op.config, true), Chunk.of)
-                ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
+                  core.map(fromFlatLoop(flat, patchedPrefix, op.config, true), RA.of)
+                ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Array<A>>
               }
               return pipe(
                 core.forEach(
                   indices,
-                  (index) => fromFlatLoop(flat, Chunk.append(prefix, `[${index}]`), op.config, true)
+                  (index) => fromFlatLoop(flat, RA.append(prefix, `[${index}]`), op.config, true)
                 ),
                 core.map((chunkChunk) => {
-                  const flattened = Chunk.flatten(chunkChunk)
-                  if (Chunk.isEmpty(flattened)) {
-                    return Chunk.of(Chunk.empty<A>())
+                  const flattened = RA.flatten(chunkChunk)
+                  if (flattened.length === 0) {
+                    return RA.of(RA.empty<A>())
                   }
-                  return Chunk.of(flattened)
+                  return RA.of(flattened)
                 })
-              ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
+              ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Array<A>>
             })
           )
         )
@@ -347,7 +349,7 @@ const fromFlatLoop = <A>(
     case OpCodes.OP_TABLE: {
       return core.suspend(() =>
         pipe(
-          core.fromEither(pathPatch.patch(prefix, flat.patch)),
+          pathPatch.patch(prefix, flat.patch),
           core.flatMap((prefix) =>
             pipe(
               flat.enumerateChildren(prefix),
@@ -357,19 +359,19 @@ const fromFlatLoop = <A>(
                   core.forEach((key) =>
                     fromFlatLoop(
                       flat,
-                      pipe(prefix, Chunk.concat(Chunk.of(key))),
+                      concat(prefix, RA.of(key)),
                       op.valueConfig,
                       split
                     )
                   ),
                   core.map((values) => {
                     if (values.length === 0) {
-                      return Chunk.of(HashMap.empty())
+                      return RA.of(HashMap.empty())
                     }
-                    const matrix = Chunk.toReadonlyArray(values).map(Chunk.toReadonlyArray) as Array<Array<unknown>>
+                    const matrix = values.map((x) => Array.from(x))
                     return pipe(
-                      Chunk.unsafeFromArray(transpose(matrix).map(Chunk.unsafeFromArray)),
-                      Chunk.map((values) => HashMap.fromIterable(Chunk.zip(Chunk.fromIterable(keys), values)))
+                      transpose(matrix),
+                      RA.map((values) => HashMap.fromIterable(RA.zip(RA.fromIterable(keys), values)))
                     )
                   })
                 )
@@ -377,7 +379,7 @@ const fromFlatLoop = <A>(
             )
           )
         )
-      ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
+      ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Array<A>>
     }
     case OpCodes.OP_ZIP_WITH: {
       return core.suspend(() =>
@@ -399,21 +401,20 @@ const fromFlatLoop = <A>(
                   return core.fail(right.left)
                 }
                 if (Either.isRight(left) && Either.isRight(right)) {
-                  const path = pipe(prefix, Chunk.join("."))
+                  const path = pipe(prefix, RA.join("."))
                   const fail = fromFlatLoopFail(prefix, path)
                   const [lefts, rights] = extend(
                     fail,
                     fail,
-                    pipe(left.right, Chunk.map(Either.right)),
-                    pipe(right.right, Chunk.map(Either.right))
+                    pipe(left.right, RA.map(Either.right)),
+                    pipe(right.right, RA.map(Either.right))
                   )
                   return pipe(
                     lefts,
-                    Chunk.zip(rights),
+                    RA.zip(rights),
                     core.forEach(([left, right]) =>
                       pipe(
-                        core.fromEither(left),
-                        core.zip(core.fromEither(right)),
+                        core.zip(left, right),
                         core.map(([left, right]) => op.zip(left, right))
                       )
                     )
@@ -426,12 +427,12 @@ const fromFlatLoop = <A>(
             )
           )
         )
-      ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>
+      ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Array<A>>
     }
   }
 }
 
-const fromFlatLoopFail = (prefix: Chunk.Chunk<string>, path: string) =>
+const fromFlatLoopFail = (prefix: Array<string>, path: string) =>
   (index: number): Either.Either<ConfigError.ConfigError, unknown> =>
     Either.left(
       configError.MissingData(
@@ -500,14 +501,14 @@ const orElseFlat = (
   makeFlat(
     (path, config, split) =>
       pipe(
-        core.fromEither(pathPatch.patch(path, self.patch)),
+        pathPatch.patch(path, self.patch),
         core.flatMap((patch) => self.load(patch, config, split)),
         core.catchAll((error1) =>
           pipe(
             core.sync(that),
             core.flatMap((that) =>
               pipe(
-                core.fromEither(pathPatch.patch(path, that.patch)),
+                pathPatch.patch(path, that.patch),
                 core.flatMap((patch) => that.load(patch, config, split)),
                 core.catchAll((error2) => core.fail(configError.Or(error1, error2)))
               )
@@ -517,7 +518,7 @@ const orElseFlat = (
       ),
     (path) =>
       pipe(
-        core.fromEither(pathPatch.patch(path, self.patch)),
+        pathPatch.patch(path, self.patch),
         core.flatMap((patch) => self.enumerateChildren(patch)),
         core.either,
         core.flatMap((left) =>
@@ -525,7 +526,7 @@ const orElseFlat = (
             core.sync(that),
             core.flatMap((that) =>
               pipe(
-                core.fromEither(pathPatch.patch(path, that.patch)),
+                pathPatch.patch(path, that.patch),
                 core.flatMap((patch) => that.enumerateChildren(patch)),
                 core.either,
                 core.flatMap((right) => {
@@ -576,43 +577,43 @@ export const upperCase = (self: ConfigProvider.ConfigProvider): ConfigProvider.C
 /** @internal */
 export const within = Debug.untracedDual<
   (
-    path: Chunk.Chunk<string>,
+    path: Array<string>,
     f: (self: ConfigProvider.ConfigProvider) => ConfigProvider.ConfigProvider
   ) => (self: ConfigProvider.ConfigProvider) => ConfigProvider.ConfigProvider,
   (
     self: ConfigProvider.ConfigProvider,
-    path: Chunk.Chunk<string>,
+    path: Array<string>,
     f: (self: ConfigProvider.ConfigProvider) => ConfigProvider.ConfigProvider
   ) => ConfigProvider.ConfigProvider
 >(3, () =>
   (self, path, f) => {
-    const unnest = Chunk.reduce(path, self, (provider, name) => unnested(provider, name))
-    const nest = Chunk.reduceRight(path, f(unnest), (provider, name) => nested(provider, name))
+    const unnest = RA.reduce(path, self, (provider, name) => unnested(provider, name))
+    const nest = RA.reduceRight(path, f(unnest), (provider, name) => nested(provider, name))
     return orElse(nest, () => self)
   })
 
-const splitPathString = (text: string, delim: string): Chunk.Chunk<string> => {
+const splitPathString = (text: string, delim: string): Array<string> => {
   const split = text.split(new RegExp(`\\s*${escapeRegex(delim)}\\s*`))
-  return Chunk.unsafeFromArray(split)
+  return split
 }
 
 const parsePrimitive = <A>(
   text: string,
-  path: Chunk.Chunk<string>,
+  path: Array<string>,
   primitive: Config.Config.Primitive<A>,
   delimiter: string,
   split: boolean
-): Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>> => {
+): Effect.Effect<never, ConfigError.ConfigError, Array<A>> => {
   if (!split) {
     return pipe(
-      core.fromEither(primitive.parse(text)),
-      core.map(Chunk.of),
+      primitive.parse(text),
+      core.map(RA.of),
       core.mapError(configError.prefixed(path))
     )
   }
   return pipe(
     splitPathString(text, delimiter),
-    core.forEach((char) => core.fromEither(primitive.parse(char.trim()))),
+    core.forEach((char) => primitive.parse(char.trim())),
     core.mapError(configError.prefixed(path))
   )
 }
@@ -625,10 +626,10 @@ const escapeRegex = (string: string): string => {
   return string.replace(/[/\-\\^$*+?.()|[\]{}]/g, "\\$&")
 }
 
-const indicesFrom = (quotedIndices: HashSet.HashSet<string>): Effect.Effect<never, never, Chunk.Chunk<number>> =>
+const indicesFrom = (quotedIndices: HashSet.HashSet<string>): Effect.Effect<never, never, Array<number>> =>
   pipe(
     core.forEach(quotedIndices, parseQuotedIndex),
-    core.mapBoth(() => Chunk.empty<number>(), Chunk.sort(number.Order)),
+    core.mapBoth(() => RA.empty<number>(), RA.sort(number.Order)),
     core.either,
     core.map(Either.merge)
   )
@@ -652,18 +653,18 @@ const parseQuotedIndex = (str: string): Option.Option<number> => {
 
 const splitIndexInKeys = (
   map: Map<string, string>,
-  unmakePathString: (str: string) => Chunk.Chunk<string>,
-  makePathString: (chunk: Chunk.Chunk<string>) => string
+  unmakePathString: (str: string) => Array<string>,
+  makePathString: (chunk: Array<string>) => string
 ): Map<string, string> => {
   const newMap: Map<string, string> = new Map()
   for (const [pathString, value] of map) {
     const keyWithIndex = pipe(
       unmakePathString(pathString),
-      Chunk.flatMap((key) =>
+      RA.flatMap((key) =>
         Option.match(
           splitIndexFrom(key),
-          () => Chunk.of(key),
-          ([key, index]) => Chunk.make(key, `[${index}]`)
+          () => RA.of(key),
+          ([key, index]) => RA.make(key, `[${index}]`)
         )
       )
     )

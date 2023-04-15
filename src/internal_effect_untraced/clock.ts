@@ -5,7 +5,6 @@ import * as Either from "@effect/data/Either"
 import { constFalse } from "@effect/data/Function"
 import type * as Clock from "@effect/io/Clock"
 import type * as Effect from "@effect/io/Effect"
-import * as internalCause from "@effect/io/internal_effect_untraced/cause"
 import * as core from "@effect/io/internal_effect_untraced/core"
 
 /** @internal */
@@ -68,12 +67,3 @@ class ClockImpl implements Clock.Clock {
 
 /** @internal */
 export const make = (): Clock.Clock => new ClockImpl()
-
-//
-// Circular with effect
-//
-/* @internal */
-export const dieMessage = Debug.methodWithTrace((trace) =>
-  (message: string): Effect.Effect<never, never, never> =>
-    core.failCauseSync(() => internalCause.die(internalCause.RuntimeException(message))).traced(trace)
-)

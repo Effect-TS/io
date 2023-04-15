@@ -299,6 +299,12 @@ export const locallyScopedWith: {
  * @since 1.0.0
  * @category fiberRefs
  */
+export const currentRequestBatchingEnabled: FiberRef<boolean> = fiberRuntime.currentRequestBatchingEnabled
+
+/**
+ * @since 1.0.0
+ * @category fiberRefs
+ */
 export const currentContext: FiberRef<Context.Context<never>> = core.currentContext
 
 /**
