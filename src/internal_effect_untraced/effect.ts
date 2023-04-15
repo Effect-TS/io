@@ -9,6 +9,7 @@ import * as HashMap from "@effect/data/HashMap"
 import * as HashSet from "@effect/data/HashSet"
 import * as Option from "@effect/data/Option"
 import type { Predicate, Refinement } from "@effect/data/Predicate"
+import * as RA from "@effect/data/ReadonlyArray"
 import { tuple } from "@effect/data/ReadonlyArray"
 import type * as Cause from "@effect/io/Cause"
 import * as Clock from "@effect/io/Clock"
@@ -45,8 +46,7 @@ export const absolveWith = Debug.dualWithTrace<
   <R, E, E2, A, A2>(self: Effect.Effect<R, E, A>, f: (a: A) => Either.Either<E2, A2>) => Effect.Effect<R, E | E2, A2>
 >(
   2,
-  (trace, restore) =>
-    (self, f) => pipe(self, core.flatMap((value) => pipe(value, restore(f), core.fromEither))).traced(trace)
+  (trace, restore) => (self, f) => pipe(self, core.flatMap((value) => pipe(value, restore(f)))).traced(trace)
 )
 
 /* @internal */
@@ -336,39 +336,36 @@ export const clockWith: <R, E, A>(f: (clock: Clock.Clock) => Effect.Effect<R, E,
   Clock.clockWith
 
 /* @internal */
-export const collectAll = Debug.methodWithTrace((trace) =>
-  <R, E, A>(
-    effects: Iterable<Effect.Effect<R, E, A>>
-  ): Effect.Effect<R, E, Chunk.Chunk<A>> => core.forEach(effects, identity).traced(trace)
+export const allDiscard = Debug.methodWithTrace((trace) =>
+  <R, E, A>(effects: Iterable<Effect.Effect<R, E, A>>): Effect.Effect<R, E, void> =>
+    core.forEachDiscard(effects, identity).traced(trace)
 )
 
 /* @internal */
-export const collectAllDiscard = Debug.methodWithTrace((trace) =>
-  <R, E, A>(
-    effects: Iterable<Effect.Effect<R, E, A>>
-  ): Effect.Effect<R, E, void> => core.forEachDiscard(effects, identity).traced(trace)
-)
-
-/* @internal */
-export const collectAllWith = Debug.dualWithTrace<
+export const allFilterMap = Debug.dualWithTrace<
   <A, B>(
     pf: (a: A) => Option.Option<B>
-  ) => <R, E>(elements: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, Chunk.Chunk<B>>,
+  ) => <R, E>(elements: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, Array<B>>,
   <R, E, A, B>(
     elements: Iterable<Effect.Effect<R, E, A>>,
     pf: (a: A) => Option.Option<B>
-  ) => Effect.Effect<R, E, Chunk.Chunk<B>>
->(2, (trace, restore) => (elements, pf) => core.map(collectAll(elements), Chunk.filterMap(restore(pf))).traced(trace))
+  ) => Effect.Effect<R, E, Array<B>>
+>(2, (trace, restore) => (elements, pf) => core.map(all(elements), RA.filterMap(restore(pf))).traced(trace))
 
 /* @internal */
-export const collectAllWithEffect = Debug.dualWithTrace<
+export const collectAll = Debug.methodWithTrace<
+  <R, E, A>(elements: Iterable<Effect.Effect<R, E, Option.Option<A>>>) => Effect.Effect<R, E, Array<A>>
+>((trace) => (elements) => core.map(all(elements), RA.filterMap(identity)).traced(trace))
+
+/* @internal */
+export const filterMapEffect = Debug.dualWithTrace<
   <A, R, E, B>(
     f: (a: A) => Option.Option<Effect.Effect<R, E, B>>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<B>>,
+  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Array<B>>,
   <A, R, E, B>(
     elements: Iterable<A>,
     f: (a: A) => Option.Option<Effect.Effect<R, E, B>>
-  ) => Effect.Effect<R, E, Chunk.Chunk<B>>
+  ) => Effect.Effect<R, E, Array<B>>
 >(2, (trace, restore) =>
   <A, R, E, B>(
     elements: Iterable<A>,
@@ -377,17 +374,17 @@ export const collectAllWithEffect = Debug.dualWithTrace<
     const array = Array.from(elements)
     // Break out early if there are no elements
     if (array.length === 0) {
-      return core.succeed(Chunk.empty()).traced(trace)
+      return core.sync(() => new Array()).traced(trace)
     }
     // Break out early if there is only one element
     if (array.length === 1) {
       const option = restore(f)(array[0]!)
       switch (option._tag) {
         case "None": {
-          return core.succeed(Chunk.empty()).traced(trace)
+          return core.sync(() => new Array()).traced(trace)
         }
         case "Some": {
-          return core.map(option.value, Chunk.of).traced(trace)
+          return core.map(option.value, (b) => Array.of(b)).traced(trace)
         }
       }
     }
@@ -399,17 +396,17 @@ export const collectAllWithEffect = Debug.dualWithTrace<
         result = core.zipWith(result, option.value, (list, b) => pipe(list, Chunk.prepend(b)))
       }
     }
-    return core.map(result, Chunk.fromIterable).traced(trace)
+    return core.map(result, (x) => Array.from(x)).traced(trace)
   })
 
 /* @internal */
 export const collectAllSuccesses = Debug.methodWithTrace((trace) =>
   <R, E, A>(
     as: Iterable<Effect.Effect<R, E, A>>
-  ): Effect.Effect<R, never, Chunk.Chunk<A>> =>
+  ): Effect.Effect<R, never, Array<A>> =>
     pipe(
       Array.from(as).map(core.exit),
-      collectAllWith((exit) => (Exit.isSuccess(exit) ? Option.some(exit.i0) : Option.none()))
+      allFilterMap((exit) => (Exit.isSuccess(exit) ? Option.some(exit.i0) : Option.none()))
     ).traced(trace)
 )
 
@@ -462,11 +459,11 @@ const collectFirstLoop = <R, E, A, B>(
 export const collectWhile = Debug.dualWithTrace<
   <A, R, E, B>(
     f: (a: A) => Option.Option<Effect.Effect<R, E, B>>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<B>>,
+  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Array<B>>,
   <A, R, E, B>(
     elements: Iterable<A>,
     f: (a: A) => Option.Option<Effect.Effect<R, E, B>>
-  ) => Effect.Effect<R, E, Chunk.Chunk<B>>
+  ) => Effect.Effect<R, E, Array<B>>
 >(2, (trace, restore) =>
   <A, R, E, B>(
     elements: Iterable<A>,
@@ -475,17 +472,17 @@ export const collectWhile = Debug.dualWithTrace<
     const array = Array.from(elements)
     // Break out early if the input is empty
     if (array.length === 0) {
-      return core.succeed(Chunk.empty()).traced(trace)
+      return core.sync(() => new Array()).traced(trace)
     }
     // Break out early if there is only one element in the list
     if (array.length === 1) {
       const option = restore(f)(array[0]!)
       switch (option._tag) {
         case "None": {
-          return core.succeed(Chunk.empty()).traced(trace)
+          return core.sync(() => new Array()).traced(trace)
         }
         case "Some": {
-          return core.map(option.value, Chunk.of).traced(trace)
+          return core.map(option.value, (x) => Array.of(x)).traced(trace)
         }
       }
     }
@@ -495,14 +492,14 @@ export const collectWhile = Debug.dualWithTrace<
       const option = restore(f)(array[i]!)
       switch (option._tag) {
         case "None": {
-          return core.map(result, Chunk.fromIterable).traced(trace)
+          return core.map(result, (bs) => Array.from(bs)).traced(trace)
         }
         case "Some": {
           result = core.zipWith(result, option.value, (bs, b) => pipe(bs, Chunk.prepend(b)))
         }
       }
     }
-    return core.map(result, Chunk.fromIterable).traced(trace)
+    return core.map(result, (bs) => Array.from(bs)).traced(trace)
   })
 
 /* @internal */
@@ -716,11 +713,11 @@ export const bindValueDiscard = Debug.dualWithTrace<
 export const dropUntil = Debug.dualWithTrace<
   <A, R, E>(
     predicate: (a: A) => Effect.Effect<R, E, boolean>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<A>>,
+  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Array<A>>,
   <A, R, E>(
     elements: Iterable<A>,
     predicate: (a: A) => Effect.Effect<R, E, boolean>
-  ) => Effect.Effect<R, E, Chunk.Chunk<A>>
+  ) => Effect.Effect<R, E, Array<A>>
 >(2, (trace, restore) =>
   <A, R, E>(
     elements: Iterable<A>,
@@ -741,15 +738,15 @@ export const dropUntil = Debug.dualWithTrace<
           return restore(predicate)(a)
         })
       }
-      return core.map(dropping, () => Chunk.unsafeFromArray(builder))
+      return core.map(dropping, () => builder)
     }).traced(trace))
 
 /* @internal */
 export const dropWhile = Debug.dualWithTrace<
   <R, E, A>(
     f: (a: A) => Effect.Effect<R, E, boolean>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<A>>,
-  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, Chunk.Chunk<A>>
+  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Array<A>>,
+  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, Array<A>>
 >(
   2,
   (trace, restore) =>
@@ -769,7 +766,7 @@ export const dropWhile = Debug.dualWithTrace<
               return b
             }))
         }
-        return core.map(dropping, () => Chunk.unsafeFromArray(builder))
+        return core.map(dropping, () => builder)
       }).traced(trace)
 )
 
@@ -818,8 +815,8 @@ export const eventually = Debug.methodWithTrace((trace) =>
 export const filter = Debug.dualWithTrace<
   <A, R, E>(
     f: (a: A) => Effect.Effect<R, E, boolean>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<A>>,
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, Chunk.Chunk<A>>
+  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Array<A>>,
+  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, Array<A>>
 >(
   2,
   (trace, restore) =>
@@ -830,9 +827,9 @@ export const filter = Debug.dualWithTrace<
             core.zipWith(
               effect,
               core.suspend(() => restore(f)(a)),
-              (list, b) => b ? pipe(list, Chunk.prepend(a)) : list
+              (list, b) => b ? [a, ...list] : list
             ),
-          core.sync(() => Chunk.empty<A>()) as Effect.Effect<R, E, Chunk.Chunk<A>>
+          core.sync(() => new Array<A>()) as Effect.Effect<R, E, Array<A>>
         )
       ).traced(trace)
 )
@@ -841,8 +838,8 @@ export const filter = Debug.dualWithTrace<
 export const filterNot = Debug.dualWithTrace<
   <A, R, E>(
     f: (a: A) => Effect.Effect<R, E, boolean>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<A>>,
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, Chunk.Chunk<A>>
+  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Array<A>>,
+  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, Array<A>>
 >(
   2,
   (trace, restore) => (elements, f) => filter(elements, (a) => core.map(restore(f)(a), (b) => !b)).traced(trace)
@@ -1163,11 +1160,11 @@ export const forEachOption = Debug.dualWithTrace<
 export const forEachWithIndex = Debug.dualWithTrace<
   <A, R, E, B>(
     f: (a: A, i: number) => Effect.Effect<R, E, B>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<B>>,
+  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Array<B>>,
   <A, R, E, B>(
     elements: Iterable<A>,
     f: (a: A, i: number) => Effect.Effect<R, E, B>
-  ) => Effect.Effect<R, E, Chunk.Chunk<B>>
+  ) => Effect.Effect<R, E, Array<B>>
 >(
   2,
   (trace, restore) =>
@@ -1181,7 +1178,7 @@ export const forEachWithIndex = Debug.dualWithTrace<
               acc.push(b)
               index++
             })),
-          core.map(() => Chunk.unsafeFromArray(acc))
+          core.map(() => acc)
         )
       }).traced(trace)
 )
@@ -1640,8 +1637,8 @@ export const loop = Debug.methodWithTrace((trace, restore) =>
     cont: (z: Z) => boolean,
     inc: (z: Z) => Z,
     body: (z: Z) => Effect.Effect<R, E, A>
-  ): Effect.Effect<R, E, Chunk.Chunk<A>> =>
-    loopInternal(initial, restore(cont), restore(inc), restore(body)).traced(trace)
+  ): Effect.Effect<R, E, Array<A>> =>
+    core.map(loopInternal(initial, restore(cont), restore(inc), restore(body)), (x) => Array.from(x)).traced(trace)
 )
 
 const loopInternal = <Z, R, E, A>(
@@ -1684,12 +1681,12 @@ export const mapAccum = Debug.dualWithTrace<
   <A, B, R, E, Z>(
     zero: Z,
     f: (z: Z, a: A) => Effect.Effect<R, E, readonly [Z, B]>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, E, [Z, Chunk.Chunk<B>]>,
+  ) => (elements: Iterable<A>) => Effect.Effect<R, E, [Z, Array<B>]>,
   <A, B, R, E, Z>(
     elements: Iterable<A>,
     zero: Z,
     f: (z: Z, a: A) => Effect.Effect<R, E, readonly [Z, B]>
-  ) => Effect.Effect<R, E, [Z, Chunk.Chunk<B>]>
+  ) => Effect.Effect<R, E, [Z, Array<B>]>
 >(3, (trace, restore) =>
   <A, B, R, E, Z>(
     elements: Iterable<A>,
@@ -1715,7 +1712,7 @@ export const mapAccum = Debug.dualWithTrace<
           )
         )
       }
-      return core.map(result, (z) => tuple(z, Chunk.unsafeFromArray(builder)))
+      return core.map(result, (z) => tuple(z, builder))
     }).traced(trace))
 
 /* @internal */
@@ -1914,9 +1911,9 @@ export const orElseSucceed = Debug.dualWithTrace<
 
 /* @internal */
 export const parallelErrors = Debug.methodWithTrace((trace) =>
-  <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, Chunk.Chunk<E>, A> =>
+  <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, Array<E>, A> =>
     core.matchCauseEffect(self, (cause) => {
-      const errors = Chunk.fromIterable(internalCause.failures(cause))
+      const errors = Array.from(internalCause.failures(cause))
       return errors.length === 0
         ? core.failCause(cause as Cause.Cause<never>)
         : core.fail(errors)
@@ -1928,11 +1925,11 @@ export const parallelErrors = Debug.methodWithTrace((trace) =>
 export const partition = Debug.dualWithTrace<
   <R, E, A, B>(
     f: (a: A) => Effect.Effect<R, E, B>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, never, [Chunk.Chunk<E>, Chunk.Chunk<B>]>,
+  ) => (elements: Iterable<A>) => Effect.Effect<R, never, [Array<E>, Array<B>]>,
   <R, E, A, B>(
     elements: Iterable<A>,
     f: (a: A) => Effect.Effect<R, E, B>
-  ) => Effect.Effect<R, never, [Chunk.Chunk<E>, Chunk.Chunk<B>]>
+  ) => Effect.Effect<R, never, [Array<E>, Array<B>]>
 >(2, (trace, restore) =>
   (elements, f) =>
     pipe(
@@ -2217,23 +2214,20 @@ const repeatNLoop = Debug.methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const replicate = (n: number) => {
-  return <R, E, A>(self: Effect.Effect<R, E, A>): Chunk.Chunk<Effect.Effect<R, E, A>> => {
-    return Chunk.unsafeFromArray(Array.from({ length: n }, () => self))
-  }
-}
+export const replicate = (n: number) =>
+  <R, E, A>(self: Effect.Effect<R, E, A>): Array<Effect.Effect<R, E, A>> => Array.from({ length: n }, () => self)
 
 /* @internal */
 export const replicateEffect = Debug.dualWithTrace<
-  (n: number) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, Chunk.Chunk<A>>,
-  <R, E, A>(self: Effect.Effect<R, E, A>, n: number) => Effect.Effect<R, E, Chunk.Chunk<A>>
->(2, (trace) => (self, n) => collectAll(replicate(n)(self)).traced(trace))
+  (n: number) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, Array<A>>,
+  <R, E, A>(self: Effect.Effect<R, E, A>, n: number) => Effect.Effect<R, E, Array<A>>
+>(2, (trace) => (self, n) => all(replicate(n)(self)).traced(trace))
 
 /* @internal */
 export const replicateEffectDiscard = Debug.dualWithTrace<
   (n: number) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, void>,
   <R, E, A>(self: Effect.Effect<R, E, A>, n: number) => Effect.Effect<R, E, void>
->(2, (trace) => (self, n) => collectAllDiscard(replicate(n)(self)).traced(trace))
+>(2, (trace) => (self, n) => allDiscard(replicate(n)(self)).traced(trace))
 
 /* @internal */
 export const resurrect = Debug.methodWithTrace((trace) =>
@@ -2445,11 +2439,11 @@ export const taggedWithLabelSet = Debug.dualWithTrace<
 export const takeWhile = Debug.dualWithTrace<
   <R, E, A>(
     predicate: (a: A) => Effect.Effect<R, E, boolean>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<A>>,
+  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Array<A>>,
   <R, E, A>(
     elements: Iterable<A>,
     predicate: (a: A) => Effect.Effect<R, E, boolean>
-  ) => Effect.Effect<R, E, Chunk.Chunk<A>>
+  ) => Effect.Effect<R, E, Array<A>>
 >(
   2,
   (trace, restore) =>
@@ -2472,7 +2466,7 @@ export const takeWhile = Debug.dualWithTrace<
               })
             ))
         }
-        return core.map(taking, () => Chunk.unsafeFromArray(builder))
+        return core.map(taking, () => builder)
       }).traced(trace)
 )
 
@@ -2745,6 +2739,16 @@ export const all = Debug.methodWithTrace((trace): {
     T[number] extends never ? []
       : { [K in keyof T]: [T[K]] extends [Effect.Effect<any, any, infer A>] ? A : never }
   >
+  <T extends Iterable<Effect.Effect<any, any, any>>>(
+    args: T
+  ): Effect.Effect<
+    [T] extends [Iterable<{ [Effect.EffectTypeId]: { _R: (_: never) => infer R } }>] ? R
+      : never,
+    [T] extends [Iterable<{ [Effect.EffectTypeId]: { _E: (_: never) => infer E } }>] ? E
+      : never,
+    [T] extends [Iterable<{ [Effect.EffectTypeId]: { _A: (_: never) => infer A } }>] ? Array<A>
+      : never
+  >
   <T extends Readonly<{ [K: string]: Effect.Effect<any, any, any> }>>(
     args: T
   ): Effect.Effect<
@@ -2761,8 +2765,8 @@ export const all = Debug.methodWithTrace((trace): {
     if (arguments.length === 1) {
       if (core.isEffect(arguments[0])) {
         return core.map(arguments[0], (x) => [x])
-      } else if (Array.isArray(arguments[0])) {
-        return core.map(collectAll(arguments[0]), Chunk.toReadonlyArray).traced(trace)
+      } else if (Array.isArray(arguments[0]) || Symbol.iterator in arguments[0]) {
+        return core.forEach(arguments[0], identity as any).traced(trace)
       } else {
         return pipe(
           core.forEach(
@@ -2779,7 +2783,7 @@ export const all = Debug.methodWithTrace((trace): {
         ).traced(trace) as any
       }
     }
-    return core.map(collectAll(arguments), Chunk.toReadonlyArray).traced(trace)
+    return core.forEach(arguments, identity as any).traced(trace)
   }
 )
 
@@ -2799,8 +2803,8 @@ export const unfold = Debug.methodWithTrace((trace, restore) =>
   <A, R, E, S>(
     s: S,
     f: (s: S) => Effect.Effect<R, E, Option.Option<readonly [A, S]>>
-  ): Effect.Effect<R, E, Chunk.Chunk<A>> =>
-    core.map(unfoldLoop(s, restore(f), Chunk.empty()), Chunk.reverse).traced(trace)
+  ): Effect.Effect<R, E, Array<A>> =>
+    core.map(unfoldLoop(s, restore(f), Chunk.empty()), (a) => Array.from(Chunk.reverse(a))).traced(trace)
 )
 
 /* @internal */
@@ -2979,15 +2983,15 @@ export const validate = Debug.dualWithTrace<
 export const validateAll = Debug.dualWithTrace<
   <R, E, A, B>(
     f: (a: A) => Effect.Effect<R, E, B>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, Chunk.Chunk<E>, Chunk.Chunk<B>>,
+  ) => (elements: Iterable<A>) => Effect.Effect<R, Array<E>, Array<B>>,
   <R, E, A, B>(
     elements: Iterable<A>,
     f: (a: A) => Effect.Effect<R, E, B>
-  ) => Effect.Effect<R, Chunk.Chunk<E>, Chunk.Chunk<B>>
+  ) => Effect.Effect<R, Array<E>, Array<B>>
 >(2, (trace, restore) =>
   (elements, f) =>
     core.flatMap(partition(elements, restore(f)), ([es, bs]) =>
-      Chunk.isEmpty(es)
+      es.length === 0
         ? core.succeed(bs)
         : core.fail(es)).traced(trace))
 
@@ -2995,19 +2999,19 @@ export const validateAll = Debug.dualWithTrace<
 export const validateAllDiscard = Debug.dualWithTrace<
   <R, E, A, X>(
     f: (a: A) => Effect.Effect<R, E, X>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, Chunk.Chunk<E>, void>,
-  <R, E, A, X>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, X>) => Effect.Effect<R, Chunk.Chunk<E>, void>
+  ) => (elements: Iterable<A>) => Effect.Effect<R, Array<E>, void>,
+  <R, E, A, X>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, X>) => Effect.Effect<R, Array<E>, void>
 >(2, (trace, restore) =>
   (elements, f) =>
     core.flatMap(partition(elements, restore(f)), ([es, _]) =>
-      Chunk.isEmpty(es) ?
+      es.length === 0 ?
         core.unit() :
         core.fail(es)).traced(trace))
 
 /* @internal */
 export const validateFirst = Debug.dualWithTrace<
-  <R, E, A, B>(f: (a: A) => Effect.Effect<R, E, B>) => (elements: Iterable<A>) => Effect.Effect<R, Chunk.Chunk<E>, B>,
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, Chunk.Chunk<E>, B>
+  <R, E, A, B>(f: (a: A) => Effect.Effect<R, E, B>) => (elements: Iterable<A>) => Effect.Effect<R, Array<E>, B>,
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, Array<E>, B>
 >(
   2,
   (trace, restore) => (elements, f) => core.flip(core.forEach(elements, (a) => core.flip(restore(f)(a)))).traced(trace)

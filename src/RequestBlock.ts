@@ -1,7 +1,6 @@
 /**
  * @since 1.0.0
  */
-import type * as Chunk from "@effect/data/Chunk"
 import type * as Context from "@effect/data/Context"
 import type * as HashMap from "@effect/data/HashMap"
 import type * as List from "@effect/data/List"
@@ -268,7 +267,7 @@ export type RequestBlockParallelTypeId = typeof RequestBlockParallelTypeId
 export interface ParallelCollection<R> extends ParallelCollection.Variance<R> {
   readonly map: HashMap.HashMap<
     RequestResolver.RequestResolver<unknown, unknown>,
-    Chunk.Chunk<Entry<unknown>>
+    Array<Entry<unknown>>
   >
 }
 
@@ -339,7 +338,7 @@ export const parallelCollectionIsEmpty: <R>(self: ParallelCollection<R>) => bool
  */
 export const parallelCollectionKeys: <R>(
   self: ParallelCollection<R>
-) => Chunk.Chunk<RequestResolver.RequestResolver<R, unknown>> = _RequestBlock.parallelCollectionKeys
+) => Array<RequestResolver.RequestResolver<R, unknown>> = _RequestBlock.parallelCollectionKeys
 
 /**
  * Converts this collection of requests that can be executed in parallel to a
@@ -362,7 +361,7 @@ export const parallelCollectionToSequentialCollection: <R>(self: ParallelCollect
  */
 export const parallelCollectionToChunk: <R>(
   self: ParallelCollection<R>
-) => Chunk.Chunk<readonly [RequestResolver.RequestResolver<R, unknown>, Chunk.Chunk<Entry<unknown>>]> =
+) => Array<readonly [RequestResolver.RequestResolver<R, unknown>, Array<Entry<unknown>>]> =
   _RequestBlock.parallelCollectionToChunk
 
 /**
@@ -387,7 +386,7 @@ export type SequentialCollectionTypeId = typeof SequentialCollectionTypeId
 export interface SequentialCollection<R> extends SequentialCollection.Variance<R> {
   readonly map: HashMap.HashMap<
     RequestResolver.RequestResolver<unknown, unknown>,
-    Chunk.Chunk<Chunk.Chunk<Entry<unknown>>>
+    Array<Array<Entry<unknown>>>
   >
 }
 
@@ -412,7 +411,7 @@ export declare namespace SequentialCollection {
  * @category constructors
  */
 export const sequentialCollectionMake: <R, A>(
-  map: HashMap.HashMap<RequestResolver.RequestResolver<R, A>, Chunk.Chunk<Chunk.Chunk<Entry<A>>>>
+  map: HashMap.HashMap<RequestResolver.RequestResolver<R, A>, Array<Array<Entry<A>>>>
 ) => SequentialCollection<R> = _RequestBlock.sequentialCollectionMake
 
 /**
@@ -447,7 +446,7 @@ export const sequentialCollectionIsEmpty: <R>(self: SequentialCollection<R>) => 
  */
 export const sequentialCollectionKeys: <R>(
   self: SequentialCollection<R>
-) => Chunk.Chunk<RequestResolver.RequestResolver<R, unknown>> = _RequestBlock.sequentialCollectionKeys
+) => Array<RequestResolver.RequestResolver<R, unknown>> = _RequestBlock.sequentialCollectionKeys
 
 /**
  * Converts this collection of batches requests that must be executed
@@ -459,5 +458,5 @@ export const sequentialCollectionKeys: <R>(
  */
 export const sequentialCollectionToChunk: <R>(
   self: SequentialCollection<R>
-) => Chunk.Chunk<readonly [RequestResolver.RequestResolver<R, unknown>, Chunk.Chunk<Chunk.Chunk<Entry<unknown>>>]> =
+) => Array<readonly [RequestResolver.RequestResolver<R, unknown>, Array<Array<Entry<unknown>>>]> =
   _RequestBlock.sequentialCollectionToChunk

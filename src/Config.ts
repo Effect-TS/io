@@ -302,7 +302,7 @@ export const primitive: <A>(
  * @since 1.0.0
  * @category utils
  */
-export const repeat: <A>(self: Config<A>) => Config<Chunk.Chunk<A>> = internal.repeat
+export const repeat: <A>(self: Config<A>) => Config<Array<A>> = internal.repeat
 
 /**
  * Constructs a config for a secret value.

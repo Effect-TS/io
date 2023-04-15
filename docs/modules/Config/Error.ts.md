@@ -64,7 +64,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const InvalidData: (path: Chunk.Chunk<string>, message: string) => ConfigError
+export declare const InvalidData: (path: Array<string>, message: string) => ConfigError
 ```
 
 Added in v1.0.0
@@ -74,7 +74,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const MissingData: (path: Chunk.Chunk<string>, message: string) => ConfigError
+export declare const MissingData: (path: Array<string>, message: string) => ConfigError
 ```
 
 Added in v1.0.0
@@ -95,7 +95,7 @@ Added in v1.0.0
 
 ```ts
 export declare const SourceUnavailable: (
-  path: Chunk.Chunk<string>,
+  path: Array<string>,
   message: string,
   cause: Cause.Cause<unknown>
 ) => ConfigError
@@ -108,7 +108,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const Unsupported: (path: Chunk.Chunk<string>, message: string) => ConfigError
+export declare const Unsupported: (path: Array<string>, message: string) => ConfigError
 ```
 
 Added in v1.0.0
@@ -164,15 +164,10 @@ Added in v1.0.0
 export interface ConfigErrorReducer<C, Z> {
   readonly andCase: (context: C, left: Z, right: Z) => Z
   readonly orCase: (context: C, left: Z, right: Z) => Z
-  readonly invalidDataCase: (context: C, path: Chunk.Chunk<string>, message: string) => Z
-  readonly missingDataCase: (context: C, path: Chunk.Chunk<string>, message: string) => Z
-  readonly sourceUnavailableCase: (
-    context: C,
-    path: Chunk.Chunk<string>,
-    message: string,
-    cause: Cause.Cause<unknown>
-  ) => Z
-  readonly unsupportedCase: (context: C, path: Chunk.Chunk<string>, message: string) => Z
+  readonly invalidDataCase: (context: C, path: Array<string>, message: string) => Z
+  readonly missingDataCase: (context: C, path: Array<string>, message: string) => Z
+  readonly sourceUnavailableCase: (context: C, path: Array<string>, message: string, cause: Cause.Cause<unknown>) => Z
+  readonly unsupportedCase: (context: C, path: Array<string>, message: string) => Z
 }
 ```
 
@@ -185,7 +180,7 @@ Added in v1.0.0
 ```ts
 export interface InvalidData extends ConfigError.Proto {
   readonly _tag: 'InvalidData'
-  readonly path: Chunk.Chunk<string>
+  readonly path: Array<string>
   readonly message: string
 }
 ```
@@ -199,7 +194,7 @@ Added in v1.0.0
 ```ts
 export interface MissingData extends ConfigError.Proto {
   readonly _tag: 'MissingData'
-  readonly path: Chunk.Chunk<string>
+  readonly path: Array<string>
   readonly message: string
 }
 ```
@@ -227,7 +222,7 @@ Added in v1.0.0
 ```ts
 export interface SourceUnavailable extends ConfigError.Proto {
   readonly _tag: 'SourceUnavailable'
-  readonly path: Chunk.Chunk<string>
+  readonly path: Array<string>
   readonly message: string
   readonly cause: Cause.Cause<unknown>
 }
@@ -242,7 +237,7 @@ Added in v1.0.0
 ```ts
 export interface Unsupported extends ConfigError.Proto {
   readonly _tag: 'Unsupported'
-  readonly path: Chunk.Chunk<string>
+  readonly path: Array<string>
   readonly message: string
 }
 ```
@@ -381,8 +376,8 @@ Added in v1.0.0
 
 ```ts
 export declare const prefixed: {
-  (prefix: Chunk.Chunk<string>): (self: ConfigError) => ConfigError
-  (self: ConfigError, prefix: Chunk.Chunk<string>): ConfigError
+  (prefix: Array<string>): (self: ConfigError) => ConfigError
+  (self: ConfigError, prefix: Array<string>): ConfigError
 }
 ```
 

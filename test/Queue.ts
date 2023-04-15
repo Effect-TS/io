@@ -280,7 +280,7 @@ describe.concurrent("Queue", () => {
       const result = yield* $(Fiber.join(takers))
       const size = yield* $(Queue.size(queue))
       assert.strictEqual(size, 0)
-      assert.deepStrictEqual(result, Chunk.range(1, 100))
+      assert.deepStrictEqual(Chunk.unsafeFromArray(result), Chunk.range(1, 100))
     }))
   it.effect("offerAll with pending takers, check ordering", () =>
     Effect.gen(function*($) {
@@ -291,7 +291,7 @@ describe.concurrent("Queue", () => {
       const result = yield* $(Fiber.join(takers))
       const size = yield* $(Queue.size(queue))
       assert.strictEqual(size, 64)
-      assert.deepStrictEqual(result, Chunk.range(1, 64))
+      assert.deepStrictEqual(Chunk.unsafeFromArray(result), Chunk.range(1, 64))
     }))
   it.effect("offerAll with pending takers, check ordering of taker resolution", () =>
     Effect.gen(function*($) {
@@ -305,7 +305,7 @@ describe.concurrent("Queue", () => {
       const size = yield* $(Queue.size(queue))
       yield* $(Fiber.interrupt(fiber))
       assert.strictEqual(size, -100)
-      assert.deepStrictEqual(result, Chunk.range(1, 100))
+      assert.deepStrictEqual(Chunk.unsafeFromArray(result), Chunk.range(1, 100))
     }))
   it.effect("offerAll with take and back pressure", () =>
     Effect.gen(function*($) {
@@ -371,7 +371,7 @@ describe.concurrent("Queue", () => {
           .reduce((acc, curr) => pipe(acc, Effect.zipRight(curr)), Effect.succeed(false))
       )
       const result = yield* $(Fiber.join(fiber))
-      assert.deepStrictEqual(result, Chunk.range(1, 10))
+      assert.deepStrictEqual(Chunk.unsafeFromArray(result), Chunk.range(1, 10))
     }))
   it.effect("parallel offers and sequential takes", () =>
     Effect.gen(function*($) {

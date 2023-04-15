@@ -1,4 +1,3 @@
-import * as Chunk from "@effect/data/Chunk"
 import * as Either from "@effect/data/Either"
 import * as Equal from "@effect/data/Equal"
 import { pipe } from "@effect/data/Function"
@@ -363,7 +362,7 @@ class ParallelImpl<R> implements RequestBlock.ParallelCollection<R> {
   constructor(
     readonly map: HashMap.HashMap<
       RequestResolver.RequestResolver<unknown, unknown>,
-      Chunk.Chunk<RequestBlock.Entry<unknown>>
+      Array<RequestBlock.Entry<unknown>>
     >
   ) {}
 }
@@ -375,7 +374,7 @@ export const parallelCollectionEmpty = <R>(): RequestBlock.ParallelCollection<R>
 export const parallelCollectionMake = <R, A>(
   dataSource: RequestResolver.RequestResolver<R, A>,
   blockedRequest: RequestBlock.Entry<A>
-): RequestBlock.ParallelCollection<R> => new ParallelImpl(HashMap.make([dataSource, Chunk.of(blockedRequest)]))
+): RequestBlock.ParallelCollection<R> => new ParallelImpl(HashMap.make([dataSource, Array.of(blockedRequest)]))
 
 /** @internal */
 export const parallelCollectionCombine = <R, R2>(
@@ -388,7 +387,7 @@ export const parallelCollectionCombine = <R, R2>(
       key,
       pipe(
         HashMap.get(map, key),
-        Option.match(() => value, Chunk.concat(value))
+        Option.match(() => value, (a) => [...a, ...value])
       )
     )))
 
@@ -399,22 +398,22 @@ export const parallelCollectionIsEmpty = <R>(self: RequestBlock.ParallelCollecti
 /** @internal */
 export const parallelCollectionKeys = <R>(
   self: RequestBlock.ParallelCollection<R>
-): Chunk.Chunk<RequestResolver.RequestResolver<R, unknown>> => Chunk.fromIterable(HashMap.keys(self.map)) as any
+): Array<RequestResolver.RequestResolver<R, unknown>> => Array.from(HashMap.keys(self.map)) as any
 
 /** @internal */
 export const parallelCollectionToSequentialCollection = <R>(
   self: RequestBlock.ParallelCollection<R>
-): RequestBlock.SequentialCollection<R> => sequentialCollectionMake(HashMap.map(self.map, Chunk.of) as any)
+): RequestBlock.SequentialCollection<R> => sequentialCollectionMake(HashMap.map(self.map, (x) => Array.of(x)) as any)
 
 /** @internal */
 export const parallelCollectionToChunk = <R>(
   self: RequestBlock.ParallelCollection<R>
-): Chunk.Chunk<
+): Array<
   readonly [
     RequestResolver.RequestResolver<R, unknown>,
-    Chunk.Chunk<RequestBlock.Entry<unknown>>
+    Array<RequestBlock.Entry<unknown>>
   ]
-> => Chunk.fromIterable(self.map) as any
+> => Array.from(self.map) as any
 
 /** @internal */
 export const SequentialCollectionTypeId: RequestBlock.SequentialCollectionTypeId = Symbol.for(
@@ -431,7 +430,7 @@ class SequentialImpl<R> implements RequestBlock.SequentialCollection<R> {
   constructor(
     readonly map: HashMap.HashMap<
       RequestResolver.RequestResolver<unknown, unknown>,
-      Chunk.Chunk<Chunk.Chunk<RequestBlock.Entry<unknown>>>
+      Array<Array<RequestBlock.Entry<unknown>>>
     >
   ) {}
 }
@@ -440,7 +439,7 @@ class SequentialImpl<R> implements RequestBlock.SequentialCollection<R> {
 export const sequentialCollectionMake = <R, A>(
   map: HashMap.HashMap<
     RequestResolver.RequestResolver<R, A>,
-    Chunk.Chunk<Chunk.Chunk<RequestBlock.Entry<A>>>
+    Array<Array<RequestBlock.Entry<A>>>
   >
 ): RequestBlock.SequentialCollection<R> => new SequentialImpl(map)
 
@@ -456,8 +455,8 @@ export const sequentialCollectionCombine = <R, R2>(
       pipe(
         HashMap.get(map, key),
         Option.match(
-          () => Chunk.empty(),
-          Chunk.concat(value)
+          () => [],
+          (a) => [...a, ...value]
         )
       )
     )))
@@ -469,12 +468,12 @@ export const sequentialCollectionIsEmpty = <R>(self: RequestBlock.SequentialColl
 /** @internal */
 export const sequentialCollectionKeys = <R>(
   self: RequestBlock.SequentialCollection<R>
-): Chunk.Chunk<RequestResolver.RequestResolver<R, unknown>> => Chunk.fromIterable(HashMap.keys(self.map)) as any
+): Array<RequestResolver.RequestResolver<R, unknown>> => Array.from(HashMap.keys(self.map)) as any
 
 /** @internal */
-export const sequentialCollectionToChunk = <R>(self: RequestBlock.SequentialCollection<R>): Chunk.Chunk<
+export const sequentialCollectionToChunk = <R>(self: RequestBlock.SequentialCollection<R>): Array<
   readonly [
     RequestResolver.RequestResolver<R, unknown>,
-    Chunk.Chunk<Chunk.Chunk<RequestBlock.Entry<unknown>>>
+    Array<Array<RequestBlock.Entry<unknown>>>
   ]
-> => Chunk.fromIterable(self.map) as any
+> => Array.from(self.map) as any

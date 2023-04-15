@@ -1,7 +1,6 @@
 /**
  * @since 1.0.0
  */
-import type * as Chunk from "@effect/data/Chunk"
 import type * as Either from "@effect/data/Either"
 import type * as Option from "@effect/data/Option"
 import type { Predicate } from "@effect/data/Predicate"
@@ -144,8 +143,7 @@ export const causeOption: <E, A>(self: Exit<E, A>) => Option.Option<Cause.Cause<
  * @since 1.0.0
  * @category constructors
  */
-export const collectAll: <E, A>(exits: Iterable<Exit<E, A>>) => Option.Option<Exit<E, Chunk.Chunk<A>>> =
-  core.exitCollectAll
+export const collectAll: <E, A>(exits: Iterable<Exit<E, A>>) => Option.Option<Exit<E, Array<A>>> = core.exitCollectAll
 
 /**
  * Collects all of the specified exit values into a `Some<Exit<E, List<A>>>`. If
@@ -156,7 +154,7 @@ export const collectAll: <E, A>(exits: Iterable<Exit<E, A>>) => Option.Option<Ex
  * @since 1.0.0
  * @category constructors
  */
-export const collectAllPar: <E, A>(exits: Iterable<Exit<E, A>>) => Option.Option<Exit<E, Chunk.Chunk<A>>> =
+export const collectAllPar: <E, A>(exits: Iterable<Exit<E, A>>) => Option.Option<Exit<E, Array<A>>> =
   core.exitCollectAllPar
 
 /**

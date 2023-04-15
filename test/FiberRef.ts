@@ -236,7 +236,7 @@ describe.concurrent("FiberRef", () => {
     Effect.gen(function*($) {
       const n = 1000
       const fiberRef = yield* $(FiberRef.make(0, constant(0), (a, b) => a + b))
-      yield* $(Effect.collectAllPar(Array.from({ length: n }, () => FiberRef.update(fiberRef, (n) => n + 1))))
+      yield* $(Effect.allParDiscard(Array.from({ length: n }, () => FiberRef.update(fiberRef, (n) => n + 1))))
       const result = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(result, n)
     }))
@@ -318,11 +318,11 @@ describe.concurrent("FiberRef", () => {
         Effect.zipRight(loseTimeAndCpu),
         Effect.replicate(n)
       )
-      yield* $(losers1, Chunk.prepend(winner1), Effect.raceAll)
+      yield* $(Chunk.unsafeFromArray(losers1), Chunk.prepend(winner1), Effect.raceAll)
       const value1 = yield* $(FiberRef.get(fiberRef), Effect.zipLeft(FiberRef.set(fiberRef, initial)))
       const winner2 = FiberRef.set(fiberRef, update1)
       const losers2 = pipe(FiberRef.set(fiberRef, update1), Effect.zipRight(Effect.fail(":-O")), Effect.replicate(n))
-      yield* $(losers2, Chunk.prepend(winner2), Effect.raceAll)
+      yield* $(Chunk.unsafeFromArray(losers2), Chunk.prepend(winner2), Effect.raceAll)
       const value2 = yield* $(FiberRef.get(fiberRef), Effect.zipLeft(FiberRef.set(fiberRef, initial)))
       assert.strictEqual(value1, update1)
       assert.strictEqual(value2, update1)

@@ -2,7 +2,6 @@
  * @since 1.0.0
  */
 
-import type * as Chunk from "@effect/data/Chunk"
 import type * as Context from "@effect/data/Context"
 import type * as Either from "@effect/data/Either"
 import type * as Equal from "@effect/data/Equal"
@@ -56,7 +55,7 @@ export interface RequestResolver<R, A> extends Equal.Equal {
    * of requests that must be performed sequentially. The inner `Chunk`
    * represents a batch of requests that can be performed in parallel.
    */
-  runAll(requests: Chunk.Chunk<Chunk.Chunk<A>>): Effect.Effect<R, never, RequestCompletionMap.RequestCompletionMap>
+  runAll(requests: Array<Array<A>>): Effect.Effect<R, never, RequestCompletionMap.RequestCompletionMap>
 
   /**
    * Identify the data source using the specific identifier
@@ -96,7 +95,7 @@ export const isRequestResolver: (u: unknown) => u is RequestResolver<unknown, un
  * @category constructors
  */
 export const make: <R, A>(
-  runAll: (requests: Chunk.Chunk<Chunk.Chunk<A>>) => Effect.Effect<R, never, void>
+  runAll: (requests: Array<Array<A>>) => Effect.Effect<R, never, void>
 ) => RequestResolver<Exclude<R, RequestCompletionMap.RequestCompletionMap>, A> = internal.make
 
 /**
@@ -107,7 +106,7 @@ export const make: <R, A>(
  * @category constructors
  */
 export const makeBatched: <R, A extends Request.Request<any, any>>(
-  run: (requests: Chunk.Chunk<A>) => Effect.Effect<R, never, void>
+  run: (requests: Array<A>) => Effect.Effect<R, never, void>
 ) => RequestResolver<Exclude<R, RequestCompletionMap.RequestCompletionMap>, A> = internal.makeBatched
 
 /**
@@ -237,7 +236,7 @@ export const fromFunction: <A extends Request.Request<never, any>>(
  * @category constructors
  */
 export const fromFunctionBatched: <A extends Request.Request<never, any>>(
-  f: (chunk: Chunk.Chunk<A>) => Chunk.Chunk<Request.Request.Success<A>>
+  f: (chunk: Array<A>) => Array<Request.Request.Success<A>>
 ) => RequestResolver<never, A> = internal.fromFunctionBatched
 
 /**
@@ -250,7 +249,7 @@ export const fromFunctionBatched: <A extends Request.Request<never, any>>(
  * @category constructors
  */
 export const fromFunctionBatchedEffect: <R, A extends Request.Request<any, any>>(
-  f: (chunk: Chunk.Chunk<A>) => Effect.Effect<R, Request.Request.Error<A>, Chunk.Chunk<Request.Request.Success<A>>>
+  f: (chunk: Array<A>) => Effect.Effect<R, Request.Request.Error<A>, Array<Request.Request.Success<A>>>
 ) => RequestResolver<R, A> = internal.fromFunctionBatchedEffect
 
 /**
@@ -263,7 +262,7 @@ export const fromFunctionBatchedEffect: <R, A extends Request.Request<any, any>>
  * @category constructors
  */
 export const fromFunctionBatchedOption: <A extends Request.Request<never, any>>(
-  f: (chunk: Chunk.Chunk<A>) => Chunk.Chunk<Option.Option<Request.Request.Success<A>>>
+  f: (chunk: Array<A>) => Array<Option.Option<Request.Request.Success<A>>>
 ) => RequestResolver<never, A> = internal.fromFunctionBatchedOption
 
 /**
@@ -277,8 +276,8 @@ export const fromFunctionBatchedOption: <A extends Request.Request<never, any>>(
  */
 export const fromFunctionBatchedOptionEffect: <R, A extends Request.Request<any, any>>(
   f: (
-    chunk: Chunk.Chunk<A>
-  ) => Effect.Effect<R, Request.Request.Error<A>, Chunk.Chunk<Option.Option<Request.Request.Success<A>>>>
+    chunk: Array<A>
+  ) => Effect.Effect<R, Request.Request.Error<A>, Array<Option.Option<Request.Request.Success<A>>>>
 ) => RequestResolver<R, A> = internal.fromFunctionBatchedOptionEffect
 
 /**
@@ -292,7 +291,7 @@ export const fromFunctionBatchedOptionEffect: <R, A extends Request.Request<any,
  * @category constructors
  */
 export const fromFunctionBatchedWith: <A extends Request.Request<any, any>>(
-  f: (chunk: Chunk.Chunk<A>) => Chunk.Chunk<Request.Request.Success<A>>,
+  f: (chunk: Array<A>) => Array<Request.Request.Success<A>>,
   g: (value: Request.Request.Success<A>) => Request.Request<never, Request.Request.Success<A>>
 ) => RequestResolver<never, A> = internal.fromFunctionBatchedWith
 
@@ -307,7 +306,7 @@ export const fromFunctionBatchedWith: <A extends Request.Request<any, any>>(
  * @category constructors
  */
 export const fromFunctionBatchedWithEffect: <R, A extends Request.Request<any, any>>(
-  f: (chunk: Chunk.Chunk<A>) => Effect.Effect<R, Request.Request.Error<A>, Chunk.Chunk<Request.Request.Success<A>>>,
+  f: (chunk: Array<A>) => Effect.Effect<R, Request.Request.Error<A>, Array<Request.Request.Success<A>>>,
   g: (b: Request.Request.Success<A>) => Request.Request<Request.Request.Error<A>, Request.Request.Success<A>>
 ) => RequestResolver<R, A> = internal.fromFunctionBatchedWithEffect
 

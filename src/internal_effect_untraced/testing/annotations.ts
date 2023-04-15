@@ -1,9 +1,9 @@
-import * as Chunk from "@effect/data/Chunk"
 import * as Context from "@effect/data/Context"
 import * as Debug from "@effect/data/Debug"
 import * as Equal from "@effect/data/Equal"
 import { pipe } from "@effect/data/Function"
 import * as MutableRef from "@effect/data/MutableRef"
+import * as RA from "@effect/data/ReadonlyArray"
 import * as SortedSet from "@effect/data/SortedSet"
 import type * as Effect from "@effect/io/Effect"
 import type * as Fiber from "@effect/io/Fiber"
@@ -89,7 +89,7 @@ class AnnotationsImpl implements Annotations {
                 return pipe(
                   either.right,
                   core.forEach((ref) => core.sync(() => MutableRef.get(ref))),
-                  core.map(Chunk.reduce(
+                  core.map(RA.reduce(
                     SortedSet.empty(fiber.Order),
                     (a, b) => pipe(a, SortedSet.union(b))
                   )),

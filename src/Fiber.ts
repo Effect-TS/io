@@ -1,7 +1,6 @@
 /**
  * @since 1.0.0
  */
-import type * as Chunk from "@effect/data/Chunk"
 import type * as Either from "@effect/data/Either"
 import type * as HashSet from "@effect/data/HashSet"
 import type * as Option from "@effect/data/Option"
@@ -70,7 +69,7 @@ export interface Fiber<E, A> extends Fiber.Variance<E, A> {
   /**
    * Retrieves the immediate children of the fiber.
    */
-  children(): Effect.Effect<never, never, Chunk.Chunk<Fiber.Runtime<any, any>>>
+  children(): Effect.Effect<never, never, Array<Fiber.Runtime<any, any>>>
 
   /**
    * Inherits values from all `FiberRef` instances into current fiber. This
@@ -269,7 +268,7 @@ export const awaitAll: (fibers: Iterable<Fiber<any, any>>) => Effect.Effect<neve
  * @since 1.0.0
  * @category getters
  */
-export const children: <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, Chunk.Chunk<RuntimeFiber<any, any>>> =
+export const children: <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, Array<RuntimeFiber<any, any>>> =
   internal.children
 
 /**
@@ -279,8 +278,7 @@ export const children: <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, 
  * @since 1.0.0
  * @category constructors
  */
-export const collectAll: <E, A>(fibers: Iterable<Fiber<E, A>>) => Fiber<E, Chunk.Chunk<A>> =
-  fiberRuntime.fiberCollectAll
+export const collectAll: <E, A>(fibers: Iterable<Fiber<E, A>>) => Fiber<E, Array<A>> = fiberRuntime.fiberCollectAll
 
 /**
  * A fiber that is done with the specified `Exit` value.
@@ -302,7 +300,7 @@ export const dump: <E, A>(self: RuntimeFiber<E, A>) => Effect.Effect<never, neve
  */
 export const dumpAll: (
   fibers: Iterable<RuntimeFiber<unknown, unknown>>
-) => Effect.Effect<never, never, Chunk.Chunk<Fiber.Dump>> = internal.dumpAll
+) => Effect.Effect<never, never, Array<Fiber.Dump>> = internal.dumpAll
 
 /**
  * A fiber that has already failed with the specified value.
@@ -554,7 +552,7 @@ export const pretty: <E, A>(self: RuntimeFiber<E, A>) => Effect.Effect<never, ne
  * @since 1.0.0
  * @category constructors
  */
-export const roots: (_: void) => Effect.Effect<never, never, Chunk.Chunk<RuntimeFiber<any, any>>> = internal.roots
+export const roots: (_: void) => Effect.Effect<never, never, Array<RuntimeFiber<any, any>>> = internal.roots
 
 /**
  * Returns a chunk containing all root fibers.
@@ -562,7 +560,7 @@ export const roots: (_: void) => Effect.Effect<never, never, Chunk.Chunk<Runtime
  * @since 1.0.0
  * @category constructors
  */
-export const unsafeRoots: (_: void) => Chunk.Chunk<RuntimeFiber<any, any>> = internal.unsafeRoots
+export const unsafeRoots: (_: void) => Array<RuntimeFiber<any, any>> = internal.unsafeRoots
 
 /**
  * Converts this fiber into a scoped effect. The fiber is interrupted when the

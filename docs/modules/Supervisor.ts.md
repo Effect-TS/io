@@ -79,9 +79,7 @@ Creates a new supervisor that tracks children in a set.
 **Signature**
 
 ```ts
-export declare const track: (
-  _: void
-) => Effect.Effect<never, never, Supervisor<Chunk.Chunk<Fiber.RuntimeFiber<any, any>>>>
+export declare const track: (_: void) => Effect.Effect<never, never, Supervisor<Array<Fiber.RuntimeFiber<any, any>>>>
 ```
 
 Added in v1.0.0
@@ -191,7 +189,7 @@ Unsafely creates a new supervisor that tracks children in a set.
 **Signature**
 
 ```ts
-export declare const unsafeTrack: (_: void) => Supervisor<Chunk.Chunk<Fiber.RuntimeFiber<any, any>>>
+export declare const unsafeTrack: () => Supervisor<Array<Fiber.RuntimeFiber<any, any>>>
 ```
 
 Added in v1.0.0

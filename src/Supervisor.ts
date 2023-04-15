@@ -4,7 +4,6 @@
  *
  * @since 1.0.0
  */
-import type * as Chunk from "@effect/data/Chunk"
 import type * as Context from "@effect/data/Context"
 import type * as MutableRef from "@effect/data/MutableRef"
 import type * as Option from "@effect/data/Option"
@@ -137,7 +136,7 @@ export const none: Supervisor<void> = internal.none
  * @since 1.0.0
  * @category constructors
  */
-export const track: (_: void) => Effect.Effect<never, never, Supervisor<Chunk.Chunk<Fiber.RuntimeFiber<any, any>>>> =
+export const track: (_: void) => Effect.Effect<never, never, Supervisor<Array<Fiber.RuntimeFiber<any, any>>>> =
   internal.track
 
 /**
@@ -146,4 +145,4 @@ export const track: (_: void) => Effect.Effect<never, never, Supervisor<Chunk.Ch
  * @since 1.0.0
  * @category unsafe
  */
-export const unsafeTrack: (_: void) => Supervisor<Chunk.Chunk<Fiber.RuntimeFiber<any, any>>> = internal.unsafeTrack
+export const unsafeTrack: () => Supervisor<Array<Fiber.RuntimeFiber<any, any>>> = internal.unsafeTrack

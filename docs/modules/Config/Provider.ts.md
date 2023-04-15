@@ -128,8 +128,8 @@ specified function within the specified path.
 
 ```ts
 export declare const within: {
-  (path: Chunk.Chunk<string>, f: (self: ConfigProvider) => ConfigProvider): (self: ConfigProvider) => ConfigProvider
-  (self: ConfigProvider, path: Chunk.Chunk<string>, f: (self: ConfigProvider) => ConfigProvider): ConfigProvider
+  (path: Array<string>, f: (self: ConfigProvider) => ConfigProvider): (self: ConfigProvider) => ConfigProvider
+  (self: ConfigProvider, path: Array<string>, f: (self: ConfigProvider) => ConfigProvider): ConfigProvider
 }
 ```
 
@@ -203,12 +203,10 @@ Creates a new flat config provider.
 ```ts
 export declare const makeFlat: (
   load: <A>(
-    path: Chunk.Chunk<string>,
+    path: Array<string>,
     config: Config.Config.Primitive<A>
-  ) => Effect.Effect<never, ConfigError.ConfigError, Chunk.Chunk<A>>,
-  enumerateChildren: (
-    path: Chunk.Chunk<string>
-  ) => Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>>,
+  ) => Effect.Effect<never, ConfigError.ConfigError, A[]>,
+  enumerateChildren: (path: Array<string>) => Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>>,
   patch: PathPatch.PathPatch
 ) => ConfigProvider.Flat
 ```

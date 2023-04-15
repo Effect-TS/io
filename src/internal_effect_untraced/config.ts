@@ -161,7 +161,7 @@ export const bool = (name?: string): Config.Config<boolean> => {
         }
         default: {
           const error = configError.InvalidData(
-            Chunk.empty(),
+            [],
             `Expected a boolean value, but received ${text}`
           )
           return Either.left(error)
@@ -179,7 +179,7 @@ export const arrayOf = <A>(config: Config.Config<A>, name?: string): Config.Conf
 
 /** @internal */
 export const chunkOf = <A>(config: Config.Config<A>, name?: string): Config.Config<Chunk.Chunk<A>> => {
-  return name === undefined ? repeat(config) : nested(name)(repeat(config))
+  return map(name === undefined ? repeat(config) : nested(name)(repeat(config)), Chunk.unsafeFromArray)
 }
 
 /** @internal */
@@ -191,7 +191,7 @@ export const date = (name?: string): Config.Config<Date> => {
       if (Number.isNaN(result)) {
         return Either.left(
           configError.InvalidData(
-            Chunk.empty(),
+            [],
             `Expected a date value but received ${text}`
           )
         )
@@ -207,7 +207,7 @@ export const fail = (message: string): Config.Config<never> => {
   const fail = Object.create(proto)
   fail._tag = OpCodes.OP_FAIL
   fail.message = message
-  fail.parse = () => Either.left(configError.Unsupported(Chunk.empty(), message))
+  fail.parse = () => Either.left(configError.Unsupported([], message))
   return fail
 }
 
@@ -220,7 +220,7 @@ export const float = (name?: string): Config.Config<number> => {
       if (Number.isNaN(result)) {
         return Either.left(
           configError.InvalidData(
-            Chunk.empty(),
+            [],
             `Expected an float value but received ${text}`
           )
         )
@@ -240,7 +240,7 @@ export const integer = (name?: string): Config.Config<number> => {
       if (Number.isNaN(result)) {
         return Either.left(
           configError.InvalidData(
-            Chunk.empty(),
+            [],
             `Expected an integer value but received ${text}`
           )
         )
@@ -257,7 +257,7 @@ export const logLevel = (name?: string): Config.Config<LogLevel.LogLevel> => {
     const label = value.toUpperCase()
     const level = core.allLogLevels.find((level) => level.label === label)
     return level === undefined
-      ? Either.left(configError.InvalidData(Chunk.empty(), `Expected a log level, but found: ${value}`))
+      ? Either.left(configError.InvalidData([], `Expected a log level, but found: ${value}`))
       : Either.right(level)
   })
   return name === undefined ? config : nested(config, name)
@@ -280,7 +280,7 @@ export const mapAttempt = dual<
     } catch (error) {
       return Either.left(
         configError.InvalidData(
-          Chunk.empty(),
+          [],
           error instanceof Error ? error.message : `${error}`
         )
       )
@@ -302,7 +302,7 @@ export const mapOrFail = dual<
 /** @internal */
 export const missingError = (name: string) => {
   return <A>(self: Config.Config.Primitive<A>): ConfigError.ConfigError => {
-    return configError.MissingData(Chunk.empty(), `Expected ${self.description} with name ${name}`)
+    return configError.MissingData([], `Expected ${self.description} with name ${name}`)
   }
 }
 
@@ -373,7 +373,7 @@ export const primitive = <A>(
 }
 
 /** @internal */
-export const repeat = <A>(self: Config.Config<A>): Config.Config<Chunk.Chunk<A>> => {
+export const repeat = <A>(self: Config.Config<A>): Config.Config<Array<A>> => {
   const repeat = Object.create(proto)
   repeat._tag = OpCodes.OP_SEQUENCE
   repeat.config = self
@@ -545,7 +545,7 @@ export const validate = dual<
     if (f(a)) {
       return Either.right(a)
     }
-    return Either.left(configError.InvalidData(Chunk.empty(), message))
+    return Either.left(configError.InvalidData([], message))
   }))
 
 /** @internal */

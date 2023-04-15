@@ -228,7 +228,7 @@ list must correspond to the item at the same index in the request list.
 
 ```ts
 export declare const fromFunctionBatched: <A extends Request.Request<never, any>>(
-  f: (chunk: Chunk.Chunk<A>) => Chunk.Chunk<Request.Request.Success<A>>
+  f: (chunk: A[]) => Request.Request.Success<A>[]
 ) => RequestResolver<never, A>
 ```
 
@@ -245,7 +245,7 @@ list.
 
 ```ts
 export declare const fromFunctionBatchedEffect: <R, A extends Request.Request<any, any>>(
-  f: (chunk: Chunk.Chunk<A>) => Effect.Effect<R, Request.Request.Error<A>, Chunk.Chunk<Request.Request.Success<A>>>
+  f: (chunk: A[]) => Effect.Effect<R, Request.Request.Error<A>, Request.Request.Success<A>[]>
 ) => RequestResolver<R, A>
 ```
 
@@ -262,7 +262,7 @@ list.
 
 ```ts
 export declare const fromFunctionBatchedOption: <A extends Request.Request<never, any>>(
-  f: (chunk: Chunk.Chunk<A>) => Chunk.Chunk<Option.Option<Request.Request.Success<A>>>
+  f: (chunk: A[]) => Option.Option<Request.Request.Success<A>>[]
 ) => RequestResolver<never, A>
 ```
 
@@ -279,9 +279,7 @@ request list.
 
 ```ts
 export declare const fromFunctionBatchedOptionEffect: <R, A extends Request.Request<any, any>>(
-  f: (
-    chunk: Chunk.Chunk<A>
-  ) => Effect.Effect<R, Request.Request.Error<A>, Chunk.Chunk<Option.Option<Request.Request.Success<A>>>>
+  f: (chunk: A[]) => Effect.Effect<R, Request.Request.Error<A>, Option.Option<Request.Request.Success<A>>[]>
 ) => RequestResolver<R, A>
 ```
 
@@ -299,7 +297,7 @@ requests.
 
 ```ts
 export declare const fromFunctionBatchedWith: <A extends Request.Request<any, any>>(
-  f: (chunk: Chunk.Chunk<A>) => Chunk.Chunk<Request.Request.Success<A>>,
+  f: (chunk: A[]) => Request.Request.Success<A>[],
   g: (value: Request.Request.Success<A>) => Request.Request<never, Request.Request.Success<A>>
 ) => RequestResolver<never, A>
 ```
@@ -318,7 +316,7 @@ list of requests.
 
 ```ts
 export declare const fromFunctionBatchedWithEffect: <R, A extends Request.Request<any, any>>(
-  f: (chunk: Chunk.Chunk<A>) => Effect.Effect<R, Request.Request.Error<A>, Chunk.Chunk<Request.Request.Success<A>>>,
+  f: (chunk: A[]) => Effect.Effect<R, Request.Request.Error<A>, Request.Request.Success<A>[]>,
   g: (b: Request.Request.Success<A>) => Request.Request<Request.Request.Error<A>, Request.Request.Success<A>>
 ) => RequestResolver<R, A>
 ```
@@ -378,7 +376,7 @@ requests.
 
 ```ts
 export declare const make: <R, A>(
-  runAll: (requests: Chunk.Chunk<Chunk.Chunk<A>>) => Effect.Effect<R, never, void>
+  runAll: (requests: A[][]) => Effect.Effect<R, never, void>
 ) => RequestResolver<Exclude<R, RequestCompletionMap.RequestCompletionMap>, A>
 ```
 
@@ -393,7 +391,7 @@ and returning a `RequestCompletionMap`.
 
 ```ts
 export declare const makeBatched: <R, A extends Request.Request<any, any>>(
-  run: (requests: Chunk.Chunk<A>) => Effect.Effect<R, never, void>
+  run: (requests: A[]) => Effect.Effect<R, never, void>
 ) => RequestResolver<Exclude<R, RequestCompletionMap.RequestCompletionMap>, A>
 ```
 
@@ -486,7 +484,7 @@ export interface RequestResolver<R, A> extends Equal.Equal {
    * of requests that must be performed sequentially. The inner `Chunk`
    * represents a batch of requests that can be performed in parallel.
    */
-  runAll(requests: Chunk.Chunk<Chunk.Chunk<A>>): Effect.Effect<R, never, RequestCompletionMap.RequestCompletionMap>
+  runAll(requests: Array<Array<A>>): Effect.Effect<R, never, RequestCompletionMap.RequestCompletionMap>
 
   /**
    * Identify the data source using the specific identifier

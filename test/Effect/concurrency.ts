@@ -254,7 +254,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const deferred = yield* $(Deferred.make<never, void>())
       const effect = yield* $(Deferred.make<never, number>())
-      const winner = Effect.fromEither(Either.right(void 0))
+      const winner = Either.right(void 0)
       const loser = Effect.acquireUseRelease(
         Deferred.succeed(deferred, void 0),
         () => Effect.never(),
@@ -268,7 +268,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const deferred = yield* $(Deferred.make<never, void>())
       const effect = yield* $(Deferred.make<never, number>())
-      const winner = pipe(Deferred.await(deferred), Effect.zipRight(Effect.fromEither(Either.left(new Error()))))
+      const winner = pipe(Deferred.await(deferred), Effect.zipRight(Either.left(new Error())))
       const loser = Effect.acquireUseRelease(
         Deferred.succeed(deferred, void 0),
         () => Effect.never(),

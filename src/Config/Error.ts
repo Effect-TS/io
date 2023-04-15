@@ -1,7 +1,6 @@
 /**
  * @since 1.0.0
  */
-import type * as Chunk from "@effect/data/Chunk"
 import type * as Cause from "@effect/io/Cause"
 import * as internal from "@effect/io/internal_effect_untraced/configError"
 
@@ -57,15 +56,15 @@ export declare namespace ConfigError {
 export interface ConfigErrorReducer<C, Z> {
   readonly andCase: (context: C, left: Z, right: Z) => Z
   readonly orCase: (context: C, left: Z, right: Z) => Z
-  readonly invalidDataCase: (context: C, path: Chunk.Chunk<string>, message: string) => Z
-  readonly missingDataCase: (context: C, path: Chunk.Chunk<string>, message: string) => Z
+  readonly invalidDataCase: (context: C, path: Array<string>, message: string) => Z
+  readonly missingDataCase: (context: C, path: Array<string>, message: string) => Z
   readonly sourceUnavailableCase: (
     context: C,
-    path: Chunk.Chunk<string>,
+    path: Array<string>,
     message: string,
     cause: Cause.Cause<unknown>
   ) => Z
-  readonly unsupportedCase: (context: C, path: Chunk.Chunk<string>, message: string) => Z
+  readonly unsupportedCase: (context: C, path: Array<string>, message: string) => Z
 }
 
 /**
@@ -94,7 +93,7 @@ export interface Or extends ConfigError.Proto {
  */
 export interface InvalidData extends ConfigError.Proto {
   readonly _tag: "InvalidData"
-  readonly path: Chunk.Chunk<string>
+  readonly path: Array<string>
   readonly message: string
 }
 
@@ -104,7 +103,7 @@ export interface InvalidData extends ConfigError.Proto {
  */
 export interface MissingData extends ConfigError.Proto {
   readonly _tag: "MissingData"
-  readonly path: Chunk.Chunk<string>
+  readonly path: Array<string>
   readonly message: string
 }
 
@@ -114,7 +113,7 @@ export interface MissingData extends ConfigError.Proto {
  */
 export interface SourceUnavailable extends ConfigError.Proto {
   readonly _tag: "SourceUnavailable"
-  readonly path: Chunk.Chunk<string>
+  readonly path: Array<string>
   readonly message: string
   readonly cause: Cause.Cause<unknown>
 }
@@ -125,7 +124,7 @@ export interface SourceUnavailable extends ConfigError.Proto {
  */
 export interface Unsupported extends ConfigError.Proto {
   readonly _tag: "Unsupported"
-  readonly path: Chunk.Chunk<string>
+  readonly path: Array<string>
   readonly message: string
 }
 
@@ -145,29 +144,26 @@ export const Or: (self: ConfigError, that: ConfigError) => ConfigError = interna
  * @since 1.0.0
  * @category constructors
  */
-export const MissingData: (path: Chunk.Chunk<string>, message: string) => ConfigError = internal.MissingData
+export const MissingData: (path: Array<string>, message: string) => ConfigError = internal.MissingData
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const InvalidData: (path: Chunk.Chunk<string>, message: string) => ConfigError = internal.InvalidData
+export const InvalidData: (path: Array<string>, message: string) => ConfigError = internal.InvalidData
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const SourceUnavailable: (
-  path: Chunk.Chunk<string>,
-  message: string,
-  cause: Cause.Cause<unknown>
-) => ConfigError = internal.SourceUnavailable
+export const SourceUnavailable: (path: Array<string>, message: string, cause: Cause.Cause<unknown>) => ConfigError =
+  internal.SourceUnavailable
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const Unsupported: (path: Chunk.Chunk<string>, message: string) => ConfigError = internal.Unsupported
+export const Unsupported: (path: Array<string>, message: string) => ConfigError = internal.Unsupported
 
 /**
  * Returns `true` if the specified value is a `ConfigError`, `false` otherwise.
@@ -242,8 +238,8 @@ export const isUnsupported: (self: ConfigError) => self is Unsupported = interna
  * @category utils
  */
 export const prefixed: {
-  (prefix: Chunk.Chunk<string>): (self: ConfigError) => ConfigError
-  (self: ConfigError, prefix: Chunk.Chunk<string>): ConfigError
+  (prefix: Array<string>): (self: ConfigError) => ConfigError
+  (self: ConfigError, prefix: Array<string>): ConfigError
 } = internal.prefixed
 
 /**

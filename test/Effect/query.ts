@@ -1,5 +1,5 @@
-import * as Chunk from "@effect/data/Chunk"
 import * as Context from "@effect/data/Context"
+import { runtimeDebug } from "@effect/data/Debug"
 import { seconds } from "@effect/data/Duration"
 import { pipe } from "@effect/data/Function"
 import * as ReadonlyArray from "@effect/data/ReadonlyArray"
@@ -11,6 +11,8 @@ import * as Layer from "@effect/io/Layer"
 import * as Request from "@effect/io/Request"
 import * as Resolver from "@effect/io/RequestResolver"
 import * as it from "@effect/io/test/utils/extend"
+
+runtimeDebug.filterStackFrame = () => true
 
 interface Counter {
   readonly _: unique symbol
@@ -48,7 +50,7 @@ export interface GetNameById extends Request.Request<never, string> {
 
 export const GetNameById = Request.tagged<GetNameById>("GetNameById")
 
-export const UserResolver = Resolver.makeBatched((requests: Chunk.Chunk<UserRequest>) =>
+export const UserResolver = Resolver.makeBatched((requests: Array<UserRequest>) =>
   Effect.flatMap(Counter, (counter) => {
     counter.count++
     return Effect.forEachDiscard(requests, (request) => {
@@ -86,8 +88,7 @@ export const getUserNameById = (id: number) =>
 export const getAllUserNames = pipe(
   getAllUserIds,
   Effect.flatMap(Effect.forEachPar(getUserNameById)),
-  Effect.onInterrupt(() => FiberRef.getWith(interrupts, (i) => Effect.sync(() => i.interrupts++))),
-  Effect.map(Chunk.toReadonlyArray)
+  Effect.onInterrupt(() => FiberRef.getWith(interrupts, (i) => Effect.sync(() => i.interrupts++)))
 )
 
 export const print = (request: UserRequest): string => {

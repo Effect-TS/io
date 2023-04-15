@@ -41,7 +41,7 @@ polls for, updates, and produces the outputs of all individual metrics.
 ```ts
 export declare const collectAll: <R, E, Out>(
   iterable: Iterable<PollingMetric<any, any, R, E, Out>>
-) => PollingMetric<Chunk.Chunk<any>, Chunk.Chunk<any>, R, E, Chunk.Chunk<Out>>
+) => PollingMetric<any[], any[], R, E, Out[]>
 ```
 
 Added in v1.0.0

@@ -16,7 +16,6 @@ import * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import type * as FiberId from "@effect/io/Fiber/Id"
-import * as clock from "@effect/io/internal_effect_untraced/clock"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as effect from "@effect/io/internal_effect_untraced/effect"
 
@@ -643,7 +642,7 @@ export const makeWith = Debug.methodWithTrace((trace, restore) =>
   ): Effect.Effect<Environment, never, Cache.Cache<Key, Error, Value>> =>
     core.map(
       effect.all(
-        clock.clockTag,
+        effect.clock(),
         core.context<Environment>(),
         core.fiberId()
       ),

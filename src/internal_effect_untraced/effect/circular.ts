@@ -1,4 +1,3 @@
-import type * as Chunk from "@effect/data/Chunk"
 import * as Debug from "@effect/data/Debug"
 import type * as Duration from "@effect/data/Duration"
 import * as Either from "@effect/data/Either"
@@ -19,7 +18,6 @@ import * as Exit from "@effect/io/Exit"
 import type * as Fiber from "@effect/io/Fiber"
 import * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
-import * as _block from "@effect/io/internal_effect_untraced/blockedRequests"
 import * as internalCause from "@effect/io/internal_effect_untraced/cause"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as effect from "@effect/io/internal_effect_untraced/effect"
@@ -257,13 +255,13 @@ export const ensuring = Debug.dualWithTrace<
 /** @internal */
 export const ensuringChild = Debug.dualWithTrace<
   <R2, X>(
-    f: (fiber: Fiber.Fiber<any, Chunk.Chunk<unknown>>) => Effect.Effect<R2, never, X>
+    f: (fiber: Fiber.Fiber<any, Array<unknown>>) => Effect.Effect<R2, never, X>
   ) => <R, E, A>(
     self: Effect.Effect<R, E, A>
   ) => Effect.Effect<R | R2, E, A>,
   <R, E, A, R2, X>(
     self: Effect.Effect<R, E, A>,
-    f: (fiber: Fiber.Fiber<any, Chunk.Chunk<unknown>>) => Effect.Effect<R2, never, X>
+    f: (fiber: Fiber.Fiber<any, Array<unknown>>) => Effect.Effect<R2, never, X>
   ) => Effect.Effect<R | R2, E, A>
 >(
   2,
@@ -278,11 +276,11 @@ export const ensuringChild = Debug.dualWithTrace<
 /** @internal */
 export const ensuringChildren = Debug.dualWithTrace<
   <R1, X>(
-    children: (fibers: Chunk.Chunk<Fiber.RuntimeFiber<any, any>>) => Effect.Effect<R1, never, X>
+    children: (fibers: Array<Fiber.RuntimeFiber<any, any>>) => Effect.Effect<R1, never, X>
   ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E, A>,
   <R, E, A, R1, X>(
     self: Effect.Effect<R, E, A>,
-    children: (fibers: Chunk.Chunk<Fiber.RuntimeFiber<any, any>>) => Effect.Effect<R1, never, X>
+    children: (fibers: Array<Fiber.RuntimeFiber<any, any>>) => Effect.Effect<R1, never, X>
   ) => Effect.Effect<R | R1, E, A>
 >(2, (trace, restore) =>
   (self, children) =>
@@ -297,7 +295,7 @@ export const ensuringChildren = Debug.dualWithTrace<
 export const forkAll = Debug.methodWithTrace((trace) =>
   <R, E, A>(
     effects: Iterable<Effect.Effect<R, E, A>>
-  ): Effect.Effect<R, never, Fiber.Fiber<E, Chunk.Chunk<A>>> =>
+  ): Effect.Effect<R, never, Fiber.Fiber<E, Array<A>>> =>
     core.map(core.forEach(effects, fiberRuntime.fork), fiberRuntime.fiberCollectAll).traced(trace)
 )
 

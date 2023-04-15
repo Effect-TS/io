@@ -173,7 +173,7 @@ data sources that must be executed sequentially.
 
 ```ts
 export declare const sequentialCollectionMake: <R, A>(
-  map: HashMap.HashMap<RequestResolver.RequestResolver<R, A>, Chunk.Chunk<Chunk.Chunk<Entry<A>>>>
+  map: HashMap.HashMap<RequestResolver.RequestResolver<R, A>, Entry<A>[][]>
 ) => SequentialCollection<R>
 ```
 
@@ -205,7 +205,7 @@ data sources.
 ```ts
 export declare const parallelCollectionToChunk: <R>(
   self: ParallelCollection<R>
-) => Chunk.Chunk<readonly [RequestResolver.RequestResolver<R, unknown>, Chunk.Chunk<Entry<unknown>>]>
+) => (readonly [RequestResolver.RequestResolver<R, unknown>, Entry<unknown>[]])[]
 ```
 
 Added in v1.0.0
@@ -237,7 +237,7 @@ batches of requests from those data sources.
 ```ts
 export declare const sequentialCollectionToChunk: <R>(
   self: SequentialCollection<R>
-) => Chunk.Chunk<readonly [RequestResolver.RequestResolver<R, unknown>, Chunk.Chunk<Chunk.Chunk<Entry<unknown>>>]>
+) => (readonly [RequestResolver.RequestResolver<R, unknown>, Entry<unknown>[][]])[]
 ```
 
 Added in v1.0.0
@@ -316,7 +316,7 @@ data sources that can be executed in parallel.
 
 ```ts
 export interface ParallelCollection<R> extends ParallelCollection.Variance<R> {
-  readonly map: HashMap.HashMap<RequestResolver.RequestResolver<unknown, unknown>, Chunk.Chunk<Entry<unknown>>>
+  readonly map: HashMap.HashMap<RequestResolver.RequestResolver<unknown, unknown>, Array<Entry<unknown>>>
 }
 ```
 
@@ -361,10 +361,7 @@ requests from those data sources that must be executed sequentially.
 
 ```ts
 export interface SequentialCollection<R> extends SequentialCollection.Variance<R> {
-  readonly map: HashMap.HashMap<
-    RequestResolver.RequestResolver<unknown, unknown>,
-    Chunk.Chunk<Chunk.Chunk<Entry<unknown>>>
-  >
+  readonly map: HashMap.HashMap<RequestResolver.RequestResolver<unknown, unknown>, Array<Array<Entry<unknown>>>>
 }
 ```
 
@@ -514,7 +511,7 @@ collection are from.
 ```ts
 export declare const parallelCollectionKeys: <R>(
   self: ParallelCollection<R>
-) => Chunk.Chunk<RequestResolver.RequestResolver<R, unknown>>
+) => RequestResolver.RequestResolver<R, unknown>[]
 ```
 
 Added in v1.0.0
@@ -559,7 +556,7 @@ this collection are from.
 ```ts
 export declare const sequentialCollectionKeys: <R>(
   self: SequentialCollection<R>
-) => Chunk.Chunk<RequestResolver.RequestResolver<R, unknown>>
+) => RequestResolver.RequestResolver<R, unknown>[]
 ```
 
 Added in v1.0.0

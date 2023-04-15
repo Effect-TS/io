@@ -768,8 +768,8 @@ export const matchEffect = Debug.dualWithTrace<
 
 /* @internal */
 export const forEach = Debug.dualWithTrace<
-  <A, R, E, B>(f: (a: A) => Effect.Effect<R, E, B>) => (self: Iterable<A>) => Effect.Effect<R, E, Chunk.Chunk<B>>,
-  <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, E, Chunk.Chunk<B>>
+  <A, R, E, B>(f: (a: A) => Effect.Effect<R, E, B>) => (self: Iterable<A>) => Effect.Effect<R, E, Array<B>>,
+  <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, E, Array<B>>
 >(2, (trace, restore) =>
   (self, f) =>
     suspend(() => {
@@ -784,7 +784,7 @@ export const forEach = Debug.dualWithTrace<
             ret[i++] = b
           }
         ),
-        as(Chunk.unsafeFromArray(ret))
+        as(ret)
       )
     }).traced(trace))
 
@@ -806,34 +806,6 @@ export const forEachDiscard = Debug.dualWithTrace<
         }
       )
     }).traced(trace))
-
-/* @internal */
-export const fromOption = Debug.methodWithTrace((trace) =>
-  <A>(option: Option.Option<A>): Effect.Effect<never, Option.Option<never>, A> => {
-    switch (option._tag) {
-      case "None": {
-        return fail(Option.none()).traced(trace)
-      }
-      case "Some": {
-        return succeed(option.value).traced(trace)
-      }
-    }
-  }
-)
-
-/* @internal */
-export const fromEither = Debug.methodWithTrace((trace) =>
-  <E, A>(either: Either.Either<E, A>): Effect.Effect<never, E, A> => {
-    switch (either._tag) {
-      case "Left": {
-        return fail(either.left).traced(trace)
-      }
-      case "Right": {
-        return succeed(either.right).traced(trace)
-      }
-    }
-  }
-)
 
 /* @internal */
 export const ifEffect = Debug.dualWithTrace<
@@ -1069,20 +1041,20 @@ export const orDieWith = Debug.dualWithTrace<
 export const partitionMap = <A, A1, A2>(
   elements: Iterable<A>,
   f: (a: A) => Either.Either<A1, A2>
-): [Chunk.Chunk<A1>, Chunk.Chunk<A2>] =>
+): [Array<A1>, Array<A2>] =>
   Array.from(elements).reduceRight(
     ([lefts, rights], current) => {
       const either = f(current)
       switch (either._tag) {
         case "Left": {
-          return [pipe(lefts, Chunk.prepend(either.left)), rights]
+          return [[either.left, ...lefts], rights]
         }
         case "Right": {
-          return [lefts, pipe(rights, Chunk.prepend(either.right))]
+          return [lefts, [either.right, ...rights]]
         }
       }
     },
-    [Chunk.empty<A1>(), Chunk.empty<A2>()]
+    [new Array<A1>(), new Array<A2>()]
   )
 
 /* @internal */
@@ -1700,7 +1672,7 @@ export class RequestResolverImpl<R, A> implements RequestResolver.RequestResolve
   readonly [RequestResolverTypeId] = dataSourceVariance
   constructor(
     readonly runAll: (
-      requests: Chunk.Chunk<Chunk.Chunk<A>>
+      requests: Array<Array<A>>
     ) => Effect.Effect<R, never, RequestCompletionMap>,
     readonly target?: unknown
   ) {}
@@ -2179,12 +2151,12 @@ export const exitCauseOption = <E, A>(self: Exit.Exit<E, A>): Option.Option<Caus
 /** @internal */
 export const exitCollectAll = <E, A>(
   exits: Iterable<Exit.Exit<E, A>>
-): Option.Option<Exit.Exit<E, Chunk.Chunk<A>>> => exitCollectAllInternal(exits, internalCause.sequential)
+): Option.Option<Exit.Exit<E, Array<A>>> => exitCollectAllInternal(exits, internalCause.sequential)
 
 /** @internal */
 export const exitCollectAllPar = <E, A>(
   exits: Iterable<Exit.Exit<E, A>>
-): Option.Option<Exit.Exit<E, Chunk.Chunk<A>>> => exitCollectAllInternal(exits, internalCause.parallel)
+): Option.Option<Exit.Exit<E, Array<A>>> => exitCollectAllInternal(exits, internalCause.parallel)
 
 /** @internal */
 export const exitDie = (defect: unknown): Exit.Exit<never, never> =>
@@ -2521,7 +2493,7 @@ export const exitZipWith = dual<
 const exitCollectAllInternal = <E, A>(
   exits: Iterable<Exit.Exit<E, A>>,
   combineCauses: (causeA: Cause.Cause<E>, causeB: Cause.Cause<E>) => Cause.Cause<E>
-): Option.Option<Exit.Exit<E, Chunk.Chunk<A>>> => {
+): Option.Option<Exit.Exit<E, Array<A>>> => {
   const list = Chunk.fromIterable(exits)
   if (!Chunk.isNonEmpty(list)) {
     return Option.none()
@@ -2541,6 +2513,7 @@ const exitCollectAllInternal = <E, A>(
         )
     ),
     exitMap(Chunk.reverse),
+    exitMap((chunk) => Array.from(chunk)),
     Option.some
   )
 }

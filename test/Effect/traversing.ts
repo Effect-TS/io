@@ -70,17 +70,17 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("replicate - zero", () =>
     Effect.gen(function*($) {
-      const result = yield* $(Effect.collectAll(pipe(Effect.succeed(12), Effect.replicate(0))))
+      const result = yield* $(Effect.all(pipe(Effect.succeed(12), Effect.replicate(0))))
       assert.strictEqual(result.length, 0)
     }))
   it.effect("replicate - negative", () =>
     Effect.gen(function*($) {
-      const result = yield* $(Effect.collectAll(pipe(Effect.succeed(12), Effect.replicate(-2))))
+      const result = yield* $(Effect.all(pipe(Effect.succeed(12), Effect.replicate(-2))))
       assert.strictEqual(result.length, 0)
     }))
   it.effect("replicate - positive", () =>
     Effect.gen(function*($) {
-      const result = yield* $(Effect.collectAll(pipe(Effect.succeed(12), Effect.replicate(2))))
+      const result = yield* $(Effect.all(pipe(Effect.succeed(12), Effect.replicate(2))))
       assert.deepStrictEqual(Array.from(result), [12, 12])
     }))
   it.effect(" - returns the list of results", () =>
