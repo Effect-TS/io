@@ -1,5 +1,23 @@
 # @effect/io
 
+## 0.21.0
+
+### Minor Changes
+
+- [#358](https://github.com/Effect-TS/io/pull/358) [`d81972a`](https://github.com/Effect-TS/io/commit/d81972a2cab81f03bf639b26655ad2b6eec9c9e8) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Introduce Request Batching & Caching in Effect
+
+- [#358](https://github.com/Effect-TS/io/pull/358) [`d81972a`](https://github.com/Effect-TS/io/commit/d81972a2cab81f03bf639b26655ad2b6eec9c9e8) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Keep Chunk as internal as possible
+
+- [#358](https://github.com/Effect-TS/io/pull/358) [`d81972a`](https://github.com/Effect-TS/io/commit/d81972a2cab81f03bf639b26655ad2b6eec9c9e8) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Restructure parallel/collection-based combinator naming
+
+- [#358](https://github.com/Effect-TS/io/pull/358) [`d81972a`](https://github.com/Effect-TS/io/commit/d81972a2cab81f03bf639b26655ad2b6eec9c9e8) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Port Cache from effect/cache and use it to cache requests
+
+### Patch Changes
+
+- [#358](https://github.com/Effect-TS/io/pull/358) [`d81972a`](https://github.com/Effect-TS/io/commit/d81972a2cab81f03bf639b26655ad2b6eec9c9e8) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Introduce Effect.serviceOption for optional services
+
+- [#359](https://github.com/Effect-TS/io/pull/359) [`581ee2e`](https://github.com/Effect-TS/io/commit/581ee2ebaf781feaa76a59fcd65cbead2edb0100) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Avoid referencing node types in dts
+
 ## 0.20.0
 
 ### Minor Changes
