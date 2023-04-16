@@ -51,10 +51,28 @@ export const fromRequest = Debug.methodWithTrace((trace) =>
               switch (orNew._tag) {
                 case "Left": {
                   orNew.left.listeners[0]++
-                  return core.blocked(
-                    BlockedRequests.empty,
-                    ensuring(core.deferredAwait(orNew.left.handle), core.sync(() => orNew.left.listeners[0]--))
-                  )
+                  return core.flatMap(core.deferredPoll(orNew.left.handle), (o) => {
+                    if (o._tag === "None") {
+                      return core.blocked(
+                        BlockedRequests.empty,
+                        ensuring(core.deferredAwait(orNew.left.handle), core.sync(() => orNew.left.listeners[0]--))
+                      )
+                    } else {
+                      return core.flatMap(core.exit(core.deferredAwait(orNew.left.handle)), (exit) => {
+                        if (exit._tag === "Failure" && isInterruptedOnly(exit.cause)) {
+                          orNew.left.listeners[0]--
+                          return core.flatMap(
+                            optionalCache.value.invalidateWhen(request, (entry) => entry.handle === orNew.left.handle),
+                            () => fromRequest(request, dataSource, cacheOrGet)
+                          )
+                        }
+                        return core.blocked(
+                          BlockedRequests.empty,
+                          ensuring(core.deferredAwait(orNew.left.handle), core.sync(() => orNew.left.listeners[0]--))
+                        )
+                      })
+                    }
+                  })
                 }
                 case "Right": {
                   orNew.right.listeners[0]++
