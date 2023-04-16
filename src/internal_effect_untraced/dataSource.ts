@@ -35,19 +35,22 @@ export const makeBatched = Debug.untracedMethod((restore) =>
   <R, A extends Request.Request<any, any>>(
     run: (requests: Array<A>) => Effect.Effect<R, never, void>
   ): RequestResolver.RequestResolver<Exclude<R, RequestCompletionMap.RequestCompletionMap>, A> =>
-    new core.RequestResolverImpl(
-      Effect.reduce(completedRequestMap.empty(), (outerMap, requests) => {
-        const newRequests = RA.filter(requests, (request) => !completedRequestMap.has(outerMap, request))
-        if (newRequests.length === 0) {
-          return Effect.succeed(outerMap)
-        }
-        const innerMap = completedRequestMap.empty()
-        return pipe(
-          restore(run)(newRequests),
-          Effect.provideService(completedRequestMap.RequestCompletionMap, innerMap),
-          Effect.map(() => completedRequestMap.combine(outerMap, innerMap))
+    new core.RequestResolverImpl<Exclude<R, RequestCompletionMap.RequestCompletionMap>, A>(
+      (requests) =>
+        Effect.suspend(() =>
+          Effect.reduce(requests, completedRequestMap.empty(), (outerMap, requests) => {
+            const newRequests = RA.filter(requests, (request) => !completedRequestMap.has(outerMap, request))
+            if (newRequests.length === 0) {
+              return Effect.succeed(outerMap)
+            }
+            const innerMap = completedRequestMap.empty()
+            return pipe(
+              restore(run)(newRequests),
+              Effect.provideService(completedRequestMap.RequestCompletionMap, innerMap),
+              Effect.map(() => completedRequestMap.combine(outerMap, innerMap))
+            )
+          })
         )
-      })
     )
 )
 
