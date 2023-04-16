@@ -1,5 +1,13 @@
 # @effect/io
 
+## 0.21.1
+
+### Patch Changes
+
+- [#363](https://github.com/Effect-TS/io/pull/363) [`b9d729b`](https://github.com/Effect-TS/io/commit/b9d729b55777b4825a7eeb19667c15b541aed691) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Make sure map is not eagerly created in RequestResolver.makeBatched
+
+- [#361](https://github.com/Effect-TS/io/pull/361) [`f45ec5a`](https://github.com/Effect-TS/io/commit/f45ec5a5ee8754704e9c8000f227be45084303c5) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Remove leftover id
+
 ## 0.21.0
 
 ### Minor Changes
