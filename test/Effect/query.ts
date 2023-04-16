@@ -150,6 +150,7 @@ describe("Effect", () => {
           if (exit._tag === "Failure") {
             expect(Cause.isInterruptedOnly(exit.cause)).toEqual(true)
           }
+          expect(yield* $(Counter)).toEqual({ count: 0 })
           expect(yield* $(FiberRef.get(interrupts))).toEqual({ interrupts: 1 })
         })
       )
@@ -168,7 +169,7 @@ describe("Effect", () => {
           if (exit._tag === "Failure") {
             expect(Cause.isInterruptedOnly(exit.cause)).toEqual(true)
           }
-          expect(yield* $(Counter)).toEqual({ count: 1 })
+          expect(yield* $(Counter)).toEqual({ count: 0 })
           expect(yield* $(FiberRef.get(interrupts))).toEqual({ interrupts: 1 })
         })
       )

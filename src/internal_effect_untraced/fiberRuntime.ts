@@ -1,6 +1,7 @@
 import * as Chunk from "@effect/data/Chunk"
 import * as Context from "@effect/data/Context"
 import * as Debug from "@effect/data/Debug"
+import { equals } from "@effect/data/Equal"
 import type { LazyArg } from "@effect/data/Function"
 import { identity, pipe } from "@effect/data/Function"
 import * as HashSet from "@effect/data/HashSet"
@@ -193,14 +194,25 @@ class LeftoverRequestsException {
 /**
  * Executes all requests, submitting requests to each data source in parallel.
  */
-const runBlockedRequests = <R>(self: RequestBlock.RequestBlock<R>) => {
+const runBlockedRequests = <R>(self: RequestBlock.RequestBlock<R>, runtime: FiberRuntime<any, any>) => {
   return core.forEachDiscard(
     _RequestBlock.flatten(self),
     (requestsByRequestResolver) =>
       forEachParDiscard(
         _RequestBlock.sequentialCollectionToChunk(requestsByRequestResolver),
-        ([dataSource, sequential]) =>
-          core.flatMap(
+        ([dataSource, sequential]) => {
+          if (runtime.isInterrupted()) {
+            sequential = sequential.map((block) =>
+              block.flatMap((entry) => {
+                if (entry.listeners[0] === 0 || (entry.listeners[0] <= 1 && equals(entry.ownerId, runtime.id()))) {
+                  core.deferredUnsafeDone(entry.result, core.exitInterrupt(runtime.id()))
+                  return []
+                }
+                return [entry]
+              })
+            ).filter((block) => block.length > 0)
+          }
+          return core.flatMap(
             dataSource.runAll(
               RA.map(
                 sequential,
@@ -228,6 +240,7 @@ const runBlockedRequests = <R>(self: RequestBlock.RequestBlock<R>) => {
                 ))
             }
           )
+        }
       )
   )
 }
@@ -1170,7 +1183,25 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
         }
       }
     }
-    return core.flatMap(core.uninterruptible(runBlockedRequests(op.i0)), () => op.i1)
+    if (_runtimeFlags.interruptible(this._runtimeFlags)) {
+      // Note for this to allow processing interrupt signals before we enter runBlocked we need to double yield
+      return core.uninterruptibleMask((restore) =>
+        core.async((resume) => {
+          const scheduler = this.getFiberRef(core.currentScheduler)
+          scheduler.scheduleTask(() => {
+            scheduler.scheduleTask(() => {
+              resume(core.flatMap(runBlockedRequests(op.i0, this), () => restore(op.i1)))
+            })
+          })
+        })
+      )
+    }
+    return core.uninterruptibleMask((restore) =>
+      core.flatMap(
+        runBlockedRequests(op.i0, this),
+        () => restore(op.i1)
+      )
+    )
   }
 
   [OpCodes.OP_UPDATE_RUNTIME_FLAGS](op: core.Primitive & { _tag: OpCodes.OP_UPDATE_RUNTIME_FLAGS }) {

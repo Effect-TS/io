@@ -188,7 +188,12 @@ export const succeed: {
  * @category models
  * @since 1.0.0
  */
-export interface Cache<R = unknown> extends _Cache.ConsumerCache<R, never, Deferred<unknown, unknown>> {}
+export interface Cache<R = unknown> extends
+  _Cache.ConsumerCache<R, never, {
+    listeners: [number]
+    handle: Deferred<unknown, unknown>
+  }>
+{}
 
 /**
  * @since 1.0.0
@@ -197,4 +202,13 @@ export interface Cache<R = unknown> extends _Cache.ConsumerCache<R, never, Defer
 export const makeCache = <R = unknown>(
   capacity: number,
   timeToLive: Duration
-): Effect.Effect<never, never, Cache<R>> => cache.make(capacity, timeToLive, () => core.deferredMake())
+): Effect.Effect<never, never, Cache<R>> =>
+  cache.make(
+    capacity,
+    timeToLive,
+    () =>
+      core.map(core.deferredMake(), (handle) => ({
+        listeners: [0],
+        handle
+      }))
+  )

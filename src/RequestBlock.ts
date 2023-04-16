@@ -5,6 +5,7 @@ import type * as Context from "@effect/data/Context"
 import type * as HashMap from "@effect/data/HashMap"
 import type * as List from "@effect/data/List"
 import type * as Deferred from "@effect/io/Deferred"
+import type { FiberId } from "@effect/io/Fiber/Id"
 import type { FiberRef } from "@effect/io/FiberRef"
 import * as _RequestBlock from "@effect/io/internal_effect_untraced/blockedRequests"
 import * as core from "@effect/io/internal_effect_untraced/core"
@@ -198,6 +199,8 @@ export interface Entry<R> extends Entry.Variance<R> {
     [R] extends [Request.Request<infer _E, infer _A>] ? _E : never,
     [R] extends [Request.Request<infer _E, infer _A>] ? _A : never
   >
+  readonly listeners: [number]
+  readonly ownerId: FiberId
 }
 
 /**
@@ -216,34 +219,17 @@ export declare namespace Entry {
   }
 }
 
-class EntryImpl<A extends Request.Request<any, any>> implements Entry<A> {
-  readonly [EntryTypeId] = blockedRequestVariance
-  constructor(
-    readonly request: A,
-    readonly result: Deferred.Deferred<Request.Request.Error<A>, Request.Request.Success<A>>
-  ) {}
-}
-
-const blockedRequestVariance = {
-  _R: (_: never) => _
-}
-
 /**
  * @since 1.0.0
  * @category guards
  */
-export const isEntry = (u: unknown): u is Entry<unknown> => {
-  return typeof u === "object" && u != null && EntryTypeId in u
-}
+export const isEntry = _RequestBlock.isEntry
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const makeEntry = <A extends Request.Request<any, any>>(
-  request: A,
-  result: Deferred.Deferred<Request.Request.Error<A>, Request.Request.Success<A>>
-): Entry<A> => new EntryImpl(request, result)
+export const makeEntry = _RequestBlock.makeEntry
 
 /**
  * @since 1.0.0

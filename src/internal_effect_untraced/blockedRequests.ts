@@ -5,6 +5,7 @@ import * as HashMap from "@effect/data/HashMap"
 import * as List from "@effect/data/List"
 import * as Option from "@effect/data/Option"
 import type * as Deferred from "@effect/io/Deferred"
+import type { FiberId } from "@effect/io/Fiber/Id"
 import type * as Request from "@effect/io/Request"
 import type * as RequestBlock from "@effect/io/RequestBlock"
 import type * as RequestResolver from "@effect/io/RequestResolver"
@@ -328,7 +329,9 @@ class EntryImpl<A extends Request.Request<any, any>> implements RequestBlock.Ent
   readonly [EntryTypeId] = blockedRequestVariance
   constructor(
     readonly request: A,
-    readonly result: Deferred.Deferred<Request.Request.Error<A>, Request.Request.Success<A>>
+    readonly result: Deferred.Deferred<Request.Request.Error<A>, Request.Request.Success<A>>,
+    readonly listeners: [number],
+    readonly ownerId: FiberId
   ) {}
 }
 
@@ -345,8 +348,10 @@ export const isEntry = (u: unknown): u is RequestBlock.Entry<unknown> => {
 /** @internal */
 export const makeEntry = <A extends Request.Request<any, any>>(
   request: A,
-  result: Deferred.Deferred<Request.Request.Error<A>, Request.Request.Success<A>>
-): RequestBlock.Entry<A> => new EntryImpl(request, result)
+  result: Deferred.Deferred<Request.Request.Error<A>, Request.Request.Success<A>>,
+  listeners: [number],
+  ownerId: FiberId
+): RequestBlock.Entry<A> => new EntryImpl(request, result, listeners, ownerId)
 
 /** @internal */
 export const RequestBlockParallelTypeId: RequestBlock.RequestBlockParallelTypeId = Symbol.for(

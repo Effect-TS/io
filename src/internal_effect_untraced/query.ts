@@ -4,12 +4,17 @@ import type * as Cache from "@effect/io/Cache"
 import type { Deferred } from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
 import * as BlockedRequests from "@effect/io/internal_effect_untraced/blockedRequests"
+import { isInterruptedOnly } from "@effect/io/internal_effect_untraced/cause"
 import * as core from "@effect/io/internal_effect_untraced/core"
+import { ensuring } from "@effect/io/internal_effect_untraced/effect/circular"
 import { currentRequestBatchingEnabled } from "@effect/io/internal_effect_untraced/fiberRuntime"
 import type * as Request from "@effect/io/Request"
 import type * as RequestResolver from "@effect/io/RequestResolver"
 
-type RequestCache = Cache.Cache<unknown, never, Deferred<any, any>>
+type RequestCache = Cache.Cache<unknown, never, {
+  listeners: [number]
+  handle: Deferred<any, any>
+}>
 
 /** @internal */
 export const fromRequest = Debug.methodWithTrace((trace) =>
@@ -21,53 +26,80 @@ export const fromRequest = Debug.methodWithTrace((trace) =>
       | Effect.Effect<any, any, RequestCache>
       | Effect.Effect<any, any, Option.Option<RequestCache>>
   ): Effect.Effect<R, Request.Request.Error<A>, Request.Request.Success<A>> => {
-    if (cacheOrGet) {
-      return core.flatMap(
-        (core.isEffect(cacheOrGet) ? cacheOrGet : core.succeed(cacheOrGet)) as Effect.Effect<
-          any,
-          any,
-          Option.Option<RequestCache> | RequestCache
-        >,
-        (cacheOrOption) => {
-          const optionalCache = Option.isOption(cacheOrOption) ? cacheOrOption : Option.some(cacheOrOption)
-          if (Option.isNone(optionalCache)) {
-            return core.flatMap(
-              core.deferredMake<Request.Request.Error<A>, Request.Request.Success<A>>(),
-              (ref) =>
-                core.blocked(
-                  BlockedRequests.single(dataSource, BlockedRequests.makeEntry(request, ref)),
-                  core.deferredAwait(ref)
-                )
-            )
-          }
-          return core.flatMap(optionalCache.value.getEither(request), (orNew) => {
-            switch (orNew._tag) {
-              case "Left": {
-                return core.blocked(
-                  BlockedRequests.empty,
-                  core.deferredAwait(orNew.left)
-                )
-              }
-              case "Right": {
-                return core.blocked(
-                  BlockedRequests.single(dataSource, BlockedRequests.makeEntry(request, orNew.right)),
-                  core.deferredAwait(orNew.right)
-                )
-              }
+    return core.fiberIdWith((id) => {
+      if (cacheOrGet) {
+        return core.flatMap(
+          (core.isEffect(cacheOrGet) ? cacheOrGet : core.succeed(cacheOrGet)) as Effect.Effect<
+            any,
+            any,
+            Option.Option<RequestCache> | RequestCache
+          >,
+          (cacheOrOption) => {
+            const optionalCache = Option.isOption(cacheOrOption) ? cacheOrOption : Option.some(cacheOrOption)
+            if (Option.isNone(optionalCache)) {
+              const listeners: [number] = [1]
+              return core.flatMap(
+                core.deferredMake<Request.Request.Error<A>, Request.Request.Success<A>>(),
+                (ref) =>
+                  core.blocked(
+                    BlockedRequests.single(dataSource, BlockedRequests.makeEntry(request, ref, listeners, id)),
+                    ensuring(core.deferredAwait(ref), core.sync(() => listeners[0]--))
+                  )
+              )
             }
-          })
-        }
-      )
-    }
-
-    return core.flatMap(
-      core.deferredMake<Request.Request.Error<A>, Request.Request.Success<A>>(),
-      (ref) =>
-        core.blocked(
-          BlockedRequests.single(dataSource, BlockedRequests.makeEntry(request, ref)),
-          core.deferredAwait(ref)
+            return core.flatMap(optionalCache.value.getEither(request), (orNew) => {
+              switch (orNew._tag) {
+                case "Left": {
+                  orNew.left.listeners[0]++
+                  return core.blocked(
+                    BlockedRequests.empty,
+                    ensuring(core.deferredAwait(orNew.left.handle), core.sync(() => orNew.left.listeners[0]--))
+                  )
+                }
+                case "Right": {
+                  orNew.right.listeners[0]++
+                  return core.blocked(
+                    BlockedRequests.single(
+                      dataSource,
+                      BlockedRequests.makeEntry(request, orNew.right.handle, orNew.right.listeners, id)
+                    ),
+                    core.matchCauseEffect(
+                      core.deferredAwait(orNew.right.handle),
+                      (cause) => {
+                        orNew.right.listeners[0]--
+                        if (isInterruptedOnly(cause)) {
+                          return core.uninterruptible(core.flatMap(
+                            optionalCache.value.invalidateWhen(request, (entry) => entry.handle === orNew.right.handle),
+                            () => core.failCause(cause)
+                          ))
+                        }
+                        return core.failCause(cause)
+                      },
+                      (value) => {
+                        orNew.right.listeners[0]--
+                        return core.succeed(value)
+                      }
+                    )
+                  )
+                }
+              }
+            })
+          }
         )
-    ).traced(trace)
+      }
+      const listeners: [number] = [1]
+      return core.flatMap(
+        core.deferredMake<Request.Request.Error<A>, Request.Request.Success<A>>(),
+        (ref) =>
+          core.blocked(
+            BlockedRequests.single(dataSource, BlockedRequests.makeEntry(request, ref, listeners, id)),
+            ensuring(
+              core.deferredAwait(ref),
+              core.sync(() => listeners[0]--)
+            )
+          )
+      )
+    }).traced(trace)
   }
 )
 
