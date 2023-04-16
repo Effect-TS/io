@@ -1672,7 +1672,7 @@ export class RequestResolverImpl<R, A> implements RequestResolver.RequestResolve
   readonly [RequestResolverTypeId] = dataSourceVariance
   constructor(
     readonly runAll: (
-      requests: Array<Array<A>>
+      requests: Array<Array<Request.Entry<A>>>
     ) => Effect.Effect<R, never, RequestCompletionMap>,
     readonly target?: unknown
   ) {}

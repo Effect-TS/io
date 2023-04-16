@@ -8,6 +8,8 @@ import type * as _Cache from "@effect/io/Cache"
 import type { Deferred } from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
+import type { FiberId } from "@effect/io/Fiber/Id"
+import * as _RequestBlock from "@effect/io/internal_effect_untraced/blockedRequests"
 import * as cache from "@effect/io/internal_effect_untraced/cache"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as internal from "@effect/io/internal_effect_untraced/request"
@@ -188,9 +190,22 @@ export const succeed: {
  * @category models
  * @since 1.0.0
  */
+export interface Listeners {
+  count: number
+  observers: Set<(count: number) => void>
+  addObserver(f: (count: number) => void): void
+  removeObserver(f: (count: number) => void): void
+  increment(): void
+  decrement(): void
+}
+
+/**
+ * @category models
+ * @since 1.0.0
+ */
 export interface Cache<R = unknown> extends
   _Cache.ConsumerCache<R, never, {
-    listeners: [number]
+    listeners: Listeners
     handle: Deferred<unknown, unknown>
   }>
 {}
@@ -208,7 +223,67 @@ export const makeCache = <R = unknown>(
     timeToLive,
     () =>
       core.map(core.deferredMake(), (handle) => ({
-        listeners: [0],
+        listeners: new internal.Listeners(),
         handle
       }))
   )
+
+/**
+ * @since 1.0.0
+ * @category symbols
+ */
+export const EntryTypeId = Symbol.for("@effect/io/RequestBlock.Entry")
+
+/**
+ * @since 1.0.0
+ * @category symbols
+ */
+export type EntryTypeId = typeof EntryTypeId
+
+/**
+ * A `Entry<A>` keeps track of a request of type `A` along with a
+ * `Ref` containing the result of the request, existentially hiding the result
+ * type. This is used internally by the library to support data sources that
+ * return different result types for different requests while guaranteeing that
+ * results will be of the type requested.
+ *
+ * @since 1.0.0
+ * @category models
+ */
+export interface Entry<R> extends Entry.Variance<R> {
+  readonly request: R
+  readonly result: Deferred<
+    [R] extends [Request<infer _E, infer _A>] ? _E : never,
+    [R] extends [Request<infer _E, infer _A>] ? _A : never
+  >
+  readonly listeners: Listeners
+  readonly ownerId: FiberId
+}
+
+/**
+ * @since 1.0.0
+ * @category models
+ */
+export declare namespace Entry {
+  /**
+   * @since 1.0.0
+   * @category models
+   */
+  export interface Variance<R> {
+    readonly [EntryTypeId]: {
+      readonly _R: (_: never) => R
+    }
+  }
+}
+
+/**
+ * @since 1.0.0
+ * @category guards
+ */
+export const isEntry = _RequestBlock.isEntry
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const makeEntry = _RequestBlock.makeEntry

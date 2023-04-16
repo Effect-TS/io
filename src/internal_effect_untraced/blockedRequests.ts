@@ -53,7 +53,7 @@ export const seq = <R, R2>(
  */
 export const single = <R, A>(
   dataSource: RequestResolver.RequestResolver<R, A>,
-  blockedRequest: RequestBlock.Entry<A>
+  blockedRequest: Request.Entry<A>
 ): RequestBlock.RequestBlock<R> => ({
   _tag: "Single",
   dataSource,
@@ -320,17 +320,17 @@ const merge = <R>(
 //
 
 /** @internal */
-export const EntryTypeId: RequestBlock.EntryTypeId = Symbol.for(
+export const EntryTypeId: Request.EntryTypeId = Symbol.for(
   "@effect/io/RequestBlock.Entry"
-) as RequestBlock.EntryTypeId
+) as Request.EntryTypeId
 
 /** @internal */
-class EntryImpl<A extends Request.Request<any, any>> implements RequestBlock.Entry<A> {
+class EntryImpl<A extends Request.Request<any, any>> implements Request.Entry<A> {
   readonly [EntryTypeId] = blockedRequestVariance
   constructor(
     readonly request: A,
     readonly result: Deferred.Deferred<Request.Request.Error<A>, Request.Request.Success<A>>,
-    readonly listeners: [number],
+    readonly listeners: Request.Listeners,
     readonly ownerId: FiberId
   ) {}
 }
@@ -341,7 +341,7 @@ const blockedRequestVariance = {
 }
 
 /** @internal */
-export const isEntry = (u: unknown): u is RequestBlock.Entry<unknown> => {
+export const isEntry = (u: unknown): u is Request.Entry<unknown> => {
   return typeof u === "object" && u != null && EntryTypeId in u
 }
 
@@ -349,9 +349,9 @@ export const isEntry = (u: unknown): u is RequestBlock.Entry<unknown> => {
 export const makeEntry = <A extends Request.Request<any, any>>(
   request: A,
   result: Deferred.Deferred<Request.Request.Error<A>, Request.Request.Success<A>>,
-  listeners: [number],
+  listeners: Request.Listeners,
   ownerId: FiberId
-): RequestBlock.Entry<A> => new EntryImpl(request, result, listeners, ownerId)
+): Request.Entry<A> => new EntryImpl(request, result, listeners, ownerId)
 
 /** @internal */
 export const RequestBlockParallelTypeId: RequestBlock.RequestBlockParallelTypeId = Symbol.for(
@@ -367,7 +367,7 @@ class ParallelImpl<R> implements RequestBlock.ParallelCollection<R> {
   constructor(
     readonly map: HashMap.HashMap<
       RequestResolver.RequestResolver<unknown, unknown>,
-      Array<RequestBlock.Entry<unknown>>
+      Array<Request.Entry<unknown>>
     >
   ) {}
 }
@@ -378,7 +378,7 @@ export const parallelCollectionEmpty = <R>(): RequestBlock.ParallelCollection<R>
 /** @internal */
 export const parallelCollectionMake = <R, A>(
   dataSource: RequestResolver.RequestResolver<R, A>,
-  blockedRequest: RequestBlock.Entry<A>
+  blockedRequest: Request.Entry<A>
 ): RequestBlock.ParallelCollection<R> => new ParallelImpl(HashMap.make([dataSource, Array.of(blockedRequest)]))
 
 /** @internal */
@@ -416,7 +416,7 @@ export const parallelCollectionToChunk = <R>(
 ): Array<
   readonly [
     RequestResolver.RequestResolver<R, unknown>,
-    Array<RequestBlock.Entry<unknown>>
+    Array<Request.Entry<unknown>>
   ]
 > => Array.from(self.map) as any
 
@@ -435,7 +435,7 @@ class SequentialImpl<R> implements RequestBlock.SequentialCollection<R> {
   constructor(
     readonly map: HashMap.HashMap<
       RequestResolver.RequestResolver<unknown, unknown>,
-      Array<Array<RequestBlock.Entry<unknown>>>
+      Array<Array<Request.Entry<unknown>>>
     >
   ) {}
 }
@@ -444,7 +444,7 @@ class SequentialImpl<R> implements RequestBlock.SequentialCollection<R> {
 export const sequentialCollectionMake = <R, A>(
   map: HashMap.HashMap<
     RequestResolver.RequestResolver<R, A>,
-    Array<Array<RequestBlock.Entry<A>>>
+    Array<Array<Request.Entry<A>>>
   >
 ): RequestBlock.SequentialCollection<R> => new SequentialImpl(map)
 
@@ -479,6 +479,6 @@ export const sequentialCollectionKeys = <R>(
 export const sequentialCollectionToChunk = <R>(self: RequestBlock.SequentialCollection<R>): Array<
   readonly [
     RequestResolver.RequestResolver<R, unknown>,
-    Array<Array<RequestBlock.Entry<unknown>>>
+    Array<Array<Request.Entry<unknown>>>
   ]
 > => Array.from(self.map) as any

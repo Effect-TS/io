@@ -51,24 +51,26 @@ export interface GetNameById extends Request.Request<never, string> {
 
 export const GetNameById = Request.tagged<GetNameById>("GetNameById")
 
-export const UserResolver = Resolver.makeBatched((requests: Array<UserRequest>) =>
-  Effect.flatMap(Counter, (counter) => {
-    counter.count++
-    return Effect.forEachDiscard(requests, (request) => {
-      switch (request._tag) {
-        case "GetAllIds": {
-          return Request.complete(request, Exit.succeed(userIds))
-        }
-        case "GetNameById": {
-          if (userNames.has(request.id)) {
-            const userName = userNames.get(request.id)!
-            return Request.complete(request, Exit.succeed(userName))
+export const UserResolver = Resolver.interruptWhenPossible(
+  Resolver.makeBatched<UserRequest>()((requests) =>
+    Effect.flatMap(Counter, (counter) => {
+      counter.count++
+      return Effect.forEachDiscard(requests, ({ request }) => {
+        switch (request._tag) {
+          case "GetAllIds": {
+            return Request.complete(request, Exit.succeed(userIds))
           }
-          return Effect.unit()
+          case "GetNameById": {
+            if (userNames.has(request.id)) {
+              const userName = userNames.get(request.id)!
+              return Request.complete(request, Exit.succeed(userName))
+            }
+            return Effect.unit()
+          }
         }
-      }
+      })
     })
-  })
+  )
 )
 
 export const getAllUserIds = Effect.request(

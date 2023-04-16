@@ -8,11 +8,12 @@ import { isInterruptedOnly } from "@effect/io/internal_effect_untraced/cause"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import { ensuring } from "@effect/io/internal_effect_untraced/effect/circular"
 import { currentRequestBatchingEnabled } from "@effect/io/internal_effect_untraced/fiberRuntime"
+import { Listeners } from "@effect/io/internal_effect_untraced/request"
 import type * as Request from "@effect/io/Request"
 import type * as RequestResolver from "@effect/io/RequestResolver"
 
 type RequestCache = Cache.Cache<unknown, never, {
-  listeners: [number]
+  listeners: Request.Listeners
   handle: Deferred<any, any>
 }>
 
@@ -37,30 +38,34 @@ export const fromRequest = Debug.methodWithTrace((trace) =>
           (cacheOrOption) => {
             const optionalCache = Option.isOption(cacheOrOption) ? cacheOrOption : Option.some(cacheOrOption)
             if (Option.isNone(optionalCache)) {
-              const listeners: [number] = [1]
+              const listeners = new Listeners()
+              listeners.increment()
               return core.flatMap(
                 core.deferredMake<Request.Request.Error<A>, Request.Request.Success<A>>(),
                 (ref) =>
                   core.blocked(
                     BlockedRequests.single(dataSource, BlockedRequests.makeEntry(request, ref, listeners, id)),
-                    ensuring(core.deferredAwait(ref), core.sync(() => listeners[0]--))
+                    ensuring(core.deferredAwait(ref), core.sync(() => listeners.decrement()))
                   )
               )
             }
             return core.flatMap(optionalCache.value.getEither(request), (orNew) => {
               switch (orNew._tag) {
                 case "Left": {
-                  orNew.left.listeners[0]++
+                  orNew.left.listeners.increment()
                   return core.flatMap(core.deferredPoll(orNew.left.handle), (o) => {
                     if (o._tag === "None") {
                       return core.blocked(
                         BlockedRequests.empty,
-                        ensuring(core.deferredAwait(orNew.left.handle), core.sync(() => orNew.left.listeners[0]--))
+                        ensuring(
+                          core.deferredAwait(orNew.left.handle),
+                          core.sync(() => orNew.left.listeners.decrement())
+                        )
                       )
                     } else {
                       return core.flatMap(core.exit(core.deferredAwait(orNew.left.handle)), (exit) => {
                         if (exit._tag === "Failure" && isInterruptedOnly(exit.cause)) {
-                          orNew.left.listeners[0]--
+                          orNew.left.listeners.decrement()
                           return core.flatMap(
                             optionalCache.value.invalidateWhen(request, (entry) => entry.handle === orNew.left.handle),
                             () => fromRequest(request, dataSource, cacheOrGet)
@@ -68,14 +73,17 @@ export const fromRequest = Debug.methodWithTrace((trace) =>
                         }
                         return core.blocked(
                           BlockedRequests.empty,
-                          ensuring(core.deferredAwait(orNew.left.handle), core.sync(() => orNew.left.listeners[0]--))
+                          ensuring(
+                            core.deferredAwait(orNew.left.handle),
+                            core.sync(() => orNew.left.listeners.decrement())
+                          )
                         )
                       })
                     }
                   })
                 }
                 case "Right": {
-                  orNew.right.listeners[0]++
+                  orNew.right.listeners.increment()
                   return core.blocked(
                     BlockedRequests.single(
                       dataSource,
@@ -84,7 +92,7 @@ export const fromRequest = Debug.methodWithTrace((trace) =>
                     core.matchCauseEffect(
                       core.deferredAwait(orNew.right.handle),
                       (cause) => {
-                        orNew.right.listeners[0]--
+                        orNew.right.listeners.decrement()
                         if (isInterruptedOnly(cause)) {
                           return core.uninterruptible(core.flatMap(
                             optionalCache.value.invalidateWhen(request, (entry) => entry.handle === orNew.right.handle),
@@ -94,7 +102,7 @@ export const fromRequest = Debug.methodWithTrace((trace) =>
                         return core.failCause(cause)
                       },
                       (value) => {
-                        orNew.right.listeners[0]--
+                        orNew.right.listeners.decrement()
                         return core.succeed(value)
                       }
                     )
@@ -105,7 +113,8 @@ export const fromRequest = Debug.methodWithTrace((trace) =>
           }
         )
       }
-      const listeners: [number] = [1]
+      const listeners = new Listeners()
+      listeners.increment()
       return core.flatMap(
         core.deferredMake<Request.Request.Error<A>, Request.Request.Success<A>>(),
         (ref) =>
@@ -113,7 +122,7 @@ export const fromRequest = Debug.methodWithTrace((trace) =>
             BlockedRequests.single(dataSource, BlockedRequests.makeEntry(request, ref, listeners, id)),
             ensuring(
               core.deferredAwait(ref),
-              core.sync(() => listeners[0]--)
+              core.sync(() => listeners.decrement())
             )
           )
       )

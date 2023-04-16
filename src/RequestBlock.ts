@@ -4,8 +4,6 @@
 import type * as Context from "@effect/data/Context"
 import type * as HashMap from "@effect/data/HashMap"
 import type * as List from "@effect/data/List"
-import type * as Deferred from "@effect/io/Deferred"
-import type { FiberId } from "@effect/io/Fiber/Id"
 import type { FiberRef } from "@effect/io/FiberRef"
 import * as _RequestBlock from "@effect/io/internal_effect_untraced/blockedRequests"
 import * as core from "@effect/io/internal_effect_untraced/core"
@@ -39,7 +37,7 @@ export declare namespace RequestBlock {
     readonly parCase: (left: Z, right: Z) => Z
     readonly singleCase: (
       dataSource: RequestResolver.RequestResolver<R, unknown>,
-      blockedRequest: Entry<unknown>
+      blockedRequest: Request.Entry<unknown>
     ) => Z
     readonly seqCase: (left: Z, right: Z) => Z
   }
@@ -80,7 +78,7 @@ export interface Seq<R> {
 export interface Single<R> {
   readonly _tag: "Single"
   readonly dataSource: RequestResolver.RequestResolver<R, unknown>
-  readonly blockedRequest: Entry<unknown>
+  readonly blockedRequest: Request.Entry<unknown>
 }
 
 /**
@@ -89,7 +87,7 @@ export interface Single<R> {
  */
 export const single: <R, A>(
   dataSource: RequestResolver.RequestResolver<R, A>,
-  blockedRequest: Entry<A>
+  blockedRequest: Request.Entry<A>
 ) => RequestBlock<R> = _RequestBlock.single
 
 /**
@@ -172,69 +170,6 @@ export const locally: <R, A>(self: RequestBlock<R>, ref: FiberRef<A>, value: A) 
  * @since 1.0.0
  * @category symbols
  */
-export const EntryTypeId = Symbol.for("@effect/io/RequestBlock.Entry")
-
-/**
- * @since 1.0.0
- * @category symbols
- */
-export type EntryTypeId = typeof EntryTypeId
-
-/**
- * A `Entry<A>` keeps track of a request of type `A` along with a
- * `Ref` containing the result of the request, existentially hiding the result
- * type. This is used internally by the library to support data sources that
- * return different result types for different requests while guaranteeing that
- * results will be of the type requested.
- *
- * @since 1.0.0
- * @category models
- */
-export interface Entry<R> extends Entry.Variance<R> {
-  readonly request: Request.Request<
-    [R] extends [Request.Request<infer _E, infer _A>] ? _E : never,
-    [R] extends [Request.Request<infer _E, infer _A>] ? _A : never
-  >
-  readonly result: Deferred.Deferred<
-    [R] extends [Request.Request<infer _E, infer _A>] ? _E : never,
-    [R] extends [Request.Request<infer _E, infer _A>] ? _A : never
-  >
-  readonly listeners: [number]
-  readonly ownerId: FiberId
-}
-
-/**
- * @since 1.0.0
- * @category models
- */
-export declare namespace Entry {
-  /**
-   * @since 1.0.0
-   * @category models
-   */
-  export interface Variance<R> {
-    readonly [EntryTypeId]: {
-      readonly _R: (_: never) => R
-    }
-  }
-}
-
-/**
- * @since 1.0.0
- * @category guards
- */
-export const isEntry = _RequestBlock.isEntry
-
-/**
- * @since 1.0.0
- * @category constructors
- */
-export const makeEntry = _RequestBlock.makeEntry
-
-/**
- * @since 1.0.0
- * @category symbols
- */
 export const RequestBlockParallelTypeId: unique symbol = _RequestBlock.RequestBlockParallelTypeId
 
 /**
@@ -253,7 +188,7 @@ export type RequestBlockParallelTypeId = typeof RequestBlockParallelTypeId
 export interface ParallelCollection<R> extends ParallelCollection.Variance<R> {
   readonly map: HashMap.HashMap<
     RequestResolver.RequestResolver<unknown, unknown>,
-    Array<Entry<unknown>>
+    Array<Request.Entry<unknown>>
   >
 }
 
@@ -290,7 +225,7 @@ export const parallelCollectionEmpty: <R>() => ParallelCollection<R> = _RequestB
  */
 export const parallelCollectionMake: <R, A>(
   dataSource: RequestResolver.RequestResolver<R, A>,
-  blockedRequest: Entry<A>
+  blockedRequest: Request.Entry<A>
 ) => ParallelCollection<R> = _RequestBlock.parallelCollectionMake
 
 /**
@@ -347,7 +282,7 @@ export const parallelCollectionToSequentialCollection: <R>(self: ParallelCollect
  */
 export const parallelCollectionToChunk: <R>(
   self: ParallelCollection<R>
-) => Array<readonly [RequestResolver.RequestResolver<R, unknown>, Array<Entry<unknown>>]> =
+) => Array<readonly [RequestResolver.RequestResolver<R, unknown>, Array<Request.Entry<unknown>>]> =
   _RequestBlock.parallelCollectionToChunk
 
 /**
@@ -372,7 +307,7 @@ export type SequentialCollectionTypeId = typeof SequentialCollectionTypeId
 export interface SequentialCollection<R> extends SequentialCollection.Variance<R> {
   readonly map: HashMap.HashMap<
     RequestResolver.RequestResolver<unknown, unknown>,
-    Array<Array<Entry<unknown>>>
+    Array<Array<Request.Entry<unknown>>>
   >
 }
 
@@ -397,7 +332,7 @@ export declare namespace SequentialCollection {
  * @category constructors
  */
 export const sequentialCollectionMake: <R, A>(
-  map: HashMap.HashMap<RequestResolver.RequestResolver<R, A>, Array<Array<Entry<A>>>>
+  map: HashMap.HashMap<RequestResolver.RequestResolver<R, A>, Array<Array<Request.Entry<A>>>>
 ) => SequentialCollection<R> = _RequestBlock.sequentialCollectionMake
 
 /**
@@ -444,5 +379,5 @@ export const sequentialCollectionKeys: <R>(
  */
 export const sequentialCollectionToChunk: <R>(
   self: SequentialCollection<R>
-) => Array<readonly [RequestResolver.RequestResolver<R, unknown>, Array<Array<Entry<unknown>>>]> =
+) => Array<readonly [RequestResolver.RequestResolver<R, unknown>, Array<Array<Request.Entry<unknown>>>]> =
   _RequestBlock.sequentialCollectionToChunk

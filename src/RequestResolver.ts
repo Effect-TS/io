@@ -2,16 +2,18 @@
  * @since 1.0.0
  */
 
+import * as Chunk from "@effect/data/Chunk"
 import type * as Context from "@effect/data/Context"
 import type * as Either from "@effect/data/Either"
 import type * as Equal from "@effect/data/Equal"
 import type * as Option from "@effect/data/Option"
-import type * as Effect from "@effect/io/Effect"
+import * as Effect from "@effect/io/Effect"
+import * as Exit from "@effect/io/Exit"
 import type { FiberRef } from "@effect/io/FiberRef"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as internal from "@effect/io/internal_effect_untraced/dataSource"
 import type * as Request from "@effect/io/Request"
-import type * as RequestCompletionMap from "@effect/io/RequestCompletionMap"
+import * as RequestCompletionMap from "@effect/io/RequestCompletionMap"
 
 /**
  * @since 1.0.0
@@ -55,7 +57,7 @@ export interface RequestResolver<R, A> extends Equal.Equal {
    * of requests that must be performed sequentially. The inner `Chunk`
    * represents a batch of requests that can be performed in parallel.
    */
-  runAll(requests: Array<Array<A>>): Effect.Effect<R, never, RequestCompletionMap.RequestCompletionMap>
+  runAll(requests: Array<Array<Request.Entry<A>>>): Effect.Effect<R, never, RequestCompletionMap.RequestCompletionMap>
 
   /**
    * Identify the data source using the specific identifier
@@ -94,9 +96,9 @@ export const isRequestResolver: (u: unknown) => u is RequestResolver<unknown, un
  * @since 1.0.0
  * @category constructors
  */
-export const make: <R, A>(
-  runAll: (requests: Array<Array<A>>) => Effect.Effect<R, never, void>
-) => RequestResolver<Exclude<R, RequestCompletionMap.RequestCompletionMap>, A> = internal.make
+export const make: <A extends Request.Request<any, any>>() => <R>(
+  runAll: (requests: Array<Array<Request.Entry<A>>>) => Effect.Effect<R, never, void>
+) => RequestResolver<Exclude<R, RequestCompletionMap.RequestCompletionMap>, A> = () => internal.make
 
 /**
  * Constructs a data source from a function taking a collection of requests
@@ -105,9 +107,9 @@ export const make: <R, A>(
  * @since 1.0.0
  * @category constructors
  */
-export const makeBatched: <R, A extends Request.Request<any, any>>(
-  run: (requests: Array<A>) => Effect.Effect<R, never, void>
-) => RequestResolver<Exclude<R, RequestCompletionMap.RequestCompletionMap>, A> = internal.makeBatched
+export const makeBatched: <A extends Request.Request<any, any>>() => <R>(
+  run: (requests: Array<Request.Entry<A>>) => Effect.Effect<R, never, void>
+) => RequestResolver<Exclude<R, RequestCompletionMap.RequestCompletionMap>, A> = () => internal.makeBatched
 
 /**
  * A data source aspect that executes requests between two effects, `before`
@@ -140,24 +142,6 @@ export const batchN: {
 } = internal.batchN
 
 /**
- * Returns a new data source that executes requests of type `B` using the
- * specified function to transform `B` requests into requests that this data
- * source can execute.
- *
- * @since 1.0.0
- * @category combinators
- */
-export const contramap: {
-  <A extends Request.Request<any, any>, B extends Request.Request<any, any>>(
-    f: (_: B) => A
-  ): <R>(self: RequestResolver<R, A>) => RequestResolver<R, B>
-  <R, A extends Request.Request<any, any>, B extends Request.Request<any, any>>(
-    self: RequestResolver<R, A>,
-    f: (_: B) => A
-  ): RequestResolver<R, B>
-} = internal.contramap
-
-/**
  * Provides this data source with part of its required context.
  *
  * @since 1.0.0
@@ -172,24 +156,6 @@ export const contramapContext: {
     f: (context: Context.Context<R0>) => Context.Context<R>
   ): RequestResolver<R0, A>
 } = internal.contramapContext
-
-/**
- * Returns a new data source that executes requests of type `B` using the
- * specified effectual function to transform `B` requests into requests that
- * this data source can execute.
- *
- * @since 1.0.0
- * @category combinators
- */
-export const contramapEffect: {
-  <A extends Request.Request<any, any>, R2, B extends Request.Request<any, any>>(
-    f: (_: B) => Effect.Effect<R2, never, A>
-  ): <R>(self: RequestResolver<R, A>) => RequestResolver<R2 | R, B>
-  <R, A extends Request.Request<any, any>, R2, B extends Request.Request<any, any>>(
-    self: RequestResolver<R, A>,
-    f: (_: B) => Effect.Effect<R2, never, A>
-  ): RequestResolver<R | R2, B>
-} = internal.contramapEffect
 
 /**
  * Returns a new data source that executes requests of type `C` using the
@@ -223,9 +189,9 @@ export const eitherWith: {
  * @since 1.0.0
  * @category constructors
  */
-export const fromFunction: <A extends Request.Request<never, any>>(
-  f: (request: A) => Request.Request.Success<A>
-) => RequestResolver<never, A> = internal.fromFunction
+export const fromFunction: <A extends Request.Request<never, any>>() => (
+  f: (request: Request.Entry<A>) => Request.Request.Success<A>
+) => RequestResolver<never, A> = () => internal.fromFunction
 
 /**
  * Constructs a data source from a pure function that takes a list of requests
@@ -235,9 +201,9 @@ export const fromFunction: <A extends Request.Request<never, any>>(
  * @since 1.0.0
  * @category constructors
  */
-export const fromFunctionBatched: <A extends Request.Request<never, any>>(
-  f: (chunk: Array<A>) => Array<Request.Request.Success<A>>
-) => RequestResolver<never, A> = internal.fromFunctionBatched
+export const fromFunctionBatched: <A extends Request.Request<never, any>>() => (
+  f: (chunk: Array<Request.Entry<A>>) => Array<Request.Request.Success<A>>
+) => RequestResolver<never, A> = () => internal.fromFunctionBatched
 
 /**
  * Constructs a data source from an effectual function that takes a list of
@@ -248,9 +214,9 @@ export const fromFunctionBatched: <A extends Request.Request<never, any>>(
  * @since 1.0.0
  * @category constructors
  */
-export const fromFunctionBatchedEffect: <R, A extends Request.Request<any, any>>(
-  f: (chunk: Array<A>) => Effect.Effect<R, Request.Request.Error<A>, Array<Request.Request.Success<A>>>
-) => RequestResolver<R, A> = internal.fromFunctionBatchedEffect
+export const fromFunctionBatchedEffect: <A extends Request.Request<any, any>>() => <R>(
+  f: (chunk: Array<Request.Entry<A>>) => Effect.Effect<R, Request.Request.Error<A>, Array<Request.Request.Success<A>>>
+) => RequestResolver<R, A> = () => internal.fromFunctionBatchedEffect
 
 /**
  * Constructs a data source from a pure function that takes a list of requests
@@ -261,9 +227,9 @@ export const fromFunctionBatchedEffect: <R, A extends Request.Request<any, any>>
  * @since 1.0.0
  * @category constructors
  */
-export const fromFunctionBatchedOption: <A extends Request.Request<never, any>>(
-  f: (chunk: Array<A>) => Array<Option.Option<Request.Request.Success<A>>>
-) => RequestResolver<never, A> = internal.fromFunctionBatchedOption
+export const fromFunctionBatchedOption: <A extends Request.Request<never, any>>() => (
+  f: (chunk: Array<Request.Entry<A>>) => Array<Option.Option<Request.Request.Success<A>>>
+) => RequestResolver<never, A> = () => internal.fromFunctionBatchedOption
 
 /**
  * Constructs a data source from an effectual function that takes a list of
@@ -274,11 +240,11 @@ export const fromFunctionBatchedOption: <A extends Request.Request<never, any>>(
  * @since 1.0.0
  * @category constructors
  */
-export const fromFunctionBatchedOptionEffect: <R, A extends Request.Request<any, any>>(
+export const fromFunctionBatchedOptionEffect: <A extends Request.Request<any, any>>() => <R>(
   f: (
-    chunk: Array<A>
+    chunk: Array<Request.Entry<A>>
   ) => Effect.Effect<R, Request.Request.Error<A>, Array<Option.Option<Request.Request.Success<A>>>>
-) => RequestResolver<R, A> = internal.fromFunctionBatchedOptionEffect
+) => RequestResolver<R, A> = () => internal.fromFunctionBatchedOptionEffect
 
 /**
  * Constructs a data source from a function that takes a list of requests and
@@ -290,10 +256,10 @@ export const fromFunctionBatchedOptionEffect: <R, A extends Request.Request<any,
  * @since 1.0.0
  * @category constructors
  */
-export const fromFunctionBatchedWith: <A extends Request.Request<any, any>>(
-  f: (chunk: Array<A>) => Array<Request.Request.Success<A>>,
+export const fromFunctionBatchedWith: <A extends Request.Request<any, any>>() => (
+  f: (chunk: Array<Request.Entry<A>>) => Array<Request.Request.Success<A>>,
   g: (value: Request.Request.Success<A>) => Request.Request<never, Request.Request.Success<A>>
-) => RequestResolver<never, A> = internal.fromFunctionBatchedWith
+) => RequestResolver<never, A> = () => internal.fromFunctionBatchedWith
 
 /**
  * Constructs a data source from an effectual function that takes a list of
@@ -305,10 +271,10 @@ export const fromFunctionBatchedWith: <A extends Request.Request<any, any>>(
  * @since 1.0.0
  * @category constructors
  */
-export const fromFunctionBatchedWithEffect: <R, A extends Request.Request<any, any>>(
-  f: (chunk: Array<A>) => Effect.Effect<R, Request.Request.Error<A>, Array<Request.Request.Success<A>>>,
+export const fromFunctionBatchedWithEffect: <A extends Request.Request<any, any>>() => <R>(
+  f: (chunk: Array<Request.Entry<A>>) => Effect.Effect<R, Request.Request.Error<A>, Array<Request.Request.Success<A>>>,
   g: (b: Request.Request.Success<A>) => Request.Request<Request.Request.Error<A>, Request.Request.Success<A>>
-) => RequestResolver<R, A> = internal.fromFunctionBatchedWithEffect
+) => RequestResolver<R, A> = () => internal.fromFunctionBatchedWithEffect
 
 /**
  * Constructs a data source from an effectual function.
@@ -316,9 +282,9 @@ export const fromFunctionBatchedWithEffect: <R, A extends Request.Request<any, a
  * @since 1.0.0
  * @category constructors
  */
-export const fromFunctionEffect: <R, A extends Request.Request<any, any>>(
-  f: (a: A) => Effect.Effect<R, Request.Request.Error<A>, Request.Request.Success<A>>
-) => RequestResolver<R, A> = internal.fromFunctionEffect
+export const fromFunctionEffect: <A extends Request.Request<any, any>>() => <R>(
+  f: (a: Request.Entry<A>) => Effect.Effect<R, Request.Request.Error<A>, Request.Request.Success<A>>
+) => RequestResolver<R, A> = () => internal.fromFunctionEffect
 
 /**
  * Constructs a data source from a pure function that may not provide results
@@ -327,9 +293,9 @@ export const fromFunctionEffect: <R, A extends Request.Request<any, any>>(
  * @since 1.0.0
  * @category constructors
  */
-export const fromFunctionOption: <A extends Request.Request<never, any>>(
-  f: (a: A) => Option.Option<Request.Request.Success<A>>
-) => RequestResolver<never, A> = internal.fromFunctionOption
+export const fromFunctionOption: <A extends Request.Request<never, any>>() => (
+  f: (a: Request.Entry<A>) => Option.Option<Request.Request.Success<A>>
+) => RequestResolver<never, A> = () => internal.fromFunctionOption
 
 /**
  * Constructs a data source from an effectual function that may not provide
@@ -338,9 +304,9 @@ export const fromFunctionOption: <A extends Request.Request<never, any>>(
  * @since 1.0.0
  * @category constructors
  */
-export const fromFunctionOptionEffect: <R, A extends Request.Request<any, any>>(
-  f: (a: A) => Effect.Effect<R, Request.Request.Error<A>, Option.Option<Request.Request.Success<A>>>
-) => RequestResolver<R, A> = internal.fromFunctionOptionEffect
+export const fromFunctionOptionEffect: <A extends Request.Request<any, any>>() => <R>(
+  f: (a: Request.Entry<A>) => Effect.Effect<R, Request.Request.Error<A>, Option.Option<Request.Request.Success<A>>>
+) => RequestResolver<R, A> = () => internal.fromFunctionOptionEffect
 
 /**
  * A data source that never executes requests.
@@ -403,3 +369,41 @@ export const locally: {
     value: A
   ): RequestResolver<R, B>
 } = core.resolverLocally
+
+/**
+ * @category utils
+ * @since 1.0.0
+ */
+export const interruptWhenPossible = <R, A extends Request.Request<any, any>>(
+  self: RequestResolver<R, A>
+): RequestResolver<R, A> =>
+  new core.RequestResolverImpl<R, A>(
+    (requests) =>
+      Effect.raceFirst(
+        self.runAll(requests),
+        Effect.interruptible(Effect.fiberIdWith((id) =>
+          Effect.asyncInterrupt<never, never, RequestCompletionMap.RequestCompletionMap>((cb) => {
+            const all = requests.flatMap((b) => b)
+            const counts = all.map(() => 0)
+            const cleanup = all.map((r, i) => {
+              const observer = (count: number) => {
+                counts[i] = count
+                if (counts.every((count) => count === 0)) {
+                  const map = RequestCompletionMap.empty()
+                  all.forEach((entry) => {
+                    RequestCompletionMap.set(map, entry.request, Exit.interrupt(id) as any)
+                  })
+                  cb(Exit.succeed(map))
+                }
+              }
+              r.listeners.addObserver(observer)
+              return () => r.listeners.removeObserver(observer)
+            })
+            return Effect.sync(() => {
+              cleanup.forEach((f) => f())
+            })
+          })
+        ))
+      ),
+    Chunk.make("Interruptible", self)
+  )

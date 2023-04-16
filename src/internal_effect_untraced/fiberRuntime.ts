@@ -49,7 +49,7 @@ import type { Logger } from "@effect/io/Logger"
 import * as LogLevel from "@effect/io/Logger/Level"
 import type * as MetricLabel from "@effect/io/Metric/Label"
 import * as Ref from "@effect/io/Ref"
-import type { Request } from "@effect/io/Request"
+import type { Entry, Request } from "@effect/io/Request"
 import type * as RequestBlock from "@effect/io/RequestBlock"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
@@ -194,19 +194,24 @@ class LeftoverRequestsException {
 /**
  * Executes all requests, submitting requests to each data source in parallel.
  */
-const runBlockedRequests = <R>(self: RequestBlock.RequestBlock<R>, runtime: FiberRuntime<any, any>) => {
+const runBlockedRequests = <R>(
+  self: RequestBlock.RequestBlock<R>,
+  runtime: FiberRuntime<any, any>,
+  isInterruptible: boolean
+) => {
   return core.forEachDiscard(
     _RequestBlock.flatten(self),
     (requestsByRequestResolver) =>
       forEachParDiscard(
         _RequestBlock.sequentialCollectionToChunk(requestsByRequestResolver),
         ([dataSource, sequential]) => {
-          const isInterrupted = runtime.isInterrupted()
+          const isInterrupted = runtime.isInterrupted() && isInterruptible
           sequential = sequential.map((block) =>
             block.flatMap((entry) => {
               const fiberId = runtime.id()
               if (
-                entry.listeners[0] === 0 || (entry.listeners[0] <= 1 && equals(entry.ownerId, fiberId) && isInterrupted)
+                entry.listeners.count === 0 ||
+                (entry.listeners.count <= 1 && equals(entry.ownerId, fiberId) && isInterrupted)
               ) {
                 core.deferredUnsafeDone(entry.result, core.exitInterrupt(fiberId))
                 return []
@@ -215,14 +220,9 @@ const runBlockedRequests = <R>(self: RequestBlock.RequestBlock<R>, runtime: Fibe
             })
           ).filter((block) => block.length > 0)
           return core.flatMap(
-            dataSource.runAll(
-              RA.map(
-                sequential,
-                (blockedRequests) => RA.map(blockedRequests, (blockedRequest) => blockedRequest.request)
-              )
-            ),
+            dataSource.runAll(sequential),
             (completedRequests) => {
-              const blockedRequests: Array<RequestBlock.Entry<unknown>> = RA.flatten(sequential)
+              const blockedRequests: Array<Entry<any>> = RA.flatten(sequential)
               const leftovers = pipe(
                 completedRequestMap.requests(completedRequests),
                 HashSet.difference(
@@ -1192,7 +1192,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
           const scheduler = this.getFiberRef(core.currentScheduler)
           scheduler.scheduleTask(() => {
             scheduler.scheduleTask(() => {
-              resume(core.flatMap(runBlockedRequests(op.i0, this), () => restore(op.i1)))
+              resume(core.flatMap(runBlockedRequests(op.i0, this, true), () => restore(op.i1)))
             })
           })
         })
@@ -1200,7 +1200,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     }
     return core.uninterruptibleMask((restore) =>
       core.flatMap(
-        runBlockedRequests(op.i0, this),
+        runBlockedRequests(op.i0, this, false),
         () => restore(op.i1)
       )
     )
