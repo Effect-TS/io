@@ -201,17 +201,19 @@ const runBlockedRequests = <R>(self: RequestBlock.RequestBlock<R>, runtime: Fibe
       forEachParDiscard(
         _RequestBlock.sequentialCollectionToChunk(requestsByRequestResolver),
         ([dataSource, sequential]) => {
-          if (runtime.isInterrupted()) {
-            sequential = sequential.map((block) =>
-              block.flatMap((entry) => {
-                if (entry.listeners[0] === 0 || (entry.listeners[0] <= 1 && equals(entry.ownerId, runtime.id()))) {
-                  core.deferredUnsafeDone(entry.result, core.exitInterrupt(runtime.id()))
-                  return []
-                }
-                return [entry]
-              })
-            ).filter((block) => block.length > 0)
-          }
+          const isInterrupted = runtime.isInterrupted()
+          sequential = sequential.map((block) =>
+            block.flatMap((entry) => {
+              const fiberId = runtime.id()
+              if (
+                entry.listeners[0] === 0 || (entry.listeners[0] <= 1 && equals(entry.ownerId, fiberId) && isInterrupted)
+              ) {
+                core.deferredUnsafeDone(entry.result, core.exitInterrupt(fiberId))
+                return []
+              }
+              return [entry]
+            })
+          ).filter((block) => block.length > 0)
           return core.flatMap(
             dataSource.runAll(
               RA.map(
