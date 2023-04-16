@@ -7,6 +7,7 @@ import * as Cause from "@effect/io/Cause"
 import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import * as FiberRef from "@effect/io/FiberRef"
+import * as TestClock from "@effect/io/internal_effect_untraced/testing/testClock"
 import * as Layer from "@effect/io/Layer"
 import * as Request from "@effect/io/Request"
 import * as Resolver from "@effect/io/RequestResolver"
@@ -215,6 +216,22 @@ describe("Effect", () => {
         yield* $(getAllUserIds)
         const requests = yield* $(UserCache, Effect.flatMap((_) => _.keys()))
         expect(requests.map((_) => _._tag)).toEqual(["GetAllIds"])
+        expect(yield* $(Counter)).toEqual({ count: 2 })
+      })
+    ))
+  it.effect("cache respects ttl", () =>
+    provideEnv(
+      Effect.gen(function*($) {
+        yield* $(getAllUserIds)
+        yield* $(getAllUserIds)
+        expect(yield* $(Counter)).toEqual({ count: 1 })
+        yield* $(TestClock.adjust(seconds(10)))
+        yield* $(getAllUserIds)
+        yield* $(getAllUserIds)
+        expect(yield* $(Counter)).toEqual({ count: 1 })
+        yield* $(TestClock.adjust(seconds(60)))
+        yield* $(getAllUserIds)
+        yield* $(getAllUserIds)
         expect(yield* $(Counter)).toEqual({ count: 2 })
       })
     ))
