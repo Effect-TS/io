@@ -384,7 +384,7 @@ export const interruptWhenPossible = <R, A extends Request.Request<any, any>>(
         Effect.interruptible(Effect.fiberIdWith((id) =>
           Effect.asyncInterrupt<never, never, RequestCompletionMap.RequestCompletionMap>((cb) => {
             const all = requests.flatMap((b) => b)
-            const counts = all.map(() => 0)
+            const counts = all.map((_) => _.listeners.count)
             const cleanup = all.map((r, i) => {
               const observer = (count: number) => {
                 counts[i] = count
