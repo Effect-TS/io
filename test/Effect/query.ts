@@ -75,7 +75,7 @@ export const UserResolver = Resolver.interruptWhenPossible(
             const userName = userNames.get(request.id)!
             return delay(Request.complete(request, Exit.succeed(userName)))
           }
-          return Request.completeEffect(request, Exit.fail("Not Found"))
+          return delay(Request.completeEffect(request, Exit.fail("Not Found")))
         }
       }
     }))
