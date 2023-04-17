@@ -89,22 +89,14 @@ export const fromRequest = Debug.methodWithTrace((trace) =>
                       dataSource,
                       BlockedRequests.makeEntry(request, orNew.right.handle, orNew.right.listeners, id)
                     ),
-                    core.matchCauseEffect(
-                      core.deferredAwait(orNew.right.handle),
-                      (cause) => {
-                        orNew.right.listeners.decrement()
-                        if (isInterruptedOnly(cause)) {
-                          return core.uninterruptible(core.flatMap(
-                            optionalCache.value.invalidateWhen(request, (entry) => entry.handle === orNew.right.handle),
-                            () => core.failCause(cause)
-                          ))
+                    core.uninterruptibleMask((restore) =>
+                      core.flatMap(
+                        core.exit(restore(core.deferredAwait(orNew.right.handle))),
+                        (exit) => {
+                          orNew.right.listeners.decrement()
+                          return exit
                         }
-                        return core.failCause(cause)
-                      },
-                      (value) => {
-                        orNew.right.listeners.decrement()
-                        return core.succeed(value)
-                      }
+                      )
                     )
                   )
                 }

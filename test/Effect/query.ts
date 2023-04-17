@@ -44,32 +44,41 @@ export interface GetAllIds extends Request.Request<never, ReadonlyArray<number>>
 
 export const GetAllIds = Request.tagged<GetAllIds>("GetAllIds")
 
-export interface GetNameById extends Request.Request<never, string> {
+export interface GetNameById extends Request.Request<string, string> {
   readonly _tag: "GetNameById"
   readonly id: number
 }
 
 export const GetNameById = Request.tagged<GetNameById>("GetNameById")
 
+const delay = <R, E, A>(self: Effect.Effect<R, E, A>) =>
+  Effect.flatMap(
+    Effect.promise(() =>
+      new Promise((r) => {
+        setTimeout(() => r(0), 0)
+      })
+    ),
+    () => self
+  )
+
+const counted = <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.tap(self, () => Effect.map(Counter, (c) => c.count++))
+
 export const UserResolver = Resolver.interruptWhenPossible(
   Resolver.makeBatched<UserRequest>()((requests) =>
-    Effect.flatMap(Counter, (counter) => {
-      counter.count++
-      return Effect.forEachDiscard(requests, ({ request }) => {
-        switch (request._tag) {
-          case "GetAllIds": {
-            return Request.complete(request, Exit.succeed(userIds))
-          }
-          case "GetNameById": {
-            if (userNames.has(request.id)) {
-              const userName = userNames.get(request.id)!
-              return Request.complete(request, Exit.succeed(userName))
-            }
-            return Effect.unit()
-          }
+    counted(Effect.forEachDiscard(requests, ({ request }) => {
+      switch (request._tag) {
+        case "GetAllIds": {
+          return delay(Request.complete(request, Exit.succeed(userIds)))
         }
-      })
-    })
+        case "GetNameById": {
+          if (userNames.has(request.id)) {
+            const userName = userNames.get(request.id)!
+            return delay(Request.complete(request, Exit.succeed(userName)))
+          }
+          return Request.completeEffect(request, Exit.fail("Not Found"))
+        }
+      }
+    }))
   )
 )
 

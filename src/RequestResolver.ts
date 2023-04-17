@@ -379,31 +379,40 @@ export const interruptWhenPossible = <R, A extends Request.Request<any, any>>(
 ): RequestResolver<R, A> =>
   new core.RequestResolverImpl<R, A>(
     (requests) =>
-      Effect.raceFirst(
-        self.runAll(requests),
-        Effect.interruptible(Effect.fiberIdWith((id) =>
-          Effect.asyncInterrupt<never, never, RequestCompletionMap.RequestCompletionMap>((cb) => {
-            const all = requests.flatMap((b) => b)
-            const counts = all.map((_) => _.listeners.count)
-            const cleanup = all.map((r, i) => {
-              const observer = (count: number) => {
-                counts[i] = count
+      Effect.race(
+        Effect.interruptible(
+          self.runAll(requests)
+        ),
+        Effect.interruptible(
+          Effect.fiberIdWith((id) =>
+            Effect.asyncInterrupt<never, never, RequestCompletionMap.RequestCompletionMap>((cb) => {
+              const all = requests.flatMap((b) => b)
+              const counts = all.map((_) => _.listeners.count)
+              const checkDone = () => {
                 if (counts.every((count) => count === 0)) {
                   const map = RequestCompletionMap.empty()
                   all.forEach((entry) => {
                     RequestCompletionMap.set(map, entry.request, Exit.interrupt(id) as any)
                   })
+                  cleanup.forEach((f) => f())
                   cb(Exit.succeed(map))
                 }
               }
-              r.listeners.addObserver(observer)
-              return () => r.listeners.removeObserver(observer)
+              const cleanup = all.map((r, i) => {
+                const observer = (count: number) => {
+                  counts[i] = count
+                  checkDone()
+                }
+                r.listeners.addObserver(observer)
+                return () => r.listeners.removeObserver(observer)
+              })
+              checkDone()
+              return Effect.sync(() => {
+                cleanup.forEach((f) => f())
+              })
             })
-            return Effect.sync(() => {
-              cleanup.forEach((f) => f())
-            })
-          })
-        ))
+          )
+        )
       ),
     Chunk.make("Interruptible", self)
   )
