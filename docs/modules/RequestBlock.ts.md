@@ -15,7 +15,6 @@ Added in v1.0.0
 - [constructors](#constructors)
   - [empty](#empty)
   - [flatten](#flatten)
-  - [makeEntry](#makeentry)
   - [mapRequestResolvers](#maprequestresolvers)
   - [parallel](#parallel)
   - [parallelCollectionEmpty](#parallelcollectionempty)
@@ -28,11 +27,8 @@ Added in v1.0.0
   - [parallelCollectionToChunk](#parallelcollectiontochunk)
   - [parallelCollectionToSequentialCollection](#parallelcollectiontosequentialcollection)
   - [sequentialCollectionToChunk](#sequentialcollectiontochunk)
-- [guards](#guards)
-  - [isEntry](#isentry)
 - [models](#models)
   - [Empty (interface)](#empty-interface)
-  - [Entry (interface)](#entry-interface)
   - [Par (interface)](#par-interface)
   - [ParallelCollection (interface)](#parallelcollection-interface)
   - [RequestBlock (type alias)](#requestblock-type-alias)
@@ -40,8 +36,6 @@ Added in v1.0.0
   - [SequentialCollection (interface)](#sequentialcollection-interface)
   - [Single (interface)](#single-interface)
 - [symbols](#symbols)
-  - [EntryTypeId](#entrytypeid)
-  - [EntryTypeId (type alias)](#entrytypeid-type-alias)
   - [RequestBlockParallelTypeId](#requestblockparalleltypeid)
   - [RequestBlockParallelTypeId (type alias)](#requestblockparalleltypeid-type-alias)
   - [SequentialCollectionTypeId](#sequentialcollectiontypeid)
@@ -76,19 +70,6 @@ Added in v1.0.0
 
 ```ts
 export declare const flatten: <R>(self: RequestBlock<R>) => List.List<SequentialCollection<R>>
-```
-
-Added in v1.0.0
-
-## makeEntry
-
-**Signature**
-
-```ts
-export declare const makeEntry: <A extends Request.Request<any, any>>(
-  request: A,
-  result: Deferred.Deferred<Request.Request.Error<A>, Request.Request.Success<A>>
-) => Entry<A>
 ```
 
 Added in v1.0.0
@@ -138,7 +119,7 @@ specified data source to the specified request.
 ```ts
 export declare const parallelCollectionMake: <R, A>(
   dataSource: RequestResolver.RequestResolver<R, A>,
-  blockedRequest: Entry<A>
+  blockedRequest: Request.Entry<A>
 ) => ParallelCollection<R>
 ```
 
@@ -173,7 +154,7 @@ data sources that must be executed sequentially.
 
 ```ts
 export declare const sequentialCollectionMake: <R, A>(
-  map: HashMap.HashMap<RequestResolver.RequestResolver<R, A>, Entry<A>[][]>
+  map: HashMap.HashMap<RequestResolver.RequestResolver<R, A>, Request.Entry<A>[][]>
 ) => SequentialCollection<R>
 ```
 
@@ -186,7 +167,7 @@ Added in v1.0.0
 ```ts
 export declare const single: <R, A>(
   dataSource: RequestResolver.RequestResolver<R, A>,
-  blockedRequest: Entry<A>
+  blockedRequest: Request.Entry<A>
 ) => RequestBlock<R>
 ```
 
@@ -205,7 +186,7 @@ data sources.
 ```ts
 export declare const parallelCollectionToChunk: <R>(
   self: ParallelCollection<R>
-) => (readonly [RequestResolver.RequestResolver<R, unknown>, Entry<unknown>[]])[]
+) => (readonly [RequestResolver.RequestResolver<R, unknown>, Request.Entry<unknown>[]])[]
 ```
 
 Added in v1.0.0
@@ -237,19 +218,7 @@ batches of requests from those data sources.
 ```ts
 export declare const sequentialCollectionToChunk: <R>(
   self: SequentialCollection<R>
-) => (readonly [RequestResolver.RequestResolver<R, unknown>, Entry<unknown>[][]])[]
-```
-
-Added in v1.0.0
-
-# guards
-
-## isEntry
-
-**Signature**
-
-```ts
-export declare const isEntry: (u: unknown) => u is Entry<unknown>
+) => (readonly [RequestResolver.RequestResolver<R, unknown>, Request.Entry<unknown>[][]])[]
 ```
 
 Added in v1.0.0
@@ -263,31 +232,6 @@ Added in v1.0.0
 ```ts
 export interface Empty {
   readonly _tag: 'Empty'
-}
-```
-
-Added in v1.0.0
-
-## Entry (interface)
-
-A `Entry<A>` keeps track of a request of type `A` along with a
-`Ref` containing the result of the request, existentially hiding the result
-type. This is used internally by the library to support data sources that
-return different result types for different requests while guaranteeing that
-results will be of the type requested.
-
-**Signature**
-
-```ts
-export interface Entry<R> extends Entry.Variance<R> {
-  readonly request: Request.Request<
-    [R] extends [Request.Request<infer _E, infer _A>] ? _E : never,
-    [R] extends [Request.Request<infer _E, infer _A>] ? _A : never
-  >
-  readonly result: Deferred.Deferred<
-    [R] extends [Request.Request<infer _E, infer _A>] ? _E : never,
-    [R] extends [Request.Request<infer _E, infer _A>] ? _A : never
-  >
 }
 ```
 
@@ -316,7 +260,7 @@ data sources that can be executed in parallel.
 
 ```ts
 export interface ParallelCollection<R> extends ParallelCollection.Variance<R> {
-  readonly map: HashMap.HashMap<RequestResolver.RequestResolver<unknown, unknown>, Array<Entry<unknown>>>
+  readonly map: HashMap.HashMap<RequestResolver.RequestResolver<unknown, unknown>, Array<Request.Entry<unknown>>>
 }
 ```
 
@@ -361,7 +305,7 @@ requests from those data sources that must be executed sequentially.
 
 ```ts
 export interface SequentialCollection<R> extends SequentialCollection.Variance<R> {
-  readonly map: HashMap.HashMap<RequestResolver.RequestResolver<unknown, unknown>, Array<Array<Entry<unknown>>>>
+  readonly map: HashMap.HashMap<RequestResolver.RequestResolver<unknown, unknown>, Array<Array<Request.Entry<unknown>>>>
 }
 ```
 
@@ -375,33 +319,13 @@ Added in v1.0.0
 export interface Single<R> {
   readonly _tag: 'Single'
   readonly dataSource: RequestResolver.RequestResolver<R, unknown>
-  readonly blockedRequest: Entry<unknown>
+  readonly blockedRequest: Request.Entry<unknown>
 }
 ```
 
 Added in v1.0.0
 
 # symbols
-
-## EntryTypeId
-
-**Signature**
-
-```ts
-export declare const EntryTypeId: typeof EntryTypeId
-```
-
-Added in v1.0.0
-
-## EntryTypeId (type alias)
-
-**Signature**
-
-```ts
-export type EntryTypeId = typeof EntryTypeId
-```
-
-Added in v1.0.0
 
 ## RequestBlockParallelTypeId
 

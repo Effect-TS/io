@@ -15,24 +15,16 @@ Added in v1.0.0
 - [combinators](#combinators)
   - [around](#around)
   - [batchN](#batchn)
-  - [contramap](#contramap)
-  - [contramapEffect](#contramapeffect)
   - [eitherWith](#eitherwith)
   - [locally](#locally)
   - [race](#race)
 - [constructors](#constructors)
   - [fromFunction](#fromfunction)
   - [fromFunctionBatched](#fromfunctionbatched)
-  - [fromFunctionBatchedEffect](#fromfunctionbatchedeffect)
-  - [fromFunctionBatchedOption](#fromfunctionbatchedoption)
-  - [fromFunctionBatchedOptionEffect](#fromfunctionbatchedoptioneffect)
-  - [fromFunctionBatchedWith](#fromfunctionbatchedwith)
-  - [fromFunctionBatchedWithEffect](#fromfunctionbatchedwitheffect)
   - [fromFunctionEffect](#fromfunctioneffect)
-  - [fromFunctionOption](#fromfunctionoption)
-  - [fromFunctionOptionEffect](#fromfunctionoptioneffect)
   - [make](#make)
   - [makeBatched](#makebatched)
+  - [makeWithEntry](#makewithentry)
   - [never](#never)
 - [context](#context)
   - [contramapContext](#contramapcontext)
@@ -81,50 +73,6 @@ Returns a data source that executes at most `n` requests in parallel.
 export declare const batchN: {
   (n: number): <R, A>(self: RequestResolver<R, A>) => RequestResolver<R, A>
   <R, A>(self: RequestResolver<R, A>, n: number): RequestResolver<R, A>
-}
-```
-
-Added in v1.0.0
-
-## contramap
-
-Returns a new data source that executes requests of type `B` using the
-specified function to transform `B` requests into requests that this data
-source can execute.
-
-**Signature**
-
-```ts
-export declare const contramap: {
-  <A extends Request.Request<any, any>, B extends Request.Request<any, any>>(f: (_: B) => A): <R>(
-    self: RequestResolver<R, A>
-  ) => RequestResolver<R, B>
-  <R, A extends Request.Request<any, any>, B extends Request.Request<any, any>>(
-    self: RequestResolver<R, A>,
-    f: (_: B) => A
-  ): RequestResolver<R, B>
-}
-```
-
-Added in v1.0.0
-
-## contramapEffect
-
-Returns a new data source that executes requests of type `B` using the
-specified effectual function to transform `B` requests into requests that
-this data source can execute.
-
-**Signature**
-
-```ts
-export declare const contramapEffect: {
-  <A extends Request.Request<any, any>, R2, B extends Request.Request<any, any>>(
-    f: (_: B) => Effect.Effect<R2, never, A>
-  ): <R>(self: RequestResolver<R, A>) => RequestResolver<R2 | R, B>
-  <R, A extends Request.Request<any, any>, R2, B extends Request.Request<any, any>>(
-    self: RequestResolver<R, A>,
-    f: (_: B) => Effect.Effect<R2, never, A>
-  ): RequestResolver<R | R2, B>
 }
 ```
 
@@ -211,7 +159,7 @@ Constructs a data source from a pure function.
 **Signature**
 
 ```ts
-export declare const fromFunction: <A extends Request.Request<never, any>>(
+export declare const fromFunction: <A extends Request.Request<never, any>>() => (
   f: (request: A) => Request.Request.Success<A>
 ) => RequestResolver<never, A>
 ```
@@ -227,98 +175,9 @@ list must correspond to the item at the same index in the request list.
 **Signature**
 
 ```ts
-export declare const fromFunctionBatched: <A extends Request.Request<never, any>>(
+export declare const fromFunctionBatched: <A extends Request.Request<never, any>>() => (
   f: (chunk: A[]) => Request.Request.Success<A>[]
 ) => RequestResolver<never, A>
-```
-
-Added in v1.0.0
-
-## fromFunctionBatchedEffect
-
-Constructs a data source from an effectual function that takes a list of
-requests and returns a list of results of the same size. Each item in the
-result list must correspond to the item at the same index in the request
-list.
-
-**Signature**
-
-```ts
-export declare const fromFunctionBatchedEffect: <R, A extends Request.Request<any, any>>(
-  f: (chunk: A[]) => Effect.Effect<R, Request.Request.Error<A>, Request.Request.Success<A>[]>
-) => RequestResolver<R, A>
-```
-
-Added in v1.0.0
-
-## fromFunctionBatchedOption
-
-Constructs a data source from a pure function that takes a list of requests
-and returns a list of optional results of the same size. Each item in the
-result list must correspond to the item at the same index in the request
-list.
-
-**Signature**
-
-```ts
-export declare const fromFunctionBatchedOption: <A extends Request.Request<never, any>>(
-  f: (chunk: A[]) => Option.Option<Request.Request.Success<A>>[]
-) => RequestResolver<never, A>
-```
-
-Added in v1.0.0
-
-## fromFunctionBatchedOptionEffect
-
-Constructs a data source from an effectual function that takes a list of
-requests and returns a list of optional results of the same size. Each item
-in the result list must correspond to the item at the same index in the
-request list.
-
-**Signature**
-
-```ts
-export declare const fromFunctionBatchedOptionEffect: <R, A extends Request.Request<any, any>>(
-  f: (chunk: A[]) => Effect.Effect<R, Request.Request.Error<A>, Option.Option<Request.Request.Success<A>>[]>
-) => RequestResolver<R, A>
-```
-
-Added in v1.0.0
-
-## fromFunctionBatchedWith
-
-Constructs a data source from a function that takes a list of requests and
-returns a list of results of the same size. Uses the specified function to
-associate each result with the corresponding effect, allowing the function
-to return the list of results in a different order than the list of
-requests.
-
-**Signature**
-
-```ts
-export declare const fromFunctionBatchedWith: <A extends Request.Request<any, any>>(
-  f: (chunk: A[]) => Request.Request.Success<A>[],
-  g: (value: Request.Request.Success<A>) => Request.Request<never, Request.Request.Success<A>>
-) => RequestResolver<never, A>
-```
-
-Added in v1.0.0
-
-## fromFunctionBatchedWithEffect
-
-Constructs a data source from an effectual function that takes a list of
-requests and returns a list of results of the same size. Uses the specified
-function to associate each result with the corresponding effect, allowing
-the function to return the list of results in a different order than the
-list of requests.
-
-**Signature**
-
-```ts
-export declare const fromFunctionBatchedWithEffect: <R, A extends Request.Request<any, any>>(
-  f: (chunk: A[]) => Effect.Effect<R, Request.Request.Error<A>, Request.Request.Success<A>[]>,
-  g: (b: Request.Request.Success<A>) => Request.Request<Request.Request.Error<A>, Request.Request.Success<A>>
-) => RequestResolver<R, A>
 ```
 
 Added in v1.0.0
@@ -330,38 +189,8 @@ Constructs a data source from an effectual function.
 **Signature**
 
 ```ts
-export declare const fromFunctionEffect: <R, A extends Request.Request<any, any>>(
+export declare const fromFunctionEffect: <A extends Request.Request<any, any>>() => <R>(
   f: (a: A) => Effect.Effect<R, Request.Request.Error<A>, Request.Request.Success<A>>
-) => RequestResolver<R, A>
-```
-
-Added in v1.0.0
-
-## fromFunctionOption
-
-Constructs a data source from a pure function that may not provide results
-for all requests received.
-
-**Signature**
-
-```ts
-export declare const fromFunctionOption: <A extends Request.Request<never, any>>(
-  f: (a: A) => Option.Option<Request.Request.Success<A>>
-) => RequestResolver<never, A>
-```
-
-Added in v1.0.0
-
-## fromFunctionOptionEffect
-
-Constructs a data source from an effectual function that may not provide
-results for all requests received.
-
-**Signature**
-
-```ts
-export declare const fromFunctionOptionEffect: <R, A extends Request.Request<any, any>>(
-  f: (a: A) => Effect.Effect<R, Request.Request.Error<A>, Option.Option<Request.Request.Success<A>>>
 ) => RequestResolver<R, A>
 ```
 
@@ -375,7 +204,7 @@ requests.
 **Signature**
 
 ```ts
-export declare const make: <R, A>(
+export declare const make: <A extends Request.Request<any, any>>() => <R>(
   runAll: (requests: A[][]) => Effect.Effect<R, never, void>
 ) => RequestResolver<Exclude<R, RequestCompletionMap.RequestCompletionMap>, A>
 ```
@@ -390,8 +219,23 @@ and returning a `RequestCompletionMap`.
 **Signature**
 
 ```ts
-export declare const makeBatched: <R, A extends Request.Request<any, any>>(
+export declare const makeBatched: <A extends Request.Request<any, any>>() => <R>(
   run: (requests: A[]) => Effect.Effect<R, never, void>
+) => RequestResolver<Exclude<R, RequestCompletionMap.RequestCompletionMap>, A>
+```
+
+Added in v1.0.0
+
+## makeWithEntry
+
+Constructs a data source with the specified identifier and method to run
+requests.
+
+**Signature**
+
+```ts
+export declare const makeWithEntry: <A extends Request.Request<any, any>>() => <R>(
+  runAll: (requests: Request.Entry<A>[][]) => Effect.Effect<R, never, void>
 ) => RequestResolver<Exclude<R, RequestCompletionMap.RequestCompletionMap>, A>
 ```
 
@@ -484,7 +328,7 @@ export interface RequestResolver<R, A> extends Equal.Equal {
    * of requests that must be performed sequentially. The inner `Chunk`
    * represents a batch of requests that can be performed in parallel.
    */
-  runAll(requests: Array<Array<A>>): Effect.Effect<R, never, RequestCompletionMap.RequestCompletionMap>
+  runAll(requests: Array<Array<Request.Entry<A>>>): Effect.Effect<R, never, RequestCompletionMap.RequestCompletionMap>
 
   /**
    * Identify the data source using the specific identifier

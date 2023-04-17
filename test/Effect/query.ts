@@ -64,7 +64,7 @@ const delay = <R, E, A>(self: Effect.Effect<R, E, A>) =>
 const counted = <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.tap(self, () => Effect.map(Counter, (c) => c.count++))
 
 export const UserResolver = Resolver.makeBatched<UserRequest>()((requests) =>
-  counted(Effect.forEachDiscard(requests, ({ request }) => {
+  counted(Effect.forEachDiscard(requests, (request) => {
     switch (request._tag) {
       case "GetAllIds": {
         return delay(Request.complete(request, Exit.succeed(userIds)))

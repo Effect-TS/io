@@ -5,7 +5,6 @@
 import type * as Context from "@effect/data/Context"
 import type * as Either from "@effect/data/Either"
 import type * as Equal from "@effect/data/Equal"
-import type * as Option from "@effect/data/Option"
 import type * as Effect from "@effect/io/Effect"
 import type { FiberRef } from "@effect/io/FiberRef"
 import * as core from "@effect/io/internal_effect_untraced/core"
@@ -95,8 +94,19 @@ export const isRequestResolver: (u: unknown) => u is RequestResolver<unknown, un
  * @category constructors
  */
 export const make: <A extends Request.Request<any, any>>() => <R>(
-  runAll: (requests: Array<Array<Request.Entry<A>>>) => Effect.Effect<R, never, void>
+  runAll: (requests: Array<Array<A>>) => Effect.Effect<R, never, void>
 ) => RequestResolver<Exclude<R, RequestCompletionMap.RequestCompletionMap>, A> = () => internal.make
+
+/**
+ * Constructs a data source with the specified identifier and method to run
+ * requests.
+ *
+ * @since 1.0.0
+ * @category constructors
+ */
+export const makeWithEntry: <A extends Request.Request<any, any>>() => <R>(
+  runAll: (requests: Array<Array<Request.Entry<A>>>) => Effect.Effect<R, never, void>
+) => RequestResolver<Exclude<R, RequestCompletionMap.RequestCompletionMap>, A> = () => internal.makeWithEntry
 
 /**
  * Constructs a data source from a function taking a collection of requests
@@ -106,7 +116,7 @@ export const make: <A extends Request.Request<any, any>>() => <R>(
  * @category constructors
  */
 export const makeBatched: <A extends Request.Request<any, any>>() => <R>(
-  run: (requests: Array<Request.Entry<A>>) => Effect.Effect<R, never, void>
+  run: (requests: Array<A>) => Effect.Effect<R, never, void>
 ) => RequestResolver<Exclude<R, RequestCompletionMap.RequestCompletionMap>, A> = () => internal.makeBatched
 
 /**
@@ -188,7 +198,7 @@ export const eitherWith: {
  * @category constructors
  */
 export const fromFunction: <A extends Request.Request<never, any>>() => (
-  f: (request: Request.Entry<A>) => Request.Request.Success<A>
+  f: (request: A) => Request.Request.Success<A>
 ) => RequestResolver<never, A> = () => internal.fromFunction
 
 /**
@@ -200,79 +210,8 @@ export const fromFunction: <A extends Request.Request<never, any>>() => (
  * @category constructors
  */
 export const fromFunctionBatched: <A extends Request.Request<never, any>>() => (
-  f: (chunk: Array<Request.Entry<A>>) => Array<Request.Request.Success<A>>
+  f: (chunk: Array<A>) => Array<Request.Request.Success<A>>
 ) => RequestResolver<never, A> = () => internal.fromFunctionBatched
-
-/**
- * Constructs a data source from an effectual function that takes a list of
- * requests and returns a list of results of the same size. Each item in the
- * result list must correspond to the item at the same index in the request
- * list.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const fromFunctionBatchedEffect: <A extends Request.Request<any, any>>() => <R>(
-  f: (chunk: Array<Request.Entry<A>>) => Effect.Effect<R, Request.Request.Error<A>, Array<Request.Request.Success<A>>>
-) => RequestResolver<R, A> = () => internal.fromFunctionBatchedEffect
-
-/**
- * Constructs a data source from a pure function that takes a list of requests
- * and returns a list of optional results of the same size. Each item in the
- * result list must correspond to the item at the same index in the request
- * list.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const fromFunctionBatchedOption: <A extends Request.Request<never, any>>() => (
-  f: (chunk: Array<Request.Entry<A>>) => Array<Option.Option<Request.Request.Success<A>>>
-) => RequestResolver<never, A> = () => internal.fromFunctionBatchedOption
-
-/**
- * Constructs a data source from an effectual function that takes a list of
- * requests and returns a list of optional results of the same size. Each item
- * in the result list must correspond to the item at the same index in the
- * request list.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const fromFunctionBatchedOptionEffect: <A extends Request.Request<any, any>>() => <R>(
-  f: (
-    chunk: Array<Request.Entry<A>>
-  ) => Effect.Effect<R, Request.Request.Error<A>, Array<Option.Option<Request.Request.Success<A>>>>
-) => RequestResolver<R, A> = () => internal.fromFunctionBatchedOptionEffect
-
-/**
- * Constructs a data source from a function that takes a list of requests and
- * returns a list of results of the same size. Uses the specified function to
- * associate each result with the corresponding effect, allowing the function
- * to return the list of results in a different order than the list of
- * requests.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const fromFunctionBatchedWith: <A extends Request.Request<any, any>>() => (
-  f: (chunk: Array<Request.Entry<A>>) => Array<Request.Request.Success<A>>,
-  g: (value: Request.Request.Success<A>) => Request.Request<never, Request.Request.Success<A>>
-) => RequestResolver<never, A> = () => internal.fromFunctionBatchedWith
-
-/**
- * Constructs a data source from an effectual function that takes a list of
- * requests and returns a list of results of the same size. Uses the specified
- * function to associate each result with the corresponding effect, allowing
- * the function to return the list of results in a different order than the
- * list of requests.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const fromFunctionBatchedWithEffect: <A extends Request.Request<any, any>>() => <R>(
-  f: (chunk: Array<Request.Entry<A>>) => Effect.Effect<R, Request.Request.Error<A>, Array<Request.Request.Success<A>>>,
-  g: (b: Request.Request.Success<A>) => Request.Request<Request.Request.Error<A>, Request.Request.Success<A>>
-) => RequestResolver<R, A> = () => internal.fromFunctionBatchedWithEffect
 
 /**
  * Constructs a data source from an effectual function.
@@ -281,30 +220,8 @@ export const fromFunctionBatchedWithEffect: <A extends Request.Request<any, any>
  * @category constructors
  */
 export const fromFunctionEffect: <A extends Request.Request<any, any>>() => <R>(
-  f: (a: Request.Entry<A>) => Effect.Effect<R, Request.Request.Error<A>, Request.Request.Success<A>>
+  f: (a: A) => Effect.Effect<R, Request.Request.Error<A>, Request.Request.Success<A>>
 ) => RequestResolver<R, A> = () => internal.fromFunctionEffect
-
-/**
- * Constructs a data source from a pure function that may not provide results
- * for all requests received.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const fromFunctionOption: <A extends Request.Request<never, any>>() => (
-  f: (a: Request.Entry<A>) => Option.Option<Request.Request.Success<A>>
-) => RequestResolver<never, A> = () => internal.fromFunctionOption
-
-/**
- * Constructs a data source from an effectual function that may not provide
- * results for all requests received.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const fromFunctionOptionEffect: <A extends Request.Request<any, any>>() => <R>(
-  f: (a: Request.Entry<A>) => Effect.Effect<R, Request.Request.Error<A>, Option.Option<Request.Request.Success<A>>>
-) => RequestResolver<R, A> = () => internal.fromFunctionOptionEffect
 
 /**
  * A data source that never executes requests.

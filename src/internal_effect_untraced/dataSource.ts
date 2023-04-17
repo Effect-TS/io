@@ -3,11 +3,9 @@ import type * as Context from "@effect/data/Context"
 import * as Debug from "@effect/data/Debug"
 import * as Either from "@effect/data/Either"
 import { pipe } from "@effect/data/Function"
-import type * as Option from "@effect/data/Option"
 import * as RA from "@effect/data/ReadonlyArray"
 import * as Cause from "@effect/io/Cause"
 import * as Effect from "@effect/io/Effect"
-import type * as Exit from "@effect/io/Exit"
 import * as completedRequestMap from "@effect/io/internal_effect_untraced/completedRequestMap"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import type * as Request from "@effect/io/Request"
@@ -17,13 +15,33 @@ import type * as RequestResolver from "@effect/io/RequestResolver"
 /** @internal */
 export const make = Debug.untracedMethod((restore) =>
   <R, A>(
+    runAll: (requests: Array<Array<A>>) => Effect.Effect<R, never, void>
+  ): RequestResolver.RequestResolver<Exclude<R, RequestCompletionMap.RequestCompletionMap>, A> =>
+    new core.RequestResolverImpl((requests) =>
+      Effect.suspend(() => {
+        const map = completedRequestMap.empty()
+        return Effect.as(
+          Effect.provideService(completedRequestMap.RequestCompletionMap, map)(
+            restore(runAll)(requests.map((_) => _.map((_) => _.request)))
+          ),
+          map
+        )
+      })
+    )
+)
+
+/** @internal */
+export const makeWithEntry = Debug.untracedMethod((restore) =>
+  <R, A>(
     runAll: (requests: Array<Array<Request.Entry<A>>>) => Effect.Effect<R, never, void>
   ): RequestResolver.RequestResolver<Exclude<R, RequestCompletionMap.RequestCompletionMap>, A> =>
     new core.RequestResolverImpl((requests) =>
       Effect.suspend(() => {
         const map = completedRequestMap.empty()
         return Effect.as(
-          Effect.provideService(completedRequestMap.RequestCompletionMap, map)(restore(runAll)(requests)),
+          Effect.provideService(completedRequestMap.RequestCompletionMap, map)(
+            restore(runAll)(requests)
+          ),
           map
         )
       })
@@ -33,7 +51,7 @@ export const make = Debug.untracedMethod((restore) =>
 /** @internal */
 export const makeBatched = Debug.untracedMethod((restore) =>
   <R, A extends Request.Request<any, any>>(
-    run: (requests: Array<Request.Entry<A>>) => Effect.Effect<R, never, void>
+    run: (requests: Array<A>) => Effect.Effect<R, never, void>
   ): RequestResolver.RequestResolver<Exclude<R, RequestCompletionMap.RequestCompletionMap>, A> =>
     new core.RequestResolverImpl<Exclude<R, RequestCompletionMap.RequestCompletionMap>, A>(
       (requests) =>
@@ -45,7 +63,7 @@ export const makeBatched = Debug.untracedMethod((restore) =>
             }
             const innerMap = completedRequestMap.empty()
             return pipe(
-              restore(run)(newRequests),
+              restore(run)(newRequests.map((_) => _.request)),
               Effect.provideService(completedRequestMap.RequestCompletionMap, innerMap),
               Effect.map(() => completedRequestMap.combine(outerMap, innerMap))
             )
@@ -79,9 +97,7 @@ export const around = Debug.untracedDual<
 
 /** @internal */
 export const batchN = Debug.untracedDual<
-  (
-    n: number
-  ) => <R, A>(
+  (n: number) => <R, A>(
     self: RequestResolver.RequestResolver<R, A>
   ) => RequestResolver.RequestResolver<R, A>,
   <R, A>(
@@ -200,14 +216,14 @@ export const eitherWith = Debug.untracedDual<
 /** @internal */
 export const fromFunction = Debug.untracedMethod((restore) =>
   <A extends Request.Request<never, any>>(
-    f: (request: Request.Entry<A>) => Request.Request.Success<A>
+    f: (request: A) => Request.Request.Success<A>
   ): RequestResolver.RequestResolver<never, A> =>
-    makeBatched((requests: Array<Request.Entry<A>>) =>
+    makeBatched((requests: Array<A>) =>
       Effect.map(completedRequestMap.RequestCompletionMap, (map) =>
         requests.forEach((request) =>
           completedRequestMap.set(
             map,
-            request.request,
+            request,
             Either.right(restore(f)(request)) as any
           )
         ))
@@ -217,131 +233,28 @@ export const fromFunction = Debug.untracedMethod((restore) =>
 /** @internal */
 export const fromFunctionBatched = Debug.untracedMethod((restore) =>
   <A extends Request.Request<never, any>>(
-    f: (chunk: Array<Request.Entry<A>>) => Array<Request.Request.Success<A>>
+    f: (chunk: Array<A>) => Array<Request.Request.Success<A>>
   ): RequestResolver.RequestResolver<never, A> =>
-    fromFunctionBatchedEffect((as: Array<Request.Entry<A>>) => Effect.succeed(restore(f)(as)))
+    makeBatched((as: Array<A>) =>
+      core.flatMap(
+        completedRequestMap.RequestCompletionMap,
+        (map) =>
+          Effect.sync(() => {
+            restore(f)(as).forEach((value, index) => {
+              completedRequestMap.set(map, as[index], core.exitSucceed(value) as any)
+            })
+          })
+      )
+    )
       .identified("FromFunctionBatched", f)
-)
-
-/** @internal */
-export const fromFunctionBatchedEffect = Debug.untracedMethod((restore) =>
-  <R, A extends Request.Request<any, any>>(
-    f: (chunk: Array<Request.Entry<A>>) => Effect.Effect<R, Request.Request.Error<A>, Array<Request.Request.Success<A>>>
-  ): RequestResolver.RequestResolver<R, A> =>
-    makeBatched((requests: Array<Request.Entry<A>>) =>
-      Effect.flatMap(completedRequestMap.RequestCompletionMap, (map) =>
-        pipe(
-          Effect.match(
-            restore(f)(requests),
-            (
-              e
-            ): Array<
-              readonly [Request.Entry<A>, Either.Either<Request.Request.Error<A>, Request.Request.Success<A>>]
-            > => pipe(requests, RA.map((k) => [k, Either.left(e)] as const)),
-            (
-              bs
-            ): Array<
-              readonly [Request.Entry<A>, Either.Either<Request.Request.Error<A>, Request.Request.Success<A>>]
-            > => pipe(requests, RA.zip(pipe(bs, RA.map(Either.right))))
-          ),
-          Effect.map((x) =>
-            x.forEach(
-              ([k, v]) => completedRequestMap.set(map, k.request, v as any)
-            )
-          )
-        ))
-    ).identified("FromFunctionBatchedEffect", f)
-)
-
-/** @internal */
-export const fromFunctionBatchedOption = Debug.untracedMethod((restore) =>
-  <A extends Request.Request<never, any>>(
-    f: (chunk: Array<Request.Entry<A>>) => Array<Option.Option<Request.Request.Success<A>>>
-  ): RequestResolver.RequestResolver<never, A> =>
-    fromFunctionBatchedOptionEffect((as: Array<Request.Entry<A>>) => Effect.succeed(restore(f)(as)))
-      .identified("FromFunctionBatchedOption", f)
-)
-
-/** @internal */
-export const fromFunctionBatchedOptionEffect = Debug.untracedMethod((restore) =>
-  <R, A extends Request.Request<any, any>>(
-    f: (
-      chunk: Array<Request.Entry<A>>
-    ) => Effect.Effect<R, Request.Request.Error<A>, Array<Option.Option<Request.Request.Success<A>>>>
-  ): RequestResolver.RequestResolver<R, A> =>
-    makeBatched(
-      (requests: Array<Request.Entry<A>>) =>
-        Effect.flatMap(completedRequestMap.RequestCompletionMap, (map) =>
-          Effect.map(
-            Effect.match(
-              restore(f)(requests),
-              (e): Array<
-                readonly [
-                  Request.Entry<A>,
-                  Either.Either<Request.Request.Error<A>, Option.Option<Request.Request.Success<A>>>
-                ]
-              > => pipe(requests, RA.map((k) => [k, Either.left(e)] as const)),
-              (bs): Array<
-                readonly [
-                  Request.Entry<A>,
-                  Either.Either<Request.Request.Error<A>, Option.Option<Request.Request.Success<A>>>
-                ]
-              > => pipe(requests, RA.zip(pipe(bs, RA.map(Either.right))))
-            ),
-            (x) => x.forEach(([k, v]) => completedRequestMap.setOption(map, k.request, v as any))
-          ))
-    ).identified("FromFunctionBatchedOptionEffect", f)
-)
-
-/** @internal */
-export const fromFunctionBatchedWith = Debug.untracedMethod((restore) =>
-  <A extends Request.Request<any, any>>(
-    f: (chunk: Array<Request.Entry<A>>) => Array<Request.Request.Success<A>>,
-    g: (value: Request.Request.Success<A>) => Request.Request<never, Request.Request.Success<A>>
-  ): RequestResolver.RequestResolver<never, A> =>
-    fromFunctionBatchedWithEffect(
-      (as) => Effect.succeed(restore(f)(as)),
-      restore(g)
-    ).identified("FromFunctionBatchedWith", f, g)
-)
-
-/** @internal */
-export const fromFunctionBatchedWithEffect = Debug.untracedMethod((restore) =>
-  <R, A extends Request.Request<any, any>>(
-    f: (
-      chunk: Array<Request.Entry<A>>
-    ) => Effect.Effect<R, Request.Request.Error<A>, Array<Request.Request.Success<A>>>,
-    g: (b: Request.Request.Success<A>) => Request.Request<Request.Request.Error<A>, Request.Request.Success<A>>
-  ): RequestResolver.RequestResolver<R, A> =>
-    makeBatched((requests: Array<Request.Entry<A>>) =>
-      Effect.flatMap(completedRequestMap.RequestCompletionMap, (map) =>
-        Effect.map(
-          Effect.matchCause(
-            restore(f)(requests),
-            (e): Array<
-              readonly [
-                Request.Request<Request.Request.Error<A>, Request.Request.Success<A>>,
-                Exit.Exit<Request.Request.Error<A>, Request.Request.Success<A>>
-              ]
-            > => pipe(requests, RA.map((k) => [k.request, core.exitFailCause(e)] as const)),
-            (bs): Array<
-              readonly [
-                Request.Request<Request.Request.Error<A>, Request.Request.Success<A>>,
-                Exit.Exit<Request.Request.Error<A>, Request.Request.Success<A>>
-              ]
-            > => pipe(bs, RA.map((b) => [restore(g)(b), core.exitSucceed(b)] as const))
-          ),
-          (x) => x.forEach(([k, v]) => completedRequestMap.set(map, k, v))
-        ))
-    ).identified("FromFunctionBatchedWithEffect", f, g)
 )
 
 /** @internal */
 export const fromFunctionEffect = Debug.untracedMethod((restore) =>
   <R, A extends Request.Request<any, any>>(
-    f: (a: Request.Entry<A>) => Effect.Effect<R, Request.Request.Error<A>, Request.Request.Success<A>>
+    f: (a: A) => Effect.Effect<R, Request.Request.Error<A>, Request.Request.Success<A>>
   ): RequestResolver.RequestResolver<R, A> =>
-    makeBatched((requests: Array<Request.Entry<A>>) =>
+    makeBatched((requests: Array<A>) =>
       Effect.flatMap(completedRequestMap.RequestCompletionMap, (map) =>
         Effect.map(
           Effect.forEachPar(requests, (a) =>
@@ -349,35 +262,9 @@ export const fromFunctionEffect = Debug.untracedMethod((restore) =>
               Effect.either(restore(f)(a)),
               (e) => [a, e] as const
             )),
-          (x) => x.forEach(([k, v]) => completedRequestMap.set(map, k.request, v as any))
+          (x) => x.forEach(([k, v]) => completedRequestMap.set(map, k, v as any))
         ))
     ).identified("FromFunctionEffect", f)
-)
-
-/** @internal */
-export const fromFunctionOption = Debug.untracedMethod((restore) =>
-  <A extends Request.Request<never, any>>(
-    f: (a: Request.Entry<A>) => Option.Option<Request.Request.Success<A>>
-  ): RequestResolver.RequestResolver<never, A> =>
-    fromFunctionOptionEffect((a: Request.Entry<A>) => Effect.succeed(restore(f)(a)))
-      .identified("FromFunctionOption", f)
-)
-
-/** @internal */
-export const fromFunctionOptionEffect = Debug.untracedMethod((restore) =>
-  <R, A extends Request.Request<any, any>>(
-    f: (a: Request.Entry<A>) => Effect.Effect<R, Request.Request.Error<A>, Option.Option<Request.Request.Success<A>>>
-  ): RequestResolver.RequestResolver<R, A> =>
-    makeBatched((requests: Array<Request.Entry<A>>) =>
-      Effect.flatMap(completedRequestMap.RequestCompletionMap, (map) =>
-        Effect.map(
-          Effect.forEachPar(
-            requests,
-            (a) => Effect.map(Effect.either(restore(f)(a)), (e) => [a, e] as const)
-          ),
-          (x) => x.forEach(([k, v]) => completedRequestMap.setOption(map, k.request, v as any))
-        ))
-    ).identified("FromFunctionOptionEffect", f)
 )
 
 /** @internal */
