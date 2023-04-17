@@ -10,7 +10,6 @@ import type { FiberRef } from "@effect/io/FiberRef"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as internal from "@effect/io/internal_effect_untraced/dataSource"
 import type * as Request from "@effect/io/Request"
-import type * as RequestCompletionMap from "@effect/io/RequestCompletionMap"
 
 /**
  * @since 1.0.0
@@ -54,7 +53,7 @@ export interface RequestResolver<R, A> extends Equal.Equal {
    * of requests that must be performed sequentially. The inner `Chunk`
    * represents a batch of requests that can be performed in parallel.
    */
-  runAll(requests: Array<Array<Request.Entry<A>>>): Effect.Effect<R, never, RequestCompletionMap.RequestCompletionMap>
+  runAll(requests: Array<Array<Request.Entry<A>>>): Effect.Effect<R, never, void>
 
   /**
    * Identify the data source using the specific identifier
@@ -95,7 +94,7 @@ export const isRequestResolver: (u: unknown) => u is RequestResolver<unknown, un
  */
 export const make: <A extends Request.Request<any, any>>() => <R>(
   runAll: (requests: Array<Array<A>>) => Effect.Effect<R, never, void>
-) => RequestResolver<Exclude<R, RequestCompletionMap.RequestCompletionMap>, A> = () => internal.make
+) => RequestResolver<R, A> = () => internal.make
 
 /**
  * Constructs a data source with the specified identifier and method to run
@@ -106,7 +105,7 @@ export const make: <A extends Request.Request<any, any>>() => <R>(
  */
 export const makeWithEntry: <A extends Request.Request<any, any>>() => <R>(
   runAll: (requests: Array<Array<Request.Entry<A>>>) => Effect.Effect<R, never, void>
-) => RequestResolver<Exclude<R, RequestCompletionMap.RequestCompletionMap>, A> = () => internal.makeWithEntry
+) => RequestResolver<R, A> = () => internal.makeWithEntry
 
 /**
  * Constructs a data source from a function taking a collection of requests
@@ -117,7 +116,7 @@ export const makeWithEntry: <A extends Request.Request<any, any>>() => <R>(
  */
 export const makeBatched: <A extends Request.Request<any, any>>() => <R>(
   run: (requests: Array<A>) => Effect.Effect<R, never, void>
-) => RequestResolver<Exclude<R, RequestCompletionMap.RequestCompletionMap>, A> = () => internal.makeBatched
+) => RequestResolver<R, A> = () => internal.makeBatched
 
 /**
  * A data source aspect that executes requests between two effects, `before`

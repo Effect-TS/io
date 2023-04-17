@@ -1,11 +1,11 @@
 import * as Data from "@effect/data/Data"
 import * as Debug from "@effect/data/Debug"
-import * as Either from "@effect/data/Either"
+import * as HashMap from "@effect/data/HashMap"
+import * as Option from "@effect/data/Option"
 import type * as Effect from "@effect/io/Effect"
 import * as completedRequestMap from "@effect/io/internal_effect_untraced/completedRequestMap"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import type * as Request from "@effect/io/Request"
-import type * as RequestCompletionMap from "@effect/io/RequestCompletionMap"
 
 /** @internal */
 const RequestSymbolKey = "@effect/io/Request"
@@ -50,64 +50,63 @@ export const tagged = <R extends Request.Request<any, any> & { _tag: string }>(
 export const complete = Debug.dualWithTrace<
   <A extends Request.Request<any, any>>(
     result: Request.Request.Result<A>
-  ) => (self: A) => Effect.Effect<RequestCompletionMap.RequestCompletionMap, never, void>,
+  ) => (self: A) => Effect.Effect<never, never, void>,
   <A extends Request.Request<any, any>>(
     self: A,
     result: Request.Request.Result<A>
-  ) => Effect.Effect<RequestCompletionMap.RequestCompletionMap, never, void>
+  ) => Effect.Effect<never, never, void>
 >(2, (trace) =>
   (self, result) =>
-    core.map(
-      completedRequestMap.RequestCompletionMap,
-      (map) => completedRequestMap.set(map, self, result)
+    core.fiberRefGetWith(
+      completedRequestMap.currentRequestMap,
+      (map) =>
+        core.sync(() => {
+          const entry = HashMap.unsafeGet(map, self)
+          if (!entry.state.completed) {
+            entry.state.completed = true
+            core.deferredUnsafeDone(entry.result, result)
+          }
+        })
     ).traced(trace))
 
 /** @internal */
 export const completeEffect = Debug.dualWithTrace<
   <A extends Request.Request<any, any>, R>(
     effect: Effect.Effect<R, Request.Request.Error<A>, Request.Request.Success<A>>
-  ) => (self: A) => Effect.Effect<R | RequestCompletionMap.RequestCompletionMap, never, void>,
+  ) => (self: A) => Effect.Effect<R, never, void>,
   <A extends Request.Request<any, any>, R>(
     self: A,
     effect: Effect.Effect<R, Request.Request.Error<A>, Request.Request.Success<A>>
-  ) => Effect.Effect<R | RequestCompletionMap.RequestCompletionMap, never, void>
+  ) => Effect.Effect<R, never, void>
 >(2, (trace) =>
   (self, effect) =>
     core.matchEffect(
       effect,
-      // @ts-expect-error
-      (error) => complete(self, Either.left(error)),
-      // @ts-expect-error
-      (value) => complete(self, Either.right(value))
+      (error) => complete(self, core.exitFail(error) as any),
+      (value) => complete(self, core.exitSucceed(value) as any)
     ).traced(trace))
 
 /** @internal */
 export const fail = Debug.dualWithTrace<
   <A extends Request.Request<any, any>>(
     error: Request.Request.Error<A>
-  ) => (self: A) => Effect.Effect<RequestCompletionMap.RequestCompletionMap, never, void>,
+  ) => (self: A) => Effect.Effect<never, never, void>,
   <A extends Request.Request<any, any>>(
     self: A,
     error: Request.Request.Error<A>
-  ) => Effect.Effect<RequestCompletionMap.RequestCompletionMap, never, void>
->(2, (trace) =>
-  (self, error) =>
-    // @ts-expect-error
-    complete(self, Either.left(error)).traced(trace))
+  ) => Effect.Effect<never, never, void>
+>(2, (trace) => (self, error) => complete(self, core.exitFail(error) as any).traced(trace))
 
 /** @internal */
 export const succeed = Debug.dualWithTrace<
   <A extends Request.Request<any, any>>(
     value: Request.Request.Success<A>
-  ) => (self: A) => Effect.Effect<RequestCompletionMap.RequestCompletionMap, never, void>,
+  ) => (self: A) => Effect.Effect<never, never, void>,
   <A extends Request.Request<any, any>>(
     self: A,
     value: Request.Request.Success<A>
-  ) => Effect.Effect<RequestCompletionMap.RequestCompletionMap, never, void>
->(2, (trace) =>
-  (self, value) =>
-    // @ts-expect-error
-    complete(self, Either.right(value)).traced(trace))
+  ) => Effect.Effect<never, never, void>
+>(2, (trace) => (self, value) => complete(self, core.exitSucceed(value) as any).traced(trace))
 
 /** @internal */
 export class Listeners {
@@ -128,3 +127,15 @@ export class Listeners {
     this.observers.forEach((f) => f(this.count))
   }
 }
+
+/**
+ * @internal
+ */
+export const filterOutCompleted = <A extends Request.Request<any, any>>(requests: Array<A>) =>
+  core.fiberRefGetWith(
+    completedRequestMap.currentRequestMap,
+    (map) =>
+      core.succeed(
+        requests.filter((request) => !(Option.getOrUndefined(HashMap.get(map, request))?.state.completed === true))
+      )
+  )

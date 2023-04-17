@@ -331,7 +331,10 @@ class EntryImpl<A extends Request.Request<any, any>> implements Request.Entry<A>
     readonly request: A,
     readonly result: Deferred.Deferred<Request.Request.Error<A>, Request.Request.Success<A>>,
     readonly listeners: Request.Listeners,
-    readonly ownerId: FiberId
+    readonly ownerId: FiberId,
+    readonly state: {
+      completed: boolean
+    }
   ) {}
 }
 
@@ -350,8 +353,11 @@ export const makeEntry = <A extends Request.Request<any, any>>(
   request: A,
   result: Deferred.Deferred<Request.Request.Error<A>, Request.Request.Success<A>>,
   listeners: Request.Listeners,
-  ownerId: FiberId
-): Request.Entry<A> => new EntryImpl(request, result, listeners, ownerId)
+  ownerId: FiberId,
+  state: {
+    completed: boolean
+  }
+): Request.Entry<A> => new EntryImpl(request, result, listeners, ownerId, state)
 
 /** @internal */
 export const RequestBlockParallelTypeId: RequestBlock.RequestBlockParallelTypeId = Symbol.for(

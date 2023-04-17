@@ -1,74 +1,45 @@
 import * as Chunk from "@effect/data/Chunk"
 import type * as Context from "@effect/data/Context"
 import * as Debug from "@effect/data/Debug"
-import * as Either from "@effect/data/Either"
+import type * as Either from "@effect/data/Either"
 import { pipe } from "@effect/data/Function"
 import * as RA from "@effect/data/ReadonlyArray"
 import * as Cause from "@effect/io/Cause"
 import * as Effect from "@effect/io/Effect"
-import * as completedRequestMap from "@effect/io/internal_effect_untraced/completedRequestMap"
 import * as core from "@effect/io/internal_effect_untraced/core"
+import { forEachWithIndex } from "@effect/io/internal_effect_untraced/effect"
+import { complete } from "@effect/io/internal_effect_untraced/request"
 import type * as Request from "@effect/io/Request"
-import type * as RequestCompletionMap from "@effect/io/RequestCompletionMap"
 import type * as RequestResolver from "@effect/io/RequestResolver"
 
 /** @internal */
 export const make = Debug.untracedMethod((restore) =>
   <R, A>(
     runAll: (requests: Array<Array<A>>) => Effect.Effect<R, never, void>
-  ): RequestResolver.RequestResolver<Exclude<R, RequestCompletionMap.RequestCompletionMap>, A> =>
-    new core.RequestResolverImpl((requests) =>
-      Effect.suspend(() => {
-        const map = completedRequestMap.empty()
-        return Effect.as(
-          Effect.provideService(completedRequestMap.RequestCompletionMap, map)(
-            restore(runAll)(requests.map((_) => _.map((_) => _.request)))
-          ),
-          map
-        )
-      })
-    )
+  ): RequestResolver.RequestResolver<R, A> =>
+    new core.RequestResolverImpl((requests) => restore(runAll)(requests.map((_) => _.map((_) => _.request))))
 )
 
 /** @internal */
 export const makeWithEntry = Debug.untracedMethod((restore) =>
   <R, A>(
     runAll: (requests: Array<Array<Request.Entry<A>>>) => Effect.Effect<R, never, void>
-  ): RequestResolver.RequestResolver<Exclude<R, RequestCompletionMap.RequestCompletionMap>, A> =>
-    new core.RequestResolverImpl((requests) =>
-      Effect.suspend(() => {
-        const map = completedRequestMap.empty()
-        return Effect.as(
-          Effect.provideService(completedRequestMap.RequestCompletionMap, map)(
-            restore(runAll)(requests)
-          ),
-          map
-        )
-      })
-    )
+  ): RequestResolver.RequestResolver<R, A> => new core.RequestResolverImpl((requests) => restore(runAll)(requests))
 )
 
 /** @internal */
 export const makeBatched = Debug.untracedMethod((restore) =>
   <R, A extends Request.Request<any, any>>(
     run: (requests: Array<A>) => Effect.Effect<R, never, void>
-  ): RequestResolver.RequestResolver<Exclude<R, RequestCompletionMap.RequestCompletionMap>, A> =>
-    new core.RequestResolverImpl<Exclude<R, RequestCompletionMap.RequestCompletionMap>, A>(
+  ): RequestResolver.RequestResolver<R, A> =>
+    new core.RequestResolverImpl<R, A>(
       (requests) =>
-        Effect.suspend(() =>
-          Effect.reduce(requests, completedRequestMap.empty(), (outerMap, requests) => {
-            const newRequests = RA.filter(requests, (entry) => !completedRequestMap.has(outerMap, entry.request))
-            if (newRequests.length === 0) {
-              return Effect.succeed(outerMap)
-            }
-            const innerMap = completedRequestMap.empty()
-            return pipe(
-              restore(run)(newRequests.map((_) => _.request)),
-              Effect.provideService(completedRequestMap.RequestCompletionMap, innerMap),
-              Effect.map(() => completedRequestMap.combine(outerMap, innerMap))
-            )
-          })
-        )
+        Effect.forEachDiscard(requests, (block) =>
+          restore(run)(
+            block
+              .filter((_) => !_.state.completed)
+              .map((_) => _.request)
+          ))
     )
 )
 
@@ -201,13 +172,9 @@ export const eitherWith = Debug.untracedDual<
               return Effect.zipWithPar(
                 restore(self.runAll)(Array.of(as)),
                 restore(that.runAll)(Array.of(bs)),
-                (self, that) => completedRequestMap.combine(self, that)
+                () => void 0
               )
-            }),
-            Effect.map(RA.reduce(
-              completedRequestMap.empty(),
-              (acc, curr) => completedRequestMap.combine(acc, curr)
-            ))
+            })
           ),
         Chunk.make("EitherWith", self, that, f)
       )
@@ -219,14 +186,10 @@ export const fromFunction = Debug.untracedMethod((restore) =>
     f: (request: A) => Request.Request.Success<A>
   ): RequestResolver.RequestResolver<never, A> =>
     makeBatched((requests: Array<A>) =>
-      Effect.map(completedRequestMap.RequestCompletionMap, (map) =>
-        requests.forEach((request) =>
-          completedRequestMap.set(
-            map,
-            request,
-            Either.right(restore(f)(request)) as any
-          )
-        ))
+      Effect.forEachDiscard(
+        requests,
+        (request) => complete(request, core.exitSucceed(restore(f)(request)) as any)
+      )
     ).identified("FromFunction", f)
 )
 
@@ -236,15 +199,7 @@ export const fromFunctionBatched = Debug.untracedMethod((restore) =>
     f: (chunk: Array<A>) => Array<Request.Request.Success<A>>
   ): RequestResolver.RequestResolver<never, A> =>
     makeBatched((as: Array<A>) =>
-      core.flatMap(
-        completedRequestMap.RequestCompletionMap,
-        (map) =>
-          Effect.sync(() => {
-            restore(f)(as).forEach((value, index) => {
-              completedRequestMap.set(map, as[index], core.exitSucceed(value) as any)
-            })
-          })
-      )
+      forEachWithIndex(restore(f)(as), (res, i) => complete(as[i], core.exitSucceed(res) as any))
     )
       .identified("FromFunctionBatched", f)
 )
@@ -255,15 +210,10 @@ export const fromFunctionEffect = Debug.untracedMethod((restore) =>
     f: (a: A) => Effect.Effect<R, Request.Request.Error<A>, Request.Request.Success<A>>
   ): RequestResolver.RequestResolver<R, A> =>
     makeBatched((requests: Array<A>) =>
-      Effect.flatMap(completedRequestMap.RequestCompletionMap, (map) =>
-        Effect.map(
-          Effect.forEachPar(requests, (a) =>
-            Effect.map(
-              Effect.either(restore(f)(a)),
-              (e) => [a, e] as const
-            )),
-          (x) => x.forEach(([k, v]) => completedRequestMap.set(map, k, v as any))
-        ))
+      Effect.forEachParDiscard(
+        requests,
+        (a) => Effect.flatMap(Effect.exit(restore(f)(a)), (e) => complete(a, e as any))
+      )
     ).identified("FromFunctionEffect", f)
 )
 

@@ -13,7 +13,6 @@ import * as _RequestBlock from "@effect/io/internal_effect_untraced/blockedReque
 import * as cache from "@effect/io/internal_effect_untraced/cache"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as internal from "@effect/io/internal_effect_untraced/request"
-import type * as RequestCompletionMap from "@effect/io/RequestCompletionMap"
 
 /**
  * @since 1.0.0
@@ -127,13 +126,8 @@ export const tagged: <R extends Request<any, any> & { _tag: string }>(
  * @category request completion
  */
 export const complete: {
-  <A extends Request<any, any>>(
-    result: Request.Result<A>
-  ): (self: A) => Effect.Effect<RequestCompletionMap.RequestCompletionMap, never, void>
-  <A extends Request<any, any>>(
-    self: A,
-    result: Request.Result<A>
-  ): Effect.Effect<RequestCompletionMap.RequestCompletionMap, never, void>
+  <A extends Request<any, any>>(result: Request.Result<A>): (self: A) => Effect.Effect<never, never, void>
+  <A extends Request<any, any>>(self: A, result: Request.Result<A>): Effect.Effect<never, never, void>
 } = internal.complete
 
 /**
@@ -147,11 +141,11 @@ export const complete: {
 export const completeEffect: {
   <A extends Request<any, any>, R>(
     effect: Effect.Effect<R, Request.Error<A>, Request.Success<A>>
-  ): (self: A) => Effect.Effect<RequestCompletionMap.RequestCompletionMap | R, never, void>
+  ): (self: A) => Effect.Effect<R, never, void>
   <A extends Request<any, any>, R>(
     self: A,
     effect: Effect.Effect<R, Request.Error<A>, Request.Success<A>>
-  ): Effect.Effect<RequestCompletionMap.RequestCompletionMap | R, never, void>
+  ): Effect.Effect<R, never, void>
 } = internal.completeEffect
 
 /**
@@ -161,13 +155,8 @@ export const completeEffect: {
  * @category request completion
  */
 export const fail: {
-  <A extends Request<any, any>>(
-    error: Request.Error<A>
-  ): (self: A) => Effect.Effect<RequestCompletionMap.RequestCompletionMap, never, void>
-  <A extends Request<any, any>>(
-    self: A,
-    error: Request.Error<A>
-  ): Effect.Effect<RequestCompletionMap.RequestCompletionMap, never, void>
+  <A extends Request<any, any>>(error: Request.Error<A>): (self: A) => Effect.Effect<never, never, void>
+  <A extends Request<any, any>>(self: A, error: Request.Error<A>): Effect.Effect<never, never, void>
 } = internal.fail
 
 /**
@@ -177,13 +166,8 @@ export const fail: {
  * @category request completion
  */
 export const succeed: {
-  <A extends Request<any, any>>(
-    value: Request.Success<A>
-  ): (self: A) => Effect.Effect<RequestCompletionMap.RequestCompletionMap, never, void>
-  <A extends Request<any, any>>(
-    self: A,
-    value: Request.Success<A>
-  ): Effect.Effect<RequestCompletionMap.RequestCompletionMap, never, void>
+  <A extends Request<any, any>>(value: Request.Success<A>): (self: A) => Effect.Effect<never, never, void>
+  <A extends Request<any, any>>(self: A, value: Request.Success<A>): Effect.Effect<never, never, void>
 } = internal.succeed
 
 /**
@@ -258,6 +242,9 @@ export interface Entry<R> extends Entry.Variance<R> {
   >
   readonly listeners: Listeners
   readonly ownerId: FiberId
+  readonly state: {
+    completed: boolean
+  }
 }
 
 /**

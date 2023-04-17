@@ -1,6 +1,6 @@
 ---
 title: RequestResolver.ts
-nav_order: 47
+nav_order: 46
 parent: Modules
 ---
 
@@ -206,7 +206,7 @@ requests.
 ```ts
 export declare const make: <A extends Request.Request<any, any>>() => <R>(
   runAll: (requests: A[][]) => Effect.Effect<R, never, void>
-) => RequestResolver<Exclude<R, RequestCompletionMap.RequestCompletionMap>, A>
+) => RequestResolver<R, A>
 ```
 
 Added in v1.0.0
@@ -221,7 +221,7 @@ and returning a `RequestCompletionMap`.
 ```ts
 export declare const makeBatched: <A extends Request.Request<any, any>>() => <R>(
   run: (requests: A[]) => Effect.Effect<R, never, void>
-) => RequestResolver<Exclude<R, RequestCompletionMap.RequestCompletionMap>, A>
+) => RequestResolver<R, A>
 ```
 
 Added in v1.0.0
@@ -236,7 +236,7 @@ requests.
 ```ts
 export declare const makeWithEntry: <A extends Request.Request<any, any>>() => <R>(
   runAll: (requests: Request.Entry<A>[][]) => Effect.Effect<R, never, void>
-) => RequestResolver<Exclude<R, RequestCompletionMap.RequestCompletionMap>, A>
+) => RequestResolver<R, A>
 ```
 
 Added in v1.0.0
@@ -328,7 +328,7 @@ export interface RequestResolver<R, A> extends Equal.Equal {
    * of requests that must be performed sequentially. The inner `Chunk`
    * represents a batch of requests that can be performed in parallel.
    */
-  runAll(requests: Array<Array<Request.Entry<A>>>): Effect.Effect<R, never, RequestCompletionMap.RequestCompletionMap>
+  runAll(requests: Array<Array<Request.Entry<A>>>): Effect.Effect<R, never, void>
 
   /**
    * Identify the data source using the specific identifier
