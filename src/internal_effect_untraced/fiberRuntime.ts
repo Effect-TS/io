@@ -198,8 +198,8 @@ const runBlockedRequests = <R>(self: RequestBlock.RequestBlock<R>, id: FiberId.F
         ([dataSource, sequential]) =>
           core.fiberRefLocally(
             race(
-              dataSource.runAll(sequential),
-              core.asyncInterrupt<never, never, void>((cb) => {
+              core.interruptible(dataSource.runAll(sequential)),
+              core.interruptible(core.asyncInterrupt<never, never, void>((cb) => {
                 const all = sequential.flatMap((b) => b)
                 const counts = all.map((_) => _.listeners.count)
                 const checkDone = () => {
@@ -225,7 +225,7 @@ const runBlockedRequests = <R>(self: RequestBlock.RequestBlock<R>, id: FiberId.F
                 return core.sync(() => {
                   cleanup.forEach((f) => f())
                 })
-              })
+              }))
             ),
             currentRequestMap,
             RA.reduce(
