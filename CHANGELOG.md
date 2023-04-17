@@ -1,5 +1,17 @@
 # @effect/io
 
+## 0.22.0
+
+### Minor Changes
+
+- [#364](https://github.com/Effect-TS/io/pull/364) [`049c9cd`](https://github.com/Effect-TS/io/commit/049c9cd2c2797a49516820cfece29572756ee087) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Propagate interruption to RequestResolver, improvents on: cache, api and request execution logic.
+
+- [#367](https://github.com/Effect-TS/io/pull/367) [`4c0e20a`](https://github.com/Effect-TS/io/commit/4c0e20a9efbf264e46be1142b9ac513d6f7dbf46) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Improve request completion logic, kill RequestCompletionMap
+
+### Patch Changes
+
+- [#366](https://github.com/Effect-TS/io/pull/366) [`bdca14e`](https://github.com/Effect-TS/io/commit/bdca14e94e09463b1974f98ace3a146164185073) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Add Effect.runRequestBlock
+
 ## 0.21.1
 
 ### Patch Changes
