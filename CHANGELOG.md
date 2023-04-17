@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.22.2
+
+### Patch Changes
+
+- [#370](https://github.com/Effect-TS/io/pull/370) [`8499d55`](https://github.com/Effect-TS/io/commit/8499d55ee78044c0d85afd7e6128c6d8ce4f251f) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Fix handling of while in blocked
+
 ## 0.22.1
 
 ### Patch Changes
