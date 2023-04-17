@@ -88,6 +88,17 @@ export const blocked = <R, E, A>(
   return effect
 }
 
+/**
+ * @internal
+ */
+export const runRequestBlock = <R>(
+  blockedRequests: BlockedRequests.RequestBlock<R>
+): Effect.Blocked<R, never, void> => {
+  const effect = new EffectPrimitive("RunBlocked") as any
+  effect.i0 = blockedRequests
+  return effect
+}
+
 /** @internal */
 export const EffectTypeId: Effect.EffectTypeId = Symbol.for("@effect/io/Effect") as Effect.EffectTypeId
 
@@ -109,6 +120,7 @@ export type Primitive =
   | OpTraced
   | OpTag
   | Blocked
+  | RunBlocked
   | Either.Either<any, any>
   | Option.Option<any>
 
@@ -238,6 +250,13 @@ export interface Blocked<R = any, E = any, A = any> extends
   Op<"Blocked", {
     readonly i0: BlockedRequests.RequestBlock<R>
     readonly i1: Effect.Effect<R, E, A>
+  }>
+{}
+
+/** @internal */
+export interface RunBlocked<R = any> extends
+  Op<"RunBlocked", {
+    readonly i0: BlockedRequests.RequestBlock<R>
   }>
 {}
 

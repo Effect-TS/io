@@ -5931,6 +5931,12 @@ export const blocked: <R, E, A>(blockedRequests: RequestBlock<R>, _continue: Eff
  * @category utils
  * @since 1.0.0
  */
+export const runRequestBlock: <R>(blockedRequests: RequestBlock<R>) => Blocked<R, never, void> = core.runRequestBlock
+
+/**
+ * @category utils
+ * @since 1.0.0
+ */
 export const step: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Exit.Exit<E, A> | Blocked<R, E, A>> = core.step
 
 /**

@@ -1195,10 +1195,14 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     }
     return core.uninterruptibleMask((restore) =>
       core.flatMap(
-        fork(runBlockedRequests(op.i0, this._fiberId)),
+        fork(core.runRequestBlock(op.i0)),
         () => restore(op.i1)
       )
     )
+  }
+
+  ["RunBlocked"](op: core.Primitive & { _tag: "RunBlocked" }) {
+    return runBlockedRequests(op.i0, this._fiberId)
   }
 
   [OpCodes.OP_UPDATE_RUNTIME_FLAGS](op: core.Primitive & { _tag: OpCodes.OP_UPDATE_RUNTIME_FLAGS }) {

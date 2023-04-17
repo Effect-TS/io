@@ -422,6 +422,7 @@ Added in v1.0.0
   - [retryWhile](#retrywhile)
   - [retryWhileEffect](#retrywhileeffect)
   - [retryWhileEquals](#retrywhileequals)
+  - [runRequestBlock](#runrequestblock)
   - [schedule](#schedule)
   - [scheduleForked](#scheduleforked)
   - [scheduleFrom](#schedulefrom)
@@ -6761,6 +6762,16 @@ export declare const retryWhileEquals: {
   <E>(e: E): <R, A>(self: Effect<R, E, A>) => Effect<R, E, A>
   <R, E, A>(self: Effect<R, E, A>, e: E): Effect<R, E, A>
 }
+```
+
+Added in v1.0.0
+
+## runRequestBlock
+
+**Signature**
+
+```ts
+export declare const runRequestBlock: <R>(blockedRequests: RequestBlock<R>) => Blocked<R, never, void>
 ```
 
 Added in v1.0.0
