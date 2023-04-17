@@ -1332,7 +1332,7 @@ export const dieSync: (evaluate: LazyArg<unknown>) => Effect<never, never, never
  * @since 1.0.0
  * @category interruption
  */
-export const disconnect: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A> = circular.disconnect
+export const disconnect: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A> = fiberRuntime.disconnect
 
 /**
  * Returns a new workflow that executes this one and captures the changes in
@@ -3428,7 +3428,7 @@ export const provideSomeLayer: {
 export const race: {
   <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2 | A>
   <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, A | A2>
-} = circular.race
+} = fiberRuntime.race
 
 /**
  * Returns an effect that races this effect with all the specified effects,
@@ -3452,7 +3452,7 @@ export const raceAll: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R,
 export const raceAwait: {
   <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2 | A>
   <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, A | A2>
-} = circular.raceAwait
+} = fiberRuntime.raceAwait
 
 /**
  * Returns an effect that races this effect with the specified effect,
@@ -3499,7 +3499,7 @@ export const raceFibersWith: {
     selfWins: (winner: Fiber.RuntimeFiber<E, A>, loser: Fiber.RuntimeFiber<E1, A1>) => Effect<R2, E2, A2>,
     thatWins: (winner: Fiber.RuntimeFiber<E1, A1>, loser: Fiber.RuntimeFiber<E, A>) => Effect<R3, E3, A3>
   ): Effect<R | R1 | R2 | R3, E2 | E3, A2 | A3>
-} = circular.raceFibersWith
+} = fiberRuntime.raceFibersWith
 
 /**
  * Returns an effect that races this effect with the specified effect,
@@ -3540,7 +3540,7 @@ export const raceWith: {
     leftDone: (exit: Exit.Exit<E, A>, fiber: Fiber.Fiber<E1, A1>) => Effect<R2, E2, A2>,
     rightDone: (exit: Exit.Exit<E1, A1>, fiber: Fiber.Fiber<E, A>) => Effect<R3, E3, A3>
   ): Effect<R | R1 | R2 | R3, E2 | E3, A2 | A3>
-} = circular.raceWith
+} = fiberRuntime.raceWith
 
 /**
  * Retreives the `Random` service from the context.

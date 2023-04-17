@@ -2,18 +2,16 @@
  * @since 1.0.0
  */
 
-import * as Chunk from "@effect/data/Chunk"
 import type * as Context from "@effect/data/Context"
 import type * as Either from "@effect/data/Either"
 import type * as Equal from "@effect/data/Equal"
 import type * as Option from "@effect/data/Option"
-import * as Effect from "@effect/io/Effect"
-import * as Exit from "@effect/io/Exit"
+import type * as Effect from "@effect/io/Effect"
 import type { FiberRef } from "@effect/io/FiberRef"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as internal from "@effect/io/internal_effect_untraced/dataSource"
 import type * as Request from "@effect/io/Request"
-import * as RequestCompletionMap from "@effect/io/RequestCompletionMap"
+import type * as RequestCompletionMap from "@effect/io/RequestCompletionMap"
 
 /**
  * @since 1.0.0
@@ -369,50 +367,3 @@ export const locally: {
     value: A
   ): RequestResolver<R, B>
 } = core.resolverLocally
-
-/**
- * @category utils
- * @since 1.0.0
- */
-export const interruptWhenPossible = <R, A extends Request.Request<any, any>>(
-  self: RequestResolver<R, A>
-): RequestResolver<R, A> =>
-  new core.RequestResolverImpl<R, A>(
-    (requests) =>
-      Effect.race(
-        Effect.interruptible(
-          self.runAll(requests)
-        ),
-        Effect.interruptible(
-          Effect.fiberIdWith((id) =>
-            Effect.asyncInterrupt<never, never, RequestCompletionMap.RequestCompletionMap>((cb) => {
-              const all = requests.flatMap((b) => b)
-              const counts = all.map((_) => _.listeners.count)
-              const checkDone = () => {
-                if (counts.every((count) => count === 0)) {
-                  const map = RequestCompletionMap.empty()
-                  all.forEach((entry) => {
-                    RequestCompletionMap.set(map, entry.request, Exit.interrupt(id) as any)
-                  })
-                  cleanup.forEach((f) => f())
-                  cb(Exit.succeed(map))
-                }
-              }
-              const cleanup = all.map((r, i) => {
-                const observer = (count: number) => {
-                  counts[i] = count
-                  checkDone()
-                }
-                r.listeners.addObserver(observer)
-                return () => r.listeners.removeObserver(observer)
-              })
-              checkDone()
-              return Effect.sync(() => {
-                cleanup.forEach((f) => f())
-              })
-            })
-          )
-        )
-      ),
-    Chunk.make("Interruptible", self)
-  )

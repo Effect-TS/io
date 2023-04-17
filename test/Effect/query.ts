@@ -63,23 +63,21 @@ const delay = <R, E, A>(self: Effect.Effect<R, E, A>) =>
 
 const counted = <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.tap(self, () => Effect.map(Counter, (c) => c.count++))
 
-export const UserResolver = Resolver.interruptWhenPossible(
-  Resolver.makeBatched<UserRequest>()((requests) =>
-    counted(Effect.forEachDiscard(requests, ({ request }) => {
-      switch (request._tag) {
-        case "GetAllIds": {
-          return delay(Request.complete(request, Exit.succeed(userIds)))
-        }
-        case "GetNameById": {
-          if (userNames.has(request.id)) {
-            const userName = userNames.get(request.id)!
-            return delay(Request.complete(request, Exit.succeed(userName)))
-          }
-          return delay(Request.completeEffect(request, Exit.fail("Not Found")))
-        }
+export const UserResolver = Resolver.makeBatched<UserRequest>()((requests) =>
+  counted(Effect.forEachDiscard(requests, ({ request }) => {
+    switch (request._tag) {
+      case "GetAllIds": {
+        return delay(Request.complete(request, Exit.succeed(userIds)))
       }
-    }))
-  )
+      case "GetNameById": {
+        if (userNames.has(request.id)) {
+          const userName = userNames.get(request.id)!
+          return delay(Request.complete(request, Exit.succeed(userName)))
+        }
+        return delay(Request.completeEffect(request, Exit.fail("Not Found")))
+      }
+    }
+  }))
 )
 
 export const getAllUserIds = Effect.request(
