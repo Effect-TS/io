@@ -38,10 +38,9 @@ import type * as LogSpan from "@effect/io/Logger/Span"
 import type * as MetricLabel from "@effect/io/Metric/Label"
 import type * as Request from "@effect/io/Request"
 import type * as BlockedRequests from "@effect/io/RequestBlock"
-import type { RequestCompletionMap } from "@effect/io/RequestCompletionMap"
 import type * as RequestResolver from "@effect/io/RequestResolver"
-import * as scheduler from "@effect/io/Scheduler"
 import type * as Scheduler from "@effect/io/Scheduler"
+import * as scheduler from "@effect/io/Scheduler"
 import type * as Scope from "@effect/io/Scope"
 
 // -----------------------------------------------------------------------------
@@ -1692,9 +1691,11 @@ export class RequestResolverImpl<R, A> implements RequestResolver.RequestResolve
   constructor(
     readonly runAll: (
       requests: Array<Array<Request.Entry<A>>>
-    ) => Effect.Effect<R, never, RequestCompletionMap>,
+    ) => Effect.Effect<R, never, void>,
     readonly target?: unknown
-  ) {}
+  ) {
+    this.runAll = runAll as any
+  }
   [Hash.symbol](): number {
     return this.target ? Hash.hash(this.target) : Hash.random(this)
   }

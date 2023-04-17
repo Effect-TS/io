@@ -3,6 +3,7 @@ import * as Context from "@effect/data/Context"
 import * as Debug from "@effect/data/Debug"
 import type { LazyArg } from "@effect/data/Function"
 import { identity, pipe } from "@effect/data/Function"
+import * as HashMap from "@effect/data/HashMap"
 import * as HashSet from "@effect/data/HashSet"
 import * as MutableQueue from "@effect/data/MutableQueue"
 import * as MRef from "@effect/data/MutableRef"
@@ -27,7 +28,7 @@ import * as _RequestBlock from "@effect/io/internal_effect_untraced/blockedReque
 import * as internalCause from "@effect/io/internal_effect_untraced/cause"
 import { StackAnnotation } from "@effect/io/internal_effect_untraced/cause"
 import * as clock from "@effect/io/internal_effect_untraced/clock"
-import * as completedRequestMap from "@effect/io/internal_effect_untraced/completedRequestMap"
+import { currentRequestMap } from "@effect/io/internal_effect_untraced/completedRequestMap"
 import { configProviderTag } from "@effect/io/internal_effect_untraced/configProvider"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as defaultServices from "@effect/io/internal_effect_untraced/defaultServices"
@@ -41,6 +42,7 @@ import * as metric from "@effect/io/internal_effect_untraced/metric"
 import * as metricBoundaries from "@effect/io/internal_effect_untraced/metric/boundaries"
 import * as metricLabel from "@effect/io/internal_effect_untraced/metric/label"
 import * as OpCodes from "@effect/io/internal_effect_untraced/opCodes/effect"
+import { complete } from "@effect/io/internal_effect_untraced/request"
 import * as _runtimeFlags from "@effect/io/internal_effect_untraced/runtimeFlags"
 import * as supervisor from "@effect/io/internal_effect_untraced/supervisor"
 import * as SupervisorPatch from "@effect/io/internal_effect_untraced/supervisor/patch"
@@ -48,9 +50,7 @@ import type { Logger } from "@effect/io/Logger"
 import * as LogLevel from "@effect/io/Logger/Level"
 import type * as MetricLabel from "@effect/io/Metric/Label"
 import * as Ref from "@effect/io/Ref"
-import type { Entry, Request } from "@effect/io/Request"
 import type * as RequestBlock from "@effect/io/RequestBlock"
-import type { RequestCompletionMap } from "@effect/io/RequestCompletionMap"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
 
@@ -186,11 +186,6 @@ const drainQueueWhileRunningTable = {
  */
 export const currentRequestBatchingEnabled = core.fiberRefUnsafeMake(true)
 
-class LeftoverRequestsException {
-  readonly _tag = "LeftoverRequestsException"
-  constructor(readonly requests: HashSet.HashSet<Request<any, any>>) {}
-}
-
 /**
  * Executes all requests, submitting requests to each data source in parallel.
  */
@@ -201,20 +196,21 @@ const runBlockedRequests = <R>(self: RequestBlock.RequestBlock<R>, id: FiberId.F
       forEachParDiscard(
         _RequestBlock.sequentialCollectionToChunk(requestsByRequestResolver),
         ([dataSource, sequential]) =>
-          core.flatMap(
+          core.fiberRefLocally(
             race(
               dataSource.runAll(sequential),
-              core.asyncInterrupt<never, never, RequestCompletionMap>((cb) => {
+              core.asyncInterrupt<never, never, void>((cb) => {
                 const all = sequential.flatMap((b) => b)
                 const counts = all.map((_) => _.listeners.count)
                 const checkDone = () => {
                   if (counts.every((count) => count === 0)) {
-                    const map = completedRequestMap.empty()
-                    all.forEach((entry) => {
-                      completedRequestMap.set(map, entry.request as any, core.exitInterrupt(id) as any)
-                    })
                     cleanup.forEach((f) => f())
-                    cb(core.exitSucceed(map))
+                    cb(
+                      core.forEachDiscard(
+                        all.filter((entry) => !entry.state.completed),
+                        (e) => complete(e.request as any, core.exitInterrupt(id))
+                      )
+                    )
                   }
                 }
                 const cleanup = all.map((r, i) => {
@@ -231,26 +227,12 @@ const runBlockedRequests = <R>(self: RequestBlock.RequestBlock<R>, id: FiberId.F
                 })
               })
             ),
-            (completedRequests) => {
-              const blockedRequests: Array<Entry<any>> = RA.flatten(sequential)
-              const leftovers = pipe(
-                completedRequestMap.requests(completedRequests),
-                HashSet.difference(
-                  RA.map(
-                    blockedRequests,
-                    (blockedRequest) => blockedRequest.request as Request<unknown, unknown>
-                  )
-                )
-              )
-              if (HashSet.size(leftovers) > 0) {
-                return core.die(new LeftoverRequestsException(leftovers))
-              }
-              return core.forEachDiscard(blockedRequests, (blockedRequest) =>
-                core.deferredComplete(
-                  blockedRequest.result,
-                  completedRequestMap.getOrThrow(completedRequests, blockedRequest.request)
-                ))
-            }
+            currentRequestMap,
+            RA.reduce(
+              sequential,
+              HashMap.empty(),
+              (agg, block) => RA.reduce(block, agg, (agg2, entry) => HashMap.set(agg2, entry.request, entry))
+            )
           )
       )
   )

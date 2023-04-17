@@ -50,7 +50,8 @@ export declare const makeEntry: <A extends Request<any, any>>(
   request: A,
   result: Deferred<Request.Error<A>, Request.Success<A>>,
   listeners: Listeners,
-  ownerId: FiberId
+  ownerId: FiberId,
+  state: { completed: boolean }
 ) => Entry<A>
 ```
 
@@ -133,6 +134,9 @@ export interface Entry<R> extends Entry.Variance<R> {
   >
   readonly listeners: Listeners
   readonly ownerId: FiberId
+  readonly state: {
+    completed: boolean
+  }
 }
 ```
 
@@ -205,14 +209,8 @@ Complete a `Request` with the specified result.
 
 ```ts
 export declare const complete: {
-  <A extends Request<any, any>>(result: Request.Result<A>): (
-    self: A
-  ) => Effect.Effect<RequestCompletionMap.RequestCompletionMap, never, void>
-  <A extends Request<any, any>>(self: A, result: Request.Result<A>): Effect.Effect<
-    RequestCompletionMap.RequestCompletionMap,
-    never,
-    void
-  >
+  <A extends Request<any, any>>(result: Request.Result<A>): (self: A) => Effect.Effect<never, never, void>
+  <A extends Request<any, any>>(self: A, result: Request.Result<A>): Effect.Effect<never, never, void>
 }
 ```
 
@@ -230,11 +228,11 @@ the request with the value of the effect workflow if it succeeds.
 export declare const completeEffect: {
   <A extends Request<any, any>, R>(effect: Effect.Effect<R, Request.Error<A>, Request.Success<A>>): (
     self: A
-  ) => Effect.Effect<RequestCompletionMap.RequestCompletionMap | R, never, void>
+  ) => Effect.Effect<R, never, void>
   <A extends Request<any, any>, R>(
     self: A,
     effect: Effect.Effect<R, Request.Error<A>, Request.Success<A>>
-  ): Effect.Effect<RequestCompletionMap.RequestCompletionMap | R, never, void>
+  ): Effect.Effect<R, never, void>
 }
 ```
 
@@ -248,14 +246,8 @@ Complete a `Request` with the specified error.
 
 ```ts
 export declare const fail: {
-  <A extends Request<any, any>>(error: Request.Error<A>): (
-    self: A
-  ) => Effect.Effect<RequestCompletionMap.RequestCompletionMap, never, void>
-  <A extends Request<any, any>>(self: A, error: Request.Error<A>): Effect.Effect<
-    RequestCompletionMap.RequestCompletionMap,
-    never,
-    void
-  >
+  <A extends Request<any, any>>(error: Request.Error<A>): (self: A) => Effect.Effect<never, never, void>
+  <A extends Request<any, any>>(self: A, error: Request.Error<A>): Effect.Effect<never, never, void>
 }
 ```
 
@@ -269,14 +261,8 @@ Complete a `Request` with the specified value.
 
 ```ts
 export declare const succeed: {
-  <A extends Request<any, any>>(value: Request.Success<A>): (
-    self: A
-  ) => Effect.Effect<RequestCompletionMap.RequestCompletionMap, never, void>
-  <A extends Request<any, any>>(self: A, value: Request.Success<A>): Effect.Effect<
-    RequestCompletionMap.RequestCompletionMap,
-    never,
-    void
-  >
+  <A extends Request<any, any>>(value: Request.Success<A>): (self: A) => Effect.Effect<never, never, void>
+  <A extends Request<any, any>>(self: A, value: Request.Success<A>): Effect.Effect<never, never, void>
 }
 ```
 

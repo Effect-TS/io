@@ -44,7 +44,10 @@ export const fromRequest = Debug.methodWithTrace((trace) =>
                 core.deferredMake<Request.Request.Error<A>, Request.Request.Success<A>>(),
                 (ref) =>
                   core.blocked(
-                    BlockedRequests.single(dataSource, BlockedRequests.makeEntry(request, ref, listeners, id)),
+                    BlockedRequests.single(
+                      dataSource,
+                      BlockedRequests.makeEntry(request, ref, listeners, id, { completed: false })
+                    ),
                     ensuring(core.deferredAwait(ref), core.sync(() => listeners.decrement()))
                   )
               )
@@ -87,7 +90,9 @@ export const fromRequest = Debug.methodWithTrace((trace) =>
                   return core.blocked(
                     BlockedRequests.single(
                       dataSource,
-                      BlockedRequests.makeEntry(request, orNew.right.handle, orNew.right.listeners, id)
+                      BlockedRequests.makeEntry(request, orNew.right.handle, orNew.right.listeners, id, {
+                        completed: false
+                      })
                     ),
                     core.uninterruptibleMask((restore) =>
                       core.flatMap(
@@ -111,7 +116,10 @@ export const fromRequest = Debug.methodWithTrace((trace) =>
         core.deferredMake<Request.Request.Error<A>, Request.Request.Success<A>>(),
         (ref) =>
           core.blocked(
-            BlockedRequests.single(dataSource, BlockedRequests.makeEntry(request, ref, listeners, id)),
+            BlockedRequests.single(
+              dataSource,
+              BlockedRequests.makeEntry(request, ref, listeners, id, { completed: false })
+            ),
             ensuring(
               core.deferredAwait(ref),
               core.sync(() => listeners.decrement())
