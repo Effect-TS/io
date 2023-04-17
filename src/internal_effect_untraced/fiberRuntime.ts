@@ -2448,7 +2448,7 @@ export const releaseMapReleaseAll = (
 // circular with Scope
 
 /** @internal */
-export const scopeTag = Context.Tag<Scope.Scope>()
+export const scopeTag = Context.Tag<Scope.Scope>(core.ScopeTypeId)
 
 /* @internal */
 export const scopeMake = Debug.methodWithTrace((trace) =>
