@@ -116,7 +116,7 @@ const provideEnv = Effect.provideSomeLayer(
   Layer.mergeAll(UserCacheLive, Layer.sync(Counter, () => ({ count: 0 })))
 )
 
-describe("Effect", () => {
+describe.concurrent("Effect", () => {
   it.effect("requests are executed correctly", () =>
     provideEnv(
       Effect.gen(function*($) {
