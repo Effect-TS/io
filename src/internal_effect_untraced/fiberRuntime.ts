@@ -1162,7 +1162,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
               core.flatMap(op.i1, (a) => {
                 nextOp.i2(a)
                 if (nextOp.i0()) {
-                  return nextOp.i1()
+                  return core.whileLoop(nextOp.i0, nextOp.i1, nextOp.i2)
                 }
                 return core.unit()
               })
