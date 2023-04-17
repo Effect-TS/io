@@ -7,6 +7,7 @@ import * as Cause from "@effect/io/Cause"
 import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import * as FiberRef from "@effect/io/FiberRef"
+import * as TestClock from "@effect/io/internal_effect_untraced/testing/testClock"
 import * as Layer from "@effect/io/Layer"
 import * as Request from "@effect/io/Request"
 import * as Resolver from "@effect/io/RequestResolver"
@@ -43,31 +44,40 @@ export interface GetAllIds extends Request.Request<never, ReadonlyArray<number>>
 
 export const GetAllIds = Request.tagged<GetAllIds>("GetAllIds")
 
-export interface GetNameById extends Request.Request<never, string> {
+export interface GetNameById extends Request.Request<string, string> {
   readonly _tag: "GetNameById"
   readonly id: number
 }
 
 export const GetNameById = Request.tagged<GetNameById>("GetNameById")
 
-export const UserResolver = Resolver.makeBatched((requests: Array<UserRequest>) =>
-  Effect.flatMap(Counter, (counter) => {
-    counter.count++
-    return Effect.forEachDiscard(requests, (request) => {
-      switch (request._tag) {
-        case "GetAllIds": {
-          return Request.complete(request, Exit.succeed(userIds))
-        }
-        case "GetNameById": {
-          if (userNames.has(request.id)) {
-            const userName = userNames.get(request.id)!
-            return Request.complete(request, Exit.succeed(userName))
-          }
-          return Effect.unit()
-        }
+const delay = <R, E, A>(self: Effect.Effect<R, E, A>) =>
+  Effect.flatMap(
+    Effect.promise(() =>
+      new Promise((r) => {
+        setTimeout(() => r(0), 0)
+      })
+    ),
+    () => self
+  )
+
+const counted = <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.tap(self, () => Effect.map(Counter, (c) => c.count++))
+
+export const UserResolver = Resolver.makeBatched<UserRequest>()((requests) =>
+  counted(Effect.forEachDiscard(requests, (request) => {
+    switch (request._tag) {
+      case "GetAllIds": {
+        return delay(Request.complete(request, Exit.succeed(userIds)))
       }
-    })
-  })
+      case "GetNameById": {
+        if (userNames.has(request.id)) {
+          const userName = userNames.get(request.id)!
+          return delay(Request.complete(request, Exit.succeed(userName)))
+        }
+        return delay(Request.completeEffect(request, Exit.fail("Not Found")))
+      }
+    }
+  }))
 )
 
 export const getAllUserIds = Effect.request(
@@ -150,6 +160,7 @@ describe("Effect", () => {
           if (exit._tag === "Failure") {
             expect(Cause.isInterruptedOnly(exit.cause)).toEqual(true)
           }
+          expect(yield* $(Counter)).toEqual({ count: 0 })
           expect(yield* $(FiberRef.get(interrupts))).toEqual({ interrupts: 1 })
         })
       )
@@ -168,7 +179,7 @@ describe("Effect", () => {
           if (exit._tag === "Failure") {
             expect(Cause.isInterruptedOnly(exit.cause)).toEqual(true)
           }
-          expect(yield* $(Counter)).toEqual({ count: 1 })
+          expect(yield* $(Counter)).toEqual({ count: 0 })
           expect(yield* $(FiberRef.get(interrupts))).toEqual({ interrupts: 1 })
         })
       )
@@ -214,6 +225,22 @@ describe("Effect", () => {
         yield* $(getAllUserIds)
         const requests = yield* $(UserCache, Effect.flatMap((_) => _.keys()))
         expect(requests.map((_) => _._tag)).toEqual(["GetAllIds"])
+        expect(yield* $(Counter)).toEqual({ count: 2 })
+      })
+    ))
+  it.effect("cache respects ttl", () =>
+    provideEnv(
+      Effect.gen(function*($) {
+        yield* $(getAllUserIds)
+        yield* $(getAllUserIds)
+        expect(yield* $(Counter)).toEqual({ count: 1 })
+        yield* $(TestClock.adjust(seconds(10)))
+        yield* $(getAllUserIds)
+        yield* $(getAllUserIds)
+        expect(yield* $(Counter)).toEqual({ count: 1 })
+        yield* $(TestClock.adjust(seconds(60)))
+        yield* $(getAllUserIds)
+        yield* $(getAllUserIds)
         expect(yield* $(Counter)).toEqual({ count: 2 })
       })
     ))

@@ -404,6 +404,21 @@ class CacheImpl<Key, Error, Value> implements Cache.Cache<Key, Error, Value> {
     )
   }
 
+  invalidateWhen(key: Key, when: (value: Value) => boolean): Effect.Effect<never, never, void> {
+    return Debug.bodyWithTrace((trace) =>
+      core.sync(() => {
+        const value = MutableHashMap.get(this.cacheState.map, key)
+        if (Option.isSome(value) && value.value._tag === "Complete") {
+          if (value.value.exit._tag === "Success") {
+            if (when(value.value.exit.value)) {
+              this.cacheState.map = MutableHashMap.empty()
+            }
+          }
+        }
+      }).traced(trace)
+    )
+  }
+
   invalidateAll(): Effect.Effect<never, never, void> {
     return Debug.bodyWithTrace((trace) =>
       core.sync(() => {

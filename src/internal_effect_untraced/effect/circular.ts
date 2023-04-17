@@ -6,7 +6,6 @@ import type { LazyArg } from "@effect/data/Function"
 import { pipe } from "@effect/data/Function"
 import * as Hash from "@effect/data/Hash"
 import * as MutableHashMap from "@effect/data/MutableHashMap"
-import * as MutableRef from "@effect/data/MutableRef"
 import * as Option from "@effect/data/Option"
 import { tuple } from "@effect/data/ReadonlyArray"
 import type { Equivalence } from "@effect/data/typeclass/Equivalence"
@@ -23,7 +22,6 @@ import * as core from "@effect/io/internal_effect_untraced/core"
 import * as effect from "@effect/io/internal_effect_untraced/effect"
 import * as internalFiber from "@effect/io/internal_effect_untraced/fiber"
 import * as fiberRuntime from "@effect/io/internal_effect_untraced/fiberRuntime"
-import * as OpCodes from "@effect/io/internal_effect_untraced/opCodes/effect"
 import * as internalRef from "@effect/io/internal_effect_untraced/ref"
 import * as _schedule from "@effect/io/internal_effect_untraced/schedule"
 import * as supervisor from "@effect/io/internal_effect_untraced/supervisor"
@@ -213,20 +211,6 @@ const invalidateCache = <E, A>(
 ): Effect.Effect<never, never, void> => internalRef.set(cache, Option.none())
 
 /** @internal */
-export const disconnect = Debug.methodWithTrace((trace) =>
-  <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
-    core.uninterruptibleMask((restore) =>
-      core.fiberIdWith((fiberId) =>
-        core.flatMap(fiberRuntime.forkDaemon(restore(self)), (fiber) =>
-          pipe(
-            restore(internalFiber.join(fiber)),
-            core.onInterrupt(() => pipe(fiber, internalFiber.interruptAsFork(fiberId)))
-          ))
-      )
-    ).traced(trace)
-)
-
-/** @internal */
 export const ensuring = Debug.dualWithTrace<
   <R1, X>(
     finalizer: Effect.Effect<R1, never, X>
@@ -405,91 +389,6 @@ export const memoizeFunction = Debug.methodWithTrace((trace) =>
 )
 
 /** @internal */
-export const race = Debug.dualWithTrace<
-  <R2, E2, A2>(
-    that: Effect.Effect<R2, E2, A2>
-  ) => <R, E, A>(
-    self: Effect.Effect<R, E, A>
-  ) => Effect.Effect<R | R2, E | E2, A | A2>,
-  <R, E, A, R2, E2, A2>(
-    self: Effect.Effect<R, E, A>,
-    that: Effect.Effect<R2, E2, A2>
-  ) => Effect.Effect<R | R2, E | E2, A | A2>
->(2, (trace) =>
-  (self, that) =>
-    core.checkInterruptible((isInterruptible) =>
-      pipe(
-        raceDisconnect(self, isInterruptible),
-        raceAwait(raceDisconnect(that, isInterruptible))
-      )
-    ).traced(trace))
-
-/** @internal */
-const raceDisconnect = <R, E, A>(
-  self: Effect.Effect<R, E, A>,
-  isInterruptible: boolean
-): Effect.Effect<R, E, A> =>
-  isInterruptible ?
-    disconnect(self) :
-    core.interruptible(disconnect(core.uninterruptible(self)))
-
-/** @internal */
-export const raceAwait = Debug.dualWithTrace<
-  <R2, E2, A2>(
-    that: Effect.Effect<R2, E2, A2>
-  ) => <R, E, A>(
-    self: Effect.Effect<R, E, A>
-  ) => Effect.Effect<R | R2, E | E2, A | A2>,
-  <R, E, A, R2, E2, A2>(
-    self: Effect.Effect<R, E, A>,
-    that: Effect.Effect<R2, E2, A2>
-  ) => Effect.Effect<R | R2, E | E2, A | A2>
->(2, (trace) =>
-  (self, that) =>
-    core.fiberIdWith((parentFiberId) =>
-      pipe(
-        self,
-        raceWith(
-          that,
-          (exit, right) =>
-            pipe(
-              exit,
-              core.exitMatchEffect(
-                (cause) =>
-                  pipe(
-                    internalFiber.join(right),
-                    effect.mapErrorCause((cause2) => internalCause.parallel(cause, cause2))
-                  ),
-                (value) =>
-                  pipe(
-                    right,
-                    core.interruptAsFiber(parentFiberId),
-                    core.as(value)
-                  )
-              )
-            ),
-          (exit, left) =>
-            pipe(
-              exit,
-              core.exitMatchEffect(
-                (cause) =>
-                  pipe(
-                    internalFiber.join(left),
-                    effect.mapErrorCause((cause2) => internalCause.parallel(cause2, cause))
-                  ),
-                (value) =>
-                  pipe(
-                    left,
-                    core.interruptAsFiber(parentFiberId),
-                    core.as(value)
-                  )
-              )
-            )
-        )
-      )
-    ).traced(trace))
-
-/** @internal */
 export const raceEither = Debug.dualWithTrace<
   <R2, E2, A2>(
     that: Effect.Effect<R2, E2, A2>
@@ -500,7 +399,10 @@ export const raceEither = Debug.dualWithTrace<
     self: Effect.Effect<R, E, A>,
     that: Effect.Effect<R2, E2, A2>
   ) => Effect.Effect<R | R2, E | E2, Either.Either<A, A2>>
->(2, (trace) => (self, that) => race(core.map(self, Either.left), core.map(that, Either.right)).traced(trace))
+>(
+  2,
+  (trace) => (self, that) => fiberRuntime.race(core.map(self, Either.left), core.map(that, Either.right)).traced(trace)
+)
 
 /** @internal */
 export const raceFirst = Debug.dualWithTrace<
@@ -520,127 +422,8 @@ export const raceFirst = Debug.dualWithTrace<
   ) =>
     pipe(
       core.exit(self),
-      race(core.exit(that)),
+      fiberRuntime.race(core.exit(that)),
       (effect: Effect.Effect<R | R2, never, Exit.Exit<E | E2, A | A2>>) => core.flatten(effect)
-    ).traced(trace))
-
-/** @internal */
-export const raceFibersWith = Debug.dualWithTrace<
-  <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
-    that: Effect.Effect<R1, E1, A1>,
-    selfWins: (winner: Fiber.RuntimeFiber<E, A>, loser: Fiber.RuntimeFiber<E1, A1>) => Effect.Effect<R2, E2, A2>,
-    thatWins: (winner: Fiber.RuntimeFiber<E1, A1>, loser: Fiber.RuntimeFiber<E, A>) => Effect.Effect<R3, E3, A3>
-  ) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<
-    R | R1 | R2 | R3,
-    E2 | E3,
-    A2 | A3
-  >,
-  <R, E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
-    self: Effect.Effect<R, E, A>,
-    that: Effect.Effect<R1, E1, A1>,
-    selfWins: (winner: Fiber.RuntimeFiber<E, A>, loser: Fiber.RuntimeFiber<E1, A1>) => Effect.Effect<R2, E2, A2>,
-    thatWins: (winner: Fiber.RuntimeFiber<E1, A1>, loser: Fiber.RuntimeFiber<E, A>) => Effect.Effect<R3, E3, A3>
-  ) => Effect.Effect<
-    R | R1 | R2 | R3,
-    E2 | E3,
-    A2 | A3
-  >
->(4, (trace, restore) =>
-  <R, E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
-    self: Effect.Effect<R, E, A>,
-    that: Effect.Effect<R1, E1, A1>,
-    selfWins: (winner: Fiber.RuntimeFiber<E, A>, loser: Fiber.RuntimeFiber<E1, A1>) => Effect.Effect<R2, E2, A2>,
-    thatWins: (winner: Fiber.RuntimeFiber<E1, A1>, loser: Fiber.RuntimeFiber<E, A>) => Effect.Effect<R3, E3, A3>
-  ) =>
-    core.withFiberRuntime<R | R1 | R2 | R3, E2 | E3, A2 | A3>((parentFiber, parentStatus) => {
-      const parentRuntimeFlags = parentStatus.runtimeFlags
-      const raceIndicator = MutableRef.make(true)
-      const leftFiber: fiberRuntime.FiberRuntime<E, A> = fiberRuntime.unsafeMakeChildFiber(
-        self,
-        parentFiber,
-        parentRuntimeFlags
-      )
-      const rightFiber: fiberRuntime.FiberRuntime<E1, A1> = fiberRuntime.unsafeMakeChildFiber(
-        that,
-        parentFiber,
-        parentRuntimeFlags
-      )
-      leftFiber.startFork(self)
-      rightFiber.startFork(that)
-      leftFiber.setFiberRef(core.forkScopeOverride, Option.some(parentFiber.scope()))
-      rightFiber.setFiberRef(core.forkScopeOverride, Option.some(parentFiber.scope()))
-      return pipe(
-        core.async<R | R1 | R2 | R3, E2 | E3, A2 | A3>((cb) => {
-          leftFiber.unsafeAddObserver(() => completeRace(leftFiber, rightFiber, restore(selfWins), raceIndicator, cb))
-          rightFiber.unsafeAddObserver(() => completeRace(rightFiber, leftFiber, restore(thatWins), raceIndicator, cb))
-        }, pipe(leftFiber.id(), FiberId.combine(rightFiber.id())))
-      )
-    }).traced(trace))
-
-/** @internal */
-const completeRace = <R, R1, R2, E2, A2, R3, E3, A3>(
-  winner: Fiber.RuntimeFiber<any, any>,
-  loser: Fiber.RuntimeFiber<any, any>,
-  cont: (winner: Fiber.RuntimeFiber<any, any>, loser: Fiber.RuntimeFiber<any, any>) => Effect.Effect<any, any, any>,
-  ab: MutableRef.MutableRef<boolean>,
-  cb: (_: Effect.Effect<R | R1 | R2 | R3, E2 | E3, A2 | A3>) => void
-): void => {
-  if (MutableRef.compareAndSet(true, false)(ab)) {
-    cb(cont(winner, loser))
-  }
-}
-
-/** @internal */
-export const raceWith = Debug.dualWithTrace<
-  <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
-    that: Effect.Effect<R1, E1, A1>,
-    leftDone: (exit: Exit.Exit<E, A>, fiber: Fiber.Fiber<E1, A1>) => Effect.Effect<R2, E2, A2>,
-    rightDone: (exit: Exit.Exit<E1, A1>, fiber: Fiber.Fiber<E, A>) => Effect.Effect<R3, E3, A3>
-  ) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1 | R2 | R3, E2 | E3, A2 | A3>,
-  <R, E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
-    self: Effect.Effect<R, E, A>,
-    that: Effect.Effect<R1, E1, A1>,
-    leftDone: (exit: Exit.Exit<E, A>, fiber: Fiber.Fiber<E1, A1>) => Effect.Effect<R2, E2, A2>,
-    rightDone: (exit: Exit.Exit<E1, A1>, fiber: Fiber.Fiber<E, A>) => Effect.Effect<R3, E3, A3>
-  ) => Effect.Effect<R | R1 | R2 | R3, E2 | E3, A2 | A3>
->(4, (trace, restore) =>
-  <R, E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
-    self: Effect.Effect<R, E, A>,
-    that: Effect.Effect<R1, E1, A1>,
-    leftDone: (exit: Exit.Exit<E, A>, fiber: Fiber.Fiber<E1, A1>) => Effect.Effect<R2, E2, A2>,
-    rightDone: (exit: Exit.Exit<E1, A1>, fiber: Fiber.Fiber<E, A>) => Effect.Effect<R3, E3, A3>
-  ) =>
-    raceFibersWith(
-      self,
-      that,
-      (winner, loser) =>
-        core.flatMap(winner.await(), (exit) => {
-          switch (exit._tag) {
-            case OpCodes.OP_SUCCESS: {
-              return core.flatMap(
-                winner.inheritAll(),
-                () => restore(leftDone)(exit, loser)
-              )
-            }
-            case OpCodes.OP_FAILURE: {
-              return restore(leftDone)(exit, loser)
-            }
-          }
-        }),
-      (winner, loser) =>
-        core.flatMap(winner.await(), (exit) => {
-          switch (exit._tag) {
-            case OpCodes.OP_SUCCESS: {
-              return core.flatMap(
-                winner.inheritAll(),
-                () => restore(rightDone)(exit, loser)
-              )
-            }
-            case OpCodes.OP_FAILURE: {
-              return restore(rightDone)(exit, loser)
-            }
-          }
-        })
     ).traced(trace))
 
 /** @internal */

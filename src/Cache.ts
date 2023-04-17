@@ -71,16 +71,6 @@ export interface Cache<Key, Error, Value> extends ConsumerCache<Key, Error, Valu
    * Associates the specified value with the specified key in the cache.
    */
   set<Key, Error, Value>(this: Cache<Key, Error, Value>, key: Key, value: Value): Effect.Effect<never, never, void>
-
-  /**
-   * Returns an approximation of the values in the cache.
-   */
-  values(): Effect.Effect<never, never, Array<Value>>
-
-  /**
-   * Returns an approximation of the values in the cache.
-   */
-  entries<Key, Error, Value>(this: Cache<Key, Error, Value>): Effect.Effect<never, never, Array<[Key, Value]>>
 }
 
 /**
@@ -114,6 +104,11 @@ export interface ConsumerCache<Key, Error, Value> extends Cache.Variance<Key, Er
   invalidate(key: Key): Effect.Effect<never, never, void>
 
   /**
+   * Invalidates the value associated with the specified key if the predicate holds.
+   */
+  invalidateWhen(key: Key, when: (value: Value) => boolean): Effect.Effect<never, never, void>
+
+  /**
    * Invalidates all values in the cache.
    */
   invalidateAll(): Effect.Effect<never, never, void>
@@ -127,6 +122,16 @@ export interface ConsumerCache<Key, Error, Value> extends Cache.Variance<Key, Er
    * Returns an approximation of the values in the cache.
    */
   keys<Key, Error, Value>(this: ConsumerCache<Key, Error, Value>): Effect.Effect<never, never, Array<Key>>
+
+  /**
+   * Returns an approximation of the values in the cache.
+   */
+  values(): Effect.Effect<never, never, Array<Value>>
+
+  /**
+   * Returns an approximation of the values in the cache.
+   */
+  entries<Key, Error, Value>(this: ConsumerCache<Key, Error, Value>): Effect.Effect<never, never, Array<[Key, Value]>>
 }
 
 /**

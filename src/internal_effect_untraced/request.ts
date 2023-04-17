@@ -1,8 +1,9 @@
 import * as Data from "@effect/data/Data"
 import * as Debug from "@effect/data/Debug"
 import * as Either from "@effect/data/Either"
-import * as Effect from "@effect/io/Effect"
+import type * as Effect from "@effect/io/Effect"
 import * as completedRequestMap from "@effect/io/internal_effect_untraced/completedRequestMap"
+import * as core from "@effect/io/internal_effect_untraced/core"
 import type * as Request from "@effect/io/Request"
 import type * as RequestCompletionMap from "@effect/io/RequestCompletionMap"
 
@@ -56,7 +57,7 @@ export const complete = Debug.dualWithTrace<
   ) => Effect.Effect<RequestCompletionMap.RequestCompletionMap, never, void>
 >(2, (trace) =>
   (self, result) =>
-    Effect.map(
+    core.map(
       completedRequestMap.RequestCompletionMap,
       (map) => completedRequestMap.set(map, self, result)
     ).traced(trace))
@@ -72,7 +73,7 @@ export const completeEffect = Debug.dualWithTrace<
   ) => Effect.Effect<R | RequestCompletionMap.RequestCompletionMap, never, void>
 >(2, (trace) =>
   (self, effect) =>
-    Effect.matchEffect(
+    core.matchEffect(
       effect,
       // @ts-expect-error
       (error) => complete(self, Either.left(error)),
@@ -107,3 +108,23 @@ export const succeed = Debug.dualWithTrace<
   (self, value) =>
     // @ts-expect-error
     complete(self, Either.right(value)).traced(trace))
+
+/** @internal */
+export class Listeners {
+  count = 0
+  observers: Set<(count: number) => void> = new Set()
+  addObserver(f: (count: number) => void): void {
+    this.observers.add(f)
+  }
+  removeObserver(f: (count: number) => void): void {
+    this.observers.delete(f)
+  }
+  increment() {
+    this.count++
+    this.observers.forEach((f) => f(this.count))
+  }
+  decrement() {
+    this.count--
+    this.observers.forEach((f) => f(this.count))
+  }
+}
