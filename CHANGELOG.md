@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.22.1
+
+### Patch Changes
+
+- [#368](https://github.com/Effect-TS/io/pull/368) [`07f0fea`](https://github.com/Effect-TS/io/commit/07f0fea49def47db7a1e39e49bdd31347c916126) Thanks [@pigoz](https://github.com/pigoz)! - add symbol to persist scope tags on HMR
+
 ## 0.22.0
 
 ### Minor Changes
