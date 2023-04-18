@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.22.5
+
+### Patch Changes
+
+- [#376](https://github.com/Effect-TS/io/pull/376) [`5779bf4`](https://github.com/Effect-TS/io/commit/5779bf42a1c12a60b87e3b1cb1c2a42c74c9a4d2) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Only interrupt residual requests, allow resolver to be uninterruptible
+
 ## 0.22.4
 
 ### Patch Changes
