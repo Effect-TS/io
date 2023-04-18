@@ -90,7 +90,7 @@ data source or that data source can execute.
 export declare const eitherWith: {
   <A extends Request.Request<any, any>, R2, B extends Request.Request<any, any>, C extends Request.Request<any, any>>(
     that: RequestResolver<R2, B>,
-    f: (_: C) => Either.Either<A, B>
+    f: (_: Request.Entry<C>) => Either.Either<Request.Entry<A>, Request.Entry<B>>
   ): <R>(self: RequestResolver<R, A>) => RequestResolver<R2 | R, C>
   <
     R,
@@ -101,7 +101,7 @@ export declare const eitherWith: {
   >(
     self: RequestResolver<R, A>,
     that: RequestResolver<R2, B>,
-    f: (_: C) => Either.Either<A, B>
+    f: (_: Request.Entry<C>) => Either.Either<Request.Entry<A>, Request.Entry<B>>
   ): RequestResolver<R | R2, C>
 }
 ```
