@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.22.3
+
+### Patch Changes
+
+- [#372](https://github.com/Effect-TS/io/pull/372) [`e1aec19`](https://github.com/Effect-TS/io/commit/e1aec19476ead1534e1f349d9fb9b472da0e1228) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Make sure resolvers are interruptible
+
 ## 0.22.2
 
 ### Patch Changes
