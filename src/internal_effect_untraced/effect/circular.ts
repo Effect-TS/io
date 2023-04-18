@@ -87,7 +87,7 @@ class Semaphore {
           core.uninterruptibleMask((restore) =>
             core.flatMap(
               restore(this.take(n)),
-              (permits) => ensuring(restore(self), this.release(permits))
+              (permits) => fiberRuntime.ensuring(restore(self), this.release(permits))
             )
           )
         ).traced(trace)
@@ -110,7 +110,7 @@ export const acquireReleaseInterruptible = Debug.methodWithTrace((trace, restore
     acquire: Effect.Effect<R, E, A>,
     release: (exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>
   ): Effect.Effect<R | R2 | Scope.Scope, E, A> =>
-    ensuring(acquire, fiberRuntime.addFinalizer(restore(release))).traced(trace)
+    fiberRuntime.ensuring(acquire, fiberRuntime.addFinalizer(restore(release))).traced(trace)
 )
 
 /** @internal */
@@ -211,32 +211,6 @@ const invalidateCache = <E, A>(
 ): Effect.Effect<never, never, void> => internalRef.set(cache, Option.none())
 
 /** @internal */
-export const ensuring = Debug.dualWithTrace<
-  <R1, X>(
-    finalizer: Effect.Effect<R1, never, X>
-  ) => <R, E, A>(
-    self: Effect.Effect<R, E, A>
-  ) => Effect.Effect<R | R1, E, A>,
-  <R, E, A, R1, X>(
-    self: Effect.Effect<R, E, A>,
-    finalizer: Effect.Effect<R1, never, X>
-  ) => Effect.Effect<R | R1, E, A>
->(2, (trace) =>
-  (self, finalizer) =>
-    core.uninterruptibleMask((restore) =>
-      core.matchCauseEffect(
-        restore(self),
-        (cause1) =>
-          core.matchCauseEffect(
-            finalizer,
-            (cause2) => core.failCause(internalCause.sequential(cause1, cause2)),
-            () => core.failCause(cause1)
-          ),
-        (a) => core.as(finalizer, a)
-      )
-    ).traced(trace))
-
-/** @internal */
 export const ensuringChild = Debug.dualWithTrace<
   <R2, X>(
     f: (fiber: Fiber.Fiber<any, Array<unknown>>) => Effect.Effect<R2, never, X>
@@ -272,7 +246,7 @@ export const ensuringChildren = Debug.dualWithTrace<
       pipe(
         self,
         supervised(supervisor),
-        ensuring(core.flatMap(supervisor.value(), restore(children)))
+        fiberRuntime.ensuring(core.flatMap(supervisor.value(), restore(children)))
       )).traced(trace))
 
 /** @internal */

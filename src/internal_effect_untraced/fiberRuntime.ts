@@ -197,35 +197,47 @@ const runBlockedRequests = <R>(self: RequestBlock.RequestBlock<R>, id: FiberId.F
         _RequestBlock.sequentialCollectionToChunk(requestsByRequestResolver),
         ([dataSource, sequential]) =>
           core.fiberRefLocally(
-            race(
-              core.interruptible(dataSource.runAll(sequential)),
-              core.interruptible(core.asyncInterrupt<never, never, void>((cb) => {
-                const all = sequential.flatMap((b) => b)
-                const counts = all.map((_) => _.listeners.count)
-                const checkDone = () => {
-                  if (counts.every((count) => count === 0)) {
+            core.flatMap(
+              raceAwait(
+                core.interruptible(dataSource.runAll(sequential)),
+                core.interruptible(core.asyncInterrupt<never, never, void>((cb) => {
+                  const all = sequential.flatMap((b) => b)
+                  const counts = all.map((_) => _.listeners.count)
+                  const checkDone = () => {
+                    if (counts.every((count) => count === 0)) {
+                      cleanup.forEach((f) => f())
+                      cb(core.unit())
+                    }
+                  }
+                  const cleanup = all.map((r, i) => {
+                    const observer = (count: number) => {
+                      counts[i] = count
+                      checkDone()
+                    }
+                    r.listeners.addObserver(observer)
+                    return () => r.listeners.removeObserver(observer)
+                  })
+                  checkDone()
+                  return core.sync(() => {
                     cleanup.forEach((f) => f())
-                    cb(
-                      core.forEachDiscard(
-                        all.filter((entry) => !entry.state.completed),
-                        (e) => complete(e.request as any, core.exitInterrupt(id))
-                      )
-                    )
-                  }
-                }
-                const cleanup = all.map((r, i) => {
-                  const observer = (count: number) => {
-                    counts[i] = count
-                    checkDone()
-                  }
-                  r.listeners.addObserver(observer)
-                  return () => r.listeners.removeObserver(observer)
+                  })
+                }))
+              ),
+              () =>
+                core.suspend(() => {
+                  const residual = sequential.flatMap((block) => {
+                    return block.flatMap((entry) => {
+                      if (!entry.state.completed) {
+                        return [entry]
+                      }
+                      return []
+                    })
+                  })
+                  return core.forEachDiscard(
+                    residual,
+                    (entry) => complete(entry.request as any, core.exitInterrupt(id))
+                  )
                 })
-                checkDone()
-                return core.sync(() => {
-                  cleanup.forEach((f) => f())
-                })
-              }))
             ),
             currentRequestMap,
             RA.reduce(
@@ -1178,7 +1190,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     return core.uninterruptibleMask((restore) =>
       core.flatMap(
         fork(core.runRequestBlock(op.i0)),
-        () => restore(op.i1)
+        (fiber) => ensuring(restore(op.i1), internalFiber.join(fiber))
       )
     )
   }
@@ -2901,3 +2913,29 @@ const completeRace = <R, R1, R2, E2, A2, R3, E3, A3>(
     cb(cont(winner, loser))
   }
 }
+
+/** @internal */
+export const ensuring = Debug.dualWithTrace<
+  <R1, X>(
+    finalizer: Effect.Effect<R1, never, X>
+  ) => <R, E, A>(
+    self: Effect.Effect<R, E, A>
+  ) => Effect.Effect<R | R1, E, A>,
+  <R, E, A, R1, X>(
+    self: Effect.Effect<R, E, A>,
+    finalizer: Effect.Effect<R1, never, X>
+  ) => Effect.Effect<R | R1, E, A>
+>(2, (trace) =>
+  (self, finalizer) =>
+    core.uninterruptibleMask((restore) =>
+      core.matchCauseEffect(
+        restore(self),
+        (cause1) =>
+          core.matchCauseEffect(
+            finalizer,
+            (cause2) => core.failCause(internalCause.sequential(cause1, cause2)),
+            () => core.failCause(cause1)
+          ),
+        (a) => core.as(finalizer, a)
+      )
+    ).traced(trace))
