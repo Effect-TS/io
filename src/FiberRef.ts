@@ -261,42 +261,6 @@ export const updateSomeAndGet: {
 
 /**
  * @since 1.0.0
- * @category utils
- */
-export const locally: {
-  <A>(self: FiberRef<A>, value: A): <R, E, B>(use: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>
-  <R, E, B, A>(use: Effect.Effect<R, E, B>, self: FiberRef<A>, value: A): Effect.Effect<R, E, B>
-} = core.fiberRefLocally
-
-/**
- * @since 1.0.0
- * @category utils
- */
-export const locallyWith: {
-  <A>(self: FiberRef<A>, f: (a: A) => A): <R, E, B>(use: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>
-  <R, E, B, A>(use: Effect.Effect<R, E, B>, self: FiberRef<A>, f: (a: A) => A): Effect.Effect<R, E, B>
-} = core.fiberRefLocallyWith
-
-/**
- * @since 1.0.0
- * @category utils
- */
-export const locallyScoped: {
-  <A>(value: A): (self: FiberRef<A>) => Effect.Effect<Scope.Scope, never, void>
-  <A>(self: FiberRef<A>, value: A): Effect.Effect<Scope.Scope, never, void>
-} = fiberRuntime.fiberRefLocallyScoped
-
-/**
- * @since 1.0.0
- * @category utils
- */
-export const locallyScopedWith: {
-  <A>(f: (a: A) => A): (self: FiberRef<A>) => Effect.Effect<Scope.Scope, never, void>
-  <A>(self: FiberRef<A>, f: (a: A) => A): Effect.Effect<Scope.Scope, never, void>
-} = fiberRuntime.fiberRefLocallyScopedWith
-
-/**
- * @since 1.0.0
  * @category fiberRefs
  */
 export const currentRequestBatchingEnabled: FiberRef<boolean> = fiberRuntime.currentRequestBatchingEnabled

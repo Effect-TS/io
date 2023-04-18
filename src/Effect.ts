@@ -6005,3 +6005,39 @@ export const withRequestBatching: {
  */
 export const serviceOption: <I, A>(tag: Context.Tag<I, A>) => Effect<never, never, Option.Option<A>> = (tag) =>
   contextWith((_: Context.Context<never>) => Context.getOption(_, tag))
+
+/**
+ * @since 1.0.0
+ * @category utils
+ */
+export const locally: {
+  <A>(self: FiberRef.FiberRef<A>, value: A): <R, E, B>(use: Effect<R, E, B>) => Effect<R, E, B>
+  <R, E, B, A>(use: Effect<R, E, B>, self: FiberRef.FiberRef<A>, value: A): Effect<R, E, B>
+} = core.fiberRefLocally
+
+/**
+ * @since 1.0.0
+ * @category utils
+ */
+export const locallyWith: {
+  <A>(self: FiberRef.FiberRef<A>, f: (a: A) => A): <R, E, B>(use: Effect<R, E, B>) => Effect<R, E, B>
+  <R, E, B, A>(use: Effect<R, E, B>, self: FiberRef.FiberRef<A>, f: (a: A) => A): Effect<R, E, B>
+} = core.fiberRefLocallyWith
+
+/**
+ * @since 1.0.0
+ * @category utils
+ */
+export const locallyScoped: {
+  <A>(value: A): (self: FiberRef.FiberRef<A>) => Effect<Scope.Scope, never, void>
+  <A>(self: FiberRef.FiberRef<A>, value: A): Effect<Scope.Scope, never, void>
+} = fiberRuntime.fiberRefLocallyScoped
+
+/**
+ * @since 1.0.0
+ * @category utils
+ */
+export const locallyScopedWith: {
+  <A>(f: (a: A) => A): (self: FiberRef.FiberRef<A>) => Effect<Scope.Scope, never, void>
+  <A>(self: FiberRef.FiberRef<A>, f: (a: A) => A): Effect<Scope.Scope, never, void>
+} = fiberRuntime.fiberRefLocallyScopedWith

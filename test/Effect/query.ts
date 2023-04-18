@@ -152,7 +152,7 @@ describe.concurrent("Effect", () => {
       })
     ))
   it.effect("batching doesn't break interruption", () =>
-    FiberRef.locally(interrupts, { interrupts: 0 })(
+    Effect.locally(interrupts, { interrupts: 0 })(
       provideEnv(
         Effect.gen(function*($) {
           const exit = yield* $(getAllUserNames, Effect.zipParLeft(Effect.interrupt()), Effect.exit)
@@ -166,7 +166,7 @@ describe.concurrent("Effect", () => {
       )
     ))
   it.effect("batching doesn't break interruption when limited", () =>
-    FiberRef.locally(interrupts, { interrupts: 0 })(
+    Effect.locally(interrupts, { interrupts: 0 })(
       provideEnv(
         Effect.gen(function*($) {
           const exit = yield* $(

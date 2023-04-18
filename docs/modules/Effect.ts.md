@@ -374,6 +374,10 @@ Added in v1.0.0
   - [ignoreLogged](#ignorelogged)
   - [left](#left)
   - [leftWith](#leftwith)
+  - [locally](#locally)
+  - [locallyScoped](#locallyscoped)
+  - [locallyScopedWith](#locallyscopedwith)
+  - [locallyWith](#locallywith)
   - [merge](#merge)
   - [nonEmptyStruct](#nonemptystruct)
   - [nonEmptyTuple](#nonemptytuple)
@@ -5910,6 +5914,58 @@ export declare const leftWith: {
     self: Effect<R, E, Either.Either<A, B>>,
     f: (effect: Effect<R, Either.Either<E, B>, A>) => Effect<R1, Either.Either<E1, B1>, A1>
   ): Effect<R | R1, E | E1, Either.Either<A1, B1>>
+}
+```
+
+Added in v1.0.0
+
+## locally
+
+**Signature**
+
+```ts
+export declare const locally: {
+  <A>(self: FiberRef.FiberRef<A>, value: A): <R, E, B>(use: Effect<R, E, B>) => Effect<R, E, B>
+  <R, E, B, A>(use: Effect<R, E, B>, self: FiberRef.FiberRef<A>, value: A): Effect<R, E, B>
+}
+```
+
+Added in v1.0.0
+
+## locallyScoped
+
+**Signature**
+
+```ts
+export declare const locallyScoped: {
+  <A>(value: A): (self: FiberRef.FiberRef<A>) => Effect<Scope.Scope, never, void>
+  <A>(self: FiberRef.FiberRef<A>, value: A): Effect<Scope.Scope, never, void>
+}
+```
+
+Added in v1.0.0
+
+## locallyScopedWith
+
+**Signature**
+
+```ts
+export declare const locallyScopedWith: {
+  <A>(f: (a: A) => A): (self: FiberRef.FiberRef<A>) => Effect<Scope.Scope, never, void>
+  <A>(self: FiberRef.FiberRef<A>, f: (a: A) => A): Effect<Scope.Scope, never, void>
+}
+```
+
+Added in v1.0.0
+
+## locallyWith
+
+**Signature**
+
+```ts
+export declare const locallyWith: {
+  <A>(self: FiberRef.FiberRef<A>, f: (a: A) => A): <R, E, B>(use: Effect<R, E, B>) => Effect<R, E, B>
+  <R, E, B, A>(use: Effect<R, E, B>, self: FiberRef.FiberRef<A>, f: (a: A) => A): Effect<R, E, B>
 }
 ```
 

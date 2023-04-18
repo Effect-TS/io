@@ -7,6 +7,7 @@ import * as Cause from "@effect/io/Cause"
 import * as Clock from "@effect/io/Clock"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
+import type { FiberRef } from "@effect/io/FiberRef"
 import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as effect from "@effect/io/internal_effect_untraced/effect"
@@ -53,6 +54,7 @@ export type Primitive =
   | FromEffect
   | Scoped
   | Suspend
+  | Locally
   | ProvideTo
   | ZipWith
   | ZipWithPar
@@ -103,6 +105,14 @@ export interface Scoped extends
 export interface Suspend extends
   Op<OpCodes.OP_SUSPEND, {
     readonly evaluate: LazyArg<Layer.Layer<never, never, unknown>>
+  }>
+{}
+
+/** @internal */
+export interface Locally extends
+  Op<"Locally", {
+    readonly self: Layer.Layer<never, never, unknown>
+    readonly f: (_: Effect.Effect<any, any, any>) => Effect.Effect<any, any, any>
   }>
 {}
 
@@ -319,7 +329,10 @@ const withScope = <RIn, E, ROut>(
 ): Effect.Effect<never, never, (memoMap: MemoMap) => Effect.Effect<RIn, E, Context.Context<ROut>>> => {
   const op = self as Primitive
   switch (op._tag) {
-    case OpCodes.OP_EXTEND_SCOPE: {
+    case "Locally": {
+      return core.sync(() => (memoMap: MemoMap) => op.f(memoMap.getOrElseMemoize(op.self, scope)))
+    }
+    case "ExtendScope": {
       return core.sync(() =>
         (memoMap: MemoMap) =>
           fiberRuntime.scopeWith(
@@ -327,7 +340,7 @@ const withScope = <RIn, E, ROut>(
           ) as unknown as Effect.Effect<RIn, E, Context.Context<ROut>>
       )
     }
-    case OpCodes.OP_FOLD: {
+    case "Fold": {
       return core.sync(() =>
         (memoMap: MemoMap) =>
           pipe(
@@ -339,13 +352,13 @@ const withScope = <RIn, E, ROut>(
           )
       )
     }
-    case OpCodes.OP_FRESH: {
+    case "Fresh": {
       return core.sync(() => (_: MemoMap) => pipe(op.layer, buildWithScope(scope)))
     }
-    case OpCodes.OP_FROM_EFFECT: {
+    case "FromEffect": {
       return core.sync(() => (_: MemoMap) => op.effect as Effect.Effect<RIn, E, Context.Context<ROut>>)
     }
-    case OpCodes.OP_PROVIDE_TO: {
+    case "ProvideTo": {
       return core.sync(() =>
         (memoMap: MemoMap) =>
           pipe(
@@ -359,7 +372,7 @@ const withScope = <RIn, E, ROut>(
           )
       )
     }
-    case OpCodes.OP_SCOPED: {
+    case "Scoped": {
       return core.sync(() =>
         (_: MemoMap) =>
           fiberRuntime.scopeExtend(
@@ -368,7 +381,7 @@ const withScope = <RIn, E, ROut>(
           )
       )
     }
-    case OpCodes.OP_SUSPEND: {
+    case "Suspend": {
       return core.sync(() =>
         (memoMap: MemoMap) =>
           memoMap.getOrElseMemoize(
@@ -377,7 +390,7 @@ const withScope = <RIn, E, ROut>(
           )
       )
     }
-    case OpCodes.OP_ZIP_WITH: {
+    case "ZipWith": {
       return core.sync(() =>
         (memoMap: MemoMap) =>
           pipe(
@@ -389,7 +402,7 @@ const withScope = <RIn, E, ROut>(
           )
       )
     }
-    case OpCodes.OP_ZIP_WITH_PAR: {
+    case "ZipWithPar": {
       return core.sync(() =>
         (memoMap: MemoMap) =>
           pipe(
@@ -521,6 +534,43 @@ export function fromEffectContext<R, E, A>(
   fromEffect.effect = effect
   return fromEffect
 }
+
+/** @internal */
+export const fiberRefLocally = dual<
+  <X>(ref: FiberRef<X>, value: X) => <R, E, A>(self: Layer.Layer<R, E, A>) => Layer.Layer<R, E, A>,
+  <R, E, A, X>(self: Layer.Layer<R, E, A>, ref: FiberRef<X>, value: X) => Layer.Layer<R, E, A>
+>(3, (self, ref, value) => locallyEffect(self, core.fiberRefLocally(ref, value)))
+
+/** @internal */
+export const locallyEffect = dual<
+  <RIn, E, ROut, RIn2, E2, ROut2>(
+    f: (_: Effect.Effect<RIn, E, Context.Context<ROut>>) => Effect.Effect<RIn2, E2, Context.Context<ROut2>>
+  ) => (self: Layer.Layer<RIn, E, ROut>) => Layer.Layer<RIn2, E2, ROut2>,
+  <RIn, E, ROut, RIn2, E2, ROut2>(
+    self: Layer.Layer<RIn, E, ROut>,
+    f: (_: Effect.Effect<RIn, E, Context.Context<ROut>>) => Effect.Effect<RIn2, E2, Context.Context<ROut2>>
+  ) => Layer.Layer<RIn2, E2, ROut2>
+>(2, (self, f) => {
+  const locally = Object.create(proto)
+  locally._tag = "Locally"
+  locally.self = self
+  locally.f = f
+  return locally
+})
+
+/** @internal */
+export const fiberRefLocallyWith = dual<
+  <X>(ref: FiberRef<X>, value: (_: X) => X) => <R, E, A>(self: Layer.Layer<R, E, A>) => Layer.Layer<R, E, A>,
+  <R, E, A, X>(self: Layer.Layer<R, E, A>, ref: FiberRef<X>, value: (_: X) => X) => Layer.Layer<R, E, A>
+>(3, (self, ref, value) => locallyEffect(self, core.fiberRefLocallyWith(ref, value)))
+
+/** @internal */
+export const fiberRefLocallyScoped = <A>(self: FiberRef<A>, value: A): Layer.Layer<never, never, never> =>
+  scopedDiscard(fiberRuntime.fiberRefLocallyScoped(self, value))
+
+/** @internal */
+export const fiberRefLocallyScopedWith = <A>(self: FiberRef<A>, value: (_: A) => A): Layer.Layer<never, never, never> =>
+  scopedDiscard(fiberRuntime.fiberRefLocallyScopedWith(self, value))
 
 /** @internal */
 export const fromFunction = <A extends Context.Tag<any, any>, B extends Context.Tag<any, any>>(
