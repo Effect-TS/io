@@ -333,7 +333,7 @@ describe.concurrent("Layer", () => {
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make<boolean>(false))
       const tag = Context.Tag<boolean>()
-      const layer1 = Layer.scopedDiscard(FiberRef.locallyScoped(fiberRef, true))
+      const layer1 = Layer.scopedDiscard(Effect.locallyScoped(fiberRef, true))
       const layer2 = Layer.effect(tag, FiberRef.get(fiberRef))
       const layer3 = pipe(layer1, Layer.merge(pipe(layer1, Layer.provide(layer2))))
       const result = yield* $(Layer.build(layer3))
@@ -605,6 +605,46 @@ describe.concurrent("Layer", () => {
       yield* $(Effect.scoped(Layer.build(layer)))
       const result = yield* $(Ref.get(ref))
       assert.strictEqual(result, "bar")
+    }))
+  it.effect("locally", () =>
+    Effect.gen(function*($) {
+      interface BarService {
+        readonly bar: string
+      }
+      const BarTag = Context.Tag<BarService>()
+      const fiberRef = FiberRef.unsafeMake(0)
+      const layer = Layer.locally(fiberRef, 100)(
+        Layer.effect(
+          BarTag,
+          Effect.map(
+            FiberRef.get(fiberRef),
+            (n): BarService => ({ bar: `bar: ${n}` })
+          )
+        )
+      )
+      const env = yield* $(Effect.scoped(Layer.build(layer)))
+      const result = Context.get(env, BarTag)
+      assert.strictEqual(result.bar, "bar: 100")
+    }))
+  it.effect("locallyWith", () =>
+    Effect.gen(function*($) {
+      interface BarService {
+        readonly bar: string
+      }
+      const BarTag = Context.Tag<BarService>()
+      const fiberRef = FiberRef.unsafeMake(0)
+      const layer = Layer.locallyWith(fiberRef, (n) => n + 1)(
+        Layer.effect(
+          BarTag,
+          Effect.map(
+            FiberRef.get(fiberRef),
+            (n): BarService => ({ bar: `bar: ${n}` })
+          )
+        )
+      )
+      const env = yield* $(Effect.scoped(Layer.build(layer)))
+      const result = Context.get(env, BarTag)
+      assert.strictEqual(result.bar, "bar: 1")
     }))
 })
 export const makeRef = (): Effect.Effect<never, never, Ref.Ref<Chunk.Chunk<string>>> => {

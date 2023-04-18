@@ -21,6 +21,7 @@ import type * as Context from "@effect/data/Context"
 import type { LazyArg } from "@effect/data/Function"
 import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
+import type { FiberRef } from "@effect/io/FiberRef"
 import * as internal from "@effect/io/internal_effect_untraced/layer"
 import type * as Runtime from "@effect/io/Runtime"
 import type * as Schedule from "@effect/io/Schedule"
@@ -484,6 +485,59 @@ export const provide: {
     that: Layer<RIn2, E2, ROut2>
   ): Layer<RIn | Exclude<RIn2, ROut>, E | E2, ROut2>
 } = internal.provide
+
+/**
+ * @since 1.0.0
+ * @category utils
+ */
+export const locallyEffect: {
+  <RIn, E, ROut, RIn2, E2, ROut2>(
+    f: (_: Effect.Effect<RIn, E, Context.Context<ROut>>) => Effect.Effect<RIn2, E2, Context.Context<ROut2>>
+  ): (self: Layer<RIn, E, ROut>) => Layer<RIn2, E2, ROut2>
+  <RIn, E, ROut, RIn2, E2, ROut2>(
+    self: Layer<RIn, E, ROut>,
+    f: (_: Effect.Effect<RIn, E, Context.Context<ROut>>) => Effect.Effect<RIn2, E2, Context.Context<ROut2>>
+  ): Layer<RIn2, E2, ROut2>
+} = internal.locallyEffect
+
+/**
+ * @since 1.0.0
+ * @category utils
+ */
+export const locally: {
+  <X>(
+    ref: FiberRef<X>,
+    value: X
+  ): <R, E, A>(self: Layer<R, E, A>) => Layer<R, E, A>
+  <R, E, A, X>(
+    self: Layer<R, E, A>,
+    ref: FiberRef<X>,
+    value: X
+  ): Layer<R, E, A>
+} = internal.fiberRefLocally
+
+/**
+ * @since 1.0.0
+ * @category utils
+ */
+export const locallyWith: {
+  <X>(ref: FiberRef<X>, value: (_: X) => X): <R, E, A>(self: Layer<R, E, A>) => Layer<R, E, A>
+  <R, E, A, X>(self: Layer<R, E, A>, ref: FiberRef<X>, value: (_: X) => X): Layer<R, E, A>
+} = internal.fiberRefLocallyWith
+
+/**
+ * @since 1.0.0
+ * @category utils
+ */
+export const locallyScoped: <A>(self: FiberRef<A>, value: A) => Layer<never, never, never> =
+  internal.fiberRefLocallyScoped
+
+/**
+ * @since 1.0.0
+ * @category utils
+ */
+export const fiberRefLocallyScopedWith: <A>(self: FiberRef<A>, value: (_: A) => A) => Layer<never, never, never> =
+  internal.fiberRefLocallyScopedWith
 
 /**
  * Feeds the output services of this layer into the input of the specified

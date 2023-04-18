@@ -86,7 +86,12 @@ Added in v1.0.0
   - [LayerTypeId (type alias)](#layertypeid-type-alias)
 - [utils](#utils)
   - [extendScope](#extendscope)
+  - [fiberRefLocallyScopedWith](#fiberreflocallyscopedwith)
   - [fresh](#fresh)
+  - [locally](#locally)
+  - [locallyEffect](#locallyeffect)
+  - [locallyScoped](#locallyscoped)
+  - [locallyWith](#locallywith)
   - [memoize](#memoize)
   - [merge](#merge)
   - [passthrough](#passthrough)
@@ -810,6 +815,16 @@ export declare const extendScope: <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => L
 
 Added in v1.0.0
 
+## fiberRefLocallyScopedWith
+
+**Signature**
+
+```ts
+export declare const fiberRefLocallyScopedWith: <A>(self: FiberRef<A>, value: (_: A) => A) => Layer<never, never, never>
+```
+
+Added in v1.0.0
+
 ## fresh
 
 Creates a fresh version of this layer that will not be shared.
@@ -818,6 +833,60 @@ Creates a fresh version of this layer that will not be shared.
 
 ```ts
 export declare const fresh: <R, E, A>(self: Layer<R, E, A>) => Layer<R, E, A>
+```
+
+Added in v1.0.0
+
+## locally
+
+**Signature**
+
+```ts
+export declare const locally: {
+  <X>(ref: FiberRef<X>, value: X): <R, E, A>(self: Layer<R, E, A>) => Layer<R, E, A>
+  <R, E, A, X>(self: Layer<R, E, A>, ref: FiberRef<X>, value: X): Layer<R, E, A>
+}
+```
+
+Added in v1.0.0
+
+## locallyEffect
+
+**Signature**
+
+```ts
+export declare const locallyEffect: {
+  <RIn, E, ROut, RIn2, E2, ROut2>(
+    f: (_: Effect.Effect<RIn, E, Context.Context<ROut>>) => Effect.Effect<RIn2, E2, Context.Context<ROut2>>
+  ): (self: Layer<RIn, E, ROut>) => Layer<RIn2, E2, ROut2>
+  <RIn, E, ROut, RIn2, E2, ROut2>(
+    self: Layer<RIn, E, ROut>,
+    f: (_: Effect.Effect<RIn, E, Context.Context<ROut>>) => Effect.Effect<RIn2, E2, Context.Context<ROut2>>
+  ): Layer<RIn2, E2, ROut2>
+}
+```
+
+Added in v1.0.0
+
+## locallyScoped
+
+**Signature**
+
+```ts
+export declare const locallyScoped: <A>(self: FiberRef<A>, value: A) => Layer<never, never, never>
+```
+
+Added in v1.0.0
+
+## locallyWith
+
+**Signature**
+
+```ts
+export declare const locallyWith: {
+  <X>(ref: FiberRef<X>, value: (_: X) => X): <R, E, A>(self: Layer<R, E, A>) => Layer<R, E, A>
+  <R, E, A, X>(self: Layer<R, E, A>, ref: FiberRef<X>, value: (_: X) => X): Layer<R, E, A>
+}
 ```
 
 Added in v1.0.0

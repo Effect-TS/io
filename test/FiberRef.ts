@@ -135,7 +135,7 @@ describe.concurrent("FiberRef", () => {
   it.scoped("locally - restores original value", () =>
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(initial))
-      const local = yield* $(FiberRef.locally(fiberRef, update)(FiberRef.get(fiberRef)))
+      const local = yield* $(Effect.locally(fiberRef, update)(FiberRef.get(fiberRef)))
       const value = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(local, update)
       assert.strictEqual(value, initial)
@@ -143,7 +143,7 @@ describe.concurrent("FiberRef", () => {
   it.scoped("locally - restores parent's value", () =>
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(initial))
-      const child = yield* $(FiberRef.locally(fiberRef, update)(pipe(FiberRef.get(fiberRef), Effect.fork)))
+      const child = yield* $(Effect.locally(fiberRef, update)(pipe(FiberRef.get(fiberRef), Effect.fork)))
       const local = yield* $(Fiber.join(child))
       const value = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(local, update)
@@ -155,7 +155,7 @@ describe.concurrent("FiberRef", () => {
       )
       // Don't use join as it inherits values from child
       const fiberRef = yield* $(Fiber.await(child), Effect.flatMap((exit) => Effect.done(exit)))
-      const localValue = yield* $(FiberRef.locally(fiberRef, update)(FiberRef.get(fiberRef)))
+      const localValue = yield* $(Effect.locally(fiberRef, update)(FiberRef.get(fiberRef)))
       const value = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(localValue, update)
       assert.strictEqual(value, initial)
@@ -340,7 +340,7 @@ describe.concurrent("FiberRef", () => {
       const fiberRef = yield* $(FiberRef.make<boolean>(true, constTrue))
       const deferred = yield* $(Deferred.make<never, boolean>())
       const runtime: Runtime.Runtime<never> = yield* $(
-        pipe(Effect.runtime<never>(), FiberRef.locally(fiberRef, false))
+        pipe(Effect.runtime<never>(), Effect.locally(fiberRef, false))
       )
       yield* $(
         Effect.sync(() => pipe(FiberRef.get(fiberRef), Effect.intoDeferred(deferred), Runtime.runCallback(runtime)))
@@ -352,7 +352,7 @@ describe.concurrent("FiberRef", () => {
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make<boolean>(true, constTrue))
       const deferred = yield* $(Deferred.make<never, boolean>())
-      const runtime: Runtime.Runtime<never> = yield* $(FiberRef.locally(Effect.runtime<never>(), fiberRef, false))
+      const runtime: Runtime.Runtime<never> = yield* $(Effect.locally(Effect.runtime<never>(), fiberRef, false))
       const fiber = yield* $(
         Effect.sync(() => Runtime.runFork(runtime)(Effect.intoDeferred(FiberRef.get(fiberRef), deferred)))
       )
