@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.22.4
+
+### Patch Changes
+
+- [#374](https://github.com/Effect-TS/io/pull/374) [`5ecdf18`](https://github.com/Effect-TS/io/commit/5ecdf18efc12fa972ac22bcf753d21d98f8850aa) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Fix RequestResolver.eitherWith signature
+
 ## 0.22.3
 
 ### Patch Changes
