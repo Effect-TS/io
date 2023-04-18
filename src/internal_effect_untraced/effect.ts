@@ -2665,19 +2665,20 @@ export const attemptCatchPromiseInterrupt = Debug.methodWithTrace((trace, restor
     evaluate: (signal: AbortSignal) => Promise<A>,
     onReject: (reason: unknown) => E
   ): Effect.Effect<never, E, A> =>
-    core.suspend(() => {
-      const controller = new AbortController()
-      return pipe(
-        attemptCatch(() => restore(evaluate)(controller.signal), restore(onReject)),
-        core.flatMap((promise) =>
-          core.async<never, E, A>((resolve) => {
-            promise
-              .then((a) => resolve(core.exitSucceed(a)))
-              .catch((e) => resolve(core.exitFail(restore(onReject)(e))))
-          })
-        )
-      )
-    }).traced(trace)
+    core.flatMap(
+      attemptCatch(() => {
+        const controller = new AbortController()
+        return [controller, restore(evaluate)(controller.signal)] as const
+      }, restore(onReject)),
+      ([controller, promise]) =>
+        core.asyncInterrupt<never, E, A>((resolve) => {
+          promise
+            .then((a) => resolve(core.exitSucceed(a)))
+            .catch((e) => resolve(core.exitFail(restore(onReject)(e))))
+          return core.sync(() => controller.abort())
+        })
+    )
+      .traced(trace)
 )
 
 /* @internal */
