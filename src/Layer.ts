@@ -23,8 +23,6 @@ import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
 import type { FiberRef } from "@effect/io/FiberRef"
 import * as internal from "@effect/io/internal_effect_untraced/layer"
-import type { Request } from "@effect/io/Request"
-import * as RequestResolver from "@effect/io/RequestResolver"
 import type * as Runtime from "@effect/io/Runtime"
 import type * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"
@@ -192,20 +190,6 @@ export const effect: <T extends Context.Tag<any, any>, R, E>(
   tag: T,
   effect: Effect.Effect<R, E, Context.Tag.Service<T>>
 ) => Layer<R, E, Context.Tag.Identifier<T>> = internal.fromEffect
-
-/**
- * Constructs a layer from the specified effect.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const resolver: <I, R, A extends Request<any, any>>(
-  tag: Context.Tag<I, RequestResolver.RequestResolver<A>>,
-  self: RequestResolver.RequestResolver<A, R>
-) => Layer<R, never, I> = <I, R, A extends Request<any, any>>(
-  tag: Context.Tag<I, RequestResolver.RequestResolver<A>>,
-  self: RequestResolver.RequestResolver<A, R>
-) => internal.fromEffect(tag, RequestResolver.provideContextFromEffect(self))
 
 /**
  * Constructs a layer from the specified effect discarding it's output.

@@ -2,7 +2,7 @@
  * @since 1.0.0
  */
 
-import type * as Context from "@effect/data/Context"
+import * as Context from "@effect/data/Context"
 import type * as Either from "@effect/data/Either"
 import type * as Equal from "@effect/data/Equal"
 import * as Effect from "@effect/io/Effect"
@@ -81,8 +81,21 @@ export declare namespace RequestResolver {
  * @since 1.0.0
  * @category utils
  */
-export const provideContextFromEffect = <R, A extends Request.Request<any, any>>(self: RequestResolver<A, R>) =>
+export const contextFromEffect = <R, A extends Request.Request<any, any>>(self: RequestResolver<A, R>) =>
   Effect.contextWith((_: Context.Context<R>) => provideContext(self, _))
+
+/**
+ * @since 1.0.0
+ * @category utils
+ */
+export const contextFromServices = <Services extends Array<Context.Tag<any, any>>>(...services: Services) =>
+  <R, A extends Request.Request<any, any>>(
+    self: RequestResolver<A, R>
+  ): Effect.Effect<
+    { [k in keyof Services]: Effect.Effect.Context<Services[k]> }[number],
+    never,
+    RequestResolver<A, Exclude<R, { [k in keyof Services]: Effect.Effect.Context<Services[k]> }[number]>>
+  > => Effect.contextWith((_) => provideContext(self as any, Context.pick(...services)(_ as any)))
 
 /**
  * Returns `true` if the specified value is a `RequestResolver`, `false` otherwise.

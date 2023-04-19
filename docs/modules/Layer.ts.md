@@ -40,7 +40,6 @@ Added in v1.0.0
   - [failCauseSync](#failcausesync)
   - [failSync](#failsync)
   - [function](#function)
-  - [resolver](#resolver)
   - [scope](#scope)
   - [scoped](#scoped)
   - [scopedContext](#scopedcontext)
@@ -242,21 +241,6 @@ Constructs a layer from the context using the specified function.
 
 ```ts
 export declare const function: <A extends Context.Tag<any, any>, B extends Context.Tag<any, any>>(tagA: A, tagB: B, f: (a: Context.Tag.Service<A>) => Context.Tag.Service<B>) => Layer<Context.Tag.Identifier<A>, never, Context.Tag.Identifier<B>>
-```
-
-Added in v1.0.0
-
-## resolver
-
-Constructs a layer from the specified effect.
-
-**Signature**
-
-```ts
-export declare const resolver: <I, R, A extends Request<any, any>>(
-  tag: Context.Tag<I, RequestResolver.RequestResolver<A, never>>,
-  self: RequestResolver.RequestResolver<A, R>
-) => Layer<R, never, I>
 ```
 
 Added in v1.0.0
