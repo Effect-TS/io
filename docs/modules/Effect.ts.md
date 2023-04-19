@@ -5091,7 +5091,7 @@ Added in v1.0.0
 ```ts
 export declare const request: <
   A extends Request.Request<any, any>,
-  Ds extends RequestResolver<never, A> | Effect<any, any, RequestResolver<never, A>>,
+  Ds extends RequestResolver<A, never> | Effect<any, any, RequestResolver<A, never>>,
   C extends
     | []
     | [
