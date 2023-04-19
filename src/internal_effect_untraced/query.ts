@@ -21,8 +21,8 @@ export const fromRequest = Debug.methodWithTrace((trace) =>
   <
     A extends Request.Request<any, any>,
     Ds extends
-      | RequestResolver.RequestResolver<never, A>
-      | Effect.Effect<any, any, RequestResolver.RequestResolver<never, A>>,
+      | RequestResolver.RequestResolver<A, never>
+      | Effect.Effect<any, any, RequestResolver.RequestResolver<A, never>>,
     C extends [
       cache:
         | Request.Cache<any>
