@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.24.2
+
+### Patch Changes
+
+- [#387](https://github.com/Effect-TS/io/pull/387) [`20f8ea7`](https://github.com/Effect-TS/io/commit/20f8ea730a21bb5b43ce61a1d77aacee971a4514) Thanks [@tim-smart](https://github.com/tim-smart)! - add Tracer.useSpan
+
 ## 0.24.1
 
 ### Patch Changes
