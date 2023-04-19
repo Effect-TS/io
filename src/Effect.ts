@@ -5955,7 +5955,7 @@ export const flatMapStep: <R, E, A, R1, E1, B>(
 export const request: {
   <
     A extends Request.Request<any, any>,
-    Ds extends RequestResolver<never, A> | Effect<any, any, RequestResolver<never, A>>,
+    Ds extends RequestResolver<A, never> | Effect<any, any, RequestResolver<A, never>>,
     C extends [
       cache:
         | Request.Cache<any>
