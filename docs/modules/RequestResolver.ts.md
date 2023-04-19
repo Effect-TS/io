@@ -37,7 +37,8 @@ Added in v1.0.0
   - [RequestResolverTypeId](#requestresolvertypeid)
   - [RequestResolverTypeId (type alias)](#requestresolvertypeid-type-alias)
 - [utils](#utils)
-  - [provideContextFromEffect](#providecontextfromeffect)
+  - [contextFromEffect](#contextfromeffect)
+  - [contextFromServices](#contextfromservices)
 
 ---
 
@@ -377,14 +378,32 @@ Added in v1.0.0
 
 # utils
 
-## provideContextFromEffect
+## contextFromEffect
 
 **Signature**
 
 ```ts
-export declare const provideContextFromEffect: <R, A extends Request.Request<any, any>>(
+export declare const contextFromEffect: <R, A extends Request.Request<any, any>>(
   self: RequestResolver<A, R>
 ) => Effect.Effect<R, never, RequestResolver<A, never>>
+```
+
+Added in v1.0.0
+
+## contextFromServices
+
+**Signature**
+
+```ts
+export declare const contextFromServices: <Services extends Context.Tag<any, any>[]>(
+  ...services: Services
+) => <R, A extends Request.Request<any, any>>(
+  self: RequestResolver<A, R>
+) => Effect.Effect<
+  { [k in keyof Services]: Effect.Effect.Context<Services[k]> }[number],
+  never,
+  RequestResolver<A, Exclude<R, { [k in keyof Services]: Effect.Effect.Context<Services[k]> }[number]>>
+>
 ```
 
 Added in v1.0.0

@@ -52,21 +52,20 @@ export interface GetNameById extends Request.Request<string, string> {
 export const GetNameById = Request.tagged<GetNameById>("GetNameById")
 
 const delay = <R, E, A>(self: Effect.Effect<R, E, A>) =>
-  Effect.flatMap(
-    Effect.promise(() =>
-      new Promise((r) => {
-        setTimeout(() => r(0), 0)
-      })
-    ),
-    () => self
+  Effect.zipRight(
+    Effect.promise(() => new Promise((r) => setTimeout(() => r(0), 0))),
+    self
   )
 
-export interface UserResolver {
-  readonly _: unique symbol
-}
-export const UserResolver = Context.Tag<UserResolver, Resolver.RequestResolver<UserRequest>>()
-
 const counted = <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.tap(self, () => Effect.map(Counter, (c) => c.count++))
+
+const UserResolver = pipe(
+  Resolver.makeBatched((requests: Array<UserRequest>) =>
+    counted(Effect.forEachDiscard(requests, (request) => delay(processRequest(request))))
+  ),
+  Resolver.batchN(15),
+  Resolver.contextFromServices(Counter)
+)
 
 export const getAllUserIds = Effect.request(
   GetAllIds({}),
@@ -115,27 +114,9 @@ const processRequest = (request: UserRequest): Effect.Effect<never, never, void>
   }
 }
 
-const UserResolverLive = Layer.resolver(
-  UserResolver,
-  Resolver.batchN(15)(
-    Resolver.makeBatched((requests) =>
-      counted(
-        Effect.forEachDiscard(requests, (request) =>
-          delay(
-            processRequest(request)
-          ))
-      )
-    )
-  )
-)
-
 const CounterLive = Layer.sync(Counter, () => ({ count: 0 }))
 
-const provideEnv = Effect.provideSomeLayer(pipe(
-  CounterLive,
-  Layer.merge(UserCacheLive),
-  Layer.provideMerge(UserResolverLive)
-))
+const provideEnv = Effect.provideSomeLayer(Layer.mergeAll(CounterLive, UserCacheLive))
 
 describe.concurrent("Effect", () => {
   it.effect("requests are executed correctly", () =>
