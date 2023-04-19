@@ -2,7 +2,7 @@
  * @since 1.0.0
  */
 import * as Context from "@effect/data/Context"
-import { dualWithTrace } from "@effect/data/Debug"
+import { dualWithTrace, methodWithTrace } from "@effect/data/Debug"
 import { globalValue } from "@effect/data/Global"
 import * as MutableRef from "@effect/data/MutableRef"
 import * as Option from "@effect/data/Option"
@@ -133,6 +133,65 @@ export const Span = Context.Tag<Span>()
 /**
  * @since 1.0.0
  */
+export const useSpan: {
+  <R, E, A>(name: string, evaluate: (span: Span) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A>
+  <R, E, A>(name: string, options: {
+    attributes?: Record<string, string>
+    parent?: ParentSpan
+    root?: boolean
+  }, evaluate: (span: Span) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A>
+} = methodWithTrace(() =>
+  <R, E, A>(
+    name: string,
+    ...args: [evaluate: (span: Span) => Effect.Effect<R, E, A>] | [
+      options: any,
+      evaluate: (span: Span) => Effect.Effect<R, E, A>
+    ]
+  ) => {
+    const options: {
+      attributes?: Record<string, string>
+      parent?: ParentSpan
+      root?: boolean
+    } | undefined = args.length === 1 ? undefined : args[0]
+    const evaluate: (span: Span) => Effect.Effect<R, E, A> = args[args.length - 1]
+
+    return Effect.acquireUseRelease(
+      Effect.flatMap(
+        Clock.currentTimeMillis(),
+        (startTime) =>
+          Effect.contextWith((context: Context.Context<never>): Span => {
+            const tracer: Tracer = Option.getOrElse(
+              Context.getOption(context, Tracer),
+              () => nativeTracer
+            )
+
+            const parent = Option.orElse(
+              Option.fromNullable(options?.parent),
+              () => options?.root === true ? Option.none() : Context.getOption(context, Span)
+            )
+
+            const span = tracer.span(name, parent, startTime)
+
+            Object.entries(options?.attributes ?? {}).forEach(([k, v]) => {
+              span.attribute(k, v)
+            })
+
+            return span
+          })
+      ),
+      evaluate,
+      (span, exit) =>
+        Effect.flatMap(
+          Clock.currentTimeMillis(),
+          (endTime) => Effect.sync(() => span.end(endTime, exit))
+        )
+    )
+  }
+)
+
+/**
+ * @since 1.0.0
+ */
 export const withSpan: {
   (name: string, options?: {
     attributes?: Record<string, string>
@@ -155,34 +214,13 @@ export const withSpan: {
     parent?: ParentSpan
     root?: boolean
   }) => Effect.Effect<Exclude<R, Span>, E, A>
->((args) => typeof args[0] !== "string", () =>
-  (self, name, options) =>
-    Effect.acquireUseRelease(
-      Effect.flatMap(Clock.currentTimeMillis(), (startTime) =>
-        Effect.contextWith((context: Context.Context<never>): Span => {
-          const tracer: Tracer = Option.getOrElse(
-            Context.getOption(context, Tracer),
-            () => nativeTracer
-          )
-
-          const parent = Option.orElse(
-            Option.fromNullable(options?.parent),
-            () => options?.root === true ? Option.none() : Context.getOption(context, Span)
-          )
-
-          const span = tracer.span(name, parent, startTime)
-
-          Object.entries(options?.attributes ?? {}).forEach(([k, v]) => {
-            span.attribute(k, v)
-          })
-
-          return span
-        })),
-      (span) =>
-        Effect.provideService(Span, span)(self),
-      (span, exit) =>
-        Effect.flatMap(
-          Clock.currentTimeMillis(),
-          (endTime) => Effect.sync(() => span.end(endTime, exit))
-        )
-    ))
+>(
+  (args) => typeof args[0] !== "string",
+  () =>
+    (self, name, options) =>
+      useSpan(
+        name,
+        options ?? {},
+        (span) => Effect.provideService(self, Span, span)
+      )
+)
