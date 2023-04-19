@@ -14,41 +14,20 @@ Added in v1.0.0
 
 - [constructors](#constructors)
   - [empty](#empty)
-  - [flatten](#flatten)
   - [mapRequestResolvers](#maprequestresolvers)
   - [parallel](#parallel)
-  - [parallelCollectionEmpty](#parallelcollectionempty)
-  - [parallelCollectionMake](#parallelcollectionmake)
   - [reduce](#reduce)
   - [sequential](#sequential)
-  - [sequentialCollectionMake](#sequentialcollectionmake)
   - [single](#single)
-- [conversions](#conversions)
-  - [parallelCollectionToChunk](#parallelcollectiontochunk)
-  - [parallelCollectionToSequentialCollection](#parallelcollectiontosequentialcollection)
-  - [sequentialCollectionToChunk](#sequentialcollectiontochunk)
 - [models](#models)
   - [Empty (interface)](#empty-interface)
   - [Par (interface)](#par-interface)
-  - [ParallelCollection (interface)](#parallelcollection-interface)
   - [RequestBlock (type alias)](#requestblock-type-alias)
   - [Seq (interface)](#seq-interface)
-  - [SequentialCollection (interface)](#sequentialcollection-interface)
   - [Single (interface)](#single-interface)
-- [symbols](#symbols)
-  - [RequestBlockParallelTypeId](#requestblockparalleltypeid)
-  - [RequestBlockParallelTypeId (type alias)](#requestblockparalleltypeid-type-alias)
-  - [SequentialCollectionTypeId](#sequentialcollectiontypeid)
-  - [SequentialCollectionTypeId (type alias)](#sequentialcollectiontypeid-type-alias)
 - [utils](#utils)
   - [contramapContext](#contramapcontext)
   - [locally](#locally)
-  - [parallelCollectionCombine](#parallelcollectioncombine)
-  - [parallelCollectionIsEmpty](#parallelcollectionisempty)
-  - [parallelCollectionKeys](#parallelcollectionkeys)
-  - [sequentialCollectionCombine](#sequentialcollectioncombine)
-  - [sequentialCollectionIsEmpty](#sequentialcollectionisempty)
-  - [sequentialCollectionKeys](#sequentialcollectionkeys)
 
 ---
 
@@ -64,16 +43,6 @@ export declare const empty: RequestBlock<never>
 
 Added in v1.0.0
 
-## flatten
-
-**Signature**
-
-```ts
-export declare const flatten: <R>(self: RequestBlock<R>) => List.List<SequentialCollection<R>>
-```
-
-Added in v1.0.0
-
 ## mapRequestResolvers
 
 **Signature**
@@ -81,7 +50,7 @@ Added in v1.0.0
 ```ts
 export declare const mapRequestResolvers: <R, A, R2>(
   self: RequestBlock<R>,
-  f: (dataSource: RequestResolver.RequestResolver<R, A>) => RequestResolver.RequestResolver<R2, A>
+  f: (dataSource: RequestResolver.RequestResolver<A, R>) => RequestResolver.RequestResolver<A, R2>
 ) => RequestBlock<R | R2>
 ```
 
@@ -93,34 +62,6 @@ Added in v1.0.0
 
 ```ts
 export declare const parallel: <R, R2>(self: RequestBlock<R>, that: RequestBlock<R2>) => RequestBlock<R | R2>
-```
-
-Added in v1.0.0
-
-## parallelCollectionEmpty
-
-The empty collection of requests.
-
-**Signature**
-
-```ts
-export declare const parallelCollectionEmpty: <R>() => ParallelCollection<R>
-```
-
-Added in v1.0.0
-
-## parallelCollectionMake
-
-Constructs a new collection of requests containing a mapping from the
-specified data source to the specified request.
-
-**Signature**
-
-```ts
-export declare const parallelCollectionMake: <R, A>(
-  dataSource: RequestResolver.RequestResolver<R, A>,
-  blockedRequest: Request.Entry<A>
-) => ParallelCollection<R>
 ```
 
 Added in v1.0.0
@@ -145,80 +86,15 @@ export declare const sequential: <R, R2>(self: RequestBlock<R>, that: RequestBlo
 
 Added in v1.0.0
 
-## sequentialCollectionMake
-
-Constructs a new mapping from data sources to batches of requests from those
-data sources that must be executed sequentially.
-
-**Signature**
-
-```ts
-export declare const sequentialCollectionMake: <R, A>(
-  map: HashMap.HashMap<RequestResolver.RequestResolver<R, A>, Request.Entry<A>[][]>
-) => SequentialCollection<R>
-```
-
-Added in v1.0.0
-
 ## single
 
 **Signature**
 
 ```ts
 export declare const single: <R, A>(
-  dataSource: RequestResolver.RequestResolver<R, A>,
+  dataSource: RequestResolver.RequestResolver<A, R>,
   blockedRequest: Request.Entry<A>
 ) => RequestBlock<R>
-```
-
-Added in v1.0.0
-
-# conversions
-
-## parallelCollectionToChunk
-
-Converts this collection of requests that can be executed in parallel to an
-`Iterable` containing mappings from data sources to requests from those
-data sources.
-
-**Signature**
-
-```ts
-export declare const parallelCollectionToChunk: <R>(
-  self: ParallelCollection<R>
-) => (readonly [RequestResolver.RequestResolver<R, unknown>, Request.Entry<unknown>[]])[]
-```
-
-Added in v1.0.0
-
-## parallelCollectionToSequentialCollection
-
-Converts this collection of requests that can be executed in parallel to a
-batch of requests in a collection of requests that must be executed
-sequentially.
-
-**Signature**
-
-```ts
-export declare const parallelCollectionToSequentialCollection: <R>(
-  self: ParallelCollection<R>
-) => SequentialCollection<R>
-```
-
-Added in v1.0.0
-
-## sequentialCollectionToChunk
-
-Converts this collection of batches requests that must be executed
-sequentially to an `Iterable` containing mappings from data sources to
-batches of requests from those data sources.
-
-**Signature**
-
-```ts
-export declare const sequentialCollectionToChunk: <R>(
-  self: SequentialCollection<R>
-) => (readonly [RequestResolver.RequestResolver<R, unknown>, Request.Entry<unknown>[][]])[]
 ```
 
 Added in v1.0.0
@@ -246,21 +122,6 @@ export interface Par<R> {
   readonly _tag: 'Par'
   readonly left: RequestBlock<R>
   readonly right: RequestBlock<R>
-}
-```
-
-Added in v1.0.0
-
-## ParallelCollection (interface)
-
-A `Parallel<R>` maintains a mapping from data sources to requests from those
-data sources that can be executed in parallel.
-
-**Signature**
-
-```ts
-export interface ParallelCollection<R> extends ParallelCollection.Variance<R> {
-  readonly map: HashMap.HashMap<RequestResolver.RequestResolver<unknown, unknown>, Array<Request.Entry<unknown>>>
 }
 ```
 
@@ -296,21 +157,6 @@ export interface Seq<R> {
 
 Added in v1.0.0
 
-## SequentialCollection (interface)
-
-A `Sequential<R>` maintains a mapping from data sources to batches of
-requests from those data sources that must be executed sequentially.
-
-**Signature**
-
-```ts
-export interface SequentialCollection<R> extends SequentialCollection.Variance<R> {
-  readonly map: HashMap.HashMap<RequestResolver.RequestResolver<unknown, unknown>, Array<Array<Request.Entry<unknown>>>>
-}
-```
-
-Added in v1.0.0
-
 ## Single (interface)
 
 **Signature**
@@ -318,51 +164,9 @@ Added in v1.0.0
 ```ts
 export interface Single<R> {
   readonly _tag: 'Single'
-  readonly dataSource: RequestResolver.RequestResolver<R, unknown>
+  readonly dataSource: RequestResolver.RequestResolver<unknown, R>
   readonly blockedRequest: Request.Entry<unknown>
 }
-```
-
-Added in v1.0.0
-
-# symbols
-
-## RequestBlockParallelTypeId
-
-**Signature**
-
-```ts
-export declare const RequestBlockParallelTypeId: typeof RequestBlockParallelTypeId
-```
-
-Added in v1.0.0
-
-## RequestBlockParallelTypeId (type alias)
-
-**Signature**
-
-```ts
-export type RequestBlockParallelTypeId = typeof RequestBlockParallelTypeId
-```
-
-Added in v1.0.0
-
-## SequentialCollectionTypeId
-
-**Signature**
-
-```ts
-export declare const SequentialCollectionTypeId: typeof SequentialCollectionTypeId
-```
-
-Added in v1.0.0
-
-## SequentialCollectionTypeId (type alias)
-
-**Signature**
-
-```ts
-export type SequentialCollectionTypeId = typeof SequentialCollectionTypeId
 ```
 
 Added in v1.0.0
@@ -392,95 +196,6 @@ Provides each data source with a fiber ref value.
 
 ```ts
 export declare const locally: <R, A>(self: RequestBlock<R>, ref: FiberRef<A>, value: A) => RequestBlock<R>
-```
-
-Added in v1.0.0
-
-## parallelCollectionCombine
-
-Combines this collection of requests that can be executed in parallel with
-that collection of requests that can be executed in parallel to return a
-new collection of requests that can be executed in parallel.
-
-**Signature**
-
-```ts
-export declare const parallelCollectionCombine: <R, R2>(
-  self: ParallelCollection<R>,
-  that: ParallelCollection<R2>
-) => ParallelCollection<R | R2>
-```
-
-Added in v1.0.0
-
-## parallelCollectionIsEmpty
-
-Returns `true` if this collection of requests is empty, `false` otherwise.
-
-**Signature**
-
-```ts
-export declare const parallelCollectionIsEmpty: <R>(self: ParallelCollection<R>) => boolean
-```
-
-Added in v1.0.0
-
-## parallelCollectionKeys
-
-Returns a collection of the data sources that the requests in this
-collection are from.
-
-**Signature**
-
-```ts
-export declare const parallelCollectionKeys: <R>(
-  self: ParallelCollection<R>
-) => RequestResolver.RequestResolver<R, unknown>[]
-```
-
-Added in v1.0.0
-
-## sequentialCollectionCombine
-
-Combines this collection of batches of requests that must be executed
-sequentially with that collection of batches of requests that must be
-executed sequentially to return a new collection of batches of requests
-that must be executed sequentially.
-
-**Signature**
-
-```ts
-export declare const sequentialCollectionCombine: <R, R2>(
-  self: SequentialCollection<R>,
-  that: SequentialCollection<R2>
-) => SequentialCollection<R | R2>
-```
-
-Added in v1.0.0
-
-## sequentialCollectionIsEmpty
-
-Returns whether this collection of batches of requests is empty.
-
-**Signature**
-
-```ts
-export declare const sequentialCollectionIsEmpty: <R>(self: SequentialCollection<R>) => boolean
-```
-
-Added in v1.0.0
-
-## sequentialCollectionKeys
-
-Returns a collection of the data sources that the batches of requests in
-this collection are from.
-
-**Signature**
-
-```ts
-export declare const sequentialCollectionKeys: <R>(
-  self: SequentialCollection<R>
-) => RequestResolver.RequestResolver<R, unknown>[]
 ```
 
 Added in v1.0.0

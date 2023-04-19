@@ -16,7 +16,7 @@ import type * as RequestResolver from "@effect/io/RequestResolver"
 export const make = Debug.untracedMethod((restore) =>
   <R, A>(
     runAll: (requests: Array<Array<A>>) => Effect.Effect<R, never, void>
-  ): RequestResolver.RequestResolver<R, A> =>
+  ): RequestResolver.RequestResolver<A, R> =>
     new core.RequestResolverImpl((requests) => restore(runAll)(requests.map((_) => _.map((_) => _.request))))
 )
 
@@ -24,14 +24,14 @@ export const make = Debug.untracedMethod((restore) =>
 export const makeWithEntry = Debug.untracedMethod((restore) =>
   <R, A>(
     runAll: (requests: Array<Array<Request.Entry<A>>>) => Effect.Effect<R, never, void>
-  ): RequestResolver.RequestResolver<R, A> => new core.RequestResolverImpl((requests) => restore(runAll)(requests))
+  ): RequestResolver.RequestResolver<A, R> => new core.RequestResolverImpl((requests) => restore(runAll)(requests))
 )
 
 /** @internal */
 export const makeBatched = Debug.untracedMethod((restore) =>
   <R, A extends Request.Request<any, any>>(
     run: (requests: Array<A>) => Effect.Effect<R, never, void>
-  ): RequestResolver.RequestResolver<R, A> =>
+  ): RequestResolver.RequestResolver<A, R> =>
     new core.RequestResolverImpl<R, A>(
       (requests) =>
         Effect.forEachDiscard(requests, (block) =>
@@ -49,13 +49,13 @@ export const around = Debug.untracedDual<
     before: Effect.Effect<R2, never, A2>,
     after: (a: A2) => Effect.Effect<R3, never, _>
   ) => <R, A>(
-    self: RequestResolver.RequestResolver<R, A>
-  ) => RequestResolver.RequestResolver<R | R2 | R3, A>,
+    self: RequestResolver.RequestResolver<A, R>
+  ) => RequestResolver.RequestResolver<A, R | R2 | R3>,
   <R, A, R2, A2, R3, _>(
-    self: RequestResolver.RequestResolver<R, A>,
+    self: RequestResolver.RequestResolver<A, R>,
     before: Effect.Effect<R2, never, A2>,
     after: (a: A2) => Effect.Effect<R3, never, _>
-  ) => RequestResolver.RequestResolver<R | R2 | R3, A>
+  ) => RequestResolver.RequestResolver<A, R | R2 | R3>
 >(
   3,
   (restore) =>
@@ -69,17 +69,17 @@ export const around = Debug.untracedDual<
 /** @internal */
 export const batchN = Debug.untracedDual<
   (n: number) => <R, A>(
-    self: RequestResolver.RequestResolver<R, A>
-  ) => RequestResolver.RequestResolver<R, A>,
+    self: RequestResolver.RequestResolver<A, R>
+  ) => RequestResolver.RequestResolver<A, R>,
   <R, A>(
-    self: RequestResolver.RequestResolver<R, A>,
+    self: RequestResolver.RequestResolver<A, R>,
     n: number
-  ) => RequestResolver.RequestResolver<R, A>
+  ) => RequestResolver.RequestResolver<A, R>
 >(2, (restore) =>
   <R, A>(
-    self: RequestResolver.RequestResolver<R, A>,
+    self: RequestResolver.RequestResolver<A, R>,
     n: number
-  ): RequestResolver.RequestResolver<R, A> =>
+  ): RequestResolver.RequestResolver<A, R> =>
     new core.RequestResolverImpl(
       (requests) => {
         return n < 1
@@ -103,15 +103,15 @@ export const contramapContext = Debug.untracedDual<
   <R0, R>(
     f: (context: Context.Context<R0>) => Context.Context<R>
   ) => <A extends Request.Request<any, any>>(
-    self: RequestResolver.RequestResolver<R, A>
-  ) => RequestResolver.RequestResolver<R0, A>,
+    self: RequestResolver.RequestResolver<A, R>
+  ) => RequestResolver.RequestResolver<A, R0>,
   <R, A extends Request.Request<any, any>, R0>(
-    self: RequestResolver.RequestResolver<R, A>,
+    self: RequestResolver.RequestResolver<A, R>,
     f: (context: Context.Context<R0>) => Context.Context<R>
-  ) => RequestResolver.RequestResolver<R0, A>
+  ) => RequestResolver.RequestResolver<A, R0>
 >(2, (restore) =>
   <R, A extends Request.Request<any, any>, R0>(
-    self: RequestResolver.RequestResolver<R, A>,
+    self: RequestResolver.RequestResolver<A, R>,
     f: (context: Context.Context<R0>) => Context.Context<R>
   ) =>
     new core.RequestResolverImpl<R0, A>(
@@ -131,11 +131,11 @@ export const eitherWith = Debug.untracedDual<
     B extends Request.Request<any, any>,
     C extends Request.Request<any, any>
   >(
-    that: RequestResolver.RequestResolver<R2, B>,
+    that: RequestResolver.RequestResolver<B, R2>,
     f: (_: Request.Entry<C>) => Either.Either<Request.Entry<A>, Request.Entry<B>>
   ) => <R>(
-    self: RequestResolver.RequestResolver<R, A>
-  ) => RequestResolver.RequestResolver<R | R2, C>,
+    self: RequestResolver.RequestResolver<A, R>
+  ) => RequestResolver.RequestResolver<C, R | R2>,
   <
     R,
     A extends Request.Request<any, any>,
@@ -143,10 +143,10 @@ export const eitherWith = Debug.untracedDual<
     B extends Request.Request<any, any>,
     C extends Request.Request<any, any>
   >(
-    self: RequestResolver.RequestResolver<R, A>,
-    that: RequestResolver.RequestResolver<R2, B>,
+    self: RequestResolver.RequestResolver<A, R>,
+    that: RequestResolver.RequestResolver<B, R2>,
     f: (_: Request.Entry<C>) => Either.Either<Request.Entry<A>, Request.Entry<B>>
-  ) => RequestResolver.RequestResolver<R | R2, C>
+  ) => RequestResolver.RequestResolver<C, R | R2>
 >(
   3,
   (restore) =>
@@ -157,8 +157,8 @@ export const eitherWith = Debug.untracedDual<
       B extends Request.Request<any, any>,
       C extends Request.Request<any, any>
     >(
-      self: RequestResolver.RequestResolver<R, A>,
-      that: RequestResolver.RequestResolver<R2, B>,
+      self: RequestResolver.RequestResolver<A, R>,
+      that: RequestResolver.RequestResolver<B, R2>,
       f: (_: Request.Entry<C>) => Either.Either<Request.Entry<A>, Request.Entry<B>>
     ) =>
       new core.RequestResolverImpl<R | R2, C>(
@@ -184,7 +184,7 @@ export const eitherWith = Debug.untracedDual<
 export const fromFunction = Debug.untracedMethod((restore) =>
   <A extends Request.Request<never, any>>(
     f: (request: A) => Request.Request.Success<A>
-  ): RequestResolver.RequestResolver<never, A> =>
+  ): RequestResolver.RequestResolver<A> =>
     makeBatched((requests: Array<A>) =>
       Effect.forEachDiscard(
         requests,
@@ -197,7 +197,7 @@ export const fromFunction = Debug.untracedMethod((restore) =>
 export const fromFunctionBatched = Debug.untracedMethod((restore) =>
   <A extends Request.Request<never, any>>(
     f: (chunk: Array<A>) => Array<Request.Request.Success<A>>
-  ): RequestResolver.RequestResolver<never, A> =>
+  ): RequestResolver.RequestResolver<A> =>
     makeBatched((as: Array<A>) =>
       forEachWithIndex(restore(f)(as), (res, i) => complete(as[i], core.exitSucceed(res) as any))
     )
@@ -208,7 +208,7 @@ export const fromFunctionBatched = Debug.untracedMethod((restore) =>
 export const fromFunctionEffect = Debug.untracedMethod((restore) =>
   <R, A extends Request.Request<any, any>>(
     f: (a: A) => Effect.Effect<R, Request.Request.Error<A>, Request.Request.Success<A>>
-  ): RequestResolver.RequestResolver<R, A> =>
+  ): RequestResolver.RequestResolver<A, R> =>
     makeBatched((requests: Array<A>) =>
       Effect.forEachParDiscard(
         requests,
@@ -219,7 +219,7 @@ export const fromFunctionEffect = Debug.untracedMethod((restore) =>
 
 /** @internal */
 export const never = Debug.untracedMethod(() =>
-  (_: void): RequestResolver.RequestResolver<never, never> =>
+  (_: void): RequestResolver.RequestResolver<never> =>
     make(() => Effect.never())
       .identified("Never")
 )
@@ -229,12 +229,12 @@ export const provideContext = Debug.untracedDual<
   <R>(
     context: Context.Context<R>
   ) => <A extends Request.Request<any, any>>(
-    self: RequestResolver.RequestResolver<R, A>
-  ) => RequestResolver.RequestResolver<never, A>,
+    self: RequestResolver.RequestResolver<A, R>
+  ) => RequestResolver.RequestResolver<A>,
   <R, A extends Request.Request<any, any>>(
-    self: RequestResolver.RequestResolver<R, A>,
+    self: RequestResolver.RequestResolver<A, R>,
     context: Context.Context<R>
-  ) => RequestResolver.RequestResolver<never, A>
+  ) => RequestResolver.RequestResolver<A>
 >(
   2,
   () =>
@@ -246,20 +246,20 @@ export const provideContext = Debug.untracedDual<
 /** @internal */
 export const race = Debug.untracedDual<
   <R2, A2 extends Request.Request<any, any>>(
-    that: RequestResolver.RequestResolver<R2, A2>
+    that: RequestResolver.RequestResolver<A2, R2>
   ) => <R, A extends Request.Request<any, any>>(
-    self: RequestResolver.RequestResolver<R, A>
-  ) => RequestResolver.RequestResolver<R | R2, A | A2>,
+    self: RequestResolver.RequestResolver<A, R>
+  ) => RequestResolver.RequestResolver<A | A2, R | R2>,
   <R, A extends Request.Request<any, any>, R2, A2 extends Request.Request<any, any>>(
-    self: RequestResolver.RequestResolver<R, A>,
-    that: RequestResolver.RequestResolver<R2, A2>
-  ) => RequestResolver.RequestResolver<R | R2, A | A2>
+    self: RequestResolver.RequestResolver<A, R>,
+    that: RequestResolver.RequestResolver<A2, R2>
+  ) => RequestResolver.RequestResolver<A | A2, R | R2>
 >(
   2,
   (restore) =>
     <R, A, R2, A2>(
-      self: RequestResolver.RequestResolver<R, A>,
-      that: RequestResolver.RequestResolver<R2, A2>
+      self: RequestResolver.RequestResolver<A, R>,
+      that: RequestResolver.RequestResolver<A2, R2>
     ) =>
       new core.RequestResolverImpl((requests) =>
         Effect.race(

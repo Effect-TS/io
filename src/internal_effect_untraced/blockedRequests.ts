@@ -52,7 +52,7 @@ export const seq = <R, R2>(
  * @internal
  */
 export const single = <R, A>(
-  dataSource: RequestResolver.RequestResolver<R, A>,
+  dataSource: RequestResolver.RequestResolver<A, R>,
   blockedRequest: Request.Entry<A>
 ): RequestBlock.RequestBlock<R> => ({
   _tag: "Single",
@@ -62,7 +62,7 @@ export const single = <R, A>(
 
 /** @internal */
 export const MapRequestResolversReducer = <R, A, R2>(
-  f: (dataSource: RequestResolver.RequestResolver<R, A>) => RequestResolver.RequestResolver<R2, A>
+  f: (dataSource: RequestResolver.RequestResolver<A, R>) => RequestResolver.RequestResolver<A, R2>
 ): RequestBlock.RequestBlock.Reducer<R, RequestBlock.RequestBlock<R | R2>> => ({
   emptyCase: () => empty,
   parCase: (left, right) => par(left, right),
@@ -103,7 +103,7 @@ interface SeqCase {
  */
 export const mapRequestResolvers = <R, A, R2>(
   self: RequestBlock.RequestBlock<R>,
-  f: (dataSource: RequestResolver.RequestResolver<R, A>) => RequestResolver.RequestResolver<R2, A>
+  f: (dataSource: RequestResolver.RequestResolver<A, R>) => RequestResolver.RequestResolver<A, R2>
 ): RequestBlock.RequestBlock<R | R2> => reduce(self, MapRequestResolversReducer(f))
 
 /**
@@ -178,9 +178,9 @@ export const reduce = <R, Z>(
  */
 export const flatten = <R>(
   self: RequestBlock.RequestBlock<R>
-): List.List<RequestBlock.SequentialCollection<R>> => {
+): List.List<SequentialCollection<R>> => {
   let current = List.of(self)
-  let updated = List.empty<RequestBlock.SequentialCollection<R>>()
+  let updated = List.empty<SequentialCollection<R>>()
   // eslint-disable-next-line no-constant-condition
   while (1) {
     const [parallel, sequential] = List.reduce(
@@ -213,7 +213,7 @@ export const flatten = <R>(
  */
 const step = <R>(
   requests: RequestBlock.RequestBlock<R>
-): readonly [RequestBlock.ParallelCollection<R>, List.List<RequestBlock.RequestBlock<R>>] => {
+): readonly [ParallelCollection<R>, List.List<RequestBlock.RequestBlock<R>>] => {
   let current: RequestBlock.RequestBlock<R> = requests
   let parallel = parallelCollectionEmpty<R>()
   let stack = List.empty<RequestBlock.RequestBlock<R>>()
@@ -288,9 +288,9 @@ const step = <R>(
  * pipelined while preserving ordering guarantees.
  */
 const merge = <R>(
-  sequential: List.List<RequestBlock.SequentialCollection<R>>,
-  parallel: RequestBlock.ParallelCollection<R>
-): List.List<RequestBlock.SequentialCollection<R>> => {
+  sequential: List.List<SequentialCollection<R>>,
+  parallel: ParallelCollection<R>
+): List.List<SequentialCollection<R>> => {
   if (List.isNil(sequential)) {
     return List.of(parallelCollectionToSequentialCollection(parallel))
   }
@@ -360,15 +360,15 @@ export const makeEntry = <A extends Request.Request<any, any>>(
 ): Request.Entry<A> => new EntryImpl(request, result, listeners, ownerId, state)
 
 /** @internal */
-export const RequestBlockParallelTypeId: RequestBlock.RequestBlockParallelTypeId = Symbol.for(
+export const RequestBlockParallelTypeId = Symbol.for(
   "@effect/io/RequestBlockParallel"
-) as RequestBlock.RequestBlockParallelTypeId
+)
 
 const parallelVariance = {
   _R: (_: never) => _
 }
 
-class ParallelImpl<R> implements RequestBlock.ParallelCollection<R> {
+class ParallelImpl<R> implements ParallelCollection<R> {
   readonly [RequestBlockParallelTypeId] = parallelVariance
   constructor(
     readonly map: HashMap.HashMap<
@@ -379,19 +379,19 @@ class ParallelImpl<R> implements RequestBlock.ParallelCollection<R> {
 }
 
 /** @internal */
-export const parallelCollectionEmpty = <R>(): RequestBlock.ParallelCollection<R> => new ParallelImpl(HashMap.empty())
+export const parallelCollectionEmpty = <R>(): ParallelCollection<R> => new ParallelImpl(HashMap.empty())
 
 /** @internal */
 export const parallelCollectionMake = <R, A>(
-  dataSource: RequestResolver.RequestResolver<R, A>,
+  dataSource: RequestResolver.RequestResolver<A, R>,
   blockedRequest: Request.Entry<A>
-): RequestBlock.ParallelCollection<R> => new ParallelImpl(HashMap.make([dataSource, Array.of(blockedRequest)]))
+): ParallelCollection<R> => new ParallelImpl(HashMap.make([dataSource, Array.of(blockedRequest)]))
 
 /** @internal */
 export const parallelCollectionCombine = <R, R2>(
-  self: RequestBlock.ParallelCollection<R>,
-  that: RequestBlock.ParallelCollection<R2>
-): RequestBlock.ParallelCollection<R | R2> =>
+  self: ParallelCollection<R>,
+  that: ParallelCollection<R2>
+): ParallelCollection<R | R2> =>
   new ParallelImpl(HashMap.reduceWithIndex(self.map, that.map, (map, value, key) =>
     HashMap.set(
       map,
@@ -403,40 +403,39 @@ export const parallelCollectionCombine = <R, R2>(
     )))
 
 /** @internal */
-export const parallelCollectionIsEmpty = <R>(self: RequestBlock.ParallelCollection<R>): boolean =>
-  HashMap.isEmpty(self.map)
+export const parallelCollectionIsEmpty = <R>(self: ParallelCollection<R>): boolean => HashMap.isEmpty(self.map)
 
 /** @internal */
 export const parallelCollectionKeys = <R>(
-  self: RequestBlock.ParallelCollection<R>
-): Array<RequestResolver.RequestResolver<R, unknown>> => Array.from(HashMap.keys(self.map)) as any
+  self: ParallelCollection<R>
+): Array<RequestResolver.RequestResolver<unknown, R>> => Array.from(HashMap.keys(self.map)) as any
 
 /** @internal */
 export const parallelCollectionToSequentialCollection = <R>(
-  self: RequestBlock.ParallelCollection<R>
-): RequestBlock.SequentialCollection<R> => sequentialCollectionMake(HashMap.map(self.map, (x) => Array.of(x)) as any)
+  self: ParallelCollection<R>
+): SequentialCollection<R> => sequentialCollectionMake(HashMap.map(self.map, (x) => Array.of(x)) as any)
 
 /** @internal */
 export const parallelCollectionToChunk = <R>(
-  self: RequestBlock.ParallelCollection<R>
+  self: ParallelCollection<R>
 ): Array<
   readonly [
-    RequestResolver.RequestResolver<R, unknown>,
+    RequestResolver.RequestResolver<unknown, R>,
     Array<Request.Entry<unknown>>
   ]
 > => Array.from(self.map) as any
 
 /** @internal */
-export const SequentialCollectionTypeId: RequestBlock.SequentialCollectionTypeId = Symbol.for(
+export const SequentialCollectionTypeId = Symbol.for(
   "@effect/io/RequestBlockSequential"
-) as RequestBlock.SequentialCollectionTypeId
+)
 
 /** @internal */
 const sequentialVariance = {
   _R: (_: never) => _
 }
 
-class SequentialImpl<R> implements RequestBlock.SequentialCollection<R> {
+class SequentialImpl<R> implements SequentialCollection<R> {
   readonly [SequentialCollectionTypeId] = sequentialVariance
   constructor(
     readonly map: HashMap.HashMap<
@@ -449,16 +448,16 @@ class SequentialImpl<R> implements RequestBlock.SequentialCollection<R> {
 /** @internal */
 export const sequentialCollectionMake = <R, A>(
   map: HashMap.HashMap<
-    RequestResolver.RequestResolver<R, A>,
+    RequestResolver.RequestResolver<A, R>,
     Array<Array<Request.Entry<A>>>
   >
-): RequestBlock.SequentialCollection<R> => new SequentialImpl(map)
+): SequentialCollection<R> => new SequentialImpl(map)
 
 /** @internal */
 export const sequentialCollectionCombine = <R, R2>(
-  self: RequestBlock.SequentialCollection<R>,
-  that: RequestBlock.SequentialCollection<R2>
-): RequestBlock.SequentialCollection<R | R2> =>
+  self: SequentialCollection<R>,
+  that: SequentialCollection<R2>
+): SequentialCollection<R | R2> =>
   new SequentialImpl(HashMap.reduceWithIndex(that.map, self.map, (map, value, key) =>
     HashMap.set(
       map,
@@ -473,18 +472,59 @@ export const sequentialCollectionCombine = <R, R2>(
     )))
 
 /** @internal */
-export const sequentialCollectionIsEmpty = <R>(self: RequestBlock.SequentialCollection<R>): boolean =>
-  HashMap.isEmpty(self.map)
+export const sequentialCollectionIsEmpty = <R>(self: SequentialCollection<R>): boolean => HashMap.isEmpty(self.map)
 
 /** @internal */
 export const sequentialCollectionKeys = <R>(
-  self: RequestBlock.SequentialCollection<R>
-): Array<RequestResolver.RequestResolver<R, unknown>> => Array.from(HashMap.keys(self.map)) as any
+  self: SequentialCollection<R>
+): Array<RequestResolver.RequestResolver<unknown, R>> => Array.from(HashMap.keys(self.map)) as any
 
 /** @internal */
-export const sequentialCollectionToChunk = <R>(self: RequestBlock.SequentialCollection<R>): Array<
+export const sequentialCollectionToChunk = <R>(self: SequentialCollection<R>): Array<
   readonly [
-    RequestResolver.RequestResolver<R, unknown>,
+    RequestResolver.RequestResolver<unknown, R>,
     Array<Array<Request.Entry<unknown>>>
   ]
 > => Array.from(self.map) as any
+
+/** @internal */
+export type RequestBlockParallelTypeId = typeof RequestBlockParallelTypeId
+
+/** @internal */
+export interface ParallelCollection<R> extends ParallelCollection.Variance<R> {
+  readonly map: HashMap.HashMap<
+    RequestResolver.RequestResolver<unknown, unknown>,
+    Array<Request.Entry<unknown>>
+  >
+}
+
+/** @internal */
+export declare namespace ParallelCollection {
+  /** @internal */
+  export interface Variance<R> {
+    readonly [RequestBlockParallelTypeId]: {
+      readonly _R: (_: never) => R
+    }
+  }
+}
+
+/** @internal */
+export type SequentialCollectionTypeId = typeof SequentialCollectionTypeId
+
+/** @internal */
+export interface SequentialCollection<R> extends SequentialCollection.Variance<R> {
+  readonly map: HashMap.HashMap<
+    RequestResolver.RequestResolver<unknown, unknown>,
+    Array<Array<Request.Entry<unknown>>>
+  >
+}
+
+/** @internal */
+export declare namespace SequentialCollection {
+  /** @internal */
+  export interface Variance<R> {
+    readonly [SequentialCollectionTypeId]: {
+      readonly _R: (_: never) => R
+    }
+  }
+}

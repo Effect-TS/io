@@ -2,8 +2,6 @@
  * @since 1.0.0
  */
 import type * as Context from "@effect/data/Context"
-import type * as HashMap from "@effect/data/HashMap"
-import type * as List from "@effect/data/List"
 import type { FiberRef } from "@effect/io/FiberRef"
 import * as _RequestBlock from "@effect/io/internal_effect_untraced/blockedRequests"
 import * as core from "@effect/io/internal_effect_untraced/core"
@@ -36,7 +34,7 @@ export declare namespace RequestBlock {
     readonly emptyCase: () => Z
     readonly parCase: (left: Z, right: Z) => Z
     readonly singleCase: (
-      dataSource: RequestResolver.RequestResolver<R, unknown>,
+      dataSource: RequestResolver.RequestResolver<unknown, R>,
       blockedRequest: Request.Entry<unknown>
     ) => Z
     readonly seqCase: (left: Z, right: Z) => Z
@@ -77,7 +75,7 @@ export interface Seq<R> {
  */
 export interface Single<R> {
   readonly _tag: "Single"
-  readonly dataSource: RequestResolver.RequestResolver<R, unknown>
+  readonly dataSource: RequestResolver.RequestResolver<unknown, R>
   readonly blockedRequest: Request.Entry<unknown>
 }
 
@@ -86,7 +84,7 @@ export interface Single<R> {
  * @category constructors
  */
 export const single: <R, A>(
-  dataSource: RequestResolver.RequestResolver<R, A>,
+  dataSource: RequestResolver.RequestResolver<A, R>,
   blockedRequest: Request.Entry<A>
 ) => RequestBlock<R> = _RequestBlock.single
 
@@ -100,17 +98,9 @@ export const empty: RequestBlock<never> = _RequestBlock.empty
  * @since 1.0.0
  * @category constructors
  */
-export const flatten: <R>(
-  self: RequestBlock<R>
-) => List.List<SequentialCollection<R>> = _RequestBlock.flatten
-
-/**
- * @since 1.0.0
- * @category constructors
- */
 export const mapRequestResolvers: <R, A, R2>(
   self: RequestBlock<R>,
-  f: (dataSource: RequestResolver.RequestResolver<R, A>) => RequestResolver.RequestResolver<R2, A>
+  f: (dataSource: RequestResolver.RequestResolver<A, R>) => RequestResolver.RequestResolver<A, R2>
 ) => RequestBlock<R | R2> = _RequestBlock.mapRequestResolvers
 
 /**
@@ -165,219 +155,3 @@ const ContramapContextReducer = <R0, R>(
  */
 export const locally: <R, A>(self: RequestBlock<R>, ref: FiberRef<A>, value: A) => RequestBlock<R> =
   core.requestBlockLocally
-
-/**
- * @since 1.0.0
- * @category symbols
- */
-export const RequestBlockParallelTypeId: unique symbol = _RequestBlock.RequestBlockParallelTypeId
-
-/**
- * @since 1.0.0
- * @category symbols
- */
-export type RequestBlockParallelTypeId = typeof RequestBlockParallelTypeId
-
-/**
- * A `Parallel<R>` maintains a mapping from data sources to requests from those
- * data sources that can be executed in parallel.
- *
- * @since 1.0.0
- * @category models
- */
-export interface ParallelCollection<R> extends ParallelCollection.Variance<R> {
-  readonly map: HashMap.HashMap<
-    RequestResolver.RequestResolver<unknown, unknown>,
-    Array<Request.Entry<unknown>>
-  >
-}
-
-/**
- * @since 1.0.0
- * @category models
- */
-export declare namespace ParallelCollection {
-  /**
-   * @since 1.0.0
-   * @category models
-   */
-  export interface Variance<R> {
-    readonly [RequestBlockParallelTypeId]: {
-      readonly _R: (_: never) => R
-    }
-  }
-}
-
-/**
- * The empty collection of requests.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const parallelCollectionEmpty: <R>() => ParallelCollection<R> = _RequestBlock.parallelCollectionEmpty
-
-/**
- * Constructs a new collection of requests containing a mapping from the
- * specified data source to the specified request.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const parallelCollectionMake: <R, A>(
-  dataSource: RequestResolver.RequestResolver<R, A>,
-  blockedRequest: Request.Entry<A>
-) => ParallelCollection<R> = _RequestBlock.parallelCollectionMake
-
-/**
- * Combines this collection of requests that can be executed in parallel with
- * that collection of requests that can be executed in parallel to return a
- * new collection of requests that can be executed in parallel.
- *
- * @since 1.0.0
- * @category utils
- */
-export const parallelCollectionCombine: <R, R2>(
-  self: ParallelCollection<R>,
-  that: ParallelCollection<R2>
-) => ParallelCollection<R | R2> = _RequestBlock.parallelCollectionCombine
-
-/**
- * Returns `true` if this collection of requests is empty, `false` otherwise.
- *
- * @since 1.0.0
- * @category utils
- */
-export const parallelCollectionIsEmpty: <R>(self: ParallelCollection<R>) => boolean =
-  _RequestBlock.parallelCollectionIsEmpty
-
-/**
- * Returns a collection of the data sources that the requests in this
- * collection are from.
- *
- * @since 1.0.0
- * @category utils
- */
-export const parallelCollectionKeys: <R>(
-  self: ParallelCollection<R>
-) => Array<RequestResolver.RequestResolver<R, unknown>> = _RequestBlock.parallelCollectionKeys
-
-/**
- * Converts this collection of requests that can be executed in parallel to a
- * batch of requests in a collection of requests that must be executed
- * sequentially.
- *
- * @since 1.0.0
- * @category conversions
- */
-export const parallelCollectionToSequentialCollection: <R>(self: ParallelCollection<R>) => SequentialCollection<R> =
-  _RequestBlock.parallelCollectionToSequentialCollection
-
-/**
- * Converts this collection of requests that can be executed in parallel to an
- * `Iterable` containing mappings from data sources to requests from those
- * data sources.
- *
- * @since 1.0.0
- * @category conversions
- */
-export const parallelCollectionToChunk: <R>(
-  self: ParallelCollection<R>
-) => Array<readonly [RequestResolver.RequestResolver<R, unknown>, Array<Request.Entry<unknown>>]> =
-  _RequestBlock.parallelCollectionToChunk
-
-/**
- * @since 1.0.0
- * @category symbols
- */
-export const SequentialCollectionTypeId: unique symbol = _RequestBlock.SequentialCollectionTypeId
-
-/**
- * @since 1.0.0
- * @category symbols
- */
-export type SequentialCollectionTypeId = typeof SequentialCollectionTypeId
-
-/**
- * A `Sequential<R>` maintains a mapping from data sources to batches of
- * requests from those data sources that must be executed sequentially.
- *
- * @since 1.0.0
- * @category models
- */
-export interface SequentialCollection<R> extends SequentialCollection.Variance<R> {
-  readonly map: HashMap.HashMap<
-    RequestResolver.RequestResolver<unknown, unknown>,
-    Array<Array<Request.Entry<unknown>>>
-  >
-}
-
-/**
- * @since 1.0.0
- * @category models
- */
-export declare namespace SequentialCollection {
-  /** @internal */
-  export interface Variance<R> {
-    readonly [SequentialCollectionTypeId]: {
-      readonly _R: (_: never) => R
-    }
-  }
-}
-
-/**
- * Constructs a new mapping from data sources to batches of requests from those
- * data sources that must be executed sequentially.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const sequentialCollectionMake: <R, A>(
-  map: HashMap.HashMap<RequestResolver.RequestResolver<R, A>, Array<Array<Request.Entry<A>>>>
-) => SequentialCollection<R> = _RequestBlock.sequentialCollectionMake
-
-/**
- * Combines this collection of batches of requests that must be executed
- * sequentially with that collection of batches of requests that must be
- * executed sequentially to return a new collection of batches of requests
- * that must be executed sequentially.
- *
- * @since 1.0.0
- * @category utils
- */
-export const sequentialCollectionCombine: <R, R2>(
-  self: SequentialCollection<R>,
-  that: SequentialCollection<R2>
-) => SequentialCollection<R | R2> = _RequestBlock.sequentialCollectionCombine
-
-/**
- * Returns whether this collection of batches of requests is empty.
- *
- * @since 1.0.0
- * @category utils
- */
-export const sequentialCollectionIsEmpty: <R>(self: SequentialCollection<R>) => boolean =
-  _RequestBlock.sequentialCollectionIsEmpty
-
-/**
- * Returns a collection of the data sources that the batches of requests in
- * this collection are from.
- *
- * @since 1.0.0
- * @category utils
- */
-export const sequentialCollectionKeys: <R>(
-  self: SequentialCollection<R>
-) => Array<RequestResolver.RequestResolver<R, unknown>> = _RequestBlock.sequentialCollectionKeys
-
-/**
- * Converts this collection of batches requests that must be executed
- * sequentially to an `Iterable` containing mappings from data sources to
- * batches of requests from those data sources.
- *
- * @since 1.0.0
- * @category conversions
- */
-export const sequentialCollectionToChunk: <R>(
-  self: SequentialCollection<R>
-) => Array<readonly [RequestResolver.RequestResolver<R, unknown>, Array<Array<Request.Entry<unknown>>>]> =
-  _RequestBlock.sequentialCollectionToChunk

@@ -205,11 +205,7 @@ export const makeCache = <R = unknown>(
   cache.make(
     capacity,
     timeToLive,
-    () =>
-      core.map(core.deferredMake(), (handle) => ({
-        listeners: new internal.Listeners(),
-        handle
-      }))
+    () => core.map(core.deferredMake(), (handle) => ({ listeners: new internal.Listeners(), handle }))
   )
 
 /**

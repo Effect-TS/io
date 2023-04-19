@@ -1686,7 +1686,7 @@ const dataSourceVariance = {
 }
 
 /** @internal */
-export class RequestResolverImpl<R, A> implements RequestResolver.RequestResolver<R, A> {
+export class RequestResolverImpl<R, A> implements RequestResolver.RequestResolver<A, R> {
   readonly [RequestResolverTypeId] = dataSourceVariance
   constructor(
     readonly runAll: (
@@ -1704,7 +1704,7 @@ export class RequestResolverImpl<R, A> implements RequestResolver.RequestResolve
       isRequestResolver(that) && Equal.equals(this.target, (that as RequestResolverImpl<any, any>).target) :
       this === that
   }
-  identified(...ids: Array<unknown>): RequestResolver.RequestResolver<R, A> {
+  identified(...ids: Array<unknown>): RequestResolver.RequestResolver<A, R> {
     return new RequestResolverImpl(this.runAll, Chunk.fromIterable(ids))
   }
 }
@@ -1721,19 +1721,19 @@ export const resolverLocally = Debug.untracedDual<
     self: FiberRef.FiberRef<A>,
     value: A
   ) => <R, B extends Request.Request<any, any>>(
-    use: RequestResolver.RequestResolver<R, B>
-  ) => RequestResolver.RequestResolver<R, B>,
+    use: RequestResolver.RequestResolver<B, R>
+  ) => RequestResolver.RequestResolver<B, R>,
   <R, B extends Request.Request<any, any>, A>(
-    use: RequestResolver.RequestResolver<R, B>,
+    use: RequestResolver.RequestResolver<B, R>,
     self: FiberRef.FiberRef<A>,
     value: A
-  ) => RequestResolver.RequestResolver<R, B>
+  ) => RequestResolver.RequestResolver<B, R>
 >(3, (restore) =>
   <R, B extends Request.Request<any, any>, A>(
-    use: RequestResolver.RequestResolver<R, B>,
+    use: RequestResolver.RequestResolver<B, R>,
     self: FiberRef.FiberRef<A>,
     value: A
-  ): RequestResolver.RequestResolver<R, B> =>
+  ): RequestResolver.RequestResolver<B, R> =>
     new RequestResolverImpl<R, B>(
       (requests) =>
         fiberRefLocally(
@@ -1782,7 +1782,7 @@ export const fiberRefLocally: {
       ),
       (res) => {
         if (res._tag === "Blocked") {
-          return blocked(requestBlockLocally(res.i0, self, value), fiberRefLocally(res.i1, self, value))
+          return blocked(res.i0, fiberRefLocally(res.i1, self, value))
         }
         return res
       }

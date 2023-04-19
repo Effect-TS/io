@@ -36,6 +36,8 @@ Added in v1.0.0
 - [symbols](#symbols)
   - [RequestResolverTypeId](#requestresolvertypeid)
   - [RequestResolverTypeId (type alias)](#requestresolvertypeid-type-alias)
+- [utils](#utils)
+  - [provideContextFromEffect](#providecontextfromeffect)
 
 ---
 
@@ -51,13 +53,13 @@ and `after`, where the result of `before` can be used by `after`.
 ```ts
 export declare const around: {
   <R2, A2, R3, _>(before: Effect.Effect<R2, never, A2>, after: (a: A2) => Effect.Effect<R3, never, _>): <R, A>(
-    self: RequestResolver<R, A>
-  ) => RequestResolver<R2 | R3 | R, A>
+    self: RequestResolver<A, R>
+  ) => RequestResolver<A, R2 | R3 | R>
   <R, A, R2, A2, R3, _>(
-    self: RequestResolver<R, A>,
+    self: RequestResolver<A, R>,
     before: Effect.Effect<R2, never, A2>,
     after: (a: A2) => Effect.Effect<R3, never, _>
-  ): RequestResolver<R | R2 | R3, A>
+  ): RequestResolver<A, R | R2 | R3>
 }
 ```
 
@@ -71,8 +73,8 @@ Returns a data source that executes at most `n` requests in parallel.
 
 ```ts
 export declare const batchN: {
-  (n: number): <R, A>(self: RequestResolver<R, A>) => RequestResolver<R, A>
-  <R, A>(self: RequestResolver<R, A>, n: number): RequestResolver<R, A>
+  (n: number): <R, A>(self: RequestResolver<A, R>) => RequestResolver<A, R>
+  <R, A>(self: RequestResolver<A, R>, n: number): RequestResolver<A, R>
 }
 ```
 
@@ -89,9 +91,9 @@ data source or that data source can execute.
 ```ts
 export declare const eitherWith: {
   <A extends Request.Request<any, any>, R2, B extends Request.Request<any, any>, C extends Request.Request<any, any>>(
-    that: RequestResolver<R2, B>,
+    that: RequestResolver<B, R2>,
     f: (_: Request.Entry<C>) => Either.Either<Request.Entry<A>, Request.Entry<B>>
-  ): <R>(self: RequestResolver<R, A>) => RequestResolver<R2 | R, C>
+  ): <R>(self: RequestResolver<A, R>) => RequestResolver<C, R2 | R>
   <
     R,
     A extends Request.Request<any, any>,
@@ -99,10 +101,10 @@ export declare const eitherWith: {
     B extends Request.Request<any, any>,
     C extends Request.Request<any, any>
   >(
-    self: RequestResolver<R, A>,
-    that: RequestResolver<R2, B>,
+    self: RequestResolver<A, R>,
+    that: RequestResolver<B, R2>,
     f: (_: Request.Entry<C>) => Either.Either<Request.Entry<A>, Request.Entry<B>>
-  ): RequestResolver<R | R2, C>
+  ): RequestResolver<C, R | R2>
 }
 ```
 
@@ -117,11 +119,11 @@ Returns a new data source with a localized FiberRef
 ```ts
 export declare const locally: {
   <A>(self: FiberRef<A>, value: A): <R, B extends Request.Request<any, any>>(
-    use: RequestResolver<R, B>
-  ) => RequestResolver<R, B>
-  <R, B extends Request.Request<any, any>, A>(use: RequestResolver<R, B>, self: FiberRef<A>, value: A): RequestResolver<
-    R,
-    B
+    use: RequestResolver<B, R>
+  ) => RequestResolver<B, R>
+  <R, B extends Request.Request<any, any>, A>(use: RequestResolver<B, R>, self: FiberRef<A>, value: A): RequestResolver<
+    B,
+    R
   >
 }
 ```
@@ -138,13 +140,13 @@ source to complete and safely interrupting the loser.
 
 ```ts
 export declare const race: {
-  <R2, A2 extends Request.Request<any, any>>(that: RequestResolver<R2, A2>): <R, A extends Request.Request<any, any>>(
-    self: RequestResolver<R, A>
-  ) => RequestResolver<R2 | R, A2 | A>
+  <R2, A2 extends Request.Request<any, any>>(that: RequestResolver<A2, R2>): <R, A extends Request.Request<any, any>>(
+    self: RequestResolver<A, R>
+  ) => RequestResolver<A2 | A, R2 | R>
   <R, A extends Request.Request<any, any>, R2, A2 extends Request.Request<any, any>>(
-    self: RequestResolver<R, A>,
-    that: RequestResolver<R2, A2>
-  ): RequestResolver<R | R2, A | A2>
+    self: RequestResolver<A, R>,
+    that: RequestResolver<A2, R2>
+  ): RequestResolver<A | A2, R | R2>
 }
 ```
 
@@ -159,9 +161,9 @@ Constructs a data source from a pure function.
 **Signature**
 
 ```ts
-export declare const fromFunction: <A extends Request.Request<never, any>>() => (
+export declare const fromFunction: <A extends Request.Request<never, any>>(
   f: (request: A) => Request.Request.Success<A>
-) => RequestResolver<never, A>
+) => RequestResolver<A, never>
 ```
 
 Added in v1.0.0
@@ -175,9 +177,9 @@ list must correspond to the item at the same index in the request list.
 **Signature**
 
 ```ts
-export declare const fromFunctionBatched: <A extends Request.Request<never, any>>() => (
+export declare const fromFunctionBatched: <A extends Request.Request<never, any>>(
   f: (chunk: A[]) => Request.Request.Success<A>[]
-) => RequestResolver<never, A>
+) => RequestResolver<A, never>
 ```
 
 Added in v1.0.0
@@ -189,9 +191,9 @@ Constructs a data source from an effectual function.
 **Signature**
 
 ```ts
-export declare const fromFunctionEffect: <A extends Request.Request<any, any>>() => <R>(
+export declare const fromFunctionEffect: <R, A extends Request.Request<any, any>>(
   f: (a: A) => Effect.Effect<R, Request.Request.Error<A>, Request.Request.Success<A>>
-) => RequestResolver<R, A>
+) => RequestResolver<A, R>
 ```
 
 Added in v1.0.0
@@ -204,9 +206,7 @@ requests.
 **Signature**
 
 ```ts
-export declare const make: <A extends Request.Request<any, any>>() => <R>(
-  runAll: (requests: A[][]) => Effect.Effect<R, never, void>
-) => RequestResolver<R, A>
+export declare const make: <R, A>(runAll: (requests: A[][]) => Effect.Effect<R, never, void>) => RequestResolver<A, R>
 ```
 
 Added in v1.0.0
@@ -219,9 +219,9 @@ and returning a `RequestCompletionMap`.
 **Signature**
 
 ```ts
-export declare const makeBatched: <A extends Request.Request<any, any>>() => <R>(
+export declare const makeBatched: <R, A extends Request.Request<any, any>>(
   run: (requests: A[]) => Effect.Effect<R, never, void>
-) => RequestResolver<R, A>
+) => RequestResolver<A, R>
 ```
 
 Added in v1.0.0
@@ -234,9 +234,9 @@ requests.
 **Signature**
 
 ```ts
-export declare const makeWithEntry: <A extends Request.Request<any, any>>() => <R>(
+export declare const makeWithEntry: <R, A>(
   runAll: (requests: Request.Entry<A>[][]) => Effect.Effect<R, never, void>
-) => RequestResolver<R, A>
+) => RequestResolver<A, R>
 ```
 
 Added in v1.0.0
@@ -264,12 +264,12 @@ Provides this data source with part of its required context.
 ```ts
 export declare const contramapContext: {
   <R0, R>(f: (context: Context.Context<R0>) => Context.Context<R>): <A extends Request.Request<any, any>>(
-    self: RequestResolver<R, A>
-  ) => RequestResolver<R0, A>
+    self: RequestResolver<A, R>
+  ) => RequestResolver<A, R0>
   <R, A extends Request.Request<any, any>, R0>(
-    self: RequestResolver<R, A>,
+    self: RequestResolver<A, R>,
     f: (context: Context.Context<R0>) => Context.Context<R>
-  ): RequestResolver<R0, A>
+  ): RequestResolver<A, R0>
 }
 ```
 
@@ -284,11 +284,11 @@ Provides this data source with its required context.
 ```ts
 export declare const provideContext: {
   <R>(context: Context.Context<R>): <A extends Request.Request<any, any>>(
-    self: RequestResolver<R, A>
-  ) => RequestResolver<never, A>
-  <R, A extends Request.Request<any, any>>(self: RequestResolver<R, A>, context: Context.Context<R>): RequestResolver<
-    never,
-    A
+    self: RequestResolver<A, R>
+  ) => RequestResolver<A, never>
+  <R, A extends Request.Request<any, any>>(self: RequestResolver<A, R>, context: Context.Context<R>): RequestResolver<
+    A,
+    never
   >
 }
 ```
@@ -299,7 +299,7 @@ Added in v1.0.0
 
 ## RequestResolver (interface)
 
-A `RequestResolver<R, A>` requires an environment `R` and is capable of executing
+A `RequestResolver<A, R>` requires an environment `R` and is capable of executing
 requests of type `A`.
 
 Data sources must implement the method `runAll` which takes a collection of
@@ -322,7 +322,7 @@ will cause a query to die with a `QueryFailure` when run.
 **Signature**
 
 ```ts
-export interface RequestResolver<R, A> extends Equal.Equal {
+export interface RequestResolver<A, R = never> extends Equal.Equal {
   /**
    * Execute a collection of requests. The outer `Chunk` represents batches
    * of requests that must be performed sequentially. The inner `Chunk`
@@ -333,7 +333,7 @@ export interface RequestResolver<R, A> extends Equal.Equal {
   /**
    * Identify the data source using the specific identifier
    */
-  identified(...identifiers: Array<unknown>): RequestResolver<R, A>
+  identified(...identifiers: Array<unknown>): RequestResolver<A, R>
 }
 ```
 
@@ -371,6 +371,20 @@ Added in v1.0.0
 
 ```ts
 export type RequestResolverTypeId = typeof RequestResolverTypeId
+```
+
+Added in v1.0.0
+
+# utils
+
+## provideContextFromEffect
+
+**Signature**
+
+```ts
+export declare const provideContextFromEffect: <R, A extends Request.Request<any, any>>(
+  self: RequestResolver<A, R>
+) => Effect.Effect<R, never, RequestResolver<A, never>>
 ```
 
 Added in v1.0.0
