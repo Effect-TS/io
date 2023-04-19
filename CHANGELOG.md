@@ -1,5 +1,13 @@
 # @effect/io
 
+## 0.24.0
+
+### Minor Changes
+
+- [#382](https://github.com/Effect-TS/io/pull/382) [`5a17436`](https://github.com/Effect-TS/io/commit/5a174360e7e622c83764ace15f01bda318d35509) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Add RequestResolver.contextFromServices
+  Rename RequestResolver.provideFromEffect to RequestResolver.contextFromEffect
+  Remove Layer.resolver
+
 ## 0.23.0
 
 ### Minor Changes
