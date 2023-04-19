@@ -61,24 +61,12 @@ const delay = <R, E, A>(self: Effect.Effect<R, E, A>) =>
     () => self
   )
 
-const counted = <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.tap(self, () => Effect.map(Counter, (c) => c.count++))
+export interface UserResolver {
+  readonly _: unique symbol
+}
+export const UserResolver = Context.Tag<UserResolver, Resolver.RequestResolver<UserRequest>>()
 
-export const UserResolver = Resolver.makeBatched<UserRequest>()((requests) =>
-  counted(Effect.forEachDiscard(requests, (request) => {
-    switch (request._tag) {
-      case "GetAllIds": {
-        return delay(Request.complete(request, Exit.succeed(userIds)))
-      }
-      case "GetNameById": {
-        if (userNames.has(request.id)) {
-          const userName = userNames.get(request.id)!
-          return delay(Request.complete(request, Exit.succeed(userName)))
-        }
-        return delay(Request.completeEffect(request, Exit.fail("Not Found")))
-      }
-    }
-  }))
-)
+const counted = <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.tap(self, () => Effect.map(Counter, (c) => c.count++))
 
 export const getAllUserIds = Effect.request(
   GetAllIds({}),
@@ -112,9 +100,42 @@ export const print = (request: UserRequest): string => {
   }
 }
 
-const provideEnv = Effect.provideSomeLayer(
-  Layer.mergeAll(UserCacheLive, Layer.sync(Counter, () => ({ count: 0 })))
+const processRequest = (request: UserRequest): Effect.Effect<never, never, void> => {
+  switch (request._tag) {
+    case "GetAllIds": {
+      return Request.complete(request, Exit.succeed(userIds))
+    }
+    case "GetNameById": {
+      if (userNames.has(request.id)) {
+        const userName = userNames.get(request.id)!
+        return Request.complete(request, Exit.succeed(userName))
+      }
+      return Request.completeEffect(request, Exit.fail("Not Found"))
+    }
+  }
+}
+
+const UserResolverLive = Layer.resolver(
+  UserResolver,
+  Resolver.batchN(15)(
+    Resolver.makeBatched((requests) =>
+      counted(
+        Effect.forEachDiscard(requests, (request) =>
+          delay(
+            processRequest(request)
+          ))
+      )
+    )
+  )
 )
+
+const CounterLive = Layer.sync(Counter, () => ({ count: 0 }))
+
+const provideEnv = Effect.provideSomeLayer(pipe(
+  CounterLive,
+  Layer.merge(UserCacheLive),
+  Layer.provideMerge(UserResolverLive)
+))
 
 describe.concurrent("Effect", () => {
   it.effect("requests are executed correctly", () =>
@@ -122,7 +143,7 @@ describe.concurrent("Effect", () => {
       Effect.gen(function*($) {
         const names = yield* $(getAllUserNames)
         const count = yield* $(Counter)
-        expect(count.count).toEqual(2)
+        expect(count.count).toEqual(3)
         expect(names.length).toBeGreaterThan(2)
         expect(names).toEqual(userIds.map((id) => userNames.get(id)))
       })
@@ -135,7 +156,7 @@ describe.concurrent("Effect", () => {
           Effect.withRequestBatching("on")
         )
         const count = yield* $(Counter)
-        expect(count.count).toEqual(2)
+        expect(count.count).toEqual(3)
         expect(names[0].length).toBeGreaterThan(2)
         expect(names[0]).toEqual(userIds.map((id) => userNames.get(id)))
         expect(names[0]).toEqual(names[1])
@@ -146,7 +167,7 @@ describe.concurrent("Effect", () => {
       Effect.gen(function*($) {
         const names = yield* $(getAllUserNames, Effect.withParallelism(5))
         const count = yield* $(Counter)
-        expect(count.count).toEqual(2)
+        expect(count.count).toEqual(3)
         expect(names.length).toBeGreaterThan(2)
         expect(names).toEqual(userIds.map((id) => userNames.get(id)))
       })

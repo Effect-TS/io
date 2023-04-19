@@ -61,7 +61,7 @@ import type * as Metric from "@effect/io/Metric"
 import type * as MetricLabel from "@effect/io/Metric/Label"
 import type * as Random from "@effect/io/Random"
 import type * as Ref from "@effect/io/Ref"
-import type { Cache, Request } from "@effect/io/Request"
+import type * as Request from "@effect/io/Request"
 import type { RequestBlock } from "@effect/io/RequestBlock"
 import type { RequestResolver } from "@effect/io/RequestResolver"
 import type * as Runtime from "@effect/io/Runtime"
@@ -5953,40 +5953,26 @@ export const flatMapStep: <R, E, A, R1, E1, B>(
  * @category requests
  */
 export const request: {
-  <R, A extends Request<any, any>, A2 extends A>(
+  <
+    A extends Request.Request<any, any>,
+    Ds extends RequestResolver<never, A> | Effect<any, any, RequestResolver<never, A>>,
+    C extends [
+      cache:
+        | Request.Cache<any>
+        | Option.Option<Request.Cache<any>>
+        | Effect<any, any, Request.Cache<any>>
+        | Effect<any, any, Option.Option<Request.Cache<any>>>
+    ] | []
+  >(
     request: A,
-    dataSource: RequestResolver<R, A2>
+    dataSource: Ds,
+    ...rest: C
   ): Effect<
-    R,
-    Request.Error<A>,
-    Request.Success<A>
-  >
-  <R, A extends Request<any, any>, A2 extends A, A3 extends A>(
-    request: A,
-    dataSource: RequestResolver<R, A2>,
-    cache: Cache<A3>
-  ): Effect<
-    R,
-    Request.Error<A>,
-    Request.Success<A>
-  >
-  <R, R1, E1, A extends Request<any, any>, A2 extends A, A3 extends A>(
-    request: A,
-    dataSource: RequestResolver<R, A2>,
-    cache: Effect<R1, E1, Cache<A3>>
-  ): Effect<
-    R | R1,
-    Request.Error<A> | E1,
-    Request.Success<A>
-  >
-  <R, R1, E1, A extends Request<any, any>, A2 extends A, A3 extends A>(
-    request: A,
-    dataSource: RequestResolver<R, A2>,
-    cache: Effect<R1, E1, Option.Option<Cache<A3>>>
-  ): Effect<
-    R | R1,
-    Request.Error<A> | E1,
-    Request.Success<A>
+    | never
+    | ([Ds] extends [Effect<any, any, any>] ? Effect.Context<Ds> : never)
+    | ([C] extends [[Effect<any, any, any>]] ? Effect.Context<C[0]> : never),
+    Request.Request.Error<A>,
+    Request.Request.Success<A>
   >
 } = query.fromRequest as any
 
