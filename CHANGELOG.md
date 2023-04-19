@@ -1,5 +1,17 @@
 # @effect/io
 
+## 0.23.0
+
+### Minor Changes
+
+- [#378](https://github.com/Effect-TS/io/pull/378) [`6ad3e58`](https://github.com/Effect-TS/io/commit/6ad3e58b05a753a7472a95282613d9f707406b72) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Add Layer locally variants, move FiberRef.locally to Effect.
+
+- [#381](https://github.com/Effect-TS/io/pull/381) [`8641a1f`](https://github.com/Effect-TS/io/commit/8641a1f0b54e5d3e2df2887d4ae0d013fc3ce312) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Detach RequestResolver context from call site
+
+### Patch Changes
+
+- [#380](https://github.com/Effect-TS/io/pull/380) [`f89c25d`](https://github.com/Effect-TS/io/commit/f89c25d3e7266d3b1f8d0f91bcecc3b580b8fb86) Thanks [@tim-smart](https://github.com/tim-smart)! - fix tryCatchPromiseInterrupt interruption
+
 ## 0.22.5
 
 ### Patch Changes
