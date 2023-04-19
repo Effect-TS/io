@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.24.1
+
+### Patch Changes
+
+- [#384](https://github.com/Effect-TS/io/pull/384) [`8efd5e2`](https://github.com/Effect-TS/io/commit/8efd5e2d107967cd30be48603264f7f12fad0d3e) Thanks [@tim-smart](https://github.com/tim-smart)! - fix Effect.request type signature
+
 ## 0.24.0
 
 ### Minor Changes
