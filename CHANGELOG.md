@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.24.4
+
+### Patch Changes
+
+- [#391](https://github.com/Effect-TS/io/pull/391) [`8d3ade2`](https://github.com/Effect-TS/io/commit/8d3ade2f47467cdbe29bb589332295339ee1ae1d) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Make Effect.all and Effect.allPar pipeable
+
 ## 0.24.3
 
 ### Patch Changes
