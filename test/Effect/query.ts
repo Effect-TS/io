@@ -76,10 +76,15 @@ export const getAllUserIds = Effect.request(
 export const interrupts = FiberRef.unsafeMake({ interrupts: 0 })
 
 export const getUserNameById = (id: number) =>
-  Effect.request(
-    GetNameById({ id }),
-    UserResolver,
-    Effect.serviceOption(UserCache)
+  Effect.acquireUseRelease(
+    Effect.unit(),
+    () =>
+      Effect.request(
+        GetNameById({ id }),
+        UserResolver,
+        Effect.serviceOption(UserCache)
+      ),
+    () => Effect.unit()
   )
 
 export const getAllUserNames = pipe(
