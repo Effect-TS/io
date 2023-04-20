@@ -374,34 +374,43 @@ export const acquireUseRelease = Debug.dualWithTrace<
   ) => Effect.Effect<R | R2 | R3, E | E2, A2>
 >(3, (trace, restoreTracing) =>
   (acquire, use, release) =>
-    uninterruptibleMask((restore) =>
-      pipe(
-        acquire,
-        flatMap((a) =>
-          pipe(
-            suspend(() => restore(restoreTracing(use)(a))),
-            exit,
-            flatMap((exit) =>
-              pipe(
-                suspend(() => restoreTracing(release)(a, exit)),
-                matchCauseEffect(
-                  (cause) => {
-                    switch (exit._tag) {
-                      case OpCodes.OP_FAILURE: {
-                        return failCause(internalCause.parallel(exit.i0, cause))
+    flatMap(
+      uninterruptibleMask((restore) =>
+        step(pipe(
+          acquire,
+          flatMap((a) =>
+            pipe(
+              suspend(() => restore(restoreTracing(use)(a))),
+              exit,
+              flatMap((exit) =>
+                pipe(
+                  suspend(() => restoreTracing(release)(a, exit)),
+                  matchCauseEffect(
+                    (cause) => {
+                      switch (exit._tag) {
+                        case OpCodes.OP_FAILURE: {
+                          return failCause(internalCause.parallel(exit.i0, cause))
+                        }
+                        case OpCodes.OP_SUCCESS: {
+                          return failCause(cause)
+                        }
                       }
-                      case OpCodes.OP_SUCCESS: {
-                        return failCause(cause)
-                      }
-                    }
-                  },
-                  () => exit
+                    },
+                    () => exit
+                  )
                 )
               )
             )
           )
-        )
-      )
+        ))
+      ),
+      (exitOrBlocked) => {
+        if (exitOrBlocked._tag === "Blocked") {
+          return blocked(exitOrBlocked.i0, uninterruptible(exitOrBlocked.i1))
+        } else {
+          return exitOrBlocked
+        }
+      }
     ).traced(trace))
 
 /* @internal */
@@ -424,10 +433,7 @@ export const async = Debug.methodWithTrace((trace) =>
     const effect = new EffectPrimitive(OpCodes.OP_ASYNC) as any
     effect.i0 = register
     effect.i1 = blockingOn
-    if (trace) {
-      return effect.traced(trace)
-    }
-    return effect
+    return effect.traced(trace)
   }
 )
 
@@ -492,10 +498,7 @@ export const catchAllCause = Debug.dualWithTrace<
     const effect = new EffectPrimitive(OpCodes.OP_ON_FAILURE) as any
     effect.i0 = self
     effect.i1 = restore(f)
-    if (trace) {
-      return effect.traced(trace)
-    }
-    return effect
+    return effect.traced(trace)
   })
 
 /* @internal */
@@ -628,10 +631,7 @@ export const failCause = Debug.methodWithTrace((trace) =>
   <E>(cause: Cause.Cause<E>): Effect.Effect<never, E, never> => {
     const effect = new EffectPrimitiveFailure(OpCodes.OP_FAILURE) as any
     effect.i0 = cause
-    if (trace) {
-      return effect.traced(trace)
-    }
-    return effect
+    return effect.traced(trace)
   }
 )
 
@@ -669,10 +669,7 @@ export const flatMap = Debug.dualWithTrace<
     const effect = new EffectPrimitive(OpCodes.OP_ON_SUCCESS) as any
     effect.i0 = self
     effect.i1 = restore(f)
-    if (trace) {
-      return effect.traced(trace)
-    }
-    return effect
+    return effect.traced(trace)
   })
 
 /* @internal */
@@ -681,10 +678,7 @@ export const step = Debug.methodWithTrace((trace) =>
     const effect = new EffectPrimitive("OnStep") as any
     effect.i0 = self
     effect.i1 = exitSucceed
-    if (trace) {
-      return effect.traced(trace)
-    }
-    return effect
+    return effect.traced(trace)
   }
 )
 
@@ -697,10 +691,7 @@ export const flatMapStep = Debug.methodWithTrace((trace) =>
     const effect = new EffectPrimitive("OnStep") as any
     effect.i0 = self
     effect.i1 = f
-    if (trace) {
-      return effect.traced(trace)
-    }
-    return effect
+    return effect.traced(trace)
   }
 )
 
@@ -753,10 +744,7 @@ export const matchCauseEffect = Debug.dualWithTrace<
     effect.i0 = self
     effect.i1 = restore(onFailure)
     effect.i2 = restore(onSuccess)
-    if (trace) {
-      return effect.traced(trace)
-    }
-    return effect
+    return effect.traced(trace)
   })
 
 /* @internal */
@@ -874,11 +862,15 @@ export const interruptible = Debug.methodWithTrace((trace) =>
   <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
     const effect = new EffectPrimitive(OpCodes.OP_UPDATE_RUNTIME_FLAGS) as any
     effect.i0 = RuntimeFlagsPatch.enable(_runtimeFlags.Interruption)
-    effect.i1 = () => self
-    if (trace) {
-      return effect.traced(trace)
-    }
-    return effect
+    effect.i1 = () => step(self)
+    // @ts-expect-error
+    return flatMap(effect, (orBlock: any) => {
+      if (orBlock._tag === "Blocked") {
+        return blocked(orBlock.i0, interruptible(orBlock.i1))
+      } else {
+        return orBlock
+      }
+    }).traced(trace)
   }
 )
 
@@ -893,10 +885,7 @@ export const interruptibleMask = Debug.methodWithTrace((trace, restore) =>
       _runtimeFlags.interruption(oldFlags)
         ? restore(f)(interruptible)
         : restore(f)(uninterruptible)
-    if (trace) {
-      return effect.traced(trace)
-    }
-    return effect
+    return effect.traced(trace)
   }
 )
 
@@ -1131,10 +1120,7 @@ export const succeed = Debug.methodWithTrace((trace) =>
   <A>(value: A): Effect.Effect<never, never, A> => {
     const effect = new EffectPrimitiveSuccess(OpCodes.OP_SUCCESS) as any
     effect.i0 = value
-    if (trace) {
-      return effect.traced(trace)
-    }
-    return effect
+    return effect.traced(trace)
   }
 )
 
@@ -1154,10 +1140,7 @@ export const sync = Debug.methodWithTrace((trace, restore) =>
   <A>(evaluate: LazyArg<A>): Effect.Effect<never, never, A> => {
     const effect = new EffectPrimitive(OpCodes.OP_SYNC) as any
     effect.i0 = restore(evaluate)
-    if (trace) {
-      return effect.traced(trace)
-    }
-    return effect
+    return effect.traced(trace)
   }
 )
 
@@ -1215,16 +1198,21 @@ export const attemptOrElse = Debug.dualWithTrace<
     ).traced(trace))
 
 /* @internal */
-export const uninterruptible = Debug.methodWithTrace((trace) =>
-  <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-    const effect = new EffectPrimitive(OpCodes.OP_UPDATE_RUNTIME_FLAGS) as any
-    effect.i0 = RuntimeFlagsPatch.disable(_runtimeFlags.Interruption)
-    effect.i1 = () => self
-    if (trace) {
-      return effect.traced(trace)
+export const uninterruptible: <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A> = Debug.methodWithTrace(
+  (trace) =>
+    <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
+      const effect = new EffectPrimitive(OpCodes.OP_UPDATE_RUNTIME_FLAGS) as any
+      effect.i0 = RuntimeFlagsPatch.disable(_runtimeFlags.Interruption)
+      effect.i1 = () => step(self)
+      // @ts-expect-error
+      return flatMap(effect, (orBlock: any) => {
+        if (orBlock._tag === "Blocked") {
+          return blocked(orBlock.i0, uninterruptible(orBlock.i1))
+        } else {
+          return orBlock
+        }
+      }).traced(trace)
     }
-    return effect
-  }
 )
 
 /* @internal */
@@ -1238,10 +1226,7 @@ export const uninterruptibleMask = Debug.methodWithTrace((trace, restore) =>
       _runtimeFlags.interruption(oldFlags)
         ? restore(f)(interruptible)
         : restore(f)(uninterruptible)
-    if (trace) {
-      return effect.traced(trace)
-    }
-    return effect
+    return effect.traced(trace)
   }
 )
 
@@ -1256,10 +1241,7 @@ export const updateRuntimeFlags = Debug.methodWithTrace((trace) =>
     const effect = new EffectPrimitive(OpCodes.OP_UPDATE_RUNTIME_FLAGS) as any
     effect.i0 = patch
     effect.i1 = void 0
-    if (trace) {
-      return effect.traced(trace)
-    }
-    return effect
+    return effect.traced(trace)
   }
 )
 
@@ -1297,10 +1279,7 @@ export const whileLoop = Debug.methodWithTrace((trace, restore) =>
     effect.i0 = restore(check)
     effect.i1 = restore(body)
     effect.i2 = restore(process)
-    if (trace) {
-      return effect.traced(trace)
-    }
-    return effect
+    return effect.traced(trace)
   }
 )
 
@@ -1311,10 +1290,7 @@ export const withFiberRuntime = Debug.methodWithTrace((trace, restore) =>
   ): Effect.Effect<R, E, A> => {
     const effect = new EffectPrimitive(OpCodes.OP_WITH_RUNTIME) as any
     effect.i0 = restore(withRuntime)
-    if (trace) {
-      return effect.traced(trace)
-    }
-    return effect
+    return effect.traced(trace)
   }
 )
 
@@ -1345,20 +1321,14 @@ export const withRuntimeFlags = Debug.dualWithTrace<
     const effect = new EffectPrimitive(OpCodes.OP_UPDATE_RUNTIME_FLAGS) as any
     effect.i0 = update
     effect.i1 = () => self
-    if (trace) {
-      return effect.traced(trace)
-    }
-    return effect
+    return effect.traced(trace)
   })
 
 /* @internal */
 export const yieldNow = Debug.methodWithTrace((trace) =>
   (): Effect.Effect<never, never, void> => {
     const effect = new EffectPrimitive(OpCodes.OP_YIELD) as any
-    if (trace) {
-      return effect.traced(trace)
-    }
-    return effect
+    return effect.traced(trace)
   }
 )
 
