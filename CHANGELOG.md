@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.24.3
+
+### Patch Changes
+
+- [`e67c735`](https://github.com/Effect-TS/io/commit/e67c7354279c4758c54130120cfea06ee459276d) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Support batching in acquireUseRelease
+
 ## 0.24.2
 
 ### Patch Changes
