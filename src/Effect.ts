@@ -4843,16 +4843,6 @@ export const all: {
     T[number] extends never ? []
       : { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
   >
-  <T extends Iterable<Effect<any, any, any>>>(
-    args: T
-  ): Effect<
-    [T] extends [Iterable<{ [EffectTypeId]: { _R: (_: never) => infer R } }>] ? R
-      : never,
-    [T] extends [Iterable<{ [EffectTypeId]: { _E: (_: never) => infer E } }>] ? E
-      : never,
-    [T] extends [Iterable<{ [EffectTypeId]: { _A: (_: never) => infer A } }>] ? Array<A>
-      : never
-  >
   <T extends Readonly<{ [K: string]: Effect<any, any, any> }>>(
     args: T
   ): Effect<
@@ -4863,6 +4853,16 @@ export const all: {
       : [T[keyof T]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
       : never,
     { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
+  >
+  <T extends Iterable<Effect<any, any, any>>>(
+    args: T
+  ): Effect<
+    [T] extends [Iterable<{ [EffectTypeId]: { _R: (_: never) => infer R } }>] ? R
+      : never,
+    [T] extends [Iterable<{ [EffectTypeId]: { _E: (_: never) => infer E } }>] ? E
+      : never,
+    [T] extends [Iterable<{ [EffectTypeId]: { _A: (_: never) => infer A } }>] ? Array<A>
+      : never
   >
 } = effect.all
 
@@ -4903,16 +4903,6 @@ export const allPar: {
     T[number] extends never ? []
       : { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
   >
-  <T extends Iterable<Effect<any, any, any>>>(
-    args: T
-  ): Effect<
-    [T] extends [Iterable<{ [EffectTypeId]: { _R: (_: never) => infer R } }>] ? R
-      : never,
-    [T] extends [Iterable<{ [EffectTypeId]: { _E: (_: never) => infer E } }>] ? E
-      : never,
-    [T] extends [Iterable<{ [EffectTypeId]: { _A: (_: never) => infer A } }>] ? Array<A>
-      : never
-  >
   <T extends Readonly<{ [K: string]: Effect<any, any, any> }>>(
     args: T
   ): Effect<
@@ -4923,6 +4913,16 @@ export const allPar: {
       : [T[keyof T]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
       : never,
     { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
+  >
+  <T extends Iterable<Effect<any, any, any>>>(
+    args: T
+  ): Effect<
+    [T] extends [Iterable<{ [EffectTypeId]: { _R: (_: never) => infer R } }>] ? R
+      : never,
+    [T] extends [Iterable<{ [EffectTypeId]: { _E: (_: never) => infer E } }>] ? E
+      : never,
+    [T] extends [Iterable<{ [EffectTypeId]: { _A: (_: never) => infer A } }>] ? Array<A>
+      : never
   >
 } = fiberRuntime.allPar
 
