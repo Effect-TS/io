@@ -1,5 +1,6 @@
 import * as Chunk from "@effect/data/Chunk"
 import * as Either from "@effect/data/Either"
+import { pipe } from "@effect/data/Function"
 import * as Effect from "@effect/io/Effect"
 import * as it from "@effect/io/test/utils/extend"
 import { describe } from "vitest"
@@ -40,6 +41,12 @@ describe.concurrent("Effect", () => {
         const x = yield* $(y)
         assert.deepEqual(x, [1, 2, 3])
       }))
+    it.effect("should work with an array argument piped", () =>
+      Effect.gen(function*($) {
+        const y = pipe([0, 1, 2].map((n) => Effect.succeed(n + 1)), Effect.all)
+        const x = yield* $(y)
+        assert.deepEqual(x, [1, 2, 3])
+      }))
     it.effect("should work with one record argument", () =>
       Effect.gen(function*($) {
         const { a, b } = yield* $(Effect.all({ a: Effect.succeed(0), b: Effect.succeed(1) }))
@@ -64,6 +71,12 @@ describe.concurrent("Effect", () => {
         const [a, b] = yield* $(Effect.allPar([Effect.succeed(0), Effect.succeed(1)]))
         assert.strictEqual(a, 0)
         assert.strictEqual(b, 1)
+      }))
+    it.effect("should work with an array argument piped", () =>
+      Effect.gen(function*($) {
+        const y = pipe([0, 1, 2].map((n) => Effect.succeed(n + 1)), Effect.allPar)
+        const x = yield* $(y)
+        assert.deepEqual(x, [1, 2, 3])
       }))
     it.effect("should work with one empty array argument", () =>
       Effect.gen(function*($) {

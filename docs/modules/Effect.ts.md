@@ -866,11 +866,6 @@ export declare const all: {
       : never,
     T[number] extends never ? [] : { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
   >
-  <T extends Iterable<Effect<any, any, any>>>(args: T): Effect<
-    [T] extends [Iterable<{ [EffectTypeId]: { _R: (_: never) => infer R } }>] ? R : never,
-    [T] extends [Iterable<{ [EffectTypeId]: { _E: (_: never) => infer E } }>] ? E : never,
-    [T] extends [Iterable<{ [EffectTypeId]: { _A: (_: never) => infer A } }>] ? A[] : never
-  >
   <T extends Readonly<{ [K: string]: Effect<any, any, any> }>>(args: T): Effect<
     keyof T extends never
       ? never
@@ -883,6 +878,11 @@ export declare const all: {
       ? E
       : never,
     { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
+  >
+  <T extends Iterable<Effect<any, any, any>>>(args: T): Effect<
+    [T] extends [Iterable<{ [EffectTypeId]: { _R: (_: never) => infer R } }>] ? R : never,
+    [T] extends [Iterable<{ [EffectTypeId]: { _E: (_: never) => infer E } }>] ? E : never,
+    [T] extends [Iterable<{ [EffectTypeId]: { _A: (_: never) => infer A } }>] ? A[] : never
   >
 }
 ```
@@ -970,11 +970,6 @@ export declare const allPar: {
       : never,
     T[number] extends never ? [] : { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
   >
-  <T extends Iterable<Effect<any, any, any>>>(args: T): Effect<
-    [T] extends [Iterable<{ [EffectTypeId]: { _R: (_: never) => infer R } }>] ? R : never,
-    [T] extends [Iterable<{ [EffectTypeId]: { _E: (_: never) => infer E } }>] ? E : never,
-    [T] extends [Iterable<{ [EffectTypeId]: { _A: (_: never) => infer A } }>] ? A[] : never
-  >
   <T extends Readonly<{ [K: string]: Effect<any, any, any> }>>(args: T): Effect<
     keyof T extends never
       ? never
@@ -987,6 +982,11 @@ export declare const allPar: {
       ? E
       : never,
     { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
+  >
+  <T extends Iterable<Effect<any, any, any>>>(args: T): Effect<
+    [T] extends [Iterable<{ [EffectTypeId]: { _R: (_: never) => infer R } }>] ? R : never,
+    [T] extends [Iterable<{ [EffectTypeId]: { _E: (_: never) => infer E } }>] ? E : never,
+    [T] extends [Iterable<{ [EffectTypeId]: { _A: (_: never) => infer A } }>] ? A[] : never
   >
 }
 ```
