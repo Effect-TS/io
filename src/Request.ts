@@ -187,8 +187,8 @@ export interface Listeners {
  * @category models
  * @since 1.0.0
  */
-export interface Cache<R = unknown> extends
-  _Cache.ConsumerCache<R, never, {
+export interface Cache extends
+  _Cache.ConsumerCache<Request<any, any>, never, {
     listeners: Listeners
     handle: Deferred<unknown, unknown>
   }>
@@ -198,10 +198,10 @@ export interface Cache<R = unknown> extends
  * @since 1.0.0
  * @category models
  */
-export const makeCache = <R = unknown>(
+export const makeCache = (
   capacity: number,
   timeToLive: Duration
-): Effect.Effect<never, never, Cache<R>> =>
+): Effect.Effect<never, never, Cache> =>
   cache.make(
     capacity,
     timeToLive,

@@ -5995,22 +5995,12 @@ export const flatMapStep: <R, E, A, R1, E1, B>(
 export const request: {
   <
     A extends Request.Request<any, any>,
-    Ds extends RequestResolver<A, never> | Effect<any, any, RequestResolver<A, never>>,
-    C extends [
-      cache:
-        | Request.Cache<any>
-        | Option.Option<Request.Cache<any>>
-        | Effect<any, any, Request.Cache<any>>
-        | Effect<any, any, Option.Option<Request.Cache<any>>>
-    ] | []
+    Ds extends RequestResolver<A, never> | Effect<any, any, RequestResolver<A, never>>
   >(
     request: A,
-    dataSource: Ds,
-    ...rest: C
+    dataSource: Ds
   ): Effect<
-    | never
-    | ([Ds] extends [Effect<any, any, any>] ? Effect.Context<Ds> : never)
-    | ([C] extends [[Effect<any, any, any>]] ? Effect.Context<C[0]> : never),
+    [Ds] extends [Effect<any, any, any>] ? Effect.Context<Ds> : never,
     Request.Request.Error<A>,
     Request.Request.Success<A>
   >
@@ -6024,6 +6014,60 @@ export const withRequestBatching: {
   (strategy: "on" | "off"): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
   <R, E, A>(self: Effect<R, E, A>, strategy: "on" | "off"): Effect<R, E, A>
 } = query.withRequestBatching
+
+/**
+ * @since 1.0.0
+ * @category requests
+ */
+export const setRequestBatching = (strategy: "on" | "off") =>
+  layer.scopedDiscard(
+    fiberRuntime.fiberRefLocallyScoped(fiberRuntime.currentRequestBatchingEnabled, strategy === "on")
+  )
+
+/**
+ * @since 1.0.0
+ * @category requests
+ */
+export const setRequestCaching = (strategy: "on" | "off") =>
+  layer.scopedDiscard(
+    fiberRuntime.fiberRefLocallyScoped(query.currentCacheEnabled, strategy === "on")
+  )
+
+/**
+ * @since 1.0.0
+ * @category requests
+ */
+export const setRequestCache: {
+  <R, E>(
+    cache: Effect<R, E, Request.Cache>
+  ): Layer.Layer<Exclude<R, Scope.Scope>, E, never>
+  (
+    cache: Request.Cache
+  ): Layer.Layer<never, never, never>
+} = (<R, E>(cache: Request.Cache | Effect<R, E, Request.Cache>) =>
+  layer.scopedDiscard(
+    core.isEffect(cache) ?
+      core.flatMap(cache, (x) => fiberRuntime.fiberRefLocallyScoped(query.currentCache as any, x)) :
+      fiberRuntime.fiberRefLocallyScoped(query.currentCache as any, cache)
+  )) as any
+
+/**
+ * @since 1.0.0
+ * @category requests
+ */
+export const withRequestCaching: {
+  (strategy: "on" | "off"): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, strategy: "on" | "off"): Effect<R, E, A>
+} = query.withRequestCaching
+
+/**
+ * @since 1.0.0
+ * @category requests
+ */
+export const withRequestCache: {
+  (cache: Request.Cache): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, cache: Request.Cache): Effect<R, E, A>
+} = query.withRequestCache
 
 /**
  * @since 1.0.0

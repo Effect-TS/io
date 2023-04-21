@@ -1,5 +1,4 @@
 import * as Context from "@effect/data/Context"
-import { runtimeDebug } from "@effect/data/Debug"
 import { seconds } from "@effect/data/Duration"
 import { pipe } from "@effect/data/Function"
 import * as ReadonlyArray from "@effect/data/ReadonlyArray"
@@ -13,18 +12,10 @@ import * as Request from "@effect/io/Request"
 import * as Resolver from "@effect/io/RequestResolver"
 import * as it from "@effect/io/test/utils/extend"
 
-runtimeDebug.filterStackFrame = () => true
-
 interface Counter {
   readonly _: unique symbol
 }
 const Counter = Context.Tag<Counter, { count: number }>()
-
-interface UserCache {
-  readonly _: unique symbol
-}
-const UserCache = Context.Tag<UserCache, Request.Cache<UserRequest>>()
-const UserCacheLive = Layer.effect(UserCache, Request.makeCache(10_000, seconds(60)))
 
 export const userIds: ReadonlyArray<number> = ReadonlyArray.range(1, 26)
 
@@ -67,25 +58,11 @@ const UserResolver = pipe(
   Resolver.contextFromServices(Counter)
 )
 
-export const getAllUserIds = Effect.request(
-  GetAllIds({}),
-  UserResolver,
-  Effect.serviceOption(UserCache)
-)
+export const getAllUserIds = Effect.request(GetAllIds({}), UserResolver)
 
 export const interrupts = FiberRef.unsafeMake({ interrupts: 0 })
 
-export const getUserNameById = (id: number) =>
-  Effect.acquireUseRelease(
-    Effect.unit(),
-    () =>
-      Effect.request(
-        GetNameById({ id }),
-        UserResolver,
-        Effect.serviceOption(UserCache)
-      ),
-    () => Effect.unit()
-  )
+export const getUserNameById = (id: number) => Effect.request(GetNameById({ id }), UserResolver)
 
 export const getAllUserNames = pipe(
   getAllUserIds,
@@ -119,9 +96,21 @@ const processRequest = (request: UserRequest): Effect.Effect<never, never, void>
   }
 }
 
-const CounterLive = Layer.sync(Counter, () => ({ count: 0 }))
+const CounterLive = Layer.sync(
+  Counter,
+  () => ({ count: 0 })
+)
 
-const provideEnv = Effect.provideSomeLayer(Layer.mergeAll(CounterLive, UserCacheLive))
+const EnvLive = Layer.provideMerge(
+  Layer.mergeAll(
+    Effect.setRequestCache(Request.makeCache(100, seconds(60))),
+    Effect.setRequestCaching("on"),
+    Effect.setRequestBatching("on")
+  ),
+  CounterLive
+)
+
+const provideEnv = Effect.provideSomeLayer(EnvLive)
 
 describe.concurrent("Effect", () => {
   it.effect("requests are executed correctly", () =>
@@ -137,10 +126,9 @@ describe.concurrent("Effect", () => {
   it.effect("batching composes", () =>
     provideEnv(
       Effect.gen(function*($) {
-        const names = yield* $(
-          Effect.zipPar(getAllUserNames, getAllUserNames),
-          Effect.withRequestBatching("on")
-        )
+        const cache = yield* $(FiberRef.get(FiberRef.currentRequestCache))
+        yield* $(cache.invalidateAll())
+        const names = yield* $(Effect.zipPar(getAllUserNames, getAllUserNames))
         const count = yield* $(Counter)
         expect(count.count).toEqual(3)
         expect(names[0].length).toBeGreaterThan(2)
@@ -222,19 +210,6 @@ describe.concurrent("Effect", () => {
         expect(b).toEqual(userNames.get(userIds[1]))
       })
     ))
-  it.effect("requests are cached when possible", () =>
-    provideEnv(
-      Effect.gen(function*($) {
-        yield* $(getAllUserIds)
-        yield* $(getAllUserIds)
-        yield* $(UserCache, Effect.flatMap((_) => _.invalidateAll()))
-        yield* $(getAllUserIds)
-        yield* $(getAllUserIds)
-        const requests = yield* $(UserCache, Effect.flatMap((_) => _.keys()))
-        expect(requests.map((_) => _._tag)).toEqual(["GetAllIds"])
-        expect(yield* $(Counter)).toEqual({ count: 2 })
-      })
-    ))
   it.effect("cache respects ttl", () =>
     provideEnv(
       Effect.gen(function*($) {
@@ -250,5 +225,21 @@ describe.concurrent("Effect", () => {
         yield* $(getAllUserIds)
         expect(yield* $(Counter)).toEqual({ count: 2 })
       })
+    ))
+  it.effect("cache can be disabled", () =>
+    provideEnv(
+      Effect.withRequestCaching("off")(Effect.gen(function*($) {
+        yield* $(getAllUserIds)
+        yield* $(getAllUserIds)
+        expect(yield* $(Counter)).toEqual({ count: 2 })
+        yield* $(TestClock.adjust(seconds(10)))
+        yield* $(getAllUserIds)
+        yield* $(getAllUserIds)
+        expect(yield* $(Counter)).toEqual({ count: 4 })
+        yield* $(TestClock.adjust(seconds(60)))
+        yield* $(getAllUserIds)
+        yield* $(getAllUserIds)
+        expect(yield* $(Counter)).toEqual({ count: 6 })
+      }))
     ))
 })

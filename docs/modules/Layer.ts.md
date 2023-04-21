@@ -98,6 +98,8 @@ Added in v1.0.0
   - [project](#project)
   - [provide](#provide)
   - [provideMerge](#providemerge)
+  - [unwrapEffect](#unwrapeffect)
+  - [unwrapScoped](#unwrapscoped)
   - [use](#use)
   - [useMerge](#usemerge)
 - [zipping](#zipping)
@@ -1012,6 +1014,30 @@ export declare const provideMerge: {
 
 Added in v1.0.0
 
+## unwrapEffect
+
+**Signature**
+
+```ts
+export declare const unwrapEffect: <R, E, R1, E1, A>(
+  self: Effect.Effect<R, E, Layer<R1, E1, A>>
+) => Layer<R | R1, E | E1, A>
+```
+
+Added in v1.0.0
+
+## unwrapScoped
+
+**Signature**
+
+```ts
+export declare const unwrapScoped: <R, E, R1, E1, A>(
+  self: Effect.Effect<R, E, Layer<R1, E1, A>>
+) => Layer<R1 | Exclude<R, Scope.Scope>, E | E1, A>
+```
+
+Added in v1.0.0
+
 ## use
 
 Feeds the output services of this builder into the input of the specified
@@ -1067,7 +1093,7 @@ Merges all the layers together in parallel.
 **Signature**
 
 ```ts
-export declare const mergeAll: <Layers extends [Layer<any, any, any>, ...Layer<any, any, any>[]]>(
+export declare const mergeAll: <Layers extends [Layer<any, any, never>, ...Layer<any, any, never>[]]>(
   ...layers: Layers
 ) => Layer<
   { [k in keyof Layers]: Layer.Context<Layers[k]> }[number],

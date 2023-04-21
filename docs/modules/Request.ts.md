@@ -102,9 +102,9 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface Cache<R = unknown>
+export interface Cache
   extends _Cache.ConsumerCache<
-    R,
+    Request<any, any>,
     never,
     {
       listeners: Listeners
@@ -177,10 +177,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const makeCache: <R = unknown>(
-  capacity: number,
-  timeToLive: Duration
-) => Effect.Effect<never, never, Cache<R>>
+export declare const makeCache: (capacity: number, timeToLive: Duration) => Effect.Effect<never, never, Cache>
 ```
 
 Added in v1.0.0
