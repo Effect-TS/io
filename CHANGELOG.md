@@ -1,5 +1,21 @@
 # @effect/io
 
+## 0.25.0
+
+### Minor Changes
+
+- [#393](https://github.com/Effect-TS/io/pull/393) [`35f72c6`](https://github.com/Effect-TS/io/commit/35f72c67c8f497aa9cbdbb1db8be9b73e2ca7b4b) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Standardise request caching config
+
+### Patch Changes
+
+- [#394](https://github.com/Effect-TS/io/pull/394) [`3943558`](https://github.com/Effect-TS/io/commit/394355830cbfde4487ddb438cbc40b2b45ec42dd) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Add layer based variants for flags
+
+- [#397](https://github.com/Effect-TS/io/pull/397) [`b854610`](https://github.com/Effect-TS/io/commit/b85461075c53f865e842302978cf87769543cde7) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Make sure tags are preserved across module reloads
+
+- [#394](https://github.com/Effect-TS/io/pull/394) [`3943558`](https://github.com/Effect-TS/io/commit/394355830cbfde4487ddb438cbc40b2b45ec42dd) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Apply deault log filter automatically
+
+- [#397](https://github.com/Effect-TS/io/pull/397) [`b854610`](https://github.com/Effect-TS/io/commit/b85461075c53f865e842302978cf87769543cde7) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Make sure fiber refs are preserved across module reloads
+
 ## 0.24.4
 
 ### Patch Changes
