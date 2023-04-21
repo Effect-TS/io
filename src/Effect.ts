@@ -11,7 +11,7 @@ import { identity } from "@effect/data/Function"
 import type * as HashMap from "@effect/data/HashMap"
 import type * as HashSet from "@effect/data/HashSet"
 import type { TypeLambda } from "@effect/data/HKT"
-import type * as Option from "@effect/data/Option"
+import * as Option from "@effect/data/Option"
 import type { Predicate, Refinement } from "@effect/data/Predicate"
 import * as applicative from "@effect/data/typeclass/Applicative"
 import type * as bicovariant from "@effect/data/typeclass/Bicovariant"
@@ -45,6 +45,7 @@ import type * as RuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
 import type * as FiberRef from "@effect/io/FiberRef"
 import type * as FiberRefs from "@effect/io/FiberRefs"
 import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
+import { clockTag } from "@effect/io/internal_effect_untraced/clock"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as defaultServices from "@effect/io/internal_effect_untraced/defaultServices"
 import * as effect from "@effect/io/internal_effect_untraced/effect"
@@ -5513,6 +5514,15 @@ export const withClock: {
 } = defaultServices.withClock
 
 /**
+ * @since 1.0.0
+ * @category utils
+ */
+export const setClock = <A extends Clock.Clock>(clock: A): Layer.Layer<never, never, never> =>
+  layer.scopedDiscard(
+    fiberRuntime.fiberRefLocallyScopedWith(defaultServices.currentServices, Context.add(clockTag, clock))
+  )
+
+/**
  * Decides wether child fibers will report or not unhandled errors via the logger
  *
  * @since 1.0.0
@@ -5524,6 +5534,15 @@ export const withUnhandledErrorLogLevel: {
 } = core.withUnhandledErrorLogLevel
 
 /**
+ * @since 1.0.0
+ * @category utils
+ */
+export const setUnhandledErrorLogLevel = (level: Option.Option<LogLevel>): Layer.Layer<never, never, never> =>
+  layer.scopedDiscard(
+    fiberRuntime.fiberRefLocallyScoped(core.unhandledErrorLogLevel, level)
+  )
+
+/**
  * Sets the provided scheduler for usage in the wrapped effect
  *
  * @since 1.0.0
@@ -5533,6 +5552,15 @@ export const withScheduler: {
   (scheduler: Scheduler): <R, E, B>(self: Effect<R, E, B>) => Effect<R, E, B>
   <R, E, B>(self: Effect<R, E, B>, scheduler: Scheduler): Effect<R, E, B>
 } = core.withScheduler
+
+/**
+ * @since 1.0.0
+ * @category utils
+ */
+export const setScheduler = (scheduler: Scheduler): Layer.Layer<never, never, never> =>
+  layer.scopedDiscard(
+    fiberRuntime.fiberRefLocallyScoped(core.currentScheduler, scheduler)
+  )
 
 /**
  * Sets the implementation of the clock service to the specified value and
@@ -5590,9 +5618,21 @@ export const withMetric: {
  * @category concurrency
  */
 export const withParallelism: {
-  (parallelism: number): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(self: Effect<R, E, A>, parallelism: number): Effect<R, E, A>
+  (parallelism: number | "unbounded"): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, parallelism: number | "unbounded"): Effect<R, E, A>
 } = core.withParallelism
+
+/**
+ * @since 1.0.0
+ * @category utils
+ */
+export const setParallelism = (parallelism: number | "unbounded"): Layer.Layer<never, never, never> =>
+  layer.scopedDiscard(
+    fiberRuntime.fiberRefLocallyScoped(
+      core.currentParallelism,
+      parallelism === "unbounded" ? Option.none() : Option.some(parallelism)
+    )
+  )
 
 /**
  * Runs the specified effect with an unbounded maximum number of fibers for

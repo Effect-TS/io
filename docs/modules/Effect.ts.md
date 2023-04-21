@@ -434,8 +434,12 @@ Added in v1.0.0
   - [serviceFunction](#servicefunction)
   - [serviceFunctionEffect](#servicefunctioneffect)
   - [serviceOption](#serviceoption)
+  - [setClock](#setclock)
   - [setConfigProvider](#setconfigprovider)
   - [setFiberRefs](#setfiberrefs)
+  - [setParallelism](#setparallelism)
+  - [setScheduler](#setscheduler)
+  - [setUnhandledErrorLogLevel](#setunhandlederrorloglevel)
   - [some](#some)
   - [someOrElse](#someorelse)
   - [someOrElseEffect](#someorelseeffect)
@@ -660,8 +664,8 @@ Added in v1.0.0
 
 ```ts
 export declare const withParallelism: {
-  (parallelism: number): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(self: Effect<R, E, A>, parallelism: number): Effect<R, E, A>
+  (parallelism: number | 'unbounded'): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, parallelism: number | 'unbounded'): Effect<R, E, A>
 }
 ```
 
@@ -6946,6 +6950,16 @@ export declare const serviceOption: <I, A>(tag: Context.Tag<I, A>) => Effect<nev
 
 Added in v1.0.0
 
+## setClock
+
+**Signature**
+
+```ts
+export declare const setClock: <A extends Clock.Clock>(clock: A) => Layer.Layer<never, never, never>
+```
+
+Added in v1.0.0
+
 ## setConfigProvider
 
 Sets the current `ConfigProvider`.
@@ -6967,6 +6981,36 @@ in the specified collection of `FiberRef` values.
 
 ```ts
 export declare const setFiberRefs: (fiberRefs: FiberRefs.FiberRefs) => Effect<never, never, void>
+```
+
+Added in v1.0.0
+
+## setParallelism
+
+**Signature**
+
+```ts
+export declare const setParallelism: (parallelism: number | 'unbounded') => Layer.Layer<never, never, never>
+```
+
+Added in v1.0.0
+
+## setScheduler
+
+**Signature**
+
+```ts
+export declare const setScheduler: (scheduler: Scheduler) => Layer.Layer<never, never, never>
+```
+
+Added in v1.0.0
+
+## setUnhandledErrorLogLevel
+
+**Signature**
+
+```ts
+export declare const setUnhandledErrorLogLevel: (level: Option.Option<LogLevel>) => Layer.Layer<never, never, never>
 ```
 
 Added in v1.0.0
