@@ -1296,20 +1296,20 @@ export const withFiberRuntime = Debug.methodWithTrace((trace, restore) =>
 
 /* @internal */
 export const withParallelism = Debug.dualWithTrace<
-  (parallelism: number) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
-  <R, E, A>(self: Effect.Effect<R, E, A>, parallelism: number) => Effect.Effect<R, E, A>
+  (parallelism: number | "unbounded") => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(self: Effect.Effect<R, E, A>, parallelism: number | "unbounded") => Effect.Effect<R, E, A>
 >(2, (trace) =>
   (self, parallelism) =>
-    suspend(
-      () => fiberRefLocally(currentParallelism, Option.some(parallelism))(self)
+    fiberRefLocally(
+      self,
+      currentParallelism,
+      parallelism === "unbounded" ? Option.none() : Option.some(parallelism)
     ).traced(trace))
 
 /* @internal */
 export const withParallelismUnbounded = Debug.methodWithTrace((trace) =>
   <R, E, A>(self: Effect.Effect<R, E, A>) =>
-    suspend(
-      () => fiberRefLocally(currentParallelism, Option.none() as Option.Option<number>)(self)
-    ).traced(trace)
+    fiberRefLocally(self, currentParallelism, Option.none() as Option.Option<number>).traced(trace)
 )
 
 /* @internal */

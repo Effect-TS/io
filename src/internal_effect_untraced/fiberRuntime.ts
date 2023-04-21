@@ -780,16 +780,17 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     const logLevel = Option.isSome(overrideLogLevel) ?
       overrideLogLevel.value :
       this.getFiberRef(core.currentLogLevel)
+    const minimumLogLevel = this.getFiberRef(currentMinimumLogLevel)
+    if (LogLevel.greaterThan(minimumLogLevel, logLevel)) {
+      return
+    }
     const spans = this.getFiberRef(core.currentLogSpan)
     const annotations = this.getFiberRef(core.currentLogAnnotations)
     const loggers = this.getLoggers()
     const contextMap = this.unsafeGetFiberRefs()
-    pipe(
-      loggers,
-      HashSet.forEach((logger) => {
-        logger.log(this.id(), logLevel, message, cause, contextMap, spans, annotations)
-      })
-    )
+    for (const logger of loggers) {
+      logger.log(this.id(), logLevel, message, cause, contextMap, spans, annotations)
+    }
   }
 
   /**
@@ -1363,10 +1364,23 @@ export const defaultLogger: Logger<string, void> = internalLogger.makeLogger(
       spans,
       annotations
     )
-    const filter = fiberRefs.getOrDefault(context, currentMinimumLogLevel)
-    if (LogLevel.greaterThanEqual(filter)(logLevel)) {
-      globalThis.console.log(formatted)
-    }
+    globalThis.console.log(formatted)
+  }
+)
+
+/** @internal */
+export const filterMinimumLogLevel: Logger<string, void> = internalLogger.makeLogger(
+  (fiberId, logLevel, message, cause, context, spans, annotations) => {
+    const formatted = internalLogger.stringLogger.log(
+      fiberId,
+      logLevel,
+      message,
+      cause,
+      context,
+      spans,
+      annotations
+    )
+    globalThis.console.log(formatted)
   }
 )
 
@@ -1382,10 +1396,7 @@ export const logFmtLogger: Logger<string, void> = internalLogger.makeLogger(
       spans,
       annotations
     )
-    const filter = fiberRefs.getOrDefault(context, currentMinimumLogLevel)
-    if (LogLevel.greaterThanEqual(filter)(logLevel)) {
-      globalThis.console.log(formatted)
-    }
+    globalThis.console.log(formatted)
   }
 )
 
