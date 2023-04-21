@@ -13,10 +13,12 @@ import type * as Effect from "@effect/io/Effect"
 import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as fiberRuntime from "@effect/io/internal_effect_untraced/fiberRuntime"
+import * as query from "@effect/io/internal_effect_untraced/query"
 import type * as Logger from "@effect/io/Logger"
 import type * as LogLevel from "@effect/io/Logger/Level"
 import type * as LogSpan from "@effect/io/Logger/Span"
 import type * as MetricLabel from "@effect/io/Metric/Label"
+import type * as Request from "@effect/io/Request"
 import type * as Scheduler from "@effect/io/Scheduler"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
@@ -264,6 +266,18 @@ export const updateSomeAndGet: {
  * @category fiberRefs
  */
 export const currentRequestBatchingEnabled: FiberRef<boolean> = fiberRuntime.currentRequestBatchingEnabled
+
+/**
+ * @since 1.0.0
+ * @category fiberRefs
+ */
+export const currentRequestCache: FiberRef<Request.Cache> = query.currentCache as any
+
+/**
+ * @since 1.0.0
+ * @category fiberRefs
+ */
+export const currentRequestCacheEnabled: FiberRef<boolean> = query.currentCacheEnabled
 
 /**
  * @since 1.0.0

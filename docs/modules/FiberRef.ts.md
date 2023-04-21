@@ -31,6 +31,8 @@ Added in v1.0.0
   - [currentMinimumLogLevel](#currentminimumloglevel)
   - [currentParallelism](#currentparallelism)
   - [currentRequestBatchingEnabled](#currentrequestbatchingenabled)
+  - [currentRequestCache](#currentrequestcache)
+  - [currentRequestCacheEnabled](#currentrequestcacheenabled)
   - [currentRuntimeFlags](#currentruntimeflags)
   - [currentScheduler](#currentscheduler)
   - [currentSupervisor](#currentsupervisor)
@@ -252,6 +254,26 @@ Added in v1.0.0
 
 ```ts
 export declare const currentRequestBatchingEnabled: FiberRef<boolean>
+```
+
+Added in v1.0.0
+
+## currentRequestCache
+
+**Signature**
+
+```ts
+export declare const currentRequestCache: FiberRef<Request.Cache>
+```
+
+Added in v1.0.0
+
+## currentRequestCacheEnabled
+
+**Signature**
+
+```ts
+export declare const currentRequestCacheEnabled: FiberRef<boolean>
 ```
 
 Added in v1.0.0

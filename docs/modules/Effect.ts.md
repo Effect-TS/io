@@ -311,7 +311,12 @@ Added in v1.0.0
   - [isEffect](#iseffect)
 - [requests](#requests)
   - [request](#request)
+  - [setRequestBatching](#setrequestbatching)
+  - [setRequestCache](#setrequestcache)
+  - [setRequestCaching](#setrequestcaching)
   - [withRequestBatching](#withrequestbatching)
+  - [withRequestCache](#withrequestcache)
+  - [withRequestCaching](#withrequestcaching)
 - [runtime](#runtime-1)
   - [updateRuntimeFlags](#updateruntimeflags)
   - [withRuntimeFlags](#withruntimeflags)
@@ -5095,26 +5100,48 @@ Added in v1.0.0
 ```ts
 export declare const request: <
   A extends Request.Request<any, any>,
-  Ds extends RequestResolver<A, never> | Effect<any, any, RequestResolver<A, never>>,
-  C extends
-    | []
-    | [
-        cache:
-          | Request.Cache<any>
-          | Option.None<Request.Cache<any>>
-          | Option.Some<Request.Cache<any>>
-          | Effect<any, any, Request.Cache<any>>
-          | Effect<any, any, Option.Option<Request.Cache<any>>>
-      ]
+  Ds extends RequestResolver<A, never> | Effect<any, any, RequestResolver<A, never>>
 >(
   request: A,
-  dataSource: Ds,
-  ...rest: C
+  dataSource: Ds
 ) => Effect<
-  ([Ds] extends [Effect<any, any, any>] ? unknown : never) | ([C] extends [[Effect<any, any, any>]] ? any : never),
+  [Ds] extends [Effect<any, any, any>] ? unknown : never,
   Request.Request.Error<A>,
   Request.Request.Success<A>
 >
+```
+
+Added in v1.0.0
+
+## setRequestBatching
+
+**Signature**
+
+```ts
+export declare const setRequestBatching: (strategy: 'on' | 'off') => Layer.Layer<never, never, never>
+```
+
+Added in v1.0.0
+
+## setRequestCache
+
+**Signature**
+
+```ts
+export declare const setRequestCache: {
+  <R, E>(cache: Effect<R, E, Request.Cache>): Layer.Layer<Exclude<R, Scope.Scope>, E, never>
+  (cache: Request.Cache): Layer.Layer<never, never, never>
+}
+```
+
+Added in v1.0.0
+
+## setRequestCaching
+
+**Signature**
+
+```ts
+export declare const setRequestCaching: (strategy: 'on' | 'off') => Layer.Layer<never, never, never>
 ```
 
 Added in v1.0.0
@@ -5125,6 +5152,32 @@ Added in v1.0.0
 
 ```ts
 export declare const withRequestBatching: {
+  (strategy: 'on' | 'off'): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, strategy: 'on' | 'off'): Effect<R, E, A>
+}
+```
+
+Added in v1.0.0
+
+## withRequestCache
+
+**Signature**
+
+```ts
+export declare const withRequestCache: {
+  (cache: Request.Cache): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, cache: Request.Cache): Effect<R, E, A>
+}
+```
+
+Added in v1.0.0
+
+## withRequestCaching
+
+**Signature**
+
+```ts
+export declare const withRequestCaching: {
   (strategy: 'on' | 'off'): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
   <R, E, A>(self: Effect<R, E, A>, strategy: 'on' | 'off'): Effect<R, E, A>
 }

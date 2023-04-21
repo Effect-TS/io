@@ -688,7 +688,7 @@ export const merge = dual<
 >(2, (self, that) => zipWithPar(self, that, (a, b) => pipe(a, Context.merge(b))))
 
 /** @internal */
-export const mergeAll = <Layers extends [Layer.Layer<any, any, any>, ...Array<Layer.Layer<any, any, any>>]>(
+export const mergeAll = <Layers extends [Layer.Layer<any, any, never>, ...Array<Layer.Layer<any, any, never>>]>(
   ...layers: Layers
 ): Layer.Layer<
   { [k in keyof Layers]: Layer.Layer.Context<Layers[k]> }[number],
@@ -699,7 +699,7 @@ export const mergeAll = <Layers extends [Layer.Layer<any, any, any>, ...Array<La
   for (let i = 1; i < layers.length; i++) {
     final = merge(layers[i])(final)
   }
-  return final
+  return final as any
 }
 
 /** @internal */

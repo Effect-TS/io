@@ -1,4 +1,4 @@
-import type * as Context from "@effect/data/Context"
+import * as Context from "@effect/data/Context"
 import * as Data from "@effect/data/Data"
 import * as Debug from "@effect/data/Debug"
 import type * as Duration from "@effect/data/Duration"
@@ -18,6 +18,7 @@ import * as Exit from "@effect/io/Exit"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as effect from "@effect/io/internal_effect_untraced/effect"
+import { none } from "@effect/io/internal_effect_untraced/fiberId"
 
 /**
  * A `MapValue` represents a value in the cache. A value may either be
@@ -293,7 +294,6 @@ class CacheImpl<Key, Error, Value> implements Cache.Cache<Key, Error, Value> {
   readonly cacheState: CacheState<Key, Error, Value>
   constructor(
     readonly capacity: number,
-    readonly clock: Clock.Clock,
     readonly context: Context.Context<any>,
     readonly fiberId: FiberId.FiberId,
     readonly lookup: Cache.Lookup<Key, any, Error, Value>,
@@ -348,51 +348,53 @@ class CacheImpl<Key, Error, Value> implements Cache.Cache<Key, Error, Value> {
 
   getEither(key: Key): Effect.Effect<never, Error, Either.Either<Value, Value>> {
     return Debug.bodyWithTrace((trace) =>
-      core.suspend((): Effect.Effect<never, Error, Either.Either<Value, Value>> => {
-        const k = key
-        let mapKey: MapKey<Key> | undefined = undefined
-        let deferred: Deferred.Deferred<Error, Value> | undefined = undefined
-        let value = Option.getOrUndefined(MutableHashMap.get(this.cacheState.map, k))
-        if (value === undefined) {
-          deferred = Deferred.unsafeMake<Error, Value>(this.fiberId)
-          mapKey = makeMapKey(k)
-          if (MutableHashMap.has(this.cacheState.map, k)) {
-            value = Option.getOrUndefined(MutableHashMap.get(this.cacheState.map, k))
-          } else {
-            MutableHashMap.set(this.cacheState.map, k, pending(mapKey, deferred))
+      effect.clockWith((clock) =>
+        core.suspend((): Effect.Effect<never, Error, Either.Either<Value, Value>> => {
+          const k = key
+          let mapKey: MapKey<Key> | undefined = undefined
+          let deferred: Deferred.Deferred<Error, Value> | undefined = undefined
+          let value = Option.getOrUndefined(MutableHashMap.get(this.cacheState.map, k))
+          if (value === undefined) {
+            deferred = Deferred.unsafeMake<Error, Value>(this.fiberId)
+            mapKey = makeMapKey(k)
+            if (MutableHashMap.has(this.cacheState.map, k)) {
+              value = Option.getOrUndefined(MutableHashMap.get(this.cacheState.map, k))
+            } else {
+              MutableHashMap.set(this.cacheState.map, k, pending(mapKey, deferred))
+            }
           }
-        }
-        if (value === undefined) {
-          this.trackAccess(mapKey!)
-          this.trackMiss()
-          return core.map(this.lookupValueOf(key, deferred!), Either.right)
-        } else {
-          switch (value._tag) {
-            case "Complete": {
-              this.trackAccess(value.key)
-              this.trackHit()
-              if (this.hasExpired(value.timeToLiveMillis)) {
-                MutableHashMap.remove(this.cacheState.map, k)
-                return this.getEither(key)
+          if (value === undefined) {
+            this.trackAccess(mapKey!)
+            this.trackMiss()
+            return core.map(this.lookupValueOf(key, deferred!), Either.right)
+          } else {
+            switch (value._tag) {
+              case "Complete": {
+                this.trackAccess(value.key)
+                this.trackHit()
+                if (this.hasExpired(clock, value.timeToLiveMillis)) {
+                  MutableHashMap.remove(this.cacheState.map, k)
+                  return this.getEither(key)
+                }
+                return core.map(core.done(value.exit), Either.left)
               }
-              return core.map(core.done(value.exit), Either.left)
-            }
-            case "Pending": {
-              this.trackAccess(value.key)
-              this.trackHit()
-              return core.map(Deferred.await(value.deferred), Either.left)
-            }
-            case "Refreshing": {
-              this.trackAccess(value.complete.key)
-              this.trackHit()
-              if (this.hasExpired(value.complete.timeToLiveMillis)) {
+              case "Pending": {
+                this.trackAccess(value.key)
+                this.trackHit()
                 return core.map(Deferred.await(value.deferred), Either.left)
               }
-              return core.map(core.done(value.complete.exit), Either.left)
+              case "Refreshing": {
+                this.trackAccess(value.complete.key)
+                this.trackHit()
+                if (this.hasExpired(clock, value.complete.timeToLiveMillis)) {
+                  return core.map(Deferred.await(value.deferred), Either.left)
+                }
+                return core.map(core.done(value.complete.exit), Either.left)
+              }
             }
           }
-        }
-      }).traced(trace)
+        })
+      ).traced(trace)
     )
   }
 
@@ -411,7 +413,7 @@ class CacheImpl<Key, Error, Value> implements Cache.Cache<Key, Error, Value> {
         if (Option.isSome(value) && value.value._tag === "Complete") {
           if (value.value.exit._tag === "Success") {
             if (when(value.value.exit.value)) {
-              this.cacheState.map = MutableHashMap.empty()
+              MutableHashMap.remove(this.cacheState.map, key)
             }
           }
         }
@@ -429,53 +431,55 @@ class CacheImpl<Key, Error, Value> implements Cache.Cache<Key, Error, Value> {
 
   refresh(key: Key): Effect.Effect<never, Error, void> {
     return Debug.bodyWithTrace((trace) =>
-      core.suspend(() => {
-        const k = key
-        const deferred: Deferred.Deferred<Error, Value> = Deferred.unsafeMake(this.fiberId)
-        let value = Option.getOrUndefined(MutableHashMap.get(this.cacheState.map, k))
-        if (value === undefined) {
-          if (MutableHashMap.has(this.cacheState.map, k)) {
-            value = Option.getOrUndefined(MutableHashMap.get(this.cacheState.map, k))
+      effect.clockWith((clock) =>
+        core.suspend(() => {
+          const k = key
+          const deferred: Deferred.Deferred<Error, Value> = Deferred.unsafeMake(this.fiberId)
+          let value = Option.getOrUndefined(MutableHashMap.get(this.cacheState.map, k))
+          if (value === undefined) {
+            if (MutableHashMap.has(this.cacheState.map, k)) {
+              value = Option.getOrUndefined(MutableHashMap.get(this.cacheState.map, k))
+            } else {
+              MutableHashMap.set(this.cacheState.map, k, pending(makeMapKey(k), deferred))
+            }
+          }
+          if (value === undefined) {
+            return core.asUnit(this.lookupValueOf(key, deferred))
           } else {
-            MutableHashMap.set(this.cacheState.map, k, pending(makeMapKey(k), deferred))
-          }
-        }
-        if (value === undefined) {
-          return core.asUnit(this.lookupValueOf(key, deferred))
-        } else {
-          switch (value._tag) {
-            case "Complete": {
-              if (this.hasExpired(value.timeToLiveMillis)) {
-                const found = Option.getOrUndefined(MutableHashMap.get(this.cacheState.map, k))
-                if (Equal.equals(found, value)) {
-                  MutableHashMap.remove(this.cacheState.map, k)
-                }
-                return core.asUnit(this.get(key))
-              }
-              // Only trigger the lookup if we're still the current value, `completedResult`
-              return pipe(
-                this.lookupValueOf(key, deferred),
-                effect.when(() => {
-                  const current = Option.getOrUndefined(MutableHashMap.get(this.cacheState.map, k))
-                  if (Equal.equals(current, value)) {
-                    const mapValue = refreshing(deferred, value as Complete<Key, Error, Value>)
-                    MutableHashMap.set(this.cacheState.map, k, mapValue)
-                    return true
+            switch (value._tag) {
+              case "Complete": {
+                if (this.hasExpired(clock, value.timeToLiveMillis)) {
+                  const found = Option.getOrUndefined(MutableHashMap.get(this.cacheState.map, k))
+                  if (Equal.equals(found, value)) {
+                    MutableHashMap.remove(this.cacheState.map, k)
                   }
-                  return false
-                }),
-                core.asUnit
-              )
-            }
-            case "Pending": {
-              return Deferred.await(value.deferred)
-            }
-            case "Refreshing": {
-              return Deferred.await(value.deferred)
+                  return core.asUnit(this.get(key))
+                }
+                // Only trigger the lookup if we're still the current value, `completedResult`
+                return pipe(
+                  this.lookupValueOf(key, deferred),
+                  effect.when(() => {
+                    const current = Option.getOrUndefined(MutableHashMap.get(this.cacheState.map, k))
+                    if (Equal.equals(current, value)) {
+                      const mapValue = refreshing(deferred, value as Complete<Key, Error, Value>)
+                      MutableHashMap.set(this.cacheState.map, k, mapValue)
+                      return true
+                    }
+                    return false
+                  }),
+                  core.asUnit
+                )
+              }
+              case "Pending": {
+                return Deferred.await(value.deferred)
+              }
+              case "Refreshing": {
+                return Deferred.await(value.deferred)
+              }
             }
           }
-        }
-      }).traced(trace)
+        })
+      ).traced(trace)
     )
   }
 
@@ -485,22 +489,24 @@ class CacheImpl<Key, Error, Value> implements Cache.Cache<Key, Error, Value> {
     value: Value
   ): Effect.Effect<never, never, void> {
     return Debug.bodyWithTrace((trace) =>
-      core.sync(() => {
-        const now = this.clock.unsafeCurrentTimeMillis()
-        const k = key
-        const lookupResult = Exit.succeed(value)
-        const mapValue = complete(
-          makeMapKey(k),
-          lookupResult,
-          makeEntryStats(now),
-          now + this.timeToLive(lookupResult).millis
-        )
-        MutableHashMap.set(
-          this.cacheState.map,
-          k,
-          mapValue as Complete<Key, Error, Value>
-        )
-      }).traced(trace)
+      effect.clockWith((clock) =>
+        core.sync(() => {
+          const now = clock.unsafeCurrentTimeMillis()
+          const k = key
+          const lookupResult = Exit.succeed(value)
+          const mapValue = complete(
+            makeMapKey(k),
+            lookupResult,
+            makeEntryStats(now),
+            now + this.timeToLive(lookupResult).millis
+          )
+          MutableHashMap.set(
+            this.cacheState.map,
+            k,
+            mapValue as Complete<Key, Error, Value>
+          )
+        })
+      ).traced(trace)
     )
   }
 
@@ -592,45 +598,47 @@ class CacheImpl<Key, Error, Value> implements Cache.Cache<Key, Error, Value> {
     }
   }
 
-  hasExpired(timeToLiveMillis: number): boolean {
-    return this.clock.unsafeCurrentTimeMillis() > timeToLiveMillis
+  hasExpired(clock: Clock.Clock, timeToLiveMillis: number): boolean {
+    return clock.unsafeCurrentTimeMillis() > timeToLiveMillis
   }
 
   lookupValueOf(
     input: Key,
     deferred: Deferred.Deferred<Error, Value>
   ): Effect.Effect<never, Error, Value> {
-    return core.suspend(() => {
-      const key = input
-      return pipe(
-        this.lookup(input),
-        core.provideContext(this.context),
-        core.exit,
-        core.flatMap((exit) => {
-          const now = this.clock.unsafeCurrentTimeMillis()
-          const stats = makeEntryStats(now)
-          const value = complete(
-            makeMapKey(key),
-            exit,
-            stats,
-            now + this.timeToLive(exit).millis
-          )
-          MutableHashMap.set(this.cacheState.map, key, value)
-          return core.zipRight(
-            Deferred.done(deferred, exit),
-            core.done(exit)
-          )
-        }),
-        core.onInterrupt(() =>
-          core.zipRight(
-            Deferred.interrupt(deferred),
-            core.sync(() => {
-              MutableHashMap.remove(this.cacheState.map, key)
-            })
+    return effect.clockWith((clock) =>
+      core.suspend(() => {
+        const key = input
+        return pipe(
+          this.lookup(input),
+          core.provideContext(this.context),
+          core.exit,
+          core.flatMap((exit) => {
+            const now = clock.unsafeCurrentTimeMillis()
+            const stats = makeEntryStats(now)
+            const value = complete(
+              makeMapKey(key),
+              exit,
+              stats,
+              now + this.timeToLive(exit).millis
+            )
+            MutableHashMap.set(this.cacheState.map, key, value)
+            return core.zipRight(
+              Deferred.done(deferred, exit),
+              core.done(exit)
+            )
+          }),
+          core.onInterrupt(() =>
+            core.zipRight(
+              Deferred.interrupt(deferred),
+              core.sync(() => {
+                MutableHashMap.remove(this.cacheState.map, key)
+              })
+            )
           )
         )
-      )
-    })
+      })
+    )
   }
 }
 
@@ -657,14 +665,12 @@ export const makeWith = Debug.methodWithTrace((trace, restore) =>
   ): Effect.Effect<Environment, never, Cache.Cache<Key, Error, Value>> =>
     core.map(
       effect.all(
-        effect.clock(),
         core.context<Environment>(),
         core.fiberId()
       ),
-      ([clock, context, fiberId]) =>
+      ([context, fiberId]) =>
         new CacheImpl(
           capacity,
-          clock,
           context,
           fiberId,
           restore(lookup),
@@ -672,3 +678,17 @@ export const makeWith = Debug.methodWithTrace((trace, restore) =>
         )
     ).traced(trace)
 )
+
+/** @internal */
+export const unsafeMakeWith = <Key, Error, Value>(
+  capacity: number,
+  lookup: Cache.Lookup<never, Key, Error, Value>,
+  timeToLive: (exit: Exit.Exit<Error, Value>) => Duration.Duration
+): Cache.Cache<Key, Error, Value> =>
+  new CacheImpl(
+    capacity,
+    Context.empty() as Context.Context<any>,
+    none,
+    lookup,
+    timeToLive
+  )

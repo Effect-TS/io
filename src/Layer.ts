@@ -17,7 +17,7 @@
  *
  * @since 1.0.0
  */
-import type * as Context from "@effect/data/Context"
+import * as Context from "@effect/data/Context"
 import type { LazyArg } from "@effect/data/Function"
 import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
@@ -64,17 +64,17 @@ export declare namespace Layer {
    * @since 1.0.0
    * @category type-level
    */
-  export type Context<T extends Layer<any, any, any>> = [T] extends [Layer<infer _R, infer _E, infer _A>] ? _R : never
+  export type Context<T extends Layer<any, any, never>> = [T] extends [Layer<infer _R, infer _E, infer _A>] ? _R : never
   /**
    * @since 1.0.0
    * @category type-level
    */
-  export type Error<T extends Layer<any, any, any>> = [T] extends [Layer<infer _R, infer _E, infer _A>] ? _E : never
+  export type Error<T extends Layer<any, any, never>> = [T] extends [Layer<infer _R, infer _E, infer _A>] ? _E : never
   /**
    * @since 1.0.0
    * @category type-level
    */
-  export type Success<T extends Layer<any, any, any>> = [T] extends [Layer<infer _R, infer _E, infer _A>] ? _A : never
+  export type Success<T extends Layer<any, any, never>> = [T] extends [Layer<infer _R, infer _E, infer _A>] ? _A : never
 }
 
 /**
@@ -409,7 +409,7 @@ export const merge: {
  * @since 1.0.0
  * @category zipping
  */
-export const mergeAll: <Layers extends [Layer<any, any, any>, ...Array<Layer<any, any, any>>]>(
+export const mergeAll: <Layers extends [Layer<any, any, never>, ...Array<Layer<any, any, never>>]>(
   ...layers: Layers
 ) => Layer<
   { [k in keyof Layers]: Layer.Context<Layers[k]> }[number],
@@ -789,3 +789,25 @@ export const zipWithPar: {
     f: (a: Context.Context<A>, b: Context.Context<B>) => Context.Context<C>
   ): Layer<R | R2, E | E2, C>
 } = internal.zipWithPar
+
+/**
+ * @since 1.0.0
+ * @category utils
+ */
+export const unwrapEffect = <R, E, R1, E1, A>(
+  self: Effect.Effect<R, E, Layer<R1, E1, A>>
+): Layer<R | R1, E | E1, A> => {
+  const tag = Context.Tag<Layer<R1, E1, A>>()
+  return internal.flatMap(internal.fromEffect(tag, self), (context) => Context.get(context, tag))
+}
+
+/**
+ * @since 1.0.0
+ * @category utils
+ */
+export const unwrapScoped = <R, E, R1, E1, A>(
+  self: Effect.Effect<R, E, Layer<R1, E1, A>>
+): Layer<R1 | Exclude<R, Scope.Scope>, E | E1, A> => {
+  const tag = Context.Tag<Layer<R1, E1, A>>()
+  return internal.flatMap(internal.scoped(tag, self), (context) => Context.get(context, tag))
+}
