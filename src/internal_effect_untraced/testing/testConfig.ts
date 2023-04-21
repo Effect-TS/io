@@ -29,7 +29,9 @@ export interface TestConfig {
 }
 
 /** @internal */
-export const TestConfig: Context.Tag<TestConfig, TestConfig> = Context.Tag<TestConfig>()
+export const TestConfig: Context.Tag<TestConfig, TestConfig> = Context.Tag<TestConfig>(
+  Symbol.for("@effect/test/TestConfig")
+)
 
 /** @internal */
 export const make = (params: {

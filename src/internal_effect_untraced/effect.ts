@@ -574,7 +574,7 @@ export const descriptorWith = Debug.methodWithTrace((trace, restore) =>
       restore(f)({
         id: state.id(),
         status,
-        interruptors: internalCause.interruptors(state.getFiberRef(core.interruptedCause))
+        interruptors: internalCause.interruptors(state.getFiberRef(core.currentInterruptedCause))
       })
     ).traced(trace) as Effect.Effect<R, E, A>
 )

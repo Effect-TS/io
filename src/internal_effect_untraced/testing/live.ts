@@ -25,7 +25,9 @@ export interface Live {
 }
 
 /** @internal */
-export const Live: Context.Tag<Live, Live> = Context.Tag<Live>()
+export const Live: Context.Tag<Live, Live> = Context.Tag<Live>(
+  Symbol.for("@effect/test/Live")
+)
 
 /** @internal */
 class LiveImpl implements Live {
