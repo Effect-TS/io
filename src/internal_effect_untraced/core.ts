@@ -8,6 +8,7 @@ import * as Either from "@effect/data/Either"
 import * as Equal from "@effect/data/Equal"
 import type { LazyArg } from "@effect/data/Function"
 import { dual, identity, pipe } from "@effect/data/Function"
+import { globalValue } from "@effect/data/Global"
 import * as Hash from "@effect/data/Hash"
 import * as HashMap from "@effect/data/HashMap"
 import * as HashSet from "@effect/data/HashSet"
@@ -1166,9 +1167,9 @@ export const transplant = Debug.methodWithTrace((trace, restore) =>
     f: (grafter: <R2, E2, A2>(effect: Effect.Effect<R2, E2, A2>) => Effect.Effect<R2, E2, A2>) => Effect.Effect<R, E, A>
   ): Effect.Effect<R, E, A> =>
     withFiberRuntime<R, E, A>((state) => {
-      const scopeOverride = state.getFiberRef(forkScopeOverride)
+      const scopeOverride = state.getFiberRef(currentForkScopeOverride)
       const scope = pipe(scopeOverride, Option.getOrElse(() => state.scope()))
-      return restore(f)(fiberRefLocally(forkScopeOverride, Option.some(scope)))
+      return restore(f)(fiberRefLocally(currentForkScopeOverride, Option.some(scope)))
     }).traced(trace)
 )
 
@@ -1833,8 +1834,9 @@ export const currentContext: FiberRef.FiberRef<Context.Context<never>> = fiberRe
 )
 
 /** @internal */
-export const currentLogAnnotations: FiberRef.FiberRef<HashMap.HashMap<string, string>> = fiberRefUnsafeMake(
-  HashMap.empty()
+export const currentLogAnnotations: FiberRef.FiberRef<HashMap.HashMap<string, string>> = globalValue(
+  Symbol.for("@effect/io/FiberRef/currentLogAnnotation"),
+  () => fiberRefUnsafeMake(HashMap.empty())
 )
 
 /** @internal */
@@ -1843,13 +1845,16 @@ export const currentLogLevel: FiberRef.FiberRef<LogLevel.LogLevel> = fiberRefUns
 )
 
 /** @internal */
-export const currentLogSpan: FiberRef.FiberRef<Chunk.Chunk<LogSpan.LogSpan>> = fiberRefUnsafeMake(
-  Chunk.empty<LogSpan.LogSpan>()
+export const currentLogSpan: FiberRef.FiberRef<Chunk.Chunk<LogSpan.LogSpan>> = globalValue(
+  Symbol.for("@effect/io/FiberRef/currentLogSpan"),
+  () => fiberRefUnsafeMake(Chunk.empty<LogSpan.LogSpan>())
 )
 
 /** @internal */
-export const currentScheduler: FiberRef.FiberRef<Scheduler.Scheduler> = fiberRefUnsafeMake(scheduler.defaultScheduler)
-
+export const currentScheduler: FiberRef.FiberRef<Scheduler.Scheduler> = globalValue(
+  Symbol.for("@effect/io/FiberRef/currentScheduler"),
+  () => fiberRefUnsafeMake(scheduler.defaultScheduler)
+)
 /** @internal */
 export const withScheduler = Debug.dualWithTrace<
   (scheduler: Scheduler.Scheduler) => <R, E, B>(self: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>,
@@ -1857,22 +1862,27 @@ export const withScheduler = Debug.dualWithTrace<
 >(2, (trace) => (self, scheduler) => fiberRefLocally(self, currentScheduler, scheduler).traced(trace))
 
 /** @internal */
-export const currentParallelism: FiberRef.FiberRef<Option.Option<number>> = fiberRefUnsafeMake<Option.Option<number>>(
-  Option.none()
+export const currentParallelism: FiberRef.FiberRef<Option.Option<number>> = globalValue(
+  Symbol.for("@effect/io/FiberRef/currentParallelism"),
+  () => fiberRefUnsafeMake<Option.Option<number>>(Option.none())
 )
 
 /** @internal */
-export const unhandledErrorLogLevel: FiberRef.FiberRef<Option.Option<LogLevel.LogLevel>> = fiberRefUnsafeMake(
-  Option.some<LogLevel.LogLevel>(logLevelDebug),
-  (_) => _,
-  (_, x) => x
+export const currentUnhandledErrorLogLevel: FiberRef.FiberRef<Option.Option<LogLevel.LogLevel>> = globalValue(
+  Symbol.for("@effect/io/FiberRef/currentUnhandledErrorLogLevel"),
+  () =>
+    fiberRefUnsafeMake(
+      Option.some<LogLevel.LogLevel>(logLevelDebug),
+      (_) => _,
+      (_, x) => x
+    )
 )
 
 /** @internal */
 export const withUnhandledErrorLogLevel = Debug.dualWithTrace<
   (level: Option.Option<LogLevel.LogLevel>) => <R, E, B>(self: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>,
   <R, E, B>(self: Effect.Effect<R, E, B>, level: Option.Option<LogLevel.LogLevel>) => Effect.Effect<R, E, B>
->(2, (trace) => (self, level) => fiberRefLocally(self, unhandledErrorLogLevel, level).traced(trace))
+>(2, (trace) => (self, level) => fiberRefLocally(self, currentUnhandledErrorLogLevel, level).traced(trace))
 
 /** @internal */
 export const currentTags: FiberRef.FiberRef<HashSet.HashSet<MetricLabel.MetricLabel>> = fiberRefUnsafeMakeHashSet(
@@ -1880,17 +1890,25 @@ export const currentTags: FiberRef.FiberRef<HashSet.HashSet<MetricLabel.MetricLa
 )
 
 /** @internal */
-export const forkScopeOverride: FiberRef.FiberRef<Option.Option<fiberScope.FiberScope>> = fiberRefUnsafeMake(
-  Option.none(),
-  () => Option.none() as Option.Option<fiberScope.FiberScope>,
-  (parent, _) => parent
+export const currentForkScopeOverride: FiberRef.FiberRef<Option.Option<fiberScope.FiberScope>> = globalValue(
+  Symbol.for("@effect/io/FiberRef/currentForkScopeOverride"),
+  () =>
+    fiberRefUnsafeMake(
+      Option.none(),
+      () => Option.none() as Option.Option<fiberScope.FiberScope>,
+      (parent, _) => parent
+    )
 )
 
 /** @internal */
-export const interruptedCause: FiberRef.FiberRef<Cause.Cause<never>> = fiberRefUnsafeMake(
-  internalCause.empty,
-  () => internalCause.empty,
-  (parent, _) => parent
+export const currentInterruptedCause: FiberRef.FiberRef<Cause.Cause<never>> = globalValue(
+  Symbol.for("@effect/io/FiberRef/currentInterruptedCause"),
+  () =>
+    fiberRefUnsafeMake(
+      internalCause.empty,
+      () => internalCause.empty,
+      (parent, _) => parent
+    )
 )
 
 // -----------------------------------------------------------------------------

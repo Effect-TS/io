@@ -39,7 +39,9 @@ export const make = (options: Omit<Tracer, TracerTypeId>): Tracer => ({
 /**
  * @since 1.0.0
  */
-export const Tracer = Context.Tag<Tracer>()
+export const Tracer = Context.Tag<Tracer>(
+  Symbol.for("@effect/io/Tracer")
+)
 
 /**
  * @since 1.0.0
@@ -128,7 +130,9 @@ const nativeTracer: Tracer = make({
 /**
  * @since 1.0.0
  */
-export const Span = Context.Tag<Span>()
+export const Span = Context.Tag<Span>(
+  Symbol.for("@effect/io/Span")
+)
 
 /**
  * @since 1.0.0

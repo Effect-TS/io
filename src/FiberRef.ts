@@ -289,7 +289,7 @@ export const currentContext: FiberRef<Context.Context<never>> = core.currentCont
  * @since 1.0.0
  * @category fiberRefs
  */
-export const unhandledErrorLogLevel: FiberRef<Option.Option<LogLevel.LogLevel>> = core.unhandledErrorLogLevel
+export const unhandledErrorLogLevel: FiberRef<Option.Option<LogLevel.LogLevel>> = core.currentUnhandledErrorLogLevel
 
 /**
  * @since 1.0.0
@@ -355,4 +355,4 @@ export const currentTags: FiberRef<HashSet.HashSet<MetricLabel.MetricLabel>> = c
  * @since 1.0.0
  * @category fiberRefs
  */
-export const interruptedCause: FiberRef<Cause.Cause<never>> = core.interruptedCause
+export const interruptedCause: FiberRef<Cause.Cause<never>> = core.currentInterruptedCause

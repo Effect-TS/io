@@ -3,6 +3,7 @@ import * as Context from "@effect/data/Context"
 import * as Debug from "@effect/data/Debug"
 import type { LazyArg } from "@effect/data/Function"
 import { identity, pipe } from "@effect/data/Function"
+import { globalValue } from "@effect/data/Global"
 import * as HashMap from "@effect/data/HashMap"
 import * as HashSet from "@effect/data/HashSet"
 import * as MutableQueue from "@effect/data/MutableQueue"
@@ -184,8 +185,10 @@ const drainQueueWhileRunningTable = {
 /**
  * @internal
  */
-export const currentRequestBatchingEnabled = core.fiberRefUnsafeMake(true)
-
+export const currentRequestBatchingEnabled = globalValue(
+  Symbol.for("@effect/io/FiberRef/currentRequestBatchingEnabled"),
+  () => core.fiberRefUnsafeMake(true)
+)
 /**
  * Executes all requests, submitting requests to each data source in parallel.
  */
@@ -361,7 +364,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    * log annotations and log level) may not be up-to-date.
    */
   getInterruptedCause() {
-    return this.getFiberRef(core.interruptedCause)
+    return this.getFiberRef(core.currentInterruptedCause)
   }
 
   /**
@@ -653,7 +656,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    * log annotations and log level) may not be up-to-date.
    */
   isInterrupted(): boolean {
-    return !internalCause.isEmpty(this.getFiberRef(core.interruptedCause))
+    return !internalCause.isEmpty(this.getFiberRef(core.currentInterruptedCause))
   }
 
   /**
@@ -663,8 +666,8 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    * **NOTE**: This method must be invoked by the fiber itself.
    */
   addInterruptedCause(cause: Cause.Cause<never>) {
-    const oldSC = this.getFiberRef(core.interruptedCause)
-    this.setFiberRef(core.interruptedCause, internalCause.sequential(oldSC, cause))
+    const oldSC = this.getFiberRef(core.currentInterruptedCause)
+    this.setFiberRef(core.currentInterruptedCause, internalCause.sequential(oldSC, cause))
   }
 
   /**
@@ -744,7 +747,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
       }
     }
     if (exit._tag === "Failure") {
-      const level = this.getFiberRef(core.unhandledErrorLogLevel)
+      const level = this.getFiberRef(core.currentUnhandledErrorLogLevel)
       if (!internalCause.isInterruptedOnly(exit.cause) && level._tag === "Some") {
         this.log("Fiber terminated with a non handled error", exit.cause, level)
       }
@@ -1483,7 +1486,7 @@ export const collectAllPar = Debug.methodWithTrace<
 /* @internal */
 export const daemonChildren = Debug.methodWithTrace((trace) =>
   <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
-    const forkScope = core.fiberRefLocally(core.forkScopeOverride, Option.some(fiberScope.globalScope))
+    const forkScope = core.fiberRefLocally(core.currentForkScopeOverride, Option.some(fiberScope.globalScope))
     return forkScope(self).traced(trace)
   }
 )
@@ -1869,7 +1872,7 @@ export const unsafeMakeChildFiber = <R, E, A, E2, B>(
   childFiber.unsafeAddObserver((exit) => supervisor.onEnd(exit, childFiber))
 
   const parentScope = overrideScope !== null ? overrideScope : pipe(
-    parentFiber.getFiberRef(core.forkScopeOverride),
+    parentFiber.getFiberRef(core.currentForkScopeOverride),
     Option.getOrElse(() => parentFiber.scope())
   )
 
@@ -2903,8 +2906,8 @@ export const raceFibersWith = Debug.dualWithTrace<
       )
       leftFiber.startFork(self)
       rightFiber.startFork(that)
-      leftFiber.setFiberRef(core.forkScopeOverride, Option.some(parentFiber.scope()))
-      rightFiber.setFiberRef(core.forkScopeOverride, Option.some(parentFiber.scope()))
+      leftFiber.setFiberRef(core.currentForkScopeOverride, Option.some(parentFiber.scope()))
+      rightFiber.setFiberRef(core.currentForkScopeOverride, Option.some(parentFiber.scope()))
       return pipe(
         core.async<R | R1 | R2 | R3, E2 | E3, A2 | A3>((cb) => {
           leftFiber.unsafeAddObserver(() => completeRace(leftFiber, rightFiber, restore(selfWins), raceIndicator, cb))

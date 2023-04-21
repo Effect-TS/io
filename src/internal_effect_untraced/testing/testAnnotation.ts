@@ -107,7 +107,7 @@ export const fibers: TestAnnotation<
  */
 export const ignored: TestAnnotation<number> = make(
   "ignored",
-  Context.Tag<number>(),
+  Context.Tag<number>(Symbol.for("@effect/test/TestAnnotation/ignored")),
   0,
   (a, b) => a + b
 )
@@ -119,7 +119,7 @@ export const ignored: TestAnnotation<number> = make(
  */
 export const repeated: TestAnnotation<number> = make(
   "repeated",
-  Context.Tag<number>(),
+  Context.Tag<number>(Symbol.for("@effect/test/TestAnnotation/repeated")),
   0,
   (a, b) => a + b
 )
@@ -131,7 +131,7 @@ export const repeated: TestAnnotation<number> = make(
  */
 export const retried: TestAnnotation<number> = make(
   "retried",
-  Context.Tag<number>(),
+  Context.Tag<number>(Symbol.for("@effect/test/TestAnnotation/retired")),
   0,
   (a, b) => a + b
 )
@@ -143,7 +143,7 @@ export const retried: TestAnnotation<number> = make(
  */
 export const tagged: TestAnnotation<HashSet.HashSet<string>> = make(
   "tagged",
-  Context.Tag<HashSet.HashSet<string>>(),
+  Context.Tag<HashSet.HashSet<string>>(Symbol.for("@effect/test/TestAnnotation/tagged")),
   HashSet.empty(),
   (a, b) => pipe(a, HashSet.union(b))
 )

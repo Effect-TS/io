@@ -1,5 +1,6 @@
 import * as Debug from "@effect/data/Debug"
 import { seconds } from "@effect/data/Duration"
+import { globalValue } from "@effect/data/Global"
 import type * as Cache from "@effect/io/Cache"
 import type { Deferred } from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
@@ -28,7 +29,10 @@ export const currentCache = core.fiberRefUnsafeMake<RequestCache>(unsafeMakeWith
 ))
 
 /** @internal */
-export const currentCacheEnabled = core.fiberRefUnsafeMake(true)
+export const currentCacheEnabled = globalValue(
+  Symbol.for("@effect/io/FiberRef/currentCacheEnabled"),
+  () => core.fiberRefUnsafeMake(true)
+)
 
 /** @internal */
 export const fromRequest = Debug.methodWithTrace((trace) =>

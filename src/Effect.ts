@@ -5539,7 +5539,7 @@ export const withUnhandledErrorLogLevel: {
  */
 export const setUnhandledErrorLogLevel = (level: Option.Option<LogLevel>): Layer.Layer<never, never, never> =>
   layer.scopedDiscard(
-    fiberRuntime.fiberRefLocallyScoped(core.unhandledErrorLogLevel, level)
+    fiberRuntime.fiberRefLocallyScoped(core.currentUnhandledErrorLogLevel, level)
   )
 
 /**
