@@ -4815,26 +4815,15 @@ export const tryPromiseInterrupt: <A>(evaluate: (signal: AbortSignal) => Promise
  * @since 1.0.0
  * @category constructors
  */
-export const all: {
-  <R, E, A, T extends ReadonlyArray<Effect<any, any, any>>>(
-    self: Effect<R, E, A>,
-    ...args: T
-  ): Effect<
-    R | T["length"] extends 0 ? never
-      : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
-      : never,
-    E | T["length"] extends 0 ? never
-      : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
-      : never,
-    [
-      A,
-      ...(T["length"] extends 0 ? []
-        : Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>)
-    ]
-  >
-  <T extends ReadonlyArray<Effect<any, any, any>>>(
-    args: [...T]
-  ): Effect<
+export const all: All.Signature = effect.all
+
+/**
+ * @since 1.0.0
+ * @category utils
+ */
+export declare namespace All {
+  export type EffectAny = Effect<any, any, any>
+  export type ReturnArray<T> = [T] extends [ReadonlyArray<EffectAny>] ? Effect<
     T[number] extends never ? never
       : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
       : never,
@@ -4844,28 +4833,52 @@ export const all: {
     T[number] extends never ? []
       : { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
   >
-  <T extends Readonly<{ [K: string]: Effect<any, any, any> }>>(
-    args: T
-  ): Effect<
-    keyof T extends never ? never
-      : [T[keyof T]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
+    : never
+  export type ReturnTuple<T extends ReadonlyArray<Effect<any, any, any>>> = Effect<
+    T[number] extends never ? never
+      : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
       : never,
-    keyof T extends never ? never
-      : [T[keyof T]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
+    T[number] extends never ? never
+      : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
       : never,
-    { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
+    T[number] extends never ? []
+      : { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
+  > extends infer X ? X : never
+  export type ReturnIterable<T> = [T] extends [[Iterable<EffectAny>]]
+    ? [T] extends [[ReadonlyArray<EffectAny>]] ? ReturnTuple<T[0]>
+    : Effect<
+      [T[0]] extends [Iterable<{ [EffectTypeId]: { _R: (_: never) => infer R } }>] ? R
+        : never,
+      [T[0]] extends [Iterable<{ [EffectTypeId]: { _E: (_: never) => infer E } }>] ? E
+        : never,
+      [T[0]] extends [Iterable<{ [EffectTypeId]: { _A: (_: never) => infer A } }>] ? Array<A>
+        : never
+    >
+    : never
+  export type ReturnObject<T> = [T] extends [[Readonly<{ [K: string]: Effect<any, any, any> }>]] ? Effect<
+    keyof T[0] extends never ? never
+      : [T[0][keyof T[0]]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
+      : never,
+    keyof T[0] extends never ? never
+      : [T[0][keyof T[0]]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
+      : never,
+    { [K in keyof T[0]]: [T[0][K]] extends [Effect<any, any, infer A>] ? A : never }
   >
-  <T extends Iterable<Effect<any, any, any>>>(
-    args: T
-  ): Effect<
-    [T] extends [Iterable<{ [EffectTypeId]: { _R: (_: never) => infer R } }>] ? R
-      : never,
-    [T] extends [Iterable<{ [EffectTypeId]: { _E: (_: never) => infer E } }>] ? E
-      : never,
-    [T] extends [Iterable<{ [EffectTypeId]: { _A: (_: never) => infer A } }>] ? Array<A>
-      : never
-  >
-} = effect.all
+    : never
+  export type Signature = {
+    <
+      Args extends
+        | ReadonlyArray<EffectAny>
+        | [Iterable<EffectAny>]
+        | [Readonly<{ [K: string]: Effect<any, any, any> }>]
+    >(
+      ...args: [...Args]
+    ): Args["length"] extends 1 ? Args extends [Iterable<EffectAny>] ? ReturnIterable<Args>
+    : Args extends [EffectAny] ? ReturnArray<Args>
+    : ReturnObject<Args>
+      : ReturnArray<Args>
+  }
+}
 
 /**
  * Runs all the provided effects in parallel respecting the structure provided in input.
@@ -4875,57 +4888,7 @@ export const all: {
  * @since 1.0.0
  * @category constructors
  */
-export const allPar: {
-  <R, E, A, T extends ReadonlyArray<Effect<any, any, any>>>(
-    self: Effect<R, E, A>,
-    ...args: T
-  ): Effect<
-    R | T["length"] extends 0 ? never
-      : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
-      : never,
-    E | T["length"] extends 0 ? never
-      : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
-      : never,
-    [
-      A,
-      ...(T["length"] extends 0 ? []
-        : { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never })
-    ]
-  >
-  <T extends ReadonlyArray<Effect<any, any, any>>>(
-    args: [...T]
-  ): Effect<
-    T[number] extends never ? never
-      : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
-      : never,
-    T[number] extends never ? never
-      : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
-      : never,
-    T[number] extends never ? []
-      : { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
-  >
-  <T extends Readonly<{ [K: string]: Effect<any, any, any> }>>(
-    args: T
-  ): Effect<
-    keyof T extends never ? never
-      : [T[keyof T]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
-      : never,
-    keyof T extends never ? never
-      : [T[keyof T]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
-      : never,
-    { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
-  >
-  <T extends Iterable<Effect<any, any, any>>>(
-    args: T
-  ): Effect<
-    [T] extends [Iterable<{ [EffectTypeId]: { _R: (_: never) => infer R } }>] ? R
-      : never,
-    [T] extends [Iterable<{ [EffectTypeId]: { _E: (_: never) => infer E } }>] ? E
-      : never,
-    [T] extends [Iterable<{ [EffectTypeId]: { _A: (_: never) => infer A } }>] ? Array<A>
-      : never
-  >
-} = fiberRuntime.allPar
+export const allPar: All.Signature = fiberRuntime.allPar
 
 /**
  * Used to unify functions that would otherwise return `Effect<A, B, C> | Effect<D, E, F>`
