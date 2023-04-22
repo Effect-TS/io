@@ -843,57 +843,7 @@ Supports multiple arguments, a single argument tuple / array or record / struct.
 **Signature**
 
 ```ts
-export declare const all: {
-  <R, E, A, T extends readonly Effect<any, any, any>[]>(self: Effect<R, E, A>, ...args: T): Effect<
-    R | T['length'] extends 0
-      ? never
-      : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }]
-      ? R
-      : never,
-    E | T['length'] extends 0
-      ? never
-      : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }]
-      ? E
-      : never,
-    [
-      A,
-      ...(T['length'] extends 0
-        ? []
-        : Readonly<{ [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }>)
-    ]
-  >
-  <T extends readonly Effect<any, any, any>[]>(args: [...T]): Effect<
-    T[number] extends never
-      ? never
-      : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }]
-      ? R
-      : never,
-    T[number] extends never
-      ? never
-      : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }]
-      ? E
-      : never,
-    T[number] extends never ? [] : { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
-  >
-  <T extends Readonly<{ [K: string]: Effect<any, any, any> }>>(args: T): Effect<
-    keyof T extends never
-      ? never
-      : [T[keyof T]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }]
-      ? R
-      : never,
-    keyof T extends never
-      ? never
-      : [T[keyof T]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }]
-      ? E
-      : never,
-    { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
-  >
-  <T extends Iterable<Effect<any, any, any>>>(args: T): Effect<
-    [T] extends [Iterable<{ [EffectTypeId]: { _R: (_: never) => infer R } }>] ? R : never,
-    [T] extends [Iterable<{ [EffectTypeId]: { _E: (_: never) => infer E } }>] ? E : never,
-    [T] extends [Iterable<{ [EffectTypeId]: { _A: (_: never) => infer A } }>] ? A[] : never
-  >
-}
+export declare const all: All.Signature
 ```
 
 Added in v1.0.0
@@ -952,52 +902,7 @@ Supports multiple arguments, a single argument tuple / array or record / struct.
 **Signature**
 
 ```ts
-export declare const allPar: {
-  <R, E, A, T extends readonly Effect<any, any, any>[]>(self: Effect<R, E, A>, ...args: T): Effect<
-    R | T['length'] extends 0
-      ? never
-      : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }]
-      ? R
-      : never,
-    E | T['length'] extends 0
-      ? never
-      : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }]
-      ? E
-      : never,
-    [A, ...(T['length'] extends 0 ? [] : { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never })]
-  >
-  <T extends readonly Effect<any, any, any>[]>(args: [...T]): Effect<
-    T[number] extends never
-      ? never
-      : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }]
-      ? R
-      : never,
-    T[number] extends never
-      ? never
-      : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }]
-      ? E
-      : never,
-    T[number] extends never ? [] : { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
-  >
-  <T extends Readonly<{ [K: string]: Effect<any, any, any> }>>(args: T): Effect<
-    keyof T extends never
-      ? never
-      : [T[keyof T]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }]
-      ? R
-      : never,
-    keyof T extends never
-      ? never
-      : [T[keyof T]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }]
-      ? E
-      : never,
-    { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
-  >
-  <T extends Iterable<Effect<any, any, any>>>(args: T): Effect<
-    [T] extends [Iterable<{ [EffectTypeId]: { _R: (_: never) => infer R } }>] ? R : never,
-    [T] extends [Iterable<{ [EffectTypeId]: { _E: (_: never) => infer E } }>] ? E : never,
-    [T] extends [Iterable<{ [EffectTypeId]: { _A: (_: never) => infer A } }>] ? A[] : never
-  >
-}
+export declare const allPar: All.Signature
 ```
 
 Added in v1.0.0
