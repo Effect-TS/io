@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.25.1
+
+### Patch Changes
+
+- [#398](https://github.com/Effect-TS/io/pull/398) [`f0411ad`](https://github.com/Effect-TS/io/commit/f0411adf8ea37378ebd83e178cf64215db6fe3a7) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Improve Effect.all / allPar type
+
 ## 0.25.0
 
 ### Minor Changes
