@@ -70,20 +70,6 @@ export const MapRequestResolversReducer = <R, A, R2>(
   singleCase: (dataSource, blockedRequest) => single(f(dataSource), blockedRequest)
 })
 
-// /** @internal */
-// export const ContramapContextReducer = <R0, R>(
-//   f: (context: Context.Context<R0>) => Context.Context<R>
-// ): BlockedRequests.Reducer<R, BlockedRequests<R0>> => ({
-//   emptyCase: () => empty,
-//   parCase: (left, right) => par(left, right),
-//   seqCase: (left, right) => seq(left, right),
-//   singleCase: (dataSource, blockedRequest) =>
-//     single(
-//       _dataSource.contramapContext(dataSource, f),
-//       blockedRequest
-//     )
-// })
-
 type BlockedRequestsCase = ParCase | SeqCase
 
 interface ParCase {
@@ -302,7 +288,7 @@ const merge = <R>(
   if (
     seqHeadKeys.length === 1 &&
     parKeys.length === 1 &&
-    Equal.equals(seqHeadKeys, parKeys)
+    Equal.equals(seqHeadKeys[0], parKeys[0])
   ) {
     return List.cons(
       sequentialCollectionCombine(
