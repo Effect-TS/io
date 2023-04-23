@@ -1,5 +1,13 @@
 # @effect/io
 
+## 0.25.2
+
+### Patch Changes
+
+- [#402](https://github.com/Effect-TS/io/pull/402) [`d15451f`](https://github.com/Effect-TS/io/commit/d15451fd0b871ce659fe614542b297d59f8b9148) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Use Proxy to distinguish identical requests
+
+- [#400](https://github.com/Effect-TS/io/pull/400) [`20338ea`](https://github.com/Effect-TS/io/commit/20338eaf676cbc2d384b453043af029f29a36a9f) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Make sure identical requests are not mangled
+
 ## 0.25.1
 
 ### Patch Changes
