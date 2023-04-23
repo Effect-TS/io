@@ -52,10 +52,11 @@ export const fromRequest = Debug.methodWithTrace((trace) =>
     // @ts-expect-error
     return core.flatMap(core.isEffect(dataSource) ? dataSource : core.succeed(dataSource), (ds) =>
       core.fiberIdWith((id) => {
+        const proxy = new Proxy(request, {})
         return core.fiberRefGetWith(currentCacheEnabled, (cacheEnabled) => {
           if (cacheEnabled) {
             return core.fiberRefGetWith(currentCache, (cache) =>
-              core.flatMap(cache.getEither(request), (orNew) => {
+              core.flatMap(cache.getEither(proxy), (orNew) => {
                 switch (orNew._tag) {
                   case "Left": {
                     orNew.left.listeners.increment()
@@ -76,10 +77,10 @@ export const fromRequest = Debug.methodWithTrace((trace) =>
                             orNew.left.listeners.decrement()
                             return core.flatMap(
                               cache.invalidateWhen(
-                                request,
+                                proxy,
                                 (entry) => entry.handle === orNew.left.handle
                               ),
-                              () => fromRequest(request, dataSource)
+                              () => fromRequest(proxy, dataSource)
                             )
                           }
                           return core.blocked(
@@ -98,7 +99,7 @@ export const fromRequest = Debug.methodWithTrace((trace) =>
                     return core.blocked(
                       BlockedRequests.single(
                         ds as any,
-                        BlockedRequests.makeEntry(request, orNew.right.handle, orNew.right.listeners, id, {
+                        BlockedRequests.makeEntry(proxy, orNew.right.handle, orNew.right.listeners, id, {
                           completed: false
                         })
                       ),
@@ -124,7 +125,7 @@ export const fromRequest = Debug.methodWithTrace((trace) =>
               core.blocked(
                 BlockedRequests.single(
                   ds as any,
-                  BlockedRequests.makeEntry(request, ref, listeners, id, { completed: false })
+                  BlockedRequests.makeEntry(proxy, ref, listeners, id, { completed: false })
                 ),
                 ensuring(
                   core.deferredAwait(ref),
