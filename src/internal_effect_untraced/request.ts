@@ -1,7 +1,5 @@
 import * as Data from "@effect/data/Data"
 import * as Debug from "@effect/data/Debug"
-import * as HashMap from "@effect/data/HashMap"
-import * as Option from "@effect/data/Option"
 import type * as Effect from "@effect/io/Effect"
 import * as completedRequestMap from "@effect/io/internal_effect_untraced/completedRequestMap"
 import * as core from "@effect/io/internal_effect_untraced/core"
@@ -61,10 +59,12 @@ export const complete = Debug.dualWithTrace<
       completedRequestMap.currentRequestMap,
       (map) =>
         core.sync(() => {
-          const entry = HashMap.unsafeGet(map, self)
-          if (!entry.state.completed) {
-            entry.state.completed = true
-            core.deferredUnsafeDone(entry.result, result)
+          if (map.has(self)) {
+            const entry = map.get(self)!
+            if (!entry.state.completed) {
+              entry.state.completed = true
+              core.deferredUnsafeDone(entry.result, result)
+            }
           }
         })
     ).traced(trace))
@@ -136,6 +136,6 @@ export const filterOutCompleted = <A extends Request.Request<any, any>>(requests
     completedRequestMap.currentRequestMap,
     (map) =>
       core.succeed(
-        requests.filter((request) => !(Option.getOrUndefined(HashMap.get(map, request))?.state.completed === true))
+        requests.filter((request) => !(map.get(request)?.state.completed === true))
       )
   )

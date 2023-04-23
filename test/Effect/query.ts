@@ -16,6 +16,10 @@ interface Counter {
   readonly _: unique symbol
 }
 const Counter = Context.Tag<Counter, { count: number }>()
+interface Requests {
+  readonly _: unique symbol
+}
+const Requests = Context.Tag<Requests, { count: number }>()
 
 export const userIds: ReadonlyArray<number> = ReadonlyArray.range(1, 26)
 
@@ -51,11 +55,14 @@ const delay = <R, E, A>(self: Effect.Effect<R, E, A>) =>
 const counted = <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.tap(self, () => Effect.map(Counter, (c) => c.count++))
 
 const UserResolver = pipe(
-  Resolver.makeBatched((requests: Array<UserRequest>) =>
-    counted(Effect.forEachDiscard(requests, (request) => delay(processRequest(request))))
-  ),
+  Resolver.makeBatched((requests: Array<UserRequest>) => {
+    return Effect.flatMap(Requests, (r) => {
+      r.count += requests.length
+      return counted(Effect.forEachDiscard(requests, (request) => delay(processRequest(request))))
+    })
+  }),
   Resolver.batchN(15),
-  Resolver.contextFromServices(Counter)
+  Resolver.contextFromServices(Counter, Requests)
 )
 
 export const getAllUserIds = Effect.request(GetAllIds({}), UserResolver)
@@ -96,18 +103,16 @@ const processRequest = (request: UserRequest): Effect.Effect<never, never, void>
   }
 }
 
-const CounterLive = Layer.sync(
-  Counter,
-  () => ({ count: 0 })
-)
-
 const EnvLive = Layer.provideMerge(
   Layer.mergeAll(
     Effect.setRequestCache(Request.makeCache(100, seconds(60))),
     Effect.setRequestCaching("on"),
     Effect.setRequestBatching("on")
   ),
-  CounterLive
+  Layer.mergeAll(
+    Layer.sync(Counter, () => ({ count: 0 })),
+    Layer.sync(Requests, () => ({ count: 0 }))
+  )
 )
 
 const provideEnv = Effect.provideSomeLayer(EnvLive)
@@ -241,5 +246,19 @@ describe.concurrent("Effect", () => {
         yield* $(getAllUserIds)
         expect(yield* $(Counter)).toEqual({ count: 6 })
       }))
+    ))
+
+  it.effect("batching preserves individual & identical requests", () =>
+    provideEnv(
+      Effect.gen(function*($) {
+        yield* $(
+          Effect.allPar(getUserNameById(userIds[0]), getUserNameById(userIds[0])),
+          Effect.withRequestCaching("off")
+        )
+        const requests = yield* $(Requests)
+        const invocations = yield* $(Counter)
+        expect(requests.count).toEqual(2)
+        expect(invocations.count).toEqual(1)
+      })
     ))
 })

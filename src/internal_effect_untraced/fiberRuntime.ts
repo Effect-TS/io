@@ -4,7 +4,6 @@ import * as Debug from "@effect/data/Debug"
 import type { LazyArg } from "@effect/data/Function"
 import { identity, pipe } from "@effect/data/Function"
 import { globalValue } from "@effect/data/Global"
-import * as HashMap from "@effect/data/HashMap"
 import * as HashSet from "@effect/data/HashSet"
 import * as MutableQueue from "@effect/data/MutableQueue"
 import * as MRef from "@effect/data/MutableRef"
@@ -51,6 +50,7 @@ import type { Logger } from "@effect/io/Logger"
 import * as LogLevel from "@effect/io/Logger/Level"
 import type * as MetricLabel from "@effect/io/Metric/Label"
 import * as Ref from "@effect/io/Ref"
+import type { Entry, Request } from "@effect/io/Request"
 import type * as RequestBlock from "@effect/io/RequestBlock"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
@@ -198,8 +198,14 @@ const runBlockedRequests = <R>(self: RequestBlock.RequestBlock<R>, id: FiberId.F
     (requestsByRequestResolver) =>
       forEachParDiscard(
         _RequestBlock.sequentialCollectionToChunk(requestsByRequestResolver),
-        ([dataSource, sequential]) =>
-          core.fiberRefLocally(
+        ([dataSource, sequential]) => {
+          const map = new Map<Request<any, any>, Entry<any>>()
+          for (const block of sequential) {
+            for (const entry of block) {
+              map.set(entry.request as Request<any, any>, entry)
+            }
+          }
+          return core.fiberRefLocally(
             core.flatMap(
               raceAwait(
                 core.interruptible(dataSource.runAll(sequential)),
@@ -243,12 +249,9 @@ const runBlockedRequests = <R>(self: RequestBlock.RequestBlock<R>, id: FiberId.F
                 })
             ),
             currentRequestMap,
-            RA.reduce(
-              sequential,
-              HashMap.empty(),
-              (agg, block) => RA.reduce(block, agg, (agg2, entry) => HashMap.set(agg2, entry.request, entry))
-            )
+            map
           )
+        }
       )
   )
 
