@@ -1062,7 +1062,7 @@ export const configProviderWith: <R, E, A>(f: (configProvider: ConfigProvider) =
  * @since 1.0.0
  * @category constructors
  */
-export const allDiscard: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, E, void> = effect.allDiscard
+export const allDiscard: All.SignatureDiscard = effect.allDiscard
 
 /**
  * Evaluate each effect in the structure in parallel, and collect the results.
@@ -1071,8 +1071,7 @@ export const allDiscard: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect
  * @since 1.0.0
  * @category constructors
  */
-export const allParDiscard: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, E, void> =
-  fiberRuntime.allParDiscard
+export const allParDiscard: All.SignatureDiscard = fiberRuntime.allParDiscard
 
 /**
  * Evaluate each effect in the structure with `collectAll`, and collect the
@@ -4877,6 +4876,22 @@ export declare namespace All {
     : Args extends [EffectAny] ? ReturnArray<Args>
     : ReturnObject<Args>
       : ReturnArray<Args>
+  }
+  export type Discard<X> = [X] extends [Effect<infer R, infer E, infer _>] ? Effect<R, E, void> : never
+  export type SignatureDiscard = {
+    <
+      Args extends
+        | ReadonlyArray<EffectAny>
+        | [Iterable<EffectAny>]
+        | [Readonly<{ [K: string]: Effect<any, any, any> }>]
+    >(
+      ...args: [...Args]
+    ): Discard<
+      Args["length"] extends 1 ? Args extends [Iterable<EffectAny>] ? ReturnIterable<Args>
+      : Args extends [EffectAny] ? ReturnArray<Args>
+      : ReturnObject<Args>
+        : ReturnArray<Args>
+    >
   }
 }
 

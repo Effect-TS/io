@@ -839,7 +839,7 @@ results. For a parallel version, see `collectAllParDiscard`.
 **Signature**
 
 ```ts
-export declare const allDiscard: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, E, void>
+export declare const allDiscard: All.SignatureDiscard
 ```
 
 Added in v1.0.0
@@ -898,7 +898,7 @@ For a sequential version, see `all`.
 **Signature**
 
 ```ts
-export declare const allParDiscard: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, E, void>
+export declare const allParDiscard: All.SignatureDiscard
 ```
 
 Added in v1.0.0
