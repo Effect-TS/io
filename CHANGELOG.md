@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.25.3
+
+### Patch Changes
+
+- [#404](https://github.com/Effect-TS/io/pull/404) [`d8e8d40`](https://github.com/Effect-TS/io/commit/d8e8d40e366172965e4b6dd1e1159b5fe094e844) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Remove leftover Effect.withParallelismUnbounded
+
 ## 0.25.2
 
 ### Patch Changes
