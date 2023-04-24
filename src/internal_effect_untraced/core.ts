@@ -881,9 +881,10 @@ export const interruptibleMask = Debug.methodWithTrace((trace, restore) =>
     }
     effect.i1 = (oldFlags: RuntimeFlags.RuntimeFlags) =>
       _runtimeFlags.interruption(oldFlags)
-        ? flatMapStep(restore(f)(interruptible), _continue)
-        : flatMapStep(restore(f)(uninterruptible), _continue)
-    return effect.traced(trace)
+        ? step(restore(f)(interruptible))
+        : step(restore(f)(uninterruptible))
+    // @ts-expect-error
+    return flatMap(effect, _continue).traced(trace)
   }
 )
 
@@ -1228,9 +1229,10 @@ export const uninterruptibleMask = Debug.methodWithTrace((trace, restore) =>
     }
     effect.i1 = (oldFlags: RuntimeFlags.RuntimeFlags) =>
       _runtimeFlags.interruption(oldFlags)
-        ? flatMapStep(restore(f)(interruptible), _continue)
-        : flatMapStep(restore(f)(uninterruptible), _continue)
-    return effect.traced(trace)
+        ? step(restore(f)(interruptible))
+        : step(restore(f)(uninterruptible))
+    // @ts-expect-error
+    return flatMap(effect, _continue).traced(trace)
   }
 )
 
