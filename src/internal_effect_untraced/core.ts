@@ -375,43 +375,34 @@ export const acquireUseRelease = Debug.dualWithTrace<
   ) => Effect.Effect<R | R2 | R3, E | E2, A2>
 >(3, (trace, restoreTracing) =>
   (acquire, use, release) =>
-    flatMap(
-      uninterruptibleMask((restore) =>
-        step(pipe(
-          acquire,
-          flatMap((a) =>
-            pipe(
-              suspend(() => restore(restoreTracing(use)(a))),
-              exit,
-              flatMap((exit) =>
-                pipe(
-                  suspend(() => restoreTracing(release)(a, exit)),
-                  matchCauseEffect(
-                    (cause) => {
-                      switch (exit._tag) {
-                        case OpCodes.OP_FAILURE: {
-                          return failCause(internalCause.parallel(exit.i0, cause))
-                        }
-                        case OpCodes.OP_SUCCESS: {
-                          return failCause(cause)
-                        }
+    uninterruptibleMask((restore) =>
+      pipe(
+        acquire,
+        flatMap((a) =>
+          pipe(
+            suspend(() => restore(restoreTracing(use)(a))),
+            exit,
+            flatMap((exit) =>
+              pipe(
+                suspend(() => restoreTracing(release)(a, exit)),
+                matchCauseEffect(
+                  (cause) => {
+                    switch (exit._tag) {
+                      case OpCodes.OP_FAILURE: {
+                        return failCause(internalCause.parallel(exit.i0, cause))
                       }
-                    },
-                    () => exit
-                  )
+                      case OpCodes.OP_SUCCESS: {
+                        return failCause(cause)
+                      }
+                    }
+                  },
+                  () => exit
                 )
               )
             )
           )
-        ))
-      ),
-      (exitOrBlocked) => {
-        if (exitOrBlocked._tag === "Blocked") {
-          return blocked(exitOrBlocked.i0, uninterruptible(exitOrBlocked.i1))
-        } else {
-          return exitOrBlocked
-        }
-      }
+        )
+      )
     ).traced(trace))
 
 /* @internal */
@@ -863,15 +854,15 @@ export const interruptible = Debug.methodWithTrace((trace) =>
   <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
     const effect = new EffectPrimitive(OpCodes.OP_UPDATE_RUNTIME_FLAGS) as any
     effect.i0 = RuntimeFlagsPatch.enable(_runtimeFlags.Interruption)
-    effect.i1 = () => step(self)
-    // @ts-expect-error
-    return flatMap(effect, (orBlock: any) => {
+    const _continue = (orBlock: any) => {
       if (orBlock._tag === "Blocked") {
         return blocked(orBlock.i0, interruptible(orBlock.i1))
       } else {
         return orBlock
       }
-    }).traced(trace)
+    }
+    effect.i1 = () => flatMapStep(self, _continue)
+    return effect.traced(trace)
   }
 )
 
@@ -882,10 +873,16 @@ export const interruptibleMask = Debug.methodWithTrace((trace, restore) =>
   ): Effect.Effect<R, E, A> => {
     const effect = new EffectPrimitive(OpCodes.OP_UPDATE_RUNTIME_FLAGS) as any
     effect.i0 = RuntimeFlagsPatch.enable(_runtimeFlags.Interruption)
+    const _continue = (step: Exit.Exit<E, A> | Effect.Blocked<R, E, A>): Exit.Exit<E, A> | Effect.Blocked<R, E, A> => {
+      if (step._tag === "Blocked") {
+        return blocked(step.i0, interruptible(step.i1))
+      }
+      return step
+    }
     effect.i1 = (oldFlags: RuntimeFlags.RuntimeFlags) =>
       _runtimeFlags.interruption(oldFlags)
-        ? restore(f)(interruptible)
-        : restore(f)(uninterruptible)
+        ? flatMapStep(restore(f)(interruptible), _continue)
+        : flatMapStep(restore(f)(uninterruptible), _continue)
     return effect.traced(trace)
   }
 )
@@ -1204,15 +1201,15 @@ export const uninterruptible: <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.
     <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
       const effect = new EffectPrimitive(OpCodes.OP_UPDATE_RUNTIME_FLAGS) as any
       effect.i0 = RuntimeFlagsPatch.disable(_runtimeFlags.Interruption)
-      effect.i1 = () => step(self)
-      // @ts-expect-error
-      return flatMap(effect, (orBlock: any) => {
+      effect.i1 = () => flatMapStep(self, _continue)
+      const _continue = (orBlock: any) => {
         if (orBlock._tag === "Blocked") {
           return blocked(orBlock.i0, uninterruptible(orBlock.i1))
         } else {
           return orBlock
         }
-      }).traced(trace)
+      }
+      return effect.traced(trace)
     }
 )
 
@@ -1223,10 +1220,16 @@ export const uninterruptibleMask = Debug.methodWithTrace((trace, restore) =>
   ): Effect.Effect<R, E, A> => {
     const effect = new EffectPrimitive(OpCodes.OP_UPDATE_RUNTIME_FLAGS) as any
     effect.i0 = RuntimeFlagsPatch.disable(_runtimeFlags.Interruption)
+    const _continue = (step: Exit.Exit<E, A> | Effect.Blocked<R, E, A>): Exit.Exit<E, A> | Effect.Blocked<R, E, A> => {
+      if (step._tag === "Blocked") {
+        return blocked(step.i0, uninterruptible(step.i1))
+      }
+      return step
+    }
     effect.i1 = (oldFlags: RuntimeFlags.RuntimeFlags) =>
       _runtimeFlags.interruption(oldFlags)
-        ? restore(f)(interruptible)
-        : restore(f)(uninterruptible)
+        ? flatMapStep(restore(f)(interruptible), _continue)
+        : flatMapStep(restore(f)(uninterruptible), _continue)
     return effect.traced(trace)
   }
 )

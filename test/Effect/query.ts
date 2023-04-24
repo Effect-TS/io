@@ -5,6 +5,7 @@ import * as ReadonlyArray from "@effect/data/ReadonlyArray"
 import * as Cause from "@effect/io/Cause"
 import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
+import * as Fiber from "@effect/io/Fiber"
 import * as FiberRef from "@effect/io/FiberRef"
 import * as TestClock from "@effect/io/internal_effect_untraced/testing/testClock"
 import * as Layer from "@effect/io/Layer"
@@ -162,6 +163,40 @@ describe.concurrent("Effect", () => {
           }
           expect(yield* $(Counter)).toEqual({ count: 0 })
           expect(yield* $(FiberRef.get(interrupts))).toEqual({ interrupts: 1 })
+        })
+      )
+    ))
+  it.effect("requests dont't break interruption", () =>
+    Effect.locally(interrupts, { interrupts: 0 })(
+      provideEnv(
+        Effect.gen(function*($) {
+          const fiber = yield* $(getAllUserNames, Effect.fork)
+          yield* $(Effect.yieldNow())
+          yield* $(Fiber.interrupt(fiber))
+          const exit = yield* $(Fiber.await(fiber))
+          expect(exit._tag).toEqual("Failure")
+          if (exit._tag === "Failure") {
+            expect(Cause.isInterruptedOnly(exit.cause)).toEqual(true)
+          }
+          expect(yield* $(Counter)).toEqual({ count: 0 })
+          expect(yield* $(FiberRef.get(interrupts))).toEqual({ interrupts: 1 })
+        })
+      )
+    ))
+  it.effect("requests work with uninterruptible", () =>
+    Effect.locally(interrupts, { interrupts: 0 })(
+      provideEnv(
+        Effect.gen(function*($) {
+          const fiber = yield* $(getAllUserNames, Effect.uninterruptible, Effect.fork)
+          yield* $(Effect.yieldNow())
+          yield* $(Fiber.interrupt(fiber))
+          const exit = yield* $(Fiber.await(fiber))
+          expect(exit._tag).toEqual("Failure")
+          if (exit._tag === "Failure") {
+            expect(Cause.isInterruptedOnly(exit.cause)).toEqual(true)
+          }
+          expect(yield* $(Counter)).toEqual({ count: 3 })
+          expect(yield* $(FiberRef.get(interrupts))).toEqual({ interrupts: 0 })
         })
       )
     ))
