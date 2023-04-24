@@ -1,5 +1,13 @@
 # @effect/io
 
+## 0.25.4
+
+### Patch Changes
+
+- [#408](https://github.com/Effect-TS/io/pull/408) [`5d920da`](https://github.com/Effect-TS/io/commit/5d920da12ac905d7773c698b3c2abbf9427605ec) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Propagate blocked through region masks
+
+- [#406](https://github.com/Effect-TS/io/pull/406) [`bb447e9`](https://github.com/Effect-TS/io/commit/bb447e969a2796772b05440c5d7df3d87151f0b2) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Always unwind stack on blocked
+
 ## 0.25.3
 
 ### Patch Changes
