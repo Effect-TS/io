@@ -21,8 +21,6 @@ Added in v1.0.0
   - [orElseOptional](#orelseoptional)
   - [orElseSucceed](#orelsesucceed)
   - [tryOrElse](#tryorelse)
-- [aspects](#aspects)
-  - [withParallelismUnbounded](#withparallelismunbounded)
 - [concurrency](#concurrency)
   - [withParallelism](#withparallelism)
 - [config](#config)
@@ -642,21 +640,6 @@ export declare const tryOrElse: {
     onSuccess: (a: A) => Effect<R3, E3, A3>
   ): Effect<R | R2 | R3, E2 | E3, A2 | A3>
 }
-```
-
-Added in v1.0.0
-
-# aspects
-
-## withParallelismUnbounded
-
-Runs the specified effect with an unbounded maximum number of fibers for
-parallel operations.
-
-**Signature**
-
-```ts
-export declare const withParallelismUnbounded: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0

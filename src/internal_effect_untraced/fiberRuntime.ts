@@ -1558,7 +1558,7 @@ export const forEachExec = Debug.dualWithTrace<
         strategy,
         ExecutionStrategy.match(
           () => pipe(elements, core.forEach(restore(f))),
-          () => pipe(elements, forEachPar(restore(f)), core.withParallelismUnbounded),
+          () => pipe(elements, forEachPar(restore(f)), core.withParallelism("unbounded")),
           (parallelism) => pipe(elements, forEachPar(restore(f)), core.withParallelism(parallelism))
         )
       )
