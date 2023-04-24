@@ -1450,10 +1450,22 @@ export const addFinalizer = Debug.methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const allParDiscard = Debug.methodWithTrace((trace) =>
-  <R, E, A>(
-    effects: Iterable<Effect.Effect<R, E, A>>
-  ): Effect.Effect<R, E, void> => forEachParDiscard(effects, identity).traced(trace)
+export const allParDiscard: Effect.All.SignatureDiscard = Debug.methodWithTrace((trace) =>
+  function() {
+    if (arguments.length === 1) {
+      if (core.isEffect(arguments[0])) {
+        return core.asUnit(arguments[0]).traced(trace)
+      } else if (Array.isArray(arguments[0]) || Symbol.iterator in arguments[0]) {
+        return forEachParDiscard(arguments[0], identity as any).traced(trace)
+      } else {
+        return forEachParDiscard(
+          Object.entries(arguments[0] as Readonly<{ [K: string]: Effect.Effect<any, any, any> }>),
+          ([_, e]) => core.asUnit(e)
+        ).traced(trace) as any
+      }
+    }
+    return forEachParDiscard(arguments, identity as any).traced(trace)
+  }
 )
 
 /* @internal */
@@ -2241,7 +2253,7 @@ export const allPar = Debug.methodWithTrace((trace): {
   function() {
     if (arguments.length === 1) {
       if (core.isEffect(arguments[0])) {
-        return core.map(arguments[0], (x) => [x])
+        return core.map(arguments[0], (x) => [x]).traced(trace)
       } else if (Array.isArray(arguments[0]) || Symbol.iterator in arguments[0]) {
         return forEachPar(arguments[0], identity as any).traced(trace)
       } else {

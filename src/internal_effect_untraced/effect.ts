@@ -336,9 +336,22 @@ export const clockWith: <R, E, A>(f: (clock: Clock.Clock) => Effect.Effect<R, E,
   Clock.clockWith
 
 /* @internal */
-export const allDiscard = Debug.methodWithTrace((trace) =>
-  <R, E, A>(effects: Iterable<Effect.Effect<R, E, A>>): Effect.Effect<R, E, void> =>
-    core.forEachDiscard(effects, identity).traced(trace)
+export const allDiscard: Effect.All.SignatureDiscard = Debug.methodWithTrace((trace) =>
+  function() {
+    if (arguments.length === 1) {
+      if (core.isEffect(arguments[0])) {
+        return core.asUnit(arguments[0]).traced(trace)
+      } else if (Array.isArray(arguments[0]) || Symbol.iterator in arguments[0]) {
+        return core.forEachDiscard(arguments[0], identity as any).traced(trace)
+      } else {
+        return core.forEachDiscard(
+          Object.entries(arguments[0] as Readonly<{ [K: string]: Effect.Effect<any, any, any> }>),
+          ([_, e]) => core.asUnit(e)
+        ).traced(trace) as any
+      }
+    }
+    return core.forEachDiscard(arguments, identity as any).traced(trace)
+  }
 )
 
 /* @internal */
