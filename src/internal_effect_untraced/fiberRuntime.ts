@@ -192,7 +192,10 @@ export const currentRequestBatchingEnabled = globalValue(
 /**
  * Executes all requests, submitting requests to each data source in parallel.
  */
-const runBlockedRequests = <R>(self: RequestBlock.RequestBlock<R>, id: FiberId.FiberId) =>
+const runBlockedRequests = <R>(
+  self: RequestBlock.RequestBlock<R>,
+  id: FiberId.FiberId
+) =>
   core.forEachDiscard(
     _RequestBlock.flatten(self),
     (requestsByRequestResolver) =>
@@ -207,30 +210,35 @@ const runBlockedRequests = <R>(self: RequestBlock.RequestBlock<R>, id: FiberId.F
           }
           return core.fiberRefLocally(
             core.flatMap(
-              raceAwait(
-                core.interruptible(dataSource.runAll(sequential)),
-                core.interruptible(core.asyncInterrupt<never, never, void>((cb) => {
-                  const all = sequential.flatMap((b) => b)
-                  const counts = all.map((_) => _.listeners.count)
-                  const checkDone = () => {
-                    if (counts.every((count) => count === 0)) {
+              core.flatMap(
+                forkDaemon(core.interruptible(dataSource.runAll(sequential))),
+                (processing) =>
+                  core.asyncInterrupt<never, never, void>((cb) => {
+                    const all = sequential.flatMap((b) => b)
+                    const counts = all.map((_) => _.listeners.count)
+                    const checkDone = () => {
+                      if (counts.every((count) => count === 0)) {
+                        cleanup.forEach((f) => f())
+                        cb(core.interruptFiber(processing))
+                      }
+                    }
+                    processing.unsafeAddObserver((exit) => {
                       cleanup.forEach((f) => f())
-                      cb(core.unit())
-                    }
-                  }
-                  const cleanup = all.map((r, i) => {
-                    const observer = (count: number) => {
-                      counts[i] = count
-                      checkDone()
-                    }
-                    r.listeners.addObserver(observer)
-                    return () => r.listeners.removeObserver(observer)
+                      cb(exit)
+                    })
+                    const cleanup = all.map((r, i) => {
+                      const observer = (count: number) => {
+                        counts[i] = count
+                        checkDone()
+                      }
+                      r.listeners.addObserver(observer)
+                      return () => r.listeners.removeObserver(observer)
+                    })
+                    checkDone()
+                    return core.sync(() => {
+                      cleanup.forEach((f) => f())
+                    })
                   })
-                  checkDone()
-                  return core.sync(() => {
-                    cleanup.forEach((f) => f())
-                  })
-                }))
               ),
               () =>
                 core.suspend(() => {
@@ -1187,8 +1195,8 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     }
     return core.uninterruptibleMask((restore) =>
       core.flatMap(
-        fork(core.runRequestBlock(op.i0)),
-        (fiber) => ensuring(restore(op.i1), internalFiber.join(fiber))
+        fork(runBlockedRequests(op.i0, this._fiberId)),
+        () => restore(op.i1)
       )
     )
   }
