@@ -5598,16 +5598,6 @@ export const setParallelism = (parallelism: number | "unbounded"): Layer.Layer<n
   )
 
 /**
- * Runs the specified effect with an unbounded maximum number of fibers for
- * parallel operations.
- *
- * @since 1.0.0
- * @category aspects
- */
-export const withParallelismUnbounded: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A> =
-  core.withParallelismUnbounded
-
-/**
  * @since 1.0.0
  * @category runtime
  */

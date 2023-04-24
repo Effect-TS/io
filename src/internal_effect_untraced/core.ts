@@ -1308,12 +1308,6 @@ export const withParallelism = Debug.dualWithTrace<
     ).traced(trace))
 
 /* @internal */
-export const withParallelismUnbounded = Debug.methodWithTrace((trace) =>
-  <R, E, A>(self: Effect.Effect<R, E, A>) =>
-    fiberRefLocally(self, currentParallelism, Option.none() as Option.Option<number>).traced(trace)
-)
-
-/* @internal */
 export const withRuntimeFlags = Debug.dualWithTrace<
   (update: RuntimeFlagsPatch.RuntimeFlagsPatch) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
   <R, E, A>(self: Effect.Effect<R, E, A>, update: RuntimeFlagsPatch.RuntimeFlagsPatch) => Effect.Effect<R, E, A>
