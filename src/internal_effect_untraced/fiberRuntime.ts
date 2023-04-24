@@ -294,6 +294,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   private _asyncBlockingOn: FiberId.FiberId | null = null
   private _exitValue: Exit.Exit<E, A> | null = null
   private _traceStack: Array<NonNullable<Debug.Trace>> = []
+  private _steps: Array<boolean> = [false]
 
   /**
    * The identity of the fiber.
@@ -987,6 +988,12 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
 
   pushStack(cont: core.Continuation) {
     this._stack.push(cont)
+    if (cont._tag === "OnStep") {
+      this._steps.push(true)
+    }
+    if (cont._tag === "RevertFlags") {
+      this._steps.push(false)
+    }
     if ("trace" in cont && cont.trace) {
       this._traceStack.push(cont.trace)
     }
@@ -995,6 +1002,9 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   popStack() {
     const item = this._stack.pop()
     if (item) {
+      if (item._tag === "OnStep" || item._tag === "RevertFlags") {
+        this._steps.pop()
+      }
       if ("trace" in item && item.trace) {
         this._traceStack.pop()
       }
@@ -1157,39 +1167,41 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   }
 
   ["Blocked"](op: core.Primitive & { _tag: "Blocked" }) {
-    const nextOp = this.popStack()
-    if (nextOp) {
-      switch (nextOp._tag) {
-        case "OnStep": {
-          return nextOp.i1(op)
-        }
-        case "OnSuccess": {
-          return core.blocked(op.i0, core.flatMap(op.i1, nextOp.i1))
-        }
-        case "OnSuccessAndFailure": {
-          return core.blocked(op.i0, core.matchCauseEffect(op.i1, nextOp.i1, nextOp.i2))
-        }
-        case "OnFailure": {
-          return core.blocked(op.i0, core.catchAllCause(op.i1, nextOp.i1))
-        }
-        case "Traced": {
-          return core.blocked(op.i0, op.i1.traced(nextOp.trace))
-        }
-        case "While": {
-          return core.blocked(
-            op.i0,
-            core.flatMap(op.i1, (a) => {
-              nextOp.i2(a)
-              if (nextOp.i0()) {
-                return core.whileLoop(nextOp.i0, nextOp.i1, nextOp.i2)
-              }
-              return core.unit()
-            })
-          )
-        }
-        case "RevertFlags": {
-          this.pushStack(nextOp)
-          break
+    if (this._steps[this._steps.length - 1] && this.getFiberRef(currentRequestBatchingEnabled)) {
+      const nextOp = this.popStack()
+      if (nextOp) {
+        switch (nextOp._tag) {
+          case "OnStep": {
+            return nextOp.i1(op)
+          }
+          case "OnSuccess": {
+            return core.blocked(op.i0, core.flatMap(op.i1, nextOp.i1))
+          }
+          case "OnSuccessAndFailure": {
+            return core.blocked(op.i0, core.matchCauseEffect(op.i1, nextOp.i1, nextOp.i2))
+          }
+          case "OnFailure": {
+            return core.blocked(op.i0, core.catchAllCause(op.i1, nextOp.i1))
+          }
+          case "Traced": {
+            return core.blocked(op.i0, op.i1.traced(nextOp.trace))
+          }
+          case "While": {
+            return core.blocked(
+              op.i0,
+              core.flatMap(op.i1, (a) => {
+                nextOp.i2(a)
+                if (nextOp.i0()) {
+                  return core.whileLoop(nextOp.i0, nextOp.i1, nextOp.i2)
+                }
+                return core.unit()
+              })
+            )
+          }
+          case "RevertFlags": {
+            this.pushStack(nextOp)
+            break
+          }
         }
       }
     }
@@ -1231,11 +1243,8 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   }
 
   ["OnStep"](op: core.Primitive & { _tag: "OnStep" }) {
-    if (this.getFiberRef(currentRequestBatchingEnabled)) {
-      this.pushStack(op)
-      return op.i0
-    }
-    return core.flatMap(core.exit(op.i0), op.i1)
+    this.pushStack(op)
+    return op.i0
   }
 
   [OpCodes.OP_TRACED](op: core.Primitive & { _tag: OpCodes.OP_TRACED }) {
