@@ -31,7 +31,7 @@ export const currentCache = core.fiberRefUnsafeMake<RequestCache>(unsafeMakeWith
 /** @internal */
 export const currentCacheEnabled = globalValue(
   Symbol.for("@effect/io/FiberRef/currentCacheEnabled"),
-  () => core.fiberRefUnsafeMake(true)
+  () => core.fiberRefUnsafeMake(false)
 )
 
 /** @internal */
