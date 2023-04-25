@@ -31,7 +31,7 @@ export const currentCache = core.fiberRefUnsafeMake<RequestCache>(unsafeMakeWith
 /** @internal */
 export const currentCacheEnabled = globalValue(
   Symbol.for("@effect/io/FiberRef/currentCacheEnabled"),
-  () => core.fiberRefUnsafeMake(true)
+  () => core.fiberRefUnsafeMake(false)
 )
 
 /** @internal */
@@ -135,6 +135,31 @@ export const fromRequest = Debug.methodWithTrace((trace) =>
           )
         })
       })).traced(trace)
+  }
+)
+
+/** @internal */
+export const cacheRequest = Debug.methodWithTrace((trace) =>
+  <A extends Request.Request<any, any>>(
+    request: A,
+    result: Request.Request.Result<A>
+  ): Effect.Effect<never, never, void> => {
+    return core.fiberRefGetWith(currentCacheEnabled, (cacheEnabled) => {
+      if (cacheEnabled) {
+        return core.fiberRefGetWith(currentCache, (cache) =>
+          core.flatMap(cache.getEither(request), (orNew) => {
+            switch (orNew._tag) {
+              case "Left": {
+                return core.unit()
+              }
+              case "Right": {
+                return core.deferredComplete(orNew.right.handle, result)
+              }
+            }
+          }))
+      }
+      return core.unit()
+    }).traced(trace)
   }
 )
 
