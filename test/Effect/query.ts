@@ -266,7 +266,7 @@ describe.concurrent("Effect", () => {
         expect(yield* $(Counter)).toEqual({ count: 2 })
       })
     ))
-  it.effect("cache can be wormed up", () =>
+  it.effect("cache can be warmed up", () =>
     provideEnv(
       Effect.gen(function*($) {
         yield* $(Effect.cacheRequestResult(GetAllIds({}), Exit.succeed(userIds)))
