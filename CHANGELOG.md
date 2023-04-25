@@ -1,5 +1,13 @@
 # @effect/io
 
+## 0.25.7
+
+### Patch Changes
+
+- [#416](https://github.com/Effect-TS/io/pull/416) [`be27e16`](https://github.com/Effect-TS/io/commit/be27e16ee5c35de36d282524805ca2badf1a465e) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Switch default caching to false
+
+- [#416](https://github.com/Effect-TS/io/pull/416) [`be27e16`](https://github.com/Effect-TS/io/commit/be27e16ee5c35de36d282524805ca2badf1a465e) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Add Effect.cacheRequestResponse to cache request responses optimistically
+
 ## 0.25.6
 
 ### Patch Changes
