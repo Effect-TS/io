@@ -1627,6 +1627,45 @@ const forEachParUnbounded = <A, R, E, B>(
     return core.zipRight(forEachParUnboundedDiscard(as, fn), core.succeed(array))
   })
 
+const forEachBatchedDiscard = <R, E, A, _>(
+  self: Iterable<A>,
+  f: (a: A) => Effect.Effect<R, E, _>
+): Effect.Effect<R, E, void> =>
+  core.suspend(() => {
+    const as = Array.from(self)
+    const size = as.length
+    if (size === 0) {
+      return core.unit()
+    } else if (size === 1) {
+      return core.asUnit(f(as[0]))
+    }
+    const effects = as.map((a) => f(a))
+    const blocked = new Array<Effect.Blocked<R, E, void>>()
+    const loop = (i: number): Effect.Effect<R, E, void> =>
+      i === effects.length ?
+        core.suspend(() => {
+          if (blocked.length > 0) {
+            const requests = blocked.map((b) => b.i0).reduce(_RequestBlock.par)
+            return core.blocked(
+              requests,
+              forEachBatchedDiscard(blocked.map((b) => b.i1), identity)
+            )
+          }
+          return core.unit()
+        }) :
+        core.flatMapStep(effects[i], (s) => {
+          if (s._tag === "Blocked") {
+            blocked.push(s)
+            return loop(i + 1)
+          } else if (s._tag === "Failure") {
+            return s
+          } else {
+            return loop(i + 1)
+          }
+        })
+    return loop(0)
+  })
+
 /* @internal */
 const forEachParUnboundedDiscard = <R, E, A, _>(
   self: Iterable<A>,
@@ -1743,49 +1782,51 @@ const forEachParNDiscard = <A, R, E, _>(
   n: number,
   f: (a: A) => Effect.Effect<R, E, _>
 ): Effect.Effect<R, E, void> =>
-  core.suspend(() => {
-    const iterator = self[Symbol.iterator]()
-    const residual: Array<Effect.Blocked<any, any, any>> = []
-    const worker: Effect.Effect<R, E, void> = core.flatMap(
-      core.sync(() => iterator.next()),
-      (next) =>
-        next.done ? core.unit() : core.flatMapStep(core.asUnit(f(next.value)), (res) => {
-          switch (res._tag) {
-            case "Blocked": {
-              residual.push(res)
-              return worker
+  n === 1 ?
+    forEachBatchedDiscard(self, f) :
+    core.suspend(() => {
+      const iterator = self[Symbol.iterator]()
+      const residual: Array<Effect.Blocked<any, any, any>> = []
+      const worker: Effect.Effect<R, E, void> = core.flatMap(
+        core.sync(() => iterator.next()),
+        (next) =>
+          next.done ? core.unit() : core.flatMapStep(core.asUnit(f(next.value)), (res) => {
+            switch (res._tag) {
+              case "Blocked": {
+                residual.push(res)
+                return worker
+              }
+              case "Failure": {
+                return res
+              }
+              case "Success":
+                return worker
             }
-            case "Failure": {
-              return res
-            }
-            case "Success":
-              return worker
-          }
-        })
-    )
-    const effects: Array<Effect.Effect<R, E, void>> = []
-    for (let i = 0; i < n; i++) {
-      effects.push(worker)
-    }
-    return core.flatMap(core.exit(forEachParUnboundedDiscard(effects, identity)), (exit) => {
-      if (residual.length === 0) {
-        return exit
+          })
+      )
+      const effects: Array<Effect.Effect<R, E, void>> = []
+      for (let i = 0; i < n; i++) {
+        effects.push(worker)
       }
-      const requests = residual.map((blocked) => blocked.i0).reduce(_RequestBlock.par)
-      const _continue = forEachParNDiscard(residual, n, (blocked) => blocked.i1)
-      if (exit._tag === "Failure") {
-        return core.blocked(
-          requests,
-          core.matchCauseEffect(
-            _continue,
-            (cause) => core.exitFailCause(internalCause.parallel(exit.cause, cause)),
-            () => exit
+      return core.flatMap(core.exit(forEachParUnboundedDiscard(effects, identity)), (exit) => {
+        if (residual.length === 0) {
+          return exit
+        }
+        const requests = residual.map((blocked) => blocked.i0).reduce(_RequestBlock.par)
+        const _continue = forEachParNDiscard(residual, n, (blocked) => blocked.i1)
+        if (exit._tag === "Failure") {
+          return core.blocked(
+            requests,
+            core.matchCauseEffect(
+              _continue,
+              (cause) => core.exitFailCause(internalCause.parallel(exit.cause, cause)),
+              () => exit
+            )
           )
-        )
-      }
-      return core.blocked(requests, _continue)
+        }
+        return core.blocked(requests, _continue)
+      })
     })
-  })
 
 /* @internal */
 export const forEachParWithIndex = Debug.dualWithTrace<

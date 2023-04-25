@@ -1,4 +1,5 @@
 import * as Context from "@effect/data/Context"
+import { seconds } from "@effect/data/Duration"
 import { pipe } from "@effect/data/Function"
 import * as ReadonlyArray from "@effect/data/ReadonlyArray"
 import * as Effect from "@effect/io/Effect"
@@ -118,9 +119,16 @@ export const getChildren = (id: number) => Effect.request(GetParentChildren({ id
 export const getChildInfo = (id: number) => Effect.request(GetChildInfo({ id }), AllResolver)
 export const getChildExtra = (id: number) => Effect.request(GetChildExtra({ id }), AllResolver)
 
-const EnvLive = Layer.mergeAll(
-  Layer.sync(Counter, () => ({ count: 0 })),
-  Layer.sync(Requests, () => ({ count: 0 }))
+const EnvLive = Layer.provideMerge(
+  Layer.mergeAll(
+    Effect.setRequestCache(Request.makeCache(100, seconds(60))),
+    Effect.setRequestCaching("on"),
+    Effect.setRequestBatching("on")
+  ),
+  Layer.mergeAll(
+    Layer.sync(Counter, () => ({ count: 0 })),
+    Layer.sync(Requests, () => ({ count: 0 }))
+  )
 )
 
 describe.concurrent("Effect", () => {
@@ -140,6 +148,25 @@ describe.concurrent("Effect", () => {
         expect(count.count).toBe(3)
         expect(requests.count).toBe(7)
       }),
+      Effect.provideSomeLayer(EnvLive)
+    ))
+  it.effect("nested queries are batched when parallelism is set to 1", () =>
+    pipe(
+      Effect.gen(function*($) {
+        const parents = yield* $(getAllParents)
+
+        yield* $(Effect.forEachPar(parents, (parent) =>
+          Effect.flatMap(getChildren(parent.id), (children) =>
+            Effect.forEachPar(children, (child) =>
+              Effect.zipPar(getChildInfo(child.id), getChildExtra(child.id))))))
+
+        const count = yield* $(Counter)
+        const requests = yield* $(Requests)
+
+        expect(count.count).toBe(3)
+        expect(requests.count).toBe(7)
+      }),
+      Effect.withParallelism(1),
       Effect.provideSomeLayer(EnvLive)
     ))
 })
