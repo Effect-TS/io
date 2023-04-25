@@ -1,5 +1,15 @@
 # @effect/io
 
+## 0.25.5
+
+### Patch Changes
+
+- [#409](https://github.com/Effect-TS/io/pull/409) [`f2ec1df`](https://github.com/Effect-TS/io/commit/f2ec1df16d7decc2a79c4cf6f520e0cc3ce1bdf5) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Fix mask propagation of batching
+
+- [#412](https://github.com/Effect-TS/io/pull/412) [`a33c84a`](https://github.com/Effect-TS/io/commit/a33c84ab14ac891642a3dc10c0f7d0264d07e059) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Readd unwinding optimizer on blocked
+
+- [#411](https://github.com/Effect-TS/io/pull/411) [`ae467d7`](https://github.com/Effect-TS/io/commit/ae467d7ad50b53d23d1b8c18c1c0813056d7d7b6) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Align allParDiscard/allDiscard signatures with all/allPar
+
 ## 0.25.4
 
 ### Patch Changes
