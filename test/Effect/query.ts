@@ -266,6 +266,19 @@ describe.concurrent("Effect", () => {
         expect(yield* $(Counter)).toEqual({ count: 2 })
       })
     ))
+  it.effect("cache can be wormed up", () =>
+    provideEnv(
+      Effect.gen(function*($) {
+        yield* $(Effect.cacheRequestResult(GetAllIds({}), Exit.succeed(userIds)))
+        yield* $(getAllUserIds)
+        yield* $(getAllUserIds)
+        expect(yield* $(Counter)).toEqual({ count: 0 })
+        yield* $(TestClock.adjust(seconds(65)))
+        yield* $(getAllUserIds)
+        yield* $(getAllUserIds)
+        expect(yield* $(Counter)).toEqual({ count: 1 })
+      })
+    ))
   it.effect("cache can be disabled", () =>
     provideEnv(
       Effect.withRequestCaching("off")(Effect.gen(function*($) {

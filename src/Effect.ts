@@ -5978,6 +5978,15 @@ export const request: {
  * @since 1.0.0
  * @category requests
  */
+export const cacheRequestResult: <A extends Request.Request<any, any>>(
+  request: A,
+  result: Request.Request.Result<A>
+) => Effect<never, never, void> = query.cacheRequest
+
+/**
+ * @since 1.0.0
+ * @category requests
+ */
 export const withRequestBatching: {
   (strategy: "on" | "off"): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
   <R, E, A>(self: Effect<R, E, A>, strategy: "on" | "off"): Effect<R, E, A>

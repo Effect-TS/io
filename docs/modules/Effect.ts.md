@@ -308,6 +308,7 @@ Added in v1.0.0
 - [refinements](#refinements)
   - [isEffect](#iseffect)
 - [requests](#requests)
+  - [cacheRequestResult](#cacherequestresult)
   - [request](#request)
   - [setRequestBatching](#setrequestbatching)
   - [setRequestCache](#setrequestcache)
@@ -4980,6 +4981,19 @@ export declare const isEffect: (u: unknown) => u is Effect<unknown, unknown, unk
 Added in v1.0.0
 
 # requests
+
+## cacheRequestResult
+
+**Signature**
+
+```ts
+export declare const cacheRequestResult: <A extends Request.Request<any, any>>(
+  request: A,
+  result: Request.Request.Result<A>
+) => Effect<never, never, void>
+```
+
+Added in v1.0.0
 
 ## request
 

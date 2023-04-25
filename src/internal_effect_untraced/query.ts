@@ -139,6 +139,31 @@ export const fromRequest = Debug.methodWithTrace((trace) =>
 )
 
 /** @internal */
+export const cacheRequest = Debug.methodWithTrace((trace) =>
+  <A extends Request.Request<any, any>>(
+    request: A,
+    result: Request.Request.Result<A>
+  ): Effect.Effect<never, never, void> => {
+    return core.fiberRefGetWith(currentCacheEnabled, (cacheEnabled) => {
+      if (cacheEnabled) {
+        return core.fiberRefGetWith(currentCache, (cache) =>
+          core.flatMap(cache.getEither(request), (orNew) => {
+            switch (orNew._tag) {
+              case "Left": {
+                return core.unit()
+              }
+              case "Right": {
+                return core.deferredComplete(orNew.right.handle, result)
+              }
+            }
+          }))
+      }
+      return core.unit()
+    }).traced(trace)
+  }
+)
+
+/** @internal */
 export const withRequestBatching: {
   (strategy: "on" | "off"): <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
   <R, E, A>(
