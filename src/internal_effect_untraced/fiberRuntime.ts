@@ -1658,7 +1658,16 @@ const forEachBatchedDiscard = <R, E, A, _>(
             blocked.push(s)
             return loop(i + 1)
           } else if (s._tag === "Failure") {
-            return s
+            return core.suspend(() => {
+              if (blocked.length > 0) {
+                const requests = blocked.map((b) => b.i0).reduce(_RequestBlock.par)
+                return core.blocked(
+                  requests,
+                  core.flatMap(forEachBatchedDiscard(blocked.map((b) => b.i1), identity), () => s)
+                )
+              }
+              return core.unit()
+            })
           } else {
             return loop(i + 1)
           }
