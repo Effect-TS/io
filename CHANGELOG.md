@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.25.6
+
+### Patch Changes
+
+- [#413](https://github.com/Effect-TS/io/pull/413) [`bed6108`](https://github.com/Effect-TS/io/commit/bed610859ef3dbc6905ce943cac7977b997942d8) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Optimise Effect.forEachPar variants when using withParallelism(1)
+
 ## 0.25.5
 
 ### Patch Changes
