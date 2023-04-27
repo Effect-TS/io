@@ -3037,17 +3037,17 @@ export const invokeWithInterrupt: <R, E, A>(
 export const interruptWhenPossible = Debug.dualWithTrace<
   (all: Iterable<Request<any, any>>) => <R, E, A>(
     self: Effect.Effect<R, E, A>
-  ) => Effect.Effect<never, never, Effect.Effect<R, E, void>>,
+  ) => Effect.Effect<R, E, void>,
   <R, E, A>(
     self: Effect.Effect<R, E, A>,
     all: Iterable<Request<any, any>>
-  ) => Effect.Effect<never, never, Effect.Effect<R, E, void>>
+  ) => Effect.Effect<R, E, void>
 >(2, (trace) =>
   (self, all) =>
     core.fiberRefGetWith(
       currentRequestMap,
       (map) =>
-        core.sync(() => {
+        core.suspend(() => {
           const entries = Array.from(all).flatMap((_) => map.has(_) ? [map.get(_)!] : [])
           return invokeWithInterrupt(self, entries)
         })
