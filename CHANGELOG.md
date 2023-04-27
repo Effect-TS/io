@@ -1,5 +1,13 @@
 # @effect/io
 
+## 0.25.8
+
+### Patch Changes
+
+- [#418](https://github.com/Effect-TS/io/pull/418) [`41debe4`](https://github.com/Effect-TS/io/commit/41debe415a3c61563b38fec784057e832563b089) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Improve request interruption
+
+- [#420](https://github.com/Effect-TS/io/pull/420) [`dac6a6b`](https://github.com/Effect-TS/io/commit/dac6a6b841565d1e67753f7630aa202139b06a16) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Fix signature of interruptWhenPossible
+
 ## 0.25.7
 
 ### Patch Changes
