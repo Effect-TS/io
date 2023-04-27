@@ -192,10 +192,7 @@ export const currentRequestBatchingEnabled = globalValue(
 /**
  * Executes all requests, submitting requests to each data source in parallel.
  */
-const runBlockedRequests = <R>(
-  self: RequestBlock.RequestBlock<R>,
-  id: FiberId.FiberId
-) =>
+const runBlockedRequests = <R>(self: RequestBlock.RequestBlock<R>) =>
   core.forEachDiscard(
     _RequestBlock.flatten(self),
     (requestsByRequestResolver) =>
@@ -209,53 +206,7 @@ const runBlockedRequests = <R>(
             }
           }
           return core.fiberRefLocally(
-            core.flatMap(
-              core.flatMap(
-                forkDaemon(core.interruptible(dataSource.runAll(sequential))),
-                (processing) =>
-                  core.asyncInterrupt<never, never, void>((cb) => {
-                    const all = sequential.flatMap((b) => b)
-                    const counts = all.map((_) => _.listeners.count)
-                    const checkDone = () => {
-                      if (counts.every((count) => count === 0)) {
-                        cleanup.forEach((f) => f())
-                        cb(core.interruptFiber(processing))
-                      }
-                    }
-                    processing.unsafeAddObserver((exit) => {
-                      cleanup.forEach((f) => f())
-                      cb(exit)
-                    })
-                    const cleanup = all.map((r, i) => {
-                      const observer = (count: number) => {
-                        counts[i] = count
-                        checkDone()
-                      }
-                      r.listeners.addObserver(observer)
-                      return () => r.listeners.removeObserver(observer)
-                    })
-                    checkDone()
-                    return core.sync(() => {
-                      cleanup.forEach((f) => f())
-                    })
-                  })
-              ),
-              () =>
-                core.suspend(() => {
-                  const residual = sequential.flatMap((block) => {
-                    return block.flatMap((entry) => {
-                      if (!entry.state.completed) {
-                        return [entry]
-                      }
-                      return []
-                    })
-                  })
-                  return core.forEachDiscard(
-                    residual,
-                    (entry) => complete(entry.request as any, core.exitInterrupt(id))
-                  )
-                })
-            ),
+            invokeWithInterrupt(dataSource.runAll(sequential), sequential.flat()),
             currentRequestMap,
             map
           )
@@ -1207,14 +1158,14 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     }
     return core.uninterruptibleMask((restore) =>
       core.flatMap(
-        fork(runBlockedRequests(op.i0, this._fiberId)),
+        fork(core.runRequestBlock(op.i0)),
         () => restore(op.i1)
       )
     )
   }
 
   ["RunBlocked"](op: core.Primitive & { _tag: "RunBlocked" }) {
-    return runBlockedRequests(op.i0, this._fiberId)
+    return runBlockedRequests(op.i0)
   }
 
   [OpCodes.OP_UPDATE_RUNTIME_FLAGS](op: core.Primitive & { _tag: OpCodes.OP_UPDATE_RUNTIME_FLAGS }) {
@@ -3028,4 +2979,76 @@ export const ensuring = Debug.dualWithTrace<
           ),
         (a) => core.as(finalizer, a)
       )
+    ).traced(trace))
+
+/** @internal */
+export const invokeWithInterrupt: <R, E, A>(
+  self: Effect.Effect<R, E, A>,
+  entries: Array<Entry<unknown>>
+) => Effect.Effect<R, E, void> = <R, E, A>(dataSource: Effect.Effect<R, E, A>, all: Array<Entry<unknown>>) =>
+  core.fiberIdWith((id) =>
+    core.flatMap(
+      core.flatMap(
+        forkDaemon(core.interruptible(dataSource)),
+        (processing) =>
+          core.asyncInterrupt<never, E, void>((cb) => {
+            const counts = all.map((_) => _.listeners.count)
+            const checkDone = () => {
+              if (counts.every((count) => count === 0)) {
+                cleanup.forEach((f) => f())
+                cb(core.interruptFiber(processing))
+              }
+            }
+            processing.unsafeAddObserver((exit) => {
+              cleanup.forEach((f) => f())
+              cb(exit)
+            })
+            const cleanup = all.map((r, i) => {
+              const observer = (count: number) => {
+                counts[i] = count
+                checkDone()
+              }
+              r.listeners.addObserver(observer)
+              return () => r.listeners.removeObserver(observer)
+            })
+            checkDone()
+            return core.sync(() => {
+              cleanup.forEach((f) => f())
+            })
+          })
+      ),
+      () =>
+        core.suspend(() => {
+          const residual = all.flatMap((entry) => {
+            if (!entry.state.completed) {
+              return [entry]
+            }
+            return []
+          })
+          return core.forEachDiscard(
+            residual,
+            (entry) => complete(entry.request as any, core.exitInterrupt(id))
+          )
+        })
+    )
+  )
+
+/** @internal */
+export const interruptWhenPossible = Debug.dualWithTrace<
+  (all: Iterable<Request<any, any>>) => <R, E, A>(
+    self: Effect.Effect<R, E, A>
+  ) => Effect.Effect<never, never, Effect.Effect<R, E, void>>,
+  <R, E, A>(
+    self: Effect.Effect<R, E, A>,
+    all: Iterable<Request<any, any>>
+  ) => Effect.Effect<never, never, Effect.Effect<R, E, void>>
+>(2, (trace) =>
+  (self, all) =>
+    core.fiberRefGetWith(
+      currentRequestMap,
+      (map) =>
+        core.sync(() => {
+          const entries = Array.from(all).flatMap((_) => map.has(_) ? [map.get(_)!] : [])
+          return invokeWithInterrupt(self, entries)
+        })
     ).traced(trace))

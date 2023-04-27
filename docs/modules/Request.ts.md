@@ -30,6 +30,7 @@ Added in v1.0.0
   - [complete](#complete)
   - [completeEffect](#completeeffect)
   - [fail](#fail)
+  - [interruptWhenPossible](#interruptwhenpossible)
   - [succeed](#succeed)
 - [symbols](#symbols)
   - [EntryTypeId](#entrytypeid)
@@ -245,6 +246,27 @@ Complete a `Request` with the specified error.
 export declare const fail: {
   <A extends Request<any, any>>(error: Request.Error<A>): (self: A) => Effect.Effect<never, never, void>
   <A extends Request<any, any>>(self: A, error: Request.Error<A>): Effect.Effect<never, never, void>
+}
+```
+
+Added in v1.0.0
+
+## interruptWhenPossible
+
+Interrupts the child effect when requests are no longer needed
+
+**Signature**
+
+```ts
+export declare const interruptWhenPossible: {
+  (all: Iterable<Request<any, any>>): <R, E, A>(
+    self: Effect.Effect<R, E, A>
+  ) => Effect.Effect<never, never, Effect.Effect<R, E, void>>
+  <R, E, A>(self: Effect.Effect<R, E, A>, all: Iterable<Request<any, any>>): Effect.Effect<
+    never,
+    never,
+    Effect.Effect<R, E, void>
+  >
 }
 ```
 
