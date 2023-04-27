@@ -8,6 +8,7 @@ import * as Cause from "@effect/io/Cause"
 import * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import { forEachWithIndex } from "@effect/io/internal_effect_untraced/effect"
+import { invokeWithInterrupt } from "@effect/io/internal_effect_untraced/fiberRuntime"
 import { complete } from "@effect/io/internal_effect_untraced/request"
 import type * as Request from "@effect/io/Request"
 import type * as RequestResolver from "@effect/io/RequestResolver"
@@ -34,12 +35,23 @@ export const makeBatched = Debug.untracedMethod((restore) =>
   ): RequestResolver.RequestResolver<A, R> =>
     new core.RequestResolverImpl<R, A>(
       (requests) =>
-        Effect.forEachDiscard(requests, (block) =>
-          restore(run)(
-            block
-              .filter((_) => !_.state.completed)
-              .map((_) => _.request)
-          ))
+        requests.length > 1 ?
+          Effect.forEachDiscard(requests, (block) =>
+            invokeWithInterrupt(
+              restore(run)(
+                block
+                  .filter((_) => !_.state.completed)
+                  .map((_) => _.request)
+              ),
+              block
+            )) :
+          (requests.length === 1 ?
+            restore(run)(
+              requests[0]
+                .filter((_) => !_.state.completed)
+                .map((_) => _.request)
+            ) :
+            core.unit())
     )
 )
 
