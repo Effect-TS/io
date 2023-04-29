@@ -28,6 +28,7 @@ Added in v1.0.0
   - [minimumLogLevel](#minimumloglevel)
   - [remove](#remove)
   - [replace](#replace)
+  - [set](#set)
   - [withMinimumLogLevel](#withminimumloglevel)
 - [filtering](#filtering)
   - [filterLogLevel](#filterloglevel)
@@ -204,6 +205,16 @@ export declare const replace: {
   <B>(that: Logger<string, B>): <A>(self: Logger<string, A>) => Layer.Layer<never, never, never>
   <A, B>(self: Logger<string, A>, that: Logger<string, B>): Layer.Layer<never, never, never>
 }
+```
+
+Added in v1.0.0
+
+## set
+
+**Signature**
+
+```ts
+export declare const set: <A>(logger: Logger<string, A>) => Layer.Layer<never, never, never>
 ```
 
 Added in v1.0.0

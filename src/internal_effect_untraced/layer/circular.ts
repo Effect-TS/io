@@ -67,6 +67,17 @@ export const replaceLogger = dual<
 >(2, (self, that) => layer.flatMap(removeLogger(self), () => addLogger(that)))
 
 /** @internal */
+export const setLogger = Debug.untracedMethod(() =>
+  <A>(logger: Logger.Logger<string, A>): Layer.Layer<never, never, never> =>
+    layer.scopedDiscard(
+      fiberRuntime.fiberRefLocallyScopedWith(
+        fiberRuntime.currentLoggers,
+        () => HashSet.make(logger)
+      )
+    )
+)
+
+/** @internal */
 export const addSupervisor = Debug.untracedMethod(() =>
   <A>(supervisor: Supervisor.Supervisor<A>): Layer.Layer<never, never, never> =>
     layer.scopedDiscard(

@@ -153,6 +153,12 @@ export const replace: {
 
 /**
  * @since 1.0.0
+ * @category context
+ */
+export const set: <A>(logger: Logger<string, A>) => Layer.Layer<never, never, never> = circular.setLogger;
+
+/**
+ * @since 1.0.0
  * @category constructors
  */
 export const simple: <A, B>(log: (a: A) => B) => Logger<A, B> = internal.simple
