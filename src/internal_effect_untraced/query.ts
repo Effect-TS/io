@@ -60,38 +60,25 @@ export const fromRequest = Debug.methodWithTrace((trace) =>
                 switch (orNew._tag) {
                   case "Left": {
                     orNew.left.listeners.increment()
-                    return core.flatMap(core.deferredPoll(orNew.left.handle), (o) => {
-                      if (o._tag === "None") {
-                        return core.blocked(
-                          BlockedRequests.empty,
-                          ensuring(
-                            core.deferredAwait(orNew.left.handle),
-                            core.sync(() =>
-                              orNew.left.listeners.decrement()
-                            )
-                          )
+                    return core.flatMap(core.exit(core.deferredAwait(orNew.left.handle)), (exit) => {
+                      if (exit._tag === "Failure" && isInterruptedOnly(exit.cause)) {
+                        orNew.left.listeners.decrement()
+                        return core.flatMap(
+                          cache.invalidateWhen(
+                            proxy,
+                            (entry) =>
+                              entry.handle === orNew.left.handle
+                          ),
+                          () => fromRequest(proxy, dataSource)
                         )
-                      } else {
-                        return core.flatMap(core.exit(core.deferredAwait(orNew.left.handle)), (exit) => {
-                          if (exit._tag === "Failure" && isInterruptedOnly(exit.cause)) {
-                            orNew.left.listeners.decrement()
-                            return core.flatMap(
-                              cache.invalidateWhen(
-                                proxy,
-                                (entry) => entry.handle === orNew.left.handle
-                              ),
-                              () => fromRequest(proxy, dataSource)
-                            )
-                          }
-                          return core.blocked(
-                            BlockedRequests.empty,
-                            ensuring(
-                              core.deferredAwait(orNew.left.handle),
-                              core.sync(() => orNew.left.listeners.decrement())
-                            )
-                          )
-                        })
                       }
+                      return core.blocked(
+                        BlockedRequests.empty,
+                        ensuring(
+                          core.deferredAwait(orNew.left.handle),
+                          core.sync(() => orNew.left.listeners.decrement())
+                        )
+                      )
                     })
                   }
                   case "Right": {
