@@ -1,5 +1,15 @@
 # @effect/io
 
+## 0.25.9
+
+### Patch Changes
+
+- [#424](https://github.com/Effect-TS/io/pull/424) [`13b7c76`](https://github.com/Effect-TS/io/commit/13b7c76265da659efbe0f2e0fc59497310f02cfe) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Add more flexible scheduling logic
+
+- [#422](https://github.com/Effect-TS/io/pull/422) [`3b6fb22`](https://github.com/Effect-TS/io/commit/3b6fb22acae22645f985af1628ab977e32a7d653) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Avoid usess branching
+
+- [#425](https://github.com/Effect-TS/io/pull/425) [`345febf`](https://github.com/Effect-TS/io/commit/345febfbce225b7740e7fb9a50da4824dbdc8c71) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Fix timeBased scheduler timeout
+
 ## 0.25.8
 
 ### Patch Changes
