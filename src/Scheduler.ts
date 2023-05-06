@@ -174,6 +174,6 @@ export const timeBased: Scheduler = {
   scheduleTask(task) {
     setTimeout(() => {
       task()
-    }, 2048)
+    }, 0)
   }
 }
