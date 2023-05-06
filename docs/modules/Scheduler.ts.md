@@ -21,12 +21,19 @@ Added in v1.0.0
     - [step (method)](#step-method)
     - [tasks (property)](#tasks-property)
     - [deferred (property)](#deferred-property)
-  - [SyncScheduler (class)](#syncscheduler-class)
+  - [MixedScheduler (class)](#mixedscheduler-class)
+    - [starveInternal (method)](#starveinternal-method)
+    - [starve (method)](#starve-method)
     - [scheduleTask (method)](#scheduletask-method-1)
-    - [flush (method)](#flush-method)
+    - [running (property)](#running-property)
     - [tasks (property)](#tasks-property-1)
+  - [SyncScheduler (class)](#syncscheduler-class)
+    - [scheduleTask (method)](#scheduletask-method-2)
+    - [flush (method)](#flush-method)
+    - [tasks (property)](#tasks-property-2)
     - [deferred (property)](#deferred-property-1)
   - [defaultScheduler](#defaultscheduler)
+  - [timeBased](#timebased)
 
 ---
 
@@ -106,6 +113,73 @@ deferred: boolean
 
 Added in v1.0.0
 
+## MixedScheduler (class)
+
+**Signature**
+
+```ts
+export declare class MixedScheduler {
+  constructor(
+    /**
+     * @since 1.0.0
+     */
+    readonly maxNextTickBeforeTimer: number
+  )
+}
+```
+
+Added in v1.0.0
+
+### starveInternal (method)
+
+**Signature**
+
+```ts
+private starveInternal(depth: number)
+```
+
+Added in v1.0.0
+
+### starve (method)
+
+**Signature**
+
+```ts
+private starve(depth = 0)
+```
+
+Added in v1.0.0
+
+### scheduleTask (method)
+
+**Signature**
+
+```ts
+scheduleTask(task: Task)
+```
+
+Added in v1.0.0
+
+### running (property)
+
+**Signature**
+
+```ts
+running: boolean
+```
+
+Added in v1.0.0
+
+### tasks (property)
+
+**Signature**
+
+```ts
+tasks: Task[]
+```
+
+Added in v1.0.0
+
 ## SyncScheduler (class)
 
 **Signature**
@@ -162,6 +236,16 @@ Added in v1.0.0
 
 ```ts
 export declare const defaultScheduler: Scheduler
+```
+
+Added in v1.0.0
+
+## timeBased
+
+**Signature**
+
+```ts
+export declare const timeBased: Scheduler
 ```
 
 Added in v1.0.0

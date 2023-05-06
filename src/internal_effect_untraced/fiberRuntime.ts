@@ -1253,7 +1253,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
       }
       cur = this.drainQueueWhileRunning(this._runtimeFlags, cur)
       ops += 1
-      if (ops >= 2048) {
+      if (ops >= this.getFiberRef(core.currentMaxFiberOps)) {
         ops = 0
         const oldCur = cur
         cur = pipe(core.yieldNow(), core.flatMap(() => oldCur))

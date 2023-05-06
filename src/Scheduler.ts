@@ -18,11 +18,31 @@ export interface Scheduler {
   scheduleTask(task: Task): void
 }
 
-class DefaultScheduler implements Scheduler {
+/**
+ * @since 1.0.0
+ * @category schedulers
+ */
+export class MixedScheduler implements Scheduler {
+  /**
+   * @since 1.0.0
+   */
   running = false
+  /**
+   * @since 1.0.0
+   */
   tasks: Array<Task> = []
 
-  starveInternal(depth: number) {
+  constructor(
+    /**
+     * @since 1.0.0
+     */
+    readonly maxNextTickBeforeTimer: number
+  ) {}
+
+  /**
+   * @since 1.0.0
+   */
+  private starveInternal(depth: number) {
     const toRun = this.tasks
     this.tasks = []
     for (let i = 0; i < toRun.length; i++) {
@@ -35,14 +55,20 @@ class DefaultScheduler implements Scheduler {
     }
   }
 
-  starve(depth = 0) {
-    if (depth >= 2048) {
+  /**
+   * @since 1.0.0
+   */
+  private starve(depth = 0) {
+    if (depth >= this.maxNextTickBeforeTimer) {
       setTimeout(() => this.starveInternal(0), 0)
     } else {
       Promise.resolve(void 0).then(() => this.starveInternal(depth + 1))
     }
   }
 
+  /**
+   * @since 1.0.0
+   */
   scheduleTask(task: Task) {
     this.tasks.push(task)
     if (!this.running) {
@@ -58,7 +84,7 @@ class DefaultScheduler implements Scheduler {
  */
 export const defaultScheduler: Scheduler = globalValue(
   Symbol.for("@effect/io/Scheduler/defaultScheduler"),
-  () => new DefaultScheduler()
+  () => new MixedScheduler(2048)
 )
 
 /**
@@ -137,5 +163,17 @@ export class ControlledScheduler implements Scheduler {
     for (let i = 0; i < toRun.length; i++) {
       toRun[i]()
     }
+  }
+}
+
+/**
+ * @since 1.0.0
+ * @category schedulers
+ */
+export const timeBased: Scheduler = {
+  scheduleTask(task) {
+    setTimeout(() => {
+      task()
+    }, 2048)
   }
 }
