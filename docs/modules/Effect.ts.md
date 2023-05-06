@@ -488,6 +488,7 @@ Added in v1.0.0
   - [whenRef](#whenref)
   - [withClock](#withclock)
   - [withEarlyRelease](#withearlyrelease)
+  - [withMaxFiberOps](#withmaxfiberops)
   - [withMetric](#withmetric)
   - [withScheduler](#withscheduler)
   - [withUnhandledErrorLogLevel](#withunhandlederrorloglevel)
@@ -7726,6 +7727,21 @@ well as a finalizer that can be run to close the scope of this workflow.
 export declare const withEarlyRelease: <R, E, A>(
   self: Effect<R, E, A>
 ) => Effect<Scope.Scope | R, E, [Effect<never, never, void>, A]>
+```
+
+Added in v1.0.0
+
+## withMaxFiberOps
+
+Sets the child effect's maximum number of ops before yield
+
+**Signature**
+
+```ts
+export declare const withMaxFiberOps: {
+  (ops: number): <R, E, B>(self: Effect<R, E, B>) => Effect<R, E, B>
+  <R, E, B>(self: Effect<R, E, B>, ops: number): Effect<R, E, B>
+}
 ```
 
 Added in v1.0.0

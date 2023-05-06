@@ -5532,6 +5532,17 @@ export const withScheduler: {
 } = core.withScheduler
 
 /**
+ * Sets the child effect's maximum number of ops before yield
+ *
+ * @since 1.0.0
+ * @category utils
+ */
+export const withMaxFiberOps: {
+  (ops: number): <R, E, B>(self: Effect<R, E, B>) => Effect<R, E, B>
+  <R, E, B>(self: Effect<R, E, B>, ops: number): Effect<R, E, B>
+} = core.withMaxFiberOps
+
+/**
  * @since 1.0.0
  * @category utils
  */

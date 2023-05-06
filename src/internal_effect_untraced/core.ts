@@ -1833,6 +1833,9 @@ export const currentContext: FiberRef.FiberRef<Context.Context<never>> = fiberRe
 )
 
 /** @internal */
+export const currentMaxFiberOps: FiberRef.FiberRef<number> = fiberRefUnsafeMake(2048)
+
+/** @internal */
 export const currentLogAnnotations: FiberRef.FiberRef<HashMap.HashMap<string, string>> = globalValue(
   Symbol.for("@effect/io/FiberRef/currentLogAnnotation"),
   () => fiberRefUnsafeMake(HashMap.empty())
@@ -1859,6 +1862,12 @@ export const withScheduler = Debug.dualWithTrace<
   (scheduler: Scheduler.Scheduler) => <R, E, B>(self: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>,
   <R, E, B>(self: Effect.Effect<R, E, B>, scheduler: Scheduler.Scheduler) => Effect.Effect<R, E, B>
 >(2, (trace) => (self, scheduler) => fiberRefLocally(self, currentScheduler, scheduler).traced(trace))
+
+/** @internal */
+export const withMaxFiberOps = Debug.dualWithTrace<
+  (ops: number) => <R, E, B>(self: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>,
+  <R, E, B>(self: Effect.Effect<R, E, B>, ops: number) => Effect.Effect<R, E, B>
+>(2, (trace) => (self, ops) => fiberRefLocally(self, currentMaxFiberOps, ops).traced(trace))
 
 /** @internal */
 export const currentParallelism: FiberRef.FiberRef<Option.Option<number>> = globalValue(

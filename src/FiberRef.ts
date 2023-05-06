@@ -289,6 +289,12 @@ export const currentContext: FiberRef<Context.Context<never>> = core.currentCont
  * @since 1.0.0
  * @category fiberRefs
  */
+export const currentMaxFiberOps: FiberRef<number> = core.currentMaxFiberOps
+
+/**
+ * @since 1.0.0
+ * @category fiberRefs
+ */
 export const unhandledErrorLogLevel: FiberRef<Option.Option<LogLevel.LogLevel>> = core.currentUnhandledErrorLogLevel
 
 /**

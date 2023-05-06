@@ -28,6 +28,7 @@ Added in v1.0.0
   - [currentLogLevel](#currentloglevel)
   - [currentLogSpan](#currentlogspan)
   - [currentLoggers](#currentloggers)
+  - [currentMaxFiberOps](#currentmaxfiberops)
   - [currentMinimumLogLevel](#currentminimumloglevel)
   - [currentParallelism](#currentparallelism)
   - [currentRequestBatchingEnabled](#currentrequestbatchingenabled)
@@ -224,6 +225,16 @@ Added in v1.0.0
 
 ```ts
 export declare const currentLoggers: FiberRef<HashSet.HashSet<Logger.Logger<string, any>>>
+```
+
+Added in v1.0.0
+
+## currentMaxFiberOps
+
+**Signature**
+
+```ts
+export declare const currentMaxFiberOps: FiberRef<number>
 ```
 
 Added in v1.0.0
