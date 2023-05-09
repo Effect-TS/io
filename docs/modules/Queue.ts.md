@@ -82,8 +82,8 @@ Added in v1.0.0
 
 Makes a new bounded `Queue` with the dropping strategy.
 
-When the capacity of the queue is reached, new elements will be added and the
-old elements will be dropped.
+When the capacity of the queue is reached, new elements will be dropped and the
+old elements will remain.
 
 **Note**: When possible use only power of 2 capacities; this will provide
 better performance by utilising an optimised version of the underlying
