@@ -83,7 +83,7 @@
     "babel-plugin-annotate-pure-calls": "^0.4.0",
     "concurrently": "^8.0.1",
     "cpx": "^1.5.0",
-    "docs-ts": "0.6.10",
+    "docs-ts": "0.8.0",
     "error-stack-parser": "^2.1.4",
     "eslint": "^8.38.0",
     "eslint-import-resolver-typescript": "^3.5.5",
@@ -105,11 +105,6 @@
     "ultra-runner": "^3.10.5",
     "vite": "^4.2.1",
     "vitest": "0.30.0"
-  },
-  "pnpm": {
-    "patchedDependencies": {
-      "docs-ts@0.6.10": "patches/docs-ts@0.6.10.patch"
-    }
   },
   "config": {
     "side": [],
