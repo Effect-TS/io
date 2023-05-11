@@ -3305,7 +3305,7 @@ export const patchFiberRefs: (patch: FiberRefsPatch.FiberRefsPatch) => Effect<ne
   effect.patchFiberRefs
 
 /**
- * Like `attemptPromise` but produces a defect in case of errors.
+ * Like `tryCatchPromise` but produces a defect in case of errors.
  *
  * @since 1.0.0
  * @category constructors
@@ -4747,7 +4747,7 @@ export const tryCatch: <E, A>(attempt: LazyArg<A>, onThrow: (u: unknown) => E) =
   effect.attemptCatch
 
 /**
- * Create an `Effect` that when executed will construct `promise` and wait for
+ * Create an `Effect` that when executed will construct `evaluate` and wait for
  * its result, errors will be handled using `onReject`.
  *
  * @since 1.0.0

@@ -1728,7 +1728,7 @@ Added in v1.0.0
 
 ## promise
 
-Like `attemptPromise` but produces a defect in case of errors.
+Like `tryCatchPromise` but produces a defect in case of errors.
 
 **Signature**
 
@@ -1976,7 +1976,7 @@ Added in v1.0.0
 
 ## tryCatchPromise
 
-Create an `Effect` that when executed will construct `promise` and wait for
+Create an `Effect` that when executed will construct `evaluate` and wait for
 its result, errors will be handled using `onReject`.
 
 **Signature**
