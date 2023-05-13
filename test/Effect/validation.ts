@@ -96,6 +96,11 @@ describe.concurrent("Effect", () => {
       const result = yield* $(array, Effect.validateFirst(Effect.fail), Effect.flip)
       assert.deepStrictEqual(Array.from(result), array)
     }))
+  it.effect("validateFirst - returns [] as error if the input is empty", () =>
+    Effect.gen(function*($) {
+      const result = yield* $([], Effect.validateFirst(Effect.succeed), Effect.flip)
+      assert.deepStrictEqual(result, [])
+    }))
   it.effect("validateFirst - runs sequentially and short circuits on first success validation", () =>
     Effect.gen(function*($) {
       const f = (n: number): Effect.Effect<never, number, number> => {
