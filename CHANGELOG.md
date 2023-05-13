@@ -1,5 +1,13 @@
 # @effect/io
 
+## 0.25.10
+
+### Patch Changes
+
+- [#426](https://github.com/Effect-TS/io/pull/426) [`1e7d900`](https://github.com/Effect-TS/io/commit/1e7d9008c310c3a8719a7bf91fa1a936ad509849) Thanks [@tim-smart](https://github.com/tim-smart)! - fix docs for dropping strategy
+
+- [#430](https://github.com/Effect-TS/io/pull/430) [`52a7ada`](https://github.com/Effect-TS/io/commit/52a7adabb4b224328af51e49586b41011cb70ba4) Thanks [@gcanti](https://github.com/gcanti)! - fix docs for promise and tryCatchPromise
+
 ## 0.25.9
 
 ### Patch Changes
