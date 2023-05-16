@@ -1627,7 +1627,7 @@ const forEachBatchedDiscard = <R, E, A, _>(
   })
 
 /* @internal */
-const forEachParUnboundedDiscard = <R, E, A, _>(
+export const forEachParUnboundedDiscard = <R, E, A, _>(
   self: Iterable<A>,
   f: (a: A) => Effect.Effect<R, E, _>
 ): Effect.Effect<R, E, void> =>
