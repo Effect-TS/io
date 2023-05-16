@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.25.11
+
+### Patch Changes
+
+- [#432](https://github.com/Effect-TS/io/pull/432) [`83f865e`](https://github.com/Effect-TS/io/commit/83f865eb26d36b091243ae396bdb332627d7d655) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Fix deadlock induced by cache
+
 ## 0.25.10
 
 ### Patch Changes
