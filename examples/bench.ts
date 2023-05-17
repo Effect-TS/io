@@ -3,12 +3,29 @@ import * as Effect from "@effect/io/Effect"
 
 Debug.runtimeDebug.tracingEnabled = false
 
-const program = Effect.repeatN(100_000)(Effect.acquireUseRelease(
-  Effect.succeed(0),
-  (n) => Effect.sync(() => n + 1),
-  () => Effect.suspend(() => Effect.getFiberRefs())
-))
+const promiseBased = async (n: number): Promise<number> => {
+  if (n < 2) {
+    return 1
+  } else {
+    return (await promiseBased(n - 1)) + (await promiseBased(n - 2))
+  }
+}
 
-const main = Effect.flatMap(Effect.timed(program), ([d]) => Effect.log(`Time: ${d.millis}ms`))
+const effectBased = (n: number): Effect.Effect<never, never, number> =>
+  n < 2 ?
+    Effect.succeed(1) :
+    Effect.zipWith(effectBased(n - 1), effectBased(n - 2), (a, b) => a + b)
 
-Effect.runFork(main)
+const main = async () => {
+  console.time("promise")
+  for (let i = 0; i < 10_000; i++) {
+    await promiseBased(10)
+  }
+  console.timeEnd("promise")
+
+  console.time("effect")
+  await Effect.runPromise(Effect.repeatN(effectBased(10), 10_000))
+  console.timeEnd("effect")
+}
+
+main()

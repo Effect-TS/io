@@ -5,7 +5,6 @@ import type { LazyArg } from "@effect/data/Function"
 import { identity, pipe } from "@effect/data/Function"
 import { globalValue } from "@effect/data/Global"
 import * as HashSet from "@effect/data/HashSet"
-import * as MutableQueue from "@effect/data/MutableQueue"
 import * as MRef from "@effect/data/MutableRef"
 import * as Option from "@effect/data/Option"
 import * as RA from "@effect/data/ReadonlyArray"
@@ -44,6 +43,7 @@ import * as metricLabel from "@effect/io/internal_effect_untraced/metric/label"
 import * as OpCodes from "@effect/io/internal_effect_untraced/opCodes/effect"
 import { complete } from "@effect/io/internal_effect_untraced/request"
 import * as _runtimeFlags from "@effect/io/internal_effect_untraced/runtimeFlags"
+import { OpSupervision } from "@effect/io/internal_effect_untraced/runtimeFlags"
 import * as supervisor from "@effect/io/internal_effect_untraced/supervisor"
 import * as SupervisorPatch from "@effect/io/internal_effect_untraced/supervisor/patch"
 import type { Logger } from "@effect/io/Logger"
@@ -236,7 +236,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
       fibersStarted.unsafeUpdate(1, tags)
     }
   }
-  private _queue = MutableQueue.unbounded<FiberMessage.FiberMessage>()
+  private _queue = new Array<FiberMessage.FiberMessage>()
   private _children: Set<FiberRuntime<any, any>> | null = null
   private _observers = new Array<(exit: Exit.Exit<E, A>) => void>()
   private _running = false
@@ -363,10 +363,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    * Adds a message to be processed by the fiber on the fiber.
    */
   tell(message: FiberMessage.FiberMessage): void {
-    pipe(
-      this._queue,
-      MutableQueue.offer(message)
-    )
+    this._queue.push(message)
     if (!this._running) {
       this._running = true
       this.drainQueueLaterOnExecutor()
@@ -498,7 +495,10 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    * log annotations and log level) may not be up-to-date.
    */
   getFiberRef<X>(fiberRef: FiberRef.FiberRef<X>): X {
-    return fiberRefs.getOrDefault(this._fiberRefs, fiberRef)
+    if (this._fiberRefs.locals.has(fiberRef)) {
+      return this._fiberRefs.locals.get(fiberRef)![0][1] as X
+    }
+    return fiberRef.initial
   }
 
   /**
@@ -552,9 +552,9 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
       ;(globalThis as any)[internalFiber.currentFiberURI] = this
       try {
         while (evaluationSignal === EvaluationSignalContinue) {
-          evaluationSignal = MutableQueue.isEmpty(this._queue) ?
+          evaluationSignal = this._queue.length === 0 ?
             EvaluationSignalDone :
-            this.evaluateMessageWhileSuspended(pipe(this._queue, MutableQueue.poll(null))!)
+            this.evaluateMessageWhileSuspended(this._queue.splice(0, 1)[0]!)
         }
       } finally {
         this._running = false
@@ -563,7 +563,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
       // Maybe someone added something to the queue between us checking, and us
       // giving up the drain. If so, we need to restart the draining, but only
       // if we beat everyone else to the restart:
-      if (!MutableQueue.isEmpty(this._queue) && !this._running) {
+      if (this._queue.length > 0 && !this._running) {
         this._running = true
         if (evaluationSignal === EvaluationSignalYieldNow) {
           this.drainQueueLaterOnExecutor()
@@ -602,8 +602,8 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     cur0: Effect.Effect<any, any, any>
   ) {
     let cur = cur0
-    while (!MutableQueue.isEmpty(this._queue)) {
-      const message = pipe(this._queue, MutableQueue.poll(void 0))!
+    while (this._queue.length > 0) {
+      const message = this._queue.splice(0, 1)[0]
       // @ts-expect-error
       cur = drainQueueWhileRunningTable[message._tag](this, runtimeFlags, cur, message)
     }
@@ -819,7 +819,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
           if (interruption !== null) {
             effect = Debug.untraced(() => core.flatMap(interruption, () => exit))
           } else {
-            if (MutableQueue.isEmpty(this._queue)) {
+            if (this._queue.length === 0) {
               // No more messages to process, so we will allow the fiber to end life:
               this.setExitValue(exit)
             } else {
@@ -876,7 +876,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
         // for spinning up the fiber if there were new messages added to
         // the queue between the completion of the effect and the transition
         // to the not running state.
-        if (!MutableQueue.isEmpty(this._queue)) {
+        if (this._queue.length > 0) {
           this.drainQueueLaterOnExecutor()
         }
       }
@@ -1248,10 +1248,12 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     let ops = 0
     // eslint-disable-next-line no-constant-condition
     while (true) {
-      if (_runtimeFlags.opSupervision(this._runtimeFlags)) {
+      if ((this._runtimeFlags & OpSupervision) !== 0) {
         this.getSupervisor().onEffect(this, cur)
       }
-      cur = this.drainQueueWhileRunning(this._runtimeFlags, cur)
+      if (this._queue.length > 0) {
+        cur = this.drainQueueWhileRunning(this._runtimeFlags, cur)
+      }
       ops += 1
       if (ops >= this.getFiberRef(core.currentMaxFiberOps)) {
         ops = 0
