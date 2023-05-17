@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.25.12
+
+### Patch Changes
+
+- [#434](https://github.com/Effect-TS/io/pull/434) [`d88e283`](https://github.com/Effect-TS/io/commit/d88e28371a3e9d04558f1749160e7bd41af1bd79) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Optimize happy path in runLoop
+
 ## 0.25.11
 
 ### Patch Changes
