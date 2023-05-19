@@ -50,6 +50,21 @@ export const addLogger = Debug.methodWithTrace((trace) =>
 )
 
 /** @internal */
+export const addLoggerEffect = Debug.methodWithTrace((trace) =>
+  <R, E, A>(effect: Effect.Effect<R, E, Logger.Logger<string, A>>): Layer.Layer<R, E, never> =>
+    layer.scopedDiscard(
+      core.flatMap(
+        effect,
+        (logger) =>
+          fiberRuntime.fiberRefLocallyScopedWith(
+            fiberRuntime.currentLoggers,
+            HashSet.add(logger)
+          )
+      ).traced(trace)
+    )
+)
+
+/** @internal */
 export const removeLogger = Debug.untracedMethod(() =>
   <A>(logger: Logger.Logger<string, A>): Layer.Layer<never, never, never> =>
     layer.scopedDiscard(
@@ -65,6 +80,17 @@ export const replaceLogger = dual<
   <B>(that: Logger.Logger<string, B>) => <A>(self: Logger.Logger<string, A>) => Layer.Layer<never, never, never>,
   <A, B>(self: Logger.Logger<string, A>, that: Logger.Logger<string, B>) => Layer.Layer<never, never, never>
 >(2, (self, that) => layer.flatMap(removeLogger(self), () => addLogger(that)))
+
+/** @internal */
+export const replaceLoggerEffect = dual<
+  <R, E, B>(
+    that: Effect.Effect<R, E, Logger.Logger<string, B>>
+  ) => <A>(self: Logger.Logger<string, A>) => Layer.Layer<R, E, never>,
+  <A, R, E, B>(
+    self: Logger.Logger<string, A>,
+    that: Effect.Effect<R, E, Logger.Logger<string, B>>
+  ) => Layer.Layer<R, E, never>
+>(2, (self, that) => layer.flatMap(removeLogger(self), () => addLoggerEffect(that)))
 
 /** @internal */
 export const addSupervisor = Debug.untracedMethod(() =>

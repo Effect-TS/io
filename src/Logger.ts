@@ -85,6 +85,13 @@ export const add: <B>(logger: Logger<string, B>) => Layer.Layer<never, never, ne
 
 /**
  * @since 1.0.0
+ * @category context
+ */
+export const addEffect: <R, E, A>(effect: Effect<R, E, Logger<string, A>>) => Layer.Layer<R, E, never> =
+  circular.addLoggerEffect
+
+/**
+ * @since 1.0.0
  * @category mapping
  */
 export const contramap: {
@@ -150,6 +157,15 @@ export const replace: {
   <B>(that: Logger<string, B>): <A>(self: Logger<string, A>) => Layer.Layer<never, never, never>
   <A, B>(self: Logger<string, A>, that: Logger<string, B>): Layer.Layer<never, never, never>
 } = circular.replaceLogger
+
+/**
+ * @since 1.0.0
+ * @category context
+ */
+export const replaceEffect: {
+  <R, E, B>(that: Effect<R, E, Logger<string, B>>): <A>(self: Logger<string, A>) => Layer.Layer<R, E, never>
+  <A, R, E, B>(self: Logger<string, A>, that: Effect<R, E, Logger<string, B>>): Layer.Layer<R, E, never>
+} = circular.replaceLoggerEffect
 
 /**
  * @since 1.0.0
