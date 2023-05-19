@@ -26,10 +26,12 @@ Added in v1.0.0
 - [context](#context)
   - [add](#add)
   - [addEffect](#addeffect)
+  - [addScoped](#addscoped)
   - [minimumLogLevel](#minimumloglevel)
   - [remove](#remove)
   - [replace](#replace)
   - [replaceEffect](#replaceeffect)
+  - [replaceScoped](#replacescoped)
   - [withMinimumLogLevel](#withminimumloglevel)
 - [filtering](#filtering)
   - [filterLogLevel](#filterloglevel)
@@ -187,6 +189,18 @@ export declare const addEffect: <R, E, A>(effect: Effect<R, E, Logger<string, A>
 
 Added in v1.0.0
 
+## addScoped
+
+**Signature**
+
+```ts
+export declare const addScoped: <R, E, A>(
+  effect: Effect<Scope | R, E, Logger<string, A>>
+) => Layer.Layer<Exclude<R, Scope>, E, never>
+```
+
+Added in v1.0.0
+
 ## minimumLogLevel
 
 **Signature**
@@ -228,6 +242,25 @@ Added in v1.0.0
 export declare const replaceEffect: {
   <R, E, B>(that: Effect<R, E, Logger<string, B>>): <A>(self: Logger<string, A>) => Layer.Layer<R, E, never>
   <A, R, E, B>(self: Logger<string, A>, that: Effect<R, E, Logger<string, B>>): Layer.Layer<R, E, never>
+}
+```
+
+Added in v1.0.0
+
+## replaceScoped
+
+**Signature**
+
+```ts
+export declare const replaceScoped: {
+  <R, E, B>(that: Effect<Scope | R, E, Logger<string, B>>): <A>(
+    self: Logger<string, A>
+  ) => Layer.Layer<Exclude<R, Scope>, E, never>
+  <A, R, E, B>(self: Logger<string, A>, that: Effect<Scope | R, E, Logger<string, B>>): Layer.Layer<
+    Exclude<R, Scope>,
+    E,
+    never
+  >
 }
 ```
 
