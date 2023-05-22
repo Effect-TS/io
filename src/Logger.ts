@@ -16,6 +16,7 @@ import * as internalCircular from "@effect/io/internal_effect_untraced/logger-ci
 import type * as Layer from "@effect/io/Layer"
 import type * as LogLevel from "@effect/io/Logger/Level"
 import type * as LogSpan from "@effect/io/Logger/Span"
+import type { Scope } from "@effect/io/Scope"
 
 /**
  * @since 1.0.0
@@ -85,6 +86,21 @@ export const add: <B>(logger: Logger<string, B>) => Layer.Layer<never, never, ne
 
 /**
  * @since 1.0.0
+ * @category context
+ */
+export const addEffect: <R, E, A>(effect: Effect<R, E, Logger<string, A>>) => Layer.Layer<R, E, never> =
+  circular.addLoggerEffect
+
+/**
+ * @since 1.0.0
+ * @category context
+ */
+export const addScoped: <R, E, A>(
+  effect: Effect<R | Scope, E, Logger<string, A>>
+) => Layer.Layer<Exclude<R, Scope>, E, never> = circular.addLoggerScoped
+
+/**
+ * @since 1.0.0
  * @category mapping
  */
 export const contramap: {
@@ -150,6 +166,29 @@ export const replace: {
   <B>(that: Logger<string, B>): <A>(self: Logger<string, A>) => Layer.Layer<never, never, never>
   <A, B>(self: Logger<string, A>, that: Logger<string, B>): Layer.Layer<never, never, never>
 } = circular.replaceLogger
+
+/**
+ * @since 1.0.0
+ * @category context
+ */
+export const replaceEffect: {
+  <R, E, B>(that: Effect<R, E, Logger<string, B>>): <A>(self: Logger<string, A>) => Layer.Layer<R, E, never>
+  <A, R, E, B>(self: Logger<string, A>, that: Effect<R, E, Logger<string, B>>): Layer.Layer<R, E, never>
+} = circular.replaceLoggerEffect
+
+/**
+ * @since 1.0.0
+ * @category context
+ */
+export const replaceScoped: {
+  <R, E, B>(
+    that: Effect<Scope | R, E, Logger<string, B>>
+  ): <A>(self: Logger<string, A>) => Layer.Layer<Exclude<R, Scope>, E, never>
+  <A, R, E, B>(
+    self: Logger<string, A>,
+    that: Effect<Scope | R, E, Logger<string, B>>
+  ): Layer.Layer<Exclude<R, Scope>, E, never>
+} = circular.replaceLoggerScoped
 
 /**
  * @since 1.0.0

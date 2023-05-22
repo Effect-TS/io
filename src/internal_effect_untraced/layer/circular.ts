@@ -9,9 +9,10 @@ import * as layer from "@effect/io/internal_effect_untraced/layer"
 import * as runtimeFlags from "@effect/io/internal_effect_untraced/runtimeFlags"
 import * as runtimeFlagsPatch from "@effect/io/internal_effect_untraced/runtimeFlagsPatch"
 import * as _supervisor from "@effect/io/internal_effect_untraced/supervisor"
-import type * as Layer from "@effect/io/Layer"
+import * as Layer from "@effect/io/Layer"
 import type * as Logger from "@effect/io/Logger"
 import type * as LogLevel from "@effect/io/Logger/Level"
+import type { Scope } from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
 
 // circular with Logger
@@ -50,6 +51,22 @@ export const addLogger = Debug.methodWithTrace((trace) =>
 )
 
 /** @internal */
+export const addLoggerEffect = Debug.methodWithTrace((trace) =>
+  <R, E, A>(effect: Effect.Effect<R, E, Logger.Logger<string, A>>): Layer.Layer<R, E, never> =>
+    Layer.unwrapEffect(
+      core.map(effect, addLogger).traced(trace)
+    )
+)
+
+/** @internal */
+export const addLoggerScoped = Debug.methodWithTrace((trace) =>
+  <R, E, A>(effect: Effect.Effect<R | Scope, E, Logger.Logger<string, A>>): Layer.Layer<Exclude<R, Scope>, E, never> =>
+    Layer.unwrapScoped(
+      core.map(effect, addLogger).traced(trace)
+    )
+)
+
+/** @internal */
 export const removeLogger = Debug.untracedMethod(() =>
   <A>(logger: Logger.Logger<string, A>): Layer.Layer<never, never, never> =>
     layer.scopedDiscard(
@@ -65,6 +82,28 @@ export const replaceLogger = dual<
   <B>(that: Logger.Logger<string, B>) => <A>(self: Logger.Logger<string, A>) => Layer.Layer<never, never, never>,
   <A, B>(self: Logger.Logger<string, A>, that: Logger.Logger<string, B>) => Layer.Layer<never, never, never>
 >(2, (self, that) => layer.flatMap(removeLogger(self), () => addLogger(that)))
+
+/** @internal */
+export const replaceLoggerEffect = dual<
+  <R, E, B>(
+    that: Effect.Effect<R, E, Logger.Logger<string, B>>
+  ) => <A>(self: Logger.Logger<string, A>) => Layer.Layer<R, E, never>,
+  <A, R, E, B>(
+    self: Logger.Logger<string, A>,
+    that: Effect.Effect<R, E, Logger.Logger<string, B>>
+  ) => Layer.Layer<R, E, never>
+>(2, (self, that) => layer.flatMap(removeLogger(self), () => addLoggerEffect(that)))
+
+/** @internal */
+export const replaceLoggerScoped = dual<
+  <R, E, B>(
+    that: Effect.Effect<R | Scope, E, Logger.Logger<string, B>>
+  ) => <A>(self: Logger.Logger<string, A>) => Layer.Layer<Exclude<R, Scope>, E, never>,
+  <A, R, E, B>(
+    self: Logger.Logger<string, A>,
+    that: Effect.Effect<R | Scope, E, Logger.Logger<string, B>>
+  ) => Layer.Layer<Exclude<R, Scope>, E, never>
+>(2, (self, that) => layer.flatMap(removeLogger(self), () => addLoggerScoped(that)))
 
 /** @internal */
 export const addSupervisor = Debug.untracedMethod(() =>
