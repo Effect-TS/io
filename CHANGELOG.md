@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.25.13
+
+### Patch Changes
+
+- [#436](https://github.com/Effect-TS/io/pull/436) [`bf4e463`](https://github.com/Effect-TS/io/commit/bf4e4638b21b06535fe9d1277032216698eed8ba) Thanks [@tim-smart](https://github.com/tim-smart)! - Logger.addEffect and Logger.replaceEffect
+
 ## 0.25.12
 
 ### Patch Changes
