@@ -221,7 +221,7 @@ export const size: <Key, Error, Value>(self: ScopedCache<Key, Error, Value>) => 
   internal.size
 
 /**
- * Similar to `Lookup`, but executes the lookup function within a `Scope`.
+ * Similar to `Cache.Lookup`, but executes the lookup function within a `Scope`.
  *
  * @since 1.0.0
  * @category models

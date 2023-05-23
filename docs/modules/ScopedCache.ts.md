@@ -211,7 +211,7 @@ Added in v1.0.0
 
 ## Lookup (type alias)
 
-Similar to `Lookup`, but executes the lookup function within a `Scope`.
+Similar to `Cache.Lookup`, but executes the lookup function within a `Scope`.
 
 **Signature**
 
