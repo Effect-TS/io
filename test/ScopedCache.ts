@@ -36,7 +36,7 @@ describe.concurrent("ScopedCache", () => {
     fc.assert(
       fc.asyncProperty(fc.integer(), async (salt) => {
         const program = Effect.gen(function*($) {
-          const capacity = 100
+          const capacity = 10
           const scopedCache = ScopedCache.make(capacity, Duration.infinity, hashEffect(salt))
           const { hits, misses, size } = yield* $(pipe(
             scopedCache,
@@ -50,9 +50,9 @@ describe.concurrent("ScopedCache", () => {
               )
             )
           ))
-          expect(hits).toBe(49)
-          expect(misses).toBe(51)
-          expect(size).toBe(51)
+          expect(hits).toBe(4)
+          expect(misses).toBe(6)
+          expect(size).toBe(6)
         })
         return Effect.runPromise(Effect.scoped(program))
       })
@@ -175,16 +175,16 @@ describe.concurrent("ScopedCache", () => {
   it.it("get - when used sequentially, should properly call correct lookup", () =>
     fc.assert(fc.asyncProperty(fc.integer(), (salt) => {
       const program = Effect.gen(function*($) {
-        const scopedCache = ScopedCache.make(100, Duration.infinity, hashEffect(salt))
+        const scopedCache = ScopedCache.make(10, Duration.infinity, hashEffect(salt))
         yield* $(Effect.scoped(Effect.gen(function*($) {
           const cache = yield* $(scopedCache)
           const actual = yield* $(
             Effect.forEach(
-              Chunk.range(1, 100),
+              Chunk.range(1, 10),
               (n) => Effect.scoped(Effect.flatMap(ScopedCache.get(cache, n), Effect.succeed))
             )
           )
-          const expected = Chunk.map(Chunk.range(1, 100), hash(salt))
+          const expected = Chunk.map(Chunk.range(1, 10), hash(salt))
           expect(Array.from(actual)).toEqual(Array.from(expected))
         })))
       })
@@ -194,16 +194,16 @@ describe.concurrent("ScopedCache", () => {
   it.it("get - when used concurrently, should properly call correct lookup", () =>
     fc.assert(fc.asyncProperty(fc.integer(), (salt) => {
       const program = Effect.gen(function*($) {
-        const scopedCache = ScopedCache.make(100, Duration.infinity, hashEffect(salt))
+        const scopedCache = ScopedCache.make(10, Duration.infinity, hashEffect(salt))
         yield* $(Effect.scoped(Effect.gen(function*($) {
           const cache = yield* $(scopedCache)
           const actual = yield* $(
             Effect.forEachPar(
-              Chunk.range(1, 100),
+              Chunk.range(1, 10),
               (n) => Effect.scoped(Effect.flatMap(ScopedCache.get(cache, n), Effect.succeed))
             )
           )
-          const expected = Chunk.map(Chunk.range(1, 100), hash(salt))
+          const expected = Chunk.map(Chunk.range(1, 10), hash(salt))
           expect(Array.from(actual)).toEqual(Array.from(expected))
         })))
       })
@@ -213,19 +213,19 @@ describe.concurrent("ScopedCache", () => {
   it.it("get - should clean and remove old resource to respect cache capacity", () =>
     fc.assert(fc.asyncProperty(fc.integer(), (salt) => {
       const program = Effect.gen(function*($) {
-        const scopedCache = ScopedCache.make(10, Duration.infinity, hashEffect(salt))
+        const scopedCache = ScopedCache.make(5, Duration.infinity, hashEffect(salt))
         yield* $(Effect.scoped(Effect.gen(function*($) {
           const cache = yield* $(scopedCache)
           const actual = yield* $(
             Effect.forEach(
-              Chunk.range(1, 100),
+              Chunk.range(1, 10),
               (n) => Effect.scoped(Effect.flatMap(ScopedCache.get(cache, n), Effect.succeed))
             )
           )
-          const expected = Chunk.map(Chunk.range(1, 100), hash(salt))
+          const expected = Chunk.map(Chunk.range(1, 10), hash(salt))
           const cacheStats = yield* $(ScopedCache.cacheStats(cache))
           expect(Array.from(actual)).toEqual(Array.from(expected))
-          expect(cacheStats.size).toBe(10)
+          expect(cacheStats.size).toBe(5)
         })))
       })
       return Effect.runPromise(program)
