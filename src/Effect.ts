@@ -2132,7 +2132,7 @@ export interface Adapter {
     de: (d: D) => E,
     ef: (e: E) => F,
     fg: (f: F) => G,
-    gh: (g: F) => Effect<_R, _E, _A>
+    gh: (g: G) => Effect<_R, _E, _A>
   ): EffectGen<_R, _E, _A>
   <A, B, C, D, E, F, G, H, _R, _E, _A>(
     a: A,
