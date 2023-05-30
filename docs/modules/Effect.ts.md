@@ -962,7 +962,7 @@ provided to allow for better diagnostics.
 ```ts
 export declare const async: <R, E, A>(
   register: (callback: (_: Effect<R, E, A>) => void) => void,
-  blockingOn?: FiberId.None | FiberId.Runtime | FiberId.Composite | undefined
+  blockingOn?: FiberId.FiberId
 ) => Effect<R, E, A>
 ```
 
@@ -997,7 +997,7 @@ provided to allow for better diagnostics.
 ```ts
 export declare const asyncInterrupt: <R, E, A>(
   register: (callback: (effect: Effect<R, E, A>) => void) => Effect<R, never, void>,
-  blockingOn?: FiberId.None | FiberId.Runtime | FiberId.Composite | undefined
+  blockingOn?: FiberId.FiberId
 ) => Effect<R, E, A>
 ```
 
@@ -1024,7 +1024,7 @@ provided to allow for better diagnostics.
 ```ts
 export declare const asyncInterruptEither: <R, E, A>(
   register: (callback: (effect: Effect<R, E, A>) => void) => Either.Either<Effect<R, never, void>, Effect<R, E, A>>,
-  blockingOn?: FiberId.None | FiberId.Runtime | FiberId.Composite | undefined
+  blockingOn?: FiberId.FiberId
 ) => Effect<R, E, A>
 ```
 
@@ -1047,7 +1047,7 @@ provided to allow for better diagnostics.
 ```ts
 export declare const asyncOption: <R, E, A>(
   register: (callback: (_: Effect<R, E, A>) => void) => Option.Option<Effect<R, E, A>>,
-  blockingOn?: FiberId.None | FiberId.Runtime | FiberId.Composite | undefined
+  blockingOn?: FiberId.FiberId
 ) => Effect<R, E, A>
 ```
 
@@ -4585,7 +4585,7 @@ export interface Adapter {
     de: (d: D) => E,
     ef: (e: E) => F,
     fg: (f: F) => G,
-    gh: (g: F) => Effect<_R, _E, _A>
+    gh: (g: G) => Effect<_R, _E, _A>
   ): EffectGen<_R, _E, _A>
   <A, B, C, D, E, F, G, H, _R, _E, _A>(
     a: A,
@@ -5008,7 +5008,7 @@ export declare const request: <
   request: A,
   dataSource: Ds
 ) => Effect<
-  [Ds] extends [Effect<any, any, any>] ? unknown : never,
+  [Ds] extends [Effect<any, any, any>] ? Effect.Context<Ds> : never,
   Request.Request.Error<A>,
   Request.Request.Success<A>
 >
@@ -5727,7 +5727,7 @@ Added in v1.0.0
 ```ts
 export declare const flatMapStep: <R, E, A, R1, E1, B>(
   self: Effect<R, E, A>,
-  f: (step: Exit.Failure<E, A> | Exit.Success<E, A> | Blocked<R, E, A>) => Effect<R1, E1, B>
+  f: (step: Exit.Exit<E, A> | Blocked<R, E, A>) => Effect<R1, E1, B>
 ) => Effect<R | R1, E1, B>
 ```
 
@@ -7074,9 +7074,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const step: <R, E, A>(
-  self: Effect<R, E, A>
-) => Effect<R, E, Exit.Failure<E, A> | Exit.Success<E, A> | Blocked<R, E, A>>
+export declare const step: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Exit.Exit<E, A> | Blocked<R, E, A>>
 ```
 
 Added in v1.0.0

@@ -385,7 +385,7 @@ repetitions so far. Returns the current duration between recurrences.
 ```ts
 export declare const exponential: (
   base: Duration.Duration,
-  factor?: number | undefined
+  factor?: number
 ) => Schedule<never, unknown, Duration.Duration>
 ```
 
@@ -520,7 +520,7 @@ interval size`.
 **Signature**
 
 ```ts
-export declare const jittered: <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env | Random.Random, In, Out>
+export declare const jittered: <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Random.Random | Env, In, Out>
 ```
 
 Added in v1.0.0
