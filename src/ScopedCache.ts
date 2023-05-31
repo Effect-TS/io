@@ -27,6 +27,12 @@ export type ScopedCacheTypeId = typeof ScopedCacheTypeId
  */
 export interface ScopedCache<Key, Error, Value> extends ScopedCache.Variance<Key, Error, Value> {
   /**
+   * Retrieves the value associated with the specified key if it exists.
+   * Otherwise returns `Option.none`.
+   */
+  getOption(key: Key): Effect.Effect<Scope.Scope, Error, Option.Option<Value>>
+
+  /**
    * Returns statistics for this cache.
    */
   cacheStats(): Effect.Effect<never, never, Cache.CacheStats>
@@ -119,106 +125,6 @@ export const makeWith: <Key, Environment, Error, Value>(
   lookup: Lookup<Key, Environment, Error, Value>,
   timeToLive: (exit: Exit.Exit<Error, Value>) => Duration.Duration
 ) => Effect.Effect<Scope.Scope | Environment, never, ScopedCache<Key, Error, Value>> = internal.makeWith
-
-/**
- * Returns statistics for this cache.
- *
- * @since 1.0.0
- * @category getters
- */
-export const cacheStats: <Key, Error, Value>(
-  self: ScopedCache<Key, Error, Value>
-) => Effect.Effect<never, never, Cache.CacheStats> = internal.cacheStats
-
-/**
- * Return whether a resource associated with the specified key exists in the
- * cache. Sometime `contains` can return true if the resource is currently
- * being created but not yet totally created.
- *
- * @since 1.0.0
- * @category combinators
- */
-export const contains: {
-  <Key>(key: Key): <Error, Value>(self: ScopedCache<Key, Error, Value>) => Effect.Effect<never, never, boolean>
-  <Key, Error, Value>(self: ScopedCache<Key, Error, Value>, key: Key): Effect.Effect<never, never, boolean>
-} = internal.contains
-
-/**
- * Return statistics for the specified entry.
- *
- * @since 1.0.0
- * @category getters
- */
-export const entryStats: {
-  <Key>(
-    key: Key
-  ): <Error, Value>(
-    self: ScopedCache<Key, Error, Value>
-  ) => Effect.Effect<never, never, Option.Option<Cache.EntryStats>>
-  <Key, Error, Value>(
-    self: ScopedCache<Key, Error, Value>,
-    key: Key
-  ): Effect.Effect<never, never, Option.Option<Cache.EntryStats>>
-} = internal.entryStats
-
-/**
- * Gets the value from the cache if it exists or otherwise computes it, the
- * release action signals to the cache that the value is no longer being used
- * and can potentially be finalized subject to the policies of the cache.
- *
- * @since 1.0.0
- * @category combinators
- */
-export const get: {
-  <Key>(key: Key): <Error, Value>(self: ScopedCache<Key, Error, Value>) => Effect.Effect<Scope.Scope, Error, Value>
-  <Key, Error, Value>(self: ScopedCache<Key, Error, Value>, key: Key): Effect.Effect<Scope.Scope, Error, Value>
-} = internal.get
-
-/**
- * Invalidates the resource associated with the specified key.
- *
- * @since 1.0.0
- * @category combinators
- */
-export const invalidate: {
-  <Key>(key: Key): <Error, Value>(self: ScopedCache<Key, Error, Value>) => Effect.Effect<never, never, void>
-  <Key, Error, Value>(self: ScopedCache<Key, Error, Value>, key: Key): Effect.Effect<never, never, void>
-} = internal.invalidate
-
-/**
- * Invalidates all values in the cache.
- *
- * @since 1.0.0
- * @category combinators
- */
-export const invalidateAll: <Key, Error, Value>(
-  self: ScopedCache<Key, Error, Value>
-) => Effect.Effect<never, never, void> = internal.invalidateAll
-
-/**
- * Force the reuse of the lookup function to compute the returned scoped
- * effect associated with the specified key immediately. Once the new resource
- * is recomputed, the old resource associated to the key is cleaned (once all
- * fiber using it are done with it). During the time the new resource is
- * computed, concurrent call the .get will use the old resource if this one is
- * not expired.
- *
- * @since 1.0.0
- * @category combinators
- */
-export const refresh: {
-  <Key>(key: Key): <Error, Value>(self: ScopedCache<Key, Error, Value>) => Effect.Effect<never, Error, void>
-  <Key, Error, Value>(self: ScopedCache<Key, Error, Value>, key: Key): Effect.Effect<never, Error, void>
-} = internal.refresh
-
-/**
- * Returns the approximate number of values in the cache.
- *
- * @since 1.0.0
- * @category getters
- */
-export const size: <Key, Error, Value>(self: ScopedCache<Key, Error, Value>) => Effect.Effect<never, never, number> =
-  internal.size
 
 /**
  * Similar to `Cache.Lookup`, but executes the lookup function within a `Scope`.
