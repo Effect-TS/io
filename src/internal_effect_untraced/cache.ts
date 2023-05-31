@@ -318,6 +318,19 @@ class CacheImpl<Key, Error, Value> implements Cache.Cache<Key, Error, Value> {
     )
   }
 
+  getOption(key: Key): Effect.Effect<never, Error, Option.Option<Value>> {
+    return Debug.bodyWithTrace((trace) =>
+      core.suspend(() =>
+        Option.match(MutableHashMap.get(this.cacheState.map, key), () => {
+          const mapKey = makeMapKey(key)
+          this.trackAccess(mapKey)
+          this.trackMiss()
+          return core.succeed(Option.none<Value>())
+        }, (value) => this.resolveMapValue(value))
+      ).traced(trace)
+    )
+  }
+
   contains(key: Key): Effect.Effect<never, never, boolean> {
     return Debug.bodyWithTrace((trace) => core.sync(() => MutableHashMap.has(this.cacheState.map, key)).traced(trace))
   }
@@ -348,53 +361,35 @@ class CacheImpl<Key, Error, Value> implements Cache.Cache<Key, Error, Value> {
 
   getEither(key: Key): Effect.Effect<never, Error, Either.Either<Value, Value>> {
     return Debug.bodyWithTrace((trace) =>
-      effect.clockWith((clock) =>
-        core.suspend((): Effect.Effect<never, Error, Either.Either<Value, Value>> => {
-          const k = key
-          let mapKey: MapKey<Key> | undefined = undefined
-          let deferred: Deferred.Deferred<Error, Value> | undefined = undefined
-          let value = Option.getOrUndefined(MutableHashMap.get(this.cacheState.map, k))
-          if (value === undefined) {
-            deferred = Deferred.unsafeMake<Error, Value>(this.fiberId)
-            mapKey = makeMapKey(k)
-            if (MutableHashMap.has(this.cacheState.map, k)) {
-              value = Option.getOrUndefined(MutableHashMap.get(this.cacheState.map, k))
-            } else {
-              MutableHashMap.set(this.cacheState.map, k, pending(mapKey, deferred))
-            }
-          }
-          if (value === undefined) {
-            this.trackAccess(mapKey!)
-            this.trackMiss()
-            return core.map(this.lookupValueOf(key, deferred!), Either.right)
+      core.suspend((): Effect.Effect<never, Error, Either.Either<Value, Value>> => {
+        const k = key
+        let mapKey: MapKey<Key> | undefined = undefined
+        let deferred: Deferred.Deferred<Error, Value> | undefined = undefined
+        let value = Option.getOrUndefined(MutableHashMap.get(this.cacheState.map, k))
+        if (value === undefined) {
+          deferred = Deferred.unsafeMake<Error, Value>(this.fiberId)
+          mapKey = makeMapKey(k)
+          if (MutableHashMap.has(this.cacheState.map, k)) {
+            value = Option.getOrUndefined(MutableHashMap.get(this.cacheState.map, k))
           } else {
-            switch (value._tag) {
-              case "Complete": {
-                this.trackAccess(value.key)
-                this.trackHit()
-                if (this.hasExpired(clock, value.timeToLiveMillis)) {
-                  MutableHashMap.remove(this.cacheState.map, k)
-                  return this.getEither(key)
-                }
-                return core.map(core.done(value.exit), Either.left)
-              }
-              case "Pending": {
-                this.trackAccess(value.key)
-                this.trackHit()
-                return core.map(Deferred.await(value.deferred), Either.left)
-              }
-              case "Refreshing": {
-                this.trackAccess(value.complete.key)
-                this.trackHit()
-                if (this.hasExpired(clock, value.complete.timeToLiveMillis)) {
-                  return core.map(Deferred.await(value.deferred), Either.left)
-                }
-                return core.map(core.done(value.complete.exit), Either.left)
-              }
-            }
+            MutableHashMap.set(this.cacheState.map, k, pending(mapKey, deferred))
           }
-        })
-      ).traced(trace)
+        }
+        if (value === undefined) {
+          this.trackAccess(mapKey!)
+          this.trackMiss()
+          return core.map(this.lookupValueOf(key, deferred!), Either.right)
+        } else {
+          return core.flatMap(
+            this.resolveMapValue(value),
+            Option.match(
+              () => this.getEither(key),
+              (value) => core.succeed(Either.left(value))
+            )
+          )
+        }
+      })
+        .traced(trace)
     )
   }
 
@@ -558,6 +553,35 @@ class CacheImpl<Key, Error, Value> implements Cache.Cache<Key, Error, Value> {
         return keys
       }).traced(trace)
     )
+  }
+
+  resolveMapValue(value: MapValue<Key, Error, Value>): Effect.Effect<never, never, Option.Option<Value>> {
+    return effect.clockWith((clock) => {
+      switch (value._tag) {
+        case "Complete": {
+          this.trackAccess(value.key)
+          this.trackHit()
+          if (this.hasExpired(clock, value.timeToLiveMillis)) {
+            MutableHashMap.remove(this.cacheState.map, value.key.current)
+            return core.succeed(Option.none<Value>())
+          }
+          return core.map(core.done(value.exit), Option.some)
+        }
+        case "Pending": {
+          this.trackAccess(value.key)
+          this.trackHit()
+          return core.map(Deferred.await(value.deferred), Option.some)
+        }
+        case "Refreshing": {
+          this.trackAccess(value.complete.key)
+          this.trackHit()
+          if (this.hasExpired(clock, value.complete.timeToLiveMillis)) {
+            return core.map(Deferred.await(value.deferred), Option.some)
+          }
+          return core.map(core.done(value.complete.exit), Option.some)
+        }
+      }
+    })
   }
 
   trackHit(): void {

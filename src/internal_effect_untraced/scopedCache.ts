@@ -206,6 +206,18 @@ class ScopedCacheImpl<Key, Environment, Error, Value> implements ScopedCache.Sco
     )
   }
 
+  getOption(key: Key): Effect.Effect<Scope.Scope, Error, Option.Option<Value>> {
+    return Debug.bodyWithTrace((trace) =>
+      Effect.suspend(() =>
+        Option.match(
+          MutableHashMap.get(this.cacheState.map, key),
+          () => Effect.succeedNone(),
+          (value) => Effect.flatten(this.resolveMapValue(value))
+        )
+      ).traced(trace)
+    )
+  }
+
   contains(key: Key): Effect.Effect<never, never, boolean> {
     return Debug.bodyWithTrace((trace) => Effect.sync(() => MutableHashMap.has(this.cacheState.map, key)).traced(trace))
   }
@@ -256,46 +268,23 @@ class ScopedCacheImpl<Key, Environment, Error, Value> implements ScopedCache.Sco
                 lookupValue
               )
             }
-            switch (value._tag) {
-              case "Complete": {
-                this.trackHit()
-                if (this.hasExpired(value.timeToLive)) {
-                  const current = Option.getOrUndefined(MutableHashMap.get(this.cacheState.map, key))
-                  if (Equal.equals(current, value)) {
-                    MutableHashMap.remove(this.cacheState.map, key)
-                  }
-                  return pipe(
-                    this.ensureMapSizeNotExceeded(value.key),
-                    Effect.zipRight(releaseOwner(value)),
-                    Effect.zipRight(Effect.succeed(this.get(key)))
-                  )
+
+            return Effect.map(
+              this.resolveMapValue(value),
+              Effect.someOrElseEffect(() => {
+                const val = value as Complete<Key, Error, Value>
+                const current = Option.getOrUndefined(MutableHashMap.get(this.cacheState.map, key))
+                if (Equal.equals(current, value)) {
+                  MutableHashMap.remove(this.cacheState.map, key)
                 }
-                return Effect.as(
-                  this.ensureMapSizeNotExceeded(value.key),
-                  toScoped(value)
+                return pipe(
+                  this.ensureMapSizeNotExceeded(val.key),
+                  Effect.zipRight(releaseOwner(val)),
+                  Effect.zipRight(Effect.succeed(this.get(key))),
+                  Effect.flatten
                 )
-              }
-              case "Pending": {
-                this.trackHit()
-                return Effect.zipRight(
-                  this.ensureMapSizeNotExceeded(value.key),
-                  value.scoped
-                )
-              }
-              case "Refreshing": {
-                this.trackHit()
-                if (this.hasExpired(value.complete.timeToLive)) {
-                  return Effect.zipRight(
-                    this.ensureMapSizeNotExceeded(value.complete.key),
-                    value.scoped
-                  )
-                }
-                return Effect.as(
-                  this.ensureMapSizeNotExceeded(value.complete.key),
-                  toScoped(value.complete)
-                )
-              }
-            }
+              })
+            )
           })
         ),
         Effect.flatten
@@ -392,6 +381,41 @@ class ScopedCacheImpl<Key, Environment, Error, Value> implements ScopedCache.Sco
 
   size(): Effect.Effect<never, never, number> {
     return Debug.bodyWithTrace((trace) => Effect.sync(() => MutableHashMap.size(this.cacheState.map)).traced(trace))
+  }
+
+  resolveMapValue(value: MapValue<Key, Error, Value>) {
+    switch (value._tag) {
+      case "Complete": {
+        this.trackHit()
+        if (this.hasExpired(value.timeToLive)) {
+          return Effect.succeed(Effect.succeedNone())
+        }
+        return Effect.as(
+          this.ensureMapSizeNotExceeded(value.key),
+          Effect.asSome(toScoped(value))
+        )
+      }
+      case "Pending": {
+        this.trackHit()
+        return Effect.zipRight(
+          this.ensureMapSizeNotExceeded(value.key),
+          Effect.map(value.scoped, Effect.asSome)
+        )
+      }
+      case "Refreshing": {
+        this.trackHit()
+        if (this.hasExpired(value.complete.timeToLive)) {
+          return Effect.zipRight(
+            this.ensureMapSizeNotExceeded(value.complete.key),
+            Effect.map(value.scoped, Effect.asSome)
+          )
+        }
+        return Effect.as(
+          this.ensureMapSizeNotExceeded(value.complete.key),
+          Effect.asSome(toScoped(value.complete))
+        )
+      }
+    }
   }
 
   lookupValueOf(key: Key): Effect.Effect<never, never, Effect.Effect<Scope.Scope, Error, Value>> {

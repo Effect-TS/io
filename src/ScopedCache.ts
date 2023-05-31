@@ -27,6 +27,12 @@ export type ScopedCacheTypeId = typeof ScopedCacheTypeId
  */
 export interface ScopedCache<Key, Error, Value> extends ScopedCache.Variance<Key, Error, Value> {
   /**
+   * Retrieves the value associated with the specified key if it exists.
+   * Otherwise returns `Option.none`.
+   */
+  getOption(key: Key): Effect.Effect<Scope.Scope, Error, Option.Option<Value>>
+
+  /**
    * Returns statistics for this cache.
    */
   cacheStats(): Effect.Effect<never, never, Cache.CacheStats>
