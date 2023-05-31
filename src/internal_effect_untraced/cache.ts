@@ -555,7 +555,7 @@ class CacheImpl<Key, Error, Value> implements Cache.Cache<Key, Error, Value> {
     )
   }
 
-  resolveMapValue(value: MapValue<Key, Error, Value>): Effect.Effect<never, never, Option.Option<Value>> {
+  resolveMapValue(value: MapValue<Key, Error, Value>): Effect.Effect<never, Error, Option.Option<Value>> {
     return effect.clockWith((clock) => {
       switch (value._tag) {
         case "Complete": {
