@@ -47,11 +47,7 @@ If an ExecutionStrategy is not provided `sequential` will be used.
 
 ```ts
 export declare const make: (
-  executionStrategy?:
-    | ExecutionStrategy.Sequential
-    | ExecutionStrategy.Parallel
-    | ExecutionStrategy.ParallelN
-    | undefined
+  executionStrategy?: ExecutionStrategy.ExecutionStrategy
 ) => Effect.Effect<never, never, CloseableScope>
 ```
 

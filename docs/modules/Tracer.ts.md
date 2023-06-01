@@ -181,26 +181,13 @@ Added in v1.0.0
 
 ```ts
 export declare const withSpan: {
-  (
-    name: string,
-    options?:
-      | {
-          attributes?: Record<string, string> | undefined
-          parent?: Span | ExternalSpan | undefined
-          root?: boolean | undefined
-        }
-      | undefined
-  ): <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<Exclude<R, Span>, E, A>
+  (name: string, options?: { attributes?: Record<string, string>; parent?: ParentSpan; root?: boolean }): <R, E, A>(
+    self: Effect.Effect<R, E, A>
+  ) => Effect.Effect<Exclude<R, Span>, E, A>
   <R, E, A>(
     self: Effect.Effect<R, E, A>,
     name: string,
-    options?:
-      | {
-          attributes?: Record<string, string> | undefined
-          parent?: Span | ExternalSpan | undefined
-          root?: boolean | undefined
-        }
-      | undefined
+    options?: { attributes?: Record<string, string>; parent?: ParentSpan; root?: boolean }
   ): Effect.Effect<Exclude<R, Span>, E, A>
 }
 ```

@@ -145,7 +145,7 @@ using the default System service.
 **Signature**
 
 ```ts
-export declare const fromEnv: (config?: ConfigProvider.FromEnvConfig | undefined) => ConfigProvider
+export declare const fromEnv: (config?: ConfigProvider.FromEnvConfig) => ConfigProvider
 ```
 
 Added in v1.0.0
@@ -173,7 +173,7 @@ which determines how to split the keys in the map into path segments.
 ```ts
 export declare const fromMap: (
   map: Map<string, string>,
-  config?: Partial<ConfigProvider.FromMapConfig> | undefined
+  config?: Partial<ConfigProvider.FromMapConfig>
 ) => ConfigProvider
 ```
 
