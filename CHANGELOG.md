@@ -1,5 +1,19 @@
 # @effect/io
 
+## 0.26.0
+
+### Minor Changes
+
+- [#445](https://github.com/Effect-TS/io/pull/445) [`4192f57`](https://github.com/Effect-TS/io/commit/4192f57ea46e007f3dde7ccef6b63b22c37a049a) Thanks [@tim-smart](https://github.com/tim-smart)! - align /ScopedCache API with /Cache
+
+### Patch Changes
+
+- [#440](https://github.com/Effect-TS/io/pull/440) [`d6f911e`](https://github.com/Effect-TS/io/commit/d6f911e41ae0d197c6c6849ff299370996b7048a) Thanks [@tim-smart](https://github.com/tim-smart)! - add ScopedCache module
+
+- [#445](https://github.com/Effect-TS/io/pull/445) [`4192f57`](https://github.com/Effect-TS/io/commit/4192f57ea46e007f3dde7ccef6b63b22c37a049a) Thanks [@tim-smart](https://github.com/tim-smart)! - add getOption to Cache and ScopedCache
+
+- [#442](https://github.com/Effect-TS/io/pull/442) [`bbf8be0`](https://github.com/Effect-TS/io/commit/bbf8be060e1f4f58362594e87cc0605c5dc6970f) Thanks [@melike2d](https://github.com/melike2d)! - Fix Effect#gen adapter parameter type
+
 ## 0.25.13
 
 ### Patch Changes
