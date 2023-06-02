@@ -12,19 +12,9 @@ Added in v1.0.0
 
 <h2 class="text-delta">Table of contents</h2>
 
-- [combinators](#combinators)
-  - [contains](#contains)
-  - [get](#get)
-  - [invalidate](#invalidate)
-  - [invalidateAll](#invalidateall)
-  - [refresh](#refresh)
 - [constructors](#constructors)
   - [make](#make)
   - [makeWith](#makewith)
-- [getters](#getters)
-  - [cacheStats](#cachestats)
-  - [entryStats](#entrystats)
-  - [size](#size)
 - [models](#models)
   - [Lookup (type alias)](#lookup-type-alias)
   - [ScopedCache (interface)](#scopedcache-interface)
@@ -33,91 +23,6 @@ Added in v1.0.0
   - [ScopedCacheTypeId (type alias)](#scopedcachetypeid-type-alias)
 
 ---
-
-# combinators
-
-## contains
-
-Return whether a resource associated with the specified key exists in the
-cache. Sometime `contains` can return true if the resource is currently
-being created but not yet totally created.
-
-**Signature**
-
-```ts
-export declare const contains: {
-  <Key>(key: Key): <Error, Value>(self: ScopedCache<Key, Error, Value>) => Effect.Effect<never, never, boolean>
-  <Key, Error, Value>(self: ScopedCache<Key, Error, Value>, key: Key): Effect.Effect<never, never, boolean>
-}
-```
-
-Added in v1.0.0
-
-## get
-
-Gets the value from the cache if it exists or otherwise computes it, the
-release action signals to the cache that the value is no longer being used
-and can potentially be finalized subject to the policies of the cache.
-
-**Signature**
-
-```ts
-export declare const get: {
-  <Key>(key: Key): <Error, Value>(self: ScopedCache<Key, Error, Value>) => Effect.Effect<Scope.Scope, Error, Value>
-  <Key, Error, Value>(self: ScopedCache<Key, Error, Value>, key: Key): Effect.Effect<Scope.Scope, Error, Value>
-}
-```
-
-Added in v1.0.0
-
-## invalidate
-
-Invalidates the resource associated with the specified key.
-
-**Signature**
-
-```ts
-export declare const invalidate: {
-  <Key>(key: Key): <Error, Value>(self: ScopedCache<Key, Error, Value>) => Effect.Effect<never, never, void>
-  <Key, Error, Value>(self: ScopedCache<Key, Error, Value>, key: Key): Effect.Effect<never, never, void>
-}
-```
-
-Added in v1.0.0
-
-## invalidateAll
-
-Invalidates all values in the cache.
-
-**Signature**
-
-```ts
-export declare const invalidateAll: <Key, Error, Value>(
-  self: ScopedCache<Key, Error, Value>
-) => Effect.Effect<never, never, void>
-```
-
-Added in v1.0.0
-
-## refresh
-
-Force the reuse of the lookup function to compute the returned scoped
-effect associated with the specified key immediately. Once the new resource
-is recomputed, the old resource associated to the key is cleaned (once all
-fiber using it are done with it). During the time the new resource is
-computed, concurrent call the .get will use the old resource if this one is
-not expired.
-
-**Signature**
-
-```ts
-export declare const refresh: {
-  <Key>(key: Key): <Error, Value>(self: ScopedCache<Key, Error, Value>) => Effect.Effect<never, Error, void>
-  <Key, Error, Value>(self: ScopedCache<Key, Error, Value>, key: Key): Effect.Effect<never, Error, void>
-}
-```
-
-Added in v1.0.0
 
 # constructors
 
@@ -156,57 +61,6 @@ export declare const makeWith: <Key, Environment, Error, Value>(
 
 Added in v1.0.0
 
-# getters
-
-## cacheStats
-
-Returns statistics for this cache.
-
-**Signature**
-
-```ts
-export declare const cacheStats: <Key, Error, Value>(
-  self: ScopedCache<Key, Error, Value>
-) => Effect.Effect<never, never, Cache.CacheStats>
-```
-
-Added in v1.0.0
-
-## entryStats
-
-Return statistics for the specified entry.
-
-**Signature**
-
-```ts
-export declare const entryStats: {
-  <Key>(key: Key): <Error, Value>(
-    self: ScopedCache<Key, Error, Value>
-  ) => Effect.Effect<never, never, Option.Option<Cache.EntryStats>>
-  <Key, Error, Value>(self: ScopedCache<Key, Error, Value>, key: Key): Effect.Effect<
-    never,
-    never,
-    Option.Option<Cache.EntryStats>
-  >
-}
-```
-
-Added in v1.0.0
-
-## size
-
-Returns the approximate number of values in the cache.
-
-**Signature**
-
-```ts
-export declare const size: <Key, Error, Value>(
-  self: ScopedCache<Key, Error, Value>
-) => Effect.Effect<never, never, number>
-```
-
-Added in v1.0.0
-
 # models
 
 ## Lookup (type alias)
@@ -229,6 +83,12 @@ Added in v1.0.0
 
 ```ts
 export interface ScopedCache<Key, Error, Value> extends ScopedCache.Variance<Key, Error, Value> {
+  /**
+   * Retrieves the value associated with the specified key if it exists.
+   * Otherwise returns `Option.none`.
+   */
+  getOption(key: Key): Effect.Effect<Scope.Scope, Error, Option.Option<Value>>
+
   /**
    * Returns statistics for this cache.
    */
