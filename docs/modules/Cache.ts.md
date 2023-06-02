@@ -177,6 +177,12 @@ It can be used safely to give over control for request management without leakin
 ```ts
 export interface ConsumerCache<Key, Error, Value> extends Cache.Variance<Key, Error, Value> {
   /**
+   * Retrieves the value associated with the specified key if it exists.
+   * Otherwise returns `Option.none`.
+   */
+  getOption(key: Key): Effect.Effect<never, Error, Option.Option<Value>>
+
+  /**
    * Returns statistics for this cache.
    */
   cacheStats(): Effect.Effect<never, never, CacheStats>
