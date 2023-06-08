@@ -34,12 +34,10 @@ Added in v1.0.0
   - [acquireUseRelease](#acquireuserelease)
   - [all](#all)
   - [allDiscard](#alldiscard)
-  - [allFilterMap](#allfiltermap)
-  - [allFilterMapPar](#allfiltermappar)
+  - [allIterable](#alliterable)
   - [allPar](#allpar)
   - [allParDiscard](#allpardiscard)
   - [allSuccesses](#allsuccesses)
-  - [allSuccessesPar](#allsuccessespar)
   - [allowInterrupt](#allowinterrupt)
   - [async](#async)
   - [asyncEffect](#asynceffect)
@@ -49,10 +47,6 @@ Added in v1.0.0
   - [cachedFunction](#cachedfunction)
   - [checkInterruptible](#checkinterruptible)
   - [clockWith](#clockwith)
-  - [collectAll](#collectall)
-  - [collectAllPar](#collectallpar)
-  - [collectFirst](#collectfirst)
-  - [collectWhile](#collectwhile)
   - [cond](#cond)
   - [descriptor](#descriptor)
   - [descriptorWith](#descriptorwith)
@@ -68,7 +62,6 @@ Added in v1.0.0
   - [failCauseSync](#failcausesync)
   - [failSync](#failsync)
   - [fiberIdWith](#fiberidwith)
-  - [filterMapEffect](#filtermapeffect)
   - [forEach](#foreach)
   - [forEachDiscard](#foreachdiscard)
   - [forEachExec](#foreachexec)
@@ -159,9 +152,9 @@ Added in v1.0.0
   - [let](#let)
   - [letDiscard](#letdiscard)
 - [elements](#elements)
-  - [find](#find)
+  - [every](#every)
+  - [findFirst](#findfirst)
   - [firstSuccessOf](#firstsuccessof)
-  - [forAll](#forall)
   - [forEachEffect](#foreacheffect)
   - [forEachOption](#foreachoption)
 - [error handling](#error-handling)
@@ -204,6 +197,7 @@ Added in v1.0.0
   - [filterOrElse](#filterorelse)
   - [filterOrElseWith](#filterorelsewith)
   - [filterOrFail](#filterorfail)
+  - [filterOrFailWith](#filterorfailwith)
   - [filterPar](#filterpar)
 - [finalization](#finalization)
   - [addFinalizer](#addfinalizer)
@@ -258,25 +252,10 @@ Added in v1.0.0
   - [annotateLogs](#annotatelogs)
   - [log](#log)
   - [logAnnotations](#logannotations)
-  - [logDebug](#logdebug)
-  - [logDebugCause](#logdebugcause)
-  - [logDebugCauseMessage](#logdebugcausemessage)
-  - [logError](#logerror)
-  - [logErrorCause](#logerrorcause)
-  - [logErrorCauseMessage](#logerrorcausemessage)
-  - [logFatal](#logfatal)
-  - [logFatalCause](#logfatalcause)
-  - [logFatalCauseMessage](#logfatalcausemessage)
-  - [logInfo](#loginfo)
-  - [logInfoCause](#loginfocause)
-  - [logInfoCauseMessage](#loginfocausemessage)
+  - [logCause](#logcause)
   - [logSpan](#logspan)
-  - [logTrace](#logtrace)
-  - [logTraceCause](#logtracecause)
-  - [logTraceCauseMessage](#logtracecausemessage)
-  - [logWarning](#logwarning)
-  - [logWarningCause](#logwarningcause)
-  - [logWarningCauseMessage](#logwarningcausemessage)
+  - [withLog](#withlog)
+  - [withLogCause](#withlogcause)
 - [mapping](#mapping)
   - [as](#as)
   - [asLeft](#asleft)
@@ -429,7 +408,6 @@ Added in v1.0.0
   - [repeatWhileEquals](#repeatwhileequals)
   - [replicate](#replicate)
   - [replicateEffect](#replicateeffect)
-  - [replicateEffectDiscard](#replicateeffectdiscard)
   - [resurrect](#resurrect)
   - [retry](#retry)
   - [retryN](#retryn)
@@ -847,7 +825,7 @@ Added in v1.0.0
 ## allDiscard
 
 Evaluate each effect in the structure from left to right, and discard the
-results. For a parallel version, see `collectAllParDiscard`.
+results. For a parallel version, see `allDiscardPar`.
 
 **Signature**
 
@@ -857,33 +835,28 @@ export declare const allDiscard: All.SignatureDiscard
 
 Added in v1.0.0
 
-## allFilterMap
+## allIterable
 
-Evaluate each effect in the structure with `collectAll`, and collect the
-results with given partial function.
-
-**Signature**
-
-```ts
-export declare const allFilterMap: {
-  <A, B>(pf: (a: A) => Option.Option<B>): <R, E>(elements: Iterable<Effect<R, E, A>>) => Effect<R, E, B[]>
-  <R, E, A, B>(elements: Iterable<Effect<R, E, A>>, pf: (a: A) => Option.Option<B>): Effect<R, E, B[]>
-}
-```
-
-Added in v1.0.0
-
-## allFilterMapPar
-
-Evaluate each effect in the structure with `collectAllPar`, and collect
-the results with given partial function.
+Evaluate and run each effect in the structure and collect the results.
 
 **Signature**
 
 ```ts
-export declare const allFilterMapPar: {
-  <A, B>(pf: (a: A) => Option.Option<B>): <R, E>(elements: Iterable<Effect<R, E, A>>) => Effect<R, E, B[]>
-  <R, E, A, B>(elements: Iterable<Effect<R, E, A>>, pf: (a: A) => Option.Option<B>): Effect<R, E, B[]>
+export declare const allIterable: {
+  (options?: { readonly concurrency?: Concurrency; readonly discard?: false }): <R, E, A>(
+    as: Iterable<Effect<R, E, A>>
+  ) => Effect<R, E, A[]>
+  (options: { readonly concurrency?: Concurrency; readonly discard: true }): <R, E, A>(
+    as: Iterable<Effect<R, E, A>>
+  ) => Effect<R, E, void>
+  <R, E, A>(
+    as: Iterable<Effect<R, E, A>>,
+    options?: { readonly concurrency?: Concurrency; readonly discard?: false }
+  ): Effect<R, E, A[]>
+  <R, E, A>(
+    as: Iterable<Effect<R, E, A>>,
+    options: { readonly concurrency?: Concurrency; readonly discard: true }
+  ): Effect<R, E, void>
 }
 ```
 
@@ -906,7 +879,7 @@ Added in v1.0.0
 ## allParDiscard
 
 Evaluate each effect in the structure in parallel, and collect the results.
-For a sequential version, see `all`.
+For a sequential version, see `allDiscard`.
 
 **Signature**
 
@@ -924,20 +897,10 @@ discarding results from failed effects.
 **Signature**
 
 ```ts
-export declare const allSuccesses: <R, E, A>(as: Iterable<Effect<R, E, A>>) => Effect<R, never, A[]>
-```
-
-Added in v1.0.0
-
-## allSuccessesPar
-
-Evaluate and run each effect in the structure in parallel and collect the
-results, discarding results from failed effects.
-
-**Signature**
-
-```ts
-export declare const allSuccessesPar: <R, E, A>(elements: Iterable<Effect<R, E, A>>) => Effect<R, never, A[]>
+export declare const allSuccesses: <R, E, A>(
+  elements: Iterable<Effect<R, E, A>>,
+  options?: { readonly concurrency?: Concurrency }
+) => Effect<R, never, A[]>
 ```
 
 Added in v1.0.0
@@ -1101,62 +1064,6 @@ specified effectful function.
 
 ```ts
 export declare const clockWith: <R, E, A>(f: (clock: Clock.Clock) => Effect<R, E, A>) => Effect<R, E, A>
-```
-
-Added in v1.0.0
-
-## collectAll
-
-Collects the all element of the `Collection<A>` for which the effect returns a value.
-
-**Signature**
-
-```ts
-export declare const collectAll: <R, E, A>(elements: Iterable<Effect<R, E, Option.Option<A>>>) => Effect<R, E, A[]>
-```
-
-Added in v1.0.0
-
-## collectAllPar
-
-Collects the all element of the `Collection<A>` for which the effect returns a value.
-
-**Signature**
-
-```ts
-export declare const collectAllPar: <R, E, A>(elements: Iterable<Effect<R, E, Option.Option<A>>>) => Effect<R, E, A[]>
-```
-
-Added in v1.0.0
-
-## collectFirst
-
-Collects the first element of the `Collection<A>` for which the effectual
-function `f` returns `Some`.
-
-**Signature**
-
-```ts
-export declare const collectFirst: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, Option.Option<B>>): (elements: Iterable<A>) => Effect<R, E, Option.Option<B>>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, Option.Option<B>>): Effect<R, E, Option.Option<B>>
-}
-```
-
-Added in v1.0.0
-
-## collectWhile
-
-Transforms all elements of the chunk for as long as the specified partial
-function is defined.
-
-**Signature**
-
-```ts
-export declare const collectWhile: {
-  <A, R, E, B>(f: (a: A) => Option.Option<Effect<R, E, B>>): (elements: Iterable<A>) => Effect<R, E, B[]>
-  <A, R, E, B>(elements: Iterable<A>, f: (a: A) => Option.Option<Effect<R, E, B>>): Effect<R, E, B[]>
-}
 ```
 
 Added in v1.0.0
@@ -1344,22 +1251,6 @@ Added in v1.0.0
 
 ```ts
 export declare const fiberIdWith: <R, E, A>(f: (descriptor: FiberId.Runtime) => Effect<R, E, A>) => Effect<R, E, A>
-```
-
-Added in v1.0.0
-
-## filterMapEffect
-
-Returns a filtered, mapped subset of the elements of the iterable based on a
-partial function.
-
-**Signature**
-
-```ts
-export declare const filterMapEffect: {
-  <A, R, E, B>(f: (a: A) => Option.Option<Effect<R, E, B>>): (elements: Iterable<A>) => Effect<R, E, B[]>
-  <A, R, E, B>(elements: Iterable<A>, f: (a: A) => Option.Option<Effect<R, E, B>>): Effect<R, E, B[]>
-}
 ```
 
 Added in v1.0.0
@@ -2650,14 +2541,30 @@ Added in v1.0.0
 
 # elements
 
-## find
+## every
+
+Determines whether all elements of the `Collection<A>` satisfies the effectual
+predicate `f`.
+
+**Signature**
+
+```ts
+export declare const every: {
+  <R, E, A>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, boolean>
+  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, boolean>
+}
+```
+
+Added in v1.0.0
+
+## findFirst
 
 Returns the first element that satisfies the effectful predicate.
 
 **Signature**
 
 ```ts
-export declare const find: {
+export declare const findFirst: {
   <A, R, E>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Option.Option<A>>
   <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, Option.Option<A>>
 }
@@ -2680,22 +2587,6 @@ will determine the outcome of the resulting `Effect` value.
 
 ```ts
 export declare const firstSuccessOf: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, E, A>
-```
-
-Added in v1.0.0
-
-## forAll
-
-Determines whether all elements of the `Collection<A>` satisfies the effectual
-predicate `f`.
-
-**Signature**
-
-```ts
-export declare const forAll: {
-  <R, E, A>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, boolean>
-  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, boolean>
-}
 ```
 
 Added in v1.0.0
@@ -3443,6 +3334,24 @@ export declare const filterOrFail: {
 
 Added in v1.0.0
 
+## filterOrFailWith
+
+Filter the specified effect with the provided function, failing with specified
+error if the predicate fails.
+
+**Signature**
+
+```ts
+export declare const filterOrFailWith: {
+  <A, B extends A, E2>(f: Refinement<A, B>, error: (a: A) => E2): <R, E>(self: Effect<R, E, A>) => Effect<R, E2 | E, B>
+  <A, E2>(f: Predicate<A>, error: (a: A) => E2): <R, E>(self: Effect<R, E, A>) => Effect<R, E2 | E, A>
+  <R, E, A, B extends A, E2>(self: Effect<R, E, A>, f: Refinement<A, B>, error: (a: A) => E2): Effect<R, E | E2, B>
+  <R, E, A, E2>(self: Effect<R, E, A>, f: Predicate<A>, error: (a: A) => E2): Effect<R, E | E2, A>
+}
+```
+
+Added in v1.0.0
+
 ## filterPar
 
 Filters the collection in parallel using the specified effectual predicate.
@@ -4072,12 +3981,25 @@ Added in v1.0.0
 
 ## log
 
-Logs the specified message at the current log level.
+Logs the specified message. You can optionally provide the log level
+and a cause.
 
 **Signature**
 
 ```ts
-export declare const log: (message: string) => Effect<never, never, void>
+export declare const log: {
+  (options?: {
+    readonly cause?: Cause.Cause<unknown>
+    readonly level?: 'None' | 'All' | 'Fatal' | 'Error' | 'Warning' | 'Info' | 'Debug' | 'Trace'
+  }): (message: string) => Effect<never, never, void>
+  (
+    message: string,
+    options?: {
+      readonly cause?: Cause.Cause<unknown>
+      readonly level?: 'None' | 'All' | 'Fatal' | 'Error' | 'Warning' | 'Info' | 'Debug' | 'Trace'
+    }
+  ): Effect<never, never, void>
+}
 ```
 
 Added in v1.0.0
@@ -4094,146 +4016,26 @@ export declare const logAnnotations: (_: void) => Effect<never, never, HashMap.H
 
 Added in v1.0.0
 
-## logDebug
+## logCause
 
-Logs the specified message at the debug log level.
-
-**Signature**
-
-```ts
-export declare const logDebug: (message: string) => Effect<never, never, void>
-```
-
-Added in v1.0.0
-
-## logDebugCause
-
-Logs the specified cause at the debug log level.
+Logs the specified cause at the current log level.
 
 **Signature**
 
 ```ts
-export declare const logDebugCause: <E>(cause: Cause.Cause<E>) => Effect<never, never, void>
-```
-
-Added in v1.0.0
-
-## logDebugCauseMessage
-
-Logs the specified message and cause at the debug log level.
-
-**Signature**
-
-```ts
-export declare const logDebugCauseMessage: <E>(message: string, cause: Cause.Cause<E>) => Effect<never, never, void>
-```
-
-Added in v1.0.0
-
-## logError
-
-Logs the specified message at the error log level.
-
-**Signature**
-
-```ts
-export declare const logError: (message: string) => Effect<never, never, void>
-```
-
-Added in v1.0.0
-
-## logErrorCause
-
-Logs the specified cause at the error log level.
-
-**Signature**
-
-```ts
-export declare const logErrorCause: <E>(cause: Cause.Cause<E>) => Effect<never, never, void>
-```
-
-Added in v1.0.0
-
-## logErrorCauseMessage
-
-Logs the specified message and cause at the error log level.
-
-**Signature**
-
-```ts
-export declare const logErrorCauseMessage: <E>(message: string, cause: Cause.Cause<E>) => Effect<never, never, void>
-```
-
-Added in v1.0.0
-
-## logFatal
-
-Logs the specified message at the fatal log level.
-
-**Signature**
-
-```ts
-export declare const logFatal: (message: string) => Effect<never, never, void>
-```
-
-Added in v1.0.0
-
-## logFatalCause
-
-Logs the specified cause at the fatal log level.
-
-**Signature**
-
-```ts
-export declare const logFatalCause: <E>(cause: Cause.Cause<E>) => Effect<never, never, void>
-```
-
-Added in v1.0.0
-
-## logFatalCauseMessage
-
-Logs the specified message and cause at the fatal log level.
-
-**Signature**
-
-```ts
-export declare const logFatalCauseMessage: <E>(message: string, cause: Cause.Cause<E>) => Effect<never, never, void>
-```
-
-Added in v1.0.0
-
-## logInfo
-
-Logs the specified message at the informational log level.
-
-**Signature**
-
-```ts
-export declare const logInfo: (message: string) => Effect<never, never, void>
-```
-
-Added in v1.0.0
-
-## logInfoCause
-
-Logs the specified cause at the informational log level.
-
-**Signature**
-
-```ts
-export declare const logInfoCause: <E>(cause: Cause.Cause<E>) => Effect<never, never, void>
-```
-
-Added in v1.0.0
-
-## logInfoCauseMessage
-
-Logs the specified message and cause at the informational log level.
-
-**Signature**
-
-```ts
-export declare const logInfoCauseMessage: <E>(message: string, cause: Cause.Cause<E>) => Effect<never, never, void>
+export declare const logCause: {
+  (options?: {
+    readonly message?: string
+    readonly level?: 'None' | 'All' | 'Fatal' | 'Error' | 'Warning' | 'Info' | 'Debug' | 'Trace'
+  }): (cause: Cause.Cause<unknown>) => Effect<never, never, void>
+  (
+    cause: Cause.Cause<unknown>,
+    options?: {
+      readonly message?: string
+      readonly level?: 'None' | 'All' | 'Fatal' | 'Error' | 'Warning' | 'Info' | 'Debug' | 'Trace'
+    }
+  ): Effect<never, never, void>
+}
 ```
 
 Added in v1.0.0
@@ -4253,74 +4055,54 @@ export declare const logSpan: {
 
 Added in v1.0.0
 
-## logTrace
+## withLog
 
-Logs the specified message at the trace log level.
+Logs the specified message at the current log level.
 
 **Signature**
 
 ```ts
-export declare const logTrace: (message: string) => Effect<never, never, void>
+export declare const withLog: {
+  (
+    message: string,
+    options?: {
+      readonly cause?: Cause.Cause<unknown>
+      readonly level?: 'All' | 'Fatal' | 'Error' | 'Warning' | 'Info' | 'Debug' | 'Trace' | 'None'
+    }
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(
+    self: Effect<R, E, A>,
+    message: string,
+    options: {
+      readonly cause?: Cause.Cause<unknown>
+      readonly level?: 'All' | 'Fatal' | 'Error' | 'Warning' | 'Info' | 'Debug' | 'Trace' | 'None'
+    }
+  ): Effect<R, E, A>
+}
 ```
 
 Added in v1.0.0
 
-## logTraceCause
+## withLogCause
 
-Logs the specified cause at the trace log level.
-
-**Signature**
-
-```ts
-export declare const logTraceCause: <E>(cause: Cause.Cause<E>) => Effect<never, never, void>
-```
-
-Added in v1.0.0
-
-## logTraceCauseMessage
-
-Logs the specified message and cause at the trace log level.
+Logs any Cause of failure for this effect with the given `message` and `level`.
 
 **Signature**
 
 ```ts
-export declare const logTraceCauseMessage: <E>(message: string, cause: Cause.Cause<E>) => Effect<never, never, void>
-```
-
-Added in v1.0.0
-
-## logWarning
-
-Logs the specified message at the warning log level.
-
-**Signature**
-
-```ts
-export declare const logWarning: (message: string) => Effect<never, never, void>
-```
-
-Added in v1.0.0
-
-## logWarningCause
-
-Logs the specified cause at the warning log level.
-
-**Signature**
-
-```ts
-export declare const logWarningCause: <E>(cause: Cause.Cause<E>) => Effect<never, never, void>
-```
-
-Added in v1.0.0
-
-## logWarningCauseMessage
-
-Logs the specified message and cause at the warning log level.
-
-**Signature**
-
-```ts
-export declare const logWarningCauseMessage: <E>(message: string, cause: Cause.Cause<E>) => Effect<never, never, void>
+export declare const withLogCause: {
+  (options?: {
+    readonly message?: string
+    readonly level?: 'None' | 'All' | 'Fatal' | 'Error' | 'Warning' | 'Info' | 'Debug' | 'Trace'
+  }): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(
+    self: Effect<R, E, A>,
+    options?: {
+      readonly message?: string
+      readonly level?: 'None' | 'All' | 'Fatal' | 'Error' | 'Warning' | 'Info' | 'Debug' | 'Trace'
+    }
+  ): Effect<R, E, A>
+}
 ```
 
 Added in v1.0.0
@@ -6725,23 +6507,10 @@ results.
 
 ```ts
 export declare const replicateEffect: {
-  (n: number): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A[]>
-  <R, E, A>(self: Effect<R, E, A>, n: number): Effect<R, E, A[]>
-}
-```
-
-Added in v1.0.0
-
-## replicateEffectDiscard
-
-Performs this effect the specified number of times, discarding the results.
-
-**Signature**
-
-```ts
-export declare const replicateEffectDiscard: {
-  (n: number): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, void>
-  <R, E, A>(self: Effect<R, E, A>, n: number): Effect<R, E, void>
+  (n: number, options?: { readonly discard?: false }): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A[]>
+  (n: number, options: { readonly discard: true }): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, void>
+  <R, E, A>(self: Effect<R, E, A>, n: number, options?: { readonly discard?: false }): Effect<R, E, A[]>
+  <R, E, A>(self: Effect<R, E, A>, n: number, options: { readonly discard: true }): Effect<R, E, void>
 }
 ```
 

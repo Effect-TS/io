@@ -34,7 +34,14 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(0))
       const effect: Effect.Effect<never, never, void> = yield* $(Ref.update(ref, (n) => n + 1), Effect.once)
-      yield* $(effect, Effect.replicate(100), Effect.allParDiscard)
+      yield* $(
+        effect,
+        Effect.replicate(100),
+        Effect.allIterable({
+          concurrency: "inherit",
+          discard: true
+        })
+      )
       const result = yield* $(Ref.get(ref))
       assert.strictEqual(result, 1)
     }))

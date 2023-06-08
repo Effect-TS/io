@@ -44,8 +44,8 @@ describe.concurrent("Effect", () => {
   it.effect("forAll - determines whether all elements satisfy the effectual predicate", () =>
     Effect.gen(function*($) {
       const array = [1, 2, 3, 4, 5, 6]
-      const result1 = yield* $(array, Effect.forAll((n) => Effect.succeed(n > 3)))
-      const result2 = yield* $(array, Effect.forAll((n) => Effect.succeed(n > 0)))
+      const result1 = yield* $(array, Effect.every((n) => Effect.succeed(n > 3)))
+      const result2 = yield* $(array, Effect.every((n) => Effect.succeed(n > 0)))
       assert.isFalse(result1)
       assert.isTrue(result2)
     }))

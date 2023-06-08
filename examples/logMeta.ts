@@ -8,7 +8,8 @@ type LogMeta = Record<string, string>
 
 const logMeta = FiberRef.unsafeMake<LogMeta>({})
 
-const logInfoWithMeta = (message: string, data: LogMeta) => Effect.locally(logMeta, data)(Effect.logInfo(message))
+const logInfoWithMeta = (message: string, data: LogMeta) =>
+  Effect.locally(logMeta, data)(Effect.log(message, { level: "Info" }))
 
 const customLogger = Logger.make<string, void>(
   (fiberId, logLevel, message, cause, context, spans, annotations) => {

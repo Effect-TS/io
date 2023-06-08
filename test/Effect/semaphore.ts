@@ -10,10 +10,11 @@ describe.concurrent("Effect", () => {
       const sem = yield* $(Effect.makeSemaphore(4))
       const messages: Array<string> = []
       yield* $(
-        Effect.fork(Effect.allParDiscard(
+        Effect.fork(Effect.allIterable(
           [0, 1, 2, 3].map((n) =>
             sem.withPermits(2)(Effect.delay(D.seconds(2))(Effect.sync(() => messages.push(`process: ${n}`))))
-          )
+          ),
+          { concurrency: "inherit", discard: true }
         ))
       )
       yield* $(TestClock.adjust(D.seconds(3)))
@@ -21,10 +22,11 @@ describe.concurrent("Effect", () => {
       yield* $(TestClock.adjust(D.seconds(3)))
       assert.equal(messages.length, 4)
       yield* $(
-        Effect.fork(Effect.allParDiscard(
+        Effect.fork(Effect.allIterable(
           [0, 1, 2, 3].map((n) =>
             sem.withPermits(2)(Effect.delay(D.seconds(2))(Effect.sync(() => messages.push(`process: ${n}`))))
-          )
+          ),
+          { concurrency: "inherit", discard: true }
         ))
       )
       yield* $(TestClock.adjust(D.seconds(3)))

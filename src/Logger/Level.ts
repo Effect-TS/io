@@ -26,6 +26,12 @@ export type LogLevel = All | Fatal | Error | Warning | Info | Debug | Trace | No
  * @since 1.0.0
  * @category model
  */
+export type Literal = LogLevel["_tag"]
+
+/**
+ * @since 1.0.0
+ * @category model
+ */
 export interface All {
   readonly _tag: "All"
   readonly label: "ALL"
@@ -229,7 +235,7 @@ export const greaterThanEqual: {
  * @category conversions
  */
 export const fromLiteral = (
-  _: "All" | "Fatal" | "Error" | "Warning" | "Info" | "Debug" | "Trace" | "None"
+  _: Literal
 ): LogLevel => {
   switch (_) {
     case "All": {

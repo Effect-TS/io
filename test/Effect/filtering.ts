@@ -134,4 +134,26 @@ describe.concurrent("Effect", () => {
       assert.deepStrictEqual(goodCase, Either.right(0))
       assert.deepStrictEqual(badCase, Either.left(Either.left("predicate failed!")))
     }))
+  it.effect("filterOrFailWith - returns failure", () =>
+    Effect.gen(function*($) {
+      const goodCase = yield* $(
+        exactlyOnce(0, (effect) =>
+          pipe(effect, Effect.filterOrFailWith((n) => n === 0, (n) => `predicate failed, got ${n}!`))),
+        Effect.sandbox,
+        Effect.either
+      )
+      const badCase = yield* $(
+        exactlyOnce(1, (effect) =>
+          pipe(
+            effect,
+            Effect.filterOrFailWith((n) =>
+              n === 0, (n) => `predicate failed, got ${n}!`)
+          )),
+        Effect.sandbox,
+        Effect.either,
+        Effect.map(Either.mapLeft(Cause.failureOrCause))
+      )
+      assert.deepStrictEqual(goodCase, Either.right(0))
+      assert.deepStrictEqual(badCase, Either.left(Either.left("predicate failed, got 1!")))
+    }))
 })

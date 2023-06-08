@@ -1433,38 +1433,6 @@ export const allParDiscard: Effect.All.SignatureDiscard = Debug.methodWithTrace(
 )
 
 /* @internal */
-export const collectAllSuccessesPar = Debug.methodWithTrace((trace) =>
-  <R, E, A>(
-    elements: Iterable<Effect.Effect<R, E, A>>
-  ): Effect.Effect<R, never, Array<A>> =>
-    allFilterMapPar(
-      Array.from(elements).map(core.exit),
-      (exit) => (core.exitIsSuccess(exit) ? Option.some(exit.i0) : Option.none())
-    ).traced(trace)
-)
-
-/* @internal */
-export const allFilterMapPar = Debug.dualWithTrace<
-  <A, B>(
-    pf: (a: A) => Option.Option<B>
-  ) => <R, E>(elements: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, Array<B>>,
-  <R, E, A, B>(
-    elements: Iterable<Effect.Effect<R, E, A>>,
-    pf: (a: A) => Option.Option<B>
-  ) => Effect.Effect<R, E, Array<B>>
->(2, (trace, restore) =>
-  (elements, pf) =>
-    core.map(
-      allPar(elements),
-      RA.filterMap(restore(pf))
-    ).traced(trace))
-
-/* @internal */
-export const collectAllPar = Debug.methodWithTrace<
-  <R, E, A>(elements: Iterable<Effect.Effect<R, E, Option.Option<A>>>) => Effect.Effect<R, E, Array<A>>
->((trace) => (elements) => core.map(allPar(elements), RA.filterMap(identity)).traced(trace))
-
-/* @internal */
 export const daemonChildren = Debug.methodWithTrace((trace) =>
   <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
     const forkScope = core.fiberRefLocally(core.currentForkScopeOverride, Option.some(fiberScope.globalScope))
@@ -1728,7 +1696,7 @@ export const forEachParUnboundedDiscard = <R, E, A, _>(
   })
 
 /* @internal */
-const forEachParN = <A, R, E, B>(
+export const forEachParN = <A, R, E, B>(
   self: Iterable<A>,
   n: number,
   f: (a: A) => Effect.Effect<R, E, B>
@@ -1741,7 +1709,7 @@ const forEachParN = <A, R, E, B>(
   })
 
 /* @internal */
-const forEachParNDiscard = <A, R, E, _>(
+export const forEachParNDiscard = <A, R, E, _>(
   self: Iterable<A>,
   n: number,
   f: (a: A) => Effect.Effect<R, E, _>

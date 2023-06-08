@@ -3,10 +3,11 @@ import type * as Duration from "@effect/data/Duration"
 import * as Either from "@effect/data/Either"
 import * as Equal from "@effect/data/Equal"
 import type { LazyArg } from "@effect/data/Function"
-import { pipe } from "@effect/data/Function"
+import { identity, pipe } from "@effect/data/Function"
 import * as Hash from "@effect/data/Hash"
 import * as MutableHashMap from "@effect/data/MutableHashMap"
 import * as Option from "@effect/data/Option"
+import * as RA from "@effect/data/ReadonlyArray"
 import { tuple } from "@effect/data/ReadonlyArray"
 import type { Equivalence } from "@effect/data/typeclass/Equivalence"
 import type * as Cause from "@effect/io/Cause"
@@ -18,6 +19,7 @@ import type * as Fiber from "@effect/io/Fiber"
 import * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
 import * as internalCause from "@effect/io/internal_effect_untraced/cause"
+import * as Concurrency from "@effect/io/internal_effect_untraced/concurrency"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as effect from "@effect/io/internal_effect_untraced/effect"
 import * as internalFiber from "@effect/io/internal_effect_untraced/fiber"
@@ -30,6 +32,9 @@ import type * as Synchronized from "@effect/io/Ref/Synchronized"
 import type * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
+
+// TODO: remove once added to /data/Predicate
+const isIterable = (u: unknown): u is Iterable<unknown> => typeof u === "object" && u != null && Symbol.iterator in u
 
 /** @internal */
 class Semaphore {
@@ -750,3 +755,100 @@ export const zipWithFiber = Debug.untracedDual<
         ).traced(trace)
     )
   }))
+
+/* @internal */
+export const allIterable = Debug.dualWithTrace<
+  {
+    (options?: {
+      readonly concurrency?: Concurrency.Concurrency
+      readonly discard?: false
+    }): <R, E, A>(as: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, Array<A>>
+    (options: {
+      readonly concurrency?: Concurrency.Concurrency
+      readonly discard: true
+    }): <R, E, A>(as: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, void>
+  },
+  {
+    <R, E, A>(as: Iterable<Effect.Effect<R, E, A>>, options?: {
+      readonly concurrency?: Concurrency.Concurrency
+      readonly discard?: false
+    }): Effect.Effect<R, E, Array<A>>
+    <R, E, A>(as: Iterable<Effect.Effect<R, E, A>>, options: {
+      readonly concurrency?: Concurrency.Concurrency
+      readonly discard: true
+    }): Effect.Effect<R, E, void>
+  }
+>((args) => isIterable(args[0]), (trace) =>
+  <R, E, A>(as: Iterable<Effect.Effect<R, E, A>>, options?: {
+    readonly concurrency?: Concurrency.Concurrency
+    readonly discard?: boolean
+  }): Effect.Effect<R, E, any> => {
+    if (options?.discard) {
+      return Concurrency.match(options?.concurrency, {
+        sequential: () => core.forEachDiscard(as, identity).traced(trace),
+        inherit: () => fiberRuntime.forEachParDiscard(as, identity),
+        withLimit: (n) => fiberRuntime.forEachParNDiscard(as, n, identity)
+      })
+    }
+
+    return Concurrency.match(options?.concurrency, {
+      sequential: () => core.forEach(as, identity).traced(trace),
+      inherit: () => fiberRuntime.forEachPar(as, identity),
+      withLimit: (n) => fiberRuntime.forEachParN(as, n, identity)
+    })
+  })
+
+/* @internal */
+export const allSome = Debug.methodWithTrace<
+  <R, E, A>(elements: Iterable<Effect.Effect<R, E, Option.Option<A>>>) => Effect.Effect<R, E, Array<A>>
+>((trace) => (elements) => core.map(allIterable(elements), RA.compact).traced(trace))
+
+/* @internal */
+export const allSuccesses = Debug.methodWithTrace((trace) =>
+  <R, E, A>(
+    elements: Iterable<Effect.Effect<R, E, A>>,
+    options?: { readonly concurrency?: Concurrency.Concurrency }
+  ): Effect.Effect<R, never, Array<A>> =>
+    core.map(
+      allIterable(Array.from(elements).map(core.exit), options),
+      RA.filterMap((exit) => core.exitIsSuccess(exit) ? Option.some(exit.i0) : Option.none())
+    ).traced(trace)
+)
+
+/* @internal */
+export const filterMap = Debug.dualWithTrace<
+  <A, B>(
+    pf: (a: A) => Option.Option<B>
+  ) => <R, E>(elements: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, Array<B>>,
+  <R, E, A, B>(
+    elements: Iterable<Effect.Effect<R, E, A>>,
+    pf: (a: A) => Option.Option<B>
+  ) => Effect.Effect<R, E, Array<B>>
+>(2, (trace, restore) => (elements, pf) => core.map(allIterable(elements), RA.filterMap(restore(pf))).traced(trace))
+
+/* @internal */
+export const replicate = (n: number) =>
+  <R, E, A>(self: Effect.Effect<R, E, A>): Array<Effect.Effect<R, E, A>> => Array.from({ length: n }, () => self)
+
+/* @internal */
+export const replicateEffect = Debug.dualWithTrace<
+  {
+    (n: number, options?: {
+      readonly discard?: false
+    }): <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, Array<A>>
+    (n: number, options: {
+      readonly discard: true
+    }): <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, void>
+  },
+  {
+    <R, E, A>(self: Effect.Effect<R, E, A>, n: number, options?: {
+      readonly discard?: false
+    }): Effect.Effect<R, E, Array<A>>
+    <R, E, A>(self: Effect.Effect<R, E, A>, n: number, options: {
+      readonly discard: true
+    }): Effect.Effect<R, E, void>
+  }
+>(
+  (args) => core.isEffect(args[0]),
+  (trace) => (self, n, options) => allIterable(replicate(n)(self), options as {}).traced(trace)
+)

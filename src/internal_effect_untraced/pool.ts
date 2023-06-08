@@ -337,7 +337,7 @@ const getAndShutdown = <E, A>(self: PoolImpl<E, A>): Effect.Effect<never, never,
  * Begins pre-allocating pool entries based on minimum pool size.
  */
 const initialize = <E, A>(self: PoolImpl<E, A>): Effect.Effect<never, never, void> =>
-  Effect.replicateEffectDiscard(
+  Effect.replicateEffect(
     Effect.uninterruptibleMask((restore) =>
       Effect.flatten(Ref.modify(self.state, (state) => {
         if (state.size < self.min && state.size >= 0) {
@@ -363,7 +363,8 @@ const initialize = <E, A>(self: PoolImpl<E, A>): Effect.Effect<never, never, voi
         return [Effect.unit(), state] as const
       }))
     ),
-    self.min
+    self.min,
+    { discard: true }
   )
 
 /**

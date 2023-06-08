@@ -236,7 +236,10 @@ describe.concurrent("FiberRef", () => {
     Effect.gen(function*($) {
       const n = 1000
       const fiberRef = yield* $(FiberRef.make(0, constant(0), (a, b) => a + b))
-      yield* $(Effect.allParDiscard(Array.from({ length: n }, () => FiberRef.update(fiberRef, (n) => n + 1))))
+      yield* $(Effect.allIterable(Array.from({ length: n }, () => FiberRef.update(fiberRef, (n) => n + 1)), {
+        concurrency: "inherit",
+        discard: true
+      }))
       const result = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(result, n)
     }))

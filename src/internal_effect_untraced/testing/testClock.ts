@@ -279,7 +279,9 @@ export class TestClockImpl implements TestClock {
         WarningData.isStart(data) ?
           Option.some(
             pipe(
-              this.live.provide(pipe(effect.logWarning(warning), effect.delay(Duration.seconds(5)))),
+              this.live.provide(
+                pipe(effect.log(warning, { level: "Warning" }), effect.delay(Duration.seconds(5)))
+              ),
               core.interruptible,
               fiberRuntime.fork,
               core.map((fiber) => WarningData.pending(fiber))
@@ -355,7 +357,7 @@ export class TestClockImpl implements TestClock {
             pipe(
               this.live.provide(
                 pipe(
-                  effect.logWarning(suspendedWarning),
+                  effect.log(suspendedWarning, { level: "Warning" }),
                   core.zipRight(ref.set(this.suspendedWarningState, SuspendedWarningData.done)),
                   effect.delay(Duration.seconds(5))
                 )

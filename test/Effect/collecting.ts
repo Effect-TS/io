@@ -1,4 +1,3 @@
-import * as Option from "@effect/data/Option"
 import * as Cause from "@effect/io/Cause"
 import * as Effect from "@effect/io/Effect"
 import * as Ref from "@effect/io/Ref"
@@ -27,22 +26,12 @@ describe.concurrent("Effect", () => {
   it.effect("collectAllParDiscard - preserves failures", () =>
     Effect.gen(function*($) {
       const result = yield* $(
-        Effect.allParDiscard(Array.from({ length: 10 }, () => Effect.fail(Cause.RuntimeException()))),
-        Effect.withParallelism(5),
+        Effect.allIterable(Array.from({ length: 10 }, () => Effect.fail(Cause.RuntimeException())), {
+          concurrency: 5,
+          discard: true
+        }),
         Effect.flip
       )
       assert.deepStrictEqual(result, Cause.RuntimeException())
-    }))
-  it.effect("collectFirst - collects the first value for which the effectual function returns Some", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(
-        Array.from({ length: 10 }, (_, i) => i),
-        Effect.collectFirst((n) =>
-          n > 5 ?
-            Effect.succeed(Option.some(n)) :
-            Effect.succeed(Option.none())
-        )
-      )
-      assert.deepStrictEqual(result, Option.some(6))
     }))
 })

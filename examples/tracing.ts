@@ -20,4 +20,4 @@ const program = Effect.allPar(
   Effect.delay(Effect.succeed(0), millis(500))
 )
 
-Effect.runFork(Effect.catchAllCause(program, Effect.logErrorCause))
+Effect.runFork(Effect.catchAllCause(program, Effect.logCause({ level: "Error" })))

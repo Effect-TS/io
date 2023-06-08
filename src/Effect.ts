@@ -46,6 +46,7 @@ import type * as FiberRef from "@effect/io/FiberRef"
 import type * as FiberRefs from "@effect/io/FiberRefs"
 import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
 import { clockTag } from "@effect/io/internal_effect_untraced/clock"
+import type { Concurrency } from "@effect/io/internal_effect_untraced/concurrency"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as defaultServices from "@effect/io/internal_effect_untraced/defaultServices"
 import * as effect from "@effect/io/internal_effect_untraced/effect"
@@ -490,6 +491,146 @@ export const acquireUseRelease: {
     release: (a: A, exit: Exit.Exit<E2, A2>) => Effect<R3, never, X>
   ): Effect<R | R2 | R3, E | E2, A2>
 } = core.acquireUseRelease
+
+/**
+ * Runs all the provided effects in sequence respecting the structure provided in input.
+ *
+ * Supports multiple arguments, a single argument tuple / array or record / struct.
+ *
+ * @since 1.0.0
+ * @category constructors
+ */
+export const all: All.Signature = effect.all
+
+/**
+ * @since 1.0.0
+ * @category utils
+ */
+export declare namespace All {
+  export type EffectAny = Effect<any, any, any>
+  export type ReturnArray<T> = [T] extends [ReadonlyArray<EffectAny>] ? Effect<
+    T[number] extends never ? never
+      : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
+      : never,
+    T[number] extends never ? never
+      : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
+      : never,
+    T[number] extends never ? []
+      : { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
+  >
+    : never
+  export type ReturnTuple<T extends ReadonlyArray<Effect<any, any, any>>> = Effect<
+    T[number] extends never ? never
+      : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
+      : never,
+    T[number] extends never ? never
+      : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
+      : never,
+    T[number] extends never ? []
+      : { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
+  > extends infer X ? X : never
+  export type ReturnObject<T> = [T] extends [[Readonly<{ [K: string]: Effect<any, any, any> }>]] ? Effect<
+    keyof T[0] extends never ? never
+      : [T[0][keyof T[0]]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
+      : never,
+    keyof T[0] extends never ? never
+      : [T[0][keyof T[0]]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
+      : never,
+    { [K in keyof T[0]]: [T[0][K]] extends [Effect<any, any, infer A>] ? A : never }
+  >
+    : never
+  export type Signature = {
+    <
+      Args extends
+        | ReadonlyArray<EffectAny>
+        | [ReadonlyArray<EffectAny>]
+        | [Readonly<{ [K: string]: Effect<any, any, any> }>]
+    >(
+      ...args: [...Args]
+    ): Args["length"] extends 1 ? [Args] extends [[ReadonlyArray<EffectAny>]] ? ReturnTuple<Args[0]>
+    : Args extends [EffectAny] ? ReturnArray<Args>
+    : ReturnObject<Args>
+      : ReturnArray<Args>
+  }
+  export type Discard<X> = [X] extends [Effect<infer R, infer E, infer _>] ? Effect<R, E, void> : never
+  export type SignatureDiscard = {
+    <
+      Args extends
+        | ReadonlyArray<EffectAny>
+        | [Readonly<{ [K: string]: Effect<any, any, any> }>]
+    >(
+      ...args: [...Args]
+    ): Discard<
+      Args["length"] extends 1 ? [Args] extends [[ReadonlyArray<EffectAny>]] ? ReturnTuple<Args[0]>
+      : Args extends [EffectAny] ? ReturnArray<Args>
+      : ReturnObject<Args>
+        : ReturnArray<Args>
+    >
+  }
+}
+
+/**
+ * Runs all the provided effects in parallel respecting the structure provided in input.
+ *
+ * Supports multiple arguments, a single argument tuple / array or record / struct.
+ *
+ * @since 1.0.0
+ * @category constructors
+ */
+export const allPar: All.Signature = fiberRuntime.allPar
+
+/**
+ * Evaluate each effect in the structure from left to right, and discard the
+ * results. For a parallel version, see `allDiscardPar`.
+ *
+ * @since 1.0.0
+ * @category constructors
+ */
+export const allDiscard: All.SignatureDiscard = effect.allDiscard
+
+/**
+ * Evaluate each effect in the structure in parallel, and collect the results.
+ * For a sequential version, see `allDiscard`.
+ *
+ * @since 1.0.0
+ * @category constructors
+ */
+export const allParDiscard: All.SignatureDiscard = fiberRuntime.allParDiscard
+
+/**
+ * Evaluate and run each effect in the structure and collect the results.
+ *
+ * @since 1.0.0
+ * @category constructors
+ */
+export const allIterable: {
+  (
+    options?: { readonly concurrency?: Concurrency; readonly discard?: false }
+  ): <R, E, A>(as: Iterable<Effect<R, E, A>>) => Effect<R, E, Array<A>>
+  (
+    options: { readonly concurrency?: Concurrency; readonly discard: true }
+  ): <R, E, A>(as: Iterable<Effect<R, E, A>>) => Effect<R, E, void>
+  <R, E, A>(
+    as: Iterable<Effect<R, E, A>>,
+    options?: { readonly concurrency?: Concurrency; readonly discard?: false }
+  ): Effect<R, E, Array<A>>
+  <R, E, A>(
+    as: Iterable<Effect<R, E, A>>,
+    options: { readonly concurrency?: Concurrency; readonly discard: true }
+  ): Effect<R, E, void>
+} = circular.allIterable
+
+/**
+ * Evaluate and run each effect in the structure and collect the results,
+ * discarding results from failed effects.
+ *
+ * @since 1.0.0
+ * @category constructors
+ */
+export const allSuccesses: <R, E, A>(
+  elements: Iterable<Effect<R, E, A>>,
+  options?: { readonly concurrency?: Concurrency }
+) => Effect<R, never, Array<A>> = circular.allSuccesses
 
 /**
  * This function checks if any fibers are attempting to interrupt the current
@@ -980,7 +1121,7 @@ export const catchTags: {
     R,
     E extends { _tag: string },
     A,
-    Cases extends { [K in E["_tag"]]+?: ((error: Extract<E, { _tag: K }>) => Effect<any, any, any>) | undefined }
+    Cases extends { [K in E["_tag"]]+?: ((error: Extract<E, { _tag: K }>) => Effect<any, any, any>) }
   >(
     self: Effect<R, E, A>,
     cases: Cases
@@ -1055,122 +1196,6 @@ export const config: <A>(config: Config<A>) => Effect<never, ConfigError, A> = d
  */
 export const configProviderWith: <R, E, A>(f: (configProvider: ConfigProvider) => Effect<R, E, A>) => Effect<R, E, A> =
   defaultServices.configProviderWith
-
-/**
- * Evaluate each effect in the structure from left to right, and discard the
- * results. For a parallel version, see `collectAllParDiscard`.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const allDiscard: All.SignatureDiscard = effect.allDiscard
-
-/**
- * Evaluate each effect in the structure in parallel, and collect the results.
- * For a sequential version, see `all`.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const allParDiscard: All.SignatureDiscard = fiberRuntime.allParDiscard
-
-/**
- * Evaluate each effect in the structure with `collectAll`, and collect the
- * results with given partial function.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const allFilterMap: {
-  <A, B>(pf: (a: A) => Option.Option<B>): <R, E>(elements: Iterable<Effect<R, E, A>>) => Effect<R, E, Array<B>>
-  <R, E, A, B>(elements: Iterable<Effect<R, E, A>>, pf: (a: A) => Option.Option<B>): Effect<R, E, Array<B>>
-} = effect.allFilterMap
-
-/**
- * Evaluate each effect in the structure with `collectAllPar`, and collect
- * the results with given partial function.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const allFilterMapPar: {
-  <A, B>(pf: (a: A) => Option.Option<B>): <R, E>(elements: Iterable<Effect<R, E, A>>) => Effect<R, E, Array<B>>
-  <R, E, A, B>(elements: Iterable<Effect<R, E, A>>, pf: (a: A) => Option.Option<B>): Effect<R, E, Array<B>>
-} = fiberRuntime.allFilterMapPar
-
-/**
- * Returns a filtered, mapped subset of the elements of the iterable based on a
- * partial function.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const filterMapEffect: {
-  <A, R, E, B>(f: (a: A) => Option.Option<Effect<R, E, B>>): (elements: Iterable<A>) => Effect<R, E, Array<B>>
-  <A, R, E, B>(elements: Iterable<A>, f: (a: A) => Option.Option<Effect<R, E, B>>): Effect<R, E, Array<B>>
-} = effect.filterMapEffect
-
-/**
- * Evaluate and run each effect in the structure and collect the results,
- * discarding results from failed effects.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const allSuccesses: <R, E, A>(as: Iterable<Effect<R, E, A>>) => Effect<R, never, Array<A>> =
-  effect.collectAllSuccesses
-
-/**
- * Evaluate and run each effect in the structure in parallel and collect the
- * results, discarding results from failed effects.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const allSuccessesPar: <R, E, A>(elements: Iterable<Effect<R, E, A>>) => Effect<R, never, Array<A>> =
-  fiberRuntime.collectAllSuccessesPar
-
-/**
- * Collects the all element of the `Collection<A>` for which the effect returns a value.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const collectAll: <R, E, A>(elements: Iterable<Effect<R, E, Option.Option<A>>>) => Effect<R, E, Array<A>> =
-  effect.collectAll
-
-/**
- * Collects the all element of the `Collection<A>` for which the effect returns a value.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const collectAllPar: <R, E, A>(elements: Iterable<Effect<R, E, Option.Option<A>>>) => Effect<R, E, Array<A>> =
-  fiberRuntime.collectAllPar
-
-/**
- * Collects the first element of the `Collection<A>` for which the effectual
- * function `f` returns `Some`.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const collectFirst: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, Option.Option<B>>): (elements: Iterable<A>) => Effect<R, E, Option.Option<B>>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, Option.Option<B>>): Effect<R, E, Option.Option<B>>
-} = effect.collectFirst
-
-/**
- * Transforms all elements of the chunk for as long as the specified partial
- * function is defined.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const collectWhile: {
-  <A, R, E, B>(f: (a: A) => Option.Option<Effect<R, E, B>>): (elements: Iterable<A>) => Effect<R, E, Array<B>>
-  <A, R, E, B>(elements: Iterable<A>, f: (a: A) => Option.Option<Effect<R, E, B>>): Effect<R, E, Array<B>>
-} = effect.collectWhile
 
 /**
  * Evaluate the predicate, return the given `A` as success if predicate returns
@@ -1525,6 +1550,18 @@ export const ensuringChildren: {
 export const eventually: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, A> = effect.eventually
 
 /**
+ * Determines whether all elements of the `Collection<A>` satisfies the effectual
+ * predicate `f`.
+ *
+ * @since 1.0.0
+ * @category elements
+ */
+export const every: {
+  <R, E, A>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, boolean>
+  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, boolean>
+} = effect.every
+
+/**
  * Determines whether any element of the `Iterable<A>` satisfies the effectual
  * predicate `f`, working sequentially.
  *
@@ -1738,15 +1775,29 @@ export const filterOrFail: {
 } = effect.filterOrFail
 
 /**
+ * Filter the specified effect with the provided function, failing with specified
+ * error if the predicate fails.
+ *
+ * @since 1.0.0
+ * @category filtering
+ */
+export const filterOrFailWith: {
+  <A, B extends A, E2>(f: Refinement<A, B>, error: (a: A) => E2): <R, E>(self: Effect<R, E, A>) => Effect<R, E2 | E, B>
+  <A, E2>(f: Predicate<A>, error: (a: A) => E2): <R, E>(self: Effect<R, E, A>) => Effect<R, E2 | E, A>
+  <R, E, A, B extends A, E2>(self: Effect<R, E, A>, f: Refinement<A, B>, error: (a: A) => E2): Effect<R, E | E2, B>
+  <R, E, A, E2>(self: Effect<R, E, A>, f: Predicate<A>, error: (a: A) => E2): Effect<R, E | E2, A>
+} = effect.filterOrFailWith
+
+/**
  * Returns the first element that satisfies the effectful predicate.
  *
  * @since 1.0.0
  * @category elements
  */
-export const find: {
+export const findFirst: {
   <A, R, E>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Option.Option<A>>
   <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, Option.Option<A>>
-} = effect.find
+} = effect.findFirst
 
 /**
  * This function takes an iterable of `Effect` values and returns a new
@@ -1830,18 +1881,6 @@ export const flipWith: {
     f: (effect: Effect<R, A, E>) => Effect<R2, A2, E2>
   ): Effect<R2, E2, A2>
 } = effect.flipWith
-
-/**
- * Determines whether all elements of the `Collection<A>` satisfies the effectual
- * predicate `f`.
- *
- * @since 1.0.0
- * @category elements
- */
-export const forAll: {
-  <R, E, A>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, boolean>
-  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, boolean>
-} = effect.forAll
 
 /**
  * @since 1.0.0
@@ -2577,162 +2616,95 @@ export const leftWith: {
 } = effect.leftWith
 
 /**
+ * Logs the specified message. You can optionally provide the log level
+ * and a cause.
+ *
+ * @since 1.0.0
+ * @category logging
+ */
+export const log: {
+  (
+    options?: {
+      readonly cause?: Cause.Cause<unknown>
+      readonly level?: "None" | "All" | "Fatal" | "Error" | "Warning" | "Info" | "Debug" | "Trace"
+    }
+  ): (message: string) => Effect<never, never, void>
+  (
+    message: string,
+    options?: {
+      readonly cause?: Cause.Cause<unknown>
+      readonly level?: "None" | "All" | "Fatal" | "Error" | "Warning" | "Info" | "Debug" | "Trace"
+    }
+  ): Effect<never, never, void>
+} = effect.log
+
+/**
+ * Logs the specified cause at the current log level.
+ *
+ * @since 1.0.0
+ * @category logging
+ */
+export const logCause: {
+  (
+    options?: {
+      readonly message?: string
+      readonly level?: "None" | "All" | "Fatal" | "Error" | "Warning" | "Info" | "Debug" | "Trace"
+    }
+  ): (cause: Cause.Cause<unknown>) => Effect<never, never, void>
+  (
+    cause: Cause.Cause<unknown>,
+    options?: {
+      readonly message?: string
+      readonly level?: "None" | "All" | "Fatal" | "Error" | "Warning" | "Info" | "Debug" | "Trace"
+    }
+  ): Effect<never, never, void>
+} = effect.logCause
+
+/**
  * Logs the specified message at the current log level.
  *
  * @since 1.0.0
  * @category logging
  */
-export const log: (message: string) => Effect<never, never, void> = effect.log
+export const withLog: {
+  (
+    message: string,
+    options?: {
+      readonly cause?: Cause.Cause<unknown>
+      readonly level?: "All" | "Fatal" | "Error" | "Warning" | "Info" | "Debug" | "Trace" | "None"
+    }
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(
+    self: Effect<R, E, A>,
+    message: string,
+    options: {
+      readonly cause?: Cause.Cause<unknown>
+      readonly level?: "All" | "Fatal" | "Error" | "Warning" | "Info" | "Debug" | "Trace" | "None"
+    }
+  ): Effect<R, E, A>
+} = effect.withLog
 
 /**
- * Logs the specified message at the debug log level.
+ * Logs any Cause of failure for this effect with the given `message` and `level`.
  *
  * @since 1.0.0
  * @category logging
  */
-export const logDebug: (message: string) => Effect<never, never, void> = effect.logDebug
-
-/**
- * Logs the specified cause at the debug log level.
- *
- * @since 1.0.0
- * @category logging
- */
-export const logDebugCause: <E>(cause: Cause.Cause<E>) => Effect<never, never, void> = effect.logDebugCause
-
-/**
- * Logs the specified message and cause at the debug log level.
- *
- * @since 1.0.0
- * @category logging
- */
-export const logDebugCauseMessage: <E>(message: string, cause: Cause.Cause<E>) => Effect<never, never, void> =
-  effect.logDebugCauseMessage
-
-/**
- * Logs the specified message at the error log level.
- *
- * @since 1.0.0
- * @category logging
- */
-export const logError: (message: string) => Effect<never, never, void> = effect.logError
-
-/**
- * Logs the specified cause at the error log level.
- *
- * @since 1.0.0
- * @category logging
- */
-export const logErrorCause: <E>(cause: Cause.Cause<E>) => Effect<never, never, void> = effect.logErrorCause
-
-/**
- * Logs the specified message and cause at the error log level.
- *
- * @since 1.0.0
- * @category logging
- */
-export const logErrorCauseMessage: <E>(message: string, cause: Cause.Cause<E>) => Effect<never, never, void> =
-  effect.logErrorCauseMessage
-
-/**
- * Logs the specified message at the fatal log level.
- *
- * @since 1.0.0
- * @category logging
- */
-export const logFatal: (message: string) => Effect<never, never, void> = effect.logFatal
-
-/**
- * Logs the specified cause at the fatal log level.
- *
- * @since 1.0.0
- * @category logging
- */
-export const logFatalCause: <E>(cause: Cause.Cause<E>) => Effect<never, never, void> = effect.logFatalCause
-
-/**
- * Logs the specified message and cause at the fatal log level.
- *
- * @since 1.0.0
- * @category logging
- */
-export const logFatalCauseMessage: <E>(message: string, cause: Cause.Cause<E>) => Effect<never, never, void> =
-  effect.logFatalCauseMessage
-
-/**
- * Logs the specified message at the informational log level.
- *
- * @since 1.0.0
- * @category logging
- */
-export const logInfo: (message: string) => Effect<never, never, void> = effect.logInfo
-
-/**
- * Logs the specified cause at the informational log level.
- *
- * @since 1.0.0
- * @category logging
- */
-export const logInfoCause: <E>(cause: Cause.Cause<E>) => Effect<never, never, void> = effect.logInfoCause
-
-/**
- * Logs the specified message and cause at the informational log level.
- *
- * @since 1.0.0
- * @category logging
- */
-export const logInfoCauseMessage: <E>(message: string, cause: Cause.Cause<E>) => Effect<never, never, void> =
-  effect.logInfoCauseMessage
-
-/**
- * Logs the specified message at the warning log level.
- *
- * @since 1.0.0
- * @category logging
- */
-export const logWarning: (message: string) => Effect<never, never, void> = effect.logWarning
-
-/**
- * Logs the specified cause at the warning log level.
- *
- * @since 1.0.0
- * @category logging
- */
-export const logWarningCause: <E>(cause: Cause.Cause<E>) => Effect<never, never, void> = effect.logWarningCause
-
-/**
- * Logs the specified message and cause at the warning log level.
- *
- * @since 1.0.0
- * @category logging
- */
-export const logWarningCauseMessage: <E>(message: string, cause: Cause.Cause<E>) => Effect<never, never, void> =
-  effect.logWarningCauseMessage
-
-/**
- * Logs the specified message at the trace log level.
- *
- * @since 1.0.0
- * @category logging
- */
-export const logTrace: (message: string) => Effect<never, never, void> = effect.logTrace
-
-/**
- * Logs the specified cause at the trace log level.
- *
- * @since 1.0.0
- * @category logging
- */
-export const logTraceCause: <E>(cause: Cause.Cause<E>) => Effect<never, never, void> = effect.logTraceCause
-
-/**
- * Logs the specified message and cause at the trace log level.
- *
- * @since 1.0.0
- * @category logging
- */
-export const logTraceCauseMessage: <E>(message: string, cause: Cause.Cause<E>) => Effect<never, never, void> =
-  effect.logTraceCauseMessage
+export const withLogCause: {
+  (
+    options?: {
+      readonly message?: string
+      readonly level?: "None" | "All" | "Fatal" | "Error" | "Warning" | "Info" | "Debug" | "Trace"
+    }
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(
+    self: Effect<R, E, A>,
+    options?: {
+      readonly message?: string
+      readonly level?: "None" | "All" | "Fatal" | "Error" | "Warning" | "Info" | "Debug" | "Trace"
+    }
+  ): Effect<R, E, A>
+} = effect.withLogCause
 
 /**
  * Adjusts the label for the current logging span.
@@ -4010,7 +3982,7 @@ export const retryWhileEquals: {
  * @since 1.0.0
  * @category utils
  */
-export const replicate: (n: number) => <R, E, A>(self: Effect<R, E, A>) => Array<Effect<R, E, A>> = effect.replicate
+export const replicate: (n: number) => <R, E, A>(self: Effect<R, E, A>) => Array<Effect<R, E, A>> = circular.replicate
 
 /**
  * Performs this effect the specified number of times and collects the
@@ -4020,20 +3992,11 @@ export const replicate: (n: number) => <R, E, A>(self: Effect<R, E, A>) => Array
  * @category utils
  */
 export const replicateEffect: {
-  (n: number): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Array<A>>
-  <R, E, A>(self: Effect<R, E, A>, n: number): Effect<R, E, Array<A>>
-} = effect.replicateEffect
-
-/**
- * Performs this effect the specified number of times, discarding the results.
- *
- * @since 1.0.0
- * @category utils
- */
-export const replicateEffectDiscard: {
-  (n: number): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, void>
-  <R, E, A>(self: Effect<R, E, A>, n: number): Effect<R, E, void>
-} = effect.replicateEffectDiscard
+  (n: number, options?: { readonly discard?: false }): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Array<A>>
+  (n: number, options: { readonly discard: true }): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, void>
+  <R, E, A>(self: Effect<R, E, A>, n: number, options?: { readonly discard?: false }): Effect<R, E, Array<A>>
+  <R, E, A>(self: Effect<R, E, A>, n: number, options: { readonly discard: true }): Effect<R, E, void>
+} = circular.replicateEffect
 
 /**
  * Unearth the unchecked failure of the effect (opposite of `orDie`).
@@ -4806,105 +4769,6 @@ export const tryPromise: <A>(evaluate: LazyArg<Promise<A>>) => Effect<never, unk
  */
 export const tryPromiseInterrupt: <A>(evaluate: (signal: AbortSignal) => Promise<A>) => Effect<never, unknown, A> =
   effect.attemptPromiseInterrupt
-
-/**
- * Runs all the provided effects in sequence respecting the structure provided in input.
- *
- * Supports multiple arguments, a single argument tuple / array or record / struct.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const all: All.Signature = effect.all
-
-/**
- * @since 1.0.0
- * @category utils
- */
-export declare namespace All {
-  export type EffectAny = Effect<any, any, any>
-  export type ReturnArray<T> = [T] extends [ReadonlyArray<EffectAny>] ? Effect<
-    T[number] extends never ? never
-      : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
-      : never,
-    T[number] extends never ? never
-      : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
-      : never,
-    T[number] extends never ? []
-      : { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
-  >
-    : never
-  export type ReturnTuple<T extends ReadonlyArray<Effect<any, any, any>>> = Effect<
-    T[number] extends never ? never
-      : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
-      : never,
-    T[number] extends never ? never
-      : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
-      : never,
-    T[number] extends never ? []
-      : { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
-  > extends infer X ? X : never
-  export type ReturnIterable<T> = [T] extends [[Iterable<EffectAny>]]
-    ? [T] extends [[ReadonlyArray<EffectAny>]] ? ReturnTuple<T[0]>
-    : Effect<
-      [T[0]] extends [Iterable<{ [EffectTypeId]: { _R: (_: never) => infer R } }>] ? R
-        : never,
-      [T[0]] extends [Iterable<{ [EffectTypeId]: { _E: (_: never) => infer E } }>] ? E
-        : never,
-      [T[0]] extends [Iterable<{ [EffectTypeId]: { _A: (_: never) => infer A } }>] ? Array<A>
-        : never
-    >
-    : never
-  export type ReturnObject<T> = [T] extends [[Readonly<{ [K: string]: Effect<any, any, any> }>]] ? Effect<
-    keyof T[0] extends never ? never
-      : [T[0][keyof T[0]]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
-      : never,
-    keyof T[0] extends never ? never
-      : [T[0][keyof T[0]]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
-      : never,
-    { [K in keyof T[0]]: [T[0][K]] extends [Effect<any, any, infer A>] ? A : never }
-  >
-    : never
-  export type Signature = {
-    <
-      Args extends
-        | ReadonlyArray<EffectAny>
-        | [Iterable<EffectAny>]
-        | [Readonly<{ [K: string]: Effect<any, any, any> }>]
-    >(
-      ...args: [...Args]
-    ): Args["length"] extends 1 ? Args extends [Iterable<EffectAny>] ? ReturnIterable<Args>
-    : Args extends [EffectAny] ? ReturnArray<Args>
-    : ReturnObject<Args>
-      : ReturnArray<Args>
-  }
-  export type Discard<X> = [X] extends [Effect<infer R, infer E, infer _>] ? Effect<R, E, void> : never
-  export type SignatureDiscard = {
-    <
-      Args extends
-        | ReadonlyArray<EffectAny>
-        | [Iterable<EffectAny>]
-        | [Readonly<{ [K: string]: Effect<any, any, any> }>]
-    >(
-      ...args: [...Args]
-    ): Discard<
-      Args["length"] extends 1 ? Args extends [Iterable<EffectAny>] ? ReturnIterable<Args>
-      : Args extends [EffectAny] ? ReturnArray<Args>
-      : ReturnObject<Args>
-        : ReturnArray<Args>
-    >
-  }
-}
-
-/**
- * Runs all the provided effects in parallel respecting the structure provided in input.
- *
- * Supports multiple arguments, a single argument tuple / array or record / struct.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const allPar: All.Signature = fiberRuntime.allPar
 
 /**
  * Used to unify functions that would otherwise return `Effect<A, B, C> | Effect<D, E, F>`
@@ -5832,7 +5696,7 @@ export const Monad: monad.Monad<EffectTypeLambda> = {
 export const SemiProduct: semiProduct.SemiProduct<EffectTypeLambda> = {
   imap,
   product: zip,
-  productMany: (self, rest) => flatMap(self, (a) => map(all(rest), (r) => [a, ...r]))
+  productMany: (self, rest) => flatMap(self, (a) => map(allIterable(rest), (r) => [a, ...r]))
 }
 
 /**
@@ -5865,7 +5729,7 @@ export const Product: product_.Product<EffectTypeLambda> = {
   imap,
   product: SemiProduct.product,
   productMany: SemiProduct.productMany,
-  productAll: (rest) => map(all(rest), (x) => Array.from(x))
+  productAll: (rest) => map(allIterable(rest), (x) => Array.from(x))
 }
 
 /**
