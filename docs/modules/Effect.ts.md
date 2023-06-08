@@ -47,6 +47,7 @@ Added in v1.0.0
   - [allSomePar](#allsomepar)
   - [allSuccesses](#allsuccesses)
   - [allSuccessesPar](#allsuccessespar)
+  - [allWhile](#allwhile)
   - [allowInterrupt](#allowinterrupt)
   - [async](#async)
   - [asyncEffect](#asynceffect)
@@ -56,7 +57,6 @@ Added in v1.0.0
   - [cachedFunction](#cachedfunction)
   - [checkInterruptible](#checkinterruptible)
   - [clockWith](#clockwith)
-  - [collectWhile](#collectwhile)
   - [cond](#cond)
   - [descriptor](#descriptor)
   - [descriptorWith](#descriptorwith)
@@ -1025,6 +1025,22 @@ export declare const allSuccessesPar: <R, E, A>(elements: Iterable<Effect<R, E, 
 
 Added in v1.0.0
 
+## allWhile
+
+Transforms all elements of the chunk for as long as the specified partial
+function is defined.
+
+**Signature**
+
+```ts
+export declare const allWhile: {
+  <A, R, E, B>(f: (a: A) => Option.Option<Effect<R, E, B>>): (elements: Iterable<A>) => Effect<R, E, B[]>
+  <A, R, E, B>(elements: Iterable<A>, f: (a: A) => Option.Option<Effect<R, E, B>>): Effect<R, E, B[]>
+}
+```
+
+Added in v1.0.0
+
 ## allowInterrupt
 
 This function checks if any fibers are attempting to interrupt the current
@@ -1184,22 +1200,6 @@ specified effectful function.
 
 ```ts
 export declare const clockWith: <R, E, A>(f: (clock: Clock.Clock) => Effect<R, E, A>) => Effect<R, E, A>
-```
-
-Added in v1.0.0
-
-## collectWhile
-
-Transforms all elements of the chunk for as long as the specified partial
-function is defined.
-
-**Signature**
-
-```ts
-export declare const collectWhile: {
-  <A, R, E, B>(f: (a: A) => Option.Option<Effect<R, E, B>>): (elements: Iterable<A>) => Effect<R, E, B[]>
-  <A, R, E, B>(elements: Iterable<A>, f: (a: A) => Option.Option<Effect<R, E, B>>): Effect<R, E, B[]>
-}
 ```
 
 Added in v1.0.0
