@@ -355,7 +355,13 @@ export const allDiscard: Effect.All.SignatureDiscard = Debug.methodWithTrace((tr
 )
 
 /* @internal */
-export const allFilterMap = Debug.dualWithTrace<
+export const allIterableDiscard = Debug.methodWithTrace((trace) =>
+  <R, E, A>(as: Iterable<Effect.Effect<R, E, A>>): Effect.Effect<R, E, void> =>
+    core.forEachDiscard(as, identity).traced(trace)
+)
+
+/* @internal */
+export const filterMap = Debug.dualWithTrace<
   <A, B>(
     pf: (a: A) => Option.Option<B>
   ) => <R, E>(elements: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, Array<B>>,
@@ -363,15 +369,15 @@ export const allFilterMap = Debug.dualWithTrace<
     elements: Iterable<Effect.Effect<R, E, A>>,
     pf: (a: A) => Option.Option<B>
   ) => Effect.Effect<R, E, Array<B>>
->(2, (trace, restore) => (elements, pf) => core.map(all(elements), RA.filterMap(restore(pf))).traced(trace))
+>(2, (trace, restore) => (elements, pf) => core.map(allIterable(elements), RA.filterMap(restore(pf))).traced(trace))
 
 /* @internal */
-export const collectAll = Debug.methodWithTrace<
+export const allSome = Debug.methodWithTrace<
   <R, E, A>(elements: Iterable<Effect.Effect<R, E, Option.Option<A>>>) => Effect.Effect<R, E, Array<A>>
->((trace) => (elements) => core.map(all(elements), RA.filterMap(identity)).traced(trace))
+>((trace) => (elements) => core.map(allIterable(elements), RA.filterMap(identity)).traced(trace))
 
 /* @internal */
-export const filterMapEffect = Debug.dualWithTrace<
+export const allFilterMapEffect = Debug.dualWithTrace<
   <A, R, E, B>(
     f: (a: A) => Option.Option<Effect.Effect<R, E, B>>
   ) => (elements: Iterable<A>) => Effect.Effect<R, E, Array<B>>,
@@ -413,18 +419,18 @@ export const filterMapEffect = Debug.dualWithTrace<
   })
 
 /* @internal */
-export const collectAllSuccesses = Debug.methodWithTrace((trace) =>
+export const allSuccesses = Debug.methodWithTrace((trace) =>
   <R, E, A>(
     as: Iterable<Effect.Effect<R, E, A>>
   ): Effect.Effect<R, never, Array<A>> =>
     pipe(
       Array.from(as).map(core.exit),
-      allFilterMap((exit) => (Exit.isSuccess(exit) ? Option.some(exit.i0) : Option.none()))
+      filterMap((exit) => (Exit.isSuccess(exit) ? Option.some(exit.i0) : Option.none()))
     ).traced(trace)
 )
 
 /* @internal */
-export const collectFirst = Debug.dualWithTrace<
+export const findSome = Debug.dualWithTrace<
   <R, E, A, B>(
     f: (a: A) => Effect.Effect<R, E, Option.Option<B>>
   ) => (elements: Iterable<A>) => Effect.Effect<R, E, Option.Option<B>>,
@@ -2240,7 +2246,7 @@ export const replicateEffect = Debug.dualWithTrace<
 export const replicateEffectDiscard = Debug.dualWithTrace<
   (n: number) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, void>,
   <R, E, A>(self: Effect.Effect<R, E, A>, n: number) => Effect.Effect<R, E, void>
->(2, (trace) => (self, n) => allDiscard(replicate(n)(self)).traced(trace))
+>(2, (trace) => (self, n) => allIterableDiscard(replicate(n)(self)).traced(trace))
 
 /* @internal */
 export const resurrect = Debug.methodWithTrace((trace) =>
@@ -2724,57 +2730,7 @@ export const attemptPromiseInterrupt = Debug.methodWithTrace((trace, restore) =>
 )
 
 /* @internal */
-export const all = Debug.methodWithTrace((trace): {
-  <R, E, A, T extends ReadonlyArray<Effect.Effect<any, any, any>>>(
-    self: Effect.Effect<R, E, A>,
-    ...args: T
-  ): Effect.Effect<
-    R | T["length"] extends 0 ? never
-      : [T[number]] extends [{ [Effect.EffectTypeId]: { _R: (_: never) => infer R } }] ? R
-      : never,
-    E | T["length"] extends 0 ? never
-      : [T[number]] extends [{ [Effect.EffectTypeId]: { _E: (_: never) => infer E } }] ? E
-      : never,
-    [
-      A,
-      ...(T["length"] extends 0 ? []
-        : { [K in keyof T]: [T[K]] extends [Effect.Effect<any, any, infer A>] ? A : never })
-    ]
-  >
-  <T extends ReadonlyArray<Effect.Effect<any, any, any>>>(
-    args: [...T]
-  ): Effect.Effect<
-    T[number] extends never ? never
-      : [T[number]] extends [{ [Effect.EffectTypeId]: { _R: (_: never) => infer R } }] ? R
-      : never,
-    T[number] extends never ? never
-      : [T[number]] extends [{ [Effect.EffectTypeId]: { _E: (_: never) => infer E } }] ? E
-      : never,
-    T[number] extends never ? []
-      : { [K in keyof T]: [T[K]] extends [Effect.Effect<any, any, infer A>] ? A : never }
-  >
-  <T extends Iterable<Effect.Effect<any, any, any>>>(
-    args: T
-  ): Effect.Effect<
-    [T] extends [Iterable<{ [Effect.EffectTypeId]: { _R: (_: never) => infer R } }>] ? R
-      : never,
-    [T] extends [Iterable<{ [Effect.EffectTypeId]: { _E: (_: never) => infer E } }>] ? E
-      : never,
-    [T] extends [Iterable<{ [Effect.EffectTypeId]: { _A: (_: never) => infer A } }>] ? Array<A>
-      : never
-  >
-  <T extends Readonly<{ [K: string]: Effect.Effect<any, any, any> }>>(
-    args: T
-  ): Effect.Effect<
-    keyof T extends never ? never
-      : [T[keyof T]] extends [{ [Effect.EffectTypeId]: { _R: (_: never) => infer R } }] ? R
-      : never,
-    keyof T extends never ? never
-      : [T[keyof T]] extends [{ [Effect.EffectTypeId]: { _E: (_: never) => infer E } }] ? E
-      : never,
-    { [K in keyof T]: [T[K]] extends [Effect.Effect<any, any, infer A>] ? A : never }
-  >
-} =>
+export const all: Effect.All.Signature = Debug.methodWithTrace((trace) =>
   function() {
     if (arguments.length === 1) {
       if (core.isEffect(arguments[0])) {
@@ -2799,6 +2755,12 @@ export const all = Debug.methodWithTrace((trace): {
     }
     return core.forEach(arguments, identity as any).traced(trace)
   }
+)
+
+/* @internal */
+export const allIterable = Debug.methodWithTrace((trace) =>
+  <R, E, A>(as: Iterable<Effect.Effect<R, E, A>>): Effect.Effect<R, E, Array<A>> =>
+    core.forEach(as, identity).traced(trace)
 )
 
 /* @internal */

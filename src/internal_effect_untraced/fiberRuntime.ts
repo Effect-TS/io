@@ -1431,7 +1431,13 @@ export const allParDiscard: Effect.All.SignatureDiscard = Debug.methodWithTrace(
 )
 
 /* @internal */
-export const collectAllSuccessesPar = Debug.methodWithTrace((trace) =>
+export const allIterableParDiscard = Debug.methodWithTrace((trace) =>
+  <R, E, A>(as: Iterable<Effect.Effect<R, E, A>>): Effect.Effect<R, E, void> =>
+    forEachParDiscard(as, identity).traced(trace)
+)
+
+/* @internal */
+export const allSuccessesPar = Debug.methodWithTrace((trace) =>
   <R, E, A>(
     elements: Iterable<Effect.Effect<R, E, A>>
   ): Effect.Effect<R, never, Array<A>> =>
@@ -1458,7 +1464,7 @@ export const allFilterMapPar = Debug.dualWithTrace<
     ).traced(trace))
 
 /* @internal */
-export const collectAllPar = Debug.methodWithTrace<
+export const allSomePar = Debug.methodWithTrace<
   <R, E, A>(elements: Iterable<Effect.Effect<R, E, Option.Option<A>>>) => Effect.Effect<R, E, Array<A>>
 >((trace) => (elements) => core.map(allPar(elements), RA.filterMap(identity)).traced(trace))
 
@@ -2286,6 +2292,12 @@ export const allPar = Debug.methodWithTrace((trace): {
     }
     return forEachPar(arguments, identity as any).traced(trace)
   }
+)
+
+/* @internal */
+export const allIterablePar = Debug.methodWithTrace((trace) =>
+  <R, E, A>(as: Iterable<Effect.Effect<R, E, A>>): Effect.Effect<R, E, Array<A>> =>
+    forEachPar(as, identity).traced(trace)
 )
 
 /* @internal */

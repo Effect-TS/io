@@ -35,9 +35,16 @@ Added in v1.0.0
   - [all](#all)
   - [allDiscard](#alldiscard)
   - [allFilterMap](#allfiltermap)
+  - [allFilterMapEffect](#allfiltermapeffect)
   - [allFilterMapPar](#allfiltermappar)
+  - [allIterable](#alliterable)
+  - [allIterableDiscard](#alliterablediscard)
+  - [allIterablePar](#alliterablepar)
+  - [allIterableParDiscard](#alliterablepardiscard)
   - [allPar](#allpar)
   - [allParDiscard](#allpardiscard)
+  - [allSome](#allsome)
+  - [allSomePar](#allsomepar)
   - [allSuccesses](#allsuccesses)
   - [allSuccessesPar](#allsuccessespar)
   - [allowInterrupt](#allowinterrupt)
@@ -49,9 +56,6 @@ Added in v1.0.0
   - [cachedFunction](#cachedfunction)
   - [checkInterruptible](#checkinterruptible)
   - [clockWith](#clockwith)
-  - [collectAll](#collectall)
-  - [collectAllPar](#collectallpar)
-  - [collectFirst](#collectfirst)
   - [collectWhile](#collectwhile)
   - [cond](#cond)
   - [descriptor](#descriptor)
@@ -68,7 +72,7 @@ Added in v1.0.0
   - [failCauseSync](#failcausesync)
   - [failSync](#failsync)
   - [fiberIdWith](#fiberidwith)
-  - [filterMapEffect](#filtermapeffect)
+  - [findSome](#findsome)
   - [forEach](#foreach)
   - [forEachDiscard](#foreachdiscard)
   - [forEachExec](#foreachexec)
@@ -836,7 +840,7 @@ Added in v1.0.0
 ## allDiscard
 
 Evaluate each effect in the structure from left to right, and discard the
-results. For a parallel version, see `collectAllParDiscard`.
+results. For a parallel version, see `allDiscardPar`.
 
 **Signature**
 
@@ -862,6 +866,22 @@ export declare const allFilterMap: {
 
 Added in v1.0.0
 
+## allFilterMapEffect
+
+Returns a filtered, mapped subset of the elements of the iterable based on a
+partial function.
+
+**Signature**
+
+```ts
+export declare const allFilterMapEffect: {
+  <A, R, E, B>(f: (a: A) => Option.Option<Effect<R, E, B>>): (elements: Iterable<A>) => Effect<R, E, B[]>
+  <A, R, E, B>(elements: Iterable<A>, f: (a: A) => Option.Option<Effect<R, E, B>>): Effect<R, E, B[]>
+}
+```
+
+Added in v1.0.0
+
 ## allFilterMapPar
 
 Evaluate each effect in the structure with `collectAllPar`, and collect
@@ -874,6 +894,56 @@ export declare const allFilterMapPar: {
   <A, B>(pf: (a: A) => Option.Option<B>): <R, E>(elements: Iterable<Effect<R, E, A>>) => Effect<R, E, B[]>
   <R, E, A, B>(elements: Iterable<Effect<R, E, A>>, pf: (a: A) => Option.Option<B>): Effect<R, E, B[]>
 }
+```
+
+Added in v1.0.0
+
+## allIterable
+
+Evaluate and run each effect in the structure and collect the results.
+
+**Signature**
+
+```ts
+export declare const allIterable: <R, E, A>(as: Iterable<Effect<R, E, A>>) => Effect<R, E, A[]>
+```
+
+Added in v1.0.0
+
+## allIterableDiscard
+
+Evaluate and run each effect in sequence, discarding the results.
+
+**Signature**
+
+```ts
+export declare const allIterableDiscard: <R, E, A>(as: Iterable<Effect<R, E, A>>) => Effect<R, E, void>
+```
+
+Added in v1.0.0
+
+## allIterablePar
+
+Evaluate and run each effect in the structure and collect the results in
+parallel.
+
+**Signature**
+
+```ts
+export declare const allIterablePar: <R, E, A>(as: Iterable<Effect<R, E, A>>) => Effect<R, E, A[]>
+```
+
+Added in v1.0.0
+
+## allIterableParDiscard
+
+Evaluate and run each effect in the structure in parallel, discarding the
+results.
+
+**Signature**
+
+```ts
+export declare const allIterableParDiscard: <R, E, A>(as: Iterable<Effect<R, E, A>>) => Effect<R, E, void>
 ```
 
 Added in v1.0.0
@@ -895,12 +965,36 @@ Added in v1.0.0
 ## allParDiscard
 
 Evaluate each effect in the structure in parallel, and collect the results.
-For a sequential version, see `all`.
+For a sequential version, see `allDiscard`.
 
 **Signature**
 
 ```ts
 export declare const allParDiscard: All.SignatureDiscard
+```
+
+Added in v1.0.0
+
+## allSome
+
+Collects the all element of the `Collection<A>` for which the effect returns a value.
+
+**Signature**
+
+```ts
+export declare const allSome: <R, E, A>(elements: Iterable<Effect<R, E, Option.Option<A>>>) => Effect<R, E, A[]>
+```
+
+Added in v1.0.0
+
+## allSomePar
+
+Collects the all element of the `Collection<A>` for which the effect returns a value.
+
+**Signature**
+
+```ts
+export declare const allSomePar: <R, E, A>(elements: Iterable<Effect<R, E, Option.Option<A>>>) => Effect<R, E, A[]>
 ```
 
 Added in v1.0.0
@@ -1090,46 +1184,6 @@ specified effectful function.
 
 ```ts
 export declare const clockWith: <R, E, A>(f: (clock: Clock.Clock) => Effect<R, E, A>) => Effect<R, E, A>
-```
-
-Added in v1.0.0
-
-## collectAll
-
-Collects the all element of the `Collection<A>` for which the effect returns a value.
-
-**Signature**
-
-```ts
-export declare const collectAll: <R, E, A>(elements: Iterable<Effect<R, E, Option.Option<A>>>) => Effect<R, E, A[]>
-```
-
-Added in v1.0.0
-
-## collectAllPar
-
-Collects the all element of the `Collection<A>` for which the effect returns a value.
-
-**Signature**
-
-```ts
-export declare const collectAllPar: <R, E, A>(elements: Iterable<Effect<R, E, Option.Option<A>>>) => Effect<R, E, A[]>
-```
-
-Added in v1.0.0
-
-## collectFirst
-
-Collects the first element of the `Collection<A>` for which the effectual
-function `f` returns `Some`.
-
-**Signature**
-
-```ts
-export declare const collectFirst: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, Option.Option<B>>): (elements: Iterable<A>) => Effect<R, E, Option.Option<B>>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, Option.Option<B>>): Effect<R, E, Option.Option<B>>
-}
 ```
 
 Added in v1.0.0
@@ -1337,17 +1391,17 @@ export declare const fiberIdWith: <R, E, A>(f: (descriptor: FiberId.Runtime) => 
 
 Added in v1.0.0
 
-## filterMapEffect
+## findSome
 
-Returns a filtered, mapped subset of the elements of the iterable based on a
-partial function.
+Collects the first element of the `Collection<A>` for which the effectual
+function `f` returns `Some`.
 
 **Signature**
 
 ```ts
-export declare const filterMapEffect: {
-  <A, R, E, B>(f: (a: A) => Option.Option<Effect<R, E, B>>): (elements: Iterable<A>) => Effect<R, E, B[]>
-  <A, R, E, B>(elements: Iterable<A>, f: (a: A) => Option.Option<Effect<R, E, B>>): Effect<R, E, B[]>
+export declare const findSome: {
+  <R, E, A, B>(f: (a: A) => Effect<R, E, Option.Option<B>>): (elements: Iterable<A>) => Effect<R, E, Option.Option<B>>
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, Option.Option<B>>): Effect<R, E, Option.Option<B>>
 }
 ```
 

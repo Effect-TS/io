@@ -1,5 +1,3 @@
-import * as Chunk from "@effect/data/Chunk"
-import * as Either from "@effect/data/Either"
 import { pipe } from "@effect/data/Function"
 import * as Effect from "@effect/io/Effect"
 import * as it from "@effect/io/test/utils/extend"
@@ -27,12 +25,6 @@ describe.concurrent("Effect", () => {
       Effect.gen(function*($) {
         const x = yield* $(Effect.all([]))
         assert.deepEqual(x, [])
-      }))
-    it.effect("should work with an iterable argument", () =>
-      Effect.gen(function*($) {
-        const y = Effect.all(Chunk.make(Effect.succeed(0), Effect.succeed("ok"), Effect.fail(1)))
-        const x = yield* $(Effect.either(y))
-        assert.deepEqual(x, Either.left(1))
       }))
     it.effect("should work with an array argument", () =>
       Effect.gen(function*($) {

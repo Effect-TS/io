@@ -27,7 +27,7 @@ describe.concurrent("Effect", () => {
   it.effect("collectAllParDiscard - preserves failures", () =>
     Effect.gen(function*($) {
       const result = yield* $(
-        Effect.allParDiscard(Array.from({ length: 10 }, () => Effect.fail(Cause.RuntimeException()))),
+        Effect.allIterableParDiscard(Array.from({ length: 10 }, () => Effect.fail(Cause.RuntimeException()))),
         Effect.withParallelism(5),
         Effect.flip
       )
@@ -37,7 +37,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const result = yield* $(
         Array.from({ length: 10 }, (_, i) => i),
-        Effect.collectFirst((n) =>
+        Effect.findSome((n) =>
           n > 5 ?
             Effect.succeed(Option.some(n)) :
             Effect.succeed(Option.none())
