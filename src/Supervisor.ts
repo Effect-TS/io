@@ -11,9 +11,9 @@ import type * as SortedSet from "@effect/data/SortedSet"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
 import type * as Fiber from "@effect/io/Fiber"
-import * as core from "@effect/io/internal_effect_untraced/core"
-import * as circular from "@effect/io/internal_effect_untraced/layer/circular"
-import * as internal from "@effect/io/internal_effect_untraced/supervisor"
+import * as core from "@effect/io/internal/core"
+import * as circular from "@effect/io/internal/layer/circular"
+import * as internal from "@effect/io/internal/supervisor"
 import type * as Layer from "@effect/io/Layer"
 
 /**
@@ -142,8 +142,7 @@ export const none: Supervisor<void> = internal.none
  * @since 1.0.0
  * @category constructors
  */
-export const track: (_: void) => Effect.Effect<never, never, Supervisor<Array<Fiber.RuntimeFiber<any, any>>>> =
-  internal.track
+export const track: Effect.Effect<never, never, Supervisor<Array<Fiber.RuntimeFiber<any, any>>>> = internal.track
 
 /**
  * Unsafely creates a new supervisor that tracks children in a set.

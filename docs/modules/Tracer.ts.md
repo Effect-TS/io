@@ -1,6 +1,6 @@
 ---
 title: Tracer.ts
-nav_order: 58
+nav_order: 59
 parent: Modules
 ---
 
@@ -71,7 +71,6 @@ Added in v1.0.0
 ```ts
 export interface ExternalSpan {
   readonly _tag: 'ExternalSpan'
-  readonly name: string
   readonly spanId: string
   readonly traceId: string
   readonly context: Context.Context<never>

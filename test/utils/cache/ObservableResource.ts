@@ -57,11 +57,15 @@ export const makeEffect = <E, V>(
       )
       const scoped = Effect.uninterruptibleMask((restore) =>
         Effect.gen(function*($) {
-          const parent = yield* $(Effect.scope())
+          const parent = yield* $(Effect.scope)
           const child = yield* $(Scope.fork(parent, ExecutionStrategy.sequential))
           yield* $(Ref.update(resourceAcquisitionCount, (n) => n + 1))
           yield* $(Scope.addFinalizer(child, Ref.update(resourceAcquisitionReleasing, (n) => n + 1)))
-          return yield* $(Effect.acquireReleaseInterruptible(restore(effect), (exit) => Scope.close(child, exit)))
+          return yield* $(Effect.acquireRelease({
+            acquire: restore(effect),
+            release: (exit) => Scope.close(child, exit),
+            interruptable: true
+          }))
         })
       )
       return new ObservableResourceImpl(scoped, getState)

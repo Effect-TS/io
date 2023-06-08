@@ -11,9 +11,9 @@ import type * as Option from "@effect/data/Option"
 import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
 import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
-import * as core from "@effect/io/internal_effect_untraced/core"
-import * as fiberRuntime from "@effect/io/internal_effect_untraced/fiberRuntime"
-import * as query from "@effect/io/internal_effect_untraced/query"
+import * as core from "@effect/io/internal/core"
+import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
+import * as query from "@effect/io/internal/query"
 import type * as Logger from "@effect/io/Logger"
 import type * as LogLevel from "@effect/io/Logger/Level"
 import type * as LogSpan from "@effect/io/Logger/Span"
@@ -71,8 +71,10 @@ export interface Variance<A> {
  */
 export const make: <A>(
   initial: A,
-  fork?: (a: A) => A,
-  join?: (left: A, right: A) => A
+  options?: {
+    readonly fork?: (a: A) => A
+    readonly join?: (left: A, right: A) => A
+  }
 ) => Effect.Effect<Scope.Scope, never, FiberRef<A>> = fiberRuntime.fiberRefMake
 
 /**
@@ -104,8 +106,10 @@ export const makeRuntimeFlags: (
  */
 export const unsafeMake: <Value>(
   initial: Value,
-  fork?: (a: Value) => Value,
-  join?: (left: Value, right: Value) => Value
+  options?: {
+    readonly fork?: (a: Value) => Value
+    readonly join?: (left: Value, right: Value) => Value
+  }
 ) => FiberRef<Value> = core.fiberRefUnsafeMake
 
 /**
@@ -135,9 +139,11 @@ export const unsafeMakeSupervisor: (initial: Supervisor.Supervisor<any>) => Fibe
  */
 export const unsafeMakePatch: <Value, Patch>(
   initial: Value,
-  differ: Differ.Differ<Value, Patch>,
-  fork: Patch,
-  join?: (oldV: Value, newV: Value) => Value
+  options: {
+    readonly differ: Differ.Differ<Value, Patch>
+    readonly fork: Patch
+    readonly join?: (oldV: Value, newV: Value) => Value
+  }
 ) => FiberRef<Value> = core.fiberRefUnsafeMakePatch
 
 /**
@@ -266,7 +272,7 @@ export const updateSomeAndGet: {
  * @since 1.0.0
  * @category fiberRefs
  */
-export const currentRequestBatchingEnabled: FiberRef<boolean> = fiberRuntime.currentRequestBatchingEnabled
+export const currentRequestBatchingEnabled: FiberRef<boolean> = core.currentRequestBatchingEnabled
 
 /**
  * @since 1.0.0
@@ -344,12 +350,6 @@ export const currentRuntimeFlags: FiberRef<RuntimeFlags.RuntimeFlags> = fiberRun
  * @since 1.0.0
  * @category fiberRefs
  */
-export const currentParallelism: FiberRef<Option.Option<number>> = core.currentParallelism
-
-/**
- * @since 1.0.0
- * @category fiberRefs
- */
 export const currentScheduler: FiberRef<Scheduler.Scheduler> = core.currentScheduler
 
 /**
@@ -362,7 +362,7 @@ export const currentSupervisor: FiberRef<Supervisor.Supervisor<any>> = fiberRunt
  * @since 1.0.0
  * @category fiberRefs
  */
-export const currentTags: FiberRef<HashSet.HashSet<MetricLabel.MetricLabel>> = core.currentTags
+export const currentMetricLabels: FiberRef<HashSet.HashSet<MetricLabel.MetricLabel>> = core.currentMetricLabels
 
 /**
  * @since 1.0.0

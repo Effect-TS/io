@@ -6,7 +6,7 @@ import type { Either } from "@effect/data/Either"
 import type * as Option from "@effect/data/Option"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
-import * as internal from "@effect/io/internal_effect_untraced/cache"
+import * as internal from "@effect/io/internal/cache"
 
 /**
  * @since 1.0.0
@@ -171,9 +171,11 @@ export declare namespace Cache {
  * @category constructors
  */
 export const make: <Key, Environment, Error, Value>(
-  capacity: number,
-  timeToLive: Duration.Duration,
-  lookup: Lookup<Key, Environment, Error, Value>
+  options: {
+    readonly capacity: number
+    readonly timeToLive: Duration.DurationInput
+    readonly lookup: Lookup<Key, Environment, Error, Value>
+  }
 ) => Effect.Effect<Environment, never, Cache<Key, Error, Value>> = internal.make
 
 /**
@@ -185,9 +187,11 @@ export const make: <Key, Environment, Error, Value>(
  * @category constructors
  */
 export const makeWith: <Key, Environment, Error, Value>(
-  capacity: number,
-  lookup: Lookup<Key, Environment, Error, Value>,
-  timeToLive: (exit: Exit.Exit<Error, Value>) => Duration.Duration
+  options: {
+    readonly capacity: number
+    readonly lookup: Lookup<Key, Environment, Error, Value>
+    readonly timeToLive: (exit: Exit.Exit<Error, Value>) => Duration.DurationInput
+  }
 ) => Effect.Effect<Environment, never, Cache<Key, Error, Value>> = internal.makeWith
 
 /**
@@ -209,7 +213,13 @@ export interface CacheStats {
  * @since 1.0.0
  * @category constructors
  */
-export const makeCacheStats: (hits: number, misses: number, size: number) => CacheStats = internal.makeCacheStats
+export const makeCacheStats: (
+  options: {
+    readonly hits: number
+    readonly misses: number
+    readonly size: number
+  }
+) => CacheStats = internal.makeCacheStats
 
 /**
  * Represents a snapshot of statistics for an entry in the cache.

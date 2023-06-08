@@ -4,8 +4,8 @@
 import type * as Context from "@effect/data/Context"
 import type * as Duration from "@effect/data/Duration"
 import type * as Effect from "@effect/io/Effect"
-import * as internal from "@effect/io/internal_effect_untraced/clock"
-import * as defaultServices from "@effect/io/internal_effect_untraced/defaultServices"
+import * as internal from "@effect/io/internal/clock"
+import * as defaultServices from "@effect/io/internal/defaultServices"
 
 /**
  * @since 1.0.0
@@ -35,7 +35,7 @@ export interface Clock {
   /**
    * Returns the current time in milliseconds.
    */
-  currentTimeMillis(): Effect.Effect<never, never, number>
+  readonly currentTimeMillis: Effect.Effect<never, never, number>
   /**
    * Unsafely returns the current time in nanoseconds.
    */
@@ -43,7 +43,7 @@ export interface Clock {
   /**
    * Returns the current time in nanoseconds.
    */
-  currentTimeNanos(): Effect.Effect<never, never, bigint>
+  readonly currentTimeNanos: Effect.Effect<never, never, bigint>
   /**
    * Asynchronously sleeps for the specified duration.
    */
@@ -83,19 +83,19 @@ export const make: (_: void) => Clock = internal.make
  * @since 1.0.0
  * @category constructors
  */
-export const sleep: (duration: Duration.Duration) => Effect.Effect<never, never, void> = defaultServices.sleep
+export const sleep: (duration: Duration.DurationInput) => Effect.Effect<never, never, void> = defaultServices.sleep
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const currentTimeMillis: (_: void) => Effect.Effect<never, never, number> = defaultServices.currentTimeMillis
+export const currentTimeMillis: Effect.Effect<never, never, number> = defaultServices.currentTimeMillis
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const currentTimeNanos: (_: void) => Effect.Effect<never, never, bigint> = defaultServices.currentTimeNanos
+export const currentTimeNanos: Effect.Effect<never, never, bigint> = defaultServices.currentTimeNanos
 
 /**
  * @since 1.0.0

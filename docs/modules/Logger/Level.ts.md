@@ -1,6 +1,6 @@
 ---
 title: Logger/Level.ts
-nav_order: 26
+nav_order: 27
 parent: Modules
 ---
 
@@ -32,6 +32,7 @@ Added in v1.0.0
   - [Error (interface)](#error-interface)
   - [Fatal (interface)](#fatal-interface)
   - [Info (interface)](#info-interface)
+  - [Literal (type alias)](#literal-type-alias)
   - [LogLevel (type alias)](#loglevel-type-alias)
   - [None (interface)](#none-interface)
   - [Trace (interface)](#trace-interface)
@@ -145,9 +146,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const fromLiteral: (
-  _: 'All' | 'Fatal' | 'Error' | 'Warning' | 'Info' | 'Debug' | 'Trace' | 'None'
-) => LogLevel
+export declare const fromLiteral: (_: Literal) => LogLevel
 ```
 
 Added in v1.0.0
@@ -237,6 +236,16 @@ export interface Info {
   readonly syslog: 6
   readonly ordinal: number
 }
+```
+
+Added in v1.0.0
+
+## Literal (type alias)
+
+**Signature**
+
+```ts
+export type Literal = LogLevel['_tag']
 ```
 
 Added in v1.0.0

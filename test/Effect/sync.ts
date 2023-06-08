@@ -2,6 +2,7 @@ import * as Either from "@effect/data/Either"
 import { pipe } from "@effect/data/Function"
 import * as Cause from "@effect/io/Cause"
 import * as Effect from "@effect/io/Effect"
+import * as Exit from "@effect/io/Exit"
 import * as it from "@effect/io/test/utils/extend"
 import { assert, describe } from "vitest"
 
@@ -40,7 +41,7 @@ describe.concurrent("Effect", () => {
   it.it("suspend - must be lazy", async () => {
     let program
     try {
-      program = Effect.trySuspend(() => {
+      program = Effect.suspend(() => {
         throw new Error("shouldn't happen!")
       })
       program = Effect.succeed(true)
@@ -54,12 +55,12 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const error = new Error("woops")
       const result = yield* $(
-        Effect.trySuspend<never, never, never>(() => {
+        Effect.suspend<never, never, never>(() => {
           throw error
         }),
-        Effect.either
+        Effect.exit
       )
-      assert.deepStrictEqual(result, Either.left(error))
+      assert.deepStrictEqual(Exit.unannotate(result), Exit.die(error))
     }))
   it.effect("suspendSucceed - must be evaluatable", () =>
     Effect.gen(function*($) {

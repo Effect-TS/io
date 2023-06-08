@@ -3,8 +3,8 @@
  */
 import type * as Chunk from "@effect/data/Chunk"
 import type * as Effect from "@effect/io/Effect"
-import * as defaultServices from "@effect/io/internal_effect_untraced/defaultServices"
-import * as internal from "@effect/io/internal_effect_untraced/random"
+import * as defaultServices from "@effect/io/internal/defaultServices"
+import * as internal from "@effect/io/internal/random"
 
 /**
  * @since 1.0.0
@@ -58,7 +58,7 @@ export interface Random {
  * @since 1.0.0
  * @category constructors
  */
-export const next: (_: void) => Effect.Effect<never, never, number> = defaultServices.next
+export const next: Effect.Effect<never, never, number> = defaultServices.next
 
 /**
  * Returns the next integer value from the pseudo-random number generator.
@@ -66,7 +66,7 @@ export const next: (_: void) => Effect.Effect<never, never, number> = defaultSer
  * @since 1.0.0
  * @category constructors
  */
-export const nextInt: (_: void) => Effect.Effect<never, never, number> = defaultServices.nextInt
+export const nextInt: Effect.Effect<never, never, number> = defaultServices.nextInt
 
 /**
  * Returns the next boolean value from the pseudo-random number generator.
@@ -74,7 +74,7 @@ export const nextInt: (_: void) => Effect.Effect<never, never, number> = default
  * @since 1.0.0
  * @category constructors
  */
-export const nextBoolean: (_: void) => Effect.Effect<never, never, boolean> = defaultServices.nextBoolean
+export const nextBoolean: Effect.Effect<never, never, boolean> = defaultServices.nextBoolean
 
 /**
  * Returns the next numeric value in the specified range from the

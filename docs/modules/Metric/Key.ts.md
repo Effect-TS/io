@@ -1,6 +1,6 @@
 ---
 title: Metric/Key.ts
-nav_order: 31
+nav_order: 32
 parent: Modules
 ---
 
@@ -94,14 +94,14 @@ maxSize, error, and quantiles.
 **Signature**
 
 ```ts
-export declare const summary: (
-  name: string,
-  maxAge: Duration.Duration,
-  maxSize: number,
-  error: number,
-  quantiles: Chunk.Chunk<number>,
-  description?: string
-) => MetricKey.Summary
+export declare const summary: (options: {
+  readonly name: string
+  readonly maxAge: Duration.DurationInput
+  readonly maxSize: number
+  readonly error: number
+  readonly quantiles: Chunk.Chunk<number>
+  readonly description?: string
+}) => MetricKey.Summary
 ```
 
 Added in v1.0.0

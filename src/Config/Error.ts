@@ -2,7 +2,7 @@
  * @since 1.0.0
  */
 import type * as Cause from "@effect/io/Cause"
-import * as internal from "@effect/io/internal_effect_untraced/configError"
+import * as internal from "@effect/io/internal/configError"
 
 /**
  * @since 1.0.0

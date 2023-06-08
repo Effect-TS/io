@@ -53,11 +53,11 @@ describe.concurrent("Effect", () => {
       const fiber = yield* $(
         Effect.asyncEffect<never, unknown, unknown, never, never, never>(() =>
           // This will never complete because we never call the callback
-          Effect.acquireUseRelease(
-            Deferred.succeed(acquire, void 0),
-            () => Effect.never(),
-            () => Deferred.succeed(release, void 0)
-          )
+          Effect.acquireUseRelease({
+            acquire: Deferred.succeed(acquire, void 0),
+            use: () => Effect.never,
+            release: () => Deferred.succeed(release, void 0)
+          })
         ),
         Effect.disconnect,
         Effect.fork
@@ -103,7 +103,7 @@ describe.concurrent("Effect", () => {
             Deferred.await(step),
             Effect.zipRight(Effect.sync(() => cb(Ref.update(unexpectedPlace, Chunk.prepend(1)))))
           ))
-          return Option.some(Effect.unit())
+          return Option.some(Effect.unit)
         }),
         Effect.flatMap(() =>
           Effect.async<never, never, void>(() => {
@@ -158,12 +158,15 @@ describe.concurrent("Effect", () => {
           })
         ),
         Effect.exit,
-        Effect.map(Exit.match((cause) =>
-          pipe(
-            Cause.defects(cause),
-            Chunk.head,
-            Option.map((e) => (e as Error).message)
-          ), () => Option.none()))
+        Effect.map(Exit.match({
+          onFailure: (cause) =>
+            pipe(
+              Cause.defects(cause),
+              Chunk.head,
+              Option.map((e) => (e as Error).message)
+            ),
+          onSuccess: () => Option.none()
+        }))
       )
       assert.deepStrictEqual(result, Option.some("ouch"))
     }))

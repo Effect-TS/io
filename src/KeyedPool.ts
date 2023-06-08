@@ -3,7 +3,7 @@
  */
 import type * as Duration from "@effect/data/Duration"
 import type * as Effect from "@effect/io/Effect"
-import * as internal from "@effect/io/internal_effect_untraced/keyedPool"
+import * as internal from "@effect/io/internal/keyedPool"
 import type * as Scope from "@effect/io/Scope"
 
 /**
@@ -68,10 +68,9 @@ export declare namespace KeyedPool {
  * @since 1.0.0
  * @category constructors
  */
-export const makeSized: <K, R, E, A>(
-  get: (key: K) => Effect.Effect<R, E, A>,
-  size: number
-) => Effect.Effect<Scope.Scope | R, never, KeyedPool<K, E, A>> = internal.makeSized
+export const make: <K, R, E, A>(
+  options: { readonly acquire: (key: K) => Effect.Effect<R, E, A>; readonly size: number }
+) => Effect.Effect<Scope.Scope | R, never, KeyedPool<K, E, A>> = internal.make
 
 /**
  * Makes a new pool of the specified fixed size. The pool is returned in a
@@ -84,10 +83,9 @@ export const makeSized: <K, R, E, A>(
  * @since 1.0.0
  * @category constructors
  */
-export const makeSizedWith: <K, R, E, A>(
-  get: (key: K) => Effect.Effect<R, E, A>,
-  size: (key: K) => number
-) => Effect.Effect<Scope.Scope | R, never, KeyedPool<K, E, A>> = internal.makeSizedWith
+export const makeWith: <K, R, E, A>(
+  options: { readonly acquire: (key: K) => Effect.Effect<R, E, A>; readonly size: (key: K) => number }
+) => Effect.Effect<Scope.Scope | R, never, KeyedPool<K, E, A>> = internal.makeWith
 
 /**
  * Makes a new pool with the specified minimum and maximum sizes and time to
@@ -102,12 +100,14 @@ export const makeSizedWith: <K, R, E, A>(
  * @since 1.0.0
  * @category constructors
  */
-export const makeSizedWithTTL: <K, R, E, A>(
-  get: (key: K) => Effect.Effect<R, E, A>,
-  min: (key: K) => number,
-  max: (key: K) => number,
-  timeToLive: Duration.Duration
-) => Effect.Effect<Scope.Scope | R, never, KeyedPool<K, E, A>> = internal.makeSizedWithTTL
+export const makeWithTTL: <K, R, E, A>(
+  options: {
+    readonly acquire: (key: K) => Effect.Effect<R, E, A>
+    readonly min: (key: K) => number
+    readonly max: (key: K) => number
+    readonly timeToLive: Duration.DurationInput
+  }
+) => Effect.Effect<Scope.Scope | R, never, KeyedPool<K, E, A>> = internal.makeWithTTL
 
 /**
  * Makes a new pool with the specified minimum and maximum sizes and time to
@@ -122,12 +122,14 @@ export const makeSizedWithTTL: <K, R, E, A>(
  * @since 1.0.0
  * @category constructors
  */
-export const makeSizedWithTTLBy: <K, R, E, A>(
-  get: (key: K) => Effect.Effect<R, E, A>,
-  min: (key: K) => number,
-  max: (key: K) => number,
-  timeToLive: (key: K) => Duration.Duration
-) => Effect.Effect<Scope.Scope | R, never, KeyedPool<K, E, A>> = internal.makeSizedWithTTLBy
+export const makeWithTTLBy: <K, R, E, A>(
+  options: {
+    readonly acquire: (key: K) => Effect.Effect<R, E, A>
+    readonly min: (key: K) => number
+    readonly max: (key: K) => number
+    readonly timeToLive: (key: K) => Duration.DurationInput
+  }
+) => Effect.Effect<Scope.Scope | R, never, KeyedPool<K, E, A>> = internal.makeWithTTLBy
 
 /**
  * Retrieves an item from the pool belonging to the given key in a scoped

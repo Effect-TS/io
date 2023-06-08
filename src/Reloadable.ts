@@ -3,7 +3,7 @@
  */
 import type * as Context from "@effect/data/Context"
 import type * as Effect from "@effect/io/Effect"
-import * as internal from "@effect/io/internal_effect_untraced/reloadable"
+import * as internal from "@effect/io/internal/reloadable"
 import type * as Layer from "@effect/io/Layer"
 import type * as Schedule from "@effect/io/Schedule"
 import type * as ScopedRef from "@effect/io/ScopedRef"
@@ -63,8 +63,10 @@ export declare namespace Reloadable {
  */
 export const auto: <Out extends Context.Tag<any, any>, In, E, R>(
   tag: Out,
-  layer: Layer.Layer<In, E, Context.Tag.Identifier<Out>>,
-  policy: Schedule.Schedule<R, unknown, unknown>
+  options: {
+    readonly layer: Layer.Layer<In, E, Context.Tag.Identifier<Out>>
+    readonly schedule: Schedule.Schedule<R, unknown, unknown>
+  }
 ) => Layer.Layer<In | R, E, Reloadable<Context.Tag.Identifier<Out>>> = internal.auto
 
 /**
@@ -77,8 +79,10 @@ export const auto: <Out extends Context.Tag<any, any>, In, E, R>(
  */
 export const autoFromConfig: <Out extends Context.Tag<any, any>, In, E, R>(
   tag: Out,
-  layer: Layer.Layer<In, E, Context.Tag.Identifier<Out>>,
-  scheduleFromConfig: (context: Context.Context<In>) => Schedule.Schedule<R, unknown, unknown>
+  options: {
+    readonly layer: Layer.Layer<In, E, Context.Tag.Identifier<Out>>
+    readonly scheduleFromConfig: (context: Context.Context<In>) => Schedule.Schedule<R, unknown, unknown>
+  }
 ) => Layer.Layer<In | R, E, Reloadable<Context.Tag.Identifier<Out>>> = internal.autoFromConfig
 
 /**
@@ -100,7 +104,7 @@ export const get: <T extends Context.Tag<any, any>>(
  */
 export const manual: <Out extends Context.Tag<any, any>, In, E>(
   tag: Out,
-  layer: Layer.Layer<In, E, Context.Tag.Identifier<Out>>
+  options: { readonly layer: Layer.Layer<In, E, Context.Tag.Identifier<Out>> }
 ) => Layer.Layer<In, E, Reloadable<Context.Tag.Identifier<Out>>> = internal.manual
 
 /**

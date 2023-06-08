@@ -3,9 +3,9 @@
  */
 import type * as Context from "@effect/data/Context"
 import type { FiberRef } from "@effect/io/FiberRef"
-import * as _RequestBlock from "@effect/io/internal_effect_untraced/blockedRequests"
-import * as core from "@effect/io/internal_effect_untraced/core"
-import * as _dataSource from "@effect/io/internal_effect_untraced/dataSource"
+import * as _RequestBlock from "@effect/io/internal/blockedRequests"
+import * as core from "@effect/io/internal/core"
+import * as _dataSource from "@effect/io/internal/dataSource"
 import type * as Request from "@effect/io/Request"
 import type * as RequestResolver from "@effect/io/RequestResolver"
 

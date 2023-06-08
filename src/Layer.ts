@@ -22,7 +22,7 @@ import type { LazyArg } from "@effect/data/Function"
 import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
 import type { FiberRef } from "@effect/io/FiberRef"
-import * as internal from "@effect/io/internal_effect_untraced/layer"
+import * as internal from "@effect/io/internal/layer"
 import type * as Runtime from "@effect/io/Runtime"
 import type * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"
@@ -186,10 +186,15 @@ export const discard: <RIn, E, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn, E,
  * @since 1.0.0
  * @category constructors
  */
-export const effect: <T extends Context.Tag<any, any>, R, E>(
-  tag: T,
-  effect: Effect.Effect<R, E, Context.Tag.Service<T>>
-) => Layer<R, E, Context.Tag.Identifier<T>> = internal.fromEffect
+export const effect: {
+  <T extends Context.Tag<any, any>>(
+    tag: T
+  ): <R, E>(effect: Effect.Effect<R, E, Context.Tag.Service<T>>) => Layer<R, E, Context.Tag.Identifier<T>>
+  <T extends Context.Tag<any, any>, R, E>(
+    tag: T,
+    effect: Effect.Effect<R, E, Context.Tag.Service<T>>
+  ): Layer<R, E, Context.Tag.Identifier<T>>
+} = internal.fromEffect
 
 /**
  * Constructs a layer from the specified effect discarding it's output.
@@ -343,17 +348,21 @@ export const mapError: {
  * @since 1.0.0
  * @category folding
  */
-export const matchLayer: {
+export const match: {
   <E, R2, E2, A2, A, R3, E3, A3>(
-    onFailure: (error: E) => Layer<R2, E2, A2>,
-    onSuccess: (context: Context.Context<A>) => Layer<R3, E3, A3>
+    options: {
+      readonly onFailure: (error: E) => Layer<R2, E2, A2>
+      readonly onSuccess: (context: Context.Context<A>) => Layer<R3, E3, A3>
+    }
   ): <R>(self: Layer<R, E, A>) => Layer<R2 | R3 | R, E2 | E3, A2 & A3>
   <R, E, A, R2, E2, A2, R3, E3, A3>(
     self: Layer<R, E, A>,
-    onFailure: (error: E) => Layer<R2, E2, A2>,
-    onSuccess: (context: Context.Context<A>) => Layer<R3, E3, A3>
+    options: {
+      readonly onFailure: (error: E) => Layer<R2, E2, A2>
+      readonly onSuccess: (context: Context.Context<A>) => Layer<R3, E3, A3>
+    }
   ): Layer<R | R2 | R3, E2 | E3, A2 & A3>
-} = internal.matchLayer
+} = internal.match
 
 /**
  * Feeds the error or output services of this layer into the input of either
@@ -363,17 +372,21 @@ export const matchLayer: {
  * @since 1.0.0
  * @category folding
  */
-export const matchCauseLayer: {
+export const matchCause: {
   <E, A, R2, E2, A2, R3, E3, A3>(
-    onFailure: (cause: Cause.Cause<E>) => Layer<R2, E2, A2>,
-    onSuccess: (context: Context.Context<A>) => Layer<R3, E3, A3>
+    options: {
+      readonly onFailure: (cause: Cause.Cause<E>) => Layer<R2, E2, A2>
+      readonly onSuccess: (context: Context.Context<A>) => Layer<R3, E3, A3>
+    }
   ): <R>(self: Layer<R, E, A>) => Layer<R2 | R3 | R, E2 | E3, A2 & A3>
   <R, E, A, R2, E2, A2, R3, E3, A3>(
     self: Layer<R, E, A>,
-    onFailure: (cause: Cause.Cause<E>) => Layer<R2, E2, A2>,
-    onSuccess: (context: Context.Context<A>) => Layer<R3, E3, A3>
+    options: {
+      readonly onFailure: (cause: Cause.Cause<E>) => Layer<R2, E2, A2>
+      readonly onSuccess: (context: Context.Context<A>) => Layer<R3, E3, A3>
+    }
   ): Layer<R | R2 | R3, E2 | E3, A2 & A3>
-} = internal.matchCauseLayer
+} = internal.matchCause
 
 /**
  * Returns a scoped effect that, if evaluated, will return the lazily computed
@@ -582,7 +595,7 @@ export const retry: {
  * @since 1.0.0
  * @category constructors
  */
-export const scope: (_: void) => Layer<never, never, Scope.CloseableScope> = internal.scope
+export const scope: Layer<never, never, Scope.CloseableScope> = internal.scope
 
 /**
  * Constructs a layer from the specified scoped effect.
@@ -590,10 +603,17 @@ export const scope: (_: void) => Layer<never, never, Scope.CloseableScope> = int
  * @since 1.0.0
  * @category constructors
  */
-export const scoped: <T extends Context.Tag<any, any>, R, E>(
-  tag: T,
-  effect: Effect.Effect<R, E, Context.Tag.Service<T>>
-) => Layer<Exclude<R, Scope.Scope>, E, Context.Tag.Identifier<T>> = internal.scoped
+export const scoped: {
+  <T extends Context.Tag<any, any>>(
+    tag: T
+  ): <R, E>(
+    effect: Effect.Effect<R, E, Context.Tag.Service<T>>
+  ) => Layer<Exclude<R, Scope.Scope>, E, Context.Tag.Identifier<T>>
+  <T extends Context.Tag<any, any>, R, E>(
+    tag: T,
+    effect: Effect.Effect<R, E, Context.Tag.Service<T>>
+  ): Layer<Exclude<R, Scope.Scope>, E, Context.Tag.Identifier<T>>
+} = internal.scoped
 
 /**
  * Constructs a layer from the specified scoped effect.
@@ -632,10 +652,15 @@ export const service: <T extends Context.Tag<any, any>>(
  * @since 1.0.0
  * @category constructors
  */
-export const succeed: <T extends Context.Tag<any, any>>(
-  tag: T,
-  resource: Context.Tag.Service<T>
-) => Layer<never, never, Context.Tag.Identifier<T>> = internal.succeed
+export const succeed: {
+  <T extends Context.Tag<any, any>>(
+    tag: T
+  ): (resource: Context.Tag.Service<T>) => Layer<never, never, Context.Tag.Identifier<T>>
+  <T extends Context.Tag<any, any>>(
+    tag: T,
+    resource: Context.Tag.Service<T>
+  ): Layer<never, never, Context.Tag.Identifier<T>>
+} = internal.succeed
 
 /**
  * Constructs a layer from the specified value, which must return one or more
@@ -661,10 +686,15 @@ export const suspend: <RIn, E, ROut>(evaluate: LazyArg<Layer<RIn, E, ROut>>) => 
  * @since 1.0.0
  * @category constructors
  */
-export const sync: <T extends Context.Tag<any, any>>(
-  tag: T,
-  evaluate: LazyArg<Context.Tag.Service<T>>
-) => Layer<never, never, Context.Tag.Identifier<T>> = internal.sync
+export const sync: {
+  <T extends Context.Tag<any, any>>(
+    tag: T
+  ): (evaluate: LazyArg<Context.Tag.Service<T>>) => Layer<never, never, Context.Tag.Identifier<T>>
+  <T extends Context.Tag<any, any>>(
+    tag: T,
+    evaluate: LazyArg<Context.Tag.Service<T>>
+  ): Layer<never, never, Context.Tag.Identifier<T>>
+} = internal.sync
 
 /**
  * Lazily constructs a layer from the specified value, which must return one or more

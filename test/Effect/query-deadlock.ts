@@ -13,15 +13,15 @@ interface GetNameById extends Request.Request<string, string> {
 const GetNameById = Request.tagged<GetNameById>("GetNameById")
 
 const UserResolver = Resolver.makeBatched((requests: Array<GetNameById>) =>
-  Effect.forEachDiscard(requests, (request) =>
+  Effect.forEach(requests, (request) =>
     Request.complete(
       request,
       Exit.succeed("ok")
-    ))
+    ), { discard: true })
 )
 
 const getUserNameById = (id: number) => Effect.request(GetNameById({ id }), UserResolver)
-const getAllUserNames = Effect.forEachPar([1, 1], getUserNameById)
+const getAllUserNames = Effect.forEach([1, 1], getUserNameById, { batched: true })
 
 describe.concurrent("Effect", () => {
   it.it("requests are executed correctly", () =>

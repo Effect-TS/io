@@ -19,7 +19,7 @@ describe.concurrent("FiberRefs", () => {
       const producer = yield* $(
         pipe(
           FiberRef.set(fiberRef, true),
-          Effect.zipRight(pipe(Effect.getFiberRefs(), Effect.flatMap((a) => Queue.offer(queue, a)))),
+          Effect.zipRight(pipe(Effect.getFiberRefs, Effect.flatMap((a) => Queue.offer(queue, a)))),
           Effect.fork
         )
       )
@@ -36,19 +36,18 @@ describe.concurrent("FiberRefs", () => {
     const parent = FiberId.make(1, Date.now()) as FiberId.Runtime
     const child = FiberId.make(2, Date.now()) as FiberId.Runtime
     const parentFiberRefs = FiberRefs.unsafeMake(new Map())
-    const childFiberRefs = FiberRefs.updatedAs(
-      parentFiberRefs,
-      child,
-      FiberRef.interruptedCause,
-      Cause.interrupt(parent)
-    )
+    const childFiberRefs = FiberRefs.updatedAs(parentFiberRefs, {
+      fiberId: child,
+      fiberRef: FiberRef.interruptedCause,
+      value: Cause.interrupt(parent)
+    })
     const newParentFiberRefs = FiberRefs.joinAs(parentFiberRefs, parent, childFiberRefs)
     assert.deepStrictEqual(FiberRefs.get(newParentFiberRefs, FiberRef.interruptedCause), Option.some(Cause.empty))
   })
 
   describe.concurrent("currentLogAnnotations", () => {
     it.it("doesnt leak", () => {
-      pipe(Effect.unit(), Effect.annotateLogs("test", "abc"), Effect.runSync)
+      pipe(Effect.unit, Effect.annotateLogs("test", "abc"), Effect.runSync)
       expect(pipe(FiberRef.currentLogAnnotations, FiberRef.get, Effect.map(HashMap.size), Effect.runSync)).toBe(0)
     })
   })

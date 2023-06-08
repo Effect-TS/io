@@ -6,7 +6,7 @@ import type * as Duration from "@effect/data/Duration"
 import type * as Equal from "@effect/data/Equal"
 import type * as HashSet from "@effect/data/HashSet"
 import type * as Option from "@effect/data/Option"
-import * as internal from "@effect/io/internal_effect_untraced/metric/key"
+import * as internal from "@effect/io/internal/metric/key"
 import type * as MetricBoundaries from "@effect/io/Metric/Boundaries"
 import type * as MetricKeyType from "@effect/io/Metric/KeyType"
 import type * as MetricLabel from "@effect/io/Metric/Label"
@@ -145,12 +145,14 @@ export const histogram: (
  * @category constructors
  */
 export const summary: (
-  name: string,
-  maxAge: Duration.Duration,
-  maxSize: number,
-  error: number,
-  quantiles: Chunk.Chunk<number>,
-  description?: string
+  options: {
+    readonly name: string
+    readonly maxAge: Duration.DurationInput
+    readonly maxSize: number
+    readonly error: number
+    readonly quantiles: Chunk.Chunk<number>
+    readonly description?: string
+  }
 ) => MetricKey.Summary = internal.summary
 
 /**

@@ -3,11 +3,12 @@ import { seconds } from "@effect/data/Duration"
 import { pipe } from "@effect/data/Function"
 import * as ReadonlyArray from "@effect/data/ReadonlyArray"
 import * as Cause from "@effect/io/Cause"
+import type { Concurrency } from "@effect/io/Concurrency"
 import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import * as Fiber from "@effect/io/Fiber"
 import * as FiberRef from "@effect/io/FiberRef"
-import * as TestClock from "@effect/io/internal_effect_untraced/testing/testClock"
+import * as TestClock from "@effect/io/internal/testing/testClock"
 import * as Layer from "@effect/io/Layer"
 import * as Request from "@effect/io/Request"
 import * as Resolver from "@effect/io/RequestResolver"
@@ -59,7 +60,7 @@ const UserResolver = pipe(
   Resolver.makeBatched((requests: Array<UserRequest>) => {
     return Effect.flatMap(Requests, (r) => {
       r.count += requests.length
-      return counted(Effect.forEachDiscard(requests, (request) => delay(processRequest(request))))
+      return counted(Effect.forEach(requests, (request) => delay(processRequest(request)), { discard: true }))
     })
   }),
   Resolver.batchN(15),
@@ -72,11 +73,14 @@ export const interrupts = FiberRef.unsafeMake({ interrupts: 0 })
 
 export const getUserNameById = (id: number) => Effect.request(GetNameById({ id }), UserResolver)
 
-export const getAllUserNames = pipe(
-  getAllUserIds,
-  Effect.flatMap(Effect.forEachPar(getUserNameById)),
-  Effect.onInterrupt(() => FiberRef.getWith(interrupts, (i) => Effect.sync(() => i.interrupts++)))
-)
+export const getAllUserNamesN = (concurrency: Concurrency) =>
+  pipe(
+    getAllUserIds,
+    Effect.flatMap(Effect.forEach(getUserNameById, { concurrency })),
+    Effect.onInterrupt(() => FiberRef.getWith(interrupts, (i) => Effect.sync(() => i.interrupts++)))
+  )
+
+export const getAllUserNames = getAllUserNamesN("unbounded")
 
 export const print = (request: UserRequest): string => {
   switch (request._tag) {
@@ -106,7 +110,10 @@ const processRequest = (request: UserRequest): Effect.Effect<never, never, void>
 
 const EnvLive = Layer.provideMerge(
   Layer.mergeAll(
-    Effect.setRequestCache(Request.makeCache(100, seconds(60))),
+    Effect.setRequestCache(Request.makeCache({
+      capacity: 100,
+      timeToLive: seconds(60)
+    })),
     Effect.setRequestCaching("on"),
     Effect.setRequestBatching("on")
   ),
@@ -134,7 +141,7 @@ describe.concurrent("Effect", () => {
       Effect.gen(function*($) {
         const cache = yield* $(FiberRef.get(FiberRef.currentRequestCache))
         yield* $(cache.invalidateAll())
-        const names = yield* $(Effect.zipPar(getAllUserNames, getAllUserNames))
+        const names = yield* $(Effect.zip(getAllUserNames, getAllUserNames, { parallel: true }))
         const count = yield* $(Counter)
         expect(count.count).toEqual(3)
         expect(names[0].length).toBeGreaterThan(2)
@@ -145,7 +152,7 @@ describe.concurrent("Effect", () => {
   it.effect("batching is independent from parallelism", () =>
     provideEnv(
       Effect.gen(function*($) {
-        const names = yield* $(getAllUserNames, Effect.withParallelism(5))
+        const names = yield* $(getAllUserNamesN(5))
         const count = yield* $(Counter)
         expect(count.count).toEqual(3)
         expect(names.length).toBeGreaterThan(2)
@@ -156,7 +163,7 @@ describe.concurrent("Effect", () => {
     Effect.locally(interrupts, { interrupts: 0 })(
       provideEnv(
         Effect.gen(function*($) {
-          const exit = yield* $(getAllUserNames, Effect.zipParLeft(Effect.interrupt()), Effect.exit)
+          const exit = yield* $(getAllUserNames, Effect.zipLeft(Effect.interrupt, { parallel: true }), Effect.exit)
           expect(exit._tag).toEqual("Failure")
           if (exit._tag === "Failure") {
             expect(Cause.isInterruptedOnly(exit.cause)).toEqual(true)
@@ -206,8 +213,7 @@ describe.concurrent("Effect", () => {
         Effect.gen(function*($) {
           const exit = yield* $(
             getAllUserNames,
-            Effect.zipParLeft(Effect.interrupt()),
-            Effect.withParallelism(2),
+            Effect.zipLeft(Effect.interrupt, { parallel: true }),
             Effect.exit
           )
           expect(exit._tag).toEqual("Failure")
@@ -219,13 +225,14 @@ describe.concurrent("Effect", () => {
         })
       )
     ))
-  it.effect("zipPar is not batched when specified", () =>
+  it.effect("zip/parallel is not batched when specified", () =>
     provideEnv(
       Effect.gen(function*($) {
         const [a, b] = yield* $(
-          Effect.zipPar(
+          Effect.zip(
             getUserNameById(userIds[0]),
-            getUserNameById(userIds[1])
+            getUserNameById(userIds[1]),
+            { parallel: true }
           ),
           Effect.withRequestBatching("off")
         )
@@ -235,13 +242,14 @@ describe.concurrent("Effect", () => {
         expect(b).toEqual(userNames.get(userIds[1]))
       })
     ))
-  it.effect("zipPar is batched by default", () =>
+  it.effect("zip/parallel is batched by default", () =>
     provideEnv(
       Effect.gen(function*($) {
         const [a, b] = yield* $(
-          Effect.zipPar(
+          Effect.zip(
             getUserNameById(userIds[0]),
-            getUserNameById(userIds[1])
+            getUserNameById(userIds[1]),
+            { parallel: true }
           )
         )
         const count = yield* $(Counter)
@@ -300,7 +308,10 @@ describe.concurrent("Effect", () => {
     provideEnv(
       Effect.gen(function*($) {
         yield* $(
-          Effect.allPar(getUserNameById(userIds[0]), getUserNameById(userIds[0])),
+          Effect.all(getUserNameById(userIds[0]), getUserNameById(userIds[0]), {
+            concurrency: "unbounded",
+            discard: true
+          }),
           Effect.withRequestCaching("off")
         )
         const requests = yield* $(Requests)

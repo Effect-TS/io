@@ -1,6 +1,6 @@
 ---
 title: Metric/Boundaries.ts
-nav_order: 29
+nav_order: 30
 parent: Modules
 ---
 
@@ -36,7 +36,11 @@ with exponentially increasing values.
 **Signature**
 
 ```ts
-export declare const exponential: (start: number, factor: number, count: number) => MetricBoundaries
+export declare const exponential: (options: {
+  readonly start: number
+  readonly factor: number
+  readonly count: number
+}) => MetricBoundaries
 ```
 
 Added in v1.0.0
@@ -59,7 +63,11 @@ with linear increasing values.
 **Signature**
 
 ```ts
-export declare const linear: (start: number, width: number, count: number) => MetricBoundaries
+export declare const linear: (options: {
+  readonly start: number
+  readonly width: number
+  readonly count: number
+}) => MetricBoundaries
 ```
 
 Added in v1.0.0

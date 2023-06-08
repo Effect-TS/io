@@ -6,8 +6,8 @@ import type * as Duration from "@effect/data/Duration"
 import type { LazyArg } from "@effect/data/Function"
 import type * as HashSet from "@effect/data/HashSet"
 import type * as Effect from "@effect/io/Effect"
-import * as fiberRuntime from "@effect/io/internal_effect_untraced/fiberRuntime"
-import * as internal from "@effect/io/internal_effect_untraced/metric"
+import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
+import * as internal from "@effect/io/internal/metric"
 import type * as MetricBoundaries from "@effect/io/Metric/Boundaries"
 import type * as MetricKey from "@effect/io/Metric/Key"
 import type * as MetricKeyType from "@effect/io/Metric/KeyType"
@@ -264,8 +264,7 @@ export const set: {
  * @since 1.0.0
  * @category getters
  */
-export const snapshot: () => Effect.Effect<never, never, HashSet.HashSet<MetricPair.MetricPair.Untyped>> =
-  internal.snapshot
+export const snapshot: Effect.Effect<never, never, HashSet.HashSet<MetricPair.MetricPair.Untyped>> = internal.snapshot
 
 /**
  * Creates a metric that ignores input and produces constant output.
@@ -288,12 +287,14 @@ export const sync: <Out>(evaluate: LazyArg<Out>) => Metric<void, unknown, Out> =
  * @category constructors
  */
 export const summary: (
-  name: string,
-  maxAge: Duration.Duration,
-  maxSize: number,
-  error: number,
-  quantiles: Chunk.Chunk<number>,
-  description?: string
+  options: {
+    readonly name: string
+    readonly maxAge: Duration.DurationInput
+    readonly maxSize: number
+    readonly error: number
+    readonly quantiles: Chunk.Chunk<number>
+    readonly description?: string
+  }
 ) => Metric.Summary<number> = internal.summary
 
 /**
@@ -301,12 +302,14 @@ export const summary: (
  * @category constructors
  */
 export const summaryTimestamp: (
-  name: string,
-  maxAge: Duration.Duration,
-  maxSize: number,
-  error: number,
-  quantiles: Chunk.Chunk<number>,
-  description?: string
+  options: {
+    readonly name: string
+    readonly maxAge: Duration.DurationInput
+    readonly maxSize: number
+    readonly error: number
+    readonly quantiles: Chunk.Chunk<number>
+    readonly description?: string
+  }
 ) => Metric.Summary<readonly [value: number, timestamp: number]> = internal.summaryTimestamp
 
 /**

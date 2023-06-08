@@ -8,7 +8,7 @@ import type * as Config from "@effect/io/Config"
 import type * as ConfigError from "@effect/io/Config/Error"
 import type * as PathPatch from "@effect/io/Config/Provider/PathPatch"
 import type * as Effect from "@effect/io/Effect"
-import * as internal from "@effect/io/internal_effect_untraced/configProvider"
+import * as internal from "@effect/io/internal/configProvider"
 
 /**
  * @since 1.0.0
@@ -77,11 +77,13 @@ export declare namespace ConfigProvider {
     readonly [FlatConfigProviderTypeId]: FlatConfigProviderTypeId
     patch: PathPatch.PathPatch
     load<A>(
-      path: Array<string>,
+      path: ReadonlyArray<string>,
       config: Config.Config.Primitive<A>,
       split?: boolean
-    ): Effect.Effect<never, ConfigError.ConfigError, Array<A>>
-    enumerateChildren(path: Array<string>): Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>>
+    ): Effect.Effect<never, ConfigError.ConfigError, ReadonlyArray<A>>
+    enumerateChildren(
+      path: ReadonlyArray<string>
+    ): Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>>
   }
 
   /**
@@ -118,8 +120,10 @@ export const ConfigProvider: Context.Tag<ConfigProvider, ConfigProvider> = inter
  * @category constructors
  */
 export const make: (
-  load: <A>(config: Config.Config<A>) => Effect.Effect<never, ConfigError.ConfigError, A>,
-  flattened: ConfigProvider.Flat
+  options: {
+    readonly load: <A>(config: Config.Config<A>) => Effect.Effect<never, ConfigError.ConfigError, A>
+    readonly flattened: ConfigProvider.Flat
+  }
 ) => ConfigProvider = internal.make
 
 /**
@@ -128,16 +132,17 @@ export const make: (
  * @since 1.0.0
  * @category constructors
  */
-export const makeFlat: (
-  load: <A>(
-    path: Array<string>,
-    config: Config.Config.Primitive<A>
-  ) => Effect.Effect<never, ConfigError.ConfigError, Array<A>>,
-  enumerateChildren: (
-    path: Array<string>
-  ) => Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>>,
-  patch: PathPatch.PathPatch
-) => ConfigProvider.Flat = internal.makeFlat
+export const makeFlat: (options: {
+  readonly load: <A>(
+    path: ReadonlyArray<string>,
+    config: Config.Config.Primitive<A>,
+    split: boolean
+  ) => Effect.Effect<never, ConfigError.ConfigError, ReadonlyArray<A>>
+  readonly enumerateChildren: (
+    path: ReadonlyArray<string>
+  ) => Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>>
+  readonly patch: PathPatch.PathPatch
+}) => ConfigProvider.Flat = internal.makeFlat
 
 /**
  * A config provider that loads configuration from context variables,
@@ -285,6 +290,6 @@ export const upperCase: (self: ConfigProvider) => ConfigProvider = internal.uppe
  * @category combinators
  */
 export const within: {
-  (path: Array<string>, f: (self: ConfigProvider) => ConfigProvider): (self: ConfigProvider) => ConfigProvider
-  (self: ConfigProvider, path: Array<string>, f: (self: ConfigProvider) => ConfigProvider): ConfigProvider
+  (path: ReadonlyArray<string>, f: (self: ConfigProvider) => ConfigProvider): (self: ConfigProvider) => ConfigProvider
+  (self: ConfigProvider, path: ReadonlyArray<string>, f: (self: ConfigProvider) => ConfigProvider): ConfigProvider
 } = internal.within

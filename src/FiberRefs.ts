@@ -7,7 +7,7 @@ import type * as Arr from "@effect/data/ReadonlyArray"
 import type * as Effect from "@effect/io/Effect"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRef from "@effect/io/FiberRef"
-import * as internal from "@effect/io/internal_effect_untraced/fiberRefs"
+import * as internal from "@effect/io/internal/fiberRefs"
 
 /**
  * @since 1.0.0
@@ -123,8 +123,21 @@ export const setAll: (self: FiberRefs) => Effect.Effect<never, never, void> = in
  * @category utils
  */
 export const updatedAs: {
-  <A>(fiberId: FiberId.Runtime, fiberRef: FiberRef.FiberRef<A>, value: A): (self: FiberRefs) => FiberRefs
-  <A>(self: FiberRefs, fiberId: FiberId.Runtime, fiberRef: FiberRef.FiberRef<A>, value: A): FiberRefs
+  <A>(
+    options: {
+      readonly fiberId: FiberId.Runtime
+      readonly fiberRef: FiberRef.FiberRef<A>
+      readonly value: A
+    }
+  ): (self: FiberRefs) => FiberRefs
+  <A>(
+    self: FiberRefs,
+    options: {
+      readonly fiberId: FiberId.Runtime
+      readonly fiberRef: FiberRef.FiberRef<A>
+      readonly value: A
+    }
+  ): FiberRefs
 } = internal.updatedAs
 
 /**

@@ -1,6 +1,6 @@
 ---
 title: FiberRefs/Patch.ts
-nav_order: 21
+nav_order: 22
 parent: Modules
 ---
 
@@ -65,7 +65,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const empty: (_: void) => FiberRefsPatch
+export declare const empty: FiberRefsPatch
 ```
 
 Added in v1.0.0
