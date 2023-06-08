@@ -708,6 +708,18 @@ export const allSomePar: <R, E, A>(
 ) => Effect<R, E, Array<A>> = fiberRuntime.allSomePar
 
 /**
+ * Transforms all elements of the chunk for as long as the specified partial
+ * function is defined.
+ *
+ * @since 1.0.0
+ * @category constructors
+ */
+export const allWhile: {
+  <A, R, E, B>(f: (a: A) => Option.Option<Effect<R, E, B>>): (elements: Iterable<A>) => Effect<R, E, Array<B>>
+  <A, R, E, B>(elements: Iterable<A>, f: (a: A) => Option.Option<Effect<R, E, B>>): Effect<R, E, Array<B>>
+} = effect.allWhile
+
+/**
  * This function checks if any fibers are attempting to interrupt the current
  * fiber, and if so, performs self-interruption.
  *
@@ -1271,18 +1283,6 @@ export const config: <A>(config: Config<A>) => Effect<never, ConfigError, A> = d
  */
 export const configProviderWith: <R, E, A>(f: (configProvider: ConfigProvider) => Effect<R, E, A>) => Effect<R, E, A> =
   defaultServices.configProviderWith
-
-/**
- * Transforms all elements of the chunk for as long as the specified partial
- * function is defined.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const collectWhile: {
-  <A, R, E, B>(f: (a: A) => Option.Option<Effect<R, E, B>>): (elements: Iterable<A>) => Effect<R, E, Array<B>>
-  <A, R, E, B>(elements: Iterable<A>, f: (a: A) => Option.Option<Effect<R, E, B>>): Effect<R, E, Array<B>>
-} = effect.collectWhile
 
 /**
  * Evaluate the predicate, return the given `A` as success if predicate returns

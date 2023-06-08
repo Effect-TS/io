@@ -475,7 +475,7 @@ const collectFirstLoop = <R, E, A, B>(
 }
 
 /* @internal */
-export const collectWhile = Debug.dualWithTrace<
+export const allWhile = Debug.dualWithTrace<
   <A, R, E, B>(
     f: (a: A) => Option.Option<Effect.Effect<R, E, B>>
   ) => (elements: Iterable<A>) => Effect.Effect<R, E, Array<B>>,
