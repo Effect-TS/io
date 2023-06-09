@@ -331,6 +331,19 @@ class CacheImpl<Key, Error, Value> implements Cache.Cache<Key, Error, Value> {
     )
   }
 
+  getOptionComplete(key: Key): Effect.Effect<never, never, Option.Option<Value>> {
+    return Debug.bodyWithTrace((trace) =>
+      core.suspend(() =>
+        Option.match(MutableHashMap.get(this.cacheState.map, key), () => {
+          const mapKey = makeMapKey(key)
+          this.trackAccess(mapKey)
+          this.trackMiss()
+          return core.succeed(Option.none<Value>())
+        }, (value) => this.resolveMapValue(value, true) as Effect.Effect<never, never, Option.Option<Value>>)
+      ).traced(trace)
+    )
+  }
+
   contains(key: Key): Effect.Effect<never, never, boolean> {
     return Debug.bodyWithTrace((trace) => core.sync(() => MutableHashMap.has(this.cacheState.map, key)).traced(trace))
   }
@@ -555,7 +568,10 @@ class CacheImpl<Key, Error, Value> implements Cache.Cache<Key, Error, Value> {
     )
   }
 
-  resolveMapValue(value: MapValue<Key, Error, Value>): Effect.Effect<never, Error, Option.Option<Value>> {
+  resolveMapValue(
+    value: MapValue<Key, Error, Value>,
+    ignorePending = false
+  ): Effect.Effect<never, Error, Option.Option<Value>> {
     return effect.clockWith((clock) => {
       switch (value._tag) {
         case "Complete": {
@@ -570,12 +586,18 @@ class CacheImpl<Key, Error, Value> implements Cache.Cache<Key, Error, Value> {
         case "Pending": {
           this.trackAccess(value.key)
           this.trackHit()
+          if (ignorePending) {
+            return core.succeed(Option.none<Value>())
+          }
           return core.map(Deferred.await(value.deferred), Option.some)
         }
         case "Refreshing": {
           this.trackAccess(value.complete.key)
           this.trackHit()
           if (this.hasExpired(clock, value.complete.timeToLiveMillis)) {
+            if (ignorePending) {
+              return core.succeed(Option.none<Value>())
+            }
             return core.map(Deferred.await(value.deferred), Option.some)
           }
           return core.map(core.done(value.complete.exit), Option.some)

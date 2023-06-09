@@ -33,6 +33,12 @@ export interface ScopedCache<Key, Error, Value> extends ScopedCache.Variance<Key
   getOption(key: Key): Effect.Effect<Scope.Scope, Error, Option.Option<Value>>
 
   /**
+   * Retrieves the value associated with the specified key if it exists and the
+   * lookup function has completed. Otherwise returns `Option.none`.
+   */
+  getOptionComplete(key: Key): Effect.Effect<Scope.Scope, never, Option.Option<Value>>
+
+  /**
    * Returns statistics for this cache.
    */
   cacheStats(): Effect.Effect<never, never, Cache.CacheStats>

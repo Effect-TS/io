@@ -480,6 +480,57 @@ describe.concurrent("ScopedCache", () => {
       })))
     }))
 
+  it.effect("getOption - should return None if resource is not in cache", () =>
+    Effect.scoped(Effect.gen(function*(_) {
+      const scopedCache = yield* _(ScopedCache.make(1, Duration.infinity, (i: number) => Effect.succeed(i)))
+      const option = yield* _(scopedCache.getOption(1))
+      expect(option._tag).toEqual("None")
+    })))
+
+  it.effect("getOption - should return Some if pending", () =>
+    Effect.scoped(Effect.gen(function*(_) {
+      const scopedCache = yield* _(
+        ScopedCache.make(
+          1,
+          Duration.infinity,
+          (i: number) => TestServices.provideLive(Effect.delay(Effect.succeed(i), Duration.millis(10)))
+        )
+      )
+      yield* _(scopedCache.get(1), Effect.scoped, Effect.fork)
+      yield* _(TestServices.provideLive(Effect.sleep(Duration.millis(5))))
+      const option = yield* _(scopedCache.getOption(1), Effect.scoped)
+      expect(option._tag).toEqual("Some")
+    })))
+
+  it.effect("getOptionComplete - should return None if pending", () =>
+    Effect.scoped(Effect.gen(function*(_) {
+      const scopedCache = yield* _(
+        ScopedCache.make(
+          1,
+          Duration.infinity,
+          (i: number) => Effect.delay(Effect.succeed(i), Duration.millis(10))
+        )
+      )
+      yield* _(scopedCache.get(1), Effect.scoped, Effect.fork)
+      yield* _(TestClock.adjust(Duration.millis(9)))
+      const option = yield* _(scopedCache.getOptionComplete(1), Effect.scoped)
+      expect(option._tag).toEqual("None")
+    })))
+
+  it.effect("getOptionComplete - should return Some if complete", () =>
+    Effect.scoped(Effect.gen(function*(_) {
+      const scopedCache = yield* _(
+        ScopedCache.make(
+          1,
+          Duration.infinity,
+          (i: number) => TestServices.provideLive(Effect.delay(Effect.succeed(i), Duration.millis(10)))
+        )
+      )
+      yield* _(scopedCache.get(1), Effect.scoped)
+      const option = yield* _(scopedCache.getOptionComplete(1), Effect.scoped)
+      expect(option._tag).toEqual("Some")
+    })))
+
   it.effect("refresh - should update the cache with a new value", () =>
     Effect.gen(function*($) {
       const inc = (n: number) => n * 10

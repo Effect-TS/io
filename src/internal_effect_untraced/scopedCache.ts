@@ -221,6 +221,19 @@ class ScopedCacheImpl<Key, Environment, Error, Value> implements ScopedCache.Sco
     )
   }
 
+  getOptionComplete(key: Key): Effect.Effect<Scope.Scope, never, Option.Option<Value>> {
+    return Debug.bodyWithTrace((trace) =>
+      core.suspend(() =>
+        Option.match(
+          MutableHashMap.get(this.cacheState.map, key),
+          () => effect.succeedNone(),
+          (value) =>
+            core.flatten(this.resolveMapValue(value, true)) as Effect.Effect<Scope.Scope, never, Option.Option<Value>>
+        )
+      ).traced(trace)
+    )
+  }
+
   contains(key: Key): Effect.Effect<never, never, boolean> {
     return Debug.bodyWithTrace((trace) => core.sync(() => MutableHashMap.has(this.cacheState.map, key)).traced(trace))
   }
@@ -385,7 +398,7 @@ class ScopedCacheImpl<Key, Environment, Error, Value> implements ScopedCache.Sco
     return Debug.bodyWithTrace((trace) => core.sync(() => MutableHashMap.size(this.cacheState.map)).traced(trace))
   }
 
-  resolveMapValue(value: MapValue<Key, Error, Value>) {
+  resolveMapValue(value: MapValue<Key, Error, Value>, ignorePending = false) {
     switch (value._tag) {
       case "Complete": {
         this.trackHit()
@@ -399,6 +412,11 @@ class ScopedCacheImpl<Key, Environment, Error, Value> implements ScopedCache.Sco
       }
       case "Pending": {
         this.trackHit()
+
+        if (ignorePending) {
+          return core.succeed(effect.succeedNone())
+        }
+
         return core.zipRight(
           this.ensureMapSizeNotExceeded(value.key),
           core.map(value.scoped, effect.asSome)
@@ -407,6 +425,9 @@ class ScopedCacheImpl<Key, Environment, Error, Value> implements ScopedCache.Sco
       case "Refreshing": {
         this.trackHit()
         if (this.hasExpired(value.complete.timeToLive)) {
+          if (ignorePending) {
+            return core.succeed(effect.succeedNone())
+          }
           return core.zipRight(
             this.ensureMapSizeNotExceeded(value.complete.key),
             core.map(value.scoped, effect.asSome)
