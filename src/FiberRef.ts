@@ -22,6 +22,7 @@ import type * as Request from "@effect/io/Request"
 import type * as Scheduler from "@effect/io/Scheduler"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
+import type * as Tracer from "@effect/io/Tracer"
 
 /**
  * @since 1.0.0
@@ -356,6 +357,12 @@ export const currentSupervisor: FiberRef<Supervisor.Supervisor<any>> = fiberRunt
  * @category fiberRefs
  */
 export const currentTags: FiberRef<HashSet.HashSet<MetricLabel.MetricLabel>> = core.currentTags
+
+/**
+ * @since 1.0.0
+ * @category fiberRefs
+ */
+export const currentTracerSpan: FiberRef<Chunk.Chunk<Tracer.Span>> = core.currentTracerSpan
 
 /**
  * @since 1.0.0

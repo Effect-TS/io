@@ -1,4 +1,5 @@
 import { seconds } from "@effect/data/Duration"
+import { identity } from "@effect/data/Function"
 import * as Option from "@effect/data/Option"
 import * as Effect from "@effect/io/Effect"
 import * as Fiber from "@effect/io/Fiber"
@@ -7,12 +8,14 @@ import * as it from "@effect/io/test/utils/extend"
 import * as Tracer from "@effect/io/Tracer"
 import { assert, describe } from "vitest"
 
+const currentSpan = Effect.flatMap(Tracer.currentSpan(), identity)
+
 describe("Tracer", () => {
   describe("withSpan", () => {
     it.effect("no parent", () =>
       Effect.gen(function*($) {
         const span = yield* $(
-          Tracer.withSpan("A")(Tracer.Span)
+          Tracer.withSpan("A")(currentSpan)
         )
 
         assert.deepEqual(span.name, "A")
@@ -23,7 +26,7 @@ describe("Tracer", () => {
       Effect.gen(function*($) {
         const span = yield* $(
           Tracer.withSpan("B")(
-            Tracer.withSpan("A")(Tracer.Span)
+            Tracer.withSpan("A")(currentSpan)
           )
         )
 
@@ -34,7 +37,7 @@ describe("Tracer", () => {
     it.effect("parent when root is set", () =>
       Effect.gen(function*($) {
         const span = yield* $(
-          Tracer.withSpan("B")(Tracer.withSpan("A", { root: true })(Tracer.Span))
+          Tracer.withSpan("B")(Tracer.withSpan("A", { root: true })(currentSpan))
         )
 
         assert.deepEqual(span.name, "A")
@@ -47,7 +50,7 @@ describe("Tracer", () => {
           Tracer.withSpan(
             "A",
             { parent: { _tag: "ExternalSpan", name: "external", spanId: "000", traceId: "111" } }
-          )(Tracer.Span)
+          )(currentSpan)
         )
         assert.deepEqual(span.name, "A")
         assert.deepEqual(
@@ -59,7 +62,7 @@ describe("Tracer", () => {
     it.effect("correct time", () =>
       Effect.gen(function*($) {
         const spanFiber = yield* $(
-          Effect.fork(Tracer.withSpan("A")(Effect.delay(seconds(1))(Tracer.Span)))
+          Effect.fork(Tracer.withSpan("A")(Effect.delay(seconds(1))(currentSpan)))
         )
 
         yield* $(TestClock.adjust(seconds(2)))

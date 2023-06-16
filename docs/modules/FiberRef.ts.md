@@ -38,6 +38,7 @@ Added in v1.0.0
   - [currentScheduler](#currentscheduler)
   - [currentSupervisor](#currentsupervisor)
   - [currentTags](#currenttags)
+  - [currentTracerSpan](#currenttracerspan)
   - [interruptedCause](#interruptedcause)
   - [unhandledErrorLogLevel](#unhandlederrorloglevel)
 - [getters](#getters)
@@ -325,6 +326,16 @@ Added in v1.0.0
 
 ```ts
 export declare const currentTags: FiberRef<HashSet.HashSet<MetricLabel.MetricLabel>>
+```
+
+Added in v1.0.0
+
+## currentTracerSpan
+
+**Signature**
+
+```ts
+export declare const currentTracerSpan: FiberRef<Chunk.Chunk<Tracer.Span>>
 ```
 
 Added in v1.0.0

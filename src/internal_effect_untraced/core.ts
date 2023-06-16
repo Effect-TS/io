@@ -43,6 +43,7 @@ import type * as RequestResolver from "@effect/io/RequestResolver"
 import type * as Scheduler from "@effect/io/Scheduler"
 import * as scheduler from "@effect/io/Scheduler"
 import type * as Scope from "@effect/io/Scope"
+import type * as Tracer from "@effect/io/Tracer"
 
 // -----------------------------------------------------------------------------
 // Effect
@@ -1917,6 +1918,12 @@ export const currentInterruptedCause: FiberRef.FiberRef<Cause.Cause<never>> = gl
       () => internalCause.empty,
       (parent, _) => parent
     )
+)
+
+/** @internal */
+export const currentTracerSpan: FiberRef.FiberRef<Chunk.Chunk<Tracer.Span>> = globalValue(
+  Symbol.for("@effect/io/FiberRef/currentTracerSpan"),
+  () => fiberRefUnsafeMake(Chunk.empty<Tracer.Span>())
 )
 
 // -----------------------------------------------------------------------------

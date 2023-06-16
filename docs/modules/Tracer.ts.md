@@ -15,13 +15,13 @@ Added in v1.0.0
 - [utils](#utils)
   - [ExternalSpan (interface)](#externalspan-interface)
   - [ParentSpan (type alias)](#parentspan-type-alias)
-  - [Span](#span)
   - [Span (interface)](#span-interface)
   - [SpanStatus (type alias)](#spanstatus-type-alias)
   - [Tracer](#tracer)
   - [Tracer (interface)](#tracer-interface)
   - [TracerTypeId](#tracertypeid)
   - [TracerTypeId (type alias)](#tracertypeid-type-alias)
+  - [currentSpan](#currentspan)
   - [make](#make)
   - [useSpan](#usespan)
   - [withSpan](#withspan)
@@ -51,16 +51,6 @@ Added in v1.0.0
 
 ```ts
 export type ParentSpan = Span | ExternalSpan
-```
-
-Added in v1.0.0
-
-## Span
-
-**Signature**
-
-```ts
-export declare const Span: Context.Tag<Span, Span>
 ```
 
 Added in v1.0.0
@@ -148,6 +138,16 @@ export type TracerTypeId = typeof TracerTypeId
 
 Added in v1.0.0
 
+## currentSpan
+
+**Signature**
+
+```ts
+export declare const currentSpan: () => Effect.Effect<never, never, Option.Option<Span>>
+```
+
+Added in v1.0.0
+
 ## make
 
 **Signature**
@@ -183,12 +183,12 @@ Added in v1.0.0
 export declare const withSpan: {
   (name: string, options?: { attributes?: Record<string, string>; parent?: ParentSpan; root?: boolean }): <R, E, A>(
     self: Effect.Effect<R, E, A>
-  ) => Effect.Effect<Exclude<R, Span>, E, A>
+  ) => Effect.Effect<R, E, A>
   <R, E, A>(
     self: Effect.Effect<R, E, A>,
     name: string,
     options?: { attributes?: Record<string, string>; parent?: ParentSpan; root?: boolean }
-  ): Effect.Effect<Exclude<R, Span>, E, A>
+  ): Effect.Effect<R, E, A>
 }
 ```
 

@@ -1,6 +1,7 @@
 /**
  * @since 1.0.0
  */
+import * as Chunk from "@effect/data/Chunk"
 import * as Context from "@effect/data/Context"
 import { dualWithTrace, methodWithTrace } from "@effect/data/Debug"
 import { globalValue } from "@effect/data/Global"
@@ -9,6 +10,7 @@ import * as Option from "@effect/data/Option"
 import * as Clock from "@effect/io/Clock"
 import * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
+import * as FiberRef from "@effect/io/FiberRef"
 
 /**
  * @since 1.0.0
@@ -130,13 +132,6 @@ const nativeTracer: Tracer = make({
 /**
  * @since 1.0.0
  */
-export const Span = Context.Tag<Span>(
-  Symbol.for("@effect/io/Span")
-)
-
-/**
- * @since 1.0.0
- */
 export const useSpan: {
   <R, E, A>(name: string, evaluate: (span: Span) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A>
   <R, E, A>(name: string, options: {
@@ -161,8 +156,8 @@ export const useSpan: {
 
     return Effect.acquireUseRelease(
       Effect.flatMap(
-        Clock.currentTimeMillis(),
-        (startTime) =>
+        Effect.zip(FiberRef.get(FiberRef.currentTracerSpan), Clock.currentTimeMillis()),
+        ([stack, startTime]) =>
           Effect.contextWith((context: Context.Context<never>): Span => {
             const tracer: Tracer = Option.getOrElse(
               Context.getOption(context, Tracer),
@@ -171,7 +166,7 @@ export const useSpan: {
 
             const parent = Option.orElse(
               Option.fromNullable(options?.parent),
-              () => options?.root === true ? Option.none() : Context.getOption(context, Span)
+              () => options?.root === true ? Option.none() : Chunk.head(stack)
             )
 
             const span = tracer.span(name, parent, startTime)
@@ -201,23 +196,23 @@ export const withSpan: {
     attributes?: Record<string, string>
     parent?: ParentSpan
     root?: boolean
-  }): <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<Exclude<R, Span>, E, A>
+  }): <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
   <R, E, A>(self: Effect.Effect<R, E, A>, name: string, options?: {
     attributes?: Record<string, string>
     parent?: ParentSpan
     root?: boolean
-  }): Effect.Effect<Exclude<R, Span>, E, A>
+  }): Effect.Effect<R, E, A>
 } = dualWithTrace<
   (name: string, options?: {
     attributes?: Record<string, string>
     parent?: ParentSpan
     root?: boolean
-  }) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<Exclude<R, Span>, E, A>,
+  }) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
   <R, E, A>(self: Effect.Effect<R, E, A>, name: string, options?: {
     attributes?: Record<string, string>
     parent?: ParentSpan
     root?: boolean
-  }) => Effect.Effect<Exclude<R, Span>, E, A>
+  }) => Effect.Effect<R, E, A>
 >(
   (args) => typeof args[0] !== "string",
   () =>
@@ -225,6 +220,22 @@ export const withSpan: {
       useSpan(
         name,
         options ?? {},
-        (span) => Effect.provideService(self, Span, span)
+        (span) =>
+          Effect.flatMap(
+            FiberRef.get(FiberRef.currentTracerSpan),
+            (stack) =>
+              Effect.locally(
+                self,
+                FiberRef.currentTracerSpan,
+                Chunk.prepend(stack, span)
+              )
+          )
       )
+)
+
+/**
+ * @since 1.0.0
+ */
+export const currentSpan = methodWithTrace((trace) =>
+  () => Effect.map(FiberRef.get(FiberRef.currentTracerSpan), Chunk.head).traced(trace)
 )
