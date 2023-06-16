@@ -236,6 +236,6 @@ export const withSpan: {
 /**
  * @since 1.0.0
  */
-export const currentSpan = methodWithTrace((trace) =>
+export const currentSpan: () => Effect.Effect<never, never, Option.Option<Span>> = methodWithTrace((trace) =>
   () => Effect.map(FiberRef.get(FiberRef.currentTracerSpan), Chunk.head).traced(trace)
 )
