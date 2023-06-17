@@ -7,6 +7,7 @@ import type { LazyArg } from "@effect/data/Function"
 import { constFalse, constTrue, constVoid, identity, pipe } from "@effect/data/Function"
 import * as HashMap from "@effect/data/HashMap"
 import * as HashSet from "@effect/data/HashSet"
+import * as List from "@effect/data/List"
 import * as Option from "@effect/data/Option"
 import type { Predicate, Refinement } from "@effect/data/Predicate"
 import * as RA from "@effect/data/ReadonlyArray"
@@ -1610,13 +1611,12 @@ export const logSpan = Debug.dualWithTrace<
         core.fiberRefGet(core.currentLogSpan),
         (stack) =>
           core.flatMap(Clock.currentTimeMillis(), (now) =>
-            core.suspend(() => {
-              const logSpan = LogSpan.make(label, now)
-              return core.fiberRefLocally(
+            core.suspend(() =>
+              core.fiberRefLocally(
                 core.currentLogSpan,
-                pipe(stack, Chunk.prepend(logSpan)) as Chunk.Chunk<LogSpan.LogSpan>
+                List.prepend(stack, LogSpan.make(label, now))
               )(effect)
-            }))
+            ))
       ).traced(trace)
 )
 

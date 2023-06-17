@@ -1,10 +1,10 @@
 /**
  * @since 1.0.0
  */
-import * as Chunk from "@effect/data/Chunk"
 import * as Context from "@effect/data/Context"
 import { dualWithTrace, methodWithTrace } from "@effect/data/Debug"
 import { globalValue } from "@effect/data/Global"
+import * as List from "@effect/data/List"
 import * as MutableRef from "@effect/data/MutableRef"
 import * as Option from "@effect/data/Option"
 import * as Clock from "@effect/io/Clock"
@@ -166,7 +166,7 @@ export const useSpan: {
 
             const parent = Option.orElse(
               Option.fromNullable(options?.parent),
-              () => options?.root === true ? Option.none() : Chunk.head(stack)
+              () => options?.root === true ? Option.none() : List.head(stack)
             )
 
             const span = tracer.span(name, parent, startTime)
@@ -227,7 +227,7 @@ export const withSpan: {
               Effect.locally(
                 self,
                 FiberRef.currentTracerSpan,
-                Chunk.prepend(stack, span)
+                List.prepend(stack, span)
               )
           )
       )
@@ -237,5 +237,5 @@ export const withSpan: {
  * @since 1.0.0
  */
 export const currentSpan: () => Effect.Effect<never, never, Option.Option<Span>> = methodWithTrace((trace) =>
-  () => Effect.map(FiberRef.get(FiberRef.currentTracerSpan), Chunk.head).traced(trace)
+  () => Effect.map(FiberRef.get(FiberRef.currentTracerSpan), List.head).traced(trace)
 )

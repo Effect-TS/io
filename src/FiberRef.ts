@@ -1,12 +1,12 @@
 /**
  * @since 1.0.0
  */
-import type * as Chunk from "@effect/data/Chunk"
 import type * as Context from "@effect/data/Context"
 import type * as Differ from "@effect/data/Differ"
 import type { LazyArg } from "@effect/data/Function"
 import type * as HashMap from "@effect/data/HashMap"
 import type * as HashSet from "@effect/data/HashSet"
+import type * as List from "@effect/data/List"
 import type * as Option from "@effect/data/Option"
 import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
@@ -326,7 +326,7 @@ export const currentMinimumLogLevel: FiberRef<LogLevel.LogLevel> = fiberRuntime.
  * @since 1.0.0
  * @category fiberRefs
  */
-export const currentLogSpan: FiberRef<Chunk.Chunk<LogSpan.LogSpan>> = core.currentLogSpan
+export const currentLogSpan: FiberRef<List.List<LogSpan.LogSpan>> = core.currentLogSpan
 
 /**
  * @since 1.0.0
@@ -362,7 +362,7 @@ export const currentTags: FiberRef<HashSet.HashSet<MetricLabel.MetricLabel>> = c
  * @since 1.0.0
  * @category fiberRefs
  */
-export const currentTracerSpan: FiberRef<Chunk.Chunk<Tracer.Span>> = core.currentTracerSpan
+export const currentTracerSpan: FiberRef<List.List<Tracer.Span>> = core.currentTracerSpan
 
 /**
  * @since 1.0.0

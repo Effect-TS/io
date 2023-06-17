@@ -12,6 +12,7 @@ import { globalValue } from "@effect/data/Global"
 import * as Hash from "@effect/data/Hash"
 import * as HashMap from "@effect/data/HashMap"
 import * as HashSet from "@effect/data/HashSet"
+import * as List from "@effect/data/List"
 import * as MutableRef from "@effect/data/MutableRef"
 import * as Option from "@effect/data/Option"
 import type { Predicate } from "@effect/data/Predicate"
@@ -1848,9 +1849,9 @@ export const currentLogLevel: FiberRef.FiberRef<LogLevel.LogLevel> = fiberRefUns
 )
 
 /** @internal */
-export const currentLogSpan: FiberRef.FiberRef<Chunk.Chunk<LogSpan.LogSpan>> = globalValue(
+export const currentLogSpan: FiberRef.FiberRef<List.List<LogSpan.LogSpan>> = globalValue(
   Symbol.for("@effect/io/FiberRef/currentLogSpan"),
-  () => fiberRefUnsafeMake(Chunk.empty<LogSpan.LogSpan>())
+  () => fiberRefUnsafeMake(List.empty<LogSpan.LogSpan>())
 )
 
 /** @internal */
@@ -1921,9 +1922,9 @@ export const currentInterruptedCause: FiberRef.FiberRef<Cause.Cause<never>> = gl
 )
 
 /** @internal */
-export const currentTracerSpan: FiberRef.FiberRef<Chunk.Chunk<Tracer.Span>> = globalValue(
+export const currentTracerSpan: FiberRef.FiberRef<List.List<Tracer.Span>> = globalValue(
   Symbol.for("@effect/io/FiberRef/currentTracerSpan"),
-  () => fiberRefUnsafeMake(Chunk.empty<Tracer.Span>())
+  () => fiberRefUnsafeMake(List.empty<Tracer.Span>())
 )
 
 // -----------------------------------------------------------------------------

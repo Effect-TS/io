@@ -1,8 +1,8 @@
-import * as Chunk from "@effect/data/Chunk"
 import * as Debug from "@effect/data/Debug"
 import type { LazyArg } from "@effect/data/Function"
 import { constVoid, dual, pipe } from "@effect/data/Function"
 import * as HashMap from "@effect/data/HashMap"
+import * as List from "@effect/data/List"
 import * as Option from "@effect/data/Option"
 import type * as CauseExt from "@effect/io/Cause"
 import type * as FiberId from "@effect/io/Fiber/Id"
@@ -36,7 +36,7 @@ export const makeLogger = <Message, Output>(
     message: Message,
     cause: CauseExt.Cause<unknown>,
     context: FiberRefs.FiberRefs,
-    spans: Chunk.Chunk<LogSpan.LogSpan>,
+    spans: List.List<LogSpan.LogSpan>,
     annotations: HashMap.HashMap<string, string>
   ) => Output
 ): Logger.Logger<Message, Output> => ({
@@ -68,7 +68,7 @@ export const stringLogger: Logger.Logger<string, string> = makeLogger<string, st
       output = appendQuoted(Pretty.pretty(cause), output)
     }
 
-    if (Chunk.isNonEmpty(spans)) {
+    if (List.isCons(spans)) {
       output = output + " "
 
       let first = true
@@ -135,7 +135,7 @@ export const logfmtLogger = makeLogger<string, string>(
       output = appendQuotedLogfmt(Pretty.pretty(cause), output)
     }
 
-    if (Chunk.isNonEmpty(spans)) {
+    if (List.isCons(spans)) {
       output = output + " "
 
       let first = true
