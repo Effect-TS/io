@@ -215,7 +215,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const currentLogSpan: FiberRef<Chunk.Chunk<LogSpan.LogSpan>>
+export declare const currentLogSpan: FiberRef<List.List<LogSpan.LogSpan>>
 ```
 
 Added in v1.0.0
@@ -335,7 +335,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const currentTracerSpan: FiberRef<Chunk.Chunk<Tracer.Span>>
+export declare const currentTracerSpan: FiberRef<List.List<Tracer.Span>>
 ```
 
 Added in v1.0.0
