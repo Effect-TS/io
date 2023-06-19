@@ -11,7 +11,6 @@ import type { Predicate } from "@effect/data/Predicate"
 import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
 import * as internal from "@effect/io/internal_effect_untraced/schedule"
-import type * as Random from "@effect/io/Random"
 import type * as ScheduleDecision from "@effect/io/Schedule/Decision"
 import type * as Interval from "@effect/io/Schedule/Interval"
 import type * as Intervals from "@effect/io/Schedule/Intervals"
@@ -768,8 +767,7 @@ export const intersectWith: {
  * @since 1.0.0
  * @category constructors
  */
-export const jittered: <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env | Random.Random, In, Out> =
-  internal.jittered
+export const jittered: <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out> = internal.jittered
 
 /**
  * Returns a new schedule that randomly modifies the size of the intervals of
@@ -784,11 +782,11 @@ export const jittered: <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<
 export const jitteredWith: {
   (options: { min?: number; max?: number }): <Env, In, Out>(
     self: Schedule<Env, In, Out>
-  ) => Schedule<Random.Random | Env, In, Out>
+  ) => Schedule<Env, In, Out>
   <Env, In, Out>(
     self: Schedule<Env, In, Out>,
     options: { min?: number; max?: number }
-  ): Schedule<Random.Random | Env, In, Out>
+  ): Schedule<Env, In, Out>
 } = internal.jitteredWith
 
 /**
