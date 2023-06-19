@@ -1,5 +1,13 @@
 # @effect/io
 
+## 0.26.1
+
+### Patch Changes
+
+- [#455](https://github.com/Effect-TS/io/pull/455) [`4686d32`](https://github.com/Effect-TS/io/commit/4686d32238338dd05743a07983a74a600957271e) Thanks [@gcanti](https://github.com/gcanti)! - Schedule: remove Random.Random from jittered, closes #454
+
+- [#448](https://github.com/Effect-TS/io/pull/448) [`f3dcabb`](https://github.com/Effect-TS/io/commit/f3dcabbc653d6b1dce277c3cc95735fced47d880) Thanks [@tim-smart](https://github.com/tim-smart)! - add getOptionComplete to Cache and ScopedCache
+
 ## 0.26.0
 
 ### Minor Changes
