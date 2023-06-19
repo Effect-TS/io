@@ -1094,7 +1094,7 @@ const intersectWithLoop = <State, State1, Env, In, Out, Env1, In1, Out2>(
 
 /** @internal */
 export const jittered = Debug.untracedMethod(() =>
-  <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env | Random.Random, In, Out> =>
+  <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>): Schedule.Schedule<Env, In, Out> =>
     jitteredWith(self, { min: 0.8, max: 1.2 })
 )
 
@@ -1102,11 +1102,11 @@ export const jittered = Debug.untracedMethod(() =>
 export const jitteredWith = Debug.untracedDual<
   (options: { min?: number; max?: number }) => <Env, In, Out>(
     self: Schedule.Schedule<Env, In, Out>
-  ) => Schedule.Schedule<Env | Random.Random, In, Out>,
+  ) => Schedule.Schedule<Env, In, Out>,
   <Env, In, Out>(
     self: Schedule.Schedule<Env, In, Out>,
     options: { min?: number; max?: number }
-  ) => Schedule.Schedule<Env | Random.Random, In, Out>
+  ) => Schedule.Schedule<Env, In, Out>
 >(2, () =>
   (self, options) => {
     const { max, min } = Object.assign({ min: 0.8, max: 1.2 }, options)

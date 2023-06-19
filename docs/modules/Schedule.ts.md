@@ -520,7 +520,7 @@ interval size`.
 **Signature**
 
 ```ts
-export declare const jittered: <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Random.Random | Env, In, Out>
+export declare const jittered: <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out>
 ```
 
 Added in v1.0.0
@@ -537,14 +537,8 @@ interval size`.
 
 ```ts
 export declare const jitteredWith: {
-  (options: { min?: number; max?: number }): <Env, In, Out>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Random.Random | Env, In, Out>
-  <Env, In, Out>(self: Schedule<Env, In, Out>, options: { min?: number; max?: number }): Schedule<
-    Random.Random | Env,
-    In,
-    Out
-  >
+  (options: { min?: number; max?: number }): <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out>
+  <Env, In, Out>(self: Schedule<Env, In, Out>, options: { min?: number; max?: number }): Schedule<Env, In, Out>
 }
 ```
 
