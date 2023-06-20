@@ -3,8 +3,6 @@ import * as Context from "@effect/data/Context"
 import * as Debug from "@effect/data/Debug"
 import type * as Duration from "@effect/data/Duration"
 import { pipe } from "@effect/data/Function"
-import * as List from "@effect/data/List"
-import * as Option from "@effect/data/Option"
 import type * as Clock from "@effect/io/Clock"
 import type * as Config from "@effect/io/Config"
 import type * as ConfigProvider from "@effect/io/Config/Provider"
@@ -163,97 +161,3 @@ export const withTracer = Debug.dualWithTrace<
       currentServices,
       Context.add(tracer.tracerTag, value)
     )(effect).traced(trace))
-
-/** @internal */
-export const currentSpan: () => Effect.Effect<never, never, Option.Option<Tracer.Span>> = Debug.methodWithTrace((
-  trace
-) => () => core.map(core.fiberRefGet(core.currentTracerSpan), List.head).traced(trace))
-
-/** @internal */
-export const useSpan: {
-  <R, E, A>(name: string, evaluate: (span: Tracer.Span) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A>
-  <R, E, A>(name: string, options: {
-    attributes?: Record<string, string>
-    parent?: Tracer.ParentSpan
-    root?: boolean
-  }, evaluate: (span: Tracer.Span) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A>
-} = Debug.methodWithTrace(() =>
-  <R, E, A>(
-    name: string,
-    ...args: [evaluate: (span: Tracer.Span) => Effect.Effect<R, E, A>] | [
-      options: any,
-      evaluate: (span: Tracer.Span) => Effect.Effect<R, E, A>
-    ]
-  ) => {
-    const options: {
-      attributes?: Record<string, string>
-      parent?: Tracer.ParentSpan
-      root?: boolean
-    } | undefined = args.length === 1 ? undefined : args[0]
-    const evaluate: (span: Tracer.Span) => Effect.Effect<R, E, A> = args[args.length - 1]
-
-    return core.acquireUseRelease(
-      tracerWith((tracer) =>
-        core.flatMap(
-          core.zip(
-            core.fiberRefGet(core.currentTracerSpan),
-            clockWith((clock) => clock.currentTimeMillis())
-          ),
-          ([stack, startTime]) =>
-            core.sync(() => {
-              const parent = Option.orElse(
-                Option.fromNullable(options?.parent),
-                () => options?.root === true ? Option.none() : List.head(stack)
-              )
-
-              const span = tracer.span(name, parent, startTime)
-
-              Object.entries(options?.attributes ?? {}).forEach(([k, v]) => {
-                span.attribute(k, v)
-              })
-
-              return span
-            })
-        )
-      ),
-      evaluate,
-      (span, exit) =>
-        core.flatMap(
-          clockWith((clock) => clock.currentTimeMillis()),
-          (endTime) => core.sync(() => span.end(endTime, exit))
-        )
-    )
-  }
-)
-
-/** @internal */
-export const withSpan = Debug.dualWithTrace<
-  (name: string, options?: {
-    attributes?: Record<string, string>
-    parent?: Tracer.ParentSpan
-    root?: boolean
-  }) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
-  <R, E, A>(self: Effect.Effect<R, E, A>, name: string, options?: {
-    attributes?: Record<string, string>
-    parent?: Tracer.ParentSpan
-    root?: boolean
-  }) => Effect.Effect<R, E, A>
->(
-  (args) => typeof args[0] !== "string",
-  () =>
-    (self, name, options) =>
-      useSpan(
-        name,
-        options ?? {},
-        (span) =>
-          core.flatMap(
-            core.fiberRefGet(core.currentTracerSpan),
-            (stack) =>
-              core.fiberRefLocally(
-                self,
-                core.currentTracerSpan,
-                List.prepend(stack, span)
-              )
-          )
-      )
-)

@@ -2,10 +2,14 @@
  * @since 1.0.0
  */
 import * as Context from "@effect/data/Context"
+import * as Debug from "@effect/data/Debug"
 import { globalValue } from "@effect/data/Global"
+import * as List from "@effect/data/List"
 import * as MutableRef from "@effect/data/MutableRef"
 import type * as Option from "@effect/data/Option"
+import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
+import * as core from "@effect/io/internal_effect_untraced/core"
 import type * as Tracer from "@effect/io/Tracer"
 
 /** @internal */
@@ -67,3 +71,8 @@ class NativeSpan implements Tracer.Span {
 export const nativeTracer: Tracer.Tracer = make({
   span: (name, parent, startTime) => new NativeSpan(name, parent, startTime)
 })
+
+/** @internal */
+export const currentSpan: () => Effect.Effect<never, never, Option.Option<Tracer.Span>> = Debug.methodWithTrace((
+  trace
+) => () => core.map(core.fiberRefGet(core.currentTracerSpan), List.head).traced(trace))

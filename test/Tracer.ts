@@ -15,7 +15,7 @@ describe("Tracer", () => {
     it.effect("no parent", () =>
       Effect.gen(function*($) {
         const span = yield* $(
-          Tracer.withSpan("A")(currentSpan)
+          Effect.withSpan("A")(currentSpan)
         )
 
         assert.deepEqual(span.name, "A")
@@ -25,8 +25,8 @@ describe("Tracer", () => {
     it.effect("parent", () =>
       Effect.gen(function*($) {
         const span = yield* $(
-          Tracer.withSpan("B")(
-            Tracer.withSpan("A")(currentSpan)
+          Effect.withSpan("B")(
+            Effect.withSpan("A")(currentSpan)
           )
         )
 
@@ -37,7 +37,7 @@ describe("Tracer", () => {
     it.effect("parent when root is set", () =>
       Effect.gen(function*($) {
         const span = yield* $(
-          Tracer.withSpan("B")(Tracer.withSpan("A", { root: true })(currentSpan))
+          Effect.withSpan("B")(Effect.withSpan("A", { root: true })(currentSpan))
         )
 
         assert.deepEqual(span.name, "A")
@@ -47,7 +47,7 @@ describe("Tracer", () => {
     it.effect("external parent", () =>
       Effect.gen(function*($) {
         const span = yield* $(
-          Tracer.withSpan(
+          Effect.withSpan(
             "A",
             { parent: { _tag: "ExternalSpan", name: "external", spanId: "000", traceId: "111" } }
           )(currentSpan)
@@ -62,7 +62,7 @@ describe("Tracer", () => {
     it.effect("correct time", () =>
       Effect.gen(function*($) {
         const spanFiber = yield* $(
-          Effect.fork(Tracer.withSpan("A")(Effect.delay(seconds(1))(currentSpan)))
+          Effect.fork(Effect.withSpan("A")(Effect.delay(seconds(1))(currentSpan)))
         )
 
         yield* $(TestClock.adjust(seconds(2)))

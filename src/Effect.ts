@@ -70,6 +70,7 @@ import type * as Schedule from "@effect/io/Schedule"
 import type { Scheduler } from "@effect/io/Scheduler"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
+import type * as Tracer from "@effect/io/Tracer"
 
 /**
  * @since 1.0.0
@@ -6113,3 +6114,56 @@ export const locallyScopedWith: {
   <A>(f: (a: A) => A): (self: FiberRef.FiberRef<A>) => Effect<Scope.Scope, never, void>
   <A>(self: FiberRef.FiberRef<A>, f: (a: A) => A): Effect<Scope.Scope, never, void>
 } = fiberRuntime.fiberRefLocallyScopedWith
+
+/**
+ * @since 1.0.0
+ * @category tracing
+ */
+export const tracer: () => Effect<never, never, Tracer.Tracer> = effect.tracer
+
+/**
+ * @since 1.0.0
+ * @category tracing
+ */
+export const tracerWith: <R, E, A>(f: (tracer: Tracer.Tracer) => Effect<R, E, A>) => Effect<R, E, A> = effect.tracerWith
+
+/**
+ * @since 1.0.0
+ * @category tracing
+ */
+export const useSpan: {
+  <R, E, A>(name: string, evaluate: (span: Tracer.Span) => Effect<R, E, A>): Effect<R, E, A>
+  <R, E, A>(
+    name: string,
+    options: {
+      attributes?: Record<string, string>
+      parent?: Tracer.ParentSpan
+      root?: boolean
+    },
+    evaluate: (span: Tracer.Span) => Effect<R, E, A>
+  ): Effect<R, E, A>
+} = effect.useSpan
+
+/**
+ * @since 1.0.0
+ * @category tracing
+ */
+export const withSpan: {
+  (
+    name: string,
+    options?: {
+      attributes?: Record<string, string>
+      parent?: Tracer.ParentSpan
+      root?: boolean
+    } | undefined
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(
+    self: Effect<R, E, A>,
+    name: string,
+    options?: {
+      attributes?: Record<string, string>
+      parent?: Tracer.ParentSpan
+      root?: boolean
+    } | undefined
+  ): Effect<R, E, A>
+} = effect.withSpan
