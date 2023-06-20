@@ -25,8 +25,6 @@ Added in v1.0.0
   - [TracerTypeId (type alias)](#tracertypeid-type-alias)
   - [currentSpan](#currentspan)
   - [make](#make)
-  - [useSpan](#usespan)
-  - [withSpan](#withspan)
 
 ---
 
@@ -168,43 +166,6 @@ Added in v1.0.0
 
 ```ts
 export declare const make: (options: Omit<Tracer, TracerTypeId>) => Tracer
-```
-
-Added in v1.0.0
-
-## useSpan
-
-**Signature**
-
-```ts
-export declare const useSpan: {
-  <R, E, A>(name: string, evaluate: (span: Span) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A>
-  <R, E, A>(
-    name: string,
-    options: { attributes?: Record<string, string>; parent?: ParentSpan; root?: boolean },
-    evaluate: (span: Span) => Effect.Effect<R, E, A>
-  ): Effect.Effect<R, E, A>
-}
-```
-
-Added in v1.0.0
-
-## withSpan
-
-**Signature**
-
-```ts
-export declare const withSpan: {
-  (
-    name: string,
-    options?: { attributes?: Record<string, string> | undefined; parent?: ParentSpan; root?: boolean } | undefined
-  ): <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
-  <R, E, A>(
-    self: Effect.Effect<R, E, A>,
-    name: string,
-    options?: { attributes?: Record<string, string> | undefined; parent?: ParentSpan; root?: boolean } | undefined
-  ): Effect.Effect<R, E, A>
-}
 ```
 
 Added in v1.0.0

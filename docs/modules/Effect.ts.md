@@ -345,6 +345,11 @@ Added in v1.0.0
 - [symbols](#symbols)
   - [EffectTypeId](#effecttypeid)
   - [EffectTypeId (type alias)](#effecttypeid-type-alias)
+- [tracing](#tracing)
+  - [tracer](#tracer)
+  - [tracerWith](#tracerwith)
+  - [useSpan](#usespan)
+  - [withSpan](#withspan)
 - [traversing](#traversing)
   - [forEachWithIndex](#foreachwithindex)
 - [type lambdas](#type-lambdas)
@@ -5470,6 +5475,65 @@ Added in v1.0.0
 
 ```ts
 export type EffectTypeId = typeof EffectTypeId
+```
+
+Added in v1.0.0
+
+# tracing
+
+## tracer
+
+**Signature**
+
+```ts
+export declare const tracer: () => Effect<never, never, Tracer.Tracer>
+```
+
+Added in v1.0.0
+
+## tracerWith
+
+**Signature**
+
+```ts
+export declare const tracerWith: <R, E, A>(f: (tracer: Tracer.Tracer) => Effect<R, E, A>) => Effect<R, E, A>
+```
+
+Added in v1.0.0
+
+## useSpan
+
+**Signature**
+
+```ts
+export declare const useSpan: {
+  <R, E, A>(name: string, evaluate: (span: Tracer.Span) => Effect<R, E, A>): Effect<R, E, A>
+  <R, E, A>(
+    name: string,
+    options: { attributes?: Record<string, string>; parent?: Tracer.ParentSpan; root?: boolean },
+    evaluate: (span: Tracer.Span) => Effect<R, E, A>
+  ): Effect<R, E, A>
+}
+```
+
+Added in v1.0.0
+
+## withSpan
+
+**Signature**
+
+```ts
+export declare const withSpan: {
+  (
+    name: string,
+    options?: { attributes?: Record<string, string>; parent?: Tracer.ParentSpan; root?: boolean } | undefined
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(
+    self: Effect<R, E, A>,
+    name: string,
+    options?: { attributes?: Record<string, string>; parent?: Tracer.ParentSpan; root?: boolean } | undefined
+  ): Effect<R, E, A>
+}
 ```
 
 Added in v1.0.0
