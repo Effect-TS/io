@@ -7,12 +7,13 @@ import type * as ConfigProvider from "@effect/io/Config/Provider"
 import type * as FiberRef from "@effect/io/FiberRef"
 import * as internal from "@effect/io/internal_effect_untraced/defaultServices"
 import type * as Random from "@effect/io/Random"
+import type * as Tracer from "@effect/io/Tracer"
 
 /**
  * @since 1.0.0
  * @category models
  */
-export type DefaultServices = Clock.Clock | Random.Random | ConfigProvider.ConfigProvider
+export type DefaultServices = Clock.Clock | Random.Random | ConfigProvider.ConfigProvider | Tracer.Tracer
 
 /**
  * @since 1.0.0
