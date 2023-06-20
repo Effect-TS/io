@@ -534,10 +534,10 @@ const orElseFlat = (
                     return core.fail(configError.And(left.left, right.left))
                   }
                   if (Either.isLeft(left) && Either.isRight(right)) {
-                    return core.fail(left.left)
+                    return core.succeed(right.right)
                   }
                   if (Either.isRight(left) && Either.isLeft(right)) {
-                    return core.fail(right.left)
+                    return core.succeed(left.right)
                   }
                   if (Either.isRight(left) && Either.isRight(right)) {
                     return core.succeed(pipe(left.right, HashSet.union(right.right)))
