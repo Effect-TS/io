@@ -12,6 +12,8 @@ Added in v1.0.0
 
 <h2 class="text-delta">Table of contents</h2>
 
+- [constructors](#constructors)
+  - [tracerWith](#tracerwith)
 - [utils](#utils)
   - [ExternalSpan (interface)](#externalspan-interface)
   - [ParentSpan (type alias)](#parentspan-type-alias)
@@ -27,6 +29,18 @@ Added in v1.0.0
   - [withSpan](#withspan)
 
 ---
+
+# constructors
+
+## tracerWith
+
+**Signature**
+
+```ts
+export declare const tracerWith: <R, E, A>(f: (tracer: Tracer) => Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+```
+
+Added in v1.0.0
 
 # utils
 
@@ -181,13 +195,14 @@ Added in v1.0.0
 
 ```ts
 export declare const withSpan: {
-  (name: string, options?: { attributes?: Record<string, string>; parent?: ParentSpan; root?: boolean }): <R, E, A>(
-    self: Effect.Effect<R, E, A>
-  ) => Effect.Effect<R, E, A>
+  (
+    name: string,
+    options?: { attributes?: Record<string, string> | undefined; parent?: ParentSpan; root?: boolean } | undefined
+  ): <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
   <R, E, A>(
     self: Effect.Effect<R, E, A>,
     name: string,
-    options?: { attributes?: Record<string, string>; parent?: ParentSpan; root?: boolean }
+    options?: { attributes?: Record<string, string> | undefined; parent?: ParentSpan; root?: boolean } | undefined
   ): Effect.Effect<R, E, A>
 }
 ```
