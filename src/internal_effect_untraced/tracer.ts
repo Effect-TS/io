@@ -93,11 +93,11 @@ export const logger = _logger.makeLogger<string, void>((
   }
 
   const attributes = Object.fromEntries(annotations)
-  attributes.fiberId = _fiberId.threadName(fiberId)
-  attributes.level = logLevel.label
+  attributes["effect.fibreId"] = _fiberId.threadName(fiberId)
+  attributes["effect.logLevel"] = logLevel.label
 
   if (cause !== null && cause !== Cause.empty) {
-    attributes.cause = Pretty.pretty(cause)
+    attributes["effect.cause"] = Pretty.pretty(cause)
   }
 
   span.value.event(
