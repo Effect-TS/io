@@ -1,5 +1,6 @@
 import * as Chunk from "@effect/data/Chunk"
 import { runtimeDebug } from "@effect/data/Debug"
+import * as Either from "@effect/data/Either"
 import * as Equal from "@effect/data/Equal"
 import { pipe } from "@effect/data/Function"
 import * as HashMap from "@effect/data/HashMap"
@@ -658,18 +659,158 @@ describe.concurrent("ConfigProvider", () => {
       assert.strictEqual(result2, "value")
     }))
 
-  it.effect("orElse", () =>
+  it.effect("orElse - with flat data", () =>
     Effect.gen(function*($) {
-      const configProvider1 = ConfigProvider.fromMap(new Map([["key", "value"]]))
-      const configProvider2 = ConfigProvider.fromMap(new Map([["key1", "value1"]]))
-      const config = Config.string("key1")
-      const result = yield* $(
-        pipe(
-          configProvider1,
-          ConfigProvider.orElse(() => configProvider2)
-        ).load(config)
+      const configProvider = pipe(
+        ConfigProvider.fromMap(
+          new Map([
+            ["key1", "value1"],
+            ["key4", "value41"]
+          ])
+        ),
+        ConfigProvider.orElse(() =>
+          ConfigProvider.fromMap(
+            new Map([
+              ["key2", "value2"],
+              ["key4", "value42"]
+            ])
+          )
+        )
       )
-      assert.strictEqual(result, "value1")
+      const result1 = yield* $(configProvider.load(Config.string("key1")))
+      const result2 = yield* $(configProvider.load(Config.string("key2")))
+      const result31 = yield* $(configProvider.load(Config.optional(Config.string("key3"))))
+      const result32 = yield* $(Effect.either(configProvider.load(Config.string("key3"))))
+      const result4 = yield* $(configProvider.load(Config.string("key4")))
+
+      expect(result1).toBe("value1")
+      expect(result2).toBe("value2")
+      expect(result31).toEqual(Option.none())
+      expect(result32).toEqual(Either.left(ConfigError.Or(
+        ConfigError.MissingData(["key3"], "Expected key3 to exist in the provided map"),
+        ConfigError.MissingData(["key3"], "Expected key3 to exist in the provided map")
+      )))
+      expect(result4).toBe("value41")
+    }))
+
+  it.effect("orElse - with indexed sequences", () =>
+    Effect.gen(function*($) {
+      const configProvider = pipe(
+        ConfigProvider.fromMap(
+          new Map([
+            ["parent1.child.employees[0].age", "1"],
+            ["parent1.child.employees[0].id", "2"],
+            ["parent1.child.employees[1].age", "3"],
+            ["parent1.child.employees[1].id", "4"]
+          ])
+        ),
+        ConfigProvider.orElse(() =>
+          ConfigProvider.fromMap(
+            new Map([
+              ["parent1.child.employees[2].age", "5"],
+              ["parent1.child.employees[2].id", "6"],
+              ["parent2.child.employees[0].age", "11"],
+              ["parent2.child.employees[0].id", "21"],
+              ["parent2.child.employees[1].age", "31"],
+              ["parent2.child.employees[1].id", "41"]
+            ])
+          )
+        )
+      )
+
+      const product = Config.zip(Config.integer("age"), Config.integer("id"))
+      const arrayConfig = Config.arrayOf(product, "employees")
+      const config1 = pipe(arrayConfig, Config.nested("child"), Config.nested("parent1"))
+      const config2 = pipe(arrayConfig, Config.nested("child"), Config.nested("parent2"))
+
+      const result1 = yield* $(configProvider.load(config1))
+      const result2 = yield* $(configProvider.load(config2))
+
+      expect(result1).toEqual([[1, 2], [3, 4], [5, 6]])
+      expect(result2).toEqual([[11, 21], [31, 41]])
+    }))
+
+  it.effect("orElse - with indexed sequences and each provider unnested", () =>
+    Effect.gen(function*(_) {
+      const configProvider = pipe(
+        ConfigProvider.fromMap(
+          new Map([
+            ["employees[0].age", "1"],
+            ["employees[0].id", "2"],
+            ["employees[1].age", "3"],
+            ["employees[1].id", "4"]
+          ])
+        ),
+        ConfigProvider.unnested("parent1"),
+        ConfigProvider.unnested("child"),
+        ConfigProvider.orElse(() =>
+          pipe(
+            ConfigProvider.fromMap(
+              new Map([
+                ["employees[0].age", "11"],
+                ["employees[0].id", "21"],
+                ["employees[1].age", "31"],
+                ["employees[1].id", "41"]
+              ])
+            ),
+            ConfigProvider.unnested("parent2"),
+            ConfigProvider.unnested("child")
+          )
+        )
+      )
+
+      const product = Config.zip(Config.integer("age"), Config.integer("id"))
+      const arrayConfig = Config.arrayOf(product, "employees")
+      const config1 = pipe(arrayConfig, Config.nested("child"), Config.nested("parent1"))
+      const config2 = pipe(arrayConfig, Config.nested("child"), Config.nested("parent2"))
+      const config3 = pipe(arrayConfig, Config.nested("child"), Config.nested("parent3"))
+
+      const result1 = yield* _(configProvider.load(config1))
+      const result2 = yield* _(configProvider.load(config2))
+      const result3 = yield* _(Effect.either(configProvider.load(config3)))
+
+      expect(result1).toEqual([[1, 2], [3, 4]])
+      expect(result2).toEqual([[11, 21], [31, 41]])
+      expect(result3).toEqual(Either.left(ConfigError.And(
+        ConfigError.MissingData(
+          ["parent3", "child", "employees"],
+          "Expected parent1 to be in path in ConfigProvider#unnested"
+        ),
+        ConfigError.MissingData(
+          ["parent3", "child", "employees"],
+          "Expected parent2 to be in path in ConfigProvider#unnested"
+        )
+      )))
+    }))
+
+  it.effect("orElse - with index sequences and combined provider unnested", () =>
+    Effect.gen(function*(_) {
+      const configProvider = pipe(
+        ConfigProvider.fromMap(
+          new Map([
+            ["employees[0].age", "1"],
+            ["employees[0].id", "2"]
+          ])
+        ),
+        ConfigProvider.orElse(() =>
+          ConfigProvider.fromMap(
+            new Map([
+              ["employees[1].age", "3"],
+              ["employees[1].id", "4"]
+            ])
+          )
+        ),
+        ConfigProvider.unnested("parent1"),
+        ConfigProvider.unnested("child")
+      )
+
+      const product = Config.zip(Config.integer("age"), Config.integer("id"))
+      const arrayConfig = Config.arrayOf(product, "employees")
+      const config = pipe(arrayConfig, Config.nested("child"), Config.nested("parent1"))
+
+      const result = yield* _(configProvider.load(config))
+
+      expect(result).toEqual([[1, 2], [3, 4]])
     }))
 
   it.effect("secret", () =>
