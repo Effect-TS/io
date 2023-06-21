@@ -13,21 +13,35 @@ Added in v1.0.0
 <h2 class="text-delta">Table of contents</h2>
 
 - [constructors](#constructors)
+  - [make](#make)
   - [tracerWith](#tracerwith)
-- [utils](#utils)
+- [loggers](#loggers)
+  - [logger](#logger)
+- [models](#models)
   - [ExternalSpan (interface)](#externalspan-interface)
-  - [ParentSpan (type alias)](#parentspan-type-alias)
   - [Span (interface)](#span-interface)
   - [SpanStatus (type alias)](#spanstatus-type-alias)
+- [tags](#tags)
   - [Tracer](#tracer)
+- [utils](#utils)
+  - [ParentSpan (type alias)](#parentspan-type-alias)
   - [Tracer (interface)](#tracer-interface)
   - [TracerTypeId](#tracertypeid)
   - [TracerTypeId (type alias)](#tracertypeid-type-alias)
-  - [make](#make)
 
 ---
 
 # constructors
+
+## make
+
+**Signature**
+
+```ts
+export declare const make: (options: Omit<Tracer, TracerTypeId>) => Tracer
+```
+
+Added in v1.0.0
 
 ## tracerWith
 
@@ -39,7 +53,19 @@ export declare const tracerWith: <R, E, A>(f: (tracer: Tracer) => Effect.Effect<
 
 Added in v1.0.0
 
-# utils
+# loggers
+
+## logger
+
+**Signature**
+
+```ts
+export declare const logger: Logger.Logger<string, void>
+```
+
+Added in v1.0.0
+
+# models
 
 ## ExternalSpan (interface)
 
@@ -52,16 +78,6 @@ export interface ExternalSpan {
   readonly spanId: string
   readonly traceId: string
 }
-```
-
-Added in v1.0.0
-
-## ParentSpan (type alias)
-
-**Signature**
-
-```ts
-export type ParentSpan = Span | ExternalSpan
 ```
 
 Added in v1.0.0
@@ -81,6 +97,7 @@ export interface Span {
   readonly attributes: ReadonlyMap<string, string>
   readonly end: (endTime: number, exit: Exit.Exit<unknown, unknown>) => void
   readonly attribute: (key: string, value: string) => void
+  readonly event: (name: string, attributes?: Record<string, string>) => void
 }
 ```
 
@@ -106,12 +123,26 @@ export type SpanStatus =
 
 Added in v1.0.0
 
+# tags
+
 ## Tracer
 
 **Signature**
 
 ```ts
 export declare const Tracer: Context.Tag<Tracer, Tracer>
+```
+
+Added in v1.0.0
+
+# utils
+
+## ParentSpan (type alias)
+
+**Signature**
+
+```ts
+export type ParentSpan = Span | ExternalSpan
 ```
 
 Added in v1.0.0
@@ -145,16 +176,6 @@ Added in v1.0.0
 
 ```ts
 export type TracerTypeId = typeof TracerTypeId
-```
-
-Added in v1.0.0
-
-## make
-
-**Signature**
-
-```ts
-export declare const make: (options: Omit<Tracer, TracerTypeId>) => Tracer
 ```
 
 Added in v1.0.0

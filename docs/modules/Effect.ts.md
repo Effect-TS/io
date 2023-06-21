@@ -347,6 +347,7 @@ Added in v1.0.0
   - [EffectTypeId (type alias)](#effecttypeid-type-alias)
 - [tracing](#tracing)
   - [currentSpan](#currentspan)
+  - [logSpanEvent](#logspanevent)
   - [spanAttributes](#spanattributes)
   - [tracer](#tracer)
   - [tracerWith](#tracerwith)
@@ -5490,6 +5491,16 @@ Added in v1.0.0
 
 ```ts
 export declare const currentSpan: (_: void) => Effect<never, never, Option.Option<Tracer.Span>>
+```
+
+Added in v1.0.0
+
+## logSpanEvent
+
+**Signature**
+
+```ts
+export declare const logSpanEvent: (name: string, attributes?: Record<string, string>) => Effect<never, never, void>
 ```
 
 Added in v1.0.0

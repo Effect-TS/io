@@ -46,6 +46,7 @@ import * as _runtimeFlags from "@effect/io/internal_effect_untraced/runtimeFlags
 import { OpSupervision } from "@effect/io/internal_effect_untraced/runtimeFlags"
 import * as supervisor from "@effect/io/internal_effect_untraced/supervisor"
 import * as SupervisorPatch from "@effect/io/internal_effect_untraced/supervisor/patch"
+import * as tracer from "@effect/io/internal_effect_untraced/tracer"
 import type { Logger } from "@effect/io/Logger"
 import * as LogLevel from "@effect/io/Logger/Level"
 import type * as MetricLabel from "@effect/io/Metric/Label"
@@ -1373,7 +1374,7 @@ export const logFmtLogger: Logger<string, void> = internalLogger.makeLogger(
 /** @internal */
 export const currentLoggers: FiberRef.FiberRef<
   HashSet.HashSet<Logger<string, any>>
-> = core.fiberRefUnsafeMakeHashSet(HashSet.make(defaultLogger))
+> = core.fiberRefUnsafeMakeHashSet(HashSet.make(defaultLogger, tracer.logger))
 
 // circular with Effect
 

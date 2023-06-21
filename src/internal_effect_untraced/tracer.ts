@@ -3,38 +3,43 @@
  */
 import * as Context from "@effect/data/Context"
 import { globalValue } from "@effect/data/Global"
+import * as List from "@effect/data/List"
 import * as MutableRef from "@effect/data/MutableRef"
-import type * as Option from "@effect/data/Option"
+import * as Option from "@effect/data/Option"
+import * as Cause from "@effect/io/Cause"
 import type * as Exit from "@effect/io/Exit"
+import * as Pretty from "@effect/io/internal_effect_untraced/cause-pretty"
+import * as core from "@effect/io/internal_effect_untraced/core"
+import * as _fiberId from "@effect/io/internal_effect_untraced/fiberId"
+import * as fiberRefs from "@effect/io/internal_effect_untraced/fiberRefs"
+import * as _logger from "@effect/io/internal_effect_untraced/logger"
 import type * as Tracer from "@effect/io/Tracer"
 
 /** @internal */
 export const TracerTypeId: Tracer.TracerTypeId = Symbol.for("@effect/io/Tracer") as Tracer.TracerTypeId
 
-/**
- * @since 1.0.0
- */
+/** @internal */
 export const make = (options: Omit<Tracer.Tracer, Tracer.TracerTypeId>): Tracer.Tracer => ({
   [TracerTypeId]: TracerTypeId,
   ...options
 })
 
-/**
- * @since 1.0.0
- */
+/** @internal */
 export const tracerTag = Context.Tag<Tracer.Tracer>(
   Symbol.for("@effect/io/Tracer")
 )
 
 const ids = globalValue("@effect/io/Tracer/SpanId.ids", () => MutableRef.make(0))
 
-class NativeSpan implements Tracer.Span {
+/** @internal */
+export class NativeSpan implements Tracer.Span {
   readonly _tag = "Span"
   readonly spanId: string
   readonly traceId: string = "native"
 
   status: Tracer.SpanStatus
   attributes: Map<string, string>
+  events: Array<[name: string, attributes: Record<string, string>]> = []
 
   constructor(
     readonly name: string,
@@ -61,9 +66,42 @@ class NativeSpan implements Tracer.Span {
   attribute = (key: string, value: string): void => {
     this.attributes.set(key, value)
   }
+
+  event = (name: string, attributes?: Record<string, string>): void => {
+    this.events.push([name, attributes ?? {}])
+  }
 }
 
 /** @internal */
 export const nativeTracer: Tracer.Tracer = make({
   span: (name, parent, startTime) => new NativeSpan(name, parent, startTime)
+})
+
+/** @internal */
+export const logger = _logger.makeLogger<string, void>((
+  fiberId,
+  logLevel,
+  message,
+  cause,
+  context,
+  _spans,
+  annotations
+) => {
+  const span = Option.flatMap(fiberRefs.get(context, core.currentTracerSpan), List.head)
+  if (Option.isNone(span)) {
+    return
+  }
+
+  const attributes = Object.fromEntries(annotations)
+  attributes.fiberId = _fiberId.threadName(fiberId)
+  attributes.level = logLevel.label
+
+  if (cause !== null && cause !== Cause.empty) {
+    attributes.cause = Pretty.pretty(cause)
+  }
+
+  span.value.event(
+    message,
+    attributes
+  )
 })

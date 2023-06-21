@@ -1653,6 +1653,17 @@ export const logAnnotations = Debug.methodWithTrace((trace) =>
 )
 
 /* @internal */
+export const logSpanEvent = Debug.methodWithTrace((trace) =>
+  (name: string, attributes?: Record<string, string>): Effect.Effect<never, never, void> =>
+    core.flatMap(core.fiberRefGet(core.currentTracerSpan), (stack) =>
+      core.sync(() => {
+        if (List.isCons(stack)) {
+          stack.head.event(name, attributes)
+        }
+      })).traced(trace)
+)
+
+/* @internal */
 export const loop = Debug.methodWithTrace((trace, restore) =>
   <Z, R, E, A>(
     initial: Z,

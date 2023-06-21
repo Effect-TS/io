@@ -3,7 +3,9 @@ import { identity } from "@effect/data/Function"
 import * as Option from "@effect/data/Option"
 import * as Effect from "@effect/io/Effect"
 import * as Fiber from "@effect/io/Fiber"
+import * as FiberId from "@effect/io/Fiber/Id"
 import * as TestClock from "@effect/io/internal_effect_untraced/testing/testClock"
+import type { NativeSpan } from "@effect/io/internal_effect_untraced/tracer"
 import * as it from "@effect/io/test/utils/extend"
 import type * as Tracer from "@effect/io/Tracer"
 import { assert, describe } from "vitest"
@@ -88,6 +90,35 @@ describe("Tracer", () => {
         assert.deepEqual(span.name, "A")
         assert.deepEqual(span.parent, Option.none())
         assert.deepEqual(span.attributes.get("key"), "value")
+      }))
+
+    it.effect("logSpanEvent", () =>
+      Effect.gen(function*($) {
+        const span = yield* $(
+          Effect.logSpanEvent("event"),
+          Effect.zipRight(currentSpan),
+          Effect.withSpan("A")
+        )
+
+        assert.deepEqual(span.name, "A")
+        assert.deepEqual(span.parent, Option.none())
+        assert.deepEqual((span as NativeSpan).events, [["event", {}]])
+      }))
+
+    it.effect("logger", () =>
+      Effect.gen(function*($) {
+        const [span, fiberId] = yield* $(
+          Effect.log("event"),
+          Effect.zipRight(Effect.all(currentSpan, Effect.fiberId())),
+          Effect.withSpan("A")
+        )
+
+        assert.deepEqual(span.name, "A")
+        assert.deepEqual(span.parent, Option.none())
+        assert.deepEqual((span as NativeSpan).events, [["event", {
+          fiberId: FiberId.threadName(fiberId),
+          level: "INFO"
+        }]])
       }))
   })
 })

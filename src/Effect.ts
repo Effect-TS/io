@@ -6137,6 +6137,21 @@ export const currentSpan: (_: void) => Effect<never, never, Option.Option<Tracer
  * @since 1.0.0
  * @category tracing
  */
+export const logSpanEvent: (
+  name: string,
+  attributes?: Record<string, string>
+) => Effect<never, never, void> = effect.logSpanEvent
+
+/**
+ * @since 1.0.0
+ * @category tracing
+ */
+export const spanAttributes: () => Effect<never, never, HashMap.HashMap<string, string>> = effect.spanAttributes
+
+/**
+ * @since 1.0.0
+ * @category tracing
+ */
 export const useSpan: {
   <R, E, A>(name: string, evaluate: (span: Tracer.Span) => Effect<R, E, A>): Effect<R, E, A>
   <R, E, A>(
@@ -6173,12 +6188,6 @@ export const withSpan: {
     } | undefined
   ): Effect<R, E, A>
 } = effect.withSpan
-
-/**
- * @since 1.0.0
- * @category tracing
- */
-export const spanAttributes: () => Effect<never, never, HashMap.HashMap<string, string>> = effect.spanAttributes
 
 /**
  * @since 1.0.0
