@@ -90,8 +90,3 @@ export interface Span {
  */
 export const tracerWith: <R, E, A>(f: (tracer: Tracer) => Effect.Effect<R, E, A>) => Effect.Effect<R, E, A> =
   defaultServices.tracerWith
-
-/**
- * @since 1.0.0
- */
-export const currentSpan: () => Effect.Effect<never, never, Option.Option<Span>> = internal.currentSpan

@@ -6131,6 +6131,12 @@ export const tracerWith: <R, E, A>(f: (tracer: Tracer.Tracer) => Effect<R, E, A>
  * @since 1.0.0
  * @category tracing
  */
+export const currentSpan: (_: void) => Effect<never, never, Option.Option<Tracer.Span>> = effect.currentSpan
+
+/**
+ * @since 1.0.0
+ * @category tracing
+ */
 export const useSpan: {
   <R, E, A>(name: string, evaluate: (span: Tracer.Span) => Effect<R, E, A>): Effect<R, E, A>
   <R, E, A>(

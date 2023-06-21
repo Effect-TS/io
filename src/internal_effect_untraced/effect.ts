@@ -570,6 +570,14 @@ export const continueOrFailEffect = Debug.dualWithTrace<
       Option.getOrElse(restore(pf)(value), () => core.failSync(error))).traced(trace))
 
 /* @internal */
+export const currentSpan = Debug.methodWithTrace((
+  trace
+) =>
+  (_: void): Effect.Effect<never, never, Option.Option<Tracer.Span>> =>
+    core.map(core.fiberRefGet(core.currentTracerSpan), List.head).traced(trace)
+)
+
+/* @internal */
 export const delay = Debug.dualWithTrace<
   (duration: Duration.Duration) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
   <R, E, A>(self: Effect.Effect<R, E, A>, duration: Duration.Duration) => Effect.Effect<R, E, A>
