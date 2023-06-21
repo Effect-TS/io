@@ -60,6 +60,7 @@ export type SpanStatus = {
 
 /**
  * @since 1.0.0
+ * @category models
  */
 export type ParentSpan = Span | ExternalSpan
 
@@ -99,6 +100,8 @@ export const tracerWith: <R, E, A>(f: (tracer: Tracer) => Effect.Effect<R, E, A>
   defaultServices.tracerWith
 
 /**
+ * A Logger which adds log entries as events to the current span.
+ *
  * @since 1.0.0
  * @category loggers
  */

@@ -19,12 +19,12 @@ Added in v1.0.0
   - [logger](#logger)
 - [models](#models)
   - [ExternalSpan (interface)](#externalspan-interface)
+  - [ParentSpan (type alias)](#parentspan-type-alias)
   - [Span (interface)](#span-interface)
   - [SpanStatus (type alias)](#spanstatus-type-alias)
 - [tags](#tags)
   - [Tracer](#tracer)
 - [utils](#utils)
-  - [ParentSpan (type alias)](#parentspan-type-alias)
   - [Tracer (interface)](#tracer-interface)
   - [TracerTypeId](#tracertypeid)
   - [TracerTypeId (type alias)](#tracertypeid-type-alias)
@@ -57,6 +57,8 @@ Added in v1.0.0
 
 ## logger
 
+A Logger which adds log entries as events to the current span.
+
 **Signature**
 
 ```ts
@@ -78,6 +80,16 @@ export interface ExternalSpan {
   readonly spanId: string
   readonly traceId: string
 }
+```
+
+Added in v1.0.0
+
+## ParentSpan (type alias)
+
+**Signature**
+
+```ts
+export type ParentSpan = Span | ExternalSpan
 ```
 
 Added in v1.0.0
@@ -136,16 +148,6 @@ export declare const Tracer: Context.Tag<Tracer, Tracer>
 Added in v1.0.0
 
 # utils
-
-## ParentSpan (type alias)
-
-**Signature**
-
-```ts
-export type ParentSpan = Span | ExternalSpan
-```
-
-Added in v1.0.0
 
 ## Tracer (interface)
 

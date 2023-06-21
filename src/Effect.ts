@@ -957,7 +957,7 @@ export const catchTag: {
 export const catchTags: {
   <
     E extends { _tag: string },
-    Cases extends { [K in E["_tag"]]+?: ((error: Extract<E, { _tag: K }>) => Effect<any, any, any>) | undefined }
+    Cases extends { [K in E["_tag"]]+?: ((error: Extract<E, { _tag: K }>) => Effect<any, any, any>) }
   >(
     cases: Cases
   ): <R, A>(
@@ -6134,6 +6134,8 @@ export const tracerWith: <R, E, A>(f: (tracer: Tracer.Tracer) => Effect<R, E, A>
 export const currentSpan: (_: void) => Effect<never, never, Option.Option<Tracer.Span>> = effect.currentSpan
 
 /**
+ * Log a span event to the current span.
+ *
  * @since 1.0.0
  * @category tracing
  */
@@ -6149,6 +6151,12 @@ export const logSpanEvent: (
 export const spanAttributes: () => Effect<never, never, HashMap.HashMap<string, string>> = effect.spanAttributes
 
 /**
+ * Create a new span for tracing, and automatically close it when the effect
+ * completes.
+ *
+ * The span is not added to the current span stack, so no child spans will be
+ * created for it.
+ *
  * @since 1.0.0
  * @category tracing
  */
@@ -6166,6 +6174,8 @@ export const useSpan: {
 } = effect.useSpan
 
 /**
+ * Wraps the effect with a new span for tracing.
+ *
  * @since 1.0.0
  * @category tracing
  */
@@ -6176,7 +6186,7 @@ export const withSpan: {
       attributes?: Record<string, string>
       parent?: Tracer.ParentSpan
       root?: boolean
-    } | undefined
+    }
   ): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
   <R, E, A>(
     self: Effect<R, E, A>,
@@ -6185,15 +6195,17 @@ export const withSpan: {
       attributes?: Record<string, string>
       parent?: Tracer.ParentSpan
       root?: boolean
-    } | undefined
+    }
   ): Effect<R, E, A>
 } = effect.withSpan
 
 /**
+ * Adds an attribute to each span in this effect.
+ *
  * @since 1.0.0
  * @category tracing
  */
 export const withSpanAttibute: {
-  (key: string, value: string): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(effect: Effect<R, E, A>, key: string, value: string): Effect<R, E, A>
+  (key: string, value: string): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, key: string, value: string): Effect<R, E, A>
 } = effect.withSpanAttibute

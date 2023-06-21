@@ -3263,16 +3263,16 @@ export const withSpan = Debug.dualWithTrace<
 
 /* @internal */
 export const withSpanAttibute = Debug.dualWithTrace<
-  (key: string, value: string) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
-  <R, E, A>(effect: Effect.Effect<R, E, A>, key: string, value: string) => Effect.Effect<R, E, A>
+  (key: string, value: string) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(self: Effect.Effect<R, E, A>, key: string, value: string) => Effect.Effect<R, E, A>
 >(
   3,
   (trace) =>
-    (effect, key, value) =>
+    (self, key, value) =>
       core.flatMap(core.fiberRefGet(core.currentTracerSpanAttributes), (attributes) =>
         core.suspend(() =>
           pipe(
-            effect,
+            self,
             core.fiberRefLocally(core.currentTracerSpanAttributes, pipe(attributes, HashMap.set(key, value)))
           )
         )).traced(trace)
