@@ -6134,7 +6134,7 @@ export const tracerWith: <R, E, A>(f: (tracer: Tracer.Tracer) => Effect<R, E, A>
 export const currentSpan: (_: void) => Effect<never, never, Option.Option<Tracer.Span>> = effect.currentSpan
 
 /**
- * Log a span event to the current span.
+ * Log an event to the current tracing span.
  *
  * @since 1.0.0
  * @category tracing

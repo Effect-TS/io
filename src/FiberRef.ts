@@ -368,4 +368,10 @@ export const currentTracerSpan: FiberRef<List.List<Tracer.Span>> = core.currentT
  * @since 1.0.0
  * @category fiberRefs
  */
+export const currentTracerSpanAttributes: FiberRef<HashMap.HashMap<string, string>> = core.currentTracerSpanAttributes
+
+/**
+ * @since 1.0.0
+ * @category fiberRefs
+ */
 export const interruptedCause: FiberRef<Cause.Cause<never>> = core.currentInterruptedCause

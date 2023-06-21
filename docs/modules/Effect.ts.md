@@ -5497,7 +5497,7 @@ Added in v1.0.0
 
 ## logSpanEvent
 
-Log a span event to the current span.
+Log an event to the current tracing span.
 
 **Signature**
 
