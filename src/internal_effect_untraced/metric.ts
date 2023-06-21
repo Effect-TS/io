@@ -82,10 +82,12 @@ export const contramap = Debug.untracedDual<
     ))
 
 /** @internal */
-export const counter = (name: string): Metric.Metric.Counter<number> => fromMetricKey(metricKey.counter(name))
+export const counter = (name: string, description?: string): Metric.Metric.Counter<number> =>
+  fromMetricKey(metricKey.counter(name, description))
 
 /** @internal */
-export const frequency = (name: string): Metric.Metric.Frequency<string> => fromMetricKey(metricKey.frequency(name))
+export const frequency = (name: string, description?: string): Metric.Metric.Frequency<string> =>
+  fromMetricKey(metricKey.frequency(name, description))
 
 /** @internal */
 export const withConstantInput = Debug.untracedDual<
@@ -116,11 +118,12 @@ export const fromMetricKey = <Type extends MetricKeyType.MetricKeyType<any, any>
 }
 
 /** @internal */
-export const gauge = (name: string): Metric.Metric.Gauge<number> => fromMetricKey(metricKey.gauge(name))
+export const gauge = (name: string, description?: string): Metric.Metric.Gauge<number> =>
+  fromMetricKey(metricKey.gauge(name, description))
 
 /** @internal */
-export const histogram = (name: string, boundaries: MetricBoundaries.MetricBoundaries) =>
-  fromMetricKey(metricKey.histogram(name, boundaries))
+export const histogram = (name: string, boundaries: MetricBoundaries.MetricBoundaries, description?: string) =>
+  fromMetricKey(metricKey.histogram(name, boundaries, description))
 
 /* @internal */
 export const increment = Debug.methodWithTrace((trace) =>
@@ -183,8 +186,9 @@ export const summary = (
   maxAge: Duration.Duration,
   maxSize: number,
   error: number,
-  quantiles: Chunk.Chunk<number>
-): Metric.Metric.Summary<number> => withNow(summaryTimestamp(name, maxAge, maxSize, error, quantiles))
+  quantiles: Chunk.Chunk<number>,
+  description?: string
+): Metric.Metric.Summary<number> => withNow(summaryTimestamp(name, maxAge, maxSize, error, quantiles, description))
 
 /** @internal */
 export const summaryTimestamp = (
@@ -192,9 +196,10 @@ export const summaryTimestamp = (
   maxAge: Duration.Duration,
   maxSize: number,
   error: number,
-  quantiles: Chunk.Chunk<number>
+  quantiles: Chunk.Chunk<number>,
+  description?: string
 ): Metric.Metric.Summary<readonly [value: number, timestamp: number]> =>
-  fromMetricKey(metricKey.summary(name, maxAge, maxSize, error, quantiles))
+  fromMetricKey(metricKey.summary(name, maxAge, maxSize, error, quantiles, description))
 
 /** @internal */
 export const tagged = dual<

@@ -1,13 +1,17 @@
 import * as Chunk from "@effect/data/Chunk"
 import * as Duration from "@effect/data/Duration"
+import * as Equal from "@effect/data/Equal"
 import { pipe } from "@effect/data/Function"
 import * as HashMap from "@effect/data/HashMap"
 import * as HashSet from "@effect/data/HashSet"
+import * as Option from "@effect/data/Option"
+import * as ReadonlyArray from "@effect/data/ReadonlyArray"
 import * as Clock from "@effect/io/Clock"
 import * as Effect from "@effect/io/Effect"
 import * as Fiber from "@effect/io/Fiber"
 import * as Metric from "@effect/io/Metric"
 import * as MetricBoundaries from "@effect/io/Metric/Boundaries"
+import * as MetricKey from "@effect/io/Metric/Key"
 import * as MetricLabel from "@effect/io/Metric/Label"
 import * as PollingMetric from "@effect/io/Metric/Polling"
 import * as MetricState from "@effect/io/Metric/State"
@@ -537,4 +541,42 @@ describe.concurrent("Metric", () => {
         assert.strictEqual(result2.value, gaugeIncrement2 * pollingCount)
       }))
   })
+
+  it.effect("with a description", () =>
+    Effect.gen(function*(_) {
+      const name = "counterName"
+      const counter1 = Metric.counter(name)
+      const counter2 = Metric.counter(name, "description1")
+      const counter3 = Metric.counter(name, "description2")
+
+      yield* _(Metric.update(counter1, 1))
+      yield* _(Metric.update(counter2, 1))
+      yield* _(Metric.update(counter3, 1))
+
+      const result1 = yield* _(Metric.value(counter1))
+      const result2 = yield* _(Metric.value(counter2))
+      const result3 = yield* _(Metric.value(counter3))
+
+      const snapshot = yield* _(Metric.snapshot())
+      const values = Array.from(snapshot)
+      const pair1 = yield* _(
+        ReadonlyArray.findFirst(values, (key) => Equal.equals(key.metricKey, MetricKey.counter(name)))
+      )
+      const pair2 = yield* _(
+        ReadonlyArray.findFirst(values, (key) => Equal.equals(key.metricKey, MetricKey.counter(name, "description1")))
+      )
+      const pair3 = yield* _(
+        ReadonlyArray.findFirst(values, (key) => Equal.equals(key.metricKey, MetricKey.counter(name, "description2")))
+      )
+
+      expect(Equal.equals(result1, MetricState.counter(1))).toBe(true)
+      expect(Equal.equals(result2, MetricState.counter(1))).toBe(true)
+      expect(Equal.equals(result3, MetricState.counter(1))).toBe(true)
+      expect(Equal.equals(pair1.metricState, MetricState.counter(1))).toBe(true)
+      expect(Option.isNone(pair1.metricKey.description)).toBe(true)
+      expect(Equal.equals(pair2.metricState, MetricState.counter(1))).toBe(true)
+      expect(Equal.equals(pair2.metricKey, MetricKey.counter(name, "description1"))).toBe(true)
+      expect(Equal.equals(pair3.metricState, MetricState.counter(1))).toBe(true)
+      expect(Equal.equals(pair3.metricKey, MetricKey.counter(name, "description2"))).toBe(true)
+    }))
 })
