@@ -157,7 +157,7 @@ export const contramap: {
  * @since 1.0.0
  * @category constructors
  */
-export const counter: (name: string) => Metric.Counter<number> = internal.counter
+export const counter: (name: string, description?: string) => Metric.Counter<number> = internal.counter
 
 /**
  * A string histogram metric, which keeps track of the counts of different
@@ -166,7 +166,7 @@ export const counter: (name: string) => Metric.Counter<number> = internal.counte
  * @since 1.0.0
  * @category constructors
  */
-export const frequency: (name: string) => Metric.Frequency<string> = internal.frequency
+export const frequency: (name: string, description?: string) => Metric.Frequency<string> = internal.frequency
 
 /**
  * Returns a new metric that is powered by this one, but which accepts updates
@@ -196,7 +196,7 @@ export const fromMetricKey: <Type extends MetricKeyType.MetricKeyType<any, any>>
  * @since 1.0.0
  * @category constructors
  */
-export const gauge: (name: string) => Metric.Gauge<number> = internal.gauge
+export const gauge: (name: string, description?: string) => Metric.Gauge<number> = internal.gauge
 
 /**
  * A numeric histogram metric, which keeps track of the count of numbers that
@@ -207,7 +207,8 @@ export const gauge: (name: string) => Metric.Gauge<number> = internal.gauge
  */
 export const histogram: (
   name: string,
-  boundaries: MetricBoundaries.MetricBoundaries
+  boundaries: MetricBoundaries.MetricBoundaries,
+  description?: string
 ) => Metric<MetricKeyType.MetricKeyType.Histogram, number, MetricState.MetricState.Histogram> = internal.histogram
 
 /**
@@ -290,7 +291,8 @@ export const summary: (
   maxAge: Duration.Duration,
   maxSize: number,
   error: number,
-  quantiles: Chunk.Chunk<number>
+  quantiles: Chunk.Chunk<number>,
+  description?: string
 ) => Metric.Summary<number> = internal.summary
 
 /**
@@ -302,7 +304,8 @@ export const summaryTimestamp: (
   maxAge: Duration.Duration,
   maxSize: number,
   error: number,
-  quantiles: Chunk.Chunk<number>
+  quantiles: Chunk.Chunk<number>,
+  description?: string
 ) => Metric.Summary<readonly [value: number, timestamp: number]> = internal.summaryTimestamp
 
 /**
