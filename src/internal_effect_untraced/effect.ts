@@ -3043,10 +3043,14 @@ export const useSpan: {
     return core.acquireUseRelease(
       tracerWith((tracer) =>
         core.flatMap(
-          options?.parent ? core.succeed(Option.some(options.parent)) : core.map(
-            core.fiberRefGet(core.currentTracerSpan),
-            List.head
-          ),
+          options?.parent ?
+            core.succeed(Option.some(options.parent)) :
+            options?.root ?
+            core.succeed(Option.none()) :
+            core.map(
+              core.fiberRefGet(core.currentTracerSpan),
+              List.head
+            ),
           (parent) =>
             core.flatMap(
               core.fiberRefGet(core.currentTracerSpanAnnotations),

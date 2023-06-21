@@ -93,7 +93,7 @@ export const logger = _logger.makeLogger<string, void>((
   }
 
   const attributes = Object.fromEntries(annotations)
-  attributes["effect.fibreId"] = _fiberId.threadName(fiberId)
+  attributes["effect.fiberId"] = _fiberId.threadName(fiberId)
   attributes["effect.logLevel"] = logLevel.label
 
   if (cause !== null && cause !== Cause.empty) {

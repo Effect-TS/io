@@ -80,7 +80,7 @@ describe("Tracer", () => {
     it.effect("withSpanAttribute", () =>
       Effect.gen(function*($) {
         const span = yield* $(
-          Effect.withSpanAttibute(
+          Effect.annotateSpans(
             Effect.withSpan("A")(currentSpan),
             "key",
             "value"
@@ -90,19 +90,6 @@ describe("Tracer", () => {
         assert.deepEqual(span.name, "A")
         assert.deepEqual(span.parent, Option.none())
         assert.deepEqual(span.attributes.get("key"), "value")
-      }))
-
-    it.effect("logSpanEvent", () =>
-      Effect.gen(function*($) {
-        const span = yield* $(
-          Effect.logSpanEvent("event"),
-          Effect.zipRight(currentSpan),
-          Effect.withSpan("A")
-        )
-
-        assert.deepEqual(span.name, "A")
-        assert.deepEqual(span.parent, Option.none())
-        assert.deepEqual((span as NativeSpan).events, [["event", {}]])
       }))
 
     it.effect("logger", () =>
@@ -116,8 +103,8 @@ describe("Tracer", () => {
         assert.deepEqual(span.name, "A")
         assert.deepEqual(span.parent, Option.none())
         assert.deepEqual((span as NativeSpan).events, [["event", {
-          fiberId: FiberId.threadName(fiberId),
-          level: "INFO"
+          "effect.fiberId": FiberId.threadName(fiberId),
+          "effect.logLevel": "INFO"
         }]])
       }))
   })
