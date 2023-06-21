@@ -255,8 +255,8 @@ Added in v1.0.0
   - [makeSemaphore](#makesemaphore)
   - [unsafeMakeSemaphore](#unsafemakesemaphore)
 - [logging](#logging)
+  - [annotateLogs](#annotatelogs)
   - [log](#log)
-  - [logAnnotate](#logannotate)
   - [logAnnotations](#logannotations)
   - [logDebug](#logdebug)
   - [logDebugCause](#logdebugcause)
@@ -346,14 +346,13 @@ Added in v1.0.0
   - [EffectTypeId](#effecttypeid)
   - [EffectTypeId (type alias)](#effecttypeid-type-alias)
 - [tracing](#tracing)
+  - [annotateSpans](#annotatespans)
   - [currentSpan](#currentspan)
-  - [logSpanEvent](#logspanevent)
-  - [spanAttributes](#spanattributes)
+  - [spanAnnotations](#spanannotations)
   - [tracer](#tracer)
   - [tracerWith](#tracerwith)
   - [useSpan](#usespan)
   - [withSpan](#withspan)
-  - [withSpanAttibute](#withspanattibute)
 - [traversing](#traversing)
   - [forEachWithIndex](#foreachwithindex)
 - [type lambdas](#type-lambdas)
@@ -4053,6 +4052,21 @@ Added in v1.0.0
 
 # logging
 
+## annotateLogs
+
+Annotates each log in this effect with the specified log annotation.
+
+**Signature**
+
+```ts
+export declare const annotateLogs: {
+  (key: string, value: string): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(effect: Effect<R, E, A>, key: string, value: string): Effect<R, E, A>
+}
+```
+
+Added in v1.0.0
+
 ## log
 
 Logs the specified message at the current log level.
@@ -4061,21 +4075,6 @@ Logs the specified message at the current log level.
 
 ```ts
 export declare const log: (message: string) => Effect<never, never, void>
-```
-
-Added in v1.0.0
-
-## logAnnotate
-
-Annotates each log in this effect with the specified log annotation.
-
-**Signature**
-
-```ts
-export declare const logAnnotate: {
-  (key: string, value: string): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(effect: Effect<R, E, A>, key: string, value: string): Effect<R, E, A>
-}
 ```
 
 Added in v1.0.0
@@ -5485,6 +5484,21 @@ Added in v1.0.0
 
 # tracing
 
+## annotateSpans
+
+Adds an annotation to each span in this effect.
+
+**Signature**
+
+```ts
+export declare const annotateSpans: {
+  (key: string, value: string): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, key: string, value: string): Effect<R, E, A>
+}
+```
+
+Added in v1.0.0
+
 ## currentSpan
 
 **Signature**
@@ -5495,24 +5509,12 @@ export declare const currentSpan: (_: void) => Effect<never, never, Option.Optio
 
 Added in v1.0.0
 
-## logSpanEvent
-
-Log an event to the current tracing span.
+## spanAnnotations
 
 **Signature**
 
 ```ts
-export declare const logSpanEvent: (name: string, attributes?: Record<string, string>) => Effect<never, never, void>
-```
-
-Added in v1.0.0
-
-## spanAttributes
-
-**Signature**
-
-```ts
-export declare const spanAttributes: () => Effect<never, never, HashMap.HashMap<string, string>>
+export declare const spanAnnotations: () => Effect<never, never, HashMap.HashMap<string, string>>
 ```
 
 Added in v1.0.0
@@ -5580,21 +5582,6 @@ export declare const withSpan: {
     name: string,
     options?: { attributes?: Record<string, string>; parent?: Tracer.ParentSpan; root?: boolean }
   ): Effect<R, E, A>
-}
-```
-
-Added in v1.0.0
-
-## withSpanAttibute
-
-Adds an attribute to each span in this effect.
-
-**Signature**
-
-```ts
-export declare const withSpanAttibute: {
-  (key: string, value: string): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(self: Effect<R, E, A>, key: string, value: string): Effect<R, E, A>
 }
 ```
 

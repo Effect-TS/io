@@ -2751,10 +2751,10 @@ export const logSpan: {
  * @since 1.0.0
  * @category logging
  */
-export const logAnnotate: {
+export const annotateLogs: {
   (key: string, value: string): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
   <R, E, A>(effect: Effect<R, E, A>, key: string, value: string): Effect<R, E, A>
-} = effect.logAnnotate
+} = effect.annotateLogs
 
 /**
  * Retrieves the log annotations associated with the current scope.
@@ -6128,27 +6128,27 @@ export const tracer: () => Effect<never, never, Tracer.Tracer> = effect.tracer
 export const tracerWith: <R, E, A>(f: (tracer: Tracer.Tracer) => Effect<R, E, A>) => Effect<R, E, A> = effect.tracerWith
 
 /**
+ * Adds an annotation to each span in this effect.
+ *
+ * @since 1.0.0
+ * @category tracing
+ */
+export const annotateSpans: {
+  (key: string, value: string): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, key: string, value: string): Effect<R, E, A>
+} = effect.annotateSpans
+
+/**
  * @since 1.0.0
  * @category tracing
  */
 export const currentSpan: (_: void) => Effect<never, never, Option.Option<Tracer.Span>> = effect.currentSpan
 
 /**
- * Log an event to the current tracing span.
- *
  * @since 1.0.0
  * @category tracing
  */
-export const logSpanEvent: (
-  name: string,
-  attributes?: Record<string, string>
-) => Effect<never, never, void> = effect.logSpanEvent
-
-/**
- * @since 1.0.0
- * @category tracing
- */
-export const spanAttributes: () => Effect<never, never, HashMap.HashMap<string, string>> = effect.spanAttributes
+export const spanAnnotations: () => Effect<never, never, HashMap.HashMap<string, string>> = effect.spanAnnotations
 
 /**
  * Create a new span for tracing, and automatically close it when the effect
@@ -6198,14 +6198,3 @@ export const withSpan: {
     }
   ): Effect<R, E, A>
 } = effect.withSpan
-
-/**
- * Adds an attribute to each span in this effect.
- *
- * @since 1.0.0
- * @category tracing
- */
-export const withSpanAttibute: {
-  (key: string, value: string): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(self: Effect<R, E, A>, key: string, value: string): Effect<R, E, A>
-} = effect.withSpanAttibute

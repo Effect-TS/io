@@ -95,6 +95,40 @@ export const asLeftError = Debug.methodWithTrace((trace) =>
 )
 
 /* @internal */
+export const annotateLogs = Debug.dualWithTrace<
+  (key: string, value: string) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(effect: Effect.Effect<R, E, A>, key: string, value: string) => Effect.Effect<R, E, A>
+>(
+  3,
+  (trace) =>
+    (effect, key, value) =>
+      core.flatMap(core.fiberRefGet(core.currentLogAnnotations), (annotations) =>
+        core.suspend(() =>
+          pipe(
+            effect,
+            core.fiberRefLocally(core.currentLogAnnotations, pipe(annotations, HashMap.set(key, value)))
+          )
+        )).traced(trace)
+)
+
+/* @internal */
+export const annotateSpans = Debug.dualWithTrace<
+  (key: string, value: string) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(self: Effect.Effect<R, E, A>, key: string, value: string) => Effect.Effect<R, E, A>
+>(
+  3,
+  (trace) =>
+    (self, key, value) =>
+      core.flatMap(core.fiberRefGet(core.currentTracerSpanAnnotations), (annotations) =>
+        core.suspend(() =>
+          pipe(
+            self,
+            core.fiberRefLocally(core.currentTracerSpanAnnotations, pipe(annotations, HashMap.set(key, value)))
+          )
+        )).traced(trace)
+)
+
+/* @internal */
 export const asRight = Debug.methodWithTrace((trace) =>
   <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, Either.Either<never, A>> =>
     pipe(self, core.map(Either.right)).traced(trace)
@@ -1630,37 +1664,9 @@ export const logSpan = Debug.dualWithTrace<
 )
 
 /* @internal */
-export const logAnnotate = Debug.dualWithTrace<
-  (key: string, value: string) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
-  <R, E, A>(effect: Effect.Effect<R, E, A>, key: string, value: string) => Effect.Effect<R, E, A>
->(
-  3,
-  (trace) =>
-    (effect, key, value) =>
-      core.flatMap(core.fiberRefGet(core.currentLogAnnotations), (annotations) =>
-        core.suspend(() =>
-          pipe(
-            effect,
-            core.fiberRefLocally(core.currentLogAnnotations, pipe(annotations, HashMap.set(key, value)))
-          )
-        )).traced(trace)
-)
-
-/* @internal */
 export const logAnnotations = Debug.methodWithTrace((trace) =>
   (): Effect.Effect<never, never, HashMap.HashMap<string, string>> =>
     core.fiberRefGet(core.currentLogAnnotations).traced(trace)
-)
-
-/* @internal */
-export const logSpanEvent = Debug.methodWithTrace((trace) =>
-  (name: string, attributes?: Record<string, string>): Effect.Effect<never, never, void> =>
-    core.flatMap(core.fiberRefGet(core.currentTracerSpan), (stack) =>
-      core.sync(() => {
-        if (List.isCons(stack)) {
-          stack.head.event(name, attributes)
-        }
-      })).traced(trace)
 )
 
 /* @internal */
@@ -3037,21 +3043,20 @@ export const useSpan: {
     return core.acquireUseRelease(
       tracerWith((tracer) =>
         core.flatMap(
-          core.fiberRefGet(core.currentTracerSpan),
-          (stack) =>
+          options?.parent ? core.succeed(Option.some(options.parent)) : core.map(
+            core.fiberRefGet(core.currentTracerSpan),
+            List.head
+          ),
+          (parent) =>
             core.flatMap(
-              core.fiberRefGet(core.currentTracerSpanAttributes),
-              (attributes) =>
+              core.fiberRefGet(core.currentTracerSpanAnnotations),
+              (annotations) =>
                 core.flatMap(
                   Clock.clockWith((clock) => clock.currentTimeMillis()),
                   (startTime) =>
                     core.sync(() => {
-                      const parent = Option.orElse(
-                        Option.fromNullable(options?.parent),
-                        () => options?.root === true ? Option.none() : List.head(stack)
-                      )
                       const span = tracer.span(name, parent, startTime)
-                      HashMap.forEachWithIndex(attributes, (value, key) => span.attribute(key, value))
+                      HashMap.forEachWithIndex(annotations, (value, key) => span.attribute(key, value))
                       Object.entries(options?.attributes ?? {}).forEach(([k, v]) => {
                         span.attribute(k, v)
                       })
@@ -3262,26 +3267,9 @@ export const withSpan = Debug.dualWithTrace<
 )
 
 /* @internal */
-export const withSpanAttibute = Debug.dualWithTrace<
-  (key: string, value: string) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
-  <R, E, A>(self: Effect.Effect<R, E, A>, key: string, value: string) => Effect.Effect<R, E, A>
->(
-  3,
-  (trace) =>
-    (self, key, value) =>
-      core.flatMap(core.fiberRefGet(core.currentTracerSpanAttributes), (attributes) =>
-        core.suspend(() =>
-          pipe(
-            self,
-            core.fiberRefLocally(core.currentTracerSpanAttributes, pipe(attributes, HashMap.set(key, value)))
-          )
-        )).traced(trace)
-)
-
-/* @internal */
-export const spanAttributes = Debug.methodWithTrace((trace) =>
+export const spanAnnotations = Debug.methodWithTrace((trace) =>
   (): Effect.Effect<never, never, HashMap.HashMap<string, string>> =>
-    core.fiberRefGet(core.currentTracerSpanAttributes).traced(trace)
+    core.fiberRefGet(core.currentTracerSpanAnnotations).traced(trace)
 )
 
 /** @internal */
