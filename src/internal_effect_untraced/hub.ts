@@ -8,6 +8,8 @@ import type * as Effect from "@effect/io/Effect"
 import type * as Hub from "@effect/io/Hub"
 import * as cause from "@effect/io/internal_effect_untraced/cause"
 import * as core from "@effect/io/internal_effect_untraced/core"
+import * as effect from "@effect/io/internal_effect_untraced/effect"
+import * as executionStrategy from "@effect/io/internal_effect_untraced/executionStrategy"
 import * as fiberRuntime from "@effect/io/internal_effect_untraced/fiberRuntime"
 import * as queue from "@effect/io/internal_effect_untraced/queue"
 import type * as Queue from "@effect/io/Queue"
@@ -885,12 +887,15 @@ class SubscriptionImpl<A> implements Queue.Dequeue<A> {
     return Debug.bodyWithTrace((trace) =>
       core.uninterruptible(
         core.withFiberRuntime<never, never, void>((state) => {
-          pipe(this.shutdownFlag, MutableRef.set(true))
+          MutableRef.set(this.shutdownFlag, true)
           return pipe(
             unsafePollAllQueue(this.pollers),
             fiberRuntime.forEachPar((d) => core.deferredInterruptWith(d, state.id())),
-            core.zipRight(core.sync(() => this.subscription.unsubscribe())),
-            core.zipRight(core.sync(() => this.strategy.unsafeOnHubEmptySpace(this.hub, this.subscribers))),
+            core.zipRight(core.sync(() => {
+              this.subscribers.delete(this.subscription)
+              this.subscription.unsubscribe()
+              this.strategy.unsafeOnHubEmptySpace(this.hub, this.subscribers)
+            })),
             core.whenEffect(core.deferredSucceed(this.shutdownHook, void 0)),
             core.asUnit
           )
@@ -1125,12 +1130,18 @@ class HubImpl<A> implements Hub.Hub<A> {
 
   subscribe(): Effect.Effect<Scope.Scope, never, Queue.Dequeue<A>> {
     return Debug.bodyWithTrace((trace) =>
-      fiberRuntime.acquireRelease(
-        pipe(
-          makeSubscription(this.hub, this.subscribers, this.strategy),
-          core.tap((dequeue) => this.scope.addFinalizer(() => dequeue.shutdown()))
+      core.map(
+        fiberRuntime.acquireRelease(
+          core.tap(
+            effect.all(
+              this.scope.fork(executionStrategy.sequential),
+              makeSubscription(this.hub, this.subscribers, this.strategy)
+            ),
+            (tuple) => tuple[0].addFinalizer(() => tuple[1].shutdown())
+          ),
+          (tuple, exit) => tuple[0].close(exit)
         ),
-        (dequeue) => dequeue.shutdown()
+        (tuple) => tuple[1]
       ).traced(trace)
     )
   }
