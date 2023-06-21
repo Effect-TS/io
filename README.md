@@ -1,6 +1,7 @@
 WIP.
 
-Docs: https://effect-ts.github.io/io
+Effect Docs: https://www.effect.website<br>
+Module Docs: https://effect-ts.github.io/io
 
 # Contributing Guidelines
 
