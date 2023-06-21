@@ -1,5 +1,15 @@
 # @effect/io
 
+## 0.26.2
+
+### Patch Changes
+
+- [#457](https://github.com/Effect-TS/io/pull/457) [`39a17ec`](https://github.com/Effect-TS/io/commit/39a17ec43ac4e8d880572928bc3f4c12784c40f4) Thanks [@IMax153](https://github.com/IMax153)! - fix nesting for `ConfigProvider.orElse`
+
+- [#459](https://github.com/Effect-TS/io/pull/459) [`36f5f97`](https://github.com/Effect-TS/io/commit/36f5f97e1d5e7a89e0e2bc05bdd9ed4767f8d23f) Thanks [@IMax153](https://github.com/IMax153)! - remove subscriber from Hub after unsubscribing
+
+- [#458](https://github.com/Effect-TS/io/pull/458) [`96dfea7`](https://github.com/Effect-TS/io/commit/96dfea7a9bc365f0c438b1fb548370030eef0691) Thanks [@IMax153](https://github.com/IMax153)! - support a description field in MetricKey
+
 ## 0.26.1
 
 ### Patch Changes
