@@ -3026,22 +3026,28 @@ export const useSpan: {
     return core.acquireUseRelease(
       tracerWith((tracer) =>
         core.flatMap(
-          core.zip(
-            core.fiberRefGet(core.currentTracerSpan),
-            Clock.clockWith((clock) => clock.currentTimeMillis())
-          ),
-          ([stack, startTime]) =>
-            core.sync(() => {
-              const parent = Option.orElse(
-                Option.fromNullable(options?.parent),
-                () => options?.root === true ? Option.none() : List.head(stack)
-              )
-              const span = tracer.span(name, parent, startTime)
-              Object.entries(options?.attributes ?? {}).forEach(([k, v]) => {
-                span.attribute(k, v)
-              })
-              return span
-            })
+          core.fiberRefGet(core.currentTracerSpan),
+          (stack) =>
+            core.flatMap(
+              core.fiberRefGet(core.currentTracerSpanAttributes),
+              (attributes) =>
+                core.flatMap(
+                  Clock.clockWith((clock) => clock.currentTimeMillis()),
+                  (startTime) =>
+                    core.sync(() => {
+                      const parent = Option.orElse(
+                        Option.fromNullable(options?.parent),
+                        () => options?.root === true ? Option.none() : List.head(stack)
+                      )
+                      const span = tracer.span(name, parent, startTime)
+                      HashMap.forEachWithIndex(attributes, (value, key) => span.attribute(key, value))
+                      Object.entries(options?.attributes ?? {}).forEach(([k, v]) => {
+                        span.attribute(k, v)
+                      })
+                      return span
+                    })
+                )
+            )
         )
       ),
       evaluate,
@@ -3242,6 +3248,29 @@ export const withSpan = Debug.dualWithTrace<
               )
           )
       )
+)
+
+/* @internal */
+export const withSpanAttibute = Debug.dualWithTrace<
+  (key: string, value: string) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(effect: Effect.Effect<R, E, A>, key: string, value: string) => Effect.Effect<R, E, A>
+>(
+  3,
+  (trace) =>
+    (effect, key, value) =>
+      core.flatMap(core.fiberRefGet(core.currentTracerSpanAttributes), (attributes) =>
+        core.suspend(() =>
+          pipe(
+            effect,
+            core.fiberRefLocally(core.currentTracerSpanAttributes, pipe(attributes, HashMap.set(key, value)))
+          )
+        )).traced(trace)
+)
+
+/* @internal */
+export const spanAttributes = Debug.methodWithTrace((trace) =>
+  (): Effect.Effect<never, never, HashMap.HashMap<string, string>> =>
+    core.fiberRefGet(core.currentTracerSpanAttributes).traced(trace)
 )
 
 /** @internal */

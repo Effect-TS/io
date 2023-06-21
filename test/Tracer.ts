@@ -5,10 +5,10 @@ import * as Effect from "@effect/io/Effect"
 import * as Fiber from "@effect/io/Fiber"
 import * as TestClock from "@effect/io/internal_effect_untraced/testing/testClock"
 import * as it from "@effect/io/test/utils/extend"
-import * as Tracer from "@effect/io/Tracer"
+import type * as Tracer from "@effect/io/Tracer"
 import { assert, describe } from "vitest"
 
-const currentSpan = Effect.flatMap(Tracer.currentSpan(), identity)
+const currentSpan = Effect.flatMap(Effect.currentSpan(), identity)
 
 describe("Tracer", () => {
   describe("withSpan", () => {
@@ -73,6 +73,21 @@ describe("Tracer", () => {
         assert.deepEqual(span.status.startTime, 0)
         assert.deepEqual((span.status as any)["endTime"], 1000)
         assert.deepEqual(span.status._tag, "Ended")
+      }))
+
+    it.effect("withSpanAttribute", () =>
+      Effect.gen(function*($) {
+        const span = yield* $(
+          Effect.withSpanAttibute(
+            Effect.withSpan("A")(currentSpan),
+            "key",
+            "value"
+          )
+        )
+
+        assert.deepEqual(span.name, "A")
+        assert.deepEqual(span.parent, Option.none())
+        assert.deepEqual(span.attributes.get("key"), "value")
       }))
   })
 })

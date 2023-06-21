@@ -23,7 +23,6 @@ Added in v1.0.0
   - [Tracer (interface)](#tracer-interface)
   - [TracerTypeId](#tracertypeid)
   - [TracerTypeId (type alias)](#tracertypeid-type-alias)
-  - [currentSpan](#currentspan)
   - [make](#make)
 
 ---
@@ -146,16 +145,6 @@ Added in v1.0.0
 
 ```ts
 export type TracerTypeId = typeof TracerTypeId
-```
-
-Added in v1.0.0
-
-## currentSpan
-
-**Signature**
-
-```ts
-export declare const currentSpan: () => Effect.Effect<never, never, Option.Option<Span>>
 ```
 
 Added in v1.0.0

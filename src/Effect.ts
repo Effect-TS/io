@@ -6173,3 +6173,18 @@ export const withSpan: {
     } | undefined
   ): Effect<R, E, A>
 } = effect.withSpan
+
+/**
+ * @since 1.0.0
+ * @category tracing
+ */
+export const spanAttributes: () => Effect<never, never, HashMap.HashMap<string, string>> = effect.spanAttributes
+
+/**
+ * @since 1.0.0
+ * @category tracing
+ */
+export const withSpanAttibute: {
+  (key: string, value: string): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(effect: Effect<R, E, A>, key: string, value: string): Effect<R, E, A>
+} = effect.withSpanAttibute

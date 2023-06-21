@@ -346,10 +346,13 @@ Added in v1.0.0
   - [EffectTypeId](#effecttypeid)
   - [EffectTypeId (type alias)](#effecttypeid-type-alias)
 - [tracing](#tracing)
+  - [currentSpan](#currentspan)
+  - [spanAttributes](#spanattributes)
   - [tracer](#tracer)
   - [tracerWith](#tracerwith)
   - [useSpan](#usespan)
   - [withSpan](#withspan)
+  - [withSpanAttibute](#withspanattibute)
 - [traversing](#traversing)
   - [forEachWithIndex](#foreachwithindex)
 - [type lambdas](#type-lambdas)
@@ -5481,6 +5484,26 @@ Added in v1.0.0
 
 # tracing
 
+## currentSpan
+
+**Signature**
+
+```ts
+export declare const currentSpan: (_: void) => Effect<never, never, Option.Option<Tracer.Span>>
+```
+
+Added in v1.0.0
+
+## spanAttributes
+
+**Signature**
+
+```ts
+export declare const spanAttributes: () => Effect<never, never, HashMap.HashMap<string, string>>
+```
+
+Added in v1.0.0
+
 ## tracer
 
 **Signature**
@@ -5533,6 +5556,19 @@ export declare const withSpan: {
     name: string,
     options?: { attributes?: Record<string, string>; parent?: Tracer.ParentSpan; root?: boolean } | undefined
   ): Effect<R, E, A>
+}
+```
+
+Added in v1.0.0
+
+## withSpanAttibute
+
+**Signature**
+
+```ts
+export declare const withSpanAttibute: {
+  (key: string, value: string): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(effect: Effect<R, E, A>, key: string, value: string): Effect<R, E, A>
 }
 ```
 
