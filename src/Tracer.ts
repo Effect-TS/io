@@ -1,7 +1,7 @@
 /**
  * @since 1.0.0
  */
-import * as Context from "@effect/data/Context"
+import type * as Context from "@effect/data/Context"
 import type * as Option from "@effect/data/Option"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
@@ -26,23 +26,6 @@ export interface Tracer {
   readonly [TracerTypeId]: TracerTypeId
   readonly span: (name: string, parent: Option.Option<ParentSpan>, startTime: number) => Span
 }
-
-/**
- * @since 1.0.0
- * @category constructors
- */
-export const make = (options: Omit<Tracer, TracerTypeId>): Tracer => ({
-  [TracerTypeId]: TracerTypeId,
-  ...options
-})
-
-/**
- * @since 1.0.0
- * @category tags
- */
-export const Tracer = Context.Tag<Tracer>(
-  Symbol.for("@effect/io/Tracer")
-)
 
 /**
  * @since 1.0.0
@@ -91,6 +74,18 @@ export interface Span {
   readonly attribute: (key: string, value: string) => void
   readonly event: (name: string, attributes?: Record<string, string>) => void
 }
+
+/**
+ * @since 1.0.0
+ * @category tags
+ */
+export const Tracer: Context.Tag<Tracer, Tracer> = internal.tracerTag
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const make: (options: Omit<Tracer, typeof TracerTypeId>) => Tracer = internal.make
 
 /**
  * @since 1.0.0
