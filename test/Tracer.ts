@@ -77,7 +77,7 @@ describe("Tracer", () => {
         assert.deepEqual(span.status._tag, "Ended")
       }))
 
-    it.effect("withSpanAttribute", () =>
+    it.effect("annotateSpans", () =>
       Effect.gen(function*($) {
         const span = yield* $(
           Effect.annotateSpans(
