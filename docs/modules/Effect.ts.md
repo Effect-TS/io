@@ -348,11 +348,14 @@ Added in v1.0.0
 - [tracing](#tracing)
   - [annotateSpans](#annotatespans)
   - [currentSpan](#currentspan)
+  - [setTracer](#settracer)
   - [spanAnnotations](#spanannotations)
   - [tracer](#tracer)
   - [tracerWith](#tracerwith)
   - [useSpan](#usespan)
   - [withSpan](#withspan)
+  - [withTracer](#withtracer)
+  - [withTracerScoped](#withtracerscoped)
 - [traversing](#traversing)
   - [forEachWithIndex](#foreachwithindex)
 - [type lambdas](#type-lambdas)
@@ -5509,6 +5512,18 @@ export declare const currentSpan: (_: void) => Effect<never, never, Option.Optio
 
 Added in v1.0.0
 
+## setTracer
+
+Create a Layer that sets the current Tracer
+
+**Signature**
+
+```ts
+export declare const setTracer: (tracer: Tracer.Tracer) => Layer.Layer<never, never, never>
+```
+
+Added in v1.0.0
+
 ## spanAnnotations
 
 **Signature**
@@ -5583,6 +5598,29 @@ export declare const withSpan: {
     options?: { attributes?: Record<string, string>; parent?: Tracer.ParentSpan; root?: boolean }
   ): Effect<R, E, A>
 }
+```
+
+Added in v1.0.0
+
+## withTracer
+
+**Signature**
+
+```ts
+export declare const withTracer: {
+  (value: Tracer.Tracer): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(effect: Effect<R, E, A>, value: Tracer.Tracer): Effect<R, E, A>
+}
+```
+
+Added in v1.0.0
+
+## withTracerScoped
+
+**Signature**
+
+```ts
+export declare const withTracerScoped: (value: Tracer.Tracer) => Effect<Scope.Scope, never, void>
 ```
 
 Added in v1.0.0

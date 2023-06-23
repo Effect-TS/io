@@ -38,7 +38,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const make: (options: Omit<Tracer, TracerTypeId>) => Tracer
+export declare const make: (options: Omit<Tracer, typeof TracerTypeId>) => Tracer
 ```
 
 Added in v1.0.0

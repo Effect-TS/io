@@ -14,6 +14,7 @@ import type * as Logger from "@effect/io/Logger"
 import type * as LogLevel from "@effect/io/Logger/Level"
 import type { Scope } from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
+import type * as Tracer from "@effect/io/Tracer"
 
 // circular with Logger
 
@@ -221,5 +222,13 @@ export const setConfigProvider = Debug.untracedMethod(() =>
   (configProvider: ConfigProvider.ConfigProvider): Layer.Layer<never, never, never> =>
     layer.scopedDiscard(
       fiberRuntime.withConfigProviderScoped(configProvider)
+    )
+)
+
+/** @internal */
+export const setTracer = Debug.untracedMethod(() =>
+  (tracer: Tracer.Tracer): Layer.Layer<never, never, never> =>
+    layer.scopedDiscard(
+      fiberRuntime.withTracerScoped(tracer)
     )
 )

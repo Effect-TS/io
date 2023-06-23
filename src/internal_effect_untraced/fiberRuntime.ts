@@ -55,6 +55,7 @@ import type { Entry, Request } from "@effect/io/Request"
 import type * as RequestBlock from "@effect/io/RequestBlock"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
+import type { Tracer } from "@effect/io/Tracer"
 
 const fibersStarted = metric.counter("effect_fiber_started")
 const fiberSuccesses = metric.counter("effect_fiber_successes")
@@ -2400,6 +2401,12 @@ export const withClockScoped = Debug.methodWithTrace((trace) =>
 export const withConfigProviderScoped = Debug.methodWithTrace((trace) =>
   (value: ConfigProvider) =>
     fiberRefLocallyScopedWith(defaultServices.currentServices, Context.add(configProviderTag, value)).traced(trace)
+)
+
+/* @internal */
+export const withTracerScoped = Debug.methodWithTrace((trace) =>
+  (value: Tracer) =>
+    fiberRefLocallyScopedWith(defaultServices.currentServices, Context.add(tracer.tracerTag, value)).traced(trace)
 )
 
 /* @internal */
