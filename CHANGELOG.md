@@ -1,5 +1,25 @@
 # @effect/io
 
+## 0.27.0
+
+### Minor Changes
+
+- [#452](https://github.com/Effect-TS/io/pull/452) [`f4660b6`](https://github.com/Effect-TS/io/commit/f4660b6030f6427aa3cd8bc0bd380f5061c7ad76) Thanks [@tim-smart](https://github.com/tim-smart)! - move Tracer apis to /Effect
+
+- [#452](https://github.com/Effect-TS/io/pull/452) [`f4660b6`](https://github.com/Effect-TS/io/commit/f4660b6030f6427aa3cd8bc0bd380f5061c7ad76) Thanks [@tim-smart](https://github.com/tim-smart)! - add Tracer logger for adding logs as span events
+
+- [#452](https://github.com/Effect-TS/io/pull/452) [`f4660b6`](https://github.com/Effect-TS/io/commit/f4660b6030f6427aa3cd8bc0bd380f5061c7ad76) Thanks [@tim-smart](https://github.com/tim-smart)! - use fiber ref for Tracer spans
+
+- [#452](https://github.com/Effect-TS/io/pull/452) [`f4660b6`](https://github.com/Effect-TS/io/commit/f4660b6030f6427aa3cd8bc0bd380f5061c7ad76) Thanks [@tim-smart](https://github.com/tim-smart)! - rename logAnnotate to annotateLogs, add annotateSpans
+
+- [#452](https://github.com/Effect-TS/io/pull/452) [`f4660b6`](https://github.com/Effect-TS/io/commit/f4660b6030f6427aa3cd8bc0bd380f5061c7ad76) Thanks [@tim-smart](https://github.com/tim-smart)! - use List for immutable stacks
+
+### Patch Changes
+
+- [#452](https://github.com/Effect-TS/io/pull/452) [`f4660b6`](https://github.com/Effect-TS/io/commit/f4660b6030f6427aa3cd8bc0bd380f5061c7ad76) Thanks [@tim-smart](https://github.com/tim-smart)! - add Tracer to default services
+
+- [#452](https://github.com/Effect-TS/io/pull/452) [`f4660b6`](https://github.com/Effect-TS/io/commit/f4660b6030f6427aa3cd8bc0bd380f5061c7ad76) Thanks [@tim-smart](https://github.com/tim-smart)! - add Tracer span events
+
 ## 0.26.2
 
 ### Patch Changes
