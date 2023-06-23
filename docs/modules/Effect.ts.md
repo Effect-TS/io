@@ -348,6 +348,7 @@ Added in v1.0.0
 - [tracing](#tracing)
   - [annotateSpans](#annotatespans)
   - [currentSpan](#currentspan)
+  - [setTracer](#settracer)
   - [spanAnnotations](#spanannotations)
   - [tracer](#tracer)
   - [tracerWith](#tracerwith)
@@ -5507,6 +5508,18 @@ Added in v1.0.0
 
 ```ts
 export declare const currentSpan: (_: void) => Effect<never, never, Option.Option<Tracer.Span>>
+```
+
+Added in v1.0.0
+
+## setTracer
+
+Create a Layer that sets the current Tracer
+
+**Signature**
+
+```ts
+export declare const setTracer: (tracer: Tracer.Tracer) => Layer.Layer<never, never, never>
 ```
 
 Added in v1.0.0

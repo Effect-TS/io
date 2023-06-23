@@ -6116,6 +6116,14 @@ export const locallyScopedWith: {
 } = fiberRuntime.fiberRefLocallyScopedWith
 
 /**
+ * Create a Layer that sets the current Tracer
+ *
+ * @since 1.0.0
+ * @category tracing
+ */
+export const setTracer: (tracer: Tracer.Tracer) => Layer.Layer<never, never, never> = circularLayer.setTracer
+
+/**
  * @since 1.0.0
  * @category tracing
  */
