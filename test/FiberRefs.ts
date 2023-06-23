@@ -48,7 +48,7 @@ describe.concurrent("FiberRefs", () => {
 
   describe.concurrent("currentLogAnnotations", () => {
     it.it("doesnt leak", () => {
-      pipe(Effect.unit(), Effect.logAnnotate("test", "abc"), Effect.runSync)
+      pipe(Effect.unit(), Effect.annotateLogs("test", "abc"), Effect.runSync)
       expect(pipe(FiberRef.currentLogAnnotations, FiberRef.get, Effect.map(HashMap.size), Effect.runSync)).toBe(0)
     })
   })

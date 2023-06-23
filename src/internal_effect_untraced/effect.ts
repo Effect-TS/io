@@ -7,6 +7,7 @@ import type { LazyArg } from "@effect/data/Function"
 import { constFalse, constTrue, constVoid, identity, pipe } from "@effect/data/Function"
 import * as HashMap from "@effect/data/HashMap"
 import * as HashSet from "@effect/data/HashSet"
+import * as List from "@effect/data/List"
 import * as Option from "@effect/data/Option"
 import type { Predicate, Refinement } from "@effect/data/Predicate"
 import * as RA from "@effect/data/ReadonlyArray"
@@ -31,6 +32,7 @@ import type * as Metric from "@effect/io/Metric"
 import type * as MetricLabel from "@effect/io/Metric/Label"
 import * as Random from "@effect/io/Random"
 import * as Ref from "@effect/io/Ref"
+import * as Tracer from "@effect/io/Tracer"
 
 /* @internal */
 export const absolve = Debug.methodWithTrace((trace) =>
@@ -90,6 +92,40 @@ export const asLeft = Debug.methodWithTrace((trace) =>
 export const asLeftError = Debug.methodWithTrace((trace) =>
   <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, Either.Either<E, never>, A> =>
     pipe(self, core.mapError(Either.left)).traced(trace)
+)
+
+/* @internal */
+export const annotateLogs = Debug.dualWithTrace<
+  (key: string, value: string) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(effect: Effect.Effect<R, E, A>, key: string, value: string) => Effect.Effect<R, E, A>
+>(
+  3,
+  (trace) =>
+    (effect, key, value) =>
+      core.flatMap(core.fiberRefGet(core.currentLogAnnotations), (annotations) =>
+        core.suspend(() =>
+          pipe(
+            effect,
+            core.fiberRefLocally(core.currentLogAnnotations, pipe(annotations, HashMap.set(key, value)))
+          )
+        )).traced(trace)
+)
+
+/* @internal */
+export const annotateSpans = Debug.dualWithTrace<
+  (key: string, value: string) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(self: Effect.Effect<R, E, A>, key: string, value: string) => Effect.Effect<R, E, A>
+>(
+  3,
+  (trace) =>
+    (self, key, value) =>
+      core.flatMap(core.fiberRefGet(core.currentTracerSpanAnnotations), (annotations) =>
+        core.suspend(() =>
+          pipe(
+            self,
+            core.fiberRefLocally(core.currentTracerSpanAnnotations, pipe(annotations, HashMap.set(key, value)))
+          )
+        )).traced(trace)
 )
 
 /* @internal */
@@ -566,6 +602,14 @@ export const continueOrFailEffect = Debug.dualWithTrace<
   ) =>
     core.flatMap(self, (value): Effect.Effect<R2, E1 | E2, A2> =>
       Option.getOrElse(restore(pf)(value), () => core.failSync(error))).traced(trace))
+
+/* @internal */
+export const currentSpan = Debug.methodWithTrace((
+  trace
+) =>
+  (_: void): Effect.Effect<never, never, Option.Option<Tracer.Span>> =>
+    core.map(core.fiberRefGet(core.currentTracerSpan), List.head).traced(trace)
+)
 
 /* @internal */
 export const delay = Debug.dualWithTrace<
@@ -1610,31 +1654,13 @@ export const logSpan = Debug.dualWithTrace<
         core.fiberRefGet(core.currentLogSpan),
         (stack) =>
           core.flatMap(Clock.currentTimeMillis(), (now) =>
-            core.suspend(() => {
-              const logSpan = LogSpan.make(label, now)
-              return core.fiberRefLocally(
+            core.suspend(() =>
+              core.fiberRefLocally(
                 core.currentLogSpan,
-                pipe(stack, Chunk.prepend(logSpan)) as Chunk.Chunk<LogSpan.LogSpan>
+                List.prepend(stack, LogSpan.make(label, now))
               )(effect)
-            }))
+            ))
       ).traced(trace)
-)
-
-/* @internal */
-export const logAnnotate = Debug.dualWithTrace<
-  (key: string, value: string) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
-  <R, E, A>(effect: Effect.Effect<R, E, A>, key: string, value: string) => Effect.Effect<R, E, A>
->(
-  3,
-  (trace) =>
-    (effect, key, value) =>
-      core.flatMap(core.fiberRefGet(core.currentLogAnnotations), (annotations) =>
-        core.suspend(() =>
-          pipe(
-            effect,
-            core.fiberRefLocally(core.currentLogAnnotations, pipe(annotations, HashMap.set(key, value)))
-          )
-        )).traced(trace)
 )
 
 /* @internal */
@@ -2643,6 +2669,15 @@ export const timedWith = Debug.dualWithTrace<
     (self, milliseconds) => summarized(self, milliseconds, (start, end) => Duration.millis(end - start)).traced(trace)
 )
 
+/** @internal */
+export const tracer = Debug.methodWithTrace((trace) =>
+  (): Effect.Effect<never, never, Tracer.Tracer> => tracerWith(core.succeed).traced(trace)
+)
+
+/* @internal */
+export const tracerWith: <R, E, A>(f: (tracer: Tracer.Tracer) => Effect.Effect<R, E, A>) => Effect.Effect<R, E, A> =
+  Tracer.tracerWith
+
 /* @internal */
 export const attemptCatch = Debug.methodWithTrace((trace, restore) =>
   <E, A>(
@@ -2982,6 +3017,69 @@ export const updateService = Debug.dualWithTrace<
         Context.add(tag, restore(f)(Context.unsafeGet(context, tag)))
       )).traced(trace) as Effect.Effect<R | Context.Tag.Identifier<T>, E, A>)
 
+/** @internal */
+export const useSpan: {
+  <R, E, A>(name: string, evaluate: (span: Tracer.Span) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A>
+  <R, E, A>(name: string, options: {
+    attributes?: Record<string, string>
+    parent?: Tracer.ParentSpan
+    root?: boolean
+  }, evaluate: (span: Tracer.Span) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A>
+} = Debug.methodWithTrace(() =>
+  <R, E, A>(
+    name: string,
+    ...args: [evaluate: (span: Tracer.Span) => Effect.Effect<R, E, A>] | [
+      options: any,
+      evaluate: (span: Tracer.Span) => Effect.Effect<R, E, A>
+    ]
+  ) => {
+    const options: {
+      attributes?: Record<string, string>
+      parent?: Tracer.ParentSpan
+      root?: boolean
+    } | undefined = args.length === 1 ? undefined : args[0]
+    const evaluate: (span: Tracer.Span) => Effect.Effect<R, E, A> = args[args.length - 1]
+
+    return core.acquireUseRelease(
+      tracerWith((tracer) =>
+        core.flatMap(
+          options?.parent ?
+            core.succeed(Option.some(options.parent)) :
+            options?.root ?
+            core.succeed(Option.none()) :
+            core.map(
+              core.fiberRefGet(core.currentTracerSpan),
+              List.head
+            ),
+          (parent) =>
+            core.flatMap(
+              core.fiberRefGet(core.currentTracerSpanAnnotations),
+              (annotations) =>
+                core.flatMap(
+                  Clock.clockWith((clock) => clock.currentTimeMillis()),
+                  (startTime) =>
+                    core.sync(() => {
+                      const span = tracer.span(name, parent, startTime)
+                      HashMap.forEachWithIndex(annotations, (value, key) => span.attribute(key, value))
+                      Object.entries(options?.attributes ?? {}).forEach(([k, v]) => {
+                        span.attribute(k, v)
+                      })
+                      return span
+                    })
+                )
+            )
+        )
+      ),
+      evaluate,
+      (span, exit) =>
+        core.flatMap(
+          Clock.clockWith((clock) => clock.currentTimeMillis()),
+          (endTime) => core.sync(() => span.end(endTime, exit))
+        )
+    )
+  }
+)
+
 /* @internal */
 export const validate = Debug.dualWithTrace<
   <R2, E2, B>(
@@ -3139,6 +3237,44 @@ export const withMetric = Debug.dualWithTrace<
     metric: Metric.Metric<Type, In, Out>
   ) => Effect.Effect<R, E, A>
 >(2, (trace) => (self, metric) => metric(self).traced(trace))
+
+/** @internal */
+export const withSpan = Debug.dualWithTrace<
+  (name: string, options?: {
+    attributes?: Record<string, string>
+    parent?: Tracer.ParentSpan
+    root?: boolean
+  }) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(self: Effect.Effect<R, E, A>, name: string, options?: {
+    attributes?: Record<string, string>
+    parent?: Tracer.ParentSpan
+    root?: boolean
+  }) => Effect.Effect<R, E, A>
+>(
+  (args) => typeof args[0] !== "string",
+  () =>
+    (self, name, options) =>
+      useSpan(
+        name,
+        options ?? {},
+        (span) =>
+          core.flatMap(
+            core.fiberRefGet(core.currentTracerSpan),
+            (stack) =>
+              core.fiberRefLocally(
+                self,
+                core.currentTracerSpan,
+                List.prepend(stack, span)
+              )
+          )
+      )
+)
+
+/* @internal */
+export const spanAnnotations = Debug.methodWithTrace((trace) =>
+  (): Effect.Effect<never, never, HashMap.HashMap<string, string>> =>
+    core.fiberRefGet(core.currentTracerSpanAnnotations).traced(trace)
+)
 
 /** @internal */
 export const serviceFunctionEffect = <T extends Context.Tag<any, any>, Args extends Array<any>, R, E, A>(

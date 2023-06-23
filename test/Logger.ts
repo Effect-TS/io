@@ -1,12 +1,11 @@
+import * as HashMap from "@effect/data/HashMap"
+import * as List from "@effect/data/List"
 import * as Cause from "@effect/io/Cause"
 import * as FiberId from "@effect/io/Fiber/Id"
 import * as FiberRefs from "@effect/io/FiberRefs"
 import { logLevelInfo } from "@effect/io/internal_effect_untraced/core"
-import * as LogSpan from "@effect/io/Logger/Span"
-
-import * as Chunk from "@effect/data/Chunk"
-import * as HashMap from "@effect/data/HashMap"
 import * as Logger from "@effect/io/Logger"
+import * as LogSpan from "@effect/io/Logger/Span"
 
 import { vi } from "vitest"
 
@@ -21,7 +20,7 @@ describe("stringLogger", () => {
   test("keys with special chars", () => {
     const date = new Date()
     vi.setSystemTime(date)
-    const spans = Chunk.make(LogSpan.make("imma span=\"", date.getTime() - 7))
+    const spans = List.make(LogSpan.make("imma span=\"", date.getTime() - 7))
     const annotations = HashMap.make(
       ["just_a_key", "just_a_value"],
       ["I am bad key name", JSON.stringify({ coolValue: "cool value" })],
@@ -46,7 +45,7 @@ describe("stringLogger", () => {
   test("with linebreaks", () => {
     const date = new Date()
     vi.setSystemTime(date)
-    const spans = Chunk.make(LogSpan.make("imma\nspan=\"", date.getTime() - 7))
+    const spans = List.make(LogSpan.make("imma\nspan=\"", date.getTime() - 7))
     const annotations = HashMap.make(
       ["I am also\na bad key name", JSON.stringify({ return: "cool\nvalue" })],
       ["good_key", JSON.stringify({ returnWithSpace: "cool\nvalue or not" })],
@@ -83,7 +82,7 @@ describe("logfmtLogger", () => {
   test("keys with special chars", () => {
     const date = new Date()
     vi.setSystemTime(date)
-    const spans = Chunk.make(LogSpan.make("imma span=\"", date.getTime() - 7))
+    const spans = List.make(LogSpan.make("imma span=\"", date.getTime() - 7))
     const annotations = HashMap.make(
       ["just_a_key", "just_a_value"],
       ["I am bad key name", JSON.stringify({ coolValue: "cool value" })],
@@ -108,7 +107,7 @@ describe("logfmtLogger", () => {
   test("with linebreaks", () => {
     const date = new Date()
     vi.setSystemTime(date)
-    const spans = Chunk.make(LogSpan.make("imma\nspan=\"", date.getTime() - 7))
+    const spans = List.make(LogSpan.make("imma\nspan=\"", date.getTime() - 7))
     const annotations = HashMap.make(
       ["I am also\na bad key name", JSON.stringify({ return: "cool\nvalue" })],
       ["good_key", JSON.stringify({ returnWithSpace: "cool\nvalue or not" })],

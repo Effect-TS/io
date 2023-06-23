@@ -12,14 +12,17 @@ import * as clock from "@effect/io/internal_effect_untraced/clock"
 import * as configProvider from "@effect/io/internal_effect_untraced/configProvider"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as random from "@effect/io/internal_effect_untraced/random"
+import * as tracer from "@effect/io/internal_effect_untraced/tracer"
 import type * as Random from "@effect/io/Random"
+import type * as Tracer from "@effect/io/Tracer"
 
 /** @internal */
 export const liveServices: Context.Context<DefaultServices.DefaultServices> = pipe(
   Context.empty(),
   Context.add(clock.clockTag, clock.make()),
   Context.add(random.randomTag, random.make((Math.random() * 4294967296) >>> 0)),
-  Context.add(configProvider.configProviderTag, configProvider.fromEnv())
+  Context.add(configProvider.configProviderTag, configProvider.fromEnv()),
+  Context.add(tracer.tracerTag, tracer.nativeTracer)
 )
 
 /**
@@ -138,3 +141,23 @@ export const shuffle = Debug.methodWithTrace((trace) =>
   <A>(elements: Iterable<A>): Effect.Effect<never, never, Chunk.Chunk<A>> =>
     randomWith((random) => random.shuffle(elements)).traced(trace)
 )
+
+// circular with Tracer
+
+/** @internal */
+export const tracerWith = Debug.methodWithTrace((trace, restore) =>
+  <R, E, A>(f: (tracer: Tracer.Tracer) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
+    core.fiberRefGetWith(currentServices, (services) => restore(f)(pipe(services, Context.get(tracer.tracerTag))))
+      .traced(trace)
+)
+
+/** @internal */
+export const withTracer = Debug.dualWithTrace<
+  (value: Tracer.Tracer) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(effect: Effect.Effect<R, E, A>, value: Tracer.Tracer) => Effect.Effect<R, E, A>
+>(2, (trace) =>
+  (effect, value) =>
+    core.fiberRefLocallyWith(
+      currentServices,
+      Context.add(tracer.tracerTag, value)
+    )(effect).traced(trace))

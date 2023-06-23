@@ -255,8 +255,8 @@ Added in v1.0.0
   - [makeSemaphore](#makesemaphore)
   - [unsafeMakeSemaphore](#unsafemakesemaphore)
 - [logging](#logging)
+  - [annotateLogs](#annotatelogs)
   - [log](#log)
-  - [logAnnotate](#logannotate)
   - [logAnnotations](#logannotations)
   - [logDebug](#logdebug)
   - [logDebugCause](#logdebugcause)
@@ -345,6 +345,14 @@ Added in v1.0.0
 - [symbols](#symbols)
   - [EffectTypeId](#effecttypeid)
   - [EffectTypeId (type alias)](#effecttypeid-type-alias)
+- [tracing](#tracing)
+  - [annotateSpans](#annotatespans)
+  - [currentSpan](#currentspan)
+  - [spanAnnotations](#spanannotations)
+  - [tracer](#tracer)
+  - [tracerWith](#tracerwith)
+  - [useSpan](#usespan)
+  - [withSpan](#withspan)
 - [traversing](#traversing)
   - [forEachWithIndex](#foreachwithindex)
 - [type lambdas](#type-lambdas)
@@ -4044,6 +4052,21 @@ Added in v1.0.0
 
 # logging
 
+## annotateLogs
+
+Annotates each log in this effect with the specified log annotation.
+
+**Signature**
+
+```ts
+export declare const annotateLogs: {
+  (key: string, value: string): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(effect: Effect<R, E, A>, key: string, value: string): Effect<R, E, A>
+}
+```
+
+Added in v1.0.0
+
 ## log
 
 Logs the specified message at the current log level.
@@ -4052,21 +4075,6 @@ Logs the specified message at the current log level.
 
 ```ts
 export declare const log: (message: string) => Effect<never, never, void>
-```
-
-Added in v1.0.0
-
-## logAnnotate
-
-Annotates each log in this effect with the specified log annotation.
-
-**Signature**
-
-```ts
-export declare const logAnnotate: {
-  (key: string, value: string): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(effect: Effect<R, E, A>, key: string, value: string): Effect<R, E, A>
-}
 ```
 
 Added in v1.0.0
@@ -5470,6 +5478,111 @@ Added in v1.0.0
 
 ```ts
 export type EffectTypeId = typeof EffectTypeId
+```
+
+Added in v1.0.0
+
+# tracing
+
+## annotateSpans
+
+Adds an annotation to each span in this effect.
+
+**Signature**
+
+```ts
+export declare const annotateSpans: {
+  (key: string, value: string): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, key: string, value: string): Effect<R, E, A>
+}
+```
+
+Added in v1.0.0
+
+## currentSpan
+
+**Signature**
+
+```ts
+export declare const currentSpan: (_: void) => Effect<never, never, Option.Option<Tracer.Span>>
+```
+
+Added in v1.0.0
+
+## spanAnnotations
+
+**Signature**
+
+```ts
+export declare const spanAnnotations: () => Effect<never, never, HashMap.HashMap<string, string>>
+```
+
+Added in v1.0.0
+
+## tracer
+
+**Signature**
+
+```ts
+export declare const tracer: () => Effect<never, never, Tracer.Tracer>
+```
+
+Added in v1.0.0
+
+## tracerWith
+
+**Signature**
+
+```ts
+export declare const tracerWith: <R, E, A>(f: (tracer: Tracer.Tracer) => Effect<R, E, A>) => Effect<R, E, A>
+```
+
+Added in v1.0.0
+
+## useSpan
+
+Create a new span for tracing, and automatically close it when the effect
+completes.
+
+The span is not added to the current span stack, so no child spans will be
+created for it.
+
+**Signature**
+
+```ts
+export declare const useSpan: {
+  <R, E, A>(name: string, evaluate: (span: Tracer.Span) => Effect<R, E, A>): Effect<R, E, A>
+  <R, E, A>(
+    name: string,
+    options: { attributes?: Record<string, string>; parent?: Tracer.ParentSpan; root?: boolean },
+    evaluate: (span: Tracer.Span) => Effect<R, E, A>
+  ): Effect<R, E, A>
+}
+```
+
+Added in v1.0.0
+
+## withSpan
+
+Wraps the effect with a new span for tracing.
+
+**Signature**
+
+```ts
+export declare const withSpan: {
+  (name: string, options?: { attributes?: Record<string, string>; parent?: Tracer.ParentSpan; root?: boolean }): <
+    R,
+    E,
+    A
+  >(
+    self: Effect<R, E, A>
+  ) => Effect<R, E, A>
+  <R, E, A>(
+    self: Effect<R, E, A>,
+    name: string,
+    options?: { attributes?: Record<string, string>; parent?: Tracer.ParentSpan; root?: boolean }
+  ): Effect<R, E, A>
+}
 ```
 
 Added in v1.0.0

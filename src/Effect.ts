@@ -70,6 +70,7 @@ import type * as Schedule from "@effect/io/Schedule"
 import type { Scheduler } from "@effect/io/Scheduler"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
+import type * as Tracer from "@effect/io/Tracer"
 
 /**
  * @since 1.0.0
@@ -956,7 +957,7 @@ export const catchTag: {
 export const catchTags: {
   <
     E extends { _tag: string },
-    Cases extends { [K in E["_tag"]]+?: ((error: Extract<E, { _tag: K }>) => Effect<any, any, any>) | undefined }
+    Cases extends { [K in E["_tag"]]+?: ((error: Extract<E, { _tag: K }>) => Effect<any, any, any>) }
   >(
     cases: Cases
   ): <R, A>(
@@ -2750,10 +2751,10 @@ export const logSpan: {
  * @since 1.0.0
  * @category logging
  */
-export const logAnnotate: {
+export const annotateLogs: {
   (key: string, value: string): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
   <R, E, A>(effect: Effect<R, E, A>, key: string, value: string): Effect<R, E, A>
-} = effect.logAnnotate
+} = effect.annotateLogs
 
 /**
  * Retrieves the log annotations associated with the current scope.
@@ -6113,3 +6114,87 @@ export const locallyScopedWith: {
   <A>(f: (a: A) => A): (self: FiberRef.FiberRef<A>) => Effect<Scope.Scope, never, void>
   <A>(self: FiberRef.FiberRef<A>, f: (a: A) => A): Effect<Scope.Scope, never, void>
 } = fiberRuntime.fiberRefLocallyScopedWith
+
+/**
+ * @since 1.0.0
+ * @category tracing
+ */
+export const tracer: () => Effect<never, never, Tracer.Tracer> = effect.tracer
+
+/**
+ * @since 1.0.0
+ * @category tracing
+ */
+export const tracerWith: <R, E, A>(f: (tracer: Tracer.Tracer) => Effect<R, E, A>) => Effect<R, E, A> = effect.tracerWith
+
+/**
+ * Adds an annotation to each span in this effect.
+ *
+ * @since 1.0.0
+ * @category tracing
+ */
+export const annotateSpans: {
+  (key: string, value: string): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, key: string, value: string): Effect<R, E, A>
+} = effect.annotateSpans
+
+/**
+ * @since 1.0.0
+ * @category tracing
+ */
+export const currentSpan: (_: void) => Effect<never, never, Option.Option<Tracer.Span>> = effect.currentSpan
+
+/**
+ * @since 1.0.0
+ * @category tracing
+ */
+export const spanAnnotations: () => Effect<never, never, HashMap.HashMap<string, string>> = effect.spanAnnotations
+
+/**
+ * Create a new span for tracing, and automatically close it when the effect
+ * completes.
+ *
+ * The span is not added to the current span stack, so no child spans will be
+ * created for it.
+ *
+ * @since 1.0.0
+ * @category tracing
+ */
+export const useSpan: {
+  <R, E, A>(name: string, evaluate: (span: Tracer.Span) => Effect<R, E, A>): Effect<R, E, A>
+  <R, E, A>(
+    name: string,
+    options: {
+      attributes?: Record<string, string>
+      parent?: Tracer.ParentSpan
+      root?: boolean
+    },
+    evaluate: (span: Tracer.Span) => Effect<R, E, A>
+  ): Effect<R, E, A>
+} = effect.useSpan
+
+/**
+ * Wraps the effect with a new span for tracing.
+ *
+ * @since 1.0.0
+ * @category tracing
+ */
+export const withSpan: {
+  (
+    name: string,
+    options?: {
+      attributes?: Record<string, string>
+      parent?: Tracer.ParentSpan
+      root?: boolean
+    }
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(
+    self: Effect<R, E, A>,
+    name: string,
+    options?: {
+      attributes?: Record<string, string>
+      parent?: Tracer.ParentSpan
+      root?: boolean
+    }
+  ): Effect<R, E, A>
+} = effect.withSpan

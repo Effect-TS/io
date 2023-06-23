@@ -52,7 +52,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export type DefaultServices = Clock.Clock | Random.Random | ConfigProvider.ConfigProvider
+export type DefaultServices = Clock.Clock | Random.Random | ConfigProvider.ConfigProvider | Tracer.Tracer
 ```
 
 Added in v1.0.0

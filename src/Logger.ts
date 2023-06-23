@@ -1,9 +1,9 @@
 /**
  * @since 1.0.0
  */
-import type * as Chunk from "@effect/data/Chunk"
 import type { LazyArg } from "@effect/data/Function"
 import type * as HashMap from "@effect/data/HashMap"
+import type * as List from "@effect/data/List"
 import type * as Option from "@effect/data/Option"
 import type * as Cause from "@effect/io/Cause"
 import type { Effect } from "@effect/io/Effect"
@@ -41,7 +41,7 @@ export interface Logger<Message, Output> extends Logger.Variance<Message, Output
     message: Message,
     cause: Cause.Cause<unknown>,
     context: FiberRefs.FiberRefs,
-    spans: Chunk.Chunk<LogSpan.LogSpan>,
+    spans: List.List<LogSpan.LogSpan>,
     annotations: HashMap.HashMap<string, string>
   ) => Output
 }
@@ -73,7 +73,7 @@ export const make: <Message, Output>(
     message: Message,
     cause: Cause.Cause<unknown>,
     context: FiberRefs.FiberRefs,
-    spans: Chunk.Chunk<LogSpan.LogSpan>,
+    spans: List.List<LogSpan.LogSpan>,
     annotations: HashMap.HashMap<string, string>
   ) => Output
 ) => Logger<Message, Output> = internal.makeLogger

@@ -1,6 +1,6 @@
-import * as Chunk from "@effect/data/Chunk"
 import { dual } from "@effect/data/Function"
 import * as HashMap from "@effect/data/HashMap"
+import * as List from "@effect/data/List"
 import * as Cause from "@effect/io/Cause"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as _fiberId from "@effect/io/internal_effect_untraced/fiberId"
@@ -18,6 +18,6 @@ export const test = dual<
     input,
     Cause.empty,
     fiberRefs.unsafeMake(new Map()),
-    Chunk.empty(),
+    List.empty(),
     HashMap.empty()
   ))
