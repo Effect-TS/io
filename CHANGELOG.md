@@ -1,5 +1,13 @@
 # @effect/io
 
+## 0.27.1
+
+### Patch Changes
+
+- [#463](https://github.com/Effect-TS/io/pull/463) [`2708be4`](https://github.com/Effect-TS/io/commit/2708be4df0e317e2ef7cb41cd8857bb87e48a040) Thanks [@tim-smart](https://github.com/tim-smart)! - add Effect.withTracer
+
+- [#463](https://github.com/Effect-TS/io/pull/463) [`2708be4`](https://github.com/Effect-TS/io/commit/2708be4df0e317e2ef7cb41cd8857bb87e48a040) Thanks [@tim-smart](https://github.com/tim-smart)! - add Effect.setTracer Layer api
+
 ## 0.27.0
 
 ### Minor Changes
