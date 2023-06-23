@@ -310,7 +310,7 @@ A counter, which can be incremented by numbers.
 **Signature**
 
 ```ts
-export declare const counter: (name: string) => Metric.Counter<number>
+export declare const counter: (name: string, description?: string) => Metric.Counter<number>
 ```
 
 Added in v1.0.0
@@ -323,7 +323,7 @@ strings.
 **Signature**
 
 ```ts
-export declare const frequency: (name: string) => Metric.Frequency<string>
+export declare const frequency: (name: string, description?: string) => Metric.Frequency<string>
 ```
 
 Added in v1.0.0
@@ -347,7 +347,7 @@ A gauge, which can be set to a value.
 **Signature**
 
 ```ts
-export declare const gauge: (name: string) => Metric.Gauge<number>
+export declare const gauge: (name: string, description?: string) => Metric.Gauge<number>
 ```
 
 Added in v1.0.0
@@ -362,7 +362,8 @@ fall in bins with the specified boundaries.
 ```ts
 export declare const histogram: (
   name: string,
-  boundaries: MetricBoundaries.MetricBoundaries
+  boundaries: MetricBoundaries.MetricBoundaries,
+  description?: string
 ) => Metric<MetricKeyType.MetricKeyType.Histogram, number, MetricState.MetricState.Histogram>
 ```
 
@@ -400,7 +401,8 @@ export declare const summary: (
   maxAge: Duration.Duration,
   maxSize: number,
   error: number,
-  quantiles: Chunk.Chunk<number>
+  quantiles: Chunk.Chunk<number>,
+  description?: string
 ) => Metric.Summary<number>
 ```
 
@@ -416,7 +418,8 @@ export declare const summaryTimestamp: (
   maxAge: Duration.Duration,
   maxSize: number,
   error: number,
-  quantiles: Chunk.Chunk<number>
+  quantiles: Chunk.Chunk<number>,
+  description?: string
 ) => Metric.Summary<readonly [value: number, timestamp: number]>
 ```
 

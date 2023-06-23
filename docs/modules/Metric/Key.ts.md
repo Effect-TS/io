@@ -40,7 +40,7 @@ Creates a metric key for a counter, with the specified name.
 **Signature**
 
 ```ts
-export declare const counter: (name: string) => MetricKey.Counter
+export declare const counter: (name: string, description?: string) => MetricKey.Counter
 ```
 
 Added in v1.0.0
@@ -53,7 +53,7 @@ name.
 **Signature**
 
 ```ts
-export declare const frequency: (name: string) => MetricKey.Frequency
+export declare const frequency: (name: string, description?: string) => MetricKey.Frequency
 ```
 
 Added in v1.0.0
@@ -65,7 +65,7 @@ Creates a metric key for a gauge, with the specified name.
 **Signature**
 
 ```ts
-export declare const gauge: (name: string) => MetricKey.Gauge
+export declare const gauge: (name: string, description?: string) => MetricKey.Gauge
 ```
 
 Added in v1.0.0
@@ -77,7 +77,11 @@ Creates a metric key for a histogram, with the specified name and boundaries.
 **Signature**
 
 ```ts
-export declare const histogram: (name: string, boundaries: MetricBoundaries.MetricBoundaries) => MetricKey.Histogram
+export declare const histogram: (
+  name: string,
+  boundaries: MetricBoundaries.MetricBoundaries,
+  description?: string
+) => MetricKey.Histogram
 ```
 
 Added in v1.0.0
@@ -95,7 +99,8 @@ export declare const summary: (
   maxAge: Duration.Duration,
   maxSize: number,
   error: number,
-  quantiles: Chunk.Chunk<number>
+  quantiles: Chunk.Chunk<number>,
+  description?: string
 ) => MetricKey.Summary
 ```
 
@@ -168,9 +173,9 @@ Added in v1.0.0
 
 A `MetricKey` is a unique key associated with each metric. The key is based
 on a combination of the metric type, the name and tags associated with the
-metric, and any other information to describe a metric, such as the
-boundaries of a histogram. In this way, it is impossible to ever create
-different metrics with conflicting keys.
+metric, an optional description of the key, and any other information to
+describe a metric, such as the boundaries of a histogram. In this way, it is
+impossible to ever create different metrics with conflicting keys.
 
 **Signature**
 
@@ -180,6 +185,7 @@ export interface MetricKey<Type extends MetricKeyType.MetricKeyType<any, any>>
     Equal.Equal {
   readonly name: string
   readonly keyType: Type
+  readonly description: Option.Option<string>
   readonly tags: HashSet.HashSet<MetricLabel.MetricLabel>
 }
 ```

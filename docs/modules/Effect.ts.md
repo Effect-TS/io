@@ -353,6 +353,8 @@ Added in v1.0.0
   - [tracerWith](#tracerwith)
   - [useSpan](#usespan)
   - [withSpan](#withspan)
+  - [withTracer](#withtracer)
+  - [withTracerScoped](#withtracerscoped)
 - [traversing](#traversing)
   - [forEachWithIndex](#foreachwithindex)
 - [type lambdas](#type-lambdas)
@@ -5583,6 +5585,29 @@ export declare const withSpan: {
     options?: { attributes?: Record<string, string>; parent?: Tracer.ParentSpan; root?: boolean }
   ): Effect<R, E, A>
 }
+```
+
+Added in v1.0.0
+
+## withTracer
+
+**Signature**
+
+```ts
+export declare const withTracer: {
+  (value: Tracer.Tracer): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(effect: Effect<R, E, A>, value: Tracer.Tracer): Effect<R, E, A>
+}
+```
+
+Added in v1.0.0
+
+## withTracerScoped
+
+**Signature**
+
+```ts
+export declare const withTracerScoped: (value: Tracer.Tracer) => Effect<Scope.Scope, never, void>
 ```
 
 Added in v1.0.0

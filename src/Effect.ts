@@ -6125,7 +6125,24 @@ export const tracer: () => Effect<never, never, Tracer.Tracer> = effect.tracer
  * @since 1.0.0
  * @category tracing
  */
-export const tracerWith: <R, E, A>(f: (tracer: Tracer.Tracer) => Effect<R, E, A>) => Effect<R, E, A> = effect.tracerWith
+export const tracerWith: <R, E, A>(f: (tracer: Tracer.Tracer) => Effect<R, E, A>) => Effect<R, E, A> =
+  defaultServices.tracerWith
+
+/**
+ * @since 1.0.0
+ * @category tracing
+ */
+export const withTracer: {
+  (value: Tracer.Tracer): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(effect: Effect<R, E, A>, value: Tracer.Tracer): Effect<R, E, A>
+} = defaultServices.withTracer
+
+/**
+ * @since 1.0.0
+ * @category tracing
+ */
+export const withTracerScoped: (value: Tracer.Tracer) => Effect<Scope.Scope, never, void> =
+  fiberRuntime.withTracerScoped
 
 /**
  * Adds an annotation to each span in this effect.
