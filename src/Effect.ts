@@ -2943,26 +2943,6 @@ export const never: (_: void) => Effect<never, never, never> = core.never
 export const none: <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R, Option.Option<E>, void> = effect.none
 
 /**
- * Lifts an `Option` into a `Effect`. If the option is empty it succeeds with
- * `void`. If the option is defined it fails with the content.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const noneOrFail: <E>(option: Option.Option<E>) => Effect<never, E, void> = effect.noneOrFail
-
-/**
- * Lifts an `Option` into a `Effect`. If the option is empty it succeeds with
- * `undefined`. If the option is defined it fails with an error computed by
- * the specified function.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const noneOrFailWith: <E, A>(option: Option.Option<A>, f: (a: A) => E) => Effect<never, E, void> =
-  effect.noneOrFailWith
-
-/**
  * @since 1.0.0
  * @category utils
  */

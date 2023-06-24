@@ -1,5 +1,5 @@
 import * as Either from "@effect/data/Either"
-import { identity, pipe } from "@effect/data/Function"
+import { pipe } from "@effect/data/Function"
 import * as Option from "@effect/data/Option"
 import * as Cause from "@effect/io/Cause"
 import * as Effect from "@effect/io/Effect"
@@ -114,28 +114,6 @@ describe.concurrent("Effect", () => {
       const error = Cause.RuntimeException("failed task")
       const result = yield* $(Effect.exit(Effect.none(Effect.fail(error))))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(Option.some(error)))
-    }))
-  it.effect("noneOrFail - on None succeeds with Unit", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(Effect.noneOrFail(Option.none()))
-      assert.isUndefined(result)
-    }))
-  it.effect("noneOrFail - on Some fails", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(Effect.noneOrFail(Option.some("some")), Effect.catchAll(Effect.succeed))
-      assert.strictEqual(result, "some")
-    }))
-  it.effect("noneOrFailWith - on None succeeds with Unit", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(Effect.noneOrFailWith(Option.none(), identity))
-      assert.isUndefined(result)
-    }))
-  it.effect("noneOrFailWith - on Some fails", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(
-        pipe(Effect.noneOrFailWith(Option.some("some"), (s) => s + s), Effect.catchAll(Effect.succeed))
-      )
-      assert.strictEqual(result, "somesome")
     }))
   it.effect("option - return success in Some", () =>
     Effect.gen(function*($) {

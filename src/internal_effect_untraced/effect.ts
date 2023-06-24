@@ -1507,19 +1507,6 @@ export const none = Debug.methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const noneOrFail = Debug.methodWithTrace((trace) =>
-  <E>(option: Option.Option<E>): Effect.Effect<never, E, void> => core.flip(getOrFailDiscard(option)).traced(trace)
-)
-
-/* @internal */
-export const noneOrFailWith = Debug.methodWithTrace((trace, restore) =>
-  <E, A>(
-    option: Option.Option<A>,
-    f: (a: A) => E
-  ): Effect.Effect<never, E, void> => pipe(core.flip(getOrFailDiscard(option)), core.mapError(restore(f))).traced(trace)
-)
-
-/* @internal */
 export const once = Debug.methodWithTrace((trace) =>
   <R, E, A>(
     self: Effect.Effect<R, E, A>
