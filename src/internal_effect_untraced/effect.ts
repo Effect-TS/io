@@ -1897,80 +1897,7 @@ export const some = Debug.methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const someOrElse = Debug.dualWithTrace<
-  <B>(orElse: LazyArg<B>) => <R, E, A>(self: Effect.Effect<R, E, Option.Option<A>>) => Effect.Effect<R, E, A | B>,
-  <R, E, A, B>(self: Effect.Effect<R, E, Option.Option<A>>, orElse: LazyArg<B>) => Effect.Effect<R, E, A | B>
->(2, (trace, restore) =>
-  (self, orElse) =>
-    core.map(self, (option) => {
-      switch (option._tag) {
-        case "None": {
-          return restore(orElse)()
-        }
-        case "Some": {
-          return option.value
-        }
-      }
-    }).traced(trace))
-
-/* @internal */
-export const someOrElseEffect = Debug.dualWithTrace<
-  <R2, E2, A2>(
-    orElse: LazyArg<Effect.Effect<R2, E2, A2>>
-  ) => <R, E, A>(self: Effect.Effect<R, E, Option.Option<A>>) => Effect.Effect<R | R2, E | E2, A | A2>,
-  <R, E, A, R2, E2, A2>(
-    self: Effect.Effect<R, E, Option.Option<A>>,
-    orElse: LazyArg<Effect.Effect<R2, E2, A2>>
-  ) => Effect.Effect<R | R2, E | E2, A | A2>
->(
-  2,
-  (trace, restore) =>
-    <R, E, A, R2, E2, A2>(self: Effect.Effect<R, E, Option.Option<A>>, orElse: LazyArg<Effect.Effect<R2, E2, A2>>) =>
-      core.flatMap(
-        self as Effect.Effect<R, E, Option.Option<A | A2>>,
-        (option) => pipe(option, Option.map(core.succeed), Option.getOrElse(() => restore(orElse)()))
-      ).traced(trace)
-)
-
-/* @internal */
-export const someOrFail = Debug.dualWithTrace<
-  <E2>(orFail: LazyArg<E2>) => <R, E, A>(self: Effect.Effect<R, E, Option.Option<A>>) => Effect.Effect<R, E | E2, A>,
-  <R, E, A, E2>(self: Effect.Effect<R, E, Option.Option<A>>, orFail: LazyArg<E2>) => Effect.Effect<R, E | E2, A>
->(2, (trace, restore) =>
-  (self, orFail) =>
-    core.flatMap(self, (option) => {
-      switch (option._tag) {
-        case "None": {
-          return core.flatMap(core.sync(restore(orFail)), core.fail)
-        }
-        case "Some": {
-          return core.succeed(option.value)
-        }
-      }
-    }).traced(trace))
-
-/* @internal */
-export const someOrFailException = Debug.methodWithTrace((trace) =>
-  <R, E, A>(
-    self: Effect.Effect<R, E, Option.Option<A>>
-  ): Effect.Effect<R, E | Cause.NoSuchElementException, A> =>
-    someOrFail(self, () => internalCause.NoSuchElementException()).traced(trace)
-)
-
-/* @internal */
-export const succeedLeft = Debug.methodWithTrace((trace) =>
-  <A>(value: A): Effect.Effect<never, never, Either.Either<A, never>> => core.succeed(Either.left(value)).traced(trace)
-)
-
-/* @internal */
-export const succeedNone = Debug.methodWithTrace((trace) =>
-  (): Effect.Effect<never, never, Option.Option<never>> => core.succeed(Option.none()).traced(trace)
-)
-
-/* @internal */
-export const succeedRight = Debug.methodWithTrace((trace) =>
-  <A>(value: A): Effect.Effect<never, never, Either.Either<never, A>> => core.succeed(Either.right(value)).traced(trace)
-)
+export const succeedNone = core.succeed(Option.none())
 
 /* @internal */
 export const succeedSome = Debug.methodWithTrace((trace) =>
@@ -2403,7 +2330,7 @@ export const unless = Debug.dualWithTrace<
   (self, predicate) =>
     core.suspend(() =>
       restore(predicate)() ?
-        succeedNone() :
+        succeedNone :
         asSome(self)
     ).traced(trace))
 
@@ -2416,7 +2343,7 @@ export const unlessEffect = Debug.dualWithTrace<
     self: Effect.Effect<R, E, A>,
     predicate: Effect.Effect<R2, E2, boolean>
   ) => Effect.Effect<R | R2, E | E2, Option.Option<A>>
->(2, (trace) => (self, predicate) => core.flatMap(predicate, (b) => (b ? succeedNone() : asSome(self))).traced(trace))
+>(2, (trace) => (self, predicate) => core.flatMap(predicate, (b) => (b ? succeedNone : asSome(self))).traced(trace))
 
 /* @internal */
 export const unrefine = Debug.dualWithTrace<
@@ -2655,7 +2582,7 @@ export const whenCase = Debug.methodWithTrace((trace, restore) =>
       pipe(
         restore(pf)(a),
         Option.map(asSome),
-        Option.getOrElse(() => succeedNone())
+        Option.getOrElse(() => succeedNone)
       )).traced(trace)
 )
 

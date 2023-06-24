@@ -214,7 +214,7 @@ class ScopedCacheImpl<Key, Environment, Error, Value> implements ScopedCache.Sco
       core.suspend(() =>
         Option.match(
           MutableHashMap.get(this.cacheState.map, key),
-          () => effect.succeedNone(),
+          () => effect.succeedNone,
           (value) => core.flatten(this.resolveMapValue(value))
         )
       ).traced(trace)
@@ -226,7 +226,7 @@ class ScopedCacheImpl<Key, Environment, Error, Value> implements ScopedCache.Sco
       core.suspend(() =>
         Option.match(
           MutableHashMap.get(this.cacheState.map, key),
-          () => effect.succeedNone(),
+          () => effect.succeedNone,
           (value) =>
             core.flatten(this.resolveMapValue(value, true)) as Effect.Effect<Scope.Scope, never, Option.Option<Value>>
         )
@@ -287,18 +287,21 @@ class ScopedCacheImpl<Key, Environment, Error, Value> implements ScopedCache.Sco
 
             return core.map(
               this.resolveMapValue(value),
-              effect.someOrElseEffect(() => {
-                const val = value as Complete<Key, Error, Value>
-                const current = Option.getOrUndefined(MutableHashMap.get(this.cacheState.map, key))
-                if (Equal.equals(current, value)) {
-                  MutableHashMap.remove(this.cacheState.map, key)
-                }
-                return pipe(
-                  this.ensureMapSizeNotExceeded(val.key),
-                  core.zipRight(releaseOwner(val)),
-                  core.zipRight(this.get(key))
-                )
-              })
+              core.flatMap(Option.match(
+                () => {
+                  const val = value as Complete<Key, Error, Value>
+                  const current = Option.getOrUndefined(MutableHashMap.get(this.cacheState.map, key))
+                  if (Equal.equals(current, value)) {
+                    MutableHashMap.remove(this.cacheState.map, key)
+                  }
+                  return pipe(
+                    this.ensureMapSizeNotExceeded(val.key),
+                    core.zipRight(releaseOwner(val)),
+                    core.zipRight(this.get(key))
+                  )
+                },
+                core.succeed
+              ))
             )
           })
         ),
@@ -403,7 +406,7 @@ class ScopedCacheImpl<Key, Environment, Error, Value> implements ScopedCache.Sco
       case "Complete": {
         this.trackHit()
         if (this.hasExpired(value.timeToLive)) {
-          return core.succeed(effect.succeedNone())
+          return core.succeed(effect.succeedNone)
         }
         return core.as(
           this.ensureMapSizeNotExceeded(value.key),
@@ -414,7 +417,7 @@ class ScopedCacheImpl<Key, Environment, Error, Value> implements ScopedCache.Sco
         this.trackHit()
 
         if (ignorePending) {
-          return core.succeed(effect.succeedNone())
+          return core.succeed(effect.succeedNone)
         }
 
         return core.zipRight(
@@ -426,7 +429,7 @@ class ScopedCacheImpl<Key, Environment, Error, Value> implements ScopedCache.Sco
         this.trackHit()
         if (this.hasExpired(value.complete.timeToLive)) {
           if (ignorePending) {
-            return core.succeed(effect.succeedNone())
+            return core.succeed(effect.succeedNone)
           }
           return core.zipRight(
             this.ensureMapSizeNotExceeded(value.complete.key),

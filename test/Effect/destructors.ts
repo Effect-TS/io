@@ -151,58 +151,6 @@ describe.concurrent("Effect", () => {
       const result = yield* $(Effect.exit(Effect.some(Effect.fail(error))))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(Option.some(error)))
     }))
-  it.effect("someOrElse - extracts the value from Some", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(Effect.succeed(Option.some(1)), Effect.someOrElse(() => 42))
-      assert.strictEqual(result, 1)
-    }))
-  it.effect("someOrElse - falls back to the default value if None", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(Effect.succeed(Option.none()), Effect.someOrElse(() => 42))
-      assert.strictEqual(result, 42)
-    }))
-  it.effect("someOrElse - does not change failed state", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(Effect.fail(ExampleError), Effect.someOrElse(() => 42), Effect.exit)
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(ExampleError))
-    }))
-  it.effect("someOrElseEffect - extracts the value from Some", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(Effect.succeed(Option.some(1)), Effect.someOrElseEffect(() => Effect.succeed(42)))
-      assert.strictEqual(result, 1)
-    }))
-  it.effect("someOrElseEffect - falls back to the default effect if None", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(Effect.succeed(Option.none()), Effect.someOrElseEffect(() => Effect.succeed(42)))
-      assert.strictEqual(result, 42)
-    }))
-  it.effect("someOrElseEffect - does not change failed state", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(
-        pipe(Effect.fail(ExampleError), Effect.someOrElseEffect(() => Effect.succeed(42)), Effect.exit)
-      )
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(ExampleError))
-    }))
-  it.effect("someOrFail - extracts the optional value", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(Effect.succeed(Option.some(42)), Effect.someOrFail(() => ExampleError))
-      assert.strictEqual(result, 42)
-    }))
-  it.effect("someOrFail - fails when given a None", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(Effect.succeed(Option.none()), Effect.someOrFail(() => ExampleError), Effect.exit)
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(ExampleError))
-    }))
-  it.effect("someOrFailException - extracts the optional value", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(Effect.someOrFailException(Effect.succeed(Option.some(42))))
-      assert.strictEqual(result, 42)
-    }))
-  it.effect("someOrFailException - fails when given a None", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(Effect.exit(Effect.someOrFailException(Effect.succeed(Option.none()))))
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(Cause.NoSuchElementException()))
-    }))
   it.effect("unleft - should handle successes with right", () =>
     Effect.gen(function*($) {
       const effect = Effect.succeed(Either.right(42))

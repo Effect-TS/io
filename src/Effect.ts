@@ -4037,54 +4037,6 @@ export const sleep: (duration: Duration.Duration) => Effect<never, never, void> 
 export const some: <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R, Option.Option<E>, A> = effect.some
 
 /**
- * Extracts the optional value, or returns the given 'orElse'.
- *
- * @since 1.0.0
- * @category utils
- */
-export const someOrElse: {
-  <B>(orElse: LazyArg<B>): <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R, E, B | A>
-  <R, E, A, B>(self: Effect<R, E, Option.Option<A>>, orElse: LazyArg<B>): Effect<R, E, A | B>
-} = effect.someOrElse
-
-/**
- * Extracts the optional value, or executes the given 'orElse' effect.
- *
- * @since 1.0.0
- * @category utils
- */
-export const someOrElseEffect: {
-  <R2, E2, A2>(
-    orElse: LazyArg<Effect<R2, E2, A2>>
-  ): <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R2 | R, E2 | E, A2 | A>
-  <R, E, A, R2, E2, A2>(
-    self: Effect<R, E, Option.Option<A>>,
-    orElse: LazyArg<Effect<R2, E2, A2>>
-  ): Effect<R | R2, E | E2, A | A2>
-} = effect.someOrElseEffect
-
-/**
- * Extracts the optional value, or fails with the given error 'e'.
- *
- * @since 1.0.0
- * @category utils
- */
-export const someOrFail: {
-  <E2>(orFail: LazyArg<E2>): <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R, E2 | E, A>
-  <R, E, A, E2>(self: Effect<R, E, Option.Option<A>>, orFail: LazyArg<E2>): Effect<R, E | E2, A>
-} = effect.someOrFail
-
-/**
- * Extracts the optional value, or fails with a `NoSuchElementException`.
- *
- * @since 1.0.0
- * @category utils
- */
-export const someOrFailException: <R, E, A>(
-  self: Effect<R, E, Option.Option<A>>
-) => Effect<R, Cause.NoSuchElementException | E, A> = effect.someOrFailException
-
-/**
  * Perfoms the specified operation while "zoomed in" on the `Some` case of an
  * `Option`.
  *
@@ -4108,28 +4060,12 @@ export const someWith: {
 export const succeed: <A>(value: A) => Effect<never, never, A> = core.succeed
 
 /**
- * Returns an effect which succeeds with the value wrapped in a `Left`.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const succeedLeft: <A>(value: A) => Effect<never, never, Either.Either<A, never>> = effect.succeedLeft
-
-/**
  * Returns an effect which succeeds with `None`.
  *
  * @since 1.0.0
  * @category constructors
  */
-export const succeedNone: (_: void) => Effect<never, never, Option.Option<never>> = effect.succeedNone
-
-/**
- * Returns an effect which succeeds with the value wrapped in a `Right`.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const succeedRight: <A>(value: A) => Effect<never, never, Either.Either<never, A>> = effect.succeedRight
+export const succeedNone: Effect<never, never, Option.Option<never>> = effect.succeedNone
 
 /**
  * Returns an effect which succeeds with the value wrapped in a `Some`.
