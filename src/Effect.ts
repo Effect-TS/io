@@ -4281,26 +4281,6 @@ export const tapErrorCause: {
 } = effect.tapErrorCause
 
 /**
- * Returns an effect that effectfully "peeks" at the success of this effect.
- * If the partial function isn't defined at the input, the result is
- * equivalent to the original effect.
- *
- * @since 1.0.0
- * @category sequencing
- */
-export const tapSome: {
-  <A, R1, E1, X>(
-    pf: (a: A) => Option.Option<Effect<R1, E1, X>>
-  ): <R, E>(
-    self: Effect<R, E, A>
-  ) => Effect<R1 | R, E1 | E, A>
-  <R, E, A, R1, E1, X>(
-    self: Effect<R, E, A>,
-    pf: (a: A) => Option.Option<Effect<R1, E1, X>>
-  ): Effect<R | R1, E | E1, A>
-} = effect.tapSome
-
-/**
  * Returns a new effect that executes this one and times the execution.
  *
  * @since 1.0.0

@@ -2113,24 +2113,6 @@ export const tapErrorCause = Debug.dualWithTrace<
     ).traced(trace))
 
 /* @internal */
-export const tapSome = Debug.dualWithTrace<
-  <A, R1, E1, X>(
-    pf: (a: A) => Option.Option<Effect.Effect<R1, E1, X>>
-  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E | E1, A>,
-  <R, E, A, R1, E1, X>(
-    self: Effect.Effect<R, E, A>,
-    pf: (a: A) => Option.Option<Effect.Effect<R1, E1, X>>
-  ) => Effect.Effect<R | R1, E | E1, A>
->(2, (trace, restore) =>
-  (self, pf) =>
-    core.tap(self, (a) =>
-      pipe(
-        restore(pf)(a),
-        Option.map(core.asUnit),
-        Option.getOrElse(() => core.unit())
-      )).traced(trace))
-
-/* @internal */
 export const timed = Debug.methodWithTrace((trace) =>
   <R, E, A>(
     self: Effect.Effect<R, E, A>

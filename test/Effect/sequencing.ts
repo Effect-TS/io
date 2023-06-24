@@ -105,30 +105,6 @@ describe.concurrent("Effect", () => {
       const result = yield* $(Ref.get(ref))
       assert.strictEqual(result, 42)
     }))
-  it.effect("tapSome - is identity if the function doesn't match", () =>
-    Effect.gen(function*($) {
-      const ref = yield* $(Ref.make(false))
-      const result = yield* $(
-        pipe(
-          Ref.set(ref, true),
-          Effect.as(42),
-          Effect.tapSome((): Option.Option<Effect.Effect<never, never, never>> => Option.none())
-        )
-      )
-      const effect = yield* $(Ref.get(ref))
-      assert.strictEqual(result, 42)
-      assert.isTrue(effect)
-    }))
-  it.effect("tapSome - runs the effect if the function matches", () =>
-    Effect.gen(function*($) {
-      const ref = yield* $(Ref.make(0))
-      const result = yield* $(
-        pipe(Ref.set(ref, 10), Effect.as(42), Effect.tapSome((n) => Option.some(Ref.set(ref, n))))
-      )
-      const effect = yield* $(Ref.get(ref))
-      assert.strictEqual(result, 42)
-      assert.strictEqual(effect, 42)
-    }))
   it.effect("unless - executes correct branch only", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(0))
