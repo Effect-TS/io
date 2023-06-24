@@ -3,7 +3,7 @@ import type * as Duration from "@effect/data/Duration"
 import * as Either from "@effect/data/Either"
 import * as Equal from "@effect/data/Equal"
 import type { LazyArg } from "@effect/data/Function"
-import { identity, pipe } from "@effect/data/Function"
+import { dual, identity, pipe } from "@effect/data/Function"
 import * as Hash from "@effect/data/Hash"
 import * as MutableHashMap from "@effect/data/MutableHashMap"
 import * as Option from "@effect/data/Option"
@@ -757,7 +757,7 @@ export const zipWithFiber = Debug.untracedDual<
   }))
 
 /* @internal */
-export const allIterable = Debug.dualWithTrace<
+export const allIterable = dual<
   {
     (options?: {
       readonly concurrency?: Concurrency.Concurrency
@@ -778,7 +778,8 @@ export const allIterable = Debug.dualWithTrace<
       readonly discard: true
     }): Effect.Effect<R, E, void>
   }
->((args) => isIterable(args[0]), (trace) =>
+>(
+  (args) => isIterable(args[0]),
   <R, E, A>(as: Iterable<Effect.Effect<R, E, A>>, options?: {
     readonly concurrency?: Concurrency.Concurrency
     readonly discard?: boolean
@@ -786,7 +787,7 @@ export const allIterable = Debug.dualWithTrace<
     if (options?.discard) {
       return Concurrency.match(
         options?.concurrency,
-        () => core.forEachDiscard(as, identity).traced(trace),
+        () => core.forEachDiscard(as, identity),
         () => fiberRuntime.forEachParDiscard(as, identity),
         (n) => fiberRuntime.forEachParNDiscard(as, n, identity)
       )
@@ -794,28 +795,22 @@ export const allIterable = Debug.dualWithTrace<
 
     return Concurrency.match(
       options?.concurrency,
-      () => core.forEach(as, identity).traced(trace),
+      () => core.forEach(as, identity),
       () => fiberRuntime.forEachPar(as, identity),
       (n) => fiberRuntime.forEachParN(as, n, identity)
     )
-  })
-
-/* @internal */
-export const allSome = Debug.methodWithTrace<
-  <R, E, A>(elements: Iterable<Effect.Effect<R, E, Option.Option<A>>>) => Effect.Effect<R, E, Array<A>>
->((trace) => (elements) => core.map(allIterable(elements), RA.compact).traced(trace))
-
-/* @internal */
-export const allSuccesses = Debug.methodWithTrace((trace) =>
-  <R, E, A>(
-    elements: Iterable<Effect.Effect<R, E, A>>,
-    options?: { readonly concurrency?: Concurrency.Concurrency }
-  ): Effect.Effect<R, never, Array<A>> =>
-    core.map(
-      allIterable(Array.from(elements).map(core.exit), options),
-      RA.filterMap((exit) => core.exitIsSuccess(exit) ? Option.some(exit.i0) : Option.none())
-    ).traced(trace)
+  }
 )
+
+/* @internal */
+export const allSuccesses = <R, E, A>(
+  elements: Iterable<Effect.Effect<R, E, A>>,
+  options?: { readonly concurrency?: Concurrency.Concurrency }
+): Effect.Effect<R, never, Array<A>> =>
+  core.map(
+    allIterable(Array.from(elements).map(core.exit), options),
+    RA.filterMap((exit) => core.exitIsSuccess(exit) ? Option.some(exit.i0) : Option.none())
+  )
 
 /* @internal */
 export const filterMap = Debug.dualWithTrace<
