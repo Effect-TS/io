@@ -1024,7 +1024,7 @@ export const onInterrupt = Debug.dualWithTrace<
     ).traced(trace))
 
 /* @internal */
-export const orElse = Debug.dualWithTrace<
+export const orElse = dual<
   <R2, E2, A2>(
     that: LazyArg<Effect.Effect<R2, E2, A2>>
   ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E2, A | A2>,
@@ -1032,7 +1032,7 @@ export const orElse = Debug.dualWithTrace<
     self: Effect.Effect<R, E, A>,
     that: LazyArg<Effect.Effect<R2, E2, A2>>
   ) => Effect.Effect<R | R2, E2, A | A2>
->(2, (trace, restore) => (self, that) => pipe(self, attemptOrElse(restore(that), succeed)).traced(trace))
+>(2, (self, that) => attemptOrElse(self, that, succeed))
 
 /* @internal */
 export const orDie = Debug.methodWithTrace((trace) =>

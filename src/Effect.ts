@@ -3074,23 +3074,6 @@ export const orElse: {
 } = core.orElse
 
 /**
- * Returns an effect that will produce the value of this effect, unless it
- * fails, in which case, it will produce the value of the specified effect.
- *
- * @since 1.0.0
- * @category alternatives
- */
-export const orElseEither: {
-  <R2, E2, A2>(
-    that: LazyArg<Effect<R2, E2, A2>>
-  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2, Either.Either<A, A2>>
-  <R, E, A, R2, E2, A2>(
-    self: Effect<R, E, A>,
-    that: LazyArg<Effect<R2, E2, A2>>
-  ): Effect<R | R2, E2, Either.Either<A, A2>>
-} = effect.orElseEither
-
-/**
  * Executes this effect and returns its value, if it succeeds, but otherwise
  * fails with the specified error.
  *
@@ -4483,25 +4466,6 @@ export const tryCatchPromiseInterrupt: <E, A>(
   evaluate: (signal: AbortSignal) => Promise<A>,
   onReject: (reason: unknown) => E
 ) => Effect<never, E, A> = effect.attemptCatchPromiseInterrupt
-
-/**
- * Executed `that` in case `self` fails with a `Cause` that doesn't contain
- * defects, executes `success` in case of successes
- *
- * @since 1.0.0
- * @category alternatives
- */
-export const tryOrElse: {
-  <R2, E2, A2, A, R3, E3, A3>(
-    that: LazyArg<Effect<R2, E2, A2>>,
-    onSuccess: (a: A) => Effect<R3, E3, A3>
-  ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2 | E3, A2 | A3>
-  <R, E, A, R2, E2, A2, R3, E3, A3>(
-    self: Effect<R, E, A>,
-    that: LazyArg<Effect<R2, E2, A2>>,
-    onSuccess: (a: A) => Effect<R3, E3, A3>
-  ): Effect<R | R2 | R3, E2 | E3, A2 | A3>
-} = core.attemptOrElse
 
 /**
  * Create an `Effect` that when executed will construct `promise` and wait for

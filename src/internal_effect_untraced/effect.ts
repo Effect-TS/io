@@ -1530,23 +1530,6 @@ export const option = Debug.methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const orElseEither = Debug.dualWithTrace<
-  <R2, E2, A2>(
-    that: LazyArg<Effect.Effect<R2, E2, A2>>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E2, Either.Either<A, A2>>,
-  <R, E, A, R2, E2, A2>(
-    self: Effect.Effect<R, E, A>,
-    that: LazyArg<Effect.Effect<R2, E2, A2>>
-  ) => Effect.Effect<R | R2, E2, Either.Either<A, A2>>
->(2, (trace, restore) =>
-  (self, that) =>
-    core.attemptOrElse(
-      self,
-      () => core.map(restore(that)(), Either.right),
-      (a) => core.succeed(Either.left(a))
-    ).traced(trace))
-
-/* @internal */
 export const orElseFail = Debug.dualWithTrace<
   <E2>(evaluate: LazyArg<E2>) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E2, A>,
   <R, E, A, E2>(self: Effect.Effect<R, E, A>, evaluate: LazyArg<E2>) => Effect.Effect<R, E2, A>
