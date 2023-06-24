@@ -31,7 +31,7 @@ import { currentRequestMap } from "@effect/io/internal_effect_untraced/completed
 import { configProviderTag } from "@effect/io/internal_effect_untraced/configProvider"
 import * as core from "@effect/io/internal_effect_untraced/core"
 import * as defaultServices from "@effect/io/internal_effect_untraced/defaultServices"
-import { mapErrorCause, some } from "@effect/io/internal_effect_untraced/effect"
+import { mapErrorCause } from "@effect/io/internal_effect_untraced/effect"
 import * as internalFiber from "@effect/io/internal_effect_untraced/fiber"
 import * as FiberMessage from "@effect/io/internal_effect_untraced/fiberMessage"
 import * as fiberRefs from "@effect/io/internal_effect_untraced/fiberRefs"
@@ -2168,17 +2168,6 @@ export const sequentialFinalizers = Debug.methodWithTrace((trace) =>
       )
     ).traced(trace)
 )
-
-/* @internal */
-export const someWith = Debug.dualWithTrace<
-  <R, E, A, R1, E1, A1>(
-    f: (effect: Effect.Effect<R, Option.Option<E>, A>) => Effect.Effect<R1, Option.Option<E1>, A1>
-  ) => (self: Effect.Effect<R, E, Option.Option<A>>) => Effect.Effect<R | R1, E | E1, Option.Option<A1>>,
-  <R, E, A, R1, E1, A1>(
-    self: Effect.Effect<R, E, Option.Option<A>>,
-    f: (effect: Effect.Effect<R, Option.Option<E>, A>) => Effect.Effect<R1, Option.Option<E1>, A1>
-  ) => Effect.Effect<R | R1, E | E1, Option.Option<A1>>
->(2, (trace, restore) => (self, f) => core.suspend(() => unsome(restore(f)(some(self)))).traced(trace))
 
 /* @internal */
 export const allPar = Debug.methodWithTrace((trace): {

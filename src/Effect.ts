@@ -4037,23 +4037,6 @@ export const sleep: (duration: Duration.Duration) => Effect<never, never, void> 
 export const some: <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R, Option.Option<E>, A> = effect.some
 
 /**
- * Perfoms the specified operation while "zoomed in" on the `Some` case of an
- * `Option`.
- *
- * @since 1.0.0
- * @category utils
- */
-export const someWith: {
-  <R, E, A, R1, E1, A1>(
-    f: (effect: Effect<R, Option.Option<E>, A>) => Effect<R1, Option.Option<E1>, A1>
-  ): (self: Effect<R, E, Option.Option<A>>) => Effect<R | R1, E | E1, Option.Option<A1>>
-  <R, E, A, R1, E1, A1>(
-    self: Effect<R, E, Option.Option<A>>,
-    f: (effect: Effect<R, Option.Option<E>, A>) => Effect<R1, Option.Option<E1>, A1>
-  ): Effect<R | R1, E | E1, Option.Option<A1>>
-} = fiberRuntime.someWith
-
-/**
  * @since 1.0.0
  * @category constructors
  */
