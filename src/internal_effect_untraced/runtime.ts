@@ -260,10 +260,6 @@ export const unsafeRunPromiseExit = <R>(runtime: Runtime.Runtime<R>) =>
   )
 
 /** @internal */
-export const unsafeRunPromiseEither = <R>(runtime: Runtime.Runtime<R>) =>
-  <E, A>(effect: Effect.Effect<R, E, A>): Promise<Either.Either<E, A>> => unsafeRunPromise(runtime)(core.either(effect))
-
-/** @internal */
 export class RuntimeImpl<R> implements Runtime.Runtime<R> {
   constructor(
     readonly context: Context.Context<R>,
@@ -314,9 +310,6 @@ export const unsafeForkEffect = unsafeFork(defaultRuntime)
 
 /** @internal */
 export const unsafeRunPromiseEffect = unsafeRunPromise(defaultRuntime)
-
-/** @internal */
-export const unsafeRunPromiseEitherEffect = unsafeRunPromiseEither(defaultRuntime)
 
 /** @internal */
 export const unsafeRunPromiseExitEffect = unsafeRunPromiseExit(defaultRuntime)

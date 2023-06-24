@@ -154,21 +154,6 @@ export const runPromiseExit: <R>(
 ) => <E, A>(effect: Effect.Effect<R, E, A>) => Promise<Exit.Exit<E, A>> = internal.unsafeRunPromiseExit
 
 /**
- * Runs the `Effect`, returning a JavaScript `Promise` that will be resolved
- * with the either a success or a failure. The promise will be rejected in case
- * of defects and interruption.
- *
- * This method is effectful and should only be used at the edges of your
- * program.
- *
- * @since 1.0.0
- * @category execution
- */
-export const runPromiseEither: <R>(
-  runtime: Runtime<R>
-) => <E, A>(effect: Effect.Effect<R, E, A>) => Promise<Either<E, A>> = internal.unsafeRunPromiseEither
-
-/**
  * @since 1.0.0
  * @category constructors
  */

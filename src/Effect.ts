@@ -4848,13 +4848,6 @@ export const runCallback: <E, A>(
 ) => Runtime.Cancel<E, A> = _runtime.unsafeRunEffect
 
 /**
- * @since 1.0.0
- * @category execution
- */
-export const runPromiseEither: <E, A>(effect: Effect<never, E, A>) => Promise<Either.Either<E, A>> =
-  _runtime.unsafeRunPromiseEitherEffect
-
-/**
  * Runs an `Effect` workflow, returning a `Promise` which resolves with the
  * result of the workflow or rejects with an error.
  *
