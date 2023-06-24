@@ -784,18 +784,20 @@ export const allIterable = Debug.dualWithTrace<
     readonly discard?: boolean
   }): Effect.Effect<R, E, any> => {
     if (options?.discard) {
-      return Concurrency.match(options?.concurrency, {
-        sequential: () => core.forEachDiscard(as, identity).traced(trace),
-        inherit: () => fiberRuntime.forEachParDiscard(as, identity),
-        withLimit: (n) => fiberRuntime.forEachParNDiscard(as, n, identity)
-      })
+      return Concurrency.match(
+        options?.concurrency,
+        () => core.forEachDiscard(as, identity).traced(trace),
+        () => fiberRuntime.forEachParDiscard(as, identity),
+        (n) => fiberRuntime.forEachParNDiscard(as, n, identity)
+      )
     }
 
-    return Concurrency.match(options?.concurrency, {
-      sequential: () => core.forEach(as, identity).traced(trace),
-      inherit: () => fiberRuntime.forEachPar(as, identity),
-      withLimit: (n) => fiberRuntime.forEachParN(as, n, identity)
-    })
+    return Concurrency.match(
+      options?.concurrency,
+      () => core.forEach(as, identity).traced(trace),
+      () => fiberRuntime.forEachPar(as, identity),
+      (n) => fiberRuntime.forEachParN(as, n, identity)
+    )
   })
 
 /* @internal */
