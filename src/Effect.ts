@@ -4873,15 +4873,15 @@ export const validateAllParDiscard: {
  *
  * @example
  * import * as Effect from "@effect/io/Effect"
- * import * as Either from "@effect/data/Either"
+ * import * as Exit from "@effect/io/Exit"
  *
  * const f = (n: number) => (n > 0 ? Effect.succeed(n) : Effect.fail(`${n} is negative`))
  *
- * assert.deepStrictEqual(Effect.runSyncEither(Effect.validateFirst([], f)), Either.left([]))
- * assert.deepStrictEqual(Effect.runSyncEither(Effect.validateFirst([1, 2], f)), Either.right(1))
- * assert.deepStrictEqual(Effect.runSyncEither(Effect.validateFirst([1, -1], f)), Either.right(1))
- * assert.deepStrictEqual(Effect.runSyncEither(Effect.validateFirst([-1, 2], f)), Either.right(2))
- * assert.deepStrictEqual(Effect.runSyncEither(Effect.validateFirst([-1, -2], f)), Either.left(['-1 is negative', '-2 is negative']))
+ * assert.deepStrictEqual(Effect.runSyncExit(Effect.validateFirst([], f)), Exit.fail([]))
+ * assert.deepStrictEqual(Effect.runSyncExit(Effect.validateFirst([1, 2], f)), Exit.succeed(1))
+ * assert.deepStrictEqual(Effect.runSyncExit(Effect.validateFirst([1, -1], f)), Exit.succeed(1))
+ * assert.deepStrictEqual(Effect.runSyncExit(Effect.validateFirst([-1, 2], f)), Exit.succeed(2))
+ * assert.deepStrictEqual(Effect.runSyncExit(Effect.validateFirst([-1, -2], f)), Exit.fail(['-1 is negative', '-2 is negative']))
  *
  * @since 1.0.0
  * @category utils
