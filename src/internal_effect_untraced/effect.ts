@@ -4,7 +4,7 @@ import * as Debug from "@effect/data/Debug"
 import * as Duration from "@effect/data/Duration"
 import * as Either from "@effect/data/Either"
 import type { LazyArg } from "@effect/data/Function"
-import { constFalse, constTrue, constVoid, identity, pipe } from "@effect/data/Function"
+import { constFalse, constTrue, constVoid, dual, identity, pipe } from "@effect/data/Function"
 import * as HashMap from "@effect/data/HashMap"
 import * as HashSet from "@effect/data/HashSet"
 import * as List from "@effect/data/List"
@@ -1310,7 +1310,7 @@ export const leftWith = Debug.dualWithTrace<
 >(2, (trace, restore) => (self, f) => core.suspend(() => unleft(restore(f)(left(self)))).traced(trace))
 
 /* @internal */
-export const log = Debug.dualWithTrace<
+export const log = dual<
   (options?: {
     readonly cause?: Cause.Cause<unknown>
     readonly level?: LogLevel.Literal
@@ -1319,7 +1319,8 @@ export const log = Debug.dualWithTrace<
     readonly cause?: Cause.Cause<unknown>
     readonly level?: LogLevel.Literal
   }) => Effect.Effect<never, never, void>
->((args) => typeof args[0] === "string", (trace) =>
+>(
+  (args) => typeof args[0] === "string",
   (message: string, options?: {
     readonly cause?: Cause.Cause<unknown>
     readonly level?: LogLevel.Literal
@@ -1331,10 +1332,11 @@ export const log = Debug.dualWithTrace<
         options?.level ? Option.some(LogLevel.fromLiteral(options.level)) : Option.none()
       )
       return core.unit()
-    }).traced(trace))
+    })
+)
 
 /* @internal */
-export const logCause = Debug.dualWithTrace<
+export const logCause = dual<
   (options?: {
     readonly message?: string
     readonly level?: LogLevel.Literal
@@ -1343,7 +1345,8 @@ export const logCause = Debug.dualWithTrace<
     readonly message?: string
     readonly level?: LogLevel.Literal
   }) => Effect.Effect<never, never, void>
->((args) => internalCause.isCause(args[0]), (trace) =>
+>(
+  (args) => internalCause.isCause(args[0]),
   (cause: Cause.Cause<unknown>, options?: {
     readonly message?: string
     readonly level?: LogLevel.Literal
@@ -1355,7 +1358,8 @@ export const logCause = Debug.dualWithTrace<
         options?.level ? Option.some(LogLevel.fromLiteral(options.level)) : Option.none()
       )
       return core.unit()
-    }).traced(trace))
+    })
+)
 
 /* @internal */
 export const withLog = Debug.dualWithTrace<
@@ -1377,7 +1381,7 @@ export const withLog = Debug.dualWithTrace<
 )
 
 /* @internal */
-export const withLogCause = Debug.dualWithTrace<
+export const withLogCause = dual<
   (options?: {
     readonly message?: string
     readonly level?: LogLevel.Literal
@@ -1388,15 +1392,10 @@ export const withLogCause = Debug.dualWithTrace<
   }) => Effect.Effect<R, E, A>
 >(
   (args) => core.isEffect(args[0]),
-  (trace) =>
-    <R, E, A>(self: Effect.Effect<R, E, A>, options?: {
-      readonly message?: string
-      readonly level?: LogLevel.Literal
-    }): Effect.Effect<R, E, A> =>
-      tapErrorCause(
-        self,
-        (cause) => logCause(cause, options)
-      ).traced(trace)
+  <R, E, A>(self: Effect.Effect<R, E, A>, options?: {
+    readonly message?: string
+    readonly level?: LogLevel.Literal
+  }): Effect.Effect<R, E, A> => tapErrorCause(self, logCause(options))
 )
 
 /* @internal */
