@@ -155,8 +155,6 @@ Added in v1.0.0
   - [every](#every)
   - [findFirst](#findfirst)
   - [firstSuccessOf](#firstsuccessof)
-  - [forEachEffect](#foreacheffect)
-  - [forEachOption](#foreachoption)
 - [error handling](#error-handling)
   - [absolve](#absolve)
   - [absolveWith](#absolvewith)
@@ -2587,38 +2585,6 @@ will determine the outcome of the resulting `Effect` value.
 
 ```ts
 export declare const firstSuccessOf: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, E, A>
-```
-
-Added in v1.0.0
-
-## forEachEffect
-
-Returns a new effect that will pass the success value of this effect to the
-provided callback. If this effect fails, then the failure will be ignored.
-
-**Signature**
-
-```ts
-export declare const forEachEffect: {
-  <A, R1, E1, B>(f: (a: A) => Effect<R1, E1, B>): <R, E>(self: Effect<R, E, A>) => Effect<R1 | R, E1, Option.Option<B>>
-  <R, E, A, R1, E1, B>(self: Effect<R, E, A>, f: (a: A) => Effect<R1, E1, B>): Effect<R | R1, E1, Option.Option<B>>
-}
-```
-
-Added in v1.0.0
-
-## forEachOption
-
-Applies the function `f` if the argument is non-empty and returns the
-results in a new `Option<B>`.
-
-**Signature**
-
-```ts
-export declare const forEachOption: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (option: Option.Option<A>) => Effect<R, E, Option.Option<B>>
-  <R, E, A, B>(option: Option.Option<A>, f: (a: A) => Effect<R, E, B>): Effect<R, E, Option.Option<B>>
-}
 ```
 
 Added in v1.0.0

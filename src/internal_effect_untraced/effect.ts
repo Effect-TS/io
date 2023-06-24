@@ -1048,41 +1048,6 @@ const forAllLoop = <R, E, A>(
 }
 
 /* @internal */
-export const forEachEffect = Debug.dualWithTrace<
-  <A, R1, E1, B>(
-    f: (a: A) => Effect.Effect<R1, E1, B>
-  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E1, Option.Option<B>>,
-  <R, E, A, R1, E1, B>(
-    self: Effect.Effect<R, E, A>,
-    f: (a: A) => Effect.Effect<R1, E1, B>
-  ) => Effect.Effect<R | R1, E1, Option.Option<B>>
->(2, (trace, restore) =>
-  (self, f) =>
-    core.matchCauseEffect(
-      self,
-      () => core.succeed(Option.none()),
-      (a) => core.map(restore(f)(a), Option.some)
-    ).traced(trace))
-
-/* @internal */
-export const forEachOption = Debug.dualWithTrace<
-  <R, E, A, B>(
-    f: (a: A) => Effect.Effect<R, E, B>
-  ) => (option: Option.Option<A>) => Effect.Effect<R, E, Option.Option<B>>,
-  <R, E, A, B>(option: Option.Option<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, E, Option.Option<B>>
->(2, (trace, restore) =>
-  (option, f) => {
-    switch (option._tag) {
-      case "None": {
-        return core.succeed(Option.none()).traced(trace)
-      }
-      case "Some": {
-        return core.map(restore(f)(option.value), Option.some).traced(trace)
-      }
-    }
-  })
-
-/* @internal */
 export const forEachWithIndex = Debug.dualWithTrace<
   <A, R, E, B>(
     f: (a: A, i: number) => Effect.Effect<R, E, B>

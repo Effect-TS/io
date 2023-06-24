@@ -1901,18 +1901,6 @@ export const forEachDiscard: {
 } = core.forEachDiscard
 
 /**
- * Returns a new effect that will pass the success value of this effect to the
- * provided callback. If this effect fails, then the failure will be ignored.
- *
- * @since 1.0.0
- * @category elements
- */
-export const forEachEffect: {
-  <A, R1, E1, B>(f: (a: A) => Effect<R1, E1, B>): <R, E>(self: Effect<R, E, A>) => Effect<R1 | R, E1, Option.Option<B>>
-  <R, E, A, R1, E1, B>(self: Effect<R, E, A>, f: (a: A) => Effect<R1, E1, B>): Effect<R | R1, E1, Option.Option<B>>
-} = effect.forEachEffect
-
-/**
  * Applies the function `f` to each element of the `Collection<A>` and returns
  * the result in a new `Arrat<B>` using the specified execution strategy.
  *
@@ -1930,18 +1918,6 @@ export const forEachExec: {
     strategy: ExecutionStrategy.ExecutionStrategy
   ): Effect<R, E, Array<B>>
 } = fiberRuntime.forEachExec
-
-/**
- * Applies the function `f` if the argument is non-empty and returns the
- * results in a new `Option<B>`.
- *
- * @since 1.0.0
- * @category elements
- */
-export const forEachOption: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (option: Option.Option<A>) => Effect<R, E, Option.Option<B>>
-  <R, E, A, B>(option: Option.Option<A>, f: (a: A) => Effect<R, E, B>): Effect<R, E, Option.Option<B>>
-} = effect.forEachOption
 
 /**
  * Same as `forEach`, except that the function `f` is supplied

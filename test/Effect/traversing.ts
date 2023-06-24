@@ -1,7 +1,6 @@
 import * as Chunk from "@effect/data/Chunk"
 import * as Either from "@effect/data/Either"
 import { constVoid, identity, pipe } from "@effect/data/Function"
-import * as Option from "@effect/data/Option"
 import * as Cause from "@effect/io/Cause"
 import * as Deferred from "@effect/io/Deferred"
 import * as Effect from "@effect/io/Effect"
@@ -137,35 +136,6 @@ describe.concurrent("Effect", () => {
       yield* $(effect)
       const result = yield* $(Ref.get(ref))
       assert.strictEqual(result, 30)
-    }))
-  it.effect("forEachOption - succeeds with None given None", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(
-        pipe(Option.none() as Option.Option<string>, Effect.forEachOption((s) => Effect.succeed(s.length)))
-      )
-      assert.deepStrictEqual(result, Option.none())
-    }))
-  it.effect("forEachOption - succeeds with Some given Some", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(Option.some("success"), Effect.forEachOption((s) => Effect.succeed(s.length)))
-      assert.deepStrictEqual(result, Option.some(7))
-    }))
-  it.effect("forEachOption - fails if the optional effect fails", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(
-        Option.some("help"),
-        Effect.forEachOption((s) =>
-          Effect.sync(() => {
-            const n = Number.parseInt(s)
-            if (Number.isNaN(n)) {
-              throw Cause.IllegalArgumentException()
-            }
-            return n
-          })
-        ),
-        Effect.exit
-      )
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.die(Cause.IllegalArgumentException()))
     }))
   it.effect("forEachPar - runs single task", () =>
     Effect.gen(function*($) {
