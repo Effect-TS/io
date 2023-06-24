@@ -1198,21 +1198,6 @@ export const configProviderWith: <R, E, A>(f: (configProvider: ConfigProvider) =
   defaultServices.configProviderWith
 
 /**
- * Evaluate the predicate, return the given `A` as success if predicate returns
- * true, and the given `E` as error otherwise
- *
- * For effectful conditionals, see `ifEffect`.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const cond: <E, A>(
-  predicate: LazyArg<boolean>,
-  result: LazyArg<A>,
-  error: LazyArg<E>
-) => Effect<never, E, A> = effect.cond
-
-/**
  * @since 1.0.0
  * @category context
  */

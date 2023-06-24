@@ -389,20 +389,6 @@ export const allDiscard: Effect.All.SignatureDiscard = Debug.methodWithTrace((tr
 )
 
 /* @internal */
-export const cond = Debug.methodWithTrace((trace, restore) =>
-  <E, A>(
-    predicate: LazyArg<boolean>,
-    result: LazyArg<A>,
-    error: LazyArg<E>
-  ): Effect.Effect<never, E, A> =>
-    core.suspend(() =>
-      restore(predicate)() ?
-        core.sync(restore(result)) :
-        core.failSync(restore(error))
-    ).traced(trace)
-)
-
-/* @internal */
 export const continueOrFail = Debug.dualWithTrace<
   <E1, A, A2>(
     error: LazyArg<E1>,
