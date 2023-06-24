@@ -16,11 +16,8 @@ Added in v1.0.0
   - [orDie](#ordie)
   - [orDieWith](#ordiewith)
   - [orElse](#orelse)
-  - [orElseEither](#orelseeither)
   - [orElseFail](#orelsefail)
-  - [orElseOptional](#orelseoptional)
   - [orElseSucceed](#orelsesucceed)
-  - [tryOrElse](#tryorelse)
 - [concurrency](#concurrency)
   - [withParallelism](#withparallelism)
 - [config](#config)
@@ -47,7 +44,6 @@ Added in v1.0.0
   - [cachedFunction](#cachedfunction)
   - [checkInterruptible](#checkinterruptible)
   - [clockWith](#clockwith)
-  - [cond](#cond)
   - [descriptor](#descriptor)
   - [descriptorWith](#descriptorwith)
   - [die](#die)
@@ -80,8 +76,6 @@ Added in v1.0.0
   - [mergeAllPar](#mergeallpar)
   - [never](#never)
   - [none](#none)
-  - [noneOrFail](#noneorfail)
-  - [noneOrFailWith](#noneorfailwith)
   - [partition](#partition)
   - [partitionPar](#partitionpar)
   - [promise](#promise)
@@ -92,9 +86,7 @@ Added in v1.0.0
   - [runtimeFlags](#runtimeflags)
   - [sleep](#sleep)
   - [succeed](#succeed)
-  - [succeedLeft](#succeedleft)
   - [succeedNone](#succeednone)
-  - [succeedRight](#succeedright)
   - [succeedSome](#succeedsome)
   - [suspend](#suspend)
   - [sync](#sync)
@@ -147,10 +139,8 @@ Added in v1.0.0
 - [do notation](#do-notation)
   - [Do](#do)
   - [bind](#bind)
-  - [bindDiscard](#binddiscard)
   - [bindTo](#bindto)
   - [let](#let)
-  - [letDiscard](#letdiscard)
 - [elements](#elements)
   - [every](#every)
   - [findFirst](#findfirst)
@@ -181,10 +171,8 @@ Added in v1.0.0
   - [runCallback](#runcallback)
   - [runFork](#runfork)
   - [runPromise](#runpromise)
-  - [runPromiseEither](#runpromiseeither)
   - [runPromiseExit](#runpromiseexit)
   - [runSync](#runsync)
-  - [runSyncEither](#runsynceither)
   - [runSyncExit](#runsyncexit)
 - [filtering](#filtering)
   - [filter](#filter)
@@ -215,8 +203,6 @@ Added in v1.0.0
   - [isFailure](#isfailure)
   - [isSuccess](#issuccess)
 - [getters](#getters)
-  - [right](#right)
-  - [rightWith](#rightwith)
   - [tags](#tags)
   - [unleft](#unleft)
 - [instances](#instances)
@@ -309,7 +295,6 @@ Added in v1.0.0
   - [tapEither](#tapeither)
   - [tapError](#taperror)
   - [tapErrorCause](#taperrorcause)
-  - [tapSome](#tapsome)
 - [supervision](#supervision)
   - [daemonChildren](#daemonchildren)
   - [fork](#fork)
@@ -406,7 +391,6 @@ Added in v1.0.0
   - [repeatWhileEquals](#repeatwhileequals)
   - [replicate](#replicate)
   - [replicateEffect](#replicateeffect)
-  - [resurrect](#resurrect)
   - [retry](#retry)
   - [retryN](#retryn)
   - [retryOrElse](#retryorelse)
@@ -432,11 +416,6 @@ Added in v1.0.0
   - [setScheduler](#setscheduler)
   - [setUnhandledErrorLogLevel](#setunhandlederrorloglevel)
   - [some](#some)
-  - [someOrElse](#someorelse)
-  - [someOrElseEffect](#someorelseeffect)
-  - [someOrFail](#someorfail)
-  - [someOrFailException](#someorfailexception)
-  - [someWith](#somewith)
   - [step](#step)
   - [summarized](#summarized)
   - [supervised](#supervised)
@@ -454,7 +433,6 @@ Added in v1.0.0
   - [unless](#unless)
   - [unlessEffect](#unlesseffect)
   - [unrefine](#unrefine)
-  - [unright](#unright)
   - [unsandbox](#unsandbox)
   - [unsome](#unsome)
   - [using](#using)
@@ -469,8 +447,6 @@ Added in v1.0.0
   - [validateWith](#validatewith)
   - [validateWithPar](#validatewithpar)
   - [when](#when)
-  - [whenCase](#whencase)
-  - [whenCaseEffect](#whencaseeffect)
   - [whenFiberRef](#whenfiberref)
   - [whenRef](#whenref)
   - [withClock](#withclock)
@@ -534,28 +510,6 @@ export declare const orElse: {
 
 Added in v1.0.0
 
-## orElseEither
-
-Returns an effect that will produce the value of this effect, unless it
-fails, in which case, it will produce the value of the specified effect.
-
-**Signature**
-
-```ts
-export declare const orElseEither: {
-  <R2, E2, A2>(that: LazyArg<Effect<R2, E2, A2>>): <R, E, A>(
-    self: Effect<R, E, A>
-  ) => Effect<R2 | R, E2, Either.Either<A, A2>>
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: LazyArg<Effect<R2, E2, A2>>): Effect<
-    R | R2,
-    E2,
-    Either.Either<A, A2>
-  >
-}
-```
-
-Added in v1.0.0
-
 ## orElseFail
 
 Executes this effect and returns its value, if it succeeds, but otherwise
@@ -572,29 +526,6 @@ export declare const orElseFail: {
 
 Added in v1.0.0
 
-## orElseOptional
-
-Returns an effect that will produce the value of this effect, unless it
-fails with the `None` value, in which case it will produce the value of
-the specified effect.
-
-**Signature**
-
-```ts
-export declare const orElseOptional: {
-  <R, E, A, R2, E2, A2>(that: LazyArg<Effect<R2, Option.Option<E2>, A2>>): (
-    self: Effect<R, Option.Option<E>, A>
-  ) => Effect<R | R2, Option.Option<E | E2>, A | A2>
-  <R, E, A, R2, E2, A2>(self: Effect<R, Option.Option<E>, A>, that: LazyArg<Effect<R2, Option.Option<E2>, A2>>): Effect<
-    R | R2,
-    Option.Option<E | E2>,
-    A | A2
-  >
-}
-```
-
-Added in v1.0.0
-
 ## orElseSucceed
 
 Executes this effect and returns its value, if it succeeds, but
@@ -606,28 +537,6 @@ otherwise succeeds with the specified value.
 export declare const orElseSucceed: {
   <A2>(evaluate: LazyArg<A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A2 | A>
   <R, E, A, A2>(self: Effect<R, E, A>, evaluate: LazyArg<A2>): Effect<R, E, A | A2>
-}
-```
-
-Added in v1.0.0
-
-## tryOrElse
-
-Executed `that` in case `self` fails with a `Cause` that doesn't contain
-defects, executes `success` in case of successes
-
-**Signature**
-
-```ts
-export declare const tryOrElse: {
-  <R2, E2, A2, A, R3, E3, A3>(that: LazyArg<Effect<R2, E2, A2>>, onSuccess: (a: A) => Effect<R3, E3, A3>): <R, E>(
-    self: Effect<R, E, A>
-  ) => Effect<R2 | R3 | R, E2 | E3, A2 | A3>
-  <R, E, A, R2, E2, A2, R3, E3, A3>(
-    self: Effect<R, E, A>,
-    that: LazyArg<Effect<R2, E2, A2>>,
-    onSuccess: (a: A) => Effect<R3, E3, A3>
-  ): Effect<R | R2 | R3, E2 | E3, A2 | A3>
 }
 ```
 
@@ -1066,25 +975,6 @@ export declare const clockWith: <R, E, A>(f: (clock: Clock.Clock) => Effect<R, E
 
 Added in v1.0.0
 
-## cond
-
-Evaluate the predicate, return the given `A` as success if predicate returns
-true, and the given `E` as error otherwise
-
-For effectful conditionals, see `ifEffect`.
-
-**Signature**
-
-```ts
-export declare const cond: <E, A>(
-  predicate: LazyArg<boolean>,
-  result: LazyArg<A>,
-  error: LazyArg<E>
-) => Effect<never, E, A>
-```
-
-Added in v1.0.0
-
 ## descriptor
 
 Constructs an effect with information about the current `Fiber`.
@@ -1380,7 +1270,7 @@ Runs `onTrue` if the result of `self` is `true` and `onFalse` otherwise.
 **Signature**
 
 ```ts
-export declare const if: { <R1, R2, E1, E2, A, A1>(onTrue: Effect<R1, E1, A>, onFalse: Effect<R2, E2, A1>): (self: boolean) => Effect<R1 | R2, E1 | E2, A | A1>; <R1, R2, E1, E2, A, A1>(self: boolean, onTrue: Effect<R1, E1, A>, onFalse: Effect<R2, E2, A1>): Effect<R1 | R2, E1 | E2, A | A1>; }
+export declare const if: { <R1, R2, E1, E2, A, A1>(options: { readonly onTrue: Effect<R1, E1, A>; readonly onFalse: Effect<R2, E2, A1>; }): (self: boolean) => Effect<R1 | R2, E1 | E2, A | A1>; <R1, R2, E1, E2, A, A1>(self: boolean, options: { readonly onTrue: Effect<R1, E1, A>; readonly onFalse: Effect<R2, E2, A1>; }): Effect<R1 | R2, E1 | E2, A | A1>; }
 ```
 
 Added in v1.0.0
@@ -1393,13 +1283,15 @@ Runs `onTrue` if the result of `self` is `true` and `onFalse` otherwise.
 
 ```ts
 export declare const ifEffect: {
-  <R1, R2, E1, E2, A, A1>(onTrue: Effect<R1, E1, A>, onFalse: Effect<R2, E2, A1>): <R, E>(
+  <R1, R2, E1, E2, A, A1>(options: { readonly onTrue: Effect<R1, E1, A>; readonly onFalse: Effect<R2, E2, A1> }): <
+    R,
+    E
+  >(
     self: Effect<R, E, boolean>
   ) => Effect<R1 | R2 | R, E1 | E2 | E, A | A1>
   <R, E, R1, R2, E1, E2, A, A1>(
     self: Effect<R, E, boolean>,
-    onTrue: Effect<R1, E1, A>,
-    onFalse: Effect<R2, E2, A1>
+    options: { readonly onTrue: Effect<R1, E1, A>; readonly onFalse: Effect<R2, E2, A1> }
   ): Effect<R | R1 | R2, E | E1 | E2, A | A1>
 }
 ```
@@ -1566,33 +1458,6 @@ export declare const none: <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Ef
 
 Added in v1.0.0
 
-## noneOrFail
-
-Lifts an `Option` into a `Effect`. If the option is empty it succeeds with
-`void`. If the option is defined it fails with the content.
-
-**Signature**
-
-```ts
-export declare const noneOrFail: <E>(option: Option.Option<E>) => Effect<never, E, void>
-```
-
-Added in v1.0.0
-
-## noneOrFailWith
-
-Lifts an `Option` into a `Effect`. If the option is empty it succeeds with
-`undefined`. If the option is defined it fails with an error computed by
-the specified function.
-
-**Signature**
-
-```ts
-export declare const noneOrFailWith: <E, A>(option: Option.Option<A>, f: (a: A) => E) => Effect<never, E, void>
-```
-
-Added in v1.0.0
-
 ## partition
 
 Feeds elements of type `A` to a function `f` that returns an effect.
@@ -1725,18 +1590,6 @@ export declare const succeed: <A>(value: A) => Effect<never, never, A>
 
 Added in v1.0.0
 
-## succeedLeft
-
-Returns an effect which succeeds with the value wrapped in a `Left`.
-
-**Signature**
-
-```ts
-export declare const succeedLeft: <A>(value: A) => Effect<never, never, Either.Either<A, never>>
-```
-
-Added in v1.0.0
-
 ## succeedNone
 
 Returns an effect which succeeds with `None`.
@@ -1744,19 +1597,7 @@ Returns an effect which succeeds with `None`.
 **Signature**
 
 ```ts
-export declare const succeedNone: (_: void) => Effect<never, never, Option.Option<never>>
-```
-
-Added in v1.0.0
-
-## succeedRight
-
-Returns an effect which succeeds with the value wrapped in a `Right`.
-
-**Signature**
-
-```ts
-export declare const succeedRight: <A>(value: A) => Effect<never, never, Either.Either<never, A>>
+export declare const succeedNone: Effect<never, never, Option.Option<never>>
 ```
 
 Added in v1.0.0
@@ -2461,27 +2302,6 @@ export declare const bind: {
 
 Added in v1.0.0
 
-## bindDiscard
-
-Binds an effectful value in a `do` scope
-
-**Signature**
-
-```ts
-export declare const bindDiscard: {
-  <N extends string, K, R2, E2, A>(tag: Exclude<N, keyof K>, f: Effect<R2, E2, A>): <R, E>(
-    self: Effect<R, E, K>
-  ) => Effect<R2 | R, E2 | E, MergeRecord<K, { [k in N]: A }>>
-  <R, E, N extends string, K, R2, E2, A>(self: Effect<R, E, K>, tag: Exclude<N, keyof K>, f: Effect<R2, E2, A>): Effect<
-    R | R2,
-    E | E2,
-    MergeRecord<K, { [k in N]: A }>
-  >
-}
-```
-
-Added in v1.0.0
-
 ## bindTo
 
 **Signature**
@@ -2507,27 +2327,6 @@ export declare const let: {
     self: Effect<R, E, K>
   ) => Effect<R, E, MergeRecord<K, { [k in N]: A }>>
   <R, E, K, N extends string, A>(self: Effect<R, E, K>, tag: Exclude<N, keyof K>, f: (_: K) => A): Effect<
-    R,
-    E,
-    MergeRecord<K, { [k in N]: A }>
-  >
-}
-```
-
-Added in v1.0.0
-
-## letDiscard
-
-Like bind for values
-
-**Signature**
-
-```ts
-export declare const letDiscard: {
-  <N extends string, K, A>(tag: Exclude<N, keyof K>, f: A): <R, E>(
-    self: Effect<R, E, K>
-  ) => Effect<R, E, MergeRecord<K, { [k in N]: A }>>
-  <R, E, K, N extends string, A>(self: Effect<R, E, K>, tag: Exclude<N, keyof K>, f: A): Effect<
     R,
     E,
     MergeRecord<K, { [k in N]: A }>
@@ -3084,16 +2883,6 @@ export declare const runPromise: <E, A>(effect: Effect<never, E, A>) => Promise<
 
 Added in v1.0.0
 
-## runPromiseEither
-
-**Signature**
-
-```ts
-export declare const runPromiseEither: <E, A>(effect: Effect<never, E, A>) => Promise<Either.Either<E, A>>
-```
-
-Added in v1.0.0
-
 ## runPromiseExit
 
 Runs an `Effect` workflow, returning a `Promise` which resolves with the
@@ -3113,16 +2902,6 @@ Added in v1.0.0
 
 ```ts
 export declare const runSync: <E, A>(effect: Effect<never, E, A>) => A
-```
-
-Added in v1.0.0
-
-## runSyncEither
-
-**Signature**
-
-```ts
-export declare const runSyncEither: <E, A>(effect: Effect<never, E, A>) => Either.Either<E, A>
 ```
 
 Added in v1.0.0
@@ -3596,40 +3375,6 @@ export declare const isSuccess: <R, E, A>(self: Effect<R, E, A>) => Effect<R, ne
 Added in v1.0.0
 
 # getters
-
-## right
-
-"Zooms in" on the value in the `Right` side of an `Either`, moving the
-possibility that the value is a `Left` to the error channel.
-
-**Signature**
-
-```ts
-export declare const right: <R, E, A, B>(self: Effect<R, E, Either.Either<A, B>>) => Effect<R, Either.Either<A, E>, B>
-```
-
-Added in v1.0.0
-
-## rightWith
-
-Performs the specified operation while "zoomed in" on the `Right` case of an
-`Either`.
-
-**Signature**
-
-```ts
-export declare const rightWith: {
-  <R, E, A, A1, B, B1, R1, E1>(
-    f: (effect: Effect<R, Either.Either<A, E>, B>) => Effect<R1, Either.Either<A1, E1>, B1>
-  ): (self: Effect<R, E, Either.Either<A, B>>) => Effect<R | R1, E | E1, Either.Either<A1, B1>>
-  <R, E, A, A1, B, B1, R1, E1>(
-    self: Effect<R, E, Either.Either<A, B>>,
-    f: (effect: Effect<R, Either.Either<A, E>, B>) => Effect<R1, Either.Either<A1, E1>, B1>
-  ): Effect<R | R1, E | E1, Either.Either<A1, B1>>
-}
-```
-
-Added in v1.0.0
 
 ## tags
 
@@ -5055,25 +4800,6 @@ export declare const tapErrorCause: {
 
 Added in v1.0.0
 
-## tapSome
-
-Returns an effect that effectfully "peeks" at the success of this effect.
-If the partial function isn't defined at the input, the result is
-equivalent to the original effect.
-
-**Signature**
-
-```ts
-export declare const tapSome: {
-  <A, R1, E1, X>(pf: (a: A) => Option.Option<Effect<R1, E1, X>>): <R, E>(
-    self: Effect<R, E, A>
-  ) => Effect<R1 | R, E1 | E, A>
-  <R, E, A, R1, E1, X>(self: Effect<R, E, A>, pf: (a: A) => Option.Option<Effect<R1, E1, X>>): Effect<R | R1, E | E1, A>
-}
-```
-
-Added in v1.0.0
-
 # supervision
 
 ## daemonChildren
@@ -6482,18 +6208,6 @@ export declare const replicateEffect: {
 
 Added in v1.0.0
 
-## resurrect
-
-Unearth the unchecked failure of the effect (opposite of `orDie`).
-
-**Signature**
-
-```ts
-export declare const resurrect: <R, E, A>(self: Effect<R, E, A>) => Effect<R, unknown, A>
-```
-
-Added in v1.0.0
-
 ## retry
 
 Retries with the specified retry policy. Retries are done following the
@@ -6869,92 +6583,6 @@ export declare const some: <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Ef
 
 Added in v1.0.0
 
-## someOrElse
-
-Extracts the optional value, or returns the given 'orElse'.
-
-**Signature**
-
-```ts
-export declare const someOrElse: {
-  <B>(orElse: LazyArg<B>): <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R, E, B | A>
-  <R, E, A, B>(self: Effect<R, E, Option.Option<A>>, orElse: LazyArg<B>): Effect<R, E, A | B>
-}
-```
-
-Added in v1.0.0
-
-## someOrElseEffect
-
-Extracts the optional value, or executes the given 'orElse' effect.
-
-**Signature**
-
-```ts
-export declare const someOrElseEffect: {
-  <R2, E2, A2>(orElse: LazyArg<Effect<R2, E2, A2>>): <R, E, A>(
-    self: Effect<R, E, Option.Option<A>>
-  ) => Effect<R2 | R, E2 | E, A2 | A>
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, Option.Option<A>>, orElse: LazyArg<Effect<R2, E2, A2>>): Effect<
-    R | R2,
-    E | E2,
-    A | A2
-  >
-}
-```
-
-Added in v1.0.0
-
-## someOrFail
-
-Extracts the optional value, or fails with the given error 'e'.
-
-**Signature**
-
-```ts
-export declare const someOrFail: {
-  <E2>(orFail: LazyArg<E2>): <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R, E2 | E, A>
-  <R, E, A, E2>(self: Effect<R, E, Option.Option<A>>, orFail: LazyArg<E2>): Effect<R, E | E2, A>
-}
-```
-
-Added in v1.0.0
-
-## someOrFailException
-
-Extracts the optional value, or fails with a `NoSuchElementException`.
-
-**Signature**
-
-```ts
-export declare const someOrFailException: <R, E, A>(
-  self: Effect<R, E, Option.Option<A>>
-) => Effect<R, Cause.NoSuchElementException | E, A>
-```
-
-Added in v1.0.0
-
-## someWith
-
-Perfoms the specified operation while "zoomed in" on the `Some` case of an
-`Option`.
-
-**Signature**
-
-```ts
-export declare const someWith: {
-  <R, E, A, R1, E1, A1>(f: (effect: Effect<R, Option.Option<E>, A>) => Effect<R1, Option.Option<E1>, A1>): (
-    self: Effect<R, E, Option.Option<A>>
-  ) => Effect<R | R1, E | E1, Option.Option<A1>>
-  <R, E, A, R1, E1, A1>(
-    self: Effect<R, E, Option.Option<A>>,
-    f: (effect: Effect<R, Option.Option<E>, A>) => Effect<R1, Option.Option<E1>, A1>
-  ): Effect<R | R1, E | E1, Option.Option<A1>>
-}
-```
-
-Added in v1.0.0
-
 ## step
 
 **Signature**
@@ -7253,19 +6881,6 @@ export declare const unrefine: {
 
 Added in v1.0.0
 
-## unright
-
-Converts a `Effect<R, Either<B, E>, A>` into a `Effect<R, E, Either<B, A>>`.
-The inverse of `right`.
-
-**Signature**
-
-```ts
-export declare const unright: <R, B, E, A>(self: Effect<R, Either.Either<B, E>, A>) => Effect<R, E, Either.Either<B, A>>
-```
-
-Added in v1.0.0
-
 ## unsandbox
 
 The inverse operation `sandbox(effect)`
@@ -7421,17 +7036,17 @@ export declare const validateFirst: {
 
 ```ts
 import * as Effect from '@effect/io/Effect'
-import * as Either from '@effect/data/Either'
+import * as Exit from '@effect/io/Exit'
 
 const f = (n: number) => (n > 0 ? Effect.succeed(n) : Effect.fail(`${n} is negative`))
 
-assert.deepStrictEqual(Effect.runSyncEither(Effect.validateFirst([], f)), Either.left([]))
-assert.deepStrictEqual(Effect.runSyncEither(Effect.validateFirst([1, 2], f)), Either.right(1))
-assert.deepStrictEqual(Effect.runSyncEither(Effect.validateFirst([1, -1], f)), Either.right(1))
-assert.deepStrictEqual(Effect.runSyncEither(Effect.validateFirst([-1, 2], f)), Either.right(2))
+assert.deepStrictEqual(Exit.unannotate(Effect.runSyncExit(Effect.validateFirst([], f))), Exit.fail([]))
+assert.deepStrictEqual(Exit.unannotate(Effect.runSyncExit(Effect.validateFirst([1, 2], f))), Exit.succeed(1))
+assert.deepStrictEqual(Exit.unannotate(Effect.runSyncExit(Effect.validateFirst([1, -1], f))), Exit.succeed(1))
+assert.deepStrictEqual(Exit.unannotate(Effect.runSyncExit(Effect.validateFirst([-1, 2], f))), Exit.succeed(2))
 assert.deepStrictEqual(
-  Effect.runSyncEither(Effect.validateFirst([-1, -2], f)),
-  Either.left(['-1 is negative', '-2 is negative'])
+  Exit.unannotate(Effect.runSyncExit(Effect.validateFirst([-1, -2], f))),
+  Exit.fail(['-1 is negative', '-2 is negative'])
 )
 ```
 
@@ -7524,44 +7139,6 @@ The moral equivalent of `if (p) exp`.
 export declare const when: {
   (predicate: LazyArg<boolean>): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Option.Option<A>>
   <R, E, A>(self: Effect<R, E, A>, predicate: LazyArg<boolean>): Effect<R, E, Option.Option<A>>
-}
-```
-
-Added in v1.0.0
-
-## whenCase
-
-Runs an effect when the supplied partial function matches for the given
-value, otherwise does nothing.
-
-**Signature**
-
-```ts
-export declare const whenCase: <R, E, A, B>(
-  evaluate: LazyArg<A>,
-  pf: (a: A) => Option.Option<Effect<R, E, B>>
-) => Effect<R, E, Option.Option<B>>
-```
-
-Added in v1.0.0
-
-## whenCaseEffect
-
-Runs an effect when the supplied partial function matches for the given
-value, otherwise does nothing.
-
-**Signature**
-
-```ts
-export declare const whenCaseEffect: {
-  <A, R2, E2, A2>(pf: (a: A) => Option.Option<Effect<R2, E2, A2>>): <R, E>(
-    self: Effect<R, E, A>
-  ) => Effect<R2 | R, E2 | E, Option.Option<A2>>
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, pf: (a: A) => Option.Option<Effect<R2, E2, A2>>): Effect<
-    R | R2,
-    E | E2,
-    Option.Option<A2>
-  >
 }
 ```
 

@@ -2391,25 +2391,21 @@ export const head: <R, E, A>(self: Effect<R, E, Iterable<A>>) => Effect<R, Optio
  */
 export const ifEffect: {
   <R1, R2, E1, E2, A, A1>(
-    onTrue: Effect<R1, E1, A>,
-    onFalse: Effect<R2, E2, A1>
+    options: { readonly onTrue: Effect<R1, E1, A>; readonly onFalse: Effect<R2, E2, A1> }
   ): <R, E>(self: Effect<R, E, boolean>) => Effect<R1 | R2 | R, E1 | E2 | E, A | A1>
   <R, E, R1, R2, E1, E2, A, A1>(
     self: Effect<R, E, boolean>,
-    onTrue: Effect<R1, E1, A>,
-    onFalse: Effect<R2, E2, A1>
+    options: { readonly onTrue: Effect<R1, E1, A>; readonly onFalse: Effect<R2, E2, A1> }
   ): Effect<R | R1 | R2, E | E1 | E2, A | A1>
 } = core.ifEffect
 
 const if_: {
   <R1, R2, E1, E2, A, A1>(
-    onTrue: Effect<R1, E1, A>,
-    onFalse: Effect<R2, E2, A1>
+    options: { readonly onTrue: Effect<R1, E1, A>; readonly onFalse: Effect<R2, E2, A1> }
   ): (self: boolean) => Effect<R1 | R2, E1 | E2, A | A1>
   <R1, R2, E1, E2, A, A1>(
     self: boolean,
-    onTrue: Effect<R1, E1, A>,
-    onFalse: Effect<R2, E2, A1>
+    options: { readonly onTrue: Effect<R1, E1, A>; readonly onFalse: Effect<R2, E2, A1> }
   ): Effect<R1 | R2, E1 | E2, A | A1>
 } = core.if_
 
@@ -4877,11 +4873,11 @@ export const validateAllParDiscard: {
  *
  * const f = (n: number) => (n > 0 ? Effect.succeed(n) : Effect.fail(`${n} is negative`))
  *
- * assert.deepStrictEqual(Effect.runSyncExit(Effect.validateFirst([], f)), Exit.fail([]))
- * assert.deepStrictEqual(Effect.runSyncExit(Effect.validateFirst([1, 2], f)), Exit.succeed(1))
- * assert.deepStrictEqual(Effect.runSyncExit(Effect.validateFirst([1, -1], f)), Exit.succeed(1))
- * assert.deepStrictEqual(Effect.runSyncExit(Effect.validateFirst([-1, 2], f)), Exit.succeed(2))
- * assert.deepStrictEqual(Effect.runSyncExit(Effect.validateFirst([-1, -2], f)), Exit.fail(['-1 is negative', '-2 is negative']))
+ * assert.deepStrictEqual(Exit.unannotate(Effect.runSyncExit(Effect.validateFirst([], f))), Exit.fail([]))
+ * assert.deepStrictEqual(Exit.unannotate(Effect.runSyncExit(Effect.validateFirst([1, 2], f))), Exit.succeed(1))
+ * assert.deepStrictEqual(Exit.unannotate(Effect.runSyncExit(Effect.validateFirst([1, -1], f))), Exit.succeed(1))
+ * assert.deepStrictEqual(Exit.unannotate(Effect.runSyncExit(Effect.validateFirst([-1, 2], f))), Exit.succeed(2))
+ * assert.deepStrictEqual(Exit.unannotate(Effect.runSyncExit(Effect.validateFirst([-1, -2], f))), Exit.fail(['-1 is negative', '-2 is negative']))
  *
  * @since 1.0.0
  * @category utils

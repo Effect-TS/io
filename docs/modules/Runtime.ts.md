@@ -21,10 +21,8 @@ Added in v1.0.0
   - [runCallback](#runcallback)
   - [runFork](#runfork)
   - [runPromise](#runpromise)
-  - [runPromiseEither](#runpromiseeither)
   - [runPromiseExit](#runpromiseexit)
   - [runSync](#runsync)
-  - [runSyncEither](#runsynceither)
   - [runSyncExit](#runsyncexit)
 - [exports](#exports)
   - [FiberFailureCauseId (type alias)](#fiberfailurecauseid-type-alias)
@@ -146,25 +144,6 @@ export declare const runPromise: <R>(runtime: Runtime<R>) => <E, A>(effect: Effe
 
 Added in v1.0.0
 
-## runPromiseEither
-
-Runs the `Effect`, returning a JavaScript `Promise` that will be resolved
-with the either a success or a failure. The promise will be rejected in case
-of defects and interruption.
-
-This method is effectful and should only be used at the edges of your
-program.
-
-**Signature**
-
-```ts
-export declare const runPromiseEither: <R>(
-  runtime: Runtime<R>
-) => <E, A>(effect: Effect.Effect<R, E, A>) => Promise<Either<E, A>>
-```
-
-Added in v1.0.0
-
 ## runPromiseExit
 
 Runs the `Effect`, returning a JavaScript `Promise` that will be resolved
@@ -194,23 +173,6 @@ program.
 
 ```ts
 export declare const runSync: <R>(runtime: Runtime<R>) => <E, A>(effect: Effect.Effect<R, E, A>) => A
-```
-
-Added in v1.0.0
-
-## runSyncEither
-
-Executes the effect synchronously returning either the result or a failure.
-
-Throwing in case of defects and interruptions.
-
-This method is effectful and should only be invoked at the edges of your
-program.
-
-**Signature**
-
-```ts
-export declare const runSyncEither: <R>(runtime: Runtime<R>) => <E, A>(effect: Effect.Effect<R, E, A>) => Either<E, A>
 ```
 
 Added in v1.0.0
