@@ -154,50 +154,6 @@ describe.concurrent("Effect", () => {
       assert.strictEqual(v2, 2)
       assert.deepStrictEqual(failed, Either.left(failure))
     }))
-  it.effect("whenCase - executes correct branch only", () =>
-    Effect.gen(function*($) {
-      const v1 = Option.none() as Option.Option<number>
-      const v2 = Option.some(0)
-      const ref = yield* $(Ref.make(false))
-      yield* $(Effect.whenCase(() => v1, (option) =>
-        option._tag === "Some" ?
-          Option.some(Ref.set(ref, true)) :
-          Option.none()))
-      const res1 = yield* $(Ref.get(ref))
-      yield* $(Effect.whenCase(() => v2, (option) =>
-        option._tag === "Some" ?
-          Option.some(Ref.set(ref, true)) :
-          Option.none()))
-      const res2 = yield* $(Ref.get(ref))
-      assert.isFalse(res1)
-      assert.isTrue(res2)
-    }))
-  it.effect("whenCaseEffect - executes condition effect and correct branch", () =>
-    Effect.gen(function*($) {
-      const v1 = Option.none() as Option.Option<number>
-      const v2 = Option.some(0)
-      const ref = yield* $(Ref.make(false))
-      yield* $(
-        Effect.succeed(v1),
-        Effect.whenCaseEffect((option) =>
-          option._tag === "Some" ?
-            Option.some(Ref.set(ref, true)) :
-            Option.none()
-        )
-      )
-      const res1 = yield* $(Ref.get(ref))
-      yield* $(
-        Effect.succeed(v2),
-        Effect.whenCaseEffect((option) =>
-          option._tag === "Some" ?
-            Option.some(Ref.set(ref, true)) :
-            Option.none()
-        )
-      )
-      const res2 = yield* $(Ref.get(ref))
-      assert.isFalse(res1)
-      assert.isTrue(res2)
-    }))
   it.effect("whenEffect - executes condition effect and correct branch", () =>
     Effect.gen(function*($) {
       const effectRef = yield* $(Ref.make(0))

@@ -259,7 +259,7 @@ export const catchSomeCause = Debug.dualWithTrace<
 )
 
 /* @internal */
-export const catchSomeDefect = Debug.dualWithTrace<
+export const catchSomeDefect = dual<
   <R2, E2, A2>(
     pf: (defect: unknown) => Option.Option<Effect.Effect<R2, E2, A2>>
   ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A | A2>,
@@ -269,12 +269,11 @@ export const catchSomeDefect = Debug.dualWithTrace<
   ) => Effect.Effect<R | R2, E | E2, A | A2>
 >(
   2,
-  (trace, restore) =>
-    <R, E, A, R2, E2, A2>(self: Effect.Effect<R, E, A>, pf: (_: unknown) => Option.Option<Effect.Effect<R2, E2, A2>>) =>
-      pipe(
-        unrefineWith(self, restore(pf), core.fail),
-        core.catchAll((s): Effect.Effect<R2, E | E2, A2> => s)
-      ).traced(trace)
+  <R, E, A, R2, E2, A2>(self: Effect.Effect<R, E, A>, pf: (_: unknown) => Option.Option<Effect.Effect<R2, E2, A2>>) =>
+    core.catchAll(
+      unrefineWith(self, pf, core.fail),
+      (s): Effect.Effect<R2, E | E2, A2> => s
+    )
 )
 
 /* @internal */
@@ -2536,31 +2535,6 @@ export const when = Debug.dualWithTrace<
         core.map(self, Option.some) :
         core.succeed(Option.none())
     ).traced(trace))
-
-/* @internal */
-export const whenCase = Debug.methodWithTrace((trace, restore) =>
-  <R, E, A, B>(
-    evaluate: LazyArg<A>,
-    pf: (a: A) => Option.Option<Effect.Effect<R, E, B>>
-  ): Effect.Effect<R, E, Option.Option<B>> =>
-    core.flatMap(core.sync(restore(evaluate)), (a) =>
-      pipe(
-        restore(pf)(a),
-        Option.map(asSome),
-        Option.getOrElse(() => succeedNone)
-      )).traced(trace)
-)
-
-/* @internal */
-export const whenCaseEffect = Debug.dualWithTrace<
-  <A, R2, E2, A2>(
-    pf: (a: A) => Option.Option<Effect.Effect<R2, E2, A2>>
-  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, Option.Option<A2>>,
-  <R, E, A, R2, E2, A2>(
-    self: Effect.Effect<R, E, A>,
-    pf: (a: A) => Option.Option<Effect.Effect<R2, E2, A2>>
-  ) => Effect.Effect<R | R2, E | E2, Option.Option<A2>>
->(2, (trace, restore) => (self, pf) => core.flatMap(self, (a) => whenCase(() => a, restore(pf))).traced(trace))
 
 /* @internal */
 export const whenFiberRef = Debug.dualWithTrace<

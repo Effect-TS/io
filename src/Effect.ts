@@ -4964,35 +4964,6 @@ export const when: {
 } = effect.when
 
 /**
- * Runs an effect when the supplied partial function matches for the given
- * value, otherwise does nothing.
- *
- * @since 1.0.0
- * @category utils
- */
-export const whenCase: <R, E, A, B>(
-  evaluate: LazyArg<A>,
-  pf: (a: A) => Option.Option<Effect<R, E, B>>
-) => Effect<R, E, Option.Option<B>> = effect.whenCase
-
-/**
- * Runs an effect when the supplied partial function matches for the given
- * value, otherwise does nothing.
- *
- * @since 1.0.0
- * @category utils
- */
-export const whenCaseEffect: {
-  <A, R2, E2, A2>(
-    pf: (a: A) => Option.Option<Effect<R2, E2, A2>>
-  ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, Option.Option<A2>>
-  <R, E, A, R2, E2, A2>(
-    self: Effect<R, E, A>,
-    pf: (a: A) => Option.Option<Effect<R2, E2, A2>>
-  ): Effect<R | R2, E | E2, Option.Option<A2>>
-} = effect.whenCaseEffect
-
-/**
  * @since 1.0.0
  * @category constructors
  */
