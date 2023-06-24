@@ -86,7 +86,7 @@ export const flakyTest = <R, E, A>(
   timeout: Duration.Duration = Duration.seconds(30)
 ) => {
   return pipe(
-    Effect.resurrect(self),
+    Effect.catchAllDefect(self, Effect.fail),
     Effect.retry(
       pipe(
         Schedule.recurs(10),

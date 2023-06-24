@@ -135,21 +135,6 @@ describe.concurrent("Effect", () => {
       const result = yield* $(Effect.option(Effect.sandbox(Effect.die(ExampleError))))
       assert.deepStrictEqual(result, Option.none())
     }))
-  it.effect("right - on Right value", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(Effect.right(Effect.succeed(Either.right("right"))))
-      assert.strictEqual(result, "right")
-    }))
-  it.effect("right - on Left value", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(Effect.exit(Effect.right(Effect.succeed(Either.left("left")))))
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(Either.left("left")))
-    }))
-  it.effect("right - on failure", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(Effect.exit(Effect.right(Effect.fail("fail"))))
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(Either.right("fail")))
-    }))
   it.effect("some - extracts the value from Some", () =>
     Effect.gen(function*($) {
       const result = yield* $(Effect.some(Effect.succeed(Option.some(1))))
@@ -236,27 +221,6 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const effect = Effect.fail(42)
       const result = yield* $(effect, Effect.left, Effect.unleft, Effect.exit)
-      const expected = yield* $(Effect.exit(effect))
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.unannotate(expected))
-    }))
-  it.effect("unright - should handle successes with right", () =>
-    Effect.gen(function*($) {
-      const effect = Effect.succeed(Either.right(42))
-      const result = yield* $(effect, Effect.right, Effect.unright, Effect.exit)
-      const expected = yield* $(Effect.exit(effect))
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.unannotate(expected))
-    }))
-  it.effect("unright - should handle successes with left", () =>
-    Effect.gen(function*($) {
-      const effect = Effect.succeed(Either.left(42))
-      const result = yield* $(effect, Effect.right, Effect.unright, Effect.exit)
-      const expected = yield* $(Effect.exit(effect))
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.unannotate(expected))
-    }))
-  it.effect("unright - should handle failures", () =>
-    Effect.gen(function*($) {
-      const effect = Effect.fail(42)
-      const result = yield* $(effect, Effect.right, Effect.unright, Effect.exit)
       const expected = yield* $(Effect.exit(effect))
       assert.deepStrictEqual(Exit.unannotate(result), Exit.unannotate(expected))
     }))

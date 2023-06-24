@@ -1863,44 +1863,6 @@ const repeatNLoop = Debug.methodWithTrace((trace) =>
 )
 
 /* @internal */
-export const resurrect = Debug.methodWithTrace((trace) =>
-  <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, unknown, A> =>
-    unrefineWith(self, Option.some, identity).traced(trace)
-)
-
-/* @internal */
-export const right = Debug.methodWithTrace((trace) =>
-  <R, E, A, B>(
-    self: Effect.Effect<R, E, Either.Either<A, B>>
-  ): Effect.Effect<R, Either.Either<A, E>, B> =>
-    core.matchEffect(
-      self,
-      (e) => core.fail(Either.right(e)),
-      (either) => {
-        switch (either._tag) {
-          case "Left": {
-            return core.fail(Either.left(either.left))
-          }
-          case "Right": {
-            return core.succeed(either.right)
-          }
-        }
-      }
-    ).traced(trace)
-)
-
-/* @internal */
-export const rightWith = Debug.dualWithTrace<
-  <R, E, A, A1, B, B1, R1, E1>(
-    f: (effect: Effect.Effect<R, Either.Either<A, E>, B>) => Effect.Effect<R1, Either.Either<A1, E1>, B1>
-  ) => (self: Effect.Effect<R, E, Either.Either<A, B>>) => Effect.Effect<R | R1, E | E1, Either.Either<A1, B1>>,
-  <R, E, A, A1, B, B1, R1, E1>(
-    self: Effect.Effect<R, E, Either.Either<A, B>>,
-    f: (effect: Effect.Effect<R, Either.Either<A, E>, B>) => Effect.Effect<R1, Either.Either<A1, E1>, B1>
-  ) => Effect.Effect<R | R1, E | E1, Either.Either<A1, B1>>
->(2, (trace, restore) => (self, f) => core.suspend(() => unright(restore(f)(right(self)))).traced(trace))
-
-/* @internal */
 export const sandbox = Debug.methodWithTrace((trace) =>
   <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, Cause.Cause<E>, A> =>
     core.matchCauseEffect(self, core.fail, core.succeed).traced(trace)
@@ -2500,27 +2462,6 @@ export const unrefineWith = Debug.dualWithTrace<
         }
       }
     ).traced(trace))
-
-/* @internal */
-export const unright = Debug.methodWithTrace((trace) =>
-  <R, B, E, A>(
-    self: Effect.Effect<R, Either.Either<B, E>, A>
-  ): Effect.Effect<R, E, Either.Either<B, A>> =>
-    core.matchEffect(
-      self,
-      (either) => {
-        switch (either._tag) {
-          case "Left": {
-            return core.succeed(Either.left(either.left))
-          }
-          case "Right": {
-            return core.fail(either.right)
-          }
-        }
-      },
-      (a) => core.succeed(Either.right(a))
-    ).traced(trace)
-)
 
 /* @internal */
 export const unsandbox = Debug.methodWithTrace((trace) =>

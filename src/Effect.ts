@@ -3886,41 +3886,6 @@ export const replicateEffect: {
 } = circular.replicateEffect
 
 /**
- * Unearth the unchecked failure of the effect (opposite of `orDie`).
- *
- * @since 1.0.0
- * @category utils
- */
-export const resurrect: <R, E, A>(self: Effect<R, E, A>) => Effect<R, unknown, A> = effect.resurrect
-
-/**
- * "Zooms in" on the value in the `Right` side of an `Either`, moving the
- * possibility that the value is a `Left` to the error channel.
- *
- * @since 1.0.0
- * @category getters
- */
-export const right: <R, E, A, B>(self: Effect<R, E, Either.Either<A, B>>) => Effect<R, Either.Either<A, E>, B> =
-  effect.right
-
-/**
- * Performs the specified operation while "zoomed in" on the `Right` case of an
- * `Either`.
- *
- * @since 1.0.0
- * @category getters
- */
-export const rightWith: {
-  <R, E, A, A1, B, B1, R1, E1>(
-    f: (effect: Effect<R, Either.Either<A, E>, B>) => Effect<R1, Either.Either<A1, E1>, B1>
-  ): (self: Effect<R, E, Either.Either<A, B>>) => Effect<R | R1, E | E1, Either.Either<A1, B1>>
-  <R, E, A, A1, B, B1, R1, E1>(
-    self: Effect<R, E, Either.Either<A, B>>,
-    f: (effect: Effect<R, Either.Either<A, E>, B>) => Effect<R1, Either.Either<A1, E1>, B1>
-  ): Effect<R | R1, E | E1, Either.Either<A1, B1>>
-} = effect.rightWith
-
-/**
  * Returns an effect that accesses the runtime, which can be used to
  * (unsafely) execute tasks. This is useful for integration with legacy code
  * that must call back into Effect code.
@@ -4787,16 +4752,6 @@ export const unrefineWith: {
     f: (e: E) => E2
   ): Effect<R, E1 | E2, A>
 } = effect.unrefineWith
-
-/**
- * Converts a `Effect<R, Either<B, E>, A>` into a `Effect<R, E, Either<B, A>>`.
- * The inverse of `right`.
- *
- * @since 1.0.0
- * @category utils
- */
-export const unright: <R, B, E, A>(self: Effect<R, Either.Either<B, E>, A>) => Effect<R, E, Either.Either<B, A>> =
-  effect.unright
 
 /**
  * @category locking
