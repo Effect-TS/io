@@ -501,23 +501,6 @@ describe.concurrent("Effect", () => {
       const result = yield* $(Effect.fail(false), Effect.orElseFail(constTrue), Effect.flip)
       assert.isTrue(result)
     }))
-  it.effect("orElseOptional - produces the value of this effect if it succeeds", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(Effect.succeed("succeed"), Effect.orElseOptional(() => Effect.succeed("orElse")))
-      assert.strictEqual(result, "succeed")
-    }))
-  it.effect("orElseOptional - produces the value of this effect if it fails with some error", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(
-        pipe(Effect.fail(Option.some("fail")), Effect.orElseOptional(() => Effect.succeed("orElse")), Effect.exit)
-      )
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(Option.some("fail")))
-    }))
-  it.effect("orElseOptional - produces the value of the specified effect if it fails with none", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(Effect.fail(Option.none()), Effect.orElseOptional(() => Effect.succeed("orElse")))
-      assert.strictEqual(result, "orElse")
-    }))
   it.effect("orElseSucceed - executes this effect and returns its value if it succeeds", () =>
     Effect.gen(function*($) {
       const result = yield* $(Effect.succeed(true), Effect.orElseSucceed(constFalse))

@@ -3103,24 +3103,6 @@ export const orElseFail: {
 } = effect.orElseFail
 
 /**
- * Returns an effect that will produce the value of this effect, unless it
- * fails with the `None` value, in which case it will produce the value of
- * the specified effect.
- *
- * @since 1.0.0
- * @category alternatives
- */
-export const orElseOptional: {
-  <R, E, A, R2, E2, A2>(
-    that: LazyArg<Effect<R2, Option.Option<E2>, A2>>
-  ): (self: Effect<R, Option.Option<E>, A>) => Effect<R | R2, Option.Option<E | E2>, A | A2>
-  <R, E, A, R2, E2, A2>(
-    self: Effect<R, Option.Option<E>, A>,
-    that: LazyArg<Effect<R2, Option.Option<E2>, A2>>
-  ): Effect<R | R2, Option.Option<E | E2>, A | A2>
-} = effect.orElseOptional
-
-/**
  * Executes this effect and returns its value, if it succeeds, but
  * otherwise succeeds with the specified value.
  *

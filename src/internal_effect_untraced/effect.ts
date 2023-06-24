@@ -1553,33 +1553,6 @@ export const orElseFail = Debug.dualWithTrace<
 >(2, (trace, restore) => (self, evaluate) => core.orElse(self, () => core.failSync(restore(evaluate))).traced(trace))
 
 /* @internal */
-export const orElseOptional = Debug.dualWithTrace<
-  <R, E, A, R2, E2, A2>(
-    that: LazyArg<Effect.Effect<R2, Option.Option<E2>, A2>>
-  ) => (
-    self: Effect.Effect<R, Option.Option<E>, A>
-  ) => Effect.Effect<R | R2, Option.Option<E | E2>, A | A2>,
-  <R, E, A, R2, E2, A2>(
-    self: Effect.Effect<R, Option.Option<E>, A>,
-    that: LazyArg<Effect.Effect<R2, Option.Option<E2>, A2>>
-  ) => Effect.Effect<R | R2, Option.Option<E | E2>, A | A2>
->(2, (trace, restore) =>
-  <R, E, A, R2, E2, A2>(
-    self: Effect.Effect<R, Option.Option<E>, A>,
-    that: LazyArg<Effect.Effect<R2, Option.Option<E2>, A2>>
-  ) =>
-    core.catchAll(self, (option) => {
-      switch (option._tag) {
-        case "None": {
-          return restore(that)()
-        }
-        case "Some": {
-          return core.fail(Option.some<E | E2>(option.value))
-        }
-      }
-    }).traced(trace))
-
-/* @internal */
 export const orElseSucceed = Debug.dualWithTrace<
   <A2>(evaluate: LazyArg<A2>) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A | A2>,
   <R, E, A, A2>(self: Effect.Effect<R, E, A>, evaluate: LazyArg<A2>) => Effect.Effect<R, E, A | A2>
