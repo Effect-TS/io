@@ -4835,13 +4835,6 @@ export const runSyncExit: <E, A>(effect: Effect<never, E, A>) => Exit.Exit<E, A>
 
 /**
  * @since 1.0.0
- * @category execution
- */
-export const runSyncEither: <E, A>(effect: Effect<never, E, A>) => Either.Either<E, A> =
-  _runtime.unsafeRunSyncEitherEffect
-
-/**
- * @since 1.0.0
  * @category utils
  */
 export const serviceFunction: <T extends Context.Tag<any, any>, Args extends Array<any>, A>(

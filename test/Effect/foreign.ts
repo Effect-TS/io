@@ -11,9 +11,6 @@ import * as it from "@effect/io/test/utils/extend"
 import { assert, describe } from "vitest"
 
 describe.concurrent("Foreign", () => {
-  it.it("Sync Either", () => {
-    expect(Effect.runSyncEither(Either.right(1))).toEqual(Either.right(1))
-  })
   it.effect("Unify", () =>
     Effect.gen(function*($) {
       const unifiedEffect = unify((yield* $(nextInt())) > 1 ? Effect.succeed(0) : Effect.fail(1))

@@ -1,6 +1,5 @@
 import * as Context from "@effect/data/Context"
 import * as Debug from "@effect/data/Debug"
-import type * as Either from "@effect/data/Either"
 import { pipe } from "@effect/data/Function"
 import * as Option from "@effect/data/Option"
 import type * as Cause from "@effect/io/Cause"
@@ -213,11 +212,6 @@ export const unsafeRunSyncExit = <R>(runtime: Runtime.Runtime<R>) =>
   )
 
 /** @internal */
-export const unsafeRunSyncEither = <R>(runtime: Runtime.Runtime<R>) =>
-  <E, A>(effect: Effect.Effect<R, E, A>): Either.Either<E, A> =>
-    Debug.untraced(() => unsafeRunSync(runtime)(core.either(effect)))
-
-/** @internal */
 export const unsafeRunPromise = <R>(runtime: Runtime.Runtime<R>) =>
   Debug.methodWithTrace((trace) =>
     <E, A>(effect: Effect.Effect<R, E, A>): Promise<A> =>
@@ -319,9 +313,6 @@ export const unsafeRunSyncEffect = unsafeRunSync(defaultRuntime)
 
 /** @internal */
 export const unsafeRunSyncExitEffect = unsafeRunSyncExit(defaultRuntime)
-
-/** @internal */
-export const unsafeRunSyncEitherEffect = unsafeRunSyncEither(defaultRuntime)
 
 // circular with Effect
 

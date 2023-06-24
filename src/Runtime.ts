@@ -2,7 +2,6 @@
  * @since 1.0.0
  */
 import type * as Context from "@effect/data/Context"
-import type { Either } from "@effect/data/Either"
 import type { Cause } from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
@@ -110,20 +109,6 @@ export const runCallback: <R>(
   onExit?: ((exit: Exit.Exit<E, A>) => void) | undefined
 ) => (fiberId?: FiberId.FiberId | undefined, onExit?: ((exit: Exit.Exit<E, A>) => void) | undefined) => void =
   internal.unsafeRunCallback
-
-/**
- * Executes the effect synchronously returning either the result or a failure.
- *
- * Throwing in case of defects and interruptions.
- *
- * This method is effectful and should only be invoked at the edges of your
- * program.
- *
- * @since 1.0.0
- * @category execution
- */
-export const runSyncEither: <R>(runtime: Runtime<R>) => <E, A>(effect: Effect.Effect<R, E, A>) => Either<E, A> =
-  internal.unsafeRunSyncEither
 
 /**
  * Runs the `Effect`, returning a JavaScript `Promise` that will be resolved
