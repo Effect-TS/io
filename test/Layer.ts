@@ -380,7 +380,7 @@ describe.concurrent("Layer", () => {
           })
         })
       )
-      const provideNumberRef = Layer.effect(NumberRefTag, Ref.make(10))
+      const provideNumberRef = Layer.effect(NumberRefTag)(Ref.make(10))
       const provideString = Layer.succeed(StringTag, "hi")
       const needsString = pipe(provideNumberRef, Layer.provide(fooBuilder))
       const layer = pipe(provideString, Layer.provide(needsString))

@@ -3956,55 +3956,6 @@ export const timeoutTo: {
 } = circular.timeoutTo
 
 /**
- * Constructs a layer from this effect.
- *
- * @since 1.0.0
- * @category conversions
- */
-export const toLayer: {
-  <I, A>(tag: Context.Tag<I, A>): <R, E>(self: Effect<R, E, A>) => Layer.Layer<R, E, I>
-  <R, E, A, I>(self: Effect<R, E, A>, tag: Context.Tag<I, A>): Layer.Layer<R, E, I>
-} = layer.toLayer
-
-/**
- * Constructs a layer from this effect.
- *
- * @since 1.0.0
- * @category conversions
- */
-export const toLayerContext: <R, E, A>(effect: Effect<R, E, Context.Context<A>>) => Layer.Layer<R, E, A> =
-  layer.fromEffectContext
-
-/**
- * Constructs a layer from this effect.
- *
- * @since 1.0.0
- * @category conversions
- */
-export const toLayerDiscard: <R, E, _>(effect: Effect<R, E, _>) => Layer.Layer<R, E, never> = layer.fromEffectDiscard
-
-/**
- * Constructs a layer from this effect.
- *
- * @since 1.0.0
- * @category conversions
- */
-export const toLayerScopedDiscard: <R, E, _>(
-  effect: Effect<R, E, _>
-) => Layer.Layer<Exclude<R, Scope.Scope>, E, never> = layer.scopedDiscard
-
-/**
- * Constructs a layer from this effect.
- *
- * @since 1.0.0
- * @category conversions
- */
-export const toLayerScoped: {
-  <I, A>(tag: Context.Tag<I, A>): <R, E>(self: Effect<R, E, A>) => Layer.Layer<Exclude<R, Scope.Scope>, E, I>
-  <R, E, I, A>(self: Effect<R, E, A>, tag: Context.Tag<I, A>): Layer.Layer<Exclude<R, Scope.Scope>, E, I>
-} = layer.toLayerScoped
-
-/**
  * Transplants specified effects so that when those effects fork other
  * effects, the forked effects will be governed by the scope of the fiber that
  * executes this effect.

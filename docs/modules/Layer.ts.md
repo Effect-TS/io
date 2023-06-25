@@ -154,10 +154,16 @@ Constructs a layer from the specified effect.
 **Signature**
 
 ```ts
-export declare const effect: <T extends Context.Tag<any, any>, R, E>(
-  tag: T,
-  effect: Effect.Effect<R, E, Context.Tag.Service<T>>
-) => Layer<R, E, Context.Tag.Identifier<T>>
+export declare const effect: {
+  <T extends Context.Tag<any, any>>(tag: T): <R, E>(
+    effect: Effect.Effect<R, E, Context.Tag.Service<T>>
+  ) => Layer<R, E, Context.Tag.Identifier<T>>
+  <T extends Context.Tag<any, any>, R, E>(tag: T, effect: Effect.Effect<R, E, Context.Tag.Service<T>>): Layer<
+    R,
+    E,
+    Context.Tag.Identifier<T>
+  >
+}
 ```
 
 Added in v1.0.0
@@ -269,10 +275,16 @@ Constructs a layer from the specified scoped effect.
 **Signature**
 
 ```ts
-export declare const scoped: <T extends Context.Tag<any, any>, R, E>(
-  tag: T,
-  effect: Effect.Effect<R, E, Context.Tag.Service<T>>
-) => Layer<Exclude<R, Scope.Scope>, E, Context.Tag.Identifier<T>>
+export declare const scoped: {
+  <T extends Context.Tag<any, any>>(tag: T): <R, E>(
+    effect: Effect.Effect<R, E, Context.Tag.Service<T>>
+  ) => Layer<Exclude<R, Scope.Scope>, E, Context.Tag.Identifier<T>>
+  <T extends Context.Tag<any, any>, R, E>(tag: T, effect: Effect.Effect<R, E, Context.Tag.Service<T>>): Layer<
+    Exclude<R, Scope.Scope>,
+    E,
+    Context.Tag.Identifier<T>
+  >
+}
 ```
 
 Added in v1.0.0
@@ -328,10 +340,16 @@ Constructs a layer from the specified value.
 **Signature**
 
 ```ts
-export declare const succeed: <T extends Context.Tag<any, any>>(
-  tag: T,
-  resource: Context.Tag.Service<T>
-) => Layer<never, never, Context.Tag.Identifier<T>>
+export declare const succeed: {
+  <T extends Context.Tag<any, any>>(tag: T): (
+    resource: Context.Tag.Service<T>
+  ) => Layer<never, never, Context.Tag.Identifier<T>>
+  <T extends Context.Tag<any, any>>(tag: T, resource: Context.Tag.Service<T>): Layer<
+    never,
+    never,
+    Context.Tag.Identifier<T>
+  >
+}
 ```
 
 Added in v1.0.0
@@ -369,10 +387,16 @@ Lazily constructs a layer from the specified value.
 **Signature**
 
 ```ts
-export declare const sync: <T extends Context.Tag<any, any>>(
-  tag: T,
-  evaluate: LazyArg<Context.Tag.Service<T>>
-) => Layer<never, never, Context.Tag.Identifier<T>>
+export declare const sync: {
+  <T extends Context.Tag<any, any>>(tag: T): (
+    evaluate: LazyArg<Context.Tag.Service<T>>
+  ) => Layer<never, never, Context.Tag.Identifier<T>>
+  <T extends Context.Tag<any, any>>(tag: T, evaluate: LazyArg<Context.Tag.Service<T>>): Layer<
+    never,
+    never,
+    Context.Tag.Identifier<T>
+  >
+}
 ```
 
 Added in v1.0.0
