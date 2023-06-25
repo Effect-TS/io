@@ -737,12 +737,6 @@ export const firstSuccessOf = <R, E, A>(effects: Iterable<Effect.Effect<R, E, A>
   })
 
 /* @internal */
-export const flattenErrorOption = dual<
-  <E1>(fallback: E1) => <R, E, A>(self: Effect.Effect<R, Option.Option<E>, A>) => Effect.Effect<R, E | E1, A>,
-  <R, E, A, E1>(self: Effect.Effect<R, Option.Option<E>, A>, fallback: E1) => Effect.Effect<R, E | E1, A>
->(2, (self, fallback) => core.mapError(self, Option.getOrElse(() => fallback)))
-
-/* @internal */
 export const flipWith = dual<
   <R, A, E, R2, A2, E2>(
     f: (effect: Effect.Effect<R, A, E>) => Effect.Effect<R2, A2, E2>

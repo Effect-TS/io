@@ -1586,17 +1586,6 @@ export const flatten: <R, E, R1, E1, A>(self: Effect<R, E, Effect<R1, E1, A>>) =
   core.flatten
 
 /**
- * Unwraps the optional error, defaulting to the provided value.
- *
- * @since 1.0.0
- * @category sequencing
- */
-export const flattenErrorOption: {
-  <E1>(fallback: E1): <R, E, A>(self: Effect<R, Option.Option<E>, A>) => Effect<R, E1 | E, A>
-  <R, E, A, E1>(self: Effect<R, Option.Option<E>, A>, fallback: E1): Effect<R, E | E1, A>
-} = effect.flattenErrorOption
-
-/**
  * Returns an effect that swaps the error/success cases. This allows you to
  * use all methods on the error channel, possibly before flipping back.
  *

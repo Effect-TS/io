@@ -20,23 +20,6 @@ describe.concurrent("Effect", () => {
       assert.strictEqual(flatten1, "test")
       assert.strictEqual(flatten2, "test")
     }))
-  it.effect("flattenErrorOption - fails when given Some error", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(
-        pipe(Effect.fail(Option.some("error")), Effect.flattenErrorOption("default"), Effect.exit)
-      )
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail("error"))
-    }))
-  it.effect("flattenErrorOption - fails with default when given None error", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(Effect.fail(Option.none()), Effect.flattenErrorOption("default"), Effect.exit)
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail("default"))
-    }))
-  it.effect("flattenErrorOption - succeeds when given a value", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(Effect.succeed(1), Effect.flattenErrorOption("default"))
-      assert.strictEqual(result, 1)
-    }))
   it.effect("ifEffect - runs `onTrue` if result of `b` is `true`", () =>
     Effect.gen(function*($) {
       const result = yield* $(
