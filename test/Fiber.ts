@@ -1,7 +1,6 @@
 import * as Chunk from "@effect/data/Chunk"
 import { constVoid, identity, pipe } from "@effect/data/Function"
 import * as HashSet from "@effect/data/HashSet"
-import * as Option from "@effect/data/Option"
 import * as Deferred from "@effect/io/Deferred"
 import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
@@ -26,10 +25,11 @@ describe.concurrent("Fiber", () => {
       const fiber2 = yield* $(Fiber.await(fiber1), Effect.fork)
       const blockingOn = yield* $(
         Fiber.status(fiber2),
-        Effect.continueOrFail(constVoid, (status) =>
+        Effect.flatMap((status) =>
           FiberStatus.isSuspended(status)
-            ? Option.some(status.blockingOn)
-            : Option.none()),
+            ? Effect.succeed(status.blockingOn)
+            : Effect.failSync(constVoid)
+        ),
         Effect.eventually
       )
       assert.deepStrictEqual(blockingOn, Fiber.id(fiber1))
@@ -39,9 +39,8 @@ describe.concurrent("Fiber", () => {
       const fiber = yield* $(Effect.never, Effect.race(Effect.never), Effect.fork)
       const blockingOn = yield* $(
         Fiber.status(fiber),
-        Effect.continueOrFail(
-          () => void 0 as void,
-          (status) => FiberStatus.isSuspended(status) ? Option.some(status.blockingOn) : Option.none()
+        Effect.flatMap(
+          (status) => FiberStatus.isSuspended(status) ? Effect.succeed(status.blockingOn) : Effect.fail(void 0 as void)
         ),
         Effect.eventually
       )

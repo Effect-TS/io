@@ -1053,40 +1053,6 @@ export const contextWithEffect: <R, R0, E, A>(
 ) => Effect<R | R0, E, A> = core.contextWithEffect
 
 /**
- * Fail with the specifed `error` if the supplied partial function does not
- * match, otherwise continue with the returned value.
- *
- * @since 1.0.0
- * @category error handling
- */
-export const continueOrFail: {
-  <E1, A, A2>(
-    error: LazyArg<E1>,
-    pf: (a: A) => Option.Option<A2>
-  ): <R, E>(self: Effect<R, E, A>) => Effect<R, E1 | E, A2>
-  <R, E, A, E1, A2>(self: Effect<R, E, A>, error: LazyArg<E1>, pf: (a: A) => Option.Option<A2>): Effect<R, E | E1, A2>
-} = effect.continueOrFail
-
-/**
- * Fail with the specifed `error` if the supplied partial function does not
- * match, otherwise continue with the returned value.
- *
- * @since 1.0.0
- * @category error handling
- */
-export const continueOrFailEffect: {
-  <E1, A, R2, E2, A2>(
-    error: LazyArg<E1>,
-    pf: (a: A) => Option.Option<Effect<R2, E2, A2>>
-  ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E1 | E2 | E, A2>
-  <R, E, A, E1, R2, E2, A2>(
-    self: Effect<R, E, A>,
-    error: LazyArg<E1>,
-    pf: (a: A) => Option.Option<Effect<R2, E2, A2>>
-  ): Effect<R | R2, E | E1 | E2, A2>
-} = effect.continueOrFailEffect
-
-/**
  * Provides some of the context required to run this effect,
  * leaving the remainder `R0`.
  *

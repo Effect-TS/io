@@ -299,45 +299,6 @@ export const allDiscard: Effect.All.SignatureDiscard = function() {
 }
 
 /* @internal */
-export const continueOrFail = dual<
-  <E1, A, A2>(
-    error: LazyArg<E1>,
-    pf: (a: A) => Option.Option<A2>
-  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E | E1, A2>,
-  <R, E, A, E1, A2>(
-    self: Effect.Effect<R, E, A>,
-    error: LazyArg<E1>,
-    pf: (a: A) => Option.Option<A2>
-  ) => Effect.Effect<R, E | E1, A2>
->(3, (self, error, pf) =>
-  continueOrFailEffect(
-    self,
-    error,
-    (a) => Option.map(pf(a), core.succeed)
-  ))
-
-/* @internal */
-export const continueOrFailEffect = dual<
-  <E1, A, R2, E2, A2>(
-    error: LazyArg<E1>,
-    pf: (a: A) => Option.Option<Effect.Effect<R2, E2, A2>>
-  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E1 | E2, A2>,
-  <R, E, A, E1, R2, E2, A2>(
-    self: Effect.Effect<R, E, A>,
-    error: LazyArg<E1>,
-    pf: (a: A) => Option.Option<Effect.Effect<R2, E2, A2>>
-  ) => Effect.Effect<R | R2, E | E1 | E2, A2>
->(3, <R, E, A, E1, R2, E2, A2>(
-  self: Effect.Effect<R, E, A>,
-  error: LazyArg<E1>,
-  pf: (a: A) => Option.Option<Effect.Effect<R2, E2, A2>>
-) =>
-  core.flatMap(
-    self,
-    (value): Effect.Effect<R2, E1 | E2, A2> => Option.getOrElse(pf(value), () => core.failSync(error))
-  ))
-
-/* @internal */
 export const currentSpan: Effect.Effect<never, never, Option.Option<Tracer.Span>> = core.map(
   core.fiberRefGet(core.currentTracerSpan),
   List.head

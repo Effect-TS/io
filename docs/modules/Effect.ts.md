@@ -156,8 +156,6 @@ Added in v1.0.0
   - [catchTag](#catchtag)
   - [catchTags](#catchtags)
   - [cause](#cause)
-  - [continueOrFail](#continueorfail)
-  - [continueOrFailEffect](#continueorfaileffect)
   - [matchCause](#matchcause)
   - [matchCauseEffect](#matchcauseeffect)
   - [matchEffect](#matcheffect)
@@ -2618,46 +2616,6 @@ or `Cause.empty` if the effect did succeed.
 
 ```ts
 export declare const cause: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Cause.Cause<E>>
-```
-
-Added in v1.0.0
-
-## continueOrFail
-
-Fail with the specifed `error` if the supplied partial function does not
-match, otherwise continue with the returned value.
-
-**Signature**
-
-```ts
-export declare const continueOrFail: {
-  <E1, A, A2>(error: LazyArg<E1>, pf: (a: A) => Option.Option<A2>): <R, E>(
-    self: Effect<R, E, A>
-  ) => Effect<R, E1 | E, A2>
-  <R, E, A, E1, A2>(self: Effect<R, E, A>, error: LazyArg<E1>, pf: (a: A) => Option.Option<A2>): Effect<R, E | E1, A2>
-}
-```
-
-Added in v1.0.0
-
-## continueOrFailEffect
-
-Fail with the specifed `error` if the supplied partial function does not
-match, otherwise continue with the returned value.
-
-**Signature**
-
-```ts
-export declare const continueOrFailEffect: {
-  <E1, A, R2, E2, A2>(error: LazyArg<E1>, pf: (a: A) => Option.Option<Effect<R2, E2, A2>>): <R, E>(
-    self: Effect<R, E, A>
-  ) => Effect<R2 | R, E1 | E2 | E, A2>
-  <R, E, A, E1, R2, E2, A2>(
-    self: Effect<R, E, A>,
-    error: LazyArg<E1>,
-    pf: (a: A) => Option.Option<Effect<R2, E2, A2>>
-  ): Effect<R | R2, E | E1 | E2, A2>
-}
 ```
 
 Added in v1.0.0
