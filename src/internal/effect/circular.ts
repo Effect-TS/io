@@ -328,19 +328,6 @@ export const memoizeFunction = <R, E, A, B>(
 }
 
 /** @internal */
-export const raceEither = dual<
-  <R2, E2, A2>(
-    that: Effect.Effect<R2, E2, A2>
-  ) => <R, E, A>(
-    self: Effect.Effect<R, E, A>
-  ) => Effect.Effect<R | R2, E | E2, Either.Either<A, A2>>,
-  <R, E, A, R2, E2, A2>(
-    self: Effect.Effect<R, E, A>,
-    that: Effect.Effect<R2, E2, A2>
-  ) => Effect.Effect<R | R2, E | E2, Either.Either<A, A2>>
->(2, (self, that) => fiberRuntime.race(core.map(self, Either.left), core.map(that, Either.right)))
-
-/** @internal */
 export const raceFirst = dual<
   <R2, E2, A2>(
     that: Effect.Effect<R2, E2, A2>

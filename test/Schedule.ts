@@ -1,6 +1,5 @@
 import * as Chunk from "@effect/data/Chunk"
 import * as Duration from "@effect/data/Duration"
-import * as Either from "@effect/data/Either"
 import { constVoid, pipe } from "@effect/data/Function"
 import * as Option from "@effect/data/Option"
 import * as Cause from "@effect/io/Cause"
@@ -399,12 +398,6 @@ describe.concurrent("Schedule", () => {
         const result = yield* $(failOn0(ref), Effect.retryOrElse(Schedule.once, ioFail))
         assert.strictEqual(result, 2)
       }))
-    it.effect("retry exactly one time for `once` when second time succeeds - retryOrElse0", () =>
-      Effect.gen(function*($) {
-        const ref = yield* $(Ref.make(0))
-        const result = yield* $(failOn0(ref), Effect.retryOrElseEither(Schedule.once, ioFail))
-        assert.deepStrictEqual(result, Either.right(2))
-      }))
     it.effect("if fallback succeeded - retryOrElse", () =>
       Effect.gen(function*($) {
         const ref = yield* $(Ref.make(0))
@@ -418,24 +411,6 @@ describe.concurrent("Schedule", () => {
           pipe(
             alwaysFail(ref),
             Effect.retryOrElse(Schedule.once, ioFail),
-            Effect.matchEffect(Effect.succeed, () => Effect.succeed("it should not be a success"))
-          )
-        )
-        assert.strictEqual(result, "OrElseFailed")
-      }))
-    it.effect("if fallback succeeded - retryOrElseEither", () =>
-      Effect.gen(function*($) {
-        const ref = yield* $(Ref.make(0))
-        const result = yield* $(alwaysFail(ref), Effect.retryOrElseEither(Schedule.once, ioSucceed))
-        assert.deepStrictEqual(result, Either.left("OrElse"))
-      }))
-    it.effect("if fallback failed - retryOrElse", () =>
-      Effect.gen(function*($) {
-        const ref = yield* $(Ref.make(0))
-        const result = yield* $(
-          pipe(
-            alwaysFail(ref),
-            Effect.retryOrElseEither(Schedule.once, ioFail),
             Effect.matchEffect(Effect.succeed, () => Effect.succeed("it should not be a success"))
           )
         )
@@ -514,11 +489,11 @@ describe.concurrent("Schedule", () => {
         )
         const program = pipe(
           effect,
-          Effect.retryOrElseEither(strategy, (s, n) =>
+          Effect.retryOrElse(strategy, (s, n) =>
             pipe(TestClock.currentTimeMillis, Effect.map((now) => [Duration.millis(now), s, n] as const)))
         )
         const result = yield* $(run(program))
-        assert.deepStrictEqual(result, Either.left([Duration.millis(800), "GiveUpError", 4] as const))
+        assert.deepStrictEqual(result, [Duration.millis(800), "GiveUpError", 4] as const)
       }))
     it.effect("fibonacci delay", () =>
       Effect.gen(function*($) {

@@ -78,28 +78,6 @@ describe.concurrent("Effect", () => {
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail("fail"))
       assert.isFalse(effect)
     }))
-  it.effect("tapEither - effectually peeks at the failure of this effect", () =>
-    Effect.gen(function*($) {
-      const ref = yield* $(Ref.make(0))
-      yield* $(
-        Effect.fail(42),
-        Effect.tapEither(Either.match((n) => Ref.set(ref, n), () => Ref.set(ref, -1))),
-        Effect.exit
-      )
-      const result = yield* $(Ref.get(ref))
-      assert.strictEqual(result, 42)
-    }))
-  it.effect("tapEither - effectually peeks at the success of this effect", () =>
-    Effect.gen(function*($) {
-      const ref = yield* $(Ref.make(0))
-      yield* $(
-        Effect.succeed(42),
-        Effect.tapEither(Either.match(() => Ref.set(ref, -1), (n) => Ref.set(ref, n))),
-        Effect.exit
-      )
-      const result = yield* $(Ref.get(ref))
-      assert.strictEqual(result, 42)
-    }))
   it.effect("unless - executes correct branch only", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(0))

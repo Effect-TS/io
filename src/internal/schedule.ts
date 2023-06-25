@@ -1909,45 +1909,28 @@ export const repeatOrElse_Effect = dual<
     orElse: (error: E, option: Option.Option<B>) => Effect.Effect<R3, E2, B>
   ) => Effect.Effect<R | R2 | R3, E2, B>
 >(3, (self, schedule, orElse) =>
-  core.map(
-    repeatOrElseEither_Effect(self, schedule, orElse),
-    Either.merge
-  ))
-
-/** @internal */
-export const repeatOrElseEither_Effect = dual<
-  <R2, A extends A0, A0, B, E, R3, E2, C>(
-    schedule: Schedule.Schedule<R2, A0, B>,
-    orElse: (error: E, option: Option.Option<B>) => Effect.Effect<R3, E2, C>
-  ) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2 | R3, E2, Either.Either<C, B>>,
-  <R, E, A extends A0, A0, R2, B, R3, E2, C>(
-    self: Effect.Effect<R, E, A>,
-    schedule: Schedule.Schedule<R2, A0, B>,
-    orElse: (error: E, option: Option.Option<B>) => Effect.Effect<R3, E2, C>
-  ) => Effect.Effect<R | R2 | R3, E2, Either.Either<C, B>>
->(3, (self, schedule, orElse) =>
   core.flatMap(driver(schedule), (driver) =>
     core.matchEffect(
       self,
-      (error) => core.map(orElse(error, Option.none()), Either.left),
-      (value) => repeatOrElseEitherEffectLoop(self, driver, orElse, value)
+      (error) => orElse(error, Option.none()),
+      (value) => repeatOrElseEffectLoop(self, driver, orElse, value)
     )))
 
 /** @internal */
-const repeatOrElseEitherEffectLoop = <R, E, A extends A0, A0, R1, B, R2, E2, C>(
+const repeatOrElseEffectLoop = <R, E, A extends A0, A0, R1, B, R2, E2, C>(
   self: Effect.Effect<R, E, A>,
   driver: Schedule.ScheduleDriver<R1, A0, B>,
   orElse: (error: E, option: Option.Option<B>) => Effect.Effect<R2, E2, C>,
   value: A
-): Effect.Effect<R | R1 | R2, E2, Either.Either<C, B>> => {
+): Effect.Effect<R | R1 | R2, E2, B | C> => {
   return core.matchEffect(
     driver.next(value),
-    () => core.map(core.orDie(driver.last()), Either.right),
+    () => core.orDie(driver.last()),
     (b) =>
       core.matchEffect(
         self,
-        (error) => core.map(orElse(error, Option.some(b)), Either.left),
-        (value) => repeatOrElseEitherEffectLoop(self, driver, orElse, value)
+        (error) => orElse(error, Option.some(b)),
+        (value) => repeatOrElseEffectLoop(self, driver, orElse, value)
       )
   )
 }
@@ -2053,46 +2036,31 @@ export const retryOrElse_Effect = dual<
     policy: Schedule.Schedule<R1, E3, A1>,
     orElse: (e: E, out: A1) => Effect.Effect<R2, E2, A2>
   ) => Effect.Effect<R | R1 | R2, E | E2, A | A2>
->(3, (self, policy, orElse) => core.map(retryOrElseEither_Effect(self, policy, orElse), Either.merge))
-
-/** @internal */
-export const retryOrElseEither_Effect = dual<
-  <R1, E extends E3, A1, R2, E2, A2, E3>(
-    policy: Schedule.Schedule<R1, E3, A1>,
-    orElse: (e: E, out: A1) => Effect.Effect<R2, E2, A2>
-  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1 | R2, E | E2, Either.Either<A2, A>>,
-  <R, A, E extends E3, R1, A1, R2, E2, A2, E3>(
-    self: Effect.Effect<R, E, A>,
-    policy: Schedule.Schedule<R1, E3, A1>,
-    orElse: (e: E, out: A1) => Effect.Effect<R2, E2, A2>
-  ) => Effect.Effect<R | R1 | R2, E | E2, Either.Either<A2, A>>
 >(3, (self, policy, orElse) =>
   core.flatMap(
     driver(policy),
-    (driver) => retryOrElseEither_EffectLoop(self, driver, orElse)
+    (driver) => retryOrElse_EffectLoop(self, driver, orElse)
   ))
 
 /** @internal */
-const retryOrElseEither_EffectLoop = <R, E, A, R1, A1, R2, E2, A2>(
+const retryOrElse_EffectLoop = <R, E, A, R1, A1, R2, E2, A2>(
   self: Effect.Effect<R, E, A>,
   driver: Schedule.ScheduleDriver<R1, E, A1>,
   orElse: (e: E, out: A1) => Effect.Effect<R2, E2, A2>
-): Effect.Effect<R | R1 | R2, E | E2, Either.Either<A2, A>> => {
-  return pipe(
+): Effect.Effect<R | R1 | R2, E | E2, A | A2> => {
+  return core.catchAll(
     self,
-    core.map(Either.right),
-    core.catchAll((e) =>
+    (e) =>
       core.matchEffect(
         driver.next(e),
         () =>
           pipe(
             driver.last(),
             core.orDie,
-            core.flatMap((out) => pipe(orElse(e, out), core.map(Either.left)))
+            core.flatMap((out) => orElse(e, out))
           ),
-        () => retryOrElseEither_EffectLoop(self, driver, orElse)
+        () => retryOrElse_EffectLoop(self, driver, orElse)
       )
-    )
   )
 }
 

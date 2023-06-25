@@ -813,18 +813,6 @@ export const forever = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R,
   return loop
 }
 
-/* @internal */
-export const fromEitherCause = <E, A>(either: Either.Either<Cause.Cause<E>, A>): Effect.Effect<never, E, A> => {
-  switch (either._tag) {
-    case "Left": {
-      return core.failCause(either.left)
-    }
-    case "Right": {
-      return core.succeed(either.right)
-    }
-  }
-}
-
 /** @internal */
 class EffectGen {
   constructor(readonly value: Effect.Effect<any, any, any>) {
@@ -924,36 +912,6 @@ export const iterate = <Z, R, E>(
     }
     return core.succeed(initial)
   })
-
-/* @internal */
-export const left = <R, E, A, B>(
-  self: Effect.Effect<R, E, Either.Either<A, B>>
-): Effect.Effect<R, Either.Either<E, B>, A> =>
-  core.matchEffect(
-    self,
-    (e) => core.fail(Either.left(e)),
-    (either) => {
-      switch (either._tag) {
-        case "Left": {
-          return core.succeed(either.left)
-        }
-        case "Right": {
-          return core.fail(Either.right(either.right))
-        }
-      }
-    }
-  )
-
-/* @internal */
-export const leftWith = dual<
-  <R, E, B, A, R1, E1, B1, A1>(
-    f: (effect: Effect.Effect<R, Either.Either<E, B>, A>) => Effect.Effect<R1, Either.Either<E1, B1>, A1>
-  ) => (self: Effect.Effect<R, E, Either.Either<A, B>>) => Effect.Effect<R | R1, E | E1, Either.Either<A1, B1>>,
-  <R, E, B, A, R1, E1, B1, A1>(
-    self: Effect.Effect<R, E, Either.Either<A, B>>,
-    f: (effect: Effect.Effect<R, Either.Either<E, B>, A>) => Effect.Effect<R1, Either.Either<E1, B1>, A1>
-  ) => Effect.Effect<R | R1, E | E1, Either.Either<A1, B1>>
->(2, (self, f) => core.suspend(() => unleft(f(left(self)))))
 
 /* @internal */
 export const log = dual<
@@ -1640,32 +1598,6 @@ export const tapDefect = dual<
     )))
 
 /* @internal */
-export const tapEither = dual<
-  <E, A, R2, E2, X>(
-    f: (either: Either.Either<E, A>) => Effect.Effect<R2, E2, X>
-  ) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A>,
-  <R, E, A, R2, E2, X>(
-    self: Effect.Effect<R, E, A>,
-    f: (either: Either.Either<E, A>) => Effect.Effect<R2, E2, X>
-  ) => Effect.Effect<R | R2, E | E2, A>
->(2, (self, f) =>
-  core.matchCauseEffect(
-    self,
-    (cause) => {
-      const either = internalCause.failureOrCause(cause)
-      switch (either._tag) {
-        case "Left": {
-          return core.zipRight(f(Either.left(either.left)), core.failCause(cause))
-        }
-        case "Right": {
-          return core.failCause(cause)
-        }
-      }
-    },
-    (a) => core.as(f(Either.right(a)), a)
-  ))
-
-/* @internal */
 export const tapError = dual<
   <E, R2, E2, X>(
     f: (e: E) => Effect.Effect<R2, E2, X>
@@ -1853,25 +1785,6 @@ const unfoldLoop = <A, R, E, S>(
       return core.succeed(builder)
     }
   })
-
-/* @internal */
-export const unleft = <R, E, B, A>(
-  self: Effect.Effect<R, Either.Either<E, B>, A>
-): Effect.Effect<R, E, Either.Either<A, B>> =>
-  core.matchEffect(
-    self,
-    (either) => {
-      switch (either._tag) {
-        case "Left": {
-          return core.fail(either.left)
-        }
-        case "Right": {
-          return core.succeed(Either.right(either.right))
-        }
-      }
-    },
-    (a) => core.succeed(Either.left(a))
-  )
 
 /* @internal */
 export const unless = dual<

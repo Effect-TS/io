@@ -123,7 +123,6 @@ Added in v1.0.0
   - [updateService](#updateservice)
 - [conversions](#conversions)
   - [either](#either)
-  - [fromEitherCause](#fromeithercause)
   - [fromFiber](#fromfiber)
   - [fromFiberEffect](#fromfibereffect)
   - [toLayer](#tolayer)
@@ -193,7 +192,6 @@ Added in v1.0.0
   - [isSuccess](#issuccess)
 - [getters](#getters)
   - [tags](#tags)
-  - [unleft](#unleft)
 - [instances](#instances)
   - [Applicative](#applicative)
   - [Bicovariant](#bicovariant)
@@ -276,7 +274,6 @@ Added in v1.0.0
   - [tap](#tap)
   - [tapBoth](#tapboth)
   - [tapDefect](#tapdefect)
-  - [tapEither](#tapeither)
   - [tapError](#taperror)
   - [tapErrorCause](#taperrorcause)
 - [supervision](#supervision)
@@ -333,8 +330,6 @@ Added in v1.0.0
   - [head](#head)
   - [ignore](#ignore)
   - [ignoreLogged](#ignorelogged)
-  - [left](#left)
-  - [leftWith](#leftwith)
   - [locally](#locally)
   - [locallyScoped](#locallyscoped)
   - [locallyScopedWith](#locallyscopedwith)
@@ -353,7 +348,6 @@ Added in v1.0.0
   - [race](#race)
   - [raceAll](#raceall)
   - [raceAwait](#raceawait)
-  - [raceEither](#raceeither)
   - [raceFibersWith](#racefiberswith)
   - [raceFirst](#racefirst)
   - [raceWith](#racewith)
@@ -364,7 +358,6 @@ Added in v1.0.0
   - [repeat](#repeat)
   - [repeatN](#repeatn)
   - [repeatOrElse](#repeatorelse)
-  - [repeatOrElseEither](#repeatorelseeither)
   - [repeatUntil](#repeatuntil)
   - [repeatUntilEffect](#repeatuntileffect)
   - [repeatUntilEquals](#repeatuntilequals)
@@ -376,7 +369,6 @@ Added in v1.0.0
   - [retry](#retry)
   - [retryN](#retryn)
   - [retryOrElse](#retryorelse)
-  - [retryOrElseEither](#retryorelseeither)
   - [retryUntil](#retryuntil)
   - [retryUntilEffect](#retryuntileffect)
   - [retryUntilEquals](#retryuntilequals)
@@ -2079,18 +2071,6 @@ export declare const either: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never
 
 Added in v1.0.0
 
-## fromEitherCause
-
-Lifts an `Either<Cause<E>, A>` into an `Effect<never, E, A>`.
-
-**Signature**
-
-```ts
-export declare const fromEitherCause: <E, A>(either: Either.Either<Cause.Cause<E>, A>) => Effect<never, E, A>
-```
-
-Added in v1.0.0
-
 ## fromFiber
 
 Creates an `Effect` value that represents the exit value of the specified
@@ -3177,19 +3157,6 @@ Retrieves the metric tags associated with the current scope.
 
 ```ts
 export declare const tags: (_: void) => Effect<never, never, HashSet.HashSet<MetricLabel.MetricLabel>>
-```
-
-Added in v1.0.0
-
-## unleft
-
-Converts a `Effect<R, Either<E, B>, A>` into a `Effect<R, E, Either<A, B>>`.
-The inverse of `left`.
-
-**Signature**
-
-```ts
-export declare const unleft: <R, E, B, A>(self: Effect<R, Either.Either<E, B>, A>) => Effect<R, E, Either.Either<A, B>>
 ```
 
 Added in v1.0.0
@@ -4466,27 +4433,6 @@ export declare const tapDefect: {
 
 Added in v1.0.0
 
-## tapEither
-
-Returns an effect that effectfully "peeks" at the result of this effect.
-
-**Signature**
-
-```ts
-export declare const tapEither: {
-  <E, A, R2, E2, X>(f: (either: Either.Either<E, A>) => Effect<R2, E2, X>): <R>(
-    self: Effect<R, E, A>
-  ) => Effect<R2 | R, E | E2, A>
-  <R, E, A, R2, E2, X>(self: Effect<R, E, A>, f: (either: Either.Either<E, A>) => Effect<R2, E2, X>): Effect<
-    R | R2,
-    E | E2,
-    A
-  >
-}
-```
-
-Added in v1.0.0
-
 ## tapError
 
 Returns an effect that effectfully "peeks" at the failure of this effect.
@@ -5194,40 +5140,6 @@ export declare const ignoreLogged: <R, E, A>(self: Effect<R, E, A>) => Effect<R,
 
 Added in v1.0.0
 
-## left
-
-"Zooms in" on the value in the `Left` side of an `Either`, moving the
-possibility that the value is a `Right` to the error channel.
-
-**Signature**
-
-```ts
-export declare const left: <R, E, A, B>(self: Effect<R, E, Either.Either<A, B>>) => Effect<R, Either.Either<E, B>, A>
-```
-
-Added in v1.0.0
-
-## leftWith
-
-Performs the specified operation while "zoomed in" on the `Left` case of an
-`Either`.
-
-**Signature**
-
-```ts
-export declare const leftWith: {
-  <R, E, B, A, R1, E1, B1, A1>(
-    f: (effect: Effect<R, Either.Either<E, B>, A>) => Effect<R1, Either.Either<E1, B1>, A1>
-  ): (self: Effect<R, E, Either.Either<A, B>>) => Effect<R | R1, E | E1, Either.Either<A1, B1>>
-  <R, E, B, A, R1, E1, B1, A1>(
-    self: Effect<R, E, Either.Either<A, B>>,
-    f: (effect: Effect<R, Either.Either<E, B>, A>) => Effect<R1, Either.Either<E1, B1>, A1>
-  ): Effect<R | R1, E | E1, Either.Either<A1, B1>>
-}
-```
-
-Added in v1.0.0
-
 ## locally
 
 **Signature**
@@ -5502,28 +5414,6 @@ export declare const raceAwait: {
 
 Added in v1.0.0
 
-## raceEither
-
-Returns an effect that races this effect with the specified effect,
-yielding the first result to succeed. If neither effect succeeds, then the
-composed effect will fail with some error.
-
-WARNING: The raced effect will safely interrupt the "loser", but will not
-resume until the loser has been cleanly terminated.
-
-**Signature**
-
-```ts
-export declare const raceEither: {
-  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(
-    self: Effect<R, E, A>
-  ) => Effect<R2 | R, E2 | E, Either.Either<A, A2>>
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, Either.Either<A, A2>>
-}
-```
-
-Added in v1.0.0
-
 ## raceFibersWith
 
 Forks this effect and the specified effect into their own fibers, and races
@@ -5743,34 +5633,6 @@ export declare const repeatOrElse: {
 
 Added in v1.0.0
 
-## repeatOrElseEither
-
-Returns a new effect that repeats this effect according to the specified
-schedule or until the first failure, at which point, the failure value and
-schedule output are passed to the specified handler.
-
-Scheduled recurrences are in addition to the first execution, so that
-`pipe(effect, Effect.repeat(Schedule.once()))` yields an effect that executes
-`effect`, and then if that succeeds, executes `effect` an additional time.
-
-**Signature**
-
-```ts
-export declare const repeatOrElseEither: {
-  <R2, A extends A0, A0, B, E, R3, E2, C>(
-    schedule: Schedule.Schedule<R2, A0, B>,
-    orElse: (error: E, option: Option.Option<B>) => Effect<R3, E2, C>
-  ): <R>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2, Either.Either<C, B>>
-  <R, E, A extends A0, A0, R2, B, R3, E2, C>(
-    self: Effect<R, E, A>,
-    schedule: Schedule.Schedule<R2, A0, B>,
-    orElse: (error: E, option: Option.Option<B>) => Effect<R3, E2, C>
-  ): Effect<R | R2 | R3, E2, Either.Either<C, B>>
-}
-```
-
-Added in v1.0.0
-
 ## repeatUntil
 
 Repeats this effect until its value satisfies the specified predicate or
@@ -5949,30 +5811,6 @@ export declare const retryOrElse: {
     policy: Schedule.Schedule<R1, E3, A1>,
     orElse: (e: E, out: A1) => Effect<R2, E2, A2>
   ): Effect<R | R1 | R2, E | E2, A | A2>
-}
-```
-
-Added in v1.0.0
-
-## retryOrElseEither
-
-Retries with the specified schedule, until it fails, and then both the
-value produced by the schedule together with the last error are passed to
-the recovery function.
-
-**Signature**
-
-```ts
-export declare const retryOrElseEither: {
-  <R1, E extends E3, A1, R2, E2, A2, E3>(
-    policy: Schedule.Schedule<R1, E3, A1>,
-    orElse: (e: E, out: A1) => Effect<R2, E2, A2>
-  ): <R, A>(self: Effect<R, E, A>) => Effect<R1 | R2 | R, E | E2, Either.Either<A2, A>>
-  <R, A, E extends E3, R1, A1, R2, E2, A2, E3>(
-    self: Effect<R, E, A>,
-    policy: Schedule.Schedule<R1, E3, A1>,
-    orElse: (e: E, out: A1) => Effect<R2, E2, A2>
-  ): Effect<R | R1 | R2, E | E2, Either.Either<A2, A>>
 }
 ```
 
