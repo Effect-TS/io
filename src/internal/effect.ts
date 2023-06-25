@@ -1544,11 +1544,6 @@ export const summarized = dual<
 )
 
 /* @internal */
-export const attemptSuspend = <R, E, A>(
-  evaluate: LazyArg<Effect.Effect<R, E, A>>
-): Effect.Effect<R, unknown, A> => core.flatMap(attempt(evaluate), identity)
-
-/* @internal */
 export const tagged = dual<
   (key: string, value: string) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
   <R, E, A>(self: Effect.Effect<R, E, A>, key: string, value: string) => Effect.Effect<R, E, A>

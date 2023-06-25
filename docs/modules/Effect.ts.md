@@ -99,7 +99,6 @@ Added in v1.0.0
   - [tryCatchPromiseInterrupt](#trycatchpromiseinterrupt)
   - [tryPromise](#trypromise)
   - [tryPromiseInterrupt](#trypromiseinterrupt)
-  - [trySuspend](#trysuspend)
   - [unfold](#unfold)
   - [unit](#unit)
   - [updateFiberRefs](#updatefiberrefs)
@@ -1742,20 +1741,6 @@ Like `tryPromise` but allows for interruption via AbortSignal
 export declare const tryPromiseInterrupt: <A>(
   evaluate: (signal: AbortSignal) => Promise<A>
 ) => Effect<never, unknown, A>
-```
-
-Added in v1.0.0
-
-## trySuspend
-
-Returns a lazily constructed effect, whose construction may itself require
-effects. When no context is required (i.e., when `R == unknown`) it is
-conceptually equivalent to `flatten(succeed(io))`.
-
-**Signature**
-
-```ts
-export declare const trySuspend: <R, E, A>(evaluate: LazyArg<Effect<R, E, A>>) => Effect<R, unknown, A>
 ```
 
 Added in v1.0.0

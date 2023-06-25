@@ -3788,16 +3788,6 @@ export const supervised: {
 } = circular.supervised
 
 /**
- * Returns a lazily constructed effect, whose construction may itself require
- * effects. When no context is required (i.e., when `R == unknown`) it is
- * conceptually equivalent to `flatten(succeed(io))`.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const trySuspend: <R, E, A>(evaluate: LazyArg<Effect<R, E, A>>) => Effect<R, unknown, A> = effect.attemptSuspend
-
-/**
  * @since 1.0.0
  * @category constructors
  */
