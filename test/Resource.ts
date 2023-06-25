@@ -1,6 +1,6 @@
 import * as Duration from "@effect/data/Duration"
 import * as Either from "@effect/data/Either"
-import { pipe } from "@effect/data/Function"
+import { identity, pipe } from "@effect/data/Function"
 import * as Effect from "@effect/io/Effect"
 import * as TestClock from "@effect/io/internal/testing/testClock"
 import * as Ref from "@effect/io/Ref"
@@ -39,7 +39,7 @@ describe.concurrent("Resource", () => {
   it.scopedLive("failed refresh doesn't affect cached value", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make<Either.Either<string, number>>(Either.right(0)))
-      const cached = yield* $(Cached.auto(Effect.absolve(Ref.get(ref)), Schedule.spaced(Duration.millis(4))))
+      const cached = yield* $(Cached.auto(Effect.flatMap(Ref.get(ref), identity), Schedule.spaced(Duration.millis(4))))
       const result1 = yield* $(Cached.get(cached))
       const result2 = yield* $(
         pipe(

@@ -21,10 +21,6 @@ export const InterruptError3 = new Error("Oh noes 3!")
 
 const ExampleErrorFail = Effect.fail(ExampleError)
 
-const ExampleErrorDie = Effect.dieSync(() => {
-  throw ExampleError
-})
-
 const deepErrorEffect = (n: number): Effect.Effect<never, unknown, void> => {
   if (n === 0) {
     return Effect.try(() => {
@@ -55,40 +51,6 @@ const exactlyOnce = <R, A, A1>(
 }
 
 describe.concurrent("Effect", () => {
-  it.effect("absolve", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(Effect.succeed(Either.right("test")), Effect.absolve)
-      assert.strictEqual(result, "test")
-    }))
-  it.effect("absolveWith right", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(
-        pipe(Effect.succeed(Either.right("test")), Effect.absolveWith(() => Either.right("absolveRight")))
-      )
-      assert.strictEqual(result, "absolveRight")
-    }))
-  it.effect("absolveWith left", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(
-        pipe(Effect.succeed("test"), Effect.absolveWith(() => Either.left("absolveLeft" as const)), Effect.exit)
-      )
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail("absolveLeft"))
-    }))
-  it.effect("absorbWith - on fail", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(ExampleErrorFail, Effect.absorbWith(Option.some), Effect.exit)
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(Option.some(ExampleError)))
-    }))
-  it.effect("absorbWith - on die", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(ExampleErrorDie, Effect.absorbWith(() => "never"), Effect.exit)
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(ExampleError))
-    }))
-  it.effect("absorbWith - on success", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(Effect.succeed(1), Effect.absorbWith(() => ExampleError))
-      assert.strictEqual(result, 1)
-    }))
   it.effect("attempt - error in sync effect", () =>
     Effect.gen(function*($) {
       const result = yield* $(

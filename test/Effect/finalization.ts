@@ -1,6 +1,6 @@
 import * as Chunk from "@effect/data/Chunk"
 import * as Duration from "@effect/data/Duration"
-import { pipe } from "@effect/data/Function"
+import { identity, pipe } from "@effect/data/Function"
 import * as Option from "@effect/data/Option"
 import * as Cause from "@effect/io/Cause"
 import * as Deferred from "@effect/io/Deferred"
@@ -125,7 +125,7 @@ describe.concurrent("Effect", () => {
       const result = yield* $(
         Effect.acquireUseRelease(Effect.fail(ExampleError), () => Effect.unit, () => Effect.unit),
         Effect.either,
-        Effect.absolve,
+        Effect.flatMap(identity),
         Effect.flip
       )
       assert.deepEqual(result, ExampleError)
@@ -141,8 +141,6 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const result = yield* $(
         Effect.acquireUseRelease(Effect.unit, () => Effect.fail(ExampleError), () => Effect.unit),
-        Effect.either,
-        Effect.absolve,
         Effect.exit
       )
       assert.deepEqual(Exit.unannotate(result), Exit.fail(ExampleError))
@@ -157,8 +155,8 @@ describe.concurrent("Effect", () => {
       )
       const a1 = yield* $(Effect.exit(io1))
       const a2 = yield* $(Effect.exit(io2))
-      const a3 = yield* $(io1, Effect.either, Effect.absolve, Effect.exit)
-      const a4 = yield* $(io2, Effect.either, Effect.absolve, Effect.exit)
+      const a3 = yield* $(io1, Effect.exit)
+      const a4 = yield* $(io2, Effect.exit)
       assert.deepStrictEqual(Exit.unannotate(a1), Exit.fail(ExampleError))
       assert.deepStrictEqual(Exit.unannotate(a2), Exit.fail(ExampleError))
       assert.deepStrictEqual(Exit.unannotate(a3), Exit.fail(ExampleError))

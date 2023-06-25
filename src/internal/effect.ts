@@ -33,41 +33,6 @@ import * as Ref from "@effect/io/Ref"
 import * as Tracer from "@effect/io/Tracer"
 
 /* @internal */
-export const absolve = <R, E, A>(self: Effect.Effect<R, E, Either.Either<E, A>>): Effect.Effect<R, E, A> =>
-  absolveWith(self, identity)
-
-/* @internal */
-export const absolveWith = dual<
-  <A, E2, A2>(
-    f: (a: A) => Either.Either<E2, A2>
-  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E | E2, A2>,
-  <R, E, E2, A, A2>(self: Effect.Effect<R, E, A>, f: (a: A) => Either.Either<E2, A2>) => Effect.Effect<R, E | E2, A2>
->(2, (self, f) => core.flatMap(self, (value) => f(value)))
-
-/* @internal */
-export const absorb = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, unknown, A> =>
-  absorbWith(self, identity)
-
-/* @internal */
-export const absorbWith = dual<
-  <E>(f: (error: E) => unknown) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, unknown, A>,
-  <R, E, A>(self: Effect.Effect<R, E, A>, f: (error: E) => unknown) => Effect.Effect<R, unknown, A>
->(2, (self, f) =>
-  core.matchEffect(
-    sandbox(self),
-    (cause) => core.fail(internalCause.squashWith(cause, f)),
-    core.succeed
-  ))
-
-/* @internal */
-export const asLeft = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, Either.Either<A, never>> =>
-  core.map(self, Either.left)
-
-/* @internal */
-export const asLeftError = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, Either.Either<E, never>, A> =>
-  core.mapError(self, Either.left)
-
-/* @internal */
 export const annotateLogs = dual<
   (key: string, value: string) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
   <R, E, A>(effect: Effect.Effect<R, E, A>, key: string, value: string) => Effect.Effect<R, E, A>
@@ -104,14 +69,6 @@ export const annotateSpans = dual<
         )
     )
 )
-
-/* @internal */
-export const asRight = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, Either.Either<never, A>> =>
-  core.map(self, Either.right)
-
-/* @internal */
-export const asRightError = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, Either.Either<never, E>, A> =>
-  core.mapError(self, Either.right)
 
 /* @internal */
 export const asSome = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, Option.Option<A>> =>
