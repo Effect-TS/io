@@ -147,7 +147,7 @@ export const toScoped = <Key, Error, Value>(
 ): Effect.Effect<Scope.Scope, Error, Value> =>
   Exit.matchEffect(
     self.exit,
-    (cause) => core.done(Exit.failCause(cause)),
+    (cause) => core.failCause(cause),
     ([value]) =>
       fiberRuntime.acquireRelease(
         core.as(core.sync(() => MutableRef.incrementAndGet(self.ownerCount)), value),

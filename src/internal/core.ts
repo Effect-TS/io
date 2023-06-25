@@ -513,9 +513,6 @@ export const dieSync = (evaluate: LazyArg<unknown>): Effect.Effect<never, never,
   failCauseSync(() => internalCause.die(evaluate()))
 
 /* @internal */
-export const done = <E, A>(exit: Exit.Exit<E, A>): Effect.Effect<never, E, A> => suspend(() => exit)
-
-/* @internal */
 export const either = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Either.Either<E, A>> =>
   matchEffect(
     self,
@@ -2376,7 +2373,7 @@ export const deferredCompleteWith = dual<
 export const deferredDone = dual<
   <E, A>(exit: Exit.Exit<E, A>) => (self: Deferred.Deferred<E, A>) => Effect.Effect<never, never, boolean>,
   <E, A>(self: Deferred.Deferred<E, A>, exit: Exit.Exit<E, A>) => Effect.Effect<never, never, boolean>
->(2, (self, exit) => deferredCompleteWith(self, done(exit)))
+>(2, (self, exit) => deferredCompleteWith(self, exit))
 
 /* @internal */
 export const deferredFail = dual<

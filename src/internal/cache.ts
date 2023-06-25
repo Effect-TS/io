@@ -551,7 +551,7 @@ class CacheImpl<Key, Error, Value> implements Cache.Cache<Key, Error, Value> {
             MutableHashMap.remove(this.cacheState.map, value.key.current)
             return core.succeed(Option.none<Value>())
           }
-          return core.map(core.done(value.exit), Option.some)
+          return core.map(value.exit, Option.some)
         }
         case "Pending": {
           this.trackAccess(value.key)
@@ -570,7 +570,7 @@ class CacheImpl<Key, Error, Value> implements Cache.Cache<Key, Error, Value> {
             }
             return core.map(Deferred.await(value.deferred), Option.some)
           }
-          return core.map(core.done(value.complete.exit), Option.some)
+          return core.map(value.complete.exit, Option.some)
         }
       }
     })
@@ -641,7 +641,7 @@ class CacheImpl<Key, Error, Value> implements Cache.Cache<Key, Error, Value> {
             MutableHashMap.set(this.cacheState.map, key, value)
             return core.zipRight(
               Deferred.done(deferred, exit),
-              core.done(exit)
+              exit
             )
           }),
           core.onInterrupt(() =>

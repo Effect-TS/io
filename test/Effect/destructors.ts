@@ -4,26 +4,12 @@ import * as Option from "@effect/data/Option"
 import * as Cause from "@effect/io/Cause"
 import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
-import * as FiberId from "@effect/io/Fiber/Id"
 import * as it from "@effect/io/test/utils/extend"
 import { assert, describe } from "vitest"
 
 const ExampleError = new Error("Oh noes!")
 
 describe.concurrent("Effect", () => {
-  it.effect("done - lifts an exit into an effect", () =>
-    Effect.gen(function*($) {
-      const fiberId = FiberId.make(0, 123)
-      const error = ExampleError
-      const completed = yield* $(Effect.done(Exit.succeed(1)))
-      const interrupted = yield* $(Effect.done(Exit.interrupt(fiberId)), Effect.exit)
-      const terminated = yield* $(Effect.done(Exit.die(error)), Effect.exit)
-      const failed = yield* $(Effect.done(Exit.fail(error)), Effect.exit)
-      assert.strictEqual(completed, 1)
-      assert.deepStrictEqual(Exit.unannotate(interrupted), Exit.interrupt(fiberId))
-      assert.deepStrictEqual(Exit.unannotate(terminated), Exit.die(error))
-      assert.deepStrictEqual(Exit.unannotate(failed), Exit.fail(error))
-    }))
   it.effect("getOrFail - make a task from a defined option", () =>
     Effect.gen(function*($) {
       const result = yield* $(Effect.getOrFail(Option.some(1)))

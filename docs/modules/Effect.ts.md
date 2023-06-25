@@ -49,7 +49,6 @@ Added in v1.0.0
   - [die](#die)
   - [dieMessage](#diemessage)
   - [dieSync](#diesync)
-  - [done](#done)
   - [dropWhile](#dropwhile)
   - [exists](#exists)
   - [existsPar](#existspar)
@@ -1021,16 +1020,6 @@ Added in v1.0.0
 
 ```ts
 export declare const dieSync: (evaluate: LazyArg<unknown>) => Effect<never, never, never>
-```
-
-Added in v1.0.0
-
-## done
-
-**Signature**
-
-```ts
-export declare const done: <E, A>(exit: Exit.Exit<E, A>) => Effect<never, E, A>
 ```
 
 Added in v1.0.0

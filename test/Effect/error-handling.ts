@@ -370,11 +370,8 @@ describe.concurrent("Effect", () => {
       successes.map((s): Either.Either<Cause.Cause<number>, Effect.Effect<never, never, number>> => Either.right(s))
     ).map(Either.match(Exit.failCause, Exit.succeed))
     await fc.assert(fc.asyncProperty(exits, exits, exits, async (exit1, exit2, exit3) => {
-      const effect1 = Effect.done(exit1)
-      const effect2 = Effect.done(exit2)
-      const effect3 = Effect.done(exit3)
-      const leftEffect = pipe(effect1, Effect.orElse(() => effect2), Effect.orElse(() => effect3))
-      const rightEffect = pipe(effect1, Effect.orElse(() => pipe(effect2, Effect.orElse(() => effect3))))
+      const leftEffect = pipe(exit1, Effect.orElse(() => exit2), Effect.orElse(() => exit3))
+      const rightEffect = pipe(exit1, Effect.orElse(() => pipe(exit2, Effect.orElse(() => exit3))))
       const program = Effect.gen(function*($) {
         const left = yield* $(Effect.exit(leftEffect))
         const right = yield* $(Effect.exit(rightEffect))

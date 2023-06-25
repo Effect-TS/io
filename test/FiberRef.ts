@@ -154,7 +154,7 @@ describe.concurrent("FiberRef", () => {
       const child = yield* $(Effect.fork(FiberRef.make(initial)) // Don't use join as it inherits values from child
       )
       // Don't use join as it inherits values from child
-      const fiberRef = yield* $(Fiber.await(child), Effect.flatMap((exit) => Effect.done(exit)))
+      const fiberRef = yield* $(Fiber.await(child), Effect.flatten)
       const localValue = yield* $(Effect.locally(fiberRef, update)(FiberRef.get(fiberRef)))
       const value = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(localValue, update)
@@ -171,7 +171,7 @@ describe.concurrent("FiberRef", () => {
   it.scoped("initial value is always available", () =>
     Effect.gen(function*($) {
       const child = yield* $(Effect.fork(FiberRef.make(initial)))
-      const fiberRef = yield* $(Fiber.await(child), Effect.flatMap((exit) => Effect.done(exit)))
+      const fiberRef = yield* $(Fiber.await(child), Effect.flatten)
       const result = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(result, initial)
     }))

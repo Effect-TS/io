@@ -1190,12 +1190,6 @@ const bindValue_: {
 export const Do: (_: void) => Effect<never, never, {}> = effect.Do
 
 /**
- * @since 1.0.0
- * @category constructors
- */
-export const done: <E, A>(exit: Exit.Exit<E, A>) => Effect<never, E, A> = core.done
-
-/**
  * Drops all elements until the effectful predicate returns true.
  *
  * @since 1.0.0

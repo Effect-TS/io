@@ -1,4 +1,4 @@
-import { pipe } from "@effect/data/Function"
+import { identity, pipe } from "@effect/data/Function"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal/core"
 import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
@@ -49,7 +49,7 @@ export const manual = <R, E, A>(
 
 /** @internal */
 export const get = <E, A>(self: Resource.Resource<E, A>): Effect.Effect<never, E, A> =>
-  core.flatMap(scopedRef.get(self.scopedRef), core.done)
+  core.flatMap(scopedRef.get(self.scopedRef), identity)
 
 /** @internal */
 export const refresh = <E, A>(self: Resource.Resource<E, A>): Effect.Effect<never, E, void> =>

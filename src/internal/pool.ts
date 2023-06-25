@@ -393,7 +393,7 @@ const forEach = <E, A, R, E2>(
   f: (a: A) => Effect.Effect<R, E2, unknown>
 ): Effect.Effect<R, E2, unknown> => core.exitMatch(self.result, () => core.unit, f)
 
-const toEffect = <E, A>(self: Attempted<E, A>): Effect.Effect<never, E, A> => core.done(self.result)
+const toEffect = <E, A>(self: Attempted<E, A>): Effect.Effect<never, E, A> => self.result
 
 /**
  * A more powerful variant of `make` that allows specifying a `Strategy` that
