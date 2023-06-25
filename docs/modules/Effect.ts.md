@@ -127,9 +127,6 @@ Added in v1.0.0
   - [fromEitherCause](#fromeithercause)
   - [fromFiber](#fromfiber)
   - [fromFiberEffect](#fromfibereffect)
-  - [getOrFail](#getorfail)
-  - [getOrFailDiscard](#getorfaildiscard)
-  - [getOrFailWith](#getorfailwith)
   - [toLayer](#tolayer)
   - [toLayerContext](#tolayercontext)
   - [toLayerDiscard](#tolayerdiscard)
@@ -2133,48 +2130,6 @@ fiber.
 
 ```ts
 export declare const fromFiberEffect: <R, E, A>(fiber: Effect<R, E, Fiber.Fiber<E, A>>) => Effect<R, E, A>
-```
-
-Added in v1.0.0
-
-## getOrFail
-
-Lifts an `Option` into an `Effect`, if the option is not defined it fails
-with `NoSuchElementException`.
-
-**Signature**
-
-```ts
-export declare const getOrFail: <A>(option: Option.Option<A>) => Effect<never, Cause.NoSuchElementException, A>
-```
-
-Added in v1.0.0
-
-## getOrFailDiscard
-
-Lifts an `Option` into a `IO`, if the option is not defined it fails with
-`void`.
-
-**Signature**
-
-```ts
-export declare const getOrFailDiscard: <A>(option: Option.Option<A>) => Effect<never, void, A>
-```
-
-Added in v1.0.0
-
-## getOrFailWith
-
-Lifts an `Maybe` into an `Effect`. If the option is not defined, fail with
-the specified `e` value.
-
-**Signature**
-
-```ts
-export declare const getOrFailWith: {
-  <E>(error: LazyArg<E>): <A>(option: Option.Option<A>) => Effect<never, E, A>
-  <A, E>(option: Option.Option<A>, error: LazyArg<E>): Effect<never, E, A>
-}
 ```
 
 Added in v1.0.0

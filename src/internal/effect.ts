@@ -868,29 +868,6 @@ export const getFiberRefs: Effect.Effect<never, never, FiberRefs.FiberRefs> = co
 >((state) => core.succeed(state.unsafeGetFiberRefs()))
 
 /* @internal */
-export const getOrFail = <A>(option: Option.Option<A>): Effect.Effect<never, Cause.NoSuchElementException, A> =>
-  getOrFailWith(option, () => internalCause.NoSuchElementException())
-
-/* @internal */
-export const getOrFailDiscard = <A>(option: Option.Option<A>): Effect.Effect<never, void, A> =>
-  getOrFailWith(option, constVoid)
-
-/* @internal */
-export const getOrFailWith = dual<
-  <E>(error: LazyArg<E>) => <A>(option: Option.Option<A>) => Effect.Effect<never, E, A>,
-  <A, E>(option: Option.Option<A>, error: LazyArg<E>) => Effect.Effect<never, E, A>
->(2, (option, error) => {
-  switch (option._tag) {
-    case "None": {
-      return core.failSync(error)
-    }
-    case "Some": {
-      return core.succeed(option.value)
-    }
-  }
-})
-
-/* @internal */
 export const head = <R, E, A>(
   self: Effect.Effect<R, E, Iterable<A>>
 ): Effect.Effect<R, Option.Option<E>, A> =>

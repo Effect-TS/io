@@ -1,5 +1,4 @@
 import * as Either from "@effect/data/Either"
-import { pipe } from "@effect/data/Function"
 import * as Option from "@effect/data/Option"
 import * as Cause from "@effect/io/Cause"
 import * as Effect from "@effect/io/Effect"
@@ -10,31 +9,6 @@ import { assert, describe } from "vitest"
 const ExampleError = new Error("Oh noes!")
 
 describe.concurrent("Effect", () => {
-  it.effect("getOrFail - make a task from a defined option", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(Effect.getOrFail(Option.some(1)))
-      assert.strictEqual(result, 1)
-    }))
-  it.effect("getOrFail - make a task from an empty option", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(Effect.exit(Effect.getOrFail(Option.none())))
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(Cause.NoSuchElementException()))
-    }))
-  it.effect("getOrFailDiscard - basic option test", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(Effect.getOrFailDiscard(Option.some("foo")))
-      assert.strictEqual(result, "foo")
-    }))
-  it.effect("getOrFailDiscard - side effect unit in option test", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(
-        pipe(
-          Effect.getOrFailDiscard(Option.none()),
-          Effect.catchAll(() => Effect.succeed("controlling unit side-effect"))
-        )
-      )
-      assert.strictEqual(result, "controlling unit side-effect")
-    }))
   it.effect("head - on non empty list", () =>
     Effect.gen(function*($) {
       const result = yield* $(Effect.succeed([1, 2, 3]), Effect.head, Effect.either)

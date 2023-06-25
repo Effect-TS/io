@@ -2124,37 +2124,6 @@ export const gen: <Eff extends EffectGen<any, any, any>, AEff>(
 export const getFiberRefs: Effect<never, never, FiberRefs.FiberRefs> = effect.getFiberRefs
 
 /**
- * Lifts an `Option` into an `Effect`, if the option is not defined it fails
- * with `NoSuchElementException`.
- *
- * @since 1.0.0
- * @category conversions
- */
-export const getOrFail: <A>(option: Option.Option<A>) => Effect<never, Cause.NoSuchElementException, A> =
-  effect.getOrFail
-
-/**
- * Lifts an `Option` into a `IO`, if the option is not defined it fails with
- * `void`.
- *
- * @since 1.0.0
- * @category conversions
- */
-export const getOrFailDiscard: <A>(option: Option.Option<A>) => Effect<never, void, A> = effect.getOrFailDiscard
-
-/**
- * Lifts an `Maybe` into an `Effect`. If the option is not defined, fail with
- * the specified `e` value.
- *
- * @since 1.0.0
- * @category conversions
- */
-export const getOrFailWith: {
-  <E>(error: LazyArg<E>): <A>(option: Option.Option<A>) => Effect<never, E, A>
-  <A, E>(option: Option.Option<A>, error: LazyArg<E>): Effect<never, E, A>
-} = effect.getOrFailWith
-
-/**
  * Returns a successful effect with the head of the collection if the collection
  * is non-empty, or fails with the error `None` if the collection is empty.
  *
