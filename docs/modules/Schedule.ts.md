@@ -262,7 +262,7 @@ A schedule that always recurs, which counts the number of recurrences.
 **Signature**
 
 ```ts
-export declare const count: (_: void) => Schedule<never, unknown, number>
+export declare const count: Schedule<never, unknown, number>
 ```
 
 Added in v1.0.0
@@ -369,7 +369,7 @@ since the first step.
 **Signature**
 
 ```ts
-export declare const elapsed: (_: void) => Schedule<never, unknown, Duration.Duration>
+export declare const elapsed: Schedule<never, unknown, Duration.Duration>
 ```
 
 Added in v1.0.0
@@ -433,7 +433,7 @@ A schedule that always recurs, producing a count of repeats: 0, 1, 2.
 **Signature**
 
 ```ts
-export declare const forever: (_: void) => Schedule<never, unknown, number>
+export declare const forever: Schedule<never, unknown, number>
 ```
 
 Added in v1.0.0
@@ -600,7 +600,7 @@ A schedule that recurs one time.
 **Signature**
 
 ```ts
-export declare const once: (_: void) => Schedule<never, unknown, void>
+export declare const once: Schedule<never, unknown, void>
 ```
 
 Added in v1.0.0
@@ -626,7 +626,7 @@ state when this schedule is done.
 **Signature**
 
 ```ts
-export declare const repeatForever: (_: void) => Schedule<never, unknown, number>
+export declare const repeatForever: Schedule<never, unknown, number>
 ```
 
 Added in v1.0.0
@@ -667,7 +667,7 @@ A schedule that does not recur, it just stops.
 **Signature**
 
 ```ts
-export declare const stop: (_: void) => Schedule<never, unknown, void>
+export declare const stop: Schedule<never, unknown, void>
 ```
 
 Added in v1.0.0

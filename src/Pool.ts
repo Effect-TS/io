@@ -4,7 +4,7 @@
 import type * as Data from "@effect/data/Data"
 import type * as Duration from "@effect/data/Duration"
 import type * as Effect from "@effect/io/Effect"
-import * as internal from "@effect/io/internal_effect_untraced/pool"
+import * as internal from "@effect/io/internal/pool"
 import type * as Scope from "@effect/io/Scope"
 
 /**

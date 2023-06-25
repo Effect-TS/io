@@ -32,7 +32,7 @@ describe.concurrent("Metric", () => {
       Effect.gen(function*($) {
         const counter = pipe(Metric.counter("c1"), Metric.taggedWithLabels(labels), Metric.withConstantInput(1))
         const result = yield* $(
-          pipe(counter(Effect.unit()), Effect.zipRight(counter(Effect.unit())), Effect.zipRight(Metric.value(counter)))
+          pipe(counter(Effect.unit), Effect.zipRight(counter(Effect.unit)), Effect.zipRight(Metric.value(counter)))
         )
         assert.deepStrictEqual(result, MetricState.counter(2))
       }))
@@ -64,7 +64,7 @@ describe.concurrent("Metric", () => {
       Effect.gen(function*($) {
         const result = yield* $(
           pipe(
-            Effect.unit(),
+            Effect.unit,
             Effect.withMetric(pipe(
               Metric.counter("c4"),
               Metric.taggedWithLabels(labels),
@@ -72,7 +72,7 @@ describe.concurrent("Metric", () => {
             )),
             Effect.zipRight(
               pipe(
-                Effect.unit(),
+                Effect.unit,
                 Effect.withMetric(pipe(
                   Metric.counter("c4"),
                   Metric.taggedWithLabels(labels),
@@ -138,7 +138,7 @@ describe.concurrent("Metric", () => {
         const counter = pipe(Metric.counter("c7"), Metric.withConstantInput(1))
         const result = yield* $(
           pipe(
-            Effect.unit(),
+            Effect.unit,
             Effect.withMetric(counter),
             Effect.zipRight(pipe(Effect.fail("error"), Effect.withMetric(counter), Effect.ignore)),
             Effect.zipRight(Metric.value(counter))
@@ -506,9 +506,9 @@ describe.concurrent("Metric", () => {
   describe.concurrent("Polling", () => {
     it.scopedLive("launch should be interruptible", () =>
       Effect.gen(function*($) {
-        const name = yield* $(Clock.currentTimeMillis(), Effect.map((now) => `gauge-${now}`))
+        const name = yield* $(Clock.currentTimeMillis, Effect.map((now) => `gauge-${now}`))
         const [gauge, metric] = makePollingGauge(name, 1)
-        const schedule = pipe(Schedule.forever(), Schedule.delayed(() => Duration.millis(250)))
+        const schedule = pipe(Schedule.forever, Schedule.delayed(() => Duration.millis(250)))
         const fiber = yield* $(metric, PollingMetric.launch(schedule))
         yield* $(Fiber.interrupt(fiber))
         const result = yield* $(Metric.value(gauge))
@@ -516,9 +516,9 @@ describe.concurrent("Metric", () => {
       }))
     it.scoped("launch should update the internal metric using the provided Schedule", () =>
       Effect.gen(function*($) {
-        const name = yield* $(Clock.currentTimeMillis(), Effect.map((now) => `gauge-${now}`))
+        const name = yield* $(Clock.currentTimeMillis, Effect.map((now) => `gauge-${now}`))
         const [gauge, metric] = makePollingGauge(name, 1)
-        const fiber = yield* $(metric, PollingMetric.launch(Schedule.once()))
+        const fiber = yield* $(metric, PollingMetric.launch(Schedule.once))
         yield* $(Fiber.join(fiber))
         const result = yield* $(Metric.value(gauge))
         assert.strictEqual(result.value, 1)
@@ -528,8 +528,8 @@ describe.concurrent("Metric", () => {
         const gaugeIncrement1 = 1
         const gaugeIncrement2 = 2
         const pollingCount = 2
-        const name1 = yield* $(Clock.currentTimeMillis(), Effect.map((now) => `gauge1-${now}`))
-        const name2 = yield* $(Clock.currentTimeMillis(), Effect.map((now) => `gauge2-${now}`))
+        const name1 = yield* $(Clock.currentTimeMillis, Effect.map((now) => `gauge1-${now}`))
+        const name2 = yield* $(Clock.currentTimeMillis, Effect.map((now) => `gauge2-${now}`))
         const [gauge1, metric1] = makePollingGauge(name1, gaugeIncrement1)
         const [gauge2, metric2] = makePollingGauge(name2, gaugeIncrement2)
         const metric = PollingMetric.collectAll([metric1, metric2])
@@ -557,7 +557,7 @@ describe.concurrent("Metric", () => {
       const result2 = yield* _(Metric.value(counter2))
       const result3 = yield* _(Metric.value(counter3))
 
-      const snapshot = yield* _(Metric.snapshot())
+      const snapshot = yield* _(Metric.snapshot)
       const values = Array.from(snapshot)
       const pair1 = yield* _(
         ReadonlyArray.findFirst(values, (key) => Equal.equals(key.metricKey, MetricKey.counter(name)))

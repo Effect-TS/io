@@ -9,7 +9,7 @@ import type * as Fiber from "@effect/io/Fiber"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import type * as FiberRefs from "@effect/io/FiberRefs"
-import * as internal from "@effect/io/internal_effect_untraced/runtime"
+import * as internal from "@effect/io/internal/runtime"
 import type { Scheduler } from "@effect/io/Scheduler"
 
 /**

@@ -7,7 +7,7 @@ import type * as Arr from "@effect/data/ReadonlyArray"
 import type * as Effect from "@effect/io/Effect"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRef from "@effect/io/FiberRef"
-import * as internal from "@effect/io/internal_effect_untraced/fiberRefs"
+import * as internal from "@effect/io/internal/fiberRefs"
 
 /**
  * @since 1.0.0

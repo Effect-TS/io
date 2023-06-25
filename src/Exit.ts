@@ -8,7 +8,7 @@ import type * as Unify from "@effect/data/Unify"
 import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
 import type * as FiberId from "@effect/io/Fiber/Id"
-import * as core from "@effect/io/internal_effect_untraced/core"
+import * as core from "@effect/io/internal/core"
 
 /**
  * An `Exit<E, A>` describes the result of a executing an `Effect` workflow.

@@ -19,7 +19,7 @@ const update2 = "update2"
 const increment = (n: number): number => n + 1
 
 const loseTimeAndCpu: Effect.Effect<never, never, void> = pipe(
-  Effect.yieldNow(),
+  Effect.yieldNow,
   Effect.zipLeft(Clock.sleep(Duration.millis(1))),
   Effect.repeatN(100)
 )
@@ -178,7 +178,7 @@ describe.concurrent("FiberRef", () => {
   it.scoped("fork function is applied on fork - 1", () =>
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(0, increment))
-      const child = yield* $(Effect.fork(Effect.unit()))
+      const child = yield* $(Effect.fork(Effect.unit))
       yield* $(Fiber.join(child))
       const result = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(result, 1)
@@ -186,7 +186,7 @@ describe.concurrent("FiberRef", () => {
   it.scoped("fork function is applied on fork - 2", () =>
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(0, increment))
-      const child = yield* $(Effect.unit(), Effect.fork, Effect.flatMap(Fiber.join), Effect.fork)
+      const child = yield* $(Effect.unit, Effect.fork, Effect.flatMap(Fiber.join), Effect.fork)
       yield* $(Fiber.join(child))
       const result = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(result, 2)
@@ -228,7 +228,7 @@ describe.concurrent("FiberRef", () => {
       const success = FiberRef.set(fiberRef, update)
       const failure1 = pipe(FiberRef.set(fiberRef, update), Effect.zipRight(Effect.fail(":-(")))
       const failure2 = pipe(FiberRef.set(fiberRef, update), Effect.zipRight(Effect.fail(":-O")))
-      yield* $(success, Effect.zipPar(pipe(failure1, Effect.zipPar(failure2))), Effect.orElse(Effect.unit))
+      yield* $(success, Effect.zipPar(pipe(failure1, Effect.zipPar(failure2))), Effect.orElse(() => Effect.unit))
       const result = yield* $(FiberRef.get(fiberRef))
       assert.isTrue(result.includes(initial))
     }))
@@ -334,7 +334,7 @@ describe.concurrent("FiberRef", () => {
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(initial))
       const loser = pipe(FiberRef.set(fiberRef, update), Effect.zipRight(Effect.fail("darn")))
-      yield* $(Effect.raceAll([loser, ...Array.from({ length: 63 }, () => loser)]), Effect.orElse(Effect.unit))
+      yield* $(Effect.raceAll([loser, ...Array.from({ length: 63 }, () => loser)]), Effect.orElse(() => Effect.unit))
       const result = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(result, initial)
     }))

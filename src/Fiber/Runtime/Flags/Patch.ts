@@ -2,8 +2,8 @@
  * @since 1.0.0
  */
 import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
-import * as runtimeFlags from "@effect/io/internal_effect_untraced/runtimeFlags"
-import * as internal from "@effect/io/internal_effect_untraced/runtimeFlagsPatch"
+import * as runtimeFlags from "@effect/io/internal/runtimeFlags"
+import * as internal from "@effect/io/internal/runtimeFlagsPatch"
 
 /**
  * @since 1.0.0

@@ -13,7 +13,7 @@ import * as it from "@effect/io/test/utils/extend"
 import { assert, describe } from "vitest"
 
 export const waitForValue = <A>(ref: Effect.Effect<never, never, A>, value: A): Effect.Effect<never, never, A> => {
-  return pipe(ref, Effect.zipLeft(Effect.yieldNow()), Effect.repeatUntil((a) => value === a))
+  return pipe(ref, Effect.zipLeft(Effect.yieldNow), Effect.repeatUntil((a) => value === a))
 }
 
 export const waitForSize = <A>(queue: Queue.Queue<A>, size: number): Effect.Effect<never, never, number> => {
@@ -437,7 +437,7 @@ describe.concurrent("Queue", () => {
     }))
   it.effect("shutdown with take fiber", () =>
     Effect.gen(function*($) {
-      const fiberId = yield* $(Effect.fiberId())
+      const fiberId = yield* $(Effect.fiberId)
       const queue = yield* $(Queue.bounded<number>(3))
       const fiber = yield* $(Effect.fork(Queue.take(queue)))
       yield* $(waitForSize(queue, -1))
@@ -447,7 +447,7 @@ describe.concurrent("Queue", () => {
     }))
   it.effect("shutdown with offer fiber", () =>
     Effect.gen(function*($) {
-      const fiberId = yield* $(Effect.fiberId())
+      const fiberId = yield* $(Effect.fiberId)
       const queue = yield* $(Queue.bounded<number>(2))
       yield* $(Queue.offer(queue, 1))
       yield* $(Queue.offer(queue, 1))
@@ -459,7 +459,7 @@ describe.concurrent("Queue", () => {
     }))
   it.effect("shutdown with offer", () =>
     Effect.gen(function*($) {
-      const fiberId = yield* $(Effect.fiberId())
+      const fiberId = yield* $(Effect.fiberId)
       const queue = yield* $(Queue.bounded<number>(1))
       yield* $(Queue.shutdown(queue))
       const result = yield* $(Queue.offer(queue, 1), Effect.sandbox, Effect.either)
@@ -467,7 +467,7 @@ describe.concurrent("Queue", () => {
     }))
   it.effect("shutdown with take", () =>
     Effect.gen(function*($) {
-      const fiberId = yield* $(Effect.fiberId())
+      const fiberId = yield* $(Effect.fiberId)
       const queue = yield* $(Queue.bounded<number>(1))
       yield* $(Queue.shutdown(queue))
       const result = yield* $(Queue.take(queue), Effect.sandbox, Effect.either)
@@ -475,7 +475,7 @@ describe.concurrent("Queue", () => {
     }))
   it.effect("shutdown with takeAll", () =>
     Effect.gen(function*($) {
-      const fiberId = yield* $(Effect.fiberId())
+      const fiberId = yield* $(Effect.fiberId)
       const queue = yield* $(Queue.bounded<number>(1))
       yield* $(Queue.shutdown(queue))
       const result = yield* $(Queue.takeAll(queue), Effect.sandbox, Effect.either)
@@ -483,7 +483,7 @@ describe.concurrent("Queue", () => {
     }))
   it.effect("shutdown with takeUpTo", () =>
     Effect.gen(function*($) {
-      const fiberId = yield* $(Effect.fiberId())
+      const fiberId = yield* $(Effect.fiberId)
       const queue = yield* $(Queue.bounded<number>(1))
       yield* $(Queue.shutdown(queue))
       const result = yield* $(Queue.takeUpTo(queue, 1), Effect.sandbox, Effect.either)
@@ -491,7 +491,7 @@ describe.concurrent("Queue", () => {
     }))
   it.effect("shutdown with size", () =>
     Effect.gen(function*($) {
-      const fiberId = yield* $(Effect.fiberId())
+      const fiberId = yield* $(Effect.fiberId)
       const queue = yield* $(Queue.bounded<number>(1))
       yield* $(Queue.shutdown(queue))
       const result = yield* $(Queue.size(queue), Effect.sandbox, Effect.either)

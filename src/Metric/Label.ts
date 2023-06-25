@@ -2,7 +2,7 @@
  * @since 1.0.0
  */
 import type * as Equal from "@effect/data/Equal"
-import * as internal from "@effect/io/internal_effect_untraced/metric/label"
+import * as internal from "@effect/io/internal/metric/label"
 
 /**
  * @since 1.0.0

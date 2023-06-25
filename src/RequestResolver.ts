@@ -7,8 +7,8 @@ import type * as Either from "@effect/data/Either"
 import type * as Equal from "@effect/data/Equal"
 import * as Effect from "@effect/io/Effect"
 import type { FiberRef } from "@effect/io/FiberRef"
-import * as core from "@effect/io/internal_effect_untraced/core"
-import * as internal from "@effect/io/internal_effect_untraced/dataSource"
+import * as core from "@effect/io/internal/core"
+import * as internal from "@effect/io/internal/dataSource"
 import type * as Request from "@effect/io/Request"
 
 /**
@@ -248,7 +248,7 @@ export const fromFunctionEffect: <R, A extends Request.Request<any, any>>(
  * @since 1.0.0
  * @category constructors
  */
-export const never: (_: void) => RequestResolver<never, never> = internal.never
+export const never: RequestResolver<never, never> = internal.never
 
 /**
  * Provides this data source with its required context.

@@ -6,8 +6,8 @@ import type * as Context from "@effect/data/Context"
 import type * as Effect from "@effect/io/Effect"
 import type * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
 import type * as Exit from "@effect/io/Exit"
-import * as core from "@effect/io/internal_effect_untraced/core"
-import * as fiberRuntime from "@effect/io/internal_effect_untraced/fiberRuntime"
+import * as core from "@effect/io/internal/core"
+import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
 
 /**
  * @since 1.0.0

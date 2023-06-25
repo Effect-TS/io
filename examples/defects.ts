@@ -19,7 +19,7 @@ const program = pipe(
   E.tap(() => E.sync(() => 1)),
   E.tap(() => E.sync(() => 1)),
   E.tap(() => E.sync(() => 1)),
-  E.flatMap(() => E.allPar(E.fail(0), E.unit())),
+  E.flatMap(() => E.allPar(E.fail(0), E.unit)),
   E.flatMap((res) => E.sync(() => console.log(`res: ${res}`)))
 )
 

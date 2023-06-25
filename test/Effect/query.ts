@@ -7,7 +7,7 @@ import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import * as Fiber from "@effect/io/Fiber"
 import * as FiberRef from "@effect/io/FiberRef"
-import * as TestClock from "@effect/io/internal_effect_untraced/testing/testClock"
+import * as TestClock from "@effect/io/internal/testing/testClock"
 import * as Layer from "@effect/io/Layer"
 import * as Request from "@effect/io/Request"
 import * as Resolver from "@effect/io/RequestResolver"
@@ -156,7 +156,7 @@ describe.concurrent("Effect", () => {
     Effect.locally(interrupts, { interrupts: 0 })(
       provideEnv(
         Effect.gen(function*($) {
-          const exit = yield* $(getAllUserNames, Effect.zipParLeft(Effect.interrupt()), Effect.exit)
+          const exit = yield* $(getAllUserNames, Effect.zipParLeft(Effect.interrupt), Effect.exit)
           expect(exit._tag).toEqual("Failure")
           if (exit._tag === "Failure") {
             expect(Cause.isInterruptedOnly(exit.cause)).toEqual(true)
@@ -171,7 +171,7 @@ describe.concurrent("Effect", () => {
       provideEnv(
         Effect.gen(function*($) {
           const fiber = yield* $(getAllUserNames, Effect.fork)
-          yield* $(Effect.yieldNow())
+          yield* $(Effect.yieldNow)
           yield* $(Fiber.interrupt(fiber))
           const exit = yield* $(Fiber.await(fiber))
           expect(exit._tag).toEqual("Failure")
@@ -188,7 +188,7 @@ describe.concurrent("Effect", () => {
       provideEnv(
         Effect.gen(function*($) {
           const fiber = yield* $(getAllUserNames, Effect.uninterruptible, Effect.fork)
-          yield* $(Effect.yieldNow())
+          yield* $(Effect.yieldNow)
           yield* $(Fiber.interrupt(fiber))
           const exit = yield* $(Fiber.await(fiber))
           expect(exit._tag).toEqual("Failure")
@@ -206,7 +206,7 @@ describe.concurrent("Effect", () => {
         Effect.gen(function*($) {
           const exit = yield* $(
             getAllUserNames,
-            Effect.zipParLeft(Effect.interrupt()),
+            Effect.zipParLeft(Effect.interrupt),
             Effect.withParallelism(2),
             Effect.exit
           )

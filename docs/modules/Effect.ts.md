@@ -822,7 +822,7 @@ Note that this allows for interruption to occur in uninterruptible regions.
 **Signature**
 
 ```ts
-export declare const allowInterrupt: (_: void) => Effect<never, never, void>
+export declare const allowInterrupt: Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -982,7 +982,7 @@ Constructs an effect with information about the current `Fiber`.
 **Signature**
 
 ```ts
-export declare const descriptor: (_: void) => Effect<never, never, Fiber.Fiber.Descriptor>
+export declare const descriptor: Effect<never, never, Fiber.Fiber.Descriptor>
 ```
 
 Added in v1.0.0
@@ -1258,7 +1258,7 @@ effect.
 **Signature**
 
 ```ts
-export declare const getFiberRefs: (_: void) => Effect<never, never, FiberRefs.FiberRefs>
+export declare const getFiberRefs: Effect<never, never, FiberRefs.FiberRefs>
 ```
 
 Added in v1.0.0
@@ -1441,7 +1441,7 @@ Returns a effect that will never produce anything. The moral equivalent of
 **Signature**
 
 ```ts
-export declare const never: (_: void) => Effect<never, never, never>
+export declare const never: Effect<never, never, never>
 ```
 
 Added in v1.0.0
@@ -1522,7 +1522,7 @@ Retreives the `Random` service from the context.
 **Signature**
 
 ```ts
-export declare const random: (_: void) => Effect<never, never, Random.Random>
+export declare const random: Effect<never, never, Random.Random>
 ```
 
 Added in v1.0.0
@@ -1562,7 +1562,7 @@ govern behavior and features of the runtime system.
 **Signature**
 
 ```ts
-export declare const runtimeFlags: (_: void) => Effect<never, never, RuntimeFlags.RuntimeFlags>
+export declare const runtimeFlags: Effect<never, never, RuntimeFlags.RuntimeFlags>
 ```
 
 Added in v1.0.0
@@ -1808,7 +1808,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const unit: (_: void) => Effect<never, never, void>
+export declare const unit: Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -1875,7 +1875,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const yieldNow: () => Effect<never, never, void>
+export declare const yieldNow: Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -1889,7 +1889,7 @@ Retreives the `Clock` service from the context
 **Signature**
 
 ```ts
-export declare const clock: (_: void) => Effect<never, never, Clock.Clock>
+export declare const clock: Effect<never, never, Clock.Clock>
 ```
 
 Added in v1.0.0
@@ -2060,7 +2060,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const scope: (_: void) => Effect<Scope.Scope, never, Scope.Scope>
+export declare const scope: Effect<Scope.Scope, never, Scope.Scope>
 ```
 
 Added in v1.0.0
@@ -3562,7 +3562,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const interrupt: (_: void) => Effect<never, never, never>
+export declare const interrupt: Effect<never, never, never>
 ```
 
 Added in v1.0.0
@@ -3722,7 +3722,7 @@ Retrieves the log annotations associated with the current scope.
 **Signature**
 
 ```ts
-export declare const logAnnotations: (_: void) => Effect<never, never, HashMap.HashMap<string, string>>
+export declare const logAnnotations: Effect<never, never, HashMap.HashMap<string, string>>
 ```
 
 Added in v1.0.0
@@ -4349,8 +4349,6 @@ of executing `Effect` values.
 
 ```ts
 export interface Effect<R, E, A> extends Effect.Variance<R, E, A>, Equal.Equal {
-  traced(trace: Trace): Effect<R, E, A>
-
   [Unify.typeSymbol]?: unknown
   [Unify.unifySymbol]?: EffectUnify<this>
   [Unify.blacklistSymbol]?: EffectUnifyBlacklist
@@ -4981,7 +4979,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const currentSpan: (_: void) => Effect<never, never, Option.Option<Tracer.Span>>
+export declare const currentSpan: Effect<never, never, Option.Option<Tracer.Span>>
 ```
 
 Added in v1.0.0
@@ -5013,7 +5011,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const tracer: () => Effect<never, never, Tracer.Tracer>
+export declare const tracer: Effect<never, never, Tracer.Tracer>
 ```
 
 Added in v1.0.0
@@ -5149,7 +5147,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const fiberId: (_: void) => Effect<never, never, FiberId.FiberId>
+export declare const fiberId: Effect<never, never, FiberId.FiberId>
 ```
 
 Added in v1.0.0

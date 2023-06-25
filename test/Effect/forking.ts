@@ -12,7 +12,7 @@ import { assert, describe } from "vitest"
 describe.concurrent("Effect", () => {
   it.effect("fork - propagates interruption", () =>
     Effect.gen(function*($) {
-      const result = yield* $(Effect.never(), Effect.fork, Effect.flatMap(Fiber.interrupt))
+      const result = yield* $(Effect.never, Effect.fork, Effect.flatMap(Fiber.interrupt))
       assert.isTrue(Exit.isInterrupted(result))
     }))
   it.effect("fork - propagates interruption with zip of defect", () =>
@@ -21,7 +21,7 @@ describe.concurrent("Effect", () => {
       const fiber = yield* $(
         Deferred.succeed(latch, void 0),
         Effect.zipRight(Effect.die(new Error())),
-        Effect.zipPar(Effect.never()),
+        Effect.zipPar(Effect.never),
         Effect.fork
       )
 
@@ -95,7 +95,7 @@ describe.concurrent("Effect", () => {
       }
       const fiber1 = yield* $(Effect.forkAll([die]))
       const fiber2 = yield* $(Effect.forkAll([die, Effect.succeed(42)]))
-      const fiber3 = yield* $(Effect.forkAll([die, Effect.succeed(42), Effect.never()]))
+      const fiber3 = yield* $(Effect.forkAll([die, Effect.succeed(42), Effect.never]))
       const result1 = yield* $(joinDefect(fiber1), Effect.map((cause) => cause))
       const result2 = yield* $(joinDefect(fiber2), Effect.map((cause) => cause))
       const result3 = yield* $(joinDefect(fiber3), Effect.map((cause) => cause))
@@ -107,7 +107,7 @@ describe.concurrent("Effect", () => {
   it.effect("forkAll - infers correctly", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(0))
-      const worker = Effect.never()
+      const worker = Effect.never
       const workers = Array.from({ length: 4 }, () => worker)
       const fiber = yield* $(Effect.forkAll(workers))
       yield* $(Fiber.interrupt(fiber))

@@ -249,7 +249,7 @@ A data source that never executes requests.
 **Signature**
 
 ```ts
-export declare const never: (_: void) => RequestResolver<never, never>
+export declare const never: RequestResolver<never, never>
 ```
 
 Added in v1.0.0

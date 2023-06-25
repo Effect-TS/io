@@ -31,14 +31,14 @@ const deepErrorEffect = (n: number): Effect.Effect<never, unknown, void> => {
       throw ExampleError
     })
   }
-  return pipe(Effect.unit(), Effect.zipRight(deepErrorEffect(n - 1)))
+  return pipe(Effect.unit, Effect.zipRight(deepErrorEffect(n - 1)))
 }
 
 const deepErrorFail = (n: number): Effect.Effect<never, unknown, void> => {
   if (n === 0) {
     return Effect.fail(ExampleError)
   }
-  return pipe(Effect.unit(), Effect.zipRight(deepErrorFail(n - 1)))
+  return pipe(Effect.unit, Effect.zipRight(deepErrorFail(n - 1)))
 }
 
 const exactlyOnce = <R, A, A1>(
@@ -49,7 +49,7 @@ const exactlyOnce = <R, A, A1>(
     const ref = yield* $(Ref.make(0))
     const res = yield* $(f(pipe(Ref.update(ref, (n) => n + 1), Effect.zipRight(Effect.succeed(value)))))
     const count = yield* $(Ref.get(ref))
-    yield* $(count !== 1 ? Effect.fail("Accessed more than once") : Effect.unit())
+    yield* $(count !== 1 ? Effect.fail("Accessed more than once") : Effect.unit)
     return res
   })
 }
@@ -419,10 +419,10 @@ describe.concurrent("Effect", () => {
       const fiberId = FiberId.make(0, 123)
       const bothCause = Cause.parallel(Cause.interrupt(fiberId), Cause.die(error))
       const thenCause = Cause.sequential(Cause.interrupt(fiberId), Cause.die(error))
-      const plain = yield* $(Effect.die(error), Effect.orElse(Effect.unit), Effect.exit)
-      const both = yield* $(Effect.failCause(bothCause), Effect.orElse(Effect.unit), Effect.exit)
-      const then = yield* $(Effect.failCause(thenCause), Effect.orElse(Effect.unit), Effect.exit)
-      const fail = yield* $(Effect.fail(error), Effect.orElse(Effect.unit), Effect.exit)
+      const plain = yield* $(Effect.die(error), Effect.orElse(() => Effect.unit), Effect.exit)
+      const both = yield* $(Effect.failCause(bothCause), Effect.orElse(() => Effect.unit), Effect.exit)
+      const then = yield* $(Effect.failCause(thenCause), Effect.orElse(() => Effect.unit), Effect.exit)
+      const fail = yield* $(Effect.fail(error), Effect.orElse(() => Effect.unit), Effect.exit)
       assert.deepStrictEqual(Exit.unannotate(plain), Exit.die(error))
       assert.deepStrictEqual(Exit.unannotate(both), Exit.die(error))
       assert.deepStrictEqual(Exit.unannotate(then), Exit.die(error))

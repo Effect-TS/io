@@ -2,7 +2,7 @@
  * @since 1.0.0
  */
 import type { LazyArg } from "@effect/data/Function"
-import * as internal from "@effect/io/internal_effect_untraced/executionStrategy"
+import * as internal from "@effect/io/internal/executionStrategy"
 
 /**
  * Describes a strategy for evaluating multiple effects, potentially in

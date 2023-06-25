@@ -3,7 +3,7 @@
  */
 import type * as Option from "@effect/data/Option"
 import type * as Effect from "@effect/io/Effect"
-import * as internal from "@effect/io/internal_effect_untraced/ref"
+import * as internal from "@effect/io/internal/ref"
 
 /**
  * @since 1.0.0

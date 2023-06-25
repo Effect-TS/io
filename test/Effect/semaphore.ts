@@ -1,6 +1,6 @@
 import * as D from "@effect/data/Duration"
 import * as Effect from "@effect/io/Effect"
-import * as TestClock from "@effect/io/internal_effect_untraced/testing/testClock"
+import * as TestClock from "@effect/io/internal/testing/testClock"
 import * as it from "@effect/io/test/utils/extend"
 import { assert, describe } from "vitest"
 

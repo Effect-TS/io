@@ -12,10 +12,10 @@ import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import type * as FiberStatus from "@effect/io/Fiber/Status"
 import type * as FiberRefs from "@effect/io/FiberRefs"
-import * as core from "@effect/io/internal_effect_untraced/core"
-import * as circular from "@effect/io/internal_effect_untraced/effect/circular"
-import * as internal from "@effect/io/internal_effect_untraced/fiber"
-import * as fiberRuntime from "@effect/io/internal_effect_untraced/fiberRuntime"
+import * as core from "@effect/io/internal/core"
+import * as circular from "@effect/io/internal/effect/circular"
+import * as internal from "@effect/io/internal/fiber"
+import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
 import type * as Scope from "@effect/io/Scope"
 
 /**
@@ -552,7 +552,7 @@ export const pretty: <E, A>(self: RuntimeFiber<E, A>) => Effect.Effect<never, ne
  * @since 1.0.0
  * @category constructors
  */
-export const roots: (_: void) => Effect.Effect<never, never, Array<RuntimeFiber<any, any>>> = internal.roots
+export const roots: Effect.Effect<never, never, Array<RuntimeFiber<any, any>>> = internal.roots
 
 /**
  * Returns a chunk containing all root fibers.
@@ -595,7 +595,7 @@ export const succeed: <A>(value: A) => Fiber<never, A> = internal.succeed
  * @since 1.0.0
  * @category constructors
  */
-export const unit: (_: void) => Fiber<never, void> = internal.unit
+export const unit: Fiber<never, void> = internal.unit
 
 /**
  * Zips this fiber and the specified fiber together, producing a tuple of

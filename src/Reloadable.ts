@@ -3,7 +3,7 @@
  */
 import type * as Context from "@effect/data/Context"
 import type * as Effect from "@effect/io/Effect"
-import * as internal from "@effect/io/internal_effect_untraced/reloadable"
+import * as internal from "@effect/io/internal/reloadable"
 import type * as Layer from "@effect/io/Layer"
 import type * as Schedule from "@effect/io/Schedule"
 import type * as ScopedRef from "@effect/io/ScopedRef"

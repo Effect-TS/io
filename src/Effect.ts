@@ -2,7 +2,6 @@
  * @since 1.0.0
  */
 import * as Context from "@effect/data/Context"
-import type { Trace } from "@effect/data/Debug"
 import type * as Duration from "@effect/data/Duration"
 import type * as Either from "@effect/data/Either"
 import type * as Equal from "@effect/data/Equal"
@@ -45,18 +44,18 @@ import type * as RuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
 import type * as FiberRef from "@effect/io/FiberRef"
 import type * as FiberRefs from "@effect/io/FiberRefs"
 import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
-import { clockTag } from "@effect/io/internal_effect_untraced/clock"
-import type { Concurrency } from "@effect/io/internal_effect_untraced/concurrency"
-import * as core from "@effect/io/internal_effect_untraced/core"
-import * as defaultServices from "@effect/io/internal_effect_untraced/defaultServices"
-import * as effect from "@effect/io/internal_effect_untraced/effect"
-import * as circular from "@effect/io/internal_effect_untraced/effect/circular"
-import * as fiberRuntime from "@effect/io/internal_effect_untraced/fiberRuntime"
-import * as layer from "@effect/io/internal_effect_untraced/layer"
-import * as circularLayer from "@effect/io/internal_effect_untraced/layer/circular"
-import * as query from "@effect/io/internal_effect_untraced/query"
-import * as _runtime from "@effect/io/internal_effect_untraced/runtime"
-import * as _schedule from "@effect/io/internal_effect_untraced/schedule"
+import { clockTag } from "@effect/io/internal/clock"
+import type { Concurrency } from "@effect/io/internal/concurrency"
+import * as core from "@effect/io/internal/core"
+import * as defaultServices from "@effect/io/internal/defaultServices"
+import * as effect from "@effect/io/internal/effect"
+import * as circular from "@effect/io/internal/effect/circular"
+import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
+import * as layer from "@effect/io/internal/layer"
+import * as circularLayer from "@effect/io/internal/layer/circular"
+import * as query from "@effect/io/internal/query"
+import * as _runtime from "@effect/io/internal/runtime"
+import * as _schedule from "@effect/io/internal/schedule"
 import type * as Layer from "@effect/io/Layer"
 import type { LogLevel } from "@effect/io/Logger/Level"
 import type * as Metric from "@effect/io/Metric"
@@ -112,8 +111,6 @@ export type EffectTypeId = typeof EffectTypeId
  * @category models
  */
 export interface Effect<R, E, A> extends Effect.Variance<R, E, A>, Equal.Equal {
-  traced(trace: Trace): Effect<R, E, A>
-
   [Unify.typeSymbol]?: unknown
   [Unify.unifySymbol]?: EffectUnify<this>
   [Unify.blacklistSymbol]?: EffectUnifyBlacklist
@@ -163,7 +160,6 @@ export interface Blocked<R, E, A> extends Effect<R, E, A> {
  */
 declare module "@effect/data/Context" {
   interface Tag<Identifier, Service> extends Effect<Identifier, never, Service> {}
-  interface TracedTag<Identifier, Service> extends Effect<Identifier, never, Service> {}
   interface TagUnifyBlacklist {
     Effect?: true
     Either?: true
@@ -182,9 +178,6 @@ declare module "@effect/data/Either" {
   interface Right<E, A> extends Effect<never, E, A> {
     readonly _tag: "Right"
   }
-  interface TracedEither<E, A> extends Effect<never, E, A> {
-    readonly _tag: "Traced"
-  }
   interface EitherUnifyBlacklist {
     Effect?: true
     Tag?: true
@@ -202,9 +195,6 @@ declare module "@effect/data/Option" {
   }
   interface Some<A> extends Effect<never, Cause.NoSuchElementException, A> {
     readonly _tag: "Some"
-  }
-  interface TracedOption<A> extends Effect<never, Cause.NoSuchElementException, A> {
-    readonly _tag: "Traced"
   }
   interface OptionUnifyBlacklist {
     Effect?: true
@@ -644,7 +634,7 @@ export const allSuccesses: <R, E, A>(
  * @since 1.0.0
  * @category constructors
  */
-export const allowInterrupt: (_: void) => Effect<never, never, void> = effect.allowInterrupt
+export const allowInterrupt: Effect<never, never, void> = effect.allowInterrupt
 
 /**
  * This function maps the success value of an `Effect` value to a specified
@@ -1166,7 +1156,7 @@ export const checkInterruptible: <R, E, A>(f: (isInterruptible: boolean) => Effe
  * @since 1.0.0
  * @category context
  */
-export const clock: (_: void) => Effect<never, never, Clock.Clock> = effect.clock
+export const clock: Effect<never, never, Clock.Clock> = effect.clock
 
 /**
  * Retreives the `Clock` service from the context and provides it to the
@@ -1294,7 +1284,7 @@ export const delay: {
  * @since 1.0.0
  * @category constructors
  */
-export const descriptor: (_: void) => Effect<never, never, Fiber.Fiber.Descriptor> = effect.descriptor
+export const descriptor: Effect<never, never, Fiber.Fiber.Descriptor> = effect.descriptor
 
 /**
  * Constructs an effect based on information about the current `Fiber`.
@@ -1569,7 +1559,7 @@ export const failCauseSync: <E>(evaluate: LazyArg<Cause.Cause<E>>) => Effect<nev
  * @since 1.0.0
  * @category utilities
  */
-export const fiberId: (_: void) => Effect<never, never, FiberId.FiberId> = core.fiberId
+export const fiberId: Effect<never, never, FiberId.FiberId> = core.fiberId
 
 /**
  * @since 1.0.0
@@ -2341,7 +2331,7 @@ export const gen: <Eff extends EffectGen<any, any, any>, AEff>(
  * @since 1.0.0
  * @category constructors
  */
-export const getFiberRefs: (_: void) => Effect<never, never, FiberRefs.FiberRefs> = effect.getFiberRefs
+export const getFiberRefs: Effect<never, never, FiberRefs.FiberRefs> = effect.getFiberRefs
 
 /**
  * Lifts an `Option` into an `Effect`, if the option is not defined it fails
@@ -2440,7 +2430,7 @@ export const inheritFiberRefs: (childFiberRefs: FiberRefs.FiberRefs) => Effect<n
  * @since 1.0.0
  * @category interruption
  */
-export const interrupt: (_: void) => Effect<never, never, never> = core.interrupt
+export const interrupt: Effect<never, never, never> = core.interrupt
 
 /**
  * @since 1.0.0
@@ -2655,7 +2645,7 @@ export const annotateLogs: {
  * @since 1.0.0
  * @category logging
  */
-export const logAnnotations: (_: void) => Effect<never, never, HashMap.HashMap<string, string>> = effect.logAnnotations
+export const logAnnotations: Effect<never, never, HashMap.HashMap<string, string>> = effect.logAnnotations
 
 /**
  * Loops with the specified effectual function, collecting the results into a
@@ -2928,7 +2918,7 @@ export const negate: <R, E>(self: Effect<R, E, boolean>) => Effect<R, E, boolean
  * @since 1.0.0
  * @category constructors
  */
-export const never: (_: void) => Effect<never, never, never> = core.never
+export const never: Effect<never, never, never> = core.never
 
 /**
  * Requires the option produced by this value to be `None`.
@@ -3387,7 +3377,7 @@ export const raceWith: {
  * @since 1.0.0
  * @category constructors
  */
-export const random: (_: void) => Effect<never, never, Random.Random> = effect.random
+export const random: Effect<never, never, Random.Random> = effect.random
 
 /**
  * Retreives the `Random` service from the context and uses it to run the
@@ -3396,7 +3386,8 @@ export const random: (_: void) => Effect<never, never, Random.Random> = effect.r
  * @since 1.0.0
  * @category constructors
  */
-export const randomWith: <R, E, A>(f: (random: Random.Random) => Effect<R, E, A>) => Effect<R, E, A> = effect.randomWith
+export const randomWith: <R, E, A>(f: (random: Random.Random) => Effect<R, E, A>) => Effect<R, E, A> =
+  defaultServices.randomWith
 
 /**
  * Folds an `Iterable<A>` using an effectual function f, working sequentially
@@ -3881,7 +3872,7 @@ export const runtime: <R>() => Effect<R, never, Runtime.Runtime<R>> = _runtime.r
  * @since 1.0.0
  * @category constructors
  */
-export const runtimeFlags: (_: void) => Effect<never, never, RuntimeFlags.RuntimeFlags> = core.runtimeFlags
+export const runtimeFlags: Effect<never, never, RuntimeFlags.RuntimeFlags> = core.runtimeFlags
 
 /**
  * Exposes the full `Cause` of failure for the specified effect.
@@ -3945,7 +3936,7 @@ export const scheduleFrom: {
  * @since 1.0.0
  * @category context
  */
-export const scope: (_: void) => Effect<Scope.Scope, never, Scope.Scope> = fiberRuntime.scope
+export const scope: Effect<Scope.Scope, never, Scope.Scope> = fiberRuntime.scope
 
 /**
  * Accesses the current scope and uses it to perform the specified effect.
@@ -4541,7 +4532,7 @@ export const uninterruptibleMask: <R, E, A>(
  * @since 1.0.0
  * @category constructors
  */
-export const unit: (_: void) => Effect<never, never, void> = core.unit
+export const unit: Effect<never, never, void> = core.unit
 
 /**
  * Converts a `Effect<R, Either<E, B>, A>` into a `Effect<R, E, Either<A, B>>`.
@@ -5180,7 +5171,7 @@ export const withRuntimeFlagsScoped: (update: RuntimeFlagsPatch.RuntimeFlagsPatc
  * @since 1.0.0
  * @category constructors
  */
-export const yieldNow: () => Effect<never, never, void> = core.yieldNow
+export const yieldNow: Effect<never, never, void> = core.yieldNow
 
 /**
  * @since 1.0.0
@@ -5649,7 +5640,7 @@ export const setTracer: (tracer: Tracer.Tracer) => Layer.Layer<never, never, nev
  * @since 1.0.0
  * @category tracing
  */
-export const tracer: () => Effect<never, never, Tracer.Tracer> = effect.tracer
+export const tracer: Effect<never, never, Tracer.Tracer> = effect.tracer
 
 /**
  * @since 1.0.0
@@ -5689,7 +5680,7 @@ export const annotateSpans: {
  * @since 1.0.0
  * @category tracing
  */
-export const currentSpan: (_: void) => Effect<never, never, Option.Option<Tracer.Span>> = effect.currentSpan
+export const currentSpan: Effect<never, never, Option.Option<Tracer.Span>> = effect.currentSpan
 
 /**
  * @since 1.0.0

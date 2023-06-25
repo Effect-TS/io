@@ -47,7 +47,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const currentTimeMillis: (_: void) => Effect.Effect<never, never, number>
+export declare const currentTimeMillis: Effect.Effect<never, never, number>
 ```
 
 Added in v1.0.0
@@ -113,7 +113,7 @@ export interface Clock {
   /**
    * Returns the current time in milliseconds.
    */
-  currentTimeMillis(): Effect.Effect<never, never, number>
+  readonly currentTimeMillis: Effect.Effect<never, never, number>
   /**
    * Asynchronously sleeps for the specified duration.
    */

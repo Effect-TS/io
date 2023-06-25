@@ -55,7 +55,7 @@ describe.concurrent("Effect", () => {
           // This will never complete because we never call the callback
           Effect.acquireUseRelease(
             Deferred.succeed(acquire, void 0),
-            () => Effect.never(),
+            () => Effect.never,
             () => Deferred.succeed(release, void 0)
           )
         ),
@@ -103,7 +103,7 @@ describe.concurrent("Effect", () => {
             Deferred.await(step),
             Effect.zipRight(Effect.sync(() => cb(Ref.update(unexpectedPlace, Chunk.prepend(1)))))
           ))
-          return Option.some(Effect.unit())
+          return Option.some(Effect.unit)
         }),
         Effect.flatMap(() =>
           Effect.async<never, never, void>(() => {

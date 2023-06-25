@@ -7,7 +7,7 @@ import type * as MutableRef from "@effect/data/MutableRef"
 import type * as Option from "@effect/data/Option"
 import type * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
-import * as internal from "@effect/io/internal_effect_untraced/queue"
+import * as internal from "@effect/io/internal/queue"
 
 /**
  * @since 1.0.0

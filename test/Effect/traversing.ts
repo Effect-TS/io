@@ -190,7 +190,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const result = yield* $(
         Array.from({ length: 10 }, (_, i) => i + 1),
-        Effect.forEachPar((n) => n === 5 ? Effect.interrupt() : Effect.succeed(n * 2)),
+        Effect.forEachPar((n) => n === 5 ? Effect.interrupt : Effect.succeed(n * 2)),
         Effect.exit
       )
       assert.isTrue(Exit.isInterrupted(result))
@@ -217,7 +217,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const deferred = yield* $(Deferred.make<never, void>())
       yield* $(
-        pipe([Effect.never(), Deferred.succeed(deferred, void 0)], Effect.forEachPar(identity), Effect.fork)
+        pipe([Effect.never, Deferred.succeed(deferred, void 0)], Effect.forEachPar(identity), Effect.fork)
       )
       const result = yield* $(Deferred.await(deferred))
       assert.isUndefined(result)
@@ -236,7 +236,7 @@ describe.concurrent("Effect", () => {
       const ref = yield* $(Ref.make(false))
       const deferred = yield* $(Deferred.make<never, void>())
       const actions = [
-        Effect.never(),
+        Effect.never,
         Effect.succeed(1),
         Effect.fail("C"),
         pipe(Deferred.await(deferred), Effect.zipRight(Ref.set(ref, true)), Effect.as(1))
@@ -278,7 +278,7 @@ describe.concurrent("Effect", () => {
       const deferred = yield* $(Deferred.make<never, void>())
       yield* $(
         pipe(
-          [Effect.never(), Deferred.succeed(deferred, void 0)],
+          [Effect.never, Deferred.succeed(deferred, void 0)],
           Effect.forEachPar(identity),
           Effect.withParallelism(2),
           Effect.fork
@@ -300,7 +300,7 @@ describe.concurrent("Effect", () => {
   it.effect("forEachPar - parallelism - interrupts effects on first failure", () =>
     Effect.gen(function*($) {
       const actions = [
-        Effect.never(),
+        Effect.never,
         Effect.succeed(1),
         Effect.fail("C")
       ]
@@ -344,7 +344,7 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("forEachParDiscard - completes on empty input", () =>
     Effect.gen(function*($) {
-      const result = yield* $([], Effect.forEachParDiscard(() => Effect.unit()))
+      const result = yield* $([], Effect.forEachParDiscard(() => Effect.unit))
       assert.isUndefined(result)
     }))
   it.effect("forEachParDiscard - parallelism - runs all effects", () =>
@@ -381,7 +381,7 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("mergeAll - return error if it exists in list", () =>
     Effect.gen(function*($) {
-      const effects: ReadonlyArray<Effect.Effect<never, number, void>> = [Effect.unit(), Effect.fail(1)]
+      const effects: ReadonlyArray<Effect.Effect<never, number, void>> = [Effect.unit, Effect.fail(1)]
       const result = yield* $(effects, Effect.mergeAll(void 0 as void, constVoid), Effect.exit)
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(1))
     }))
@@ -401,7 +401,7 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("mergeAllPar - return error if it exists in list", () =>
     Effect.gen(function*($) {
-      const effects: ReadonlyArray<Effect.Effect<never, number, void>> = [Effect.unit(), Effect.fail(1)]
+      const effects: ReadonlyArray<Effect.Effect<never, number, void>> = [Effect.unit, Effect.fail(1)]
       const result = yield* $(effects, Effect.mergeAllPar(void 0 as void, constVoid), Effect.exit)
       assert.deepStrictEqual(Exit.unannotate(result), Exit.failCause(Cause.parallel(Cause.empty, Cause.fail(1))))
     }))
@@ -541,15 +541,15 @@ describe.concurrent("Effect", () => {
   it.effect("reduceAllPar - return error if zero is an error", () =>
     Effect.gen(function*($) {
       const result = yield* $(
-        pipe([Effect.unit(), Effect.unit()], Effect.reduceAllPar(Effect.fail(1), constVoid), Effect.exit)
+        pipe([Effect.unit, Effect.unit], Effect.reduceAllPar(Effect.fail(1), constVoid), Effect.exit)
       )
       assert.deepStrictEqual(Exit.unannotate(result), Exit.failCause(Cause.parallel(Cause.empty, Cause.fail(1))))
     }))
   it.effect("reduceAllPar - return error if it exists in list", () =>
     Effect.gen(function*($) {
-      const effects: ReadonlyArray<Effect.Effect<never, number, void>> = [Effect.unit(), Effect.fail(1)]
+      const effects: ReadonlyArray<Effect.Effect<never, number, void>> = [Effect.unit, Effect.fail(1)]
       const result = yield* $(
-        pipe(effects, Effect.reduceAllPar(Effect.unit() as Effect.Effect<never, number, void>, constVoid), Effect.exit)
+        pipe(effects, Effect.reduceAllPar(Effect.unit as Effect.Effect<never, number, void>, constVoid), Effect.exit)
       )
       assert.deepStrictEqual(Exit.unannotate(result), Exit.failCause(Cause.parallel(Cause.empty, Cause.fail(1))))
     }))

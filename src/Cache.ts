@@ -6,7 +6,7 @@ import type { Either } from "@effect/data/Either"
 import type * as Option from "@effect/data/Option"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
-import * as internal from "@effect/io/internal_effect_untraced/cache"
+import * as internal from "@effect/io/internal/cache"
 
 /**
  * @since 1.0.0

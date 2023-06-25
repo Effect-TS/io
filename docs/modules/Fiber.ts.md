@@ -197,7 +197,7 @@ Returns a chunk containing all root fibers.
 **Signature**
 
 ```ts
-export declare const roots: (_: void) => Effect.Effect<never, never, Array<RuntimeFiber<any, any>>>
+export declare const roots: Effect.Effect<never, never, RuntimeFiber<any, any>[]>
 ```
 
 Added in v1.0.0
@@ -221,7 +221,7 @@ A fiber that has already succeeded with unit.
 **Signature**
 
 ```ts
-export declare const unit: (_: void) => Fiber<never, void>
+export declare const unit: Fiber<never, void>
 ```
 
 Added in v1.0.0

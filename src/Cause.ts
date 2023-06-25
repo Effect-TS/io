@@ -29,8 +29,8 @@ import type * as HashSet from "@effect/data/HashSet"
 import type * as Option from "@effect/data/Option"
 import type { Predicate } from "@effect/data/Predicate"
 import type * as FiberId from "@effect/io/Fiber/Id"
-import * as internal from "@effect/io/internal_effect_untraced/cause"
-import * as _pretty from "@effect/io/internal_effect_untraced/cause-pretty"
+import * as internal from "@effect/io/internal/cause"
+import * as _pretty from "@effect/io/internal/cause-pretty"
 
 /**
  * @since 1.0.0

@@ -5,8 +5,8 @@ import type * as Context from "@effect/data/Context"
 import type * as Option from "@effect/data/Option"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
-import * as defaultServices from "@effect/io/internal_effect_untraced/defaultServices"
-import * as internal from "@effect/io/internal_effect_untraced/tracer"
+import * as defaultServices from "@effect/io/internal/defaultServices"
+import * as internal from "@effect/io/internal/tracer"
 import type * as Logger from "@effect/io/Logger"
 
 /**

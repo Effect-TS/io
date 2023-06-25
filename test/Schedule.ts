@@ -9,7 +9,7 @@ import * as Deferred from "@effect/io/Deferred"
 import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import * as Fiber from "@effect/io/Fiber"
-import * as TestClock from "@effect/io/internal_effect_untraced/testing/testClock"
+import * as TestClock from "@effect/io/internal/testing/testClock"
 import * as Ref from "@effect/io/Ref"
 import * as Schedule from "@effect/io/Schedule"
 import * as ScheduleDecision from "@effect/io/Schedule/Decision"
@@ -55,9 +55,9 @@ describe.concurrent("Schedule", () => {
   it.effect("either should not wait if neither schedule wants to continue", () =>
     Effect.gen(function*($) {
       const schedule = pipe(
-        Schedule.stop(),
-        Schedule.union(pipe(Schedule.spaced(Duration.seconds(2)), Schedule.intersect(Schedule.stop()))),
-        Schedule.compose(Schedule.elapsed())
+        Schedule.stop,
+        Schedule.union(pipe(Schedule.spaced(Duration.seconds(2)), Schedule.intersect(Schedule.stop))),
+        Schedule.compose(Schedule.elapsed)
       )
       const input = Array.from({ length: 4 }, constVoid)
       const result = yield* $(runCollect(schedule, input))
@@ -88,7 +88,7 @@ describe.concurrent("Schedule", () => {
             }
             // The 10th retry will succeed, which is only possible if the schedule was reset
             if (retries == 10) {
-              return Effect.unit()
+              return Effect.unit
             }
             return Effect.fail("Boom")
           })
@@ -108,7 +108,7 @@ describe.concurrent("Schedule", () => {
     Effect.gen(function*($) {
       const schedule = pipe(Schedule.recurWhile((b: boolean) => b), Schedule.union(Schedule.fixed(Duration.seconds(1))))
       const input = Chunk.make(true, false, false, false, false)
-      const result = yield* $(runCollect(pipe(schedule, Schedule.compose(Schedule.elapsed())), input))
+      const result = yield* $(runCollect(pipe(schedule, Schedule.compose(Schedule.elapsed)), input))
       const expected = [0, 0, 1, 2, 3].map(Duration.seconds)
       assert.deepStrictEqual(Array.from(result), expected)
     }))
@@ -144,7 +144,7 @@ describe.concurrent("Schedule", () => {
       Effect.gen(function*($) {
         const schedule = Schedule.exponential(Duration.minutes(1))
         const result = yield* $(
-          Clock.currentTimeMillis(),
+          Clock.currentTimeMillis,
           Effect.flatMap((now) => pipe(schedule, Schedule.run(now, Array.from({ length: 5 }, constVoid))))
         )
         assert.deepStrictEqual(Array.from(result), [
@@ -160,7 +160,7 @@ describe.concurrent("Schedule", () => {
         const schedule = pipe(Schedule.recurs(2), Schedule.intersect(Schedule.exponential(Duration.minutes(1))))
         const result = yield* $(
           pipe(
-            Clock.currentTimeMillis(),
+            Clock.currentTimeMillis,
             Effect.flatMap((now) => pipe(schedule, Schedule.run(now, Chunk.range(1, 10))))
           )
         )
@@ -175,7 +175,7 @@ describe.concurrent("Schedule", () => {
         const schedule = pipe(Schedule.spaced(Duration.seconds(1)), Schedule.upTo(Duration.seconds(5)))
         const result = yield* $(
           pipe(
-            Clock.currentTimeMillis(),
+            Clock.currentTimeMillis,
             Effect.flatMap((now) => pipe(schedule, Schedule.run(now, Chunk.range(1, 10))))
           )
         )
@@ -241,7 +241,7 @@ describe.concurrent("Schedule", () => {
     it.effect("for 'once' will repeat 1 additional time", () =>
       Effect.gen(function*($) {
         const ref = yield* $(Ref.make(0))
-        yield* $(Ref.update(ref, (n) => n + 1), Effect.repeat(Schedule.once()))
+        yield* $(Ref.update(ref, (n) => n + 1), Effect.repeat(Schedule.once))
         const result = yield* $(Ref.get(ref))
         assert.strictEqual(result, 2)
       }))
@@ -320,12 +320,12 @@ describe.concurrent("Schedule", () => {
   describe.concurrent("repetitions", () => {
     it.effect("forever", () =>
       Effect.gen(function*($) {
-        const [actual, expected] = yield* $(checkRepetitions(Schedule.repeatForever()))
+        const [actual, expected] = yield* $(checkRepetitions(Schedule.repeatForever))
         assert.deepStrictEqual(actual, expected)
       }))
     it.effect("count", () =>
       Effect.gen(function*($) {
-        const [actual, expected] = yield* $(checkRepetitions(Schedule.count()))
+        const [actual, expected] = yield* $(checkRepetitions(Schedule.count))
         assert.deepStrictEqual(actual, expected)
       }))
     it.effect("dayOfMonth", () =>
@@ -360,7 +360,7 @@ describe.concurrent("Schedule", () => {
       }))
     it.effect("repeatForever", () =>
       Effect.gen(function*($) {
-        const [actual, expected] = yield* $(checkRepetitions(Schedule.repeatForever()))
+        const [actual, expected] = yield* $(checkRepetitions(Schedule.repeatForever))
         assert.deepStrictEqual(actual, expected)
       }))
     it.effect("recurs", () =>
@@ -396,19 +396,19 @@ describe.concurrent("Schedule", () => {
     it.effect("retry exactly one time for `once` when second time succeeds - retryOrElse", () =>
       Effect.gen(function*($) {
         const ref = yield* $(Ref.make(0))
-        const result = yield* $(failOn0(ref), Effect.retryOrElse(Schedule.once(), ioFail))
+        const result = yield* $(failOn0(ref), Effect.retryOrElse(Schedule.once, ioFail))
         assert.strictEqual(result, 2)
       }))
     it.effect("retry exactly one time for `once` when second time succeeds - retryOrElse0", () =>
       Effect.gen(function*($) {
         const ref = yield* $(Ref.make(0))
-        const result = yield* $(failOn0(ref), Effect.retryOrElseEither(Schedule.once(), ioFail))
+        const result = yield* $(failOn0(ref), Effect.retryOrElseEither(Schedule.once, ioFail))
         assert.deepStrictEqual(result, Either.right(2))
       }))
     it.effect("if fallback succeeded - retryOrElse", () =>
       Effect.gen(function*($) {
         const ref = yield* $(Ref.make(0))
-        const result = yield* $(alwaysFail(ref), Effect.retryOrElse(Schedule.once(), ioSucceed))
+        const result = yield* $(alwaysFail(ref), Effect.retryOrElse(Schedule.once, ioSucceed))
         assert.strictEqual(result, "OrElse")
       }))
     it.effect("if fallback failed - retryOrElse", () =>
@@ -417,7 +417,7 @@ describe.concurrent("Schedule", () => {
         const result = yield* $(
           pipe(
             alwaysFail(ref),
-            Effect.retryOrElse(Schedule.once(), ioFail),
+            Effect.retryOrElse(Schedule.once, ioFail),
             Effect.matchEffect(Effect.succeed, () => Effect.succeed("it should not be a success"))
           )
         )
@@ -426,7 +426,7 @@ describe.concurrent("Schedule", () => {
     it.effect("if fallback succeeded - retryOrElseEither", () =>
       Effect.gen(function*($) {
         const ref = yield* $(Ref.make(0))
-        const result = yield* $(alwaysFail(ref), Effect.retryOrElseEither(Schedule.once(), ioSucceed))
+        const result = yield* $(alwaysFail(ref), Effect.retryOrElseEither(Schedule.once, ioSucceed))
         assert.deepStrictEqual(result, Either.left("OrElse"))
       }))
     it.effect("if fallback failed - retryOrElse", () =>
@@ -435,7 +435,7 @@ describe.concurrent("Schedule", () => {
         const result = yield* $(
           pipe(
             alwaysFail(ref),
-            Effect.retryOrElseEither(Schedule.once(), ioFail),
+            Effect.retryOrElseEither(Schedule.once, ioFail),
             Effect.matchEffect(Effect.succeed, () => Effect.succeed("it should not be a success"))
           )
         )
@@ -444,7 +444,7 @@ describe.concurrent("Schedule", () => {
     it.effect("retry 0 time for `once` when first time succeeds", () =>
       Effect.gen(function*($) {
         const ref = yield* $(Ref.make(0))
-        yield* $(Ref.update(ref, (n) => n + 1), Effect.retry(Schedule.once()))
+        yield* $(Ref.update(ref, (n) => n + 1), Effect.retry(Schedule.once))
         const result = yield* $(Ref.get(ref))
         assert.strictEqual(result, 1)
       }))
@@ -465,7 +465,7 @@ describe.concurrent("Schedule", () => {
         const ref = yield* $(Ref.make(0) // One retry on failure
         )
         // One retry on failure
-        yield* $(failOn0(ref), Effect.retry(Schedule.once()))
+        yield* $(failOn0(ref), Effect.retry(Schedule.once))
         const result = yield* $(Ref.get(ref))
         assert.strictEqual(result, 2)
       }))
@@ -477,7 +477,7 @@ describe.concurrent("Schedule", () => {
         const result = yield* $(
           pipe(
             alwaysFail(ref),
-            Effect.retry(Schedule.once()),
+            Effect.retry(Schedule.once),
             Effect.matchEffect(Effect.succeed, () => Effect.succeed("it should not be a success"))
           )
         )
@@ -515,49 +515,49 @@ describe.concurrent("Schedule", () => {
         const program = pipe(
           effect,
           Effect.retryOrElseEither(strategy, (s, n) =>
-            pipe(TestClock.currentTimeMillis(), Effect.map((now) => [Duration.millis(now), s, n] as const)))
+            pipe(TestClock.currentTimeMillis, Effect.map((now) => [Duration.millis(now), s, n] as const)))
         )
         const result = yield* $(run(program))
         assert.deepStrictEqual(result, Either.left([Duration.millis(800), "GiveUpError", 4] as const))
       }))
     it.effect("fibonacci delay", () =>
       Effect.gen(function*($) {
-        const schedule = pipe(Schedule.fibonacci(Duration.millis(100)), Schedule.compose(Schedule.elapsed()))
+        const schedule = pipe(Schedule.fibonacci(Duration.millis(100)), Schedule.compose(Schedule.elapsed))
         const result = yield* $(runCollect(schedule, Array.from({ length: 5 }, constVoid)))
         const expected = [0, 100, 200, 400, 700].map(Duration.millis)
         assert.deepStrictEqual(Array.from(result), expected)
       }))
     it.effect("linear delay", () =>
       Effect.gen(function*($) {
-        const schedule = pipe(Schedule.linear(Duration.millis(100)), Schedule.compose(Schedule.elapsed()))
+        const schedule = pipe(Schedule.linear(Duration.millis(100)), Schedule.compose(Schedule.elapsed))
         const result = yield* $(runCollect(schedule, Array.from({ length: 5 }, constVoid)))
         const expected = [0, 100, 300, 600, 1000].map(Duration.millis)
         assert.deepStrictEqual(Array.from(result), expected)
       }))
     it.effect("spaced delay", () =>
       Effect.gen(function*($) {
-        const schedule = pipe(Schedule.spaced(Duration.millis(100)), Schedule.compose(Schedule.elapsed()))
+        const schedule = pipe(Schedule.spaced(Duration.millis(100)), Schedule.compose(Schedule.elapsed))
         const result = yield* $(runCollect(schedule, Array.from({ length: 5 }, constVoid)))
         const expected = [0, 100, 200, 300, 400].map(Duration.millis)
         assert.deepStrictEqual(Array.from(result), expected)
       }))
     it.effect("fixed delay", () =>
       Effect.gen(function*($) {
-        const schedule = pipe(Schedule.fixed(Duration.millis(100)), Schedule.compose(Schedule.elapsed()))
+        const schedule = pipe(Schedule.fixed(Duration.millis(100)), Schedule.compose(Schedule.elapsed))
         const result = yield* $(runCollect(schedule, Array.from({ length: 5 }, constVoid)))
         const expected = [0, 100, 200, 300, 400].map(Duration.millis)
         assert.deepStrictEqual(Array.from(result), expected)
       }))
     it.effect("fixed delay with zero delay", () =>
       Effect.gen(function*($) {
-        const schedule = pipe(Schedule.fixed(Duration.zero), Schedule.compose(Schedule.elapsed()))
+        const schedule = pipe(Schedule.fixed(Duration.zero), Schedule.compose(Schedule.elapsed))
         const result = yield* $(runCollect(schedule, Array.from({ length: 5 }, constVoid)))
         const expected = Array.from({ length: 5 }, () => Duration.zero)
         assert.deepStrictEqual(Array.from(result), expected)
       }))
     it.effect("windowed", () =>
       Effect.gen(function*($) {
-        const schedule = pipe(Schedule.windowed(Duration.millis(100)), Schedule.compose(Schedule.elapsed()))
+        const schedule = pipe(Schedule.windowed(Duration.millis(100)), Schedule.compose(Schedule.elapsed))
         const result = yield* $(runCollect(schedule, Array.from({ length: 5 }, constVoid)))
         const expected = [0, 100, 200, 300, 400].map(Duration.millis)
         assert.deepStrictEqual(Array.from(result), expected)
@@ -567,7 +567,7 @@ describe.concurrent("Schedule", () => {
         const schedule = pipe(
           Schedule.linear(Duration.millis(100)),
           Schedule.modifyDelayEffect((_, duration) => Effect.succeed(pipe(duration, Duration.times(2)))),
-          Schedule.compose(Schedule.elapsed())
+          Schedule.compose(Schedule.elapsed)
         )
         const result = yield* $(runCollect(schedule, Array.from({ length: 5 }, constVoid)))
         const expected = [0, 200, 600, 1200, 2000].map(Duration.millis)
@@ -575,14 +575,14 @@ describe.concurrent("Schedule", () => {
       }))
     it.effect("exponential delay with default factor", () =>
       Effect.gen(function*($) {
-        const schedule = pipe(Schedule.exponential(Duration.millis(100)), Schedule.compose(Schedule.elapsed()))
+        const schedule = pipe(Schedule.exponential(Duration.millis(100)), Schedule.compose(Schedule.elapsed))
         const result = yield* $(runCollect(schedule, Array.from({ length: 5 }, constVoid)))
         const expected = [0, 100, 300, 700, 1500].map(Duration.millis)
         assert.deepStrictEqual(Array.from(result), expected)
       }))
     it.effect("exponential delay with other factor", () =>
       Effect.gen(function*($) {
-        const schedule = pipe(Schedule.exponential(Duration.millis(100), 3), Schedule.compose(Schedule.elapsed()))
+        const schedule = pipe(Schedule.exponential(Duration.millis(100), 3), Schedule.compose(Schedule.elapsed))
         const result = yield* $(runCollect(schedule, Array.from({ length: 5 }, constVoid)))
         const expected = [0, 100, 400, 1300, 4000].map(Duration.millis)
         assert.deepStrictEqual(Array.from(result), expected)
@@ -595,7 +595,7 @@ describe.concurrent("Schedule", () => {
           Duration.seconds(12),
           Duration.seconds(19)
         )
-        const schedule = pipe(delays, Schedule.compose(Schedule.elapsed()))
+        const schedule = pipe(delays, Schedule.compose(Schedule.elapsed))
         const result = yield* $(runCollect(schedule, Array.from({ length: 5 }, constVoid)))
         const expected = [0, 4, 11, 23, 42].map(Duration.seconds)
         assert.deepStrictEqual(Array.from(result), expected)
@@ -746,7 +746,7 @@ describe.concurrent("Schedule", () => {
         yield* $(TestClock.adjust(Duration.seconds(5)))
         const schedule = pipe(Schedule.spaced(Duration.seconds(20)), Schedule.union(Schedule.secondOfMinute(30)))
         yield* $(
-          TestClock.currentTimeMillis(),
+          TestClock.currentTimeMillis,
           Effect.tap((instant) => Ref.update(ref, (seconds) => [...seconds, instant / 1000])),
           Effect.repeat(schedule),
           Effect.fork

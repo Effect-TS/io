@@ -497,7 +497,7 @@ Captures a snapshot of all metrics recorded by the application.
 **Signature**
 
 ```ts
-export declare const snapshot: () => Effect.Effect<never, never, HashSet.HashSet<MetricPair.MetricPair.Untyped>>
+export declare const snapshot: Effect.Effect<never, never, HashSet.HashSet<MetricPair.MetricPair.Untyped>>
 ```
 
 Added in v1.0.0

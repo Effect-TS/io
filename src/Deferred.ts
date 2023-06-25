@@ -8,8 +8,8 @@ import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
 import type * as FiberId from "@effect/io/Fiber/Id"
-import * as core from "@effect/io/internal_effect_untraced/core"
-import * as internal from "@effect/io/internal_effect_untraced/deferred"
+import * as core from "@effect/io/internal/core"
+import * as internal from "@effect/io/internal/deferred"
 
 /**
  * @since 1.0.0

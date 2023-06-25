@@ -3,7 +3,7 @@
  */
 import type * as Duration from "@effect/data/Duration"
 import type * as Effect from "@effect/io/Effect"
-import * as internal from "@effect/io/internal_effect_untraced/keyedPool"
+import * as internal from "@effect/io/internal/keyedPool"
 import type * as Scope from "@effect/io/Scope"
 
 /**

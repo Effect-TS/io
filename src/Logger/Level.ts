@@ -1,12 +1,11 @@
 /**
  * @since 1.0.0
  */
-import * as debug from "@effect/data/Debug"
-import { pipe } from "@effect/data/Function"
+import { dual, pipe } from "@effect/data/Function"
 import * as number from "@effect/data/Number"
 import * as order from "@effect/data/typeclass/Order"
 import type * as Effect from "@effect/io/Effect"
-import * as core from "@effect/io/internal_effect_untraced/core"
+import * as core from "@effect/io/internal/core"
 
 /**
  * A `LogLevel` represents the log level associated with an individual logging
@@ -180,10 +179,10 @@ export const allLevels = core.allLogLevels
 export const locally: {
   (self: LogLevel): <R, E, B>(use: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>
   <R, E, B>(use: Effect.Effect<R, E, B>, self: LogLevel): Effect.Effect<R, E, B>
-} = debug.dualWithTrace<
+} = dual<
   (self: LogLevel) => <R, E, B>(use: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>,
   <R, E, B>(use: Effect.Effect<R, E, B>, self: LogLevel) => Effect.Effect<R, E, B>
->(2, (trace) => (use, self) => core.fiberRefLocally(use, core.currentLogLevel, self).traced(trace))
+>(2, (use, self) => core.fiberRefLocally(use, core.currentLogLevel, self))
 
 /**
  * @since 1.0.0

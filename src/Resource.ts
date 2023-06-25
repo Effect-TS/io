@@ -3,7 +3,7 @@
  */
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
-import * as internal from "@effect/io/internal_effect_untraced/resource"
+import * as internal from "@effect/io/internal/resource"
 import type * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"
 import type * as ScopedRef from "@effect/io/ScopedRef"

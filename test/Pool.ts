@@ -5,8 +5,8 @@ import * as Deferred from "@effect/io/Deferred"
 import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import * as Fiber from "@effect/io/Fiber"
-import * as TestClock from "@effect/io/internal_effect_untraced/testing/testClock"
-import * as TestServices from "@effect/io/internal_effect_untraced/testing/testServices"
+import * as TestClock from "@effect/io/internal/testing/testClock"
+import * as TestServices from "@effect/io/internal/testing/testServices"
 import * as Pool from "@effect/io/Pool"
 import * as Ref from "@effect/io/Ref"
 import * as Scope from "@effect/io/Scope"
@@ -220,7 +220,7 @@ describe("Pool", () => {
         Ref.updateAndGet(count, (n) => n + 1),
         () => Ref.update(count, (n) => n - 1)
       )
-      const fiberId = yield* $(Effect.fiberId())
+      const fiberId = yield* $(Effect.fiberId)
       const pool = yield* $(Pool.make(get, 10))
       yield* $(Effect.repeatN(Pool.get(pool), 9))
       const fiber = yield* $(Effect.fork(Pool.get(pool)))

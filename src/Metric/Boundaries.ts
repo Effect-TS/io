@@ -3,7 +3,7 @@
  */
 import type * as Chunk from "@effect/data/Chunk"
 import type * as Equal from "@effect/data/Equal"
-import * as internal from "@effect/io/internal_effect_untraced/metric/boundaries"
+import * as internal from "@effect/io/internal/metric/boundaries"
 
 /**
  * @since 1.0.0

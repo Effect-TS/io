@@ -5,7 +5,7 @@ import type * as Chunk from "@effect/data/Chunk"
 import type * as Equal from "@effect/data/Equal"
 import type * as HashMap from "@effect/data/HashMap"
 import type * as Option from "@effect/data/Option"
-import * as internal from "@effect/io/internal_effect_untraced/metric/state"
+import * as internal from "@effect/io/internal/metric/state"
 import type * as MetricKeyType from "@effect/io/Metric/KeyType"
 
 /**

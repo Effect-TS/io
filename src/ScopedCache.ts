@@ -6,7 +6,7 @@ import type * as Option from "@effect/data/Option"
 import type * as Cache from "@effect/io/Cache"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
-import * as internal from "@effect/io/internal_effect_untraced/scopedCache"
+import * as internal from "@effect/io/internal/scopedCache"
 import type * as Scope from "@effect/io/Scope"
 
 /**

@@ -9,11 +9,11 @@ import type { Deferred } from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
 import type { FiberId } from "@effect/io/Fiber/Id"
-import * as _RequestBlock from "@effect/io/internal_effect_untraced/blockedRequests"
-import * as cache from "@effect/io/internal_effect_untraced/cache"
-import * as core from "@effect/io/internal_effect_untraced/core"
-import * as fiberRuntime from "@effect/io/internal_effect_untraced/fiberRuntime"
-import * as internal from "@effect/io/internal_effect_untraced/request"
+import * as _RequestBlock from "@effect/io/internal/blockedRequests"
+import * as cache from "@effect/io/internal/cache"
+import * as core from "@effect/io/internal/core"
+import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
+import * as internal from "@effect/io/internal/request"
 
 /**
  * @since 1.0.0

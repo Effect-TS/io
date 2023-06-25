@@ -4,7 +4,7 @@
 import type * as Equal from "@effect/data/Equal"
 import type * as HashSet from "@effect/data/HashSet"
 import type * as Option from "@effect/data/Option"
-import * as internal from "@effect/io/internal_effect_untraced/fiberId"
+import * as internal from "@effect/io/internal/fiberId"
 
 /**
  * @since 1.0.0

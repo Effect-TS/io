@@ -3,7 +3,7 @@ import * as Duration from "@effect/data/Duration"
 import { pipe } from "@effect/data/Function"
 import * as Effect from "@effect/io/Effect"
 import * as Fiber from "@effect/io/Fiber"
-import * as TestClock from "@effect/io/internal_effect_untraced/testing/testClock"
+import * as TestClock from "@effect/io/internal/testing/testClock"
 import * as KeyedPool from "@effect/io/KeyedPool"
 import * as Random from "@effect/io/Random"
 import * as Ref from "@effect/io/Ref"
@@ -50,7 +50,7 @@ describe("KeyedPool", () => {
               Effect.zipRight(
                 Effect.whenEffect(
                   KeyedPool.invalidate(pool, value),
-                  Random.nextBoolean()
+                  Random.nextBoolean
                 ),
                 Effect.flatMap(
                   Random.nextIntBetween(0, 15),

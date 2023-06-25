@@ -39,13 +39,25 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("ifEffect - runs `onTrue` if result of `b` is `true`", () =>
     Effect.gen(function*($) {
-      const result = yield* $(Effect.succeed(true), Effect.ifEffect(Effect.succeed(true), Effect.succeed(false)))
+      const result = yield* $(
+        Effect.succeed(true),
+        Effect.ifEffect({
+          onTrue: Effect.succeed(true),
+          onFalse: Effect.succeed(false)
+        })
+      )
       assert.isTrue(result)
     }))
   it.effect("ifEffect - runs `onFalse` if result of `b` is `false`", () =>
     Effect.gen(function*($) {
-      const result = yield* $(Effect.succeed(false), Effect.ifEffect(Effect.succeed(true), Effect.succeed(false)))
-      assert.isFalse(result)
+      const result = yield* $(
+        Effect.succeed(false),
+        Effect.ifEffect({
+          onFalse: Effect.succeed(true),
+          onTrue: Effect.succeed(false)
+        })
+      )
+      assert.isTrue(result)
     }))
   describe.concurrent("", () => {
     it.effect("tapErrorCause - effectually peeks at the cause of the failure of this effect", () =>
@@ -189,8 +201,8 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const result = yield* $(
         pipe(
-          Effect.interrupt(),
-          Effect.zipPar(Effect.interrupt()),
+          Effect.interrupt,
+          Effect.zipPar(Effect.interrupt),
           Effect.exit,
           Effect.map((exit) =>
             pipe(Exit.causeOption(exit), Option.map(Cause.interruptors), Option.getOrElse(() => HashSet.empty()))
@@ -203,7 +215,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const result = yield* $(
         pipe(
-          Effect.interrupt(),
+          Effect.interrupt,
           Effect.zipPar(Effect.succeed(1)),
           Effect.sandbox,
           Effect.either,

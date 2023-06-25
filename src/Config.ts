@@ -10,7 +10,7 @@ import type * as Option from "@effect/data/Option"
 import type { Predicate, Refinement } from "@effect/data/Predicate"
 import type * as ConfigError from "@effect/io/Config/Error"
 import type * as ConfigSecret from "@effect/io/Config/Secret"
-import * as internal from "@effect/io/internal_effect_untraced/config"
+import * as internal from "@effect/io/internal/config"
 import type * as LogLevel from "@effect/io/Logger/Level"
 
 /**

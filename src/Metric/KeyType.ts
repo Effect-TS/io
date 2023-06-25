@@ -4,7 +4,7 @@
 import type * as Chunk from "@effect/data/Chunk"
 import type * as Duration from "@effect/data/Duration"
 import type * as Equal from "@effect/data/Equal"
-import * as internal from "@effect/io/internal_effect_untraced/metric/keyType"
+import * as internal from "@effect/io/internal/metric/keyType"
 import type * as MetricBoundaries from "@effect/io/Metric/Boundaries"
 import type * as MetricState from "@effect/io/Metric/State"
 

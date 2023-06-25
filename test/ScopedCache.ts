@@ -9,8 +9,8 @@ import * as Cause from "@effect/io/Cause"
 import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import * as Fiber from "@effect/io/Fiber"
-import * as TestClock from "@effect/io/internal_effect_untraced/testing/testClock"
-import * as TestServices from "@effect/io/internal_effect_untraced/testing/testServices"
+import * as TestClock from "@effect/io/internal/testing/testClock"
+import * as TestServices from "@effect/io/internal/testing/testServices"
 import * as Ref from "@effect/io/Ref"
 import * as Schedule from "@effect/io/Schedule"
 import * as Scope from "@effect/io/Scope"
@@ -44,7 +44,7 @@ describe.concurrent("ScopedCache", () => {
               pipe(
                 Effect.forEachParDiscard(
                   Chunk.map(Chunk.range(1, capacity), (n) => (n / 2) | 0),
-                  (n) => Effect.scoped(Effect.zipRight(cache.get(n), Effect.unit()))
+                  (n) => Effect.scoped(Effect.zipRight(cache.get(n), Effect.unit))
                 ),
                 Effect.flatMap(() => cache.cacheStats())
               )
@@ -76,7 +76,7 @@ describe.concurrent("ScopedCache", () => {
         const cache = yield* $(scopedCache)
         yield* $(Effect.forEachParDiscard(
           Chunk.range(0, capacity - 1),
-          (n) => Effect.scoped(Effect.zipRight(cache.get(n), Effect.unit()))
+          (n) => Effect.scoped(Effect.zipRight(cache.get(n), Effect.unit))
         ))
         yield* $(cache.invalidate(42))
         const cacheContainsKey42 = yield* $(cache.contains(42))
@@ -104,11 +104,11 @@ describe.concurrent("ScopedCache", () => {
       const scopedCache = ScopedCache.make(4, Duration.infinity, () => observablesResource.scoped)
       yield* $(Effect.scoped(Effect.gen(function*($) {
         const cache = yield* $(scopedCache)
-        yield* $(Effect.scoped(Effect.zipRight(cache.get(void 0), Effect.unit())))
+        yield* $(Effect.scoped(Effect.zipRight(cache.get(void 0), Effect.unit)))
         const invalidateEffect = cache.invalidate(void 0)
         const cacheContainsKey42BeforeInvalidate = yield* $(cache.contains(void 0))
         yield* $(observablesResource.assertAcquiredOnceAndNotCleaned())
-        yield* $(Effect.scoped(Effect.zipRight(cache.get(void 0), Effect.unit())))
+        yield* $(Effect.scoped(Effect.zipRight(cache.get(void 0), Effect.unit)))
         yield* $(invalidateEffect)
         const cacheContainsKey42AfterInvalidate = yield* $(cache.contains(void 0))
         yield* $(observablesResource.assertAcquiredOnceAndCleaned())
@@ -135,7 +135,7 @@ describe.concurrent("ScopedCache", () => {
         const cache = yield* $(scopedCache)
         yield* $(Effect.forEachParDiscard(
           Chunk.range(0, capacity - 1),
-          (n) => Effect.scoped(Effect.zipRight(cache.get(n), Effect.unit()))
+          (n) => Effect.scoped(Effect.zipRight(cache.get(n), Effect.unit))
         ))
         yield* $(cache.invalidateAll())
         const contains = yield* $(pipe(
@@ -611,7 +611,7 @@ describe.concurrent("ScopedCache", () => {
   it.effect("refresh - should create and acquire subresource if the key doesn't exist in the cache", () =>
     Effect.gen(function*($) {
       const capacity = 100
-      const scopedCache = ScopedCache.make(capacity, Duration.infinity, (_: number) => Effect.unit())
+      const scopedCache = ScopedCache.make(capacity, Duration.infinity, (_: number) => Effect.unit)
       yield* $(Effect.scoped(Effect.gen(function*($) {
         const cache = yield* $(scopedCache)
         const count0 = yield* $(cache.size())
@@ -672,7 +672,7 @@ describe.concurrent("ScopedCache", () => {
           watchableLookup.getCalledTimes(void 0),
           Effect.repeat(pipe(
             Schedule.recurWhile<number>((calledTimes) => calledTimes < 2),
-            Schedule.compose(Schedule.elapsed()),
+            Schedule.compose(Schedule.elapsed),
             Schedule.whileOutput((elapsed) => elapsed.millis < 100)
           ))
         ))
@@ -699,7 +699,7 @@ describe.concurrent("ScopedCache", () => {
           watchableLookup.getCalledTimes(void 0),
           Effect.repeat(pipe(
             Schedule.recurWhile<number>((calledTimes) => calledTimes < 1),
-            Schedule.compose(Schedule.elapsed()),
+            Schedule.compose(Schedule.elapsed),
             Schedule.whileOutput((elapsed) => elapsed.millis < 100)
           ))
         ))

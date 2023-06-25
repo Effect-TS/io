@@ -10,7 +10,7 @@ import type * as Option from "@effect/data/Option"
 import type { Predicate } from "@effect/data/Predicate"
 import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
-import * as internal from "@effect/io/internal_effect_untraced/schedule"
+import * as internal from "@effect/io/internal/schedule"
 import type * as ScheduleDecision from "@effect/io/Schedule/Decision"
 import type * as Interval from "@effect/io/Schedule/Interval"
 import type * as Intervals from "@effect/io/Schedule/Intervals"
@@ -427,7 +427,7 @@ export const contramapEffect: {
  * @since 1.0.0
  * @category constructors
  */
-export const count: (_: void) => Schedule<never, unknown, number> = internal.count
+export const count: Schedule<never, unknown, number> = internal.count
 
 /**
  * Cron-like schedule that recurs every specified `day` of month. Won't recur
@@ -606,7 +606,7 @@ export const eitherWith: {
  * @since 1.0.0
  * @category constructors
  */
-export const elapsed: (_: void) => Schedule<never, unknown, Duration.Duration> = internal.elapsed
+export const elapsed: Schedule<never, unknown, Duration.Duration> = internal.elapsed
 
 /**
  * Returns a new schedule that will run the specified finalizer as soon as the
@@ -667,7 +667,7 @@ export const fixed: (interval: Duration.Duration) => Schedule<never, unknown, nu
  * @since 1.0.0
  * @category constructors
  */
-export const forever: (_: void) => Schedule<never, unknown, number> = internal.forever
+export const forever: Schedule<never, unknown, number> = internal.forever
 
 /**
  * A schedule that recurs once with the specified delay.
@@ -910,7 +910,7 @@ export const onDecision: {
  * @since 1.0.0
  * @category constructors
  */
-export const once: (_: void) => Schedule<never, unknown, void> = internal.once
+export const once: Schedule<never, unknown, void> = internal.once
 
 /**
  * Returns a new schedule that passes through the inputs of this schedule.
@@ -1117,7 +1117,7 @@ export const reduceEffect: {
  * @since 1.0.0
  * @category constructors
  */
-export const repeatForever: (_: void) => Schedule<never, unknown, number> = internal.forever
+export const repeatForever: Schedule<never, unknown, number> = internal.forever
 
 /**
  * Returns a new schedule that outputs the number of repetitions of this one.
@@ -1209,7 +1209,7 @@ export const spaced: (duration: Duration.Duration) => Schedule<never, unknown, n
  * @since 1.0.0
  * @category constructors
  */
-export const stop: (_: void) => Schedule<never, unknown, void> = internal.stop
+export const stop: Schedule<never, unknown, void> = internal.stop
 
 /**
  * Returns a schedule that repeats one time, producing the specified constant

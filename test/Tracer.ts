@@ -4,13 +4,13 @@ import * as Option from "@effect/data/Option"
 import * as Effect from "@effect/io/Effect"
 import * as Fiber from "@effect/io/Fiber"
 import * as FiberId from "@effect/io/Fiber/Id"
-import * as TestClock from "@effect/io/internal_effect_untraced/testing/testClock"
-import type { NativeSpan } from "@effect/io/internal_effect_untraced/tracer"
+import * as TestClock from "@effect/io/internal/testing/testClock"
+import type { NativeSpan } from "@effect/io/internal/tracer"
 import * as it from "@effect/io/test/utils/extend"
 import type * as Tracer from "@effect/io/Tracer"
 import { assert, describe } from "vitest"
 
-const currentSpan = Effect.flatMap(Effect.currentSpan(), identity)
+const currentSpan = Effect.flatMap(Effect.currentSpan, identity)
 
 describe("Tracer", () => {
   describe("withSpan", () => {
@@ -96,7 +96,7 @@ describe("Tracer", () => {
       Effect.gen(function*($) {
         const [span, fiberId] = yield* $(
           Effect.log("event"),
-          Effect.zipRight(Effect.all(currentSpan, Effect.fiberId())),
+          Effect.zipRight(Effect.all(currentSpan, Effect.fiberId)),
           Effect.withSpan("A")
         )
 

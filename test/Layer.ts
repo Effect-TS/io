@@ -25,14 +25,14 @@ describe.concurrent("Layer", () => {
     Effect.gen(function*($) {
       const BoolTag = Context.Tag<boolean>()
       const deferred = yield* $(Deferred.make<never, void>())
-      const layer1 = Layer.effectContext<never, never, never>(Effect.never())
+      const layer1 = Layer.effectContext<never, never, never>(Effect.never)
       const layer2 = Layer.scopedContext(
         Effect.acquireRelease(
           pipe(
             Deferred.succeed(deferred, void 0),
             Effect.map((bool) => Context.make(BoolTag, bool))
           ),
-          () => Effect.unit()
+          () => Effect.unit
         )
       )
       const env = pipe(layer1, Layer.merge(layer2), Layer.build)
@@ -53,7 +53,7 @@ describe.concurrent("Layer", () => {
               Ref.get(ref),
               Effect.flatMap((chunk) => Ref.set(testRef, chunk))
             )),
-          Effect.tap(() => Effect.unit())
+          Effect.tap(() => Effect.unit)
         )
       )
       yield* $(
@@ -174,7 +174,7 @@ describe.concurrent("Layer", () => {
       const layer3 = Layer.succeed(BazTag, { baz: "baz" })
       const layer4 = Layer.scoped(ScopedTag, Effect.scoped(Effect.acquireRelease(sleep, () => sleep)))
       const layer = pipe(layer1, Layer.merge(pipe(layer2, Layer.merge(layer3), Layer.provide(layer4))))
-      const result = yield* $(Effect.unit(), Effect.provideLayer(layer), Effect.exit)
+      const result = yield* $(Effect.unit, Effect.provideLayer(layer), Effect.exit)
       assert.isTrue(Exit.isFailure(result))
     }))
   it.effect("fresh with merge", () =>

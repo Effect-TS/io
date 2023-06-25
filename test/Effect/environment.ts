@@ -1,5 +1,4 @@
 import * as Context from "@effect/data/Context"
-import { sourceLocation } from "@effect/data/Debug"
 import { pipe } from "@effect/data/Function"
 import * as Effect from "@effect/io/Effect"
 import * as it from "@effect/io/test/utils/extend"
@@ -63,14 +62,15 @@ describe.concurrent("Effect", () => {
       )
       assert.strictEqual(result, 3)
     }))
-  it.effect("serviceWith - traced tag", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(
-        Effect.flatMap(NumberService.traced(sourceLocation(new Error())), ({ n }) => Effect.succeed(n + 3)),
-        Effect.provideContext(Context.make(NumberService, { n: 0 }))
-      )
-      assert.strictEqual(result, 3)
-    }))
+  // TODO: remove
+  // it.effect("serviceWith - traced tag", () =>
+  //   Effect.gen(function*($) {
+  //     const result = yield* $(
+  //       Effect.flatMap(NumberService.traced(sourceLocation(new Error())), ({ n }) => Effect.succeed(n + 3)),
+  //       Effect.provideContext(Context.make(NumberService, { n: 0 }))
+  //     )
+  //     assert.strictEqual(result, 3)
+  //   }))
   it.effect("updateService - updates a service in the environment", () =>
     pipe(
       Effect.gen(function*($) {

@@ -6,7 +6,7 @@ import type * as Duration from "@effect/data/Duration"
 import type { LazyArg } from "@effect/data/Function"
 import type * as HashSet from "@effect/data/HashSet"
 import type * as Effect from "@effect/io/Effect"
-import * as internal from "@effect/io/internal_effect_untraced/metric"
+import * as internal from "@effect/io/internal/metric"
 import type * as MetricBoundaries from "@effect/io/Metric/Boundaries"
 import type * as MetricKey from "@effect/io/Metric/Key"
 import type * as MetricKeyType from "@effect/io/Metric/KeyType"
@@ -263,8 +263,7 @@ export const set: {
  * @since 1.0.0
  * @category getters
  */
-export const snapshot: () => Effect.Effect<never, never, HashSet.HashSet<MetricPair.MetricPair.Untyped>> =
-  internal.snapshot
+export const snapshot: Effect.Effect<never, never, HashSet.HashSet<MetricPair.MetricPair.Untyped>> = internal.snapshot
 
 /**
  * Creates a metric that ignores input and produces constant output.
