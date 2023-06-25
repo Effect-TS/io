@@ -68,7 +68,7 @@ export const frequency = (_key: MetricKey.MetricKey.Frequency): MetricHook.Metri
     const slotCount = values.get(word) ?? 0
     values.set(word, slotCount + 1)
   }
-  const snapshot = () => HashMap.fromIterable(Array.from(values.entries()).map(([k, v]) => [k, v] as const))
+  const snapshot = () => HashMap.fromIterable(values.entries())
   return make(() => metricState.frequency(snapshot()), update)
 }
 
@@ -87,8 +87,8 @@ export const gauge = (_key: MetricKey.MetricKey.Gauge, startAt: number): MetricH
 export const histogram = (key: MetricKey.MetricKey.Histogram): MetricHook.MetricHook.Histogram => {
   const bounds = key.keyType.boundaries.values
   const size = bounds.length
-  const values = Array<number>(size + 1)
-  const boundaries = Array<number>(size)
+  const values = new Uint32Array(size + 1)
+  const boundaries = new Float32Array(size)
   let count = 0
   let sum = 0
   let min = Number.MAX_VALUE
@@ -97,7 +97,7 @@ export const histogram = (key: MetricKey.MetricKey.Histogram): MetricHook.Metric
   pipe(
     bounds,
     Chunk.sort(number.Order),
-    Chunk.mapWithIndex((i, n) => {
+    Chunk.mapWithIndex((n, i) => {
       boundaries[i] = n
     })
   )
@@ -108,7 +108,7 @@ export const histogram = (key: MetricKey.MetricKey.Histogram): MetricHook.Metric
     let to = size
     while (from !== to) {
       const mid = Math.floor(from + (to - from) / 2)
-      const boundary = boundaries[mid]!
+      const boundary = boundaries[mid]
       if (value <= boundary) {
         to = mid
       } else {
@@ -116,7 +116,7 @@ export const histogram = (key: MetricKey.MetricKey.Histogram): MetricHook.Metric
       }
       // The special case when to / from have a distance of one
       if (to === from + 1) {
-        if (value <= boundaries[from]!) {
+        if (value <= boundaries[from]) {
           to = from
         } else {
           from = to
@@ -135,17 +135,15 @@ export const histogram = (key: MetricKey.MetricKey.Histogram): MetricHook.Metric
   }
 
   const getBuckets = (): Chunk.Chunk<readonly [number, number]> => {
-    const builder: Array<readonly [number, number]> = []
-    let i = 0
+    const builder: Array<readonly [number, number]> = Array(size)
     let cumulated = 0
-    while (i != size) {
-      const boundary = boundaries[i]!
-      const value = values[i]!
+    for (let i = 0; i < size; i++) {
+      const boundary = boundaries[i]
+      const value = values[i]
       cumulated = cumulated + value
-      builder.push([boundary, cumulated] as const)
-      i = i + 1
+      builder[i] = [boundary, cumulated]
     }
-    return Chunk.fromIterable(builder)
+    return Chunk.unsafeFromArray(builder)
   }
 
   return make(
@@ -196,7 +194,7 @@ export const summary = (key: MetricKey.MetricKey.Summary): MetricHook.MetricHook
     return calculateQuantiles(
       error,
       sortedQuantiles,
-      pipe(Chunk.fromIterable(builder), Chunk.sort(number.Order))
+      pipe(Chunk.unsafeFromArray(builder), Chunk.sort(number.Order))
     )
   }
 
