@@ -4,7 +4,7 @@ import * as E from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 
 const program = pipe(
-  E.Do(),
+  E.Do,
   E.tap(() => E.sync(() => 1)),
   E.tap(() => E.sync(() => 1)),
   E.tap(() => E.sync(() => 1)),

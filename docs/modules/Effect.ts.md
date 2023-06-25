@@ -2099,7 +2099,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const Do: (_: void) => Effect<never, never, {}>
+export declare const Do: Effect<never, never, {}>
 ```
 
 Added in v1.0.0
@@ -3083,7 +3083,7 @@ Retrieves the metric tags associated with the current scope.
 **Signature**
 
 ```ts
-export declare const tags: (_: void) => Effect<never, never, HashSet.HashSet<MetricLabel.MetricLabel>>
+export declare const tags: Effect<never, never, HashSet.HashSet<MetricLabel.MetricLabel>>
 ```
 
 Added in v1.0.0
@@ -4600,7 +4600,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const spanAnnotations: () => Effect<never, never, HashMap.HashMap<string, string>>
+export declare const spanAnnotations: Effect<never, never, HashMap.HashMap<string, string>>
 ```
 
 Added in v1.0.0

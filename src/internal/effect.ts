@@ -339,7 +339,7 @@ export const diffFiberRefs = <R, E, A>(
 ): Effect.Effect<R, E, [FiberRefsPatch.FiberRefsPatch, A]> => summarized(self, getFiberRefs, fiberRefsPatch.diff)
 
 /* @internal */
-export const Do = (): Effect.Effect<never, never, {}> => core.succeed({})
+export const Do: Effect.Effect<never, never, {}> = core.succeed({})
 
 /* @internal */
 export const bind = dual<
@@ -2104,8 +2104,9 @@ export const withSpan = dual<
 )
 
 /* @internal */
-export const spanAnnotations = (): Effect.Effect<never, never, HashMap.HashMap<string, string>> =>
-  core.fiberRefGet(core.currentTracerSpanAnnotations)
+export const spanAnnotations: Effect.Effect<never, never, HashMap.HashMap<string, string>> = core.fiberRefGet(
+  core.currentTracerSpanAnnotations
+)
 
 /** @internal */
 export const serviceFunctionEffect = <T extends Context.Tag<any, any>, Args extends Array<any>, R, E, A>(

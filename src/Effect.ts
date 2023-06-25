@@ -1187,7 +1187,7 @@ const bindValue_: {
  * @since 1.0.0
  * @category do notation
  */
-export const Do: (_: void) => Effect<never, never, {}> = effect.Do
+export const Do: Effect<never, never, {}> = effect.Do
 
 /**
  * Drops all elements until the effectful predicate returns true.
@@ -3774,7 +3774,7 @@ export const taggedScopedWithLabelSet: (
  * @since 1.0.0
  * @category getters
  */
-export const tags: (_: void) => Effect<never, never, HashSet.HashSet<MetricLabel.MetricLabel>> = core.tags
+export const tags: Effect<never, never, HashSet.HashSet<MetricLabel.MetricLabel>> = core.tags
 
 /**
  * @since 1.0.0
@@ -5225,7 +5225,7 @@ export const currentSpan: Effect<never, never, Option.Option<Tracer.Span>> = eff
  * @since 1.0.0
  * @category tracing
  */
-export const spanAnnotations: () => Effect<never, never, HashMap.HashMap<string, string>> = effect.spanAnnotations
+export const spanAnnotations: Effect<never, never, HashMap.HashMap<string, string>> = effect.spanAnnotations
 
 /**
  * Create a new span for tracing, and automatically close it when the effect

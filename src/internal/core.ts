@@ -979,10 +979,6 @@ export const sync = <A>(evaluate: LazyArg<A>): Effect.Effect<never, never, A> =>
 }
 
 /* @internal */
-export const tags = (): Effect.Effect<never, never, HashSet.HashSet<MetricLabel.MetricLabel>> =>
-  fiberRefGet(currentTags)
-
-/* @internal */
 export const tap = dual<
   <A, R2, E2, _>(
     f: (a: A) => Effect.Effect<R2, E2, _>
@@ -1672,6 +1668,9 @@ export const withUnhandledErrorLogLevel = dual<
 export const currentTags: FiberRef.FiberRef<HashSet.HashSet<MetricLabel.MetricLabel>> = fiberRefUnsafeMakeHashSet(
   HashSet.empty()
 )
+
+/* @internal */
+export const tags: Effect.Effect<never, never, HashSet.HashSet<MetricLabel.MetricLabel>> = fiberRefGet(currentTags)
 
 /** @internal */
 export const currentForkScopeOverride: FiberRef.FiberRef<Option.Option<fiberScope.FiberScope>> = globalValue(
