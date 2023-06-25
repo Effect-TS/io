@@ -7,7 +7,6 @@ import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import * as Fiber from "@effect/io/Fiber"
 import * as FiberId from "@effect/io/Fiber/Id"
-import * as Ref from "@effect/io/Ref"
 import { causesArb } from "@effect/io/test/utils/cause"
 import * as it from "@effect/io/test/utils/extend"
 import * as fc from "fast-check"
@@ -35,19 +34,6 @@ const deepErrorFail = (n: number): Effect.Effect<never, unknown, void> => {
     return Effect.fail(ExampleError)
   }
   return pipe(Effect.unit, Effect.zipRight(deepErrorFail(n - 1)))
-}
-
-const exactlyOnce = <R, A, A1>(
-  value: A,
-  f: (_: Effect.Effect<never, never, A>) => Effect.Effect<R, string, A1>
-): Effect.Effect<R, string, A1> => {
-  return Effect.gen(function*($) {
-    const ref = yield* $(Ref.make(0))
-    const res = yield* $(f(pipe(Ref.update(ref, (n) => n + 1), Effect.zipRight(Effect.succeed(value)))))
-    const count = yield* $(Ref.get(ref))
-    yield* $(count !== 1 ? Effect.fail("Accessed more than once") : Effect.unit)
-    return res
-  })
 }
 
 describe.concurrent("Effect", () => {
@@ -424,58 +410,6 @@ describe.concurrent("Effect", () => {
         Effect.exit
       )
       assert.deepStrictEqual(Exit.unannotate(result), Exit.die(ExampleError))
-    }))
-  it.effect("reject - returns failure ignoring value", () =>
-    Effect.gen(function*($) {
-      const goodCase = yield* $(
-        pipe(
-          exactlyOnce(0, Effect.reject((n) => (n !== 0 ? Option.some("partial failed!") : Option.none()))),
-          Effect.sandbox,
-          Effect.either
-        )
-      )
-      const badCase = yield* $(
-        pipe(
-          exactlyOnce(1, Effect.reject((n) => (n !== 0 ? Option.some("partial failed!") : Option.none()))),
-          Effect.sandbox,
-          Effect.either,
-          Effect.map(Either.mapLeft(Cause.failureOrCause))
-        )
-      )
-      assert.deepStrictEqual(goodCase, Either.right(0))
-      assert.deepStrictEqual(badCase, Either.left(Either.left("partial failed!")))
-    }))
-  it.effect("rejectEffect - returns failure ignoring value", () =>
-    Effect.gen(function*($) {
-      const goodCase = yield* $(
-        exactlyOnce(
-          0,
-          Effect.rejectEffect((n) => n !== 0 ? Option.some(Effect.succeed("partial failed!")) : Option.none())
-        ),
-        Effect.sandbox,
-        Effect.either
-      )
-      const partialBadCase = yield* $(
-        exactlyOnce(
-          0,
-          Effect.rejectEffect((n) => n !== 0 ? Option.some(Effect.fail("partial failed!")) : Option.none())
-        ),
-        Effect.sandbox,
-        Effect.either,
-        Effect.map(Either.mapLeft(Cause.failureOrCause))
-      )
-      const badCase = yield* $(
-        exactlyOnce(
-          1,
-          Effect.rejectEffect((n) => n !== 0 ? Option.some(Effect.fail("partial failed!")) : Option.none())
-        ),
-        Effect.sandbox,
-        Effect.either,
-        Effect.map(Either.mapLeft(Cause.failureOrCause))
-      )
-      assert.deepStrictEqual(goodCase, Either.right(0))
-      assert.deepStrictEqual(partialBadCase, Either.right(0))
-      assert.deepStrictEqual(badCase, Either.left(Either.left("partial failed!")))
     }))
   it.effect("tryCatch = handles exceptions", () =>
     Effect.gen(function*($) {

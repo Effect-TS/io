@@ -1476,34 +1476,6 @@ export const refineTagOrDieWith = dual<
   }))
 
 /* @internal */
-export const reject = dual<
-  <A, E1>(pf: (a: A) => Option.Option<E1>) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E | E1, A>,
-  <R, E, A, E1>(self: Effect.Effect<R, E, A>, pf: (a: A) => Option.Option<E1>) => Effect.Effect<R, E | E1, A>
->(2, (self, pf) => rejectEffect(self, (a) => Option.map(pf(a), core.fail)))
-
-/* @internal */
-export const rejectEffect = dual<
-  <A, R1, E1>(
-    pf: (a: A) => Option.Option<Effect.Effect<R1, E1, E1>>
-  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E | E1, A>,
-  <R, E, A, R1, E1>(
-    self: Effect.Effect<R, E, A>,
-    pf: (a: A) => Option.Option<Effect.Effect<R1, E1, E1>>
-  ) => Effect.Effect<R | R1, E | E1, A>
->(2, (self, pf) =>
-  core.flatMap(self, (a) => {
-    const option = pf(a)
-    switch (option._tag) {
-      case "None": {
-        return core.succeed(a)
-      }
-      case "Some": {
-        return core.flatMap(option.value, core.fail)
-      }
-    }
-  }))
-
-/* @internal */
 export const repeatN = dual<
   (n: number) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
   <R, E, A>(self: Effect.Effect<R, E, A>, n: number) => Effect.Effect<R, E, A>

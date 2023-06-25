@@ -362,8 +362,6 @@ Added in v1.0.0
   - [refineOrDieWith](#refineordiewith)
   - [refineTagOrDie](#refinetagordie)
   - [refineTagOrDieWith](#refinetagordiewith)
-  - [reject](#reject)
-  - [rejectEffect](#rejecteffect)
   - [repeat](#repeat)
   - [repeatN](#repeatn)
   - [repeatOrElse](#repeatorelse)
@@ -5688,41 +5686,6 @@ export declare const refineTagOrDieWith: {
     k: K,
     f: (e: Exclude<E, { _tag: K }>) => unknown
   ): Effect<R, Extract<E, { _tag: K }>, A>
-}
-```
-
-Added in v1.0.0
-
-## reject
-
-Fail with the returned value if the `PartialFunction` matches, otherwise
-continue with our held value.
-
-**Signature**
-
-```ts
-export declare const reject: {
-  <A, E1>(pf: (a: A) => Option.Option<E1>): <R, E>(self: Effect<R, E, A>) => Effect<R, E1 | E, A>
-  <R, E, A, E1>(self: Effect<R, E, A>, pf: (a: A) => Option.Option<E1>): Effect<R, E | E1, A>
-}
-```
-
-Added in v1.0.0
-
-## rejectEffect
-
-Continue with the returned computation if the `PartialFunction` matches,
-translating the successful match into a failure, otherwise continue with
-our held value.
-
-**Signature**
-
-```ts
-export declare const rejectEffect: {
-  <A, R1, E1>(pf: (a: A) => Option.Option<Effect<R1, E1, E1>>): <R, E>(
-    self: Effect<R, E, A>
-  ) => Effect<R1 | R, E1 | E, A>
-  <R, E, A, R1, E1>(self: Effect<R, E, A>, pf: (a: A) => Option.Option<Effect<R1, E1, E1>>): Effect<R | R1, E | E1, A>
 }
 ```
 

@@ -3276,38 +3276,6 @@ export const refineTagOrDieWith: {
 } = effect.refineTagOrDieWith
 
 /**
- * Fail with the returned value if the `PartialFunction` matches, otherwise
- * continue with our held value.
- *
- * @since 1.0.0
- * @category utils
- */
-export const reject: {
-  <A, E1>(pf: (a: A) => Option.Option<E1>): <R, E>(self: Effect<R, E, A>) => Effect<R, E1 | E, A>
-  <R, E, A, E1>(self: Effect<R, E, A>, pf: (a: A) => Option.Option<E1>): Effect<R, E | E1, A>
-} = effect.reject
-
-/**
- * Continue with the returned computation if the `PartialFunction` matches,
- * translating the successful match into a failure, otherwise continue with
- * our held value.
- *
- * @since 1.0.0
- * @category utils
- */
-export const rejectEffect: {
-  <A, R1, E1>(
-    pf: (a: A) => Option.Option<Effect<R1, E1, E1>>
-  ): <R, E>(
-    self: Effect<R, E, A>
-  ) => Effect<R1 | R, E1 | E, A>
-  <R, E, A, R1, E1>(
-    self: Effect<R, E, A>,
-    pf: (a: A) => Option.Option<Effect<R1, E1, E1>>
-  ): Effect<R | R1, E | E1, A>
-} = effect.rejectEffect
-
-/**
  * Returns a new effect that repeats this effect according to the specified
  * schedule or until the first failure. Scheduled recurrences are in addition
  * to the first execution, so that `io.repeat(Schedule.once)` yields an effect
