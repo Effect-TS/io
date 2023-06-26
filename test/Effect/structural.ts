@@ -39,19 +39,28 @@ describe.concurrent("Effect", () => {
       }))
     it.effect("record should work with pipe", () =>
       Effect.gen(function*($) {
-        const { a, b } = yield* $({ a: Effect.succeed(0), b: Effect.succeed(1) }, Effect.all)
+        const { a, b } = yield* $(
+          { a: Effect.succeed(0), b: Effect.succeed("hello") },
+          Effect.all
+        )
         assert.deepEqual(a, 0)
-        assert.deepEqual(b, 1)
+        assert.deepEqual(b, "hello")
       }))
     it.effect("tuple should work with pipe", () =>
       Effect.gen(function*($) {
-        const [a, b] = yield* $([Effect.succeed(0), Effect.succeed(1)] as const, Effect.all)
+        const [a, b] = (yield* $(
+          [Effect.succeed(0), Effect.succeed(1)] as const,
+          Effect.all
+        )) satisfies readonly [number, number]
         assert.deepEqual(a, 0)
         assert.deepEqual(b, 1)
       }))
     it.effect("array should work with pipe", () =>
       Effect.gen(function*($) {
-        const a = yield* $([Effect.succeed(0), Effect.succeed(1)], Effect.all)
+        const a = (yield* $(
+          [Effect.succeed(0), Effect.succeed(1)],
+          Effect.all
+        )) satisfies Array<number>
         assert.deepEqual(a, [0, 1])
       }))
     it.effect("should work with one empty record", () =>
@@ -92,7 +101,7 @@ describe.concurrent("Effect", () => {
       }))
     it.effect("should work with one record argument", () =>
       Effect.gen(function*($) {
-        const { a, b } = yield* $(Effect.all({ a: Effect.succeed(0), b: Effect.succeed(1) }, {
+        const { a, b } = yield* $(Effect.all({ a: Effect.succeed(0), b: Effect.succeed(1) },  {
           concurrency: "inherit"
         }))
         assert.deepEqual(a, 0)
@@ -102,6 +111,42 @@ describe.concurrent("Effect", () => {
       Effect.gen(function*($) {
         const x = yield* $(Effect.all({}, { concurrency: "inherit" }))
         assert.deepEqual(x, {})
+      }))
+  })
+  describe("allWith", () => {
+    it.effect("record should work with pipe", () =>
+      Effect.gen(function*($) {
+        const { a, b } = yield* $(
+          { a: Effect.succeed(0), b: Effect.succeed("hello") },
+          Effect.allWith({ concurrency: "inherit" })
+        )
+        assert.deepEqual(a, 0)
+        assert.deepEqual(b, "hello")
+      }))
+    it.effect("tuple should work with pipe", () =>
+      Effect.gen(function*($) {
+        const [a, b] = (yield* $(
+          [Effect.succeed(0), Effect.succeed(1)] as const,
+          Effect.allWith({ concurrency: "inherit" })
+        )) satisfies readonly [number, number]
+        assert.deepEqual(a, 0)
+        assert.deepEqual(b, 1)
+      }))
+    it.effect("array should work with pipe", () =>
+      Effect.gen(function*($) {
+        const a = (yield* $(
+          [Effect.succeed(0), Effect.succeed(1)],
+          Effect.allWith({ concurrency: "inherit" })
+        )) satisfies Array<number>
+        assert.deepEqual(a, [0, 1])
+      }))
+    it.effect("discard", () =>
+      Effect.gen(function*($) {
+        const a = (yield* $(
+          [Effect.succeed(0), Effect.succeed(1)],
+          Effect.allWith({ concurrency: "inherit", discard: true })
+        )) satisfies void
+        assert.deepEqual(a, void 0)
       }))
   })
 })

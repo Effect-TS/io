@@ -391,7 +391,27 @@ export const acquireUseRelease: {
  * @since 1.0.0
  * @category constructors
  */
-export const all: All.Signature = circular.all
+export const all: All.DataFirst = circular.all
+
+/**
+ * Runs all the provided effects in sequence respecting the structure provided in input.
+ *
+ * Same as `all`, except the options can be partially applied for use with
+ * `pipe`.
+ *
+ * @example
+ * import { pipe } from "@effect/data/Function"
+ * import * as Effect from "@effect/io/Effect"
+ *
+ * pipe(
+ *   { a: Effect.succeed(1), b: Effect.succeed(2) },
+ *   Effect.allWith({ concurrency: 2 })
+ * )
+ *
+ * @since 1.0.0
+ * @category constructors
+ */
+export const allWith: All.DataLast = circular.allWith
 
 /**
  * @since 1.0.0
@@ -408,7 +428,7 @@ export declare namespace All {
       : never,
     Discard extends true ? void
       : T[number] extends never ? []
-      : { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
+      : { readonly [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
   >
     : never
   export type ReturnTuple<T extends ReadonlyArray<unknown>, Discard extends boolean> = Effect<
@@ -434,13 +454,13 @@ export declare namespace All {
   >
     : never
   export type Options = {
-    readonly concurrency: Concurrency
+    readonly concurrency?: Concurrency
     readonly discard?: boolean
   }
 
   export type IsDiscard<A> = [Extract<A, { readonly discard: true }>] extends [never] ? false : true
 
-  export type Signature = {
+  export type DataFirst = {
     <
       Args extends
         | [ReadonlyArray<EffectAny>]
@@ -457,6 +477,19 @@ export declare namespace All {
         IsDiscard<Args[number]>
       >
       : ReturnObject<Args[0], IsDiscard<Args[1]>>
+  }
+
+  export type DataLast = {
+    <O extends Options>(options?: O): <
+      Arg extends
+        | ReadonlyArray<EffectAny>
+        | Readonly<{ [K: string]: EffectAny }>
+        | EffectAny
+    >(
+      self: Arg
+    ) => [Arg] extends [ReadonlyArray<EffectAny>] ? ReturnTuple<Arg, IsDiscard<O>>
+      : [Arg] extends [EffectAny] ? ReturnArray<[Arg], IsDiscard<O>>
+      : ReturnObject<Arg, IsDiscard<O>>
   }
 }
 

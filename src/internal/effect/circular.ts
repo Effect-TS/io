@@ -674,7 +674,7 @@ export const zipWithFiber = dual<
 }))
 
 /* @internal */
-export const all: Effect.All.Signature = function() {
+export const all: Effect.All.DataFirst = function() {
   const hasOptions = arguments.length > 1 && !core.isEffect(arguments[arguments.length - 1])
   const options: {
     readonly concurrency?: Concurrency.Concurrency
@@ -709,6 +709,11 @@ export const all: Effect.All.Signature = function() {
   }
 
   return allIterable(effects, options as any)
+}
+
+/* @internal */
+export const allWith: Effect.All.DataLast = function(options) {
+  return (self) => (all as any)(self, options)
 }
 
 /* @internal */

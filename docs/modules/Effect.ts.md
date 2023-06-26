@@ -31,6 +31,7 @@ Added in v1.0.0
   - [all](#all)
   - [allIterable](#alliterable)
   - [allSuccesses](#allsuccesses)
+  - [allWith](#allwith)
   - [allowInterrupt](#allowinterrupt)
   - [async](#async)
   - [asyncEffect](#asynceffect)
@@ -681,7 +682,7 @@ Supports multiple arguments, a single argument tuple / array or record / struct.
 **Signature**
 
 ```ts
-export declare const all: All.Signature
+export declare const all: All.DataFirst
 ```
 
 Added in v1.0.0
@@ -725,6 +726,30 @@ export declare const allSuccesses: <R, E, A>(
   elements: Iterable<Effect<R, E, A>>,
   options?: { readonly concurrency?: Concurrency }
 ) => Effect<R, never, A[]>
+```
+
+Added in v1.0.0
+
+## allWith
+
+Runs all the provided effects in sequence respecting the structure provided in input.
+
+Same as `all`, except the options can be partially applied for use with
+`pipe`.
+
+**Signature**
+
+```ts
+export declare const allWith: All.DataLast
+```
+
+**Example**
+
+```ts
+import { pipe } from '@effect/data/Function'
+import * as Effect from '@effect/io/Effect'
+
+pipe({ a: Effect.succeed(1), b: Effect.succeed(2) }, Effect.allWith({ concurrency: 2 }))
 ```
 
 Added in v1.0.0
