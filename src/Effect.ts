@@ -1352,45 +1352,16 @@ export const fiberIdWith: <R, E, A>(f: (descriptor: FiberId.Runtime) => Effect<R
  * @category filtering
  */
 export const filter: {
-  <A, R, E>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Array<A>>
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, Array<A>>
-} = effect.filter
-
-/**
- * Filters the collection in parallel using the specified effectual predicate.
- * See `filter` for a sequential version of it.
- *
- * @since 1.0.0
- * @category filtering
- */
-export const filterPar: {
-  <A, R, E>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Array<A>>
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, Array<A>>
-} = fiberRuntime.filterPar
-
-/**
- * Filters the collection using the specified effectual predicate, removing
- * all elements that satisfy the predicate.
- *
- * @since 1.0.0
- * @category filtering
- */
-export const filterNot: {
-  <A, R, E>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Array<A>>
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, Array<A>>
-} = effect.filterNot
-
-/**
- * Filters the collection in parallel using the specified effectual predicate.
- * See `filterNot` for a sequential version.
- *
- * @since 1.0.0
- * @category filtering
- */
-export const filterNotPar: {
-  <A, R, E>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Array<A>>
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, Array<A>>
-} = fiberRuntime.filterNotPar
+  <A, R, E>(
+    f: (a: A) => Effect<R, E, boolean>,
+    options?: { readonly concurrency?: Concurrency; readonly negate?: boolean }
+  ): (elements: Iterable<A>) => Effect<R, E, Array<A>>
+  <A, R, E>(
+    elements: Iterable<A>,
+    f: (a: A) => Effect<R, E, boolean>,
+    options?: { readonly concurrency?: Concurrency; readonly negate?: boolean }
+  ): Effect<R, E, Array<A>>
+} = fiberRuntime.filter
 
 /**
  * Filter the specified effect with the provided function, dying with specified

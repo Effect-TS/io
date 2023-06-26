@@ -18,3 +18,21 @@ export const match = <A>(
       return concurrency > 1 ? withLimit(concurrency) : sequential()
   }
 }
+
+/** @internal */
+export const matchSimple = <A>(
+  concurrency: Concurrency | undefined,
+  sequential: () => A,
+  parallel: (limit: number | undefined) => A
+) => {
+  switch (concurrency) {
+    case undefined:
+      return sequential()
+    case "inherit":
+      return parallel(undefined)
+    case "batched":
+      return parallel(1)
+    default:
+      return concurrency > 1 ? parallel(concurrency) : sequential()
+  }
+}

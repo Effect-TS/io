@@ -33,35 +33,38 @@ describe.concurrent("Effect", () => {
       assert.deepStrictEqual(Array.from(results), [2, 4, 6, 6])
       assert.deepStrictEqual(Array.from(effects), [2, 4, 6, 3, 5, 6])
     }))
-  it.effect("filterNot - filters a collection using an effectual predicate, removing all elements that satisfy the predicate", () =>
+  it.effect("filter/negate - filters a collection using an effectual predicate, removing all elements that satisfy the predicate", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make<ReadonlyArray<number>>([]))
       const results = yield* $(
         pipe(
           [2, 4, 6, 3, 5, 6],
-          Effect.filterNot((n) => pipe(Ref.update(ref, (ns) => [n, ...ns]), Effect.as(n % 2 === 0)))
+          Effect.filter((n) => pipe(Ref.update(ref, (ns) => [n, ...ns]), Effect.as(n % 2 === 0)), { negate: true })
         )
       )
       const effects = yield* $(Ref.get(ref))
       assert.deepStrictEqual(Array.from(results), [3, 5])
       assert.deepStrictEqual(Array.from(effects), [2, 4, 6, 3, 5, 6])
     }))
-  it.effect("filterPar - filters a collection in parallel using an effectual predicate", () =>
+  it.effect("filter/concurrency - filters a collection in parallel using an effectual predicate", () =>
     Effect.gen(function*($) {
       const result = yield* $(
         pipe(
           [2, 4, 6, 3, 5, 6, 10, 11, 15, 17, 20, 22, 23, 25, 28],
-          Effect.filterPar((n) => Effect.succeed(n % 2 === 0))
+          Effect.filter((n) => Effect.succeed(n % 2 === 0), { concurrency: "inherit" })
         )
       )
       assert.deepStrictEqual(Array.from(result), [2, 4, 6, 6, 10, 20, 22, 28])
     }))
-  it.effect("filterNotPar - filters a collection in parallel using an effectual predicate, removing all elements that satisfy the predicate", () =>
+  it.effect("filter/concurrency+negate - filters a collection in parallel using an effectual predicate, removing all elements that satisfy the predicate", () =>
     Effect.gen(function*($) {
       const result = yield* $(
         pipe(
           [2, 4, 6, 3, 5, 6, 10, 11, 15, 17, 20, 22, 23, 25, 28],
-          Effect.filterNotPar((n) => Effect.succeed(n % 2 === 0))
+          Effect.filter((n) => Effect.succeed(n % 2 === 0), {
+            concurrency: "inherit",
+            negate: true
+          })
         )
       )
       assert.deepStrictEqual(Array.from(result), [3, 5, 11, 15, 17, 23, 25])

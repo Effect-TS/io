@@ -1,3 +1,4 @@
+import * as Boolean from "@effect/data/Boolean"
 import * as Chunk from "@effect/data/Chunk"
 import * as Context from "@effect/data/Context"
 import type { LazyArg } from "@effect/data/Function"
@@ -1405,22 +1406,12 @@ export const exists = dual<
     readonly concurrency: Concurrency.Concurrency
   }) => Effect.Effect<R, E, boolean>
 >((args) => isIterable(args[0]), (elements, f, options) =>
-  Concurrency.match(
+  Concurrency.matchSimple(
     options?.concurrency,
     () => core.suspend(() => existsLoop(elements[Symbol.iterator](), f)),
-    () =>
-      core.matchEffect(
-        forEachPar(elements, (a) =>
-          core.ifEffect(f(a), {
-            onTrue: core.fail(_existsParFound),
-            onFalse: core.unit
-          })),
-        (e) => e === _existsParFound ? core.succeed(true) : core.fail(e),
-        () => core.succeed(false)
-      ),
     (n) =>
       core.matchEffect(
-        forEachParN(elements, n, (a) =>
+        forEachConcurrency(elements, n, (a) =>
           core.ifEffect(f(a), {
             onTrue: core.fail(_existsParFound),
             onFalse: core.unit
@@ -1445,24 +1436,57 @@ const existsLoop = <R, E, A>(
 }
 
 /* @internal */
-export const filterPar = dual<
+export const filter = dual<
   <A, R, E>(
-    f: (a: A) => Effect.Effect<R, E, boolean>
+    f: (a: A) => Effect.Effect<R, E, boolean>,
+    options?: {
+      readonly concurrency?: Concurrency.Concurrency
+      readonly negate?: boolean
+    }
   ) => (elements: Iterable<A>) => Effect.Effect<R, E, Array<A>>,
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, Array<A>>
->(2, (elements, f) =>
-  core.map(
-    forEachPar(elements, (a) => core.map(f(a), (b) => (b ? Option.some(a) : Option.none()))),
-    RA.compact
-  ))
+  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>, options?: {
+    readonly concurrency?: Concurrency.Concurrency
+    readonly negate?: boolean
+  }) => Effect.Effect<R, E, Array<A>>
+>(
+  (args) => isIterable(args[0]),
+  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>, options?: {
+    readonly concurrency?: Concurrency.Concurrency
+    readonly negate?: boolean
+  }) => {
+    const predicate = options?.negate ? (a: A) => core.map(f(a), Boolean.not) : f
+    return Concurrency.matchSimple(
+      options?.concurrency,
+      () =>
+        core.suspend(() =>
+          Array.from(elements).reduceRight(
+            (effect, a) =>
+              core.zipWith(
+                effect,
+                core.suspend(() => predicate(a)),
+                (list, b) => b ? [a, ...list] : list
+              ),
+            core.sync(() => new Array<A>()) as Effect.Effect<R, E, Array<A>>
+          )
+        ),
+      (n) =>
+        core.map(
+          forEachConcurrency(
+            elements,
+            n,
+            (a) => core.map(predicate(a), (b) => (b ? Option.some(a) : Option.none()))
+          ),
+          RA.compact
+        )
+    )
+  }
+)
 
-/* @internal */
-export const filterNotPar = dual<
-  <A, R, E>(
-    f: (a: A) => Effect.Effect<R, E, boolean>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Array<A>>,
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, Array<A>>
->(2, (elements, f) => filterPar(elements, (a) => core.map(f(a), (b) => !b)))
+const forEachConcurrency = <R, E, A, B>(
+  iterable: Iterable<A>,
+  n: number | undefined,
+  f: (a: A) => Effect.Effect<R, E, B>
+) => n ? forEachParN(iterable, n, f) : forEachPar(iterable, f)
 
 /* @internal */
 export const forEachExec = dual<

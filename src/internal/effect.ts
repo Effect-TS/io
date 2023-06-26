@@ -448,36 +448,6 @@ export const eventually = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect
   core.orElse(self, () => core.flatMap(core.yieldNow, () => eventually(self)))
 
 /* @internal */
-export const filter = dual<
-  <A, R, E>(
-    f: (a: A) => Effect.Effect<R, E, boolean>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Array<A>>,
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, Array<A>>
->(
-  2,
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) =>
-    core.suspend(() =>
-      Array.from(elements).reduceRight(
-        (effect, a) =>
-          core.zipWith(
-            effect,
-            core.suspend(() => f(a)),
-            (list, b) => b ? [a, ...list] : list
-          ),
-        core.sync(() => new Array<A>()) as Effect.Effect<R, E, Array<A>>
-      )
-    )
-)
-
-/* @internal */
-export const filterNot = dual<
-  <A, R, E>(
-    f: (a: A) => Effect.Effect<R, E, boolean>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Array<A>>,
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, Array<A>>
->(2, (elements, f) => filter(elements, (a) => core.map(f(a), (b) => !b)))
-
-/* @internal */
 export const filterOrDie = dual<
   {
     <A, B extends A>(

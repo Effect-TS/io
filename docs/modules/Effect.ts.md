@@ -154,15 +154,12 @@ Added in v1.0.0
   - [runSyncExit](#runsyncexit)
 - [filtering](#filtering)
   - [filter](#filter)
-  - [filterNot](#filternot)
-  - [filterNotPar](#filternotpar)
   - [filterOrDie](#filterordie)
   - [filterOrDieMessage](#filterordiemessage)
   - [filterOrElse](#filterorelse)
   - [filterOrElseWith](#filterorelsewith)
   - [filterOrFail](#filterorfail)
   - [filterOrFailWith](#filterorfailwith)
-  - [filterPar](#filterpar)
 - [finalization](#finalization)
   - [addFinalizer](#addfinalizer)
   - [ensuring](#ensuring)
@@ -2561,40 +2558,15 @@ Filters the collection using the specified effectful predicate.
 
 ```ts
 export declare const filter: {
-  <A, R, E>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, A[]>
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, A[]>
-}
-```
-
-Added in v1.0.0
-
-## filterNot
-
-Filters the collection using the specified effectual predicate, removing
-all elements that satisfy the predicate.
-
-**Signature**
-
-```ts
-export declare const filterNot: {
-  <A, R, E>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, A[]>
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, A[]>
-}
-```
-
-Added in v1.0.0
-
-## filterNotPar
-
-Filters the collection in parallel using the specified effectual predicate.
-See `filterNot` for a sequential version.
-
-**Signature**
-
-```ts
-export declare const filterNotPar: {
-  <A, R, E>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, A[]>
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, A[]>
+  <A, R, E>(
+    f: (a: A) => Effect<R, E, boolean>,
+    options?: { readonly concurrency?: Concurrency; readonly negate?: boolean }
+  ): (elements: Iterable<A>) => Effect<R, E, A[]>
+  <A, R, E>(
+    elements: Iterable<A>,
+    f: (a: A) => Effect<R, E, boolean>,
+    options?: { readonly concurrency?: Concurrency; readonly negate?: boolean }
+  ): Effect<R, E, A[]>
 }
 ```
 
@@ -2727,22 +2699,6 @@ export declare const filterOrFailWith: {
   <A, E2>(f: Predicate<A>, error: (a: A) => E2): <R, E>(self: Effect<R, E, A>) => Effect<R, E2 | E, A>
   <R, E, A, B extends A, E2>(self: Effect<R, E, A>, f: Refinement<A, B>, error: (a: A) => E2): Effect<R, E | E2, B>
   <R, E, A, E2>(self: Effect<R, E, A>, f: Predicate<A>, error: (a: A) => E2): Effect<R, E | E2, A>
-}
-```
-
-Added in v1.0.0
-
-## filterPar
-
-Filters the collection in parallel using the specified effectual predicate.
-See `filter` for a sequential version of it.
-
-**Signature**
-
-```ts
-export declare const filterPar: {
-  <A, R, E>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, A[]>
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, A[]>
 }
 ```
 
