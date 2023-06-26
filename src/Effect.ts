@@ -388,6 +388,8 @@ export const acquireUseRelease: {
  *
  * Supports multiple arguments, a single argument tuple / array or record / struct.
  *
+ * See `allWith` for an options-first variant that can be used with `pipe`.
+ *
  * @since 1.0.0
  * @category constructors
  */

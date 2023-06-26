@@ -29,7 +29,6 @@ Added in v1.0.0
   - [acquireRelease](#acquirerelease)
   - [acquireUseRelease](#acquireuserelease)
   - [all](#all)
-  - [allIterable](#alliterable)
   - [allSuccesses](#allsuccesses)
   - [allWith](#allwith)
   - [allowInterrupt](#allowinterrupt)
@@ -679,37 +678,12 @@ Runs all the provided effects in sequence respecting the structure provided in i
 
 Supports multiple arguments, a single argument tuple / array or record / struct.
 
+See `allWith` for an options-first variant that can be used with `pipe`.
+
 **Signature**
 
 ```ts
 export declare const all: All.DataFirst
-```
-
-Added in v1.0.0
-
-## allIterable
-
-Evaluate and run each effect in the structure and collect the results.
-
-**Signature**
-
-```ts
-export declare const allIterable: {
-  (options?: { readonly concurrency?: Concurrency; readonly discard?: false }): <R, E, A>(
-    as: Iterable<Effect<R, E, A>>
-  ) => Effect<R, E, A[]>
-  (options: { readonly concurrency?: Concurrency; readonly discard: true }): <R, E, A>(
-    as: Iterable<Effect<R, E, A>>
-  ) => Effect<R, E, void>
-  <R, E, A>(
-    as: Iterable<Effect<R, E, A>>,
-    options?: { readonly concurrency?: Concurrency; readonly discard?: false }
-  ): Effect<R, E, A[]>
-  <R, E, A>(
-    as: Iterable<Effect<R, E, A>>,
-    options: { readonly concurrency?: Concurrency; readonly discard: true }
-  ): Effect<R, E, void>
-}
 ```
 
 Added in v1.0.0
@@ -5650,9 +5624,9 @@ results.
 
 ```ts
 export declare const replicateEffect: {
-  (n: number, options?: { readonly discard?: false }): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A[]>
+  (n: number, options?: { readonly discard?: false }): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, readonly A[]>
   (n: number, options: { readonly discard: true }): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, void>
-  <R, E, A>(self: Effect<R, E, A>, n: number, options?: { readonly discard?: false }): Effect<R, E, A[]>
+  <R, E, A>(self: Effect<R, E, A>, n: number, options?: { readonly discard?: false }): Effect<R, E, readonly A[]>
   <R, E, A>(self: Effect<R, E, A>, n: number, options: { readonly discard: true }): Effect<R, E, void>
 }
 ```
