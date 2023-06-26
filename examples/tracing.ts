@@ -12,12 +12,13 @@ class MyError extends Error {
   }
 }
 
-const program = Effect.allPar(
+const program = Effect.all(
   Effect.delay(Effect.succeed(0), millis(500)),
   Effect.onInterrupt(Effect.delay(Effect.failSync(() => new MyError("welp")), millis(1000)), () => Effect.die("oki")),
   Effect.delay(Effect.succeed(0), millis(500)),
   Effect.delay(Effect.failSync(() => new MyError("welp")), millis(500)),
-  Effect.delay(Effect.succeed(0), millis(500))
+  Effect.delay(Effect.succeed(0), millis(500)),
+  { concurrency: "inherit", discard: true }
 )
 
 Effect.runFork(Effect.catchAllCause(program, Effect.logCause({ level: "Error" })))

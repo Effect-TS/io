@@ -17,6 +17,7 @@ import * as Exit from "@effect/io/Exit"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import * as core from "@effect/io/internal/core"
 import * as effect from "@effect/io/internal/effect"
+import * as circular from "@effect/io/internal/effect/circular"
 import { none } from "@effect/io/internal/fiberId"
 
 /**
@@ -677,7 +678,7 @@ export const makeWith = <Key, Environment, Error, Value>(
   timeToLive: (exit: Exit.Exit<Error, Value>) => Duration.Duration
 ): Effect.Effect<Environment, never, Cache.Cache<Key, Error, Value>> =>
   core.map(
-    effect.all(core.context<Environment>(), core.fiberId),
+    circular.all(core.context<Environment>(), core.fiberId),
     ([context, fiberId]) =>
       new CacheImpl(
         capacity,

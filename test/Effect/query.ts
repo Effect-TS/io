@@ -300,7 +300,10 @@ describe.concurrent("Effect", () => {
     provideEnv(
       Effect.gen(function*($) {
         yield* $(
-          Effect.allPar(getUserNameById(userIds[0]), getUserNameById(userIds[0])),
+          Effect.all(getUserNameById(userIds[0]), getUserNameById(userIds[0]), {
+            concurrency: "inherit",
+            discard: true
+          }),
           Effect.withRequestCaching("off")
         )
         const requests = yield* $(Requests)

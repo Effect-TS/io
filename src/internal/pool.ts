@@ -408,7 +408,7 @@ const makeWith = <R, E, A, S, R2>(
 ): Effect.Effect<R | R2 | Scope.Scope, never, Pool.Pool<E, A>> =>
   core.uninterruptibleMask((restore) =>
     pipe(
-      effect.all(
+      circular.all(
         core.context<R>(),
         ref.make(false),
         ref.make<PoolState>({ size: 0, free: 0 }),

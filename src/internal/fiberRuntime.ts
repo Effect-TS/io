@@ -1384,23 +1384,6 @@ export const addFinalizer = <R, X>(
   )
 
 /* @internal */
-export const allParDiscard: Effect.All.SignatureDiscard = function() {
-  if (arguments.length === 1) {
-    if (core.isEffect(arguments[0])) {
-      return core.asUnit(arguments[0])
-    } else if (Array.isArray(arguments[0]) || Symbol.iterator in arguments[0]) {
-      return forEachParDiscard(arguments[0], identity as any)
-    } else {
-      return forEachParDiscard(
-        Object.entries(arguments[0] as Readonly<{ [K: string]: Effect.Effect<any, any, any> }>),
-        ([_, e]) => core.asUnit(e)
-      ) as any
-    }
-  }
-  return forEachParDiscard(arguments, identity as any)
-}
-
-/* @internal */
 export const daemonChildren = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> => {
   const forkScope = core.fiberRefLocally(core.currentForkScopeOverride, Option.some(fiberScope.globalScope))
   return forkScope(self)
@@ -2088,82 +2071,6 @@ export const sequentialFinalizers = <R, E, A>(self: Effect.Effect<R, E, A>): Eff
       core.flatMap((scope) => scopeExtend(scope)(self))
     )
   )
-
-/* @internal */
-export const allPar: {
-  <R, E, A, T extends ReadonlyArray<Effect.Effect<any, any, any>>>(
-    self: Effect.Effect<R, E, A>,
-    ...args: T
-  ): Effect.Effect<
-    R | T["length"] extends 0 ? never
-      : [T[number]] extends [{ [Effect.EffectTypeId]: { _R: (_: never) => infer R } }] ? R
-      : never,
-    E | T["length"] extends 0 ? never
-      : [T[number]] extends [{ [Effect.EffectTypeId]: { _E: (_: never) => infer E } }] ? E
-      : never,
-    [
-      A,
-      ...(T["length"] extends 0 ? []
-        : Readonly<{ [K in keyof T]: [T[K]] extends [Effect.Effect<any, any, infer A>] ? A : never }>)
-    ]
-  >
-  <T extends ReadonlyArray<Effect.Effect<any, any, any>>>(
-    args: [...T]
-  ): Effect.Effect<
-    T[number] extends never ? never
-      : [T[number]] extends [{ [Effect.EffectTypeId]: { _R: (_: never) => infer R } }] ? R
-      : never,
-    T[number] extends never ? never
-      : [T[number]] extends [{ [Effect.EffectTypeId]: { _E: (_: never) => infer E } }] ? E
-      : never,
-    T[number] extends never ? []
-      : { [K in keyof T]: [T[K]] extends [Effect.Effect<any, any, infer A>] ? A : never }
-  >
-  <T extends Iterable<Effect.Effect<any, any, any>>>(
-    args: T
-  ): Effect.Effect<
-    [T] extends [Iterable<{ [Effect.EffectTypeId]: { _R: (_: never) => infer R } }>] ? R
-      : never,
-    [T] extends [Iterable<{ [Effect.EffectTypeId]: { _E: (_: never) => infer E } }>] ? E
-      : never,
-    [T] extends [Iterable<{ [Effect.EffectTypeId]: { _A: (_: never) => infer A } }>] ? Array<A>
-      : never
-  >
-  <T extends Readonly<{ [K: string]: Effect.Effect<any, any, any> }>>(
-    args: T
-  ): Effect.Effect<
-    keyof T extends never ? never
-      : [T[keyof T]] extends [{ [Effect.EffectTypeId]: { _R: (_: never) => infer R } }] ? R
-      : never,
-    keyof T extends never ? never
-      : [T[keyof T]] extends [{ [Effect.EffectTypeId]: { _E: (_: never) => infer E } }] ? E
-      : never,
-    { [K in keyof T]: [T[K]] extends [Effect.Effect<any, any, infer A>] ? A : never }
-  >
-} = function() {
-  if (arguments.length === 1) {
-    if (core.isEffect(arguments[0])) {
-      return core.map(arguments[0], (x) => [x])
-    } else if (Array.isArray(arguments[0]) || Symbol.iterator in arguments[0]) {
-      return forEachPar(arguments[0], identity as any)
-    } else {
-      return pipe(
-        forEachPar(
-          Object.entries(arguments[0] as Readonly<{ [K: string]: Effect.Effect<any, any, any> }>),
-          ([_, e]) => core.map(e, (a) => [_, a] as const)
-        ),
-        core.map((values) => {
-          const res = {}
-          for (const [k, v] of values) {
-            ;(res as any)[k] = v
-          }
-          return res
-        })
-      ) as any
-    }
-  }
-  return forEachPar(arguments, identity as any)
-}
 
 /* @internal */
 export const taggedScoped = (key: string, value: string): Effect.Effect<Scope.Scope, never, void> =>

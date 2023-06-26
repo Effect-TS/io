@@ -391,7 +391,7 @@ export const acquireUseRelease: {
  * @since 1.0.0
  * @category constructors
  */
-export const all: All.Signature = effect.all
+export const all: All.Signature = circular.all
 
 /**
  * @since 1.0.0
@@ -399,94 +399,66 @@ export const all: All.Signature = effect.all
  */
 export declare namespace All {
   export type EffectAny = Effect<any, any, any>
-  export type ReturnArray<T> = [T] extends [ReadonlyArray<EffectAny>] ? Effect<
+  export type ReturnArray<T, Discard extends boolean> = [T] extends [ReadonlyArray<EffectAny>] ? Effect<
     T[number] extends never ? never
       : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
       : never,
     T[number] extends never ? never
       : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
       : never,
-    T[number] extends never ? []
+    Discard extends true ? void
+      : T[number] extends never ? []
       : { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
   >
     : never
-  export type ReturnTuple<T extends ReadonlyArray<Effect<any, any, any>>> = Effect<
+  export type ReturnTuple<T extends ReadonlyArray<unknown>, Discard extends boolean> = Effect<
     T[number] extends never ? never
       : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
       : never,
     T[number] extends never ? never
       : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
       : never,
-    T[number] extends never ? []
+    Discard extends true ? void
+      : T[number] extends never ? []
       : { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
   > extends infer X ? X : never
-  export type ReturnObject<T> = [T] extends [[Readonly<{ [K: string]: Effect<any, any, any> }>]] ? Effect<
-    keyof T[0] extends never ? never
-      : [T[0][keyof T[0]]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
+  export type ReturnObject<T, Discard extends boolean> = [T] extends [{ readonly [K: string]: EffectAny }] ? Effect<
+    keyof T extends never ? never
+      : [T[keyof T]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
       : never,
-    keyof T[0] extends never ? never
-      : [T[0][keyof T[0]]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
+    keyof T extends never ? never
+      : [T[keyof T]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
       : never,
-    { [K in keyof T[0]]: [T[0][K]] extends [Effect<any, any, infer A>] ? A : never }
+    Discard extends true ? void
+      : { readonly [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
   >
     : never
+  export type Options = {
+    readonly concurrency: Concurrency
+    readonly discard?: boolean
+  }
+
+  export type IsDiscard<A> = [Extract<A, { readonly discard: true }>] extends [never] ? false : true
+
   export type Signature = {
     <
       Args extends
-        | ReadonlyArray<EffectAny>
         | [ReadonlyArray<EffectAny>]
-        | [Readonly<{ [K: string]: Effect<any, any, any> }>]
+        | [Readonly<{ [K: string]: EffectAny }>]
+        | [EffectAny, ...ReadonlyArray<EffectAny>]
+        | [ReadonlyArray<EffectAny>, Options]
+        | [Readonly<{ [K: string]: EffectAny }>, Options]
+        | [EffectAny, ...ReadonlyArray<EffectAny>, Options]
     >(
-      ...args: [...Args]
-    ): Args["length"] extends 1 ? [Args] extends [[ReadonlyArray<EffectAny>]] ? ReturnTuple<Args[0]>
-    : Args extends [EffectAny] ? ReturnArray<Args>
-    : ReturnObject<Args>
-      : ReturnArray<Args>
-  }
-  export type Discard<X> = [X] extends [Effect<infer R, infer E, infer _>] ? Effect<R, E, void> : never
-  export type SignatureDiscard = {
-    <
-      Args extends
-        | ReadonlyArray<EffectAny>
-        | [Readonly<{ [K: string]: Effect<any, any, any> }>]
-    >(
-      ...args: [...Args]
-    ): Discard<
-      Args["length"] extends 1 ? [Args] extends [[ReadonlyArray<EffectAny>]] ? ReturnTuple<Args[0]>
-      : Args extends [EffectAny] ? ReturnArray<Args>
-      : ReturnObject<Args>
-        : ReturnArray<Args>
-    >
+      ...args: Args
+    ): [Args[0]] extends [ReadonlyArray<EffectAny>] ? ReturnTuple<Args[0], IsDiscard<Args[1]>>
+      : [Args[0]] extends [EffectAny] ? ReturnTuple<
+        [Args] extends [[...(infer Effects), Options]] ? Effects : Args,
+        IsDiscard<Args[number]>
+      >
+      : ReturnObject<Args[0], IsDiscard<Args[1]>>
   }
 }
-
-/**
- * Runs all the provided effects in parallel respecting the structure provided in input.
- *
- * Supports multiple arguments, a single argument tuple / array or record / struct.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const allPar: All.Signature = fiberRuntime.allPar
-
-/**
- * Evaluate each effect in the structure from left to right, and discard the
- * results. For a parallel version, see `allDiscardPar`.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const allDiscard: All.SignatureDiscard = effect.allDiscard
-
-/**
- * Evaluate each effect in the structure in parallel, and collect the results.
- * For a sequential version, see `allDiscard`.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const allParDiscard: All.SignatureDiscard = fiberRuntime.allParDiscard
 
 /**
  * Evaluate and run each effect in the structure and collect the results.

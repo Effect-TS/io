@@ -7,11 +7,15 @@ const program = E.gen(function*($) {
   const sem = yield* $(E.makeSemaphore(4))
 
   yield* $(
-    E.allPar([0, 1, 2, 3].map((n) => sem.withPermits(2)(E.delay(D.seconds(2))(E.log(`process: ${n}`)))))
+    E.allIterable([0, 1, 2, 3].map((n) => sem.withPermits(2)(E.delay(D.seconds(2))(E.log(`process: ${n}`)))), {
+      concurrency: "inherit"
+    })
   )
 
   yield* $(
-    E.allPar([0, 1, 2, 3].map((n) => sem.withPermits(2)(E.delay(D.seconds(2))(E.log(`process: ${n}`)))))
+    E.allIterable([0, 1, 2, 3].map((n) => sem.withPermits(2)(E.delay(D.seconds(2))(E.log(`process: ${n}`)))), {
+      concurrency: "inherit"
+    })
   )
 })
 

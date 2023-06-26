@@ -527,7 +527,13 @@ export const zipWithPar: {
   self: Effect.Effect<R, E, A>,
   that: Effect.Effect<R2, E2, A2>,
   f: (a: A, b: A2) => B
-): Effect.Effect<R | R2, E | E2, B> => core.map(fiberRuntime.allPar(self, that), ([a, a2]) => f(a, a2)))
+): Effect.Effect<R | R2, E | E2, B> =>
+  core.map(
+    all(self, that, {
+      concurrency: "inherit"
+    }),
+    ([a, a2]) => f(a, a2)
+  ))
 
 // circular with Synchronized
 
@@ -666,6 +672,44 @@ export const zipWithFiber = dual<
       that.interruptAsFork(id)
     )
 }))
+
+/* @internal */
+export const all: Effect.All.Signature = function() {
+  const hasOptions = arguments.length > 1 && !core.isEffect(arguments[arguments.length - 1])
+  const options: {
+    readonly concurrency?: Concurrency.Concurrency
+    readonly discard?: boolean
+  } = hasOptions ?
+    arguments[arguments.length - 1] :
+    {}
+  const effects = hasOptions ? Array.prototype.slice.call(arguments, 0, -1) : arguments
+
+  if (effects.length === 1) {
+    if (core.isEffect(effects[0])) {
+      return options.discard ? core.asUnit(effects[0]) : core.map(effects[0], (x) => [x])
+    } else if (Array.isArray(effects[0]) || Symbol.iterator in effects[0]) {
+      return allIterable(effects[0], options as any)
+    } else {
+      const keys = Object.keys(effects[0])
+      const size = keys.length
+      return pipe(
+        allIterable(
+          keys.map((k) => (effects[0] as Readonly<{ [K: string]: Effect.Effect<any, any, any> }>)[k]),
+          options as any
+        ),
+        core.map((values) => {
+          const res = {}
+          for (let i = 0; i < size; i++) {
+            ;(res as any)[keys[i]] = values[i]
+          }
+          return res
+        })
+      ) as any
+    }
+  }
+
+  return allIterable(effects, options as any)
+}
 
 /* @internal */
 export const allIterable = dual<

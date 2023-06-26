@@ -29,10 +29,7 @@ Added in v1.0.0
   - [acquireRelease](#acquirerelease)
   - [acquireUseRelease](#acquireuserelease)
   - [all](#all)
-  - [allDiscard](#alldiscard)
   - [allIterable](#alliterable)
-  - [allPar](#allpar)
-  - [allParDiscard](#allpardiscard)
   - [allSuccesses](#allsuccesses)
   - [allowInterrupt](#allowinterrupt)
   - [async](#async)
@@ -689,19 +686,6 @@ export declare const all: All.Signature
 
 Added in v1.0.0
 
-## allDiscard
-
-Evaluate each effect in the structure from left to right, and discard the
-results. For a parallel version, see `allDiscardPar`.
-
-**Signature**
-
-```ts
-export declare const allDiscard: All.SignatureDiscard
-```
-
-Added in v1.0.0
-
 ## allIterable
 
 Evaluate and run each effect in the structure and collect the results.
@@ -725,33 +709,6 @@ export declare const allIterable: {
     options: { readonly concurrency?: Concurrency; readonly discard: true }
   ): Effect<R, E, void>
 }
-```
-
-Added in v1.0.0
-
-## allPar
-
-Runs all the provided effects in parallel respecting the structure provided in input.
-
-Supports multiple arguments, a single argument tuple / array or record / struct.
-
-**Signature**
-
-```ts
-export declare const allPar: All.Signature
-```
-
-Added in v1.0.0
-
-## allParDiscard
-
-Evaluate each effect in the structure in parallel, and collect the results.
-For a sequential version, see `allDiscard`.
-
-**Signature**
-
-```ts
-export declare const allParDiscard: All.SignatureDiscard
 ```
 
 Added in v1.0.0

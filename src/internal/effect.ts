@@ -282,23 +282,6 @@ export const clockWith: <R, E, A>(f: (clock: Clock.Clock) => Effect.Effect<R, E,
 export const clock: Effect.Effect<never, never, Clock.Clock> = clockWith(core.succeed)
 
 /* @internal */
-export const allDiscard: Effect.All.SignatureDiscard = function() {
-  if (arguments.length === 1) {
-    if (core.isEffect(arguments[0])) {
-      return core.asUnit(arguments[0])
-    } else if (Array.isArray(arguments[0]) || Symbol.iterator in arguments[0]) {
-      return core.forEachDiscard(arguments[0], identity as any)
-    } else {
-      return core.forEachDiscard(
-        Object.entries(arguments[0] as Readonly<{ [K: string]: Effect.Effect<any, any, any> }>),
-        ([_, e]) => core.asUnit(e)
-      ) as any
-    }
-  }
-  return core.forEachDiscard(arguments, identity as any)
-}
-
-/* @internal */
 export const currentSpan: Effect.Effect<never, never, Option.Option<Tracer.Span>> = core.map(
   core.fiberRefGet(core.currentTracerSpan),
   List.head
@@ -1732,32 +1715,6 @@ export const attemptPromiseInterrupt = <A>(
         return Either.left(core.sync(() => controller.abort()))
       })
   )
-
-/* @internal */
-export const all: Effect.All.Signature = function() {
-  if (arguments.length === 1) {
-    if (core.isEffect(arguments[0])) {
-      return core.map(arguments[0], (x) => [x])
-    } else if (Array.isArray(arguments[0]) || Symbol.iterator in arguments[0]) {
-      return core.forEach(arguments[0], identity as any)
-    } else {
-      return pipe(
-        core.forEach(
-          Object.entries(arguments[0] as Readonly<{ [K: string]: Effect.Effect<any, any, any> }>),
-          ([_, e]) => core.map(e, (a) => [_, a] as const)
-        ),
-        core.map((values) => {
-          const res = {}
-          for (const [k, v] of values) {
-            ;(res as any)[k] = v
-          }
-          return res
-        })
-      ) as any
-    }
-  }
-  return core.forEach(arguments, identity as any)
-}
 
 /* @internal */
 export const uncause = <R, E>(self: Effect.Effect<R, never, Cause.Cause<E>>): Effect.Effect<R, E, void> =>

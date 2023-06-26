@@ -7,7 +7,7 @@ import type * as Effect from "@effect/io/Effect"
 import type * as Hub from "@effect/io/Hub"
 import * as cause from "@effect/io/internal/cause"
 import * as core from "@effect/io/internal/core"
-import * as effect from "@effect/io/internal/effect"
+import * as circular from "@effect/io/internal/effect/circular"
 import * as executionStrategy from "@effect/io/internal/executionStrategy"
 import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
 import * as queue from "@effect/io/internal/queue"
@@ -1065,7 +1065,7 @@ class HubImpl<A> implements Hub.Hub<A> {
     return core.map(
       fiberRuntime.acquireRelease(
         core.tap(
-          effect.all(
+          circular.all(
             this.scope.fork(executionStrategy.sequential),
             makeSubscription(this.hub, this.subscribers, this.strategy)
           ),
