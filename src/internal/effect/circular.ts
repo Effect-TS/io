@@ -768,7 +768,7 @@ export const allSuccesses = <R, E, A>(
   options?: { readonly concurrency?: Concurrency.Concurrency }
 ): Effect.Effect<R, never, Array<A>> =>
   core.map(
-    allIterable(Array.from(elements).map(core.exit), options),
+    all(Array.from(elements).map(core.exit), options),
     RA.filterMap((exit) => core.exitIsSuccess(exit) ? Option.some(exit.i0) : Option.none())
   )
 
@@ -781,7 +781,7 @@ export const filterMap = dual<
     elements: Iterable<Effect.Effect<R, E, A>>,
     pf: (a: A) => Option.Option<B>
   ) => Effect.Effect<R, E, Array<B>>
->(2, (elements, pf) => core.map(allIterable(elements), RA.filterMap(pf)))
+>(2, (elements, pf) => core.map(all(elements), RA.filterMap(pf)))
 
 /* @internal */
 export const replicate = (n: number) =>
@@ -792,7 +792,7 @@ export const replicateEffect = dual<
   {
     (n: number, options?: {
       readonly discard?: false
-    }): <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, Array<A>>
+    }): <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, ReadonlyArray<A>>
     (n: number, options: {
       readonly discard: true
     }): <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, void>
@@ -800,12 +800,12 @@ export const replicateEffect = dual<
   {
     <R, E, A>(self: Effect.Effect<R, E, A>, n: number, options?: {
       readonly discard?: false
-    }): Effect.Effect<R, E, Array<A>>
+    }): Effect.Effect<R, E, ReadonlyArray<A>>
     <R, E, A>(self: Effect.Effect<R, E, A>, n: number, options: {
       readonly discard: true
     }): Effect.Effect<R, E, void>
   }
 >(
   (args) => core.isEffect(args[0]),
-  (self, n, options) => allIterable(replicate(n)(self), options as {})
+  (self, n, options) => all(replicate(n)(self), options as {})
 )

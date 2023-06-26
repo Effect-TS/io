@@ -418,8 +418,18 @@ export const allWith: All.DataLast = circular.allWith
  * @category utils
  */
 export declare namespace All {
-  export type EffectAny = Effect<any, any, any>
-  export type ReturnArray<T, Discard extends boolean> = [T] extends [ReadonlyArray<EffectAny>] ? Effect<
+  type EffectAny = Effect<any, any, any>
+
+  type ReturnIterable<T extends Iterable<EffectAny>, Discard extends boolean> = [T] extends
+    [Iterable<Effect.Variance<infer R, infer E, infer A>>] ? Effect<
+    R,
+    E,
+    Discard extends true ? void
+      : ReadonlyArray<A>
+  >
+    : never
+
+  type ReturnTuple<T extends ReadonlyArray<unknown>, Discard extends boolean> = Effect<
     T[number] extends never ? never
       : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
       : never,
@@ -429,20 +439,9 @@ export declare namespace All {
     Discard extends true ? void
       : T[number] extends never ? []
       : { readonly [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
-  >
-    : never
-  export type ReturnTuple<T extends ReadonlyArray<unknown>, Discard extends boolean> = Effect<
-    T[number] extends never ? never
-      : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
-      : never,
-    T[number] extends never ? never
-      : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
-      : never,
-    Discard extends true ? void
-      : T[number] extends never ? []
-      : { [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
   > extends infer X ? X : never
-  export type ReturnObject<T, Discard extends boolean> = [T] extends [{ readonly [K: string]: EffectAny }] ? Effect<
+
+  type ReturnObject<T, Discard extends boolean> = [T] extends [{ readonly [K: string]: EffectAny }] ? Effect<
     keyof T extends never ? never
       : [T[keyof T]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
       : never,
@@ -453,33 +452,35 @@ export declare namespace All {
       : { readonly [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
   >
     : never
+
   export type Options = {
     readonly concurrency?: Concurrency
     readonly discard?: boolean
   }
 
-  export type IsDiscard<A> = [Extract<A, { readonly discard: true }>] extends [never] ? false : true
+  type IsDiscard<A> = [Extract<A, { readonly discard: true }>] extends [never] ? false : true
 
-  export type DataFirst = {
+  export interface DataFirst {
     <
       Args extends
-        | [ReadonlyArray<EffectAny>]
+        | [Iterable<EffectAny>]
         | [Readonly<{ [K: string]: EffectAny }>]
         | [EffectAny, ...ReadonlyArray<EffectAny>]
-        | [ReadonlyArray<EffectAny>, Options]
-        | [Readonly<{ [K: string]: EffectAny }>, Options]
-        | [EffectAny, ...ReadonlyArray<EffectAny>, Options]
+        | [Iterable<EffectAny>, Options | undefined]
+        | [Readonly<{ [K: string]: EffectAny }>, Options | undefined]
+        | [EffectAny, ...ReadonlyArray<EffectAny>, Options | undefined]
     >(
       ...args: Args
     ): [Args[0]] extends [ReadonlyArray<EffectAny>] ? ReturnTuple<Args[0], IsDiscard<Args[1]>>
+      : [Args[0]] extends [Iterable<EffectAny>] ? ReturnIterable<Args[0], IsDiscard<Args[1]>>
       : [Args[0]] extends [EffectAny] ? ReturnTuple<
-        [Args] extends [[...(infer Effects), Options]] ? Effects : Args,
+        [Args] extends [[...(infer Effects), Options | undefined]] ? Effects : Args,
         IsDiscard<Args[number]>
       >
       : ReturnObject<Args[0], IsDiscard<Args[1]>>
   }
 
-  export type DataLast = {
+  export interface DataLast {
     <O extends Options>(options?: O): <
       Arg extends
         | ReadonlyArray<EffectAny>
@@ -488,33 +489,11 @@ export declare namespace All {
     >(
       self: Arg
     ) => [Arg] extends [ReadonlyArray<EffectAny>] ? ReturnTuple<Arg, IsDiscard<O>>
-      : [Arg] extends [EffectAny] ? ReturnArray<[Arg], IsDiscard<O>>
+      : [Arg] extends [Iterable<EffectAny>] ? ReturnIterable<Arg, IsDiscard<O>>
+      : [Arg] extends [EffectAny] ? ReturnTuple<[Arg], IsDiscard<O>>
       : ReturnObject<Arg, IsDiscard<O>>
   }
 }
-
-/**
- * Evaluate and run each effect in the structure and collect the results.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const allIterable: {
-  (
-    options?: { readonly concurrency?: Concurrency; readonly discard?: false }
-  ): <R, E, A>(as: Iterable<Effect<R, E, A>>) => Effect<R, E, Array<A>>
-  (
-    options: { readonly concurrency?: Concurrency; readonly discard: true }
-  ): <R, E, A>(as: Iterable<Effect<R, E, A>>) => Effect<R, E, void>
-  <R, E, A>(
-    as: Iterable<Effect<R, E, A>>,
-    options?: { readonly concurrency?: Concurrency; readonly discard?: false }
-  ): Effect<R, E, Array<A>>
-  <R, E, A>(
-    as: Iterable<Effect<R, E, A>>,
-    options: { readonly concurrency?: Concurrency; readonly discard: true }
-  ): Effect<R, E, void>
-} = circular.allIterable
 
 /**
  * Evaluate and run each effect in the structure and collect the results,
@@ -3473,9 +3452,16 @@ export const replicate: (n: number) => <R, E, A>(self: Effect<R, E, A>) => Array
  * @category utils
  */
 export const replicateEffect: {
-  (n: number, options?: { readonly discard?: false }): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, Array<A>>
+  (
+    n: number,
+    options?: { readonly discard?: false }
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, ReadonlyArray<A>>
   (n: number, options: { readonly discard: true }): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, void>
-  <R, E, A>(self: Effect<R, E, A>, n: number, options?: { readonly discard?: false }): Effect<R, E, Array<A>>
+  <R, E, A>(
+    self: Effect<R, E, A>,
+    n: number,
+    options?: { readonly discard?: false }
+  ): Effect<R, E, ReadonlyArray<A>>
   <R, E, A>(self: Effect<R, E, A>, n: number, options: { readonly discard: true }): Effect<R, E, void>
 } = circular.replicateEffect
 
@@ -4884,7 +4870,7 @@ export const Monad: monad.Monad<EffectTypeLambda> = {
 export const SemiProduct: semiProduct.SemiProduct<EffectTypeLambda> = {
   imap,
   product: zip,
-  productMany: (self, rest) => flatMap(self, (a) => map(allIterable(rest), (r) => [a, ...r]))
+  productMany: (self, rest) => flatMap(self, (a) => map(all(rest), (r) => [a, ...r]))
 }
 
 /**
@@ -4917,7 +4903,7 @@ export const Product: product_.Product<EffectTypeLambda> = {
   imap,
   product: SemiProduct.product,
   productMany: SemiProduct.productMany,
-  productAll: (rest) => map(allIterable(rest), (x) => Array.from(x))
+  productAll: (rest) => map(all(rest), (x) => Array.from(x))
 }
 
 /**

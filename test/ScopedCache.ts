@@ -405,13 +405,13 @@ describe.concurrent("ScopedCache", () => {
               Chunk.flatMap((key) => HashMap.unsafeGet(createdResources, key)),
               Chunk.map((resource) => resource.assertAcquiredOnceAndCleaned())
             )
-          yield* $(Effect.allIterable(oldestResourceCleaned, { discard: true }))
+          yield* $(Effect.all(oldestResourceCleaned, { discard: true }))
           const newestResourceNotCleanedYet = pipe(
             Chunk.range(numCreatedKey - cacheSize, numCreatedKey - 1),
             Chunk.flatMap((key) => HashMap.unsafeGet(createdResources, key)),
             Chunk.map((resource) => resource.assertAcquiredOnceAndNotCleaned())
           )
-          yield* $(Effect.allIterable(newestResourceNotCleanedYet, { discard: true }))
+          yield* $(Effect.all(newestResourceNotCleanedYet, { discard: true }))
         })))
       })
       return Effect.runPromise(program)
@@ -646,13 +646,13 @@ describe.concurrent("ScopedCache", () => {
               Chunk.flatMap((key) => HashMap.unsafeGet(createdResources, key)),
               Chunk.map((resource) => resource.assertAcquiredOnceAndCleaned())
             )
-          yield* $(Effect.allIterable(oldestResourceCleaned, { discard: true }))
+          yield* $(Effect.all(oldestResourceCleaned, { discard: true }))
           const newestResourceNotCleanedYet = pipe(
             Chunk.range(numCreatedKey - cacheSize, numCreatedKey - 1),
             Chunk.flatMap((key) => HashMap.unsafeGet(createdResources, key)),
             Chunk.map((resource) => resource.assertAcquiredOnceAndNotCleaned())
           )
-          yield* $(Effect.allIterable(newestResourceNotCleanedYet, { discard: true }))
+          yield* $(Effect.all(newestResourceNotCleanedYet, { discard: true }))
         })))
       })
       return Effect.runPromise(program)

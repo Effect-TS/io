@@ -37,7 +37,7 @@ describe.concurrent("Effect", () => {
       yield* $(
         effect,
         Effect.replicate(100),
-        Effect.allIterable({
+        Effect.allWith({
           concurrency: "inherit",
           discard: true
         })

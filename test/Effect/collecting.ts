@@ -12,9 +12,9 @@ describe.concurrent("Effect", () => {
       }))
       assert.deepStrictEqual(Array.from(result), [1, 2, 3])
     }))
-  it.effect("allIterable - returns result in the same order", () =>
+  it.effect("all - returns result in the same order", () =>
     Effect.gen(function*($) {
-      const result = yield* $(Effect.allIterable([1, 2, 3].map(Effect.succeed), {
+      const result = yield* $(Effect.all([1, 2, 3].map(Effect.succeed), {
         concurrency: "inherit"
       }))
       assert.deepStrictEqual(Array.from(result), [1, 2, 3])
@@ -27,17 +27,17 @@ describe.concurrent("Effect", () => {
       const result = yield* $(ops3, Effect.zipPar(ops3))
       assert.notDeepEqual(Array.from(result[0]), Array.from(result[1]))
     }))
-  it.effect("allIterable - returns results in the same order in parallel", () =>
+  it.effect("all - returns results in the same order in parallel", () =>
     Effect.gen(function*($) {
-      const result = yield* $(Effect.allIterable([1, 2, 3].map(Effect.succeed), {
+      const result = yield* $(Effect.all([1, 2, 3].map(Effect.succeed), {
         concurrency: 2
       }))
       assert.deepStrictEqual(Array.from(result), [1, 2, 3])
     }))
-  it.effect("collectAllParDiscard - preserves failures", () =>
+  it.effect("all - preserves failures", () =>
     Effect.gen(function*($) {
       const result = yield* $(
-        Effect.allIterable(Array.from({ length: 10 }, () => Effect.fail(Cause.RuntimeException())), {
+        Effect.all(Array.from({ length: 10 }, () => Effect.fail(Cause.RuntimeException())), {
           concurrency: 5,
           discard: true
         }),
