@@ -762,16 +762,17 @@ export const cachedInvalidateWithTTL: {
 } = circular.cachedInvalidate
 
 const _catch: {
-  <N extends keyof E, K extends E[N] & string, E, R1, E1, A1>(
-    tag: N,
-    k: K,
-    f: (error: Extract<E, { [n in N]: K }>) => Effect<R1, E1, A1>
-  ): <R, A>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | Exclude<E, { [n in N]: K }>, A1 | A>
+  <N extends keyof E, K extends E[N] & string, E, R1, E1, A1>(discriminator: N, options: {
+    readonly failure: K
+    readonly onFailure: (error: Extract<E, { [n in N]: K }>) => Effect<R1, E1, A1>
+  }): <R, A>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | Exclude<E, { [n in N]: K }>, A1 | A>
   <R, E, A, N extends keyof E, K extends E[N] & string, R1, E1, A1>(
     self: Effect<R, E, A>,
-    tag: N,
-    k: K,
-    f: (error: Extract<E, { [n in N]: K }>) => Effect<R1, E1, A1>
+    discriminator: N,
+    options: {
+      readonly failure: K
+      readonly onFailure: (error: Extract<E, { [n in N]: K }>) => Effect<R1, E1, A1>
+    }
   ): Effect<R | R1, E1 | Exclude<E, { [n in N]: K }>, A | A1>
 } = effect._catch
 

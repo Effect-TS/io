@@ -111,9 +111,11 @@ export const attempt = <A>(evaluate: LazyArg<A>): Effect.Effect<never, unknown, 
 /* @internal */
 export const _catch = dual<
   <N extends keyof E, K extends E[N] & string, E, R1, E1, A1>(
-    tag: N,
-    k: K,
-    f: (error: Extract<E, { [n in N]: K }>) => Effect.Effect<R1, E1, A1>
+    discriminator: N,
+    options: {
+      readonly failure: K
+      readonly onFailure: (error: Extract<E, { [n in N]: K }>) => Effect.Effect<R1, E1, A1>
+    }
   ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<
     R | R1,
     Exclude<E, { [n in N]: K }> | E1,
@@ -121,17 +123,19 @@ export const _catch = dual<
   >,
   <R, E, A, N extends keyof E, K extends E[N] & string, R1, E1, A1>(
     self: Effect.Effect<R, E, A>,
-    tag: N,
-    k: K,
-    f: (error: Extract<E, { [n in N]: K }>) => Effect.Effect<R1, E1, A1>
+    discriminator: N,
+    options: {
+      readonly failure: K
+      readonly onFailure: (error: Extract<E, { [n in N]: K }>) => Effect.Effect<R1, E1, A1>
+    }
   ) => Effect.Effect<R | R1, Exclude<E, { [n in N]: K }> | E1, A | A1>
 >(
-  // @ts-expect-error - probably a TS bug - infers to never because "DF does not extend (...args: any[]) => any)" but, of course, it does)
-  4,
-  (self, tag, k, f) =>
+  // @ts-expect-error
+  3,
+  (self, tag, options) =>
     core.catchAll(self, (e) => {
-      if (typeof e === "object" && e != null && tag in e && e[tag] === k) {
-        return f(e as any)
+      if (typeof e === "object" && e != null && tag in e && e[tag] === options.failure) {
+        return options.onFailure(e as any)
       }
       return core.fail(e as any)
     })

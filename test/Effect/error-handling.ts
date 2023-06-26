@@ -221,6 +221,39 @@ describe.concurrent("Effect", () => {
       )
       assert.deepStrictEqual(result, error)
     }))
+  it.effect("catch - recovers from one of several tagged errors", () =>
+    Effect.gen(function*($) {
+      interface ErrorA {
+        readonly _tag: "ErrorA"
+      }
+      interface ErrorB {
+        readonly _tag: "ErrorB"
+      }
+      const effect: Effect.Effect<never, ErrorA | ErrorB, never> = Effect.fail({ _tag: "ErrorA" })
+      const result = yield* $(Effect.catch(effect, "_tag", {
+        failure: "ErrorA",
+        onFailure: Effect.succeed
+      }))
+      assert.deepStrictEqual(result, { _tag: "ErrorA" })
+    }))
+  it.effect("catch - does not recover from one of several tagged errors", () =>
+    Effect.gen(function*($) {
+      interface ErrorA {
+        readonly _tag: "ErrorA"
+      }
+      interface ErrorB {
+        readonly _tag: "ErrorB"
+      }
+      const effect: Effect.Effect<never, ErrorA | ErrorB, never> = Effect.fail({ _tag: "ErrorB" })
+      const result = yield* $(
+        Effect.catch(effect, "_tag", {
+          failure: "ErrorA",
+          onFailure: Effect.succeed
+        }),
+        Effect.exit
+      )
+      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail({ _tag: "ErrorB" }))
+    }))
   it.effect("catchTags - recovers from one of several tagged errors", () =>
     Effect.gen(function*($) {
       interface ErrorA {
