@@ -451,181 +451,174 @@ export const eventually = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect
 export const filterOrDie = dual<
   {
     <A, B extends A>(
-      f: Refinement<A, B>,
-      defect: LazyArg<unknown>
+      options: {
+        readonly filter: Refinement<A, B>
+        readonly orDieWith: LazyArg<unknown>
+      }
     ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, B>
     <A>(
-      f: Predicate<A>,
-      defect: LazyArg<unknown>
+      options: {
+        readonly filter: Predicate<A>
+        readonly orDieWith: LazyArg<unknown>
+      }
     ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
   },
   {
     <R, E, A, B extends A>(
       self: Effect.Effect<R, E, A>,
-      f: Refinement<A, B>,
-      defect: LazyArg<unknown>
+      options: {
+        readonly filter: Refinement<A, B>
+        readonly orDieWith: LazyArg<unknown>
+      }
     ): Effect.Effect<R, E, B>
     <R, E, A>(
       self: Effect.Effect<R, E, A>,
-      f: Predicate<A>,
-      defect: LazyArg<unknown>
+      options: {
+        readonly filter: Predicate<A>
+        readonly orDieWith: LazyArg<unknown>
+      }
     ): Effect.Effect<R, E, A>
   }
->(3, <R, E, A>(
+>(2, <R, E, A>(
   self: Effect.Effect<R, E, A>,
-  f: Predicate<A>,
-  defect: LazyArg<unknown>
-): Effect.Effect<R, E, A> => filterOrElse(self, f, () => core.dieSync(defect)))
+  options: {
+    readonly filter: Predicate<A>
+    readonly orDieWith: LazyArg<unknown>
+  }
+): Effect.Effect<R, E, A> =>
+  filterOrElse(self, {
+    filter: options.filter,
+    orElse: () => core.dieSync(options.orDieWith)
+  }))
 
 /* @internal */
 export const filterOrDieMessage = dual<
   {
     <A, B extends A>(
-      f: Refinement<A, B>,
-      message: string
+      options: {
+        readonly filter: Refinement<A, B>
+        readonly message: string
+      }
     ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, B>
     <A>(
-      f: Predicate<A>,
-      message: string
+      options: {
+        readonly filter: Predicate<A>
+        readonly message: string
+      }
     ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
   },
   {
     <R, E, A, B extends A>(
       self: Effect.Effect<R, E, A>,
-      f: Refinement<A, B>,
-      message: string
+      options: {
+        readonly filter: Refinement<A, B>
+        readonly message: string
+      }
     ): Effect.Effect<R, E, B>
     <R, E, A>(
       self: Effect.Effect<R, E, A>,
-      f: Predicate<A>,
-      message: string
+      options: {
+        readonly filter: Predicate<A>
+        readonly message: string
+      }
     ): Effect.Effect<R, E, A>
   }
->(3, <R, E, A>(
+>(2, <R, E, A>(
   self: Effect.Effect<R, E, A>,
-  f: Predicate<A>,
-  message: string
-): Effect.Effect<R, E, A> => filterOrElse(self, f, () => core.dieMessage(message)))
+  options: {
+    readonly filter: Predicate<A>
+    readonly message: string
+  }
+): Effect.Effect<R, E, A> =>
+  filterOrElse(self, {
+    filter: options.filter,
+    orElse: () => core.dieMessage(options.message)
+  }))
 
 /* @internal */
 export const filterOrElse = dual<
   {
     <A, B extends A, R2, E2, C>(
-      f: Refinement<A, B>,
-      orElse: LazyArg<Effect.Effect<R2, E2, C>>
+      options: {
+        readonly filter: Refinement<A, B>
+        readonly orElse: (a: A) => Effect.Effect<R2, E2, C>
+      }
     ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, B | C>
     <A, R2, E2, B>(
-      f: Predicate<A>,
-      orElse: LazyArg<Effect.Effect<R2, E2, B>>
+      options: {
+        readonly filter: Predicate<A>
+        readonly orElse: (a: A) => Effect.Effect<R2, E2, B>
+      }
     ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A | B>
   },
   {
     <R, E, A, B extends A, R2, E2, C>(
       self: Effect.Effect<R, E, A>,
-      f: Refinement<A, B>,
-      orElse: LazyArg<Effect.Effect<R2, E2, C>>
+      options: {
+        readonly filter: Refinement<A, B>
+        readonly orElse: (a: A) => Effect.Effect<R2, E2, C>
+      }
     ): Effect.Effect<R | R2, E | E2, B | C>
     <R, E, A, R2, E2, B>(
       self: Effect.Effect<R, E, A>,
-      f: Predicate<A>,
-      orElse: LazyArg<Effect.Effect<R2, E2, B>>
+      options: {
+        readonly filter: Predicate<A>
+        readonly orElse: (a: A) => Effect.Effect<R2, E2, B>
+      }
     ): Effect.Effect<R | R2, E | E2, A | B>
   }
->(3, <R, E, A, R2, E2, B>(
+>(2, <R, E, A, R2, E2, B>(
   self: Effect.Effect<R, E, A>,
-  f: Predicate<A>,
-  orElse: LazyArg<Effect.Effect<R2, E2, B>>
-): Effect.Effect<R | R2, E | E2, A | B> => filterOrElseWith(self, f, orElse))
-
-/* @internal */
-export const filterOrElseWith = dual<
-  {
-    <A, B extends A, R2, E2, C>(
-      f: Refinement<A, B>,
-      orElse: (a: A) => Effect.Effect<R2, E2, C>
-    ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, B | C>
-    <A, R2, E2, B>(
-      f: Predicate<A>,
-      orElse: (a: A) => Effect.Effect<R2, E2, B>
-    ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A | B>
-  },
-  {
-    <R, E, A, B extends A, R2, E2, C>(
-      self: Effect.Effect<R, E, A>,
-      f: Refinement<A, B>,
-      orElse: (a: A) => Effect.Effect<R2, E2, C>
-    ): Effect.Effect<R | R2, E | E2, B | C>
-    <R, E, A, R2, E2, B>(
-      self: Effect.Effect<R, E, A>,
-      f: Predicate<A>,
-      orElse: (a: A) => Effect.Effect<R2, E2, B>
-    ): Effect.Effect<R | R2, E | E2, A | B>
+  options: {
+    readonly filter: Predicate<A>
+    readonly orElse: (a: A) => Effect.Effect<R2, E2, B>
   }
->(3, <R, E, A, R2, E2, B>(
-  self: Effect.Effect<R, E, A>,
-  f: Predicate<A>,
-  orElse: (a: A) => Effect.Effect<R2, E2, B>
-): Effect.Effect<R | R2, E | E2, A | B> => core.flatMap(self, (a) => f(a) ? core.succeed<A | B>(a) : orElse(a)))
+): Effect.Effect<R | R2, E | E2, A | B> =>
+  core.flatMap(self, (a) => options.filter(a) ? core.succeed<A | B>(a) : options.orElse(a)))
 
 /* @internal */
 export const filterOrFail = dual<
   {
     <A, B extends A, E2>(
-      f: Refinement<A, B>,
-      error: LazyArg<E2>
+      options: {
+        readonly filter: Refinement<A, B>
+        readonly orFailWith: (a: A) => E2
+      }
     ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E | E2, B>
     <A, E2>(
-      f: Predicate<A>,
-      error: LazyArg<E2>
+      options: {
+        readonly filter: Predicate<A>
+        readonly orFailWith: (a: A) => E2
+      }
     ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E | E2, A>
   },
   {
     <R, E, A, B extends A, E2>(
       self: Effect.Effect<R, E, A>,
-      f: Refinement<A, B>,
-      error: LazyArg<E2>
+      options: {
+        readonly filter: Refinement<A, B>
+        readonly orFailWith: (a: A) => E2
+      }
     ): Effect.Effect<R, E | E2, B>
     <R, E, A, E2>(
       self: Effect.Effect<R, E, A>,
-      f: Predicate<A>,
-      error: LazyArg<E2>
+      options: {
+        readonly filter: Predicate<A>
+        readonly orFailWith: (a: A) => E2
+      }
     ): Effect.Effect<R, E | E2, A>
   }
->(3, <R, E, A, E2>(
+>(2, <R, E, A, E2>(
   self: Effect.Effect<R, E, A>,
-  f: Predicate<A>,
-  error: LazyArg<E2>
-): Effect.Effect<R, E | E2, A> => filterOrElse(self, f, () => core.failSync(error)))
-
-/* @internal */
-export const filterOrFailWith = dual<
-  {
-    <A, B extends A, E2>(
-      f: Refinement<A, B>,
-      error: (a: A) => E2
-    ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E | E2, B>
-    <A, E2>(
-      f: Predicate<A>,
-      error: (a: A) => E2
-    ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E | E2, A>
-  },
-  {
-    <R, E, A, B extends A, E2>(
-      self: Effect.Effect<R, E, A>,
-      f: Refinement<A, B>,
-      error: (a: A) => E2
-    ): Effect.Effect<R, E | E2, B>
-    <R, E, A, E2>(
-      self: Effect.Effect<R, E, A>,
-      f: Predicate<A>,
-      error: (a: A) => E2
-    ): Effect.Effect<R, E | E2, A>
+  options: {
+    readonly filter: Predicate<A>
+    readonly orFailWith: (a: A) => E2
   }
->(3, <R, E, A, E2>(
-  self: Effect.Effect<R, E, A>,
-  f: Predicate<A>,
-  error: (a: A) => E2
-): Effect.Effect<R, E | E2, A> => filterOrElseWith(self, f, (a) => core.failSync(() => error(a))))
+): Effect.Effect<R, E | E2, A> =>
+  filterOrElse(self, {
+    filter: options.filter,
+    orElse: (a) => core.failSync(() => options.orFailWith(a))
+  }))
 
 /* @internal */
 export const findFirst = dual<

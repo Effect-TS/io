@@ -291,7 +291,7 @@ export class TestClockImpl implements TestClock {
             pipe(this.live.provide(effect.sleep(Duration.millis(10))), core.zipRight(this.suspended())),
             Equal.equals
           ),
-          effect.filterOrFail(identity, constVoid),
+          effect.filterOrFail({ filter: identity, orFailWith: constVoid }),
           effect.eventually
         )
       ),

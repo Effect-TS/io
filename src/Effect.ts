@@ -1371,10 +1371,20 @@ export const filter: {
  * @category filtering
  */
 export const filterOrDie: {
-  <A, B extends A>(f: Refinement<A, B>, defect: LazyArg<unknown>): <R, E>(self: Effect<R, E, A>) => Effect<R, E, B>
-  <A>(f: Predicate<A>, defect: LazyArg<unknown>): <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A, B extends A>(self: Effect<R, E, A>, f: Refinement<A, B>, defect: LazyArg<unknown>): Effect<R, E, B>
-  <R, E, A>(self: Effect<R, E, A>, f: Predicate<A>, defect: LazyArg<unknown>): Effect<R, E, A>
+  <A, B extends A>(
+    options: { readonly filter: Refinement<A, B>; readonly orDieWith: LazyArg<unknown> }
+  ): <R, E>(self: Effect<R, E, A>) => Effect<R, E, B>
+  <A>(
+    options: { readonly filter: Predicate<A>; readonly orDieWith: LazyArg<unknown> }
+  ): <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A, B extends A>(
+    self: Effect<R, E, A>,
+    options: { readonly filter: Refinement<A, B>; readonly orDieWith: LazyArg<unknown> }
+  ): Effect<R, E, B>
+  <R, E, A>(
+    self: Effect<R, E, A>,
+    options: { readonly filter: Predicate<A>; readonly orDieWith: LazyArg<unknown> }
+  ): Effect<R, E, A>
 } = effect.filterOrDie
 
 /**
@@ -1385,10 +1395,20 @@ export const filterOrDie: {
  * @category filtering
  */
 export const filterOrDieMessage: {
-  <A, B extends A>(f: Refinement<A, B>, message: string): <R, E>(self: Effect<R, E, A>) => Effect<R, E, B>
-  <A>(f: Predicate<A>, message: string): <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A, B extends A>(self: Effect<R, E, A>, f: Refinement<A, B>, message: string): Effect<R, E, B>
-  <R, E, A>(self: Effect<R, E, A>, f: Predicate<A>, message: string): Effect<R, E, A>
+  <A, B extends A>(
+    options: { readonly filter: Refinement<A, B>; readonly message: string }
+  ): <R, E>(self: Effect<R, E, A>) => Effect<R, E, B>
+  <A>(
+    options: { readonly filter: Predicate<A>; readonly message: string }
+  ): <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A, B extends A>(
+    self: Effect<R, E, A>,
+    options: { readonly filter: Refinement<A, B>; readonly message: string }
+  ): Effect<R, E, B>
+  <R, E, A>(
+    self: Effect<R, E, A>,
+    options: { readonly filter: Predicate<A>; readonly message: string }
+  ): Effect<R, E, A>
 } = effect.filterOrDieMessage
 
 /**
@@ -1400,52 +1420,20 @@ export const filterOrDieMessage: {
  */
 export const filterOrElse: {
   <A, B extends A, R2, E2, C>(
-    f: Refinement<A, B>,
-    orElse: LazyArg<Effect<R2, E2, C>>
+    options: { readonly filter: Refinement<A, B>; readonly orElse: (a: A) => Effect<R2, E2, C> }
   ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, B | C>
   <A, R2, E2, B>(
-    f: Predicate<A>,
-    orElse: LazyArg<Effect<R2, E2, B>>
+    options: { readonly filter: Predicate<A>; readonly orElse: (a: A) => Effect<R2, E2, B> }
   ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A | B>
   <R, E, A, B extends A, R2, E2, C>(
     self: Effect<R, E, A>,
-    f: Refinement<A, B>,
-    orElse: LazyArg<Effect<R2, E2, C>>
+    options: { readonly filter: Refinement<A, B>; readonly orElse: (a: A) => Effect<R2, E2, C> }
   ): Effect<R | R2, E | E2, B | C>
   <R, E, A, R2, E2, B>(
     self: Effect<R, E, A>,
-    f: Predicate<A>,
-    orElse: LazyArg<Effect<R2, E2, B>>
+    options: { readonly filter: Predicate<A>; readonly orElse: (a: A) => Effect<R2, E2, B> }
   ): Effect<R | R2, E | E2, A | B>
 } = effect.filterOrElse
-
-/**
- * Filters the specified effect with the provided function returning the value
- * of the effect if it is successful, otherwise returns the value of `orElse`.
- *
- * @since 1.0.0
- * @category filtering
- */
-export const filterOrElseWith: {
-  <A, B extends A, R2, E2, C>(
-    f: Refinement<A, B>,
-    orElse: (a: A) => Effect<R2, E2, C>
-  ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, B | C>
-  <A, R2, E2, B>(
-    f: Predicate<A>,
-    orElse: (a: A) => Effect<R2, E2, B>
-  ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A | B>
-  <R, E, A, B extends A, R2, E2, C>(
-    self: Effect<R, E, A>,
-    f: Refinement<A, B>,
-    orElse: (a: A) => Effect<R2, E2, C>
-  ): Effect<R | R2, E | E2, B | C>
-  <R, E, A, R2, E2, B>(
-    self: Effect<R, E, A>,
-    f: Predicate<A>,
-    orElse: (a: A) => Effect<R2, E2, B>
-  ): Effect<R | R2, E | E2, A | B>
-} = effect.filterOrElseWith
 
 /**
  * Filter the specified effect with the provided function, failing with specified
@@ -1455,25 +1443,21 @@ export const filterOrElseWith: {
  * @category filtering
  */
 export const filterOrFail: {
-  <A, B extends A, E2>(f: Refinement<A, B>, error: LazyArg<E2>): <R, E>(self: Effect<R, E, A>) => Effect<R, E2 | E, B>
-  <A, E2>(f: Predicate<A>, error: LazyArg<E2>): <R, E>(self: Effect<R, E, A>) => Effect<R, E2 | E, A>
-  <R, E, A, B extends A, E2>(self: Effect<R, E, A>, f: Refinement<A, B>, error: LazyArg<E2>): Effect<R, E | E2, B>
-  <R, E, A, E2>(self: Effect<R, E, A>, f: Predicate<A>, error: LazyArg<E2>): Effect<R, E | E2, A>
+  <A, B extends A, E2>(
+    options: { readonly filter: Refinement<A, B>; readonly orFailWith: (a: A) => E2 }
+  ): <R, E>(self: Effect<R, E, A>) => Effect<R, E2 | E, B>
+  <A, E2>(
+    options: { readonly filter: Predicate<A>; readonly orFailWith: (a: A) => E2 }
+  ): <R, E>(self: Effect<R, E, A>) => Effect<R, E2 | E, A>
+  <R, E, A, B extends A, E2>(
+    self: Effect<R, E, A>,
+    options: { readonly filter: Refinement<A, B>; readonly orFailWith: (a: A) => E2 }
+  ): Effect<R, E | E2, B>
+  <R, E, A, E2>(
+    self: Effect<R, E, A>,
+    options: { readonly filter: Predicate<A>; readonly orFailWith: (a: A) => E2 }
+  ): Effect<R, E | E2, A>
 } = effect.filterOrFail
-
-/**
- * Filter the specified effect with the provided function, failing with specified
- * error if the predicate fails.
- *
- * @since 1.0.0
- * @category filtering
- */
-export const filterOrFailWith: {
-  <A, B extends A, E2>(f: Refinement<A, B>, error: (a: A) => E2): <R, E>(self: Effect<R, E, A>) => Effect<R, E2 | E, B>
-  <A, E2>(f: Predicate<A>, error: (a: A) => E2): <R, E>(self: Effect<R, E, A>) => Effect<R, E2 | E, A>
-  <R, E, A, B extends A, E2>(self: Effect<R, E, A>, f: Refinement<A, B>, error: (a: A) => E2): Effect<R, E | E2, B>
-  <R, E, A, E2>(self: Effect<R, E, A>, f: Predicate<A>, error: (a: A) => E2): Effect<R, E | E2, A>
-} = effect.filterOrFailWith
 
 /**
  * Returns the first element that satisfies the effectful predicate.

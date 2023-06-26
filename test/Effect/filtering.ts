@@ -69,13 +69,16 @@ describe.concurrent("Effect", () => {
       )
       assert.deepStrictEqual(Array.from(result), [3, 5, 11, 15, 17, 23, 25])
     }))
-  it.effect("filterOrElseWith - returns checked failure from held value", () =>
+  it.effect("filterOrElse - returns checked failure from held value", () =>
     Effect.gen(function*($) {
       const goodCase = yield* $(
         exactlyOnce(0, (effect) =>
           pipe(
             effect,
-            Effect.filterOrElseWith((n) => n === 0, (n) => Effect.fail(`${n} was not 0`))
+            Effect.filterOrElse({
+              filter: (n) => n === 0,
+              orElse: (n) => Effect.fail(`${n} was not 0`)
+            })
           )),
         Effect.sandbox,
         Effect.either
@@ -84,7 +87,10 @@ describe.concurrent("Effect", () => {
         exactlyOnce(1, (effect) =>
           pipe(
             effect,
-            Effect.filterOrElseWith((n) => n === 0, (n) => Effect.fail(`${n} was not 0`))
+            Effect.filterOrElse({
+              filter: (n) => n === 0,
+              orElse: (n) => Effect.fail(`${n} was not 0`)
+            })
           )),
         Effect.sandbox,
         Effect.either,
@@ -99,7 +105,10 @@ describe.concurrent("Effect", () => {
         exactlyOnce(0, (effect) =>
           pipe(
             effect,
-            Effect.filterOrElse((n) => n === 0, () => Effect.fail("predicate failed!"))
+            Effect.filterOrElse({
+              filter: (n) => n === 0,
+              orElse: () => Effect.fail("predicate failed!")
+            })
           )),
         Effect.sandbox,
         Effect.either
@@ -108,7 +117,10 @@ describe.concurrent("Effect", () => {
         exactlyOnce(1, (effect) =>
           pipe(
             effect,
-            Effect.filterOrElse((n) => n === 0, () => Effect.fail("predicate failed!"))
+            Effect.filterOrElse({
+              filter: (n) => n === 0,
+              orElse: () => Effect.fail("predicate failed!")
+            })
           )),
         Effect.sandbox,
         Effect.either,
@@ -120,7 +132,14 @@ describe.concurrent("Effect", () => {
   it.effect("filterOrFail - returns failure ignoring value", () =>
     Effect.gen(function*($) {
       const goodCase = yield* $(
-        exactlyOnce(0, (effect) => pipe(effect, Effect.filterOrFail((n) => n === 0, () => "predicate failed!"))),
+        exactlyOnce(0, (effect) =>
+          pipe(
+            effect,
+            Effect.filterOrFail({
+              filter: (n) => n === 0,
+              orFailWith: () => "predicate failed!"
+            })
+          )),
         Effect.sandbox,
         Effect.either
       )
@@ -128,7 +147,10 @@ describe.concurrent("Effect", () => {
         exactlyOnce(1, (effect) =>
           pipe(
             effect,
-            Effect.filterOrFail((n) => n === 0, () => "predicate failed!")
+            Effect.filterOrFail({
+              filter: (n) => n === 0,
+              orFailWith: () => "predicate failed!"
+            })
           )),
         Effect.sandbox,
         Effect.either,
@@ -137,11 +159,17 @@ describe.concurrent("Effect", () => {
       assert.deepStrictEqual(goodCase, Either.right(0))
       assert.deepStrictEqual(badCase, Either.left(Either.left("predicate failed!")))
     }))
-  it.effect("filterOrFailWith - returns failure", () =>
+  it.effect("filterOrFail - returns failure", () =>
     Effect.gen(function*($) {
       const goodCase = yield* $(
         exactlyOnce(0, (effect) =>
-          pipe(effect, Effect.filterOrFailWith((n) => n === 0, (n) => `predicate failed, got ${n}!`))),
+          pipe(
+            effect,
+            Effect.filterOrFail({
+              filter: (n) => n === 0,
+              orFailWith: (n) => `predicate failed, got ${n}!`
+            })
+          )),
         Effect.sandbox,
         Effect.either
       )
@@ -149,8 +177,10 @@ describe.concurrent("Effect", () => {
         exactlyOnce(1, (effect) =>
           pipe(
             effect,
-            Effect.filterOrFailWith((n) =>
-              n === 0, (n) => `predicate failed, got ${n}!`)
+            Effect.filterOrFail({
+              filter: (n) => n === 0,
+              orFailWith: (n) => `predicate failed, got ${n}!`
+            })
           )),
         Effect.sandbox,
         Effect.either,
