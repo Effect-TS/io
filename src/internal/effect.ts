@@ -444,26 +444,6 @@ export const contextWith = <R, A>(f: (context: Context.Context<R>) => A): Effect
   core.map(core.context<R>(), f)
 
 /* @internal */
-export const exists = dual<
-  <R, E, A>(f: (a: A) => Effect.Effect<R, E, boolean>) => (elements: Iterable<A>) => Effect.Effect<R, E, boolean>,
-  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, boolean>
->(2, (elements, f) => core.suspend(() => existsLoop(elements[Symbol.iterator](), f)))
-
-const existsLoop = <R, E, A>(
-  iterator: Iterator<A>,
-  f: (a: A) => Effect.Effect<R, E, boolean>
-): Effect.Effect<R, E, boolean> => {
-  const next = iterator.next()
-  if (next.done) {
-    return core.succeed(false)
-  }
-  return pipe(core.flatMap(
-    f(next.value),
-    (b) => b ? core.succeed(b) : existsLoop(iterator, f)
-  ))
-}
-
-/* @internal */
 export const eventually = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, A> =>
   core.orElse(self, () => core.flatMap(core.yieldNow, () => eventually(self)))
 

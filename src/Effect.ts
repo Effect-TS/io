@@ -1291,22 +1291,16 @@ export const every: {
  * @category constructors
  */
 export const exists: {
-  <R, E, A>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, boolean>
-  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, boolean>
-} = effect.exists
-
-/**
- * Determines whether any element of the `Iterable<A>` satisfies the effectual
- * predicate `f`, working in parallel. Interrupts all effects on any failure or
- * finding an element that satisfies the predicate.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const existsPar: {
-  <R, E, A>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, boolean>
-  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, boolean>
-} = fiberRuntime.existsPar
+  <R, E, A>(
+    f: (a: A) => Effect<R, E, boolean>,
+    options?: { readonly concurrency?: Concurrency }
+  ): (elements: Iterable<A>) => Effect<R, E, boolean>
+  <R, E, A>(
+    elements: Iterable<A>,
+    f: (a: A) => Effect<R, E, boolean>,
+    options?: { readonly concurrency: Concurrency }
+  ): Effect<R, E, boolean>
+} = fiberRuntime.exists
 
 /**
  * @since 1.0.0

@@ -36,7 +36,12 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const array = [1, 2, 3, 4, 5]
       const result1 = yield* $(array, Effect.exists((n) => Effect.succeed(n > 3)))
-      const result2 = yield* $(array, Effect.exists((n) => Effect.succeed(n > 5)))
+      const result2 = yield* $(
+        array,
+        Effect.exists((n) => Effect.succeed(n > 5), {
+          concurrency: "inherit"
+        })
+      )
       assert.isTrue(result1)
       assert.isFalse(result2)
     }))

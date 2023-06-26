@@ -47,7 +47,6 @@ Added in v1.0.0
   - [dieSync](#diesync)
   - [dropWhile](#dropwhile)
   - [exists](#exists)
-  - [existsPar](#existspar)
   - [fail](#fail)
   - [failCause](#failcause)
   - [failCauseSync](#failcausesync)
@@ -975,25 +974,14 @@ predicate `f`, working sequentially.
 
 ```ts
 export declare const exists: {
-  <R, E, A>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, boolean>
-  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, boolean>
-}
-```
-
-Added in v1.0.0
-
-## existsPar
-
-Determines whether any element of the `Iterable<A>` satisfies the effectual
-predicate `f`, working in parallel. Interrupts all effects on any failure or
-finding an element that satisfies the predicate.
-
-**Signature**
-
-```ts
-export declare const existsPar: {
-  <R, E, A>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, boolean>
-  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, boolean>
+  <R, E, A>(f: (a: A) => Effect<R, E, boolean>, options?: { readonly concurrency?: Concurrency }): (
+    elements: Iterable<A>
+  ) => Effect<R, E, boolean>
+  <R, E, A>(
+    elements: Iterable<A>,
+    f: (a: A) => Effect<R, E, boolean>,
+    options?: { readonly concurrency: Concurrency }
+  ): Effect<R, E, boolean>
 }
 ```
 

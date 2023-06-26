@@ -26,6 +26,7 @@ import * as _RequestBlock from "@effect/io/internal/blockedRequests"
 import * as internalCause from "@effect/io/internal/cause"
 import * as clock from "@effect/io/internal/clock"
 import { currentRequestMap } from "@effect/io/internal/completedRequestMap"
+import * as Concurrency from "@effect/io/internal/concurrency"
 import { configProviderTag } from "@effect/io/internal/configProvider"
 import * as core from "@effect/io/internal/core"
 import * as defaultServices from "@effect/io/internal/defaultServices"
@@ -55,6 +56,9 @@ import type * as RequestBlock from "@effect/io/RequestBlock"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
 import type { Tracer } from "@effect/io/Tracer"
+
+// TODO: remove once added to /data/Predicate
+const isIterable = (u: unknown): u is Iterable<unknown> => typeof u === "object" && u != null && Symbol.iterator in u
 
 const fibersStarted = metric.counter("effect_fiber_started")
 const fiberSuccesses = metric.counter("effect_fiber_successes")
@@ -1393,19 +1397,52 @@ export const daemonChildren = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Ef
 const _existsParFound = Symbol("@effect/io/Effect/existsPar/found")
 
 /* @internal */
-export const existsPar = dual<
-  <R, E, A>(f: (a: A) => Effect.Effect<R, E, boolean>) => (elements: Iterable<A>) => Effect.Effect<R, E, boolean>,
-  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, boolean>
->(2, (elements, f) =>
-  core.matchEffect(
-    forEachPar(elements, (a) =>
-      core.ifEffect(f(a), {
-        onTrue: core.fail(_existsParFound),
-        onFalse: core.unit
-      })),
-    (e) => e === _existsParFound ? core.succeed(true) : core.fail(e),
-    () => core.succeed(false)
+export const exists = dual<
+  <R, E, A>(f: (a: A) => Effect.Effect<R, E, boolean>, options?: {
+    readonly concurrency?: Concurrency.Concurrency
+  }) => (elements: Iterable<A>) => Effect.Effect<R, E, boolean>,
+  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>, options?: {
+    readonly concurrency: Concurrency.Concurrency
+  }) => Effect.Effect<R, E, boolean>
+>((args) => isIterable(args[0]), (elements, f, options) =>
+  Concurrency.match(
+    options?.concurrency,
+    () => core.suspend(() => existsLoop(elements[Symbol.iterator](), f)),
+    () =>
+      core.matchEffect(
+        forEachPar(elements, (a) =>
+          core.ifEffect(f(a), {
+            onTrue: core.fail(_existsParFound),
+            onFalse: core.unit
+          })),
+        (e) => e === _existsParFound ? core.succeed(true) : core.fail(e),
+        () => core.succeed(false)
+      ),
+    (n) =>
+      core.matchEffect(
+        forEachParN(elements, n, (a) =>
+          core.ifEffect(f(a), {
+            onTrue: core.fail(_existsParFound),
+            onFalse: core.unit
+          })),
+        (e) => e === _existsParFound ? core.succeed(true) : core.fail(e),
+        () => core.succeed(false)
+      )
   ))
+
+const existsLoop = <R, E, A>(
+  iterator: Iterator<A>,
+  f: (a: A) => Effect.Effect<R, E, boolean>
+): Effect.Effect<R, E, boolean> => {
+  const next = iterator.next()
+  if (next.done) {
+    return core.succeed(false)
+  }
+  return pipe(core.flatMap(
+    f(next.value),
+    (b) => b ? core.succeed(b) : existsLoop(iterator, f)
+  ))
+}
 
 /* @internal */
 export const filterPar = dual<
