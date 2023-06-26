@@ -297,6 +297,7 @@ export const addFinalizer: <R, X>(
  *
  * @param acquire - The `Effect` value that acquires the resource.
  * @param release - The `Effect` value that releases the resource.
+ * @param interruptable - Whether the `acquire` Effect can be interrupted
  *
  * @returns A new `Effect` value that represents the scoped resource.
  *
@@ -305,42 +306,32 @@ export const addFinalizer: <R, X>(
  */
 export const acquireRelease: {
   <A, R2, X>(
-    release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect<R2, never, X>
-  ): <R, E>(acquire: Effect<R, E, A>) => Effect<Scope.Scope | R2 | R, E, A>
+    options: {
+      readonly release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect<R2, never, X>
+      readonly interruptable?: false
+    }
+  ): <R, E>(self: Effect<R, E, A>) => Effect<Scope.Scope | R2 | R, E, A>
+  <A, R2, X>(
+    options: {
+      readonly release: (exit: Exit.Exit<unknown, unknown>) => Effect<R2, never, X>
+      readonly interruptable: true
+    }
+  ): <R, E>(self: Effect<R, E, A>) => Effect<Scope.Scope | R2 | R, E, A>
   <R, E, A, R2, X>(
     acquire: Effect<R, E, A>,
-    release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect<R2, never, X>
+    options: {
+      readonly release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect<R2, never, X>
+      readonly interruptable?: false
+    }
+  ): Effect<Scope.Scope | R | R2, E, A>
+  <R, E, A, R2, X>(
+    acquire: Effect<R, E, A>,
+    options: {
+      readonly release: (exit: Exit.Exit<unknown, unknown>) => Effect<R2, never, X>
+      readonly interruptable: true
+    }
   ): Effect<Scope.Scope | R | R2, E, A>
 } = fiberRuntime.acquireRelease
-
-/**
- * This function is a variant of `acquireRelease` that allows the `acquire`
- * `Effect` value to be interruptible.
- *
- * Since the `acquire` `Effect` value could be interrupted after partially
- * acquiring resources, the `release` `Effect` value is not allowed to access
- * the resource produced by `acquire` and must independently determine what
- * finalization, if any, needs to be performed (e.g. by examining in memory
- * state).
- *
- * Additionally, the `release` `Effect` value may depend on the `Exit` value
- * specified when the scope is closed.
- *
- * @param acquire - The interruptible `Effect` value that acquires the
- * resource.
- * @param release - The `Effect` value that releases the resource. This function
- * must take an `Exit` value as its parameter, and return a new `Effect` value.
- *
- * @returns A new `Effect` value that represents the interruptible scoped
- * resource.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const acquireReleaseInterruptible: <R, E, A, R2, X>(
-  acquire: Effect<R, E, A>,
-  release: (exit: Exit.Exit<unknown, unknown>) => Effect<R2, never, X>
-) => Effect<Scope.Scope | R | R2, E, A> = circular.acquireReleaseInterruptible
 
 /**
  * This function is used to ensure that an `Effect` value that represents the
@@ -378,13 +369,17 @@ export const acquireReleaseInterruptible: <R, E, A, R2, X>(
  */
 export const acquireUseRelease: {
   <A, R2, E2, A2, R3, X>(
-    use: (a: A) => Effect<R2, E2, A2>,
-    release: (a: A, exit: Exit.Exit<E2, A2>) => Effect<R3, never, X>
+    options: {
+      readonly use: (a: A) => Effect<R2, E2, A2>
+      readonly release: (a: A, exit: Exit.Exit<E2, A2>) => Effect<R3, never, X>
+    }
   ): <R, E>(acquire: Effect<R, E, A>) => Effect<R2 | R3 | R, E2 | E, A2>
   <R, E, A, R2, E2, A2, R3, X>(
     acquire: Effect<R, E, A>,
-    use: (a: A) => Effect<R2, E2, A2>,
-    release: (a: A, exit: Exit.Exit<E2, A2>) => Effect<R3, never, X>
+    options: {
+      readonly use: (a: A) => Effect<R2, E2, A2>
+      readonly release: (a: A, exit: Exit.Exit<E2, A2>) => Effect<R3, never, X>
+    }
   ): Effect<R | R2 | R3, E | E2, A2>
 } = core.acquireUseRelease
 

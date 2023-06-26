@@ -29,7 +29,7 @@ export const makeLayer1 = (ref: Ref.Ref<Chunk.Chunk<string>>): Layer.Layer<never
     Service1Tag,
     Effect.acquireRelease(
       pipe(Ref.update(ref, Chunk.append(acquire1)), Effect.as(new Service1())),
-      () => Ref.update(ref, Chunk.append(release1))
+      { release: () => Ref.update(ref, Chunk.append(release1)) }
     )
   )
 }
@@ -47,7 +47,7 @@ export const makeLayer2 = (ref: Ref.Ref<Chunk.Chunk<string>>): Layer.Layer<never
     Service2Tag,
     Effect.acquireRelease(
       pipe(Ref.update(ref, Chunk.append(acquire2)), Effect.as(new Service2())),
-      () => Ref.update(ref, Chunk.append(release2))
+      { release: () => Ref.update(ref, Chunk.append(release2)) }
     )
   )
 }
@@ -65,7 +65,7 @@ export const makeLayer3 = (ref: Ref.Ref<Chunk.Chunk<string>>): Layer.Layer<never
     Service3Tag,
     Effect.acquireRelease(
       pipe(Ref.update(ref, Chunk.append(acquire3)), Effect.as(new Service3())),
-      () => Ref.update(ref, Chunk.append(release3))
+      { release: () => Ref.update(ref, Chunk.append(release3)) }
     )
   )
 }

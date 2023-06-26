@@ -231,7 +231,7 @@ class PoolImpl<E, A> implements Pool.Pool<E, A> {
       )
 
     return pipe(
-      fiberRuntime.acquireRelease(acquire(), release),
+      fiberRuntime.acquireRelease(acquire(), { release }),
       fiberRuntime.withEarlyRelease,
       fiberRuntime.disconnect,
       core.flatMap(([release, attempted]) =>

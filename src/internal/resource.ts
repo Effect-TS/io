@@ -30,7 +30,7 @@ export const auto = <R, E, A, R2, Out>(
   core.tap(manual(acquire), (manual) =>
     fiberRuntime.acquireRelease(
       pipe(refresh(manual), _schedule.schedule_Effect(policy), core.interruptible, fiberRuntime.forkDaemon),
-      core.interruptFiber
+      { release: core.interruptFiber }
     ))
 
 /** @internal */

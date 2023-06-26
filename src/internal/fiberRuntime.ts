@@ -1319,20 +1319,53 @@ export const currentLoggers: FiberRef.FiberRef<
 
 /* @internal */
 export const acquireRelease = dual<
-  <A, R2, X>(
-    release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>
-  ) => <R, E>(acquire: Effect.Effect<R, E, A>) => Effect.Effect<R | R2 | Scope.Scope, E, A>,
-  <R, E, A, R2, X>(
-    acquire: Effect.Effect<R, E, A>,
-    release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>
-  ) => Effect.Effect<R | R2 | Scope.Scope, E, A>
+  {
+    <A, R2, X>(
+      options: {
+        readonly release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>
+        readonly interruptable?: false
+      }
+    ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2 | Scope.Scope, E, A>
+    <A, R2, X>(
+      options: {
+        readonly release: (exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>
+        readonly interruptable: true
+      }
+    ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2 | Scope.Scope, E, A>
+  },
+  {
+    <R, E, A, R2, X>(
+      acquire: Effect.Effect<R, E, A>,
+      options: {
+        readonly release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>
+        readonly interruptable?: false
+      }
+    ): Effect.Effect<R | R2 | Scope.Scope, E, A>
+    <R, E, A, R2, X>(
+      acquire: Effect.Effect<R, E, A>,
+      options: {
+        readonly release: (exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>
+        readonly interruptable: true
+      }
+    ): Effect.Effect<R | R2 | Scope.Scope, E, A>
+  }
 >(2, <R, E, A, R2, X>(
   acquire: Effect.Effect<R, E, A>,
-  release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>
-): Effect.Effect<R | R2 | Scope.Scope, E, A> =>
-  core.uninterruptible(
-    core.tap(acquire, (a) => addFinalizer((exit) => release(a, exit)))
-  ))
+  options: {
+    readonly release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>
+    readonly interruptable?: boolean
+  }
+): Effect.Effect<R | R2 | Scope.Scope, E, A> => {
+  if (options.interruptable) {
+    return ensuring(
+      acquire,
+      addFinalizer(options.release as any)
+    )
+  }
+  return core.uninterruptible(
+    core.tap(acquire, (a) => addFinalizer((exit) => options.release(a, exit)))
+  )
+})
 
 /* @internal */
 export const addFinalizer = <R, X>(
@@ -2159,8 +2192,10 @@ export const using = dual<
 >(2, (self, use) =>
   core.acquireUseRelease(
     scopeMake(),
-    (scope) => core.flatMap(scopeExtend(self, scope), use),
-    (scope, exit) => core.scopeClose(scope, exit)
+    {
+      use: (scope) => core.flatMap(scopeExtend(self, scope), use),
+      release: (scope, exit) => core.scopeClose(scope, exit)
+    }
   ))
 
 /* @internal */
@@ -2417,7 +2452,7 @@ export const fiberRefLocallyScoped = dual<
         core.fiberRefGet(self),
         core.flatMap((oldValue) => pipe(core.fiberRefSet(self, value), core.as(oldValue)))
       ),
-      (oldValue) => core.fiberRefSet(self, oldValue)
+      { release: (oldValue) => core.fiberRefSet(self, oldValue) }
     )
   ))
 
@@ -2441,7 +2476,7 @@ export const fiberRefMakeWith = <Value>(
 ): Effect.Effect<Scope.Scope, never, FiberRef.FiberRef<Value>> =>
   acquireRelease(
     core.tap(core.sync(ref), (ref) => core.fiberRefUpdate(ref, identity)),
-    (fiberRef) => core.fiberRefDelete(fiberRef)
+    { release: (fiberRef) => core.fiberRefDelete(fiberRef) }
   )
 
 /* @internal */
@@ -2525,7 +2560,7 @@ export const fiberJoinAll = <E, A>(fibers: Iterable<Fiber.Fiber<E, A>>): Effect.
 
 /* @internal */
 export const fiberScoped = <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<Scope.Scope, never, Fiber.Fiber<E, A>> =>
-  acquireRelease(core.succeed(self), core.interruptFiber)
+  acquireRelease(core.succeed(self), { release: core.interruptFiber })
 
 //
 // circular race

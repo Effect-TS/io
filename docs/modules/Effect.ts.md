@@ -27,7 +27,6 @@ Added in v1.0.0
   - [withConfigProviderScoped](#withconfigproviderscoped)
 - [constructors](#constructors)
   - [acquireRelease](#acquirerelease)
-  - [acquireReleaseInterruptible](#acquirereleaseinterruptible)
   - [acquireUseRelease](#acquireuserelease)
   - [all](#all)
   - [allDiscard](#alldiscard)
@@ -605,39 +604,29 @@ specified when the scope is closed.
 
 ```ts
 export declare const acquireRelease: {
-  <A, R2, X>(release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect<R2, never, X>): <R, E>(
-    acquire: Effect<R, E, A>
-  ) => Effect<Scope.Scope | R2 | R, E, A>
+  <A, R2, X>(options: {
+    readonly release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect<R2, never, X>
+    readonly interruptable?: false | undefined
+  }): <R, E>(self: Effect<R, E, A>) => Effect<Scope.Scope | R2 | R, E, A>
+  <A, R2, X>(options: {
+    readonly release: (exit: Exit.Exit<unknown, unknown>) => Effect<R2, never, X>
+    readonly interruptable: true
+  }): <R, E>(self: Effect<R, E, A>) => Effect<Scope.Scope | R2 | R, E, A>
   <R, E, A, R2, X>(
     acquire: Effect<R, E, A>,
-    release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect<R2, never, X>
+    options: {
+      readonly release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect<R2, never, X>
+      readonly interruptable?: false | undefined
+    }
+  ): Effect<Scope.Scope | R | R2, E, A>
+  <R, E, A, R2, X>(
+    acquire: Effect<R, E, A>,
+    options: {
+      readonly release: (exit: Exit.Exit<unknown, unknown>) => Effect<R2, never, X>
+      readonly interruptable: true
+    }
   ): Effect<Scope.Scope | R | R2, E, A>
 }
-```
-
-Added in v1.0.0
-
-## acquireReleaseInterruptible
-
-This function is a variant of `acquireRelease` that allows the `acquire`
-`Effect` value to be interruptible.
-
-Since the `acquire` `Effect` value could be interrupted after partially
-acquiring resources, the `release` `Effect` value is not allowed to access
-the resource produced by `acquire` and must independently determine what
-finalization, if any, needs to be performed (e.g. by examining in memory
-state).
-
-Additionally, the `release` `Effect` value may depend on the `Exit` value
-specified when the scope is closed.
-
-**Signature**
-
-```ts
-export declare const acquireReleaseInterruptible: <R, E, A, R2, X>(
-  acquire: Effect<R, E, A>,
-  release: (exit: Exit.Exit<unknown, unknown>) => Effect<R2, never, X>
-) => Effect<Scope.Scope | R | R2, E, A>
 ```
 
 Added in v1.0.0
@@ -670,14 +659,16 @@ and ignored.
 
 ```ts
 export declare const acquireUseRelease: {
-  <A, R2, E2, A2, R3, X>(
-    use: (a: A) => Effect<R2, E2, A2>,
-    release: (a: A, exit: Exit.Exit<E2, A2>) => Effect<R3, never, X>
-  ): <R, E>(acquire: Effect<R, E, A>) => Effect<R2 | R3 | R, E2 | E, A2>
+  <A, R2, E2, A2, R3, X>(options: {
+    readonly use: (a: A) => Effect<R2, E2, A2>
+    readonly release: (a: A, exit: Exit.Exit<E2, A2>) => Effect<R3, never, X>
+  }): <R, E>(acquire: Effect<R, E, A>) => Effect<R2 | R3 | R, E2 | E, A2>
   <R, E, A, R2, E2, A2, R3, X>(
     acquire: Effect<R, E, A>,
-    use: (a: A) => Effect<R2, E2, A2>,
-    release: (a: A, exit: Exit.Exit<E2, A2>) => Effect<R3, never, X>
+    options: {
+      readonly use: (a: A) => Effect<R2, E2, A2>
+      readonly release: (a: A, exit: Exit.Exit<E2, A2>) => Effect<R3, never, X>
+    }
   ): Effect<R | R2 | R3, E | E2, A2>
 }
 ```

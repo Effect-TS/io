@@ -338,22 +338,26 @@ export const withFiberRuntime = <R, E, A>(
 /* @internal */
 export const acquireUseRelease = dual<
   <A, R2, E2, A2, R3, X>(
-    use: (a: A) => Effect.Effect<R2, E2, A2>,
-    release: (a: A, exit: Exit.Exit<E2, A2>) => Effect.Effect<R3, never, X>
+    options: {
+      readonly use: (a: A) => Effect.Effect<R2, E2, A2>
+      readonly release: (a: A, exit: Exit.Exit<E2, A2>) => Effect.Effect<R3, never, X>
+    }
   ) => <R, E>(acquire: Effect.Effect<R, E, A>) => Effect.Effect<R | R2 | R3, E | E2, A2>,
   <R, E, A, R2, E2, A2, R3, X>(
     acquire: Effect.Effect<R, E, A>,
-    use: (a: A) => Effect.Effect<R2, E2, A2>,
-    release: (a: A, exit: Exit.Exit<E2, A2>) => Effect.Effect<R3, never, X>
+    options: {
+      readonly use: (a: A) => Effect.Effect<R2, E2, A2>
+      readonly release: (a: A, exit: Exit.Exit<E2, A2>) => Effect.Effect<R3, never, X>
+    }
   ) => Effect.Effect<R | R2 | R3, E | E2, A2>
 >(
-  3,
-  (acquire, use, release) =>
+  2,
+  (acquire, options) =>
     uninterruptibleMask((restore) =>
       flatMap(acquire, (a) =>
-        flatMap(exit(suspend(() => restore(use(a)))), (exit) =>
+        flatMap(exit(suspend(() => restore(options.use(a)))), (exit) =>
           pipe(
-            suspend(() => release(a, exit)),
+            suspend(() => options.release(a, exit)),
             matchCauseEffect(
               (cause) => {
                 switch (exit._tag) {
@@ -1523,8 +1527,10 @@ export const fiberRefLocally: {
   flatMap(
     acquireUseRelease(
       zipLeft(fiberRefGet(self), fiberRefSet(self, value)),
-      () => step(use),
-      (oldValue) => fiberRefSet(self, oldValue)
+      {
+        use: () => step(use),
+        release: (oldValue) => fiberRefSet(self, oldValue)
+      }
     ),
     (res) => {
       if (res._tag === "Blocked") {

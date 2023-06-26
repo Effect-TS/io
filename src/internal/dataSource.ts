@@ -63,7 +63,11 @@ export const around = dual<
   ) => RequestResolver.RequestResolver<A, R | R2 | R3>
 >(3, (self, before, after) =>
   new core.RequestResolverImpl(
-    (requests) => Effect.acquireUseRelease(before, () => self.runAll(requests), after),
+    (requests) =>
+      Effect.acquireUseRelease(before, {
+        use: () => self.runAll(requests),
+        release: after
+      }),
     Chunk.make("Around", self, before, after)
   ))
 

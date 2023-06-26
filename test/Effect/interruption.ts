@@ -53,8 +53,10 @@ describe.concurrent("Effect", () => {
           pipe(
             Effect.acquireUseRelease(
               pipe(Deferred.succeed(deferred, void 0), Effect.zipLeft(Deferred.await(awaiter))),
-              () => Effect.unit,
-              () => Effect.unit
+              {
+                use: () => Effect.unit,
+                release: () => Effect.unit
+              }
             ),
             Effect.forkDaemon
           )
@@ -74,7 +76,10 @@ describe.concurrent("Effect", () => {
   it.effect("acquireUseRelease - use is interruptible", () =>
     Effect.gen(function*($) {
       const fiber = yield* $(
-        pipe(Effect.acquireUseRelease(Effect.unit, () => Effect.never, () => Effect.unit), Effect.fork)
+        pipe(
+          Effect.acquireUseRelease(Effect.unit, { use: () => Effect.never, release: () => Effect.unit }),
+          Effect.fork
+        )
       )
       const result = yield* $(Fiber.interrupt(fiber))
       assert.isTrue(Exit.isInterrupted(result))
@@ -86,8 +91,10 @@ describe.concurrent("Effect", () => {
       const fiber = yield* $(
         Effect.acquireUseRelease(
           Effect.unit,
-          () => pipe(Deferred.succeed(deferred1, void 0), Effect.zipRight(Effect.never)),
-          () => pipe(Deferred.succeed(deferred2, void 0), Effect.zipRight(Effect.unit))
+          {
+            use: () => pipe(Deferred.succeed(deferred1, void 0), Effect.zipRight(Effect.never)),
+            release: () => pipe(Deferred.succeed(deferred2, void 0), Effect.zipRight(Effect.unit))
+          }
         ),
         Effect.fork
       )
@@ -108,8 +115,10 @@ describe.concurrent("Effect", () => {
         pipe(
           Effect.acquireUseRelease(
             pipe(Deferred.succeed(deferred1, void 0), Effect.zipRight(Deferred.await(deferred2))),
-            () => Effect.unit,
-            () => Deferred.await(deferred3)
+            {
+              use: () => Effect.unit,
+              release: () => Deferred.await(deferred3)
+            }
           ),
           Effect.disconnect,
           Effect.fork
@@ -123,7 +132,7 @@ describe.concurrent("Effect", () => {
   it.effect("acquireUseRelease disconnect use is interruptible", () =>
     Effect.gen(function*($) {
       const fiber = yield* $(
-        Effect.acquireUseRelease(Effect.unit, () => Effect.never, () => Effect.unit),
+        Effect.acquireUseRelease(Effect.unit, { use: () => Effect.never, release: () => Effect.unit }),
         Effect.disconnect,
         Effect.fork
       )
@@ -138,8 +147,10 @@ describe.concurrent("Effect", () => {
         pipe(
           Effect.acquireUseRelease(
             Effect.unit,
-            () => pipe(Deferred.succeed(deferred1, void 0), Effect.zipRight(Effect.never)),
-            () => pipe(Deferred.succeed(deferred2, void 0), Effect.zipRight(Effect.unit))
+            {
+              use: () => pipe(Deferred.succeed(deferred1, void 0), Effect.zipRight(Effect.never)),
+              release: () => pipe(Deferred.succeed(deferred2, void 0), Effect.zipRight(Effect.unit))
+            }
           ),
           Effect.disconnect,
           Effect.fork
@@ -434,12 +445,15 @@ describe.concurrent("Effect", () => {
         pipe(
           withLatch((release1) =>
             pipe(
-              Effect.acquireUseRelease(release1, () =>
-                pipe(
-                  await2,
-                  Effect.zipRight(Effect.sleep(Duration.millis(10))),
-                  Effect.zipRight(Ref.set(ref, true))
-                ), () => Effect.unit),
+              Effect.acquireUseRelease(release1, {
+                use: () =>
+                  pipe(
+                    await2,
+                    Effect.zipRight(Effect.sleep(Duration.millis(10))),
+                    Effect.zipRight(Ref.set(ref, true))
+                  ),
+                release: () => Effect.unit
+              }),
               Effect.uninterruptible,
               Effect.fork
             )
@@ -457,13 +471,16 @@ describe.concurrent("Effect", () => {
       const latch2 = yield* $(Deferred.make<never, void>())
       const ref = yield* $(Ref.make(false))
       const fiber = yield* $(
-        Effect.acquireUseRelease(Deferred.succeed(latch1, void 0), () =>
-          pipe(
-            Deferred.await(latch2),
-            Effect.zipRight(Effect.sleep(Duration.millis(10))),
-            Effect.zipRight(Ref.set(ref, true)),
-            Effect.asUnit
-          ), () => Effect.unit),
+        Effect.acquireUseRelease(Deferred.succeed(latch1, void 0), {
+          use: () =>
+            pipe(
+              Deferred.await(latch2),
+              Effect.zipRight(Effect.sleep(Duration.millis(10))),
+              Effect.zipRight(Ref.set(ref, true)),
+              Effect.asUnit
+            ),
+          release: () => Effect.unit
+        }),
         Effect.uninterruptible,
         Effect.fork
       )

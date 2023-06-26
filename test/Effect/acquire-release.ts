@@ -13,7 +13,10 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const release = yield* $(Ref.make(false))
       const result = yield* $(
-        Effect.acquireUseRelease(Effect.succeed(42), (n) => Effect.succeed(n + 1), () => Ref.set(release, true))
+        Effect.acquireUseRelease(Effect.succeed(42), {
+          use: (n) => Effect.succeed(n + 1),
+          release: () => Ref.set(release, true)
+        })
       )
       const released = yield* $(Ref.get(release))
       assert.strictEqual(result, 43)
@@ -23,7 +26,10 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const release = yield* $(Ref.make(false))
       const result = yield* $(
-        Effect.acquireUseRelease(Effect.succeed(42), (n) => Effect.succeed(n + 1), () => Ref.set(release, true)),
+        Effect.acquireUseRelease(Effect.succeed(42), {
+          use: (n) => Effect.succeed(n + 1),
+          release: () => Ref.set(release, true)
+        }),
         Effect.disconnect
       )
       const released = yield* $(Ref.get(release))
@@ -34,7 +40,10 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const releaseDied = Cause.RuntimeException("release died")
       const exit = yield* $(
-        Effect.acquireUseRelease(Effect.succeed(42), () => Effect.fail("use failed"), () => Effect.die(releaseDied)),
+        Effect.acquireUseRelease(Effect.succeed(42), {
+          use: () => Effect.fail("use failed"),
+          release: () => Effect.die(releaseDied)
+        }),
         Effect.exit
       )
       const result = yield* $(
@@ -48,7 +57,10 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const releaseDied = Cause.RuntimeException("release died")
       const exit = yield* $(
-        Effect.acquireUseRelease(Effect.succeed(42), () => Effect.fail("use failed"), () => Effect.die(releaseDied)),
+        Effect.acquireUseRelease(Effect.succeed(42), {
+          use: () => Effect.fail("use failed"),
+          release: () => Effect.die(releaseDied)
+        }),
         Effect.disconnect,
         Effect.exit
       )
@@ -65,13 +77,12 @@ describe.concurrent("Effect", () => {
       const release = yield* $(Ref.make(false))
       const exit = yield* $(
         pipe(
-          Effect.acquireUseRelease(
-            Effect.succeed(42),
-            (): Effect.Effect<never, unknown, unknown> => {
+          Effect.acquireUseRelease(Effect.succeed(42), {
+            use: (): Effect.Effect<never, unknown, unknown> => {
               throw useDied
             },
-            () => Ref.set(release, true)
-          ),
+            release: () => Ref.set(release, true)
+          }),
           Effect.disconnect,
           Effect.exit
         )

@@ -1939,12 +1939,14 @@ export const useSpan: {
           )
       )
     ),
-    evaluate,
-    (span, exit) =>
-      core.flatMap(
-        Clock.clockWith((clock) => clock.currentTimeMillis),
-        (endTime) => core.sync(() => span.end(endTime, exit))
-      )
+    {
+      use: evaluate,
+      release: (span, exit) =>
+        core.flatMap(
+          Clock.clockWith((clock) => clock.currentTimeMillis),
+          (endTime) => core.sync(() => span.end(endTime, exit))
+        )
+    }
   )
 }
 

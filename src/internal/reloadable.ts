@@ -48,7 +48,7 @@ export const auto = <Out extends Context.Tag<any, any>, In, E, R>(
             _schedule.schedule_Effect(policy),
             fiberRuntime.forkDaemon
           ),
-          core.interruptFiber
+          { release: core.interruptFiber }
         )
       )
     )

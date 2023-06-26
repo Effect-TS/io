@@ -151,7 +151,7 @@ export const toScoped = <Key, Error, Value>(
     ([value]) =>
       fiberRuntime.acquireRelease(
         core.as(core.sync(() => MutableRef.incrementAndGet(self.ownerCount)), value),
-        () => releaseOwner(self)
+        { release: () => releaseOwner(self) }
       )
   )
 
@@ -608,5 +608,5 @@ const buildWith = <Key, Environment, Error, Value>(
           )
         )
     ),
-    (cache) => cache.invalidateAll()
+    { release: (cache) => cache.invalidateAll() }
   )

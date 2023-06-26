@@ -1071,7 +1071,7 @@ class HubImpl<A> implements Hub.Hub<A> {
           ),
           (tuple) => tuple[0].addFinalizer(() => tuple[1].shutdown())
         ),
-        (tuple, exit) => tuple[0].close(exit)
+        { release: (tuple, exit) => tuple[0].close(exit) }
       ),
       (tuple) => tuple[1]
     )

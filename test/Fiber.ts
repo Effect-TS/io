@@ -112,8 +112,10 @@ describe.concurrent("Fiber", () => {
               release,
               Effect.zipRight(Effect.unit)
             ),
-            () => Effect.never,
-            (_, __) => Ref.set(ref, true)
+            {
+              use: () => Effect.never,
+              release: () => Ref.set(ref, true)
+            }
           ),
           Effect.fork
         )

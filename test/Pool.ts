@@ -19,7 +19,7 @@ describe("Pool", () => {
       const count = yield* $(Ref.make(0))
       const get = Effect.acquireRelease(
         Ref.updateAndGet(count, (n) => n + 1),
-        () => Ref.update(count, (n) => n - 1)
+        { release: () => Ref.update(count, (n) => n - 1) }
       )
       yield* $(Pool.make(get, 10))
       yield* $(Effect.repeatUntil(Ref.get(count), (n) => n === 10))
@@ -32,7 +32,7 @@ describe("Pool", () => {
       const count = yield* $(Ref.make(0))
       const get = Effect.acquireRelease(
         Ref.updateAndGet(count, (n) => n + 1),
-        () => Ref.update(count, (n) => n - 1)
+        { release: () => Ref.update(count, (n) => n - 1) }
       )
       const scope = yield* $(Scope.make())
       yield* $(Scope.extend(Pool.make(get, 10), scope))
@@ -47,7 +47,7 @@ describe("Pool", () => {
       const count = yield* $(Ref.make(0))
       const get = Effect.acquireRelease(
         Ref.updateAndGet(count, (n) => n + 1),
-        () => Ref.update(count, (n) => n - 1)
+        { release: () => Ref.update(count, (n) => n - 1) }
       )
       const pool = yield* $(Pool.make(get, 10))
       yield* $(Effect.repeatUntil(Ref.get(count), (n) => n === 10))
@@ -63,7 +63,7 @@ describe("Pool", () => {
           Ref.updateAndGet(count, (n) => n + 1),
           Effect.fail
         ),
-        () => Ref.update(count, (n) => n - 1)
+        { release: () => Ref.update(count, (n) => n - 1) }
       )
       const pool = yield* $(Pool.make(get, 10))
       yield* $(Effect.repeatUntil(Ref.get(count), (n) => n === 10))
@@ -76,7 +76,7 @@ describe("Pool", () => {
       const count = yield* $(Ref.make(0))
       const get = Effect.acquireRelease(
         Ref.updateAndGet(count, (n) => n + 1),
-        () => Ref.update(count, (n) => n - 1)
+        { release: () => Ref.update(count, (n) => n - 1) }
       )
       const pool = yield* $(Pool.make(get, 10))
       yield* $(Effect.repeatUntil(Ref.get(count), (n) => n === 10))
@@ -94,7 +94,7 @@ describe("Pool", () => {
       const count = yield* $(Ref.make(0))
       const get = Effect.acquireRelease(
         Ref.updateAndGet(count, (n) => n + 1),
-        () => Ref.update(count, (n) => n - 1)
+        { release: () => Ref.update(count, (n) => n - 1) }
       )
       const pool = yield* $(Pool.make(get, 10))
       yield* $(Effect.repeatN(99)(Effect.scoped(Pool.get(pool))))
@@ -107,7 +107,7 @@ describe("Pool", () => {
       const count = yield* $(Ref.make(0))
       const get = Effect.acquireRelease(
         Ref.updateAndGet(count, (n) => n + 1),
-        () => Ref.update(count, (n) => n - 1)
+        { release: () => Ref.update(count, (n) => n - 1) }
       )
       const pool = yield* $(Pool.make(get, 10))
       yield* $(Effect.repeatUntil(Ref.get(count), (n) => n === 10))
@@ -124,7 +124,7 @@ describe("Pool", () => {
       const finalized = yield* $(Ref.make(0))
       const get = Effect.acquireRelease(
         Ref.updateAndGet(allocated, (n) => n + 1),
-        () => Ref.update(finalized, (n) => n + 1)
+        { release: () => Ref.update(finalized, (n) => n + 1) }
       )
       const pool = yield* $(Pool.make(get, 2))
       yield* $(Effect.repeatUntil(Ref.get(allocated), (n) => n === 2))
@@ -160,7 +160,7 @@ describe("Pool", () => {
           Ref.updateAndGet(count, (n) => n + 1),
           Effect.flatMap(cond)
         ),
-        () => Ref.update(count, (n) => n - 1)
+        { release: () => Ref.update(count, (n) => n - 1) }
       )
       const pool = yield* $(Pool.make(get, 10))
       yield* $(Effect.repeatUntil(Ref.get(count), (n) => n === 10))
@@ -174,7 +174,7 @@ describe("Pool", () => {
       const count = yield* $(Ref.make(0))
       const get = Effect.acquireRelease(
         Ref.updateAndGet(count, (n) => n + 1),
-        () => Ref.update(count, (n) => n - 1)
+        { release: () => Ref.update(count, (n) => n - 1) }
       )
       const pool = yield* $(Pool.makeWithTTL(get, 10, 15, Duration.seconds(60)))
       yield* $(
@@ -199,7 +199,7 @@ describe("Pool", () => {
       const count = yield* $(Ref.make(0))
       const get = Effect.acquireRelease(
         Ref.updateAndGet(count, (n) => n + 1),
-        () => Ref.update(count, (n) => n - 1)
+        { release: () => Ref.update(count, (n) => n - 1) }
       )
       const scope = yield* $(Scope.make())
       const pool = yield* $(Scope.extend(Pool.make(get, 10), scope))
@@ -218,7 +218,7 @@ describe("Pool", () => {
       const count = yield* $(Ref.make(0))
       const get = Effect.acquireRelease(
         Ref.updateAndGet(count, (n) => n + 1),
-        () => Ref.update(count, (n) => n - 1)
+        { release: () => Ref.update(count, (n) => n - 1) }
       )
       const fiberId = yield* $(Effect.fiberId)
       const pool = yield* $(Pool.make(get, 10))

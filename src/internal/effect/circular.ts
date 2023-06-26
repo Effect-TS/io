@@ -99,12 +99,6 @@ export const unsafeMakeSemaphore = (leases: number) => {
 export const makeSemaphore = (permits: number) => core.sync(() => unsafeMakeSemaphore(permits))
 
 /** @internal */
-export const acquireReleaseInterruptible = <R, E, A, R2, X>(
-  acquire: Effect.Effect<R, E, A>,
-  release: (exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>
-): Effect.Effect<R | R2 | Scope.Scope, E, A> => fiberRuntime.ensuring(acquire, fiberRuntime.addFinalizer(release))
-
-/** @internal */
 export const awaitAllChildren = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
   ensuringChildren(self, fiberRuntime.fiberAwaitAll)
 
