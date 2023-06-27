@@ -1019,14 +1019,6 @@ export const recurUntilEffect: <Env, A>(f: (a: A) => Effect.Effect<Env, never, b
   internal.recurUntilEffect
 
 /**
- * A schedule that recurs for until the predicate is equal.
- *
- * @since 1.0.0
- * @category utils
- */
-export const recurUntilEquals: <A>(value: A) => Schedule<never, A, A> = internal.recurUntilEquals
-
-/**
  * A schedule that recurs for until the input value becomes applicable to
  * partial function and then map that value with given function.
  *

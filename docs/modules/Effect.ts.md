@@ -337,7 +337,6 @@ Added in v1.0.0
   - [repeatOrElse](#repeatorelse)
   - [repeatUntil](#repeatuntil)
   - [repeatUntilEffect](#repeatuntileffect)
-  - [repeatUntilEquals](#repeatuntilequals)
   - [repeatWhile](#repeatwhile)
   - [repeatWhileEffect](#repeatwhileeffect)
   - [repeatWhileEquals](#repeatwhileequals)
@@ -348,7 +347,6 @@ Added in v1.0.0
   - [retryOrElse](#retryorelse)
   - [retryUntil](#retryuntil)
   - [retryUntilEffect](#retryuntileffect)
-  - [retryUntilEquals](#retryuntilequals)
   - [retryWhile](#retrywhile)
   - [retryWhileEffect](#retrywhileeffect)
   - [retryWhileEquals](#retrywhileequals)
@@ -5374,22 +5372,6 @@ export declare const repeatUntilEffect: {
 
 Added in v1.0.0
 
-## repeatUntilEquals
-
-Repeats this effect until its value is equal to the specified value or
-until the first failure.
-
-**Signature**
-
-```ts
-export declare const repeatUntilEquals: {
-  <A>(value: A): <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(self: Effect<R, E, A>, value: A): Effect<R, E, A>
-}
-```
-
-Added in v1.0.0
-
 ## repeatWhile
 
 Repeats this effect while its value satisfies the specified effectful
@@ -5551,21 +5533,6 @@ predicate.
 export declare const retryUntilEffect: {
   <R1, E>(f: (e: E) => Effect<R1, never, boolean>): <R, A>(self: Effect<R, E, A>) => Effect<R1 | R, E, A>
   <R, E, A, R1>(self: Effect<R, E, A>, f: (e: E) => Effect<R1, never, boolean>): Effect<R | R1, E, A>
-}
-```
-
-Added in v1.0.0
-
-## retryUntilEquals
-
-Retries this effect until its error is equal to the specified error.
-
-**Signature**
-
-```ts
-export declare const retryUntilEquals: {
-  <E>(e: E): <R, A>(self: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(self: Effect<R, E, A>, e: E): Effect<R, E, A>
 }
 ```
 

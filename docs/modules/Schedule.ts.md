@@ -111,7 +111,6 @@ Added in v1.0.0
   - [reconsiderEffect](#reconsidereffect)
   - [recurUntil](#recuruntil)
   - [recurUntilEffect](#recuruntileffect)
-  - [recurUntilEquals](#recuruntilequals)
   - [recurUntilOption](#recuruntiloption)
   - [recurUpTo](#recurupto)
   - [recurWhile](#recurwhile)
@@ -1661,18 +1660,6 @@ A schedule that recurs for until the predicate evaluates to true.
 
 ```ts
 export declare const recurUntilEffect: <Env, A>(f: (a: A) => Effect.Effect<Env, never, boolean>) => Schedule<Env, A, A>
-```
-
-Added in v1.0.0
-
-## recurUntilEquals
-
-A schedule that recurs for until the predicate is equal.
-
-**Signature**
-
-```ts
-export declare const recurUntilEquals: <A>(value: A) => Schedule<never, A, A>
 ```
 
 Added in v1.0.0

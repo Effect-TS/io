@@ -41,19 +41,6 @@ describe.concurrent("Effect", () => {
       const result = yield* $(Ref.get(ref))
       assert.strictEqual(result, 1)
     }))
-  it.effect("repeatUntilEquals - repeats until result is equal to predicate", () =>
-    Effect.gen(function*($) {
-      const ref = yield* $(Ref.make(0))
-      const queue = yield* $(Queue.unbounded<number>())
-      yield* $(Queue.offerAll(queue, [1, 2, 3, 4, 5, 6]))
-      yield* $(
-        Queue.take(queue),
-        Effect.zipLeft(Ref.update(ref, (n) => n + 1)),
-        Effect.repeatUntilEquals(5)
-      )
-      const result = yield* $(Ref.get(ref))
-      assert.strictEqual(result, 5)
-    }))
   it.effect("repeatUntilEffect - repeats until the effectful condition is true", () =>
     Effect.gen(function*($) {
       const input = yield* $(Ref.make(10))

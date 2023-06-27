@@ -1245,10 +1245,6 @@ export const recurUntilEffect = <Env, A>(
 ): Schedule.Schedule<Env, A, A> => untilInputEffect(identity<A>(), f)
 
 /** @internal */
-export const recurUntilEquals = <A>(value: A): Schedule.Schedule<never, A, A> =>
-  untilInput(identity<A>(), (input) => Equal.equals(input, value))
-
-/** @internal */
 export const recurUntilOption = <A, B>(pf: (a: A) => Option.Option<B>): Schedule.Schedule<never, A, Option.Option<B>> =>
   untilOutput(map(identity<A>(), pf), Option.isSome)
 
@@ -1966,12 +1962,6 @@ export const repeatUntilEffect_Effect: {
         ))))
 
 /** @internal */
-export const repeatUntilEquals_Effect = dual<
-  <A>(value: A) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
-  <R, E, A>(self: Effect.Effect<R, E, A>, value: A) => Effect.Effect<R, E, A>
->(2, (self, value) => repeatUntil_Effect(self, (a) => Equal.equals(a, value)))
-
-/** @internal */
 export const repeatWhile_Effect = dual<
   <A>(f: Predicate<A>) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
   <R, E, A>(self: Effect.Effect<R, E, A>, f: Predicate<A>) => Effect.Effect<R, E, A>
@@ -2096,12 +2086,6 @@ export const retryUntilEffect_Effect: {
           core.yieldNow,
           () => retryUntilEffect_Effect(self, f)
         ))))
-
-/** @internal */
-export const retryUntilEquals_Effect = dual<
-  <E>(e: E) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
-  <R, E, A>(self: Effect.Effect<R, E, A>, e: E) => Effect.Effect<R, E, A>
->(2, (self, e) => retryUntil_Effect(self, (_) => Equal.equals(_, e)))
 
 /** @internal */
 export const retryWhile_Effect = dual<

@@ -3170,18 +3170,6 @@ export const repeatUntilEffect: {
 } = _schedule.repeatUntilEffect_Effect
 
 /**
- * Repeats this effect until its value is equal to the specified value or
- * until the first failure.
- *
- * @since 1.0.0
- * @category utils
- */
-export const repeatUntilEquals: {
-  <A>(value: A): <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(self: Effect<R, E, A>, value: A): Effect<R, E, A>
-} = _schedule.repeatUntilEquals_Effect
-
-/**
  * Repeats this effect while its value satisfies the specified effectful
  * predicate or until the first failure.
  *
@@ -3284,17 +3272,6 @@ export const retryUntilEffect: {
   <R1, E>(f: (e: E) => Effect<R1, never, boolean>): <R, A>(self: Effect<R, E, A>) => Effect<R1 | R, E, A>
   <R, E, A, R1>(self: Effect<R, E, A>, f: (e: E) => Effect<R1, never, boolean>): Effect<R | R1, E, A>
 } = _schedule.retryUntilEffect_Effect
-
-/**
- * Retries this effect until its error is equal to the specified error.
- *
- * @since 1.0.0
- * @category utils
- */
-export const retryUntilEquals: {
-  <E>(e: E): <R, A>(self: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(self: Effect<R, E, A>, e: E): Effect<R, E, A>
-} = _schedule.retryUntilEquals_Effect
 
 /**
  * Retries this effect while its error satisfies the specified predicate.
