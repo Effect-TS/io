@@ -3616,7 +3616,7 @@ export const labelMetrics: {
  * @since 1.0.0
  * @category utils
  */
-export const labelMetricSet: {
+export const labelMetricsSet: {
   (labels: HashSet.HashSet<MetricLabel.MetricLabel>): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
   <R, E, A>(self: Effect<R, E, A>, labels: HashSet.HashSet<MetricLabel.MetricLabel>): Effect<R, E, A>
 } = effect.labelMetricsSet

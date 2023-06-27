@@ -305,8 +305,8 @@ Added in v1.0.0
   - [head](#head)
   - [ignore](#ignore)
   - [ignoreLogged](#ignorelogged)
-  - [labelMetricSet](#labelmetricset)
   - [labelMetrics](#labelmetrics)
+  - [labelMetricsSet](#labelmetricsset)
   - [locally](#locally)
   - [locallyScoped](#locallyscoped)
   - [locallyScopedWith](#locallyscopedwith)
@@ -4819,21 +4819,6 @@ export declare const ignoreLogged: <R, E, A>(self: Effect<R, E, A>) => Effect<R,
 
 Added in v1.0.0
 
-## labelMetricSet
-
-Tags each metric in this effect with the specific tag.
-
-**Signature**
-
-```ts
-export declare const labelMetricSet: {
-  (labels: HashSet.HashSet<MetricLabel.MetricLabel>): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(self: Effect<R, E, A>, labels: HashSet.HashSet<MetricLabel.MetricLabel>): Effect<R, E, A>
-}
-```
-
-Added in v1.0.0
-
 ## labelMetrics
 
 Tags each metric in this effect with the specific tag.
@@ -4844,6 +4829,21 @@ Tags each metric in this effect with the specific tag.
 export declare const labelMetrics: {
   (labels: Iterable<MetricLabel.MetricLabel>): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
   <R, E, A>(self: Effect<R, E, A>, labels: Iterable<MetricLabel.MetricLabel>): Effect<R, E, A>
+}
+```
+
+Added in v1.0.0
+
+## labelMetricsSet
+
+Tags each metric in this effect with the specific tag.
+
+**Signature**
+
+```ts
+export declare const labelMetricsSet: {
+  (labels: HashSet.HashSet<MetricLabel.MetricLabel>): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, labels: HashSet.HashSet<MetricLabel.MetricLabel>): Effect<R, E, A>
 }
 ```
 
