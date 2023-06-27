@@ -6,7 +6,6 @@ import * as RA from "@effect/data/ReadonlyArray"
 import * as Cause from "@effect/io/Cause"
 import * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal/core"
-import { forEachWithIndex } from "@effect/io/internal/effect"
 import { invokeWithInterrupt } from "@effect/io/internal/fiberRuntime"
 import { complete } from "@effect/io/internal/request"
 import type * as Request from "@effect/io/Request"
@@ -30,7 +29,7 @@ export const makeBatched = <R, A extends Request.Request<any, any>>(
   new core.RequestResolverImpl<R, A>(
     (requests) =>
       requests.length > 1 ?
-        Effect.forEachDiscard(requests, (block) =>
+        Effect.forEach(requests, (block) =>
           invokeWithInterrupt(
             run(
               block
@@ -38,7 +37,7 @@ export const makeBatched = <R, A extends Request.Request<any, any>>(
                 .map((_) => _.request)
             ),
             block
-          )) :
+          ), { discard: true }) :
         (requests.length === 1 ?
           run(
             requests[0]
@@ -184,9 +183,10 @@ export const fromFunction = <A extends Request.Request<never, any>>(
   f: (request: A) => Request.Request.Success<A>
 ): RequestResolver.RequestResolver<A> =>
   makeBatched((requests: Array<A>) =>
-    Effect.forEachDiscard(
+    Effect.forEach(
       requests,
-      (request) => complete(request, core.exitSucceed(f(request)) as any)
+      (request) => complete(request, core.exitSucceed(f(request)) as any),
+      { discard: true }
     )
   ).identified("FromFunction", f)
 
@@ -195,9 +195,10 @@ export const fromFunctionBatched = <A extends Request.Request<never, any>>(
   f: (chunk: Array<A>) => Array<Request.Request.Success<A>>
 ): RequestResolver.RequestResolver<A> =>
   makeBatched((as: Array<A>) =>
-    forEachWithIndex(
+    Effect.forEachWithIndex(
       f(as),
-      (res, i) => complete(as[i], core.exitSucceed(res) as any)
+      (res, i) => complete(as[i], core.exitSucceed(res) as any),
+      { discard: true }
     )
   ).identified("FromFunctionBatched", f)
 
@@ -206,9 +207,13 @@ export const fromFunctionEffect = <R, A extends Request.Request<any, any>>(
   f: (a: A) => Effect.Effect<R, Request.Request.Error<A>, Request.Request.Success<A>>
 ): RequestResolver.RequestResolver<A, R> =>
   makeBatched((requests: Array<A>) =>
-    Effect.forEachParDiscard(
+    Effect.forEach(
       requests,
-      (a) => Effect.flatMap(Effect.exit(f(a)), (e) => complete(a, e as any))
+      (a) => Effect.flatMap(Effect.exit(f(a)), (e) => complete(a, e as any)),
+      {
+        concurrency: "inherit",
+        discard: true
+      }
     )
   ).identified("FromFunctionEffect", f)
 

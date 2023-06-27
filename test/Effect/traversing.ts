@@ -126,117 +126,122 @@ describe.concurrent("Effect", () => {
 
       assert.deepStrictEqual(Exit.unannotate(result), Exit.die(Cause.IllegalArgumentException()))
     }))
-  it.effect("forEachDiscard - runs effects in order", () =>
+  it.effect("forEach/discard - runs effects in order", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(Chunk.empty<number>()))
-      yield* $([1, 2, 3, 4, 5], Effect.forEachDiscard((n) => Ref.update(ref, Chunk.prepend(n))))
+      yield* $([1, 2, 3, 4, 5], Effect.forEach((n) => Ref.update(ref, Chunk.prepend(n)), { discard: true }))
       const result = yield* $(Ref.get(ref), Effect.map(Chunk.reverse))
       assert.deepStrictEqual(result, Chunk.make(1, 2, 3, 4, 5))
     }))
-  it.effect("forEachDiscard - can be run twice", () =>
+  it.effect("forEach/discard - can be run twice", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(0))
-      const effect = pipe([1, 2, 3, 4, 5], Effect.forEachDiscard((n) => Ref.update(ref, (_) => _ + n)))
+      const effect = pipe([1, 2, 3, 4, 5], Effect.forEach((n) => Ref.update(ref, (_) => _ + n), { discard: true }))
       yield* $(effect)
       yield* $(effect)
       const result = yield* $(Ref.get(ref))
       assert.strictEqual(result, 30)
     }))
-  it.effect("forEachPar - runs single task", () =>
+  it.effect("forEach/concurrency - runs single task", () =>
     Effect.gen(function*($) {
-      const result = yield* $([2], Effect.forEachPar((n) => Effect.succeed(n * 2)))
+      const result = yield* $([2], Effect.forEach((n) => Effect.succeed(n * 2), { concurrency: "inherit" }))
       assert.deepStrictEqual(Array.from(result), [4])
     }))
-  it.effect("forEachPar - runs two tasks", () =>
+  it.effect("forEach/concurrency - runs two tasks", () =>
     Effect.gen(function*($) {
-      const result = yield* $([2, 3], Effect.forEachPar((n) => Effect.succeed(n * 2)))
+      const result = yield* $([2, 3], Effect.forEach((n) => Effect.succeed(n * 2), { concurrency: "inherit" }))
       assert.deepStrictEqual(Array.from(result), [4, 6])
     }))
-  it.effect("forEachPar - runs many tasks", () =>
+  it.effect("forEach/concurrency - runs many tasks", () =>
     Effect.gen(function*($) {
       const array = Array.from({ length: 100 }, (_, i) => i + 1)
-      const result = yield* $(array, Effect.forEachPar((n) => Effect.succeed(n * 2)))
+      const result = yield* $(array, Effect.forEach((n) => Effect.succeed(n * 2), { concurrency: "inherit" }))
       assert.deepStrictEqual(Array.from(result), array.map((n) => n * 2))
     }))
-  it.effect("forEachPar - runs a task that fails", () =>
+  it.effect("forEach/concurrency - runs a task that fails", () =>
     Effect.gen(function*($) {
       const result = yield* $(
         Array.from({ length: 10 }, (_, i) => i + 1),
-        Effect.forEachPar((n) => n === 5 ? Effect.fail("boom") : Effect.succeed(n * 2)),
+        Effect.forEach((n) => n === 5 ? Effect.fail("boom") : Effect.succeed(n * 2), { concurrency: "inherit" }),
         Effect.flip
       )
       assert.strictEqual(result, "boom")
     }))
-  it.effect("forEachPar - runs two failed tasks", () =>
+  it.effect("forEach/concurrency - runs two failed tasks", () =>
     Effect.gen(function*($) {
       const result = yield* $(
         Array.from({ length: 10 }, (_, i) => i + 1),
-        Effect.forEachPar((n) =>
+        Effect.forEach((n) =>
           n === 5
             ? Effect.fail("boom1")
             : n === 8
             ? Effect.fail("boom2")
-            : Effect.succeed(n * 2)
-        ),
+            : Effect.succeed(n * 2), { concurrency: "inherit" }),
         Effect.flip
       )
       assert.isTrue(result === "boom1" || result === "boom2")
     }))
-  it.effect("forEachPar - runs a task that dies", () =>
+  it.effect("forEach/concurrency - runs a task that dies", () =>
     Effect.gen(function*($) {
       const result = yield* $(
         Array.from({ length: 10 }, (_, i) => i + 1),
-        Effect.forEachPar((n) => n === 5 ? Effect.dieMessage("boom") : Effect.succeed(n * 2)),
+        Effect.forEach((n) => n === 5 ? Effect.dieMessage("boom") : Effect.succeed(n * 2), { concurrency: "inherit" }),
         Effect.exit
       )
       assert.isTrue(Exit.isFailure(result) && Cause.isDie(result.i0))
     }))
-  it.effect("forEachPar - runs a task that is interrupted", () =>
+  it.effect("forEach/concurrency - runs a task that is interrupted", () =>
     Effect.gen(function*($) {
       const result = yield* $(
         Array.from({ length: 10 }, (_, i) => i + 1),
-        Effect.forEachPar((n) => n === 5 ? Effect.interrupt : Effect.succeed(n * 2)),
+        Effect.forEach((n) => n === 5 ? Effect.interrupt : Effect.succeed(n * 2), { concurrency: "inherit" }),
         Effect.exit
       )
       assert.isTrue(Exit.isInterrupted(result))
     }))
-  it.effect("forEachPar - runs a task that throws an unsuspended exception", () =>
+  it.effect("forEach/concurrency - runs a task that throws an unsuspended exception", () =>
     Effect.gen(function*($) {
       const result = yield* $(
         [1],
-        Effect.forEachPar((n) =>
+        Effect.forEach((n) =>
           Effect.sync(() => {
             throw new Error(n.toString())
-          })
-        ),
+          }), { concurrency: "inherit" }),
         Effect.exit
       )
       assert.deepStrictEqual(Exit.unannotate(result), Exit.die(new Error("1")))
     }))
-  it.effect("forEachPar - returns results in the same order", () =>
+  it.effect("forEach/concurrency - returns results in the same order", () =>
     Effect.gen(function*($) {
-      const result = yield* $(["1", "2", "3"], Effect.forEachPar((s) => Effect.sync(() => Number.parseInt(s))))
+      const result = yield* $(
+        ["1", "2", "3"],
+        Effect.forEach((s) => Effect.sync(() => Number.parseInt(s)), { concurrency: "inherit" })
+      )
       assert.deepStrictEqual(Array.from(result), [1, 2, 3])
     }))
-  it.effect("forEachPar - runs effects in parallel", () =>
+  it.effect("forEach/concurrency - runs effects in parallel", () =>
     Effect.gen(function*($) {
       const deferred = yield* $(Deferred.make<never, void>())
       yield* $(
-        pipe([Effect.never, Deferred.succeed(deferred, void 0)], Effect.forEachPar(identity), Effect.fork)
+        pipe(
+          [Effect.never, Deferred.succeed(deferred, void 0)],
+          Effect.forEach(identity, { concurrency: "inherit" }),
+          Effect.fork
+        )
       )
       const result = yield* $(Deferred.await(deferred))
       assert.isUndefined(result)
     }))
-  it.effect("forEachPar - propagates error", () =>
+  it.effect("forEach/concurrency - propagates error", () =>
     Effect.gen(function*($) {
       const result = yield* $(
         [1, 2, 3, 4, 5, 6],
-        Effect.forEachPar((n) => n % 2 !== 0 ? Effect.succeed(n) : Effect.fail("not odd")),
+        Effect.forEach((n) => n % 2 !== 0 ? Effect.succeed(n) : Effect.fail("not odd"), { concurrency: "inherit" }),
         Effect.flip
       )
       assert.strictEqual(result, "not odd")
     }))
-  it.effect("forEachPar - interrupts effects on first failure", () =>
+  it.effect("forEach/concurrency - interrupts effects on first failure", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(false))
       const deferred = yield* $(Deferred.make<never, void>())
@@ -246,45 +251,53 @@ describe.concurrent("Effect", () => {
         Effect.fail("C"),
         pipe(Deferred.await(deferred), Effect.zipRight(Ref.set(ref, true)), Effect.as(1))
       ]
-      const error = yield* $(actions, Effect.forEachPar(identity), Effect.flip)
+      const error = yield* $(actions, Effect.forEach(identity, { concurrency: "inherit" }), Effect.flip)
       const value = yield* $(Ref.get(ref))
       assert.strictEqual(error, "C")
       assert.isFalse(value)
     }))
-  it.effect("forEachPar - does not kill fiber when forked on the parent scope", () =>
+  it.effect("forEach/concurrency - does not kill fiber when forked on the parent scope", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(0))
       const fibers = yield* $(
         Array.from({ length: 100 }, (_, i) => i + 1),
-        Effect.forEachPar(() => pipe(Ref.update(ref, (_) => _ + 1), Effect.fork))
+        Effect.forEach(() => pipe(Ref.update(ref, (_) => _ + 1), Effect.fork), { concurrency: "inherit" })
       )
       yield* $(fibers, Effect.forEach(Fiber.await))
       const result = yield* $(Ref.get(ref))
       assert.strictEqual(result, 100)
     }))
-  it.effect("forEachPar - parallelism - returns the results in the appropriate order", () =>
+  it.effect("forEach/concurrency - parallelism - returns the results in the appropriate order", () =>
     Effect.gen(function*($) {
       const result = yield* $(
-        pipe([1, 2, 3], Effect.forEachPar((n) => Effect.succeed(n.toString())), Effect.withParallelism(2))
+        pipe(
+          [1, 2, 3],
+          Effect.forEach((n) => Effect.succeed(n.toString()), { concurrency: "inherit" }),
+          Effect.withParallelism(2)
+        )
       )
       assert.deepStrictEqual(Array.from(result), ["1", "2", "3"])
     }))
-  it.effect("forEachPar - parallelism - works on large lists", () =>
+  it.effect("forEach/concurrency - parallelism - works on large lists", () =>
     Effect.gen(function*($) {
       const parallelism = 10
       const array = Array.from({ length: 100000 }, (_, i) => i)
       const result = yield* $(
-        pipe(array, Effect.forEachPar((n) => Effect.succeed(n)), Effect.withParallelism(parallelism))
+        pipe(
+          array,
+          Effect.forEach((n) => Effect.succeed(n), { concurrency: "inherit" }),
+          Effect.withParallelism(parallelism)
+        )
       )
       assert.deepStrictEqual(Array.from(result), array)
     }))
-  it.effect("forEachPar - parallelism - runs effects in parallel", () =>
+  it.effect("forEach/concurrency - parallelism - runs effects in parallel", () =>
     Effect.gen(function*($) {
       const deferred = yield* $(Deferred.make<never, void>())
       yield* $(
         pipe(
           [Effect.never, Deferred.succeed(deferred, void 0)],
-          Effect.forEachPar(identity),
+          Effect.forEach(identity, { concurrency: "inherit" }),
           Effect.withParallelism(2),
           Effect.fork
         )
@@ -292,27 +305,32 @@ describe.concurrent("Effect", () => {
       const result = yield* $(Deferred.await(deferred))
       assert.isUndefined(result)
     }))
-  it.effect("forEachPar - parallelism - propagates error", () =>
+  it.effect("forEach/concurrency - parallelism - propagates error", () =>
     Effect.gen(function*($) {
       const result = yield* $(
         [1, 2, 3, 4, 5, 6],
-        Effect.forEachPar((n) => n % 2 !== 0 ? Effect.succeed(n) : Effect.fail("not odd")),
+        Effect.forEach((n) => n % 2 !== 0 ? Effect.succeed(n) : Effect.fail("not odd"), { concurrency: "inherit" }),
         Effect.withParallelism(4),
         Effect.either
       )
       assert.deepStrictEqual(result, Either.left("not odd"))
     }))
-  it.effect("forEachPar - parallelism - interrupts effects on first failure", () =>
+  it.effect("forEach/concurrency - parallelism - interrupts effects on first failure", () =>
     Effect.gen(function*($) {
       const actions = [
         Effect.never,
         Effect.succeed(1),
         Effect.fail("C")
       ]
-      const result = yield* $(actions, Effect.forEachPar(identity), Effect.withParallelism(4), Effect.either)
+      const result = yield* $(
+        actions,
+        Effect.forEach(identity, { concurrency: "inherit" }),
+        Effect.withParallelism(4),
+        Effect.either
+      )
       assert.deepStrictEqual(result, Either.left("C"))
     }))
-  it.effect("forEachParDiscard - accumulates errors", () =>
+  it.effect("forEach/concurrency+discard - accumulates errors", () =>
     Effect.gen(function*($) {
       const task = (
         started: Ref.Ref<number>,
@@ -335,29 +353,47 @@ describe.concurrent("Effect", () => {
       const trigger = yield* $(Deferred.make<never, void>())
       const result = yield* $(
         [1, 2, 3],
-        Effect.forEachParDiscard((n) => pipe(task(started, trigger, n), Effect.uninterruptible)),
+        Effect.forEach((n) => pipe(task(started, trigger, n), Effect.uninterruptible), {
+          concurrency: "inherit",
+          discard: true
+        }),
         Effect.matchCause(Cause.failures, () => Chunk.empty<number>())
       )
       assert.deepStrictEqual(Array.from(result), [1, 2, 3])
     }))
-  it.effect("forEachParDiscard - runs all effects", () =>
-    Effect.gen(function*($) {
-      const ref = yield* $(Ref.make(Chunk.empty<number>()))
-      yield* $([1, 2, 3, 4, 5], Effect.forEachParDiscard((n) => Ref.update(ref, Chunk.prepend(n))))
-      const result = yield* $(Ref.get(ref), Effect.map(Chunk.reverse))
-      assert.deepStrictEqual(Array.from(result), [1, 2, 3, 4, 5])
-    }))
-  it.effect("forEachParDiscard - completes on empty input", () =>
-    Effect.gen(function*($) {
-      const result = yield* $([], Effect.forEachParDiscard(() => Effect.unit))
-      assert.isUndefined(result)
-    }))
-  it.effect("forEachParDiscard - parallelism - runs all effects", () =>
+  it.effect("forEach/concurrency+discard - runs all effects", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(Chunk.empty<number>()))
       yield* $(
         [1, 2, 3, 4, 5],
-        Effect.forEachParDiscard((n) => Ref.update(ref, Chunk.prepend(n))),
+        Effect.forEach((n) => Ref.update(ref, Chunk.prepend(n)), {
+          concurrency: "inherit",
+          discard: true
+        })
+      )
+      const result = yield* $(Ref.get(ref), Effect.map(Chunk.reverse))
+      assert.deepStrictEqual(Array.from(result), [1, 2, 3, 4, 5])
+    }))
+  it.effect("forEach/concurrency+discard - completes on empty input", () =>
+    Effect.gen(function*($) {
+      const result = yield* $(
+        [],
+        Effect.forEach(() => Effect.unit, {
+          concurrency: "inherit",
+          discard: true
+        })
+      )
+      assert.isUndefined(result)
+    }))
+  it.effect("forEach/concurrency+discard - parallelism - runs all effects", () =>
+    Effect.gen(function*($) {
+      const ref = yield* $(Ref.make(Chunk.empty<number>()))
+      yield* $(
+        [1, 2, 3, 4, 5],
+        Effect.forEach((n) => Ref.update(ref, Chunk.prepend(n)), {
+          concurrency: "inherit",
+          discard: true
+        }),
         Effect.withParallelism(2)
       )
       const result = yield* $(Ref.get(ref), Effect.map(Chunk.reverse))

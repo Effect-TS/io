@@ -1411,7 +1411,7 @@ export const exists = dual<
     () => core.suspend(() => existsLoop(elements[Symbol.iterator](), f)),
     (n) =>
       core.matchEffect(
-        forEachConcurrency(elements, n, (a) =>
+        forEachParOptionalN(elements, n, (a) =>
           core.ifEffect(f(a), {
             onTrue: core.fail(_existsParFound),
             onFalse: core.unit
@@ -1471,7 +1471,7 @@ export const filter = dual<
         ),
       (n) =>
         core.map(
-          forEachConcurrency(
+          forEachParOptionalN(
             elements,
             n,
             (a) => core.map(predicate(a), (b) => (b ? Option.some(a) : Option.none()))
@@ -1482,32 +1482,82 @@ export const filter = dual<
   }
 )
 
-const forEachConcurrency = <R, E, A, B>(
-  iterable: Iterable<A>,
-  n: number | undefined,
-  f: (a: A) => Effect.Effect<R, E, B>
-) => n ? forEachParN(iterable, n, f) : forEachPar(iterable, f)
+// @ts-expect-error
+export const forEachOptions = dual<
+  {
+    <A, R, E, B>(f: (a: A) => Effect.Effect<R, E, B>, options?: {
+      readonly concurrency?: Concurrency.Concurrency
+      readonly discard?: false
+    }): (self: Iterable<A>) => Effect.Effect<R, E, ReadonlyArray<B>>
+    <A, R, E, B>(f: (a: A) => Effect.Effect<R, E, B>, options: {
+      readonly concurrency?: Concurrency.Concurrency
+      readonly discard: true
+    }): (self: Iterable<A>) => Effect.Effect<R, E, void>
+  },
+  {
+    <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>, options?: {
+      readonly concurrency?: Concurrency.Concurrency
+      readonly discard?: false
+    }): Effect.Effect<R, E, ReadonlyArray<B>>
+    <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>, options: {
+      readonly concurrency?: Concurrency.Concurrency
+      readonly discard: true
+    }): Effect.Effect<R, E, void>
+  }
+>((args) => isIterable(args[0]), (self, f, options) => {
+  if (options?.discard) {
+    return Concurrency.match(
+      options?.concurrency as Concurrency.Concurrency,
+      () => core.forEachDiscard(self, f),
+      () => forEachParDiscard(self, f),
+      (n) => forEachParNDiscard(self, n, f)
+    )
+  }
+
+  return Concurrency.match(
+    options?.concurrency as Concurrency.Concurrency,
+    () => core.forEach(self, f),
+    () => forEachPar(self, f),
+    (n) => forEachParN(self, n, f)
+  )
+})
 
 /* @internal */
-export const forEachExec = dual<
-  <R, E, A, B>(
-    f: (a: A) => Effect.Effect<R, E, B>,
-    strategy: ExecutionStrategy.ExecutionStrategy
-  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Array<B>>,
-  <R, E, A, B>(
-    elements: Iterable<A>,
-    f: (a: A) => Effect.Effect<R, E, B>,
-    strategy: ExecutionStrategy.ExecutionStrategy
-  ) => Effect.Effect<R, E, Array<B>>
->(3, (elements, f, strategy) =>
-  core.suspend(() =>
-    executionStrategy.match(
-      strategy,
-      () => core.forEach(elements, f),
-      () => pipe(forEachPar(elements, f), core.withParallelism("unbounded")),
-      (parallelism) => pipe(forEachPar(elements, f), core.withParallelism(parallelism))
+export const forEachOptionsWithIndex = dual<
+  {
+    <A, R, E, B>(f: (a: A, index: number) => Effect.Effect<R, E, B>, options?: {
+      readonly concurrency?: Concurrency.Concurrency
+      readonly discard?: false
+    }): (self: Iterable<A>) => Effect.Effect<R, E, ReadonlyArray<B>>
+    <A, R, E, B>(f: (a: A, index: number) => Effect.Effect<R, E, B>, options: {
+      readonly concurrency?: Concurrency.Concurrency
+      readonly discard: true
+    }): (self: Iterable<A>) => Effect.Effect<R, E, void>
+  },
+  {
+    <A, R, E, B>(self: Iterable<A>, f: (a: A, index: number) => Effect.Effect<R, E, B>, options?: {
+      readonly concurrency?: Concurrency.Concurrency
+      readonly discard?: false
+    }): Effect.Effect<R, E, ReadonlyArray<B>>
+    <A, R, E, B>(self: Iterable<A>, f: (a: A, index: number) => Effect.Effect<R, E, B>, options: {
+      readonly concurrency?: Concurrency.Concurrency
+      readonly discard: true
+    }): Effect.Effect<R, E, void>
+  }
+>(
+  (args) => isIterable(args[0]),
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A, i: number) => Effect.Effect<R, E, B>, options?: {
+    readonly concurrency?: Concurrency.Concurrency
+    readonly discard?: boolean
+  }) =>
+    core.suspend(() =>
+      forEachOptions(
+        Array.from(elements).map((a, i) => [a, i] as [A, number]),
+        ([a, i]) => f(a, i),
+        options as any
+      )
     )
-  ))
+)
 
 /* @internal */
 export const forEachPar = dual<
@@ -1757,33 +1807,11 @@ export const forEachParNDiscard = <A, R, E, _>(
       })
     })
 
-/* @internal */
-export const forEachParWithIndex = dual<
-  <R, E, A, B>(
-    f: (a: A, i: number) => Effect.Effect<R, E, B>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Array<B>>,
-  <R, E, A, B>(
-    elements: Iterable<A>,
-    f: (a: A, i: number) => Effect.Effect<R, E, B>
-  ) => Effect.Effect<R, E, Array<B>>
->(
-  2,
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A, i: number) => Effect.Effect<R, E, B>) =>
-    core.suspend(() =>
-      core.flatMap(core.sync<Array<B>>(() => []), (array) =>
-        core.map(
-          forEachParDiscard(
-            Array.from(elements).map((a, i) => [a, i] as [A, number]),
-            ([a, i]) =>
-              core.flatMap(core.suspend(() => f(a, i)), (b) =>
-                core.sync(() => {
-                  array[i] = b
-                }))
-          ),
-          () => array
-        ))
-    )
-)
+const forEachParOptionalN = <R, E, A, B>(
+  iterable: Iterable<A>,
+  n: number | undefined,
+  f: (a: A) => Effect.Effect<R, E, B>
+) => n ? forEachParN(iterable, n, f) : forEachPar(iterable, f)
 
 /* @internal */
 export const fork = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>> =>

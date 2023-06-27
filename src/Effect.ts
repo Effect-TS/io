@@ -35,7 +35,6 @@ import type { Config } from "@effect/io/Config"
 import type { ConfigError } from "@effect/io/Config/Error"
 import type { ConfigProvider } from "@effect/io/Config/Provider"
 import type * as Deferred from "@effect/io/Deferred"
-import type * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
 import type * as Exit from "@effect/io/Exit"
 import type * as Fiber from "@effect/io/Fiber"
 import type * as FiberId from "@effect/io/Fiber/Id"
@@ -1547,37 +1546,25 @@ export const flipWith: {
  * @category constructors
  */
 export const forEach: {
-  <A, R, E, B>(f: (a: A) => Effect<R, E, B>): (self: Iterable<A>) => Effect<R, E, Array<B>>
-  <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, E, Array<B>>
-} = core.forEach
-
-/**
- * @since 1.0.0
- * @category constructors
- */
-export const forEachDiscard: {
-  <A, R, E, B>(f: (a: A) => Effect<R, E, B>): (self: Iterable<A>) => Effect<R, E, void>
-  <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, E, void>
-} = core.forEachDiscard
-
-/**
- * Applies the function `f` to each element of the `Collection<A>` and returns
- * the result in a new `Arrat<B>` using the specified execution strategy.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const forEachExec: {
-  <R, E, A, B>(
+  <A, R, E, B>(
     f: (a: A) => Effect<R, E, B>,
-    strategy: ExecutionStrategy.ExecutionStrategy
-  ): (elements: Iterable<A>) => Effect<R, E, Array<B>>
-  <R, E, A, B>(
-    elements: Iterable<A>,
+    options?: { readonly concurrency?: Concurrency; readonly discard?: false }
+  ): (self: Iterable<A>) => Effect<R, E, ReadonlyArray<B>>
+  <A, R, E, B>(
     f: (a: A) => Effect<R, E, B>,
-    strategy: ExecutionStrategy.ExecutionStrategy
-  ): Effect<R, E, Array<B>>
-} = fiberRuntime.forEachExec
+    options: { readonly concurrency?: Concurrency; readonly discard: true }
+  ): (self: Iterable<A>) => Effect<R, E, void>
+  <A, R, E, B>(
+    self: Iterable<A>,
+    f: (a: A) => Effect<R, E, B>,
+    options?: { readonly concurrency?: Concurrency; readonly discard?: false }
+  ): Effect<R, E, ReadonlyArray<B>>
+  <A, R, E, B>(
+    self: Iterable<A>,
+    f: (a: A) => Effect<R, E, B>,
+    options: { readonly concurrency?: Concurrency; readonly discard: true }
+  ): Effect<R, E, void>
+} = fiberRuntime.forEachOptions
 
 /**
  * Same as `forEach`, except that the function `f` is supplied
@@ -1588,40 +1575,25 @@ export const forEachExec: {
  * @category traversing
  */
 export const forEachWithIndex: {
-  <A, R, E, B>(f: (a: A, i: number) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, E, Array<B>>
-  <A, R, E, B>(elements: Iterable<A>, f: (a: A, i: number) => Effect<R, E, B>): Effect<R, E, Array<B>>
-} = effect.forEachWithIndex
-
-/**
- * @since 1.0.0
- * @category constructors
- */
-export const forEachPar: {
-  <A, R, E, B>(f: (a: A) => Effect<R, E, B>): (self: Iterable<A>) => Effect<R, E, Array<B>>
-  <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, E, Array<B>>
-} = fiberRuntime.forEachPar
-
-/**
- * @since 1.0.0
- * @category constructors
- */
-export const forEachParDiscard: {
-  <A, R, E, _>(f: (a: A) => Effect<R, E, _>): (self: Iterable<A>) => Effect<R, E, void>
-  <A, R, E, _>(self: Iterable<A>, f: (a: A) => Effect<R, E, _>): Effect<R, E, void>
-} = fiberRuntime.forEachParDiscard
-
-/**
- * Same as `forEachPar`, except that the function `f` is supplied
- * a second argument that corresponds to the index (starting from 0)
- * of the current element being iterated over.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const forEachParWithIndex: {
-  <R, E, A, B>(f: (a: A, i: number) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, E, Array<B>>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A, i: number) => Effect<R, E, B>): Effect<R, E, Array<B>>
-} = fiberRuntime.forEachParWithIndex
+  <A, R, E, B>(
+    f: (a: A, index: number) => Effect<R, E, B>,
+    options?: { readonly concurrency?: Concurrency; readonly discard?: false }
+  ): (self: Iterable<A>) => Effect<R, E, ReadonlyArray<B>>
+  <A, R, E, B>(
+    f: (a: A, index: number) => Effect<R, E, B>,
+    options: { readonly concurrency?: Concurrency; readonly discard: true }
+  ): (self: Iterable<A>) => Effect<R, E, void>
+  <A, R, E, B>(
+    self: Iterable<A>,
+    f: (a: A, index: number) => Effect<R, E, B>,
+    options?: { readonly concurrency?: Concurrency; readonly discard?: false }
+  ): Effect<R, E, ReadonlyArray<B>>
+  <A, R, E, B>(
+    self: Iterable<A>,
+    f: (a: A, index: number) => Effect<R, E, B>,
+    options: { readonly concurrency?: Concurrency; readonly discard: true }
+  ): Effect<R, E, void>
+} = fiberRuntime.forEachOptionsWithIndex
 
 /**
  * Repeats this effect forever (until the first error).

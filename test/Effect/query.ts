@@ -59,7 +59,7 @@ const UserResolver = pipe(
   Resolver.makeBatched((requests: Array<UserRequest>) => {
     return Effect.flatMap(Requests, (r) => {
       r.count += requests.length
-      return counted(Effect.forEachDiscard(requests, (request) => delay(processRequest(request))))
+      return counted(Effect.forEach(requests, (request) => delay(processRequest(request)), { discard: true }))
     })
   }),
   Resolver.batchN(15),
@@ -74,7 +74,7 @@ export const getUserNameById = (id: number) => Effect.request(GetNameById({ id }
 
 export const getAllUserNames = pipe(
   getAllUserIds,
-  Effect.flatMap(Effect.forEachPar(getUserNameById)),
+  Effect.flatMap(Effect.forEach(getUserNameById, { concurrency: "inherit" })),
   Effect.onInterrupt(() => FiberRef.getWith(interrupts, (i) => Effect.sync(() => i.interrupts++)))
 )
 

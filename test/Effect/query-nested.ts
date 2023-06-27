@@ -137,10 +137,20 @@ describe.concurrent("Effect", () => {
       Effect.gen(function*($) {
         const parents = yield* $(getAllParents)
 
-        yield* $(Effect.forEachPar(parents, (parent) =>
-          Effect.flatMap(getChildren(parent.id), (children) =>
-            Effect.forEachPar(children, (child) =>
-              Effect.zipPar(getChildInfo(child.id), getChildExtra(child.id))))))
+        yield* $(Effect.forEach(
+          parents,
+          (parent) =>
+            Effect.flatMap(
+              getChildren(parent.id),
+              (children) =>
+                Effect.forEach(
+                  children,
+                  (child) => Effect.zipPar(getChildInfo(child.id), getChildExtra(child.id)),
+                  { concurrency: "inherit" }
+                )
+            ),
+          { concurrency: "inherit" }
+        ))
 
         const count = yield* $(Counter)
         const requests = yield* $(Requests)
@@ -155,10 +165,20 @@ describe.concurrent("Effect", () => {
       Effect.gen(function*($) {
         const parents = yield* $(getAllParents)
 
-        yield* $(Effect.forEachPar(parents, (parent) =>
-          Effect.flatMap(getChildren(parent.id), (children) =>
-            Effect.forEachPar(children, (child) =>
-              Effect.zipPar(getChildInfo(child.id), getChildExtra(child.id))))))
+        yield* $(Effect.forEach(
+          parents,
+          (parent) =>
+            Effect.flatMap(
+              getChildren(parent.id),
+              (children) =>
+                Effect.forEach(
+                  children,
+                  (child) => Effect.zipPar(getChildInfo(child.id), getChildExtra(child.id)),
+                  { concurrency: "inherit" }
+                )
+            ),
+          { concurrency: "inherit" }
+        ))
 
         const count = yield* $(Counter)
         const requests = yield* $(Requests)

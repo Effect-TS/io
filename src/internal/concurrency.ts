@@ -1,4 +1,21 @@
+import * as executionStrategy from "@effect/io/internal/executionStrategy"
+
+/** @internal */
 export type Concurrency = number | "inherit" | "batched"
+
+/** @internal */
+export const toExecutionStrategy = (concurrency?: Concurrency) => {
+  switch (concurrency) {
+    case undefined:
+      return executionStrategy.sequential
+    case "inherit":
+      return executionStrategy.parallel
+    case "batched":
+      return executionStrategy.parallelN(1)
+    default:
+      return concurrency > 1 ? executionStrategy.parallelN(concurrency) : executionStrategy.sequential
+  }
+}
 
 /** @internal */
 export const match = <A>(

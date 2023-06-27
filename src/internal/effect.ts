@@ -715,29 +715,6 @@ const forAllLoop = <R, E, A>(
 }
 
 /* @internal */
-export const forEachWithIndex = dual<
-  <A, R, E, B>(
-    f: (a: A, i: number) => Effect.Effect<R, E, B>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Array<B>>,
-  <A, R, E, B>(
-    elements: Iterable<A>,
-    f: (a: A, i: number) => Effect.Effect<R, E, B>
-  ) => Effect.Effect<R, E, Array<B>>
->(2, <A, R, E, B>(elements: Iterable<A>, f: (a: A, i: number) => Effect.Effect<R, E, B>) =>
-  core.suspend(() => {
-    let index = 0
-    const acc: Array<B> = []
-    return core.map(
-      core.forEachDiscard(elements, (a) =>
-        core.map(f(a, index), (b) => {
-          acc.push(b)
-          index++
-        })),
-      () => acc
-    )
-  }))
-
-/* @internal */
 export const forever = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, never> => {
   const loop: Effect.Effect<R, E, never> = core.flatMap(core.flatMap(self, () => core.yieldNow), () => loop)
   return loop

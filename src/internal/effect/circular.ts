@@ -17,7 +17,7 @@ import type * as Fiber from "@effect/io/Fiber"
 import * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
 import * as internalCause from "@effect/io/internal/cause"
-import * as Concurrency from "@effect/io/internal/concurrency"
+import type * as Concurrency from "@effect/io/internal/concurrency"
 import * as core from "@effect/io/internal/core"
 import * as effect from "@effect/io/internal/effect"
 import * as executionStrategy from "@effect/io/internal/executionStrategy"
@@ -31,9 +31,6 @@ import type * as Synchronized from "@effect/io/Ref/Synchronized"
 import type * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
-
-// TODO: remove once added to /data/Predicate
-const isIterable = (u: unknown): u is Iterable<unknown> => typeof u === "object" && u != null && Symbol.iterator in u
 
 /** @internal */
 class Semaphore {
@@ -688,13 +685,21 @@ export const all: Effect.All.DataFirst = function() {
     if (core.isEffect(effects[0])) {
       return options.discard ? core.asUnit(effects[0]) : core.map(effects[0], (x) => [x])
     } else if (Array.isArray(effects[0]) || Symbol.iterator in effects[0]) {
-      return allIterable(effects[0], options as any)
+      // @ts-expect-error
+      return fiberRuntime.forEachOptions(effects[0], identity, options)
+    } else if (options?.discard) {
+      return fiberRuntime.forEachOptions(
+        Object.values(effects[0] as Readonly<{ [K: string]: Effect.Effect<any, any, any> }>),
+        identity,
+        options as any
+      )
     } else {
       const keys = Object.keys(effects[0])
       const size = keys.length
       return pipe(
-        allIterable(
+        fiberRuntime.forEachOptions(
           keys.map((k) => (effects[0] as Readonly<{ [K: string]: Effect.Effect<any, any, any> }>)[k]),
+          identity,
           options as any
         ),
         core.map((values) => {
@@ -708,59 +713,13 @@ export const all: Effect.All.DataFirst = function() {
     }
   }
 
-  return allIterable(effects, options as any)
+  return fiberRuntime.forEachOptions(effects, identity, options as any)
 }
 
 /* @internal */
 export const allWith: Effect.All.DataLast = function(options) {
   return (self) => (all as any)(self, options)
 }
-
-/* @internal */
-export const allIterable = dual<
-  {
-    (options?: {
-      readonly concurrency?: Concurrency.Concurrency
-      readonly discard?: false
-    }): <R, E, A>(as: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, Array<A>>
-    (options: {
-      readonly concurrency?: Concurrency.Concurrency
-      readonly discard: true
-    }): <R, E, A>(as: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, void>
-  },
-  {
-    <R, E, A>(as: Iterable<Effect.Effect<R, E, A>>, options?: {
-      readonly concurrency?: Concurrency.Concurrency
-      readonly discard?: false
-    }): Effect.Effect<R, E, Array<A>>
-    <R, E, A>(as: Iterable<Effect.Effect<R, E, A>>, options: {
-      readonly concurrency?: Concurrency.Concurrency
-      readonly discard: true
-    }): Effect.Effect<R, E, void>
-  }
->(
-  (args) => isIterable(args[0]),
-  <R, E, A>(as: Iterable<Effect.Effect<R, E, A>>, options?: {
-    readonly concurrency?: Concurrency.Concurrency
-    readonly discard?: boolean
-  }): Effect.Effect<R, E, any> => {
-    if (options?.discard) {
-      return Concurrency.match(
-        options?.concurrency,
-        () => core.forEachDiscard(as, identity),
-        () => fiberRuntime.forEachParDiscard(as, identity),
-        (n) => fiberRuntime.forEachParNDiscard(as, n, identity)
-      )
-    }
-
-    return Concurrency.match(
-      options?.concurrency,
-      () => core.forEach(as, identity),
-      () => fiberRuntime.forEachPar(as, identity),
-      (n) => fiberRuntime.forEachParN(as, n, identity)
-    )
-  }
-)
 
 /* @internal */
 export const allSuccesses = <R, E, A>(

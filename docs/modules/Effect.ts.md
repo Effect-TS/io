@@ -53,11 +53,6 @@ Added in v1.0.0
   - [failSync](#failsync)
   - [fiberIdWith](#fiberidwith)
   - [forEach](#foreach)
-  - [forEachDiscard](#foreachdiscard)
-  - [forEachExec](#foreachexec)
-  - [forEachPar](#foreachpar)
-  - [forEachParDiscard](#foreachpardiscard)
-  - [forEachParWithIndex](#foreachparwithindex)
   - [gen](#gen)
   - [getFiberRefs](#getfiberrefs)
   - [if](#if)
@@ -1038,86 +1033,23 @@ Added in v1.0.0
 
 ```ts
 export declare const forEach: {
-  <A, R, E, B>(f: (a: A) => Effect<R, E, B>): (self: Iterable<A>) => Effect<R, E, B[]>
-  <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, E, B[]>
-}
-```
-
-Added in v1.0.0
-
-## forEachDiscard
-
-**Signature**
-
-```ts
-export declare const forEachDiscard: {
-  <A, R, E, B>(f: (a: A) => Effect<R, E, B>): (self: Iterable<A>) => Effect<R, E, void>
-  <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, E, void>
-}
-```
-
-Added in v1.0.0
-
-## forEachExec
-
-Applies the function `f` to each element of the `Collection<A>` and returns
-the result in a new `Arrat<B>` using the specified execution strategy.
-
-**Signature**
-
-```ts
-export declare const forEachExec: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>, strategy: ExecutionStrategy.ExecutionStrategy): (
-    elements: Iterable<A>
-  ) => Effect<R, E, B[]>
-  <R, E, A, B>(
-    elements: Iterable<A>,
+  <A, R, E, B>(
     f: (a: A) => Effect<R, E, B>,
-    strategy: ExecutionStrategy.ExecutionStrategy
-  ): Effect<R, E, B[]>
-}
-```
-
-Added in v1.0.0
-
-## forEachPar
-
-**Signature**
-
-```ts
-export declare const forEachPar: {
-  <A, R, E, B>(f: (a: A) => Effect<R, E, B>): (self: Iterable<A>) => Effect<R, E, B[]>
-  <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, E, B[]>
-}
-```
-
-Added in v1.0.0
-
-## forEachParDiscard
-
-**Signature**
-
-```ts
-export declare const forEachParDiscard: {
-  <A, R, E, _>(f: (a: A) => Effect<R, E, _>): (self: Iterable<A>) => Effect<R, E, void>
-  <A, R, E, _>(self: Iterable<A>, f: (a: A) => Effect<R, E, _>): Effect<R, E, void>
-}
-```
-
-Added in v1.0.0
-
-## forEachParWithIndex
-
-Same as `forEachPar`, except that the function `f` is supplied
-a second argument that corresponds to the index (starting from 0)
-of the current element being iterated over.
-
-**Signature**
-
-```ts
-export declare const forEachParWithIndex: {
-  <R, E, A, B>(f: (a: A, i: number) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, E, B[]>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A, i: number) => Effect<R, E, B>): Effect<R, E, B[]>
+    options?: { readonly concurrency?: Concurrency; readonly discard?: false }
+  ): (self: Iterable<A>) => Effect<R, E, readonly B[]>
+  <A, R, E, B>(f: (a: A) => Effect<R, E, B>, options: { readonly concurrency?: Concurrency; readonly discard: true }): (
+    self: Iterable<A>
+  ) => Effect<R, E, void>
+  <A, R, E, B>(
+    self: Iterable<A>,
+    f: (a: A) => Effect<R, E, B>,
+    options?: { readonly concurrency?: Concurrency; readonly discard?: false }
+  ): Effect<R, E, readonly B[]>
+  <A, R, E, B>(
+    self: Iterable<A>,
+    f: (a: A) => Effect<R, E, B>,
+    options: { readonly concurrency?: Concurrency; readonly discard: true }
+  ): Effect<R, E, void>
 }
 ```
 
@@ -4579,8 +4511,24 @@ of the current element being iterated over.
 
 ```ts
 export declare const forEachWithIndex: {
-  <A, R, E, B>(f: (a: A, i: number) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, E, B[]>
-  <A, R, E, B>(elements: Iterable<A>, f: (a: A, i: number) => Effect<R, E, B>): Effect<R, E, B[]>
+  <A, R, E, B>(
+    f: (a: A, index: number) => Effect<R, E, B>,
+    options?: { readonly concurrency?: Concurrency; readonly discard?: false }
+  ): (self: Iterable<A>) => Effect<R, E, readonly B[]>
+  <A, R, E, B>(
+    f: (a: A, index: number) => Effect<R, E, B>,
+    options: { readonly concurrency?: Concurrency; readonly discard: true }
+  ): (self: Iterable<A>) => Effect<R, E, void>
+  <A, R, E, B>(
+    self: Iterable<A>,
+    f: (a: A, index: number) => Effect<R, E, B>,
+    options?: { readonly concurrency?: Concurrency; readonly discard?: false }
+  ): Effect<R, E, readonly B[]>
+  <A, R, E, B>(
+    self: Iterable<A>,
+    f: (a: A, index: number) => Effect<R, E, B>,
+    options: { readonly concurrency?: Concurrency; readonly discard: true }
+  ): Effect<R, E, void>
 }
 ```
 

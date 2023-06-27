@@ -42,9 +42,10 @@ describe.concurrent("ScopedCache", () => {
             scopedCache,
             Effect.flatMap((cache) =>
               pipe(
-                Effect.forEachParDiscard(
+                Effect.forEach(
                   Chunk.map(Chunk.range(1, capacity), (n) => (n / 2) | 0),
-                  (n) => Effect.scoped(Effect.zipRight(cache.get(n), Effect.unit))
+                  (n) => Effect.scoped(Effect.zipRight(cache.get(n), Effect.unit)),
+                  { concurrency: "inherit", discard: true }
                 ),
                 Effect.flatMap(() => cache.cacheStats())
               )
@@ -74,9 +75,10 @@ describe.concurrent("ScopedCache", () => {
       )
       yield* $(Effect.scoped(Effect.gen(function*($) {
         const cache = yield* $(scopedCache)
-        yield* $(Effect.forEachParDiscard(
+        yield* $(Effect.forEach(
           Chunk.range(0, capacity - 1),
-          (n) => Effect.scoped(Effect.zipRight(cache.get(n), Effect.unit))
+          (n) => Effect.scoped(Effect.zipRight(cache.get(n), Effect.unit)),
+          { concurrency: "inherit", discard: true }
         ))
         yield* $(cache.invalidate(42))
         const cacheContainsKey42 = yield* $(cache.contains(42))
@@ -133,15 +135,17 @@ describe.concurrent("ScopedCache", () => {
       )
       yield* $(Effect.scoped(Effect.gen(function*($) {
         const cache = yield* $(scopedCache)
-        yield* $(Effect.forEachParDiscard(
+        yield* $(Effect.forEach(
           Chunk.range(0, capacity - 1),
-          (n) => Effect.scoped(Effect.zipRight(cache.get(n), Effect.unit))
+          (n) => Effect.scoped(Effect.zipRight(cache.get(n), Effect.unit)),
+          { concurrency: "inherit", discard: true }
         ))
         yield* $(cache.invalidateAll())
         const contains = yield* $(pipe(
-          Effect.forEachPar(
+          Effect.forEach(
             Chunk.range(0, capacity - 1),
-            (n) => Effect.scoped(cache.contains(n))
+            (n) => Effect.scoped(cache.contains(n)),
+            { concurrency: "inherit" }
           ),
           Effect.map((_) => _.every(identity))
         ))
@@ -198,9 +202,10 @@ describe.concurrent("ScopedCache", () => {
         yield* $(Effect.scoped(Effect.gen(function*($) {
           const cache = yield* $(scopedCache)
           const actual = yield* $(
-            Effect.forEachPar(
+            Effect.forEach(
               Chunk.range(1, 10),
-              (n) => Effect.scoped(Effect.flatMap(cache.get(n), Effect.succeed))
+              (n) => Effect.scoped(Effect.flatMap(cache.get(n), Effect.succeed)),
+              { concurrency: "inherit" }
             )
           )
           const expected = Chunk.map(Chunk.range(1, 10), hash(salt))
@@ -391,9 +396,10 @@ describe.concurrent("ScopedCache", () => {
         yield* $(Effect.scoped(Effect.gen(function*($) {
           const cache = yield* $(scopedCache)
           yield* $(
-            Effect.forEachDiscard(
+            Effect.forEach(
               Chunk.range(0, numCreatedKey - 1),
-              (key) => Effect.scoped(Effect.asUnit(cache.get(key)))
+              (key) => Effect.scoped(Effect.asUnit(cache.get(key))),
+              { discard: true }
             )
           )
           const createdResources = yield* $(watchableLookup.createdResources())
@@ -615,7 +621,7 @@ describe.concurrent("ScopedCache", () => {
       yield* $(Effect.scoped(Effect.gen(function*($) {
         const cache = yield* $(scopedCache)
         const count0 = yield* $(cache.size())
-        yield* $(Effect.forEachDiscard(Chunk.range(1, capacity), (key) => cache.refresh(key)))
+        yield* $(Effect.forEach(Chunk.range(1, capacity), (key) => cache.refresh(key), { discard: true }))
         const count1 = yield* $(cache.size())
         expect(count0).toBe(0)
         expect(count1).toBe(capacity)
@@ -633,9 +639,10 @@ describe.concurrent("ScopedCache", () => {
         const scopedCache = ScopedCache.make(cacheSize, Duration.seconds(60), (key: number) => watchableLookup(key))
         yield* $(Effect.scoped(Effect.gen(function*($) {
           const cache = yield* $(scopedCache)
-          yield* $(Effect.forEachDiscard(
+          yield* $(Effect.forEach(
             Chunk.range(0, numCreatedKey - 1),
-            (key) => cache.refresh(key)
+            (key) => cache.refresh(key),
+            { discard: true }
           ))
           const createdResources = yield* $(watchableLookup.createdResources())
           const cleanedAssertions = numCreatedKey - cacheSize - 1

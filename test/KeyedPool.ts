@@ -21,13 +21,17 @@ describe("KeyedPool", () => {
         Effect.asUnit
       )
       const fiber = yield* $(Effect.fork(
-        Effect.forEachParDiscard(Chunk.range(1, N), () =>
-          Effect.scoped(
-            Effect.zipRight(
-              KeyedPool.get(pool, "key2"),
-              Effect.sleep(Duration.millis(10))
-            )
-          ))
+        Effect.forEach(
+          Chunk.range(1, N),
+          () =>
+            Effect.scoped(
+              Effect.zipRight(
+                KeyedPool.get(pool, "key2"),
+                Effect.sleep(Duration.millis(10))
+              )
+            ),
+          { concurrency: "inherit", discard: true }
+        )
       ))
       yield* $(TestClock.adjust(Duration.millis(10 * N)))
       const result = yield* $(Fiber.join(fiber))
@@ -43,22 +47,26 @@ describe("KeyedPool", () => {
         4
       ))
       const fiber = yield* $(Effect.fork(
-        Effect.forEachParDiscard(Chunk.range(1, N), () =>
-          Effect.scoped(pipe(
-            KeyedPool.get(pool, "key1"),
-            Effect.flatMap((value) =>
-              Effect.zipRight(
-                Effect.whenEffect(
-                  KeyedPool.invalidate(pool, value),
-                  Random.nextBoolean
-                ),
-                Effect.flatMap(
-                  Random.nextIntBetween(0, 15),
-                  (n) => Effect.sleep(Duration.millis(n))
+        Effect.forEach(
+          Chunk.range(1, N),
+          () =>
+            Effect.scoped(pipe(
+              KeyedPool.get(pool, "key1"),
+              Effect.flatMap((value) =>
+                Effect.zipRight(
+                  Effect.whenEffect(
+                    KeyedPool.invalidate(pool, value),
+                    Random.nextBoolean
+                  ),
+                  Effect.flatMap(
+                    Random.nextIntBetween(0, 15),
+                    (n) => Effect.sleep(Duration.millis(n))
+                  )
                 )
               )
-            )
-          )))
+            )),
+          { concurrency: "inherit", discard: true }
+        )
       ))
       yield* $(TestClock.adjust(Duration.millis(15 * N)))
       const result = yield* $(Fiber.join(fiber))
