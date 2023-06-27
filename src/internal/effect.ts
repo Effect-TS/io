@@ -810,12 +810,14 @@ export const isSuccess = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<
 /* @internal */
 export const iterate = <Z, R, E>(
   initial: Z,
-  cont: (z: Z) => boolean,
-  body: (z: Z) => Effect.Effect<R, E, Z>
+  options: {
+    readonly while: (z: Z) => boolean
+    readonly body: (z: Z) => Effect.Effect<R, E, Z>
+  }
 ): Effect.Effect<R, E, Z> =>
   core.suspend<R, E, Z>(() => {
-    if (cont(initial)) {
-      return core.flatMap(body(initial), (z2) => iterate(z2, cont, body))
+    if (options.while(initial)) {
+      return core.flatMap(options.body(initial), (z2) => iterate(z2, options))
     }
     return core.succeed(initial)
   })

@@ -1125,8 +1125,7 @@ return s
 ```ts
 export declare const iterate: <Z, R, E>(
   initial: Z,
-  cont: (z: Z) => boolean,
-  body: (z: Z) => Effect<R, E, Z>
+  options: { readonly while: (z: Z) => boolean; readonly body: (z: Z) => Effect<R, E, Z> }
 ) => Effect<R, E, Z>
 ```
 

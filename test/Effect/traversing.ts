@@ -55,7 +55,10 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("iterate - iterates with the specified effectual function", () =>
     Effect.gen(function*($) {
-      const result = yield* $(Effect.iterate(100, (n) => n > 0, (n) => Effect.succeed(n - 1)))
+      const result = yield* $(Effect.iterate(100, {
+        while: (n) => n > 0,
+        body: (n) => Effect.succeed(n - 1)
+      }))
       assert.strictEqual(result, 0)
     }))
   it.effect("loop - loops with the specified effectual function", () =>

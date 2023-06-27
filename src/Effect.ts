@@ -2134,8 +2134,7 @@ export const isSuccess: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, boo
  */
 export const iterate: <Z, R, E>(
   initial: Z,
-  cont: (z: Z) => boolean,
-  body: (z: Z) => Effect<R, E, Z>
+  options: { readonly while: (z: Z) => boolean; readonly body: (z: Z) => Effect<R, E, Z> }
 ) => Effect<R, E, Z> = effect.iterate
 
 /**
