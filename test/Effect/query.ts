@@ -134,7 +134,7 @@ describe.concurrent("Effect", () => {
       Effect.gen(function*($) {
         const cache = yield* $(FiberRef.get(FiberRef.currentRequestCache))
         yield* $(cache.invalidateAll())
-        const names = yield* $(Effect.zipPar(getAllUserNames, getAllUserNames))
+        const names = yield* $(Effect.zip(getAllUserNames, getAllUserNames, { parallel: true }))
         const count = yield* $(Counter)
         expect(count.count).toEqual(3)
         expect(names[0].length).toBeGreaterThan(2)
@@ -156,7 +156,7 @@ describe.concurrent("Effect", () => {
     Effect.locally(interrupts, { interrupts: 0 })(
       provideEnv(
         Effect.gen(function*($) {
-          const exit = yield* $(getAllUserNames, Effect.zipParLeft(Effect.interrupt), Effect.exit)
+          const exit = yield* $(getAllUserNames, Effect.zipLeft(Effect.interrupt, { parallel: true }), Effect.exit)
           expect(exit._tag).toEqual("Failure")
           if (exit._tag === "Failure") {
             expect(Cause.isInterruptedOnly(exit.cause)).toEqual(true)
@@ -206,7 +206,7 @@ describe.concurrent("Effect", () => {
         Effect.gen(function*($) {
           const exit = yield* $(
             getAllUserNames,
-            Effect.zipParLeft(Effect.interrupt),
+            Effect.zipLeft(Effect.interrupt, { parallel: true }),
             Effect.withParallelism(2),
             Effect.exit
           )
@@ -219,13 +219,14 @@ describe.concurrent("Effect", () => {
         })
       )
     ))
-  it.effect("zipPar is not batched when specified", () =>
+  it.effect("zip/parallel is not batched when specified", () =>
     provideEnv(
       Effect.gen(function*($) {
         const [a, b] = yield* $(
-          Effect.zipPar(
+          Effect.zip(
             getUserNameById(userIds[0]),
-            getUserNameById(userIds[1])
+            getUserNameById(userIds[1]),
+            { parallel: true }
           ),
           Effect.withRequestBatching("off")
         )
@@ -235,13 +236,14 @@ describe.concurrent("Effect", () => {
         expect(b).toEqual(userNames.get(userIds[1]))
       })
     ))
-  it.effect("zipPar is batched by default", () =>
+  it.effect("zip/parallel is batched by default", () =>
     provideEnv(
       Effect.gen(function*($) {
         const [a, b] = yield* $(
-          Effect.zipPar(
+          Effect.zip(
             getUserNameById(userIds[0]),
-            getUserNameById(userIds[1])
+            getUserNameById(userIds[1]),
+            { parallel: true }
           )
         )
         const count = yield* $(Counter)

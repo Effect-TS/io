@@ -12,6 +12,7 @@ import { assert, describe } from "vitest"
 describe.concurrent("Effect", () => {
   it.live("timeout a long computation", () =>
     Effect.gen(function*($) {
+      console.log(Effect.zipRight(Effect.succeed(true)))
       const result = yield* $(
         pipe(
           Effect.sleep(Duration.seconds(5)),

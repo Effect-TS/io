@@ -148,22 +148,22 @@ describe.concurrent("Effect", () => {
       assert.strictEqual(c2, 2)
       assert.deepStrictEqual(failed, Either.left(failure))
     }))
-  it.effect("zipPar - combines results", () =>
+  it.effect("zip/parallel - combines results", () =>
     Effect.gen(function*($) {
       const result = yield* $(
         Effect.succeed(1),
-        Effect.zipPar(Effect.succeed(2)),
+        Effect.zip(Effect.succeed(2), { parallel: true }),
         Effect.flatMap((tuple) => Effect.succeed(tuple[0] + tuple[1])),
         Effect.map((n) => n === 3)
       )
       assert.isTrue(result)
     }))
-  it.effect("zipPar - does not swallow exit causes of loser", () =>
+  it.effect("zip/parallel - does not swallow exit causes of loser", () =>
     Effect.gen(function*($) {
       const result = yield* $(
         pipe(
           Effect.interrupt,
-          Effect.zipPar(Effect.interrupt),
+          Effect.zip(Effect.interrupt, { parallel: true }),
           Effect.exit,
           Effect.map((exit) =>
             pipe(Exit.causeOption(exit), Option.map(Cause.interruptors), Option.getOrElse(() => HashSet.empty()))
@@ -172,12 +172,12 @@ describe.concurrent("Effect", () => {
       )
       assert.isAbove(HashSet.size(result), 0)
     }))
-  it.effect("zipPar - does not report failure when interrupting loser after it succeeded", () =>
+  it.effect("zip/parallel - does not report failure when interrupting loser after it succeeded", () =>
     Effect.gen(function*($) {
       const result = yield* $(
         pipe(
           Effect.interrupt,
-          Effect.zipPar(Effect.succeed(1)),
+          Effect.zip(Effect.succeed(1), { parallel: true }),
           Effect.sandbox,
           Effect.either,
           Effect.map(Either.mapLeft(Cause.isInterrupted))
@@ -185,21 +185,21 @@ describe.concurrent("Effect", () => {
       )
       assert.deepStrictEqual(result, Either.left(true))
     }))
-  it.effect("zipPar - paralellizes simple success values", () =>
+  it.effect("zip/parallel - paralellizes simple success values", () =>
     Effect.gen(function*($) {
       const countdown = (n: number): Effect.Effect<never, never, number> => {
         return n === 0
           ? Effect.succeed(0)
           : pipe(
             Effect.succeed(1),
-            Effect.zipPar(Effect.succeed(2)),
+            Effect.zip(Effect.succeed(2), { parallel: true }),
             Effect.flatMap((tuple) => pipe(countdown(n - 1), Effect.map((y) => tuple[0] + tuple[1] + y)))
           )
       }
       const result = yield* $(countdown(50))
       assert.strictEqual(result, 150)
     }))
-  it.effect("zipPar - does not kill fiber when forked on parent scope", () =>
+  it.effect("zip/parallel - does not kill fiber when forked on parent scope", () =>
     Effect.gen(function*($) {
       const latch1 = yield* $(Deferred.make<never, void>())
       const latch2 = yield* $(Deferred.make<never, void>())
@@ -220,7 +220,7 @@ describe.concurrent("Effect", () => {
         Effect.fork
       )
 
-      const result = yield* $(Effect.fork(left), Effect.zipPar(right))
+      const result = yield* $(Effect.fork(left), Effect.zip(right, { parallel: true }))
       const leftInnerFiber = result[0]
       const rightResult = result[1]
       const leftResult = yield* $(Fiber.await(leftInnerFiber))

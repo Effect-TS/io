@@ -80,11 +80,11 @@ describe.concurrent("Scope", () => {
         Effect.scoped(
           pipe(
             Effect.parallelFinalizers(resource(1, ref)),
-            Effect.zipPar(resource(2, ref)),
+            Effect.zip(resource(2, ref), { parallel: true }),
             Effect.flatMap(([resource1, resource2]) =>
               pipe(
                 Ref.update(ref, (actions) => [...actions, use(resource1)]),
-                Effect.zipPar(Ref.update(ref, (actions) => [...actions, use(resource2)]))
+                Effect.zip(Ref.update(ref, (actions) => [...actions, use(resource2)]), { parallel: true })
               )
             )
           )
@@ -103,7 +103,7 @@ describe.concurrent("Scope", () => {
       const ref = yield* $(Ref.make<ReadonlyArray<Action>>([]))
       const left = Effect.sequentialFinalizers(pipe(resource(1, ref), Effect.zipRight(resource(2, ref))))
       const right = Effect.sequentialFinalizers(pipe(resource(3, ref), Effect.zipRight(resource(4, ref))))
-      yield* $(Effect.scoped(Effect.parallelFinalizers(pipe(left, Effect.zipPar(right)))))
+      yield* $(Effect.scoped(Effect.parallelFinalizers(pipe(left, Effect.zip(right, { parallel: true })))))
       const actions = yield* $(Ref.get(ref))
       const action1Index = actions.findIndex((action) => action.op === OP_RELEASE && action.id === 1)
       const action2Index = actions.findIndex((action) => action.op === OP_RELEASE && action.id === 2)

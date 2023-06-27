@@ -4004,21 +4004,16 @@ export const updateService: {
  * @category utils
  */
 export const validate: {
-  <R2, E2, B>(that: Effect<R2, E2, B>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, [A, B]>
-  <R, E, A, R2, E2, B>(self: Effect<R, E, A>, that: Effect<R2, E2, B>): Effect<R | R2, E | E2, [A, B]>
-} = effect.validate
-
-/**
- * Returns an effect that executes both this effect and the specified effect,
- * in parallel. Combines both Cause<E1>` when both effects fail.
- *
- * @since 1.0.0
- * @category utils
- */
-export const validatePar: {
-  <R1, E1, B>(that: Effect<R1, E1, B>): <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, [A, B]>
-  <R, E, A, R1, E1, B>(self: Effect<R, E, A>, that: Effect<R1, E1, B>): Effect<R | R1, E | E1, [A, B]>
-} = circular.validatePar
+  <R1, E1, B>(
+    that: Effect<R1, E1, B>,
+    options?: { readonly parallel?: boolean }
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, [A, B]>
+  <R, E, A, R1, E1, B>(
+    self: Effect<R, E, A>,
+    that: Effect<R1, E1, B>,
+    options?: { readonly parallel?: boolean }
+  ): Effect<R | R1, E | E1, [A, B]>
+} = circular.validate
 
 /**
  * Feeds elements of type `A` to `f` and accumulates all errors in error
@@ -4120,36 +4115,18 @@ export const validateFirstPar: {
  * @category utils
  */
 export const validateWith: {
-  <A, R2, E2, B, C>(
-    that: Effect<R2, E2, B>,
-    f: (a: A, b: B) => C
-  ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, C>
-  <R, E, A, R2, E2, B, C>(
-    self: Effect<R, E, A>,
-    that: Effect<R2, E2, B>,
-    f: (a: A, b: B) => C
-  ): Effect<R | R2, E | E2, C>
-} = effect.validateWith
-
-/**
- * Returns an effect that executes both this effect and the specified effect,
- * in parallel, combining their results with the specified `f` function. If
- * both sides fail, then the cause will be combined.
- *
- * @since 1.0.0
- * @category utils
- */
-export const validateWithPar: {
   <A, R1, E1, B, C>(
     that: Effect<R1, E1, B>,
-    f: (a: A, b: B) => C
+    f: (a: A, b: B) => C,
+    options?: { readonly parallel?: boolean }
   ): <R, E>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, C>
   <R, E, A, R1, E1, B, C>(
     self: Effect<R, E, A>,
     that: Effect<R1, E1, B>,
-    f: (a: A, b: B) => C
+    f: (a: A, b: B) => C,
+    options?: { readonly parallel?: boolean }
   ): Effect<R | R1, E | E1, C>
-} = circular.validateWithPar
+} = circular.validateWith
 
 /**
  * @since 1.0.0
@@ -4400,27 +4377,48 @@ export const yieldNow: Effect<never, never, void> = core.yieldNow
  * @category products
  */
 export const zip: {
-  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, [A, A2]>
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, [A, A2]>
-} = core.zip
+  <R2, E2, A2>(
+    that: Effect<R2, E2, A2>,
+    options?: { readonly parallel?: boolean }
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, [A, A2]>
+  <R, E, A, R2, E2, A2>(
+    self: Effect<R, E, A>,
+    that: Effect<R2, E2, A2>,
+    options?: { readonly parallel?: boolean }
+  ): Effect<R | R2, E | E2, [A, A2]>
+} = circular.zip
 
 /**
  * @since 1.0.0
  * @category products
  */
 export const zipLeft: {
-  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A>
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, A>
-} = core.zipLeft
+  <R2, E2, A2>(
+    that: Effect<R2, E2, A2>,
+    options?: { readonly parallel?: boolean }
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A>
+  <R, E, A, R2, E2, A2>(
+    self: Effect<R, E, A>,
+    that: Effect<R2, E2, A2>,
+    options?: { readonly parallel?: boolean }
+  ): Effect<R | R2, E | E2, A>
+} = circular.zipLeft
 
 /**
  * @since 1.0.0
  * @category products
  */
 export const zipRight: {
-  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2>
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, A2>
-} = core.zipRight
+  <R2, E2, A2>(
+    that: Effect<R2, E2, A2>,
+    options?: { readonly parallel?: boolean }
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2>
+  <R, E, A, R2, E2, A2>(
+    self: Effect<R, E, A>,
+    that: Effect<R2, E2, A2>,
+    options?: { readonly parallel?: boolean }
+  ): Effect<R | R2, E | E2, A2>
+} = circular.zipRight
 
 /**
  * @since 1.0.0
@@ -4429,70 +4427,16 @@ export const zipRight: {
 export const zipWith: {
   <R2, E2, A2, A, B>(
     that: Effect<R2, E2, A2>,
-    f: (a: A, b: A2) => B
-  ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, B>
-  <R, E, R2, E2, A2, A, B>(
-    self: Effect<R, E, A>,
-    that: Effect<R2, E2, A2>,
-    f: (a: A, b: A2) => B
-  ): Effect<R | R2, E | E2, B>
-} = core.zipWith
-
-/**
- * Zips this effect and that effect in parallel.
- *
- * @since 1.0.0
- * @category zipping
- */
-export const zipPar: {
-  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, [A, A2]>
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, [A, A2]>
-} = circular.zipPar
-
-/**
- * Returns an effect that executes both this effect and the specified effect,
- * in parallel, returning result of that effect. If either side fails,
- * then the other side will be interrupted.
- *
- * @since 1.0.0
- * @category zipping
- */
-export const zipParLeft: {
-  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A>
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, A>
-} = circular.zipParLeft
-
-/**
- * Returns an effect that executes both this effect and the specified effect,
- * in parallel, returning result of the provided effect. If either side fails,
- * then the other side will be interrupted.
- *
- * @since 1.0.0
- * @category zipping
- */
-export const zipParRight: {
-  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2>
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, A2>
-} = circular.zipParRight
-
-/**
- * Sequentially zips this effect with the specified effect using the
- * specified combiner function.
- *
- * @since 1.0.0
- * @category zipping
- */
-export const zipWithPar: {
-  <R2, E2, A2, A, B>(
-    that: Effect<R2, E2, A2>,
-    f: (a: A, b: A2) => B
+    f: (a: A, b: A2) => B,
+    options?: { readonly parallel?: boolean }
   ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, B>
   <R, E, A, R2, E2, A2, B>(
     self: Effect<R, E, A>,
     that: Effect<R2, E2, A2>,
-    f: (a: A, b: A2) => B
+    f: (a: A, b: A2) => B,
+    options?: { readonly parallel?: boolean }
   ): Effect<R | R2, E | E2, B>
-} = circular.zipWithPar
+} = circular.zipWith
 
 /**
  * @category instances

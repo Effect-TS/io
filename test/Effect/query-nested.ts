@@ -145,7 +145,7 @@ describe.concurrent("Effect", () => {
               (children) =>
                 Effect.forEach(
                   children,
-                  (child) => Effect.zipPar(getChildInfo(child.id), getChildExtra(child.id)),
+                  (child) => Effect.zip(getChildInfo(child.id), getChildExtra(child.id), { parallel: true }),
                   { concurrency: "inherit" }
                 )
             ),
@@ -173,7 +173,7 @@ describe.concurrent("Effect", () => {
               (children) =>
                 Effect.forEach(
                   children,
-                  (child) => Effect.zipPar(getChildInfo(child.id), getChildExtra(child.id)),
+                  (child) => Effect.zip(getChildInfo(child.id), getChildExtra(child.id), { parallel: true }),
                   { concurrency: "inherit" }
                 )
             ),

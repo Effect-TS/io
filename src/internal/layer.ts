@@ -402,9 +402,10 @@ const withScope = <RIn, E, ROut>(
         (memoMap: MemoMap) =>
           pipe(
             memoMap.getOrElseMemoize(op.first, scope),
-            circular.zipWithPar(
+            circular.zipWith(
               memoMap.getOrElseMemoize(op.second, scope),
-              op.zipK
+              op.zipK,
+              { parallel: true }
             )
           )
       )

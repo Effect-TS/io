@@ -375,9 +375,7 @@ Added in v1.0.0
   - [validateAllParDiscard](#validateallpardiscard)
   - [validateFirst](#validatefirst)
   - [validateFirstPar](#validatefirstpar)
-  - [validatePar](#validatepar)
   - [validateWith](#validatewith)
-  - [validateWithPar](#validatewithpar)
   - [when](#when)
   - [whenFiberRef](#whenfiberref)
   - [whenRef](#whenref)
@@ -387,11 +385,6 @@ Added in v1.0.0
   - [withMetric](#withmetric)
   - [withScheduler](#withscheduler)
   - [withUnhandledErrorLogLevel](#withunhandlederrorloglevel)
-- [zipping](#zipping)
-  - [zipPar](#zippar)
-  - [zipParLeft](#zipparleft)
-  - [zipParRight](#zipparright)
-  - [zipWithPar](#zipwithpar)
 
 ---
 
@@ -3636,8 +3629,14 @@ Added in v1.0.0
 
 ```ts
 export declare const zip: {
-  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, [A, A2]>
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, [A, A2]>
+  <R2, E2, A2>(that: Effect<R2, E2, A2>, options?: { readonly parallel?: boolean }): <R, E, A>(
+    self: Effect<R, E, A>
+  ) => Effect<R2 | R, E2 | E, [A, A2]>
+  <R, E, A, R2, E2, A2>(
+    self: Effect<R, E, A>,
+    that: Effect<R2, E2, A2>,
+    options?: { readonly parallel?: boolean }
+  ): Effect<R | R2, E | E2, [A, A2]>
 }
 ```
 
@@ -3649,8 +3648,14 @@ Added in v1.0.0
 
 ```ts
 export declare const zipLeft: {
-  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A>
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, A>
+  <R2, E2, A2>(that: Effect<R2, E2, A2>, options?: { readonly parallel?: boolean }): <R, E, A>(
+    self: Effect<R, E, A>
+  ) => Effect<R2 | R, E2 | E, A>
+  <R, E, A, R2, E2, A2>(
+    self: Effect<R, E, A>,
+    that: Effect<R2, E2, A2>,
+    options?: { readonly parallel?: boolean }
+  ): Effect<R | R2, E | E2, A>
 }
 ```
 
@@ -3662,8 +3667,14 @@ Added in v1.0.0
 
 ```ts
 export declare const zipRight: {
-  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2>
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, A2>
+  <R2, E2, A2>(that: Effect<R2, E2, A2>, options?: { readonly parallel?: boolean }): <R, E, A>(
+    self: Effect<R, E, A>
+  ) => Effect<R2 | R, E2 | E, A2>
+  <R, E, A, R2, E2, A2>(
+    self: Effect<R, E, A>,
+    that: Effect<R2, E2, A2>,
+    options?: { readonly parallel?: boolean }
+  ): Effect<R | R2, E | E2, A2>
 }
 ```
 
@@ -3675,14 +3686,18 @@ Added in v1.0.0
 
 ```ts
 export declare const zipWith: {
-  <R2, E2, A2, A, B>(that: Effect<R2, E2, A2>, f: (a: A, b: A2) => B): <R, E>(
+  <R2, E2, A2, A, B>(that: Effect<R2, E2, A2>, f: (a: A, b: A2) => B, options?: { readonly parallel?: boolean }): <
+    R,
+    E
+  >(
     self: Effect<R, E, A>
   ) => Effect<R2 | R, E2 | E, B>
-  <R, E, R2, E2, A2, A, B>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>, f: (a: A, b: A2) => B): Effect<
-    R | R2,
-    E | E2,
-    B
-  >
+  <R, E, A, R2, E2, A2, B>(
+    self: Effect<R, E, A>,
+    that: Effect<R2, E2, A2>,
+    f: (a: A, b: A2) => B,
+    options?: { readonly parallel?: boolean }
+  ): Effect<R | R2, E | E2, B>
 }
 ```
 
@@ -5849,8 +5864,14 @@ Sequentially zips the this result with the specified result. Combines both
 
 ```ts
 export declare const validate: {
-  <R2, E2, B>(that: Effect<R2, E2, B>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, [A, B]>
-  <R, E, A, R2, E2, B>(self: Effect<R, E, A>, that: Effect<R2, E2, B>): Effect<R | R2, E | E2, [A, B]>
+  <R1, E1, B>(that: Effect<R1, E1, B>, options?: { readonly parallel?: boolean }): <R, E, A>(
+    self: Effect<R, E, A>
+  ) => Effect<R1 | R, E1 | E, [A, B]>
+  <R, E, A, R1, E1, B>(
+    self: Effect<R, E, A>,
+    that: Effect<R1, E1, B>,
+    options?: { readonly parallel?: boolean }
+  ): Effect<R | R1, E | E1, [A, B]>
 }
 ```
 
@@ -5978,22 +5999,6 @@ export declare const validateFirstPar: {
 
 Added in v1.0.0
 
-## validatePar
-
-Returns an effect that executes both this effect and the specified effect,
-in parallel. Combines both Cause<E1>` when both effects fail.
-
-**Signature**
-
-```ts
-export declare const validatePar: {
-  <R1, E1, B>(that: Effect<R1, E1, B>): <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, [A, B]>
-  <R, E, A, R1, E1, B>(self: Effect<R, E, A>, that: Effect<R1, E1, B>): Effect<R | R1, E | E1, [A, B]>
-}
-```
-
-Added in v1.0.0
-
 ## validateWith
 
 Sequentially zips this effect with the specified effect using the specified
@@ -6003,37 +6008,15 @@ combiner function. Combines the causes in case both effect fail.
 
 ```ts
 export declare const validateWith: {
-  <A, R2, E2, B, C>(that: Effect<R2, E2, B>, f: (a: A, b: B) => C): <R, E>(
-    self: Effect<R, E, A>
-  ) => Effect<R2 | R, E2 | E, C>
-  <R, E, A, R2, E2, B, C>(self: Effect<R, E, A>, that: Effect<R2, E2, B>, f: (a: A, b: B) => C): Effect<
-    R | R2,
-    E | E2,
-    C
-  >
-}
-```
-
-Added in v1.0.0
-
-## validateWithPar
-
-Returns an effect that executes both this effect and the specified effect,
-in parallel, combining their results with the specified `f` function. If
-both sides fail, then the cause will be combined.
-
-**Signature**
-
-```ts
-export declare const validateWithPar: {
-  <A, R1, E1, B, C>(that: Effect<R1, E1, B>, f: (a: A, b: B) => C): <R, E>(
+  <A, R1, E1, B, C>(that: Effect<R1, E1, B>, f: (a: A, b: B) => C, options?: { readonly parallel?: boolean }): <R, E>(
     self: Effect<R, E, A>
   ) => Effect<R1 | R, E1 | E, C>
-  <R, E, A, R1, E1, B, C>(self: Effect<R, E, A>, that: Effect<R1, E1, B>, f: (a: A, b: B) => C): Effect<
-    R | R1,
-    E | E1,
-    C
-  >
+  <R, E, A, R1, E1, B, C>(
+    self: Effect<R, E, A>,
+    that: Effect<R1, E1, B>,
+    f: (a: A, b: B) => C,
+    options?: { readonly parallel?: boolean }
+  ): Effect<R | R1, E | E1, C>
 }
 ```
 
@@ -6175,79 +6158,6 @@ Decides wether child fibers will report or not unhandled errors via the logger
 export declare const withUnhandledErrorLogLevel: {
   (level: Option.Option<LogLevel>): <R, E, B>(self: Effect<R, E, B>) => Effect<R, E, B>
   <R, E, B>(self: Effect<R, E, B>, level: Option.Option<LogLevel>): Effect<R, E, B>
-}
-```
-
-Added in v1.0.0
-
-# zipping
-
-## zipPar
-
-Zips this effect and that effect in parallel.
-
-**Signature**
-
-```ts
-export declare const zipPar: {
-  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, [A, A2]>
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, [A, A2]>
-}
-```
-
-Added in v1.0.0
-
-## zipParLeft
-
-Returns an effect that executes both this effect and the specified effect,
-in parallel, returning result of that effect. If either side fails,
-then the other side will be interrupted.
-
-**Signature**
-
-```ts
-export declare const zipParLeft: {
-  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A>
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, A>
-}
-```
-
-Added in v1.0.0
-
-## zipParRight
-
-Returns an effect that executes both this effect and the specified effect,
-in parallel, returning result of the provided effect. If either side fails,
-then the other side will be interrupted.
-
-**Signature**
-
-```ts
-export declare const zipParRight: {
-  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2>
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, A2>
-}
-```
-
-Added in v1.0.0
-
-## zipWithPar
-
-Sequentially zips this effect with the specified effect using the
-specified combiner function.
-
-**Signature**
-
-```ts
-export declare const zipWithPar: {
-  <R2, E2, A2, A, B>(that: Effect<R2, E2, A2>, f: (a: A, b: A2) => B): <R, E>(
-    self: Effect<R, E, A>
-  ) => Effect<R2 | R, E2 | E, B>
-  <R, E, A, R2, E2, A2, B>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>, f: (a: A, b: A2) => B): Effect<
-    R | R2,
-    E | E2,
-    B
-  >
 }
 ```
 

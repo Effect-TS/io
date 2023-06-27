@@ -1569,8 +1569,8 @@ export const forEachOptionsWithIndex = dual<
 
 /* @internal */
 export const forEachPar = dual<
-  <A, R, E, B>(f: (a: A) => Effect.Effect<R, E, B>) => (self: Iterable<A>) => Effect.Effect<R, E, Array<B>>,
-  <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, E, Array<B>>
+  <A, R, E, B>(f: (a: A) => Effect.Effect<R, E, B>) => (self: Iterable<A>) => Effect.Effect<R, E, ReadonlyArray<B>>,
+  <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, E, ReadonlyArray<B>>
 >(2, (self, f) =>
   core.fiberRefGetWith(
     core.currentParallelism,
@@ -1756,7 +1756,7 @@ export const forEachParN = <A, R, E, B>(
   self: Iterable<A>,
   n: number,
   f: (a: A) => Effect.Effect<R, E, B>
-): Effect.Effect<R, E, Array<B>> =>
+): Effect.Effect<R, E, ReadonlyArray<B>> =>
   core.suspend(() => {
     const as = Array.from(self).map((v, i) => [v, i] as const)
     const array = new Array<B>(as.length)

@@ -1690,39 +1690,10 @@ export const useSpan: {
 }
 
 /* @internal */
-export const validate = dual<
-  <R2, E2, B>(
-    that: Effect.Effect<R2, E2, B>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, [A, B]>,
-  <R, E, A, R2, E2, B>(
-    self: Effect.Effect<R, E, A>,
-    that: Effect.Effect<R2, E2, B>
-  ) => Effect.Effect<R | R2, E | E2, [A, B]>
->(2, (self, that) => validateWith(self, that, (a, b) => tuple(a, b)))
-
-/* @internal */
 export const validateFirst = dual<
   <R, E, A, B>(f: (a: A) => Effect.Effect<R, E, B>) => (elements: Iterable<A>) => Effect.Effect<R, Array<E>, B>,
   <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, Array<E>, B>
 >(2, (elements, f) => core.flip(core.forEach(elements, (a) => core.flip(f(a)))))
-
-/* @internal */
-export const validateWith = dual<
-  <A, R2, E2, B, C>(
-    that: Effect.Effect<R2, E2, B>,
-    f: (a: A, b: B) => C
-  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, C>,
-  <R, E, A, R2, E2, B, C>(
-    self: Effect.Effect<R, E, A>,
-    that: Effect.Effect<R2, E2, B>,
-    f: (a: A, b: B) => C
-  ) => Effect.Effect<R | R2, E | E2, C>
->(3, (self, that, f) =>
-  core.flatten(core.zipWith(
-    core.exit(self),
-    core.exit(that),
-    (ea, eb) => core.exitZipWith(ea, eb, f, (ca, cb) => internalCause.sequential(ca, cb))
-  )))
 
 /* @internal */
 export const when = dual<

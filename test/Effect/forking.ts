@@ -21,7 +21,7 @@ describe.concurrent("Effect", () => {
       const fiber = yield* $(
         Deferred.succeed(latch, void 0),
         Effect.zipRight(Effect.die(new Error())),
-        Effect.zipPar(Effect.never),
+        Effect.zip(Effect.never, { parallel: true }),
         Effect.fork
       )
 

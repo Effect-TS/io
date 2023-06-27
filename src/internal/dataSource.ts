@@ -168,10 +168,11 @@ export const eitherWith = dual<
             requests,
             RA.partitionMap(f)
           )
-          return Effect.zipWithPar(
+          return Effect.zipWith(
             self.runAll(Array.of(as)),
             that.runAll(Array.of(bs)),
-            () => void 0
+            () => void 0,
+            { parallel: true }
           )
         })
       ),

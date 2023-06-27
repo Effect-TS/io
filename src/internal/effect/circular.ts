@@ -470,108 +470,127 @@ export const timeoutTo = dual<
   ))
 
 /** @internal */
-export const validatePar = dual<
+export const validate = dual<
   <R1, E1, B>(
-    that: Effect.Effect<R1, E1, B>
+    that: Effect.Effect<R1, E1, B>,
+    options?: { readonly parallel?: boolean }
   ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E | E1, [A, B]>,
   <R, E, A, R1, E1, B>(
     self: Effect.Effect<R, E, A>,
-    that: Effect.Effect<R1, E1, B>
+    that: Effect.Effect<R1, E1, B>,
+    options?: { readonly parallel?: boolean }
   ) => Effect.Effect<R | R1, E | E1, [A, B]>
->(2, (self, that) => validateWithPar(self, that, (a, b) => tuple(a, b)))
+>(
+  (args) => core.isEffect(args[0]) && core.isEffect(args[1]),
+  (self, that, options) => validateWith(self, that, (a, b) => tuple(a, b), options)
+)
 
 /** @internal */
-export const validateWithPar = dual<
+export const validateWith = dual<
   <A, R1, E1, B, C>(
     that: Effect.Effect<R1, E1, B>,
-    f: (a: A, b: B) => C
+    f: (a: A, b: B) => C,
+    options?: { readonly parallel?: boolean }
   ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E | E1, C>,
   <R, E, A, R1, E1, B, C>(
     self: Effect.Effect<R, E, A>,
     that: Effect.Effect<R1, E1, B>,
-    f: (a: A, b: B) => C
+    f: (a: A, b: B) => C,
+    options?: { readonly parallel?: boolean }
   ) => Effect.Effect<R | R1, E | E1, C>
->(3, (self, that, f) =>
-  core.flatten(zipWithPar(
+>((args) => core.isEffect(args[0]) && core.isEffect(args[1]), (self, that, f, options) =>
+  core.flatten(zipWith(
     core.exit(self),
     core.exit(that),
-    (ea, eb) => core.exitZipWith(ea, eb, f, (ca, cb) => internalCause.parallel(ca, cb))
+    (ea, eb) =>
+      core.exitZipWith(ea, eb, f, (ca, cb) =>
+        options?.parallel ? internalCause.parallel(ca, cb) : internalCause.sequential(ca, cb)),
+    options
   )))
 
 /** @internal */
-export const zipPar = dual<
+export const zip = dual<
   <R2, E2, A2>(
-    that: Effect.Effect<R2, E2, A2>
+    that: Effect.Effect<R2, E2, A2>,
+    options?: { readonly parallel?: boolean }
   ) => <R, E, A>(
     self: Effect.Effect<R, E, A>
   ) => Effect.Effect<R | R2, E | E2, [A, A2]>,
   <R, E, A, R2, E2, A2>(
     self: Effect.Effect<R, E, A>,
-    that: Effect.Effect<R2, E2, A2>
+    that: Effect.Effect<R2, E2, A2>,
+    options?: { readonly parallel?: boolean }
   ) => Effect.Effect<R | R2, E | E2, [A, A2]>
->(2, <R, E, A, R2, E2, A2>(
-  self: Effect.Effect<R, E, A>,
-  that: Effect.Effect<R2, E2, A2>
-): Effect.Effect<R | R2, E | E2, [A, A2]> => zipWithPar(self, that, (a, b) => [a, b] as [A, A2]))
+>((args) => core.isEffect(args[0]) && core.isEffect(args[1]), (
+  self,
+  that,
+  options
+) =>
+  options?.parallel ?
+    zipWith(self, that, (a, b) => [a, b], options) :
+    core.zip(self, that))
 
 /** @internal */
-export const zipParLeft = dual<
+export const zipLeft = dual<
   <R2, E2, A2>(
-    that: Effect.Effect<R2, E2, A2>
+    that: Effect.Effect<R2, E2, A2>,
+    options?: { readonly parallel?: boolean }
   ) => <R, E, A>(
     self: Effect.Effect<R, E, A>
   ) => Effect.Effect<R | R2, E | E2, A>,
   <R, E, A, R2, E2, A2>(
     self: Effect.Effect<R, E, A>,
-    that: Effect.Effect<R2, E2, A2>
+    that: Effect.Effect<R2, E2, A2>,
+    options?: { readonly parallel?: boolean }
   ) => Effect.Effect<R | R2, E | E2, A>
->(2, (self, that) => zipWithPar(self, that, (a, _) => a))
+>(
+  (args) => core.isEffect(args[0]) && core.isEffect(args[1]),
+  (self, that, options) => options?.parallel ? zipWith(self, that, (a, _) => a, options) : core.zipLeft(self, that)
+)
 
 /** @internal */
-export const zipParRight = dual<
+export const zipRight = dual<
   <R2, E2, A2>(
-    that: Effect.Effect<R2, E2, A2>
+    that: Effect.Effect<R2, E2, A2>,
+    options?: { readonly parallel?: boolean }
   ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A2>,
   <R, E, A, R2, E2, A2>(
     self: Effect.Effect<R, E, A>,
-    that: Effect.Effect<R2, E2, A2>
+    that: Effect.Effect<R2, E2, A2>,
+    options?: { readonly parallel?: boolean }
   ) => Effect.Effect<R | R2, E | E2, A2>
->(2, (self, that) => zipWithPar(self, that, (_, b) => b))
+>((args) => core.isEffect(args[0]) && core.isEffect(args[1]), (self, that, options) =>
+  options?.parallel ?
+    zipWith(self, that, (_, b) => b, options) :
+    core.zipRight(self, that))
 
 /** @internal */
-export const zipWithPar: {
+export const zipWith = dual<
   <R2, E2, A2, A, B>(
     that: Effect.Effect<R2, E2, A2>,
-    f: (a: A, b: A2) => B
-  ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R2 | R, E2 | E, B>
-  <R, E, A, R2, E2, A2, B>(
-    self: Effect.Effect<R, E, A>,
-    that: Effect.Effect<R2, E2, A2>,
-    f: (a: A, b: A2) => B
-  ): Effect.Effect<R | R2, E | E2, B>
-} = dual<
-  <R2, E2, A2, A, B>(
-    that: Effect.Effect<R2, E2, A2>,
-    f: (a: A, b: A2) => B
+    f: (a: A, b: A2) => B,
+    options?: { readonly parallel?: boolean }
   ) => <R, E>(
     self: Effect.Effect<R, E, A>
   ) => Effect.Effect<R | R2, E | E2, B>,
   <R, E, A, R2, E2, A2, B>(
     self: Effect.Effect<R, E, A>,
     that: Effect.Effect<R2, E2, A2>,
-    f: (a: A, b: A2) => B
+    f: (a: A, b: A2) => B,
+    options?: { readonly parallel?: boolean }
   ) => Effect.Effect<R | R2, E | E2, B>
->(3, <R, E, A, R2, E2, A2, B>(
+>((args) => core.isEffect(args[0]) && core.isEffect(args[1]), <R, E, A, R2, E2, A2, B>(
   self: Effect.Effect<R, E, A>,
   that: Effect.Effect<R2, E2, A2>,
-  f: (a: A, b: A2) => B
+  f: (a: A, b: A2) => B,
+  options?: { readonly parallel?: boolean }
 ): Effect.Effect<R | R2, E | E2, B> =>
-  core.map(
-    all(self, that, {
-      concurrency: "inherit"
-    }),
-    ([a, a2]) => f(a, a2)
-  ))
+  options?.parallel ?
+    core.map(
+      all(self, that, { concurrency: 2 }),
+      ([a, a2]) => f(a, a2)
+    ) :
+    core.zipWith(self, that, f))
 
 // circular with Synchronized
 
@@ -680,7 +699,7 @@ export const zipWithFiber = dual<
     pipe(
       self.await(),
       core.flatten,
-      zipWithPar(core.flatten(that.await()), f),
+      zipWith(core.flatten(that.await()), f, { parallel: true }),
       core.exit
     ),
   children: () => self.children(),
