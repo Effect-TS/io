@@ -150,53 +150,21 @@ export const catchAllDefect = dual<
     self: Effect.Effect<R, E, A>,
     f: (defect: unknown) => Effect.Effect<R2, E2, A2>
   ) => Effect.Effect<R | R2, E | E2, A | A2>
->(2, (self, f) => catchSomeDefect(self, (defect) => Option.some(f(defect))))
-
-/* @internal */
-export const catchSomeCause = dual<
-  <E, R2, E2, A2>(
-    f: (cause: Cause.Cause<E>) => Option.Option<Effect.Effect<R2, E2, A2>>
-  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A | A2>,
-  <R, E, A, R2, E2, A2>(
-    self: Effect.Effect<R, E, A>,
-    f: (cause: Cause.Cause<E>) => Option.Option<Effect.Effect<R2, E2, A2>>
-  ) => Effect.Effect<R | R2, E | E2, A | A2>
->(2, <R, E, A, R2, E2, A2>(
-  self: Effect.Effect<R, E, A>,
-  f: (cause: Cause.Cause<E>) => Option.Option<Effect.Effect<R2, E2, A2>>
-) =>
-  core.matchCauseEffect(self, {
-    onFailure: (cause): Effect.Effect<R2, E | E2, A2> => {
-      const option = f(cause)
+>(2, (self, f) =>
+  core.catchAllCause(
+    self,
+    core.unified((cause) => {
+      const option = internalCause.find(cause, (_) => internalCause.isDieType(_) ? Option.some(_) : Option.none())
       switch (option._tag) {
         case "None": {
           return core.failCause(cause)
         }
         case "Some": {
-          return option.value
+          return f(option.value.defect)
         }
       }
-    },
-    onSuccess: core.succeed
-  }))
-
-/* @internal */
-export const catchSomeDefect = dual<
-  <R2, E2, A2>(
-    pf: (defect: unknown) => Option.Option<Effect.Effect<R2, E2, A2>>
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A | A2>,
-  <R, E, A, R2, E2, A2>(
-    self: Effect.Effect<R, E, A>,
-    pf: (defect: unknown) => Option.Option<Effect.Effect<R2, E2, A2>>
-  ) => Effect.Effect<R | R2, E | E2, A | A2>
->(
-  2,
-  <R, E, A, R2, E2, A2>(self: Effect.Effect<R, E, A>, pf: (_: unknown) => Option.Option<Effect.Effect<R2, E2, A2>>) =>
-    core.catchAll(
-      unrefineWith(self, pf, core.fail),
-      (s): Effect.Effect<R2, E | E2, A2> => s
-    )
-)
+    })
+  ))
 
 /* @internal */
 export const catchTag = dual<
@@ -1280,66 +1248,6 @@ const reduceWhileLoop = <A, R, E, Z>(
 }
 
 /* @internal */
-export const refineOrDie = dual<
-  <E, E1>(pf: (e: E) => Option.Option<E1>) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E1, A>,
-  <R, E, A, E1>(self: Effect.Effect<R, E, A>, pf: (e: E) => Option.Option<E1>) => Effect.Effect<R, E1, A>
->(2, (self, pf) => refineOrDieWith(self, pf, identity))
-
-/* @internal */
-export const refineOrDieWith = dual<
-  <E, E1>(
-    pf: (e: E) => Option.Option<E1>,
-    f: (e: E) => unknown
-  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E1, A>,
-  <R, E, A, E1>(
-    self: Effect.Effect<R, E, A>,
-    pf: (e: E) => Option.Option<E1>,
-    f: (e: E) => unknown
-  ) => Effect.Effect<R, E1, A>
->(3, (self, pf, f) =>
-  core.catchAll(self, (e) => {
-    const option = pf(e)
-    switch (option._tag) {
-      case "None": {
-        return core.die(f(e))
-      }
-      case "Some": {
-        return core.fail(option.value)
-      }
-    }
-  }))
-
-/* @internal */
-export const refineTagOrDie = dual<
-  <R, E extends { _tag: string }, A, K extends E["_tag"] & string>(
-    k: K
-  ) => (self: Effect.Effect<R, E, A>) => Effect.Effect<R, Extract<E, { _tag: K }>, A>,
-  <R, E extends { _tag: string }, A, K extends E["_tag"] & string>(
-    self: Effect.Effect<R, E, A>,
-    k: K
-  ) => Effect.Effect<R, Extract<E, { _tag: K }>, A>
->(2, (self, k) => refineTagOrDieWith(self, k, identity))
-
-/* @internal */
-export const refineTagOrDieWith = dual<
-  <R, E extends { _tag: string }, A, K extends E["_tag"] & string>(
-    k: K,
-    f: (e: Exclude<E, { _tag: K }>) => unknown
-  ) => (self: Effect.Effect<R, E, A>) => Effect.Effect<R, Extract<E, { _tag: K }>, A>,
-  <R, E extends { _tag: string }, A, K extends E["_tag"] & string>(
-    self: Effect.Effect<R, E, A>,
-    k: K,
-    f: (e: Exclude<E, { _tag: K }>) => unknown
-  ) => Effect.Effect<R, Extract<E, { _tag: K }>, A>
->(3, (self, k, f) =>
-  core.catchAll(self, (e) => {
-    if ("_tag" in e && e["_tag"] === k) {
-      return core.fail(e as any)
-    }
-    return core.die(f(e as any))
-  }))
-
-/* @internal */
 export const repeatN = dual<
   (n: number) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
   <R, E, A>(self: Effect.Effect<R, E, A>, n: number) => Effect.Effect<R, E, A>
@@ -1689,50 +1597,6 @@ export const unlessEffect = dual<
     predicate: Effect.Effect<R2, E2, boolean>
   ) => Effect.Effect<R | R2, E | E2, Option.Option<A>>
 >(2, (self, predicate) => core.flatMap(predicate, (b) => (b ? succeedNone : asSome(self))))
-
-/* @internal */
-export const unrefine = dual<
-  <E1>(pf: (u: unknown) => Option.Option<E1>) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E | E1, A>,
-  <R, E, A, E1>(self: Effect.Effect<R, E, A>, pf: (u: unknown) => Option.Option<E1>) => Effect.Effect<R, E | E1, A>
->(2, (self, pf) => unrefineWith(self, pf, identity))
-
-/* @internal */
-export const unrefineWith = dual<
-  <E, E1, E2>(
-    pf: (u: unknown) => Option.Option<E1>,
-    f: (e: E) => E2
-  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E1 | E2, A>,
-  <R, E, A, E1, E2>(
-    self: Effect.Effect<R, E, A>,
-    pf: (u: unknown) => Option.Option<E1>,
-    f: (e: E) => E2
-  ) => Effect.Effect<R, E1 | E2, A>
->(3, <R, E, A, E1, E2>(
-  self: Effect.Effect<R, E, A>,
-  pf: (u: unknown) => Option.Option<E1>,
-  f: (e: E) => E2
-) =>
-  core.catchAllCause(
-    self,
-    (cause): Effect.Effect<R, E1 | E2, A> => {
-      const option = pipe(
-        cause,
-        internalCause.find((cause) =>
-          internalCause.isDieType(cause) ?
-            pf(cause.defect) :
-            Option.none()
-        )
-      )
-      switch (option._tag) {
-        case "None": {
-          return core.failCause(pipe(cause, internalCause.map(f)))
-        }
-        case "Some": {
-          return core.fail(option.value)
-        }
-      }
-    }
-  ))
 
 /* @internal */
 export const unsandbox = <R, E, A>(self: Effect.Effect<R, Cause.Cause<E>, A>) =>

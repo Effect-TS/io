@@ -125,9 +125,6 @@ Added in v1.0.0
   - [catchAll](#catchall)
   - [catchAllCause](#catchallcause)
   - [catchAllDefect](#catchalldefect)
-  - [catchSome](#catchsome)
-  - [catchSomeCause](#catchsomecause)
-  - [catchSomeDefect](#catchsomedefect)
   - [catchTag](#catchtag)
   - [catchTags](#catchtags)
   - [cause](#cause)
@@ -135,7 +132,6 @@ Added in v1.0.0
   - [matchCauseEffect](#matchcauseeffect)
   - [matchEffect](#matcheffect)
   - [sandbox](#sandbox)
-  - [unrefineWith](#unrefinewith)
 - [execution](#execution)
   - [runCallback](#runcallback)
   - [runFork](#runfork)
@@ -325,10 +321,6 @@ Added in v1.0.0
   - [raceFibersWith](#racefiberswith)
   - [raceFirst](#racefirst)
   - [raceWith](#racewith)
-  - [refineOrDie](#refineordie)
-  - [refineOrDieWith](#refineordiewith)
-  - [refineTagOrDie](#refinetagordie)
-  - [refineTagOrDieWith](#refinetagordiewith)
   - [repeat](#repeat)
   - [repeatN](#repeatn)
   - [repeatOrElse](#repeatorelse)
@@ -376,7 +368,6 @@ Added in v1.0.0
   - [uncause](#uncause)
   - [unless](#unless)
   - [unlessEffect](#unlesseffect)
-  - [unrefine](#unrefine)
   - [unsandbox](#unsandbox)
   - [unsome](#unsome)
   - [using](#using)
@@ -2081,74 +2072,6 @@ export declare const catchAllDefect: {
 
 Added in v1.0.0
 
-## catchSome
-
-Recovers from some or all of the error cases.
-
-**Signature**
-
-```ts
-export declare const catchSome: {
-  <E, R2, E2, A2>(pf: (e: E) => Option.Option<Effect<R2, E2, A2>>): <R, A>(
-    self: Effect<R, E, A>
-  ) => Effect<R2 | R, E | E2, A2 | A>
-  <R, A, E, R2, E2, A2>(self: Effect<R, E, A>, pf: (e: E) => Option.Option<Effect<R2, E2, A2>>): Effect<
-    R | R2,
-    E | E2,
-    A | A2
-  >
-}
-```
-
-Added in v1.0.0
-
-## catchSomeCause
-
-Recovers from some or all of the error cases with provided cause.
-
-**Signature**
-
-```ts
-export declare const catchSomeCause: {
-  <E, R2, E2, A2>(f: (cause: Cause.Cause<E>) => Option.Option<Effect<R2, E2, A2>>): <R, A>(
-    self: Effect<R, E, A>
-  ) => Effect<R2 | R, E | E2, A2 | A>
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, f: (cause: Cause.Cause<E>) => Option.Option<Effect<R2, E2, A2>>): Effect<
-    R | R2,
-    E | E2,
-    A | A2
-  >
-}
-```
-
-Added in v1.0.0
-
-## catchSomeDefect
-
-Recovers from some or all of the defects with provided partial function.
-
-**WARNING**: There is no sensible way to recover from defects. This
-method should be used only at the boundary between Effect and an external
-system, to transmit information on a defect for diagnostic or explanatory
-purposes.
-
-**Signature**
-
-```ts
-export declare const catchSomeDefect: {
-  <R2, E2, A2>(pf: (defect: unknown) => Option.Option<Effect<R2, E2, A2>>): <R, E, A>(
-    self: Effect<R, E, A>
-  ) => Effect<R2 | R, E2 | E, A2 | A>
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, pf: (defect: unknown) => Option.Option<Effect<R2, E2, A2>>): Effect<
-    R | R2,
-    E | E2,
-    A | A2
-  >
-}
-```
-
-Added in v1.0.0
-
 ## catchTag
 
 Recovers from the specified tagged error.
@@ -2307,28 +2230,6 @@ Exposes the full `Cause` of failure for the specified effect.
 
 ```ts
 export declare const sandbox: <R, E, A>(self: Effect<R, E, A>) => Effect<R, Cause.Cause<E>, A>
-```
-
-Added in v1.0.0
-
-## unrefineWith
-
-Takes some fiber failures and converts them into errors, using the specified
-function to convert the `E` into an `E1 | E2`.
-
-**Signature**
-
-```ts
-export declare const unrefineWith: {
-  <E, E1, E2>(pf: (u: unknown) => Option.Option<E1>, f: (e: E) => E2): <R, A>(
-    self: Effect<R, E, A>
-  ) => Effect<R, E1 | E2, A>
-  <R, E, A, E1, E2>(self: Effect<R, E, A>, pf: (u: unknown) => Option.Option<E1>, f: (e: E) => E2): Effect<
-    R,
-    E1 | E2,
-    A
-  >
-}
 ```
 
 Added in v1.0.0
@@ -5148,81 +5049,6 @@ export declare const raceWith: {
 
 Added in v1.0.0
 
-## refineOrDie
-
-Keeps some of the errors, and terminates the fiber with the rest
-
-**Signature**
-
-```ts
-export declare const refineOrDie: {
-  <E, E1>(pf: (e: E) => Option.Option<E1>): <R, A>(self: Effect<R, E, A>) => Effect<R, E1, A>
-  <R, E, A, E1>(self: Effect<R, E, A>, pf: (e: E) => Option.Option<E1>): Effect<R, E1, A>
-}
-```
-
-Added in v1.0.0
-
-## refineOrDieWith
-
-Keeps some of the errors, and terminates the fiber with the rest, using
-the specified function to convert the `E` into a defect.
-
-**Signature**
-
-```ts
-export declare const refineOrDieWith: {
-  <E, E1>(pf: (e: E) => Option.Option<E1>, f: (e: E) => unknown): <R, A>(self: Effect<R, E, A>) => Effect<R, E1, A>
-  <R, E, A, E1>(self: Effect<R, E, A>, pf: (e: E) => Option.Option<E1>, f: (e: E) => unknown): Effect<R, E1, A>
-}
-```
-
-Added in v1.0.0
-
-## refineTagOrDie
-
-Keeps only the error matching the specified tag, and terminates the fiber
-with the rest
-
-**Signature**
-
-```ts
-export declare const refineTagOrDie: {
-  <R, E extends { _tag: string }, A, K extends E['_tag'] & string>(k: K): (
-    self: Effect<R, E, A>
-  ) => Effect<R, Extract<E, { _tag: K }>, A>
-  <R, E extends { _tag: string }, A, K extends E['_tag'] & string>(self: Effect<R, E, A>, k: K): Effect<
-    R,
-    Extract<E, { _tag: K }>,
-    A
-  >
-}
-```
-
-Added in v1.0.0
-
-## refineTagOrDieWith
-
-Keeps only the error matching the specified tag, and terminates the fiber
-with the rest, using the specified function to convert the `E` into a defect.
-
-**Signature**
-
-```ts
-export declare const refineTagOrDieWith: {
-  <R, E extends { _tag: string }, A, K extends E['_tag'] & string>(k: K, f: (e: Exclude<E, { _tag: K }>) => unknown): (
-    self: Effect<R, E, A>
-  ) => Effect<R, Extract<E, { _tag: K }>, A>
-  <R, E extends { _tag: string }, A, K extends E['_tag'] & string>(
-    self: Effect<R, E, A>,
-    k: K,
-    f: (e: Exclude<E, { _tag: K }>) => unknown
-  ): Effect<R, Extract<E, { _tag: K }>, A>
-}
-```
-
-Added in v1.0.0
-
 ## repeat
 
 Returns a new effect that repeats this effect according to the specified
@@ -5984,21 +5810,6 @@ export declare const unlessEffect: {
     self: Effect<R, E, A>
   ) => Effect<R2 | R, E2 | E, Option.Option<A>>
   <R, E, A, R2, E2>(self: Effect<R, E, A>, predicate: Effect<R2, E2, boolean>): Effect<R | R2, E | E2, Option.Option<A>>
-}
-```
-
-Added in v1.0.0
-
-## unrefine
-
-Takes some fiber failures and converts them into errors.
-
-**Signature**
-
-```ts
-export declare const unrefine: {
-  <E1>(pf: (u: unknown) => Option.Option<E1>): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E1 | E, A>
-  <R, E, A, E1>(self: Effect<R, E, A>, pf: (u: unknown) => Option.Option<E1>): Effect<R, E | E1, A>
 }
 ```
 

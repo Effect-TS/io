@@ -831,59 +831,6 @@ export const catchAllDefect: {
 } = effect.catchAllDefect
 
 /**
- * Recovers from some or all of the error cases.
- *
- * @since 1.0.0
- * @category error handling
- */
-export const catchSome: {
-  <E, R2, E2, A2>(
-    pf: (e: E) => Option.Option<Effect<R2, E2, A2>>
-  ): <R, A>(self: Effect<R, E, A>) => Effect<R2 | R, E | E2, A2 | A>
-  <R, A, E, R2, E2, A2>(
-    self: Effect<R, E, A>,
-    pf: (e: E) => Option.Option<Effect<R2, E2, A2>>
-  ): Effect<R | R2, E | E2, A | A2>
-} = core.catchSome
-
-/**
- * Recovers from some or all of the error cases with provided cause.
- *
- * @since 1.0.0
- * @category error handling
- */
-export const catchSomeCause: {
-  <E, R2, E2, A2>(
-    f: (cause: Cause.Cause<E>) => Option.Option<Effect<R2, E2, A2>>
-  ): <R, A>(self: Effect<R, E, A>) => Effect<R2 | R, E | E2, A2 | A>
-  <R, E, A, R2, E2, A2>(
-    self: Effect<R, E, A>,
-    f: (cause: Cause.Cause<E>) => Option.Option<Effect<R2, E2, A2>>
-  ): Effect<R | R2, E | E2, A | A2>
-} = effect.catchSomeCause
-
-/**
- * Recovers from some or all of the defects with provided partial function.
- *
- * **WARNING**: There is no sensible way to recover from defects. This
- * method should be used only at the boundary between Effect and an external
- * system, to transmit information on a defect for diagnostic or explanatory
- * purposes.
- *
- * @since 1.0.0
- * @category error handling
- */
-export const catchSomeDefect: {
-  <R2, E2, A2>(
-    pf: (defect: unknown) => Option.Option<Effect<R2, E2, A2>>
-  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2 | A>
-  <R, E, A, R2, E2, A2>(
-    self: Effect<R, E, A>,
-    pf: (defect: unknown) => Option.Option<Effect<R2, E2, A2>>
-  ): Effect<R | R2, E | E2, A | A2>
-} = effect.catchSomeDefect
-
-/**
  * Recovers from the specified tagged error.
  *
  * @since 1.0.0
@@ -3002,65 +2949,6 @@ export const reduceWhile: {
 } = effect.reduceWhile
 
 /**
- * Keeps some of the errors, and terminates the fiber with the rest
- *
- * @since 1.0.0
- * @category utils
- */
-export const refineOrDie: {
-  <E, E1>(pf: (e: E) => Option.Option<E1>): <R, A>(self: Effect<R, E, A>) => Effect<R, E1, A>
-  <R, E, A, E1>(self: Effect<R, E, A>, pf: (e: E) => Option.Option<E1>): Effect<R, E1, A>
-} = effect.refineOrDie
-
-/**
- * Keeps some of the errors, and terminates the fiber with the rest, using
- * the specified function to convert the `E` into a defect.
- *
- * @since 1.0.0
- * @category utils
- */
-export const refineOrDieWith: {
-  <E, E1>(pf: (e: E) => Option.Option<E1>, f: (e: E) => unknown): <R, A>(self: Effect<R, E, A>) => Effect<R, E1, A>
-  <R, E, A, E1>(self: Effect<R, E, A>, pf: (e: E) => Option.Option<E1>, f: (e: E) => unknown): Effect<R, E1, A>
-} = effect.refineOrDieWith
-
-/**
- * Keeps only the error matching the specified tag, and terminates the fiber
- * with the rest
- *
- * @since 1.0.0
- * @category utils
- */
-export const refineTagOrDie: {
-  <R, E extends { _tag: string }, A, K extends E["_tag"] & string>(
-    k: K
-  ): (self: Effect<R, E, A>) => Effect<R, Extract<E, { _tag: K }>, A>
-  <R, E extends { _tag: string }, A, K extends E["_tag"] & string>(
-    self: Effect<R, E, A>,
-    k: K
-  ): Effect<R, Extract<E, { _tag: K }>, A>
-} = effect.refineTagOrDie
-
-/**
- * Keeps only the error matching the specified tag, and terminates the fiber
- * with the rest, using the specified function to convert the `E` into a defect.
- *
- * @since 1.0.0
- * @category utils
- */
-export const refineTagOrDieWith: {
-  <R, E extends { _tag: string }, A, K extends E["_tag"] & string>(
-    k: K,
-    f: (e: Exclude<E, { _tag: K }>) => unknown
-  ): (self: Effect<R, E, A>) => Effect<R, Extract<E, { _tag: K }>, A>
-  <R, E extends { _tag: string }, A, K extends E["_tag"] & string>(
-    self: Effect<R, E, A>,
-    k: K,
-    f: (e: Exclude<E, { _tag: K }>) => unknown
-  ): Effect<R, Extract<E, { _tag: K }>, A>
-} = effect.refineTagOrDieWith
-
-/**
  * Returns a new effect that repeats this effect according to the specified
  * schedule or until the first failure. Scheduled recurrences are in addition
  * to the first execution, so that `io.repeat(Schedule.once)` yields an effect
@@ -3940,36 +3828,6 @@ export const unlessEffect: {
     predicate: Effect<R2, E2, boolean>
   ): Effect<R | R2, E | E2, Option.Option<A>>
 } = effect.unlessEffect
-
-/**
- * Takes some fiber failures and converts them into errors.
- *
- * @since 1.0.0
- * @category utils
- */
-export const unrefine: {
-  <E1>(pf: (u: unknown) => Option.Option<E1>): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E1 | E, A>
-  <R, E, A, E1>(self: Effect<R, E, A>, pf: (u: unknown) => Option.Option<E1>): Effect<R, E | E1, A>
-} = effect.unrefine
-
-/**
- * Takes some fiber failures and converts them into errors, using the specified
- * function to convert the `E` into an `E1 | E2`.
- *
- * @since 1.0.0
- * @category error handling
- */
-export const unrefineWith: {
-  <E, E1, E2>(
-    pf: (u: unknown) => Option.Option<E1>,
-    f: (e: E) => E2
-  ): <R, A>(self: Effect<R, E, A>) => Effect<R, E1 | E2, A>
-  <R, E, A, E1, E2>(
-    self: Effect<R, E, A>,
-    pf: (u: unknown) => Option.Option<E1>,
-    f: (e: E) => E2
-  ): Effect<R, E1 | E2, A>
-} = effect.unrefineWith
 
 /**
  * @category locking
