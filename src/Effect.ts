@@ -1647,19 +1647,17 @@ export const forkDaemon: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Fi
  * @since 1.0.0
  * @category supervision
  */
-export const forkAll: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, never, Fiber.Fiber<E, Array<A>>> =
-  circular.forkAll
-
-/**
- * Returns an effect that forks all of the specified values, and returns a
- * composite fiber that produces unit. This version is faster than `forkAll`
- * in cases where the results of the forked fibers are not needed.
- *
- * @since 1.0.0
- * @category supervision
- */
-export const forkAllDiscard: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, never, void> =
-  fiberRuntime.forkAllDiscard
+export const forkAll: {
+  (
+    options?: { readonly discard?: false }
+  ): <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, never, Fiber.Fiber<E, Array<A>>>
+  (options: { readonly discard: true }): <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, never, void>
+  <R, E, A>(
+    effects: Iterable<Effect<R, E, A>>,
+    options?: { readonly discard?: false }
+  ): Effect<R, never, Fiber.Fiber<E, Array<A>>>
+  <R, E, A>(effects: Iterable<Effect<R, E, A>>, options: { readonly discard: true }): Effect<R, never, void>
+} = circular.forkAll
 
 /**
  * Forks the effect in the specified scope. The fiber will be interrupted

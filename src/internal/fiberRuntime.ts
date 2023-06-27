@@ -1820,10 +1820,6 @@ export const fork = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, ne
   )
 
 /* @internal */
-export const forkAllDiscard = <R, E, A>(effects: Iterable<Effect.Effect<R, E, A>>): Effect.Effect<R, never, void> =>
-  core.forEachDiscard(effects, fork)
-
-/* @internal */
 export const forkDaemon = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>> =>
   forkWithScopeOverride(self, fiberScope.globalScope)
 

@@ -32,6 +32,9 @@ import type * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
 
+// TODO: remove once added to /data/Predicate
+const isIterable = (u: unknown): u is Iterable<unknown> => typeof u === "object" && u != null && Symbol.iterator in u
+
 /** @internal */
 class Semaphore {
   public waiters = new Array<() => void>()
@@ -219,10 +222,33 @@ export const ensuringChildren = dual<
     )))
 
 /** @internal */
-export const forkAll = <R, E, A>(
-  effects: Iterable<Effect.Effect<R, E, A>>
-): Effect.Effect<R, never, Fiber.Fiber<E, Array<A>>> =>
-  core.map(core.forEach(effects, fiberRuntime.fork), fiberRuntime.fiberCollectAll)
+// @ts-expect-error
+export const forkAll = dual<
+  {
+    (options?: { readonly discard?: false }): <R, E, A>(
+      effects: Iterable<Effect.Effect<R, E, A>>
+    ) => Effect.Effect<R, never, Fiber.Fiber<E, Array<A>>>
+    (options: { readonly discard: true }): <R, E, A>(
+      effects: Iterable<Effect.Effect<R, E, A>>
+    ) => Effect.Effect<R, never, void>
+  },
+  {
+    <R, E, A>(
+      effects: Iterable<Effect.Effect<R, E, A>>,
+      options?: { readonly discard?: false }
+    ): Effect.Effect<R, never, Fiber.Fiber<E, Array<A>>>
+    <R, E, A>(
+      effects: Iterable<Effect.Effect<R, E, A>>,
+      options: { readonly discard: true }
+    ): Effect.Effect<R, never, void>
+  }
+>((args) => isIterable(args[0]), (
+  effects,
+  options
+) =>
+  options?.discard ?
+    core.forEachDiscard(effects, fiberRuntime.fork) :
+    core.map(core.forEach(effects, fiberRuntime.fork), fiberRuntime.fiberCollectAll))
 
 /** @internal */
 export const forkIn = dual<

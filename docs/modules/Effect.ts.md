@@ -260,7 +260,6 @@ Added in v1.0.0
   - [daemonChildren](#daemonchildren)
   - [fork](#fork)
   - [forkAll](#forkall)
-  - [forkAllDiscard](#forkalldiscard)
   - [forkDaemon](#forkdaemon)
   - [forkIn](#forkin)
   - [forkScoped](#forkscoped)
@@ -4253,21 +4252,18 @@ composite fiber that produces a list of their results, in order.
 **Signature**
 
 ```ts
-export declare const forkAll: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, never, Fiber.Fiber<E, A[]>>
-```
-
-Added in v1.0.0
-
-## forkAllDiscard
-
-Returns an effect that forks all of the specified values, and returns a
-composite fiber that produces unit. This version is faster than `forkAll`
-in cases where the results of the forked fibers are not needed.
-
-**Signature**
-
-```ts
-export declare const forkAllDiscard: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, never, void>
+export declare const forkAll: {
+  (options?: { readonly discard?: false }): <R, E, A>(
+    effects: Iterable<Effect<R, E, A>>
+  ) => Effect<R, never, Fiber.Fiber<E, A[]>>
+  (options: { readonly discard: true }): <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, never, void>
+  <R, E, A>(effects: Iterable<Effect<R, E, A>>, options?: { readonly discard?: false }): Effect<
+    R,
+    never,
+    Fiber.Fiber<E, A[]>
+  >
+  <R, E, A>(effects: Iterable<Effect<R, E, A>>, options: { readonly discard: true }): Effect<R, never, void>
+}
 ```
 
 Added in v1.0.0

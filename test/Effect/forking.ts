@@ -57,14 +57,14 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("forkAll - returns the list of results in the same order", () =>
     Effect.gen(function*($) {
-      const result = yield* $([1, 2, 3].map(Effect.succeed), Effect.forkAll, Effect.flatMap(Fiber.join))
+      const result = yield* $([1, 2, 3].map(Effect.succeed), Effect.forkAll(), Effect.flatMap(Fiber.join))
       assert.deepStrictEqual(Array.from(result), [1, 2, 3])
     }))
   it.effect("forkAll - happy-path", () =>
     Effect.gen(function*($) {
       const result = yield* $(
         Array.from({ length: 1000 }, (_, i) => i + 1).map(Effect.succeed),
-        Effect.forkAll,
+        Effect.forkAll(),
         Effect.flatMap(Fiber.join)
       )
       assert.deepStrictEqual(
@@ -75,7 +75,7 @@ describe.concurrent("Effect", () => {
   it.effect("forkAll - empty input", () =>
     Effect.gen(function*($) {
       const result = yield* $(
-        pipe([] as ReadonlyArray<Effect.Effect<never, never, number>>, Effect.forkAll, Effect.flatMap(Fiber.join))
+        pipe([] as ReadonlyArray<Effect.Effect<never, never, number>>, Effect.forkAll(), Effect.flatMap(Fiber.join))
       )
       assert.strictEqual(result.length, 0)
     }))
@@ -83,7 +83,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const boom = new Error()
       const fail = Effect.fail(boom)
-      const result = yield* $([fail], Effect.forkAll, Effect.flatMap((fiber) => Effect.flip(Fiber.join(fiber))))
+      const result = yield* $([fail], Effect.forkAll(), Effect.flatMap((fiber) => Effect.flip(Fiber.join(fiber))))
       assert.strictEqual(result, boom)
     }))
   it.effect("forkAll - propagates defects", () =>
