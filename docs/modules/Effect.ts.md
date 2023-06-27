@@ -314,8 +314,6 @@ Added in v1.0.0
   - [merge](#merge)
   - [nonEmptyStruct](#nonemptystruct)
   - [nonEmptyTuple](#nonemptytuple)
-  - [onDone](#ondone)
-  - [onDoneCause](#ondonecause)
   - [onError](#onerror)
   - [once](#once)
   - [option](#option)
@@ -4940,45 +4938,6 @@ export declare const nonEmptyTuple: <T extends readonly [Effect<any, any, any>, 
   [T[number]] extends [Effect<any, infer E, any>] ? E : never,
   { [I in keyof T]: [T[I]] extends [Effect<any, any, infer A>] ? A : never }
 >
-```
-
-Added in v1.0.0
-
-## onDone
-
-**Signature**
-
-```ts
-export declare const onDone: {
-  <E, A, R1, X1, R2, X2>(onError: (e: E) => Effect<R1, never, X1>, onSuccess: (a: A) => Effect<R2, never, X2>): <R>(
-    self: Effect<R, E, A>
-  ) => Effect<R1 | R2 | R, never, void>
-  <R, E, A, R1, X1, R2, X2>(
-    self: Effect<R, E, A>,
-    onError: (e: E) => Effect<R1, never, X1>,
-    onSuccess: (a: A) => Effect<R2, never, X2>
-  ): Effect<R | R1 | R2, never, void>
-}
-```
-
-Added in v1.0.0
-
-## onDoneCause
-
-**Signature**
-
-```ts
-export declare const onDoneCause: {
-  <E, A, R1, X1, R2, X2>(
-    onCause: (cause: Cause.Cause<E>) => Effect<R1, never, X1>,
-    onSuccess: (a: A) => Effect<R2, never, X2>
-  ): <R>(self: Effect<R, E, A>) => Effect<R1 | R2 | R, never, void>
-  <R, E, A, R1, X1, R2, X2>(
-    self: Effect<R, E, A>,
-    onCause: (cause: Cause.Cause<E>) => Effect<R1, never, X1>,
-    onSuccess: (a: A) => Effect<R2, never, X2>
-  ): Effect<R | R1 | R2, never, void>
-}
 ```
 
 Added in v1.0.0

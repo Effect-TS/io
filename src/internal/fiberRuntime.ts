@@ -1950,50 +1950,6 @@ export const mergeAll = dual<
 )
 
 /* @internal */
-export const onDone = dual<
-  <E, A, R1, X1, R2, X2>(
-    onError: (e: E) => Effect.Effect<R1, never, X1>,
-    onSuccess: (a: A) => Effect.Effect<R2, never, X2>
-  ) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1 | R2, never, void>,
-  <R, E, A, R1, X1, R2, X2>(
-    self: Effect.Effect<R, E, A>,
-    onError: (e: E) => Effect.Effect<R1, never, X1>,
-    onSuccess: (a: A) => Effect.Effect<R2, never, X2>
-  ) => Effect.Effect<R | R1 | R2, never, void>
->(
-  3,
-  (self, onError, onSuccess) =>
-    core.uninterruptibleMask((restore) =>
-      core.asUnit(forkDaemon(core.matchEffect(restore(self), {
-        onFailure: (e) => restore(onError(e)),
-        onSuccess: (a) => restore(onSuccess(a))
-      })))
-    )
-)
-
-/* @internal */
-export const onDoneCause = dual<
-  <E, A, R1, X1, R2, X2>(
-    onCause: (cause: Cause.Cause<E>) => Effect.Effect<R1, never, X1>,
-    onSuccess: (a: A) => Effect.Effect<R2, never, X2>
-  ) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1 | R2, never, void>,
-  <R, E, A, R1, X1, R2, X2>(
-    self: Effect.Effect<R, E, A>,
-    onCause: (cause: Cause.Cause<E>) => Effect.Effect<R1, never, X1>,
-    onSuccess: (a: A) => Effect.Effect<R2, never, X2>
-  ) => Effect.Effect<R | R1 | R2, never, void>
->(
-  3,
-  (self, onCause, onSuccess) =>
-    core.uninterruptibleMask((restore) =>
-      core.asUnit(forkDaemon(core.matchCauseEffect(restore(self), {
-        onFailure: (c) => restore(onCause(c)),
-        onSuccess: (a) => restore(onSuccess(a))
-      })))
-    )
-)
-
-/* @internal */
 export const partitionPar = dual<
   <R, E, A, B>(
     f: (a: A) => Effect.Effect<R, E, B>

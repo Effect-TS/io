@@ -2530,38 +2530,6 @@ export const never: Effect<never, never, never> = core.never
 export const none: <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R, Option.Option<E>, void> = effect.none
 
 /**
- * @since 1.0.0
- * @category utils
- */
-export const onDone: {
-  <E, A, R1, X1, R2, X2>(
-    onError: (e: E) => Effect<R1, never, X1>,
-    onSuccess: (a: A) => Effect<R2, never, X2>
-  ): <R>(self: Effect<R, E, A>) => Effect<R1 | R2 | R, never, void>
-  <R, E, A, R1, X1, R2, X2>(
-    self: Effect<R, E, A>,
-    onError: (e: E) => Effect<R1, never, X1>,
-    onSuccess: (a: A) => Effect<R2, never, X2>
-  ): Effect<R | R1 | R2, never, void>
-} = fiberRuntime.onDone
-
-/**
- * @since 1.0.0
- * @category utils
- */
-export const onDoneCause: {
-  <E, A, R1, X1, R2, X2>(
-    onCause: (cause: Cause.Cause<E>) => Effect<R1, never, X1>,
-    onSuccess: (a: A) => Effect<R2, never, X2>
-  ): <R>(self: Effect<R, E, A>) => Effect<R1 | R2 | R, never, void>
-  <R, E, A, R1, X1, R2, X2>(
-    self: Effect<R, E, A>,
-    onCause: (cause: Cause.Cause<E>) => Effect<R1, never, X1>,
-    onSuccess: (a: A) => Effect<R2, never, X2>
-  ): Effect<R | R1 | R2, never, void>
-} = fiberRuntime.onDoneCause
-
-/**
  * Runs the specified effect if this effect fails, providing the error to the
  * effect if it exists. The provided effect will not be interrupted.
  *
