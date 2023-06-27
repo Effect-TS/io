@@ -3608,10 +3608,10 @@ export const takeWhile: {
  * @since 1.0.0
  * @category utils
  */
-export const tagged: {
+export const tagMetrics: {
   (key: string, value: string): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
   <R, E, A>(self: Effect<R, E, A>, key: string, value: string): Effect<R, E, A>
-} = effect.tagged
+} = effect.tagMetrics
 
 /**
  * Tags each metric in this effect with the specific tag.
@@ -3619,10 +3619,10 @@ export const tagged: {
  * @since 1.0.0
  * @category utils
  */
-export const taggedWithLabels: {
+export const labelMetrics: {
   (labels: Iterable<MetricLabel.MetricLabel>): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
   <R, E, A>(self: Effect<R, E, A>, labels: Iterable<MetricLabel.MetricLabel>): Effect<R, E, A>
-} = effect.taggedWithLabels
+} = effect.labelMetrics
 
 /**
  * Tags each metric in this effect with the specific tag.
@@ -3630,10 +3630,10 @@ export const taggedWithLabels: {
  * @since 1.0.0
  * @category utils
  */
-export const taggedWithLabelSet: {
+export const labelMetricSet: {
   (labels: HashSet.HashSet<MetricLabel.MetricLabel>): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
   <R, E, A>(self: Effect<R, E, A>, labels: HashSet.HashSet<MetricLabel.MetricLabel>): Effect<R, E, A>
-} = effect.taggedWithLabelSet
+} = effect.labelMetricsSet
 
 /**
  * Tags each metric in a scope with a the specific tag.
@@ -3641,7 +3641,8 @@ export const taggedWithLabelSet: {
  * @since 1.0.0
  * @category constructors
  */
-export const taggedScoped: (key: string, value: string) => Effect<Scope.Scope, never, void> = fiberRuntime.taggedScoped
+export const tagMetricsScoped: (key: string, value: string) => Effect<Scope.Scope, never, void> =
+  fiberRuntime.tagMetricsScoped
 
 /**
  * Tags each metric in a scope with a the specific tag.
@@ -3649,9 +3650,9 @@ export const taggedScoped: (key: string, value: string) => Effect<Scope.Scope, n
  * @since 1.0.0
  * @category constructors
  */
-export const taggedScopedWithLabels: (
+export const labelMetricsScoped: (
   labels: ReadonlyArray<MetricLabel.MetricLabel>
-) => Effect<Scope.Scope, never, void> = fiberRuntime.taggedScopedWithLabels
+) => Effect<Scope.Scope, never, void> = fiberRuntime.labelMetricsScoped
 
 /**
  * Tags each metric in a scope with a the specific tag.
@@ -3659,9 +3660,9 @@ export const taggedScopedWithLabels: (
  * @since 1.0.0
  * @category constructors
  */
-export const taggedScopedWithLabelSet: (
+export const labelMetricsScopedSet: (
   labels: HashSet.HashSet<MetricLabel.MetricLabel>
-) => Effect<Scope.Scope, never, void> = fiberRuntime.taggedScopedWithLabelSet
+) => Effect<Scope.Scope, never, void> = fiberRuntime.labelMetricsScopedSet
 
 /**
  * Retrieves the metric tags associated with the current scope.
@@ -3669,7 +3670,7 @@ export const taggedScopedWithLabelSet: (
  * @since 1.0.0
  * @category getters
  */
-export const tags: Effect<never, never, HashSet.HashSet<MetricLabel.MetricLabel>> = core.tags
+export const tags: Effect<never, never, HashSet.HashSet<MetricLabel.MetricLabel>> = core.metricLabels
 
 /**
  * @since 1.0.0

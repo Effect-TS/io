@@ -58,6 +58,8 @@ Added in v1.0.0
   - [if](#if)
   - [inheritFiberRefs](#inheritfiberrefs)
   - [iterate](#iterate)
+  - [labelMetricsScoped](#labelmetricsscoped)
+  - [labelMetricsScopedSet](#labelmetricsscopedset)
   - [loop](#loop)
   - [mergeAll](#mergeall)
   - [mergeAllPar](#mergeallpar)
@@ -77,9 +79,7 @@ Added in v1.0.0
   - [succeedSome](#succeedsome)
   - [suspend](#suspend)
   - [sync](#sync)
-  - [taggedScoped](#taggedscoped)
-  - [taggedScopedWithLabelSet](#taggedscopedwithlabelset)
-  - [taggedScopedWithLabels](#taggedscopedwithlabels)
+  - [tagMetricsScoped](#tagmetricsscoped)
   - [takeWhile](#takewhile)
   - [try](#try)
   - [tryCatch](#trycatch)
@@ -307,6 +307,8 @@ Added in v1.0.0
   - [head](#head)
   - [ignore](#ignore)
   - [ignoreLogged](#ignorelogged)
+  - [labelMetricSet](#labelmetricset)
+  - [labelMetrics](#labelmetrics)
   - [locally](#locally)
   - [locallyScoped](#locallyscoped)
   - [locallyScopedWith](#locallyscopedwith)
@@ -370,9 +372,7 @@ Added in v1.0.0
   - [step](#step)
   - [summarized](#summarized)
   - [supervised](#supervised)
-  - [tagged](#tagged)
-  - [taggedWithLabelSet](#taggedwithlabelset)
-  - [taggedWithLabels](#taggedwithlabels)
+  - [tagMetrics](#tagmetrics)
   - [timed](#timed)
   - [timedWith](#timedwith)
   - [timeout](#timeout)
@@ -1130,6 +1130,34 @@ export declare const iterate: <Z, R, E>(
 
 Added in v1.0.0
 
+## labelMetricsScoped
+
+Tags each metric in a scope with a the specific tag.
+
+**Signature**
+
+```ts
+export declare const labelMetricsScoped: (
+  labels: ReadonlyArray<MetricLabel.MetricLabel>
+) => Effect<Scope.Scope, never, void>
+```
+
+Added in v1.0.0
+
+## labelMetricsScopedSet
+
+Tags each metric in a scope with a the specific tag.
+
+**Signature**
+
+```ts
+export declare const labelMetricsScopedSet: (
+  labels: HashSet.HashSet<MetricLabel.MetricLabel>
+) => Effect<Scope.Scope, never, void>
+```
+
+Added in v1.0.0
+
 ## loop
 
 Loops with the specified effectual function, collecting the results into a
@@ -1415,42 +1443,14 @@ export declare const sync: <A>(evaluate: LazyArg<A>) => Effect<never, never, A>
 
 Added in v1.0.0
 
-## taggedScoped
+## tagMetricsScoped
 
 Tags each metric in a scope with a the specific tag.
 
 **Signature**
 
 ```ts
-export declare const taggedScoped: (key: string, value: string) => Effect<Scope.Scope, never, void>
-```
-
-Added in v1.0.0
-
-## taggedScopedWithLabelSet
-
-Tags each metric in a scope with a the specific tag.
-
-**Signature**
-
-```ts
-export declare const taggedScopedWithLabelSet: (
-  labels: HashSet.HashSet<MetricLabel.MetricLabel>
-) => Effect<Scope.Scope, never, void>
-```
-
-Added in v1.0.0
-
-## taggedScopedWithLabels
-
-Tags each metric in a scope with a the specific tag.
-
-**Signature**
-
-```ts
-export declare const taggedScopedWithLabels: (
-  labels: ReadonlyArray<MetricLabel.MetricLabel>
-) => Effect<Scope.Scope, never, void>
+export declare const tagMetricsScoped: (key: string, value: string) => Effect<Scope.Scope, never, void>
 ```
 
 Added in v1.0.0
@@ -4848,6 +4848,36 @@ export declare const ignoreLogged: <R, E, A>(self: Effect<R, E, A>) => Effect<R,
 
 Added in v1.0.0
 
+## labelMetricSet
+
+Tags each metric in this effect with the specific tag.
+
+**Signature**
+
+```ts
+export declare const labelMetricSet: {
+  (labels: HashSet.HashSet<MetricLabel.MetricLabel>): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, labels: HashSet.HashSet<MetricLabel.MetricLabel>): Effect<R, E, A>
+}
+```
+
+Added in v1.0.0
+
+## labelMetrics
+
+Tags each metric in this effect with the specific tag.
+
+**Signature**
+
+```ts
+export declare const labelMetrics: {
+  (labels: Iterable<MetricLabel.MetricLabel>): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, labels: Iterable<MetricLabel.MetricLabel>): Effect<R, E, A>
+}
+```
+
+Added in v1.0.0
+
 ## locally
 
 **Signature**
@@ -5867,46 +5897,16 @@ export declare const supervised: {
 
 Added in v1.0.0
 
-## tagged
+## tagMetrics
 
 Tags each metric in this effect with the specific tag.
 
 **Signature**
 
 ```ts
-export declare const tagged: {
+export declare const tagMetrics: {
   (key: string, value: string): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
   <R, E, A>(self: Effect<R, E, A>, key: string, value: string): Effect<R, E, A>
-}
-```
-
-Added in v1.0.0
-
-## taggedWithLabelSet
-
-Tags each metric in this effect with the specific tag.
-
-**Signature**
-
-```ts
-export declare const taggedWithLabelSet: {
-  (labels: HashSet.HashSet<MetricLabel.MetricLabel>): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(self: Effect<R, E, A>, labels: HashSet.HashSet<MetricLabel.MetricLabel>): Effect<R, E, A>
-}
-```
-
-Added in v1.0.0
-
-## taggedWithLabels
-
-Tags each metric in this effect with the specific tag.
-
-**Signature**
-
-```ts
-export declare const taggedWithLabels: {
-  (labels: Iterable<MetricLabel.MetricLabel>): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(self: Effect<R, E, A>, labels: Iterable<MetricLabel.MetricLabel>): Effect<R, E, A>
 }
 ```
 

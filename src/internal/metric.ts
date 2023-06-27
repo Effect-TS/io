@@ -425,7 +425,7 @@ export const update = dual<
   <Type, In, Out>(self: Metric.Metric<Type, In, Out>, input: In) => Effect.Effect<never, never, void>
 >(2, (self, input) =>
   core.fiberRefGetWith(
-    core.currentTags,
+    core.currentMetricLabels,
     (tags) => core.sync(() => self.unsafeUpdate(input, tags))
   ))
 
@@ -434,7 +434,7 @@ export const value = <Type, In, Out>(
   self: Metric.Metric<Type, In, Out>
 ): Effect.Effect<never, never, Out> =>
   core.fiberRefGetWith(
-    core.currentTags,
+    core.currentMetricLabels,
     (tags) => core.sync(() => self.unsafeValue(tags))
   )
 

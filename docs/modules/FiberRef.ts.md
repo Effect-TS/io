@@ -29,6 +29,7 @@ Added in v1.0.0
   - [currentLogSpan](#currentlogspan)
   - [currentLoggers](#currentloggers)
   - [currentMaxFiberOps](#currentmaxfiberops)
+  - [currentMetricLabels](#currentmetriclabels)
   - [currentMinimumLogLevel](#currentminimumloglevel)
   - [currentParallelism](#currentparallelism)
   - [currentRequestBatchingEnabled](#currentrequestbatchingenabled)
@@ -37,7 +38,6 @@ Added in v1.0.0
   - [currentRuntimeFlags](#currentruntimeflags)
   - [currentScheduler](#currentscheduler)
   - [currentSupervisor](#currentsupervisor)
-  - [currentTags](#currenttags)
   - [currentTracerSpan](#currenttracerspan)
   - [currentTracerSpanAnnotations](#currenttracerspanannotations)
   - [interruptedCause](#interruptedcause)
@@ -241,6 +241,16 @@ export declare const currentMaxFiberOps: FiberRef<number>
 
 Added in v1.0.0
 
+## currentMetricLabels
+
+**Signature**
+
+```ts
+export declare const currentMetricLabels: FiberRef<HashSet.HashSet<MetricLabel.MetricLabel>>
+```
+
+Added in v1.0.0
+
 ## currentMinimumLogLevel
 
 **Signature**
@@ -317,16 +327,6 @@ Added in v1.0.0
 
 ```ts
 export declare const currentSupervisor: FiberRef<Supervisor.Supervisor<any>>
-```
-
-Added in v1.0.0
-
-## currentTags
-
-**Signature**
-
-```ts
-export declare const currentTags: FiberRef<HashSet.HashSet<MetricLabel.MetricLabel>>
 ```
 
 Added in v1.0.0

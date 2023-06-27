@@ -1445,24 +1445,27 @@ export const summarized = dual<
 )
 
 /* @internal */
-export const tagged = dual<
+export const tagMetrics = dual<
   (key: string, value: string) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
   <R, E, A>(self: Effect.Effect<R, E, A>, key: string, value: string) => Effect.Effect<R, E, A>
->(3, (self, key, value) => taggedWithLabels(self, [metricLabel.make(key, value)]))
+>(3, (self, key, value) => labelMetrics(self, [metricLabel.make(key, value)]))
 
 /* @internal */
-export const taggedWithLabels = dual<
+export const labelMetrics = dual<
   (labels: Iterable<MetricLabel.MetricLabel>) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
   <R, E, A>(self: Effect.Effect<R, E, A>, labels: Iterable<MetricLabel.MetricLabel>) => Effect.Effect<R, E, A>
->(2, (self, labels) => taggedWithLabelSet(self, HashSet.fromIterable(labels)))
+>(2, (self, labels) => labelMetricsSet(self, HashSet.fromIterable(labels)))
 
 /* @internal */
-export const taggedWithLabelSet = dual<
+export const labelMetricsSet = dual<
   (labels: HashSet.HashSet<MetricLabel.MetricLabel>) => <R, E, A>(
     self: Effect.Effect<R, E, A>
   ) => Effect.Effect<R, E, A>,
   <R, E, A>(self: Effect.Effect<R, E, A>, labels: HashSet.HashSet<MetricLabel.MetricLabel>) => Effect.Effect<R, E, A>
->(2, (self, labels) => core.fiberRefLocallyWith(core.currentTags, (set) => pipe(set, HashSet.union(labels)))(self))
+>(
+  2,
+  (self, labels) => core.fiberRefLocallyWith(core.currentMetricLabels, (set) => pipe(set, HashSet.union(labels)))(self)
+)
 
 /* @internal */
 export const takeWhile = dual<

@@ -238,7 +238,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     this._fiberId = fiberId
     this._fiberRefs = fiberRefs0
     if (_runtimeFlags.runtimeMetrics(runtimeFlags0)) {
-      const tags = this.getFiberRef(core.currentTags)
+      const tags = this.getFiberRef(core.currentMetricLabels)
       fibersStarted.unsafeUpdate(1, tags)
     }
   }
@@ -693,7 +693,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
 
   reportExitValue(exit: Exit.Exit<E, A>) {
     if (_runtimeFlags.runtimeMetrics(this._runtimeFlags)) {
-      const tags = this.getFiberRef(core.currentTags)
+      const tags = this.getFiberRef(core.currentMetricLabels)
       switch (exit._tag) {
         case OpCodes.OP_SUCCESS: {
           fiberSuccesses.unsafeUpdate(1, tags)
@@ -717,7 +717,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     this._exitValue = exit
 
     if (_runtimeFlags.runtimeMetrics(this._runtimeFlags)) {
-      const tags = this.getFiberRef(core.currentTags)
+      const tags = this.getFiberRef(core.currentMetricLabels)
       const startTimeMillis = this.id().startTimeMillis
       const endTimeMillis = new Date().getTime()
       fiberLifetimes.unsafeUpdate((endTimeMillis - startTimeMillis) / 1000.0, tags)
@@ -2170,19 +2170,19 @@ export const sequentialFinalizers = <R, E, A>(self: Effect.Effect<R, E, A>): Eff
   )
 
 /* @internal */
-export const taggedScoped = (key: string, value: string): Effect.Effect<Scope.Scope, never, void> =>
-  taggedScopedWithLabels([metricLabel.make(key, value)])
+export const tagMetricsScoped = (key: string, value: string): Effect.Effect<Scope.Scope, never, void> =>
+  labelMetricsScoped([metricLabel.make(key, value)])
 
 /* @internal */
-export const taggedScopedWithLabels = (
+export const labelMetricsScoped = (
   labels: ReadonlyArray<MetricLabel.MetricLabel>
-): Effect.Effect<Scope.Scope, never, void> => taggedScopedWithLabelSet(HashSet.fromIterable(labels))
+): Effect.Effect<Scope.Scope, never, void> => labelMetricsScopedSet(HashSet.fromIterable(labels))
 
 /* @internal */
-export const taggedScopedWithLabelSet = (
+export const labelMetricsScopedSet = (
   labels: HashSet.HashSet<MetricLabel.MetricLabel>
 ): Effect.Effect<Scope.Scope, never, void> =>
-  fiberRefLocallyScopedWith(core.currentTags, (set) => pipe(set, HashSet.union(labels)))
+  fiberRefLocallyScopedWith(core.currentMetricLabels, (set) => pipe(set, HashSet.union(labels)))
 
 /* @internal */
 export const using = dual<
@@ -2268,7 +2268,7 @@ export const withConfigProviderScoped = (value: ConfigProvider) =>
   fiberRefLocallyScopedWith(defaultServices.currentServices, Context.add(configProviderTag, value))
 
 /* @internal */
-export const withTracerScoped = (value: Tracer) =>
+export const withTracerScoped = (value: Tracer): Effect.Effect<Scope.Scope, never, void> =>
   fiberRefLocallyScopedWith(defaultServices.currentServices, Context.add(tracer.tracerTag, value))
 
 /* @internal */

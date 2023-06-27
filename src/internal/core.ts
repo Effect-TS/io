@@ -1697,12 +1697,15 @@ export const withUnhandledErrorLogLevel = dual<
 >(2, (self, level) => fiberRefLocally(self, currentUnhandledErrorLogLevel, level))
 
 /** @internal */
-export const currentTags: FiberRef.FiberRef<HashSet.HashSet<MetricLabel.MetricLabel>> = fiberRefUnsafeMakeHashSet(
-  HashSet.empty()
-)
+export const currentMetricLabels: FiberRef.FiberRef<HashSet.HashSet<MetricLabel.MetricLabel>> =
+  fiberRefUnsafeMakeHashSet(
+    HashSet.empty()
+  )
 
 /* @internal */
-export const tags: Effect.Effect<never, never, HashSet.HashSet<MetricLabel.MetricLabel>> = fiberRefGet(currentTags)
+export const metricLabels: Effect.Effect<never, never, HashSet.HashSet<MetricLabel.MetricLabel>> = fiberRefGet(
+  currentMetricLabels
+)
 
 /** @internal */
 export const currentForkScopeOverride: FiberRef.FiberRef<Option.Option<fiberScope.FiberScope>> = globalValue(
