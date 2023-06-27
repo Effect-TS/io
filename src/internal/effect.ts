@@ -1374,28 +1374,32 @@ export const takeWhile = dual<
 /* @internal */
 export const tapBoth = dual<
   <E, A, R2, E2, X, R3, E3, X1>(
-    f: (e: E) => Effect.Effect<R2, E2, X>,
-    g: (a: A) => Effect.Effect<R3, E3, X1>
+    options: {
+      readonly onFailure: (e: E) => Effect.Effect<R2, E2, X>
+      readonly onSuccess: (a: A) => Effect.Effect<R3, E3, X1>
+    }
   ) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2 | R3, E | E2 | E3, A>,
   <R, E, A, R2, E2, X, R3, E3, X1>(
     self: Effect.Effect<R, E, A>,
-    f: (e: E) => Effect.Effect<R2, E2, X>,
-    g: (a: A) => Effect.Effect<R3, E3, X1>
+    options: {
+      readonly onFailure: (e: E) => Effect.Effect<R2, E2, X>
+      readonly onSuccess: (a: A) => Effect.Effect<R3, E3, X1>
+    }
   ) => Effect.Effect<R | R2 | R3, E | E2 | E3, A>
->(3, (self, f, g) =>
+>(2, (self, { onFailure, onSuccess }) =>
   core.matchCauseEffect(self, {
     onFailure: (cause) => {
       const either = internalCause.failureOrCause(cause)
       switch (either._tag) {
         case "Left": {
-          return core.zipRight(f(either.left), core.failCause(cause))
+          return core.zipRight(onFailure(either.left), core.failCause(cause))
         }
         case "Right": {
           return core.failCause(cause)
         }
       }
     },
-    onSuccess: (a) => core.as(g(a), a)
+    onSuccess: (a) => core.as(onSuccess(a), a)
   }))
 
 /* @internal */
