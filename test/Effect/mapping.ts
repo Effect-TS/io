@@ -52,14 +52,14 @@ describe.concurrent("Effect", () => {
       )
       assert.deepStrictEqual(result, Either.left("10"))
     }))
-  it.effect("mapTryCatch - returns an effect whose success is mapped by the specified side effecting function", () =>
+  it.effect("tryMap - returns an effect whose success is mapped by the specified side effecting function", () =>
     Effect.gen(function*($) {
-      const result = yield* $(Effect.succeed("123"), Effect.mapTryCatch(parseInt, identity))
+      const result = yield* $(Effect.succeed("123"), Effect.tryMap(parseInt, { catch: identity }))
       assert.strictEqual(result, 123)
     }))
-  it.effect("mapTryCatch - translates any thrown exceptions into typed failed effects", () =>
+  it.effect("tryMap - translates any thrown exceptions into typed failed effects", () =>
     Effect.gen(function*($) {
-      const result = yield* $(Effect.succeed("hello"), Effect.mapTryCatch(parseInt, identity), Effect.exit)
+      const result = yield* $(Effect.succeed("hello"), Effect.tryMap(parseInt, { catch: identity }), Effect.exit)
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(Cause.IllegalArgumentException()))
     }))
   it.effect("negate - on true returns false", () =>

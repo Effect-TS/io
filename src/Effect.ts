@@ -681,7 +681,10 @@ export const asyncInterrupt: <R, E, A>(
   blockingOn?: FiberId.FiberId
 ) => Effect<R, E, A> = core.asyncInterrupt
 
-const try_: <A>(evaluate: LazyArg<A>) => Effect<never, unknown, A> = effect.attempt
+const try_: {
+  <A>(try_: LazyArg<A>): Effect<never, unknown, A>
+  <A, E>(try_: LazyArg<A>, options: { readonly catch: (error: unknown) => E }): Effect<never, E, A>
+} = effect.attempt
 export {
   /**
    * Imports a synchronous side-effect into a pure `Effect` value, translating any
@@ -2318,18 +2321,6 @@ export const mapErrorCause: {
 } = effect.mapErrorCause
 
 /**
- * Returns an effect whose success is mapped by the specified side effecting
- * `f` function, translating any thrown exceptions into typed failed effects.
- *
- * @since 1.0.0
- * @category mapping
- */
-export const mapTryCatch: {
-  <A, B, E1>(f: (a: A) => B, onThrow: (u: unknown) => E1): <R, E>(self: Effect<R, E, A>) => Effect<R, E1 | E, B>
-  <R, E, A, B, E1>(self: Effect<R, E, A>, f: (a: A) => B, onThrow: (u: unknown) => E1): Effect<R, E | E1, B>
-} = effect.mapTryCatch
-
-/**
  * Folds over the failure value or the success value to yield an effect that
  * does not fail, but succeeds with the value returned by the left or right
  * function passed to `match`.
@@ -3699,37 +3690,23 @@ export const transplant: <R, E, A>(
 ) => Effect<R, E, A> = core.transplant
 
 /**
- * Imports a synchronous side-effect into a pure value, translating any
- * thrown exceptions into typed failed effects.
+ * Returns an effect whose success is mapped by the specified side effecting
+ * `f` function, translating any thrown exceptions into typed failed effects.
  *
  * @since 1.0.0
- * @category constructors
+ * @category mapping
  */
-export const tryCatch: <E, A>(attempt: LazyArg<A>, onThrow: (u: unknown) => E) => Effect<never, E, A> =
-  effect.attemptCatch
-
-/**
- * Create an `Effect` that when executed will construct `evaluate` and wait for
- * its result, errors will be handled using `onReject`.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const tryCatchPromise: <E, A>(
-  evaluate: LazyArg<Promise<A>>,
-  onReject: (reason: unknown) => E
-) => Effect<never, E, A> = effect.attemptCatchPromise
-
-/**
- * Like `tryCatchPromise` but allows for interruption via AbortSignal
- *
- * @since 1.0.0
- * @category constructors
- */
-export const tryCatchPromiseInterrupt: <E, A>(
-  evaluate: (signal: AbortSignal) => Promise<A>,
-  onReject: (reason: unknown) => E
-) => Effect<never, E, A> = effect.attemptCatchPromiseInterrupt
+export const tryMap: {
+  <A, B, E1>(
+    try_: (a: A) => B,
+    options: { readonly catch: (error: unknown) => E1 }
+  ): <R, E>(self: Effect<R, E, A>) => Effect<R, E1 | E, B>
+  <R, E, A, B, E1>(
+    self: Effect<R, E, A>,
+    f: (a: A) => B,
+    options: { readonly catch: (error: unknown) => E1 }
+  ): Effect<R, E | E1, B>
+} = effect.attemptMap
 
 /**
  * Create an `Effect` that when executed will construct `promise` and wait for
@@ -3738,7 +3715,10 @@ export const tryCatchPromiseInterrupt: <E, A>(
  * @since 1.0.0
  * @category constructors
  */
-export const tryPromise: <A>(evaluate: LazyArg<Promise<A>>) => Effect<never, unknown, A> = effect.attemptPromise
+export const tryPromise: {
+  <A>(try_: LazyArg<Promise<A>>): Effect<never, unknown, A>
+  <A, E>(try_: LazyArg<Promise<A>>, options: { readonly catch: (error: unknown) => E }): Effect<never, E, A>
+} = effect.attemptPromise
 
 /**
  * Like `tryPromise` but allows for interruption via AbortSignal
@@ -3746,8 +3726,13 @@ export const tryPromise: <A>(evaluate: LazyArg<Promise<A>>) => Effect<never, unk
  * @since 1.0.0
  * @category constructors
  */
-export const tryPromiseInterrupt: <A>(evaluate: (signal: AbortSignal) => Promise<A>) => Effect<never, unknown, A> =
-  effect.attemptPromiseInterrupt
+export const tryPromiseInterrupt: {
+  <A>(try_: (signal: AbortSignal) => Promise<A>): Effect<never, unknown, A>
+  <A, E>(
+    try_: (signal: AbortSignal) => Promise<A>,
+    options: { readonly catch: (error: unknown) => E }
+  ): Effect<never, E, A>
+} = effect.attemptPromiseInterrupt
 
 /**
  * Used to unify functions that would otherwise return `Effect<A, B, C> | Effect<D, E, F>`

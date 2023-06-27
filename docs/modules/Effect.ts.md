@@ -80,9 +80,6 @@ Added in v1.0.0
   - [tagMetricsScoped](#tagmetricsscoped)
   - [takeWhile](#takewhile)
   - [try](#try)
-  - [tryCatch](#trycatch)
-  - [tryCatchPromise](#trycatchpromise)
-  - [tryCatchPromiseInterrupt](#trycatchpromiseinterrupt)
   - [tryPromise](#trypromise)
   - [tryPromiseInterrupt](#trypromiseinterrupt)
   - [unfold](#unfold)
@@ -208,8 +205,8 @@ Added in v1.0.0
   - [mapBoth](#mapboth)
   - [mapError](#maperror)
   - [mapErrorCause](#maperrorcause)
-  - [mapTryCatch](#maptrycatch)
   - [negate](#negate)
+  - [tryMap](#trymap)
 - [models](#models)
   - [Adapter (interface)](#adapter-interface)
   - [Blocked (interface)](#blocked-interface)
@@ -1434,51 +1431,7 @@ thrown exceptions into typed failed effects creating with `Effect.fail`.
 **Signature**
 
 ```ts
-export declare const try: <A>(evaluate: LazyArg<A>) => Effect<never, unknown, A>
-```
-
-Added in v1.0.0
-
-## tryCatch
-
-Imports a synchronous side-effect into a pure value, translating any
-thrown exceptions into typed failed effects.
-
-**Signature**
-
-```ts
-export declare const tryCatch: <E, A>(attempt: LazyArg<A>, onThrow: (u: unknown) => E) => Effect<never, E, A>
-```
-
-Added in v1.0.0
-
-## tryCatchPromise
-
-Create an `Effect` that when executed will construct `evaluate` and wait for
-its result, errors will be handled using `onReject`.
-
-**Signature**
-
-```ts
-export declare const tryCatchPromise: <E, A>(
-  evaluate: LazyArg<Promise<A>>,
-  onReject: (reason: unknown) => E
-) => Effect<never, E, A>
-```
-
-Added in v1.0.0
-
-## tryCatchPromiseInterrupt
-
-Like `tryCatchPromise` but allows for interruption via AbortSignal
-
-**Signature**
-
-```ts
-export declare const tryCatchPromiseInterrupt: <E, A>(
-  evaluate: (signal: AbortSignal) => Promise<A>,
-  onReject: (reason: unknown) => E
-) => Effect<never, E, A>
+export declare const try: { <A>(try_: LazyArg<A>): Effect<never, unknown, A>; <A, E>(try_: LazyArg<A>, options: { readonly catch: (error: unknown) => E; }): Effect<never, E, A>; }
 ```
 
 Added in v1.0.0
@@ -1491,7 +1444,10 @@ its result, errors will produce failure as `unknown`.
 **Signature**
 
 ```ts
-export declare const tryPromise: <A>(evaluate: LazyArg<Promise<A>>) => Effect<never, unknown, A>
+export declare const tryPromise: {
+  <A>(try_: LazyArg<Promise<A>>): Effect<never, unknown, A>
+  <A, E>(try_: LazyArg<Promise<A>>, options: { readonly catch: (error: unknown) => E }): Effect<never, E, A>
+}
 ```
 
 Added in v1.0.0
@@ -1503,9 +1459,14 @@ Like `tryPromise` but allows for interruption via AbortSignal
 **Signature**
 
 ```ts
-export declare const tryPromiseInterrupt: <A>(
-  evaluate: (signal: AbortSignal) => Promise<A>
-) => Effect<never, unknown, A>
+export declare const tryPromiseInterrupt: {
+  <A>(try_: (signal: AbortSignal) => Promise<A>): Effect<never, unknown, A>
+  <A, E>(try_: (signal: AbortSignal) => Promise<A>, options: { readonly catch: (error: unknown) => E }): Effect<
+    never,
+    E,
+    A
+  >
+}
 ```
 
 Added in v1.0.0
@@ -3275,22 +3236,6 @@ export declare const mapErrorCause: {
 
 Added in v1.0.0
 
-## mapTryCatch
-
-Returns an effect whose success is mapped by the specified side effecting
-`f` function, translating any thrown exceptions into typed failed effects.
-
-**Signature**
-
-```ts
-export declare const mapTryCatch: {
-  <A, B, E1>(f: (a: A) => B, onThrow: (u: unknown) => E1): <R, E>(self: Effect<R, E, A>) => Effect<R, E1 | E, B>
-  <R, E, A, B, E1>(self: Effect<R, E, A>, f: (a: A) => B, onThrow: (u: unknown) => E1): Effect<R, E | E1, B>
-}
-```
-
-Added in v1.0.0
-
 ## negate
 
 Returns a new effect where boolean value of this effect is negated.
@@ -3299,6 +3244,28 @@ Returns a new effect where boolean value of this effect is negated.
 
 ```ts
 export declare const negate: <R, E>(self: Effect<R, E, boolean>) => Effect<R, E, boolean>
+```
+
+Added in v1.0.0
+
+## tryMap
+
+Returns an effect whose success is mapped by the specified side effecting
+`f` function, translating any thrown exceptions into typed failed effects.
+
+**Signature**
+
+```ts
+export declare const tryMap: {
+  <A, B, E1>(try_: (a: A) => B, options: { readonly catch: (error: unknown) => E1 }): <R, E>(
+    self: Effect<R, E, A>
+  ) => Effect<R, E1 | E, B>
+  <R, E, A, B, E1>(self: Effect<R, E, A>, f: (a: A) => B, options: { readonly catch: (error: unknown) => E1 }): Effect<
+    R,
+    E | E1,
+    B
+  >
+}
 ```
 
 Added in v1.0.0

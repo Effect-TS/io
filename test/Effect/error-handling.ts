@@ -396,13 +396,13 @@ describe.concurrent("Effect", () => {
       )
       assert.deepStrictEqual(Exit.unannotate(result), Exit.die(ExampleError))
     }))
-  it.effect("tryCatch = handles exceptions", () =>
+  it.effect("try = handles exceptions", () =>
     Effect.gen(function*($) {
       const message = "hello"
       const result = yield* $(
-        Effect.tryCatch(() => {
+        Effect.try(() => {
           throw message
-        }, identity),
+        }, { catch: identity }),
         Effect.exit
       )
 
