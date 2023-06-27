@@ -935,10 +935,13 @@ export const logAnnotations: Effect.Effect<never, never, HashMap.HashMap<string,
 /* @internal */
 export const loop = <Z, R, E, A>(
   initial: Z,
-  cont: (z: Z) => boolean,
-  inc: (z: Z) => Z,
-  body: (z: Z) => Effect.Effect<R, E, A>
-): Effect.Effect<R, E, Array<A>> => core.map(loopInternal(initial, cont, inc, body), (x) => Array.from(x))
+  options: {
+    readonly while: (z: Z) => boolean
+    readonly step: (z: Z) => Z
+    readonly body: (z: Z) => Effect.Effect<R, E, A>
+  }
+): Effect.Effect<R, E, Array<A>> =>
+  core.map(loopInternal(initial, options.while, options.step, options.body), (x) => Array.from(x))
 
 const loopInternal = <Z, R, E, A>(
   initial: Z,

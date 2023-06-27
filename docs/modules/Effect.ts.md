@@ -1153,9 +1153,7 @@ A.reverse(as)
 ```ts
 export declare const loop: <Z, R, E, A>(
   initial: Z,
-  cont: (z: Z) => boolean,
-  inc: (z: Z) => Z,
-  body: (z: Z) => Effect<R, E, A>
+  options: { readonly while: (z: Z) => boolean; readonly step: (z: Z) => Z; readonly body: (z: Z) => Effect<R, E, A> }
 ) => Effect<R, E, A[]>
 ```
 
