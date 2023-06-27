@@ -6,8 +6,13 @@ import type * as Context from "@effect/data/Context"
 import type * as Duration from "@effect/data/Duration"
 import type * as Either from "@effect/data/Either"
 import type { LazyArg } from "@effect/data/Function"
+import type { TypeLambda } from "@effect/data/HKT"
 import type * as Option from "@effect/data/Option"
 import type { Predicate } from "@effect/data/Predicate"
+import type * as bicovariant from "@effect/data/typeclass/Bicovariant"
+import type * as contravariant from "@effect/data/typeclass/Contravariant"
+import * as covariant from "@effect/data/typeclass/Covariant"
+import type * as invariant from "@effect/data/typeclass/Invariant"
 import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
 import * as internal from "@effect/io/internal_effect_untraced/schedule"
@@ -117,6 +122,14 @@ export interface ScheduleDriver<Env, In, Out> extends Schedule.DriverVariance<En
   last(): Effect.Effect<never, Cause.NoSuchElementException, Out>
   reset(): Effect.Effect<never, never, void>
   next(input: In): Effect.Effect<Env, Option.Option<never>, Out>
+}
+
+/**
+ * @category type lambdas
+ * @since 1.0.0
+ */
+export interface ScheduleTypeLambda extends TypeLambda {
+  readonly type: Schedule<this["Out2"], this["Out1"], this["Target"]>
 }
 
 /**
@@ -528,6 +541,14 @@ export const dimap: {
 } = internal.dimap
 
 /**
+ * @category instances
+ * @since 1.0.0
+ */
+export const Bicovariant: bicovariant.Bicovariant<ScheduleTypeLambda> = {
+  bimap: dimap
+}
+
+/**
  * Returns a new schedule that contramaps the input and maps the output.
  *
  * @since 1.0.0
@@ -824,6 +845,34 @@ export const map: {
   <Out, Out2>(f: (out: Out) => Out2): <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out2>
   <Env, In, Out, Out2>(self: Schedule<Env, In, Out>, f: (out: Out) => Out2): Schedule<Env, In, Out2>
 } = internal.map
+
+const imap = covariant.imap<ScheduleTypeLambda>(map)
+
+/**
+ * @category instances
+ * @since 1.0.0
+ */
+export const Covariant: covariant.Covariant<ScheduleTypeLambda> = {
+  imap,
+  map
+}
+
+/**
+ * @category instances
+ * @since 1.0.0
+ */
+export const Invariant: invariant.Invariant<ScheduleTypeLambda> = {
+  imap
+}
+
+/**
+ * @category instances
+ * @since 1.0.0
+ */
+export const Contravariant: contravariant.Contravariant<ScheduleTypeLambda> = {
+  imap,
+  contramap
+}
 
 /**
  * Returns a new schedule that maps the output of this schedule through the
