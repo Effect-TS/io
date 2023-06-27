@@ -1525,11 +1525,11 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const whileLoop: <R, E, A>(
-  check: LazyArg<boolean>,
-  body: LazyArg<Effect<R, E, A>>,
-  process: (a: A) => void
-) => Effect<R, E, void>
+export declare const whileLoop: <R, E, A>(options: {
+  readonly while: LazyArg<boolean>
+  readonly body: LazyArg<Effect<R, E, A>>
+  readonly step: (a: A) => void
+}) => Effect<R, E, void>
 ```
 
 Added in v1.0.0

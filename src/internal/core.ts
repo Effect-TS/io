@@ -669,15 +669,15 @@ export const forEach = dual<
     const arr = Array.from(self)
     const ret = new Array(arr.length)
     let i = 0
-    return pipe(
-      whileLoop(
-        () => i < arr.length,
-        () => f(arr[i]),
-        (b) => {
+    return as(
+      whileLoop({
+        while: () => i < arr.length,
+        body: () => f(arr[i]),
+        step: (b) => {
           ret[i++] = b
         }
-      ),
-      as(ret)
+      }),
+      ret
     )
   }))
 
@@ -689,13 +689,13 @@ export const forEachDiscard = dual<
   suspend(() => {
     const arr = Array.from(self)
     let i = 0
-    return whileLoop(
-      () => i < arr.length,
-      () => f(arr[i++]),
-      () => {
+    return whileLoop({
+      while: () => i < arr.length,
+      body: () => f(arr[i++]),
+      step: () => {
         //
       }
-    )
+    })
   }))
 
 /* @internal */
@@ -1096,14 +1096,16 @@ export const whenEffect = dual<
 
 /* @internal */
 export const whileLoop = <R, E, A>(
-  check: LazyArg<boolean>,
-  body: LazyArg<Effect.Effect<R, E, A>>,
-  process: (a: A) => void
+  options: {
+    readonly while: LazyArg<boolean>
+    readonly body: LazyArg<Effect.Effect<R, E, A>>
+    readonly step: (a: A) => void
+  }
 ): Effect.Effect<R, E, void> => {
   const effect = new EffectPrimitive(OpCodes.OP_WHILE) as any
-  effect.i0 = check
-  effect.i1 = body
-  effect.i2 = process
+  effect.i0 = options.while
+  effect.i1 = options.body
+  effect.i2 = options.step
   return effect
 }
 

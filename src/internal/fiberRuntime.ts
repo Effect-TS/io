@@ -680,13 +680,13 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
           })
         }
       }
-      return core.whileLoop(
-        () => !isDone,
-        () => body(),
-        () => {
+      return core.whileLoop({
+        while: () => !isDone,
+        body,
+        step: () => {
           //
         }
-      )
+      })
     }
     return null
   }
@@ -1113,7 +1113,11 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
               core.flatMap(op.i1, (a) => {
                 nextOp.i2(a)
                 if (nextOp.i0()) {
-                  return core.whileLoop(nextOp.i0, nextOp.i1, nextOp.i2)
+                  return core.whileLoop({
+                    while: nextOp.i0,
+                    body: nextOp.i1,
+                    step: nextOp.i2
+                  })
                 }
                 return core.unit
               })

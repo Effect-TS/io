@@ -4130,9 +4130,11 @@ export const validateWith: {
  * @category constructors
  */
 export const whileLoop: <R, E, A>(
-  check: LazyArg<boolean>,
-  body: LazyArg<Effect<R, E, A>>,
-  process: (a: A) => void
+  options: {
+    readonly while: LazyArg<boolean>
+    readonly body: LazyArg<Effect<R, E, A>>
+    readonly step: (a: A) => void
+  }
 ) => Effect<R, E, void> = core.whileLoop
 
 /**
