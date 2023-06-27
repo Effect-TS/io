@@ -682,9 +682,9 @@ export const asyncInterrupt: <R, E, A>(
 ) => Effect<R, E, A> = core.asyncInterrupt
 
 const try_: {
-  <A>(try_: LazyArg<A>): Effect<never, unknown, A>
-  <A, E>(try_: LazyArg<A>, options: { readonly catch: (error: unknown) => E }): Effect<never, E, A>
-} = effect.attempt
+  <A, E>(options: { readonly try: LazyArg<A>; readonly catch: (error: unknown) => E }): Effect<never, E, A>
+  <A>(evaluate: LazyArg<A>): Effect<never, unknown, A>
+} = effect.try_
 export {
   /**
    * Imports a synchronous side-effect into a pure `Effect` value, translating any
@@ -3698,15 +3698,13 @@ export const transplant: <R, E, A>(
  */
 export const tryMap: {
   <A, B, E1>(
-    try_: (a: A) => B,
-    options: { readonly catch: (error: unknown) => E1 }
+    options: { readonly try: (a: A) => B; readonly catch: (error: unknown) => E1 }
   ): <R, E>(self: Effect<R, E, A>) => Effect<R, E1 | E, B>
   <R, E, A, B, E1>(
     self: Effect<R, E, A>,
-    f: (a: A) => B,
-    options: { readonly catch: (error: unknown) => E1 }
+    options: { readonly try: (a: A) => B; readonly catch: (error: unknown) => E1 }
   ): Effect<R, E | E1, B>
-} = effect.attemptMap
+} = effect.tryMap
 
 /**
  * Create an `Effect` that when executed will construct `promise` and wait for
@@ -3716,9 +3714,9 @@ export const tryMap: {
  * @category constructors
  */
 export const tryPromise: {
+  <A, E>(options: { readonly try: LazyArg<Promise<A>>; readonly catch: (error: unknown) => E }): Effect<never, E, A>
   <A>(try_: LazyArg<Promise<A>>): Effect<never, unknown, A>
-  <A, E>(try_: LazyArg<Promise<A>>, options: { readonly catch: (error: unknown) => E }): Effect<never, E, A>
-} = effect.attemptPromise
+} = effect.tryPromise
 
 /**
  * Like `tryPromise` but allows for interruption via AbortSignal
@@ -3727,12 +3725,11 @@ export const tryPromise: {
  * @category constructors
  */
 export const tryPromiseInterrupt: {
-  <A>(try_: (signal: AbortSignal) => Promise<A>): Effect<never, unknown, A>
   <A, E>(
-    try_: (signal: AbortSignal) => Promise<A>,
-    options: { readonly catch: (error: unknown) => E }
+    options: { readonly try: (signal: AbortSignal) => Promise<A>; readonly catch: (error: unknown) => E }
   ): Effect<never, E, A>
-} = effect.attemptPromiseInterrupt
+  <A>(try_: (signal: AbortSignal) => Promise<A>): Effect<never, unknown, A>
+} = effect.tryPromiseInterrupt
 
 /**
  * Used to unify functions that would otherwise return `Effect<A, B, C> | Effect<D, E, F>`

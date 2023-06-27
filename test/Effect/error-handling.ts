@@ -400,9 +400,12 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const message = "hello"
       const result = yield* $(
-        Effect.try(() => {
-          throw message
-        }, { catch: identity }),
+        Effect.try({
+          try: () => {
+            throw message
+          },
+          catch: identity
+        }),
         Effect.exit
       )
 

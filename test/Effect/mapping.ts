@@ -54,12 +54,12 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("tryMap - returns an effect whose success is mapped by the specified side effecting function", () =>
     Effect.gen(function*($) {
-      const result = yield* $(Effect.succeed("123"), Effect.tryMap(parseInt, { catch: identity }))
+      const result = yield* $(Effect.succeed("123"), Effect.tryMap({ try: parseInt, catch: identity }))
       assert.strictEqual(result, 123)
     }))
   it.effect("tryMap - translates any thrown exceptions into typed failed effects", () =>
     Effect.gen(function*($) {
-      const result = yield* $(Effect.succeed("hello"), Effect.tryMap(parseInt, { catch: identity }), Effect.exit)
+      const result = yield* $(Effect.succeed("hello"), Effect.tryMap({ try: parseInt, catch: identity }), Effect.exit)
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(Cause.IllegalArgumentException()))
     }))
   it.effect("negate - on true returns false", () =>

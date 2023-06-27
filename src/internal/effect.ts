@@ -99,22 +99,28 @@ export const asyncOption = <R, E, A>(
   )
 
 /* @internal */
-export const attempt: {
-  <A>(try_: LazyArg<A>): Effect.Effect<never, unknown, A>
-  <A, E>(try_: LazyArg<A>, options: { readonly catch: (error: unknown) => E }): Effect.Effect<never, E, A>
-} = <A, E>(
-  evaluate: LazyArg<A>,
-  options?: { readonly catch: (error: unknown) => E }
-): Effect.Effect<never, unknown, A> =>
-  core.sync(() => {
+export const try_: {
+  <A, E>(options: { readonly try: LazyArg<A>; readonly catch: (error: unknown) => E }): Effect.Effect<never, E, A>
+  <A>(evaluate: LazyArg<A>): Effect.Effect<never, unknown, A>
+} = <A, E>(arg: LazyArg<A> | { readonly try: LazyArg<A>; readonly catch: (error: unknown) => E }) => {
+  let evaluate: LazyArg<A>
+  let onFailure: ((error: unknown) => E) | undefined = undefined
+  if (typeof arg === "function") {
+    evaluate = arg
+  } else {
+    evaluate = arg.try
+    onFailure = arg.catch
+  }
+  return core.sync(() => {
     try {
       return evaluate()
     } catch (error) {
       throw core.makeEffectError(internalCause.fail(
-        options?.catch ? options.catch(error) : error
+        onFailure ? onFailure(error) : error
       ))
     }
   })
+}
 
 /* @internal */
 export const _catch = dual<
@@ -1478,69 +1484,84 @@ export const tracerWith: <R, E, A>(f: (tracer: Tracer.Tracer) => Effect.Effect<R
 export const tracer: Effect.Effect<never, never, Tracer.Tracer> = tracerWith(core.succeed)
 
 /* @internal */
-export const attemptPromise: {
+export const tryPromise: {
+  <A, E>(
+    options: {
+      readonly try: LazyArg<Promise<A>>
+      readonly catch: (error: unknown) => E
+    }
+  ): Effect.Effect<never, E, A>
   <A>(try_: LazyArg<Promise<A>>): Effect.Effect<never, unknown, A>
-  <A, E>(try_: LazyArg<Promise<A>>, options: { readonly catch: (error: unknown) => E }): Effect.Effect<never, E, A>
 } = <A, E>(
-  evaluate: LazyArg<Promise<A>>,
-  options?: { readonly catch: (error: unknown) => E }
-): Effect.Effect<never, E, A> =>
-  core.flatMap(attempt(evaluate, options!), (promise) =>
+  arg: LazyArg<Promise<A>> | { readonly try: LazyArg<Promise<A>>; readonly catch: (error: unknown) => E }
+): Effect.Effect<never, E | unknown, A> =>
+  core.flatMap(try_(arg as LazyArg<Promise<A>>), (promise) =>
     core.async<never, E, A>((resolve) => {
       promise
         .then((a) => resolve(core.exitSucceed(a)))
         .catch((e) =>
           resolve(core.exitFail(
-            options?.catch ? options.catch(e) : e
+            "catch" in arg ? arg.catch(e) : e
           ))
         )
     }))
 
 /* @internal */
-export const attemptPromiseInterrupt: {
-  <A>(try_: (signal: AbortSignal) => Promise<A>): Effect.Effect<never, unknown, A>
+export const tryPromiseInterrupt: {
   <A, E>(
-    try_: (signal: AbortSignal) => Promise<A>,
-    options: { readonly catch: (error: unknown) => E }
+    options: {
+      readonly try: (signal: AbortSignal) => Promise<A>
+      readonly catch: (error: unknown) => E
+    }
   ): Effect.Effect<never, E, A>
+  <A>(try_: (signal: AbortSignal) => Promise<A>): Effect.Effect<never, unknown, A>
 } = <A, E>(
-  evaluate: (signal: AbortSignal) => Promise<A>,
-  options?: { readonly catch: (error: unknown) => E }
-): Effect.Effect<never, E, A> =>
-  core.flatMap(
-    attempt(() => {
-      const controller = new AbortController()
-      return [controller, evaluate(controller.signal)] as const
-    }, options!),
+  arg:
+    | ((signal: AbortSignal) => Promise<A>)
+    | {
+      readonly try: (signal: AbortSignal) => Promise<A>
+      readonly catch: (error: unknown) => E
+    }
+): Effect.Effect<never, E | unknown, A> => {
+  const hasCatch = "catch" in arg
+  const evaluate = () => {
+    const controller = new AbortController()
+    return [controller, hasCatch ? arg.try(controller.signal) : arg(controller.signal)] as const
+  }
+
+  return core.flatMap(
+    hasCatch ? try_({ try: evaluate, catch: arg.catch }) : try_(evaluate),
     ([controller, promise]) =>
       core.asyncInterruptEither<never, E, A>((resolve) => {
         promise
           .then((a) => resolve(core.exitSucceed(a)))
-          .catch((e) =>
-            resolve(core.exitFail(
-              options?.catch ? options.catch(e) : e
-            ))
-          )
+          .catch((e) => resolve(core.exitFail(hasCatch ? arg.catch(e) : e)))
         return Either.left(core.sync(() => controller.abort()))
       })
   )
+}
 
 /* @internal */
-export const attemptMap = dual<
+export const tryMap = dual<
   <A, B, E1>(
-    try_: (a: A) => B,
     options: {
+      readonly try: (a: A) => B
       readonly catch: (error: unknown) => E1
     }
   ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E | E1, B>,
   <R, E, A, B, E1>(
     self: Effect.Effect<R, E, A>,
-    f: (a: A) => B,
     options: {
+      readonly try: (a: A) => B
       readonly catch: (error: unknown) => E1
     }
   ) => Effect.Effect<R, E | E1, B>
->(3, (self, f, options) => core.flatMap(self, (a) => attempt(() => f(a), options)))
+>(2, (self, options) =>
+  core.flatMap(self, (a) =>
+    try_({
+      try: () => options.try(a),
+      catch: options.catch
+    })))
 
 /* @internal */
 export const uncause = <R, E>(self: Effect.Effect<R, never, Cause.Cause<E>>): Effect.Effect<R, E, void> =>
