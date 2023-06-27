@@ -1147,21 +1147,6 @@ export const parallelErrors = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Ef
   })
 
 /* @internal */
-export const partition = dual<
-  <R, E, A, B>(
-    f: (a: A) => Effect.Effect<R, E, B>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, never, [Array<E>, Array<B>]>,
-  <R, E, A, B>(
-    elements: Iterable<A>,
-    f: (a: A) => Effect.Effect<R, E, B>
-  ) => Effect.Effect<R, never, [Array<E>, Array<B>]>
->(2, (elements, f) =>
-  pipe(
-    core.forEach(elements, (a) => core.either(f(a))),
-    core.map((chunk) => core.partitionMap(chunk, identity))
-  ))
-
-/* @internal */
 export const patchFiberRefs = (patch: FiberRefsPatch.FiberRefsPatch): Effect.Effect<never, never, void> =>
   updateFiberRefs((fiberId, fiberRefs) => pipe(patch, fiberRefsPatch.patch(fiberId, fiberRefs)))
 
@@ -1851,33 +1836,6 @@ export const validate = dual<
     that: Effect.Effect<R2, E2, B>
   ) => Effect.Effect<R | R2, E | E2, [A, B]>
 >(2, (self, that) => validateWith(self, that, (a, b) => tuple(a, b)))
-
-/* @internal */
-export const validateAll = dual<
-  <R, E, A, B>(
-    f: (a: A) => Effect.Effect<R, E, B>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, Array<E>, Array<B>>,
-  <R, E, A, B>(
-    elements: Iterable<A>,
-    f: (a: A) => Effect.Effect<R, E, B>
-  ) => Effect.Effect<R, Array<E>, Array<B>>
->(2, (elements, f) =>
-  core.flatMap(partition(elements, f), ([es, bs]) =>
-    es.length === 0
-      ? core.succeed(bs)
-      : core.fail(es)))
-
-/* @internal */
-export const validateAllDiscard = dual<
-  <R, E, A, X>(
-    f: (a: A) => Effect.Effect<R, E, X>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, Array<E>, void>,
-  <R, E, A, X>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, X>) => Effect.Effect<R, Array<E>, void>
->(2, (elements, f) =>
-  core.flatMap(partition(elements, f), ([es, _]) =>
-    es.length === 0 ?
-      core.unit :
-      core.fail(es)))
 
 /* @internal */
 export const validateFirst = dual<

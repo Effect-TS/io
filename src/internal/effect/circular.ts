@@ -195,24 +195,24 @@ const invalidateCache = <E, A>(
 /** @internal */
 export const ensuringChild = dual<
   <R2, X>(
-    f: (fiber: Fiber.Fiber<any, Array<unknown>>) => Effect.Effect<R2, never, X>
+    f: (fiber: Fiber.Fiber<any, ReadonlyArray<unknown>>) => Effect.Effect<R2, never, X>
   ) => <R, E, A>(
     self: Effect.Effect<R, E, A>
   ) => Effect.Effect<R | R2, E, A>,
   <R, E, A, R2, X>(
     self: Effect.Effect<R, E, A>,
-    f: (fiber: Fiber.Fiber<any, Array<unknown>>) => Effect.Effect<R2, never, X>
+    f: (fiber: Fiber.Fiber<any, ReadonlyArray<unknown>>) => Effect.Effect<R2, never, X>
   ) => Effect.Effect<R | R2, E, A>
 >(2, (self, f) => ensuringChildren(self, (children) => f(fiberRuntime.fiberCollectAll(children))))
 
 /** @internal */
 export const ensuringChildren = dual<
   <R1, X>(
-    children: (fibers: Array<Fiber.RuntimeFiber<any, any>>) => Effect.Effect<R1, never, X>
+    children: (fibers: ReadonlyArray<Fiber.RuntimeFiber<any, any>>) => Effect.Effect<R1, never, X>
   ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E, A>,
   <R, E, A, R1, X>(
     self: Effect.Effect<R, E, A>,
-    children: (fibers: Array<Fiber.RuntimeFiber<any, any>>) => Effect.Effect<R1, never, X>
+    children: (fibers: ReadonlyArray<Fiber.RuntimeFiber<any, any>>) => Effect.Effect<R1, never, X>
   ) => Effect.Effect<R | R1, E, A>
 >(2, (self, children) =>
   core.flatMap(supervisor.track, (supervisor) =>
@@ -227,7 +227,7 @@ export const forkAll = dual<
   {
     (options?: { readonly discard?: false }): <R, E, A>(
       effects: Iterable<Effect.Effect<R, E, A>>
-    ) => Effect.Effect<R, never, Fiber.Fiber<E, Array<A>>>
+    ) => Effect.Effect<R, never, Fiber.Fiber<E, ReadonlyArray<A>>>
     (options: { readonly discard: true }): <R, E, A>(
       effects: Iterable<Effect.Effect<R, E, A>>
     ) => Effect.Effect<R, never, void>
@@ -236,7 +236,7 @@ export const forkAll = dual<
     <R, E, A>(
       effects: Iterable<Effect.Effect<R, E, A>>,
       options?: { readonly discard?: false }
-    ): Effect.Effect<R, never, Fiber.Fiber<E, Array<A>>>
+    ): Effect.Effect<R, never, Fiber.Fiber<E, ReadonlyArray<A>>>
     <R, E, A>(
       effects: Iterable<Effect.Effect<R, E, A>>,
       options: { readonly discard: true }

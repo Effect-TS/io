@@ -1950,19 +1950,48 @@ export const mergeAll = dual<
 )
 
 /* @internal */
-export const partitionPar = dual<
+export const partition = dual<
+  <R, E, A, B>(
+    f: (a: A) => Effect.Effect<R, E, B>,
+    options?: { readonly concurrency?: Concurrency.Concurrency }
+  ) => (elements: Iterable<A>) => Effect.Effect<R, never, readonly [ReadonlyArray<E>, ReadonlyArray<B>]>,
+  <R, E, A, B>(
+    elements: Iterable<A>,
+    f: (a: A) => Effect.Effect<R, E, B>,
+    options?: { readonly concurrency?: Concurrency.Concurrency }
+  ) => Effect.Effect<R, never, readonly [ReadonlyArray<E>, ReadonlyArray<B>]>
+>((args) => isIterable(args[0]), (elements, f, options) =>
+  pipe(
+    forEachOptions(elements, (a) => core.either(f(a)), options),
+    core.map((chunk) => core.partitionMap(chunk, identity))
+  ))
+
+/* @internal */
+export const validateAll = dual<
   <R, E, A, B>(
     f: (a: A) => Effect.Effect<R, E, B>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, never, [Array<E>, Array<B>]>,
+  ) => (elements: Iterable<A>) => Effect.Effect<R, ReadonlyArray<E>, ReadonlyArray<B>>,
   <R, E, A, B>(
     elements: Iterable<A>,
     f: (a: A) => Effect.Effect<R, E, B>
-  ) => Effect.Effect<R, never, [Array<E>, Array<B>]>
+  ) => Effect.Effect<R, ReadonlyArray<E>, ReadonlyArray<B>>
 >(2, (elements, f) =>
-  pipe(
-    forEachPar(elements, (a) => core.either(f(a))),
-    core.map((chunk) => core.partitionMap(chunk, identity))
-  ))
+  core.flatMap(partition(elements, f), ([es, bs]) =>
+    es.length === 0
+      ? core.succeed(bs)
+      : core.fail(es)))
+
+/* @internal */
+export const validateAllDiscard = dual<
+  <R, E, A, X>(
+    f: (a: A) => Effect.Effect<R, E, X>
+  ) => (elements: Iterable<A>) => Effect.Effect<R, ReadonlyArray<E>, void>,
+  <R, E, A, X>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, X>) => Effect.Effect<R, ReadonlyArray<E>, void>
+>(2, (elements, f) =>
+  core.flatMap(partition(elements, f), ([es, _]) =>
+    es.length === 0 ?
+      core.unit :
+      core.fail(es)))
 
 /* @internal */
 export const raceAll = <R, E, A>(all: Iterable<Effect.Effect<R, E, A>>) => {
@@ -2214,14 +2243,14 @@ export const unsome = <R, E, A>(
 export const validateAllPar = dual<
   <R, E, A, B>(
     f: (a: A) => Effect.Effect<R, E, B>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, Array<E>, Array<B>>,
+  ) => (elements: Iterable<A>) => Effect.Effect<R, ReadonlyArray<E>, ReadonlyArray<B>>,
   <R, E, A, B>(
     elements: Iterable<A>,
     f: (a: A) => Effect.Effect<R, E, B>
-  ) => Effect.Effect<R, Array<E>, Array<B>>
+  ) => Effect.Effect<R, ReadonlyArray<E>, ReadonlyArray<B>>
 >(2, (elements, f) =>
   core.flatMap(
-    partitionPar(elements, f),
+    partition(elements, f),
     ([es, bs]) =>
       es.length === 0
         ? core.succeed(bs)
@@ -2232,11 +2261,11 @@ export const validateAllPar = dual<
 export const validateAllParDiscard = dual<
   <R, E, A, B>(
     f: (a: A) => Effect.Effect<R, E, B>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, Array<E>, void>,
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, Array<E>, void>
+  ) => (elements: Iterable<A>) => Effect.Effect<R, ReadonlyArray<E>, void>,
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, ReadonlyArray<E>, void>
 >(2, (elements, f) =>
   core.flatMap(
-    partitionPar(elements, f),
+    partition(elements, f),
     ([es, _]) =>
       es.length === 0
         ? core.unit
@@ -2245,8 +2274,8 @@ export const validateAllParDiscard = dual<
 
 /* @internal */
 export const validateFirstPar = dual<
-  <R, E, A, B>(f: (a: A) => Effect.Effect<R, E, B>) => (elements: Iterable<A>) => Effect.Effect<R, Array<E>, B>,
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, Array<E>, B>
+  <R, E, A, B>(f: (a: A) => Effect.Effect<R, E, B>) => (elements: Iterable<A>) => Effect.Effect<R, ReadonlyArray<E>, B>,
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, ReadonlyArray<E>, B>
 >(2, (elements, f) => core.flip(forEachPar(elements, (a) => core.flip(f(a)))))
 
 /* @internal */
@@ -2501,7 +2530,7 @@ export const fiberAwaitAll = (fibers: Iterable<Fiber.Fiber<any, any>>): Effect.E
   core.asUnit(internalFiber._await(fiberCollectAll(fibers)))
 
 /** @internal */
-export const fiberCollectAll = <E, A>(fibers: Iterable<Fiber.Fiber<E, A>>): Fiber.Fiber<E, Array<A>> => ({
+export const fiberCollectAll = <E, A>(fibers: Iterable<Fiber.Fiber<E, A>>): Fiber.Fiber<E, ReadonlyArray<A>> => ({
   [internalFiber.FiberTypeId]: internalFiber.fiberVariance,
   id: () => Array.from(fibers).reduce((id, fiber) => FiberId.combine(id, fiber.id()), FiberId.none),
   await: () => core.exit(forEachPar(fibers, (fiber) => core.flatten(fiber.await()))),

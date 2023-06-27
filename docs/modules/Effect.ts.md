@@ -65,7 +65,6 @@ Added in v1.0.0
   - [never](#never)
   - [none](#none)
   - [partition](#partition)
-  - [partitionPar](#partitionpar)
   - [promise](#promise)
   - [promiseInterrupt](#promiseinterrupt)
   - [random](#random)
@@ -1253,25 +1252,14 @@ Collects all successes and failures in a tupled fashion.
 
 ```ts
 export declare const partition: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, never, [E[], B[]]>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, never, [E[], B[]]>
-}
-```
-
-Added in v1.0.0
-
-## partitionPar
-
-Feeds elements of type `A` to a function `f` that returns an effect.
-Collects all successes and failures in parallel and returns the result as a
-tuple.
-
-**Signature**
-
-```ts
-export declare const partitionPar: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, never, [E[], B[]]>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, never, [E[], B[]]>
+  <R, E, A, B>(f: (a: A) => Effect<R, E, B>, options?: { readonly concurrency?: Concurrency }): (
+    elements: Iterable<A>
+  ) => Effect<R, never, readonly [readonly E[], readonly B[]]>
+  <R, E, A, B>(
+    elements: Iterable<A>,
+    f: (a: A) => Effect<R, E, B>,
+    options?: { readonly concurrency?: Concurrency }
+  ): Effect<R, never, readonly [readonly E[], readonly B[]]>
 }
 ```
 
@@ -2605,14 +2593,13 @@ effect succeeds.
 
 ```ts
 export declare const ensuringChild: {
-  <R2, X>(f: (fiber: Fiber.Fiber<any, Array<unknown>>) => Effect<R2, never, X>): <R, E, A>(
+  <R2, X>(f: (fiber: Fiber.Fiber<any, ReadonlyArray<unknown>>) => Effect<R2, never, X>): <R, E, A>(
     self: Effect<R, E, A>
   ) => Effect<R2 | R, E, A>
-  <R, E, A, R2, X>(self: Effect<R, E, A>, f: (fiber: Fiber.Fiber<any, Array<unknown>>) => Effect<R2, never, X>): Effect<
-    R | R2,
-    E,
-    A
-  >
+  <R, E, A, R2, X>(
+    self: Effect<R, E, A>,
+    f: (fiber: Fiber.Fiber<any, ReadonlyArray<unknown>>) => Effect<R2, never, X>
+  ): Effect<R | R2, E, A>
 }
 ```
 
@@ -2627,12 +2614,12 @@ will be invoked, whether or not this effect succeeds.
 
 ```ts
 export declare const ensuringChildren: {
-  <R1, X>(children: (fibers: Array<Fiber.RuntimeFiber<any, any>>) => Effect<R1, never, X>): <R, E, A>(
+  <R1, X>(children: (fibers: ReadonlyArray<Fiber.RuntimeFiber<any, any>>) => Effect<R1, never, X>): <R, E, A>(
     self: Effect<R, E, A>
   ) => Effect<R1 | R, E, A>
   <R, E, A, R1, X>(
     self: Effect<R, E, A>,
-    children: (fibers: Array<Fiber.RuntimeFiber<any, any>>) => Effect<R1, never, X>
+    children: (fibers: ReadonlyArray<Fiber.RuntimeFiber<any, any>>) => Effect<R1, never, X>
   ): Effect<R | R1, E, A>
 }
 ```
@@ -4188,12 +4175,12 @@ composite fiber that produces a list of their results, in order.
 export declare const forkAll: {
   (options?: { readonly discard?: false }): <R, E, A>(
     effects: Iterable<Effect<R, E, A>>
-  ) => Effect<R, never, Fiber.Fiber<E, A[]>>
+  ) => Effect<R, never, Fiber.Fiber<E, readonly A[]>>
   (options: { readonly discard: true }): <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, never, void>
   <R, E, A>(effects: Iterable<Effect<R, E, A>>, options?: { readonly discard?: false }): Effect<
     R,
     never,
-    Fiber.Fiber<E, A[]>
+    Fiber.Fiber<E, readonly A[]>
   >
   <R, E, A>(effects: Iterable<Effect<R, E, A>>, options: { readonly discard: true }): Effect<R, never, void>
 }
@@ -6090,8 +6077,8 @@ will be lost. To retain all information please use `partition`.
 
 ```ts
 export declare const validateAll: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, E[], B[]>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, E[], B[]>
+  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, readonly E[], readonly B[]>
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, readonly E[], readonly B[]>
 }
 ```
 
@@ -6106,8 +6093,8 @@ the successes.
 
 ```ts
 export declare const validateAllDiscard: {
-  <R, E, A, X>(f: (a: A) => Effect<R, E, X>): (elements: Iterable<A>) => Effect<R, E[], void>
-  <R, E, A, X>(elements: Iterable<A>, f: (a: A) => Effect<R, E, X>): Effect<R, E[], void>
+  <R, E, A, X>(f: (a: A) => Effect<R, E, X>): (elements: Iterable<A>) => Effect<R, readonly E[], void>
+  <R, E, A, X>(elements: Iterable<A>, f: (a: A) => Effect<R, E, X>): Effect<R, readonly E[], void>
 }
 ```
 
@@ -6125,8 +6112,8 @@ will be lost. To retain all information please use [[partitionPar]].
 
 ```ts
 export declare const validateAllPar: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, E[], B[]>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, E[], B[]>
+  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, readonly E[], readonly B[]>
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, readonly E[], readonly B[]>
 }
 ```
 
@@ -6141,8 +6128,8 @@ discarding the successes.
 
 ```ts
 export declare const validateAllParDiscard: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, E[], void>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, E[], void>
+  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, readonly E[], void>
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, readonly E[], void>
 }
 ```
 
@@ -6193,8 +6180,8 @@ or the accumulation of all errors.
 
 ```ts
 export declare const validateFirstPar: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, E[], B>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, E[], B>
+  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, readonly E[], B>
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, readonly E[], B>
 }
 ```
 

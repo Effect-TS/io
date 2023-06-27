@@ -125,7 +125,7 @@ results.
 **Signature**
 
 ```ts
-export declare const collectAll: <E, A>(fibers: Iterable<Fiber<E, A>>) => Fiber<E, A[]>
+export declare const collectAll: <E, A>(fibers: Iterable<Fiber<E, A>>) => Fiber<E, readonly A[]>
 ```
 
 Added in v1.0.0

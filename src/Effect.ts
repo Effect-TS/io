@@ -1236,11 +1236,11 @@ export const ensuring: {
  */
 export const ensuringChild: {
   <R2, X>(
-    f: (fiber: Fiber.Fiber<any, Array<unknown>>) => Effect<R2, never, X>
+    f: (fiber: Fiber.Fiber<any, ReadonlyArray<unknown>>) => Effect<R2, never, X>
   ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E, A>
   <R, E, A, R2, X>(
     self: Effect<R, E, A>,
-    f: (fiber: Fiber.Fiber<any, Array<unknown>>) => Effect<R2, never, X>
+    f: (fiber: Fiber.Fiber<any, ReadonlyArray<unknown>>) => Effect<R2, never, X>
   ): Effect<R | R2, E, A>
 } = circular.ensuringChild
 
@@ -1253,11 +1253,11 @@ export const ensuringChild: {
  */
 export const ensuringChildren: {
   <R1, X>(
-    children: (fibers: Array<Fiber.RuntimeFiber<any, any>>) => Effect<R1, never, X>
+    children: (fibers: ReadonlyArray<Fiber.RuntimeFiber<any, any>>) => Effect<R1, never, X>
   ): <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | R, E, A>
   <R, E, A, R1, X>(
     self: Effect<R, E, A>,
-    children: (fibers: Array<Fiber.RuntimeFiber<any, any>>) => Effect<R1, never, X>
+    children: (fibers: ReadonlyArray<Fiber.RuntimeFiber<any, any>>) => Effect<R1, never, X>
   ): Effect<R | R1, E, A>
 } = circular.ensuringChildren
 
@@ -1650,12 +1650,12 @@ export const forkDaemon: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Fi
 export const forkAll: {
   (
     options?: { readonly discard?: false }
-  ): <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, never, Fiber.Fiber<E, Array<A>>>
+  ): <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, never, Fiber.Fiber<E, ReadonlyArray<A>>>
   (options: { readonly discard: true }): <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, never, void>
   <R, E, A>(
     effects: Iterable<Effect<R, E, A>>,
     options?: { readonly discard?: false }
-  ): Effect<R, never, Fiber.Fiber<E, Array<A>>>
+  ): Effect<R, never, Fiber.Fiber<E, ReadonlyArray<A>>>
   <R, E, A>(effects: Iterable<Effect<R, E, A>>, options: { readonly discard: true }): Effect<R, never, void>
 } = circular.forkAll
 
@@ -2675,22 +2675,16 @@ export const parallelFinalizers: <R, E, A>(self: Effect<R, E, A>) => Effect<Scop
  * @category constructors
  */
 export const partition: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, never, [Array<E>, Array<B>]>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, never, [Array<E>, Array<B>]>
-} = effect.partition
-
-/**
- * Feeds elements of type `A` to a function `f` that returns an effect.
- * Collects all successes and failures in parallel and returns the result as a
- * tuple.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const partitionPar: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, never, [Array<E>, Array<B>]>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, never, [Array<E>, Array<B>]>
-} = fiberRuntime.partitionPar
+  <R, E, A, B>(
+    f: (a: A) => Effect<R, E, B>,
+    options?: { readonly concurrency?: Concurrency }
+  ): (elements: Iterable<A>) => Effect<R, never, readonly [ReadonlyArray<E>, ReadonlyArray<B>]>
+  <R, E, A, B>(
+    elements: Iterable<A>,
+    f: (a: A) => Effect<R, E, B>,
+    options?: { readonly concurrency?: Concurrency }
+  ): Effect<R, never, readonly [ReadonlyArray<E>, ReadonlyArray<B>]>
+} = fiberRuntime.partition
 
 /**
  * Applies the specified changes to the `FiberRef` values for the fiber
@@ -4175,9 +4169,9 @@ export const validatePar: {
  * @category utils
  */
 export const validateAll: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, Array<E>, Array<B>>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, Array<E>, Array<B>>
-} = effect.validateAll
+  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, ReadonlyArray<E>, ReadonlyArray<B>>
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, ReadonlyArray<E>, ReadonlyArray<B>>
+} = fiberRuntime.validateAll
 
 /**
  * Feeds elements of type `A` to `f `and accumulates, in parallel, all errors
@@ -4190,8 +4184,8 @@ export const validateAll: {
  * @category utils
  */
 export const validateAllPar: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, Array<E>, Array<B>>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, Array<E>, Array<B>>
+  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, ReadonlyArray<E>, ReadonlyArray<B>>
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, ReadonlyArray<E>, ReadonlyArray<B>>
 } = fiberRuntime.validateAllPar
 
 /**
@@ -4202,9 +4196,9 @@ export const validateAllPar: {
  * @category utils
  */
 export const validateAllDiscard: {
-  <R, E, A, X>(f: (a: A) => Effect<R, E, X>): (elements: Iterable<A>) => Effect<R, Array<E>, void>
-  <R, E, A, X>(elements: Iterable<A>, f: (a: A) => Effect<R, E, X>): Effect<R, Array<E>, void>
-} = effect.validateAllDiscard
+  <R, E, A, X>(f: (a: A) => Effect<R, E, X>): (elements: Iterable<A>) => Effect<R, ReadonlyArray<E>, void>
+  <R, E, A, X>(elements: Iterable<A>, f: (a: A) => Effect<R, E, X>): Effect<R, ReadonlyArray<E>, void>
+} = fiberRuntime.validateAllDiscard
 
 /**
  * Feeds elements of type `A` to `f` in parallel and accumulates all errors,
@@ -4214,8 +4208,8 @@ export const validateAllDiscard: {
  * @category utils
  */
 export const validateAllParDiscard: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, Array<E>, void>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, Array<E>, void>
+  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, ReadonlyArray<E>, void>
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, ReadonlyArray<E>, void>
 } = fiberRuntime.validateAllParDiscard
 
 /**
@@ -4252,8 +4246,8 @@ export const validateFirst: {
  * @category utils
  */
 export const validateFirstPar: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, Array<E>, B>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, Array<E>, B>
+  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, ReadonlyArray<E>, B>
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, ReadonlyArray<E>, B>
 } = fiberRuntime.validateFirstPar
 
 /**

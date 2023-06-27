@@ -934,7 +934,7 @@ export const orDieWith = dual<
 export const partitionMap = <A, A1, A2>(
   elements: Iterable<A>,
   f: (a: A) => Either.Either<A1, A2>
-): [Array<A1>, Array<A2>] =>
+): readonly [ReadonlyArray<A1>, ReadonlyArray<A2>] =>
   Array.from(elements).reduceRight(
     ([lefts, rights], current) => {
       const either = f(current)
