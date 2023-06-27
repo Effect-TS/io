@@ -708,40 +708,38 @@ export const forEachDiscard = dual<
   }))
 
 /* @internal */
-export const ifEffect = dual<
-  <R1, R2, E1, E2, A, A1>(
-    options: {
-      readonly onTrue: Effect.Effect<R1, E1, A>
-      readonly onFalse: Effect.Effect<R2, E2, A1>
-    }
-  ) => <R, E>(
-    self: Effect.Effect<R, E, boolean>
-  ) => Effect.Effect<R1 | R2 | R, E1 | E2 | E, A | A1>,
-  <R, E, R1, R2, E1, E2, A, A1>(
-    self: Effect.Effect<R, E, boolean>,
-    options: {
-      readonly onTrue: Effect.Effect<R1, E1, A>
-      readonly onFalse: Effect.Effect<R2, E2, A1>
-    }
-  ) => Effect.Effect<R1 | R2 | R, E1 | E2 | E, A | A1>
->(2, (self, { onFalse, onTrue }) => flatMap(self, unified((b) => (b ? onTrue : onFalse))))
-
-/* @internal */
 export const if_ = dual<
   <R1, R2, E1, E2, A, A1>(
     options: {
       readonly onTrue: Effect.Effect<R1, E1, A>
       readonly onFalse: Effect.Effect<R2, E2, A1>
     }
-  ) => (self: boolean) => Effect.Effect<R1 | R2, E1 | E2, A | A1>,
-  <R1, R2, E1, E2, A, A1>(
-    self: boolean,
-    options: {
-      readonly onTrue: Effect.Effect<R1, E1, A>
-      readonly onFalse: Effect.Effect<R2, E2, A1>
-    }
-  ) => Effect.Effect<R1 | R2, E1 | E2, A | A1>
->(2, (self, { onFalse, onTrue }) => (self ? onTrue : onFalse))
+  ) => <R = never, E = never>(
+    self: Effect.Effect<R, E, boolean> | boolean
+  ) => Effect.Effect<R | R1 | R2, E | E1 | E2, A | A1>,
+  {
+    <R1, R2, E1, E2, A, A1>(
+      self: boolean,
+      options: {
+        readonly onTrue: Effect.Effect<R1, E1, A>
+        readonly onFalse: Effect.Effect<R2, E2, A1>
+      }
+    ): Effect.Effect<R1 | R2, E1 | E2, A | A1>
+    <R, E, R1, R2, E1, E2, A, A1>(
+      self: Effect.Effect<R, E, boolean>,
+      options: {
+        readonly onTrue: Effect.Effect<R1, E1, A>
+        readonly onFalse: Effect.Effect<R2, E2, A1>
+      }
+    ): Effect.Effect<R1 | R2 | R, E1 | E2 | E, A | A1>
+  }
+>(
+  (args) => typeof args[0] === "boolean" || isEffect(args[0]),
+  (self: boolean | Effect.Effect<unknown, unknown, unknown>, { onFalse, onTrue }: {
+    readonly onTrue: Effect.Effect<unknown, unknown, unknown>
+    readonly onFalse: Effect.Effect<unknown, unknown, unknown>
+  }) => typeof self === "boolean" ? (self ? onTrue : onFalse) : flatMap(self, unified((b) => (b ? onTrue : onFalse)))
+)
 
 /* @internal */
 export const interrupt: Effect.Effect<never, never, never> = flatMap(fiberId, (fiberId) => interruptWith(fiberId))

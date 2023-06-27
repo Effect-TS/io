@@ -20,22 +20,22 @@ describe.concurrent("Effect", () => {
       assert.strictEqual(flatten1, "test")
       assert.strictEqual(flatten2, "test")
     }))
-  it.effect("ifEffect - runs `onTrue` if result of `b` is `true`", () =>
+  it.effect("if - runs `onTrue` if result of `b` is `true`", () =>
     Effect.gen(function*($) {
       const result = yield* $(
-        Effect.succeed(true),
-        Effect.ifEffect({
+        true,
+        Effect.if({
           onTrue: Effect.succeed(true),
           onFalse: Effect.succeed(false)
         })
       )
       assert.isTrue(result)
     }))
-  it.effect("ifEffect - runs `onFalse` if result of `b` is `false`", () =>
+  it.effect("if - runs `onFalse` if result of `b` is `false`", () =>
     Effect.gen(function*($) {
       const result = yield* $(
         Effect.succeed(false),
-        Effect.ifEffect({
+        Effect.if({
           onFalse: Effect.succeed(true),
           onTrue: Effect.succeed(false)
         })

@@ -2024,30 +2024,18 @@ export const getFiberRefs: Effect<never, never, FiberRefs.FiberRefs> = effect.ge
  */
 export const head: <R, E, A>(self: Effect<R, E, Iterable<A>>) => Effect<R, Option.Option<E>, A> = effect.head
 
-/**
- * Runs `onTrue` if the result of `self` is `true` and `onFalse` otherwise.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const ifEffect: {
-  <R1, R2, E1, E2, A, A1>(
-    options: { readonly onTrue: Effect<R1, E1, A>; readonly onFalse: Effect<R2, E2, A1> }
-  ): <R, E>(self: Effect<R, E, boolean>) => Effect<R1 | R2 | R, E1 | E2 | E, A | A1>
-  <R, E, R1, R2, E1, E2, A, A1>(
-    self: Effect<R, E, boolean>,
-    options: { readonly onTrue: Effect<R1, E1, A>; readonly onFalse: Effect<R2, E2, A1> }
-  ): Effect<R | R1 | R2, E | E1 | E2, A | A1>
-} = core.ifEffect
-
 const if_: {
   <R1, R2, E1, E2, A, A1>(
     options: { readonly onTrue: Effect<R1, E1, A>; readonly onFalse: Effect<R2, E2, A1> }
-  ): (self: boolean) => Effect<R1 | R2, E1 | E2, A | A1>
+  ): <R = never, E = never>(self: boolean | Effect<R, E, boolean>) => Effect<R1 | R2 | R, E1 | E2 | E, A | A1>
   <R1, R2, E1, E2, A, A1>(
     self: boolean,
     options: { readonly onTrue: Effect<R1, E1, A>; readonly onFalse: Effect<R2, E2, A1> }
   ): Effect<R1 | R2, E1 | E2, A | A1>
+  <R, E, R1, R2, E1, E2, A, A1>(
+    self: Effect<R, E, boolean>,
+    options: { readonly onTrue: Effect<R1, E1, A>; readonly onFalse: Effect<R2, E2, A1> }
+  ): Effect<R | R1 | R2, E | E1 | E2, A | A1>
 } = core.if_
 
 /**

@@ -1412,7 +1412,7 @@ export const exists = dual<
     (n) =>
       core.matchEffect(
         forEachParOptionalN(elements, n, (a) =>
-          core.ifEffect(f(a), {
+          core.if_(f(a), {
             onTrue: core.fail(_existsParFound),
             onFalse: core.unit
           })),
