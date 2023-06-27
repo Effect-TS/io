@@ -3625,8 +3625,14 @@ export const timeout: {
  * @category utils
  */
 export const timeoutFail: {
-  <E1>(evaluate: LazyArg<E1>, duration: Duration.Duration): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E1 | E, A>
-  <R, E, A, E1>(self: Effect<R, E, A>, evaluate: LazyArg<E1>, duration: Duration.Duration): Effect<R, E | E1, A>
+  <E1>(options: {
+    readonly onTimeout: LazyArg<E1>
+    readonly duration: Duration.Duration
+  }): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E1 | E, A>
+  <R, E, A, E1>(self: Effect<R, E, A>, options: {
+    readonly onTimeout: LazyArg<E1>
+    readonly duration: Duration.Duration
+  }): Effect<R, E | E1, A>
 } = circular.timeoutFail
 
 /**
@@ -3638,13 +3644,17 @@ export const timeoutFail: {
  */
 export const timeoutFailCause: {
   <E1>(
-    evaluate: LazyArg<Cause.Cause<E1>>,
-    duration: Duration.Duration
+    options: {
+      readonly onTimeout: LazyArg<Cause.Cause<E1>>
+      readonly duration: Duration.Duration
+    }
   ): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E1 | E, A>
   <R, E, A, E1>(
     self: Effect<R, E, A>,
-    evaluate: LazyArg<Cause.Cause<E1>>,
-    duration: Duration.Duration
+    options: {
+      readonly onTimeout: LazyArg<Cause.Cause<E1>>
+      readonly duration: Duration.Duration
+    }
   ): Effect<R, E | E1, A>
 } = circular.timeoutFailCause
 
@@ -3661,19 +3671,16 @@ export const timeoutFailCause: {
  * @category utils
  */
 export const timeoutTo: {
-  <A, B, B1>(
-    def: B1,
-    f: (a: A) => B,
-    duration: Duration.Duration
-  ): <R, E>(
-    self: Effect<R, E, A>
-  ) => Effect<R, E, B | B1>
-  <R, E, A, B, B1>(
-    self: Effect<R, E, A>,
-    def: B1,
-    f: (a: A) => B,
-    duration: Duration.Duration
-  ): Effect<R, E, B | B1>
+  <A, B, B1>(options: {
+    readonly onTimeout: B1
+    readonly onSuccess: (a: A) => B
+    readonly duration: Duration.Duration
+  }): <R, E>(self: Effect<R, E, A>) => Effect<R, E, B | B1>
+  <R, E, A, B, B1>(self: Effect<R, E, A>, options: {
+    readonly onTimeout: B1
+    readonly onSuccess: (a: A) => B
+    readonly duration: Duration.Duration
+  }): Effect<R, E, B | B1>
 } = circular.timeoutTo
 
 /**

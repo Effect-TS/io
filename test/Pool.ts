@@ -144,7 +144,10 @@ describe("Pool", () => {
       const pool = yield* $(Pool.makeWithTTL(get, 0, 1, Duration.infinity))
       const result = yield* $(
         Effect.scoped(Effect.retryN(Pool.get(pool), 5)),
-        Effect.timeoutFail(() => "timeout", Duration.seconds(1)),
+        Effect.timeoutFail({
+          onTimeout: () => "timeout",
+          duration: Duration.seconds(1)
+        }),
         Effect.flip,
         TestServices.provideLive
       )

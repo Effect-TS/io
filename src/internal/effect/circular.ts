@@ -391,65 +391,80 @@ export const supervised = dual<
 export const timeout = dual<
   (duration: Duration.Duration) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, Option.Option<A>>,
   <R, E, A>(self: Effect.Effect<R, E, A>, duration: Duration.Duration) => Effect.Effect<R, E, Option.Option<A>>
->(2, (self, duration) => timeoutTo(self, Option.none(), Option.some, duration))
+>(2, (self, duration) =>
+  timeoutTo(self, {
+    onTimeout: Option.none(),
+    onSuccess: Option.some,
+    duration
+  }))
 
 /** @internal */
 export const timeoutFail = dual<
   <E1>(
-    evaluate: LazyArg<E1>,
-    duration: Duration.Duration
+    options: {
+      readonly onTimeout: LazyArg<E1>
+      readonly duration: Duration.Duration
+    }
   ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E | E1, A>,
   <R, E, A, E1>(
     self: Effect.Effect<R, E, A>,
-    evaluate: LazyArg<E1>,
-    duration: Duration.Duration
+    options: {
+      readonly onTimeout: LazyArg<E1>
+      readonly duration: Duration.Duration
+    }
   ) => Effect.Effect<R, E | E1, A>
->(3, (self, evaluate, duration) =>
-  core.flatten(timeoutTo(
-    self,
-    core.failSync(evaluate),
-    core.succeed,
+>(2, (self, { duration, onTimeout }) =>
+  core.flatten(timeoutTo(self, {
+    onTimeout: core.failSync(onTimeout),
+    onSuccess: core.succeed,
     duration
-  )))
+  })))
 
 /** @internal */
 export const timeoutFailCause = dual<
   <E1>(
-    evaluate: LazyArg<Cause.Cause<E1>>,
-    duration: Duration.Duration
+    options: {
+      readonly onTimeout: LazyArg<Cause.Cause<E1>>
+      readonly duration: Duration.Duration
+    }
   ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E | E1, A>,
   <R, E, A, E1>(
     self: Effect.Effect<R, E, A>,
-    evaluate: LazyArg<Cause.Cause<E1>>,
-    duration: Duration.Duration
+    options: {
+      readonly onTimeout: LazyArg<Cause.Cause<E1>>
+      readonly duration: Duration.Duration
+    }
   ) => Effect.Effect<R, E | E1, A>
->(3, (self, evaluate, duration) =>
-  core.flatten(timeoutTo(
-    self,
-    core.failCauseSync(evaluate),
-    core.succeed,
+>(2, (self, { duration, onTimeout }) =>
+  core.flatten(timeoutTo(self, {
+    onTimeout: core.failCauseSync(onTimeout),
+    onSuccess: core.succeed,
     duration
-  )))
+  })))
 
 /** @internal */
 export const timeoutTo = dual<
   <A, B, B1>(
-    def: B1,
-    f: (a: A) => B,
-    duration: Duration.Duration
+    options: {
+      readonly onTimeout: B1
+      readonly onSuccess: (a: A) => B
+      readonly duration: Duration.Duration
+    }
   ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, B | B1>,
   <R, E, A, B, B1>(
     self: Effect.Effect<R, E, A>,
-    def: B1,
-    f: (a: A) => B,
-    duration: Duration.Duration
+    options: {
+      readonly onTimeout: B1
+      readonly onSuccess: (a: A) => B
+      readonly duration: Duration.Duration
+    }
   ) => Effect.Effect<R, E, B | B1>
->(4, (self, def, f, duration) =>
+>(2, (self, { duration, onSuccess, onTimeout }) =>
   raceFirst(
-    core.map(self, f),
+    core.map(self, onSuccess),
     pipe(
       effect.sleep(duration),
-      core.as(def),
+      core.as(onTimeout),
       core.interruptible
     )
   ))

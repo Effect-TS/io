@@ -64,7 +64,14 @@ describe.concurrent("Effect", () => {
         return yield* $(
           pipe(
             Deferred.await(deferred),
-            Effect.zipRight(pipe(Fiber.interrupt(fiber), Effect.timeoutTo(42, () => 0, Duration.millis(500)))),
+            Effect.zipRight(pipe(
+              Fiber.interrupt(fiber),
+              Effect.timeoutTo({
+                onTimeout: 42,
+                onSuccess: () => 0,
+                duration: Duration.millis(500)
+              })
+            )),
             Effect.zipParLeft(TestClock.adjust(Duration.seconds(1)))
           )
         )
@@ -102,7 +109,11 @@ describe.concurrent("Effect", () => {
       yield* $(Fiber.interrupt(fiber))
       const result = yield* $(
         Deferred.await(deferred2),
-        Effect.timeoutTo(42, () => 0, Duration.seconds(1))
+        Effect.timeoutTo({
+          onTimeout: 42,
+          onSuccess: () => 0,
+          duration: Duration.seconds(1)
+        })
       )
       assert.strictEqual(result, 0)
     }))
@@ -159,7 +170,14 @@ describe.concurrent("Effect", () => {
       yield* $(Deferred.await(deferred1))
       yield* $(Fiber.interrupt(fiber))
       const result = yield* $(
-        pipe(Deferred.await(deferred2), Effect.timeoutTo(false, () => true, Duration.seconds(10)))
+        pipe(
+          Deferred.await(deferred2),
+          Effect.timeoutTo({
+            onTimeout: false,
+            onSuccess: () => true,
+            duration: Duration.seconds(10)
+          })
+        )
       )
       assert.isTrue(result)
     }))

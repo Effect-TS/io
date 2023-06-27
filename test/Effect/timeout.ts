@@ -16,7 +16,10 @@ describe.concurrent("Effect", () => {
         pipe(
           Effect.sleep(Duration.seconds(5)),
           Effect.zipRight(Effect.succeed(true)),
-          Effect.timeoutFail(constFalse, Duration.millis(10)),
+          Effect.timeoutFail({
+            onTimeout: constFalse,
+            duration: Duration.millis(10)
+          }),
           Effect.exit
         )
       )
@@ -29,7 +32,10 @@ describe.concurrent("Effect", () => {
         pipe(
           Effect.sleep(Duration.seconds(5)),
           Effect.zipRight(Effect.succeed(true)),
-          Effect.timeoutFailCause(() => cause, Duration.millis(10)),
+          Effect.timeoutFailCause({
+            onTimeout: () => cause,
+            duration: Duration.millis(10)
+          }),
           Effect.sandbox,
           Effect.flip
         )
