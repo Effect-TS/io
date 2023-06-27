@@ -301,17 +301,16 @@ const getAndShutdown = <E, A>(self: PoolImpl<E, A>): Effect.Effect<never, never,
   core.flatten(ref.modify(self.state, (state) => {
     if (state.free > 0) {
       return [
-        core.matchCauseEffect(
-          queue.take(self.items),
-          () => core.unit,
-          (attempted) =>
+        core.matchCauseEffect(queue.take(self.items), {
+          onFailure: () => core.unit,
+          onSuccess: (attempted) =>
             pipe(
               forEach(attempted, (a) => ref.update(self.invalidated, HashSet.remove(a))),
               core.zipRight(attempted.finalizer),
               core.zipRight(ref.update(self.state, (state) => ({ ...state, size: state.size - 1 }))),
               core.flatMap(() => getAndShutdown(self))
             )
-        ),
+        }),
         { ...state, free: state.free - 1 }
       ] as const
     }

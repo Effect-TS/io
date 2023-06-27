@@ -358,8 +358,8 @@ export const acquireUseRelease = dual<
         flatMap(exit(suspend(() => restore(options.use(a)))), (exit) =>
           pipe(
             suspend(() => options.release(a, exit)),
-            matchCauseEffect(
-              (cause) => {
+            matchCauseEffect({
+              onFailure: (cause) => {
                 switch (exit._tag) {
                   case OpCodes.OP_FAILURE: {
                     return failCause(internalCause.parallel(exit.i0, cause))
@@ -369,8 +369,8 @@ export const acquireUseRelease = dual<
                   }
                 }
               },
-              () => exit
-            )
+              onSuccess: () => exit
+            })
           )))
     )
 )
@@ -463,7 +463,7 @@ export const catchAll = dual<
     self: Effect.Effect<R, E, A>,
     f: (e: E) => Effect.Effect<R2, E2, A2>
   ) => Effect.Effect<R2 | R, E2, A2 | A>
->(2, (self, f) => matchEffect(self, f, succeed))
+>(2, (self, f) => matchEffect(self, { onFailure: f, onSuccess: succeed }))
 
 /**
  * @macro identity
@@ -483,9 +483,8 @@ export const catchSome = dual<
     pf: (e: E) => Option.Option<Effect.Effect<R2, E2, A2>>
   ) => Effect.Effect<R2 | R, E | E2, A2 | A>
 >(2, (self, pf) =>
-  matchCauseEffect(
-    self,
-    unified((cause) => {
+  matchCauseEffect(self, {
+    onFailure: unified((cause) => {
       const either = internalCause.failureOrCause(cause)
       switch (either._tag) {
         case "Left": {
@@ -496,8 +495,8 @@ export const catchSome = dual<
         }
       }
     }),
-    succeed
-  ))
+    onSuccess: succeed
+  }))
 
 /* @internal */
 export const checkInterruptible = <R, E, A>(
@@ -518,11 +517,10 @@ export const dieSync = (evaluate: LazyArg<unknown>): Effect.Effect<never, never,
 
 /* @internal */
 export const either = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Either.Either<E, A>> =>
-  matchEffect(
-    self,
-    (e) => succeed(Either.left(e)),
-    (a) => succeed(Either.right(a))
-  )
+  matchEffect(self, {
+    onFailure: (e) => succeed(Either.left(e)),
+    onSuccess: (a) => succeed(Either.right(a))
+  })
 
 /* @internal */
 export const context = <R>(): Effect.Effect<R, never, Context.Context<R>> =>
@@ -535,7 +533,10 @@ export const contextWithEffect = <R, R0, E, A>(
 
 /* @internal */
 export const exit = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Exit.Exit<E, A>> =>
-  matchCause(self, exitFailCause, exitSucceed)
+  matchCause(self, {
+    onFailure: exitFailCause,
+    onSuccess: exitSucceed
+  })
 
 /* @internal */
 export const fail = <E>(error: E): Effect.Effect<never, E, never> => failCause(internalCause.fail(error))
@@ -606,38 +607,46 @@ export const flatMapStep = <R, E, A, R1, E1, B>(
 export const flatten = <R, E, R1, E1, A>(self: Effect.Effect<R, E, Effect.Effect<R1, E1, A>>) => flatMap(self, identity)
 
 /* @internal */
-export const flip = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, A, E> => matchEffect(self, succeed, fail)
+export const flip = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, A, E> =>
+  matchEffect(self, { onFailure: succeed, onSuccess: fail })
 
 /* @internal */
 export const matchCause = dual<
   <E, A2, A, A3>(
-    onFailure: (cause: Cause.Cause<E>) => A2,
-    onSuccess: (a: A) => A3
+    options: {
+      readonly onFailure: (cause: Cause.Cause<E>) => A2
+      readonly onSuccess: (a: A) => A3
+    }
   ) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, A2 | A3>,
   <R, E, A2, A, A3>(
     self: Effect.Effect<R, E, A>,
-    onFailure: (cause: Cause.Cause<E>) => A2,
-    onSuccess: (a: A) => A3
+    options: {
+      readonly onFailure: (cause: Cause.Cause<E>) => A2
+      readonly onSuccess: (a: A) => A3
+    }
   ) => Effect.Effect<R, never, A2 | A3>
->(3, (self, onFailure, onSuccess) =>
-  matchCauseEffect(
-    self,
-    (cause) => succeed(onFailure(cause)),
-    (a) => succeed(onSuccess(a))
-  ))
+>(2, (self, { onFailure, onSuccess }) =>
+  matchCauseEffect(self, {
+    onFailure: (cause) => succeed(onFailure(cause)),
+    onSuccess: (a) => succeed(onSuccess(a))
+  }))
 
 /* @internal */
 export const matchCauseEffect = dual<
   <E, A, R2, E2, A2, R3, E3, A3>(
-    onFailure: (cause: Cause.Cause<E>) => Effect.Effect<R2, E2, A2>,
-    onSuccess: (a: A) => Effect.Effect<R3, E3, A3>
+    options: {
+      readonly onFailure: (cause: Cause.Cause<E>) => Effect.Effect<R2, E2, A2>
+      readonly onSuccess: (a: A) => Effect.Effect<R3, E3, A3>
+    }
   ) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R2 | R3 | R, E2 | E3, A2 | A3>,
   <R, E, A, R2, E2, A2, R3, E3, A3>(
     self: Effect.Effect<R, E, A>,
-    onFailure: (cause: Cause.Cause<E>) => Effect.Effect<R2, E2, A2>,
-    onSuccess: (a: A) => Effect.Effect<R3, E3, A3>
+    options: {
+      readonly onFailure: (cause: Cause.Cause<E>) => Effect.Effect<R2, E2, A2>
+      readonly onSuccess: (a: A) => Effect.Effect<R3, E3, A3>
+    }
   ) => Effect.Effect<R2 | R3 | R, E2 | E3, A2 | A3>
->(3, (self, onFailure, onSuccess) => {
+>(2, (self, { onFailure, onSuccess }) => {
   const effect = new EffectPrimitive(OpCodes.OP_ON_SUCCESS_AND_FAILURE) as any
   effect.i0 = self
   effect.i1 = onFailure
@@ -648,26 +657,33 @@ export const matchCauseEffect = dual<
 /* @internal */
 export const matchEffect = dual<
   <E, A, R2, E2, A2, R3, E3, A3>(
-    onFailure: (e: E) => Effect.Effect<R2, E2, A2>,
-    onSuccess: (a: A) => Effect.Effect<R3, E3, A3>
+    options: {
+      readonly onFailure: (e: E) => Effect.Effect<R2, E2, A2>
+      readonly onSuccess: (a: A) => Effect.Effect<R3, E3, A3>
+    }
   ) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R2 | R3 | R, E2 | E3, A2 | A3>,
   <R, E, A, R2, E2, A2, R3, E3, A3>(
     self: Effect.Effect<R, E, A>,
-    onFailure: (e: E) => Effect.Effect<R2, E2, A2>,
-    onSuccess: (a: A) => Effect.Effect<R3, E3, A3>
+    options: {
+      readonly onFailure: (e: E) => Effect.Effect<R2, E2, A2>
+      readonly onSuccess: (a: A) => Effect.Effect<R3, E3, A3>
+    }
   ) => Effect.Effect<R2 | R3 | R, E2 | E3, A2 | A3>
->(3, (self, onFailure, onSuccess) =>
-  matchCauseEffect(self, (cause) => {
-    const failures = internalCause.failures(cause)
-    const defects = internalCause.defects(cause)
-    if (defects.length > 0) {
-      return failCause(internalCause.electFailures(cause))
-    }
-    if (failures.length > 0) {
-      return onFailure(Chunk.unsafeHead(failures))
-    }
-    return failCause(cause as Cause.Cause<never>)
-  }, onSuccess))
+>(2, (self, { onFailure, onSuccess }) =>
+  matchCauseEffect(self, {
+    onFailure: (cause) => {
+      const failures = internalCause.failures(cause)
+      const defects = internalCause.defects(cause)
+      if (defects.length > 0) {
+        return failCause(internalCause.electFailures(cause))
+      }
+      if (failures.length > 0) {
+        return onFailure(Chunk.unsafeHead(failures))
+      }
+      return failCause(cause as Cause.Cause<never>)
+    },
+    onSuccess
+  }))
 
 /* @internal */
 export const forEach = dual<
@@ -810,28 +826,30 @@ export const mapBoth = dual<
     options: { readonly onFailure: (e: E) => E2; readonly onSuccess: (a: A) => A2 }
   ) => Effect.Effect<R, E2, A2>
 >(2, (self, { onFailure, onSuccess }) =>
-  matchEffect(
-    self,
-    (e) => failSync(() => onFailure(e)),
-    (a) => sync(() => onSuccess(a))
-  ))
+  matchEffect(self, {
+    onFailure: (e) => failSync(() => onFailure(e)),
+    onSuccess: (a) => sync(() => onSuccess(a))
+  }))
 
 /* @internal */
 export const mapError = dual<
   <E, E2>(f: (e: E) => E2) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E2, A>,
   <R, A, E, E2>(self: Effect.Effect<R, E, A>, f: (e: E) => E2) => Effect.Effect<R, E2, A>
 >(2, (self, f) =>
-  matchCauseEffect(self, (cause) => {
-    const either = internalCause.failureOrCause(cause)
-    switch (either._tag) {
-      case "Left": {
-        return failSync(() => f(either.left))
+  matchCauseEffect(self, {
+    onFailure: (cause) => {
+      const either = internalCause.failureOrCause(cause)
+      switch (either._tag) {
+        case "Left": {
+          return failSync(() => f(either.left))
+        }
+        case "Right": {
+          return failCause(either.right)
+        }
       }
-      case "Right": {
-        return failCause(either.right)
-      }
-    }
-  }, succeed))
+    },
+    onSuccess: succeed
+  }))
 
 /* @internal */
 export const onError = dual<
@@ -855,16 +873,18 @@ export const onExit = dual<
   ) => Effect.Effect<R2 | R, E, A>
 >(2, (self, cleanup) =>
   uninterruptibleMask((restore) =>
-    matchCauseEffect(restore(self), (cause1) => {
-      const result = exitFailCause(cause1)
-      return matchCauseEffect(
-        cleanup(result),
-        (cause2) => exitFailCause(internalCause.sequential(cause1, cause2)),
-        () => result
-      )
-    }, (success) => {
-      const result = exitSucceed(success)
-      return zipRight(cleanup(result), result)
+    matchCauseEffect(restore(self), {
+      onFailure: (cause1) => {
+        const result = exitFailCause(cause1)
+        return matchCauseEffect(cleanup(result), {
+          onFailure: (cause2) => exitFailCause(internalCause.sequential(cause1, cause2)),
+          onSuccess: () => result
+        })
+      },
+      onSuccess: (success) => {
+        const result = exitSucceed(success)
+        return zipRight(cleanup(result), result)
+      }
     })
   ))
 
@@ -904,7 +924,11 @@ export const orDie = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, n
 export const orDieWith = dual<
   <E>(f: (error: E) => unknown) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, A>,
   <R, E, A>(self: Effect.Effect<R, E, A>, f: (error: E) => unknown) => Effect.Effect<R, never, A>
->(2, (self, f) => matchEffect(self, (e) => die(f(e)), succeed))
+>(2, (self, f) =>
+  matchEffect(self, {
+    onFailure: (e) => die(f(e)),
+    onSuccess: succeed
+  }))
 
 /* @internal */
 export const partitionMap = <A, A1, A2>(
@@ -1018,9 +1042,8 @@ export const attemptOrElse = dual<
     onSuccess: (a: A) => Effect.Effect<R3, E3, A3>
   ) => Effect.Effect<R | R2 | R3, E2 | E3, A2 | A3>
 >(3, (self, that, onSuccess) =>
-  matchCauseEffect(
-    self,
-    (cause) => {
+  matchCauseEffect(self, {
+    onFailure: (cause) => {
       const defects = internalCause.defects(cause)
       if (defects.length > 0) {
         return failCause(Option.getOrThrow(internalCause.keepDefectsAndElectFailures(cause)))
@@ -1028,7 +1051,7 @@ export const attemptOrElse = dual<
       return that()
     },
     onSuccess
-  ))
+  }))
 
 /* @internal */
 export const uninterruptible: <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A> = <R, E, A>(

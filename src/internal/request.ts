@@ -78,11 +78,10 @@ export const completeEffect = dual<
     effect: Effect.Effect<R, Request.Request.Error<A>, Request.Request.Success<A>>
   ) => Effect.Effect<R, never, void>
 >(2, (self, effect) =>
-  core.matchEffect(
-    effect,
-    (error) => complete(self, core.exitFail(error) as any),
-    (value) => complete(self, core.exitSucceed(value) as any)
-  ))
+  core.matchEffect(effect, {
+    onFailure: (error) => complete(self, core.exitFail(error) as any),
+    onSuccess: (value) => complete(self, core.exitSucceed(value) as any)
+  }))
 
 /** @internal */
 export const fail = dual<

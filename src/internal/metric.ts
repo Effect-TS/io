@@ -274,17 +274,16 @@ export const trackAll = dual<
   ) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
 >(2, (self, input) =>
   (effect) =>
-    core.matchCauseEffect(
-      effect,
-      (cause) => {
+    core.matchCauseEffect(effect, {
+      onFailure: (cause) => {
         self.unsafeUpdate(input, HashSet.empty())
         return core.failCause(cause)
       },
-      (value) => {
+      onSuccess: (value) => {
         self.unsafeUpdate(input, HashSet.empty())
         return core.succeed(value)
       }
-    ))
+    }))
 
 /* @internal */
 export const trackDefect = dual<

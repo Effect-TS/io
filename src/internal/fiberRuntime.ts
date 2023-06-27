@@ -1096,7 +1096,13 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
             return core.blocked(op.i0, core.flatMap(op.i1, nextOp.i1))
           }
           case "OnSuccessAndFailure": {
-            return core.blocked(op.i0, core.matchCauseEffect(op.i1, nextOp.i1, nextOp.i2))
+            return core.blocked(
+              op.i0,
+              core.matchCauseEffect(op.i1, {
+                onFailure: nextOp.i1,
+                onSuccess: nextOp.i2
+              })
+            )
           }
           case "OnFailure": {
             return core.blocked(op.i0, core.catchAllCause(op.i1, nextOp.i1))
@@ -1411,13 +1417,15 @@ export const exists = dual<
     () => core.suspend(() => existsLoop(elements[Symbol.iterator](), f)),
     (n) =>
       core.matchEffect(
-        forEachParOptionalN(elements, n, (a) =>
-          core.if_(f(a), {
-            onTrue: core.fail(_existsParFound),
-            onFalse: core.unit
-          })),
-        (e) => e === _existsParFound ? core.succeed(true) : core.fail(e),
-        () => core.succeed(false)
+        forEachParOptionalN(
+          elements,
+          n,
+          (a) => core.if_(f(a), { onTrue: core.fail(_existsParFound), onFalse: core.unit })
+        ),
+        {
+          onFailure: (e) => e === _existsParFound ? core.succeed(true) : core.fail(e),
+          onSuccess: () => core.succeed(false)
+        }
       )
   ))
 
@@ -1676,19 +1684,18 @@ export const forEachParUnboundedDiscard = <R, E, A, _>(
                         const _continue = forEachParUnboundedDiscard(residual, (blocked) => blocked.i1)
                         return core.blocked(
                           requests,
-                          core.matchCauseEffect(
-                            _continue,
-                            (cause) =>
+                          core.matchCauseEffect(_continue, {
+                            onFailure: (cause) =>
                               core.zipRight(
                                 core.deferredFail(deferred, void 0),
                                 core.failCause(internalCause.parallel(cause, exit.cause))
                               ),
-                            () =>
+                            onSuccess: () =>
                               core.zipRight(
                                 core.deferredFail(deferred, void 0),
                                 core.failCause(exit.cause)
                               )
-                          )
+                          })
                         )
                       }
                       return core.zipRight(
@@ -1723,21 +1730,23 @@ export const forEachParUnboundedDiscard = <R, E, A, _>(
       return core.flatMap(process, (fibers) =>
         core.matchCauseEffect(
           restore(core.deferredAwait(deferred)),
-          (cause) =>
-            core.flatMap(
-              forEachParUnbounded(fibers, core.interruptFiber),
-              (exits) => {
-                const exit = core.exitCollectAllPar(exits)
-                if (exit._tag === "Some" && core.exitIsFailure(exit.value)) {
-                  return core.failCause(
-                    internalCause.parallel(internalCause.stripFailures(cause), exit.value.i0)
-                  )
-                } else {
-                  return core.failCause(internalCause.stripFailures(cause))
+          {
+            onFailure: (cause) =>
+              core.flatMap(
+                forEachParUnbounded(fibers, core.interruptFiber),
+                (exits) => {
+                  const exit = core.exitCollectAllPar(exits)
+                  if (exit._tag === "Some" && core.exitIsFailure(exit.value)) {
+                    return core.failCause(
+                      internalCause.parallel(internalCause.stripFailures(cause), exit.value.i0)
+                    )
+                  } else {
+                    return core.failCause(internalCause.stripFailures(cause))
+                  }
                 }
-              }
-            ),
-          (rest) => core.flatMap(rest, () => core.forEachDiscard(fibers, (f) => f.inheritAll()))
+              ),
+            onSuccess: (rest) => core.flatMap(rest, () => core.forEachDiscard(fibers, (f) => f.inheritAll()))
+          }
         ))
     })
   })
@@ -1796,11 +1805,10 @@ export const forEachParNDiscard = <A, R, E, _>(
         if (exit._tag === "Failure") {
           return core.blocked(
             requests,
-            core.matchCauseEffect(
-              _continue,
-              (cause) => core.exitFailCause(internalCause.parallel(exit.cause, cause)),
-              () => exit
-            )
+            core.matchCauseEffect(_continue, {
+              onFailure: (cause) => core.exitFailCause(internalCause.parallel(exit.cause, cause)),
+              onSuccess: () => exit
+            })
           )
         }
         return core.blocked(requests, _continue)
@@ -1927,14 +1935,16 @@ export const onDone = dual<
     onError: (e: E) => Effect.Effect<R1, never, X1>,
     onSuccess: (a: A) => Effect.Effect<R2, never, X2>
   ) => Effect.Effect<R | R1 | R2, never, void>
->(3, (self, onError, onSuccess) =>
-  core.uninterruptibleMask((restore) =>
-    core.asUnit(forkDaemon(core.matchEffect(
-      restore(self),
-      (e) => restore(onError(e)),
-      (a) => restore(onSuccess(a))
-    )))
-  ))
+>(
+  3,
+  (self, onError, onSuccess) =>
+    core.uninterruptibleMask((restore) =>
+      core.asUnit(forkDaemon(core.matchEffect(restore(self), {
+        onFailure: (e) => restore(onError(e)),
+        onSuccess: (a) => restore(onSuccess(a))
+      })))
+    )
+)
 
 /* @internal */
 export const onDoneCause = dual<
@@ -1947,14 +1957,16 @@ export const onDoneCause = dual<
     onCause: (cause: Cause.Cause<E>) => Effect.Effect<R1, never, X1>,
     onSuccess: (a: A) => Effect.Effect<R2, never, X2>
   ) => Effect.Effect<R | R1 | R2, never, void>
->(3, (self, onCause, onSuccess) =>
-  core.uninterruptibleMask((restore) =>
-    core.asUnit(forkDaemon(core.matchCauseEffect(
-      restore(self),
-      (c) => restore(onCause(c)),
-      (a) => restore(onSuccess(a))
-    )))
-  ))
+>(
+  3,
+  (self, onCause, onSuccess) =>
+    core.uninterruptibleMask((restore) =>
+      core.asUnit(forkDaemon(core.matchCauseEffect(restore(self), {
+        onFailure: (c) => restore(onCause(c)),
+        onSuccess: (a) => restore(onSuccess(a))
+      })))
+    )
+)
 
 /* @internal */
 export const partitionPar = dual<
@@ -2194,9 +2206,8 @@ export const using = dual<
 export const unsome = <R, E, A>(
   self: Effect.Effect<R, Option.Option<E>, A>
 ): Effect.Effect<R, E, Option.Option<A>> =>
-  core.matchEffect(
-    self,
-    (option) => {
+  core.matchEffect(self, {
+    onFailure: (option) => {
       switch (option._tag) {
         case "None": {
           return core.succeed(Option.none())
@@ -2206,8 +2217,8 @@ export const unsome = <R, E, A>(
         }
       }
     },
-    (a) => core.succeed(Option.some(a))
-  )
+    onSuccess: (a) => core.succeed(Option.some(a))
+  })
 
 /* @internal */
 export const validateAllPar = dual<
@@ -2768,16 +2779,14 @@ export const ensuring = dual<
   ) => Effect.Effect<R | R1, E, A>
 >(2, (self, finalizer) =>
   core.uninterruptibleMask((restore) =>
-    core.matchCauseEffect(
-      restore(self),
-      (cause1) =>
-        core.matchCauseEffect(
-          finalizer,
-          (cause2) => core.failCause(internalCause.sequential(cause1, cause2)),
-          () => core.failCause(cause1)
-        ),
-      (a) => core.as(finalizer, a)
-    )
+    core.matchCauseEffect(restore(self), {
+      onFailure: (cause1) =>
+        core.matchCauseEffect(finalizer, {
+          onFailure: (cause2) => core.failCause(internalCause.sequential(cause1, cause2)),
+          onSuccess: () => core.failCause(cause1)
+        }),
+      onSuccess: (a) => core.as(finalizer, a)
+    })
   ))
 
 /** @internal */

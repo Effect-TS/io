@@ -1910,11 +1910,10 @@ export const repeatOrElse_Effect = dual<
   ) => Effect.Effect<R | R2 | R3, E2, B>
 >(3, (self, schedule, orElse) =>
   core.flatMap(driver(schedule), (driver) =>
-    core.matchEffect(
-      self,
-      (error) => orElse(error, Option.none()),
-      (value) => repeatOrElseEffectLoop(self, driver, orElse, value)
-    )))
+    core.matchEffect(self, {
+      onFailure: (error) => orElse(error, Option.none()),
+      onSuccess: (value) => repeatOrElseEffectLoop(self, driver, orElse, value)
+    })))
 
 /** @internal */
 const repeatOrElseEffectLoop = <R, E, A extends A0, A0, R1, B, R2, E2, C>(
@@ -1923,16 +1922,14 @@ const repeatOrElseEffectLoop = <R, E, A extends A0, A0, R1, B, R2, E2, C>(
   orElse: (error: E, option: Option.Option<B>) => Effect.Effect<R2, E2, C>,
   value: A
 ): Effect.Effect<R | R1 | R2, E2, B | C> => {
-  return core.matchEffect(
-    driver.next(value),
-    () => core.orDie(driver.last()),
-    (b) =>
-      core.matchEffect(
-        self,
-        (error) => orElse(error, Option.some(b)),
-        (value) => repeatOrElseEffectLoop(self, driver, orElse, value)
-      )
-  )
+  return core.matchEffect(driver.next(value), {
+    onFailure: () => core.orDie(driver.last()),
+    onSuccess: (b) =>
+      core.matchEffect(self, {
+        onFailure: (error) => orElse(error, Option.some(b)),
+        onSuccess: (value) => repeatOrElseEffectLoop(self, driver, orElse, value)
+      })
+  })
 }
 
 /** @internal */
@@ -2051,16 +2048,15 @@ const retryOrElse_EffectLoop = <R, E, A, R1, A1, R2, E2, A2>(
   return core.catchAll(
     self,
     (e) =>
-      core.matchEffect(
-        driver.next(e),
-        () =>
+      core.matchEffect(driver.next(e), {
+        onFailure: () =>
           pipe(
             driver.last(),
             core.orDie,
             core.flatMap((out) => orElse(e, out))
           ),
-        () => retryOrElse_EffectLoop(self, driver, orElse)
-      )
+        onSuccess: () => retryOrElse_EffectLoop(self, driver, orElse)
+      })
   )
 }
 
@@ -2167,11 +2163,10 @@ const scheduleFrom_EffectLoop = <R, E, In, R2, Out>(
   initial: In,
   driver: Schedule.ScheduleDriver<R2, In, Out>
 ): Effect.Effect<R | R2, E, Out> =>
-  core.matchEffect(
-    driver.next(initial),
-    () => core.orDie(driver.last()),
-    () => core.flatMap(self, (a) => scheduleFrom_EffectLoop(self, a, driver))
-  )
+  core.matchEffect(driver.next(initial), {
+    onFailure: () => core.orDie(driver.last()),
+    onSuccess: () => core.flatMap(self, (a) => scheduleFrom_EffectLoop(self, a, driver))
+  })
 
 /** @internal */
 export const count: Schedule.Schedule<never, unknown, number> = unfold(0, (n) => n + 1)

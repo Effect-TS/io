@@ -185,12 +185,7 @@ describe.concurrent("Schedule", () => {
     it.effect("repeat on failure does not actually repeat", () =>
       Effect.gen(function*($) {
         const ref = yield* $(Ref.make(0))
-        const result = yield* $(
-          pipe(
-            alwaysFail(ref),
-            Effect.matchEffect(Effect.succeed, () => Effect.succeed("it should never be a success"))
-          )
-        )
+        const result = yield* $(Effect.flip(alwaysFail(ref)))
         assert.strictEqual(result, "Error: 1")
       }))
     it.effect("repeat a scheduled repeat repeats the whole number", () =>
@@ -411,7 +406,7 @@ describe.concurrent("Schedule", () => {
           pipe(
             alwaysFail(ref),
             Effect.retryOrElse(Schedule.once, ioFail),
-            Effect.matchEffect(Effect.succeed, () => Effect.succeed("it should not be a success"))
+            Effect.flip
           )
         )
         assert.strictEqual(result, "OrElseFailed")
@@ -430,7 +425,7 @@ describe.concurrent("Schedule", () => {
           pipe(
             alwaysFail(ref),
             Effect.retry(Schedule.recurs(0)),
-            Effect.matchEffect(Effect.succeed, () => Effect.succeed("it should not be a success"))
+            Effect.flip
           )
         )
         assert.strictEqual(result, "Error: 1")
@@ -453,7 +448,7 @@ describe.concurrent("Schedule", () => {
           pipe(
             alwaysFail(ref),
             Effect.retry(Schedule.once),
-            Effect.matchEffect(Effect.succeed, () => Effect.succeed("it should not be a success"))
+            Effect.flip
           )
         )
         assert.strictEqual(result, "Error: 2")
@@ -867,10 +862,17 @@ const runCollectLoop = <Env, In, Out>(
   const tail = Chunk.tailNonEmpty(input)
   return pipe(
     driver.next(head),
-    Effect.matchEffect(
-      () => pipe(driver.last(), Effect.match(() => acc, (b) => pipe(acc, Chunk.append(b)))),
-      (b) => runCollectLoop(driver, tail, pipe(acc, Chunk.append(b)))
-    )
+    Effect.matchEffect({
+      onFailure: () =>
+        pipe(
+          driver.last(),
+          Effect.match({
+            onFailure: () => acc,
+            onSuccess: (b) => Chunk.append(acc, b)
+          })
+        ),
+      onSuccess: (b) => runCollectLoop(driver, tail, pipe(acc, Chunk.append(b)))
+    })
   )
 }
 const runManually = <Env, In, Out>(

@@ -340,10 +340,10 @@ const withScope = <RIn, E, ROut>(
         (memoMap: MemoMap) =>
           pipe(
             memoMap.getOrElseMemoize(op.layer, scope),
-            core.matchCauseEffect(
-              (cause) => memoMap.getOrElseMemoize(op.failureK(cause), scope),
-              (value) => memoMap.getOrElseMemoize(op.successK(value), scope)
-            )
+            core.matchCauseEffect({
+              onFailure: (cause) => memoMap.getOrElseMemoize(op.failureK(cause), scope),
+              onSuccess: (value) => memoMap.getOrElseMemoize(op.successK(value), scope)
+            })
           )
       )
     }

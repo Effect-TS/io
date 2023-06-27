@@ -124,8 +124,8 @@ const makeWith = <K, R, E, A>(
                       scope
                     )
                   ),
-                  core.matchCauseEffect(
-                    (cause) => {
+                  core.matchCauseEffect({
+                    onFailure: (cause) => {
                       const current = Option.getOrUndefined(HashMap.get(MutableRef.get(map), key))
                       if (Equal.equals(current, value)) {
                         MutableRef.update(map, HashMap.remove(key))
@@ -135,14 +135,14 @@ const makeWith = <K, R, E, A>(
                         core.failCause(cause)
                       )
                     },
-                    (pool) => {
+                    onSuccess: (pool) => {
                       MutableRef.update(map, HashMap.set(key, new Complete(pool) as MapValue<E, A>))
                       return core.as(
                         core.deferredSucceed(deferred, pool),
                         pool
                       )
                     }
-                  )
+                  })
                 )
               }
               switch (previous._tag) {

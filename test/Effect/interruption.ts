@@ -281,10 +281,10 @@ describe.concurrent("Effect", () => {
         pipe(
           release,
           Effect.zipRight(pipe(Effect.never, Effect.interruptible)),
-          Effect.matchCauseEffect(
-            (cause) => Ref.set(recovered, Cause.isInterrupted(cause)),
-            () => Ref.set(recovered, false)
-          ),
+          Effect.matchCauseEffect({
+            onFailure: (cause) => Ref.set(recovered, Cause.isInterrupted(cause)),
+            onSuccess: () => Ref.set(recovered, false)
+          }),
           Effect.uninterruptible,
           Effect.fork
         )

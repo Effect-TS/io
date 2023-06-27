@@ -2281,14 +2281,13 @@ Added in v1.0.0
 
 ```ts
 export declare const matchCause: {
-  <E, A2, A, A3>(onFailure: (cause: Cause.Cause<E>) => A2, onSuccess: (a: A) => A3): <R>(
+  <E, A2, A, A3>(options: { readonly onFailure: (cause: Cause.Cause<E>) => A2; readonly onSuccess: (a: A) => A3 }): <R>(
     self: Effect<R, E, A>
   ) => Effect<R, never, A2 | A3>
-  <R, E, A2, A, A3>(self: Effect<R, E, A>, onFailure: (cause: Cause.Cause<E>) => A2, onSuccess: (a: A) => A3): Effect<
-    R,
-    never,
-    A2 | A3
-  >
+  <R, E, A2, A, A3>(
+    self: Effect<R, E, A>,
+    options: { readonly onFailure: (cause: Cause.Cause<E>) => A2; readonly onSuccess: (a: A) => A3 }
+  ): Effect<R, never, A2 | A3>
 }
 ```
 
@@ -2300,14 +2299,16 @@ Added in v1.0.0
 
 ```ts
 export declare const matchCauseEffect: {
-  <E, A, R2, E2, A2, R3, E3, A3>(
-    onFailure: (cause: Cause.Cause<E>) => Effect<R2, E2, A2>,
-    onSuccess: (a: A) => Effect<R3, E3, A3>
-  ): <R>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2 | E3, A2 | A3>
+  <E, A, R2, E2, A2, R3, E3, A3>(options: {
+    readonly onFailure: (cause: Cause.Cause<E>) => Effect<R2, E2, A2>
+    readonly onSuccess: (a: A) => Effect<R3, E3, A3>
+  }): <R>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2 | E3, A2 | A3>
   <R, E, A, R2, E2, A2, R3, E3, A3>(
     self: Effect<R, E, A>,
-    onFailure: (cause: Cause.Cause<E>) => Effect<R2, E2, A2>,
-    onSuccess: (a: A) => Effect<R3, E3, A3>
+    options: {
+      readonly onFailure: (cause: Cause.Cause<E>) => Effect<R2, E2, A2>
+      readonly onSuccess: (a: A) => Effect<R3, E3, A3>
+    }
   ): Effect<R | R2 | R3, E2 | E3, A2 | A3>
 }
 ```
@@ -2320,13 +2321,13 @@ Added in v1.0.0
 
 ```ts
 export declare const matchEffect: {
-  <E, A, R2, E2, A2, R3, E3, A3>(onFailure: (e: E) => Effect<R2, E2, A2>, onSuccess: (a: A) => Effect<R3, E3, A3>): <R>(
-    self: Effect<R, E, A>
-  ) => Effect<R2 | R3 | R, E2 | E3, A2 | A3>
+  <E, A, R2, E2, A2, R3, E3, A3>(options: {
+    readonly onFailure: (e: E) => Effect<R2, E2, A2>
+    readonly onSuccess: (a: A) => Effect<R3, E3, A3>
+  }): <R>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E2 | E3, A2 | A3>
   <R, E, A, R2, E2, A2, R3, E3, A3>(
     self: Effect<R, E, A>,
-    onFailure: (e: E) => Effect<R2, E2, A2>,
-    onSuccess: (a: A) => Effect<R3, E3, A3>
+    options: { readonly onFailure: (e: E) => Effect<R2, E2, A2>; readonly onSuccess: (a: A) => Effect<R3, E3, A3> }
   ): Effect<R | R2 | R3, E2 | E3, A2 | A3>
 }
 ```
@@ -2713,14 +2714,13 @@ function passed to `match`.
 
 ```ts
 export declare const match: {
-  <E, A, A2, A3>(onFailure: (error: E) => A2, onSuccess: (value: A) => A3): <R>(
+  <E, A, A2, A3>(options: { readonly onFailure: (error: E) => A2; readonly onSuccess: (value: A) => A3 }): <R>(
     self: Effect<R, E, A>
   ) => Effect<R, never, A2 | A3>
-  <R, E, A, A2, A3>(self: Effect<R, E, A>, onFailure: (error: E) => A2, onSuccess: (value: A) => A3): Effect<
-    R,
-    never,
-    A2 | A3
-  >
+  <R, E, A, A2, A3>(
+    self: Effect<R, E, A>,
+    options: { readonly onFailure: (error: E) => A2; readonly onSuccess: (value: A) => A3 }
+  ): Effect<R, never, A2 | A3>
 }
 ```
 

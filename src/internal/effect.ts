@@ -165,9 +165,8 @@ export const catchSomeCause = dual<
   self: Effect.Effect<R, E, A>,
   f: (cause: Cause.Cause<E>) => Option.Option<Effect.Effect<R2, E2, A2>>
 ) =>
-  core.matchCauseEffect(
-    self,
-    (cause): Effect.Effect<R2, E | E2, A2> => {
+  core.matchCauseEffect(self, {
+    onFailure: (cause): Effect.Effect<R2, E | E2, A2> => {
       const option = f(cause)
       switch (option._tag) {
         case "None": {
@@ -178,8 +177,8 @@ export const catchSomeCause = dual<
         }
       }
     },
-    core.succeed
-  ))
+    onSuccess: core.succeed
+  }))
 
 /* @internal */
 export const catchSomeDefect = dual<
@@ -276,7 +275,7 @@ export const catchTags: {
 
 /* @internal */
 export const cause = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Cause.Cause<E>> =>
-  core.matchCause(self, identity, () => internalCause.empty)
+  core.matchCause(self, { onFailure: identity, onSuccess: () => internalCause.empty })
 
 /* @internal */
 export const clockWith: <R, E, A>(f: (clock: Clock.Clock) => Effect.Effect<R, E, A>) => Effect.Effect<R, E, A> =
@@ -680,20 +679,23 @@ export const flipWith = dual<
 /* @internal */
 export const match = dual<
   <E, A, A2, A3>(
-    onFailure: (error: E) => A2,
-    onSuccess: (value: A) => A3
+    options: {
+      readonly onFailure: (error: E) => A2
+      readonly onSuccess: (value: A) => A3
+    }
   ) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, A2 | A3>,
   <R, E, A, A2, A3>(
     self: Effect.Effect<R, E, A>,
-    onFailure: (error: E) => A2,
-    onSuccess: (value: A) => A3
+    options: {
+      readonly onFailure: (error: E) => A2
+      readonly onSuccess: (value: A) => A3
+    }
   ) => Effect.Effect<R, never, A2 | A3>
->(3, (self, onFailure, onSuccess) =>
-  core.matchEffect(
-    self,
-    (e) => core.succeed(onFailure(e)),
-    (a) => core.succeed(onSuccess(a))
-  ))
+>(2, (self, { onFailure, onSuccess }) =>
+  core.matchEffect(self, {
+    onFailure: (e) => core.succeed(onFailure(e)),
+    onSuccess: (a) => core.succeed(onSuccess(a))
+  }))
 
 /* @internal */
 export const every = dual<
@@ -766,10 +768,9 @@ export const getFiberRefs: Effect.Effect<never, never, FiberRefs.FiberRefs> = co
 export const head = <R, E, A>(
   self: Effect.Effect<R, E, Iterable<A>>
 ): Effect.Effect<R, Option.Option<E>, A> =>
-  core.matchEffect(
-    self,
-    (e) => core.fail(Option.some(e)),
-    (as) => {
+  core.matchEffect(self, {
+    onFailure: (e) => core.fail(Option.some(e)),
+    onSuccess: (as) => {
       const iterator = as[Symbol.iterator]()
       const next = iterator.next()
       if (next.done) {
@@ -777,23 +778,22 @@ export const head = <R, E, A>(
       }
       return core.succeed(next.value)
     }
-  )
+  })
 
 /* @internal */
 export const ignore = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, void> =>
-  match(self, constVoid, constVoid)
+  match(self, { onFailure: constVoid, onSuccess: constVoid })
 
 /* @internal */
 export const ignoreLogged = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, void> =>
-  core.matchCauseEffect(
-    self,
-    (cause) =>
+  core.matchCauseEffect(self, {
+    onFailure: (cause) =>
       logCause(cause, {
         message: "An error was silently ignored because it is not anticipated to be useful",
         level: "Debug"
       }),
-    () => core.unit
-  )
+    onSuccess: () => core.unit
+  })
 
 /* @internal */
 export const inheritFiberRefs = (childFiberRefs: FiberRefs.FiberRefs) =>
@@ -801,11 +801,11 @@ export const inheritFiberRefs = (childFiberRefs: FiberRefs.FiberRefs) =>
 
 /* @internal */
 export const isFailure = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, boolean> =>
-  match(self, constTrue, constFalse)
+  match(self, { onFailure: constTrue, onSuccess: constFalse })
 
 /* @internal */
 export const isSuccess = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, boolean> =>
-  match(self, constFalse, constTrue)
+  match(self, { onFailure: constFalse, onSuccess: constTrue })
 
 /* @internal */
 export const iterate = <Z, R, E>(
@@ -1034,7 +1034,11 @@ export const mapErrorCause = dual<
     f: (cause: Cause.Cause<E>) => Cause.Cause<E2>
   ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E2, A>,
   <R, E, A, E2>(self: Effect.Effect<R, E, A>, f: (cause: Cause.Cause<E>) => Cause.Cause<E2>) => Effect.Effect<R, E2, A>
->(2, (self, f) => core.matchCauseEffect(self, (c) => core.failCauseSync(() => f(c)), core.succeed))
+>(2, (self, f) =>
+  core.matchCauseEffect(self, {
+    onFailure: (c) => core.failCauseSync(() => f(c)),
+    onSuccess: core.succeed
+  }))
 
 /* @internal */
 export const mapTryCatch = dual<
@@ -1075,7 +1079,10 @@ export const memoize = <R, E, A>(
 
 /* @internal */
 export const merge = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, E | A> =>
-  core.matchEffect(self, (e) => core.succeed(e), core.succeed)
+  core.matchEffect(self, {
+    onFailure: (e) => core.succeed(e),
+    onSuccess: core.succeed
+  })
 
 /* @internal */
 export const mergeAll = dual<
@@ -1098,10 +1105,9 @@ export const negate = <R, E>(self: Effect.Effect<R, E, boolean>): Effect.Effect<
 export const none = <R, E, A>(
   self: Effect.Effect<R, E, Option.Option<A>>
 ): Effect.Effect<R, Option.Option<E>, void> =>
-  core.matchEffect(
-    self,
-    (e) => core.fail(Option.some(e)),
-    (option) => {
+  core.matchEffect(self, {
+    onFailure: (e) => core.fail(Option.some(e)),
+    onSuccess: (option) => {
       switch (option._tag) {
         case "None": {
           return core.unit
@@ -1111,7 +1117,7 @@ export const none = <R, E, A>(
         }
       }
     }
-  )
+  })
 
 /* @internal */
 export const once = <R, E, A>(
@@ -1124,11 +1130,10 @@ export const once = <R, E, A>(
 
 /* @internal */
 export const option = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Option.Option<A>> =>
-  core.matchEffect(
-    self,
-    () => core.succeed(Option.none()),
-    (a) => core.succeed(Option.some(a))
-  )
+  core.matchEffect(self, {
+    onFailure: () => core.succeed(Option.none()),
+    onSuccess: (a) => core.succeed(Option.some(a))
+  })
 
 /* @internal */
 export const orElseFail = dual<
@@ -1144,12 +1149,15 @@ export const orElseSucceed = dual<
 
 /* @internal */
 export const parallelErrors = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, Array<E>, A> =>
-  core.matchCauseEffect(self, (cause) => {
-    const errors = Array.from(internalCause.failures(cause))
-    return errors.length === 0
-      ? core.failCause(cause as Cause.Cause<never>)
-      : core.fail(errors)
-  }, core.succeed)
+  core.matchCauseEffect(self, {
+    onFailure: (cause) => {
+      const errors = Array.from(internalCause.failures(cause))
+      return errors.length === 0
+        ? core.failCause(cause as Cause.Cause<never>)
+        : core.fail(errors)
+    },
+    onSuccess: core.succeed
+  })
 
 /* @internal */
 export const partition = dual<
@@ -1381,7 +1389,10 @@ const repeatNLoop = <R, E, A>(self: Effect.Effect<R, E, A>, n: number): Effect.E
 
 /* @internal */
 export const sandbox = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, Cause.Cause<E>, A> =>
-  core.matchCauseEffect(self, core.fail, core.succeed)
+  core.matchCauseEffect(self, {
+    onFailure: core.fail,
+    onSuccess: core.succeed
+  })
 
 /* @internal */
 export const setFiberRefs = (fiberRefs: FiberRefs.FiberRefs): Effect.Effect<never, never, void> =>
@@ -1392,10 +1403,9 @@ export const sleep: (duration: Duration.Duration) => Effect.Effect<never, never,
 
 /* @internal */
 export const some = <R, E, A>(self: Effect.Effect<R, E, Option.Option<A>>): Effect.Effect<R, Option.Option<E>, A> =>
-  core.matchEffect(
-    self,
-    (e) => core.fail(Option.some(e)),
-    (option) => {
+  core.matchEffect(self, {
+    onFailure: (e) => core.fail(Option.some(e)),
+    onSuccess: (option) => {
       switch (option._tag) {
         case "None": {
           return core.fail(Option.none())
@@ -1405,7 +1415,7 @@ export const some = <R, E, A>(self: Effect.Effect<R, E, Option.Option<A>>): Effe
         }
       }
     }
-  )
+  })
 
 /* @internal */
 export const succeedNone: Effect.Effect<never, never, Option.Option<never>> = core.succeed(Option.none())
@@ -1497,9 +1507,8 @@ export const tapBoth = dual<
     g: (a: A) => Effect.Effect<R3, E3, X1>
   ) => Effect.Effect<R | R2 | R3, E | E2 | E3, A>
 >(3, (self, f, g) =>
-  core.matchCauseEffect(
-    self,
-    (cause) => {
+  core.matchCauseEffect(self, {
+    onFailure: (cause) => {
       const either = internalCause.failureOrCause(cause)
       switch (either._tag) {
         case "Left": {
@@ -1510,8 +1519,8 @@ export const tapBoth = dual<
         }
       }
     },
-    (a) => core.as(g(a), a)
-  ))
+    onSuccess: (a) => core.as(g(a), a)
+  }))
 
 /* @internal */
 export const tapDefect = dual<
@@ -1540,9 +1549,8 @@ export const tapError = dual<
     f: (e: E) => Effect.Effect<R2, E2, X>
   ) => Effect.Effect<R | R2, E | E2, A>
 >(2, (self, f) =>
-  core.matchCauseEffect(
-    self,
-    (cause) => {
+  core.matchCauseEffect(self, {
+    onFailure: (cause) => {
       const either = internalCause.failureOrCause(cause)
       switch (either._tag) {
         case "Left": {
@@ -1553,8 +1561,8 @@ export const tapError = dual<
         }
       }
     },
-    core.succeed
-  ))
+    onSuccess: core.succeed
+  }))
 
 /* @internal */
 export const tapErrorCause = dual<
@@ -1566,11 +1574,10 @@ export const tapErrorCause = dual<
     f: (cause: Cause.Cause<E>) => Effect.Effect<R2, E2, X>
   ) => Effect.Effect<R | R2, E | E2, A>
 >(2, (self, f) =>
-  core.matchCauseEffect(
-    self,
-    (cause) => core.zipRight(f(cause), core.failCause(cause)),
-    core.succeed
-  ))
+  core.matchCauseEffect(self, {
+    onFailure: (cause) => core.zipRight(f(cause), core.failCause(cause)),
+    onSuccess: core.succeed
+  }))
 
 /* @internal */
 export const timed = <R, E, A>(

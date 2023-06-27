@@ -371,7 +371,10 @@ describe.concurrent("Effect", () => {
           concurrency: "inherit",
           discard: true
         }),
-        Effect.matchCause(Cause.failures, () => Chunk.empty<number>())
+        Effect.matchCause({
+          onFailure: Cause.failures,
+          onSuccess: () => Chunk.empty<number>()
+        })
       )
       assert.deepStrictEqual(Array.from(result), [1, 2, 3])
     }))
