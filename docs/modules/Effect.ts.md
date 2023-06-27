@@ -167,7 +167,7 @@ Added in v1.0.0
   - [isFailure](#isfailure)
   - [isSuccess](#issuccess)
 - [getters](#getters)
-  - [tags](#tags)
+  - [metricLabels](#metriclabels)
 - [instances](#instances)
   - [Applicative](#applicative)
   - [Bicovariant](#bicovariant)
@@ -2810,14 +2810,14 @@ Added in v1.0.0
 
 # getters
 
-## tags
+## metricLabels
 
-Retrieves the metric tags associated with the current scope.
+Retrieves the metric labels associated with the current scope.
 
 **Signature**
 
 ```ts
-export declare const tags: Effect<never, never, HashSet.HashSet<MetricLabel.MetricLabel>>
+export declare const metricLabels: Effect<never, never, HashSet.HashSet<MetricLabel.MetricLabel>>
 ```
 
 Added in v1.0.0

@@ -3651,12 +3651,12 @@ export const labelMetricsScopedSet: (
 ) => Effect<Scope.Scope, never, void> = fiberRuntime.labelMetricsScopedSet
 
 /**
- * Retrieves the metric tags associated with the current scope.
+ * Retrieves the metric labels associated with the current scope.
  *
  * @since 1.0.0
  * @category getters
  */
-export const tags: Effect<never, never, HashSet.HashSet<MetricLabel.MetricLabel>> = core.metricLabels
+export const metricLabels: Effect<never, never, HashSet.HashSet<MetricLabel.MetricLabel>> = core.metricLabels
 
 /**
  * @since 1.0.0
