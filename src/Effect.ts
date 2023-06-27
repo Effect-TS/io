@@ -2992,14 +2992,12 @@ export const reduceRight: {
 export const reduceWhile: {
   <A, R, E, Z>(
     zero: Z,
-    predicate: Predicate<Z>,
-    f: (s: Z, a: A) => Effect<R, E, Z>
+    options: { readonly while: Predicate<Z>; readonly body: (s: Z, a: A) => Effect<R, E, Z> }
   ): (elements: Iterable<A>) => Effect<R, E, Z>
   <A, R, E, Z>(
     elements: Iterable<A>,
     zero: Z,
-    predicate: Predicate<Z>,
-    f: (s: Z, a: A) => Effect<R, E, Z>
+    options: { readonly while: Predicate<Z>; readonly body: (s: Z, a: A) => Effect<R, E, Z> }
   ): Effect<R, E, Z>
 } = effect.reduceWhile
 

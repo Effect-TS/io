@@ -1237,24 +1237,30 @@ export const reduceRight = dual<
 export const reduceWhile = dual<
   <A, R, E, Z>(
     zero: Z,
-    predicate: Predicate<Z>,
-    f: (s: Z, a: A) => Effect.Effect<R, E, Z>
+    options: {
+      readonly while: Predicate<Z>
+      readonly body: (s: Z, a: A) => Effect.Effect<R, E, Z>
+    }
   ) => (elements: Iterable<A>) => Effect.Effect<R, E, Z>,
   <A, R, E, Z>(
     elements: Iterable<A>,
     zero: Z,
-    predicate: Predicate<Z>,
-    f: (s: Z, a: A) => Effect.Effect<R, E, Z>
+    options: {
+      readonly while: Predicate<Z>
+      readonly body: (s: Z, a: A) => Effect.Effect<R, E, Z>
+    }
   ) => Effect.Effect<R, E, Z>
->(4, <A, R, E, Z>(
+>(3, <A, R, E, Z>(
   elements: Iterable<A>,
   zero: Z,
-  predicate: Predicate<Z>,
-  f: (s: Z, a: A) => Effect.Effect<R, E, Z>
+  options: {
+    readonly while: Predicate<Z>
+    readonly body: (s: Z, a: A) => Effect.Effect<R, E, Z>
+  }
 ) =>
   core.flatMap(
     core.sync(() => elements[Symbol.iterator]()),
-    (iterator) => reduceWhileLoop(iterator, zero, predicate, f)
+    (iterator) => reduceWhileLoop(iterator, zero, options.while, options.body)
   ))
 
 const reduceWhileLoop = <A, R, E, Z>(
