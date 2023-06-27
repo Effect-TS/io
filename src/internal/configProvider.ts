@@ -609,7 +609,10 @@ const escapeRegex = (string: string): string => {
 const indicesFrom = (quotedIndices: HashSet.HashSet<string>): Effect.Effect<never, never, Array<number>> =>
   pipe(
     core.forEach(quotedIndices, parseQuotedIndex),
-    core.mapBoth(() => RA.empty<number>(), RA.sort(number.Order)),
+    core.mapBoth({
+      onFailure: () => RA.empty<number>(),
+      onSuccess: RA.sort(number.Order)
+    }),
     core.either,
     core.map(Either.merge)
   )

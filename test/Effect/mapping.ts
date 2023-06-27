@@ -42,7 +42,14 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("mapBoth - maps over both error and value channels", () =>
     Effect.gen(function*($) {
-      const result = yield* $(Effect.fail(10), Effect.mapBoth((n) => n.toString(), identity), Effect.either)
+      const result = yield* $(
+        Effect.fail(10),
+        Effect.mapBoth({
+          onFailure: (n) => n.toString(),
+          onSuccess: identity
+        }),
+        Effect.either
+      )
       assert.deepStrictEqual(result, Either.left("10"))
     }))
   it.effect("mapTryCatch - returns an effect whose success is mapped by the specified side effecting function", () =>

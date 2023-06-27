@@ -802,13 +802,18 @@ export const map = dual<
 
 /* @internal */
 export const mapBoth = dual<
-  <E, A, E2, A2>(f: (e: E) => E2, g: (a: A) => A2) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E2, A2>,
-  <R, E, A, E2, A2>(self: Effect.Effect<R, E, A>, f: (e: E) => E2, g: (a: A) => A2) => Effect.Effect<R, E2, A2>
->(3, (self, f, g) =>
+  <E, A, E2, A2>(
+    options: { readonly onFailure: (e: E) => E2; readonly onSuccess: (a: A) => A2 }
+  ) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E2, A2>,
+  <R, E, A, E2, A2>(
+    self: Effect.Effect<R, E, A>,
+    options: { readonly onFailure: (e: E) => E2; readonly onSuccess: (a: A) => A2 }
+  ) => Effect.Effect<R, E2, A2>
+>(2, (self, { onFailure, onSuccess }) =>
   matchEffect(
     self,
-    (e) => failSync(() => f(e)),
-    (a) => sync(() => g(a))
+    (e) => failSync(() => onFailure(e)),
+    (a) => sync(() => onSuccess(a))
   ))
 
 /* @internal */

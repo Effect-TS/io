@@ -6,7 +6,7 @@ import type * as Duration from "@effect/data/Duration"
 import type * as Either from "@effect/data/Either"
 import type * as Equal from "@effect/data/Equal"
 import type { LazyArg } from "@effect/data/Function"
-import { identity } from "@effect/data/Function"
+import { dual, identity } from "@effect/data/Function"
 import type * as HashMap from "@effect/data/HashMap"
 import type * as HashSet from "@effect/data/HashSet"
 import type { TypeLambda } from "@effect/data/HKT"
@@ -2334,8 +2334,13 @@ export const mapAccum: {
  * @category mapping
  */
 export const mapBoth: {
-  <E, A, E2, A2>(f: (e: E) => E2, g: (a: A) => A2): <R>(self: Effect<R, E, A>) => Effect<R, E2, A2>
-  <R, E, A, E2, A2>(self: Effect<R, E, A>, f: (e: E) => E2, g: (a: A) => A2): Effect<R, E2, A2>
+  <E, A, E2, A2>(
+    options: { readonly onFailure: (e: E) => E2; readonly onSuccess: (a: A) => A2 }
+  ): <R>(self: Effect<R, E, A>) => Effect<R, E2, A2>
+  <R, E, A, E2, A2>(
+    self: Effect<R, E, A>,
+    options: { readonly onFailure: (e: E) => E2; readonly onSuccess: (a: A) => A2 }
+  ): Effect<R, E2, A2>
 } = core.mapBoth
 
 /**
@@ -4702,7 +4707,7 @@ export const zipWithPar: {
  * @since 1.0.0
  */
 export const Bicovariant: bicovariant.Bicovariant<EffectTypeLambda> = {
-  bimap: mapBoth
+  bimap: dual(3, (self, onFailure, onSuccess) => mapBoth(self, { onFailure, onSuccess }))
 }
 
 const imap = covariant.imap<EffectTypeLambda>(map)
