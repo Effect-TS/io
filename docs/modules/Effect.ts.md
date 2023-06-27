@@ -59,7 +59,6 @@ Added in v1.0.0
   - [inheritFiberRefs](#inheritfiberrefs)
   - [iterate](#iterate)
   - [loop](#loop)
-  - [loopDiscard](#loopdiscard)
   - [mergeAll](#mergeall)
   - [mergeAllPar](#mergeallpar)
   - [never](#never)
@@ -1151,37 +1150,26 @@ A.reverse(as)
 **Signature**
 
 ```ts
-export declare const loop: <Z, R, E, A>(
-  initial: Z,
-  options: { readonly while: (z: Z) => boolean; readonly step: (z: Z) => Z; readonly body: (z: Z) => Effect<R, E, A> }
-) => Effect<R, E, A[]>
-```
-
-Added in v1.0.0
-
-## loopDiscard
-
-Loops with the specified effectual function purely for its effects. The
-moral equivalent of:
-
-```ts
-let s = initial
-
-while (cont(s)) {
-  body(s)
-  s = inc(s)
+export declare const loop: {
+  <Z, R, E, A>(
+    initial: Z,
+    options: {
+      readonly while: (z: Z) => boolean
+      readonly step: (z: Z) => Z
+      readonly body: (z: Z) => Effect<R, E, A>
+      readonly discard?: false | undefined
+    }
+  ): Effect<R, E, A[]>
+  <Z, R, E, A>(
+    initial: Z,
+    options: {
+      readonly while: (z: Z) => boolean
+      readonly step: (z: Z) => Z
+      readonly body: (z: Z) => Effect<R, E, A>
+      readonly discard: true
+    }
+  ): Effect<R, E, void>
 }
-```
-
-**Signature**
-
-```ts
-export declare const loopDiscard: <Z, R, E, X>(
-  initial: Z,
-  cont: (z: Z) => boolean,
-  inc: (z: Z) => Z,
-  body: (z: Z) => Effect<R, E, X>
-) => Effect<R, E, void>
 ```
 
 Added in v1.0.0

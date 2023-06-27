@@ -74,10 +74,15 @@ describe.concurrent("Effect", () => {
       const result = yield* $(Ref.get(ref), Effect.map(Chunk.reverse))
       assert.deepStrictEqual(result, Chunk.make(0, 1, 2, 3, 4))
     }))
-  it.effect("loopDiscard - loops with the specified effectual function", () =>
+  it.effect("loop/discard - loops with the specified effectual function", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(Chunk.empty<number>()))
-      yield* $(Effect.loopDiscard(0, (n) => n < 5, (n) => n + 1, (n) => Ref.update(ref, Chunk.prepend(n))))
+      yield* $(Effect.loop(0, {
+        while: (n) => n < 5,
+        step: (n) => n + 1,
+        body: (n) => Ref.update(ref, Chunk.prepend(n)),
+        discard: true
+      }))
       const result = yield* $(Ref.get(ref), Effect.map(Chunk.reverse))
       assert.deepStrictEqual(result, Chunk.make(0, 1, 2, 3, 4))
     }))

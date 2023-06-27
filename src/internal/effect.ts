@@ -933,35 +933,56 @@ export const logAnnotations: Effect.Effect<never, never, HashMap.HashMap<string,
 )
 
 /* @internal */
-export const loop = <Z, R, E, A>(
+// @ts-expect-error
+export const loop: {
+  <Z, R, E, A>(
+    initial: Z,
+    options: {
+      readonly while: (z: Z) => boolean
+      readonly step: (z: Z) => Z
+      readonly body: (z: Z) => Effect.Effect<R, E, A>
+      readonly discard?: false | undefined
+    }
+  ): Effect.Effect<R, E, Array<A>>
+  <Z, R, E, A>(
+    initial: Z,
+    options: {
+      readonly while: (z: Z) => boolean
+      readonly step: (z: Z) => Z
+      readonly body: (z: Z) => Effect.Effect<R, E, A>
+      readonly discard: true
+    }
+  ): Effect.Effect<R, E, void>
+} = <Z, R, E, A>(
   initial: Z,
   options: {
     readonly while: (z: Z) => boolean
     readonly step: (z: Z) => Z
     readonly body: (z: Z) => Effect.Effect<R, E, A>
+    readonly discard?: boolean
   }
-): Effect.Effect<R, E, Array<A>> =>
-  core.map(loopInternal(initial, options.while, options.step, options.body), (x) => Array.from(x))
+): Effect.Effect<R, E, Array<A>> | Effect.Effect<R, E, void> =>
+  options.discard ?
+    loopDiscard(initial, options.while, options.step, options.body) :
+    core.map(loopInternal(initial, options.while, options.step, options.body), (x) => Array.from(x))
 
 const loopInternal = <Z, R, E, A>(
   initial: Z,
   cont: (z: Z) => boolean,
   inc: (z: Z) => Z,
   body: (z: Z) => Effect.Effect<R, E, A>
-): Effect.Effect<R, E, List.List<A>> => {
-  return core.suspend(() => {
-    return cont(initial)
+): Effect.Effect<R, E, List.List<A>> =>
+  core.suspend(() =>
+    cont(initial)
       ? core.flatMap(body(initial), (a) =>
         core.map(
           loopInternal(inc(initial), cont, inc, body),
           List.prepend(a)
         ))
       : core.sync(() => List.empty())
-  })
-}
+  )
 
-/* @internal */
-export const loopDiscard = <Z, R, E, X>(
+const loopDiscard = <Z, R, E, X>(
   initial: Z,
   cont: (z: Z) => boolean,
   inc: (z: Z) => Z,
