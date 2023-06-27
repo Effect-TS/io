@@ -291,19 +291,19 @@ describe.concurrent("Effect", () => {
       )
       assert.strictEqual(result, 0)
     }))
-  it.effect("reduceAll", () =>
+  it.effect("reduceEffect", () =>
     Effect.gen(function*($) {
       const result = yield* $(
-        pipe([2, 3, 4].map((n) => Effect.succeed(n)), Effect.reduceAll(Effect.succeed(1), (acc, a) => acc + a))
+        pipe([2, 3, 4].map((n) => Effect.succeed(n)), Effect.reduceEffect(Effect.succeed(1), (acc, a) => acc + a))
       )
       assert.strictEqual(result, 10)
     }))
-  it.effect("reduceAll - empty list", () =>
+  it.effect("reduceEffect - empty list", () =>
     Effect.gen(function*($) {
       const result = yield* $(
         pipe(
           [] as ReadonlyArray<Effect.Effect<never, never, number>>,
-          Effect.reduceAll(Effect.succeed(1), (acc, a) => acc + a)
+          Effect.reduceEffect(Effect.succeed(1), (acc, a) => acc + a)
         )
       )
       assert.strictEqual(result, 1)

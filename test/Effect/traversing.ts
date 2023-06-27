@@ -443,24 +443,40 @@ describe.concurrent("Effect", () => {
       const result = yield* $(effects, Effect.mergeAll(void 0 as void, constVoid), Effect.exit)
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(1))
     }))
-  it.effect("mergeAllPar - return zero element on empty input", () =>
+  it.effect("mergeAll/concurrency - return zero element on empty input", () =>
     Effect.gen(function*($) {
       const zeroElement = 42
       const nonZero = 43
       const result = yield* $(
-        pipe([] as ReadonlyArray<Effect.Effect<never, never, unknown>>, Effect.mergeAllPar(zeroElement, () => nonZero))
+        pipe(
+          [] as ReadonlyArray<Effect.Effect<never, never, unknown>>,
+          Effect.mergeAll(zeroElement, () => nonZero, {
+            concurrency: "inherit"
+          })
+        )
       )
       assert.strictEqual(result, zeroElement)
     }))
-  it.effect("mergeAllPar - merge list using function", () =>
+  it.effect("mergeAll/concurrency - merge list using function", () =>
     Effect.gen(function*($) {
-      const result = yield* $([3, 5, 7].map(Effect.succeed), Effect.mergeAllPar(1, (b, a) => b + a))
+      const result = yield* $(
+        [3, 5, 7].map(Effect.succeed),
+        Effect.mergeAll(1, (b, a) => b + a, {
+          concurrency: "inherit"
+        })
+      )
       assert.strictEqual(result, 1 + 3 + 5 + 7)
     }))
-  it.effect("mergeAllPar - return error if it exists in list", () =>
+  it.effect("mergeAll/concurrency - return error if it exists in list", () =>
     Effect.gen(function*($) {
       const effects: ReadonlyArray<Effect.Effect<never, number, void>> = [Effect.unit, Effect.fail(1)]
-      const result = yield* $(effects, Effect.mergeAllPar(void 0 as void, constVoid), Effect.exit)
+      const result = yield* $(
+        effects,
+        Effect.mergeAll(void 0 as void, constVoid, {
+          concurrency: "inherit"
+        }),
+        Effect.exit
+      )
       assert.deepStrictEqual(Exit.unannotate(result), Exit.failCause(Cause.parallel(Cause.empty, Cause.fail(1))))
     }))
   it.effect("partition - collects only successes", () =>
@@ -577,37 +593,56 @@ describe.concurrent("Effect", () => {
       )
       assert.deepStrictEqual(result, [1, 2, 3, 4, 5])
     }))
-  it.effect("reduceAllPar - return zero element on empty input", () =>
+  it.effect("reduceEffect/concurrency - return zero element on empty input", () =>
     Effect.gen(function*($) {
       const zeroElement = 42
       const nonZero = 43
       const result = yield* $(
         pipe(
           [] as ReadonlyArray<Effect.Effect<never, never, number>>,
-          Effect.reduceAllPar(Effect.succeed(zeroElement), () => nonZero)
+          Effect.reduceEffect(Effect.succeed(zeroElement), () => nonZero, {
+            concurrency: "inherit"
+          })
         )
       )
       assert.strictEqual(result, zeroElement)
     }))
-  it.effect("reduceAllPar - reduce list using function", () =>
+  it.effect("reduceEffect/concurrency - reduce list using function", () =>
     Effect.gen(function*($) {
       const result = yield* $(
-        pipe([3, 5, 7].map(Effect.succeed), Effect.reduceAllPar(Effect.succeed(1), (acc, a) => acc + a))
+        pipe(
+          [3, 5, 7].map(Effect.succeed),
+          Effect.reduceEffect(Effect.succeed(1), (acc, a) => acc + a, {
+            concurrency: "inherit"
+          })
+        )
       )
       assert.strictEqual(result, 1 + 3 + 5 + 7)
     }))
-  it.effect("reduceAllPar - return error if zero is an error", () =>
+  it.effect("reduceEffect/concurrency - return error if zero is an error", () =>
     Effect.gen(function*($) {
       const result = yield* $(
-        pipe([Effect.unit, Effect.unit], Effect.reduceAllPar(Effect.fail(1), constVoid), Effect.exit)
+        pipe(
+          [Effect.unit, Effect.unit],
+          Effect.reduceEffect(Effect.fail(1), constVoid, {
+            concurrency: "inherit"
+          }),
+          Effect.exit
+        )
       )
       assert.deepStrictEqual(Exit.unannotate(result), Exit.failCause(Cause.parallel(Cause.empty, Cause.fail(1))))
     }))
-  it.effect("reduceAllPar - return error if it exists in list", () =>
+  it.effect("reduceEffect/concurrency - return error if it exists in list", () =>
     Effect.gen(function*($) {
       const effects: ReadonlyArray<Effect.Effect<never, number, void>> = [Effect.unit, Effect.fail(1)]
       const result = yield* $(
-        pipe(effects, Effect.reduceAllPar(Effect.unit as Effect.Effect<never, number, void>, constVoid), Effect.exit)
+        pipe(
+          effects,
+          Effect.reduceEffect(Effect.unit as Effect.Effect<never, number, void>, constVoid, {
+            concurrency: "inherit"
+          }),
+          Effect.exit
+        )
       )
       assert.deepStrictEqual(Exit.unannotate(result), Exit.failCause(Cause.parallel(Cause.empty, Cause.fail(1))))
     }))

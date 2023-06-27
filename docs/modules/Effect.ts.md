@@ -62,7 +62,6 @@ Added in v1.0.0
   - [labelMetricsScopedSet](#labelmetricsscopedset)
   - [loop](#loop)
   - [mergeAll](#mergeall)
-  - [mergeAllPar](#mergeallpar)
   - [never](#never)
   - [none](#none)
   - [partition](#partition)
@@ -161,8 +160,7 @@ Added in v1.0.0
 - [folding](#folding)
   - [match](#match)
   - [reduce](#reduce)
-  - [reduceAll](#reduceall)
-  - [reduceAllPar](#reduceallpar)
+  - [reduceEffect](#reduceeffect)
   - [reduceRight](#reduceright)
   - [reduceWhile](#reducewhile)
 - [getter](#getter)
@@ -1211,32 +1209,15 @@ sequentially.
 
 ```ts
 export declare const mergeAll: {
-  <Z, A>(zero: Z, f: (z: Z, a: A) => Z): <R, E>(elements: Iterable<Effect<R, E, A>>) => Effect<R, E, Z>
-  <R, E, Z, A>(elements: Iterable<Effect<R, E, A>>, zero: Z, f: (z: Z, a: A) => Z): Effect<R, E, Z>
-}
-```
-
-Added in v1.0.0
-
-## mergeAllPar
-
-Merges an `Iterable<Effect<R, E, A>>` to a single effect, working in
-parallel.
-
-Due to the parallel nature of this combinator, `f` must be both:
-
-- commutative: `f(a, b) == f(b, a)`
-- associative: `f(a, f(b, c)) == f(f(a, b), c)`
-
-It's unsafe to execute side effects inside `f`, as `f` may be executed
-more than once for some of `in` elements during effect execution.
-
-**Signature**
-
-```ts
-export declare const mergeAllPar: {
-  <R, E, A, Z>(elements: Iterable<Effect<R, E, A>>, zero: Z, f: (z: Z, a: A) => Z): Effect<R, E, Z>
-  <Z, A>(zero: Z, f: (z: Z, a: A) => Z): <R, E>(elements: Iterable<Effect<R, E, A>>) => Effect<R, E, Z>
+  <Z, A>(zero: Z, f: (z: Z, a: A) => Z, options?: { readonly concurrency?: Concurrency }): <R, E>(
+    elements: Iterable<Effect<R, E, A>>
+  ) => Effect<R, E, Z>
+  <R, E, A, Z>(
+    elements: Iterable<Effect<R, E, A>>,
+    zero: Z,
+    f: (z: Z, a: A) => Z,
+    options?: { readonly concurrency?: Concurrency }
+  ): Effect<R, E, Z>
 }
 ```
 
@@ -2742,33 +2723,23 @@ export declare const reduce: {
 
 Added in v1.0.0
 
-## reduceAll
+## reduceEffect
 
-Reduces an `Iterable<Effect<R, E, A>>` to a single effect, working
-sequentially.
-
-**Signature**
-
-```ts
-export declare const reduceAll: {
-  <R, E, A>(zero: Effect<R, E, A>, f: (acc: A, a: A) => A): (elements: Iterable<Effect<R, E, A>>) => Effect<R, E, A>
-  <R, E, A>(elements: Iterable<Effect<R, E, A>>, zero: Effect<R, E, A>, f: (acc: A, a: A) => A): Effect<R, E, A>
-}
-```
-
-Added in v1.0.0
-
-## reduceAllPar
-
-Reduces an `Iterable<Effect<R, E, A>>` to a single effect, working in
-parallel.
+Reduces an `Iterable<Effect<R, E, A>>` to a single effect.
 
 **Signature**
 
 ```ts
-export declare const reduceAllPar: {
-  <R, E, A>(zero: Effect<R, E, A>, f: (acc: A, a: A) => A): (elements: Iterable<Effect<R, E, A>>) => Effect<R, E, A>
-  <R, E, A>(elements: Iterable<Effect<R, E, A>>, zero: Effect<R, E, A>, f: (acc: A, a: A) => A): Effect<R, E, A>
+export declare const reduceEffect: {
+  <R, E, A>(zero: Effect<R, E, A>, f: (acc: A, a: A) => A, options?: { readonly concurrency: Concurrency }): (
+    elements: Iterable<Effect<R, E, A>>
+  ) => Effect<R, E, A>
+  <R, E, A>(
+    elements: Iterable<Effect<R, E, A>>,
+    zero: Effect<R, E, A>,
+    f: (acc: A, a: A) => A,
+    options?: { readonly concurrency: Concurrency }
+  ): Effect<R, E, A>
 }
 ```
 

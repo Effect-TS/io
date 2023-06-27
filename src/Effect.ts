@@ -2491,28 +2491,18 @@ export const merge: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, E | A> 
  * @category constructors
  */
 export const mergeAll: {
-  <Z, A>(zero: Z, f: (z: Z, a: A) => Z): <R, E>(elements: Iterable<Effect<R, E, A>>) => Effect<R, E, Z>
-  <R, E, Z, A>(elements: Iterable<Effect<R, E, A>>, zero: Z, f: (z: Z, a: A) => Z): Effect<R, E, Z>
-} = effect.mergeAll
-
-/**
- * Merges an `Iterable<Effect<R, E, A>>` to a single effect, working in
- * parallel.
- *
- * Due to the parallel nature of this combinator, `f` must be both:
- * - commutative: `f(a, b) == f(b, a)`
- * - associative: `f(a, f(b, c)) == f(f(a, b), c)`
- *
- * It's unsafe to execute side effects inside `f`, as `f` may be executed
- * more than once for some of `in` elements during effect execution.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const mergeAllPar: {
-  <R, E, A, Z>(elements: Iterable<Effect<R, E, A>>, zero: Z, f: (z: Z, a: A) => Z): Effect<R, E, Z>
-  <Z, A>(zero: Z, f: (z: Z, a: A) => Z): <R, E>(elements: Iterable<Effect<R, E, A>>) => Effect<R, E, Z>
-} = fiberRuntime.mergeAllPar
+  <Z, A>(
+    zero: Z,
+    f: (z: Z, a: A) => Z,
+    options?: { readonly concurrency?: Concurrency }
+  ): <R, E>(elements: Iterable<Effect<R, E, A>>) => Effect<R, E, Z>
+  <R, E, A, Z>(
+    elements: Iterable<Effect<R, E, A>>,
+    zero: Z,
+    f: (z: Z, a: A) => Z,
+    options?: { readonly concurrency?: Concurrency }
+  ): Effect<R, E, Z>
+} = fiberRuntime.mergeAll
 
 /**
  * Returns a new effect where boolean value of this effect is negated.
@@ -2990,28 +2980,24 @@ export const reduce: {
 } = effect.reduce
 
 /**
- * Reduces an `Iterable<Effect<R, E, A>>` to a single effect, working
- * sequentially.
+ * Reduces an `Iterable<Effect<R, E, A>>` to a single effect.
  *
  * @since 1.0.0
  * @category folding
  */
-export const reduceAll: {
-  <R, E, A>(zero: Effect<R, E, A>, f: (acc: A, a: A) => A): (elements: Iterable<Effect<R, E, A>>) => Effect<R, E, A>
-  <R, E, A>(elements: Iterable<Effect<R, E, A>>, zero: Effect<R, E, A>, f: (acc: A, a: A) => A): Effect<R, E, A>
-} = effect.reduceAll
-
-/**
- * Reduces an `Iterable<Effect<R, E, A>>` to a single effect, working in
- * parallel.
- *
- * @since 1.0.0
- * @category folding
- */
-export const reduceAllPar: {
-  <R, E, A>(zero: Effect<R, E, A>, f: (acc: A, a: A) => A): (elements: Iterable<Effect<R, E, A>>) => Effect<R, E, A>
-  <R, E, A>(elements: Iterable<Effect<R, E, A>>, zero: Effect<R, E, A>, f: (acc: A, a: A) => A): Effect<R, E, A>
-} = fiberRuntime.reduceAllPar
+export const reduceEffect: {
+  <R, E, A>(
+    zero: Effect<R, E, A>,
+    f: (acc: A, a: A) => A,
+    options?: { readonly concurrency: Concurrency }
+  ): (elements: Iterable<Effect<R, E, A>>) => Effect<R, E, A>
+  <R, E, A>(
+    elements: Iterable<Effect<R, E, A>>,
+    zero: Effect<R, E, A>,
+    f: (acc: A, a: A) => A,
+    options?: { readonly concurrency: Concurrency }
+  ): Effect<R, E, A>
+} = fiberRuntime.reduceEffect
 
 /**
  * Folds an `Iterable<A>` using an effectual function f, working sequentially from left to right.

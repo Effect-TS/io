@@ -1085,19 +1085,6 @@ export const merge = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, n
   })
 
 /* @internal */
-export const mergeAll = dual<
-  <Z, A>(zero: Z, f: (z: Z, a: A) => Z) => <R, E>(elements: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, Z>,
-  <R, E, Z, A>(elements: Iterable<Effect.Effect<R, E, A>>, zero: Z, f: (z: Z, a: A) => Z) => Effect.Effect<R, E, Z>
->(
-  3,
-  <R, E, Z, A>(elements: Iterable<Effect.Effect<R, E, A>>, zero: Z, f: (z: Z, a: A) => Z) =>
-    Array.from(elements).reduce(
-      (acc, a) => core.zipWith(acc, a, f),
-      core.succeed(zero) as Effect.Effect<R, E, Z>
-    )
-)
-
-/* @internal */
 export const negate = <R, E>(self: Effect.Effect<R, E, boolean>): Effect.Effect<R, E, boolean> =>
   core.map(self, (b) => !b)
 
@@ -1247,19 +1234,6 @@ export const reduce = dual<
       core.succeed(zero) as Effect.Effect<R, E, Z>
     )
 )
-
-/* @internal */
-export const reduceAll = dual<
-  <R, E, A>(
-    zero: Effect.Effect<R, E, A>,
-    f: (acc: A, a: A) => A
-  ) => (elements: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, A>,
-  <R, E, A>(
-    elements: Iterable<Effect.Effect<R, E, A>>,
-    zero: Effect.Effect<R, E, A>,
-    f: (acc: A, a: A) => A
-  ) => Effect.Effect<R, E, A>
->(3, (elements, zero, f) => Array.from(elements).reduce((acc, a) => core.zipWith(acc, a, f), zero))
 
 /* @internal */
 export const reduceRight = dual<

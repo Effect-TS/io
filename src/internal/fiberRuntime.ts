@@ -1821,6 +1821,12 @@ const forEachParOptionalN = <R, E, A, B>(
   f: (a: A) => Effect.Effect<R, E, B>
 ) => n ? forEachParN(iterable, n, f) : forEachPar(iterable, f)
 
+const forEachParOptionalNDiscard = <R, E, A, B>(
+  iterable: Iterable<A>,
+  n: number | undefined,
+  f: (a: A) => Effect.Effect<R, E, B>
+) => n ? forEachParNDiscard(iterable, n, f) : forEachParDiscard(iterable, f)
+
 /* @internal */
 export const fork = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>> =>
   core.withFiberRuntime<R, never, Fiber.RuntimeFiber<E, A>>((state, status) =>
@@ -1911,18 +1917,37 @@ const forkWithScopeOverride = <R, E, A>(
   )
 
 /* @internal */
-export const mergeAllPar = dual<
-  <Z, A>(zero: Z, f: (z: Z, a: A) => Z) => <R, E>(elements: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, Z>,
-  <R, E, A, Z>(elements: Iterable<Effect.Effect<R, E, A>>, zero: Z, f: (z: Z, a: A) => Z) => Effect.Effect<R, E, Z>
->(3, (elements, zero, f) =>
-  core.flatMap(Ref.make(zero), (acc) =>
-    core.flatMap(
-      forEachParDiscard(
-        elements,
-        core.flatMap((a) => Ref.update(acc, (b) => f(b, a)))
-      ),
-      () => Ref.get(acc)
-    )))
+export const mergeAll = dual<
+  <Z, A>(zero: Z, f: (z: Z, a: A) => Z, options?: {
+    readonly concurrency?: Concurrency.Concurrency
+  }) => <R, E>(elements: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, Z>,
+  <R, E, A, Z>(elements: Iterable<Effect.Effect<R, E, A>>, zero: Z, f: (z: Z, a: A) => Z, options?: {
+    readonly concurrency?: Concurrency.Concurrency
+  }) => Effect.Effect<R, E, Z>
+>(
+  (args) => isIterable(args[0]),
+  <R, E, A, Z>(elements: Iterable<Effect.Effect<R, E, A>>, zero: Z, f: (z: Z, a: A) => Z, options?: {
+    readonly concurrency?: Concurrency.Concurrency
+  }) =>
+    Concurrency.matchSimple(
+      options?.concurrency,
+      () =>
+        Array.from(elements).reduce(
+          (acc, a) => core.zipWith(acc, a, f),
+          core.succeed(zero) as Effect.Effect<R, E, Z>
+        ),
+      (n) =>
+        core.flatMap(Ref.make(zero), (acc) =>
+          core.flatMap(
+            forEachParOptionalNDiscard(
+              elements,
+              n,
+              core.flatMap((a) => Ref.update(acc, (b) => f(b, a)))
+            ),
+            () => Ref.get(acc)
+          ))
+    )
+)
 
 /* @internal */
 export const onDone = dual<
@@ -2096,50 +2121,59 @@ const raceAllArbiter = <E, E1, A, A1>(
     )
 
 /* @internal */
-export const reduceAllPar = dual<
+export const reduceEffect = dual<
   <R, E, A>(
     zero: Effect.Effect<R, E, A>,
-    f: (acc: A, a: A) => A
+    f: (acc: A, a: A) => A,
+    options?: { readonly concurrency: Concurrency.Concurrency }
   ) => (elements: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, A>,
   <R, E, A>(
     elements: Iterable<Effect.Effect<R, E, A>>,
     zero: Effect.Effect<R, E, A>,
-    f: (acc: A, a: A) => A
+    f: (acc: A, a: A) => A,
+    options?: { readonly concurrency: Concurrency.Concurrency }
   ) => Effect.Effect<R, E, A>
->(3, <R, E, A>(
+>((args) => isIterable(args[0]), <R, E, A>(
   elements: Iterable<Effect.Effect<R, E, A>>,
   zero: Effect.Effect<R, E, A>,
-  f: (acc: A, a: A) => A
+  f: (acc: A, a: A) => A,
+  options?: { readonly concurrency: Concurrency.Concurrency }
 ) =>
-  core.suspend(() =>
-    pipe(
-      mergeAllPar(
-        [zero, ...Array.from(elements)],
-        Option.none() as Option.Option<A>,
-        (acc, elem) => {
-          switch (acc._tag) {
-            case "None": {
-              return Option.some(elem)
+  Concurrency.matchSimple(
+    options?.concurrency,
+    () => Array.from(elements).reduce((acc, a) => core.zipWith(acc, a, f), zero),
+    () =>
+      core.suspend(() =>
+        pipe(
+          mergeAll(
+            [zero, ...Array.from(elements)],
+            Option.none() as Option.Option<A>,
+            (acc, elem) => {
+              switch (acc._tag) {
+                case "None": {
+                  return Option.some(elem)
+                }
+                case "Some": {
+                  return Option.some(f(acc.value, elem))
+                }
+              }
+            },
+            options
+          ),
+          core.map((option) => {
+            switch (option._tag) {
+              case "None": {
+                throw new Error(
+                  "BUG: Effect.reduceEffect - please report an issue at https://github.com/Effect-TS/io/issues"
+                )
+              }
+              case "Some": {
+                return option.value
+              }
             }
-            case "Some": {
-              return Option.some(f(acc.value, elem))
-            }
-          }
-        }
-      ),
-      core.map((option) => {
-        switch (option._tag) {
-          case "None": {
-            throw new Error(
-              "BUG: Effect.reduceAllPar - please report an issue at https://github.com/Effect-TS/io/issues"
-            )
-          }
-          case "Some": {
-            return option.value
-          }
-        }
-      })
-    )
+          })
+        )
+      )
   ))
 
 /* @internal */
