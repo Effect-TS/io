@@ -521,7 +521,7 @@ export const zip = dual<
     that: Effect.Effect<R2, E2, A2>,
     options?: { readonly parallel?: boolean }
   ) => Effect.Effect<R | R2, E | E2, [A, A2]>
->((args) => core.isEffect(args[0]) && core.isEffect(args[1]), (
+>((args) => core.isEffect(args[1]), (
   self,
   that,
   options
@@ -544,7 +544,7 @@ export const zipLeft = dual<
     options?: { readonly parallel?: boolean }
   ) => Effect.Effect<R | R2, E | E2, A>
 >(
-  (args) => core.isEffect(args[0]) && core.isEffect(args[1]),
+  (args) => core.isEffect(args[1]),
   (self, that, options) => options?.parallel ? zipWith(self, that, (a, _) => a, options) : core.zipLeft(self, that)
 )
 
@@ -559,7 +559,7 @@ export const zipRight = dual<
     that: Effect.Effect<R2, E2, A2>,
     options?: { readonly parallel?: boolean }
   ) => Effect.Effect<R | R2, E | E2, A2>
->((args) => core.isEffect(args[0]) && core.isEffect(args[1]), (self, that, options) =>
+>((args) => core.isEffect(args[1]), (self, that, options) =>
   options?.parallel ?
     zipWith(self, that, (_, b) => b, options) :
     core.zipRight(self, that))
@@ -579,7 +579,7 @@ export const zipWith = dual<
     f: (a: A, b: A2) => B,
     options?: { readonly parallel?: boolean }
   ) => Effect.Effect<R | R2, E | E2, B>
->((args) => core.isEffect(args[0]) && core.isEffect(args[1]), <R, E, A, R2, E2, A2, B>(
+>((args) => core.isEffect(args[1]), <R, E, A, R2, E2, A2, B>(
   self: Effect.Effect<R, E, A>,
   that: Effect.Effect<R2, E2, A2>,
   f: (a: A, b: A2) => B,

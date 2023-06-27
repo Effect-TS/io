@@ -421,37 +421,40 @@ export const allWith: All.DataLast = circular.allWith
 export declare namespace All {
   type EffectAny = Effect<any, any, any>
 
-  type ReturnIterable<T extends Iterable<EffectAny>, Discard extends boolean> = [T] extends
+  type ReturnIterable<T extends Iterable<EffectAny>, Discard extends boolean, Validate = false> = [T] extends
     [Iterable<Effect.Variance<infer R, infer E, infer A>>] ? Effect<
     R,
-    E,
+    Validate extends true ? ReadonlyArray<E> : E,
     Discard extends true ? void
       : ReadonlyArray<A>
   >
     : never
 
-  type ReturnTuple<T extends ReadonlyArray<unknown>, Discard extends boolean> = Effect<
+  type ReturnTuple<T extends ReadonlyArray<unknown>, Discard extends boolean, Validate = false> = Effect<
     T[number] extends never ? never
       : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
       : never,
     T[number] extends never ? never
-      : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
+      : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }]
+        ? Validate extends true ? ReadonlyArray<E> : E
       : never,
     Discard extends true ? void
-      : T[number] extends never ? []
-      : { readonly [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
+      : T[number] extends never ? readonly []
+      : { readonly [K in keyof T]: [T[K]] extends [Effect<infer _R, infer _E, infer _A>] ? _A : never }
   > extends infer X ? X : never
 
-  type ReturnObject<T, Discard extends boolean> = [T] extends [{ readonly [K: string]: EffectAny }] ? Effect<
-    keyof T extends never ? never
-      : [T[keyof T]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
-      : never,
-    keyof T extends never ? never
-      : [T[keyof T]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
-      : never,
-    Discard extends true ? void
-      : { readonly [K in keyof T]: [T[K]] extends [Effect<any, any, infer A>] ? A : never }
-  >
+  type ReturnObject<T, Discard extends boolean, Validate = false> = [T] extends [{ readonly [K: string]: EffectAny }]
+    ? Effect<
+      keyof T extends never ? never
+        : [T[keyof T]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
+        : never,
+      keyof T extends never ? never
+        : [T[keyof T]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }]
+          ? Validate extends true ? ReadonlyArray<E> : E
+        : never,
+      Discard extends true ? void
+        : { readonly [K in keyof T]: [T[K]] extends [Effect<infer _R, infer _E, infer _A>] ? _A : never }
+    >
     : never
 
   export type Options = {

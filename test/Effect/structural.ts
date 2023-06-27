@@ -9,45 +9,62 @@ describe.concurrent("Effect", () => {
   describe("all", () => {
     it.effect("should work with multiple arguments", () =>
       Effect.gen(function*($) {
-        const [a, b] = yield* $(Effect.all(Effect.succeed(0), Effect.succeed(1)))
+        const result = yield* $(Effect.all(Effect.succeed(0), Effect.succeed(1)))
+        const [a, b] = result
         assert.deepEqual(a, 0)
         assert.deepEqual(b, 1)
+        assertType<readonly [number, number]>()(result) satisfies true
       }))
     it.effect("should work with one argument", () =>
       Effect.gen(function*($) {
-        const [a] = yield* $(Effect.all(Effect.succeed(0)))
+        const result = yield* $(Effect.all(Effect.succeed(0)))
+        const [a] = result
         assert.deepEqual(a, 0)
+        assertType<readonly [number]>()(result) satisfies true
       }))
     it.effect("should work with one array argument", () =>
       Effect.gen(function*($) {
         const res = yield* $(Effect.all([Effect.succeed(0), Effect.succeed(1)]))
         assert.deepEqual(res, [0, 1])
+        assertType<ReadonlyArray<number>>()(res) satisfies true
       }))
     it.effect("should work with one empty array argument", () =>
       Effect.gen(function*($) {
         const x = yield* $(Effect.all([]))
         assert.deepEqual(x, [])
+        assertType<readonly []>()(x) satisfies true
       }))
     it.effect("should work with an array argument", () =>
       Effect.gen(function*($) {
         const y = Effect.all([0, 1, 2].map((n) => Effect.succeed(n + 1)))
         const x = yield* $(y)
         assert.deepEqual(x, [1, 2, 3])
+        assertType<ReadonlyArray<number>>()(x) satisfies true
       }))
     it.effect("should work with one record argument", () =>
       Effect.gen(function*($) {
-        const { a, b } = yield* $(Effect.all({ a: Effect.succeed(0), b: Effect.succeed(1) }))
+        const result = yield* $(Effect.all({ a: Effect.succeed(0), b: Effect.succeed(1) }))
+        const { a, b } = result
         assert.deepEqual(a, 0)
         assert.deepEqual(b, 1)
+        assertType<{
+          readonly a: number
+          readonly b: number
+        }>()(result) satisfies true
       }))
     it.effect("record should work with pipe", () =>
       Effect.gen(function*($) {
-        const { a, b } = yield* $(
+        const result = yield* $(
           { a: Effect.succeed(0), b: Effect.succeed("hello") },
           Effect.all
         )
+        const { a, b } = result
         assert.deepEqual(a, 0)
         assert.deepEqual(b, "hello")
+        assertType<{
+          readonly a: number
+          readonly b: string
+        }>()(result) satisfies true
       }))
     it.effect("tuple should work with pipe", () =>
       Effect.gen(function*($) {
@@ -168,27 +185,38 @@ describe.concurrent("Effect", () => {
       }))
     it.effect("should work with one record argument", () =>
       Effect.gen(function*($) {
-        const { a, b } = yield* $(Effect.all({ a: Effect.succeed(0), b: Effect.succeed(1) },  {
+        const result = yield* $(Effect.all({ a: Effect.succeed(0), b: Effect.succeed(1) },  {
           concurrency: "inherit"
         }))
+        const { a, b } = result
         assert.deepEqual(a, 0)
         assert.deepEqual(b, 1)
+        assertType<{
+          readonly a: number
+          readonly b: number
+        }>()(result) satisfies true
       }))
     it.effect("should work with one empty record", () =>
       Effect.gen(function*($) {
         const x = yield* $(Effect.all({}, { concurrency: "inherit" }))
         assert.deepEqual(x, {})
+        assertType<{}>()(x) satisfies true
       }))
   })
   describe("allWith", () => {
     it.effect("record should work with pipe", () =>
       Effect.gen(function*($) {
-        const { a, b } = yield* $(
+        const result = yield* $(
           { a: Effect.succeed(0), b: Effect.succeed("hello") },
           Effect.allWith({ concurrency: "inherit" })
         )
+        const { a, b } = result
         assert.deepEqual(a, 0)
         assert.deepEqual(b, "hello")
+        assertType<{
+          readonly a: number
+          readonly b: string
+        }>()(result) satisfies true
       }))
     it.effect("tuple should work with pipe", () =>
       Effect.gen(function*($) {
