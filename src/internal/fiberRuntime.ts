@@ -1456,11 +1456,11 @@ export const filter = dual<
       readonly concurrency?: Concurrency.Concurrency
       readonly negate?: boolean
     }
-  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Array<A>>,
+  ) => (elements: Iterable<A>) => Effect.Effect<R, E, ReadonlyArray<A>>,
   <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>, options?: {
     readonly concurrency?: Concurrency.Concurrency
     readonly negate?: boolean
-  }) => Effect.Effect<R, E, Array<A>>
+  }) => Effect.Effect<R, E, ReadonlyArray<A>>
 >(
   (args) => isIterable(args[0]),
   <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>, options?: {
@@ -1601,7 +1601,7 @@ export const allWith: Effect.All.AllWith = function(options) {
 export const allSuccesses = <R, E, A>(
   elements: Iterable<Effect.Effect<R, E, A>>,
   options?: { readonly concurrency?: Concurrency.Concurrency }
-): Effect.Effect<R, never, Array<A>> =>
+): Effect.Effect<R, never, ReadonlyArray<A>> =>
   core.map(
     all(Array.from(elements).map(core.exit), options),
     RA.filterMap((exit) => core.exitIsSuccess(exit) ? Option.some(exit.i0) : Option.none())
@@ -1609,7 +1609,8 @@ export const allSuccesses = <R, E, A>(
 
 /* @internal */
 export const replicate = (n: number) =>
-  <R, E, A>(self: Effect.Effect<R, E, A>): Array<Effect.Effect<R, E, A>> => Array.from({ length: n }, () => self)
+  <R, E, A>(self: Effect.Effect<R, E, A>): ReadonlyArray<Effect.Effect<R, E, A>> =>
+    Array.from({ length: n }, () => self)
 
 /* @internal */
 export const replicateEffect = dual<
@@ -1741,7 +1742,7 @@ export const forEachParDiscard = dual<
 const forEachParUnbounded = <A, R, E, B>(
   self: Iterable<A>,
   f: (a: A) => Effect.Effect<R, E, B>
-): Effect.Effect<R, E, Array<B>> =>
+): Effect.Effect<R, E, ReadonlyArray<B>> =>
   core.suspend(() => {
     const as = Array.from(self).map((v, i) => [v, i] as const)
     const array = new Array<B>(as.length)
@@ -2827,10 +2828,10 @@ export const currentSupervisor: FiberRef.FiberRef<Supervisor.Supervisor<any>> = 
 
 /* @internal */
 export const fiberAwaitAll = (fibers: Iterable<Fiber.Fiber<any, any>>): Effect.Effect<never, never, void> =>
-  core.asUnit(internalFiber._await(fiberCollectAll(fibers)))
+  core.asUnit(internalFiber._await(fiberAll(fibers)))
 
 /** @internal */
-export const fiberCollectAll = <E, A>(fibers: Iterable<Fiber.Fiber<E, A>>): Fiber.Fiber<E, ReadonlyArray<A>> => ({
+export const fiberAll = <E, A>(fibers: Iterable<Fiber.Fiber<E, A>>): Fiber.Fiber<E, ReadonlyArray<A>> => ({
   [internalFiber.FiberTypeId]: internalFiber.fiberVariance,
   id: () => Array.from(fibers).reduce((id, fiber) => FiberId.combine(id, fiber.id()), FiberId.none),
   await: () => core.exit(forEachPar(fibers, (fiber) => core.flatten(fiber.await()))),
@@ -2874,7 +2875,7 @@ export const fiberInterruptFork = <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect
 
 /* @internal */
 export const fiberJoinAll = <E, A>(fibers: Iterable<Fiber.Fiber<E, A>>): Effect.Effect<never, E, void> =>
-  core.asUnit(internalFiber.join(fiberCollectAll(fibers)))
+  core.asUnit(internalFiber.join(fiberAll(fibers)))
 
 /* @internal */
 export const fiberScoped = <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<Scope.Scope, never, Fiber.Fiber<E, A>> =>
@@ -3141,8 +3142,8 @@ export const ensuring = dual<
 /** @internal */
 export const invokeWithInterrupt: <R, E, A>(
   self: Effect.Effect<R, E, A>,
-  entries: Array<Entry<unknown>>
-) => Effect.Effect<R, E, void> = <R, E, A>(dataSource: Effect.Effect<R, E, A>, all: Array<Entry<unknown>>) =>
+  entries: ReadonlyArray<Entry<unknown>>
+) => Effect.Effect<R, E, void> = <R, E, A>(dataSource: Effect.Effect<R, E, A>, all: ReadonlyArray<Entry<unknown>>) =>
   core.fiberIdWith((id) =>
     core.flatMap(
       core.flatMap(
