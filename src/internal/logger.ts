@@ -30,13 +30,15 @@ const loggerVariance = {
 /** @internal */
 export const makeLogger = <Message, Output>(
   log: (
-    fiberId: FiberId.FiberId,
-    logLevel: LogLevel.LogLevel,
-    message: Message,
-    cause: CauseExt.Cause<unknown>,
-    context: FiberRefs.FiberRefs,
-    spans: List.List<LogSpan.LogSpan>,
-    annotations: HashMap.HashMap<string, string>
+    options: {
+      readonly fiberId: FiberId.FiberId
+      readonly logLevel: LogLevel.LogLevel
+      readonly message: Message
+      readonly cause: CauseExt.Cause<unknown>
+      readonly context: FiberRefs.FiberRefs
+      readonly spans: List.List<LogSpan.LogSpan>
+      readonly annotations: HashMap.HashMap<string, string>
+    }
   ) => Output
 ): Logger.Logger<Message, Output> => ({
   [LoggerTypeId]: loggerVariance,
@@ -45,7 +47,7 @@ export const makeLogger = <Message, Output>(
 
 /** @internal */
 export const stringLogger: Logger.Logger<string, string> = makeLogger<string, string>(
-  (fiberId, logLevel, message, cause, _context, spans, annotations) => {
+  ({ annotations, cause, fiberId, logLevel, message, spans }) => {
     const now = new Date()
     const nowMillis = now.getTime()
 
@@ -112,7 +114,7 @@ const appendQuoted = (label: string, output: string): string =>
 
 /** @internal */
 export const logfmtLogger = makeLogger<string, string>(
-  (fiberId, logLevel, message, cause, _context, spans, annotations) => {
+  ({ annotations, cause, fiberId, logLevel, message, spans }) => {
     const now = new Date()
     const nowMillis = now.getTime()
 
@@ -196,8 +198,7 @@ export const contramap = dual<
   ) => Logger.Logger<Message2, Output>
 >(2, (self, f) =>
   makeLogger(
-    (fiberId, logLevel, message, cause, context, spans, annotations) =>
-      self.log(fiberId, logLevel, f(message), cause, context, spans, annotations)
+    (options) => self.log({ ...options, message: f(options.message) })
   ))
 
 /** @internal */
@@ -210,19 +211,9 @@ export const filterLogLevel = dual<
     f: (logLevel: LogLevel.LogLevel) => boolean
   ) => Logger.Logger<Message, Option.Option<Output>>
 >(2, (self, f) =>
-  makeLogger((fiberId, logLevel, message, cause, context, spans, annotations) =>
-    f(logLevel)
-      ? Option.some(
-        self.log(
-          fiberId,
-          logLevel,
-          message,
-          cause,
-          context,
-          spans,
-          annotations
-        )
-      )
+  makeLogger((options) =>
+    f(options.logLevel)
+      ? Option.some(self.log(options))
       : Option.none()
   ))
 
@@ -235,24 +226,18 @@ export const map = dual<
     self: Logger.Logger<Message, Output>,
     f: (output: Output) => Output2
   ) => Logger.Logger<Message, Output2>
->(2, (self, f) =>
-  makeLogger(
-    (fiberId, logLevel, message, cause, context, spans, annotations) =>
-      f(self.log(fiberId, logLevel, message, cause, context, spans, annotations))
-  ))
+>(2, (self, f) => makeLogger((options) => f(self.log(options))))
 
 /** @internal */
-export const none = (): Logger.Logger<unknown, void> => ({
+export const none: Logger.Logger<unknown, void> = {
   [LoggerTypeId]: loggerVariance,
   log: constVoid
-})
+} as Logger.Logger<unknown, void>
 
 /** @internal */
 export const simple = <A, B>(log: (a: A) => B): Logger.Logger<A, B> => ({
   [LoggerTypeId]: loggerVariance,
-  log: (_fiberId, _logLevel, message, _cause, _context, _spans, _annotations) => {
-    return log(message)
-  }
+  log: ({ message }) => log(message)
 })
 
 /** @internal */
@@ -276,13 +261,7 @@ export const zip = dual<
     self: Logger.Logger<Message, Output>,
     that: Logger.Logger<Message2, Output2>
   ) => Logger.Logger<Message & Message2, readonly [Output, Output2]>
->(2, (self, that) =>
-  makeLogger((fiberId, logLevel, message, cause, context, spans, annotations) =>
-    [
-      self.log(fiberId, logLevel, message, cause, context, spans, annotations),
-      that.log(fiberId, logLevel, message, cause, context, spans, annotations)
-    ] as const
-  ))
+>(2, (self, that) => makeLogger((options) => [self.log(options), that.log(options)] as const))
 
 /** @internal */
 export const zipLeft = dual<

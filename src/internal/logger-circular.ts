@@ -12,12 +12,12 @@ export const test = dual<
   <Message>(input: Message) => <Output>(self: Logger.Logger<Message, Output>) => Output,
   <Message, Output>(self: Logger.Logger<Message, Output>, input: Message) => Output
 >(2, (self, input) =>
-  self.log(
-    _fiberId.none,
-    core.logLevelInfo,
-    input,
-    Cause.empty,
-    fiberRefs.unsafeMake(new Map()),
-    List.empty(),
-    HashMap.empty()
-  ))
+  self.log({
+    fiberId: _fiberId.none,
+    logLevel: core.logLevelInfo,
+    message: input,
+    cause: Cause.empty,
+    context: fiberRefs.unsafeMake(new Map()),
+    spans: List.empty(),
+    annotations: HashMap.empty()
+  }))

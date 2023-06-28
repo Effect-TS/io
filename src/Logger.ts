@@ -36,13 +36,15 @@ export type LoggerTypeId = typeof LoggerTypeId
  */
 export interface Logger<Message, Output> extends Logger.Variance<Message, Output> {
   readonly log: (
-    fiberId: FiberId.FiberId,
-    logLevel: LogLevel.LogLevel,
-    message: Message,
-    cause: Cause.Cause<unknown>,
-    context: FiberRefs.FiberRefs,
-    spans: List.List<LogSpan.LogSpan>,
-    annotations: HashMap.HashMap<string, string>
+    options: {
+      readonly fiberId: FiberId.FiberId
+      readonly logLevel: LogLevel.LogLevel
+      readonly message: Message
+      readonly cause: Cause.Cause<unknown>
+      readonly context: FiberRefs.FiberRefs
+      readonly spans: List.List<LogSpan.LogSpan>
+      readonly annotations: HashMap.HashMap<string, string>
+    }
   ) => Output
 }
 
@@ -68,13 +70,15 @@ export declare namespace Logger {
  */
 export const make: <Message, Output>(
   log: (
-    fiberId: FiberId.FiberId,
-    logLevel: LogLevel.LogLevel,
-    message: Message,
-    cause: Cause.Cause<unknown>,
-    context: FiberRefs.FiberRefs,
-    spans: List.List<LogSpan.LogSpan>,
-    annotations: HashMap.HashMap<string, string>
+    options: {
+      readonly fiberId: FiberId.FiberId
+      readonly logLevel: LogLevel.LogLevel
+      readonly message: Message
+      readonly cause: Cause.Cause<unknown>
+      readonly context: FiberRefs.FiberRefs
+      readonly spans: List.List<LogSpan.LogSpan>
+      readonly annotations: HashMap.HashMap<string, string>
+    }
   ) => Output
 ) => Logger<Message, Output> = internal.makeLogger
 
@@ -150,7 +154,7 @@ export const map: {
  * @since 1.0.0
  * @category constructors
  */
-export const none: (_: void) => Logger<unknown, void> = internal.none
+export const none: Logger<unknown, void> = internal.none
 
 /**
  * @since 1.0.0

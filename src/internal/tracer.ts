@@ -78,15 +78,14 @@ export const nativeTracer: Tracer.Tracer = make({
 })
 
 /** @internal */
-export const logger = _logger.makeLogger<string, void>((
-  fiberId,
-  logLevel,
-  message,
+export const logger = _logger.makeLogger<string, void>(({
+  annotations,
   cause,
   context,
-  _spans,
-  annotations
-) => {
+  fiberId,
+  logLevel,
+  message
+}) => {
   const span = Option.flatMap(fiberRefs.get(context, core.currentTracerSpan), List.head)
   if (Option.isNone(span)) {
     return

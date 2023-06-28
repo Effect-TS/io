@@ -88,15 +88,15 @@ Added in v1.0.0
 
 ```ts
 export declare const make: <Message, Output>(
-  log: (
-    fiberId: FiberId.FiberId,
-    logLevel: LogLevel.LogLevel,
-    message: Message,
-    cause: Cause.Cause<unknown>,
-    context: FiberRefs.FiberRefs,
-    spans: List.List<LogSpan.LogSpan>,
-    annotations: HashMap.HashMap<string, string>
-  ) => Output
+  log: (options: {
+    readonly fiberId: FiberId.FiberId
+    readonly logLevel: LogLevel.LogLevel
+    readonly message: Message
+    readonly cause: Cause.Cause<unknown>
+    readonly context: FiberRefs.FiberRefs
+    readonly spans: List.List<LogSpan.LogSpan>
+    readonly annotations: HashMap.HashMap<string, string>
+  }) => Output
 ) => Logger<Message, Output>
 ```
 
@@ -109,7 +109,7 @@ A logger that does nothing in response to logging events.
 **Signature**
 
 ```ts
-export declare const none: (_: void) => Logger<unknown, void>
+export declare const none: Logger<unknown, void>
 ```
 
 Added in v1.0.0
@@ -345,15 +345,15 @@ Added in v1.0.0
 
 ```ts
 export interface Logger<Message, Output> extends Logger.Variance<Message, Output> {
-  readonly log: (
-    fiberId: FiberId.FiberId,
-    logLevel: LogLevel.LogLevel,
-    message: Message,
-    cause: Cause.Cause<unknown>,
-    context: FiberRefs.FiberRefs,
-    spans: List.List<LogSpan.LogSpan>,
-    annotations: HashMap.HashMap<string, string>
-  ) => Output
+  readonly log: (options: {
+    readonly fiberId: FiberId.FiberId
+    readonly logLevel: LogLevel.LogLevel
+    readonly message: Message
+    readonly cause: Cause.Cause<unknown>
+    readonly context: FiberRefs.FiberRefs
+    readonly spans: List.List<LogSpan.LogSpan>
+    readonly annotations: HashMap.HashMap<string, string>
+  }) => Output
 }
 ```
 

@@ -756,7 +756,15 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     const loggers = this.getLoggers()
     const contextMap = this.unsafeGetFiberRefs()
     for (const logger of loggers) {
-      logger.log(this.id(), logLevel, message, cause, contextMap, spans, annotations)
+      logger.log({
+        fiberId: this.id(),
+        logLevel,
+        message,
+        cause,
+        context: contextMap,
+        spans,
+        annotations
+      })
     }
   }
 
@@ -1283,52 +1291,22 @@ export const currentMinimumLogLevel: FiberRef.FiberRef<LogLevel.LogLevel> = core
 )
 
 /** @internal */
-export const defaultLogger: Logger<string, void> = internalLogger.makeLogger(
-  (fiberId, logLevel, message, cause, context, spans, annotations) => {
-    const formatted = internalLogger.stringLogger.log(
-      fiberId,
-      logLevel,
-      message,
-      cause,
-      context,
-      spans,
-      annotations
-    )
-    globalThis.console.log(formatted)
-  }
-)
+export const defaultLogger: Logger<string, void> = internalLogger.makeLogger((options) => {
+  const formatted = internalLogger.stringLogger.log(options)
+  globalThis.console.log(formatted)
+})
 
 /** @internal */
-export const filterMinimumLogLevel: Logger<string, void> = internalLogger.makeLogger(
-  (fiberId, logLevel, message, cause, context, spans, annotations) => {
-    const formatted = internalLogger.stringLogger.log(
-      fiberId,
-      logLevel,
-      message,
-      cause,
-      context,
-      spans,
-      annotations
-    )
-    globalThis.console.log(formatted)
-  }
-)
+export const filterMinimumLogLevel: Logger<string, void> = internalLogger.makeLogger((options) => {
+  const formatted = internalLogger.stringLogger.log(options)
+  globalThis.console.log(formatted)
+})
 
 /** @internal */
-export const logFmtLogger: Logger<string, void> = internalLogger.makeLogger(
-  (fiberId, logLevel, message, cause, context, spans, annotations) => {
-    const formatted = internalLogger.logfmtLogger.log(
-      fiberId,
-      logLevel,
-      message,
-      cause,
-      context,
-      spans,
-      annotations
-    )
-    globalThis.console.log(formatted)
-  }
-)
+export const logFmtLogger: Logger<string, void> = internalLogger.makeLogger((options) => {
+  const formatted = internalLogger.logfmtLogger.log(options)
+  globalThis.console.log(formatted)
+})
 
 /** @internal */
 export const currentLoggers: FiberRef.FiberRef<
