@@ -1879,7 +1879,7 @@ export const forEachParUnboundedDiscard = <R, E, A, _>(
               core.flatMap(
                 forEachParUnbounded(fibers, core.interruptFiber),
                 (exits) => {
-                  const exit = core.exitCollectAllPar(exits)
+                  const exit = core.exitCollectAll(exits, { parallel: true })
                   if (exit._tag === "Some" && core.exitIsFailure(exit.value)) {
                     return core.failCause(
                       internalCause.parallel(internalCause.stripFailures(cause), exit.value.i0)
@@ -2666,7 +2666,7 @@ export const releaseMapReleaseAll = (
               forEachPar((fin) => core.exit(update(fin)(exit))),
               core.flatMap((results) =>
                 pipe(
-                  core.exitCollectAllPar(results),
+                  core.exitCollectAll(results, { parallel: true }),
                   Option.map(core.exitAsUnit),
                   Option.getOrElse(() => core.exitUnit())
                 )
@@ -2677,7 +2677,7 @@ export const releaseMapReleaseAll = (
               forEachPar((fin) => core.exit(update(fin)(exit))),
               core.flatMap((results) =>
                 pipe(
-                  core.exitCollectAllPar(results),
+                  core.exitCollectAll(results, { parallel: true }),
                   Option.map(core.exitAsUnit),
                   Option.getOrElse(() => core.exitUnit())
                 )

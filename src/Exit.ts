@@ -138,24 +138,13 @@ export const causeOption: <E, A>(self: Exit<E, A>) => Option.Option<Cause.Cause<
  * Collects all of the specified exit values into a `Some<Exit<E, List<A>>>`. If
  * the provided iterable contains no elements, `None` will be returned.
  *
- * **Note**: `Exit.collectAll` combines `Cause` values sequentially.
- *
  * @since 1.0.0
  * @category constructors
  */
-export const collectAll: <E, A>(exits: Iterable<Exit<E, A>>) => Option.Option<Exit<E, Array<A>>> = core.exitCollectAll
-
-/**
- * Collects all of the specified exit values into a `Some<Exit<E, List<A>>>`. If
- * the provided iterable contains no elements, `None` will be returned.
- *
- * **Note**: `Exit.collectAll` combines `Cause` values in parallel.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const collectAllPar: <E, A>(exits: Iterable<Exit<E, A>>) => Option.Option<Exit<E, Array<A>>> =
-  core.exitCollectAllPar
+export const all: <E, A>(
+  exits: Iterable<Exit<E, A>>,
+  options?: { readonly parallel?: boolean } | undefined
+) => Option.Option<Exit<E, Array<A>>> = core.exitCollectAll
 
 /**
  * Constructs a new `Exit.Failure` from the specified unrecoverable defect.

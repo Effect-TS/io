@@ -1950,13 +1950,10 @@ export const exitCauseOption = <E, A>(self: Exit.Exit<E, A>): Option.Option<Caus
 
 /** @internal */
 export const exitCollectAll = <E, A>(
-  exits: Iterable<Exit.Exit<E, A>>
-): Option.Option<Exit.Exit<E, Array<A>>> => exitCollectAllInternal(exits, internalCause.sequential)
-
-/** @internal */
-export const exitCollectAllPar = <E, A>(
-  exits: Iterable<Exit.Exit<E, A>>
-): Option.Option<Exit.Exit<E, Array<A>>> => exitCollectAllInternal(exits, internalCause.parallel)
+  exits: Iterable<Exit.Exit<E, A>>,
+  options?: { readonly parallel?: boolean }
+): Option.Option<Exit.Exit<E, Array<A>>> =>
+  exitCollectAllInternal(exits, options?.parallel ? internalCause.parallel : internalCause.sequential)
 
 /** @internal */
 export const exitDie = (defect: unknown): Exit.Exit<never, never> =>
