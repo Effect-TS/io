@@ -83,7 +83,7 @@ class Pending<E, A> implements Equal.Equal {
 const isPending = (u: unknown): u is Pending<unknown, unknown> =>
   typeof u === "object" && u != null && KeyedPoolMapValueSymbol in u && "_tag" in u && u["_tag"] === "Pending"
 
-const makeWith = <K, R, E, A>(
+const makeImpl = <K, R, E, A>(
   get: (key: K) => Effect.Effect<R, E, A>,
   min: (key: K) => number,
   max: (key: K) => number,
@@ -181,35 +181,44 @@ const makeWith = <K, R, E, A>(
   )
 
 /** @internal */
-export const makeSized = <K, R, E, A>(
-  get: (key: K) => Effect.Effect<R, E, A>,
-  size: number
+export const make = <K, R, E, A>(
+  options: {
+    readonly acquire: (key: K) => Effect.Effect<R, E, A>
+    readonly size: number
+  }
 ): Effect.Effect<R | Scope.Scope, never, KeyedPool.KeyedPool<K, E, A>> =>
-  makeWith(get, () => size, () => size, () => Option.none())
+  makeImpl(options.acquire, () => options.size, () => options.size, () => Option.none())
 
 /** @internal */
-export const makeSizedWith = <K, R, E, A>(
-  get: (key: K) => Effect.Effect<R, E, A>,
-  size: (key: K) => number
-): Effect.Effect<R | Scope.Scope, never, KeyedPool.KeyedPool<K, E, A>> => makeWith(get, size, size, () => Option.none())
+export const makeWith = <K, R, E, A>(
+  options: {
+    readonly acquire: (key: K) => Effect.Effect<R, E, A>
+    readonly size: (key: K) => number
+  }
+): Effect.Effect<R | Scope.Scope, never, KeyedPool.KeyedPool<K, E, A>> =>
+  makeImpl(options.acquire, options.size, options.size, () => Option.none())
 
 /** @internal */
-export const makeSizedWithTTL = <K, R, E, A>(
-  get: (key: K) => Effect.Effect<R, E, A>,
-  min: (key: K) => number,
-  max: (key: K) => number,
-  timeToLive: Duration.Duration
+export const makeWithTTL = <K, R, E, A>(
+  options: {
+    readonly acquire: (key: K) => Effect.Effect<R, E, A>
+    readonly min: (key: K) => number
+    readonly max: (key: K) => number
+    readonly timeToLive: Duration.Duration
+  }
 ): Effect.Effect<R | Scope.Scope, never, KeyedPool.KeyedPool<K, E, A>> =>
-  makeWith(get, min, max, () => Option.some(timeToLive))
+  makeImpl(options.acquire, options.min, options.max, () => Option.some(options.timeToLive))
 
 /** @internal */
-export const makeSizedWithTTLBy = <K, R, E, A>(
-  get: (key: K) => Effect.Effect<R, E, A>,
-  min: (key: K) => number,
-  max: (key: K) => number,
-  timeToLive: (key: K) => Duration.Duration
+export const makeWithTTLBy = <K, R, E, A>(
+  options: {
+    readonly acquire: (key: K) => Effect.Effect<R, E, A>
+    readonly min: (key: K) => number
+    readonly max: (key: K) => number
+    readonly timeToLive: (key: K) => Duration.Duration
+  }
 ): Effect.Effect<R | Scope.Scope, never, KeyedPool.KeyedPool<K, E, A>> =>
-  makeWith(get, min, max, (key) => Option.some(timeToLive(key)))
+  makeImpl(options.acquire, options.min, options.max, (key) => Option.some(options.timeToLive(key)))
 
 /** @internal */
 export const get = dual<

@@ -14,7 +14,10 @@ describe("KeyedPool", () => {
   it.scoped("acquire release many successfully while other key is blocked", () =>
     Effect.gen(function*($) {
       const N = 10
-      const pool = yield* $(KeyedPool.makeSized((key: string) => Effect.succeed(key), 4))
+      const pool = yield* $(KeyedPool.make({
+        acquire: (key: string) => Effect.succeed(key),
+        size: 4
+      }))
       yield* $(
         KeyedPool.get(pool, "key1"),
         Effect.repeatN(3),
@@ -42,10 +45,10 @@ describe("KeyedPool", () => {
     Effect.gen(function*($) {
       const N = 10
       const counter = yield* $(Ref.make(0))
-      const pool = yield* $(KeyedPool.makeSized(
-        (key) => Ref.modify(counter, (n) => [`${key}-${n}`, n + 1] as const),
-        4
-      ))
+      const pool = yield* $(KeyedPool.make({
+        acquire: (key) => Ref.modify(counter, (n) => [`${key}-${n}`, n + 1] as const),
+        size: 4
+      }))
       const fiber = yield* $(Effect.fork(
         Effect.forEach(
           Chunk.range(1, N),
