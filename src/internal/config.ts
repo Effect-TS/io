@@ -334,20 +334,24 @@ export const orElse = dual<
 /** @internal */
 export const orElseIf = dual<
   <A2>(
-    that: LazyArg<Config.Config<A2>>,
-    condition: Predicate<ConfigError.ConfigError>
+    options: {
+      readonly if: Predicate<ConfigError.ConfigError>
+      readonly orElse: LazyArg<Config.Config<A2>>
+    }
   ) => <A>(self: Config.Config<A>) => Config.Config<A>,
   <A, A2>(
     self: Config.Config<A>,
-    that: LazyArg<Config.Config<A2>>,
-    condition: Predicate<ConfigError.ConfigError>
+    options: {
+      readonly if: Predicate<ConfigError.ConfigError>
+      readonly orElse: LazyArg<Config.Config<A2>>
+    }
   ) => Config.Config<A>
->(3, (self, that, condition) => {
+>(2, (self, options) => {
   const fallback = Object.create(proto)
   fallback._tag = OpCodes.OP_FALLBACK
   fallback.first = self
-  fallback.second = suspend(that)
-  fallback.condition = condition
+  fallback.second = suspend(options.orElse)
+  fallback.condition = options.if
   return fallback
 })
 
@@ -356,7 +360,7 @@ export const optional = <A>(self: Config.Config<A>): Config.Config<Option.Option
   return pipe(
     self,
     map(Option.some),
-    orElseIf(() => succeed(Option.none()), ConfigError.isMissingDataOnly)
+    orElseIf({ orElse: () => succeed(Option.none()), if: ConfigError.isMissingDataOnly })
   )
 }
 
@@ -533,16 +537,31 @@ export const unwrap = <A>(wrapped: Config.Config.Wrap<A>): Config.Config<A> => {
 /** @internal */
 export const validate = dual<
   {
-    <A, B extends A>(message: string, f: Refinement<A, B>): (self: Config.Config<A>) => Config.Config<B>
-    <A>(message: string, f: Predicate<A>): (self: Config.Config<A>) => Config.Config<A>
+    <A, B extends A>(options: {
+      readonly message: string
+      readonly validation: Refinement<A, B>
+    }): (self: Config.Config<A>) => Config.Config<B>
+    <A>(options: {
+      readonly message: string
+      readonly validation: Predicate<A>
+    }): (self: Config.Config<A>) => Config.Config<A>
   },
   {
-    <A, B extends A>(self: Config.Config<A>, message: string, f: Refinement<A, B>): Config.Config<B>
-    <A>(self: Config.Config<A>, message: string, f: Predicate<A>): Config.Config<A>
+    <A, B extends A>(self: Config.Config<A>, options: {
+      readonly message: string
+      readonly validation: Refinement<A, B>
+    }): Config.Config<B>
+    <A>(self: Config.Config<A>, options: {
+      readonly message: string
+      readonly validation: Predicate<A>
+    }): Config.Config<A>
   }
->(3, <A>(self: Config.Config<A>, message: string, f: Predicate<A>) =>
+>(2, <A>(self: Config.Config<A>, { message, validation }: {
+  readonly message: string
+  readonly validation: Predicate<A>
+}) =>
   mapOrFail(self, (a) => {
-    if (f(a)) {
+    if (validation(a)) {
       return Either.right(a)
     }
     return Either.left(configError.InvalidData([], message))
@@ -552,7 +571,11 @@ export const validate = dual<
 export const withDefault = dual<
   <A2>(def: A2) => <A>(self: Config.Config<A>) => Config.Config<A | A2>,
   <A, A2>(self: Config.Config<A>, def: A2) => Config.Config<A | A2>
->(2, (self, def) => orElseIf(self, () => succeed(def), ConfigError.isMissingDataOnly))
+>(2, (self, def) =>
+  orElseIf(self, {
+    orElse: () => succeed(def),
+    if: ConfigError.isMissingDataOnly
+  }))
 
 /** @internal */
 export const withDescription = dual<
