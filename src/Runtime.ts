@@ -17,8 +17,8 @@ import type { Scheduler } from "@effect/io/Scheduler"
  * @since 1.0.0
  * @category models
  */
-export interface AsyncFiber<E, A> {
-  readonly _tag: "AsyncFiber"
+export interface AsyncFiberException<E, A> {
+  readonly _tag: "AsyncFiberException"
   readonly fiber: Fiber.RuntimeFiber<E, A>
 }
 
@@ -234,6 +234,13 @@ export const NodePrint: unique symbol = internal.NodePrint
  * @category symbols
  */
 export type NodePrint = typeof NodePrint
+
+/**
+ * @since 1.0.0
+ * @category guards
+ */
+export const isAsyncFiberException: (u: unknown) => u is AsyncFiberException<unknown, unknown> =
+  internal.isAsyncFiberException
 
 /**
  * @since 1.0.0

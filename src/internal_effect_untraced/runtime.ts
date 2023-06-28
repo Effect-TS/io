@@ -113,21 +113,45 @@ export const unsafeRunSync = <R>(runtime: Runtime.Runtime<R>) =>
           return result.i0
         }
       }
-      throw new AsyncFiber(fiberRuntime)
+      throw asyncFiberException(fiberRuntime)
     }
   )
 
 /** @internal */
-export class AsyncFiber<E, A> implements Runtime.AsyncFiber<E, A> {
-  readonly _tag = "AsyncFiber"
-  constructor(readonly fiber: Fiber.RuntimeFiber<E, A>) {}
-  toString() {
-    return `Fiber #${this.fiber.id().id} has suspended work asyncroniously`
-  }
-  [Symbol.for("nodejs.util.inspect.custom")]() {
-    return this.toString()
-  }
+const asyncFiberException = <E, A>(fiber: Fiber.RuntimeFiber<E, A>): Runtime.AsyncFiberException<E, A> => {
+  const limit = Error.stackTraceLimit
+  Error.stackTraceLimit = 0
+  const error = (new Error()) as any
+  Error.stackTraceLimit = limit
+  const message = `Fiber #${fiber.id().id} has suspended work asyncroniously`
+  const _tag = "AsyncFiberException"
+  Object.defineProperties(error, {
+    _tag: {
+      value: _tag
+    },
+    message: {
+      value: message
+    },
+    name: {
+      value: _tag
+    },
+    toString: {
+      get() {
+        return () => message
+      }
+    },
+    [NodePrint]: {
+      get() {
+        return () => message
+      }
+    }
+  })
+  return error
 }
+
+/** @internal */
+export const isAsyncFiberException = (u: unknown): u is Runtime.AsyncFiberException<unknown, unknown> =>
+  typeof u === "object" && u !== null && "_tag" in u && u._tag === "AsyncFiberException" && "fiber" in u
 
 /** @internal */
 export const FiberFailureId: Runtime.FiberFailureId = Symbol.for("@effect/io/Runtime/FiberFailure") as any
@@ -184,7 +208,7 @@ export const unsafeRunSyncExit = <R>(runtime: Runtime.Runtime<R>) =>
           return result.i0
         }
       }
-      throw new AsyncFiber(fiberRuntime)
+      throw asyncFiberException(fiberRuntime)
     }
   )
 
