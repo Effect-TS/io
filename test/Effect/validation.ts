@@ -142,19 +142,19 @@ describe.concurrent("Effect", () => {
       assert.deepStrictEqual(Array.from(result), [2, 4, 6, 3, 5, 6])
     }))
   describe.concurrent("", () => {
-    it.effect("validateFirstPar - returns all errors if never valid", () =>
+    it.effect("validateFirst/concurrency - returns all errors if never valid", () =>
       Effect.gen(function*($) {
         const array = Array.from({ length: 1000 }, () => 0)
-        const result = yield* $(array, Effect.validateFirstPar(Effect.fail), Effect.flip)
+        const result = yield* $(array, Effect.validateFirst(Effect.fail, { concurrency: "inherit" }), Effect.flip)
         assert.deepStrictEqual(Array.from(result), array)
       }))
-    it.effect("validateFirstPar - returns success if valid", () =>
+    it.effect("validateFirst/concurrency - returns success if valid", () =>
       Effect.gen(function*($) {
         const f = (n: number): Effect.Effect<never, number, number> => {
           return n === 6 ? Effect.succeed(n) : Effect.fail(n)
         }
         const array = Array.from({ length: 10 }, (_, i) => i + 1)
-        const result = yield* $(array, Effect.validateFirstPar(f))
+        const result = yield* $(array, Effect.validateFirst(f, { concurrency: "inherit" }))
         assert.strictEqual(result, 6)
       }))
   })

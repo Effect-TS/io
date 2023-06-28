@@ -4131,21 +4131,16 @@ export const validateAll: {
  * @category utils
  */
 export const validateFirst: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, Array<E>, B>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, Array<E>, B>
-} = effect.validateFirst
-
-/**
- * Feeds elements of type `A` to `f` until it succeeds. Returns first success
- * or the accumulation of all errors.
- *
- * @since 1.0.0
- * @category utils
- */
-export const validateFirstPar: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, ReadonlyArray<E>, B>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, ReadonlyArray<E>, B>
-} = fiberRuntime.validateFirstPar
+  <R, E, A, B>(
+    f: (a: A) => Effect<R, E, B>,
+    options?: { readonly concurrency?: Concurrency }
+  ): (elements: Iterable<A>) => Effect<R, ReadonlyArray<E>, B>
+  <R, E, A, B>(
+    elements: Iterable<A>,
+    f: (a: A) => Effect<R, E, B>,
+    options?: { readonly concurrency?: Concurrency }
+  ): Effect<R, ReadonlyArray<E>, B>
+} = fiberRuntime.validateFirst
 
 /**
  * Sequentially zips this effect with the specified effect using the specified

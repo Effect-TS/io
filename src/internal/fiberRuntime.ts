@@ -2482,10 +2482,17 @@ export const validateAllParDiscard = dual<
   ))
 
 /* @internal */
-export const validateFirstPar = dual<
-  <R, E, A, B>(f: (a: A) => Effect.Effect<R, E, B>) => (elements: Iterable<A>) => Effect.Effect<R, ReadonlyArray<E>, B>,
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, ReadonlyArray<E>, B>
->(2, (elements, f) => core.flip(forEachPar(elements, (a) => core.flip(f(a)))))
+export const validateFirst = dual<
+  <R, E, A, B>(f: (a: A) => Effect.Effect<R, E, B>, options?: {
+    readonly concurrency?: Concurrency.Concurrency
+  }) => (elements: Iterable<A>) => Effect.Effect<R, ReadonlyArray<E>, B>,
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>, options?: {
+    readonly concurrency?: Concurrency.Concurrency
+  }) => Effect.Effect<R, ReadonlyArray<E>, B>
+>(
+  (args) => isIterable(args[0]),
+  (elements, f, options) => core.flip(forEachOptions(elements, (a) => core.flip(f(a)), options))
+)
 
 /* @internal */
 export const withClockScoped = <A extends Clock.Clock>(value: A) =>

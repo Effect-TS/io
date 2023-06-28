@@ -1727,12 +1727,6 @@ export const useSpan: {
 }
 
 /* @internal */
-export const validateFirst = dual<
-  <R, E, A, B>(f: (a: A) => Effect.Effect<R, E, B>) => (elements: Iterable<A>) => Effect.Effect<R, Array<E>, B>,
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, Array<E>, B>
->(2, (elements, f) => core.flip(core.forEach(elements, (a) => core.flip(f(a)))))
-
-/* @internal */
 export const when = dual<
   (predicate: LazyArg<boolean>) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, Option.Option<A>>,
   <R, E, A>(self: Effect.Effect<R, E, A>, predicate: LazyArg<boolean>) => Effect.Effect<R, E, Option.Option<A>>

@@ -373,7 +373,6 @@ Added in v1.0.0
   - [validate](#validate)
   - [validateAll](#validateall)
   - [validateFirst](#validatefirst)
-  - [validateFirstPar](#validatefirstpar)
   - [validateWith](#validatewith)
   - [when](#when)
   - [whenFiberRef](#whenfiberref)
@@ -5952,8 +5951,14 @@ If `elements` is empty then `Effect.fail([])` is returned.
 
 ```ts
 export declare const validateFirst: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, E[], B>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, E[], B>
+  <R, E, A, B>(f: (a: A) => Effect<R, E, B>, options?: { readonly concurrency?: Concurrency }): (
+    elements: Iterable<A>
+  ) => Effect<R, readonly E[], B>
+  <R, E, A, B>(
+    elements: Iterable<A>,
+    f: (a: A) => Effect<R, E, B>,
+    options?: { readonly concurrency?: Concurrency }
+  ): Effect<R, readonly E[], B>
 }
 ```
 
@@ -5973,22 +5978,6 @@ assert.deepStrictEqual(
   Exit.unannotate(Effect.runSyncExit(Effect.validateFirst([-1, -2], f))),
   Exit.fail(['-1 is negative', '-2 is negative'])
 )
-```
-
-Added in v1.0.0
-
-## validateFirstPar
-
-Feeds elements of type `A` to `f` until it succeeds. Returns first success
-or the accumulation of all errors.
-
-**Signature**
-
-```ts
-export declare const validateFirstPar: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, readonly E[], B>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, readonly E[], B>
-}
 ```
 
 Added in v1.0.0
