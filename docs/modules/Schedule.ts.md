@@ -13,8 +13,6 @@ Added in v1.0.0
 <h2 class="text-delta">Table of contents</h2>
 
 - [alternatives](#alternatives)
-  - [choose](#choose)
-  - [chooseMerge](#choosemerge)
   - [either](#either)
   - [eitherWith](#eitherwith)
 - [constructors](#constructors)
@@ -102,13 +100,10 @@ Added in v1.0.0
   - [delayed](#delayed)
   - [intersect](#intersect)
   - [intersectWith](#intersectwith)
-  - [left](#left)
   - [modifyDelay](#modifydelay)
   - [modifyDelayEffect](#modifydelayeffect)
   - [onDecision](#ondecision)
   - [passthrough](#passthrough)
-  - [reconsider](#reconsider)
-  - [reconsiderEffect](#reconsidereffect)
   - [recurUntil](#recuruntil)
   - [recurUntilEffect](#recuruntileffect)
   - [recurUntilOption](#recuruntiloption)
@@ -118,7 +113,6 @@ Added in v1.0.0
   - [repetitions](#repetitions)
   - [resetAfter](#resetafter)
   - [resetWhen](#resetwhen)
-  - [right](#right)
   - [union](#union)
   - [unionWith](#unionwith)
   - [untilInput](#untilinput)
@@ -138,50 +132,6 @@ Added in v1.0.0
 ---
 
 # alternatives
-
-## choose
-
-Returns a new schedule that allows choosing between feeding inputs to this
-schedule, or feeding inputs to the specified schedule.
-
-**Signature**
-
-```ts
-export declare const choose: {
-  <Env2, In2, Out2>(that: Schedule<Env2, In2, Out2>): <Env, In, Out>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Env2 | Env, Either.Either<In, In2>, Either.Either<Out, Out2>>
-  <Env, In, Out, Env2, In2, Out2>(self: Schedule<Env, In, Out>, that: Schedule<Env2, In2, Out2>): Schedule<
-    Env | Env2,
-    Either.Either<In, In2>,
-    Either.Either<Out, Out2>
-  >
-}
-```
-
-Added in v1.0.0
-
-## chooseMerge
-
-Returns a new schedule that chooses between two schedules with a common
-output.
-
-**Signature**
-
-```ts
-export declare const chooseMerge: {
-  <Env2, In2, Out2>(that: Schedule<Env2, In2, Out2>): <Env, In, Out>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Env2 | Env, Either.Either<In, In2>, Out2 | Out>
-  <Env, In, Out, Env2, In2, Out2>(self: Schedule<Env, In, Out>, that: Schedule<Env2, In2, Out2>): Schedule<
-    Env | Env2,
-    Either.Either<In, In2>,
-    Out | Out2
-  >
-}
-```
-
-Added in v1.0.0
 
 ## either
 
@@ -955,14 +905,13 @@ Returns a new schedule that contramaps the input and maps the output.
 
 ```ts
 export declare const dimap: {
-  <In, Out, In2, Out2>(f: (in2: In2) => In, g: (out: Out) => Out2): <Env>(
+  <In, Out, In2, Out2>(options: { readonly onInput: (in2: In2) => In; readonly onOutput: (out: Out) => Out2 }): <Env>(
     self: Schedule<Env, In, Out>
   ) => Schedule<Env, In2, Out2>
-  <Env, In, Out, In2, Out2>(self: Schedule<Env, In, Out>, f: (in2: In2) => In, g: (out: Out) => Out2): Schedule<
-    Env,
-    In2,
-    Out2
-  >
+  <Env, In, Out, In2, Out2>(
+    self: Schedule<Env, In, Out>,
+    options: { readonly onInput: (in2: In2) => In; readonly onOutput: (out: Out) => Out2 }
+  ): Schedule<Env, In2, Out2>
 }
 ```
 
@@ -976,14 +925,16 @@ Returns a new schedule that contramaps the input and maps the output.
 
 ```ts
 export declare const dimapEffect: {
-  <In2, Env2, In, Out, Env3, Out2>(
-    f: (input: In2) => Effect.Effect<Env2, never, In>,
-    g: (out: Out) => Effect.Effect<Env3, never, Out2>
-  ): <Env>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env3 | Env, In2, Out2>
+  <In2, Env2, In, Out, Env3, Out2>(options: {
+    readonly onInput: (input: In2) => Effect.Effect<Env2, never, In>
+    readonly onOutput: (out: Out) => Effect.Effect<Env3, never, Out2>
+  }): <Env>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env3 | Env, In2, Out2>
   <Env, In, Out, In2, Env2, Env3, Out2>(
     self: Schedule<Env, In, Out>,
-    f: (input: In2) => Effect.Effect<Env2, never, In>,
-    g: (out: Out) => Effect.Effect<Env3, never, Out2>
+    options: {
+      readonly onInput: (input: In2) => Effect.Effect<Env2, never, In>
+      readonly onOutput: (out: Out) => Effect.Effect<Env3, never, Out2>
+    }
   ): Schedule<Env | Env2 | Env3, In2, Out2>
 }
 ```
@@ -1486,22 +1437,6 @@ export declare const intersectWith: {
 
 Added in v1.0.0
 
-## left
-
-Returns a new schedule that makes this schedule available on the `Left`
-side of an `Either` input, allowing propagating some type `X` through this
-channel on demand.
-
-**Signature**
-
-```ts
-export declare const left: <Env, In, Out, X>(
-  self: Schedule<Env, In, Out>
-) => Schedule<Env, Either.Either<In, X>, Either.Either<Out, X>>
-```
-
-Added in v1.0.0
-
 ## modifyDelay
 
 Returns a new schedule that modifies the delay using the specified
@@ -1579,62 +1514,6 @@ Returns a new schedule that passes through the inputs of this schedule.
 export declare const passthrough: <Env, Input, Output>(
   self: Schedule<Env, Input, Output>
 ) => Schedule<Env, Input, Input>
-```
-
-Added in v1.0.0
-
-## reconsider
-
-Returns a new schedule that reconsiders every decision made by this
-schedule, possibly modifying the next interval and the output type in the
-process.
-
-**Signature**
-
-```ts
-export declare const reconsider: {
-  <Out, Out2>(
-    f: (
-      out: Out,
-      decision: ScheduleDecision.ScheduleDecision
-    ) => Either.Either<Out2, readonly [Out2, Interval.Interval]>
-  ): <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out2>
-  <Env, In, Out, Out2>(
-    self: Schedule<Env, In, Out>,
-    f: (
-      out: Out,
-      decision: ScheduleDecision.ScheduleDecision
-    ) => Either.Either<Out2, readonly [Out2, Interval.Interval]>
-  ): Schedule<Env, In, Out2>
-}
-```
-
-Added in v1.0.0
-
-## reconsiderEffect
-
-Returns a new schedule that effectfully reconsiders every decision made by
-this schedule, possibly modifying the next interval and the output type in
-the process.
-
-**Signature**
-
-```ts
-export declare const reconsiderEffect: {
-  <Out, Env2, Out2>(
-    f: (
-      out: Out,
-      decision: ScheduleDecision.ScheduleDecision
-    ) => Effect.Effect<Env2, never, Either.Either<Out2, readonly [Out2, Interval.Interval]>>
-  ): <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env, In, Out2>
-  <Env, In, Out, Env2, Out2>(
-    self: Schedule<Env, In, Out>,
-    f: (
-      out: Out,
-      decision: ScheduleDecision.ScheduleDecision
-    ) => Effect.Effect<Env2, never, Either.Either<Out2, readonly [Out2, Interval.Interval]>>
-  ): Schedule<Env | Env2, In, Out2>
-}
 ```
 
 Added in v1.0.0
@@ -1753,22 +1632,6 @@ export declare const resetWhen: {
   <Out>(f: Predicate<Out>): <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out>
   <Env, In, Out>(self: Schedule<Env, In, Out>, f: Predicate<Out>): Schedule<Env, In, Out>
 }
-```
-
-Added in v1.0.0
-
-## right
-
-Returns a new schedule that makes this schedule available on the `Right`
-side of an `Either` input, allowing propagating some type `X` through this
-channel on demand.
-
-**Signature**
-
-```ts
-export declare const right: <Env, In, Out, X>(
-  self: Schedule<Env, In, Out>
-) => Schedule<Env, Either.Either<X, In>, Either.Either<X, Out>>
 ```
 
 Added in v1.0.0

@@ -12,7 +12,6 @@ import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
 import * as internal from "@effect/io/internal/schedule"
 import type * as ScheduleDecision from "@effect/io/Schedule/Decision"
-import type * as Interval from "@effect/io/Schedule/Interval"
 import type * as Intervals from "@effect/io/Schedule/Intervals"
 
 /**
@@ -264,42 +263,6 @@ export const checkEffect: {
 } = internal.checkEffect
 
 /**
- * Returns a new schedule that allows choosing between feeding inputs to this
- * schedule, or feeding inputs to the specified schedule.
- *
- * @since 1.0.0
- * @category alternatives
- */
-export const choose: {
-  <Env2, In2, Out2>(
-    that: Schedule<Env2, In2, Out2>
-  ): <Env, In, Out>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Env2 | Env, Either.Either<In, In2>, Either.Either<Out, Out2>>
-  <Env, In, Out, Env2, In2, Out2>(
-    self: Schedule<Env, In, Out>,
-    that: Schedule<Env2, In2, Out2>
-  ): Schedule<Env | Env2, Either.Either<In, In2>, Either.Either<Out, Out2>>
-} = internal.choose
-
-/**
- * Returns a new schedule that chooses between two schedules with a common
- * output.
- *
- * @since 1.0.0
- * @category alternatives
- */
-export const chooseMerge: {
-  <Env2, In2, Out2>(
-    that: Schedule<Env2, In2, Out2>
-  ): <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env, Either.Either<In, In2>, Out2 | Out>
-  <Env, In, Out, Env2, In2, Out2>(
-    self: Schedule<Env, In, Out>,
-    that: Schedule<Env2, In2, Out2>
-  ): Schedule<Env | Env2, Either.Either<In, In2>, Out | Out2>
-} = internal.chooseMerge
-
-/**
  * A schedule that recurs anywhere, collecting all inputs into a `Chunk`.
  *
  * @since 1.0.0
@@ -516,13 +479,17 @@ export const delays: <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<En
  */
 export const dimap: {
   <In, Out, In2, Out2>(
-    f: (in2: In2) => In,
-    g: (out: Out) => Out2
+    options: {
+      readonly onInput: (in2: In2) => In
+      readonly onOutput: (out: Out) => Out2
+    }
   ): <Env>(self: Schedule<Env, In, Out>) => Schedule<Env, In2, Out2>
   <Env, In, Out, In2, Out2>(
     self: Schedule<Env, In, Out>,
-    f: (in2: In2) => In,
-    g: (out: Out) => Out2
+    options: {
+      readonly onInput: (in2: In2) => In
+      readonly onOutput: (out: Out) => Out2
+    }
   ): Schedule<Env, In2, Out2>
 } = internal.dimap
 
@@ -534,13 +501,17 @@ export const dimap: {
  */
 export const dimapEffect: {
   <In2, Env2, In, Out, Env3, Out2>(
-    f: (input: In2) => Effect.Effect<Env2, never, In>,
-    g: (out: Out) => Effect.Effect<Env3, never, Out2>
+    options: {
+      readonly onInput: (input: In2) => Effect.Effect<Env2, never, In>
+      readonly onOutput: (out: Out) => Effect.Effect<Env3, never, Out2>
+    }
   ): <Env>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env3 | Env, In2, Out2>
   <Env, In, Out, In2, Env2, Env3, Out2>(
     self: Schedule<Env, In, Out>,
-    f: (input: In2) => Effect.Effect<Env2, never, In>,
-    g: (out: Out) => Effect.Effect<Env3, never, Out2>
+    options: {
+      readonly onInput: (input: In2) => Effect.Effect<Env2, never, In>
+      readonly onOutput: (out: Out) => Effect.Effect<Env3, never, Out2>
+    }
   ): Schedule<Env | Env2 | Env3, In2, Out2>
 } = internal.dimapEffect
 
@@ -790,18 +761,6 @@ export const jitteredWith: {
 } = internal.jitteredWith
 
 /**
- * Returns a new schedule that makes this schedule available on the `Left`
- * side of an `Either` input, allowing propagating some type `X` through this
- * channel on demand.
- *
- * @since 1.0.0
- * @category utils
- */
-export const left: <Env, In, Out, X>(
-  self: Schedule<Env, In, Out>
-) => Schedule<Env, Either.Either<In, X>, Either.Either<Out, X>> = internal.left
-
-/**
  * A schedule that always recurs, but will repeat on a linear time interval,
  * given by `base * n` where `n` is the number of repetitions so far. Returns
  * the current duration between recurrences.
@@ -954,54 +913,6 @@ export const provideService: {
 } = internal.provideService
 
 /**
- * Returns a new schedule that reconsiders every decision made by this
- * schedule, possibly modifying the next interval and the output type in the
- * process.
- *
- * @since 1.0.0
- * @category utils
- */
-export const reconsider: {
-  <Out, Out2>(
-    f: (
-      out: Out,
-      decision: ScheduleDecision.ScheduleDecision
-    ) => Either.Either<Out2, readonly [Out2, Interval.Interval]>
-  ): <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out2>
-  <Env, In, Out, Out2>(
-    self: Schedule<Env, In, Out>,
-    f: (
-      out: Out,
-      decision: ScheduleDecision.ScheduleDecision
-    ) => Either.Either<Out2, readonly [Out2, Interval.Interval]>
-  ): Schedule<Env, In, Out2>
-} = internal.reconsider
-
-/**
- * Returns a new schedule that effectfully reconsiders every decision made by
- * this schedule, possibly modifying the next interval and the output type in
- * the process.
- *
- * @since 1.0.0
- * @category utils
- */
-export const reconsiderEffect: {
-  <Out, Env2, Out2>(
-    f: (
-      out: Out,
-      decision: ScheduleDecision.ScheduleDecision
-    ) => Effect.Effect<Env2, never, Either.Either<Out2, readonly [Out2, Interval.Interval]>>
-  ): <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env, In, Out2>
-  <Env, In, Out, Env2, Out2>(
-    self: Schedule<Env, In, Out>,
-    f: (
-      out: Out,
-      decision: ScheduleDecision.ScheduleDecision
-    ) => Effect.Effect<Env2, never, Either.Either<Out2, readonly [Out2, Interval.Interval]>>
-  ): Schedule<Env | Env2, In, Out2>
-} = internal.reconsiderEffect
-
-/**
  * A schedule that recurs for until the predicate evaluates to true.
  *
  * @since 1.0.0
@@ -1134,18 +1045,6 @@ export const resetWhen: {
   <Out>(f: Predicate<Out>): <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out>
   <Env, In, Out>(self: Schedule<Env, In, Out>, f: Predicate<Out>): Schedule<Env, In, Out>
 } = internal.resetWhen
-
-/**
- * Returns a new schedule that makes this schedule available on the `Right`
- * side of an `Either` input, allowing propagating some type `X` through this
- * channel on demand.
- *
- * @since 1.0.0
- * @category utils
- */
-export const right: <Env, In, Out, X>(
-  self: Schedule<Env, In, Out>
-) => Schedule<Env, Either.Either<X, In>, Either.Either<X, Out>> = internal.right
 
 /**
  * Runs a schedule using the provided inputs, and collects all outputs.

@@ -313,67 +313,6 @@ export const checkEffect = dual<
             [state, out, ScheduleDecision.done] as const)
       })
   ))
-
-/** @internal */
-export const choose = dual<
-  <Env2, In2, Out2>(
-    that: Schedule.Schedule<Env2, In2, Out2>
-  ) => <Env, In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<
-    Env | Env2,
-    Either.Either<In, In2>,
-    Either.Either<Out, Out2>
-  >,
-  <Env, In, Out, Env2, In2, Out2>(
-    self: Schedule.Schedule<Env, In, Out>,
-    that: Schedule.Schedule<Env2, In2, Out2>
-  ) => Schedule.Schedule<
-    Env | Env2,
-    Either.Either<In, In2>,
-    Either.Either<Out, Out2>
-  >
->(2, <Env, In, Out, Env2, In2, Out2>(
-  self: Schedule.Schedule<Env, In, Out>,
-  that: Schedule.Schedule<Env2, In2, Out2>
-): Schedule.Schedule<
-  Env | Env2,
-  Either.Either<In, In2>,
-  Either.Either<Out, Out2>
-> =>
-  makeWithState(
-    [self.initial, that.initial] as const,
-    (now, either, state): Effect.Effect<
-      Env | Env2,
-      never,
-      readonly [readonly [any, any], Either.Either<Out, Out2>, ScheduleDecision.ScheduleDecision]
-    > => {
-      switch (either._tag) {
-        case "Left": {
-          return core.map(
-            self.step(now, either.left, state[0]),
-            ([lState, out, decision]) => [[lState, state[1]] as const, Either.left(out), decision] as const
-          )
-        }
-        case "Right": {
-          return pipe(
-            that.step(now, either.right, state[1]),
-            core.map(([rState, out2, decision]) => [[state[0], rState] as const, Either.right(out2), decision] as const)
-          )
-        }
-      }
-    }
-  ))
-
-/** @internal */
-export const chooseMerge = dual<
-  <Env2, In2, Out2>(that: Schedule.Schedule<Env2, In2, Out2>) => <Env, In, Out>(
-    self: Schedule.Schedule<Env, In, Out>
-  ) => Schedule.Schedule<Env | Env2, Either.Either<In, In2>, Out | Out2>,
-  <Env, In, Out, Env2, In2, Out2>(
-    self: Schedule.Schedule<Env, In, Out>,
-    that: Schedule.Schedule<Env2, In2, Out2>
-  ) => Schedule.Schedule<Env | Env2, Either.Either<In, In2>, Out | Out2>
->(2, (self, that) => map(choose(self, that), Either.merge))
-
 /** @internal */
 export const collectAllInputs = <A>(): Schedule.Schedule<never, A, Chunk.Chunk<A>> => collectAllOutputs(identity<A>())
 
@@ -583,28 +522,36 @@ export const delays = <Env, In, Out>(
 /** @internal */
 export const dimap = dual<
   <In, Out, In2, Out2>(
-    f: (in2: In2) => In,
-    g: (out: Out) => Out2
+    options: {
+      readonly onInput: (in2: In2) => In
+      readonly onOutput: (out: Out) => Out2
+    }
   ) => <Env>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env, In2, Out2>,
   <Env, In, Out, In2, Out2>(
     self: Schedule.Schedule<Env, In, Out>,
-    f: (in2: In2) => In,
-    g: (out: Out) => Out2
+    options: {
+      readonly onInput: (in2: In2) => In
+      readonly onOutput: (out: Out) => Out2
+    }
   ) => Schedule.Schedule<Env, In2, Out2>
->(3, (self, f, g) => map(contramap(self, f), g))
+>(2, (self, { onInput, onOutput }) => map(contramap(self, onInput), onOutput))
 
 /** @internal */
 export const dimapEffect = dual<
   <In2, Env2, In, Out, Env3, Out2>(
-    f: (input: In2) => Effect.Effect<Env2, never, In>,
-    g: (out: Out) => Effect.Effect<Env3, never, Out2>
+    options: {
+      readonly onInput: (input: In2) => Effect.Effect<Env2, never, In>
+      readonly onOutput: (out: Out) => Effect.Effect<Env3, never, Out2>
+    }
   ) => <Env>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2 | Env3, In2, Out2>,
   <Env, In, Out, In2, Env2, Env3, Out2>(
     self: Schedule.Schedule<Env, In, Out>,
-    f: (input: In2) => Effect.Effect<Env2, never, In>,
-    g: (out: Out) => Effect.Effect<Env3, never, Out2>
+    options: {
+      readonly onInput: (input: In2) => Effect.Effect<Env2, never, In>
+      readonly onOutput: (out: Out) => Effect.Effect<Env3, never, Out2>
+    }
   ) => Schedule.Schedule<Env | Env2 | Env3, In2, Out2>
->(3, (self, f, g) => mapEffect(contramapEffect(self, f), g))
+>(2, (self, { onInput, onOutput }) => mapEffect(contramapEffect(self, onInput), onOutput))
 
 /** @internal */
 export const driver = <Env, In, Out>(
@@ -989,11 +936,6 @@ export const jitteredWith = dual<
 })
 
 /** @internal */
-export const left = <Env, In, Out, X>(
-  self: Schedule.Schedule<Env, In, Out>
-): Schedule.Schedule<Env, Either.Either<In, X>, Either.Either<Out, X>> => choose(self, identity<X>())
-
-/** @internal */
 export const linear = (base: Duration.Duration): Schedule.Schedule<never, unknown, Duration.Duration> =>
   delayedSchedule(map(forever, (i) => Duration.millis(base.millis * (i + 1))))
 
@@ -1175,68 +1117,6 @@ export const provideService = dual<
     )))
 
 /** @internal */
-export const reconsider = dual<
-  <Out, Out2>(
-    f: (
-      out: Out,
-      decision: ScheduleDecision.ScheduleDecision
-    ) => Either.Either<Out2, readonly [Out2, Interval.Interval]>
-  ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env, In, Out2>,
-  <Env, In, Out, Out2>(
-    self: Schedule.Schedule<Env, In, Out>,
-    f: (
-      out: Out,
-      decision: ScheduleDecision.ScheduleDecision
-    ) => Either.Either<Out2, readonly [Out2, Interval.Interval]>
-  ) => Schedule.Schedule<Env, In, Out2>
->(2, (self, f) => reconsiderEffect(self, (out, decision) => core.sync(() => f(out, decision))))
-
-/** @internal */
-export const reconsiderEffect = dual<
-  <Out, Env2, Out2>(
-    f: (
-      out: Out,
-      decision: ScheduleDecision.ScheduleDecision
-    ) => Effect.Effect<Env2, never, Either.Either<Out2, readonly [Out2, Interval.Interval]>>
-  ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In, Out2>,
-  <Env, In, Out, Env2, Out2>(
-    self: Schedule.Schedule<Env, In, Out>,
-    f: (
-      out: Out,
-      decision: ScheduleDecision.ScheduleDecision
-    ) => Effect.Effect<Env2, never, Either.Either<Out2, readonly [Out2, Interval.Interval]>>
-  ) => Schedule.Schedule<Env | Env2, In, Out2>
->(2, (self, f) =>
-  makeWithState(
-    self.initial,
-    (now, input, state) =>
-      core.flatMap(self.step(now, input, state), ([state, out, decision]) =>
-        ScheduleDecision.isDone(decision)
-          ? core.map(f(out, decision), (either) => {
-            switch (either._tag) {
-              case "Left": {
-                return [state, either.left, ScheduleDecision.done] as const
-              }
-              case "Right": {
-                const [out2] = either.right
-                return [state, out2, ScheduleDecision.done] as const
-              }
-            }
-          })
-          : core.map(f(out, decision), (either) => {
-            switch (either._tag) {
-              case "Left": {
-                return [state, either.left, ScheduleDecision.done] as const
-              }
-              case "Right": {
-                const [out2, interval] = either.right
-                return [state, out2, ScheduleDecision.continueWith(interval)] as const
-              }
-            }
-          }))
-  ))
-
-/** @internal */
 export const recurUntil = <A>(f: Predicate<A>): Schedule.Schedule<never, A, A> => untilInput(identity<A>(), f)
 
 /** @internal */
@@ -1351,11 +1231,6 @@ export const resetWhen = dual<
           ? self.step(now, input, self.initial)
           : core.succeed([state, out, decision] as const))
   ))
-
-/** @internal */
-export const right = <Env, In, Out, X>(
-  self: Schedule.Schedule<Env, In, Out>
-): Schedule.Schedule<Env, Either.Either<X, In>, Either.Either<X, Out>> => choose(identity<X>(), self)
 
 /** @internal */
 export const run = dual<
