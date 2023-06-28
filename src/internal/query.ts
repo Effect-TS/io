@@ -86,8 +86,12 @@ export const fromRequest = <
                     return core.blocked(
                       BlockedRequests.single(
                         ds as any,
-                        BlockedRequests.makeEntry(proxy, orNew.right.handle, orNew.right.listeners, id, {
-                          completed: false
+                        BlockedRequests.makeEntry({
+                          request: proxy,
+                          result: orNew.right.handle,
+                          listeners: orNew.right.listeners,
+                          ownerId: id,
+                          state: { completed: false }
                         })
                       ),
                       core.uninterruptibleMask((restore) =>
@@ -112,7 +116,13 @@ export const fromRequest = <
               core.blocked(
                 BlockedRequests.single(
                   ds as any,
-                  BlockedRequests.makeEntry(proxy, ref, listeners, id, { completed: false })
+                  BlockedRequests.makeEntry({
+                    request: proxy,
+                    result: ref,
+                    listeners,
+                    ownerId: id,
+                    state: { completed: false }
+                  })
                 ),
                 ensuring(
                   core.deferredAwait(ref),

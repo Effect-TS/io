@@ -121,7 +121,10 @@ export const getChildExtra = (id: number) => Effect.request(GetChildExtra({ id }
 
 const EnvLive = Layer.provideMerge(
   Layer.mergeAll(
-    Effect.setRequestCache(Request.makeCache(100, seconds(60))),
+    Effect.setRequestCache(Request.makeCache({
+      capacity: 100,
+      timeToLive: seconds(60)
+    })),
     Effect.setRequestCaching("on"),
     Effect.setRequestBatching("on")
   ),

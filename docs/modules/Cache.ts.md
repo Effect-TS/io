@@ -39,11 +39,11 @@ lookup function.
 **Signature**
 
 ```ts
-export declare const make: <Key, Environment, Error, Value>(
-  capacity: number,
-  timeToLive: Duration.Duration,
-  lookup: Lookup<Key, Environment, Error, Value>
-) => Effect.Effect<Environment, never, Cache<Key, Error, Value>>
+export declare const make: <Key, Environment, Error, Value>(options: {
+  readonly capacity: number
+  readonly timeToLive: Duration.Duration
+  readonly lookup: Lookup<Key, Environment, Error, Value>
+}) => Effect.Effect<Environment, never, Cache<Key, Error, Value>>
 ```
 
 Added in v1.0.0
@@ -81,11 +81,11 @@ returned by the lookup function.
 **Signature**
 
 ```ts
-export declare const makeWith: <Key, Environment, Error, Value>(
-  capacity: number,
-  lookup: Lookup<Key, Environment, Error, Value>,
-  timeToLive: (exit: Exit.Exit<Error, Value>) => Duration.Duration
-) => Effect.Effect<Environment, never, Cache<Key, Error, Value>>
+export declare const makeWith: <Key, Environment, Error, Value>(options: {
+  readonly capacity: number
+  readonly lookup: Lookup<Key, Environment, Error, Value>
+  readonly timeToLive: (exit: Exit.Exit<Error, Value>) => Duration.Duration
+}) => Effect.Effect<Environment, never, Cache<Key, Error, Value>>
 ```
 
 Added in v1.0.0

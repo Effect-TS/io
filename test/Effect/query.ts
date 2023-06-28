@@ -106,7 +106,10 @@ const processRequest = (request: UserRequest): Effect.Effect<never, never, void>
 
 const EnvLive = Layer.provideMerge(
   Layer.mergeAll(
-    Effect.setRequestCache(Request.makeCache(100, seconds(60))),
+    Effect.setRequestCache(Request.makeCache({
+      capacity: 100,
+      timeToLive: seconds(60)
+    })),
     Effect.setRequestCaching("on"),
     Effect.setRequestBatching("on")
   ),

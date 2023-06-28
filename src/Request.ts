@@ -211,14 +211,15 @@ export interface Cache extends
  * @category models
  */
 export const makeCache = (
-  capacity: number,
-  timeToLive: Duration
+  options: {
+    readonly capacity: number
+    readonly timeToLive: Duration
+  }
 ): Effect.Effect<never, never, Cache> =>
-  cache.make(
-    capacity,
-    timeToLive,
-    () => core.map(core.deferredMake(), (handle) => ({ listeners: new internal.Listeners(), handle }))
-  )
+  cache.make({
+    ...options,
+    lookup: () => core.map(core.deferredMake(), (handle) => ({ listeners: new internal.Listeners(), handle }))
+  })
 
 /**
  * @since 1.0.0

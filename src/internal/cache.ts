@@ -661,31 +661,35 @@ class CacheImpl<Key, Error, Value> implements Cache.Cache<Key, Error, Value> {
 
 /** @internal */
 export const make = <Key, Environment, Error, Value>(
-  capacity: number,
-  timeToLive: Duration.Duration,
-  lookup: Cache.Lookup<Key, Environment, Error, Value>
+  options: {
+    readonly capacity: number
+    readonly timeToLive: Duration.Duration
+    readonly lookup: Cache.Lookup<Key, Environment, Error, Value>
+  }
 ): Effect.Effect<Environment, never, Cache.Cache<Key, Error, Value>> =>
-  makeWith(
-    capacity,
-    lookup,
-    () => timeToLive
-  )
+  makeWith({
+    capacity: options.capacity,
+    lookup: options.lookup,
+    timeToLive: () => options.timeToLive
+  })
 
 /** @internal */
 export const makeWith = <Key, Environment, Error, Value>(
-  capacity: number,
-  lookup: Cache.Lookup<Key, Environment, Error, Value>,
-  timeToLive: (exit: Exit.Exit<Error, Value>) => Duration.Duration
+  options: {
+    readonly capacity: number
+    readonly lookup: Cache.Lookup<Key, Environment, Error, Value>
+    readonly timeToLive: (exit: Exit.Exit<Error, Value>) => Duration.Duration
+  }
 ): Effect.Effect<Environment, never, Cache.Cache<Key, Error, Value>> =>
   core.map(
     fiberRuntime.all(core.context<Environment>(), core.fiberId),
     ([context, fiberId]) =>
       new CacheImpl(
-        capacity,
+        options.capacity,
         context,
         fiberId,
-        lookup,
-        timeToLive
+        options.lookup,
+        options.timeToLive
       )
   )
 

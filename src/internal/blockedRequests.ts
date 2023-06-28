@@ -336,14 +336,14 @@ export const isEntry = (u: unknown): u is Request.Entry<unknown> => {
 
 /** @internal */
 export const makeEntry = <A extends Request.Request<any, any>>(
-  request: A,
-  result: Deferred.Deferred<Request.Request.Error<A>, Request.Request.Success<A>>,
-  listeners: Request.Listeners,
-  ownerId: FiberId,
-  state: {
-    completed: boolean
+  options: {
+    readonly request: A
+    readonly result: Deferred.Deferred<Request.Request.Error<A>, Request.Request.Success<A>>
+    readonly listeners: Request.Listeners
+    readonly ownerId: FiberId
+    readonly state: { completed: boolean }
   }
-): Request.Entry<A> => new EntryImpl(request, result, listeners, ownerId, state)
+): Request.Entry<A> => new EntryImpl(options.request, options.result, options.listeners, options.ownerId, options.state)
 
 /** @internal */
 export const RequestBlockParallelTypeId = Symbol.for(

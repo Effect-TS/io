@@ -47,13 +47,13 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const makeEntry: <A extends Request<any, any>>(
-  request: A,
-  result: Deferred<Request.Error<A>, Request.Success<A>>,
-  listeners: Listeners,
-  ownerId: FiberId,
-  state: { completed: boolean }
-) => Entry<A>
+export declare const makeEntry: <A extends Request<any, any>>(options: {
+  readonly request: A
+  readonly result: Deferred<Request.Error<A>, Request.Success<A>>
+  readonly listeners: Listeners
+  readonly ownerId: FiberId
+  readonly state: { completed: boolean }
+}) => Entry<A>
 ```
 
 Added in v1.0.0
@@ -178,7 +178,10 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const makeCache: (capacity: number, timeToLive: Duration) => Effect.Effect<never, never, Cache>
+export declare const makeCache: (options: {
+  readonly capacity: number
+  readonly timeToLive: Duration
+}) => Effect.Effect<never, never, Cache>
 ```
 
 Added in v1.0.0

@@ -171,9 +171,11 @@ export declare namespace Cache {
  * @category constructors
  */
 export const make: <Key, Environment, Error, Value>(
-  capacity: number,
-  timeToLive: Duration.Duration,
-  lookup: Lookup<Key, Environment, Error, Value>
+  options: {
+    readonly capacity: number
+    readonly timeToLive: Duration.Duration
+    readonly lookup: Lookup<Key, Environment, Error, Value>
+  }
 ) => Effect.Effect<Environment, never, Cache<Key, Error, Value>> = internal.make
 
 /**
@@ -185,9 +187,11 @@ export const make: <Key, Environment, Error, Value>(
  * @category constructors
  */
 export const makeWith: <Key, Environment, Error, Value>(
-  capacity: number,
-  lookup: Lookup<Key, Environment, Error, Value>,
-  timeToLive: (exit: Exit.Exit<Error, Value>) => Duration.Duration
+  options: {
+    readonly capacity: number
+    readonly lookup: Lookup<Key, Environment, Error, Value>
+    readonly timeToLive: (exit: Exit.Exit<Error, Value>) => Duration.Duration
+  }
 ) => Effect.Effect<Environment, never, Cache<Key, Error, Value>> = internal.makeWith
 
 /**
