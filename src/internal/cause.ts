@@ -241,14 +241,13 @@ export const dieOption = <E>(self: Cause.Cause<E>): Option.Option<unknown> =>
 
 /** @internal */
 export const flipCauseOption = <E>(self: Cause.Cause<Option.Option<E>>): Option.Option<Cause.Cause<E>> =>
-  match(
-    self,
-    Option.some(empty),
-    (failureOption) => pipe(failureOption, Option.map(fail)),
-    (defect) => Option.some(die(defect)),
-    (fiberId) => Option.some(interrupt(fiberId)),
-    (causeOption, annotation) => pipe(causeOption, Option.map((cause) => annotated(cause, annotation))),
-    (left, right) => {
+  match(self, {
+    onEmpty: Option.some(empty),
+    onFail: (failureOption) => pipe(failureOption, Option.map(fail)),
+    onDie: (defect) => Option.some(die(defect)),
+    onInterrupt: (fiberId) => Option.some(interrupt(fiberId)),
+    onAnnotated: (causeOption, annotation) => pipe(causeOption, Option.map((cause) => annotated(cause, annotation))),
+    onSequential: (left, right) => {
       if (Option.isSome(left) && Option.isSome(right)) {
         return Option.some(sequential(left.value, right.value))
       }
@@ -260,7 +259,7 @@ export const flipCauseOption = <E>(self: Cause.Cause<Option.Option<E>>): Option.
       }
       return Option.none()
     },
-    (left, right) => {
+    onParallel: (left, right) => {
       if (Option.isSome(left) && Option.isSome(right)) {
         return Option.some(parallel(left.value, right.value))
       }
@@ -272,7 +271,7 @@ export const flipCauseOption = <E>(self: Cause.Cause<Option.Option<E>>): Option.
       }
       return Option.none()
     }
-  )
+  })
 
 /** @internal */
 export const interruptOption = <E>(self: Cause.Cause<E>): Option.Option<FiberId.FiberId> =>
@@ -283,14 +282,13 @@ export const interruptOption = <E>(self: Cause.Cause<E>): Option.Option<FiberId.
 
 /** @internal */
 export const keepDefects = <E>(self: Cause.Cause<E>): Option.Option<Cause.Cause<never>> =>
-  match<Option.Option<Cause.Cause<never>>, E>(
-    self,
-    Option.none(),
-    () => Option.none(),
-    (defect) => Option.some(die(defect)),
-    () => Option.none(),
-    (option, annotation) => pipe(option, Option.map((cause) => annotated(cause, annotation))),
-    (left, right) => {
+  match<Option.Option<Cause.Cause<never>>, E>(self, {
+    onEmpty: Option.none(),
+    onFail: () => Option.none(),
+    onDie: (defect) => Option.some(die(defect)),
+    onInterrupt: () => Option.none(),
+    onAnnotated: (option, annotation) => pipe(option, Option.map((cause) => annotated(cause, annotation))),
+    onSequential: (left, right) => {
       if (Option.isSome(left) && Option.isSome(right)) {
         return Option.some(sequential(left.value, right.value))
       }
@@ -302,7 +300,7 @@ export const keepDefects = <E>(self: Cause.Cause<E>): Option.Option<Cause.Cause<
       }
       return Option.none()
     },
-    (left, right) => {
+    onParallel: (left, right) => {
       if (Option.isSome(left) && Option.isSome(right)) {
         return Option.some(parallel(left.value, right.value))
       }
@@ -314,18 +312,17 @@ export const keepDefects = <E>(self: Cause.Cause<E>): Option.Option<Cause.Cause<
       }
       return Option.none()
     }
-  )
+  })
 
 /** @internal */
 export const keepDefectsAndElectFailures = <E>(self: Cause.Cause<E>): Option.Option<Cause.Cause<never>> =>
-  match<Option.Option<Cause.Cause<never>>, E>(
-    self,
-    Option.none(),
-    (failure) => Option.some(die(failure)),
-    (defect) => Option.some(die(defect)),
-    () => Option.none(),
-    (option, annotation) => pipe(option, Option.map((cause) => annotated(cause, annotation))),
-    (left, right) => {
+  match<Option.Option<Cause.Cause<never>>, E>(self, {
+    onEmpty: Option.none(),
+    onFail: (failure) => Option.some(die(failure)),
+    onDie: (defect) => Option.some(die(defect)),
+    onInterrupt: () => Option.none(),
+    onAnnotated: (option, annotation) => pipe(option, Option.map((cause) => annotated(cause, annotation))),
+    onSequential: (left, right) => {
       if (Option.isSome(left) && Option.isSome(right)) {
         return Option.some(sequential(left.value, right.value))
       }
@@ -337,7 +334,7 @@ export const keepDefectsAndElectFailures = <E>(self: Cause.Cause<E>): Option.Opt
       }
       return Option.none()
     },
-    (left, right) => {
+    onParallel: (left, right) => {
       if (Option.isSome(left) && Option.isSome(right)) {
         return Option.some(parallel(left.value, right.value))
       }
@@ -349,18 +346,17 @@ export const keepDefectsAndElectFailures = <E>(self: Cause.Cause<E>): Option.Opt
       }
       return Option.none()
     }
-  )
+  })
 
 /** @internal */
 export const linearize = <E>(self: Cause.Cause<E>): HashSet.HashSet<Cause.Cause<E>> =>
-  match(
-    self,
-    HashSet.empty(),
-    (error) => HashSet.make(fail(error)),
-    (defect) => HashSet.make(die(defect)),
-    (fiberId) => HashSet.make(interrupt(fiberId)),
-    (set, annotation) => pipe(set, HashSet.map((cause) => annotated(cause, annotation))),
-    (leftSet, rightSet) =>
+  match(self, {
+    onEmpty: HashSet.empty(),
+    onFail: (error) => HashSet.make(fail(error)),
+    onDie: (defect) => HashSet.make(die(defect)),
+    onInterrupt: (fiberId) => HashSet.make(interrupt(fiberId)),
+    onAnnotated: (set, annotation) => pipe(set, HashSet.map((cause) => annotated(cause, annotation))),
+    onSequential: (leftSet, rightSet) =>
       pipe(
         leftSet,
         HashSet.flatMap((leftCause) =>
@@ -370,7 +366,7 @@ export const linearize = <E>(self: Cause.Cause<E>): HashSet.HashSet<Cause.Cause<
           )
         )
       ),
-    (leftSet, rightSet) =>
+    onParallel: (leftSet, rightSet) =>
       pipe(
         leftSet,
         HashSet.flatMap((leftCause) =>
@@ -380,50 +376,47 @@ export const linearize = <E>(self: Cause.Cause<E>): HashSet.HashSet<Cause.Cause<
           )
         )
       )
-  )
+  })
 
 /** @internal */
 export const stripFailures = <E>(self: Cause.Cause<E>): Cause.Cause<never> =>
-  match(
-    self,
-    empty,
-    () => empty,
-    (defect) => die(defect),
-    (fiberId) => interrupt(fiberId),
-    (cause, annotation) => isEmptyType(cause) ? cause : annotated(cause, annotation),
-    (left, right) => sequential(left, right),
-    (left, right) => parallel(left, right)
-  )
+  match(self, {
+    onEmpty: empty,
+    onFail: () => empty,
+    onDie: (defect) => die(defect),
+    onInterrupt: (fiberId) => interrupt(fiberId),
+    onAnnotated: (cause, annotation) => isEmptyType(cause) ? cause : annotated(cause, annotation),
+    onSequential: sequential,
+    onParallel: parallel
+  })
 
 /** @internal */
 export const electFailures = <E>(self: Cause.Cause<E>): Cause.Cause<never> =>
-  match(
-    self,
-    empty,
-    (failure) => die(failure),
-    (defect) => die(defect),
-    (fiberId) => interrupt(fiberId),
-    (cause, annotation) => isEmptyType(cause) ? cause : annotated(cause, annotation),
-    (left, right) => sequential(left, right),
-    (left, right) => parallel(left, right)
-  )
+  match(self, {
+    onEmpty: empty,
+    onFail: (failure) => die(failure),
+    onDie: (defect) => die(defect),
+    onInterrupt: (fiberId) => interrupt(fiberId),
+    onAnnotated: (cause, annotation) => isEmptyType(cause) ? cause : annotated(cause, annotation),
+    onSequential: (left, right) => sequential(left, right),
+    onParallel: (left, right) => parallel(left, right)
+  })
 
 /** @internal */
 export const stripSomeDefects = dual<
   (pf: (defect: unknown) => Option.Option<unknown>) => <E>(self: Cause.Cause<E>) => Option.Option<Cause.Cause<E>>,
   <E>(self: Cause.Cause<E>, pf: (defect: unknown) => Option.Option<unknown>) => Option.Option<Cause.Cause<E>>
->(2, <E>(self: Cause.Cause<E>, pf: (defect: unknown) => Option.Option<unknown>) => {
-  return match(
-    self,
-    Option.some(empty),
-    (error) => Option.some(fail(error)),
-    (defect) => {
+>(2, <E>(self: Cause.Cause<E>, pf: (defect: unknown) => Option.Option<unknown>) =>
+  match(self, {
+    onEmpty: Option.some(empty),
+    onFail: (error) => Option.some(fail(error)),
+    onDie: (defect) => {
       const option = pf(defect)
       return Option.isSome(option) ? Option.none() : Option.some(die(defect))
     },
-    (fiberId) => Option.some(interrupt(fiberId)),
-    (option, annotation) => pipe(option, Option.map((cause) => annotated(cause, annotation))),
-    (left, right) => {
+    onInterrupt: (fiberId) => Option.some(interrupt(fiberId)),
+    onAnnotated: (option, annotation) => pipe(option, Option.map((cause) => annotated(cause, annotation))),
+    onSequential: (left, right) => {
       if (Option.isSome(left) && Option.isSome(right)) {
         return Option.some(sequential(left.value, right.value))
       }
@@ -435,7 +428,7 @@ export const stripSomeDefects = dual<
       }
       return Option.none()
     },
-    (left, right) => {
+    onParallel: (left, right) => {
       if (Option.isSome(left) && Option.isSome(right)) {
         return Option.some(parallel(left.value, right.value))
       }
@@ -447,8 +440,7 @@ export const stripSomeDefects = dual<
       }
       return Option.none()
     }
-  )
-})
+  }))
 
 // -----------------------------------------------------------------------------
 // Mapping
@@ -475,16 +467,15 @@ export const flatMap = dual<
   <E, E2>(f: (e: E) => Cause.Cause<E2>) => (self: Cause.Cause<E>) => Cause.Cause<E2>,
   <E, E2>(self: Cause.Cause<E>, f: (e: E) => Cause.Cause<E2>) => Cause.Cause<E2>
 >(2, (self, f) =>
-  match(
-    self,
-    empty,
-    (error) => f(error),
-    (defect) => die(defect),
-    (fiberId) => interrupt(fiberId),
-    (cause, annotation) => annotated(cause, annotation),
-    (left, right) => sequential(left, right),
-    (left, right) => parallel(left, right)
-  ))
+  match(self, {
+    onEmpty: empty,
+    onFail: (error) => f(error),
+    onDie: (defect) => die(defect),
+    onInterrupt: (fiberId) => interrupt(fiberId),
+    onAnnotated: (cause, annotation) => annotated(cause, annotation),
+    onSequential: (left, right) => sequential(left, right),
+    onParallel: (left, right) => parallel(left, right)
+  }))
 
 /** @internal */
 export const flatten = <E>(self: Cause.Cause<Cause.Cause<E>>): Cause.Cause<E> => flatMap(self, identity)
@@ -860,33 +851,37 @@ interface AnnotatedCase {
 /** @internal */
 export const match = dual<
   <Z, E>(
-    emptyCase: Z,
-    failCase: (error: E) => Z,
-    dieCase: (defect: unknown) => Z,
-    interruptCase: (fiberId: FiberId.FiberId) => Z,
-    annotatedCase: (value: Z, annotation: unknown) => Z,
-    sequentialCase: (left: Z, right: Z) => Z,
-    parallelCase: (left: Z, right: Z) => Z
+    options: {
+      readonly onEmpty: Z
+      readonly onFail: (error: E) => Z
+      readonly onDie: (defect: unknown) => Z
+      readonly onInterrupt: (fiberId: FiberId.FiberId) => Z
+      readonly onAnnotated: (value: Z, annotation: unknown) => Z
+      readonly onSequential: (left: Z, right: Z) => Z
+      readonly onParallel: (left: Z, right: Z) => Z
+    }
   ) => (self: Cause.Cause<E>) => Z,
   <Z, E>(
     self: Cause.Cause<E>,
-    emptyCase: Z,
-    failCase: (error: E) => Z,
-    dieCase: (defect: unknown) => Z,
-    interruptCase: (fiberId: FiberId.FiberId) => Z,
-    annotatedCase: (value: Z, annotation: unknown) => Z,
-    sequentialCase: (left: Z, right: Z) => Z,
-    parallelCase: (left: Z, right: Z) => Z
+    options: {
+      readonly onEmpty: Z
+      readonly onFail: (error: E) => Z
+      readonly onDie: (defect: unknown) => Z
+      readonly onInterrupt: (fiberId: FiberId.FiberId) => Z
+      readonly onAnnotated: (value: Z, annotation: unknown) => Z
+      readonly onSequential: (left: Z, right: Z) => Z
+      readonly onParallel: (left: Z, right: Z) => Z
+    }
   ) => Z
->(8, (self, emptyCase, failCase, dieCase, interruptCase, annotatedCase, sequentialCase, parallelCase) => {
+>(2, (self, { onAnnotated, onDie, onEmpty, onFail, onInterrupt, onParallel, onSequential }) => {
   return reduceWithContext(self, void 0, {
-    emptyCase: () => emptyCase,
-    failCase: (_, error) => failCase(error),
-    dieCase: (_, defect) => dieCase(defect),
-    interruptCase: (_, fiberId) => interruptCase(fiberId),
-    annotatedCase: (_, value, annotation) => annotatedCase(value, annotation),
-    sequentialCase: (_, left, right) => sequentialCase(left, right),
-    parallelCase: (_, left, right) => parallelCase(left, right)
+    emptyCase: () => onEmpty,
+    failCase: (_, error) => onFail(error),
+    dieCase: (_, defect) => onDie(defect),
+    interruptCase: (_, fiberId) => onInterrupt(fiberId),
+    annotatedCase: (_, value, annotation) => onAnnotated(value, annotation),
+    sequentialCase: (_, left, right) => onSequential(left, right),
+    parallelCase: (_, left, right) => onParallel(left, right)
   })
 })
 

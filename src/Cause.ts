@@ -751,23 +751,27 @@ export const filter: {
  */
 export const match: {
   <Z, E>(
-    emptyCase: Z,
-    failCase: (error: E) => Z,
-    dieCase: (defect: unknown) => Z,
-    interruptCase: (fiberId: FiberId.FiberId) => Z,
-    annotatedCase: (value: Z, annotation: unknown) => Z,
-    sequentialCase: (left: Z, right: Z) => Z,
-    parallelCase: (left: Z, right: Z) => Z
+    options: {
+      readonly onEmpty: Z
+      readonly onFail: (error: E) => Z
+      readonly onDie: (defect: unknown) => Z
+      readonly onInterrupt: (fiberId: FiberId.FiberId) => Z
+      readonly onAnnotated: (value: Z, annotation: unknown) => Z
+      readonly onSequential: (left: Z, right: Z) => Z
+      readonly onParallel: (left: Z, right: Z) => Z
+    }
   ): (self: Cause<E>) => Z
   <Z, E>(
     self: Cause<E>,
-    emptyCase: Z,
-    failCase: (error: E) => Z,
-    dieCase: (defect: unknown) => Z,
-    interruptCase: (fiberId: FiberId.FiberId) => Z,
-    annotatedCase: (value: Z, annotation: unknown) => Z,
-    sequentialCase: (left: Z, right: Z) => Z,
-    parallelCase: (left: Z, right: Z) => Z
+    options: {
+      readonly onEmpty: Z
+      readonly onFail: (error: E) => Z
+      readonly onDie: (defect: unknown) => Z
+      readonly onInterrupt: (fiberId: FiberId.FiberId) => Z
+      readonly onAnnotated: (value: Z, annotation: unknown) => Z
+      readonly onSequential: (left: Z, right: Z) => Z
+      readonly onParallel: (left: Z, right: Z) => Z
+    }
   ): Z
 } = internal.match
 
