@@ -44,36 +44,39 @@ export const FlatConfigProviderTypeId: ConfigProvider.FlatConfigProviderTypeId =
 
 /** @internal */
 export const make = (
-  load: <A>(config: Config.Config<A>) => Effect.Effect<never, ConfigError.ConfigError, A>,
-  flattened: ConfigProvider.ConfigProvider.Flat
+  options: {
+    readonly load: <A>(config: Config.Config<A>) => Effect.Effect<never, ConfigError.ConfigError, A>
+    readonly flattened: ConfigProvider.ConfigProvider.Flat
+  }
 ): ConfigProvider.ConfigProvider => ({
   [ConfigProviderTypeId]: ConfigProviderTypeId,
-  load,
-  flattened
+  ...options
 })
 
 /** @internal */
 export const makeFlat = (
-  load: <A>(
-    path: Array<string>,
-    config: Config.Config.Primitive<A>,
-    split: boolean
-  ) => Effect.Effect<never, ConfigError.ConfigError, Array<A>>,
-  enumerateChildren: (
-    path: Array<string>
-  ) => Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>>,
-  patch: PathPatch.PathPatch
+  options: {
+    readonly load: <A>(
+      path: Array<string>,
+      config: Config.Config.Primitive<A>,
+      split: boolean
+    ) => Effect.Effect<never, ConfigError.ConfigError, Array<A>>
+    readonly enumerateChildren: (
+      path: Array<string>
+    ) => Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>>
+    readonly patch: PathPatch.PathPatch
+  }
 ): ConfigProvider.ConfigProvider.Flat => ({
   [FlatConfigProviderTypeId]: FlatConfigProviderTypeId,
-  patch,
-  load: (path, config, split = true) => load(path, config, split),
-  enumerateChildren
+  patch: options.patch,
+  load: (path, config, split = true) => options.load(path, config, split),
+  enumerateChildren: options.enumerateChildren
 })
 
 /** @internal */
 export const fromFlat = (flat: ConfigProvider.ConfigProvider.Flat): ConfigProvider.ConfigProvider =>
-  make(
-    (config) =>
+  make({
+    load: (config) =>
       core.flatMap(fromFlatLoop(flat, RA.empty(), config, false), (chunk) =>
         Option.match(RA.head(chunk), () =>
           core.fail(
@@ -82,8 +85,8 @@ export const fromFlat = (flat: ConfigProvider.ConfigProvider.Flat): ConfigProvid
               `Expected a single value having structure: ${config}`
             )
           ), core.succeed)),
-    flat
-  )
+    flattened: flat
+  })
 
 /** @internal */
 export const fromEnv = (
@@ -131,7 +134,7 @@ export const fromEnv = (
       return HashSet.fromIterable(filteredKeyPaths)
     })
 
-  return fromFlat(makeFlat(load, enumerateChildren, pathPatch.empty))
+  return fromFlat(makeFlat({ load, enumerateChildren, patch: pathPatch.empty }))
 }
 
 /** @internal */
@@ -180,7 +183,7 @@ export const fromMap = (
       return HashSet.fromIterable(filteredKeyPaths)
     })
 
-  return fromFlat(makeFlat(load, enumerateChildren, pathPatch.empty))
+  return fromFlat(makeFlat({ load, enumerateChildren, patch: pathPatch.empty }))
 }
 
 const extend = <A, B>(
@@ -434,33 +437,33 @@ const contramapPathFlat = (
   self: ConfigProvider.ConfigProvider.Flat,
   f: (path: string) => string
 ): ConfigProvider.ConfigProvider.Flat =>
-  makeFlat(
-    (path, config, split = true) => self.load(path, config, split),
-    (path) => self.enumerateChildren(path),
-    pathPatch.mapName(self.patch, f)
-  )
+  makeFlat({
+    load: (path, config, split = true) => self.load(path, config, split),
+    enumerateChildren: (path) => self.enumerateChildren(path),
+    patch: pathPatch.mapName(self.patch, f)
+  })
 
 /** @internal */
 export const nested = dual<
   (name: string) => (self: ConfigProvider.ConfigProvider) => ConfigProvider.ConfigProvider,
   (self: ConfigProvider.ConfigProvider, name: string) => ConfigProvider.ConfigProvider
 >(2, (self, name) =>
-  fromFlat(makeFlat(
-    (path, config) => self.flattened.load(path, config, true),
-    (path) => self.flattened.enumerateChildren(path),
-    pathPatch.nested(self.flattened.patch, name)
-  )))
+  fromFlat(makeFlat({
+    load: (path, config) => self.flattened.load(path, config, true),
+    enumerateChildren: (path) => self.flattened.enumerateChildren(path),
+    patch: pathPatch.nested(self.flattened.patch, name)
+  })))
 
 /** @internal */
 export const unnested = dual<
   (name: string) => (self: ConfigProvider.ConfigProvider) => ConfigProvider.ConfigProvider,
   (self: ConfigProvider.ConfigProvider, name: string) => ConfigProvider.ConfigProvider
 >(2, (self, name) =>
-  fromFlat(makeFlat(
-    (path, config) => self.flattened.load(path, config, true),
-    (path) => self.flattened.enumerateChildren(path),
-    pathPatch.unnested(self.flattened.patch, name)
-  )))
+  fromFlat(makeFlat({
+    load: (path, config) => self.flattened.load(path, config, true),
+    enumerateChildren: (path) => self.flattened.enumerateChildren(path),
+    patch: pathPatch.unnested(self.flattened.patch, name)
+  })))
 
 /** @internal */
 export const orElse = dual<
@@ -479,8 +482,8 @@ const orElseFlat = (
   self: ConfigProvider.ConfigProvider.Flat,
   that: LazyArg<ConfigProvider.ConfigProvider.Flat>
 ): ConfigProvider.ConfigProvider.Flat =>
-  makeFlat(
-    (path, config, split) =>
+  makeFlat({
+    load: (path, config, split) =>
       pipe(
         pathPatch.patch(path, self.patch),
         core.flatMap((patch) => self.load(patch, config, split)),
@@ -497,7 +500,7 @@ const orElseFlat = (
           )
         )
       ),
-    (path) =>
+    enumerateChildren: (path) =>
       pipe(
         pathPatch.patch(path, self.patch),
         core.flatMap((patch) => self.enumerateChildren(patch)),
@@ -532,8 +535,8 @@ const orElseFlat = (
           )
         )
       ),
-    pathPatch.empty
-  )
+    patch: pathPatch.empty
+  })
 
 /** @internal */
 export const constantCase = (self: ConfigProvider.ConfigProvider): ConfigProvider.ConfigProvider =>
