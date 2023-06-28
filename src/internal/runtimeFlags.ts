@@ -148,10 +148,9 @@ export const renderPatch = (self: RuntimeFlagsPatch.RuntimeFlagsPatch): string =
 }
 
 /** @internal */
-export const differ = (): Differ.Differ<RuntimeFlags.RuntimeFlags, RuntimeFlagsPatch.RuntimeFlagsPatch> =>
-  Differ.make({
-    empty: runtimeFlagsPatch.empty,
-    diff: (oldValue, newValue) => diff(oldValue, newValue),
-    combine: (first, second) => runtimeFlagsPatch.andThen(second)(first),
-    patch: (_patch, oldValue) => patch(oldValue, _patch)
-  })
+export const differ: Differ.Differ<RuntimeFlags.RuntimeFlags, RuntimeFlagsPatch.RuntimeFlagsPatch> = Differ.make({
+  empty: runtimeFlagsPatch.empty,
+  diff: (oldValue, newValue) => diff(oldValue, newValue),
+  combine: (first, second) => runtimeFlagsPatch.andThen(second)(first),
+  patch: (_patch, oldValue) => patch(oldValue, _patch)
+})

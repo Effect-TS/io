@@ -1607,7 +1607,7 @@ export const fiberRefUnsafeMakeRuntimeFlags = (
 ): FiberRef.FiberRef<RuntimeFlags.RuntimeFlags> =>
   fiberRefUnsafeMakePatch(
     initial,
-    _runtimeFlags.differ(),
+    _runtimeFlags.differ,
     RuntimeFlagsPatch.empty
   )
 
