@@ -8,6 +8,7 @@ import { globalValue } from "@effect/data/Global"
 import * as HashSet from "@effect/data/HashSet"
 import * as MRef from "@effect/data/MutableRef"
 import * as Option from "@effect/data/Option"
+import * as Predicate from "@effect/data/Predicate"
 import * as RA from "@effect/data/ReadonlyArray"
 import { tuple } from "@effect/data/ReadonlyArray"
 import type * as Cause from "@effect/io/Cause"
@@ -58,9 +59,6 @@ import type * as RequestBlock from "@effect/io/RequestBlock"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
 import type { Tracer } from "@effect/io/Tracer"
-
-// TODO: remove once added to /data/Predicate
-const isIterable = (u: unknown): u is Iterable<unknown> => typeof u === "object" && u != null && Symbol.iterator in u
 
 const fibersStarted = metric.counter("effect_fiber_started")
 const fiberSuccesses = metric.counter("effect_fiber_successes")
@@ -1398,7 +1396,7 @@ export const exists = dual<
   <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>, options?: {
     readonly concurrency: Concurrency.Concurrency
   }) => Effect.Effect<R, E, boolean>
->((args) => isIterable(args[0]), (elements, f, options) =>
+>((args) => Predicate.isIterable(args[0]), (elements, f, options) =>
   Concurrency.matchSimple(
     options?.concurrency,
     () => core.suspend(() => existsLoop(elements[Symbol.iterator](), f)),
@@ -1444,7 +1442,7 @@ export const filter = dual<
     readonly negate?: boolean
   }) => Effect.Effect<R, E, ReadonlyArray<A>>
 >(
-  (args) => isIterable(args[0]),
+  (args) => Predicate.isIterable(args[0]),
   <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>, options?: {
     readonly concurrency?: Concurrency.Concurrency
     readonly negate?: boolean
@@ -1639,7 +1637,7 @@ export const forEachOptions = dual<
       readonly discard: true
     }): Effect.Effect<R, E, void>
   }
->((args) => isIterable(args[0]), (self, f, options) => {
+>((args) => Predicate.isIterable(args[0]), (self, f, options) => {
   if (options?.discard) {
     return Concurrency.match(
       options?.concurrency as Concurrency.Concurrency,
@@ -1680,17 +1678,15 @@ export const forEachOptionsWithIndex = dual<
     }): Effect.Effect<R, E, void>
   }
 >(
-  (args) => isIterable(args[0]),
+  (args) => Predicate.isIterable(args[0]),
   <R, E, A, B>(elements: Iterable<A>, f: (a: A, i: number) => Effect.Effect<R, E, B>, options?: {
     readonly concurrency?: Concurrency.Concurrency
     readonly discard?: boolean
   }) =>
-    core.suspend(() =>
-      forEachOptions(
-        Array.from(elements).map((a, i) => [a, i] as [A, number]),
-        ([a, i]) => f(a, i),
-        options as any
-      )
+    forEachOptions(
+      Array.from(elements).map((a, i) => [a, i] as [A, number]),
+      ([a, i]) => f(a, i),
+      options as any
     )
 )
 
@@ -2052,7 +2048,7 @@ export const mergeAll = dual<
     readonly concurrency?: Concurrency.Concurrency
   }) => Effect.Effect<R, E, Z>
 >(
-  (args) => isIterable(args[0]),
+  (args) => Predicate.isIterable(args[0]),
   <R, E, A, Z>(elements: Iterable<Effect.Effect<R, E, A>>, zero: Z, f: (z: Z, a: A) => Z, options?: {
     readonly concurrency?: Concurrency.Concurrency
   }) =>
@@ -2087,7 +2083,7 @@ export const partition = dual<
     f: (a: A) => Effect.Effect<R, E, B>,
     options?: { readonly concurrency?: Concurrency.Concurrency }
   ) => Effect.Effect<R, never, readonly [ReadonlyArray<E>, ReadonlyArray<B>]>
->((args) => isIterable(args[0]), (elements, f, options) =>
+>((args) => Predicate.isIterable(args[0]), (elements, f, options) =>
   pipe(
     forEachOptions(elements, (a) => core.either(f(a)), options),
     core.map((chunk) => core.partitionMap(chunk, identity))
@@ -2130,7 +2126,7 @@ export const validateAll = dual<
     ): Effect.Effect<R, ReadonlyArray<E>, void>
   }
 >(
-  (args) => isIterable(args[0]),
+  (args) => Predicate.isIterable(args[0]),
   <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>, options?: {
     readonly concurrency?: Concurrency.Concurrency
     readonly discard?: boolean
@@ -2268,7 +2264,7 @@ export const reduceEffect = dual<
     f: (acc: A, a: A) => A,
     options?: { readonly concurrency: Concurrency.Concurrency }
   ) => Effect.Effect<R, E, A>
->((args) => isIterable(args[0]), <R, E, A>(
+>((args) => Predicate.isIterable(args[0]), <R, E, A>(
   elements: Iterable<Effect.Effect<R, E, A>>,
   zero: Effect.Effect<R, E, A>,
   f: (acc: A, a: A) => A,
@@ -2472,7 +2468,7 @@ export const validateFirst = dual<
     readonly concurrency?: Concurrency.Concurrency
   }) => Effect.Effect<R, ReadonlyArray<E>, B>
 >(
-  (args) => isIterable(args[0]),
+  (args) => Predicate.isIterable(args[0]),
   (elements, f, options) => core.flip(forEachOptions(elements, (a) => core.flip(f(a)), options))
 )
 

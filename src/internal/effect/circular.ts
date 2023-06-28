@@ -6,6 +6,7 @@ import { dual, pipe } from "@effect/data/Function"
 import * as Hash from "@effect/data/Hash"
 import * as MutableHashMap from "@effect/data/MutableHashMap"
 import * as Option from "@effect/data/Option"
+import * as Predicate from "@effect/data/Predicate"
 import type { Equivalence } from "@effect/data/typeclass/Equivalence"
 import type * as Cause from "@effect/io/Cause"
 import type * as Deferred from "@effect/io/Deferred"
@@ -28,9 +29,6 @@ import type * as Synchronized from "@effect/io/Ref/Synchronized"
 import type * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
-
-// TODO: remove once added to /data/Predicate
-const isIterable = (u: unknown): u is Iterable<unknown> => typeof u === "object" && u != null && Symbol.iterator in u
 
 /** @internal */
 class Semaphore {
@@ -239,7 +237,7 @@ export const forkAll = dual<
       options: { readonly discard: true }
     ): Effect.Effect<R, never, void>
   }
->((args) => isIterable(args[0]), (
+>((args) => Predicate.isIterable(args[0]), (
   effects,
   options
 ) =>
