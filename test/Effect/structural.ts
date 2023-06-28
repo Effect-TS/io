@@ -1,5 +1,6 @@
 import * as Effect from "@effect/io/Effect"
 import * as Chunk from "@effect/data/Chunk"
+import * as Option from "@effect/data/Option"
 import * as it from "@effect/io/test/utils/extend"
 import { describe } from "vitest"
 import { pipe } from "@effect/data/Function"
@@ -278,5 +279,85 @@ describe.concurrent("Effect", () => {
         readonly b: string
       }>()(x) satisfies true
     }))
+  })
+  describe("allValidate", () => {
+    it.effect("should work with multiple arguments", () =>
+      Effect.gen(function*($) {
+        const result = yield* $(Effect.allValidate(Effect.succeed(0), Effect.succeed(1)))
+        const [a, b] = result
+        assert.deepEqual(a, 0)
+        assert.deepEqual(b, 1)
+        assertType<readonly [number, number]>()(result) satisfies true
+      }))
+    it.effect("failures should work with multiple arguments", () =>
+      Effect.gen(function*($) {
+        const result = yield* $(Effect.flip(Effect.allValidate(Effect.succeed(0), Effect.fail(1))))
+        const [a, b] = result
+        assert.deepEqual(a, Option.none())
+        assert.deepEqual(b, Option.some(1))
+        assertType<readonly [Option.Option<never>, Option.Option<number>]>()(result) satisfies true
+      }))
+    it.effect("should work with one argument", () =>
+      Effect.gen(function*($) {
+        const result = yield* $(Effect.allValidate(Effect.succeed(0)))
+        const [a] = result
+        assert.deepEqual(a, 0)
+        assertType<readonly [number]>()(result) satisfies true
+      }))
+    it.effect("failure should work with one argument", () =>
+      Effect.gen(function*($) {
+        const result = yield* $(Effect.flip(Effect.allValidate(Effect.fail(0))))
+        const [a] = result
+        assert.deepEqual(a, Option.some(0))
+        assertType<readonly [Option.Option<number>]>()(result) satisfies true
+      }))
+    it.effect("should work with one array argument", () =>
+      Effect.gen(function*($) {
+        const res = yield* $(Effect.allValidate([Effect.succeed(0), Effect.succeed(1)]))
+        assert.deepEqual(res, [0, 1])
+        assertType<ReadonlyArray<number>>()(res) satisfies true
+      }))
+    it.effect("failure should work with one array argument", () =>
+      Effect.gen(function*($) {
+        const res = yield* $(Effect.flip(Effect.allValidate([Effect.fail(0), Effect.succeed(1)])))
+        assert.deepEqual(res, [Option.some(0), Option.none()])
+        assertType<ReadonlyArray<Option.Option<number>>>()(res) satisfies true
+      }))
+    it.effect("should work with one record argument", () =>
+      Effect.gen(function*($) {
+        const result = yield* $(Effect.allValidate({ a: Effect.succeed(0), b: Effect.succeed(1) }))
+        const { a, b } = result
+        assert.deepEqual(a, 0)
+        assert.deepEqual(b, 1)
+        assertType<{
+          readonly a: number
+          readonly b: number
+        }>()(result) satisfies true
+      }))
+    it.effect("failure should work with one record argument", () =>
+      Effect.gen(function*($) {
+        const result = yield* $(Effect.flip(Effect.allValidate({ a: Effect.fail(0), b: Effect.succeed(1) })))
+        const { a, b } = result
+        assert.deepEqual(a, Option.some(0))
+        assert.deepEqual(b, Option.none())
+        assertType<{
+          readonly a: Option.Option<number>
+          readonly b: Option.Option<never>
+        }>()(result) satisfies true
+      }))
+    it.effect("record should work with pipe", () =>
+      Effect.gen(function*($) {
+        const result = yield* $(
+          { a: Effect.succeed(0), b: Effect.succeed("hello") },
+          Effect.allValidate
+        )
+        const { a, b } = result
+        assert.deepEqual(a, 0)
+        assert.deepEqual(b, "hello")
+        assertType<{
+          readonly a: number
+          readonly b: string
+        }>()(result) satisfies true
+      }))
   })
 })

@@ -9,6 +9,7 @@ import * as HashSet from "@effect/data/HashSet"
 import * as List from "@effect/data/List"
 import * as Option from "@effect/data/Option"
 import type { Predicate, Refinement } from "@effect/data/Predicate"
+import * as ReadonlyArray from "@effect/data/ReadonlyArray"
 import { tuple } from "@effect/data/ReadonlyArray"
 import type * as Cause from "@effect/io/Cause"
 import * as Clock from "@effect/io/Clock"
@@ -427,6 +428,21 @@ export const contextWith = <R, A>(f: (context: Context.Context<R>) => A): Effect
 /* @internal */
 export const eventually = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, A> =>
   core.orElse(self, () => core.flatMap(core.yieldNow, () => eventually(self)))
+
+/* @internal */
+export const filterMap = dual<
+  <A, B>(
+    pf: (a: A) => Option.Option<B>
+  ) => <R, E>(elements: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, Array<B>>,
+  <R, E, A, B>(
+    elements: Iterable<Effect.Effect<R, E, A>>,
+    pf: (a: A) => Option.Option<B>
+  ) => Effect.Effect<R, E, Array<B>>
+>(2, (elements, pf) =>
+  core.map(
+    core.forEach(elements, identity),
+    ReadonlyArray.filterMap(pf)
+  ))
 
 /* @internal */
 export const filterOrDie = dual<

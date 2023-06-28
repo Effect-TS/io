@@ -8,7 +8,6 @@ import * as Option from "@effect/data/Option"
 import type * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal/core"
-import * as circular from "@effect/io/internal/effect/circular"
 import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
 import * as pool from "@effect/io/internal/pool"
 import type * as KeyedPool from "@effect/io/KeyedPool"
@@ -91,7 +90,7 @@ const makeWith = <K, R, E, A>(
   timeToLive: (key: K) => Option.Option<Duration.Duration>
 ): Effect.Effect<R | Scope.Scope, never, KeyedPool.KeyedPool<K, E, A>> =>
   pipe(
-    circular.all(
+    fiberRuntime.all(
       core.context<R>(),
       core.fiberId,
       core.sync(() => MutableRef.make(HashMap.empty<K, MapValue<E, A>>())),

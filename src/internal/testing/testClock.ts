@@ -196,7 +196,7 @@ export class TestClockImpl implements TestClock {
    */
   adjustWith(duration: Duration.Duration) {
     return <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
-      circular.zipLeft(effect, this.adjust(duration), { parallel: true })
+      fiberRuntime.zipLeftOptions(effect, this.adjust(duration), { parallel: true })
   }
   /**
    * Returns a set of all fibers in this test.

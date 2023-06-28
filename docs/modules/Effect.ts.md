@@ -278,6 +278,8 @@ Added in v1.0.0
   - [unifiedFn](#unifiedfn)
 - [utils](#utils)
   - [MergeRecord (type alias)](#mergerecord-type-alias)
+  - [allValidate](#allvalidate)
+  - [allValidateWith](#allvalidatewith)
   - [awaitAllChildren](#awaitallchildren)
   - [blocked](#blocked)
   - [cached](#cached)
@@ -643,7 +645,7 @@ See `allWith` for an options-first variant that can be used with `pipe`.
 **Signature**
 
 ```ts
-export declare const all: All.DataFirst
+export declare const all: All.All
 ```
 
 Added in v1.0.0
@@ -674,7 +676,7 @@ Same as `all`, except the options can be partially applied for use with
 **Signature**
 
 ```ts
-export declare const allWith: All.DataLast
+export declare const allWith: All.AllWith
 ```
 
 **Example**
@@ -4419,6 +4421,38 @@ export type MergeRecord<K, H> = {
 } extends infer X
   ? X
   : never
+```
+
+Added in v1.0.0
+
+## allValidate
+
+Feeds elements of type `A` to `f` and accumulates all errors in error
+channel or successes in success channel.
+
+This combinator is lossy meaning that if there are errors all successes
+will be lost. To retain all information please use `partition`.
+
+**Signature**
+
+```ts
+export declare const allValidate: All.Validate
+```
+
+Added in v1.0.0
+
+## allValidateWith
+
+Feeds elements of type `A` to `f` and accumulates all errors in error
+channel or successes in success channel.
+
+This combinator is lossy meaning that if there are errors all successes
+will be lost. To retain all information please use `partition`.
+
+**Signature**
+
+```ts
+export declare const allValidateWith: All.ValidateWith
 ```
 
 Added in v1.0.0

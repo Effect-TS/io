@@ -392,7 +392,31 @@ export const acquireUseRelease: {
  * @since 1.0.0
  * @category constructors
  */
-export const all: All.DataFirst = circular.all
+export const all: All.All = fiberRuntime.all
+
+/**
+ * Feeds elements of type `A` to `f` and accumulates all errors in error
+ * channel or successes in success channel.
+ *
+ * This combinator is lossy meaning that if there are errors all successes
+ * will be lost. To retain all information please use `partition`.
+ *
+ * @since 1.0.0
+ * @category utils
+ */
+export const allValidate: All.Validate = fiberRuntime.allValidate
+
+/**
+ * Feeds elements of type `A` to `f` and accumulates all errors in error
+ * channel or successes in success channel.
+ *
+ * This combinator is lossy meaning that if there are errors all successes
+ * will be lost. To retain all information please use `partition`.
+ *
+ * @since 1.0.0
+ * @category utils
+ */
+export const allValidateWith: All.ValidateWith = fiberRuntime.allValidateWith
 
 /**
  * Runs all the provided effects in sequence respecting the structure provided in input.
@@ -412,7 +436,7 @@ export const all: All.DataFirst = circular.all
  * @since 1.0.0
  * @category constructors
  */
-export const allWith: All.DataLast = circular.allWith
+export const allWith: All.AllWith = fiberRuntime.allWith
 
 /**
  * @since 1.0.0
@@ -424,7 +448,7 @@ export declare namespace All {
   type ReturnIterable<T extends Iterable<EffectAny>, Discard extends boolean, Validate = false> = [T] extends
     [Iterable<Effect.Variance<infer R, infer E, infer A>>] ? Effect<
     R,
-    Validate extends true ? ReadonlyArray<E> : E,
+    Validate extends true ? ReadonlyArray<Option.Option<E>> : E,
     Discard extends true ? void
       : ReadonlyArray<A>
   >
@@ -435,8 +459,9 @@ export declare namespace All {
       : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
       : never,
     T[number] extends never ? never
-      : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }]
-        ? Validate extends true ? ReadonlyArray<E> : E
+      : Validate extends true
+        ? { readonly [K in keyof T]: [T[K]] extends [Effect<infer _R, infer _E, infer _A>] ? Option.Option<_E> : never }
+      : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
       : never,
     Discard extends true ? void
       : T[number] extends never ? readonly []
@@ -449,8 +474,10 @@ export declare namespace All {
         : [T[keyof T]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
         : never,
       keyof T extends never ? never
-        : [T[keyof T]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }]
-          ? Validate extends true ? ReadonlyArray<E> : E
+        : Validate extends true ? {
+          readonly [K in keyof T]: [T[K]] extends [Effect<infer _R, infer _E, infer _A>] ? Option.Option<_E> : never
+        }
+        : [T[keyof T]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
         : never,
       Discard extends true ? void
         : { readonly [K in keyof T]: [T[K]] extends [Effect<infer _R, infer _E, infer _A>] ? _A : never }
@@ -464,7 +491,7 @@ export declare namespace All {
 
   type IsDiscard<A> = [Extract<A, { readonly discard: true }>] extends [never] ? false : true
 
-  export interface DataFirst {
+  export interface All {
     <
       Args extends
         | [Iterable<EffectAny>]
@@ -484,7 +511,7 @@ export declare namespace All {
       : ReturnObject<Args[0], IsDiscard<Args[1]>>
   }
 
-  export interface DataLast {
+  export interface AllWith {
     <O extends Options>(options?: O): <
       Arg extends
         | ReadonlyArray<EffectAny>
@@ -496,6 +523,41 @@ export declare namespace All {
       : [Arg] extends [Iterable<EffectAny>] ? ReturnIterable<Arg, IsDiscard<O>>
       : [Arg] extends [EffectAny] ? ReturnTuple<[Arg], IsDiscard<O>>
       : ReturnObject<Arg, IsDiscard<O>>
+  }
+
+  export interface Validate {
+    <
+      Args extends
+        | [Iterable<EffectAny>]
+        | [Readonly<{ [K: string]: EffectAny }>]
+        | [EffectAny, ...ReadonlyArray<EffectAny>]
+        | [Iterable<EffectAny>, Options | undefined]
+        | [Readonly<{ [K: string]: EffectAny }>, Options | undefined]
+        | [EffectAny, ...ReadonlyArray<EffectAny>, Options | undefined]
+    >(
+      ...args: Args
+    ): [Args[0]] extends [ReadonlyArray<EffectAny>] ? ReturnTuple<Args[0], IsDiscard<Args[1]>, true>
+      : [Args[0]] extends [Iterable<EffectAny>] ? ReturnIterable<Args[0], IsDiscard<Args[1]>, true>
+      : [Args[0]] extends [EffectAny] ? ReturnTuple<
+        [Args] extends [[...(infer Effects), Options | undefined]] ? Effects : Args,
+        IsDiscard<Args[number]>,
+        true
+      >
+      : ReturnObject<Args[0], IsDiscard<Args[1]>, true>
+  }
+
+  export interface ValidateWith {
+    <O extends Options>(options?: O): <
+      Arg extends
+        | ReadonlyArray<EffectAny>
+        | Readonly<{ [K: string]: EffectAny }>
+        | EffectAny
+    >(
+      self: Arg
+    ) => [Arg] extends [ReadonlyArray<EffectAny>] ? ReturnTuple<Arg, IsDiscard<O>, true>
+      : [Arg] extends [Iterable<EffectAny>] ? ReturnIterable<Arg, IsDiscard<O>, true>
+      : [Arg] extends [EffectAny] ? ReturnTuple<[Arg], IsDiscard<O>, true>
+      : ReturnObject<Arg, IsDiscard<O>, true>
   }
 }
 
@@ -509,7 +571,7 @@ export declare namespace All {
 export const allSuccesses: <R, E, A>(
   elements: Iterable<Effect<R, E, A>>,
   options?: { readonly concurrency?: Concurrency }
-) => Effect<R, never, Array<A>> = circular.allSuccesses
+) => Effect<R, never, Array<A>> = fiberRuntime.allSuccesses
 
 /**
  * This function checks if any fibers are attempting to interrupt the current
@@ -3166,7 +3228,8 @@ export const retryWhileEquals: {
  * @since 1.0.0
  * @category utils
  */
-export const replicate: (n: number) => <R, E, A>(self: Effect<R, E, A>) => Array<Effect<R, E, A>> = circular.replicate
+export const replicate: (n: number) => <R, E, A>(self: Effect<R, E, A>) => Array<Effect<R, E, A>> =
+  fiberRuntime.replicate
 
 /**
  * Performs this effect the specified number of times and collects the
@@ -3187,7 +3250,7 @@ export const replicateEffect: {
     options?: { readonly discard?: false }
   ): Effect<R, E, ReadonlyArray<A>>
   <R, E, A>(self: Effect<R, E, A>, n: number, options: { readonly discard: true }): Effect<R, E, void>
-} = circular.replicateEffect
+} = fiberRuntime.replicateEffect
 
 /**
  * Returns an effect that accesses the runtime, which can be used to
@@ -4013,7 +4076,7 @@ export const validate: {
     that: Effect<R1, E1, B>,
     options?: { readonly parallel?: boolean }
   ): Effect<R | R1, E | E1, [A, B]>
-} = circular.validate
+} = fiberRuntime.validate
 
 /**
  * Feeds elements of type `A` to `f` and accumulates all errors in error
@@ -4126,7 +4189,7 @@ export const validateWith: {
     f: (a: A, b: B) => C,
     options?: { readonly parallel?: boolean }
   ): Effect<R | R1, E | E1, C>
-} = circular.validateWith
+} = fiberRuntime.validateWith
 
 /**
  * @since 1.0.0
@@ -4388,7 +4451,7 @@ export const zip: {
     that: Effect<R2, E2, A2>,
     options?: { readonly parallel?: boolean }
   ): Effect<R | R2, E | E2, [A, A2]>
-} = circular.zip
+} = fiberRuntime.zipOptions
 
 /**
  * @since 1.0.0
@@ -4404,7 +4467,7 @@ export const zipLeft: {
     that: Effect<R2, E2, A2>,
     options?: { readonly parallel?: boolean }
   ): Effect<R | R2, E | E2, A>
-} = circular.zipLeft
+} = fiberRuntime.zipLeftOptions
 
 /**
  * @since 1.0.0
@@ -4420,7 +4483,7 @@ export const zipRight: {
     that: Effect<R2, E2, A2>,
     options?: { readonly parallel?: boolean }
   ): Effect<R | R2, E | E2, A2>
-} = circular.zipRight
+} = fiberRuntime.zipRightOptions
 
 /**
  * @since 1.0.0
@@ -4438,7 +4501,7 @@ export const zipWith: {
     f: (a: A, b: A2) => B,
     options?: { readonly parallel?: boolean }
   ): Effect<R | R2, E | E2, B>
-} = circular.zipWith
+} = fiberRuntime.zipWithOptions
 
 /**
  * @category instances

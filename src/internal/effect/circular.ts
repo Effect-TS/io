@@ -2,12 +2,10 @@ import type * as Duration from "@effect/data/Duration"
 import * as Either from "@effect/data/Either"
 import * as Equal from "@effect/data/Equal"
 import type { LazyArg } from "@effect/data/Function"
-import { dual, identity, pipe } from "@effect/data/Function"
+import { dual, pipe } from "@effect/data/Function"
 import * as Hash from "@effect/data/Hash"
 import * as MutableHashMap from "@effect/data/MutableHashMap"
 import * as Option from "@effect/data/Option"
-import * as RA from "@effect/data/ReadonlyArray"
-import { tuple } from "@effect/data/ReadonlyArray"
 import type { Equivalence } from "@effect/data/typeclass/Equivalence"
 import type * as Cause from "@effect/io/Cause"
 import type * as Deferred from "@effect/io/Deferred"
@@ -17,7 +15,6 @@ import type * as Fiber from "@effect/io/Fiber"
 import * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
 import * as internalCause from "@effect/io/internal/cause"
-import type * as Concurrency from "@effect/io/internal/concurrency"
 import * as core from "@effect/io/internal/core"
 import * as effect from "@effect/io/internal/effect"
 import * as executionStrategy from "@effect/io/internal/executionStrategy"
@@ -469,129 +466,6 @@ export const timeoutTo = dual<
     )
   ))
 
-/** @internal */
-export const validate = dual<
-  <R1, E1, B>(
-    that: Effect.Effect<R1, E1, B>,
-    options?: { readonly parallel?: boolean }
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E | E1, [A, B]>,
-  <R, E, A, R1, E1, B>(
-    self: Effect.Effect<R, E, A>,
-    that: Effect.Effect<R1, E1, B>,
-    options?: { readonly parallel?: boolean }
-  ) => Effect.Effect<R | R1, E | E1, [A, B]>
->(
-  (args) => core.isEffect(args[0]) && core.isEffect(args[1]),
-  (self, that, options) => validateWith(self, that, (a, b) => tuple(a, b), options)
-)
-
-/** @internal */
-export const validateWith = dual<
-  <A, R1, E1, B, C>(
-    that: Effect.Effect<R1, E1, B>,
-    f: (a: A, b: B) => C,
-    options?: { readonly parallel?: boolean }
-  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E | E1, C>,
-  <R, E, A, R1, E1, B, C>(
-    self: Effect.Effect<R, E, A>,
-    that: Effect.Effect<R1, E1, B>,
-    f: (a: A, b: B) => C,
-    options?: { readonly parallel?: boolean }
-  ) => Effect.Effect<R | R1, E | E1, C>
->((args) => core.isEffect(args[0]) && core.isEffect(args[1]), (self, that, f, options) =>
-  core.flatten(zipWith(
-    core.exit(self),
-    core.exit(that),
-    (ea, eb) =>
-      core.exitZipWith(ea, eb, f, (ca, cb) =>
-        options?.parallel ? internalCause.parallel(ca, cb) : internalCause.sequential(ca, cb)),
-    options
-  )))
-
-/** @internal */
-export const zip = dual<
-  <R2, E2, A2>(
-    that: Effect.Effect<R2, E2, A2>,
-    options?: { readonly parallel?: boolean }
-  ) => <R, E, A>(
-    self: Effect.Effect<R, E, A>
-  ) => Effect.Effect<R | R2, E | E2, [A, A2]>,
-  <R, E, A, R2, E2, A2>(
-    self: Effect.Effect<R, E, A>,
-    that: Effect.Effect<R2, E2, A2>,
-    options?: { readonly parallel?: boolean }
-  ) => Effect.Effect<R | R2, E | E2, [A, A2]>
->((args) => core.isEffect(args[1]), (
-  self,
-  that,
-  options
-) =>
-  options?.parallel ?
-    zipWith(self, that, (a, b) => [a, b], options) :
-    core.zip(self, that))
-
-/** @internal */
-export const zipLeft = dual<
-  <R2, E2, A2>(
-    that: Effect.Effect<R2, E2, A2>,
-    options?: { readonly parallel?: boolean }
-  ) => <R, E, A>(
-    self: Effect.Effect<R, E, A>
-  ) => Effect.Effect<R | R2, E | E2, A>,
-  <R, E, A, R2, E2, A2>(
-    self: Effect.Effect<R, E, A>,
-    that: Effect.Effect<R2, E2, A2>,
-    options?: { readonly parallel?: boolean }
-  ) => Effect.Effect<R | R2, E | E2, A>
->(
-  (args) => core.isEffect(args[1]),
-  (self, that, options) => options?.parallel ? zipWith(self, that, (a, _) => a, options) : core.zipLeft(self, that)
-)
-
-/** @internal */
-export const zipRight = dual<
-  <R2, E2, A2>(
-    that: Effect.Effect<R2, E2, A2>,
-    options?: { readonly parallel?: boolean }
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A2>,
-  <R, E, A, R2, E2, A2>(
-    self: Effect.Effect<R, E, A>,
-    that: Effect.Effect<R2, E2, A2>,
-    options?: { readonly parallel?: boolean }
-  ) => Effect.Effect<R | R2, E | E2, A2>
->((args) => core.isEffect(args[1]), (self, that, options) =>
-  options?.parallel ?
-    zipWith(self, that, (_, b) => b, options) :
-    core.zipRight(self, that))
-
-/** @internal */
-export const zipWith = dual<
-  <R2, E2, A2, A, B>(
-    that: Effect.Effect<R2, E2, A2>,
-    f: (a: A, b: A2) => B,
-    options?: { readonly parallel?: boolean }
-  ) => <R, E>(
-    self: Effect.Effect<R, E, A>
-  ) => Effect.Effect<R | R2, E | E2, B>,
-  <R, E, A, R2, E2, A2, B>(
-    self: Effect.Effect<R, E, A>,
-    that: Effect.Effect<R2, E2, A2>,
-    f: (a: A, b: A2) => B,
-    options?: { readonly parallel?: boolean }
-  ) => Effect.Effect<R | R2, E | E2, B>
->((args) => core.isEffect(args[1]), <R, E, A, R2, E2, A2, B>(
-  self: Effect.Effect<R, E, A>,
-  that: Effect.Effect<R2, E2, A2>,
-  f: (a: A, b: A2) => B,
-  options?: { readonly parallel?: boolean }
-): Effect.Effect<R | R2, E | E2, B> =>
-  options?.parallel ?
-    core.map(
-      all(self, that, { concurrency: 2 }),
-      ([a, a2]) => f(a, a2)
-    ) :
-    core.zipWith(self, that, f))
-
 // circular with Synchronized
 
 /** @internal */
@@ -699,7 +573,7 @@ export const zipWithFiber = dual<
     pipe(
       self.await(),
       core.flatten,
-      zipWith(core.flatten(that.await()), f, { parallel: true }),
+      fiberRuntime.zipWithOptions(core.flatten(that.await()), f, { parallel: true }),
       core.exit
     ),
   children: () => self.children(),
@@ -729,102 +603,3 @@ export const zipWithFiber = dual<
       that.interruptAsFork(id)
     )
 }))
-
-/* @internal */
-export const all: Effect.All.DataFirst = function() {
-  const hasOptions = arguments.length > 1 && !core.isEffect(arguments[arguments.length - 1])
-  const options: {
-    readonly concurrency?: Concurrency.Concurrency
-    readonly discard?: boolean
-  } = hasOptions ?
-    arguments[arguments.length - 1] :
-    {}
-  const effects = hasOptions ? Array.prototype.slice.call(arguments, 0, -1) : arguments
-
-  if (effects.length === 1) {
-    if (core.isEffect(effects[0])) {
-      return options.discard ? core.asUnit(effects[0]) : core.map(effects[0], (x) => [x])
-    } else if (Array.isArray(effects[0]) || Symbol.iterator in effects[0]) {
-      // @ts-expect-error
-      return fiberRuntime.forEachOptions(effects[0], identity, options)
-    } else if (options?.discard) {
-      return fiberRuntime.forEachOptions(
-        Object.values(effects[0] as Readonly<{ [K: string]: Effect.Effect<any, any, any> }>),
-        identity,
-        options as any
-      )
-    } else {
-      const keys = Object.keys(effects[0])
-      const size = keys.length
-      return pipe(
-        fiberRuntime.forEachOptions(
-          keys.map((k) => (effects[0] as Readonly<{ [K: string]: Effect.Effect<any, any, any> }>)[k]),
-          identity,
-          options as any
-        ),
-        core.map((values) => {
-          const res = {}
-          for (let i = 0; i < size; i++) {
-            ;(res as any)[keys[i]] = values[i]
-          }
-          return res
-        })
-      ) as any
-    }
-  }
-
-  return fiberRuntime.forEachOptions(effects, identity, options as any)
-}
-
-/* @internal */
-export const allWith: Effect.All.DataLast = function(options) {
-  return (self) => (all as any)(self, options)
-}
-
-/* @internal */
-export const allSuccesses = <R, E, A>(
-  elements: Iterable<Effect.Effect<R, E, A>>,
-  options?: { readonly concurrency?: Concurrency.Concurrency }
-): Effect.Effect<R, never, Array<A>> =>
-  core.map(
-    all(Array.from(elements).map(core.exit), options),
-    RA.filterMap((exit) => core.exitIsSuccess(exit) ? Option.some(exit.i0) : Option.none())
-  )
-
-/* @internal */
-export const filterMap = dual<
-  <A, B>(
-    pf: (a: A) => Option.Option<B>
-  ) => <R, E>(elements: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, Array<B>>,
-  <R, E, A, B>(
-    elements: Iterable<Effect.Effect<R, E, A>>,
-    pf: (a: A) => Option.Option<B>
-  ) => Effect.Effect<R, E, Array<B>>
->(2, (elements, pf) => core.map(all(elements), RA.filterMap(pf)))
-
-/* @internal */
-export const replicate = (n: number) =>
-  <R, E, A>(self: Effect.Effect<R, E, A>): Array<Effect.Effect<R, E, A>> => Array.from({ length: n }, () => self)
-
-/* @internal */
-export const replicateEffect = dual<
-  {
-    (n: number, options?: {
-      readonly discard?: false
-    }): <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, ReadonlyArray<A>>
-    (n: number, options: {
-      readonly discard: true
-    }): <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, void>
-  },
-  {
-    <R, E, A>(self: Effect.Effect<R, E, A>, n: number, options?: {
-      readonly discard?: false
-    }): Effect.Effect<R, E, ReadonlyArray<A>>
-    <R, E, A>(self: Effect.Effect<R, E, A>, n: number, options: {
-      readonly discard: true
-    }): Effect.Effect<R, E, void>
-  }
->(
-  (args) => core.isEffect(args[0]),
-  (self, n, options) => all(replicate(n)(self), options as {})
-)

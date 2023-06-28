@@ -9,7 +9,6 @@ import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
 import * as core from "@effect/io/internal/core"
 import * as effect from "@effect/io/internal/effect"
-import * as circular from "@effect/io/internal/effect/circular"
 import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
 import * as queue from "@effect/io/internal/queue"
 import * as ref from "@effect/io/internal/ref"
@@ -324,7 +323,7 @@ const getAndShutdown = <E, A>(self: PoolImpl<E, A>): Effect.Effect<never, never,
  * Begins pre-allocating pool entries based on minimum pool size.
  */
 const initialize = <E, A>(self: PoolImpl<E, A>): Effect.Effect<never, never, void> =>
-  circular.replicateEffect(
+  fiberRuntime.replicateEffect(
     core.uninterruptibleMask((restore) =>
       core.flatten(ref.modify(self.state, (state) => {
         if (state.size < self.min && state.size >= 0) {
@@ -407,7 +406,7 @@ const makeWith = <R, E, A, S, R2>(
 ): Effect.Effect<R | R2 | Scope.Scope, never, Pool.Pool<E, A>> =>
   core.uninterruptibleMask((restore) =>
     pipe(
-      circular.all(
+      fiberRuntime.all(
         core.context<R>(),
         ref.make(false),
         ref.make<PoolState>({ size: 0, free: 0 }),
