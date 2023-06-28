@@ -200,7 +200,7 @@ export const ensuringChild = dual<
     self: Effect.Effect<R, E, A>,
     f: (fiber: Fiber.Fiber<any, ReadonlyArray<unknown>>) => Effect.Effect<R2, never, X>
   ) => Effect.Effect<R | R2, E, A>
->(2, (self, f) => ensuringChildren(self, (children) => f(fiberRuntime.fiberCollectAll(children))))
+>(2, (self, f) => ensuringChildren(self, (children) => f(fiberRuntime.fiberAll(children))))
 
 /** @internal */
 export const ensuringChildren = dual<
@@ -245,7 +245,7 @@ export const forkAll = dual<
 ) =>
   options?.discard ?
     core.forEachDiscard(effects, fiberRuntime.fork) :
-    core.map(core.forEach(effects, fiberRuntime.fork), fiberRuntime.fiberCollectAll))
+    core.map(core.forEach(effects, fiberRuntime.fork), fiberRuntime.fiberAll))
 
 /** @internal */
 export const forkIn = dual<

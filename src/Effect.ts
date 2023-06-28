@@ -571,7 +571,7 @@ export declare namespace All {
 export const allSuccesses: <R, E, A>(
   elements: Iterable<Effect<R, E, A>>,
   options?: { readonly concurrency?: Concurrency }
-) => Effect<R, never, Array<A>> = fiberRuntime.allSuccesses
+) => Effect<R, never, ReadonlyArray<A>> = fiberRuntime.allSuccesses
 
 /**
  * This function checks if any fibers are attempting to interrupt the current
@@ -1369,12 +1369,12 @@ export const filter: {
   <A, R, E>(
     f: (a: A) => Effect<R, E, boolean>,
     options?: { readonly concurrency?: Concurrency; readonly negate?: boolean }
-  ): (elements: Iterable<A>) => Effect<R, E, Array<A>>
+  ): (elements: Iterable<A>) => Effect<R, E, ReadonlyArray<A>>
   <A, R, E>(
     elements: Iterable<A>,
     f: (a: A) => Effect<R, E, boolean>,
     options?: { readonly concurrency?: Concurrency; readonly negate?: boolean }
-  ): Effect<R, E, Array<A>>
+  ): Effect<R, E, ReadonlyArray<A>>
 } = fiberRuntime.filter
 
 /**
@@ -3204,7 +3204,7 @@ export const retryWhileEffect: {
  * @since 1.0.0
  * @category utils
  */
-export const replicate: (n: number) => <R, E, A>(self: Effect<R, E, A>) => Array<Effect<R, E, A>> =
+export const replicate: (n: number) => <R, E, A>(self: Effect<R, E, A>) => ReadonlyArray<Effect<R, E, A>> =
   fiberRuntime.replicate
 
 /**

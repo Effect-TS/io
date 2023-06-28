@@ -222,9 +222,9 @@ describe.concurrent("Fiber", () => {
       const result = yield* $(Fiber.joinAll(fibers))
       assert.isUndefined(result)
     }), 10000)
-  it.effect("collectAll - stack safety", () =>
+  it.effect("all - stack safety", () =>
     Effect.gen(function*($) {
-      const result = yield* $(Fiber.join(Fiber.collectAll(fibers)), Effect.asUnit)
+      const result = yield* $(Fiber.join(Fiber.all(fibers)), Effect.asUnit)
       assert.isUndefined(result)
     }), 10000)
 })

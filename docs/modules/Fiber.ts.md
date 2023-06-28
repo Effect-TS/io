@@ -16,7 +16,7 @@ Added in v1.0.0
   - [orElse](#orelse)
   - [orElseEither](#orelseeither)
 - [constructors](#constructors)
-  - [collectAll](#collectall)
+  - [all](#all)
   - [done](#done)
   - [fail](#fail)
   - [failCause](#failcause)
@@ -117,7 +117,7 @@ Added in v1.0.0
 
 # constructors
 
-## collectAll
+## all
 
 Collects all fibers into a single fiber producing an in-order list of the
 results.
@@ -125,7 +125,7 @@ results.
 **Signature**
 
 ```ts
-export declare const collectAll: <E, A>(fibers: Iterable<Fiber<E, A>>) => Fiber<E, readonly A[]>
+export declare const all: <E, A>(fibers: Iterable<Fiber<E, A>>) => Fiber<E, readonly A[]>
 ```
 
 Added in v1.0.0

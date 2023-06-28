@@ -655,7 +655,7 @@ discarding results from failed effects.
 export declare const allSuccesses: <R, E, A>(
   elements: Iterable<Effect<R, E, A>>,
   options?: { readonly concurrency?: Concurrency }
-) => Effect<R, never, A[]>
+) => Effect<R, never, readonly A[]>
 ```
 
 Added in v1.0.0
@@ -2268,12 +2268,12 @@ export declare const filter: {
   <A, R, E>(
     f: (a: A) => Effect<R, E, boolean>,
     options?: { readonly concurrency?: Concurrency; readonly negate?: boolean }
-  ): (elements: Iterable<A>) => Effect<R, E, A[]>
+  ): (elements: Iterable<A>) => Effect<R, E, readonly A[]>
   <A, R, E>(
     elements: Iterable<A>,
     f: (a: A) => Effect<R, E, boolean>,
     options?: { readonly concurrency?: Concurrency; readonly negate?: boolean }
-  ): Effect<R, E, A[]>
+  ): Effect<R, E, readonly A[]>
 }
 ```
 
@@ -5196,7 +5196,7 @@ Replicates the given effect `n` times.
 **Signature**
 
 ```ts
-export declare const replicate: (n: number) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>[]
+export declare const replicate: (n: number) => <R, E, A>(self: Effect<R, E, A>) => readonly Effect<R, E, A>[]
 ```
 
 Added in v1.0.0

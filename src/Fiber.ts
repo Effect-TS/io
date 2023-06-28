@@ -278,8 +278,7 @@ export const children: <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, 
  * @since 1.0.0
  * @category constructors
  */
-export const collectAll: <E, A>(fibers: Iterable<Fiber<E, A>>) => Fiber<E, ReadonlyArray<A>> =
-  fiberRuntime.fiberCollectAll
+export const all: <E, A>(fibers: Iterable<Fiber<E, A>>) => Fiber<E, ReadonlyArray<A>> = fiberRuntime.fiberAll
 
 /**
  * A fiber that is done with the specified `Exit` value.
