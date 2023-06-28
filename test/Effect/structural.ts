@@ -360,4 +360,95 @@ describe.concurrent("Effect", () => {
         }>()(result) satisfies true
       }))
   })
+  describe("allValidateWith", () => {
+    it.effect("record should work with pipe", () =>
+      Effect.gen(function*($) {
+        const result = yield* $(
+          { a: Effect.succeed(0), b: Effect.succeed("hello") },
+          Effect.allValidateWith({ concurrency: "inherit" })
+        )
+        const { a, b } = result
+        assert.deepEqual(a, 0)
+        assert.deepEqual(b, "hello")
+        assertType<{
+          readonly a: number
+          readonly b: string
+        }>()(result) satisfies true
+      }))
+    it.effect("failure/ record should work with pipe", () =>
+      Effect.gen(function*($) {
+        const result = yield* $(
+          { a: Effect.fail(0), b: Effect.fail("hello") },
+          Effect.allValidateWith({ concurrency: "inherit" }),
+          Effect.flip
+        )
+        const { a, b } = result
+        assert.deepEqual(a, Option.some(0))
+        assert.deepEqual(b, Option.some("hello"))
+        assertType<{
+          readonly a: Option.Option<number>
+          readonly b: Option.Option<string>
+        }>()(result) satisfies true
+      }))
+    it.effect("tuple should work with pipe", () =>
+      Effect.gen(function*($) {
+        const result = yield* $(
+          [Effect.succeed(0), Effect.succeed("hello")] as const,
+          Effect.allValidateWith({ concurrency: "inherit" })
+        )
+        const [a, b] = result
+        assert.deepEqual(a, 0)
+        assert.deepEqual(b, "hello")
+        assertType<readonly [number, string]>()(result) satisfies true
+      }))
+    it.effect("array should work with pipe", () =>
+      Effect.gen(function*($) {
+        const a = yield* $(
+          [Effect.succeed(0), Effect.succeed(1)],
+          Effect.allValidateWith({ concurrency: "inherit" })
+        )
+        assert.deepEqual(a, [0, 1])
+        assertType<ReadonlyArray<number>>()(a) satisfies true
+      }))
+    it.effect("discard", () =>
+      Effect.gen(function*($) {
+        const a = yield* $(
+          [Effect.succeed(0), Effect.succeed(1)],
+          Effect.allValidateWith({ concurrency: "inherit", discard: true })
+        )
+        assert.deepEqual(a, void 0)
+        assertType<void>()(a) satisfies true
+      }))
+    it.effect("tuple should work with pipe and generics", () => Effect.gen(function* (_) {
+      const allGeneric = <A, B>(a: A, b: B) => pipe(
+        [Effect.succeed(a), Effect.succeed(b)] as const,
+        Effect.allValidateWith()
+      )
+      const x = yield* _(allGeneric(0, "hello"))
+      assert.deepEqual(x, [0, "hello"])
+      assertType<readonly [number, string]>()(x) satisfies true
+    }))
+    it.effect("iterable should work with pipe and generics", () => Effect.gen(function* (_) {
+      const allGeneric = <A>(a: Iterable<A>) => pipe(
+        Array.from(a).map(Effect.succeed),
+        Effect.allValidateWith()
+      )
+      assertType<<A>(a: Iterable<A>) => Effect.Effect<never, never, ReadonlyArray<A>>>()(allGeneric)
+      const x = yield* _(allGeneric(Chunk.make(0, "hello")))
+      assert.deepEqual(x, [0, "hello"])
+      assertType<ReadonlyArray<string | number>>()(x) satisfies true
+    }))
+    it.effect("struct should work with pipe and generics", () => Effect.gen(function* (_) {
+      const allGeneric = <A, B>(a: A, b: B) => pipe(
+        { a: Effect.succeed(a), b: Effect.succeed(b) },
+        Effect.allValidateWith()
+      )
+      const x = yield* _(allGeneric(0, "hello"))
+      assert.deepEqual(x, { a: 0, b: "hello" })
+      assertType<{
+        readonly a: number
+        readonly b: string
+      }>()(x) satisfies true
+    }))
+  })
 })

@@ -1552,8 +1552,11 @@ export const allValidate = function() {
     eitherEffects.push(core.either(effect))
   }
   return core.flatMap(
-    forEachOptions(eitherEffects, identity, options as any),
+    forEachOptions(eitherEffects, identity, {
+      concurrency: options?.concurrency
+    }),
     (eithers) => {
+      const none = Option.none()
       const size = eithers.length
       const errors: Array<unknown> = new Array(size)
       const successes: Array<unknown> = new Array(size)
@@ -1565,13 +1568,15 @@ export const allValidate = function() {
           errored = true
         } else {
           successes[i] = either.right
-          errors[i] = Option.none()
+          errors[i] = none
         }
       }
       if (errored) {
         return reconcile._tag === "Some" ?
           core.fail(reconcile.value(errors)) :
           core.fail(errors)
+      } else if (options?.discard) {
+        return core.unit
       }
       return reconcile._tag === "Some" ?
         core.succeed(reconcile.value(successes)) :
