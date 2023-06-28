@@ -484,13 +484,11 @@ export const mapFiber: {
  */
 export const match: {
   <E, A, Z>(
-    onFiber: (fiber: Fiber<E, A>) => Z,
-    onRuntimeFiber: (fiber: RuntimeFiber<E, A>) => Z
+    options: { readonly onFiber: (fiber: Fiber<E, A>) => Z; readonly onRuntimeFiber: (fiber: RuntimeFiber<E, A>) => Z }
   ): (self: Fiber<E, A>) => Z
   <E, A, Z>(
     self: Fiber<E, A>,
-    onFiber: (fiber: Fiber<E, A>) => Z,
-    onRuntimeFiber: (fiber: RuntimeFiber<E, A>) => Z
+    options: { readonly onFiber: (fiber: Fiber<E, A>) => Z; readonly onRuntimeFiber: (fiber: RuntimeFiber<E, A>) => Z }
   ): Z
 } = internal.match
 
@@ -500,7 +498,7 @@ export const match: {
  * @since 1.0.0
  * @category constructors
  */
-export const never: (_: void) => Fiber<never, never> = internal.never
+export const never: Fiber<never, never> = internal.never
 
 /**
  * Returns a fiber that prefers `this` fiber, but falls back to the `that` one

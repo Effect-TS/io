@@ -184,15 +184,19 @@ export const mapFiber = dual<
 /** @internal */
 export const match = dual<
   <E, A, Z>(
-    onFiber: (fiber: Fiber.Fiber<E, A>) => Z,
-    onRuntimeFiber: (fiber: Fiber.RuntimeFiber<E, A>) => Z
+    options: {
+      readonly onFiber: (fiber: Fiber.Fiber<E, A>) => Z
+      readonly onRuntimeFiber: (fiber: Fiber.RuntimeFiber<E, A>) => Z
+    }
   ) => (self: Fiber.Fiber<E, A>) => Z,
   <E, A, Z>(
     self: Fiber.Fiber<E, A>,
-    onFiber: (fiber: Fiber.Fiber<E, A>) => Z,
-    onRuntimeFiber: (fiber: Fiber.RuntimeFiber<E, A>) => Z
+    options: {
+      readonly onFiber: (fiber: Fiber.Fiber<E, A>) => Z
+      readonly onRuntimeFiber: (fiber: Fiber.RuntimeFiber<E, A>) => Z
+    }
   ) => Z
->(3, (self, onFiber, onRuntimeFiber) => {
+>(2, (self, { onFiber, onRuntimeFiber }) => {
   if (isRuntimeFiber(self)) {
     return onRuntimeFiber(self)
   }
@@ -200,7 +204,7 @@ export const match = dual<
 })
 
 /** @internal */
-export const never = (): Fiber.Fiber<never, never> => ({
+export const never: Fiber.Fiber<never, never> = ({
   [FiberTypeId]: fiberVariance,
   id: () => FiberId.none,
   await: () => core.never,
