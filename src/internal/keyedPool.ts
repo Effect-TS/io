@@ -114,12 +114,12 @@ const makeImpl = <K, R, E, A>(
                 return pipe(
                   restore(
                     fiberRuntime.scopeExtend(
-                      pool.makeWithTTL(
-                        core.provideContext(get(key), context),
-                        min(key),
-                        max(key),
-                        Option.getOrElse(timeToLive(key), () => Duration.infinity)
-                      ),
+                      pool.makeWithTTL({
+                        acquire: core.provideContext(get(key), context),
+                        min: min(key),
+                        max: max(key),
+                        timeToLive: Option.getOrElse(timeToLive(key), () => Duration.infinity)
+                      }),
                       scope
                     )
                   ),

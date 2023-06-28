@@ -401,10 +401,12 @@ const toEffect = <E, A>(self: Attempted<E, A>): Effect.Effect<never, E, A> => se
  * down to the minimum size.
  */
 const makeWith = <R, E, A, S, R2>(
-  get: Effect.Effect<R, E, A>,
-  min: number,
-  max: number,
-  strategy: Strategy<S, R2, E, A>
+  options: {
+    readonly acquire: Effect.Effect<R, E, A>
+    readonly min: number
+    readonly max: number
+    readonly strategy: Strategy<S, R2, E, A>
+  }
 ): Effect.Effect<R | R2 | Scope.Scope, never, Pool.Pool<E, A>> =>
   core.uninterruptibleMask((restore) =>
     pipe(
@@ -412,26 +414,26 @@ const makeWith = <R, E, A, S, R2>(
         core.context<R>(),
         ref.make(false),
         ref.make<PoolState>({ size: 0, free: 0 }),
-        queue.bounded<Attempted<E, A>>(max),
+        queue.bounded<Attempted<E, A>>(options.max),
         ref.make(HashSet.empty<A>()),
-        strategy.initial()
+        options.strategy.initial()
       ),
       core.flatMap(([context, down, state, items, inv, initial]) => {
         const pool = new PoolImpl<E, A>(
-          core.contramapContext(get, (old) => Context.merge(old)(context)),
-          min,
-          max,
+          core.contramapContext(options.acquire, (old) => Context.merge(old)(context)),
+          options.min,
+          options.max,
           down,
           state,
           items,
           inv,
-          (exit) => strategy.track(initial, exit)
+          (exit) => options.strategy.track(initial, exit)
         )
         return pipe(
           fiberRuntime.forkDaemon(restore(initialize(pool))),
           core.flatMap((fiber) =>
             core.flatMap(
-              fiberRuntime.forkDaemon(restore(strategy.run(initial, excess(pool), shrink(pool)))),
+              fiberRuntime.forkDaemon(restore(options.strategy.run(initial, excess(pool), shrink(pool)))),
               (shrink) =>
                 fiberRuntime.addFinalizer(() =>
                   pipe(
@@ -454,17 +456,33 @@ export const isPool = (u: unknown): u is Pool.Pool<unknown, unknown> =>
 
 /** @internal */
 export const make = <R, E, A>(
-  get: Effect.Effect<R, E, A>,
-  size: number
-): Effect.Effect<R | Scope.Scope, never, Pool.Pool<E, A>> => makeWith(get, size, size, new NoneStrategy())
+  options: {
+    readonly acquire: Effect.Effect<R, E, A>
+    readonly size: number
+  }
+): Effect.Effect<R | Scope.Scope, never, Pool.Pool<E, A>> =>
+  makeWith({
+    acquire: options.acquire,
+    min: options.size,
+    max: options.size,
+    strategy: new NoneStrategy()
+  })
 
 /** @internal */
 export const makeWithTTL = <R, E, A>(
-  get: Effect.Effect<R, E, A>,
-  min: number,
-  max: number,
-  timeToLive: Duration.Duration
-): Effect.Effect<R | Scope.Scope, never, Pool.Pool<E, A>> => makeWith(get, min, max, new TimeToLiveStrategy(timeToLive))
+  options: {
+    readonly acquire: Effect.Effect<R, E, A>
+    readonly min: number
+    readonly max: number
+    readonly timeToLive: Duration.Duration
+  }
+): Effect.Effect<R | Scope.Scope, never, Pool.Pool<E, A>> =>
+  makeWith({
+    acquire: options.acquire,
+    min: options.min,
+    max: options.max,
+    strategy: new TimeToLiveStrategy(options.timeToLive)
+  })
 
 /** @internal */
 export const get = <E, A>(self: Pool.Pool<E, A>): Effect.Effect<Scope.Scope, E, A> => self.get()
