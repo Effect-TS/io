@@ -37,9 +37,9 @@ export const OP_AND_THEN = "AndThen" as const
 export type OP_AND_THEN = typeof OP_AND_THEN
 
 /** @internal */
-export const empty = (): FiberRefsPatch.FiberRefsPatch => ({
+export const empty: FiberRefsPatch.FiberRefsPatch = ({
   _tag: OP_EMPTY
-})
+}) as FiberRefsPatch.FiberRefsPatch
 
 /** @internal */
 export const diff = (
@@ -47,7 +47,7 @@ export const diff = (
   newValue: FiberRefs.FiberRefs
 ): FiberRefsPatch.FiberRefsPatch => {
   const missingLocals = new Map(oldValue.locals)
-  let patch = empty()
+  let patch = empty
   for (const [fiberRef, pairs] of newValue.locals.entries()) {
     const newValue = Arr.headNonEmpty(pairs)[1]
     const old = missingLocals.get(fiberRef)
@@ -111,7 +111,11 @@ export const patch = dual<
         break
       }
       case OP_ADD: {
-        fiberRefs = _fiberRefs.updatedAs(fiberRefs, fiberId, head.fiberRef, head.value)
+        fiberRefs = _fiberRefs.updatedAs(fiberRefs, {
+          fiberId,
+          fiberRef: head.fiberRef,
+          value: head.value
+        })
         patches = tail
         break
       }
@@ -122,7 +126,11 @@ export const patch = dual<
       }
       case OP_UPDATE: {
         const value = _fiberRefs.getOrDefault(fiberRefs, head.fiberRef)
-        fiberRefs = _fiberRefs.updatedAs(fiberRefs, fiberId, head.fiberRef, head.fiberRef.patch(head.patch)(value))
+        fiberRefs = _fiberRefs.updatedAs(fiberRefs, {
+          fiberId,
+          fiberRef: head.fiberRef,
+          value: head.fiberRef.patch(head.patch)(value)
+        })
         patches = tail
         break
       }

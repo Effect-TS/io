@@ -179,17 +179,25 @@ export const getOrDefault = dual<
 /** @internal */
 export const updatedAs = dual<
   <A>(
-    fiberId: FiberId.Runtime,
-    fiberRef: FiberRef.FiberRef<A>,
-    value: A
+    options: {
+      readonly fiberId: FiberId.Runtime
+      readonly fiberRef: FiberRef.FiberRef<A>
+      readonly value: A
+    }
   ) => (self: FiberRefs.FiberRefs) => FiberRefs.FiberRefs,
   <A>(
     self: FiberRefs.FiberRefs,
-    fiberId: FiberId.Runtime,
-    fiberRef: FiberRef.FiberRef<A>,
-    value: A
+    options: {
+      readonly fiberId: FiberId.Runtime
+      readonly fiberRef: FiberRef.FiberRef<A>
+      readonly value: A
+    }
   ) => FiberRefs.FiberRefs
->(4, <A>(self: FiberRefs.FiberRefs, fiberId: FiberId.Runtime, fiberRef: FiberRef.FiberRef<A>, value: A) => {
+>(2, <A>(self: FiberRefs.FiberRefs, { fiberId, fiberRef, value }: {
+  readonly fiberId: FiberId.Runtime
+  readonly fiberRef: FiberRef.FiberRef<A>
+  readonly value: A
+}) => {
   const oldStack = self.locals.has(fiberRef) ?
     self.locals.get(fiberRef)! :
     Arr.empty<readonly [FiberId.Runtime, any]>()

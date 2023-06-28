@@ -28,20 +28,18 @@ export const unsafeFork = <R>(runtime: Runtime.Runtime<R>) =>
     const fiberId = FiberId.unsafeMake()
     const effect = self
 
-    let fiberRefs = FiberRefs.updatedAs(
-      runtime.fiberRefs,
+    let fiberRefs = FiberRefs.updatedAs(runtime.fiberRefs, {
       fiberId,
-      core.currentContext,
-      runtime.context as Context.Context<never>
-    )
+      fiberRef: core.currentContext,
+      value: runtime.context as Context.Context<never>
+    })
 
     if (options?.scheduler) {
-      fiberRefs = FiberRefs.updatedAs(
-        fiberRefs,
+      fiberRefs = FiberRefs.updatedAs(fiberRefs, {
         fiberId,
-        core.currentScheduler,
-        options.scheduler
-      )
+        fiberRef: core.currentScheduler,
+        value: options.scheduler
+      })
     }
 
     if (options?.updateRefs) {
