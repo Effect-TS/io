@@ -208,10 +208,12 @@ export const histogram: (boundaries: MetricBoundaries.MetricBoundaries) => Metri
  * @category constructors
  */
 export const summary: (
-  maxAge: Duration.Duration,
-  maxSize: number,
-  error: number,
-  quantiles: Chunk.Chunk<number>
+  options: {
+    readonly maxAge: Duration.Duration
+    readonly maxSize: number
+    readonly error: number
+    readonly quantiles: Chunk.Chunk<number>
+  }
 ) => MetricKeyType.Summary = internal.summary
 
 /**

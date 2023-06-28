@@ -420,7 +420,13 @@ describe.concurrent("Metric", () => {
     it.effect("custom observe as aspect", () =>
       Effect.gen(function*($) {
         const summary = pipe(
-          Metric.summary("s1", Duration.minutes(1), 10, 0, Chunk.make(0, 1, 10)),
+          Metric.summary({
+            name: "s1",
+            maxAge: Duration.minutes(1),
+            maxSize: 10,
+            error: 0,
+            quantiles: Chunk.make(0, 1, 10)
+          }),
           Metric.taggedWithLabels(labels)
         )
         const result = yield* $(
@@ -439,7 +445,13 @@ describe.concurrent("Metric", () => {
     it.effect("direct observe", () =>
       Effect.gen(function*($) {
         const summary = pipe(
-          Metric.summary("s2", Duration.minutes(1), 10, 0, Chunk.make(0, 1, 10)),
+          Metric.summary({
+            name: "s2",
+            maxAge: Duration.minutes(1),
+            maxSize: 10,
+            error: 0,
+            quantiles: Chunk.make(0, 1, 10)
+          }),
           Metric.taggedWithLabels(labels)
         )
         const result = yield* $(
@@ -458,7 +470,13 @@ describe.concurrent("Metric", () => {
     it.effect("custom observe with contramap", () =>
       Effect.gen(function*($) {
         const summary = pipe(
-          Metric.summary("s3", Duration.minutes(1), 10, 0, Chunk.make(0, 1, 10)),
+          Metric.summary({
+            name: "s3",
+            maxAge: Duration.minutes(1),
+            maxSize: 10,
+            error: 0,
+            quantiles: Chunk.make(0, 1, 10)
+          }),
           Metric.taggedWithLabels(labels),
           Metric.contramap((s: string) => s.length)
         )
@@ -478,7 +496,13 @@ describe.concurrent("Metric", () => {
     it.effect("observeSummaryWith + taggedWith", () =>
       Effect.gen(function*($) {
         const base = pipe(
-          Metric.summary("s4", Duration.minutes(1), 10, 0, Chunk.make(0, 1, 10)),
+          Metric.summary({
+            name: "s4",
+            maxAge: Duration.minutes(1),
+            maxSize: 10,
+            error: 0,
+            quantiles: Chunk.make(0, 1, 10)
+          }),
           Metric.taggedWithLabels(labels),
           Metric.contramap((s: string) => s.length)
         )

@@ -168,24 +168,27 @@ export const sync = <Out>(evaluate: LazyArg<Out>): Metric.Metric<void, unknown, 
 
 /** @internal */
 export const summary = (
-  name: string,
-  maxAge: Duration.Duration,
-  maxSize: number,
-  error: number,
-  quantiles: Chunk.Chunk<number>,
-  description?: string
-): Metric.Metric.Summary<number> => withNow(summaryTimestamp(name, maxAge, maxSize, error, quantiles, description))
+  options: {
+    readonly name: string
+    readonly maxAge: Duration.Duration
+    readonly maxSize: number
+    readonly error: number
+    readonly quantiles: Chunk.Chunk<number>
+    readonly description?: string
+  }
+): Metric.Metric.Summary<number> => withNow(summaryTimestamp(options))
 
 /** @internal */
 export const summaryTimestamp = (
-  name: string,
-  maxAge: Duration.Duration,
-  maxSize: number,
-  error: number,
-  quantiles: Chunk.Chunk<number>,
-  description?: string
-): Metric.Metric.Summary<readonly [value: number, timestamp: number]> =>
-  fromMetricKey(metricKey.summary(name, maxAge, maxSize, error, quantiles, description))
+  options: {
+    readonly name: string
+    readonly maxAge: Duration.Duration
+    readonly maxSize: number
+    readonly error: number
+    readonly quantiles: Chunk.Chunk<number>
+    readonly description?: string
+  }
+): Metric.Metric.Summary<readonly [value: number, timestamp: number]> => fromMetricKey(metricKey.summary(options))
 
 /** @internal */
 export const tagged = dual<

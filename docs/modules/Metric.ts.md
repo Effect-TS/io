@@ -396,14 +396,14 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const summary: (
-  name: string,
-  maxAge: Duration.Duration,
-  maxSize: number,
-  error: number,
-  quantiles: Chunk.Chunk<number>,
-  description?: string
-) => Metric.Summary<number>
+export declare const summary: (options: {
+  readonly name: string
+  readonly maxAge: Duration.Duration
+  readonly maxSize: number
+  readonly error: number
+  readonly quantiles: Chunk.Chunk<number>
+  readonly description?: string
+}) => Metric.Summary<number>
 ```
 
 Added in v1.0.0
@@ -413,14 +413,14 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const summaryTimestamp: (
-  name: string,
-  maxAge: Duration.Duration,
-  maxSize: number,
-  error: number,
-  quantiles: Chunk.Chunk<number>,
-  description?: string
-) => Metric.Summary<readonly [value: number, timestamp: number]>
+export declare const summaryTimestamp: (options: {
+  readonly name: string
+  readonly maxAge: Duration.Duration
+  readonly maxSize: number
+  readonly error: number
+  readonly quantiles: Chunk.Chunk<number>
+  readonly description?: string
+}) => Metric.Summary<readonly [value: number, timestamp: number]>
 ```
 
 Added in v1.0.0

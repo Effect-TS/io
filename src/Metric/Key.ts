@@ -145,12 +145,14 @@ export const histogram: (
  * @category constructors
  */
 export const summary: (
-  name: string,
-  maxAge: Duration.Duration,
-  maxSize: number,
-  error: number,
-  quantiles: Chunk.Chunk<number>,
-  description?: string
+  options: {
+    readonly name: string
+    readonly maxAge: Duration.Duration
+    readonly maxSize: number
+    readonly error: number
+    readonly quantiles: Chunk.Chunk<number>
+    readonly description?: string
+  }
 ) => MetricKey.Summary = internal.summary
 
 /**

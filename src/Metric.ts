@@ -286,12 +286,14 @@ export const sync: <Out>(evaluate: LazyArg<Out>) => Metric<void, unknown, Out> =
  * @category constructors
  */
 export const summary: (
-  name: string,
-  maxAge: Duration.Duration,
-  maxSize: number,
-  error: number,
-  quantiles: Chunk.Chunk<number>,
-  description?: string
+  options: {
+    readonly name: string
+    readonly maxAge: Duration.Duration
+    readonly maxSize: number
+    readonly error: number
+    readonly quantiles: Chunk.Chunk<number>
+    readonly description?: string
+  }
 ) => Metric.Summary<number> = internal.summary
 
 /**
@@ -299,12 +301,14 @@ export const summary: (
  * @category constructors
  */
 export const summaryTimestamp: (
-  name: string,
-  maxAge: Duration.Duration,
-  maxSize: number,
-  error: number,
-  quantiles: Chunk.Chunk<number>,
-  description?: string
+  options: {
+    readonly name: string
+    readonly maxAge: Duration.Duration
+    readonly maxSize: number
+    readonly error: number
+    readonly quantiles: Chunk.Chunk<number>
+    readonly description?: string
+  }
 ) => Metric.Summary<readonly [value: number, timestamp: number]> = internal.summaryTimestamp
 
 /**
