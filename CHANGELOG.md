@@ -1,5 +1,13 @@
 # @effect/io
 
+## 0.27.2
+
+### Patch Changes
+
+- [`6511f1a`](https://github.com/Effect-TS/io/commit/6511f1a45bc8618eacd6286a33a9df2a95cfc326) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Improve log in case async fiber is thrown and not recovered
+
+- [#465](https://github.com/Effect-TS/io/pull/465) [`93c8296`](https://github.com/Effect-TS/io/commit/93c8296d1775816118e5248ce52eee5fcee9479b) Thanks [@tim-smart](https://github.com/tim-smart)! - fix histogram MetricHook
+
 ## 0.27.1
 
 ### Patch Changes
