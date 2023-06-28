@@ -1555,61 +1555,61 @@ export const fiberRefLocallyWith = dual<
 /** @internal */
 export const fiberRefUnsafeMake = <Value>(
   initial: Value,
-  fork: (a: Value) => Value = identity,
-  join: (left: Value, right: Value) => Value = (_, a) => a
+  options?: {
+    readonly fork?: (a: Value) => Value
+    readonly join?: (left: Value, right: Value) => Value
+  }
 ): FiberRef.FiberRef<Value> =>
-  fiberRefUnsafeMakePatch(
-    initial,
-    Differ.update(),
-    fork,
-    join
-  )
+  fiberRefUnsafeMakePatch(initial, {
+    differ: Differ.update(),
+    fork: options?.fork ?? identity,
+    join: options?.join
+  })
 
 /** @internal */
 export const fiberRefUnsafeMakeHashSet = <A>(
   initial: HashSet.HashSet<A>
 ): FiberRef.FiberRef<HashSet.HashSet<A>> =>
-  fiberRefUnsafeMakePatch(
-    initial,
-    Differ.hashSet(),
-    HashSetPatch.empty()
-  )
+  fiberRefUnsafeMakePatch(initial, {
+    differ: Differ.hashSet(),
+    fork: HashSetPatch.empty<A>()
+  })
 
 /** @internal */
 export const fiberRefUnsafeMakeContext = <A>(
   initial: Context.Context<A>
 ): FiberRef.FiberRef<Context.Context<A>> =>
-  fiberRefUnsafeMakePatch(
-    initial,
-    Differ.environment(),
-    ContextPatch.empty()
-  )
+  fiberRefUnsafeMakePatch(initial, {
+    differ: Differ.environment(),
+    fork: ContextPatch.empty<A, A>()
+  })
 
 /** @internal */
 export const fiberRefUnsafeMakePatch = <Value, Patch>(
   initial: Value,
-  differ: Differ.Differ<Value, Patch>,
-  fork: Patch,
-  join: (oldV: Value, newV: Value) => Value = (_, n) => n
+  options: {
+    readonly differ: Differ.Differ<Value, Patch>
+    readonly fork: Patch
+    readonly join?: (oldV: Value, newV: Value) => Value
+  }
 ): FiberRef.FiberRef<Value> => ({
   [FiberRefTypeId]: fiberRefVariance,
   initial,
-  diff: (oldValue, newValue) => pipe(differ, Differ.diff(oldValue, newValue)),
-  combine: (first, second) => pipe(differ, Differ.combine(first as Patch, second as Patch)),
-  patch: (patch) => (oldValue) => pipe(differ, Differ.patch(patch as Patch, oldValue)),
-  fork,
-  join
+  diff: (oldValue, newValue) => pipe(options.differ, Differ.diff(oldValue, newValue)),
+  combine: (first, second) => pipe(options.differ, Differ.combine(first as Patch, second as Patch)),
+  patch: (patch) => (oldValue) => pipe(options.differ, Differ.patch(patch as Patch, oldValue)),
+  fork: options.fork,
+  join: options.join ?? ((_, n) => n)
 })
 
 /** @internal */
 export const fiberRefUnsafeMakeRuntimeFlags = (
   initial: RuntimeFlags.RuntimeFlags
 ): FiberRef.FiberRef<RuntimeFlags.RuntimeFlags> =>
-  fiberRefUnsafeMakePatch(
-    initial,
-    _runtimeFlags.differ,
-    RuntimeFlagsPatch.empty
-  )
+  fiberRefUnsafeMakePatch(initial, {
+    differ: _runtimeFlags.differ,
+    fork: RuntimeFlagsPatch.empty
+  })
 
 /** @internal */
 export const currentContext: FiberRef.FiberRef<Context.Context<never>> = fiberRefUnsafeMakeContext(
@@ -1662,12 +1662,7 @@ export const currentParallelism: FiberRef.FiberRef<Option.Option<number>> = glob
 /** @internal */
 export const currentUnhandledErrorLogLevel: FiberRef.FiberRef<Option.Option<LogLevel.LogLevel>> = globalValue(
   Symbol.for("@effect/io/FiberRef/currentUnhandledErrorLogLevel"),
-  () =>
-    fiberRefUnsafeMake(
-      Option.some<LogLevel.LogLevel>(logLevelDebug),
-      (_) => _,
-      (_, x) => x
-    )
+  () => fiberRefUnsafeMake(Option.some<LogLevel.LogLevel>(logLevelDebug))
 )
 
 /** @internal */
@@ -1691,22 +1686,20 @@ export const metricLabels: Effect.Effect<never, never, HashSet.HashSet<MetricLab
 export const currentForkScopeOverride: FiberRef.FiberRef<Option.Option<fiberScope.FiberScope>> = globalValue(
   Symbol.for("@effect/io/FiberRef/currentForkScopeOverride"),
   () =>
-    fiberRefUnsafeMake(
-      Option.none(),
-      () => Option.none() as Option.Option<fiberScope.FiberScope>,
-      (parent, _) => parent
-    )
+    fiberRefUnsafeMake(Option.none(), {
+      fork: () => Option.none() as Option.Option<fiberScope.FiberScope>,
+      join: (parent, _) => parent
+    })
 )
 
 /** @internal */
 export const currentInterruptedCause: FiberRef.FiberRef<Cause.Cause<never>> = globalValue(
   Symbol.for("@effect/io/FiberRef/currentInterruptedCause"),
   () =>
-    fiberRefUnsafeMake(
-      internalCause.empty,
-      () => internalCause.empty,
-      (parent, _) => parent
-    )
+    fiberRefUnsafeMake(internalCause.empty, {
+      fork: () => internalCause.empty,
+      join: (parent, _) => parent
+    })
 )
 
 /** @internal */

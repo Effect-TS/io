@@ -2756,11 +2756,10 @@ export const scopeUse = dual<
 export const fiberRefUnsafeMakeSupervisor = (
   initial: Supervisor.Supervisor<any>
 ): FiberRef.FiberRef<Supervisor.Supervisor<any>> =>
-  core.fiberRefUnsafeMakePatch(
-    initial,
-    SupervisorPatch.differ,
-    SupervisorPatch.empty
-  )
+  core.fiberRefUnsafeMakePatch(initial, {
+    differ: SupervisorPatch.differ,
+    fork: SupervisorPatch.empty
+  })
 
 // circular with FiberRef
 
@@ -2788,10 +2787,12 @@ export const fiberRefLocallyScopedWith = dual<
 /* @internal */
 export const fiberRefMake = <A>(
   initial: A,
-  fork: (a: A) => A = identity,
-  join: (left: A, right: A) => A = (_, a) => a
+  options?: {
+    readonly fork?: (a: A) => A
+    readonly join?: (left: A, right: A) => A
+  }
 ): Effect.Effect<Scope.Scope, never, FiberRef.FiberRef<A>> =>
-  fiberRefMakeWith(() => core.fiberRefUnsafeMake(initial, fork, join))
+  fiberRefMakeWith(() => core.fiberRefUnsafeMake(initial, options))
 
 /* @internal */
 export const fiberRefMakeWith = <Value>(

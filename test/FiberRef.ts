@@ -177,7 +177,7 @@ describe.concurrent("FiberRef", () => {
     }))
   it.scoped("fork function is applied on fork - 1", () =>
     Effect.gen(function*($) {
-      const fiberRef = yield* $(FiberRef.make(0, increment))
+      const fiberRef = yield* $(FiberRef.make(0, { fork: increment }))
       const child = yield* $(Effect.fork(Effect.unit))
       yield* $(Fiber.join(child))
       const result = yield* $(FiberRef.get(fiberRef))
@@ -185,7 +185,7 @@ describe.concurrent("FiberRef", () => {
     }))
   it.scoped("fork function is applied on fork - 2", () =>
     Effect.gen(function*($) {
-      const fiberRef = yield* $(FiberRef.make(0, increment))
+      const fiberRef = yield* $(FiberRef.make(0, { fork: increment }))
       const child = yield* $(Effect.unit, Effect.fork, Effect.flatMap(Fiber.join), Effect.fork)
       yield* $(Fiber.join(child))
       const result = yield* $(FiberRef.get(fiberRef))
@@ -193,7 +193,7 @@ describe.concurrent("FiberRef", () => {
     }))
   it.scoped("join function is applied on join - 1", () =>
     Effect.gen(function*($) {
-      const fiberRef = yield* $(FiberRef.make(0, identity, Math.max))
+      const fiberRef = yield* $(FiberRef.make(0, { fork: identity, join: Math.max }))
       const child = yield* $(Effect.fork(FiberRef.update(fiberRef, increment)))
       yield* $(Fiber.join(child))
       const result = yield* $(FiberRef.get(fiberRef))
@@ -201,7 +201,7 @@ describe.concurrent("FiberRef", () => {
     }))
   it.scoped("join function is applied on join - 2", () =>
     Effect.gen(function*($) {
-      const fiberRef = yield* $(FiberRef.make(0, identity, Math.max))
+      const fiberRef = yield* $(FiberRef.make(0, { fork: identity, join: Math.max }))
       const child = yield* $(Effect.fork(FiberRef.update(fiberRef, increment)))
       yield* $(FiberRef.update(fiberRef, (n) => n + 2))
       yield* $(Fiber.join(child))
@@ -239,7 +239,10 @@ describe.concurrent("FiberRef", () => {
   it.scoped("the value of all fibers in inherited when running many effects with collectAllPar", () =>
     Effect.gen(function*($) {
       const n = 1000
-      const fiberRef = yield* $(FiberRef.make(0, constant(0), (a, b) => a + b))
+      const fiberRef = yield* $(FiberRef.make(0, {
+        fork: constant(0),
+        join: (a, b) => a + b
+      }))
       yield* $(Effect.all(Array.from({ length: n }, () => FiberRef.update(fiberRef, (n) => n + 1)), {
         concurrency: "inherit",
         discard: true
@@ -344,7 +347,7 @@ describe.concurrent("FiberRef", () => {
     }))
   it.scoped("fork patch is applied when a fiber is unsafely run", () =>
     Effect.gen(function*($) {
-      const fiberRef = yield* $(FiberRef.make<boolean>(true, constTrue))
+      const fiberRef = yield* $(FiberRef.make<boolean>(true, { fork: constTrue }))
       const deferred = yield* $(Deferred.make<never, boolean>())
       const runtime: Runtime.Runtime<never> = yield* $(
         pipe(Effect.runtime<never>(), Effect.locally(fiberRef, false))
@@ -357,7 +360,7 @@ describe.concurrent("FiberRef", () => {
     }))
   it.scoped("fork patch is applied when a fiber is unsafely forked", () =>
     Effect.gen(function*($) {
-      const fiberRef = yield* $(FiberRef.make<boolean>(true, constTrue))
+      const fiberRef = yield* $(FiberRef.make<boolean>(true, { fork: constTrue }))
       const deferred = yield* $(Deferred.make<never, boolean>())
       const runtime: Runtime.Runtime<never> = yield* $(Effect.locally(Effect.runtime<never>(), fiberRef, false))
       const fiber = yield* $(

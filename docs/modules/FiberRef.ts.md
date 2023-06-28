@@ -77,8 +77,9 @@ Added in v1.0.0
 ```ts
 export declare const make: <A>(
   initial: A,
-  fork?: ((a: A) => A) | undefined,
-  join?: ((left: A, right: A) => A) | undefined
+  options?:
+    | { readonly fork?: ((a: A) => A) | undefined; readonly join?: ((left: A, right: A) => A) | undefined }
+    | undefined
 ) => Effect.Effect<Scope.Scope, never, FiberRef<A>>
 ```
 
@@ -127,8 +128,12 @@ Added in v1.0.0
 ```ts
 export declare const unsafeMake: <Value>(
   initial: Value,
-  fork?: ((a: Value) => Value) | undefined,
-  join?: ((left: Value, right: Value) => Value) | undefined
+  options?:
+    | {
+        readonly fork?: ((a: Value) => Value) | undefined
+        readonly join?: ((left: Value, right: Value) => Value) | undefined
+      }
+    | undefined
 ) => FiberRef<Value>
 ```
 
@@ -161,9 +166,11 @@ Added in v1.0.0
 ```ts
 export declare const unsafeMakePatch: <Value, Patch>(
   initial: Value,
-  differ: Differ.Differ<Value, Patch>,
-  fork: Patch,
-  join?: ((oldV: Value, newV: Value) => Value) | undefined
+  options: {
+    readonly differ: Differ.Differ<Value, Patch>
+    readonly fork: Patch
+    readonly join?: ((oldV: Value, newV: Value) => Value) | undefined
+  }
 ) => FiberRef<Value>
 ```
 
