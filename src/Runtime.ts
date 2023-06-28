@@ -155,9 +155,11 @@ export const defaultRuntimeFlags: RuntimeFlags.RuntimeFlags = internal.defaultRu
  * @category constructors
  */
 export const make: <R>(
-  context: Context.Context<R>,
-  runtimeFlags: RuntimeFlags.RuntimeFlags,
-  fiberRefs: FiberRefs.FiberRefs
+  options: {
+    readonly context: Context.Context<R>
+    readonly flags: RuntimeFlags.RuntimeFlags
+    readonly fiberRefs: FiberRefs.FiberRefs
+  }
 ) => Runtime<R> = internal.make
 
 /**

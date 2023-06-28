@@ -70,11 +70,11 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const make: <R>(
-  context: Context.Context<R>,
-  runtimeFlags: RuntimeFlags.RuntimeFlags,
-  fiberRefs: FiberRefs.FiberRefs
-) => Runtime<R>
+export declare const make: <R>(options: {
+  readonly context: Context.Context<R>
+  readonly flags: RuntimeFlags.RuntimeFlags
+  readonly fiberRefs: FiberRefs.FiberRefs
+}) => Runtime<R>
 ```
 
 Added in v1.0.0
