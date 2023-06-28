@@ -115,7 +115,6 @@ Added in v1.0.0
   - [recurUpTo](#recurupto)
   - [recurWhile](#recurwhile)
   - [recurWhileEffect](#recurwhileeffect)
-  - [recurWhileEquals](#recurwhileequals)
   - [repetitions](#repetitions)
   - [resetAfter](#resetafter)
   - [resetWhen](#resetwhen)
@@ -1710,19 +1709,6 @@ true.
 
 ```ts
 export declare const recurWhileEffect: <Env, A>(f: (a: A) => Effect.Effect<Env, never, boolean>) => Schedule<Env, A, A>
-```
-
-Added in v1.0.0
-
-## recurWhileEquals
-
-A schedule that recurs for as long as the predicate is equal to the
-specified value.
-
-**Signature**
-
-```ts
-export declare const recurWhileEquals: <A>(value: A) => Schedule<never, A, A>
 ```
 
 Added in v1.0.0

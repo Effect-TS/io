@@ -1,6 +1,5 @@
 import { constFalse, constTrue, pipe } from "@effect/data/Function"
 import * as Effect from "@effect/io/Effect"
-import * as Queue from "@effect/io/Queue"
 import * as Ref from "@effect/io/Ref"
 import * as it from "@effect/io/test/utils/extend"
 import { assert, describe } from "vitest"
@@ -78,17 +77,6 @@ describe.concurrent("Effect", () => {
       yield* $(Ref.update(ref, (n) => n + 1), Effect.repeatWhile(constFalse))
       const result = yield* $(Ref.get(ref))
       assert.strictEqual(result, 1)
-    }))
-  it.effect("repeatWhileEquals - repeats while the result equals the predicate", () =>
-    Effect.gen(function*($) {
-      const ref = yield* $(Ref.make(0))
-      const queue = yield* $(Queue.unbounded<number>())
-      yield* $(Queue.offerAll(queue, [0, 0, 0, 0, 1, 2]))
-      yield* $(
-        pipe(Queue.take(queue), Effect.zipLeft(Ref.update(ref, (n) => n + 1)), Effect.repeatWhileEquals(0))
-      )
-      const result = yield* $(Ref.get(ref))
-      assert.strictEqual(result, 5)
     }))
   it.effect("repeatWhileEffect - repeats while condition is true", () =>
     Effect.gen(function*($) {

@@ -1261,10 +1261,6 @@ export const recurWhileEffect = <Env, A>(
 ): Schedule.Schedule<Env, A, A> => whileInputEffect(identity<A>(), f)
 
 /** @internal */
-export const recurWhileEquals = <A>(value: A): Schedule.Schedule<never, A, A> =>
-  whileInput(identity<A>(), (input) => Equal.equals(input, value))
-
-/** @internal */
 export const recurs = (n: number): Schedule.Schedule<never, unknown, number> => whileOutput(forever, (out) => out < n)
 
 /** @internal */
@@ -1979,12 +1975,6 @@ export const repeatWhileEffect_Effect = dual<
 >(2, (self, f) => repeatUntilEffect_Effect(self, (a) => effect.negate(f(a))))
 
 /** @internal */
-export const repeatWhileEquals_Effect = dual<
-  <A>(value: A) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
-  <R, E, A>(self: Effect.Effect<R, E, A>, value: A) => Effect.Effect<R, E, A>
->(2, (self, value) => repeatWhile_Effect(self, (a) => Equal.equals(a, value)))
-
-/** @internal */
 export const retry_Effect = dual<
   <R1, E extends E0, E0, B>(
     policy: Schedule.Schedule<R1, E0, B>
@@ -2103,12 +2093,6 @@ export const retryWhileEffect_Effect = dual<
     f: (e: E) => Effect.Effect<R1, never, boolean>
   ) => Effect.Effect<R | R1, E, A>
 >(2, (self, f) => retryUntilEffect_Effect(self, (e) => effect.negate(f(e))))
-
-/** @internal */
-export const retryWhileEquals_Effect = dual<
-  <E>(e: E) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
-  <R, E, A>(self: Effect.Effect<R, E, A>, e: E) => Effect.Effect<R, E, A>
->(2, (self, e) => retryWhile_Effect(self, (err) => Equal.equals(e, err)))
 
 /** @internal */
 export const schedule_Effect = dual<

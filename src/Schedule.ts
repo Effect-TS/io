@@ -1056,15 +1056,6 @@ export const recurWhileEffect: <Env, A>(f: (a: A) => Effect.Effect<Env, never, b
   internal.recurWhileEffect
 
 /**
- * A schedule that recurs for as long as the predicate is equal to the
- * specified value.
- *
- * @since 1.0.0
- * @category utils
- */
-export const recurWhileEquals: <A>(value: A) => Schedule<never, A, A> = internal.recurWhileEquals
-
-/**
  * A schedule spanning all time, which can be stepped only the specified
  * number of times before it terminates.
  *

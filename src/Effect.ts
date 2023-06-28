@@ -3108,18 +3108,6 @@ export const repeatWhileEffect: {
 } = _schedule.repeatWhileEffect_Effect
 
 /**
- * Repeats this effect for as long as its value is equal to the specified
- * value or until the first failure.
- *
- * @since 1.0.0
- * @category utils
- */
-export const repeatWhileEquals: {
-  <A>(value: A): <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(self: Effect<R, E, A>, value: A): Effect<R, E, A>
-} = _schedule.repeatWhileEquals_Effect
-
-/**
  * Retries with the specified retry policy. Retries are done following the
  * failure of the original `io` (up to a fixed maximum with `once` or `recurs`
  * for example), so that that `io.retry(Schedule.once)` means "execute `io`
@@ -3209,18 +3197,6 @@ export const retryWhileEffect: {
   <R1, E>(f: (e: E) => Effect<R1, never, boolean>): <R, A>(self: Effect<R, E, A>) => Effect<R1 | R, E, A>
   <R, E, A, R1>(self: Effect<R, E, A>, f: (e: E) => Effect<R1, never, boolean>): Effect<R | R1, E, A>
 } = _schedule.retryWhileEffect_Effect
-
-/**
- * Retries this effect for as long as its error is equal to the specified
- * error.
- *
- * @since 1.0.0
- * @category utils
- */
-export const retryWhileEquals: {
-  <E>(e: E): <R, A>(self: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(self: Effect<R, E, A>, e: E): Effect<R, E, A>
-} = _schedule.retryWhileEquals_Effect
 
 /**
  * Replicates the given effect `n` times.

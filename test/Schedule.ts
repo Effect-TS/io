@@ -254,11 +254,6 @@ describe.concurrent("Schedule", () => {
         const result = yield* $(repeat(Schedule.recurWhileEffect((n) => Effect.succeed(n > 10))))
         assert.strictEqual(result, 1)
       }))
-    it.effect("for 'recurWhileEquals(cond)' repeats while the cond is equal", () =>
-      Effect.gen(function*($) {
-        const result = yield* $(repeat(Schedule.recurWhileEquals(1)))
-        assert.strictEqual(result, 2)
-      }))
     it.effect("for 'recurUntil(cond)' repeats until the cond is satisfied", () =>
       Effect.gen(function*($) {
         const result = yield* $(repeat(Schedule.recurUntil((n) => n < 10)))

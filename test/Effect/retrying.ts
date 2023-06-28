@@ -1,6 +1,5 @@
 import { constFalse, constTrue } from "@effect/data/Function"
 import * as Effect from "@effect/io/Effect"
-import * as Queue from "@effect/io/Queue"
 import * as Ref from "@effect/io/Ref"
 import * as it from "@effect/io/test/utils/extend"
 import { assert, describe } from "vitest"
@@ -65,19 +64,6 @@ describe.concurrent("Effect", () => {
       yield* $(Ref.update(ref, (n) => n + 1), Effect.flipWith(Effect.retryWhile(constFalse)))
       const result = yield* $(Ref.get(ref))
       assert.strictEqual(result, 1)
-    }))
-  it.effect("retryWhileEquals - retries while error equals predicate", () =>
-    Effect.gen(function*($) {
-      const ref = yield* $(Ref.make(0))
-      const queue = yield* $(Queue.unbounded<number>())
-      yield* $(Queue.offerAll(queue, [0, 0, 0, 0, 1, 2]))
-      yield* $(
-        Queue.take(queue),
-        Effect.zipLeft(Ref.update(ref, (n) => n + 1)),
-        Effect.flipWith(Effect.retryWhileEquals(0))
-      )
-      const result = yield* $(Ref.get(ref))
-      assert.strictEqual(result, 5)
     }))
   it.effect("retryWhileEffect - retries while condition is true", () =>
     Effect.gen(function*($) {
