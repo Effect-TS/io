@@ -62,8 +62,8 @@ Added in v1.0.0
   - [orDie](#ordie)
   - [orElse](#orelse)
 - [folding](#folding)
-  - [matchCauseLayer](#matchcauselayer)
-  - [matchLayer](#matchlayer)
+  - [match](#match)
+  - [matchCause](#matchcause)
 - [getters](#getters)
   - [isFresh](#isfresh)
   - [isLayer](#islayer)
@@ -263,7 +263,7 @@ workflow.
 **Signature**
 
 ```ts
-export declare const scope: (_: void) => Layer<never, never, Scope.CloseableScope>
+export declare const scope: Layer<never, never, Scope.CloseableScope>
 ```
 
 Added in v1.0.0
@@ -548,7 +548,7 @@ Added in v1.0.0
 
 # folding
 
-## matchCauseLayer
+## match
 
 Feeds the error or output services of this layer into the input of either
 the specified `failure` or `success` layers, resulting in a new layer with
@@ -557,22 +557,24 @@ the inputs of this layer, and the error or outputs of the specified layer.
 **Signature**
 
 ```ts
-export declare const matchCauseLayer: {
-  <E, A, R2, E2, A2, R3, E3, A3>(
-    onFailure: (cause: Cause.Cause<E>) => Layer<R2, E2, A2>,
-    onSuccess: (context: Context.Context<A>) => Layer<R3, E3, A3>
-  ): <R>(self: Layer<R, E, A>) => Layer<R2 | R3 | R, E2 | E3, A2 & A3>
+export declare const match: {
+  <E, R2, E2, A2, A, R3, E3, A3>(options: {
+    readonly onFailure: (error: E) => Layer<R2, E2, A2>
+    readonly onSuccess: (context: Context.Context<A>) => Layer<R3, E3, A3>
+  }): <R>(self: Layer<R, E, A>) => Layer<R2 | R3 | R, E2 | E3, A2 & A3>
   <R, E, A, R2, E2, A2, R3, E3, A3>(
     self: Layer<R, E, A>,
-    onFailure: (cause: Cause.Cause<E>) => Layer<R2, E2, A2>,
-    onSuccess: (context: Context.Context<A>) => Layer<R3, E3, A3>
+    options: {
+      readonly onFailure: (error: E) => Layer<R2, E2, A2>
+      readonly onSuccess: (context: Context.Context<A>) => Layer<R3, E3, A3>
+    }
   ): Layer<R | R2 | R3, E2 | E3, A2 & A3>
 }
 ```
 
 Added in v1.0.0
 
-## matchLayer
+## matchCause
 
 Feeds the error or output services of this layer into the input of either
 the specified `failure` or `success` layers, resulting in a new layer with
@@ -581,15 +583,17 @@ the inputs of this layer, and the error or outputs of the specified layer.
 **Signature**
 
 ```ts
-export declare const matchLayer: {
-  <E, R2, E2, A2, A, R3, E3, A3>(
-    onFailure: (error: E) => Layer<R2, E2, A2>,
-    onSuccess: (context: Context.Context<A>) => Layer<R3, E3, A3>
-  ): <R>(self: Layer<R, E, A>) => Layer<R2 | R3 | R, E2 | E3, A2 & A3>
+export declare const matchCause: {
+  <E, A, R2, E2, A2, R3, E3, A3>(options: {
+    readonly onFailure: (cause: Cause.Cause<E>) => Layer<R2, E2, A2>
+    readonly onSuccess: (context: Context.Context<A>) => Layer<R3, E3, A3>
+  }): <R>(self: Layer<R, E, A>) => Layer<R2 | R3 | R, E2 | E3, A2 & A3>
   <R, E, A, R2, E2, A2, R3, E3, A3>(
     self: Layer<R, E, A>,
-    onFailure: (error: E) => Layer<R2, E2, A2>,
-    onSuccess: (context: Context.Context<A>) => Layer<R3, E3, A3>
+    options: {
+      readonly onFailure: (cause: Cause.Cause<E>) => Layer<R2, E2, A2>
+      readonly onSuccess: (context: Context.Context<A>) => Layer<R3, E3, A3>
+    }
   ): Layer<R | R2 | R3, E2 | E3, A2 & A3>
 }
 ```

@@ -68,7 +68,7 @@ export interface AndThen {
  * @since 1.0.0
  * @category constructors
  */
-export const empty: (_: void) => FiberRefsPatch = internal.empty
+export const empty: FiberRefsPatch = internal.empty
 
 /**
  * Constructs a patch that describes the changes between the specified

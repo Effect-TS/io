@@ -348,17 +348,21 @@ export const mapError: {
  * @since 1.0.0
  * @category folding
  */
-export const matchLayer: {
+export const match: {
   <E, R2, E2, A2, A, R3, E3, A3>(
-    onFailure: (error: E) => Layer<R2, E2, A2>,
-    onSuccess: (context: Context.Context<A>) => Layer<R3, E3, A3>
+    options: {
+      readonly onFailure: (error: E) => Layer<R2, E2, A2>
+      readonly onSuccess: (context: Context.Context<A>) => Layer<R3, E3, A3>
+    }
   ): <R>(self: Layer<R, E, A>) => Layer<R2 | R3 | R, E2 | E3, A2 & A3>
   <R, E, A, R2, E2, A2, R3, E3, A3>(
     self: Layer<R, E, A>,
-    onFailure: (error: E) => Layer<R2, E2, A2>,
-    onSuccess: (context: Context.Context<A>) => Layer<R3, E3, A3>
+    options: {
+      readonly onFailure: (error: E) => Layer<R2, E2, A2>
+      readonly onSuccess: (context: Context.Context<A>) => Layer<R3, E3, A3>
+    }
   ): Layer<R | R2 | R3, E2 | E3, A2 & A3>
-} = internal.matchLayer
+} = internal.match
 
 /**
  * Feeds the error or output services of this layer into the input of either
@@ -368,17 +372,21 @@ export const matchLayer: {
  * @since 1.0.0
  * @category folding
  */
-export const matchCauseLayer: {
+export const matchCause: {
   <E, A, R2, E2, A2, R3, E3, A3>(
-    onFailure: (cause: Cause.Cause<E>) => Layer<R2, E2, A2>,
-    onSuccess: (context: Context.Context<A>) => Layer<R3, E3, A3>
+    options: {
+      readonly onFailure: (cause: Cause.Cause<E>) => Layer<R2, E2, A2>
+      readonly onSuccess: (context: Context.Context<A>) => Layer<R3, E3, A3>
+    }
   ): <R>(self: Layer<R, E, A>) => Layer<R2 | R3 | R, E2 | E3, A2 & A3>
   <R, E, A, R2, E2, A2, R3, E3, A3>(
     self: Layer<R, E, A>,
-    onFailure: (cause: Cause.Cause<E>) => Layer<R2, E2, A2>,
-    onSuccess: (context: Context.Context<A>) => Layer<R3, E3, A3>
+    options: {
+      readonly onFailure: (cause: Cause.Cause<E>) => Layer<R2, E2, A2>
+      readonly onSuccess: (context: Context.Context<A>) => Layer<R3, E3, A3>
+    }
   ): Layer<R | R2 | R3, E2 | E3, A2 & A3>
-} = internal.matchCauseLayer
+} = internal.matchCause
 
 /**
  * Returns a scoped effect that, if evaluated, will return the lazily computed
@@ -587,7 +595,7 @@ export const retry: {
  * @since 1.0.0
  * @category constructors
  */
-export const scope: (_: void) => Layer<never, never, Scope.CloseableScope> = internal.scope
+export const scope: Layer<never, never, Scope.CloseableScope> = internal.scope
 
 /**
  * Constructs a layer from the specified scoped effect.

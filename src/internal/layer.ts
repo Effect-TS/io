@@ -426,7 +426,7 @@ export const catchAll = dual<
     self: Layer.Layer<R, E, A>,
     onError: (error: E) => Layer.Layer<R2, E2, A2>
   ) => Layer.Layer<R | R2, E2, A & A2>
->(2, (self, onError) => matchLayer(self, onError, succeedContext))
+>(2, (self, onFailure) => match(self, { onFailure, onSuccess: succeedContext }))
 
 /** @internal */
 export const catchAllCause = dual<
@@ -437,7 +437,7 @@ export const catchAllCause = dual<
     self: Layer.Layer<R, E, A>,
     onError: (cause: Cause.Cause<E>) => Layer.Layer<R2, E2, A2>
   ) => Layer.Layer<R | R2, E2, A & A2>
->(2, (self, onError) => matchCauseLayer(self, onError, succeedContext))
+>(2, (self, onFailure) => matchCause(self, { onFailure, onSuccess: succeedContext }))
 
 /** @internal */
 export const die = (defect: unknown): Layer.Layer<never, never, unknown> => failCause(Cause.die(defect))
@@ -487,7 +487,7 @@ export const flatMap = dual<
     self: Layer.Layer<R, E, A>,
     f: (context: Context.Context<A>) => Layer.Layer<R2, E2, A2>
   ) => Layer.Layer<R | R2, E | E2, A2>
->(2, (self, f) => matchLayer(self, fail, f))
+>(2, (self, f) => match(self, { onFailure: fail, onSuccess: f }))
 
 /** @internal */
 export const flatten = dual<
@@ -614,17 +614,21 @@ export const mapError = dual<
 >(2, (self, f) => catchAll(self, (error) => failSync(() => f(error))))
 
 /** @internal */
-export const matchCauseLayer = dual<
+export const matchCause = dual<
   <E, A, R2, E2, A2, R3, E3, A3>(
-    onFailure: (cause: Cause.Cause<E>) => Layer.Layer<R2, E2, A2>,
-    onSuccess: (context: Context.Context<A>) => Layer.Layer<R3, E3, A3>
+    options: {
+      readonly onFailure: (cause: Cause.Cause<E>) => Layer.Layer<R2, E2, A2>
+      readonly onSuccess: (context: Context.Context<A>) => Layer.Layer<R3, E3, A3>
+    }
   ) => <R>(self: Layer.Layer<R, E, A>) => Layer.Layer<R | R2 | R3, E2 | E3, A2 & A3>,
   <R, E, A, R2, E2, A2, R3, E3, A3>(
     self: Layer.Layer<R, E, A>,
-    onFailure: (cause: Cause.Cause<E>) => Layer.Layer<R2, E2, A2>,
-    onSuccess: (context: Context.Context<A>) => Layer.Layer<R3, E3, A3>
+    options: {
+      readonly onFailure: (cause: Cause.Cause<E>) => Layer.Layer<R2, E2, A2>
+      readonly onSuccess: (context: Context.Context<A>) => Layer.Layer<R3, E3, A3>
+    }
   ) => Layer.Layer<R | R2 | R3, E2 | E3, A2 & A3>
->(3, (self, onFailure, onSuccess) => {
+>(2, (self, { onFailure, onSuccess }) => {
   const fold = Object.create(proto)
   fold._tag = OpCodes.OP_FOLD
   fold.layer = self
@@ -634,20 +638,23 @@ export const matchCauseLayer = dual<
 })
 
 /** @internal */
-export const matchLayer = dual<
+export const match = dual<
   <E, R2, E2, A2, A, R3, E3, A3>(
-    onFailure: (error: E) => Layer.Layer<R2, E2, A2>,
-    onSuccess: (context: Context.Context<A>) => Layer.Layer<R3, E3, A3>
+    options: {
+      readonly onFailure: (error: E) => Layer.Layer<R2, E2, A2>
+      readonly onSuccess: (context: Context.Context<A>) => Layer.Layer<R3, E3, A3>
+    }
   ) => <R>(self: Layer.Layer<R, E, A>) => Layer.Layer<R | R2 | R3, E2 | E3, A2 & A3>,
   <R, E, A, R2, E2, A2, R3, E3, A3>(
     self: Layer.Layer<R, E, A>,
-    onFailure: (error: E) => Layer.Layer<R2, E2, A2>,
-    onSuccess: (context: Context.Context<A>) => Layer.Layer<R3, E3, A3>
+    options: {
+      readonly onFailure: (error: E) => Layer.Layer<R2, E2, A2>
+      readonly onSuccess: (context: Context.Context<A>) => Layer.Layer<R3, E3, A3>
+    }
   ) => Layer.Layer<R | R2 | R3, E2 | E3, A2 & A3>
->(3, (self, onFailure, onSuccess) =>
-  matchCauseLayer(
-    self,
-    (cause) => {
+>(2, (self, { onFailure, onSuccess }) =>
+  matchCause(self, {
+    onFailure: (cause) => {
       const failureOrCause = Cause.failureOrCause(cause)
       switch (failureOrCause._tag) {
         case "Left": {
@@ -659,7 +666,7 @@ export const matchLayer = dual<
       }
     },
     onSuccess
-  ))
+  }))
 
 /** @internal */
 export const memoize = <RIn, E, ROut>(
@@ -856,19 +863,6 @@ const retryUpdate = <RIn, E, X>(
 }
 
 /** @internal */
-export const scope = (): Layer.Layer<never, never, Scope.Scope.Closeable> => {
-  return scopedContext(
-    pipe(
-      fiberRuntime.acquireRelease(
-        fiberRuntime.scopeMake(),
-        { release: (scope, exit) => scope.close(exit) }
-      ),
-      core.map((scope) => Context.make(Scope.Scope, scope))
-    )
-  )
-}
-
-/** @internal */
 export const scoped = dual<
   <T extends Context.Tag<any, any>>(
     tag: T
@@ -902,6 +896,17 @@ export const scopedContext = <R, E, A>(
   scoped.effect = effect
   return scoped
 }
+
+/** @internal */
+export const scope: Layer.Layer<never, never, Scope.Scope.Closeable> = scopedContext(
+  core.map(
+    fiberRuntime.acquireRelease(
+      fiberRuntime.scopeMake(),
+      { release: (scope, exit) => scope.close(exit) }
+    ),
+    (scope) => Context.make(Scope.Scope, scope)
+  )
+)
 
 /** @internal */
 export const service = <T extends Context.Tag<any, any>>(
