@@ -178,10 +178,9 @@ class PoolImpl<E, A> implements Pool.Pool<E, A> {
                 core.flatMap(
                   queue.take(this.items),
                   (attempted) =>
-                    core.exitMatch(
-                      attempted.result,
-                      () => core.succeed(attempted),
-                      (item) =>
+                    core.exitMatch(attempted.result, {
+                      onFailure: () => core.succeed(attempted),
+                      onSuccess: (item) =>
                         core.flatMap(
                           ref.get(this.invalidated),
                           (set) => {
@@ -191,7 +190,7 @@ class PoolImpl<E, A> implements Pool.Pool<E, A> {
                             return core.succeed(attempted)
                           }
                         )
-                    )
+                    })
                 ),
                 { ...state, free: state.free - 1 }
               ] as const
@@ -206,16 +205,15 @@ class PoolImpl<E, A> implements Pool.Pool<E, A> {
           })))
 
     const release = (attempted: Attempted<E, A>): Effect.Effect<never, never, unknown> =>
-      core.exitMatch(
-        attempted.result,
-        () =>
+      core.exitMatch(attempted.result, {
+        onFailure: () =>
           core.flatten(ref.modify(this.state, (state) => {
             if (state.size <= this.min) {
               return [allocate(this), { ...state, free: state.free + 1 }] as const
             }
             return [core.unit, { ...state, size: state.size - 1 }] as const
           })),
-        (item) =>
+        onSuccess: (item) =>
           core.flatMap(ref.get(this.invalidated), (set) => {
             if (pipe(set, HashSet.has(item))) {
               return finalizeInvalid(this, attempted)
@@ -227,7 +225,7 @@ class PoolImpl<E, A> implements Pool.Pool<E, A> {
               core.zipRight(core.whenEffect(getAndShutdown(this), ref.get(this.isShuttingDown)))
             )
           })
-      )
+      })
 
     return pipe(
       fiberRuntime.acquireRelease(acquire(), { release }),
@@ -389,7 +387,11 @@ const isFailure = <E, A>(self: Attempted<E, A>): boolean => core.exitIsFailure(s
 const forEach = <E, A, R, E2>(
   self: Attempted<E, A>,
   f: (a: A) => Effect.Effect<R, E2, unknown>
-): Effect.Effect<R, E2, unknown> => core.exitMatch(self.result, () => core.unit, f)
+): Effect.Effect<R, E2, unknown> =>
+  core.exitMatch(self.result, {
+    onFailure: () => core.unit,
+    onSuccess: f
+  })
 
 const toEffect = <E, A>(self: Attempted<E, A>): Effect.Effect<never, E, A> => self.result
 

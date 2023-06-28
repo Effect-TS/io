@@ -279,8 +279,13 @@ export const map: {
  * @category mapping
  */
 export const mapBoth: {
-  <E, A, E2, A2>(onFailure: (e: E) => E2, onSuccess: (a: A) => A2): (self: Exit<E, A>) => Exit<E2, A2>
-  <E, A, E2, A2>(self: Exit<E, A>, onFailure: (e: E) => E2, onSuccess: (a: A) => A2): Exit<E2, A2>
+  <E, A, E2, A2>(
+    options: { readonly onFailure: (e: E) => E2; readonly onSuccess: (a: A) => A2 }
+  ): (self: Exit<E, A>) => Exit<E2, A2>
+  <E, A, E2, A2>(
+    self: Exit<E, A>,
+    options: { readonly onFailure: (e: E) => E2; readonly onSuccess: (a: A) => A2 }
+  ): Exit<E2, A2>
 } = core.exitMapBoth
 
 /**
@@ -312,8 +317,13 @@ export const mapErrorCause: {
  * @category folding
  */
 export const match: {
-  <E, A, Z>(onFailure: (cause: Cause.Cause<E>) => Z, onSuccess: (a: A) => Z): (self: Exit<E, A>) => Z
-  <E, A, Z>(self: Exit<E, A>, onFailure: (cause: Cause.Cause<E>) => Z, onSuccess: (a: A) => Z): Z
+  <E, A, Z>(
+    options: { readonly onFailure: (cause: Cause.Cause<E>) => Z; readonly onSuccess: (a: A) => Z }
+  ): (self: Exit<E, A>) => Z
+  <E, A, Z>(
+    self: Exit<E, A>,
+    options: { readonly onFailure: (cause: Cause.Cause<E>) => Z; readonly onSuccess: (a: A) => Z }
+  ): Z
 } = core.exitMatch
 
 /**
@@ -322,13 +332,17 @@ export const match: {
  */
 export const matchEffect: {
   <E, A, R, E2, A2, R2, E3, A3>(
-    onFailure: (cause: Cause.Cause<E>) => Effect.Effect<R, E2, A2>,
-    onSuccess: (a: A) => Effect.Effect<R2, E3, A3>
+    options: {
+      readonly onFailure: (cause: Cause.Cause<E>) => Effect.Effect<R, E2, A2>
+      readonly onSuccess: (a: A) => Effect.Effect<R2, E3, A3>
+    }
   ): (self: Exit<E, A>) => Effect.Effect<R | R2, E3, A3>
   <E, A, R, E2, A2, R2, E3, A3>(
     self: Exit<E, A>,
-    onFailure: (cause: Cause.Cause<E>) => Effect.Effect<R, E2, A2>,
-    onSuccess: (a: A) => Effect.Effect<R2, E3, A3>
+    options: {
+      readonly onFailure: (cause: Cause.Cause<E>) => Effect.Effect<R, E2, A2>
+      readonly onSuccess: (a: A) => Effect.Effect<R2, E3, A3>
+    }
   ): Effect.Effect<R | R2, E2 | E3, A2 | A3>
 } = core.exitMatchEffect
 
@@ -354,7 +368,7 @@ export const unannotate: <E, A>(exit: Exit<E, A>) => Exit<E, A> = core.exitUnann
  * @since 1.0.0
  * @category constructors
  */
-export const unit: (_: void) => Exit<never, void> = core.exitUnit
+export const unit: Exit<never, void> = core.exitUnit
 
 /**
  * Sequentially zips the this result with the specified result or else returns
@@ -438,13 +452,17 @@ export const zipParRight: {
 export const zipWith: {
   <E, E2, A, B, C>(
     that: Exit<E2, B>,
-    f: (a: A, b: B) => C,
-    g: (cause: Cause.Cause<E>, cause2: Cause.Cause<E2>) => Cause.Cause<E | E2>
+    options: {
+      readonly onSuccess: (a: A, b: B) => C
+      readonly onFailure: (cause: Cause.Cause<E>, cause2: Cause.Cause<E2>) => Cause.Cause<E | E2>
+    }
   ): (self: Exit<E, A>) => Exit<E | E2, C>
   <E, E2, A, B, C>(
     self: Exit<E, A>,
     that: Exit<E2, B>,
-    f: (a: A, b: B) => C,
-    g: (cause: Cause.Cause<E>, cause2: Cause.Cause<E2>) => Cause.Cause<E | E2>
+    options: {
+      readonly onSuccess: (a: A, b: B) => C
+      readonly onFailure: (cause: Cause.Cause<E>, cause2: Cause.Cause<E2>) => Cause.Cause<E | E2>
+    }
   ): Exit<E | E2, C>
 } = core.exitZipWith

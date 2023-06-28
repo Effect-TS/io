@@ -875,10 +875,13 @@ export const onInterrupt = dual<
 >(2, (self, cleanup) =>
   onExit(
     self,
-    exitMatch((cause) =>
-      internalCause.isInterruptedOnly(cause)
-        ? asUnit(cleanup(internalCause.interruptors(cause)))
-        : unit, () => unit)
+    exitMatch({
+      onFailure: (cause) =>
+        internalCause.isInterruptedOnly(cause)
+          ? asUnit(cleanup(internalCause.interruptors(cause)))
+          : unit,
+      onSuccess: () => unit
+    })
   ))
 
 /* @internal */
@@ -2106,21 +2109,25 @@ export const exitMap = dual<
 /** @internal */
 export const exitMapBoth = dual<
   <E, A, E2, A2>(
-    onFailure: (e: E) => E2,
-    onSuccess: (a: A) => A2
+    options: {
+      readonly onFailure: (e: E) => E2
+      readonly onSuccess: (a: A) => A2
+    }
   ) => (self: Exit.Exit<E, A>) => Exit.Exit<E2, A2>,
   <E, A, E2, A2>(
     self: Exit.Exit<E, A>,
-    onFailure: (e: E) => E2,
-    onSuccess: (a: A) => A2
+    options: {
+      readonly onFailure: (e: E) => E2
+      readonly onSuccess: (a: A) => A2
+    }
   ) => Exit.Exit<E2, A2>
->(3, <E, A, E2, A2>(self: Exit.Exit<E, A>, onFailure: (e: E) => E2, onSuccess: (a: A) => A2) => {
+>(2, (self, { onFailure, onSuccess }) => {
   switch (self._tag) {
     case OpCodes.OP_FAILURE: {
-      return exitFailCause(pipe(self.i0, internalCause.map(onFailure))) as Exit.Exit<E2, A2>
+      return exitFailCause(pipe(self.i0, internalCause.map(onFailure)))
     }
     case OpCodes.OP_SUCCESS: {
-      return exitSucceed(onSuccess(self.i0)) as Exit.Exit<E2, A2>
+      return exitSucceed(onSuccess(self.i0))
     }
   }
 })
@@ -2157,9 +2164,15 @@ export const exitMapErrorCause = dual<
 
 /** @internal */
 export const exitMatch = dual<
-  <E, A, Z>(onFailure: (cause: Cause.Cause<E>) => Z, onSuccess: (a: A) => Z) => (self: Exit.Exit<E, A>) => Z,
-  <E, A, Z>(self: Exit.Exit<E, A>, onFailure: (cause: Cause.Cause<E>) => Z, onSuccess: (a: A) => Z) => Z
->(3, (self, onFailure, onSuccess) => {
+  <E, A, Z>(options: {
+    readonly onFailure: (cause: Cause.Cause<E>) => Z
+    readonly onSuccess: (a: A) => Z
+  }) => (self: Exit.Exit<E, A>) => Z,
+  <E, A, Z>(self: Exit.Exit<E, A>, options: {
+    readonly onFailure: (cause: Cause.Cause<E>) => Z
+    readonly onSuccess: (a: A) => Z
+  }) => Z
+>(2, (self, { onFailure, onSuccess }) => {
   switch (self._tag) {
     case OpCodes.OP_FAILURE: {
       return onFailure(self.i0)
@@ -2173,15 +2186,19 @@ export const exitMatch = dual<
 /** @internal */
 export const exitMatchEffect = dual<
   <E, A, R, E2, A2, R2, E3, A3>(
-    onFailure: (cause: Cause.Cause<E>) => Effect.Effect<R, E2, A2>,
-    onSuccess: (a: A) => Effect.Effect<R2, E3, A3>
+    options: {
+      readonly onFailure: (cause: Cause.Cause<E>) => Effect.Effect<R, E2, A2>
+      readonly onSuccess: (a: A) => Effect.Effect<R2, E3, A3>
+    }
   ) => (self: Exit.Exit<E, A>) => Effect.Effect<R | R2, E3 | E3, A3 | A3>,
   <E, A, R, E2, A2, R2, E3, A3>(
     self: Exit.Exit<E, A>,
-    onFailure: (cause: Cause.Cause<E>) => Effect.Effect<R, E2, A2>,
-    onSuccess: (a: A) => Effect.Effect<R2, E3, A3>
+    options: {
+      readonly onFailure: (cause: Cause.Cause<E>) => Effect.Effect<R, E2, A2>
+      readonly onSuccess: (a: A) => Effect.Effect<R2, E3, A3>
+    }
   ) => Effect.Effect<R | R2, E2 | E3, A2 | A3>
->(3, (self, onFailure, onSuccess) => {
+>(2, (self, { onFailure, onSuccess }) => {
   switch (self._tag) {
     case OpCodes.OP_FAILURE: {
       return onFailure(self.i0)
@@ -2204,62 +2221,89 @@ export const exitUnannotate = <E, A>(exit: Exit.Exit<E, A>): Exit.Exit<E, A> =>
   exitIsSuccess(exit) ? exit : exitFailCause(internalCause.unannotate(exit.i0))
 
 /** @internal */
-export const exitUnit: (_: void) => Exit.Exit<never, void> = () => exitSucceed(void 0)
+export const exitUnit: Exit.Exit<never, void> = exitSucceed(void 0)
 
 /** @internal */
 export const exitZip = dual<
   <E2, A2>(that: Exit.Exit<E2, A2>) => <E, A>(self: Exit.Exit<E, A>) => Exit.Exit<E | E2, readonly [A, A2]>,
   <E, A, E2, A2>(self: Exit.Exit<E, A>, that: Exit.Exit<E2, A2>) => Exit.Exit<E | E2, readonly [A, A2]>
->(2, (self, that) => exitZipWith(self, that, (a, a2) => [a, a2] as const, internalCause.sequential))
+>(2, (self, that) =>
+  exitZipWith(self, that, {
+    onSuccess: (a, a2) => [a, a2] as const,
+    onFailure: internalCause.sequential
+  }))
 
 /** @internal */
 export const exitZipLeft = dual<
   <E2, A2>(that: Exit.Exit<E2, A2>) => <E, A>(self: Exit.Exit<E, A>) => Exit.Exit<E | E2, A>,
   <E, A, E2, A2>(self: Exit.Exit<E, A>, that: Exit.Exit<E2, A2>) => Exit.Exit<E | E2, A>
->(2, (self, that) => exitZipWith(self, that, (a, _) => a, internalCause.sequential))
+>(2, (self, that) =>
+  exitZipWith(self, that, {
+    onSuccess: (a, _) => a,
+    onFailure: internalCause.sequential
+  }))
 
 /** @internal */
 export const exitZipRight = dual<
   <E2, A2>(that: Exit.Exit<E2, A2>) => <E, A>(self: Exit.Exit<E, A>) => Exit.Exit<E | E2, A2>,
   <E, A, E2, A2>(self: Exit.Exit<E, A>, that: Exit.Exit<E2, A2>) => Exit.Exit<E | E2, A2>
->(2, (self, that) => exitZipWith(self, that, (_, a2) => a2, internalCause.sequential))
+>(2, (self, that) =>
+  exitZipWith(self, that, {
+    onSuccess: (_, a2) => a2,
+    onFailure: internalCause.sequential
+  }))
 
 /** @internal */
 export const exitZipPar = dual<
   <E2, A2>(that: Exit.Exit<E2, A2>) => <E, A>(self: Exit.Exit<E, A>) => Exit.Exit<E | E2, readonly [A, A2]>,
   <E, A, E2, A2>(self: Exit.Exit<E, A>, that: Exit.Exit<E2, A2>) => Exit.Exit<E | E2, readonly [A, A2]>
->(2, (self, that) => exitZipWith(self, that, (a, a2) => [a, a2] as const, internalCause.parallel))
+>(2, (self, that) =>
+  exitZipWith(self, that, {
+    onSuccess: (a, a2) => [a, a2] as const,
+    onFailure: internalCause.parallel
+  }))
 
 /** @internal */
 export const exitZipParLeft = dual<
   <E2, A2>(that: Exit.Exit<E2, A2>) => <E, A>(self: Exit.Exit<E, A>) => Exit.Exit<E | E2, A>,
   <E, A, E2, A2>(self: Exit.Exit<E, A>, that: Exit.Exit<E2, A2>) => Exit.Exit<E | E2, A>
->(2, (self, that) => exitZipWith(self, that, (a, _) => a, internalCause.parallel))
+>(2, (self, that) =>
+  exitZipWith(self, that, {
+    onSuccess: (a, _) => a,
+    onFailure: internalCause.parallel
+  }))
 
 /** @internal */
 export const exitZipParRight = dual<
   <E2, A2>(that: Exit.Exit<E2, A2>) => <E, A>(self: Exit.Exit<E, A>) => Exit.Exit<E | E2, A2>,
   <E, A, E2, A2>(self: Exit.Exit<E, A>, that: Exit.Exit<E2, A2>) => Exit.Exit<E | E2, A2>
->(2, (self, that) => exitZipWith(self, that, (_, a2) => a2, internalCause.parallel))
+>(2, (self, that) =>
+  exitZipWith(self, that, {
+    onSuccess: (_, a2) => a2,
+    onFailure: internalCause.parallel
+  }))
 
 /** @internal */
 export const exitZipWith = dual<
   <E, E2, A, B, C>(
     that: Exit.Exit<E2, B>,
-    f: (a: A, b: B) => C,
-    g: (cause: Cause.Cause<E>, cause2: Cause.Cause<E2>) => Cause.Cause<E | E2>
+    options: {
+      readonly onSuccess: (a: A, b: B) => C
+      readonly onFailure: (cause: Cause.Cause<E>, cause2: Cause.Cause<E2>) => Cause.Cause<E | E2>
+    }
   ) => (self: Exit.Exit<E, A>) => Exit.Exit<E | E2, C>,
   <E, E2, A, B, C>(
     self: Exit.Exit<E, A>,
     that: Exit.Exit<E2, B>,
-    f: (a: A, b: B) => C,
-    g: (cause: Cause.Cause<E>, cause2: Cause.Cause<E2>) => Cause.Cause<E | E2>
+    options: {
+      readonly onSuccess: (a: A, b: B) => C
+      readonly onFailure: (cause: Cause.Cause<E>, cause2: Cause.Cause<E2>) => Cause.Cause<E | E2>
+    }
   ) => Exit.Exit<E | E2, C>
->(4, <E, E2, A, B, C>(
-  self: Exit.Exit<E, A>,
-  that: Exit.Exit<E2, B>,
-  f: (a: A, b: B) => C,
-  g: (cause: Cause.Cause<E>, cause2: Cause.Cause<E2>) => Cause.Cause<E | E2>
+>(3, (
+  self,
+  that,
+  { onFailure, onSuccess }
 ) => {
   switch (self._tag) {
     case OpCodes.OP_FAILURE: {
@@ -2268,14 +2312,14 @@ export const exitZipWith = dual<
           return exitFailCause(self.i0)
         }
         case OpCodes.OP_FAILURE: {
-          return exitFailCause(g(self.i0, that.i0)) as Exit.Exit<E | E2, C>
+          return exitFailCause(onFailure(self.i0, that.i0))
         }
       }
     }
     case OpCodes.OP_SUCCESS: {
       switch (that._tag) {
         case OpCodes.OP_SUCCESS: {
-          return exitSucceed(f(self.i0, that.i0)) as Exit.Exit<E | E2, C>
+          return exitSucceed(onSuccess(self.i0, that.i0))
         }
         case OpCodes.OP_FAILURE: {
           return exitFailCause(that.i0)
@@ -2300,11 +2344,10 @@ const exitCollectAllInternal = <E, A>(
       (accumulator, current) =>
         pipe(
           accumulator,
-          exitZipWith(
-            current,
-            (list, value) => pipe(list, Chunk.prepend(value)),
-            combineCauses
-          )
+          exitZipWith(current, {
+            onSuccess: (list, value) => pipe(list, Chunk.prepend(value)),
+            onFailure: combineCauses
+          })
         )
     ),
     exitMap(Chunk.reverse),

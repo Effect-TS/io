@@ -275,7 +275,13 @@ describe.concurrent("Effect", () => {
   it.effect("onExit - executes that a cleanup function runs when effect succeeds", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(false))
-      yield* $(Effect.unit, Effect.onExit(Exit.match(() => Effect.unit, () => Ref.set(ref, true))))
+      yield* $(
+        Effect.unit,
+        Effect.onExit(Exit.match({
+          onFailure: () => Effect.unit,
+          onSuccess: () => Ref.set(ref, true)
+        }))
+      )
       const result = yield* $(Ref.get(ref))
       assert.isTrue(result)
     }))

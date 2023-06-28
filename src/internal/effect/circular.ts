@@ -592,7 +592,12 @@ export const zipWithFiber = dual<
           Option.flatMap((exitA) =>
             pipe(
               optionB,
-              Option.map((exitB) => Exit.zipWith(exitA, exitB, f, internalCause.parallel))
+              Option.map((exitB) =>
+                Exit.zipWith(exitA, exitB, {
+                  onSuccess: f,
+                  onFailure: internalCause.parallel
+                })
+              )
             )
           )
         )

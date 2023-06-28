@@ -13,8 +13,7 @@ Added in v1.0.0
 <h2 class="text-delta">Table of contents</h2>
 
 - [constructors](#constructors)
-  - [collectAll](#collectall)
-  - [collectAllPar](#collectallpar)
+  - [all](#all)
   - [die](#die)
   - [fail](#fail)
   - [failCause](#failcause)
@@ -71,32 +70,18 @@ Added in v1.0.0
 
 # constructors
 
-## collectAll
+## all
 
 Collects all of the specified exit values into a `Some<Exit<E, List<A>>>`. If
 the provided iterable contains no elements, `None` will be returned.
 
-**Note**: `Exit.collectAll` combines `Cause` values sequentially.
-
 **Signature**
 
 ```ts
-export declare const collectAll: <E, A>(exits: Iterable<Exit<E, A>>) => Option.Option<Exit<E, A[]>>
-```
-
-Added in v1.0.0
-
-## collectAllPar
-
-Collects all of the specified exit values into a `Some<Exit<E, List<A>>>`. If
-the provided iterable contains no elements, `None` will be returned.
-
-**Note**: `Exit.collectAll` combines `Cause` values in parallel.
-
-**Signature**
-
-```ts
-export declare const collectAllPar: <E, A>(exits: Iterable<Exit<E, A>>) => Option.Option<Exit<E, A[]>>
+export declare const all: <E, A>(
+  exits: Iterable<Exit<E, A>>,
+  options?: { readonly parallel?: boolean } | undefined
+) => Option.Option<Exit<E, A[]>>
 ```
 
 Added in v1.0.0
@@ -170,7 +155,7 @@ Represents an `Exit` which succeeds with `undefined`.
 **Signature**
 
 ```ts
-export declare const unit: (_: void) => Exit<never, void>
+export declare const unit: Exit<never, void>
 ```
 
 Added in v1.0.0
@@ -241,8 +226,13 @@ Added in v1.0.0
 
 ```ts
 export declare const match: {
-  <E, A, Z>(onFailure: (cause: Cause.Cause<E>) => Z, onSuccess: (a: A) => Z): (self: Exit<E, A>) => Z
-  <E, A, Z>(self: Exit<E, A>, onFailure: (cause: Cause.Cause<E>) => Z, onSuccess: (a: A) => Z): Z
+  <E, A, Z>(options: { readonly onFailure: (cause: Cause.Cause<E>) => Z; readonly onSuccess: (a: A) => Z }): (
+    self: Exit<E, A>
+  ) => Z
+  <E, A, Z>(
+    self: Exit<E, A>,
+    options: { readonly onFailure: (cause: Cause.Cause<E>) => Z; readonly onSuccess: (a: A) => Z }
+  ): Z
 }
 ```
 
@@ -254,14 +244,16 @@ Added in v1.0.0
 
 ```ts
 export declare const matchEffect: {
-  <E, A, R, E2, A2, R2, E3, A3>(
-    onFailure: (cause: Cause.Cause<E>) => Effect.Effect<R, E2, A2>,
-    onSuccess: (a: A) => Effect.Effect<R2, E3, A3>
-  ): (self: Exit<E, A>) => Effect.Effect<R | R2, E3, A3>
+  <E, A, R, E2, A2, R2, E3, A3>(options: {
+    readonly onFailure: (cause: Cause.Cause<E>) => Effect.Effect<R, E2, A2>
+    readonly onSuccess: (a: A) => Effect.Effect<R2, E3, A3>
+  }): (self: Exit<E, A>) => Effect.Effect<R | R2, E3, A3>
   <E, A, R, E2, A2, R2, E3, A3>(
     self: Exit<E, A>,
-    onFailure: (cause: Cause.Cause<E>) => Effect.Effect<R, E2, A2>,
-    onSuccess: (a: A) => Effect.Effect<R2, E3, A3>
+    options: {
+      readonly onFailure: (cause: Cause.Cause<E>) => Effect.Effect<R, E2, A2>
+      readonly onSuccess: (a: A) => Effect.Effect<R2, E3, A3>
+    }
   ): Effect.Effect<R | R2, E2 | E3, A2 | A3>
 }
 ```
@@ -368,8 +360,13 @@ provided functions.
 
 ```ts
 export declare const mapBoth: {
-  <E, A, E2, A2>(onFailure: (e: E) => E2, onSuccess: (a: A) => A2): (self: Exit<E, A>) => Exit<E2, A2>
-  <E, A, E2, A2>(self: Exit<E, A>, onFailure: (e: E) => E2, onSuccess: (a: A) => A2): Exit<E2, A2>
+  <E, A, E2, A2>(options: { readonly onFailure: (e: E) => E2; readonly onSuccess: (a: A) => A2 }): (
+    self: Exit<E, A>
+  ) => Exit<E2, A2>
+  <E, A, E2, A2>(
+    self: Exit<E, A>,
+    options: { readonly onFailure: (e: E) => E2; readonly onSuccess: (a: A) => A2 }
+  ): Exit<E2, A2>
 }
 ```
 
@@ -694,14 +691,18 @@ functions.
 export declare const zipWith: {
   <E, E2, A, B, C>(
     that: Exit<E2, B>,
-    f: (a: A, b: B) => C,
-    g: (cause: Cause.Cause<E>, cause2: Cause.Cause<E2>) => Cause.Cause<E | E2>
+    options: {
+      readonly onSuccess: (a: A, b: B) => C
+      readonly onFailure: (cause: Cause.Cause<E>, cause2: Cause.Cause<E2>) => Cause.Cause<E | E2>
+    }
   ): (self: Exit<E, A>) => Exit<E | E2, C>
   <E, E2, A, B, C>(
     self: Exit<E, A>,
     that: Exit<E2, B>,
-    f: (a: A, b: B) => C,
-    g: (cause: Cause.Cause<E>, cause2: Cause.Cause<E2>) => Cause.Cause<E | E2>
+    options: {
+      readonly onSuccess: (a: A, b: B) => C
+      readonly onFailure: (cause: Cause.Cause<E>, cause2: Cause.Cause<E2>) => Cause.Cause<E | E2>
+    }
   ): Exit<E | E2, C>
 }
 ```

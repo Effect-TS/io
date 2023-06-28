@@ -175,10 +175,10 @@ export const mapFiber = dual<
 ) =>
   core.map(
     self.await(),
-    Exit.match(
-      (cause): Fiber.Fiber<E | E2, B> => failCause(cause),
-      (a) => f(a)
-    )
+    Exit.match({
+      onFailure: (cause): Fiber.Fiber<E | E2, B> => failCause(cause),
+      onSuccess: (a) => f(a)
+    })
   ))
 
 /** @internal */

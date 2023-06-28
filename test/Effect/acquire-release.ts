@@ -48,7 +48,7 @@ describe.concurrent("Effect", () => {
       )
       const result = yield* $(
         exit,
-        Exit.matchEffect(Effect.succeed, () => Effect.fail("effect should have failed"))
+        Exit.matchEffect({ onFailure: Effect.succeed, onSuccess: () => Effect.fail("effect should have failed") })
       )
       assert.isTrue(equals(Cause.failures(result), Chunk.of("use failed")))
       assert.isTrue(equals(Cause.defects(result), Chunk.of(releaseDied)))
@@ -66,7 +66,10 @@ describe.concurrent("Effect", () => {
       )
       const result = yield* $(
         exit,
-        Exit.matchEffect(Effect.succeed, () => Effect.fail("effect should have failed"))
+        Exit.matchEffect({
+          onFailure: Effect.succeed,
+          onSuccess: () => Effect.fail("effect should have failed")
+        })
       )
       assert.isTrue(equals(Cause.failures(result), Chunk.of("use failed")))
       assert.isTrue(equals(Cause.defects(result), Chunk.of(releaseDied)))
@@ -88,7 +91,13 @@ describe.concurrent("Effect", () => {
         )
       )
       const result = yield* $(
-        pipe(exit, Exit.matchEffect(Effect.succeed, () => Effect.fail("effect should have failed")))
+        pipe(
+          exit,
+          Exit.matchEffect({
+            onFailure: Effect.succeed,
+            onSuccess: () => Effect.fail("effect should have failed")
+          })
+        )
       )
       const released = yield* $(Ref.get(release))
       assert.isTrue(equals(Cause.defects(result), Chunk.of(useDied)))

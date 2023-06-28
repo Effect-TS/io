@@ -190,10 +190,10 @@ class MemoMap {
           const cached: Effect.Effect<never, E, Context.Context<ROut>> = pipe(
             acquire as Effect.Effect<never, E, readonly [FiberRefsPatch.FiberRefsPatch, Context.Context<ROut>]>,
             core.flatMap(([patch, b]) => pipe(effect.patchFiberRefs(patch), core.as(b))),
-            core.onExit(core.exitMatch(
-              () => core.unit,
-              () => core.scopeAddFinalizerExit(scope, release)
-            ))
+            core.onExit(core.exitMatch({
+              onFailure: () => core.unit,
+              onSuccess: () => core.scopeAddFinalizerExit(scope, release)
+            }))
           )
           return core.succeed([cached, map] as const)
         }
@@ -256,10 +256,10 @@ class MemoMap {
                     const memoized = [
                       pipe(
                         core.deferredAwait(deferred),
-                        core.onExit(core.exitMatchEffect(
-                          () => core.unit,
-                          () => ref.update(observers, (n) => n + 1)
-                        ))
+                        core.onExit(core.exitMatchEffect({
+                          onFailure: () => core.unit,
+                          onSuccess: () => ref.update(observers, (n) => n + 1)
+                        }))
                       ),
                       (exit: Exit.Exit<unknown, unknown>) =>
                         pipe(

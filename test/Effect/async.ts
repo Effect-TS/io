@@ -157,12 +157,15 @@ describe.concurrent("Effect", () => {
           })
         ),
         Effect.exit,
-        Effect.map(Exit.match((cause) =>
-          pipe(
-            Cause.defects(cause),
-            Chunk.head,
-            Option.map((e) => (e as Error).message)
-          ), () => Option.none()))
+        Effect.map(Exit.match({
+          onFailure: (cause) =>
+            pipe(
+              Cause.defects(cause),
+              Chunk.head,
+              Option.map((e) => (e as Error).message)
+            ),
+          onSuccess: () => Option.none()
+        }))
       )
       assert.deepStrictEqual(result, Option.some("ouch"))
     }))

@@ -26,7 +26,7 @@ const scopedRefVariance = {
 
 /** @internal  */
 const close = <A>(self: ScopedRef.ScopedRef<A>): Effect.Effect<never, never, void> =>
-  core.flatMap(ref.get(self.ref), (tuple) => tuple[0].close(core.exitUnit()))
+  core.flatMap(ref.get(self.ref), (tuple) => tuple[0].close(core.exitUnit))
 
 /** @internal */
 export const fromAcquire = <R, E, A>(
@@ -102,10 +102,10 @@ export const set = dual<
               ),
               core.exit,
               core.flatMap(
-                core.exitMatch(
-                  (cause) =>
+                core.exitMatch({
+                  onFailure: (cause) =>
                     pipe(
-                      newScope.close(core.exitUnit()),
+                      newScope.close(core.exitUnit),
                       effect.ignore,
                       core.as(
                         [
@@ -114,13 +114,13 @@ export const set = dual<
                         ] as const
                       )
                     ),
-                  (value) =>
+                  onSuccess: (value) =>
                     pipe(
-                      oldScope.close(core.exitUnit()),
+                      oldScope.close(core.exitUnit),
                       effect.ignore,
                       core.as([core.unit, [newScope, value] as const] as const)
                     )
-                )
+                })
               )
             )
           )

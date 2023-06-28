@@ -145,29 +145,27 @@ export const refreshing = <Key, Error, Value>(
 export const toScoped = <Key, Error, Value>(
   self: Complete<Key, Error, Value>
 ): Effect.Effect<Scope.Scope, Error, Value> =>
-  Exit.matchEffect(
-    self.exit,
-    (cause) => core.failCause(cause),
-    ([value]) =>
+  Exit.matchEffect(self.exit, {
+    onFailure: (cause) => core.failCause(cause),
+    onSuccess: ([value]) =>
       fiberRuntime.acquireRelease(
         core.as(core.sync(() => MutableRef.incrementAndGet(self.ownerCount)), value),
         { release: () => releaseOwner(self) }
       )
-  )
+  })
 
 /** @internal */
 export const releaseOwner = <Key, Error, Value>(
   self: Complete<Key, Error, Value>
 ): Effect.Effect<never, never, void> =>
-  Exit.matchEffect(
-    self.exit,
-    () => core.unit,
-    ([, finalizer]) =>
+  Exit.matchEffect(self.exit, {
+    onFailure: () => core.unit,
+    onSuccess: ([, finalizer]) =>
       core.flatMap(
         core.sync(() => MutableRef.decrementAndGet(self.ownerCount)),
-        (numOwner) => effect.when(finalizer(Exit.unit()), () => numOwner === 0)
+        (numOwner) => effect.when(finalizer(Exit.unit), () => numOwner === 0)
       )
-  )
+  })
 
 /** @internal */
 const ScopedCacheSymbolKey = "@effect/io/ScopedCache"

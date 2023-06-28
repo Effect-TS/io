@@ -833,10 +833,10 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
             if ((e as core.Primitive)._tag === OpCodes.OP_YIELD) {
               if (_runtimeFlags.cooperativeYielding(this._runtimeFlags)) {
                 this.tell(FiberMessage.yieldNow())
-                this.tell(FiberMessage.resume(core.exitUnit()))
+                this.tell(FiberMessage.resume(core.exitUnit))
                 effect = null
               } else {
-                effect = core.exitUnit()
+                effect = core.exitUnit
               }
             } else if ((e as core.Primitive)._tag === OpCodes.OP_ASYNC) {
               // Terminate this evaluation, async resumption will continue evaluation:
@@ -1159,7 +1159,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
       // Since we updated the flags, we need to revert them
       const revertFlags = _runtimeFlags.diff(newRuntimeFlags, oldRuntimeFlags)
       this.pushStack(new core.RevertFlags(revertFlags, op))
-      return op.i1 ? op.i1(oldRuntimeFlags) : core.exitUnit()
+      return op.i1 ? op.i1(oldRuntimeFlags) : core.exitUnit
     }
   }
 
@@ -1200,7 +1200,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
       this.pushStack(op)
       return body()
     } else {
-      return core.exitUnit()
+      return core.exitUnit
     }
   }
 
@@ -1857,7 +1857,7 @@ export const forEachParUnboundedDiscard = <R, E, A, _>(
                           const _continue = forEachParUnboundedDiscard(residual, (blocked) => blocked.i1)
                           return core.deferredSucceed(deferred, core.blocked(requests, _continue))
                         } else {
-                          core.deferredUnsafeDone(deferred, core.exitSucceed(core.exitUnit()))
+                          core.deferredUnsafeDone(deferred, core.exitSucceed(core.exitUnit))
                         }
                       } else {
                         ref = ref + 1
@@ -2240,40 +2240,37 @@ const raceAllArbiter = <E, E1, A, A1>(
   fails: Ref.Ref<number>
 ) =>
   (exit: Exit.Exit<E | E1, A | A1>): Effect.Effect<never, never, void> =>
-    pipe(
-      exit,
-      core.exitMatchEffect(
-        (cause) =>
-          pipe(
-            Ref.modify(fails, (fails) =>
-              [
-                fails === 0 ?
-                  pipe(core.deferredFailCause(deferred, cause), core.asUnit) :
+    core.exitMatchEffect(exit, {
+      onFailure: (cause) =>
+        pipe(
+          Ref.modify(fails, (fails) =>
+            [
+              fails === 0 ?
+                pipe(core.deferredFailCause(deferred, cause), core.asUnit) :
+                core.unit,
+              fails - 1
+            ] as const),
+          core.flatten
+        ),
+      onSuccess: (value): Effect.Effect<never, never, void> =>
+        pipe(
+          core.deferredSucceed(deferred, [value, winner] as const),
+          core.flatMap((set) =>
+            set ?
+              pipe(
+                Chunk.fromIterable(fibers),
+                Chunk.reduce(
                   core.unit,
-                fails - 1
-              ] as const),
-            core.flatten
-          ),
-        (value): Effect.Effect<never, never, void> =>
-          pipe(
-            core.deferredSucceed(deferred, [value, winner] as const),
-            core.flatMap((set) =>
-              set ?
-                pipe(
-                  Chunk.fromIterable(fibers),
-                  Chunk.reduce(
-                    core.unit,
-                    (effect, fiber) =>
-                      fiber === winner ?
-                        effect :
-                        pipe(effect, core.zipLeft(core.interruptFiber(fiber)))
-                  )
-                ) :
-                core.unit
-            )
+                  (effect, fiber) =>
+                    fiber === winner ?
+                      effect :
+                      pipe(effect, core.zipLeft(core.interruptFiber(fiber)))
+                )
+              ) :
+              core.unit
           )
-      )
-    )
+        )
+    })
 
 /* @internal */
 export const reduceEffect = dual<
@@ -2443,8 +2440,10 @@ export const validateWith = dual<
     core.exit(self),
     core.exit(that),
     (ea, eb) =>
-      core.exitZipWith(ea, eb, f, (ca, cb) =>
-        options?.parallel ? internalCause.parallel(ca, cb) : internalCause.sequential(ca, cb)),
+      core.exitZipWith(ea, eb, {
+        onSuccess: f,
+        onFailure: (ca, cb) => options?.parallel ? internalCause.parallel(ca, cb) : internalCause.sequential(ca, cb)
+      }),
     options
   )))
 
@@ -2656,7 +2655,7 @@ export const releaseMapReleaseAll = (
                 pipe(
                   core.exitCollectAll(results),
                   Option.map(core.exitAsUnit),
-                  Option.getOrElse(() => core.exitUnit())
+                  Option.getOrElse(() => core.exitUnit)
                 )
               )
             ) :
@@ -2668,7 +2667,7 @@ export const releaseMapReleaseAll = (
                 pipe(
                   core.exitCollectAll(results, { parallel: true }),
                   Option.map(core.exitAsUnit),
-                  Option.getOrElse(() => core.exitUnit())
+                  Option.getOrElse(() => core.exitUnit)
                 )
               )
             ) :
@@ -2679,7 +2678,7 @@ export const releaseMapReleaseAll = (
                 pipe(
                   core.exitCollectAll(results, { parallel: true }),
                   Option.map(core.exitAsUnit),
-                  Option.getOrElse(() => core.exitUnit())
+                  Option.getOrElse(() => core.exitUnit)
                 )
               ),
               core.withParallelism(strategy.parallelism)
@@ -2854,14 +2853,10 @@ export const fiberCollectAll = <E, A>(fibers: Iterable<Fiber.Fiber<E, A>>): Fibe
                 }
                 case "Some": {
                   return Option.some(
-                    pipe(
-                      optionA.value,
-                      core.exitZipWith(
-                        optionB.value,
-                        (a, chunk) => [a, ...chunk],
-                        internalCause.parallel
-                      )
-                    )
+                    core.exitZipWith(optionA.value, optionB.value, {
+                      onSuccess: (a, chunk) => [a, ...chunk],
+                      onFailure: internalCause.parallel
+                    })
                   )
                 }
               }
@@ -3003,35 +2998,33 @@ export const raceAwait = dual<
       raceWith(self, {
         other: that,
         onSelfDone: (exit, right) =>
-          core.exitMatchEffect(
-            exit,
-            (cause) =>
+          core.exitMatchEffect(exit, {
+            onFailure: (cause) =>
               pipe(
                 internalFiber.join(right),
                 mapErrorCause((cause2) => internalCause.parallel(cause, cause2))
               ),
-            (value) =>
+            onSuccess: (value) =>
               pipe(
                 right,
                 core.interruptAsFiber(parentFiberId),
                 core.as(value)
               )
-          ),
+          }),
         onOtherDone: (exit, left) =>
-          core.exitMatchEffect(
-            exit,
-            (cause) =>
+          core.exitMatchEffect(exit, {
+            onFailure: (cause) =>
               pipe(
                 internalFiber.join(left),
                 mapErrorCause((cause2) => internalCause.parallel(cause2, cause))
               ),
-            (value) =>
+            onSuccess: (value) =>
               pipe(
                 left,
                 core.interruptAsFiber(parentFiberId),
                 core.as(value)
               )
-          )
+          })
       })
     )
 )
