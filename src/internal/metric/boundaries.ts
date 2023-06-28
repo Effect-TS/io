@@ -43,19 +43,25 @@ export const fromChunk = (chunk: Chunk.Chunk<number>): MetricBoundaries.MetricBo
 }
 
 /** @internal */
-export const linear = (start: number, width: number, count: number): MetricBoundaries.MetricBoundaries => {
-  return pipe(
-    Chunk.range(0, count - 1),
-    Chunk.map((i) => start + i * width),
+export const linear = (options: {
+  readonly start: number
+  readonly width: number
+  readonly count: number
+}): MetricBoundaries.MetricBoundaries =>
+  pipe(
+    Chunk.range(0, options.count - 1),
+    Chunk.map((i) => options.start + i * options.width),
     fromChunk
   )
-}
 
 /** @internal */
-export const exponential = (start: number, factor: number, count: number): MetricBoundaries.MetricBoundaries => {
-  return pipe(
-    Chunk.range(0, count - 1),
-    Chunk.map((i) => start * Math.pow(factor, i)),
+export const exponential = (options: {
+  readonly start: number
+  readonly factor: number
+  readonly count: number
+}): MetricBoundaries.MetricBoundaries =>
+  pipe(
+    Chunk.range(0, options.count - 1),
+    Chunk.map((i) => options.start * Math.pow(options.factor, i)),
     fromChunk
   )
-}

@@ -25,15 +25,14 @@ const metricHookVariance = {
 
 /** @internal */
 export const make = <In, Out>(
-  get: LazyArg<Out>,
-  update: (input: In) => void
-): MetricHook.MetricHook<In, Out> => {
-  return {
-    [MetricHookTypeId]: metricHookVariance,
-    update,
-    get
+  options: {
+    readonly get: LazyArg<Out>
+    readonly update: (input: In) => void
   }
-}
+): MetricHook.MetricHook<In, Out> => ({
+  [MetricHookTypeId]: metricHookVariance,
+  ...options
+})
 
 /** @internal */
 export const onUpdate = dual<
@@ -51,12 +50,12 @@ export const onUpdate = dual<
 /** @internal */
 export const counter = (_key: MetricKey.MetricKey.Counter): MetricHook.MetricHook.Counter => {
   let sum = 0
-  return make(
-    () => metricState.counter(sum),
-    (value) => {
+  return make({
+    get: () => metricState.counter(sum),
+    update: (value) => {
       sum = sum + value
     }
-  )
+  })
 }
 
 /** @internal */
@@ -69,18 +68,21 @@ export const frequency = (_key: MetricKey.MetricKey.Frequency): MetricHook.Metri
     values.set(word, slotCount + 1)
   }
   const snapshot = () => HashMap.fromIterable(values.entries())
-  return make(() => metricState.frequency(snapshot()), update)
+  return make({
+    get: () => metricState.frequency(snapshot()),
+    update
+  })
 }
 
 /** @internal */
 export const gauge = (_key: MetricKey.MetricKey.Gauge, startAt: number): MetricHook.MetricHook.Gauge => {
   let value = startAt
-  return make(
-    () => metricState.gauge(value),
-    (v) => {
+  return make({
+    get: () => metricState.gauge(value),
+    update: (v) => {
       value = v
     }
-  )
+  })
 }
 
 /** @internal */
@@ -146,10 +148,17 @@ export const histogram = (key: MetricKey.MetricKey.Histogram): MetricHook.Metric
     return Chunk.unsafeFromArray(builder)
   }
 
-  return make(
-    () => metricState.histogram(getBuckets(), count, min, max, sum),
+  return make({
+    get: () =>
+      metricState.histogram({
+        buckets: getBuckets(),
+        count,
+        min,
+        max,
+        sum
+      }),
     update
-  )
+  })
 }
 
 /** @internal */
@@ -214,10 +223,18 @@ export const summary = (key: MetricKey.MetricKey.Summary): MetricHook.MetricHook
     }
   }
 
-  return make(
-    () => metricState.summary(error, snapshot(Date.now()), count, min, max, sum),
-    ([value, timestamp]) => observe(value, timestamp)
-  )
+  return make({
+    get: () =>
+      metricState.summary({
+        error,
+        quantiles: snapshot(Date.now()),
+        count,
+        min,
+        max,
+        sum
+      }),
+    update: ([value, timestamp]) => observe(value, timestamp)
+  })
 }
 
 /** @internal */

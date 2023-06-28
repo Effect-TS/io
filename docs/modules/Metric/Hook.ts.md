@@ -76,7 +76,10 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const make: <In, Out>(get: LazyArg<Out>, update: (input: In) => void) => MetricHook<In, Out>
+export declare const make: <In, Out>(options: {
+  readonly get: LazyArg<Out>
+  readonly update: (input: In) => void
+}) => MetricHook<In, Out>
 ```
 
 Added in v1.0.0

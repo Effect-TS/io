@@ -189,26 +189,41 @@ export const gauge = (value: number): MetricState.MetricState.Gauge => {
 
 /** @internal */
 export const histogram = (
-  buckets: Chunk.Chunk<readonly [number, number]>,
-  count: number,
-  min: number,
-  max: number,
-  sum: number
-): MetricState.MetricState.Histogram => {
-  return new HistogramState(buckets, count, min, max, sum)
-}
+  options: {
+    readonly buckets: Chunk.Chunk<readonly [number, number]>
+    readonly count: number
+    readonly min: number
+    readonly max: number
+    readonly sum: number
+  }
+): MetricState.MetricState.Histogram =>
+  new HistogramState(
+    options.buckets,
+    options.count,
+    options.min,
+    options.max,
+    options.sum
+  )
 
 /** @internal */
 export const summary = (
-  error: number,
-  quantiles: Chunk.Chunk<readonly [number, Option.Option<number>]>,
-  count: number,
-  min: number,
-  max: number,
-  sum: number
-): MetricState.MetricState.Summary => {
-  return new SummaryState(error, quantiles, count, min, max, sum)
-}
+  options: {
+    readonly error: number
+    readonly quantiles: Chunk.Chunk<readonly [number, Option.Option<number>]>
+    readonly count: number
+    readonly min: number
+    readonly max: number
+    readonly sum: number
+  }
+): MetricState.MetricState.Summary =>
+  new SummaryState(
+    options.error,
+    options.quantiles,
+    options.count,
+    options.min,
+    options.max,
+    options.sum
+  )
 
 /** @internal */
 export const isMetricState = (u: unknown): u is MetricState.MetricState.Counter => {

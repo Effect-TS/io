@@ -310,7 +310,7 @@ describe.concurrent("Metric", () => {
   describe.concurrent("Histogram", () => {
     it.effect("custom observe as aspect", () =>
       Effect.gen(function*($) {
-        const boundaries = MetricBoundaries.linear(0, 1, 10)
+        const boundaries = MetricBoundaries.linear({ start: 0, width: 1, count: 10 })
         const histogram = pipe(Metric.histogram("h1", boundaries), Metric.taggedWithLabels(labels))
         const result = yield* $(
           pipe(
@@ -327,7 +327,7 @@ describe.concurrent("Metric", () => {
       }))
     it.effect("direct observe", () =>
       Effect.gen(function*($) {
-        const boundaries = MetricBoundaries.linear(0, 1, 10)
+        const boundaries = MetricBoundaries.linear({ start: 0, width: 1, count: 10 })
         const histogram = pipe(Metric.histogram("h2", boundaries), Metric.taggedWithLabels(labels))
         const result = yield* $(
           pipe(
@@ -344,7 +344,7 @@ describe.concurrent("Metric", () => {
       }))
     it.flakyTest(
       Effect.gen(function*($) {
-        const boundaries = MetricBoundaries.linear(0, 1, 10)
+        const boundaries = MetricBoundaries.linear({ start: 0, width: 1, count: 10 })
         const histogram = pipe(
           Metric.histogram("h3", boundaries),
           Metric.taggedWithLabels(labels),
@@ -368,7 +368,7 @@ describe.concurrent("Metric", () => {
     )
     it.effect("custom observe with contramap", () =>
       Effect.gen(function*($) {
-        const boundaries = MetricBoundaries.linear(0, 1, 10)
+        const boundaries = MetricBoundaries.linear({ start: 0, width: 1, count: 10 })
         const histogram = pipe(
           Metric.histogram("h4", boundaries),
           Metric.taggedWithLabels(labels),
@@ -389,7 +389,7 @@ describe.concurrent("Metric", () => {
       }))
     it.effect("observe + taggedWith", () =>
       Effect.gen(function*($) {
-        const boundaries = MetricBoundaries.linear(0, 1, 10)
+        const boundaries = MetricBoundaries.linear({ start: 0, width: 1, count: 10 })
         const base = pipe(
           Metric.histogram("h5", boundaries),
           Metric.taggedWithLabels(labels),

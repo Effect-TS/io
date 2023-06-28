@@ -243,7 +243,11 @@ export const timer = (name: string): Metric.Metric<
   Duration.Duration,
   MetricState.MetricState.Histogram
 > => {
-  const boundaries = metricBoundaries.exponential(1, 2, 100)
+  const boundaries = metricBoundaries.exponential({
+    start: 1,
+    factor: 2,
+    count: 100
+  })
   const base = pipe(histogram(name, boundaries), tagged("time_unit", "milliseconds"))
   return pipe(base, contramap((duration) => duration.millis))
 }

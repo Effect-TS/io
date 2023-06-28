@@ -89,7 +89,10 @@ export declare namespace MetricHook {
  * @since 1.0.0
  * @category constructors
  */
-export const make: <In, Out>(get: LazyArg<Out>, update: (input: In) => void) => MetricHook<In, Out> = internal.make
+export const make: <In, Out>(options: {
+  readonly get: LazyArg<Out>
+  readonly update: (input: In) => void
+}) => MetricHook<In, Out> = internal.make
 
 /**
  * @since 1.0.0
