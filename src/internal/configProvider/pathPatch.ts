@@ -46,15 +46,15 @@ export const patch = dual<
   (
     patch: PathPatch.PathPatch
   ) => (
-    path: Array<string>
-  ) => Either.Either<ConfigError.ConfigError, Array<string>>,
+    path: ReadonlyArray<string>
+  ) => Either.Either<ConfigError.ConfigError, ReadonlyArray<string>>,
   (
-    path: Array<string>,
+    path: ReadonlyArray<string>,
     patch: PathPatch.PathPatch
-  ) => Either.Either<ConfigError.ConfigError, Array<string>>
+  ) => Either.Either<ConfigError.ConfigError, ReadonlyArray<string>>
 >(2, (path, patch) => {
   let input = List.of(patch)
-  let output: Array<string> = path
+  let output: ReadonlyArray<string> = path
   while (List.isCons(input)) {
     const patch = input.head
     switch (patch._tag) {

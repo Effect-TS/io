@@ -19,7 +19,7 @@ import * as core from "@effect/io/internal/core"
 import * as OpCodes from "@effect/io/internal/opCodes/config"
 import * as StringUtils from "@effect/io/internal/string-utils"
 
-const concat = <A, B>(l: Array<A>, r: Array<B>): Array<A | B> => [...l, ...r]
+const concat = <A, B>(l: ReadonlyArray<A>, r: ReadonlyArray<B>): ReadonlyArray<A | B> => [...l, ...r]
 
 /** @internal */
 const ConfigProviderSymbolKey = "@effect/io/Config/Provider"
@@ -57,12 +57,12 @@ export const make = (
 export const makeFlat = (
   options: {
     readonly load: <A>(
-      path: Array<string>,
+      path: ReadonlyArray<string>,
       config: Config.Config.Primitive<A>,
       split: boolean
-    ) => Effect.Effect<never, ConfigError.ConfigError, Array<A>>
+    ) => Effect.Effect<never, ConfigError.ConfigError, ReadonlyArray<A>>
     readonly enumerateChildren: (
-      path: Array<string>
+      path: ReadonlyArray<string>
     ) => Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>>
     readonly patch: PathPatch.PathPatch
   }
@@ -93,17 +93,17 @@ export const fromEnv = (
   config: Partial<ConfigProvider.ConfigProvider.FromEnvConfig> = {}
 ): ConfigProvider.ConfigProvider => {
   const { pathDelim, seqDelim } = Object.assign({}, { pathDelim: "_", seqDelim: "," }, config)
-  const makePathString = (path: Array<string>): string => pipe(path, RA.join(pathDelim))
+  const makePathString = (path: ReadonlyArray<string>): string => pipe(path, RA.join(pathDelim))
   const unmakePathString = (pathString: string): ReadonlyArray<string> => pathString.split(pathDelim)
 
   const getEnv = () =>
     typeof process !== "undefined" && "env" in process && typeof process.env === "object" ? process.env : {}
 
   const load = <A>(
-    path: Array<string>,
+    path: ReadonlyArray<string>,
     primitive: Config.Config.Primitive<A>,
     split = true
-  ): Effect.Effect<never, ConfigError.ConfigError, Array<A>> => {
+  ): Effect.Effect<never, ConfigError.ConfigError, ReadonlyArray<A>> => {
     const pathString = makePathString(path)
     const current = getEnv()
     const valueOpt = pathString in current ? Option.some(current[pathString]!) : Option.none()
@@ -115,7 +115,7 @@ export const fromEnv = (
   }
 
   const enumerateChildren = (
-    path: Array<string>
+    path: ReadonlyArray<string>
   ): Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>> =>
     core.sync(() => {
       const current = getEnv()
@@ -143,7 +143,7 @@ export const fromMap = (
   config: Partial<ConfigProvider.ConfigProvider.FromMapConfig> = {}
 ): ConfigProvider.ConfigProvider => {
   const { pathDelim, seqDelim } = Object.assign({}, { seqDelim: ",", pathDelim: "." }, config)
-  const makePathString = (path: Array<string>): string => pipe(path, RA.join(pathDelim))
+  const makePathString = (path: ReadonlyArray<string>): string => pipe(path, RA.join(pathDelim))
   const unmakePathString = (pathString: string): ReadonlyArray<string> => pathString.split(pathDelim)
   const mapWithIndexSplit = splitIndexInKeys(
     map,
@@ -151,10 +151,10 @@ export const fromMap = (
     makePathString
   )
   const load = <A>(
-    path: Array<string>,
+    path: ReadonlyArray<string>,
     primitive: Config.Config.Primitive<A>,
     split = true
-  ): Effect.Effect<never, ConfigError.ConfigError, Array<A>> => {
+  ): Effect.Effect<never, ConfigError.ConfigError, ReadonlyArray<A>> => {
     const pathString = makePathString(path)
     const valueOpt = mapWithIndexSplit.has(pathString) ?
       Option.some(mapWithIndexSplit.get(pathString)!) :
@@ -166,7 +166,7 @@ export const fromMap = (
     )
   }
   const enumerateChildren = (
-    path: Array<string>
+    path: ReadonlyArray<string>
   ): Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>> =>
     core.sync(() => {
       const keyPaths = Array.from(mapWithIndexSplit.keys()).map(unmakePathString)
@@ -189,9 +189,9 @@ export const fromMap = (
 const extend = <A, B>(
   leftDef: (n: number) => A,
   rightDef: (n: number) => B,
-  left: Array<A>,
-  right: Array<B>
-): readonly [Array<A>, Array<B>] => {
+  left: ReadonlyArray<A>,
+  right: ReadonlyArray<B>
+): readonly [ReadonlyArray<A>, ReadonlyArray<B>] => {
   const leftPad = RA.unfold(
     left.length,
     (index) =>
@@ -213,29 +213,29 @@ const extend = <A, B>(
 
 const fromFlatLoop = <A>(
   flat: ConfigProvider.ConfigProvider.Flat,
-  prefix: Array<string>,
+  prefix: ReadonlyArray<string>,
   config: Config.Config<A>,
   split: boolean
-): Effect.Effect<never, ConfigError.ConfigError, Array<A>> => {
+): Effect.Effect<never, ConfigError.ConfigError, ReadonlyArray<A>> => {
   const op = config as _config.ConfigPrimitive
   switch (op._tag) {
     case OpCodes.OP_CONSTANT: {
       return core.succeed(RA.of(op.value)) as Effect.Effect<
         never,
         ConfigError.ConfigError,
-        Array<A>
+        ReadonlyArray<A>
       >
     }
     case OpCodes.OP_DESCRIBED: {
       return core.suspend(
         () => fromFlatLoop(flat, prefix, op.config, split)
-      ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Array<A>>
+      ) as unknown as Effect.Effect<never, ConfigError.ConfigError, ReadonlyArray<A>>
     }
     case OpCodes.OP_FAIL: {
       return core.fail(configError.MissingData(prefix, op.message)) as Effect.Effect<
         never,
         ConfigError.ConfigError,
-        Array<A>
+        ReadonlyArray<A>
       >
     }
     case OpCodes.OP_FALLBACK: {
@@ -250,13 +250,13 @@ const fromFlatLoop = <A>(
           }
           return core.fail(error1)
         })
-      ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Array<A>>
+      ) as unknown as Effect.Effect<never, ConfigError.ConfigError, ReadonlyArray<A>>
     }
     case OpCodes.OP_LAZY: {
       return core.suspend(() => fromFlatLoop(flat, prefix, op.config(), split)) as Effect.Effect<
         never,
         ConfigError.ConfigError,
-        Array<A>
+        ReadonlyArray<A>
       >
     }
     case OpCodes.OP_MAP_OR_FAIL: {
@@ -272,7 +272,7 @@ const fromFlatLoop = <A>(
             )
           )
         )
-      ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Array<A>>
+      ) as unknown as Effect.Effect<never, ConfigError.ConfigError, ReadonlyArray<A>>
     }
     case OpCodes.OP_NESTED: {
       return core.suspend(() =>
@@ -282,7 +282,7 @@ const fromFlatLoop = <A>(
           op.config,
           split
         )
-      ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Array<A>>
+      ) as unknown as Effect.Effect<never, ConfigError.ConfigError, ReadonlyArray<A>>
     }
     case OpCodes.OP_PRIMITIVE: {
       return pipe(
@@ -299,7 +299,7 @@ const fromFlatLoop = <A>(
             })
           )
         )
-      ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Array<A>>
+      ) as unknown as Effect.Effect<never, ConfigError.ConfigError, ReadonlyArray<A>>
     }
     case OpCodes.OP_SEQUENCE: {
       return pipe(
@@ -312,7 +312,7 @@ const fromFlatLoop = <A>(
               if (indices.length === 0) {
                 return core.suspend(() =>
                   core.map(fromFlatLoop(flat, patchedPrefix, op.config, true), RA.of)
-                ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Array<A>>
+                ) as unknown as Effect.Effect<never, ConfigError.ConfigError, ReadonlyArray<A>>
               }
               return pipe(
                 core.forEach(
@@ -326,7 +326,7 @@ const fromFlatLoop = <A>(
                   }
                   return RA.of(flattened)
                 })
-              ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Array<A>>
+              ) as unknown as Effect.Effect<never, ConfigError.ConfigError, ReadonlyArray<A>>
             })
           )
         )
@@ -365,7 +365,7 @@ const fromFlatLoop = <A>(
             )
           )
         )
-      ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Array<A>>
+      ) as unknown as Effect.Effect<never, ConfigError.ConfigError, ReadonlyArray<A>>
     }
     case OpCodes.OP_ZIP_WITH: {
       return core.suspend(() =>
@@ -413,12 +413,12 @@ const fromFlatLoop = <A>(
             )
           )
         )
-      ) as unknown as Effect.Effect<never, ConfigError.ConfigError, Array<A>>
+      ) as unknown as Effect.Effect<never, ConfigError.ConfigError, ReadonlyArray<A>>
     }
   }
 }
 
-const fromFlatLoopFail = (prefix: Array<string>, path: string) =>
+const fromFlatLoopFail = (prefix: ReadonlyArray<string>, path: string) =>
   (index: number): Either.Either<ConfigError.ConfigError, unknown> =>
     Either.left(
       configError.MissingData(
@@ -561,12 +561,12 @@ export const upperCase = (self: ConfigProvider.ConfigProvider): ConfigProvider.C
 /** @internal */
 export const within = dual<
   (
-    path: Array<string>,
+    path: ReadonlyArray<string>,
     f: (self: ConfigProvider.ConfigProvider) => ConfigProvider.ConfigProvider
   ) => (self: ConfigProvider.ConfigProvider) => ConfigProvider.ConfigProvider,
   (
     self: ConfigProvider.ConfigProvider,
-    path: Array<string>,
+    path: ReadonlyArray<string>,
     f: (self: ConfigProvider.ConfigProvider) => ConfigProvider.ConfigProvider
   ) => ConfigProvider.ConfigProvider
 >(3, (self, path, f) => {
@@ -575,18 +575,18 @@ export const within = dual<
   return orElse(nest, () => self)
 })
 
-const splitPathString = (text: string, delim: string): Array<string> => {
+const splitPathString = (text: string, delim: string): ReadonlyArray<string> => {
   const split = text.split(new RegExp(`\\s*${escapeRegex(delim)}\\s*`))
   return split
 }
 
 const parsePrimitive = <A>(
   text: string,
-  path: Array<string>,
+  path: ReadonlyArray<string>,
   primitive: Config.Config.Primitive<A>,
   delimiter: string,
   split: boolean
-): Effect.Effect<never, ConfigError.ConfigError, Array<A>> => {
+): Effect.Effect<never, ConfigError.ConfigError, ReadonlyArray<A>> => {
   if (!split) {
     return pipe(
       primitive.parse(text),
@@ -601,7 +601,7 @@ const parsePrimitive = <A>(
   )
 }
 
-const transpose = <A>(array: Array<Array<A>>): Array<Array<A>> => {
+const transpose = <A>(array: ReadonlyArray<ReadonlyArray<A>>): ReadonlyArray<ReadonlyArray<A>> => {
   return Object.keys(array[0]).map((column) => array.map((row) => row[column as any]))
 }
 
@@ -609,7 +609,7 @@ const escapeRegex = (string: string): string => {
   return string.replace(/[/\-\\^$*+?.()|[\]{}]/g, "\\$&")
 }
 
-const indicesFrom = (quotedIndices: HashSet.HashSet<string>): Effect.Effect<never, never, Array<number>> =>
+const indicesFrom = (quotedIndices: HashSet.HashSet<string>): Effect.Effect<never, never, ReadonlyArray<number>> =>
   pipe(
     core.forEach(quotedIndices, parseQuotedIndex),
     core.mapBoth({
@@ -639,8 +639,8 @@ const parseQuotedIndex = (str: string): Option.Option<number> => {
 
 const splitIndexInKeys = (
   map: Map<string, string>,
-  unmakePathString: (str: string) => Array<string>,
-  makePathString: (chunk: Array<string>) => string
+  unmakePathString: (str: string) => ReadonlyArray<string>,
+  makePathString: (chunk: ReadonlyArray<string>) => string
 ): Map<string, string> => {
   const newMap: Map<string, string> = new Map()
   for (const [pathString, value] of map) {

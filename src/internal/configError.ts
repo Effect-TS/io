@@ -49,7 +49,7 @@ export const Or = (self: ConfigError.ConfigError, that: ConfigError.ConfigError)
 }
 
 /** @internal */
-export const InvalidData = (path: Array<string>, message: string): ConfigError.ConfigError => {
+export const InvalidData = (path: ReadonlyArray<string>, message: string): ConfigError.ConfigError => {
   const error = Object.create(proto)
   error._tag = OpCodes.OP_INVALID_DATA
   error.path = path
@@ -65,7 +65,7 @@ export const InvalidData = (path: Array<string>, message: string): ConfigError.C
 }
 
 /** @internal */
-export const MissingData = (path: Array<string>, message: string): ConfigError.ConfigError => {
+export const MissingData = (path: ReadonlyArray<string>, message: string): ConfigError.ConfigError => {
   const error = Object.create(proto)
   error._tag = OpCodes.OP_MISSING_DATA
   error.path = path
@@ -82,7 +82,7 @@ export const MissingData = (path: Array<string>, message: string): ConfigError.C
 
 /** @internal */
 export const SourceUnavailable = (
-  path: Array<string>,
+  path: ReadonlyArray<string>,
   message: string,
   cause: Cause.Cause<unknown>
 ): ConfigError.ConfigError => {
@@ -102,7 +102,7 @@ export const SourceUnavailable = (
 }
 
 /** @internal */
-export const Unsupported = (path: Array<string>, message: string): ConfigError.ConfigError => {
+export const Unsupported = (path: ReadonlyArray<string>, message: string): ConfigError.ConfigError => {
   const error = Object.create(proto)
   error._tag = OpCodes.OP_UNSUPPORTED
   error.path = path
@@ -145,11 +145,11 @@ export const isUnsupported = (self: ConfigError.ConfigError): self is ConfigErro
 
 /** @internal */
 export const prefixed: {
-  (prefix: Array<string>): (self: ConfigError.ConfigError) => ConfigError.ConfigError
-  (self: ConfigError.ConfigError, prefix: Array<string>): ConfigError.ConfigError
+  (prefix: ReadonlyArray<string>): (self: ConfigError.ConfigError) => ConfigError.ConfigError
+  (self: ConfigError.ConfigError, prefix: ReadonlyArray<string>): ConfigError.ConfigError
 } = dual<
-  (prefix: Array<string>) => (self: ConfigError.ConfigError) => ConfigError.ConfigError,
-  (self: ConfigError.ConfigError, prefix: Array<string>) => ConfigError.ConfigError
+  (prefix: ReadonlyArray<string>) => (self: ConfigError.ConfigError) => ConfigError.ConfigError,
+  (self: ConfigError.ConfigError, prefix: ReadonlyArray<string>) => ConfigError.ConfigError
 >(2, (self, prefix) => {
   switch (self._tag) {
     case OpCodes.OP_AND: {
