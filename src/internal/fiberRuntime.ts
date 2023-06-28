@@ -2112,30 +2112,56 @@ export const partition = dual<
 
 /* @internal */
 export const validateAll = dual<
-  <R, E, A, B>(
-    f: (a: A) => Effect.Effect<R, E, B>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, ReadonlyArray<E>, ReadonlyArray<B>>,
-  <R, E, A, B>(
-    elements: Iterable<A>,
-    f: (a: A) => Effect.Effect<R, E, B>
-  ) => Effect.Effect<R, ReadonlyArray<E>, ReadonlyArray<B>>
->(2, (elements, f) =>
-  core.flatMap(partition(elements, f), ([es, bs]) =>
-    es.length === 0
-      ? core.succeed(bs)
-      : core.fail(es)))
-
-/* @internal */
-export const validateAllDiscard = dual<
-  <R, E, A, X>(
-    f: (a: A) => Effect.Effect<R, E, X>
-  ) => (elements: Iterable<A>) => Effect.Effect<R, ReadonlyArray<E>, void>,
-  <R, E, A, X>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, X>) => Effect.Effect<R, ReadonlyArray<E>, void>
->(2, (elements, f) =>
-  core.flatMap(partition(elements, f), ([es, _]) =>
-    es.length === 0 ?
-      core.unit :
-      core.fail(es)))
+  {
+    <R, E, A, B>(
+      f: (a: A) => Effect.Effect<R, E, B>,
+      options?: {
+        readonly concurrency?: Concurrency.Concurrency
+        readonly discard?: false
+      }
+    ): (elements: Iterable<A>) => Effect.Effect<R, ReadonlyArray<E>, ReadonlyArray<B>>
+    <R, E, A, B>(
+      f: (a: A) => Effect.Effect<R, E, B>,
+      options: {
+        readonly concurrency?: Concurrency.Concurrency
+        readonly discard: true
+      }
+    ): (elements: Iterable<A>) => Effect.Effect<R, ReadonlyArray<E>, void>
+  },
+  {
+    <R, E, A, B>(
+      elements: Iterable<A>,
+      f: (a: A) => Effect.Effect<R, E, B>,
+      options?: {
+        readonly concurrency?: Concurrency.Concurrency
+        readonly discard?: false
+      }
+    ): Effect.Effect<R, ReadonlyArray<E>, ReadonlyArray<B>>
+    <R, E, A, B>(
+      elements: Iterable<A>,
+      f: (a: A) => Effect.Effect<R, E, B>,
+      options: {
+        readonly concurrency?: Concurrency.Concurrency
+        readonly discard: true
+      }
+    ): Effect.Effect<R, ReadonlyArray<E>, void>
+  }
+>(
+  (args) => isIterable(args[0]),
+  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>, options?: {
+    readonly concurrency?: Concurrency.Concurrency
+    readonly discard?: boolean
+  }): Effect.Effect<R, ReadonlyArray<E>, any> =>
+    core.flatMap(
+      partition(elements, f, {
+        concurrency: options?.concurrency
+      }),
+      ([es, bs]) =>
+        es.length === 0
+          ? options?.discard ? core.unit : core.succeed(bs)
+          : core.fail(es)
+    )
+)
 
 /* @internal */
 export const raceAll = <R, E, A>(all: Iterable<Effect.Effect<R, E, A>>) => {

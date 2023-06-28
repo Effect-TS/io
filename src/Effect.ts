@@ -4089,48 +4089,25 @@ export const validate: {
  * @category utils
  */
 export const validateAll: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, ReadonlyArray<E>, ReadonlyArray<B>>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, ReadonlyArray<E>, ReadonlyArray<B>>
+  <R, E, A, B>(
+    f: (a: A) => Effect<R, E, B>,
+    options?: { readonly concurrency?: Concurrency; readonly discard?: false }
+  ): (elements: Iterable<A>) => Effect<R, ReadonlyArray<E>, ReadonlyArray<B>>
+  <R, E, A, B>(
+    f: (a: A) => Effect<R, E, B>,
+    options: { readonly concurrency?: Concurrency; readonly discard: true }
+  ): (elements: Iterable<A>) => Effect<R, ReadonlyArray<E>, void>
+  <R, E, A, B>(
+    elements: Iterable<A>,
+    f: (a: A) => Effect<R, E, B>,
+    options?: { readonly concurrency?: Concurrency; readonly discard?: false }
+  ): Effect<R, ReadonlyArray<E>, ReadonlyArray<B>>
+  <R, E, A, B>(
+    elements: Iterable<A>,
+    f: (a: A) => Effect<R, E, B>,
+    options: { readonly concurrency?: Concurrency; readonly discard: true }
+  ): Effect<R, ReadonlyArray<E>, void>
 } = fiberRuntime.validateAll
-
-/**
- * Feeds elements of type `A` to `f `and accumulates, in parallel, all errors
- * in error channel or successes in success channel.
- *
- * This combinator is lossy meaning that if there are errors all successes
- * will be lost. To retain all information please use [[partitionPar]].
- *
- * @since 1.0.0
- * @category utils
- */
-export const validateAllPar: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, ReadonlyArray<E>, ReadonlyArray<B>>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, ReadonlyArray<E>, ReadonlyArray<B>>
-} = fiberRuntime.validateAllPar
-
-/**
- * Feeds elements of type `A` to `f` and accumulates all errors, discarding
- * the successes.
- *
- * @since 1.0.0
- * @category utils
- */
-export const validateAllDiscard: {
-  <R, E, A, X>(f: (a: A) => Effect<R, E, X>): (elements: Iterable<A>) => Effect<R, ReadonlyArray<E>, void>
-  <R, E, A, X>(elements: Iterable<A>, f: (a: A) => Effect<R, E, X>): Effect<R, ReadonlyArray<E>, void>
-} = fiberRuntime.validateAllDiscard
-
-/**
- * Feeds elements of type `A` to `f` in parallel and accumulates all errors,
- * discarding the successes.
- *
- * @since 1.0.0
- * @category utils
- */
-export const validateAllParDiscard: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, ReadonlyArray<E>, void>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, ReadonlyArray<E>, void>
-} = fiberRuntime.validateAllParDiscard
 
 /**
  * Feeds elements of type `A` to `f` until it succeeds. Returns first success

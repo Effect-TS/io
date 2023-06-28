@@ -372,9 +372,6 @@ Added in v1.0.0
   - [using](#using)
   - [validate](#validate)
   - [validateAll](#validateall)
-  - [validateAllDiscard](#validatealldiscard)
-  - [validateAllPar](#validateallpar)
-  - [validateAllParDiscard](#validateallpardiscard)
   - [validateFirst](#validatefirst)
   - [validateFirstPar](#validatefirstpar)
   - [validateWith](#validatewith)
@@ -5922,59 +5919,23 @@ will be lost. To retain all information please use `partition`.
 
 ```ts
 export declare const validateAll: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, readonly E[], readonly B[]>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, readonly E[], readonly B[]>
-}
-```
-
-Added in v1.0.0
-
-## validateAllDiscard
-
-Feeds elements of type `A` to `f` and accumulates all errors, discarding
-the successes.
-
-**Signature**
-
-```ts
-export declare const validateAllDiscard: {
-  <R, E, A, X>(f: (a: A) => Effect<R, E, X>): (elements: Iterable<A>) => Effect<R, readonly E[], void>
-  <R, E, A, X>(elements: Iterable<A>, f: (a: A) => Effect<R, E, X>): Effect<R, readonly E[], void>
-}
-```
-
-Added in v1.0.0
-
-## validateAllPar
-
-Feeds elements of type `A` to `f `and accumulates, in parallel, all errors
-in error channel or successes in success channel.
-
-This combinator is lossy meaning that if there are errors all successes
-will be lost. To retain all information please use [[partitionPar]].
-
-**Signature**
-
-```ts
-export declare const validateAllPar: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, readonly E[], readonly B[]>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, readonly E[], readonly B[]>
-}
-```
-
-Added in v1.0.0
-
-## validateAllParDiscard
-
-Feeds elements of type `A` to `f` in parallel and accumulates all errors,
-discarding the successes.
-
-**Signature**
-
-```ts
-export declare const validateAllParDiscard: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>): (elements: Iterable<A>) => Effect<R, readonly E[], void>
-  <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>): Effect<R, readonly E[], void>
+  <R, E, A, B>(
+    f: (a: A) => Effect<R, E, B>,
+    options?: { readonly concurrency?: Concurrency; readonly discard?: false }
+  ): (elements: Iterable<A>) => Effect<R, readonly E[], readonly B[]>
+  <R, E, A, B>(f: (a: A) => Effect<R, E, B>, options: { readonly concurrency?: Concurrency; readonly discard: true }): (
+    elements: Iterable<A>
+  ) => Effect<R, readonly E[], void>
+  <R, E, A, B>(
+    elements: Iterable<A>,
+    f: (a: A) => Effect<R, E, B>,
+    options?: { readonly concurrency?: Concurrency; readonly discard?: false }
+  ): Effect<R, readonly E[], readonly B[]>
+  <R, E, A, B>(
+    elements: Iterable<A>,
+    f: (a: A) => Effect<R, E, B>,
+    options: { readonly concurrency?: Concurrency; readonly discard: true }
+  ): Effect<R, readonly E[], void>
 }
 ```
 
