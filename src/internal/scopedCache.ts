@@ -196,11 +196,11 @@ class ScopedCacheImpl<Key, Environment, Error, Value> implements ScopedCache.Sco
 
   cacheStats(): Effect.Effect<never, never, Cache.CacheStats> {
     return core.sync(() =>
-      _cache.makeCacheStats(
-        this.cacheState.hits,
-        this.cacheState.misses,
-        MutableHashMap.size(this.cacheState.map)
-      )
+      _cache.makeCacheStats({
+        hits: this.cacheState.hits,
+        misses: this.cacheState.misses,
+        size: MutableHashMap.size(this.cacheState.map)
+      })
     )
   }
 
@@ -572,19 +572,27 @@ class ScopedCacheImpl<Key, Environment, Error, Value> implements ScopedCache.Sco
 
 /** @internal */
 export const make = <Key, Environment, Error, Value>(
-  capacity: number,
-  timeToLive: Duration.Duration,
-  lookup: ScopedCache.Lookup<Key, Environment, Error, Value>
+  options: {
+    readonly lookup: ScopedCache.Lookup<Key, Environment, Error, Value>
+    readonly capacity: number
+    readonly timeToLive: Duration.Duration
+  }
 ): Effect.Effect<Environment | Scope.Scope, never, ScopedCache.ScopedCache<Key, Error, Value>> =>
-  makeWith(capacity, lookup, () => timeToLive)
+  makeWith({
+    capacity: options.capacity,
+    lookup: options.lookup,
+    timeToLive: () => options.timeToLive
+  })
 
 /** @internal */
 export const makeWith = <Key, Environment, Error, Value>(
-  capacity: number,
-  lookup: ScopedCache.Lookup<Key, Environment, Error, Value>,
-  timeToLive: (exit: Exit.Exit<Error, Value>) => Duration.Duration
+  options: {
+    readonly capacity: number
+    readonly lookup: ScopedCache.Lookup<Key, Environment, Error, Value>
+    readonly timeToLive: (exit: Exit.Exit<Error, Value>) => Duration.Duration
+  }
 ): Effect.Effect<Environment | Scope.Scope, never, ScopedCache.ScopedCache<Key, Error, Value>> =>
-  core.flatMap(effect.clock, (clock) => buildWith(capacity, lookup, clock, timeToLive))
+  core.flatMap(effect.clock, (clock) => buildWith(options.capacity, options.lookup, clock, options.timeToLive))
 
 const buildWith = <Key, Environment, Error, Value>(
   capacity: number,

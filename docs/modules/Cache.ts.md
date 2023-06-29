@@ -55,7 +55,11 @@ Constructs a new `CacheStats` from the specified values.
 **Signature**
 
 ```ts
-export declare const makeCacheStats: (hits: number, misses: number, size: number) => CacheStats
+export declare const makeCacheStats: (options: {
+  readonly hits: number
+  readonly misses: number
+  readonly size: number
+}) => CacheStats
 ```
 
 Added in v1.0.0

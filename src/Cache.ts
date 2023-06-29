@@ -213,7 +213,13 @@ export interface CacheStats {
  * @since 1.0.0
  * @category constructors
  */
-export const makeCacheStats: (hits: number, misses: number, size: number) => CacheStats = internal.makeCacheStats
+export const makeCacheStats: (
+  options: {
+    readonly hits: number
+    readonly misses: number
+    readonly size: number
+  }
+) => CacheStats = internal.makeCacheStats
 
 /**
  * Represents a snapshot of statistics for an entry in the cache.

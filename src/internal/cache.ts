@@ -275,14 +275,12 @@ const cacheVariance = {
 
 /** @internal */
 export const makeCacheStats = (
-  hits: number,
-  misses: number,
-  size: number
-): Cache.CacheStats => ({
-  hits,
-  misses,
-  size
-})
+  options: {
+    readonly hits: number
+    readonly misses: number
+    readonly size: number
+  }
+): Cache.CacheStats => options
 
 /** @internal */
 export const makeEntryStats = (loadedMillis: number): Cache.EntryStats => ({
@@ -308,11 +306,11 @@ class CacheImpl<Key, Error, Value> implements Cache.Cache<Key, Error, Value> {
 
   cacheStats(): Effect.Effect<never, never, Cache.CacheStats> {
     return core.sync(() =>
-      makeCacheStats(
-        this.cacheState.hits,
-        this.cacheState.misses,
-        MutableHashMap.size(this.cacheState.map)
-      )
+      makeCacheStats({
+        hits: this.cacheState.hits,
+        misses: this.cacheState.misses,
+        size: MutableHashMap.size(this.cacheState.map)
+      })
     )
   }
 

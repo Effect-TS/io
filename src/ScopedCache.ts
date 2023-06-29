@@ -113,9 +113,11 @@ export declare namespace ScopedCache {
  * @category constructors
  */
 export const make: <Key, Environment, Error, Value>(
-  capacity: number,
-  timeToLive: Duration.Duration,
-  lookup: Lookup<Key, Environment, Error, Value>
+  options: {
+    readonly lookup: Lookup<Key, Environment, Error, Value>
+    readonly capacity: number
+    readonly timeToLive: Duration.Duration
+  }
 ) => Effect.Effect<Scope.Scope | Environment, never, ScopedCache<Key, Error, Value>> = internal.make
 
 /**
@@ -127,9 +129,11 @@ export const make: <Key, Environment, Error, Value>(
  * @category constructors
  */
 export const makeWith: <Key, Environment, Error, Value>(
-  capacity: number,
-  lookup: Lookup<Key, Environment, Error, Value>,
-  timeToLive: (exit: Exit.Exit<Error, Value>) => Duration.Duration
+  options: {
+    readonly capacity: number
+    readonly lookup: Lookup<Key, Environment, Error, Value>
+    readonly timeToLive: (exit: Exit.Exit<Error, Value>) => Duration.Duration
+  }
 ) => Effect.Effect<Scope.Scope | Environment, never, ScopedCache<Key, Error, Value>> = internal.makeWith
 
 /**

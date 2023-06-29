@@ -37,7 +37,11 @@ describe.concurrent("ScopedCache", () => {
       fc.asyncProperty(fc.integer(), async (salt) => {
         const program = Effect.gen(function*($) {
           const capacity = 10
-          const scopedCache = ScopedCache.make(capacity, Duration.infinity, hashEffect(salt))
+          const scopedCache = ScopedCache.make({
+            lookup: hashEffect(salt),
+            capacity,
+            timeToLive: Duration.infinity
+          })
           const { hits, misses, size } = yield* $(pipe(
             scopedCache,
             Effect.flatMap((cache) =>
@@ -68,11 +72,11 @@ describe.concurrent("ScopedCache", () => {
           () => ObservableResource.makeUnit()
         )
       )
-      const scopedCache = ScopedCache.make(
+      const scopedCache = ScopedCache.make({
         capacity,
-        Duration.infinity,
-        (key: number) => observablesResources[key].scoped
-      )
+        timeToLive: Duration.infinity,
+        lookup: (key: number) => observablesResources[key].scoped
+      })
       yield* $(Effect.scoped(Effect.gen(function*($) {
         const cache = yield* $(scopedCache)
         yield* $(Effect.forEach(
@@ -103,7 +107,11 @@ describe.concurrent("ScopedCache", () => {
   it.effect("invalidate - should not invalidate anything before effect is evaluated", () =>
     Effect.gen(function*($) {
       const observablesResource = yield* $(ObservableResource.makeUnit())
-      const scopedCache = ScopedCache.make(4, Duration.infinity, () => observablesResource.scoped)
+      const scopedCache = ScopedCache.make({
+        capacity: 4,
+        timeToLive: Duration.infinity,
+        lookup: () => observablesResource.scoped
+      })
       yield* $(Effect.scoped(Effect.gen(function*($) {
         const cache = yield* $(scopedCache)
         yield* $(Effect.scoped(Effect.zipRight(cache.get(void 0), Effect.unit)))
@@ -128,11 +136,11 @@ describe.concurrent("ScopedCache", () => {
           () => ObservableResource.makeUnit()
         )
       )
-      const scopedCache = ScopedCache.make(
+      const scopedCache = ScopedCache.make({
         capacity,
-        Duration.infinity,
-        (key: number) => observablesResources[key].scoped
-      )
+        timeToLive: Duration.infinity,
+        lookup: (key: number) => observablesResources[key].scoped
+      })
       yield* $(Effect.scoped(Effect.gen(function*($) {
         const cache = yield* $(scopedCache)
         yield* $(Effect.forEach(
@@ -164,7 +172,11 @@ describe.concurrent("ScopedCache", () => {
   it.effect("get - should not put anything in the cache before the scoped effect returned by get is used", () =>
     Effect.gen(function*($) {
       const observablesResource = yield* $(ObservableResource.makeUnit())
-      const scopedCache = ScopedCache.make(1, Duration.seconds(60), () => observablesResource.scoped)
+      const scopedCache = ScopedCache.make({
+        capacity: 1,
+        timeToLive: Duration.seconds(60),
+        lookup: () => observablesResource.scoped
+      })
       yield* $(Effect.scoped(Effect.gen(function*($) {
         const cache = yield* $(scopedCache)
         yield* $(observablesResource.assertNotAcquired())
@@ -179,7 +191,11 @@ describe.concurrent("ScopedCache", () => {
   it.it("get - when used sequentially, should properly call correct lookup", () =>
     fc.assert(fc.asyncProperty(fc.integer(), (salt) => {
       const program = Effect.gen(function*($) {
-        const scopedCache = ScopedCache.make(10, Duration.infinity, hashEffect(salt))
+        const scopedCache = ScopedCache.make({
+          capacity: 10,
+          timeToLive: Duration.infinity,
+          lookup: hashEffect(salt)
+        })
         yield* $(Effect.scoped(Effect.gen(function*($) {
           const cache = yield* $(scopedCache)
           const actual = yield* $(
@@ -198,7 +214,11 @@ describe.concurrent("ScopedCache", () => {
   it.it("get - when used concurrently, should properly call correct lookup", () =>
     fc.assert(fc.asyncProperty(fc.integer(), (salt) => {
       const program = Effect.gen(function*($) {
-        const scopedCache = ScopedCache.make(10, Duration.infinity, hashEffect(salt))
+        const scopedCache = ScopedCache.make({
+          capacity: 10,
+          timeToLive: Duration.infinity,
+          lookup: hashEffect(salt)
+        })
         yield* $(Effect.scoped(Effect.gen(function*($) {
           const cache = yield* $(scopedCache)
           const actual = yield* $(
@@ -218,7 +238,11 @@ describe.concurrent("ScopedCache", () => {
   it.it("get - should clean and remove old resource to respect cache capacity", () =>
     fc.assert(fc.asyncProperty(fc.integer(), (salt) => {
       const program = Effect.gen(function*($) {
-        const scopedCache = ScopedCache.make(5, Duration.infinity, hashEffect(salt))
+        const scopedCache = ScopedCache.make({
+          capacity: 5,
+          timeToLive: Duration.infinity,
+          lookup: hashEffect(salt)
+        })
         yield* $(Effect.scoped(Effect.gen(function*($) {
           const cache = yield* $(scopedCache)
           const actual = yield* $(
@@ -239,7 +263,11 @@ describe.concurrent("ScopedCache", () => {
   it.effect("get - sequential use of the scoped effect returned by a single call to get should create only one resource", () =>
     Effect.gen(function*($) {
       const subResource = yield* $(ObservableResource.makeUnit())
-      const scopedCache = ScopedCache.make(1, Duration.seconds(60), (_: void) => subResource.scoped)
+      const scopedCache = ScopedCache.make({
+        capacity: 1,
+        timeToLive: Duration.seconds(60),
+        lookup: (_: void) => subResource.scoped
+      })
       yield* $(Effect.scoped(Effect.gen(function*($) {
         const cache = yield* $(scopedCache)
         yield* $(subResource.assertNotAcquired())
@@ -256,7 +284,11 @@ describe.concurrent("ScopedCache", () => {
   it.effect("get - sequential use should create only one resource", () =>
     Effect.gen(function*($) {
       const subResource = yield* $(ObservableResource.makeUnit())
-      const scopedCache = ScopedCache.make(1, Duration.seconds(60), (_: void) => subResource.scoped)
+      const scopedCache = ScopedCache.make({
+        capacity: 1,
+        timeToLive: Duration.seconds(60),
+        lookup: (_: void) => subResource.scoped
+      })
       yield* $(Effect.scoped(Effect.gen(function*($) {
         const cache = yield* $(scopedCache)
         yield* $(subResource.assertNotAcquired())
@@ -275,7 +307,11 @@ describe.concurrent("ScopedCache", () => {
           Effect.fail(Cause.RuntimeException("fail"))
         )
       )
-      const scopedCache = ScopedCache.make(1, Duration.seconds(60), (key: void) => watchableLookup(key))
+      const scopedCache = ScopedCache.make({
+        capacity: 1,
+        timeToLive: Duration.seconds(60),
+        lookup: (key: void) => watchableLookup(key)
+      })
       yield* $(Effect.scoped(Effect.gen(function*($) {
         const cache = yield* $(scopedCache)
         yield* $(watchableLookup.assertCalledTimes(void 0, (n) => expect(n).toBe(0)))
@@ -291,7 +327,11 @@ describe.concurrent("ScopedCache", () => {
   it.effect("get - concurrent use of the scoped effect returned by a single call to get should create only one resource", () =>
     Effect.gen(function*($) {
       const subResource = yield* $(ObservableResource.makeUnit())
-      const scopedCache = ScopedCache.make(1, Duration.seconds(60), (_: void) => subResource.scoped)
+      const scopedCache = ScopedCache.make({
+        capacity: 1,
+        timeToLive: Duration.seconds(60),
+        lookup: (_: void) => subResource.scoped
+      })
       yield* $(Effect.scoped(Effect.gen(function*($) {
         const cache = yield* $(scopedCache)
         const scoped = cache.get(void 0)
@@ -320,7 +360,11 @@ describe.concurrent("ScopedCache", () => {
           Effect.fail(Cause.RuntimeException("fail"))
         )
       )
-      const scopedCache = ScopedCache.make(1, Duration.seconds(60), (key: void) => watchableLookup(key))
+      const scopedCache = ScopedCache.make({
+        capacity: 1,
+        timeToLive: Duration.seconds(60),
+        lookup: (key: void) => watchableLookup(key)
+      })
       yield* $(Effect.scoped(Effect.gen(function*($) {
         const cache = yield* $(scopedCache)
         yield* $(watchableLookup.assertCalledTimes(void 0, (n) => expect(n).toBe(0)))
@@ -339,7 +383,11 @@ describe.concurrent("ScopedCache", () => {
   it.effect("get - when two scoped effects returned by two calls to get live longer than the cache, the resource should be cleaned only when it is not in use anymore", () =>
     Effect.gen(function*($) {
       const subResource = yield* $(ObservableResource.makeUnit())
-      const scopedCache = ScopedCache.make(1, Duration.seconds(60), (_: void) => subResource.scoped)
+      const scopedCache = ScopedCache.make({
+        capacity: 1,
+        timeToLive: Duration.seconds(60),
+        lookup: (_: void) => subResource.scoped
+      })
       const scope1 = yield* $(Scope.make())
       const scope2 = yield* $(Scope.make())
       const [release1, release2] = yield* $(Effect.scoped(Effect.gen(function*($) {
@@ -366,7 +414,11 @@ describe.concurrent("ScopedCache", () => {
   it.effect("get - when two scoped effects obtained by a single scoped effect returned by a single call to get live longer than the cache, the resource should be cleaned only when it is not in use anymore", () =>
     Effect.gen(function*($) {
       const subResource = yield* $(ObservableResource.makeUnit())
-      const scopedCache = ScopedCache.make(1, Duration.seconds(60), (_: void) => subResource.scoped)
+      const scopedCache = ScopedCache.make({
+        capacity: 1,
+        timeToLive: Duration.seconds(60),
+        lookup: (_: void) => subResource.scoped
+      })
       const scope1 = yield* $(Scope.make())
       const scope2 = yield* $(Scope.make())
       const [release1, release2] = yield* $(Effect.scoped(Effect.gen(function*($) {
@@ -393,7 +445,11 @@ describe.concurrent("ScopedCache", () => {
     return fc.assert(fc.asyncProperty(arb, ([cacheSize, numCreatedKey]) => {
       const program = Effect.gen(function*($) {
         const watchableLookup = yield* $(WatchableLookup.make<number, void>(() => void 0))
-        const scopedCache = ScopedCache.make(cacheSize, Duration.seconds(60), (key: number) => watchableLookup(key))
+        const scopedCache = ScopedCache.make({
+          capacity: cacheSize,
+          timeToLive: Duration.seconds(60),
+          lookup: (key: number) => watchableLookup(key)
+        })
         yield* $(Effect.scoped(Effect.gen(function*($) {
           const cache = yield* $(scopedCache)
           yield* $(
@@ -429,7 +485,11 @@ describe.concurrent("ScopedCache", () => {
     Effect.gen(function*($) {
       const watchableLookup = yield* $(WatchableLookup.makeUnit())
       yield* $(Effect.scoped(Effect.gen(function*($) {
-        const cache = yield* $(ScopedCache.make(10, Duration.seconds(10), (key: void) => watchableLookup(key)))
+        const cache = yield* $(ScopedCache.make({
+          capacity: 10,
+          timeToLive: Duration.seconds(10),
+          lookup: (key: void) => watchableLookup(key)
+        }))
         const scoped = cache.get(void 0)
         yield* $(Effect.scoped(Effect.asUnit(scoped)))
         yield* $(TestClock.adjust(Duration.seconds(5)))
@@ -449,7 +509,11 @@ describe.concurrent("ScopedCache", () => {
     Effect.gen(function*($) {
       const watchableLookup = yield* $(WatchableLookup.makeUnit())
       yield* $(Effect.scoped(Effect.gen(function*($) {
-        const cache = yield* $(ScopedCache.make(10, Duration.seconds(10), (key: void) => watchableLookup(key)))
+        const cache = yield* $(ScopedCache.make({
+          capacity: 10,
+          timeToLive: Duration.seconds(10),
+          lookup: (key: void) => watchableLookup(key)
+        }))
         const scoped = Effect.scoped(Effect.asUnit(cache.get(void 0)))
         yield* $(scoped)
         yield* $(TestClock.adjust(Duration.seconds(5)))
@@ -469,7 +533,11 @@ describe.concurrent("ScopedCache", () => {
     Effect.gen(function*($) {
       const watchableLookup = yield* $(WatchableLookup.makeUnit())
       yield* $(Effect.scoped(Effect.gen(function*($) {
-        const cache = yield* $(ScopedCache.make(10, Duration.seconds(10), (key: void) => watchableLookup(key)))
+        const cache = yield* $(ScopedCache.make({
+          capacity: 10,
+          timeToLive: Duration.seconds(10),
+          lookup: (key: void) => watchableLookup(key)
+        }))
         const scope = yield* $(Scope.make())
         const acquire = Effect.provideContext(
           cache.get(void 0),
@@ -489,20 +557,22 @@ describe.concurrent("ScopedCache", () => {
 
   it.effect("getOption - should return None if resource is not in cache", () =>
     Effect.scoped(Effect.gen(function*(_) {
-      const scopedCache = yield* _(ScopedCache.make(1, Duration.infinity, (i: number) => Effect.succeed(i)))
+      const scopedCache = yield* _(ScopedCache.make({
+        capacity: 1,
+        timeToLive: Duration.infinity,
+        lookup: (i: number) => Effect.succeed(i)
+      }))
       const option = yield* _(scopedCache.getOption(1))
       expect(option._tag).toEqual("None")
     })))
 
   it.effect("getOption - should return Some if pending", () =>
     Effect.scoped(Effect.gen(function*(_) {
-      const scopedCache = yield* _(
-        ScopedCache.make(
-          1,
-          Duration.infinity,
-          (i: number) => TestServices.provideLive(Effect.delay(Effect.succeed(i), Duration.millis(10)))
-        )
-      )
+      const scopedCache = yield* _(ScopedCache.make({
+        capacity: 1,
+        timeToLive: Duration.infinity,
+        lookup: (i: number) => TestServices.provideLive(Effect.delay(Effect.succeed(i), Duration.millis(10)))
+      }))
       yield* _(scopedCache.get(1), Effect.scoped, Effect.fork)
       yield* _(TestServices.provideLive(Effect.sleep(Duration.millis(5))))
       const option = yield* _(scopedCache.getOption(1), Effect.scoped)
@@ -511,13 +581,11 @@ describe.concurrent("ScopedCache", () => {
 
   it.effect("getOptionComplete - should return None if pending", () =>
     Effect.scoped(Effect.gen(function*(_) {
-      const scopedCache = yield* _(
-        ScopedCache.make(
-          1,
-          Duration.infinity,
-          (i: number) => Effect.delay(Effect.succeed(i), Duration.millis(10))
-        )
-      )
+      const scopedCache = yield* _(ScopedCache.make({
+        capacity: 1,
+        timeToLive: Duration.infinity,
+        lookup: (i: number) => Effect.delay(Effect.succeed(i), Duration.millis(10))
+      }))
       yield* _(scopedCache.get(1), Effect.scoped, Effect.fork)
       yield* _(TestClock.adjust(Duration.millis(9)))
       const option = yield* _(scopedCache.getOptionComplete(1), Effect.scoped)
@@ -526,13 +594,11 @@ describe.concurrent("ScopedCache", () => {
 
   it.effect("getOptionComplete - should return Some if complete", () =>
     Effect.scoped(Effect.gen(function*(_) {
-      const scopedCache = yield* _(
-        ScopedCache.make(
-          1,
-          Duration.infinity,
-          (i: number) => TestServices.provideLive(Effect.delay(Effect.succeed(i), Duration.millis(10)))
-        )
-      )
+      const scopedCache = yield* _(ScopedCache.make({
+        capacity: 1,
+        timeToLive: Duration.infinity,
+        lookup: (i: number) => TestServices.provideLive(Effect.delay(Effect.succeed(i), Duration.millis(10)))
+      }))
       yield* _(scopedCache.get(1), Effect.scoped)
       const option = yield* _(scopedCache.getOptionComplete(1), Effect.scoped)
       expect(option._tag).toEqual("Some")
@@ -550,7 +616,11 @@ describe.concurrent("ScopedCache", () => {
       const seed = 1
       const key = 123
       const ref = yield* $(Ref.make(seed))
-      const scopedCache = ScopedCache.make(1, Duration.infinity, retrieve(ref))
+      const scopedCache = ScopedCache.make({
+        capacity: 1,
+        timeToLive: Duration.infinity,
+        lookup: retrieve(ref)
+      })
       const [val1, val2, val3] = yield* $(Effect.scoped(Effect.gen(function*($) {
         const cache = yield* $(scopedCache)
         const val1 = yield* $(cache.get(key))
@@ -566,7 +636,11 @@ describe.concurrent("ScopedCache", () => {
   it.effect("refresh - should clean old resource when making a new one", () =>
     Effect.gen(function*($) {
       const watchableLookup = yield* $(WatchableLookup.makeUnit())
-      const scopedCache = ScopedCache.make(1, Duration.infinity, (key: void) => watchableLookup(key))
+      const scopedCache = ScopedCache.make({
+        capacity: 1,
+        timeToLive: Duration.infinity,
+        lookup: (key: void) => watchableLookup(key)
+      })
       yield* $(Effect.scoped(Effect.gen(function*($) {
         const cache = yield* $(scopedCache)
         yield* $(Effect.scoped(cache.get(void 0)))
@@ -597,7 +671,11 @@ describe.concurrent("ScopedCache", () => {
       const seed = 2
       const key = 1
       const ref = yield* $(Ref.make(seed))
-      const scopedCache = ScopedCache.make(1, Duration.infinity, retrieve(ref))
+      const scopedCache = ScopedCache.make({
+        capacity: 1,
+        timeToLive: Duration.infinity,
+        lookup: retrieve(ref)
+      })
       const result = yield* $(Effect.scoped(Effect.gen(function*($) {
         const cache = yield* $(scopedCache)
         const failure1 = yield* $(Effect.either(cache.get(key)))
@@ -618,7 +696,11 @@ describe.concurrent("ScopedCache", () => {
   it.effect("refresh - should create and acquire subresource if the key doesn't exist in the cache", () =>
     Effect.gen(function*($) {
       const capacity = 100
-      const scopedCache = ScopedCache.make(capacity, Duration.infinity, (_: number) => Effect.unit)
+      const scopedCache = ScopedCache.make({
+        capacity,
+        timeToLive: Duration.infinity,
+        lookup: (_: number) => Effect.unit
+      })
       yield* $(Effect.scoped(Effect.gen(function*($) {
         const cache = yield* $(scopedCache)
         const count0 = yield* $(cache.size())
@@ -637,7 +719,11 @@ describe.concurrent("ScopedCache", () => {
     return fc.assert(fc.asyncProperty(arb, ([cacheSize, numCreatedKey]) => {
       const program = Effect.gen(function*($) {
         const watchableLookup = yield* $(WatchableLookup.make<number, void>(() => void 0))
-        const scopedCache = ScopedCache.make(cacheSize, Duration.seconds(60), (key: number) => watchableLookup(key))
+        const scopedCache = ScopedCache.make({
+          capacity: cacheSize,
+          timeToLive: Duration.seconds(60),
+          lookup: (key: number) => watchableLookup(key)
+        })
         yield* $(Effect.scoped(Effect.gen(function*($) {
           const cache = yield* $(scopedCache)
           yield* $(Effect.forEach(
@@ -671,7 +757,11 @@ describe.concurrent("ScopedCache", () => {
     Effect.gen(function*($) {
       const watchableLookup = yield* $(WatchableLookup.makeUnit())
       yield* $(Effect.scoped(Effect.gen(function*($) {
-        const cache = yield* $(ScopedCache.make(10, Duration.seconds(10), watchableLookup))
+        const cache = yield* $(ScopedCache.make({
+          capacity: 10,
+          timeToLive: Duration.seconds(10),
+          lookup: watchableLookup
+        }))
         yield* $(Effect.scoped(Effect.asUnit(cache.get(void 0))))
         yield* $(TestClock.adjust(Duration.seconds(9)))
         yield* $(watchableLookup.lock())
@@ -698,7 +788,11 @@ describe.concurrent("ScopedCache", () => {
     Effect.gen(function*($) {
       const watchableLookup = yield* $(WatchableLookup.makeUnit())
       yield* $(Effect.scoped(Effect.gen(function*($) {
-        const cache = yield* $(ScopedCache.make(10, Duration.seconds(10), watchableLookup))
+        const cache = yield* $(ScopedCache.make({
+          capacity: 10,
+          timeToLive: Duration.seconds(10),
+          lookup: watchableLookup
+        }))
         yield* $(Effect.scoped(Effect.asUnit(cache.get(void 0))))
         yield* $(TestClock.adjust(Duration.seconds(11)))
         yield* $(watchableLookup.lock())
@@ -723,7 +817,11 @@ describe.concurrent("ScopedCache", () => {
     Effect.gen(function*($) {
       const watchableLookup = yield* $(WatchableLookup.makeUnit())
       yield* $(Effect.scoped(Effect.gen(function*($) {
-        const cache = yield* $(ScopedCache.make(10, Duration.seconds(10), watchableLookup))
+        const cache = yield* $(ScopedCache.make({
+          capacity: 10,
+          timeToLive: Duration.seconds(10),
+          lookup: watchableLookup
+        }))
         const scope = yield* $(Scope.make())
         const acquire = Effect.provideContext(
           cache.get(void 0),
