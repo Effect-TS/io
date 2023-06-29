@@ -161,7 +161,3 @@ export const withTracer = Debug.dualWithTrace<
       currentServices,
       Context.add(tracer.tracerTag, value)
     )(effect).traced(trace))
-
-//
-// Logger circular
-//
