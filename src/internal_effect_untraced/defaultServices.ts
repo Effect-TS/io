@@ -3,16 +3,26 @@ import * as Context from "@effect/data/Context"
 import * as Debug from "@effect/data/Debug"
 import type * as Duration from "@effect/data/Duration"
 import { pipe } from "@effect/data/Function"
+import * as HashMap from "@effect/data/HashMap"
+import * as List from "@effect/data/List"
 import type * as Clock from "@effect/io/Clock"
 import type * as Config from "@effect/io/Config"
 import type * as ConfigProvider from "@effect/io/Config/Provider"
 import type * as DefaultServices from "@effect/io/DefaultServices"
 import type * as Effect from "@effect/io/Effect"
+import type { FiberRefs } from "@effect/io/FiberRefs"
+import * as Cause from "@effect/io/internal_effect_untraced/cause"
+import * as Pretty from "@effect/io/internal_effect_untraced/cause-pretty"
 import * as clock from "@effect/io/internal_effect_untraced/clock"
 import * as configProvider from "@effect/io/internal_effect_untraced/configProvider"
 import * as core from "@effect/io/internal_effect_untraced/core"
+import * as _fiberId from "@effect/io/internal_effect_untraced/fiberId"
+import * as fiberRefs from "@effect/io/internal_effect_untraced/fiberRefs"
+import { makeLogger } from "@effect/io/internal_effect_untraced/logger"
 import * as random from "@effect/io/internal_effect_untraced/random"
 import * as tracer from "@effect/io/internal_effect_untraced/tracer"
+import type * as Logger from "@effect/io/Logger"
+import * as LogSpan from "@effect/io/Logger/Span"
 import type * as Random from "@effect/io/Random"
 import type * as Tracer from "@effect/io/Tracer"
 
@@ -161,3 +171,154 @@ export const withTracer = Debug.dualWithTrace<
       currentServices,
       Context.add(tracer.tracerTag, value)
     )(effect).traced(trace))
+
+//
+// Logger circular
+//
+
+/** @internal */
+export const stringLogger: Logger.Logger<string, string> = makeLogger<string, string>(
+  (fiberId, logLevel, message, cause, _context, spans, annotations) => {
+    const now = new Date(getLogger(_context).unsafeCurrentTimeMillis())
+    const nowMillis = now.getTime()
+
+    const outputArray = [
+      `timestamp=${now.toISOString()}`,
+      `level=${logLevel.label}`,
+      `fiber=${_fiberId.threadName(fiberId)}`
+    ]
+
+    let output = outputArray.join(" ")
+
+    if (message.length > 0) {
+      output = output + " message="
+      output = appendQuoted(message, output)
+    }
+
+    if (cause != null && cause != Cause.empty) {
+      output = output + " cause="
+      output = appendQuoted(Pretty.pretty(cause), output)
+    }
+
+    if (List.isCons(spans)) {
+      output = output + " "
+
+      let first = true
+      for (const span of spans) {
+        if (first) {
+          first = false
+        } else {
+          output = output + " "
+        }
+        output = output + pipe(span, LogSpan.render(nowMillis))
+      }
+    }
+
+    if (pipe(annotations, HashMap.size) > 0) {
+      output = output + " "
+
+      let first = true
+      for (const [key, value] of annotations) {
+        if (first) {
+          first = false
+        } else {
+          output = output + " "
+        }
+        output = output + filterKeyName(key)
+        output = output + "="
+        output = appendQuoted(value, output)
+      }
+    }
+
+    return output
+  }
+)
+
+/** @internal */
+const escapeDoubleQuotes = (str: string) => `"${str.replace(/\\([\s\S])|(")/g, "\\$1$2")}"`
+
+const textOnly = /^[^\s"=]+$/
+
+/** @internal */
+const appendQuoted = (label: string, output: string): string =>
+  output + (label.match(textOnly) ? label : escapeDoubleQuotes(label))
+
+const getLogger = (refs: FiberRefs) => {
+  const services = fiberRefs.getOrDefault(refs, currentServices)
+  return Context.get(services, clock.clockTag)
+}
+
+/** @internal */
+export const logfmtLogger = makeLogger<string, string>(
+  (fiberId, logLevel, message, cause, _context, spans, annotations) => {
+    const now = new Date(getLogger(_context).unsafeCurrentTimeMillis())
+    const nowMillis = now.getTime()
+
+    const outputArray = [
+      `timestamp=${now.toISOString()}`,
+      `level=${logLevel.label}`,
+      `fiber=${_fiberId.threadName(fiberId)}`
+    ]
+
+    let output = outputArray.join(" ")
+
+    if (message.length > 0) {
+      output = output + " message="
+      output = appendQuotedLogfmt(message, output)
+    }
+
+    if (cause != null && cause != Cause.empty) {
+      output = output + " cause="
+      output = appendQuotedLogfmt(Pretty.pretty(cause), output)
+    }
+
+    if (List.isCons(spans)) {
+      output = output + " "
+
+      let first = true
+      for (const span of spans) {
+        if (first) {
+          first = false
+        } else {
+          output = output + " "
+        }
+        output = output + pipe(span, renderLogSpanLogfmt(nowMillis))
+      }
+    }
+
+    if (pipe(annotations, HashMap.size) > 0) {
+      output = output + " "
+
+      let first = true
+      for (const [key, value] of annotations) {
+        if (first) {
+          first = false
+        } else {
+          output = output + " "
+        }
+        output = output + filterKeyName(key)
+        output = output + "="
+        output = appendQuotedLogfmt(value, output)
+      }
+    }
+
+    return output
+  }
+)
+
+/** @internal */
+const filterKeyName = (key: string) => key.replace(/[\s="]/g, "_")
+
+/** @internal */
+const escapeDoubleQuotesLogfmt = (str: string) => JSON.stringify(str)
+
+/** @internal */
+const appendQuotedLogfmt = (label: string, output: string): string =>
+  output + (label.match(textOnly) ? label : escapeDoubleQuotesLogfmt(label))
+
+/** @internal */
+const renderLogSpanLogfmt = (now: number) =>
+  (self: LogSpan.LogSpan): string => {
+    const label = filterKeyName(self.label)
+    return `${label}=${now - self.startTime}ms`
+  }

@@ -1,18 +1,15 @@
 import * as Debug from "@effect/data/Debug"
 import type { LazyArg } from "@effect/data/Function"
-import { constVoid, dual, pipe } from "@effect/data/Function"
-import * as HashMap from "@effect/data/HashMap"
-import * as List from "@effect/data/List"
+import { constVoid, dual } from "@effect/data/Function"
+import type * as HashMap from "@effect/data/HashMap"
+import type * as List from "@effect/data/List"
 import * as Option from "@effect/data/Option"
 import type * as CauseExt from "@effect/io/Cause"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRefs from "@effect/io/FiberRefs"
-import * as Cause from "@effect/io/internal_effect_untraced/cause"
-import * as Pretty from "@effect/io/internal_effect_untraced/cause-pretty"
-import * as _fiberId from "@effect/io/internal_effect_untraced/fiberId"
 import type * as Logger from "@effect/io/Logger"
 import type * as LogLevel from "@effect/io/Logger/Level"
-import * as LogSpan from "@effect/io/Logger/Span"
+import type * as LogSpan from "@effect/io/Logger/Span"
 
 /** @internal */
 const LoggerSymbolKey = "@effect/io/Logger"
@@ -43,148 +40,6 @@ export const makeLogger = <Message, Output>(
   [LoggerTypeId]: loggerVariance,
   log
 })
-
-/** @internal */
-export const stringLogger: Logger.Logger<string, string> = makeLogger<string, string>(
-  (fiberId, logLevel, message, cause, _context, spans, annotations) => {
-    const now = new Date()
-    const nowMillis = now.getTime()
-
-    const outputArray = [
-      `timestamp=${now.toISOString()}`,
-      `level=${logLevel.label}`,
-      `fiber=${_fiberId.threadName(fiberId)}`
-    ]
-
-    let output = outputArray.join(" ")
-
-    if (message.length > 0) {
-      output = output + " message="
-      output = appendQuoted(message, output)
-    }
-
-    if (cause != null && cause != Cause.empty) {
-      output = output + " cause="
-      output = appendQuoted(Pretty.pretty(cause), output)
-    }
-
-    if (List.isCons(spans)) {
-      output = output + " "
-
-      let first = true
-      for (const span of spans) {
-        if (first) {
-          first = false
-        } else {
-          output = output + " "
-        }
-        output = output + pipe(span, LogSpan.render(nowMillis))
-      }
-    }
-
-    if (pipe(annotations, HashMap.size) > 0) {
-      output = output + " "
-
-      let first = true
-      for (const [key, value] of annotations) {
-        if (first) {
-          first = false
-        } else {
-          output = output + " "
-        }
-        output = output + filterKeyName(key)
-        output = output + "="
-        output = appendQuoted(value, output)
-      }
-    }
-
-    return output
-  }
-)
-
-/** @internal */
-const escapeDoubleQuotes = (str: string) => `"${str.replace(/\\([\s\S])|(")/g, "\\$1$2")}"`
-
-const textOnly = /^[^\s"=]+$/
-
-/** @internal */
-const appendQuoted = (label: string, output: string): string =>
-  output + (label.match(textOnly) ? label : escapeDoubleQuotes(label))
-
-/** @internal */
-export const logfmtLogger = makeLogger<string, string>(
-  (fiberId, logLevel, message, cause, _context, spans, annotations) => {
-    const now = new Date()
-    const nowMillis = now.getTime()
-
-    const outputArray = [
-      `timestamp=${now.toISOString()}`,
-      `level=${logLevel.label}`,
-      `fiber=${_fiberId.threadName(fiberId)}`
-    ]
-
-    let output = outputArray.join(" ")
-
-    if (message.length > 0) {
-      output = output + " message="
-      output = appendQuotedLogfmt(message, output)
-    }
-
-    if (cause != null && cause != Cause.empty) {
-      output = output + " cause="
-      output = appendQuotedLogfmt(Pretty.pretty(cause), output)
-    }
-
-    if (List.isCons(spans)) {
-      output = output + " "
-
-      let first = true
-      for (const span of spans) {
-        if (first) {
-          first = false
-        } else {
-          output = output + " "
-        }
-        output = output + pipe(span, renderLogSpanLogfmt(nowMillis))
-      }
-    }
-
-    if (pipe(annotations, HashMap.size) > 0) {
-      output = output + " "
-
-      let first = true
-      for (const [key, value] of annotations) {
-        if (first) {
-          first = false
-        } else {
-          output = output + " "
-        }
-        output = output + filterKeyName(key)
-        output = output + "="
-        output = appendQuotedLogfmt(value, output)
-      }
-    }
-
-    return output
-  }
-)
-
-/** @internal */
-const filterKeyName = (key: string) => key.replace(/[\s="]/g, "_")
-
-/** @internal */
-const escapeDoubleQuotesLogfmt = (str: string) => JSON.stringify(str)
-
-/** @internal */
-const appendQuotedLogfmt = (label: string, output: string): string =>
-  output + (label.match(textOnly) ? label : escapeDoubleQuotesLogfmt(label))
-
-/** @internal */
-const renderLogSpanLogfmt = (now: number) =>
-  (self: LogSpan.LogSpan): string => {
-    const label = filterKeyName(self.label)
-    return `${label}=${now - self.startTime}ms`
-  }
 
 /** @internal */
 export const contramap = Debug.untracedDual<
