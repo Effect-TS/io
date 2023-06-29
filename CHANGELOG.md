@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.28.0
+
+### Minor Changes
+
+- [#470](https://github.com/Effect-TS/io/pull/470) [`99fc772`](https://github.com/Effect-TS/io/commit/99fc7727059b2c324cd65f2ca5a3572f23b5890f) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Pass now in Logger from fiber
+
 ## 0.27.2
 
 ### Patch Changes
