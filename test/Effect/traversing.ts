@@ -39,7 +39,7 @@ describe.concurrent("Effect", () => {
       const result2 = yield* $(
         array,
         Effect.exists((n) => Effect.succeed(n > 5), {
-          concurrency: "inherit"
+          concurrency: "unbounded"
         })
       )
       assert.isTrue(result1)
@@ -158,25 +158,25 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("forEach/concurrency - runs single task", () =>
     Effect.gen(function*($) {
-      const result = yield* $([2], Effect.forEach((n) => Effect.succeed(n * 2), { concurrency: "inherit" }))
+      const result = yield* $([2], Effect.forEach((n) => Effect.succeed(n * 2), { concurrency: "unbounded" }))
       assert.deepStrictEqual(Array.from(result), [4])
     }))
   it.effect("forEach/concurrency - runs two tasks", () =>
     Effect.gen(function*($) {
-      const result = yield* $([2, 3], Effect.forEach((n) => Effect.succeed(n * 2), { concurrency: "inherit" }))
+      const result = yield* $([2, 3], Effect.forEach((n) => Effect.succeed(n * 2), { concurrency: "unbounded" }))
       assert.deepStrictEqual(Array.from(result), [4, 6])
     }))
   it.effect("forEach/concurrency - runs many tasks", () =>
     Effect.gen(function*($) {
       const array = Array.from({ length: 100 }, (_, i) => i + 1)
-      const result = yield* $(array, Effect.forEach((n) => Effect.succeed(n * 2), { concurrency: "inherit" }))
+      const result = yield* $(array, Effect.forEach((n) => Effect.succeed(n * 2), { concurrency: "unbounded" }))
       assert.deepStrictEqual(Array.from(result), array.map((n) => n * 2))
     }))
   it.effect("forEach/concurrency - runs a task that fails", () =>
     Effect.gen(function*($) {
       const result = yield* $(
         Array.from({ length: 10 }, (_, i) => i + 1),
-        Effect.forEach((n) => n === 5 ? Effect.fail("boom") : Effect.succeed(n * 2), { concurrency: "inherit" }),
+        Effect.forEach((n) => n === 5 ? Effect.fail("boom") : Effect.succeed(n * 2), { concurrency: "unbounded" }),
         Effect.flip
       )
       assert.strictEqual(result, "boom")
@@ -190,7 +190,7 @@ describe.concurrent("Effect", () => {
             ? Effect.fail("boom1")
             : n === 8
             ? Effect.fail("boom2")
-            : Effect.succeed(n * 2), { concurrency: "inherit" }),
+            : Effect.succeed(n * 2), { concurrency: "unbounded" }),
         Effect.flip
       )
       assert.isTrue(result === "boom1" || result === "boom2")
@@ -199,7 +199,9 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const result = yield* $(
         Array.from({ length: 10 }, (_, i) => i + 1),
-        Effect.forEach((n) => n === 5 ? Effect.dieMessage("boom") : Effect.succeed(n * 2), { concurrency: "inherit" }),
+        Effect.forEach((n) => n === 5 ? Effect.dieMessage("boom") : Effect.succeed(n * 2), {
+          concurrency: "unbounded"
+        }),
         Effect.exit
       )
       assert.isTrue(Exit.isFailure(result) && Cause.isDie(result.i0))
@@ -208,7 +210,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const result = yield* $(
         Array.from({ length: 10 }, (_, i) => i + 1),
-        Effect.forEach((n) => n === 5 ? Effect.interrupt : Effect.succeed(n * 2), { concurrency: "inherit" }),
+        Effect.forEach((n) => n === 5 ? Effect.interrupt : Effect.succeed(n * 2), { concurrency: "unbounded" }),
         Effect.exit
       )
       assert.isTrue(Exit.isInterrupted(result))
@@ -220,7 +222,7 @@ describe.concurrent("Effect", () => {
         Effect.forEach((n) =>
           Effect.sync(() => {
             throw new Error(n.toString())
-          }), { concurrency: "inherit" }),
+          }), { concurrency: "unbounded" }),
         Effect.exit
       )
       assert.deepStrictEqual(Exit.unannotate(result), Exit.die(new Error("1")))
@@ -229,7 +231,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const result = yield* $(
         ["1", "2", "3"],
-        Effect.forEach((s) => Effect.sync(() => Number.parseInt(s)), { concurrency: "inherit" })
+        Effect.forEach((s) => Effect.sync(() => Number.parseInt(s)), { concurrency: "unbounded" })
       )
       assert.deepStrictEqual(Array.from(result), [1, 2, 3])
     }))
@@ -239,7 +241,7 @@ describe.concurrent("Effect", () => {
       yield* $(
         pipe(
           [Effect.never, Deferred.succeed(deferred, void 0)],
-          Effect.forEach(identity, { concurrency: "inherit" }),
+          Effect.forEach(identity, { concurrency: "unbounded" }),
           Effect.fork
         )
       )
@@ -250,7 +252,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const result = yield* $(
         [1, 2, 3, 4, 5, 6],
-        Effect.forEach((n) => n % 2 !== 0 ? Effect.succeed(n) : Effect.fail("not odd"), { concurrency: "inherit" }),
+        Effect.forEach((n) => n % 2 !== 0 ? Effect.succeed(n) : Effect.fail("not odd"), { concurrency: "unbounded" }),
         Effect.flip
       )
       assert.strictEqual(result, "not odd")
@@ -265,7 +267,7 @@ describe.concurrent("Effect", () => {
         Effect.fail("C"),
         pipe(Deferred.await(deferred), Effect.zipRight(Ref.set(ref, true)), Effect.as(1))
       ]
-      const error = yield* $(actions, Effect.forEach(identity, { concurrency: "inherit" }), Effect.flip)
+      const error = yield* $(actions, Effect.forEach(identity, { concurrency: "unbounded" }), Effect.flip)
       const value = yield* $(Ref.get(ref))
       assert.strictEqual(error, "C")
       assert.isFalse(value)
@@ -275,7 +277,7 @@ describe.concurrent("Effect", () => {
       const ref = yield* $(Ref.make(0))
       const fibers = yield* $(
         Array.from({ length: 100 }, (_, i) => i + 1),
-        Effect.forEach(() => pipe(Ref.update(ref, (_) => _ + 1), Effect.fork), { concurrency: "inherit" })
+        Effect.forEach(() => pipe(Ref.update(ref, (_) => _ + 1), Effect.fork), { concurrency: "unbounded" })
       )
       yield* $(fibers, Effect.forEach(Fiber.await))
       const result = yield* $(Ref.get(ref))
@@ -286,8 +288,7 @@ describe.concurrent("Effect", () => {
       const result = yield* $(
         pipe(
           [1, 2, 3],
-          Effect.forEach((n) => Effect.succeed(n.toString()), { concurrency: "inherit" }),
-          Effect.withParallelism(2)
+          Effect.forEach((n) => Effect.succeed(n.toString()), { concurrency: 2 })
         )
       )
       assert.deepStrictEqual(Array.from(result), ["1", "2", "3"])
@@ -299,8 +300,7 @@ describe.concurrent("Effect", () => {
       const result = yield* $(
         pipe(
           array,
-          Effect.forEach((n) => Effect.succeed(n), { concurrency: "inherit" }),
-          Effect.withParallelism(parallelism)
+          Effect.forEach((n) => Effect.succeed(n), { concurrency: parallelism })
         )
       )
       assert.deepStrictEqual(Array.from(result), array)
@@ -311,8 +311,7 @@ describe.concurrent("Effect", () => {
       yield* $(
         pipe(
           [Effect.never, Deferred.succeed(deferred, void 0)],
-          Effect.forEach(identity, { concurrency: "inherit" }),
-          Effect.withParallelism(2),
+          Effect.forEach(identity, { concurrency: 2 }),
           Effect.fork
         )
       )
@@ -323,8 +322,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const result = yield* $(
         [1, 2, 3, 4, 5, 6],
-        Effect.forEach((n) => n % 2 !== 0 ? Effect.succeed(n) : Effect.fail("not odd"), { concurrency: "inherit" }),
-        Effect.withParallelism(4),
+        Effect.forEach((n) => n % 2 !== 0 ? Effect.succeed(n) : Effect.fail("not odd"), { concurrency: 4 }),
         Effect.either
       )
       assert.deepStrictEqual(result, Either.left("not odd"))
@@ -338,8 +336,7 @@ describe.concurrent("Effect", () => {
       ]
       const result = yield* $(
         actions,
-        Effect.forEach(identity, { concurrency: "inherit" }),
-        Effect.withParallelism(4),
+        Effect.forEach(identity, { concurrency: 4 }),
         Effect.either
       )
       assert.deepStrictEqual(result, Either.left("C"))
@@ -368,7 +365,7 @@ describe.concurrent("Effect", () => {
       const result = yield* $(
         [1, 2, 3],
         Effect.forEach((n) => pipe(task(started, trigger, n), Effect.uninterruptible), {
-          concurrency: "inherit",
+          concurrency: "unbounded",
           discard: true
         }),
         Effect.matchCause({
@@ -384,7 +381,7 @@ describe.concurrent("Effect", () => {
       yield* $(
         [1, 2, 3, 4, 5],
         Effect.forEach((n) => Ref.update(ref, Chunk.prepend(n)), {
-          concurrency: "inherit",
+          concurrency: "unbounded",
           discard: true
         })
       )
@@ -396,7 +393,7 @@ describe.concurrent("Effect", () => {
       const result = yield* $(
         [],
         Effect.forEach(() => Effect.unit, {
-          concurrency: "inherit",
+          concurrency: "unbounded",
           discard: true
         })
       )
@@ -408,10 +405,9 @@ describe.concurrent("Effect", () => {
       yield* $(
         [1, 2, 3, 4, 5],
         Effect.forEach((n) => Ref.update(ref, Chunk.prepend(n)), {
-          concurrency: "inherit",
+          concurrency: 2,
           discard: true
-        }),
-        Effect.withParallelism(2)
+        })
       )
       const result = yield* $(Ref.get(ref), Effect.map(Chunk.reverse))
       assert.deepStrictEqual(Array.from(result), [1, 2, 3, 4, 5])
@@ -451,7 +447,7 @@ describe.concurrent("Effect", () => {
         pipe(
           [] as ReadonlyArray<Effect.Effect<never, never, unknown>>,
           Effect.mergeAll(zeroElement, () => nonZero, {
-            concurrency: "inherit"
+            concurrency: "unbounded"
           })
         )
       )
@@ -462,7 +458,7 @@ describe.concurrent("Effect", () => {
       const result = yield* $(
         [3, 5, 7].map(Effect.succeed),
         Effect.mergeAll(1, (b, a) => b + a, {
-          concurrency: "inherit"
+          concurrency: "unbounded"
         })
       )
       assert.strictEqual(result, 1 + 3 + 5 + 7)
@@ -473,7 +469,7 @@ describe.concurrent("Effect", () => {
       const result = yield* $(
         effects,
         Effect.mergeAll(void 0 as void, constVoid, {
-          concurrency: "inherit"
+          concurrency: "unbounded"
         }),
         Effect.exit
       )
@@ -516,7 +512,7 @@ describe.concurrent("Effect", () => {
       const [left, right] = yield* $(
         array,
         Effect.partition(Effect.succeed, {
-          concurrency: "inherit"
+          concurrency: "unbounded"
         })
       )
       assert.deepStrictEqual(Array.from(left), [])
@@ -528,7 +524,7 @@ describe.concurrent("Effect", () => {
       const [left, right] = yield* $(
         array,
         Effect.partition(Effect.fail, {
-          concurrency: "inherit"
+          concurrency: "unbounded"
         })
       )
       assert.deepStrictEqual(Array.from(left), array)
@@ -541,7 +537,7 @@ describe.concurrent("Effect", () => {
         pipe(
           array,
           Effect.partition((n) => n % 2 === 0 ? Effect.fail(n) : Effect.succeed(n), {
-            concurrency: "inherit"
+            concurrency: "unbounded"
           })
         )
       )
@@ -554,9 +550,8 @@ describe.concurrent("Effect", () => {
       const [left, right] = yield* $(
         array,
         Effect.partition(Effect.succeed, {
-          concurrency: "inherit"
-        }),
-        Effect.withParallelism(3)
+          concurrency: 3
+        })
       )
       assert.deepStrictEqual(Array.from(left), [])
       assert.deepStrictEqual(Array.from(right), array)
@@ -566,10 +561,7 @@ describe.concurrent("Effect", () => {
       const array = Array.from({ length: 10 }, () => 0)
       const [left, right] = yield* $(
         array,
-        Effect.partition(Effect.fail, {
-          concurrency: "inherit"
-        }),
-        Effect.withParallelism(3)
+        Effect.partition(Effect.fail, { concurrency: 3 })
       )
       assert.deepStrictEqual(Array.from(left), array)
       assert.deepStrictEqual(Array.from(right), [])
@@ -629,7 +621,7 @@ describe.concurrent("Effect", () => {
         pipe(
           [] as ReadonlyArray<Effect.Effect<never, never, number>>,
           Effect.reduceEffect(Effect.succeed(zeroElement), () => nonZero, {
-            concurrency: "inherit"
+            concurrency: "unbounded"
           })
         )
       )
@@ -641,7 +633,7 @@ describe.concurrent("Effect", () => {
         pipe(
           [3, 5, 7].map(Effect.succeed),
           Effect.reduceEffect(Effect.succeed(1), (acc, a) => acc + a, {
-            concurrency: "inherit"
+            concurrency: "unbounded"
           })
         )
       )
@@ -653,7 +645,7 @@ describe.concurrent("Effect", () => {
         pipe(
           [Effect.unit, Effect.unit],
           Effect.reduceEffect(Effect.fail(1), constVoid, {
-            concurrency: "inherit"
+            concurrency: "unbounded"
           }),
           Effect.exit
         )
@@ -667,7 +659,7 @@ describe.concurrent("Effect", () => {
         pipe(
           effects,
           Effect.reduceEffect(Effect.unit as Effect.Effect<never, number, void>, constVoid, {
-            concurrency: "inherit"
+            concurrency: "unbounded"
           }),
           Effect.exit
         )

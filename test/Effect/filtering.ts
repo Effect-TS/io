@@ -51,7 +51,7 @@ describe.concurrent("Effect", () => {
       const result = yield* $(
         pipe(
           [2, 4, 6, 3, 5, 6, 10, 11, 15, 17, 20, 22, 23, 25, 28],
-          Effect.filter((n) => Effect.succeed(n % 2 === 0), { concurrency: "inherit" })
+          Effect.filter((n) => Effect.succeed(n % 2 === 0), { concurrency: "unbounded" })
         )
       )
       assert.deepStrictEqual(Array.from(result), [2, 4, 6, 6, 10, 20, 22, 28])
@@ -62,7 +62,7 @@ describe.concurrent("Effect", () => {
         pipe(
           [2, 4, 6, 3, 5, 6, 10, 11, 15, 17, 20, 22, 23, 25, 28],
           Effect.filter((n) => Effect.succeed(n % 2 === 0), {
-            concurrency: "inherit",
+            concurrency: "unbounded",
             negate: true
           })
         )

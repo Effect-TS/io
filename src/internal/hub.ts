@@ -848,8 +848,10 @@ class SubscriptionImpl<A> implements Queue.Dequeue<A> {
       core.withFiberRuntime<never, never, void>((state) => {
         MutableRef.set(this.shutdownFlag, true)
         return pipe(
-          unsafePollAllQueue(this.pollers),
-          fiberRuntime.forEachPar((d) => core.deferredInterruptWith(d, state.id())),
+          fiberRuntime.forEachParUnbounded(
+            unsafePollAllQueue(this.pollers),
+            (d) => core.deferredInterruptWith(d, state.id())
+          ),
           core.zipRight(core.sync(() => {
             this.subscribers.delete(this.subscription)
             this.subscription.unsubscribe()
@@ -1248,7 +1250,7 @@ class BackPressureStrategy<A> implements HubStrategy<A> {
       core.flatMap(
         core.sync(() => unsafePollAllQueue(this.publishers)),
         (publishers) =>
-          fiberRuntime.forEachParDiscard(publishers, ([_, deferred, last]) =>
+          fiberRuntime.forEachParUnboundedDiscard(publishers, ([_, deferred, last]) =>
             last ?
               pipe(core.deferredInterruptWith(deferred, fiberId), core.asUnit) :
               core.unit)

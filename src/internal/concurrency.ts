@@ -1,55 +1,63 @@
-import * as executionStrategy from "@effect/io/internal/executionStrategy"
+import type { Effect } from "@effect/io/Effect"
+import * as core from "@effect/io/internal/core"
 
 /** @internal */
-export type Concurrency = number | "inherit" | "batched"
+export type Concurrency = number | "unbounded"
 
 /** @internal */
-export const toExecutionStrategy = (concurrency?: Concurrency) => {
-  switch (concurrency) {
-    case undefined:
-      return executionStrategy.sequential
-    case "inherit":
-      return executionStrategy.parallel
-    case "batched":
-      return executionStrategy.parallelN(1)
-    default:
-      return concurrency > 1 ? executionStrategy.parallelN(concurrency) : executionStrategy.sequential
+export const matchWithBatched = <R, E, A>(
+  options: {
+    readonly concurrency?: Concurrency
+    readonly batched?: boolean
+  } | undefined,
+  sequential: () => Effect<R, E, A>,
+  unbounded: () => Effect<R, E, A>,
+  withLimit: (limit: number) => Effect<R, E, A>,
+  batched: () => Effect<R, E, A>
+) => {
+  let effect: Effect<R, E, A>
+  switch (options?.concurrency) {
+    case undefined: {
+      effect = sequential()
+      break
+    }
+    case "unbounded": {
+      effect = unbounded()
+      break
+    }
+    case 1: {
+      effect = options.batched ? batched() : sequential()
+      break
+    }
+    default: {
+      effect = options!.concurrency > 1 ?
+        withLimit(options!.concurrency) :
+        sequential()
+      break
+    }
   }
+  return options?.batched !== undefined ?
+    core.fiberRefLocally(effect, core.currentRequestBatchingEnabled, options.batched) :
+    effect
 }
 
 /** @internal */
-export const match = <A>(
-  concurrency: Concurrency | undefined,
-  sequential: () => A,
-  inherit: () => A,
-  withLimit: (limit: number) => A
+export const matchWithBatchedSimple = <R, E, A>(
+  options: {
+    readonly concurrency?: Concurrency
+    readonly batched?: boolean
+  } | undefined,
+  sequential: () => Effect<R, E, A>,
+  parallel: () => Effect<R, E, A>
 ) => {
-  switch (concurrency) {
+  switch (options?.concurrency) {
     case undefined:
       return sequential()
-    case "inherit":
-      return inherit()
-    case "batched":
-      return withLimit(1)
+    case "unbounded":
+      return parallel()
+    case 1:
+      return options.batched ? parallel() : sequential()
     default:
-      return concurrency > 1 ? withLimit(concurrency) : sequential()
-  }
-}
-
-/** @internal */
-export const matchSimple = <A>(
-  concurrency: Concurrency | undefined,
-  sequential: () => A,
-  parallel: (limit: number | undefined) => A
-) => {
-  switch (concurrency) {
-    case undefined:
-      return sequential()
-    case "inherit":
-      return parallel(undefined)
-    case "batched":
-      return parallel(1)
-    default:
-      return concurrency > 1 ? parallel(concurrency) : sequential()
+      return options!.concurrency > 1 ? parallel() : sequential()
   }
 }

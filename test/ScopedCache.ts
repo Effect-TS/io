@@ -49,7 +49,7 @@ describe.concurrent("ScopedCache", () => {
                 Effect.forEach(
                   Chunk.map(Chunk.range(1, capacity), (n) => (n / 2) | 0),
                   (n) => Effect.scoped(Effect.zipRight(cache.get(n), Effect.unit)),
-                  { concurrency: "inherit", discard: true }
+                  { concurrency: "unbounded", discard: true }
                 ),
                 Effect.flatMap(() => cache.cacheStats())
               )
@@ -82,7 +82,7 @@ describe.concurrent("ScopedCache", () => {
         yield* $(Effect.forEach(
           Chunk.range(0, capacity - 1),
           (n) => Effect.scoped(Effect.zipRight(cache.get(n), Effect.unit)),
-          { concurrency: "inherit", discard: true }
+          { concurrency: "unbounded", discard: true }
         ))
         yield* $(cache.invalidate(42))
         const cacheContainsKey42 = yield* $(cache.contains(42))
@@ -146,14 +146,14 @@ describe.concurrent("ScopedCache", () => {
         yield* $(Effect.forEach(
           Chunk.range(0, capacity - 1),
           (n) => Effect.scoped(Effect.zipRight(cache.get(n), Effect.unit)),
-          { concurrency: "inherit", discard: true }
+          { concurrency: "unbounded", discard: true }
         ))
         yield* $(cache.invalidateAll())
         const contains = yield* $(pipe(
           Effect.forEach(
             Chunk.range(0, capacity - 1),
             (n) => Effect.scoped(cache.contains(n)),
-            { concurrency: "inherit" }
+            { concurrency: "unbounded" }
           ),
           Effect.map((_) => _.every(identity))
         ))
@@ -225,7 +225,7 @@ describe.concurrent("ScopedCache", () => {
             Effect.forEach(
               Chunk.range(1, 10),
               (n) => Effect.scoped(Effect.flatMap(cache.get(n), Effect.succeed)),
-              { concurrency: "inherit" }
+              { concurrency: "unbounded" }
             )
           )
           const expected = Chunk.map(Chunk.range(1, 10), hash(salt))

@@ -8,7 +8,7 @@ import * as BlockedRequests from "@effect/io/internal/blockedRequests"
 import { unsafeMakeWith } from "@effect/io/internal/cache"
 import { isInterruptedOnly } from "@effect/io/internal/cause"
 import * as core from "@effect/io/internal/core"
-import { currentRequestBatchingEnabled, ensuring } from "@effect/io/internal/fiberRuntime"
+import { ensuring } from "@effect/io/internal/fiberRuntime"
 import { Listeners } from "@effect/io/internal/request"
 import type * as Request from "@effect/io/Request"
 import type * as RequestResolver from "@effect/io/RequestResolver"
@@ -174,12 +174,12 @@ export const withRequestBatching: {
     strategy: "on" | "off"
   ) => Effect.Effect<R, E, A>
 >(2, (self, strategy) =>
-  core.fiberRefGetWith(currentRequestBatchingEnabled, (enabled) => {
+  core.fiberRefGetWith(core.currentRequestBatchingEnabled, (enabled) => {
     switch (strategy) {
       case "off":
-        return enabled ? core.fiberRefLocally(self, currentRequestBatchingEnabled, false) : self
+        return enabled ? core.fiberRefLocally(self, core.currentRequestBatchingEnabled, false) : self
       case "on":
-        return enabled ? self : core.fiberRefLocally(self, currentRequestBatchingEnabled, true)
+        return enabled ? self : core.fiberRefLocally(self, core.currentRequestBatchingEnabled, true)
     }
   }))
 

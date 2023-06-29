@@ -18,8 +18,6 @@ Added in v1.0.0
   - [orElse](#orelse)
   - [orElseFail](#orelsefail)
   - [orElseSucceed](#orelsesucceed)
-- [concurrency](#concurrency)
-  - [withParallelism](#withparallelism)
 - [config](#config)
   - [config](#config-1)
   - [configProviderWith](#configproviderwith)
@@ -347,7 +345,6 @@ Added in v1.0.0
   - [setClock](#setclock)
   - [setConfigProvider](#setconfigprovider)
   - [setFiberRefs](#setfiberrefs)
-  - [setParallelism](#setparallelism)
   - [setScheduler](#setscheduler)
   - [setUnhandledErrorLogLevel](#setunhandlederrorloglevel)
   - [some](#some)
@@ -458,21 +455,6 @@ otherwise succeeds with the specified value.
 export declare const orElseSucceed: {
   <A2>(evaluate: LazyArg<A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A2 | A>
   <R, E, A, A2>(self: Effect<R, E, A>, evaluate: LazyArg<A2>): Effect<R, E, A | A2>
-}
-```
-
-Added in v1.0.0
-
-# concurrency
-
-## withParallelism
-
-**Signature**
-
-```ts
-export declare const withParallelism: {
-  (parallelism: number | 'unbounded'): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(self: Effect<R, E, A>, parallelism: number | 'unbounded'): Effect<R, E, A>
 }
 ```
 
@@ -654,7 +636,7 @@ discarding results from failed effects.
 ```ts
 export declare const allSuccesses: <R, E, A>(
   elements: Iterable<Effect<R, E, A>>,
-  options?: { readonly concurrency?: Concurrency }
+  options?: { readonly concurrency?: Concurrency; readonly batched?: boolean }
 ) => Effect<R, never, readonly A[]>
 ```
 
@@ -931,13 +913,14 @@ predicate `f`, working sequentially.
 
 ```ts
 export declare const exists: {
-  <R, E, A>(f: (a: A) => Effect<R, E, boolean>, options?: { readonly concurrency?: Concurrency }): (
-    elements: Iterable<A>
-  ) => Effect<R, E, boolean>
+  <R, E, A>(
+    f: (a: A) => Effect<R, E, boolean>,
+    options?: { readonly concurrency?: Concurrency; readonly batched?: boolean }
+  ): (elements: Iterable<A>) => Effect<R, E, boolean>
   <R, E, A>(
     elements: Iterable<A>,
     f: (a: A) => Effect<R, E, boolean>,
-    options?: { readonly concurrency: Concurrency }
+    options?: { readonly concurrency: Concurrency; readonly batched?: boolean }
   ): Effect<R, E, boolean>
 }
 ```
@@ -1002,20 +985,21 @@ Added in v1.0.0
 export declare const forEach: {
   <A, R, E, B>(
     f: (a: A) => Effect<R, E, B>,
-    options?: { readonly concurrency?: Concurrency; readonly discard?: false }
+    options?: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly discard?: false }
   ): (self: Iterable<A>) => Effect<R, E, readonly B[]>
-  <A, R, E, B>(f: (a: A) => Effect<R, E, B>, options: { readonly concurrency?: Concurrency; readonly discard: true }): (
-    self: Iterable<A>
-  ) => Effect<R, E, void>
+  <A, R, E, B>(
+    f: (a: A) => Effect<R, E, B>,
+    options: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly discard: true }
+  ): (self: Iterable<A>) => Effect<R, E, void>
   <A, R, E, B>(
     self: Iterable<A>,
     f: (a: A) => Effect<R, E, B>,
-    options?: { readonly concurrency?: Concurrency; readonly discard?: false }
+    options?: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly discard?: false }
   ): Effect<R, E, readonly B[]>
   <A, R, E, B>(
     self: Iterable<A>,
     f: (a: A) => Effect<R, E, B>,
-    options: { readonly concurrency?: Concurrency; readonly discard: true }
+    options: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly discard: true }
   ): Effect<R, E, void>
 }
 ```
@@ -1181,14 +1165,17 @@ sequentially.
 
 ```ts
 export declare const mergeAll: {
-  <Z, A>(zero: Z, f: (z: Z, a: A) => Z, options?: { readonly concurrency?: Concurrency }): <R, E>(
+  <Z, A>(zero: Z, f: (z: Z, a: A) => Z, options?: { readonly concurrency?: Concurrency; readonly batched?: boolean }): <
+    R,
+    E
+  >(
     elements: Iterable<Effect<R, E, A>>
   ) => Effect<R, E, Z>
   <R, E, A, Z>(
     elements: Iterable<Effect<R, E, A>>,
     zero: Z,
     f: (z: Z, a: A) => Z,
-    options?: { readonly concurrency?: Concurrency }
+    options?: { readonly concurrency?: Concurrency; readonly batched?: boolean }
   ): Effect<R, E, Z>
 }
 ```
@@ -1229,13 +1216,14 @@ Collects all successes and failures in a tupled fashion.
 
 ```ts
 export declare const partition: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>, options?: { readonly concurrency?: Concurrency }): (
-    elements: Iterable<A>
-  ) => Effect<R, never, readonly [readonly E[], readonly B[]]>
+  <R, E, A, B>(
+    f: (a: A) => Effect<R, E, B>,
+    options?: { readonly concurrency?: Concurrency; readonly batched?: boolean }
+  ): (elements: Iterable<A>) => Effect<R, never, readonly [readonly E[], readonly B[]]>
   <R, E, A, B>(
     elements: Iterable<A>,
     f: (a: A) => Effect<R, E, B>,
-    options?: { readonly concurrency?: Concurrency }
+    options?: { readonly concurrency?: Concurrency; readonly batched?: boolean }
   ): Effect<R, never, readonly [readonly E[], readonly B[]]>
 }
 ```
@@ -2267,12 +2255,12 @@ Filters the collection using the specified effectful predicate.
 export declare const filter: {
   <A, R, E>(
     f: (a: A) => Effect<R, E, boolean>,
-    options?: { readonly concurrency?: Concurrency; readonly negate?: boolean }
+    options?: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly negate?: boolean }
   ): (elements: Iterable<A>) => Effect<R, E, readonly A[]>
   <A, R, E>(
     elements: Iterable<A>,
     f: (a: A) => Effect<R, E, boolean>,
-    options?: { readonly concurrency?: Concurrency; readonly negate?: boolean }
+    options?: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly negate?: boolean }
   ): Effect<R, E, readonly A[]>
 }
 ```
@@ -4307,21 +4295,21 @@ of the current element being iterated over.
 export declare const forEachWithIndex: {
   <A, R, E, B>(
     f: (a: A, index: number) => Effect<R, E, B>,
-    options?: { readonly concurrency?: Concurrency; readonly discard?: false }
+    options?: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly discard?: false }
   ): (self: Iterable<A>) => Effect<R, E, readonly B[]>
   <A, R, E, B>(
     f: (a: A, index: number) => Effect<R, E, B>,
-    options: { readonly concurrency?: Concurrency; readonly discard: true }
+    options: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly discard: true }
   ): (self: Iterable<A>) => Effect<R, E, void>
   <A, R, E, B>(
     self: Iterable<A>,
     f: (a: A, index: number) => Effect<R, E, B>,
-    options?: { readonly concurrency?: Concurrency; readonly discard?: false }
+    options?: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly discard?: false }
   ): Effect<R, E, readonly B[]>
   <A, R, E, B>(
     self: Iterable<A>,
     f: (a: A, index: number) => Effect<R, E, B>,
-    options: { readonly concurrency?: Concurrency; readonly discard: true }
+    options: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly discard: true }
   ): Effect<R, E, void>
 }
 ```
@@ -5497,16 +5485,6 @@ export declare const setFiberRefs: (fiberRefs: FiberRefs.FiberRefs) => Effect<ne
 
 Added in v1.0.0
 
-## setParallelism
-
-**Signature**
-
-```ts
-export declare const setParallelism: (parallelism: number | 'unbounded') => Layer.Layer<never, never, never>
-```
-
-Added in v1.0.0
-
 ## setScheduler
 
 **Signature**
@@ -5917,13 +5895,14 @@ If `elements` is empty then `Effect.fail([])` is returned.
 
 ```ts
 export declare const validateFirst: {
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>, options?: { readonly concurrency?: Concurrency }): (
-    elements: Iterable<A>
-  ) => Effect<R, readonly E[], B>
+  <R, E, A, B>(
+    f: (a: A) => Effect<R, E, B>,
+    options?: { readonly concurrency?: Concurrency; readonly batched?: boolean }
+  ): (elements: Iterable<A>) => Effect<R, readonly E[], B>
   <R, E, A, B>(
     elements: Iterable<A>,
     f: (a: A) => Effect<R, E, B>,
-    options?: { readonly concurrency?: Concurrency }
+    options?: { readonly concurrency?: Concurrency; readonly batched?: boolean }
   ): Effect<R, readonly E[], B>
 }
 ```

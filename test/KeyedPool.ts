@@ -33,7 +33,7 @@ describe("KeyedPool", () => {
                 Effect.sleep(Duration.millis(10))
               )
             ),
-          { concurrency: "inherit", discard: true }
+          { concurrency: "unbounded", discard: true }
         )
       ))
       yield* $(TestClock.adjust(Duration.millis(10 * N)))
@@ -68,7 +68,7 @@ describe("KeyedPool", () => {
                 )
               )
             )),
-          { concurrency: "inherit", discard: true }
+          { concurrency: "unbounded", discard: true }
         )
       ))
       yield* $(TestClock.adjust(Duration.millis(15 * N)))

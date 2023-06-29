@@ -272,7 +272,7 @@ export const updateSomeAndGet: {
  * @since 1.0.0
  * @category fiberRefs
  */
-export const currentRequestBatchingEnabled: FiberRef<boolean> = fiberRuntime.currentRequestBatchingEnabled
+export const currentRequestBatchingEnabled: FiberRef<boolean> = core.currentRequestBatchingEnabled
 
 /**
  * @since 1.0.0
@@ -339,12 +339,6 @@ export const currentLogSpan: FiberRef<List.List<LogSpan.LogSpan>> = core.current
  * @category fiberRefs
  */
 export const currentRuntimeFlags: FiberRef<RuntimeFlags.RuntimeFlags> = fiberRuntime.currentRuntimeFlags
-
-/**
- * @since 1.0.0
- * @category fiberRefs
- */
-export const currentParallelism: FiberRef<Option.Option<number>> = core.currentParallelism
 
 /**
  * @since 1.0.0

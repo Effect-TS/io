@@ -4,7 +4,6 @@ import * as Context from "@effect/data/Context"
 import type * as Either from "@effect/data/Either"
 import type { LazyArg } from "@effect/data/Function"
 import { dual, identity, pipe } from "@effect/data/Function"
-import { globalValue } from "@effect/data/Global"
 import * as HashSet from "@effect/data/HashSet"
 import * as MRef from "@effect/data/MutableRef"
 import * as Option from "@effect/data/Option"
@@ -196,20 +195,13 @@ const drainQueueWhileRunningTable = {
 }
 
 /**
- * @internal
- */
-export const currentRequestBatchingEnabled = globalValue(
-  Symbol.for("@effect/io/FiberRef/currentRequestBatchingEnabled"),
-  () => core.fiberRefUnsafeMake(true)
-)
-/**
  * Executes all requests, submitting requests to each data source in parallel.
  */
 const runBlockedRequests = <R>(self: RequestBlock.RequestBlock<R>) =>
   core.forEachDiscard(
     _RequestBlock.flatten(self),
     (requestsByRequestResolver) =>
-      forEachParDiscard(
+      forEachBatchedDiscard(
         _RequestBlock.sequentialCollectionToChunk(requestsByRequestResolver),
         ([dataSource, sequential]) => {
           const map = new Map<Request<any, any>, Entry<any>>()
@@ -1104,7 +1096,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   }
 
   ["Blocked"](op: core.Primitive & { _tag: "Blocked" }) {
-    if (this._steps[this._steps.length - 1] && this.getFiberRef(currentRequestBatchingEnabled)) {
+    if (this._steps[this._steps.length - 1] && this.getFiberRef(core.currentRequestBatchingEnabled)) {
       const nextOp = this.popStack()
       if (nextOp) {
         switch (nextOp._tag) {
@@ -1400,20 +1392,22 @@ const _existsParFound = Symbol("@effect/io/Effect/existsPar/found")
 export const exists = dual<
   <R, E, A>(f: (a: A) => Effect.Effect<R, E, boolean>, options?: {
     readonly concurrency?: Concurrency.Concurrency
+    readonly batched?: boolean
   }) => (elements: Iterable<A>) => Effect.Effect<R, E, boolean>,
   <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>, options?: {
     readonly concurrency: Concurrency.Concurrency
+    readonly batched?: boolean
   }) => Effect.Effect<R, E, boolean>
 >((args) => Predicate.isIterable(args[0]), (elements, f, options) =>
-  Concurrency.matchSimple(
-    options?.concurrency,
+  Concurrency.matchWithBatchedSimple(
+    options,
     () => core.suspend(() => existsLoop(elements[Symbol.iterator](), f)),
-    (n) =>
+    () =>
       core.matchEffect(
-        forEachParOptionalN(
+        forEachOptions(
           elements,
-          n,
-          (a) => core.if_(f(a), { onTrue: core.fail(_existsParFound), onFalse: core.unit })
+          (a) => core.if_(f(a), { onTrue: core.fail(_existsParFound), onFalse: core.unit }),
+          options
         ),
         {
           onFailure: (e) => e === _existsParFound ? core.succeed(true) : core.fail(e),
@@ -1442,22 +1436,25 @@ export const filter = dual<
     f: (a: A) => Effect.Effect<R, E, boolean>,
     options?: {
       readonly concurrency?: Concurrency.Concurrency
+      readonly batched?: boolean
       readonly negate?: boolean
     }
   ) => (elements: Iterable<A>) => Effect.Effect<R, E, ReadonlyArray<A>>,
   <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>, options?: {
     readonly concurrency?: Concurrency.Concurrency
+    readonly batched?: boolean
     readonly negate?: boolean
   }) => Effect.Effect<R, E, ReadonlyArray<A>>
 >(
   (args) => Predicate.isIterable(args[0]),
   <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>, options?: {
     readonly concurrency?: Concurrency.Concurrency
+    readonly batched?: boolean
     readonly negate?: boolean
   }) => {
     const predicate = options?.negate ? (a: A) => core.map(f(a), Boolean.not) : f
-    return Concurrency.matchSimple(
-      options?.concurrency,
+    return Concurrency.matchWithBatchedSimple(
+      options,
       () =>
         core.suspend(() =>
           Array.from(elements).reduceRight(
@@ -1470,12 +1467,12 @@ export const filter = dual<
             core.sync(() => new Array<A>()) as Effect.Effect<R, E, Array<A>>
           )
         ),
-      (n) =>
+      () =>
         core.map(
-          forEachParOptionalN(
+          forEachOptions(
             elements,
-            n,
-            (a) => core.map(predicate(a), (b) => (b ? Option.some(a) : Option.none()))
+            (a) => core.map(predicate(a), (b) => (b ? Option.some(a) : Option.none())),
+            options
           ),
           RA.compact
         )
@@ -1487,6 +1484,7 @@ const resolveAllArguments = function(args: IArguments) {
   const hasOptions = args.length > 1 && !core.isEffect(args[args.length - 1])
   const options: {
     readonly concurrency?: Concurrency.Concurrency
+    readonly batched?: boolean
     readonly discard?: boolean
   } | undefined = hasOptions ?
     args[args.length - 1] :
@@ -1541,7 +1539,8 @@ export const allValidate = function() {
   }
   return core.flatMap(
     forEachOptions(eitherEffects, identity, {
-      concurrency: options?.concurrency
+      concurrency: options?.concurrency,
+      batched: options?.batched
     }),
     (eithers) => {
       const none = Option.none()
@@ -1588,7 +1587,10 @@ export const allWith: Effect.All.AllWith = function(options) {
 /* @internal */
 export const allSuccesses = <R, E, A>(
   elements: Iterable<Effect.Effect<R, E, A>>,
-  options?: { readonly concurrency?: Concurrency.Concurrency }
+  options?: {
+    readonly concurrency?: Concurrency.Concurrency
+    readonly batched?: boolean
+  }
 ): Effect.Effect<R, never, ReadonlyArray<A>> =>
   core.map(
     all(Array.from(elements).map(core.exit), options),
@@ -1628,38 +1630,44 @@ export const forEachOptions = dual<
   {
     <A, R, E, B>(f: (a: A) => Effect.Effect<R, E, B>, options?: {
       readonly concurrency?: Concurrency.Concurrency
+      readonly batched?: boolean
       readonly discard?: false
     }): (self: Iterable<A>) => Effect.Effect<R, E, ReadonlyArray<B>>
     <A, R, E, B>(f: (a: A) => Effect.Effect<R, E, B>, options: {
       readonly concurrency?: Concurrency.Concurrency
+      readonly batched?: boolean
       readonly discard: true
     }): (self: Iterable<A>) => Effect.Effect<R, E, void>
   },
   {
     <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>, options?: {
       readonly concurrency?: Concurrency.Concurrency
+      readonly batched?: boolean
       readonly discard?: false
     }): Effect.Effect<R, E, ReadonlyArray<B>>
     <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>, options: {
       readonly concurrency?: Concurrency.Concurrency
+      readonly batched?: boolean
       readonly discard: true
     }): Effect.Effect<R, E, void>
   }
 >((args) => Predicate.isIterable(args[0]), (self, f, options) => {
   if (options?.discard) {
-    return Concurrency.match(
-      options?.concurrency as Concurrency.Concurrency,
+    return Concurrency.matchWithBatched(
+      options,
       () => core.forEachDiscard(self, f),
-      () => forEachParDiscard(self, f),
-      (n) => forEachParNDiscard(self, n, f)
+      () => forEachParUnboundedDiscard(self, f),
+      (n) => forEachParNDiscard(self, n, f),
+      () => forEachBatchedDiscard(self, f)
     )
   }
 
-  return Concurrency.match(
-    options?.concurrency as Concurrency.Concurrency,
+  return Concurrency.matchWithBatched(
+    options,
     () => core.forEach(self, f),
-    () => forEachPar(self, f),
-    (n) => forEachParN(self, n, f)
+    () => forEachParUnbounded(self, f),
+    (n) => forEachParN(self, n, f),
+    () => forEachParN(self, 1, f)
   )
 })
 
@@ -1668,20 +1676,24 @@ export const forEachOptionsWithIndex = dual<
   {
     <A, R, E, B>(f: (a: A, index: number) => Effect.Effect<R, E, B>, options?: {
       readonly concurrency?: Concurrency.Concurrency
+      readonly batched?: boolean
       readonly discard?: false
     }): (self: Iterable<A>) => Effect.Effect<R, E, ReadonlyArray<B>>
     <A, R, E, B>(f: (a: A, index: number) => Effect.Effect<R, E, B>, options: {
       readonly concurrency?: Concurrency.Concurrency
+      readonly batched?: boolean
       readonly discard: true
     }): (self: Iterable<A>) => Effect.Effect<R, E, void>
   },
   {
     <A, R, E, B>(self: Iterable<A>, f: (a: A, index: number) => Effect.Effect<R, E, B>, options?: {
       readonly concurrency?: Concurrency.Concurrency
+      readonly batched?: boolean
       readonly discard?: false
     }): Effect.Effect<R, E, ReadonlyArray<B>>
     <A, R, E, B>(self: Iterable<A>, f: (a: A, index: number) => Effect.Effect<R, E, B>, options: {
       readonly concurrency?: Concurrency.Concurrency
+      readonly batched?: boolean
       readonly discard: true
     }): Effect.Effect<R, E, void>
   }
@@ -1689,6 +1701,7 @@ export const forEachOptionsWithIndex = dual<
   (args) => Predicate.isIterable(args[0]),
   <R, E, A, B>(elements: Iterable<A>, f: (a: A, i: number) => Effect.Effect<R, E, B>, options?: {
     readonly concurrency?: Concurrency.Concurrency
+    readonly batched?: boolean
     readonly discard?: boolean
   }) =>
     forEachOptions(
@@ -1699,33 +1712,7 @@ export const forEachOptionsWithIndex = dual<
 )
 
 /* @internal */
-export const forEachPar = dual<
-  <A, R, E, B>(f: (a: A) => Effect.Effect<R, E, B>) => (self: Iterable<A>) => Effect.Effect<R, E, ReadonlyArray<B>>,
-  <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, E, ReadonlyArray<B>>
->(2, (self, f) =>
-  core.fiberRefGetWith(
-    core.currentParallelism,
-    (o) =>
-      Option.isNone(o) ?
-        forEachParUnbounded(self, f) :
-        forEachParN(self, o.value, f)
-  ))
-
-/* @internal */
-export const forEachParDiscard = dual<
-  <A, R, E, _>(f: (a: A) => Effect.Effect<R, E, _>) => (self: Iterable<A>) => Effect.Effect<R, E, void>,
-  <A, R, E, _>(self: Iterable<A>, f: (a: A) => Effect.Effect<R, E, _>) => Effect.Effect<R, E, void>
->(2, (self, f) =>
-  core.fiberRefGetWith(
-    core.currentParallelism,
-    (o) =>
-      o._tag === "None" ?
-        forEachParUnboundedDiscard(self, f) :
-        forEachParNDiscard(self, o.value, f)
-  ))
-
-/* @internal */
-const forEachParUnbounded = <A, R, E, B>(
+export const forEachParUnbounded = <A, R, E, B>(
   self: Iterable<A>,
   f: (a: A) => Effect.Effect<R, E, B>
 ): Effect.Effect<R, E, ReadonlyArray<B>> =>
@@ -1946,18 +1933,6 @@ export const forEachParNDiscard = <A, R, E, _>(
       })
     })
 
-const forEachParOptionalN = <R, E, A, B>(
-  iterable: Iterable<A>,
-  n: number | undefined,
-  f: (a: A) => Effect.Effect<R, E, B>
-) => n ? forEachParN(iterable, n, f) : forEachPar(iterable, f)
-
-const forEachParOptionalNDiscard = <R, E, A, B>(
-  iterable: Iterable<A>,
-  n: number | undefined,
-  f: (a: A) => Effect.Effect<R, E, B>
-) => n ? forEachParNDiscard(iterable, n, f) : forEachParDiscard(iterable, f)
-
 /* @internal */
 export const fork = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>> =>
   core.withFiberRuntime<R, never, Fiber.RuntimeFiber<E, A>>((state, status) =>
@@ -2051,29 +2026,32 @@ const forkWithScopeOverride = <R, E, A>(
 export const mergeAll = dual<
   <Z, A>(zero: Z, f: (z: Z, a: A) => Z, options?: {
     readonly concurrency?: Concurrency.Concurrency
+    readonly batched?: boolean
   }) => <R, E>(elements: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, Z>,
   <R, E, A, Z>(elements: Iterable<Effect.Effect<R, E, A>>, zero: Z, f: (z: Z, a: A) => Z, options?: {
     readonly concurrency?: Concurrency.Concurrency
+    readonly batched?: boolean
   }) => Effect.Effect<R, E, Z>
 >(
   (args) => Predicate.isIterable(args[0]),
   <R, E, A, Z>(elements: Iterable<Effect.Effect<R, E, A>>, zero: Z, f: (z: Z, a: A) => Z, options?: {
     readonly concurrency?: Concurrency.Concurrency
+    readonly batched?: boolean
   }) =>
-    Concurrency.matchSimple(
-      options?.concurrency,
+    Concurrency.matchWithBatchedSimple(
+      options,
       () =>
         Array.from(elements).reduce(
           (acc, a) => core.zipWith(acc, a, f),
           core.succeed(zero) as Effect.Effect<R, E, Z>
         ),
-      (n) =>
+      () =>
         core.flatMap(Ref.make(zero), (acc) =>
           core.flatMap(
-            forEachParOptionalNDiscard(
+            forEachOptions(
               elements,
-              n,
-              core.flatMap((a) => Ref.update(acc, (b) => f(b, a)))
+              core.flatMap((a) => Ref.update(acc, (b) => f(b, a))),
+              options
             ),
             () => Ref.get(acc)
           ))
@@ -2084,12 +2062,18 @@ export const mergeAll = dual<
 export const partition = dual<
   <R, E, A, B>(
     f: (a: A) => Effect.Effect<R, E, B>,
-    options?: { readonly concurrency?: Concurrency.Concurrency }
+    options?: {
+      readonly concurrency?: Concurrency.Concurrency
+      readonly batched?: boolean
+    }
   ) => (elements: Iterable<A>) => Effect.Effect<R, never, readonly [ReadonlyArray<E>, ReadonlyArray<B>]>,
   <R, E, A, B>(
     elements: Iterable<A>,
     f: (a: A) => Effect.Effect<R, E, B>,
-    options?: { readonly concurrency?: Concurrency.Concurrency }
+    options?: {
+      readonly concurrency?: Concurrency.Concurrency
+      readonly batched?: boolean
+    }
   ) => Effect.Effect<R, never, readonly [ReadonlyArray<E>, ReadonlyArray<B>]>
 >((args) => Predicate.isIterable(args[0]), (elements, f, options) =>
   pipe(
@@ -2104,6 +2088,7 @@ export const validateAll = dual<
       f: (a: A) => Effect.Effect<R, E, B>,
       options?: {
         readonly concurrency?: Concurrency.Concurrency
+        readonly batched?: boolean
         readonly discard?: false
       }
     ): (elements: Iterable<A>) => Effect.Effect<R, ReadonlyArray<E>, ReadonlyArray<B>>
@@ -2111,6 +2096,7 @@ export const validateAll = dual<
       f: (a: A) => Effect.Effect<R, E, B>,
       options: {
         readonly concurrency?: Concurrency.Concurrency
+        readonly batched?: boolean
         readonly discard: true
       }
     ): (elements: Iterable<A>) => Effect.Effect<R, ReadonlyArray<E>, void>
@@ -2121,6 +2107,7 @@ export const validateAll = dual<
       f: (a: A) => Effect.Effect<R, E, B>,
       options?: {
         readonly concurrency?: Concurrency.Concurrency
+        readonly batched?: boolean
         readonly discard?: false
       }
     ): Effect.Effect<R, ReadonlyArray<E>, ReadonlyArray<B>>
@@ -2129,6 +2116,7 @@ export const validateAll = dual<
       f: (a: A) => Effect.Effect<R, E, B>,
       options: {
         readonly concurrency?: Concurrency.Concurrency
+        readonly batched?: boolean
         readonly discard: true
       }
     ): Effect.Effect<R, ReadonlyArray<E>, void>
@@ -2137,11 +2125,13 @@ export const validateAll = dual<
   (args) => Predicate.isIterable(args[0]),
   <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>, options?: {
     readonly concurrency?: Concurrency.Concurrency
+    readonly batched?: boolean
     readonly discard?: boolean
   }): Effect.Effect<R, ReadonlyArray<E>, any> =>
     core.flatMap(
       partition(elements, f, {
-        concurrency: options?.concurrency
+        concurrency: options?.concurrency,
+        batched: options?.batched
       }),
       ([es, bs]) =>
         es.length === 0
@@ -2264,22 +2254,31 @@ export const reduceEffect = dual<
   <R, E, A>(
     zero: Effect.Effect<R, E, A>,
     f: (acc: A, a: A) => A,
-    options?: { readonly concurrency: Concurrency.Concurrency }
+    options?: {
+      readonly concurrency?: Concurrency.Concurrency
+      readonly batched?: boolean
+    }
   ) => (elements: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, A>,
   <R, E, A>(
     elements: Iterable<Effect.Effect<R, E, A>>,
     zero: Effect.Effect<R, E, A>,
     f: (acc: A, a: A) => A,
-    options?: { readonly concurrency: Concurrency.Concurrency }
+    options?: {
+      readonly concurrency?: Concurrency.Concurrency
+      readonly batched?: boolean
+    }
   ) => Effect.Effect<R, E, A>
 >((args) => Predicate.isIterable(args[0]), <R, E, A>(
   elements: Iterable<Effect.Effect<R, E, A>>,
   zero: Effect.Effect<R, E, A>,
   f: (acc: A, a: A) => A,
-  options?: { readonly concurrency: Concurrency.Concurrency }
+  options?: {
+    readonly concurrency?: Concurrency.Concurrency
+    readonly batched?: boolean
+  }
 ) =>
-  Concurrency.matchSimple(
-    options?.concurrency,
+  Concurrency.matchWithBatchedSimple(
+    options,
     () => Array.from(elements).reduce((acc, a) => core.zipWith(acc, a, f), zero),
     () =>
       core.suspend(() =>
@@ -2471,9 +2470,11 @@ export const validateAllParDiscard = dual<
 export const validateFirst = dual<
   <R, E, A, B>(f: (a: A) => Effect.Effect<R, E, B>, options?: {
     readonly concurrency?: Concurrency.Concurrency
+    readonly batched?: boolean
   }) => (elements: Iterable<A>) => Effect.Effect<R, ReadonlyArray<E>, B>,
   <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>, options?: {
     readonly concurrency?: Concurrency.Concurrency
+    readonly batched?: boolean
   }) => Effect.Effect<R, ReadonlyArray<E>, B>
 >(
   (args) => Predicate.isIterable(args[0]),
@@ -2648,8 +2649,7 @@ export const releaseMapReleaseAll = (
             ) :
             executionStrategy.isParallel(strategy) ?
             pipe(
-              finalizers,
-              forEachPar((fin) => core.exit(update(fin)(exit))),
+              forEachParUnbounded(finalizers, (fin) => core.exit(update(fin)(exit))),
               core.flatMap((results) =>
                 pipe(
                   core.exitCollectAll(results, { parallel: true }),
@@ -2659,16 +2659,14 @@ export const releaseMapReleaseAll = (
               )
             ) :
             pipe(
-              finalizers,
-              forEachPar((fin) => core.exit(update(fin)(exit))),
+              forEachParN(finalizers, strategy.parallelism, (fin) => core.exit(update(fin)(exit))),
               core.flatMap((results) =>
                 pipe(
                   core.exitCollectAll(results, { parallel: true }),
                   Option.map(core.exitAsUnit),
                   Option.getOrElse(() => core.exitUnit)
                 )
-              ),
-              core.withParallelism(strategy.parallelism)
+              )
             )
         }
       }
@@ -2821,8 +2819,8 @@ export const fiberAwaitAll = (fibers: Iterable<Fiber.Fiber<any, any>>): Effect.E
 export const fiberAll = <E, A>(fibers: Iterable<Fiber.Fiber<E, A>>): Fiber.Fiber<E, ReadonlyArray<A>> => ({
   [internalFiber.FiberTypeId]: internalFiber.fiberVariance,
   id: () => Array.from(fibers).reduce((id, fiber) => FiberId.combine(id, fiber.id()), FiberId.none),
-  await: () => core.exit(forEachPar(fibers, (fiber) => core.flatten(fiber.await()))),
-  children: () => core.map(forEachPar(fibers, (fiber) => fiber.children()), RA.flatten),
+  await: () => core.exit(forEachParUnbounded(fibers, (fiber) => core.flatten(fiber.await()))),
+  children: () => core.map(forEachParUnbounded(fibers, (fiber) => fiber.children()), RA.flatten),
   inheritAll: () => core.forEachDiscard(fibers, (fiber) => fiber.inheritAll()),
   poll: () =>
     core.map(

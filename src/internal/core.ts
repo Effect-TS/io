@@ -1114,17 +1114,6 @@ export const whileLoop = <R, E, A>(
 }
 
 /* @internal */
-export const withParallelism = dual<
-  (parallelism: number | "unbounded") => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
-  <R, E, A>(self: Effect.Effect<R, E, A>, parallelism: number | "unbounded") => Effect.Effect<R, E, A>
->(2, (self, parallelism) =>
-  fiberRefLocally(
-    self,
-    currentParallelism,
-    parallelism === "unbounded" ? Option.none() : Option.some(parallelism)
-  ))
-
-/* @internal */
 export const withRuntimeFlags = dual<
   (update: RuntimeFlagsPatch.RuntimeFlagsPatch) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
   <R, E, A>(self: Effect.Effect<R, E, A>, update: RuntimeFlagsPatch.RuntimeFlagsPatch) => Effect.Effect<R, E, A>
@@ -1654,10 +1643,12 @@ export const withMaxFiberOps = dual<
   <R, E, B>(self: Effect.Effect<R, E, B>, ops: number) => Effect.Effect<R, E, B>
 >(2, (self, ops) => fiberRefLocally(self, currentMaxFiberOps, ops))
 
-/** @internal */
-export const currentParallelism: FiberRef.FiberRef<Option.Option<number>> = globalValue(
-  Symbol.for("@effect/io/FiberRef/currentParallelism"),
-  () => fiberRefUnsafeMake<Option.Option<number>>(Option.none())
+/**
+ * @internal
+ */
+export const currentRequestBatchingEnabled = globalValue(
+  Symbol.for("@effect/io/FiberRef/currentRequestBatchingEnabled"),
+  () => fiberRefUnsafeMake(true)
 )
 
 /** @internal */

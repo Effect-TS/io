@@ -149,10 +149,10 @@ describe.concurrent("Effect", () => {
                 Effect.forEach(
                   children,
                   (child) => Effect.zip(getChildInfo(child.id), getChildExtra(child.id), { parallel: true }),
-                  { concurrency: "inherit" }
+                  { concurrency: "unbounded" }
                 )
             ),
-          { concurrency: "inherit" }
+          { concurrency: "unbounded" }
         ))
 
         const count = yield* $(Counter)
@@ -163,7 +163,7 @@ describe.concurrent("Effect", () => {
       }),
       Effect.provideSomeLayer(EnvLive)
     ))
-  it.effect("nested queries are batched when parallelism is set to 1", () =>
+  it.effect("nested queries are batched when concurrency is set to 1", () =>
     pipe(
       Effect.gen(function*($) {
         const parents = yield* $(getAllParents)
@@ -177,10 +177,10 @@ describe.concurrent("Effect", () => {
                 Effect.forEach(
                   children,
                   (child) => Effect.zip(getChildInfo(child.id), getChildExtra(child.id), { parallel: true }),
-                  { concurrency: "inherit" }
+                  { concurrency: 1, batched: true }
                 )
             ),
-          { concurrency: "inherit" }
+          { concurrency: 1, batched: true }
         ))
 
         const count = yield* $(Counter)
@@ -189,7 +189,6 @@ describe.concurrent("Effect", () => {
         expect(count.count).toBe(3)
         expect(requests.count).toBe(7)
       }),
-      Effect.withParallelism(1),
       Effect.provideSomeLayer(EnvLive)
     ))
 })

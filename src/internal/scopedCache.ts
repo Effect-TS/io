@@ -319,7 +319,7 @@ class ScopedCacheImpl<Key, Environment, Error, Value> implements ScopedCache.Sco
   }
 
   invalidateAll(): Effect.Effect<never, never, void> {
-    return fiberRuntime.forEachParDiscard(
+    return fiberRuntime.forEachParUnboundedDiscard(
       HashSet.fromIterable(Array.from(this.cacheState.map).map(([key]) => key)),
       (key) => this.invalidate(key)
     )
@@ -563,7 +563,7 @@ class ScopedCacheImpl<Key, Environment, Error, Value> implements ScopedCache.Sco
   }
 
   ensureMapSizeNotExceeded(key: _cache.MapKey<Key>): Effect.Effect<never, never, void> {
-    return fiberRuntime.forEachParDiscard(
+    return fiberRuntime.forEachParUnboundedDiscard(
       this.trackAccess(key),
       (cleanedMapValue) => this.cleanMapValue(cleanedMapValue)
     )

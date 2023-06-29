@@ -7,6 +7,7 @@ import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import * as Fiber from "@effect/io/Fiber"
 import * as FiberRef from "@effect/io/FiberRef"
+import type { Concurrency } from "@effect/io/internal/concurrency"
 import * as TestClock from "@effect/io/internal/testing/testClock"
 import * as Layer from "@effect/io/Layer"
 import * as Request from "@effect/io/Request"
@@ -72,11 +73,14 @@ export const interrupts = FiberRef.unsafeMake({ interrupts: 0 })
 
 export const getUserNameById = (id: number) => Effect.request(GetNameById({ id }), UserResolver)
 
-export const getAllUserNames = pipe(
-  getAllUserIds,
-  Effect.flatMap(Effect.forEach(getUserNameById, { concurrency: "inherit" })),
-  Effect.onInterrupt(() => FiberRef.getWith(interrupts, (i) => Effect.sync(() => i.interrupts++)))
-)
+export const getAllUserNamesN = (concurrency: Concurrency) =>
+  pipe(
+    getAllUserIds,
+    Effect.flatMap(Effect.forEach(getUserNameById, { concurrency })),
+    Effect.onInterrupt(() => FiberRef.getWith(interrupts, (i) => Effect.sync(() => i.interrupts++)))
+  )
+
+export const getAllUserNames = getAllUserNamesN("unbounded")
 
 export const print = (request: UserRequest): string => {
   switch (request._tag) {
@@ -148,7 +152,7 @@ describe.concurrent("Effect", () => {
   it.effect("batching is independent from parallelism", () =>
     provideEnv(
       Effect.gen(function*($) {
-        const names = yield* $(getAllUserNames, Effect.withParallelism(5))
+        const names = yield* $(getAllUserNamesN(5))
         const count = yield* $(Counter)
         expect(count.count).toEqual(3)
         expect(names.length).toBeGreaterThan(2)
@@ -210,7 +214,6 @@ describe.concurrent("Effect", () => {
           const exit = yield* $(
             getAllUserNames,
             Effect.zipLeft(Effect.interrupt, { parallel: true }),
-            Effect.withParallelism(2),
             Effect.exit
           )
           expect(exit._tag).toEqual("Failure")
@@ -306,7 +309,7 @@ describe.concurrent("Effect", () => {
       Effect.gen(function*($) {
         yield* $(
           Effect.all(getUserNameById(userIds[0]), getUserNameById(userIds[0]), {
-            concurrency: "inherit",
+            concurrency: "unbounded",
             discard: true
           }),
           Effect.withRequestCaching("off")

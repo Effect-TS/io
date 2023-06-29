@@ -21,7 +21,7 @@ const UserResolver = Resolver.makeBatched((requests: Array<GetNameById>) =>
 )
 
 const getUserNameById = (id: number) => Effect.request(GetNameById({ id }), UserResolver)
-const getAllUserNames = Effect.forEach([1, 1], getUserNameById, { concurrency: "inherit" })
+const getAllUserNames = Effect.forEach([1, 1], getUserNameById, { batched: true })
 
 describe.concurrent("Effect", () => {
   it.it("requests are executed correctly", () =>

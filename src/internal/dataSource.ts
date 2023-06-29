@@ -212,10 +212,7 @@ export const fromFunctionEffect = <R, A extends Request.Request<any, any>>(
     Effect.forEach(
       requests,
       (a) => Effect.flatMap(Effect.exit(f(a)), (e) => complete(a, e as any)),
-      {
-        concurrency: "inherit",
-        discard: true
-      }
+      { batched: true, discard: true }
     )
   ).identified("FromFunctionEffect", f)
 

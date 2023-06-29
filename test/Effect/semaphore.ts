@@ -14,7 +14,7 @@ describe.concurrent("Effect", () => {
           [0, 1, 2, 3].map((n) =>
             sem.withPermits(2)(Effect.delay(D.seconds(2))(Effect.sync(() => messages.push(`process: ${n}`))))
           ),
-          { concurrency: "inherit", discard: true }
+          { concurrency: "unbounded", discard: true }
         ))
       )
       yield* $(TestClock.adjust(D.seconds(3)))
@@ -26,7 +26,7 @@ describe.concurrent("Effect", () => {
           [0, 1, 2, 3].map((n) =>
             sem.withPermits(2)(Effect.delay(D.seconds(2))(Effect.sync(() => messages.push(`process: ${n}`))))
           ),
-          { concurrency: "inherit", discard: true }
+          { concurrency: "unbounded", discard: true }
         ))
       )
       yield* $(TestClock.adjust(D.seconds(3)))

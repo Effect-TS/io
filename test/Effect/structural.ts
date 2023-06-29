@@ -154,7 +154,7 @@ describe.concurrent("Effect", () => {
     it.effect("should work with multiple arguments", () =>
       Effect.gen(function*($) {
         const result = yield* $(Effect.all(Effect.succeed(0), Effect.succeed(1), {
-          concurrency: "inherit"
+          concurrency: "unbounded"
         }))
         const [a, b] = result
         assert.deepEqual(a, 0)
@@ -164,7 +164,7 @@ describe.concurrent("Effect", () => {
     it.effect("should work with one argument", () =>
       Effect.gen(function*($) {
         const result = yield* $(Effect.all(Effect.succeed(0), {
-          concurrency: "inherit"
+          concurrency: "unbounded"
         }))
         const [a] = result
         assert.deepEqual(a, 0)
@@ -173,21 +173,21 @@ describe.concurrent("Effect", () => {
     it.effect("should work with one array argument", () =>
       Effect.gen(function*($) {
         const res = yield* $(Effect.all([Effect.succeed(0), Effect.succeed(1)], {
-          concurrency: "inherit"
+          concurrency: "unbounded"
         }))
         assert.deepEqual(res, [0, 1])
       }))
     it.effect("should work with one empty array argument", () =>
       Effect.gen(function*($) {
         const x = yield* $(Effect.all([], {
-          concurrency: "inherit"
+          concurrency: "unbounded"
         }))
         assert.deepEqual(x, [])
       }))
     it.effect("should work with one record argument", () =>
       Effect.gen(function*($) {
         const result = yield* $(Effect.all({ a: Effect.succeed(0), b: Effect.succeed(1) },  {
-          concurrency: "inherit"
+          concurrency: "unbounded"
         }))
         const { a, b } = result
         assert.deepEqual(a, 0)
@@ -199,7 +199,7 @@ describe.concurrent("Effect", () => {
       }))
     it.effect("should work with one empty record", () =>
       Effect.gen(function*($) {
-        const x = yield* $(Effect.all({}, { concurrency: "inherit" }))
+        const x = yield* $(Effect.all({}, { concurrency: "unbounded" }))
         assert.deepEqual(x, {})
         assertType<{}>()(x) satisfies true
       }))
@@ -209,7 +209,7 @@ describe.concurrent("Effect", () => {
       Effect.gen(function*($) {
         const result = yield* $(
           { a: Effect.succeed(0), b: Effect.succeed("hello") },
-          Effect.allWith({ concurrency: "inherit" })
+          Effect.allWith({ concurrency: "unbounded" })
         )
         const { a, b } = result
         assert.deepEqual(a, 0)
@@ -223,7 +223,7 @@ describe.concurrent("Effect", () => {
       Effect.gen(function*($) {
         const result = yield* $(
           [Effect.succeed(0), Effect.succeed("hello")] as const,
-          Effect.allWith({ concurrency: "inherit" })
+          Effect.allWith({ concurrency: "unbounded" })
         )
         const [a, b] = result
         assert.deepEqual(a, 0)
@@ -234,7 +234,7 @@ describe.concurrent("Effect", () => {
       Effect.gen(function*($) {
         const a = yield* $(
           [Effect.succeed(0), Effect.succeed(1)],
-          Effect.allWith({ concurrency: "inherit" })
+          Effect.allWith({ concurrency: "unbounded" })
         )
         assert.deepEqual(a, [0, 1])
         assertType<ReadonlyArray<number>>()(a) satisfies true
@@ -243,7 +243,7 @@ describe.concurrent("Effect", () => {
       Effect.gen(function*($) {
         const a = yield* $(
           [Effect.succeed(0), Effect.succeed(1)],
-          Effect.allWith({ concurrency: "inherit", discard: true })
+          Effect.allWith({ concurrency: "unbounded", discard: true })
         )
         assert.deepEqual(a, void 0)
         assertType<void>()(a) satisfies true
@@ -365,7 +365,7 @@ describe.concurrent("Effect", () => {
       Effect.gen(function*($) {
         const result = yield* $(
           { a: Effect.succeed(0), b: Effect.succeed("hello") },
-          Effect.allValidateWith({ concurrency: "inherit" })
+          Effect.allValidateWith({ concurrency: "unbounded" })
         )
         const { a, b } = result
         assert.deepEqual(a, 0)
@@ -379,7 +379,7 @@ describe.concurrent("Effect", () => {
       Effect.gen(function*($) {
         const result = yield* $(
           { a: Effect.fail(0), b: Effect.fail("hello") },
-          Effect.allValidateWith({ concurrency: "inherit" }),
+          Effect.allValidateWith({ concurrency: "unbounded" }),
           Effect.flip
         )
         const { a, b } = result
@@ -394,7 +394,7 @@ describe.concurrent("Effect", () => {
       Effect.gen(function*($) {
         const result = yield* $(
           [Effect.succeed(0), Effect.succeed("hello")] as const,
-          Effect.allValidateWith({ concurrency: "inherit" })
+          Effect.allValidateWith({ concurrency: "unbounded" })
         )
         const [a, b] = result
         assert.deepEqual(a, 0)
@@ -405,7 +405,7 @@ describe.concurrent("Effect", () => {
       Effect.gen(function*($) {
         const a = yield* $(
           [Effect.succeed(0), Effect.succeed(1)],
-          Effect.allValidateWith({ concurrency: "inherit" })
+          Effect.allValidateWith({ concurrency: "unbounded" })
         )
         assert.deepEqual(a, [0, 1])
         assertType<ReadonlyArray<number>>()(a) satisfies true
@@ -414,7 +414,7 @@ describe.concurrent("Effect", () => {
       Effect.gen(function*($) {
         const a = yield* $(
           [Effect.succeed(0), Effect.succeed(1)],
-          Effect.allValidateWith({ concurrency: "inherit", discard: true })
+          Effect.allValidateWith({ concurrency: "unbounded", discard: true })
         )
         assert.deepEqual(a, void 0)
         assertType<void>()(a) satisfies true

@@ -31,7 +31,6 @@ Added in v1.0.0
   - [currentMaxFiberOps](#currentmaxfiberops)
   - [currentMetricLabels](#currentmetriclabels)
   - [currentMinimumLogLevel](#currentminimumloglevel)
-  - [currentParallelism](#currentparallelism)
   - [currentRequestBatchingEnabled](#currentrequestbatchingenabled)
   - [currentRequestCache](#currentrequestcache)
   - [currentRequestCacheEnabled](#currentrequestcacheenabled)
@@ -264,16 +263,6 @@ Added in v1.0.0
 
 ```ts
 export declare const currentMinimumLogLevel: FiberRef<LogLevel.LogLevel>
-```
-
-Added in v1.0.0
-
-## currentParallelism
-
-**Signature**
-
-```ts
-export declare const currentParallelism: FiberRef<Option.Option<number>>
 ```
 
 Added in v1.0.0

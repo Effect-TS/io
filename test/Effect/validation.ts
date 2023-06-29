@@ -67,7 +67,7 @@ describe.concurrent("Effect", () => {
   it.effect("validateAll/concurrency - returns all errors if never valid", () =>
     Effect.gen(function*($) {
       const array = Array.from({ length: 1000 }, () => 0)
-      const result = yield* $(array, Effect.validateAll(Effect.fail, { concurrency: "inherit" }), Effect.flip)
+      const result = yield* $(array, Effect.validateAll(Effect.fail, { concurrency: "unbounded" }), Effect.flip)
       assert.deepStrictEqual(Array.from(result), array)
     }))
   it.effect("validateAll/concurrency - accumulate errors and ignore successes", () =>
@@ -77,7 +77,7 @@ describe.concurrent("Effect", () => {
         pipe(
           array,
           Effect.validateAll((n) => n % 2 === 0 ? Effect.succeed(n) : Effect.fail(n), {
-            concurrency: "inherit"
+            concurrency: "unbounded"
           }),
           Effect.flip
         )
@@ -87,7 +87,7 @@ describe.concurrent("Effect", () => {
   it.effect("validateAll/concurrency - accumulate successes", () =>
     Effect.gen(function*($) {
       const array = Array.from({ length: 10 }, (_, i) => i)
-      const result = yield* $(array, Effect.validateAll(Effect.succeed, { concurrency: "inherit" }))
+      const result = yield* $(array, Effect.validateAll(Effect.succeed, { concurrency: "unbounded" }))
       assert.deepStrictEqual(Array.from(result), array)
     }))
   it.effect("validateAll/concurrency+discard - returns all errors if never valid", () =>
@@ -96,7 +96,7 @@ describe.concurrent("Effect", () => {
       const result = yield* $(
         array,
         Effect.validateAll(Effect.fail, {
-          concurrency: "inherit",
+          concurrency: "unbounded",
           discard: true
         }),
         Effect.flip
@@ -145,7 +145,7 @@ describe.concurrent("Effect", () => {
     it.effect("validateFirst/concurrency - returns all errors if never valid", () =>
       Effect.gen(function*($) {
         const array = Array.from({ length: 1000 }, () => 0)
-        const result = yield* $(array, Effect.validateFirst(Effect.fail, { concurrency: "inherit" }), Effect.flip)
+        const result = yield* $(array, Effect.validateFirst(Effect.fail, { concurrency: "unbounded" }), Effect.flip)
         assert.deepStrictEqual(Array.from(result), array)
       }))
     it.effect("validateFirst/concurrency - returns success if valid", () =>
@@ -154,7 +154,7 @@ describe.concurrent("Effect", () => {
           return n === 6 ? Effect.succeed(n) : Effect.fail(n)
         }
         const array = Array.from({ length: 10 }, (_, i) => i + 1)
-        const result = yield* $(array, Effect.validateFirst(f, { concurrency: "inherit" }))
+        const result = yield* $(array, Effect.validateFirst(f, { concurrency: "unbounded" }))
         assert.strictEqual(result, 6)
       }))
   })

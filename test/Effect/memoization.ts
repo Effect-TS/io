@@ -38,7 +38,7 @@ describe.concurrent("Effect", () => {
         effect,
         Effect.replicate(100),
         Effect.allWith({
-          concurrency: "inherit",
+          concurrency: "unbounded",
           discard: true
         })
       )

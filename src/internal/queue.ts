@@ -93,8 +93,10 @@ class QueueImpl<A> implements Queue.Queue<A> {
       core.withFiberRuntime<never, never, void>((state) => {
         pipe(this.shutdownFlag, MutableRef.set(true))
         return pipe(
-          unsafePollAll(this.takers),
-          fiberRuntime.forEachParDiscard((d) => core.deferredInterruptWith(d, state.id())),
+          fiberRuntime.forEachParUnboundedDiscard(
+            unsafePollAll(this.takers),
+            (d) => core.deferredInterruptWith(d, state.id())
+          ),
           core.zipRight(this.strategy.shutdown()),
           core.whenEffect(core.deferredSucceed(this.shutdownHook, void 0)),
           core.asUnit
@@ -443,9 +445,10 @@ class BackPressureStrategy<A> implements Queue.Strategy<A> {
       core.flatMap((fiberId) =>
         pipe(
           core.sync(() => unsafePollAll(this.putters)),
-          core.flatMap(fiberRuntime.forEachParDiscard(([_, deferred, isLastItem]) =>
-            isLastItem ? pipe(core.deferredInterruptWith(deferred, fiberId), core.asUnit) : core.unit
-          ))
+          core.flatMap((putters) =>
+            fiberRuntime.forEachParUnboundedDiscard(putters, ([_, deferred, isLastItem]) =>
+              isLastItem ? pipe(core.deferredInterruptWith(deferred, fiberId), core.asUnit) : core.unit)
+          )
         )
       )
     )

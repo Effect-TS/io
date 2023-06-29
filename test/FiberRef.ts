@@ -244,7 +244,7 @@ describe.concurrent("FiberRef", () => {
         join: (a, b) => a + b
       }))
       yield* $(Effect.all(Array.from({ length: n }, () => FiberRef.update(fiberRef, (n) => n + 1)), {
-        concurrency: "inherit",
+        concurrency: "unbounded",
         discard: true
       }))
       const result = yield* $(FiberRef.get(fiberRef))
