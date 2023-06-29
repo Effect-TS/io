@@ -34,7 +34,8 @@ describe("stringLogger", () => {
       Cause.empty,
       FiberRefs.unsafeMake(new Map()),
       spans,
-      annotations
+      annotations,
+      date
     )
 
     expect(result).toEqual(
@@ -60,7 +61,8 @@ describe("stringLogger", () => {
       Cause.empty,
       FiberRefs.unsafeMake(new Map()),
       spans,
-      annotations
+      annotations,
+      date
     )
 
     expect(result).toEqual(
@@ -96,7 +98,8 @@ describe("logfmtLogger", () => {
       Cause.empty,
       FiberRefs.unsafeMake(new Map()),
       spans,
-      annotations
+      annotations,
+      date
     )
 
     expect(result).toEqual(
@@ -122,7 +125,8 @@ describe("logfmtLogger", () => {
       Cause.empty,
       FiberRefs.unsafeMake(new Map()),
       spans,
-      annotations
+      annotations,
+      date
     )
 
     expect(result).toEqual(

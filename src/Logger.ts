@@ -42,7 +42,8 @@ export interface Logger<Message, Output> extends Logger.Variance<Message, Output
     cause: Cause.Cause<unknown>,
     context: FiberRefs.FiberRefs,
     spans: List.List<LogSpan.LogSpan>,
-    annotations: HashMap.HashMap<string, string>
+    annotations: HashMap.HashMap<string, string>,
+    now: Date
   ) => Output
 }
 
@@ -74,7 +75,8 @@ export const make: <Message, Output>(
     cause: Cause.Cause<unknown>,
     context: FiberRefs.FiberRefs,
     spans: List.List<LogSpan.LogSpan>,
-    annotations: HashMap.HashMap<string, string>
+    annotations: HashMap.HashMap<string, string>,
+    now: Date
   ) => Output
 ) => Logger<Message, Output> = internal.makeLogger
 
