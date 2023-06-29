@@ -1,5 +1,5 @@
 ---
-"@effect/io": patch
+"@effect/io": minor
 ---
 
-Use Clock for default Logger implementations
+Pass now in Logger from fiber
