@@ -5864,20 +5864,21 @@ will be lost. To retain all information please use `partition`.
 export declare const validateAll: {
   <R, E, A, B>(
     f: (a: A) => Effect<R, E, B>,
-    options?: { readonly concurrency?: Concurrency; readonly discard?: false }
+    options?: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly discard?: false }
   ): (elements: Iterable<A>) => Effect<R, readonly E[], readonly B[]>
-  <R, E, A, B>(f: (a: A) => Effect<R, E, B>, options: { readonly concurrency?: Concurrency; readonly discard: true }): (
-    elements: Iterable<A>
-  ) => Effect<R, readonly E[], void>
+  <R, E, A, B>(
+    f: (a: A) => Effect<R, E, B>,
+    options: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly discard: true }
+  ): (elements: Iterable<A>) => Effect<R, readonly E[], void>
   <R, E, A, B>(
     elements: Iterable<A>,
     f: (a: A) => Effect<R, E, B>,
-    options?: { readonly concurrency?: Concurrency; readonly discard?: false }
+    options?: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly discard?: false }
   ): Effect<R, readonly E[], readonly B[]>
   <R, E, A, B>(
     elements: Iterable<A>,
     f: (a: A) => Effect<R, E, B>,
-    options: { readonly concurrency?: Concurrency; readonly discard: true }
+    options: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly discard: true }
   ): Effect<R, readonly E[], void>
 }
 ```

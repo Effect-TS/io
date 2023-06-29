@@ -4127,6 +4127,7 @@ export const validateAll: {
     f: (a: A) => Effect<R, E, B>,
     options?: {
       readonly concurrency?: Concurrency
+      readonly batched?: boolean
       readonly discard?: false
     }
   ): (elements: Iterable<A>) => Effect<R, ReadonlyArray<E>, ReadonlyArray<B>>
@@ -4134,6 +4135,7 @@ export const validateAll: {
     f: (a: A) => Effect<R, E, B>,
     options: {
       readonly concurrency?: Concurrency
+      readonly batched?: boolean
       readonly discard: true
     }
   ): (elements: Iterable<A>) => Effect<R, ReadonlyArray<E>, void>
@@ -4142,6 +4144,7 @@ export const validateAll: {
     f: (a: A) => Effect<R, E, B>,
     options?: {
       readonly concurrency?: Concurrency
+      readonly batched?: boolean
       readonly discard?: false
     }
   ): Effect<R, ReadonlyArray<E>, ReadonlyArray<B>>
@@ -4150,6 +4153,7 @@ export const validateAll: {
     f: (a: A) => Effect<R, E, B>,
     options: {
       readonly concurrency?: Concurrency
+      readonly batched?: boolean
       readonly discard: true
     }
   ): Effect<R, ReadonlyArray<E>, void>
