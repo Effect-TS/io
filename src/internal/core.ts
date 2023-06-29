@@ -45,7 +45,6 @@ import type * as Scheduler from "@effect/io/Scheduler"
 import * as scheduler from "@effect/io/Scheduler"
 import type * as Scope from "@effect/io/Scope"
 import type * as Tracer from "@effect/io/Tracer"
-import * as ReadonlyArray from "@effect/data/ReadonlyArray"
 
 // -----------------------------------------------------------------------------
 // Effect

@@ -3,6 +3,7 @@ import type * as Context from "@effect/data/Context"
 import type * as Either from "@effect/data/Either"
 import { dual, pipe } from "@effect/data/Function"
 import * as RA from "@effect/data/ReadonlyArray"
+import * as ReadonlyArray from "@effect/data/ReadonlyArray"
 import * as Cause from "@effect/io/Cause"
 import * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal/core"
@@ -10,7 +11,6 @@ import { invokeWithInterrupt } from "@effect/io/internal/fiberRuntime"
 import { complete } from "@effect/io/internal/request"
 import type * as Request from "@effect/io/Request"
 import type * as RequestResolver from "@effect/io/RequestResolver"
-import * as ReadonlyArray from "@effect/data/ReadonlyArray"
 
 /** @internal */
 export const make = <R, A>(
@@ -212,7 +212,7 @@ export const fromFunctionEffect = <R, A extends Request.Request<any, any>>(
     Effect.forEach(
       requests,
       (a) => Effect.flatMap(Effect.exit(f(a)), (e) => complete(a, e as any)),
-      { batched: true, discard: true }
+      { concurrency: "unbounded", discard: true }
     )
   ).identified("FromFunctionEffect", f)
 
