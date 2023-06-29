@@ -197,7 +197,7 @@ export const fromFunctionBatched = <A extends Request.Request<never, any>>(
   f: (chunk: Array<A>) => Array<Request.Request.Success<A>>
 ): RequestResolver.RequestResolver<A> =>
   makeBatched((as: Array<A>) =>
-    Effect.forEachWithIndex(
+    Effect.forEach(
       f(as),
       (res, i) => complete(as[i], core.exitSucceed(res) as any),
       { discard: true }

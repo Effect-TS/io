@@ -368,29 +368,31 @@ export const bindValue = dual<
 /* @internal */
 export const dropUntil = dual<
   <A, R, E>(
-    predicate: (a: A) => Effect.Effect<R, E, boolean>
+    predicate: (a: A, i: number) => Effect.Effect<R, E, boolean>
   ) => (elements: Iterable<A>) => Effect.Effect<R, E, Array<A>>,
   <A, R, E>(
     elements: Iterable<A>,
-    predicate: (a: A) => Effect.Effect<R, E, boolean>
+    predicate: (a: A, i: number) => Effect.Effect<R, E, boolean>
   ) => Effect.Effect<R, E, Array<A>>
 >(2, <A, R, E>(
   elements: Iterable<A>,
-  predicate: (a: A) => Effect.Effect<R, E, boolean>
+  predicate: (a: A, i: number) => Effect.Effect<R, E, boolean>
 ) =>
   core.suspend(() => {
     const iterator = elements[Symbol.iterator]()
     const builder: Array<A> = []
     let next: IteratorResult<A, any>
     let dropping: Effect.Effect<R, E, boolean> = core.succeed(false)
+    let i = 0
     while ((next = iterator.next()) && !next.done) {
       const a = next.value
+      const index = i++
       dropping = core.flatMap(dropping, (bool) => {
         if (bool) {
           builder.push(a)
           return core.succeed(true)
         }
-        return predicate(a)
+        return predicate(a, index)
       })
     }
     return core.map(dropping, () => builder)
@@ -399,19 +401,24 @@ export const dropUntil = dual<
 /* @internal */
 export const dropWhile = dual<
   <R, E, A>(
-    f: (a: A) => Effect.Effect<R, E, boolean>
+    f: (a: A, i: number) => Effect.Effect<R, E, boolean>
   ) => (elements: Iterable<A>) => Effect.Effect<R, E, Array<A>>,
-  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, Array<A>>
->(2, <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) =>
+  <R, E, A>(
+    elements: Iterable<A>,
+    f: (a: A, i: number) => Effect.Effect<R, E, boolean>
+  ) => Effect.Effect<R, E, Array<A>>
+>(2, <R, E, A>(elements: Iterable<A>, f: (a: A, i: number) => Effect.Effect<R, E, boolean>) =>
   core.suspend(() => {
     const iterator = elements[Symbol.iterator]()
     const builder: Array<A> = []
     let next
     let dropping: Effect.Effect<R, E, boolean> = core.succeed(true)
+    let i = 0
     while ((next = iterator.next()) && !next.done) {
       const a = next.value
+      const index = i++
       dropping = core.flatMap(dropping, (d) =>
-        core.map(d ? f(a) : core.succeed(false), (b) => {
+        core.map(d ? f(a, index) : core.succeed(false), (b) => {
           if (!b) {
             builder.push(a)
           }
@@ -620,32 +627,35 @@ export const filterOrFail = dual<
 /* @internal */
 export const findFirst = dual<
   <A, R, E>(
-    f: (a: A) => Effect.Effect<R, E, boolean>
+    f: (a: A, i: number) => Effect.Effect<R, E, boolean>
   ) => (elements: Iterable<A>) => Effect.Effect<R, E, Option.Option<A>>,
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, Option.Option<A>>
+  <A, R, E>(
+    elements: Iterable<A>,
+    f: (a: A, i: number) => Effect.Effect<R, E, boolean>
+  ) => Effect.Effect<R, E, Option.Option<A>>
 >(2, (elements, f) =>
   core.suspend(() => {
-    const array = Array.from(elements)
-    const iterator = array[Symbol.iterator]()
+    const iterator = elements[Symbol.iterator]()
     const next = iterator.next()
     if (!next.done) {
-      return findLoop(iterator, f, next.value)
+      return findLoop(iterator, 0, f, next.value)
     }
     return core.succeed(Option.none())
   }))
 
 const findLoop = <A, R, E>(
   iterator: Iterator<A>,
-  f: (a: A) => Effect.Effect<R, E, boolean>,
+  index: number,
+  f: (a: A, i: number) => Effect.Effect<R, E, boolean>,
   value: A
 ): Effect.Effect<R, E, Option.Option<A>> =>
-  core.flatMap(f(value), (result) => {
+  core.flatMap(f(value, index), (result) => {
     if (result) {
       return core.succeed(Option.some(value))
     }
     const next = iterator.next()
     if (!next.done) {
-      return findLoop(iterator, f, next.value)
+      return findLoop(iterator, index + 1, f, next.value)
     }
     return core.succeed(Option.none())
   })
@@ -697,20 +707,23 @@ export const match = dual<
 
 /* @internal */
 export const every = dual<
-  <R, E, A>(f: (a: A) => Effect.Effect<R, E, boolean>) => (elements: Iterable<A>) => Effect.Effect<R, E, boolean>,
-  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, boolean>
->(2, (elements, f) => core.suspend(() => forAllLoop(elements[Symbol.iterator](), f)))
+  <R, E, A>(
+    f: (a: A, i: number) => Effect.Effect<R, E, boolean>
+  ) => (elements: Iterable<A>) => Effect.Effect<R, E, boolean>,
+  <R, E, A>(elements: Iterable<A>, f: (a: A, i: number) => Effect.Effect<R, E, boolean>) => Effect.Effect<R, E, boolean>
+>(2, (elements, f) => core.suspend(() => forAllLoop(elements[Symbol.iterator](), 0, f)))
 
 const forAllLoop = <R, E, A>(
   iterator: Iterator<A>,
-  f: (a: A) => Effect.Effect<R, E, boolean>
+  index: number,
+  f: (a: A, i: number) => Effect.Effect<R, E, boolean>
 ): Effect.Effect<R, E, boolean> => {
   const next = iterator.next()
   return next.done
     ? core.succeed(true)
     : core.flatMap(
-      f(next.value),
-      (b) => b ? forAllLoop(iterator, f) : core.succeed(b)
+      f(next.value, index),
+      (b) => b ? forAllLoop(iterator, index + 1, f) : core.succeed(b)
     )
 }
 
@@ -999,26 +1012,28 @@ const loopDiscard = <Z, R, E, X>(
 export const mapAccum = dual<
   <A, B, R, E, Z>(
     zero: Z,
-    f: (z: Z, a: A) => Effect.Effect<R, E, readonly [Z, B]>
+    f: (z: Z, a: A, i: number) => Effect.Effect<R, E, readonly [Z, B]>
   ) => (elements: Iterable<A>) => Effect.Effect<R, E, [Z, Array<B>]>,
   <A, B, R, E, Z>(
     elements: Iterable<A>,
     zero: Z,
-    f: (z: Z, a: A) => Effect.Effect<R, E, readonly [Z, B]>
+    f: (z: Z, a: A, i: number) => Effect.Effect<R, E, readonly [Z, B]>
   ) => Effect.Effect<R, E, [Z, Array<B>]>
 >(3, <A, B, R, E, Z>(
   elements: Iterable<A>,
   zero: Z,
-  f: (z: Z, a: A) => Effect.Effect<R, E, readonly [Z, B]>
+  f: (z: Z, a: A, i: number) => Effect.Effect<R, E, readonly [Z, B]>
 ) =>
   core.suspend(() => {
     const iterator = elements[Symbol.iterator]()
     const builder: Array<B> = []
     let result: Effect.Effect<R, E, Z> = core.succeed(zero)
     let next: IteratorResult<A, any>
+    let i = 0
     while (!(next = iterator.next()).done) {
+      const index = i++
       result = core.flatMap(result, (state) =>
-        core.map(f(state, next.value), ([z, b]) => {
+        core.map(f(state, next.value, index), ([z, b]) => {
           builder.push(b)
           return z
         }))
@@ -1194,26 +1209,40 @@ export const random: Effect.Effect<never, never, Random.Random> = defaultService
 
 /* @internal */
 export const reduce = dual<
-  <Z, A, R, E>(zero: Z, f: (z: Z, a: A) => Effect.Effect<R, E, Z>) => (elements: Iterable<A>) => Effect.Effect<R, E, Z>,
-  <Z, A, R, E>(elements: Iterable<A>, zero: Z, f: (z: Z, a: A) => Effect.Effect<R, E, Z>) => Effect.Effect<R, E, Z>
+  <Z, A, R, E>(
+    zero: Z,
+    f: (z: Z, a: A, i: number) => Effect.Effect<R, E, Z>
+  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Z>,
+  <Z, A, R, E>(
+    elements: Iterable<A>,
+    zero: Z,
+    f: (z: Z, a: A, i: number) => Effect.Effect<R, E, Z>
+  ) => Effect.Effect<R, E, Z>
 >(
   3,
-  <Z, A, R, E>(elements: Iterable<A>, zero: Z, f: (z: Z, a: A) => Effect.Effect<R, E, Z>) =>
-    Array.from(elements).reduce(
-      (acc, el) => core.flatMap(acc, (a) => f(a, el)),
+  <Z, A, R, E>(elements: Iterable<A>, zero: Z, f: (z: Z, a: A, i: number) => Effect.Effect<R, E, Z>) =>
+    ReadonlyArray.fromIterable(elements).reduce(
+      (acc, el, i) => core.flatMap(acc, (a) => f(a, el, i)),
       core.succeed(zero) as Effect.Effect<R, E, Z>
     )
 )
 
 /* @internal */
 export const reduceRight = dual<
-  <A, Z, R, E>(zero: Z, f: (a: A, z: Z) => Effect.Effect<R, E, Z>) => (elements: Iterable<A>) => Effect.Effect<R, E, Z>,
-  <A, Z, R, E>(elements: Iterable<A>, zero: Z, f: (a: A, z: Z) => Effect.Effect<R, E, Z>) => Effect.Effect<R, E, Z>
+  <A, Z, R, E>(
+    zero: Z,
+    f: (a: A, z: Z, i: number) => Effect.Effect<R, E, Z>
+  ) => (elements: Iterable<A>) => Effect.Effect<R, E, Z>,
+  <A, Z, R, E>(
+    elements: Iterable<A>,
+    zero: Z,
+    f: (a: A, z: Z, i: number) => Effect.Effect<R, E, Z>
+  ) => Effect.Effect<R, E, Z>
 >(
   3,
-  <A, Z, R, E>(elements: Iterable<A>, zero: Z, f: (a: A, z: Z) => Effect.Effect<R, E, Z>) =>
-    Array.from(elements).reduceRight(
-      (acc, el) => core.flatMap(acc, (a) => f(el, a)),
+  <A, Z, R, E>(elements: Iterable<A>, zero: Z, f: (a: A, z: Z, i: number) => Effect.Effect<R, E, Z>) =>
+    ReadonlyArray.fromIterable(elements).reduceRight(
+      (acc, el, i) => core.flatMap(acc, (a) => f(el, a, i)),
       core.succeed(zero) as Effect.Effect<R, E, Z>
     )
 )
@@ -1224,7 +1253,7 @@ export const reduceWhile = dual<
     zero: Z,
     options: {
       readonly while: Predicate<Z>
-      readonly body: (s: Z, a: A) => Effect.Effect<R, E, Z>
+      readonly body: (s: Z, a: A, i: number) => Effect.Effect<R, E, Z>
     }
   ) => (elements: Iterable<A>) => Effect.Effect<R, E, Z>,
   <A, R, E, Z>(
@@ -1232,7 +1261,7 @@ export const reduceWhile = dual<
     zero: Z,
     options: {
       readonly while: Predicate<Z>
-      readonly body: (s: Z, a: A) => Effect.Effect<R, E, Z>
+      readonly body: (s: Z, a: A, i: number) => Effect.Effect<R, E, Z>
     }
   ) => Effect.Effect<R, E, Z>
 >(3, <A, R, E, Z>(
@@ -1240,25 +1269,26 @@ export const reduceWhile = dual<
   zero: Z,
   options: {
     readonly while: Predicate<Z>
-    readonly body: (s: Z, a: A) => Effect.Effect<R, E, Z>
+    readonly body: (s: Z, a: A, i: number) => Effect.Effect<R, E, Z>
   }
 ) =>
   core.flatMap(
     core.sync(() => elements[Symbol.iterator]()),
-    (iterator) => reduceWhileLoop(iterator, zero, options.while, options.body)
+    (iterator) => reduceWhileLoop(iterator, 0, zero, options.while, options.body)
   ))
 
 const reduceWhileLoop = <A, R, E, Z>(
   iterator: Iterator<A>,
+  index: number,
   state: Z,
   predicate: Predicate<Z>,
-  f: (s: Z, a: A) => Effect.Effect<R, E, Z>
+  f: (s: Z, a: A, i: number) => Effect.Effect<R, E, Z>
 ): Effect.Effect<R, E, Z> => {
   const next = iterator.next()
   if (!next.done && predicate(state)) {
     return core.flatMap(
-      f(state, next.value),
-      (nextState) => reduceWhileLoop(iterator, nextState, predicate, f)
+      f(state, next.value, index),
+      (nextState) => reduceWhileLoop(iterator, index + 1, nextState, predicate, f)
     )
   }
   return core.succeed(state)
@@ -1360,33 +1390,38 @@ export const labelMetricsSet = dual<
 /* @internal */
 export const takeWhile = dual<
   <R, E, A>(
-    predicate: (a: A) => Effect.Effect<R, E, boolean>
+    predicate: (a: A, i: number) => Effect.Effect<R, E, boolean>
   ) => (elements: Iterable<A>) => Effect.Effect<R, E, Array<A>>,
   <R, E, A>(
     elements: Iterable<A>,
-    predicate: (a: A) => Effect.Effect<R, E, boolean>
+    predicate: (a: A, i: number) => Effect.Effect<R, E, boolean>
   ) => Effect.Effect<R, E, Array<A>>
->(2, <R, E, A>(elements: Iterable<A>, predicate: (a: A) => Effect.Effect<R, E, boolean>) =>
-  core.suspend(() => {
-    const iterator = elements[Symbol.iterator]()
-    const builder: Array<A> = []
-    let next: IteratorResult<A, any>
-    let taking: Effect.Effect<R, E, boolean> = core.succeed(true)
-    while ((next = iterator.next()) && !next.done) {
-      const a = next.value
-      taking = core.flatMap(taking, (taking) =>
-        pipe(
-          taking ? predicate(a) : core.succeed(false),
-          core.map((bool) => {
-            if (bool) {
-              builder.push(a)
-            }
-            return bool
-          })
-        ))
-    }
-    return core.map(taking, () => builder)
-  }))
+>(
+  2,
+  <R, E, A>(elements: Iterable<A>, predicate: (a: A, i: number) => Effect.Effect<R, E, boolean>) =>
+    core.suspend(() => {
+      const iterator = elements[Symbol.iterator]()
+      const builder: Array<A> = []
+      let next: IteratorResult<A, any>
+      let taking: Effect.Effect<R, E, boolean> = core.succeed(true)
+      let i = 0
+      while ((next = iterator.next()) && !next.done) {
+        const a = next.value
+        const index = i++
+        taking = core.flatMap(taking, (taking) =>
+          pipe(
+            taking ? predicate(a, index) : core.succeed(false),
+            core.map((bool) => {
+              if (bool) {
+                builder.push(a)
+              }
+              return bool
+            })
+          ))
+      }
+      return core.map(taking, () => builder)
+    })
+)
 
 /* @internal */
 export const tapBoth = dual<

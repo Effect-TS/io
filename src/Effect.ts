@@ -1196,8 +1196,8 @@ export const Do: Effect<never, never, {}> = effect.Do
  * @category utils
  */
 export const dropUntil: {
-  <A, R, E>(predicate: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Array<A>>
-  <A, R, E>(elements: Iterable<A>, predicate: (a: A) => Effect<R, E, boolean>): Effect<R, E, Array<A>>
+  <A, R, E>(predicate: (a: A, i: number) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Array<A>>
+  <A, R, E>(elements: Iterable<A>, predicate: (a: A, i: number) => Effect<R, E, boolean>): Effect<R, E, Array<A>>
 } = effect.dropUntil
 
 /**
@@ -1207,8 +1207,8 @@ export const dropUntil: {
  * @category constructors
  */
 export const dropWhile: {
-  <R, E, A>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Array<A>>
-  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, Array<A>>
+  <R, E, A>(f: (a: A, i: number) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Array<A>>
+  <R, E, A>(elements: Iterable<A>, f: (a: A, i: number) => Effect<R, E, boolean>): Effect<R, E, Array<A>>
 } = effect.dropWhile
 
 /**
@@ -1297,8 +1297,8 @@ export const eventually: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, A>
  * @category elements
  */
 export const every: {
-  <R, E, A>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, boolean>
-  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, boolean>
+  <R, E, A>(f: (a: A, i: number) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, boolean>
+  <R, E, A>(elements: Iterable<A>, f: (a: A, i: number) => Effect<R, E, boolean>): Effect<R, E, boolean>
 } = effect.every
 
 /**
@@ -1310,7 +1310,7 @@ export const every: {
  */
 export const exists: {
   <R, E, A>(
-    f: (a: A) => Effect<R, E, boolean>,
+    f: (a: A, i: number) => Effect<R, E, boolean>,
     options?: {
       readonly concurrency?: Concurrency
       readonly batched?: boolean
@@ -1318,7 +1318,7 @@ export const exists: {
   ): (elements: Iterable<A>) => Effect<R, E, boolean>
   <R, E, A>(
     elements: Iterable<A>,
-    f: (a: A) => Effect<R, E, boolean>,
+    f: (a: A, i: number) => Effect<R, E, boolean>,
     options?: {
       readonly concurrency: Concurrency
       readonly batched?: boolean
@@ -1377,7 +1377,7 @@ export const fiberIdWith: <R, E, A>(f: (descriptor: FiberId.Runtime) => Effect<R
  */
 export const filter: {
   <A, R, E>(
-    f: (a: A) => Effect<R, E, boolean>,
+    f: (a: A, i: number) => Effect<R, E, boolean>,
     options?: {
       readonly concurrency?: Concurrency
       readonly batched?: boolean
@@ -1386,7 +1386,7 @@ export const filter: {
   ): (elements: Iterable<A>) => Effect<R, E, ReadonlyArray<A>>
   <A, R, E>(
     elements: Iterable<A>,
-    f: (a: A) => Effect<R, E, boolean>,
+    f: (a: A, i: number) => Effect<R, E, boolean>,
     options?: {
       readonly concurrency?: Concurrency
       readonly batched?: boolean
@@ -1452,18 +1452,30 @@ export const filterOrDieMessage: {
  */
 export const filterOrElse: {
   <A, B extends A, R2, E2, C>(
-    options: { readonly filter: Refinement<A, B>; readonly orElse: (a: A) => Effect<R2, E2, C> }
+    options: {
+      readonly filter: Refinement<A, B>
+      readonly orElse: (a: A) => Effect<R2, E2, C>
+    }
   ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, B | C>
   <A, R2, E2, B>(
-    options: { readonly filter: Predicate<A>; readonly orElse: (a: A) => Effect<R2, E2, B> }
+    options: {
+      readonly filter: Predicate<A>
+      readonly orElse: (a: A) => Effect<R2, E2, B>
+    }
   ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A | B>
   <R, E, A, B extends A, R2, E2, C>(
     self: Effect<R, E, A>,
-    options: { readonly filter: Refinement<A, B>; readonly orElse: (a: A) => Effect<R2, E2, C> }
+    options: {
+      readonly filter: Refinement<A, B>
+      readonly orElse: (a: A) => Effect<R2, E2, C>
+    }
   ): Effect<R | R2, E | E2, B | C>
   <R, E, A, R2, E2, B>(
     self: Effect<R, E, A>,
-    options: { readonly filter: Predicate<A>; readonly orElse: (a: A) => Effect<R2, E2, B> }
+    options: {
+      readonly filter: Predicate<A>
+      readonly orElse: (a: A) => Effect<R2, E2, B>
+    }
   ): Effect<R | R2, E | E2, A | B>
 } = effect.filterOrElse
 
@@ -1476,18 +1488,30 @@ export const filterOrElse: {
  */
 export const filterOrFail: {
   <A, B extends A, E2>(
-    options: { readonly filter: Refinement<A, B>; readonly orFailWith: (a: A) => E2 }
+    options: {
+      readonly filter: Refinement<A, B>
+      readonly orFailWith: (a: A) => E2
+    }
   ): <R, E>(self: Effect<R, E, A>) => Effect<R, E2 | E, B>
   <A, E2>(
-    options: { readonly filter: Predicate<A>; readonly orFailWith: (a: A) => E2 }
+    options: {
+      readonly filter: Predicate<A>
+      readonly orFailWith: (a: A) => E2
+    }
   ): <R, E>(self: Effect<R, E, A>) => Effect<R, E2 | E, A>
   <R, E, A, B extends A, E2>(
     self: Effect<R, E, A>,
-    options: { readonly filter: Refinement<A, B>; readonly orFailWith: (a: A) => E2 }
+    options: {
+      readonly filter: Refinement<A, B>
+      readonly orFailWith: (a: A) => E2
+    }
   ): Effect<R, E | E2, B>
   <R, E, A, E2>(
     self: Effect<R, E, A>,
-    options: { readonly filter: Predicate<A>; readonly orFailWith: (a: A) => E2 }
+    options: {
+      readonly filter: Predicate<A>
+      readonly orFailWith: (a: A) => E2
+    }
   ): Effect<R, E | E2, A>
 } = effect.filterOrFail
 
@@ -1498,8 +1522,8 @@ export const filterOrFail: {
  * @category elements
  */
 export const findFirst: {
-  <A, R, E>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Option.Option<A>>
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, Option.Option<A>>
+  <A, R, E>(f: (a: A, i: number) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Option.Option<A>>
+  <A, R, E>(elements: Iterable<A>, f: (a: A, i: number) => Effect<R, E, boolean>): Effect<R, E, Option.Option<A>>
 } = effect.findFirst
 
 /**
@@ -1580,7 +1604,7 @@ export const flipWith: {
  */
 export const forEach: {
   <A, R, E, B>(
-    f: (a: A) => Effect<R, E, B>,
+    f: (a: A, i: number) => Effect<R, E, B>,
     options?: {
       readonly concurrency?: Concurrency
       readonly batched?: boolean
@@ -1588,7 +1612,7 @@ export const forEach: {
     }
   ): (self: Iterable<A>) => Effect<R, E, ReadonlyArray<B>>
   <A, R, E, B>(
-    f: (a: A) => Effect<R, E, B>,
+    f: (a: A, i: number) => Effect<R, E, B>,
     options: {
       readonly concurrency?: Concurrency
       readonly batched?: boolean
@@ -1597,7 +1621,7 @@ export const forEach: {
   ): (self: Iterable<A>) => Effect<R, E, void>
   <A, R, E, B>(
     self: Iterable<A>,
-    f: (a: A) => Effect<R, E, B>,
+    f: (a: A, i: number) => Effect<R, E, B>,
     options?: {
       readonly concurrency?: Concurrency
       readonly batched?: boolean
@@ -1606,7 +1630,7 @@ export const forEach: {
   ): Effect<R, E, ReadonlyArray<B>>
   <A, R, E, B>(
     self: Iterable<A>,
-    f: (a: A) => Effect<R, E, B>,
+    f: (a: A, i: number) => Effect<R, E, B>,
     options: {
       readonly concurrency?: Concurrency
       readonly batched?: boolean
@@ -1614,51 +1638,6 @@ export const forEach: {
     }
   ): Effect<R, E, void>
 } = fiberRuntime.forEachOptions
-
-/**
- * Same as `forEach`, except that the function `f` is supplied
- * a second argument that corresponds to the index (starting from 0)
- * of the current element being iterated over.
- *
- * @since 1.0.0
- * @category traversing
- */
-export const forEachWithIndex: {
-  <A, R, E, B>(
-    f: (a: A, index: number) => Effect<R, E, B>,
-    options?: {
-      readonly concurrency?: Concurrency
-      readonly batched?: boolean
-      readonly discard?: false
-    }
-  ): (self: Iterable<A>) => Effect<R, E, ReadonlyArray<B>>
-  <A, R, E, B>(
-    f: (a: A, index: number) => Effect<R, E, B>,
-    options: {
-      readonly concurrency?: Concurrency
-      readonly batched?: boolean
-      readonly discard: true
-    }
-  ): (self: Iterable<A>) => Effect<R, E, void>
-  <A, R, E, B>(
-    self: Iterable<A>,
-    f: (a: A, index: number) => Effect<R, E, B>,
-    options?: {
-      readonly concurrency?: Concurrency
-      readonly batched?: boolean
-      readonly discard?: false
-    }
-  ): Effect<R, E, ReadonlyArray<B>>
-  <A, R, E, B>(
-    self: Iterable<A>,
-    f: (a: A, index: number) => Effect<R, E, B>,
-    options: {
-      readonly concurrency?: Concurrency
-      readonly batched?: boolean
-      readonly discard: true
-    }
-  ): Effect<R, E, void>
-} = fiberRuntime.forEachOptionsWithIndex
 
 /**
  * Repeats this effect forever (until the first error).
@@ -2382,12 +2361,12 @@ export const map: {
 export const mapAccum: {
   <A, B, R, E, Z>(
     zero: Z,
-    f: (z: Z, a: A) => Effect<R, E, readonly [Z, B]>
+    f: (z: Z, a: A, i: number) => Effect<R, E, readonly [Z, B]>
   ): (elements: Iterable<A>) => Effect<R, E, [Z, Array<B>]>
   <A, B, R, E, Z>(
     elements: Iterable<A>,
     zero: Z,
-    f: (z: Z, a: A) => Effect<R, E, readonly [Z, B]>
+    f: (z: Z, a: A, i: number) => Effect<R, E, readonly [Z, B]>
   ): Effect<R, E, [Z, Array<B>]>
 } = effect.mapAccum
 
@@ -2546,7 +2525,7 @@ export const merge: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, E | A> 
 export const mergeAll: {
   <Z, A>(
     zero: Z,
-    f: (z: Z, a: A) => Z,
+    f: (z: Z, a: A, i: number) => Z,
     options?: {
       readonly concurrency?: Concurrency
       readonly batched?: boolean
@@ -2555,7 +2534,7 @@ export const mergeAll: {
   <R, E, A, Z>(
     elements: Iterable<Effect<R, E, A>>,
     zero: Z,
-    f: (z: Z, a: A) => Z,
+    f: (z: Z, a: A, i: number) => Z,
     options?: {
       readonly concurrency?: Concurrency
       readonly batched?: boolean
@@ -3008,8 +2987,8 @@ export const randomWith: <R, E, A>(f: (random: Random.Random) => Effect<R, E, A>
  * @category folding
  */
 export const reduce: {
-  <Z, A, R, E>(zero: Z, f: (z: Z, a: A) => Effect<R, E, Z>): (elements: Iterable<A>) => Effect<R, E, Z>
-  <Z, A, R, E>(elements: Iterable<A>, zero: Z, f: (z: Z, a: A) => Effect<R, E, Z>): Effect<R, E, Z>
+  <Z, A, R, E>(zero: Z, f: (z: Z, a: A, i: number) => Effect<R, E, Z>): (elements: Iterable<A>) => Effect<R, E, Z>
+  <Z, A, R, E>(elements: Iterable<A>, zero: Z, f: (z: Z, a: A, i: number) => Effect<R, E, Z>): Effect<R, E, Z>
 } = effect.reduce
 
 /**
@@ -3021,14 +3000,20 @@ export const reduce: {
 export const reduceEffect: {
   <R, E, A>(
     zero: Effect<R, E, A>,
-    f: (acc: A, a: A) => A,
-    options?: { readonly concurrency: Concurrency }
+    f: (acc: A, a: A, i: number) => A,
+    options?: {
+      readonly concurrency?: Concurrency
+      readonly batched?: boolean
+    }
   ): (elements: Iterable<Effect<R, E, A>>) => Effect<R, E, A>
   <R, E, A>(
     elements: Iterable<Effect<R, E, A>>,
     zero: Effect<R, E, A>,
-    f: (acc: A, a: A) => A,
-    options?: { readonly concurrency: Concurrency }
+    f: (acc: A, a: A, i: number) => A,
+    options?: {
+      readonly concurrency?: Concurrency
+      readonly batched?: boolean
+    }
   ): Effect<R, E, A>
 } = fiberRuntime.reduceEffect
 
@@ -3039,8 +3024,8 @@ export const reduceEffect: {
  * @category folding
  */
 export const reduceRight: {
-  <A, Z, R, E>(zero: Z, f: (a: A, z: Z) => Effect<R, E, Z>): (elements: Iterable<A>) => Effect<R, E, Z>
-  <A, Z, R, E>(elements: Iterable<A>, zero: Z, f: (a: A, z: Z) => Effect<R, E, Z>): Effect<R, E, Z>
+  <A, Z, R, E>(zero: Z, f: (a: A, z: Z, i: number) => Effect<R, E, Z>): (elements: Iterable<A>) => Effect<R, E, Z>
+  <A, Z, R, E>(elements: Iterable<A>, zero: Z, f: (a: A, z: Z, i: number) => Effect<R, E, Z>): Effect<R, E, Z>
 } = effect.reduceRight
 
 /**
@@ -3053,12 +3038,18 @@ export const reduceRight: {
 export const reduceWhile: {
   <A, R, E, Z>(
     zero: Z,
-    options: { readonly while: Predicate<Z>; readonly body: (s: Z, a: A) => Effect<R, E, Z> }
+    options: {
+      readonly while: Predicate<Z>
+      readonly body: (s: Z, a: A, i: number) => Effect<R, E, Z>
+    }
   ): (elements: Iterable<A>) => Effect<R, E, Z>
   <A, R, E, Z>(
     elements: Iterable<A>,
     zero: Z,
-    options: { readonly while: Predicate<Z>; readonly body: (s: Z, a: A) => Effect<R, E, Z> }
+    options: {
+      readonly while: Predicate<Z>
+      readonly body: (s: Z, a: A, i: number) => Effect<R, E, Z>
+    }
   ): Effect<R, E, Z>
 } = effect.reduceWhile
 
@@ -3510,8 +3501,8 @@ export const sync: <A>(evaluate: LazyArg<A>) => Effect<never, never, A> = core.s
  * @category constructors
  */
 export const takeWhile: {
-  <R, E, A>(predicate: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Array<A>>
-  <R, E, A>(elements: Iterable<A>, predicate: (a: A) => Effect<R, E, boolean>): Effect<R, E, Array<A>>
+  <R, E, A>(predicate: (a: A, i: number) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Array<A>>
+  <R, E, A>(elements: Iterable<A>, predicate: (a: A, i: number) => Effect<R, E, boolean>): Effect<R, E, Array<A>>
 } = effect.takeWhile
 
 /**
@@ -4124,7 +4115,7 @@ export const validate: {
  */
 export const validateAll: {
   <R, E, A, B>(
-    f: (a: A) => Effect<R, E, B>,
+    f: (a: A, i: number) => Effect<R, E, B>,
     options?: {
       readonly concurrency?: Concurrency
       readonly batched?: boolean
@@ -4132,7 +4123,7 @@ export const validateAll: {
     }
   ): (elements: Iterable<A>) => Effect<R, ReadonlyArray<E>, ReadonlyArray<B>>
   <R, E, A, B>(
-    f: (a: A) => Effect<R, E, B>,
+    f: (a: A, i: number) => Effect<R, E, B>,
     options: {
       readonly concurrency?: Concurrency
       readonly batched?: boolean
@@ -4141,7 +4132,7 @@ export const validateAll: {
   ): (elements: Iterable<A>) => Effect<R, ReadonlyArray<E>, void>
   <R, E, A, B>(
     elements: Iterable<A>,
-    f: (a: A) => Effect<R, E, B>,
+    f: (a: A, i: number) => Effect<R, E, B>,
     options?: {
       readonly concurrency?: Concurrency
       readonly batched?: boolean
@@ -4150,7 +4141,7 @@ export const validateAll: {
   ): Effect<R, ReadonlyArray<E>, ReadonlyArray<B>>
   <R, E, A, B>(
     elements: Iterable<A>,
-    f: (a: A) => Effect<R, E, B>,
+    f: (a: A, i: number) => Effect<R, E, B>,
     options: {
       readonly concurrency?: Concurrency
       readonly batched?: boolean
@@ -4182,7 +4173,7 @@ export const validateAll: {
  */
 export const validateFirst: {
   <R, E, A, B>(
-    f: (a: A) => Effect<R, E, B>,
+    f: (a: A, i: number) => Effect<R, E, B>,
     options?: {
       readonly concurrency?: Concurrency
       readonly batched?: boolean
@@ -4190,7 +4181,7 @@ export const validateFirst: {
   ): (elements: Iterable<A>) => Effect<R, ReadonlyArray<E>, B>
   <R, E, A, B>(
     elements: Iterable<A>,
-    f: (a: A) => Effect<R, E, B>,
+    f: (a: A, i: number) => Effect<R, E, B>,
     options?: {
       readonly concurrency?: Concurrency
       readonly batched?: boolean

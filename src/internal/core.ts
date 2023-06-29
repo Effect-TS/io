@@ -15,6 +15,7 @@ import * as List from "@effect/data/List"
 import * as MutableRef from "@effect/data/MutableRef"
 import * as Option from "@effect/data/Option"
 import type { Predicate } from "@effect/data/Predicate"
+import * as ReadonlyArray from "@effect/data/ReadonlyArray"
 import type * as Cause from "@effect/io/Cause"
 import type * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
@@ -663,17 +664,17 @@ export const matchEffect = dual<
 
 /* @internal */
 export const forEach = dual<
-  <A, R, E, B>(f: (a: A) => Effect.Effect<R, E, B>) => (self: Iterable<A>) => Effect.Effect<R, E, Array<B>>,
-  <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, E, Array<B>>
+  <A, R, E, B>(f: (a: A, i: number) => Effect.Effect<R, E, B>) => (self: Iterable<A>) => Effect.Effect<R, E, Array<B>>,
+  <A, R, E, B>(self: Iterable<A>, f: (a: A, i: number) => Effect.Effect<R, E, B>) => Effect.Effect<R, E, Array<B>>
 >(2, (self, f) =>
   suspend(() => {
-    const arr = Array.from(self)
+    const arr = ReadonlyArray.fromIterable(self)
     const ret = new Array(arr.length)
     let i = 0
     return as(
       whileLoop({
         while: () => i < arr.length,
-        body: () => f(arr[i]),
+        body: () => f(arr[i], i),
         step: (b) => {
           ret[i++] = b
         }
@@ -684,17 +685,17 @@ export const forEach = dual<
 
 /* @internal */
 export const forEachDiscard = dual<
-  <A, R, E, B>(f: (a: A) => Effect.Effect<R, E, B>) => (self: Iterable<A>) => Effect.Effect<R, E, void>,
-  <A, R, E, B>(self: Iterable<A>, f: (a: A) => Effect.Effect<R, E, B>) => Effect.Effect<R, E, void>
+  <A, R, E, B>(f: (a: A, i: number) => Effect.Effect<R, E, B>) => (self: Iterable<A>) => Effect.Effect<R, E, void>,
+  <A, R, E, B>(self: Iterable<A>, f: (a: A, i: number) => Effect.Effect<R, E, B>) => Effect.Effect<R, E, void>
 >(2, (self, f) =>
   suspend(() => {
-    const arr = Array.from(self)
+    const arr = ReadonlyArray.fromIterable(self)
     let i = 0
     return whileLoop({
       while: () => i < arr.length,
-      body: () => f(arr[i++]),
+      body: () => f(arr[i], i),
       step: () => {
-        //
+        i++
       }
     })
   }))
@@ -914,7 +915,7 @@ export const partitionMap = <A, A1, A2>(
   elements: Iterable<A>,
   f: (a: A) => Either.Either<A1, A2>
 ): readonly [ReadonlyArray<A1>, ReadonlyArray<A2>] =>
-  Array.from(elements).reduceRight(
+  ReadonlyArray.fromIterable(elements).reduceRight(
     ([lefts, rights], current) => {
       const either = f(current)
       switch (either._tag) {

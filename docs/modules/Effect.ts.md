@@ -264,8 +264,6 @@ Added in v1.0.0
   - [withSpan](#withspan)
   - [withTracer](#withtracer)
   - [withTracerScoped](#withtracerscoped)
-- [traversing](#traversing)
-  - [forEachWithIndex](#foreachwithindex)
 - [type lambdas](#type-lambdas)
   - [EffectTypeLambda (interface)](#effecttypelambda-interface)
 - [utilities](#utilities)
@@ -897,8 +895,8 @@ Drops all elements so long as the predicate returns true.
 
 ```ts
 export declare const dropWhile: {
-  <R, E, A>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, A[]>
-  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, A[]>
+  <R, E, A>(f: (a: A, i: number) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, A[]>
+  <R, E, A>(elements: Iterable<A>, f: (a: A, i: number) => Effect<R, E, boolean>): Effect<R, E, A[]>
 }
 ```
 
@@ -914,12 +912,12 @@ predicate `f`, working sequentially.
 ```ts
 export declare const exists: {
   <R, E, A>(
-    f: (a: A) => Effect<R, E, boolean>,
+    f: (a: A, i: number) => Effect<R, E, boolean>,
     options?: { readonly concurrency?: Concurrency; readonly batched?: boolean }
   ): (elements: Iterable<A>) => Effect<R, E, boolean>
   <R, E, A>(
     elements: Iterable<A>,
-    f: (a: A) => Effect<R, E, boolean>,
+    f: (a: A, i: number) => Effect<R, E, boolean>,
     options?: { readonly concurrency: Concurrency; readonly batched?: boolean }
   ): Effect<R, E, boolean>
 }
@@ -984,21 +982,21 @@ Added in v1.0.0
 ```ts
 export declare const forEach: {
   <A, R, E, B>(
-    f: (a: A) => Effect<R, E, B>,
+    f: (a: A, i: number) => Effect<R, E, B>,
     options?: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly discard?: false }
   ): (self: Iterable<A>) => Effect<R, E, readonly B[]>
   <A, R, E, B>(
-    f: (a: A) => Effect<R, E, B>,
+    f: (a: A, i: number) => Effect<R, E, B>,
     options: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly discard: true }
   ): (self: Iterable<A>) => Effect<R, E, void>
   <A, R, E, B>(
     self: Iterable<A>,
-    f: (a: A) => Effect<R, E, B>,
+    f: (a: A, i: number) => Effect<R, E, B>,
     options?: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly discard?: false }
   ): Effect<R, E, readonly B[]>
   <A, R, E, B>(
     self: Iterable<A>,
-    f: (a: A) => Effect<R, E, B>,
+    f: (a: A, i: number) => Effect<R, E, B>,
     options: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly discard: true }
   ): Effect<R, E, void>
 }
@@ -1165,16 +1163,15 @@ sequentially.
 
 ```ts
 export declare const mergeAll: {
-  <Z, A>(zero: Z, f: (z: Z, a: A) => Z, options?: { readonly concurrency?: Concurrency; readonly batched?: boolean }): <
-    R,
-    E
-  >(
-    elements: Iterable<Effect<R, E, A>>
-  ) => Effect<R, E, Z>
+  <Z, A>(
+    zero: Z,
+    f: (z: Z, a: A, i: number) => Z,
+    options?: { readonly concurrency?: Concurrency; readonly batched?: boolean }
+  ): <R, E>(elements: Iterable<Effect<R, E, A>>) => Effect<R, E, Z>
   <R, E, A, Z>(
     elements: Iterable<Effect<R, E, A>>,
     zero: Z,
-    f: (z: Z, a: A) => Z,
+    f: (z: Z, a: A, i: number) => Z,
     options?: { readonly concurrency?: Concurrency; readonly batched?: boolean }
   ): Effect<R, E, Z>
 }
@@ -1393,8 +1390,8 @@ Takes all elements so long as the effectual predicate returns true.
 
 ```ts
 export declare const takeWhile: {
-  <R, E, A>(predicate: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, A[]>
-  <R, E, A>(elements: Iterable<A>, predicate: (a: A) => Effect<R, E, boolean>): Effect<R, E, A[]>
+  <R, E, A>(predicate: (a: A, i: number) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, A[]>
+  <R, E, A>(elements: Iterable<A>, predicate: (a: A, i: number) => Effect<R, E, boolean>): Effect<R, E, A[]>
 }
 ```
 
@@ -1886,8 +1883,8 @@ predicate `f`.
 
 ```ts
 export declare const every: {
-  <R, E, A>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, boolean>
-  <R, E, A>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, boolean>
+  <R, E, A>(f: (a: A, i: number) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, boolean>
+  <R, E, A>(elements: Iterable<A>, f: (a: A, i: number) => Effect<R, E, boolean>): Effect<R, E, boolean>
 }
 ```
 
@@ -1901,8 +1898,8 @@ Returns the first element that satisfies the effectful predicate.
 
 ```ts
 export declare const findFirst: {
-  <A, R, E>(f: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Option.Option<A>>
-  <A, R, E>(elements: Iterable<A>, f: (a: A) => Effect<R, E, boolean>): Effect<R, E, Option.Option<A>>
+  <A, R, E>(f: (a: A, i: number) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, Option.Option<A>>
+  <A, R, E>(elements: Iterable<A>, f: (a: A, i: number) => Effect<R, E, boolean>): Effect<R, E, Option.Option<A>>
 }
 ```
 
@@ -2254,12 +2251,12 @@ Filters the collection using the specified effectful predicate.
 ```ts
 export declare const filter: {
   <A, R, E>(
-    f: (a: A) => Effect<R, E, boolean>,
+    f: (a: A, i: number) => Effect<R, E, boolean>,
     options?: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly negate?: boolean }
   ): (elements: Iterable<A>) => Effect<R, E, readonly A[]>
   <A, R, E>(
     elements: Iterable<A>,
-    f: (a: A) => Effect<R, E, boolean>,
+    f: (a: A, i: number) => Effect<R, E, boolean>,
     options?: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly negate?: boolean }
   ): Effect<R, E, readonly A[]>
 }
@@ -2538,8 +2535,8 @@ from left to right.
 
 ```ts
 export declare const reduce: {
-  <Z, A, R, E>(zero: Z, f: (z: Z, a: A) => Effect<R, E, Z>): (elements: Iterable<A>) => Effect<R, E, Z>
-  <Z, A, R, E>(elements: Iterable<A>, zero: Z, f: (z: Z, a: A) => Effect<R, E, Z>): Effect<R, E, Z>
+  <Z, A, R, E>(zero: Z, f: (z: Z, a: A, i: number) => Effect<R, E, Z>): (elements: Iterable<A>) => Effect<R, E, Z>
+  <Z, A, R, E>(elements: Iterable<A>, zero: Z, f: (z: Z, a: A, i: number) => Effect<R, E, Z>): Effect<R, E, Z>
 }
 ```
 
@@ -2553,14 +2550,16 @@ Reduces an `Iterable<Effect<R, E, A>>` to a single effect.
 
 ```ts
 export declare const reduceEffect: {
-  <R, E, A>(zero: Effect<R, E, A>, f: (acc: A, a: A) => A, options?: { readonly concurrency: Concurrency }): (
-    elements: Iterable<Effect<R, E, A>>
-  ) => Effect<R, E, A>
+  <R, E, A>(
+    zero: Effect<R, E, A>,
+    f: (acc: A, a: A, i: number) => A,
+    options?: { readonly concurrency?: Concurrency; readonly batched?: boolean }
+  ): (elements: Iterable<Effect<R, E, A>>) => Effect<R, E, A>
   <R, E, A>(
     elements: Iterable<Effect<R, E, A>>,
     zero: Effect<R, E, A>,
-    f: (acc: A, a: A) => A,
-    options?: { readonly concurrency: Concurrency }
+    f: (acc: A, a: A, i: number) => A,
+    options?: { readonly concurrency?: Concurrency; readonly batched?: boolean }
   ): Effect<R, E, A>
 }
 ```
@@ -2575,8 +2574,8 @@ Folds an `Iterable<A>` using an effectual function f, working sequentially from 
 
 ```ts
 export declare const reduceRight: {
-  <A, Z, R, E>(zero: Z, f: (a: A, z: Z) => Effect<R, E, Z>): (elements: Iterable<A>) => Effect<R, E, Z>
-  <A, Z, R, E>(elements: Iterable<A>, zero: Z, f: (a: A, z: Z) => Effect<R, E, Z>): Effect<R, E, Z>
+  <A, Z, R, E>(zero: Z, f: (a: A, z: Z, i: number) => Effect<R, E, Z>): (elements: Iterable<A>) => Effect<R, E, Z>
+  <A, Z, R, E>(elements: Iterable<A>, zero: Z, f: (a: A, z: Z, i: number) => Effect<R, E, Z>): Effect<R, E, Z>
 }
 ```
 
@@ -2591,13 +2590,14 @@ when the predicate is not satisfied.
 
 ```ts
 export declare const reduceWhile: {
-  <A, R, E, Z>(zero: Z, options: { readonly while: Predicate<Z>; readonly body: (s: Z, a: A) => Effect<R, E, Z> }): (
-    elements: Iterable<A>
-  ) => Effect<R, E, Z>
+  <A, R, E, Z>(
+    zero: Z,
+    options: { readonly while: Predicate<Z>; readonly body: (s: Z, a: A, i: number) => Effect<R, E, Z> }
+  ): (elements: Iterable<A>) => Effect<R, E, Z>
   <A, R, E, Z>(
     elements: Iterable<A>,
     zero: Z,
-    options: { readonly while: Predicate<Z>; readonly body: (s: Z, a: A) => Effect<R, E, Z> }
+    options: { readonly while: Predicate<Z>; readonly body: (s: Z, a: A, i: number) => Effect<R, E, Z> }
   ): Effect<R, E, Z>
 }
 ```
@@ -3144,10 +3144,10 @@ new elements.
 
 ```ts
 export declare const mapAccum: {
-  <A, B, R, E, Z>(zero: Z, f: (z: Z, a: A) => Effect<R, E, readonly [Z, B]>): (
+  <A, B, R, E, Z>(zero: Z, f: (z: Z, a: A, i: number) => Effect<R, E, readonly [Z, B]>): (
     elements: Iterable<A>
   ) => Effect<R, E, [Z, B[]]>
-  <A, B, R, E, Z>(elements: Iterable<A>, zero: Z, f: (z: Z, a: A) => Effect<R, E, readonly [Z, B]>): Effect<
+  <A, B, R, E, Z>(elements: Iterable<A>, zero: Z, f: (z: Z, a: A, i: number) => Effect<R, E, readonly [Z, B]>): Effect<
     R,
     E,
     [Z, B[]]
@@ -4281,41 +4281,6 @@ export declare const withTracerScoped: (value: Tracer.Tracer) => Effect<Scope.Sc
 
 Added in v1.0.0
 
-# traversing
-
-## forEachWithIndex
-
-Same as `forEach`, except that the function `f` is supplied
-a second argument that corresponds to the index (starting from 0)
-of the current element being iterated over.
-
-**Signature**
-
-```ts
-export declare const forEachWithIndex: {
-  <A, R, E, B>(
-    f: (a: A, index: number) => Effect<R, E, B>,
-    options?: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly discard?: false }
-  ): (self: Iterable<A>) => Effect<R, E, readonly B[]>
-  <A, R, E, B>(
-    f: (a: A, index: number) => Effect<R, E, B>,
-    options: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly discard: true }
-  ): (self: Iterable<A>) => Effect<R, E, void>
-  <A, R, E, B>(
-    self: Iterable<A>,
-    f: (a: A, index: number) => Effect<R, E, B>,
-    options?: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly discard?: false }
-  ): Effect<R, E, readonly B[]>
-  <A, R, E, B>(
-    self: Iterable<A>,
-    f: (a: A, index: number) => Effect<R, E, B>,
-    options: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly discard: true }
-  ): Effect<R, E, void>
-}
-```
-
-Added in v1.0.0
-
 # type lambdas
 
 ## EffectTypeLambda (interface)
@@ -4555,8 +4520,8 @@ Drops all elements until the effectful predicate returns true.
 
 ```ts
 export declare const dropUntil: {
-  <A, R, E>(predicate: (a: A) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, A[]>
-  <A, R, E>(elements: Iterable<A>, predicate: (a: A) => Effect<R, E, boolean>): Effect<R, E, A[]>
+  <A, R, E>(predicate: (a: A, i: number) => Effect<R, E, boolean>): (elements: Iterable<A>) => Effect<R, E, A[]>
+  <A, R, E>(elements: Iterable<A>, predicate: (a: A, i: number) => Effect<R, E, boolean>): Effect<R, E, A[]>
 }
 ```
 
@@ -5863,21 +5828,21 @@ will be lost. To retain all information please use `partition`.
 ```ts
 export declare const validateAll: {
   <R, E, A, B>(
-    f: (a: A) => Effect<R, E, B>,
+    f: (a: A, i: number) => Effect<R, E, B>,
     options?: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly discard?: false }
   ): (elements: Iterable<A>) => Effect<R, readonly E[], readonly B[]>
   <R, E, A, B>(
-    f: (a: A) => Effect<R, E, B>,
+    f: (a: A, i: number) => Effect<R, E, B>,
     options: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly discard: true }
   ): (elements: Iterable<A>) => Effect<R, readonly E[], void>
   <R, E, A, B>(
     elements: Iterable<A>,
-    f: (a: A) => Effect<R, E, B>,
+    f: (a: A, i: number) => Effect<R, E, B>,
     options?: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly discard?: false }
   ): Effect<R, readonly E[], readonly B[]>
   <R, E, A, B>(
     elements: Iterable<A>,
-    f: (a: A) => Effect<R, E, B>,
+    f: (a: A, i: number) => Effect<R, E, B>,
     options: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly discard: true }
   ): Effect<R, readonly E[], void>
 }
@@ -5897,12 +5862,12 @@ If `elements` is empty then `Effect.fail([])` is returned.
 ```ts
 export declare const validateFirst: {
   <R, E, A, B>(
-    f: (a: A) => Effect<R, E, B>,
+    f: (a: A, i: number) => Effect<R, E, B>,
     options?: { readonly concurrency?: Concurrency; readonly batched?: boolean }
   ): (elements: Iterable<A>) => Effect<R, readonly E[], B>
   <R, E, A, B>(
     elements: Iterable<A>,
-    f: (a: A) => Effect<R, E, B>,
+    f: (a: A, i: number) => Effect<R, E, B>,
     options?: { readonly concurrency?: Concurrency; readonly batched?: boolean }
   ): Effect<R, readonly E[], B>
 }
