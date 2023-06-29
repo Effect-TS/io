@@ -659,7 +659,7 @@ export const firstSuccessOf = <R, E, A>(effects: Iterable<Effect.Effect<R, E, A>
     }
     return pipe(
       Chunk.tailNonEmpty(list),
-      Chunk.reduce(Chunk.headNonEmpty(list), (left, right) => core.orElse(left, () => right))
+      ReadonlyArray.reduce(Chunk.headNonEmpty(list), (left, right) => core.orElse(left, () => right))
     )
   })
 

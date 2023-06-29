@@ -10,6 +10,7 @@ import { invokeWithInterrupt } from "@effect/io/internal/fiberRuntime"
 import { complete } from "@effect/io/internal/request"
 import type * as Request from "@effect/io/Request"
 import type * as RequestResolver from "@effect/io/RequestResolver"
+import * as ReadonlyArray from "@effect/data/ReadonlyArray"
 
 /** @internal */
 export const make = <R, A>(
@@ -89,8 +90,8 @@ export const batchN = dual<
         ? Effect.die(Cause.IllegalArgumentException("RequestResolver.batchN: n must be at least 1"))
         : self.runAll(
           Array.from(Chunk.map(
-            Chunk.reduce(
-              Chunk.unsafeFromArray(requests),
+            ReadonlyArray.reduce(
+              requests,
               Chunk.empty<Chunk.Chunk<Request.Entry<A>>>(),
               (acc, chunk) => Chunk.concat(acc, Chunk.chunksOf(Chunk.unsafeFromArray(chunk), n))
             ),

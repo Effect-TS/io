@@ -5,6 +5,7 @@ import { dual, pipe } from "@effect/data/Function"
 import * as HashMap from "@effect/data/HashMap"
 import * as number from "@effect/data/Number"
 import * as Option from "@effect/data/Option"
+import * as ReadonlyArray from "@effect/data/ReadonlyArray"
 import * as metricState from "@effect/io/internal/metric/state"
 import type * as MetricHook from "@effect/io/Metric/Hook"
 import type * as MetricKey from "@effect/io/Metric/Key"
@@ -273,7 +274,7 @@ const calculateQuantiles = (
   const tail = pipe(sortedQuantiles, Chunk.drop(1))
   const resolved = pipe(
     tail,
-    Chunk.reduce(
+    ReadonlyArray.reduce(
       Chunk.of(
         resolveQuantile(
           error,

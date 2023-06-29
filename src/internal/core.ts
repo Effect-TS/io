@@ -44,6 +44,7 @@ import type * as Scheduler from "@effect/io/Scheduler"
 import * as scheduler from "@effect/io/Scheduler"
 import type * as Scope from "@effect/io/Scope"
 import type * as Tracer from "@effect/io/Tracer"
+import * as ReadonlyArray from "@effect/data/ReadonlyArray"
 
 // -----------------------------------------------------------------------------
 // Effect
@@ -2332,7 +2333,7 @@ const exitCollectAllInternal = <E, A>(
   }
   return pipe(
     Chunk.tailNonEmpty(list),
-    Chunk.reduce(
+    ReadonlyArray.reduce(
       pipe(Chunk.headNonEmpty(list), exitMap<A, Chunk.Chunk<A>>(Chunk.of)),
       (accumulator, current) =>
         pipe(

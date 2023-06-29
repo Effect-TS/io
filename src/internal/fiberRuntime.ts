@@ -59,6 +59,7 @@ import type * as RequestBlock from "@effect/io/RequestBlock"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
 import type { Tracer } from "@effect/io/Tracer"
+import * as ReadonlyArray from "@effect/data/ReadonlyArray"
 
 const fibersStarted = metric.counter("effect_fiber_started")
 const fiberSuccesses = metric.counter("effect_fiber_successes")
@@ -2180,7 +2181,7 @@ export const raceAll = <R, E, A>(all: Iterable<Effect.Effect<R, E, A>>) => {
                   core.tap((fibers) =>
                     pipe(
                       fibers,
-                      Chunk.reduce(core.unit, (effect, fiber) =>
+                      ReadonlyArray.reduce(core.unit, (effect, fiber) =>
                         pipe(
                           effect,
                           core.zipRight(
@@ -2200,7 +2201,7 @@ export const raceAll = <R, E, A>(all: Iterable<Effect.Effect<R, E, A>>) => {
                       core.onInterrupt(() =>
                         pipe(
                           fibers,
-                          Chunk.reduce(
+                          ReadonlyArray.reduce(
                             core.unit,
                             (effect, fiber) => pipe(effect, core.zipLeft(core.interruptFiber(fiber)))
                           )
@@ -2245,7 +2246,7 @@ const raceAllArbiter = <E, E1, A, A1>(
             set ?
               pipe(
                 Chunk.fromIterable(fibers),
-                Chunk.reduce(
+                ReadonlyArray.reduce(
                   core.unit,
                   (effect, fiber) =>
                     fiber === winner ?
