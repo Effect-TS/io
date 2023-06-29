@@ -27,9 +27,10 @@ Added in v1.0.0
 - [exports](#exports)
   - [FiberFailureCauseId (type alias)](#fiberfailurecauseid-type-alias)
 - [guards](#guards)
+  - [isAsyncFiberException](#isasyncfiberexception)
   - [isFiberFailure](#isfiberfailure)
 - [models](#models)
-  - [AsyncFiber (interface)](#asyncfiber-interface)
+  - [AsyncFiberException (interface)](#asyncfiberexception-interface)
   - [Cancel (interface)](#cancel-interface)
   - [FiberFailure (interface)](#fiberfailure-interface)
   - [RunForkOptions (interface)](#runforkoptions-interface)
@@ -206,6 +207,16 @@ Added in v1.0.0
 
 # guards
 
+## isAsyncFiberException
+
+**Signature**
+
+```ts
+export declare const isAsyncFiberException: (u: unknown) => u is AsyncFiberException<unknown, unknown>
+```
+
+Added in v1.0.0
+
 ## isFiberFailure
 
 **Signature**
@@ -218,13 +229,13 @@ Added in v1.0.0
 
 # models
 
-## AsyncFiber (interface)
+## AsyncFiberException (interface)
 
 **Signature**
 
 ```ts
-export interface AsyncFiber<E, A> {
-  readonly _tag: 'AsyncFiber'
+export interface AsyncFiberException<E, A> {
+  readonly _tag: 'AsyncFiberException'
   readonly fiber: Fiber.RuntimeFiber<E, A>
 }
 ```
