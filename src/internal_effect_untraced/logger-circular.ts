@@ -19,5 +19,6 @@ export const test = dual<
     Cause.empty,
     fiberRefs.unsafeMake(new Map()),
     List.empty(),
-    HashMap.empty()
+    HashMap.empty(),
+    new Date()
   ))

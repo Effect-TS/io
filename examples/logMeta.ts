@@ -11,9 +11,9 @@ const logMeta = FiberRef.unsafeMake<LogMeta>({})
 const logInfoWithMeta = (message: string, data: LogMeta) => Effect.locally(logMeta, data)(Effect.logInfo(message))
 
 const customLogger = Logger.make<string, void>(
-  (fiberId, logLevel, message, cause, context, spans, annotations) => {
+  (fiberId, logLevel, message, cause, context, spans, annotations, date) => {
     const meta = FiberRefs.getOrDefault(context, logMeta)
-    const formatted = Logger.stringLogger.log(fiberId, logLevel, message, cause, context, spans, annotations)
+    const formatted = Logger.stringLogger.log(fiberId, logLevel, message, cause, context, spans, annotations, date)
     console.log(formatted, { meta })
   }
 )

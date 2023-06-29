@@ -9,7 +9,6 @@ import type * as Cause from "@effect/io/Cause"
 import type { Effect } from "@effect/io/Effect"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRefs from "@effect/io/FiberRefs"
-import * as defaultServices from "@effect/io/internal_effect_untraced/defaultServices"
 import * as fiberRuntime from "@effect/io/internal_effect_untraced/fiberRuntime"
 import * as circular from "@effect/io/internal_effect_untraced/layer/circular"
 import * as internal from "@effect/io/internal_effect_untraced/logger"
@@ -43,7 +42,8 @@ export interface Logger<Message, Output> extends Logger.Variance<Message, Output
     cause: Cause.Cause<unknown>,
     context: FiberRefs.FiberRefs,
     spans: List.List<LogSpan.LogSpan>,
-    annotations: HashMap.HashMap<string, string>
+    annotations: HashMap.HashMap<string, string>,
+    now: Date
   ) => Output
 }
 
@@ -75,7 +75,8 @@ export const make: <Message, Output>(
     cause: Cause.Cause<unknown>,
     context: FiberRefs.FiberRefs,
     spans: List.List<LogSpan.LogSpan>,
-    annotations: HashMap.HashMap<string, string>
+    annotations: HashMap.HashMap<string, string>,
+    now: Date
   ) => Output
 ) => Logger<Message, Output> = internal.makeLogger
 
@@ -282,13 +283,13 @@ export const defaultLogger: Logger<string, void> = fiberRuntime.defaultLogger
  * @since 1.0.0
  * @category constructors
  */
-export const logfmtLogger: Logger<string, string> = defaultServices.logfmtLogger
+export const logfmtLogger: Logger<string, string> = internal.logfmtLogger
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const stringLogger: Logger<string, string> = defaultServices.stringLogger
+export const stringLogger: Logger<string, string> = internal.stringLogger
 
 /**
  * @since 1.0.0
