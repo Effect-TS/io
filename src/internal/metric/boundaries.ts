@@ -2,6 +2,7 @@ import * as Chunk from "@effect/data/Chunk"
 import * as Equal from "@effect/data/Equal"
 import { pipe } from "@effect/data/Function"
 import * as Hash from "@effect/data/Hash"
+import * as ReadonlyArray from "@effect/data/ReadonlyArray"
 import type * as MetricBoundaries from "@effect/io/Metric/Boundaries"
 
 /** @internal */
@@ -49,8 +50,8 @@ export const linear = (options: {
   readonly count: number
 }): MetricBoundaries.MetricBoundaries =>
   pipe(
-    Chunk.range(0, options.count - 1),
-    Chunk.map((i) => options.start + i * options.width),
+    ReadonlyArray.makeBy(options.count - 1, (i) => options.start + i * options.width),
+    Chunk.unsafeFromArray,
     fromChunk
   )
 
@@ -61,7 +62,7 @@ export const exponential = (options: {
   readonly count: number
 }): MetricBoundaries.MetricBoundaries =>
   pipe(
-    Chunk.range(0, options.count - 1),
-    Chunk.map((i) => options.start * Math.pow(options.factor, i)),
+    ReadonlyArray.makeBy(options.count - 1, (i) => options.start * Math.pow(options.factor, i)),
+    Chunk.unsafeFromArray,
     fromChunk
   )

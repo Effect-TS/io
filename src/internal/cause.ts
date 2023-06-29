@@ -7,6 +7,7 @@ import * as Hash from "@effect/data/Hash"
 import * as HashSet from "@effect/data/HashSet"
 import * as Option from "@effect/data/Option"
 import type { Predicate } from "@effect/data/Predicate"
+import * as ReadonlyArray from "@effect/data/ReadonlyArray"
 import type * as Cause from "@effect/io/Cause"
 import * as FiberId from "@effect/io/Fiber/Id"
 import * as OpCodes from "@effect/io/internal/opCodes/cause"
@@ -565,7 +566,7 @@ const flattenCauseLoop = (
   while (1) {
     const [parallel, sequential] = pipe(
       causes,
-      Chunk.reduce(
+      ReadonlyArray.reduce(
         [HashSet.empty<unknown>(), Chunk.empty<Cause.Cause<unknown>>()] as const,
         ([parallel, sequential], cause) => {
           const [par, seq] = evaluateCause(cause)
