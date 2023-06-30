@@ -123,7 +123,7 @@ const asyncFiberException = <E, A>(fiber: Fiber.RuntimeFiber<E, A>): Runtime.Asy
   Error.stackTraceLimit = 0
   const error = (new Error()) as any
   Error.stackTraceLimit = limit
-  const message = `Fiber #${fiber.id().id} has suspended work asyncroniously`
+  const message = `Fiber #${fiber.id().id} has suspended work asynchronously`
   const _tag = "AsyncFiberException"
   Object.defineProperties(error, {
     _tag: {
