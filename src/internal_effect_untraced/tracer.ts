@@ -38,12 +38,13 @@ export class NativeSpan implements Tracer.Span {
   readonly traceId: string = "native"
 
   status: Tracer.SpanStatus
-  attributes: Map<string, string>
-  events: Array<[name: string, attributes: Record<string, string>]> = []
+  attributes: Map<string, Tracer.AttributeValue>
+  events: Array<[name: string, attributes: Record<string, Tracer.AttributeValue>]> = []
 
   constructor(
     readonly name: string,
     readonly parent: Option.Option<Tracer.ParentSpan>,
+    readonly context: Context.Context<never>,
     readonly startTime: bigint
   ) {
     this.status = {
@@ -63,18 +64,18 @@ export class NativeSpan implements Tracer.Span {
     }
   }
 
-  attribute = (key: string, value: string): void => {
+  attribute = (key: string, value: Tracer.AttributeValue): void => {
     this.attributes.set(key, value)
   }
 
-  event = (name: string, attributes?: Record<string, string>): void => {
+  event = (name: string, attributes?: Record<string, Tracer.AttributeValue>): void => {
     this.events.push([name, attributes ?? {}])
   }
 }
 
 /** @internal */
 export const nativeTracer: Tracer.Tracer = make({
-  span: (name, parent, startTime) => new NativeSpan(name, parent, startTime)
+  span: (name, parent, traceFlags, startTime) => new NativeSpan(name, parent, traceFlags, startTime)
 })
 
 /** @internal */

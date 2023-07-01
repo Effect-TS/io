@@ -113,8 +113,8 @@ export const annotateLogs = Debug.dualWithTrace<
 
 /* @internal */
 export const annotateSpans = Debug.dualWithTrace<
-  (key: string, value: string) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
-  <R, E, A>(self: Effect.Effect<R, E, A>, key: string, value: string) => Effect.Effect<R, E, A>
+  (key: string, value: Tracer.AttributeValue) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(self: Effect.Effect<R, E, A>, key: string, value: Tracer.AttributeValue) => Effect.Effect<R, E, A>
 >(
   3,
   (trace) =>
@@ -3021,9 +3021,10 @@ export const updateService = Debug.dualWithTrace<
 export const useSpan: {
   <R, E, A>(name: string, evaluate: (span: Tracer.Span) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A>
   <R, E, A>(name: string, options: {
-    attributes?: Record<string, string>
-    parent?: Tracer.ParentSpan
-    root?: boolean
+    readonly attributes?: Record<string, Tracer.AttributeValue>
+    readonly parent?: Tracer.ParentSpan
+    readonly root?: boolean
+    readonly context?: Context.Context<never>
   }, evaluate: (span: Tracer.Span) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A>
 } = Debug.methodWithTrace(() =>
   <R, E, A>(
@@ -3034,9 +3035,10 @@ export const useSpan: {
     ]
   ) => {
     const options: {
-      attributes?: Record<string, string>
-      parent?: Tracer.ParentSpan
-      root?: boolean
+      readonly attributes?: Record<string, Tracer.AttributeValue>
+      readonly parent?: Tracer.ParentSpan
+      readonly root?: boolean
+      readonly context?: Context.Context<never>
     } | undefined = args.length === 1 ? undefined : args[0]
     const evaluate: (span: Tracer.Span) => Effect.Effect<R, E, A> = args[args.length - 1]
 
@@ -3059,7 +3061,7 @@ export const useSpan: {
                   Clock.clockWith((clock) => clock.currentTimeNanos()),
                   (startTime) =>
                     core.sync(() => {
-                      const span = tracer.span(name, parent, startTime)
+                      const span = tracer.span(name, parent, options?.context ?? Context.empty(), startTime)
                       HashMap.forEachWithIndex(annotations, (value, key) => span.attribute(key, value))
                       Object.entries(options?.attributes ?? {}).forEach(([k, v]) => {
                         span.attribute(k, v)
@@ -3241,14 +3243,16 @@ export const withMetric = Debug.dualWithTrace<
 /** @internal */
 export const withSpan = Debug.dualWithTrace<
   (name: string, options?: {
-    attributes?: Record<string, string>
-    parent?: Tracer.ParentSpan
-    root?: boolean
+    readonly attributes?: Record<string, Tracer.AttributeValue>
+    readonly parent?: Tracer.ParentSpan
+    readonly root?: boolean
+    readonly context?: Context.Context<never>
   }) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
   <R, E, A>(self: Effect.Effect<R, E, A>, name: string, options?: {
-    attributes?: Record<string, string>
-    parent?: Tracer.ParentSpan
-    root?: boolean
+    readonly attributes?: Record<string, Tracer.AttributeValue>
+    readonly parent?: Tracer.ParentSpan
+    readonly root?: boolean
+    readonly context?: Context.Context<never>
   }) => Effect.Effect<R, E, A>
 >(
   (args) => typeof args[0] !== "string",
@@ -3272,7 +3276,7 @@ export const withSpan = Debug.dualWithTrace<
 
 /* @internal */
 export const spanAnnotations = Debug.methodWithTrace((trace) =>
-  (): Effect.Effect<never, never, HashMap.HashMap<string, string>> =>
+  (): Effect.Effect<never, never, HashMap.HashMap<string, Tracer.AttributeValue>> =>
     core.fiberRefGet(core.currentTracerSpanAnnotations).traced(trace)
 )
 
