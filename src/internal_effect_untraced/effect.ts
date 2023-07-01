@@ -3056,7 +3056,7 @@ export const useSpan: {
               core.fiberRefGet(core.currentTracerSpanAnnotations),
               (annotations) =>
                 core.flatMap(
-                  Clock.clockWith((clock) => clock.currentTimeMillis()),
+                  Clock.clockWith((clock) => clock.currentTimeNanos()),
                   (startTime) =>
                     core.sync(() => {
                       const span = tracer.span(name, parent, startTime)
@@ -3073,7 +3073,7 @@ export const useSpan: {
       evaluate,
       (span, exit) =>
         core.flatMap(
-          Clock.clockWith((clock) => clock.currentTimeMillis()),
+          Clock.clockWith((clock) => clock.currentTimeNanos()),
           (endTime) => core.sync(() => span.end(endTime, exit))
         )
     )

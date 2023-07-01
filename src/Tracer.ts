@@ -24,7 +24,7 @@ export type TracerTypeId = typeof TracerTypeId
  */
 export interface Tracer {
   readonly [TracerTypeId]: TracerTypeId
-  readonly span: (name: string, parent: Option.Option<ParentSpan>, startTime: number) => Span
+  readonly span: (name: string, parent: Option.Option<ParentSpan>, startTime: bigint) => Span
 }
 
 /**
@@ -33,11 +33,11 @@ export interface Tracer {
  */
 export type SpanStatus = {
   _tag: "Started"
-  startTime: number
+  startTime: bigint
 } | {
   _tag: "Ended"
-  startTime: number
-  endTime: number
+  startTime: bigint
+  endTime: bigint
   exit: Exit.Exit<unknown, unknown>
 }
 
@@ -70,7 +70,7 @@ export interface Span {
   readonly parent: Option.Option<ParentSpan>
   readonly status: SpanStatus
   readonly attributes: ReadonlyMap<string, string>
-  readonly end: (endTime: number, exit: Exit.Exit<unknown, unknown>) => void
+  readonly end: (endTime: bigint, exit: Exit.Exit<unknown, unknown>) => void
   readonly attribute: (key: string, value: string) => void
   readonly event: (name: string, attributes?: Record<string, string>) => void
 }

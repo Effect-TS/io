@@ -44,7 +44,7 @@ export class NativeSpan implements Tracer.Span {
   constructor(
     readonly name: string,
     readonly parent: Option.Option<Tracer.ParentSpan>,
-    readonly startTime: number
+    readonly startTime: bigint
   ) {
     this.status = {
       _tag: "Started",
@@ -54,7 +54,7 @@ export class NativeSpan implements Tracer.Span {
     this.spanId = `span${MutableRef.incrementAndGet(ids)}`
   }
 
-  end = (endTime: number, exit: Exit.Exit<unknown, unknown>): void => {
+  end = (endTime: bigint, exit: Exit.Exit<unknown, unknown>): void => {
     this.status = {
       _tag: "Ended",
       endTime,
