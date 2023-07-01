@@ -136,6 +136,26 @@ export class TestClockImpl implements TestClock {
       ).traced(trace)
     )
   }
+
+  /**
+   * Unsafely returns the current time in nanoseconds.
+   */
+  unsafeCurrentTimeNanos(): bigint {
+    return BigInt(ref.unsafeGet(this.clockState).instant * 1000000)
+  }
+
+  /**
+   * Returns the current clock time in nanoseconds.
+   */
+  currentTimeNanos(): Effect.Effect<never, never, bigint> {
+    return Debug.bodyWithTrace((trace) =>
+      core.map(
+        ref.get(this.clockState),
+        (data) => BigInt(data.instant * 1000000)
+      ).traced(trace)
+    )
+  }
+
   /**
    * Saves the `TestClock`'s current state in an effect which, when run, will
    * restore the `TestClock` state to the saved state.

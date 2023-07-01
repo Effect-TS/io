@@ -37,6 +37,14 @@ export interface Clock {
    */
   currentTimeMillis(): Effect.Effect<never, never, number>
   /**
+   * Unsafely returns the current time in nanoseconds.
+   */
+  unsafeCurrentTimeNanos(): bigint
+  /**
+   * Returns the current time in nanoseconds.
+   */
+  currentTimeNanos(): Effect.Effect<never, never, bigint>
+  /**
    * Asynchronously sleeps for the specified duration.
    */
   sleep(duration: Duration.Duration): Effect.Effect<never, never, void>
@@ -82,6 +90,12 @@ export const sleep: (duration: Duration.Duration) => Effect.Effect<never, never,
  * @category constructors
  */
 export const currentTimeMillis: (_: void) => Effect.Effect<never, never, number> = defaultServices.currentTimeMillis
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const currentTimeNanos: (_: void) => Effect.Effect<never, never, bigint> = defaultServices.currentTimeNanos
 
 /**
  * @since 1.0.0

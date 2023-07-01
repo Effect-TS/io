@@ -47,8 +47,16 @@ class ClockImpl implements Clock.Clock {
     return new Date().getTime()
   }
 
+  unsafeCurrentTimeNanos(): bigint {
+    return BigInt(Math.round(performance.timeOrigin * 1000000)) + BigInt(Math.round(performance.now() * 1000000))
+  }
+
   currentTimeMillis(): Effect.Effect<never, never, number> {
     return Debug.bodyWithTrace((trace) => core.sync(() => this.unsafeCurrentTimeMillis()).traced(trace))
+  }
+
+  currentTimeNanos(): Effect.Effect<never, never, bigint> {
+    return Debug.bodyWithTrace((trace) => core.sync(() => this.unsafeCurrentTimeNanos()).traced(trace))
   }
 
   scheduler(): Effect.Effect<never, never, Clock.ClockScheduler> {
