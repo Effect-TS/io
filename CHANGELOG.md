@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.29.1
+
+### Patch Changes
+
+- [#478](https://github.com/Effect-TS/io/pull/478) [`c0f0fc9`](https://github.com/Effect-TS/io/commit/c0f0fc9e68c906245d727844c956f67260489b06) Thanks [@tim-smart](https://github.com/tim-smart)! - add startTime to span events
+
 ## 0.29.0
 
 ### Minor Changes
