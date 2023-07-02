@@ -41,6 +41,11 @@ export const currentTimeMillis = Debug.methodWithTrace((trace) =>
 )
 
 /** @internal */
+export const currentTimeNanos = Debug.methodWithTrace((trace) =>
+  (): Effect.Effect<never, never, bigint> => clockWith((clock) => clock.currentTimeNanos()).traced(trace)
+)
+
+/** @internal */
 export const sleep = Debug.methodWithTrace((trace) =>
   (duration: Duration.Duration): Effect.Effect<never, never, void> =>
     clockWith((clock) => clock.sleep(duration)).traced(trace)
