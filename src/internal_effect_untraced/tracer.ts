@@ -3,15 +3,10 @@
  */
 import * as Context from "@effect/data/Context"
 import { globalValue } from "@effect/data/Global"
-import * as List from "@effect/data/List"
 import * as MutableRef from "@effect/data/MutableRef"
-import * as Option from "@effect/data/Option"
-import * as Cause from "@effect/io/Cause"
+import type * as Option from "@effect/data/Option"
 import type * as Exit from "@effect/io/Exit"
-import * as Pretty from "@effect/io/internal_effect_untraced/cause-pretty"
-import * as core from "@effect/io/internal_effect_untraced/core"
 import * as _fiberId from "@effect/io/internal_effect_untraced/fiberId"
-import * as fiberRefs from "@effect/io/internal_effect_untraced/fiberRefs"
 import * as _logger from "@effect/io/internal_effect_untraced/logger"
 import type * as Tracer from "@effect/io/Tracer"
 
@@ -39,7 +34,7 @@ export class NativeSpan implements Tracer.Span {
 
   status: Tracer.SpanStatus
   attributes: Map<string, Tracer.AttributeValue>
-  events: Array<[name: string, attributes: Record<string, Tracer.AttributeValue>]> = []
+  events: Array<[name: string, startTime: bigint, attributes: Record<string, Tracer.AttributeValue>]> = []
 
   constructor(
     readonly name: string,
@@ -68,41 +63,12 @@ export class NativeSpan implements Tracer.Span {
     this.attributes.set(key, value)
   }
 
-  event = (name: string, attributes?: Record<string, Tracer.AttributeValue>): void => {
-    this.events.push([name, attributes ?? {}])
+  event = (name: string, startTime: bigint, attributes?: Record<string, Tracer.AttributeValue>): void => {
+    this.events.push([name, startTime, attributes ?? {}])
   }
 }
 
 /** @internal */
 export const nativeTracer: Tracer.Tracer = make({
   span: (name, parent, traceFlags, startTime) => new NativeSpan(name, parent, traceFlags, startTime)
-})
-
-/** @internal */
-export const logger = _logger.makeLogger<string, void>((
-  fiberId,
-  logLevel,
-  message,
-  cause,
-  context,
-  _spans,
-  annotations
-) => {
-  const span = Option.flatMap(fiberRefs.get(context, core.currentTracerSpan), List.head)
-  if (Option.isNone(span)) {
-    return
-  }
-
-  const attributes = Object.fromEntries(annotations)
-  attributes["effect.fiberId"] = _fiberId.threadName(fiberId)
-  attributes["effect.logLevel"] = logLevel.label
-
-  if (cause !== null && cause !== Cause.empty) {
-    attributes["effect.cause"] = Pretty.pretty(cause)
-  }
-
-  span.value.event(
-    message,
-    attributes
-  )
 })

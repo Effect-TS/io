@@ -7,7 +7,6 @@ import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
 import * as defaultServices from "@effect/io/internal_effect_untraced/defaultServices"
 import * as internal from "@effect/io/internal_effect_untraced/tracer"
-import type * as Logger from "@effect/io/Logger"
 
 /**
  * @since 1.0.0
@@ -79,7 +78,7 @@ export interface Span {
   readonly attributes: ReadonlyMap<string, AttributeValue>
   readonly end: (endTime: bigint, exit: Exit.Exit<unknown, unknown>) => void
   readonly attribute: (key: string, value: AttributeValue) => void
-  readonly event: (name: string, attributes?: Record<string, AttributeValue>) => void
+  readonly event: (name: string, startTime: bigint, attributes?: Record<string, AttributeValue>) => void
 }
 /**
  * @since 1.0.0
@@ -105,11 +104,3 @@ export const make: (options: Omit<Tracer, typeof TracerTypeId>) => Tracer = inte
  */
 export const tracerWith: <R, E, A>(f: (tracer: Tracer) => Effect.Effect<R, E, A>) => Effect.Effect<R, E, A> =
   defaultServices.tracerWith
-
-/**
- * A Logger which adds log entries as events to the current span.
- *
- * @since 1.0.0
- * @category loggers
- */
-export const logger: Logger.Logger<string, void> = internal.logger

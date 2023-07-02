@@ -1,5 +1,5 @@
 import * as Context from "@effect/data/Context"
-import { seconds } from "@effect/data/Duration"
+import { millis, seconds } from "@effect/data/Duration"
 import { identity } from "@effect/data/Function"
 import * as Option from "@effect/data/Option"
 import * as Effect from "@effect/io/Effect"
@@ -96,6 +96,8 @@ describe("Tracer", () => {
 
     it.effect("logger", () =>
       Effect.gen(function*($) {
+        yield* $(TestClock.adjust(millis(0.01)))
+
         const [span, fiberId] = yield* $(
           Effect.log("event"),
           Effect.zipRight(Effect.all(currentSpan, Effect.fiberId())),
@@ -104,7 +106,7 @@ describe("Tracer", () => {
 
         assert.deepEqual(span.name, "A")
         assert.deepEqual(span.parent, Option.none())
-        assert.deepEqual((span as NativeSpan).events, [["event", {
+        assert.deepEqual((span as NativeSpan).events, [["event", 10000n, {
           "effect.fiberId": FiberId.threadName(fiberId),
           "effect.logLevel": "INFO"
         }]])

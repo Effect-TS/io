@@ -295,6 +295,12 @@ export const stringLogger: Logger<string, string> = internal.stringLogger
  * @since 1.0.0
  * @category constructors
  */
+export const tracerLogger: Logger<string, void> = fiberRuntime.tracerLogger
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
 export const logFmt: Layer.Layer<never, never, never> = replace(fiberRuntime.defaultLogger, fiberRuntime.logFmtLogger)
 
 /**
