@@ -6159,8 +6159,8 @@ export const withTracerScoped: (value: Tracer.Tracer) => Effect<Scope.Scope, nev
  * @category tracing
  */
 export const annotateSpans: {
-  (key: string, value: string): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(self: Effect<R, E, A>, key: string, value: string): Effect<R, E, A>
+  (key: string, value: Tracer.AttributeValue): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, key: string, value: Tracer.AttributeValue): Effect<R, E, A>
 } = effect.annotateSpans
 
 /**
@@ -6173,7 +6173,8 @@ export const currentSpan: (_: void) => Effect<never, never, Option.Option<Tracer
  * @since 1.0.0
  * @category tracing
  */
-export const spanAnnotations: () => Effect<never, never, HashMap.HashMap<string, string>> = effect.spanAnnotations
+export const spanAnnotations: () => Effect<never, never, HashMap.HashMap<string, Tracer.AttributeValue>> =
+  effect.spanAnnotations
 
 /**
  * Create a new span for tracing, and automatically close it when the effect
@@ -6190,9 +6191,10 @@ export const useSpan: {
   <R, E, A>(
     name: string,
     options: {
-      attributes?: Record<string, string>
-      parent?: Tracer.ParentSpan
-      root?: boolean
+      readonly attributes?: Record<string, Tracer.AttributeValue>
+      readonly parent?: Tracer.ParentSpan
+      readonly root?: boolean
+      readonly context?: Context.Context<never>
     },
     evaluate: (span: Tracer.Span) => Effect<R, E, A>
   ): Effect<R, E, A>
@@ -6208,18 +6210,20 @@ export const withSpan: {
   (
     name: string,
     options?: {
-      attributes?: Record<string, string>
-      parent?: Tracer.ParentSpan
-      root?: boolean
+      readonly attributes?: Record<string, Tracer.AttributeValue>
+      readonly parent?: Tracer.ParentSpan
+      readonly root?: boolean
+      readonly context?: Context.Context<never>
     }
   ): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
   <R, E, A>(
     self: Effect<R, E, A>,
     name: string,
     options?: {
-      attributes?: Record<string, string>
-      parent?: Tracer.ParentSpan
-      root?: boolean
+      readonly attributes?: Record<string, Tracer.AttributeValue>
+      readonly parent?: Tracer.ParentSpan
+      readonly root?: boolean
+      readonly context?: Context.Context<never>
     }
   ): Effect<R, E, A>
 } = effect.withSpan

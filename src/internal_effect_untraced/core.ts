@@ -1928,10 +1928,11 @@ export const currentTracerSpan: FiberRef.FiberRef<List.List<Tracer.Span>> = glob
 )
 
 /** @internal */
-export const currentTracerSpanAnnotations: FiberRef.FiberRef<HashMap.HashMap<string, string>> = globalValue(
-  Symbol.for("@effect/io/FiberRef/currentTracerSpanAnnotations"),
-  () => fiberRefUnsafeMake(HashMap.empty())
-)
+export const currentTracerSpanAnnotations: FiberRef.FiberRef<HashMap.HashMap<string, Tracer.AttributeValue>> =
+  globalValue(
+    Symbol.for("@effect/io/FiberRef/currentTracerSpanAnnotations"),
+    () => fiberRefUnsafeMake(HashMap.empty())
+  )
 
 // -----------------------------------------------------------------------------
 // Scope

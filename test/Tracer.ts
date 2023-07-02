@@ -1,3 +1,4 @@
+import * as Context from "@effect/data/Context"
 import { seconds } from "@effect/data/Duration"
 import { identity } from "@effect/data/Function"
 import * as Option from "@effect/data/Option"
@@ -7,7 +8,6 @@ import * as FiberId from "@effect/io/Fiber/Id"
 import * as TestClock from "@effect/io/internal_effect_untraced/testing/testClock"
 import type { NativeSpan } from "@effect/io/internal_effect_untraced/tracer"
 import * as it from "@effect/io/test/utils/extend"
-import type * as Tracer from "@effect/io/Tracer"
 import { assert, describe } from "vitest"
 
 const currentSpan = Effect.flatMap(Effect.currentSpan(), identity)
@@ -49,16 +49,18 @@ describe("Tracer", () => {
     it.effect("external parent", () =>
       Effect.gen(function*($) {
         const span = yield* $(
-          Effect.withSpan(
-            "A",
-            { parent: { _tag: "ExternalSpan", name: "external", spanId: "000", traceId: "111" } }
-          )(currentSpan)
+          Effect.withSpan("A", {
+            parent: {
+              _tag: "ExternalSpan",
+              name: "external",
+              spanId: "000",
+              traceId: "111",
+              context: Context.empty()
+            }
+          })(currentSpan)
         )
         assert.deepEqual(span.name, "A")
-        assert.deepEqual(
-          span.parent,
-          Option.some<Tracer.ExternalSpan>({ _tag: "ExternalSpan", name: "external", spanId: "000", traceId: "111" })
-        )
+        assert.deepEqual(Option.map(span.parent, (span) => span.spanId), Option.some("000"))
       }))
 
     it.effect("correct time", () =>

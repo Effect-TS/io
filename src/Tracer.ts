@@ -24,7 +24,12 @@ export type TracerTypeId = typeof TracerTypeId
  */
 export interface Tracer {
   readonly [TracerTypeId]: TracerTypeId
-  readonly span: (name: string, parent: Option.Option<ParentSpan>, startTime: bigint) => Span
+  readonly span: (
+    name: string,
+    parent: Option.Option<ParentSpan>,
+    context: Context.Context<never>,
+    startTime: bigint
+  ) => Span
 }
 
 /**
@@ -56,6 +61,7 @@ export interface ExternalSpan {
   readonly name: string
   readonly spanId: string
   readonly traceId: string
+  readonly context: Context.Context<never>
 }
 
 /**
@@ -68,12 +74,18 @@ export interface Span {
   readonly spanId: string
   readonly traceId: string
   readonly parent: Option.Option<ParentSpan>
+  readonly context: Context.Context<never>
   readonly status: SpanStatus
-  readonly attributes: ReadonlyMap<string, string>
+  readonly attributes: ReadonlyMap<string, AttributeValue>
   readonly end: (endTime: bigint, exit: Exit.Exit<unknown, unknown>) => void
-  readonly attribute: (key: string, value: string) => void
-  readonly event: (name: string, attributes?: Record<string, string>) => void
+  readonly attribute: (key: string, value: AttributeValue) => void
+  readonly event: (name: string, attributes?: Record<string, AttributeValue>) => void
 }
+/**
+ * @since 1.0.0
+ * @category models
+ */
+export type AttributeValue = string | boolean | number
 
 /**
  * @since 1.0.0
