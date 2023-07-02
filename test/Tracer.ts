@@ -72,8 +72,8 @@ describe("Tracer", () => {
         const span = yield* $(Fiber.join(spanFiber))
 
         assert.deepEqual(span.name, "A")
-        assert.deepEqual(span.status.startTime, 0)
-        assert.deepEqual((span.status as any)["endTime"], 1000)
+        assert.deepEqual(span.status.startTime, 0n)
+        assert.deepEqual((span.status as any)["endTime"], 1000000000n)
         assert.deepEqual(span.status._tag, "Ended")
       }))
 
