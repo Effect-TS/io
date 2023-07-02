@@ -15,6 +15,7 @@ Added in v1.0.0
 - [constructors](#constructors)
   - [clockWith](#clockwith)
   - [currentTimeMillis](#currenttimemillis)
+  - [currentTimeNanos](#currenttimenanos)
   - [make](#make)
   - [sleep](#sleep)
 - [context](#context)
@@ -48,6 +49,16 @@ Added in v1.0.0
 
 ```ts
 export declare const currentTimeMillis: (_: void) => Effect.Effect<never, never, number>
+```
+
+Added in v1.0.0
+
+## currentTimeNanos
+
+**Signature**
+
+```ts
+export declare const currentTimeNanos: (_: void) => Effect.Effect<never, never, bigint>
 ```
 
 Added in v1.0.0
@@ -114,6 +125,14 @@ export interface Clock {
    * Returns the current time in milliseconds.
    */
   currentTimeMillis(): Effect.Effect<never, never, number>
+  /**
+   * Unsafely returns the current time in nanoseconds.
+   */
+  unsafeCurrentTimeNanos(): bigint
+  /**
+   * Returns the current time in nanoseconds.
+   */
+  currentTimeNanos(): Effect.Effect<never, never, bigint>
   /**
    * Asynchronously sleeps for the specified duration.
    */

@@ -5495,8 +5495,8 @@ Adds an annotation to each span in this effect.
 
 ```ts
 export declare const annotateSpans: {
-  (key: string, value: string): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(self: Effect<R, E, A>, key: string, value: string): Effect<R, E, A>
+  (key: string, value: Tracer.AttributeValue): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, key: string, value: Tracer.AttributeValue): Effect<R, E, A>
 }
 ```
 
@@ -5529,7 +5529,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const spanAnnotations: () => Effect<never, never, HashMap.HashMap<string, string>>
+export declare const spanAnnotations: () => Effect<never, never, HashMap.HashMap<string, Tracer.AttributeValue>>
 ```
 
 Added in v1.0.0
@@ -5569,7 +5569,12 @@ export declare const useSpan: {
   <R, E, A>(name: string, evaluate: (span: Tracer.Span) => Effect<R, E, A>): Effect<R, E, A>
   <R, E, A>(
     name: string,
-    options: { attributes?: Record<string, string>; parent?: Tracer.ParentSpan; root?: boolean },
+    options: {
+      readonly attributes?: Record<string, Tracer.AttributeValue>
+      readonly parent?: Tracer.ParentSpan
+      readonly root?: boolean
+      readonly context?: Context.Context<never>
+    },
     evaluate: (span: Tracer.Span) => Effect<R, E, A>
   ): Effect<R, E, A>
 }
@@ -5585,17 +5590,24 @@ Wraps the effect with a new span for tracing.
 
 ```ts
 export declare const withSpan: {
-  (name: string, options?: { attributes?: Record<string, string>; parent?: Tracer.ParentSpan; root?: boolean }): <
-    R,
-    E,
-    A
-  >(
-    self: Effect<R, E, A>
-  ) => Effect<R, E, A>
+  (
+    name: string,
+    options?: {
+      readonly attributes?: Record<string, Tracer.AttributeValue>
+      readonly parent?: Tracer.ParentSpan
+      readonly root?: boolean
+      readonly context?: Context.Context<never>
+    }
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
   <R, E, A>(
     self: Effect<R, E, A>,
     name: string,
-    options?: { attributes?: Record<string, string>; parent?: Tracer.ParentSpan; root?: boolean }
+    options?: {
+      readonly attributes?: Record<string, Tracer.AttributeValue>
+      readonly parent?: Tracer.ParentSpan
+      readonly root?: boolean
+      readonly context?: Context.Context<never>
+    }
   ): Effect<R, E, A>
 }
 ```

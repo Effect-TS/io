@@ -23,6 +23,7 @@ Added in v1.0.0
   - [succeed](#succeed)
   - [sync](#sync)
   - [test](#test)
+  - [tracerLogger](#tracerlogger)
 - [context](#context)
   - [add](#add)
   - [addEffect](#addeffect)
@@ -95,7 +96,8 @@ export declare const make: <Message, Output>(
     cause: Cause.Cause<unknown>,
     context: FiberRefs.FiberRefs,
     spans: List.List<LogSpan.LogSpan>,
-    annotations: HashMap.HashMap<string, string>
+    annotations: HashMap.HashMap<string, string>,
+    now: Date
   ) => Output
 ) => Logger<Message, Output>
 ```
@@ -163,6 +165,16 @@ export declare const test: {
   <Message>(input: Message): <Output>(self: Logger<Message, Output>) => Output
   <Message, Output>(self: Logger<Message, Output>, input: Message): Output
 }
+```
+
+Added in v1.0.0
+
+## tracerLogger
+
+**Signature**
+
+```ts
+export declare const tracerLogger: Logger<string, void>
 ```
 
 Added in v1.0.0
@@ -352,7 +364,8 @@ export interface Logger<Message, Output> extends Logger.Variance<Message, Output
     cause: Cause.Cause<unknown>,
     context: FiberRefs.FiberRefs,
     spans: List.List<LogSpan.LogSpan>,
-    annotations: HashMap.HashMap<string, string>
+    annotations: HashMap.HashMap<string, string>,
+    now: Date
   ) => Output
 }
 ```

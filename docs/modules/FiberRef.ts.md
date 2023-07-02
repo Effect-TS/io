@@ -346,7 +346,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const currentTracerSpanAnnotations: FiberRef<HashMap.HashMap<string, string>>
+export declare const currentTracerSpanAnnotations: FiberRef<HashMap.HashMap<string, Tracer.AttributeValue>>
 ```
 
 Added in v1.0.0
