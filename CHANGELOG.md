@@ -1,5 +1,21 @@
 # @effect/io
 
+## 0.29.0
+
+### Minor Changes
+
+- [#476](https://github.com/Effect-TS/io/pull/476) [`cd1096e`](https://github.com/Effect-TS/io/commit/cd1096e6064e590b66dcf60becc8459feb2e1369) Thanks [@tim-smart](https://github.com/tim-smart)! - add context to spans for adding implementation specific metadata
+
+- [#475](https://github.com/Effect-TS/io/pull/475) [`b2d9412`](https://github.com/Effect-TS/io/commit/b2d9412489705e8b89a97855d61489f07670c6b1) Thanks [@tim-smart](https://github.com/tim-smart)! - use nanoseconds for tracing
+
+### Patch Changes
+
+- [#476](https://github.com/Effect-TS/io/pull/476) [`cd1096e`](https://github.com/Effect-TS/io/commit/cd1096e6064e590b66dcf60becc8459feb2e1369) Thanks [@tim-smart](https://github.com/tim-smart)! - accept booleans and numbers for span attributes
+
+- [#473](https://github.com/Effect-TS/io/pull/473) [`7fb701c`](https://github.com/Effect-TS/io/commit/7fb701cb4422139069e8d78ed737cc07b8bd153e) Thanks [@joshamaju](https://github.com/joshamaju)! - fixed async fiber error message typo
+
+- [#474](https://github.com/Effect-TS/io/pull/474) [`0c06e92`](https://github.com/Effect-TS/io/commit/0c06e92e8a94a080e0149856822b8c132d008805) Thanks [@tim-smart](https://github.com/tim-smart)! - add currentTimeNanos to Clock service
+
 ## 0.28.0
 
 ### Minor Changes
