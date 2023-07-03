@@ -39,16 +39,32 @@ export const globalClockScheduler: Clock.ClockScheduler = {
   }
 }
 
+const performanceNowNanos = (function() {
+  const origin = BigInt(Math.round(performance.timeOrigin * 1_000_000))
+  return () => {
+    const now = performance.now()
+    const millis = Math.floor(now)
+    return origin + BigInt(millis * 1000000) + BigInt(Math.round((now - millis) * 1_000_000))
+  }
+})()
+
 /** @internal */
 class ClockImpl implements Clock.Clock {
   readonly [ClockTypeId]: Clock.ClockTypeId = ClockTypeId
 
+  readonly processHrtime = typeof process === "object" && "hrtime" in process ? process.hrtime : undefined
+  readonly timeOrigin = this.processHrtime ?
+    performanceNowNanos() - this.processHrtime.bigint() :
+    0n
+
   unsafeCurrentTimeMillis(): number {
-    return new Date().getTime()
+    return Date.now()
   }
 
   unsafeCurrentTimeNanos(): bigint {
-    return BigInt(Math.round(performance.timeOrigin * 1000000)) + BigInt(Math.round(performance.now() * 1000000))
+    return this.processHrtime ?
+      this.timeOrigin + this.processHrtime.bigint() :
+      performanceNowNanos()
   }
 
   currentTimeMillis(): Effect.Effect<never, never, number> {
