@@ -1,5 +1,13 @@
 # @effect/io
 
+## 0.29.2
+
+### Patch Changes
+
+- [#480](https://github.com/Effect-TS/io/pull/480) [`5fcf340`](https://github.com/Effect-TS/io/commit/5fcf340e7d2ddb4676e510b91fd152457e255853) Thanks [@tim-smart](https://github.com/tim-smart)! - use process.hrtime in clock for node.js platform
+
+- [#482](https://github.com/Effect-TS/io/pull/482) [`98861ee`](https://github.com/Effect-TS/io/commit/98861eec80d3554c3cb8a275f94bb6dc81ead1c0) Thanks [@IMax153](https://github.com/IMax153)! - upgrade `@effect/data/` to version `0.12.10`
+
 ## 0.29.1
 
 ### Patch Changes
