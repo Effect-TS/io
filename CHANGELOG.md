@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.29.3
+
+### Patch Changes
+
+- [#483](https://github.com/Effect-TS/io/pull/483) [`cbd690b`](https://github.com/Effect-TS/io/commit/cbd690b89a5dc4edcb64f28a39907bc4d6d3631e) Thanks [@tim-smart](https://github.com/tim-smart)! - fix for missing performance apis
+
 ## 0.29.2
 
 ### Patch Changes
