@@ -48,6 +48,11 @@ Added in v1.0.0
   - [contramap](#contramap)
   - [map](#map)
   - [mapType](#maptype)
+- [metrics](#metrics)
+  - [fiberFailures](#fiberfailures)
+  - [fiberLifetimes](#fiberlifetimes)
+  - [fiberStarted](#fiberstarted)
+  - [fiberSuccesses](#fibersuccesses)
 - [models](#models)
   - [Metric (interface)](#metric-interface)
   - [MetricApply (interface)](#metricapply-interface)
@@ -571,6 +576,52 @@ export declare const mapType: {
   <Type, Type2>(f: (type: Type) => Type2): <In, Out>(self: Metric<Type, In, Out>) => Metric<Type2, In, Out>
   <Type, In, Out, Type2>(self: Metric<Type, In, Out>, f: (type: Type) => Type2): Metric<Type2, In, Out>
 }
+```
+
+Added in v1.0.0
+
+# metrics
+
+## fiberFailures
+
+**Signature**
+
+```ts
+export declare const fiberFailures: Metric.Counter<number>
+```
+
+Added in v1.0.0
+
+## fiberLifetimes
+
+**Signature**
+
+```ts
+export declare const fiberLifetimes: Metric<
+  MetricKeyType.MetricKeyType.Histogram,
+  number,
+  MetricState.MetricState.Histogram
+>
+```
+
+Added in v1.0.0
+
+## fiberStarted
+
+**Signature**
+
+```ts
+export declare const fiberStarted: Metric.Counter<number>
+```
+
+Added in v1.0.0
+
+## fiberSuccesses
+
+**Signature**
+
+```ts
+export declare const fiberSuccesses: Metric.Counter<number>
 ```
 
 Added in v1.0.0
