@@ -1,5 +1,15 @@
 # @effect/io
 
+## 0.30.0
+
+### Minor Changes
+
+- [#489](https://github.com/Effect-TS/io/pull/489) [`91b6426`](https://github.com/Effect-TS/io/commit/91b642603170731327b675874efc55010f0e616e) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Allow supervisors to control execution
+
+### Patch Changes
+
+- [#489](https://github.com/Effect-TS/io/pull/489) [`91b6426`](https://github.com/Effect-TS/io/commit/91b642603170731327b675874efc55010f0e616e) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Add AbstractSupervisor to default supervisors
+
 ## 0.29.5
 
 ### Patch Changes
