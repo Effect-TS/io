@@ -69,6 +69,10 @@ export class ProxySupervisor<T> implements Supervisor.Supervisor<T> {
   zip<B>(right: Supervisor.Supervisor<B>): Supervisor.Supervisor<readonly [T, B]> {
     return new Zip(this, right)
   }
+
+  onRun<E, A, X>(execution: () => X, fiber: Fiber.RuntimeFiber<E, A>): X {
+    return this.underlying.onRun(execution, fiber)
+  }
 }
 
 /** @internal */
@@ -123,8 +127,13 @@ export class Zip<T0, T1> implements Supervisor.Supervisor<readonly [T0, T1]> {
   map<B>(f: (a: readonly [T0, T1]) => B): Supervisor.Supervisor<B> {
     return new ProxySupervisor(this, () => pipe(this.value(), core.map(f)))
   }
+
   zip<A>(right: Supervisor.Supervisor<A>): Supervisor.Supervisor<readonly [readonly [T0, T1], A]> {
     return new Zip(this, right)
+  }
+
+  onRun<E, A, X>(execution: () => X, fiber: Fiber.RuntimeFiber<E, A>): X {
+    return this.right.onRun(() => this.left.onRun(execution, fiber), fiber)
   }
 }
 
@@ -171,6 +180,10 @@ export class Track implements Supervisor.Supervisor<Array<Fiber.RuntimeFiber<any
   ): Supervisor.Supervisor<readonly [Array<Fiber.RuntimeFiber<any, any>>, A]> {
     return new Zip(this, right)
   }
+
+  onRun<E, A, X>(execution: () => X, _fiber: Fiber.RuntimeFiber<E, A>): X {
+    return execution()
+  }
 }
 
 export class Const<T> implements Supervisor.Supervisor<T> {
@@ -214,6 +227,10 @@ export class Const<T> implements Supervisor.Supervisor<T> {
 
   zip<A>(right: Supervisor.Supervisor<A>): Supervisor.Supervisor<readonly [T, A]> {
     return new Zip(this, right)
+  }
+
+  onRun<E, A, X>(execution: () => X, _fiber: Fiber.RuntimeFiber<E, A>): X {
+    return execution()
   }
 }
 
@@ -260,6 +277,10 @@ class FibersIn implements Supervisor.Supervisor<SortedSet.SortedSet<Fiber.Runtim
     right: Supervisor.Supervisor<A>
   ): Supervisor.Supervisor<readonly [SortedSet.SortedSet<Fiber.RuntimeFiber<any, any>>, A]> {
     return new Zip(this, right)
+  }
+
+  onRun<E, A, X>(execution: () => X, _fiber: Fiber.RuntimeFiber<E, A>): X {
+    return execution()
   }
 }
 

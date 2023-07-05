@@ -825,7 +825,8 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
           effect0
       while (effect !== null) {
         try {
-          const exit = this.runLoop(effect)
+          const eff: Effect.Effect<any, any, any> = effect
+          const exit = this.runLoop(eff)
           this._runtimeFlags = pipe(this._runtimeFlags, _runtimeFlags.enable(_runtimeFlags.WindDown))
           const interruption = this.interruptAllChildren()
           if (interruption !== null) {
@@ -1278,7 +1279,11 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
           absurd(cur)
         }
         // @ts-expect-error
-        cur = this[(cur as core.Primitive)._tag](cur as core.Primitive)
+        cur = this.getFiberRef(currentSupervisor).onRun(
+          // @ts-expect-error
+          () => this[(cur as core.Primitive)._tag](cur as core.Primitive),
+          this
+        )
       } catch (e) {
         if (core.isEffect(e)) {
           if (

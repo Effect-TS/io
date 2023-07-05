@@ -56,6 +56,11 @@ export interface Supervisor<T> extends Supervisor.Variance<T> {
   onEnd<E, A>(value: Exit.Exit<E, A>, fiber: Fiber.RuntimeFiber<E, A>): void
 
   /**
+   * Supervises the run of a `Fiber`.
+   */
+  onRun<E, A, X>(execution: () => X, fiber: Fiber.RuntimeFiber<E, A>): X
+
+  /**
    * Supervises the execution of an `Effect` by a `Fiber`.
    */
   onEffect<E, A>(fiber: Fiber.RuntimeFiber<E, A>, effect: Effect.Effect<any, any, any>): void
@@ -222,6 +227,13 @@ export abstract class AbstractSupervisor<T> implements Supervisor<T> {
     right: Supervisor<A>
   ): Supervisor<readonly [T, A]> {
     return new internal.Zip(this, right)
+  }
+
+  /**
+   * @since 1.0.0
+   */
+  onRun<E, A, X>(execution: () => X, _fiber: Fiber.RuntimeFiber<E, A>): X {
+    return execution()
   }
 
   /**

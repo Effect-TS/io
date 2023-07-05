@@ -16,6 +16,17 @@ Added in v1.0.0
 <h2 class="text-delta">Table of contents</h2>
 
 - [constructors](#constructors)
+  - [AbstractSupervisor (class)](#abstractsupervisor-class)
+    - [value (method)](#value-method)
+    - [onStart (method)](#onstart-method)
+    - [onEnd (method)](#onend-method)
+    - [onEffect (method)](#oneffect-method)
+    - [onSuspend (method)](#onsuspend-method)
+    - [onResume (method)](#onresume-method)
+    - [map (method)](#map-method)
+    - [zip (method)](#zip-method)
+    - [onRun (method)](#onrun-method)
+    - [[SupervisorTypeId] (property)](#supervisortypeid-property)
   - [fibersIn](#fibersin)
   - [fromEffect](#fromeffect)
   - [none](#none)
@@ -33,6 +44,133 @@ Added in v1.0.0
 ---
 
 # constructors
+
+## AbstractSupervisor (class)
+
+**Signature**
+
+```ts
+export declare class AbstractSupervisor<T>
+```
+
+Added in v1.0.0
+
+### value (method)
+
+**Signature**
+
+```ts
+abstract value(): Effect.Effect<never, never, T>
+```
+
+Added in v1.0.0
+
+### onStart (method)
+
+**Signature**
+
+```ts
+onStart<R, E, A>(
+    _context: Context.Context<R>,
+    _effect: Effect.Effect<R, E, A>,
+    _parent: Option.Option<Fiber.RuntimeFiber<any, any>>,
+    _fiber: Fiber.RuntimeFiber<E, A>
+  ): void
+```
+
+Added in v1.0.0
+
+### onEnd (method)
+
+**Signature**
+
+```ts
+onEnd<E, A>(
+    _value: Exit.Exit<E, A>,
+    _fiber: Fiber.RuntimeFiber<E, A>
+  ): void
+```
+
+Added in v1.0.0
+
+### onEffect (method)
+
+**Signature**
+
+```ts
+onEffect<E, A>(
+    _fiber: Fiber.RuntimeFiber<E, A>,
+    _effect: Effect.Effect<any, any, any>
+  ): void
+```
+
+Added in v1.0.0
+
+### onSuspend (method)
+
+**Signature**
+
+```ts
+onSuspend<E, A>(
+    _fiber: Fiber.RuntimeFiber<E, A>
+  ): void
+```
+
+Added in v1.0.0
+
+### onResume (method)
+
+**Signature**
+
+```ts
+onResume<E, A>(
+    _fiber: Fiber.RuntimeFiber<E, A>
+  ): void
+```
+
+Added in v1.0.0
+
+### map (method)
+
+**Signature**
+
+```ts
+map<B>(f: (a: T) => B): Supervisor<B>
+```
+
+Added in v1.0.0
+
+### zip (method)
+
+**Signature**
+
+```ts
+zip<A>(
+    right: Supervisor<A>
+  ): Supervisor<readonly [T, A]>
+```
+
+Added in v1.0.0
+
+### onRun (method)
+
+**Signature**
+
+```ts
+onRun<E, A, X>(execution: () => X, _fiber: Fiber.RuntimeFiber<E, A>): X
+```
+
+Added in v1.0.0
+
+### [SupervisorTypeId] (property)
+
+**Signature**
+
+```ts
+readonly [SupervisorTypeId]: { _T: (_: never) => never; }
+```
+
+Added in v1.0.0
 
 ## fibersIn
 
@@ -125,6 +263,11 @@ export interface Supervisor<T> extends Supervisor.Variance<T> {
    * Supervises the end of a `Fiber`.
    */
   onEnd<E, A>(value: Exit.Exit<E, A>, fiber: Fiber.RuntimeFiber<E, A>): void
+
+  /**
+   * Supervises the run of a `Fiber`.
+   */
+  onRun<E, A, X>(execution: () => X, fiber: Fiber.RuntimeFiber<E, A>): X
 
   /**
    * Supervises the execution of an `Effect` by a `Fiber`.
