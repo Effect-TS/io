@@ -254,6 +254,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   private _exitValue: Exit.Exit<E, A> | null = null
   private _traceStack: Array<NonNullable<Debug.Trace>> = []
   private _steps: Array<boolean> = [false]
+  private _supervisor: Supervisor.Supervisor<any> | undefined = undefined
 
   /**
    * The identity of the fiber.
@@ -322,7 +323,11 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    * log annotations and log level) may not be up-to-date.
    */
   getSupervisor() {
-    return this.getFiberRef(currentSupervisor)
+    if (this._supervisor) {
+      return this._supervisor
+    }
+    this._supervisor = this.getFiberRef(currentSupervisor)
+    return this._supervisor
   }
 
   /**
@@ -516,6 +521,11 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    */
   setFiberRef<X>(fiberRef: FiberRef.FiberRef<X>, value: X): void {
     this._fiberRefs = fiberRefs.updatedAs(this._fiberRefs, this._fiberId, fiberRef, value)
+    // @ts-expect-error
+    if (fiberRef === currentSupervisor) {
+      // @ts-expect-error
+      this._supervisor = value
+    }
   }
 
   /**
@@ -525,6 +535,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    */
   setFiberRefs(fiberRefs: FiberRefs.FiberRefs): void {
     this._fiberRefs = fiberRefs
+    this._supervisor = this.getFiberRef(currentSupervisor)
   }
 
   /**
@@ -1279,7 +1290,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
           absurd(cur)
         }
         // @ts-expect-error
-        cur = this.getFiberRef(currentSupervisor).onRun(
+        cur = this.getSupervisor().onRun(
           // @ts-expect-error
           () => this[(cur as core.Primitive)._tag](cur as core.Primitive),
           this
