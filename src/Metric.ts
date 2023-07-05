@@ -6,6 +6,7 @@ import type * as Duration from "@effect/data/Duration"
 import type { LazyArg } from "@effect/data/Function"
 import type * as HashSet from "@effect/data/HashSet"
 import type * as Effect from "@effect/io/Effect"
+import * as fiberRuntime from "@effect/io/internal_effect_untraced/fiberRuntime"
 import * as internal from "@effect/io/internal_effect_untraced/metric"
 import type * as MetricBoundaries from "@effect/io/Metric/Boundaries"
 import type * as MetricKey from "@effect/io/Metric/Key"
@@ -592,3 +593,28 @@ export const zip: {
  * @category unsafe
  */
 export const unsafeSnapshot: (_: void) => HashSet.HashSet<MetricPair.MetricPair.Untyped> = internal.unsafeSnapshot
+
+/**
+ * @since 1.0.0
+ * @category metrics
+ */
+export const fiberStarted: Metric.Counter<number> = fiberRuntime.fibersStarted
+
+/**
+ * @since 1.0.0
+ * @category metrics
+ */
+export const fiberSuccesses: Metric.Counter<number> = fiberRuntime.fiberSuccesses
+
+/**
+ * @since 1.0.0
+ * @category metrics
+ */
+export const fiberFailures: Metric.Counter<number> = fiberRuntime.fiberFailures
+
+/**
+ * @since 1.0.0
+ * @category metrics
+ */
+export const fiberLifetimes: Metric<MetricKeyType.MetricKeyType.Histogram, number, MetricState.MetricState.Histogram> =
+  fiberRuntime.fiberLifetimes

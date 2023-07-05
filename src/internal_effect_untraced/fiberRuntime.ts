@@ -59,10 +59,14 @@ import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
 import type { Tracer } from "@effect/io/Tracer"
 
-const fibersStarted = metric.counter("effect_fiber_started")
-const fiberSuccesses = metric.counter("effect_fiber_successes")
-const fiberFailures = metric.counter("effect_fiber_failures")
-const fiberLifetimes = metric.histogram("effect_fiber_lifetimes", metricBoundaries.exponential(1.0, 2.0, 100))
+/** @internal */
+export const fibersStarted = metric.counter("effect_fiber_started")
+/** @internal */
+export const fiberSuccesses = metric.counter("effect_fiber_successes")
+/** @internal */
+export const fiberFailures = metric.counter("effect_fiber_failures")
+/** @internal */
+export const fiberLifetimes = metric.histogram("effect_fiber_lifetimes", metricBoundaries.exponential(1.0, 2.0, 100))
 
 /** @internal */
 type EvaluationSignal =

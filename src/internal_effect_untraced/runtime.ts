@@ -296,7 +296,8 @@ export const runtime = Debug.methodWithTrace((trace) =>
 /** @internal */
 export const defaultRuntimeFlags: RuntimeFlags.RuntimeFlags = runtimeFlags.make(
   runtimeFlags.Interruption,
-  runtimeFlags.CooperativeYielding
+  runtimeFlags.CooperativeYielding,
+  runtimeFlags.RuntimeMetrics
 )
 
 /** @internal */
