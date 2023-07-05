@@ -855,6 +855,10 @@ class SubscriptionImpl<A> implements Queue.Dequeue<A> {
     return this.hub.capacity
   }
 
+  isActive(): boolean {
+    return !MutableRef.get(this.shutdownFlag)
+  }
+
   size(): Effect.Effect<never, never, number> {
     return Debug.bodyWithTrace((trace) =>
       core.suspend(() =>
@@ -1105,6 +1109,23 @@ class HubImpl<A> implements Hub.Hub<A> {
         )
       }).traced(trace)
     )
+  }
+
+  isActive(): boolean {
+    return !MutableRef.get(this.shutdownFlag)
+  }
+
+  unsafeOffer(value: A): boolean {
+    if (MutableRef.get(this.shutdownFlag)) {
+      return false
+    }
+
+    if ((this.hub as AtomicHub<unknown>).publish(value)) {
+      this.strategy.unsafeCompleteSubscribers(this.hub, this.subscribers)
+      return true
+    }
+
+    return false
   }
 
   publishAll(elements: Iterable<A>): Effect.Effect<never, never, boolean> {
