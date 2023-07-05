@@ -19,7 +19,7 @@ export const SupervisorTypeId: Supervisor.SupervisorTypeId = Symbol.for(
 ) as Supervisor.SupervisorTypeId
 
 /** @internal */
-const supervisorVariance = {
+export const supervisorVariance = {
   _T: (_: never) => _
 }
 
