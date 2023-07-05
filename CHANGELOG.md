@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.29.4
+
+### Patch Changes
+
+- [#485](https://github.com/Effect-TS/io/pull/485) [`9a5d9df`](https://github.com/Effect-TS/io/commit/9a5d9df020c37573f13c071844f146a4d89512e9) Thanks [@tim-smart](https://github.com/tim-smart)! - remove use of bigint literals
+
 ## 0.29.3
 
 ### Patch Changes
