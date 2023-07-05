@@ -40,13 +40,15 @@ export const globalClockScheduler: Clock.ClockScheduler = {
 }
 
 const performanceNowNanos = (function() {
+  const bigint1e6 = BigInt(1_000_000)
+
   if (typeof performance === "undefined") {
-    return () => BigInt(Date.now()) * 1_000_000n
+    return () => BigInt(Date.now()) * bigint1e6
   }
 
   const origin = "timeOrigin" in performance && typeof performance.timeOrigin === "number" ?
     BigInt(Math.round(performance.timeOrigin * 1_000_000)) :
-    BigInt(Date.now()) * 1_000_000n
+    BigInt(Date.now()) * bigint1e6
 
   return () => origin + BigInt(Math.round(performance.now() * 1_000_000))
 })()
