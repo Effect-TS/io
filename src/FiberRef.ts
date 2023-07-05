@@ -290,6 +290,12 @@ export const currentContext: FiberRef<Context.Context<never>> = core.currentCont
  * @since 1.0.0
  * @category fiberRefs
  */
+export const currentSchedulingPriority: FiberRef<number> = core.currentSchedulingPriority
+
+/**
+ * @since 1.0.0
+ * @category fiberRefs
+ */
 export const currentMaxFiberOps: FiberRef<number> = core.currentMaxFiberOps
 
 /**

@@ -1835,6 +1835,9 @@ export const currentContext: FiberRef.FiberRef<Context.Context<never>> = fiberRe
 )
 
 /** @internal */
+export const currentSchedulingPriority: FiberRef.FiberRef<number> = fiberRefUnsafeMake(0)
+
+/** @internal */
 export const currentMaxFiberOps: FiberRef.FiberRef<number> = fiberRefUnsafeMake(2048)
 
 /** @internal */
@@ -1864,6 +1867,12 @@ export const withScheduler = Debug.dualWithTrace<
   (scheduler: Scheduler.Scheduler) => <R, E, B>(self: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>,
   <R, E, B>(self: Effect.Effect<R, E, B>, scheduler: Scheduler.Scheduler) => Effect.Effect<R, E, B>
 >(2, (trace) => (self, scheduler) => fiberRefLocally(self, currentScheduler, scheduler).traced(trace))
+
+/** @internal */
+export const withSchedulingPriority = Debug.dualWithTrace<
+  (priority: number) => <R, E, B>(self: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>,
+  <R, E, B>(self: Effect.Effect<R, E, B>, priority: number) => Effect.Effect<R, E, B>
+>(2, (trace) => (self, scheduler) => fiberRefLocally(self, currentSchedulingPriority, scheduler).traced(trace))
 
 /** @internal */
 export const withMaxFiberOps = Debug.dualWithTrace<

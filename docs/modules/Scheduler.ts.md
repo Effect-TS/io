@@ -45,7 +45,7 @@ Added in v1.0.0
 
 ```ts
 export interface Scheduler {
-  scheduleTask(task: Task): void
+  scheduleTask(task: Task, priority: number): void
 }
 ```
 
@@ -78,7 +78,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-scheduleTask(task: Task)
+scheduleTask(task: Task, priority: number)
 ```
 
 Added in v1.0.0
@@ -98,7 +98,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-tasks: Task[]
+tasks: Task[][]
 ```
 
 Added in v1.0.0
@@ -155,7 +155,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-scheduleTask(task: Task)
+scheduleTask(task: Task, priority: number)
 ```
 
 Added in v1.0.0
@@ -175,7 +175,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-tasks: Task[]
+tasks: Task[][]
 ```
 
 Added in v1.0.0
@@ -195,7 +195,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-scheduleTask(task: Task)
+scheduleTask(task: Task, priority: number)
 ```
 
 Added in v1.0.0
@@ -215,7 +215,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-tasks: Task[]
+tasks: Task[][]
 ```
 
 Added in v1.0.0

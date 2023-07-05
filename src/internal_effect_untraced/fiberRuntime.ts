@@ -592,7 +592,10 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    * **NOTE**: This method must be invoked by the fiber itself.
    */
   drainQueueLaterOnExecutor() {
-    this.getFiberRef(core.currentScheduler).scheduleTask(this.run)
+    this.getFiberRef(core.currentScheduler).scheduleTask(
+      this.run,
+      this.getFiberRef(core.currentSchedulingPriority)
+    )
   }
 
   /**

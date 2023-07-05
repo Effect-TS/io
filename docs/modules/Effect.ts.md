@@ -502,6 +502,7 @@ Added in v1.0.0
   - [withMaxFiberOps](#withmaxfiberops)
   - [withMetric](#withmetric)
   - [withScheduler](#withscheduler)
+  - [withSchedulingPriority](#withschedulingpriority)
   - [withUnhandledErrorLogLevel](#withunhandlederrorloglevel)
 - [zipping](#zipping)
   - [zipPar](#zippar)
@@ -7950,6 +7951,21 @@ Sets the provided scheduler for usage in the wrapped effect
 export declare const withScheduler: {
   (scheduler: Scheduler): <R, E, B>(self: Effect<R, E, B>) => Effect<R, E, B>
   <R, E, B>(self: Effect<R, E, B>, scheduler: Scheduler): Effect<R, E, B>
+}
+```
+
+Added in v1.0.0
+
+## withSchedulingPriority
+
+Sets the scheduling priority used when yielding
+
+**Signature**
+
+```ts
+export declare const withSchedulingPriority: {
+  (priority: number): <R, E, B>(self: Effect<R, E, B>) => Effect<R, E, B>
+  <R, E, B>(self: Effect<R, E, B>, priority: number): Effect<R, E, B>
 }
 ```
 
