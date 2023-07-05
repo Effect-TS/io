@@ -239,6 +239,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     this._runtimeFlags = runtimeFlags0
     this._fiberId = fiberId
     this._fiberRefs = fiberRefs0
+    this._supervisor = this.getFiberRef(currentSupervisor)
     if (_runtimeFlags.runtimeMetrics(runtimeFlags0)) {
       const tags = this.getFiberRef(core.currentTags)
       fibersStarted.unsafeUpdate(1, tags)
@@ -254,6 +255,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   private _exitValue: Exit.Exit<E, A> | null = null
   private _traceStack: Array<NonNullable<Debug.Trace>> = []
   private _steps: Array<boolean> = [false]
+  public _supervisor: Supervisor.Supervisor<any>
 
   /**
    * The identity of the fiber.
@@ -312,17 +314,6 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
       this._children = new Set()
     }
     return this._children
-  }
-
-  /**
-   * Retrieves the current supervisor the fiber uses for supervising effects.
-   *
-   * **NOTE**: This method is safe to invoke on any fiber, but if not invoked
-   * on this fiber, then values derived from the fiber's state (including the
-   * log annotations and log level) may not be up-to-date.
-   */
-  getSupervisor() {
-    return this.getFiberRef(currentSupervisor)
   }
 
   /**
@@ -516,6 +507,11 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    */
   setFiberRef<X>(fiberRef: FiberRef.FiberRef<X>, value: X): void {
     this._fiberRefs = fiberRefs.updatedAs(this._fiberRefs, this._fiberId, fiberRef, value)
+    // @ts-expect-error
+    if (fiberRef === currentSupervisor) {
+      // @ts-expect-error
+      this._supervisor = value
+    }
   }
 
   /**
@@ -525,6 +521,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    */
   setFiberRefs(fiberRefs: FiberRefs.FiberRefs): void {
     this._fiberRefs = fiberRefs
+    this._supervisor = this.getFiberRef(currentSupervisor)
   }
 
   /**
@@ -817,7 +814,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    * **NOTE**: This method must be invoked by the fiber itself.
    */
   evaluateEffect(effect0: Effect.Effect<any, any, any>) {
-    this.getSupervisor().onResume(this)
+    this._supervisor.onResume(this)
     try {
       let effect: Effect.Effect<any, any, any> | null =
         _runtimeFlags.interruptible(this._runtimeFlags) && this.isInterrupted() ?
@@ -825,7 +822,8 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
           effect0
       while (effect !== null) {
         try {
-          const exit = this.runLoop(effect)
+          const eff: Effect.Effect<any, any, any> = effect
+          const exit = this.runLoop(eff)
           this._runtimeFlags = pipe(this._runtimeFlags, _runtimeFlags.enable(_runtimeFlags.WindDown))
           const interruption = this.interruptAllChildren()
           if (interruption !== null) {
@@ -862,7 +860,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
         }
       }
     } finally {
-      this.getSupervisor().onSuspend(this)
+      this._supervisor.onSuspend(this)
     }
   }
 
@@ -1261,7 +1259,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     // eslint-disable-next-line no-constant-condition
     while (true) {
       if ((this._runtimeFlags & OpSupervision) !== 0) {
-        this.getSupervisor().onEffect(this, cur)
+        this._supervisor.onEffect(this, cur)
       }
       if (this._queue.length > 0) {
         cur = this.drainQueueWhileRunning(this._runtimeFlags, cur)
@@ -1278,7 +1276,11 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
           absurd(cur)
         }
         // @ts-expect-error
-        cur = this[(cur as core.Primitive)._tag](cur as core.Primitive)
+        cur = this._supervisor.onRun(
+          // @ts-expect-error
+          () => this[(cur as core.Primitive)._tag](cur as core.Primitive),
+          this
+        )
       } catch (e) {
         if (core.isEffect(e)) {
           if (
@@ -1922,7 +1924,7 @@ export const unsafeMakeChildFiber = <R, E, A, E2, B>(
     childFiberRefs,
     core.currentContext as unknown as FiberRef.FiberRef<Context.Context<R>>
   )
-  const supervisor = childFiber.getSupervisor()
+  const supervisor = childFiber._supervisor
 
   supervisor.onStart(
     childContext,

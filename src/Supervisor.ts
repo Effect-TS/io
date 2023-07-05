@@ -11,6 +11,7 @@ import type * as SortedSet from "@effect/data/SortedSet"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
 import type * as Fiber from "@effect/io/Fiber"
+import * as core from "@effect/io/internal_effect_untraced/core"
 import * as circular from "@effect/io/internal_effect_untraced/layer/circular"
 import * as internal from "@effect/io/internal_effect_untraced/supervisor"
 import type * as Layer from "@effect/io/Layer"
@@ -53,6 +54,11 @@ export interface Supervisor<T> extends Supervisor.Variance<T> {
    * Supervises the end of a `Fiber`.
    */
   onEnd<E, A>(value: Exit.Exit<E, A>, fiber: Fiber.RuntimeFiber<E, A>): void
+
+  /**
+   * Supervises the run of a `Fiber`.
+   */
+  onRun<E, A, X>(execution: () => X, fiber: Fiber.RuntimeFiber<E, A>): X
 
   /**
    * Supervises the execution of an `Effect` by a `Fiber`.
@@ -146,3 +152,94 @@ export const track: (_: void) => Effect.Effect<never, never, Supervisor<Array<Fi
  * @category unsafe
  */
 export const unsafeTrack: () => Supervisor<Array<Fiber.RuntimeFiber<any, any>>> = internal.unsafeTrack
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export abstract class AbstractSupervisor<T> implements Supervisor<T> {
+  /**
+   * @since 1.0.0
+   */
+  abstract value(): Effect.Effect<never, never, T>
+
+  /**
+   * @since 1.0.0
+   */
+  onStart<R, E, A>(
+    _context: Context.Context<R>,
+    _effect: Effect.Effect<R, E, A>,
+    _parent: Option.Option<Fiber.RuntimeFiber<any, any>>,
+    _fiber: Fiber.RuntimeFiber<E, A>
+  ): void {
+    //
+  }
+
+  /**
+   * @since 1.0.0
+   */
+  onEnd<E, A>(
+    _value: Exit.Exit<E, A>,
+    _fiber: Fiber.RuntimeFiber<E, A>
+  ): void {
+    //
+  }
+
+  /**
+   * @since 1.0.0
+   */
+  onEffect<E, A>(
+    _fiber: Fiber.RuntimeFiber<E, A>,
+    _effect: Effect.Effect<any, any, any>
+  ): void {
+    //
+  }
+
+  /**
+   * @since 1.0.0
+   */
+  onSuspend<E, A>(
+    _fiber: Fiber.RuntimeFiber<E, A>
+  ): void {
+    //
+  }
+
+  /**
+   * @since 1.0.0
+   */
+  onResume<E, A>(
+    _fiber: Fiber.RuntimeFiber<E, A>
+  ): void {
+    //
+  }
+
+  /**
+   * @since 1.0.0
+   */
+  map<B>(f: (a: T) => B): Supervisor<B> {
+    return new internal.ProxySupervisor(this, () => core.map(this.value(), f))
+  }
+
+  /**
+   * @since 1.0.0
+   */
+  zip<A>(
+    right: Supervisor<A>
+  ): Supervisor<readonly [T, A]> {
+    return new internal.Zip(this, right)
+  }
+
+  /**
+   * @since 1.0.0
+   */
+  onRun<E, A, X>(execution: () => X, _fiber: Fiber.RuntimeFiber<E, A>): X {
+    return execution()
+  }
+
+  /**
+   * @since 1.0.0
+   */
+  readonly [SupervisorTypeId]: {
+    _T: (_: never) => never
+  } = internal.supervisorVariance
+}
