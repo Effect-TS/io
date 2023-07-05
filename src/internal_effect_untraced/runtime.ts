@@ -57,7 +57,7 @@ export const unsafeFork = <R>(runtime: Runtime.Runtime<R>) =>
         runtime.runtimeFlags
       )
 
-      const supervisor = fiberRuntime.getSupervisor()
+      const supervisor = fiberRuntime._supervisor
 
       if (supervisor !== _supervisor.none) {
         supervisor.onStart(runtime.context, effect, Option.none(), fiberRuntime)
