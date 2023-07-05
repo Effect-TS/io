@@ -1,5 +1,13 @@
 # @effect/io
 
+## 0.29.5
+
+### Patch Changes
+
+- [#487](https://github.com/Effect-TS/io/pull/487) [`bcc6eb3`](https://github.com/Effect-TS/io/commit/bcc6eb3bc3a7e6b86b7430b9b09ce149db3dfaf8) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Enable RuntimeMetrics by default
+
+- [#487](https://github.com/Effect-TS/io/pull/487) [`bcc6eb3`](https://github.com/Effect-TS/io/commit/bcc6eb3bc3a7e6b86b7430b9b09ce149db3dfaf8) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Export default metrics
+
 ## 0.29.4
 
 ### Patch Changes
