@@ -1,5 +1,27 @@
 # @effect/io
 
+## 0.31.0
+
+### Minor Changes
+
+- [#491](https://github.com/Effect-TS/io/pull/491) [`0cefdcf`](https://github.com/Effect-TS/io/commit/0cefdcf5007708fd97a6cf2009a9cb8fb393330a) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Priority aware scheduling
+
+- [#491](https://github.com/Effect-TS/io/pull/491) [`0cefdcf`](https://github.com/Effect-TS/io/commit/0cefdcf5007708fd97a6cf2009a9cb8fb393330a) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Allow to offer syncroniously to a queue when possible
+
+- [#461](https://github.com/Effect-TS/io/pull/461) [`fda4269`](https://github.com/Effect-TS/io/commit/fda4269015bfb76c842d2ad5f6386823a8ec2f78) Thanks [@tim-smart](https://github.com/tim-smart)! - remove some apis that are have low usage
+
+- [#461](https://github.com/Effect-TS/io/pull/461) [`fda4269`](https://github.com/Effect-TS/io/commit/fda4269015bfb76c842d2ad5f6386823a8ec2f78) Thanks [@tim-smart](https://github.com/tim-smart)! - update apis to use object parameters where applicable
+
+### Patch Changes
+
+- [#491](https://github.com/Effect-TS/io/pull/491) [`0cefdcf`](https://github.com/Effect-TS/io/commit/0cefdcf5007708fd97a6cf2009a9cb8fb393330a) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Improve priority management in scheduler
+
+- [#491](https://github.com/Effect-TS/io/pull/491) [`0cefdcf`](https://github.com/Effect-TS/io/commit/0cefdcf5007708fd97a6cf2009a9cb8fb393330a) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Improve yield api and scheduler naming
+
+- [#491](https://github.com/Effect-TS/io/pull/491) [`0cefdcf`](https://github.com/Effect-TS/io/commit/0cefdcf5007708fd97a6cf2009a9cb8fb393330a) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Add fiberActive metric
+
+- [#491](https://github.com/Effect-TS/io/pull/491) [`0cefdcf`](https://github.com/Effect-TS/io/commit/0cefdcf5007708fd97a6cf2009a9cb8fb393330a) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Improve scheduler constructors
+
 ## 0.30.0
 
 ### Minor Changes
