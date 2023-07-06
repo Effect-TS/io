@@ -1,6 +1,6 @@
 ---
 title: Fiber.ts
-nav_order: 14
+nav_order: 15
 parent: Modules
 ---
 
@@ -16,7 +16,7 @@ Added in v1.0.0
   - [orElse](#orelse)
   - [orElseEither](#orelseeither)
 - [constructors](#constructors)
-  - [collectAll](#collectall)
+  - [all](#all)
   - [done](#done)
   - [fail](#fail)
   - [failCause](#failcause)
@@ -117,7 +117,7 @@ Added in v1.0.0
 
 # constructors
 
-## collectAll
+## all
 
 Collects all fibers into a single fiber producing an in-order list of the
 results.
@@ -125,7 +125,7 @@ results.
 **Signature**
 
 ```ts
-export declare const collectAll: <E, A>(fibers: Iterable<Fiber<E, A>>) => Fiber<E, A[]>
+export declare const all: <E, A>(fibers: Iterable<Fiber<E, A>>) => Fiber<E, readonly A[]>
 ```
 
 Added in v1.0.0
@@ -185,7 +185,7 @@ A fiber that never fails or succeeds.
 **Signature**
 
 ```ts
-export declare const never: (_: void) => Fiber<never, never>
+export declare const never: Fiber<never, never>
 ```
 
 Added in v1.0.0
@@ -197,7 +197,7 @@ Returns a chunk containing all root fibers.
 **Signature**
 
 ```ts
-export declare const roots: (_: void) => Effect.Effect<never, never, Array<RuntimeFiber<any, any>>>
+export declare const roots: Effect.Effect<never, never, RuntimeFiber<any, any>[]>
 ```
 
 Added in v1.0.0
@@ -221,7 +221,7 @@ A fiber that has already succeeded with unit.
 **Signature**
 
 ```ts
-export declare const unit: (_: void) => Fiber<never, void>
+export declare const unit: Fiber<never, void>
 ```
 
 Added in v1.0.0
@@ -366,10 +366,14 @@ Folds over the `Fiber` or `RuntimeFiber`.
 
 ```ts
 export declare const match: {
-  <E, A, Z>(onFiber: (fiber: Fiber<E, A>) => Z, onRuntimeFiber: (fiber: RuntimeFiber<E, A>) => Z): (
-    self: Fiber<E, A>
-  ) => Z
-  <E, A, Z>(self: Fiber<E, A>, onFiber: (fiber: Fiber<E, A>) => Z, onRuntimeFiber: (fiber: RuntimeFiber<E, A>) => Z): Z
+  <E, A, Z>(options: {
+    readonly onFiber: (fiber: Fiber<E, A>) => Z
+    readonly onRuntimeFiber: (fiber: RuntimeFiber<E, A>) => Z
+  }): (self: Fiber<E, A>) => Z
+  <E, A, Z>(
+    self: Fiber<E, A>,
+    options: { readonly onFiber: (fiber: Fiber<E, A>) => Z; readonly onRuntimeFiber: (fiber: RuntimeFiber<E, A>) => Z }
+  ): Z
 }
 ```
 

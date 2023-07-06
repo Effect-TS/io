@@ -4,7 +4,7 @@ import { identity, pipe } from "@effect/data/Function"
 import * as HashMap from "@effect/data/HashMap"
 import * as Option from "@effect/data/Option"
 import * as Effect from "@effect/io/Effect"
-import * as TestServices from "@effect/io/internal_effect_untraced/testing/testServices"
+import * as TestServices from "@effect/io/internal/testing/testServices"
 import * as Ref from "@effect/io/Ref"
 import * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"
@@ -81,7 +81,11 @@ export const makeEffect = <Key, Error, Value>(
       const getCalledTimes = (key: Key) =>
         Effect.map(
           createdResources(),
-          (map) => pipe(HashMap.get(map, key), Option.match(() => 0, Chunk.size))
+          (map) =>
+            Option.match(HashMap.get(map, key), {
+              onNone: () => 0,
+              onSome: Chunk.size
+            })
         )
       const resourcesCleaned = (resources: Iterable<ObservableResource.ObservableResource<Error, Value>>) =>
         Effect.forEach(resources, (resource) => Effect.suspend(() => resource.assertAcquiredOnceAndCleaned()))
@@ -91,10 +95,10 @@ export const makeEffect = <Key, Error, Value>(
         Effect.flatMap(createdResources(), (resources) =>
           resourcesCleaned(pipe(
             HashMap.get(resources, key),
-            Option.match(
-              () => Chunk.empty<ObservableResource.ObservableResource<Error, Value>>(),
-              Chunk.take(n)
-            )
+            Option.match({
+              onNone: () => Chunk.empty<ObservableResource.ObservableResource<Error, Value>>(),
+              onSome: Chunk.take(n)
+            })
           )))
       const assertAllCleaned = () =>
         Effect.flatMap(createdResources(), (resources) =>

@@ -1,6 +1,6 @@
 ---
 title: Supervisor.ts
-nav_order: 57
+nav_order: 58
 parent: Modules
 ---
 
@@ -217,7 +217,7 @@ Creates a new supervisor that tracks children in a set.
 **Signature**
 
 ```ts
-export declare const track: (_: void) => Effect.Effect<never, never, Supervisor<Array<Fiber.RuntimeFiber<any, any>>>>
+export declare const track: Effect.Effect<never, never, Supervisor<Fiber.RuntimeFiber<any, any>[]>>
 ```
 
 Added in v1.0.0

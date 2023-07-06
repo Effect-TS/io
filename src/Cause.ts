@@ -22,15 +22,14 @@
  * @since 1.0.0
  */
 import type * as Chunk from "@effect/data/Chunk"
-import type { SourceLocation } from "@effect/data/Debug"
 import type * as Either from "@effect/data/Either"
 import type * as Equal from "@effect/data/Equal"
 import type * as HashSet from "@effect/data/HashSet"
 import type * as Option from "@effect/data/Option"
 import type { Predicate } from "@effect/data/Predicate"
 import type * as FiberId from "@effect/io/Fiber/Id"
-import * as internal from "@effect/io/internal_effect_untraced/cause"
-import * as _pretty from "@effect/io/internal_effect_untraced/cause-pretty"
+import * as internal from "@effect/io/internal/cause"
+import * as _pretty from "@effect/io/internal/cause-pretty"
 
 /**
  * @since 1.0.0
@@ -151,30 +150,6 @@ export declare namespace Cause {
     }
   }
 }
-
-/**
- * @since 1.0.0
- * @category models
- */
-export interface StackAnnotationConstructor {
-  new(stack: Chunk.Chunk<SourceLocation>, seq: number): StackAnnotation
-}
-
-/**
- * @since 1.0.0
- * @category models
- */
-export interface StackAnnotation {
-  readonly [StackAnnotationTypeId]: StackAnnotationTypeId
-  readonly stack: Chunk.Chunk<SourceLocation>
-  readonly seq: number
-}
-
-/**
- * @since 1.0.0
- * @category stack
- */
-export const StackAnnotation: StackAnnotationConstructor = internal.StackAnnotation
 
 /**
  * @since 1.0.0
@@ -751,23 +726,27 @@ export const filter: {
  */
 export const match: {
   <Z, E>(
-    emptyCase: Z,
-    failCase: (error: E) => Z,
-    dieCase: (defect: unknown) => Z,
-    interruptCase: (fiberId: FiberId.FiberId) => Z,
-    annotatedCase: (value: Z, annotation: unknown) => Z,
-    sequentialCase: (left: Z, right: Z) => Z,
-    parallelCase: (left: Z, right: Z) => Z
+    options: {
+      readonly onEmpty: Z
+      readonly onFail: (error: E) => Z
+      readonly onDie: (defect: unknown) => Z
+      readonly onInterrupt: (fiberId: FiberId.FiberId) => Z
+      readonly onAnnotated: (value: Z, annotation: unknown) => Z
+      readonly onSequential: (left: Z, right: Z) => Z
+      readonly onParallel: (left: Z, right: Z) => Z
+    }
   ): (self: Cause<E>) => Z
   <Z, E>(
     self: Cause<E>,
-    emptyCase: Z,
-    failCase: (error: E) => Z,
-    dieCase: (defect: unknown) => Z,
-    interruptCase: (fiberId: FiberId.FiberId) => Z,
-    annotatedCase: (value: Z, annotation: unknown) => Z,
-    sequentialCase: (left: Z, right: Z) => Z,
-    parallelCase: (left: Z, right: Z) => Z
+    options: {
+      readonly onEmpty: Z
+      readonly onFail: (error: E) => Z
+      readonly onDie: (defect: unknown) => Z
+      readonly onInterrupt: (fiberId: FiberId.FiberId) => Z
+      readonly onAnnotated: (value: Z, annotation: unknown) => Z
+      readonly onSequential: (left: Z, right: Z) => Z
+      readonly onParallel: (left: Z, right: Z) => Z
+    }
   ): Z
 } = internal.match
 
@@ -876,14 +855,6 @@ export const isRuntimeException: (u: unknown) => u is RuntimeException = interna
  * @category rendering
  */
 export const pretty: <E>(cause: Cause<E>) => string = _pretty.pretty
-
-/**
- * Checks if an annotation is a StackAnnotation
- *
- * @since 1.0.0
- * @category guards
- */
-export const isStackAnnotation: (u: unknown) => u is StackAnnotation = internal.isStackAnnotation
 
 /**
  * Removes any annotation from the cause

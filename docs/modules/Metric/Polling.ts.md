@@ -1,6 +1,6 @@
 ---
 title: Metric/Polling.ts
-nav_order: 35
+nav_order: 36
 parent: Modules
 ---
 
@@ -101,7 +101,7 @@ export interface PollingMetric<Type, In, R, E, Out> {
   /**
    * An effect that polls a value that may be fed to the metric.
    */
-  poll(): Effect.Effect<R, E, In>
+  readonly poll: Effect.Effect<R, E, In>
 }
 ```
 

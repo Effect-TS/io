@@ -4,7 +4,7 @@ import * as E from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 
 const program = pipe(
-  E.Do(),
+  E.Do,
   E.tap(() => E.sync(() => 1)),
   E.tap(() => E.sync(() => 1)),
   E.tap(() => E.sync(() => 1)),
@@ -19,7 +19,7 @@ const program = pipe(
   E.tap(() => E.sync(() => 1)),
   E.tap(() => E.sync(() => 1)),
   E.tap(() => E.sync(() => 1)),
-  E.flatMap(() => E.allPar(E.fail(0), E.unit())),
+  E.flatMap(() => E.all(E.fail(0), E.unit, { concurrency: "unbounded" })),
   E.flatMap((res) => E.sync(() => console.log(`res: ${res}`)))
 )
 

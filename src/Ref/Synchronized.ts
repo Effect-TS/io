@@ -3,9 +3,9 @@
  */
 import type * as Option from "@effect/data/Option"
 import type * as Effect from "@effect/io/Effect"
-import * as circular from "@effect/io/internal_effect_untraced/effect/circular"
-import * as ref from "@effect/io/internal_effect_untraced/ref"
-import * as internal from "@effect/io/internal_effect_untraced/synchronizedRef"
+import * as circular from "@effect/io/internal/effect/circular"
+import * as ref from "@effect/io/internal/ref"
+import * as internal from "@effect/io/internal/synchronizedRef"
 import type * as Ref from "@effect/io/Ref"
 
 /**

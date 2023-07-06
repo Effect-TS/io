@@ -9,10 +9,10 @@ import type * as Cause from "@effect/io/Cause"
 import type { Effect } from "@effect/io/Effect"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRefs from "@effect/io/FiberRefs"
-import * as fiberRuntime from "@effect/io/internal_effect_untraced/fiberRuntime"
-import * as circular from "@effect/io/internal_effect_untraced/layer/circular"
-import * as internal from "@effect/io/internal_effect_untraced/logger"
-import * as internalCircular from "@effect/io/internal_effect_untraced/logger-circular"
+import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
+import * as circular from "@effect/io/internal/layer/circular"
+import * as internal from "@effect/io/internal/logger"
+import * as internalCircular from "@effect/io/internal/logger-circular"
 import type * as Layer from "@effect/io/Layer"
 import type * as LogLevel from "@effect/io/Logger/Level"
 import type * as LogSpan from "@effect/io/Logger/Span"
@@ -36,14 +36,16 @@ export type LoggerTypeId = typeof LoggerTypeId
  */
 export interface Logger<Message, Output> extends Logger.Variance<Message, Output> {
   readonly log: (
-    fiberId: FiberId.FiberId,
-    logLevel: LogLevel.LogLevel,
-    message: Message,
-    cause: Cause.Cause<unknown>,
-    context: FiberRefs.FiberRefs,
-    spans: List.List<LogSpan.LogSpan>,
-    annotations: HashMap.HashMap<string, string>,
-    now: Date
+    options: {
+      readonly fiberId: FiberId.FiberId
+      readonly logLevel: LogLevel.LogLevel
+      readonly message: Message
+      readonly cause: Cause.Cause<unknown>
+      readonly context: FiberRefs.FiberRefs
+      readonly spans: List.List<LogSpan.LogSpan>
+      readonly annotations: HashMap.HashMap<string, string>
+      readonly date: Date
+    }
   ) => Output
 }
 
@@ -69,14 +71,16 @@ export declare namespace Logger {
  */
 export const make: <Message, Output>(
   log: (
-    fiberId: FiberId.FiberId,
-    logLevel: LogLevel.LogLevel,
-    message: Message,
-    cause: Cause.Cause<unknown>,
-    context: FiberRefs.FiberRefs,
-    spans: List.List<LogSpan.LogSpan>,
-    annotations: HashMap.HashMap<string, string>,
-    now: Date
+    options: {
+      readonly fiberId: FiberId.FiberId
+      readonly logLevel: LogLevel.LogLevel
+      readonly message: Message
+      readonly cause: Cause.Cause<unknown>
+      readonly context: FiberRefs.FiberRefs
+      readonly spans: List.List<LogSpan.LogSpan>
+      readonly annotations: HashMap.HashMap<string, string>
+      readonly date: Date
+    }
   ) => Output
 ) => Logger<Message, Output> = internal.makeLogger
 
@@ -152,7 +156,7 @@ export const map: {
  * @since 1.0.0
  * @category constructors
  */
-export const none: (_: void) => Logger<unknown, void> = internal.none
+export const none: Logger<unknown, void> = internal.none
 
 /**
  * @since 1.0.0

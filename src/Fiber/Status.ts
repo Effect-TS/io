@@ -4,7 +4,7 @@
 import type * as Equal from "@effect/data/Equal"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
-import * as internal from "@effect/io/internal_effect_untraced/fiberStatus"
+import * as internal from "@effect/io/internal/fiberStatus"
 
 /**
  * @since 1.0.0

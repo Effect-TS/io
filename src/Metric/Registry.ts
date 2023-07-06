@@ -2,7 +2,7 @@
  * @since 1.0.0
  */
 import type * as HashSet from "@effect/data/HashSet"
-import * as internal from "@effect/io/internal_effect_untraced/metric/registry"
+import * as internal from "@effect/io/internal/metric/registry"
 import type * as MetricHook from "@effect/io/Metric/Hook"
 import type * as MetricKey from "@effect/io/Metric/Key"
 import type * as MetricKeyType from "@effect/io/Metric/KeyType"

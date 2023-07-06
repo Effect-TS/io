@@ -1,4 +1,4 @@
-import { constVoid, pipe } from "@effect/data/Function"
+import { constVoid, identity, pipe } from "@effect/data/Function"
 import * as Effect from "@effect/io/Effect"
 import * as Ref from "@effect/io/Ref"
 import * as it from "@effect/io/test/utils/extend"
@@ -24,8 +24,8 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const array = Array.from({ length: 10000 }, (_, i) => i)
       const result = yield* $(array.reduce(
-        (acc, _) => pipe(acc, Effect.matchEffect(Effect.die, Effect.succeed), Effect.either, Effect.asUnit),
-        pipe(Effect.try(constVoid), Effect.matchEffect(Effect.die, Effect.succeed))
+        (acc, _) => pipe(Effect.orDie(acc), Effect.either, Effect.asUnit),
+        Effect.orDie(Effect.try(constVoid))
       ))
       assert.isUndefined(result)
     }))
@@ -50,14 +50,16 @@ describe.concurrent("Effect", () => {
   it.effect("deep absolve/attempt is identity", () =>
     Effect.gen(function*($) {
       const array = Array.from({ length: 100 }, (_, i) => i)
-      const result = yield* $(array.reduce((acc, _) => Effect.absolve(Effect.either(acc)), Effect.succeed(42)))
+      const result = yield* $(
+        array.reduce((acc, _) => Effect.flatMap(Effect.either(acc), identity), Effect.succeed(42))
+      )
       assert.strictEqual(result, 42)
     }))
   it.effect("deep async absolve/attempt is identity", () =>
     Effect.gen(function*($) {
       const array = Array.from({ length: 1000 }, (_, i) => i)
       const result = yield* $(array.reduce(
-        (acc, _) => Effect.absolve(Effect.either(acc)),
+        (acc, _) => Effect.flatMap(Effect.either(acc), identity),
         Effect.async<never, unknown, unknown>((cb) => {
           cb(Effect.succeed(42))
         })

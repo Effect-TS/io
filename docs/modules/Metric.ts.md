@@ -1,6 +1,6 @@
 ---
 title: Metric.ts
-nav_order: 28
+nav_order: 29
 parent: Modules
 ---
 
@@ -402,14 +402,14 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const summary: (
-  name: string,
-  maxAge: Duration.Duration,
-  maxSize: number,
-  error: number,
-  quantiles: Chunk.Chunk<number>,
-  description?: string
-) => Metric.Summary<number>
+export declare const summary: (options: {
+  readonly name: string
+  readonly maxAge: Duration.DurationInput
+  readonly maxSize: number
+  readonly error: number
+  readonly quantiles: Chunk.Chunk<number>
+  readonly description?: string
+}) => Metric.Summary<number>
 ```
 
 Added in v1.0.0
@@ -419,14 +419,14 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const summaryTimestamp: (
-  name: string,
-  maxAge: Duration.Duration,
-  maxSize: number,
-  error: number,
-  quantiles: Chunk.Chunk<number>,
-  description?: string
-) => Metric.Summary<readonly [value: number, timestamp: number]>
+export declare const summaryTimestamp: (options: {
+  readonly name: string
+  readonly maxAge: Duration.DurationInput
+  readonly maxSize: number
+  readonly error: number
+  readonly quantiles: Chunk.Chunk<number>
+  readonly description?: string
+}) => Metric.Summary<readonly [value: number, timestamp: number]>
 ```
 
 Added in v1.0.0
@@ -503,7 +503,7 @@ Captures a snapshot of all metrics recorded by the application.
 **Signature**
 
 ```ts
-export declare const snapshot: () => Effect.Effect<never, never, HashSet.HashSet<MetricPair.MetricPair.Untyped>>
+export declare const snapshot: Effect.Effect<never, never, HashSet.HashSet<MetricPair.MetricPair.Untyped>>
 ```
 
 Added in v1.0.0

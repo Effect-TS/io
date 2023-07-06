@@ -3,7 +3,7 @@ import * as List from "@effect/data/List"
 import * as Cause from "@effect/io/Cause"
 import * as FiberId from "@effect/io/Fiber/Id"
 import * as FiberRefs from "@effect/io/FiberRefs"
-import { logLevelInfo } from "@effect/io/internal_effect_untraced/core"
+import { logLevelInfo } from "@effect/io/internal/core"
 import * as Logger from "@effect/io/Logger"
 import * as LogSpan from "@effect/io/Logger/Span"
 
@@ -27,16 +27,16 @@ describe("stringLogger", () => {
       ["good_key", "I am a good value"]
     )
 
-    const result = Logger.stringLogger.log(
-      FiberId.none,
-      logLevelInfo,
-      "My message",
-      Cause.empty,
-      FiberRefs.unsafeMake(new Map()),
+    const result = Logger.stringLogger.log({
+      fiberId: FiberId.none,
+      logLevel: logLevelInfo,
+      message: "My message",
+      cause: Cause.empty,
+      context: FiberRefs.unsafeMake(new Map()),
       spans,
       annotations,
       date
-    )
+    })
 
     expect(result).toEqual(
       `timestamp=${date.toJSON()} level=INFO fiber= message="My message" imma_span__=7ms just_a_key=just_a_value good_key="I am a good value" I_am_bad_key_name="{\\"coolValue\\":\\"cool value\\"}"`
@@ -54,16 +54,16 @@ describe("stringLogger", () => {
       ["good_key3", "I_have=a"]
     )
 
-    const result = Logger.stringLogger.log(
-      FiberId.none,
-      logLevelInfo,
-      "My\nmessage",
-      Cause.empty,
-      FiberRefs.unsafeMake(new Map()),
+    const result = Logger.stringLogger.log({
+      fiberId: FiberId.none,
+      logLevel: logLevelInfo,
+      message: "My\nmessage",
+      cause: Cause.empty,
+      context: FiberRefs.unsafeMake(new Map()),
       spans,
       annotations,
       date
-    )
+    })
 
     expect(result).toEqual(
       `timestamp=${date.toJSON()} level=INFO fiber= message="My
@@ -91,16 +91,16 @@ describe("logfmtLogger", () => {
       ["good_key", "I am a good value"]
     )
 
-    const result = Logger.logfmtLogger.log(
-      FiberId.none,
-      logLevelInfo,
-      "My message",
-      Cause.empty,
-      FiberRefs.unsafeMake(new Map()),
+    const result = Logger.logfmtLogger.log({
+      fiberId: FiberId.none,
+      logLevel: logLevelInfo,
+      message: "My message",
+      cause: Cause.empty,
+      context: FiberRefs.unsafeMake(new Map()),
       spans,
       annotations,
       date
-    )
+    })
 
     expect(result).toEqual(
       `timestamp=${date.toJSON()} level=INFO fiber= message="My message" imma_span__=7ms just_a_key=just_a_value good_key="I am a good value" I_am_bad_key_name="{\\"coolValue\\":\\"cool value\\"}"`
@@ -118,16 +118,16 @@ describe("logfmtLogger", () => {
       ["good_key3", "I_have=a"]
     )
 
-    const result = Logger.logfmtLogger.log(
-      FiberId.none,
-      logLevelInfo,
-      "My\nmessage",
-      Cause.empty,
-      FiberRefs.unsafeMake(new Map()),
+    const result = Logger.logfmtLogger.log({
+      fiberId: FiberId.none,
+      logLevel: logLevelInfo,
+      message: "My\nmessage",
+      cause: Cause.empty,
+      context: FiberRefs.unsafeMake(new Map()),
       spans,
       annotations,
       date
-    )
+    })
 
     expect(result).toEqual(
       `timestamp=${date.toJSON()} level=INFO fiber= message="My\\nmessage" imma_span__=7ms I_am_also_a_bad_key_name="{\\"return\\":\\"cool\\\\nvalue\\"}" good_key="{\\"returnWithSpace\\":\\"cool\\\\nvalue or not\\"}" good_key2="I am a good value\\nwith line breaks" good_key3="I_have=a"`

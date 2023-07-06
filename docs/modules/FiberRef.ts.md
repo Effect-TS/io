@@ -1,6 +1,6 @@
 ---
 title: FiberRef.ts
-nav_order: 19
+nav_order: 20
 parent: Modules
 ---
 
@@ -29,8 +29,8 @@ Added in v1.0.0
   - [currentLogSpan](#currentlogspan)
   - [currentLoggers](#currentloggers)
   - [currentMaxFiberOps](#currentmaxfiberops)
+  - [currentMetricLabels](#currentmetriclabels)
   - [currentMinimumLogLevel](#currentminimumloglevel)
-  - [currentParallelism](#currentparallelism)
   - [currentRequestBatchingEnabled](#currentrequestbatchingenabled)
   - [currentRequestCache](#currentrequestcache)
   - [currentRequestCacheEnabled](#currentrequestcacheenabled)
@@ -38,7 +38,6 @@ Added in v1.0.0
   - [currentScheduler](#currentscheduler)
   - [currentSchedulingPriority](#currentschedulingpriority)
   - [currentSupervisor](#currentsupervisor)
-  - [currentTags](#currenttags)
   - [currentTracerSpan](#currenttracerspan)
   - [currentTracerSpanAnnotations](#currenttracerspanannotations)
   - [interruptedCause](#interruptedcause)
@@ -78,8 +77,9 @@ Added in v1.0.0
 ```ts
 export declare const make: <A>(
   initial: A,
-  fork?: ((a: A) => A) | undefined,
-  join?: ((left: A, right: A) => A) | undefined
+  options?:
+    | { readonly fork?: ((a: A) => A) | undefined; readonly join?: ((left: A, right: A) => A) | undefined }
+    | undefined
 ) => Effect.Effect<Scope.Scope, never, FiberRef<A>>
 ```
 
@@ -128,8 +128,12 @@ Added in v1.0.0
 ```ts
 export declare const unsafeMake: <Value>(
   initial: Value,
-  fork?: ((a: Value) => Value) | undefined,
-  join?: ((left: Value, right: Value) => Value) | undefined
+  options?:
+    | {
+        readonly fork?: ((a: Value) => Value) | undefined
+        readonly join?: ((left: Value, right: Value) => Value) | undefined
+      }
+    | undefined
 ) => FiberRef<Value>
 ```
 
@@ -162,9 +166,11 @@ Added in v1.0.0
 ```ts
 export declare const unsafeMakePatch: <Value, Patch>(
   initial: Value,
-  differ: Differ.Differ<Value, Patch>,
-  fork: Patch,
-  join?: ((oldV: Value, newV: Value) => Value) | undefined
+  options: {
+    readonly differ: Differ.Differ<Value, Patch>
+    readonly fork: Patch
+    readonly join?: ((oldV: Value, newV: Value) => Value) | undefined
+  }
 ) => FiberRef<Value>
 ```
 
@@ -242,22 +248,22 @@ export declare const currentMaxFiberOps: FiberRef<number>
 
 Added in v1.0.0
 
+## currentMetricLabels
+
+**Signature**
+
+```ts
+export declare const currentMetricLabels: FiberRef<HashSet.HashSet<MetricLabel.MetricLabel>>
+```
+
+Added in v1.0.0
+
 ## currentMinimumLogLevel
 
 **Signature**
 
 ```ts
 export declare const currentMinimumLogLevel: FiberRef<LogLevel.LogLevel>
-```
-
-Added in v1.0.0
-
-## currentParallelism
-
-**Signature**
-
-```ts
-export declare const currentParallelism: FiberRef<Option.Option<number>>
 ```
 
 Added in v1.0.0
@@ -328,16 +334,6 @@ Added in v1.0.0
 
 ```ts
 export declare const currentSupervisor: FiberRef<Supervisor.Supervisor<any>>
-```
-
-Added in v1.0.0
-
-## currentTags
-
-**Signature**
-
-```ts
-export declare const currentTags: FiberRef<HashSet.HashSet<MetricLabel.MetricLabel>>
 ```
 
 Added in v1.0.0

@@ -2,7 +2,6 @@
  * @since 1.0.0
  */
 import type * as Context from "@effect/data/Context"
-import type { Either } from "@effect/data/Either"
 import type { Cause } from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
@@ -10,7 +9,7 @@ import type * as Fiber from "@effect/io/Fiber"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import type * as FiberRefs from "@effect/io/FiberRefs"
-import * as internal from "@effect/io/internal_effect_untraced/runtime"
+import * as internal from "@effect/io/internal/runtime"
 import type { Scheduler } from "@effect/io/Scheduler"
 
 /**
@@ -112,20 +111,6 @@ export const runCallback: <R>(
   internal.unsafeRunCallback
 
 /**
- * Executes the effect synchronously returning either the result or a failure.
- *
- * Throwing in case of defects and interruptions.
- *
- * This method is effectful and should only be invoked at the edges of your
- * program.
- *
- * @since 1.0.0
- * @category execution
- */
-export const runSyncEither: <R>(runtime: Runtime<R>) => <E, A>(effect: Effect.Effect<R, E, A>) => Either<E, A> =
-  internal.unsafeRunSyncEither
-
-/**
  * Runs the `Effect`, returning a JavaScript `Promise` that will be resolved
  * with the value of the effect once the effect has been executed, or will be
  * rejected with the first error or exception throw by the effect.
@@ -154,21 +139,6 @@ export const runPromiseExit: <R>(
 ) => <E, A>(effect: Effect.Effect<R, E, A>) => Promise<Exit.Exit<E, A>> = internal.unsafeRunPromiseExit
 
 /**
- * Runs the `Effect`, returning a JavaScript `Promise` that will be resolved
- * with the either a success or a failure. The promise will be rejected in case
- * of defects and interruption.
- *
- * This method is effectful and should only be used at the edges of your
- * program.
- *
- * @since 1.0.0
- * @category execution
- */
-export const runPromiseEither: <R>(
-  runtime: Runtime<R>
-) => <E, A>(effect: Effect.Effect<R, E, A>) => Promise<Either<E, A>> = internal.unsafeRunPromiseEither
-
-/**
  * @since 1.0.0
  * @category constructors
  */
@@ -185,9 +155,11 @@ export const defaultRuntimeFlags: RuntimeFlags.RuntimeFlags = internal.defaultRu
  * @category constructors
  */
 export const make: <R>(
-  context: Context.Context<R>,
-  runtimeFlags: RuntimeFlags.RuntimeFlags,
-  fiberRefs: FiberRefs.FiberRefs
+  options: {
+    readonly context: Context.Context<R>
+    readonly flags: RuntimeFlags.RuntimeFlags
+    readonly fiberRefs: FiberRefs.FiberRefs
+  }
 ) => Runtime<R> = internal.make
 
 /**

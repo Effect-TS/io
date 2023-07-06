@@ -121,7 +121,10 @@ export const getChildExtra = (id: number) => Effect.request(GetChildExtra({ id }
 
 const EnvLive = Layer.provideMerge(
   Layer.mergeAll(
-    Effect.setRequestCache(Request.makeCache(100, seconds(60))),
+    Effect.setRequestCache(Request.makeCache({
+      capacity: 100,
+      timeToLive: seconds(60)
+    })),
     Effect.setRequestCaching("on"),
     Effect.setRequestBatching("on")
   ),
@@ -137,10 +140,20 @@ describe.concurrent("Effect", () => {
       Effect.gen(function*($) {
         const parents = yield* $(getAllParents)
 
-        yield* $(Effect.forEachPar(parents, (parent) =>
-          Effect.flatMap(getChildren(parent.id), (children) =>
-            Effect.forEachPar(children, (child) =>
-              Effect.zipPar(getChildInfo(child.id), getChildExtra(child.id))))))
+        yield* $(Effect.forEach(
+          parents,
+          (parent) =>
+            Effect.flatMap(
+              getChildren(parent.id),
+              (children) =>
+                Effect.forEach(
+                  children,
+                  (child) => Effect.zip(getChildInfo(child.id), getChildExtra(child.id), { parallel: true }),
+                  { concurrency: "unbounded" }
+                )
+            ),
+          { concurrency: "unbounded" }
+        ))
 
         const count = yield* $(Counter)
         const requests = yield* $(Requests)
@@ -150,15 +163,25 @@ describe.concurrent("Effect", () => {
       }),
       Effect.provideSomeLayer(EnvLive)
     ))
-  it.effect("nested queries are batched when parallelism is set to 1", () =>
+  it.effect("nested queries are batched when concurrency is set to 1", () =>
     pipe(
       Effect.gen(function*($) {
         const parents = yield* $(getAllParents)
 
-        yield* $(Effect.forEachPar(parents, (parent) =>
-          Effect.flatMap(getChildren(parent.id), (children) =>
-            Effect.forEachPar(children, (child) =>
-              Effect.zipPar(getChildInfo(child.id), getChildExtra(child.id))))))
+        yield* $(Effect.forEach(
+          parents,
+          (parent) =>
+            Effect.flatMap(
+              getChildren(parent.id),
+              (children) =>
+                Effect.forEach(
+                  children,
+                  (child) => Effect.zip(getChildInfo(child.id), getChildExtra(child.id), { parallel: true }),
+                  { concurrency: 1, batched: true }
+                )
+            ),
+          { concurrency: 1, batched: true }
+        ))
 
         const count = yield* $(Counter)
         const requests = yield* $(Requests)
@@ -166,7 +189,6 @@ describe.concurrent("Effect", () => {
         expect(count.count).toBe(3)
         expect(requests.count).toBe(7)
       }),
-      Effect.withParallelism(1),
       Effect.provideSomeLayer(EnvLive)
     ))
 })

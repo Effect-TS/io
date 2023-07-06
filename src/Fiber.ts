@@ -4,7 +4,7 @@
 import type * as Either from "@effect/data/Either"
 import type * as HashSet from "@effect/data/HashSet"
 import type * as Option from "@effect/data/Option"
-import type * as order from "@effect/data/typeclass/Order"
+import type * as order from "@effect/data/Order"
 import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
@@ -12,10 +12,10 @@ import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import type * as FiberStatus from "@effect/io/Fiber/Status"
 import type * as FiberRefs from "@effect/io/FiberRefs"
-import * as core from "@effect/io/internal_effect_untraced/core"
-import * as circular from "@effect/io/internal_effect_untraced/effect/circular"
-import * as internal from "@effect/io/internal_effect_untraced/fiber"
-import * as fiberRuntime from "@effect/io/internal_effect_untraced/fiberRuntime"
+import * as core from "@effect/io/internal/core"
+import * as circular from "@effect/io/internal/effect/circular"
+import * as internal from "@effect/io/internal/fiber"
+import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
 import type * as Scope from "@effect/io/Scope"
 
 /**
@@ -278,7 +278,7 @@ export const children: <E, A>(self: Fiber<E, A>) => Effect.Effect<never, never, 
  * @since 1.0.0
  * @category constructors
  */
-export const collectAll: <E, A>(fibers: Iterable<Fiber<E, A>>) => Fiber<E, Array<A>> = fiberRuntime.fiberCollectAll
+export const all: <E, A>(fibers: Iterable<Fiber<E, A>>) => Fiber<E, ReadonlyArray<A>> = fiberRuntime.fiberAll
 
 /**
  * A fiber that is done with the specified `Exit` value.
@@ -484,13 +484,11 @@ export const mapFiber: {
  */
 export const match: {
   <E, A, Z>(
-    onFiber: (fiber: Fiber<E, A>) => Z,
-    onRuntimeFiber: (fiber: RuntimeFiber<E, A>) => Z
+    options: { readonly onFiber: (fiber: Fiber<E, A>) => Z; readonly onRuntimeFiber: (fiber: RuntimeFiber<E, A>) => Z }
   ): (self: Fiber<E, A>) => Z
   <E, A, Z>(
     self: Fiber<E, A>,
-    onFiber: (fiber: Fiber<E, A>) => Z,
-    onRuntimeFiber: (fiber: RuntimeFiber<E, A>) => Z
+    options: { readonly onFiber: (fiber: Fiber<E, A>) => Z; readonly onRuntimeFiber: (fiber: RuntimeFiber<E, A>) => Z }
   ): Z
 } = internal.match
 
@@ -500,7 +498,7 @@ export const match: {
  * @since 1.0.0
  * @category constructors
  */
-export const never: (_: void) => Fiber<never, never> = internal.never
+export const never: Fiber<never, never> = internal.never
 
 /**
  * Returns a fiber that prefers `this` fiber, but falls back to the `that` one
@@ -552,7 +550,7 @@ export const pretty: <E, A>(self: RuntimeFiber<E, A>) => Effect.Effect<never, ne
  * @since 1.0.0
  * @category constructors
  */
-export const roots: (_: void) => Effect.Effect<never, never, Array<RuntimeFiber<any, any>>> = internal.roots
+export const roots: Effect.Effect<never, never, Array<RuntimeFiber<any, any>>> = internal.roots
 
 /**
  * Returns a chunk containing all root fibers.
@@ -595,7 +593,7 @@ export const succeed: <A>(value: A) => Fiber<never, A> = internal.succeed
  * @since 1.0.0
  * @category constructors
  */
-export const unit: (_: void) => Fiber<never, void> = internal.unit
+export const unit: Fiber<never, void> = internal.unit
 
 /**
  * Zips this fiber and the specified fiber together, producing a tuple of

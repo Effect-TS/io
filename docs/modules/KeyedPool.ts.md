@@ -1,6 +1,6 @@
 ---
 title: KeyedPool.ts
-nav_order: 23
+nav_order: 24
 parent: Modules
 ---
 
@@ -16,10 +16,10 @@ Added in v1.0.0
   - [get](#get)
   - [invalidate](#invalidate)
 - [constructors](#constructors)
-  - [makeSized](#makesized)
-  - [makeSizedWith](#makesizedwith)
-  - [makeSizedWithTTL](#makesizedwithttl)
-  - [makeSizedWithTTLBy](#makesizedwithttlby)
+  - [make](#make)
+  - [makeWith](#makewith)
+  - [makeWithTTL](#makewithttl)
+  - [makeWithTTLBy](#makewithttlby)
 - [models](#models)
   - [KeyedPool (interface)](#keyedpool-interface)
 - [symbols](#symbols)
@@ -67,7 +67,7 @@ Added in v1.0.0
 
 # constructors
 
-## makeSized
+## make
 
 Makes a new pool of the specified fixed size. The pool is returned in a
 `Scope`, which governs the lifetime of the pool. When the pool is shutdown
@@ -77,15 +77,15 @@ will be released in some unspecified order.
 **Signature**
 
 ```ts
-export declare const makeSized: <K, R, E, A>(
-  get: (key: K) => Effect.Effect<R, E, A>,
-  size: number
-) => Effect.Effect<Scope.Scope | R, never, KeyedPool<K, E, A>>
+export declare const make: <K, R, E, A>(options: {
+  readonly acquire: (key: K) => Effect.Effect<R, E, A>
+  readonly size: number
+}) => Effect.Effect<Scope.Scope | R, never, KeyedPool<K, E, A>>
 ```
 
 Added in v1.0.0
 
-## makeSizedWith
+## makeWith
 
 Makes a new pool of the specified fixed size. The pool is returned in a
 `Scope`, which governs the lifetime of the pool. When the pool is shutdown
@@ -97,15 +97,15 @@ The size of the underlying pools can be configured per key.
 **Signature**
 
 ```ts
-export declare const makeSizedWith: <K, R, E, A>(
-  get: (key: K) => Effect.Effect<R, E, A>,
-  size: (key: K) => number
-) => Effect.Effect<Scope.Scope | R, never, KeyedPool<K, E, A>>
+export declare const makeWith: <K, R, E, A>(options: {
+  readonly acquire: (key: K) => Effect.Effect<R, E, A>
+  readonly size: (key: K) => number
+}) => Effect.Effect<Scope.Scope | R, never, KeyedPool<K, E, A>>
 ```
 
 Added in v1.0.0
 
-## makeSizedWithTTL
+## makeWithTTL
 
 Makes a new pool with the specified minimum and maximum sizes and time to
 live before a pool whose excess items are not being used will be shrunk
@@ -119,17 +119,17 @@ The size of the underlying pools can be configured per key.
 **Signature**
 
 ```ts
-export declare const makeSizedWithTTL: <K, R, E, A>(
-  get: (key: K) => Effect.Effect<R, E, A>,
-  min: (key: K) => number,
-  max: (key: K) => number,
-  timeToLive: Duration.Duration
-) => Effect.Effect<Scope.Scope | R, never, KeyedPool<K, E, A>>
+export declare const makeWithTTL: <K, R, E, A>(options: {
+  readonly acquire: (key: K) => Effect.Effect<R, E, A>
+  readonly min: (key: K) => number
+  readonly max: (key: K) => number
+  readonly timeToLive: Duration.DurationInput
+}) => Effect.Effect<Scope.Scope | R, never, KeyedPool<K, E, A>>
 ```
 
 Added in v1.0.0
 
-## makeSizedWithTTLBy
+## makeWithTTLBy
 
 Makes a new pool with the specified minimum and maximum sizes and time to
 live before a pool whose excess items are not being used will be shrunk
@@ -143,12 +143,12 @@ The size of the underlying pools can be configured per key.
 **Signature**
 
 ```ts
-export declare const makeSizedWithTTLBy: <K, R, E, A>(
-  get: (key: K) => Effect.Effect<R, E, A>,
-  min: (key: K) => number,
-  max: (key: K) => number,
-  timeToLive: (key: K) => Duration.Duration
-) => Effect.Effect<Scope.Scope | R, never, KeyedPool<K, E, A>>
+export declare const makeWithTTLBy: <K, R, E, A>(options: {
+  readonly acquire: (key: K) => Effect.Effect<R, E, A>
+  readonly min: (key: K) => number
+  readonly max: (key: K) => number
+  readonly timeToLive: (key: K) => Duration.DurationInput
+}) => Effect.Effect<Scope.Scope | R, never, KeyedPool<K, E, A>>
 ```
 
 Added in v1.0.0

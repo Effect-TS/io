@@ -1,6 +1,6 @@
 ---
 title: Metric/Hook.ts
-nav_order: 30
+nav_order: 31
 parent: Modules
 ---
 
@@ -76,7 +76,10 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const make: <In, Out>(get: LazyArg<Out>, update: (input: In) => void) => MetricHook<In, Out>
+export declare const make: <In, Out>(options: {
+  readonly get: LazyArg<Out>
+  readonly update: (input: In) => void
+}) => MetricHook<In, Out>
 ```
 
 Added in v1.0.0

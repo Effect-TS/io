@@ -1,4 +1,3 @@
-import { millis } from "@effect/data/Duration"
 import * as Effect from "@effect/io/Effect"
 
 class MyError extends Error {
@@ -12,12 +11,13 @@ class MyError extends Error {
   }
 }
 
-const program = Effect.allPar(
-  Effect.delay(Effect.succeed(0), millis(500)),
-  Effect.onInterrupt(Effect.delay(Effect.failSync(() => new MyError("welp")), millis(1000)), () => Effect.die("oki")),
-  Effect.delay(Effect.succeed(0), millis(500)),
-  Effect.delay(Effect.failSync(() => new MyError("welp")), millis(500)),
-  Effect.delay(Effect.succeed(0), millis(500))
+const program = Effect.all(
+  Effect.delay(Effect.succeed(0), "500 millis"),
+  Effect.onInterrupt(Effect.delay(Effect.failSync(() => new MyError("welp")), "1 seconds"), () => Effect.die("oki")),
+  Effect.delay(Effect.succeed(0), "500 millis"),
+  Effect.delay(Effect.failSync(() => new MyError("welp")), "500 millis"),
+  Effect.delay(Effect.succeed(0), "500 millis"),
+  { concurrency: "unbounded", discard: true }
 )
 
-Effect.runFork(Effect.catchAllCause(program, Effect.logErrorCause))
+Effect.runFork(Effect.catchAllCause(program, Effect.logCause({ level: "Error" })))

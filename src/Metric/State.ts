@@ -5,7 +5,7 @@ import type * as Chunk from "@effect/data/Chunk"
 import type * as Equal from "@effect/data/Equal"
 import type * as HashMap from "@effect/data/HashMap"
 import type * as Option from "@effect/data/Option"
-import * as internal from "@effect/io/internal_effect_untraced/metric/state"
+import * as internal from "@effect/io/internal/metric/state"
 import type * as MetricKeyType from "@effect/io/Metric/KeyType"
 
 /**
@@ -188,11 +188,13 @@ export const gauge: (value: number) => MetricState.Gauge = internal.gauge
  * @category constructors
  */
 export const histogram: (
-  buckets: Chunk.Chunk<readonly [number, number]>,
-  count: number,
-  min: number,
-  max: number,
-  sum: number
+  options: {
+    readonly buckets: Chunk.Chunk<readonly [number, number]>
+    readonly count: number
+    readonly min: number
+    readonly max: number
+    readonly sum: number
+  }
 ) => MetricState.Histogram = internal.histogram
 
 /**
@@ -200,12 +202,14 @@ export const histogram: (
  * @category constructors
  */
 export const summary: (
-  error: number,
-  quantiles: Chunk.Chunk<readonly [number, Option.Option<number>]>,
-  count: number,
-  min: number,
-  max: number,
-  sum: number
+  options: {
+    readonly error: number
+    readonly quantiles: Chunk.Chunk<readonly [number, Option.Option<number>]>
+    readonly count: number
+    readonly min: number
+    readonly max: number
+    readonly sum: number
+  }
 ) => MetricState.Summary = internal.summary
 
 /**

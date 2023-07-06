@@ -1,4 +1,3 @@
-import * as Either from "@effect/data/Either"
 import * as Option from "@effect/data/Option"
 import * as Effect from "@effect/io/Effect"
 import * as it from "@effect/io/test/utils/extend"
@@ -12,17 +11,23 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("using the none value", () =>
     Effect.gen(function*($) {
-      const result = yield* $(Effect.succeedNone())
+      const result = yield* $(Effect.succeedNone)
       assert.deepStrictEqual(result, Option.none())
     }))
-  it.effect("can lift a value into right", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(Effect.succeedRight(42))
-      assert.deepStrictEqual(result, Either.right(42))
-    }))
-  it.effect("can lift a value into left", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(Effect.succeedLeft(42))
-      assert.deepStrictEqual(result, Either.left(42))
-    }))
+  it.effect("can use .pipe for composition", () =>
+    Effect.gen(function*(_) {
+      return yield* _(Effect.succeed(1))
+    }).pipe(
+      Effect.map((n) => n + 1),
+      Effect.flatMap((n) =>
+        Effect.gen(function*(_) {
+          return yield* _(Effect.succeed(n + 1))
+        })
+      ),
+      Effect.tap((n) =>
+        Effect.sync(() => {
+          assert.strictEqual(n, 3)
+        })
+      )
+    ))
 })

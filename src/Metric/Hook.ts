@@ -2,7 +2,7 @@
  * @since 1.0.0
  */
 import type { LazyArg } from "@effect/data/Function"
-import * as internal from "@effect/io/internal_effect_untraced/metric/hook"
+import * as internal from "@effect/io/internal/metric/hook"
 import type * as MetricKey from "@effect/io/Metric/Key"
 import type * as MetricState from "@effect/io/Metric/State"
 
@@ -89,7 +89,10 @@ export declare namespace MetricHook {
  * @since 1.0.0
  * @category constructors
  */
-export const make: <In, Out>(get: LazyArg<Out>, update: (input: In) => void) => MetricHook<In, Out> = internal.make
+export const make: <In, Out>(options: {
+  readonly get: LazyArg<Out>
+  readonly update: (input: In) => void
+}) => MetricHook<In, Out> = internal.make
 
 /**
  * @since 1.0.0

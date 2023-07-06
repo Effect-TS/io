@@ -3,7 +3,7 @@
  */
 import type * as Chunk from "@effect/data/Chunk"
 import type * as Equal from "@effect/data/Equal"
-import * as internal from "@effect/io/internal_effect_untraced/metric/boundaries"
+import * as internal from "@effect/io/internal/metric/boundaries"
 
 /**
  * @since 1.0.0
@@ -45,7 +45,13 @@ export const fromChunk: (chunk: Chunk.Chunk<number>) => MetricBoundaries = inter
  * @since 1.0.0
  * @category constructors
  */
-export const linear: (start: number, width: number, count: number) => MetricBoundaries = internal.linear
+export const linear: (
+  options: {
+    readonly start: number
+    readonly width: number
+    readonly count: number
+  }
+) => MetricBoundaries = internal.linear
 
 /**
  * A helper method to create histogram bucket boundaries for a histogram
@@ -54,4 +60,10 @@ export const linear: (start: number, width: number, count: number) => MetricBoun
  * @since 1.0.0
  * @category constructors
  */
-export const exponential: (start: number, factor: number, count: number) => MetricBoundaries = internal.exponential
+export const exponential: (
+  options: {
+    readonly start: number
+    readonly factor: number
+    readonly count: number
+  }
+) => MetricBoundaries = internal.exponential

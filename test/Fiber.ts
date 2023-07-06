@@ -1,7 +1,7 @@
 import * as Chunk from "@effect/data/Chunk"
 import { constVoid, identity, pipe } from "@effect/data/Function"
 import * as HashSet from "@effect/data/HashSet"
-import * as Option from "@effect/data/Option"
+import * as ReadonlyArray from "@effect/data/ReadonlyArray"
 import * as Deferred from "@effect/io/Deferred"
 import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
@@ -17,31 +17,31 @@ import { assert, describe } from "vitest"
 
 const initial = "initial"
 const update = "update"
-const fibers = Array.from({ length: 10000 }, Fiber.unit)
+const fibers = Array.from({ length: 10000 }, () => Fiber.unit)
 
 describe.concurrent("Fiber", () => {
   it.effect("should track blockingOn in await", () =>
     Effect.gen(function*($) {
-      const fiber1 = yield* $(Effect.never(), Effect.fork)
+      const fiber1 = yield* $(Effect.never, Effect.fork)
       const fiber2 = yield* $(Fiber.await(fiber1), Effect.fork)
       const blockingOn = yield* $(
         Fiber.status(fiber2),
-        Effect.continueOrFail(constVoid, (status) =>
+        Effect.flatMap((status) =>
           FiberStatus.isSuspended(status)
-            ? Option.some(status.blockingOn)
-            : Option.none()),
+            ? Effect.succeed(status.blockingOn)
+            : Effect.failSync(constVoid)
+        ),
         Effect.eventually
       )
       assert.deepStrictEqual(blockingOn, Fiber.id(fiber1))
     }))
   it.effect("should track blockingOn in race", () =>
     Effect.gen(function*($) {
-      const fiber = yield* $(Effect.never(), Effect.race(Effect.never()), Effect.fork)
+      const fiber = yield* $(Effect.never, Effect.race(Effect.never), Effect.fork)
       const blockingOn = yield* $(
         Fiber.status(fiber),
-        Effect.continueOrFail(
-          () => void 0 as void,
-          (status) => FiberStatus.isSuspended(status) ? Option.some(status.blockingOn) : Option.none()
+        Effect.flatMap(
+          (status) => FiberStatus.isSuspended(status) ? Effect.succeed(status.blockingOn) : Effect.fail(void 0 as void)
         ),
         Effect.eventually
       )
@@ -108,14 +108,11 @@ describe.concurrent("Fiber", () => {
       const ref = yield* $(Ref.make(false))
       const fiber = yield* $(withLatch((release) =>
         pipe(
-          Effect.acquireUseRelease(
-            pipe(
-              release,
-              Effect.zipRight(Effect.unit())
-            ),
-            () => Effect.never(),
-            (_, __) => Ref.set(ref, true)
-          ),
+          Effect.acquireUseRelease({
+            acquire: Effect.asUnit(release),
+            use: () => Effect.never,
+            release: () => Ref.set(ref, true)
+          }),
           Effect.fork
         )
       ))
@@ -139,7 +136,7 @@ describe.concurrent("Fiber", () => {
         return pipe(
           Effect.forkAll(Array.from({ length: n }, () => worker1)),
           Effect.flatMap(Fiber.join),
-          Effect.zipRight(Effect.never())
+          Effect.zipRight(Effect.never)
         )
       }
       const worker = (n: number) => {
@@ -158,7 +155,7 @@ describe.concurrent("Fiber", () => {
     Effect.gen(function*($) {
       const latch = yield* $(Deferred.make<never, void>())
       const child = pipe(
-        Effect.interruptible(Effect.never()),
+        Effect.interruptible(Effect.never),
         Effect.onInterrupt(() => Deferred.succeed(latch, void 0)),
         Effect.fork
       )
@@ -169,10 +166,10 @@ describe.concurrent("Fiber", () => {
   it.effect("dual roots", () =>
     Effect.gen(function*($) {
       const rootContains = (fiber: Fiber.RuntimeFiber<any, any>): Effect.Effect<never, never, boolean> => {
-        return pipe(Fiber.roots(), Effect.map(Chunk.unsafeFromArray), Effect.map(Chunk.elem(fiber)))
+        return pipe(Fiber.roots, Effect.map(Chunk.unsafeFromArray), Effect.map(ReadonlyArray.contains(fiber)))
       }
-      const fiber1 = yield* $(Effect.forkDaemon(Effect.never()))
-      const fiber2 = yield* $(Effect.forkDaemon(Effect.never()))
+      const fiber1 = yield* $(Effect.forkDaemon(Effect.never))
+      const fiber2 = yield* $(Effect.forkDaemon(Effect.never))
       yield* $(
         rootContains(fiber1),
         Effect.flatMap((a) => a ? rootContains(fiber2) : Effect.succeed(false)),
@@ -186,7 +183,7 @@ describe.concurrent("Fiber", () => {
       const deferred1 = yield* $(Deferred.make<never, void>())
       const deferred2 = yield* $(Deferred.make<never, void>())
       const fiber1 = yield* $(
-        pipe(Deferred.succeed(deferred1, void 0), Effect.zipRight(Effect.never()), Effect.forkDaemon)
+        pipe(Deferred.succeed(deferred1, void 0), Effect.zipRight(Effect.never), Effect.forkDaemon)
       )
       const fiber2 = yield* $(
         pipe(
@@ -221,9 +218,9 @@ describe.concurrent("Fiber", () => {
       const result = yield* $(Fiber.joinAll(fibers))
       assert.isUndefined(result)
     }), 10000)
-  it.effect("collectAll - stack safety", () =>
+  it.effect("all - stack safety", () =>
     Effect.gen(function*($) {
-      const result = yield* $(Fiber.join(Fiber.collectAll(fibers)), Effect.asUnit)
+      const result = yield* $(Fiber.join(Fiber.all(fibers)), Effect.asUnit)
       assert.isUndefined(result)
     }), 10000)
 })

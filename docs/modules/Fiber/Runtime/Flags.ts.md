@@ -1,6 +1,6 @@
 ---
 title: Fiber/Runtime/Flags.ts
-nav_order: 16
+nav_order: 17
 parent: Modules
 ---
 
@@ -173,7 +173,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const disableCooperativeYielding: (_: void) => Layer.Layer<never, never, never>
+export declare const disableCooperativeYielding: Layer.Layer<never, never, never>
 ```
 
 Added in v1.0.0
@@ -183,7 +183,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const disableInterruption: (_: void) => Layer.Layer<never, never, never>
+export declare const disableInterruption: Layer.Layer<never, never, never>
 ```
 
 Added in v1.0.0
@@ -193,7 +193,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const disableOpSupervision: (_: void) => Layer.Layer<never, never, never>
+export declare const disableOpSupervision: Layer.Layer<never, never, never>
 ```
 
 Added in v1.0.0
@@ -203,7 +203,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const disableRuntimeMetrics: (_: void) => Layer.Layer<never, never, never>
+export declare const disableRuntimeMetrics: Layer.Layer<never, never, never>
 ```
 
 Added in v1.0.0
@@ -213,7 +213,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const disableWindDown: (_: void) => Layer.Layer<never, never, never>
+export declare const disableWindDown: Layer.Layer<never, never, never>
 ```
 
 Added in v1.0.0
@@ -223,7 +223,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const enableCooperativeYielding: (_: void) => Layer.Layer<never, never, never>
+export declare const enableCooperativeYielding: Layer.Layer<never, never, never>
 ```
 
 Added in v1.0.0
@@ -233,7 +233,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const enableInterruption: (_: void) => Layer.Layer<never, never, never>
+export declare const enableInterruption: Layer.Layer<never, never, never>
 ```
 
 Added in v1.0.0
@@ -243,7 +243,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const enableOpSupervision: (_: void) => Layer.Layer<never, never, never>
+export declare const enableOpSupervision: Layer.Layer<never, never, never>
 ```
 
 Added in v1.0.0
@@ -253,7 +253,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const enableRuntimeMetrics: (_: void) => Layer.Layer<never, never, never>
+export declare const enableRuntimeMetrics: Layer.Layer<never, never, never>
 ```
 
 Added in v1.0.0
@@ -263,7 +263,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const enableWindDown: (_: void) => Layer.Layer<never, never, never>
+export declare const enableWindDown: Layer.Layer<never, never, never>
 ```
 
 Added in v1.0.0
@@ -470,7 +470,7 @@ Constructs a differ that knows how to diff `RuntimeFlags` values.
 **Signature**
 
 ```ts
-export declare const differ: (_: void) => Differ.Differ<RuntimeFlags, RuntimeFlagsPatch.RuntimeFlagsPatch>
+export declare const differ: Differ.Differ<RuntimeFlags, RuntimeFlagsPatch.RuntimeFlagsPatch>
 ```
 
 Added in v1.0.0

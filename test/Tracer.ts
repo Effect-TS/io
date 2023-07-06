@@ -5,12 +5,13 @@ import * as Option from "@effect/data/Option"
 import * as Effect from "@effect/io/Effect"
 import * as Fiber from "@effect/io/Fiber"
 import * as FiberId from "@effect/io/Fiber/Id"
-import * as TestClock from "@effect/io/internal_effect_untraced/testing/testClock"
-import type { NativeSpan } from "@effect/io/internal_effect_untraced/tracer"
+import * as TestClock from "@effect/io/internal/testing/testClock"
+import type { NativeSpan } from "@effect/io/internal/tracer"
 import * as it from "@effect/io/test/utils/extend"
+import type { Span } from "@effect/io/Tracer"
 import { assert, describe } from "vitest"
 
-const currentSpan = Effect.flatMap(Effect.currentSpan(), identity)
+const currentSpan = Effect.flatMap(Effect.currentSpan, identity)
 
 describe("Tracer", () => {
   describe("withSpan", () => {
@@ -33,7 +34,7 @@ describe("Tracer", () => {
         )
 
         assert.deepEqual(span.name, "A")
-        assert.deepEqual(Option.map(span.parent, (span) => span.name), Option.some("B"))
+        assert.deepEqual(Option.map(span.parent, (span) => (span as Span).name), Option.some("B"))
       }))
 
     it.effect("parent when root is set", () =>
@@ -52,7 +53,6 @@ describe("Tracer", () => {
           Effect.withSpan("A", {
             parent: {
               _tag: "ExternalSpan",
-              name: "external",
               spanId: "000",
               traceId: "111",
               context: Context.empty()
@@ -100,7 +100,7 @@ describe("Tracer", () => {
 
         const [span, fiberId] = yield* $(
           Effect.log("event"),
-          Effect.zipRight(Effect.all(currentSpan, Effect.fiberId())),
+          Effect.zipRight(Effect.all(currentSpan, Effect.fiberId)),
           Effect.withSpan("A")
         )
 

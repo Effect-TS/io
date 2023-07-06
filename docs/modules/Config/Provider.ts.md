@@ -1,6 +1,6 @@
 ---
 title: Config/Provider.ts
-nav_order: 6
+nav_order: 7
 parent: Modules
 ---
 
@@ -128,8 +128,8 @@ specified function within the specified path.
 
 ```ts
 export declare const within: {
-  (path: Array<string>, f: (self: ConfigProvider) => ConfigProvider): (self: ConfigProvider) => ConfigProvider
-  (self: ConfigProvider, path: Array<string>, f: (self: ConfigProvider) => ConfigProvider): ConfigProvider
+  (path: ReadonlyArray<string>, f: (self: ConfigProvider) => ConfigProvider): (self: ConfigProvider) => ConfigProvider
+  (self: ConfigProvider, path: ReadonlyArray<string>, f: (self: ConfigProvider) => ConfigProvider): ConfigProvider
 }
 ```
 
@@ -186,10 +186,10 @@ Creates a new config provider.
 **Signature**
 
 ```ts
-export declare const make: (
-  load: <A>(config: Config.Config<A>) => Effect.Effect<never, ConfigError.ConfigError, A>,
-  flattened: ConfigProvider.Flat
-) => ConfigProvider
+export declare const make: (options: {
+  readonly load: <A>(config: Config.Config<A>) => Effect.Effect<never, ConfigError.ConfigError, A>
+  readonly flattened: ConfigProvider.Flat
+}) => ConfigProvider
 ```
 
 Added in v1.0.0
@@ -201,14 +201,17 @@ Creates a new flat config provider.
 **Signature**
 
 ```ts
-export declare const makeFlat: (
-  load: <A>(
-    path: Array<string>,
-    config: Config.Config.Primitive<A>
-  ) => Effect.Effect<never, ConfigError.ConfigError, A[]>,
-  enumerateChildren: (path: Array<string>) => Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>>,
-  patch: PathPatch.PathPatch
-) => ConfigProvider.Flat
+export declare const makeFlat: (options: {
+  readonly load: <A>(
+    path: ReadonlyArray<string>,
+    config: Config.Config.Primitive<A>,
+    split: boolean
+  ) => Effect.Effect<never, ConfigError.ConfigError, readonly A[]>
+  readonly enumerateChildren: (
+    path: ReadonlyArray<string>
+  ) => Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>>
+  readonly patch: PathPatch.PathPatch
+}) => ConfigProvider.Flat
 ```
 
 Added in v1.0.0

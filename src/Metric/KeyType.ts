@@ -4,7 +4,7 @@
 import type * as Chunk from "@effect/data/Chunk"
 import type * as Duration from "@effect/data/Duration"
 import type * as Equal from "@effect/data/Equal"
-import * as internal from "@effect/io/internal_effect_untraced/metric/keyType"
+import * as internal from "@effect/io/internal/metric/keyType"
 import type * as MetricBoundaries from "@effect/io/Metric/Boundaries"
 import type * as MetricState from "@effect/io/Metric/State"
 
@@ -208,10 +208,12 @@ export const histogram: (boundaries: MetricBoundaries.MetricBoundaries) => Metri
  * @category constructors
  */
 export const summary: (
-  maxAge: Duration.Duration,
-  maxSize: number,
-  error: number,
-  quantiles: Chunk.Chunk<number>
+  options: {
+    readonly maxAge: Duration.DurationInput
+    readonly maxSize: number
+    readonly error: number
+    readonly quantiles: Chunk.Chunk<number>
+  }
 ) => MetricKeyType.Summary = internal.summary
 
 /**

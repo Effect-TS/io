@@ -1,6 +1,6 @@
 ---
 title: Pool.ts
-nav_order: 38
+nav_order: 39
 parent: Modules
 ---
 
@@ -60,10 +60,10 @@ will be released in some unspecified order.
 **Signature**
 
 ```ts
-export declare const make: <R, E, A>(
-  get: Effect.Effect<R, E, A>,
-  size: number
-) => Effect.Effect<Scope.Scope | R, never, Pool<E, A>>
+export declare const make: <R, E, A>(options: {
+  readonly acquire: Effect.Effect<R, E, A>
+  readonly size: number
+}) => Effect.Effect<Scope.Scope | R, never, Pool<E, A>>
 ```
 
 Added in v1.0.0
@@ -102,12 +102,12 @@ Effect.scoped(
 **Signature**
 
 ```ts
-export declare const makeWithTTL: <R, E, A>(
-  get: Effect.Effect<R, E, A>,
-  min: number,
-  max: number,
-  timeToLive: Duration.Duration
-) => Effect.Effect<Scope.Scope | R, never, Pool<E, A>>
+export declare const makeWithTTL: <R, E, A>(options: {
+  readonly acquire: Effect.Effect<R, E, A>
+  readonly min: number
+  readonly max: number
+  readonly timeToLive: Duration.DurationInput
+}) => Effect.Effect<Scope.Scope | R, never, Pool<E, A>>
 ```
 
 Added in v1.0.0

@@ -8,13 +8,13 @@ import { assert, describe } from "vitest"
 describe.concurrent("Effect", () => {
   it.effect("non-memoized returns new instances on repeated calls", () =>
     it.flakyTest(Effect.gen(function*($) {
-      const random = Random.nextInt()
+      const random = Random.nextInt
       const [first, second] = yield* $(random, Effect.zip(random))
       assert.notStrictEqual(first, second)
     })))
   it.effect("memoized returns the same instance on repeated calls", () =>
     it.flakyTest(Effect.gen(function*($) {
-      const memo = Effect.cached(Random.nextInt())
+      const memo = Effect.cached(Random.nextInt)
       const [first, second] = yield* $(memo, Effect.flatMap((effect) => pipe(effect, Effect.zip(effect))))
       assert.strictEqual(first, second)
     })))
@@ -34,7 +34,14 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(0))
       const effect: Effect.Effect<never, never, void> = yield* $(Ref.update(ref, (n) => n + 1), Effect.once)
-      yield* $(effect, Effect.replicate(100), Effect.allParDiscard)
+      yield* $(
+        effect,
+        Effect.replicate(100),
+        Effect.all({
+          concurrency: "unbounded",
+          discard: true
+        })
+      )
       const result = yield* $(Ref.get(ref))
       assert.strictEqual(result, 1)
     }))

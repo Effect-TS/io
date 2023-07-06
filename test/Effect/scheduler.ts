@@ -42,28 +42,28 @@ describe.concurrent("Effect", () => {
       )
       assert.deepEqual(ps000, [0])
       yield* $(
-        Effect.yieldNow(50),
+        Effect.yieldNow({ priority: 50 }),
         Effect.withScheduler(scheduler)
       )
       assert.deepEqual(ps000, [0, 0])
       yield* $(
-        Effect.yieldNow(100),
+        Effect.yieldNow({ priority: 100 }),
         Effect.withScheduler(scheduler)
       )
       assert.deepEqual(ps100, [100])
       yield* $(
-        Effect.yieldNow(150),
+        Effect.yieldNow({ priority: 150 }),
         Effect.withScheduler(scheduler)
       )
       assert.deepEqual(ps100, [100, 100])
       yield* $(
-        Effect.yieldNow(200),
+        Effect.yieldNow({ priority: 200 }),
         Effect.withScheduler(scheduler)
       )
       assert.deepEqual(ps100, [100, 100])
       assert.deepEqual(ps200, [200])
       yield* $(
-        Effect.yieldNow(300),
+        Effect.yieldNow({ priority: 300 }),
         Effect.withScheduler(scheduler)
       )
       assert.deepEqual(ps100, [100, 100])

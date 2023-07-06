@@ -1,7 +1,7 @@
 /**
  * @since 1.0.0
  */
-import * as internal from "@effect/io/internal_effect_untraced/configProvider/pathPatch"
+import * as internal from "@effect/io/internal/configProvider/pathPatch"
 
 /**
  * Represents a description of how to modify the path to a configuration

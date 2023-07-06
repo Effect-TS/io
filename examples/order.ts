@@ -27,10 +27,10 @@ export const Service1Tag = Context.Tag<Service1>()
 export const makeLayer1 = (ref: Ref.Ref<Chunk.Chunk<string>>): Layer.Layer<never, never, Service1> => {
   return Layer.scoped(
     Service1Tag,
-    Effect.acquireRelease(
-      pipe(Ref.update(ref, Chunk.append(acquire1)), Effect.as(new Service1())),
-      () => Ref.update(ref, Chunk.append(release1))
-    )
+    Effect.acquireRelease({
+      acquire: pipe(Ref.update(ref, Chunk.append(acquire1)), Effect.as(new Service1())),
+      release: () => Ref.update(ref, Chunk.append(release1))
+    })
   )
 }
 
@@ -45,10 +45,10 @@ export const Service2Tag = Context.Tag<Service2>()
 export const makeLayer2 = (ref: Ref.Ref<Chunk.Chunk<string>>): Layer.Layer<never, never, Service2> => {
   return Layer.scoped(
     Service2Tag,
-    Effect.acquireRelease(
-      pipe(Ref.update(ref, Chunk.append(acquire2)), Effect.as(new Service2())),
-      () => Ref.update(ref, Chunk.append(release2))
-    )
+    Effect.acquireRelease({
+      acquire: pipe(Ref.update(ref, Chunk.append(acquire2)), Effect.as(new Service2())),
+      release: () => Ref.update(ref, Chunk.append(release2))
+    })
   )
 }
 
@@ -63,10 +63,10 @@ export const Service3Tag = Context.Tag<Service3>()
 export const makeLayer3 = (ref: Ref.Ref<Chunk.Chunk<string>>): Layer.Layer<never, never, Service3> => {
   return Layer.scoped(
     Service3Tag,
-    Effect.acquireRelease(
-      pipe(Ref.update(ref, Chunk.append(acquire3)), Effect.as(new Service3())),
-      () => Ref.update(ref, Chunk.append(release3))
-    )
+    Effect.acquireRelease({
+      acquire: pipe(Ref.update(ref, Chunk.append(acquire3)), Effect.as(new Service3())),
+      release: () => Ref.update(ref, Chunk.append(release3))
+    })
   )
 }
 

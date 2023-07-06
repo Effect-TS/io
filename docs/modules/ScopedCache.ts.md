@@ -1,6 +1,6 @@
 ---
 title: ScopedCache.ts
-nav_order: 55
+nav_order: 56
 parent: Modules
 ---
 
@@ -34,11 +34,11 @@ lookup function.
 **Signature**
 
 ```ts
-export declare const make: <Key, Environment, Error, Value>(
-  capacity: number,
-  timeToLive: Duration.Duration,
-  lookup: Lookup<Key, Environment, Error, Value>
-) => Effect.Effect<Scope.Scope | Environment, never, ScopedCache<Key, Error, Value>>
+export declare const make: <Key, Environment, Error, Value>(options: {
+  readonly lookup: Lookup<Key, Environment, Error, Value>
+  readonly capacity: number
+  readonly timeToLive: Duration.DurationInput
+}) => Effect.Effect<Scope.Scope | Environment, never, ScopedCache<Key, Error, Value>>
 ```
 
 Added in v1.0.0
@@ -52,11 +52,11 @@ returned by the lookup function.
 **Signature**
 
 ```ts
-export declare const makeWith: <Key, Environment, Error, Value>(
-  capacity: number,
-  lookup: Lookup<Key, Environment, Error, Value>,
-  timeToLive: (exit: Exit.Exit<Error, Value>) => Duration.Duration
-) => Effect.Effect<Scope.Scope | Environment, never, ScopedCache<Key, Error, Value>>
+export declare const makeWith: <Key, Environment, Error, Value>(options: {
+  readonly capacity: number
+  readonly lookup: Lookup<Key, Environment, Error, Value>
+  readonly timeToLive: (exit: Exit.Exit<Error, Value>) => Duration.DurationInput
+}) => Effect.Effect<Scope.Scope | Environment, never, ScopedCache<Key, Error, Value>>
 ```
 
 Added in v1.0.0

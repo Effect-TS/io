@@ -1,6 +1,6 @@
 ---
 title: Reloadable.ts
-nav_order: 43
+nav_order: 44
 parent: Modules
 ---
 
@@ -43,8 +43,10 @@ provided schedule.
 ```ts
 export declare const auto: <Out extends Context.Tag<any, any>, In, E, R>(
   tag: Out,
-  layer: Layer.Layer<In, E, Context.Tag.Identifier<Out>>,
-  policy: Schedule.Schedule<R, unknown, unknown>
+  options: {
+    readonly layer: Layer.Layer<In, E, Context.Tag.Identifier<Out>>
+    readonly schedule: Schedule.Schedule<R, unknown, unknown>
+  }
 ) => Layer.Layer<In | R, E, Reloadable<Context.Tag.Identifier<Out>>>
 ```
 
@@ -61,8 +63,10 @@ schedule, which is extracted from the input to the layer.
 ```ts
 export declare const autoFromConfig: <Out extends Context.Tag<any, any>, In, E, R>(
   tag: Out,
-  layer: Layer.Layer<In, E, Context.Tag.Identifier<Out>>,
-  scheduleFromConfig: (context: Context.Context<In>) => Schedule.Schedule<R, unknown, unknown>
+  options: {
+    readonly layer: Layer.Layer<In, E, Context.Tag.Identifier<Out>>
+    readonly scheduleFromConfig: (context: Context.Context<In>) => Schedule.Schedule<R, unknown, unknown>
+  }
 ) => Layer.Layer<In | R, E, Reloadable<Context.Tag.Identifier<Out>>>
 ```
 
@@ -78,7 +82,7 @@ of a static service.
 ```ts
 export declare const manual: <Out extends Context.Tag<any, any>, In, E>(
   tag: Out,
-  layer: Layer.Layer<In, E, Context.Tag.Identifier<Out>>
+  options: { readonly layer: Layer.Layer<In, E, Context.Tag.Identifier<Out>> }
 ) => Layer.Layer<In, E, Reloadable<Context.Tag.Identifier<Out>>>
 ```
 

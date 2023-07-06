@@ -4,7 +4,7 @@
 import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRef from "@effect/io/FiberRef"
 import type * as FiberRefs from "@effect/io/FiberRefs"
-import * as internal from "@effect/io/internal_effect_untraced/fiberRefs/patch"
+import * as internal from "@effect/io/internal/fiberRefs/patch"
 
 /**
  * A `FiberRefsPatch` captures the changes in `FiberRef` values made by a single
@@ -68,7 +68,7 @@ export interface AndThen {
  * @since 1.0.0
  * @category constructors
  */
-export const empty: (_: void) => FiberRefsPatch = internal.empty
+export const empty: FiberRefsPatch = internal.empty
 
 /**
  * Constructs a patch that describes the changes between the specified

@@ -2,7 +2,7 @@ import * as Duration from "@effect/data/Duration"
 import { pipe } from "@effect/data/Function"
 import * as Clock from "@effect/io/Clock"
 import * as Effect from "@effect/io/Effect"
-import * as TestClock from "@effect/io/internal_effect_untraced/testing/testClock"
+import * as TestClock from "@effect/io/internal/testing/testClock"
 import * as Ref from "@effect/io/Ref"
 import * as Schedule from "@effect/io/Schedule"
 import * as it from "@effect/io/test/utils/extend"
@@ -13,7 +13,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make<ReadonlyArray<Duration.Duration>>([]))
       const effect = pipe(
-        Clock.currentTimeMillis(),
+        Clock.currentTimeMillis,
         Effect.flatMap((duration) => Ref.update(ref, (array) => [...array, Duration.millis(duration)]))
       )
       const schedule = pipe(Schedule.spaced(Duration.seconds(1)), Schedule.intersect(Schedule.recurs(5)))
