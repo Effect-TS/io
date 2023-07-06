@@ -20,7 +20,45 @@ export interface Scheduler {
 
 /**
  * @since 1.0.0
- * @category schedulers
+ * @category utils
+ */
+export class PriorityBuckets<T = Task> {
+  /**
+   * @since 1.0.0
+   */
+  public buckets: Array<[number, Array<T>]> = []
+  /**
+   * @since 1.0.0
+   */
+  scheduleTask(task: T, priority: number) {
+    let bucket: [number, Array<T>] | undefined = undefined
+    let index: number
+    for (index = 0; index < this.buckets.length; index++) {
+      if (this.buckets[index][0] <= priority) {
+        bucket = this.buckets[index]
+      } else {
+        break
+      }
+    }
+    if (bucket) {
+      bucket[1].push(task)
+    } else {
+      const newBuckets: Array<[number, Array<T>]> = []
+      for (let i = 0; i < index; i++) {
+        newBuckets.push(this.buckets[i])
+      }
+      newBuckets.push([priority, [task]])
+      for (let i = index; i < this.buckets.length; i++) {
+        newBuckets.push(this.buckets[i])
+      }
+      this.buckets = newBuckets
+    }
+  }
+}
+
+/**
+ * @since 1.0.0
+ * @category constructors
  */
 export class MixedScheduler implements Scheduler {
   /**
@@ -30,7 +68,7 @@ export class MixedScheduler implements Scheduler {
   /**
    * @since 1.0.0
    */
-  tasks: Array<Array<Task>> = []
+  tasks = new PriorityBuckets()
 
   constructor(
     /**
@@ -43,14 +81,14 @@ export class MixedScheduler implements Scheduler {
    * @since 1.0.0
    */
   private starveInternal(depth: number) {
-    const tasks = this.tasks
-    this.tasks = []
-    for (const toRun of tasks) {
+    const tasks = this.tasks.buckets
+    this.tasks.buckets = []
+    for (const [_, toRun] of tasks) {
       for (let i = 0; i < toRun.length; i++) {
         toRun[i]()
       }
     }
-    if (this.tasks.length === 0) {
+    if (this.tasks.buckets.length === 0) {
       this.running = false
     } else {
       this.starve(depth)
@@ -72,10 +110,7 @@ export class MixedScheduler implements Scheduler {
    * @since 1.0.0
    */
   scheduleTask(task: Task, priority: number) {
-    if (!this.tasks[priority]) {
-      this.tasks[priority] = []
-    }
-    this.tasks[priority].push(task)
+    this.tasks.scheduleTask(task, priority)
     if (!this.running) {
       this.running = true
       this.starve()
@@ -94,13 +129,13 @@ export const defaultScheduler: Scheduler = globalValue(
 
 /**
  * @since 1.0.0
- * @category schedulers
+ * @category constructors
  */
 export class SyncScheduler implements Scheduler {
   /**
    * @since 1.0.0
    */
-  tasks: Array<Array<Task>> = []
+  tasks = new PriorityBuckets()
 
   /**
    * @since 1.0.0
@@ -114,10 +149,7 @@ export class SyncScheduler implements Scheduler {
     if (this.deferred) {
       defaultScheduler.scheduleTask(task, priority)
     } else {
-      if (!this.tasks[priority]) {
-        this.tasks[priority] = []
-      }
-      this.tasks[priority].push(task)
+      this.tasks.scheduleTask(task, priority)
     }
   }
 
@@ -125,10 +157,10 @@ export class SyncScheduler implements Scheduler {
    * @since 1.0.0
    */
   flush() {
-    while (this.tasks.length > 0) {
-      const tasks = this.tasks
-      this.tasks = []
-      for (const toRun of tasks) {
+    while (this.tasks.buckets.length > 0) {
+      const tasks = this.tasks.buckets
+      this.tasks.buckets = []
+      for (const [_, toRun] of tasks) {
         for (let i = 0; i < toRun.length; i++) {
           toRun[i]()
         }
@@ -140,13 +172,13 @@ export class SyncScheduler implements Scheduler {
 
 /**
  * @since 1.0.0
- * @category schedulers
+ * @category constructors
  */
 export class ControlledScheduler implements Scheduler {
   /**
    * @since 1.0.0
    */
-  tasks: Array<Array<Task>> = []
+  tasks = new PriorityBuckets()
 
   /**
    * @since 1.0.0
@@ -160,10 +192,7 @@ export class ControlledScheduler implements Scheduler {
     if (this.deferred) {
       defaultScheduler.scheduleTask(task, priority)
     } else {
-      if (!this.tasks[priority]) {
-        this.tasks[priority] = []
-      }
-      this.tasks[priority].push(task)
+      this.tasks.scheduleTask(task, priority)
     }
   }
 
@@ -171,9 +200,9 @@ export class ControlledScheduler implements Scheduler {
    * @since 1.0.0
    */
   step() {
-    const tasks = this.tasks
-    this.tasks = []
-    for (const toRun of tasks) {
+    const tasks = this.tasks.buckets
+    this.tasks.buckets = []
+    for (const [_, toRun] of tasks) {
       for (let i = 0; i < toRun.length; i++) {
         toRun[i]()
       }
@@ -192,3 +221,30 @@ export const timeBased: Scheduler = {
     }, 0)
   }
 }
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const matrix = (...record: Array<[number, Scheduler]>): Scheduler => {
+  const index = record.sort(([p0], [p1]) => p0 < p1 ? -1 : p0 > p1 ? 1 : 0)
+  return {
+    scheduleTask(task, priority) {
+      let scheduler: Scheduler | undefined = undefined
+      for (const i of index) {
+        if (priority >= i[0]) {
+          scheduler = i[1]
+        } else {
+          return (scheduler ?? defaultScheduler).scheduleTask(task, priority)
+        }
+      }
+      return (scheduler ?? defaultScheduler).scheduleTask(task, priority)
+    }
+  }
+}
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const make = (scheduleTask: Scheduler["scheduleTask"]): Scheduler => ({ scheduleTask })

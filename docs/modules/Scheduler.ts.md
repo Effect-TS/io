@@ -12,10 +12,7 @@ Added in v1.0.0
 
 <h2 class="text-delta">Table of contents</h2>
 
-- [models](#models)
-  - [Scheduler (interface)](#scheduler-interface)
-  - [Task (type alias)](#task-type-alias)
-- [schedulers](#schedulers)
+- [constructors](#constructors)
   - [ControlledScheduler (class)](#controlledscheduler-class)
     - [scheduleTask (method)](#scheduletask-method)
     - [step (method)](#step-method)
@@ -32,36 +29,22 @@ Added in v1.0.0
     - [flush (method)](#flush-method)
     - [tasks (property)](#tasks-property-2)
     - [deferred (property)](#deferred-property-1)
+  - [make](#make)
+  - [matrix](#matrix)
+- [models](#models)
+  - [Scheduler (interface)](#scheduler-interface)
+  - [Task (type alias)](#task-type-alias)
+- [schedulers](#schedulers)
   - [defaultScheduler](#defaultscheduler)
   - [timeBased](#timebased)
+- [utils](#utils)
+  - [PriorityBuckets (class)](#prioritybuckets-class)
+    - [scheduleTask (method)](#scheduletask-method-3)
+    - [buckets (property)](#buckets-property)
 
 ---
 
-# models
-
-## Scheduler (interface)
-
-**Signature**
-
-```ts
-export interface Scheduler {
-  scheduleTask(task: Task, priority: number): void
-}
-```
-
-Added in v1.0.0
-
-## Task (type alias)
-
-**Signature**
-
-```ts
-export type Task = () => void
-```
-
-Added in v1.0.0
-
-# schedulers
+# constructors
 
 ## ControlledScheduler (class)
 
@@ -98,7 +81,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-tasks: Task[][]
+tasks: PriorityBuckets<Task>
 ```
 
 Added in v1.0.0
@@ -175,7 +158,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-tasks: Task[][]
+tasks: PriorityBuckets<Task>
 ```
 
 Added in v1.0.0
@@ -215,7 +198,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-tasks: Task[][]
+tasks: PriorityBuckets<Task>
 ```
 
 Added in v1.0.0
@@ -229,6 +212,52 @@ deferred: boolean
 ```
 
 Added in v1.0.0
+
+## make
+
+**Signature**
+
+```ts
+export declare const make: (scheduleTask: Scheduler['scheduleTask']) => Scheduler
+```
+
+Added in v1.0.0
+
+## matrix
+
+**Signature**
+
+```ts
+export declare const matrix: (...record: Array<[number, Scheduler]>) => Scheduler
+```
+
+Added in v1.0.0
+
+# models
+
+## Scheduler (interface)
+
+**Signature**
+
+```ts
+export interface Scheduler {
+  scheduleTask(task: Task, priority: number): void
+}
+```
+
+Added in v1.0.0
+
+## Task (type alias)
+
+**Signature**
+
+```ts
+export type Task = () => void
+```
+
+Added in v1.0.0
+
+# schedulers
 
 ## defaultScheduler
 
@@ -246,6 +275,38 @@ Added in v1.0.0
 
 ```ts
 export declare const timeBased: Scheduler
+```
+
+Added in v1.0.0
+
+# utils
+
+## PriorityBuckets (class)
+
+**Signature**
+
+```ts
+export declare class PriorityBuckets<T>
+```
+
+Added in v1.0.0
+
+### scheduleTask (method)
+
+**Signature**
+
+```ts
+scheduleTask(task: T, priority: number)
+```
+
+Added in v1.0.0
+
+### buckets (property)
+
+**Signature**
+
+```ts
+buckets: [number, T[]][]
 ```
 
 Added in v1.0.0
