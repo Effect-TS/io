@@ -1521,6 +1521,59 @@ export const catchAllDefect: {
 } = effect.catchAllDefect
 
 /**
+ * Recovers from some or all of the error cases.
+ *
+ * @since 1.0.0
+ * @category error handling
+ */
+export const catchSome: {
+  <E, R2, E2, A2>(
+    pf: (e: E) => Option.Option<Effect<R2, E2, A2>>
+  ): <R, A>(self: Effect<R, E, A>) => Effect<R2 | R, E | E2, A2 | A>
+  <R, A, E, R2, E2, A2>(
+    self: Effect<R, E, A>,
+    pf: (e: E) => Option.Option<Effect<R2, E2, A2>>
+  ): Effect<R | R2, E | E2, A | A2>
+} = core.catchSome
+
+/**
+ * Recovers from some or all of the error cases with provided cause.
+ *
+ * @since 1.0.0
+ * @category error handling
+ */
+export const catchSomeCause: {
+  <E, R2, E2, A2>(
+    f: (cause: Cause.Cause<E>) => Option.Option<Effect<R2, E2, A2>>
+  ): <R, A>(self: Effect<R, E, A>) => Effect<R2 | R, E | E2, A2 | A>
+  <R, E, A, R2, E2, A2>(
+    self: Effect<R, E, A>,
+    f: (cause: Cause.Cause<E>) => Option.Option<Effect<R2, E2, A2>>
+  ): Effect<R | R2, E | E2, A | A2>
+} = effect.catchSomeCause
+
+/**
+ * Recovers from some or all of the defects with provided partial function.
+ *
+ * **WARNING**: There is no sensible way to recover from defects. This
+ * method should be used only at the boundary between Effect and an external
+ * system, to transmit information on a defect for diagnostic or explanatory
+ * purposes.
+ *
+ * @since 1.0.0
+ * @category error handling
+ */
+export const catchSomeDefect: {
+  <R2, E2, A2>(
+    pf: (defect: unknown) => Option.Option<Effect<R2, E2, A2>>
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2 | A>
+  <R, E, A, R2, E2, A2>(
+    self: Effect<R, E, A>,
+    pf: (defect: unknown) => Option.Option<Effect<R2, E2, A2>>
+  ): Effect<R | R2, E | E2, A | A2>
+} = effect.catchSomeDefect
+
+/**
  * Recovers from the specified tagged error.
  *
  * @since 1.0.0

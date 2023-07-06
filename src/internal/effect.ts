@@ -181,6 +181,66 @@ export const catchAllDefect = dual<
   ))
 
 /* @internal */
+export const catchSomeCause = dual<
+  <E, R2, E2, A2>(
+    f: (cause: Cause.Cause<E>) => Option.Option<Effect.Effect<R2, E2, A2>>
+  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A | A2>,
+  <R, E, A, R2, E2, A2>(
+    self: Effect.Effect<R, E, A>,
+    f: (cause: Cause.Cause<E>) => Option.Option<Effect.Effect<R2, E2, A2>>
+  ) => Effect.Effect<R | R2, E | E2, A | A2>
+>(
+  2,
+  <R, E, A, R2, E2, A2>(
+    self: Effect.Effect<R, E, A>,
+    f: (cause: Cause.Cause<E>) => Option.Option<Effect.Effect<R2, E2, A2>>
+  ) =>
+    core.matchCauseEffect(self, {
+      onFailure: (cause): Effect.Effect<R2, E | E2, A2> => {
+        const option = f(cause)
+        switch (option._tag) {
+          case "None": {
+            return core.failCause(cause)
+          }
+          case "Some": {
+            return option.value
+          }
+        }
+      },
+      onSuccess: core.succeed
+    })
+)
+
+/* @internal */
+export const catchSomeDefect = dual<
+  <R2, E2, A2>(
+    pf: (defect: unknown) => Option.Option<Effect.Effect<R2, E2, A2>>
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A | A2>,
+  <R, E, A, R2, E2, A2>(
+    self: Effect.Effect<R, E, A>,
+    pf: (defect: unknown) => Option.Option<Effect.Effect<R2, E2, A2>>
+  ) => Effect.Effect<R | R2, E | E2, A | A2>
+>(
+  2,
+  <R, E, A, R2, E2, A2>(self: Effect.Effect<R, E, A>, pf: (_: unknown) => Option.Option<Effect.Effect<R2, E2, A2>>) =>
+    core.catchAllCause(
+      self,
+      core.unified((cause) => {
+        const option = internalCause.find(cause, (_) => internalCause.isDieType(_) ? Option.some(_) : Option.none())
+        switch (option._tag) {
+          case "None": {
+            return core.failCause(cause)
+          }
+          case "Some": {
+            const optionEffect = pf(option.value.defect)
+            return optionEffect._tag === "Some" ? optionEffect.value : core.failCause(cause)
+          }
+        }
+      })
+    )
+)
+
+/* @internal */
 export const catchTag = dual<
   <K extends E["_tag"] & string, E extends { _tag: string }, R1, E1, A1>(
     k: K,

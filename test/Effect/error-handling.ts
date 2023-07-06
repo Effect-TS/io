@@ -170,6 +170,60 @@ describe.concurrent("Effect", () => {
       )
       assert.deepStrictEqual(result, error)
     }))
+  it.effect("catchSomeDefect - recovers from some defects", () =>
+    Effect.gen(function*($) {
+      const message = "division by zero"
+      const result = yield* $(
+        Effect.die(Cause.IllegalArgumentException(message)),
+        Effect.catchSomeDefect((e) =>
+          Cause.isIllegalArgumentException(e)
+            ? Option.some(Effect.succeed(e.message))
+            : Option.none()
+        )
+      )
+      assert.strictEqual(result, message)
+    }))
+  it.effect("catchSomeDefect - leaves the rest", () =>
+    Effect.gen(function*($) {
+      const error = Cause.IllegalArgumentException("division by zero")
+      const result = yield* $(
+        Effect.die(error),
+        Effect.catchSomeDefect((e) =>
+          Cause.isRuntimeException(e) ?
+            Option.some(Effect.succeed(e.message)) :
+            Option.none()
+        ),
+        Effect.exit
+      )
+      assert.deepStrictEqual(Exit.unannotate(result), Exit.die(error))
+    }))
+  it.effect("catchSomeDefect - leaves errors", () =>
+    Effect.gen(function*($) {
+      const error = Cause.IllegalArgumentException("division by zero")
+      const result = yield* $(
+        Effect.fail(error),
+        Effect.catchSomeDefect((e) =>
+          Cause.isIllegalArgumentException(e)
+            ? Option.some(Effect.succeed(e.message))
+            : Option.none()
+        ),
+        Effect.exit
+      )
+      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(error))
+    }))
+  it.effect("catchSomeDefect - leaves values", () =>
+    Effect.gen(function*($) {
+      const error = Cause.IllegalArgumentException("division by zero")
+      const result = yield* $(
+        Effect.succeed(error),
+        Effect.catchSomeDefect((e) =>
+          Cause.isIllegalArgumentException(e)
+            ? Option.some(Effect.succeed(e.message))
+            : Option.none()
+        )
+      )
+      assert.deepStrictEqual(result, error)
+    }))
   it.effect("catch - recovers from one of several tagged errors", () =>
     Effect.gen(function*($) {
       interface ErrorA {

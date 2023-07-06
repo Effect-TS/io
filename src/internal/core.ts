@@ -472,6 +472,31 @@ export const unified = <Args extends ReadonlyArray<any>, Ret extends Effect.Effe
 ) => (...args: Args): Effect.Effect.Unify<Ret> => f(...args)
 
 /* @internal */
+export const catchSome = dual<
+  <E, R2, E2, A2>(
+    pf: (e: E) => Option.Option<Effect.Effect<R2, E2, A2>>
+  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R2 | R, E | E2, A2 | A>,
+  <R, A, E, R2, E2, A2>(
+    self: Effect.Effect<R, E, A>,
+    pf: (e: E) => Option.Option<Effect.Effect<R2, E2, A2>>
+  ) => Effect.Effect<R2 | R, E | E2, A2 | A>
+>(2, (self, pf) =>
+  matchCauseEffect(self, {
+    onFailure: unified((cause) => {
+      const either = internalCause.failureOrCause(cause)
+      switch (either._tag) {
+        case "Left": {
+          return pipe(pf(either.left), Option.getOrElse(() => failCause(cause)))
+        }
+        case "Right": {
+          return failCause(either.right)
+        }
+      }
+    }),
+    onSuccess: succeed
+  }))
+
+/* @internal */
 export const checkInterruptible = <R, E, A>(
   f: (isInterruptible: boolean) => Effect.Effect<R, E, A>
 ): Effect.Effect<R, E, A> =>
