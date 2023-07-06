@@ -75,7 +75,7 @@ class Semaphore {
         this.taken -= n
         fiber.getFiberRef(core.currentScheduler).scheduleTask(() => {
           this.waiters.forEach((wake) => wake())
-        })
+        }, fiber.getFiberRef(core.currentSchedulingPriority))
         return core.unit()
       }).traced(trace)
     )

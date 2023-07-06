@@ -598,7 +598,7 @@ export const unsafeSnapshot: (_: void) => HashSet.HashSet<MetricPair.MetricPair.
  * @since 1.0.0
  * @category metrics
  */
-export const fiberStarted: Metric.Counter<number> = fiberRuntime.fibersStarted
+export const fiberStarted: Metric.Counter<number> = fiberRuntime.fiberStarted
 
 /**
  * @since 1.0.0
@@ -618,3 +618,9 @@ export const fiberFailures: Metric.Counter<number> = fiberRuntime.fiberFailures
  */
 export const fiberLifetimes: Metric<MetricKeyType.MetricKeyType.Histogram, number, MetricState.MetricState.Histogram> =
   fiberRuntime.fiberLifetimes
+
+/**
+ * @since 1.0.0
+ * @category metrics
+ */
+export const fiberActive: Metric.Counter<number> = fiberRuntime.fiberActive

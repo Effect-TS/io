@@ -49,6 +49,7 @@ Added in v1.0.0
   - [map](#map)
   - [mapType](#maptype)
 - [metrics](#metrics)
+  - [fiberActive](#fiberactive)
   - [fiberFailures](#fiberfailures)
   - [fiberLifetimes](#fiberlifetimes)
   - [fiberStarted](#fiberstarted)
@@ -581,6 +582,16 @@ export declare const mapType: {
 Added in v1.0.0
 
 # metrics
+
+## fiberActive
+
+**Signature**
+
+```ts
+export declare const fiberActive: Metric.Counter<number>
+```
+
+Added in v1.0.0
 
 ## fiberFailures
 

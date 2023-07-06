@@ -55,6 +55,7 @@ Added in v1.0.0
   - [takeBetween](#takebetween)
   - [takeN](#taken)
   - [takeUpTo](#takeupto)
+  - [unsafeOffer](#unsafeoffer)
 
 ---
 
@@ -204,9 +205,14 @@ The base interface that all `Queue`s must implement.
 ```ts
 export interface BaseQueue {
   /**
-   *  Returns the number of elements the queue can hold.
+   * Returns the number of elements the queue can hold.
    */
   capacity(): number
+
+  /**
+   * Returns false if shutdown has been called.
+   */
+  isActive(): boolean
 
   /**
    * Retrieves the size of the queue, which is equal to the number of elements
@@ -292,6 +298,11 @@ export interface Enqueue<A> extends Queue.EnqueueVariance<A>, BaseQueue {
    * Places one value in the queue.
    */
   offer(value: A): Effect.Effect<never, never, boolean>
+
+  /**
+   * Places one value in the queue when possible without needing the fiber runtime.
+   */
+  unsafeOffer(value: A): boolean
 
   /**
    * For Bounded Queue: uses the `BackPressure` Strategy, places the values in
@@ -664,6 +675,21 @@ Takes up to max number of values from the queue.
 export declare const takeUpTo: {
   (max: number): <A>(self: Dequeue<A>) => Effect.Effect<never, never, Chunk.Chunk<A>>
   <A>(self: Dequeue<A>, max: number): Effect.Effect<never, never, Chunk.Chunk<A>>
+}
+```
+
+Added in v1.0.0
+
+## unsafeOffer
+
+Places one value in the queue.
+
+**Signature**
+
+```ts
+export declare const unsafeOffer: {
+  <A>(value: A): (self: Enqueue<A>) => boolean
+  <A>(self: Enqueue<A>, value: A): boolean
 }
 ```
 

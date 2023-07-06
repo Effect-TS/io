@@ -60,7 +60,9 @@ import type * as Supervisor from "@effect/io/Supervisor"
 import type { Tracer } from "@effect/io/Tracer"
 
 /** @internal */
-export const fibersStarted = metric.counter("effect_fiber_started")
+export const fiberStarted = metric.counter("effect_fiber_started")
+/** @internal */
+export const fiberActive = metric.counter("effect_fiber_active")
 /** @internal */
 export const fiberSuccesses = metric.counter("effect_fiber_successes")
 /** @internal */
@@ -242,7 +244,8 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     this._supervisor = this.getFiberRef(currentSupervisor)
     if (_runtimeFlags.runtimeMetrics(runtimeFlags0)) {
       const tags = this.getFiberRef(core.currentTags)
-      fibersStarted.unsafeUpdate(1, tags)
+      fiberStarted.unsafeUpdate(1, tags)
+      fiberActive.unsafeUpdate(1, tags)
     }
   }
   private _queue = new Array<FiberMessage.FiberMessage>()
@@ -592,7 +595,10 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    * **NOTE**: This method must be invoked by the fiber itself.
    */
   drainQueueLaterOnExecutor() {
-    this.getFiberRef(core.currentScheduler).scheduleTask(this.run)
+    this.getFiberRef(core.currentScheduler).scheduleTask(
+      this.run,
+      this.getFiberRef(core.currentSchedulingPriority)
+    )
   }
 
   /**
@@ -702,6 +708,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   reportExitValue(exit: Exit.Exit<E, A>) {
     if (_runtimeFlags.runtimeMetrics(this._runtimeFlags)) {
       const tags = this.getFiberRef(core.currentTags)
+      fiberActive.unsafeUpdate(-1, tags)
       switch (exit._tag) {
         case OpCodes.OP_SUCCESS: {
           fiberSuccesses.unsafeUpdate(1, tags)

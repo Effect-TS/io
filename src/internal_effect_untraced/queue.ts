@@ -1,6 +1,6 @@
 import * as Chunk from "@effect/data/Chunk"
 import * as Debug from "@effect/data/Debug"
-import { pipe } from "@effect/data/Function"
+import { dual, pipe } from "@effect/data/Function"
 import * as MutableQueue from "@effect/data/MutableQueue"
 import * as MutableRef from "@effect/data/MutableRef"
 import type * as Option from "@effect/data/Option"
@@ -124,6 +124,38 @@ class QueueImpl<A> implements Queue.Queue<A> {
 
   awaitShutdown(): Effect.Effect<never, never, void> {
     return Debug.bodyWithTrace((trace) => core.deferredAwait(this.shutdownHook).traced(trace))
+  }
+
+  isActive() {
+    return !MutableRef.get(this.shutdownFlag)
+  }
+
+  unsafeOffer(value: A): boolean {
+    if (MutableRef.get(this.shutdownFlag)) {
+      return false
+    }
+    let noRemaining: boolean
+    if (MutableQueue.isEmpty(this.queue)) {
+      const taker = pipe(
+        this.takers,
+        MutableQueue.poll(MutableQueue.EmptyMutableQueue)
+      )
+      if (taker !== MutableQueue.EmptyMutableQueue) {
+        unsafeCompleteDeferred(taker, value)
+        noRemaining = true
+      } else {
+        noRemaining = false
+      }
+    } else {
+      noRemaining = false
+    }
+    if (noRemaining) {
+      return true
+    }
+    // Not enough takers, offer to the queue
+    const succeeded = pipe(this.queue, MutableQueue.offer(value))
+    unsafeCompleteTakers(this.strategy, this.queue, this.takers)
+    return succeeded
   }
 
   offer(value: A): Effect.Effect<never, never, boolean> {
@@ -426,6 +458,12 @@ export const offer = Debug.dualWithTrace<
   <A>(value: A) => (self: Queue.Enqueue<A>) => Effect.Effect<never, never, boolean>,
   <A>(self: Queue.Enqueue<A>, value: A) => Effect.Effect<never, never, boolean>
 >(2, (trace) => (self, value) => self.offer(value).traced(trace))
+
+/** @internal */
+export const unsafeOffer = dual<
+  <A>(value: A) => (self: Queue.Enqueue<A>) => boolean,
+  <A>(self: Queue.Enqueue<A>, value: A) => boolean
+>(2, (self, value) => self.unsafeOffer(value))
 
 /** @internal */
 export const offerAll = Debug.dualWithTrace<

@@ -73,6 +73,11 @@ export interface Enqueue<A> extends Queue.EnqueueVariance<A>, BaseQueue {
   offer(value: A): Effect.Effect<never, never, boolean>
 
   /**
+   * Places one value in the queue when possible without needing the fiber runtime.
+   */
+  unsafeOffer(value: A): boolean
+
+  /**
    * For Bounded Queue: uses the `BackPressure` Strategy, places the values in
    * the queue and always returns true. If the queue has reached capacity, then
    * the fiber performing the `offerAll` will be suspended until there is room
@@ -128,9 +133,14 @@ export interface Dequeue<A> extends Queue.DequeueVariance<A>, BaseQueue {
  */
 export interface BaseQueue {
   /**
-   *  Returns the number of elements the queue can hold.
+   * Returns the number of elements the queue can hold.
    */
   capacity(): number
+
+  /**
+   * Returns false if shutdown has been called.
+   */
+  isActive(): boolean
 
   /**
    * Retrieves the size of the queue, which is equal to the number of elements
@@ -411,6 +421,17 @@ export const offer: {
   <A>(value: A): (self: Enqueue<A>) => Effect.Effect<never, never, boolean>
   <A>(self: Enqueue<A>, value: A): Effect.Effect<never, never, boolean>
 } = internal.offer
+
+/**
+ * Places one value in the queue.
+ *
+ * @since 1.0.0
+ * @category utils
+ */
+export const unsafeOffer: {
+  <A>(value: A): (self: Enqueue<A>) => boolean
+  <A>(self: Enqueue<A>, value: A): boolean
+} = internal.unsafeOffer
 
 /**
  * For Bounded Queue: uses the `BackPressure` Strategy, places the values in

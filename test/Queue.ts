@@ -539,6 +539,15 @@ describe.concurrent("Queue", () => {
       const result = yield* $(Queue.takeAll(queue))
       assert.deepStrictEqual(result, Chunk.range(1, 3))
     }))
+  it.effect("elements can be enqueued syncroniously when there is space", () =>
+    Effect.gen(function*($) {
+      const queue = yield* $(Queue.unbounded<number>())
+      Queue.unsafeOffer(queue, 1)
+      Queue.unsafeOffer(queue, 2)
+      Queue.unsafeOffer(queue, 3)
+      const result = yield* $(Queue.takeAll(queue))
+      assert.deepStrictEqual(result, Chunk.range(1, 3))
+    }))
   it.effect("takeAll returns all values from an empty queue", () =>
     Effect.gen(function*($) {
       const queue = yield* $(Queue.unbounded<number>())

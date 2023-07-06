@@ -36,6 +36,7 @@ Added in v1.0.0
   - [currentRequestCacheEnabled](#currentrequestcacheenabled)
   - [currentRuntimeFlags](#currentruntimeflags)
   - [currentScheduler](#currentscheduler)
+  - [currentSchedulingPriority](#currentschedulingpriority)
   - [currentSupervisor](#currentsupervisor)
   - [currentTags](#currenttags)
   - [currentTracerSpan](#currenttracerspan)
@@ -307,6 +308,16 @@ Added in v1.0.0
 
 ```ts
 export declare const currentScheduler: FiberRef<Scheduler.Scheduler>
+```
+
+Added in v1.0.0
+
+## currentSchedulingPriority
+
+**Signature**
+
+```ts
+export declare const currentSchedulingPriority: FiberRef<number>
 ```
 
 Added in v1.0.0

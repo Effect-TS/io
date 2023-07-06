@@ -5547,6 +5547,17 @@ export const withScheduler: {
 } = core.withScheduler
 
 /**
+ * Sets the scheduling priority used when yielding
+ *
+ * @since 1.0.0
+ * @category utils
+ */
+export const withSchedulingPriority: {
+  (priority: number): <R, E, B>(self: Effect<R, E, B>) => Effect<R, E, B>
+  <R, E, B>(self: Effect<R, E, B>, priority: number): Effect<R, E, B>
+} = core.withSchedulingPriority
+
+/**
  * Sets the child effect's maximum number of ops before yield
  *
  * @since 1.0.0
@@ -5658,7 +5669,7 @@ export const withRuntimeFlagsScoped: (update: RuntimeFlagsPatch.RuntimeFlagsPatc
  * @since 1.0.0
  * @category constructors
  */
-export const yieldNow: () => Effect<never, never, void> = core.yieldNow
+export const yieldNow: (priority?: number | undefined) => Effect<never, never, void> = core.yieldNow
 
 /**
  * @since 1.0.0
