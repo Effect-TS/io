@@ -2146,7 +2146,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const yieldNow: () => Effect<never, never, void>
+export declare const yieldNow: (priority?: number | undefined) => Effect<never, never, void>
 ```
 
 Added in v1.0.0

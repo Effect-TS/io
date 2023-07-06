@@ -269,3 +269,15 @@ export const makeBatched = (callback: (runBatch: () => void) => void) => {
     }
   })
 }
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const timer = (ms: number) => make((task) => setTimeout(task, ms))
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const timerBatched = (ms: number) => makeBatched((task) => setTimeout(task, ms))

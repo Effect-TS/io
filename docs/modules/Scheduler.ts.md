@@ -32,6 +32,8 @@ Added in v1.0.0
   - [make](#make)
   - [makeBatched](#makebatched)
   - [makeMatrix](#makematrix)
+  - [timer](#timer)
+  - [timerBatched](#timerbatched)
 - [models](#models)
   - [Scheduler (interface)](#scheduler-interface)
   - [Task (type alias)](#task-type-alias)
@@ -239,6 +241,26 @@ Added in v1.0.0
 
 ```ts
 export declare const makeMatrix: (...record: Array<[number, Scheduler]>) => Scheduler
+```
+
+Added in v1.0.0
+
+## timer
+
+**Signature**
+
+```ts
+export declare const timer: (ms: number) => Scheduler
+```
+
+Added in v1.0.0
+
+## timerBatched
+
+**Signature**
+
+```ts
+export declare const timerBatched: (ms: number) => Scheduler
 ```
 
 Added in v1.0.0

@@ -5669,7 +5669,7 @@ export const withRuntimeFlagsScoped: (update: RuntimeFlagsPatch.RuntimeFlagsPatc
  * @since 1.0.0
  * @category constructors
  */
-export const yieldNow: () => Effect<never, never, void> = core.yieldNow
+export const yieldNow: (priority?: number | undefined) => Effect<never, never, void> = core.yieldNow
 
 /**
  * @since 1.0.0

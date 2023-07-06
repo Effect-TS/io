@@ -1,5 +1,4 @@
 import * as Effect from "@effect/io/Effect"
-import * as Fiber from "@effect/io/Fiber"
 import * as Scheduler from "@effect/io/Scheduler"
 import * as it from "@effect/io/test/utils/extend"
 import { assert, describe } from "vitest"
@@ -38,45 +37,34 @@ describe.concurrent("Effect", () => {
         ]
       )
       yield* $(
-        Effect.fork(Effect.unit()),
-        Effect.withScheduler(scheduler),
-        Effect.flatMap((f) => Fiber.join(f))
+        Effect.yieldNow(),
+        Effect.withScheduler(scheduler)
       )
       assert.deepEqual(ps000, [0])
       yield* $(
-        Effect.fork(Effect.unit()),
-        Effect.withSchedulingPriority(50),
-        Effect.withScheduler(scheduler),
-        Effect.flatMap((f) => Fiber.join(f))
+        Effect.yieldNow(50),
+        Effect.withScheduler(scheduler)
       )
       assert.deepEqual(ps000, [0, 0])
       yield* $(
-        Effect.fork(Effect.unit()),
-        Effect.withSchedulingPriority(100),
-        Effect.withScheduler(scheduler),
-        Effect.flatMap((f) => Fiber.join(f))
+        Effect.yieldNow(100),
+        Effect.withScheduler(scheduler)
       )
       assert.deepEqual(ps100, [100])
       yield* $(
-        Effect.fork(Effect.unit()),
-        Effect.withSchedulingPriority(150),
-        Effect.withScheduler(scheduler),
-        Effect.flatMap((f) => Fiber.join(f))
+        Effect.yieldNow(150),
+        Effect.withScheduler(scheduler)
       )
       assert.deepEqual(ps100, [100, 100])
       yield* $(
-        Effect.fork(Effect.unit()),
-        Effect.withSchedulingPriority(200),
-        Effect.withScheduler(scheduler),
-        Effect.flatMap((f) => Fiber.join(f))
+        Effect.yieldNow(200),
+        Effect.withScheduler(scheduler)
       )
       assert.deepEqual(ps100, [100, 100])
       assert.deepEqual(ps200, [200])
       yield* $(
-        Effect.fork(Effect.unit()),
-        Effect.withSchedulingPriority(300),
-        Effect.withScheduler(scheduler),
-        Effect.flatMap((f) => Fiber.join(f))
+        Effect.yieldNow(300),
+        Effect.withScheduler(scheduler)
       )
       assert.deepEqual(ps100, [100, 100])
       assert.deepEqual(ps200, [200])

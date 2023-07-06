@@ -1328,9 +1328,11 @@ export const withRuntimeFlags = Debug.dualWithTrace<
 
 /* @internal */
 export const yieldNow = Debug.methodWithTrace((trace) =>
-  (): Effect.Effect<never, never, void> => {
+  (priority?: number): Effect.Effect<never, never, void> => {
     const effect = new EffectPrimitive(OpCodes.OP_YIELD) as any
-    return effect.traced(trace)
+    return typeof priority !== "undefined" ?
+      withSchedulingPriority(priority)(effect).traced(trace) :
+      effect.traced(trace)
   }
 )
 
