@@ -30,13 +30,13 @@ Added in v1.0.0
     - [tasks (property)](#tasks-property-2)
     - [deferred (property)](#deferred-property-1)
   - [make](#make)
-  - [matrix](#matrix)
+  - [makeBatched](#makebatched)
+  - [makeMatrix](#makematrix)
 - [models](#models)
   - [Scheduler (interface)](#scheduler-interface)
   - [Task (type alias)](#task-type-alias)
 - [schedulers](#schedulers)
   - [defaultScheduler](#defaultscheduler)
-  - [timeBased](#timebased)
 - [utils](#utils)
   - [PriorityBuckets (class)](#prioritybuckets-class)
     - [scheduleTask (method)](#scheduletask-method-3)
@@ -223,12 +223,22 @@ export declare const make: (scheduleTask: Scheduler['scheduleTask']) => Schedule
 
 Added in v1.0.0
 
-## matrix
+## makeBatched
 
 **Signature**
 
 ```ts
-export declare const matrix: (...record: Array<[number, Scheduler]>) => Scheduler
+export declare const makeBatched: (callback: (runBatch: () => void) => void) => Scheduler
+```
+
+Added in v1.0.0
+
+## makeMatrix
+
+**Signature**
+
+```ts
+export declare const makeMatrix: (...record: Array<[number, Scheduler]>) => Scheduler
 ```
 
 Added in v1.0.0
@@ -265,16 +275,6 @@ Added in v1.0.0
 
 ```ts
 export declare const defaultScheduler: Scheduler
-```
-
-Added in v1.0.0
-
-## timeBased
-
-**Signature**
-
-```ts
-export declare const timeBased: Scheduler
 ```
 
 Added in v1.0.0
