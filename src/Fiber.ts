@@ -4,7 +4,7 @@
 import type * as Either from "@effect/data/Either"
 import type * as HashSet from "@effect/data/HashSet"
 import type * as Option from "@effect/data/Option"
-import type * as order from "@effect/data/typeclass/Order"
+import type * as order from "@effect/data/Order"
 import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"

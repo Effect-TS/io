@@ -22,7 +22,6 @@
  * @since 1.0.0
  */
 import type * as Chunk from "@effect/data/Chunk"
-import type { SourceLocation } from "@effect/data/Debug"
 import type * as Either from "@effect/data/Either"
 import type * as Equal from "@effect/data/Equal"
 import type * as HashSet from "@effect/data/HashSet"
@@ -151,30 +150,6 @@ export declare namespace Cause {
     }
   }
 }
-
-/**
- * @since 1.0.0
- * @category models
- */
-export interface StackAnnotationConstructor {
-  new(stack: Chunk.Chunk<SourceLocation>, seq: number): StackAnnotation
-}
-
-/**
- * @since 1.0.0
- * @category models
- */
-export interface StackAnnotation {
-  readonly [StackAnnotationTypeId]: StackAnnotationTypeId
-  readonly stack: Chunk.Chunk<SourceLocation>
-  readonly seq: number
-}
-
-/**
- * @since 1.0.0
- * @category stack
- */
-export const StackAnnotation: StackAnnotationConstructor = internal.StackAnnotation
 
 /**
  * @since 1.0.0
@@ -880,14 +855,6 @@ export const isRuntimeException: (u: unknown) => u is RuntimeException = interna
  * @category rendering
  */
 export const pretty: <E>(cause: Cause<E>) => string = _pretty.pretty
-
-/**
- * Checks if an annotation is a StackAnnotation
- *
- * @since 1.0.0
- * @category guards
- */
-export const isStackAnnotation: (u: unknown) => u is StackAnnotation = internal.isStackAnnotation
 
 /**
  * Removes any annotation from the cause

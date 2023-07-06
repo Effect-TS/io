@@ -1,10 +1,5 @@
-import * as Chunk from "@effect/data/Chunk"
-import * as Debug from "@effect/data/Debug"
-import { pipe } from "@effect/data/Function"
-import * as Option from "@effect/data/Option"
 import type * as Cause from "@effect/io/Cause"
 import * as internal from "@effect/io/internal/cause"
-import { StackAnnotation } from "@effect/io/internal/cause"
 
 // -----------------------------------------------------------------------------
 // Pretty Printing
@@ -41,84 +36,18 @@ const renderToString = (u: unknown): string => {
   return `Error: ${JSON.stringify(u)}`
 }
 
-const renderTraces = (chunk: Chunk.Chunk<Debug.Trace>): ReadonlyArray<string> => {
-  const ret: Array<string> = []
-  for (const s of chunk) {
-    const r = s?.toFrame()
-    if (r) {
-      if (Debug.runtimeDebug.filterStackFrame(r)) {
-        ret.push(renderFrame(r))
-      }
-    }
-  }
-  return ret
-}
-
-/** @internal */
-const renderStack = (span: Option.Option<StackAnnotation>): ReadonlyArray<string> => {
-  if (Option.isNone(span)) {
-    return []
-  }
-  if (span.value.stack.length > 0) {
-    return renderTraces(span.value.stack)
-  }
-  return []
-}
-
-/** @internal */
-const renderFail = (
-  error: string,
-  errorStack: string | undefined,
-  stack: Option.Option<StackAnnotation>
-): ReadonlyArray<RenderError> => {
-  return [
-    new RenderError(
-      stack._tag === "Some" ? stack.value.seq : 0,
-      error,
-      errorStack ? errorStack + "\r\n" + renderStack(stack).join("\r\n") : renderStack(stack).join("\r\n")
-    )
-  ]
-}
-
-/** @internal */
-const renderError = (error: Error): [string, string | undefined] => {
-  if (error.stack) {
-    const stack = Debug.runtimeDebug.parseStack(error)
-    const traces: Array<string> = []
-    for (const frame of stack) {
-      if (frame) {
-        if (Debug.runtimeDebug.filterStackFrame(frame)) {
-          traces.push(renderFrame(frame))
-        } else {
-          break
-        }
-      }
-    }
-    return [
-      renderToString(error),
-      traces.join("\r\n")
-    ]
-  }
-  return [String(error), void 0]
-}
-
 /** @internal */
 const defaultErrorToLines = (error: unknown): [string, string | undefined] => {
   if (error instanceof Error) {
-    return renderError(error)
+    return [renderToString(error), error.stack?.split("\n").filter((_) => !_.startsWith("Error")).join("\n")]
   }
   return [renderToString(error), void 0]
 }
 
 class RenderError {
-  constructor(public seq: number, public message: string, public stack: string) {}
-}
-
-class RenderErrorTmp {
   constructor(
     readonly message: string,
-    readonly errorSack: string | undefined,
-    readonly fiberStack: Option.Option<Cause.StackAnnotation>
+    readonly stack: string | undefined
   ) {}
 }
 
@@ -127,11 +56,10 @@ export const pretty = <E>(cause: Cause.Cause<E>): string => {
   if (internal.isInterruptedOnly(cause)) {
     return "All fibers interrupted without errors."
   }
-  const errors = prettyErrors<E>(cause)
-
-  const final = Array.from(errors).sort((a, b) => a.seq === b.seq ? 0 : a.seq > b.seq ? 1 : -1).map((e) => {
+  console.log(prettyErrors<E>(cause))
+  const final = prettyErrors<E>(cause).map((e) => {
     let message = e.message
-    if (e.stack && e.stack.length > 0) {
+    if (e.stack) {
       message += `\r\n${e.stack}`
     }
     return message
@@ -145,51 +73,17 @@ export const pretty = <E>(cause: Cause.Cause<E>): string => {
 /** @internal */
 export const prettyErrors = <E>(cause: Cause.Cause<E>) =>
   internal.reduceWithContext(cause, void 0, {
-    emptyCase: (): ReadonlyArray<RenderErrorTmp> => [],
+    emptyCase: (): ReadonlyArray<RenderError> => [],
     dieCase: (_, err) => {
       const rendered = defaultErrorToLines(err)
-      return [{ message: rendered[0], errorSack: rendered[1], fiberStack: Option.none() }]
+      return [{ message: rendered[0], stack: rendered[1] }]
     },
     failCase: (_, err) => {
       const rendered = defaultErrorToLines(err)
-      return [{ message: rendered[0], errorSack: rendered[1], fiberStack: Option.none() }]
+      return [{ message: rendered[0], stack: rendered[1] }]
     },
     interruptCase: () => [],
     parallelCase: (_, l, r) => [...l, ...r],
     sequentialCase: (_, l, r) => [...l, ...r],
-    annotatedCase: (_, v, parent) =>
-      internal.isStackAnnotation(parent) ?
-        v.map((r) => ({
-          message: r.message,
-          errorSack: r.errorSack,
-          fiberStack: pipe(
-            Option.map(r.fiberStack, (annotation) =>
-              new StackAnnotation(
-                annotation.stack.length < Debug.runtimeDebug.traceStackLimit && parent.stack.length > 0 &&
-                  ((annotation.stack.length > 0 &&
-                    Chunk.unsafeLast(parent.stack) !== Chunk.unsafeLast(annotation.stack)) ||
-                    annotation.stack.length === 0) ?
-                  pipe(
-                    annotation.stack,
-                    Chunk.appendAll(parent.stack),
-                    Chunk.dedupeAdjacent,
-                    Chunk.take(Debug.runtimeDebug.traceStackLimit)
-                  ) :
-                  annotation.stack,
-                annotation.seq
-              )),
-            Option.orElse(() => Option.some(parent))
-          )
-        })) :
-        v
-  }).flatMap((r) => renderFail(r.message, r.errorSack, r.fiberStack))
-
-function renderFrame(r: Debug.Frame | undefined): string {
-  if (r) {
-    if (r.name) {
-      return `    at ${r.name} (${r.fileName}:${r.line}:${r.column})`
-    }
-    return `    at ${r.fileName}:${r.line}:${r.column}`
-  }
-  return `    at <unknown>`
-}
+    annotatedCase: (_, v, _parent) => v
+  })

@@ -401,6 +401,27 @@ export const bind = dual<
     )))
 
 /* @internal */
+export const bindTo = dual<
+  <N extends string>(tag: N) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<
+    R,
+    E,
+    Record<N, A>
+  >,
+  <R, E, A, N extends string>(
+    self: Effect.Effect<R, E, A>,
+    tag: N
+  ) => Effect.Effect<
+    R,
+    E,
+    Record<N, A>
+  >
+>(
+  2,
+  <R, E, A, N extends string>(self: Effect.Effect<R, E, A>, tag: N): Effect.Effect<R, E, Record<N, A>> =>
+    core.map(self, (a) => ({ [tag]: a } as Record<N, A>))
+)
+
+/* @internal */
 export const bindValue = dual<
   <N extends string, K, A>(
     tag: Exclude<N, keyof K>,

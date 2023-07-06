@@ -6,8 +6,8 @@ settings:
 
 dependencies:
   '@effect/data':
-    specifier: file:vendor/effect-data-0.12.10.tgz
-    version: file:vendor/effect-data-0.12.10.tgz
+    specifier: ^0.13.0
+    version: 0.13.0
 
 devDependencies:
   '@babel/cli':
@@ -713,6 +713,10 @@ packages:
     dependencies:
       '@babel/core': 7.22.5
     dev: true
+
+  /@effect/data@0.13.0:
+    resolution: {integrity: sha512-v88t+7OBUr+Xy9VARLUFNEB9XHpt9P0Mn2kcUC4ed9b0zUV7AfwLGsLN9f3H/meU1H+SpVnVvGWL5r0qiDQmdg==}
+    dev: false
 
   /@effect/docgen@0.1.2(@types/node@20.3.3)(typescript@5.1.6):
     resolution: {integrity: sha512-qy1pA8SKsqla7/35Q2NuUeT/VwO/olg9hdmmY929wSrKhRVVPOmnF4cbCvFxbykikYek0/6/thupSUenYV0DvQ==}
@@ -7045,11 +7049,5 @@ packages:
     resolution: {integrity: sha512-9bnSc/HEW2uRy67wc+T8UwauLuPJVn28jb+GtJY16iiKWyvmYJRXVT4UamsAEGQfPohgr2q4Tq0sQbQlxTfi1g==}
     engines: {node: '>=12.20'}
     dev: true
-
-  file:vendor/effect-data-0.12.10.tgz:
-    resolution: {integrity: sha512-wP6bDgDXB4vC4yTfxqkbnYAx0VJxCYBRil2wIB2nOrH+PEbsmd1IPt1Vz1765e7fFWsgEK2xc+cvRyjGy/sXrw==, tarball: file:vendor/effect-data-0.12.10.tgz}
-    name: '@effect/data'
-    version: 0.12.10
-    dev: false
 
 publishDirectory: dist

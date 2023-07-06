@@ -1,7 +1,4 @@
-import * as Debug from "@effect/data/Debug"
 import * as Effect from "@effect/io/Effect"
-
-Debug.runtimeDebug.tracingEnabled = false
 
 const promiseBased = async (n: number): Promise<number> => {
   if (n < 2) {

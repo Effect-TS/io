@@ -1,5 +1,4 @@
 import * as Chunk from "@effect/data/Chunk"
-import { runtimeDebug } from "@effect/data/Debug"
 import * as Either from "@effect/data/Either"
 import * as Equal from "@effect/data/Equal"
 import { pipe } from "@effect/data/Function"
@@ -16,8 +15,6 @@ import * as Exit from "@effect/io/Exit"
 import * as LogLevel from "@effect/io/Logger/Level"
 import * as it from "@effect/io/test/utils/extend"
 import { assert, describe, expect } from "vitest"
-
-runtimeDebug.filterStackFrame = () => true
 
 interface HostPort {
   readonly host: string

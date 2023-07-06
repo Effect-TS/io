@@ -1,5 +1,4 @@
 import * as Chunk from "@effect/data/Chunk"
-import type * as Debug from "@effect/data/Debug"
 import * as Either from "@effect/data/Either"
 import * as Equal from "@effect/data/Equal"
 import { constFalse, constTrue, dual, identity, pipe } from "@effect/data/Function"
@@ -1126,18 +1125,7 @@ export const StackAnnotationTypeId: Cause.StackAnnotationTypeId = Symbol.for(
 ) as Cause.StackAnnotationTypeId
 
 /** @internal */
-export class StackAnnotation implements Cause.StackAnnotation {
-  readonly [StackAnnotationTypeId]: Cause.StackAnnotationTypeId = StackAnnotationTypeId
-  constructor(readonly stack: Chunk.Chunk<Debug.SourceLocation>, readonly seq: number) {}
-}
-
-/** @internal */
 export const globalErrorSeq = MRef.make(0)
-
-/** @internal */
-export const isStackAnnotation = (u: unknown): u is Cause.StackAnnotation => {
-  return typeof u === "object" && u != null && StackAnnotationTypeId in u
-}
 
 /** @internal */
 const UnAnnotateCauseReducer = <E>(): Cause.CauseReducer<unknown, E, Cause.Cause<E>> => ({

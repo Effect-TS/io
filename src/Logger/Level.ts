@@ -3,7 +3,7 @@
  */
 import { dual, pipe } from "@effect/data/Function"
 import * as number from "@effect/data/Number"
-import * as order from "@effect/data/typeclass/Order"
+import * as order from "@effect/data/Order"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal/core"
 
