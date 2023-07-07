@@ -1487,6 +1487,9 @@ export class RequestResolverImpl<R, A> implements RequestResolver.RequestResolve
   identified(...ids: Array<unknown>): RequestResolver.RequestResolver<A, R> {
     return new RequestResolverImpl(this.runAll, Chunk.fromIterable(ids))
   }
+  pipe() {
+    return pipeArguments(this, arguments)
+  }
 }
 
 /** @internal */

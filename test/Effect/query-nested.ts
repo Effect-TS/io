@@ -1,6 +1,5 @@
 import * as Context from "@effect/data/Context"
 import { seconds } from "@effect/data/Duration"
-import { pipe } from "@effect/data/Function"
 import * as ReadonlyArray from "@effect/data/ReadonlyArray"
 import * as Effect from "@effect/io/Effect"
 import * as Layer from "@effect/io/Layer"
@@ -76,40 +75,41 @@ export const children: ReadonlyMap<number, ReadonlyArray<Child>> = new Map(
 
 const counted = <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.tap(self, () => Effect.map(Counter, (c) => c.count++))
 
-const AllResolver = pipe(
-  Resolver.makeBatched((requests: Array<GetParentChildren | GetAllParents | GetChildExtra | GetChildInfo>) =>
-    Effect.flatMap(Requests, (r) => {
-      r.count += requests.length
-      return counted(Effect.all(
-        Effect.forEach(
-          requests.filter((_): _ is GetParentChildren => _._tag === "GetParentChildren"),
-          (request) => Request.succeed(request, children.get(request.id)!)
-        ),
-        Effect.forEach(
-          requests.filter((_): _ is GetChildExtra => _._tag === "GetChildExtra"),
-          (request) =>
-            Request.succeed(request, {
-              id: request.id * 10,
-              childId: request.id,
-              extra: "more stuff"
-            })
-        ),
-        Effect.forEach(
-          requests.filter((_): _ is GetChildInfo => _._tag === "GetChildInfo"),
-          (request) =>
-            Request.succeed(request, {
-              id: request.id * 10,
-              childId: request.id,
-              name: "Mike"
-            })
-        ),
-        Effect.forEach(
-          requests.filter((_): _ is GetAllParents => _._tag === "GetAllParents"),
-          (request) => Request.succeed(request, parents)
-        )
-      ))
-    })
-  ),
+const AllResolver = Resolver.makeBatched((
+  requests: Array<GetParentChildren | GetAllParents | GetChildExtra | GetChildInfo>
+) =>
+  Effect.flatMap(Requests, (r) => {
+    r.count += requests.length
+    return counted(Effect.all(
+      Effect.forEach(
+        requests.filter((_): _ is GetParentChildren => _._tag === "GetParentChildren"),
+        (request) => Request.succeed(request, children.get(request.id)!)
+      ),
+      Effect.forEach(
+        requests.filter((_): _ is GetChildExtra => _._tag === "GetChildExtra"),
+        (request) =>
+          Request.succeed(request, {
+            id: request.id * 10,
+            childId: request.id,
+            extra: "more stuff"
+          })
+      ),
+      Effect.forEach(
+        requests.filter((_): _ is GetChildInfo => _._tag === "GetChildInfo"),
+        (request) =>
+          Request.succeed(request, {
+            id: request.id * 10,
+            childId: request.id,
+            name: "Mike"
+          })
+      ),
+      Effect.forEach(
+        requests.filter((_): _ is GetAllParents => _._tag === "GetAllParents"),
+        (request) => Request.succeed(request, parents)
+      )
+    ))
+  })
+).pipe(
   Resolver.batchN(15),
   Resolver.contextFromServices(Counter, Requests)
 )
@@ -136,59 +136,57 @@ const EnvLive = Layer.provideMerge(
 
 describe.concurrent("Effect", () => {
   it.effect("nested queries are batched", () =>
-    pipe(
-      Effect.gen(function*($) {
-        const parents = yield* $(getAllParents)
+    Effect.gen(function*($) {
+      const parents = yield* $(getAllParents)
 
-        yield* $(Effect.forEach(
-          parents,
-          (parent) =>
-            Effect.flatMap(
-              getChildren(parent.id),
-              (children) =>
-                Effect.forEach(
-                  children,
-                  (child) => Effect.zip(getChildInfo(child.id), getChildExtra(child.id), { parallel: true }),
-                  { concurrency: "unbounded" }
-                )
-            ),
-          { concurrency: "unbounded" }
-        ))
+      yield* $(Effect.forEach(
+        parents,
+        (parent) =>
+          Effect.flatMap(
+            getChildren(parent.id),
+            (children) =>
+              Effect.forEach(
+                children,
+                (child) => Effect.zip(getChildInfo(child.id), getChildExtra(child.id), { parallel: true }),
+                { concurrency: "unbounded" }
+              )
+          ),
+        { concurrency: "unbounded" }
+      ))
 
-        const count = yield* $(Counter)
-        const requests = yield* $(Requests)
+      const count = yield* $(Counter)
+      const requests = yield* $(Requests)
 
-        expect(count.count).toBe(3)
-        expect(requests.count).toBe(7)
-      }),
+      expect(count.count).toBe(3)
+      expect(requests.count).toBe(7)
+    }).pipe(
       Effect.provideSomeLayer(EnvLive)
     ))
   it.effect("nested queries are batched when concurrency is set to 1", () =>
-    pipe(
-      Effect.gen(function*($) {
-        const parents = yield* $(getAllParents)
+    Effect.gen(function*($) {
+      const parents = yield* $(getAllParents)
 
-        yield* $(Effect.forEach(
-          parents,
-          (parent) =>
-            Effect.flatMap(
-              getChildren(parent.id),
-              (children) =>
-                Effect.forEach(
-                  children,
-                  (child) => Effect.zip(getChildInfo(child.id), getChildExtra(child.id), { parallel: true }),
-                  { concurrency: 1, batched: true }
-                )
-            ),
-          { concurrency: 1, batched: true }
-        ))
+      yield* $(Effect.forEach(
+        parents,
+        (parent) =>
+          Effect.flatMap(
+            getChildren(parent.id),
+            (children) =>
+              Effect.forEach(
+                children,
+                (child) => Effect.zip(getChildInfo(child.id), getChildExtra(child.id), { parallel: true }),
+                { concurrency: 1, batched: true }
+              )
+          ),
+        { concurrency: 1, batched: true }
+      ))
 
-        const count = yield* $(Counter)
-        const requests = yield* $(Requests)
+      const count = yield* $(Counter)
+      const requests = yield* $(Requests)
 
-        expect(count.count).toBe(3)
-        expect(requests.count).toBe(7)
-      }),
+      expect(count.count).toBe(3)
+      expect(requests.count).toBe(7)
+    }).pipe(
       Effect.provideSomeLayer(EnvLive)
     ))
 })

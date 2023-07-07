@@ -1,4 +1,3 @@
-import { pipe } from "@effect/data/Function"
 import * as Option from "@effect/data/Option"
 import * as Deferred from "@effect/io/Deferred"
 import * as Effect from "@effect/io/Effect"
@@ -99,8 +98,7 @@ describe.concurrent("SynchronizedRef", () => {
     Effect.gen(function*($) {
       const deferred = yield* $(Deferred.make<never, Synchronized.Synchronized<State>>())
       const latch = yield* $(Deferred.make<never, void>())
-      const makeAndWait = pipe(
-        Deferred.complete(deferred, Synchronized.make<State>(Active)),
+      const makeAndWait = Deferred.complete(deferred, Synchronized.make<State>(Active)).pipe(
         Effect.zipRight(Deferred.await(latch))
       )
       const fiber = yield* $(Effect.fork(makeAndWait))

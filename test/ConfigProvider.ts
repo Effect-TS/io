@@ -1,7 +1,6 @@
 import * as Chunk from "@effect/data/Chunk"
 import * as Either from "@effect/data/Either"
 import * as Equal from "@effect/data/Equal"
-import { pipe } from "@effect/data/Function"
 import * as HashMap from "@effect/data/HashMap"
 import * as HashSet from "@effect/data/HashSet"
 import * as Option from "@effect/data/Option"
@@ -533,8 +532,7 @@ describe.concurrent("ConfigProvider", () => {
         ["employees[1].age", "3"],
         ["employees[1].id", "4"]
       ])
-      const provider = pipe(
-        ConfigProvider.fromMap(map),
+      const provider = ConfigProvider.fromMap(map).pipe(
         ConfigProvider.unnested("parent"),
         ConfigProvider.unnested("child")
       )
@@ -579,8 +577,7 @@ describe.concurrent("ConfigProvider", () => {
 
   it.effect("constantCase", () =>
     Effect.gen(function*($) {
-      const configProvider = pipe(
-        ConfigProvider.fromMap(new Map([["CONSTANT_CASE", "value"]])),
+      const configProvider = ConfigProvider.fromMap(new Map([["CONSTANT_CASE", "value"]])).pipe(
         ConfigProvider.constantCase
       )
       const result = yield* $(configProvider.load(Config.string("constant.case")))
@@ -589,8 +586,7 @@ describe.concurrent("ConfigProvider", () => {
 
   it.effect("contramapPath", () =>
     Effect.gen(function*($) {
-      const configProvider = pipe(
-        ConfigProvider.fromMap(new Map([["KEY", "VALUE"]])),
+      const configProvider = ConfigProvider.fromMap(new Map([["KEY", "VALUE"]])).pipe(
         ConfigProvider.contramapPath((path) => path.toUpperCase())
       )
       const result = yield* $(configProvider.load(Config.string("key")))
@@ -599,8 +595,7 @@ describe.concurrent("ConfigProvider", () => {
 
   it.effect("kebabCase", () =>
     Effect.gen(function*($) {
-      const configProvider = pipe(
-        ConfigProvider.fromMap(new Map([["kebab-case", "value"]])),
+      const configProvider = ConfigProvider.fromMap(new Map([["kebab-case", "value"]])).pipe(
         ConfigProvider.kebabCase
       )
       const result = yield* $(configProvider.load(Config.string("kebabCase")))
@@ -609,8 +604,7 @@ describe.concurrent("ConfigProvider", () => {
 
   it.effect("lowerCase", () =>
     Effect.gen(function*($) {
-      const configProvider = pipe(
-        ConfigProvider.fromMap(new Map([["lowercase", "value"]])),
+      const configProvider = ConfigProvider.fromMap(new Map([["lowercase", "value"]])).pipe(
         ConfigProvider.lowerCase
       )
       const result = yield* $(configProvider.load(Config.string("lowerCase")))
@@ -621,8 +615,7 @@ describe.concurrent("ConfigProvider", () => {
     Effect.gen(function*($) {
       const configProvider1 = ConfigProvider.fromMap(new Map([["nested.key", "value"]]))
       const config1 = Config.string("key").pipe(Config.nested("nested"))
-      const configProvider2 = pipe(
-        ConfigProvider.fromMap(new Map([["nested.key", "value"]])),
+      const configProvider2 = ConfigProvider.fromMap(new Map([["nested.key", "value"]])).pipe(
         ConfigProvider.nested("nested")
       )
       const config2 = Config.string("key")
@@ -639,8 +632,7 @@ describe.concurrent("ConfigProvider", () => {
         Config.nested("child"),
         Config.nested("parent")
       )
-      const configProvider2 = pipe(
-        ConfigProvider.fromMap(new Map([["parent.child.key", "value"]])),
+      const configProvider2 = ConfigProvider.fromMap(new Map([["parent.child.key", "value"]])).pipe(
         ConfigProvider.nested("child"),
         ConfigProvider.nested("parent")
       )
@@ -653,13 +645,12 @@ describe.concurrent("ConfigProvider", () => {
 
   it.effect("orElse - with flat data", () =>
     Effect.gen(function*($) {
-      const configProvider = pipe(
-        ConfigProvider.fromMap(
-          new Map([
-            ["key1", "value1"],
-            ["key4", "value41"]
-          ])
-        ),
+      const configProvider = ConfigProvider.fromMap(
+        new Map([
+          ["key1", "value1"],
+          ["key4", "value41"]
+        ])
+      ).pipe(
         ConfigProvider.orElse(() =>
           ConfigProvider.fromMap(
             new Map([
@@ -687,15 +678,14 @@ describe.concurrent("ConfigProvider", () => {
 
   it.effect("orElse - with indexed sequences", () =>
     Effect.gen(function*($) {
-      const configProvider = pipe(
-        ConfigProvider.fromMap(
-          new Map([
-            ["parent1.child.employees[0].age", "1"],
-            ["parent1.child.employees[0].id", "2"],
-            ["parent1.child.employees[1].age", "3"],
-            ["parent1.child.employees[1].id", "4"]
-          ])
-        ),
+      const configProvider = ConfigProvider.fromMap(
+        new Map([
+          ["parent1.child.employees[0].age", "1"],
+          ["parent1.child.employees[0].id", "2"],
+          ["parent1.child.employees[1].age", "3"],
+          ["parent1.child.employees[1].id", "4"]
+        ])
+      ).pipe(
         ConfigProvider.orElse(() =>
           ConfigProvider.fromMap(
             new Map([
@@ -724,27 +714,25 @@ describe.concurrent("ConfigProvider", () => {
 
   it.effect("orElse - with indexed sequences and each provider unnested", () =>
     Effect.gen(function*(_) {
-      const configProvider = pipe(
-        ConfigProvider.fromMap(
-          new Map([
-            ["employees[0].age", "1"],
-            ["employees[0].id", "2"],
-            ["employees[1].age", "3"],
-            ["employees[1].id", "4"]
-          ])
-        ),
+      const configProvider = ConfigProvider.fromMap(
+        new Map([
+          ["employees[0].age", "1"],
+          ["employees[0].id", "2"],
+          ["employees[1].age", "3"],
+          ["employees[1].id", "4"]
+        ])
+      ).pipe(
         ConfigProvider.unnested("parent1"),
         ConfigProvider.unnested("child"),
         ConfigProvider.orElse(() =>
-          pipe(
-            ConfigProvider.fromMap(
-              new Map([
-                ["employees[0].age", "11"],
-                ["employees[0].id", "21"],
-                ["employees[1].age", "31"],
-                ["employees[1].id", "41"]
-              ])
-            ),
+          ConfigProvider.fromMap(
+            new Map([
+              ["employees[0].age", "11"],
+              ["employees[0].id", "21"],
+              ["employees[1].age", "31"],
+              ["employees[1].id", "41"]
+            ])
+          ).pipe(
             ConfigProvider.unnested("parent2"),
             ConfigProvider.unnested("child")
           )
@@ -777,13 +765,12 @@ describe.concurrent("ConfigProvider", () => {
 
   it.effect("orElse - with index sequences and combined provider unnested", () =>
     Effect.gen(function*(_) {
-      const configProvider = pipe(
-        ConfigProvider.fromMap(
-          new Map([
-            ["employees[0].age", "1"],
-            ["employees[0].id", "2"]
-          ])
-        ),
+      const configProvider = ConfigProvider.fromMap(
+        new Map([
+          ["employees[0].age", "1"],
+          ["employees[0].id", "2"]
+        ])
+      ).pipe(
         ConfigProvider.orElse(() =>
           ConfigProvider.fromMap(
             new Map([
@@ -815,8 +802,7 @@ describe.concurrent("ConfigProvider", () => {
 
   it.effect("snakeCase", () =>
     Effect.gen(function*($) {
-      const configProvider = pipe(
-        ConfigProvider.fromMap(new Map([["snake_case", "value"]])),
+      const configProvider = ConfigProvider.fromMap(new Map([["snake_case", "value"]])).pipe(
         ConfigProvider.snakeCase
       )
       const result = yield* $(configProvider.load(Config.string("snakeCase")))
@@ -827,8 +813,7 @@ describe.concurrent("ConfigProvider", () => {
     Effect.gen(function*($) {
       const configProvider1 = ConfigProvider.fromMap(new Map([["key", "value"]]))
       const config1 = Config.string("key")
-      const configProvider2 = pipe(
-        ConfigProvider.fromMap(new Map([["key", "value"]])),
+      const configProvider2 = ConfigProvider.fromMap(new Map([["key", "value"]])).pipe(
         ConfigProvider.unnested("nested")
       )
       const config2 = Config.string("key").pipe(Config.nested("nested"))
@@ -842,8 +827,7 @@ describe.concurrent("ConfigProvider", () => {
     Effect.gen(function*($) {
       const configProvider1 = ConfigProvider.fromMap(new Map([["key", "value"]]))
       const config1 = Config.string("key")
-      const configProvider2 = pipe(
-        ConfigProvider.fromMap(new Map([["key", "value"]])),
+      const configProvider2 = ConfigProvider.fromMap(new Map([["key", "value"]])).pipe(
         ConfigProvider.unnested("parent"),
         ConfigProvider.unnested("child")
       )
@@ -859,8 +843,7 @@ describe.concurrent("ConfigProvider", () => {
 
   it.effect("unnested - failure", () =>
     Effect.gen(function*($) {
-      const configProvider = pipe(
-        ConfigProvider.fromMap(new Map([["key", "value"]])),
+      const configProvider = ConfigProvider.fromMap(new Map([["key", "value"]])).pipe(
         ConfigProvider.unnested("nested")
       )
       const config = Config.string("key")
@@ -874,8 +857,7 @@ describe.concurrent("ConfigProvider", () => {
 
   it.effect("upperCase", () =>
     Effect.gen(function*($) {
-      const configProvider = pipe(
-        ConfigProvider.fromMap(new Map([["UPPERCASE", "value"]])),
+      const configProvider = ConfigProvider.fromMap(new Map([["UPPERCASE", "value"]])).pipe(
         ConfigProvider.upperCase
       )
       const result = yield* $(configProvider.load(Config.string("upperCase")))
@@ -884,10 +866,10 @@ describe.concurrent("ConfigProvider", () => {
 
   it.effect("within", () =>
     Effect.gen(function*($) {
-      const configProvider = pipe(
-        ConfigProvider.fromMap(new Map([["nesting1.key1", "value1"], ["nesting2.KEY2", "value2"]])),
-        ConfigProvider.within(["nesting2"], ConfigProvider.contramapPath((s) => s.toUpperCase()))
-      )
+      const configProvider = ConfigProvider.fromMap(new Map([["nesting1.key1", "value1"], ["nesting2.KEY2", "value2"]]))
+        .pipe(
+          ConfigProvider.within(["nesting2"], ConfigProvider.contramapPath((s) => s.toUpperCase()))
+        )
       const config = Config.string("key1").pipe(
         Config.nested("nesting1"),
         Config.zip(
@@ -902,8 +884,9 @@ describe.concurrent("ConfigProvider", () => {
 
   it.effect("within - multiple layers of nesting", () =>
     Effect.gen(function*($) {
-      const configProvider = pipe(
-        ConfigProvider.fromMap(new Map([["nesting1.key1", "value1"], ["nesting2.nesting3.KEY2", "value2"]])),
+      const configProvider = ConfigProvider.fromMap(
+        new Map([["nesting1.key1", "value1"], ["nesting2.nesting3.KEY2", "value2"]])
+      ).pipe(
         ConfigProvider.within(["nesting2", "nesting3"], ConfigProvider.contramapPath((s) => s.toUpperCase()))
       )
       const config = Config.string("key1").pipe(
