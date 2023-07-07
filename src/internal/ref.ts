@@ -1,6 +1,7 @@
 import { dual } from "@effect/data/Function"
 import * as MutableRef from "@effect/data/MutableRef"
 import * as Option from "@effect/data/Option"
+import { pipeArguments } from "@effect/data/Pipeable"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal/core"
 import type * as Ref from "@effect/io/Ref"
@@ -25,6 +26,9 @@ class RefImpl<A> implements Ref.Ref<A> {
       }
       return b
     })
+  }
+  pipe() {
+    return pipeArguments(this, arguments)
   }
 }
 

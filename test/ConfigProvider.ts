@@ -40,7 +40,7 @@ interface ServiceConfig {
 }
 
 const serviceConfigConfig: Config.Config<ServiceConfig> = Config.all({
-  hostPort: pipe(hostPortConfig, Config.nested("hostPort")),
+  hostPort: hostPortConfig.pipe(Config.nested("hostPort")),
   timeout: Config.integer("timeout")
 })
 
@@ -79,8 +79,7 @@ const webScrapingTargetsConfig: Config.Config<WebScrapingTargets> = Config.all({
 })
 
 const webScrapingTargetsConfigWithDefault = Config.all({
-  targets: pipe(
-    Config.chunkOf(Config.string()),
+  targets: Config.chunkOf(Config.string()).pipe(
     Config.withDefault(Chunk.make("https://effect.website2", "https://github.com/Effect-TS2"))
   )
 })
@@ -510,8 +509,7 @@ describe.concurrent("ConfigProvider", () => {
         ["parent.child.employees[1].age", "3"],
         ["parent.child.employees[1].id", "4"]
       ])
-      const provider = pipe(
-        ConfigProvider.fromMap(map),
+      const provider = ConfigProvider.fromMap(map).pipe(
         ConfigProvider.nested("child"),
         ConfigProvider.nested("parent")
       )
@@ -525,8 +523,7 @@ describe.concurrent("ConfigProvider", () => {
         age: Config.integer("age"),
         id: Config.integer("id")
       })
-      const config = pipe(
-        Config.arrayOf(employee, "employees"),
+      const config = Config.arrayOf(employee, "employees").pipe(
         Config.nested("child"),
         Config.nested("parent")
       )
@@ -558,8 +555,7 @@ describe.concurrent("ConfigProvider", () => {
       const map = new Map([
         ["k1.k3", "v"]
       ])
-      const config = pipe(
-        Config.string("k2"),
+      const config = Config.string("k2").pipe(
         Config.nested("k1")
       )
       const result = yield* $(Effect.exit(provider(map).load(config)))
@@ -624,7 +620,7 @@ describe.concurrent("ConfigProvider", () => {
   it.effect("nested", () =>
     Effect.gen(function*($) {
       const configProvider1 = ConfigProvider.fromMap(new Map([["nested.key", "value"]]))
-      const config1 = pipe(Config.string("key"), Config.nested("nested"))
+      const config1 = Config.string("key").pipe(Config.nested("nested"))
       const configProvider2 = pipe(
         ConfigProvider.fromMap(new Map([["nested.key", "value"]])),
         ConfigProvider.nested("nested")
@@ -639,8 +635,7 @@ describe.concurrent("ConfigProvider", () => {
   it.effect("nested - multiple layers of nesting", () =>
     Effect.gen(function*($) {
       const configProvider1 = ConfigProvider.fromMap(new Map([["parent.child.key", "value"]]))
-      const config1 = pipe(
-        Config.string("key"),
+      const config1 = Config.string("key").pipe(
         Config.nested("child"),
         Config.nested("parent")
       )
@@ -717,8 +712,8 @@ describe.concurrent("ConfigProvider", () => {
 
       const product = Config.zip(Config.integer("age"), Config.integer("id"))
       const arrayConfig = Config.arrayOf(product, "employees")
-      const config1 = pipe(arrayConfig, Config.nested("child"), Config.nested("parent1"))
-      const config2 = pipe(arrayConfig, Config.nested("child"), Config.nested("parent2"))
+      const config1 = arrayConfig.pipe(Config.nested("child"), Config.nested("parent1"))
+      const config2 = arrayConfig.pipe(Config.nested("child"), Config.nested("parent2"))
 
       const result1 = yield* $(configProvider.load(config1))
       const result2 = yield* $(configProvider.load(config2))
@@ -758,9 +753,9 @@ describe.concurrent("ConfigProvider", () => {
 
       const product = Config.zip(Config.integer("age"), Config.integer("id"))
       const arrayConfig = Config.arrayOf(product, "employees")
-      const config1 = pipe(arrayConfig, Config.nested("child"), Config.nested("parent1"))
-      const config2 = pipe(arrayConfig, Config.nested("child"), Config.nested("parent2"))
-      const config3 = pipe(arrayConfig, Config.nested("child"), Config.nested("parent3"))
+      const config1 = arrayConfig.pipe(Config.nested("child"), Config.nested("parent1"))
+      const config2 = arrayConfig.pipe(Config.nested("child"), Config.nested("parent2"))
+      const config3 = arrayConfig.pipe(Config.nested("child"), Config.nested("parent3"))
 
       const result1 = yield* _(configProvider.load(config1))
       const result2 = yield* _(configProvider.load(config2))
@@ -803,7 +798,7 @@ describe.concurrent("ConfigProvider", () => {
 
       const product = Config.zip(Config.integer("age"), Config.integer("id"))
       const arrayConfig = Config.arrayOf(product, "employees")
-      const config = pipe(arrayConfig, Config.nested("child"), Config.nested("parent1"))
+      const config = arrayConfig.pipe(Config.nested("child"), Config.nested("parent1"))
 
       const result = yield* _(configProvider.load(config))
 
@@ -836,7 +831,7 @@ describe.concurrent("ConfigProvider", () => {
         ConfigProvider.fromMap(new Map([["key", "value"]])),
         ConfigProvider.unnested("nested")
       )
-      const config2 = pipe(Config.string("key"), Config.nested("nested"))
+      const config2 = Config.string("key").pipe(Config.nested("nested"))
       const result1 = yield* $(configProvider1.load(config1))
       const result2 = yield* $(configProvider2.load(config2))
       assert.strictEqual(result1, "value")
@@ -852,8 +847,7 @@ describe.concurrent("ConfigProvider", () => {
         ConfigProvider.unnested("parent"),
         ConfigProvider.unnested("child")
       )
-      const config2 = pipe(
-        Config.string("key"),
+      const config2 = Config.string("key").pipe(
         Config.nested("child"),
         Config.nested("parent")
       )
@@ -894,13 +888,13 @@ describe.concurrent("ConfigProvider", () => {
         ConfigProvider.fromMap(new Map([["nesting1.key1", "value1"], ["nesting2.KEY2", "value2"]])),
         ConfigProvider.within(["nesting2"], ConfigProvider.contramapPath((s) => s.toUpperCase()))
       )
-      const config = pipe(
-        Config.string("key1"),
+      const config = Config.string("key1").pipe(
         Config.nested("nesting1"),
-        Config.zip(pipe(
-          Config.string("key2"),
-          Config.nested("nesting2")
-        ))
+        Config.zip(
+          Config.string("key2").pipe(
+            Config.nested("nesting2")
+          )
+        )
       )
       const result = yield* $(configProvider.load(config))
       assert.deepStrictEqual(result, ["value1", "value2"])
@@ -912,14 +906,14 @@ describe.concurrent("ConfigProvider", () => {
         ConfigProvider.fromMap(new Map([["nesting1.key1", "value1"], ["nesting2.nesting3.KEY2", "value2"]])),
         ConfigProvider.within(["nesting2", "nesting3"], ConfigProvider.contramapPath((s) => s.toUpperCase()))
       )
-      const config = pipe(
-        Config.string("key1"),
+      const config = Config.string("key1").pipe(
         Config.nested("nesting1"),
-        Config.zip(pipe(
-          Config.string("key2"),
-          Config.nested("nesting3"),
-          Config.nested("nesting2")
-        ))
+        Config.zip(
+          Config.string("key2").pipe(
+            Config.nested("nesting3"),
+            Config.nested("nesting2")
+          )
+        )
       )
       const result = yield* $(configProvider.load(config))
       assert.deepStrictEqual(result, ["value1", "value2"])

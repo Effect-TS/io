@@ -6,6 +6,7 @@ import * as HashMap from "@effect/data/HashMap"
 import * as HashSet from "@effect/data/HashSet"
 import * as number from "@effect/data/Number"
 import * as Option from "@effect/data/Option"
+import { pipeArguments } from "@effect/data/Pipeable"
 import * as RA from "@effect/data/ReadonlyArray"
 import type * as Config from "@effect/io/Config"
 import type * as ConfigError from "@effect/io/Config/Error"
@@ -50,6 +51,9 @@ export const make = (
   }
 ): ConfigProvider.ConfigProvider => ({
   [ConfigProviderTypeId]: ConfigProviderTypeId,
+  pipe() {
+    return pipeArguments(this, arguments)
+  },
   ...options
 })
 
