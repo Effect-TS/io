@@ -2397,11 +2397,11 @@ export const using = dual<
     use: (a: A) => Effect.Effect<R2, E2, A2>
   ) => Effect.Effect<R | R2, E | E2, A2>
 >(2, (self, use) =>
-  core.acquireUseRelease({
-    acquire: scopeMake(),
-    use: (scope) => core.flatMap(scopeExtend(self, scope), use),
-    release: (scope, exit) => core.scopeClose(scope, exit)
-  }))
+  core.acquireUseRelease(
+    scopeMake(),
+    (scope) => core.flatMap(scopeExtend(self, scope), use),
+    (scope, exit) => core.scopeClose(scope, exit)
+  ))
 
 /* @internal */
 export const unsome = <R, E, A>(

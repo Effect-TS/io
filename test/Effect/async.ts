@@ -53,11 +53,11 @@ describe.concurrent("Effect", () => {
       const fiber = yield* $(
         Effect.asyncEffect<never, unknown, unknown, never, never, never>(() =>
           // This will never complete because we never call the callback
-          Effect.acquireUseRelease({
-            acquire: Deferred.succeed(acquire, void 0),
-            use: () => Effect.never,
-            release: () => Deferred.succeed(release, void 0)
-          })
+          Effect.acquireUseRelease(
+            Deferred.succeed(acquire, void 0),
+            () => Effect.never,
+            () => Deferred.succeed(release, void 0)
+          )
         ),
         Effect.disconnect,
         Effect.fork

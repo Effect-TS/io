@@ -6,7 +6,7 @@ import * as RA from "@effect/data/ReadonlyArray"
 import * as Cause from "@effect/io/Cause"
 import * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal/core"
-import { invokeWithInterrupt } from "@effect/io/internal/fiberRuntime"
+import { invokeWithInterrupt, zipWithOptions } from "@effect/io/internal/fiberRuntime"
 import { complete } from "@effect/io/internal/request"
 import type * as Request from "@effect/io/Request"
 import type * as RequestResolver from "@effect/io/RequestResolver"
@@ -29,7 +29,7 @@ export const makeBatched = <R, A extends Request.Request<any, any>>(
   new core.RequestResolverImpl<R, A>(
     (requests) =>
       requests.length > 1 ?
-        Effect.forEach(requests, (block) =>
+        core.forEachDiscard(requests, (block) =>
           invokeWithInterrupt(
             run(
               block
@@ -37,7 +37,7 @@ export const makeBatched = <R, A extends Request.Request<any, any>>(
                 .map((_) => _.request)
             ),
             block
-          ), { discard: true }) :
+          )) :
         (requests.length === 1 ?
           run(
             requests[0]
@@ -63,11 +63,11 @@ export const around = dual<
 >(3, (self, before, after) =>
   new core.RequestResolverImpl(
     (requests) =>
-      Effect.acquireUseRelease({
-        acquire: before,
-        use: () => self.runAll(requests),
-        release: after
-      }),
+      core.acquireUseRelease(
+        before,
+        () => self.runAll(requests),
+        after
+      ),
     Chunk.make("Around", self, before, after)
   ))
 
@@ -87,7 +87,7 @@ export const batchN = dual<
   new core.RequestResolverImpl(
     (requests) => {
       return n < 1
-        ? Effect.die(Cause.IllegalArgumentException("RequestResolver.batchN: n must be at least 1"))
+        ? core.die(Cause.IllegalArgumentException("RequestResolver.batchN: n must be at least 1"))
         : self.runAll(
           Array.from(Chunk.map(
             RA.reduce(
@@ -119,7 +119,7 @@ export const contramapContext = dual<
 ) =>
   new core.RequestResolverImpl<R0, A>(
     (requests) =>
-      Effect.contramapContext(
+      core.contramapContext(
         self.runAll(requests),
         (context: Context.Context<R0>) => f(context)
       ),
@@ -164,12 +164,12 @@ export const eitherWith = dual<
   new core.RequestResolverImpl<R | R2, C>(
     (batch) =>
       pipe(
-        Effect.forEach(batch, (requests) => {
+        core.forEach(batch, (requests) => {
           const [as, bs] = pipe(
             requests,
             RA.partitionMap(f)
           )
-          return Effect.zipWith(
+          return zipWithOptions(
             self.runAll(Array.of(as)),
             that.runAll(Array.of(bs)),
             () => void 0,
@@ -185,10 +185,9 @@ export const fromFunction = <A extends Request.Request<never, any>>(
   f: (request: A) => Request.Request.Success<A>
 ): RequestResolver.RequestResolver<A> =>
   makeBatched((requests: Array<A>) =>
-    Effect.forEach(
+    core.forEachDiscard(
       requests,
-      (request) => complete(request, core.exitSucceed(f(request)) as any),
-      { discard: true }
+      (request) => complete(request, core.exitSucceed(f(request)) as any)
     )
   ).identified("FromFunction", f)
 

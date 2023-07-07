@@ -1811,8 +1811,8 @@ export const useSpan: {
     readonly context?: Context.Context<never>
   } | undefined = args.length === 1 ? undefined : args[0]
   const evaluate: (span: Tracer.Span) => Effect.Effect<R, E, A> = args[args.length - 1]
-  return core.acquireUseRelease({
-    acquire: tracerWith((tracer) =>
+  return core.acquireUseRelease(
+    tracerWith((tracer) =>
       core.flatMap(
         options?.parent ?
           core.succeed(Option.some(options.parent)) :
@@ -1841,13 +1841,13 @@ export const useSpan: {
           )
       )
     ),
-    use: evaluate,
-    release: (span, exit) =>
+    evaluate,
+    (span, exit) =>
       core.flatMap(
         Clock.clockWith((clock) => clock.currentTimeNanos),
         (endTime) => core.sync(() => span.end(endTime, exit))
       )
-  })
+  )
 }
 
 /* @internal */

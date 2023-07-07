@@ -51,11 +51,11 @@ describe.concurrent("Effect", () => {
       const fiber = yield* $(
         Effect.asyncEffect<never, unknown, unknown, never, unknown, unknown>((_) =>
           // This will never complete because the callback is never invoked
-          Effect.acquireUseRelease({
-            acquire: Deferred.succeed(acquire, void 0),
-            use: () => Effect.never,
-            release: () => pipe(Deferred.succeed(release, 42), Effect.asUnit)
-          })
+          Effect.acquireUseRelease(
+            Deferred.succeed(acquire, void 0),
+            () => Effect.never,
+            () => Effect.asUnit(Deferred.succeed(release, 42))
+          )
         ),
         Effect.fork
       )
@@ -114,16 +114,16 @@ describe.concurrent("Effect", () => {
       const latch2 = yield* $(Deferred.make<never, void>())
       const deferred1 = yield* $(Deferred.make<never, void>())
       const deferred2 = yield* $(Deferred.make<never, void>())
-      const loser1 = Effect.acquireUseRelease({
-        acquire: Deferred.succeed(latch1, void 0),
-        use: () => Effect.never,
-        release: () => Deferred.succeed(deferred1, void 0)
-      })
-      const loser2 = Effect.acquireUseRelease({
-        acquire: Deferred.succeed(latch2, void 0),
-        use: () => Effect.never,
-        release: () => Deferred.succeed(deferred2, void 0)
-      })
+      const loser1 = Effect.acquireUseRelease(
+        Deferred.succeed(latch1, void 0),
+        () => Effect.never,
+        () => Deferred.succeed(deferred1, void 0)
+      )
+      const loser2 = Effect.acquireUseRelease(
+        Deferred.succeed(latch2, void 0),
+        () => Effect.never,
+        () => Deferred.succeed(deferred2, void 0)
+      )
       const fiber = yield* $(loser1, Effect.race(loser2), Effect.forkDaemon)
       yield* $(Deferred.await(latch1))
       yield* $(Deferred.await(latch2))
@@ -259,11 +259,11 @@ describe.concurrent("Effect", () => {
       const deferred = yield* $(Deferred.make<never, void>())
       const effect = yield* $(Deferred.make<never, number>())
       const winner = Either.right(void 0)
-      const loser = Effect.acquireUseRelease({
-        acquire: Deferred.succeed(deferred, void 0),
-        use: () => Effect.never,
-        release: () => Deferred.succeed(effect, 42)
-      })
+      const loser = Effect.acquireUseRelease(
+        Deferred.succeed(deferred, void 0),
+        () => Effect.never,
+        () => Deferred.succeed(effect, 42)
+      )
       yield* $(winner, Effect.raceFirst(loser))
       const result = yield* $(Deferred.await(effect))
       assert.strictEqual(result, 42)
@@ -273,11 +273,11 @@ describe.concurrent("Effect", () => {
       const deferred = yield* $(Deferred.make<never, void>())
       const effect = yield* $(Deferred.make<never, number>())
       const winner = pipe(Deferred.await(deferred), Effect.zipRight(Either.left(new Error())))
-      const loser = Effect.acquireUseRelease({
-        acquire: Deferred.succeed(deferred, void 0),
-        use: () => Effect.never,
-        release: () => Deferred.succeed(effect, 42)
-      })
+      const loser = Effect.acquireUseRelease(
+        Deferred.succeed(deferred, void 0),
+        () => Effect.never,
+        () => Deferred.succeed(effect, 42)
+      )
       yield* $(winner, Effect.raceFirst(loser), Effect.either)
       const result = yield* $(Deferred.await(effect))
       assert.strictEqual(result, 42)

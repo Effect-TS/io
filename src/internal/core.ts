@@ -347,17 +347,23 @@ export const withFiberRuntime = <R, E, A>(
 }
 
 /* @internal */
-export const acquireUseRelease = <R, E, A, R2, E2, A2, R3, X>(options: {
-  readonly acquire: Effect.Effect<R, E, A>
-  readonly use: (a: A) => Effect.Effect<R2, E2, A2>
-  readonly release: (a: A, exit: Exit.Exit<E2, A2>) => Effect.Effect<R3, never, X>
-}) =>
+export const acquireUseRelease = dual<
+  <A, R2, E2, A2, R3, X>(
+    use: (a: A) => Effect.Effect<R2, E2, A2>,
+    release: (a: A, exit: Exit.Exit<E2, A2>) => Effect.Effect<R3, never, X>
+  ) => <R, E>(acquire: Effect.Effect<R, E, A>) => Effect.Effect<R | R2 | R3, E | E2, A2>,
+  <R, E, A, R2, E2, A2, R3, X>(
+    acquire: Effect.Effect<R, E, A>,
+    use: (a: A) => Effect.Effect<R2, E2, A2>,
+    release: (a: A, exit: Exit.Exit<E2, A2>) => Effect.Effect<R3, never, X>
+  ) => Effect.Effect<R | R2 | R3, E | E2, A2>
+>(3, (acquire, use, release) =>
   uninterruptibleMask((restore) =>
     flatMap(
-      options.acquire,
+      acquire,
       (a) =>
-        flatMap(exit(suspend(() => restore(options.use(a)))), (exit) =>
-          suspend(() => options.release(a, exit)).pipe(
+        flatMap(exit(suspend(() => restore(use(a)))), (exit) =>
+          suspend(() => release(a, exit)).pipe(
             matchCauseEffect({
               onFailure: (cause) => {
                 switch (exit._tag) {
@@ -373,7 +379,7 @@ export const acquireUseRelease = <R, E, A, R2, E2, A2, R3, X>(options: {
             })
           ))
     )
-  )
+  ))
 
 /* @internal */
 export const as = dual<
@@ -1547,14 +1553,11 @@ export const fiberRefLocally: {
   <R, E, B, A>(use: Effect.Effect<R, E, B>, self: FiberRef.FiberRef<A>, value: A) => Effect.Effect<R, E, B>
 >(3, (use, self, value) =>
   flatMap(
-    acquireUseRelease({
-      acquire: pipe(
-        fiberRefGet(self),
-        zipLeft(fiberRefSet(self, value))
-      ),
-      use: () => step(use),
-      release: (oldValue) => fiberRefSet(self, oldValue)
-    }),
+    acquireUseRelease(
+      zipLeft(fiberRefGet(self), fiberRefSet(self, value)),
+      () => step(use),
+      (oldValue) => fiberRefSet(self, oldValue)
+    ),
     (res) => {
       if (res._tag === "Blocked") {
         return blocked(res.i0, fiberRefLocally(res.i1, self, value))

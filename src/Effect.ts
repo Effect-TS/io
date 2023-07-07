@@ -2207,13 +2207,17 @@ export const acquireRelease: {
  * @since 1.0.0
  * @category scoping, resources & finalization
  */
-export const acquireUseRelease: <R, E, A, R2, E2, A2, R3, X>(
-  options: {
-    readonly acquire: Effect<R, E, A>
-    readonly use: (a: A) => Effect<R2, E2, A2>
-    readonly release: (a: A, exit: Exit.Exit<E2, A2>) => Effect<R3, never, X>
-  }
-) => Effect<R | R2 | R3, E | E2, A2> = core.acquireUseRelease
+export const acquireUseRelease: {
+  <A, R2, E2, A2, R3, X>(
+    use: (a: A) => Effect<R2, E2, A2>,
+    release: (a: A, exit: Exit.Exit<E2, A2>) => Effect<R3, never, X>
+  ): <R, E>(acquire: Effect<R, E, A>) => Effect<R2 | R3 | R, E2 | E, A2>
+  <R, E, A, R2, E2, A2, R3, X>(
+    acquire: Effect<R, E, A>,
+    use: (a: A) => Effect<R2, E2, A2>,
+    release: (a: A, exit: Exit.Exit<E2, A2>) => Effect<R3, never, X>
+  ): Effect<R | R2 | R3, E | E2, A2>
+} = core.acquireUseRelease
 
 /**
  * This function adds a finalizer to the scope of the calling `Effect` value.
