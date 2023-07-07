@@ -56,7 +56,6 @@ export const pretty = <E>(cause: Cause.Cause<E>): string => {
   if (internal.isInterruptedOnly(cause)) {
     return "All fibers interrupted without errors."
   }
-  console.log(prettyErrors<E>(cause))
   const final = prettyErrors<E>(cause).map((e) => {
     let message = e.message
     if (e.stack) {
