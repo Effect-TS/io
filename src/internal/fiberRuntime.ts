@@ -1008,7 +1008,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
         try {
           return Context.unsafeGet(context, op as unknown as Context.Tag<any, any>)
         } catch (e) {
-          console.log(op)
+          console.log(e)
           throw e
         }
       }
