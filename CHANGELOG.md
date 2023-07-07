@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.31.1
+
+### Patch Changes
+
+- [#493](https://github.com/Effect-TS/io/pull/493) [`7a886f2`](https://github.com/Effect-TS/io/commit/7a886f294210cbabd3c6fcca02a8f70f23f794b4) Thanks [@tim-smart](https://github.com/tim-smart)! - remove internal console.log's
+
 ## 0.31.0
 
 ### Minor Changes
