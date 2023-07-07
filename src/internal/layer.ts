@@ -2,6 +2,7 @@ import * as Context from "@effect/data/Context"
 import * as Duration from "@effect/data/Duration"
 import type { LazyArg } from "@effect/data/Function"
 import { dual, pipe } from "@effect/data/Function"
+import { pipeArguments } from "@effect/data/Pipeable"
 import * as Cause from "@effect/io/Cause"
 import * as Clock from "@effect/io/Clock"
 import type * as Effect from "@effect/io/Effect"
@@ -42,7 +43,10 @@ const layerVariance = {
 
 /** @internal */
 const proto = {
-  [LayerTypeId]: layerVariance
+  [LayerTypeId]: layerVariance,
+  pipe() {
+    return pipeArguments(this, arguments)
+  }
 }
 
 /** @internal */

@@ -1,7 +1,7 @@
 import * as Chunk from "@effect/data/Chunk"
 import * as Context from "@effect/data/Context"
 import * as Duration from "@effect/data/Duration"
-import { identity, pipe } from "@effect/data/Function"
+import { identity } from "@effect/data/Function"
 import * as Deferred from "@effect/io/Deferred"
 import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
@@ -28,14 +28,13 @@ describe.concurrent("Layer", () => {
       const layer1 = Layer.effectContext<never, never, never>(Effect.never)
       const layer2 = Layer.scopedContext(
         Effect.acquireRelease(
-          pipe(
-            Deferred.succeed(deferred, void 0),
+          Deferred.succeed(deferred, void 0).pipe(
             Effect.map((bool) => Context.make(BoolTag, bool))
           ),
           () => Effect.unit
         )
       )
-      const env = pipe(layer1, Layer.merge(layer2), Layer.build)
+      const env = layer1.pipe(Layer.merge(layer2), Layer.build)
       const fiber = yield* $(Effect.scoped(env), Effect.forkDaemon)
       yield* $(Deferred.await(deferred))
       const result = yield* $(Fiber.interrupt(fiber), Effect.asUnit)
@@ -47,15 +46,13 @@ describe.concurrent("Layer", () => {
       const testRef = yield* $(Ref.make<Chunk.Chunk<string>>(Chunk.empty()))
       const layer = Layer.scoped(
         ChunkTag,
-        pipe(
-          Effect.acquireRelease(
-            Ref.make<Chunk.Chunk<string>>(Chunk.empty()),
-            (ref) =>
-              pipe(
-                Ref.get(ref),
-                Effect.flatMap((chunk) => Ref.set(testRef, chunk))
-              )
-          ),
+        Effect.acquireRelease(
+          Ref.make<Chunk.Chunk<string>>(Chunk.empty()),
+          (ref) =>
+            Ref.get(ref).pipe(
+              Effect.flatMap((chunk) => Ref.set(testRef, chunk))
+            )
+        ).pipe(
           Effect.tap(() => Effect.unit)
         )
       )
@@ -63,7 +60,7 @@ describe.concurrent("Layer", () => {
         Layer.build(layer),
         Effect.flatMap((context) =>
           Ref.update(
-            pipe(context, Context.get(ChunkTag)),
+            context.pipe(Context.get(ChunkTag)),
             Chunk.append("test")
           )
         ),
@@ -76,7 +73,7 @@ describe.concurrent("Layer", () => {
     Effect.gen(function*($) {
       const ref = yield* $(makeRef())
       const layer = makeLayer1(ref)
-      const env = pipe(layer, Layer.merge(layer), Layer.build)
+      const env = layer.pipe(Layer.merge(layer), Layer.build)
       yield* $(Effect.scoped(env))
       const result = yield* $(Ref.get(ref))
       assert.deepStrictEqual(Array.from(result), [acquire1, release1])
@@ -85,9 +82,9 @@ describe.concurrent("Layer", () => {
     Effect.gen(function*($) {
       const service1 = new Service1()
       const layer = Layer.succeed(Service1Tag, service1)
-      const env = pipe(layer, Layer.merge(layer), Layer.merge(layer), Layer.build)
+      const env = layer.pipe(Layer.merge(layer), Layer.merge(layer), Layer.build)
       const result = yield* $(
-        pipe(env, Effect.flatMap((context) => Effect.try(() => pipe(context, Context.get(Service1Tag)))))
+        env.pipe(Effect.flatMap((context) => Effect.try(() => context.pipe(Context.get(Service1Tag)))))
       )
       assert.strictEqual(result, service1)
     }))
@@ -96,7 +93,7 @@ describe.concurrent("Layer", () => {
       const ref = yield* $(makeRef())
       const layer1 = makeLayer1(ref)
       const layer2 = makeLayer2(ref)
-      const env = pipe(layer1, Layer.merge(layer2), Layer.build)
+      const env = layer1.pipe(Layer.merge(layer2), Layer.build)
       yield* $(Effect.scoped(env))
       const result = yield* $(Ref.get(ref))
       assert.isDefined(Array.from(result).slice(0, 2).find((s) => s === acquire1))
@@ -125,13 +122,11 @@ describe.concurrent("Layer", () => {
       }
       const CTag = Context.Tag<C>()
       const cLayer = Layer.function(ATag, CTag, (_: A) => new C(_.value))
-      const fedB = pipe(
-        Layer.succeed(ConfigTag, new Config(1)),
+      const fedB = Layer.succeed(ConfigTag, new Config(1)).pipe(
         Layer.provideMerge(aLayer),
         Layer.provideMerge(bLayer)
       )
-      const fedC = pipe(
-        cLayer,
+      const fedC = cLayer.pipe(
         Layer.useMerge(aLayer),
         Layer.use(Layer.succeed(ConfigTag, new Config(2)))
       )
@@ -141,8 +136,8 @@ describe.concurrent("Layer", () => {
         Layer.build,
         Effect.map((context) =>
           [
-            pipe(context, Context.get(BTag)),
-            pipe(context, Context.get(CTag))
+            context.pipe(Context.get(BTag)),
+            context.pipe(Context.get(CTag))
           ] as const
         ),
         Effect.scoped
@@ -155,7 +150,7 @@ describe.concurrent("Layer", () => {
       const ref = yield* $(makeRef())
       const layer1 = makeLayer1(ref)
       const layer2 = makeLayer2(ref)
-      const env = pipe(layer1, Layer.provideMerge(Layer.fail("failed!")), Layer.orElse(() => layer2), Layer.build)
+      const env = layer1.pipe(Layer.provideMerge(Layer.fail("failed!")), Layer.orElse(() => layer2), Layer.build)
       yield* $(Effect.scoped(env))
       const result = yield* $(Ref.get(ref))
       assert.deepStrictEqual(Array.from(result), [acquire1, release1, acquire2, release2])
@@ -179,7 +174,7 @@ describe.concurrent("Layer", () => {
         ScopedTag,
         Effect.scoped(Effect.acquireRelease(sleep, () => sleep))
       )
-      const layer = pipe(layer1, Layer.merge(pipe(layer2, Layer.merge(layer3), Layer.provide(layer4))))
+      const layer = layer1.pipe(Layer.merge(layer2.pipe(Layer.merge(layer3), Layer.provide(layer4))))
       const result = yield* $(Effect.unit, Effect.provideLayer(layer), Effect.exit)
       assert.isTrue(Exit.isFailure(result))
     }))
@@ -187,7 +182,7 @@ describe.concurrent("Layer", () => {
     Effect.gen(function*($) {
       const ref = yield* $(makeRef())
       const layer = makeLayer1(ref)
-      const env = pipe(layer, Layer.merge(Layer.fresh(layer)), Layer.build)
+      const env = layer.pipe(Layer.merge(Layer.fresh(layer)), Layer.build)
       yield* $(Effect.scoped(env))
       const result = yield* $(Ref.get(ref))
       assert.deepStrictEqual(Array.from(result), [acquire1, acquire1, release1, release1])
@@ -196,7 +191,7 @@ describe.concurrent("Layer", () => {
     Effect.gen(function*($) {
       const ref = yield* $(makeRef())
       const layer = makeLayer1(ref)
-      const env = pipe(layer, Layer.provide(Layer.fresh(layer)), Layer.build)
+      const env = layer.pipe(Layer.provide(Layer.fresh(layer)), Layer.build)
       yield* $(Effect.scoped(env))
       const result = yield* $(Ref.get(ref))
       assert.deepStrictEqual(Array.from(result), [acquire1, acquire1, release1, release1])
@@ -205,10 +200,9 @@ describe.concurrent("Layer", () => {
     Effect.gen(function*($) {
       const ref = yield* $(makeRef())
       const layer = makeLayer1(ref)
-      const env = pipe(
-        layer,
+      const env = layer.pipe(
         Layer.merge(layer),
-        Layer.merge(pipe(layer, Layer.merge(layer), Layer.fresh)),
+        Layer.merge(layer.pipe(Layer.merge(layer), Layer.fresh)),
         Layer.build
       )
       yield* $(Effect.scoped(env))
@@ -221,9 +215,8 @@ describe.concurrent("Layer", () => {
       const layer1 = makeLayer1(ref)
       const layer2 = makeLayer2(ref)
       const layer3 = makeLayer3(ref)
-      const env = pipe(
-        Layer.fresh(layer1),
-        Layer.provide(pipe(layer2, Layer.merge(pipe(layer1, Layer.provide(layer3), Layer.fresh)))),
+      const env = Layer.fresh(layer1).pipe(
+        Layer.provide(layer2.pipe(Layer.merge(layer1.pipe(Layer.provide(layer3), Layer.fresh)))),
         Layer.build
       )
       yield* $(Effect.scoped(env))
@@ -244,7 +237,7 @@ describe.concurrent("Layer", () => {
       const ref = yield* $(makeRef())
       const layer1 = makeLayer1(ref)
       const layer2 = makeLayer2(ref)
-      const env = pipe(layer1, Layer.merge(layer2), Layer.build)
+      const env = layer1.pipe(Layer.merge(layer2), Layer.build)
       const fiber = yield* $(Effect.scoped(env), Effect.fork)
       yield* $(Fiber.interrupt(fiber))
       const result = yield* $(Ref.get(ref), Effect.map((chunk) => Array.from(chunk)))
@@ -260,7 +253,7 @@ describe.concurrent("Layer", () => {
       const ref = yield* $(makeRef())
       const layer1 = makeLayer1(ref)
       const layer2 = makeLayer2(ref)
-      const env = pipe(layer1, Layer.provide(layer2), Layer.build)
+      const env = layer1.pipe(Layer.provide(layer2), Layer.build)
       const fiber = yield* $(Effect.scoped(env), Effect.fork)
       yield* $(Fiber.interrupt(fiber))
       const result = yield* $(Ref.get(ref), Effect.map((chunk) => Array.from(chunk)))
@@ -277,9 +270,8 @@ describe.concurrent("Layer", () => {
       const layer1 = makeLayer1(ref)
       const layer2 = makeLayer2(ref)
       const layer3 = makeLayer3(ref)
-      const env = pipe(
-        layer1,
-        Layer.provide(pipe(layer2, Layer.merge(pipe(layer1, Layer.provide(layer3))))),
+      const env = layer1.pipe(
+        Layer.provide(layer2.pipe(Layer.merge(layer1.pipe(Layer.provide(layer3))))),
         Layer.build
       )
       const fiber = yield* $(Effect.scoped(env), Effect.fork)
@@ -309,8 +301,7 @@ describe.concurrent("Layer", () => {
       const StringTag = Context.Tag<string>()
       const layer1 = Layer.succeed(ServiceATag, { name: "name", value: 1 })
       const layer2 = Layer.function(StringTag, ServiceBTag, (name) => ({ name }))
-      const live = pipe(
-        layer1,
+      const live = layer1.pipe(
         Layer.map((context) => Context.make(StringTag, Context.get(context, ServiceATag).name)),
         Layer.provide(layer2)
       )
@@ -324,10 +315,9 @@ describe.concurrent("Layer", () => {
       yield* $(
         memoized,
         Effect.flatMap((layer) =>
-          pipe(
-            Effect.context<Service1>(),
+          Effect.context<Service1>().pipe(
             Effect.provideLayer(layer),
-            Effect.flatMap(() => pipe(Effect.context<Service1>(), Effect.provideLayer(layer)))
+            Effect.flatMap(() => Effect.context<Service1>().pipe(Effect.provideLayer(layer)))
           )
         ),
         Effect.scoped
@@ -341,9 +331,9 @@ describe.concurrent("Layer", () => {
       const tag = Context.Tag<boolean>()
       const layer1 = Layer.scopedDiscard(Effect.locallyScoped(fiberRef, true))
       const layer2 = Layer.effect(tag, FiberRef.get(fiberRef))
-      const layer3 = pipe(layer1, Layer.merge(pipe(layer1, Layer.provide(layer2))))
+      const layer3 = layer1.pipe(Layer.merge(layer1.pipe(Layer.provide(layer2))))
       const result = yield* $(Layer.build(layer3))
-      assert.equal(pipe(result, Context.unsafeGet(tag)), true)
+      assert.equal(result.pipe(Context.unsafeGet(tag)), true)
     }))
   it.effect("provides a partial environment to an effect", () =>
     Effect.gen(function*($) {
@@ -352,7 +342,7 @@ describe.concurrent("Layer", () => {
       const needsNumberAndString = Effect.all(NumberTag, StringTag)
       const providesNumber = Layer.succeed(NumberTag, 10)
       const providesString = Layer.succeed(StringTag, "hi")
-      const needsString = pipe(needsNumberAndString, Effect.provideSomeLayer(providesNumber))
+      const needsString = needsNumberAndString.pipe(Effect.provideSomeLayer(providesNumber))
       const result = yield* $(needsString, Effect.provideLayer(providesString))
       assert.strictEqual(result[0], 10)
       assert.strictEqual(result[1], "hi")
@@ -374,22 +364,21 @@ describe.concurrent("Layer", () => {
         >
       }
       const FooTag = Context.Tag<FooService>()
-      const fooBuilder = pipe(
-        Layer.context<string | Ref.Ref<number>>(),
+      const fooBuilder = Layer.context<string | Ref.Ref<number>>().pipe(
         Layer.map((context) => {
           const s = Context.get(context, StringTag)
           const ref = Context.get(context, NumberRefTag)
           return Context.make(FooTag, {
             ref,
             string: s,
-            get: pipe(Ref.get(ref), Effect.map((i) => [i, s] as const))
+            get: Ref.get(ref).pipe(Effect.map((i) => [i, s] as const))
           })
         })
       )
       const provideNumberRef = Layer.effect(NumberRefTag)(Ref.make(10))
       const provideString = Layer.succeed(StringTag, "hi")
-      const needsString = pipe(provideNumberRef, Layer.provide(fooBuilder))
-      const layer = pipe(provideString, Layer.provide(needsString))
+      const needsString = provideNumberRef.pipe(Layer.provide(fooBuilder))
+      const layer = provideString.pipe(Layer.provide(needsString))
       const result = yield* $(Effect.flatMap(FooTag, (_) => _.get), Effect.provideLayer(layer))
       assert.strictEqual(result[0], 10)
       assert.strictEqual(result[1], "hi")
@@ -411,26 +400,25 @@ describe.concurrent("Layer", () => {
         >
       }
       const FooTag = Context.Tag<FooService>()
-      const fooBuilder = pipe(
-        Layer.context<string | Ref.Ref<number>>(),
+      const fooBuilder = Layer.context<string | Ref.Ref<number>>().pipe(
         Layer.map((context) => {
           const s = Context.get(context, StringTag)
           const ref = Context.get(context, NumberRefTag)
           return Context.make(FooTag, {
             ref,
             string: s,
-            get: pipe(Ref.get(ref), Effect.map((i) => [i, s] as const))
+            get: Ref.get(ref).pipe(Effect.map((i) => [i, s] as const))
           })
         })
       )
       const provideNumberRef = Layer.effect(NumberRefTag, Ref.make(10))
       const provideString = Layer.succeed(StringTag, "hi")
-      const needsString = pipe(provideNumberRef, Layer.provideMerge(fooBuilder))
-      const layer = pipe(provideString, Layer.provideMerge(needsString))
+      const needsString = provideNumberRef.pipe(Layer.provideMerge(fooBuilder))
+      const layer = provideString.pipe(Layer.provideMerge(needsString))
       const result = yield* $(
         Effect.flatMap(FooTag, (foo) => foo.get),
         Effect.flatMap(([i1, s]) =>
-          pipe(Effect.flatMap(NumberRefTag, Ref.get), Effect.map((i2) => [i1, i2, s] as const))
+          NumberRefTag.pipe(Effect.flatMap(Ref.get), Effect.map((i2) => [i1, i2, s] as const))
         ),
         Effect.provideLayer(layer)
       )
@@ -451,7 +439,7 @@ describe.concurrent("Layer", () => {
       const layer = Layer.function(NumberTag, ToStringTag, (numberService) => ({
         value: numberService.value.toString()
       }))
-      const live = pipe(Layer.succeed(NumberTag, { value: 1 }), Layer.provide(Layer.passthrough(layer)))
+      const live = Layer.succeed(NumberTag, { value: 1 }).pipe(Layer.provide(Layer.passthrough(layer)))
       const { i, s } = yield* $(
         Effect.all({
           i: NumberTag,
@@ -473,7 +461,7 @@ describe.concurrent("Layer", () => {
       const PersonTag = Context.Tag<PersonService>()
       const AgeTag = Context.Tag<AgeService>()
       const personLayer = Layer.succeed(PersonTag, { name: "User", age: 42 })
-      const ageLayer = pipe(personLayer, Layer.project(PersonTag, AgeTag, (_) => ({ age: _.age })))
+      const ageLayer = personLayer.pipe(Layer.project(PersonTag, AgeTag, (_) => ({ age: _.age })))
       const { age } = yield* $(AgeTag, Effect.provideLayer(ageLayer))
       assert.strictEqual(age, 42)
     }))
@@ -481,7 +469,7 @@ describe.concurrent("Layer", () => {
     Effect.gen(function*($) {
       const ref = yield* $(makeRef())
       const layer = makeLayer1(ref)
-      const env = pipe(layer, Layer.provide(layer), Layer.build)
+      const env = layer.pipe(Layer.provide(layer), Layer.build)
       yield* $(Effect.scoped(env))
       const result = yield* $(Ref.get(ref))
       assert.deepStrictEqual(Array.from(result), [acquire1, release1])
@@ -492,7 +480,7 @@ describe.concurrent("Layer", () => {
       const layer1 = makeLayer1(ref)
       const layer2 = makeLayer2(ref)
       const layer3 = makeLayer3(ref)
-      const env = pipe(layer1, Layer.provide(layer2), Layer.merge(pipe(layer1, Layer.provide(layer3))), Layer.build)
+      const env = layer1.pipe(Layer.provide(layer2), Layer.merge(layer1.pipe(Layer.provide(layer3))), Layer.build)
       yield* $(Effect.scoped(env))
       const result = yield* $(Ref.get(ref), Effect.map((chunk) => Array.from(chunk)))
       assert.strictEqual(result[0], acquire1)
@@ -507,7 +495,7 @@ describe.concurrent("Layer", () => {
       const ref = yield* $(makeRef())
       const layer1 = makeLayer1(ref)
       const layer2 = makeLayer2(ref)
-      const env = pipe(layer1, Layer.provide(layer2), Layer.build)
+      const env = layer1.pipe(Layer.provide(layer2), Layer.build)
       yield* $(Effect.scoped(env))
       const result = yield* $(Ref.get(ref))
       assert.deepStrictEqual(Array.from(result), [acquire1, acquire2, release2, release1])
@@ -518,7 +506,7 @@ describe.concurrent("Layer", () => {
       const layer1 = makeLayer1(ref)
       const layer2 = makeLayer2(ref)
       const layer3 = makeLayer3(ref)
-      const env = pipe(layer1, Layer.provide(layer2), Layer.provide(layer3), Layer.build)
+      const env = layer1.pipe(Layer.provide(layer2), Layer.provide(layer3), Layer.build)
       yield* $(Effect.scoped(env))
       const result = yield* $(Ref.get(ref))
       assert.deepStrictEqual(Array.from(result), [acquire1, acquire2, acquire3, release3, release2, release1])
@@ -526,8 +514,8 @@ describe.concurrent("Layer", () => {
   it.effect("retry", () =>
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(0))
-      const effect = pipe(Ref.update(ref, (n) => n + 1), Effect.zipRight(Effect.fail("fail")))
-      const layer = pipe(Layer.effectContext(effect), Layer.retry(Schedule.recurs(3)))
+      const effect = ref.pipe(Ref.update((n) => n + 1), Effect.zipRight(Effect.fail("fail")))
+      const layer = Layer.effectContext(effect).pipe(Layer.retry(Schedule.recurs(3)))
       yield* $(Effect.ignore(Effect.scoped(Layer.build(layer))))
       const result = yield* $(Ref.get(ref))
       assert.strictEqual(result, 4)
@@ -538,11 +526,10 @@ describe.concurrent("Layer", () => {
       const layer1 = makeLayer1(ref)
       const layer2 = makeLayer2(ref)
       const layer3 = makeLayer3(ref)
-      const env = pipe(
-        layer1,
+      const env = layer1.pipe(
         Layer.map(identity),
         Layer.provide(layer2),
-        Layer.provide(pipe(layer1, Layer.provide(layer3))),
+        Layer.provide(layer1.pipe(Layer.provide(layer3))),
         Layer.build
       )
       yield* $(Effect.scoped(env))
@@ -560,11 +547,10 @@ describe.concurrent("Layer", () => {
       const layer1 = makeLayer1(ref)
       const layer2 = makeLayer2(ref)
       const layer3 = makeLayer3(ref)
-      const env = pipe(
-        layer1,
+      const env = layer1.pipe(
         Layer.mapError(identity),
         Layer.provide(layer2),
-        Layer.provide(pipe(layer1, Layer.provide(layer3))),
+        Layer.provide(layer1.pipe(Layer.provide(layer3))),
         Layer.build
       )
       yield* $(Effect.scoped(env))
@@ -582,10 +568,9 @@ describe.concurrent("Layer", () => {
       const layer1 = makeLayer1(ref)
       const layer2 = makeLayer2(ref)
       const layer3 = makeLayer3(ref)
-      const env = pipe(
-        Layer.orDie(layer1),
+      const env = Layer.orDie(layer1).pipe(
         Layer.provide(layer2),
-        Layer.provide(pipe(layer1, Layer.provide(layer3))),
+        Layer.provide(layer1.pipe(Layer.provide(layer3))),
         Layer.build
       )
       yield* $(Effect.scoped(env))
@@ -604,9 +589,8 @@ describe.concurrent("Layer", () => {
       }
       const BarTag = Context.Tag<BarService>()
       const ref: Ref.Ref<string> = yield* $(Ref.make("foo"))
-      const layer = pipe(
-        Layer.succeed(BarTag, { bar: "bar" }),
-        Layer.tap((context) => Ref.set(ref, pipe(context, Context.get(BarTag)).bar))
+      const layer = Layer.succeed(BarTag, { bar: "bar" }).pipe(
+        Layer.tap((context) => Ref.set(ref, context.pipe(Context.get(BarTag)).bar))
       )
       yield* $(Effect.scoped(Layer.build(layer)))
       const result = yield* $(Ref.get(ref))
@@ -666,7 +650,7 @@ export const makeLayer1 = (ref: Ref.Ref<Chunk.Chunk<string>>): Layer.Layer<never
   return Layer.scoped(
     Service1Tag,
     Effect.acquireRelease(
-      pipe(Ref.update(ref, Chunk.append(acquire1)), Effect.as(new Service1())),
+      ref.pipe(Ref.update(Chunk.append(acquire1)), Effect.as(new Service1())),
       () => Ref.update(ref, Chunk.append(release1))
     )
   )
@@ -681,7 +665,7 @@ export const makeLayer2 = (ref: Ref.Ref<Chunk.Chunk<string>>): Layer.Layer<never
   return Layer.scoped(
     Service2Tag,
     Effect.acquireRelease(
-      pipe(Ref.update(ref, Chunk.append(acquire2)), Effect.as(new Service2())),
+      ref.pipe(Ref.update(Chunk.append(acquire2)), Effect.as(new Service2())),
       () => Ref.update(ref, Chunk.append(release2))
     )
   )
@@ -696,7 +680,7 @@ export const makeLayer3 = (ref: Ref.Ref<Chunk.Chunk<string>>): Layer.Layer<never
   return Layer.scoped(
     Service3Tag,
     Effect.acquireRelease(
-      pipe(Ref.update(ref, Chunk.append(acquire3)), Effect.as(new Service3())),
+      ref.pipe(Ref.update(Chunk.append(acquire3)), Effect.as(new Service3())),
       () => Ref.update(ref, Chunk.append(release3))
     )
   )
