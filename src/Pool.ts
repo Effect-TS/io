@@ -3,6 +3,7 @@
  */
 import type * as Data from "@effect/data/Data"
 import type * as Duration from "@effect/data/Duration"
+import type { Pipeable } from "@effect/data/Pipeable"
 import type * as Effect from "@effect/io/Effect"
 import * as internal from "@effect/io/internal/pool"
 import type * as Scope from "@effect/io/Scope"
@@ -27,7 +28,7 @@ export type PoolTypeId = typeof PoolTypeId
  * @since 1.0.0
  * @category models
  */
-export interface Pool<E, A> extends Data.Case, Pool.Variance<E, A> {
+export interface Pool<E, A> extends Data.Case, Pool.Variance<E, A>, Pipeable<Pool<E, A>> {
   /**
    * Retrieves an item from the pool in a scoped effect. Note that if
    * acquisition fails, then the returned effect will fail for that same reason.

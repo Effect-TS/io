@@ -1,5 +1,5 @@
 import * as Duration from "@effect/data/Duration"
-import { pipe } from "@effect/data/Function"
+import { identity } from "@effect/data/Function"
 import * as Option from "@effect/data/Option"
 import * as Deferred from "@effect/io/Deferred"
 import * as Effect from "@effect/io/Effect"
@@ -81,11 +81,12 @@ describe("Pool", () => {
       const pool = yield* $(Pool.make({ acquire: get, size: 10 }))
       yield* $(Effect.repeatUntil(Ref.get(count), (n) => n === 10))
       yield* $(Effect.all(Effect.replicate(10)(Pool.get(pool))))
-      const result = yield* $(TestServices.provideLive(pipe(
-        Effect.scoped(Pool.get(pool)),
-        Effect.disconnect,
-        Effect.timeout(Duration.millis(1))
-      )))
+      const result = yield* $(TestServices.provideLive(
+        Effect.scoped(Pool.get(pool)).pipe(
+          Effect.disconnect,
+          Effect.timeout(Duration.millis(1))
+        )
+      ))
       expect(result).toEqual(Option.none())
     }))
 
@@ -159,8 +160,7 @@ describe("Pool", () => {
       const cond = (i: number) => (i <= 10 ? Effect.fail(i) : Effect.succeed(i))
       const count = yield* $(Ref.make(0))
       const get = Effect.acquireRelease(
-        pipe(
-          Ref.updateAndGet(count, (n) => n + 1),
+        Ref.updateAndGet(count, (n) => n + 1).pipe(
           Effect.flatMap(cond)
         ),
         () => Ref.update(count, (n) => n - 1)

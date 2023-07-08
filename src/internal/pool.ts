@@ -4,6 +4,7 @@ import * as Equal from "@effect/data/Equal"
 import { dual, pipe } from "@effect/data/Function"
 import * as Hash from "@effect/data/Hash"
 import * as HashSet from "@effect/data/HashSet"
+import { pipeArguments } from "@effect/data/Pipeable"
 import type * as Clock from "@effect/io/Clock"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
@@ -165,6 +166,10 @@ class PoolImpl<E, A> implements Pool.Pool<E, A> {
       Equal.equals(this.items, (that as PoolImpl<E, A>).items) &&
       Equal.equals(this.invalidated, (that as PoolImpl<E, A>).invalidated) &&
       Equal.equals(this.track, (that as PoolImpl<E, A>).track)
+  }
+
+  pipe() {
+    return pipeArguments(this, arguments)
   }
 
   get(): Effect.Effect<Scope.Scope, E, A> {
