@@ -5,6 +5,7 @@ import type * as Either from "@effect/data/Either"
 import type * as HashSet from "@effect/data/HashSet"
 import type * as Option from "@effect/data/Option"
 import type * as order from "@effect/data/Order"
+import type { Pipeable } from "@effect/data/Pipeable"
 import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
@@ -54,7 +55,7 @@ export type RuntimeFiberTypeId = typeof RuntimeFiberTypeId
  * @since 1.0.0
  * @category models
  */
-export interface Fiber<E, A> extends Fiber.Variance<E, A> {
+export interface Fiber<E, A> extends Fiber.Variance<E, A>, Pipeable<Fiber<E, A>> {
   /**
    * The identity of the fiber.
    */

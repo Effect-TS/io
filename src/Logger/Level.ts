@@ -4,6 +4,7 @@
 import { dual, pipe } from "@effect/data/Function"
 import * as number from "@effect/data/Number"
 import * as order from "@effect/data/Order"
+import type { Pipeable } from "@effect/data/Pipeable"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal/core"
 
@@ -19,7 +20,7 @@ import * as core from "@effect/io/internal/core"
  * @property label - A label associated with the log level.
  * @property syslog -The syslog severity level of the log level.
  */
-export type LogLevel = All | Fatal | Error | Warning | Info | Debug | Trace | None
+export type LogLevel = (All | Fatal | Error | Warning | Info | Debug | Trace | None) & Pipeable<LogLevel>
 
 /**
  * @since 1.0.0
@@ -31,7 +32,7 @@ export type Literal = LogLevel["_tag"]
  * @since 1.0.0
  * @category model
  */
-export interface All {
+export interface All extends Pipeable<All> {
   readonly _tag: "All"
   readonly label: "ALL"
   readonly syslog: 0
@@ -42,7 +43,7 @@ export interface All {
  * @since 1.0.0
  * @category model
  */
-export interface Fatal {
+export interface Fatal extends Pipeable<Fatal> {
   readonly _tag: "Fatal"
   readonly label: "FATAL"
   readonly syslog: 2
@@ -53,7 +54,7 @@ export interface Fatal {
  * @since 1.0.0
  * @category model
  */
-export interface Error {
+export interface Error extends Pipeable<Error> {
   readonly _tag: "Error"
   readonly label: "ERROR"
   readonly syslog: 3
@@ -64,7 +65,7 @@ export interface Error {
  * @since 1.0.0
  * @category model
  */
-export interface Warning {
+export interface Warning extends Pipeable<Warning> {
   readonly _tag: "Warning"
   readonly label: "WARN"
   readonly syslog: 4
@@ -75,7 +76,7 @@ export interface Warning {
  * @since 1.0.0
  * @category model
  */
-export interface Info {
+export interface Info extends Pipeable<Info> {
   readonly _tag: "Info"
   readonly label: "INFO"
   readonly syslog: 6
@@ -86,7 +87,7 @@ export interface Info {
  * @since 1.0.0
  * @category model
  */
-export interface Debug {
+export interface Debug extends Pipeable<Debug> {
   readonly _tag: "Debug"
   readonly label: "DEBUG"
   readonly syslog: 7
@@ -97,7 +98,7 @@ export interface Debug {
  * @since 1.0.0
  * @category model
  */
-export interface Trace {
+export interface Trace extends Pipeable<Trace> {
   readonly _tag: "Trace"
   readonly label: "TRACE"
   readonly syslog: 7
@@ -108,7 +109,7 @@ export interface Trace {
  * @since 1.0.0
  * @category model
  */
-export interface None {
+export interface None extends Pipeable<None> {
   readonly _tag: "None"
   readonly label: "OFF"
   readonly syslog: 7

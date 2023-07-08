@@ -6,6 +6,7 @@ import * as Equal from "@effect/data/Equal"
 import type { LazyArg } from "@effect/data/Function"
 import { constVoid, dual, pipe } from "@effect/data/Function"
 import * as Option from "@effect/data/Option"
+import { pipeArguments } from "@effect/data/Pipeable"
 import type { Predicate } from "@effect/data/Predicate"
 import type * as Cause from "@effect/io/Cause"
 import * as Clock from "@effect/io/Clock"
@@ -61,6 +62,9 @@ class ScheduleImpl<S, Env, In, Out> implements Schedule.Schedule<Env, In, Out> {
       state: S
     ) => Effect.Effect<Env, never, readonly [S, Out, ScheduleDecision.ScheduleDecision]>
   ) {
+  }
+  pipe() {
+    return pipeArguments(this, arguments)
   }
 }
 

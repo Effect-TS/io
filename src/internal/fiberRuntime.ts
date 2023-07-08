@@ -8,6 +8,7 @@ import * as HashSet from "@effect/data/HashSet"
 import * as List from "@effect/data/List"
 import * as MRef from "@effect/data/MutableRef"
 import * as Option from "@effect/data/Option"
+import { type Pipeable, pipeArguments } from "@effect/data/Pipeable"
 import * as Predicate from "@effect/data/Predicate"
 import * as RA from "@effect/data/ReadonlyArray"
 import type * as Cause from "@effect/io/Cause"
@@ -227,10 +228,14 @@ const runBlockedRequests = <R>(self: RequestBlock.RequestBlock<R>) =>
   )
 
 /** @internal */
-export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
+export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A>, Pipeable<FiberRuntime<E, A>> {
   readonly [internalFiber.FiberTypeId] = internalFiber.fiberVariance
 
   readonly [internalFiber.RuntimeFiberTypeId] = runtimeFiberVariance
+
+  pipe() {
+    return pipeArguments(this, arguments)
+  }
 
   private _fiberRefs: FiberRefs.FiberRefs
   private _fiberId: FiberId.Runtime
@@ -2750,6 +2755,9 @@ export const scopeMake = (
   core.map(core.releaseMapMake, (rm): Scope.Scope.Closeable => ({
     [core.ScopeTypeId]: core.ScopeTypeId,
     [core.CloseableScopeTypeId]: core.CloseableScopeTypeId,
+    pipe() {
+      return pipeArguments(this, arguments)
+    },
     fork: (strategy) =>
       core.uninterruptible(
         pipe(
@@ -2914,7 +2922,10 @@ export const fiberAll = <E, A>(fibers: Iterable<Fiber.Fiber<E, A>>): Fiber.Fiber
         }
       )
     ),
-  interruptAsFork: (fiberId) => core.forEachDiscard(fibers, (fiber) => fiber.interruptAsFork(fiberId))
+  interruptAsFork: (fiberId) => core.forEachDiscard(fibers, (fiber) => fiber.interruptAsFork(fiberId)),
+  pipe() {
+    return pipeArguments(this, arguments)
+  }
 })
 
 /* @internal */

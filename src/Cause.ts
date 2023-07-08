@@ -26,6 +26,7 @@ import type * as Either from "@effect/data/Either"
 import type * as Equal from "@effect/data/Equal"
 import type * as HashSet from "@effect/data/HashSet"
 import type * as Option from "@effect/data/Option"
+import type { Pipeable } from "@effect/data/Pipeable"
 import type { Predicate } from "@effect/data/Predicate"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import * as internal from "@effect/io/internal/cause"
@@ -128,13 +129,16 @@ export type StackAnnotationTypeId = typeof StackAnnotationTypeId
  * @category models
  */
 export type Cause<E> =
-  | Empty
-  | Fail<E>
-  | Die
-  | Interrupt
-  | Annotated<E>
-  | Sequential<E>
-  | Parallel<E>
+  & (
+    | Empty
+    | Fail<E>
+    | Die
+    | Interrupt
+    | Annotated<E>
+    | Sequential<E>
+    | Parallel<E>
+  )
+  & Pipeable<Cause<E>>
 
 /**
  * @since 1.0.0
@@ -243,7 +247,7 @@ export interface InvalidHubCapacityException {
  * @since 1.0.0
  * @category models
  */
-export interface Empty extends Cause.Variance<never>, Equal.Equal {
+export interface Empty extends Cause.Variance<never>, Equal.Equal, Pipeable<Empty> {
   readonly _tag: "Empty"
 }
 
@@ -254,7 +258,7 @@ export interface Empty extends Cause.Variance<never>, Equal.Equal {
  * @since 1.0.0
  * @category models
  */
-export interface Fail<E> extends Cause.Variance<E>, Equal.Equal {
+export interface Fail<E> extends Cause.Variance<E>, Equal.Equal, Pipeable<Fail<E>> {
   readonly _tag: "Fail"
   readonly error: E
 }
@@ -267,7 +271,7 @@ export interface Fail<E> extends Cause.Variance<E>, Equal.Equal {
  * @since 1.0.0
  * @category models
  */
-export interface Die extends Cause.Variance<never>, Equal.Equal {
+export interface Die extends Cause.Variance<never>, Equal.Equal, Pipeable<Die> {
   readonly _tag: "Die"
   readonly defect: unknown
 }
@@ -279,7 +283,7 @@ export interface Die extends Cause.Variance<never>, Equal.Equal {
  * @since 1.0.0
  * @category models
  */
-export interface Interrupt extends Cause.Variance<never>, Equal.Equal {
+export interface Interrupt extends Cause.Variance<never>, Equal.Equal, Pipeable<Interrupt> {
   readonly _tag: "Interrupt"
   readonly fiberId: FiberId.FiberId
 }
@@ -293,7 +297,7 @@ export interface Interrupt extends Cause.Variance<never>, Equal.Equal {
  * @since 1.0.0
  * @category models
  */
-export interface Annotated<E> extends Cause.Variance<E>, Equal.Equal {
+export interface Annotated<E> extends Cause.Variance<E>, Equal.Equal, Pipeable<Annotated<E>> {
   readonly _tag: "Annotated"
   readonly cause: Cause<E>
   readonly annotation: unknown
@@ -312,7 +316,7 @@ export interface Annotated<E> extends Cause.Variance<E>, Equal.Equal {
  * @since 1.0.0
  * @category models
  */
-export interface Parallel<E> extends Cause.Variance<E>, Equal.Equal {
+export interface Parallel<E> extends Cause.Variance<E>, Equal.Equal, Pipeable<Parallel<E>> {
   readonly _tag: "Parallel"
   readonly left: Cause<E>
   readonly right: Cause<E>
@@ -330,7 +334,7 @@ export interface Parallel<E> extends Cause.Variance<E>, Equal.Equal {
  * @since 1.0.0
  * @category models
  */
-export interface Sequential<E> extends Cause.Variance<E>, Equal.Equal {
+export interface Sequential<E> extends Cause.Variance<E>, Equal.Equal, Pipeable<Sequential<E>> {
   readonly _tag: "Sequential"
   readonly left: Cause<E>
   readonly right: Cause<E>

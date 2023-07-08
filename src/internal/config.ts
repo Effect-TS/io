@@ -5,6 +5,7 @@ import { constTrue, dual, pipe } from "@effect/data/Function"
 import type * as HashMap from "@effect/data/HashMap"
 import * as HashSet from "@effect/data/HashSet"
 import * as Option from "@effect/data/Option"
+import { pipeArguments } from "@effect/data/Pipeable"
 import type { Predicate, Refinement } from "@effect/data/Predicate"
 import type * as Config from "@effect/io/Config"
 import * as ConfigError from "@effect/io/Config/Error"
@@ -44,7 +45,10 @@ const configVariance = {
 
 /** @internal */
 const proto = {
-  [ConfigTypeId]: configVariance
+  [ConfigTypeId]: configVariance,
+  pipe() {
+    return pipeArguments(this, arguments)
+  }
 }
 
 /** @internal */

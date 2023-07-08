@@ -3,6 +3,7 @@ import * as Duration from "@effect/data/Duration"
 import * as Equal from "@effect/data/Equal"
 import { pipe } from "@effect/data/Function"
 import * as Hash from "@effect/data/Hash"
+import { pipeArguments } from "@effect/data/Pipeable"
 import type * as MetricBoundaries from "@effect/io/Metric/Boundaries"
 import type * as MetricKeyType from "@effect/io/Metric/KeyType"
 
@@ -70,6 +71,9 @@ class CounterKeyType implements MetricKeyType.MetricKeyType.Counter {
   [Equal.symbol](that: unknown): boolean {
     return isCounterKey(that)
   }
+  pipe() {
+    return pipeArguments(this, arguments)
+  }
 }
 
 /** @internal */
@@ -82,6 +86,9 @@ class FrequencyKeyType implements MetricKeyType.MetricKeyType.Frequency {
   [Equal.symbol](that: unknown): boolean {
     return isFrequencyKey(that)
   }
+  pipe() {
+    return pipeArguments(this, arguments)
+  }
 }
 
 /** @internal */
@@ -93,6 +100,9 @@ class GaugeKeyType implements MetricKeyType.MetricKeyType.Gauge {
   }
   [Equal.symbol](that: unknown): boolean {
     return isGaugeKey(that)
+  }
+  pipe() {
+    return pipeArguments(this, arguments)
   }
 }
 
@@ -112,6 +122,9 @@ export class HistogramKeyType implements MetricKeyType.MetricKeyType.Histogram {
   }
   [Equal.symbol](that: unknown): boolean {
     return isHistogramKey(that) && Equal.equals(this.boundaries, that.boundaries)
+  }
+  pipe() {
+    return pipeArguments(this, arguments)
   }
 }
 
@@ -140,6 +153,9 @@ class SummaryKeyType implements MetricKeyType.MetricKeyType.Summary {
       this.maxSize === that.maxSize &&
       this.error === that.error &&
       Equal.equals(this.quantiles, that.quantiles)
+  }
+  pipe() {
+    return pipeArguments(this, arguments)
   }
 }
 

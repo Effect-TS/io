@@ -1,6 +1,5 @@
 import * as Context from "@effect/data/Context"
 import { seconds } from "@effect/data/Duration"
-import { pipe } from "@effect/data/Function"
 import * as ReadonlyArray from "@effect/data/ReadonlyArray"
 import * as Cause from "@effect/io/Cause"
 import type { Concurrency } from "@effect/io/Concurrency"
@@ -56,13 +55,12 @@ const delay = <R, E, A>(self: Effect.Effect<R, E, A>) =>
 
 const counted = <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.tap(self, () => Effect.map(Counter, (c) => c.count++))
 
-const UserResolver = pipe(
-  Resolver.makeBatched((requests: Array<UserRequest>) => {
-    return Effect.flatMap(Requests, (r) => {
-      r.count += requests.length
-      return counted(Effect.forEach(requests, (request) => delay(processRequest(request)), { discard: true }))
-    })
-  }),
+const UserResolver = Resolver.makeBatched((requests: Array<UserRequest>) => {
+  return Effect.flatMap(Requests, (r) => {
+    r.count += requests.length
+    return counted(Effect.forEach(requests, (request) => delay(processRequest(request)), { discard: true }))
+  })
+}).pipe(
   Resolver.batchN(15),
   Resolver.contextFromServices(Counter, Requests)
 )
@@ -74,8 +72,7 @@ export const interrupts = FiberRef.unsafeMake({ interrupts: 0 })
 export const getUserNameById = (id: number) => Effect.request(GetNameById({ id }), UserResolver)
 
 export const getAllUserNamesN = (concurrency: Concurrency) =>
-  pipe(
-    getAllUserIds,
+  getAllUserIds.pipe(
     Effect.flatMap(Effect.forEach(getUserNameById, { concurrency })),
     Effect.onInterrupt(() => FiberRef.getWith(interrupts, (i) => Effect.sync(() => i.interrupts++)))
   )

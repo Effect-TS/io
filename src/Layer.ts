@@ -19,6 +19,7 @@
  */
 import * as Context from "@effect/data/Context"
 import type { LazyArg } from "@effect/data/Function"
+import type { Pipeable } from "@effect/data/Pipeable"
 import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
 import type { FiberRef } from "@effect/io/FiberRef"
@@ -43,7 +44,7 @@ export type LayerTypeId = typeof LayerTypeId
  * @since 1.0.0
  * @category models
  */
-export interface Layer<RIn, E, ROut> extends Layer.Variance<RIn, E, ROut> {}
+export interface Layer<RIn, E, ROut> extends Layer.Variance<RIn, E, ROut>, Pipeable<Layer<RIn, E, ROut>> {}
 
 /**
  * @since 1.0.0

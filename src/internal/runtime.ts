@@ -1,6 +1,7 @@
 import * as Context from "@effect/data/Context"
 import { pipe } from "@effect/data/Function"
 import * as Option from "@effect/data/Option"
+import { pipeArguments } from "@effect/data/Pipeable"
 import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
@@ -245,6 +246,10 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
     readonly runtimeFlags: RuntimeFlags.RuntimeFlags,
     readonly fiberRefs: FiberRefs.FiberRefs
   ) {}
+
+  pipe() {
+    return pipeArguments(this, arguments)
+  }
 }
 
 /** @internal */

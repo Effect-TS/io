@@ -1,6 +1,7 @@
 /**
  * @since 1.0.0
  */
+import type { Pipeable } from "@effect/data/Pipeable"
 import * as internal from "@effect/io/internal/metric/pair"
 import type * as MetricKey from "@effect/io/Metric/Key"
 import type * as MetricKeyType from "@effect/io/Metric/KeyType"
@@ -22,7 +23,9 @@ export type MetricPairTypeId = typeof MetricPairTypeId
  * @since 1.0.0
  * @category model
  */
-export interface MetricPair<Type extends MetricKeyType.MetricKeyType<any, any>> extends MetricPair.Variance<Type> {
+export interface MetricPair<Type extends MetricKeyType.MetricKeyType<any, any>>
+  extends MetricPair.Variance<Type>, Pipeable<MetricPair<Type>>
+{
   readonly metricKey: MetricKey.MetricKey<Type>
   readonly metricState: MetricState.MetricState<MetricKeyType.MetricKeyType.OutType<Type>>
 }

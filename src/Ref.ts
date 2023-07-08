@@ -2,6 +2,7 @@
  * @since 1.0.0
  */
 import type * as Option from "@effect/data/Option"
+import type { Pipeable } from "@effect/data/Pipeable"
 import type * as Effect from "@effect/io/Effect"
 import * as internal from "@effect/io/internal/ref"
 
@@ -21,7 +22,7 @@ export type RefTypeId = typeof RefTypeId
  * @since 1.0.0
  * @category models
  */
-export interface Ref<A> extends Ref.Variance<A> {
+export interface Ref<A> extends Ref.Variance<A>, Pipeable<Ref<A>> {
   modify<B>(f: (a: A) => readonly [B, A]): Effect.Effect<never, never, B>
 }
 

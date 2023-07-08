@@ -1,5 +1,4 @@
 import * as Equal from "@effect/data/Equal"
-import { pipe } from "@effect/data/Function"
 import * as Hash from "@effect/data/Hash"
 import * as Option from "@effect/data/Option"
 import * as Cause from "@effect/io/Cause"
@@ -50,7 +49,7 @@ describe.concurrent("Cause", () => {
 
   it("left identity", () => {
     fc.assert(fc.property(causes, (cause) => {
-      const left = pipe(cause, Cause.flatMap(Cause.fail))
+      const left = cause.pipe(Cause.flatMap(Cause.fail))
       const right = cause
       assert.isTrue(Equal.equals(left, right))
     }))
@@ -58,7 +57,7 @@ describe.concurrent("Cause", () => {
 
   it("right identity", () => {
     fc.assert(fc.property(errors, errorCauseFunctions, (error, f) => {
-      const left = pipe(Cause.fail(error), Cause.flatMap(f))
+      const left = Cause.fail(error).pipe(Cause.flatMap(f))
       const right = f(error)
       assert.isTrue(Equal.equals(left, right))
     }))
@@ -66,8 +65,8 @@ describe.concurrent("Cause", () => {
 
   it("associativity", () => {
     fc.assert(fc.property(causes, errorCauseFunctions, errorCauseFunctions, (cause, f, g) => {
-      const left = pipe(cause, Cause.flatMap(f), Cause.flatMap(g))
-      const right = pipe(cause, Cause.flatMap((error) => pipe(f(error), Cause.flatMap(g))))
+      const left = cause.pipe(Cause.flatMap(f), Cause.flatMap(g))
+      const right = cause.pipe(Cause.flatMap((error) => f(error).pipe(Cause.flatMap(g))))
       assert.isTrue(Equal.equals(left, right))
     }))
   })
@@ -83,8 +82,7 @@ describe.concurrent("Cause", () => {
         msg: "division by zero"
       })
       const cause = Cause.parallel(cause1, cause2)
-      const stripped = pipe(
-        cause,
+      const stripped = cause.pipe(
         Cause.stripSomeDefects((defect) =>
           typeof defect === "object" &&
             defect != null &&
@@ -99,8 +97,7 @@ describe.concurrent("Cause", () => {
 
     it("returns `None` if there are no remaining causes", () => {
       const cause = Cause.die({ _tag: "NumberFormatException", msg: "can't parse to int" })
-      const stripped = pipe(
-        cause,
+      const stripped = cause.pipe(
         Cause.stripSomeDefects((defect) =>
           typeof defect === "object" &&
             defect != null &&

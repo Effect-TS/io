@@ -5,6 +5,7 @@ import type * as Chunk from "@effect/data/Chunk"
 import type * as Duration from "@effect/data/Duration"
 import type { LazyArg } from "@effect/data/Function"
 import type * as HashSet from "@effect/data/HashSet"
+import type { Pipeable } from "@effect/data/Pipeable"
 import type * as Effect from "@effect/io/Effect"
 import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
 import * as internal from "@effect/io/internal/metric"
@@ -48,7 +49,7 @@ export type MetricTypeId = typeof MetricTypeId
  * @since 1.0.0
  * @category models
  */
-export interface Metric<Type, In, Out> extends Metric.Variance<Type, In, Out> {
+export interface Metric<Type, In, Out> extends Metric.Variance<Type, In, Out>, Pipeable<Metric<Type, In, Out>> {
   /**
    * The type of the underlying primitive metric. For example, this could be
    * `MetricKeyType.Counter` or `MetricKeyType.Gauge`.

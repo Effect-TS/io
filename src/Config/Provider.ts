@@ -4,6 +4,7 @@
 import type * as Context from "@effect/data/Context"
 import type { LazyArg } from "@effect/data/Function"
 import type * as HashSet from "@effect/data/HashSet"
+import type { Pipeable } from "@effect/data/Pipeable"
 import type * as Config from "@effect/io/Config"
 import type * as ConfigError from "@effect/io/Config/Error"
 import type * as PathPatch from "@effect/io/Config/Provider/PathPatch"
@@ -41,7 +42,7 @@ export type FlatConfigProviderTypeId = typeof FlatConfigProviderTypeId
  * @since 1.0.0
  * @category models
  */
-export interface ConfigProvider extends ConfigProvider.Proto {
+export interface ConfigProvider extends ConfigProvider.Proto, Pipeable<ConfigProvider> {
   /**
    * Loads the specified configuration, or fails with a config error.
    */

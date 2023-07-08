@@ -7,6 +7,7 @@ import type * as Duration from "@effect/data/Duration"
 import type * as Either from "@effect/data/Either"
 import type { LazyArg } from "@effect/data/Function"
 import type * as Option from "@effect/data/Option"
+import type { Pipeable } from "@effect/data/Pipeable"
 import type { Predicate } from "@effect/data/Predicate"
 import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
@@ -66,7 +67,7 @@ export type ScheduleDriverTypeId = typeof ScheduleDriverTypeId
  * @category model
  * @since 1.0.0
  */
-export interface Schedule<Env, In, Out> extends Schedule.Variance<Env, In, Out> {
+export interface Schedule<Env, In, Out> extends Schedule.Variance<Env, In, Out>, Pipeable<Schedule<Env, In, Out>> {
   /**
    * Initial State
    */

@@ -3,6 +3,7 @@
  */
 import type * as HashSet from "@effect/data/HashSet"
 import type * as Option from "@effect/data/Option"
+import type { Pipeable } from "@effect/data/Pipeable"
 import type * as Arr from "@effect/data/ReadonlyArray"
 import type * as Effect from "@effect/io/Effect"
 import type * as FiberId from "@effect/io/Fiber/Id"
@@ -30,7 +31,7 @@ export type FiberRefsSym = typeof FiberRefsSym
  * @since 1.0.0
  * @category models
  */
-export interface FiberRefs {
+export interface FiberRefs extends Pipeable<FiberRefs> {
   readonly [FiberRefsSym]: FiberRefsSym
   readonly locals: Map<FiberRef.FiberRef<any>, Arr.NonEmptyReadonlyArray<readonly [FiberId.Runtime, any]>>
 }

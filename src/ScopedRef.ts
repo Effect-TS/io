@@ -2,6 +2,7 @@
  * @since 1.0.0
  */
 import type { LazyArg } from "@effect/data/Function"
+import type { Pipeable } from "@effect/data/Pipeable"
 import type * as Effect from "@effect/io/Effect"
 import * as internal from "@effect/io/internal/scopedRef"
 import type * as Synchronized from "@effect/io/Ref/Synchronized"
@@ -29,7 +30,7 @@ export type ScopedRefTypeId = typeof ScopedRefTypeId
  * @since 1.0.0
  * @category models
  */
-export interface ScopedRef<A> extends ScopedRef.Variance<A> {
+export interface ScopedRef<A> extends ScopedRef.Variance<A>, Pipeable<ScopedRef<A>> {
   /** @internal */
   readonly ref: Synchronized.Synchronized<readonly [Scope.Scope.Closeable, A]>
 }

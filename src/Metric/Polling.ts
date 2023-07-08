@@ -1,6 +1,7 @@
 /**
  * @since 1.0.0
  */
+import type { Pipeable } from "@effect/data/Pipeable"
 import type * as Effect from "@effect/io/Effect"
 import type * as Fiber from "@effect/io/Fiber"
 import * as internal from "@effect/io/internal/metric/polling"
@@ -27,7 +28,7 @@ export type PollingMetricTypeId = typeof PollingMetricTypeId
  * @since 1.0.0
  * @category models
  */
-export interface PollingMetric<Type, In, R, E, Out> {
+export interface PollingMetric<Type, In, R, E, Out> extends Pipeable<PollingMetric<Type, In, R, E, Out>> {
   readonly [PollingMetricTypeId]: PollingMetricTypeId
   /**
    * The metric that this `PollingMetric` polls to update.

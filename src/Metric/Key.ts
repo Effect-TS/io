@@ -6,6 +6,7 @@ import type * as Duration from "@effect/data/Duration"
 import type * as Equal from "@effect/data/Equal"
 import type * as HashSet from "@effect/data/HashSet"
 import type * as Option from "@effect/data/Option"
+import type { Pipeable } from "@effect/data/Pipeable"
 import * as internal from "@effect/io/internal/metric/key"
 import type * as MetricBoundaries from "@effect/io/Metric/Boundaries"
 import type * as MetricKeyType from "@effect/io/Metric/KeyType"
@@ -34,7 +35,7 @@ export type MetricKeyTypeId = typeof MetricKeyTypeId
  * @category models
  */
 export interface MetricKey<Type extends MetricKeyType.MetricKeyType<any, any>>
-  extends MetricKey.Variance<Type>, Equal.Equal
+  extends MetricKey.Variance<Type>, Equal.Equal, Pipeable<MetricKey<Type>>
 {
   readonly name: string
   readonly keyType: Type

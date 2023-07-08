@@ -7,6 +7,7 @@ import { dual, pipe } from "@effect/data/Function"
 import * as Hash from "@effect/data/Hash"
 import * as MutableHashMap from "@effect/data/MutableHashMap"
 import * as Option from "@effect/data/Option"
+import { pipeArguments } from "@effect/data/Pipeable"
 import * as Predicate from "@effect/data/Predicate"
 import type * as Cause from "@effect/io/Cause"
 import type * as Deferred from "@effect/io/Deferred"
@@ -504,6 +505,9 @@ class SynchronizedImpl<A> implements Synchronized.Synchronized<A> {
       )
     )
   }
+  pipe() {
+    return pipeArguments(this, arguments)
+  }
 }
 
 /** @internal */
@@ -610,5 +614,8 @@ export const zipWithFiber = dual<
     core.zipRight(
       self.interruptAsFork(id),
       that.interruptAsFork(id)
-    )
+    ),
+  pipe() {
+    return pipeArguments(this, arguments)
+  }
 }))

@@ -4,6 +4,7 @@ import type { LazyArg } from "@effect/data/Function"
 import { constVoid, dual, identity, pipe } from "@effect/data/Function"
 import { globalValue } from "@effect/data/Global"
 import * as HashSet from "@effect/data/HashSet"
+import { pipeArguments } from "@effect/data/Pipeable"
 import * as ReadonlyArray from "@effect/data/ReadonlyArray"
 import * as Clock from "@effect/io/Clock"
 import type * as Effect from "@effect/io/Effect"
@@ -61,7 +62,10 @@ export const make: Metric.MetricApply = function<Type, In, Out>(
       [MetricTypeId]: metricVariance,
       keyType,
       unsafeUpdate,
-      unsafeValue
+      unsafeValue,
+      pipe() {
+        return pipeArguments(this, arguments)
+      }
     } as const
   )
   return metric

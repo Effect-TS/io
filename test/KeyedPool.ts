@@ -19,9 +19,11 @@ describe("KeyedPool", () => {
         size: 4
       }))
       yield* $(
-        KeyedPool.get(pool, "key1"),
-        Effect.repeatN(3),
-        Effect.asUnit
+        pool.pipe(
+          KeyedPool.get("key1"),
+          Effect.repeatN(3),
+          Effect.asUnit
+        )
       )
       const fiber = yield* $(Effect.fork(
         Effect.forEach(

@@ -1,6 +1,7 @@
 import * as Context from "@effect/data/Context"
 import type { LazyArg } from "@effect/data/Function"
 import { dual, pipe } from "@effect/data/Function"
+import { pipeArguments } from "@effect/data/Pipeable"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal/core"
 import * as effect from "@effect/io/internal/effect"
@@ -50,6 +51,9 @@ export const fromAcquire = <R, E, A>(
               core.flatMap((ref) => {
                 const scopedRef: ScopedRef.ScopedRef<A> = {
                   [ScopedRefTypeId]: scopedRefVariance,
+                  pipe() {
+                    return pipeArguments(this, arguments)
+                  },
                   ref
                 }
                 return pipe(

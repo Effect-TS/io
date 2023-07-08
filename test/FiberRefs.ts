@@ -1,4 +1,3 @@
-import { pipe } from "@effect/data/Function"
 import * as HashMap from "@effect/data/HashMap"
 import * as Option from "@effect/data/Option"
 import * as Cause from "@effect/io/Cause"
@@ -17,15 +16,14 @@ describe.concurrent("FiberRefs", () => {
       const fiberRef = yield* $(FiberRef.make(false))
       const queue = yield* $(Queue.unbounded<FiberRefs.FiberRefs>())
       const producer = yield* $(
-        pipe(
-          FiberRef.set(fiberRef, true),
-          Effect.zipRight(pipe(Effect.getFiberRefs, Effect.flatMap((a) => Queue.offer(queue, a)))),
+        FiberRef.set(fiberRef, true).pipe(
+          Effect.zipRight(Effect.getFiberRefs.pipe(Effect.flatMap((a) => Queue.offer(queue, a)))),
           Effect.fork
         )
       )
       const consumer = yield* $(
         Queue.take(queue),
-        Effect.flatMap((fiberRefs) => pipe(Effect.setFiberRefs(fiberRefs), Effect.zipRight(FiberRef.get(fiberRef)))),
+        Effect.flatMap((fiberRefs) => Effect.setFiberRefs(fiberRefs).pipe(Effect.zipRight(FiberRef.get(fiberRef)))),
         Effect.fork
       )
       yield* $(Fiber.join(producer))
@@ -47,8 +45,8 @@ describe.concurrent("FiberRefs", () => {
 
   describe.concurrent("currentLogAnnotations", () => {
     it.it("doesnt leak", () => {
-      pipe(Effect.unit, Effect.annotateLogs("test", "abc"), Effect.runSync)
-      expect(pipe(FiberRef.currentLogAnnotations, FiberRef.get, Effect.map(HashMap.size), Effect.runSync)).toBe(0)
+      Effect.unit.pipe(Effect.annotateLogs("test", "abc"), Effect.runSync)
+      expect(FiberRef.currentLogAnnotations.pipe(FiberRef.get, Effect.map(HashMap.size), Effect.runSync)).toBe(0)
     })
   })
 })

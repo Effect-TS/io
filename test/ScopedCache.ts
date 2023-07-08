@@ -837,4 +837,16 @@ describe.concurrent("ScopedCache", () => {
         yield* $(firstCreatedResource.assertAcquiredOnceAndCleaned())
       })))
     }))
+  it.effect(".pipe", () =>
+    Effect.gen(function*(_) {
+      const cache = yield* _(
+        ScopedCache.make({
+          capacity: 10,
+          timeToLive: Duration.seconds(10),
+          lookup: () => Effect.unit
+        }),
+        Effect.scoped
+      )
+      expect(cache.pipe(identity)).toBe(cache)
+    }))
 })

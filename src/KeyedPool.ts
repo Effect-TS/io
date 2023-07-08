@@ -2,6 +2,7 @@
  * @since 1.0.0
  */
 import type * as Duration from "@effect/data/Duration"
+import type { Pipeable } from "@effect/data/Pipeable"
 import type * as Effect from "@effect/io/Effect"
 import * as internal from "@effect/io/internal/keyedPool"
 import type * as Scope from "@effect/io/Scope"
@@ -25,7 +26,7 @@ export type KeyedPoolTypeId = typeof KeyedPoolTypeId
  * @since 1.0.0
  * @category models
  */
-export interface KeyedPool<K, E, A> extends KeyedPool.Variance<K, E, A> {
+export interface KeyedPool<K, E, A> extends KeyedPool.Variance<K, E, A>, Pipeable<KeyedPool<K, E, A>> {
   /**
    * Retrieves an item from the pool belonging to the given key in a scoped
    * effect. Note that if acquisition fails, then the returned effect will fail

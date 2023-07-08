@@ -1,3 +1,4 @@
+import { pipeArguments } from "@effect/data/Pipeable"
 import type * as MetricKey from "@effect/io/Metric/Key"
 import type * as MetricKeyType from "@effect/io/Metric/KeyType"
 import type * as MetricPair from "@effect/io/Metric/Pair"
@@ -24,7 +25,10 @@ export const make = <Type extends MetricKeyType.MetricKeyType<any, any>>(
   return {
     [MetricPairTypeId]: metricPairVariance,
     metricKey,
-    metricState
+    metricState,
+    pipe() {
+      return pipeArguments(this, arguments)
+    }
   }
 }
 
@@ -36,6 +40,9 @@ export const unsafeMake = <Type extends MetricKeyType.MetricKeyType<any, any>>(
   return {
     [MetricPairTypeId]: metricPairVariance,
     metricKey,
-    metricState
+    metricState,
+    pipe() {
+      return pipeArguments(this, arguments)
+    }
   }
 }

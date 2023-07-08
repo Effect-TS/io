@@ -4,6 +4,7 @@ import * as HashSet from "@effect/data/HashSet"
 import * as number from "@effect/data/Number"
 import * as Option from "@effect/data/Option"
 import * as order from "@effect/data/Order"
+import { pipeArguments } from "@effect/data/Pipeable"
 import type * as Cause from "@effect/io/Cause"
 import * as Clock from "@effect/io/Clock"
 import type * as Effect from "@effect/io/Effect"
@@ -27,6 +28,14 @@ export const FiberTypeId: Fiber.FiberTypeId = Symbol.for(
 export const fiberVariance = {
   _E: (_: never) => _,
   _A: (_: never) => _
+}
+
+/** @internal */
+const fiberProto = {
+  [FiberTypeId]: fiberVariance,
+  pipe() {
+    return pipeArguments(this, arguments)
+  }
 }
 
 /** @internal */
@@ -66,7 +75,7 @@ export const children = <E, A>(
 
 /** @internal */
 export const done = <E, A>(exit: Exit.Exit<E, A>): Fiber.Fiber<E, A> => ({
-  [FiberTypeId]: fiberVariance,
+  ...fiberProto,
   id: () => FiberId.none,
   await: () => core.succeed(exit),
   children: () => core.succeed([]),
@@ -138,7 +147,7 @@ export const mapEffect = dual<
   <A, E2, A2>(f: (a: A) => Effect.Effect<never, E2, A2>) => <E>(self: Fiber.Fiber<E, A>) => Fiber.Fiber<E | E2, A2>,
   <E, A, E2, A2>(self: Fiber.Fiber<E, A>, f: (a: A) => Effect.Effect<never, E2, A2>) => Fiber.Fiber<E | E2, A2>
 >(2, (self, f) => ({
-  [FiberTypeId]: fiberVariance,
+  ...fiberProto,
   id: () => self.id(),
   await: () => core.flatMap(self.await(), Exit.forEachEffect(f)),
   children: () => self.children(),
@@ -205,7 +214,7 @@ export const match = dual<
 
 /** @internal */
 export const never: Fiber.Fiber<never, never> = ({
-  [FiberTypeId]: fiberVariance,
+  ...fiberProto,
   id: () => FiberId.none,
   await: () => core.never,
   children: () => core.succeed([]),
@@ -219,7 +228,7 @@ export const orElse = dual<
   <E2, A2>(that: Fiber.Fiber<E2, A2>) => <E, A>(self: Fiber.Fiber<E, A>) => Fiber.Fiber<E | E2, A | A2>,
   <E, A, E2, A2>(self: Fiber.Fiber<E, A>, that: Fiber.Fiber<E2, A2>) => Fiber.Fiber<E | E2, A | A2>
 >(2, (self, that) => ({
-  [FiberTypeId]: fiberVariance,
+  ...fiberProto,
   id: () => FiberId.getOrElse(self.id(), that.id()),
   await: () =>
     core.zipWith(

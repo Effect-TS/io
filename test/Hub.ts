@@ -43,8 +43,8 @@ describe.concurrent("Hub", () => {
       const deferred3 = yield* $(Deferred.make<never, void>())
       const hub = yield* $(Hub.bounded<number>(10))
       const subscriber1 = yield* $(
-        pipe(
-          Hub.subscribe(hub),
+        hub.pipe(
+          Hub.subscribe,
           Effect.flatMap((subscription) =>
             pipe(
               Deferred.succeed(deferred1, void 0),
@@ -57,8 +57,8 @@ describe.concurrent("Hub", () => {
         )
       )
       const subscriber2 = yield* $(
-        pipe(
-          Hub.subscribe(hub),
+        hub.pipe(
+          Hub.subscribe,
           Effect.flatMap((subscription) =>
             pipe(
               Deferred.succeed(deferred2, void 0),

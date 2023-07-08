@@ -1,4 +1,3 @@
-import { pipe } from "@effect/data/Function"
 import * as Option from "@effect/data/Option"
 import * as Deferred from "@effect/io/Deferred"
 import * as Effect from "@effect/io/Effect"
@@ -115,8 +114,7 @@ describe.concurrent("Deferred", () => {
       const deferred = yield* $(Deferred.make<string, number>())
       yield* $(Deferred.succeed(deferred, 12))
       const result = yield* $(
-        pipe(
-          Deferred.poll(deferred),
+        Deferred.poll(deferred).pipe(
           Effect.flatMap(Option.match({
             onNone: () => Effect.fail("fail"),
             onSome: Effect.succeed
@@ -132,8 +130,7 @@ describe.concurrent("Deferred", () => {
       const deferred = yield* $(Deferred.make<string, number>())
       yield* $(Deferred.fail(deferred, "failure"))
       const result = yield* $(
-        pipe(
-          Deferred.poll(deferred),
+        Deferred.poll(deferred).pipe(
           Effect.flatMap(Option.match({
             onNone: () => Effect.fail("fail"),
             onSome: Effect.succeed
@@ -149,8 +146,7 @@ describe.concurrent("Deferred", () => {
       const deferred = yield* $(Deferred.make<string, number>())
       yield* $(Deferred.interrupt(deferred))
       const result = yield* $(
-        pipe(
-          Deferred.poll(deferred),
+        Deferred.poll(deferred).pipe(
           Effect.flatMap(Option.match({
             onNone: () => Effect.fail("fail"),
             onSome: Effect.succeed

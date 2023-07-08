@@ -1,6 +1,6 @@
 import * as Chunk from "@effect/data/Chunk"
 import * as Either from "@effect/data/Either"
-import { pipe } from "@effect/data/Function"
+import { identity, pipe } from "@effect/data/Function"
 import * as Option from "@effect/data/Option"
 import * as ReadonlyArray from "@effect/data/ReadonlyArray"
 import * as Cause from "@effect/io/Cause"
@@ -14,7 +14,7 @@ import * as it from "@effect/io/test/utils/extend"
 import { assert, describe } from "vitest"
 
 export const waitForValue = <A>(ref: Effect.Effect<never, never, A>, value: A): Effect.Effect<never, never, A> => {
-  return pipe(ref, Effect.zipLeft(Effect.yieldNow()), Effect.repeatUntil((a) => value === a))
+  return ref.pipe(Effect.zipLeft(Effect.yieldNow()), Effect.repeatUntil((a) => value === a))
 }
 
 export const waitForSize = <A>(queue: Queue.Queue<A>, size: number): Effect.Effect<never, never, number> => {
@@ -767,4 +767,12 @@ describe.concurrent("Queue", () => {
       assert.strictEqual(result2, 2)
       assert.strictEqual(result3, 3)
     }))
+  it.effect(
+    ".pipe",
+    () =>
+      Effect.gen(function*(_) {
+        const queue = yield* _(Queue.unbounded<number>())
+        expect(queue.pipe(identity)).toBe(queue)
+      })
+  )
 })

@@ -4,6 +4,7 @@ import { pipe } from "@effect/data/Function"
 import * as Hash from "@effect/data/Hash"
 import type * as HashMap from "@effect/data/HashMap"
 import type * as Option from "@effect/data/Option"
+import { pipeArguments } from "@effect/data/Pipeable"
 import type * as MetricState from "@effect/io/Metric/State"
 
 /** @internal */
@@ -73,6 +74,9 @@ class CounterState implements MetricState.MetricState.Counter {
   [Equal.symbol](that: unknown): boolean {
     return isCounterState(that) && this.count === that.count
   }
+  pipe() {
+    return pipeArguments(this, arguments)
+  }
 }
 
 /** @internal */
@@ -89,6 +93,9 @@ class FrequencyState implements MetricState.MetricState.Frequency {
   [Equal.symbol](that: unknown): boolean {
     return isFrequencyState(that) && Equal.equals(this.occurrences, that.occurrences)
   }
+  pipe() {
+    return pipeArguments(this, arguments)
+  }
 }
 
 /** @internal */
@@ -104,6 +111,9 @@ class GaugeState implements MetricState.MetricState.Gauge {
   }
   [Equal.symbol](u: unknown): boolean {
     return isGaugeState(u) && this.value === u.value
+  }
+  pipe() {
+    return pipeArguments(this, arguments)
   }
 }
 
@@ -135,6 +145,9 @@ export class HistogramState implements MetricState.MetricState.Histogram {
       this.min === that.min &&
       this.max === that.max &&
       this.sum === that.sum
+  }
+  pipe() {
+    return pipeArguments(this, arguments)
   }
 }
 
@@ -169,6 +182,9 @@ export class SummaryState implements MetricState.MetricState.Summary {
       this.min === that.min &&
       this.max === that.max &&
       this.sum === that.sum
+  }
+  pipe() {
+    return pipeArguments(this, arguments)
   }
 }
 

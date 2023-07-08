@@ -5,6 +5,7 @@
 import * as Context from "@effect/data/Context"
 import type * as Either from "@effect/data/Either"
 import type * as Equal from "@effect/data/Equal"
+import type { Pipeable } from "@effect/data/Pipeable"
 import * as Effect from "@effect/io/Effect"
 import type { FiberRef } from "@effect/io/FiberRef"
 import * as core from "@effect/io/internal/core"
@@ -47,7 +48,7 @@ export type RequestResolverTypeId = typeof RequestResolverTypeId
  * @since 1.0.0
  * @category models
  */
-export interface RequestResolver<A, R = never> extends Equal.Equal {
+export interface RequestResolver<A, R = never> extends Equal.Equal, Pipeable<RequestResolver<A, R>> {
   /**
    * Execute a collection of requests. The outer `Chunk` represents batches
    * of requests that must be performed sequentially. The inner `Chunk`

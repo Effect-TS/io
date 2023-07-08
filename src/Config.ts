@@ -7,6 +7,7 @@ import type { LazyArg } from "@effect/data/Function"
 import type * as HashMap from "@effect/data/HashMap"
 import type * as HashSet from "@effect/data/HashSet"
 import type * as Option from "@effect/data/Option"
+import type { Pipeable } from "@effect/data/Pipeable"
 import type { Predicate, Refinement } from "@effect/data/Predicate"
 import type * as ConfigError from "@effect/io/Config/Error"
 import type * as ConfigSecret from "@effect/io/Config/Secret"
@@ -43,7 +44,7 @@ export type ConfigTypeId = typeof ConfigTypeId
  * @since 1.0.0
  * @category models
  */
-export interface Config<A> extends Config.Variance<A> {}
+export interface Config<A> extends Config.Variance<A>, Pipeable<Config<A>> {}
 
 /**
  * @since 1.0.0

@@ -3,6 +3,7 @@
  */
 import type * as Duration from "@effect/data/Duration"
 import type * as Option from "@effect/data/Option"
+import type { Pipeable } from "@effect/data/Pipeable"
 import type * as Cache from "@effect/io/Cache"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
@@ -25,7 +26,9 @@ export type ScopedCacheTypeId = typeof ScopedCacheTypeId
  * @since 1.0.0
  * @category models
  */
-export interface ScopedCache<Key, Error, Value> extends ScopedCache.Variance<Key, Error, Value> {
+export interface ScopedCache<Key, Error, Value>
+  extends ScopedCache.Variance<Key, Error, Value>, Pipeable<ScopedCache<Key, Error, Value>>
+{
   /**
    * Retrieves the value associated with the specified key if it exists.
    * Otherwise returns `Option.none`.

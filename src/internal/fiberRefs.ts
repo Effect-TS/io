@@ -2,6 +2,7 @@ import * as Equal from "@effect/data/Equal"
 import { dual, pipe } from "@effect/data/Function"
 import * as HashSet from "@effect/data/HashSet"
 import * as Option from "@effect/data/Option"
+import { pipeArguments } from "@effect/data/Pipeable"
 import * as Arr from "@effect/data/ReadonlyArray"
 import type * as Effect from "@effect/io/Effect"
 import type * as FiberId from "@effect/io/Fiber/Id"
@@ -28,6 +29,9 @@ export class FiberRefsImpl implements FiberRefs.FiberRefs {
       Arr.NonEmptyReadonlyArray<readonly [FiberId.Runtime, any]>
     >
   ) {
+  }
+  pipe() {
+    return pipeArguments(this, arguments)
   }
 }
 

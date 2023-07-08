@@ -1,3 +1,4 @@
+import { identity } from "@effect/data/Function"
 import * as HashMap from "@effect/data/HashMap"
 import * as List from "@effect/data/List"
 import * as Cause from "@effect/io/Cause"
@@ -132,5 +133,10 @@ describe("logfmtLogger", () => {
     expect(result).toEqual(
       `timestamp=${date.toJSON()} level=INFO fiber= message="My\\nmessage" imma_span__=7ms I_am_also_a_bad_key_name="{\\"return\\":\\"cool\\\\nvalue\\"}" good_key="{\\"returnWithSpace\\":\\"cool\\\\nvalue or not\\"}" good_key2="I am a good value\\nwith line breaks" good_key3="I_have=a"`
     )
+  })
+
+  test(".pipe", () => {
+    expect(Logger.stringLogger.pipe(identity)).toBe(Logger.stringLogger)
+    expect(logLevelInfo.pipe(identity)).toBe(logLevelInfo)
   })
 })

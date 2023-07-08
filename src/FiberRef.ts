@@ -8,6 +8,7 @@ import type * as HashMap from "@effect/data/HashMap"
 import type * as HashSet from "@effect/data/HashSet"
 import type * as List from "@effect/data/List"
 import type * as Option from "@effect/data/Option"
+import type { Pipeable } from "@effect/data/Pipeable"
 import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
 import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
@@ -40,7 +41,7 @@ export type FiberRefTypeId = typeof FiberRefTypeId
  * @since 1.0.0
  * @category model
  */
-export interface FiberRef<A> extends Variance<A> {
+export interface FiberRef<A> extends Variance<A>, Pipeable<FiberRef<A>> {
   /** @internal */
   readonly initial: A
   /** @internal */

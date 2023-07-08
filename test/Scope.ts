@@ -1,8 +1,8 @@
-import { pipe } from "@effect/data/Function"
+import { identity, pipe } from "@effect/data/Function"
 import * as Deferred from "@effect/io/Deferred"
 import * as Effect from "@effect/io/Effect"
 import * as Ref from "@effect/io/Ref"
-import type * as Scope from "@effect/io/Scope"
+import * as Scope from "@effect/io/Scope"
 import * as it from "@effect/io/test/utils/extend"
 import { assert, describe } from "vitest"
 
@@ -140,4 +140,12 @@ describe.concurrent("Scope", () => {
       assert.deepStrictEqual(actions1, [acquire(1), use(1), release(1)])
       assert.deepStrictEqual(actions2, [acquire(2), use(2), release(2)])
     }))
+  it.effect(
+    ".pipe",
+    () =>
+      Effect.gen(function*(_) {
+        const scope = yield* _(Scope.make())
+        expect(scope.pipe(identity)).toBe(scope)
+      })
+  )
 })
