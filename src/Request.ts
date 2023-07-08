@@ -2,7 +2,7 @@
  * @since 1.0.0
  */
 import type * as Data from "@effect/data/Data"
-import type { Duration } from "@effect/data/Duration"
+import type { DurationInput } from "@effect/data/Duration"
 import type * as Option from "@effect/data/Option"
 import type * as _Cache from "@effect/io/Cache"
 import type { Deferred } from "@effect/io/Deferred"
@@ -213,7 +213,7 @@ export interface Cache extends
 export const makeCache = (
   options: {
     readonly capacity: number
-    readonly timeToLive: Duration
+    readonly timeToLive: DurationInput
   }
 ): Effect.Effect<never, never, Cache> =>
   cache.make({
