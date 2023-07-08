@@ -2,6 +2,7 @@ import * as Chunk from "@effect/data/Chunk"
 import { dual, pipe } from "@effect/data/Function"
 import * as MutableQueue from "@effect/data/MutableQueue"
 import * as MutableRef from "@effect/data/MutableRef"
+import { pipeArguments } from "@effect/data/Pipeable"
 import type * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
 import type * as Hub from "@effect/io/Hub"
@@ -1103,6 +1104,10 @@ class HubImpl<A> implements Hub.Hub<A> {
 
   offerAll(elements: Iterable<A>): Effect.Effect<never, never, boolean> {
     return this.publishAll(elements)
+  }
+
+  pipe() {
+    return pipeArguments(this, arguments)
   }
 }
 
