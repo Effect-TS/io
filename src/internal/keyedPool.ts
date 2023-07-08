@@ -5,6 +5,7 @@ import * as Hash from "@effect/data/Hash"
 import * as HashMap from "@effect/data/HashMap"
 import * as MutableRef from "@effect/data/MutableRef"
 import * as Option from "@effect/data/Option"
+import { pipeArguments } from "@effect/data/Pipeable"
 import type * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal/core"
@@ -42,6 +43,9 @@ class KeyedPoolImpl<K, E, A> implements KeyedPool.KeyedPool<K, E, A> {
   }
   invalidate(item: A): Effect.Effect<never, never, void> {
     return core.flatMap(this.activePools(), core.forEachDiscard((pool) => pool.invalidate(item)))
+  }
+  pipe() {
+    return pipeArguments(this, arguments)
   }
 }
 
