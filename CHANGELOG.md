@@ -1,5 +1,17 @@
 # @effect/io
 
+## 0.31.2
+
+### Patch Changes
+
+- [#501](https://github.com/Effect-TS/io/pull/501) [`64cc8f0`](https://github.com/Effect-TS/io/commit/64cc8f0cff62986d832a6a9211f6d5bd369e7479) Thanks [@IMax153](https://github.com/IMax153)! - revert Effect.filter\* variants to positional args
+
+- [#504](https://github.com/Effect-TS/io/pull/504) [`7e0a5e6`](https://github.com/Effect-TS/io/commit/7e0a5e6007ac8ed921fa693f3cb5d52e00602327) Thanks [@IMax153](https://github.com/IMax153)! - allow Request.makeCache to accept DurationInput for timeToLive
+
+- [#501](https://github.com/Effect-TS/io/pull/501) [`64cc8f0`](https://github.com/Effect-TS/io/commit/64cc8f0cff62986d832a6a9211f6d5bd369e7479) Thanks [@IMax153](https://github.com/IMax153)! - revert Effect.acquireUseRelease to positional args
+
+- [#501](https://github.com/Effect-TS/io/pull/501) [`64cc8f0`](https://github.com/Effect-TS/io/commit/64cc8f0cff62986d832a6a9211f6d5bd369e7479) Thanks [@IMax153](https://github.com/IMax153)! - revert Effect.acquireRelease to positional args
+
 ## 0.31.1
 
 ### Patch Changes
