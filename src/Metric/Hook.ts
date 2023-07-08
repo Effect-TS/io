@@ -2,6 +2,7 @@
  * @since 1.0.0
  */
 import type { LazyArg } from "@effect/data/Function"
+import type { Pipeable } from "@effect/data/Pipeable"
 import * as internal from "@effect/io/internal/metric/hook"
 import type * as MetricKey from "@effect/io/Metric/Key"
 import type * as MetricState from "@effect/io/Metric/State"
@@ -22,7 +23,7 @@ export type MetricHookTypeId = typeof MetricHookTypeId
  * @since 1.0.0
  * @category models
  */
-export interface MetricHook<In, Out> extends MetricHook.Variance<In, Out> {
+export interface MetricHook<In, Out> extends MetricHook.Variance<In, Out>, Pipeable<MetricHook<In, Out>> {
   readonly get: () => Out
   readonly update: (input: In) => void
 }

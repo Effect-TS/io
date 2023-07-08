@@ -1,4 +1,5 @@
 import { dual, pipe } from "@effect/data/Function"
+import { pipeArguments } from "@effect/data/Pipeable"
 import type * as Effect from "@effect/io/Effect"
 import type * as Fiber from "@effect/io/Fiber"
 import * as core from "@effect/io/internal/core"
@@ -25,6 +26,9 @@ export const make = <Type, In, Out, R, E>(
 ): PollingMetric.PollingMetric<Type, In, R, E, Out> => {
   return {
     [PollingMetricTypeId]: PollingMetricTypeId,
+    pipe() {
+      return pipeArguments(this, arguments)
+    },
     metric,
     poll
   }
@@ -37,6 +41,9 @@ export const collectAll = <R, E, Out>(
   const metrics = Array.from(iterable)
   return {
     [PollingMetricTypeId]: PollingMetricTypeId,
+    pipe() {
+      return pipeArguments(this, arguments)
+    },
     metric: metric.make(
       Array.of<any>(void 0) as Array<any>,
       (inputs: Array<any>, extraTags) => {
@@ -96,6 +103,9 @@ export const retry = dual<
   ) => PollingMetric.PollingMetric<Type, In, R | R2, E, Out>
 >(2, (self, policy) => ({
   [PollingMetricTypeId]: PollingMetricTypeId,
+  pipe() {
+    return pipeArguments(this, arguments)
+  },
   metric: self.metric,
   poll: schedule.retry_Effect(self.poll, policy)
 }))
@@ -125,6 +135,9 @@ export const zip = dual<
   >
 >(2, (self, that) => ({
   [PollingMetricTypeId]: PollingMetricTypeId,
+  pipe() {
+    return pipeArguments(this, arguments)
+  },
   metric: pipe(self.metric, metric.zip(that.metric)),
   poll: core.zip(self.poll, that.poll)
 }))

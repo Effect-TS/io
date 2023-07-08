@@ -5,6 +5,7 @@ import type * as Chunk from "@effect/data/Chunk"
 import type * as Equal from "@effect/data/Equal"
 import type * as HashMap from "@effect/data/HashMap"
 import type * as Option from "@effect/data/Option"
+import type { Pipeable } from "@effect/data/Pipeable"
 import * as internal from "@effect/io/internal/metric/state"
 import type * as MetricKeyType from "@effect/io/Metric/KeyType"
 
@@ -88,7 +89,7 @@ export type SummaryStateTypeId = typeof SummaryStateTypeId
  * @since 1.0.0
  * @category models
  */
-export interface MetricState<A> extends MetricState.Variance<A>, Equal.Equal {}
+export interface MetricState<A> extends MetricState.Variance<A>, Equal.Equal, Pipeable<MetricState<A>> {}
 
 /**
  * @since 1.0.0

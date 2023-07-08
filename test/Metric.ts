@@ -22,7 +22,7 @@ const labels = Chunk.make(MetricLabel.make("x", "a"), MetricLabel.make("y", "b")
 
 const makePollingGauge = (name: string, increment: number) => {
   const gauge = Metric.gauge(name)
-  const metric = PollingMetric.make(gauge, pipe(Metric.value(gauge), Effect.map((gauge) => gauge.value + increment)))
+  const metric = PollingMetric.make(gauge, Metric.value(gauge).pipe(Effect.map((gauge) => gauge.value + increment)))
   return [gauge, metric] as const
 }
 
@@ -30,18 +30,17 @@ describe.concurrent("Metric", () => {
   describe.concurrent("Counter", () => {
     it.effect("custom increment as aspect", () =>
       Effect.gen(function*($) {
-        const counter = pipe(Metric.counter("c1"), Metric.taggedWithLabels(labels), Metric.withConstantInput(1))
+        const counter = Metric.counter("c1").pipe(Metric.taggedWithLabels(labels), Metric.withConstantInput(1))
         const result = yield* $(
-          pipe(counter(Effect.unit), Effect.zipRight(counter(Effect.unit)), Effect.zipRight(Metric.value(counter)))
+          counter(Effect.unit).pipe(Effect.zipRight(counter(Effect.unit)), Effect.zipRight(Metric.value(counter)))
         )
         assert.deepStrictEqual(result, MetricState.counter(2))
       }))
     it.effect("direct increment", () =>
       Effect.gen(function*($) {
-        const counter = pipe(Metric.counter("c2"), Metric.taggedWithLabels(labels))
+        const counter = Metric.counter("c2").pipe(Metric.taggedWithLabels(labels))
         const result = yield* $(
-          pipe(
-            Metric.increment(counter),
+          Metric.increment(counter).pipe(
             Effect.zipRight(Metric.increment(counter)),
             Effect.zipRight(Metric.value(counter))
           )
@@ -50,10 +49,9 @@ describe.concurrent("Metric", () => {
       }))
     it.effect("custom increment by value as aspect", () =>
       Effect.gen(function*($) {
-        const counter = pipe(Metric.counter("c3"), Metric.taggedWithLabels(labels))
+        const counter = Metric.counter("c3").pipe(Metric.taggedWithLabels(labels))
         const result = yield* $(
-          pipe(
-            counter(Effect.succeed(10)),
+          counter(Effect.succeed(10)).pipe(
             Effect.zipRight(counter(Effect.succeed(5))),
             Effect.zipRight(Metric.value(counter))
           )
@@ -65,11 +63,12 @@ describe.concurrent("Metric", () => {
         const result = yield* $(
           pipe(
             Effect.unit,
-            Effect.withMetric(pipe(
-              Metric.counter("c4"),
-              Metric.taggedWithLabels(labels),
-              Metric.withConstantInput(1)
-            )),
+            Effect.withMetric(
+              Metric.counter("c4").pipe(
+                Metric.taggedWithLabels(labels),
+                Metric.withConstantInput(1)
+              )
+            ),
             Effect.zipRight(
               pipe(
                 Effect.unit,
@@ -395,21 +394,18 @@ describe.concurrent("Metric", () => {
           Metric.taggedWithLabels(labels),
           Metric.contramap((s: string) => s.length)
         )
-        const histogram = pipe(
-          base,
+        const histogram = base.pipe(
           Metric.taggedWithLabelsInput((input: string) => HashSet.make(MetricLabel.make("dyn", input)))
         )
         const { result1, result2, result3 } = yield* $(
-          pipe(
-            Effect.succeed("x"),
-            Effect.withMetric(histogram),
-            Effect.zipRight(pipe(Effect.succeed("xyz"), Effect.withMetric(histogram))),
-            Effect.zipRight(Effect.all({
-              result1: Metric.value(base),
-              result2: pipe(base, Metric.tagged("dyn", "x"), Metric.value),
-              result3: pipe(base, Metric.tagged("dyn", "xyz"), Metric.value)
-            }))
-          )
+          Effect.succeed("x"),
+          Effect.withMetric(histogram),
+          Effect.zipRight(pipe(Effect.succeed("xyz"), Effect.withMetric(histogram))),
+          Effect.zipRight(Effect.all({
+            result1: Metric.value(base),
+            result2: pipe(base, Metric.tagged("dyn", "x"), Metric.value),
+            result3: pipe(base, Metric.tagged("dyn", "xyz"), Metric.value)
+          }))
         )
         assert.strictEqual(result1.count, 0)
         assert.strictEqual(result2.count, 1)
@@ -419,23 +415,20 @@ describe.concurrent("Metric", () => {
   describe.concurrent("Summary", () => {
     it.effect("custom observe as aspect", () =>
       Effect.gen(function*($) {
-        const summary = pipe(
-          Metric.summary({
-            name: "s1",
-            maxAge: Duration.minutes(1),
-            maxSize: 10,
-            error: 0,
-            quantiles: Chunk.make(0, 1, 10)
-          }),
+        const summary = Metric.summary({
+          name: "s1",
+          maxAge: Duration.minutes(1),
+          maxSize: 10,
+          error: 0,
+          quantiles: Chunk.make(0, 1, 10)
+        }).pipe(
           Metric.taggedWithLabels(labels)
         )
         const result = yield* $(
-          pipe(
-            Effect.succeed(1),
-            Effect.withMetric(summary),
-            Effect.zipRight(pipe(Effect.succeed(3), Effect.withMetric(summary))),
-            Effect.zipRight(Metric.value(summary))
-          )
+          Effect.succeed(1),
+          Effect.withMetric(summary),
+          Effect.zipRight(pipe(Effect.succeed(3), Effect.withMetric(summary))),
+          Effect.zipRight(Metric.value(summary))
         )
         assert.strictEqual(result.count, 2)
         assert.strictEqual(result.sum, 4)
@@ -444,23 +437,20 @@ describe.concurrent("Metric", () => {
       }))
     it.effect("direct observe", () =>
       Effect.gen(function*($) {
-        const summary = pipe(
-          Metric.summary({
-            name: "s2",
-            maxAge: Duration.minutes(1),
-            maxSize: 10,
-            error: 0,
-            quantiles: Chunk.make(0, 1, 10)
-          }),
+        const summary = Metric.summary({
+          name: "s2",
+          maxAge: Duration.minutes(1),
+          maxSize: 10,
+          error: 0,
+          quantiles: Chunk.make(0, 1, 10)
+        }).pipe(
           Metric.taggedWithLabels(labels)
         )
         const result = yield* $(
-          pipe(
-            summary,
-            Metric.update(1),
-            Effect.zipRight(pipe(summary, Metric.update(3))),
-            Effect.zipRight(Metric.value(summary))
-          )
+          summary,
+          Metric.update(1),
+          Effect.zipRight(pipe(summary, Metric.update(3))),
+          Effect.zipRight(Metric.value(summary))
         )
         assert.strictEqual(result.count, 2)
         assert.strictEqual(result.sum, 4)
@@ -469,24 +459,21 @@ describe.concurrent("Metric", () => {
       }))
     it.effect("custom observe with contramap", () =>
       Effect.gen(function*($) {
-        const summary = pipe(
-          Metric.summary({
-            name: "s3",
-            maxAge: Duration.minutes(1),
-            maxSize: 10,
-            error: 0,
-            quantiles: Chunk.make(0, 1, 10)
-          }),
+        const summary = Metric.summary({
+          name: "s3",
+          maxAge: Duration.minutes(1),
+          maxSize: 10,
+          error: 0,
+          quantiles: Chunk.make(0, 1, 10)
+        }).pipe(
           Metric.taggedWithLabels(labels),
           Metric.contramap((s: string) => s.length)
         )
         const result = yield* $(
-          pipe(
-            Effect.succeed("x"),
-            Effect.withMetric(summary),
-            Effect.zipRight(pipe(Effect.succeed("xyz"), Effect.withMetric(summary))),
-            Effect.zipRight(Metric.value(summary))
-          )
+          Effect.succeed("x"),
+          Effect.withMetric(summary),
+          Effect.zipRight(pipe(Effect.succeed("xyz"), Effect.withMetric(summary))),
+          Effect.zipRight(Metric.value(summary))
         )
         assert.strictEqual(result.count, 2)
         assert.strictEqual(result.sum, 4)
@@ -495,32 +482,28 @@ describe.concurrent("Metric", () => {
       }))
     it.effect("observeSummaryWith + taggedWith", () =>
       Effect.gen(function*($) {
-        const base = pipe(
-          Metric.summary({
-            name: "s4",
-            maxAge: Duration.minutes(1),
-            maxSize: 10,
-            error: 0,
-            quantiles: Chunk.make(0, 1, 10)
-          }),
+        const base = Metric.summary({
+          name: "s4",
+          maxAge: Duration.minutes(1),
+          maxSize: 10,
+          error: 0,
+          quantiles: Chunk.make(0, 1, 10)
+        }).pipe(
           Metric.taggedWithLabels(labels),
           Metric.contramap((s: string) => s.length)
         )
-        const summary = pipe(
-          base,
+        const summary = base.pipe(
           Metric.taggedWithLabelsInput((input: string) => HashSet.make(MetricLabel.make("dyn", input)))
         )
         const { result1, result2, result3 } = yield* $(
-          pipe(
-            Effect.succeed("x"),
-            Effect.withMetric(summary),
-            Effect.zipRight(pipe(Effect.succeed("xyz"), Effect.withMetric(summary))),
-            Effect.zipRight(Effect.all({
-              result1: Metric.value(base),
-              result2: pipe(base, Metric.tagged("dyn", "x"), Metric.value),
-              result3: pipe(base, Metric.tagged("dyn", "xyz"), Metric.value)
-            }))
-          )
+          Effect.succeed("x"),
+          Effect.withMetric(summary),
+          Effect.zipRight(pipe(Effect.succeed("xyz"), Effect.withMetric(summary))),
+          Effect.zipRight(Effect.all({
+            result1: Metric.value(base),
+            result2: pipe(base, Metric.tagged("dyn", "x"), Metric.value),
+            result3: pipe(base, Metric.tagged("dyn", "xyz"), Metric.value)
+          }))
         )
         assert.strictEqual(result1.count, 0)
         assert.strictEqual(result2.count, 1)

@@ -2,6 +2,7 @@
  * @since 1.0.0
  */
 import type * as Equal from "@effect/data/Equal"
+import type { Pipeable } from "@effect/data/Pipeable"
 import * as internal from "@effect/io/internal/metric/label"
 
 /**
@@ -27,7 +28,7 @@ export type MetricLabelTypeId = typeof MetricLabelTypeId
  * @since 1.0.0
  * @category models
  */
-export interface MetricLabel extends Equal.Equal {
+export interface MetricLabel extends Equal.Equal, Pipeable<MetricLabel> {
   readonly [MetricLabelTypeId]: MetricLabelTypeId
   readonly key: string
   readonly value: string

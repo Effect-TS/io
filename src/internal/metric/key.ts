@@ -5,6 +5,7 @@ import { dual, pipe } from "@effect/data/Function"
 import * as Hash from "@effect/data/Hash"
 import * as HashSet from "@effect/data/HashSet"
 import * as Option from "@effect/data/Option"
+import { pipeArguments } from "@effect/data/Pipeable"
 import * as metricKeyType from "@effect/io/internal/metric/keyType"
 import * as metricLabel from "@effect/io/internal/metric/label"
 import type * as MetricBoundaries from "@effect/io/Metric/Boundaries"
@@ -48,6 +49,9 @@ class MetricKeyImpl<Type extends MetricKeyType.MetricKeyType<any, any>> implemen
       Equal.equals(this.keyType, u.keyType) &&
       Equal.equals(this.description, u.description) &&
       Equal.equals(this.tags, u.tags)
+  }
+  pipe() {
+    return pipeArguments(this, arguments)
   }
 }
 

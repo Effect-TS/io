@@ -1,6 +1,7 @@
 import * as Equal from "@effect/data/Equal"
 import { pipe } from "@effect/data/Function"
 import * as Hash from "@effect/data/Hash"
+import { pipeArguments } from "@effect/data/Pipeable"
 import type * as MetricLabel from "@effect/io/Metric/Label"
 
 /** @internal */
@@ -26,6 +27,9 @@ class MetricLabelImpl implements MetricLabel.MetricLabel {
     return isMetricLabel(that) &&
       this.key === that.key &&
       this.value === that.value
+  }
+  pipe() {
+    return pipeArguments(this, arguments)
   }
 }
 

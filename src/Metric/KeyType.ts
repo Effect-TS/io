@@ -4,6 +4,7 @@
 import type * as Chunk from "@effect/data/Chunk"
 import type * as Duration from "@effect/data/Duration"
 import type * as Equal from "@effect/data/Equal"
+import type { Pipeable } from "@effect/data/Pipeable"
 import * as internal from "@effect/io/internal/metric/keyType"
 import type * as MetricBoundaries from "@effect/io/Metric/Boundaries"
 import type * as MetricState from "@effect/io/Metric/State"
@@ -84,7 +85,9 @@ export type SummaryKeyTypeTypeId = typeof SummaryKeyTypeTypeId
  * @since 1.0.0
  * @category modelz
  */
-export interface MetricKeyType<In, Out> extends MetricKeyType.Variance<In, Out>, Equal.Equal {}
+export interface MetricKeyType<In, Out>
+  extends MetricKeyType.Variance<In, Out>, Equal.Equal, Pipeable<MetricKeyType<In, Out>>
+{}
 
 /**
  * @since 1.0.0

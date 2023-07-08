@@ -2,6 +2,7 @@ import * as Chunk from "@effect/data/Chunk"
 import * as Equal from "@effect/data/Equal"
 import { pipe } from "@effect/data/Function"
 import * as Hash from "@effect/data/Hash"
+import { pipeArguments } from "@effect/data/Pipeable"
 import * as ReadonlyArray from "@effect/data/ReadonlyArray"
 import type * as MetricBoundaries from "@effect/io/Metric/Boundaries"
 
@@ -25,6 +26,9 @@ class MetricBoundariesImpl implements MetricBoundaries.MetricBoundaries {
   }
   [Equal.symbol](u: unknown): boolean {
     return isMetricBoundaries(u) && Equal.equals(this.values, u.values)
+  }
+  pipe() {
+    return pipeArguments(this, arguments)
   }
 }
 

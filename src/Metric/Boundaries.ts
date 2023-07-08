@@ -3,6 +3,7 @@
  */
 import type * as Chunk from "@effect/data/Chunk"
 import type * as Equal from "@effect/data/Equal"
+import type { Pipeable } from "@effect/data/Pipeable"
 import * as internal from "@effect/io/internal/metric/boundaries"
 
 /**
@@ -21,7 +22,7 @@ export type MetricBoundariesTypeId = typeof MetricBoundariesTypeId
  * @since 1.0.0
  * @category models
  */
-export interface MetricBoundaries extends Equal.Equal {
+export interface MetricBoundaries extends Equal.Equal, Pipeable<MetricBoundaries> {
   readonly [MetricBoundariesTypeId]: MetricBoundariesTypeId
   readonly values: Chunk.Chunk<number>
 }

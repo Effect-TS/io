@@ -5,6 +5,7 @@ import { dual, pipe } from "@effect/data/Function"
 import * as HashMap from "@effect/data/HashMap"
 import * as number from "@effect/data/Number"
 import * as Option from "@effect/data/Option"
+import { pipeArguments } from "@effect/data/Pipeable"
 import * as ReadonlyArray from "@effect/data/ReadonlyArray"
 import * as metricState from "@effect/io/internal/metric/state"
 import type * as MetricHook from "@effect/io/Metric/Hook"
@@ -32,6 +33,9 @@ export const make = <In, Out>(
   }
 ): MetricHook.MetricHook<In, Out> => ({
   [MetricHookTypeId]: metricHookVariance,
+  pipe() {
+    return pipeArguments(this, arguments)
+  },
   ...options
 })
 
@@ -41,6 +45,9 @@ export const onUpdate = dual<
   <In, Out>(self: MetricHook.MetricHook<In, Out>, f: (input: In) => void) => MetricHook.MetricHook<In, Out>
 >(2, (self, f) => ({
   [MetricHookTypeId]: metricHookVariance,
+  pipe() {
+    return pipeArguments(this, arguments)
+  },
   get: self.get,
   update: (input) => {
     self.update(input)
