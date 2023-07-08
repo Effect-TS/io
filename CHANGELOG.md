@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.31.3
+
+### Patch Changes
+
+- [#502](https://github.com/Effect-TS/io/pull/502) [`7be0399`](https://github.com/Effect-TS/io/commit/7be0399d58b4b748152a79411154f40a788956f8) Thanks [@gcanti](https://github.com/gcanti)! - add Pipeable to most data types
+
 ## 0.31.2
 
 ### Patch Changes
