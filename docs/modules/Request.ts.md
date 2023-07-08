@@ -180,7 +180,7 @@ Added in v1.0.0
 ```ts
 export declare const makeCache: (options: {
   readonly capacity: number
-  readonly timeToLive: Duration
+  readonly timeToLive: DurationInput
 }) => Effect.Effect<never, never, Cache>
 ```
 
