@@ -4,6 +4,7 @@
 import type { LazyArg } from "@effect/data/Function"
 import type * as MutableRef from "@effect/data/MutableRef"
 import type * as Option from "@effect/data/Option"
+import type { Pipeable } from "@effect/data/Pipeable"
 import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
@@ -35,7 +36,7 @@ export type DeferredTypeId = typeof DeferredTypeId
  * @since 1.0.0
  * @category models
  */
-export interface Deferred<E, A> extends Deferred.Variance<E, A> {
+export interface Deferred<E, A> extends Deferred.Variance<E, A>, Pipeable<Deferred<E, A>> {
   /** @internal */
   readonly state: MutableRef.MutableRef<internal.State<E, A>>
   /** @internal */

@@ -2392,7 +2392,10 @@ const exitCollectAllInternal = <E, A>(
 export const deferredUnsafeMake = <E, A>(fiberId: FiberId.FiberId): Deferred.Deferred<E, A> => ({
   [deferred.DeferredTypeId]: deferred.deferredVariance,
   state: MutableRef.make(deferred.pending([])),
-  blockingOn: fiberId
+  blockingOn: fiberId,
+  pipe() {
+    return pipeArguments(this, arguments)
+  }
 })
 
 /* @internal */
