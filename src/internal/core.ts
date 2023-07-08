@@ -1622,7 +1622,10 @@ export const fiberRefUnsafeMakePatch = <Value, Patch>(
   combine: (first, second) => pipe(options.differ, Differ.combine(first as Patch, second as Patch)),
   patch: (patch) => (oldValue) => pipe(options.differ, Differ.patch(patch as Patch, oldValue)),
   fork: options.fork,
-  join: options.join ?? ((_, n) => n)
+  join: options.join ?? ((_, n) => n),
+  pipe() {
+    return pipeArguments(this, arguments)
+  }
 })
 
 /** @internal */
