@@ -12,6 +12,7 @@ import * as FiberId from "@effect/io/Fiber/Id"
 import * as OpCodes from "@effect/io/internal/opCodes/cause"
 
 import * as MRef from "@effect/data/MutableRef"
+import { pipeArguments } from "@effect/data/Pipeable"
 
 // -----------------------------------------------------------------------------
 // Models
@@ -41,6 +42,9 @@ const proto = {
   },
   [Equal.symbol](this: Cause.Cause<any>, that: unknown): boolean {
     return isCause(that) && causeEquals(this, that)
+  },
+  pipe() {
+    return pipeArguments(this, arguments)
   }
 }
 
