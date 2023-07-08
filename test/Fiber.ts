@@ -51,7 +51,7 @@ describe.concurrent("Fiber", () => {
     Effect.gen(function*($) {
       const fiberRef = yield* $(FiberRef.make(initial))
       const child = yield* $(
-        withLatch((release) => pipe(FiberRef.set(fiberRef, update), Effect.zipRight(release), Effect.fork))
+        withLatch((release) => FiberRef.set(fiberRef, update).pipe(Effect.zipRight(release), Effect.fork))
       )
       yield* $(child, Fiber.map(constVoid), Fiber.inheritAll)
       const result = yield* $(FiberRef.get(fiberRef))

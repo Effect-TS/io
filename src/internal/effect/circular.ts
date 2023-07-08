@@ -614,5 +614,8 @@ export const zipWithFiber = dual<
     core.zipRight(
       self.interruptAsFork(id),
       that.interruptAsFork(id)
-    )
+    ),
+  pipe() {
+    return pipeArguments(this, arguments)
+  }
 }))
