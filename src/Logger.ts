@@ -5,6 +5,7 @@ import type { LazyArg } from "@effect/data/Function"
 import type * as HashMap from "@effect/data/HashMap"
 import type * as List from "@effect/data/List"
 import type * as Option from "@effect/data/Option"
+import type { Pipeable } from "@effect/data/Pipeable"
 import type * as Cause from "@effect/io/Cause"
 import type { Effect } from "@effect/io/Effect"
 import type * as FiberId from "@effect/io/Fiber/Id"
@@ -34,7 +35,7 @@ export type LoggerTypeId = typeof LoggerTypeId
  * @since 1.0.0
  * @category models
  */
-export interface Logger<Message, Output> extends Logger.Variance<Message, Output> {
+export interface Logger<Message, Output> extends Logger.Variance<Message, Output>, Pipeable<Logger<Message, Output>> {
   readonly log: (
     options: {
       readonly fiberId: FiberId.FiberId

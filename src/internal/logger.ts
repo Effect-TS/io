@@ -3,6 +3,7 @@ import { constVoid, dual, pipe } from "@effect/data/Function"
 import * as HashMap from "@effect/data/HashMap"
 import * as List from "@effect/data/List"
 import * as Option from "@effect/data/Option"
+import { pipeArguments } from "@effect/data/Pipeable"
 import type * as CauseExt from "@effect/io/Cause"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRefs from "@effect/io/FiberRefs"
@@ -43,7 +44,10 @@ export const makeLogger = <Message, Output>(
   ) => Output
 ): Logger.Logger<Message, Output> => ({
   [LoggerTypeId]: loggerVariance,
-  log
+  log,
+  pipe() {
+    return pipeArguments(this, arguments)
+  }
 })
 
 /** @internal */
@@ -90,13 +94,19 @@ export const map = dual<
 /** @internal */
 export const none: Logger.Logger<unknown, void> = {
   [LoggerTypeId]: loggerVariance,
-  log: constVoid
+  log: constVoid,
+  pipe() {
+    return pipeArguments(this, arguments)
+  }
 } as Logger.Logger<unknown, void>
 
 /** @internal */
 export const simple = <A, B>(log: (a: A) => B): Logger.Logger<A, B> => ({
   [LoggerTypeId]: loggerVariance,
-  log: ({ message }) => log(message)
+  log: ({ message }) => log(message),
+  pipe() {
+    return pipeArguments(this, arguments)
+  }
 })
 
 /** @internal */
