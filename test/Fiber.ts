@@ -107,13 +107,12 @@ describe.concurrent("Fiber", () => {
     Effect.gen(function*($) {
       const ref = yield* $(Ref.make(false))
       const fiber = yield* $(withLatch((release) =>
-        pipe(
-          Effect.acquireUseRelease({
-            acquire: Effect.asUnit(release),
-            use: () => Effect.never,
-            release: () => Ref.set(ref, true)
-          }),
-          Effect.fork
+        Effect.fork(
+          Effect.acquireUseRelease(
+            Effect.asUnit(release),
+            () => Effect.never,
+            () => Ref.set(ref, true)
+          )
         )
       ))
       yield* $(Effect.scoped(Fiber.scoped(fiber)))

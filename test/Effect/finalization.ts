@@ -97,22 +97,22 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("acquireUseRelease exit.effect() is usage result", () =>
     Effect.gen(function*($) {
-      const result = yield* $(Effect.acquireUseRelease({
-        acquire: Effect.unit,
-        use: () => Effect.succeed(42),
-        release: () => Effect.unit
-      }))
+      const result = yield* $(Effect.acquireUseRelease(
+        Effect.unit,
+        () => Effect.succeed(42),
+        () => Effect.unit
+      ))
       assert.strictEqual(result, 42)
     }))
   it.effect("error in just acquisition", () =>
     Effect.gen(function*($) {
       const result = yield* $(
         pipe(
-          Effect.acquireUseRelease({
-            acquire: Effect.fail(ExampleError),
-            use: () => Effect.unit,
-            release: () => Effect.unit
-          }),
+          Effect.acquireUseRelease(
+            Effect.fail(ExampleError),
+            () => Effect.unit,
+            () => Effect.unit
+          ),
           Effect.exit
         )
       )
@@ -122,11 +122,11 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const result = yield* $(
         pipe(
-          Effect.acquireUseRelease({
-            acquire: Effect.unit,
-            use: () => Effect.unit,
-            release: () => Effect.die(ExampleError)
-          }),
+          Effect.acquireUseRelease(
+            Effect.unit,
+            () => Effect.unit,
+            () => Effect.die(ExampleError)
+          ),
           Effect.exit
         )
       )
@@ -136,11 +136,11 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const result = yield* $(
         pipe(
-          Effect.acquireUseRelease({
-            acquire: Effect.unit,
-            use: () => Effect.fail(ExampleError),
-            release: () => Effect.unit
-          }),
+          Effect.acquireUseRelease(
+            Effect.unit,
+            () => Effect.fail(ExampleError),
+            () => Effect.unit
+          ),
           Effect.exit
         )
       )
@@ -149,11 +149,11 @@ describe.concurrent("Effect", () => {
   it.effect("rethrown caught error in acquisition", () =>
     Effect.gen(function*($) {
       const result = yield* $(
-        Effect.acquireUseRelease({
-          acquire: Effect.fail(ExampleError),
-          use: () => Effect.unit,
-          release: () => Effect.unit
-        }),
+        Effect.acquireUseRelease(
+          Effect.fail(ExampleError),
+          () => Effect.unit,
+          () => Effect.unit
+        ),
         Effect.either,
         Effect.flatMap(identity),
         Effect.flip
@@ -164,11 +164,11 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const result = yield* $(
         pipe(
-          Effect.acquireUseRelease({
-            acquire: Effect.unit,
-            use: () => Effect.unit,
-            release: () => Effect.die(ExampleError)
-          }),
+          Effect.acquireUseRelease(
+            Effect.unit,
+            () => Effect.unit,
+            () => Effect.die(ExampleError)
+          ),
           Effect.exit
         )
       )
@@ -177,27 +177,27 @@ describe.concurrent("Effect", () => {
   it.effect("rethrown caught error in usage", () =>
     Effect.gen(function*($) {
       const result = yield* $(
-        Effect.acquireUseRelease({
-          acquire: Effect.unit,
-          use: () => Effect.fail(ExampleError),
-          release: () => Effect.unit
-        }),
+        Effect.acquireUseRelease(
+          Effect.unit,
+          () => Effect.fail(ExampleError),
+          () => Effect.unit
+        ),
         Effect.exit
       )
       assert.deepEqual(Exit.unannotate(result), Exit.fail(ExampleError))
     }))
   it.effect("test eval of async fail", () =>
     Effect.gen(function*($) {
-      const io1 = Effect.acquireUseRelease({
-        acquire: Effect.unit,
-        use: () => asyncExampleError<void>(),
-        release: () => asyncUnit<never>()
-      })
-      const io2 = Effect.acquireUseRelease({
-        acquire: asyncUnit<never>(),
-        use: () => asyncExampleError<void>(),
-        release: () => asyncUnit<never>()
-      })
+      const io1 = Effect.acquireUseRelease(
+        Effect.unit,
+        () => asyncExampleError<void>(),
+        () => asyncUnit<never>()
+      )
+      const io2 = Effect.acquireUseRelease(
+        asyncUnit<never>(),
+        () => asyncExampleError<void>(),
+        () => asyncUnit<never>()
+      )
       const a1 = yield* $(Effect.exit(io1))
       const a2 = yield* $(Effect.exit(io2))
       const a3 = yield* $(io1, Effect.exit)
@@ -217,25 +217,25 @@ describe.concurrent("Effect", () => {
       const ref = yield* $(Ref.make(Chunk.empty<string>()))
       const log = makeLogger(ref)
       const fiber = yield* $(
-        Effect.acquireUseRelease({
-          acquire: Effect.acquireUseRelease({
-            acquire: Effect.unit,
-            use: () => Effect.unit,
-            release: () =>
+        Effect.acquireUseRelease(
+          Effect.acquireUseRelease(
+            Effect.unit,
+            () => Effect.unit,
+            () =>
               pipe(
                 log("start 1"),
                 Effect.zipRight(Effect.sleep(Duration.millis(10))),
                 Effect.zipRight(log("release 1"))
               )
-          }),
-          use: () => Effect.unit,
-          release: () =>
+          ),
+          () => Effect.unit,
+          () =>
             pipe(
               log("start 2"),
               Effect.zipRight(Effect.sleep(Duration.millis(10))),
               Effect.zipRight(log("release 2"))
             )
-        }),
+        ),
         Effect.fork
       )
       yield* $(

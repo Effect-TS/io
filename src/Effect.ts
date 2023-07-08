@@ -2149,7 +2149,7 @@ export const negate: <R, E>(self: Effect<R, E, boolean>) => Effect<R, E, boolean
  *
  * @param acquire - The `Effect` value that acquires the resource.
  * @param release - The `Effect` value that releases the resource.
- * @param interruptable - Whether the `acquire` Effect can be interrupted
+ * @param interruptible - Whether the `acquire` Effect can be interrupted
  *
  * @returns A new `Effect` value that represents the scoped resource.
  *
@@ -2157,19 +2157,23 @@ export const negate: <R, E>(self: Effect<R, E, boolean>) => Effect<R, E, boolean
  * @category scoping, resources & finalization
  */
 export const acquireRelease: {
+  <A, R2, X>(
+    release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect<R2, never, X>,
+    options?: { readonly interruptible?: false }
+  ): <R, E>(acquire: Effect<R, E, A>) => Effect<R2 | R | Scope.Scope, E, A>
+  <A, R2, X>(
+    release: (exit: Exit.Exit<unknown, unknown>) => Effect<R2, never, X>,
+    options?: { readonly interruptible: true }
+  ): <R, E>(acquire: Effect<R, E, A>) => Effect<Scope.Scope | R2 | R, E, A>
   <R, E, A, R2, X>(
-    options: {
-      readonly acquire: Effect<R, E, A>
-      readonly release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect<R2, never, X>
-      readonly interruptable?: false
-    }
+    acquire: Effect<R, E, A>,
+    release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect<R2, never, X>,
+    options?: { readonly interruptible?: false }
   ): Effect<Scope.Scope | R | R2, E, A>
   <R, E, A, R2, X>(
-    options: {
-      readonly acquire: Effect<R, E, A>
-      readonly release: (exit: Exit.Exit<unknown, unknown>) => Effect<R2, never, X>
-      readonly interruptable: true
-    }
+    acquire: Effect<R, E, A>,
+    release: (exit: Exit.Exit<unknown, unknown>) => Effect<R2, never, X>,
+    options?: { readonly interruptible: true }
   ): Effect<Scope.Scope | R | R2, E, A>
 } = fiberRuntime.acquireRelease
 
@@ -2207,13 +2211,17 @@ export const acquireRelease: {
  * @since 1.0.0
  * @category scoping, resources & finalization
  */
-export const acquireUseRelease: <R, E, A, R2, E2, A2, R3, X>(
-  options: {
-    readonly acquire: Effect<R, E, A>
-    readonly use: (a: A) => Effect<R2, E2, A2>
-    readonly release: (a: A, exit: Exit.Exit<E2, A2>) => Effect<R3, never, X>
-  }
-) => Effect<R | R2 | R3, E | E2, A2> = core.acquireUseRelease
+export const acquireUseRelease: {
+  <A, R2, E2, A2, R3, X>(
+    use: (a: A) => Effect<R2, E2, A2>,
+    release: (a: A, exit: Exit.Exit<E2, A2>) => Effect<R3, never, X>
+  ): <R, E>(acquire: Effect<R, E, A>) => Effect<R2 | R3 | R, E2 | E, A2>
+  <R, E, A, R2, E2, A2, R3, X>(
+    acquire: Effect<R, E, A>,
+    use: (a: A) => Effect<R2, E2, A2>,
+    release: (a: A, exit: Exit.Exit<E2, A2>) => Effect<R3, never, X>
+  ): Effect<R | R2 | R3, E | E2, A2>
+} = core.acquireUseRelease
 
 /**
  * This function adds a finalizer to the scope of the calling `Effect` value.
@@ -3216,19 +3224,12 @@ export {
  */
 export const filterOrDie: {
   <A, B extends A>(
-    options: { readonly filter: Refinement<A, B>; readonly orDieWith: LazyArg<unknown> }
+    filter: Refinement<A, B>,
+    orDieWith: LazyArg<unknown>
   ): <R, E>(self: Effect<R, E, A>) => Effect<R, E, B>
-  <A>(
-    options: { readonly filter: Predicate<A>; readonly orDieWith: LazyArg<unknown> }
-  ): <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A, B extends A>(
-    self: Effect<R, E, A>,
-    options: { readonly filter: Refinement<A, B>; readonly orDieWith: LazyArg<unknown> }
-  ): Effect<R, E, B>
-  <R, E, A>(
-    self: Effect<R, E, A>,
-    options: { readonly filter: Predicate<A>; readonly orDieWith: LazyArg<unknown> }
-  ): Effect<R, E, A>
+  <A>(filter: Predicate<A>, orDieWith: LazyArg<unknown>): <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A, B extends A>(self: Effect<R, E, A>, filter: Refinement<A, B>, orDieWith: LazyArg<unknown>): Effect<R, E, B>
+  <R, E, A>(self: Effect<R, E, A>, filter: Predicate<A>, orDieWith: LazyArg<unknown>): Effect<R, E, A>
 } = effect.filterOrDie
 
 /**
@@ -3239,20 +3240,10 @@ export const filterOrDie: {
  * @category filtering & conditionals
  */
 export const filterOrDieMessage: {
-  <A, B extends A>(
-    options: { readonly filter: Refinement<A, B>; readonly message: string }
-  ): <R, E>(self: Effect<R, E, A>) => Effect<R, E, B>
-  <A>(
-    options: { readonly filter: Predicate<A>; readonly message: string }
-  ): <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A, B extends A>(
-    self: Effect<R, E, A>,
-    options: { readonly filter: Refinement<A, B>; readonly message: string }
-  ): Effect<R, E, B>
-  <R, E, A>(
-    self: Effect<R, E, A>,
-    options: { readonly filter: Predicate<A>; readonly message: string }
-  ): Effect<R, E, A>
+  <A, B extends A>(filter: Refinement<A, B>, message: string): <R, E>(self: Effect<R, E, A>) => Effect<R, E, B>
+  <A>(filter: Predicate<A>, message: string): <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A, B extends A>(self: Effect<R, E, A>, filter: Refinement<A, B>, message: string): Effect<R, E, B>
+  <R, E, A>(self: Effect<R, E, A>, filter: Predicate<A>, message: string): Effect<R, E, A>
 } = effect.filterOrDieMessage
 
 /**
@@ -3264,30 +3255,22 @@ export const filterOrDieMessage: {
  */
 export const filterOrElse: {
   <A, B extends A, R2, E2, C>(
-    options: {
-      readonly filter: Refinement<A, B>
-      readonly orElse: (a: A) => Effect<R2, E2, C>
-    }
+    filter: Refinement<A, B>,
+    orElse: (a: A) => Effect<R2, E2, C>
   ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, B | C>
   <A, R2, E2, B>(
-    options: {
-      readonly filter: Predicate<A>
-      readonly orElse: (a: A) => Effect<R2, E2, B>
-    }
+    filter: Predicate<A>,
+    orElse: (a: A) => Effect<R2, E2, B>
   ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A | B>
   <R, E, A, B extends A, R2, E2, C>(
     self: Effect<R, E, A>,
-    options: {
-      readonly filter: Refinement<A, B>
-      readonly orElse: (a: A) => Effect<R2, E2, C>
-    }
+    filter: Refinement<A, B>,
+    orElse: (a: A) => Effect<R2, E2, C>
   ): Effect<R | R2, E | E2, B | C>
   <R, E, A, R2, E2, B>(
     self: Effect<R, E, A>,
-    options: {
-      readonly filter: Predicate<A>
-      readonly orElse: (a: A) => Effect<R2, E2, B>
-    }
+    filter: Predicate<A>,
+    orElse: (a: A) => Effect<R2, E2, B>
   ): Effect<R | R2, E | E2, A | B>
 } = effect.filterOrElse
 
@@ -3300,31 +3283,16 @@ export const filterOrElse: {
  */
 export const filterOrFail: {
   <A, B extends A, E2>(
-    options: {
-      readonly filter: Refinement<A, B>
-      readonly orFailWith: (a: A) => E2
-    }
+    filter: Refinement<A, B>,
+    orFailWith: (a: A) => E2
   ): <R, E>(self: Effect<R, E, A>) => Effect<R, E2 | E, B>
-  <A, E2>(
-    options: {
-      readonly filter: Predicate<A>
-      readonly orFailWith: (a: A) => E2
-    }
-  ): <R, E>(self: Effect<R, E, A>) => Effect<R, E2 | E, A>
+  <A, E2>(filter: Predicate<A>, orFailWith: (a: A) => E2): <R, E>(self: Effect<R, E, A>) => Effect<R, E2 | E, A>
   <R, E, A, B extends A, E2>(
     self: Effect<R, E, A>,
-    options: {
-      readonly filter: Refinement<A, B>
-      readonly orFailWith: (a: A) => E2
-    }
+    filter: Refinement<A, B>,
+    orFailWith: (a: A) => E2
   ): Effect<R, E | E2, B>
-  <R, E, A, E2>(
-    self: Effect<R, E, A>,
-    options: {
-      readonly filter: Predicate<A>
-      readonly orFailWith: (a: A) => E2
-    }
-  ): Effect<R, E | E2, A>
+  <R, E, A, E2>(self: Effect<R, E, A>, filter: Predicate<A>, orFailWith: (a: A) => E2): Effect<R, E | E2, A>
 } = effect.filterOrFail
 
 /**

@@ -148,10 +148,10 @@ export const toScoped = <Key, Error, Value>(
   Exit.matchEffect(self.exit, {
     onFailure: (cause) => core.failCause(cause),
     onSuccess: ([value]) =>
-      fiberRuntime.acquireRelease({
-        acquire: core.as(core.sync(() => MutableRef.incrementAndGet(self.ownerCount)), value),
-        release: () => releaseOwner(self)
-      })
+      fiberRuntime.acquireRelease(
+        core.as(core.sync(() => MutableRef.incrementAndGet(self.ownerCount)), value),
+        () => releaseOwner(self)
+      )
   })
 
 /** @internal */
@@ -609,8 +609,8 @@ const buildWith = <Key, Environment, Error, Value>(
   clock: Clock.Clock,
   timeToLive: (exit: Exit.Exit<Error, Value>) => Duration.Duration
 ): Effect.Effect<Environment | Scope.Scope, never, ScopedCache.ScopedCache<Key, Error, Value>> =>
-  fiberRuntime.acquireRelease({
-    acquire: core.flatMap(
+  fiberRuntime.acquireRelease(
+    core.flatMap(
       core.context<Environment>(),
       (context) =>
         core.sync(() =>
@@ -623,5 +623,5 @@ const buildWith = <Key, Environment, Error, Value>(
           )
         )
     ),
-    release: (cache) => cache.invalidateAll()
-  })
+    (cache) => cache.invalidateAll()
+  )

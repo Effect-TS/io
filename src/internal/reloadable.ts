@@ -43,15 +43,15 @@ export const auto = <Out extends Context.Tag<any, any>, In, E, R>(
       _layer.build(manual(tag, { layer: options.layer })),
       core.map(Context.unsafeGet(reloadableTag(tag))),
       core.tap((reloadable) =>
-        fiberRuntime.acquireRelease({
-          acquire: pipe(
+        fiberRuntime.acquireRelease(
+          pipe(
             reloadable.reload(),
             effect.ignoreLogged,
             _schedule.schedule_Effect(options.schedule),
             fiberRuntime.forkDaemon
           ),
-          release: core.interruptFiber
-        })
+          core.interruptFiber
+        )
       )
     )
   )

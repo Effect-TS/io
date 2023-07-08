@@ -900,10 +900,10 @@ export const scopedContext = <R, E, A>(
 /** @internal */
 export const scope: Layer.Layer<never, never, Scope.Scope.Closeable> = scopedContext(
   core.map(
-    fiberRuntime.acquireRelease({
-      acquire: fiberRuntime.scopeMake(),
-      release: (scope, exit) => scope.close(exit)
-    }),
+    fiberRuntime.acquireRelease(
+      fiberRuntime.scopeMake(),
+      (scope, exit) => scope.close(exit)
+    ),
     (scope) => Context.make(Scope.Scope, scope)
   )
 )
@@ -1107,15 +1107,15 @@ export const provideLayer = dual<
   <R0, E2, R>(layer: Layer.Layer<R0, E2, R>) => <E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R0, E | E2, A>,
   <R, E, A, R0, E2>(self: Effect.Effect<R, E, A>, layer: Layer.Layer<R0, E2, R>) => Effect.Effect<R0, E | E2, A>
 >(2, (self, layer) =>
-  core.acquireUseRelease({
-    acquire: fiberRuntime.scopeMake(),
-    use: (scope) =>
+  core.acquireUseRelease(
+    fiberRuntime.scopeMake(),
+    (scope) =>
       core.flatMap(
         buildWithScope(layer, scope),
         (context) => core.provideContext(self, context)
       ),
-    release: (scope, exit) => core.scopeClose(scope, exit)
-  }))
+    (scope, exit) => core.scopeClose(scope, exit)
+  ))
 
 /** @internal */
 export const provideSomeLayer: {

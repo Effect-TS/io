@@ -1252,6 +1252,9 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
       }
       try {
         if (!((cur as core.Primitive)._tag in this)) {
+          if (typeof cur === "function") {
+            console.log((cur as any)())
+          }
           // @ts-expect-error
           absurd(cur)
         }
@@ -1362,37 +1365,65 @@ export const currentLoggers: FiberRef.FiberRef<
 
 /* @internal */
 export const acquireRelease: {
+  <A, R2, X>(
+    release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>,
+    options?: { readonly interruptible?: false }
+  ): <R, E>(acquire: Effect.Effect<R, E, A>) => Effect.Effect<R2 | R | Scope.Scope, E, A>
+  <A, R2, X>(
+    release: (exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>,
+    options?: { readonly interruptible: true }
+  ): <R, E>(acquire: Effect.Effect<R, E, A>) => Effect.Effect<Scope.Scope | R2 | R, E, A>
   <R, E, A, R2, X>(
-    options: {
-      readonly acquire: Effect.Effect<R, E, A>
-      readonly release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>
-      readonly interruptable?: false
-    }
-  ): Effect.Effect<R | R2 | Scope.Scope, E, A>
+    acquire: Effect.Effect<R, E, A>,
+    release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>,
+    options?: { readonly interruptible?: false }
+  ): Effect.Effect<Scope.Scope | R | R2, E, A>
   <R, E, A, R2, X>(
-    options: {
-      readonly acquire: Effect.Effect<R, E, A>
-      readonly release: (exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>
-      readonly interruptable: true
-    }
-  ): Effect.Effect<R | R2 | Scope.Scope, E, A>
-} = <R, E, A, R2, X>(
-  options: {
-    readonly acquire: Effect.Effect<R, E, A>
-    readonly release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>
-    readonly interruptable?: boolean
+    acquire: Effect.Effect<R, E, A>,
+    release: (exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>,
+    options?: { readonly interruptible: true }
+  ): Effect.Effect<Scope.Scope | R | R2, E, A>
+} = dual<
+  {
+    <A, R2, X>(
+      release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>,
+      options?: { readonly interruptible?: false }
+    ): <R, E>(acquire: Effect.Effect<R, E, A>) => Effect.Effect<R | R2 | Scope.Scope, E, A>
+    <A, R2, X>(
+      release: (exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>,
+      options?: { readonly interruptible: true }
+    ): <R, E>(acquire: Effect.Effect<R, E, A>) => Effect.Effect<R | R2 | Scope.Scope, E, A>
+  },
+  {
+    <R, E, A, R2, X>(
+      acquire: Effect.Effect<R, E, A>,
+      release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>,
+      options?: { readonly interruptible?: false }
+    ): Effect.Effect<R | R2 | Scope.Scope, E, A>
+    <R, E, A, R2, X>(
+      acquire: Effect.Effect<R, E, A>,
+      release: (exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>,
+      options?: { readonly interruptible: true }
+    ): Effect.Effect<R | R2 | Scope.Scope, E, A>
   }
-): Effect.Effect<R | R2 | Scope.Scope, E, A> => {
-  if (options.interruptable) {
+>((args) => core.isEffect(args[0]), (acquire, release, options) => {
+  if (options?.interruptible) {
     return ensuring(
-      options.acquire,
-      addFinalizer(options.release as any)
+      acquire,
+      addFinalizer((exit) =>
+        // @ts-expect-error
+        release(exit)
+      )
     )
   }
   return core.uninterruptible(
-    core.tap(options.acquire, (a) => addFinalizer((exit) => options.release(a, exit)))
+    core.tap(acquire, (a) =>
+      addFinalizer((exit) =>
+        // @ts-expect-error
+        release(a, exit)
+      ))
   )
-}
+})
 
 /* @internal */
 export const addFinalizer = <R, X>(
@@ -2397,11 +2428,11 @@ export const using = dual<
     use: (a: A) => Effect.Effect<R2, E2, A2>
   ) => Effect.Effect<R | R2, E | E2, A2>
 >(2, (self, use) =>
-  core.acquireUseRelease({
-    acquire: scopeMake(),
-    use: (scope) => core.flatMap(scopeExtend(self, scope), use),
-    release: (scope, exit) => core.scopeClose(scope, exit)
-  }))
+  core.acquireUseRelease(
+    scopeMake(),
+    (scope) => core.flatMap(scopeExtend(self, scope), use),
+    (scope, exit) => core.scopeClose(scope, exit)
+  ))
 
 /* @internal */
 export const unsome = <R, E, A>(
@@ -2785,13 +2816,13 @@ export const fiberRefLocallyScoped = dual<
   <A>(self: FiberRef.FiberRef<A>, value: A) => Effect.Effect<Scope.Scope, never, void>
 >(2, (self, value) =>
   core.asUnit(
-    acquireRelease({
-      acquire: pipe(
+    acquireRelease(
+      core.flatMap(
         core.fiberRefGet(self),
-        core.flatMap((oldValue) => pipe(core.fiberRefSet(self, value), core.as(oldValue)))
+        (oldValue) => core.as(core.fiberRefSet(self, value), oldValue)
       ),
-      release: (oldValue) => core.fiberRefSet(self, oldValue)
-    })
+      (oldValue) => core.fiberRefSet(self, oldValue)
+    )
   ))
 
 /* @internal */
@@ -2814,10 +2845,10 @@ export const fiberRefMake = <A>(
 export const fiberRefMakeWith = <Value>(
   ref: LazyArg<FiberRef.FiberRef<Value>>
 ): Effect.Effect<Scope.Scope, never, FiberRef.FiberRef<Value>> =>
-  acquireRelease({
-    acquire: core.tap(core.sync(ref), (ref) => core.fiberRefUpdate(ref, identity)),
-    release: (fiberRef) => core.fiberRefDelete(fiberRef)
-  })
+  acquireRelease(
+    core.tap(core.sync(ref), (ref) => core.fiberRefUpdate(ref, identity)),
+    (fiberRef) => core.fiberRefDelete(fiberRef)
+  )
 
 /* @internal */
 export const fiberRefMakeContext = <A>(
@@ -2896,10 +2927,7 @@ export const fiberJoinAll = <E, A>(fibers: Iterable<Fiber.Fiber<E, A>>): Effect.
 
 /* @internal */
 export const fiberScoped = <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<Scope.Scope, never, Fiber.Fiber<E, A>> =>
-  acquireRelease({
-    acquire: core.succeed(self),
-    release: core.interruptFiber
-  })
+  acquireRelease(core.succeed(self), core.interruptFiber)
 
 //
 // circular race
