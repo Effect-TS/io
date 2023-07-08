@@ -75,10 +75,10 @@ describe.concurrent("Effect", () => {
         exactlyOnce(0, (effect) =>
           pipe(
             effect,
-            Effect.filterOrElse({
-              filter: (n) => n === 0,
-              orElse: (n) => Effect.fail(`${n} was not 0`)
-            })
+            Effect.filterOrElse(
+              (n) => n === 0,
+              (n) => Effect.fail(`${n} was not 0`)
+            )
           )),
         Effect.sandbox,
         Effect.either
@@ -87,10 +87,10 @@ describe.concurrent("Effect", () => {
         exactlyOnce(1, (effect) =>
           pipe(
             effect,
-            Effect.filterOrElse({
-              filter: (n) => n === 0,
-              orElse: (n) => Effect.fail(`${n} was not 0`)
-            })
+            Effect.filterOrElse(
+              (n) => n === 0,
+              (n) => Effect.fail(`${n} was not 0`)
+            )
           )),
         Effect.sandbox,
         Effect.either,
@@ -105,10 +105,10 @@ describe.concurrent("Effect", () => {
         exactlyOnce(0, (effect) =>
           pipe(
             effect,
-            Effect.filterOrElse({
-              filter: (n) => n === 0,
-              orElse: () => Effect.fail("predicate failed!")
-            })
+            Effect.filterOrElse(
+              (n) => n === 0,
+              () => Effect.fail("predicate failed!")
+            )
           )),
         Effect.sandbox,
         Effect.either
@@ -117,10 +117,10 @@ describe.concurrent("Effect", () => {
         exactlyOnce(1, (effect) =>
           pipe(
             effect,
-            Effect.filterOrElse({
-              filter: (n) => n === 0,
-              orElse: () => Effect.fail("predicate failed!")
-            })
+            Effect.filterOrElse(
+              (n) => n === 0,
+              () => Effect.fail("predicate failed!")
+            )
           )),
         Effect.sandbox,
         Effect.either,
@@ -135,10 +135,10 @@ describe.concurrent("Effect", () => {
         exactlyOnce(0, (effect) =>
           pipe(
             effect,
-            Effect.filterOrFail({
-              filter: (n) => n === 0,
-              orFailWith: () => "predicate failed!"
-            })
+            Effect.filterOrFail(
+              (n) => n === 0,
+              () => "predicate failed!"
+            )
           )),
         Effect.sandbox,
         Effect.either
@@ -147,10 +147,10 @@ describe.concurrent("Effect", () => {
         exactlyOnce(1, (effect) =>
           pipe(
             effect,
-            Effect.filterOrFail({
-              filter: (n) => n === 0,
-              orFailWith: () => "predicate failed!"
-            })
+            Effect.filterOrFail(
+              (n) => n === 0,
+              () => "predicate failed!"
+            )
           )),
         Effect.sandbox,
         Effect.either,
@@ -165,10 +165,10 @@ describe.concurrent("Effect", () => {
         exactlyOnce(0, (effect) =>
           pipe(
             effect,
-            Effect.filterOrFail({
-              filter: (n) => n === 0,
-              orFailWith: (n) => `predicate failed, got ${n}!`
-            })
+            Effect.filterOrFail(
+              (n) => n === 0,
+              (n) => `predicate failed, got ${n}!`
+            )
           )),
         Effect.sandbox,
         Effect.either
@@ -177,10 +177,10 @@ describe.concurrent("Effect", () => {
         exactlyOnce(1, (effect) =>
           pipe(
             effect,
-            Effect.filterOrFail({
-              filter: (n) => n === 0,
-              orFailWith: (n) => `predicate failed, got ${n}!`
-            })
+            Effect.filterOrFail(
+              (n) => n === 0,
+              (n) => `predicate failed, got ${n}!`
+            )
           )),
         Effect.sandbox,
         Effect.either,
