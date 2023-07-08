@@ -28,10 +28,15 @@ export const auto = <R, E, A, R2, Out>(
   policy: Schedule.Schedule<R2, unknown, Out>
 ): Effect.Effect<R | R2 | Scope.Scope, never, Resource.Resource<E, A>> =>
   core.tap(manual(acquire), (manual) =>
-    fiberRuntime.acquireRelease({
-      acquire: pipe(refresh(manual), _schedule.schedule_Effect(policy), core.interruptible, fiberRuntime.forkDaemon),
-      release: core.interruptFiber
-    }))
+    fiberRuntime.acquireRelease(
+      pipe(
+        refresh(manual),
+        _schedule.schedule_Effect(policy),
+        core.interruptible,
+        fiberRuntime.forkDaemon
+      ),
+      core.interruptFiber
+    ))
 
 /** @internal */
 export const manual = <R, E, A>(

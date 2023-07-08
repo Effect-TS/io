@@ -900,10 +900,10 @@ export const scopedContext = <R, E, A>(
 /** @internal */
 export const scope: Layer.Layer<never, never, Scope.Scope.Closeable> = scopedContext(
   core.map(
-    fiberRuntime.acquireRelease({
-      acquire: fiberRuntime.scopeMake(),
-      release: (scope, exit) => scope.close(exit)
-    }),
+    fiberRuntime.acquireRelease(
+      fiberRuntime.scopeMake(),
+      (scope, exit) => scope.close(exit)
+    ),
     (scope) => Context.make(Scope.Scope, scope)
   )
 )

@@ -4635,12 +4635,12 @@ export declare const acquireRelease: {
   <R, E, A, R2, X>(options: {
     readonly acquire: Effect<R, E, A>
     readonly release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect<R2, never, X>
-    readonly interruptable?: false | undefined
+    readonly interruptible?: false | undefined
   }): Effect<Scope.Scope | R | R2, E, A>
   <R, E, A, R2, X>(options: {
     readonly acquire: Effect<R, E, A>
     readonly release: (exit: Exit.Exit<unknown, unknown>) => Effect<R2, never, X>
-    readonly interruptable: true
+    readonly interruptible: true
   }): Effect<Scope.Scope | R | R2, E, A>
 }
 ```

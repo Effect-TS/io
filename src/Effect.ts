@@ -2149,7 +2149,7 @@ export const negate: <R, E>(self: Effect<R, E, boolean>) => Effect<R, E, boolean
  *
  * @param acquire - The `Effect` value that acquires the resource.
  * @param release - The `Effect` value that releases the resource.
- * @param interruptable - Whether the `acquire` Effect can be interrupted
+ * @param interruptible - Whether the `acquire` Effect can be interrupted
  *
  * @returns A new `Effect` value that represents the scoped resource.
  *
@@ -2157,19 +2157,23 @@ export const negate: <R, E>(self: Effect<R, E, boolean>) => Effect<R, E, boolean
  * @category scoping, resources & finalization
  */
 export const acquireRelease: {
+  <A, R2, X>(
+    release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect<R2, never, X>,
+    options?: { readonly interruptible?: false }
+  ): <R, E>(acquire: Effect<R, E, A>) => Effect<R2 | R | Scope.Scope, E, A>
+  <A, R2, X>(
+    release: (exit: Exit.Exit<unknown, unknown>) => Effect<R2, never, X>,
+    options?: { readonly interruptible: true }
+  ): <R, E>(acquire: Effect<R, E, A>) => Effect<Scope.Scope | R2 | R, E, A>
   <R, E, A, R2, X>(
-    options: {
-      readonly acquire: Effect<R, E, A>
-      readonly release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect<R2, never, X>
-      readonly interruptable?: false
-    }
+    acquire: Effect<R, E, A>,
+    release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect<R2, never, X>,
+    options?: { readonly interruptible?: false }
   ): Effect<Scope.Scope | R | R2, E, A>
   <R, E, A, R2, X>(
-    options: {
-      readonly acquire: Effect<R, E, A>
-      readonly release: (exit: Exit.Exit<unknown, unknown>) => Effect<R2, never, X>
-      readonly interruptable: true
-    }
+    acquire: Effect<R, E, A>,
+    release: (exit: Exit.Exit<unknown, unknown>) => Effect<R2, never, X>,
+    options?: { readonly interruptible: true }
   ): Effect<Scope.Scope | R | R2, E, A>
 } = fiberRuntime.acquireRelease
 
