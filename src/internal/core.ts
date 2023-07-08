@@ -1260,7 +1260,10 @@ export const logLevelAll: LogLevel.LogLevel = {
   _tag: "All",
   syslog: 0,
   label: "ALL",
-  ordinal: Number.MIN_SAFE_INTEGER
+  ordinal: Number.MIN_SAFE_INTEGER,
+  pipe() {
+    return pipeArguments(this, arguments)
+  }
 }
 
 /** @internal */
@@ -1268,7 +1271,10 @@ export const logLevelFatal: LogLevel.LogLevel = {
   _tag: "Fatal",
   syslog: 2,
   label: "FATAL",
-  ordinal: 50000
+  ordinal: 50000,
+  pipe() {
+    return pipeArguments(this, arguments)
+  }
 }
 
 /** @internal */
@@ -1276,7 +1282,10 @@ export const logLevelError: LogLevel.LogLevel = {
   _tag: "Error",
   syslog: 3,
   label: "ERROR",
-  ordinal: 40000
+  ordinal: 40000,
+  pipe() {
+    return pipeArguments(this, arguments)
+  }
 }
 
 /** @internal */
@@ -1284,7 +1293,10 @@ export const logLevelWarning: LogLevel.LogLevel = {
   _tag: "Warning",
   syslog: 4,
   label: "WARN",
-  ordinal: 30000
+  ordinal: 30000,
+  pipe() {
+    return pipeArguments(this, arguments)
+  }
 }
 
 /** @internal */
@@ -1292,7 +1304,10 @@ export const logLevelInfo: LogLevel.LogLevel = {
   _tag: "Info",
   syslog: 6,
   label: "INFO",
-  ordinal: 20000
+  ordinal: 20000,
+  pipe() {
+    return pipeArguments(this, arguments)
+  }
 }
 
 /** @internal */
@@ -1300,7 +1315,10 @@ export const logLevelDebug: LogLevel.LogLevel = {
   _tag: "Debug",
   syslog: 7,
   label: "DEBUG",
-  ordinal: 10000
+  ordinal: 10000,
+  pipe() {
+    return pipeArguments(this, arguments)
+  }
 }
 
 /** @internal */
@@ -1308,7 +1326,10 @@ export const logLevelTrace: LogLevel.LogLevel = {
   _tag: "Trace",
   syslog: 7,
   label: "TRACE",
-  ordinal: 0
+  ordinal: 0,
+  pipe() {
+    return pipeArguments(this, arguments)
+  }
 }
 
 /** @internal */
@@ -1316,7 +1337,10 @@ export const logLevelNone: LogLevel.LogLevel = {
   _tag: "None",
   syslog: 7,
   label: "OFF",
-  ordinal: Number.MAX_SAFE_INTEGER
+  ordinal: Number.MAX_SAFE_INTEGER,
+  pipe() {
+    return pipeArguments(this, arguments)
+  }
 }
 
 /** @internal */
