@@ -2755,6 +2755,9 @@ export const scopeMake = (
   core.map(core.releaseMapMake, (rm): Scope.Scope.Closeable => ({
     [core.ScopeTypeId]: core.ScopeTypeId,
     [core.CloseableScopeTypeId]: core.CloseableScopeTypeId,
+    pipe() {
+      return pipeArguments(this, arguments)
+    },
     fork: (strategy) =>
       core.uninterruptible(
         pipe(

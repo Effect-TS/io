@@ -1,5 +1,4 @@
 import * as Duration from "@effect/data/Duration"
-import { identity } from "@effect/data/Function"
 import * as Option from "@effect/data/Option"
 import * as Deferred from "@effect/io/Deferred"
 import * as Effect from "@effect/io/Effect"

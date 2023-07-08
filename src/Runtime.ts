@@ -2,6 +2,7 @@
  * @since 1.0.0
  */
 import type * as Context from "@effect/data/Context"
+import type { Pipeable } from "@effect/data/Pipeable"
 import type { Cause } from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
@@ -33,7 +34,7 @@ export interface Cancel<E, A> {
  * @since 1.0.0
  * @category models
  */
-export interface Runtime<R> {
+export interface Runtime<R> extends Pipeable<Runtime<R>> {
   /**
    * The context used as initial for forks
    */

@@ -3,6 +3,7 @@ import { dual, pipe } from "@effect/data/Function"
 import * as MutableQueue from "@effect/data/MutableQueue"
 import * as MutableRef from "@effect/data/MutableRef"
 import type * as Option from "@effect/data/Option"
+import { pipeArguments } from "@effect/data/Pipeable"
 import * as ReadonlyArray from "@effect/data/ReadonlyArray"
 import type * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
@@ -62,6 +63,10 @@ class QueueImpl<A> implements Queue.Queue<A> {
     /** @internal */
     readonly strategy: Queue.Strategy<A>
   ) {
+  }
+
+  pipe() {
+    return pipeArguments(this, arguments)
   }
 
   capacity(): number {

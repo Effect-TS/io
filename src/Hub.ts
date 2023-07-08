@@ -15,7 +15,7 @@ import type * as Scope from "@effect/io/Scope"
  * @since 1.0.0
  * @category models
  */
-export interface Hub<A> extends Queue.Enqueue<A>, Pipeable<Hub<A>> {
+export interface Hub<A> extends Omit<Queue.Enqueue<A>, "pipe">, Pipeable<Hub<A>> {
   /**
    * Publishes a message to the hub, returning whether the message was published
    * to the hub.

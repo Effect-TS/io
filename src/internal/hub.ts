@@ -526,6 +526,10 @@ class BoundedHubSingle<A> implements AtomicHub<A> {
 
   readonly capacity = 1
 
+  pipe() {
+    return pipeArguments(this, arguments)
+  }
+
   isEmpty(): boolean {
     return this.subscribers === 0
   }
@@ -822,6 +826,10 @@ class SubscriptionImpl<A> implements Queue.Dequeue<A> {
     readonly shutdownFlag: MutableRef.MutableRef<boolean>,
     readonly strategy: HubStrategy<A>
   ) {
+  }
+
+  pipe() {
+    return pipeArguments(this, arguments)
   }
 
   capacity(): number {

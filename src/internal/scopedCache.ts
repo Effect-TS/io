@@ -8,6 +8,7 @@ import * as MutableHashMap from "@effect/data/MutableHashMap"
 import * as MutableQueue from "@effect/data/MutableQueue"
 import * as MutableRef from "@effect/data/MutableRef"
 import * as Option from "@effect/data/Option"
+import { pipeArguments } from "@effect/data/Pipeable"
 import type * as Cache from "@effect/io/Cache"
 import type * as Clock from "@effect/io/Clock"
 import type * as Effect from "@effect/io/Effect"
@@ -192,6 +193,10 @@ class ScopedCacheImpl<Key, Environment, Error, Value> implements ScopedCache.Sco
     readonly context: Context.Context<Environment>
   ) {
     this.cacheState = initialCacheState()
+  }
+
+  pipe() {
+    return pipeArguments(this, arguments)
   }
 
   cacheStats(): Effect.Effect<never, never, Cache.CacheStats> {

@@ -5,6 +5,7 @@ import type * as Chunk from "@effect/data/Chunk"
 import type * as MutableQueue from "@effect/data/MutableQueue"
 import type * as MutableRef from "@effect/data/MutableRef"
 import type * as Option from "@effect/data/Option"
+import type { Pipeable } from "@effect/data/Pipeable"
 import type * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
 import * as internal from "@effect/io/internal/queue"
@@ -49,7 +50,7 @@ export type QueueStrategyTypeId = typeof QueueStrategyTypeId
  * @since 1.0.0
  * @category models
  */
-export interface Queue<A> extends Enqueue<A>, Dequeue<A> {
+export interface Queue<A> extends Omit<Enqueue<A>, "pipe">, Omit<Dequeue<A>, "pipe">, Pipeable<Queue<A>> {
   /** @internal */
   readonly queue: MutableQueue.MutableQueue<A>
   /** @internal */
@@ -66,7 +67,7 @@ export interface Queue<A> extends Enqueue<A>, Dequeue<A> {
  * @since 1.0.0
  * @category models
  */
-export interface Enqueue<A> extends Queue.EnqueueVariance<A>, BaseQueue {
+export interface Enqueue<A> extends Queue.EnqueueVariance<A>, BaseQueue, Pipeable<Enqueue<A>> {
   /**
    * Places one value in the queue.
    */
@@ -99,7 +100,7 @@ export interface Enqueue<A> extends Queue.EnqueueVariance<A>, BaseQueue {
  * @since 1.0.0
  * @category models
  */
-export interface Dequeue<A> extends Queue.DequeueVariance<A>, BaseQueue {
+export interface Dequeue<A> extends Queue.DequeueVariance<A>, BaseQueue, Pipeable<Dequeue<A>> {
   /**
    * Takes the oldest value in the queue. If the queue is empty, this will return
    * a computation that resumes when an item has been added to the queue.

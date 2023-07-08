@@ -1,4 +1,4 @@
-import { pipe } from "@effect/data/Function"
+import { identity, pipe } from "@effect/data/Function"
 import * as Effect from "@effect/io/Effect"
 import * as ScopedRef from "@effect/io/ScopedRef"
 import * as Counter from "@effect/io/test/utils/counter"
@@ -73,5 +73,10 @@ describe.concurrent("ScopedRef", () => {
       const released = yield* $(counter.released())
       assert.strictEqual(acquired, 3)
       assert.strictEqual(released, 3)
+    }))
+  it.effect("full release", () =>
+    Effect.gen(function*(_) {
+      const ref = yield* _(Effect.scoped(ScopedRef.make(() => 0)))
+      expect(ref.pipe(identity)).toBe(ref)
     }))
 })
