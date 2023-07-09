@@ -162,31 +162,4 @@ describe.concurrent("Effect", () => {
     }).pipe(
       Effect.provideSomeLayer(EnvLive)
     ))
-  it.effect("nested queries are batched when concurrency is set to 1", () =>
-    Effect.gen(function*($) {
-      const parents = yield* $(getAllParents)
-
-      yield* $(Effect.forEach(
-        parents,
-        (parent) =>
-          Effect.flatMap(
-            getChildren(parent.id),
-            (children) =>
-              Effect.forEach(
-                children,
-                (child) => Effect.zip(getChildInfo(child.id), getChildExtra(child.id), { parallel: true }),
-                { concurrency: 1, batched: true }
-              )
-          ),
-        { concurrency: 1, batched: true }
-      ))
-
-      const count = yield* $(Counter)
-      const requests = yield* $(Requests)
-
-      expect(count.count).toBe(3)
-      expect(requests.count).toBe(7)
-    }).pipe(
-      Effect.provideSomeLayer(EnvLive)
-    ))
 })

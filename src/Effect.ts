@@ -390,17 +390,9 @@ export declare namespace All {
     : never
 
   export type Options = {
-    readonly concurrency: Concurrency
-    readonly batched?: boolean
-    readonly discard?: boolean
-  } | {
     readonly concurrency?: Concurrency
-    readonly batched: boolean
+    readonly batchRequests?: boolean | "inherit"
     readonly discard?: boolean
-  } | {
-    readonly concurrency?: Concurrency
-    readonly batched?: boolean
-    readonly discard: boolean
   }
 
   type IsDiscard<A> = [Extract<A, { readonly discard: true }>] extends [never] ? false : true
@@ -481,7 +473,7 @@ export const allSuccesses: <R, E, A>(
   elements: Iterable<Effect<R, E, A>>,
   options?: {
     readonly concurrency?: Concurrency
-    readonly batched?: boolean
+    readonly batchRequests?: boolean | "inherit"
   }
 ) => Effect<R, never, Array<A>> = fiberRuntime.allSuccesses
 
@@ -531,7 +523,7 @@ export const exists: {
     f: (a: A, i: number) => Effect<R, E, boolean>,
     options?: {
       readonly concurrency?: Concurrency
-      readonly batched?: boolean
+      readonly batchRequests?: boolean | "inherit"
     }
   ): (elements: Iterable<A>) => Effect<R, E, boolean>
   <R, E, A>(
@@ -539,7 +531,7 @@ export const exists: {
     f: (a: A, i: number) => Effect<R, E, boolean>,
     options?: {
       readonly concurrency: Concurrency
-      readonly batched?: boolean
+      readonly batchRequests?: boolean | "inherit"
     }
   ): Effect<R, E, boolean>
 } = fiberRuntime.exists
@@ -555,7 +547,7 @@ export const filter: {
     f: (a: A, i: number) => Effect<R, E, boolean>,
     options?: {
       readonly concurrency?: Concurrency
-      readonly batched?: boolean
+      readonly batchRequests?: boolean | "inherit"
       readonly negate?: boolean
     }
   ): (elements: Iterable<A>) => Effect<R, E, Array<A>>
@@ -564,7 +556,7 @@ export const filter: {
     f: (a: A, i: number) => Effect<R, E, boolean>,
     options?: {
       readonly concurrency?: Concurrency
-      readonly batched?: boolean
+      readonly batchRequests?: boolean | "inherit"
       readonly negate?: boolean
     }
   ): Effect<R, E, Array<A>>
@@ -611,7 +603,7 @@ export const forEach: {
     f: (a: A, i: number) => Effect<R, E, B>,
     options?: {
       readonly concurrency?: Concurrency
-      readonly batched?: boolean
+      readonly batchRequests?: boolean | "inherit"
       readonly discard?: false
     }
   ): (self: Iterable<A>) => Effect<R, E, Array<B>>
@@ -619,7 +611,7 @@ export const forEach: {
     f: (a: A, i: number) => Effect<R, E, B>,
     options: {
       readonly concurrency?: Concurrency
-      readonly batched?: boolean
+      readonly batchRequests?: boolean | "inherit"
       readonly discard: true
     }
   ): (self: Iterable<A>) => Effect<R, E, void>
@@ -628,7 +620,7 @@ export const forEach: {
     f: (a: A, i: number) => Effect<R, E, B>,
     options?: {
       readonly concurrency?: Concurrency
-      readonly batched?: boolean
+      readonly batchRequests?: boolean | "inherit"
       readonly discard?: false
     }
   ): Effect<R, E, Array<B>>
@@ -637,7 +629,7 @@ export const forEach: {
     f: (a: A, i: number) => Effect<R, E, B>,
     options: {
       readonly concurrency?: Concurrency
-      readonly batched?: boolean
+      readonly batchRequests?: boolean | "inherit"
       readonly discard: true
     }
   ): Effect<R, E, void>
@@ -665,7 +657,7 @@ export const mergeAll: {
     f: (z: Z, a: A, i: number) => Z,
     options?: {
       readonly concurrency?: Concurrency
-      readonly batched?: boolean
+      readonly batchRequests?: boolean | "inherit"
     }
   ): <R, E>(elements: Iterable<Effect<R, E, A>>) => Effect<R, E, Z>
   <R, E, A, Z>(
@@ -674,7 +666,7 @@ export const mergeAll: {
     f: (z: Z, a: A, i: number) => Z,
     options?: {
       readonly concurrency?: Concurrency
-      readonly batched?: boolean
+      readonly batchRequests?: boolean | "inherit"
     }
   ): Effect<R, E, Z>
 } = fiberRuntime.mergeAll
@@ -691,12 +683,12 @@ export const partition: {
     f: (a: A) => Effect<R, E, B>,
     options?: {
       readonly concurrency?: Concurrency
-      readonly batched?: boolean
+      readonly batchRequests?: boolean | "inherit"
     }
   ): (elements: Iterable<A>) => Effect<R, never, readonly [Array<E>, Array<B>]>
   <R, E, A, B>(elements: Iterable<A>, f: (a: A) => Effect<R, E, B>, options?: {
     readonly concurrency?: Concurrency
-    readonly batched?: boolean
+    readonly batchRequests?: boolean | "inherit"
   }): Effect<R, never, readonly [Array<E>, Array<B>]>
 } = fiberRuntime.partition
 
@@ -724,7 +716,7 @@ export const reduceEffect: {
     f: (acc: A, a: A, i: number) => A,
     options?: {
       readonly concurrency?: Concurrency
-      readonly batched?: boolean
+      readonly batchRequests?: boolean | "inherit"
     }
   ): (elements: Iterable<Effect<R, E, A>>) => Effect<R, E, A>
   <R, E, A>(
@@ -733,7 +725,7 @@ export const reduceEffect: {
     f: (acc: A, a: A, i: number) => A,
     options?: {
       readonly concurrency?: Concurrency
-      readonly batched?: boolean
+      readonly batchRequests?: boolean | "inherit"
     }
   ): Effect<R, E, A>
 } = fiberRuntime.reduceEffect
@@ -841,7 +833,7 @@ export const validateAll: {
     f: (a: A, i: number) => Effect<R, E, B>,
     options?: {
       readonly concurrency?: Concurrency
-      readonly batched?: boolean
+      readonly batchRequests?: boolean | "inherit"
       readonly discard?: false
     }
   ): (elements: Iterable<A>) => Effect<R, Array<E>, Array<B>>
@@ -849,7 +841,7 @@ export const validateAll: {
     f: (a: A, i: number) => Effect<R, E, B>,
     options: {
       readonly concurrency?: Concurrency
-      readonly batched?: boolean
+      readonly batchRequests?: boolean | "inherit"
       readonly discard: true
     }
   ): (elements: Iterable<A>) => Effect<R, Array<E>, void>
@@ -858,7 +850,7 @@ export const validateAll: {
     f: (a: A, i: number) => Effect<R, E, B>,
     options?: {
       readonly concurrency?: Concurrency
-      readonly batched?: boolean
+      readonly batchRequests?: boolean | "inherit"
       readonly discard?: false
     }
   ): Effect<R, Array<E>, Array<B>>
@@ -867,7 +859,7 @@ export const validateAll: {
     f: (a: A, i: number) => Effect<R, E, B>,
     options: {
       readonly concurrency?: Concurrency
-      readonly batched?: boolean
+      readonly batchRequests?: boolean | "inherit"
       readonly discard: true
     }
   ): Effect<R, Array<E>, void>
@@ -899,7 +891,7 @@ export const validateFirst: {
     f: (a: A, i: number) => Effect<R, E, B>,
     options?: {
       readonly concurrency?: Concurrency
-      readonly batched?: boolean
+      readonly batchRequests?: boolean | "inherit"
     }
   ): (elements: Iterable<A>) => Effect<R, Array<E>, B>
   <R, E, A, B>(
@@ -907,7 +899,7 @@ export const validateFirst: {
     f: (a: A, i: number) => Effect<R, E, B>,
     options?: {
       readonly concurrency?: Concurrency
-      readonly batched?: boolean
+      readonly batchRequests?: boolean | "inherit"
     }
   ): Effect<R, Array<E>, B>
 } = fiberRuntime.validateFirst
@@ -2605,6 +2597,15 @@ export const supervised: {
 export const transplant: <R, E, A>(
   f: (grafter: <R2, E2, A2>(effect: Effect<R2, E2, A2>) => Effect<R2, E2, A2>) => Effect<R, E, A>
 ) => Effect<R, E, A> = core.transplant
+
+/**
+ * @since 1.0.0
+ * @category concurrency
+ */
+export const withConcurrency: {
+  (concurrency: number | "unbounded"): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, concurrency: number | "unbounded"): Effect<R, E, A>
+} = core.withConcurrency
 
 // ---------------------------------------------------------------------------------------
 // scheduler
