@@ -1111,7 +1111,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A>, Pipeable<Fi
   }
 
   ["Blocked"](op: core.Primitive & { _tag: "Blocked" }) {
-    if (this._steps[this._steps.length - 1] && this.getFiberRef(core.currentRequestBatchingEnabled)) {
+    if (this._steps[this._steps.length - 1]) {
       const nextOp = this.popStack()
       if (nextOp) {
         switch (nextOp._tag) {

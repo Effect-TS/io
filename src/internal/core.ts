@@ -588,24 +588,25 @@ export const flatMap = dual<
 
 /* @internal */
 export const step = <R, E, A>(
-  self: Effect.Effect<R, E, A>
-): Effect.Effect<R, E, Exit.Exit<E, A> | Effect.Blocked<R, E, A>> => {
-  const effect = new EffectPrimitive("OnStep") as any
-  effect.i0 = self
-  effect.i1 = exitSucceed
-  return effect
-}
+  self: Effect.Effect<R, E, A>,
+  options?: { batching?: "enabled" | "disabled" | "inherit" }
+): Effect.Effect<R, E, Exit.Exit<E, A> | Effect.Blocked<R, E, A>> => flatMapStep(self, exitSucceed, options)
 
 /* @internal */
 export const flatMapStep = <R, E, A, R1, E1, B>(
   self: Effect.Effect<R, E, A>,
-  f: (step: Exit.Exit<E, A> | Effect.Blocked<R, E, A>) => Effect.Effect<R1, E1, B>
-): Effect.Effect<R | R1, E1, B> => {
-  const effect = new EffectPrimitive("OnStep") as any
-  effect.i0 = self
-  effect.i1 = f
-  return effect
-}
+  f: (step: Exit.Exit<E, A> | Effect.Blocked<R, E, A>) => Effect.Effect<R1, E1, B>,
+  options?: { batching?: "enabled" | "disabled" | "inherit" }
+): Effect.Effect<R | R1, E1, B> =>
+  flatMap(fiberRefGet(currentRequestBatchingEnabled), (batchingEnabled) => {
+    if (!(options?.batching === "enabled" || (options?.batching === "inherit" && batchingEnabled))) {
+      return flatMap(exit(self), f)
+    }
+    const effect = new EffectPrimitive("OnStep") as any
+    effect.i0 = self
+    effect.i1 = f
+    return effect
+  })
 
 /* @internal */
 export const flatten = <R, E, R1, E1, A>(self: Effect.Effect<R, E, Effect.Effect<R1, E1, A>>) => flatMap(self, identity)
