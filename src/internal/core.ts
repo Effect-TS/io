@@ -1142,7 +1142,7 @@ export const whileLoop = <R, E, A>(
 }
 
 /* @internal */
-export const withConcurrency = dual<
+export const withInheritedConcurrency = dual<
   (concurrency: number | "unbounded") => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
   <R, E, A>(self: Effect.Effect<R, E, A>, concurrency: number | "unbounded") => Effect.Effect<R, E, A>
 >(2, (self, concurrency) =>

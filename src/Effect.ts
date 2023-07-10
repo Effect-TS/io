@@ -2600,12 +2600,12 @@ export const transplant: <R, E, A>(
 
 /**
  * @since 1.0.0
- * @category concurrency
+ * @category supervision & fibers
  */
-export const withConcurrency: {
+export const withInheritedConcurrency: {
   (concurrency: number | "unbounded"): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
   <R, E, A>(self: Effect<R, E, A>, concurrency: number | "unbounded"): Effect<R, E, A>
-} = core.withConcurrency
+} = core.withInheritedConcurrency
 
 // ---------------------------------------------------------------------------------------
 // scheduler
