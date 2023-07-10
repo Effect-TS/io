@@ -119,7 +119,7 @@ This phantom type parameter is used to tie keys to their expected states.
 **Signature**
 
 ```ts
-export interface MetricState<A> extends MetricState.Variance<A>, Equal.Equal {}
+export interface MetricState<A> extends MetricState.Variance<A>, Equal.Equal, Pipeable<MetricState<A>> {}
 ```
 
 Added in v1.0.0

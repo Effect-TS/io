@@ -128,7 +128,7 @@ higher-level concurrent or asynchronous structures.
 **Signature**
 
 ```ts
-export interface Deferred<E, A> extends Deferred.Variance<E, A> {
+export interface Deferred<E, A> extends Deferred.Variance<E, A>, Pipeable<Deferred<E, A>> {
   /** @internal */
   readonly state: MutableRef.MutableRef<internal.State<E, A>>
   /** @internal */

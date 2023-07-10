@@ -101,7 +101,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface MetricHook<In, Out> extends MetricHook.Variance<In, Out> {
+export interface MetricHook<In, Out> extends MetricHook.Variance<In, Out>, Pipeable<MetricHook<In, Out>> {
   readonly get: () => Out
   readonly update: (input: In) => void
 }

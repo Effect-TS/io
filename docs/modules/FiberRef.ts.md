@@ -397,7 +397,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface FiberRef<A> extends Variance<A> {
+export interface FiberRef<A> extends Variance<A>, Pipeable<FiberRef<A>> {
   /** @internal */
   readonly initial: A
   /** @internal */

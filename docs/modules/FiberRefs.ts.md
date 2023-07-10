@@ -90,7 +90,7 @@ example between an asynchronous producer and consumer.
 **Signature**
 
 ```ts
-export interface FiberRefs {
+export interface FiberRefs extends Pipeable<FiberRefs> {
   readonly [FiberRefsSym]: FiberRefsSym
   readonly locals: Map<FiberRef.FiberRef<any>, Arr.NonEmptyReadonlyArray<readonly [FiberId.Runtime, any]>>
 }

@@ -713,7 +713,7 @@ For example, we can annotate a `Cause` with a trace to assist in debugging.
 **Signature**
 
 ```ts
-export interface Annotated<E> extends Cause.Variance<E>, Equal.Equal {
+export interface Annotated<E> extends Cause.Variance<E>, Equal.Equal, Pipeable<Annotated<E>> {
   readonly _tag: 'Annotated'
   readonly cause: Cause<E>
   readonly annotation: unknown
@@ -735,7 +735,8 @@ and parallel composition of errors in a fully lossless fashion.
 **Signature**
 
 ```ts
-export type Cause<E> = Empty | Fail<E> | Die | Interrupt | Annotated<E> | Sequential<E> | Parallel<E>
+export type Cause<E> = (Empty | Fail<E> | Die | Interrupt | Annotated<E> | Sequential<E> | Parallel<E>) &
+  Pipeable<Cause<E>>
 ```
 
 Added in v1.0.0
@@ -771,7 +772,7 @@ type `E`.
 **Signature**
 
 ```ts
-export interface Die extends Cause.Variance<never>, Equal.Equal {
+export interface Die extends Cause.Variance<never>, Equal.Equal, Pipeable<Die> {
   readonly _tag: 'Die'
   readonly defect: unknown
 }
@@ -786,7 +787,7 @@ The `Empty` cause represents a lack of errors.
 **Signature**
 
 ```ts
-export interface Empty extends Cause.Variance<never>, Equal.Equal {
+export interface Empty extends Cause.Variance<never>, Equal.Equal, Pipeable<Empty> {
   readonly _tag: 'Empty'
 }
 ```
@@ -801,7 +802,7 @@ type `E`.
 **Signature**
 
 ```ts
-export interface Fail<E> extends Cause.Variance<E>, Equal.Equal {
+export interface Fail<E> extends Cause.Variance<E>, Equal.Equal, Pipeable<Fail<E>> {
   readonly _tag: 'Fail'
   readonly error: E
 }
@@ -834,7 +835,7 @@ contains the `FiberId` of the interrupted `Fiber`.
 **Signature**
 
 ```ts
-export interface Interrupt extends Cause.Variance<never>, Equal.Equal {
+export interface Interrupt extends Cause.Variance<never>, Equal.Equal, Pipeable<Interrupt> {
   readonly _tag: 'Interrupt'
   readonly fiberId: FiberId.FiberId
 }
@@ -906,7 +907,7 @@ occurred in parallel. In these cases, the errors can be represented by the
 **Signature**
 
 ```ts
-export interface Parallel<E> extends Cause.Variance<E>, Equal.Equal {
+export interface Parallel<E> extends Cause.Variance<E>, Equal.Equal, Pipeable<Parallel<E>> {
   readonly _tag: 'Parallel'
   readonly left: Cause<E>
   readonly right: Cause<E>
@@ -944,7 +945,7 @@ represented by the `Sequential` cause.
 **Signature**
 
 ```ts
-export interface Sequential<E> extends Cause.Variance<E>, Equal.Equal {
+export interface Sequential<E> extends Cause.Variance<E>, Equal.Equal, Pipeable<Sequential<E>> {
   readonly _tag: 'Sequential'
   readonly left: Cause<E>
   readonly right: Cause<E>
