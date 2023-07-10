@@ -1,5 +1,19 @@
 # @effect/io
 
+## 0.31.4
+
+### Patch Changes
+
+- [#511](https://github.com/Effect-TS/io/pull/511) [`05079b6`](https://github.com/Effect-TS/io/commit/05079b642521059c9ef98c771988e49baba7545f) Thanks [@tim-smart](https://github.com/tim-smart)! - rename batched option to batchRequests
+
+- [#513](https://github.com/Effect-TS/io/pull/513) [`9fc6b50`](https://github.com/Effect-TS/io/commit/9fc6b5005b4379668bd0028b756b4643856c1c2b) Thanks [@tim-smart](https://github.com/tim-smart)! - fix pipe method conflicts
+
+- [#511](https://github.com/Effect-TS/io/pull/511) [`05079b6`](https://github.com/Effect-TS/io/commit/05079b642521059c9ef98c771988e49baba7545f) Thanks [@tim-smart](https://github.com/tim-smart)! - improve hrtime.bigint detection
+
+- [#514](https://github.com/Effect-TS/io/pull/514) [`145f583`](https://github.com/Effect-TS/io/commit/145f583947f82c5dc1c64940948842f0fc89051e) Thanks [@tim-smart](https://github.com/tim-smart)! - add tryMapPromise\*
+
+- [#511](https://github.com/Effect-TS/io/pull/511) [`05079b6`](https://github.com/Effect-TS/io/commit/05079b642521059c9ef98c771988e49baba7545f) Thanks [@tim-smart](https://github.com/tim-smart)! - add back explicit regional concurrency
+
 ## 0.31.3
 
 ### Patch Changes
