@@ -148,7 +148,7 @@ export interface Blocked<R, E, A> extends Effect<R, E, A> {
  * @category models
  */
 declare module "@effect/data/Context" {
-  interface Tag<Identifier, Service> extends Effect<Identifier, never, Service> {}
+  interface Tag<Identifier, Service> extends Omit<Effect<Identifier, never, Service>, "pipe"> {}
   interface TagUnifyBlacklist {
     Effect?: true
     Either?: true
@@ -161,10 +161,10 @@ declare module "@effect/data/Context" {
  * @category models
  */
 declare module "@effect/data/Either" {
-  interface Left<E, A> extends Effect<never, E, A> {
+  interface Left<E, A> extends Omit<Effect<never, E, A>, "pipe"> {
     readonly _tag: "Left"
   }
-  interface Right<E, A> extends Effect<never, E, A> {
+  interface Right<E, A> extends Omit<Effect<never, E, A>, "pipe"> {
     readonly _tag: "Right"
   }
   interface EitherUnifyBlacklist {
@@ -179,10 +179,10 @@ declare module "@effect/data/Either" {
  * @category models
  */
 declare module "@effect/data/Option" {
-  interface None<A> extends Effect<never, Cause.NoSuchElementException, A> {
+  interface None<A> extends Omit<Effect<never, Cause.NoSuchElementException, A>, "pipe"> {
     readonly _tag: "None"
   }
-  interface Some<A> extends Effect<never, Cause.NoSuchElementException, A> {
+  interface Some<A> extends Omit<Effect<never, Cause.NoSuchElementException, A>, "pipe"> {
     readonly _tag: "Some"
   }
   interface OptionUnifyBlacklist {
