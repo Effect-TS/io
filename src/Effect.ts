@@ -99,7 +99,7 @@ export type EffectTypeId = typeof EffectTypeId
  * @since 1.0.0
  * @category models
  */
-export interface Effect<R, E, A> extends Effect.Variance<R, E, A>, Equal.Equal, Pipeable<Effect<R, E, A>> {
+export interface Effect<R, E, A> extends Effect.Variance<R, E, A>, Equal.Equal, Pipeable {
   readonly [Unify.typeSymbol]?: unknown
   readonly [Unify.unifySymbol]?: EffectUnify<this>
   readonly [Unify.blacklistSymbol]?: EffectUnifyBlacklist
@@ -148,7 +148,7 @@ export interface Blocked<R, E, A> extends Effect<R, E, A> {
  * @category models
  */
 declare module "@effect/data/Context" {
-  interface Tag<Identifier, Service> extends Omit<Effect<Identifier, never, Service>, "pipe"> {}
+  interface Tag<Identifier, Service> extends Effect<Identifier, never, Service> {}
   interface TagUnifyBlacklist {
     Effect?: true
     Either?: true
@@ -161,10 +161,10 @@ declare module "@effect/data/Context" {
  * @category models
  */
 declare module "@effect/data/Either" {
-  interface Left<E, A> extends Omit<Effect<never, E, A>, "pipe"> {
+  interface Left<E, A> extends Effect<never, E, A> {
     readonly _tag: "Left"
   }
-  interface Right<E, A> extends Omit<Effect<never, E, A>, "pipe"> {
+  interface Right<E, A> extends Effect<never, E, A> {
     readonly _tag: "Right"
   }
   interface EitherUnifyBlacklist {
@@ -179,10 +179,10 @@ declare module "@effect/data/Either" {
  * @category models
  */
 declare module "@effect/data/Option" {
-  interface None<A> extends Omit<Effect<never, Cause.NoSuchElementException, A>, "pipe"> {
+  interface None<A> extends Effect<never, Cause.NoSuchElementException, A> {
     readonly _tag: "None"
   }
-  interface Some<A> extends Omit<Effect<never, Cause.NoSuchElementException, A>, "pipe"> {
+  interface Some<A> extends Effect<never, Cause.NoSuchElementException, A> {
     readonly _tag: "Some"
   }
   interface OptionUnifyBlacklist {

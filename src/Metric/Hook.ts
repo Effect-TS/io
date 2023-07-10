@@ -23,7 +23,7 @@ export type MetricHookTypeId = typeof MetricHookTypeId
  * @since 1.0.0
  * @category models
  */
-export interface MetricHook<In, Out> extends MetricHook.Variance<In, Out>, Pipeable<MetricHook<In, Out>> {
+export interface MetricHook<In, Out> extends MetricHook.Variance<In, Out>, Pipeable {
   readonly get: () => Out
   readonly update: (input: In) => void
 }

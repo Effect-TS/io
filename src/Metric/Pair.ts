@@ -24,7 +24,7 @@ export type MetricPairTypeId = typeof MetricPairTypeId
  * @category model
  */
 export interface MetricPair<Type extends MetricKeyType.MetricKeyType<any, any>>
-  extends MetricPair.Variance<Type>, Pipeable<MetricPair<Type>>
+  extends MetricPair.Variance<Type>, Pipeable
 {
   readonly metricKey: MetricKey.MetricKey<Type>
   readonly metricState: MetricState.MetricState<MetricKeyType.MetricKeyType.OutType<Type>>

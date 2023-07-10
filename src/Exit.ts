@@ -3,7 +3,7 @@
  */
 import type * as Either from "@effect/data/Either"
 import type * as Option from "@effect/data/Option"
-import type { Pipeable, PipeableOverride } from "@effect/data/Pipeable"
+import type { Pipeable } from "@effect/data/Pipeable"
 import type { Predicate } from "@effect/data/Predicate"
 import type * as Unify from "@effect/data/Unify"
 import type * as Cause from "@effect/io/Cause"
@@ -21,7 +21,7 @@ import * as core from "@effect/io/internal/core"
  * @since 1.0.0
  * @category models
  */
-export type Exit<E, A> = (Failure<E, A> | Success<E, A>) & Pipeable<Exit<E, A>>
+export type Exit<E, A> = Failure<E, A> | Success<E, A>
 
 /**
  * Represents a failed `Effect` workflow containing the `Cause` of the failure
@@ -30,7 +30,7 @@ export type Exit<E, A> = (Failure<E, A> | Success<E, A>) & Pipeable<Exit<E, A>>
  * @since 1.0.0
  * @category models
  */
-export interface Failure<E, A> extends PipeableOverride<Effect.Effect<never, E, A>, Failure<E, A>> {
+export interface Failure<E, A> extends Effect.Effect<never, E, A>, Pipeable {
   readonly _tag: "Failure"
   readonly cause: Cause.Cause<E>
   [Unify.typeSymbol]?: unknown
@@ -63,7 +63,7 @@ export interface ExitUnifyBlackList extends Effect.EffectUnifyBlacklist {
  * @since 1.0.0
  * @category models
  */
-export interface Success<E, A> extends PipeableOverride<Effect.Effect<never, E, A>, Success<E, A>> {
+export interface Success<E, A> extends Effect.Effect<never, E, A>, Pipeable {
   readonly _tag: "Success"
   readonly value: A
   [Unify.typeSymbol]?: unknown

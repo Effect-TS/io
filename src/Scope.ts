@@ -3,7 +3,7 @@
  */
 
 import type * as Context from "@effect/data/Context"
-import type { Pipeable, PipeableOverride } from "@effect/data/Pipeable"
+import type { Pipeable } from "@effect/data/Pipeable"
 import type * as Effect from "@effect/io/Effect"
 import type * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
 import type * as Exit from "@effect/io/Exit"
@@ -38,7 +38,7 @@ export type CloseableScopeTypeId = typeof CloseableScopeTypeId
  * @since 1.0.0
  * @category models
  */
-export interface Scope extends Pipeable<Scope> {
+export interface Scope extends Pipeable {
   readonly [ScopeTypeId]: ScopeTypeId
 
   /**
@@ -55,7 +55,7 @@ export interface Scope extends Pipeable<Scope> {
  * @since 1.0.0
  * @category models
  */
-export interface CloseableScope extends PipeableOverride<Scope, CloseableScope> {
+export interface CloseableScope extends Scope, Pipeable {
   readonly [CloseableScopeTypeId]: CloseableScopeTypeId
 
   /**

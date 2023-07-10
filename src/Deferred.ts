@@ -36,7 +36,7 @@ export type DeferredTypeId = typeof DeferredTypeId
  * @since 1.0.0
  * @category models
  */
-export interface Deferred<E, A> extends Deferred.Variance<E, A>, Pipeable<Deferred<E, A>> {
+export interface Deferred<E, A> extends Deferred.Variance<E, A>, Pipeable {
   /** @internal */
   readonly state: MutableRef.MutableRef<internal.State<E, A>>
   /** @internal */

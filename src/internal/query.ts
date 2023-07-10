@@ -49,7 +49,11 @@ export const fromRequest = <
   Request.Request.Success<A>
 > =>
   core.flatMap(
-    core.isEffect(dataSource) ? dataSource : core.succeed(dataSource),
+    (core.isEffect(dataSource) ? dataSource : core.succeed(dataSource)) as Effect.Effect<
+      never,
+      never,
+      RequestResolver.RequestResolver<A, never>
+    >,
     (ds) =>
       core.fiberIdWith((id) => {
         const proxy = new Proxy(request, {})
@@ -84,7 +88,7 @@ export const fromRequest = <
                     orNew.right.listeners.increment()
                     return core.blocked(
                       BlockedRequests.single(
-                        ds as any,
+                        ds as RequestResolver.RequestResolver<A, never>,
                         BlockedRequests.makeEntry({
                           request: proxy,
                           result: orNew.right.handle,
@@ -114,7 +118,7 @@ export const fromRequest = <
             (ref) =>
               core.blocked(
                 BlockedRequests.single(
-                  ds as any,
+                  ds as RequestResolver.RequestResolver<A, never>,
                   BlockedRequests.makeEntry({
                     request: proxy,
                     result: ref,

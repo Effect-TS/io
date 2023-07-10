@@ -49,7 +49,7 @@ export type MetricTypeId = typeof MetricTypeId
  * @since 1.0.0
  * @category models
  */
-export interface Metric<Type, In, Out> extends Metric.Variance<Type, In, Out>, Pipeable<Metric<Type, In, Out>> {
+export interface Metric<Type, In, Out> extends Metric.Variance<Type, In, Out>, Pipeable {
   /**
    * The type of the underlying primitive metric. For example, this could be
    * `MetricKeyType.Counter` or `MetricKeyType.Gauge`.

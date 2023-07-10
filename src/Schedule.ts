@@ -67,7 +67,7 @@ export type ScheduleDriverTypeId = typeof ScheduleDriverTypeId
  * @category model
  * @since 1.0.0
  */
-export interface Schedule<Env, In, Out> extends Schedule.Variance<Env, In, Out>, Pipeable<Schedule<Env, In, Out>> {
+export interface Schedule<Env, In, Out> extends Schedule.Variance<Env, In, Out>, Pipeable {
   /**
    * Initial State
    */

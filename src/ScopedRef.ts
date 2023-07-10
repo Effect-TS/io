@@ -30,7 +30,7 @@ export type ScopedRefTypeId = typeof ScopedRefTypeId
  * @since 1.0.0
  * @category models
  */
-export interface ScopedRef<A> extends ScopedRef.Variance<A>, Pipeable<ScopedRef<A>> {
+export interface ScopedRef<A> extends ScopedRef.Variance<A>, Pipeable {
   /** @internal */
   readonly ref: Synchronized.Synchronized<readonly [Scope.Scope.Closeable, A]>
 }
