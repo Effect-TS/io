@@ -1551,53 +1551,74 @@ export const filter = dual<
 
 // === all
 
+const allIsDataFirst = (args: IArguments): boolean => {
+  if (args.length === 0) {
+    return false
+  } else if (Array.isArray(args[0]) || Predicate.isIterable(args[0])) {
+    return true
+  }
+  const obj: Effect.All.Options = args[0]
+  return (
+    typeof obj.concurrency === "number" || typeof obj.concurrency === "string" ||
+    typeof obj.batchRequests === "number" || typeof obj.batchRequests === "string" ||
+    typeof obj.discard === "boolean"
+  ) === false
+}
+
+const allResolveInput = (
+  input: Iterable<Effect.Effect<any, any, any>> | Record<string, Effect.Effect<any, any, any>>
+): readonly [Iterable<Effect.Effect<any, any, any>>, Option.Option<(as: ReadonlyArray<any>) => any>] => {
+  if (Array.isArray(input) || Predicate.isIterable(input)) {
+    return [input, Option.none()]
+  }
+  const keys = Object.keys(input)
+  const size = keys.length
+  return [
+    keys.map((k) => input[k]),
+    Option.some((values: ReadonlyArray<any>) => {
+      const res = {}
+      for (let i = 0; i < size; i++) {
+        ;(res as any)[keys[i]] = values[i]
+      }
+      return res
+    })
+  ]
+}
+
 /* @internal */
-export const all = function() {
-  if (allIsDataFirst(arguments)) {
-    const [input, options] = allSplitArguments(arguments)
-    const [effects, reconcile] = allResolveInput(input)
-    return all_(effects, reconcile, options)
-  }
-
-  return (arg: any) => {
-    const [effects, reconcile] = allResolveInput([arg])
-    return all_(effects, reconcile, arguments[0])
-  }
-} as Effect.All.All
-
-const all_ = (
-  effects: Iterable<Effect.Effect<any, any, any>>,
-  reconcile: Option.Option<(as: ReadonlyArray<any>) => any>,
-  options: Effect.All.Options | undefined
-) =>
-  reconcile._tag === "Some" ?
+export const all = dual<
+  (
+    options?: Effect.All.Options
+  ) => (
+    arg: Iterable<Effect.Effect<any, any, any>> | Record<string, Effect.Effect<any, any, any>>
+  ) => Effect.Effect<any, any, any>,
+  (
+    arg: Iterable<Effect.Effect<any, any, any>> | Record<string, Effect.Effect<any, any, any>>,
+    options?: Effect.All.Options
+  ) => Effect.Effect<any, any, any>
+>(allIsDataFirst, (arg, options) => {
+  const [effects, reconcile] = allResolveInput(arg)
+  return reconcile._tag === "Some" ?
     core.map(
       forEachOptions(effects, identity, options as any),
       reconcile.value
     ) :
     forEachOptions(effects, identity, options as any)
+}) as Effect.All.All
 
 // === allValidate
 
 /* @internal */
-export const allValidate = function() {
-  if (allIsDataFirst(arguments)) {
-    const [input, options] = allSplitArguments(arguments)
-    const [effects, reconcile] = allResolveInput(input)
-    return allValidate_(effects, reconcile, options)
-  }
-
-  return (arg: any) => {
-    const [effects, reconcile] = allResolveInput([arg])
-    return allValidate_(effects, reconcile, arguments[0])
-  }
-} as Effect.All.Validate
-
-const allValidate_ = (
-  effects: Iterable<Effect.Effect<any, any, any>>,
-  reconcile: Option.Option<(as: ReadonlyArray<any>) => any>,
-  options: Effect.All.Options | undefined
-) => {
+export const allValidate = dual<
+  (options?: Effect.All.Options) => (
+    arg: Iterable<Effect.Effect<any, any, any>> | Record<string, Effect.Effect<any, any, any>>
+  ) => Effect.Effect<any, any, any>,
+  (
+    arg: Iterable<Effect.Effect<any, any, any>> | Record<string, Effect.Effect<any, any, any>>,
+    options?: Effect.All.Options
+  ) => Effect.Effect<any, any, any>
+>(allIsDataFirst, (arg, options) => {
+  const [effects, reconcile] = allResolveInput(arg)
   const eitherEffects: Array<Effect.Effect<unknown, never, Either.Either<unknown, unknown>>> = []
   for (const effect of effects) {
     eitherEffects.push(core.either(effect))
@@ -1635,60 +1656,7 @@ const allValidate_ = (
         core.succeed(successes)
     }
   )
-}
-
-const allIsDataFirst = (args: IArguments) => {
-  if (args.length === 0) {
-    return false
-  } else if (args.length > 1) {
-    return true
-  } else if (Predicate.isIterable(args[0]) || core.isEffect(args[0])) {
-    return true
-  }
-
-  const obj: Record<string, any> = args[0]
-
-  return !(
-    typeof obj.concurrency === "number" || typeof obj.concurrency === "string" ||
-    typeof obj.batched === "boolean" || typeof obj.discard === "boolean"
-  )
-}
-
-const allSplitArguments = (args: IArguments) => {
-  const hasOptions = args.length > 1 && !core.isEffect(args[args.length - 1])
-  const options: Effect.All.Options | undefined = hasOptions ?
-    args[args.length - 1] :
-    undefined
-
-  const input = hasOptions ? Array.prototype.slice.call(args, 0, -1) : args
-  return [input, options] as const
-}
-
-const allResolveInput = (input: Array<any> | IArguments) => {
-  let effects: Iterable<Effect.Effect<any, any, any>> = input
-  let reconcile = Option.none<(as: ReadonlyArray<any>) => any>()
-
-  if (input.length === 1) {
-    if (core.isEffect(input[0])) {
-      effects = [input[0]]
-    } else if (Array.isArray(input[0]) || Symbol.iterator in input[0]) {
-      effects = input[0]
-    } else {
-      const keys = Object.keys(input[0])
-      const size = keys.length
-      effects = keys.map((k) => input[0][k])
-      reconcile = Option.some((values: ReadonlyArray<any>) => {
-        const res = {}
-        for (let i = 0; i < size; i++) {
-          ;(res as any)[keys[i]] = values[i]
-        }
-        return res
-      })
-    }
-  }
-
-  return [effects, reconcile] as const
-}
+}) as Effect.All.Validate
 
 /* @internal */
 export const allSuccesses = <R, E, A>(
@@ -2694,7 +2662,7 @@ export const zipWithOptions = dual<
   }
 ): Effect.Effect<R | R2, E | E2, B> =>
   core.map(
-    all(self, that, {
+    all([self, that], {
       concurrency: options?.concurrent ? 2 : 1,
       batchRequests: options?.batchRequests
     }),

@@ -80,7 +80,7 @@ const AllResolver = Resolver.makeBatched((
 ) =>
   Effect.flatMap(Requests, (r) => {
     r.count += requests.length
-    return counted(Effect.all(
+    return counted(Effect.all([
       Effect.forEach(
         requests.filter((_): _ is GetParentChildren => _._tag === "GetParentChildren"),
         (request) => Request.succeed(request, children.get(request.id)!)
@@ -107,7 +107,7 @@ const AllResolver = Resolver.makeBatched((
         requests.filter((_): _ is GetAllParents => _._tag === "GetAllParents"),
         (request) => Request.succeed(request, parents)
       )
-    ))
+    ]))
   })
 ).pipe(
   Resolver.batchN(15),

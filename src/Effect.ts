@@ -396,10 +396,11 @@ export declare namespace All {
   }
 
   type IsDiscard<A> = [Extract<A, { readonly discard: true }>] extends [never] ? false : true
+  type Narrow<A> = (A extends [] ? [] : never) | A
 
   export interface All {
     <Arg extends Iterable<EffectAny>, O extends Options>(
-      arg: Arg,
+      arg: Narrow<Arg>,
       options?: O
     ): [Arg] extends [ReadonlyArray<EffectAny>] ? ReturnTuple<Arg, IsDiscard<O>> : ReturnIterable<Arg, IsDiscard<O>>
 
@@ -408,29 +409,18 @@ export declare namespace All {
       options?: O
     ): ReturnObject<Arg, IsDiscard<O>>
 
-    <Args extends [EffectAny, ...ReadonlyArray<EffectAny>] | [EffectAny, ...ReadonlyArray<EffectAny>, Options]>(
-      ...args: Args
-    ): ReturnTuple<
-      [Args] extends [[...(infer Effects), Options]] ? Effects : Args,
-      IsDiscard<Args[number]>
-    >
-
-    <O extends Options>(options?: O): <
-      Arg extends
-        | Iterable<EffectAny>
-        | Readonly<{ [K: string]: EffectAny }>
-        | EffectAny
-    >(
+    <O extends Options>(
+      options?: O
+    ): <Arg extends Iterable<EffectAny> | Readonly<{ [K: string]: EffectAny }>>(
       self: Arg
     ) => [Arg] extends [ReadonlyArray<EffectAny>] ? ReturnTuple<Arg, IsDiscard<O>>
       : [Arg] extends [Iterable<EffectAny>] ? ReturnIterable<Arg, IsDiscard<O>>
-      : [Arg] extends [EffectAny] ? ReturnTuple<[Arg], IsDiscard<O>>
       : ReturnObject<Arg, IsDiscard<O>>
   }
 
   export interface Validate {
     <Arg extends Iterable<EffectAny>, O extends Options>(
-      arg: Arg,
+      arg: Narrow<Arg>,
       options?: O
     ): [Arg] extends [ReadonlyArray<EffectAny>] ? ReturnTuple<Arg, IsDiscard<O>, true>
       : ReturnIterable<Arg, IsDiscard<O>, true>
@@ -440,24 +430,12 @@ export declare namespace All {
       options?: O
     ): ReturnObject<Arg, IsDiscard<O>, true>
 
-    <Args extends [EffectAny, ...ReadonlyArray<EffectAny>] | [EffectAny, ...ReadonlyArray<EffectAny>, Options]>(
-      ...args: Args
-    ): ReturnTuple<
-      [Args] extends [[...(infer Effects), Options]] ? Effects : Args,
-      IsDiscard<Args[number]>,
-      true
-    >
-
-    <O extends Options>(options?: O): <
-      Arg extends
-        | Iterable<EffectAny>
-        | Readonly<{ [K: string]: EffectAny }>
-        | EffectAny
-    >(
+    <O extends Options>(
+      options?: O
+    ): <Arg extends Iterable<EffectAny> | Readonly<{ [K: string]: EffectAny }>>(
       self: Arg
     ) => [Arg] extends [ReadonlyArray<EffectAny>] ? ReturnTuple<Arg, IsDiscard<O>, true>
       : [Arg] extends [Iterable<EffectAny>] ? ReturnIterable<Arg, IsDiscard<O>, true>
-      : [Arg] extends [EffectAny] ? ReturnTuple<[Arg], IsDiscard<O>, true>
       : ReturnObject<Arg, IsDiscard<O>, true>
   }
 }

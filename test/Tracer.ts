@@ -100,7 +100,7 @@ describe("Tracer", () => {
 
         const [span, fiberId] = yield* $(
           Effect.log("event"),
-          Effect.zipRight(Effect.all(currentSpan, Effect.fiberId)),
+          Effect.zipRight(Effect.all([currentSpan, Effect.fiberId])),
           Effect.withSpan("A")
         )
 

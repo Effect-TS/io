@@ -324,7 +324,7 @@ describe.concurrent("Effect", () => {
     provideEnv(
       Effect.gen(function*($) {
         yield* $(
-          Effect.all(getUserNameById(userIds[0]), getUserNameById(userIds[0]), {
+          Effect.all([getUserNameById(userIds[0]), getUserNameById(userIds[0])], {
             concurrency: "unbounded",
             batchRequests: true,
             discard: true

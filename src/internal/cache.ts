@@ -688,7 +688,7 @@ export const makeWith = <Key, Environment, Error, Value>(
   }
 ): Effect.Effect<Environment, never, Cache.Cache<Key, Error, Value>> =>
   core.map(
-    fiberRuntime.all(core.context<Environment>(), core.fiberId),
+    fiberRuntime.all([core.context<Environment>(), core.fiberId]),
     ([context, fiberId]) =>
       new CacheImpl(
         options.capacity,
