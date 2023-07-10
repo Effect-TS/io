@@ -1796,6 +1796,51 @@ export const tryMap: {
 } = effect.tryMap
 
 /**
+ * Returns an effect whose success is mapped by the specified side effecting
+ * `f` function, translating any promise rejections into typed failed effects.
+ *
+ * @since 1.0.0
+ * @category error handling
+ */
+export const tryMapPromise: {
+  <A, B, E1>(
+    options: {
+      readonly try: (a: A) => Promise<B>
+      readonly catch: (error: unknown) => E1
+    }
+  ): <R, E>(self: Effect<R, E, A>) => Effect<R, E1 | E, B>
+  <R, E, A, B, E1>(
+    self: Effect<R, E, A>,
+    options: {
+      readonly try: (a: A) => Promise<B>
+      readonly catch: (error: unknown) => E1
+    }
+  ): Effect<R, E | E1, B>
+} = effect.tryMapPromise
+
+/**
+ * Like `tryMapPromise` but allows for interruption via AbortSignal
+ *
+ * @since 1.0.0
+ * @category error handling
+ */
+export const tryMapPromiseInterrupt: {
+  <A, B, E1>(
+    options: {
+      readonly try: (a: A, signal: AbortSignal) => Promise<B>
+      readonly catch: (error: unknown) => E1
+    }
+  ): <R, E>(self: Effect<R, E, A>) => Effect<R, E1 | E, B>
+  <R, E, A, B, E1>(
+    self: Effect<R, E, A>,
+    options: {
+      readonly try: (a: A, signal: AbortSignal) => Promise<B>
+      readonly catch: (error: unknown) => E1
+    }
+  ): Effect<R, E | E1, B>
+} = effect.tryMapPromiseInterrupt
+
+/**
  * Create an `Effect` that when executed will construct `promise` and wait for
  * its result, errors will produce failure as `unknown`.
  *

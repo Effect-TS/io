@@ -1010,7 +1010,7 @@ schedules, both for performing retrying, as well as performing repetition.
 **Signature**
 
 ```ts
-export interface Schedule<Env, In, Out> extends Schedule.Variance<Env, In, Out> {
+export interface Schedule<Env, In, Out> extends Schedule.Variance<Env, In, Out>, Pipeable<Schedule<Env, In, Out>> {
   /**
    * Initial State
    */

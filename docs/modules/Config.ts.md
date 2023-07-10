@@ -307,7 +307,7 @@ A `Config` describes the structure of some configuration data.
 **Signature**
 
 ```ts
-export interface Config<A> extends Config.Variance<A> {}
+export interface Config<A> extends Config.Variance<A>, Pipeable<Config<A>> {}
 ```
 
 Added in v1.0.0

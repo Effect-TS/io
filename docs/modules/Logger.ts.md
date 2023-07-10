@@ -356,7 +356,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface Logger<Message, Output> extends Logger.Variance<Message, Output> {
+export interface Logger<Message, Output> extends Logger.Variance<Message, Output>, Pipeable<Logger<Message, Output>> {
   readonly log: (options: {
     readonly fiberId: FiberId.FiberId
     readonly logLevel: LogLevel.LogLevel

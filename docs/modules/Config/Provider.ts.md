@@ -240,7 +240,7 @@ of the structure of that configuration.
 **Signature**
 
 ```ts
-export interface ConfigProvider extends ConfigProvider.Proto {
+export interface ConfigProvider extends ConfigProvider.Proto, Pipeable<ConfigProvider> {
   /**
    * Loads the specified configuration, or fails with a config error.
    */

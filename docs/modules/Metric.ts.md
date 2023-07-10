@@ -660,7 +660,7 @@ There are five primitive metric types supported by Effect:
 **Signature**
 
 ```ts
-export interface Metric<Type, In, Out> extends Metric.Variance<Type, In, Out> {
+export interface Metric<Type, In, Out> extends Metric.Variance<Type, In, Out>, Pipeable<Metric<Type, In, Out>> {
   /**
    * The type of the underlying primitive metric. For example, this could be
    * `MetricKeyType.Counter` or `MetricKeyType.Gauge`.

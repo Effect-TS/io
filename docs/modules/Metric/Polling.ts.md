@@ -92,7 +92,7 @@ updates to the metric.
 **Signature**
 
 ```ts
-export interface PollingMetric<Type, In, R, E, Out> {
+export interface PollingMetric<Type, In, R, E, Out> extends Pipeable<PollingMetric<Type, In, R, E, Out>> {
   readonly [PollingMetricTypeId]: PollingMetricTypeId
   /**
    * The metric that this `PollingMetric` polls to update.

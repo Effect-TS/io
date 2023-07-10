@@ -26,7 +26,7 @@ Describes the concurrency to use when executing multiple Effect's.
 **Signature**
 
 ```ts
-export type Concurrency = number | 'unbounded'
+export type Concurrency = number | 'unbounded' | 'inherit'
 ```
 
 Added in v1.0.0

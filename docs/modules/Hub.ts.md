@@ -170,7 +170,7 @@ messages of type `A` and subscribers can subscribe to take messages of type
 **Signature**
 
 ```ts
-export interface Hub<A> extends Queue.Enqueue<A> {
+export interface Hub<A> extends PipeableOverride<Queue.Enqueue<A>, Hub<A>> {
   /**
    * Publishes a message to the hub, returning whether the message was published
    * to the hub.

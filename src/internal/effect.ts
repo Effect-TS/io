@@ -1682,6 +1682,50 @@ export const tryMap = dual<
     })))
 
 /* @internal */
+export const tryMapPromise = dual<
+  <A, B, E1>(
+    options: {
+      readonly try: (a: A) => Promise<B>
+      readonly catch: (error: unknown) => E1
+    }
+  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E | E1, B>,
+  <R, E, A, B, E1>(
+    self: Effect.Effect<R, E, A>,
+    options: {
+      readonly try: (a: A) => Promise<B>
+      readonly catch: (error: unknown) => E1
+    }
+  ) => Effect.Effect<R, E | E1, B>
+>(2, (self, options) =>
+  core.flatMap(self, (a) =>
+    tryPromise({
+      try: () => options.try(a),
+      catch: options.catch
+    })))
+
+/* @internal */
+export const tryMapPromiseInterrupt = dual<
+  <A, B, E1>(
+    options: {
+      readonly try: (a: A, signal: AbortSignal) => Promise<B>
+      readonly catch: (error: unknown) => E1
+    }
+  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E | E1, B>,
+  <R, E, A, B, E1>(
+    self: Effect.Effect<R, E, A>,
+    options: {
+      readonly try: (a: A, signal: AbortSignal) => Promise<B>
+      readonly catch: (error: unknown) => E1
+    }
+  ) => Effect.Effect<R, E | E1, B>
+>(2, (self, options) =>
+  core.flatMap(self, (a) =>
+    tryPromiseInterrupt({
+      try: (signal) => options.try(a, signal),
+      catch: options.catch
+    })))
+
+/* @internal */
 export const unless = dual<
   (predicate: LazyArg<boolean>) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, Option.Option<A>>,
   <R, E, A>(self: Effect.Effect<R, E, A>, predicate: LazyArg<boolean>) => Effect.Effect<R, E, Option.Option<A>>

@@ -50,7 +50,7 @@ clients.
 **Signature**
 
 ```ts
-export interface MetricLabel extends Equal.Equal {
+export interface MetricLabel extends Equal.Equal, Pipeable<MetricLabel> {
   readonly [MetricLabelTypeId]: MetricLabelTypeId
   readonly key: string
   readonly value: string

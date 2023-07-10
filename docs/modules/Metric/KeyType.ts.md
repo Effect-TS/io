@@ -107,7 +107,10 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface MetricKeyType<In, Out> extends MetricKeyType.Variance<In, Out>, Equal.Equal {}
+export interface MetricKeyType<In, Out>
+  extends MetricKeyType.Variance<In, Out>,
+    Equal.Equal,
+    Pipeable<MetricKeyType<In, Out>> {}
 ```
 
 Added in v1.0.0

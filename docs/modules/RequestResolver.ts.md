@@ -323,7 +323,7 @@ will cause a query to die with a `QueryFailure` when run.
 **Signature**
 
 ```ts
-export interface RequestResolver<A, R = never> extends Equal.Equal {
+export interface RequestResolver<A, R = never> extends Equal.Equal, Pipeable<RequestResolver<A, R>> {
   /**
    * Execute a collection of requests. The outer `Chunk` represents batches
    * of requests that must be performed sequentially. The inner `Chunk`

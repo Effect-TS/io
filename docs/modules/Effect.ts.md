@@ -148,6 +148,8 @@ Added in v1.0.0
   - [sandbox](#sandbox)
   - [try](#try)
   - [tryMap](#trymap)
+  - [tryMapPromise](#trymappromise)
+  - [tryMapPromiseInterrupt](#trymappromiseinterrupt)
   - [tryPromise](#trypromise)
   - [tryPromiseInterrupt](#trypromiseinterrupt)
   - [unsandbox](#unsandbox)
@@ -334,6 +336,7 @@ Added in v1.0.0
   - [fromFiberEffect](#fromfibereffect)
   - [supervised](#supervised)
   - [transplant](#transplant)
+  - [withInheritedConcurrency](#withinheritedconcurrency)
 - [symbols](#symbols)
   - [EffectTypeId](#effecttypeid)
   - [EffectTypeId (type alias)](#effecttypeid-type-alias)
@@ -607,7 +610,7 @@ discarding results from failed effects.
 ```ts
 export declare const allSuccesses: <R, E, A>(
   elements: Iterable<Effect<R, E, A>>,
-  options?: { readonly concurrency?: Concurrency; readonly batched?: boolean }
+  options?: { readonly concurrency?: Concurrency; readonly batchRequests?: boolean | 'inherit' }
 ) => Effect<R, never, A[]>
 ```
 
@@ -685,12 +688,12 @@ predicate `f`.
 export declare const exists: {
   <R, E, A>(
     f: (a: A, i: number) => Effect<R, E, boolean>,
-    options?: { readonly concurrency?: Concurrency; readonly batched?: boolean }
+    options?: { readonly concurrency?: Concurrency; readonly batchRequests?: boolean | 'inherit' }
   ): (elements: Iterable<A>) => Effect<R, E, boolean>
   <R, E, A>(
     elements: Iterable<A>,
     f: (a: A, i: number) => Effect<R, E, boolean>,
-    options?: { readonly concurrency: Concurrency; readonly batched?: boolean }
+    options?: { readonly concurrency: Concurrency; readonly batchRequests?: boolean | 'inherit' }
   ): Effect<R, E, boolean>
 }
 ```
@@ -707,12 +710,20 @@ Filters the collection using the specified effectful predicate.
 export declare const filter: {
   <A, R, E>(
     f: (a: A, i: number) => Effect<R, E, boolean>,
-    options?: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly negate?: boolean }
+    options?: {
+      readonly concurrency?: Concurrency
+      readonly batchRequests?: boolean | 'inherit'
+      readonly negate?: boolean
+    }
   ): (elements: Iterable<A>) => Effect<R, E, A[]>
   <A, R, E>(
     elements: Iterable<A>,
     f: (a: A, i: number) => Effect<R, E, boolean>,
-    options?: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly negate?: boolean }
+    options?: {
+      readonly concurrency?: Concurrency
+      readonly batchRequests?: boolean | 'inherit'
+      readonly negate?: boolean
+    }
   ): Effect<R, E, A[]>
 }
 ```
@@ -761,21 +772,37 @@ Added in v1.0.0
 export declare const forEach: {
   <A, R, E, B>(
     f: (a: A, i: number) => Effect<R, E, B>,
-    options?: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly discard?: false }
+    options?: {
+      readonly concurrency?: Concurrency
+      readonly batchRequests?: boolean | 'inherit'
+      readonly discard?: false
+    }
   ): (self: Iterable<A>) => Effect<R, E, B[]>
   <A, R, E, B>(
     f: (a: A, i: number) => Effect<R, E, B>,
-    options: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly discard: true }
+    options: {
+      readonly concurrency?: Concurrency
+      readonly batchRequests?: boolean | 'inherit'
+      readonly discard: true
+    }
   ): (self: Iterable<A>) => Effect<R, E, void>
   <A, R, E, B>(
     self: Iterable<A>,
     f: (a: A, i: number) => Effect<R, E, B>,
-    options?: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly discard?: false }
+    options?: {
+      readonly concurrency?: Concurrency
+      readonly batchRequests?: boolean | 'inherit'
+      readonly discard?: false
+    }
   ): Effect<R, E, B[]>
   <A, R, E, B>(
     self: Iterable<A>,
     f: (a: A, i: number) => Effect<R, E, B>,
-    options: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly discard: true }
+    options: {
+      readonly concurrency?: Concurrency
+      readonly batchRequests?: boolean | 'inherit'
+      readonly discard: true
+    }
   ): Effect<R, E, void>
 }
 ```
@@ -807,13 +834,13 @@ export declare const mergeAll: {
   <Z, A>(
     zero: Z,
     f: (z: Z, a: A, i: number) => Z,
-    options?: { readonly concurrency?: Concurrency; readonly batched?: boolean }
+    options?: { readonly concurrency?: Concurrency; readonly batchRequests?: boolean | 'inherit' }
   ): <R, E>(elements: Iterable<Effect<R, E, A>>) => Effect<R, E, Z>
   <R, E, A, Z>(
     elements: Iterable<Effect<R, E, A>>,
     zero: Z,
     f: (z: Z, a: A, i: number) => Z,
-    options?: { readonly concurrency?: Concurrency; readonly batched?: boolean }
+    options?: { readonly concurrency?: Concurrency; readonly batchRequests?: boolean | 'inherit' }
   ): Effect<R, E, Z>
 }
 ```
@@ -831,12 +858,12 @@ Collects all successes and failures in a tupled fashion.
 export declare const partition: {
   <R, E, A, B>(
     f: (a: A) => Effect<R, E, B>,
-    options?: { readonly concurrency?: Concurrency; readonly batched?: boolean }
+    options?: { readonly concurrency?: Concurrency; readonly batchRequests?: boolean | 'inherit' }
   ): (elements: Iterable<A>) => Effect<R, never, readonly [E[], B[]]>
   <R, E, A, B>(
     elements: Iterable<A>,
     f: (a: A) => Effect<R, E, B>,
-    options?: { readonly concurrency?: Concurrency; readonly batched?: boolean }
+    options?: { readonly concurrency?: Concurrency; readonly batchRequests?: boolean | 'inherit' }
   ): Effect<R, never, readonly [E[], B[]]>
 }
 ```
@@ -870,13 +897,13 @@ export declare const reduceEffect: {
   <R, E, A>(
     zero: Effect<R, E, A>,
     f: (acc: A, a: A, i: number) => A,
-    options?: { readonly concurrency?: Concurrency; readonly batched?: boolean }
+    options?: { readonly concurrency?: Concurrency; readonly batchRequests?: boolean | 'inherit' }
   ): (elements: Iterable<Effect<R, E, A>>) => Effect<R, E, A>
   <R, E, A>(
     elements: Iterable<Effect<R, E, A>>,
     zero: Effect<R, E, A>,
     f: (acc: A, a: A, i: number) => A,
-    options?: { readonly concurrency?: Concurrency; readonly batched?: boolean }
+    options?: { readonly concurrency?: Concurrency; readonly batchRequests?: boolean | 'inherit' }
   ): Effect<R, E, A>
 }
 ```
@@ -995,21 +1022,37 @@ will be lost. To retain all information please use `partition`.
 export declare const validateAll: {
   <R, E, A, B>(
     f: (a: A, i: number) => Effect<R, E, B>,
-    options?: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly discard?: false }
+    options?: {
+      readonly concurrency?: Concurrency
+      readonly batchRequests?: boolean | 'inherit'
+      readonly discard?: false
+    }
   ): (elements: Iterable<A>) => Effect<R, E[], B[]>
   <R, E, A, B>(
     f: (a: A, i: number) => Effect<R, E, B>,
-    options: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly discard: true }
+    options: {
+      readonly concurrency?: Concurrency
+      readonly batchRequests?: boolean | 'inherit'
+      readonly discard: true
+    }
   ): (elements: Iterable<A>) => Effect<R, E[], void>
   <R, E, A, B>(
     elements: Iterable<A>,
     f: (a: A, i: number) => Effect<R, E, B>,
-    options?: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly discard?: false }
+    options?: {
+      readonly concurrency?: Concurrency
+      readonly batchRequests?: boolean | 'inherit'
+      readonly discard?: false
+    }
   ): Effect<R, E[], B[]>
   <R, E, A, B>(
     elements: Iterable<A>,
     f: (a: A, i: number) => Effect<R, E, B>,
-    options: { readonly concurrency?: Concurrency; readonly batched?: boolean; readonly discard: true }
+    options: {
+      readonly concurrency?: Concurrency
+      readonly batchRequests?: boolean | 'inherit'
+      readonly discard: true
+    }
   ): Effect<R, E[], void>
 }
 ```
@@ -1029,12 +1072,12 @@ If `elements` is empty then `Effect.fail([])` is returned.
 export declare const validateFirst: {
   <R, E, A, B>(
     f: (a: A, i: number) => Effect<R, E, B>,
-    options?: { readonly concurrency?: Concurrency; readonly batched?: boolean }
+    options?: { readonly concurrency?: Concurrency; readonly batchRequests?: boolean | 'inherit' }
   ): (elements: Iterable<A>) => Effect<R, E[], B>
   <R, E, A, B>(
     elements: Iterable<A>,
     f: (a: A, i: number) => Effect<R, E, B>,
-    options?: { readonly concurrency?: Concurrency; readonly batched?: boolean }
+    options?: { readonly concurrency?: Concurrency; readonly batchRequests?: boolean | 'inherit' }
   ): Effect<R, E[], B>
 }
 ```
@@ -2462,6 +2505,48 @@ export declare const tryMap: {
   <R, E, A, B, E1>(
     self: Effect<R, E, A>,
     options: { readonly try: (a: A) => B; readonly catch: (error: unknown) => E1 }
+  ): Effect<R, E | E1, B>
+}
+```
+
+Added in v1.0.0
+
+## tryMapPromise
+
+Returns an effect whose success is mapped by the specified side effecting
+`f` function, translating any promise rejections into typed failed effects.
+
+**Signature**
+
+```ts
+export declare const tryMapPromise: {
+  <A, B, E1>(options: { readonly try: (a: A) => Promise<B>; readonly catch: (error: unknown) => E1 }): <R, E>(
+    self: Effect<R, E, A>
+  ) => Effect<R, E1 | E, B>
+  <R, E, A, B, E1>(
+    self: Effect<R, E, A>,
+    options: { readonly try: (a: A) => Promise<B>; readonly catch: (error: unknown) => E1 }
+  ): Effect<R, E | E1, B>
+}
+```
+
+Added in v1.0.0
+
+## tryMapPromiseInterrupt
+
+Like `tryMapPromise` but allows for interruption via AbortSignal
+
+**Signature**
+
+```ts
+export declare const tryMapPromiseInterrupt: {
+  <A, B, E1>(options: {
+    readonly try: (a: A, signal: AbortSignal) => Promise<B>
+    readonly catch: (error: unknown) => E1
+  }): <R, E>(self: Effect<R, E, A>) => Effect<R, E1 | E, B>
+  <R, E, A, B, E1>(
+    self: Effect<R, E, A>,
+    options: { readonly try: (a: A, signal: AbortSignal) => Promise<B>; readonly catch: (error: unknown) => E1 }
   ): Effect<R, E | E1, B>
 }
 ```
@@ -5497,6 +5582,19 @@ effectively extending their lifespans into the parent scope.
 export declare const transplant: <R, E, A>(
   f: (grafter: <R2, E2, A2>(effect: Effect<R2, E2, A2>) => Effect<R2, E2, A2>) => Effect<R, E, A>
 ) => Effect<R, E, A>
+```
+
+Added in v1.0.0
+
+## withInheritedConcurrency
+
+**Signature**
+
+```ts
+export declare const withInheritedConcurrency: {
+  (concurrency: number | 'unbounded'): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, concurrency: number | 'unbounded'): Effect<R, E, A>
+}
 ```
 
 Added in v1.0.0
