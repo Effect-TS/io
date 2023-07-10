@@ -1142,6 +1142,17 @@ export const whileLoop = <R, E, A>(
 }
 
 /* @internal */
+export const withInheritedConcurrency = dual<
+  (concurrency: number | "unbounded") => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(self: Effect.Effect<R, E, A>, concurrency: number | "unbounded") => Effect.Effect<R, E, A>
+>(2, (self, concurrency) =>
+  fiberRefLocally(
+    self,
+    currentConcurrency,
+    concurrency === "unbounded" ? Option.none() : Option.some(concurrency)
+  ))
+
+/* @internal */
 export const withRuntimeFlags = dual<
   (update: RuntimeFlagsPatch.RuntimeFlagsPatch) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
   <R, E, A>(self: Effect.Effect<R, E, A>, update: RuntimeFlagsPatch.RuntimeFlagsPatch) => Effect.Effect<R, E, A>
@@ -1711,6 +1722,12 @@ export const withMaxFiberOps = dual<
   (ops: number) => <R, E, B>(self: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>,
   <R, E, B>(self: Effect.Effect<R, E, B>, ops: number) => Effect.Effect<R, E, B>
 >(2, (self, ops) => fiberRefLocally(self, currentMaxFiberOps, ops))
+
+/** @internal */
+export const currentConcurrency: FiberRef.FiberRef<Option.Option<number>> = globalValue(
+  Symbol.for("@effect/io/FiberRef/currentConcurrency"),
+  () => fiberRefUnsafeMake<Option.Option<number>>(Option.none())
+)
 
 /**
  * @internal

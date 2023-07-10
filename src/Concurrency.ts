@@ -8,4 +8,4 @@
  * @since 1.0.0
  * @category models
  */
-export type Concurrency = number | "unbounded"
+export type Concurrency = number | "unbounded" | "inherit"
