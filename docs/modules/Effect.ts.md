@@ -4492,7 +4492,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const setRequestBatching: (strategy: 'on' | 'off') => Layer.Layer<never, never, never>
+export declare const setRequestBatching: (requestBatching: boolean) => Layer.Layer<never, never, never>
 ```
 
 Added in v1.0.0
@@ -4515,7 +4515,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const setRequestCaching: (strategy: 'on' | 'off') => Layer.Layer<never, never, never>
+export declare const setRequestCaching: (requestCaching: boolean) => Layer.Layer<never, never, never>
 ```
 
 Added in v1.0.0
@@ -4536,8 +4536,8 @@ Added in v1.0.0
 
 ```ts
 export declare const withRequestBatching: {
-  (strategy: 'on' | 'off'): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(self: Effect<R, E, A>, strategy: 'on' | 'off'): Effect<R, E, A>
+  (requestBatching: boolean): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, requestBatching: boolean): Effect<R, E, A>
 }
 ```
 
@@ -4562,8 +4562,8 @@ Added in v1.0.0
 
 ```ts
 export declare const withRequestCaching: {
-  (strategy: 'on' | 'off'): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(self: Effect<R, E, A>, strategy: 'on' | 'off'): Effect<R, E, A>
+  (strategy: boolean): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, strategy: boolean): Effect<R, E, A>
 }
 ```
 
@@ -5857,13 +5857,18 @@ Sequentially zips the this result with the specified result. Combines both
 
 ```ts
 export declare const validate: {
-  <R1, E1, B>(that: Effect<R1, E1, B>, options?: { readonly parallel?: boolean }): <R, E, A>(
-    self: Effect<R, E, A>
-  ) => Effect<R1 | R, E1 | E, readonly [A, B]>
+  <R1, E1, B>(
+    that: Effect<R1, E1, B>,
+    options?:
+      | { readonly concurrent?: boolean | undefined; readonly batchRequests?: boolean | 'inherit' | undefined }
+      | undefined
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, readonly [A, B]>
   <R, E, A, R1, E1, B>(
     self: Effect<R, E, A>,
     that: Effect<R1, E1, B>,
-    options?: { readonly parallel?: boolean }
+    options?:
+      | { readonly concurrent?: boolean | undefined; readonly batchRequests?: boolean | 'inherit' | undefined }
+      | undefined
   ): Effect<R | R1, E | E1, readonly [A, B]>
 }
 ```
@@ -5879,14 +5884,20 @@ combiner function. Combines the causes in case both effect fail.
 
 ```ts
 export declare const validateWith: {
-  <A, R1, E1, B, C>(that: Effect<R1, E1, B>, f: (a: A, b: B) => C, options?: { readonly parallel?: boolean }): <R, E>(
-    self: Effect<R, E, A>
-  ) => Effect<R1 | R, E1 | E, C>
+  <A, R1, E1, B, C>(
+    that: Effect<R1, E1, B>,
+    f: (a: A, b: B) => C,
+    options?:
+      | { readonly concurrent?: boolean | undefined; readonly batchRequests?: boolean | 'inherit' | undefined }
+      | undefined
+  ): <R, E>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, C>
   <R, E, A, R1, E1, B, C>(
     self: Effect<R, E, A>,
     that: Effect<R1, E1, B>,
     f: (a: A, b: B) => C,
-    options?: { readonly parallel?: boolean }
+    options?:
+      | { readonly concurrent?: boolean | undefined; readonly batchRequests?: boolean | 'inherit' | undefined }
+      | undefined
   ): Effect<R | R1, E | E1, C>
 }
 ```
@@ -5899,13 +5910,14 @@ Added in v1.0.0
 
 ```ts
 export declare const zip: {
-  <R2, E2, A2>(that: Effect<R2, E2, A2>, options?: { readonly parallel?: boolean }): <R, E, A>(
-    self: Effect<R, E, A>
-  ) => Effect<R2 | R, E2 | E, [A, A2]>
+  <R2, E2, A2>(
+    that: Effect<R2, E2, A2>,
+    options?: { readonly concurrent?: boolean; readonly batchRequests?: boolean | 'inherit' }
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, [A, A2]>
   <R, E, A, R2, E2, A2>(
     self: Effect<R, E, A>,
     that: Effect<R2, E2, A2>,
-    options?: { readonly parallel?: boolean }
+    options?: { readonly concurrent?: boolean; readonly batchRequests?: boolean | 'inherit' }
   ): Effect<R | R2, E | E2, [A, A2]>
 }
 ```
@@ -5918,13 +5930,18 @@ Added in v1.0.0
 
 ```ts
 export declare const zipLeft: {
-  <R2, E2, A2>(that: Effect<R2, E2, A2>, options?: { readonly parallel?: boolean }): <R, E, A>(
-    self: Effect<R, E, A>
-  ) => Effect<R2 | R, E2 | E, A>
+  <R2, E2, A2>(
+    that: Effect<R2, E2, A2>,
+    options?:
+      | { readonly concurrent?: boolean | undefined; readonly batchRequests?: boolean | 'inherit' | undefined }
+      | undefined
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A>
   <R, E, A, R2, E2, A2>(
     self: Effect<R, E, A>,
     that: Effect<R2, E2, A2>,
-    options?: { readonly parallel?: boolean }
+    options?:
+      | { readonly concurrent?: boolean | undefined; readonly batchRequests?: boolean | 'inherit' | undefined }
+      | undefined
   ): Effect<R | R2, E | E2, A>
 }
 ```
@@ -5937,13 +5954,18 @@ Added in v1.0.0
 
 ```ts
 export declare const zipRight: {
-  <R2, E2, A2>(that: Effect<R2, E2, A2>, options?: { readonly parallel?: boolean }): <R, E, A>(
-    self: Effect<R, E, A>
-  ) => Effect<R2 | R, E2 | E, A2>
+  <R2, E2, A2>(
+    that: Effect<R2, E2, A2>,
+    options?:
+      | { readonly concurrent?: boolean | undefined; readonly batchRequests?: boolean | 'inherit' | undefined }
+      | undefined
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2>
   <R, E, A, R2, E2, A2>(
     self: Effect<R, E, A>,
     that: Effect<R2, E2, A2>,
-    options?: { readonly parallel?: boolean }
+    options?:
+      | { readonly concurrent?: boolean | undefined; readonly batchRequests?: boolean | 'inherit' | undefined }
+      | undefined
   ): Effect<R | R2, E | E2, A2>
 }
 ```
@@ -5956,17 +5978,20 @@ Added in v1.0.0
 
 ```ts
 export declare const zipWith: {
-  <R2, E2, A2, A, B>(that: Effect<R2, E2, A2>, f: (a: A, b: A2) => B, options?: { readonly parallel?: boolean }): <
-    R,
-    E
-  >(
-    self: Effect<R, E, A>
-  ) => Effect<R2 | R, E2 | E, B>
+  <R2, E2, A2, A, B>(
+    that: Effect<R2, E2, A2>,
+    f: (a: A, b: A2) => B,
+    options?:
+      | { readonly concurrent?: boolean | undefined; readonly batchRequests?: boolean | 'inherit' | undefined }
+      | undefined
+  ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, B>
   <R, E, A, R2, E2, A2, B>(
     self: Effect<R, E, A>,
     that: Effect<R2, E2, A2>,
     f: (a: A, b: A2) => B,
-    options?: { readonly parallel?: boolean }
+    options?:
+      | { readonly concurrent?: boolean | undefined; readonly batchRequests?: boolean | 'inherit' | undefined }
+      | undefined
   ): Effect<R | R2, E | E2, B>
 }
 ```

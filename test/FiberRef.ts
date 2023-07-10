@@ -215,7 +215,7 @@ describe.concurrent("FiberRef", () => {
         Effect.zipRight(Clock.sleep(Duration.millis(1))),
         Effect.zipRight(FiberRef.set(fiberRef, update2))
       )
-      yield* $(winner, Effect.zip(loser, { parallel: true }))
+      yield* $(winner, Effect.zip(loser, { concurrent: true }))
       const result = yield* $(FiberRef.get(fiberRef))
       assert.strictEqual(result, update2)
     }))
@@ -227,7 +227,7 @@ describe.concurrent("FiberRef", () => {
       const failure2 = FiberRef.set(fiberRef, update).pipe(Effect.zipRight(Effect.fail(":-O")))
       yield* $(
         success,
-        Effect.zip(failure1.pipe(Effect.zip(failure2, { parallel: true })), { parallel: true }),
+        Effect.zip(failure1.pipe(Effect.zip(failure2, { concurrent: true })), { concurrent: true }),
         Effect.orElse(() => Effect.unit)
       )
       const result = yield* $(FiberRef.get(fiberRef))

@@ -271,7 +271,7 @@ const fromFlatLoop = <A>(
         pipe(
           fromFlatLoop(flat, prefix, op.original, split),
           core.flatMap(
-            core.forEach((a) =>
+            core.forEachSequential((a) =>
               pipe(
                 op.mapOrFail(a),
                 core.mapError(configError.prefixed(prefix))
@@ -322,7 +322,7 @@ const fromFlatLoop = <A>(
                 ) as unknown as Effect.Effect<never, ConfigError.ConfigError, ReadonlyArray<A>>
               }
               return pipe(
-                core.forEach(
+                core.forEachSequential(
                   indices,
                   (index) => fromFlatLoop(flat, RA.append(prefix, `[${index}]`), op.config, true)
                 ),
@@ -349,7 +349,7 @@ const fromFlatLoop = <A>(
               core.flatMap((keys) => {
                 return pipe(
                   keys,
-                  core.forEach((key) =>
+                  core.forEachSequential((key) =>
                     fromFlatLoop(
                       flat,
                       concat(prefix, RA.of(key)),
@@ -405,7 +405,7 @@ const fromFlatLoop = <A>(
                   return pipe(
                     lefts,
                     RA.zip(rights),
-                    core.forEach(([left, right]) =>
+                    core.forEachSequential(([left, right]) =>
                       pipe(
                         core.zip(left, right),
                         core.map(([left, right]) => op.zip(left, right))
@@ -603,7 +603,7 @@ const parsePrimitive = <A>(
   }
   return pipe(
     splitPathString(text, delimiter),
-    core.forEach((char) => primitive.parse(char.trim())),
+    core.forEachSequential((char) => primitive.parse(char.trim())),
     core.mapError(configError.prefixed(path))
   )
 }
@@ -618,7 +618,7 @@ const escapeRegex = (string: string): string => {
 
 const indicesFrom = (quotedIndices: HashSet.HashSet<string>): Effect.Effect<never, never, ReadonlyArray<number>> =>
   pipe(
-    core.forEach(quotedIndices, parseQuotedIndex),
+    core.forEachSequential(quotedIndices, parseQuotedIndex),
     core.mapBoth({
       onFailure: () => RA.empty<number>(),
       onSuccess: RA.sort(number.Order)

@@ -161,54 +161,21 @@ export const cacheRequest = <A extends Request.Request<any, any>>(
 }
 
 /** @internal */
-export const withRequestBatching: {
-  (strategy: "on" | "off"): <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
-  <R, E, A>(
-    self: Effect.Effect<R, E, A>,
-    strategy: "on" | "off"
-  ): Effect.Effect<R, E, A>
-} = dual<
-  (
-    strategy: "on" | "off"
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
-  <R, E, A>(
-    self: Effect.Effect<R, E, A>,
-    strategy: "on" | "off"
-  ) => Effect.Effect<R, E, A>
->(2, (self, strategy) =>
-  core.fiberRefGetWith(core.currentRequestBatchingEnabled, (enabled) => {
-    switch (strategy) {
-      case "off":
-        return enabled ? core.fiberRefLocally(self, core.currentRequestBatchingEnabled, false) : self
-      case "on":
-        return enabled ? self : core.fiberRefLocally(self, core.currentRequestBatchingEnabled, true)
-    }
-  }))
-
-/** @internal */
 export const withRequestCaching: {
-  (strategy: "on" | "off"): <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  (strategy: boolean): <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
   <R, E, A>(
     self: Effect.Effect<R, E, A>,
-    strategy: "on" | "off"
+    strategy: boolean
   ): Effect.Effect<R, E, A>
 } = dual<
   (
-    strategy: "on" | "off"
+    strategy: boolean
   ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
   <R, E, A>(
     self: Effect.Effect<R, E, A>,
-    strategy: "on" | "off"
+    strategy: boolean
   ) => Effect.Effect<R, E, A>
->(2, (self, strategy) =>
-  core.fiberRefGetWith(currentCacheEnabled, (enabled) => {
-    switch (strategy) {
-      case "off":
-        return enabled ? core.fiberRefLocally(self, currentCacheEnabled, false) : self
-      case "on":
-        return enabled ? self : core.fiberRefLocally(self, currentCacheEnabled, true)
-    }
-  }))
+>(2, (self, strategy) => core.fiberRefLocally(self, currentCacheEnabled, strategy))
 
 /** @internal */
 export const withRequestCache: {

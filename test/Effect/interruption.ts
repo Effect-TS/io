@@ -71,7 +71,7 @@ describe.concurrent("Effect", () => {
                 duration: Duration.millis(500)
               })
             )),
-            Effect.zipLeft(TestClock.adjust(Duration.seconds(1)), { parallel: true })
+            Effect.zipLeft(TestClock.adjust(Duration.seconds(1)), { concurrent: true })
           )
         )
       })

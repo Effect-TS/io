@@ -29,7 +29,7 @@ export const makeBatched = <R, A extends Request.Request<any, any>>(
   new core.RequestResolverImpl<R, A>(
     (requests) =>
       requests.length > 1 ?
-        core.forEachDiscard(requests, (block) =>
+        core.forEachSequentialDiscard(requests, (block) =>
           invokeWithInterrupt(
             run(
               block
@@ -164,7 +164,7 @@ export const eitherWith = dual<
   new core.RequestResolverImpl<R | R2, C>(
     (batch) =>
       pipe(
-        core.forEach(batch, (requests) => {
+        core.forEachSequential(batch, (requests) => {
           const [as, bs] = pipe(
             requests,
             RA.partitionMap(f)
@@ -173,7 +173,7 @@ export const eitherWith = dual<
             self.runAll(Array.of(as)),
             that.runAll(Array.of(bs)),
             () => void 0,
-            { parallel: true }
+            { concurrent: true }
           )
         })
       ),
@@ -185,7 +185,7 @@ export const fromFunction = <A extends Request.Request<never, any>>(
   f: (request: A) => Request.Request.Success<A>
 ): RequestResolver.RequestResolver<A> =>
   makeBatched((requests: Array<A>) =>
-    core.forEachDiscard(
+    core.forEachSequentialDiscard(
       requests,
       (request) => complete(request, core.exitSucceed(f(request)) as any)
     )

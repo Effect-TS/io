@@ -148,7 +148,7 @@ export const fiberRefs = (self: FiberRefs.FiberRefs) => HashSet.fromIterable(sel
 
 /** @internal */
 export const setAll = (self: FiberRefs.FiberRefs): Effect.Effect<never, never, void> =>
-  core.forEachDiscard(
+  core.forEachSequentialDiscard(
     fiberRefs(self),
     (fiberRef) => core.fiberRefSet(fiberRef, getOrDefault(self, fiberRef))
   )

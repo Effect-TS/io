@@ -58,7 +58,7 @@ export const collectAll = <R, E, Out>(
           metrics.map((pollingMetric) => pollingMetric.metric.unsafeValue(extraTags))
         )
     ),
-    poll: core.forEach(metrics, (metric) => metric.poll)
+    poll: core.forEachSequential(metrics, (metric) => metric.poll)
   }
 }
 

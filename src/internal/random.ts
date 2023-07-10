@@ -65,7 +65,7 @@ const shuffleWith = <A>(
         }
         return pipe(
           numbers,
-          core.forEachDiscard((n) =>
+          core.forEachSequentialDiscard((n) =>
             pipe(
               nextIntBounded(n),
               core.map((k) => swap(buffer, n - 1, k))

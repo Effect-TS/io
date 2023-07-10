@@ -3,14 +3,20 @@ import type { Effect } from "@effect/io/Effect"
 import * as core from "@effect/io/internal/core"
 
 /** @internal */
-export const match = <R, E, A>(
+export const match: <R, E, A>(
   options: {
     readonly concurrency?: Concurrency
-    readonly batchRequests?: boolean | "inherit"
   } | undefined,
   sequential: () => Effect<R, E, A>,
   unbounded: () => Effect<R, E, A>,
-  withLimit: (limit: number) => Effect<R, E, A>
+  bounded: (limit: number) => Effect<R, E, A>
+) => Effect<R, E, A> = <R, E, A>(
+  options: {
+    readonly concurrency?: Concurrency
+  } | undefined,
+  sequential: () => Effect<R, E, A>,
+  unbounded: () => Effect<R, E, A>,
+  bounded: (limit: number) => Effect<R, E, A>
 ) => {
   let effect: Effect<R, E, A>
   switch (options?.concurrency) {
@@ -26,34 +32,37 @@ export const match = <R, E, A>(
       effect = core.fiberRefGetWith(
         core.currentConcurrency,
         (concurrency) =>
-          concurrency._tag === "None" ?
+          concurrency === "unbounded" ?
             unbounded() :
-            concurrency.value > 1 ?
-            withLimit(concurrency.value) :
+            concurrency > 1 ?
+            bounded(concurrency) :
             sequential()
       )
       break
     }
     default: {
       effect = options!.concurrency > 1 ?
-        withLimit(options!.concurrency) :
+        bounded(options!.concurrency) :
         sequential()
       break
     }
   }
-  return options?.batchRequests !== undefined && options.batchRequests !== "inherit" ?
-    core.fiberRefLocally(effect, core.currentRequestBatchingEnabled, options.batchRequests) :
-    effect
+  return effect
 }
 
 /** @internal */
-export const matchSimple = <R, E, A>(
+export const matchSimple: <R, E, A>(
   options: {
     readonly concurrency?: Concurrency
-    readonly batchRequests?: boolean | "inherit"
   } | undefined,
   sequential: () => Effect<R, E, A>,
-  parallel: () => Effect<R, E, A>
+  concurrent: () => Effect<R, E, A>
+) => Effect<R, E, A> = <R, E, A>(
+  options: {
+    readonly concurrency?: Concurrency
+  } | undefined,
+  sequential: () => Effect<R, E, A>,
+  concurrent: () => Effect<R, E, A>
 ) => {
   let effect: Effect<R, E, A>
   switch (options?.concurrency) {
@@ -62,28 +71,26 @@ export const matchSimple = <R, E, A>(
       break
     }
     case "unbounded": {
-      effect = parallel()
+      effect = concurrent()
       break
     }
     case "inherit": {
       effect = core.fiberRefGetWith(
         core.currentConcurrency,
         (concurrency) =>
-          concurrency._tag === "None" ?
-            parallel() :
-            concurrency.value > 1 ?
-            parallel() :
+          concurrency === "unbounded" ?
+            concurrent() :
+            concurrency > 1 ?
+            concurrent() :
             sequential()
       )
       break
     }
     default: {
-      effect = options!.concurrency > 1 ? parallel() : sequential()
+      effect = options!.concurrency > 1 ? concurrent() : sequential()
       break
     }
   }
 
-  return options?.batchRequests !== undefined && options.batchRequests !== "inherit" ?
-    core.fiberRefLocally(effect, core.currentRequestBatchingEnabled, options.batchRequests) :
-    effect
+  return effect
 }

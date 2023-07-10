@@ -152,7 +152,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const result = yield* $(
         Effect.succeed(1),
-        Effect.zip(Effect.succeed(2), { parallel: true }),
+        Effect.zip(Effect.succeed(2), { concurrent: true }),
         Effect.flatMap((tuple) => Effect.succeed(tuple[0] + tuple[1])),
         Effect.map((n) => n === 3)
       )
@@ -163,7 +163,7 @@ describe.concurrent("Effect", () => {
       const result = yield* $(
         pipe(
           Effect.interrupt,
-          Effect.zip(Effect.interrupt, { parallel: true }),
+          Effect.zip(Effect.interrupt, { concurrent: true }),
           Effect.exit,
           Effect.map((exit) =>
             pipe(Exit.causeOption(exit), Option.map(Cause.interruptors), Option.getOrElse(() => HashSet.empty()))
@@ -177,7 +177,7 @@ describe.concurrent("Effect", () => {
       const result = yield* $(
         pipe(
           Effect.interrupt,
-          Effect.zip(Effect.succeed(1), { parallel: true }),
+          Effect.zip(Effect.succeed(1), { concurrent: true }),
           Effect.sandbox,
           Effect.either,
           Effect.map(Either.mapLeft(Cause.isInterrupted))
@@ -192,7 +192,7 @@ describe.concurrent("Effect", () => {
           ? Effect.succeed(0)
           : pipe(
             Effect.succeed(1),
-            Effect.zip(Effect.succeed(2), { parallel: true }),
+            Effect.zip(Effect.succeed(2), { concurrent: true }),
             Effect.flatMap((tuple) => pipe(countdown(n - 1), Effect.map((y) => tuple[0] + tuple[1] + y)))
           )
       }
@@ -220,7 +220,7 @@ describe.concurrent("Effect", () => {
         Effect.fork
       )
 
-      const result = yield* $(Effect.fork(left), Effect.zip(right, { parallel: true }))
+      const result = yield* $(Effect.fork(left), Effect.zip(right, { concurrent: true }))
       const leftInnerFiber = result[0]
       const rightResult = result[1]
       const leftResult = yield* $(Fiber.await(leftInnerFiber))

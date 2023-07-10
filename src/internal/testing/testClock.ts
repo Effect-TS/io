@@ -214,7 +214,7 @@ export class TestClockImpl implements TestClock {
   adjustWith(durationInput: Duration.DurationInput) {
     const duration = Duration.decode(durationInput)
     return <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
-      fiberRuntime.zipLeftOptions(effect, this.adjust(duration), { parallel: true })
+      fiberRuntime.zipLeftOptions(effect, this.adjust(duration), { concurrent: true })
   }
   /**
    * Returns a set of all fibers in this test.

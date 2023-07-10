@@ -91,7 +91,7 @@ export const dump = <E, A>(self: Fiber.RuntimeFiber<E, A>): Effect.Effect<never,
 /** @internal */
 export const dumpAll = (
   fibers: Iterable<Fiber.RuntimeFiber<unknown, unknown>>
-): Effect.Effect<never, never, Array<Fiber.Fiber.Dump>> => core.forEach(fibers, dump)
+): Effect.Effect<never, never, Array<Fiber.Fiber.Dump>> => core.forEachSequential(fibers, dump)
 
 /** @internal */
 export const fail = <E>(error: E): Fiber.Fiber<E, never> => done(Exit.fail(error))
@@ -122,8 +122,8 @@ export const interruptAllAs = dual<
   (fibers: Iterable<Fiber.Fiber<any, any>>, fiberId: FiberId.FiberId) => Effect.Effect<never, never, void>
 >(2, (fibers, fiberId) =>
   pipe(
-    core.forEachDiscard(fibers, interruptAsFork(fiberId)),
-    core.zipRight(pipe(fibers, core.forEachDiscard(_await)))
+    core.forEachSequentialDiscard(fibers, interruptAsFork(fiberId)),
+    core.zipRight(pipe(fibers, core.forEachSequentialDiscard(_await)))
   ))
 
 /** @internal */

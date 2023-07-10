@@ -73,7 +73,7 @@ export const getUserNameById = (id: number) => Effect.request(GetNameById({ id }
 
 export const getAllUserNamesN = (concurrency: Concurrency) =>
   getAllUserIds.pipe(
-    Effect.flatMap(Effect.forEach(getUserNameById, { concurrency })),
+    Effect.flatMap(Effect.forEach(getUserNameById, { concurrency, batchRequests: true })),
     Effect.onInterrupt(() => FiberRef.getWith(interrupts, (i) => Effect.sync(() => i.interrupts++)))
   )
 
@@ -111,8 +111,8 @@ const EnvLive = Layer.provideMerge(
       capacity: 100,
       timeToLive: seconds(60)
     })),
-    Effect.setRequestCaching("on"),
-    Effect.setRequestBatching("on")
+    Effect.setRequestCaching(true),
+    Effect.setRequestBatching(true)
   ),
   Layer.mergeAll(
     Layer.sync(Counter, () => ({ count: 0 })),
@@ -138,7 +138,10 @@ describe.concurrent("Effect", () => {
       Effect.gen(function*($) {
         const cache = yield* $(FiberRef.get(FiberRef.currentRequestCache))
         yield* $(cache.invalidateAll())
-        const names = yield* $(Effect.zip(getAllUserNames, getAllUserNames, { parallel: true }))
+        const names = yield* $(Effect.zip(getAllUserNames, getAllUserNames, {
+          concurrent: true,
+          batchRequests: true
+        }))
         const count = yield* $(Counter)
         expect(count.count).toEqual(3)
         expect(names[0].length).toBeGreaterThan(2)
@@ -160,7 +163,14 @@ describe.concurrent("Effect", () => {
     Effect.locally(interrupts, { interrupts: 0 })(
       provideEnv(
         Effect.gen(function*($) {
-          const exit = yield* $(getAllUserNames, Effect.zipLeft(Effect.interrupt, { parallel: true }), Effect.exit)
+          const exit = yield* $(
+            getAllUserNames,
+            Effect.zipLeft(Effect.interrupt, {
+              concurrent: true,
+              batchRequests: true
+            }),
+            Effect.exit
+          )
           expect(exit._tag).toEqual("Failure")
           if (exit._tag === "Failure") {
             expect(Cause.isInterruptedOnly(exit.cause)).toEqual(true)
@@ -210,7 +220,10 @@ describe.concurrent("Effect", () => {
         Effect.gen(function*($) {
           const exit = yield* $(
             getAllUserNames,
-            Effect.zipLeft(Effect.interrupt, { parallel: true }),
+            Effect.zipLeft(Effect.interrupt, {
+              concurrent: true,
+              batchRequests: true
+            }),
             Effect.exit
           )
           expect(exit._tag).toEqual("Failure")
@@ -229,9 +242,12 @@ describe.concurrent("Effect", () => {
           Effect.zip(
             getUserNameById(userIds[0]),
             getUserNameById(userIds[1]),
-            { parallel: true }
+            {
+              concurrent: true,
+              batchRequests: false
+            }
           ),
-          Effect.withRequestBatching("off")
+          Effect.withRequestBatching(true)
         )
         const count = yield* $(Counter)
         expect(count.count).toEqual(2)
@@ -246,7 +262,10 @@ describe.concurrent("Effect", () => {
           Effect.zip(
             getUserNameById(userIds[0]),
             getUserNameById(userIds[1]),
-            { parallel: true }
+            {
+              concurrent: true,
+              batchRequests: true
+            }
           )
         )
         const count = yield* $(Counter)
@@ -286,7 +305,7 @@ describe.concurrent("Effect", () => {
     ))
   it.effect("cache can be disabled", () =>
     provideEnv(
-      Effect.withRequestCaching("off")(Effect.gen(function*($) {
+      Effect.withRequestCaching(false)(Effect.gen(function*($) {
         yield* $(getAllUserIds)
         yield* $(getAllUserIds)
         expect(yield* $(Counter)).toEqual({ count: 2 })
@@ -307,9 +326,10 @@ describe.concurrent("Effect", () => {
         yield* $(
           Effect.all(getUserNameById(userIds[0]), getUserNameById(userIds[0]), {
             concurrency: "unbounded",
+            batchRequests: true,
             discard: true
           }),
-          Effect.withRequestCaching("off")
+          Effect.withRequestCaching(false)
         )
         const requests = yield* $(Requests)
         const invocations = yield* $(Counter)

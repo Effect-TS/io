@@ -690,7 +690,7 @@ export const matchEffect = dual<
   }))
 
 /* @internal */
-export const forEach = dual<
+export const forEachSequential = dual<
   <A, R, E, B>(f: (a: A, i: number) => Effect.Effect<R, E, B>) => (self: Iterable<A>) => Effect.Effect<R, E, Array<B>>,
   <A, R, E, B>(self: Iterable<A>, f: (a: A, i: number) => Effect.Effect<R, E, B>) => Effect.Effect<R, E, Array<B>>
 >(2, (self, f) =>
@@ -711,7 +711,7 @@ export const forEach = dual<
   }))
 
 /* @internal */
-export const forEachDiscard = dual<
+export const forEachSequentialDiscard = dual<
   <A, R, E, B>(f: (a: A, i: number) => Effect.Effect<R, E, B>) => (self: Iterable<A>) => Effect.Effect<R, E, void>,
   <A, R, E, B>(self: Iterable<A>, f: (a: A, i: number) => Effect.Effect<R, E, B>) => Effect.Effect<R, E, void>
 >(2, (self, f) =>
@@ -1142,15 +1142,16 @@ export const whileLoop = <R, E, A>(
 }
 
 /* @internal */
-export const withInheritedConcurrency = dual<
+export const withConcurrency = dual<
   (concurrency: number | "unbounded") => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
   <R, E, A>(self: Effect.Effect<R, E, A>, concurrency: number | "unbounded") => Effect.Effect<R, E, A>
->(2, (self, concurrency) =>
-  fiberRefLocally(
-    self,
-    currentConcurrency,
-    concurrency === "unbounded" ? Option.none() : Option.some(concurrency)
-  ))
+>(2, (self, concurrency) => fiberRefLocally(self, currentConcurrency, concurrency))
+
+/* @internal */
+export const withRequestBatching = dual<
+  (requestBatching: boolean) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(self: Effect.Effect<R, E, A>, requestBatching: boolean) => Effect.Effect<R, E, A>
+>(2, (self, requestBatching) => fiberRefLocally(self, currentRequestBatching, requestBatching))
 
 /* @internal */
 export const withRuntimeFlags = dual<
@@ -1724,16 +1725,16 @@ export const withMaxFiberOps = dual<
 >(2, (self, ops) => fiberRefLocally(self, currentMaxFiberOps, ops))
 
 /** @internal */
-export const currentConcurrency: FiberRef.FiberRef<Option.Option<number>> = globalValue(
+export const currentConcurrency: FiberRef.FiberRef<"unbounded" | number> = globalValue(
   Symbol.for("@effect/io/FiberRef/currentConcurrency"),
-  () => fiberRefUnsafeMake<Option.Option<number>>(Option.none())
+  () => fiberRefUnsafeMake<"unbounded" | number>("unbounded")
 )
 
 /**
  * @internal
  */
-export const currentRequestBatchingEnabled = globalValue(
-  Symbol.for("@effect/io/FiberRef/currentRequestBatchingEnabled"),
+export const currentRequestBatching = globalValue(
+  Symbol.for("@effect/io/FiberRef/currentRequestBatching"),
   () => fiberRefUnsafeMake(true)
 )
 

@@ -2647,10 +2647,10 @@ export const transplant: <R, E, A>(
  * @since 1.0.0
  * @category supervision & fibers
  */
-export const withInheritedConcurrency: {
+export const withConcurrency: {
   (concurrency: number | "unbounded"): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
   <R, E, A>(self: Effect<R, E, A>, concurrency: number | "unbounded"): Effect<R, E, A>
-} = core.withInheritedConcurrency
+} = core.withConcurrency
 
 // ---------------------------------------------------------------------------------------
 // scheduler
@@ -4595,12 +4595,12 @@ export const runSyncExit: <E, A>(effect: Effect<never, E, A>) => Exit.Exit<E, A>
 export const validate: {
   <R1, E1, B>(
     that: Effect<R1, E1, B>,
-    options?: { readonly parallel?: boolean }
+    options?: { readonly concurrent?: boolean; readonly batchRequests?: boolean | "inherit" }
   ): <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, readonly [A, B]>
   <R, E, A, R1, E1, B>(
     self: Effect<R, E, A>,
     that: Effect<R1, E1, B>,
-    options?: { readonly parallel?: boolean }
+    options?: { readonly concurrent?: boolean; readonly batchRequests?: boolean | "inherit" }
   ): Effect<R | R1, E | E1, readonly [A, B]>
 } = fiberRuntime.validate
 
@@ -4615,13 +4615,13 @@ export const validateWith: {
   <A, R1, E1, B, C>(
     that: Effect<R1, E1, B>,
     f: (a: A, b: B) => C,
-    options?: { readonly parallel?: boolean }
+    options?: { readonly concurrent?: boolean; readonly batchRequests?: boolean | "inherit" }
   ): <R, E>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, C>
   <R, E, A, R1, E1, B, C>(
     self: Effect<R, E, A>,
     that: Effect<R1, E1, B>,
     f: (a: A, b: B) => C,
-    options?: { readonly parallel?: boolean }
+    options?: { readonly concurrent?: boolean; readonly batchRequests?: boolean | "inherit" }
   ): Effect<R | R1, E | E1, C>
 } = fiberRuntime.validateWith
 
@@ -4632,12 +4632,18 @@ export const validateWith: {
 export const zip: {
   <R2, E2, A2>(
     that: Effect<R2, E2, A2>,
-    options?: { readonly parallel?: boolean }
+    options?: {
+      readonly concurrent?: boolean
+      readonly batchRequests?: boolean | "inherit"
+    }
   ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, [A, A2]>
   <R, E, A, R2, E2, A2>(
     self: Effect<R, E, A>,
     that: Effect<R2, E2, A2>,
-    options?: { readonly parallel?: boolean }
+    options?: {
+      readonly concurrent?: boolean
+      readonly batchRequests?: boolean | "inherit"
+    }
   ): Effect<R | R2, E | E2, [A, A2]>
 } = fiberRuntime.zipOptions
 
@@ -4648,12 +4654,12 @@ export const zip: {
 export const zipLeft: {
   <R2, E2, A2>(
     that: Effect<R2, E2, A2>,
-    options?: { readonly parallel?: boolean }
+    options?: { readonly concurrent?: boolean; readonly batchRequests?: boolean | "inherit" }
   ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A>
   <R, E, A, R2, E2, A2>(
     self: Effect<R, E, A>,
     that: Effect<R2, E2, A2>,
-    options?: { readonly parallel?: boolean }
+    options?: { readonly concurrent?: boolean; readonly batchRequests?: boolean | "inherit" }
   ): Effect<R | R2, E | E2, A>
 } = fiberRuntime.zipLeftOptions
 
@@ -4664,12 +4670,15 @@ export const zipLeft: {
 export const zipRight: {
   <R2, E2, A2>(
     that: Effect<R2, E2, A2>,
-    options?: { readonly parallel?: boolean }
+    options?: { readonly concurrent?: boolean; readonly batchRequests?: boolean | "inherit" }
   ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2>
   <R, E, A, R2, E2, A2>(
     self: Effect<R, E, A>,
     that: Effect<R2, E2, A2>,
-    options?: { readonly parallel?: boolean }
+    options?: {
+      readonly concurrent?: boolean
+      readonly batchRequests?: boolean | "inherit"
+    }
   ): Effect<R | R2, E | E2, A2>
 } = fiberRuntime.zipRightOptions
 
@@ -4681,13 +4690,13 @@ export const zipWith: {
   <R2, E2, A2, A, B>(
     that: Effect<R2, E2, A2>,
     f: (a: A, b: A2) => B,
-    options?: { readonly parallel?: boolean }
+    options?: { readonly concurrent?: boolean; readonly batchRequests?: boolean | "inherit" }
   ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, B>
   <R, E, A, R2, E2, A2, B>(
     self: Effect<R, E, A>,
     that: Effect<R2, E2, A2>,
     f: (a: A, b: A2) => B,
-    options?: { readonly parallel?: boolean }
+    options?: { readonly concurrent?: boolean; readonly batchRequests?: boolean | "inherit" }
   ): Effect<R | R2, E | E2, B>
 } = fiberRuntime.zipWithOptions
 
@@ -4755,26 +4764,26 @@ export const cacheRequestResult: <A extends Request.Request<any, any>>(
  * @category requests & batching
  */
 export const withRequestBatching: {
-  (strategy: "on" | "off"): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(self: Effect<R, E, A>, strategy: "on" | "off"): Effect<R, E, A>
-} = query.withRequestBatching
+  (requestBatching: boolean): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, requestBatching: boolean): Effect<R, E, A>
+} = core.withRequestBatching
 
 /**
  * @since 1.0.0
  * @category requests & batching
  */
-export const setRequestBatching = (strategy: "on" | "off") =>
+export const setRequestBatching = (requestBatching: boolean) =>
   layer.scopedDiscard(
-    fiberRuntime.fiberRefLocallyScoped(core.currentRequestBatchingEnabled, strategy === "on")
+    fiberRuntime.fiberRefLocallyScoped(core.currentRequestBatching, requestBatching)
   )
 
 /**
  * @since 1.0.0
  * @category requests & batching
  */
-export const setRequestCaching = (strategy: "on" | "off") =>
+export const setRequestCaching = (requestCaching: boolean) =>
   layer.scopedDiscard(
-    fiberRuntime.fiberRefLocallyScoped(query.currentCacheEnabled, strategy === "on")
+    fiberRuntime.fiberRefLocallyScoped(query.currentCacheEnabled, requestCaching)
   )
 
 /**
@@ -4800,8 +4809,8 @@ export const setRequestCache: {
  * @category requests & batching
  */
 export const withRequestCaching: {
-  (strategy: "on" | "off"): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(self: Effect<R, E, A>, strategy: "on" | "off"): Effect<R, E, A>
+  (strategy: boolean): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, strategy: boolean): Effect<R, E, A>
 } = query.withRequestCaching
 
 /**

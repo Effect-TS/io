@@ -24,7 +24,7 @@ describe.concurrent("Effect", () => {
       const counter = yield* $(Ref.make(0))
       const op = Ref.getAndUpdate(counter, (n) => n + 1)
       const ops3 = Effect.all([op, op, op], { concurrency: "unbounded" })
-      const result = yield* $(ops3, Effect.zip(ops3, { parallel: true }))
+      const result = yield* $(ops3, Effect.zip(ops3, { concurrent: true }))
       assert.notDeepEqual(Array.from(result[0]), Array.from(result[1]))
     }))
   it.effect("all - returns results in the same order in parallel", () =>

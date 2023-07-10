@@ -74,7 +74,7 @@ class AnnotationsImpl implements Annotations {
           case "Right": {
             return pipe(
               either.right,
-              core.forEach((ref) => core.sync(() => MutableRef.get(ref))),
+              core.forEachSequential((ref) => core.sync(() => MutableRef.get(ref))),
               core.map(RA.reduce(SortedSet.empty(fiber.Order), (a, b) => SortedSet.union(a, b))),
               core.map(SortedSet.filter((fiber) => !Equal.equals(fiber.id(), descriptor.id)))
             )
