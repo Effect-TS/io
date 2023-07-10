@@ -34,7 +34,7 @@ export interface Cancel<E, A> {
  * @since 1.0.0
  * @category models
  */
-export interface Runtime<R> extends Pipeable<Runtime<R>> {
+export interface Runtime<R> extends Pipeable {
   /**
    * The context used as initial for forks
    */

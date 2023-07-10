@@ -44,7 +44,7 @@ export type LayerTypeId = typeof LayerTypeId
  * @since 1.0.0
  * @category models
  */
-export interface Layer<RIn, E, ROut> extends Layer.Variance<RIn, E, ROut>, Pipeable<Layer<RIn, E, ROut>> {}
+export interface Layer<RIn, E, ROut> extends Layer.Variance<RIn, E, ROut>, Pipeable {}
 
 /**
  * @since 1.0.0

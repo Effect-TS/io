@@ -1,7 +1,7 @@
 /**
  * @since 1.0.0
  */
-import type { PipeableOverride } from "@effect/data/Pipeable"
+import type { Pipeable } from "@effect/data/Pipeable"
 import type * as Effect from "@effect/io/Effect"
 import * as internal from "@effect/io/internal/hub"
 import type * as Queue from "@effect/io/Queue"
@@ -15,7 +15,7 @@ import type * as Scope from "@effect/io/Scope"
  * @since 1.0.0
  * @category models
  */
-export interface Hub<A> extends PipeableOverride<Queue.Enqueue<A>, Hub<A>> {
+export interface Hub<A> extends Queue.Enqueue<A>, Pipeable {
   /**
    * Publishes a message to the hub, returning whether the message was published
    * to the hub.

@@ -42,7 +42,7 @@ export type FlatConfigProviderTypeId = typeof FlatConfigProviderTypeId
  * @since 1.0.0
  * @category models
  */
-export interface ConfigProvider extends ConfigProvider.Proto, Pipeable<ConfigProvider> {
+export interface ConfigProvider extends ConfigProvider.Proto, Pipeable {
   /**
    * Loads the specified configuration, or fails with a config error.
    */

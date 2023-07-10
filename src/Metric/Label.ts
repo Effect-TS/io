@@ -28,7 +28,7 @@ export type MetricLabelTypeId = typeof MetricLabelTypeId
  * @since 1.0.0
  * @category models
  */
-export interface MetricLabel extends Equal.Equal, Pipeable<MetricLabel> {
+export interface MetricLabel extends Equal.Equal, Pipeable {
   readonly [MetricLabelTypeId]: MetricLabelTypeId
   readonly key: string
   readonly value: string

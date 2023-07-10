@@ -55,7 +55,7 @@ export type RuntimeFiberTypeId = typeof RuntimeFiberTypeId
  * @since 1.0.0
  * @category models
  */
-export interface Fiber<E, A> extends Fiber.Variance<E, A>, Pipeable<Fiber<E, A>> {
+export interface Fiber<E, A> extends Fiber.Variance<E, A>, Pipeable {
   /**
    * The identity of the fiber.
    */

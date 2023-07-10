@@ -86,7 +86,7 @@ export type SummaryKeyTypeTypeId = typeof SummaryKeyTypeTypeId
  * @category modelz
  */
 export interface MetricKeyType<In, Out>
-  extends MetricKeyType.Variance<In, Out>, Equal.Equal, Pipeable<MetricKeyType<In, Out>>
+  extends MetricKeyType.Variance<In, Out>, Equal.Equal, Pipeable
 {}
 
 /**

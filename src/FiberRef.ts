@@ -41,7 +41,7 @@ export type FiberRefTypeId = typeof FiberRefTypeId
  * @since 1.0.0
  * @category model
  */
-export interface FiberRef<A> extends Variance<A>, Pipeable<FiberRef<A>> {
+export interface FiberRef<A> extends Variance<A>, Pipeable {
   /** @internal */
   readonly initial: A
   /** @internal */

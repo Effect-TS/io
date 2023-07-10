@@ -35,7 +35,7 @@ export type LoggerTypeId = typeof LoggerTypeId
  * @since 1.0.0
  * @category models
  */
-export interface Logger<Message, Output> extends Logger.Variance<Message, Output>, Pipeable<Logger<Message, Output>> {
+export interface Logger<Message, Output> extends Logger.Variance<Message, Output>, Pipeable {
   readonly log: (
     options: {
       readonly fiberId: FiberId.FiberId

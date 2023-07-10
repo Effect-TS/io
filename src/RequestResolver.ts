@@ -48,7 +48,7 @@ export type RequestResolverTypeId = typeof RequestResolverTypeId
  * @since 1.0.0
  * @category models
  */
-export interface RequestResolver<A, R = never> extends Equal.Equal, Pipeable<RequestResolver<A, R>> {
+export interface RequestResolver<A, R = never> extends Equal.Equal, Pipeable {
   /**
    * Execute a collection of requests. The outer `Chunk` represents batches
    * of requests that must be performed sequentially. The inner `Chunk`

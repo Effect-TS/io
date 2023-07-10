@@ -89,7 +89,7 @@ export type SummaryStateTypeId = typeof SummaryStateTypeId
  * @since 1.0.0
  * @category models
  */
-export interface MetricState<A> extends MetricState.Variance<A>, Equal.Equal, Pipeable<MetricState<A>> {}
+export interface MetricState<A> extends MetricState.Variance<A>, Equal.Equal, Pipeable {}
 
 /**
  * @since 1.0.0

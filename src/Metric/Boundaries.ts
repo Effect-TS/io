@@ -22,7 +22,7 @@ export type MetricBoundariesTypeId = typeof MetricBoundariesTypeId
  * @since 1.0.0
  * @category models
  */
-export interface MetricBoundaries extends Equal.Equal, Pipeable<MetricBoundaries> {
+export interface MetricBoundaries extends Equal.Equal, Pipeable {
   readonly [MetricBoundariesTypeId]: MetricBoundariesTypeId
   readonly values: Chunk.Chunk<number>
 }

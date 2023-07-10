@@ -44,7 +44,7 @@ export type ConfigTypeId = typeof ConfigTypeId
  * @since 1.0.0
  * @category models
  */
-export interface Config<A> extends Config.Variance<A>, Pipeable<Config<A>> {}
+export interface Config<A> extends Config.Variance<A>, Pipeable {}
 
 /**
  * @since 1.0.0
