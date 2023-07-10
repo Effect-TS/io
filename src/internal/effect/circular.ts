@@ -247,8 +247,8 @@ export const forkAll = dual<
   options
 ) =>
   options?.discard ?
-    core.forEachDiscard(effects, fiberRuntime.fork) :
-    core.map(core.forEach(effects, fiberRuntime.fork), fiberRuntime.fiberAll))
+    core.forEachSequentialDiscard(effects, fiberRuntime.fork) :
+    core.map(core.forEachSequential(effects, fiberRuntime.fork), fiberRuntime.fiberAll))
 
 /** @internal */
 export const forkIn = dual<
@@ -581,7 +581,7 @@ export const zipWithFiber = dual<
     pipe(
       self.await(),
       core.flatten,
-      fiberRuntime.zipWithOptions(core.flatten(that.await()), f, { parallel: true }),
+      fiberRuntime.zipWithOptions(core.flatten(that.await()), f, { concurrent: true }),
       core.exit
     ),
   children: () => self.children(),

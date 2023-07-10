@@ -372,7 +372,7 @@ describe.concurrent("ScopedCache", () => {
         yield* $(Effect.zip(
           Effect.either(Effect.scoped(resourceScopedProxy)),
           Effect.either(Effect.scoped(resourceScopedProxy)),
-          { parallel: true }
+          { concurrent: true }
         ))
         yield* $(watchableLookup.assertAllCleanedForKey(void 0))
         yield* $(watchableLookup.assertCalledTimes(void 0, (n) => expect(n).toBe(1)))

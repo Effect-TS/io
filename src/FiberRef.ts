@@ -273,7 +273,7 @@ export const updateSomeAndGet: {
  * @since 1.0.0
  * @category fiberRefs
  */
-export const currentRequestBatchingEnabled: FiberRef<boolean> = core.currentRequestBatchingEnabled
+export const currentRequestBatchingEnabled: FiberRef<boolean> = core.currentRequestBatching
 
 /**
  * @since 1.0.0

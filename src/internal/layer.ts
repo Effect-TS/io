@@ -409,7 +409,7 @@ const withScope = <RIn, E, ROut>(
             fiberRuntime.zipWithOptions(
               memoMap.getOrElseMemoize(op.second, scope),
               op.zipK,
-              { parallel: true }
+              { concurrent: true }
             )
           )
       )

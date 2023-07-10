@@ -206,7 +206,7 @@ const drainQueueWhileRunningTable = {
  * Executes all requests, submitting requests to each data source in parallel.
  */
 const runBlockedRequests = <R>(self: RequestBlock.RequestBlock<R>) =>
-  core.forEachDiscard(
+  core.forEachSequentialDiscard(
     _RequestBlock.flatten(self),
     (requestsByRequestResolver) =>
       forEachParUnboundedDiscard(
@@ -223,7 +223,8 @@ const runBlockedRequests = <R>(self: RequestBlock.RequestBlock<R>) =>
             currentRequestMap,
             map
           )
-        }
+        },
+        false
       )
   )
 
@@ -1111,7 +1112,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   }
 
   ["Blocked"](op: core.Primitive & { _tag: "Blocked" }) {
-    if (this._steps[this._steps.length - 1] && this.getFiberRef(core.currentRequestBatchingEnabled)) {
+    if (this._steps[this._steps.length - 1]) {
       const nextOp = this.popStack()
       if (nextOp) {
         switch (nextOp._tag) {
@@ -1757,34 +1758,39 @@ export const forEachOptions = dual<
       readonly discard: true
     }): Effect.Effect<R, E, void>
   }
->((args) => Predicate.isIterable(args[0]), (self, f, options) => {
-  if (options?.discard) {
+>((args) => Predicate.isIterable(args[0]), (self, f, options) =>
+  core.withFiberRuntime((r) => {
+    const requestBatchingEnabled = options?.batchRequests === true ||
+      (options?.batchRequests === "inherit" && r.getFiberRef(core.currentRequestBatching))
+
+    if (options?.discard) {
+      return concurrency.match(
+        options,
+        () => requestBatchingEnabled ? forEachBatchedDiscard(self, f) : core.forEachSequentialDiscard(self, f),
+        () => forEachParUnboundedDiscard(self, f, requestBatchingEnabled),
+        (n) => forEachParNDiscard(self, n, f, requestBatchingEnabled)
+      )
+    }
+
     return concurrency.match(
       options,
-      () => core.forEachDiscard(self, f),
-      () => forEachParUnboundedDiscard(self, f),
-      (n) => forEachParNDiscard(self, n, f)
+      () => requestBatchingEnabled ? forEachParN(self, 1, f, true) : core.forEachSequential(self, f),
+      () => forEachParUnbounded(self, f, requestBatchingEnabled),
+      (n) => forEachParN(self, n, f, requestBatchingEnabled)
     )
-  }
-
-  return concurrency.match(
-    options,
-    () => core.forEach(self, f),
-    () => forEachParUnbounded(self, f),
-    (n) => forEachParN(self, n, f)
-  )
-})
+  }))
 
 /* @internal */
 export const forEachParUnbounded = <A, R, E, B>(
   self: Iterable<A>,
-  f: (a: A, i: number) => Effect.Effect<R, E, B>
+  f: (a: A, i: number) => Effect.Effect<R, E, B>,
+  batchRequests: boolean
 ): Effect.Effect<R, E, Array<B>> =>
   core.suspend(() => {
     const as = RA.fromIterable(self)
     const array = new Array<B>(as.length)
     const fn = (a: A, i: number) => core.flatMap(f(a, i), (b) => core.sync(() => array[i] = b))
-    return core.zipRight(forEachParUnboundedDiscard(as, fn), core.succeed(array))
+    return core.zipRight(forEachParUnboundedDiscard(as, fn, batchRequests), core.succeed(array))
   })
 
 const forEachBatchedDiscard = <R, E, A, _>(
@@ -1838,7 +1844,8 @@ const forEachBatchedDiscard = <R, E, A, _>(
 /* @internal */
 export const forEachParUnboundedDiscard = <R, E, A, _>(
   self: Iterable<A>,
-  f: (a: A, i: number) => Effect.Effect<R, E, _>
+  f: (a: A, i: number) => Effect.Effect<R, E, _>,
+  batchRequests: boolean
 ): Effect.Effect<R, E, void> =>
   core.suspend(() => {
     const as = RA.fromIterable(self)
@@ -1853,17 +1860,17 @@ export const forEachParUnboundedDiscard = <R, E, A, _>(
       let ref = 0
       const residual: Array<Effect.Blocked<any, any, any>> = []
       const process = core.transplant((graft) =>
-        core.forEach(as, (a, i) =>
+        core.forEachSequential(as, (a, i) =>
           pipe(
             graft(pipe(
-              core.suspend(() => restore(core.step(f(a, i)))),
+              core.suspend(() => restore((batchRequests ? core.step : core.exit)(f(a, i)))),
               core.flatMap(
                 (exit) => {
                   switch (exit._tag) {
                     case "Failure": {
                       if (residual.length > 0) {
                         const requests = residual.map((blocked) => blocked.i0).reduce(_RequestBlock.par)
-                        const _continue = forEachParUnboundedDiscard(residual, (blocked) => blocked.i1)
+                        const _continue = forEachParUnboundedDiscard(residual, (blocked) => blocked.i1, batchRequests)
                         return core.blocked(
                           requests,
                           core.matchCauseEffect(_continue, {
@@ -1892,7 +1899,7 @@ export const forEachParUnboundedDiscard = <R, E, A, _>(
                       if (ref + 1 === size) {
                         if (residual.length > 0) {
                           const requests = residual.map((blocked) => blocked.i0).reduce(_RequestBlock.par)
-                          const _continue = forEachParUnboundedDiscard(residual, (blocked) => blocked.i1)
+                          const _continue = forEachParUnboundedDiscard(residual, (blocked) => blocked.i1, batchRequests)
                           return core.deferredSucceed(deferred, core.blocked(requests, _continue))
                         } else {
                           core.deferredUnsafeDone(deferred, core.exitSucceed(core.exitUnit))
@@ -1915,7 +1922,7 @@ export const forEachParUnboundedDiscard = <R, E, A, _>(
           {
             onFailure: (cause) =>
               core.flatMap(
-                forEachParUnbounded(fibers, core.interruptFiber),
+                forEachParUnbounded(fibers, core.interruptFiber, batchRequests),
                 (exits) => {
                   const exit = core.exitCollectAll(exits, { parallel: true })
                   if (exit._tag === "Some" && core.exitIsFailure(exit.value)) {
@@ -1927,7 +1934,7 @@ export const forEachParUnboundedDiscard = <R, E, A, _>(
                   }
                 }
               ),
-            onSuccess: (rest) => core.flatMap(rest, () => core.forEachDiscard(fibers, (f) => f.inheritAll()))
+            onSuccess: (rest) => core.flatMap(rest, () => core.forEachSequentialDiscard(fibers, (f) => f.inheritAll()))
           }
         ))
     })
@@ -1937,31 +1944,33 @@ export const forEachParUnboundedDiscard = <R, E, A, _>(
 export const forEachParN = <A, R, E, B>(
   self: Iterable<A>,
   n: number,
-  f: (a: A, i: number) => Effect.Effect<R, E, B>
+  f: (a: A, i: number) => Effect.Effect<R, E, B>,
+  batchRequests: boolean
 ): Effect.Effect<R, E, Array<B>> =>
   core.suspend(() => {
     const as = RA.fromIterable(self)
     const array = new Array<B>(as.length)
     const fn = (a: A, i: number) => core.map(f(a, i), (b) => array[i] = b)
-    return core.zipRight(forEachParNDiscard(as, n, fn), core.succeed(array))
+    return core.zipRight(forEachParNDiscard(as, n, fn, batchRequests), core.succeed(array))
   })
 
 /* @internal */
 export const forEachParNDiscard = <A, R, E, _>(
   self: Iterable<A>,
   n: number,
-  f: (a: A, i: number) => Effect.Effect<R, E, _>
+  f: (a: A, i: number) => Effect.Effect<R, E, _>,
+  batchRequests: boolean
 ): Effect.Effect<R, E, void> =>
-  n === 1 ?
-    forEachBatchedDiscard(self, f) :
-    core.suspend(() => {
-      const iterator = self[Symbol.iterator]()
-      let i = 0
-      const residual: Array<Effect.Blocked<any, any, any>> = []
-      const worker: Effect.Effect<R, E, void> = core.flatMap(
-        core.sync(() => iterator.next()),
-        (next) =>
-          next.done ? core.unit : core.flatMapStep(core.asUnit(f(next.value, i++)), (res) => {
+  core.suspend(() => {
+    let i = 0
+    const iterator = self[Symbol.iterator]()
+    const residual: Array<Effect.Blocked<any, any, any>> = []
+    const worker: Effect.Effect<R, E, void> = core.flatMap(
+      core.sync(() => iterator.next()),
+      (next) =>
+        next.done ?
+          core.unit :
+          core.flatMap((batchRequests ? core.step : core.exit)(core.asUnit(f(next.value, i++))), (res) => {
             switch (res._tag) {
               case "Blocked": {
                 residual.push(res)
@@ -1974,29 +1983,29 @@ export const forEachParNDiscard = <A, R, E, _>(
                 return worker
             }
           })
-      )
-      const effects: Array<Effect.Effect<R, E, void>> = []
-      for (let i = 0; i < n; i++) {
-        effects.push(worker)
+    )
+    const effects: Array<Effect.Effect<R, E, void>> = []
+    for (let i = 0; i < n; i++) {
+      effects.push(worker)
+    }
+    return core.flatMap(core.exit(forEachParUnboundedDiscard(effects, identity, batchRequests)), (exit) => {
+      if (residual.length === 0) {
+        return exit
       }
-      return core.flatMap(core.exit(forEachParUnboundedDiscard(effects, identity)), (exit) => {
-        if (residual.length === 0) {
-          return exit
-        }
-        const requests = residual.map((blocked) => blocked.i0).reduce(_RequestBlock.par)
-        const _continue = forEachParNDiscard(residual, n, (blocked) => blocked.i1)
-        if (exit._tag === "Failure") {
-          return core.blocked(
-            requests,
-            core.matchCauseEffect(_continue, {
-              onFailure: (cause) => core.exitFailCause(internalCause.parallel(exit.cause, cause)),
-              onSuccess: () => exit
-            })
-          )
-        }
-        return core.blocked(requests, _continue)
-      })
+      const requests = residual.map((blocked) => blocked.i0).reduce(_RequestBlock.par)
+      const _continue = forEachParNDiscard(residual, n, (blocked) => blocked.i1, batchRequests)
+      if (exit._tag === "Failure") {
+        return core.blocked(
+          requests,
+          core.matchCauseEffect(_continue, {
+            onFailure: (cause) => core.exitFailCause(internalCause.parallel(exit.cause, cause)),
+            onSuccess: () => exit
+          })
+        )
+      }
+      return core.blocked(requests, _continue)
     })
+  })
 
 /* @internal */
 export const fork = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Fiber.RuntimeFiber<E, A>> =>
@@ -2230,7 +2239,7 @@ export const raceAll = <R, E, A>(all: Iterable<Effect.Effect<R, E, A>>) => {
               core.flatMap((head) =>
                 pipe(
                   effects,
-                  core.forEach((effect) => fork(core.interruptible(effect))),
+                  core.forEachSequential((effect) => fork(core.interruptible(effect))),
                   core.map(Chunk.unsafeFromArray),
                   core.map((tail) => pipe(tail, Chunk.prepend(head)) as Chunk.Chunk<Fiber.RuntimeFiber<E, A>>),
                   core.tap((fibers) =>
@@ -2459,12 +2468,18 @@ export const unsome = <R, E, A>(
 export const validate = dual<
   <R1, E1, B>(
     that: Effect.Effect<R1, E1, B>,
-    options?: { readonly parallel?: boolean }
+    options?: {
+      readonly concurrent?: boolean
+      readonly batchRequests?: boolean | "inherit"
+    }
   ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E | E1, readonly [A, B]>,
   <R, E, A, R1, E1, B>(
     self: Effect.Effect<R, E, A>,
     that: Effect.Effect<R1, E1, B>,
-    options?: { readonly parallel?: boolean }
+    options?: {
+      readonly concurrent?: boolean
+      readonly batchRequests?: boolean | "inherit"
+    }
   ) => Effect.Effect<R | R1, E | E1, readonly [A, B]>
 >(
   (args) => core.isEffect(args[1]),
@@ -2476,13 +2491,19 @@ export const validateWith = dual<
   <A, R1, E1, B, C>(
     that: Effect.Effect<R1, E1, B>,
     f: (a: A, b: B) => C,
-    options?: { readonly parallel?: boolean }
+    options?: {
+      readonly concurrent?: boolean
+      readonly batchRequests?: boolean | "inherit"
+    }
   ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E | E1, C>,
   <R, E, A, R1, E1, B, C>(
     self: Effect.Effect<R, E, A>,
     that: Effect.Effect<R1, E1, B>,
     f: (a: A, b: B) => C,
-    options?: { readonly parallel?: boolean }
+    options?: {
+      readonly concurrent?: boolean
+      readonly batchRequests?: boolean | "inherit"
+    }
   ) => Effect.Effect<R | R1, E | E1, C>
 >((args) => core.isEffect(args[1]), (self, that, f, options) =>
   core.flatten(zipWithOptions(
@@ -2491,7 +2512,7 @@ export const validateWith = dual<
     (ea, eb) =>
       core.exitZipWith(ea, eb, {
         onSuccess: f,
-        onFailure: (ca, cb) => options?.parallel ? internalCause.parallel(ca, cb) : internalCause.sequential(ca, cb)
+        onFailure: (ca, cb) => options?.concurrent ? internalCause.parallel(ca, cb) : internalCause.sequential(ca, cb)
       }),
     options
   )))
@@ -2578,65 +2599,79 @@ export const withEarlyRelease = <R, E, A>(
 export const zipOptions = dual<
   <R2, E2, A2>(
     that: Effect.Effect<R2, E2, A2>,
-    options?: { readonly parallel?: boolean }
+    options?: {
+      readonly concurrent?: boolean
+      readonly batchRequests?: boolean | "inherit"
+    }
   ) => <R, E, A>(
     self: Effect.Effect<R, E, A>
   ) => Effect.Effect<R | R2, E | E2, [A, A2]>,
   <R, E, A, R2, E2, A2>(
     self: Effect.Effect<R, E, A>,
     that: Effect.Effect<R2, E2, A2>,
-    options?: { readonly parallel?: boolean }
+    options?: {
+      readonly concurrent?: boolean
+      readonly batchRequests?: boolean | "inherit"
+    }
   ) => Effect.Effect<R | R2, E | E2, [A, A2]>
 >((args) => core.isEffect(args[1]), (
   self,
   that,
   options
-) =>
-  options?.parallel ?
-    zipWithOptions(self, that, (a, b) => [a, b], options) :
-    core.zip(self, that))
+) => zipWithOptions(self, that, (a, b) => [a, b], options))
 
 /** @internal */
 export const zipLeftOptions = dual<
   <R2, E2, A2>(
     that: Effect.Effect<R2, E2, A2>,
-    options?: { readonly parallel?: boolean }
+    options?: {
+      readonly concurrent?: boolean
+      readonly batchRequests?: boolean | "inherit"
+    }
   ) => <R, E, A>(
     self: Effect.Effect<R, E, A>
   ) => Effect.Effect<R | R2, E | E2, A>,
   <R, E, A, R2, E2, A2>(
     self: Effect.Effect<R, E, A>,
     that: Effect.Effect<R2, E2, A2>,
-    options?: { readonly parallel?: boolean }
+    options?: {
+      readonly concurrent?: boolean
+      readonly batchRequests?: boolean | "inherit"
+    }
   ) => Effect.Effect<R | R2, E | E2, A>
 >(
   (args) => core.isEffect(args[1]),
-  (self, that, options) =>
-    options?.parallel ? zipWithOptions(self, that, (a, _) => a, options) : core.zipLeft(self, that)
+  (self, that, options) => zipWithOptions(self, that, (a, _) => a, options)
 )
 
 /** @internal */
 export const zipRightOptions = dual<
   <R2, E2, A2>(
     that: Effect.Effect<R2, E2, A2>,
-    options?: { readonly parallel?: boolean }
+    options?: {
+      readonly concurrent?: boolean
+      readonly batchRequests?: boolean | "inherit"
+    }
   ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A2>,
   <R, E, A, R2, E2, A2>(
     self: Effect.Effect<R, E, A>,
     that: Effect.Effect<R2, E2, A2>,
-    options?: { readonly parallel?: boolean }
+    options?: {
+      readonly concurrent?: boolean
+      readonly batchRequests?: boolean | "inherit"
+    }
   ) => Effect.Effect<R | R2, E | E2, A2>
->((args) => core.isEffect(args[1]), (self, that, options) =>
-  options?.parallel ?
-    zipWithOptions(self, that, (_, b) => b, options) :
-    core.zipRight(self, that))
+>((args) => core.isEffect(args[1]), (self, that, options) => zipWithOptions(self, that, (_, b) => b, options))
 
 /** @internal */
 export const zipWithOptions = dual<
   <R2, E2, A2, A, B>(
     that: Effect.Effect<R2, E2, A2>,
     f: (a: A, b: A2) => B,
-    options?: { readonly parallel?: boolean }
+    options?: {
+      readonly concurrent?: boolean
+      readonly batchRequests?: boolean | "inherit"
+    }
   ) => <R, E>(
     self: Effect.Effect<R, E, A>
   ) => Effect.Effect<R | R2, E | E2, B>,
@@ -2644,20 +2679,27 @@ export const zipWithOptions = dual<
     self: Effect.Effect<R, E, A>,
     that: Effect.Effect<R2, E2, A2>,
     f: (a: A, b: A2) => B,
-    options?: { readonly parallel?: boolean }
+    options?: {
+      readonly concurrent?: boolean
+      readonly batchRequests?: boolean | "inherit"
+    }
   ) => Effect.Effect<R | R2, E | E2, B>
 >((args) => core.isEffect(args[1]), <R, E, A, R2, E2, A2, B>(
   self: Effect.Effect<R, E, A>,
   that: Effect.Effect<R2, E2, A2>,
   f: (a: A, b: A2) => B,
-  options?: { readonly parallel?: boolean }
+  options?: {
+    readonly concurrent?: boolean
+    readonly batchRequests?: boolean | "inherit"
+  }
 ): Effect.Effect<R | R2, E | E2, B> =>
-  options?.parallel ?
-    core.map(
-      all(self, that, { concurrency: 2 }),
-      ([a, a2]) => f(a, a2)
-    ) :
-    core.zipWith(self, that, f))
+  core.map(
+    all(self, that, {
+      concurrency: options?.concurrent ? 2 : 1,
+      batchRequests: options?.batchRequests
+    }),
+    ([a, a2]) => f(a, a2)
+  ))
 
 /* @internal */
 export const withRuntimeFlagsScoped = (
@@ -2704,7 +2746,7 @@ export const releaseMapReleaseAll = (
           return executionStrategy.isSequential(strategy) ?
             pipe(
               finalizers,
-              core.forEach((fin) => core.exit(update(fin)(exit))),
+              core.forEachSequential((fin) => core.exit(update(fin)(exit))),
               core.flatMap((results) =>
                 pipe(
                   core.exitCollectAll(results),
@@ -2715,7 +2757,7 @@ export const releaseMapReleaseAll = (
             ) :
             executionStrategy.isParallel(strategy) ?
             pipe(
-              forEachParUnbounded(finalizers, (fin) => core.exit(update(fin)(exit))),
+              forEachParUnbounded(finalizers, (fin) => core.exit(update(fin)(exit)), false),
               core.flatMap((results) =>
                 pipe(
                   core.exitCollectAll(results, { parallel: true }),
@@ -2725,7 +2767,7 @@ export const releaseMapReleaseAll = (
               )
             ) :
             pipe(
-              forEachParN(finalizers, strategy.parallelism, (fin) => core.exit(update(fin)(exit))),
+              forEachParN(finalizers, strategy.parallelism, (fin) => core.exit(update(fin)(exit)), false),
               core.flatMap((results) =>
                 pipe(
                   core.exitCollectAll(results, { parallel: true }),
@@ -2888,12 +2930,12 @@ export const fiberAwaitAll = (fibers: Iterable<Fiber.Fiber<any, any>>): Effect.E
 export const fiberAll = <E, A>(fibers: Iterable<Fiber.Fiber<E, A>>): Fiber.Fiber<E, Array<A>> => ({
   [internalFiber.FiberTypeId]: internalFiber.fiberVariance,
   id: () => RA.fromIterable(fibers).reduce((id, fiber) => FiberId.combine(id, fiber.id()), FiberId.none),
-  await: () => core.exit(forEachParUnbounded(fibers, (fiber) => core.flatten(fiber.await()))),
-  children: () => core.map(forEachParUnbounded(fibers, (fiber) => fiber.children()), RA.flatten),
-  inheritAll: () => core.forEachDiscard(fibers, (fiber) => fiber.inheritAll()),
+  await: () => core.exit(forEachParUnbounded(fibers, (fiber) => core.flatten(fiber.await()), false)),
+  children: () => core.map(forEachParUnbounded(fibers, (fiber) => fiber.children(), false), RA.flatten),
+  inheritAll: () => core.forEachSequentialDiscard(fibers, (fiber) => fiber.inheritAll()),
   poll: () =>
     core.map(
-      core.forEach(fibers, (fiber) => fiber.poll()),
+      core.forEachSequential(fibers, (fiber) => fiber.poll()),
       RA.reduceRight(
         Option.some<Exit.Exit<E, Array<A>>>(core.exitSucceed(new Array())),
         (optionB, optionA) => {
@@ -2920,7 +2962,7 @@ export const fiberAll = <E, A>(fibers: Iterable<Fiber.Fiber<E, A>>): Fiber.Fiber
         }
       )
     ),
-  interruptAsFork: (fiberId) => core.forEachDiscard(fibers, (fiber) => fiber.interruptAsFork(fiberId)),
+  interruptAsFork: (fiberId) => core.forEachSequentialDiscard(fibers, (fiber) => fiber.interruptAsFork(fiberId)),
   pipe() {
     return pipeArguments(this, arguments)
   }
@@ -3240,7 +3282,7 @@ export const invokeWithInterrupt: <R, E, A>(
             }
             return []
           })
-          return core.forEachDiscard(
+          return core.forEachSequentialDiscard(
             residual,
             (entry) => complete(entry.request as any, core.exitInterrupt(id))
           )

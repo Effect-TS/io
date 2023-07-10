@@ -29,8 +29,8 @@ describe.concurrent("Effect", () => {
       Effect.gen(function*($) {
         yield* $(
           getAllUserNames,
-          Effect.withRequestCaching("on"),
-          Effect.withRequestBatching("on")
+          Effect.withRequestCaching(true),
+          Effect.withRequestBatching(true)
         )
       })
     ))

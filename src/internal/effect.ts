@@ -528,7 +528,7 @@ export const filterMap = dual<
   ) => Effect.Effect<R, E, Array<B>>
 >(2, (elements, pf) =>
   core.map(
-    core.forEach(elements, identity),
+    core.forEachSequential(elements, identity),
     ReadonlyArray.filterMap(pf)
   ))
 

@@ -42,7 +42,7 @@ class KeyedPoolImpl<K, E, A> implements KeyedPool.KeyedPool<K, E, A> {
     return core.flatMap(this.getOrCreatePool(key), pool.get)
   }
   invalidate(item: A): Effect.Effect<never, never, void> {
-    return core.flatMap(this.activePools(), core.forEachDiscard((pool) => pool.invalidate(item)))
+    return core.flatMap(this.activePools(), core.forEachSequentialDiscard((pool) => pool.invalidate(item)))
   }
   pipe() {
     return pipeArguments(this, arguments)
@@ -169,7 +169,7 @@ const makeImpl = <K, R, E, A>(
         })
       const activePools = (): Effect.Effect<never, never, Array<Pool.Pool<E, A>>> =>
         core.suspend(() =>
-          core.forEach(Array.from(HashMap.values(MutableRef.get(map))), (value) => {
+          core.forEachSequential(Array.from(HashMap.values(MutableRef.get(map))), (value) => {
             switch (value._tag) {
               case "Complete": {
                 return core.succeed(value.pool)

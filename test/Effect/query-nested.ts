@@ -125,8 +125,8 @@ const EnvLive = Layer.provideMerge(
       capacity: 100,
       timeToLive: seconds(60)
     })),
-    Effect.setRequestCaching("on"),
-    Effect.setRequestBatching("on")
+    Effect.setRequestCaching(true),
+    Effect.setRequestBatching(true)
   ),
   Layer.mergeAll(
     Layer.sync(Counter, () => ({ count: 0 })),
@@ -147,11 +147,25 @@ describe.concurrent("Effect", () => {
             (children) =>
               Effect.forEach(
                 children,
-                (child) => Effect.zip(getChildInfo(child.id), getChildExtra(child.id), { parallel: true }),
-                { concurrency: "unbounded" }
+                (child) =>
+                  Effect.zip(
+                    getChildInfo(child.id),
+                    getChildExtra(child.id),
+                    {
+                      concurrent: true,
+                      batchRequests: "inherit"
+                    }
+                  ),
+                {
+                  concurrency: "unbounded",
+                  batchRequests: "inherit"
+                }
               )
           ),
-        { concurrency: "unbounded" }
+        {
+          concurrency: "inherit",
+          batchRequests: "inherit"
+        }
       ))
 
       const count = yield* $(Counter)
