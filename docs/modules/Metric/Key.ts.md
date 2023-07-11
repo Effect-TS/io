@@ -183,7 +183,7 @@ impossible to ever create different metrics with conflicting keys.
 export interface MetricKey<Type extends MetricKeyType.MetricKeyType<any, any>>
   extends MetricKey.Variance<Type>,
     Equal.Equal,
-    Pipeable<MetricKey<Type>> {
+    Pipeable {
   readonly name: string
   readonly keyType: Type
   readonly description: Option.Option<string>

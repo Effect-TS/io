@@ -163,7 +163,7 @@ in the `KeyedPool` is associated with a key of type `K`.
 **Signature**
 
 ```ts
-export interface KeyedPool<K, E, A> extends KeyedPool.Variance<K, E, A>, Pipeable<KeyedPool<K, E, A>> {
+export interface KeyedPool<K, E, A> extends KeyedPool.Variance<K, E, A>, Pipeable {
   /**
    * Retrieves an item from the pool belonging to the given key in a scoped
    * effect. Note that if acquisition fails, then the returned effect will fail

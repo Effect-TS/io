@@ -51,7 +51,7 @@ Added in v1.0.0
   - [unfold](#unfold)
   - [windowed](#windowed)
 - [context](#context)
-  - [contramapContext](#contramapcontext)
+  - [mapInputContext](#mapinputcontext)
   - [provideContext](#providecontext)
   - [provideService](#provideservice)
 - [destructors](#destructors)
@@ -65,12 +65,12 @@ Added in v1.0.0
   - [driver](#driver)
 - [mapping](#mapping)
   - [as](#as)
-  - [contramap](#contramap)
-  - [contramapEffect](#contramapeffect)
-  - [dimap](#dimap)
-  - [dimapEffect](#dimapeffect)
   - [map](#map)
+  - [mapBoth](#mapboth)
+  - [mapBothEffect](#mapbotheffect)
   - [mapEffect](#mapeffect)
+  - [mapInput](#mapinput)
+  - [mapInputEffect](#mapinputeffect)
 - [model](#model)
   - [Schedule (interface)](#schedule-interface)
 - [models](#models)
@@ -683,7 +683,7 @@ Added in v1.0.0
 
 # context
 
-## contramapContext
+## mapInputContext
 
 Transforms the context being provided to this schedule with the
 specified function.
@@ -691,7 +691,7 @@ specified function.
 **Signature**
 
 ```ts
-export declare const contramapContext: {
+export declare const mapInputContext: {
   <Env0, Env>(f: (env0: Context.Context<Env0>) => Context.Context<Env>): <In, Out>(
     self: Schedule<Env, In, Out>
   ) => Schedule<Env0, In, Out>
@@ -859,52 +859,30 @@ export declare const as: {
 
 Added in v1.0.0
 
-## contramap
+## map
 
-Returns a new schedule that deals with a narrower class of inputs than this
-schedule.
+Returns a new schedule that maps the output of this schedule through the
+specified function.
 
 **Signature**
 
 ```ts
-export declare const contramap: {
-  <In, In2>(f: (in2: In2) => In): <Env, Out>(self: Schedule<Env, In, Out>) => Schedule<Env, In2, Out>
-  <Env, In, Out, In2>(self: Schedule<Env, In, Out>, f: (in2: In2) => In): Schedule<Env, In2, Out>
+export declare const map: {
+  <Out, Out2>(f: (out: Out) => Out2): <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out2>
+  <Env, In, Out, Out2>(self: Schedule<Env, In, Out>, f: (out: Out) => Out2): Schedule<Env, In, Out2>
 }
 ```
 
 Added in v1.0.0
 
-## contramapEffect
+## mapBoth
 
-Returns a new schedule that deals with a narrower class of inputs than this
-schedule.
-
-**Signature**
-
-```ts
-export declare const contramapEffect: {
-  <In, Env2, In2>(f: (in2: In2) => Effect.Effect<Env2, never, In>): <Env, Out>(
-    self: Schedule<Env, In, Out>
-  ) => Schedule<Env2 | Env, In2, Out>
-  <Env, In, Out, Env2, In2>(self: Schedule<Env, In, Out>, f: (in2: In2) => Effect.Effect<Env2, never, In>): Schedule<
-    Env | Env2,
-    In2,
-    Out
-  >
-}
-```
-
-Added in v1.0.0
-
-## dimap
-
-Returns a new schedule that contramaps the input and maps the output.
+Returns a new schedule that maps both the input and output.
 
 **Signature**
 
 ```ts
-export declare const dimap: {
+export declare const mapBoth: {
   <In, Out, In2, Out2>(options: { readonly onInput: (in2: In2) => In; readonly onOutput: (out: Out) => Out2 }): <Env>(
     self: Schedule<Env, In, Out>
   ) => Schedule<Env, In2, Out2>
@@ -917,14 +895,14 @@ export declare const dimap: {
 
 Added in v1.0.0
 
-## dimapEffect
+## mapBothEffect
 
-Returns a new schedule that contramaps the input and maps the output.
+Returns a new schedule that maps both the input and output.
 
 **Signature**
 
 ```ts
-export declare const dimapEffect: {
+export declare const mapBothEffect: {
   <In2, Env2, In, Out, Env3, Out2>(options: {
     readonly onInput: (input: In2) => Effect.Effect<Env2, never, In>
     readonly onOutput: (out: Out) => Effect.Effect<Env3, never, Out2>
@@ -936,22 +914,6 @@ export declare const dimapEffect: {
       readonly onOutput: (out: Out) => Effect.Effect<Env3, never, Out2>
     }
   ): Schedule<Env | Env2 | Env3, In2, Out2>
-}
-```
-
-Added in v1.0.0
-
-## map
-
-Returns a new schedule that maps the output of this schedule through the
-specified function.
-
-**Signature**
-
-```ts
-export declare const map: {
-  <Out, Out2>(f: (out: Out) => Out2): <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env, In, Out2>
-  <Env, In, Out, Out2>(self: Schedule<Env, In, Out>, f: (out: Out) => Out2): Schedule<Env, In, Out2>
 }
 ```
 
@@ -973,6 +935,44 @@ export declare const mapEffect: {
     Env | Env2,
     In,
     Out2
+  >
+}
+```
+
+Added in v1.0.0
+
+## mapInput
+
+Returns a new schedule that deals with a narrower class of inputs than this
+schedule.
+
+**Signature**
+
+```ts
+export declare const mapInput: {
+  <In, In2>(f: (in2: In2) => In): <Env, Out>(self: Schedule<Env, In, Out>) => Schedule<Env, In2, Out>
+  <Env, In, Out, In2>(self: Schedule<Env, In, Out>, f: (in2: In2) => In): Schedule<Env, In2, Out>
+}
+```
+
+Added in v1.0.0
+
+## mapInputEffect
+
+Returns a new schedule that deals with a narrower class of inputs than this
+schedule.
+
+**Signature**
+
+```ts
+export declare const mapInputEffect: {
+  <In, Env2, In2>(f: (in2: In2) => Effect.Effect<Env2, never, In>): <Env, Out>(
+    self: Schedule<Env, In, Out>
+  ) => Schedule<Env2 | Env, In2, Out>
+  <Env, In, Out, Env2, In2>(self: Schedule<Env, In, Out>, f: (in2: In2) => Effect.Effect<Env2, never, In>): Schedule<
+    Env | Env2,
+    In2,
+    Out
   >
 }
 ```
@@ -1010,7 +1010,7 @@ schedules, both for performing retrying, as well as performing repetition.
 **Signature**
 
 ```ts
-export interface Schedule<Env, In, Out> extends Schedule.Variance<Env, In, Out>, Pipeable<Schedule<Env, In, Out>> {
+export interface Schedule<Env, In, Out> extends Schedule.Variance<Env, In, Out>, Pipeable {
   /**
    * Initial State
    */

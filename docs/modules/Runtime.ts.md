@@ -286,7 +286,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface Runtime<R> extends Pipeable<Runtime<R>> {
+export interface Runtime<R> extends Pipeable {
   /**
    * The context used as initial for forks
    */

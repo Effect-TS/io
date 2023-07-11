@@ -374,7 +374,7 @@ export const compose = dual<
   ))
 
 /** @internal */
-export const contramap = dual<
+export const mapInput = dual<
   <In, In2>(
     f: (in2: In2) => In
   ) => <Env, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env, In2, Out>,
@@ -382,10 +382,10 @@ export const contramap = dual<
     self: Schedule.Schedule<Env, In, Out>,
     f: (in2: In2) => In
   ) => Schedule.Schedule<Env, In2, Out>
->(2, (self, f) => contramapEffect(self, (input2) => core.sync(() => f(input2))))
+>(2, (self, f) => mapInputEffect(self, (input2) => core.sync(() => f(input2))))
 
 /** @internal */
-export const contramapContext = dual<
+export const mapInputContext = dual<
   <Env0, Env>(
     f: (env0: Context.Context<Env0>) => Context.Context<Env>
   ) => <In, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env0, In, Out>,
@@ -396,11 +396,11 @@ export const contramapContext = dual<
 >(2, (self, f) =>
   makeWithState(
     self.initial,
-    (now, input, state) => core.contramapContext(self.step(now, input, state), f)
+    (now, input, state) => core.mapInputContext(self.step(now, input, state), f)
   ))
 
 /** @internal */
-export const contramapEffect = dual<
+export const mapInputEffect = dual<
   <In, Env2, In2>(
     f: (in2: In2) => Effect.Effect<Env2, never, In>
   ) => <Env, Out>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In2, Out>,
@@ -524,7 +524,7 @@ export const delays = <Env, In, Out>(
     ))
 
 /** @internal */
-export const dimap = dual<
+export const mapBoth = dual<
   <In, Out, In2, Out2>(
     options: {
       readonly onInput: (in2: In2) => In
@@ -538,10 +538,10 @@ export const dimap = dual<
       readonly onOutput: (out: Out) => Out2
     }
   ) => Schedule.Schedule<Env, In2, Out2>
->(2, (self, { onInput, onOutput }) => map(contramap(self, onInput), onOutput))
+>(2, (self, { onInput, onOutput }) => map(mapInput(self, onInput), onOutput))
 
 /** @internal */
-export const dimapEffect = dual<
+export const mapBothEffect = dual<
   <In2, Env2, In, Out, Env3, Out2>(
     options: {
       readonly onInput: (input: In2) => Effect.Effect<Env2, never, In>
@@ -555,7 +555,7 @@ export const dimapEffect = dual<
       readonly onOutput: (out: Out) => Effect.Effect<Env3, never, Out2>
     }
   ) => Schedule.Schedule<Env | Env2 | Env3, In2, Out2>
->(2, (self, { onInput, onOutput }) => mapEffect(contramapEffect(self, onInput), onOutput))
+>(2, (self, { onInput, onOutput }) => mapEffect(mapInputEffect(self, onInput), onOutput))
 
 /** @internal */
 export const driver = <Env, In, Out>(

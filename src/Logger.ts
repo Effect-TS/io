@@ -110,7 +110,7 @@ export const addScoped: <R, E, A>(
  * @since 1.0.0
  * @category mapping
  */
-export const contramap: {
+export const mapInput: {
   <Message, Message2>(
     f: (message: Message2) => Message
   ): <Output>(self: Logger<Message, Output>) => Logger<Message2, Output>
@@ -118,7 +118,7 @@ export const contramap: {
     self: Logger<Message, Output>,
     f: (message: Message2) => Message
   ): Logger<Message2, Output>
-} = internal.contramap
+} = internal.mapInput
 
 /**
  * Returns a version of this logger that only logs messages when the log level

@@ -69,7 +69,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface Ref<A> extends Ref.Variance<A>, Pipeable<Ref<A>> {
+export interface Ref<A> extends Ref.Variance<A>, Pipeable {
   modify<B>(f: (a: A) => readonly [B, A]): Effect.Effect<never, never, B>
 }
 ```

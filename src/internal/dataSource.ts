@@ -103,7 +103,7 @@ export const batchN = dual<
   ))
 
 /** @internal */
-export const contramapContext = dual<
+export const mapInputContext = dual<
   <R0, R>(
     f: (context: Context.Context<R0>) => Context.Context<R>
   ) => <A extends Request.Request<any, any>>(
@@ -119,11 +119,11 @@ export const contramapContext = dual<
 ) =>
   new core.RequestResolverImpl<R0, A>(
     (requests) =>
-      core.contramapContext(
+      core.mapInputContext(
         self.runAll(requests),
         (context: Context.Context<R0>) => f(context)
       ),
-    Chunk.make("ContramapContext", self, f)
+    Chunk.make("MapInputContext", self, f)
   ))
 
 /** @internal */
@@ -230,7 +230,7 @@ export const provideContext = dual<
     context: Context.Context<R>
   ) => RequestResolver.RequestResolver<A>
 >(2, (self, context) =>
-  contramapContext(
+  mapInputContext(
     self,
     (_: Context.Context<never>) => context
   ).identified("ProvideContext", self, context))

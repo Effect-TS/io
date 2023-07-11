@@ -139,7 +139,7 @@ an item `A` from a pool may fail with an error of type `E`.
 **Signature**
 
 ```ts
-export interface Pool<E, A> extends Data.Case, Pool.Variance<E, A>, Pipeable<Pool<E, A>> {
+export interface Pool<E, A> extends Data.Case, Pool.Variance<E, A>, Pipeable {
   /**
    * Retrieves an item from the pool in a scoped effect. Note that if
    * acquisition fails, then the returned effect will fail for that same reason.

@@ -45,8 +45,8 @@ Added in v1.0.0
 - [globals](#globals)
   - [globalMetricRegistry](#globalmetricregistry)
 - [mapping](#mapping)
-  - [contramap](#contramap)
   - [map](#map)
+  - [mapInput](#mapinput)
   - [mapType](#maptype)
 - [metrics](#metrics)
   - [fiberActive](#fiberactive)
@@ -534,23 +534,6 @@ Added in v1.0.0
 
 # mapping
 
-## contramap
-
-Returns a new metric that is powered by this one, but which accepts updates
-of the specified new type, which must be transformable to the input type of
-this metric.
-
-**Signature**
-
-```ts
-export declare const contramap: {
-  <In, In2>(f: (input: In2) => In): <Type, Out>(self: Metric<Type, In, Out>) => Metric<Type, In2, Out>
-  <Type, In, Out, In2>(self: Metric<Type, In, Out>, f: (input: In2) => In): Metric<Type, In2, Out>
-}
-```
-
-Added in v1.0.0
-
 ## map
 
 Returns a new metric that is powered by this one, but which outputs a new
@@ -563,6 +546,23 @@ specified function.
 export declare const map: {
   <Out, Out2>(f: (out: Out) => Out2): <Type, In>(self: Metric<Type, In, Out>) => Metric<Type, In, Out2>
   <Type, In, Out, Out2>(self: Metric<Type, In, Out>, f: (out: Out) => Out2): Metric<Type, In, Out2>
+}
+```
+
+Added in v1.0.0
+
+## mapInput
+
+Returns a new metric that is powered by this one, but which accepts updates
+of the specified new type, which must be transformable to the input type of
+this metric.
+
+**Signature**
+
+```ts
+export declare const mapInput: {
+  <In, In2>(f: (input: In2) => In): <Type, Out>(self: Metric<Type, In, Out>) => Metric<Type, In2, Out>
+  <Type, In, Out, In2>(self: Metric<Type, In, Out>, f: (input: In2) => In): Metric<Type, In2, Out>
 }
 ```
 
@@ -660,7 +660,7 @@ There are five primitive metric types supported by Effect:
 **Signature**
 
 ```ts
-export interface Metric<Type, In, Out> extends Metric.Variance<Type, In, Out>, Pipeable<Metric<Type, In, Out>> {
+export interface Metric<Type, In, Out> extends Metric.Variance<Type, In, Out>, Pipeable {
   /**
    * The type of the underlying primitive metric. For example, this could be
    * `MetricKeyType.Counter` or `MetricKeyType.Gauge`.

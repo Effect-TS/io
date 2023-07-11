@@ -2978,10 +2978,10 @@ export const contextWithEffect: <R, R0, E, A>(
  * @since 1.0.0
  * @category context
  */
-export const contramapContext: {
+export const mapInputContext: {
   <R0, R>(f: (context: Context.Context<R0>) => Context.Context<R>): <E, A>(self: Effect<R, E, A>) => Effect<R0, E, A>
   <R0, R, E, A>(self: Effect<R, E, A>, f: (context: Context.Context<R0>) => Context.Context<R>): Effect<R0, E, A>
-} = core.contramapContext
+} = core.mapInputContext
 
 /**
  * Provides the effect with its required context, which eliminates its

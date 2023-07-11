@@ -259,7 +259,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface Dequeue<A> extends Queue.DequeueVariance<A>, BaseQueue, Pipeable<Dequeue<A>> {
+export interface Dequeue<A> extends Queue.DequeueVariance<A>, BaseQueue, Pipeable {
   /**
    * Takes the oldest value in the queue. If the queue is empty, this will return
    * a computation that resumes when an item has been added to the queue.
@@ -293,7 +293,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface Enqueue<A> extends Queue.EnqueueVariance<A>, BaseQueue, Pipeable<Enqueue<A>> {
+export interface Enqueue<A> extends Queue.EnqueueVariance<A>, BaseQueue, Pipeable {
   /**
    * Places one value in the queue.
    */
@@ -330,7 +330,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface Queue<A> extends PipeableOverride<Enqueue<A>, Queue<A>>, PipeableOverride<Dequeue<A>, Queue<A>> {
+export interface Queue<A> extends Enqueue<A>, Dequeue<A>, Pipeable {
   /** @internal */
   readonly queue: MutableQueue.MutableQueue<A>
   /** @internal */

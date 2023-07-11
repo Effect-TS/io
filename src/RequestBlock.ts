@@ -129,12 +129,12 @@ export const sequential: <R, R2>(self: RequestBlock<R>, that: RequestBlock<R2>) 
  * @since 1.0.0
  * @category utils
  */
-export const contramapContext = <R0, R>(
+export const mapInputContext = <R0, R>(
   self: RequestBlock<R>,
   f: (context: Context.Context<R0>) => Context.Context<R>
-): RequestBlock<R0> => reduce(self, ContramapContextReducer(f))
+): RequestBlock<R0> => reduce(self, MapInputContextReducer(f))
 
-const ContramapContextReducer = <R0, R>(
+const MapInputContextReducer = <R0, R>(
   f: (context: Context.Context<R0>) => Context.Context<R>
 ): RequestBlock.Reducer<R, RequestBlock<R0>> => ({
   emptyCase: () => empty,
@@ -142,7 +142,7 @@ const ContramapContextReducer = <R0, R>(
   seqCase: (left, right) => sequential(left, right),
   singleCase: (dataSource, blockedRequest) =>
     single(
-      _dataSource.contramapContext(dataSource, f),
+      _dataSource.mapInputContext(dataSource, f),
       blockedRequest
     )
 })

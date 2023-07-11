@@ -175,7 +175,7 @@ export const batchN: {
  * @since 1.0.0
  * @category context
  */
-export const contramapContext: {
+export const mapInputContext: {
   <R0, R>(
     f: (context: Context.Context<R0>) => Context.Context<R>
   ): <A extends Request.Request<any, any>>(self: RequestResolver<A, R>) => RequestResolver<A, R0>
@@ -183,7 +183,7 @@ export const contramapContext: {
     self: RequestResolver<A, R>,
     f: (context: Context.Context<R0>) => Context.Context<R>
   ): RequestResolver<A, R0>
-} = internal.contramapContext
+} = internal.mapInputContext
 
 /**
  * Returns a new data source that executes requests of type `C` using the

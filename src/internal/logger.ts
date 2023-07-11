@@ -51,7 +51,7 @@ export const makeLogger = <Message, Output>(
 })
 
 /** @internal */
-export const contramap = dual<
+export const mapInput = dual<
   <Message, Message2>(
     f: (message: Message2) => Message
   ) => <Output>(self: Logger.Logger<Message, Output>) => Logger.Logger<Message2, Output>,

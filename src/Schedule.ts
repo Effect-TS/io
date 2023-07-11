@@ -346,10 +346,10 @@ export const compose: {
  * @since 1.0.0
  * @category mapping
  */
-export const contramap: {
+export const mapInput: {
   <In, In2>(f: (in2: In2) => In): <Env, Out>(self: Schedule<Env, In, Out>) => Schedule<Env, In2, Out>
   <Env, In, Out, In2>(self: Schedule<Env, In, Out>, f: (in2: In2) => In): Schedule<Env, In2, Out>
-} = internal.contramap
+} = internal.mapInput
 
 /**
  * Transforms the context being provided to this schedule with the
@@ -358,7 +358,7 @@ export const contramap: {
  * @since 1.0.0
  * @category context
  */
-export const contramapContext: {
+export const mapInputContext: {
   <Env0, Env>(
     f: (env0: Context.Context<Env0>) => Context.Context<Env>
   ): <In, Out>(self: Schedule<Env, In, Out>) => Schedule<Env0, In, Out>
@@ -366,7 +366,7 @@ export const contramapContext: {
     self: Schedule<Env, In, Out>,
     f: (env0: Context.Context<Env0>) => Context.Context<Env>
   ): Schedule<Env0, In, Out>
-} = internal.contramapContext
+} = internal.mapInputContext
 
 /**
  * Returns a new schedule that deals with a narrower class of inputs than this
@@ -375,7 +375,7 @@ export const contramapContext: {
  * @since 1.0.0
  * @category mapping
  */
-export const contramapEffect: {
+export const mapInputEffect: {
   <In, Env2, In2>(
     f: (in2: In2) => Effect.Effect<Env2, never, In>
   ): <Env, Out>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env, In2, Out>
@@ -383,7 +383,7 @@ export const contramapEffect: {
     self: Schedule<Env, In, Out>,
     f: (in2: In2) => Effect.Effect<Env2, never, In>
   ): Schedule<Env | Env2, In2, Out>
-} = internal.contramapEffect
+} = internal.mapInputEffect
 
 /**
  * A schedule that always recurs, which counts the number of recurrences.
@@ -473,12 +473,12 @@ export const delays: <Env, In, Out>(self: Schedule<Env, In, Out>) => Schedule<En
   internal.delays
 
 /**
- * Returns a new schedule that contramaps the input and maps the output.
+ * Returns a new schedule that maps both the input and output.
  *
  * @since 1.0.0
  * @category mapping
  */
-export const dimap: {
+export const mapBoth: {
   <In, Out, In2, Out2>(
     options: {
       readonly onInput: (in2: In2) => In
@@ -492,15 +492,15 @@ export const dimap: {
       readonly onOutput: (out: Out) => Out2
     }
   ): Schedule<Env, In2, Out2>
-} = internal.dimap
+} = internal.mapBoth
 
 /**
- * Returns a new schedule that contramaps the input and maps the output.
+ * Returns a new schedule that maps both the input and output.
  *
  * @since 1.0.0
  * @category mapping
  */
-export const dimapEffect: {
+export const mapBothEffect: {
   <In2, Env2, In, Out, Env3, Out2>(
     options: {
       readonly onInput: (input: In2) => Effect.Effect<Env2, never, In>
@@ -514,7 +514,7 @@ export const dimapEffect: {
       readonly onOutput: (out: Out) => Effect.Effect<Env3, never, Out2>
     }
   ): Schedule<Env | Env2 | Env3, In2, Out2>
-} = internal.dimapEffect
+} = internal.mapBothEffect
 
 /**
  * Returns a driver that can be used to step the schedule, appropriately

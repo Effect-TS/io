@@ -27,7 +27,7 @@ Added in v1.0.0
   - [makeWithEntry](#makewithentry)
   - [never](#never)
 - [context](#context)
-  - [contramapContext](#contramapcontext)
+  - [mapInputContext](#mapinputcontext)
   - [provideContext](#providecontext)
 - [models](#models)
   - [RequestResolver (interface)](#requestresolver-interface)
@@ -256,14 +256,14 @@ Added in v1.0.0
 
 # context
 
-## contramapContext
+## mapInputContext
 
 Provides this data source with part of its required context.
 
 **Signature**
 
 ```ts
-export declare const contramapContext: {
+export declare const mapInputContext: {
   <R0, R>(f: (context: Context.Context<R0>) => Context.Context<R>): <A extends Request.Request<any, any>>(
     self: RequestResolver<A, R>
   ) => RequestResolver<A, R0>
@@ -323,7 +323,7 @@ will cause a query to die with a `QueryFailure` when run.
 **Signature**
 
 ```ts
-export interface RequestResolver<A, R = never> extends Equal.Equal, Pipeable<RequestResolver<A, R>> {
+export interface RequestResolver<A, R = never> extends Equal.Equal, Pipeable {
   /**
    * Execute a collection of requests. The outer `Chunk` represents batches
    * of requests that must be performed sequentially. The inner `Chunk`

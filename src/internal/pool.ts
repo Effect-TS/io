@@ -425,7 +425,7 @@ const makeWith = <R, E, A, S, R2>(
       ),
       core.flatMap(([context, down, state, items, inv, initial]) => {
         const pool = new PoolImpl<E, A>(
-          core.contramapContext(options.acquire, (old) => Context.merge(old)(context)),
+          core.mapInputContext(options.acquire, (old) => Context.merge(old)(context)),
           options.min,
           options.max,
           down,

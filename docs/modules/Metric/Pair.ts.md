@@ -48,7 +48,7 @@ Added in v1.0.0
 ```ts
 export interface MetricPair<Type extends MetricKeyType.MetricKeyType<any, any>>
   extends MetricPair.Variance<Type>,
-    Pipeable<MetricPair<Type>> {
+    Pipeable {
   readonly metricKey: MetricKey.MetricKey<Type>
   readonly metricState: MetricState.MetricState<MetricKeyType.MetricKeyType.OutType<Type>>
 }
