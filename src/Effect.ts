@@ -390,15 +390,31 @@ export declare namespace All {
     : never
 
   export type Options = {
-    readonly concurrency?: Concurrency
+    readonly concurrency: Concurrency
     readonly batchRequests?: boolean | "inherit"
     readonly discard?: boolean
+  } | {
+    readonly concurrency?: Concurrency
+    readonly batchRequests: boolean | "inherit"
+    readonly discard?: boolean
+  } | {
+    readonly concurrency?: Concurrency
+    readonly batchRequests?: boolean | "inherit"
+    readonly discard: boolean
   }
 
   type IsDiscard<A> = [Extract<A, { readonly discard: true }>] extends [never] ? false : true
   type Narrow<A> = (A extends [] ? [] : never) | A
 
   export interface All {
+    <O extends Options>(
+      options?: O
+    ): <Arg extends Iterable<EffectAny> | Readonly<{ [K: string]: EffectAny }>>(
+      self: Arg
+    ) => [Arg] extends [ReadonlyArray<EffectAny>] ? ReturnTuple<Arg, IsDiscard<O>>
+      : [Arg] extends [Iterable<EffectAny>] ? ReturnIterable<Arg, IsDiscard<O>>
+      : ReturnObject<Arg, IsDiscard<O>>
+
     <Arg extends Iterable<EffectAny>, O extends Options>(
       arg: Narrow<Arg>,
       options?: O
@@ -408,17 +424,17 @@ export declare namespace All {
       arg: Arg,
       options?: O
     ): ReturnObject<Arg, IsDiscard<O>>
+  }
 
+  export interface Validate {
     <O extends Options>(
       options?: O
     ): <Arg extends Iterable<EffectAny> | Readonly<{ [K: string]: EffectAny }>>(
       self: Arg
-    ) => [Arg] extends [ReadonlyArray<EffectAny>] ? ReturnTuple<Arg, IsDiscard<O>>
-      : [Arg] extends [Iterable<EffectAny>] ? ReturnIterable<Arg, IsDiscard<O>>
-      : ReturnObject<Arg, IsDiscard<O>>
-  }
+    ) => [Arg] extends [ReadonlyArray<EffectAny>] ? ReturnTuple<Arg, IsDiscard<O>, true>
+      : [Arg] extends [Iterable<EffectAny>] ? ReturnIterable<Arg, IsDiscard<O>, true>
+      : ReturnObject<Arg, IsDiscard<O>, true>
 
-  export interface Validate {
     <Arg extends Iterable<EffectAny>, O extends Options>(
       arg: Narrow<Arg>,
       options?: O
@@ -429,14 +445,6 @@ export declare namespace All {
       arg: Arg,
       options?: O
     ): ReturnObject<Arg, IsDiscard<O>, true>
-
-    <O extends Options>(
-      options?: O
-    ): <Arg extends Iterable<EffectAny> | Readonly<{ [K: string]: EffectAny }>>(
-      self: Arg
-    ) => [Arg] extends [ReadonlyArray<EffectAny>] ? ReturnTuple<Arg, IsDiscard<O>, true>
-      : [Arg] extends [Iterable<EffectAny>] ? ReturnIterable<Arg, IsDiscard<O>, true>
-      : ReturnObject<Arg, IsDiscard<O>, true>
   }
 }
 
