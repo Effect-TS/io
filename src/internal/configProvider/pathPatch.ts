@@ -53,10 +53,10 @@ export const patch = dual<
     patch: PathPatch.PathPatch
   ) => Either.Either<ConfigError.ConfigError, ReadonlyArray<string>>
 >(2, (path, patch) => {
-  let input = List.of(patch)
+  let input: List.List<PathPatch.PathPatch> = List.of(patch)
   let output: ReadonlyArray<string> = path
   while (List.isCons(input)) {
-    const patch = input.head
+    const patch: PathPatch.PathPatch = input.head
     switch (patch._tag) {
       case "Empty": {
         input = input.tail

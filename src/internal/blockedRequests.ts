@@ -101,10 +101,10 @@ export const reduce = <R, Z>(
   self: RequestBlock.RequestBlock<R>,
   reducer: RequestBlock.RequestBlock.Reducer<R, Z>
 ): Z => {
-  let input = List.of(self)
+  let input: List.List<RequestBlock.RequestBlock<R>> = List.of(self)
   let output = List.empty<Either.Either<BlockedRequestsCase, Z>>()
   while (List.isCons(input)) {
-    const current = input.head
+    const current: RequestBlock.RequestBlock<R> = input.head
     switch (current._tag) {
       case "Empty": {
         output = List.cons(Either.right(reducer.emptyCase()), output)
