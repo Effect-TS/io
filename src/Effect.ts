@@ -1350,7 +1350,7 @@ export const never: Effect<never, never, never> = core.never
 export const none: <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R, Option.Option<E>, void> = effect.none
 
 /**
- * Like `tryCatchPromise` but produces a defect in case of errors.
+ * Like `tryPromise` but produces a defect in case of errors.
  *
  * @since 1.0.0
  * @category constructors

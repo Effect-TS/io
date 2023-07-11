@@ -1399,7 +1399,7 @@ Added in v1.0.0
 
 ## promise
 
-Like `tryCatchPromise` but produces a defect in case of errors.
+Like `tryPromise` but produces a defect in case of errors.
 
 **Signature**
 
