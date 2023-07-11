@@ -10,26 +10,11 @@ const satisfies = <T>(type: T) => type
 
 describe.concurrent("Effect", () => {
   describe("all", () => {
-    it.effect("should work with multiple arguments", () =>
-      Effect.gen(function*($) {
-        const result = yield* $(Effect.all(Effect.succeed(0), Effect.succeed(1)))
-        const [a, b] = result
-        assert.deepEqual(a, 0)
-        assert.deepEqual(b, 1)
-        satisfies<true>(assertType<[number, number]>()(result))
-      }))
-    it.effect("should work with one argument", () =>
-      Effect.gen(function*($) {
-        const result = yield* $(Effect.all(Effect.succeed(0)))
-        const [a] = result
-        assert.deepEqual(a, 0)
-        satisfies<true>(assertType<[number]>()(result))
-      }))
     it.effect("should work with one array argument", () =>
       Effect.gen(function*($) {
         const res = yield* $(Effect.all([Effect.succeed(0), Effect.succeed(1)]))
         assert.deepEqual(res, [0, 1])
-        satisfies<true>(assertType<Array<number>>()(res))
+        satisfies<true>(assertType<[number, number]>()(res))
       }))
     it.effect("should work with one empty array argument", () =>
       Effect.gen(function*($) {
@@ -56,6 +41,12 @@ describe.concurrent("Effect", () => {
             readonly b: number
           }>()(result)
         )
+      }))
+    it.effect("should work with one iterable argument", () =>
+      Effect.gen(function*($) {
+        const result = yield* $(Effect.all(new Set([Effect.succeed(0), Effect.succeed(1)])))
+        assert.deepEqual(result, [0, 1])
+        satisfies<true>(assertType<Array<number>>()(result))
       }))
     it.effect("record should work with pipe", () =>
       Effect.gen(function*($) {
@@ -160,31 +151,13 @@ describe.concurrent("Effect", () => {
       }))
   })
   describe("all/ concurrency", () => {
-    it.effect("should work with multiple arguments", () =>
-      Effect.gen(function*($) {
-        const result = yield* $(Effect.all(Effect.succeed(0), Effect.succeed(1), {
-          concurrency: "unbounded"
-        }))
-        const [a, b] = result
-        assert.deepEqual(a, 0)
-        assert.deepEqual(b, 1)
-        satisfies<true>(assertType<[number, number]>()(result))
-      }))
-    it.effect("should work with one argument", () =>
-      Effect.gen(function*($) {
-        const result = yield* $(Effect.all(Effect.succeed(0), {
-          concurrency: "unbounded"
-        }))
-        const [a] = result
-        assert.deepEqual(a, 0)
-        satisfies<true>(assertType<[number]>()(result))
-      }))
     it.effect("should work with one array argument", () =>
       Effect.gen(function*($) {
         const res = yield* $(Effect.all([Effect.succeed(0), Effect.succeed(1)], {
           concurrency: "unbounded"
         }))
         assert.deepEqual(res, [0, 1])
+        satisfies<true>(assertType<[number, number]>()(res))
       }))
     it.effect("should work with one empty array argument", () =>
       Effect.gen(function*($) {
@@ -192,6 +165,7 @@ describe.concurrent("Effect", () => {
           concurrency: "unbounded"
         }))
         assert.deepEqual(x, [])
+        satisfies<true>(assertType<[]>()(x))
       }))
     it.effect("should work with one record argument", () =>
       Effect.gen(function*($) {
@@ -301,49 +275,17 @@ describe.concurrent("Effect", () => {
       }))
   })
   describe("allValidate", () => {
-    it.effect("should work with multiple arguments", () =>
-      Effect.gen(function*($) {
-        const result = yield* $(Effect.allValidate(Effect.succeed(0), Effect.succeed(1), {
-          concurrency: "unbounded"
-        }))
-        const [a, b] = result
-        assert.deepEqual(a, 0)
-        assert.deepEqual(b, 1)
-        satisfies<true>(assertType<[number, number]>()(result))
-      }))
-    it.effect("failures should work with multiple arguments", () =>
-      Effect.gen(function*($) {
-        const result = yield* $(Effect.flip(Effect.allValidate(Effect.succeed(0), Effect.fail(1))))
-        const [a, b] = result
-        assert.deepEqual(a, Option.none())
-        assert.deepEqual(b, Option.some(1))
-        satisfies<true>(assertType<[Option.Option<never>, Option.Option<number>]>()(result))
-      }))
-    it.effect("should work with one argument", () =>
-      Effect.gen(function*($) {
-        const result = yield* $(Effect.allValidate(Effect.succeed(0)))
-        const [a] = result
-        assert.deepEqual(a, 0)
-        satisfies<true>(assertType<[number]>()(result))
-      }))
-    it.effect("failure should work with one argument", () =>
-      Effect.gen(function*($) {
-        const result = yield* $(Effect.flip(Effect.allValidate(Effect.fail(0))))
-        const [a] = result
-        assert.deepEqual(a, Option.some(0))
-        satisfies<true>(assertType<[Option.Option<number>]>()(result))
-      }))
     it.effect("should work with one array argument", () =>
       Effect.gen(function*($) {
         const res = yield* $(Effect.allValidate([Effect.succeed(0), Effect.succeed(1)]))
         assert.deepEqual(res, [0, 1])
-        satisfies<true>(assertType<Array<number>>()(res))
+        satisfies<true>(assertType<[number, number]>()(res))
       }))
     it.effect("failure should work with one array argument", () =>
       Effect.gen(function*($) {
         const res = yield* $(Effect.flip(Effect.allValidate([Effect.fail(0), Effect.succeed(1)])))
         assert.deepEqual(res, [Option.some(0), Option.none()])
-        satisfies<true>(assertType<Array<Option.Option<number>>>()(res))
+        satisfies<true>(assertType<[Option.Option<number>, Option.Option<never>]>()(res))
       }))
     it.effect("should work with one record argument", () =>
       Effect.gen(function*($) {
@@ -370,6 +312,12 @@ describe.concurrent("Effect", () => {
             readonly b: Option.Option<never>
           }>()(result)
         )
+      }))
+    it.effect("should work with one iterable argument", () =>
+      Effect.gen(function*($) {
+        const result = yield* $(Effect.allValidate(new Set([Effect.succeed(0), Effect.succeed(1)])))
+        assert.deepEqual(result, [0, 1])
+        satisfies<true>(assertType<Array<number>>()(result))
       }))
     it.effect("record should work with pipe", () =>
       Effect.gen(function*($) {

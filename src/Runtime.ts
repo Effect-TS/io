@@ -188,16 +188,6 @@ export type FiberFailureCauseId = typeof FiberFailureCauseId
 
 /**
  * @since 1.0.0
- * @category models
- */
-export interface FiberFailure extends Error {
-  readonly [FiberFailureId]: FiberFailureId
-  readonly [FiberFailureCauseId]: Cause<unknown>
-  readonly [NodePrint]: () => string
-}
-
-/**
- * @since 1.0.0
  * @category symbols
  */
 export const NodePrint: unique symbol = internal.NodePrint
@@ -207,6 +197,16 @@ export const NodePrint: unique symbol = internal.NodePrint
  * @category symbols
  */
 export type NodePrint = typeof NodePrint
+
+/**
+ * @since 1.0.0
+ * @category models
+ */
+export interface FiberFailure extends Error {
+  readonly [FiberFailureId]: FiberFailureId
+  readonly [FiberFailureCauseId]: Cause<unknown>
+  readonly [NodePrint]: () => string
+}
 
 /**
  * @since 1.0.0

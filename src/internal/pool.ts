@@ -415,14 +415,14 @@ const makeWith = <R, E, A, S, R2>(
 ): Effect.Effect<R | R2 | Scope.Scope, never, Pool.Pool<E, A>> =>
   core.uninterruptibleMask((restore) =>
     pipe(
-      fiberRuntime.all(
+      fiberRuntime.all([
         core.context<R>(),
         ref.make(false),
         ref.make<PoolState>({ size: 0, free: 0 }),
         queue.bounded<Attempted<E, A>>(options.max),
         ref.make(HashSet.empty<A>()),
         options.strategy.initial()
-      ),
+      ]),
       core.flatMap(([context, down, state, items, inv, initial]) => {
         const pool = new PoolImpl<E, A>(
           core.mapInputContext(options.acquire, (old) => Context.merge(old)(context)),

@@ -339,7 +339,7 @@ describe.concurrent("Layer", () => {
     Effect.gen(function*($) {
       const NumberTag = Context.Tag<number>()
       const StringTag = Context.Tag<string>()
-      const needsNumberAndString = Effect.all(NumberTag, StringTag)
+      const needsNumberAndString = Effect.all([NumberTag, StringTag])
       const providesNumber = Layer.succeed(NumberTag, 10)
       const providesString = Layer.succeed(StringTag, "hi")
       const needsString = needsNumberAndString.pipe(Effect.provideSomeLayer(providesNumber))

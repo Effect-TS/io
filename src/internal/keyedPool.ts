@@ -94,12 +94,12 @@ const makeImpl = <K, R, E, A>(
   timeToLive: (key: K) => Option.Option<Duration.Duration>
 ): Effect.Effect<R | Scope.Scope, never, KeyedPool.KeyedPool<K, E, A>> =>
   pipe(
-    fiberRuntime.all(
+    fiberRuntime.all([
       core.context<R>(),
       core.fiberId,
       core.sync(() => MutableRef.make(HashMap.empty<K, MapValue<E, A>>())),
       fiberRuntime.scopeMake()
-    ),
+    ]),
     core.map(([context, fiberId, map, scope]) => {
       const getOrCreatePool = (key: K): Effect.Effect<never, never, Pool.Pool<E, A>> =>
         core.suspend(() => {

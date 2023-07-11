@@ -1095,10 +1095,10 @@ class HubImpl<A> implements Hub.Hub<A> {
 
   subscribe(): Effect.Effect<Scope.Scope, never, Queue.Dequeue<A>> {
     const acquire = core.tap(
-      fiberRuntime.all(
+      fiberRuntime.all([
         this.scope.fork(executionStrategy.sequential),
         makeSubscription(this.hub, this.subscribers, this.strategy)
-      ),
+      ]),
       (tuple) => tuple[0].addFinalizer(() => tuple[1].shutdown())
     )
     return core.map(

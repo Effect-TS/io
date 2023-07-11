@@ -1460,11 +1460,11 @@ const _existsParFound = Symbol("@effect/io/Effect/existsPar/found")
 export const exists = dual<
   <R, E, A>(f: (a: A, i: number) => Effect.Effect<R, E, boolean>, options?: {
     readonly concurrency?: Concurrency
-    readonly batchRequests?: boolean | "inherit"
+    readonly batching?: boolean | "inherit"
   }) => (elements: Iterable<A>) => Effect.Effect<R, E, boolean>,
   <R, E, A>(elements: Iterable<A>, f: (a: A, i: number) => Effect.Effect<R, E, boolean>, options?: {
     readonly concurrency: Concurrency
-    readonly batchRequests?: boolean | "inherit"
+    readonly batching?: boolean | "inherit"
   }) => Effect.Effect<R, E, boolean>
 >((args) => Predicate.isIterable(args[0]), (elements, f, options) =>
   concurrency.matchSimple(
@@ -1505,20 +1505,20 @@ export const filter = dual<
     f: (a: A, i: number) => Effect.Effect<R, E, boolean>,
     options?: {
       readonly concurrency?: Concurrency
-      readonly batchRequests?: boolean | "inherit"
+      readonly batching?: boolean | "inherit"
       readonly negate?: boolean
     }
   ) => (elements: Iterable<A>) => Effect.Effect<R, E, Array<A>>,
   <A, R, E>(elements: Iterable<A>, f: (a: A, i: number) => Effect.Effect<R, E, boolean>, options?: {
     readonly concurrency?: Concurrency
-    readonly batchRequests?: boolean | "inherit"
+    readonly batching?: boolean | "inherit"
     readonly negate?: boolean
   }) => Effect.Effect<R, E, Array<A>>
 >(
   (args) => Predicate.isIterable(args[0]),
   <A, R, E>(elements: Iterable<A>, f: (a: A, i: number) => Effect.Effect<R, E, boolean>, options?: {
     readonly concurrency?: Concurrency
-    readonly batchRequests?: boolean | "inherit"
+    readonly batching?: boolean | "inherit"
     readonly negate?: boolean
   }) => {
     const predicate = options?.negate ? (a: A, i: number) => core.map(f(a, i), Boolean.not) : f
@@ -1551,53 +1551,74 @@ export const filter = dual<
 
 // === all
 
+const allIsDataFirst = (args: IArguments): boolean => {
+  if (args.length === 0) {
+    return false
+  } else if (Array.isArray(args[0]) || Predicate.isIterable(args[0])) {
+    return true
+  }
+  const obj: Effect.All.Options = args[0]
+  return (
+    typeof obj.concurrency === "number" || typeof obj.concurrency === "string" ||
+    typeof obj.batching === "number" || typeof obj.batching === "string" ||
+    typeof obj.discard === "boolean"
+  ) === false
+}
+
+const allResolveInput = (
+  input: Iterable<Effect.Effect<any, any, any>> | Record<string, Effect.Effect<any, any, any>>
+): readonly [Iterable<Effect.Effect<any, any, any>>, Option.Option<(as: ReadonlyArray<any>) => any>] => {
+  if (Array.isArray(input) || Predicate.isIterable(input)) {
+    return [input, Option.none()]
+  }
+  const keys = Object.keys(input)
+  const size = keys.length
+  return [
+    keys.map((k) => input[k]),
+    Option.some((values: ReadonlyArray<any>) => {
+      const res = {}
+      for (let i = 0; i < size; i++) {
+        ;(res as any)[keys[i]] = values[i]
+      }
+      return res
+    })
+  ]
+}
+
 /* @internal */
-export const all = function() {
-  if (allIsDataFirst(arguments)) {
-    const [input, options] = allSplitArguments(arguments)
-    const [effects, reconcile] = allResolveInput(input)
-    return all_(effects, reconcile, options)
-  }
-
-  return (arg: any) => {
-    const [effects, reconcile] = allResolveInput([arg])
-    return all_(effects, reconcile, arguments[0])
-  }
-} as Effect.All.All
-
-const all_ = (
-  effects: Iterable<Effect.Effect<any, any, any>>,
-  reconcile: Option.Option<(as: ReadonlyArray<any>) => any>,
-  options: Effect.All.Options | undefined
-) =>
-  reconcile._tag === "Some" ?
+export const all = dual<
+  (
+    options?: Effect.All.Options
+  ) => (
+    arg: Iterable<Effect.Effect<any, any, any>> | Record<string, Effect.Effect<any, any, any>>
+  ) => Effect.Effect<any, any, any>,
+  (
+    arg: Iterable<Effect.Effect<any, any, any>> | Record<string, Effect.Effect<any, any, any>>,
+    options?: Effect.All.Options
+  ) => Effect.Effect<any, any, any>
+>(allIsDataFirst, (arg, options) => {
+  const [effects, reconcile] = allResolveInput(arg)
+  return reconcile._tag === "Some" ?
     core.map(
       forEachOptions(effects, identity, options as any),
       reconcile.value
     ) :
     forEachOptions(effects, identity, options as any)
+}) as Effect.All.All
 
 // === allValidate
 
 /* @internal */
-export const allValidate = function() {
-  if (allIsDataFirst(arguments)) {
-    const [input, options] = allSplitArguments(arguments)
-    const [effects, reconcile] = allResolveInput(input)
-    return allValidate_(effects, reconcile, options)
-  }
-
-  return (arg: any) => {
-    const [effects, reconcile] = allResolveInput([arg])
-    return allValidate_(effects, reconcile, arguments[0])
-  }
-} as Effect.All.Validate
-
-const allValidate_ = (
-  effects: Iterable<Effect.Effect<any, any, any>>,
-  reconcile: Option.Option<(as: ReadonlyArray<any>) => any>,
-  options: Effect.All.Options | undefined
-) => {
+export const allValidate = dual<
+  (options?: Effect.All.Options) => (
+    arg: Iterable<Effect.Effect<any, any, any>> | Record<string, Effect.Effect<any, any, any>>
+  ) => Effect.Effect<any, any, any>,
+  (
+    arg: Iterable<Effect.Effect<any, any, any>> | Record<string, Effect.Effect<any, any, any>>,
+    options?: Effect.All.Options
+  ) => Effect.Effect<any, any, any>
+>(allIsDataFirst, (arg, options) => {
+  const [effects, reconcile] = allResolveInput(arg)
   const eitherEffects: Array<Effect.Effect<unknown, never, Either.Either<unknown, unknown>>> = []
   for (const effect of effects) {
     eitherEffects.push(core.either(effect))
@@ -1605,7 +1626,7 @@ const allValidate_ = (
   return core.flatMap(
     forEachOptions(eitherEffects, identity, {
       concurrency: options?.concurrency,
-      batchRequests: options?.batchRequests
+      batching: options?.batching
     }),
     (eithers) => {
       const none = Option.none()
@@ -1635,67 +1656,14 @@ const allValidate_ = (
         core.succeed(successes)
     }
   )
-}
-
-const allIsDataFirst = (args: IArguments) => {
-  if (args.length === 0) {
-    return false
-  } else if (args.length > 1) {
-    return true
-  } else if (Predicate.isIterable(args[0]) || core.isEffect(args[0])) {
-    return true
-  }
-
-  const obj: Record<string, any> = args[0]
-
-  return !(
-    typeof obj.concurrency === "number" || typeof obj.concurrency === "string" ||
-    typeof obj.batched === "boolean" || typeof obj.discard === "boolean"
-  )
-}
-
-const allSplitArguments = (args: IArguments) => {
-  const hasOptions = args.length > 1 && !core.isEffect(args[args.length - 1])
-  const options: Effect.All.Options | undefined = hasOptions ?
-    args[args.length - 1] :
-    undefined
-
-  const input = hasOptions ? Array.prototype.slice.call(args, 0, -1) : args
-  return [input, options] as const
-}
-
-const allResolveInput = (input: Array<any> | IArguments) => {
-  let effects: Iterable<Effect.Effect<any, any, any>> = input
-  let reconcile = Option.none<(as: ReadonlyArray<any>) => any>()
-
-  if (input.length === 1) {
-    if (core.isEffect(input[0])) {
-      effects = [input[0]]
-    } else if (Array.isArray(input[0]) || Symbol.iterator in input[0]) {
-      effects = input[0]
-    } else {
-      const keys = Object.keys(input[0])
-      const size = keys.length
-      effects = keys.map((k) => input[0][k])
-      reconcile = Option.some((values: ReadonlyArray<any>) => {
-        const res = {}
-        for (let i = 0; i < size; i++) {
-          ;(res as any)[keys[i]] = values[i]
-        }
-        return res
-      })
-    }
-  }
-
-  return [effects, reconcile] as const
-}
+}) as Effect.All.Validate
 
 /* @internal */
 export const allSuccesses = <R, E, A>(
   elements: Iterable<Effect.Effect<R, E, A>>,
   options?: {
     readonly concurrency?: Concurrency
-    readonly batchRequests?: boolean | "inherit"
+    readonly batching?: boolean | "inherit"
   }
 ): Effect.Effect<R, never, Array<A>> =>
   core.map(
@@ -1737,31 +1705,31 @@ export const forEachOptions = dual<
   {
     <A, R, E, B>(f: (a: A, i: number) => Effect.Effect<R, E, B>, options?: {
       readonly concurrency?: Concurrency
-      readonly batchRequests?: boolean | "inherit"
+      readonly batching?: boolean | "inherit"
       readonly discard?: false
     }): (self: Iterable<A>) => Effect.Effect<R, E, Array<B>>
     <A, R, E, B>(f: (a: A, i: number) => Effect.Effect<R, E, B>, options: {
       readonly concurrency?: Concurrency
-      readonly batchRequests?: boolean | "inherit"
+      readonly batching?: boolean | "inherit"
       readonly discard: true
     }): (self: Iterable<A>) => Effect.Effect<R, E, void>
   },
   {
     <A, R, E, B>(self: Iterable<A>, f: (a: A, i: number) => Effect.Effect<R, E, B>, options?: {
       readonly concurrency?: Concurrency
-      readonly batchRequests?: boolean | "inherit"
+      readonly batching?: boolean | "inherit"
       readonly discard?: false
     }): Effect.Effect<R, E, Array<B>>
     <A, R, E, B>(self: Iterable<A>, f: (a: A, i: number) => Effect.Effect<R, E, B>, options: {
       readonly concurrency?: Concurrency
-      readonly batchRequests?: boolean | "inherit"
+      readonly batching?: boolean | "inherit"
       readonly discard: true
     }): Effect.Effect<R, E, void>
   }
 >((args) => Predicate.isIterable(args[0]), (self, f, options) =>
   core.withFiberRuntime((r) => {
-    const requestBatchingEnabled = options?.batchRequests === true ||
-      (options?.batchRequests === "inherit" && r.getFiberRef(core.currentRequestBatching))
+    const requestBatchingEnabled = options?.batching === true ||
+      (options?.batching === "inherit" && r.getFiberRef(core.currentRequestBatching))
 
     if (options?.discard) {
       return concurrency.match(
@@ -1784,13 +1752,13 @@ export const forEachOptions = dual<
 export const forEachParUnbounded = <A, R, E, B>(
   self: Iterable<A>,
   f: (a: A, i: number) => Effect.Effect<R, E, B>,
-  batchRequests: boolean
+  batching: boolean
 ): Effect.Effect<R, E, Array<B>> =>
   core.suspend(() => {
     const as = RA.fromIterable(self)
     const array = new Array<B>(as.length)
     const fn = (a: A, i: number) => core.flatMap(f(a, i), (b) => core.sync(() => array[i] = b))
-    return core.zipRight(forEachParUnboundedDiscard(as, fn, batchRequests), core.succeed(array))
+    return core.zipRight(forEachParUnboundedDiscard(as, fn, batching), core.succeed(array))
   })
 
 const forEachBatchedDiscard = <R, E, A, _>(
@@ -1845,7 +1813,7 @@ const forEachBatchedDiscard = <R, E, A, _>(
 export const forEachParUnboundedDiscard = <R, E, A, _>(
   self: Iterable<A>,
   f: (a: A, i: number) => Effect.Effect<R, E, _>,
-  batchRequests: boolean
+  batching: boolean
 ): Effect.Effect<R, E, void> =>
   core.suspend(() => {
     const as = RA.fromIterable(self)
@@ -1863,14 +1831,14 @@ export const forEachParUnboundedDiscard = <R, E, A, _>(
         core.forEachSequential(as, (a, i) =>
           pipe(
             graft(pipe(
-              core.suspend(() => restore((batchRequests ? core.step : core.exit)(f(a, i)))),
+              core.suspend(() => restore((batching ? core.step : core.exit)(f(a, i)))),
               core.flatMap(
                 (exit) => {
                   switch (exit._tag) {
                     case "Failure": {
                       if (residual.length > 0) {
                         const requests = residual.map((blocked) => blocked.i0).reduce(_RequestBlock.par)
-                        const _continue = forEachParUnboundedDiscard(residual, (blocked) => blocked.i1, batchRequests)
+                        const _continue = forEachParUnboundedDiscard(residual, (blocked) => blocked.i1, batching)
                         return core.blocked(
                           requests,
                           core.matchCauseEffect(_continue, {
@@ -1899,7 +1867,7 @@ export const forEachParUnboundedDiscard = <R, E, A, _>(
                       if (ref + 1 === size) {
                         if (residual.length > 0) {
                           const requests = residual.map((blocked) => blocked.i0).reduce(_RequestBlock.par)
-                          const _continue = forEachParUnboundedDiscard(residual, (blocked) => blocked.i1, batchRequests)
+                          const _continue = forEachParUnboundedDiscard(residual, (blocked) => blocked.i1, batching)
                           return core.deferredSucceed(deferred, core.blocked(requests, _continue))
                         } else {
                           core.deferredUnsafeDone(deferred, core.exitSucceed(core.exitUnit))
@@ -1922,7 +1890,7 @@ export const forEachParUnboundedDiscard = <R, E, A, _>(
           {
             onFailure: (cause) =>
               core.flatMap(
-                forEachParUnbounded(fibers, core.interruptFiber, batchRequests),
+                forEachParUnbounded(fibers, core.interruptFiber, batching),
                 (exits) => {
                   const exit = core.exitCollectAll(exits, { parallel: true })
                   if (exit._tag === "Some" && core.exitIsFailure(exit.value)) {
@@ -1945,13 +1913,13 @@ export const forEachParN = <A, R, E, B>(
   self: Iterable<A>,
   n: number,
   f: (a: A, i: number) => Effect.Effect<R, E, B>,
-  batchRequests: boolean
+  batching: boolean
 ): Effect.Effect<R, E, Array<B>> =>
   core.suspend(() => {
     const as = RA.fromIterable(self)
     const array = new Array<B>(as.length)
     const fn = (a: A, i: number) => core.map(f(a, i), (b) => array[i] = b)
-    return core.zipRight(forEachParNDiscard(as, n, fn, batchRequests), core.succeed(array))
+    return core.zipRight(forEachParNDiscard(as, n, fn, batching), core.succeed(array))
   })
 
 /* @internal */
@@ -1959,7 +1927,7 @@ export const forEachParNDiscard = <A, R, E, _>(
   self: Iterable<A>,
   n: number,
   f: (a: A, i: number) => Effect.Effect<R, E, _>,
-  batchRequests: boolean
+  batching: boolean
 ): Effect.Effect<R, E, void> =>
   core.suspend(() => {
     let i = 0
@@ -1970,7 +1938,7 @@ export const forEachParNDiscard = <A, R, E, _>(
       (next) =>
         next.done ?
           core.unit :
-          core.flatMap((batchRequests ? core.step : core.exit)(core.asUnit(f(next.value, i++))), (res) => {
+          core.flatMap((batching ? core.step : core.exit)(core.asUnit(f(next.value, i++))), (res) => {
             switch (res._tag) {
               case "Blocked": {
                 residual.push(res)
@@ -1988,12 +1956,12 @@ export const forEachParNDiscard = <A, R, E, _>(
     for (let i = 0; i < n; i++) {
       effects.push(worker)
     }
-    return core.flatMap(core.exit(forEachParUnboundedDiscard(effects, identity, batchRequests)), (exit) => {
+    return core.flatMap(core.exit(forEachParUnboundedDiscard(effects, identity, batching)), (exit) => {
       if (residual.length === 0) {
         return exit
       }
       const requests = residual.map((blocked) => blocked.i0).reduce(_RequestBlock.par)
-      const _continue = forEachParNDiscard(residual, n, (blocked) => blocked.i1, batchRequests)
+      const _continue = forEachParNDiscard(residual, n, (blocked) => blocked.i1, batching)
       if (exit._tag === "Failure") {
         return core.blocked(
           requests,
@@ -2100,17 +2068,17 @@ const forkWithScopeOverride = <R, E, A>(
 export const mergeAll = dual<
   <Z, A>(zero: Z, f: (z: Z, a: A, i: number) => Z, options?: {
     readonly concurrency?: Concurrency
-    readonly batchRequests?: boolean | "inherit"
+    readonly batching?: boolean | "inherit"
   }) => <R, E>(elements: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, Z>,
   <R, E, A, Z>(elements: Iterable<Effect.Effect<R, E, A>>, zero: Z, f: (z: Z, a: A, i: number) => Z, options?: {
     readonly concurrency?: Concurrency
-    readonly batchRequests?: boolean | "inherit"
+    readonly batching?: boolean | "inherit"
   }) => Effect.Effect<R, E, Z>
 >(
   (args) => Predicate.isIterable(args[0]),
   <R, E, A, Z>(elements: Iterable<Effect.Effect<R, E, A>>, zero: Z, f: (z: Z, a: A, i: number) => Z, options?: {
     readonly concurrency?: Concurrency
-    readonly batchRequests?: boolean | "inherit"
+    readonly batching?: boolean | "inherit"
   }) =>
     concurrency.matchSimple(
       options,
@@ -2138,7 +2106,7 @@ export const partition = dual<
     f: (a: A, i: number) => Effect.Effect<R, E, B>,
     options?: {
       readonly concurrency?: Concurrency
-      readonly batchRequests?: boolean | "inherit"
+      readonly batching?: boolean | "inherit"
     }
   ) => (elements: Iterable<A>) => Effect.Effect<R, never, readonly [Array<E>, Array<B>]>,
   <R, E, A, B>(
@@ -2146,7 +2114,7 @@ export const partition = dual<
     f: (a: A, i: number) => Effect.Effect<R, E, B>,
     options?: {
       readonly concurrency?: Concurrency
-      readonly batchRequests?: boolean | "inherit"
+      readonly batching?: boolean | "inherit"
     }
   ) => Effect.Effect<R, never, readonly [Array<E>, Array<B>]>
 >((args) => Predicate.isIterable(args[0]), (elements, f, options) =>
@@ -2162,7 +2130,7 @@ export const validateAll = dual<
       f: (a: A, i: number) => Effect.Effect<R, E, B>,
       options?: {
         readonly concurrency?: Concurrency
-        readonly batchRequests?: boolean | "inherit"
+        readonly batching?: boolean | "inherit"
         readonly discard?: false
       }
     ): (elements: Iterable<A>) => Effect.Effect<R, Array<E>, Array<B>>
@@ -2170,7 +2138,7 @@ export const validateAll = dual<
       f: (a: A, i: number) => Effect.Effect<R, E, B>,
       options: {
         readonly concurrency?: Concurrency
-        readonly batchRequests?: boolean | "inherit"
+        readonly batching?: boolean | "inherit"
         readonly discard: true
       }
     ): (elements: Iterable<A>) => Effect.Effect<R, Array<E>, void>
@@ -2181,7 +2149,7 @@ export const validateAll = dual<
       f: (a: A, i: number) => Effect.Effect<R, E, B>,
       options?: {
         readonly concurrency?: Concurrency
-        readonly batchRequests?: boolean | "inherit"
+        readonly batching?: boolean | "inherit"
         readonly discard?: false
       }
     ): Effect.Effect<R, Array<E>, Array<B>>
@@ -2190,7 +2158,7 @@ export const validateAll = dual<
       f: (a: A, i: number) => Effect.Effect<R, E, B>,
       options: {
         readonly concurrency?: Concurrency
-        readonly batchRequests?: boolean | "inherit"
+        readonly batching?: boolean | "inherit"
         readonly discard: true
       }
     ): Effect.Effect<R, Array<E>, void>
@@ -2199,13 +2167,13 @@ export const validateAll = dual<
   (args) => Predicate.isIterable(args[0]),
   <R, E, A, B>(elements: Iterable<A>, f: (a: A, i: number) => Effect.Effect<R, E, B>, options?: {
     readonly concurrency?: Concurrency
-    readonly batchRequests?: boolean | "inherit"
+    readonly batching?: boolean | "inherit"
     readonly discard?: boolean
   }): Effect.Effect<R, Array<E>, any> =>
     core.flatMap(
       partition(elements, f, {
         concurrency: options?.concurrency,
-        batchRequests: options?.batchRequests
+        batching: options?.batching
       }),
       ([es, bs]) =>
         es.length === 0
@@ -2330,7 +2298,7 @@ export const reduceEffect = dual<
     f: (acc: A, a: A, i: number) => A,
     options?: {
       readonly concurrency?: Concurrency
-      readonly batchRequests?: boolean | "inherit"
+      readonly batching?: boolean | "inherit"
     }
   ) => (elements: Iterable<Effect.Effect<R, E, A>>) => Effect.Effect<R, E, A>,
   <R, E, A>(
@@ -2339,7 +2307,7 @@ export const reduceEffect = dual<
     f: (acc: A, a: A, i: number) => A,
     options?: {
       readonly concurrency?: Concurrency
-      readonly batchRequests?: boolean | "inherit"
+      readonly batching?: boolean | "inherit"
     }
   ) => Effect.Effect<R, E, A>
 >((args) => Predicate.isIterable(args[0]), <R, E, A>(
@@ -2348,7 +2316,7 @@ export const reduceEffect = dual<
   f: (acc: A, a: A, i: number) => A,
   options?: {
     readonly concurrency?: Concurrency
-    readonly batchRequests?: boolean | "inherit"
+    readonly batching?: boolean | "inherit"
   }
 ) =>
   concurrency.matchSimple(
@@ -2470,7 +2438,7 @@ export const validate = dual<
     that: Effect.Effect<R1, E1, B>,
     options?: {
       readonly concurrent?: boolean
-      readonly batchRequests?: boolean | "inherit"
+      readonly batching?: boolean | "inherit"
     }
   ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E | E1, readonly [A, B]>,
   <R, E, A, R1, E1, B>(
@@ -2478,7 +2446,7 @@ export const validate = dual<
     that: Effect.Effect<R1, E1, B>,
     options?: {
       readonly concurrent?: boolean
-      readonly batchRequests?: boolean | "inherit"
+      readonly batching?: boolean | "inherit"
     }
   ) => Effect.Effect<R | R1, E | E1, readonly [A, B]>
 >(
@@ -2493,7 +2461,7 @@ export const validateWith = dual<
     f: (a: A, b: B) => C,
     options?: {
       readonly concurrent?: boolean
-      readonly batchRequests?: boolean | "inherit"
+      readonly batching?: boolean | "inherit"
     }
   ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E | E1, C>,
   <R, E, A, R1, E1, B, C>(
@@ -2502,7 +2470,7 @@ export const validateWith = dual<
     f: (a: A, b: B) => C,
     options?: {
       readonly concurrent?: boolean
-      readonly batchRequests?: boolean | "inherit"
+      readonly batching?: boolean | "inherit"
     }
   ) => Effect.Effect<R | R1, E | E1, C>
 >((args) => core.isEffect(args[1]), (self, that, f, options) =>
@@ -2554,11 +2522,11 @@ export const validateAllParDiscard = dual<
 export const validateFirst = dual<
   <R, E, A, B>(f: (a: A, i: number) => Effect.Effect<R, E, B>, options?: {
     readonly concurrency?: Concurrency
-    readonly batchRequests?: boolean | "inherit"
+    readonly batching?: boolean | "inherit"
   }) => (elements: Iterable<A>) => Effect.Effect<R, Array<E>, B>,
   <R, E, A, B>(elements: Iterable<A>, f: (a: A, i: number) => Effect.Effect<R, E, B>, options?: {
     readonly concurrency?: Concurrency
-    readonly batchRequests?: boolean | "inherit"
+    readonly batching?: boolean | "inherit"
   }) => Effect.Effect<R, Array<E>, B>
 >(
   (args) => Predicate.isIterable(args[0]),
@@ -2601,7 +2569,7 @@ export const zipOptions = dual<
     that: Effect.Effect<R2, E2, A2>,
     options?: {
       readonly concurrent?: boolean
-      readonly batchRequests?: boolean | "inherit"
+      readonly batching?: boolean | "inherit"
     }
   ) => <R, E, A>(
     self: Effect.Effect<R, E, A>
@@ -2611,7 +2579,7 @@ export const zipOptions = dual<
     that: Effect.Effect<R2, E2, A2>,
     options?: {
       readonly concurrent?: boolean
-      readonly batchRequests?: boolean | "inherit"
+      readonly batching?: boolean | "inherit"
     }
   ) => Effect.Effect<R | R2, E | E2, [A, A2]>
 >((args) => core.isEffect(args[1]), (
@@ -2626,7 +2594,7 @@ export const zipLeftOptions = dual<
     that: Effect.Effect<R2, E2, A2>,
     options?: {
       readonly concurrent?: boolean
-      readonly batchRequests?: boolean | "inherit"
+      readonly batching?: boolean | "inherit"
     }
   ) => <R, E, A>(
     self: Effect.Effect<R, E, A>
@@ -2636,7 +2604,7 @@ export const zipLeftOptions = dual<
     that: Effect.Effect<R2, E2, A2>,
     options?: {
       readonly concurrent?: boolean
-      readonly batchRequests?: boolean | "inherit"
+      readonly batching?: boolean | "inherit"
     }
   ) => Effect.Effect<R | R2, E | E2, A>
 >(
@@ -2650,7 +2618,7 @@ export const zipRightOptions = dual<
     that: Effect.Effect<R2, E2, A2>,
     options?: {
       readonly concurrent?: boolean
-      readonly batchRequests?: boolean | "inherit"
+      readonly batching?: boolean | "inherit"
     }
   ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A2>,
   <R, E, A, R2, E2, A2>(
@@ -2658,7 +2626,7 @@ export const zipRightOptions = dual<
     that: Effect.Effect<R2, E2, A2>,
     options?: {
       readonly concurrent?: boolean
-      readonly batchRequests?: boolean | "inherit"
+      readonly batching?: boolean | "inherit"
     }
   ) => Effect.Effect<R | R2, E | E2, A2>
 >((args) => core.isEffect(args[1]), (self, that, options) => zipWithOptions(self, that, (_, b) => b, options))
@@ -2670,7 +2638,7 @@ export const zipWithOptions = dual<
     f: (a: A, b: A2) => B,
     options?: {
       readonly concurrent?: boolean
-      readonly batchRequests?: boolean | "inherit"
+      readonly batching?: boolean | "inherit"
     }
   ) => <R, E>(
     self: Effect.Effect<R, E, A>
@@ -2681,7 +2649,7 @@ export const zipWithOptions = dual<
     f: (a: A, b: A2) => B,
     options?: {
       readonly concurrent?: boolean
-      readonly batchRequests?: boolean | "inherit"
+      readonly batching?: boolean | "inherit"
     }
   ) => Effect.Effect<R | R2, E | E2, B>
 >((args) => core.isEffect(args[1]), <R, E, A, R2, E2, A2, B>(
@@ -2690,13 +2658,13 @@ export const zipWithOptions = dual<
   f: (a: A, b: A2) => B,
   options?: {
     readonly concurrent?: boolean
-    readonly batchRequests?: boolean | "inherit"
+    readonly batching?: boolean | "inherit"
   }
 ): Effect.Effect<R | R2, E | E2, B> =>
   core.map(
-    all(self, that, {
+    all([self, that], {
       concurrency: options?.concurrent ? 2 : 1,
-      batchRequests: options?.batchRequests
+      batching: options?.batching
     }),
     ([a, a2]) => f(a, a2)
   ))
