@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.32.1
+
+### Patch Changes
+
+- [#525](https://github.com/Effect-TS/io/pull/525) [`ab8c2ac`](https://github.com/Effect-TS/io/commit/ab8c2ac4abf4ac1455fd0edbed719c3212a29c32) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Fix WithRuntimeFlags Logic
+
 ## 0.32.0
 
 ### Minor Changes
