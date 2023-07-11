@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "noEmit": true,
+    "strict": true,
+    "noImplicitReturns": false,
+    "noUnusedLocals": false,
+    "noErrorTruncation": true,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": true,
+    "moduleResolution": "node",
+    "module": "commonjs",
+    "target": "ES2021",
+    "lib": [
+      "ES2021"
+    ],
+    "paths": {
+      "@effect/io": [
+        "../src/index.ts"
+      ],
+      "@effect/io/test/*": [
+        "../test/*"
+      ],
+      "@effect/io/examples/*": [
+        "../examples/*"
+      ],
+      "@effect/io/*": [
+        "../src/*"
+      ]
+    }
+  }
+}

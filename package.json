@@ -45,7 +45,8 @@
     "docs-update": "git add --force --all docs/modules || true",
     "circular": "madge --ts-config ./tsconfig.madge.json --circular --no-color --no-spinner --warning build/esm",
     "test": "vitest",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "dtslint": "dtslint --expectOnly dtslint"
   },
   "exports": {
     ".": {
@@ -64,6 +65,7 @@
     "@babel/plugin-transform-modules-commonjs": "^7.22.5",
     "@changesets/changelog-github": "^0.4.8",
     "@changesets/cli": "^2.26.2",
+    "@definitelytyped/dtslint": "^0.0.163",
     "@effect-ts/build-utils": "0.40.7",
     "@effect-ts/core": "^0.60.5",
     "@effect/babel-plugin": "^0.2.0",
