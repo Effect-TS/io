@@ -610,7 +610,7 @@ discarding results from failed effects.
 ```ts
 export declare const allSuccesses: <R, E, A>(
   elements: Iterable<Effect<R, E, A>>,
-  options?: { readonly concurrency?: Concurrency; readonly batchRequests?: boolean | 'inherit' }
+  options?: { readonly concurrency?: Concurrency; readonly batching?: boolean | 'inherit' }
 ) => Effect<R, never, A[]>
 ```
 
@@ -688,12 +688,12 @@ predicate `f`.
 export declare const exists: {
   <R, E, A>(
     f: (a: A, i: number) => Effect<R, E, boolean>,
-    options?: { readonly concurrency?: Concurrency; readonly batchRequests?: boolean | 'inherit' }
+    options?: { readonly concurrency?: Concurrency; readonly batching?: boolean | 'inherit' }
   ): (elements: Iterable<A>) => Effect<R, E, boolean>
   <R, E, A>(
     elements: Iterable<A>,
     f: (a: A, i: number) => Effect<R, E, boolean>,
-    options?: { readonly concurrency: Concurrency; readonly batchRequests?: boolean | 'inherit' }
+    options?: { readonly concurrency: Concurrency; readonly batching?: boolean | 'inherit' }
   ): Effect<R, E, boolean>
 }
 ```
@@ -710,20 +710,12 @@ Filters the collection using the specified effectful predicate.
 export declare const filter: {
   <A, R, E>(
     f: (a: A, i: number) => Effect<R, E, boolean>,
-    options?: {
-      readonly concurrency?: Concurrency
-      readonly batchRequests?: boolean | 'inherit'
-      readonly negate?: boolean
-    }
+    options?: { readonly concurrency?: Concurrency; readonly batching?: boolean | 'inherit'; readonly negate?: boolean }
   ): (elements: Iterable<A>) => Effect<R, E, A[]>
   <A, R, E>(
     elements: Iterable<A>,
     f: (a: A, i: number) => Effect<R, E, boolean>,
-    options?: {
-      readonly concurrency?: Concurrency
-      readonly batchRequests?: boolean | 'inherit'
-      readonly negate?: boolean
-    }
+    options?: { readonly concurrency?: Concurrency; readonly batching?: boolean | 'inherit'; readonly negate?: boolean }
   ): Effect<R, E, A[]>
 }
 ```
@@ -772,37 +764,21 @@ Added in v1.0.0
 export declare const forEach: {
   <A, R, E, B>(
     f: (a: A, i: number) => Effect<R, E, B>,
-    options?: {
-      readonly concurrency?: Concurrency
-      readonly batchRequests?: boolean | 'inherit'
-      readonly discard?: false
-    }
+    options?: { readonly concurrency?: Concurrency; readonly batching?: boolean | 'inherit'; readonly discard?: false }
   ): (self: Iterable<A>) => Effect<R, E, B[]>
   <A, R, E, B>(
     f: (a: A, i: number) => Effect<R, E, B>,
-    options: {
-      readonly concurrency?: Concurrency
-      readonly batchRequests?: boolean | 'inherit'
-      readonly discard: true
-    }
+    options: { readonly concurrency?: Concurrency; readonly batching?: boolean | 'inherit'; readonly discard: true }
   ): (self: Iterable<A>) => Effect<R, E, void>
   <A, R, E, B>(
     self: Iterable<A>,
     f: (a: A, i: number) => Effect<R, E, B>,
-    options?: {
-      readonly concurrency?: Concurrency
-      readonly batchRequests?: boolean | 'inherit'
-      readonly discard?: false
-    }
+    options?: { readonly concurrency?: Concurrency; readonly batching?: boolean | 'inherit'; readonly discard?: false }
   ): Effect<R, E, B[]>
   <A, R, E, B>(
     self: Iterable<A>,
     f: (a: A, i: number) => Effect<R, E, B>,
-    options: {
-      readonly concurrency?: Concurrency
-      readonly batchRequests?: boolean | 'inherit'
-      readonly discard: true
-    }
+    options: { readonly concurrency?: Concurrency; readonly batching?: boolean | 'inherit'; readonly discard: true }
   ): Effect<R, E, void>
 }
 ```
@@ -834,13 +810,13 @@ export declare const mergeAll: {
   <Z, A>(
     zero: Z,
     f: (z: Z, a: A, i: number) => Z,
-    options?: { readonly concurrency?: Concurrency; readonly batchRequests?: boolean | 'inherit' }
+    options?: { readonly concurrency?: Concurrency; readonly batching?: boolean | 'inherit' }
   ): <R, E>(elements: Iterable<Effect<R, E, A>>) => Effect<R, E, Z>
   <R, E, A, Z>(
     elements: Iterable<Effect<R, E, A>>,
     zero: Z,
     f: (z: Z, a: A, i: number) => Z,
-    options?: { readonly concurrency?: Concurrency; readonly batchRequests?: boolean | 'inherit' }
+    options?: { readonly concurrency?: Concurrency; readonly batching?: boolean | 'inherit' }
   ): Effect<R, E, Z>
 }
 ```
@@ -858,12 +834,12 @@ Collects all successes and failures in a tupled fashion.
 export declare const partition: {
   <R, E, A, B>(
     f: (a: A) => Effect<R, E, B>,
-    options?: { readonly concurrency?: Concurrency; readonly batchRequests?: boolean | 'inherit' }
+    options?: { readonly concurrency?: Concurrency; readonly batching?: boolean | 'inherit' }
   ): (elements: Iterable<A>) => Effect<R, never, readonly [E[], B[]]>
   <R, E, A, B>(
     elements: Iterable<A>,
     f: (a: A) => Effect<R, E, B>,
-    options?: { readonly concurrency?: Concurrency; readonly batchRequests?: boolean | 'inherit' }
+    options?: { readonly concurrency?: Concurrency; readonly batching?: boolean | 'inherit' }
   ): Effect<R, never, readonly [E[], B[]]>
 }
 ```
@@ -897,13 +873,13 @@ export declare const reduceEffect: {
   <R, E, A>(
     zero: Effect<R, E, A>,
     f: (acc: A, a: A, i: number) => A,
-    options?: { readonly concurrency?: Concurrency; readonly batchRequests?: boolean | 'inherit' }
+    options?: { readonly concurrency?: Concurrency; readonly batching?: boolean | 'inherit' }
   ): (elements: Iterable<Effect<R, E, A>>) => Effect<R, E, A>
   <R, E, A>(
     elements: Iterable<Effect<R, E, A>>,
     zero: Effect<R, E, A>,
     f: (acc: A, a: A, i: number) => A,
-    options?: { readonly concurrency?: Concurrency; readonly batchRequests?: boolean | 'inherit' }
+    options?: { readonly concurrency?: Concurrency; readonly batching?: boolean | 'inherit' }
   ): Effect<R, E, A>
 }
 ```
@@ -1022,37 +998,21 @@ will be lost. To retain all information please use `partition`.
 export declare const validateAll: {
   <R, E, A, B>(
     f: (a: A, i: number) => Effect<R, E, B>,
-    options?: {
-      readonly concurrency?: Concurrency
-      readonly batchRequests?: boolean | 'inherit'
-      readonly discard?: false
-    }
+    options?: { readonly concurrency?: Concurrency; readonly batching?: boolean | 'inherit'; readonly discard?: false }
   ): (elements: Iterable<A>) => Effect<R, E[], B[]>
   <R, E, A, B>(
     f: (a: A, i: number) => Effect<R, E, B>,
-    options: {
-      readonly concurrency?: Concurrency
-      readonly batchRequests?: boolean | 'inherit'
-      readonly discard: true
-    }
+    options: { readonly concurrency?: Concurrency; readonly batching?: boolean | 'inherit'; readonly discard: true }
   ): (elements: Iterable<A>) => Effect<R, E[], void>
   <R, E, A, B>(
     elements: Iterable<A>,
     f: (a: A, i: number) => Effect<R, E, B>,
-    options?: {
-      readonly concurrency?: Concurrency
-      readonly batchRequests?: boolean | 'inherit'
-      readonly discard?: false
-    }
+    options?: { readonly concurrency?: Concurrency; readonly batching?: boolean | 'inherit'; readonly discard?: false }
   ): Effect<R, E[], B[]>
   <R, E, A, B>(
     elements: Iterable<A>,
     f: (a: A, i: number) => Effect<R, E, B>,
-    options: {
-      readonly concurrency?: Concurrency
-      readonly batchRequests?: boolean | 'inherit'
-      readonly discard: true
-    }
+    options: { readonly concurrency?: Concurrency; readonly batching?: boolean | 'inherit'; readonly discard: true }
   ): Effect<R, E[], void>
 }
 ```
@@ -1072,12 +1032,12 @@ If `elements` is empty then `Effect.fail([])` is returned.
 export declare const validateFirst: {
   <R, E, A, B>(
     f: (a: A, i: number) => Effect<R, E, B>,
-    options?: { readonly concurrency?: Concurrency; readonly batchRequests?: boolean | 'inherit' }
+    options?: { readonly concurrency?: Concurrency; readonly batching?: boolean | 'inherit' }
   ): (elements: Iterable<A>) => Effect<R, E[], B>
   <R, E, A, B>(
     elements: Iterable<A>,
     f: (a: A, i: number) => Effect<R, E, B>,
-    options?: { readonly concurrency?: Concurrency; readonly batchRequests?: boolean | 'inherit' }
+    options?: { readonly concurrency?: Concurrency; readonly batching?: boolean | 'inherit' }
   ): Effect<R, E[], B>
 }
 ```
@@ -5859,12 +5819,12 @@ Sequentially zips the this result with the specified result. Combines both
 export declare const validate: {
   <R1, E1, B>(
     that: Effect<R1, E1, B>,
-    options?: { readonly concurrent?: boolean; readonly batchRequests?: boolean | 'inherit' }
+    options?: { readonly concurrent?: boolean; readonly batching?: boolean | 'inherit' }
   ): <R, E, A>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, readonly [A, B]>
   <R, E, A, R1, E1, B>(
     self: Effect<R, E, A>,
     that: Effect<R1, E1, B>,
-    options?: { readonly concurrent?: boolean; readonly batchRequests?: boolean | 'inherit' }
+    options?: { readonly concurrent?: boolean; readonly batching?: boolean | 'inherit' }
   ): Effect<R | R1, E | E1, readonly [A, B]>
 }
 ```
@@ -5883,13 +5843,13 @@ export declare const validateWith: {
   <A, R1, E1, B, C>(
     that: Effect<R1, E1, B>,
     f: (a: A, b: B) => C,
-    options?: { readonly concurrent?: boolean; readonly batchRequests?: boolean | 'inherit' }
+    options?: { readonly concurrent?: boolean; readonly batching?: boolean | 'inherit' }
   ): <R, E>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | E, C>
   <R, E, A, R1, E1, B, C>(
     self: Effect<R, E, A>,
     that: Effect<R1, E1, B>,
     f: (a: A, b: B) => C,
-    options?: { readonly concurrent?: boolean; readonly batchRequests?: boolean | 'inherit' }
+    options?: { readonly concurrent?: boolean; readonly batching?: boolean | 'inherit' }
   ): Effect<R | R1, E | E1, C>
 }
 ```
@@ -5904,12 +5864,12 @@ Added in v1.0.0
 export declare const zip: {
   <R2, E2, A2>(
     that: Effect<R2, E2, A2>,
-    options?: { readonly concurrent?: boolean; readonly batchRequests?: boolean | 'inherit' }
+    options?: { readonly concurrent?: boolean; readonly batching?: boolean | 'inherit' }
   ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, [A, A2]>
   <R, E, A, R2, E2, A2>(
     self: Effect<R, E, A>,
     that: Effect<R2, E2, A2>,
-    options?: { readonly concurrent?: boolean; readonly batchRequests?: boolean | 'inherit' }
+    options?: { readonly concurrent?: boolean; readonly batching?: boolean | 'inherit' }
   ): Effect<R | R2, E | E2, [A, A2]>
 }
 ```
@@ -5924,12 +5884,12 @@ Added in v1.0.0
 export declare const zipLeft: {
   <R2, E2, A2>(
     that: Effect<R2, E2, A2>,
-    options?: { readonly concurrent?: boolean; readonly batchRequests?: boolean | 'inherit' }
+    options?: { readonly concurrent?: boolean; readonly batching?: boolean | 'inherit' }
   ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A>
   <R, E, A, R2, E2, A2>(
     self: Effect<R, E, A>,
     that: Effect<R2, E2, A2>,
-    options?: { readonly concurrent?: boolean; readonly batchRequests?: boolean | 'inherit' }
+    options?: { readonly concurrent?: boolean; readonly batching?: boolean | 'inherit' }
   ): Effect<R | R2, E | E2, A>
 }
 ```
@@ -5944,12 +5904,12 @@ Added in v1.0.0
 export declare const zipRight: {
   <R2, E2, A2>(
     that: Effect<R2, E2, A2>,
-    options?: { readonly concurrent?: boolean; readonly batchRequests?: boolean | 'inherit' }
+    options?: { readonly concurrent?: boolean; readonly batching?: boolean | 'inherit' }
   ): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2>
   <R, E, A, R2, E2, A2>(
     self: Effect<R, E, A>,
     that: Effect<R2, E2, A2>,
-    options?: { readonly concurrent?: boolean; readonly batchRequests?: boolean | 'inherit' }
+    options?: { readonly concurrent?: boolean; readonly batching?: boolean | 'inherit' }
   ): Effect<R | R2, E | E2, A2>
 }
 ```
@@ -5965,13 +5925,13 @@ export declare const zipWith: {
   <R2, E2, A2, A, B>(
     that: Effect<R2, E2, A2>,
     f: (a: A, b: A2) => B,
-    options?: { readonly concurrent?: boolean; readonly batchRequests?: boolean | 'inherit' }
+    options?: { readonly concurrent?: boolean; readonly batching?: boolean | 'inherit' }
   ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, B>
   <R, E, A, R2, E2, A2, B>(
     self: Effect<R, E, A>,
     that: Effect<R2, E2, A2>,
     f: (a: A, b: A2) => B,
-    options?: { readonly concurrent?: boolean; readonly batchRequests?: boolean | 'inherit' }
+    options?: { readonly concurrent?: boolean; readonly batching?: boolean | 'inherit' }
   ): Effect<R | R2, E | E2, B>
 }
 ```

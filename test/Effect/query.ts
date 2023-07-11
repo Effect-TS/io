@@ -73,7 +73,7 @@ export const getUserNameById = (id: number) => Effect.request(GetNameById({ id }
 
 export const getAllUserNamesN = (concurrency: Concurrency) =>
   getAllUserIds.pipe(
-    Effect.flatMap(Effect.forEach(getUserNameById, { concurrency, batchRequests: true })),
+    Effect.flatMap(Effect.forEach(getUserNameById, { concurrency, batching: true })),
     Effect.onInterrupt(() => FiberRef.getWith(interrupts, (i) => Effect.sync(() => i.interrupts++)))
   )
 
@@ -140,7 +140,7 @@ describe.concurrent("Effect", () => {
         yield* $(cache.invalidateAll())
         const names = yield* $(Effect.zip(getAllUserNames, getAllUserNames, {
           concurrent: true,
-          batchRequests: true
+          batching: true
         }))
         const count = yield* $(Counter)
         expect(count.count).toEqual(3)
@@ -167,7 +167,7 @@ describe.concurrent("Effect", () => {
             getAllUserNames,
             Effect.zipLeft(Effect.interrupt, {
               concurrent: true,
-              batchRequests: true
+              batching: true
             }),
             Effect.exit
           )
@@ -222,7 +222,7 @@ describe.concurrent("Effect", () => {
             getAllUserNames,
             Effect.zipLeft(Effect.interrupt, {
               concurrent: true,
-              batchRequests: true
+              batching: true
             }),
             Effect.exit
           )
@@ -244,7 +244,7 @@ describe.concurrent("Effect", () => {
             getUserNameById(userIds[1]),
             {
               concurrent: true,
-              batchRequests: false
+              batching: false
             }
           ),
           Effect.withRequestBatching(true)
@@ -264,7 +264,7 @@ describe.concurrent("Effect", () => {
             getUserNameById(userIds[1]),
             {
               concurrent: true,
-              batchRequests: true
+              batching: true
             }
           )
         )
@@ -326,7 +326,7 @@ describe.concurrent("Effect", () => {
         yield* $(
           Effect.all([getUserNameById(userIds[0]), getUserNameById(userIds[0])], {
             concurrency: "unbounded",
-            batchRequests: true,
+            batching: true,
             discard: true
           }),
           Effect.withRequestCaching(false)
