@@ -153,18 +153,18 @@ describe.concurrent("Effect", () => {
                     getChildExtra(child.id),
                     {
                       concurrent: true,
-                      batchRequests: "inherit"
+                      batching: "inherit"
                     }
                   ),
                 {
                   concurrency: "unbounded",
-                  batchRequests: "inherit"
+                  batching: "inherit"
                 }
               )
           ),
         {
           concurrency: "inherit",
-          batchRequests: "inherit"
+          batching: "inherit"
         }
       ))
 
