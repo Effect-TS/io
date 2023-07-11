@@ -32,6 +32,29 @@ export const allFlags: ReadonlyArray<RuntimeFlags.RuntimeFlag> = [
   CooperativeYielding
 ]
 
+const print = (flag: RuntimeFlags.RuntimeFlag) => {
+  switch (flag) {
+    case CooperativeYielding: {
+      return "CooperativeYielding"
+    }
+    case WindDown: {
+      return "WindDown"
+    }
+    case RuntimeMetrics: {
+      return "RuntimeMetrics"
+    }
+    case OpSupervision: {
+      return "OpSupervision"
+    }
+    case Interruption: {
+      return "Interruption"
+    }
+    case None: {
+      return "None"
+    }
+  }
+}
+
 /** @internal */
 export const cooperativeYielding = (self: RuntimeFlags.RuntimeFlags): boolean => isEnabled(self, CooperativeYielding)
 
@@ -92,7 +115,7 @@ export const render = (self: RuntimeFlags.RuntimeFlags): string => {
   const active: Array<string> = []
   allFlags.forEach((flag) => {
     if (isEnabled(self, flag)) {
-      active.push(`${flag}`)
+      active.push(`${print(flag)}`)
     }
   })
   return `RuntimeFlags(${active.join(", ")})`
@@ -134,15 +157,12 @@ export const patch = dual<
   ) as RuntimeFlags.RuntimeFlags)
 
 /** @internal */
-const renderFlag = (a: RuntimeFlags.RuntimeFlag): string => `${allFlags.find((b) => a === b)!}`
-
-/** @internal */
 export const renderPatch = (self: RuntimeFlagsPatch.RuntimeFlagsPatch): string => {
   const enabled = Array.from(enabledSet(self))
-    .map((flag) => renderFlag(flag))
+    .map((flag) => print(flag))
     .join(", ")
   const disabled = Array.from(disabledSet(self))
-    .map((flag) => renderFlag(flag))
+    .map((flag) => print(flag))
     .join(", ")
   return `RuntimeFlagsPatch(enabled = (${enabled}), disabled = (${disabled}))`
 }

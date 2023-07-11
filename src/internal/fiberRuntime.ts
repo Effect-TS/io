@@ -1182,10 +1182,14 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     } else {
       // Impossible to short circuit, so record the changes
       this.patchRuntimeFlags(this._runtimeFlags, updateFlags)
-      // Since we updated the flags, we need to revert them
-      const revertFlags = _runtimeFlags.diff(newRuntimeFlags, oldRuntimeFlags)
-      this.pushStack(new core.RevertFlags(revertFlags, op))
-      return op.i1 ? op.i1(oldRuntimeFlags) : core.exitUnit
+      if (op.i1) {
+        // Since we updated the flags, we need to revert them
+        const revertFlags = _runtimeFlags.diff(newRuntimeFlags, oldRuntimeFlags)
+        this.pushStack(new core.RevertFlags(revertFlags, op))
+        return op.i1(oldRuntimeFlags)
+      } else {
+        return core.exitUnit
+      }
     }
   }
 
