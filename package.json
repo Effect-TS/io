@@ -57,7 +57,7 @@
     }
   },
   "dependencies": {
-    "@effect/data": "^0.14.0"
+    "@effect/data": "^0.14.1"
   },
   "devDependencies": {
     "@babel/cli": "^7.22.6",
