@@ -978,7 +978,7 @@ export const provideSomeContext = dual<
   )(self as Effect.Effect<never, E, A>))
 
 /* @internal */
-export const contramapContext = dual<
+export const mapInputContext = dual<
   <R0, R>(
     f: (context: Context.Context<R0>) => Context.Context<R>
   ) => <E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R0, E, A>,

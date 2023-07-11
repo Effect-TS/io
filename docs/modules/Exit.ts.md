@@ -418,7 +418,7 @@ There are two possible values for an `Exit<E, A>`:
 **Signature**
 
 ```ts
-export type Exit<E, A> = (Failure<E, A> | Success<E, A>) & Pipeable<Exit<E, A>>
+export type Exit<E, A> = Failure<E, A> | Success<E, A>
 ```
 
 Added in v1.0.0
@@ -455,7 +455,7 @@ of type `E`.
 **Signature**
 
 ```ts
-export interface Failure<E, A> extends PipeableOverride<Effect.Effect<never, E, A>, Failure<E, A>> {
+export interface Failure<E, A> extends Effect.Effect<never, E, A>, Pipeable {
   readonly _tag: 'Failure'
   readonly cause: Cause.Cause<E>
   [Unify.typeSymbol]?: unknown
@@ -476,7 +476,7 @@ of type `A`.
 **Signature**
 
 ```ts
-export interface Success<E, A> extends PipeableOverride<Effect.Effect<never, E, A>, Success<E, A>> {
+export interface Success<E, A> extends Effect.Effect<never, E, A>, Pipeable {
   readonly _tag: 'Success'
   readonly value: A
   [Unify.typeSymbol]?: unknown

@@ -435,12 +435,12 @@ const fromFlatLoopFail = (prefix: ReadonlyArray<string>, path: string) =>
     )
 
 /** @internal */
-export const contramapPath = dual<
+export const mapInputPath = dual<
   (f: (path: string) => string) => (self: ConfigProvider.ConfigProvider) => ConfigProvider.ConfigProvider,
   (self: ConfigProvider.ConfigProvider, f: (path: string) => string) => ConfigProvider.ConfigProvider
->(2, (self, f) => fromFlat(contramapPathFlat(self.flattened, f)))
+>(2, (self, f) => fromFlat(mapInputPathFlat(self.flattened, f)))
 
-const contramapPathFlat = (
+const mapInputPathFlat = (
   self: ConfigProvider.ConfigProvider.Flat,
   f: (path: string) => string
 ): ConfigProvider.ConfigProvider.Flat =>
@@ -547,23 +547,23 @@ const orElseFlat = (
 
 /** @internal */
 export const constantCase = (self: ConfigProvider.ConfigProvider): ConfigProvider.ConfigProvider =>
-  contramapPath(self, StringUtils.constantCase)
+  mapInputPath(self, StringUtils.constantCase)
 
 /** @internal */
 export const kebabCase = (self: ConfigProvider.ConfigProvider): ConfigProvider.ConfigProvider =>
-  contramapPath(self, StringUtils.kebabCase)
+  mapInputPath(self, StringUtils.kebabCase)
 
 /** @internal */
 export const lowerCase = (self: ConfigProvider.ConfigProvider): ConfigProvider.ConfigProvider =>
-  contramapPath(self, StringUtils.lowerCase)
+  mapInputPath(self, StringUtils.lowerCase)
 
 /** @internal */
 export const snakeCase = (self: ConfigProvider.ConfigProvider): ConfigProvider.ConfigProvider =>
-  contramapPath(self, StringUtils.snakeCase)
+  mapInputPath(self, StringUtils.snakeCase)
 
 /** @internal */
 export const upperCase = (self: ConfigProvider.ConfigProvider): ConfigProvider.ConfigProvider =>
-  contramapPath(self, StringUtils.upperCase)
+  mapInputPath(self, StringUtils.upperCase)
 
 /** @internal */
 export const within = dual<

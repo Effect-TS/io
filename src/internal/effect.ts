@@ -1776,7 +1776,7 @@ export const updateService = dual<
   tag: T,
   f: (service: Context.Tag.Service<T>) => Context.Tag.Service<T>
 ) =>
-  core.contramapContext(self, (context) =>
+  core.mapInputContext(self, (context) =>
     Context.add(
       context,
       tag,

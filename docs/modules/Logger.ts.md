@@ -37,8 +37,8 @@ Added in v1.0.0
 - [filtering](#filtering)
   - [filterLogLevel](#filterloglevel)
 - [mapping](#mapping)
-  - [contramap](#contramap)
   - [map](#map)
+  - [mapInput](#mapinput)
 - [models](#models)
   - [Logger (interface)](#logger-interface)
 - [symbols](#symbols)
@@ -316,24 +316,6 @@ Added in v1.0.0
 
 # mapping
 
-## contramap
-
-**Signature**
-
-```ts
-export declare const contramap: {
-  <Message, Message2>(f: (message: Message2) => Message): <Output>(
-    self: Logger<Message, Output>
-  ) => Logger<Message2, Output>
-  <Output, Message, Message2>(self: Logger<Message, Output>, f: (message: Message2) => Message): Logger<
-    Message2,
-    Output
-  >
-}
-```
-
-Added in v1.0.0
-
 ## map
 
 **Signature**
@@ -349,6 +331,24 @@ export declare const map: {
 
 Added in v1.0.0
 
+## mapInput
+
+**Signature**
+
+```ts
+export declare const mapInput: {
+  <Message, Message2>(f: (message: Message2) => Message): <Output>(
+    self: Logger<Message, Output>
+  ) => Logger<Message2, Output>
+  <Output, Message, Message2>(self: Logger<Message, Output>, f: (message: Message2) => Message): Logger<
+    Message2,
+    Output
+  >
+}
+```
+
+Added in v1.0.0
+
 # models
 
 ## Logger (interface)
@@ -356,7 +356,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface Logger<Message, Output> extends Logger.Variance<Message, Output>, Pipeable<Logger<Message, Output>> {
+export interface Logger<Message, Output> extends Logger.Variance<Message, Output>, Pipeable {
   readonly log: (options: {
     readonly fiberId: FiberId.FiberId
     readonly logLevel: LogLevel.LogLevel

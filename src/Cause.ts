@@ -129,13 +129,13 @@ export type StackAnnotationTypeId = typeof StackAnnotationTypeId
  * @category models
  */
 export type Cause<E> =
-    | Empty
-    | Fail<E>
-    | Die
-    | Interrupt
-    | Annotated<E>
-    | Sequential<E>
-    | Parallel<E>
+  | Empty
+  | Fail<E>
+  | Die
+  | Interrupt
+  | Annotated<E>
+  | Sequential<E>
+  | Parallel<E>
 
 /**
  * @since 1.0.0

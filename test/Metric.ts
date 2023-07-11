@@ -103,7 +103,7 @@ describe.concurrent("Metric", () => {
         )
         assert.deepStrictEqual(result, MetricState.counter(15))
       }))
-    it.effect("custom increment with contramap", () =>
+    it.effect("custom increment with mapInput", () =>
       Effect.gen(function*($) {
         const result = yield* $(
           pipe(
@@ -112,7 +112,7 @@ describe.concurrent("Metric", () => {
               pipe(
                 Metric.counter("c6"),
                 Metric.taggedWithLabels(labels),
-                Metric.contramap((input: string) => input.length)
+                Metric.mapInput((input: string) => input.length)
               )
             ),
             Effect.zipRight(
@@ -122,7 +122,7 @@ describe.concurrent("Metric", () => {
                   pipe(
                     Metric.counter("c6"),
                     Metric.taggedWithLabels(labels),
-                    Metric.contramap((input: string) => input.length)
+                    Metric.mapInput((input: string) => input.length)
                   )
                 )
               )
@@ -209,12 +209,12 @@ describe.concurrent("Metric", () => {
         )
         assert.deepStrictEqual(result.occurrences, HashMap.make(["hello", 2] as const, ["world", 1] as const))
       }))
-    it.effect("custom occurrences with contramap", () =>
+    it.effect("custom occurrences with mapInput", () =>
       Effect.gen(function*($) {
         const frequency = pipe(
           Metric.frequency("f3"),
           Metric.taggedWithLabels(labels),
-          Metric.contramap((n: number) => `${n}`)
+          Metric.mapInput((n: number) => `${n}`)
         )
         const result = yield* $(
           pipe(
@@ -274,9 +274,9 @@ describe.concurrent("Metric", () => {
         )
         assert.deepStrictEqual(result, MetricState.gauge(3))
       }))
-    it.effect("custom set with contramap", () =>
+    it.effect("custom set with mapInput", () =>
       Effect.gen(function*($) {
-        const gauge = pipe(Metric.gauge("g3"), Metric.taggedWithLabels(labels), Metric.contramap((n: number) => n * 2))
+        const gauge = pipe(Metric.gauge("g3"), Metric.taggedWithLabels(labels), Metric.mapInput((n: number) => n * 2))
         const result = yield* $(
           pipe(
             Effect.succeed(1),
@@ -289,7 +289,7 @@ describe.concurrent("Metric", () => {
       }))
     it.effect("gauge + taggedWith", () =>
       Effect.gen(function*($) {
-        const base = pipe(Metric.gauge("g4"), Metric.tagged("static", "0"), Metric.contramap((s: string) => s.length))
+        const base = pipe(Metric.gauge("g4"), Metric.tagged("static", "0"), Metric.mapInput((s: string) => s.length))
         const gauge = pipe(
           base,
           Metric.taggedWithLabelsInput((input: string) => HashSet.make(MetricLabel.make("dyn", input)))
@@ -347,7 +347,7 @@ describe.concurrent("Metric", () => {
         const histogram = pipe(
           Metric.histogram("h3", boundaries),
           Metric.taggedWithLabels(labels),
-          Metric.contramap((duration: Duration.Duration) => Duration.toMillis(duration) / 1000)
+          Metric.mapInput((duration: Duration.Duration) => Duration.toMillis(duration) / 1000)
         )
         // NOTE: trackDuration always uses the **real** Clock
         const start = yield* $(Effect.sync(() => Date.now()))
@@ -365,13 +365,13 @@ describe.concurrent("Metric", () => {
         assert.isBelow(result.max, elapsed)
       })
     )
-    it.effect("custom observe with contramap", () =>
+    it.effect("custom observe with mapInput", () =>
       Effect.gen(function*($) {
         const boundaries = MetricBoundaries.linear({ start: 0, width: 1, count: 10 })
         const histogram = pipe(
           Metric.histogram("h4", boundaries),
           Metric.taggedWithLabels(labels),
-          Metric.contramap((s: string) => s.length)
+          Metric.mapInput((s: string) => s.length)
         )
         const result = yield* $(
           pipe(
@@ -392,7 +392,7 @@ describe.concurrent("Metric", () => {
         const base = pipe(
           Metric.histogram("h5", boundaries),
           Metric.taggedWithLabels(labels),
-          Metric.contramap((s: string) => s.length)
+          Metric.mapInput((s: string) => s.length)
         )
         const histogram = base.pipe(
           Metric.taggedWithLabelsInput((input: string) => HashSet.make(MetricLabel.make("dyn", input)))
@@ -457,7 +457,7 @@ describe.concurrent("Metric", () => {
         assert.strictEqual(result.min, 1)
         assert.strictEqual(result.max, 3)
       }))
-    it.effect("custom observe with contramap", () =>
+    it.effect("custom observe with mapInput", () =>
       Effect.gen(function*($) {
         const summary = Metric.summary({
           name: "s3",
@@ -467,7 +467,7 @@ describe.concurrent("Metric", () => {
           quantiles: Chunk.make(0, 1, 10)
         }).pipe(
           Metric.taggedWithLabels(labels),
-          Metric.contramap((s: string) => s.length)
+          Metric.mapInput((s: string) => s.length)
         )
         const result = yield* $(
           Effect.succeed("x"),
@@ -490,7 +490,7 @@ describe.concurrent("Metric", () => {
           quantiles: Chunk.make(0, 1, 10)
         }).pipe(
           Metric.taggedWithLabels(labels),
-          Metric.contramap((s: string) => s.length)
+          Metric.mapInput((s: string) => s.length)
         )
         const summary = base.pipe(
           Metric.taggedWithLabelsInput((input: string) => HashSet.make(MetricLabel.make("dyn", input)))

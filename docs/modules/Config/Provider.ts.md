@@ -35,7 +35,7 @@ Added in v1.0.0
   - [FlatConfigProviderTypeId](#flatconfigprovidertypeid)
   - [FlatConfigProviderTypeId (type alias)](#flatconfigprovidertypeid-type-alias)
 - [utils](#utils)
-  - [contramapPath](#contramappath)
+  - [mapInputPath](#mapinputpath)
   - [nested](#nested)
   - [orElse](#orelse)
   - [unnested](#unnested)
@@ -240,7 +240,7 @@ of the structure of that configuration.
 **Signature**
 
 ```ts
-export interface ConfigProvider extends ConfigProvider.Proto, Pipeable<ConfigProvider> {
+export interface ConfigProvider extends ConfigProvider.Proto, Pipeable {
   /**
    * Loads the specified configuration, or fails with a config error.
    */
@@ -299,7 +299,7 @@ Added in v1.0.0
 
 # utils
 
-## contramapPath
+## mapInputPath
 
 Returns a new config provider that will automatically tranform all path
 configuration names with the specified function. This can be utilized to
@@ -309,7 +309,7 @@ another.
 **Signature**
 
 ```ts
-export declare const contramapPath: {
+export declare const mapInputPath: {
   (f: (path: string) => string): (self: ConfigProvider) => ConfigProvider
   (self: ConfigProvider, f: (path: string) => string): ConfigProvider
 }

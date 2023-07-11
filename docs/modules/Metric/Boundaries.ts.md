@@ -79,7 +79,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface MetricBoundaries extends Equal.Equal, Pipeable<MetricBoundaries> {
+export interface MetricBoundaries extends Equal.Equal, Pipeable {
   readonly [MetricBoundariesTypeId]: MetricBoundariesTypeId
   readonly values: Chunk.Chunk<number>
 }

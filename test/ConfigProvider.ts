@@ -584,10 +584,10 @@ describe.concurrent("ConfigProvider", () => {
       assert.strictEqual(result, "value")
     }))
 
-  it.effect("contramapPath", () =>
+  it.effect("mapInputPath", () =>
     Effect.gen(function*($) {
       const configProvider = ConfigProvider.fromMap(new Map([["KEY", "VALUE"]])).pipe(
-        ConfigProvider.contramapPath((path) => path.toUpperCase())
+        ConfigProvider.mapInputPath((path) => path.toUpperCase())
       )
       const result = yield* $(configProvider.load(Config.string("key")))
       assert.strictEqual(result, "VALUE")
@@ -868,7 +868,7 @@ describe.concurrent("ConfigProvider", () => {
     Effect.gen(function*($) {
       const configProvider = ConfigProvider.fromMap(new Map([["nesting1.key1", "value1"], ["nesting2.KEY2", "value2"]]))
         .pipe(
-          ConfigProvider.within(["nesting2"], ConfigProvider.contramapPath((s) => s.toUpperCase()))
+          ConfigProvider.within(["nesting2"], ConfigProvider.mapInputPath((s) => s.toUpperCase()))
         )
       const config = Config.string("key1").pipe(
         Config.nested("nesting1"),
@@ -887,7 +887,7 @@ describe.concurrent("ConfigProvider", () => {
       const configProvider = ConfigProvider.fromMap(
         new Map([["nesting1.key1", "value1"], ["nesting2.nesting3.KEY2", "value2"]])
       ).pipe(
-        ConfigProvider.within(["nesting2", "nesting3"], ConfigProvider.contramapPath((s) => s.toUpperCase()))
+        ConfigProvider.within(["nesting2", "nesting3"], ConfigProvider.mapInputPath((s) => s.toUpperCase()))
       )
       const config = Config.string("key1").pipe(
         Config.nested("nesting1"),

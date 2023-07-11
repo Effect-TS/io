@@ -26,8 +26,8 @@ Added in v1.0.0
   - [Seq (interface)](#seq-interface)
   - [Single (interface)](#single-interface)
 - [utils](#utils)
-  - [contramapContext](#contramapcontext)
   - [locally](#locally)
+  - [mapInputContext](#mapinputcontext)
 
 ---
 
@@ -173,21 +173,6 @@ Added in v1.0.0
 
 # utils
 
-## contramapContext
-
-Provides each data source with part of its required environment.
-
-**Signature**
-
-```ts
-export declare const contramapContext: <R0, R>(
-  self: RequestBlock<R>,
-  f: (context: Context.Context<R0>) => Context.Context<R>
-) => RequestBlock<R0>
-```
-
-Added in v1.0.0
-
 ## locally
 
 Provides each data source with a fiber ref value.
@@ -196,6 +181,21 @@ Provides each data source with a fiber ref value.
 
 ```ts
 export declare const locally: <R, A>(self: RequestBlock<R>, ref: FiberRef<A>, value: A) => RequestBlock<R>
+```
+
+Added in v1.0.0
+
+## mapInputContext
+
+Provides each data source with part of its required environment.
+
+**Signature**
+
+```ts
+export declare const mapInputContext: <R0, R>(
+  self: RequestBlock<R>,
+  f: (context: Context.Context<R0>) => Context.Context<R>
+) => RequestBlock<R0>
 ```
 
 Added in v1.0.0

@@ -108,7 +108,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface CloseableScope extends PipeableOverride<Scope, CloseableScope> {
+export interface CloseableScope extends Scope, Pipeable {
   readonly [CloseableScopeTypeId]: CloseableScopeTypeId
 
   /**
@@ -125,7 +125,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface Scope extends Pipeable<Scope> {
+export interface Scope extends Pipeable {
   readonly [ScopeTypeId]: ScopeTypeId
 
   /**

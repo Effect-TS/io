@@ -2822,7 +2822,7 @@ export const scopeExtend = dual<
 >(
   2,
   <R, E, A>(effect: Effect.Effect<R, E, A>, scope: Scope.Scope) =>
-    core.contramapContext<Exclude<R, Scope.Scope>, R, E, A>(
+    core.mapInputContext<Exclude<R, Scope.Scope>, R, E, A>(
       effect,
       // @ts-expect-error
       Context.merge(Context.make(scopeTag, scope))

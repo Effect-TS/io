@@ -193,10 +193,10 @@ export const constantCase: (self: ConfigProvider) => ConfigProvider = internal.c
  * @since 1.0.0
  * @category utils
  */
-export const contramapPath: {
+export const mapInputPath: {
   (f: (path: string) => string): (self: ConfigProvider) => ConfigProvider
   (self: ConfigProvider, f: (path: string) => string): ConfigProvider
-} = internal.contramapPath
+} = internal.mapInputPath
 
 /**
  * Returns a new config provider that will automatically convert all property

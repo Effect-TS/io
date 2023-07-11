@@ -170,7 +170,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface All extends Pipeable<All> {
+export interface All extends Pipeable {
   readonly _tag: 'All'
   readonly label: 'ALL'
   readonly syslog: 0
@@ -185,7 +185,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface Debug extends Pipeable<Debug> {
+export interface Debug extends Pipeable {
   readonly _tag: 'Debug'
   readonly label: 'DEBUG'
   readonly syslog: 7
@@ -200,7 +200,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface Error extends Pipeable<Error> {
+export interface Error extends Pipeable {
   readonly _tag: 'Error'
   readonly label: 'ERROR'
   readonly syslog: 3
@@ -215,7 +215,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface Fatal extends Pipeable<Fatal> {
+export interface Fatal extends Pipeable {
   readonly _tag: 'Fatal'
   readonly label: 'FATAL'
   readonly syslog: 2
@@ -230,7 +230,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface Info extends Pipeable<Info> {
+export interface Info extends Pipeable {
   readonly _tag: 'Info'
   readonly label: 'INFO'
   readonly syslog: 6
@@ -260,7 +260,7 @@ verbosity of log output.
 **Signature**
 
 ```ts
-export type LogLevel = (All | Fatal | Error | Warning | Info | Debug | Trace | None) & Pipeable<LogLevel>
+export type LogLevel = All | Fatal | Error | Warning | Info | Debug | Trace | None
 ```
 
 Added in v1.0.0
@@ -270,7 +270,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface None extends Pipeable<None> {
+export interface None extends Pipeable {
   readonly _tag: 'None'
   readonly label: 'OFF'
   readonly syslog: 7
@@ -285,7 +285,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface Trace extends Pipeable<Trace> {
+export interface Trace extends Pipeable {
   readonly _tag: 'Trace'
   readonly label: 'TRACE'
   readonly syslog: 7
@@ -300,7 +300,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface Warning extends Pipeable<Warning> {
+export interface Warning extends Pipeable {
   readonly _tag: 'Warning'
   readonly label: 'WARN'
   readonly syslog: 4

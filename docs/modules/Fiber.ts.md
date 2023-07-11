@@ -610,7 +610,7 @@ which terminates the fiber, safely releasing all resources.
 **Signature**
 
 ```ts
-export interface Fiber<E, A> extends Fiber.Variance<E, A>, Pipeable<Fiber<E, A>> {
+export interface Fiber<E, A> extends Fiber.Variance<E, A>, Pipeable {
   /**
    * The identity of the fiber.
    */

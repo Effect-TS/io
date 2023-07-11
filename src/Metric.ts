@@ -148,10 +148,10 @@ export const make: MetricApply = internal.make
  * @since 1.0.0
  * @category mapping
  */
-export const contramap: {
+export const mapInput: {
   <In, In2>(f: (input: In2) => In): <Type, Out>(self: Metric<Type, In, Out>) => Metric<Type, In2, Out>
   <Type, In, Out, In2>(self: Metric<Type, In, Out>, f: (input: In2) => In): Metric<Type, In2, Out>
-} = internal.contramap
+} = internal.mapInput
 
 /**
  * A counter, which can be incremented by numbers.

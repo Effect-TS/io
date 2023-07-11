@@ -679,7 +679,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface Layer<RIn, E, ROut> extends Layer.Variance<RIn, E, ROut>, Pipeable<Layer<RIn, E, ROut>> {}
+export interface Layer<RIn, E, ROut> extends Layer.Variance<RIn, E, ROut>, Pipeable {}
 ```
 
 Added in v1.0.0

@@ -72,7 +72,7 @@ export const make: Metric.MetricApply = function<Type, In, Out>(
 }
 
 /** @internal */
-export const contramap = dual<
+export const mapInput = dual<
   <In, In2>(f: (input: In2) => In) => <Type, Out>(self: Metric.Metric<Type, In, Out>) => Metric.Metric<Type, In2, Out>,
   <Type, In, Out, In2>(self: Metric.Metric<Type, In, Out>, f: (input: In2) => In) => Metric.Metric<Type, In2, Out>
 >(2, (self, f) =>
@@ -94,7 +94,7 @@ export const frequency = (name: string, description?: string): Metric.Metric.Fre
 export const withConstantInput = dual<
   <In>(input: In) => <Type, Out>(self: Metric.Metric<Type, In, Out>) => Metric.Metric<Type, unknown, Out>,
   <Type, In, Out>(self: Metric.Metric<Type, In, Out>, input: In) => Metric.Metric<Type, unknown, Out>
->(2, (self, input) => contramap(self, () => input))
+>(2, (self, input) => mapInput(self, () => input))
 
 /** @internal */
 export const fromMetricKey = <Type extends MetricKeyType.MetricKeyType<any, any>>(
@@ -255,7 +255,7 @@ export const timer = (name: string): Metric.Metric<
     count: 100
   })
   const base = pipe(histogram(name, boundaries), tagged("time_unit", "milliseconds"))
-  return contramap(base, Duration.toMillis)
+  return mapInput(base, Duration.toMillis)
 }
 
 /** @internal */
@@ -271,7 +271,7 @@ export const timerWithBoundaries = (
     histogram(name, metricBoundaries.fromChunk(boundaries)),
     tagged("time_unit", "milliseconds")
   )
-  return contramap(base, Duration.toMillis)
+  return mapInput(base, Duration.toMillis)
 }
 
 /* @internal */
@@ -454,7 +454,7 @@ export const value = <Type, In, Out>(
 /** @internal */
 export const withNow = <Type, In, Out>(
   self: Metric.Metric<Type, readonly [In, number], Out>
-): Metric.Metric<Type, In, Out> => contramap(self, (input: In) => [input, Date.now()] as const)
+): Metric.Metric<Type, In, Out> => mapInput(self, (input: In) => [input, Date.now()] as const)
 
 /** @internal */
 export const zip = dual<
