@@ -276,7 +276,8 @@ export const runtime = <R>(): Effect.Effect<R, never, Runtime.Runtime<R>> =>
 /** @internal */
 export const defaultRuntimeFlags: RuntimeFlags.RuntimeFlags = runtimeFlags.make(
   runtimeFlags.Interruption,
-  runtimeFlags.CooperativeYielding
+  runtimeFlags.CooperativeYielding,
+  runtimeFlags.RuntimeMetrics
 )
 
 /** @internal */
