@@ -1162,8 +1162,8 @@ export const orElseFail = dual<
 
 /* @internal */
 export const orElseSucceed = dual<
-  <A2>(evaluate: LazyArg<A2>) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A | A2>,
-  <R, E, A, A2>(self: Effect.Effect<R, E, A>, evaluate: LazyArg<A2>) => Effect.Effect<R, E, A | A2>
+  <A2>(evaluate: LazyArg<A2>) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, never, A | A2>,
+  <R, E, A, A2>(self: Effect.Effect<R, E, A>, evaluate: LazyArg<A2>) => Effect.Effect<R, never, A | A2>
 >(2, (self, evaluate) => core.orElse(self, () => core.sync(evaluate)))
 
 /* @internal */
