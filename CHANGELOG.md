@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.32.2
+
+### Patch Changes
+
+- [#527](https://github.com/Effect-TS/io/pull/527) [`41a92f8`](https://github.com/Effect-TS/io/commit/41a92f83a07ae62359d0fa5a1e32997d345a1d35) Thanks [@gcanti](https://github.com/gcanti)! - Effect: fix orElseSucceed signature (should return never in the error channel)
+
 ## 0.32.1
 
 ### Patch Changes
