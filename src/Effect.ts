@@ -399,39 +399,23 @@ export declare namespace All {
   type Narrow<A> = (A extends [] ? [] : never) | A
 
   export interface All {
-    <Arg extends ReadonlyArray<EffectAny>, O extends Options>(
+    <Arg extends Iterable<EffectAny> | Record<string, EffectAny>, O extends Options>(
       arg: Narrow<Arg>,
       options?: O
-    ): ReturnTuple<Arg, IsDiscard<O>>
-    <Arg extends Iterable<EffectAny>, O extends Options>(
-      arg: Arg,
-      options?: O
-    ): ReturnIterable<Arg, IsDiscard<O>>
-    <
-      Arg extends Record<string, EffectAny>,
-      O extends Options
-    >(
-      arg: Arg,
-      options?: O
-    ): ReturnObject<Arg, IsDiscard<O>>
+    ): [Arg] extends [ReadonlyArray<EffectAny>] ? ReturnTuple<Arg, IsDiscard<O>>
+      : [Arg] extends [Iterable<EffectAny>] ? ReturnIterable<Arg, IsDiscard<O>>
+      : [Arg] extends [Record<string, EffectAny>] ? ReturnObject<Arg, IsDiscard<O>>
+      : never
   }
 
   export interface Validate {
-    <Arg extends ReadonlyArray<EffectAny>, O extends Options>(
+    <Arg extends Iterable<EffectAny> | Record<string, EffectAny>, O extends Options>(
       arg: Narrow<Arg>,
       options?: O
-    ): ReturnTuple<Arg, IsDiscard<O>, true>
-    <Arg extends Iterable<EffectAny>, O extends Options>(
-      arg: Arg,
-      options?: O
-    ): ReturnIterable<Arg, IsDiscard<O>, true>
-    <
-      Arg extends Record<string, EffectAny>,
-      O extends Options
-    >(
-      arg: Arg,
-      options?: O
-    ): ReturnObject<Arg, IsDiscard<O>, true>
+    ): [Arg] extends [ReadonlyArray<EffectAny>] ? ReturnTuple<Arg, IsDiscard<O>, true>
+      : [Arg] extends [Iterable<EffectAny>] ? ReturnIterable<Arg, IsDiscard<O>, true>
+      : [Arg] extends [Record<string, EffectAny>] ? ReturnObject<Arg, IsDiscard<O>, true>
+      : never
   }
 }
 

@@ -1576,7 +1576,7 @@ const allResolveInput = (
 }
 
 /* @internal */
-export const all: Effect.All.All = (
+export const all = ((
   arg: Iterable<Effect.Effect<any, any, any>> | Record<string, Effect.Effect<any, any, any>>,
   options?: Effect.All.Options
 ) => {
@@ -1587,10 +1587,10 @@ export const all: Effect.All.All = (
       reconcile.value
     ) :
     forEachOptions(effects, identity, options as any)
-}
+}) as Effect.All.All
 
 /* @internal */
-export const allValidate: Effect.All.Validate = (
+export const allValidate = ((
   arg: Iterable<Effect.Effect<any, any, any>> | Record<string, Effect.Effect<any, any, any>>,
   options?: Effect.All.Options
 ) => {
@@ -1632,7 +1632,7 @@ export const allValidate: Effect.All.Validate = (
         core.succeed(successes)
     }
   )
-}
+}) as Effect.All.Validate
 
 /* @internal */
 export const allSuccesses = <R, E, A>(
