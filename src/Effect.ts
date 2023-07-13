@@ -390,58 +390,45 @@ export declare namespace All {
     : never
 
   export type Options = {
-    readonly concurrency: Concurrency
-    readonly batching?: boolean | "inherit"
-    readonly discard?: boolean
-  } | {
-    readonly concurrency?: Concurrency
-    readonly batching: boolean | "inherit"
-    readonly discard?: boolean
-  } | {
     readonly concurrency?: Concurrency
     readonly batching?: boolean | "inherit"
-    readonly discard: boolean
+    readonly discard?: boolean
   }
 
   type IsDiscard<A> = [Extract<A, { readonly discard: true }>] extends [never] ? false : true
   type Narrow<A> = (A extends [] ? [] : never) | A
 
   export interface All {
-    <O extends Options>(
-      options?: O
-    ): <Arg extends Iterable<EffectAny> | Readonly<{ [K: string]: EffectAny }>>(
-      self: Arg
-    ) => [Arg] extends [ReadonlyArray<EffectAny>] ? ReturnTuple<Arg, IsDiscard<O>>
-      : [Arg] extends [Iterable<EffectAny>] ? ReturnIterable<Arg, IsDiscard<O>>
-      : ReturnObject<Arg, IsDiscard<O>>
-
-    <Arg extends Iterable<EffectAny>, O extends Options>(
+    <Arg extends ReadonlyArray<EffectAny>, O extends Options>(
       arg: Narrow<Arg>,
       options?: O
-    ): [Arg] extends [ReadonlyArray<EffectAny>] ? ReturnTuple<Arg, IsDiscard<O>> : ReturnIterable<Arg, IsDiscard<O>>
-
-    <Arg extends Record<string, EffectAny>, O extends Options>(
+    ): ReturnTuple<Arg, IsDiscard<O>>
+    <Arg extends Iterable<EffectAny>, O extends Options>(
+      arg: Arg,
+      options?: O
+    ): ReturnIterable<Arg, IsDiscard<O>>
+    <
+      Arg extends Record<string, EffectAny>,
+      O extends Options
+    >(
       arg: Arg,
       options?: O
     ): ReturnObject<Arg, IsDiscard<O>>
   }
 
   export interface Validate {
-    <O extends Options>(
-      options?: O
-    ): <Arg extends Iterable<EffectAny> | Readonly<{ [K: string]: EffectAny }>>(
-      self: Arg
-    ) => [Arg] extends [ReadonlyArray<EffectAny>] ? ReturnTuple<Arg, IsDiscard<O>, true>
-      : [Arg] extends [Iterable<EffectAny>] ? ReturnIterable<Arg, IsDiscard<O>, true>
-      : ReturnObject<Arg, IsDiscard<O>, true>
-
-    <Arg extends Iterable<EffectAny>, O extends Options>(
+    <Arg extends ReadonlyArray<EffectAny>, O extends Options>(
       arg: Narrow<Arg>,
       options?: O
-    ): [Arg] extends [ReadonlyArray<EffectAny>] ? ReturnTuple<Arg, IsDiscard<O>, true>
-      : ReturnIterable<Arg, IsDiscard<O>, true>
-
-    <Arg extends Record<string, EffectAny>, O extends Options>(
+    ): ReturnTuple<Arg, IsDiscard<O>, true>
+    <Arg extends Iterable<EffectAny>, O extends Options>(
+      arg: Arg,
+      options?: O
+    ): ReturnIterable<Arg, IsDiscard<O>, true>
+    <
+      Arg extends Record<string, EffectAny>,
+      O extends Options
+    >(
       arg: Arg,
       options?: O
     ): ReturnObject<Arg, IsDiscard<O>, true>
@@ -758,8 +745,10 @@ export const reduceWhile: {
  * @since 1.0.0
  * @category collecting & elements
  */
-export const replicate: (n: number) => <R, E, A>(self: Effect<R, E, A>) => Array<Effect<R, E, A>> =
-  fiberRuntime.replicate
+export const replicate: {
+  (n: number): <R, E, A>(self: Effect<R, E, A>) => Array<Effect<R, E, A>>
+  <R, E, A>(self: Effect<R, E, A>, n: number): Array<Effect<R, E, A>>
+} = fiberRuntime.replicate
 
 /**
  * Performs this effect the specified number of times and collects the
