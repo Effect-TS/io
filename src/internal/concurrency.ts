@@ -18,18 +18,15 @@ export const match: <R, E, A>(
   unbounded: () => Effect<R, E, A>,
   bounded: (limit: number) => Effect<R, E, A>
 ) => {
-  let effect: Effect<R, E, A>
   switch (options?.concurrency) {
     case undefined: {
-      effect = sequential()
-      break
+      return sequential()
     }
     case "unbounded": {
-      effect = unbounded()
-      break
+      return unbounded()
     }
     case "inherit": {
-      effect = core.fiberRefGetWith(
+      return core.fiberRefGetWith(
         core.currentConcurrency,
         (concurrency) =>
           concurrency === "unbounded" ?
@@ -38,16 +35,13 @@ export const match: <R, E, A>(
             bounded(concurrency) :
             sequential()
       )
-      break
     }
     default: {
-      effect = options!.concurrency > 1 ?
+      return options!.concurrency > 1 ?
         bounded(options!.concurrency) :
         sequential()
-      break
     }
   }
-  return effect
 }
 
 /** @internal */
@@ -64,18 +58,15 @@ export const matchSimple: <R, E, A>(
   sequential: () => Effect<R, E, A>,
   concurrent: () => Effect<R, E, A>
 ) => {
-  let effect: Effect<R, E, A>
   switch (options?.concurrency) {
     case undefined: {
-      effect = sequential()
-      break
+      return sequential()
     }
     case "unbounded": {
-      effect = concurrent()
-      break
+      return concurrent()
     }
     case "inherit": {
-      effect = core.fiberRefGetWith(
+      return core.fiberRefGetWith(
         core.currentConcurrency,
         (concurrency) =>
           concurrency === "unbounded" ?
@@ -84,13 +75,9 @@ export const matchSimple: <R, E, A>(
             concurrent() :
             sequential()
       )
-      break
     }
     default: {
-      effect = options!.concurrency > 1 ? concurrent() : sequential()
-      break
+      return options!.concurrency > 1 ? concurrent() : sequential()
     }
   }
-
-  return effect
 }
