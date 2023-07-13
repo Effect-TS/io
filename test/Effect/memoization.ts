@@ -35,9 +35,7 @@ describe.concurrent("Effect", () => {
       const ref = yield* $(Ref.make(0))
       const effect: Effect.Effect<never, never, void> = yield* $(Ref.update(ref, (n) => n + 1), Effect.once)
       yield* $(
-        effect,
-        Effect.replicate(100),
-        Effect.all({
+        Effect.all(Effect.replicate(effect, 100), {
           concurrency: "unbounded",
           discard: true
         })

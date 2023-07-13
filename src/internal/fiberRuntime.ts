@@ -1678,8 +1678,10 @@ export const allSuccesses = <R, E, A>(
   )
 
 /* @internal */
-export const replicate = (n: number) =>
-  <R, E, A>(self: Effect.Effect<R, E, A>): Array<Effect.Effect<R, E, A>> => Array.from({ length: n }, () => self)
+export const replicate = dual<
+  (n: number) => <R, E, A>(self: Effect.Effect<R, E, A>) => Array<Effect.Effect<R, E, A>>,
+  <R, E, A>(self: Effect.Effect<R, E, A>, n: number) => Array<Effect.Effect<R, E, A>>
+>(2, (self, n) => Array.from({ length: n }, () => self))
 
 /* @internal */
 export const replicateEffect = dual<
