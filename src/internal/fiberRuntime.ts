@@ -1555,20 +1555,6 @@ export const filter = dual<
 
 // === all
 
-const allIsDataFirst = (args: IArguments): boolean => {
-  if (args.length === 0) {
-    return false
-  } else if (Array.isArray(args[0]) || Predicate.isIterable(args[0])) {
-    return true
-  }
-  const obj: Effect.All.Options = args[0]
-  return (
-    typeof obj.concurrency === "number" || typeof obj.concurrency === "string" ||
-    typeof obj.batching === "number" || typeof obj.batching === "string" ||
-    typeof obj.discard === "boolean"
-  ) === false
-}
-
 const allResolveInput = (
   input: Iterable<Effect.Effect<any, any, any>> | Record<string, Effect.Effect<any, any, any>>
 ): readonly [Iterable<Effect.Effect<any, any, any>>, Option.Option<(as: ReadonlyArray<any>) => any>] => {
@@ -1590,17 +1576,10 @@ const allResolveInput = (
 }
 
 /* @internal */
-export const all = dual<
-  (
-    options?: Effect.All.Options
-  ) => (
-    arg: Iterable<Effect.Effect<any, any, any>> | Record<string, Effect.Effect<any, any, any>>
-  ) => Effect.Effect<any, any, any>,
-  (
-    arg: Iterable<Effect.Effect<any, any, any>> | Record<string, Effect.Effect<any, any, any>>,
-    options?: Effect.All.Options
-  ) => Effect.Effect<any, any, any>
->(allIsDataFirst, (arg, options) => {
+export const all: Effect.All.All = (
+  arg: Iterable<Effect.Effect<any, any, any>> | Record<string, Effect.Effect<any, any, any>>,
+  options?: Effect.All.Options
+) => {
   const [effects, reconcile] = allResolveInput(arg)
   return reconcile._tag === "Some" ?
     core.map(
@@ -1608,20 +1587,13 @@ export const all = dual<
       reconcile.value
     ) :
     forEachOptions(effects, identity, options as any)
-}) as Effect.All.All
-
-// === allValidate
+}
 
 /* @internal */
-export const allValidate = dual<
-  (options?: Effect.All.Options) => (
-    arg: Iterable<Effect.Effect<any, any, any>> | Record<string, Effect.Effect<any, any, any>>
-  ) => Effect.Effect<any, any, any>,
-  (
-    arg: Iterable<Effect.Effect<any, any, any>> | Record<string, Effect.Effect<any, any, any>>,
-    options?: Effect.All.Options
-  ) => Effect.Effect<any, any, any>
->(allIsDataFirst, (arg, options) => {
+export const allValidate: Effect.All.Validate = (
+  arg: Iterable<Effect.Effect<any, any, any>> | Record<string, Effect.Effect<any, any, any>>,
+  options?: Effect.All.Options
+) => {
   const [effects, reconcile] = allResolveInput(arg)
   const eitherEffects: Array<Effect.Effect<unknown, never, Either.Either<unknown, unknown>>> = []
   for (const effect of effects) {
@@ -1660,7 +1632,7 @@ export const allValidate = dual<
         core.succeed(successes)
     }
   )
-}) as Effect.All.Validate
+}
 
 /* @internal */
 export const allSuccesses = <R, E, A>(
@@ -1671,9 +1643,7 @@ export const allSuccesses = <R, E, A>(
   }
 ): Effect.Effect<R, never, Array<A>> =>
   core.map(
-    options ?
-      all(RA.fromIterable(elements).map(core.exit), options as Effect.All.Options) :
-      all(RA.fromIterable(elements).map(core.exit)),
+    all(RA.fromIterable(elements).map(core.exit), options as Effect.All.Options),
     RA.filterMap((exit) => core.exitIsSuccess(exit) ? Option.some(exit.i0) : Option.none())
   )
 
