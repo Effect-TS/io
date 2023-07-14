@@ -365,7 +365,7 @@ export class TestClockImpl implements TestClock {
           const end = f(data.instant)
           const sorted = pipe(
             data.sleeps,
-            Chunk.sort<readonly [number, Deferred<never, void>]>(pipe(number.Order, Order.contramap((_) => _[0])))
+            Chunk.sort<readonly [number, Deferred<never, void>]>(pipe(number.Order, Order.mapInput((_) => _[0])))
           )
           if (Chunk.isNonEmpty(sorted)) {
             const [instant, deferred] = Chunk.headNonEmpty(sorted)
