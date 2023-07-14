@@ -377,7 +377,7 @@ export const parallelCollectionCombine = <R, R2>(
   self: ParallelCollection<R>,
   that: ParallelCollection<R2>
 ): ParallelCollection<R | R2> =>
-  new ParallelImpl(HashMap.reduceWithIndex(self.map, that.map, (map, value, key) =>
+  new ParallelImpl(HashMap.reduce(self.map, that.map, (map, value, key) =>
     HashMap.set(
       map,
       key,
@@ -443,7 +443,7 @@ export const sequentialCollectionCombine = <R, R2>(
   self: SequentialCollection<R>,
   that: SequentialCollection<R2>
 ): SequentialCollection<R | R2> =>
-  new SequentialImpl(HashMap.reduceWithIndex(that.map, self.map, (map, value, key) =>
+  new SequentialImpl(HashMap.reduce(that.map, self.map, (map, value, key) =>
     HashMap.set(
       map,
       key,

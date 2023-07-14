@@ -3,7 +3,6 @@ import { dual, pipe } from "@effect/data/Function"
 import * as List from "@effect/data/List"
 import * as Option from "@effect/data/Option"
 import * as RA from "@effect/data/ReadonlyArray"
-import * as String from "@effect/data/String"
 import type * as ConfigError from "@effect/io/Config/Error"
 import type * as PathPatch from "@effect/io/Config/Provider/PathPatch"
 import * as configError from "@effect/io/internal/configError"
@@ -79,7 +78,7 @@ export const patch = dual<
       case "Unnested": {
         const containsName = pipe(
           RA.head(output),
-          Option.contains(String.Equivalence)(patch.name)
+          Option.contains(patch.name)
         )
         if (containsName) {
           output = RA.tailNonEmpty(output as RA.NonEmptyArray<string>)

@@ -191,7 +191,7 @@ export const locally: {
  */
 export const Order: order.Order<LogLevel> = pipe(
   number.Order,
-  order.contramap((level: LogLevel) => level.ordinal)
+  order.mapInput((level: LogLevel) => level.ordinal)
 )
 
 /**

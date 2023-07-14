@@ -1826,7 +1826,7 @@ export const useSpan: {
                 (startTime) =>
                   core.sync(() => {
                     const span = tracer.span(name, parent, options?.context ?? Context.empty(), startTime)
-                    HashMap.forEachWithIndex(annotations, (value, key) => span.attribute(key, value))
+                    HashMap.forEach(annotations, (value, key) => span.attribute(key, value))
                     Object.entries(options?.attributes ?? {}).forEach(([k, v]) => {
                       span.attribute(k, v)
                     })

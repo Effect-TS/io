@@ -49,7 +49,7 @@ export const RuntimeFiberTypeId: Fiber.RuntimeFiberTypeId = Symbol.for(
 /** @internal */
 export const Order: order.Order<Fiber.RuntimeFiber<unknown, unknown>> = pipe(
   order.tuple<readonly [order.Order<number>, order.Order<number>]>(number.Order, number.Order),
-  order.contramap((fiber: Fiber.RuntimeFiber<unknown, unknown>) =>
+  order.mapInput((fiber: Fiber.RuntimeFiber<unknown, unknown>) =>
     [
       (fiber.id() as FiberId.Runtime).startTimeMillis,
       (fiber.id() as FiberId.Runtime).id
