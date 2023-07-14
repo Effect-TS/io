@@ -74,4 +74,28 @@ describe.concurrent("Effect", () => {
       const result = yield* $(Fiber.join(fiber))
       assert.deepStrictEqual(result, Option.none())
     }))
+  it.effect("timeout should wait for interrupt even when uninterruptible", () =>
+    Effect.gen(function*($) {
+      const messages: Array<string> = []
+      const log = (s: string) =>
+        Effect.sync(() => {
+          messages.push(s)
+        })
+      const program = log("start doing something.").pipe(
+        Effect.flatMap(() => Effect.sleep("2 seconds")),
+        Effect.flatMap(() => log("my job is finished!")),
+        Effect.as("result")
+      )
+      const resultFiber = yield* $(
+        program,
+        Effect.timeout("1 seconds"),
+        Effect.tap(() => log("done")),
+        Effect.uninterruptible,
+        Effect.fork
+      )
+      yield* $(TestClock.adjust(Duration.seconds(3)))
+      const result = yield* $(Fiber.join(resultFiber))
+      assert.deepStrictEqual(result, Option.none())
+      assert.deepStrictEqual(messages, ["start doing something.", "my job is finished!", "done"])
+    }))
 })

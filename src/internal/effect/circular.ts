@@ -462,7 +462,7 @@ export const timeoutTo = dual<
     }
   ) => Effect.Effect<R, E, B | B1>
 >(2, (self, { duration, onSuccess, onTimeout }) =>
-  raceFirst(
+  fiberRuntime.raceAwait(
     core.map(self, onSuccess),
     pipe(
       effect.sleep(duration),
