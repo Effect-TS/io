@@ -539,8 +539,8 @@ export const filterOrDie = dual<
       filter: Refinement<A, B>,
       orDieWith: LazyArg<unknown>
     ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, B>
-    <A>(
-      filter: Predicate<A>,
+    <A, X extends A>(
+      filter: Predicate<X>,
       orDieWith: LazyArg<unknown>
     ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
   },
@@ -550,15 +550,15 @@ export const filterOrDie = dual<
       filter: Refinement<A, B>,
       orDieWith: LazyArg<unknown>
     ): Effect.Effect<R, E, B>
-    <R, E, A>(
+    <R, E, A, X extends A>(
       self: Effect.Effect<R, E, A>,
-      filter: Predicate<A>,
+      filter: Predicate<X>,
       orDieWith: LazyArg<unknown>
     ): Effect.Effect<R, E, A>
   }
->(3, <R, E, A>(
+>(3, <R, E, A, X extends A>(
   self: Effect.Effect<R, E, A>,
-  filter: Predicate<A>,
+  filter: Predicate<X>,
   orDieWith: LazyArg<unknown>
 ): Effect.Effect<R, E, A> => filterOrElse(self, filter, () => core.dieSync(orDieWith)))
 
@@ -569,8 +569,8 @@ export const filterOrDieMessage = dual<
       filter: Refinement<A, B>,
       message: string
     ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, B>
-    <A>(
-      filter: Predicate<A>,
+    <A, X extends A>(
+      filter: Predicate<X>,
       message: string
     ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
   },
@@ -580,40 +580,40 @@ export const filterOrDieMessage = dual<
       filter: Refinement<A, B>,
       message: string
     ): Effect.Effect<R, E, B>
-    <R, E, A>(
+    <R, E, A, X extends A>(
       self: Effect.Effect<R, E, A>,
-      filter: Predicate<A>,
+      filter: Predicate<X>,
       message: string
     ): Effect.Effect<R, E, A>
   }
->(3, <R, E, A>(
+>(3, <R, E, A, X extends A>(
   self: Effect.Effect<R, E, A>,
-  filter: Predicate<A>,
+  filter: Predicate<X>,
   message: string
 ): Effect.Effect<R, E, A> => filterOrElse(self, filter, () => core.dieMessage(message)))
 
 /* @internal */
 export const filterOrElse = dual<
   {
-    <A, B extends A, R2, E2, C>(
+    <A, B extends A, X extends A, R2, E2, C>(
       filter: Refinement<A, B>,
-      orElse: (a: A) => Effect.Effect<R2, E2, C>
+      orElse: (a: X) => Effect.Effect<R2, E2, C>
     ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, B | C>
-    <A, R2, E2, B>(
-      filter: Predicate<A>,
-      orElse: (a: A) => Effect.Effect<R2, E2, B>
+    <A, X extends A, Y extends A, R2, E2, B>(
+      filter: Predicate<X>,
+      orElse: (a: Y) => Effect.Effect<R2, E2, B>
     ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A | B>
   },
   {
-    <R, E, A, B extends A, R2, E2, C>(
+    <R, E, A, B extends A, X extends A, R2, E2, C>(
       self: Effect.Effect<R, E, A>,
       filter: Refinement<A, B>,
-      orElse: (a: A) => Effect.Effect<R2, E2, C>
+      orElse: (a: X) => Effect.Effect<R2, E2, C>
     ): Effect.Effect<R | R2, E | E2, B | C>
-    <R, E, A, R2, E2, B>(
+    <R, E, A, X extends A, Y extends A, R2, E2, B>(
       self: Effect.Effect<R, E, A>,
-      filter: Predicate<A>,
-      orElse: (a: A) => Effect.Effect<R2, E2, B>
+      filter: Predicate<X>,
+      orElse: (a: Y) => Effect.Effect<R2, E2, B>
     ): Effect.Effect<R | R2, E | E2, A | B>
   }
 >(3, <R, E, A, R2, E2, B>(
@@ -629,32 +629,32 @@ export const filterOrElse = dual<
 /* @internal */
 export const filterOrFail = dual<
   {
-    <A, B extends A, E2>(
+    <A, B extends A, X extends A, E2>(
       filter: Refinement<A, B>,
-      orFailWith: (a: A) => E2
+      orFailWith: (a: X) => E2
     ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E | E2, B>
-    <A, E2>(
-      filter: Predicate<A>,
-      orFailWith: (a: A) => E2
+    <A, X extends A, Y extends A, E2>(
+      filter: Predicate<X>,
+      orFailWith: (a: Y) => E2
     ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E | E2, A>
   },
   {
-    <R, E, A, B extends A, E2>(
+    <R, E, A, B extends A, X extends A, E2>(
       self: Effect.Effect<R, E, A>,
       filter: Refinement<A, B>,
-      orFailWith: (a: A) => E2
+      orFailWith: (a: X) => E2
     ): Effect.Effect<R, E | E2, B>
-    <R, E, A, E2>(
+    <R, E, A, X extends A, Y extends A, E2>(
       self: Effect.Effect<R, E, A>,
-      filter: Predicate<A>,
-      orFailWith: (a: A) => E2
+      filter: Predicate<X>,
+      orFailWith: (a: Y) => E2
     ): Effect.Effect<R, E | E2, A>
   }
->(3, <R, E, A, E2>(
+>(3, <R, E, A, X extends A, Y extends A, E2>(
   self: Effect.Effect<R, E, A>,
-  filter: Predicate<A>,
-  orFailWith: (a: A) => E2
-): Effect.Effect<R, E | E2, A> => filterOrElse(self, filter, (a) => core.failSync(() => orFailWith(a))))
+  filter: Predicate<X>,
+  orFailWith: (a: Y) => E2
+): Effect.Effect<R, E | E2, A> => filterOrElse(self, filter, (a) => core.failSync(() => orFailWith(a as Y))))
 
 /* @internal */
 export const findFirst = dual<
@@ -1467,17 +1467,17 @@ export const takeWhile = dual<
 
 /* @internal */
 export const tapBoth = dual<
-  <E, A, R2, E2, X, R3, E3, X1>(
+  <E, XE extends E, A, XA extends A, R2, E2, X, R3, E3, X1>(
     options: {
-      readonly onFailure: (e: E) => Effect.Effect<R2, E2, X>
-      readonly onSuccess: (a: A) => Effect.Effect<R3, E3, X1>
+      readonly onFailure: (e: XE) => Effect.Effect<R2, E2, X>
+      readonly onSuccess: (a: XA) => Effect.Effect<R3, E3, X1>
     }
   ) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2 | R3, E | E2 | E3, A>,
-  <R, E, A, R2, E2, X, R3, E3, X1>(
+  <R, E, A, XE extends E, XA extends A, R2, E2, X, R3, E3, X1>(
     self: Effect.Effect<R, E, A>,
     options: {
-      readonly onFailure: (e: E) => Effect.Effect<R2, E2, X>
-      readonly onSuccess: (a: A) => Effect.Effect<R3, E3, X1>
+      readonly onFailure: (e: XE) => Effect.Effect<R2, E2, X>
+      readonly onSuccess: (a: XA) => Effect.Effect<R3, E3, X1>
     }
   ) => Effect.Effect<R | R2 | R3, E | E2 | E3, A>
 >(2, (self, { onFailure, onSuccess }) =>
@@ -1486,14 +1486,14 @@ export const tapBoth = dual<
       const either = internalCause.failureOrCause(cause)
       switch (either._tag) {
         case "Left": {
-          return core.zipRight(onFailure(either.left), core.failCause(cause))
+          return core.zipRight(onFailure(either.left as any), core.failCause(cause))
         }
         case "Right": {
           return core.failCause(cause)
         }
       }
     },
-    onSuccess: (a) => core.as(onSuccess(a), a)
+    onSuccess: (a) => core.as(onSuccess(a as any), a)
   }))
 
 /* @internal */
@@ -1514,12 +1514,12 @@ export const tapDefect = dual<
 
 /* @internal */
 export const tapError = dual<
-  <E, R2, E2, X>(
-    f: (e: E) => Effect.Effect<R2, E2, X>
+  <E, XE extends E, R2, E2, X>(
+    f: (e: XE) => Effect.Effect<R2, E2, X>
   ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A>,
-  <R, E, A, R2, E2, X>(
+  <R, E, XE extends E, A, R2, E2, X>(
     self: Effect.Effect<R, E, A>,
-    f: (e: E) => Effect.Effect<R2, E2, X>
+    f: (e: XE) => Effect.Effect<R2, E2, X>
   ) => Effect.Effect<R | R2, E | E2, A>
 >(2, (self, f) =>
   core.matchCauseEffect(self, {
@@ -1527,7 +1527,7 @@ export const tapError = dual<
       const either = internalCause.failureOrCause(cause)
       switch (either._tag) {
         case "Left": {
-          return core.zipRight(f(either.left), core.failCause(cause))
+          return core.zipRight(f(either.left as any), core.failCause(cause))
         }
         case "Right": {
           return core.failCause(cause)
@@ -1539,16 +1539,16 @@ export const tapError = dual<
 
 /* @internal */
 export const tapErrorCause = dual<
-  <E, R2, E2, X>(
-    f: (cause: Cause.Cause<E>) => Effect.Effect<R2, E2, X>
+  <E, XE extends E, R2, E2, X>(
+    f: (cause: Cause.Cause<XE>) => Effect.Effect<R2, E2, X>
   ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A>,
-  <R, E, A, R2, E2, X>(
+  <R, E, A, XE extends E, R2, E2, X>(
     self: Effect.Effect<R, E, A>,
-    f: (cause: Cause.Cause<E>) => Effect.Effect<R2, E2, X>
+    f: (cause: Cause.Cause<XE>) => Effect.Effect<R2, E2, X>
   ) => Effect.Effect<R | R2, E | E2, A>
 >(2, (self, f) =>
   core.matchCauseEffect(self, {
-    onFailure: (cause) => core.zipRight(f(cause), core.failCause(cause)),
+    onFailure: (cause) => core.zipRight(f(cause as any), core.failCause(cause)),
     onSuccess: core.succeed
   }))
 

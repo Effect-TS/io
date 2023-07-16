@@ -1,4 +1,5 @@
 import { pipe } from "@effect/data/Function"
+import type { Cause } from "@effect/io/Cause"
 import * as Effect from "@effect/io/Effect"
 
 declare const string: Effect.Effect<"dep-1", "err-1", string>
@@ -276,3 +277,70 @@ pipe(numberRecord, Effect.allWith({ mode: "either" }))
 
 // $ExpectType Effect<"dep-4", never, void>
 pipe(numberRecord, Effect.allWith({ mode: "either", discard: true }))
+
+// -------------------------------------------------------------------------------------
+// tacit
+// -------------------------------------------------------------------------------------
+
+const tacitString = (s: string): Effect.Effect<never, never, string> => Effect.succeed(`string ${s}`)
+const tacitStringCause = (s: Cause<string>): Effect.Effect<never, never, string> => Effect.succeed(`string ${s}`)
+const tacitStringPredicate = (_s: string): boolean => true
+const tacitStringError = (_s: string): "a" => "a"
+const tacitStringErrorEffect = (_s: string): Effect.Effect<never, "a", never> => Effect.fail("a")
+
+// $ExpectType Effect<never, "a", "a">
+Effect.succeed("a" as const).pipe(Effect.filterOrFail(
+  tacitStringPredicate,
+  () => "a" as const
+))
+
+// $ExpectType Effect<never, "a", "a">
+Effect.succeed("a" as const).pipe(Effect.filterOrFail(
+  () => true,
+  tacitStringError
+))
+
+// $ExpectType Effect<never, never, "a">
+Effect.succeed("a" as const).pipe(Effect.filterOrDie(
+  tacitStringPredicate,
+  () => "fail"
+))
+
+// $ExpectType Effect<never, never, "a">
+Effect.succeed("a" as const).pipe(Effect.filterOrDieMessage(
+  tacitStringPredicate,
+  "fail"
+))
+
+// $ExpectType Effect<never, "a", "a">
+Effect.succeed("a" as const).pipe(Effect.filterOrElse(
+  tacitStringPredicate,
+  () => Effect.fail("a" as const)
+))
+
+// $ExpectType Effect<never, "a", "a">
+Effect.succeed("a" as const).pipe(Effect.filterOrElse(
+  () => true,
+  tacitStringErrorEffect
+))
+
+// $ExpectType Effect<never, never, "a">
+Effect.succeed("a" as const).pipe(Effect.tap(tacitString))
+
+// $ExpectType Effect<never, "a", never>
+Effect.fail("a" as const).pipe(Effect.tapError(tacitString))
+
+// $ExpectType Effect<never, "a", never>
+Effect.fail("a" as const).pipe(Effect.tapErrorCause(tacitStringCause))
+
+// $ExpectType Effect<never, "a", never>
+Effect.fail("a" as const).pipe(Effect.tapDefect(tacitStringCause))
+
+// $ExpectType Effect<never, "a", "a">
+pipe(
+  Effect.succeed("a" as const) as Effect.Effect<never, "a", "a">,
+  Effect.tapBoth({
+    onFailure: tacitString,
+    onSuccess: tacitString
+  })
+)
