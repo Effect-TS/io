@@ -3248,9 +3248,9 @@ export const filterOrDie: {
     filter: Refinement<A, B>,
     orDieWith: LazyArg<unknown>
   ): <R, E>(self: Effect<R, E, A>) => Effect<R, E, B>
-  <A>(filter: Predicate<A>, orDieWith: LazyArg<unknown>): <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <A, X extends A>(filter: Predicate<X>, orDieWith: LazyArg<unknown>): <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
   <R, E, A, B extends A>(self: Effect<R, E, A>, filter: Refinement<A, B>, orDieWith: LazyArg<unknown>): Effect<R, E, B>
-  <R, E, A>(self: Effect<R, E, A>, filter: Predicate<A>, orDieWith: LazyArg<unknown>): Effect<R, E, A>
+  <R, E, A, X extends A>(self: Effect<R, E, A>, filter: Predicate<X>, orDieWith: LazyArg<unknown>): Effect<R, E, A>
 } = effect.filterOrDie
 
 /**
@@ -3262,9 +3262,9 @@ export const filterOrDie: {
  */
 export const filterOrDieMessage: {
   <A, B extends A>(filter: Refinement<A, B>, message: string): <R, E>(self: Effect<R, E, A>) => Effect<R, E, B>
-  <A>(filter: Predicate<A>, message: string): <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <A, X extends A>(filter: Predicate<X>, message: string): <R, E>(self: Effect<R, E, A>) => Effect<R, E, A>
   <R, E, A, B extends A>(self: Effect<R, E, A>, filter: Refinement<A, B>, message: string): Effect<R, E, B>
-  <R, E, A>(self: Effect<R, E, A>, filter: Predicate<A>, message: string): Effect<R, E, A>
+  <R, E, A, X extends A>(self: Effect<R, E, A>, filter: Predicate<X>, message: string): Effect<R, E, A>
 } = effect.filterOrDieMessage
 
 /**
@@ -3275,23 +3275,23 @@ export const filterOrDieMessage: {
  * @category filtering & conditionals
  */
 export const filterOrElse: {
-  <A, B extends A, R2, E2, C>(
+  <A, B extends A, X extends A, R2, E2, C>(
     filter: Refinement<A, B>,
-    orElse: (a: A) => Effect<R2, E2, C>
+    orElse: (a: X) => Effect<R2, E2, C>
   ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, B | C>
-  <A, R2, E2, B>(
-    filter: Predicate<A>,
-    orElse: (a: A) => Effect<R2, E2, B>
+  <A, X extends A, Y extends A, R2, E2, B>(
+    filter: Predicate<X>,
+    orElse: (a: Y) => Effect<R2, E2, B>
   ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A | B>
-  <R, E, A, B extends A, R2, E2, C>(
+  <R, E, A, B extends A, X extends A, R2, E2, C>(
     self: Effect<R, E, A>,
     filter: Refinement<A, B>,
-    orElse: (a: A) => Effect<R2, E2, C>
+    orElse: (a: X) => Effect<R2, E2, C>
   ): Effect<R | R2, E | E2, B | C>
-  <R, E, A, R2, E2, B>(
+  <R, E, A, X extends A, Y extends A, R2, E2, B>(
     self: Effect<R, E, A>,
-    filter: Predicate<A>,
-    orElse: (a: A) => Effect<R2, E2, B>
+    filter: Predicate<X>,
+    orElse: (a: Y) => Effect<R2, E2, B>
   ): Effect<R | R2, E | E2, A | B>
 } = effect.filterOrElse
 
@@ -3303,17 +3303,24 @@ export const filterOrElse: {
  * @category filtering & conditionals
  */
 export const filterOrFail: {
-  <A, B extends A, E2>(
+  <A, B extends A, X extends A, E2>(
     filter: Refinement<A, B>,
-    orFailWith: (a: A) => E2
+    orFailWith: (a: X) => E2
   ): <R, E>(self: Effect<R, E, A>) => Effect<R, E2 | E, B>
-  <A, E2>(filter: Predicate<A>, orFailWith: (a: A) => E2): <R, E>(self: Effect<R, E, A>) => Effect<R, E2 | E, A>
-  <R, E, A, B extends A, E2>(
+  <A, X extends A, Y extends A, E2>(
+    filter: Predicate<X>,
+    orFailWith: (a: Y) => E2
+  ): <R, E>(self: Effect<R, E, A>) => Effect<R, E2 | E, A>
+  <R, E, A, B extends A, X extends A, E2>(
     self: Effect<R, E, A>,
     filter: Refinement<A, B>,
-    orFailWith: (a: A) => E2
+    orFailWith: (a: X) => E2
   ): Effect<R, E | E2, B>
-  <R, E, A, E2>(self: Effect<R, E, A>, filter: Predicate<A>, orFailWith: (a: A) => E2): Effect<R, E | E2, A>
+  <R, E, A, X extends A, Y extends A, E2>(
+    self: Effect<R, E, A>,
+    filter: Predicate<X>,
+    orFailWith: (a: Y) => E2
+  ): Effect<R, E | E2, A>
 } = effect.filterOrFail
 
 /**
@@ -3585,8 +3592,10 @@ export const summarized: {
  * @category sequencing
  */
 export const tap: {
-  <A, R2, E2, _>(f: (a: A) => Effect<R2, E2, _>): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A>
-  <R, E, A, R2, E2, _>(self: Effect<R, E, A>, f: (a: A) => Effect<R2, E2, _>): Effect<R | R2, E | E2, A>
+  <A, X extends A, R2, E2, _>(
+    f: (a: X) => Effect<R2, E2, _>
+  ): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A>
+  <R, E, A, X extends A, R2, E2, _>(self: Effect<R, E, A>, f: (a: X) => Effect<R2, E2, _>): Effect<R | R2, E | E2, A>
 } = core.tap
 
 /**
@@ -3597,18 +3606,12 @@ export const tap: {
  * @category sequencing
  */
 export const tapBoth: {
-  <E, A, R2, E2, X, R3, E3, X1>(
-    options: {
-      readonly onFailure: (e: E) => Effect<R2, E2, X>
-      readonly onSuccess: (a: A) => Effect<R3, E3, X1>
-    }
+  <E, XE extends E, A, XA extends A, R2, E2, X, R3, E3, X1>(
+    options: { readonly onFailure: (e: XE) => Effect<R2, E2, X>; readonly onSuccess: (a: XA) => Effect<R3, E3, X1> }
   ): <R>(self: Effect<R, E, A>) => Effect<R2 | R3 | R, E | E2 | E3, A>
-  <R, E, A, R2, E2, X, R3, E3, X1>(
+  <R, E, A, XE extends E, XA extends A, R2, E2, X, R3, E3, X1>(
     self: Effect<R, E, A>,
-    options: {
-      readonly onFailure: (e: E) => Effect<R2, E2, X>
-      readonly onSuccess: (a: A) => Effect<R3, E3, X1>
-    }
+    options: { readonly onFailure: (e: XE) => Effect<R2, E2, X>; readonly onSuccess: (a: XA) => Effect<R3, E3, X1> }
   ): Effect<R | R2 | R3, E | E2 | E3, A>
 } = effect.tapBoth
 
@@ -3635,8 +3638,10 @@ export const tapDefect: {
  * @category sequencing
  */
 export const tapError: {
-  <E, R2, E2, X>(f: (e: E) => Effect<R2, E2, X>): <R, A>(self: Effect<R, E, A>) => Effect<R2 | R, E | E2, A>
-  <R, E, A, R2, E2, X>(self: Effect<R, E, A>, f: (e: E) => Effect<R2, E2, X>): Effect<R | R2, E | E2, A>
+  <E, XE extends E, R2, E2, X>(
+    f: (e: XE) => Effect<R2, E2, X>
+  ): <R, A>(self: Effect<R, E, A>) => Effect<R2 | R, E | E2, A>
+  <R, E, XE extends E, A, R2, E2, X>(self: Effect<R, E, A>, f: (e: XE) => Effect<R2, E2, X>): Effect<R | R2, E | E2, A>
 } = effect.tapError
 
 /**
@@ -3647,12 +3652,12 @@ export const tapError: {
  * @category sequencing
  */
 export const tapErrorCause: {
-  <E, R2, E2, X>(
-    f: (cause: Cause.Cause<E>) => Effect<R2, E2, X>
+  <E, XE extends E, R2, E2, X>(
+    f: (cause: Cause.Cause<XE>) => Effect<R2, E2, X>
   ): <R, A>(self: Effect<R, E, A>) => Effect<R2 | R, E | E2, A>
-  <R, E, A, R2, E2, X>(
+  <R, E, A, XE extends E, R2, E2, X>(
     self: Effect<R, E, A>,
-    f: (cause: Cause.Cause<E>) => Effect<R2, E2, X>
+    f: (cause: Cause.Cause<XE>) => Effect<R2, E2, X>
   ): Effect<R | R2, E | E2, A>
 } = effect.tapErrorCause
 
