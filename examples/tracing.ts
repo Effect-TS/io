@@ -19,4 +19,4 @@ const program = Effect.all([
   Effect.delay(Effect.succeed(0), "500 millis")
 ], { concurrency: "unbounded", discard: true })
 
-Effect.runFork(Effect.catchAllCause(program, Effect.logCause({ level: "Error" })))
+Effect.runFork(Effect.catchAllCause(program, Effect.logCause("Error")))

@@ -831,9 +831,8 @@ export const ignore = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, 
 export const ignoreLogged = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, void> =>
   core.matchCauseEffect(self, {
     onFailure: (cause) =>
-      logCause(cause, {
-        message: "An error was silently ignored because it is not anticipated to be useful",
-        level: "Debug"
+      logCause(cause, "Debug", {
+        message: "An error was silently ignored because it is not anticipated to be useful"
       }),
     onSuccess: () => core.unit
   })
@@ -866,52 +865,36 @@ export const iterate = <Z, R, E>(
   })
 
 /* @internal */
-export const log = dual<
-  (options?: {
-    readonly cause?: Cause.Cause<unknown>
-    readonly level?: LogLevel.Literal
-  }) => (message: string) => Effect.Effect<never, never, void>,
-  (message: string, options?: {
-    readonly cause?: Cause.Cause<unknown>
-    readonly level?: LogLevel.Literal
-  }) => Effect.Effect<never, never, void>
->(
-  (args) => typeof args[0] === "string",
-  (message: string, options?: {
-    readonly cause?: Cause.Cause<unknown>
-    readonly level?: LogLevel.Literal
-  }): Effect.Effect<never, never, void> =>
-    core.withFiberRuntime<never, never, void>((fiberState) => {
-      fiberState.log(
-        message,
-        options?.cause ?? internalCause.empty,
-        options?.level ? Option.some(LogLevel.fromLiteral(options.level)) : Option.none()
-      )
-      return core.unit
-    })
-)
+export const log = (message: string, level?: LogLevel.Literal, options?: {
+  readonly cause?: Cause.Cause<unknown>
+}): Effect.Effect<never, never, void> =>
+  core.withFiberRuntime<never, never, void>((fiberState) => {
+    fiberState.log(
+      message,
+      options?.cause ?? internalCause.empty,
+      level ? Option.some(LogLevel.fromLiteral(level)) : Option.none()
+    )
+    return core.unit
+  })
 
 /* @internal */
 export const logCause = dual<
-  (options?: {
+  (level?: LogLevel.Literal, options?: {
     readonly message?: string
-    readonly level?: LogLevel.Literal
   }) => (cause: Cause.Cause<unknown>) => Effect.Effect<never, never, void>,
-  (cause: Cause.Cause<unknown>, options?: {
+  (cause: Cause.Cause<unknown>, level?: LogLevel.Literal, options?: {
     readonly message?: string
-    readonly level?: LogLevel.Literal
   }) => Effect.Effect<never, never, void>
 >(
   (args) => internalCause.isCause(args[0]),
-  (cause: Cause.Cause<unknown>, options?: {
+  (cause: Cause.Cause<unknown>, level?: LogLevel.Literal, options?: {
     readonly message?: string
-    readonly level?: LogLevel.Literal
   }): Effect.Effect<never, never, void> =>
     core.withFiberRuntime<never, never, void>((fiberState) => {
       fiberState.log(
         options?.message ?? "",
         cause,
-        options?.level ? Option.some(LogLevel.fromLiteral(options.level)) : Option.none()
+        level ? Option.some(LogLevel.fromLiteral(level)) : Option.none()
       )
       return core.unit
     })
@@ -919,38 +902,32 @@ export const logCause = dual<
 
 /* @internal */
 export const withLog = dual<
-  (message: string, options?: {
+  (message: string, level?: LogLevel.Literal, options?: {
     readonly cause?: Cause.Cause<unknown>
-    readonly level?: LogLevel.Literal
   }) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
-  <R, E, A>(self: Effect.Effect<R, E, A>, message: string, options: {
+  <R, E, A>(self: Effect.Effect<R, E, A>, message: string, level?: LogLevel.Literal, options?: {
     readonly cause?: Cause.Cause<unknown>
-    readonly level?: LogLevel.Literal
   }) => Effect.Effect<R, E, A>
 >(
   (args) => core.isEffect(args[0]),
-  <R, E, A>(self: Effect.Effect<R, E, A>, message: string, options?: {
+  <R, E, A>(self: Effect.Effect<R, E, A>, message: string, level?: LogLevel.Literal, options?: {
     readonly cause?: Cause.Cause<unknown>
-    readonly level?: LogLevel.Literal
-  }): Effect.Effect<R, E, A> => core.zipLeft(self, log(message, options))
+  }): Effect.Effect<R, E, A> => core.zipLeft(self, log(message, level, options))
 )
 
 /* @internal */
 export const withLogCause = dual<
-  (options?: {
+  (level?: LogLevel.Literal, options?: {
     readonly message?: string
-    readonly level?: LogLevel.Literal
   }) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
-  <R, E, A>(self: Effect.Effect<R, E, A>, options?: {
+  <R, E, A>(self: Effect.Effect<R, E, A>, level?: LogLevel.Literal, options?: {
     readonly message?: string
-    readonly level?: LogLevel.Literal
   }) => Effect.Effect<R, E, A>
 >(
   (args) => core.isEffect(args[0]),
-  <R, E, A>(self: Effect.Effect<R, E, A>, options?: {
+  <R, E, A>(self: Effect.Effect<R, E, A>, level?: LogLevel.Literal, options?: {
     readonly message?: string
-    readonly level?: LogLevel.Literal
-  }): Effect.Effect<R, E, A> => tapErrorCause(self, logCause(options))
+  }): Effect.Effect<R, E, A> => tapErrorCause(self, logCause(level, options))
 )
 
 /* @internal */
