@@ -335,6 +335,18 @@ export const once: <R, E, A>(self: Effect<R, E, A>) => Effect<never, never, Effe
 export const all: All.Signature = fiberRuntime.all
 
 /**
+ * Data-last variant of `Effect.all`.
+ *
+ * Runs all the provided effects in sequence respecting the structure provided in input.
+ *
+ * Supports multiple arguments, a single argument tuple / array or record / struct.
+ *
+ * @since 1.0.0
+ * @category collecting & elements
+ */
+export const allWith: All.SignatureWith = fiberRuntime.allWith
+
+/**
  * @since 1.0.0
  */
 export declare namespace All {
@@ -408,6 +420,15 @@ export declare namespace All {
       arg: Narrow<Arg>,
       options?: O
     ): [Arg] extends [ReadonlyArray<EffectAny>] ? ReturnTuple<Arg, IsDiscard<O>, ExtractMode<O>>
+      : [Arg] extends [Iterable<EffectAny>] ? ReturnIterable<Arg, IsDiscard<O>, ExtractMode<O>>
+      : [Arg] extends [Record<string, EffectAny>] ? ReturnObject<Arg, IsDiscard<O>, ExtractMode<O>>
+      : never
+  }
+
+  export interface SignatureWith {
+    <O extends Options>(options?: O): <Arg extends Iterable<EffectAny> | Record<string, EffectAny>>(
+      arg: Arg
+    ) => [Arg] extends [ReadonlyArray<EffectAny>] ? ReturnTuple<Arg, IsDiscard<O>, ExtractMode<O>>
       : [Arg] extends [Iterable<EffectAny>] ? ReturnIterable<Arg, IsDiscard<O>, ExtractMode<O>>
       : [Arg] extends [Record<string, EffectAny>] ? ReturnObject<Arg, IsDiscard<O>, ExtractMode<O>>
       : never

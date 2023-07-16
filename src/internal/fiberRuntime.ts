@@ -1671,6 +1671,9 @@ export const all = ((
 }) as Effect.All.Signature
 
 /* @internal */
+export const allWith: Effect.All.SignatureWith = (options) => (arg) => all(arg, options)
+
+/* @internal */
 export const allSuccesses = <R, E, A>(
   elements: Iterable<Effect.Effect<R, E, A>>,
   options?: {

@@ -189,4 +189,15 @@ describe.concurrent("Effect", () => {
         satisfies<true>(assertType<Array<Either.Either<never, number>>>()(result))
       }))
   })
+  describe("allWith", () => {
+    it.effect("should work with one array argument", () =>
+      Effect.gen(function*($) {
+        const res = yield* $(
+          [Effect.succeed(0), Effect.succeed(1)] as const,
+          Effect.allWith()
+        )
+        assert.deepEqual(res, [0, 1])
+        satisfies<true>(assertType<[number, number]>()(res))
+      }))
+  })
 })

@@ -32,6 +32,7 @@ Added in v1.0.0
 - [collecting & elements](#collecting--elements)
   - [all](#all)
   - [allSuccesses](#allsuccesses)
+  - [allWith](#allwith)
   - [dropUntil](#dropuntil)
   - [dropWhile](#dropwhile)
   - [every](#every)
@@ -611,6 +612,22 @@ export declare const allSuccesses: <R, E, A>(
   elements: Iterable<Effect<R, E, A>>,
   options?: { readonly concurrency?: Concurrency; readonly batching?: boolean | 'inherit' }
 ) => Effect<R, never, A[]>
+```
+
+Added in v1.0.0
+
+## allWith
+
+Data-last variant of `Effect.all`.
+
+Runs all the provided effects in sequence respecting the structure provided in input.
+
+Supports multiple arguments, a single argument tuple / array or record / struct.
+
+**Signature**
+
+```ts
+export declare const allWith: All.SignatureWith
 ```
 
 Added in v1.0.0
