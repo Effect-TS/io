@@ -332,18 +332,19 @@ export const once: <R, E, A>(self: Effect<R, E, A>) => Effect<never, never, Effe
  * @since 1.0.0
  * @category collecting & elements
  */
-export const all: All.All = fiberRuntime.all
+export const all: All.Signature = fiberRuntime.all
 
 /**
- * Runs all the provided effects in sequence respecting the structure provided
- * in input. The structure of any errors is also preserved.
+ * Data-last variant of `Effect.all`.
+ *
+ * Runs all the provided effects in sequence respecting the structure provided in input.
  *
  * Supports multiple arguments, a single argument tuple / array or record / struct.
  *
  * @since 1.0.0
  * @category collecting & elements
  */
-export const allValidate: All.Validate = fiberRuntime.allValidate
+export const allWith: All.SignatureWith = fiberRuntime.allWith
 
 /**
  * @since 1.0.0
@@ -351,41 +352,55 @@ export const allValidate: All.Validate = fiberRuntime.allValidate
 export declare namespace All {
   type EffectAny = Effect<any, any, any>
 
-  type ReturnIterable<T extends Iterable<EffectAny>, Discard extends boolean, Validate = false> = [T] extends
+  type ReturnIterable<T extends Iterable<EffectAny>, Discard extends boolean, Mode> = [T] extends
     [Iterable<Effect.Variance<infer R, infer E, infer A>>] ? Effect<
     R,
-    Validate extends true ? Array<Option.Option<E>> : E,
-    Discard extends true ? void : Array<A>
+    Mode extends "either" ? never
+      : Mode extends "validate" ? Array<Option.Option<E>>
+      : E,
+    Discard extends true ? void : Mode extends "either" ? Array<Either.Either<E, A>> : Array<A>
   >
     : never
 
-  type ReturnTuple<T extends ReadonlyArray<unknown>, Discard extends boolean, Validate = false> = Effect<
+  type ReturnTuple<T extends ReadonlyArray<unknown>, Discard extends boolean, Mode> = Effect<
     T[number] extends never ? never
       : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
       : never,
-    T[number] extends never ? never
-      : Validate extends true ? {
-        -readonly [K in keyof T]: [T[K]] extends [Effect<infer _R, infer _E, infer _A>] ? Option.Option<_E> : never
+    Mode extends "either" ? never
+      : T[number] extends never ? never
+      : Mode extends "validate" ? {
+        -readonly [K in keyof T]: [T[K]] extends [Effect.Variance<infer _R, infer _E, infer _A>] ? Option.Option<_E>
+          : never
       }
       : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
       : never,
     Discard extends true ? void
       : T[number] extends never ? []
-      : { -readonly [K in keyof T]: [T[K]] extends [Effect<infer _R, infer _E, infer _A>] ? _A : never }
+      : Mode extends "either" ? {
+        -readonly [K in keyof T]: [T[K]] extends [Effect.Variance<infer _R, infer _E, infer _A>] ? Either.Either<_E, _A>
+          : never
+      }
+      : { -readonly [K in keyof T]: [T[K]] extends [Effect.Variance<infer _R, infer _E, infer _A>] ? _A : never }
   > extends infer X ? X : never
 
-  type ReturnObject<T, Discard extends boolean, Validate = false> = [T] extends [{ [K: string]: EffectAny }] ? Effect<
+  type ReturnObject<T, Discard extends boolean, Mode> = [T] extends [{ [K: string]: EffectAny }] ? Effect<
     keyof T extends never ? never
       : [T[keyof T]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
       : never,
-    keyof T extends never ? never
-      : Validate extends true ? {
-        -readonly [K in keyof T]: [T[K]] extends [Effect<infer _R, infer _E, infer _A>] ? Option.Option<_E> : never
+    Mode extends "either" ? never
+      : keyof T extends never ? never
+      : Mode extends "validate" ? {
+        -readonly [K in keyof T]: [T[K]] extends [Effect.Variance<infer _R, infer _E, infer _A>] ? Option.Option<_E>
+          : never
       }
       : [T[keyof T]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }] ? E
       : never,
     Discard extends true ? void
-      : { -readonly [K in keyof T]: [T[K]] extends [Effect<infer _R, infer _E, infer _A>] ? _A : never }
+      : Mode extends "either" ? {
+        -readonly [K in keyof T]: [T[K]] extends [Effect.Variance<infer _R, infer _E, infer _A>] ? Either.Either<_E, _A>
+          : never
+      }
+      : { -readonly [K in keyof T]: [T[K]] extends [Effect.Variance<infer _R, infer _E, infer _A>] ? _A : never }
   >
     : never
 
@@ -393,28 +408,29 @@ export declare namespace All {
     readonly concurrency?: Concurrency
     readonly batching?: boolean | "inherit"
     readonly discard?: boolean
+    readonly mode?: "default" | "validate" | "either"
   }
 
   type IsDiscard<A> = [Extract<A, { readonly discard: true }>] extends [never] ? false : true
+  type ExtractMode<A> = [A] extends [{ mode: infer M }] ? M : "default"
   type Narrow<A> = (A extends [] ? [] : never) | A
 
-  export interface All {
+  export interface Signature {
     <Arg extends Iterable<EffectAny> | Record<string, EffectAny>, O extends Options>(
       arg: Narrow<Arg>,
       options?: O
-    ): [Arg] extends [ReadonlyArray<EffectAny>] ? ReturnTuple<Arg, IsDiscard<O>>
-      : [Arg] extends [Iterable<EffectAny>] ? ReturnIterable<Arg, IsDiscard<O>>
-      : [Arg] extends [Record<string, EffectAny>] ? ReturnObject<Arg, IsDiscard<O>>
+    ): [Arg] extends [ReadonlyArray<EffectAny>] ? ReturnTuple<Arg, IsDiscard<O>, ExtractMode<O>>
+      : [Arg] extends [Iterable<EffectAny>] ? ReturnIterable<Arg, IsDiscard<O>, ExtractMode<O>>
+      : [Arg] extends [Record<string, EffectAny>] ? ReturnObject<Arg, IsDiscard<O>, ExtractMode<O>>
       : never
   }
 
-  export interface Validate {
-    <Arg extends Iterable<EffectAny> | Record<string, EffectAny>, O extends Options>(
-      arg: Narrow<Arg>,
-      options?: O
-    ): [Arg] extends [ReadonlyArray<EffectAny>] ? ReturnTuple<Arg, IsDiscard<O>, true>
-      : [Arg] extends [Iterable<EffectAny>] ? ReturnIterable<Arg, IsDiscard<O>, true>
-      : [Arg] extends [Record<string, EffectAny>] ? ReturnObject<Arg, IsDiscard<O>, true>
+  export interface SignatureWith {
+    <O extends Options>(options?: O): <Arg extends Iterable<EffectAny> | Record<string, EffectAny>>(
+      arg: Arg
+    ) => [Arg] extends [ReadonlyArray<EffectAny>] ? ReturnTuple<Arg, IsDiscard<O>, ExtractMode<O>>
+      : [Arg] extends [Iterable<EffectAny>] ? ReturnIterable<Arg, IsDiscard<O>, ExtractMode<O>>
+      : [Arg] extends [Record<string, EffectAny>] ? ReturnObject<Arg, IsDiscard<O>, ExtractMode<O>>
       : never
   }
 }

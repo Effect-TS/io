@@ -1575,26 +1575,11 @@ const allResolveInput = (
   ]
 }
 
-/* @internal */
-export const all = ((
-  arg: Iterable<Effect.Effect<any, any, any>> | Record<string, Effect.Effect<any, any, any>>,
+const allValidate = ((
+  effects: Iterable<Effect.Effect<any, any, any>>,
+  reconcile: Option.Option<(as: ReadonlyArray<any>) => any>,
   options?: Effect.All.Options
 ) => {
-  const [effects, reconcile] = allResolveInput(arg)
-  return reconcile._tag === "Some" ?
-    core.map(
-      forEachOptions(effects, identity, options as any),
-      reconcile.value
-    ) :
-    forEachOptions(effects, identity, options as any)
-}) as Effect.All.All
-
-/* @internal */
-export const allValidate = ((
-  arg: Iterable<Effect.Effect<any, any, any>> | Record<string, Effect.Effect<any, any, any>>,
-  options?: Effect.All.Options
-) => {
-  const [effects, reconcile] = allResolveInput(arg)
   const eitherEffects: Array<Effect.Effect<unknown, never, Either.Either<unknown, unknown>>> = []
   for (const effect of effects) {
     eitherEffects.push(core.either(effect))
@@ -1632,7 +1617,61 @@ export const allValidate = ((
         core.succeed(successes)
     }
   )
-}) as Effect.All.Validate
+})
+
+const allEither = ((
+  effects: Iterable<Effect.Effect<any, any, any>>,
+  reconcile: Option.Option<(as: ReadonlyArray<any>) => any>,
+  options?: Effect.All.Options
+) => {
+  const eitherEffects: Array<Effect.Effect<unknown, never, Either.Either<unknown, unknown>>> = []
+  for (const effect of effects) {
+    eitherEffects.push(core.either(effect))
+  }
+
+  if (options?.discard) {
+    return forEachOptions(eitherEffects, identity, {
+      concurrency: options?.concurrency,
+      batching: options?.batching,
+      discard: true
+    })
+  }
+
+  return core.map(
+    forEachOptions(eitherEffects, identity, {
+      concurrency: options?.concurrency,
+      batching: options?.batching
+    }),
+    (eithers) =>
+      reconcile._tag === "Some" ?
+        reconcile.value(eithers) :
+        eithers
+  )
+})
+
+/* @internal */
+export const all = ((
+  arg: Iterable<Effect.Effect<any, any, any>> | Record<string, Effect.Effect<any, any, any>>,
+  options?: Effect.All.Options
+) => {
+  const [effects, reconcile] = allResolveInput(arg)
+
+  if (options?.mode === "validate") {
+    return allValidate(effects, reconcile, options)
+  } else if (options?.mode === "either") {
+    return allEither(effects, reconcile, options)
+  }
+
+  return reconcile._tag === "Some" ?
+    core.map(
+      forEachOptions(effects, identity, options as any),
+      reconcile.value
+    ) :
+    forEachOptions(effects, identity, options as any)
+}) as Effect.All.Signature
+
+/* @internal */
+export const allWith: Effect.All.SignatureWith = (options) => (arg) => all(arg, options)
 
 /* @internal */
 export const allSuccesses = <R, E, A>(
