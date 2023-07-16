@@ -5,17 +5,17 @@ import * as LogLevel from "@effect/io/Logger/Level"
 
 const program1 = Logger.withMinimumLogLevel(LogLevel.Debug)(
   Effect.gen(function*($) {
-    yield* $(Effect.log("debug0", { level: "Debug" }))
-    yield* $(Effect.log("debug1", { level: "Debug" }))
-    yield* $(Effect.log("debug2", { level: "Debug" }))
+    yield* $(Effect.log("debug0", "Debug"))
+    yield* $(Effect.log("debug1", "Debug"))
+    yield* $(Effect.log("debug2", "Debug"))
   })
 )
 
 const program2 = Logger.withMinimumLogLevel(LogLevel.Info)(
   Effect.gen(function*($) {
-    yield* $(Effect.log("debug0", { level: "Debug" }))
-    yield* $(Effect.log("debug1", { level: "Debug" }))
-    yield* $(Effect.log("debug2", { level: "Debug" }))
+    yield* $(Effect.log("debug0", "Debug"))
+    yield* $(Effect.log("debug1", "Debug"))
+    yield* $(Effect.log("debug2", "Debug"))
   })
 )
 

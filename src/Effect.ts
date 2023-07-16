@@ -4100,21 +4100,11 @@ export const matchEffect: {
  * @since 1.0.0
  * @category logging
  */
-export const log: {
-  (
-    options?: {
-      readonly cause?: Cause.Cause<unknown>
-      readonly level?: "None" | "All" | "Fatal" | "Error" | "Warning" | "Info" | "Debug" | "Trace"
-    }
-  ): (message: string) => Effect<never, never, void>
-  (
-    message: string,
-    options?: {
-      readonly cause?: Cause.Cause<unknown>
-      readonly level?: "None" | "All" | "Fatal" | "Error" | "Warning" | "Info" | "Debug" | "Trace"
-    }
-  ): Effect<never, never, void>
-} = effect.log
+export const log: (
+  message: string,
+  level?: "None" | "All" | "Fatal" | "Error" | "Warning" | "Info" | "Debug" | "Trace",
+  options?: { readonly cause?: Cause.Cause<unknown> }
+) => Effect<never, never, void> = effect.log
 
 /**
  * Logs the specified cause at the current log level.
@@ -4124,17 +4114,13 @@ export const log: {
  */
 export const logCause: {
   (
-    options?: {
-      readonly message?: string
-      readonly level?: "None" | "All" | "Fatal" | "Error" | "Warning" | "Info" | "Debug" | "Trace"
-    }
+    level?: "None" | "All" | "Fatal" | "Error" | "Warning" | "Info" | "Debug" | "Trace",
+    options?: { readonly message?: string }
   ): (cause: Cause.Cause<unknown>) => Effect<never, never, void>
   (
     cause: Cause.Cause<unknown>,
-    options?: {
-      readonly message?: string
-      readonly level?: "None" | "All" | "Fatal" | "Error" | "Warning" | "Info" | "Debug" | "Trace"
-    }
+    level?: "None" | "All" | "Fatal" | "Error" | "Warning" | "Info" | "Debug" | "Trace",
+    options?: { readonly message?: string }
   ): Effect<never, never, void>
 } = effect.logCause
 
@@ -4147,18 +4133,14 @@ export const logCause: {
 export const withLog: {
   (
     message: string,
-    options?: {
-      readonly cause?: Cause.Cause<unknown>
-      readonly level?: "All" | "Fatal" | "Error" | "Warning" | "Info" | "Debug" | "Trace" | "None"
-    }
+    level?: "None" | "All" | "Fatal" | "Error" | "Warning" | "Info" | "Debug" | "Trace",
+    options?: { readonly cause?: Cause.Cause<unknown> }
   ): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
   <R, E, A>(
     self: Effect<R, E, A>,
     message: string,
-    options: {
-      readonly cause?: Cause.Cause<unknown>
-      readonly level?: "All" | "Fatal" | "Error" | "Warning" | "Info" | "Debug" | "Trace" | "None"
-    }
+    level?: "None" | "All" | "Fatal" | "Error" | "Warning" | "Info" | "Debug" | "Trace",
+    options?: { readonly cause?: Cause.Cause<unknown> }
   ): Effect<R, E, A>
 } = effect.withLog
 
@@ -4170,17 +4152,13 @@ export const withLog: {
  */
 export const withLogCause: {
   (
-    options?: {
-      readonly message?: string
-      readonly level?: "None" | "All" | "Fatal" | "Error" | "Warning" | "Info" | "Debug" | "Trace"
-    }
+    level?: "All" | "Fatal" | "Error" | "Warning" | "Info" | "Debug" | "Trace" | "None",
+    options?: { readonly message?: string }
   ): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
   <R, E, A>(
     self: Effect<R, E, A>,
-    options?: {
-      readonly message?: string
-      readonly level?: "None" | "All" | "Fatal" | "Error" | "Warning" | "Info" | "Debug" | "Trace"
-    }
+    level?: "All" | "Fatal" | "Error" | "Warning" | "Info" | "Debug" | "Trace" | "None",
+    options?: { readonly message?: string }
   ): Effect<R, E, A>
 } = effect.withLogCause
 

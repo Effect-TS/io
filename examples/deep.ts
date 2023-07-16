@@ -10,7 +10,7 @@ const program = pipe(
     concurrency: "unbounded"
   }),
   Effect.flatMap((chunk) => Effect.sync(() => console.log(Array.from(chunk)))),
-  Effect.tapErrorCause(Effect.logCause({ level: "Error" })),
+  Effect.tapErrorCause(Effect.logCause("Error")),
   Effect.provideLayer(Logger.minimumLogLevel(Level.Debug))
 )
 
