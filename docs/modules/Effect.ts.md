@@ -32,7 +32,6 @@ Added in v1.0.0
 - [collecting & elements](#collecting--elements)
   - [all](#all)
   - [allSuccesses](#allsuccesses)
-  - [allValidate](#allvalidate)
   - [dropUntil](#dropuntil)
   - [dropWhile](#dropwhile)
   - [every](#every)
@@ -595,7 +594,7 @@ Supports multiple arguments, a single argument tuple / array or record / struct.
 **Signature**
 
 ```ts
-export declare const all: All.All
+export declare const all: All.Signature
 ```
 
 Added in v1.0.0
@@ -612,21 +611,6 @@ export declare const allSuccesses: <R, E, A>(
   elements: Iterable<Effect<R, E, A>>,
   options?: { readonly concurrency?: Concurrency; readonly batching?: boolean | 'inherit' }
 ) => Effect<R, never, A[]>
-```
-
-Added in v1.0.0
-
-## allValidate
-
-Runs all the provided effects in sequence respecting the structure provided
-in input. The structure of any errors is also preserved.
-
-Supports multiple arguments, a single argument tuple / array or record / struct.
-
-**Signature**
-
-```ts
-export declare const allValidate: All.Validate
 ```
 
 Added in v1.0.0
