@@ -713,12 +713,12 @@ export const syncContext: <A>(evaluate: LazyArg<Context.Context<A>>) => Layer<ne
  * @category sequencing
  */
 export const tap: {
-  <ROut, RIn2, E2, X>(
-    f: (context: Context.Context<ROut>) => Effect.Effect<RIn2, E2, X>
+  <ROut, XR extends ROut, RIn2, E2, X>(
+    f: (context: Context.Context<XR>) => Effect.Effect<RIn2, E2, X>
   ): <RIn, E>(self: Layer<RIn, E, ROut>) => Layer<RIn2 | RIn, E2 | E, ROut>
-  <RIn, E, ROut, RIn2, E2, X>(
+  <RIn, E, ROut, XR extends ROut, RIn2, E2, X>(
     self: Layer<RIn, E, ROut>,
-    f: (context: Context.Context<ROut>) => Effect.Effect<RIn2, E2, X>
+    f: (context: Context.Context<XR>) => Effect.Effect<RIn2, E2, X>
   ): Layer<RIn | RIn2, E | E2, ROut>
 } = internal.tap
 
@@ -729,12 +729,12 @@ export const tap: {
  * @category sequencing
  */
 export const tapError: {
-  <E, RIn2, E2, X>(
-    f: (e: E) => Effect.Effect<RIn2, E2, X>
+  <E, XE extends E, RIn2, E2, X>(
+    f: (e: XE) => Effect.Effect<RIn2, E2, X>
   ): <RIn, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn2 | RIn, E | E2, ROut>
-  <RIn, E, ROut, RIn2, E2, X>(
+  <RIn, E, XE extends E, ROut, RIn2, E2, X>(
     self: Layer<RIn, E, ROut>,
-    f: (e: E) => Effect.Effect<RIn2, E2, X>
+    f: (e: XE) => Effect.Effect<RIn2, E2, X>
   ): Layer<RIn | RIn2, E | E2, ROut>
 } = internal.tapError
 
@@ -745,12 +745,12 @@ export const tapError: {
  * @category sequencing
  */
 export const tapErrorCause: {
-  <E, RIn2, E2, X>(
-    f: (cause: Cause.Cause<E>) => Effect.Effect<RIn2, E2, X>
+  <E, XE extends E, RIn2, E2, X>(
+    f: (cause: Cause.Cause<XE>) => Effect.Effect<RIn2, E2, X>
   ): <RIn, ROut>(self: Layer<RIn, E, ROut>) => Layer<RIn2 | RIn, E | E2, ROut>
-  <RIn, E, ROut, RIn2, E2, X>(
+  <RIn, E, XE extends E, ROut, RIn2, E2, X>(
     self: Layer<RIn, E, ROut>,
-    f: (cause: Cause.Cause<E>) => Effect.Effect<RIn2, E2, X>
+    f: (cause: Cause.Cause<XE>) => Effect.Effect<RIn2, E2, X>
   ): Layer<RIn | RIn2, E | E2, ROut>
 } = internal.tapErrorCause
 

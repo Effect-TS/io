@@ -1360,18 +1360,18 @@ export const tapInput = dual<
 
 /** @internal */
 export const tapOutput = dual<
-  <Out, Env2, X>(
-    f: (out: Out) => Effect.Effect<Env2, never, X>
+  <Out, XO extends Out, Env2, X>(
+    f: (out: XO) => Effect.Effect<Env2, never, X>
   ) => <Env, In>(self: Schedule.Schedule<Env, In, Out>) => Schedule.Schedule<Env | Env2, In, Out>,
-  <Env, In, Out, Env2, X>(
+  <Env, In, Out, XO extends Out, Env2, X>(
     self: Schedule.Schedule<Env, In, Out>,
-    f: (out: Out) => Effect.Effect<Env2, never, X>
+    f: (out: XO) => Effect.Effect<Env2, never, X>
   ) => Schedule.Schedule<Env | Env2, In, Out>
 >(2, (self, f) =>
   makeWithState(self.initial, (now, input, state) =>
     core.tap(
       self.step(now, input, state),
-      ([, out]) => f(out)
+      ([, out]) => f(out as any)
     )))
 
 /** @internal */
