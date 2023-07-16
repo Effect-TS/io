@@ -979,43 +979,43 @@ export const syncContext = <A>(evaluate: LazyArg<Context.Context<A>>): Layer.Lay
 
 /** @internal */
 export const tap = dual<
-  <ROut, RIn2, E2, X>(
-    f: (context: Context.Context<ROut>) => Effect.Effect<RIn2, E2, X>
+  <ROut, XR extends ROut, RIn2, E2, X>(
+    f: (context: Context.Context<XR>) => Effect.Effect<RIn2, E2, X>
   ) => <RIn, E>(self: Layer.Layer<RIn, E, ROut>) => Layer.Layer<RIn | RIn2, E | E2, ROut>,
-  <RIn, E, ROut, RIn2, E2, X>(
+  <RIn, E, ROut, XR extends ROut, RIn2, E2, X>(
     self: Layer.Layer<RIn, E, ROut>,
-    f: (context: Context.Context<ROut>) => Effect.Effect<RIn2, E2, X>
+    f: (context: Context.Context<XR>) => Effect.Effect<RIn2, E2, X>
   ) => Layer.Layer<RIn | RIn2, E | E2, ROut>
 >(2, (self, f) => flatMap(self, (context) => fromEffectContext(core.as(f(context), context))))
 
 /** @internal */
 export const tapError = dual<
-  <E, RIn2, E2, X>(
-    f: (e: E) => Effect.Effect<RIn2, E2, X>
+  <E, XE extends E, RIn2, E2, X>(
+    f: (e: XE) => Effect.Effect<RIn2, E2, X>
   ) => <RIn, ROut>(self: Layer.Layer<RIn, E, ROut>) => Layer.Layer<RIn | RIn2, E | E2, ROut>,
-  <RIn, E, ROut, RIn2, E2, X>(
+  <RIn, E, XE extends E, ROut, RIn2, E2, X>(
     self: Layer.Layer<RIn, E, ROut>,
-    f: (e: E) => Effect.Effect<RIn2, E2, X>
+    f: (e: XE) => Effect.Effect<RIn2, E2, X>
   ) => Layer.Layer<RIn | RIn2, E | E2, ROut>
 >(2, (self, f) =>
   catchAll(
     self,
-    (e) => fromEffectContext(core.flatMap(f(e), () => core.fail(e)))
+    (e) => fromEffectContext(core.flatMap(f(e as any), () => core.fail(e)))
   ))
 
 /** @internal */
 export const tapErrorCause = dual<
-  <E, RIn2, E2, X>(
-    f: (cause: Cause.Cause<E>) => Effect.Effect<RIn2, E2, X>
+  <E, XE extends E, RIn2, E2, X>(
+    f: (cause: Cause.Cause<XE>) => Effect.Effect<RIn2, E2, X>
   ) => <RIn, ROut>(self: Layer.Layer<RIn, E, ROut>) => Layer.Layer<RIn | RIn2, E | E2, ROut>,
-  <RIn, E, ROut, RIn2, E2, X>(
+  <RIn, E, XE extends E, ROut, RIn2, E2, X>(
     self: Layer.Layer<RIn, E, ROut>,
-    f: (cause: Cause.Cause<E>) => Effect.Effect<RIn2, E2, X>
+    f: (cause: Cause.Cause<XE>) => Effect.Effect<RIn2, E2, X>
   ) => Layer.Layer<RIn | RIn2, E | E2, ROut>
 >(2, (self, f) =>
   catchAllCause(
     self,
-    (cause) => fromEffectContext(core.flatMap(f(cause), () => core.failCause(cause)))
+    (cause) => fromEffectContext(core.flatMap(f(cause as any), () => core.failCause(cause)))
   ))
 
 /** @internal */

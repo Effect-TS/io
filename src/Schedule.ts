@@ -1142,12 +1142,12 @@ export const tapInput: {
  * @category sequencing
  */
 export const tapOutput: {
-  <Out, Env2, X>(
-    f: (out: Out) => Effect.Effect<Env2, never, X>
+  <Out, XO extends Out, Env2, X>(
+    f: (out: XO) => Effect.Effect<Env2, never, X>
   ): <Env, In>(self: Schedule<Env, In, Out>) => Schedule<Env2 | Env, In, Out>
-  <Env, In, Out, Env2, X>(
+  <Env, In, Out, XO extends Out, Env2, X>(
     self: Schedule<Env, In, Out>,
-    f: (out: Out) => Effect.Effect<Env2, never, X>
+    f: (out: XO) => Effect.Effect<Env2, never, X>
   ): Schedule<Env | Env2, In, Out>
 } = internal.tapOutput
 
