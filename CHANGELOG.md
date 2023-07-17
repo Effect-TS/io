@@ -1,5 +1,31 @@
 # @effect/io
 
+## 0.33.0
+
+### Minor Changes
+
+- [#530](https://github.com/Effect-TS/io/pull/530) [`7f41e1e`](https://github.com/Effect-TS/io/commit/7f41e1ebab5e868ed9c90c048eeeebb6e68d53cb) Thanks [@tim-smart](https://github.com/tim-smart)! - remove data-last variant for .all
+
+- [#540](https://github.com/Effect-TS/io/pull/540) [`58815ce`](https://github.com/Effect-TS/io/commit/58815ce0b244bb6a643ed80e8ab876165326fabc) Thanks [@tim-smart](https://github.com/tim-smart)! - positional log level argument
+
+- [#540](https://github.com/Effect-TS/io/pull/540) [`58815ce`](https://github.com/Effect-TS/io/commit/58815ce0b244bb6a643ed80e8ab876165326fabc) Thanks [@tim-smart](https://github.com/tim-smart)! - remove data last Effect.log
+
+- [#539](https://github.com/Effect-TS/io/pull/539) [`a792860`](https://github.com/Effect-TS/io/commit/a792860c03dbd8223f2d68e2145e68c2341fcca5) Thanks [@tim-smart](https://github.com/tim-smart)! - add "validate" and "either" mode to Effect.all
+
+- [#537](https://github.com/Effect-TS/io/pull/537) [`8bbebac`](https://github.com/Effect-TS/io/commit/8bbebac7be042df8c87a6a340e376ff950f8e7c4) Thanks [@gcanti](https://github.com/gcanti)! - update to latest /data
+
+### Patch Changes
+
+- [#541](https://github.com/Effect-TS/io/pull/541) [`d77b3e3`](https://github.com/Effect-TS/io/commit/d77b3e3c6e14fa4ff35dbd0353fe33399929f2f2) Thanks [@tim-smart](https://github.com/tim-smart)! - fix tacit usage inference
+
+- [#542](https://github.com/Effect-TS/io/pull/542) [`e503d7f`](https://github.com/Effect-TS/io/commit/e503d7f97a5f4861ed1667e8ea26bb833e2028a4) Thanks [@tim-smart](https://github.com/tim-smart)! - fix tacit inference in Schedule
+
+- [#542](https://github.com/Effect-TS/io/pull/542) [`e503d7f`](https://github.com/Effect-TS/io/commit/e503d7f97a5f4861ed1667e8ea26bb833e2028a4) Thanks [@tim-smart](https://github.com/tim-smart)! - fix tacit inference in Layer
+
+- [#539](https://github.com/Effect-TS/io/pull/539) [`a792860`](https://github.com/Effect-TS/io/commit/a792860c03dbd8223f2d68e2145e68c2341fcca5) Thanks [@tim-smart](https://github.com/tim-smart)! - add allWith - data-last variant of Effect.all
+
+- [#533](https://github.com/Effect-TS/io/pull/533) [`b3c003e`](https://github.com/Effect-TS/io/commit/b3c003e92e504b7a6323eab8bc5ee760b8fef98a) Thanks [@tim-smart](https://github.com/tim-smart)! - simplify Effect.all types
+
 ## 0.32.2
 
 ### Patch Changes
