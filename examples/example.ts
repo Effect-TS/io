@@ -9,13 +9,13 @@ const N = Context.Tag<number>()
 const L = Layer.effect(
   N,
   Effect.gen(function*($) {
-    yield* $(Effect.log("A", "Debug"))
-    yield* $(Effect.forkDaemon(Effect.schedule(Schedule.fixed("10 millis"))(Effect.log("B", "Debug"))))
+    yield* $(Effect.logDebug("A"))
+    yield* $(Effect.forkDaemon(Effect.schedule(Schedule.fixed("10 millis"))(Effect.logDebug("B"))))
     return 0
   })
 )
 
-const main = Effect.provideSomeLayer(L)(Effect.flatMap(N, (n) => Effect.log(`n: ${n}`, "Debug")))
+const main = Effect.provideSomeLayer(L)(Effect.flatMap(N, (n) => Effect.logDebug(`n: ${n}`)))
 
 Effect.runSync(
   Logger.withMinimumLogLevel(LogLevel.Debug)(main)

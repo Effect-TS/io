@@ -33,6 +33,6 @@ export const program = Effect.gen(function*($) {
 pipe(
   program,
   Effect.provideSomeLayer(HttpServerLive),
-  Effect.catchAllCause(Effect.logCause("Error")),
+  Effect.catchAllCause(Effect.logError),
   Effect.runFork
 )

@@ -203,10 +203,13 @@ Added in v1.0.0
   - [annotateLogs](#annotatelogs)
   - [log](#log)
   - [logAnnotations](#logannotations)
-  - [logCause](#logcause)
+  - [logDebug](#logdebug)
+  - [logError](#logerror)
+  - [logFatal](#logfatal)
+  - [logInfo](#loginfo)
+  - [logTrace](#logtrace)
+  - [logWarning](#logwarning)
   - [setUnhandledErrorLogLevel](#setunhandlederrorloglevel)
-  - [withLog](#withlog)
-  - [withLogCause](#withlogcause)
   - [withLogSpan](#withlogspan)
   - [withUnhandledErrorLogLevel](#withunhandlederrorloglevel)
 - [mapping](#mapping)
@@ -3220,16 +3223,16 @@ Added in v1.0.0
 
 ## log
 
-Logs the specified message. You can optionally provide the log level
-and a cause.
+Logs the specified message or cause at the current log level.
+
+You can set the current log level using `FiberRef.currentLogLevel`.
 
 **Signature**
 
 ```ts
-export declare const log: (
-  message: string,
-  level?: 'None' | 'All' | 'Fatal' | 'Error' | 'Warning' | 'Info' | 'Debug' | 'Trace',
-  options?: { readonly cause?: Cause.Cause<unknown> }
+export declare const log: <A extends string | Cause.Cause<unknown>>(
+  messageOrCause: A,
+  supplementry?: (A extends string ? Cause.Cause<unknown> : string) | undefined
 ) => Effect<never, never, void>
 ```
 
@@ -3247,24 +3250,92 @@ export declare const logAnnotations: Effect<never, never, HashMap.HashMap<string
 
 Added in v1.0.0
 
-## logCause
+## logDebug
 
-Logs the specified cause at the current log level.
+Logs the specified message or cause at the Debug log level.
 
 **Signature**
 
 ```ts
-export declare const logCause: {
-  (
-    level?: 'None' | 'All' | 'Fatal' | 'Error' | 'Warning' | 'Info' | 'Debug' | 'Trace',
-    options?: { readonly message?: string }
-  ): (cause: Cause.Cause<unknown>) => Effect<never, never, void>
-  (
-    cause: Cause.Cause<unknown>,
-    level?: 'None' | 'All' | 'Fatal' | 'Error' | 'Warning' | 'Info' | 'Debug' | 'Trace',
-    options?: { readonly message?: string }
-  ): Effect<never, never, void>
-}
+export declare const logDebug: <A extends string | Cause.Cause<unknown>>(
+  messageOrCause: A,
+  supplementry?: (A extends string ? Cause.Cause<unknown> : string) | undefined
+) => Effect<never, never, void>
+```
+
+Added in v1.0.0
+
+## logError
+
+Logs the specified message or cause at the Error log level.
+
+**Signature**
+
+```ts
+export declare const logError: <A extends string | Cause.Cause<unknown>>(
+  messageOrCause: A,
+  supplementry?: (A extends string ? Cause.Cause<unknown> : string) | undefined
+) => Effect<never, never, void>
+```
+
+Added in v1.0.0
+
+## logFatal
+
+Logs the specified message or cause at the Fatal log level.
+
+**Signature**
+
+```ts
+export declare const logFatal: <A extends string | Cause.Cause<unknown>>(
+  messageOrCause: A,
+  supplementry?: (A extends string ? Cause.Cause<unknown> : string) | undefined
+) => Effect<never, never, void>
+```
+
+Added in v1.0.0
+
+## logInfo
+
+Logs the specified message or cause at the Info log level.
+
+**Signature**
+
+```ts
+export declare const logInfo: <A extends string | Cause.Cause<unknown>>(
+  messageOrCause: A,
+  supplementry?: (A extends string ? Cause.Cause<unknown> : string) | undefined
+) => Effect<never, never, void>
+```
+
+Added in v1.0.0
+
+## logTrace
+
+Logs the specified message or cause at the Trace log level.
+
+**Signature**
+
+```ts
+export declare const logTrace: <A extends string | Cause.Cause<unknown>>(
+  messageOrCause: A,
+  supplementry?: (A extends string ? Cause.Cause<unknown> : string) | undefined
+) => Effect<never, never, void>
+```
+
+Added in v1.0.0
+
+## logWarning
+
+Logs the specified message or cause at the Warning log level.
+
+**Signature**
+
+```ts
+export declare const logWarning: <A extends string | Cause.Cause<unknown>>(
+  messageOrCause: A,
+  supplementry?: (A extends string ? Cause.Cause<unknown> : string) | undefined
+) => Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -3275,52 +3346,6 @@ Added in v1.0.0
 
 ```ts
 export declare const setUnhandledErrorLogLevel: (level: Option.Option<LogLevel>) => Layer.Layer<never, never, never>
-```
-
-Added in v1.0.0
-
-## withLog
-
-Logs the specified message at the current log level.
-
-**Signature**
-
-```ts
-export declare const withLog: {
-  (
-    message: string,
-    level?: 'None' | 'All' | 'Fatal' | 'Error' | 'Warning' | 'Info' | 'Debug' | 'Trace',
-    options?: { readonly cause?: Cause.Cause<unknown> }
-  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(
-    self: Effect<R, E, A>,
-    message: string,
-    level?: 'None' | 'All' | 'Fatal' | 'Error' | 'Warning' | 'Info' | 'Debug' | 'Trace',
-    options?: { readonly cause?: Cause.Cause<unknown> }
-  ): Effect<R, E, A>
-}
-```
-
-Added in v1.0.0
-
-## withLogCause
-
-Logs any Cause of failure for this effect with the given `message` and `level`.
-
-**Signature**
-
-```ts
-export declare const withLogCause: {
-  (
-    level?: 'All' | 'Fatal' | 'Error' | 'Warning' | 'Info' | 'Debug' | 'Trace' | 'None',
-    options?: { readonly message?: string }
-  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(
-    self: Effect<R, E, A>,
-    level?: 'All' | 'Fatal' | 'Error' | 'Warning' | 'Info' | 'Debug' | 'Trace' | 'None',
-    options?: { readonly message?: string }
-  ): Effect<R, E, A>
-}
 ```
 
 Added in v1.0.0

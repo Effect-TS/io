@@ -830,10 +830,7 @@ export const ignore = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, 
 /* @internal */
 export const ignoreLogged = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, void> =>
   core.matchCauseEffect(self, {
-    onFailure: (cause) =>
-      logCause(cause, "Debug", {
-        message: "An error was silently ignored because it is not anticipated to be useful"
-      }),
+    onFailure: (cause) => logDebug(cause, "An error was silently ignored because it is not anticipated to be useful"),
     onSuccess: () => core.unit
   })
 
@@ -864,71 +861,61 @@ export const iterate = <Z, R, E>(
     return core.succeed(initial)
   })
 
-/* @internal */
-export const log = (message: string, level?: LogLevel.Literal, options?: {
-  readonly cause?: Cause.Cause<unknown>
-}): Effect.Effect<never, never, void> =>
-  core.withFiberRuntime<never, never, void>((fiberState) => {
-    fiberState.log(
-      message,
-      options?.cause ?? internalCause.empty,
-      level ? Option.some(LogLevel.fromLiteral(level)) : Option.none()
-    )
-    return core.unit
-  })
-
-/* @internal */
-export const logCause = dual<
-  (level?: LogLevel.Literal, options?: {
-    readonly message?: string
-  }) => (cause: Cause.Cause<unknown>) => Effect.Effect<never, never, void>,
-  (cause: Cause.Cause<unknown>, level?: LogLevel.Literal, options?: {
-    readonly message?: string
-  }) => Effect.Effect<never, never, void>
->(
-  (args) => internalCause.isCause(args[0]),
-  (cause: Cause.Cause<unknown>, level?: LogLevel.Literal, options?: {
-    readonly message?: string
-  }): Effect.Effect<never, never, void> =>
-    core.withFiberRuntime<never, never, void>((fiberState) => {
-      fiberState.log(
-        options?.message ?? "",
-        cause,
-        level ? Option.some(LogLevel.fromLiteral(level)) : Option.none()
-      )
+const logWithLevel = (level?: LogLevel.LogLevel) =>
+  <A extends string | Cause.Cause<unknown>>(
+    messageOrCause: A,
+    supplementry?: A extends string ? Cause.Cause<unknown> : string
+  ): Effect.Effect<never, never, void> => {
+    const message = typeof messageOrCause === "string" ? messageOrCause : ""
+    const cause: Cause.Cause<unknown> = internalCause.isCause(supplementry) ? supplementry : internalCause.empty
+    const levelOption = Option.fromNullable(level)
+    return core.withFiberRuntime<never, never, void>((fiberState) => {
+      fiberState.log(message, cause, levelOption)
       return core.unit
     })
-)
+  }
 
-/* @internal */
-export const withLog = dual<
-  (message: string, level?: LogLevel.Literal, options?: {
-    readonly cause?: Cause.Cause<unknown>
-  }) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
-  <R, E, A>(self: Effect.Effect<R, E, A>, message: string, level?: LogLevel.Literal, options?: {
-    readonly cause?: Cause.Cause<unknown>
-  }) => Effect.Effect<R, E, A>
->(
-  (args) => core.isEffect(args[0]),
-  <R, E, A>(self: Effect.Effect<R, E, A>, message: string, level?: LogLevel.Literal, options?: {
-    readonly cause?: Cause.Cause<unknown>
-  }): Effect.Effect<R, E, A> => core.zipLeft(self, log(message, level, options))
-)
+/** @internal */
+export const log: <A extends string | Cause.Cause<unknown>>(
+  messageOrCause: A,
+  supplementry?: A extends string ? Cause.Cause<unknown> : string
+) => Effect.Effect<never, never, void> = logWithLevel()
 
-/* @internal */
-export const withLogCause = dual<
-  (level?: LogLevel.Literal, options?: {
-    readonly message?: string
-  }) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
-  <R, E, A>(self: Effect.Effect<R, E, A>, level?: LogLevel.Literal, options?: {
-    readonly message?: string
-  }) => Effect.Effect<R, E, A>
->(
-  (args) => core.isEffect(args[0]),
-  <R, E, A>(self: Effect.Effect<R, E, A>, level?: LogLevel.Literal, options?: {
-    readonly message?: string
-  }): Effect.Effect<R, E, A> => tapErrorCause(self, logCause(level, options))
-)
+/** @internal */
+export const logTrace: <A extends string | Cause.Cause<unknown>>(
+  messageOrCause: A,
+  supplementry?: A extends string ? Cause.Cause<unknown> : string
+) => Effect.Effect<never, never, void> = logWithLevel(LogLevel.Trace)
+
+/** @internal */
+export const logDebug: <A extends string | Cause.Cause<unknown>>(
+  messageOrCause: A,
+  supplementry?: A extends string ? Cause.Cause<unknown> : string
+) => Effect.Effect<never, never, void> = logWithLevel(LogLevel.Debug)
+
+/** @internal */
+export const logInfo: <A extends string | Cause.Cause<unknown>>(
+  messageOrCause: A,
+  supplementry?: A extends string ? Cause.Cause<unknown> : string
+) => Effect.Effect<never, never, void> = logWithLevel(LogLevel.Info)
+
+/** @internal */
+export const logWarning: <A extends string | Cause.Cause<unknown>>(
+  messageOrCause: A,
+  supplementry?: A extends string ? Cause.Cause<unknown> : string
+) => Effect.Effect<never, never, void> = logWithLevel(LogLevel.Warning)
+
+/** @internal */
+export const logError: <A extends string | Cause.Cause<unknown>>(
+  messageOrCause: A,
+  supplementry?: A extends string ? Cause.Cause<unknown> : string
+) => Effect.Effect<never, never, void> = logWithLevel(LogLevel.Error)
+
+/** @internal */
+export const logFatal: <A extends string | Cause.Cause<unknown>>(
+  messageOrCause: A,
+  supplementry?: A extends string ? Cause.Cause<unknown> : string
+) => Effect.Effect<never, never, void> = logWithLevel(LogLevel.Fatal)
 
 /* @internal */
 export const withLogSpan = dual<
