@@ -5,6 +5,6 @@ pipe(
   Effect.sync(() => "hello"),
   Effect.map((hello) => hello + ", world!"),
   Effect.flatMap(Effect.log),
-  Effect.tapErrorCause(Effect.logCause("Error")),
+  Effect.tapErrorCause(Effect.logError),
   Effect.runFork
 )

@@ -6,4 +6,4 @@ const program = Effect.promise(() =>
   })
 )
 
-Effect.runFork(Effect.catchAllCause(program, Effect.logCause("Error")))
+Effect.runFork(Effect.catchAllCause(program, Effect.logError))

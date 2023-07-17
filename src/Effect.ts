@@ -4099,73 +4099,83 @@ export const matchEffect: {
 // -------------------------------------------------------------------------------------
 
 /**
- * Logs the specified message. You can optionally provide the log level
- * and a cause.
+ * Logs the specified message or cause at the current log level.
+ *
+ * You can set the current log level using `FiberRef.currentLogLevel`.
  *
  * @since 1.0.0
  * @category logging
  */
-export const log: (
-  message: string,
-  level?: "None" | "All" | "Fatal" | "Error" | "Warning" | "Info" | "Debug" | "Trace",
-  options?: { readonly cause?: Cause.Cause<unknown> }
+export const log: <A extends string | Cause.Cause<unknown>>(
+  messageOrCause: A,
+  supplementry?: A extends string ? Cause.Cause<unknown> : string
 ) => Effect<never, never, void> = effect.log
 
 /**
- * Logs the specified cause at the current log level.
+ * Logs the specified message or cause at the Trace log level.
  *
  * @since 1.0.0
  * @category logging
  */
-export const logCause: {
-  (
-    level?: "None" | "All" | "Fatal" | "Error" | "Warning" | "Info" | "Debug" | "Trace",
-    options?: { readonly message?: string }
-  ): (cause: Cause.Cause<unknown>) => Effect<never, never, void>
-  (
-    cause: Cause.Cause<unknown>,
-    level?: "None" | "All" | "Fatal" | "Error" | "Warning" | "Info" | "Debug" | "Trace",
-    options?: { readonly message?: string }
-  ): Effect<never, never, void>
-} = effect.logCause
+export const logTrace: <A extends string | Cause.Cause<unknown>>(
+  messageOrCause: A,
+  supplementry?: A extends string ? Cause.Cause<unknown> : string
+) => Effect<never, never, void> = effect.logTrace
 
 /**
- * Logs the specified message at the current log level.
+ * Logs the specified message or cause at the Debug log level.
  *
  * @since 1.0.0
  * @category logging
  */
-export const withLog: {
-  (
-    message: string,
-    level?: "None" | "All" | "Fatal" | "Error" | "Warning" | "Info" | "Debug" | "Trace",
-    options?: { readonly cause?: Cause.Cause<unknown> }
-  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(
-    self: Effect<R, E, A>,
-    message: string,
-    level?: "None" | "All" | "Fatal" | "Error" | "Warning" | "Info" | "Debug" | "Trace",
-    options?: { readonly cause?: Cause.Cause<unknown> }
-  ): Effect<R, E, A>
-} = effect.withLog
+export const logDebug: <A extends string | Cause.Cause<unknown>>(
+  messageOrCause: A,
+  supplementry?: A extends string ? Cause.Cause<unknown> : string
+) => Effect<never, never, void> = effect.logDebug
 
 /**
- * Logs any Cause of failure for this effect with the given `message` and `level`.
+ * Logs the specified message or cause at the Info log level.
  *
  * @since 1.0.0
  * @category logging
  */
-export const withLogCause: {
-  (
-    level?: "All" | "Fatal" | "Error" | "Warning" | "Info" | "Debug" | "Trace" | "None",
-    options?: { readonly message?: string }
-  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(
-    self: Effect<R, E, A>,
-    level?: "All" | "Fatal" | "Error" | "Warning" | "Info" | "Debug" | "Trace" | "None",
-    options?: { readonly message?: string }
-  ): Effect<R, E, A>
-} = effect.withLogCause
+export const logInfo: <A extends string | Cause.Cause<unknown>>(
+  messageOrCause: A,
+  supplementry?: A extends string ? Cause.Cause<unknown> : string
+) => Effect<never, never, void> = effect.logInfo
+
+/**
+ * Logs the specified message or cause at the Warning log level.
+ *
+ * @since 1.0.0
+ * @category logging
+ */
+export const logWarning: <A extends string | Cause.Cause<unknown>>(
+  messageOrCause: A,
+  supplementry?: A extends string ? Cause.Cause<unknown> : string
+) => Effect<never, never, void> = effect.logWarning
+
+/**
+ * Logs the specified message or cause at the Error log level.
+ *
+ * @since 1.0.0
+ * @category logging
+ */
+export const logError: <A extends string | Cause.Cause<unknown>>(
+  messageOrCause: A,
+  supplementry?: A extends string ? Cause.Cause<unknown> : string
+) => Effect<never, never, void> = effect.logError
+
+/**
+ * Logs the specified message or cause at the Fatal log level.
+ *
+ * @since 1.0.0
+ * @category logging
+ */
+export const logFatal: <A extends string | Cause.Cause<unknown>>(
+  messageOrCause: A,
+  supplementry?: A extends string ? Cause.Cause<unknown> : string
+) => Effect<never, never, void> = effect.logFatal
 
 /**
  * Adjusts the label for the current logging span.
