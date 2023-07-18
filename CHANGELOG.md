@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.34.0
+
+### Minor Changes
+
+- [#543](https://github.com/Effect-TS/io/pull/543) [`eed548d`](https://github.com/Effect-TS/io/commit/eed548d5e7fbaa8a72695f2363ea334300a68d5c) Thanks [@tim-smart](https://github.com/tim-smart)! - separate log functions per level
+
 ## 0.33.0
 
 ### Minor Changes
