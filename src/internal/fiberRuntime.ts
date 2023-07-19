@@ -2455,7 +2455,7 @@ export const validate = dual<
       readonly concurrent?: boolean
       readonly batching?: boolean | "inherit"
     }
-  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E | E1, readonly [A, B]>,
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E | E1, [A, B]>,
   <R, E, A, R1, E1, B>(
     self: Effect.Effect<R, E, A>,
     that: Effect.Effect<R1, E1, B>,
@@ -2463,10 +2463,10 @@ export const validate = dual<
       readonly concurrent?: boolean
       readonly batching?: boolean | "inherit"
     }
-  ) => Effect.Effect<R | R1, E | E1, readonly [A, B]>
+  ) => Effect.Effect<R | R1, E | E1, [A, B]>
 >(
   (args) => core.isEffect(args[1]),
-  (self, that, options) => validateWith(self, that, (a, b) => [a, b] as const, options)
+  (self, that, options) => validateWith(self, that, (a, b) => [a, b], options)
 )
 
 /** @internal */
