@@ -344,3 +344,17 @@ pipe(
     onSuccess: tacitString
   })
 )
+
+// -------------------------------------------------------------------------------------
+// zip
+// -------------------------------------------------------------------------------------
+
+// $ExpectType Effect<never, never, [number, string]>
+Effect.zip(Effect.succeed(1), Effect.succeed("a"))
+
+// -------------------------------------------------------------------------------------
+// validate
+// -------------------------------------------------------------------------------------
+
+// $ExpectType Effect<never, never, [number, string]>
+Effect.validate(Effect.succeed(1), Effect.succeed("a"))
