@@ -30,7 +30,7 @@ interface HostPorts {
 }
 
 const hostPortsConfig: Config.Config<HostPorts> = Config.all({
-  hostPorts: Config.arrayOf(hostPortConfig, "hostPorts")
+  hostPorts: Config.array(hostPortConfig, "hostPorts")
 })
 
 interface ServiceConfig {
@@ -54,10 +54,10 @@ interface StockDay {
 
 const stockDayConfig: Config.Config<StockDay> = Config.all({
   date: Config.date("date"),
-  open: Config.float("open"),
-  close: Config.float("close"),
-  low: Config.float("low"),
-  high: Config.float("high"),
+  open: Config.number("open"),
+  close: Config.number("close"),
+  low: Config.number("low"),
+  high: Config.number("high"),
   volume: Config.integer("volume")
 })
 
@@ -66,7 +66,7 @@ interface SNP500 {
 }
 
 const snp500Config: Config.Config<SNP500> = Config.all({
-  stockDays: Config.table(stockDayConfig)
+  stockDays: Config.hashMap(stockDayConfig)
 })
 
 interface WebScrapingTargets {
@@ -74,11 +74,11 @@ interface WebScrapingTargets {
 }
 
 const webScrapingTargetsConfig: Config.Config<WebScrapingTargets> = Config.all({
-  targets: Config.setOf(Config.string(), "targets")
+  targets: Config.hashSet(Config.string(), "targets")
 })
 
 const webScrapingTargetsConfigWithDefault = Config.all({
-  targets: Config.chunkOf(Config.string()).pipe(
+  targets: Config.chunk(Config.string()).pipe(
     Config.withDefault(Chunk.make("https://effect.website2", "https://github.com/Effect-TS2"))
   )
 })
@@ -140,7 +140,7 @@ describe.concurrent("ConfigProvider", () => {
         ["name", "Sherlock Holmes"],
         ["address", "221B Baker Street"]
       ])
-      const result = yield* $(provider(map).load(Config.table(Config.string())))
+      const result = yield* $(provider(map).load(Config.hashMap(Config.string())))
       assert.deepStrictEqual(
         result,
         HashMap.make(
@@ -279,7 +279,7 @@ describe.concurrent("ConfigProvider", () => {
 
   it.effect("indexed - simple", () =>
     Effect.gen(function*($) {
-      const config = Config.arrayOf(Config.integer(), "id")
+      const config = Config.array(Config.integer(), "id")
       const map = new Map([
         ["id[0]", "1"],
         ["id[1]", "2"],
@@ -291,7 +291,7 @@ describe.concurrent("ConfigProvider", () => {
 
   it.effect("indexed sequence - simple with list values", () =>
     Effect.gen(function*($) {
-      const config = Config.arrayOf(Config.arrayOf(Config.integer()), "id")
+      const config = Config.array(Config.array(Config.integer()), "id")
       const map = new Map([
         ["id[0]", "1, 2"],
         ["id[1]", "3, 4"],
@@ -303,7 +303,7 @@ describe.concurrent("ConfigProvider", () => {
 
   it.effect("indexed sequence - one product type", () =>
     Effect.gen(function*($) {
-      const config = Config.arrayOf(
+      const config = Config.array(
         Config.all({
           age: Config.integer("age"),
           id: Config.integer("id")
@@ -320,7 +320,7 @@ describe.concurrent("ConfigProvider", () => {
 
   it.effect("indexed sequence - multiple product types", () =>
     Effect.gen(function*($) {
-      const config = Config.arrayOf(
+      const config = Config.array(
         Config.all({
           age: Config.integer("age"),
           id: Config.integer("id")
@@ -339,7 +339,7 @@ describe.concurrent("ConfigProvider", () => {
 
   it.effect("indexed sequence - multiple product types with missing fields", () =>
     Effect.gen(function*($) {
-      const config = Config.arrayOf(
+      const config = Config.array(
         Config.all({
           age: Config.integer("age"),
           id: Config.integer("id")
@@ -368,9 +368,9 @@ describe.concurrent("ConfigProvider", () => {
 
   it.effect("indexed sequence - multiple product types with optional fields", () =>
     Effect.gen(function*($) {
-      const config = Config.arrayOf(
+      const config = Config.array(
         Config.all({
-          age: Config.optional(Config.integer("age")),
+          age: Config.option(Config.integer("age")),
           id: Config.integer("id")
         }),
         "employees"
@@ -386,9 +386,9 @@ describe.concurrent("ConfigProvider", () => {
 
   it.effect("indexed sequence - multiple product types with sequence fields", () =>
     Effect.gen(function*($) {
-      const config = Config.arrayOf(
+      const config = Config.array(
         Config.all({
-          refunds: Config.arrayOf(Config.integer(), "refunds"),
+          refunds: Config.array(Config.integer(), "refunds"),
           id: Config.integer("id")
         }),
         "employees"
@@ -410,8 +410,8 @@ describe.concurrent("ConfigProvider", () => {
         age: Config.integer("age")
       })
       const config = Config.all({
-        employees: Config.arrayOf(idAndAge, "employees"),
-        students: Config.arrayOf(idAndAge, "students")
+        employees: Config.array(idAndAge, "employees"),
+        students: Config.array(idAndAge, "students")
       })
       const map = new Map([
         ["employees[0].id", "0"],
@@ -436,7 +436,7 @@ describe.concurrent("ConfigProvider", () => {
         age: Config.integer("age"),
         id: Config.integer("id")
       })
-      const config = Config.table(Config.arrayOf(employee, "employees"), "departments")
+      const config = Config.hashMap(Config.array(employee, "employees"), "departments")
       const map = new Map([
         ["departments.department1.employees[0].age", "10"],
         ["departments.department1.employees[0].id", "0"],
@@ -457,8 +457,8 @@ describe.concurrent("ConfigProvider", () => {
 
   it.effect("indexed sequence - map", () =>
     Effect.gen(function*($) {
-      const employee = Config.table(Config.integer(), "details")
-      const config = Config.arrayOf(employee, "employees")
+      const employee = Config.hashMap(Config.integer(), "details")
+      const config = Config.array(employee, "employees")
       const map = new Map([
         ["employees[0].details.age", "10"],
         ["employees[0].details.id", "0"],
@@ -478,8 +478,8 @@ describe.concurrent("ConfigProvider", () => {
         age: Config.integer("age"),
         id: Config.integer("id")
       })
-      const department = Config.arrayOf(employee, "employees")
-      const config = Config.arrayOf(department, "departments")
+      const department = Config.array(employee, "employees")
+      const config = Config.array(department, "departments")
       const map = new Map([
         ["departments[0].employees[0].age", "10"],
         ["departments[0].employees[0].id", "0"],
@@ -501,7 +501,7 @@ describe.concurrent("ConfigProvider", () => {
         age: Config.integer("age"),
         id: Config.integer("id")
       })
-      const config = Config.arrayOf(employee, "employees")
+      const config = Config.array(employee, "employees")
       const map = new Map([
         ["parent.child.employees[0].age", "1"],
         ["parent.child.employees[0].id", "2"],
@@ -522,7 +522,7 @@ describe.concurrent("ConfigProvider", () => {
         age: Config.integer("age"),
         id: Config.integer("id")
       })
-      const config = Config.arrayOf(employee, "employees").pipe(
+      const config = Config.array(employee, "employees").pipe(
         Config.nested("child"),
         Config.nested("parent")
       )
@@ -662,7 +662,7 @@ describe.concurrent("ConfigProvider", () => {
       )
       const result1 = yield* $(configProvider.load(Config.string("key1")))
       const result2 = yield* $(configProvider.load(Config.string("key2")))
-      const result31 = yield* $(configProvider.load(Config.optional(Config.string("key3"))))
+      const result31 = yield* $(configProvider.load(Config.option(Config.string("key3"))))
       const result32 = yield* $(Effect.either(configProvider.load(Config.string("key3"))))
       const result4 = yield* $(configProvider.load(Config.string("key4")))
 
@@ -701,7 +701,7 @@ describe.concurrent("ConfigProvider", () => {
       )
 
       const product = Config.zip(Config.integer("age"), Config.integer("id"))
-      const arrayConfig = Config.arrayOf(product, "employees")
+      const arrayConfig = Config.array(product, "employees")
       const config1 = arrayConfig.pipe(Config.nested("child"), Config.nested("parent1"))
       const config2 = arrayConfig.pipe(Config.nested("child"), Config.nested("parent2"))
 
@@ -740,7 +740,7 @@ describe.concurrent("ConfigProvider", () => {
       )
 
       const product = Config.zip(Config.integer("age"), Config.integer("id"))
-      const arrayConfig = Config.arrayOf(product, "employees")
+      const arrayConfig = Config.array(product, "employees")
       const config1 = arrayConfig.pipe(Config.nested("child"), Config.nested("parent1"))
       const config2 = arrayConfig.pipe(Config.nested("child"), Config.nested("parent2"))
       const config3 = arrayConfig.pipe(Config.nested("child"), Config.nested("parent3"))
@@ -784,7 +784,7 @@ describe.concurrent("ConfigProvider", () => {
       )
 
       const product = Config.zip(Config.integer("age"), Config.integer("id"))
-      const arrayConfig = Config.arrayOf(product, "employees")
+      const arrayConfig = Config.array(product, "employees")
       const config = arrayConfig.pipe(Config.nested("child"), Config.nested("parent1"))
 
       const result = yield* _(configProvider.load(config))

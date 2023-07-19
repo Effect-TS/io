@@ -129,8 +129,8 @@ export interface Sequence extends
 
 /** @internal */
 export interface Table extends
-  Op<OpCodes.OP_TABLE, {
-    readonly op: OpCodes.OP_TABLE
+  Op<OpCodes.OP_HASHMAP, {
+    readonly op: OpCodes.OP_HASHMAP
     readonly valueConfig: Config.Config<unknown>
   }>
 {}
@@ -146,7 +146,7 @@ export interface Zipped extends
 {}
 
 /** @internal */
-export const bool = (name?: string): Config.Config<boolean> => {
+export const boolean = (name?: string): Config.Config<boolean> => {
   const config = primitive(
     "a boolean property",
     (text) => {
@@ -177,12 +177,12 @@ export const bool = (name?: string): Config.Config<boolean> => {
 }
 
 /** @internal */
-export const arrayOf = <A>(config: Config.Config<A>, name?: string): Config.Config<ReadonlyArray<A>> => {
-  return pipe(chunkOf(config, name), map(Chunk.toReadonlyArray))
+export const array = <A>(config: Config.Config<A>, name?: string): Config.Config<ReadonlyArray<A>> => {
+  return pipe(chunk(config, name), map(Chunk.toReadonlyArray))
 }
 
 /** @internal */
-export const chunkOf = <A>(config: Config.Config<A>, name?: string): Config.Config<Chunk.Chunk<A>> => {
+export const chunk = <A>(config: Config.Config<A>, name?: string): Config.Config<Chunk.Chunk<A>> => {
   return map(name === undefined ? repeat(config) : nested(name)(repeat(config)), Chunk.unsafeFromArray)
 }
 
@@ -216,16 +216,16 @@ export const fail = (message: string): Config.Config<never> => {
 }
 
 /** @internal */
-export const float = (name?: string): Config.Config<number> => {
+export const number = (name?: string): Config.Config<number> => {
   const config = primitive(
-    "a float property",
+    "a number property",
     (text) => {
       const result = Number.parseFloat(text)
       if (Number.isNaN(result)) {
         return Either.left(
           configError.InvalidData(
             [],
-            `Expected an float value but received ${text}`
+            `Expected an number value but received ${text}`
           )
         )
       }
@@ -360,7 +360,7 @@ export const orElseIf = dual<
 })
 
 /** @internal */
-export const optional = <A>(self: Config.Config<A>): Config.Config<Option.Option<A>> => {
+export const option = <A>(self: Config.Config<A>): Config.Config<Option.Option<A>> => {
   return pipe(
     self,
     map(Option.some),
@@ -398,8 +398,8 @@ export const secret = (name?: string): Config.Config<ConfigSecret.ConfigSecret> 
 }
 
 /** @internal */
-export const setOf = <A>(config: Config.Config<A>, name?: string): Config.Config<HashSet.HashSet<A>> => {
-  const newConfig = map(chunkOf(config), HashSet.fromIterable)
+export const hashSet = <A>(config: Config.Config<A>, name?: string): Config.Config<HashSet.HashSet<A>> => {
+  const newConfig = map(chunk(config), HashSet.fromIterable)
   return name === undefined ? newConfig : nested(name)(newConfig)
 }
 
@@ -412,40 +412,25 @@ export const string = (name?: string): Config.Config<string> => {
   return name === undefined ? config : nested(name)(config)
 }
 
-export const all: {
-  <A, T extends ReadonlyArray<Config.Config<any>>>(
-    self: Config.Config<A>,
-    ...args: T
-  ): Config.Config<
-    [
-      A,
-      ...(T["length"] extends 0 ? []
-        : { [K in keyof T]: [T[K]] extends [Config.Config<infer A>] ? A : never })
-    ]
-  >
-  <T extends ReadonlyArray<Config.Config<any>>>(
-    args: [...T]
-  ): Config.Config<
-    T[number] extends never ? []
-      : { [K in keyof T]: [T[K]] extends [Config.Config<infer A>] ? A : never }
-  >
-  <T extends Readonly<{ [K: string]: Config.Config<any> }>>(
-    args: T
-  ): Config.Config<
-    { [K in keyof T]: [T[K]] extends [Config.Config<infer A>] ? A : never }
-  >
-} = function() {
-  if (arguments.length === 1) {
-    if (typeof arguments[0] === "object" && arguments[0] !== null && isConfig(arguments[0])) {
-      return map(arguments[0], (x) => [x])
-    } else if (Array.isArray(arguments[0])) {
-      return tuple(arguments)
-    } else {
-      return struct(arguments[0] as Readonly<{ [K: string]: Config.Config<any> }>)
-    }
+export const all = <Arg extends Iterable<Config.Config<any>> | Record<string, Config.Config<any>>>(
+  arg: Config.Config.Narrow<Arg>
+): Config.Config<
+  [Arg] extends [ReadonlyArray<Config.Config<any>>] ? {
+    -readonly [K in keyof Arg]: [Arg[K]] extends [Config.Config<infer A>] ? A : never
   }
-  return tuple(arguments)
-} as any
+    : [Arg] extends [Iterable<Config.Config<infer A>>] ? Array<A>
+    : [Arg] extends [Record<string, Config.Config<any>>] ? {
+      -readonly [K in keyof Arg]: [Arg[K]] extends [Config.Config<infer A>] ? A : never
+    }
+    : never
+> => {
+  if (Array.isArray(arg)) {
+    return tuple(arg) as any
+  } else if (Symbol.iterator in arg) {
+    return tuple([...(arg as Iterable<Config.Config<any>>)]) as any
+  }
+  return struct(arg) as any
+}
 
 const struct = <NER extends Record<string, Config.Config<any>>>(r: NER): Config.Config<
   {
@@ -490,9 +475,9 @@ export const sync = <A>(value: LazyArg<A>): Config.Config<A> => {
 }
 
 /** @internal */
-export const table = <A>(config: Config.Config<A>, name?: string): Config.Config<HashMap.HashMap<string, A>> => {
+export const hashMap = <A>(config: Config.Config<A>, name?: string): Config.Config<HashMap.HashMap<string, A>> => {
   const table = Object.create(proto)
-  table._tag = OpCodes.OP_TABLE
+  table._tag = OpCodes.OP_HASHMAP
   table.valueConfig = config
   return name === undefined ? table : nested(name)(table)
 }

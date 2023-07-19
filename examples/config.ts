@@ -15,7 +15,7 @@ export const HttpServerLive = Layer.effect(
   HttpServer,
   Effect.gen(function*($) {
     const [host, port] = yield* $(Effect.config(
-      Config.all(Config.string("HOST"), Config.integer("PORT"))
+      Config.all([Config.string("HOST"), Config.integer("PORT")])
     ))
     return {
       host,

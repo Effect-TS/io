@@ -16,18 +16,6 @@ import type * as LogLevel from "@effect/io/Logger/Level"
 
 /**
  * @since 1.0.0
- */
-export type NonEmptyArrayConfig = [Config<any>, ...Array<Config<any>>]
-
-/**
- * @since 1.0.0
- */
-export type TupleConfig<T extends NonEmptyArrayConfig> = {
-  [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never
-}
-
-/**
- * @since 1.0.0
  * @category symbols
  */
 export const ConfigTypeId: unique symbol = internal.ConfigTypeId
@@ -85,6 +73,11 @@ export declare namespace Config {
     }
       : never)
     | Config<A>
+
+  /**
+   * @since 1.0.0
+   */
+  export type Narrow<A> = (A extends [] ? [] : never) | A
 }
 
 /**
@@ -93,29 +86,18 @@ export declare namespace Config {
  * @since 1.0.0
  * @category constructors
  */
-export const all: {
-  <A, T extends ReadonlyArray<Config<any>>>(
-    self: Config<A>,
-    ...args: T
-  ): Config<
-    [
-      A,
-      ...(T["length"] extends 0 ? []
-        : { [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never })
-    ]
-  >
-  <T extends ReadonlyArray<Config<any>>>(
-    args: [...T]
-  ): Config<
-    T[number] extends never ? []
-      : { [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never }
-  >
-  <T extends Readonly<{ [K: string]: Config<any> }>>(
-    args: T
-  ): Config<
-    { [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never }
-  >
-} = internal.all
+export const all: <Arg extends Iterable<Config<any>> | Record<string, Config<any>>>(
+  arg: Config.Narrow<Arg>
+) => Config<
+  [Arg] extends [ReadonlyArray<Config<any>>] ? {
+    -readonly [K in keyof Arg]: [Arg[K]] extends [Config<infer A>] ? A : never
+  }
+    : [Arg] extends [Iterable<Config<infer A>>] ? Array<A>
+    : [Arg] extends [Record<string, Config<any>>] ? {
+      -readonly [K in keyof Arg]: [Arg[K]] extends [Config<infer A>] ? A : never
+    }
+    : never
+> = internal.all
 
 /**
  * Constructs a config for an array of values.
@@ -123,7 +105,7 @@ export const all: {
  * @since 1.0.0
  * @category constructors
  */
-export const arrayOf: <A>(config: Config<A>, name?: string | undefined) => Config<ReadonlyArray<A>> = internal.arrayOf
+export const array: <A>(config: Config<A>, name?: string | undefined) => Config<ReadonlyArray<A>> = internal.array
 
 /**
  * Constructs a config for a boolean value.
@@ -131,7 +113,7 @@ export const arrayOf: <A>(config: Config<A>, name?: string | undefined) => Confi
  * @since 1.0.0
  * @category constructors
  */
-export const bool: (name?: string | undefined) => Config<boolean> = internal.bool
+export const boolean: (name?: string | undefined) => Config<boolean> = internal.boolean
 
 /**
  * Constructs a config for a sequence of values.
@@ -139,7 +121,7 @@ export const bool: (name?: string | undefined) => Config<boolean> = internal.boo
  * @since 1.0.0
  * @category constructors
  */
-export const chunkOf: <A>(config: Config<A>, name?: string | undefined) => Config<Chunk.Chunk<A>> = internal.chunkOf
+export const chunk: <A>(config: Config<A>, name?: string | undefined) => Config<Chunk.Chunk<A>> = internal.chunk
 
 /**
  * Constructs a config for a date value.
@@ -163,7 +145,7 @@ export const fail: (message: string) => Config<never> = internal.fail
  * @since 1.0.0
  * @category constructors
  */
-export const float: (name?: string | undefined) => Config<number> = internal.float
+export const number: (name?: string | undefined) => Config<number> = internal.number
 
 /**
  * Constructs a config for a integer value.
@@ -294,7 +276,7 @@ export const orElseIf: {
  * @since 1.0.0
  * @category utils
  */
-export const optional: <A>(self: Config<A>) => Config<Option.Option<A>> = internal.optional
+export const option: <A>(self: Config<A>) => Config<Option.Option<A>> = internal.option
 
 /**
  * Constructs a new primitive config.
@@ -330,7 +312,7 @@ export const secret: (name?: string | undefined) => Config<ConfigSecret.ConfigSe
  * @since 1.0.0
  * @category constructors
  */
-export const setOf: <A>(config: Config<A>, name?: string | undefined) => Config<HashSet.HashSet<A>> = internal.setOf
+export const hashSet: <A>(config: Config<A>, name?: string | undefined) => Config<HashSet.HashSet<A>> = internal.hashSet
 
 /**
  * Constructs a config for a string value.
@@ -370,8 +352,8 @@ export const sync: <A>(value: LazyArg<A>) => Config<A> = internal.sync
  * @since 1.0.0
  * @category constructors
  */
-export const table: <A>(config: Config<A>, name?: string | undefined) => Config<HashMap.HashMap<string, A>> =
-  internal.table
+export const hashMap: <A>(config: Config<A>, name?: string | undefined) => Config<HashMap.HashMap<string, A>> =
+  internal.hashMap
 
 /**
  * Constructs a config from some configuration wrapped with the `Wrap<A>` utility type.
