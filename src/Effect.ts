@@ -1352,6 +1352,15 @@ export const succeedNone: Effect<never, never, Option.Option<never>> = effect.su
 export const succeedSome: <A>(value: A) => Effect<never, never, Option.Option<A>> = effect.succeedSome
 
 /**
+ * Catches all Cause.NoSuchElementExceptions that are thrown.
+ * @since 1.0.0
+ * @category error handling
+ */
+export const catchNoSuchElement: <R, E, A>(
+  self: Effect<R, E | Cause.NoSuchElementException, A>
+) => Effect<R, E, Option.Option<A>> = effect.catchNoSuchElement
+
+/**
  * @since 1.0.0
  * @category constructors
  */
