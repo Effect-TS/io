@@ -339,7 +339,7 @@ const fromFlatLoop = <A>(
         )
       )
     }
-    case OpCodes.OP_TABLE: {
+    case OpCodes.OP_HASHMAP: {
       return core.suspend(() =>
         pipe(
           pathPatch.patch(prefix, flat.patch),

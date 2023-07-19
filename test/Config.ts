@@ -93,7 +93,7 @@ describe.concurrent("Config", () => {
   describe.concurrent("optional", () => {
     it.effect("recovers from missing data error", () =>
       Effect.gen(function*($) {
-        const config = Config.optional(Config.integer("key"))
+        const config = Config.option(Config.integer("key"))
         const configProvider = ConfigProvider.fromMap(new Map())
         const result = yield* $(configProvider.load(config))
         assert.deepStrictEqual(result, Option.none())
@@ -101,7 +101,7 @@ describe.concurrent("Config", () => {
 
     it.effect("does not recover from other errors", () =>
       Effect.gen(function*($) {
-        const config = Config.optional(Config.integer("key"))
+        const config = Config.option(Config.integer("key"))
         const configProvider = ConfigProvider.fromMap(new Map([["key", "value"]]))
         const result = yield* $(
           Effect.exit(configProvider.load(config)),
@@ -119,7 +119,7 @@ describe.concurrent("Config", () => {
         const config = pipe(
           Config.integer("key1"),
           Config.zip(Config.integer("key2")),
-          Config.optional
+          Config.option
         )
         const configProvider = ConfigProvider.fromMap(new Map([["key2", "value"]]))
         const result = yield* $(
@@ -140,7 +140,7 @@ describe.concurrent("Config", () => {
         const config = pipe(
           Config.integer("key1"),
           Config.orElse(() => Config.integer("key2")),
-          Config.optional
+          Config.option
         )
         const configProvider = ConfigProvider.fromMap(new Map([["key2", "value"]]))
         const result = yield* $(
@@ -176,7 +176,7 @@ describe.concurrent("Config", () => {
 
         const config = wrapper({
           key1: Config.integer("key1"),
-          list: Config.arrayOf(Config.string(), "items"),
+          list: Config.array(Config.string(), "items"),
           nested: {
             key2: Config.string("key2")
           }

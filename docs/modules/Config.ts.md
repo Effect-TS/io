@@ -14,22 +14,22 @@ Added in v1.0.0
 
 - [constructors](#constructors)
   - [all](#all)
-  - [arrayOf](#arrayof)
-  - [bool](#bool)
-  - [chunkOf](#chunkof)
+  - [array](#array)
+  - [boolean](#boolean)
+  - [chunk](#chunk)
   - [date](#date)
   - [fail](#fail)
-  - [float](#float)
+  - [hashMap](#hashmap)
+  - [hashSet](#hashset)
   - [integer](#integer)
   - [logLevel](#loglevel)
+  - [number](#number)
   - [primitive](#primitive)
   - [secret](#secret)
-  - [setOf](#setof)
   - [string](#string)
   - [succeed](#succeed)
   - [suspend](#suspend)
   - [sync](#sync)
-  - [table](#table)
   - [unwrap](#unwrap)
 - [models](#models)
   - [Config (interface)](#config-interface)
@@ -39,13 +39,11 @@ Added in v1.0.0
   - [ConfigTypeId](#configtypeid)
   - [ConfigTypeId (type alias)](#configtypeid-type-alias)
 - [utils](#utils)
-  - [NonEmptyArrayConfig (type alias)](#nonemptyarrayconfig-type-alias)
-  - [TupleConfig (type alias)](#tupleconfig-type-alias)
   - [map](#map)
   - [mapAttempt](#mapattempt)
   - [mapOrFail](#maporfail)
   - [nested](#nested)
-  - [optional](#optional)
+  - [option](#option)
   - [orElse](#orelse)
   - [orElseIf](#orelseif)
   - [repeat](#repeat)
@@ -66,53 +64,53 @@ Constructs a config from a tuple / struct / arguments of configs.
 **Signature**
 
 ```ts
-export declare const all: {
-  <A, T extends readonly Config<any>[]>(self: Config<A>, ...args: T): Config<
-    [A, ...(T['length'] extends 0 ? [] : { [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never })]
-  >
-  <T extends readonly Config<any>[]>(args: [...T]): Config<
-    T[number] extends never ? [] : { [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never }
-  >
-  <T extends Readonly<{ [K: string]: Config<any> }>>(args: T): Config<{
-    [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never
-  }>
-}
+export declare const all: <Arg extends Iterable<Config<any>> | Record<string, Config<any>>>(
+  arg: Config.Narrow<Arg>
+) => Config<
+  [Arg] extends [readonly Config<any>[]]
+    ? { -readonly [K in keyof Arg]: [Arg[K]] extends [Config<infer A>] ? A : never }
+    : [Arg] extends [Iterable<Config<infer A>>]
+    ? A[]
+    : [Arg] extends [Record<string, Config<any>>]
+    ? { -readonly [K in keyof Arg]: [Arg[K]] extends [Config<infer A>] ? A : never }
+    : never
+>
 ```
 
 Added in v1.0.0
 
-## arrayOf
+## array
 
 Constructs a config for an array of values.
 
 **Signature**
 
 ```ts
-export declare const arrayOf: <A>(config: Config<A>, name?: string | undefined) => Config<readonly A[]>
+export declare const array: <A>(config: Config<A>, name?: string | undefined) => Config<readonly A[]>
 ```
 
 Added in v1.0.0
 
-## bool
+## boolean
 
 Constructs a config for a boolean value.
 
 **Signature**
 
 ```ts
-export declare const bool: (name?: string | undefined) => Config<boolean>
+export declare const boolean: (name?: string | undefined) => Config<boolean>
 ```
 
 Added in v1.0.0
 
-## chunkOf
+## chunk
 
 Constructs a config for a sequence of values.
 
 **Signature**
 
 ```ts
-export declare const chunkOf: <A>(config: Config<A>, name?: string | undefined) => Config<Chunk.Chunk<A>>
+export declare const chunk: <A>(config: Config<A>, name?: string | undefined) => Config<Chunk.Chunk<A>>
 ```
 
 Added in v1.0.0
@@ -141,14 +139,26 @@ export declare const fail: (message: string) => Config<never>
 
 Added in v1.0.0
 
-## float
+## hashMap
 
-Constructs a config for a float value.
+Constructs a config for a sequence of values.
 
 **Signature**
 
 ```ts
-export declare const float: (name?: string | undefined) => Config<number>
+export declare const hashMap: <A>(config: Config<A>, name?: string | undefined) => Config<HashMap.HashMap<string, A>>
+```
+
+Added in v1.0.0
+
+## hashSet
+
+Constructs a config for a sequence of values.
+
+**Signature**
+
+```ts
+export declare const hashSet: <A>(config: Config<A>, name?: string | undefined) => Config<HashSet.HashSet<A>>
 ```
 
 Added in v1.0.0
@@ -177,6 +187,18 @@ export declare const logLevel: (name?: string | undefined) => Config<LogLevel.Lo
 
 Added in v1.0.0
 
+## number
+
+Constructs a config for a float value.
+
+**Signature**
+
+```ts
+export declare const number: (name?: string | undefined) => Config<number>
+```
+
+Added in v1.0.0
+
 ## primitive
 
 Constructs a new primitive config.
@@ -200,18 +222,6 @@ Constructs a config for a secret value.
 
 ```ts
 export declare const secret: (name?: string | undefined) => Config<ConfigSecret.ConfigSecret>
-```
-
-Added in v1.0.0
-
-## setOf
-
-Constructs a config for a sequence of values.
-
-**Signature**
-
-```ts
-export declare const setOf: <A>(config: Config<A>, name?: string | undefined) => Config<HashSet.HashSet<A>>
 ```
 
 Added in v1.0.0
@@ -260,18 +270,6 @@ Constructs a config which contains the specified lazy value.
 
 ```ts
 export declare const sync: <A>(value: LazyArg<A>) => Config<A>
-```
-
-Added in v1.0.0
-
-## table
-
-Constructs a config for a sequence of values.
-
-**Signature**
-
-```ts
-export declare const table: <A>(config: Config<A>, name?: string | undefined) => Config<HashMap.HashMap<string, A>>
 ```
 
 Added in v1.0.0
@@ -356,28 +354,6 @@ Added in v1.0.0
 
 # utils
 
-## NonEmptyArrayConfig (type alias)
-
-**Signature**
-
-```ts
-export type NonEmptyArrayConfig = [Config<any>, ...Array<Config<any>>]
-```
-
-Added in v1.0.0
-
-## TupleConfig (type alias)
-
-**Signature**
-
-```ts
-export type TupleConfig<T extends NonEmptyArrayConfig> = {
-  [K in keyof T]: [T[K]] extends [Config<infer A>] ? A : never
-}
-```
-
-Added in v1.0.0
-
 ## map
 
 Returns a config whose structure is the same as this one, but which produces
@@ -444,7 +420,7 @@ export declare const nested: {
 
 Added in v1.0.0
 
-## optional
+## option
 
 Returns an optional version of this config, which will be `None` if the
 data is missing from configuration, and `Some` otherwise.
@@ -452,7 +428,7 @@ data is missing from configuration, and `Some` otherwise.
 **Signature**
 
 ```ts
-export declare const optional: <A>(self: Config<A>) => Config<Option.Option<A>>
+export declare const option: <A>(self: Config<A>) => Config<Option.Option<A>>
 ```
 
 Added in v1.0.0

@@ -53,10 +53,10 @@ export type OP_SEQUENCE = typeof OP_SEQUENCE
 export const OP_SEQUENCE = "Sequence" as const
 
 /** @internal */
-export type OP_TABLE = typeof OP_TABLE
+export type OP_HASHMAP = typeof OP_HASHMAP
 
 /** @internal */
-export const OP_TABLE = "Table" as const
+export const OP_HASHMAP = "HashMap" as const
 
 /** @internal */
 export type OP_ZIP_WITH = typeof OP_ZIP_WITH
