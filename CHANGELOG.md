@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.35.1
+
+### Patch Changes
+
+- [#548](https://github.com/Effect-TS/io/pull/548) [`83b50cc`](https://github.com/Effect-TS/io/commit/83b50cc8dacdeef2fb3b7c088884b2f0501551bd) Thanks [@tim-smart](https://github.com/tim-smart)! - properly handle suplimentary log argument
+
 ## 0.35.0
 
 ### Minor Changes
