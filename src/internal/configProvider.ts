@@ -679,7 +679,7 @@ const splitIndexFrom = (key: string): Option.Option<readonly [string, number]> =
         Option.none(),
       Option.flatMap(parseInteger)
     )
-    return Option.all(optionalString, optionalIndex)
+    return Option.all([optionalString, optionalIndex])
   }
   return Option.none()
 }
