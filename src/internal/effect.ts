@@ -866,9 +866,16 @@ const logWithLevel = (level?: LogLevel.LogLevel) =>
     messageOrCause: A,
     supplementry?: A extends string ? Cause.Cause<unknown> : string
   ): Effect.Effect<never, never, void> => {
-    const message = typeof messageOrCause === "string" ? messageOrCause : ""
-    const cause: Cause.Cause<unknown> = internalCause.isCause(supplementry) ? supplementry : internalCause.empty
     const levelOption = Option.fromNullable(level)
+    let message: string
+    let cause: Cause.Cause<unknown>
+    if (typeof messageOrCause === "string") {
+      message = messageOrCause
+      cause = (supplementry as Cause.Cause<unknown>) ?? internalCause.empty
+    } else {
+      cause = messageOrCause
+      message = (supplementry as string) ?? ""
+    }
     return core.withFiberRuntime<never, never, void>((fiberState) => {
       fiberState.log(message, cause, levelOption)
       return core.unit
