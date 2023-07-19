@@ -1,5 +1,13 @@
 # @effect/io
 
+## 0.35.0
+
+### Minor Changes
+
+- [#547](https://github.com/Effect-TS/io/pull/547) [`1990e4b`](https://github.com/Effect-TS/io/commit/1990e4b1c183f949a5902ba5bd71b2fede1522c1) Thanks [@tim-smart](https://github.com/tim-smart)! - update /data
+
+- [#545](https://github.com/Effect-TS/io/pull/545) [`092f4ce`](https://github.com/Effect-TS/io/commit/092f4ce0e0e0c8172e57f436a34c8dafd34a84f3) Thanks [@tim-smart](https://github.com/tim-smart)! - align Config apis to /schema
+
 ## 0.34.0
 
 ### Minor Changes
