@@ -98,6 +98,7 @@ Added in v1.0.0
   - [provideServiceEffect](#provideserviceeffect)
   - [provideSomeContext](#providesomecontext)
   - [provideSomeLayer](#providesomelayer)
+  - [provideSomeRuntime](#providesomeruntime)
   - [serviceFunction](#servicefunction)
   - [serviceFunctionEffect](#servicefunctioneffect)
   - [serviceOption](#serviceoption)
@@ -1648,6 +1649,22 @@ export declare const provideSomeLayer: {
     self: Effect<R, E, A>
   ) => Effect<R2 | Exclude<R, A2>, E2 | E, A>
   <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, layer: Layer.Layer<R2, E2, A2>): Effect<R2 | Exclude<R, A2>, E | E2, A>
+}
+```
+
+Added in v1.0.0
+
+## provideSomeRuntime
+
+Splits the context into two parts, providing one part using the
+specified runtime and leaving the remainder `R0`.
+
+**Signature**
+
+```ts
+export declare const provideSomeRuntime: {
+  <R>(context: Runtime.Runtime<R>): <R1, E, A>(self: Effect<R1, E, A>) => Effect<Exclude<R1, R>, E, A>
+  <R, R1, E, A>(self: Effect<R1, E, A>, context: Runtime.Runtime<R>): Effect<Exclude<R1, R>, E, A>
 }
 ```
 
