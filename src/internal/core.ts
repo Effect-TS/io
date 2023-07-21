@@ -393,14 +393,19 @@ export const asUnit = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, 
 
 /* @internal */
 export const async = <R, E, A>(
-  register: (callback: (_: Effect.Effect<R, E, A>) => void) => void,
+  register: (callback: (_: Effect.Effect<R, E, A>) => void) => void | Effect.Effect<R, never, void>,
   blockingOn: FiberId.FiberId = FiberId.none
-): Effect.Effect<R, E, A> => {
-  const effect = new EffectPrimitive(OpCodes.OP_ASYNC) as any
-  effect.i0 = register
-  effect.i1 = blockingOn
-  return effect
-}
+): Effect.Effect<R, E, A> =>
+  suspend(() => {
+    let cancelerRef: Effect.Effect<R, never, void> | void = undefined
+
+    const effect = new EffectPrimitive(OpCodes.OP_ASYNC) as any
+    effect.i0 = (resume: (_: Effect.Effect<R, E, A>) => void) => {
+      cancelerRef = register(resume)
+    }, effect.i1 = blockingOn
+
+    return effect.pipe(onInterrupt(() => cancelerRef ? cancelerRef : unit))
+  })
 
 /* @internal */
 export const asyncInterruptEither = <R, E, A>(
@@ -409,39 +414,20 @@ export const asyncInterruptEither = <R, E, A>(
   ) => Either.Either<Effect.Effect<R, never, void>, Effect.Effect<R, E, A>>,
   blockingOn: FiberId.FiberId = FiberId.none
 ): Effect.Effect<R, E, A> =>
-  suspend(() => {
-    let cancelerRef: Effect.Effect<R, never, void> = unit
-    return async<R, E, A>(
-      (resume) => {
-        const result = register(resume)
-        if (Either.isRight(result)) {
-          resume(result.right)
-        } else {
-          cancelerRef = result.left
-        }
-      },
-      blockingOn
-    ).pipe(
-      onInterrupt(() => cancelerRef)
-    )
-  })
+  async<R, E, A>((resume) => {
+    const result = register(resume)
+    if (Either.isRight(result)) {
+      resume(result.right)
+    } else {
+      return result.left
+    }
+  }, blockingOn)
 
 /* @internal */
 export const asyncInterrupt = <R, E, A>(
   register: (callback: (effect: Effect.Effect<R, E, A>) => void) => Effect.Effect<R, never, void>,
   blockingOn: FiberId.FiberId = FiberId.none
-): Effect.Effect<R, E, A> =>
-  suspend(() => {
-    let cancelerRef: Effect.Effect<R, never, void> = unit
-    return async<R, E, A>(
-      (resume) => {
-        cancelerRef = register(resume)
-      },
-      blockingOn
-    ).pipe(
-      onInterrupt(() => cancelerRef)
-    )
-  })
+): Effect.Effect<R, E, A> => async(register, blockingOn)
 
 /* @internal */
 export const catchAllCause = dual<
