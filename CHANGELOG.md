@@ -1,5 +1,15 @@
 # @effect/io
 
+## 0.35.2
+
+### Patch Changes
+
+- [#554](https://github.com/Effect-TS/io/pull/554) [`e2e5cc1`](https://github.com/Effect-TS/io/commit/e2e5cc1097269c68e930c143a10d53240ffe0153) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Introduce Effect.provideSomeRuntime
+
+- [#550](https://github.com/Effect-TS/io/pull/550) [`35333a0`](https://github.com/Effect-TS/io/commit/35333a029c07df5087c8aab00f2ddbb26838aec5) Thanks [@gcanti](https://github.com/gcanti)! - Effect: align validate with zip (should both return a mutable tuple)
+
+- [#553](https://github.com/Effect-TS/io/pull/553) [`4849b95`](https://github.com/Effect-TS/io/commit/4849b95afa14dca3fdf0f5ee09fba1ddc0859313) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Join Fibers in the correct order in Effect.all
+
 ## 0.35.1
 
 ### Patch Changes
