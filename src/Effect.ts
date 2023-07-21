@@ -7,7 +7,7 @@ import type * as Either from "@effect/data/Either"
 import type * as Equal from "@effect/data/Equal"
 import type { Equivalence } from "@effect/data/Equivalence"
 import type { LazyArg } from "@effect/data/Function"
-import { identity } from "@effect/data/Function"
+import { dual, identity } from "@effect/data/Function"
 import type * as HashMap from "@effect/data/HashMap"
 import type * as HashSet from "@effect/data/HashSet"
 import type { TypeLambda } from "@effect/data/HKT"
@@ -25,11 +25,11 @@ import type * as Deferred from "@effect/io/Deferred"
 import type * as Exit from "@effect/io/Exit"
 import type * as Fiber from "@effect/io/Fiber"
 import type * as FiberId from "@effect/io/Fiber/Id"
-import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
+import * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import type * as RuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
 import type * as FiberRef from "@effect/io/FiberRef"
 import type * as FiberRefs from "@effect/io/FiberRefs"
-import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
+import * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
 import { clockTag } from "@effect/io/internal/clock"
 import * as core from "@effect/io/internal/core"
 import * as defaultServices from "@effect/io/internal/defaultServices"
@@ -2981,6 +2981,38 @@ export const provideSomeContext: {
   <R>(context: Context.Context<R>): <R1, E, A>(self: Effect<R1, E, A>) => Effect<Exclude<R1, R>, E, A>
   <R, R1, E, A>(self: Effect<R1, E, A>, context: Context.Context<R>): Effect<Exclude<R1, R>, E, A>
 } = core.provideSomeContext
+
+/**
+ * Splits the context into two parts, providing one part using the
+ * specified runtime and leaving the remainder `R0`.
+ *
+ * @since 1.0.0
+ * @category context
+ */
+export const provideSomeRuntime: {
+  <R>(context: Runtime.Runtime<R>): <R1, E, A>(self: Effect<R1, E, A>) => Effect<Exclude<R1, R>, E, A>
+  <R, R1, E, A>(self: Effect<R1, E, A>, context: Runtime.Runtime<R>): Effect<Exclude<R1, R>, E, A>
+} = dual<
+  <R>(context: Runtime.Runtime<R>) => <R1, E, A>(self: Effect<R1, E, A>) => Effect<Exclude<R1, R>, E, A>,
+  <R, R1, E, A>(self: Effect<R1, E, A>, context: Runtime.Runtime<R>) => Effect<Exclude<R1, R>, E, A>
+>(2, (self, runtime) => {
+  const patchFlags = RuntimeFlags.diff(_runtime.defaultRuntime.runtimeFlags, runtime.runtimeFlags)
+  const inversePatchFlags = RuntimeFlags.diff(runtime.runtimeFlags, _runtime.defaultRuntime.runtimeFlags)
+  const patchRefs = FiberRefsPatch.diff(_runtime.defaultRuntime.fiberRefs, runtime.fiberRefs)
+  const inversePatchRefs = FiberRefsPatch.diff(runtime.fiberRefs, _runtime.defaultRuntime.fiberRefs)
+  return acquireUseRelease(
+    core.flatMap(
+      updateRuntimeFlags(patchFlags),
+      () => patchFiberRefs(patchRefs)
+    ),
+    () => provideSomeContext(self, runtime.context),
+    () =>
+      core.flatMap(
+        updateRuntimeFlags(inversePatchFlags),
+        () => patchFiberRefs(inversePatchRefs)
+      )
+  )
+})
 
 /**
  * Provides a layer to the effect, which translates it to another level.
