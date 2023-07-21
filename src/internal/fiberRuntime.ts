@@ -1842,6 +1842,7 @@ export const forEachParUnboundedDiscard = <R, E, A, _>(
       const deferred = core.deferredUnsafeMake<void, Effect.Effect<any, any, any>>(FiberId.none)
       let ref = 0
       const residual: Array<Effect.Blocked<any, any, any>> = []
+      const joinOrder: Array<Fiber.RuntimeFiber<any, any>> = []
       const process = core.transplant((graft) =>
         core.forEachSequential(as, (a, i) =>
           pipe(
@@ -1896,7 +1897,13 @@ export const forEachParUnboundedDiscard = <R, E, A, _>(
                 }
               )
             )),
-            forkDaemon
+            forkDaemon,
+            core.map((fiber) => {
+              fiber.unsafeAddObserver(() => {
+                joinOrder.push(fiber)
+              })
+              return fiber
+            })
           ))
       )
       return core.flatMap(process, (fibers) =>
@@ -1917,7 +1924,8 @@ export const forEachParUnboundedDiscard = <R, E, A, _>(
                   }
                 }
               ),
-            onSuccess: (rest) => core.flatMap(rest, () => core.forEachSequentialDiscard(fibers, (f) => f.inheritAll()))
+            onSuccess: (rest) =>
+              core.flatMap(rest, () => core.forEachSequentialDiscard(joinOrder, (f) => f.inheritAll()))
           }
         ))
     })
