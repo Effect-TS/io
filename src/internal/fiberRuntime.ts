@@ -753,7 +753,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   }
 
   log(
-    message: string,
+    message: unknown,
     cause: Cause.Cause<any>,
     overrideLogLevel: Option.Option<LogLevel.LogLevel>
   ): void {
@@ -1319,25 +1319,25 @@ export const currentMinimumLogLevel: FiberRef.FiberRef<LogLevel.LogLevel> = core
 )
 
 /** @internal */
-export const defaultLogger: Logger<string, void> = internalLogger.makeLogger((options) => {
+export const defaultLogger: Logger<unknown, void> = internalLogger.makeLogger((options) => {
   const formatted = internalLogger.stringLogger.log(options)
   globalThis.console.log(formatted)
 })
 
 /** @internal */
-export const filterMinimumLogLevel: Logger<string, void> = internalLogger.makeLogger((options) => {
+export const filterMinimumLogLevel: Logger<unknown, void> = internalLogger.makeLogger((options) => {
   const formatted = internalLogger.stringLogger.log(options)
   globalThis.console.log(formatted)
 })
 
 /** @internal */
-export const logFmtLogger: Logger<string, void> = internalLogger.makeLogger((options) => {
+export const logFmtLogger: Logger<unknown, void> = internalLogger.makeLogger((options) => {
   const formatted = internalLogger.logfmtLogger.log(options)
   globalThis.console.log(formatted)
 })
 
 /** @internal */
-export const tracerLogger = internalLogger.makeLogger<string, void>(({
+export const tracerLogger = internalLogger.makeLogger<unknown, void>(({
   annotations,
   cause,
   context,
@@ -1363,7 +1363,7 @@ export const tracerLogger = internalLogger.makeLogger<string, void>(({
   }
 
   span.value.event(
-    message,
+    String(message),
     clockService.value.unsafeCurrentTimeNanos(),
     attributes
   )
@@ -1371,7 +1371,7 @@ export const tracerLogger = internalLogger.makeLogger<string, void>(({
 
 /** @internal */
 export const currentLoggers: FiberRef.FiberRef<
-  HashSet.HashSet<Logger<string, any>>
+  HashSet.HashSet<Logger<unknown, any>>
 > = core.fiberRefUnsafeMakeHashSet(HashSet.make(defaultLogger, tracerLogger))
 
 // circular with Effect

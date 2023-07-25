@@ -8,16 +8,16 @@ type LogMeta = Record<string, string>
 
 const logMeta = FiberRef.unsafeMake<LogMeta>({})
 
-const logInfoWithMeta = (message: string, data: LogMeta) => Effect.locally(logMeta, data)(Effect.logInfo(message))
+const logInfoWithMeta = (message: unknown, data: LogMeta) => Effect.locally(logMeta, data)(Effect.logInfo(message))
 
-const customLogger = Logger.make<string, void>((options) => {
+const customLogger = Logger.make<unknown, void>((options) => {
   const meta = FiberRefs.getOrDefault(options.context, logMeta)
   const formatted = Logger.stringLogger.log(options)
   console.log(formatted, { meta })
 })
 
 const program = Effect.gen(function*($) {
-  yield* $(logInfoWithMeta("message1", { foo: "bar" }))
+  yield* $(logInfoWithMeta({ msg: "message1" }, { foo: "bar" }))
 })
 
 const main = pipe(

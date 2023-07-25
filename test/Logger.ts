@@ -139,4 +139,87 @@ describe("logfmtLogger", () => {
     expect(Logger.stringLogger.pipe(identity)).toBe(Logger.stringLogger)
     expect(logLevelInfo.pipe(identity)).toBe(logLevelInfo)
   })
+
+  test("objects", () => {
+    const date = new Date()
+    vi.setSystemTime(date)
+
+    const result = Logger.logfmtLogger.log({
+      fiberId: FiberId.none,
+      logLevel: logLevelInfo,
+      message: { hello: "world" },
+      cause: Cause.empty,
+      context: FiberRefs.unsafeMake(new Map()),
+      spans: List.empty(),
+      annotations: HashMap.empty(),
+      date
+    })
+
+    expect(result).toEqual(
+      `timestamp=${date.toJSON()} level=INFO fiber= message="{\\"hello\\":\\"world\\"}"`
+    )
+  })
+
+  test("circular objects", () => {
+    const date = new Date()
+    vi.setSystemTime(date)
+
+    const msg: Record<string, any> = { hello: "world" }
+    msg.msg = msg
+
+    const result = Logger.logfmtLogger.log({
+      fiberId: FiberId.none,
+      logLevel: logLevelInfo,
+      message: msg,
+      cause: Cause.empty,
+      context: FiberRefs.unsafeMake(new Map()),
+      spans: List.empty(),
+      annotations: HashMap.empty(),
+      date
+    })
+
+    expect(result).toEqual(
+      `timestamp=${date.toJSON()} level=INFO fiber= message="[object Object]"`
+    )
+  })
+
+  test("symbols", () => {
+    const date = new Date()
+    vi.setSystemTime(date)
+
+    const result = Logger.logfmtLogger.log({
+      fiberId: FiberId.none,
+      logLevel: logLevelInfo,
+      message: Symbol.for("@effect/io/Logger/test"),
+      cause: Cause.empty,
+      context: FiberRefs.unsafeMake(new Map()),
+      spans: List.empty(),
+      annotations: HashMap.empty(),
+      date
+    })
+
+    expect(result).toEqual(
+      `timestamp=${date.toJSON()} level=INFO fiber= message=Symbol(@effect/io/Logger/test)`
+    )
+  })
+
+  test("functions", () => {
+    const date = new Date()
+    vi.setSystemTime(date)
+
+    const result = Logger.logfmtLogger.log({
+      fiberId: FiberId.none,
+      logLevel: logLevelInfo,
+      message: () => "hello world",
+      cause: Cause.empty,
+      context: FiberRefs.unsafeMake(new Map()),
+      spans: List.empty(),
+      annotations: HashMap.empty(),
+      date
+    })
+
+    expect(result).toEqual(
+      `timestamp=${date.toJSON()} level=INFO fiber= message="() => \\"hello world\\""`
+    )
+  })
 })

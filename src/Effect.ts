@@ -4138,9 +4138,9 @@ export const matchEffect: {
  * @since 1.0.0
  * @category logging
  */
-export const log: <A extends string | Cause.Cause<unknown>>(
+export const log: <A>(
   messageOrCause: A,
-  supplementry?: A extends string ? Cause.Cause<unknown> : string
+  supplementry?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
 ) => Effect<never, never, void> = effect.log
 
 /**
@@ -4149,9 +4149,9 @@ export const log: <A extends string | Cause.Cause<unknown>>(
  * @since 1.0.0
  * @category logging
  */
-export const logTrace: <A extends string | Cause.Cause<unknown>>(
+export const logTrace: <A>(
   messageOrCause: A,
-  supplementry?: A extends string ? Cause.Cause<unknown> : string
+  supplementry?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
 ) => Effect<never, never, void> = effect.logTrace
 
 /**
@@ -4160,9 +4160,9 @@ export const logTrace: <A extends string | Cause.Cause<unknown>>(
  * @since 1.0.0
  * @category logging
  */
-export const logDebug: <A extends string | Cause.Cause<unknown>>(
+export const logDebug: <A>(
   messageOrCause: A,
-  supplementry?: A extends string ? Cause.Cause<unknown> : string
+  supplementry?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
 ) => Effect<never, never, void> = effect.logDebug
 
 /**
@@ -4171,9 +4171,9 @@ export const logDebug: <A extends string | Cause.Cause<unknown>>(
  * @since 1.0.0
  * @category logging
  */
-export const logInfo: <A extends string | Cause.Cause<unknown>>(
+export const logInfo: <A>(
   messageOrCause: A,
-  supplementry?: A extends string ? Cause.Cause<unknown> : string
+  supplementry?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
 ) => Effect<never, never, void> = effect.logInfo
 
 /**
@@ -4182,9 +4182,9 @@ export const logInfo: <A extends string | Cause.Cause<unknown>>(
  * @since 1.0.0
  * @category logging
  */
-export const logWarning: <A extends string | Cause.Cause<unknown>>(
+export const logWarning: <A>(
   messageOrCause: A,
-  supplementry?: A extends string ? Cause.Cause<unknown> : string
+  supplementry?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
 ) => Effect<never, never, void> = effect.logWarning
 
 /**
@@ -4193,9 +4193,9 @@ export const logWarning: <A extends string | Cause.Cause<unknown>>(
  * @since 1.0.0
  * @category logging
  */
-export const logError: <A extends string | Cause.Cause<unknown>>(
+export const logError: <A>(
   messageOrCause: A,
-  supplementry?: A extends string ? Cause.Cause<unknown> : string
+  supplementry?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
 ) => Effect<never, never, void> = effect.logError
 
 /**
@@ -4204,9 +4204,9 @@ export const logError: <A extends string | Cause.Cause<unknown>>(
  * @since 1.0.0
  * @category logging
  */
-export const logFatal: <A extends string | Cause.Cause<unknown>>(
+export const logFatal: <A>(
   messageOrCause: A,
-  supplementry?: A extends string ? Cause.Cause<unknown> : string
+  supplementry?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
 ) => Effect<never, never, void> = effect.logFatal
 
 /**

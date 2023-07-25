@@ -37,7 +37,7 @@ export const withMinimumLogLevel = dual<
   )(self))
 
 /** @internal */
-export const addLogger = <A>(logger: Logger.Logger<string, A>): Layer.Layer<never, never, never> =>
+export const addLogger = <A>(logger: Logger.Logger<unknown, A>): Layer.Layer<never, never, never> =>
   layer.scopedDiscard(
     fiberRuntime.fiberRefLocallyScopedWith(
       fiberRuntime.currentLoggers,
@@ -47,7 +47,7 @@ export const addLogger = <A>(logger: Logger.Logger<string, A>): Layer.Layer<neve
 
 /** @internal */
 export const addLoggerEffect = <R, E, A>(
-  effect: Effect.Effect<R, E, Logger.Logger<string, A>>
+  effect: Effect.Effect<R, E, Logger.Logger<unknown, A>>
 ): Layer.Layer<R, E, never> =>
   Layer.unwrapEffect(
     core.map(effect, addLogger)
@@ -55,14 +55,14 @@ export const addLoggerEffect = <R, E, A>(
 
 /** @internal */
 export const addLoggerScoped = <R, E, A>(
-  effect: Effect.Effect<R | Scope, E, Logger.Logger<string, A>>
+  effect: Effect.Effect<R | Scope, E, Logger.Logger<unknown, A>>
 ): Layer.Layer<Exclude<R, Scope>, E, never> =>
   Layer.unwrapScoped(
     core.map(effect, addLogger)
   )
 
 /** @internal */
-export const removeLogger = <A>(logger: Logger.Logger<string, A>): Layer.Layer<never, never, never> =>
+export const removeLogger = <A>(logger: Logger.Logger<unknown, A>): Layer.Layer<never, never, never> =>
   layer.scopedDiscard(
     fiberRuntime.fiberRefLocallyScopedWith(
       fiberRuntime.currentLoggers,
@@ -72,29 +72,29 @@ export const removeLogger = <A>(logger: Logger.Logger<string, A>): Layer.Layer<n
 
 /** @internal */
 export const replaceLogger = dual<
-  <B>(that: Logger.Logger<string, B>) => <A>(self: Logger.Logger<string, A>) => Layer.Layer<never, never, never>,
-  <A, B>(self: Logger.Logger<string, A>, that: Logger.Logger<string, B>) => Layer.Layer<never, never, never>
+  <B>(that: Logger.Logger<unknown, B>) => <A>(self: Logger.Logger<unknown, A>) => Layer.Layer<never, never, never>,
+  <A, B>(self: Logger.Logger<unknown, A>, that: Logger.Logger<unknown, B>) => Layer.Layer<never, never, never>
 >(2, (self, that) => layer.flatMap(removeLogger(self), () => addLogger(that)))
 
 /** @internal */
 export const replaceLoggerEffect = dual<
   <R, E, B>(
-    that: Effect.Effect<R, E, Logger.Logger<string, B>>
-  ) => <A>(self: Logger.Logger<string, A>) => Layer.Layer<R, E, never>,
+    that: Effect.Effect<R, E, Logger.Logger<unknown, B>>
+  ) => <A>(self: Logger.Logger<unknown, A>) => Layer.Layer<R, E, never>,
   <A, R, E, B>(
-    self: Logger.Logger<string, A>,
-    that: Effect.Effect<R, E, Logger.Logger<string, B>>
+    self: Logger.Logger<unknown, A>,
+    that: Effect.Effect<R, E, Logger.Logger<unknown, B>>
   ) => Layer.Layer<R, E, never>
 >(2, (self, that) => layer.flatMap(removeLogger(self), () => addLoggerEffect(that)))
 
 /** @internal */
 export const replaceLoggerScoped = dual<
   <R, E, B>(
-    that: Effect.Effect<R | Scope, E, Logger.Logger<string, B>>
-  ) => <A>(self: Logger.Logger<string, A>) => Layer.Layer<Exclude<R, Scope>, E, never>,
+    that: Effect.Effect<R | Scope, E, Logger.Logger<unknown, B>>
+  ) => <A>(self: Logger.Logger<unknown, A>) => Layer.Layer<Exclude<R, Scope>, E, never>,
   <A, R, E, B>(
-    self: Logger.Logger<string, A>,
-    that: Effect.Effect<R | Scope, E, Logger.Logger<string, B>>
+    self: Logger.Logger<unknown, A>,
+    that: Effect.Effect<R | Scope, E, Logger.Logger<unknown, B>>
   ) => Layer.Layer<Exclude<R, Scope>, E, never>
 >(2, (self, that) => layer.flatMap(removeLogger(self), () => addLoggerScoped(that)))
 

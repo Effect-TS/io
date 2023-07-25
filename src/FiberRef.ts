@@ -321,7 +321,7 @@ export const currentLogAnnotations: FiberRef<HashMap.HashMap<string, string>> = 
  * @since 1.0.0
  * @category fiberRefs
  */
-export const currentLoggers: FiberRef<HashSet.HashSet<Logger.Logger<string, any>>> = fiberRuntime.currentLoggers
+export const currentLoggers: FiberRef<HashSet.HashSet<Logger.Logger<unknown, any>>> = fiberRuntime.currentLoggers
 
 /**
  * @since 1.0.0
