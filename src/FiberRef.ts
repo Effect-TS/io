@@ -315,7 +315,8 @@ export const unhandledErrorLogLevel: FiberRef<Option.Option<LogLevel.LogLevel>> 
  * @since 1.0.0
  * @category fiberRefs
  */
-export const currentLogAnnotations: FiberRef<HashMap.HashMap<string, string>> = core.currentLogAnnotations
+export const currentLogAnnotations: FiberRef<HashMap.HashMap<string, Logger.AnnotationValue>> =
+  core.currentLogAnnotations
 
 /**
  * @since 1.0.0

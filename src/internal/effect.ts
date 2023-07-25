@@ -24,6 +24,7 @@ import * as defaultServices from "@effect/io/internal/defaultServices"
 import * as fiberRefsPatch from "@effect/io/internal/fiberRefs/patch"
 import * as metricLabel from "@effect/io/internal/metric/label"
 import * as SingleShotGen from "@effect/io/internal/singleShotGen"
+import type * as Logger from "@effect/io/Logger"
 import * as LogLevel from "@effect/io/Logger/Level"
 import * as LogSpan from "@effect/io/Logger/Span"
 import type * as Metric from "@effect/io/Metric"
@@ -34,7 +35,7 @@ import * as Tracer from "@effect/io/Tracer"
 
 /* @internal */
 export const annotateLogs = dual<
-  (key: string, value: string) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  (key: string, value: Logger.AnnotationValue) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
   <R, E, A>(effect: Effect.Effect<R, E, A>, key: string, value: string) => Effect.Effect<R, E, A>
 >(
   3,
@@ -44,9 +45,10 @@ export const annotateLogs = dual<
       (annotations) =>
         core.suspend(() =>
           core.fiberRefLocally(
+            effect,
             core.currentLogAnnotations,
             HashMap.set(annotations, key, value)
-          )(effect)
+          )
         )
     )
 )
@@ -63,9 +65,10 @@ export const annotateSpans = dual<
       (annotations) =>
         core.suspend(() =>
           core.fiberRefLocally(
+            self,
             core.currentTracerSpanAnnotations,
             HashMap.set(annotations, key, value)
-          )(self)
+          )
         )
     )
 )
@@ -942,9 +945,10 @@ export const withLogSpan = dual<
   ))
 
 /* @internal */
-export const logAnnotations: Effect.Effect<never, never, HashMap.HashMap<string, string>> = core.fiberRefGet(
-  core.currentLogAnnotations
-)
+export const logAnnotations: Effect.Effect<never, never, HashMap.HashMap<string, Logger.AnnotationValue>> = core
+  .fiberRefGet(
+    core.currentLogAnnotations
+  )
 
 /* @internal */
 // @ts-expect-error

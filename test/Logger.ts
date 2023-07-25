@@ -25,7 +25,9 @@ describe("stringLogger", () => {
     const annotations = HashMap.make(
       ["just_a_key", "just_a_value"],
       ["I am bad key name", JSON.stringify({ coolValue: "cool value" })],
-      ["good_key", "I am a good value"]
+      ["good_key", "I am a good value"],
+      ["good_bool", true],
+      ["good_number", 123]
     )
 
     const result = Logger.stringLogger.log({
@@ -40,7 +42,7 @@ describe("stringLogger", () => {
     })
 
     expect(result).toEqual(
-      `timestamp=${date.toJSON()} level=INFO fiber= message="My message" imma_span__=7ms just_a_key=just_a_value good_key="I am a good value" I_am_bad_key_name="{\\"coolValue\\":\\"cool value\\"}"`
+      `timestamp=${date.toJSON()} level=INFO fiber= message="My message" imma_span__=7ms just_a_key=just_a_value good_key="I am a good value" good_bool=true I_am_bad_key_name="{\\"coolValue\\":\\"cool value\\"}" good_number=123`
     )
   })
 
@@ -116,7 +118,9 @@ describe("logfmtLogger", () => {
       ["I am also\na bad key name", JSON.stringify({ return: "cool\nvalue" })],
       ["good_key", JSON.stringify({ returnWithSpace: "cool\nvalue or not" })],
       ["good_key2", "I am a good value\nwith line breaks"],
-      ["good_key3", "I_have=a"]
+      ["good_key3", "I_have=a"],
+      ["good_bool", true],
+      ["good_number", 123]
     )
 
     const result = Logger.logfmtLogger.log({
@@ -131,7 +135,7 @@ describe("logfmtLogger", () => {
     })
 
     expect(result).toEqual(
-      `timestamp=${date.toJSON()} level=INFO fiber= message="My\\nmessage" imma_span__=7ms I_am_also_a_bad_key_name="{\\"return\\":\\"cool\\\\nvalue\\"}" good_key="{\\"returnWithSpace\\":\\"cool\\\\nvalue or not\\"}" good_key2="I am a good value\\nwith line breaks" good_key3="I_have=a"`
+      `timestamp=${date.toJSON()} level=INFO fiber= message="My\\nmessage" imma_span__=7ms I_am_also_a_bad_key_name="{\\"return\\":\\"cool\\\\nvalue\\"}" good_key="{\\"returnWithSpace\\":\\"cool\\\\nvalue or not\\"}" good_bool=true good_number=123 good_key2="I am a good value\\nwith line breaks" good_key3="I_have=a"`
     )
   })
 

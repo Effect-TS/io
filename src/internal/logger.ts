@@ -38,7 +38,7 @@ export const makeLogger = <Message, Output>(
       readonly cause: CauseExt.Cause<unknown>
       readonly context: FiberRefs.FiberRefs
       readonly spans: List.List<LogSpan.LogSpan>
-      readonly annotations: HashMap.HashMap<string, string>
+      readonly annotations: HashMap.HashMap<string, Logger.AnnotationValue>
       readonly date: Date
     }
   ) => Output
@@ -208,7 +208,7 @@ export const stringLogger: Logger.Logger<unknown, string> = makeLogger<unknown, 
         }
         output = output + filterKeyName(key)
         output = output + "="
-        output = appendQuoted(value, output)
+        output = appendQuoted(String(value), output)
       }
     }
 
@@ -283,7 +283,7 @@ export const logfmtLogger = makeLogger<unknown, string>(
         }
         output = output + filterKeyName(key)
         output = output + "="
-        output = appendQuotedLogfmt(value, output)
+        output = appendQuotedLogfmt(String(value), output)
       }
     }
 

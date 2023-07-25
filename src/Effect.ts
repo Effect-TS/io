@@ -42,6 +42,7 @@ import * as query from "@effect/io/internal/query"
 import * as _runtime from "@effect/io/internal/runtime"
 import * as _schedule from "@effect/io/internal/schedule"
 import type * as Layer from "@effect/io/Layer"
+import type * as Logger from "@effect/io/Logger"
 import type { LogLevel } from "@effect/io/Logger/Level"
 import type * as Metric from "@effect/io/Metric"
 import type * as MetricLabel from "@effect/io/Metric/Label"
@@ -4227,7 +4228,7 @@ export const withLogSpan: {
  * @category logging
  */
 export const annotateLogs: {
-  (key: string, value: string): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
+  (key: string, value: Logger.AnnotationValue): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
   <R, E, A>(effect: Effect<R, E, A>, key: string, value: string): Effect<R, E, A>
 } = effect.annotateLogs
 
@@ -4237,7 +4238,8 @@ export const annotateLogs: {
  * @since 1.0.0
  * @category logging
  */
-export const logAnnotations: Effect<never, never, HashMap.HashMap<string, string>> = effect.logAnnotations
+export const logAnnotations: Effect<never, never, HashMap.HashMap<string, Logger.AnnotationValue>> =
+  effect.logAnnotations
 
 /**
  * Decides wether child fibers will report or not unhandled errors via the logger
