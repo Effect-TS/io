@@ -233,7 +233,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const currentLoggers: FiberRef<HashSet.HashSet<Logger.Logger<string, any>>>
+export declare const currentLoggers: FiberRef<HashSet.HashSet<Logger.Logger<unknown, any>>>
 ```
 
 Added in v1.0.0

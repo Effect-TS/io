@@ -3247,9 +3247,9 @@ You can set the current log level using `FiberRef.currentLogLevel`.
 **Signature**
 
 ```ts
-export declare const log: <A extends string | Cause.Cause<unknown>>(
+export declare const log: <A>(
   messageOrCause: A,
-  supplementry?: (A extends string ? Cause.Cause<unknown> : string) | undefined
+  supplementry?: (A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>) | undefined
 ) => Effect<never, never, void>
 ```
 
@@ -3274,9 +3274,9 @@ Logs the specified message or cause at the Debug log level.
 **Signature**
 
 ```ts
-export declare const logDebug: <A extends string | Cause.Cause<unknown>>(
+export declare const logDebug: <A>(
   messageOrCause: A,
-  supplementry?: (A extends string ? Cause.Cause<unknown> : string) | undefined
+  supplementry?: (A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>) | undefined
 ) => Effect<never, never, void>
 ```
 
@@ -3289,9 +3289,9 @@ Logs the specified message or cause at the Error log level.
 **Signature**
 
 ```ts
-export declare const logError: <A extends string | Cause.Cause<unknown>>(
+export declare const logError: <A>(
   messageOrCause: A,
-  supplementry?: (A extends string ? Cause.Cause<unknown> : string) | undefined
+  supplementry?: (A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>) | undefined
 ) => Effect<never, never, void>
 ```
 
@@ -3304,9 +3304,9 @@ Logs the specified message or cause at the Fatal log level.
 **Signature**
 
 ```ts
-export declare const logFatal: <A extends string | Cause.Cause<unknown>>(
+export declare const logFatal: <A>(
   messageOrCause: A,
-  supplementry?: (A extends string ? Cause.Cause<unknown> : string) | undefined
+  supplementry?: (A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>) | undefined
 ) => Effect<never, never, void>
 ```
 
@@ -3319,9 +3319,9 @@ Logs the specified message or cause at the Info log level.
 **Signature**
 
 ```ts
-export declare const logInfo: <A extends string | Cause.Cause<unknown>>(
+export declare const logInfo: <A>(
   messageOrCause: A,
-  supplementry?: (A extends string ? Cause.Cause<unknown> : string) | undefined
+  supplementry?: (A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>) | undefined
 ) => Effect<never, never, void>
 ```
 
@@ -3334,9 +3334,9 @@ Logs the specified message or cause at the Trace log level.
 **Signature**
 
 ```ts
-export declare const logTrace: <A extends string | Cause.Cause<unknown>>(
+export declare const logTrace: <A>(
   messageOrCause: A,
-  supplementry?: (A extends string ? Cause.Cause<unknown> : string) | undefined
+  supplementry?: (A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>) | undefined
 ) => Effect<never, never, void>
 ```
 
@@ -3349,9 +3349,9 @@ Logs the specified message or cause at the Warning log level.
 **Signature**
 
 ```ts
-export declare const logWarning: <A extends string | Cause.Cause<unknown>>(
+export declare const logWarning: <A>(
   messageOrCause: A,
-  supplementry?: (A extends string ? Cause.Cause<unknown> : string) | undefined
+  supplementry?: (A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>) | undefined
 ) => Effect<never, never, void>
 ```
 
