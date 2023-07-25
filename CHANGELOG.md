@@ -1,5 +1,13 @@
 # @effect/io
 
+## 0.35.3
+
+### Patch Changes
+
+- [#560](https://github.com/Effect-TS/io/pull/560) [`1608ba4`](https://github.com/Effect-TS/io/commit/1608ba48bcf711d152ed5e7993fdc0ad2bd916d7) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Include Span information in Cause.pretty
+
+- [#558](https://github.com/Effect-TS/io/pull/558) [`04222ad`](https://github.com/Effect-TS/io/commit/04222adc9139ae25ebcfe31a631ca68a15695809) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Improve AsyncFiberException error message
+
 ## 0.35.2
 
 ### Patch Changes
