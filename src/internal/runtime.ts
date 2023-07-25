@@ -115,7 +115,7 @@ const asyncFiberException = <E, A>(fiber: Fiber.RuntimeFiber<E, A>): Runtime.Asy
   const error = (new Error()) as any
   Error.stackTraceLimit = limit
   const message =
-    `Fiber #${fiber.id().id} cannot be be resolved syncroniously, this is caused by using runSync on an effect that performs async work`
+    `Fiber #${fiber.id().id} cannot be be resolved synchronously, this is caused by using runSync on an effect that performs async work`
   const _tag = "AsyncFiberException"
   Object.defineProperties(error, {
     _tag: {
