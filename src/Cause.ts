@@ -31,6 +31,7 @@ import type { Predicate } from "@effect/data/Predicate"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import * as internal from "@effect/io/internal/cause"
 import * as _pretty from "@effect/io/internal/cause-pretty"
+import type { Span } from "@effect/io/Tracer"
 
 /**
  * @since 1.0.0
@@ -108,13 +109,23 @@ export type InvalidHubCapacityExceptionTypeId = typeof InvalidHubCapacityExcepti
  * @since 1.0.0
  * @category symbols
  */
-export const StackAnnotationTypeId: unique symbol = internal.StackAnnotationTypeId
+export const SpanAnnotationTypeId: unique symbol = internal.SpanAnnotationTypeId
 
 /**
  * @since 1.0.0
  * @category symbols
  */
-export type StackAnnotationTypeId = typeof StackAnnotationTypeId
+export type SpanAnnotationTypeId = typeof SpanAnnotationTypeId
+
+/**
+ * @since 1.0.0
+ * @category annotations
+ */
+export interface SpanAnnotation {
+  readonly _tag: "SpanAnnotation"
+  readonly [SpanAnnotationTypeId]: SpanAnnotationTypeId
+  readonly span: Span
+}
 
 /**
  * A `Cause` represents the full history of a failure resulting from running an

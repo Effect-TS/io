@@ -1068,7 +1068,10 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   }
 
   [OpCodes.OP_FAILURE](op: core.Primitive & { _tag: OpCodes.OP_FAILURE }) {
-    const cause = op.i0
+    const span = this.getFiberRef(core.currentTracerSpan)
+    const cause = List.isNil(span) ?
+      op.i0 :
+      internalCause.annotated(op.i0, internalCause.makeSpanAnnotation(List.unsafeHead(span)))
     const cont = this.getNextFailCont()
     if (cont !== undefined) {
       switch (cont._tag) {

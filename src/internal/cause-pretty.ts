@@ -1,5 +1,7 @@
+import * as Option from "@effect/data/Option"
 import type * as Cause from "@effect/io/Cause"
 import * as internal from "@effect/io/internal/cause"
+import type { ParentSpan, Span } from "@effect/io/Tracer"
 
 // -----------------------------------------------------------------------------
 // Pretty Printing
@@ -47,8 +49,26 @@ const defaultErrorToLines = (error: unknown): [string, string | undefined] => {
 class RenderError {
   constructor(
     readonly message: string,
-    readonly stack: string | undefined
+    readonly stack: string | undefined,
+    readonly span: Span | undefined
   ) {}
+}
+
+const filterStack = (stack: string) => {
+  const lines = stack.split("\n")
+  const out: Array<string> = []
+  for (let i = 0; i < lines.length; i++) {
+    if (
+      lines[i].includes("EffectPrimitive")
+      || lines[i].includes("Generator.next")
+      || lines[i].includes("FiberRuntime")
+    ) {
+      return out.join("\n")
+    } else {
+      out.push(lines[i])
+    }
+  }
+  return out.join("\n")
 }
 
 /** @internal */
@@ -59,7 +79,16 @@ export const pretty = <E>(cause: Cause.Cause<E>): string => {
   const final = prettyErrors<E>(cause).map((e) => {
     let message = e.message
     if (e.stack) {
-      message += `\r\n${e.stack}`
+      message += `\r\n${filterStack(e.stack)}`
+    }
+    if (e.span) {
+      let current: Span | ParentSpan | undefined = e.span
+      let i = 0
+      while (current && current._tag === "Span" && i < 10) {
+        message += `\r\n    at ${current.name}`
+        current = Option.getOrUndefined(current.parent)
+        i++
+      }
     }
     return message
   }).join("\r\n\r\n")
@@ -75,14 +104,17 @@ export const prettyErrors = <E>(cause: Cause.Cause<E>) =>
     emptyCase: (): ReadonlyArray<RenderError> => [],
     dieCase: (_, err) => {
       const rendered = defaultErrorToLines(err)
-      return [{ message: rendered[0], stack: rendered[1] }]
+      return [{ message: rendered[0], stack: rendered[1], span: undefined }]
     },
     failCase: (_, err) => {
       const rendered = defaultErrorToLines(err)
-      return [{ message: rendered[0], stack: rendered[1] }]
+      return [{ message: rendered[0], stack: rendered[1], span: undefined }]
     },
     interruptCase: () => [],
     parallelCase: (_, l, r) => [...l, ...r],
     sequentialCase: (_, l, r) => [...l, ...r],
-    annotatedCase: (_, v, _parent) => v
+    annotatedCase: (_, v, annotation) =>
+      internal.isSpanAnnotation(annotation) ?
+        v.map((error) => ({ ...error, span: error.span ?? annotation.span })) :
+        v
   })
