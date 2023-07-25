@@ -13,6 +13,7 @@ import * as OpCodes from "@effect/io/internal/opCodes/cause"
 
 import * as MRef from "@effect/data/MutableRef"
 import { pipeArguments } from "@effect/data/Pipeable"
+import type { Span } from "@effect/io/Tracer"
 
 // -----------------------------------------------------------------------------
 // Models
@@ -1124,9 +1125,20 @@ export const isInvalidCapacityError = (u: unknown): u is Cause.InvalidHubCapacit
 // -----------------------------------------------------------------------------
 
 /** @internal */
-export const StackAnnotationTypeId: Cause.StackAnnotationTypeId = Symbol.for(
-  "@effect/io/Cause/StackAnnotation"
-) as Cause.StackAnnotationTypeId
+export const SpanAnnotationTypeId: Cause.SpanAnnotationTypeId = Symbol.for(
+  "@effect/io/Cause/SpanAnnotation"
+) as Cause.SpanAnnotationTypeId
+
+/** @internal */
+export const isSpanAnnotation = (u: unknown): u is Cause.SpanAnnotation =>
+  typeof u === "object" && u !== null && SpanAnnotationTypeId in u
+
+/** @internal */
+export const makeSpanAnnotation = (span: Span): Cause.SpanAnnotation => ({
+  _tag: "SpanAnnotation",
+  [SpanAnnotationTypeId]: SpanAnnotationTypeId,
+  span
+})
 
 /** @internal */
 export const globalErrorSeq = MRef.make(0)

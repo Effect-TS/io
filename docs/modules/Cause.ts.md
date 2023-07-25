@@ -32,6 +32,8 @@ Added in v1.0.0
 
 <h2 class="text-delta">Table of contents</h2>
 
+- [annotations](#annotations)
+  - [SpanAnnotation (interface)](#spanannotation-interface)
 - [constructors](#constructors)
   - [annotated](#annotated)
   - [die](#die)
@@ -128,10 +130,26 @@ Added in v1.0.0
   - [NoSuchElementExceptionTypeId (type alias)](#nosuchelementexceptiontypeid-type-alias)
   - [RuntimeExceptionTypeId](#runtimeexceptiontypeid)
   - [RuntimeExceptionTypeId (type alias)](#runtimeexceptiontypeid-type-alias)
-  - [StackAnnotationTypeId](#stackannotationtypeid)
-  - [StackAnnotationTypeId (type alias)](#stackannotationtypeid-type-alias)
+  - [SpanAnnotationTypeId](#spanannotationtypeid)
+  - [SpanAnnotationTypeId (type alias)](#spanannotationtypeid-type-alias)
 
 ---
+
+# annotations
+
+## SpanAnnotation (interface)
+
+**Signature**
+
+```ts
+export interface SpanAnnotation {
+  readonly _tag: 'SpanAnnotation'
+  readonly [SpanAnnotationTypeId]: SpanAnnotationTypeId
+  readonly span: Span
+}
+```
+
+Added in v1.0.0
 
 # constructors
 
@@ -1283,22 +1301,22 @@ export type RuntimeExceptionTypeId = typeof RuntimeExceptionTypeId
 
 Added in v1.0.0
 
-## StackAnnotationTypeId
+## SpanAnnotationTypeId
 
 **Signature**
 
 ```ts
-export declare const StackAnnotationTypeId: typeof StackAnnotationTypeId
+export declare const SpanAnnotationTypeId: typeof SpanAnnotationTypeId
 ```
 
 Added in v1.0.0
 
-## StackAnnotationTypeId (type alias)
+## SpanAnnotationTypeId (type alias)
 
 **Signature**
 
 ```ts
-export type StackAnnotationTypeId = typeof StackAnnotationTypeId
+export type SpanAnnotationTypeId = typeof SpanAnnotationTypeId
 ```
 
 Added in v1.0.0
