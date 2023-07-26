@@ -203,7 +203,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const currentLogAnnotations: FiberRef<HashMap.HashMap<string, string>>
+export declare const currentLogAnnotations: FiberRef<HashMap.HashMap<string, Logger.AnnotationValue>>
 ```
 
 Added in v1.0.0

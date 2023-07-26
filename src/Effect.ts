@@ -4141,7 +4141,7 @@ export const matchEffect: {
  */
 export const log: <A>(
   messageOrCause: A,
-  supplementry?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
+  supplementary?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
 ) => Effect<never, never, void> = effect.log
 
 /**
@@ -4152,7 +4152,7 @@ export const log: <A>(
  */
 export const logTrace: <A>(
   messageOrCause: A,
-  supplementry?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
+  supplementary?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
 ) => Effect<never, never, void> = effect.logTrace
 
 /**
@@ -4163,7 +4163,7 @@ export const logTrace: <A>(
  */
 export const logDebug: <A>(
   messageOrCause: A,
-  supplementry?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
+  supplementary?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
 ) => Effect<never, never, void> = effect.logDebug
 
 /**
@@ -4174,7 +4174,7 @@ export const logDebug: <A>(
  */
 export const logInfo: <A>(
   messageOrCause: A,
-  supplementry?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
+  supplementary?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
 ) => Effect<never, never, void> = effect.logInfo
 
 /**
@@ -4185,7 +4185,7 @@ export const logInfo: <A>(
  */
 export const logWarning: <A>(
   messageOrCause: A,
-  supplementry?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
+  supplementary?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
 ) => Effect<never, never, void> = effect.logWarning
 
 /**
@@ -4196,7 +4196,7 @@ export const logWarning: <A>(
  */
 export const logError: <A>(
   messageOrCause: A,
-  supplementry?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
+  supplementary?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
 ) => Effect<never, never, void> = effect.logError
 
 /**
@@ -4207,7 +4207,7 @@ export const logError: <A>(
  */
 export const logFatal: <A>(
   messageOrCause: A,
-  supplementry?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
+  supplementary?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
 ) => Effect<never, never, void> = effect.logFatal
 
 /**

@@ -867,17 +867,17 @@ export const iterate = <Z, R, E>(
 const logWithLevel = (level?: LogLevel.LogLevel) =>
   <A>(
     messageOrCause: A,
-    supplementry?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
+    supplementary?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
   ): Effect.Effect<never, never, void> => {
     const levelOption = Option.fromNullable(level)
     let message: unknown
     let cause: Cause.Cause<unknown>
     if (internalCause.isCause(messageOrCause)) {
       cause = messageOrCause
-      message = (supplementry as unknown) ?? ""
+      message = (supplementary as unknown) ?? ""
     } else {
       message = messageOrCause
-      cause = (supplementry as Cause.Cause<unknown>) ?? internalCause.empty
+      cause = (supplementary as Cause.Cause<unknown>) ?? internalCause.empty
     }
     return core.withFiberRuntime<never, never, void>((fiberState) => {
       fiberState.log(message, cause, levelOption)
@@ -888,43 +888,43 @@ const logWithLevel = (level?: LogLevel.LogLevel) =>
 /** @internal */
 export const log: <A>(
   messageOrCause: A,
-  supplementry?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
+  supplementary?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
 ) => Effect.Effect<never, never, void> = logWithLevel()
 
 /** @internal */
 export const logTrace: <A>(
   messageOrCause: A,
-  supplementry?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
+  supplementary?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
 ) => Effect.Effect<never, never, void> = logWithLevel(LogLevel.Trace)
 
 /** @internal */
 export const logDebug: <A>(
   messageOrCause: A,
-  supplementry?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
+  supplementary?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
 ) => Effect.Effect<never, never, void> = logWithLevel(LogLevel.Debug)
 
 /** @internal */
 export const logInfo: <A>(
   messageOrCause: A,
-  supplementry?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
+  supplementary?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
 ) => Effect.Effect<never, never, void> = logWithLevel(LogLevel.Info)
 
 /** @internal */
 export const logWarning: <A>(
   messageOrCause: A,
-  supplementry?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
+  supplementary?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
 ) => Effect.Effect<never, never, void> = logWithLevel(LogLevel.Warning)
 
 /** @internal */
 export const logError: <A>(
   messageOrCause: A,
-  supplementry?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
+  supplementary?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
 ) => Effect.Effect<never, never, void> = logWithLevel(LogLevel.Error)
 
 /** @internal */
 export const logFatal: <A>(
   messageOrCause: A,
-  supplementry?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
+  supplementary?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
 ) => Effect.Effect<never, never, void> = logWithLevel(LogLevel.Fatal)
 
 /* @internal */
