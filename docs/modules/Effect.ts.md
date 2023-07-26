@@ -348,6 +348,7 @@ Added in v1.0.0
   - [annotateSpans](#annotatespans)
   - [currentSpan](#currentspan)
   - [setTracer](#settracer)
+  - [setTracerTiming](#settracertiming)
   - [spanAnnotations](#spanannotations)
   - [tracer](#tracer)
   - [tracerWith](#tracerwith)
@@ -355,6 +356,7 @@ Added in v1.0.0
   - [withSpan](#withspan)
   - [withTracer](#withtracer)
   - [withTracerScoped](#withtracerscoped)
+  - [withTracerTiming](#withtracertiming)
 - [type lambdas](#type-lambdas)
   - [EffectTypeLambda (interface)](#effecttypelambda-interface)
 - [unify](#unify)
@@ -5660,6 +5662,16 @@ export declare const setTracer: (tracer: Tracer.Tracer) => Layer.Layer<never, ne
 
 Added in v1.0.0
 
+## setTracerTiming
+
+**Signature**
+
+```ts
+export declare const setTracerTiming: (enabled: boolean) => Layer.Layer<never, never, never>
+```
+
+Added in v1.0.0
+
 ## spanAnnotations
 
 **Signature**
@@ -5769,6 +5781,19 @@ Added in v1.0.0
 
 ```ts
 export declare const withTracerScoped: (value: Tracer.Tracer) => Effect<Scope.Scope, never, void>
+```
+
+Added in v1.0.0
+
+## withTracerTiming
+
+**Signature**
+
+```ts
+export declare const withTracerTiming: {
+  (enabled: boolean): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(effect: Effect<R, E, A>, enabled: boolean): Effect<R, E, A>
+}
 ```
 
 Added in v1.0.0

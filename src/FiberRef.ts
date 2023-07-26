@@ -375,6 +375,12 @@ export const currentTracerSpan: FiberRef<List.List<Tracer.Span>> = core.currentT
  * @since 1.0.0
  * @category fiberRefs
  */
+export const currentTracerTimingEnabled: FiberRef<boolean> = core.currentTracerTimingEnabled
+
+/**
+ * @since 1.0.0
+ * @category fiberRefs
+ */
 export const currentTracerSpanAnnotations: FiberRef<HashMap.HashMap<string, Tracer.AttributeValue>> =
   core.currentTracerSpanAnnotations
 
