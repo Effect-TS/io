@@ -24,6 +24,7 @@ import * as defaultServices from "@effect/io/internal/defaultServices"
 import * as fiberRefsPatch from "@effect/io/internal/fiberRefs/patch"
 import * as metricLabel from "@effect/io/internal/metric/label"
 import * as SingleShotGen from "@effect/io/internal/singleShotGen"
+import type * as Logger from "@effect/io/Logger"
 import * as LogLevel from "@effect/io/Logger/Level"
 import * as LogSpan from "@effect/io/Logger/Span"
 import type * as Metric from "@effect/io/Metric"
@@ -34,7 +35,7 @@ import * as Tracer from "@effect/io/Tracer"
 
 /* @internal */
 export const annotateLogs = dual<
-  (key: string, value: string) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  (key: string, value: Logger.AnnotationValue) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
   <R, E, A>(effect: Effect.Effect<R, E, A>, key: string, value: string) => Effect.Effect<R, E, A>
 >(
   3,
@@ -44,9 +45,10 @@ export const annotateLogs = dual<
       (annotations) =>
         core.suspend(() =>
           core.fiberRefLocally(
+            effect,
             core.currentLogAnnotations,
             HashMap.set(annotations, key, value)
-          )(effect)
+          )
         )
     )
 )
@@ -63,9 +65,10 @@ export const annotateSpans = dual<
       (annotations) =>
         core.suspend(() =>
           core.fiberRefLocally(
+            self,
             core.currentTracerSpanAnnotations,
             HashMap.set(annotations, key, value)
-          )(self)
+          )
         )
     )
 )
@@ -862,19 +865,19 @@ export const iterate = <Z, R, E>(
   })
 
 const logWithLevel = (level?: LogLevel.LogLevel) =>
-  <A extends string | Cause.Cause<unknown>>(
+  <A>(
     messageOrCause: A,
-    supplementry?: A extends string ? Cause.Cause<unknown> : string
+    supplementary?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
   ): Effect.Effect<never, never, void> => {
     const levelOption = Option.fromNullable(level)
-    let message: string
+    let message: unknown
     let cause: Cause.Cause<unknown>
-    if (typeof messageOrCause === "string") {
-      message = messageOrCause
-      cause = (supplementry as Cause.Cause<unknown>) ?? internalCause.empty
-    } else {
+    if (internalCause.isCause(messageOrCause)) {
       cause = messageOrCause
-      message = (supplementry as string) ?? ""
+      message = (supplementary as unknown) ?? ""
+    } else {
+      message = messageOrCause
+      cause = (supplementary as Cause.Cause<unknown>) ?? internalCause.empty
     }
     return core.withFiberRuntime<never, never, void>((fiberState) => {
       fiberState.log(message, cause, levelOption)
@@ -883,45 +886,45 @@ const logWithLevel = (level?: LogLevel.LogLevel) =>
   }
 
 /** @internal */
-export const log: <A extends string | Cause.Cause<unknown>>(
+export const log: <A>(
   messageOrCause: A,
-  supplementry?: A extends string ? Cause.Cause<unknown> : string
+  supplementary?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
 ) => Effect.Effect<never, never, void> = logWithLevel()
 
 /** @internal */
-export const logTrace: <A extends string | Cause.Cause<unknown>>(
+export const logTrace: <A>(
   messageOrCause: A,
-  supplementry?: A extends string ? Cause.Cause<unknown> : string
+  supplementary?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
 ) => Effect.Effect<never, never, void> = logWithLevel(LogLevel.Trace)
 
 /** @internal */
-export const logDebug: <A extends string | Cause.Cause<unknown>>(
+export const logDebug: <A>(
   messageOrCause: A,
-  supplementry?: A extends string ? Cause.Cause<unknown> : string
+  supplementary?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
 ) => Effect.Effect<never, never, void> = logWithLevel(LogLevel.Debug)
 
 /** @internal */
-export const logInfo: <A extends string | Cause.Cause<unknown>>(
+export const logInfo: <A>(
   messageOrCause: A,
-  supplementry?: A extends string ? Cause.Cause<unknown> : string
+  supplementary?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
 ) => Effect.Effect<never, never, void> = logWithLevel(LogLevel.Info)
 
 /** @internal */
-export const logWarning: <A extends string | Cause.Cause<unknown>>(
+export const logWarning: <A>(
   messageOrCause: A,
-  supplementry?: A extends string ? Cause.Cause<unknown> : string
+  supplementary?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
 ) => Effect.Effect<never, never, void> = logWithLevel(LogLevel.Warning)
 
 /** @internal */
-export const logError: <A extends string | Cause.Cause<unknown>>(
+export const logError: <A>(
   messageOrCause: A,
-  supplementry?: A extends string ? Cause.Cause<unknown> : string
+  supplementary?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
 ) => Effect.Effect<never, never, void> = logWithLevel(LogLevel.Error)
 
 /** @internal */
-export const logFatal: <A extends string | Cause.Cause<unknown>>(
+export const logFatal: <A>(
   messageOrCause: A,
-  supplementry?: A extends string ? Cause.Cause<unknown> : string
+  supplementary?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
 ) => Effect.Effect<never, never, void> = logWithLevel(LogLevel.Fatal)
 
 /* @internal */
@@ -942,9 +945,10 @@ export const withLogSpan = dual<
   ))
 
 /* @internal */
-export const logAnnotations: Effect.Effect<never, never, HashMap.HashMap<string, string>> = core.fiberRefGet(
-  core.currentLogAnnotations
-)
+export const logAnnotations: Effect.Effect<never, never, HashMap.HashMap<string, Logger.AnnotationValue>> = core
+  .fiberRefGet(
+    core.currentLogAnnotations
+  )
 
 /* @internal */
 // @ts-expect-error

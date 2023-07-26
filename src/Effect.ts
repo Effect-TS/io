@@ -42,6 +42,7 @@ import * as query from "@effect/io/internal/query"
 import * as _runtime from "@effect/io/internal/runtime"
 import * as _schedule from "@effect/io/internal/schedule"
 import type * as Layer from "@effect/io/Layer"
+import type * as Logger from "@effect/io/Logger"
 import type { LogLevel } from "@effect/io/Logger/Level"
 import type * as Metric from "@effect/io/Metric"
 import type * as MetricLabel from "@effect/io/Metric/Label"
@@ -4138,9 +4139,9 @@ export const matchEffect: {
  * @since 1.0.0
  * @category logging
  */
-export const log: <A extends string | Cause.Cause<unknown>>(
+export const log: <A>(
   messageOrCause: A,
-  supplementry?: A extends string ? Cause.Cause<unknown> : string
+  supplementary?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
 ) => Effect<never, never, void> = effect.log
 
 /**
@@ -4149,9 +4150,9 @@ export const log: <A extends string | Cause.Cause<unknown>>(
  * @since 1.0.0
  * @category logging
  */
-export const logTrace: <A extends string | Cause.Cause<unknown>>(
+export const logTrace: <A>(
   messageOrCause: A,
-  supplementry?: A extends string ? Cause.Cause<unknown> : string
+  supplementary?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
 ) => Effect<never, never, void> = effect.logTrace
 
 /**
@@ -4160,9 +4161,9 @@ export const logTrace: <A extends string | Cause.Cause<unknown>>(
  * @since 1.0.0
  * @category logging
  */
-export const logDebug: <A extends string | Cause.Cause<unknown>>(
+export const logDebug: <A>(
   messageOrCause: A,
-  supplementry?: A extends string ? Cause.Cause<unknown> : string
+  supplementary?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
 ) => Effect<never, never, void> = effect.logDebug
 
 /**
@@ -4171,9 +4172,9 @@ export const logDebug: <A extends string | Cause.Cause<unknown>>(
  * @since 1.0.0
  * @category logging
  */
-export const logInfo: <A extends string | Cause.Cause<unknown>>(
+export const logInfo: <A>(
   messageOrCause: A,
-  supplementry?: A extends string ? Cause.Cause<unknown> : string
+  supplementary?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
 ) => Effect<never, never, void> = effect.logInfo
 
 /**
@@ -4182,9 +4183,9 @@ export const logInfo: <A extends string | Cause.Cause<unknown>>(
  * @since 1.0.0
  * @category logging
  */
-export const logWarning: <A extends string | Cause.Cause<unknown>>(
+export const logWarning: <A>(
   messageOrCause: A,
-  supplementry?: A extends string ? Cause.Cause<unknown> : string
+  supplementary?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
 ) => Effect<never, never, void> = effect.logWarning
 
 /**
@@ -4193,9 +4194,9 @@ export const logWarning: <A extends string | Cause.Cause<unknown>>(
  * @since 1.0.0
  * @category logging
  */
-export const logError: <A extends string | Cause.Cause<unknown>>(
+export const logError: <A>(
   messageOrCause: A,
-  supplementry?: A extends string ? Cause.Cause<unknown> : string
+  supplementary?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
 ) => Effect<never, never, void> = effect.logError
 
 /**
@@ -4204,9 +4205,9 @@ export const logError: <A extends string | Cause.Cause<unknown>>(
  * @since 1.0.0
  * @category logging
  */
-export const logFatal: <A extends string | Cause.Cause<unknown>>(
+export const logFatal: <A>(
   messageOrCause: A,
-  supplementry?: A extends string ? Cause.Cause<unknown> : string
+  supplementary?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
 ) => Effect<never, never, void> = effect.logFatal
 
 /**
@@ -4227,7 +4228,7 @@ export const withLogSpan: {
  * @category logging
  */
 export const annotateLogs: {
-  (key: string, value: string): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
+  (key: string, value: Logger.AnnotationValue): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
   <R, E, A>(effect: Effect<R, E, A>, key: string, value: string): Effect<R, E, A>
 } = effect.annotateLogs
 
@@ -4237,7 +4238,8 @@ export const annotateLogs: {
  * @since 1.0.0
  * @category logging
  */
-export const logAnnotations: Effect<never, never, HashMap.HashMap<string, string>> = effect.logAnnotations
+export const logAnnotations: Effect<never, never, HashMap.HashMap<string, Logger.AnnotationValue>> =
+  effect.logAnnotations
 
 /**
  * Decides wether child fibers will report or not unhandled errors via the logger

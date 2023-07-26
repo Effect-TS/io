@@ -44,7 +44,7 @@ export interface Logger<Message, Output> extends Logger.Variance<Message, Output
       readonly cause: Cause.Cause<unknown>
       readonly context: FiberRefs.FiberRefs
       readonly spans: List.List<LogSpan.LogSpan>
-      readonly annotations: HashMap.HashMap<string, string>
+      readonly annotations: HashMap.HashMap<string, AnnotationValue>
       readonly date: Date
     }
   ) => Output
@@ -67,6 +67,12 @@ export declare namespace Logger {
 }
 
 /**
+ * @since 1.0.0
+ * @category models
+ */
+export type AnnotationValue = string | number | boolean
+
+/**
  * @category constructors
  * @since 1.0.0
  */
@@ -79,7 +85,7 @@ export const make: <Message, Output>(
       readonly cause: Cause.Cause<unknown>
       readonly context: FiberRefs.FiberRefs
       readonly spans: List.List<LogSpan.LogSpan>
-      readonly annotations: HashMap.HashMap<string, string>
+      readonly annotations: HashMap.HashMap<string, AnnotationValue>
       readonly date: Date
     }
   ) => Output
@@ -89,13 +95,13 @@ export const make: <Message, Output>(
  * @since 1.0.0
  * @category context
  */
-export const add: <B>(logger: Logger<string, B>) => Layer.Layer<never, never, never> = circular.addLogger
+export const add: <B>(logger: Logger<unknown, B>) => Layer.Layer<never, never, never> = circular.addLogger
 
 /**
  * @since 1.0.0
  * @category context
  */
-export const addEffect: <R, E, A>(effect: Effect<R, E, Logger<string, A>>) => Layer.Layer<R, E, never> =
+export const addEffect: <R, E, A>(effect: Effect<R, E, Logger<unknown, A>>) => Layer.Layer<R, E, never> =
   circular.addLoggerEffect
 
 /**
@@ -103,7 +109,7 @@ export const addEffect: <R, E, A>(effect: Effect<R, E, Logger<string, A>>) => La
  * @category context
  */
 export const addScoped: <R, E, A>(
-  effect: Effect<R | Scope, E, Logger<string, A>>
+  effect: Effect<R | Scope, E, Logger<unknown, A>>
 ) => Layer.Layer<Exclude<R, Scope>, E, never> = circular.addLoggerScoped
 
 /**
@@ -163,15 +169,15 @@ export const none: Logger<unknown, void> = internal.none
  * @since 1.0.0
  * @category context
  */
-export const remove: <A>(logger: Logger<string, A>) => Layer.Layer<never, never, never> = circular.removeLogger
+export const remove: <A>(logger: Logger<unknown, A>) => Layer.Layer<never, never, never> = circular.removeLogger
 
 /**
  * @since 1.0.0
  * @category context
  */
 export const replace: {
-  <B>(that: Logger<string, B>): <A>(self: Logger<string, A>) => Layer.Layer<never, never, never>
-  <A, B>(self: Logger<string, A>, that: Logger<string, B>): Layer.Layer<never, never, never>
+  <B>(that: Logger<unknown, B>): <A>(self: Logger<unknown, A>) => Layer.Layer<never, never, never>
+  <A, B>(self: Logger<unknown, A>, that: Logger<unknown, B>): Layer.Layer<never, never, never>
 } = circular.replaceLogger
 
 /**
@@ -179,8 +185,8 @@ export const replace: {
  * @category context
  */
 export const replaceEffect: {
-  <R, E, B>(that: Effect<R, E, Logger<string, B>>): <A>(self: Logger<string, A>) => Layer.Layer<R, E, never>
-  <A, R, E, B>(self: Logger<string, A>, that: Effect<R, E, Logger<string, B>>): Layer.Layer<R, E, never>
+  <R, E, B>(that: Effect<R, E, Logger<unknown, B>>): <A>(self: Logger<unknown, A>) => Layer.Layer<R, E, never>
+  <A, R, E, B>(self: Logger<unknown, A>, that: Effect<R, E, Logger<unknown, B>>): Layer.Layer<R, E, never>
 } = circular.replaceLoggerEffect
 
 /**
@@ -189,11 +195,11 @@ export const replaceEffect: {
  */
 export const replaceScoped: {
   <R, E, B>(
-    that: Effect<Scope | R, E, Logger<string, B>>
-  ): <A>(self: Logger<string, A>) => Layer.Layer<Exclude<R, Scope>, E, never>
+    that: Effect<Scope | R, E, Logger<unknown, B>>
+  ): <A>(self: Logger<unknown, A>) => Layer.Layer<Exclude<R, Scope>, E, never>
   <A, R, E, B>(
-    self: Logger<string, A>,
-    that: Effect<Scope | R, E, Logger<string, B>>
+    self: Logger<unknown, A>,
+    that: Effect<Scope | R, E, Logger<unknown, B>>
   ): Layer.Layer<Exclude<R, Scope>, E, never>
 } = circular.replaceLoggerScoped
 
@@ -282,25 +288,25 @@ export const zipRight: {
  * @since 1.0.0
  * @category constructors
  */
-export const defaultLogger: Logger<string, void> = fiberRuntime.defaultLogger
+export const defaultLogger: Logger<unknown, void> = fiberRuntime.defaultLogger
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const logfmtLogger: Logger<string, string> = internal.logfmtLogger
+export const logfmtLogger: Logger<unknown, string> = internal.logfmtLogger
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const stringLogger: Logger<string, string> = internal.stringLogger
+export const stringLogger: Logger<unknown, string> = internal.stringLogger
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const tracerLogger: Logger<string, void> = fiberRuntime.tracerLogger
+export const tracerLogger: Logger<unknown, void> = fiberRuntime.tracerLogger
 
 /**
  * @since 1.0.0

@@ -36,6 +36,7 @@ import type * as fiberScope from "@effect/io/internal/fiberScope"
 import * as DeferredOpCodes from "@effect/io/internal/opCodes/deferred"
 import * as OpCodes from "@effect/io/internal/opCodes/effect"
 import * as _runtimeFlags from "@effect/io/internal/runtimeFlags"
+import type * as Logger from "@effect/io/Logger"
 import type * as LogLevel from "@effect/io/Logger/Level"
 import type * as LogSpan from "@effect/io/Logger/Span"
 import type * as MetricLabel from "@effect/io/Metric/Label"
@@ -1696,7 +1697,7 @@ export const currentSchedulingPriority: FiberRef.FiberRef<number> = fiberRefUnsa
 export const currentMaxFiberOps: FiberRef.FiberRef<number> = fiberRefUnsafeMake(2048)
 
 /** @internal */
-export const currentLogAnnotations: FiberRef.FiberRef<HashMap.HashMap<string, string>> = globalValue(
+export const currentLogAnnotations: FiberRef.FiberRef<HashMap.HashMap<string, Logger.AnnotationValue>> = globalValue(
   Symbol.for("@effect/io/FiberRef/currentLogAnnotation"),
   () => fiberRefUnsafeMake(HashMap.empty())
 )

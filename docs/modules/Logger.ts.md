@@ -40,6 +40,7 @@ Added in v1.0.0
   - [map](#map)
   - [mapInput](#mapinput)
 - [models](#models)
+  - [AnnotationValue (type alias)](#annotationvalue-type-alias)
   - [Logger (interface)](#logger-interface)
 - [symbols](#symbols)
   - [LoggerTypeId](#loggertypeid)
@@ -58,7 +59,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const defaultLogger: Logger<string, void>
+export declare const defaultLogger: Logger<unknown, void>
 ```
 
 Added in v1.0.0
@@ -78,7 +79,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const logfmtLogger: Logger<string, string>
+export declare const logfmtLogger: Logger<unknown, string>
 ```
 
 Added in v1.0.0
@@ -96,7 +97,7 @@ export declare const make: <Message, Output>(
     readonly cause: Cause.Cause<unknown>
     readonly context: FiberRefs.FiberRefs
     readonly spans: List.List<LogSpan.LogSpan>
-    readonly annotations: HashMap.HashMap<string, string>
+    readonly annotations: HashMap.HashMap<string, AnnotationValue>
     readonly date: Date
   }) => Output
 ) => Logger<Message, Output>
@@ -131,7 +132,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const stringLogger: Logger<string, string>
+export declare const stringLogger: Logger<unknown, string>
 ```
 
 Added in v1.0.0
@@ -174,7 +175,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const tracerLogger: Logger<string, void>
+export declare const tracerLogger: Logger<unknown, void>
 ```
 
 Added in v1.0.0
@@ -186,7 +187,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const add: <B>(logger: Logger<string, B>) => Layer.Layer<never, never, never>
+export declare const add: <B>(logger: Logger<unknown, B>) => Layer.Layer<never, never, never>
 ```
 
 Added in v1.0.0
@@ -196,7 +197,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const addEffect: <R, E, A>(effect: Effect<R, E, Logger<string, A>>) => Layer.Layer<R, E, never>
+export declare const addEffect: <R, E, A>(effect: Effect<R, E, Logger<unknown, A>>) => Layer.Layer<R, E, never>
 ```
 
 Added in v1.0.0
@@ -207,7 +208,7 @@ Added in v1.0.0
 
 ```ts
 export declare const addScoped: <R, E, A>(
-  effect: Effect<Scope | R, E, Logger<string, A>>
+  effect: Effect<Scope | R, E, Logger<unknown, A>>
 ) => Layer.Layer<Exclude<R, Scope>, E, never>
 ```
 
@@ -228,7 +229,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const remove: <A>(logger: Logger<string, A>) => Layer.Layer<never, never, never>
+export declare const remove: <A>(logger: Logger<unknown, A>) => Layer.Layer<never, never, never>
 ```
 
 Added in v1.0.0
@@ -239,8 +240,8 @@ Added in v1.0.0
 
 ```ts
 export declare const replace: {
-  <B>(that: Logger<string, B>): <A>(self: Logger<string, A>) => Layer.Layer<never, never, never>
-  <A, B>(self: Logger<string, A>, that: Logger<string, B>): Layer.Layer<never, never, never>
+  <B>(that: Logger<unknown, B>): <A>(self: Logger<unknown, A>) => Layer.Layer<never, never, never>
+  <A, B>(self: Logger<unknown, A>, that: Logger<unknown, B>): Layer.Layer<never, never, never>
 }
 ```
 
@@ -252,8 +253,8 @@ Added in v1.0.0
 
 ```ts
 export declare const replaceEffect: {
-  <R, E, B>(that: Effect<R, E, Logger<string, B>>): <A>(self: Logger<string, A>) => Layer.Layer<R, E, never>
-  <A, R, E, B>(self: Logger<string, A>, that: Effect<R, E, Logger<string, B>>): Layer.Layer<R, E, never>
+  <R, E, B>(that: Effect<R, E, Logger<unknown, B>>): <A>(self: Logger<unknown, A>) => Layer.Layer<R, E, never>
+  <A, R, E, B>(self: Logger<unknown, A>, that: Effect<R, E, Logger<unknown, B>>): Layer.Layer<R, E, never>
 }
 ```
 
@@ -265,10 +266,10 @@ Added in v1.0.0
 
 ```ts
 export declare const replaceScoped: {
-  <R, E, B>(that: Effect<Scope | R, E, Logger<string, B>>): <A>(
-    self: Logger<string, A>
+  <R, E, B>(that: Effect<Scope | R, E, Logger<unknown, B>>): <A>(
+    self: Logger<unknown, A>
   ) => Layer.Layer<Exclude<R, Scope>, E, never>
-  <A, R, E, B>(self: Logger<string, A>, that: Effect<Scope | R, E, Logger<string, B>>): Layer.Layer<
+  <A, R, E, B>(self: Logger<unknown, A>, that: Effect<Scope | R, E, Logger<unknown, B>>): Layer.Layer<
     Exclude<R, Scope>,
     E,
     never
@@ -351,6 +352,16 @@ Added in v1.0.0
 
 # models
 
+## AnnotationValue (type alias)
+
+**Signature**
+
+```ts
+export type AnnotationValue = string | number | boolean
+```
+
+Added in v1.0.0
+
 ## Logger (interface)
 
 **Signature**
@@ -364,7 +375,7 @@ export interface Logger<Message, Output> extends Logger.Variance<Message, Output
     readonly cause: Cause.Cause<unknown>
     readonly context: FiberRefs.FiberRefs
     readonly spans: List.List<LogSpan.LogSpan>
-    readonly annotations: HashMap.HashMap<string, string>
+    readonly annotations: HashMap.HashMap<string, AnnotationValue>
     readonly date: Date
   }) => Output
 }

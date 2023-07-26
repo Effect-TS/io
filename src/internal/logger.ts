@@ -38,7 +38,7 @@ export const makeLogger = <Message, Output>(
       readonly cause: CauseExt.Cause<unknown>
       readonly context: FiberRefs.FiberRefs
       readonly spans: List.List<LogSpan.LogSpan>
-      readonly annotations: HashMap.HashMap<string, string>
+      readonly annotations: HashMap.HashMap<string, Logger.AnnotationValue>
       readonly date: Date
     }
   ) => Output
@@ -159,7 +159,7 @@ export const zipRight = dual<
 >(2, (self, that) => map(zip(self, that), (tuple) => tuple[1]))
 
 /** @internal */
-export const stringLogger: Logger.Logger<string, string> = makeLogger<string, string>(
+export const stringLogger: Logger.Logger<unknown, string> = makeLogger<unknown, string>(
   ({ annotations, cause, date, fiberId, logLevel, message, spans }) => {
     const nowMillis = date.getTime()
 
@@ -170,10 +170,11 @@ export const stringLogger: Logger.Logger<string, string> = makeLogger<string, st
     ]
 
     let output = outputArray.join(" ")
+    const stringMessage = serializeUnknown(message)
 
-    if (message.length > 0) {
+    if (stringMessage.length > 0) {
       output = output + " message="
-      output = appendQuoted(message, output)
+      output = appendQuoted(stringMessage, output)
     }
 
     if (cause != null && cause != Cause.empty) {
@@ -207,13 +208,21 @@ export const stringLogger: Logger.Logger<string, string> = makeLogger<string, st
         }
         output = output + filterKeyName(key)
         output = output + "="
-        output = appendQuoted(value, output)
+        output = appendQuoted(String(value), output)
       }
     }
 
     return output
   }
 )
+
+const serializeUnknown = (u: unknown): string => {
+  try {
+    return typeof u === "object" ? JSON.stringify(u) : String(u)
+  } catch (_) {
+    return String(u)
+  }
+}
 
 /** @internal */
 const escapeDoubleQuotes = (str: string) => `"${str.replace(/\\([\s\S])|(")/g, "\\$1$2")}"`
@@ -225,7 +234,7 @@ const appendQuoted = (label: string, output: string): string =>
   output + (label.match(textOnly) ? label : escapeDoubleQuotes(label))
 
 /** @internal */
-export const logfmtLogger = makeLogger<string, string>(
+export const logfmtLogger = makeLogger<unknown, string>(
   ({ annotations, cause, date, fiberId, logLevel, message, spans }) => {
     const nowMillis = date.getTime()
 
@@ -236,10 +245,11 @@ export const logfmtLogger = makeLogger<string, string>(
     ]
 
     let output = outputArray.join(" ")
+    const stringMessage = serializeUnknown(message)
 
-    if (message.length > 0) {
+    if (stringMessage.length > 0) {
       output = output + " message="
-      output = appendQuotedLogfmt(message, output)
+      output = appendQuotedLogfmt(stringMessage, output)
     }
 
     if (cause != null && cause != Cause.empty) {
@@ -273,7 +283,7 @@ export const logfmtLogger = makeLogger<string, string>(
         }
         output = output + filterKeyName(key)
         output = output + "="
-        output = appendQuotedLogfmt(value, output)
+        output = appendQuotedLogfmt(String(value), output)
       }
     }
 
