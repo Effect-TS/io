@@ -1781,9 +1781,9 @@ export const useSpan: {
     tracerWith((tracer) =>
       core.flatMap(
         options?.parent ?
-          core.succeed(Option.some(options.parent)) :
+          succeedSome(options.parent) :
           options?.root ?
-          core.succeed(Option.none()) :
+          succeedNone :
           core.map(
             core.fiberRefGet(core.currentTracerSpan),
             List.head
@@ -1793,7 +1793,7 @@ export const useSpan: {
             core.fiberRefGet(core.currentTracerSpanAnnotations),
             (annotations) =>
               core.flatMap(
-                Clock.currentTimeNanos,
+                currentTimeNanosTracing,
                 (startTime) =>
                   core.sync(() => {
                     const span = tracer.span(name, parent, options?.context ?? Context.empty(), startTime)
@@ -1810,11 +1810,17 @@ export const useSpan: {
     evaluate,
     (span, exit) =>
       core.flatMap(
-        Clock.clockWith((clock) => clock.currentTimeNanos),
+        currentTimeNanosTracing,
         (endTime) => core.sync(() => span.end(endTime, exit))
       )
   )
 }
+
+const bigint0 = BigInt(0)
+const currentTimeNanosTracing = core.fiberRefGetWith(
+  core.currentTracerTimingEnabled,
+  (enabled) => enabled ? Clock.currentTimeNanos : core.succeed(bigint0)
+)
 
 /* @internal */
 export const when = dual<

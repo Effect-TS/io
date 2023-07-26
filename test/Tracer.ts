@@ -111,5 +111,17 @@ describe("Tracer", () => {
           "effect.logLevel": "INFO"
         }]])
       }))
+
+    it.effect("withTracerTiming false", () =>
+      Effect.gen(function*($) {
+        yield* $(TestClock.adjust(millis(1)))
+
+        const span = yield* $(
+          Effect.withSpan("A")(currentSpan),
+          Effect.withTracerTiming(false)
+        )
+
+        assert.deepEqual(span.status.startTime, 0n)
+      }))
   })
 })

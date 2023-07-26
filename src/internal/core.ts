@@ -1164,6 +1164,17 @@ export const withRuntimeFlags = dual<
   return effect
 })
 
+/** @internal */
+export const withTracerTiming = dual<
+  (enabled: boolean) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(effect: Effect.Effect<R, E, A>, enabled: boolean) => Effect.Effect<R, E, A>
+>(2, (effect, enabled) =>
+  fiberRefLocally(
+    effect,
+    currentTracerTimingEnabled,
+    enabled
+  ))
+
 /* @internal */
 export const yieldNow = (options?: {
   readonly priority?: number
@@ -1785,6 +1796,12 @@ export const currentInterruptedCause: FiberRef.FiberRef<Cause.Cause<never>> = gl
 export const currentTracerSpan: FiberRef.FiberRef<List.List<Tracer.Span>> = globalValue(
   Symbol.for("@effect/io/FiberRef/currentTracerSpan"),
   () => fiberRefUnsafeMake(List.empty<Tracer.Span>())
+)
+
+/** @internal */
+export const currentTracerTimingEnabled: FiberRef.FiberRef<boolean> = globalValue(
+  Symbol.for("@effect/io/FiberRef/currentTracerTiming"),
+  () => fiberRefUnsafeMake(true)
 )
 
 /** @internal */

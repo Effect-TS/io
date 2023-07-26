@@ -4864,6 +4864,24 @@ export const withTracerScoped: (value: Tracer.Tracer) => Effect<Scope.Scope, nev
   fiberRuntime.withTracerScoped
 
 /**
+ * @since 1.0.0
+ * @category tracing
+ */
+export const withTracerTiming: {
+  (enabled: boolean): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(effect: Effect<R, E, A>, enabled: boolean): Effect<R, E, A>
+} = core.withTracerTiming
+
+/**
+ * @since 1.0.0
+ * @category tracing
+ */
+export const setTracerTiming: (enabled: boolean) => Layer.Layer<never, never, never> = (enabled: boolean) =>
+  layer.scopedDiscard(
+    fiberRuntime.fiberRefLocallyScoped(core.currentTracerTimingEnabled, enabled)
+  )
+
+/**
  * Adds an annotation to each span in this effect.
  *
  * @since 1.0.0
