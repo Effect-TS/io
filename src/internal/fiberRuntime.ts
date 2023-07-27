@@ -26,6 +26,7 @@ import * as RuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
 import * as FiberStatus from "@effect/io/Fiber/Status"
 import type * as FiberRef from "@effect/io/FiberRef"
 import type * as FiberRefs from "@effect/io/FiberRefs"
+import * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
 import * as _RequestBlock from "@effect/io/internal/blockedRequests"
 import * as internalCause from "@effect/io/internal/cause"
 import * as causePretty from "@effect/io/internal/cause-pretty"
@@ -1442,16 +1443,26 @@ export const acquireRelease: {
 export const addFinalizer = <R, X>(
   finalizer: (exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R, never, X>
 ): Effect.Effect<R | Scope.Scope, never, void> =>
-  core.flatMap(
-    core.context<R | Scope.Scope>(),
-    (context) =>
-      core.flatMap(scope, (scope) =>
+  core.withFiberRuntime(
+    (runtime) => {
+      const acquireRefs = runtime.unsafeGetFiberRefs()
+      return core.flatMap(scope, (scope) =>
         core.scopeAddFinalizerExit(scope, (exit) =>
-          pipe(
-            finalizer(exit),
-            core.provideContext(context),
-            core.asUnit
-          )))
+          core.withFiberRuntime((runtimeFinalizer) => {
+            const pre = runtimeFinalizer.unsafeGetFiberRefs()
+            const patch = FiberRefsPatch.diff(pre, acquireRefs)
+            const inverse = FiberRefsPatch.diff(acquireRefs, pre)
+            runtimeFinalizer.setFiberRefs(FiberRefsPatch.patch(patch, runtimeFinalizer.id(), acquireRefs))
+            return ensuring(
+              finalizer(exit) as Effect.Effect<never, never, X>,
+              core.sync(() => {
+                runtimeFinalizer.setFiberRefs(
+                  FiberRefsPatch.patch(inverse, runtimeFinalizer.id(), runtimeFinalizer.unsafeGetFiberRefs())
+                )
+              })
+            )
+          })))
+    }
   )
 
 /* @internal */
