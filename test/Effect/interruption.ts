@@ -543,10 +543,10 @@ describe.concurrent("Effect", () => {
       const result = yield* $(Ref.get(ref))
       assert.isTrue(result)
     }))
-  it.effect("asyncInterrupt cancelation", () =>
+  it.effect("async cancelation", () =>
     Effect.gen(function*($) {
       const ref = MutableRef.make(0)
-      const effect = Effect.asyncInterruptEither(() => {
+      const effect = Effect.asyncEither(() => {
         pipe(ref, MutableRef.set(MutableRef.get(ref) + 1))
         return Either.left(Effect.sync(() => {
           pipe(ref, MutableRef.set(MutableRef.get(ref) - 1))
@@ -587,5 +587,18 @@ describe.concurrent("Effect", () => {
       yield* $(Effect.interrupt, Effect.exit, Effect.zipRight(Deferred.succeed(deferred, 42)))
       const result = yield* $(Deferred.await(deferred))
       assert.strictEqual(result, 42)
+    }))
+  it.effect("asyncInterrupt aborts the signal", () =>
+    Effect.gen(function*($) {
+      let signal: AbortSignal
+      const fiber = yield* $(
+        Effect.asyncInterrupt<never, never, void>((cb, signal_) => {
+          signal = signal_
+        }),
+        Effect.fork
+      )
+      yield* $(Effect.yieldNow())
+      yield* $(Fiber.interrupt(fiber))
+      assert.strictEqual(signal!.aborted, true)
     }))
 })

@@ -74,12 +74,12 @@ describe.concurrent("Effect", () => {
       const unexpectedPlace = yield* $(Ref.make(Chunk.empty<number>()))
       const runtime = yield* $(Effect.runtime<never>())
       const fiber = yield* $(
-        Effect.async<never, never, void>((cb) =>
+        Effect.async<never, never, void>((cb) => {
           Runtime.runCallback(runtime)(pipe(
             Deferred.await(step),
             Effect.zipRight(Effect.sync(() => cb(Ref.update(unexpectedPlace, Chunk.prepend(1)))))
           ))
-        ),
+        }),
         Effect.ensuring(Effect.async<never, never, void>(() => {
           // The callback is never called so this never completes
           Runtime.runCallback(runtime)(Deferred.succeed(step, undefined))

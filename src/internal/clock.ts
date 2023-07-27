@@ -85,7 +85,7 @@ class ClockImpl implements Clock.Clock {
   }
 
   sleep(duration: Duration.Duration): Effect.Effect<never, never, void> {
-    return core.asyncInterruptEither<never, never, void>((cb) => {
+    return core.asyncEither<never, never, void>((cb) => {
       const canceler = globalClockScheduler.unsafeSchedule(() => cb(core.unit), duration)
       return Either.left(core.asUnit(core.sync(canceler)))
     })

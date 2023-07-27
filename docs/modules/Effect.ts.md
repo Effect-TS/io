@@ -63,8 +63,8 @@ Added in v1.0.0
 - [constructors](#constructors)
   - [async](#async)
   - [asyncEffect](#asynceffect)
+  - [asyncEither](#asynceither)
   - [asyncInterrupt](#asyncinterrupt)
-  - [asyncInterruptEither](#asyncinterrupteither)
   - [asyncOption](#asyncoption)
   - [die](#die)
   - [dieMessage](#diemessage)
@@ -1147,11 +1147,11 @@ Added in v1.0.0
 
 ## async
 
-Imports an asynchronous side-effect into a pure `Effect` value. See
-`asyncMaybe` for the more expressive variant of this function that can
-return a value synchronously.
-
+Imports an asynchronous side-effect into a pure `Effect` value.
 The callback function `Effect<R, E, A> => void` must be called at most once.
+
+If an Effect is returned by the registration function, it will be executed
+if the fiber executing the effect is interrupted.
 
 The `FiberId` of the fiber that may complete the async callback may be
 provided to allow for better diagnostics.
@@ -1160,7 +1160,7 @@ provided to allow for better diagnostics.
 
 ```ts
 export declare const async: <R, E, A>(
-  register: (callback: (_: Effect<R, E, A>) => void) => void,
+  register: (callback: (_: Effect<R, E, A>) => void) => void | Effect<R, never, void>,
   blockingOn?: FiberId.FiberId
 ) => Effect<R, E, A>
 ```
@@ -1184,25 +1184,7 @@ export declare const asyncEffect: <R, E, A, R2, E2, X>(
 
 Added in v1.0.0
 
-## asyncInterrupt
-
-Imports an asynchronous side-effect into an effect allowing control of interruption.
-
-The `FiberId` of the fiber that may complete the async callback may be
-provided to allow for better diagnostics.
-
-**Signature**
-
-```ts
-export declare const asyncInterrupt: <R, E, A>(
-  register: (callback: (effect: Effect<R, E, A>) => void) => Effect<R, never, void>,
-  blockingOn?: FiberId.FiberId
-) => Effect<R, E, A>
-```
-
-Added in v1.0.0
-
-## asyncInterruptEither
+## asyncEither
 
 Imports an asynchronous side-effect into an effect. It has the option of
 returning the value synchronously, which is useful in cases where it cannot
@@ -1221,8 +1203,30 @@ provided to allow for better diagnostics.
 **Signature**
 
 ```ts
-export declare const asyncInterruptEither: <R, E, A>(
+export declare const asyncEither: <R, E, A>(
   register: (callback: (effect: Effect<R, E, A>) => void) => Either.Either<Effect<R, never, void>, Effect<R, E, A>>,
+  blockingOn?: FiberId.FiberId
+) => Effect<R, E, A>
+```
+
+Added in v1.0.0
+
+## asyncInterrupt
+
+Imports an asynchronous side-effect into a pure `Effect` value.
+The callback function `Effect<R, E, A> => void` must be called at most once.
+
+The registration function receives an AbortSignal that can be used to handle
+interruption.
+
+The `FiberId` of the fiber that may complete the async callback may be
+provided to allow for better diagnostics.
+
+**Signature**
+
+```ts
+export declare const asyncInterrupt: <R, E, A>(
+  register: (callback: (_: Effect<R, E, A>) => void, signal: AbortSignal) => void,
   blockingOn?: FiberId.FiberId
 ) => Effect<R, E, A>
 ```

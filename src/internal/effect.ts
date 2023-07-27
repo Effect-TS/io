@@ -86,7 +86,7 @@ export const asyncOption = <R, E, A>(
   register: (callback: (_: Effect.Effect<R, E, A>) => void) => Option.Option<Effect.Effect<R, E, A>>,
   blockingOn: FiberId.FiberId = FiberId.none
 ): Effect.Effect<R, E, A> =>
-  core.asyncInterruptEither<R, E, A>(
+  core.asyncEither<R, E, A>(
     (cb) => {
       const option = register(cb)
       switch (option._tag) {
@@ -1167,7 +1167,7 @@ export const promise = <A>(evaluate: LazyArg<Promise<A>>): Effect.Effect<never, 
 
 /* @internal */
 export const promiseInterrupt = <A>(evaluate: (signal: AbortSignal) => Promise<A>): Effect.Effect<never, never, A> =>
-  core.asyncInterruptEither<never, never, A>((resolve) => {
+  core.asyncEither<never, never, A>((resolve) => {
     const controller = new AbortController()
     evaluate(controller.signal)
       .then((a) => resolve(core.exitSucceed(a)))
@@ -1625,7 +1625,7 @@ export const tryPromiseInterrupt: {
   return core.flatMap(
     hasCatch ? try_({ try: evaluate, catch: arg.catch }) : try_(evaluate),
     ([controller, promise]) =>
-      core.asyncInterruptEither<never, E, A>((resolve) => {
+      core.asyncEither<never, E, A>((resolve) => {
         promise
           .then((a) => resolve(core.exitSucceed(a)))
           .catch((e) => resolve(core.exitFail(hasCatch ? arg.catch(e) : e)))
