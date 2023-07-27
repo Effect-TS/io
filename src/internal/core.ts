@@ -403,7 +403,7 @@ export const async = <R, E, A>(
       cancelerRef = register(resume)
     }
     effect.i1 = blockingOn
-    return onInterrupt(effect, () => cancelerRef ?? unit)
+    return onInterrupt(effect, () => isEffect(cancelerRef) ? cancelerRef : unit)
   })
 
 /* @internal */
