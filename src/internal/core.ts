@@ -392,19 +392,49 @@ export const as = dual<
 export const asUnit = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, void> => as(self, void 0)
 
 /* @internal */
-export const async = <R, E, A>(
-  register: (callback: (_: Effect.Effect<R, E, A>) => void) => void | Effect.Effect<R, never, void>,
+export const async: {
+  <R, E, A>(
+    register: (callback: (_: Effect.Effect<R, E, A>) => void) => Effect.Effect<R, never, void>,
+    blockingOn?: FiberId.FiberId
+  ): Effect.Effect<R, E, A>
+  <R, E, A>(
+    register: (callback: (_: Effect.Effect<R, E, A>) => void) => void,
+    blockingOn?: FiberId.FiberId
+  ): Effect.Effect<R, E, A>
+  <R, E, A>(
+    register: (callback: (_: Effect.Effect<R, E, A>) => void, signal: AbortSignal) => void,
+    blockingOn?: FiberId.FiberId
+  ): Effect.Effect<R, E, A>
+} = <R, E, A>(
+  register: (
+    callback: (_: Effect.Effect<R, E, A>) => void,
+    signal: AbortSignal
+  ) => void | Effect.Effect<R, never, void>,
   blockingOn: FiberId.FiberId = FiberId.none
-): Effect.Effect<R, E, A> =>
-  suspend(() => {
+): Effect.Effect<R, E, A> => {
+  if (register.length >= 2) {
+    return suspend(() => {
+      const controller = new AbortController()
+      const effect = new EffectPrimitive(OpCodes.OP_ASYNC) as any
+      effect.i0 = (resume: (_: Effect.Effect<R, E, A>) => void) => {
+        register(resume, controller.signal)
+      }
+      effect.i1 = blockingOn
+      return onInterrupt(effect, () => sync(() => controller.abort()))
+    })
+  }
+
+  return suspend(() => {
     let cancelerRef: Effect.Effect<R, never, void> | void = undefined
     const effect = new EffectPrimitive(OpCodes.OP_ASYNC) as any
     effect.i0 = (resume: (_: Effect.Effect<R, E, A>) => void) => {
-      cancelerRef = register(resume)
+      cancelerRef =
+        (register as (callback: (_: Effect.Effect<R, E, A>) => void) => void | Effect.Effect<R, never, void>)(resume)
     }
     effect.i1 = blockingOn
     return onInterrupt(effect, () => isEffect(cancelerRef) ? cancelerRef : unit)
   })
+}
 
 /* @internal */
 export const asyncEither = <R, E, A>(
@@ -420,19 +450,6 @@ export const asyncEither = <R, E, A>(
     } else {
       return result.left
     }
-  }, blockingOn)
-
-/** @internal */
-export const asyncInterrupt = <R, E, A>(
-  register: (callback: (_: Effect.Effect<R, E, A>) => void, signal: AbortSignal) => void,
-  blockingOn: FiberId.FiberId = FiberId.none
-): Effect.Effect<R, E, A> =>
-  async<R, E, A>((resume) => {
-    const controller = new AbortController()
-    register(resume, controller.signal)
-    return sync(() => {
-      controller.abort()
-    })
   }, blockingOn)
 
 /* @internal */

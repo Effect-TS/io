@@ -588,11 +588,11 @@ describe.concurrent("Effect", () => {
       const result = yield* $(Deferred.await(deferred))
       assert.strictEqual(result, 42)
     }))
-  it.effect("asyncInterrupt aborts the signal", () =>
+  it.effect("AbortSignal is aborted", () =>
     Effect.gen(function*($) {
       let signal: AbortSignal
       const fiber = yield* $(
-        Effect.asyncInterrupt<never, never, void>((cb, signal_) => {
+        Effect.async<never, never, void>((_cb, signal_) => {
           signal = signal_
         }),
         Effect.fork
