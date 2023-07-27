@@ -10,6 +10,7 @@ import * as FiberId from "@effect/io/Fiber/Id"
 import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import type * as FiberRef from "@effect/io/FiberRef"
 import * as FiberRefs from "@effect/io/FiberRefs"
+import { NoSuchElementException } from "@effect/io/internal/cause"
 import * as CausePretty from "@effect/io/internal/cause-pretty"
 import * as core from "@effect/io/internal/core"
 import * as FiberRuntime from "@effect/io/internal/fiberRuntime"
@@ -94,18 +95,12 @@ export const unsafeRunCallback = <R>(runtime: Runtime.Runtime<R>) =>
 /** @internal */
 export const unsafeRunSync = <R>(runtime: Runtime.Runtime<R>) =>
   <E, A>(effect: Effect.Effect<R, E, A>): A => {
-    const scheduler = new _scheduler.SyncScheduler()
-    const fiberRuntime = unsafeFork(runtime)(effect, { scheduler })
-    scheduler.flush()
-    const result = fiberRuntime.unsafePoll()
-    if (result) {
-      if (result._tag === "Failure") {
-        throw fiberFailure(result.i0)
-      } else {
-        return result.i0
-      }
+    const result = unsafeRunSyncExit(runtime)(effect)
+    if (result._tag === "Failure") {
+      throw fiberFailure(result.i0)
+    } else {
+      return result.i0
     }
-    throw asyncFiberException(fiberRuntime)
   }
 
 /** @internal */
@@ -185,19 +180,43 @@ export const fiberFailure = <E>(cause: Cause.Cause<E>): Runtime.FiberFailure => 
 export const isFiberFailure = (u: unknown): u is Runtime.FiberFailure =>
   typeof u === "object" && u !== null && FiberFailureId in u
 
+const fastPath = <R, E, A>(effect: Effect.Effect<R, E, A>): Exit.Exit<E, A> | undefined => {
+  const op = effect as core.Primitive
+  switch (op._tag) {
+    case "Failure":
+    case "Success": {
+      // @ts-expect-error
+      return op
+    }
+    case "Left": {
+      return core.exitFail(op.left)
+    }
+    case "Right": {
+      return core.exitSucceed(op.right)
+    }
+    case "Some": {
+      return core.exitSucceed(op.value)
+    }
+    case "None": {
+      // @ts-expect-error
+      return core.exitFail(NoSuchElementException())
+    }
+  }
+}
+
 /** @internal */
 export const unsafeRunSyncExit = <R>(runtime: Runtime.Runtime<R>) =>
-  <E, A>(effect: Effect.Effect<R, E, A>) => {
+  <E, A>(effect: Effect.Effect<R, E, A>): Exit.Exit<E, A> => {
+    const op = fastPath(effect)
+    if (op) {
+      return op
+    }
     const scheduler = new _scheduler.SyncScheduler()
-    const fiberRuntime = unsafeFork(runtime)(core.exit(effect), { scheduler })
+    const fiberRuntime = unsafeFork(runtime)(effect, { scheduler })
     scheduler.flush()
     const result = fiberRuntime.unsafePoll()
     if (result) {
-      if (result._tag === "Failure") {
-        throw fiberFailure(result.i0)
-      } else {
-        return result.i0
-      }
+      return result
     }
     throw asyncFiberException(fiberRuntime)
   }
@@ -205,39 +224,28 @@ export const unsafeRunSyncExit = <R>(runtime: Runtime.Runtime<R>) =>
 /** @internal */
 export const unsafeRunPromise = <R>(runtime: Runtime.Runtime<R>) =>
   <E, A>(effect: Effect.Effect<R, E, A>): Promise<A> =>
-    new Promise((resolve, reject) => {
-      unsafeFork(runtime)(effect)
-        .unsafeAddObserver((result) => {
-          switch (result._tag) {
-            case OpCodes.OP_SUCCESS: {
-              resolve(result.i0)
-              break
-            }
-            case OpCodes.OP_FAILURE: {
-              reject(fiberFailure(result.i0))
-              break
-            }
-          }
-        })
+    unsafeRunPromiseExit(runtime)(effect).then((result) => {
+      switch (result._tag) {
+        case OpCodes.OP_SUCCESS: {
+          return result.i0
+        }
+        case OpCodes.OP_FAILURE: {
+          throw fiberFailure(result.i0)
+        }
+      }
     })
 
 /** @internal */
 export const unsafeRunPromiseExit = <R>(runtime: Runtime.Runtime<R>) =>
   <E, A>(effect: Effect.Effect<R, E, A>): Promise<Exit.Exit<E, A>> =>
-    new Promise((resolve, reject) => {
-      unsafeFork(runtime)(core.exit(effect))
-        .unsafeAddObserver((exit) => {
-          switch (exit._tag) {
-            case OpCodes.OP_SUCCESS: {
-              resolve(exit.i0)
-              break
-            }
-            case OpCodes.OP_FAILURE: {
-              reject(fiberFailure(exit.i0))
-              break
-            }
-          }
-        })
+    new Promise((resolve) => {
+      const op = fastPath(effect)
+      if (op) {
+        resolve(op)
+      }
+      unsafeFork(runtime)(effect).unsafeAddObserver((exit) => {
+        resolve(exit)
+      })
     })
 
 /** @internal */
