@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.36.1
+
+### Patch Changes
+
+- [#567](https://github.com/Effect-TS/io/pull/567) [`ec4f103`](https://github.com/Effect-TS/io/commit/ec4f10387cab682a7641cf4d703498e6041a5692) Thanks [@tim-smart](https://github.com/tim-smart)! - check if Effect.async canceller is an actual Effect
+
 ## 0.36.0
 
 ### Minor Changes
