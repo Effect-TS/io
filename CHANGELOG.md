@@ -1,5 +1,29 @@
 # @effect/io
 
+## 0.36.0
+
+### Minor Changes
+
+- [#555](https://github.com/Effect-TS/io/pull/555) [`29e4148`](https://github.com/Effect-TS/io/commit/29e414844b91a6849059490fbc00eed6ad2888e9) Thanks [@jessekelly881](https://github.com/jessekelly881)! - rename asyncInterruptEither to asyncEither
+
+- [#565](https://github.com/Effect-TS/io/pull/565) [`538a347`](https://github.com/Effect-TS/io/commit/538a34769ef894677d975b602e8c664b06c9d5ca) Thanks [@tim-smart](https://github.com/tim-smart)! - update /data
+
+- [#555](https://github.com/Effect-TS/io/pull/555) [`29e4148`](https://github.com/Effect-TS/io/commit/29e414844b91a6849059490fbc00eed6ad2888e9) Thanks [@jessekelly881](https://github.com/jessekelly881)! - replace Effect.asyncInterrupt with AbortSignal variant
+
+- [#557](https://github.com/Effect-TS/io/pull/557) [`da9af7f`](https://github.com/Effect-TS/io/commit/da9af7f819b5c88ed69019e8a681851abcdb3300) Thanks [@tim-smart](https://github.com/tim-smart)! - allow numbers and booleans in log annotations
+
+- [#557](https://github.com/Effect-TS/io/pull/557) [`da9af7f`](https://github.com/Effect-TS/io/commit/da9af7f819b5c88ed69019e8a681851abcdb3300) Thanks [@tim-smart](https://github.com/tim-smart)! - accept unknown as input for Effect.log\*
+
+### Patch Changes
+
+- [#563](https://github.com/Effect-TS/io/pull/563) [`e34531b`](https://github.com/Effect-TS/io/commit/e34531bc5f488d95887733af31b2c90b8c7e61ac) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Propagate fiber refs in finalizers
+
+- [#561](https://github.com/Effect-TS/io/pull/561) [`9322998`](https://github.com/Effect-TS/io/commit/9322998178ed261a6a790cc72df29469d030d06c) Thanks [@tim-smart](https://github.com/tim-smart)! - allow Tracer timing to be disabled
+
+- [#564](https://github.com/Effect-TS/io/pull/564) [`8fa68a9`](https://github.com/Effect-TS/io/commit/8fa68a9539c5fe379bee8835128181a9a6104f39) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Perf: skip fiber for already computed results
+
+- [#555](https://github.com/Effect-TS/io/pull/555) [`29e4148`](https://github.com/Effect-TS/io/commit/29e414844b91a6849059490fbc00eed6ad2888e9) Thanks [@jessekelly881](https://github.com/jessekelly881)! - add optional interruption return to Effect.async
+
 ## 0.35.3
 
 ### Patch Changes
