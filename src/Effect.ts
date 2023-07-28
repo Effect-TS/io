@@ -897,17 +897,10 @@ export const validateFirst: {
  * @since 1.0.0
  * @category constructors
  */
-export const async: {
-  <R, E, A>(
-    register: (callback: (_: Effect<R, E, A>) => void) => Effect<R, never, void>,
-    blockingOn?: FiberId.FiberId
-  ): Effect<R, E, A>
-  <R, E, A>(register: (callback: (_: Effect<R, E, A>) => void) => void, blockingOn?: FiberId.FiberId): Effect<R, E, A>
-  <R, E, A>(
-    register: (callback: (_: Effect<R, E, A>) => void, signal: AbortSignal) => void,
-    blockingOn?: FiberId.FiberId
-  ): Effect<R, E, A>
-} = core.async
+export const async: <R, E, A>(
+  register: (callback: (_: Effect<R, E, A>) => void, signal: AbortSignal) => void | Effect<R, never, void>,
+  blockingOn?: FiberId.FiberId
+) => Effect<R, E, A> = core.async
 
 /**
  * Converts an asynchronous, callback-style API into an `Effect`, which will

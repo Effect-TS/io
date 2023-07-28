@@ -394,15 +394,10 @@ export const asUnit = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, 
 /* @internal */
 export const async: {
   <R, E, A>(
-    register: (callback: (_: Effect.Effect<R, E, A>) => void) => Effect.Effect<R, never, void>,
-    blockingOn?: FiberId.FiberId
-  ): Effect.Effect<R, E, A>
-  <R, E, A>(
-    register: (callback: (_: Effect.Effect<R, E, A>) => void) => void,
-    blockingOn?: FiberId.FiberId
-  ): Effect.Effect<R, E, A>
-  <R, E, A>(
-    register: (callback: (_: Effect.Effect<R, E, A>) => void, signal: AbortSignal) => void,
+    register: (
+      callback: (_: Effect.Effect<R, E, A>) => void,
+      signal: AbortSignal
+    ) => Effect.Effect<R, never, void> | void,
     blockingOn?: FiberId.FiberId
   ): Effect.Effect<R, E, A>
 } = <R, E, A>(
@@ -412,27 +407,29 @@ export const async: {
   ) => void | Effect.Effect<R, never, void>,
   blockingOn: FiberId.FiberId = FiberId.none
 ): Effect.Effect<R, E, A> => {
-  if (register.length >= 2) {
-    return suspend(() => {
-      const controller = new AbortController()
-      const effect = new EffectPrimitive(OpCodes.OP_ASYNC) as any
-      effect.i0 = (resume: (_: Effect.Effect<R, E, A>) => void) => {
-        register(resume, controller.signal)
-      }
-      effect.i1 = blockingOn
-      return onInterrupt(effect, () => sync(() => controller.abort()))
-    })
-  }
-
   return suspend(() => {
     let cancelerRef: Effect.Effect<R, never, void> | void = undefined
+    let controllerRef: AbortController | void = undefined
     const effect = new EffectPrimitive(OpCodes.OP_ASYNC) as any
-    effect.i0 = (resume: (_: Effect.Effect<R, E, A>) => void) => {
-      cancelerRef =
-        (register as (callback: (_: Effect.Effect<R, E, A>) => void) => void | Effect.Effect<R, never, void>)(resume)
+    if (register.length !== 1) {
+      const controller = new AbortController()
+      controllerRef = controller
+      effect.i0 = (resume: (_: Effect.Effect<R, E, A>) => void) => {
+        cancelerRef = register(resume, controller.signal)
+      }
+    } else {
+      effect.i0 = (resume: (_: Effect.Effect<R, E, A>) => void) => {
+        // @ts-expect-error
+        cancelerRef = register(resume)
+      }
     }
     effect.i1 = blockingOn
-    return onInterrupt(effect, () => isEffect(cancelerRef) ? cancelerRef : unit)
+    return onInterrupt(effect, () => {
+      if (controllerRef) {
+        controllerRef.abort()
+      }
+      return cancelerRef ?? unit
+    })
   })
 }
 
