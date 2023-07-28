@@ -1380,62 +1380,55 @@ export const currentLoggers: FiberRef.FiberRef<
 /* @internal */
 export const acquireRelease: {
   <A, R2, X>(
-    release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>,
-    options?: { readonly interruptible?: false }
+    release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>
   ): <R, E>(acquire: Effect.Effect<R, E, A>) => Effect.Effect<R2 | R | Scope.Scope, E, A>
-  <A, R2, X>(
-    release: (exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>,
-    options?: { readonly interruptible: true }
-  ): <R, E>(acquire: Effect.Effect<R, E, A>) => Effect.Effect<Scope.Scope | R2 | R, E, A>
   <R, E, A, R2, X>(
     acquire: Effect.Effect<R, E, A>,
-    release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>,
-    options?: { readonly interruptible?: false }
-  ): Effect.Effect<Scope.Scope | R | R2, E, A>
-  <R, E, A, R2, X>(
-    acquire: Effect.Effect<R, E, A>,
-    release: (exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>,
-    options?: { readonly interruptible: true }
+    release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>
   ): Effect.Effect<Scope.Scope | R | R2, E, A>
 } = dual<
   {
     <A, R2, X>(
-      release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>,
-      options?: { readonly interruptible?: false }
-    ): <R, E>(acquire: Effect.Effect<R, E, A>) => Effect.Effect<R | R2 | Scope.Scope, E, A>
-    <A, R2, X>(
-      release: (exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>,
-      options?: { readonly interruptible: true }
+      release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>
     ): <R, E>(acquire: Effect.Effect<R, E, A>) => Effect.Effect<R | R2 | Scope.Scope, E, A>
   },
   {
     <R, E, A, R2, X>(
       acquire: Effect.Effect<R, E, A>,
-      release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>,
-      options?: { readonly interruptible?: false }
+      release: (a: A, exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>
     ): Effect.Effect<R | R2 | Scope.Scope, E, A>
+  }
+>((args) => core.isEffect(args[0]), (acquire, release) => {
+  return core.uninterruptible(
+    core.tap(acquire, (a) => addFinalizer((exit) => release(a, exit)))
+  )
+})
+
+/* @internal */
+export const acquireReleaseInterruptible: {
+  <A, R2, X>(
+    release: (exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>
+  ): <R, E>(acquire: Effect.Effect<R, E, A>) => Effect.Effect<Scope.Scope | R2 | R, E, A>
+  <R, E, A, R2, X>(
+    acquire: Effect.Effect<R, E, A>,
+    release: (exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>
+  ): Effect.Effect<Scope.Scope | R | R2, E, A>
+} = dual<
+  {
+    <A, R2, X>(
+      release: (exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>
+    ): <R, E>(acquire: Effect.Effect<R, E, A>) => Effect.Effect<R | R2 | Scope.Scope, E, A>
+  },
+  {
     <R, E, A, R2, X>(
       acquire: Effect.Effect<R, E, A>,
-      release: (exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>,
-      options?: { readonly interruptible: true }
+      release: (exit: Exit.Exit<unknown, unknown>) => Effect.Effect<R2, never, X>
     ): Effect.Effect<R | R2 | Scope.Scope, E, A>
   }
->((args) => core.isEffect(args[0]), (acquire, release, options) => {
-  if (options?.interruptible) {
-    return ensuring(
-      acquire,
-      addFinalizer((exit) =>
-        // @ts-expect-error
-        release(exit)
-      )
-    )
-  }
-  return core.uninterruptible(
-    core.tap(acquire, (a) =>
-      addFinalizer((exit) =>
-        // @ts-expect-error
-        release(a, exit)
-      ))
+>((args) => core.isEffect(args[0]), (acquire, release) => {
+  return ensuring(
+    acquire,
+    addFinalizer((exit) => release(exit))
   )
 })
 
