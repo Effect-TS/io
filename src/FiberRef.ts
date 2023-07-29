@@ -370,7 +370,7 @@ export const currentMetricLabels: FiberRef<HashSet.HashSet<MetricLabel.MetricLab
  * @since 1.0.0
  * @category fiberRefs
  */
-export const currentTracerSpan: FiberRef<List.List<Tracer.Span>> = core.currentTracerSpan
+export const currentTracerSpan: FiberRef<List.List<Tracer.ParentSpan>> = core.currentTracerSpan
 
 /**
  * @since 1.0.0

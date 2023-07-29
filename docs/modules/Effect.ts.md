@@ -346,14 +346,21 @@ Added in v1.0.0
   - [EffectTypeId](#effecttypeid)
   - [EffectTypeId (type alias)](#effecttypeid-type-alias)
 - [tracing](#tracing)
+  - [annotateCurrentSpan](#annotatecurrentspan)
   - [annotateSpans](#annotatespans)
+  - [currentParentSpan](#currentparentspan)
   - [currentSpan](#currentspan)
+  - [makeSpan](#makespan)
+  - [setParentSpan](#setparentspan)
   - [setTracer](#settracer)
   - [setTracerTiming](#settracertiming)
   - [spanAnnotations](#spanannotations)
   - [tracer](#tracer)
   - [tracerWith](#tracerwith)
   - [useSpan](#usespan)
+  - [useSpanScoped](#usespanscoped)
+  - [withParentSpan](#withparentspan)
+  - [withParentSpanScoped](#withparentspanscoped)
   - [withSpan](#withspan)
   - [withTracer](#withtracer)
   - [withTracerScoped](#withtracerscoped)
@@ -5651,6 +5658,18 @@ Added in v1.0.0
 
 # tracing
 
+## annotateCurrentSpan
+
+Adds an annotation to the current span if available
+
+**Signature**
+
+```ts
+export declare const annotateCurrentSpan: (key: string, value: Tracer.AttributeValue) => Effect<never, never, void>
+```
+
+Added in v1.0.0
+
 ## annotateSpans
 
 Adds an annotation to each span in this effect.
@@ -5666,12 +5685,54 @@ export declare const annotateSpans: {
 
 Added in v1.0.0
 
+## currentParentSpan
+
+**Signature**
+
+```ts
+export declare const currentParentSpan: Effect<never, never, Option.Option<Tracer.ParentSpan>>
+```
+
+Added in v1.0.0
+
 ## currentSpan
 
 **Signature**
 
 ```ts
 export declare const currentSpan: Effect<never, never, Option.Option<Tracer.Span>>
+```
+
+Added in v1.0.0
+
+## makeSpan
+
+Create a new span for tracing.
+
+**Signature**
+
+```ts
+export declare const makeSpan: (
+  name: string,
+  options?: {
+    readonly attributes?: Record<string, Tracer.AttributeValue>
+    readonly parent?: Tracer.ParentSpan
+    readonly root?: boolean
+    readonly context?: Context.Context<never>
+  }
+) => Effect<never, never, Tracer.Span>
+```
+
+Added in v1.0.0
+
+## setParentSpan
+
+Prepends the provided span to the span stack.
+
+**Signature**
+
+```ts
+export declare const setParentSpan: (span: Tracer.ParentSpan) => Layer.Layer<never, never, never>
 ```
 
 Added in v1.0.0
@@ -5752,6 +5813,57 @@ export declare const useSpan: {
     evaluate: (span: Tracer.Span) => Effect<R, E, A>
   ): Effect<R, E, A>
 }
+```
+
+Added in v1.0.0
+
+## useSpanScoped
+
+Create a new span for tracing, and automatically close it when the Scope
+finalizes.
+
+The span is not added to the current span stack, so no child spans will be
+created for it.
+
+**Signature**
+
+```ts
+export declare const useSpanScoped: (
+  name: string,
+  options?: {
+    readonly attributes?: Record<string, Tracer.AttributeValue>
+    readonly parent?: Tracer.ParentSpan
+    readonly root?: boolean
+    readonly context?: Context.Context<never>
+  }
+) => Effect<Scope.Scope, never, Tracer.Span>
+```
+
+Added in v1.0.0
+
+## withParentSpan
+
+Adds the provided span to the current span stack.
+
+**Signature**
+
+```ts
+export declare const withParentSpan: {
+  (span: Tracer.ParentSpan): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, span: Tracer.ParentSpan): Effect<R, E, A>
+}
+```
+
+Added in v1.0.0
+
+## withParentSpanScoped
+
+Adds the provided span to the current span stack.
+
+**Signature**
+
+```ts
+export declare const withParentSpanScoped: (span: Tracer.ParentSpan) => Effect<Scope.Scope, never, void>
 ```
 
 Added in v1.0.0

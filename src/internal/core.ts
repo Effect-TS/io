@@ -1786,9 +1786,9 @@ export const currentInterruptedCause: FiberRef.FiberRef<Cause.Cause<never>> = gl
 )
 
 /** @internal */
-export const currentTracerSpan: FiberRef.FiberRef<List.List<Tracer.Span>> = globalValue(
+export const currentTracerSpan: FiberRef.FiberRef<List.List<Tracer.ParentSpan>> = globalValue(
   Symbol.for("@effect/io/FiberRef/currentTracerSpan"),
-  () => fiberRefUnsafeMake(List.empty<Tracer.Span>())
+  () => fiberRefUnsafeMake(List.empty<Tracer.ParentSpan>())
 )
 
 /** @internal */

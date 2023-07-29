@@ -182,5 +182,9 @@ export const setConfigProvider = (configProvider: ConfigProvider.ConfigProvider)
   layer.scopedDiscard(fiberRuntime.withConfigProviderScoped(configProvider))
 
 /** @internal */
+export const setParentSpan = (span: Tracer.ParentSpan): Layer.Layer<never, never, never> =>
+  layer.scopedDiscard(fiberRuntime.withParentSpanScoped(span))
+
+/** @internal */
 export const setTracer = (tracer: Tracer.Tracer): Layer.Layer<never, never, never> =>
   layer.scopedDiscard(fiberRuntime.withTracerScoped(tracer))

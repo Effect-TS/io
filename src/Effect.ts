@@ -4921,6 +4921,15 @@ export const annotateSpans: {
 } = effect.annotateSpans
 
 /**
+ * Adds an annotation to the current span if available
+ *
+ * @since 1.0.0
+ * @category tracing
+ */
+export const annotateCurrentSpan: (key: string, value: Tracer.AttributeValue) => Effect<never, never, void> =
+  effect.annotateCurrentSpan
+
+/**
  * @since 1.0.0
  * @category tracing
  */
@@ -4930,8 +4939,30 @@ export const currentSpan: Effect<never, never, Option.Option<Tracer.Span>> = eff
  * @since 1.0.0
  * @category tracing
  */
+export const currentParentSpan: Effect<never, never, Option.Option<Tracer.ParentSpan>> = effect.currentParentSpan
+
+/**
+ * @since 1.0.0
+ * @category tracing
+ */
 export const spanAnnotations: Effect<never, never, HashMap.HashMap<string, Tracer.AttributeValue>> =
   effect.spanAnnotations
+
+/**
+ * Create a new span for tracing.
+ *
+ * @since 1.0.0
+ * @category tracing
+ */
+export const makeSpan: (
+  name: string,
+  options?: {
+    readonly attributes?: Record<string, Tracer.AttributeValue>
+    readonly parent?: Tracer.ParentSpan
+    readonly root?: boolean
+    readonly context?: Context.Context<never>
+  }
+) => Effect<never, never, Tracer.Span> = effect.makeSpan
 
 /**
  * Create a new span for tracing, and automatically close it when the effect
@@ -4956,6 +4987,26 @@ export const useSpan: {
     evaluate: (span: Tracer.Span) => Effect<R, E, A>
   ): Effect<R, E, A>
 } = effect.useSpan
+
+/**
+ * Create a new span for tracing, and automatically close it when the Scope
+ * finalizes.
+ *
+ * The span is not added to the current span stack, so no child spans will be
+ * created for it.
+ *
+ * @since 1.0.0
+ * @category tracing
+ */
+export const useSpanScoped: (
+  name: string,
+  options?: {
+    readonly attributes?: Record<string, Tracer.AttributeValue>
+    readonly parent?: Tracer.ParentSpan
+    readonly root?: boolean
+    readonly context?: Context.Context<never>
+  }
+) => Effect<Scope.Scope, never, Tracer.Span> = fiberRuntime.useSpanScoped
 
 /**
  * Wraps the effect with a new span for tracing.
@@ -4984,3 +5035,31 @@ export const withSpan: {
     }
   ): Effect<R, E, A>
 } = effect.withSpan
+
+/**
+ * Adds the provided span to the current span stack.
+ *
+ * @since 1.0.0
+ * @category tracing
+ */
+export const withParentSpan: {
+  (span: Tracer.ParentSpan): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, span: Tracer.ParentSpan): Effect<R, E, A>
+} = effect.withParentSpan
+
+/**
+ * Adds the provided span to the current span stack.
+ *
+ * @since 1.0.0
+ * @category tracing
+ */
+export const withParentSpanScoped: (span: Tracer.ParentSpan) => Effect<Scope.Scope, never, void> =
+  fiberRuntime.withParentSpanScoped
+
+/**
+ * Prepends the provided span to the span stack.
+ *
+ * @since 1.0.0
+ * @category tracing
+ */
+export const setParentSpan: (span: Tracer.ParentSpan) => Layer.Layer<never, never, never> = circularLayer.setParentSpan

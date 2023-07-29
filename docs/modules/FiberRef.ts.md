@@ -344,7 +344,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const currentTracerSpan: FiberRef<List.List<Tracer.Span>>
+export declare const currentTracerSpan: FiberRef<List.List<Tracer.ParentSpan>>
 ```
 
 Added in v1.0.0
