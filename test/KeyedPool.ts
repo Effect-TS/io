@@ -64,7 +64,7 @@ describe("KeyedPool", () => {
                     Random.nextBoolean
                   ),
                   Effect.flatMap(
-                    Random.nextIntBetween(0, 15),
+                    Random.nextIntBetween(0, 15 + 1),
                     (n) => Effect.sleep(Duration.millis(n))
                   )
                 )
