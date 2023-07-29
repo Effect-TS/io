@@ -891,6 +891,9 @@ export const validateFirst: {
  * If an Effect is returned by the registration function, it will be executed
  * if the fiber executing the effect is interrupted.
  *
+ * The registration function can also receive an `AbortSignal` if required for
+ * interruption.
+ *
  * The `FiberId` of the fiber that may complete the async callback may be
  * provided to allow for better diagnostics.
  *
@@ -898,7 +901,7 @@ export const validateFirst: {
  * @category constructors
  */
 export const async: <R, E, A>(
-  register: (callback: (_: Effect<R, E, A>) => void) => void | Effect<R, never, void>,
+  register: (callback: (_: Effect<R, E, A>) => void, signal: AbortSignal) => void | Effect<R, never, void>,
   blockingOn?: FiberId.FiberId
 ) => Effect<R, E, A> = core.async
 
@@ -914,24 +917,6 @@ export const async: <R, E, A>(
 export const asyncEffect: <R, E, A, R2, E2, X>(
   register: (callback: (_: Effect<R, E, A>) => void) => Effect<R2, E2, X>
 ) => Effect<R | R2, E | E2, A> = _runtime.asyncEffect
-
-/**
- * Imports an asynchronous side-effect into a pure `Effect` value.
- * The callback function `Effect<R, E, A> => void` must be called at most once.
- *
- * The registration function receives an AbortSignal that can be used to handle
- * interruption.
- *
- * The `FiberId` of the fiber that may complete the async callback may be
- * provided to allow for better diagnostics.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const asyncInterrupt: <R, E, A>(
-  register: (callback: (_: Effect<R, E, A>) => void, signal: AbortSignal) => void,
-  blockingOn?: FiberId.FiberId
-) => Effect<R, E, A> = core.asyncInterrupt
 
 /**
  * Imports an asynchronous effect into a pure `Effect` value, possibly returning
@@ -1332,19 +1317,15 @@ export const none: <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R, 
 /**
  * Like `tryPromise` but produces a defect in case of errors.
  *
- * @since 1.0.0
- * @category constructors
- */
-export const promise: <A>(evaluate: LazyArg<Promise<A>>) => Effect<never, never, A> = effect.promise
-
-/**
- * Like `promise` but allows for interruption via AbortSignal
+ * An optional `AbortSignal` can be provided to allow for interruption of the
+ * wrapped Promise api.
  *
  * @since 1.0.0
  * @category constructors
  */
-export const promiseInterrupt: <A>(evaluate: (signal: AbortSignal) => Promise<A>) => Effect<never, never, A> =
-  effect.promiseInterrupt
+export const promise: <A>(
+  evaluate: LazyArg<Promise<A>> | ((signal: AbortSignal) => Promise<A>)
+) => Effect<never, never, A> = effect.promise
 
 /**
  * @since 1.0.0
@@ -1779,12 +1760,18 @@ export const tryMap: {
  * Returns an effect whose success is mapped by the specified side effecting
  * `f` function, translating any promise rejections into typed failed effects.
  *
+ * An optional `AbortSignal` can be provided to allow for interruption of the
+ * wrapped Promise api.
+ *
  * @since 1.0.0
  * @category error handling
  */
 export const tryMapPromise: {
   <A, B, E1>(
     options: {
+      readonly try: (a: A, signal: AbortSignal) => Promise<B>
+      readonly catch: (error: unknown) => E1
+    } | {
       readonly try: (a: A) => Promise<B>
       readonly catch: (error: unknown) => E1
     }
@@ -1792,6 +1779,9 @@ export const tryMapPromise: {
   <R, E, A, B, E1>(
     self: Effect<R, E, A>,
     options: {
+      readonly try: (a: A, signal: AbortSignal) => Promise<B>
+      readonly catch: (error: unknown) => E1
+    } | {
       readonly try: (a: A) => Promise<B>
       readonly catch: (error: unknown) => E1
     }
@@ -1799,51 +1789,24 @@ export const tryMapPromise: {
 } = effect.tryMapPromise
 
 /**
- * Like `tryMapPromise` but allows for interruption via AbortSignal
- *
- * @since 1.0.0
- * @category error handling
- */
-export const tryMapPromiseInterrupt: {
-  <A, B, E1>(
-    options: {
-      readonly try: (a: A, signal: AbortSignal) => Promise<B>
-      readonly catch: (error: unknown) => E1
-    }
-  ): <R, E>(self: Effect<R, E, A>) => Effect<R, E1 | E, B>
-  <R, E, A, B, E1>(
-    self: Effect<R, E, A>,
-    options: {
-      readonly try: (a: A, signal: AbortSignal) => Promise<B>
-      readonly catch: (error: unknown) => E1
-    }
-  ): Effect<R, E | E1, B>
-} = effect.tryMapPromiseInterrupt
-
-/**
  * Create an `Effect` that when executed will construct `promise` and wait for
  * its result, errors will produce failure as `unknown`.
+ *
+ * An optional `AbortSignal` can be provided to allow for interruption of the
+ * wrapped Promise api.
  *
  * @since 1.0.0
  * @category error handling
  */
 export const tryPromise: {
-  <A, E>(options: { readonly try: LazyArg<Promise<A>>; readonly catch: (error: unknown) => E }): Effect<never, E, A>
-  <A>(try_: LazyArg<Promise<A>>): Effect<never, unknown, A>
-} = effect.tryPromise
-
-/**
- * Like `tryPromise` but allows for interruption via AbortSignal
- *
- * @since 1.0.0
- * @category error handling
- */
-export const tryPromiseInterrupt: {
   <A, E>(
-    options: { readonly try: (signal: AbortSignal) => Promise<A>; readonly catch: (error: unknown) => E }
+    options: {
+      readonly try: LazyArg<Promise<A>> | ((signal: AbortSignal) => Promise<A>)
+      readonly catch: (error: unknown) => E
+    }
   ): Effect<never, E, A>
-  <A>(try_: (signal: AbortSignal) => Promise<A>): Effect<never, unknown, A>
-} = effect.tryPromiseInterrupt
+  <A>(try_: LazyArg<Promise<A>> | ((signal: AbortSignal) => Promise<A>)): Effect<never, unknown, A>
+} = effect.tryPromise
 
 /**
  * The inverse operation `sandbox(effect)`

@@ -379,7 +379,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   }
 
   await(): Effect.Effect<never, never, Exit.Exit<E, A>> {
-    return core.asyncInterrupt<never, never, Exit.Exit<E, A>>((resume) => {
+    return core.async<never, never, Exit.Exit<E, A>>((resume) => {
       const cb = (exit: Exit.Exit<E, A>) => resume(core.succeed(exit))
       this.tell(
         FiberMessage.stateful((fiber, _) => {
@@ -3246,7 +3246,7 @@ export const invokeWithInterrupt: <R, E, A>(
       core.flatMap(
         forkDaemon(core.interruptible(dataSource)),
         (processing) =>
-          core.asyncInterrupt<never, E, void>((cb) => {
+          core.async<never, E, void>((cb) => {
             const counts = all.map((_) => _.listeners.count)
             const checkDone = () => {
               if (counts.every((count) => count === 0)) {
