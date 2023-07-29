@@ -95,6 +95,19 @@ describe("Tracer", () => {
         assert.deepEqual(span.attributes.get("key"), "value")
       }))
 
+    it.effect("annotateSpans record", () =>
+      Effect.gen(function*($) {
+        const span = yield* $(
+          Effect.annotateSpans(
+            Effect.withSpan("A")(currentSpan),
+            { key: "value", key2: "value2" }
+          )
+        )
+
+        assert.deepEqual(span.attributes.get("key"), "value")
+        assert.deepEqual(span.attributes.get("key2"), "value2")
+      }))
+
     it.effect("logger", () =>
       Effect.gen(function*($) {
         yield* $(TestClock.adjust(millis(0.01)))

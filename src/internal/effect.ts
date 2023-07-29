@@ -35,22 +35,37 @@ import * as Tracer from "@effect/io/Tracer"
 
 /* @internal */
 export const annotateLogs = dual<
-  (key: string, value: Logger.AnnotationValue) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
-  <R, E, A>(effect: Effect.Effect<R, E, A>, key: string, value: string) => Effect.Effect<R, E, A>
+  {
+    (key: string, value: Logger.AnnotationValue): <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+    (
+      values: Record<string, Logger.AnnotationValue>
+    ): <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  },
+  {
+    <R, E, A>(effect: Effect.Effect<R, E, A>, key: string, value: Logger.AnnotationValue): Effect.Effect<R, E, A>
+    <R, E, A>(effect: Effect.Effect<R, E, A>, values: Record<string, Logger.AnnotationValue>): Effect.Effect<R, E, A>
+  }
 >(
-  3,
-  (effect, key, value) =>
-    core.flatMap(
+  (args) => core.isEffect(args[0]),
+  function<R, E, A>() {
+    const args = arguments
+    return core.flatMap(
       core.fiberRefGet(core.currentLogAnnotations),
       (annotations) =>
         core.suspend(() =>
           core.fiberRefLocally(
-            effect,
+            args[0] as Effect.Effect<R, E, A>,
             core.currentLogAnnotations,
-            HashMap.set(annotations, key, value)
+            typeof args[1] === "string" ?
+              HashMap.set(annotations, args[1], args[2]) :
+              Object.entries(args[1] as Record<string, Logger.AnnotationValue>).reduce(
+                (acc, [key, value]) => HashMap.set(acc, key, value),
+                annotations
+              )
           )
         )
     )
+  }
 )
 
 /* @internal */
@@ -1811,33 +1826,61 @@ export const serviceFunction = <T extends Context.Tag<any, any>, Args extends Ar
 // -----------------------------------------------------------------------------
 
 /* @internal */
-export const annotateCurrentSpan = (key: string, value: Tracer.AttributeValue): Effect.Effect<never, never, void> =>
-  core.flatMap(
+export const annotateCurrentSpan: {
+  (key: string, value: Tracer.AttributeValue): Effect.Effect<never, never, void>
+  (values: Record<string, Tracer.AttributeValue>): Effect.Effect<never, never, void>
+} = function(): Effect.Effect<never, never, void> {
+  const args = arguments
+  return core.flatMap(
     currentSpan,
     (span) =>
       span._tag === "Some" ?
-        core.sync(() => span.value.attribute(key, value)) :
+        core.sync(() => {
+          if (typeof args[0] === "string") {
+            span.value.attribute(args[0], args[1])
+          } else {
+            for (const key in args[0]) {
+              span.value.attribute(key, args[0][key])
+            }
+          }
+        }) :
         core.unit
   )
+}
 
 /* @internal */
 export const annotateSpans = dual<
-  (key: string, value: Tracer.AttributeValue) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
-  <R, E, A>(self: Effect.Effect<R, E, A>, key: string, value: Tracer.AttributeValue) => Effect.Effect<R, E, A>
+  {
+    (key: string, value: Tracer.AttributeValue): <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+    (
+      values: Record<string, Tracer.AttributeValue>
+    ): <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  },
+  {
+    <R, E, A>(effect: Effect.Effect<R, E, A>, key: string, value: Tracer.AttributeValue): Effect.Effect<R, E, A>
+    <R, E, A>(effect: Effect.Effect<R, E, A>, values: Record<string, Tracer.AttributeValue>): Effect.Effect<R, E, A>
+  }
 >(
-  3,
-  (self, key, value) =>
-    core.flatMap(
+  (args) => core.isEffect(args[0]),
+  function<R, E, A>() {
+    const args = arguments
+    return core.flatMap(
       core.fiberRefGet(core.currentTracerSpanAnnotations),
       (annotations) =>
         core.suspend(() =>
           core.fiberRefLocally(
-            self,
+            args[0] as Effect.Effect<R, E, A>,
             core.currentTracerSpanAnnotations,
-            HashMap.set(annotations, key, value)
+            typeof args[1] === "string" ?
+              HashMap.set(annotations, args[1], args[2]) :
+              Object.entries(args[1] as Record<string, Tracer.AttributeValue>).reduce(
+                (acc, [key, value]) => HashMap.set(acc, key, value),
+                annotations
+              )
           )
         )
     )
+  }
 )
 
 /* @internal */

@@ -3246,7 +3246,9 @@ Annotates each log in this effect with the specified log annotation.
 ```ts
 export declare const annotateLogs: {
   (key: string, value: Logger.AnnotationValue): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(effect: Effect<R, E, A>, key: string, value: string): Effect<R, E, A>
+  (values: Record<string, Logger.AnnotationValue>): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(effect: Effect<R, E, A>, key: string, value: Logger.AnnotationValue): Effect<R, E, A>
+  <R, E, A>(effect: Effect<R, E, A>, values: Record<string, Logger.AnnotationValue>): Effect<R, E, A>
 }
 ```
 
@@ -5665,7 +5667,10 @@ Adds an annotation to the current span if available
 **Signature**
 
 ```ts
-export declare const annotateCurrentSpan: (key: string, value: Tracer.AttributeValue) => Effect<never, never, void>
+export declare const annotateCurrentSpan: {
+  (key: string, value: Tracer.AttributeValue): Effect<never, never, void>
+  (values: Record<string, Tracer.AttributeValue>): Effect<never, never, void>
+}
 ```
 
 Added in v1.0.0
@@ -5678,8 +5683,10 @@ Adds an annotation to each span in this effect.
 
 ```ts
 export declare const annotateSpans: {
-  (key: string, value: Tracer.AttributeValue): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(self: Effect<R, E, A>, key: string, value: Tracer.AttributeValue): Effect<R, E, A>
+  (key: string, value: Tracer.AttributeValue): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
+  (values: Record<string, Tracer.AttributeValue>): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(effect: Effect<R, E, A>, key: string, value: Tracer.AttributeValue): Effect<R, E, A>
+  <R, E, A>(effect: Effect<R, E, A>, values: Record<string, Tracer.AttributeValue>): Effect<R, E, A>
 }
 ```
 

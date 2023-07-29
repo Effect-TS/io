@@ -4255,7 +4255,9 @@ export const withLogSpan: {
  */
 export const annotateLogs: {
   (key: string, value: Logger.AnnotationValue): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(effect: Effect<R, E, A>, key: string, value: string): Effect<R, E, A>
+  (values: Record<string, Logger.AnnotationValue>): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(effect: Effect<R, E, A>, key: string, value: Logger.AnnotationValue): Effect<R, E, A>
+  <R, E, A>(effect: Effect<R, E, A>, values: Record<string, Logger.AnnotationValue>): Effect<R, E, A>
 } = effect.annotateLogs
 
 /**
@@ -4916,8 +4918,10 @@ export const setTracerTiming: (enabled: boolean) => Layer.Layer<never, never, ne
  * @category tracing
  */
 export const annotateSpans: {
-  (key: string, value: Tracer.AttributeValue): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(self: Effect<R, E, A>, key: string, value: Tracer.AttributeValue): Effect<R, E, A>
+  (key: string, value: Tracer.AttributeValue): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
+  (values: Record<string, Tracer.AttributeValue>): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(effect: Effect<R, E, A>, key: string, value: Tracer.AttributeValue): Effect<R, E, A>
+  <R, E, A>(effect: Effect<R, E, A>, values: Record<string, Tracer.AttributeValue>): Effect<R, E, A>
 } = effect.annotateSpans
 
 /**
@@ -4926,8 +4930,10 @@ export const annotateSpans: {
  * @since 1.0.0
  * @category tracing
  */
-export const annotateCurrentSpan: (key: string, value: Tracer.AttributeValue) => Effect<never, never, void> =
-  effect.annotateCurrentSpan
+export const annotateCurrentSpan: {
+  (key: string, value: Tracer.AttributeValue): Effect<never, never, void>
+  (values: Record<string, Tracer.AttributeValue>): Effect<never, never, void>
+} = effect.annotateCurrentSpan
 
 /**
  * @since 1.0.0
