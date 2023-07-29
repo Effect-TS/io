@@ -412,8 +412,8 @@ export const string = (name?: string): Config.Config<string> => {
   return name === undefined ? config : nested(name)(config)
 }
 
-export const all = <Arg extends Iterable<Config.Config<any>> | Record<string, Config.Config<any>>>(
-  arg: Config.Config.Narrow<Arg>
+export const all = <const Arg extends Iterable<Config.Config<any>> | Record<string, Config.Config<any>>>(
+  arg: Arg
 ): Config.Config<
   [Arg] extends [ReadonlyArray<Config.Config<any>>] ? {
     -readonly [K in keyof Arg]: [Arg[K]] extends [Config.Config<infer A>] ? A : never

@@ -415,11 +415,10 @@ export declare namespace All {
 
   type IsDiscard<A> = [Extract<A, { readonly discard: true }>] extends [never] ? false : true
   type ExtractMode<A> = [A] extends [{ mode: infer M }] ? M : "default"
-  type Narrow<A> = (A extends [] ? [] : never) | A
 
   export interface Signature {
-    <Arg extends Iterable<EffectAny> | Record<string, EffectAny>, O extends Options>(
-      arg: Narrow<Arg>,
+    <const Arg extends Iterable<EffectAny> | Record<string, EffectAny>, O extends Options>(
+      arg: Arg,
       options?: O
     ): [Arg] extends [ReadonlyArray<EffectAny>] ? ReturnTuple<Arg, IsDiscard<O>, ExtractMode<O>>
       : [Arg] extends [Iterable<EffectAny>] ? ReturnIterable<Arg, IsDiscard<O>, ExtractMode<O>>

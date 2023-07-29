@@ -74,10 +74,6 @@ export declare namespace Config {
       : never)
     | Config<A>
 
-  /**
-   * @since 1.0.0
-   */
-  export type Narrow<A> = (A extends [] ? [] : never) | A
 }
 
 /**
@@ -86,8 +82,8 @@ export declare namespace Config {
  * @since 1.0.0
  * @category constructors
  */
-export const all: <Arg extends Iterable<Config<any>> | Record<string, Config<any>>>(
-  arg: Config.Narrow<Arg>
+export const all: <const Arg extends Iterable<Config<any>> | Record<string, Config<any>>>(
+  arg: Arg
 ) => Config<
   [Arg] extends [ReadonlyArray<Config<any>>] ? {
     -readonly [K in keyof Arg]: [Arg[K]] extends [Config<infer A>] ? A : never

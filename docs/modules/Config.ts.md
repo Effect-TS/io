@@ -64,8 +64,8 @@ Constructs a config from a tuple / struct / arguments of configs.
 **Signature**
 
 ```ts
-export declare const all: <Arg extends Iterable<Config<any>> | Record<string, Config<any>>>(
-  arg: Config.Narrow<Arg>
+export declare const all: <const Arg extends Iterable<Config<any>> | Record<string, Config<any>>>(
+  arg: Arg
 ) => Config<
   [Arg] extends [readonly Config<any>[]]
     ? { -readonly [K in keyof Arg]: [Arg[K]] extends [Config<infer A>] ? A : never }
