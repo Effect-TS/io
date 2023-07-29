@@ -891,6 +891,9 @@ export const validateFirst: {
  * If an Effect is returned by the registration function, it will be executed
  * if the fiber executing the effect is interrupted.
  *
+ * The registration function can also receive an `AbortSignal` if required for
+ * interruption.
+ *
  * The `FiberId` of the fiber that may complete the async callback may be
  * provided to allow for better diagnostics.
  *
@@ -1313,6 +1316,9 @@ export const none: <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R, 
 
 /**
  * Like `tryPromise` but produces a defect in case of errors.
+ *
+ * An optional `AbortSignal` can be provided to allow for interruption of the
+ * wrapped Promise api.
  *
  * @since 1.0.0
  * @category constructors
@@ -1754,6 +1760,9 @@ export const tryMap: {
  * Returns an effect whose success is mapped by the specified side effecting
  * `f` function, translating any promise rejections into typed failed effects.
  *
+ * An optional `AbortSignal` can be provided to allow for interruption of the
+ * wrapped Promise api.
+ *
  * @since 1.0.0
  * @category error handling
  */
@@ -1782,6 +1791,9 @@ export const tryMapPromise: {
 /**
  * Create an `Effect` that when executed will construct `promise` and wait for
  * its result, errors will produce failure as `unknown`.
+ *
+ * An optional `AbortSignal` can be provided to allow for interruption of the
+ * wrapped Promise api.
  *
  * @since 1.0.0
  * @category error handling

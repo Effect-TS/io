@@ -1150,6 +1150,9 @@ The callback function `Effect<R, E, A> => void` must be called at most once.
 If an Effect is returned by the registration function, it will be executed
 if the fiber executing the effect is interrupted.
 
+The registration function can also receive an `AbortSignal` if required for
+interruption.
+
 The `FiberId` of the fiber that may complete the async callback may be
 provided to allow for better diagnostics.
 
@@ -1349,6 +1352,9 @@ Added in v1.0.0
 ## promise
 
 Like `tryPromise` but produces a defect in case of errors.
+
+An optional `AbortSignal` can be provided to allow for interruption of the
+wrapped Promise api.
 
 **Signature**
 
@@ -2471,6 +2477,9 @@ Added in v1.0.0
 Returns an effect whose success is mapped by the specified side effecting
 `f` function, translating any promise rejections into typed failed effects.
 
+An optional `AbortSignal` can be provided to allow for interruption of the
+wrapped Promise api.
+
 **Signature**
 
 ```ts
@@ -2495,6 +2504,9 @@ Added in v1.0.0
 
 Create an `Effect` that when executed will construct `promise` and wait for
 its result, errors will produce failure as `unknown`.
+
+An optional `AbortSignal` can be provided to allow for interruption of the
+wrapped Promise api.
 
 **Signature**
 
