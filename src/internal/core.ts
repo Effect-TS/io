@@ -392,22 +392,14 @@ export const as = dual<
 export const asUnit = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, void> => as(self, void 0)
 
 /* @internal */
-export const async: {
-  <R, E, A>(
-    register: (
-      callback: (_: Effect.Effect<R, E, A>) => void,
-      signal: AbortSignal
-    ) => Effect.Effect<R, never, void> | void,
-    blockingOn?: FiberId.FiberId
-  ): Effect.Effect<R, E, A>
-} = <R, E, A>(
+export const async = <R, E, A>(
   register: (
     callback: (_: Effect.Effect<R, E, A>) => void,
     signal: AbortSignal
   ) => void | Effect.Effect<R, never, void>,
   blockingOn: FiberId.FiberId = FiberId.none
-): Effect.Effect<R, E, A> => {
-  return suspend(() => {
+): Effect.Effect<R, E, A> =>
+  suspend(() => {
     let cancelerRef: Effect.Effect<R, never, void> | void = undefined
     let controllerRef: AbortController | void = undefined
     const effect = new EffectPrimitive(OpCodes.OP_ASYNC) as any
@@ -431,7 +423,6 @@ export const async: {
       return cancelerRef ?? unit
     })
   })
-}
 
 /* @internal */
 export const asyncEither = <R, E, A>(

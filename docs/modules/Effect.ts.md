@@ -1156,17 +1156,10 @@ provided to allow for better diagnostics.
 **Signature**
 
 ```ts
-export declare const async: {
-  <R, E, A>(
-    register: (callback: (_: Effect<R, E, A>) => void) => Effect<R, never, void>,
-    blockingOn?: FiberId.FiberId
-  ): Effect<R, E, A>
-  <R, E, A>(register: (callback: (_: Effect<R, E, A>) => void) => void, blockingOn?: FiberId.FiberId): Effect<R, E, A>
-  <R, E, A>(
-    register: (callback: (_: Effect<R, E, A>) => void, signal: AbortSignal) => void,
-    blockingOn?: FiberId.FiberId
-  ): Effect<R, E, A>
-}
+export declare const async: <R, E, A>(
+  register: (callback: (_: Effect<R, E, A>) => void, signal: AbortSignal) => void | Effect<R, never, void>,
+  blockingOn?: FiberId.FiberId
+) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -1360,10 +1353,9 @@ Like `tryPromise` but produces a defect in case of errors.
 **Signature**
 
 ```ts
-export declare const promise: {
-  <A>(evaluate: (signal: AbortSignal) => Promise<A>): Effect<never, never, A>
-  <A>(evaluate: LazyArg<Promise<A>>): Effect<never, never, A>
-}
+export declare const promise: <A>(
+  evaluate: LazyArg<Promise<A>> | ((signal: AbortSignal) => Promise<A>)
+) => Effect<never, never, A>
 ```
 
 Added in v1.0.0
@@ -2508,11 +2500,10 @@ its result, errors will produce failure as `unknown`.
 
 ```ts
 export declare const tryPromise: {
-  <A, E>(
-    options:
-      | { readonly try: LazyArg<Promise<A>>; readonly catch: (error: unknown) => E }
-      | { readonly try: (signal: AbortSignal) => Promise<A>; readonly catch: (error: unknown) => E }
-  ): Effect<never, E, A>
+  <A, E>(options: {
+    readonly try: LazyArg<Promise<A>> | ((signal: AbortSignal) => Promise<A>)
+    readonly catch: (error: unknown) => E
+  }): Effect<never, E, A>
   <A>(try_: LazyArg<Promise<A>> | ((signal: AbortSignal) => Promise<A>)): Effect<never, unknown, A>
 }
 ```

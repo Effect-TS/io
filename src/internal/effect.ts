@@ -1159,8 +1159,7 @@ export const patchFiberRefs = (patch: FiberRefsPatch.FiberRefsPatch): Effect.Eff
 
 /* @internal */
 export const promise: {
-  <A>(evaluate: (signal: AbortSignal) => Promise<A>): Effect.Effect<never, never, A>
-  <A>(evaluate: LazyArg<Promise<A>>): Effect.Effect<never, never, A>
+  <A>(evaluate: LazyArg<Promise<A>> | ((signal: AbortSignal) => Promise<A>)): Effect.Effect<never, never, A>
 } = <A>(evaluate: (signal: AbortSignal) => Promise<A>): Effect.Effect<never, never, A> =>
   evaluate.length >= 1 ?
     core.async<never, never, A>((resolve, signal) => {
@@ -1579,10 +1578,7 @@ export const tracer: Effect.Effect<never, never, Tracer.Tracer> = tracerWith(cor
 export const tryPromise: {
   <A, E>(
     options: {
-      readonly try: LazyArg<Promise<A>>
-      readonly catch: (error: unknown) => E
-    } | {
-      readonly try: (signal: AbortSignal) => Promise<A>
+      readonly try: LazyArg<Promise<A>> | ((signal: AbortSignal) => Promise<A>)
       readonly catch: (error: unknown) => E
     }
   ): Effect.Effect<never, E, A>
@@ -1597,9 +1593,9 @@ export const tryPromise: {
   let catcher: ((error: unknown) => E) | undefined = undefined
 
   if (typeof arg === "function") {
-    evaluate = arg as any
+    evaluate = arg as (signal?: AbortSignal) => Promise<A>
   } else {
-    evaluate = arg.try as any
+    evaluate = arg.try as (signal?: AbortSignal) => Promise<A>
     catcher = arg.catch
   }
 
@@ -1620,16 +1616,24 @@ export const tryPromise: {
     })
   }
 
-  return core.flatMap(try_(arg as LazyArg<Promise<A>>), (promise) =>
-    core.async<never, E, A>((resolve) => {
-      promise
-        .then((a) => resolve(core.exitSucceed(a)))
-        .catch((e) =>
-          resolve(core.exitFail(
-            catcher ? catcher(e) : e
-          ))
-        )
-    }))
+  return core.flatMap(
+    try_(
+      arg as {
+        readonly try: LazyArg<Promise<A>>
+        readonly catch: (error: unknown) => E
+      }
+    ),
+    (promise) =>
+      core.async<never, E, A>((resolve) => {
+        promise
+          .then((a) => resolve(core.exitSucceed(a)))
+          .catch((e) =>
+            resolve(core.exitFail(
+              catcher ? catcher(e) : e
+            ))
+          )
+      })
+  )
 }
 
 /* @internal */
@@ -1658,29 +1662,29 @@ export const tryMap = dual<
 export const tryMapPromise = dual<
   <A, B, E1>(
     options: {
-      readonly try: (a: A, signal: AbortSignal) => Promise<B>
-      readonly catch: (error: unknown) => E1
-    } | {
-      readonly try: (a: A) => Promise<B>
+      readonly try: ((a: A) => Promise<B>) | ((a: A, signal: AbortSignal) => Promise<B>)
       readonly catch: (error: unknown) => E1
     }
   ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E | E1, B>,
   <R, E, A, B, E1>(
     self: Effect.Effect<R, E, A>,
     options: {
-      readonly try: (a: A, signal: AbortSignal) => Promise<B>
-      readonly catch: (error: unknown) => E1
-    } | {
-      readonly try: (a: A) => Promise<B>
+      readonly try: ((a: A) => Promise<B>) | ((a: A, signal: AbortSignal) => Promise<B>)
       readonly catch: (error: unknown) => E1
     }
   ) => Effect.Effect<R, E | E1, B>
->(2, (self, options) =>
+>(2, <R, E, A, B, E1>(
+  self: Effect.Effect<R, E, A>,
+  options: {
+    readonly try: ((a: A) => Promise<B>) | ((a: A, signal: AbortSignal) => Promise<B>)
+    readonly catch: (error: unknown) => E1
+  }
+): Effect.Effect<R, E | E1, B> =>
   core.flatMap(self, (a) =>
     tryPromise({
       try: options.try.length >= 1 ?
         (signal) => options.try(a, signal) :
-        () => (options.try as any)(a),
+        () => (options.try as (a: A) => Promise<B>)(a),
       catch: options.catch
     })))
 

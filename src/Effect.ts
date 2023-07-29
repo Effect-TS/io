@@ -1317,10 +1317,9 @@ export const none: <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R, 
  * @since 1.0.0
  * @category constructors
  */
-export const promise: {
-  <A>(evaluate: (signal: AbortSignal) => Promise<A>): Effect<never, never, A>
-  <A>(evaluate: LazyArg<Promise<A>>): Effect<never, never, A>
-} = effect.promise
+export const promise: <A>(
+  evaluate: LazyArg<Promise<A>> | ((signal: AbortSignal) => Promise<A>)
+) => Effect<never, never, A> = effect.promise
 
 /**
  * @since 1.0.0
@@ -1790,10 +1789,7 @@ export const tryMapPromise: {
 export const tryPromise: {
   <A, E>(
     options: {
-      readonly try: LazyArg<Promise<A>>
-      readonly catch: (error: unknown) => E
-    } | {
-      readonly try: (signal: AbortSignal) => Promise<A>
+      readonly try: LazyArg<Promise<A>> | ((signal: AbortSignal) => Promise<A>)
       readonly catch: (error: unknown) => E
     }
   ): Effect<never, E, A>
