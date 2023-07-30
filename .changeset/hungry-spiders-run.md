@@ -2,4 +2,13 @@
 "@effect/io": minor
 ---
 
-add more apis for working with spans
+add apis for working with spans
+
+- annotateCurrentSpan
+- currentParentSpan
+- linkSpans & linkCurrentSpan
+- makeSpan
+- useSpanScoped
+- setParentSpan
+- withParentSpan
+- withParentSpanScoped

@@ -350,6 +350,8 @@ Added in v1.0.0
   - [annotateSpans](#annotatespans)
   - [currentParentSpan](#currentparentspan)
   - [currentSpan](#currentspan)
+  - [linkCurrentSpan](#linkcurrentspan)
+  - [linkSpans](#linkspans)
   - [makeSpan](#makespan)
   - [setParentSpan](#setparentspan)
   - [setTracer](#settracer)
@@ -5708,6 +5710,33 @@ Added in v1.0.0
 
 ```ts
 export declare const currentSpan: Effect<never, never, Option.Option<Tracer.Span>>
+```
+
+Added in v1.0.0
+
+## linkCurrentSpan
+
+Add a link between the provided span and the current span if available.
+
+**Signature**
+
+```ts
+export declare const linkCurrentSpan: (link: Tracer.ParentSpan) => Effect<never, never, void>
+```
+
+Added in v1.0.0
+
+## linkSpans
+
+For all spans in this effect, add a link with the provided span.
+
+**Signature**
+
+```ts
+export declare const linkSpans: {
+  (span: Tracer.ParentSpan): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, span: Tracer.ParentSpan): Effect<R, E, A>
+}
 ```
 
 Added in v1.0.0

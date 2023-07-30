@@ -103,8 +103,10 @@ export interface Span {
   readonly context: Context.Context<never>
   readonly status: SpanStatus
   readonly attributes: ReadonlyMap<string, AttributeValue>
+  readonly links: ReadonlySet<ParentSpan>
   readonly end: (endTime: bigint, exit: Exit.Exit<unknown, unknown>) => void
   readonly attribute: (key: string, value: AttributeValue) => void
+  readonly link: (span: ParentSpan) => void
   readonly event: (name: string, startTime: bigint, attributes?: Record<string, AttributeValue>) => void
 }
 ```

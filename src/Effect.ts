@@ -4955,6 +4955,25 @@ export const spanAnnotations: Effect<never, never, HashMap.HashMap<string, Trace
   effect.spanAnnotations
 
 /**
+ * Add a link between the provided span and the current span if available.
+ *
+ * @since 1.0.0
+ * @category tracing
+ */
+export const linkCurrentSpan: (link: Tracer.ParentSpan) => Effect<never, never, void> = effect.linkCurrentSpan
+
+/**
+ * For all spans in this effect, add a link with the provided span.
+ *
+ * @since 1.0.0
+ * @category tracing
+ */
+export const linkSpans: {
+  (span: Tracer.ParentSpan): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, span: Tracer.ParentSpan): Effect<R, E, A>
+} = effect.linkSpans
+
+/**
  * Create a new span for tracing.
  *
  * @since 1.0.0

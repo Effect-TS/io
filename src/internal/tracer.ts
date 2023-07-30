@@ -34,6 +34,7 @@ export class NativeSpan implements Tracer.Span {
 
   status: Tracer.SpanStatus
   attributes: Map<string, Tracer.AttributeValue>
+  links: Set<Tracer.ParentSpan>
   events: Array<[name: string, startTime: bigint, attributes: Record<string, Tracer.AttributeValue>]> = []
 
   constructor(
@@ -47,6 +48,7 @@ export class NativeSpan implements Tracer.Span {
       startTime
     }
     this.attributes = new Map()
+    this.links = new Set()
     this.spanId = `span${MutableRef.incrementAndGet(ids)}`
   }
 
@@ -61,6 +63,10 @@ export class NativeSpan implements Tracer.Span {
 
   attribute = (key: string, value: Tracer.AttributeValue): void => {
     this.attributes.set(key, value)
+  }
+
+  link = (span: Tracer.ParentSpan): void => {
+    this.links.add(span)
   }
 
   event = (name: string, startTime: bigint, attributes?: Record<string, Tracer.AttributeValue>): void => {

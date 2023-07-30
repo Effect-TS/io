@@ -49,21 +49,16 @@ export const annotateLogs = dual<
   (args) => core.isEffect(args[0]),
   function<R, E, A>() {
     const args = arguments
-    return core.flatMap(
-      core.fiberRefGet(core.currentLogAnnotations),
-      (annotations) =>
-        core.suspend(() =>
-          core.fiberRefLocally(
-            args[0] as Effect.Effect<R, E, A>,
-            core.currentLogAnnotations,
-            typeof args[1] === "string" ?
-              HashMap.set(annotations, args[1], args[2]) :
-              Object.entries(args[1] as Record<string, Logger.AnnotationValue>).reduce(
-                (acc, [key, value]) => HashMap.set(acc, key, value),
-                annotations
-              )
+    return core.fiberRefLocallyWith(
+      args[0] as Effect.Effect<R, E, A>,
+      core.currentLogAnnotations,
+      typeof args[1] === "string" ?
+        HashMap.set(args[1], args[2]) :
+        (annotations) =>
+          Object.entries(args[1] as Record<string, Logger.AnnotationValue>).reduce(
+            (acc, [key, value]) => HashMap.set(acc, key, value),
+            annotations
           )
-        )
     )
   }
 )
@@ -921,17 +916,12 @@ export const withLogSpan = dual<
   (label: string) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
   <R, E, A>(effect: Effect.Effect<R, E, A>, label: string) => Effect.Effect<R, E, A>
 >(2, (effect, label) =>
-  core.flatMap(
-    core.fiberRefGet(core.currentLogSpan),
-    (stack) =>
-      core.flatMap(Clock.currentTimeMillis, (now) =>
-        core.suspend(() =>
-          core.fiberRefLocally(
-            core.currentLogSpan,
-            List.prepend(stack, LogSpan.make(label, now))
-          )(effect)
-        ))
-  ))
+  core.flatMap(Clock.currentTimeMillis, (now) =>
+    core.fiberRefLocallyWith(
+      effect,
+      core.currentLogSpan,
+      List.prepend(LogSpan.make(label, now))
+    )))
 
 /* @internal */
 export const logAnnotations: Effect.Effect<never, never, HashMap.HashMap<string, Logger.AnnotationValue>> = core
@@ -1864,21 +1854,16 @@ export const annotateSpans = dual<
   (args) => core.isEffect(args[0]),
   function<R, E, A>() {
     const args = arguments
-    return core.flatMap(
-      core.fiberRefGet(core.currentTracerSpanAnnotations),
-      (annotations) =>
-        core.suspend(() =>
-          core.fiberRefLocally(
-            args[0] as Effect.Effect<R, E, A>,
-            core.currentTracerSpanAnnotations,
-            typeof args[1] === "string" ?
-              HashMap.set(annotations, args[1], args[2]) :
-              Object.entries(args[1] as Record<string, Tracer.AttributeValue>).reduce(
-                (acc, [key, value]) => HashMap.set(acc, key, value),
-                annotations
-              )
+    return core.fiberRefLocallyWith(
+      args[0] as Effect.Effect<R, E, A>,
+      core.currentTracerSpanAnnotations,
+      typeof args[1] === "string" ?
+        HashMap.set(args[1], args[2]) :
+        (annotations) =>
+          Object.entries(args[1] as Record<string, Tracer.AttributeValue>).reduce(
+            (acc, [key, value]) => HashMap.set(acc, key, value),
+            annotations
           )
-        )
     )
   }
 )
@@ -1900,6 +1885,32 @@ const bigint0 = BigInt(0)
 export const currentTimeNanosTracing = core.fiberRefGetWith(
   core.currentTracerTimingEnabled,
   (enabled) => enabled ? Clock.currentTimeNanos : core.succeed(bigint0)
+)
+
+/* @internal */
+export const linkCurrentSpan = (link: Tracer.ParentSpan): Effect.Effect<never, never, void> =>
+  core.flatMap(
+    currentSpan,
+    (span) =>
+      span._tag === "Some" ?
+        core.sync(() => {
+          span.value.link(link)
+        }) :
+        core.unit
+  )
+
+/* @internal */
+export const linkSpans = dual<
+  (span: Tracer.ParentSpan) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(self: Effect.Effect<R, E, A>, span: Tracer.ParentSpan) => Effect.Effect<R, E, A>
+>(
+  2,
+  (self, span) =>
+    core.fiberRefLocallyWith(
+      self,
+      core.currentTracerSpanLinks,
+      HashSet.add(span)
+    )
 )
 
 /** @internal */
@@ -1924,16 +1935,19 @@ export const makeSpan = (
           core.fiberRefGet(core.currentTracerSpanAnnotations),
           (annotations) =>
             core.flatMap(
-              currentTimeNanosTracing,
-              (startTime) =>
-                core.sync(() => {
-                  const span = tracer.span(name, parent, options?.context ?? Context.empty(), startTime)
-                  HashMap.forEach(annotations, (value, key) => span.attribute(key, value))
-                  Object.entries(options?.attributes ?? {}).forEach(([k, v]) => {
-                    span.attribute(k, v)
-                  })
-                  return span
-                })
+              core.fiberRefGet(core.currentTracerSpanLinks),
+              (links) =>
+                core.flatMap(
+                  currentTimeNanosTracing,
+                  (startTime) =>
+                    core.sync(() => {
+                      const span = tracer.span(name, parent, options?.context ?? Context.empty(), startTime)
+                      HashMap.forEach(annotations, (value, key) => span.attribute(key, value))
+                      Object.entries(options?.attributes ?? {}).forEach(([k, v]) => span.attribute(k, v))
+                      HashSet.forEach(links, (link) => span.link(link))
+                      return span
+                    })
+                )
             )
         )
     )
@@ -1982,14 +1996,10 @@ export const withParentSpan = dual<
   (span: Tracer.ParentSpan) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
   <R, E, A>(self: Effect.Effect<R, E, A>, span: Tracer.ParentSpan) => Effect.Effect<R, E, A>
 >(2, (self, span) =>
-  core.flatMap(
-    core.fiberRefGet(core.currentTracerSpan),
-    (stack) =>
-      core.fiberRefLocally(
-        self,
-        core.currentTracerSpan,
-        List.prepend(stack, span)
-      )
+  core.fiberRefLocallyWith(
+    self,
+    core.currentTracerSpan,
+    List.prepend(span)
   ))
 
 /** @internal */

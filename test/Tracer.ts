@@ -194,5 +194,32 @@ describe("Tracer", () => {
           )
         ))
       ))
+
+    it.effect("linkCurrentSpan", () =>
+      Effect.gen(function*(_) {
+        const span = yield* _(Effect.makeSpan("child"))
+        yield* _(Effect.linkCurrentSpan(span))
+        const currentSpan = yield* _(Effect.currentSpan)
+        assert.deepEqual(
+          currentSpan.pipe(
+            Option.map((span) => span.links.values().next().value)
+          ),
+          Option.some(span)
+        )
+      }).pipe(
+        Effect.withSpan("A")
+      ))
+
+    it.effect("linkSpans", () =>
+      Effect.gen(function*(_) {
+        const span = yield* _(Effect.makeSpan("child"))
+        const currentSpan = yield* _(Effect.currentSpan, Effect.withSpan("A"), Effect.linkSpans(span))
+        assert.deepEqual(
+          currentSpan.pipe(
+            Option.map((span) => span.links.values().next().value)
+          ),
+          Option.some(span)
+        )
+      }))
   })
 })
