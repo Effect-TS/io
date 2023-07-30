@@ -130,6 +130,14 @@ export interface Unsupported extends ConfigError.Proto {
 
 /**
  * @since 1.0.0
+ * @category models
+ */
+export interface Options {
+  pathDelim: string
+}
+
+/**
+ * @since 1.0.0
  * @category constructors
  */
 export const And: (self: ConfigError, that: ConfigError) => ConfigError = internal.And
@@ -144,26 +152,33 @@ export const Or: (self: ConfigError, that: ConfigError) => ConfigError = interna
  * @since 1.0.0
  * @category constructors
  */
-export const MissingData: (path: Array<string>, message: string) => ConfigError = internal.MissingData
+export const MissingData: (path: Array<string>, message: string, options?: Options) => ConfigError =
+  internal.MissingData
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const InvalidData: (path: Array<string>, message: string) => ConfigError = internal.InvalidData
+export const InvalidData: (path: Array<string>, message: string, options?: Options) => ConfigError =
+  internal.InvalidData
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const SourceUnavailable: (path: Array<string>, message: string, cause: Cause.Cause<unknown>) => ConfigError =
-  internal.SourceUnavailable
+export const SourceUnavailable: (
+  path: Array<string>,
+  message: string,
+  cause: Cause.Cause<unknown>,
+  options?: Options
+) => ConfigError = internal.SourceUnavailable
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const Unsupported: (path: Array<string>, message: string) => ConfigError = internal.Unsupported
+export const Unsupported: (path: Array<string>, message: string, options?: Options) => ConfigError =
+  internal.Unsupported
 
 /**
  * Returns `true` if the specified value is a `ConfigError`, `false` otherwise.
