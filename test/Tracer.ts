@@ -201,12 +201,12 @@ describe("Tracer", () => {
         const childB = yield* _(Effect.makeSpan("childB"))
         const currentSpan = yield* _(
           Effect.currentSpan,
-          Effect.withSpan("A", { links: [childB] }),
+          Effect.withSpan("A", { links: [{ _tag: "SpanLink", span: childB, attributes: {} }] }),
           Effect.linkSpans(childA)
         )
         assert.deepEqual(
           currentSpan.pipe(
-            Option.map((span) => [...span.links]),
+            Option.map((span) => [...span.links].map((_) => _.span)),
             Option.getOrElse(() => [])
           ),
           [childA, childB]

@@ -41,7 +41,7 @@ export class NativeSpan implements Tracer.Span {
     readonly name: string,
     readonly parent: Option.Option<Tracer.ParentSpan>,
     readonly context: Context.Context<never>,
-    readonly links: HashSet.HashSet<Tracer.ParentSpan>,
+    readonly links: HashSet.HashSet<Tracer.SpanLink>,
     readonly startTime: bigint
   ) {
     this.status = {

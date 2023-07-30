@@ -4961,8 +4961,15 @@ export const spanAnnotations: Effect<never, never, HashMap.HashMap<string, Trace
  * @category tracing
  */
 export const linkSpans: {
-  (span: Tracer.ParentSpan): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(self: Effect<R, E, A>, span: Tracer.ParentSpan): Effect<R, E, A>
+  (
+    span: Tracer.ParentSpan,
+    attributes?: Record<string, Tracer.AttributeValue>
+  ): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(
+    self: Effect<R, E, A>,
+    span: Tracer.ParentSpan,
+    attributes?: Record<string, Tracer.AttributeValue>
+  ): Effect<R, E, A>
 } = effect.linkSpans
 
 /**
@@ -4975,7 +4982,7 @@ export const makeSpan: (
   name: string,
   options?: {
     readonly attributes?: Record<string, Tracer.AttributeValue>
-    readonly links?: ReadonlyArray<Tracer.ParentSpan>
+    readonly links?: ReadonlyArray<Tracer.SpanLink>
     readonly parent?: Tracer.ParentSpan
     readonly root?: boolean
     readonly context?: Context.Context<never>
@@ -4998,7 +5005,7 @@ export const useSpan: {
     name: string,
     options: {
       readonly attributes?: Record<string, Tracer.AttributeValue>
-      readonly links?: ReadonlyArray<Tracer.ParentSpan>
+      readonly links?: ReadonlyArray<Tracer.SpanLink>
       readonly parent?: Tracer.ParentSpan
       readonly root?: boolean
       readonly context?: Context.Context<never>
@@ -5021,7 +5028,7 @@ export const useSpanScoped: (
   name: string,
   options?: {
     readonly attributes?: Record<string, Tracer.AttributeValue>
-    readonly links?: ReadonlyArray<Tracer.ParentSpan>
+    readonly links?: ReadonlyArray<Tracer.SpanLink>
     readonly parent?: Tracer.ParentSpan
     readonly root?: boolean
     readonly context?: Context.Context<never>
@@ -5039,7 +5046,7 @@ export const withSpan: {
     name: string,
     options?: {
       readonly attributes?: Record<string, Tracer.AttributeValue>
-      readonly links?: ReadonlyArray<Tracer.ParentSpan>
+      readonly links?: ReadonlyArray<Tracer.SpanLink>
       readonly parent?: Tracer.ParentSpan
       readonly root?: boolean
       readonly context?: Context.Context<never>
@@ -5050,7 +5057,7 @@ export const withSpan: {
     name: string,
     options?: {
       readonly attributes?: Record<string, Tracer.AttributeValue>
-      readonly links?: ReadonlyArray<Tracer.ParentSpan>
+      readonly links?: ReadonlyArray<Tracer.SpanLink>
       readonly parent?: Tracer.ParentSpan
       readonly root?: boolean
       readonly context?: Context.Context<never>

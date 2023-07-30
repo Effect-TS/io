@@ -1805,7 +1805,7 @@ export const currentTracerSpanAnnotations: FiberRef.FiberRef<HashMap.HashMap<str
   )
 
 /** @internal */
-export const currentTracerSpanLinks: FiberRef.FiberRef<HashSet.HashSet<Tracer.ParentSpan>> = globalValue(
+export const currentTracerSpanLinks: FiberRef.FiberRef<HashSet.HashSet<Tracer.SpanLink>> = globalValue(
   Symbol.for("@effect/io/FiberRef/currentTracerSpanLinks"),
   () => fiberRefUnsafeMake(HashSet.empty())
 )
