@@ -20,6 +20,7 @@ Added in v1.0.0
   - [ExternalSpan (interface)](#externalspan-interface)
   - [ParentSpan (type alias)](#parentspan-type-alias)
   - [Span (interface)](#span-interface)
+  - [SpanLink (interface)](#spanlink-interface)
   - [SpanStatus (type alias)](#spanstatus-type-alias)
 - [tags](#tags)
   - [Tracer](#tracer)
@@ -103,9 +104,24 @@ export interface Span {
   readonly context: Context.Context<never>
   readonly status: SpanStatus
   readonly attributes: ReadonlyMap<string, AttributeValue>
+  readonly links: ReadonlyArray<SpanLink>
   readonly end: (endTime: bigint, exit: Exit.Exit<unknown, unknown>) => void
   readonly attribute: (key: string, value: AttributeValue) => void
   readonly event: (name: string, startTime: bigint, attributes?: Record<string, AttributeValue>) => void
+}
+```
+
+Added in v1.0.0
+
+## SpanLink (interface)
+
+**Signature**
+
+```ts
+export interface SpanLink {
+  readonly _tag: 'SpanLink'
+  readonly span: ParentSpan
+  readonly attributes: Readonly<Record<string, AttributeValue>>
 }
 ```
 
@@ -156,6 +172,7 @@ export interface Tracer {
     name: string,
     parent: Option.Option<ParentSpan>,
     context: Context.Context<never>,
+    links: ReadonlyArray<SpanLink>,
     startTime: bigint
   ) => Span
 }

@@ -1,3 +1,4 @@
+import type * as Context from "@effect/data/Context"
 import { dual } from "@effect/data/Function"
 import * as HashSet from "@effect/data/HashSet"
 import type * as ConfigProvider from "@effect/io/Config/Provider"
@@ -180,6 +181,22 @@ export const disableWindDown: Layer.Layer<never, never, never> = layer.scopedDis
 /** @internal */
 export const setConfigProvider = (configProvider: ConfigProvider.ConfigProvider): Layer.Layer<never, never, never> =>
   layer.scopedDiscard(fiberRuntime.withConfigProviderScoped(configProvider))
+
+/** @internal */
+export const setParentSpan = (span: Tracer.ParentSpan): Layer.Layer<never, never, never> =>
+  layer.scopedDiscard(fiberRuntime.withParentSpanScoped(span))
+
+/** @internal */
+export const setSpan = (
+  name: string,
+  options?: {
+    readonly attributes?: Record<string, Tracer.AttributeValue>
+    readonly links?: ReadonlyArray<Tracer.SpanLink>
+    readonly parent?: Tracer.ParentSpan
+    readonly root?: boolean
+    readonly context?: Context.Context<never>
+  }
+): Layer.Layer<never, never, never> => layer.scopedDiscard(fiberRuntime.withSpanScoped(name, options))
 
 /** @internal */
 export const setTracer = (tracer: Tracer.Tracer): Layer.Layer<never, never, never> =>

@@ -1618,7 +1618,7 @@ export const fiberRefLocally: {
 export const fiberRefLocallyWith = dual<
   <A>(self: FiberRef.FiberRef<A>, f: (a: A) => A) => <R, E, B>(use: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>,
   <R, E, B, A>(use: Effect.Effect<R, E, B>, self: FiberRef.FiberRef<A>, f: (a: A) => A) => Effect.Effect<R, E, B>
->(3, (use, self, f) => fiberRefGetWith(self, (a) => pipe(use, fiberRefLocally(self, f(a)))))
+>(3, (use, self, f) => fiberRefGetWith(self, (a) => fiberRefLocally(use, self, f(a))))
 
 /** @internal */
 export const fiberRefUnsafeMake = <Value>(
@@ -1791,9 +1791,9 @@ export const currentInterruptedCause: FiberRef.FiberRef<Cause.Cause<never>> = gl
 )
 
 /** @internal */
-export const currentTracerSpan: FiberRef.FiberRef<List.List<Tracer.Span>> = globalValue(
+export const currentTracerSpan: FiberRef.FiberRef<List.List<Tracer.ParentSpan>> = globalValue(
   Symbol.for("@effect/io/FiberRef/currentTracerSpan"),
-  () => fiberRefUnsafeMake(List.empty<Tracer.Span>())
+  () => fiberRefUnsafeMake(List.empty<Tracer.ParentSpan>())
 )
 
 /** @internal */
@@ -1808,6 +1808,12 @@ export const currentTracerSpanAnnotations: FiberRef.FiberRef<HashMap.HashMap<str
     Symbol.for("@effect/io/FiberRef/currentTracerSpanAnnotations"),
     () => fiberRefUnsafeMake(HashMap.empty())
   )
+
+/** @internal */
+export const currentTracerSpanLinks: FiberRef.FiberRef<Chunk.Chunk<Tracer.SpanLink>> = globalValue(
+  Symbol.for("@effect/io/FiberRef/currentTracerSpanLinks"),
+  () => fiberRefUnsafeMake(Chunk.empty())
+)
 
 // -----------------------------------------------------------------------------
 // Scope

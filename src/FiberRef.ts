@@ -1,6 +1,7 @@
 /**
  * @since 1.0.0
  */
+import type * as Chunk from "@effect/data/Chunk"
 import type * as Context from "@effect/data/Context"
 import type * as Differ from "@effect/data/Differ"
 import type { LazyArg } from "@effect/data/Function"
@@ -370,7 +371,7 @@ export const currentMetricLabels: FiberRef<HashSet.HashSet<MetricLabel.MetricLab
  * @since 1.0.0
  * @category fiberRefs
  */
-export const currentTracerSpan: FiberRef<List.List<Tracer.Span>> = core.currentTracerSpan
+export const currentTracerSpan: FiberRef<List.List<Tracer.ParentSpan>> = core.currentTracerSpan
 
 /**
  * @since 1.0.0
@@ -384,6 +385,12 @@ export const currentTracerTimingEnabled: FiberRef<boolean> = core.currentTracerT
  */
 export const currentTracerSpanAnnotations: FiberRef<HashMap.HashMap<string, Tracer.AttributeValue>> =
   core.currentTracerSpanAnnotations
+
+/**
+ * @since 1.0.0
+ * @category fiberRefs
+ */
+export const currentTracerSpanLinks: FiberRef<Chunk.Chunk<Tracer.SpanLink>> = core.currentTracerSpanLinks
 
 /**
  * @since 1.0.0

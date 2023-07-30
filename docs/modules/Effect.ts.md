@@ -342,15 +342,26 @@ Added in v1.0.0
   - [EffectTypeId](#effecttypeid)
   - [EffectTypeId (type alias)](#effecttypeid-type-alias)
 - [tracing](#tracing)
+  - [annotateCurrentSpan](#annotatecurrentspan)
   - [annotateSpans](#annotatespans)
+  - [currentParentSpan](#currentparentspan)
   - [currentSpan](#currentspan)
+  - [linkSpans](#linkspans)
+  - [makeSpan](#makespan)
+  - [setParentSpan](#setparentspan)
+  - [setSpan](#setspan)
   - [setTracer](#settracer)
   - [setTracerTiming](#settracertiming)
   - [spanAnnotations](#spanannotations)
+  - [spanLinks](#spanlinks)
   - [tracer](#tracer)
   - [tracerWith](#tracerwith)
   - [useSpan](#usespan)
+  - [useSpanScoped](#usespanscoped)
+  - [withParentSpan](#withparentspan)
+  - [withParentSpanScoped](#withparentspanscoped)
   - [withSpan](#withspan)
+  - [withSpanScoped](#withspanscoped)
   - [withTracer](#withtracer)
   - [withTracerScoped](#withtracerscoped)
   - [withTracerTiming](#withtracertiming)
@@ -3182,7 +3193,9 @@ Annotates each log in this effect with the specified log annotation.
 ```ts
 export declare const annotateLogs: {
   (key: string, value: Logger.AnnotationValue): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(effect: Effect<R, E, A>, key: string, value: string): Effect<R, E, A>
+  (values: Record<string, Logger.AnnotationValue>): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(effect: Effect<R, E, A>, key: string, value: Logger.AnnotationValue): Effect<R, E, A>
+  <R, E, A>(effect: Effect<R, E, A>, values: Record<string, Logger.AnnotationValue>): Effect<R, E, A>
 }
 ```
 
@@ -5594,6 +5607,21 @@ Added in v1.0.0
 
 # tracing
 
+## annotateCurrentSpan
+
+Adds an annotation to the current span if available
+
+**Signature**
+
+```ts
+export declare const annotateCurrentSpan: {
+  (key: string, value: Tracer.AttributeValue): Effect<never, never, void>
+  (values: Record<string, Tracer.AttributeValue>): Effect<never, never, void>
+}
+```
+
+Added in v1.0.0
+
 ## annotateSpans
 
 Adds an annotation to each span in this effect.
@@ -5602,9 +5630,21 @@ Adds an annotation to each span in this effect.
 
 ```ts
 export declare const annotateSpans: {
-  (key: string, value: Tracer.AttributeValue): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(self: Effect<R, E, A>, key: string, value: Tracer.AttributeValue): Effect<R, E, A>
+  (key: string, value: Tracer.AttributeValue): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
+  (values: Record<string, Tracer.AttributeValue>): <R, E, A>(effect: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(effect: Effect<R, E, A>, key: string, value: Tracer.AttributeValue): Effect<R, E, A>
+  <R, E, A>(effect: Effect<R, E, A>, values: Record<string, Tracer.AttributeValue>): Effect<R, E, A>
 }
+```
+
+Added in v1.0.0
+
+## currentParentSpan
+
+**Signature**
+
+```ts
+export declare const currentParentSpan: Effect<never, never, Option.Option<Tracer.ParentSpan>>
 ```
 
 Added in v1.0.0
@@ -5615,6 +5655,83 @@ Added in v1.0.0
 
 ```ts
 export declare const currentSpan: Effect<never, never, Option.Option<Tracer.Span>>
+```
+
+Added in v1.0.0
+
+## linkSpans
+
+For all spans in this effect, add a link with the provided span.
+
+**Signature**
+
+```ts
+export declare const linkSpans: {
+  (span: Tracer.ParentSpan, attributes?: Record<string, Tracer.AttributeValue>): <R, E, A>(
+    self: Effect<R, E, A>
+  ) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, span: Tracer.ParentSpan, attributes?: Record<string, Tracer.AttributeValue>): Effect<
+    R,
+    E,
+    A
+  >
+}
+```
+
+Added in v1.0.0
+
+## makeSpan
+
+Create a new span for tracing.
+
+**Signature**
+
+```ts
+export declare const makeSpan: (
+  name: string,
+  options?: {
+    readonly attributes?: Record<string, Tracer.AttributeValue>
+    readonly links?: ReadonlyArray<Tracer.SpanLink>
+    readonly parent?: Tracer.ParentSpan
+    readonly root?: boolean
+    readonly context?: Context.Context<never>
+  }
+) => Effect<never, never, Tracer.Span>
+```
+
+Added in v1.0.0
+
+## setParentSpan
+
+Adds the provided span to the span stack.
+
+**Signature**
+
+```ts
+export declare const setParentSpan: (span: Tracer.ParentSpan) => Layer.Layer<never, never, never>
+```
+
+Added in v1.0.0
+
+## setSpan
+
+Create and add a span to the current span stack.
+
+The span is ended when the Layer is released.
+
+**Signature**
+
+```ts
+export declare const setSpan: (
+  name: string,
+  options?: {
+    readonly attributes?: Record<string, Tracer.AttributeValue>
+    readonly links?: ReadonlyArray<Tracer.SpanLink>
+    readonly parent?: Tracer.ParentSpan
+    readonly root?: boolean
+    readonly context?: Context.Context<never>
+  }
+) => Layer.Layer<never, never, never>
 ```
 
 Added in v1.0.0
@@ -5647,6 +5764,16 @@ Added in v1.0.0
 
 ```ts
 export declare const spanAnnotations: Effect<never, never, HashMap.HashMap<string, Tracer.AttributeValue>>
+```
+
+Added in v1.0.0
+
+## spanLinks
+
+**Signature**
+
+```ts
+export declare const spanLinks: Effect<never, never, Chunk.Chunk<Tracer.SpanLink>>
 ```
 
 Added in v1.0.0
@@ -5688,6 +5815,7 @@ export declare const useSpan: {
     name: string,
     options: {
       readonly attributes?: Record<string, Tracer.AttributeValue>
+      readonly links?: ReadonlyArray<Tracer.SpanLink>
       readonly parent?: Tracer.ParentSpan
       readonly root?: boolean
       readonly context?: Context.Context<never>
@@ -5695,6 +5823,58 @@ export declare const useSpan: {
     evaluate: (span: Tracer.Span) => Effect<R, E, A>
   ): Effect<R, E, A>
 }
+```
+
+Added in v1.0.0
+
+## useSpanScoped
+
+Create a new span for tracing, and automatically close it when the Scope
+finalizes.
+
+The span is not added to the current span stack, so no child spans will be
+created for it.
+
+**Signature**
+
+```ts
+export declare const useSpanScoped: (
+  name: string,
+  options?: {
+    readonly attributes?: Record<string, Tracer.AttributeValue>
+    readonly links?: ReadonlyArray<Tracer.SpanLink>
+    readonly parent?: Tracer.ParentSpan
+    readonly root?: boolean
+    readonly context?: Context.Context<never>
+  }
+) => Effect<Scope.Scope, never, Tracer.Span>
+```
+
+Added in v1.0.0
+
+## withParentSpan
+
+Adds the provided span to the current span stack.
+
+**Signature**
+
+```ts
+export declare const withParentSpan: {
+  (span: Tracer.ParentSpan): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, span: Tracer.ParentSpan): Effect<R, E, A>
+}
+```
+
+Added in v1.0.0
+
+## withParentSpanScoped
+
+Adds the provided span to the current span stack.
+
+**Signature**
+
+```ts
+export declare const withParentSpanScoped: (span: Tracer.ParentSpan) => Effect<Scope.Scope, never, void>
 ```
 
 Added in v1.0.0
@@ -5711,6 +5891,7 @@ export declare const withSpan: {
     name: string,
     options?: {
       readonly attributes?: Record<string, Tracer.AttributeValue>
+      readonly links?: ReadonlyArray<Tracer.SpanLink>
       readonly parent?: Tracer.ParentSpan
       readonly root?: boolean
       readonly context?: Context.Context<never>
@@ -5721,12 +5902,36 @@ export declare const withSpan: {
     name: string,
     options?: {
       readonly attributes?: Record<string, Tracer.AttributeValue>
+      readonly links?: ReadonlyArray<Tracer.SpanLink>
       readonly parent?: Tracer.ParentSpan
       readonly root?: boolean
       readonly context?: Context.Context<never>
     }
   ): Effect<R, E, A>
 }
+```
+
+Added in v1.0.0
+
+## withSpanScoped
+
+Create and add a span to the current span stack.
+
+The span is ended when the Scope is finalized.
+
+**Signature**
+
+```ts
+export declare const withSpanScoped: (
+  name: string,
+  options?: {
+    readonly attributes?: Record<string, Tracer.AttributeValue>
+    readonly links?: ReadonlyArray<Tracer.SpanLink>
+    readonly parent?: Tracer.ParentSpan
+    readonly root?: boolean
+    readonly context?: Context.Context<never>
+  }
+) => Effect<Scope.Scope, never, void>
 ```
 
 Added in v1.0.0

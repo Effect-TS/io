@@ -7,6 +7,7 @@ import * as Fiber from "@effect/io/Fiber"
 import * as FiberId from "@effect/io/Fiber/Id"
 import * as TestClock from "@effect/io/internal/testing/testClock"
 import type { NativeSpan } from "@effect/io/internal/tracer"
+import * as Layer from "@effect/io/Layer"
 import * as it from "@effect/io/test/utils/extend"
 import type { Span } from "@effect/io/Tracer"
 import { assert, describe } from "vitest"
@@ -94,6 +95,19 @@ describe("Tracer", () => {
         assert.deepEqual(span.attributes.get("key"), "value")
       }))
 
+    it.effect("annotateSpans record", () =>
+      Effect.gen(function*($) {
+        const span = yield* $(
+          Effect.annotateSpans(
+            Effect.withSpan("A")(currentSpan),
+            { key: "value", key2: "value2" }
+          )
+        )
+
+        assert.deepEqual(span.attributes.get("key"), "value")
+        assert.deepEqual(span.attributes.get("key2"), "value2")
+      }))
+
     it.effect("logger", () =>
       Effect.gen(function*($) {
         yield* $(TestClock.adjust(millis(0.01)))
@@ -122,6 +136,95 @@ describe("Tracer", () => {
         )
 
         assert.deepEqual(span.status.startTime, 0n)
+      }))
+
+    it.effect("useSpanScoped", () =>
+      Effect.gen(function*(_) {
+        const span = yield* _(Effect.scoped(Effect.useSpanScoped("A")))
+        assert.deepEqual(span.status._tag, "Ended")
+      }))
+
+    it.effect("annotateCurrentSpan", () =>
+      Effect.gen(function*(_) {
+        yield* _(Effect.annotateCurrentSpan("key", "value"))
+        const span = yield* _(Effect.currentSpan)
+        assert.deepEqual(
+          Option.map(span, (span) => span.attributes.get("key")),
+          Option.some("value")
+        )
+      }).pipe(
+        Effect.withSpan("A")
+      ))
+
+    it.effect("withParentSpan", () =>
+      Effect.gen(function*(_) {
+        const span = yield* _(Effect.currentSpan)
+        assert.deepEqual(
+          span.pipe(
+            Option.flatMap((_) => _.parent),
+            Option.map((_) => _.spanId)
+          ),
+          Option.some("456")
+        )
+      }).pipe(
+        Effect.withSpan("A"),
+        Effect.withParentSpan({
+          _tag: "ExternalSpan",
+          traceId: "123",
+          spanId: "456",
+          context: Context.empty()
+        })
+      ))
+
+    it.effect("setParentSpan", () =>
+      Effect.gen(function*(_) {
+        const span = yield* _(Effect.makeSpan("child"))
+        assert.deepEqual(
+          span.parent.pipe(
+            Option.filter((span): span is Span => span._tag === "Span"),
+            Option.map((span) => span.name)
+          ),
+          Option.some("parent")
+        )
+      }).pipe(
+        Effect.provideLayer(Layer.unwrapScoped(
+          Effect.map(
+            Effect.useSpanScoped("parent"),
+            (span) => Effect.setParentSpan(span)
+          )
+        ))
+      ))
+
+    it.effect("setSpan", () =>
+      Effect.gen(function*(_) {
+        const span = yield* _(Effect.makeSpan("child"))
+        assert.deepEqual(
+          span.parent.pipe(
+            Option.filter((span): span is Span => span._tag === "Span"),
+            Option.map((span) => span.name)
+          ),
+          Option.some("parent")
+        )
+      }).pipe(
+        Effect.provideLayer(Effect.setSpan("parent"))
+      ))
+
+    it.effect("linkSpans", () =>
+      Effect.gen(function*(_) {
+        const childA = yield* _(Effect.makeSpan("childA"))
+        const childB = yield* _(Effect.makeSpan("childB"))
+        const currentSpan = yield* _(
+          Effect.currentSpan,
+          Effect.withSpan("A", { links: [{ _tag: "SpanLink", span: childB, attributes: {} }] }),
+          Effect.linkSpans(childA)
+        )
+        assert.includeMembers(
+          currentSpan.pipe(
+            Option.map((span) => span.links.map((_) => _.span)),
+            Option.getOrElse(() => [])
+          ),
+          [childB, childA]
+        )
       }))
   })
 })

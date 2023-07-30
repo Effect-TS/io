@@ -35,42 +35,32 @@ import * as Tracer from "@effect/io/Tracer"
 
 /* @internal */
 export const annotateLogs = dual<
-  (key: string, value: Logger.AnnotationValue) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
-  <R, E, A>(effect: Effect.Effect<R, E, A>, key: string, value: string) => Effect.Effect<R, E, A>
+  {
+    (key: string, value: Logger.AnnotationValue): <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+    (
+      values: Record<string, Logger.AnnotationValue>
+    ): <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  },
+  {
+    <R, E, A>(effect: Effect.Effect<R, E, A>, key: string, value: Logger.AnnotationValue): Effect.Effect<R, E, A>
+    <R, E, A>(effect: Effect.Effect<R, E, A>, values: Record<string, Logger.AnnotationValue>): Effect.Effect<R, E, A>
+  }
 >(
-  3,
-  (effect, key, value) =>
-    core.flatMap(
-      core.fiberRefGet(core.currentLogAnnotations),
-      (annotations) =>
-        core.suspend(() =>
-          core.fiberRefLocally(
-            effect,
-            core.currentLogAnnotations,
-            HashMap.set(annotations, key, value)
+  (args) => core.isEffect(args[0]),
+  function<R, E, A>() {
+    const args = arguments
+    return core.fiberRefLocallyWith(
+      args[0] as Effect.Effect<R, E, A>,
+      core.currentLogAnnotations,
+      typeof args[1] === "string" ?
+        HashMap.set(args[1], args[2]) :
+        (annotations) =>
+          Object.entries(args[1] as Record<string, Logger.AnnotationValue>).reduce(
+            (acc, [key, value]) => HashMap.set(acc, key, value),
+            annotations
           )
-        )
     )
-)
-
-/* @internal */
-export const annotateSpans = dual<
-  (key: string, value: Tracer.AttributeValue) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
-  <R, E, A>(self: Effect.Effect<R, E, A>, key: string, value: Tracer.AttributeValue) => Effect.Effect<R, E, A>
->(
-  3,
-  (self, key, value) =>
-    core.flatMap(
-      core.fiberRefGet(core.currentTracerSpanAnnotations),
-      (annotations) =>
-        core.suspend(() =>
-          core.fiberRefLocally(
-            self,
-            core.currentTracerSpanAnnotations,
-            HashMap.set(annotations, key, value)
-          )
-        )
-    )
+  }
 )
 
 /* @internal */
@@ -328,12 +318,6 @@ export const clockWith: <R, E, A>(f: (clock: Clock.Clock) => Effect.Effect<R, E,
 
 /* @internal */
 export const clock: Effect.Effect<never, never, Clock.Clock> = clockWith(core.succeed)
-
-/* @internal */
-export const currentSpan: Effect.Effect<never, never, Option.Option<Tracer.Span>> = core.map(
-  core.fiberRefGet(core.currentTracerSpan),
-  List.head
-)
 
 /* @internal */
 export const delay = dual<
@@ -932,17 +916,12 @@ export const withLogSpan = dual<
   (label: string) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
   <R, E, A>(effect: Effect.Effect<R, E, A>, label: string) => Effect.Effect<R, E, A>
 >(2, (effect, label) =>
-  core.flatMap(
-    core.fiberRefGet(core.currentLogSpan),
-    (stack) =>
-      core.flatMap(Clock.currentTimeMillis, (now) =>
-        core.suspend(() =>
-          core.fiberRefLocally(
-            core.currentLogSpan,
-            List.prepend(stack, LogSpan.make(label, now))
-          )(effect)
-        ))
-  ))
+  core.flatMap(Clock.currentTimeMillis, (now) =>
+    core.fiberRefLocallyWith(
+      effect,
+      core.currentLogSpan,
+      List.prepend(LogSpan.make(label, now))
+    )))
 
 /* @internal */
 export const logAnnotations: Effect.Effect<never, never, HashMap.HashMap<string, Logger.AnnotationValue>> = core
@@ -1746,74 +1725,6 @@ export const updateService = dual<
       f(Context.unsafeGet(context, tag))
     )) as Effect.Effect<R | Context.Tag.Identifier<T>, E, A>)
 
-/** @internal */
-export const useSpan: {
-  <R, E, A>(name: string, evaluate: (span: Tracer.Span) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A>
-  <R, E, A>(name: string, options: {
-    readonly attributes?: Record<string, Tracer.AttributeValue>
-    readonly parent?: Tracer.ParentSpan
-    readonly root?: boolean
-    readonly context?: Context.Context<never>
-  }, evaluate: (span: Tracer.Span) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A>
-} = <R, E, A>(
-  name: string,
-  ...args: [evaluate: (span: Tracer.Span) => Effect.Effect<R, E, A>] | [
-    options: any,
-    evaluate: (span: Tracer.Span) => Effect.Effect<R, E, A>
-  ]
-) => {
-  const options: {
-    readonly attributes?: Record<string, Tracer.AttributeValue>
-    readonly parent?: Tracer.ParentSpan
-    readonly root?: boolean
-    readonly context?: Context.Context<never>
-  } | undefined = args.length === 1 ? undefined : args[0]
-  const evaluate: (span: Tracer.Span) => Effect.Effect<R, E, A> = args[args.length - 1]
-  return core.acquireUseRelease(
-    tracerWith((tracer) =>
-      core.flatMap(
-        options?.parent ?
-          succeedSome(options.parent) :
-          options?.root ?
-          succeedNone :
-          core.map(
-            core.fiberRefGet(core.currentTracerSpan),
-            List.head
-          ),
-        (parent) =>
-          core.flatMap(
-            core.fiberRefGet(core.currentTracerSpanAnnotations),
-            (annotations) =>
-              core.flatMap(
-                currentTimeNanosTracing,
-                (startTime) =>
-                  core.sync(() => {
-                    const span = tracer.span(name, parent, options?.context ?? Context.empty(), startTime)
-                    HashMap.forEach(annotations, (value, key) => span.attribute(key, value))
-                    Object.entries(options?.attributes ?? {}).forEach(([k, v]) => {
-                      span.attribute(k, v)
-                    })
-                    return span
-                  })
-              )
-          )
-      )
-    ),
-    evaluate,
-    (span, exit) =>
-      core.flatMap(
-        currentTimeNanosTracing,
-        (endTime) => core.sync(() => span.end(endTime, exit))
-      )
-  )
-}
-
-const bigint0 = BigInt(0)
-const currentTimeNanosTracing = core.fiberRefGetWith(
-  core.currentTracerTimingEnabled,
-  (enabled) => enabled ? Clock.currentTimeNanos : core.succeed(bigint0)
-)
-
 /* @internal */
 export const when = dual<
   (predicate: LazyArg<boolean>) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, Option.Option<A>>,
@@ -1877,43 +1788,6 @@ export const withMetric = dual<
 >(2, (self, metric) => metric(self))
 
 /** @internal */
-export const withSpan = dual<
-  (name: string, options?: {
-    readonly attributes?: Record<string, Tracer.AttributeValue>
-    readonly parent?: Tracer.ParentSpan
-    readonly root?: boolean
-    readonly context?: Context.Context<never>
-  }) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
-  <R, E, A>(self: Effect.Effect<R, E, A>, name: string, options?: {
-    readonly attributes?: Record<string, Tracer.AttributeValue>
-    readonly parent?: Tracer.ParentSpan
-    readonly root?: boolean
-    readonly context?: Context.Context<never>
-  }) => Effect.Effect<R, E, A>
->(
-  (args) => typeof args[0] !== "string",
-  (self, name, options) =>
-    useSpan(
-      name,
-      options ?? {},
-      (span) =>
-        core.flatMap(
-          core.fiberRefGet(core.currentTracerSpan),
-          (stack) =>
-            core.fiberRefLocally(
-              self,
-              core.currentTracerSpan,
-              List.prepend(stack, span)
-            )
-        )
-    )
-)
-
-/* @internal */
-export const spanAnnotations: Effect.Effect<never, never, HashMap.HashMap<string, Tracer.AttributeValue>> = core
-  .fiberRefGet(core.currentTracerSpanAnnotations)
-
-/** @internal */
 export const serviceFunctionEffect = <T extends Context.Tag<any, any>, Args extends Array<any>, R, E, A>(
   service: T,
   f: (_: Context.Tag.Service<T>) => (...args: Args) => Effect.Effect<R, E, A>
@@ -1924,3 +1798,230 @@ export const serviceFunction = <T extends Context.Tag<any, any>, Args extends Ar
   service: T,
   f: (_: Context.Tag.Service<T>) => (...args: Args) => A
 ) => (...args: Args): Effect.Effect<Context.Tag.Identifier<T>, never, A> => core.map(service, (a) => f(a)(...args))
+
+// -----------------------------------------------------------------------------
+// tracing
+// -----------------------------------------------------------------------------
+
+/* @internal */
+export const annotateCurrentSpan: {
+  (key: string, value: Tracer.AttributeValue): Effect.Effect<never, never, void>
+  (values: Record<string, Tracer.AttributeValue>): Effect.Effect<never, never, void>
+} = function(): Effect.Effect<never, never, void> {
+  const args = arguments
+  return core.flatMap(
+    currentSpan,
+    (span) =>
+      span._tag === "Some" ?
+        core.sync(() => {
+          if (typeof args[0] === "string") {
+            span.value.attribute(args[0], args[1])
+          } else {
+            for (const key in args[0]) {
+              span.value.attribute(key, args[0][key])
+            }
+          }
+        }) :
+        core.unit
+  )
+}
+
+/* @internal */
+export const annotateSpans = dual<
+  {
+    (key: string, value: Tracer.AttributeValue): <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+    (
+      values: Record<string, Tracer.AttributeValue>
+    ): <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
+  },
+  {
+    <R, E, A>(effect: Effect.Effect<R, E, A>, key: string, value: Tracer.AttributeValue): Effect.Effect<R, E, A>
+    <R, E, A>(effect: Effect.Effect<R, E, A>, values: Record<string, Tracer.AttributeValue>): Effect.Effect<R, E, A>
+  }
+>(
+  (args) => core.isEffect(args[0]),
+  function<R, E, A>() {
+    const args = arguments
+    return core.fiberRefLocallyWith(
+      args[0] as Effect.Effect<R, E, A>,
+      core.currentTracerSpanAnnotations,
+      typeof args[1] === "string" ?
+        HashMap.set(args[1], args[2]) :
+        (annotations) =>
+          Object.entries(args[1] as Record<string, Tracer.AttributeValue>).reduce(
+            (acc, [key, value]) => HashMap.set(acc, key, value),
+            annotations
+          )
+    )
+  }
+)
+
+/* @internal */
+export const currentParentSpan: Effect.Effect<never, never, Option.Option<Tracer.ParentSpan>> = core.map(
+  core.fiberRefGet(core.currentTracerSpan),
+  List.head
+)
+
+/* @internal */
+export const currentSpan: Effect.Effect<never, never, Option.Option<Tracer.Span>> = core.map(
+  core.fiberRefGet(core.currentTracerSpan),
+  List.findFirst((span): span is Tracer.Span => span._tag === "Span")
+)
+
+const bigint0 = BigInt(0)
+/** @internal */
+export const currentTimeNanosTracing = core.fiberRefGetWith(
+  core.currentTracerTimingEnabled,
+  (enabled) => enabled ? Clock.currentTimeNanos : core.succeed(bigint0)
+)
+
+/* @internal */
+export const linkSpans = dual<
+  (
+    span: Tracer.ParentSpan,
+    attributes?: Record<string, Tracer.AttributeValue>
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(
+    self: Effect.Effect<R, E, A>,
+    span: Tracer.ParentSpan,
+    attributes?: Record<string, Tracer.AttributeValue>
+  ) => Effect.Effect<R, E, A>
+>(
+  (args) => core.isEffect(args[0]),
+  (self, span, attributes) =>
+    core.fiberRefLocallyWith(
+      self,
+      core.currentTracerSpanLinks,
+      Chunk.append(
+        {
+          _tag: "SpanLink",
+          span,
+          attributes: attributes ?? {}
+        } as const
+      )
+    )
+)
+
+/** @internal */
+export const makeSpan = (
+  name: string,
+  options?: {
+    readonly attributes?: Record<string, Tracer.AttributeValue>
+    readonly links?: ReadonlyArray<Tracer.SpanLink>
+    readonly parent?: Tracer.ParentSpan
+    readonly root?: boolean
+    readonly context?: Context.Context<never>
+  }
+) =>
+  tracerWith((tracer) =>
+    core.flatMap(
+      options?.parent ?
+        succeedSome(options.parent) :
+        options?.root ?
+        succeedNone :
+        currentParentSpan,
+      (parent) =>
+        core.flatMap(
+          core.fiberRefGet(core.currentTracerSpanAnnotations),
+          (annotations) =>
+            core.flatMap(
+              core.fiberRefGet(core.currentTracerSpanLinks),
+              (links) =>
+                core.flatMap(
+                  currentTimeNanosTracing,
+                  (startTime) =>
+                    core.sync(() => {
+                      const linksArray = options?.links ?
+                        [...Chunk.toReadonlyArray(links), ...options.links] :
+                        Chunk.toReadonlyArray(links)
+                      const span = tracer.span(name, parent, options?.context ?? Context.empty(), linksArray, startTime)
+                      HashMap.forEach(annotations, (value, key) => span.attribute(key, value))
+                      Object.entries(options?.attributes ?? {}).forEach(([k, v]) => span.attribute(k, v))
+                      return span
+                    })
+                )
+            )
+        )
+    )
+  )
+
+/* @internal */
+export const spanAnnotations: Effect.Effect<never, never, HashMap.HashMap<string, Tracer.AttributeValue>> = core
+  .fiberRefGet(core.currentTracerSpanAnnotations)
+
+/* @internal */
+export const spanLinks: Effect.Effect<never, never, Chunk.Chunk<Tracer.SpanLink>> = core
+  .fiberRefGet(core.currentTracerSpanLinks)
+
+/** @internal */
+export const useSpan: {
+  <R, E, A>(name: string, evaluate: (span: Tracer.Span) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A>
+  <R, E, A>(name: string, options: {
+    readonly attributes?: Record<string, Tracer.AttributeValue>
+    readonly links?: ReadonlyArray<Tracer.SpanLink>
+    readonly parent?: Tracer.ParentSpan
+    readonly root?: boolean
+    readonly context?: Context.Context<never>
+  }, evaluate: (span: Tracer.Span) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A>
+} = <R, E, A>(
+  name: string,
+  ...args: [evaluate: (span: Tracer.Span) => Effect.Effect<R, E, A>] | [
+    options: any,
+    evaluate: (span: Tracer.Span) => Effect.Effect<R, E, A>
+  ]
+) => {
+  const options: {
+    readonly attributes?: Record<string, Tracer.AttributeValue>
+    readonly links?: ReadonlyArray<Tracer.SpanLink>
+    readonly parent?: Tracer.ParentSpan
+    readonly root?: boolean
+    readonly context?: Context.Context<never>
+  } | undefined = args.length === 1 ? undefined : args[0]
+  const evaluate: (span: Tracer.Span) => Effect.Effect<R, E, A> = args[args.length - 1]
+  return core.acquireUseRelease(
+    makeSpan(name, options),
+    evaluate,
+    (span, exit) =>
+      core.flatMap(
+        currentTimeNanosTracing,
+        (endTime) => core.sync(() => span.end(endTime, exit))
+      )
+  )
+}
+
+/** @internal */
+export const withParentSpan = dual<
+  (span: Tracer.ParentSpan) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(self: Effect.Effect<R, E, A>, span: Tracer.ParentSpan) => Effect.Effect<R, E, A>
+>(2, (self, span) =>
+  core.fiberRefLocallyWith(
+    self,
+    core.currentTracerSpan,
+    List.prepend(span)
+  ))
+
+/** @internal */
+export const withSpan = dual<
+  (name: string, options?: {
+    readonly attributes?: Record<string, Tracer.AttributeValue>
+    readonly links?: ReadonlyArray<Tracer.SpanLink>
+    readonly parent?: Tracer.ParentSpan
+    readonly root?: boolean
+    readonly context?: Context.Context<never>
+  }) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(self: Effect.Effect<R, E, A>, name: string, options?: {
+    readonly attributes?: Record<string, Tracer.AttributeValue>
+    readonly links?: ReadonlyArray<Tracer.SpanLink>
+    readonly parent?: Tracer.ParentSpan
+    readonly root?: boolean
+    readonly context?: Context.Context<never>
+  }) => Effect.Effect<R, E, A>
+>(
+  (args) => typeof args[0] !== "string",
+  (self, name, options) =>
+    useSpan(
+      name,
+      options ?? {},
+      (span) => withParentSpan(self, span)
+    )
+)

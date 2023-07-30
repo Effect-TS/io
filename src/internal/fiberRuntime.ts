@@ -36,7 +36,7 @@ import * as concurrency from "@effect/io/internal/concurrency"
 import { configProviderTag } from "@effect/io/internal/configProvider"
 import * as core from "@effect/io/internal/core"
 import * as defaultServices from "@effect/io/internal/defaultServices"
-import { mapErrorCause } from "@effect/io/internal/effect"
+import * as internalEffect from "@effect/io/internal/effect"
 import * as executionStrategy from "@effect/io/internal/executionStrategy"
 import * as internalFiber from "@effect/io/internal/fiber"
 import * as FiberMessage from "@effect/io/internal/fiberMessage"
@@ -61,7 +61,7 @@ import type { Entry, Request } from "@effect/io/Request"
 import type * as RequestBlock from "@effect/io/RequestBlock"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
-import type { Tracer } from "@effect/io/Tracer"
+import type * as Tracer from "@effect/io/Tracer"
 
 /** @internal */
 export const fiberStarted = metric.counter("effect_fiber_started")
@@ -1070,9 +1070,9 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
 
   [OpCodes.OP_FAILURE](op: core.Primitive & { _tag: OpCodes.OP_FAILURE }) {
     const span = this.getFiberRef(core.currentTracerSpan)
-    const cause = List.isNil(span) ?
+    const cause = List.isNil(span) || span.head._tag === "ExternalSpan" ?
       op.i0 :
-      internalCause.annotated(op.i0, internalCause.makeSpanAnnotation(List.unsafeHead(span)))
+      internalCause.annotated(op.i0, internalCause.makeSpanAnnotation(span.head))
     const cont = this.getNextFailCont()
     if (cont !== undefined) {
       switch (cont._tag) {
@@ -1351,7 +1351,7 @@ export const tracerLogger = internalLogger.makeLogger<unknown, void>(({
     fiberRefs.get(context, defaultServices.currentServices),
     (_) => Context.get(_, clock.clockTag)
   )
-  if (span._tag === "None" || clockService._tag === "None") {
+  if (span._tag === "None" || span.value._tag === "ExternalSpan" || clockService._tag === "None") {
     return
   }
 
@@ -2572,10 +2572,6 @@ export const withConfigProviderScoped = (value: ConfigProvider) =>
   fiberRefLocallyScopedWith(defaultServices.currentServices, Context.add(configProviderTag, value))
 
 /* @internal */
-export const withTracerScoped = (value: Tracer): Effect.Effect<Scope.Scope, never, void> =>
-  fiberRefLocallyScopedWith(defaultServices.currentServices, Context.add(tracer.tracerTag, value))
-
-/* @internal */
 export const withEarlyRelease = <R, E, A>(
   self: Effect.Effect<R, E, A>
 ): Effect.Effect<R | Scope.Scope, E, readonly [Effect.Effect<never, never, void>, A]> =>
@@ -3100,7 +3096,7 @@ export const raceAwait = dual<
             onFailure: (cause) =>
               pipe(
                 internalFiber.join(right),
-                mapErrorCause((cause2) => internalCause.parallel(cause, cause2))
+                internalEffect.mapErrorCause((cause2) => internalCause.parallel(cause, cause2))
               ),
             onSuccess: (value) =>
               pipe(
@@ -3114,7 +3110,7 @@ export const raceAwait = dual<
             onFailure: (cause) =>
               pipe(
                 internalFiber.join(left),
-                mapErrorCause((cause2) => internalCause.parallel(cause2, cause))
+                internalEffect.mapErrorCause((cause2) => internalCause.parallel(cause2, cause))
               ),
             onSuccess: (value) =>
               pipe(
@@ -3306,3 +3302,53 @@ export const interruptWhenPossible = dual<
         return invokeWithInterrupt(self, entries)
       })
   ))
+
+// circular Tracer
+
+/** @internal */
+export const useSpanScoped = (
+  name: string,
+  options?: {
+    readonly attributes?: Record<string, Tracer.AttributeValue>
+    readonly links?: ReadonlyArray<Tracer.SpanLink>
+    readonly parent?: Tracer.ParentSpan
+    readonly root?: boolean
+    readonly context?: Context.Context<never>
+  }
+): Effect.Effect<Scope.Scope, never, Tracer.Span> =>
+  acquireRelease(
+    internalEffect.makeSpan(name, options),
+    (span, exit) =>
+      core.flatMap(
+        internalEffect.currentTimeNanosTracing,
+        (endTime) => core.sync(() => span.end(endTime, exit))
+      )
+  )
+
+/* @internal */
+export const withSpanScoped = (
+  name: string,
+  options?: {
+    readonly attributes?: Record<string, Tracer.AttributeValue>
+    readonly links?: ReadonlyArray<Tracer.SpanLink>
+    readonly parent?: Tracer.ParentSpan
+    readonly root?: boolean
+    readonly context?: Context.Context<never>
+  }
+): Effect.Effect<Scope.Scope, never, void> =>
+  core.flatMap(
+    internalEffect.makeSpan(name, options),
+    (span) =>
+      fiberRefLocallyScopedWith(
+        core.currentTracerSpan,
+        List.prepend(span)
+      )
+  )
+
+/* @internal */
+export const withTracerScoped = (value: Tracer.Tracer): Effect.Effect<Scope.Scope, never, void> =>
+  fiberRefLocallyScopedWith(defaultServices.currentServices, Context.add(tracer.tracerTag, value))
+
+/* @internal */
+export const withParentSpanScoped = (span: Tracer.ParentSpan): Effect.Effect<Scope.Scope, never, void> =>
+  fiberRefLocallyScopedWith(core.currentTracerSpan, List.prepend(span))

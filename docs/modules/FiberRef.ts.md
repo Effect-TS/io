@@ -40,6 +40,7 @@ Added in v1.0.0
   - [currentSupervisor](#currentsupervisor)
   - [currentTracerSpan](#currenttracerspan)
   - [currentTracerSpanAnnotations](#currenttracerspanannotations)
+  - [currentTracerSpanLinks](#currenttracerspanlinks)
   - [currentTracerTimingEnabled](#currenttracertimingenabled)
   - [interruptedCause](#interruptedcause)
   - [unhandledErrorLogLevel](#unhandlederrorloglevel)
@@ -344,7 +345,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const currentTracerSpan: FiberRef<List.List<Tracer.Span>>
+export declare const currentTracerSpan: FiberRef<List.List<Tracer.ParentSpan>>
 ```
 
 Added in v1.0.0
@@ -355,6 +356,16 @@ Added in v1.0.0
 
 ```ts
 export declare const currentTracerSpanAnnotations: FiberRef<HashMap.HashMap<string, Tracer.AttributeValue>>
+```
+
+Added in v1.0.0
+
+## currentTracerSpanLinks
+
+**Signature**
+
+```ts
+export declare const currentTracerSpanLinks: FiberRef<Chunk.Chunk<Tracer.SpanLink>>
 ```
 
 Added in v1.0.0

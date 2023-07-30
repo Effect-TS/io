@@ -27,6 +27,7 @@ export interface Tracer {
     name: string,
     parent: Option.Option<ParentSpan>,
     context: Context.Context<never>,
+    links: ReadonlyArray<SpanLink>,
     startTime: bigint
   ) => Span
 }
@@ -75,6 +76,7 @@ export interface Span {
   readonly context: Context.Context<never>
   readonly status: SpanStatus
   readonly attributes: ReadonlyMap<string, AttributeValue>
+  readonly links: ReadonlyArray<SpanLink>
   readonly end: (endTime: bigint, exit: Exit.Exit<unknown, unknown>) => void
   readonly attribute: (key: string, value: AttributeValue) => void
   readonly event: (name: string, startTime: bigint, attributes?: Record<string, AttributeValue>) => void
@@ -84,6 +86,16 @@ export interface Span {
  * @category models
  */
 export type AttributeValue = string | boolean | number
+
+/**
+ * @since 1.0.0
+ * @category models
+ */
+export interface SpanLink {
+  readonly _tag: "SpanLink"
+  readonly span: ParentSpan
+  readonly attributes: Readonly<Record<string, AttributeValue>>
+}
 
 /**
  * @since 1.0.0
