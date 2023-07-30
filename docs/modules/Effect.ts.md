@@ -350,7 +350,6 @@ Added in v1.0.0
   - [annotateSpans](#annotatespans)
   - [currentParentSpan](#currentparentspan)
   - [currentSpan](#currentspan)
-  - [linkCurrentSpan](#linkcurrentspan)
   - [linkSpans](#linkspans)
   - [makeSpan](#makespan)
   - [setParentSpan](#setparentspan)
@@ -5714,18 +5713,6 @@ export declare const currentSpan: Effect<never, never, Option.Option<Tracer.Span
 
 Added in v1.0.0
 
-## linkCurrentSpan
-
-Add a link between the provided span and the current span if available.
-
-**Signature**
-
-```ts
-export declare const linkCurrentSpan: (link: Tracer.ParentSpan) => Effect<never, never, void>
-```
-
-Added in v1.0.0
-
 ## linkSpans
 
 For all spans in this effect, add a link with the provided span.
@@ -5734,8 +5721,14 @@ For all spans in this effect, add a link with the provided span.
 
 ```ts
 export declare const linkSpans: {
-  (span: Tracer.ParentSpan): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
-  <R, E, A>(self: Effect<R, E, A>, span: Tracer.ParentSpan): Effect<R, E, A>
+  (span: Tracer.ParentSpan, attributes?: Record<string, Tracer.AttributeValue>): <R, E, A>(
+    self: Effect<R, E, A>
+  ) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, span: Tracer.ParentSpan, attributes?: Record<string, Tracer.AttributeValue>): Effect<
+    R,
+    E,
+    A
+  >
 }
 ```
 
@@ -5752,6 +5745,7 @@ export declare const makeSpan: (
   name: string,
   options?: {
     readonly attributes?: Record<string, Tracer.AttributeValue>
+    readonly links?: ReadonlyArray<Tracer.SpanLink>
     readonly parent?: Tracer.ParentSpan
     readonly root?: boolean
     readonly context?: Context.Context<never>
@@ -5842,6 +5836,7 @@ export declare const useSpan: {
     name: string,
     options: {
       readonly attributes?: Record<string, Tracer.AttributeValue>
+      readonly links?: ReadonlyArray<Tracer.SpanLink>
       readonly parent?: Tracer.ParentSpan
       readonly root?: boolean
       readonly context?: Context.Context<never>
@@ -5868,6 +5863,7 @@ export declare const useSpanScoped: (
   name: string,
   options?: {
     readonly attributes?: Record<string, Tracer.AttributeValue>
+    readonly links?: ReadonlyArray<Tracer.SpanLink>
     readonly parent?: Tracer.ParentSpan
     readonly root?: boolean
     readonly context?: Context.Context<never>
@@ -5916,6 +5912,7 @@ export declare const withSpan: {
     name: string,
     options?: {
       readonly attributes?: Record<string, Tracer.AttributeValue>
+      readonly links?: ReadonlyArray<Tracer.SpanLink>
       readonly parent?: Tracer.ParentSpan
       readonly root?: boolean
       readonly context?: Context.Context<never>
@@ -5926,6 +5923,7 @@ export declare const withSpan: {
     name: string,
     options?: {
       readonly attributes?: Record<string, Tracer.AttributeValue>
+      readonly links?: ReadonlyArray<Tracer.SpanLink>
       readonly parent?: Tracer.ParentSpan
       readonly root?: boolean
       readonly context?: Context.Context<never>
