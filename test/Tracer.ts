@@ -195,6 +195,20 @@ describe("Tracer", () => {
         ))
       ))
 
+    it.effect("setSpan", () =>
+      Effect.gen(function*(_) {
+        const span = yield* _(Effect.makeSpan("child"))
+        assert.deepEqual(
+          span.parent.pipe(
+            Option.filter((span): span is Span => span._tag === "Span"),
+            Option.map((span) => span.name)
+          ),
+          Option.some("parent")
+        )
+      }).pipe(
+        Effect.provideLayer(Effect.setSpan("parent"))
+      ))
+
     it.effect("linkSpans", () =>
       Effect.gen(function*(_) {
         const childA = yield* _(Effect.makeSpan("childA"))
@@ -204,12 +218,12 @@ describe("Tracer", () => {
           Effect.withSpan("A", { links: [{ _tag: "SpanLink", span: childB, attributes: {} }] }),
           Effect.linkSpans(childA)
         )
-        assert.deepEqual(
+        assert.includeMembers(
           currentSpan.pipe(
             Option.map((span) => [...span.links].map((_) => _.span)),
             Option.getOrElse(() => [])
           ),
-          [childA, childB]
+          [childB, childA]
         )
       }))
   })

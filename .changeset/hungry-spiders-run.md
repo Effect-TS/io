@@ -10,6 +10,8 @@ add apis for working with spans
 - makeSpan
 - useSpanScoped
 - setParentSpan
+- setSpan
 - spanLinks
 - withParentSpan
 - withParentSpanScoped
+- withSpanScoped

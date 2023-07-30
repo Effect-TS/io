@@ -3305,14 +3305,6 @@ export const interruptWhenPossible = dual<
 
 // circular Tracer
 
-/* @internal */
-export const withTracerScoped = (value: Tracer.Tracer): Effect.Effect<Scope.Scope, never, void> =>
-  fiberRefLocallyScopedWith(defaultServices.currentServices, Context.add(tracer.tracerTag, value))
-
-/* @internal */
-export const withParentSpanScoped = (span: Tracer.ParentSpan): Effect.Effect<Scope.Scope, never, void> =>
-  fiberRefLocallyScopedWith(core.currentTracerSpan, List.prepend(span))
-
 /** @internal */
 export const useSpanScoped = (
   name: string,
@@ -3332,3 +3324,31 @@ export const useSpanScoped = (
         (endTime) => core.sync(() => span.end(endTime, exit))
       )
   )
+
+/* @internal */
+export const withSpanScoped = (
+  name: string,
+  options?: {
+    readonly attributes?: Record<string, Tracer.AttributeValue>
+    readonly links?: ReadonlyArray<Tracer.SpanLink>
+    readonly parent?: Tracer.ParentSpan
+    readonly root?: boolean
+    readonly context?: Context.Context<never>
+  }
+): Effect.Effect<Scope.Scope, never, void> =>
+  core.flatMap(
+    internalEffect.makeSpan(name, options),
+    (span) =>
+      fiberRefLocallyScopedWith(
+        core.currentTracerSpan,
+        List.prepend(span)
+      )
+  )
+
+/* @internal */
+export const withTracerScoped = (value: Tracer.Tracer): Effect.Effect<Scope.Scope, never, void> =>
+  fiberRefLocallyScopedWith(defaultServices.currentServices, Context.add(tracer.tracerTag, value))
+
+/* @internal */
+export const withParentSpanScoped = (span: Tracer.ParentSpan): Effect.Effect<Scope.Scope, never, void> =>
+  fiberRefLocallyScopedWith(core.currentTracerSpan, List.prepend(span))

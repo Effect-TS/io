@@ -4996,6 +4996,33 @@ export const makeSpan: (
 ) => Effect<never, never, Tracer.Span> = effect.makeSpan
 
 /**
+ * Adds the provided span to the span stack.
+ *
+ * @since 1.0.0
+ * @category tracing
+ */
+export const setParentSpan: (span: Tracer.ParentSpan) => Layer.Layer<never, never, never> = circularLayer.setParentSpan
+
+/**
+ * Create and add a span to the current span stack.
+ *
+ * The span is ended when the Layer is released.
+ *
+ * @since 1.0.0
+ * @category tracing
+ */
+export const setSpan: (
+  name: string,
+  options?: {
+    readonly attributes?: Record<string, Tracer.AttributeValue>
+    readonly links?: ReadonlyArray<Tracer.SpanLink>
+    readonly parent?: Tracer.ParentSpan
+    readonly root?: boolean
+    readonly context?: Context.Context<never>
+  }
+) => Layer.Layer<never, never, never> = circularLayer.setSpan
+
+/**
  * Create a new span for tracing, and automatically close it when the effect
  * completes.
  *
@@ -5072,6 +5099,25 @@ export const withSpan: {
 } = effect.withSpan
 
 /**
+ * Create and add a span to the current span stack.
+ *
+ * The span is ended when the Scope is finalized.
+ *
+ * @since 1.0.0
+ * @category tracing
+ */
+export const withSpanScoped: (
+  name: string,
+  options?: {
+    readonly attributes?: Record<string, Tracer.AttributeValue>
+    readonly links?: ReadonlyArray<Tracer.SpanLink>
+    readonly parent?: Tracer.ParentSpan
+    readonly root?: boolean
+    readonly context?: Context.Context<never>
+  }
+) => Effect<Scope.Scope, never, void> = fiberRuntime.withSpanScoped
+
+/**
  * Adds the provided span to the current span stack.
  *
  * @since 1.0.0
@@ -5090,11 +5136,3 @@ export const withParentSpan: {
  */
 export const withParentSpanScoped: (span: Tracer.ParentSpan) => Effect<Scope.Scope, never, void> =
   fiberRuntime.withParentSpanScoped
-
-/**
- * Prepends the provided span to the span stack.
- *
- * @since 1.0.0
- * @category tracing
- */
-export const setParentSpan: (span: Tracer.ParentSpan) => Layer.Layer<never, never, never> = circularLayer.setParentSpan

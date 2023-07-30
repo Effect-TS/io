@@ -353,6 +353,7 @@ Added in v1.0.0
   - [linkSpans](#linkspans)
   - [makeSpan](#makespan)
   - [setParentSpan](#setparentspan)
+  - [setSpan](#setspan)
   - [setTracer](#settracer)
   - [setTracerTiming](#settracertiming)
   - [spanAnnotations](#spanannotations)
@@ -364,6 +365,7 @@ Added in v1.0.0
   - [withParentSpan](#withparentspan)
   - [withParentSpanScoped](#withparentspanscoped)
   - [withSpan](#withspan)
+  - [withSpanScoped](#withspanscoped)
   - [withTracer](#withtracer)
   - [withTracerScoped](#withtracerscoped)
   - [withTracerTiming](#withtracertiming)
@@ -5758,12 +5760,35 @@ Added in v1.0.0
 
 ## setParentSpan
 
-Prepends the provided span to the span stack.
+Adds the provided span to the span stack.
 
 **Signature**
 
 ```ts
 export declare const setParentSpan: (span: Tracer.ParentSpan) => Layer.Layer<never, never, never>
+```
+
+Added in v1.0.0
+
+## setSpan
+
+Create and add a span to the current span stack.
+
+The span is ended when the Layer is released.
+
+**Signature**
+
+```ts
+export declare const setSpan: (
+  name: string,
+  options?: {
+    readonly attributes?: Record<string, Tracer.AttributeValue>
+    readonly links?: ReadonlyArray<Tracer.SpanLink>
+    readonly parent?: Tracer.ParentSpan
+    readonly root?: boolean
+    readonly context?: Context.Context<never>
+  }
+) => Layer.Layer<never, never, never>
 ```
 
 Added in v1.0.0
@@ -5941,6 +5966,29 @@ export declare const withSpan: {
     }
   ): Effect<R, E, A>
 }
+```
+
+Added in v1.0.0
+
+## withSpanScoped
+
+Create and add a span to the current span stack.
+
+The span is ended when the Scope is finalized.
+
+**Signature**
+
+```ts
+export declare const withSpanScoped: (
+  name: string,
+  options?: {
+    readonly attributes?: Record<string, Tracer.AttributeValue>
+    readonly links?: ReadonlyArray<Tracer.SpanLink>
+    readonly parent?: Tracer.ParentSpan
+    readonly root?: boolean
+    readonly context?: Context.Context<never>
+  }
+) => Effect<Scope.Scope, never, void>
 ```
 
 Added in v1.0.0
