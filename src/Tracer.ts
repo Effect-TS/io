@@ -79,7 +79,7 @@ export interface Span {
   readonly links: ReadonlyArray<SpanLink>
   readonly end: (endTime: bigint, exit: Exit.Exit<unknown, unknown>) => void
   readonly attribute: (key: string, value: AttributeValue) => void
-  readonly event: (name: string, startTime: bigint, attributes?: Readonly<Record<string, AttributeValue>>) => void
+  readonly event: (name: string, startTime: bigint, attributes?: Record<string, AttributeValue>) => void
 }
 /**
  * @since 1.0.0
