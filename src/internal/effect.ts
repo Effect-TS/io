@@ -1904,7 +1904,7 @@ export const linkSpans = dual<
     core.fiberRefLocallyWith(
       self,
       core.currentTracerSpanLinks,
-      HashSet.add(
+      Chunk.append(
         {
           _tag: "SpanLink",
           span,
@@ -1943,10 +1943,10 @@ export const makeSpan = (
                   currentTimeNanosTracing,
                   (startTime) =>
                     core.sync(() => {
-                      links = options?.links ?
-                        options.links.reduce((set, link) => HashSet.add(set, link), links) :
-                        links
-                      const span = tracer.span(name, parent, options?.context ?? Context.empty(), links, startTime)
+                      const linksArray = options?.links ?
+                        [...Chunk.toReadonlyArray(links), ...options.links] :
+                        Chunk.toReadonlyArray(links)
+                      const span = tracer.span(name, parent, options?.context ?? Context.empty(), linksArray, startTime)
                       HashMap.forEach(annotations, (value, key) => span.attribute(key, value))
                       Object.entries(options?.attributes ?? {}).forEach(([k, v]) => span.attribute(k, v))
                       return span
@@ -1962,7 +1962,7 @@ export const spanAnnotations: Effect.Effect<never, never, HashMap.HashMap<string
   .fiberRefGet(core.currentTracerSpanAnnotations)
 
 /* @internal */
-export const spanLinks: Effect.Effect<never, never, HashSet.HashSet<Tracer.SpanLink>> = core
+export const spanLinks: Effect.Effect<never, never, Chunk.Chunk<Tracer.SpanLink>> = core
   .fiberRefGet(core.currentTracerSpanLinks)
 
 /** @internal */

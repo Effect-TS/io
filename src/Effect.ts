@@ -1,6 +1,7 @@
 /**
  * @since 1.0.0
  */
+import type * as Chunk from "@effect/data/Chunk"
 import * as Context from "@effect/data/Context"
 import type * as Duration from "@effect/data/Duration"
 import type * as Either from "@effect/data/Either"
@@ -4958,7 +4959,7 @@ export const spanAnnotations: Effect<never, never, HashMap.HashMap<string, Trace
  * @since 1.0.0
  * @category tracing
  */
-export const spanLinks: Effect<never, never, HashSet.HashSet<Tracer.SpanLink>> = effect.spanLinks
+export const spanLinks: Effect<never, never, Chunk.Chunk<Tracer.SpanLink>> = effect.spanLinks
 
 /**
  * For all spans in this effect, add a link with the provided span.

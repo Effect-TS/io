@@ -220,7 +220,7 @@ describe("Tracer", () => {
         )
         assert.includeMembers(
           currentSpan.pipe(
-            Option.map((span) => [...span.links].map((_) => _.span)),
+            Option.map((span) => span.links.map((_) => _.span)),
             Option.getOrElse(() => [])
           ),
           [childB, childA]

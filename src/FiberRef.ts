@@ -1,6 +1,7 @@
 /**
  * @since 1.0.0
  */
+import type * as Chunk from "@effect/data/Chunk"
 import type * as Context from "@effect/data/Context"
 import type * as Differ from "@effect/data/Differ"
 import type { LazyArg } from "@effect/data/Function"
@@ -389,7 +390,7 @@ export const currentTracerSpanAnnotations: FiberRef<HashMap.HashMap<string, Trac
  * @since 1.0.0
  * @category fiberRefs
  */
-export const currentTracerSpanLinks: FiberRef<HashSet.HashSet<Tracer.SpanLink>> = core.currentTracerSpanLinks
+export const currentTracerSpanLinks: FiberRef<Chunk.Chunk<Tracer.SpanLink>> = core.currentTracerSpanLinks
 
 /**
  * @since 1.0.0

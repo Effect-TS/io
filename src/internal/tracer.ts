@@ -3,7 +3,6 @@
  */
 import * as Context from "@effect/data/Context"
 import { globalValue } from "@effect/data/Global"
-import type * as HashSet from "@effect/data/HashSet"
 import * as MutableRef from "@effect/data/MutableRef"
 import type * as Option from "@effect/data/Option"
 import type * as Exit from "@effect/io/Exit"
@@ -41,7 +40,7 @@ export class NativeSpan implements Tracer.Span {
     readonly name: string,
     readonly parent: Option.Option<Tracer.ParentSpan>,
     readonly context: Context.Context<never>,
-    readonly links: HashSet.HashSet<Tracer.SpanLink>,
+    readonly links: ReadonlyArray<Tracer.SpanLink>,
     readonly startTime: bigint
   ) {
     this.status = {

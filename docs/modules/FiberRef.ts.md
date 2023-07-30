@@ -365,7 +365,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const currentTracerSpanLinks: FiberRef<HashSet.HashSet<Tracer.SpanLink>>
+export declare const currentTracerSpanLinks: FiberRef<Chunk.Chunk<Tracer.SpanLink>>
 ```
 
 Added in v1.0.0

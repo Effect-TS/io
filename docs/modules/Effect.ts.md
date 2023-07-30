@@ -5830,7 +5830,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const spanLinks: Effect<never, never, HashSet.HashSet<Tracer.SpanLink>>
+export declare const spanLinks: Effect<never, never, Chunk.Chunk<Tracer.SpanLink>>
 ```
 
 Added in v1.0.0
