@@ -1,5 +1,33 @@
 # @effect/io
 
+## 0.37.0
+
+### Minor Changes
+
+- [#571](https://github.com/Effect-TS/io/pull/571) [`a946357`](https://github.com/Effect-TS/io/commit/a946357e4a362221679a8cad6be82084e2dcfdef) Thanks [@tim-smart](https://github.com/tim-smart)! - add apis for working with spans
+
+  - annotateCurrentSpan
+  - currentParentSpan
+  - linkSpans
+  - makeSpan
+  - useSpanScoped
+  - setParentSpan
+  - setSpan
+  - spanLinks
+  - withParentSpan
+  - withParentSpanScoped
+  - withSpanScoped
+
+- [#572](https://github.com/Effect-TS/io/pull/572) [`9c4cbb0`](https://github.com/Effect-TS/io/commit/9c4cbb03319bcf610e1c2ef09f3d19b032a6ec06) Thanks [@tim-smart](https://github.com/tim-smart)! - change Random.nextIntBetween upper bound to be exclusive
+
+- [#566](https://github.com/Effect-TS/io/pull/566) [`2d7a9ab`](https://github.com/Effect-TS/io/commit/2d7a9ab1f3677cad183a2cb09a44afb0375c25c0) Thanks [@tim-smart](https://github.com/tim-smart)! - optional AbortSignal apis - remove \*Interrupt variants
+
+### Patch Changes
+
+- [#569](https://github.com/Effect-TS/io/pull/569) [`80a72de`](https://github.com/Effect-TS/io/commit/80a72de36571f2a689aaa2521b0dabf194db7898) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Revert acquireRelease to have a variant for interruptible behaviour
+
+- [#571](https://github.com/Effect-TS/io/pull/571) [`a946357`](https://github.com/Effect-TS/io/commit/a946357e4a362221679a8cad6be82084e2dcfdef) Thanks [@tim-smart](https://github.com/tim-smart)! - accept records for annotateLogs and annotateSpans
+
 ## 0.36.1
 
 ### Patch Changes
