@@ -1961,6 +1961,10 @@ export const makeSpan = (
 export const spanAnnotations: Effect.Effect<never, never, HashMap.HashMap<string, Tracer.AttributeValue>> = core
   .fiberRefGet(core.currentTracerSpanAnnotations)
 
+/* @internal */
+export const spanLinks: Effect.Effect<never, never, HashSet.HashSet<Tracer.SpanLink>> = core
+  .fiberRefGet(core.currentTracerSpanLinks)
+
 /** @internal */
 export const useSpan: {
   <R, E, A>(name: string, evaluate: (span: Tracer.Span) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A>

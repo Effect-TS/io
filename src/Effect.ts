@@ -4955,6 +4955,12 @@ export const spanAnnotations: Effect<never, never, HashMap.HashMap<string, Trace
   effect.spanAnnotations
 
 /**
+ * @since 1.0.0
+ * @category tracing
+ */
+export const spanLinks: Effect<never, never, HashSet.HashSet<Tracer.SpanLink>> = effect.spanLinks
+
+/**
  * For all spans in this effect, add a link with the provided span.
  *
  * @since 1.0.0

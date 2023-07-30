@@ -356,6 +356,7 @@ Added in v1.0.0
   - [setTracer](#settracer)
   - [setTracerTiming](#settracertiming)
   - [spanAnnotations](#spanannotations)
+  - [spanLinks](#spanlinks)
   - [tracer](#tracer)
   - [tracerWith](#tracerwith)
   - [useSpan](#usespan)
@@ -5795,6 +5796,16 @@ Added in v1.0.0
 
 ```ts
 export declare const spanAnnotations: Effect<never, never, HashMap.HashMap<string, Tracer.AttributeValue>>
+```
+
+Added in v1.0.0
+
+## spanLinks
+
+**Signature**
+
+```ts
+export declare const spanLinks: Effect<never, never, HashSet.HashSet<Tracer.SpanLink>>
 ```
 
 Added in v1.0.0
