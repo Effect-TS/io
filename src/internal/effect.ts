@@ -1888,18 +1888,6 @@ export const currentTimeNanosTracing = core.fiberRefGetWith(
 )
 
 /* @internal */
-export const linkCurrentSpan = (link: Tracer.ParentSpan): Effect.Effect<never, never, void> =>
-  core.flatMap(
-    currentSpan,
-    (span) =>
-      span._tag === "Some" ?
-        core.sync(() => {
-          span.value.link(link)
-        }) :
-        core.unit
-  )
-
-/* @internal */
 export const linkSpans = dual<
   (span: Tracer.ParentSpan) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
   <R, E, A>(self: Effect.Effect<R, E, A>, span: Tracer.ParentSpan) => Effect.Effect<R, E, A>
@@ -1918,6 +1906,7 @@ export const makeSpan = (
   name: string,
   options?: {
     readonly attributes?: Record<string, Tracer.AttributeValue>
+    readonly links?: ReadonlyArray<Tracer.ParentSpan>
     readonly parent?: Tracer.ParentSpan
     readonly root?: boolean
     readonly context?: Context.Context<never>
@@ -1941,10 +1930,12 @@ export const makeSpan = (
                   currentTimeNanosTracing,
                   (startTime) =>
                     core.sync(() => {
-                      const span = tracer.span(name, parent, options?.context ?? Context.empty(), startTime)
+                      links = options?.links ?
+                        options.links.reduce((acc, span) => HashSet.add(acc, span), links) :
+                        links
+                      const span = tracer.span(name, parent, options?.context ?? Context.empty(), links, startTime)
                       HashMap.forEach(annotations, (value, key) => span.attribute(key, value))
                       Object.entries(options?.attributes ?? {}).forEach(([k, v]) => span.attribute(k, v))
-                      HashSet.forEach(links, (link) => span.link(link))
                       return span
                     })
                 )
@@ -1962,6 +1953,7 @@ export const useSpan: {
   <R, E, A>(name: string, evaluate: (span: Tracer.Span) => Effect.Effect<R, E, A>): Effect.Effect<R, E, A>
   <R, E, A>(name: string, options: {
     readonly attributes?: Record<string, Tracer.AttributeValue>
+    readonly links?: ReadonlyArray<Tracer.ParentSpan>
     readonly parent?: Tracer.ParentSpan
     readonly root?: boolean
     readonly context?: Context.Context<never>
@@ -1975,6 +1967,7 @@ export const useSpan: {
 ) => {
   const options: {
     readonly attributes?: Record<string, Tracer.AttributeValue>
+    readonly links?: ReadonlyArray<Tracer.ParentSpan>
     readonly parent?: Tracer.ParentSpan
     readonly root?: boolean
     readonly context?: Context.Context<never>
@@ -2006,12 +1999,14 @@ export const withParentSpan = dual<
 export const withSpan = dual<
   (name: string, options?: {
     readonly attributes?: Record<string, Tracer.AttributeValue>
+    readonly links?: ReadonlyArray<Tracer.ParentSpan>
     readonly parent?: Tracer.ParentSpan
     readonly root?: boolean
     readonly context?: Context.Context<never>
   }) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
   <R, E, A>(self: Effect.Effect<R, E, A>, name: string, options?: {
     readonly attributes?: Record<string, Tracer.AttributeValue>
+    readonly links?: ReadonlyArray<Tracer.ParentSpan>
     readonly parent?: Tracer.ParentSpan
     readonly root?: boolean
     readonly context?: Context.Context<never>

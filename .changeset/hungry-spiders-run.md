@@ -6,7 +6,7 @@ add apis for working with spans
 
 - annotateCurrentSpan
 - currentParentSpan
-- linkSpans & linkCurrentSpan
+- linkSpans
 - makeSpan
 - useSpanScoped
 - setParentSpan

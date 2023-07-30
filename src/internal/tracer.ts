@@ -3,6 +3,7 @@
  */
 import * as Context from "@effect/data/Context"
 import { globalValue } from "@effect/data/Global"
+import type * as HashSet from "@effect/data/HashSet"
 import * as MutableRef from "@effect/data/MutableRef"
 import type * as Option from "@effect/data/Option"
 import type * as Exit from "@effect/io/Exit"
@@ -34,13 +35,13 @@ export class NativeSpan implements Tracer.Span {
 
   status: Tracer.SpanStatus
   attributes: Map<string, Tracer.AttributeValue>
-  links: Set<Tracer.ParentSpan>
   events: Array<[name: string, startTime: bigint, attributes: Record<string, Tracer.AttributeValue>]> = []
 
   constructor(
     readonly name: string,
     readonly parent: Option.Option<Tracer.ParentSpan>,
     readonly context: Context.Context<never>,
+    readonly links: HashSet.HashSet<Tracer.ParentSpan>,
     readonly startTime: bigint
   ) {
     this.status = {
@@ -48,7 +49,6 @@ export class NativeSpan implements Tracer.Span {
       startTime
     }
     this.attributes = new Map()
-    this.links = new Set()
     this.spanId = `span${MutableRef.incrementAndGet(ids)}`
   }
 
@@ -65,10 +65,6 @@ export class NativeSpan implements Tracer.Span {
     this.attributes.set(key, value)
   }
 
-  link = (span: Tracer.ParentSpan): void => {
-    this.links.add(span)
-  }
-
   event = (name: string, startTime: bigint, attributes?: Record<string, Tracer.AttributeValue>): void => {
     this.events.push([name, startTime, attributes ?? {}])
   }
@@ -76,5 +72,5 @@ export class NativeSpan implements Tracer.Span {
 
 /** @internal */
 export const nativeTracer: Tracer.Tracer = make({
-  span: (name, parent, context, startTime) => new NativeSpan(name, parent, context, startTime)
+  span: (name, parent, context, links, startTime) => new NativeSpan(name, parent, context, links, startTime)
 })

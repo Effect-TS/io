@@ -3318,6 +3318,7 @@ export const useSpanScoped = (
   name: string,
   options?: {
     readonly attributes?: Record<string, Tracer.AttributeValue>
+    readonly links?: ReadonlyArray<Tracer.ParentSpan>
     readonly parent?: Tracer.ParentSpan
     readonly root?: boolean
     readonly context?: Context.Context<never>

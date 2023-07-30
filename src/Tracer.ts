@@ -2,6 +2,7 @@
  * @since 1.0.0
  */
 import type * as Context from "@effect/data/Context"
+import type * as HashSet from "@effect/data/HashSet"
 import type * as Option from "@effect/data/Option"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
@@ -27,6 +28,7 @@ export interface Tracer {
     name: string,
     parent: Option.Option<ParentSpan>,
     context: Context.Context<never>,
+    links: HashSet.HashSet<ParentSpan>,
     startTime: bigint
   ) => Span
 }
@@ -75,10 +77,9 @@ export interface Span {
   readonly context: Context.Context<never>
   readonly status: SpanStatus
   readonly attributes: ReadonlyMap<string, AttributeValue>
-  readonly links: ReadonlySet<ParentSpan>
+  readonly links: HashSet.HashSet<ParentSpan>
   readonly end: (endTime: bigint, exit: Exit.Exit<unknown, unknown>) => void
   readonly attribute: (key: string, value: AttributeValue) => void
-  readonly link: (span: ParentSpan) => void
   readonly event: (name: string, startTime: bigint, attributes?: Record<string, AttributeValue>) => void
 }
 /**

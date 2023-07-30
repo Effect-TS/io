@@ -389,4 +389,10 @@ export const currentTracerSpanAnnotations: FiberRef<HashMap.HashMap<string, Trac
  * @since 1.0.0
  * @category fiberRefs
  */
+export const currentTracerSpanLinks: FiberRef<HashSet.HashSet<Tracer.ParentSpan>> = core.currentTracerSpanLinks
+
+/**
+ * @since 1.0.0
+ * @category fiberRefs
+ */
 export const interruptedCause: FiberRef<Cause.Cause<never>> = core.currentInterruptedCause

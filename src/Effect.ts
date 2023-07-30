@@ -4955,14 +4955,6 @@ export const spanAnnotations: Effect<never, never, HashMap.HashMap<string, Trace
   effect.spanAnnotations
 
 /**
- * Add a link between the provided span and the current span if available.
- *
- * @since 1.0.0
- * @category tracing
- */
-export const linkCurrentSpan: (link: Tracer.ParentSpan) => Effect<never, never, void> = effect.linkCurrentSpan
-
-/**
  * For all spans in this effect, add a link with the provided span.
  *
  * @since 1.0.0
@@ -4983,6 +4975,7 @@ export const makeSpan: (
   name: string,
   options?: {
     readonly attributes?: Record<string, Tracer.AttributeValue>
+    readonly links?: ReadonlyArray<Tracer.ParentSpan>
     readonly parent?: Tracer.ParentSpan
     readonly root?: boolean
     readonly context?: Context.Context<never>
@@ -5005,6 +4998,7 @@ export const useSpan: {
     name: string,
     options: {
       readonly attributes?: Record<string, Tracer.AttributeValue>
+      readonly links?: ReadonlyArray<Tracer.ParentSpan>
       readonly parent?: Tracer.ParentSpan
       readonly root?: boolean
       readonly context?: Context.Context<never>
@@ -5027,6 +5021,7 @@ export const useSpanScoped: (
   name: string,
   options?: {
     readonly attributes?: Record<string, Tracer.AttributeValue>
+    readonly links?: ReadonlyArray<Tracer.ParentSpan>
     readonly parent?: Tracer.ParentSpan
     readonly root?: boolean
     readonly context?: Context.Context<never>
@@ -5044,6 +5039,7 @@ export const withSpan: {
     name: string,
     options?: {
       readonly attributes?: Record<string, Tracer.AttributeValue>
+      readonly links?: ReadonlyArray<Tracer.ParentSpan>
       readonly parent?: Tracer.ParentSpan
       readonly root?: boolean
       readonly context?: Context.Context<never>
@@ -5054,6 +5050,7 @@ export const withSpan: {
     name: string,
     options?: {
       readonly attributes?: Record<string, Tracer.AttributeValue>
+      readonly links?: ReadonlyArray<Tracer.ParentSpan>
       readonly parent?: Tracer.ParentSpan
       readonly root?: boolean
       readonly context?: Context.Context<never>
