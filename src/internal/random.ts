@@ -43,11 +43,11 @@ class RandomImpl implements Random.Random {
   }
 
   nextIntBetween(min: number, max: number): Effect.Effect<never, never, number> {
-    return core.sync(() => this.PRNG.integer(1 + max - min) + min)
+    return core.sync(() => this.PRNG.integer(max - min) + min)
   }
 
   shuffle<A>(elements: Iterable<A>): Effect.Effect<never, never, Chunk.Chunk<A>> {
-    return shuffleWith(elements, (n) => this.nextIntBetween(0, n))
+    return shuffleWith(elements, (n) => this.nextIntBetween(0, n + 1))
   }
 }
 
