@@ -358,3 +358,17 @@ Effect.zip(Effect.succeed(1), Effect.succeed("a"))
 
 // $ExpectType Effect<never, never, [number, string]>
 Effect.validate(Effect.succeed(1), Effect.succeed("a"))
+
+// -------------------------------------------------------------------------------------
+// promise
+// -------------------------------------------------------------------------------------
+
+// $ExpectType Effect<never, never, string>
+Effect.promise<string>(
+  () =>
+    new Promise((resolve) => {
+      setTimeout(() => {
+        resolve("Async operation completed successfully!")
+      }, 2000)
+    })
+)

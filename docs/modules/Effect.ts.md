@@ -1370,9 +1370,7 @@ wrapped Promise api.
 **Signature**
 
 ```ts
-export declare const promise: <A>(
-  evaluate: LazyArg<Promise<A>> | ((signal: AbortSignal) => Promise<A>)
-) => Effect<never, never, A>
+export declare const promise: <A>(evaluate: (signal: AbortSignal) => Promise<A>) => Effect<never, never, A>
 ```
 
 Added in v1.0.0
@@ -2495,16 +2493,13 @@ wrapped Promise api.
 
 ```ts
 export declare const tryMapPromise: {
-  <A, B, E1>(
-    options:
-      | { readonly try: (a: A, signal: AbortSignal) => Promise<B>; readonly catch: (error: unknown) => E1 }
-      | { readonly try: (a: A) => Promise<B>; readonly catch: (error: unknown) => E1 }
-  ): <R, E>(self: Effect<R, E, A>) => Effect<R, E1 | E, B>
+  <A, B, E1>(options: {
+    readonly try: (a: A, signal: AbortSignal) => Promise<B>
+    readonly catch: (error: unknown) => E1
+  }): <R, E>(self: Effect<R, E, A>) => Effect<R, E1 | E, B>
   <R, E, A, B, E1>(
     self: Effect<R, E, A>,
-    options:
-      | { readonly try: (a: A, signal: AbortSignal) => Promise<B>; readonly catch: (error: unknown) => E1 }
-      | { readonly try: (a: A) => Promise<B>; readonly catch: (error: unknown) => E1 }
+    options: { readonly try: (a: A, signal: AbortSignal) => Promise<B>; readonly catch: (error: unknown) => E1 }
   ): Effect<R, E | E1, B>
 }
 ```
@@ -2523,11 +2518,12 @@ wrapped Promise api.
 
 ```ts
 export declare const tryPromise: {
-  <A, E>(options: {
-    readonly try: LazyArg<Promise<A>> | ((signal: AbortSignal) => Promise<A>)
-    readonly catch: (error: unknown) => E
-  }): Effect<never, E, A>
-  <A>(try_: LazyArg<Promise<A>> | ((signal: AbortSignal) => Promise<A>)): Effect<never, unknown, A>
+  <A, E>(options: { readonly try: (signal: AbortSignal) => Promise<A>; readonly catch: (error: unknown) => E }): Effect<
+    never,
+    E,
+    A
+  >
+  <A>(try_: (signal: AbortSignal) => Promise<A>): Effect<never, unknown, A>
 }
 ```
 

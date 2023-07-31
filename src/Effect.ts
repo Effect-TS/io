@@ -901,16 +901,10 @@ export const validateFirst: {
  * @since 1.0.0
  * @category constructors
  */
-export const async: {
-  <R, E, A>(
-    register: (callback: (_: Effect<R, E, A>) => void, signal: AbortSignal) => void | Effect<R, never, void>,
-    blockingOn?: FiberId.FiberId | undefined
-  ): Effect<R, E, A>
-  <R, E, A>(
-    register: (callback: (_: Effect<R, E, A>) => void) => void | Effect<R, never, void>,
-    blockingOn?: FiberId.FiberId | undefined
-  ): Effect<R, E, A>
-} = core.async
+export const async: <R, E, A>(
+  register: (callback: (_: Effect<R, E, A>) => void, signal: AbortSignal) => void | Effect<R, never, void>,
+  blockingOn?: FiberId.FiberId
+) => Effect<R, E, A> = core.async
 
 /**
  * Converts an asynchronous, callback-style API into an `Effect`, which will
@@ -1330,10 +1324,9 @@ export const none: <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R, 
  * @since 1.0.0
  * @category constructors
  */
-export const promise: {
-  <A>(evaluate: (signal: AbortSignal) => Promise<A>): Effect<never, never, A>
-  <A>(evaluate: LazyArg<Promise<A>>): Effect<never, never, A>
-} = effect.promise
+export const promise: <A>(
+  evaluate: (signal: AbortSignal) => Promise<A>
+) => Effect<never, never, A> = effect.promise
 
 /**
  * @since 1.0.0
@@ -1779,18 +1772,12 @@ export const tryMapPromise: {
     options: {
       readonly try: (a: A, signal: AbortSignal) => Promise<B>
       readonly catch: (error: unknown) => E1
-    } | {
-      readonly try: (a: A) => Promise<B>
-      readonly catch: (error: unknown) => E1
     }
   ): <R, E>(self: Effect<R, E, A>) => Effect<R, E1 | E, B>
   <R, E, A, B, E1>(
     self: Effect<R, E, A>,
     options: {
       readonly try: (a: A, signal: AbortSignal) => Promise<B>
-      readonly catch: (error: unknown) => E1
-    } | {
-      readonly try: (a: A) => Promise<B>
       readonly catch: (error: unknown) => E1
     }
   ): Effect<R, E | E1, B>
@@ -1811,13 +1798,9 @@ export const tryPromise: {
     options: {
       readonly try: (signal: AbortSignal) => Promise<A>
       readonly catch: (error: unknown) => E
-    } | {
-      readonly try: LazyArg<Promise<A>>
-      readonly catch: (error: unknown) => E
     }
   ): Effect<never, E, A>
   <A>(try_: (signal: AbortSignal) => Promise<A>): Effect<never, unknown, A>
-  <A>(try_: LazyArg<Promise<A>>): Effect<never, unknown, A>
 } = effect.tryPromise
 
 /**

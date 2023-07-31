@@ -1137,10 +1137,7 @@ export const patchFiberRefs = (patch: FiberRefsPatch.FiberRefsPatch): Effect.Eff
   updateFiberRefs((fiberId, fiberRefs) => pipe(patch, fiberRefsPatch.patch(fiberId, fiberRefs)))
 
 /* @internal */
-export const promise: {
-  <A>(evaluate: (signal: AbortSignal) => Promise<A>): Effect.Effect<never, never, A>
-  <A>(evaluate: LazyArg<Promise<A>>): Effect.Effect<never, never, A>
-} = <A>(evaluate: (signal: AbortSignal) => Promise<A>): Effect.Effect<never, never, A> =>
+export const promise = <A>(evaluate: (signal: AbortSignal) => Promise<A>): Effect.Effect<never, never, A> =>
   evaluate.length >= 1 ?
     core.async<never, never, A>((resolve, signal) => {
       evaluate(signal)
@@ -1560,16 +1557,12 @@ export const tryPromise: {
     options: {
       readonly try: (signal: AbortSignal) => Promise<A>
       readonly catch: (error: unknown) => E
-    } | {
-      readonly try: LazyArg<Promise<A>>
-      readonly catch: (error: unknown) => E
     }
   ): Effect.Effect<never, E, A>
   <A>(try_: (signal: AbortSignal) => Promise<A>): Effect.Effect<never, unknown, A>
-  <A>(try_: LazyArg<Promise<A>>): Effect.Effect<never, unknown, A>
 } = <A, E>(
-  arg: (LazyArg<Promise<A>> | ((signal: AbortSignal) => Promise<A>)) | {
-    readonly try: LazyArg<Promise<A>> | ((signal: AbortSignal) => Promise<A>)
+  arg: ((signal: AbortSignal) => Promise<A>) | {
+    readonly try: (signal: AbortSignal) => Promise<A>
     readonly catch: (error: unknown) => E
   }
 ): Effect.Effect<never, E | unknown, A> => {
@@ -1648,9 +1641,6 @@ export const tryMapPromise = dual<
     options: {
       readonly try: (a: A, signal: AbortSignal) => Promise<B>
       readonly catch: (error: unknown) => E1
-    } | {
-      readonly try: (a: A) => Promise<B>
-      readonly catch: (error: unknown) => E1
     }
   ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E | E1, B>,
   <R, E, A, B, E1>(
@@ -1658,15 +1648,12 @@ export const tryMapPromise = dual<
     options: {
       readonly try: (a: A, signal: AbortSignal) => Promise<B>
       readonly catch: (error: unknown) => E1
-    } | {
-      readonly try: ((a: A) => Promise<B>)
-      readonly catch: (error: unknown) => E1
     }
   ) => Effect.Effect<R, E | E1, B>
 >(2, <R, E, A, B, E1>(
   self: Effect.Effect<R, E, A>,
   options: {
-    readonly try: ((a: A) => Promise<B>) | ((a: A, signal: AbortSignal) => Promise<B>)
+    readonly try: (a: A, signal: AbortSignal) => Promise<B>
     readonly catch: (error: unknown) => E1
   }
 ): Effect.Effect<R, E | E1, B> =>
