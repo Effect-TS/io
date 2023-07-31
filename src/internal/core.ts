@@ -392,7 +392,19 @@ export const as = dual<
 export const asUnit = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, void> => as(self, void 0)
 
 /* @internal */
-export const async = <R, E, A>(
+export const async: {
+  <R, E, A>(
+    register: (
+      callback: (_: Effect.Effect<R, E, A>) => void,
+      signal: AbortSignal
+    ) => void | Effect.Effect<R, never, void>,
+    blockingOn?: FiberId.FiberId
+  ): Effect.Effect<R, E, A>
+  <R, E, A>(
+    register: (callback: (_: Effect.Effect<R, E, A>) => void) => void | Effect.Effect<R, never, void>,
+    blockingOn?: FiberId.FiberId
+  ): Effect.Effect<R, E, A>
+} = <R, E, A>(
   register: (
     callback: (_: Effect.Effect<R, E, A>) => void,
     signal: AbortSignal
