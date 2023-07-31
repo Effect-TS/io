@@ -2,4 +2,4 @@
 "@effect/io": patch
 ---
 
-fix tryPromise inference regression
+fix `promise` inference regression (remove redundant union in args typings)
