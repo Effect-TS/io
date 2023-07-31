@@ -1,5 +1,13 @@
 # @effect/io
 
+## 0.37.1
+
+### Patch Changes
+
+- [#577](https://github.com/Effect-TS/io/pull/577) [`06128c0`](https://github.com/Effect-TS/io/commit/06128c09cf44967d6f44b3e5154b20a03d5b8c6e) Thanks [@tim-smart](https://github.com/tim-smart)! - fix `promise` inference regression (remove redundant union in args typings)
+
+- [#576](https://github.com/Effect-TS/io/pull/576) [`f6fd515`](https://github.com/Effect-TS/io/commit/f6fd515399f10ba0f49ea59611edd39b830493bb) Thanks [@vecerek](https://github.com/vecerek)! - Make the path delimiter used in ConfigError configurable
+
 ## 0.37.0
 
 ### Minor Changes
