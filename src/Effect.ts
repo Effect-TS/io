@@ -1325,7 +1325,7 @@ export const none: <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R, 
  * @category constructors
  */
 export const promise: <A>(
-  evaluate: LazyArg<Promise<A>> | ((signal: AbortSignal) => Promise<A>)
+  evaluate: (signal: AbortSignal) => Promise<A>
 ) => Effect<never, never, A> = effect.promise
 
 /**
@@ -1772,18 +1772,12 @@ export const tryMapPromise: {
     options: {
       readonly try: (a: A, signal: AbortSignal) => Promise<B>
       readonly catch: (error: unknown) => E1
-    } | {
-      readonly try: (a: A) => Promise<B>
-      readonly catch: (error: unknown) => E1
     }
   ): <R, E>(self: Effect<R, E, A>) => Effect<R, E1 | E, B>
   <R, E, A, B, E1>(
     self: Effect<R, E, A>,
     options: {
       readonly try: (a: A, signal: AbortSignal) => Promise<B>
-      readonly catch: (error: unknown) => E1
-    } | {
-      readonly try: (a: A) => Promise<B>
       readonly catch: (error: unknown) => E1
     }
   ): Effect<R, E | E1, B>
@@ -1802,11 +1796,11 @@ export const tryMapPromise: {
 export const tryPromise: {
   <A, E>(
     options: {
-      readonly try: LazyArg<Promise<A>> | ((signal: AbortSignal) => Promise<A>)
+      readonly try: (signal: AbortSignal) => Promise<A>
       readonly catch: (error: unknown) => E
     }
   ): Effect<never, E, A>
-  <A>(try_: LazyArg<Promise<A>> | ((signal: AbortSignal) => Promise<A>)): Effect<never, unknown, A>
+  <A>(try_: (signal: AbortSignal) => Promise<A>): Effect<never, unknown, A>
 } = effect.tryPromise
 
 /**
