@@ -49,7 +49,11 @@ export const Or = (self: ConfigError.ConfigError, that: ConfigError.ConfigError)
 }
 
 /** @internal */
-export const InvalidData = (path: ReadonlyArray<string>, message: string): ConfigError.ConfigError => {
+export const InvalidData = (
+  path: ReadonlyArray<string>,
+  message: string,
+  options: ConfigError.Options = { pathDelim: "." }
+): ConfigError.ConfigError => {
   const error = Object.create(proto)
   error._tag = OpCodes.OP_INVALID_DATA
   error.path = path
@@ -57,7 +61,7 @@ export const InvalidData = (path: ReadonlyArray<string>, message: string): Confi
   Object.defineProperty(error, "toString", {
     enumerable: false,
     value(this: ConfigError.InvalidData) {
-      const path = pipe(this.path, RA.join("."))
+      const path = pipe(this.path, RA.join(options.pathDelim))
       return `(Invalid data at ${path}: "${this.message}")`
     }
   })
@@ -65,7 +69,11 @@ export const InvalidData = (path: ReadonlyArray<string>, message: string): Confi
 }
 
 /** @internal */
-export const MissingData = (path: ReadonlyArray<string>, message: string): ConfigError.ConfigError => {
+export const MissingData = (
+  path: ReadonlyArray<string>,
+  message: string,
+  options: ConfigError.Options = { pathDelim: "." }
+): ConfigError.ConfigError => {
   const error = Object.create(proto)
   error._tag = OpCodes.OP_MISSING_DATA
   error.path = path
@@ -73,7 +81,7 @@ export const MissingData = (path: ReadonlyArray<string>, message: string): Confi
   Object.defineProperty(error, "toString", {
     enumerable: false,
     value(this: ConfigError.MissingData) {
-      const path = pipe(this.path, RA.join("."))
+      const path = pipe(this.path, RA.join(options.pathDelim))
       return `(Missing data at ${path}: "${this.message}")`
     }
   })
@@ -84,7 +92,8 @@ export const MissingData = (path: ReadonlyArray<string>, message: string): Confi
 export const SourceUnavailable = (
   path: ReadonlyArray<string>,
   message: string,
-  cause: Cause.Cause<unknown>
+  cause: Cause.Cause<unknown>,
+  options: ConfigError.Options = { pathDelim: "." }
 ): ConfigError.ConfigError => {
   const error = Object.create(proto)
   error._tag = OpCodes.OP_SOURCE_UNAVAILABLE
@@ -94,7 +103,7 @@ export const SourceUnavailable = (
   Object.defineProperty(error, "toString", {
     enumerable: false,
     value(this: ConfigError.SourceUnavailable) {
-      const path = pipe(this.path, RA.join("."))
+      const path = pipe(this.path, RA.join(options.pathDelim))
       return `(Source unavailable at ${path}: "${this.message}")`
     }
   })
@@ -102,7 +111,11 @@ export const SourceUnavailable = (
 }
 
 /** @internal */
-export const Unsupported = (path: ReadonlyArray<string>, message: string): ConfigError.ConfigError => {
+export const Unsupported = (
+  path: ReadonlyArray<string>,
+  message: string,
+  options: ConfigError.Options = { pathDelim: "." }
+): ConfigError.ConfigError => {
   const error = Object.create(proto)
   error._tag = OpCodes.OP_UNSUPPORTED
   error.path = path
@@ -110,7 +123,7 @@ export const Unsupported = (path: ReadonlyArray<string>, message: string): Confi
   Object.defineProperty(error, "toString", {
     enumerable: false,
     value(this: ConfigError.Unsupported) {
-      const path = pipe(this.path, RA.join("."))
+      const path = pipe(this.path, RA.join(options.pathDelim))
       return `(Unsupported operation at ${path}: "${this.message}")`
     }
   })
