@@ -416,12 +416,12 @@ export const all = <const Arg extends Iterable<Config.Config<any>> | Record<stri
   arg: Arg
 ): Config.Config<
   [Arg] extends [ReadonlyArray<Config.Config<any>>] ? {
-    -readonly [K in keyof Arg]: [Arg[K]] extends [Config.Config<infer A>] ? A : never
-  }
-    : [Arg] extends [Iterable<Config.Config<infer A>>] ? Array<A>
-    : [Arg] extends [Record<string, Config.Config<any>>] ? {
       -readonly [K in keyof Arg]: [Arg[K]] extends [Config.Config<infer A>] ? A : never
     }
+    : [Arg] extends [Iterable<Config.Config<infer A>>] ? Array<A>
+    : [Arg] extends [Record<string, Config.Config<any>>] ? {
+        -readonly [K in keyof Arg]: [Arg[K]] extends [Config.Config<infer A>] ? A : never
+      }
     : never
 > => {
   if (Array.isArray(arg)) {

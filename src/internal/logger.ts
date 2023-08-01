@@ -302,8 +302,7 @@ const appendQuotedLogfmt = (label: string, output: string): string =>
   output + (label.match(textOnly) ? label : escapeDoubleQuotesLogfmt(label))
 
 /** @internal */
-const renderLogSpanLogfmt = (now: number) =>
-  (self: LogSpan.LogSpan): string => {
-    const label = filterKeyName(self.label)
-    return `${label}=${now - self.startTime}ms`
-  }
+const renderLogSpanLogfmt = (now: number) => (self: LogSpan.LogSpan): string => {
+  const label = filterKeyName(self.label)
+  return `${label}=${now - self.startTime}ms`
+}

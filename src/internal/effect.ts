@@ -849,25 +849,25 @@ export const iterate = <Z, R, E>(
   })
 
 const logWithLevel = (level?: LogLevel.LogLevel) =>
-  <A>(
-    messageOrCause: A,
-    supplementary?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
-  ): Effect.Effect<never, never, void> => {
-    const levelOption = Option.fromNullable(level)
-    let message: unknown
-    let cause: Cause.Cause<unknown>
-    if (internalCause.isCause(messageOrCause)) {
-      cause = messageOrCause
-      message = (supplementary as unknown) ?? ""
-    } else {
-      message = messageOrCause
-      cause = (supplementary as Cause.Cause<unknown>) ?? internalCause.empty
-    }
-    return core.withFiberRuntime<never, never, void>((fiberState) => {
-      fiberState.log(message, cause, levelOption)
-      return core.unit
-    })
+<A>(
+  messageOrCause: A,
+  supplementary?: A extends Cause.Cause<any> ? unknown : Cause.Cause<unknown>
+): Effect.Effect<never, never, void> => {
+  const levelOption = Option.fromNullable(level)
+  let message: unknown
+  let cause: Cause.Cause<unknown>
+  if (internalCause.isCause(messageOrCause)) {
+    cause = messageOrCause
+    message = (supplementary as unknown) ?? ""
+  } else {
+    message = messageOrCause
+    cause = (supplementary as Cause.Cause<unknown>) ?? internalCause.empty
   }
+  return core.withFiberRuntime<never, never, void>((fiberState) => {
+    fiberState.log(message, cause, levelOption)
+    return core.unit
+  })
+}
 
 /** @internal */
 export const log: <A>(
@@ -1789,13 +1789,15 @@ export const withMetric = dual<
 export const serviceFunctionEffect = <T extends Context.Tag<any, any>, Args extends Array<any>, R, E, A>(
   service: T,
   f: (_: Context.Tag.Service<T>) => (...args: Args) => Effect.Effect<R, E, A>
-) => (...args: Args): Effect.Effect<R | Context.Tag.Identifier<T>, E, A> => core.flatMap(service, (a) => f(a)(...args))
+) =>
+(...args: Args): Effect.Effect<R | Context.Tag.Identifier<T>, E, A> => core.flatMap(service, (a) => f(a)(...args))
 
 /** @internal */
 export const serviceFunction = <T extends Context.Tag<any, any>, Args extends Array<any>, A>(
   service: T,
   f: (_: Context.Tag.Service<T>) => (...args: Args) => A
-) => (...args: Args): Effect.Effect<Context.Tag.Identifier<T>, never, A> => core.map(service, (a) => f(a)(...args))
+) =>
+(...args: Args): Effect.Effect<Context.Tag.Identifier<T>, never, A> => core.map(service, (a) => f(a)(...args))
 
 // -----------------------------------------------------------------------------
 // tracing

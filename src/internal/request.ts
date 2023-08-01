@@ -24,25 +24,24 @@ export const isRequest = (u: unknown): u is Request.Request<unknown, unknown> =>
   typeof u === "object" && u != null && RequestTypeId in u
 
 /** @internal */
-export const of = <R extends Request.Request<any, any>>(): Request.Request.Constructor<R> =>
-  (args) =>
-    // @ts-expect-error
-    Data.struct({
-      [RequestTypeId]: requestVariance,
-      ...args
-    })
+export const of = <R extends Request.Request<any, any>>(): Request.Request.Constructor<R> => (args) =>
+  // @ts-expect-error
+  Data.struct({
+    [RequestTypeId]: requestVariance,
+    ...args
+  })
 
 /** @internal */
 export const tagged = <R extends Request.Request<any, any> & { _tag: string }>(
   tag: R["_tag"]
 ): Request.Request.Constructor<R, "_tag"> =>
-  (args) =>
-    // @ts-expect-error
-    Data.struct({
-      [RequestTypeId]: requestVariance,
-      _tag: tag,
-      ...args
-    })
+(args) =>
+  // @ts-expect-error
+  Data.struct({
+    [RequestTypeId]: requestVariance,
+    _tag: tag,
+    ...args
+  })
 
 /** @internal */
 export const complete = dual<

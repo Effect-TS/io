@@ -473,7 +473,8 @@ export const catchAll = dual<
  */
 export const unified = <Args extends ReadonlyArray<any>, Ret extends Effect.Effect<any, any, any>>(
   f: (...args: Args) => Ret
-) => (...args: Args): Effect.Effect.Unify<Ret> => f(...args)
+) =>
+(...args: Args): Effect.Effect.Unify<Ret> => f(...args)
 
 /* @internal */
 export const catchSome = dual<

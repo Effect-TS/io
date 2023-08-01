@@ -45,28 +45,28 @@ const addSubscribers = <A>(
   subscription: Subscription<A>,
   pollers: MutableQueue.MutableQueue<Deferred.Deferred<never, A>>
 ) =>
-  (subscribers: Subscribers<A>) => {
-    if (!subscribers.has(subscription)) {
-      subscribers.set(subscription, new Set())
-    }
-    const set = subscribers.get(subscription)!
-    set.add(pollers)
+(subscribers: Subscribers<A>) => {
+  if (!subscribers.has(subscription)) {
+    subscribers.set(subscription, new Set())
   }
+  const set = subscribers.get(subscription)!
+  set.add(pollers)
+}
 
 const removeSubscribers = <A>(
   subscription: Subscription<A>,
   pollers: MutableQueue.MutableQueue<Deferred.Deferred<never, A>>
 ) =>
-  (subscribers: Subscribers<A>) => {
-    if (!subscribers.has(subscription)) {
-      return
-    }
-    const set = subscribers.get(subscription)!
-    set.delete(pollers)
-    if (set.size === 0) {
-      subscribers.delete(subscription)
-    }
+(subscribers: Subscribers<A>) => {
+  if (!subscribers.has(subscription)) {
+    return
   }
+  const set = subscribers.get(subscription)!
+  set.delete(pollers)
+  if (set.size === 0) {
+    subscribers.delete(subscription)
+  }
+}
 
 /** @internal */
 export const bounded = <A>(requestedCapacity: number): Effect.Effect<never, never, Hub.Hub<A>> =>

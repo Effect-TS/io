@@ -332,23 +332,21 @@ const withScope = <RIn, E, ROut>(
       return core.sync(() => (memoMap: MemoMap) => op.f(memoMap.getOrElseMemoize(op.self, scope)))
     }
     case "ExtendScope": {
-      return core.sync(() =>
-        (memoMap: MemoMap) =>
-          fiberRuntime.scopeWith(
-            (scope) => memoMap.getOrElseMemoize(op.layer, scope)
-          ) as unknown as Effect.Effect<RIn, E, Context.Context<ROut>>
+      return core.sync(() => (memoMap: MemoMap) =>
+        fiberRuntime.scopeWith(
+          (scope) => memoMap.getOrElseMemoize(op.layer, scope)
+        ) as unknown as Effect.Effect<RIn, E, Context.Context<ROut>>
       )
     }
     case "Fold": {
-      return core.sync(() =>
-        (memoMap: MemoMap) =>
-          pipe(
-            memoMap.getOrElseMemoize(op.layer, scope),
-            core.matchCauseEffect({
-              onFailure: (cause) => memoMap.getOrElseMemoize(op.failureK(cause), scope),
-              onSuccess: (value) => memoMap.getOrElseMemoize(op.successK(value), scope)
-            })
-          )
+      return core.sync(() => (memoMap: MemoMap) =>
+        pipe(
+          memoMap.getOrElseMemoize(op.layer, scope),
+          core.matchCauseEffect({
+            onFailure: (cause) => memoMap.getOrElseMemoize(op.failureK(cause), scope),
+            onSuccess: (value) => memoMap.getOrElseMemoize(op.successK(value), scope)
+          })
+        )
       )
     }
     case "Fresh": {
@@ -358,60 +356,55 @@ const withScope = <RIn, E, ROut>(
       return core.sync(() => (_: MemoMap) => op.effect as Effect.Effect<RIn, E, Context.Context<ROut>>)
     }
     case "ProvideTo": {
-      return core.sync(() =>
-        (memoMap: MemoMap) =>
-          pipe(
-            memoMap.getOrElseMemoize(op.first, scope),
-            core.flatMap((env) =>
-              pipe(
-                memoMap.getOrElseMemoize(op.second, scope),
-                core.provideContext(env)
-              )
+      return core.sync(() => (memoMap: MemoMap) =>
+        pipe(
+          memoMap.getOrElseMemoize(op.first, scope),
+          core.flatMap((env) =>
+            pipe(
+              memoMap.getOrElseMemoize(op.second, scope),
+              core.provideContext(env)
             )
           )
+        )
       )
     }
     case "Scoped": {
-      return core.sync(() =>
-        (_: MemoMap) =>
-          fiberRuntime.scopeExtend(
-            op.effect as Effect.Effect<RIn, E, Context.Context<ROut>>,
-            scope
-          )
+      return core.sync(() => (_: MemoMap) =>
+        fiberRuntime.scopeExtend(
+          op.effect as Effect.Effect<RIn, E, Context.Context<ROut>>,
+          scope
+        )
       )
     }
     case "Suspend": {
-      return core.sync(() =>
-        (memoMap: MemoMap) =>
-          memoMap.getOrElseMemoize(
-            op.evaluate(),
-            scope
-          )
+      return core.sync(() => (memoMap: MemoMap) =>
+        memoMap.getOrElseMemoize(
+          op.evaluate(),
+          scope
+        )
       )
     }
     case "ZipWith": {
-      return core.sync(() =>
-        (memoMap: MemoMap) =>
-          pipe(
-            memoMap.getOrElseMemoize(op.first, scope),
-            core.zipWith(
-              memoMap.getOrElseMemoize(op.second, scope),
-              op.zipK
-            )
+      return core.sync(() => (memoMap: MemoMap) =>
+        pipe(
+          memoMap.getOrElseMemoize(op.first, scope),
+          core.zipWith(
+            memoMap.getOrElseMemoize(op.second, scope),
+            op.zipK
           )
+        )
       )
     }
     case "ZipWithPar": {
-      return core.sync(() =>
-        (memoMap: MemoMap) =>
-          pipe(
-            memoMap.getOrElseMemoize(op.first, scope),
-            fiberRuntime.zipWithOptions(
-              memoMap.getOrElseMemoize(op.second, scope),
-              op.zipK,
-              { concurrent: true }
-            )
+      return core.sync(() => (memoMap: MemoMap) =>
+        pipe(
+          memoMap.getOrElseMemoize(op.first, scope),
+          fiberRuntime.zipWithOptions(
+            memoMap.getOrElseMemoize(op.second, scope),
+            op.zipK,
+            { concurrent: true }
           )
+        )
       )
     }
   }
@@ -528,7 +521,7 @@ export const fromEffect = dual<
 >(2, (a, b) => {
   const tagFirst = Context.isTag(a)
   const tag = (tagFirst ? a : b) as Context.Tag<unknown, unknown>
-  const effect = (tagFirst ? b : a)
+  const effect = tagFirst ? b : a
   return fromEffectContext(core.map(effect, (service) => Context.make(tag, service)))
 })
 
@@ -880,7 +873,7 @@ export const scoped = dual<
 >(2, (a, b) => {
   const tagFirst = Context.isTag(a)
   const tag = (tagFirst ? a : b) as Context.Tag<unknown, unknown>
-  const effect = (tagFirst ? b : a)
+  const effect = tagFirst ? b : a
   return scopedContext(core.map(effect, (service) => Context.make(tag, service)))
 })
 
@@ -933,7 +926,7 @@ export const succeed = dual<
 >(2, (a, b) => {
   const tagFirst = Context.isTag(a)
   const tag = (tagFirst ? a : b) as Context.Tag<unknown, unknown>
-  const resource = (tagFirst ? b : a)
+  const resource = tagFirst ? b : a
   return fromEffectContext(core.succeed(Context.make(tag, resource)))
 })
 
@@ -968,7 +961,7 @@ export const sync = dual<
 >(2, (a, b) => {
   const tagFirst = Context.isTag(a)
   const tag = (tagFirst ? a : b) as Context.Tag<unknown, unknown>
-  const evaluate = (tagFirst ? b : a)
+  const evaluate = tagFirst ? b : a
   return fromEffectContext(core.sync(() => Context.make(tag, evaluate())))
 })
 

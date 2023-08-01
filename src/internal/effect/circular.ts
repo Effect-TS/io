@@ -76,14 +76,13 @@ class Semaphore {
       return core.unit
     })
 
-  readonly withPermits = (n: number) =>
-    <R, E, A>(self: Effect.Effect<R, E, A>) =>
-      core.uninterruptibleMask((restore) =>
-        core.flatMap(
-          restore(this.take(n)),
-          (permits) => fiberRuntime.ensuring(restore(self), this.release(permits))
-        )
+  readonly withPermits = (n: number) => <R, E, A>(self: Effect.Effect<R, E, A>) =>
+    core.uninterruptibleMask((restore) =>
+      core.flatMap(
+        restore(this.take(n)),
+        (permits) => fiberRuntime.ensuring(restore(self), this.release(permits))
       )
+    )
 }
 
 /** @internal */
@@ -317,29 +316,28 @@ export const memoizeFunction = <R, E, A, B>(
   return pipe(
     core.sync(() => MutableHashMap.empty<Key<A>, Deferred.Deferred<E, readonly [FiberRefsPatch.FiberRefsPatch, B]>>()),
     core.flatMap(makeSynchronized),
-    core.map((ref) =>
-      (a: A) =>
-        pipe(
-          ref.modifyEffect((map) => {
-            const result = pipe(map, MutableHashMap.get(new Key(a, eq)))
-            if (Option.isNone(result)) {
-              return pipe(
-                core.deferredMake<E, readonly [FiberRefsPatch.FiberRefsPatch, B]>(),
-                core.tap((deferred) =>
-                  pipe(
-                    effect.diffFiberRefs(f(a)),
-                    core.intoDeferred(deferred),
-                    fiberRuntime.fork
-                  )
-                ),
-                core.map((deferred) => [deferred, pipe(map, MutableHashMap.set(new Key(a, eq), deferred))] as const)
-              )
-            }
-            return core.succeed([result.value, map] as const)
-          }),
-          core.flatMap(core.deferredAwait),
-          core.flatMap(([patch, b]) => pipe(effect.patchFiberRefs(patch), core.as(b)))
-        )
+    core.map((ref) => (a: A) =>
+      pipe(
+        ref.modifyEffect((map) => {
+          const result = pipe(map, MutableHashMap.get(new Key(a, eq)))
+          if (Option.isNone(result)) {
+            return pipe(
+              core.deferredMake<E, readonly [FiberRefsPatch.FiberRefsPatch, B]>(),
+              core.tap((deferred) =>
+                pipe(
+                  effect.diffFiberRefs(f(a)),
+                  core.intoDeferred(deferred),
+                  fiberRuntime.fork
+                )
+              ),
+              core.map((deferred) => [deferred, pipe(map, MutableHashMap.set(new Key(a, eq), deferred))] as const)
+            )
+          }
+          return core.succeed([result.value, map] as const)
+        }),
+        core.flatMap(core.deferredAwait),
+        core.flatMap(([patch, b]) => pipe(effect.patchFiberRefs(patch), core.as(b)))
+      )
     )
   )
 }
