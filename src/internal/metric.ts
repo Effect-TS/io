@@ -285,18 +285,17 @@ export const trackAll = dual<
     self: Metric.Metric<Type, In, Out>,
     input: In
   ) => <R, E, A>(effect: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>
->(2, (self, input) =>
-  (effect) =>
-    core.matchCauseEffect(effect, {
-      onFailure: (cause) => {
-        self.unsafeUpdate(input, HashSet.empty())
-        return core.failCause(cause)
-      },
-      onSuccess: (value) => {
-        self.unsafeUpdate(input, HashSet.empty())
-        return core.succeed(value)
-      }
-    }))
+>(2, (self, input) => (effect) =>
+  core.matchCauseEffect(effect, {
+    onFailure: (cause) => {
+      self.unsafeUpdate(input, HashSet.empty())
+      return core.failCause(cause)
+    },
+    onSuccess: (value) => {
+      self.unsafeUpdate(input, HashSet.empty())
+      return core.succeed(value)
+    }
+  }))
 
 /* @internal */
 export const trackDefect = dual<

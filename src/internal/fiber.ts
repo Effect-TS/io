@@ -213,7 +213,7 @@ export const match = dual<
 })
 
 /** @internal */
-export const never: Fiber.Fiber<never, never> = ({
+export const never: Fiber.Fiber<never, never> = {
   ...fiberProto,
   id: () => FiberId.none,
   await: () => core.never,
@@ -221,7 +221,7 @@ export const never: Fiber.Fiber<never, never> = ({
   inheritAll: () => core.never,
   poll: () => core.succeed(Option.none()),
   interruptAsFork: () => core.never
-})
+}
 
 /** @internal */
 export const orElse = dual<

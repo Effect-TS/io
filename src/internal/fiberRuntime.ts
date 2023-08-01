@@ -1582,7 +1582,7 @@ const allResolveInput = (
   ]
 }
 
-const allValidate = ((
+const allValidate = (
   effects: Iterable<Effect.Effect<any, any, any>>,
   reconcile: Option.Option<(as: ReadonlyArray<any>) => any>,
   options?: Effect.All.Options
@@ -1624,9 +1624,9 @@ const allValidate = ((
         core.succeed(successes)
     }
   )
-})
+}
 
-const allEither = ((
+const allEither = (
   effects: Iterable<Effect.Effect<any, any, any>>,
   reconcile: Option.Option<(as: ReadonlyArray<any>) => any>,
   options?: Effect.All.Options
@@ -1654,7 +1654,7 @@ const allEither = ((
         reconcile.value(eithers) :
         eithers
   )
-})
+}
 
 /* @internal */
 export const all = ((
@@ -2288,38 +2288,38 @@ const raceAllArbiter = <E, E1, A, A1>(
   deferred: Deferred.Deferred<E | E1, readonly [A | A1, Fiber.Fiber<E | E1, A | A1>]>,
   fails: Ref.Ref<number>
 ) =>
-  (exit: Exit.Exit<E | E1, A | A1>): Effect.Effect<never, never, void> =>
-    core.exitMatchEffect(exit, {
-      onFailure: (cause) =>
-        pipe(
-          Ref.modify(fails, (fails) =>
-            [
-              fails === 0 ?
-                pipe(core.deferredFailCause(deferred, cause), core.asUnit) :
+(exit: Exit.Exit<E | E1, A | A1>): Effect.Effect<never, never, void> =>
+  core.exitMatchEffect(exit, {
+    onFailure: (cause) =>
+      pipe(
+        Ref.modify(fails, (fails) =>
+          [
+            fails === 0 ?
+              pipe(core.deferredFailCause(deferred, cause), core.asUnit) :
+              core.unit,
+            fails - 1
+          ] as const),
+        core.flatten
+      ),
+    onSuccess: (value): Effect.Effect<never, never, void> =>
+      pipe(
+        core.deferredSucceed(deferred, [value, winner] as const),
+        core.flatMap((set) =>
+          set ?
+            pipe(
+              Chunk.fromIterable(fibers),
+              RA.reduce(
                 core.unit,
-              fails - 1
-            ] as const),
-          core.flatten
-        ),
-      onSuccess: (value): Effect.Effect<never, never, void> =>
-        pipe(
-          core.deferredSucceed(deferred, [value, winner] as const),
-          core.flatMap((set) =>
-            set ?
-              pipe(
-                Chunk.fromIterable(fibers),
-                RA.reduce(
-                  core.unit,
-                  (effect, fiber) =>
-                    fiber === winner ?
-                      effect :
-                      pipe(effect, core.zipLeft(core.interruptFiber(fiber)))
-                )
-              ) :
-              core.unit
-          )
+                (effect, fiber) =>
+                  fiber === winner ?
+                    effect :
+                    pipe(effect, core.zipLeft(core.interruptFiber(fiber)))
+              )
+            ) :
+            core.unit
         )
-    })
+      )
+  })
 
 /* @internal */
 export const reduceEffect = dual<
@@ -2724,55 +2724,53 @@ export const releaseMapReleaseAll = (
   strategy: ExecutionStrategy.ExecutionStrategy,
   exit: Exit.Exit<unknown, unknown>
 ) =>
-  (self: core.ReleaseMap): Effect.Effect<never, never, void> =>
-    core.suspend(() => {
-      switch (self.state._tag) {
-        case "Exited": {
-          return core.unit
-        }
-        case "Running": {
-          const finalizersMap = self.state.finalizers
-          const update = self.state.update
-          const finalizers = Array.from(finalizersMap.keys()).sort((a, b) => b - a).map((key) =>
-            finalizersMap.get(key)!
-          )
-          self.state = { _tag: "Exited", nextKey: self.state.nextKey, exit, update }
-          return executionStrategy.isSequential(strategy) ?
-            pipe(
-              finalizers,
-              core.forEachSequential((fin) => core.exit(update(fin)(exit))),
-              core.flatMap((results) =>
-                pipe(
-                  core.exitCollectAll(results),
-                  Option.map(core.exitAsUnit),
-                  Option.getOrElse(() => core.exitUnit)
-                )
-              )
-            ) :
-            executionStrategy.isParallel(strategy) ?
-            pipe(
-              forEachParUnbounded(finalizers, (fin) => core.exit(update(fin)(exit)), false),
-              core.flatMap((results) =>
-                pipe(
-                  core.exitCollectAll(results, { parallel: true }),
-                  Option.map(core.exitAsUnit),
-                  Option.getOrElse(() => core.exitUnit)
-                )
-              )
-            ) :
-            pipe(
-              forEachParN(finalizers, strategy.parallelism, (fin) => core.exit(update(fin)(exit)), false),
-              core.flatMap((results) =>
-                pipe(
-                  core.exitCollectAll(results, { parallel: true }),
-                  Option.map(core.exitAsUnit),
-                  Option.getOrElse(() => core.exitUnit)
-                )
+(self: core.ReleaseMap): Effect.Effect<never, never, void> =>
+  core.suspend(() => {
+    switch (self.state._tag) {
+      case "Exited": {
+        return core.unit
+      }
+      case "Running": {
+        const finalizersMap = self.state.finalizers
+        const update = self.state.update
+        const finalizers = Array.from(finalizersMap.keys()).sort((a, b) => b - a).map((key) => finalizersMap.get(key)!)
+        self.state = { _tag: "Exited", nextKey: self.state.nextKey, exit, update }
+        return executionStrategy.isSequential(strategy) ?
+          pipe(
+            finalizers,
+            core.forEachSequential((fin) => core.exit(update(fin)(exit))),
+            core.flatMap((results) =>
+              pipe(
+                core.exitCollectAll(results),
+                Option.map(core.exitAsUnit),
+                Option.getOrElse(() => core.exitUnit)
               )
             )
-        }
+          ) :
+          executionStrategy.isParallel(strategy) ?
+          pipe(
+            forEachParUnbounded(finalizers, (fin) => core.exit(update(fin)(exit)), false),
+            core.flatMap((results) =>
+              pipe(
+                core.exitCollectAll(results, { parallel: true }),
+                Option.map(core.exitAsUnit),
+                Option.getOrElse(() => core.exitUnit)
+              )
+            )
+          ) :
+          pipe(
+            forEachParN(finalizers, strategy.parallelism, (fin) => core.exit(update(fin)(exit)), false),
+            core.flatMap((results) =>
+              pipe(
+                core.exitCollectAll(results, { parallel: true }),
+                Option.map(core.exitAsUnit),
+                Option.getOrElse(() => core.exitUnit)
+              )
+            )
+          )
       }
-    })
+    }
+  })
 
 // circular with Scope
 
