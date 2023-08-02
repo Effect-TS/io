@@ -66,7 +66,7 @@ describe.concurrent("Effect", () => {
             Effect.zipRight(pipe(
               Fiber.interrupt(fiber),
               Effect.timeoutTo({
-                onTimeout: 42,
+                onTimeout: () => 42,
                 onSuccess: () => 0,
                 duration: Duration.millis(500)
               })
@@ -111,7 +111,7 @@ describe.concurrent("Effect", () => {
       const result = yield* $(
         Deferred.await(deferred2),
         Effect.timeoutTo({
-          onTimeout: 42,
+          onTimeout: () => 42,
           onSuccess: () => 0,
           duration: Duration.seconds(1)
         })
@@ -174,7 +174,7 @@ describe.concurrent("Effect", () => {
         pipe(
           Deferred.await(deferred2),
           Effect.timeoutTo({
-            onTimeout: false,
+            onTimeout: () => false,
             onSuccess: () => true,
             duration: Duration.seconds(10)
           })

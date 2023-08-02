@@ -2979,30 +2979,29 @@ export const fiberScoped = <E, A>(self: Fiber.Fiber<E, A>): Effect.Effect<Scope.
 /** @internal */
 export const raceWith = dual<
   <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
+    other: Effect.Effect<R1, E1, A1>,
     options: {
-      readonly other: Effect.Effect<R1, E1, A1>
       readonly onSelfDone: (exit: Exit.Exit<E, A>, fiber: Fiber.Fiber<E1, A1>) => Effect.Effect<R2, E2, A2>
       readonly onOtherDone: (exit: Exit.Exit<E1, A1>, fiber: Fiber.Fiber<E, A>) => Effect.Effect<R3, E3, A3>
     }
   ) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1 | R2 | R3, E2 | E3, A2 | A3>,
   <R, E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
     self: Effect.Effect<R, E, A>,
+    other: Effect.Effect<R1, E1, A1>,
     options: {
-      readonly other: Effect.Effect<R1, E1, A1>
       readonly onSelfDone: (exit: Exit.Exit<E, A>, fiber: Fiber.Fiber<E1, A1>) => Effect.Effect<R2, E2, A2>
       readonly onOtherDone: (exit: Exit.Exit<E1, A1>, fiber: Fiber.Fiber<E, A>) => Effect.Effect<R3, E3, A3>
     }
   ) => Effect.Effect<R | R1 | R2 | R3, E2 | E3, A2 | A3>
->(2, <R, E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
+>(3, <R, E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
   self: Effect.Effect<R, E, A>,
+  other: Effect.Effect<R1, E1, A1>,
   options: {
-    readonly other: Effect.Effect<R1, E1, A1>
     readonly onSelfDone: (exit: Exit.Exit<E, A>, fiber: Fiber.Fiber<E1, A1>) => Effect.Effect<R2, E2, A2>
     readonly onOtherDone: (exit: Exit.Exit<E1, A1>, fiber: Fiber.Fiber<E, A>) => Effect.Effect<R3, E3, A3>
   }
 ) =>
-  raceFibersWith(self, {
-    other: options.other,
+  raceFibersWith(self, other, {
     onSelfWin: (winner, loser) =>
       core.flatMap(winner.await(), (exit) => {
         switch (exit._tag) {
@@ -3034,25 +3033,6 @@ export const raceWith = dual<
   }))
 
 /** @internal */
-export const race = dual<
-  <R2, E2, A2>(
-    that: Effect.Effect<R2, E2, A2>
-  ) => <R, E, A>(
-    self: Effect.Effect<R, E, A>
-  ) => Effect.Effect<R | R2, E | E2, A | A2>,
-  <R, E, A, R2, E2, A2>(
-    self: Effect.Effect<R, E, A>,
-    that: Effect.Effect<R2, E2, A2>
-  ) => Effect.Effect<R | R2, E | E2, A | A2>
->(2, (self, that) =>
-  core.checkInterruptible((isInterruptible) =>
-    pipe(
-      raceDisconnect(self, isInterruptible),
-      raceAwait(raceDisconnect(that, isInterruptible))
-    )
-  ))
-
-/** @internal */
 export const disconnect = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
   core.uninterruptibleMask((restore) =>
     core.fiberIdWith((fiberId) =>
@@ -3064,16 +3044,8 @@ export const disconnect = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect
     )
   )
 
-const raceDisconnect = <R, E, A>(
-  self: Effect.Effect<R, E, A>,
-  isInterruptible: boolean
-): Effect.Effect<R, E, A> =>
-  isInterruptible ?
-    disconnect(self) :
-    core.interruptible(disconnect(core.uninterruptible(self)))
-
 /** @internal */
-export const raceAwait = dual<
+export const race = dual<
   <R2, E2, A2>(
     that: Effect.Effect<R2, E2, A2>
   ) => <R, E, A>(
@@ -3087,8 +3059,7 @@ export const raceAwait = dual<
   2,
   (self, that) =>
     core.fiberIdWith((parentFiberId) =>
-      raceWith(self, {
-        other: that,
+      raceWith(self, that, {
         onSelfDone: (exit, right) =>
           core.exitMatchEffect(exit, {
             onFailure: (cause) =>
@@ -3124,8 +3095,8 @@ export const raceAwait = dual<
 /** @internal */
 export const raceFibersWith = dual<
   <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
+    other: Effect.Effect<R1, E1, A1>,
     options: {
-      readonly other: Effect.Effect<R1, E1, A1>
       readonly onSelfWin: (
         winner: Fiber.RuntimeFiber<E, A>,
         loser: Fiber.RuntimeFiber<E1, A1>
@@ -3134,6 +3105,8 @@ export const raceFibersWith = dual<
         winner: Fiber.RuntimeFiber<E1, A1>,
         loser: Fiber.RuntimeFiber<E, A>
       ) => Effect.Effect<R3, E3, A3>
+      readonly selfScope?: fiberScope.FiberScope
+      readonly otherScope?: fiberScope.FiberScope
     }
   ) => <R>(self: Effect.Effect<R, E, A>) => Effect.Effect<
     R | R1 | R2 | R3,
@@ -3142,8 +3115,8 @@ export const raceFibersWith = dual<
   >,
   <R, E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
     self: Effect.Effect<R, E, A>,
+    other: Effect.Effect<R1, E1, A1>,
     options: {
-      readonly other: Effect.Effect<R1, E1, A1>
       readonly onSelfWin: (
         winner: Fiber.RuntimeFiber<E, A>,
         loser: Fiber.RuntimeFiber<E1, A1>
@@ -3152,16 +3125,18 @@ export const raceFibersWith = dual<
         winner: Fiber.RuntimeFiber<E1, A1>,
         loser: Fiber.RuntimeFiber<E, A>
       ) => Effect.Effect<R3, E3, A3>
+      readonly selfScope?: fiberScope.FiberScope
+      readonly otherScope?: fiberScope.FiberScope
     }
   ) => Effect.Effect<
     R | R1 | R2 | R3,
     E2 | E3,
     A2 | A3
   >
->(2, <R, E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
+>(3, <R, E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
   self: Effect.Effect<R, E, A>,
+  other: Effect.Effect<R1, E1, A1>,
   options: {
-    readonly other: Effect.Effect<R1, E1, A1>
     readonly onSelfWin: (
       winner: Fiber.RuntimeFiber<E, A>,
       loser: Fiber.RuntimeFiber<E1, A1>
@@ -3170,6 +3145,8 @@ export const raceFibersWith = dual<
       winner: Fiber.RuntimeFiber<E1, A1>,
       loser: Fiber.RuntimeFiber<E, A>
     ) => Effect.Effect<R3, E3, A3>
+    readonly selfScope?: fiberScope.FiberScope
+    readonly otherScope?: fiberScope.FiberScope
   }
 ) =>
   core.withFiberRuntime<R | R1 | R2 | R3, E2 | E3, A2 | A3>((parentFiber, parentStatus) => {
@@ -3178,20 +3155,20 @@ export const raceFibersWith = dual<
     const leftFiber: FiberRuntime<E, A> = unsafeMakeChildFiber(
       self,
       parentFiber,
-      parentRuntimeFlags
+      parentRuntimeFlags,
+      options.selfScope
     )
     const rightFiber: FiberRuntime<E1, A1> = unsafeMakeChildFiber(
-      options.other,
+      other,
       parentFiber,
-      parentRuntimeFlags
+      parentRuntimeFlags,
+      options.otherScope
     )
-    leftFiber.startFork(self)
-    rightFiber.startFork(options.other)
-    leftFiber.setFiberRef(core.currentForkScopeOverride, Option.some(parentFiber.scope()))
-    rightFiber.setFiberRef(core.currentForkScopeOverride, Option.some(parentFiber.scope()))
     return core.async<R | R1 | R2 | R3, E2 | E3, A2 | A3>((cb) => {
       leftFiber.unsafeAddObserver(() => completeRace(leftFiber, rightFiber, options.onSelfWin, raceIndicator, cb))
       rightFiber.unsafeAddObserver(() => completeRace(rightFiber, leftFiber, options.onOtherWin, raceIndicator, cb))
+      leftFiber.startFork(self)
+      rightFiber.startFork(other)
     }, FiberId.combine(leftFiber.id(), rightFiber.id()))
   }))
 
