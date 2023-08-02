@@ -22,6 +22,7 @@ import * as effect from "@effect/io/internal/effect"
 import * as executionStrategy from "@effect/io/internal/executionStrategy"
 import * as internalFiber from "@effect/io/internal/fiber"
 import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
+import { globalScope } from "@effect/io/internal/fiberScope"
 import * as internalRef from "@effect/io/internal/ref"
 import * as _schedule from "@effect/io/internal/schedule"
 import * as supervisor from "@effect/io/internal/supervisor"
@@ -393,7 +394,7 @@ export const timeout = dual<
   <R, E, A>(self: Effect.Effect<R, E, A>, duration: Duration.DurationInput) => Effect.Effect<R, E, Option.Option<A>>
 >(2, (self, duration) =>
   timeoutTo(self, {
-    onTimeout: Option.none(),
+    onTimeout: Option.none,
     onSuccess: Option.some,
     duration
   }))
@@ -415,7 +416,7 @@ export const timeoutFail = dual<
   ) => Effect.Effect<R, E | E1, A>
 >(2, (self, { duration, onTimeout }) =>
   core.flatten(timeoutTo(self, {
-    onTimeout: core.failSync(onTimeout),
+    onTimeout: () => core.failSync(onTimeout),
     onSuccess: core.succeed,
     duration
   })))
@@ -437,7 +438,7 @@ export const timeoutFailCause = dual<
   ) => Effect.Effect<R, E | E1, A>
 >(2, (self, { duration, onTimeout }) =>
   core.flatten(timeoutTo(self, {
-    onTimeout: core.failCauseSync(onTimeout),
+    onTimeout: () => core.failCauseSync(onTimeout),
     onSuccess: core.succeed,
     duration
   })))
@@ -446,7 +447,7 @@ export const timeoutFailCause = dual<
 export const timeoutTo = dual<
   <A, B, B1>(
     options: {
-      readonly onTimeout: B1
+      readonly onTimeout: LazyArg<B1>
       readonly onSuccess: (a: A) => B
       readonly duration: Duration.DurationInput
     }
@@ -454,18 +455,61 @@ export const timeoutTo = dual<
   <R, E, A, B, B1>(
     self: Effect.Effect<R, E, A>,
     options: {
-      readonly onTimeout: B1
+      readonly onTimeout: LazyArg<B1>
       readonly onSuccess: (a: A) => B
       readonly duration: Duration.DurationInput
     }
   ) => Effect.Effect<R, E, B | B1>
 >(2, (self, { duration, onSuccess, onTimeout }) =>
-  raceFirst(
-    core.map(self, onSuccess),
-    pipe(
-      effect.sleep(duration),
-      core.as(onTimeout),
-      core.interruptible
+  core.fiberIdWith((parentFiberId) =>
+    fiberRuntime.raceFibersWith(
+      self,
+      core.interruptible(effect.sleep(duration)),
+      {
+        onSelfWin: (winner, loser) =>
+          core.flatMap(
+            winner.await(),
+            (exit) => {
+              if (exit._tag === "Success") {
+                return core.flatMap(
+                  winner.inheritAll(),
+                  () =>
+                    core.as(
+                      core.interruptAsFiber(loser, parentFiberId),
+                      onSuccess(exit.value)
+                    )
+                )
+              } else {
+                return core.flatMap(
+                  core.interruptAsFiber(loser, parentFiberId),
+                  () => core.exitFailCause(exit.cause)
+                )
+              }
+            }
+          ),
+        onOtherWin: (winner, loser) =>
+          core.flatMap(
+            winner.await(),
+            (exit) => {
+              if (exit._tag === "Success") {
+                return core.flatMap(
+                  winner.inheritAll(),
+                  () =>
+                    core.as(
+                      core.interruptAsFiber(loser, parentFiberId),
+                      onTimeout()
+                    )
+                )
+              } else {
+                return core.flatMap(
+                  core.interruptAsFiber(loser, parentFiberId),
+                  () => core.exitFailCause(exit.cause)
+                )
+              }
+            }
+          ),
+        otherScope: globalScope
+      }
     )
   ))
 

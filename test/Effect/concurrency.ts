@@ -5,7 +5,7 @@ import * as Deferred from "@effect/io/Deferred"
 import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import * as Fiber from "@effect/io/Fiber"
-import * as FiberId from "@effect/io/Fiber/Id"
+import { adjust } from "@effect/io/internal/testing/testClock"
 import * as Ref from "@effect/io/Ref"
 import * as it from "@effect/io/test/utils/extend"
 import { withLatch } from "@effect/io/test/utils/latch"
@@ -179,11 +179,16 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("race in uninterruptible region", () =>
     Effect.gen(function*($) {
-      const awaiter = Deferred.unsafeMake<never, void>(FiberId.none)
-      const program = pipe(Effect.unit, Effect.race(pipe(awaiter, Deferred.await)), Effect.uninterruptible)
-      const result = yield* $(program)
-      yield* $(Deferred.succeed(awaiter, void 0))
-      assert.isUndefined(result)
+      const fiber = yield* $(
+        Effect.unit,
+        Effect.race(Effect.sleep("60 seconds")),
+        Effect.uninterruptible,
+        Effect.fork
+      )
+      yield* $(adjust("30 seconds"))
+      assert.isTrue(fiber.unsafePoll() === null)
+      yield* $(adjust("60 seconds"))
+      assert.isFalse(fiber.unsafePoll() === null)
     }))
   it.effect("race of two forks does not interrupt winner", () =>
     Effect.gen(function*($) {

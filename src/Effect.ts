@@ -2838,16 +2838,21 @@ export const timeoutFailCause: {
  * @category delays & timeouts
  */
 export const timeoutTo: {
-  <A, B, B1>(options: {
-    readonly onTimeout: B1
-    readonly onSuccess: (a: A) => B
-    readonly duration: Duration.DurationInput
-  }): <R, E>(self: Effect<R, E, A>) => Effect<R, E, B | B1>
-  <R, E, A, B, B1>(self: Effect<R, E, A>, options: {
-    readonly onTimeout: B1
-    readonly onSuccess: (a: A) => B
-    readonly duration: Duration.DurationInput
-  }): Effect<R, E, B | B1>
+  <A, B, B1>(
+    options: {
+      readonly onTimeout: LazyArg<B1>
+      readonly onSuccess: (a: A) => B
+      readonly duration: Duration.DurationInput
+    }
+  ): <R, E>(self: Effect<R, E, A>) => Effect<R, E, B | B1>
+  <R, E, A, B, B1>(
+    self: Effect<R, E, A>,
+    options: {
+      readonly onTimeout: LazyArg<B1>
+      readonly onSuccess: (a: A) => B
+      readonly duration: Duration.DurationInput
+    }
+  ): Effect<R, E, B | B1>
 } = circular.timeoutTo
 
 // -------------------------------------------------------------------------------------
@@ -3468,25 +3473,6 @@ export const flatten: <R, E, R1, E1, A>(self: Effect<R, E, Effect<R1, E1, A>>) =
   core.flatten
 
 /**
- * Returns an effect that races this effect with the specified effect,
- * returning the first successful `A` from the faster side. If one effect
- * succeeds, the other will be interrupted. If neither succeeds, then the
- * effect will fail with some error.
- *
- * Note that both effects are disconnected before being raced. This means that
- * interruption of the loser will always be performed in the background. If this
- * behavior is not desired, you can use `Effect.raceWith`, which will not
- * disconnect or interrupt losers.
- *
- * @since 1.0.0
- * @category sequencing
- */
-export const race: {
-  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2 | A>
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, A | A2>
-} = fiberRuntime.race
-
-/**
  * Returns an effect that races this effect with all the specified effects,
  * yielding the value of the first effect to succeed with a value. Losers of
  * the race will be interrupted immediately
@@ -3505,40 +3491,10 @@ export const raceAll: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R,
  * @since 1.0.0
  * @category sequencing
  */
-export const raceAwait: {
+export const race: {
   <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2 | A>
   <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, A | A2>
-} = fiberRuntime.raceAwait
-
-/**
- * Forks this effect and the specified effect into their own fibers, and races
- * them, calling one of two specified callbacks depending on which fiber wins
- * the race. This method does not interrupt, join, or otherwise do anything
- * with the fibers. It can be considered a low-level building block for
- * higher-level operators like `race`.
- *
- * @since 1.0.0
- * @category sequencing
- */
-export const raceFibersWith: {
-  <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
-    options: {
-      readonly other: Effect<R1, E1, A1>
-      readonly onSelfWin: (winner: Fiber.RuntimeFiber<E, A>, loser: Fiber.RuntimeFiber<E1, A1>) => Effect<R2, E2, A2>
-      readonly onOtherWin: (winner: Fiber.RuntimeFiber<E1, A1>, loser: Fiber.RuntimeFiber<E, A>) => Effect<R3, E3, A3>
-    }
-  ): <R>(self: Effect<R, E, A>) => Effect<R1 | R2 | R3 | R, E2 | E3, A2 | A3>
-  <R, E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(self: Effect<R, E, A>, options: {
-    /**
-     * Retreives the `Random` service from the context.
-     *
-     * @since 1.0.0
-     * @category constructors
-     */ readonly other: Effect<R1, E1, A1>
-    readonly onSelfWin: (winner: Fiber.RuntimeFiber<E, A>, loser: Fiber.RuntimeFiber<E1, A1>) => Effect<R2, E2, A2>
-    readonly onOtherWin: (winner: Fiber.RuntimeFiber<E1, A1>, loser: Fiber.RuntimeFiber<E, A>) => Effect<R3, E3, A3>
-  }): Effect<R | R1 | R2 | R3, E2 | E3, A2 | A3>
-} = fiberRuntime.raceFibersWith
+} = fiberRuntime.race
 
 /**
  * Returns an effect that races this effect with the specified effect,
@@ -3569,16 +3525,16 @@ export const raceFirst: {
  */
 export const raceWith: {
   <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
+    other: Effect<R1, E1, A1>,
     options: {
-      readonly other: Effect<R1, E1, A1>
       readonly onSelfDone: (exit: Exit.Exit<E, A>, fiber: Fiber.Fiber<E1, A1>) => Effect<R2, E2, A2>
       readonly onOtherDone: (exit: Exit.Exit<E1, A1>, fiber: Fiber.Fiber<E, A>) => Effect<R3, E3, A3>
     }
   ): <R>(self: Effect<R, E, A>) => Effect<R1 | R2 | R3 | R, E2 | E3, A2 | A3>
   <R, E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
     self: Effect<R, E, A>,
+    other: Effect<R1, E1, A1>,
     options: {
-      readonly other: Effect<R1, E1, A1>
       readonly onSelfDone: (exit: Exit.Exit<E, A>, fiber: Fiber.Fiber<E1, A1>) => Effect<R2, E2, A2>
       readonly onOtherDone: (exit: Exit.Exit<E1, A1>, fiber: Fiber.Fiber<E, A>) => Effect<R3, E3, A3>
     }
