@@ -30,7 +30,6 @@ import type { Pipeable } from "@effect/data/Pipeable"
 import type { Predicate } from "@effect/data/Predicate"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import * as internal from "@effect/io/internal/cause"
-import * as _pretty from "@effect/io/internal/cause-pretty"
 import type { Span } from "@effect/io/Tracer"
 
 /**
@@ -866,7 +865,7 @@ export const isRuntimeException: (u: unknown) => u is RuntimeException = interna
  * @since 1.0.0
  * @category rendering
  */
-export const pretty: <E>(cause: Cause<E>) => string = _pretty.pretty
+export const pretty: <E>(cause: Cause<E>) => string = internal.pretty
 
 /**
  * Removes any annotation from the cause

@@ -8,7 +8,6 @@ import type * as CauseExt from "@effect/io/Cause"
 import type * as FiberId from "@effect/io/Fiber/Id"
 import type * as FiberRefs from "@effect/io/FiberRefs"
 import * as Cause from "@effect/io/internal/cause"
-import * as Pretty from "@effect/io/internal/cause-pretty"
 import * as _fiberId from "@effect/io/internal/fiberId"
 import type * as Logger from "@effect/io/Logger"
 import type * as LogLevel from "@effect/io/Logger/Level"
@@ -179,7 +178,7 @@ export const stringLogger: Logger.Logger<unknown, string> = makeLogger<unknown, 
 
     if (cause != null && cause != Cause.empty) {
       output = output + " cause="
-      output = appendQuoted(Pretty.pretty(cause), output)
+      output = appendQuoted(Cause.pretty(cause), output)
     }
 
     if (List.isCons(spans)) {
@@ -254,7 +253,7 @@ export const logfmtLogger = makeLogger<unknown, string>(
 
     if (cause != null && cause != Cause.empty) {
       output = output + " cause="
-      output = appendQuotedLogfmt(Pretty.pretty(cause), output)
+      output = appendQuotedLogfmt(Cause.pretty(cause), output)
     }
 
     if (List.isCons(spans)) {
