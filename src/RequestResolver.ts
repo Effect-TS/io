@@ -89,7 +89,8 @@ export const contextFromEffect = <R, A extends Request.Request<any, any>>(self: 
  * @since 1.0.0
  * @category utils
  */
-export const contextFromServices = <Services extends Array<Context.Tag<any, any>>>(...services: Services) =>
+export const contextFromServices =
+  <Services extends Array<Context.Tag<any, any>>>(...services: Services) =>
   <R, A extends Request.Request<any, any>>(
     self: RequestResolver<A, R>
   ): Effect.Effect<

@@ -606,12 +606,11 @@ describe.concurrent("ScopedCache", () => {
   it.effect("refresh - should update the cache with a new value", () =>
     Effect.gen(function*($) {
       const inc = (n: number) => n * 10
-      const retrieve = (multiplier: Ref.Ref<number>) =>
-        (key: number) =>
-          pipe(
-            Ref.updateAndGet(multiplier, inc),
-            Effect.map((multiplier) => key * multiplier)
-          )
+      const retrieve = (multiplier: Ref.Ref<number>) => (key: number) =>
+        pipe(
+          Ref.updateAndGet(multiplier, inc),
+          Effect.map((multiplier) => key * multiplier)
+        )
       const seed = 1
       const key = 123
       const ref = yield* $(Ref.make(seed))
@@ -657,16 +656,15 @@ describe.concurrent("ScopedCache", () => {
     Effect.gen(function*($) {
       const error = Cause.RuntimeException("Must be a multiple of 3")
       const inc = (n: number) => n + 1
-      const retrieve = (number: Ref.Ref<number>) =>
-        (key: number) =>
-          pipe(
-            Ref.updateAndGet(number, inc),
-            Effect.flatMap((n) =>
-              n % 3 === 0
-                ? Effect.fail(error)
-                : Effect.succeed(key * n)
-            )
+      const retrieve = (number: Ref.Ref<number>) => (key: number) =>
+        pipe(
+          Ref.updateAndGet(number, inc),
+          Effect.flatMap((n) =>
+            n % 3 === 0
+              ? Effect.fail(error)
+              : Effect.succeed(key * n)
           )
+        )
       const seed = 2
       const key = 1
       const ref = yield* $(Ref.make(seed))

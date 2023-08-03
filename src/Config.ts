@@ -69,11 +69,10 @@ export declare namespace Config {
    */
   export type Wrap<A> =
     | (A extends Record<string, any> ? {
-      [K in keyof A]: Wrap<A[K]>
-    }
+        [K in keyof A]: Wrap<A[K]>
+      }
       : never)
     | Config<A>
-
 }
 
 /**
@@ -86,12 +85,12 @@ export const all: <const Arg extends Iterable<Config<any>> | Record<string, Conf
   arg: Arg
 ) => Config<
   [Arg] extends [ReadonlyArray<Config<any>>] ? {
-    -readonly [K in keyof Arg]: [Arg[K]] extends [Config<infer A>] ? A : never
-  }
-    : [Arg] extends [Iterable<Config<infer A>>] ? Array<A>
-    : [Arg] extends [Record<string, Config<any>>] ? {
       -readonly [K in keyof Arg]: [Arg[K]] extends [Config<infer A>] ? A : never
     }
+    : [Arg] extends [Iterable<Config<infer A>>] ? Array<A>
+    : [Arg] extends [Record<string, Config<any>>] ? {
+        -readonly [K in keyof Arg]: [Arg[K]] extends [Config<infer A>] ? A : never
+      }
     : never
 > = internal.all
 
