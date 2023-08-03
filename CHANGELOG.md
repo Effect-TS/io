@@ -1,5 +1,21 @@
 # @effect/io
 
+## 0.38.0
+
+### Minor Changes
+
+- [#580](https://github.com/Effect-TS/io/pull/580) [`40fb148`](https://github.com/Effect-TS/io/commit/40fb148f10728a7582941b9b82aeb41fe741dbea) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Revise race variant, remove raceAwait in favour of race
+
+### Patch Changes
+
+- [#585](https://github.com/Effect-TS/io/pull/585) [`18af9fd`](https://github.com/Effect-TS/io/commit/18af9fda205252d822b51e64ad801910b451dda1) Thanks [@tim-smart](https://github.com/tim-smart)! - use peer deps for /data
+
+- [#583](https://github.com/Effect-TS/io/pull/583) [`91f983e`](https://github.com/Effect-TS/io/commit/91f983e32a1893a9377ac9fc54eabc95d333d521) Thanks [@tim-smart](https://github.com/tim-smart)! - switch to @effect/build-utils
+
+- [#582](https://github.com/Effect-TS/io/pull/582) [`d9a6dc3`](https://github.com/Effect-TS/io/commit/d9a6dc3ace8d06c97427e28764f997286a958bd7) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Add toString / inspect to Exit
+
+- [#574](https://github.com/Effect-TS/io/pull/574) [`80030e0`](https://github.com/Effect-TS/io/commit/80030e0703882d02083b04afa78ef55f9e7467a7) Thanks [@gcanti](https://github.com/gcanti)! - remove Narrow helper (and use const params instead)
+
 ## 0.37.1
 
 ### Patch Changes
