@@ -4,11 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-dependencies:
-  '@effect/data':
-    specifier: ^0.17.0
-    version: 0.17.0
-
 devDependencies:
   '@babel/cli':
     specifier: ^7.22.9
@@ -34,6 +29,9 @@ devDependencies:
   '@effect/build-utils':
     specifier: ^0.1.2
     version: 0.1.2
+  '@effect/data':
+    specifier: ^0.17.1
+    version: 0.17.1
   '@effect/docgen':
     specifier: ^0.1.2
     version: 0.1.2(@types/node@20.4.5)(typescript@5.1.6)
@@ -751,9 +749,9 @@ packages:
     hasBin: true
     dev: true
 
-  /@effect/data@0.17.0:
-    resolution: {integrity: sha512-hBncTBQ4F3lggBjFgCgJVcPuesMSVRH2SSdGPbY4DDaGu19xyRX8dImJuoN6uniZG307MacHpwn/dDkqAVzITA==}
-    dev: false
+  /@effect/data@0.17.1:
+    resolution: {integrity: sha512-QCYkLE5Y5Dm5Yax5R3GmW4ZIgTx7W+kSZ7yq5eqQ/mFWa8i4yxbLuu8cudqzdeZtRtTGZKlhDxfFfgVtMywXJg==}
+    dev: true
 
   /@effect/docgen@0.1.2(@types/node@20.4.5)(typescript@5.1.6):
     resolution: {integrity: sha512-qy1pA8SKsqla7/35Q2NuUeT/VwO/olg9hdmmY929wSrKhRVVPOmnF4cbCvFxbykikYek0/6/thupSUenYV0DvQ==}
@@ -7046,7 +7044,7 @@ packages:
     resolution: {integrity: sha512-eDMORYaPNZ4sQIuuYPDHdQvf4gyCF9rEEV/yPxGfwPkRodwEgiMUUXTx/dex+Me0wxx53S+NgUHaP7y3MGlDmg==}
     requiresBuild: true
     dependencies:
-      string-width: 1.0.2
+      string-width: 4.2.3
     dev: true
     optional: true
 
