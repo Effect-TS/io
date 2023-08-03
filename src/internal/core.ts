@@ -17,7 +17,7 @@ import * as Option from "@effect/data/Option"
 import { pipeArguments } from "@effect/data/Pipeable"
 import type { Predicate } from "@effect/data/Predicate"
 import * as ReadonlyArray from "@effect/data/ReadonlyArray"
-import type * as Cause from "@effect/io/Cause"
+import * as Cause from "@effect/io/Cause"
 import type * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
 import type * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
@@ -185,6 +185,18 @@ class EffectPrimitiveFailure {
   pipe() {
     return pipeArguments(this, arguments)
   }
+  toJSON() {
+    return {
+      _tag: this._tag,
+      cause: (this.cause as any).toJSON()
+    }
+  }
+  toString() {
+    return Cause.pretty(this.cause as any as Cause.Cause<unknown>)
+  }
+  [Symbol.for("nodejs.util.inspect.custom")]() {
+    return this.toJSON()
+  }
 }
 
 /** @internal */
@@ -206,6 +218,18 @@ class EffectPrimitiveSuccess {
   }
   pipe() {
     return pipeArguments(this, arguments)
+  }
+  toJSON() {
+    return {
+      _tag: this._tag,
+      value: this.value
+    }
+  }
+  toString() {
+    return `Success: ${String(this.value)}`
+  }
+  [Symbol.for("nodejs.util.inspect.custom")]() {
+    return this.toJSON()
   }
 }
 

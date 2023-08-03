@@ -29,7 +29,6 @@ import type * as FiberRefs from "@effect/io/FiberRefs"
 import * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
 import * as _RequestBlock from "@effect/io/internal/blockedRequests"
 import * as internalCause from "@effect/io/internal/cause"
-import * as causePretty from "@effect/io/internal/cause-pretty"
 import * as clock from "@effect/io/internal/clock"
 import { currentRequestMap } from "@effect/io/internal/completedRequestMap"
 import * as concurrency from "@effect/io/internal/concurrency"
@@ -1360,7 +1359,7 @@ export const tracerLogger = internalLogger.makeLogger<unknown, void>(({
   attributes["effect.logLevel"] = logLevel.label
 
   if (cause !== null && cause !== internalCause.empty) {
-    attributes["effect.cause"] = causePretty.pretty(cause)
+    attributes["effect.cause"] = internalCause.pretty(cause)
   }
 
   span.value.event(
