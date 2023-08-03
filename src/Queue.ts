@@ -50,7 +50,7 @@ export type QueueStrategyTypeId = typeof QueueStrategyTypeId
  * @since 1.0.0
  * @category models
  */
-export interface Queue<A> extends Enqueue<A>,  Dequeue<A>, Pipeable {
+export interface Queue<A> extends Enqueue<A>, Dequeue<A>, Pipeable {
   /** @internal */
   readonly queue: MutableQueue.MutableQueue<A>
   /** @internal */
