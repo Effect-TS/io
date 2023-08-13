@@ -3619,6 +3619,24 @@ export const tapError: {
 } = effect.tapError
 
 /**
+ * Returns an effect that effectfully "peeks" at the specific tagged failure of this effect.
+ *
+ * @since 1.0.0
+ * @category sequencing
+ */
+export const tapErrorTag: {
+  <K extends E["_tag"] & string, E extends { _tag: string }, R1, E1, A1>(
+    k: K,
+    f: (e: Extract<E, { _tag: K }>) => Effect<R1, E1, A1>
+  ): <R, A>(self: Effect<R, E, A>) => Effect<R | R1, E | E1, A>
+  <R, E extends { _tag: string }, A, K extends E["_tag"] & string, R1, E1, A1>(
+    self: Effect<R, E, A>,
+    k: K,
+    f: (e: Extract<E, { _tag: K }>) => Effect<R1, E1, A1>
+  ): Effect<R | R1, E | E1, A>
+} = effect.tapErrorTag
+
+/**
  * Returns an effect that effectually "peeks" at the cause of the failure of
  * this effect.
  *
