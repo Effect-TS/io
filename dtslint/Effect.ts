@@ -372,3 +372,20 @@ Effect.promise<string>(
       }, 2000)
     })
 )
+
+class TestError1 {
+  readonly _tag = "TestError1"
+  constructor() {}
+}
+
+// $ExpectType Effect<never, TestError1, never>
+pipe(
+  Effect.fail(new TestError1()),
+  Effect.tapErrorTag("TestError1", () => Effect.succeed(1))
+)
+
+// $ExpectType Effect<never, Error | TestError1, never>
+pipe(
+  Effect.fail(new TestError1()),
+  Effect.tapErrorTag("TestError1", () => Effect.fail(new Error("")))
+)

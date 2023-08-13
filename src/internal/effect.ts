@@ -1511,6 +1511,25 @@ export const tapError = dual<
   }))
 
 /* @internal */
+export const tapErrorTag = dual<
+  <K extends E["_tag"] & string, E extends { _tag: string }, R1, E1, A1>(
+    k: K,
+    f: (e: Extract<E, { _tag: K }>) => Effect.Effect<R1, E1, A1>
+  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E | E1, A>,
+  <R, E extends { _tag: string }, A, K extends E["_tag"] & string, R1, E1, A1>(
+    self: Effect.Effect<R, E, A>,
+    k: K,
+    f: (e: Extract<E, { _tag: K }>) => Effect.Effect<R1, E1, A1>
+  ) => Effect.Effect<R | R1, E | E1, A>
+>(3, (self, k, f) =>
+  tapError(self, (e) => {
+    if ("_tag" in e && e["_tag"] === k) {
+      return f(e as any)
+    }
+    return core.unit
+  }))
+
+/* @internal */
 export const tapErrorCause = dual<
   <E, XE extends E, R2, E2, X>(
     f: (cause: Cause.Cause<XE>) => Effect.Effect<R2, E2, X>
