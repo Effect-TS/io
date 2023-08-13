@@ -1,6 +1,7 @@
 import { pipe } from "@effect/data/Function"
 import type { Cause } from "@effect/io/Cause"
 import * as Effect from "@effect/io/Effect"
+import * as ConfigProvider from "@effect/io/Config/Provider"
 
 declare const string: Effect.Effect<"dep-1", "err-1", string>
 declare const number: Effect.Effect<"dep-2", "err-2", number>
@@ -389,3 +390,9 @@ pipe(
   Effect.fail(new TestError1()),
   Effect.tapErrorTag("TestError1", () => Effect.fail(new Error("")))
 )
+
+// $ExpectType Layer<never, never, never>
+Effect.setConfigProvider(Effect.sync(() => ConfigProvider.fromEnv()))
+
+// $ExpectType Layer<never, Error, never>
+Effect.setConfigProvider(1 === 1 ? Effect.sync(() => ConfigProvider.fromEnv()) : Effect.fail(new Error("")))

@@ -2885,7 +2885,10 @@ export const configProviderWith: <R, E, A>(f: (configProvider: ConfigProvider) =
  * @since 1.0.0
  * @category config
  */
-export const setConfigProvider: (configProvider: ConfigProvider) => Layer.Layer<never, never, never> =
+export const setConfigProvider:{
+  <R = never, E = never>(configProvider: ConfigProvider): Layer.Layer<R, E, never>
+  <R, E>(configProviderEffect: Effect<R, E, ConfigProvider>): Layer.Layer<R, E, never>
+} =
   circularLayer.setConfigProvider
 
 /**

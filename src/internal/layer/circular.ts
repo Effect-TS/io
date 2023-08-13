@@ -1,5 +1,5 @@
 import type * as Context from "@effect/data/Context"
-import { dual } from "@effect/data/Function"
+import { dual, pipe } from "@effect/data/Function"
 import * as HashSet from "@effect/data/HashSet"
 import type * as ConfigProvider from "@effect/io/Config/Provider"
 import type * as Effect from "@effect/io/Effect"
@@ -179,8 +179,15 @@ export const disableWindDown: Layer.Layer<never, never, never> = layer.scopedDis
 )
 
 /** @internal */
-export const setConfigProvider = (configProvider: ConfigProvider.ConfigProvider): Layer.Layer<never, never, never> =>
-  layer.scopedDiscard(fiberRuntime.withConfigProviderScoped(configProvider))
+export const setConfigProvider: {
+  <R = never, E = never>(configProvider: ConfigProvider.ConfigProvider): Layer.Layer<R, E, never>
+  <R, E>(configProviderEffect: Effect.Effect<R, E, ConfigProvider.ConfigProvider>): Layer.Layer<R, E, never>
+} = <R, E>(cp: ConfigProvider.ConfigProvider | Effect.Effect<R, E, ConfigProvider.ConfigProvider>) =>
+  pipe(
+    core.isEffect(cp) ? cp : core.succeed(cp),
+    core.flatMap(fiberRuntime.withConfigProviderScoped),
+    layer.scopedDiscard
+  )
 
 /** @internal */
 export const setParentSpan = (span: Tracer.ParentSpan): Layer.Layer<never, never, never> =>
