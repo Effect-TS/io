@@ -378,6 +378,11 @@ class TestError1 {
   constructor() {}
 }
 
+class TestError2 {
+  readonly _tag = "TestError2"
+  constructor() {}
+}
+
 // $ExpectType Effect<never, TestError1, never>
 pipe(
   Effect.fail(new TestError1()),
@@ -388,4 +393,10 @@ pipe(
 pipe(
   Effect.fail(new TestError1()),
   Effect.tapErrorTag("TestError1", () => Effect.fail(new Error("")))
+)
+
+// $ExpectType Effect<never, Error, never>
+pipe(
+  Effect.fail<TestError1 | Error>(new TestError1()),
+  Effect.orDieTag("TestError1"),
 )

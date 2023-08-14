@@ -15,7 +15,7 @@ import * as List from "@effect/data/List"
 import * as MutableRef from "@effect/data/MutableRef"
 import * as Option from "@effect/data/Option"
 import { pipeArguments } from "@effect/data/Pipeable"
-import type { Predicate } from "@effect/data/Predicate"
+import { isObject, type Predicate } from "@effect/data/Predicate"
 import * as ReadonlyArray from "@effect/data/ReadonlyArray"
 import * as Cause from "@effect/io/Cause"
 import type * as Deferred from "@effect/io/Deferred"
@@ -957,6 +957,28 @@ export const orDieWith = dual<
 >(2, (self, f) =>
   matchEffect(self, {
     onFailure: (e) => die(f(e)),
+    onSuccess: succeed
+  }))
+
+/* @internal */
+export const orDieTag = dual<
+  <K extends (E extends { _tag: string } ? E["_tag"] : never), E>(
+    tag: K,
+    f?: (error: Extract<E, { _tag: K }>) => unknown
+  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, Exclude<E, { _tag: K }>, A>,
+  <K extends (E extends { _tag: string } ? E["_tag"] : never), E, R, A>(
+    self: Effect.Effect<R, E, A>,
+    tag: K,
+    f?: (error: Extract<E, { _tag: K }>) => unknown
+  ) => Effect.Effect<R, Exclude<E, { _tag: K }>, A>
+>(3, (self, tag, f) =>
+  matchEffect(self, {
+    onFailure: (e) => {
+      if (isObject(e) && "_tag" in e && e["_tag"] === tag) {
+        return die(f ? f(e as any) : e)
+      }
+      return self as any
+    },
     onSuccess: succeed
   }))
 

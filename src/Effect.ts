@@ -4236,6 +4236,21 @@ export const setUnhandledErrorLogLevel = (level: Option.Option<LogLevel>): Layer
 export const orDie: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, A> = core.orDie
 
 /**
+ * Converts the specified error into a defect and removes it from the error channel.
+ */
+export const orDieTag: {
+  <K extends (E extends { _tag: string } ? E["_tag"] : never), E>(
+    tag: K,
+    f?: (error: Extract<E, { _tag: K }>) => unknown
+  ): <R, A>(self: Effect<R, E, A>) => Effect<R, Exclude<E, { _tag: K }>, A>,
+  <K extends (E extends { _tag: string } ? E["_tag"] : never), E extends object, R, A>(
+    self: Effect<R, E, A>,
+    tag: K,
+    f?: (error: Extract<E, { _tag: K }>) => unknown
+  ): Effect<R, Exclude<E, { _tag: K }>, A>
+} = core.orDieTag
+
+/**
  * Keeps none of the errors, and terminates the fiber with them, using the
  * specified function to convert the `E` into a `Throwable`.
  *

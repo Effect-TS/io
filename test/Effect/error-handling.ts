@@ -1,6 +1,6 @@
 import * as Chunk from "@effect/data/Chunk"
 import * as Either from "@effect/data/Either"
-import { constFalse, constTrue, identity, pipe } from "@effect/data/Function"
+import { constFalse, constTrue, flow, identity, pipe } from "@effect/data/Function"
 import * as Option from "@effect/data/Option"
 import * as Cause from "@effect/io/Cause"
 import * as Effect from "@effect/io/Effect"
@@ -19,6 +19,16 @@ export const InterruptError2 = new Error("Oh noes 2!")
 export const InterruptError3 = new Error("Oh noes 3!")
 
 const ExampleErrorFail = Effect.fail(ExampleError)
+
+class TaggedError1 {
+  readonly _tag = "TaggedError1"
+  constructor() {}
+}
+
+class TaggedError2 {
+  readonly _tag = "TaggedError2"
+  constructor() {}
+}
 
 const deepErrorEffect = (n: number): Effect.Effect<never, unknown, void> => {
   if (n === 0) {
@@ -513,5 +523,43 @@ describe.concurrent("Effect", () => {
       const expectedCause = Cause.fail("oh no")
       const result = yield* $(cause(pipe(Effect.failCause(expectedCause), Effect.sandbox, Effect.unsandbox)))
       assert.deepStrictEqual(Cause.unannotate(result), expectedCause)
+    }))
+
+  it.effect("orDieTag", () =>
+    Effect.gen(function*($) {
+      const toErrorTypeStr = flow(
+        Effect.catchAllDefect(() => Effect.succeed("defect")),
+        Effect.catchAll(() => Effect.succeed("error"))
+      )
+
+      const success = yield* $(
+        Effect.succeed("success") as Effect.Effect<never, TaggedError1, string>,
+        Effect.orDieTag("TaggedError1"),
+        toErrorTypeStr
+      )
+
+      assert.strictEqual(success, "success")
+
+      const defect = yield* $(
+        Effect.fail(new TaggedError1()),
+        Effect.orDieTag("TaggedError1"),
+        toErrorTypeStr
+      )
+
+      assert.strictEqual(defect, "defect")
+
+      const error1 = yield* $(
+        Effect.fail(new TaggedError1()),
+        toErrorTypeStr
+      )
+
+      assert.strictEqual(error1, "error")
+
+      const error2 = yield* $(
+        Effect.fail<TaggedError1 | TaggedError2>(new TaggedError1()),
+        Effect.orDieTag("TaggedError2"),
+        toErrorTypeStr
+      )
+      assert.strictEqual(error2, "error")
     }))
 })
