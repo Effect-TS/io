@@ -106,6 +106,7 @@ Added in v1.0.0
   - [exit](#exit)
   - [intoDeferred](#intodeferred)
   - [option](#option)
+  - [optionFromOptional](#optionfromoptional)
   - [some](#some)
   - [unsome](#unsome)
 - [delays & timeouts](#delays--timeouts)
@@ -307,8 +308,6 @@ Added in v1.0.0
   - [flatten](#flatten)
   - [race](#race)
   - [raceAll](#raceall)
-  - [raceAwait](#raceawait)
-  - [raceFibersWith](#racefiberswith)
   - [raceFirst](#racefirst)
   - [raceWith](#racewith)
   - [summarized](#summarized)
@@ -317,6 +316,7 @@ Added in v1.0.0
   - [tapDefect](#tapdefect)
   - [tapError](#taperror)
   - [tapErrorCause](#taperrorcause)
+  - [tapErrorTag](#taperrortag)
 - [supervision & fibers](#supervision--fibers)
   - [awaitAllChildren](#awaitallchildren)
   - [daemonChildren](#daemonchildren)
@@ -1770,6 +1770,21 @@ export declare const option: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never
 
 Added in v1.0.0
 
+## optionFromOptional
+
+Wraps the success value of this effect with `Option.some`, and maps
+`Cause.NoSuchElementException` to `Option.none`.
+
+**Signature**
+
+```ts
+export declare const optionFromOptional: <R, E, A>(
+  self: Effect<R, E, A>
+) => Effect<R, Exclude<E, Cause.NoSuchElementException>, Option.Option<A>>
+```
+
+Added in v1.0.0
+
 ## some
 
 Converts an option on values into an option on errors.
@@ -1932,7 +1947,7 @@ Added in v1.0.0
 
 Returns an effect that will timeout this effect, returning either the
 default value if the timeout elapses before the effect has produced a
-value or returning the result of applying the function `f` to the
+value or returning the result of applying the function `onSuccess` to the
 success value of the effect.
 
 If the timeout elapses without producing a value, the running effect will
@@ -1943,13 +1958,17 @@ be safely interrupted.
 ```ts
 export declare const timeoutTo: {
   <A, B, B1>(options: {
-    readonly onTimeout: B1
+    readonly onTimeout: LazyArg<B1>
     readonly onSuccess: (a: A) => B
     readonly duration: Duration.DurationInput
   }): <R, E>(self: Effect<R, E, A>) => Effect<R, E, B | B1>
   <R, E, A, B, B1>(
     self: Effect<R, E, A>,
-    options: { readonly onTimeout: B1; readonly onSuccess: (a: A) => B; readonly duration: Duration.DurationInput }
+    options: {
+      readonly onTimeout: LazyArg<B1>
+      readonly onSuccess: (a: A) => B
+      readonly duration: Duration.DurationInput
+    }
   ): Effect<R, E, B | B1>
 }
 ```
@@ -2182,11 +2201,11 @@ Recovers from the specified tagged error.
 
 ```ts
 export declare const catchTag: {
-  <K extends E['_tag'] & string, E extends { _tag: string }, R1, E1, A1>(
+  <K extends E extends { _tag: string } ? E['_tag'] : never, E, R1, E1, A1>(
     k: K,
     f: (e: Extract<E, { _tag: K }>) => Effect<R1, E1, A1>
   ): <R, A>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | Exclude<E, { _tag: K }>, A1 | A>
-  <R, E extends { _tag: string }, A, K extends E['_tag'] & string, R1, E1, A1>(
+  <R, E, A, K extends E extends { _tag: string } ? E['_tag'] : never, R1, E1, A1>(
     self: Effect<R, E, A>,
     k: K,
     f: (e: Extract<E, { _tag: K }>) => Effect<R1, E1, A1>
@@ -2205,8 +2224,10 @@ Recovers from the specified tagged errors.
 ```ts
 export declare const catchTags: {
   <
-    E extends { _tag: string },
-    Cases extends { [K in E['_tag']]+?: ((error: Extract<E, { _tag: K }>) => Effect<any, any, any>) | undefined }
+    E,
+    Cases extends E extends { _tag: string }
+      ? { [K in E['_tag']]+?: ((error: Extract<E, { _tag: K }>) => Effect<any, any, any>) | undefined }
+      : {}
   >(
     cases: Cases
   ): <R, A>(
@@ -2227,9 +2248,11 @@ export declare const catchTags: {
   >
   <
     R,
-    E extends { _tag: string },
+    E,
     A,
-    Cases extends { [K in E['_tag']]+?: ((error: Extract<E, { _tag: K }>) => Effect<any, any, any>) | undefined }
+    Cases extends E extends { _tag: string }
+      ? { [K in E['_tag']]+?: ((error: Extract<E, { _tag: K }>) => Effect<any, any, any>) | undefined }
+      : {}
   >(
     self: Effect<R, E, A>,
     cases: Cases
@@ -2463,7 +2486,8 @@ Added in v1.0.0
 ## tryMap
 
 Returns an effect whose success is mapped by the specified side effecting
-`f` function, translating any thrown exceptions into typed failed effects.
+`try` function, translating any promise rejections into typed failed effects
+via the `catch` function.
 
 **Signature**
 
@@ -2484,7 +2508,8 @@ Added in v1.0.0
 ## tryMapPromise
 
 Returns an effect whose success is mapped by the specified side effecting
-`f` function, translating any promise rejections into typed failed effects.
+`try` function, translating any promise rejections into typed failed effects
+via the `catch` function.
 
 An optional `AbortSignal` can be provided to allow for interruption of the
 wrapped Promise api.
@@ -3486,7 +3511,7 @@ Added in v1.0.0
 ## mapBoth
 
 Returns an effect whose failure and success channels have been mapped by
-the specified pair of functions, `f` and `g`.
+the specified `onFailure` and `onSuccess` functions.
 
 **Signature**
 
@@ -5005,11 +5030,6 @@ returning the first successful `A` from the faster side. If one effect
 succeeds, the other will be interrupted. If neither succeeds, then the
 effect will fail with some error.
 
-Note that both effects are disconnected before being raced. This means that
-interruption of the loser will always be performed in the background. If this
-behavior is not desired, you can use `Effect.raceWith`, which will not
-disconnect or interrupt losers.
-
 **Signature**
 
 ```ts
@@ -5031,54 +5051,6 @@ the race will be interrupted immediately
 
 ```ts
 export declare const raceAll: <R, E, A>(effects: Iterable<Effect<R, E, A>>) => Effect<R, E, A>
-```
-
-Added in v1.0.0
-
-## raceAwait
-
-Returns an effect that races this effect with the specified effect,
-returning the first successful `A` from the faster side. If one effect
-succeeds, the other will be interrupted. If neither succeeds, then the
-effect will fail with some error.
-
-**Signature**
-
-```ts
-export declare const raceAwait: {
-  <R2, E2, A2>(that: Effect<R2, E2, A2>): <R, E, A>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A2 | A>
-  <R, E, A, R2, E2, A2>(self: Effect<R, E, A>, that: Effect<R2, E2, A2>): Effect<R | R2, E | E2, A | A2>
-}
-```
-
-Added in v1.0.0
-
-## raceFibersWith
-
-Forks this effect and the specified effect into their own fibers, and races
-them, calling one of two specified callbacks depending on which fiber wins
-the race. This method does not interrupt, join, or otherwise do anything
-with the fibers. It can be considered a low-level building block for
-higher-level operators like `race`.
-
-**Signature**
-
-```ts
-export declare const raceFibersWith: {
-  <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(options: {
-    readonly other: Effect<R1, E1, A1>
-    readonly onSelfWin: (winner: Fiber.RuntimeFiber<E, A>, loser: Fiber.RuntimeFiber<E1, A1>) => Effect<R2, E2, A2>
-    readonly onOtherWin: (winner: Fiber.RuntimeFiber<E1, A1>, loser: Fiber.RuntimeFiber<E, A>) => Effect<R3, E3, A3>
-  }): <R>(self: Effect<R, E, A>) => Effect<R1 | R2 | R3 | R, E2 | E3, A2 | A3>
-  <R, E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
-    self: Effect<R, E, A>,
-    options: {
-      readonly other: Effect<R1, E1, A1>
-      readonly onSelfWin: (winner: Fiber.RuntimeFiber<E, A>, loser: Fiber.RuntimeFiber<E1, A1>) => Effect<R2, E2, A2>
-      readonly onOtherWin: (winner: Fiber.RuntimeFiber<E1, A1>, loser: Fiber.RuntimeFiber<E, A>) => Effect<R3, E3, A3>
-    }
-  ): Effect<R | R1 | R2 | R3, E2 | E3, A2 | A3>
-}
 ```
 
 Added in v1.0.0
@@ -5116,15 +5088,17 @@ the specified finisher as soon as one result or the other has been computed.
 
 ```ts
 export declare const raceWith: {
-  <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(options: {
-    readonly other: Effect<R1, E1, A1>
-    readonly onSelfDone: (exit: Exit.Exit<E, A>, fiber: Fiber.Fiber<E1, A1>) => Effect<R2, E2, A2>
-    readonly onOtherDone: (exit: Exit.Exit<E1, A1>, fiber: Fiber.Fiber<E, A>) => Effect<R3, E3, A3>
-  }): <R>(self: Effect<R, E, A>) => Effect<R1 | R2 | R3 | R, E2 | E3, A2 | A3>
+  <E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
+    other: Effect<R1, E1, A1>,
+    options: {
+      readonly onSelfDone: (exit: Exit.Exit<E, A>, fiber: Fiber.Fiber<E1, A1>) => Effect<R2, E2, A2>
+      readonly onOtherDone: (exit: Exit.Exit<E1, A1>, fiber: Fiber.Fiber<E, A>) => Effect<R3, E3, A3>
+    }
+  ): <R>(self: Effect<R, E, A>) => Effect<R1 | R2 | R3 | R, E2 | E3, A2 | A3>
   <R, E, A, R1, E1, A1, R2, E2, A2, R3, E3, A3>(
     self: Effect<R, E, A>,
+    other: Effect<R1, E1, A1>,
     options: {
-      readonly other: Effect<R1, E1, A1>
       readonly onSelfDone: (exit: Exit.Exit<E, A>, fiber: Fiber.Fiber<E1, A1>) => Effect<R2, E2, A2>
       readonly onOtherDone: (exit: Exit.Exit<E1, A1>, fiber: Fiber.Fiber<E, A>) => Effect<R3, E3, A3>
     }
@@ -5249,6 +5223,28 @@ export declare const tapErrorCause: {
     E | E2,
     A
   >
+}
+```
+
+Added in v1.0.0
+
+## tapErrorTag
+
+Returns an effect that effectfully "peeks" at the specific tagged failure of this effect.
+
+**Signature**
+
+```ts
+export declare const tapErrorTag: {
+  <K extends E extends { _tag: string } ? E['_tag'] : never, E, R1, E1, A1>(
+    k: K,
+    f: (e: Extract<E, { _tag: K }>) => Effect<R1, E1, A1>
+  ): <R, A>(self: Effect<R, E, A>) => Effect<R1 | R, E | E1, A>
+  <R, E, A, K extends E extends { _tag: string } ? E['_tag'] : never, R1, E1, A1>(
+    self: Effect<R, E, A>,
+    k: K,
+    f: (e: Extract<E, { _tag: K }>) => Effect<R1, E1, A1>
+  ): Effect<R | R1, E | E1, A>
 }
 ```
 
