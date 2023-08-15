@@ -3091,6 +3091,30 @@ export const serviceFunctionEffect: <T extends Context.Tag<any, any>, Args exten
   f: (_: Context.Tag.Service<T>) => (...args: Args) => Effect<R, E, A>
 ) => (...args: Args) => Effect<R | Context.Tag.Identifier<T>, E, A> = effect.serviceFunctionEffect
 
+
+/**
+ * @since 1.0.0
+ * @category context
+ */
+export const deriveFunctions : <I, S>(tag: Context.Tag<I, S>) =>
+    { [k in { [k in keyof S]: S[k] extends (...args: any[]) =>Effect<any, any, any> ? k : never }[keyof S]]: S[k] extends (...args: infer Args) => Effect<infer R, infer E, infer A> ? (...args: Args) => Effect<R | I, E, A> : never } = effect.deriveFunctions
+
+/**
+ * @since 1.0.0
+ * @category context
+ */
+export const deriveConstants : <I, S>(tag: Context.Tag<I, S>)=>
+    { [k in { [k in keyof S]: S[k] extends Effect<any, any, any> ? k : never }[keyof S]]: S[k] extends Effect<infer R, infer E, infer A> ? Effect<R | I, E, A> : never } = effect.deriveConstants
+    
+/**
+ * @since 1.0.0
+ * @category context
+ */
+export const deriveAccesses : <I, S>(tag: Context.Tag<I, S>) => {
+    functions: { [k in { [k in keyof S]: S[k] extends (...args: any[]) => Effect<any, any, any> ? k : never }[keyof S]]: S[k] extends (...args: infer Args) => Effect<infer R, infer E, infer A> ? (...args: Args) => Effect<R | I, E, A> : never }
+    constants: { [k in { [k in keyof S]: S[k] extends Effect<any, any, any> ? k : never }[keyof S]]: S[k] extends Effect<infer R, infer E, infer A> ? Effect<R | I, E, A> : never }
+} = effect.deriveAccesses
+
 /**
  * @since 1.0.0
  * @category context

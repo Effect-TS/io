@@ -81,4 +81,64 @@ describe.concurrent("Effect", () => {
       }),
       Effect.provideContext(pipe(Context.make(NumberService, { n: 0 })))
     ))
+
+  it.effect("deriveAccessFunctions", () => {
+    interface Service {
+      foo: (x: string, y: number) => Effect.Effect<never, never, string>
+    }
+    const Service = Context.Tag<Service>()
+    const { foo } = Effect.deriveFunctions(Service)
+    return pipe(
+      Effect.gen(function*(_) {
+        expect(yield* _(foo("a", 3))).toEqual("a3")
+      }),
+      Effect.provideService(
+        Service,
+        Service.of({
+          foo: (x, y) => Effect.succeed(`${x}${y}`)
+        })
+      )
+    )
+  })
+
+  it.effect("deriveAccessConstants", () => {
+    interface Service {
+      baz: Effect.Effect<never, never, string>
+    }
+    const Service = Context.Tag<Service>()
+    const { baz } = Effect.deriveConstants(Service)
+    return pipe(
+      Effect.gen(function*(_) {
+        expect(yield* _(baz)).toEqual("42!")
+      }),
+      Effect.provideService(
+        Service,
+        Service.of({
+          baz: Effect.succeed("42!")
+        })
+      )
+    )
+  })
+
+  it.effect("deriveAccesses - both functions and constants", () => {
+    interface Service {
+      foo: (x: string, y: number) => Effect.Effect<never, never, string>
+      baz: Effect.Effect<never, never, string>
+    }
+    const Service = Context.Tag<Service>()
+    const { constants, functions } = Effect.deriveAccesses(Service)
+    return pipe(
+      Effect.gen(function*(_) {
+        expect(yield* _(constants.baz)).toEqual("42!")
+        expect(yield* _(functions.foo("a", 3))).toEqual("a3")
+      }),
+      Effect.provideService(
+        Service,
+        Service.of({
+          baz: Effect.succeed("42!"),
+          foo: (x, y) => Effect.succeed(`${x}${y}`)
+        })
+      )
+    )
+  })
 })
