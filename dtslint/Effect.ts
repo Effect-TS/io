@@ -389,3 +389,23 @@ pipe(
   Effect.fail(new TestError1()),
   Effect.tapErrorTag("TestError1", () => Effect.fail(new Error("")))
 )
+
+// $ExpectType Effect<never, Error, number>
+pipe(
+  Effect.fail<TestError1 | Error>(new TestError1()),
+  Effect.catchTag("TestError1", () => Effect.succeed(1))
+)
+
+// $ExpectType Effect<never, Error | TestError1, never>
+pipe(
+  Effect.fail<TestError1 | Error>(new TestError1()),
+  Effect.tapErrorTag("TestError1", () => Effect.succeed(1))
+)
+
+// $ExpectType Effect<never, Error, number>
+pipe(
+  Effect.fail<TestError1 | Error>(new Error()),
+  Effect.catchTags({
+    "TestError1": (e) => Effect.succeed(1),
+  })
+)

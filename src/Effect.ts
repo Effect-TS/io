@@ -1520,11 +1520,11 @@ export const catchSomeDefect: {
  * @category error handling
  */
 export const catchTag: {
-  <K extends E["_tag"] & string, E extends { _tag: string }, R1, E1, A1>(
+  <K extends (E extends { _tag: string } ? E["_tag"] : never), E, R1, E1, A1>(
     k: K,
     f: (e: Extract<E, { _tag: K }>) => Effect<R1, E1, A1>
   ): <R, A>(self: Effect<R, E, A>) => Effect<R1 | R, E1 | Exclude<E, { _tag: K }>, A1 | A>
-  <R, E extends { _tag: string }, A, K extends E["_tag"] & string, R1, E1, A1>(
+  <R, E, A, K extends (E extends { _tag: string } ? E["_tag"] : never), R1, E1, A1>(
     self: Effect<R, E, A>,
     k: K,
     f: (e: Extract<E, { _tag: K }>) => Effect<R1, E1, A1>
@@ -1539,8 +1539,8 @@ export const catchTag: {
  */
 export const catchTags: {
   <
-    E extends { _tag: string },
-    Cases extends { [K in E["_tag"]]+?: ((error: Extract<E, { _tag: K }>) => Effect<any, any, any>) }
+    E,
+    Cases extends (E extends { _tag: string } ? { [K in E["_tag"]]+?: ((error: Extract<E, { _tag: K }>) => Effect<any, any, any>) } : {})
   >(
     cases: Cases
   ): <R, A>(
@@ -1561,9 +1561,9 @@ export const catchTags: {
   >
   <
     R,
-    E extends { _tag: string },
+    E,
     A,
-    Cases extends { [K in E["_tag"]]+?: ((error: Extract<E, { _tag: K }>) => Effect<any, any, any>) }
+    Cases extends (E extends { _tag: string } ? { [K in E["_tag"]]+?: ((error: Extract<E, { _tag: K }>) => Effect<any, any, any>) } : {})
   >(
     self: Effect<R, E, A>,
     cases: Cases
@@ -3627,11 +3627,11 @@ export const tapError: {
  * @category sequencing
  */
 export const tapErrorTag: {
-  <K extends E["_tag"] & string, E extends { _tag: string }, R1, E1, A1>(
+  <K extends (E extends { _tag: string } ? E["_tag"] : never), E, R1, E1, A1>(
     k: K,
     f: (e: Extract<E, { _tag: K }>) => Effect<R1, E1, A1>
   ): <R, A>(self: Effect<R, E, A>) => Effect<R | R1, E | E1, A>
-  <R, E extends { _tag: string }, A, K extends E["_tag"] & string, R1, E1, A1>(
+  <R, E, A, K extends (E extends { _tag: string } ? E["_tag"] : never), R1, E1, A1>(
     self: Effect<R, E, A>,
     k: K,
     f: (e: Extract<E, { _tag: K }>) => Effect<R1, E1, A1>
