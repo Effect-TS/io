@@ -1743,7 +1743,8 @@ export {
 
 /**
  * Returns an effect whose success is mapped by the specified side effecting
- * `f` function, translating any thrown exceptions into typed failed effects.
+ * `try` function, translating any promise rejections into typed failed effects
+ * via the `catch` function.
  *
  * @since 1.0.0
  * @category error handling
@@ -1760,7 +1761,8 @@ export const tryMap: {
 
 /**
  * Returns an effect whose success is mapped by the specified side effecting
- * `f` function, translating any promise rejections into typed failed effects.
+ * `try` function, translating any promise rejections into typed failed effects
+ * via the `catch` function.
  *
  * An optional `AbortSignal` can be provided to allow for interruption of the
  * wrapped Promise api.
@@ -2047,7 +2049,7 @@ export const mapAccum: {
 
 /**
  * Returns an effect whose failure and success channels have been mapped by
- * the specified pair of functions, `f` and `g`.
+ * the specified `onFailure` and `onSuccess` functions.
  *
  * @since 1.0.0
  * @category mapping
@@ -2828,7 +2830,7 @@ export const timeoutFailCause: {
 /**
  * Returns an effect that will timeout this effect, returning either the
  * default value if the timeout elapses before the effect has produced a
- * value or returning the result of applying the function `f` to the
+ * value or returning the result of applying the function `onSuccess` to the
  * success value of the effect.
  *
  * If the timeout elapses without producing a value, the running effect will
