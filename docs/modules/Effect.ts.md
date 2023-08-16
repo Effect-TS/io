@@ -106,7 +106,6 @@ Added in v1.0.0
   - [exit](#exit)
   - [intoDeferred](#intodeferred)
   - [option](#option)
-  - [optionFromOptional](#optionfromoptional)
   - [some](#some)
   - [unsome](#unsome)
 - [delays & timeouts](#delays--timeouts)
@@ -240,6 +239,9 @@ Added in v1.0.0
   - [EffectGen (interface)](#effectgen-interface)
   - [EffectUnify (interface)](#effectunify-interface)
   - [EffectUnifyBlacklist (interface)](#effectunifyblacklist-interface)
+- [optionality](#optionality)
+  - [fromNullable](#fromnullable)
+  - [optionFromOptional](#optionfromoptional)
 - [random](#random)
   - [random](#random-1)
   - [randomWith](#randomwith)
@@ -1766,21 +1768,6 @@ success.
 
 ```ts
 export declare const option: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Option.Option<A>>
-```
-
-Added in v1.0.0
-
-## optionFromOptional
-
-Wraps the success value of this effect with `Option.some`, and maps
-`Cause.NoSuchElementException` to `Option.none`.
-
-**Signature**
-
-```ts
-export declare const optionFromOptional: <R, E, A>(
-  self: Effect<R, E, A>
-) => Effect<R, Exclude<E, Cause.NoSuchElementException>, Option.Option<A>>
 ```
 
 Added in v1.0.0
@@ -4055,6 +4042,38 @@ export interface EffectUnifyBlacklist {
   Option?: true
   Either?: true
 }
+```
+
+Added in v1.0.0
+
+# optionality
+
+## fromNullable
+
+Returns an effect that errors with `NoSuchElementException` if the value is
+null or undefined, otherwise succeeds with the value.
+
+**Signature**
+
+```ts
+export declare const fromNullable: <A>(
+  evaluate: LazyArg<A>
+) => Effect<never, Cause.NoSuchElementException, NonNullable<A>>
+```
+
+Added in v1.0.0
+
+## optionFromOptional
+
+Wraps the success value of this effect with `Option.some`, and maps
+`Cause.NoSuchElementException` to `Option.none`.
+
+**Signature**
+
+```ts
+export declare const optionFromOptional: <R, E, A>(
+  self: Effect<R, E, A>
+) => Effect<R, Exclude<E, Cause.NoSuchElementException>, Option.Option<A>>
 ```
 
 Added in v1.0.0

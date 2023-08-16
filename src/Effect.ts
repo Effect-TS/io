@@ -3224,17 +3224,6 @@ export const intoDeferred: {
 export const option: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Option.Option<A>> = effect.option
 
 /**
- * Wraps the success value of this effect with `Option.some`, and maps
- * `Cause.NoSuchElementException` to `Option.none`.
- *
- * @since 1.0.0
- * @category conversions
- */
-export const optionFromOptional: <R, E, A>(
-  self: Effect<R, E, A>
-) => Effect<R, Exclude<E, Cause.NoSuchElementException>, Option.Option<A>> = effect.optionFromOptional
-
-/**
  * Converts an option on values into an option on errors.
  *
  * @since 1.0.0
@@ -5088,3 +5077,28 @@ export const withParentSpan: {
  */
 export const withParentSpanScoped: (span: Tracer.ParentSpan) => Effect<Scope.Scope, never, void> =
   fiberRuntime.withParentSpanScoped
+
+// -------------------------------------------------------------------------------------
+// optionality
+// -------------------------------------------------------------------------------------
+
+/**
+ * Returns an effect that errors with `NoSuchElementException` if the value is
+ * null or undefined, otherwise succeeds with the value.
+ *
+ * @since 1.0.0
+ * @category optionality
+ */
+export const fromNullable: <A>(evaluate: LazyArg<A>) => Effect<never, Cause.NoSuchElementException, NonNullable<A>> =
+  effect.fromNullable
+
+/**
+ * Wraps the success value of this effect with `Option.some`, and maps
+ * `Cause.NoSuchElementException` to `Option.none`.
+ *
+ * @since 1.0.0
+ * @category optionality
+ */
+export const optionFromOptional: <R, E, A>(
+  self: Effect<R, E, A>
+) => Effect<R, Exclude<E, Cause.NoSuchElementException>, Option.Option<A>> = effect.optionFromOptional
