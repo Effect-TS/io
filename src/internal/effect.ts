@@ -1819,7 +1819,7 @@ export const serviceFunction = <T extends Context.Tag<any, any>, Args extends Ar
 (...args: Args): Effect.Effect<Context.Tag.Identifier<T>, never, A> => core.map(service, (a) => f(a)(...args))
 
 /** @internal */
-export const deriveFunctions = <I, S>(
+export const serviceFunctions = <I, S>(
   tag: Context.Tag<I, S>
 ): {
   [k in { [k in keyof S]: S[k] extends (...args: Array<any>) => Effect.Effect<any, any, any> ? k : never }[keyof S]]:
@@ -1834,7 +1834,7 @@ export const deriveFunctions = <I, S>(
   })
 
 /** @internal */
-export const deriveConstants = <I, S>(
+export const serviceConstants = <I, S>(
   tag: Context.Tag<I, S>
 ): {
   [k in { [k in keyof S]: S[k] extends Effect.Effect<any, any, any> ? k : never }[keyof S]]: S[k] extends
@@ -1847,7 +1847,7 @@ export const deriveConstants = <I, S>(
   })
 
 /** @internal */
-export const deriveAccesses = <I, S>(tag: Context.Tag<I, S>): {
+export const serviceMembers = <I, S>(tag: Context.Tag<I, S>): {
   functions: {
     [k in { [k in keyof S]: S[k] extends (...args: Array<any>) => Effect.Effect<any, any, any> ? k : never }[keyof S]]:
       S[k] extends (...args: infer Args) => Effect.Effect<infer R, infer E, infer A>
@@ -1859,8 +1859,8 @@ export const deriveAccesses = <I, S>(tag: Context.Tag<I, S>): {
       Effect.Effect<infer R, infer E, infer A> ? Effect.Effect<R | I, E, A> : never
   }
 } => ({
-  functions: deriveFunctions(tag),
-  constants: deriveConstants(tag)
+  functions: serviceFunctions(tag),
+  constants: serviceConstants(tag)
 })
 
 // -----------------------------------------------------------------------------

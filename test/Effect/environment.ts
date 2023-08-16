@@ -82,12 +82,12 @@ describe.concurrent("Effect", () => {
       Effect.provideContext(pipe(Context.make(NumberService, { n: 0 })))
     ))
 
-  it.effect("deriveAccessFunctions", () => {
+  it.effect("serviceFunctions - expose service functions", () => {
     interface Service {
       foo: (x: string, y: number) => Effect.Effect<never, never, string>
     }
     const Service = Context.Tag<Service>()
-    const { foo } = Effect.deriveFunctions(Service)
+    const { foo } = Effect.serviceFunctions(Service)
     return pipe(
       Effect.gen(function*(_) {
         expect(yield* _(foo("a", 3))).toEqual("a3")
@@ -101,12 +101,12 @@ describe.concurrent("Effect", () => {
     )
   })
 
-  it.effect("deriveAccessConstants", () => {
+  it.effect("serviceConstants - expose service constants", () => {
     interface Service {
       baz: Effect.Effect<never, never, string>
     }
     const Service = Context.Tag<Service>()
-    const { baz } = Effect.deriveConstants(Service)
+    const { baz } = Effect.serviceConstants(Service)
     return pipe(
       Effect.gen(function*(_) {
         expect(yield* _(baz)).toEqual("42!")
@@ -120,13 +120,13 @@ describe.concurrent("Effect", () => {
     )
   })
 
-  it.effect("deriveAccesses - both functions and constants", () => {
+  it.effect("serviceMembers - expose both service functions and constants", () => {
     interface Service {
       foo: (x: string, y: number) => Effect.Effect<never, never, string>
       baz: Effect.Effect<never, never, string>
     }
     const Service = Context.Tag<Service>()
-    const { constants, functions } = Effect.deriveAccesses(Service)
+    const { constants, functions } = Effect.serviceMembers(Service)
     return pipe(
       Effect.gen(function*(_) {
         expect(yield* _(constants.baz)).toEqual("42!")

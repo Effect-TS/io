@@ -2,4 +2,4 @@
 "@effect/io": minor
 ---
 
-added Effect derive functions (deriveFunctions, deriveConstants and deriveAccesses)
+added Effect functions to extract service members (serviceFunctions, serviceConstants and serviceMembers)
