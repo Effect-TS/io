@@ -97,8 +97,11 @@ Added in v1.0.0
   - [provideSomeContext](#providesomecontext)
   - [provideSomeLayer](#providesomelayer)
   - [provideSomeRuntime](#providesomeruntime)
+  - [serviceConstants](#serviceconstants)
   - [serviceFunction](#servicefunction)
   - [serviceFunctionEffect](#servicefunctioneffect)
+  - [serviceFunctions](#servicefunctions)
+  - [serviceMembers](#servicemembers)
   - [serviceOption](#serviceoption)
   - [updateService](#updateservice)
 - [conversions](#conversions)
@@ -1658,6 +1661,26 @@ export declare const provideSomeRuntime: {
 
 Added in v1.0.0
 
+## serviceConstants
+
+**Signature**
+
+```ts
+export declare const serviceConstants: <I, S>(
+  tag: Context.Tag<I, S>
+) => {
+  [k in { [k in keyof S]: S[k] extends Effect<any, any, any> ? k : never }[keyof S]]: S[k] extends Effect<
+    infer R,
+    infer E,
+    infer A
+  >
+    ? Effect<I | R, E, A>
+    : never
+}
+```
+
+Added in v1.0.0
+
 ## serviceFunction
 
 **Signature**
@@ -1680,6 +1703,53 @@ export declare const serviceFunctionEffect: <T extends Context.Tag<any, any>, Ar
   service: T,
   f: (_: Context.Tag.Service<T>) => (...args: Args) => Effect<R, E, A>
 ) => (...args: Args) => Effect<R | Context.Tag.Identifier<T>, E, A>
+```
+
+Added in v1.0.0
+
+## serviceFunctions
+
+**Signature**
+
+```ts
+export declare const serviceFunctions: <I, S>(
+  tag: Context.Tag<I, S>
+) => {
+  [k in {
+    [k in keyof S]: S[k] extends (...args: Array<any>) => Effect<any, any, any> ? k : never
+  }[keyof S]]: S[k] extends (...args: infer Args) => Effect<infer R, infer E, infer A>
+    ? (...args: Args) => Effect<I | R, E, A>
+    : never
+}
+```
+
+Added in v1.0.0
+
+## serviceMembers
+
+**Signature**
+
+```ts
+export declare const serviceMembers: <I, S>(
+  tag: Context.Tag<I, S>
+) => {
+  functions: {
+    [k in {
+      [k in keyof S]: S[k] extends (...args: Array<any>) => Effect<any, any, any> ? k : never
+    }[keyof S]]: S[k] extends (...args: infer Args) => Effect<infer R, infer E, infer A>
+      ? (...args: Args) => Effect<I | R, E, A>
+      : never
+  }
+  constants: {
+    [k in { [k in keyof S]: S[k] extends Effect<any, any, any> ? k : never }[keyof S]]: S[k] extends Effect<
+      infer R,
+      infer E,
+      infer A
+    >
+      ? Effect<I | R, E, A>
+      : never
+  }
+}
 ```
 
 Added in v1.0.0
