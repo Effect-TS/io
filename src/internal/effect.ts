@@ -1306,22 +1306,6 @@ export const setFiberRefs = (fiberRefs: FiberRefs.FiberRefs): Effect.Effect<neve
 export const sleep: (duration: Duration.DurationInput) => Effect.Effect<never, never, void> = Clock.sleep
 
 /* @internal */
-export const some = <R, E, A>(self: Effect.Effect<R, E, Option.Option<A>>): Effect.Effect<R, Option.Option<E>, A> =>
-  core.matchEffect(self, {
-    onFailure: (e) => core.fail(Option.some(e)),
-    onSuccess: (option) => {
-      switch (option._tag) {
-        case "None": {
-          return core.fail(Option.none())
-        }
-        case "Some": {
-          return core.succeed(option.value)
-        }
-      }
-    }
-  })
-
-/* @internal */
 export const succeedNone: Effect.Effect<never, never, Option.Option<never>> = core.succeed(Option.none())
 
 /* @internal */

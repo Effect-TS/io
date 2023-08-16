@@ -80,35 +80,4 @@ describe.concurrent("Effect", () => {
       const result = yield* $(Effect.option(Effect.sandbox(Effect.die(ExampleError))))
       assert.deepStrictEqual(result, Option.none())
     }))
-  it.effect("some - extracts the value from Some", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(Effect.some(Effect.succeed(Option.some(1))))
-      assert.strictEqual(result, 1)
-    }))
-  it.effect("some - fails on None", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(Effect.exit(Effect.some(Effect.succeed(Option.none()))))
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(Option.none()))
-    }))
-  it.effect("some - fails when given an exception", () =>
-    Effect.gen(function*($) {
-      const error = Cause.RuntimeException("failed")
-      const result = yield* $(Effect.exit(Effect.some(Effect.fail(error))))
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(Option.some(error)))
-    }))
-  it.effect("unsome - fails when given Some error", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(Effect.exit(Effect.unsome(Effect.fail(Option.some("error")))))
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail("error"))
-    }))
-  it.effect("unsome - succeeds with None given None error", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(Effect.unsome(Effect.fail(Option.none())))
-      assert.deepStrictEqual(result, Option.none())
-    }))
-  it.effect("unsome - succeeds with Some given a value", () =>
-    Effect.gen(function*($) {
-      const result = yield* $(Effect.unsome(Effect.succeed(1)))
-      assert.deepStrictEqual(result, Option.some(1))
-    }))
 })
