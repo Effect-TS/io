@@ -618,6 +618,26 @@ describe.concurrent("Queue", () => {
       yield* $(Fiber.interrupt(fiber))
       assert.deepStrictEqual(Array.from(result), values)
     }))
+  it.effect("takeBetween doesn't drop elements if interrupted", () =>
+    Effect.gen(function*($) {
+      const queue = yield* $(Queue.unbounded<number>())
+      yield* $(Queue.offer(queue, 1))
+      yield* $(Queue.offer(queue, 2))
+      yield* $(Queue.offer(queue, 3))
+
+      let fiber = yield* $(Queue.takeBetween(queue, 4, 4), Effect.fork)
+      yield* $(Effect.yieldNow())
+      yield* $(Fiber.interrupt(fiber))
+      let size = yield* $(Queue.size(queue))
+      assert.deepStrictEqual(size, 3)
+
+      // test for when remaining > 1
+      fiber = yield* $(Queue.takeBetween(queue, 5, 5), Effect.fork)
+      yield* $(Effect.yieldNow())
+      yield* $(Fiber.interrupt(fiber))
+      size = yield* $(Queue.size(queue))
+      assert.deepStrictEqual(size, 3)
+    }))
   it.effect("takeN returns immediately if there is enough elements", () =>
     Effect.gen(function*($) {
       const queue = yield* $(Queue.bounded<number>(100))
