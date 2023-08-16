@@ -1329,18 +1329,6 @@ export const succeedSome = <A>(value: A): Effect.Effect<never, never, Option.Opt
   core.succeed(Option.some(value))
 
 /* @internal */
-export const optionFromOptional = <R, E, A>(
-  self: Effect.Effect<R, E, A>
-): Effect.Effect<R, Exclude<E, Cause.NoSuchElementException>, Option.Option<A>> =>
-  core.catchAll(
-    core.map(self, Option.some),
-    (error) =>
-      internalCause.isNoSuchElementException(error) ?
-        succeedNone :
-        core.fail(error as Exclude<E, Cause.NoSuchElementException>)
-  )
-
-/* @internal */
 export const summarized = dual<
   <R2, E2, B, C>(
     summary: Effect.Effect<R2, E2, B>,
@@ -2058,3 +2046,31 @@ export const withSpan = dual<
       (span) => withParentSpan(self, span)
     )
 )
+
+// -------------------------------------------------------------------------------------
+// optionality
+// -------------------------------------------------------------------------------------
+
+/* @internal */
+export const fromNullable = <A>(
+  evaluate: LazyArg<A>
+): Effect.Effect<never, Cause.NoSuchElementException, NonNullable<A>> =>
+  core.suspend(() => {
+    const a = evaluate()
+    if (a === null || a === undefined) {
+      return core.fail(internalCause.NoSuchElementException())
+    }
+    return core.succeed(a)
+  })
+
+/* @internal */
+export const optionFromOptional = <R, E, A>(
+  self: Effect.Effect<R, E, A>
+): Effect.Effect<R, Exclude<E, Cause.NoSuchElementException>, Option.Option<A>> =>
+  core.catchAll(
+    core.map(self, Option.some),
+    (error) =>
+      internalCause.isNoSuchElementException(error) ?
+        succeedNone :
+        core.fail(error as Exclude<E, Cause.NoSuchElementException>)
+  )
