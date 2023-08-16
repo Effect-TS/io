@@ -1,5 +1,17 @@
 # @effect/io
 
+## 0.38.1
+
+### Patch Changes
+
+- [#551](https://github.com/Effect-TS/io/pull/551) [`0ace417`](https://github.com/Effect-TS/io/commit/0ace41710e4c36e5d406b848ef9ee8452a32d443) Thanks [@TylorS](https://github.com/TylorS)! - add optionFromOptional
+
+- [#596](https://github.com/Effect-TS/io/pull/596) [`b21e65d`](https://github.com/Effect-TS/io/commit/b21e65d9491fa3d04d7664e6c3b010730e37fa7d) Thanks [@jessekelly881](https://github.com/jessekelly881)! - relax tagged error fn type signatures
+
+- [#599](https://github.com/Effect-TS/io/pull/599) [`0819398`](https://github.com/Effect-TS/io/commit/0819398925654cb4c983f38025ca5315a861eb72) Thanks [@tim-smart](https://github.com/tim-smart)! - add Effect.fromNullable
+
+- [#590](https://github.com/Effect-TS/io/pull/590) [`6d689db`](https://github.com/Effect-TS/io/commit/6d689dbae25245ae8902aaac6dd0912e1ea94c5b) Thanks [@jessekelly881](https://github.com/jessekelly881)! - added Effect.tapErrorTag
+
 ## 0.38.0
 
 ### Minor Changes
