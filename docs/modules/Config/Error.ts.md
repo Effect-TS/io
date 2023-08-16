@@ -27,6 +27,7 @@ Added in v1.0.0
   - [ConfigErrorReducer (interface)](#configerrorreducer-interface)
   - [InvalidData (interface)](#invaliddata-interface)
   - [MissingData (interface)](#missingdata-interface)
+  - [Options (interface)](#options-interface)
   - [Or (interface)](#or-interface)
   - [SourceUnavailable (interface)](#sourceunavailable-interface)
   - [Unsupported (interface)](#unsupported-interface)
@@ -64,7 +65,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const InvalidData: (path: Array<string>, message: string) => ConfigError
+export declare const InvalidData: (path: Array<string>, message: string, options?: Options) => ConfigError
 ```
 
 Added in v1.0.0
@@ -74,7 +75,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const MissingData: (path: Array<string>, message: string) => ConfigError
+export declare const MissingData: (path: Array<string>, message: string, options?: Options) => ConfigError
 ```
 
 Added in v1.0.0
@@ -97,7 +98,8 @@ Added in v1.0.0
 export declare const SourceUnavailable: (
   path: Array<string>,
   message: string,
-  cause: Cause.Cause<unknown>
+  cause: Cause.Cause<unknown>,
+  options?: Options
 ) => ConfigError
 ```
 
@@ -108,7 +110,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const Unsupported: (path: Array<string>, message: string) => ConfigError
+export declare const Unsupported: (path: Array<string>, message: string, options?: Options) => ConfigError
 ```
 
 Added in v1.0.0
@@ -196,6 +198,18 @@ export interface MissingData extends ConfigError.Proto {
   readonly _tag: 'MissingData'
   readonly path: Array<string>
   readonly message: string
+}
+```
+
+Added in v1.0.0
+
+## Options (interface)
+
+**Signature**
+
+```ts
+export interface Options {
+  pathDelim: string
 }
 ```
 

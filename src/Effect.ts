@@ -1540,7 +1540,10 @@ export const catchTag: {
 export const catchTags: {
   <
     E,
-    Cases extends (E extends { _tag: string } ? { [K in E["_tag"]]+?: ((error: Extract<E, { _tag: K }>) => Effect<any, any, any>) } : {})
+    Cases
+      extends (E extends { _tag: string }
+        ? { [K in E["_tag"]]+?: ((error: Extract<E, { _tag: K }>) => Effect<any, any, any>) }
+        : {})
   >(
     cases: Cases
   ): <R, A>(
@@ -1563,7 +1566,10 @@ export const catchTags: {
     R,
     E,
     A,
-    Cases extends (E extends { _tag: string } ? { [K in E["_tag"]]+?: ((error: Extract<E, { _tag: K }>) => Effect<any, any, any>) } : {})
+    Cases
+      extends (E extends { _tag: string }
+        ? { [K in E["_tag"]]+?: ((error: Extract<E, { _tag: K }>) => Effect<any, any, any>) }
+        : {})
   >(
     self: Effect<R, E, A>,
     cases: Cases
@@ -3216,6 +3222,17 @@ export const intoDeferred: {
  * @category conversions
  */
 export const option: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Option.Option<A>> = effect.option
+
+/**
+ * Wraps the success value of this effect with `Option.some`, and maps
+ * `Cause.NoSuchElementException` to `Option.none`.
+ *
+ * @since 1.0.0
+ * @category conversions
+ */
+export const optionFromOptional: <R, E, A>(
+  self: Effect<R, E, A>
+) => Effect<R, Exclude<E, Cause.NoSuchElementException>, Option.Option<A>> = effect.optionFromOptional
 
 /**
  * Converts an option on values into an option on errors.
