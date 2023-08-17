@@ -218,6 +218,27 @@ describe.concurrent("Queue", () => {
       const result = yield* $(Queue.size(queue))
       assert.strictEqual(result, 0)
     }))
+  it.effect("take interruption doesn't drop elements", () =>
+    Effect.gen(function*($) {
+      const queue = yield* $(Queue.bounded<number>(100))
+      const taken: Array<number> = []
+      const fiber = yield* $(Effect.fork(Effect.tap(Queue.take(queue), (n) =>
+        Effect.sync(() => {
+          taken.push(n)
+        }))))
+      yield* $(Effect.yieldNow())
+      yield* $(Effect.fork(Fiber.interrupt(fiber)))
+      yield* $(Queue.offer(queue, 1))
+      yield* $(Queue.offer(queue, 2))
+      yield* $(Queue.offer(queue, 3))
+      let elements = yield* $(Queue.takeAll(queue))
+      assert.strictEqual(taken.length, 0)
+      assert.deepEqual(Chunk.toReadonlyArray(elements), [2, 3])
+
+      yield* $(Effect.yieldNow())
+      elements = yield* $(Queue.takeAll(queue))
+      assert.deepEqual(Chunk.toReadonlyArray(elements), [1])
+    }))
   it.effect("offer interruption", () =>
     Effect.gen(function*($) {
       const queue = yield* $(Queue.bounded<number>(2))

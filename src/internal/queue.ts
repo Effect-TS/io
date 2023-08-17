@@ -233,9 +233,18 @@ class QueueImpl<A> implements Queue.Queue<A> {
               core.interrupt :
               core.deferredAwait(deferred)
           }),
-          core.onInterrupt(() => {
-            return core.sync(() => unsafeRemove(this.takers, deferred))
-          })
+          core.onInterrupt(() =>
+            core.flatMap(
+              core.suspend(() => {
+                unsafeRemove(this.takers, deferred)
+                return core.deferredPoll(deferred)
+              }),
+              (effect) =>
+                effect._tag === "Some" ?
+                  core.flatMap(effect.value, (a) => this.offer(a))
+                  : core.unit
+            )
+          )
         )
       }
     })
