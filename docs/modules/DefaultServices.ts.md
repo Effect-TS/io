@@ -1,6 +1,6 @@
 ---
 title: DefaultServices.ts
-nav_order: 10
+nav_order: 11
 parent: Modules
 ---
 
@@ -52,7 +52,12 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export type DefaultServices = Clock.Clock | Random.Random | ConfigProvider.ConfigProvider | Tracer.Tracer
+export type DefaultServices =
+  | Clock.Clock
+  | Console.Console
+  | Random.Random
+  | ConfigProvider.ConfigProvider
+  | Tracer.Tracer
 ```
 
 Added in v1.0.0
