@@ -62,11 +62,11 @@ export const makeEffect = <Key, Error, Value>(
             Schedule.recurWhile<boolean>(identity),
             Schedule.exponential(Duration.millis(10), 2.0)
           )
-          yield* $(pipe(
+          yield* $(
             Ref.get(blocked),
             Effect.repeat(schedule),
             TestServices.provideLive
-          ))
+          )
           return observableResource.scoped
         }))
       }

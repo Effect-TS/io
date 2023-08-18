@@ -43,7 +43,7 @@ describe.concurrent("ScopedCache", () => {
             capacity,
             timeToLive: Duration.infinity
           })
-          const { hits, misses, size } = yield* $(pipe(
+          const { hits, misses, size } = yield* $(
             scopedCache,
             Effect.flatMap((cache) =>
               pipe(
@@ -55,7 +55,7 @@ describe.concurrent("ScopedCache", () => {
                 Effect.flatMap(() => cache.cacheStats())
               )
             )
-          ))
+          )
           expect(hits).toBe(4)
           expect(misses).toBe(6)
           expect(size).toBe(6)
@@ -148,14 +148,14 @@ describe.concurrent("ScopedCache", () => {
           { concurrency: "unbounded", discard: true }
         ))
         yield* $(cache.invalidateAll())
-        const contains = yield* $(pipe(
+        const contains = yield* $(
           Effect.forEach(
             ReadonlyArray.range(0, capacity - 1),
             (n) => Effect.scoped(cache.contains(n)),
             { concurrency: "unbounded" }
           ),
           Effect.map((_) => _.every(identity))
-        ))
+        )
         const { hits, misses, size } = yield* $(cache.cacheStats())
         yield* $(Effect.forEach(
           observablesResources,
@@ -643,10 +643,10 @@ describe.concurrent("ScopedCache", () => {
         const cache = yield* $(scopedCache)
         yield* $(Effect.scoped(cache.get(void 0)))
         yield* $(cache.refresh(void 0))
-        const createdResources = yield* $(pipe(
+        const createdResources = yield* $(
           watchableLookup.createdResources(),
           Effect.map(HashMap.unsafeGet(void 0))
-        ))
+        )
         yield* $(Chunk.unsafeHead(createdResources).assertAcquiredOnceAndCleaned())
         yield* $(Chunk.unsafeGet(createdResources, 1).assertAcquiredOnceAndNotCleaned())
       })))
@@ -763,14 +763,14 @@ describe.concurrent("ScopedCache", () => {
         yield* $(TestClock.adjust(Duration.seconds(9)))
         yield* $(watchableLookup.lock())
         const refreshFiber = yield* $(Effect.fork(cache.refresh(void 0)))
-        yield* $(pipe(
+        yield* $(
           watchableLookup.getCalledTimes(void 0),
           Effect.repeat(pipe(
             Schedule.recurWhile<number>((calledTimes) => calledTimes < 2),
             Schedule.compose(Schedule.elapsed),
             Schedule.whileOutput((elapsed) => Duration.lessThan(elapsed, Duration.millis(100)))
           ))
-        ))
+        )
         yield* $(TestServices.provideLive(Effect.sleep(Duration.millis(100))))
         yield* $(watchableLookup.assertCalledTimes(void 0, (n) => expect(n).toBe(2)))
         const firstCreatedResource = yield* $(watchableLookup.firstCreatedResource(void 0))
@@ -794,14 +794,14 @@ describe.concurrent("ScopedCache", () => {
         yield* $(TestClock.adjust(Duration.seconds(11)))
         yield* $(watchableLookup.lock())
         const refreshFiber = yield* $(Effect.fork(cache.refresh(void 0)))
-        yield* $(pipe(
+        yield* $(
           watchableLookup.getCalledTimes(void 0),
           Effect.repeat(pipe(
             Schedule.recurWhile<number>((calledTimes) => calledTimes < 1),
             Schedule.compose(Schedule.elapsed),
             Schedule.whileOutput((elapsed) => Duration.lessThan(elapsed, Duration.millis(100)))
           ))
-        ))
+        )
         yield* $(TestServices.provideLive(Effect.sleep(Duration.millis(100))))
         yield* $(watchableLookup.assertCalledTimes(void 0, (n) => expect(n).toBe(2)))
         yield* $(watchableLookup.assertFirstNCreatedResourcesCleaned(void 0, 1))
