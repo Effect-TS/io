@@ -34,9 +34,9 @@ export const defaultConsole: Console.Console = {
       console.debug(...args)
     })
   },
-  dir(...args) {
+  dir(item, options) {
     return core.sync(() => {
-      console.dir(...args)
+      console.dir(item, options)
     })
   },
   dirxml(...args) {

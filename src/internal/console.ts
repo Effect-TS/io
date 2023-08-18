@@ -59,7 +59,7 @@ export const countReset = (label?: string) => consoleWith((_) => _.countReset(la
 export const debug = (...args: ReadonlyArray<any>) => consoleWith((_) => _.debug(...args))
 
 /** @internal */
-export const dir = (...args: ReadonlyArray<any>) => consoleWith((_) => _.dir(...args))
+export const dir = (item: any, options?: any) => consoleWith((_) => _.dir(item, options))
 
 /** @internal */
 export const dirxml = (...args: ReadonlyArray<any>) => consoleWith((_) => _.dirxml(...args))
