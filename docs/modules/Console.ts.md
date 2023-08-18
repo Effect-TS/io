@@ -295,14 +295,6 @@ export interface Console {
   timeLog(label?: string, ...args: ReadonlyArray<any>): Effect<never, never, void>
   trace(...args: ReadonlyArray<any>): Effect<never, never, void>
   warn(...args: ReadonlyArray<any>): Effect<never, never, void>
-  withGroup<R, E, A>(
-    self: Effect<R, E, A>,
-    options?: {
-      readonly label?: string
-      readonly collapsed?: boolean
-    }
-  ): Effect<R, E, A>
-  withTime<R, E, A>(self: Effect<R, E, A>, label?: string): Effect<R, E, A>
 }
 ```
 
