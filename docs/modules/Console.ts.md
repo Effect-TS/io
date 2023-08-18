@@ -110,7 +110,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const dir: (...args: ReadonlyArray<any>) => Effect<never, never, void>
+export declare const dir: (item: any, options?: any) => Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -282,7 +282,7 @@ export interface Console {
   count(label?: string): Effect<never, never, void>
   countReset(label?: string): Effect<never, never, void>
   debug(...args: ReadonlyArray<any>): Effect<never, never, void>
-  dir(...args: ReadonlyArray<any>): Effect<never, never, void>
+  dir(item: any, options?: any): Effect<never, never, void>
   dirxml(...args: ReadonlyArray<any>): Effect<never, never, void>
   error(...args: ReadonlyArray<any>): Effect<never, never, void>
   group(options?: { readonly label?: string; readonly collapsed?: boolean }): Effect<never, never, void>
