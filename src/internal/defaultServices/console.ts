@@ -92,21 +92,5 @@ export const defaultConsole: Console.Console = {
     return core.sync(() => {
       console.warn(...args)
     })
-  },
-  withGroup(self, options) {
-    return core.acquireUseRelease(
-      options?.collapsed ?
-        core.sync(() => console.groupCollapsed(options?.label)) :
-        core.sync(() => console.group(options?.label)),
-      () => self,
-      () => core.sync(() => console.groupEnd())
-    )
-  },
-  withTime(self, label) {
-    return core.acquireUseRelease(
-      core.sync(() => console.time(label)),
-      () => self,
-      () => core.sync(() => console.timeEnd(label))
-    )
   }
 }

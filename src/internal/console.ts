@@ -113,10 +113,24 @@ export const withGroup = dual<
     self: Effect.Effect<R, E, A>,
     options?: { readonly label?: string; readonly collapsed?: boolean }
   ) => Effect.Effect<R, E, A>
->((args) => core.isEffect(args[0]), (self, options) => consoleWith((_) => _.withGroup(self, options)))
+>((args) => core.isEffect(args[0]), (self, options) =>
+  consoleWith((_) =>
+    core.acquireUseRelease(
+      _.group(options),
+      () => self,
+      () => _.groupEnd
+    )
+  ))
 
 /** @internal */
 export const withTime = dual<
   (label?: string) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
   <R, E, A>(self: Effect.Effect<R, E, A>, label?: string) => Effect.Effect<R, E, A>
->((args) => core.isEffect(args[0]), (self, label) => consoleWith((_) => _.withTime(self, label)))
+>((args) => core.isEffect(args[0]), (self, label) =>
+  consoleWith((_) =>
+    core.acquireUseRelease(
+      _.time(label),
+      () => self,
+      () => _.timeEnd(label)
+    )
+  ))
