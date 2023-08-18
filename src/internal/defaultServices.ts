@@ -10,6 +10,7 @@ import type * as Effect from "@effect/io/Effect"
 import * as clock from "@effect/io/internal/clock"
 import * as configProvider from "@effect/io/internal/configProvider"
 import * as core from "@effect/io/internal/core"
+import * as console_ from "@effect/io/internal/defaultServices/console"
 import * as random from "@effect/io/internal/random"
 import * as tracer from "@effect/io/internal/tracer"
 import type * as Random from "@effect/io/Random"
@@ -19,6 +20,7 @@ import type * as Tracer from "@effect/io/Tracer"
 export const liveServices: Context.Context<DefaultServices.DefaultServices> = pipe(
   Context.empty(),
   Context.add(clock.clockTag, clock.make()),
+  Context.add(console_.consoleTag, console_.defaultConsole),
   Context.add(random.randomTag, random.make((Math.random() * 4294967296) >>> 0)),
   Context.add(configProvider.configProviderTag, configProvider.fromEnv()),
   Context.add(tracer.tracerTag, tracer.nativeTracer)
