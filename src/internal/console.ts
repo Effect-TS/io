@@ -105,13 +105,18 @@ export const trace = (...args: ReadonlyArray<any>) => consoleWith((_) => _.trace
 export const warn = (...args: ReadonlyArray<any>) => consoleWith((_) => _.warn(...args))
 
 /** @internal */
-export const withGroup = (options?: { label?: string; collapsed?: boolean }) =>
-<R, E, A>(
-  self: Effect.Effect<R, E, A>
-) => consoleWith((_) => _.withGroup(options)(self))
+export const withGroup = dual<
+  (
+    options?: { readonly label?: string; readonly collapsed?: boolean }
+  ) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(
+    self: Effect.Effect<R, E, A>,
+    options?: { readonly label?: string; readonly collapsed?: boolean }
+  ) => Effect.Effect<R, E, A>
+>((args) => core.isEffect(args[0]), (self, options) => consoleWith((_) => _.withGroup(self, options)))
 
 /** @internal */
-export const withTime = (label?: string) =>
-<R, E, A>(
-  self: Effect.Effect<R, E, A>
-) => consoleWith((_) => _.withTime(label)(self))
+export const withTime = dual<
+  (label?: string) => <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, A>,
+  <R, E, A>(self: Effect.Effect<R, E, A>, label?: string) => Effect.Effect<R, E, A>
+>((args) => core.isEffect(args[0]), (self, label) => consoleWith((_) => _.withTime(self, label)))

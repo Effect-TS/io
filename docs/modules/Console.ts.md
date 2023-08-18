@@ -220,10 +220,12 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const withGroup: (options?: {
-  label?: string
-  collapsed?: boolean
-}) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+export declare const withGroup: {
+  (options?: { readonly label?: string; readonly collapsed?: boolean }): <R, E, A>(
+    self: Effect<R, E, A>
+  ) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, options?: { readonly label?: string; readonly collapsed?: boolean }): Effect<R, E, A>
+}
 ```
 
 Added in v1.0.0
@@ -233,7 +235,10 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const withTime: (label?: string) => <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+export declare const withTime: {
+  (label?: string): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  <R, E, A>(self: Effect<R, E, A>, label?: string): Effect<R, E, A>
+}
 ```
 
 Added in v1.0.0
@@ -290,11 +295,14 @@ export interface Console {
   timeLog(label?: string, ...args: ReadonlyArray<any>): Effect<never, never, void>
   trace(...args: ReadonlyArray<any>): Effect<never, never, void>
   warn(...args: ReadonlyArray<any>): Effect<never, never, void>
-  withGroup(options?: {
-    readonly label?: string
-    readonly collapsed?: boolean
-  }): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
-  withTime(label?: string): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
+  withGroup<R, E, A>(
+    self: Effect<R, E, A>,
+    options?: {
+      readonly label?: string
+      readonly collapsed?: boolean
+    }
+  ): Effect<R, E, A>
+  withTime<R, E, A>(self: Effect<R, E, A>, label?: string): Effect<R, E, A>
 }
 ```
 
