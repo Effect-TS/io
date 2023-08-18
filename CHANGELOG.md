@@ -1,5 +1,13 @@
 # @effect/io
 
+## 0.38.2
+
+### Patch Changes
+
+- [#605](https://github.com/Effect-TS/io/pull/605) [`8e0a044`](https://github.com/Effect-TS/io/commit/8e0a04476f6b0b4ddaf4950cfb9a3f6c5125580d) Thanks [@tim-smart](https://github.com/tim-smart)! - add Console default service
+
+- [#598](https://github.com/Effect-TS/io/pull/598) [`2f6b764`](https://github.com/Effect-TS/io/commit/2f6b764a54624c6204f93357c5658ffb76bb71b3) Thanks [@sledorze](https://github.com/sledorze)! - added Effect functions to extract service members (serviceFunctions, serviceConstants and serviceMembers)
+
 ## 0.38.1
 
 ### Patch Changes
