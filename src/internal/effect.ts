@@ -246,7 +246,7 @@ export const catchTag = dual<
   ) => Effect.Effect<R | R1, Exclude<E, { _tag: K }> | E1, A | A1>
 >(3, (self, k, f) =>
   core.catchAll(self, (e) => {
-    if (Predicate.isObject(e) && "_tag" in e && e["_tag"] === k) {
+    if (Predicate.isTagged(e, k)) {
       return f(e as any)
     }
     return core.fail(e as any)
@@ -1525,7 +1525,7 @@ export const tapErrorTag = dual<
   ) => Effect.Effect<R | R1, E | E1, A>
 >(3, (self, k, f) =>
   tapError(self, (e) => {
-    if (Predicate.isObject(e) && "_tag" in e && e["_tag"] === k) {
+    if (Predicate.isTagged(e, k)) {
       return f(e as any)
     }
     return core.unit as any
