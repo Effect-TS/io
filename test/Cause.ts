@@ -1,6 +1,7 @@
 import * as Equal from "@effect/data/Equal"
 import * as Hash from "@effect/data/Hash"
 import * as Option from "@effect/data/Option"
+import * as Predicate from "@effect/data/Predicate"
 import * as Cause from "@effect/io/Cause"
 import { causes, equalCauses, errorCauseFunctions, errors } from "@effect/io/test/utils/cause"
 import * as fc from "fast-check"
@@ -84,11 +85,8 @@ describe.concurrent("Cause", () => {
       const cause = Cause.parallel(cause1, cause2)
       const stripped = cause.pipe(
         Cause.stripSomeDefects((defect) =>
-          typeof defect === "object" &&
-            defect != null &&
-            "_tag" in defect &&
-            defect["_tag"] === "NumberFormatException" ?
-            Option.some(defect) :
+          Predicate.isTagged(defect, "NumberFormatException")
+            ? Option.some(defect) :
             Option.none()
         )
       )
@@ -99,11 +97,8 @@ describe.concurrent("Cause", () => {
       const cause = Cause.die({ _tag: "NumberFormatException", msg: "can't parse to int" })
       const stripped = cause.pipe(
         Cause.stripSomeDefects((defect) =>
-          typeof defect === "object" &&
-            defect != null &&
-            "_tag" in defect &&
-            defect["_tag"] === "NumberFormatException" ?
-            Option.some(defect) :
+          Predicate.isTagged(defect, "NumberFormatException")
+            ? Option.some(defect) :
             Option.none()
         )
       )

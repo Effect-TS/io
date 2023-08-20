@@ -6,6 +6,7 @@ import * as HashMap from "@effect/data/HashMap"
 import * as MutableRef from "@effect/data/MutableRef"
 import * as Option from "@effect/data/Option"
 import { pipeArguments } from "@effect/data/Pipeable"
+import * as Predicate from "@effect/data/Predicate"
 import type * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal/core"
@@ -67,7 +68,7 @@ class Complete<E, A> implements Equal.Equal {
 }
 
 const isComplete = (u: unknown): u is Complete<unknown, unknown> =>
-  typeof u === "object" && u != null && KeyedPoolMapValueSymbol in u && "_tag" in u && u["_tag"] === "Complete"
+  Predicate.isTagged(u, "Complete") && KeyedPoolMapValueSymbol in u
 
 class Pending<E, A> implements Equal.Equal {
   readonly _tag = "Pending"
@@ -85,7 +86,7 @@ class Pending<E, A> implements Equal.Equal {
 }
 
 const isPending = (u: unknown): u is Pending<unknown, unknown> =>
-  typeof u === "object" && u != null && KeyedPoolMapValueSymbol in u && "_tag" in u && u["_tag"] === "Pending"
+  Predicate.isTagged(u, "Pending") && KeyedPoolMapValueSymbol in u
 
 const makeImpl = <K, R, E, A>(
   get: (key: K) => Effect.Effect<R, E, A>,

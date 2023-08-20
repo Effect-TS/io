@@ -2,6 +2,7 @@ import * as Context from "@effect/data/Context"
 import { pipe } from "@effect/data/Function"
 import * as Option from "@effect/data/Option"
 import { pipeArguments } from "@effect/data/Pipeable"
+import * as Predicate from "@effect/data/Predicate"
 import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
@@ -137,7 +138,7 @@ const asyncFiberException = <E, A>(fiber: Fiber.RuntimeFiber<E, A>): Runtime.Asy
 
 /** @internal */
 export const isAsyncFiberException = (u: unknown): u is Runtime.AsyncFiberException<unknown, unknown> =>
-  typeof u === "object" && u !== null && "_tag" in u && u._tag === "AsyncFiberException" && "fiber" in u
+  Predicate.isTagged(u, "AsyncFiberException") && "fiber" in u
 
 /** @internal */
 export const FiberFailureId: Runtime.FiberFailureId = Symbol.for("@effect/io/Runtime/FiberFailure") as any
