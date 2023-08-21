@@ -615,7 +615,7 @@ Supports multiple arguments, a single argument tuple / array or record / struct.
 
 ```ts
 export declare const all: <
-  const Arg extends Iterable<All.EffectAny> | Record<string, All.EffectAny>,
+  const Arg extends Iterable<Effect<any, any, any>> | Record<string, Effect<any, any, any>>,
   O extends {
     readonly concurrency?: Concurrency | undefined
     readonly batching?: boolean | 'inherit' | undefined
@@ -666,7 +666,9 @@ export declare const allWith: <
   }
 >(
   options?: O | undefined
-) => <const Arg extends Iterable<All.EffectAny> | Record<string, All.EffectAny>>(arg: Arg) => All.Return<Arg, O>
+) => <const Arg extends Iterable<Effect<any, any, any>> | Record<string, Effect<any, any, any>>>(
+  arg: Arg
+) => All.Return<Arg, O>
 ```
 
 Added in v1.0.0

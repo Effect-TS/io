@@ -1667,7 +1667,7 @@ const allEither = (
 
 /* @internal */
 export const all = <
-  const Arg extends Iterable<Effect.All.EffectAny> | Record<string, Effect.All.EffectAny>,
+  const Arg extends Iterable<Effect.Effect<any, any, any>> | Record<string, Effect.Effect<any, any, any>>,
   O extends {
     readonly concurrency?: Concurrency
     readonly batching?: boolean | "inherit"
@@ -1703,7 +1703,7 @@ export const allWith = <
     readonly mode?: "default" | "validate" | "either"
   }
 >(options?: O) =>
-<const Arg extends Iterable<Effect.All.EffectAny> | Record<string, Effect.All.EffectAny>>(
+<const Arg extends Iterable<Effect.Effect<any, any, any>> | Record<string, Effect.Effect<any, any, any>>>(
   arg: Arg
 ): Effect.All.Return<Arg, O> => all(arg, options)
 

@@ -335,7 +335,7 @@ export const once: <R, E, A>(self: Effect<R, E, A>) => Effect<never, never, Effe
  * @category collecting & elements
  */
 export const all: <
-  const Arg extends Iterable<All.EffectAny> | Record<string, All.EffectAny>,
+  const Arg extends Iterable<Effect<any, any, any>> | Record<string, Effect<any, any, any>>,
   O extends {
     readonly concurrency?: Concurrency
     readonly batching?: boolean | "inherit"
@@ -363,8 +363,9 @@ export const allWith: <
   }
 >(
   options?: O
-) => <const Arg extends Iterable<All.EffectAny> | Record<string, All.EffectAny>>(arg: Arg) => All.Return<Arg, O> =
-  fiberRuntime.allWith
+) => <const Arg extends Iterable<Effect<any, any, any>> | Record<string, Effect<any, any, any>>>(
+  arg: Arg
+) => All.Return<Arg, O> = fiberRuntime.allWith
 
 /**
  * @since 1.0.0
