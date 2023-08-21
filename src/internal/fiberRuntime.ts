@@ -1584,7 +1584,12 @@ const allResolveInput = (
 const allValidate = (
   effects: Iterable<Effect.Effect<any, any, any>>,
   reconcile: Option.Option<(as: ReadonlyArray<any>) => any>,
-  options?: Effect.All.Options
+  options?: {
+    readonly concurrency?: Concurrency
+    readonly batching?: boolean | "inherit"
+    readonly discard?: boolean
+    readonly mode?: "default" | "validate" | "either"
+  }
 ) => {
   const eitherEffects: Array<Effect.Effect<unknown, never, Either.Either<unknown, unknown>>> = []
   for (const effect of effects) {
@@ -1628,7 +1633,12 @@ const allValidate = (
 const allEither = (
   effects: Iterable<Effect.Effect<any, any, any>>,
   reconcile: Option.Option<(as: ReadonlyArray<any>) => any>,
-  options?: Effect.All.Options
+  options?: {
+    readonly concurrency?: Concurrency
+    readonly batching?: boolean | "inherit"
+    readonly discard?: boolean
+    readonly mode?: "default" | "validate" | "either"
+  }
 ) => {
   const eitherEffects: Array<Effect.Effect<unknown, never, Either.Either<unknown, unknown>>> = []
   for (const effect of effects) {
@@ -1656,28 +1666,46 @@ const allEither = (
 }
 
 /* @internal */
-export const all = ((
-  arg: Iterable<Effect.Effect<any, any, any>> | Record<string, Effect.Effect<any, any, any>>,
-  options?: Effect.All.Options
-) => {
+export const all = <
+  const Arg extends Iterable<Effect.Effect<any, any, any>> | Record<string, Effect.Effect<any, any, any>>,
+  O extends {
+    readonly concurrency?: Concurrency
+    readonly batching?: boolean | "inherit"
+    readonly discard?: boolean
+    readonly mode?: "default" | "validate" | "either"
+  }
+>(
+  arg: Arg,
+  options?: O
+): Effect.All.Return<Arg, O> => {
   const [effects, reconcile] = allResolveInput(arg)
 
   if (options?.mode === "validate") {
-    return allValidate(effects, reconcile, options)
+    return allValidate(effects, reconcile, options) as any
   } else if (options?.mode === "either") {
-    return allEither(effects, reconcile, options)
+    return allEither(effects, reconcile, options) as any
   }
 
-  return reconcile._tag === "Some" ?
-    core.map(
+  return reconcile._tag === "Some"
+    ? core.map(
       forEachOptions(effects, identity, options as any),
       reconcile.value
-    ) :
-    forEachOptions(effects, identity, options as any)
-}) as Effect.All.Signature
+    ) as any
+    : forEachOptions(effects, identity, options as any) as any
+}
 
 /* @internal */
-export const allWith: Effect.All.SignatureWith = (options) => (arg) => all(arg, options)
+export const allWith = <
+  O extends {
+    readonly concurrency?: Concurrency
+    readonly batching?: boolean | "inherit"
+    readonly discard?: boolean
+    readonly mode?: "default" | "validate" | "either"
+  }
+>(options?: O) =>
+<const Arg extends Iterable<Effect.Effect<any, any, any>> | Record<string, Effect.Effect<any, any, any>>>(
+  arg: Arg
+): Effect.All.Return<Arg, O> => all(arg, options)
 
 /* @internal */
 export const allSuccesses = <R, E, A>(
@@ -1688,7 +1716,7 @@ export const allSuccesses = <R, E, A>(
   }
 ): Effect.Effect<R, never, Array<A>> =>
   core.map(
-    all(RA.fromIterable(elements).map(core.exit), options as Effect.All.Options),
+    all(RA.fromIterable(elements).map(core.exit), options),
     RA.filterMap((exit) => core.exitIsSuccess(exit) ? Option.some(exit.i0) : Option.none())
   )
 

@@ -406,6 +406,6 @@ pipe(
 pipe(
   Effect.fail<TestError1 | Error>(new Error()),
   Effect.catchTags({
-    "TestError1": (e) => Effect.succeed(1),
+    "TestError1": (_e) => Effect.succeed(1)
   })
 )

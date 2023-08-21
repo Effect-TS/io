@@ -614,7 +614,18 @@ Supports multiple arguments, a single argument tuple / array or record / struct.
 **Signature**
 
 ```ts
-export declare const all: All.Signature
+export declare const all: <
+  const Arg extends Iterable<Effect<any, any, any>> | Record<string, Effect<any, any, any>>,
+  O extends {
+    readonly concurrency?: Concurrency | undefined
+    readonly batching?: boolean | 'inherit' | undefined
+    readonly discard?: boolean | undefined
+    readonly mode?: 'default' | 'validate' | 'either' | undefined
+  }
+>(
+  arg: Arg,
+  options?: O | undefined
+) => All.Return<Arg, O>
 ```
 
 Added in v1.0.0
@@ -646,7 +657,18 @@ Supports multiple arguments, a single argument tuple / array or record / struct.
 **Signature**
 
 ```ts
-export declare const allWith: All.SignatureWith
+export declare const allWith: <
+  O extends {
+    readonly concurrency?: Concurrency | undefined
+    readonly batching?: boolean | 'inherit' | undefined
+    readonly discard?: boolean | undefined
+    readonly mode?: 'default' | 'validate' | 'either' | undefined
+  }
+>(
+  options?: O | undefined
+) => <const Arg extends Iterable<Effect<any, any, any>> | Record<string, Effect<any, any, any>>>(
+  arg: Arg
+) => All.Return<Arg, O>
 ```
 
 Added in v1.0.0

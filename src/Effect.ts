@@ -334,7 +334,15 @@ export const once: <R, E, A>(self: Effect<R, E, A>) => Effect<never, never, Effe
  * @since 1.0.0
  * @category collecting & elements
  */
-export const all: All.Signature = fiberRuntime.all
+export const all: <
+  const Arg extends Iterable<Effect<any, any, any>> | Record<string, Effect<any, any, any>>,
+  O extends {
+    readonly concurrency?: Concurrency
+    readonly batching?: boolean | "inherit"
+    readonly discard?: boolean
+    readonly mode?: "default" | "validate" | "either"
+  }
+>(arg: Arg, options?: O) => All.Return<Arg, O> = fiberRuntime.all
 
 /**
  * Data-last variant of `Effect.all`.
@@ -346,7 +354,18 @@ export const all: All.Signature = fiberRuntime.all
  * @since 1.0.0
  * @category collecting & elements
  */
-export const allWith: All.SignatureWith = fiberRuntime.allWith
+export const allWith: <
+  O extends {
+    readonly concurrency?: Concurrency
+    readonly batching?: boolean | "inherit"
+    readonly discard?: boolean
+    readonly mode?: "default" | "validate" | "either"
+  }
+>(
+  options?: O
+) => <const Arg extends Iterable<Effect<any, any, any>> | Record<string, Effect<any, any, any>>>(
+  arg: Arg
+) => All.Return<Arg, O> = fiberRuntime.allWith
 
 /**
  * @since 1.0.0
@@ -408,34 +427,21 @@ export declare namespace All {
     >
     : never
 
-  export type Options = {
-    readonly concurrency?: Concurrency
-    readonly batching?: boolean | "inherit"
-    readonly discard?: boolean
-    readonly mode?: "default" | "validate" | "either"
-  }
-
   type IsDiscard<A> = [Extract<A, { readonly discard: true }>] extends [never] ? false : true
   type ExtractMode<A> = [A] extends [{ mode: infer M }] ? M : "default"
 
-  export interface Signature {
-    <const Arg extends Iterable<EffectAny> | Record<string, EffectAny>, O extends Options>(
-      arg: Arg,
-      options?: O
-    ): [Arg] extends [ReadonlyArray<EffectAny>] ? ReturnTuple<Arg, IsDiscard<O>, ExtractMode<O>>
-      : [Arg] extends [Iterable<EffectAny>] ? ReturnIterable<Arg, IsDiscard<O>, ExtractMode<O>>
-      : [Arg] extends [Record<string, EffectAny>] ? ReturnObject<Arg, IsDiscard<O>, ExtractMode<O>>
-      : never
-  }
-
-  export interface SignatureWith {
-    <O extends Options>(options?: O): <Arg extends Iterable<EffectAny> | Record<string, EffectAny>>(
-      arg: Arg
-    ) => [Arg] extends [ReadonlyArray<EffectAny>] ? ReturnTuple<Arg, IsDiscard<O>, ExtractMode<O>>
-      : [Arg] extends [Iterable<EffectAny>] ? ReturnIterable<Arg, IsDiscard<O>, ExtractMode<O>>
-      : [Arg] extends [Record<string, EffectAny>] ? ReturnObject<Arg, IsDiscard<O>, ExtractMode<O>>
-      : never
-  }
+  export type Return<
+    Arg extends Iterable<EffectAny> | Record<string, EffectAny>,
+    O extends {
+      readonly concurrency?: Concurrency
+      readonly batching?: boolean | "inherit"
+      readonly discard?: boolean
+      readonly mode?: "default" | "validate" | "either"
+    }
+  > = [Arg] extends [ReadonlyArray<EffectAny>] ? ReturnTuple<Arg, IsDiscard<O>, ExtractMode<O>>
+    : [Arg] extends [Iterable<EffectAny>] ? ReturnIterable<Arg, IsDiscard<O>, ExtractMode<O>>
+    : [Arg] extends [Record<string, EffectAny>] ? ReturnObject<Arg, IsDiscard<O>, ExtractMode<O>>
+    : never
 }
 
 /**
