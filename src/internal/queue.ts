@@ -2,7 +2,7 @@ import * as Chunk from "@effect/data/Chunk"
 import { dual, pipe } from "@effect/data/Function"
 import * as MutableQueue from "@effect/data/MutableQueue"
 import * as MutableRef from "@effect/data/MutableRef"
-import type * as Option from "@effect/data/Option"
+import * as Option from "@effect/data/Option"
 import { pipeArguments } from "@effect/data/Pipeable"
 import * as ReadonlyArray from "@effect/data/ReadonlyArray"
 import type * as Deferred from "@effect/io/Deferred"
@@ -53,7 +53,7 @@ class QueueImpl<A> implements Queue.Queue<A> {
 
   constructor(
     /** @internal */
-    readonly queue: MutableQueue.MutableQueue<A>,
+    readonly queue: Queue.BackingQueue<A>,
     /** @internal */
     readonly takers: MutableQueue.MutableQueue<Deferred.Deferred<never, A>>,
     /** @internal */
@@ -70,18 +70,21 @@ class QueueImpl<A> implements Queue.Queue<A> {
   }
 
   capacity(): number {
-    return MutableQueue.capacity(this.queue)
+    return this.queue.capacity()
   }
 
   size(): Effect.Effect<never, never, number> {
-    return core.suspend(() =>
-      MutableRef.get(this.shutdownFlag)
-        ? core.interrupt
-        : core.succeed(
-          MutableQueue.length(this.queue) -
-            MutableQueue.length(this.takers) +
-            this.strategy.surplusSize()
-        )
+    return core.suspend(() => core.catchAll(this.unsafeSize(), () => core.interrupt))
+  }
+
+  unsafeSize() {
+    if (MutableRef.get(this.shutdownFlag)) {
+      return Option.none<number>()
+    }
+    return Option.some(
+      this.queue.length() -
+        MutableQueue.length(this.takers) +
+        this.strategy.surplusSize()
     )
   }
 
@@ -128,7 +131,7 @@ class QueueImpl<A> implements Queue.Queue<A> {
       return false
     }
     let noRemaining: boolean
-    if (MutableQueue.isEmpty(this.queue)) {
+    if (this.queue.length() === 0) {
       const taker = pipe(
         this.takers,
         MutableQueue.poll(MutableQueue.EmptyMutableQueue)
@@ -146,7 +149,7 @@ class QueueImpl<A> implements Queue.Queue<A> {
       return true
     }
     // Not enough takers, offer to the queue
-    const succeeded = pipe(this.queue, MutableQueue.offer(value))
+    const succeeded = this.queue.offer(value)
     unsafeCompleteTakers(this.strategy, this.queue, this.takers)
     return succeeded
   }
@@ -157,7 +160,7 @@ class QueueImpl<A> implements Queue.Queue<A> {
         return core.interrupt
       }
       let noRemaining: boolean
-      if (MutableQueue.isEmpty(this.queue)) {
+      if (this.queue.length() === 0) {
         const taker = pipe(
           this.takers,
           MutableQueue.poll(MutableQueue.EmptyMutableQueue)
@@ -175,7 +178,7 @@ class QueueImpl<A> implements Queue.Queue<A> {
         return core.succeed(true)
       }
       // Not enough takers, offer to the queue
-      const succeeded = pipe(this.queue, MutableQueue.offer(value))
+      const succeeded = this.queue.offer(value)
       unsafeCompleteTakers(this.strategy, this.queue, this.takers)
       return succeeded
         ? core.succeed(true)
@@ -189,7 +192,7 @@ class QueueImpl<A> implements Queue.Queue<A> {
         return core.interrupt
       }
       const values = ReadonlyArray.fromIterable(iterable)
-      const pTakers = MutableQueue.isEmpty(this.queue)
+      const pTakers = this.queue.length() === 0
         ? ReadonlyArray.fromIterable(unsafePollN(this.takers, values.length))
         : ReadonlyArray.empty
       const [forTakers, remaining] = pipe(values, ReadonlyArray.splitAt(pTakers.length))
@@ -202,7 +205,7 @@ class QueueImpl<A> implements Queue.Queue<A> {
         return core.succeed(true)
       }
       // Not enough takers, offer to the queue
-      const surplus = unsafeOfferAll(this.queue, remaining)
+      const surplus = this.queue.offerAll(remaining)
       unsafeCompleteTakers(this.strategy, this.queue, this.takers)
       return Chunk.isEmpty(surplus)
         ? core.succeed(true)
@@ -215,7 +218,7 @@ class QueueImpl<A> implements Queue.Queue<A> {
       if (MutableRef.get(this.shutdownFlag)) {
         return core.interrupt
       }
-      const item = pipe(this.queue, MutableQueue.poll(MutableQueue.EmptyMutableQueue))
+      const item = this.queue.poll(MutableQueue.EmptyMutableQueue)
       if (item !== MutableQueue.EmptyMutableQueue) {
         this.strategy.unsafeOnQueueEmptySpace(this.queue, this.takers)
         return core.succeed(item)
@@ -246,7 +249,7 @@ class QueueImpl<A> implements Queue.Queue<A> {
       return MutableRef.get(this.shutdownFlag)
         ? core.interrupt
         : core.sync(() => {
-          const values = unsafePollAll(this.queue)
+          const values = this.queue.pollUpTo(Number.POSITIVE_INFINITY)
           this.strategy.unsafeOnQueueEmptySpace(this.queue, this.takers)
           return Chunk.fromIterable(values)
         })
@@ -258,7 +261,7 @@ class QueueImpl<A> implements Queue.Queue<A> {
       MutableRef.get(this.shutdownFlag)
         ? core.interrupt
         : core.sync(() => {
-          const values = unsafePollN(this.queue, max)
+          const values = this.queue.pollUpTo(max)
           this.strategy.unsafeOnQueueEmptySpace(this.queue, this.takers)
           return Chunk.fromIterable(values)
         })
@@ -330,33 +333,33 @@ export const isDequeue = (u: unknown): u is Queue.Dequeue<unknown> =>
 export const bounded = <A>(requestedCapacity: number): Effect.Effect<never, never, Queue.Queue<A>> =>
   pipe(
     core.sync(() => MutableQueue.bounded<A>(requestedCapacity)),
-    core.flatMap((queue) => make(queue, backPressureStrategy()))
+    core.flatMap((queue) => make(backingQueueFromMutableQueue(queue), backPressureStrategy()))
   )
 
 /** @internal */
 export const dropping = <A>(requestedCapacity: number): Effect.Effect<never, never, Queue.Queue<A>> =>
   pipe(
     core.sync(() => MutableQueue.bounded<A>(requestedCapacity)),
-    core.flatMap((queue) => make(queue, droppingStrategy()))
+    core.flatMap((queue) => make(backingQueueFromMutableQueue(queue), droppingStrategy()))
   )
 
 /** @internal */
 export const sliding = <A>(requestedCapacity: number): Effect.Effect<never, never, Queue.Queue<A>> =>
   pipe(
     core.sync(() => MutableQueue.bounded<A>(requestedCapacity)),
-    core.flatMap((queue) => make(queue, slidingStrategy()))
+    core.flatMap((queue) => make(backingQueueFromMutableQueue(queue), slidingStrategy()))
   )
 
 /** @internal */
 export const unbounded = <A>(): Effect.Effect<never, never, Queue.Queue<A>> =>
   pipe(
     core.sync(() => MutableQueue.unbounded<A>()),
-    core.flatMap((queue) => make(queue, droppingStrategy()))
+    core.flatMap((queue) => make(backingQueueFromMutableQueue(queue), droppingStrategy()))
   )
 
 /** @internal */
 const unsafeMake = <A>(
-  queue: MutableQueue.MutableQueue<A>,
+  queue: Queue.BackingQueue<A>,
   takers: MutableQueue.MutableQueue<Deferred.Deferred<never, A>>,
   shutdownHook: Deferred.Deferred<never, void>,
   shutdownFlag: MutableRef.MutableRef<boolean>,
@@ -366,8 +369,8 @@ const unsafeMake = <A>(
 }
 
 /** @internal */
-const make = <A>(
-  queue: MutableQueue.MutableQueue<A>,
+export const make = <A>(
+  queue: Queue.BackingQueue<A>,
   strategy: Queue.Strategy<A>
 ): Effect.Effect<never, never, Queue.Queue<A>> =>
   pipe(
@@ -382,6 +385,33 @@ const make = <A>(
       )
     )
   )
+
+/** @internal */
+export class BackingQueueFromMutableQueue<A> implements Queue.BackingQueue<A> {
+  constructor(readonly mutable: MutableQueue.MutableQueue<A>) {}
+  poll<Def>(def: Def): A | Def {
+    return MutableQueue.poll(this.mutable, def)
+  }
+  pollUpTo(limit: number): Chunk.Chunk<A> {
+    return MutableQueue.pollUpTo(this.mutable, limit)
+  }
+  offerAll(elements: Iterable<A>): Chunk.Chunk<A> {
+    return MutableQueue.offerAll(this.mutable, elements)
+  }
+  offer(element: A): boolean {
+    return MutableQueue.offer(this.mutable, element)
+  }
+  capacity(): number {
+    return MutableQueue.capacity(this.mutable)
+  }
+  length(): number {
+    return MutableQueue.length(this.mutable)
+  }
+}
+
+/** @internal */
+export const backingQueueFromMutableQueue = <A>(mutable: MutableQueue.MutableQueue<A>): Queue.BackingQueue<A> =>
+  new BackingQueueFromMutableQueue(mutable)
 
 /** @internal */
 export const capacity = <A>(self: Queue.Dequeue<A> | Queue.Enqueue<A>): number => self.capacity()
@@ -505,7 +535,7 @@ class BackPressureStrategy<A> implements Queue.Strategy<A> {
 
   handleSurplus(
     iterable: Iterable<A>,
-    queue: MutableQueue.MutableQueue<A>,
+    queue: Queue.BackingQueue<A>,
     takers: MutableQueue.MutableQueue<Deferred.Deferred<never, A>>,
     isShutdown: MutableRef.MutableRef<boolean>
   ): Effect.Effect<never, never, boolean> {
@@ -524,16 +554,16 @@ class BackPressureStrategy<A> implements Queue.Strategy<A> {
   }
 
   unsafeOnQueueEmptySpace(
-    queue: MutableQueue.MutableQueue<A>,
+    queue: Queue.BackingQueue<A>,
     takers: MutableQueue.MutableQueue<Deferred.Deferred<never, A>>
   ): void {
     let keepPolling = true
-    while (keepPolling && !MutableQueue.isFull(queue)) {
+    while (keepPolling && (queue.capacity() === Number.POSITIVE_INFINITY || queue.length() < queue.capacity())) {
       const putter = pipe(this.putters, MutableQueue.poll(MutableQueue.EmptyMutableQueue))
       if (putter === MutableQueue.EmptyMutableQueue) {
         keepPolling = false
       } else {
-        const offered = pipe(queue, MutableQueue.offer(putter[0]))
+        const offered = queue.offer(putter[0])
         if (offered && putter[2]) {
           unsafeCompleteDeferred(putter[1], true)
         } else if (!offered) {
@@ -583,7 +613,7 @@ class DroppingStrategy<A> implements Queue.Strategy<A> {
 
   handleSurplus(
     _iterable: Iterable<A>,
-    _queue: MutableQueue.MutableQueue<A>,
+    _queue: Queue.BackingQueue<A>,
     _takers: MutableQueue.MutableQueue<Deferred.Deferred<never, A>>,
     _isShutdown: MutableRef.MutableRef<boolean>
   ): Effect.Effect<never, never, boolean> {
@@ -591,7 +621,7 @@ class DroppingStrategy<A> implements Queue.Strategy<A> {
   }
 
   unsafeOnQueueEmptySpace(
-    _queue: MutableQueue.MutableQueue<A>,
+    _queue: Queue.BackingQueue<A>,
     _takers: MutableQueue.MutableQueue<Deferred.Deferred<never, A>>
   ): void {
     //
@@ -612,7 +642,7 @@ class SlidingStrategy<A> implements Queue.Strategy<A> {
 
   handleSurplus(
     iterable: Iterable<A>,
-    queue: MutableQueue.MutableQueue<A>,
+    queue: Queue.BackingQueue<A>,
     takers: MutableQueue.MutableQueue<Deferred.Deferred<never, A>>,
     _isShutdown: MutableRef.MutableRef<boolean>
   ): Effect.Effect<never, never, boolean> {
@@ -624,23 +654,23 @@ class SlidingStrategy<A> implements Queue.Strategy<A> {
   }
 
   unsafeOnQueueEmptySpace(
-    _queue: MutableQueue.MutableQueue<A>,
+    _queue: Queue.BackingQueue<A>,
     _takers: MutableQueue.MutableQueue<Deferred.Deferred<never, A>>
   ): void {
     //
   }
 
-  unsafeOffer(queue: MutableQueue.MutableQueue<A>, iterable: Iterable<A>): void {
+  unsafeOffer(queue: Queue.BackingQueue<A>, iterable: Iterable<A>): void {
     const iterator = iterable[Symbol.iterator]()
     let next: IteratorResult<A>
     let offering = true
     while (!(next = iterator.next()).done && offering) {
-      if (MutableQueue.capacity(queue) === 0) {
+      if (queue.capacity() === 0) {
         return
       }
       // Poll 1 and retry
-      pipe(queue, MutableQueue.poll(MutableQueue.EmptyMutableQueue))
-      offering = pipe(queue, MutableQueue.offer(next.value))
+      queue.poll(MutableQueue.EmptyMutableQueue)
+      offering = queue.offer(next.value)
     }
   }
 }
@@ -676,15 +706,15 @@ export const unsafeRemove = <A>(queue: MutableQueue.MutableQueue<A>, a: A): void
 /** @internal */
 export const unsafeCompleteTakers = <A>(
   strategy: Queue.Strategy<A>,
-  queue: MutableQueue.MutableQueue<A>,
+  queue: Queue.BackingQueue<A>,
   takers: MutableQueue.MutableQueue<Deferred.Deferred<never, A>>
 ): void => {
   // Check both a taker and an item are in the queue, starting with the taker
   let keepPolling = true
-  while (keepPolling && !MutableQueue.isEmpty(queue)) {
+  while (keepPolling && queue.length() !== 0) {
     const taker = pipe(takers, MutableQueue.poll(MutableQueue.EmptyMutableQueue))
     if (taker !== MutableQueue.EmptyMutableQueue) {
-      const element = pipe(queue, MutableQueue.poll(MutableQueue.EmptyMutableQueue))
+      const element = queue.poll(MutableQueue.EmptyMutableQueue)
       if (element !== MutableQueue.EmptyMutableQueue) {
         unsafeCompleteDeferred(taker, element)
         strategy.unsafeOnQueueEmptySpace(queue, takers)

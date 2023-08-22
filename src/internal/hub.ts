@@ -2,6 +2,7 @@ import * as Chunk from "@effect/data/Chunk"
 import { dual, pipe } from "@effect/data/Function"
 import * as MutableQueue from "@effect/data/MutableQueue"
 import * as MutableRef from "@effect/data/MutableRef"
+import * as Option from "@effect/data/Option"
 import { pipeArguments } from "@effect/data/Pipeable"
 import type * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
@@ -848,6 +849,13 @@ class SubscriptionImpl<A> implements Queue.Dequeue<A> {
     )
   }
 
+  unsafeSize(): Option.Option<number> {
+    if (MutableRef.get(this.shutdownFlag)) {
+      return Option.none()
+    }
+    return Option.some(this.subscription.size())
+  }
+
   isFull(): Effect.Effect<never, never, boolean> {
     return core.map(this.size(), (size) => size === this.capacity())
   }
@@ -1007,6 +1015,13 @@ class HubImpl<A> implements Hub.Hub<A> {
         core.interrupt :
         core.sync(() => this.hub.size())
     )
+  }
+
+  unsafeSize(): Option.Option<number> {
+    if (MutableRef.get(this.shutdownFlag)) {
+      return Option.none()
+    }
+    return Option.some(this.hub.size())
   }
 
   isFull(): Effect.Effect<never, never, boolean> {
