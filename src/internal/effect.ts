@@ -353,8 +353,7 @@ export const descriptor: Effect.Effect<never, never, Fiber.Fiber.Descriptor> = d
 /* @internal */
 export const diffFiberRefs = <R, E, A>(
   self: Effect.Effect<R, E, A>
-): Effect.Effect<R, E, readonly [FiberRefsPatch.FiberRefsPatch, A]> =>
-  summarized(self, getFiberRefs, fiberRefsPatch.diff)
+): Effect.Effect<R, E, readonly [FiberRefsPatch.FiberRefsPatch, A]> => summarized(self, fiberRefs, fiberRefsPatch.diff)
 
 /* @internal */
 export const Do: Effect.Effect<never, never, {}> = core.succeed({})
@@ -790,7 +789,7 @@ export const gen: typeof Effect.gen = (f) =>
   })
 
 /* @internal */
-export const getFiberRefs: Effect.Effect<never, never, FiberRefs.FiberRefs> = core.withFiberRuntime<
+export const fiberRefs: Effect.Effect<never, never, FiberRefs.FiberRefs> = core.withFiberRuntime<
   never,
   never,
   FiberRefs.FiberRefs
