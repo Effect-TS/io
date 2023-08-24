@@ -5134,7 +5134,7 @@ export const withParentSpanScoped: (span: Tracer.ParentSpan) => Effect<Scope.Sco
  * @since 1.0.0
  * @category optionality
  */
-export const fromNullable: <A>(evaluate: LazyArg<A>) => Effect<never, Cause.NoSuchElementException, NonNullable<A>> =
+export const fromNullable: <A>(value: A) => Effect<never, Cause.NoSuchElementException, NonNullable<A>> =
   effect.fromNullable
 
 /**

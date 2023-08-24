@@ -2096,16 +2096,8 @@ export const withSpan = dual<
 // -------------------------------------------------------------------------------------
 
 /* @internal */
-export const fromNullable = <A>(
-  evaluate: LazyArg<A>
-): Effect.Effect<never, Cause.NoSuchElementException, NonNullable<A>> =>
-  core.suspend(() => {
-    const a = evaluate()
-    if (a === null || a === undefined) {
-      return core.fail(internalCause.NoSuchElementException())
-    }
-    return core.succeed(a)
-  })
+export const fromNullable = <A>(value: A): Effect.Effect<never, Cause.NoSuchElementException, NonNullable<A>> =>
+  value == null ? core.fail(internalCause.NoSuchElementException()) : core.succeed(value as NonNullable<A>)
 
 /* @internal */
 export const optionFromOptional = <R, E, A>(
