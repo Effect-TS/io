@@ -52,9 +52,9 @@ export const annotateLogs = dual<
     return core.fiberRefLocallyWith(
       args[0] as Effect.Effect<R, E, A>,
       core.currentLogAnnotations,
-      typeof args[1] === "string" ?
-        HashMap.set(args[1], args[2]) :
-        (annotations) =>
+      typeof args[1] === "string"
+        ? HashMap.set(args[1], args[2])
+        : (annotations) =>
           Object.entries(args[1] as Record<string, Logger.AnnotationValue>).reduce(
             (acc, [key, value]) => HashMap.set(acc, key, value),
             annotations
@@ -342,9 +342,9 @@ export const descriptorWith = <R, E, A>(
 /* @internal */
 export const allowInterrupt: Effect.Effect<never, never, void> = descriptorWith(
   (descriptor) =>
-    HashSet.size(descriptor.interruptors) > 0 ?
-      core.interrupt :
-      core.unit
+    HashSet.size(descriptor.interruptors) > 0
+      ? core.interrupt
+      : core.unit
 )
 
 /* @internal */
@@ -779,9 +779,9 @@ export const gen: typeof Effect.gen = (f) =>
     const state = iterator.next()
     const run = (
       state: IteratorYieldResult<any> | IteratorReturnResult<any>
-    ): Effect.Effect<any, any, any> => (state.done ?
-      core.succeed(state.value) :
-      pipe(
+    ): Effect.Effect<any, any, any> => (state.done
+      ? core.succeed(state.value)
+      : pipe(
         state.value.value as unknown as Effect.Effect<any, any, any>,
         core.flatMap((val: any) => run(iterator.next(val)))
       ))
@@ -960,9 +960,9 @@ export const loop: {
     readonly discard?: boolean
   }
 ): Effect.Effect<R, E, Array<A>> | Effect.Effect<R, E, void> =>
-  options.discard ?
-    loopDiscard(initial, options.while, options.step, options.body) :
-    core.map(loopInternal(initial, options.while, options.step, options.body), (x) => Array.from(x))
+  options.discard
+    ? loopDiscard(initial, options.while, options.step, options.body)
+    : core.map(loopInternal(initial, options.while, options.step, options.body), (x) => Array.from(x))
 
 const loopInternal = <Z, R, E, A>(
   initial: Z,
@@ -1139,13 +1139,13 @@ export const patchFiberRefs = (patch: FiberRefsPatch.FiberRefsPatch): Effect.Eff
 
 /* @internal */
 export const promise = <A>(evaluate: (signal: AbortSignal) => Promise<A>): Effect.Effect<never, never, A> =>
-  evaluate.length >= 1 ?
-    core.async<never, never, A>((resolve, signal) => {
+  evaluate.length >= 1
+    ? core.async<never, never, A>((resolve, signal) => {
       evaluate(signal)
         .then((a) => resolve(core.exitSucceed(a)))
         .catch((e) => resolve(core.exitDie(e)))
-    }) :
-    core.async<never, never, A>((resolve) => {
+    })
+    : core.async<never, never, A>((resolve) => {
       ;(evaluate as LazyArg<Promise<A>>)()
         .then((a) => resolve(core.exitSucceed(a)))
         .catch((e) => resolve(core.exitDie(e)))
@@ -1286,9 +1286,9 @@ export const repeatN = dual<
 /* @internal */
 const repeatNLoop = <R, E, A>(self: Effect.Effect<R, E, A>, n: number): Effect.Effect<R, E, A> =>
   core.flatMap(self, (a) =>
-    n <= 0 ?
-      core.succeed(a) :
-      core.zipRight(core.yieldNow(), repeatNLoop(self, n - 1)))
+    n <= 0
+      ? core.succeed(a)
+      : core.zipRight(core.yieldNow(), repeatNLoop(self, n - 1)))
 
 /* @internal */
 export const sandbox = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, Cause.Cause<E>, A> =>
@@ -1663,9 +1663,9 @@ export const tryMapPromise = dual<
 ): Effect.Effect<R, E | E1, B> =>
   core.flatMap(self, (a) =>
     tryPromise({
-      try: options.try.length >= 1 ?
-        (signal) => options.try(a, signal) :
-        () => (options.try as (a: A) => Promise<B>)(a),
+      try: options.try.length >= 1
+        ? (signal) => options.try(a, signal)
+        : () => (options.try as (a: A) => Promise<B>)(a),
       catch: options.catch
     })))
 
@@ -1675,9 +1675,9 @@ export const unless = dual<
   <R, E, A>(self: Effect.Effect<R, E, A>, predicate: LazyArg<boolean>) => Effect.Effect<R, E, Option.Option<A>>
 >(2, (self, predicate) =>
   core.suspend(() =>
-    predicate() ?
-      succeedNone :
-      asSome(self)
+    predicate()
+      ? succeedNone
+      : asSome(self)
   ))
 
 /* @internal */
@@ -1733,9 +1733,9 @@ export const when = dual<
   <R, E, A>(self: Effect.Effect<R, E, A>, predicate: LazyArg<boolean>) => Effect.Effect<R, E, Option.Option<A>>
 >(2, (self, predicate) =>
   core.suspend(() =>
-    predicate() ?
-      core.map(self, Option.some) :
-      core.succeed(Option.none())
+    predicate()
+      ? core.map(self, Option.some)
+      : core.succeed(Option.none())
   ))
 
 /* @internal */
@@ -1753,9 +1753,9 @@ export const whenFiberRef = dual<
   3,
   <R, E, A, S>(self: Effect.Effect<R, E, A>, fiberRef: FiberRef.FiberRef<S>, predicate: Predicate.Predicate<S>) =>
     core.flatMap(core.fiberRefGet(fiberRef), (s) =>
-      predicate(s) ?
-        core.map(self, (a) => [s, Option.some(a)] as const) :
-        core.succeed<[S, Option.Option<A>]>([s, Option.none()]))
+      predicate(s)
+        ? core.map(self, (a) => [s, Option.some(a)] as const)
+        : core.succeed<[S, Option.Option<A>]>([s, Option.none()]))
 )
 
 /* @internal */
@@ -1773,9 +1773,9 @@ export const whenRef = dual<
   3,
   <R, E, A, S>(self: Effect.Effect<R, E, A>, ref: Ref.Ref<S>, predicate: Predicate.Predicate<S>) =>
     core.flatMap(Ref.get(ref), (s) =>
-      predicate(s) ?
-        core.map(self, (a) => [s, Option.some(a)] as const) :
-        core.succeed<[S, Option.Option<A>]>([s, Option.none()]))
+      predicate(s)
+        ? core.map(self, (a) => [s, Option.some(a)] as const)
+        : core.succeed<[S, Option.Option<A>]>([s, Option.none()]))
 )
 
 /* @internal */
@@ -1861,8 +1861,8 @@ export const annotateCurrentSpan: {
   return core.flatMap(
     currentSpan,
     (span) =>
-      span._tag === "Some" ?
-        core.sync(() => {
+      span._tag === "Some"
+        ? core.sync(() => {
           if (typeof args[0] === "string") {
             span.value.attribute(args[0], args[1])
           } else {
@@ -1870,8 +1870,8 @@ export const annotateCurrentSpan: {
               span.value.attribute(key, args[0][key])
             }
           }
-        }) :
-        core.unit
+        })
+        : core.unit
   )
 }
 
@@ -1894,9 +1894,9 @@ export const annotateSpans = dual<
     return core.fiberRefLocallyWith(
       args[0] as Effect.Effect<R, E, A>,
       core.currentTracerSpanAnnotations,
-      typeof args[1] === "string" ?
-        HashMap.set(args[1], args[2]) :
-        (annotations) =>
+      typeof args[1] === "string"
+        ? HashMap.set(args[1], args[2])
+        : (annotations) =>
           Object.entries(args[1] as Record<string, Tracer.AttributeValue>).reduce(
             (acc, [key, value]) => HashMap.set(acc, key, value),
             annotations
@@ -1964,11 +1964,11 @@ export const makeSpan = (
 ) =>
   tracerWith((tracer) =>
     core.flatMap(
-      options?.parent ?
-        succeedSome(options.parent) :
-        options?.root ?
-        succeedNone :
-        currentParentSpan,
+      options?.parent
+        ? succeedSome(options.parent)
+        : options?.root
+        ? succeedNone
+        : currentParentSpan,
       (parent) =>
         core.flatMap(
           core.fiberRefGet(core.currentTracerSpanAnnotations),
@@ -1980,10 +1980,16 @@ export const makeSpan = (
                   currentTimeNanosTracing,
                   (startTime) =>
                     core.sync(() => {
-                      const linksArray = options?.links ?
-                        [...Chunk.toReadonlyArray(links), ...options.links] :
-                        Chunk.toReadonlyArray(links)
-                      const span = tracer.span(name, parent, options?.context ?? Context.empty(), linksArray, startTime)
+                      const linksArray = options?.links
+                        ? [...Chunk.toReadonlyArray(links), ...options.links]
+                        : Chunk.toReadonlyArray(links)
+                      const span = tracer.span(
+                        name,
+                        parent,
+                        options?.context ?? Context.empty(),
+                        linksArray,
+                        startTime
+                      )
                       HashMap.forEach(annotations, (value, key) => span.attribute(key, value))
                       Object.entries(options?.attributes ?? {}).forEach(([k, v]) => span.attribute(k, v))
                       return span

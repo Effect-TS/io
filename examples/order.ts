@@ -77,7 +77,7 @@ const program = Effect.gen(function*($) {
   const layer3 = makeLayer3(ref)
   const env = pipe(layer1, Layer.provide(layer2), Layer.merge(pipe(layer1, Layer.provide(layer3))), Layer.build)
   yield* $(Effect.scoped(env))
-  const result = yield* $(pipe(Ref.get(ref), Effect.map((chunk) => Array.from(chunk))))
+  const result = yield* $(Ref.get(ref), Effect.map((chunk) => Array.from(chunk)))
   console.log(result)
 })
 
