@@ -353,8 +353,7 @@ export const descriptor: Effect.Effect<never, never, Fiber.Fiber.Descriptor> = d
 /* @internal */
 export const diffFiberRefs = <R, E, A>(
   self: Effect.Effect<R, E, A>
-): Effect.Effect<R, E, readonly [FiberRefsPatch.FiberRefsPatch, A]> =>
-  summarized(self, getFiberRefs, fiberRefsPatch.diff)
+): Effect.Effect<R, E, readonly [FiberRefsPatch.FiberRefsPatch, A]> => summarized(self, fiberRefs, fiberRefsPatch.diff)
 
 /* @internal */
 export const Do: Effect.Effect<never, never, {}> = core.succeed({})
@@ -790,7 +789,7 @@ export const gen: typeof Effect.gen = (f) =>
   })
 
 /* @internal */
-export const getFiberRefs: Effect.Effect<never, never, FiberRefs.FiberRefs> = core.withFiberRuntime<
+export const fiberRefs: Effect.Effect<never, never, FiberRefs.FiberRefs> = core.withFiberRuntime<
   never,
   never,
   FiberRefs.FiberRefs
@@ -2081,16 +2080,8 @@ export const withSpan = dual<
 // -------------------------------------------------------------------------------------
 
 /* @internal */
-export const fromNullable = <A>(
-  evaluate: LazyArg<A>
-): Effect.Effect<never, Cause.NoSuchElementException, NonNullable<A>> =>
-  core.suspend(() => {
-    const a = evaluate()
-    if (a === null || a === undefined) {
-      return core.fail(internalCause.NoSuchElementException())
-    }
-    return core.succeed(a)
-  })
+export const fromNullable = <A>(value: A): Effect.Effect<never, Cause.NoSuchElementException, NonNullable<A>> =>
+  value == null ? core.fail(internalCause.NoSuchElementException()) : core.succeed(value as NonNullable<A>)
 
 /* @internal */
 export const optionFromOptional = <R, E, A>(

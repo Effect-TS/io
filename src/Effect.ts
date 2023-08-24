@@ -3941,7 +3941,7 @@ export const whileLoop: <R, E, A>(
  * @since 1.0.0
  * @category fiber refs
  */
-export const getFiberRefs: Effect<never, never, FiberRefs.FiberRefs> = effect.getFiberRefs
+export const fiberRefs: Effect<never, never, FiberRefs.FiberRefs> = effect.fiberRefs
 
 /**
  * Inherits values from all `FiberRef` instances into current fiber.
@@ -4012,7 +4012,7 @@ export const setFiberRefs: (fiberRefs: FiberRefs.FiberRefs) => Effect<never, nev
  * specified function.
  *
  * @since 1.0.0
- * @category constructors
+ * @category fiber refs
  */
 export const updateFiberRefs: (
   f: (fiberId: FiberId.Runtime, fiberRefs: FiberRefs.FiberRefs) => FiberRefs.FiberRefs
@@ -5117,7 +5117,7 @@ export const withParentSpanScoped: (span: Tracer.ParentSpan) => Effect<Scope.Sco
  * @since 1.0.0
  * @category optionality
  */
-export const fromNullable: <A>(evaluate: LazyArg<A>) => Effect<never, Cause.NoSuchElementException, NonNullable<A>> =
+export const fromNullable: <A>(value: A) => Effect<never, Cause.NoSuchElementException, NonNullable<A>> =
   effect.fromNullable
 
 /**

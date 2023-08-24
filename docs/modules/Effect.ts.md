@@ -82,7 +82,6 @@ Added in v1.0.0
   - [suspend](#suspend)
   - [sync](#sync)
   - [unit](#unit)
-  - [updateFiberRefs](#updatefiberrefs)
   - [withClockScoped](#withclockscoped)
   - [yieldNow](#yieldnow)
 - [context](#context)
@@ -159,7 +158,7 @@ Added in v1.0.0
   - [runSync](#runsync)
   - [runSyncExit](#runsyncexit)
 - [fiber refs](#fiber-refs)
-  - [getFiberRefs](#getfiberrefs)
+  - [fiberRefs](#fiberrefs)
   - [inheritFiberRefs](#inheritfiberrefs)
   - [locally](#locally)
   - [locallyScoped](#locallyscoped)
@@ -167,6 +166,7 @@ Added in v1.0.0
   - [locallyWith](#locallywith)
   - [patchFiberRefs](#patchfiberrefs)
   - [setFiberRefs](#setfiberrefs)
+  - [updateFiberRefs](#updatefiberrefs)
 - [filtering & conditionals](#filtering--conditionals)
   - [filterOrDie](#filterordie)
   - [filterOrDieMessage](#filterordiemessage)
@@ -1464,21 +1464,6 @@ export declare const unit: Effect<never, never, void>
 
 Added in v1.0.0
 
-## updateFiberRefs
-
-Updates the `FiberRef` values for the fiber running this effect using the
-specified function.
-
-**Signature**
-
-```ts
-export declare const updateFiberRefs: (
-  f: (fiberId: FiberId.Runtime, fiberRefs: FiberRefs.FiberRefs) => FiberRefs.FiberRefs
-) => Effect<never, never, void>
-```
-
-Added in v1.0.0
-
 ## withClockScoped
 
 Sets the implementation of the clock service to the specified value and
@@ -2695,7 +2680,7 @@ Added in v1.0.0
 
 # fiber refs
 
-## getFiberRefs
+## fiberRefs
 
 Returns a collection of all `FiberRef` values for the fiber running this
 effect.
@@ -2703,7 +2688,7 @@ effect.
 **Signature**
 
 ```ts
-export declare const getFiberRefs: Effect<never, never, FiberRefs.FiberRefs>
+export declare const fiberRefs: Effect<never, never, FiberRefs.FiberRefs>
 ```
 
 Added in v1.0.0
@@ -2794,6 +2779,21 @@ in the specified collection of `FiberRef` values.
 
 ```ts
 export declare const setFiberRefs: (fiberRefs: FiberRefs.FiberRefs) => Effect<never, never, void>
+```
+
+Added in v1.0.0
+
+## updateFiberRefs
+
+Updates the `FiberRef` values for the fiber running this effect using the
+specified function.
+
+**Signature**
+
+```ts
+export declare const updateFiberRefs: (
+  f: (fiberId: FiberId.Runtime, fiberRefs: FiberRefs.FiberRefs) => FiberRefs.FiberRefs
+) => Effect<never, never, void>
 ```
 
 Added in v1.0.0
@@ -4122,9 +4122,7 @@ null or undefined, otherwise succeeds with the value.
 **Signature**
 
 ```ts
-export declare const fromNullable: <A>(
-  evaluate: LazyArg<A>
-) => Effect<never, Cause.NoSuchElementException, NonNullable<A>>
+export declare const fromNullable: <A>(value: A) => Effect<never, Cause.NoSuchElementException, NonNullable<A>>
 ```
 
 Added in v1.0.0
