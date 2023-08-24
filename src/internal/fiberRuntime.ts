@@ -2471,24 +2471,6 @@ export const using = dual<
     (scope, exit) => core.scopeClose(scope, exit)
   ))
 
-/* @internal */
-export const unsome = <R, E, A>(
-  self: Effect.Effect<R, Option.Option<E>, A>
-): Effect.Effect<R, E, Option.Option<A>> =>
-  core.matchEffect(self, {
-    onFailure: (option) => {
-      switch (option._tag) {
-        case "None": {
-          return core.succeed(Option.none())
-        }
-        case "Some": {
-          return core.fail(option.value)
-        }
-      }
-    },
-    onSuccess: (a) => core.succeed(Option.some(a))
-  })
-
 /** @internal */
 export const validate = dual<
   <R1, E1, B>(

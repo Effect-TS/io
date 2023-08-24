@@ -109,8 +109,6 @@ Added in v1.0.0
   - [exit](#exit)
   - [intoDeferred](#intodeferred)
   - [option](#option)
-  - [some](#some)
-  - [unsome](#unsome)
 - [delays & timeouts](#delays--timeouts)
   - [delay](#delay)
   - [sleep](#sleep)
@@ -1860,30 +1858,6 @@ success.
 
 ```ts
 export declare const option: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Option.Option<A>>
-```
-
-Added in v1.0.0
-
-## some
-
-Converts an option on values into an option on errors.
-
-**Signature**
-
-```ts
-export declare const some: <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R, Option.Option<E>, A>
-```
-
-Added in v1.0.0
-
-## unsome
-
-Converts an option on errors into an option on values.
-
-**Signature**
-
-```ts
-export declare const unsome: <R, E, A>(self: Effect<R, Option.Option<E>, A>) => Effect<R, E, Option.Option<A>>
 ```
 
 Added in v1.0.0

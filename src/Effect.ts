@@ -3268,23 +3268,6 @@ export const intoDeferred: {
  */
 export const option: <R, E, A>(self: Effect<R, E, A>) => Effect<R, never, Option.Option<A>> = effect.option
 
-/**
- * Converts an option on values into an option on errors.
- *
- * @since 1.0.0
- * @category conversions
- */
-export const some: <R, E, A>(self: Effect<R, E, Option.Option<A>>) => Effect<R, Option.Option<E>, A> = effect.some
-
-/**
- * Converts an option on errors into an option on values.
- *
- * @since 1.0.0
- * @category conversions
- */
-export const unsome: <R, E, A>(self: Effect<R, Option.Option<E>, A>) => Effect<R, E, Option.Option<A>> =
-  fiberRuntime.unsome
-
 // -------------------------------------------------------------------------------------
 // filtering & conditionals
 // -------------------------------------------------------------------------------------
