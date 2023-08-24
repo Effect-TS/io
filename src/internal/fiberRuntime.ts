@@ -75,7 +75,7 @@ export const fiberLifetimes = metric.histogram(
   "effect_fiber_lifetimes",
   metricBoundaries.exponential({
     start: 1.0,
-    factor: 2.0,
+    factor: 1.3,
     count: 100
   })
 )
@@ -738,7 +738,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
       const tags = this.getFiberRef(core.currentMetricLabels)
       const startTimeMillis = this.id().startTimeMillis
       const endTimeMillis = new Date().getTime()
-      fiberLifetimes.unsafeUpdate((endTimeMillis - startTimeMillis) / 1000.0, tags)
+      fiberLifetimes.unsafeUpdate(endTimeMillis - startTimeMillis, tags)
     }
 
     this.reportExitValue(exit)
