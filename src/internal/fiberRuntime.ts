@@ -71,13 +71,17 @@ export const fiberSuccesses = metric.counter("effect_fiber_successes")
 /** @internal */
 export const fiberFailures = metric.counter("effect_fiber_failures")
 /** @internal */
-export const fiberLifetimes = metric.histogram(
-  "effect_fiber_lifetimes",
-  metricBoundaries.exponential({
-    start: 1.0,
-    factor: 1.3,
-    count: 100
-  })
+export const fiberLifetimes = metric.tagged(
+  metric.histogram(
+    "effect_fiber_lifetimes",
+    metricBoundaries.exponential({
+      start: 1.0,
+      factor: 1.3,
+      count: 100
+    })
+  ),
+  "time_unit",
+  "milliseconds"
 )
 
 /** @internal */
