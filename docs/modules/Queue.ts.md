@@ -15,6 +15,7 @@ Added in v1.0.0
 - [constructors](#constructors)
   - [bounded](#bounded)
   - [dropping](#dropping)
+  - [make](#make)
   - [sliding](#sliding)
   - [unbounded](#unbounded)
 - [getters](#getters)
@@ -24,6 +25,7 @@ Added in v1.0.0
   - [isShutdown](#isshutdown)
   - [size](#size)
 - [models](#models)
+  - [BackingQueue (interface)](#backingqueue-interface)
   - [BaseQueue (interface)](#basequeue-interface)
   - [Dequeue (interface)](#dequeue-interface)
   - [Enqueue (interface)](#enqueue-interface)
@@ -94,6 +96,16 @@ better performance by utilising an optimised version of the underlying
 
 ```ts
 export declare const dropping: <A>(requestedCapacity: number) => Effect.Effect<never, never, Queue<A>>
+```
+
+Added in v1.0.0
+
+## make
+
+**Signature**
+
+```ts
+export declare const make: <A>(queue: BackingQueue<A>, strategy: Strategy<A>) => Effect.Effect<never, never, Queue<A>>
 ```
 
 Added in v1.0.0
@@ -196,6 +208,49 @@ Added in v1.0.0
 
 # models
 
+## BackingQueue (interface)
+
+**Signature**
+
+```ts
+export interface BackingQueue<A> {
+  /**
+   * Dequeues an element from the queue.
+   * Returns either an element from the queue, or the `def` param.
+   */
+  poll<Def>(def: Def): A | Def
+  /**
+   * Dequeues up to `limit` elements from the queue.
+   */
+  pollUpTo(limit: number): Chunk.Chunk<A>
+  /**
+   * Enqueues a collection of values into the queue.
+   *
+   * Returns a `Chunk` of the values that were **not** able to be enqueued.
+   */
+  offerAll(elements: Iterable<A>): Chunk.Chunk<A>
+  /**
+   * Offers an element to the queue.
+   *
+   * Returns whether the enqueue was successful or not.
+   */
+  offer(element: A): boolean
+  /**
+   * The **maximum** number of elements that a queue can hold.
+   *
+   * **Note**: unbounded queues can still implement this interface with
+   * `capacity = Infinity`.
+   */
+  capacity(): number
+  /**
+   * Returns the number of elements currently in the queue
+   */
+  length(): number
+}
+```
+
+Added in v1.0.0
+
 ## BaseQueue (interface)
 
 The base interface that all `Queue`s must implement.
@@ -220,6 +275,13 @@ export interface BaseQueue {
    * elements to be added to the queue.
    */
   size(): Effect.Effect<never, never, number>
+
+  /**
+   * Retrieves the size of the queue, which is equal to the number of elements
+   * in the queue. This may be negative if fibers are suspended waiting for
+   * elements to be added to the queue. Returns None if shutdown has been called
+   */
+  unsafeSize(): Option.Option<number>
 
   /**
    * Returns `true` if the `Queue` contains at least one element, `false`
@@ -332,7 +394,7 @@ Added in v1.0.0
 ```ts
 export interface Queue<A> extends Enqueue<A>, Dequeue<A>, Pipeable {
   /** @internal */
-  readonly queue: MutableQueue.MutableQueue<A>
+  readonly queue: BackingQueue<A>
   /** @internal */
   readonly takers: MutableQueue.MutableQueue<Deferred.Deferred<never, A>>
   /** @internal */
@@ -371,7 +433,7 @@ export interface Strategy<A> extends Queue.StrategyVariance<A> {
    */
   handleSurplus(
     iterable: Iterable<A>,
-    queue: MutableQueue.MutableQueue<A>,
+    queue: BackingQueue<A>,
     takers: MutableQueue.MutableQueue<Deferred.Deferred<never, A>>,
     isShutdown: MutableRef.MutableRef<boolean>
   ): Effect.Effect<never, never, boolean>
@@ -380,10 +442,7 @@ export interface Strategy<A> extends Queue.StrategyVariance<A> {
    * Determines the behavior of the `Queue.Strategy` when the `Queue` has empty
    * slots following a `take` operation.
    */
-  unsafeOnQueueEmptySpace(
-    queue: MutableQueue.MutableQueue<A>,
-    takers: MutableQueue.MutableQueue<Deferred.Deferred<never, A>>
-  ): void
+  unsafeOnQueueEmptySpace(queue: BackingQueue<A>, takers: MutableQueue.MutableQueue<Deferred.Deferred<never, A>>): void
 }
 ```
 

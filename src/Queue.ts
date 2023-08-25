@@ -52,7 +52,7 @@ export type QueueStrategyTypeId = typeof QueueStrategyTypeId
  */
 export interface Queue<A> extends Enqueue<A>, Dequeue<A>, Pipeable {
   /** @internal */
-  readonly queue: MutableQueue.MutableQueue<A>
+  readonly queue: BackingQueue<A>
   /** @internal */
   readonly takers: MutableQueue.MutableQueue<Deferred.Deferred<never, A>>
   /** @internal */
@@ -151,6 +151,13 @@ export interface BaseQueue {
   size(): Effect.Effect<never, never, number>
 
   /**
+   * Retrieves the size of the queue, which is equal to the number of elements
+   * in the queue. This may be negative if fibers are suspended waiting for
+   * elements to be added to the queue. Returns None if shutdown has been called
+   */
+  unsafeSize(): Option.Option<number>
+
+  /**
    * Returns `true` if the `Queue` contains at least one element, `false`
    * otherwise.
    */
@@ -204,7 +211,7 @@ export interface Strategy<A> extends Queue.StrategyVariance<A> {
    */
   handleSurplus(
     iterable: Iterable<A>,
-    queue: MutableQueue.MutableQueue<A>,
+    queue: BackingQueue<A>,
     takers: MutableQueue.MutableQueue<Deferred.Deferred<never, A>>,
     isShutdown: MutableRef.MutableRef<boolean>
   ): Effect.Effect<never, never, boolean>
@@ -214,9 +221,48 @@ export interface Strategy<A> extends Queue.StrategyVariance<A> {
    * slots following a `take` operation.
    */
   unsafeOnQueueEmptySpace(
-    queue: MutableQueue.MutableQueue<A>,
+    queue: BackingQueue<A>,
     takers: MutableQueue.MutableQueue<Deferred.Deferred<never, A>>
   ): void
+}
+
+/**
+ * @since 1.0.0
+ * @category models
+ */
+export interface BackingQueue<A> {
+  /**
+   * Dequeues an element from the queue.
+   * Returns either an element from the queue, or the `def` param.
+   */
+  poll<Def>(def: Def): A | Def
+  /**
+   * Dequeues up to `limit` elements from the queue.
+   */
+  pollUpTo(limit: number): Chunk.Chunk<A>
+  /**
+   * Enqueues a collection of values into the queue.
+   *
+   * Returns a `Chunk` of the values that were **not** able to be enqueued.
+   */
+  offerAll(elements: Iterable<A>): Chunk.Chunk<A>
+  /**
+   * Offers an element to the queue.
+   *
+   * Returns whether the enqueue was successful or not.
+   */
+  offer(element: A): boolean
+  /**
+   * The **maximum** number of elements that a queue can hold.
+   *
+   * **Note**: unbounded queues can still implement this interface with
+   * `capacity = Infinity`.
+   */
+  capacity(): number
+  /**
+   * Returns the number of elements currently in the queue
+   */
+  length(): number
 }
 
 /**
@@ -295,6 +341,13 @@ export const droppingStrategy: <A>() => Strategy<A> = internal.droppingStrategy
  * @category strategies
  */
 export const slidingStrategy: <A>() => Strategy<A> = internal.slidingStrategy
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const make: <A>(queue: BackingQueue<A>, strategy: Strategy<A>) => Effect.Effect<never, never, Queue<A>> =
+  internal.make
 
 /**
  * Makes a new bounded `Queue`. When the capacity of the queue is reached, any
