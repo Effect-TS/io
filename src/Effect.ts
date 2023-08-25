@@ -2139,7 +2139,6 @@ export const negate: <R, E>(self: Effect<R, E, boolean>) => Effect<R, E, boolean
  *
  * @param acquire - The `Effect` value that acquires the resource.
  * @param release - The `Effect` value that releases the resource.
- * @param interruptible - Whether the `acquire` Effect can be interrupted
  *
  * @returns A new `Effect` value that represents the scoped resource.
  *
