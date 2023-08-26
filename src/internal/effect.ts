@@ -15,6 +15,7 @@ import * as Clock from "@effect/io/Clock"
 import type * as Effect from "@effect/io/Effect"
 import type * as Fiber from "@effect/io/Fiber"
 import * as FiberId from "@effect/io/Fiber/Id"
+import type * as runtimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
 import type * as FiberRef from "@effect/io/FiberRef"
 import * as FiberRefs from "@effect/io/FiberRefs"
 import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
@@ -23,6 +24,7 @@ import * as core from "@effect/io/internal/core"
 import * as defaultServices from "@effect/io/internal/defaultServices"
 import * as fiberRefsPatch from "@effect/io/internal/fiberRefs/patch"
 import * as metricLabel from "@effect/io/internal/metric/label"
+import * as runtimeFlags from "@effect/io/internal/runtimeFlags"
 import * as SingleShotGen from "@effect/io/internal/singleShotGen"
 import type * as Logger from "@effect/io/Logger"
 import * as LogLevel from "@effect/io/Logger/Level"
@@ -354,6 +356,17 @@ export const descriptor: Effect.Effect<never, never, Fiber.Fiber.Descriptor> = d
 export const diffFiberRefs = <R, E, A>(
   self: Effect.Effect<R, E, A>
 ): Effect.Effect<R, E, readonly [FiberRefsPatch.FiberRefsPatch, A]> => summarized(self, fiberRefs, fiberRefsPatch.diff)
+
+/* @internal */
+export const diffFiberRefsAndRuntimeFlags = <R, E, A>(
+  self: Effect.Effect<R, E, A>
+) =>
+  summarized(
+    self,
+    core.zip(fiberRefs, core.runtimeFlags),
+    ([refs, flags], [refsNew, flagsNew]) =>
+      [fiberRefsPatch.diff(refs, refsNew), runtimeFlags.diff(flags, flagsNew)] as const
+  )
 
 /* @internal */
 export const Do: Effect.Effect<never, never, {}> = core.succeed({})
@@ -1045,10 +1058,19 @@ export const memoize = <R, E, A>(
   self: Effect.Effect<R, E, A>
 ): Effect.Effect<never, never, Effect.Effect<R, E, A>> =>
   pipe(
-    core.deferredMake<E, readonly [FiberRefsPatch.FiberRefsPatch, A]>(),
+    core.deferredMake<
+      E,
+      readonly [
+        readonly [
+          FiberRefsPatch.FiberRefsPatch,
+          runtimeFlagsPatch.RuntimeFlagsPatch
+        ],
+        A
+      ]
+    >(),
     core.flatMap((deferred) =>
       pipe(
-        diffFiberRefs(self),
+        diffFiberRefsAndRuntimeFlags(self),
         core.intoDeferred(deferred),
         once,
         core.map((complete) =>
@@ -1056,7 +1078,9 @@ export const memoize = <R, E, A>(
             complete,
             pipe(
               core.deferredAwait(deferred),
-              core.flatMap(([patch, a]) => core.as(patchFiberRefs(patch), a))
+              core.flatMap(([patch, a]) =>
+                core.as(core.zip(patchFiberRefs(patch[0]), core.updateRuntimeFlags(patch[1])), a)
+              )
             )
           )
         )
