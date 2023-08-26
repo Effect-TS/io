@@ -181,10 +181,11 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const fiber = yield* $(
         Effect.unit,
-        Effect.race(Effect.sleep("60 seconds")),
+        Effect.race(Effect.sleep("45 seconds")),
         Effect.uninterruptible,
         Effect.fork
       )
+      yield* $(Effect.yieldNow())
       yield* $(adjust("30 seconds"))
       assert.isTrue(fiber.unsafePoll() === null)
       yield* $(adjust("60 seconds"))
