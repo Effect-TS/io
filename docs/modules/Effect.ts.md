@@ -70,6 +70,7 @@ Added in v1.0.0
   - [dieSync](#diesync)
   - [fail](#fail)
   - [failCause](#failcause)
+  - [failCauseAnnotate](#failcauseannotate)
   - [failCauseSync](#failcausesync)
   - [failSync](#failsync)
   - [gen](#gen)
@@ -158,7 +159,7 @@ Added in v1.0.0
   - [runSync](#runsync)
   - [runSyncExit](#runsyncexit)
 - [fiber refs](#fiber-refs)
-  - [fiberRefs](#fiberrefs)
+  - [getFiberRefs](#getfiberrefs)
   - [inheritFiberRefs](#inheritfiberrefs)
   - [locally](#locally)
   - [locallyScoped](#locallyscoped)
@@ -277,11 +278,11 @@ Added in v1.0.0
   - [withRequestCache](#withrequestcache)
   - [withRequestCaching](#withrequestcaching)
 - [runtime](#runtime)
+  - [getRuntimeFlags](#getruntimeflags)
+  - [patchRuntimeFlags](#patchruntimeflags)
   - [runtime](#runtime-1)
-  - [runtimeFlags](#runtimeflags)
-  - [updateRuntimeFlags](#updateruntimeflags)
-  - [withRuntimeFlags](#withruntimeflags)
-  - [withRuntimeFlagsScoped](#withruntimeflagsscoped)
+  - [withRuntimeFlagsPatch](#withruntimeflagspatch)
+  - [withRuntimeFlagsPatchScoped](#withruntimeflagspatchscoped)
 - [scheduler](#scheduler)
   - [setScheduler](#setscheduler)
   - [withMaxFiberOps](#withmaxfiberops)
@@ -1320,6 +1321,18 @@ Added in v1.0.0
 
 ```ts
 export declare const failCause: <E>(cause: Cause.Cause<E>) => Effect<never, E, never>
+```
+
+Added in v1.0.0
+
+## failCauseAnnotate
+
+**Signature**
+
+```ts
+export declare const failCauseAnnotate: <E>(
+  evaluate: (annotate: <X>(cause: Cause.Cause<X>) => Cause.Cause<X>) => Cause.Cause<E>
+) => Effect<never, E, never>
 ```
 
 Added in v1.0.0
@@ -2680,7 +2693,7 @@ Added in v1.0.0
 
 # fiber refs
 
-## fiberRefs
+## getFiberRefs
 
 Returns a collection of all `FiberRef` values for the fiber running this
 effect.
@@ -2688,7 +2701,7 @@ effect.
 **Signature**
 
 ```ts
-export declare const fiberRefs: Effect<never, never, FiberRefs.FiberRefs>
+export declare const getFiberRefs: Effect<never, never, FiberRefs.FiberRefs>
 ```
 
 Added in v1.0.0
@@ -4644,6 +4657,29 @@ Added in v1.0.0
 
 # runtime
 
+## getRuntimeFlags
+
+Retrieves an effect that succeeds with the current runtime flags, which
+govern behavior and features of the runtime system.
+
+**Signature**
+
+```ts
+export declare const getRuntimeFlags: Effect<never, never, RuntimeFlags.RuntimeFlags>
+```
+
+Added in v1.0.0
+
+## patchRuntimeFlags
+
+**Signature**
+
+```ts
+export declare const patchRuntimeFlags: (patch: RuntimeFlagsPatch.RuntimeFlagsPatch) => Effect<never, never, void>
+```
+
+Added in v1.0.0
+
 ## runtime
 
 Returns an effect that accesses the runtime, which can be used to
@@ -4658,35 +4694,12 @@ export declare const runtime: <R>() => Effect<R, never, Runtime.Runtime<R>>
 
 Added in v1.0.0
 
-## runtimeFlags
-
-Retrieves an effect that succeeds with the current runtime flags, which
-govern behavior and features of the runtime system.
+## withRuntimeFlagsPatch
 
 **Signature**
 
 ```ts
-export declare const runtimeFlags: Effect<never, never, RuntimeFlags.RuntimeFlags>
-```
-
-Added in v1.0.0
-
-## updateRuntimeFlags
-
-**Signature**
-
-```ts
-export declare const updateRuntimeFlags: (patch: RuntimeFlagsPatch.RuntimeFlagsPatch) => Effect<never, never, void>
-```
-
-Added in v1.0.0
-
-## withRuntimeFlags
-
-**Signature**
-
-```ts
-export declare const withRuntimeFlags: {
+export declare const withRuntimeFlagsPatch: {
   (update: RuntimeFlagsPatch.RuntimeFlagsPatch): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
   <R, E, A>(self: Effect<R, E, A>, update: RuntimeFlagsPatch.RuntimeFlagsPatch): Effect<R, E, A>
 }
@@ -4694,12 +4707,12 @@ export declare const withRuntimeFlags: {
 
 Added in v1.0.0
 
-## withRuntimeFlagsScoped
+## withRuntimeFlagsPatchScoped
 
 **Signature**
 
 ```ts
-export declare const withRuntimeFlagsScoped: (
+export declare const withRuntimeFlagsPatchScoped: (
   update: RuntimeFlagsPatch.RuntimeFlagsPatch
 ) => Effect<Scope.Scope, never, void>
 ```
