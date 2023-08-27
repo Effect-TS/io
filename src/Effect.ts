@@ -3014,13 +3014,13 @@ export const provideSomeRuntime: {
   const inversePatchRefs = FiberRefsPatch.diff(runtime.fiberRefs, _runtime.defaultRuntime.fiberRefs)
   return acquireUseRelease(
     core.flatMap(
-      updateRuntimeFlags(patchFlags),
+      patchRuntimeFlags(patchFlags),
       () => patchFiberRefs(patchRefs)
     ),
     () => provideSomeContext(self, runtime.context),
     () =>
       core.flatMap(
-        updateRuntimeFlags(inversePatchFlags),
+        patchRuntimeFlags(inversePatchFlags),
         () => patchFiberRefs(inversePatchRefs)
       )
   )
@@ -3959,7 +3959,7 @@ export const whileLoop: <R, E, A>(
  * @since 1.0.0
  * @category fiber refs
  */
-export const fiberRefs: Effect<never, never, FiberRefs.FiberRefs> = effect.fiberRefs
+export const getFiberRefs: Effect<never, never, FiberRefs.FiberRefs> = effect.fiberRefs
 
 /**
  * Inherits values from all `FiberRef` instances into current fiber.
@@ -4380,20 +4380,20 @@ export const runtime: <R>() => Effect<R, never, Runtime.Runtime<R>> = _runtime.r
  * @since 1.0.0
  * @category runtime
  */
-export const runtimeFlags: Effect<never, never, RuntimeFlags.RuntimeFlags> = core.runtimeFlags
+export const getRuntimeFlags: Effect<never, never, RuntimeFlags.RuntimeFlags> = core.runtimeFlags
 
 /**
  * @since 1.0.0
  * @category runtime
  */
-export const updateRuntimeFlags: (patch: RuntimeFlagsPatch.RuntimeFlagsPatch) => Effect<never, never, void> =
+export const patchRuntimeFlags: (patch: RuntimeFlagsPatch.RuntimeFlagsPatch) => Effect<never, never, void> =
   core.updateRuntimeFlags
 
 /**
  * @since 1.0.0
  * @category runtime
  */
-export const withRuntimeFlags: {
+export const withRuntimeFlagsPatch: {
   (update: RuntimeFlagsPatch.RuntimeFlagsPatch): <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
   <R, E, A>(self: Effect<R, E, A>, update: RuntimeFlagsPatch.RuntimeFlagsPatch): Effect<R, E, A>
 } = core.withRuntimeFlags
@@ -4402,8 +4402,9 @@ export const withRuntimeFlags: {
  * @since 1.0.0
  * @category runtime
  */
-export const withRuntimeFlagsScoped: (update: RuntimeFlagsPatch.RuntimeFlagsPatch) => Effect<Scope.Scope, never, void> =
-  fiberRuntime.withRuntimeFlagsScoped
+export const withRuntimeFlagsPatchScoped: (
+  update: RuntimeFlagsPatch.RuntimeFlagsPatch
+) => Effect<Scope.Scope, never, void> = fiberRuntime.withRuntimeFlagsScoped
 
 // -------------------------------------------------------------------------------------
 // metrics

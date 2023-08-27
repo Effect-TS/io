@@ -36,14 +36,14 @@ describe.concurrent("Effect", () => {
           Effect.gen(function*($) {
             const a = yield* $(FiberRef.get(ref))
             const b = yield* $(A)
-            const c = RuntimeFlags.isEnabled(yield* $(Effect.runtimeFlags), RuntimeFlags.OpSupervision)
+            const c = RuntimeFlags.isEnabled(yield* $(Effect.getRuntimeFlags), RuntimeFlags.OpSupervision)
             return { a, b, c }
           }),
           runtime
         ),
         Effect.gen(function*($) {
           const a = yield* $(FiberRef.get(ref))
-          const c = RuntimeFlags.isEnabled(yield* $(Effect.runtimeFlags), RuntimeFlags.OpSupervision)
+          const c = RuntimeFlags.isEnabled(yield* $(Effect.getRuntimeFlags), RuntimeFlags.OpSupervision)
           return { a, c }
         })
       ]
