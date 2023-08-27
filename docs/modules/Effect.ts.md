@@ -2471,8 +2471,8 @@ predicate.
 
 ```ts
 export declare const retryUntilEffect: {
-  <R1, E>(f: (e: E) => Effect<R1, never, boolean>): <R, A>(self: Effect<R, E, A>) => Effect<R1 | R, E, A>
-  <R, E, A, R1>(self: Effect<R, E, A>, f: (e: E) => Effect<R1, never, boolean>): Effect<R | R1, E, A>
+  <R1, E, E2>(f: (e: E) => Effect<R1, E2, boolean>): <R, A>(self: Effect<R, E, A>) => Effect<R1 | R, E | E2, A>
+  <R, E, A, R1, E2>(self: Effect<R, E, A>, f: (e: E) => Effect<R1, E2, boolean>): Effect<R | R1, E | E2, A>
 }
 ```
 
@@ -2502,8 +2502,8 @@ predicate.
 
 ```ts
 export declare const retryWhileEffect: {
-  <R1, E>(f: (e: E) => Effect<R1, never, boolean>): <R, A>(self: Effect<R, E, A>) => Effect<R1 | R, E, A>
-  <R, E, A, R1>(self: Effect<R, E, A>, f: (e: E) => Effect<R1, never, boolean>): Effect<R | R1, E, A>
+  <R1, E, E2>(f: (e: E) => Effect<R1, E2, boolean>): <R, A>(self: Effect<R, E, A>) => Effect<R1 | R, E | E2, A>
+  <R, E, A, R1, E2>(self: Effect<R, E, A>, f: (e: E) => Effect<R1, E2, boolean>): Effect<R | R1, E | E2, A>
 }
 ```
 
@@ -4387,8 +4387,8 @@ predicate or until the first failure.
 
 ```ts
 export declare const repeatUntilEffect: {
-  <A, R2>(f: (a: A) => Effect<R2, never, boolean>): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E, A>
-  <R, E, A, R2>(self: Effect<R, E, A>, f: (a: A) => Effect<R2, never, boolean>): Effect<R | R2, E, A>
+  <A, R2, E2>(f: (a: A) => Effect<R2, E2, boolean>): <R, E>(self: Effect<R, E, A>) => Effect<R2 | R, E2 | E, A>
+  <R, E, A, R2, E2>(self: Effect<R, E, A>, f: (a: A) => Effect<R2, E2, boolean>): Effect<R | R2, E | E2, A>
 }
 ```
 
@@ -4419,8 +4419,8 @@ predicate or until the first failure.
 
 ```ts
 export declare const repeatWhileEffect: {
-  <R1, A>(f: (a: A) => Effect<R1, never, boolean>): <R, E>(self: Effect<R, E, A>) => Effect<R1 | R, E, A>
-  <R, E, R1, A>(self: Effect<R, E, A>, f: (a: A) => Effect<R1, never, boolean>): Effect<R | R1, E, A>
+  <R1, A, E2>(f: (a: A) => Effect<R1, E2, boolean>): <R, E>(self: Effect<R, E, A>) => Effect<R1 | R, E2 | E, A>
+  <R, E, R1, A, E2>(self: Effect<R, E, A>, f: (a: A) => Effect<R1, E2, boolean>): Effect<R | R1, E | E2, A>
 }
 ```
 

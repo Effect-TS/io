@@ -1836,21 +1836,21 @@ export const repeatUntil_Effect = dual<
 
 /** @internal */
 export const repeatUntilEffect_Effect: {
-  <A, R2>(
-    f: (a: A) => Effect.Effect<R2, never, boolean>
-  ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E, A>
-  <R, E, A, R2>(
+  <A, R2, E2>(
+    f: (a: A) => Effect.Effect<R2, E2, boolean>
+  ): <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A>
+  <R, E, A, R2, E2>(
     self: Effect.Effect<R, E, A>,
-    f: (a: A) => Effect.Effect<R2, never, boolean>
-  ): Effect.Effect<R | R2, E, A>
+    f: (a: A) => Effect.Effect<R2, E2, boolean>
+  ): Effect.Effect<R | R2, E | E2, A>
 } = dual<
-  <A, R2>(
-    f: (a: A) => Effect.Effect<R2, never, boolean>
-  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E, A>,
-  <R, E, A, R2>(
+  <A, R2, E2>(
+    f: (a: A) => Effect.Effect<R2, E2, boolean>
+  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R2, E | E2, A>,
+  <R, E, A, R2, E2>(
     self: Effect.Effect<R, E, A>,
-    f: (a: A) => Effect.Effect<R2, never, boolean>
-  ) => Effect.Effect<R | R2, E, A>
+    f: (a: A) => Effect.Effect<R2, E2, boolean>
+  ) => Effect.Effect<R | R2, E | E2, A>
 >(2, (self, f) =>
   core.flatMap(self, (a) =>
     core.flatMap(f(a), (result) =>
@@ -1869,13 +1869,13 @@ export const repeatWhile_Effect = dual<
 
 /** @internal */
 export const repeatWhileEffect_Effect = dual<
-  <R1, A>(
-    f: (a: A) => Effect.Effect<R1, never, boolean>
-  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E, A>,
-  <R, E, R1, A>(
+  <R1, A, E2>(
+    f: (a: A) => Effect.Effect<R1, E2, boolean>
+  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E | E2, A>,
+  <R, E, R1, A, E2>(
     self: Effect.Effect<R, E, A>,
-    f: (a: A) => Effect.Effect<R1, never, boolean>
-  ) => Effect.Effect<R | R1, E, A>
+    f: (a: A) => Effect.Effect<R1, E2, boolean>
+  ) => Effect.Effect<R | R1, E | E2, A>
 >(2, (self, f) => repeatUntilEffect_Effect(self, (a) => effect.negate(f(a))))
 
 /** @internal */
@@ -1956,21 +1956,21 @@ export const retryUntil_Effect = dual<
 
 /** @internal */
 export const retryUntilEffect_Effect: {
-  <R1, E>(
-    f: (e: E) => Effect.Effect<R1, never, boolean>
-  ): <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E, A>
-  <R, E, A, R1>(
+  <R1, E, E2>(
+    f: (e: E) => Effect.Effect<R1, E2, boolean>
+  ): <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R1 | R, E | E2, A>
+  <R, E, A, R1, E2>(
     self: Effect.Effect<R, E, A>,
-    f: (e: E) => Effect.Effect<R1, never, boolean>
-  ): Effect.Effect<R | R1, E, A>
+    f: (e: E) => Effect.Effect<R1, E2, boolean>
+  ): Effect.Effect<R | R1, E | E2, A>
 } = dual<
-  <R1, E>(
-    f: (e: E) => Effect.Effect<R1, never, boolean>
-  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E, A>,
-  <R, E, A, R1>(
+  <R1, E, E2>(
+    f: (e: E) => Effect.Effect<R1, E2, boolean>
+  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E | E2, A>,
+  <R, E, A, R1, E2>(
     self: Effect.Effect<R, E, A>,
-    f: (e: E) => Effect.Effect<R1, never, boolean>
-  ) => Effect.Effect<R | R1, E, A>
+    f: (e: E) => Effect.Effect<R1, E2, boolean>
+  ) => Effect.Effect<R | R1, E | E2, A>
 >(2, (self, f) =>
   core.catchAll(self, (e) =>
     core.flatMap(f(e), (b) =>
@@ -1989,13 +1989,13 @@ export const retryWhile_Effect = dual<
 
 /** @internal */
 export const retryWhileEffect_Effect = dual<
-  <R1, E>(
-    f: (e: E) => Effect.Effect<R1, never, boolean>
-  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E, A>,
-  <R, E, A, R1>(
+  <R1, E, E2>(
+    f: (e: E) => Effect.Effect<R1, E2, boolean>
+  ) => <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R | R1, E | E2, A>,
+  <R, E, A, R1, E2>(
     self: Effect.Effect<R, E, A>,
-    f: (e: E) => Effect.Effect<R1, never, boolean>
-  ) => Effect.Effect<R | R1, E, A>
+    f: (e: E) => Effect.Effect<R1, E2, boolean>
+  ) => Effect.Effect<R | R1, E | E2, A>
 >(2, (self, f) => retryUntilEffect_Effect(self, (e) => effect.negate(f(e))))
 
 /** @internal */
