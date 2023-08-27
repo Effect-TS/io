@@ -1071,11 +1071,17 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     }
   }
 
-  [OpCodes.OP_FAILURE](op: core.Primitive & { _tag: OpCodes.OP_FAILURE }) {
+  [OpCodes.OP_FAILURE_WITH_ANNOTATION](op: core.Primitive & { _tag: OpCodes.OP_FAILURE_WITH_ANNOTATION }) {
     const span = this.getFiberRef(core.currentTracerSpan)
     const cause = List.isNil(span) || span.head._tag === "ExternalSpan" ?
-      op.i0 :
-      internalCause.annotated(op.i0, internalCause.makeSpanAnnotation(span.head))
+      op.i0(identity) :
+      // @ts-expect-error
+      op.i0((c) => internalCause.annotated(c, internalCause.makeSpanAnnotation(span.head)))
+    return core.exitFailCause(cause)
+  }
+
+  [OpCodes.OP_FAILURE](op: core.Primitive & { _tag: OpCodes.OP_FAILURE }) {
+    const cause = op.i0
     const cont = this.getNextFailCont()
     if (cont !== undefined) {
       switch (cont._tag) {
