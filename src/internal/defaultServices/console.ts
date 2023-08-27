@@ -92,5 +92,6 @@ export const defaultConsole: Console.Console = {
     return core.sync(() => {
       console.warn(...args)
     })
-  }
+  },
+  unsafe: console
 }
