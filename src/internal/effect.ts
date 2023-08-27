@@ -247,9 +247,11 @@ export const catchTag = dual<
     f: (e: Extract<E, { _tag: K }>) => Effect.Effect<R1, E1, A1>
   ) => Effect.Effect<R | R1, Exclude<E, { _tag: K }> | E1, A | A1>
 >(3, (self, k, f) =>
-  core.catchAll(self, (e) => {
-    if (Predicate.isTagged(e, k)) {
-      return f(e as any)
+  core.catchAllCause(self, (e) => {
+    const failure = internalCause.find(e, (c) =>
+      internalCause.isFailType(c) && Predicate.isTagged(c.error, k) ? Option.some(c.error) : Option.none())
+    if (Option.isSome(failure)) {
+      return f(failure.value as any)
     }
     return core.fail(e as any)
   }))
@@ -304,12 +306,22 @@ export const catchTags: {
     }[keyof Cases]
   >
 } = dual(2, (self, cases) =>
-  core.catchAll(self, (e: any) => {
+  core.catchAllCause(self, (e) => {
     const keys = Object.keys(cases)
-    if (Predicate.isObject(e) && "_tag" in e && keys.includes(e["_tag"] as any)) {
-      return cases[e["_tag"] as any](e as any)
+    const handler = internalCause.find(e, (c) => {
+      if (
+        internalCause.isFailType(c) && Predicate.isObject(c.error) && "_tag" in c.error &&
+        keys.includes(c.error["_tag"] as any)
+      ) {
+        return Option.some(cases[c.error["_tag"] as any](c.error as any))
+      } else {
+        return Option.none()
+      }
+    })
+    if (Option.isSome(handler)) {
+      return handler.value
     }
-    return core.fail(e as any)
+    return core.failCause(e as any)
   }))
 
 /* @internal */
