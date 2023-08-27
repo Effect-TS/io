@@ -6,8 +6,6 @@ import { globalValue } from "@effect/data/Global"
 import * as MutableRef from "@effect/data/MutableRef"
 import type * as Option from "@effect/data/Option"
 import type * as Exit from "@effect/io/Exit"
-import * as _fiberId from "@effect/io/internal/fiberId"
-import * as _logger from "@effect/io/internal/logger"
 import type * as Tracer from "@effect/io/Tracer"
 
 /** @internal */
@@ -71,5 +69,6 @@ export class NativeSpan implements Tracer.Span {
 
 /** @internal */
 export const nativeTracer: Tracer.Tracer = make({
-  span: (name, parent, context, links, startTime) => new NativeSpan(name, parent, context, links, startTime)
+  span: (name, parent, context, links, startTime) => new NativeSpan(name, parent, context, links, startTime),
+  context: (f) => f()
 })

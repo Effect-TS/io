@@ -996,6 +996,14 @@ export const failCauseSync: <E>(evaluate: LazyArg<Cause.Cause<E>>) => Effect<nev
  * @since 1.0.0
  * @category constructors
  */
+export const failCauseAnnotate: <E>(
+  evaluate: (annotate: <X>(cause: Cause.Cause<X>) => Cause.Cause<X>) => Cause.Cause<E>
+) => Effect<never, E, never> = core.failCauseAnnotate
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
 export const die: (defect: unknown) => Effect<never, never, never> = core.die
 
 /**

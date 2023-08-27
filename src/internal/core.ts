@@ -111,6 +111,7 @@ export type Primitive =
   | Async
   | Commit
   | Failure
+  | FailureWithAnnotation
   | OnFailure
   | OnSuccess
   | OnStep
@@ -272,6 +273,13 @@ export interface RunBlocked<R = any> extends
 export interface Failure extends
   Op<OpCodes.OP_FAILURE, {
     readonly i0: Cause.Cause<unknown>
+  }>
+{}
+
+/** @internal */
+export interface FailureWithAnnotation extends
+  Op<OpCodes.OP_FAILURE_WITH_ANNOTATION, {
+    readonly i0: (annotate: <E>(cause: Cause.Cause<E>) => Cause.Cause<E>) => Cause.Cause<unknown>
   }>
 {}
 
@@ -532,15 +540,15 @@ export const checkInterruptible = <R, E, A>(
   withFiberRuntime<R, E, A>((_, status) => f(_runtimeFlags.interruption(status.runtimeFlags)))
 
 /* @internal */
-export const die = (defect: unknown): Effect.Effect<never, never, never> => failCause(internalCause.die(defect))
+export const die = (defect: unknown): Effect.Effect<never, never, never> =>
+  failCauseAnnotate((annotate) => annotate(internalCause.die(defect)))
 
 /* @internal */
 export const dieMessage = (message: string): Effect.Effect<never, never, never> =>
   failCauseSync(() => internalCause.die(internalCause.RuntimeException(message)))
 
 /* @internal */
-export const dieSync = (evaluate: LazyArg<unknown>): Effect.Effect<never, never, never> =>
-  failCauseSync(() => internalCause.die(evaluate()))
+export const dieSync = (evaluate: LazyArg<unknown>): Effect.Effect<never, never, never> => flatMap(sync(evaluate), die)
 
 /* @internal */
 export const either = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, never, Either.Either<E, A>> =>
@@ -566,11 +574,11 @@ export const exit = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, ne
   })
 
 /* @internal */
-export const fail = <E>(error: E): Effect.Effect<never, E, never> => failCause(internalCause.fail(error))
+export const fail = <E>(error: E): Effect.Effect<never, E, never> =>
+  failCauseAnnotate((annotate) => annotate(internalCause.fail(error)))
 
 /* @internal */
-export const failSync = <E>(evaluate: LazyArg<E>): Effect.Effect<never, E, never> =>
-  failCauseSync(() => internalCause.fail(evaluate()))
+export const failSync = <E>(evaluate: LazyArg<E>): Effect.Effect<never, E, never> => flatMap(sync(evaluate), fail)
 
 /* @internal */
 export const failCause = <E>(cause: Cause.Cause<E>): Effect.Effect<never, E, never> => {
@@ -580,8 +588,18 @@ export const failCause = <E>(cause: Cause.Cause<E>): Effect.Effect<never, E, nev
 }
 
 /* @internal */
-export const failCauseSync = <E>(evaluate: LazyArg<Cause.Cause<E>>): Effect.Effect<never, E, never> =>
-  flatMap(sync(evaluate), failCause)
+export const failCauseSync = <E>(
+  evaluate: LazyArg<Cause.Cause<E>>
+): Effect.Effect<never, E, never> => flatMap(sync(evaluate), failCause)
+
+/* @internal */
+export const failCauseAnnotate = <E>(
+  evaluate: (annotate: <X>(cause: Cause.Cause<X>) => Cause.Cause<X>) => Cause.Cause<E>
+): Effect.Effect<never, E, never> => {
+  const effect = new EffectPrimitive(OpCodes.OP_FAILURE_WITH_ANNOTATION) as any
+  effect.i0 = evaluate
+  return effect
+}
 
 /* @internal */
 export const fiberId: Effect.Effect<never, never, FiberId.FiberId> = withFiberRuntime<never, never, FiberId.FiberId>((
