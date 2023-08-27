@@ -25,7 +25,7 @@ import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
 import * as RuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
 import * as FiberStatus from "@effect/io/Fiber/Status"
 import type * as FiberRef from "@effect/io/FiberRef"
-import type * as FiberRefs from "@effect/io/FiberRefs"
+import * as FiberRefs from "@effect/io/FiberRefs"
 import * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
 import * as _RequestBlock from "@effect/io/internal/blockedRequests"
 import * as internalCause from "@effect/io/internal/cause"
@@ -35,6 +35,7 @@ import * as concurrency from "@effect/io/internal/concurrency"
 import { configProviderTag } from "@effect/io/internal/configProvider"
 import * as core from "@effect/io/internal/core"
 import * as defaultServices from "@effect/io/internal/defaultServices"
+import { consoleTag } from "@effect/io/internal/defaultServices/console"
 import * as internalEffect from "@effect/io/internal/effect"
 import * as executionStrategy from "@effect/io/internal/executionStrategy"
 import * as internalFiber from "@effect/io/internal/fiber"
@@ -1332,21 +1333,28 @@ export const currentMinimumLogLevel: FiberRef.FiberRef<LogLevel.LogLevel> = core
 )
 
 /** @internal */
+export const getConsole = (refs: FiberRefs.FiberRefs) => {
+  const defaultServicesValue = FiberRefs.getOrDefault(refs, defaultServices.currentServices)
+  const cnsl = Context.get(defaultServicesValue, consoleTag)
+  return cnsl.unsafe
+}
+
+/** @internal */
 export const defaultLogger: Logger<unknown, void> = internalLogger.makeLogger((options) => {
   const formatted = internalLogger.stringLogger.log(options)
-  globalThis.console.log(formatted)
+  getConsole(options.context).log(formatted)
 })
 
 /** @internal */
 export const filterMinimumLogLevel: Logger<unknown, void> = internalLogger.makeLogger((options) => {
   const formatted = internalLogger.stringLogger.log(options)
-  globalThis.console.log(formatted)
+  getConsole(options.context).log(formatted)
 })
 
 /** @internal */
 export const logFmtLogger: Logger<unknown, void> = internalLogger.makeLogger((options) => {
   const formatted = internalLogger.logfmtLogger.log(options)
-  globalThis.console.log(formatted)
+  getConsole(options.context).log(formatted)
 })
 
 /** @internal */

@@ -46,6 +46,35 @@ export interface Console {
   timeLog(label?: string, ...args: ReadonlyArray<any>): Effect<never, never, void>
   trace(...args: ReadonlyArray<any>): Effect<never, never, void>
   warn(...args: ReadonlyArray<any>): Effect<never, never, void>
+  readonly unsafe: UnsafeConsole
+}
+
+/**
+ * @since 1.0.0
+ * @category model
+ */
+export interface UnsafeConsole {
+  assert(condition: boolean, ...args: ReadonlyArray<any>): void
+  clear(): void
+  count(label?: string): void
+  countReset(label?: string): void
+  debug(...args: ReadonlyArray<any>): void
+  dir(item: any, options?: any): void
+  dirxml(...args: ReadonlyArray<any>): void
+  error(...args: ReadonlyArray<any>): void
+  group(options?: {
+    readonly label?: string
+    readonly collapsed?: boolean
+  }): void
+  groupEnd(): void
+  info(...args: ReadonlyArray<any>): void
+  log(...args: ReadonlyArray<any>): void
+  table(tabularData: any, properties?: ReadonlyArray<string>): void
+  time(label?: string): void
+  timeEnd(label?: string): void
+  timeLog(label?: string, ...args: ReadonlyArray<any>): void
+  trace(...args: ReadonlyArray<any>): void
+  warn(...args: ReadonlyArray<any>): void
 }
 
 /**
