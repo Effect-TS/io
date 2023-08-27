@@ -1,11 +1,11 @@
 import * as Equal from "@effect/data/Equal"
 import { pipe } from "@effect/data/Function"
 import * as Hash from "@effect/data/Hash"
-import type { FiberId } from "@effect/io/Fiber/Id"
-import type { RuntimeFlags } from "@effect/io/Fiber/Runtime/Flags"
-import type * as FiberStatus from "@effect/io/Fiber/Status"
+import type { FiberId } from "@effect/io/FiberId"
+import type * as FiberStatus from "@effect/io/FiberStatus"
+import type { RuntimeFlags } from "@effect/io/RuntimeFlags"
 
-const FiberStatusSymbolKey = "@effect/io/Fiber/Status"
+const FiberStatusSymbolKey = "@effect/io/FiberStatus"
 
 /** @internal */
 export const FiberStatusTypeId: FiberStatus.FiberStatusTypeId = Symbol.for(

@@ -8,7 +8,7 @@ import type { Predicate } from "@effect/data/Predicate"
 import type * as Unify from "@effect/data/Unify"
 import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
-import type * as FiberId from "@effect/io/Fiber/Id"
+import type * as FiberId from "@effect/io/FiberId"
 import * as core from "@effect/io/internal/core"
 
 /**

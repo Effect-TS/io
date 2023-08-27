@@ -12,19 +12,19 @@ import * as fiberRuntime from "@effect/io/internal/fiberRuntime"
 import type * as Queue from "@effect/io/Queue"
 
 /** @internal */
-const EnqueueSymbolKey = "@effect/io/Queue/Enqueue"
+const EnqueueSymbolKey = "@effect/io/QueueEnqueue"
 
 /** @internal */
 export const EnqueueTypeId: Queue.EnqueueTypeId = Symbol.for(EnqueueSymbolKey) as Queue.EnqueueTypeId
 
 /** @internal */
-const DequeueSymbolKey = "@effect/io/Queue/Dequeue"
+const DequeueSymbolKey = "@effect/io/QueueDequeue"
 
 /** @internal */
 export const DequeueTypeId: Queue.DequeueTypeId = Symbol.for(DequeueSymbolKey) as Queue.DequeueTypeId
 
 /** @internal */
-const QueueStrategySymbolKey = "@effect/io/Queue/Strategy"
+const QueueStrategySymbolKey = "@effect/io/QueueStrategy"
 
 /** @internal */
 export const QueueStrategyTypeId: Queue.QueueStrategyTypeId = Symbol.for(

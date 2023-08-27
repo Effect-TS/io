@@ -1,6 +1,6 @@
 import { pipe } from "@effect/data/Function"
-import * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
-import * as RuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
+import * as RuntimeFlags from "@effect/io/RuntimeFlags"
+import * as RuntimeFlagsPatch from "@effect/io/RuntimeFlagsPatch"
 import * as fc from "fast-check"
 import { assert, describe, it } from "vitest"
 

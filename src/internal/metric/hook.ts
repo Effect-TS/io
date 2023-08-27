@@ -8,11 +8,11 @@ import * as Option from "@effect/data/Option"
 import { pipeArguments } from "@effect/data/Pipeable"
 import * as ReadonlyArray from "@effect/data/ReadonlyArray"
 import * as metricState from "@effect/io/internal/metric/state"
-import type * as MetricHook from "@effect/io/Metric/Hook"
-import type * as MetricKey from "@effect/io/Metric/Key"
+import type * as MetricHook from "@effect/io/MetricHook"
+import type * as MetricKey from "@effect/io/MetricKey"
 
 /** @internal */
-const MetricHookSymbolKey = "@effect/io/Metric/Hook"
+const MetricHookSymbolKey = "@effect/io/MetricHook"
 
 /** @internal */
 export const MetricHookTypeId: MetricHook.MetricHookTypeId = Symbol.for(

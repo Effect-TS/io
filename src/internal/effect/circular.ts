@@ -14,8 +14,8 @@ import type * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import type * as Fiber from "@effect/io/Fiber"
-import * as FiberId from "@effect/io/Fiber/Id"
-import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
+import * as FiberId from "@effect/io/FiberId"
+import type * as FiberRefsPatch from "@effect/io/FiberRefsPatch"
 import * as internalCause from "@effect/io/internal/cause"
 import * as core from "@effect/io/internal/core"
 import * as effect from "@effect/io/internal/effect"
@@ -27,10 +27,10 @@ import * as internalRef from "@effect/io/internal/ref"
 import * as _schedule from "@effect/io/internal/schedule"
 import * as supervisor from "@effect/io/internal/supervisor"
 import type * as Ref from "@effect/io/Ref"
-import type * as Synchronized from "@effect/io/Ref/Synchronized"
 import type * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
+import type * as Synchronized from "@effect/io/SynchronizedRef"
 
 /** @internal */
 class Semaphore {
@@ -157,7 +157,7 @@ const computeCachedValue = <R, E, A>(
 const getCachedValue = <R, E, A>(
   self: Effect.Effect<R, E, A>,
   timeToLive: Duration.DurationInput,
-  cache: Synchronized.Synchronized<Option.Option<readonly [number, Deferred.Deferred<E, A>]>>
+  cache: Synchronized.SynchronizedRef<Option.Option<readonly [number, Deferred.Deferred<E, A>]>>
 ): Effect.Effect<R, E, A> =>
   core.uninterruptibleMask<R, E, A>((restore) =>
     pipe(
@@ -189,7 +189,7 @@ const getCachedValue = <R, E, A>(
 
 /** @internal */
 const invalidateCache = <E, A>(
-  cache: Synchronized.Synchronized<Option.Option<readonly [number, Deferred.Deferred<E, A>]>>
+  cache: Synchronized.SynchronizedRef<Option.Option<readonly [number, Deferred.Deferred<E, A>]>>
 ): Effect.Effect<never, never, void> => internalRef.set(cache, Option.none())
 
 /** @internal */
@@ -516,12 +516,12 @@ export const timeoutTo = dual<
 // circular with Synchronized
 
 /** @internal */
-const SynchronizedSymbolKey = "@effect/io/Ref/Synchronized"
+const SynchronizedSymbolKey = "@effect/io/Ref/SynchronizedRef"
 
 /** @internal */
-export const SynchronizedTypeId: Synchronized.SynchronizedTypeId = Symbol.for(
+export const SynchronizedTypeId: Synchronized.SynchronizedRefTypeId = Symbol.for(
   SynchronizedSymbolKey
-) as Synchronized.SynchronizedTypeId
+) as Synchronized.SynchronizedRefTypeId
 
 /** @internal */
 export const synchronizedVariance = {
@@ -529,7 +529,7 @@ export const synchronizedVariance = {
 }
 
 /** @internal */
-class SynchronizedImpl<A> implements Synchronized.Synchronized<A> {
+class SynchronizedImpl<A> implements Synchronized.SynchronizedRef<A> {
   readonly [SynchronizedTypeId] = synchronizedVariance
   readonly [internalRef.RefTypeId] = internalRef.refVariance
   constructor(
@@ -553,11 +553,11 @@ class SynchronizedImpl<A> implements Synchronized.Synchronized<A> {
 }
 
 /** @internal */
-export const makeSynchronized = <A>(value: A): Effect.Effect<never, never, Synchronized.Synchronized<A>> =>
+export const makeSynchronized = <A>(value: A): Effect.Effect<never, never, Synchronized.SynchronizedRef<A>> =>
   core.sync(() => unsafeMakeSynchronized(value))
 
 /** @internal */
-export const unsafeMakeSynchronized = <A>(value: A): Synchronized.Synchronized<A> => {
+export const unsafeMakeSynchronized = <A>(value: A): Synchronized.SynchronizedRef<A> => {
   const ref = internalRef.unsafeMake(value)
   const sem = unsafeMakeSemaphore(1)
   return new SynchronizedImpl(ref, sem.withPermits(1))
@@ -567,9 +567,9 @@ export const unsafeMakeSynchronized = <A>(value: A): Synchronized.Synchronized<A
 export const updateSomeAndGetEffectSynchronized = dual<
   <A, R, E>(
     pf: (a: A) => Option.Option<Effect.Effect<R, E, A>>
-  ) => (self: Synchronized.Synchronized<A>) => Effect.Effect<R, E, A>,
+  ) => (self: Synchronized.SynchronizedRef<A>) => Effect.Effect<R, E, A>,
   <A, R, E>(
-    self: Synchronized.Synchronized<A>,
+    self: Synchronized.SynchronizedRef<A>,
     pf: (a: A) => Option.Option<Effect.Effect<R, E, A>>
   ) => Effect.Effect<R, E, A>
 >(2, (self, pf) =>

@@ -1,9 +1,9 @@
 import { equals } from "@effect/data/Equal"
 import { dual } from "@effect/data/Function"
 import * as Arr from "@effect/data/ReadonlyArray"
-import type * as FiberId from "@effect/io/Fiber/Id"
+import type * as FiberId from "@effect/io/FiberId"
 import type * as FiberRefs from "@effect/io/FiberRefs"
-import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
+import type * as FiberRefsPatch from "@effect/io/FiberRefsPatch"
 import * as _fiberRefs from "@effect/io/internal/fiberRefs"
 
 /** @internal */

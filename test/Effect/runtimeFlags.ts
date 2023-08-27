@@ -1,6 +1,6 @@
 import * as Effect from "@effect/io/Effect"
-import * as Flags from "@effect/io/Fiber/Runtime/Flags"
-import * as Patch from "@effect/io/Fiber/Runtime/Flags/Patch"
+import * as Flags from "@effect/io/RuntimeFlags"
+import * as Patch from "@effect/io/RuntimeFlagsPatch"
 import * as it from "@effect/io/test/utils/extend"
 import { describe } from "vitest"
 

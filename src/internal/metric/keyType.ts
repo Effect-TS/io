@@ -4,11 +4,11 @@ import * as Equal from "@effect/data/Equal"
 import { pipe } from "@effect/data/Function"
 import * as Hash from "@effect/data/Hash"
 import { pipeArguments } from "@effect/data/Pipeable"
-import type * as MetricBoundaries from "@effect/io/Metric/Boundaries"
-import type * as MetricKeyType from "@effect/io/Metric/KeyType"
+import type * as MetricBoundaries from "@effect/io/MetricBoundaries"
+import type * as MetricKeyType from "@effect/io/MetricKeyType"
 
 /** @internal */
-const MetricKeyTypeSymbolKey = "@effect/io/Metric/KeyType"
+const MetricKeyTypeSymbolKey = "@effect/io/MetricKeyType"
 
 /** @internal */
 export const MetricKeyTypeTypeId: MetricKeyType.MetricKeyTypeTypeId = Symbol.for(
@@ -16,7 +16,7 @@ export const MetricKeyTypeTypeId: MetricKeyType.MetricKeyTypeTypeId = Symbol.for
 ) as MetricKeyType.MetricKeyTypeTypeId
 
 /** @internal */
-const CounterKeyTypeSymbolKey = "effect/io/Metric/KeyType/Counter"
+const CounterKeyTypeSymbolKey = "effect/io/MetricKeyTypeCounter"
 
 /** @internal */
 export const CounterKeyTypeTypeId: MetricKeyType.CounterKeyTypeTypeId = Symbol.for(
@@ -24,7 +24,7 @@ export const CounterKeyTypeTypeId: MetricKeyType.CounterKeyTypeTypeId = Symbol.f
 ) as MetricKeyType.CounterKeyTypeTypeId
 
 /** @internal */
-const FrequencyKeyTypeSymbolKey = "effect/io/Metric/KeyType/Frequency"
+const FrequencyKeyTypeSymbolKey = "effect/io/MetricKeyTypeFrequency"
 
 /** @internal */
 export const FrequencyKeyTypeTypeId: MetricKeyType.FrequencyKeyTypeTypeId = Symbol.for(
@@ -32,7 +32,7 @@ export const FrequencyKeyTypeTypeId: MetricKeyType.FrequencyKeyTypeTypeId = Symb
 ) as MetricKeyType.FrequencyKeyTypeTypeId
 
 /** @internal */
-const GaugeKeyTypeSymbolKey = "effect/io/Metric/KeyType/Gauge"
+const GaugeKeyTypeSymbolKey = "effect/io/MetricKeyTypeGauge"
 
 /** @internal */
 export const GaugeKeyTypeTypeId: MetricKeyType.GaugeKeyTypeTypeId = Symbol.for(
@@ -40,7 +40,7 @@ export const GaugeKeyTypeTypeId: MetricKeyType.GaugeKeyTypeTypeId = Symbol.for(
 ) as MetricKeyType.GaugeKeyTypeTypeId
 
 /** @internal */
-const HistogramKeyTypeSymbolKey = "effect/io/Metric/KeyType/Histogram"
+const HistogramKeyTypeSymbolKey = "effect/io/MetricKeyTypeHistogram"
 
 /** @internal */
 export const HistogramKeyTypeTypeId: MetricKeyType.HistogramKeyTypeTypeId = Symbol.for(
@@ -48,7 +48,7 @@ export const HistogramKeyTypeTypeId: MetricKeyType.HistogramKeyTypeTypeId = Symb
 ) as MetricKeyType.HistogramKeyTypeTypeId
 
 /** @internal */
-const SummaryKeyTypeSymbolKey = "effect/io/Metric/KeyType/Summary"
+const SummaryKeyTypeSymbolKey = "effect/io/MetricKeyTypeSummary"
 
 /** @internal */
 export const SummaryKeyTypeTypeId: MetricKeyType.SummaryKeyTypeTypeId = Symbol.for(

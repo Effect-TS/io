@@ -12,8 +12,8 @@ import type { Predicate } from "@effect/data/Predicate"
 import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
 import * as internal from "@effect/io/internal/schedule"
-import type * as ScheduleDecision from "@effect/io/Schedule/Decision"
-import type * as Intervals from "@effect/io/Schedule/Intervals"
+import type * as ScheduleDecision from "@effect/io/ScheduleDecision"
+import type * as Intervals from "@effect/io/ScheduleIntervals"
 
 /**
  * @since 1.0.0

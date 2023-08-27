@@ -10,8 +10,8 @@ import * as Clock from "@effect/io/Clock"
 import type * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import type * as Fiber from "@effect/io/Fiber"
-import * as FiberId from "@effect/io/Fiber/Id"
-import * as FiberStatus from "@effect/io/Fiber/Status"
+import * as FiberId from "@effect/io/FiberId"
+import * as FiberStatus from "@effect/io/FiberStatus"
 import * as core from "@effect/io/internal/core"
 import * as fiberScope from "@effect/io/internal/fiberScope"
 import * as runtimeFlags from "@effect/io/internal/runtimeFlags"
@@ -343,7 +343,7 @@ export const succeed = <A>(value: A): Fiber.Fiber<never, A> => done(Exit.succeed
 export const unit: Fiber.Fiber<never, void> = succeed(void 0)
 
 /** @internal */
-export const currentFiberURI = "@effect/io/Fiber/Current"
+export const currentFiberURI = "@effect/io/FiberCurrent"
 
 /** @internal */
 export const getCurrentFiber = (): Option.Option<Fiber.RuntimeFiber<any, any>> =>

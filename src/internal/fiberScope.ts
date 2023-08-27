@@ -1,12 +1,12 @@
 import { globalValue } from "@effect/data/Global"
-import * as FiberId from "@effect/io/Fiber/Id"
-import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
+import * as FiberId from "@effect/io/FiberId"
 import * as FiberMessage from "@effect/io/internal/fiberMessage"
 import type * as FiberRuntime from "@effect/io/internal/fiberRuntime"
 import * as _runtimeFlags from "@effect/io/internal/runtimeFlags"
+import type * as RuntimeFlags from "@effect/io/RuntimeFlags"
 
 /** @internal */
-const FiberScopeSymbolKey = "@effect/io/Fiber/Scope"
+const FiberScopeSymbolKey = "@effect/io/FiberScope"
 
 /** @internal */
 export const FiberScopeTypeId = Symbol.for(FiberScopeSymbolKey)

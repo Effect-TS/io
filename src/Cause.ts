@@ -28,7 +28,7 @@ import type * as HashSet from "@effect/data/HashSet"
 import type * as Option from "@effect/data/Option"
 import type { Pipeable } from "@effect/data/Pipeable"
 import type { Predicate } from "@effect/data/Predicate"
-import type * as FiberId from "@effect/io/Fiber/Id"
+import type * as FiberId from "@effect/io/FiberId"
 import * as internal from "@effect/io/internal/cause"
 import type { Span } from "@effect/io/Tracer"
 

@@ -8,7 +8,7 @@ import type { Pipeable } from "@effect/data/Pipeable"
 import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
-import type * as FiberId from "@effect/io/Fiber/Id"
+import type * as FiberId from "@effect/io/FiberId"
 import * as core from "@effect/io/internal/core"
 import * as internal from "@effect/io/internal/deferred"
 

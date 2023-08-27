@@ -5,10 +5,10 @@ import * as Hash from "@effect/data/Hash"
 import type * as HashMap from "@effect/data/HashMap"
 import type * as Option from "@effect/data/Option"
 import { pipeArguments } from "@effect/data/Pipeable"
-import type * as MetricState from "@effect/io/Metric/State"
+import type * as MetricState from "@effect/io/MetricState"
 
 /** @internal */
-const MetricStateSymbolKey = "@effect/io/Metric/State"
+const MetricStateSymbolKey = "@effect/io/MetricState"
 
 /** @internal */
 export const MetricStateTypeId: MetricState.MetricStateTypeId = Symbol.for(
@@ -16,7 +16,7 @@ export const MetricStateTypeId: MetricState.MetricStateTypeId = Symbol.for(
 ) as MetricState.MetricStateTypeId
 
 /** @internal */
-const CounterStateSymbolKey = "effect/io/Metric/State/Counter"
+const CounterStateSymbolKey = "effect/io/MetricStateCounter"
 
 /** @internal */
 export const CounterStateTypeId: MetricState.CounterStateTypeId = Symbol.for(
@@ -24,7 +24,7 @@ export const CounterStateTypeId: MetricState.CounterStateTypeId = Symbol.for(
 ) as MetricState.CounterStateTypeId
 
 /** @internal */
-const FrequencyStateSymbolKey = "effect/io/Metric/State/Frequency"
+const FrequencyStateSymbolKey = "effect/io/MetricStateFrequency"
 
 /** @internal */
 export const FrequencyStateTypeId: MetricState.FrequencyStateTypeId = Symbol.for(
@@ -32,7 +32,7 @@ export const FrequencyStateTypeId: MetricState.FrequencyStateTypeId = Symbol.for
 ) as MetricState.FrequencyStateTypeId
 
 /** @internal */
-const GaugeStateSymbolKey = "effect/io/Metric/State/Gauge"
+const GaugeStateSymbolKey = "effect/io/MetricStateGauge"
 
 /** @internal */
 export const GaugeStateTypeId: MetricState.GaugeStateTypeId = Symbol.for(
@@ -40,7 +40,7 @@ export const GaugeStateTypeId: MetricState.GaugeStateTypeId = Symbol.for(
 ) as MetricState.GaugeStateTypeId
 
 /** @internal */
-const HistogramStateSymbolKey = "effect/io/Metric/State/Histogram"
+const HistogramStateSymbolKey = "effect/io/MetricStateHistogram"
 
 /** @internal */
 export const HistogramStateTypeId: MetricState.HistogramStateTypeId = Symbol.for(
@@ -48,7 +48,7 @@ export const HistogramStateTypeId: MetricState.HistogramStateTypeId = Symbol.for
 ) as MetricState.HistogramStateTypeId
 
 /** @internal */
-const SummaryStateSymbolKey = "effect/io/Metric/State/Summary"
+const SummaryStateSymbolKey = "effect/io/MetricStateSummary"
 
 /** @internal */
 export const SummaryStateTypeId: MetricState.SummaryStateTypeId = Symbol.for(

@@ -9,10 +9,10 @@ import type * as HashSet from "@effect/data/HashSet"
 import type * as Option from "@effect/data/Option"
 import type { Pipeable } from "@effect/data/Pipeable"
 import type { Predicate, Refinement } from "@effect/data/Predicate"
-import type * as ConfigError from "@effect/io/Config/Error"
-import type * as ConfigSecret from "@effect/io/Config/Secret"
+import type * as ConfigError from "@effect/io/ConfigError"
+import type * as ConfigSecret from "@effect/io/ConfigSecret"
 import * as internal from "@effect/io/internal/config"
-import type * as LogLevel from "@effect/io/Logger/Level"
+import type * as LogLevel from "@effect/io/LogLevel"
 
 /**
  * @since 1.0.0

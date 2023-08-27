@@ -2,7 +2,7 @@ import * as Context from "@effect/data/Context"
 import * as Effect from "@effect/io/Effect"
 import * as Layer from "@effect/io/Layer"
 import * as Logger from "@effect/io/Logger"
-import * as LogLevel from "@effect/io/Logger/Level"
+import * as LogLevel from "@effect/io/LogLevel"
 import * as Schedule from "@effect/io/Schedule"
 
 const N = Context.Tag<number>()

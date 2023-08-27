@@ -7,12 +7,12 @@ import * as circular from "@effect/io/internal/effect/circular"
 import * as metric from "@effect/io/internal/metric"
 import * as schedule from "@effect/io/internal/schedule"
 import type * as Metric from "@effect/io/Metric"
-import type * as PollingMetric from "@effect/io/Metric/Polling"
+import type * as PollingMetric from "@effect/io/MetricPolling"
 import type * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"
 
 /** @internal */
-const PollingMetricSymbolKey = "@effect/io/Metric/Polling"
+const PollingMetricSymbolKey = "@effect/io/MetricPolling"
 
 /** @internal */
 export const PollingMetricTypeId: PollingMetric.PollingMetricTypeId = Symbol.for(

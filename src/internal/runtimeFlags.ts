@@ -1,8 +1,8 @@
 import * as Differ from "@effect/data/Differ"
 import { dual } from "@effect/data/Function"
-import type * as RuntimeFlags from "@effect/io/Fiber/Runtime/Flags"
-import type * as RuntimeFlagsPatch from "@effect/io/Fiber/Runtime/Flags/Patch"
 import * as runtimeFlagsPatch from "@effect/io/internal/runtimeFlagsPatch"
+import type * as RuntimeFlags from "@effect/io/RuntimeFlags"
+import type * as RuntimeFlagsPatch from "@effect/io/RuntimeFlagsPatch"
 
 /** @internal */
 export const None: RuntimeFlags.RuntimeFlag = 0 as RuntimeFlags.RuntimeFlag

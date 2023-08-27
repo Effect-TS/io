@@ -5,8 +5,8 @@ import type { LazyArg } from "@effect/data/Function"
 import type { Pipeable } from "@effect/data/Pipeable"
 import type * as Effect from "@effect/io/Effect"
 import * as internal from "@effect/io/internal/scopedRef"
-import type * as Synchronized from "@effect/io/Ref/Synchronized"
 import type * as Scope from "@effect/io/Scope"
+import type * as Synchronized from "@effect/io/SynchronizedRef"
 
 /**
  * @since 1.0.0
@@ -32,7 +32,7 @@ export type ScopedRefTypeId = typeof ScopedRefTypeId
  */
 export interface ScopedRef<A> extends ScopedRef.Variance<A>, Pipeable {
   /** @internal */
-  readonly ref: Synchronized.Synchronized<readonly [Scope.Scope.Closeable, A]>
+  readonly ref: Synchronized.SynchronizedRef<readonly [Scope.Scope.Closeable, A]>
 }
 
 /**

@@ -1,11 +1,11 @@
 import { pipeArguments } from "@effect/data/Pipeable"
-import type * as MetricKey from "@effect/io/Metric/Key"
-import type * as MetricKeyType from "@effect/io/Metric/KeyType"
-import type * as MetricPair from "@effect/io/Metric/Pair"
-import type * as MetricState from "@effect/io/Metric/State"
+import type * as MetricKey from "@effect/io/MetricKey"
+import type * as MetricKeyType from "@effect/io/MetricKeyType"
+import type * as MetricPair from "@effect/io/MetricPair"
+import type * as MetricState from "@effect/io/MetricState"
 
 /** @internal */
-const MetricPairSymbolKey = "@effect/io/Metric/Pair"
+const MetricPairSymbolKey = "@effect/io/MetricPair"
 
 /** @internal */
 export const MetricPairTypeId: MetricPair.MetricPairTypeId = Symbol.for(

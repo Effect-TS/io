@@ -2,11 +2,11 @@ import * as Either from "@effect/data/Either"
 import { constFalse, constTrue, dual, pipe } from "@effect/data/Function"
 import * as RA from "@effect/data/ReadonlyArray"
 import type * as Cause from "@effect/io/Cause"
-import type * as ConfigError from "@effect/io/Config/Error"
+import type * as ConfigError from "@effect/io/ConfigError"
 import * as OpCodes from "@effect/io/internal/opCodes/configError"
 
 /** @internal */
-const ConfigErrorSymbolKey = "@effect/io/Config/Error"
+const ConfigErrorSymbolKey = "@effect/io/ConfigError"
 
 /** @internal */
 export const ConfigErrorTypeId: ConfigError.ConfigErrorTypeId = Symbol.for(

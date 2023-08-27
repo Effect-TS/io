@@ -5,14 +5,14 @@ import * as Option from "@effect/data/Option"
 import * as metricHook from "@effect/io/internal/metric/hook"
 import * as metricKeyType from "@effect/io/internal/metric/keyType"
 import * as metricPair from "@effect/io/internal/metric/pair"
-import type * as MetricHook from "@effect/io/Metric/Hook"
-import type * as MetricKey from "@effect/io/Metric/Key"
-import type * as MetricKeyType from "@effect/io/Metric/KeyType"
-import type * as MetricPair from "@effect/io/Metric/Pair"
-import type * as MetricRegistry from "@effect/io/Metric/Registry"
+import type * as MetricHook from "@effect/io/MetricHook"
+import type * as MetricKey from "@effect/io/MetricKey"
+import type * as MetricKeyType from "@effect/io/MetricKeyType"
+import type * as MetricPair from "@effect/io/MetricPair"
+import type * as MetricRegistry from "@effect/io/MetricRegistry"
 
 /** @internal */
-const MetricRegistrySymbolKey = "@effect/io/Metric/Registry"
+const MetricRegistrySymbolKey = "@effect/io/MetricRegistry"
 
 /** @internal */
 export const MetricRegistryTypeId: MetricRegistry.MetricRegistryTypeId = Symbol.for(
