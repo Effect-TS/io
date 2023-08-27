@@ -17,4 +17,46 @@ describe.concurrent("Effect", () => {
       assert.include(rendered, "spanA")
       assert.include(rendered, "spanB")
     }))
+  it.effect("catchTag should not invalidate traces", () =>
+    Effect.gen(function*($) {
+      class E1 {
+        readonly _tag = "E1"
+      }
+      class E2 {
+        readonly _tag = "E2"
+      }
+      const effect = Effect.withSpan("spanB")(
+        Effect.withSpan("spanA")(
+          Effect.if(Effect.sync(() => Math.random() > 1), {
+            onTrue: Effect.fail(new E2()),
+            onFalse: Effect.fail(new E1())
+          })
+        )
+      ).pipe(Effect.catchTag("E2", (e) => Effect.die(e)))
+      const cause = yield* $(Effect.flip(Effect.sandbox(effect)))
+      const rendered = Cause.pretty(cause)
+      assert.include(rendered, "spanA")
+      assert.include(rendered, "spanB")
+    }))
+  it.effect("catchTags should not invalidate traces", () =>
+    Effect.gen(function*($) {
+      class E1 {
+        readonly _tag = "E1"
+      }
+      class E2 {
+        readonly _tag = "E2"
+      }
+      const effect = Effect.withSpan("spanB")(
+        Effect.withSpan("spanA")(
+          Effect.if(Effect.sync(() => Math.random() > 1), {
+            onTrue: Effect.fail(new E2()),
+            onFalse: Effect.fail(new E1())
+          })
+        )
+      ).pipe(Effect.catchTags({ E2: (e) => Effect.die(e) }))
+      const cause = yield* $(Effect.flip(Effect.sandbox(effect)))
+      const rendered = Cause.pretty(cause)
+      assert.include(rendered, "spanA")
+      assert.include(rendered, "spanB")
+    }))
 })
