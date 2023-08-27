@@ -56,11 +56,6 @@ export interface Supervisor<T> extends Supervisor.Variance<T> {
   onEnd<E, A>(value: Exit.Exit<E, A>, fiber: Fiber.RuntimeFiber<E, A>): void
 
   /**
-   * Supervises the run of a `Fiber`.
-   */
-  onRun<E, A, X>(execution: () => X, fiber: Fiber.RuntimeFiber<E, A>): X
-
-  /**
    * Supervises the execution of an `Effect` by a `Fiber`.
    */
   onEffect<E, A>(fiber: Fiber.RuntimeFiber<E, A>, effect: Effect.Effect<any, any, any>): void

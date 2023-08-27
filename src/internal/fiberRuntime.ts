@@ -259,6 +259,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
       fiberStarted.unsafeUpdate(1, tags)
       fiberActive.unsafeUpdate(1, tags)
     }
+    this._tracer = Context.get(this.getFiberRef(defaultServices.currentServices), tracer.tracerTag)
   }
   private _queue = new Array<FiberMessage.FiberMessage>()
   private _children: Set<FiberRuntime<any, any>> | null = null
@@ -270,6 +271,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   private _exitValue: Exit.Exit<E, A> | null = null
   private _steps: Array<boolean> = [false]
   public _supervisor: Supervisor.Supervisor<any>
+  private _tracer: Tracer.Tracer
 
   /**
    * The identity of the fiber.
@@ -517,11 +519,12 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
       fiberRef,
       value
     })
-    // @ts-expect-error
-    if (fiberRef === currentSupervisor) {
-      // @ts-expect-error
-      this._supervisor = value
-    }
+    this.refreshRefCache()
+  }
+
+  refreshRefCache() {
+    this._tracer = Context.get(this.getFiberRef(defaultServices.currentServices), tracer.tracerTag)
+    this._supervisor = this.getFiberRef(currentSupervisor)
   }
 
   /**
@@ -531,7 +534,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    */
   setFiberRefs(fiberRefs: FiberRefs.FiberRefs): void {
     this._fiberRefs = fiberRefs
-    this._supervisor = this.getFiberRef(currentSupervisor)
+    this.refreshRefCache()
   }
 
   /**
@@ -1282,7 +1285,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
           absurd(cur)
         }
         // @ts-expect-error
-        cur = this._supervisor.onRun(
+        cur = this._tracer.context(
           // @ts-expect-error
           () => this[(cur as core.Primitive)._tag](cur as core.Primitive),
           this

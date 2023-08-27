@@ -68,10 +68,6 @@ export class ProxySupervisor<T> implements Supervisor.Supervisor<T> {
   zip<B>(right: Supervisor.Supervisor<B>): Supervisor.Supervisor<readonly [T, B]> {
     return new Zip(this, right)
   }
-
-  onRun<E, A, X>(execution: () => X, fiber: Fiber.RuntimeFiber<E, A>): X {
-    return this.underlying.onRun(execution, fiber)
-  }
 }
 
 /** @internal */
@@ -124,10 +120,6 @@ export class Zip<T0, T1> implements Supervisor.Supervisor<readonly [T0, T1]> {
 
   zip<A>(right: Supervisor.Supervisor<A>): Supervisor.Supervisor<readonly [readonly [T0, T1], A]> {
     return new Zip(this, right)
-  }
-
-  onRun<E, A, X>(execution: () => X, fiber: Fiber.RuntimeFiber<E, A>): X {
-    return this.right.onRun(() => this.left.onRun(execution, fiber), fiber)
   }
 }
 
