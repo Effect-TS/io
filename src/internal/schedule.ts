@@ -18,9 +18,9 @@ import * as ref from "@effect/io/internal/ref"
 import * as Random from "@effect/io/Random"
 import type * as Ref from "@effect/io/Ref"
 import type * as Schedule from "@effect/io/Schedule"
-import * as ScheduleDecision from "@effect/io/Schedule/Decision"
-import * as Interval from "@effect/io/Schedule/Interval"
-import * as Intervals from "@effect/io/Schedule/Intervals"
+import * as ScheduleDecision from "@effect/io/ScheduleDecision"
+import * as Interval from "@effect/io/ScheduleInterval"
+import * as Intervals from "@effect/io/ScheduleIntervals"
 
 /** @internal */
 const ScheduleSymbolKey = "@effect/io/Schedule"
@@ -31,7 +31,7 @@ export const ScheduleTypeId: Schedule.ScheduleTypeId = Symbol.for(
 ) as Schedule.ScheduleTypeId
 
 /** @internal */
-const ScheduleDriverSymbolKey = "@effect/io/Schedule/Driver"
+const ScheduleDriverSymbolKey = "@effect/io/ScheduleDriver"
 
 /** @internal */
 export const ScheduleDriverTypeId: Schedule.ScheduleDriverTypeId = Symbol.for(

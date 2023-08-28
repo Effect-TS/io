@@ -8,7 +8,7 @@ import * as Clock from "@effect/io/Clock"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
 import type { FiberRef } from "@effect/io/FiberRef"
-import type * as FiberRefsPatch from "@effect/io/FiberRefs/Patch"
+import type * as FiberRefsPatch from "@effect/io/FiberRefsPatch"
 import * as core from "@effect/io/internal/core"
 import * as effect from "@effect/io/internal/effect"
 import * as circular from "@effect/io/internal/effect/circular"
@@ -19,12 +19,12 @@ import * as ref from "@effect/io/internal/ref"
 import * as runtime from "@effect/io/internal/runtime"
 import * as synchronized from "@effect/io/internal/synchronizedRef"
 import type * as Layer from "@effect/io/Layer"
-import type * as Synchronized from "@effect/io/Ref/Synchronized"
 import type * as Runtime from "@effect/io/Runtime"
 import type * as Schedule from "@effect/io/Schedule"
-import * as ScheduleDecision from "@effect/io/Schedule/Decision"
-import * as Intervals from "@effect/io/Schedule/Intervals"
+import * as ScheduleDecision from "@effect/io/ScheduleDecision"
+import * as Intervals from "@effect/io/ScheduleIntervals"
 import * as Scope from "@effect/io/Scope"
+import type * as Synchronized from "@effect/io/SynchronizedRef"
 
 /** @internal */
 const LayerSymbolKey = "@effect/io/Layer"
@@ -168,7 +168,7 @@ export const isFresh = <R, E, A>(self: Layer.Layer<R, E, A>): boolean => {
 /** @internal */
 class MemoMap {
   constructor(
-    readonly ref: Synchronized.Synchronized<
+    readonly ref: Synchronized.SynchronizedRef<
       Map<
         Layer.Layer<any, any, any>,
         readonly [Effect.Effect<never, any, any>, Scope.Scope.Finalizer]

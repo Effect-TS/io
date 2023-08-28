@@ -2,10 +2,10 @@ import * as Chunk from "@effect/data/Chunk"
 import * as Equal from "@effect/data/Equal"
 import { pipe } from "@effect/data/Function"
 import * as Hash from "@effect/data/Hash"
-import type * as ConfigSecret from "@effect/io/Config/Secret"
+import type * as ConfigSecret from "@effect/io/ConfigSecret"
 
 /** @internal */
-const ConfigSecretSymbolKey = "@effect/io/Config/Secret"
+const ConfigSecretSymbolKey = "@effect/io/ConfigSecret"
 
 /** @internal */
 export const ConfigSecretTypeId: ConfigSecret.ConfigSecretTypeId = Symbol.for(

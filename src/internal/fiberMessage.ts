@@ -1,6 +1,6 @@
 import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
-import type * as FiberStatus from "@effect/io/Fiber/Status"
+import type * as FiberStatus from "@effect/io/FiberStatus"
 import type * as FiberRuntime from "@effect/io/internal/fiberRuntime"
 
 /** @internal */

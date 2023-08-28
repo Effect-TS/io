@@ -3,7 +3,7 @@
  */
 import type * as Context from "@effect/data/Context"
 import type * as Clock from "@effect/io/Clock"
-import type * as ConfigProvider from "@effect/io/Config/Provider"
+import type * as ConfigProvider from "@effect/io/ConfigProvider"
 import type * as Console from "@effect/io/Console"
 import type * as FiberRef from "@effect/io/FiberRef"
 import * as internal from "@effect/io/internal/defaultServices"

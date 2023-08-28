@@ -8,13 +8,13 @@ import * as Option from "@effect/data/Option"
 import { pipeArguments } from "@effect/data/Pipeable"
 import * as metricKeyType from "@effect/io/internal/metric/keyType"
 import * as metricLabel from "@effect/io/internal/metric/label"
-import type * as MetricBoundaries from "@effect/io/Metric/Boundaries"
-import type * as MetricKey from "@effect/io/Metric/Key"
-import type * as MetricKeyType from "@effect/io/Metric/KeyType"
-import type * as MetricLabel from "@effect/io/Metric/Label"
+import type * as MetricBoundaries from "@effect/io/MetricBoundaries"
+import type * as MetricKey from "@effect/io/MetricKey"
+import type * as MetricKeyType from "@effect/io/MetricKeyType"
+import type * as MetricLabel from "@effect/io/MetricLabel"
 
 /** @internal */
-const MetricKeySymbolKey = "@effect/io/Metric/Key"
+const MetricKeySymbolKey = "@effect/io/MetricKey"
 
 /** @internal */
 export const MetricKeyTypeId: MetricKey.MetricKeyTypeId = Symbol.for(

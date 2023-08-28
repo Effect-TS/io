@@ -1,11 +1,11 @@
 import * as Chunk from "@effect/data/Chunk"
 import { dual, pipe } from "@effect/data/Function"
 import * as Option from "@effect/data/Option"
-import * as Interval from "@effect/io/Schedule/Interval"
-import type * as Intervals from "@effect/io/Schedule/Intervals"
+import * as Interval from "@effect/io/ScheduleInterval"
+import type * as Intervals from "@effect/io/ScheduleIntervals"
 
 /** @internal */
-const IntervalsSymbolKey = "@effect/io/Schedule/Intervals"
+const IntervalsSymbolKey = "@effect/io/ScheduleIntervals"
 
 /** @internal */
 export const IntervalsTypeId: Intervals.IntervalsTypeId = Symbol.for(

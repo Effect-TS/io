@@ -1,5 +1,5 @@
 import * as Cause from "@effect/io/Cause"
-import * as FiberId from "@effect/io/Fiber/Id"
+import * as FiberId from "@effect/io/FiberId"
 import * as fc from "fast-check"
 
 export const causesArb = <E>(

@@ -4,10 +4,10 @@ import { pipe } from "@effect/data/Function"
 import * as Hash from "@effect/data/Hash"
 import { pipeArguments } from "@effect/data/Pipeable"
 import * as ReadonlyArray from "@effect/data/ReadonlyArray"
-import type * as MetricBoundaries from "@effect/io/Metric/Boundaries"
+import type * as MetricBoundaries from "@effect/io/MetricBoundaries"
 
 /** @internal */
-const MetricBoundariesSymbolKey = "@effect/io/Metric/Boundaries"
+const MetricBoundariesSymbolKey = "@effect/io/MetricBoundaries"
 
 /** @internal */
 export const MetricBoundariesTypeId: MetricBoundaries.MetricBoundariesTypeId = Symbol.for(

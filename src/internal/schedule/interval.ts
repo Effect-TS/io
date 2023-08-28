@@ -1,10 +1,10 @@
 import * as Duration from "@effect/data/Duration"
 import { dual } from "@effect/data/Function"
 import * as Option from "@effect/data/Option"
-import type * as Interval from "@effect/io/Schedule/Interval"
+import type * as Interval from "@effect/io/ScheduleInterval"
 
 /** @internal */
-const IntervalSymbolKey = "@effect/io/Schedule/Interval"
+const IntervalSymbolKey = "@effect/io/ScheduleInterval"
 
 /** @internal */
 export const IntervalTypeId: Interval.IntervalTypeId = Symbol.for(

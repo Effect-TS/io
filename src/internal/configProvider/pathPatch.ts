@@ -3,8 +3,8 @@ import { dual, pipe } from "@effect/data/Function"
 import * as List from "@effect/data/List"
 import * as Option from "@effect/data/Option"
 import * as RA from "@effect/data/ReadonlyArray"
-import type * as ConfigError from "@effect/io/Config/Error"
-import type * as PathPatch from "@effect/io/Config/Provider/PathPatch"
+import type * as ConfigError from "@effect/io/ConfigError"
+import type * as PathPatch from "@effect/io/ConfigProviderPathPatch"
 import * as configError from "@effect/io/internal/configError"
 
 /** @internal */

@@ -8,7 +8,7 @@ import * as Option from "@effect/data/Option"
 import type { Predicate } from "@effect/data/Predicate"
 import * as ReadonlyArray from "@effect/data/ReadonlyArray"
 import type * as Cause from "@effect/io/Cause"
-import * as FiberId from "@effect/io/Fiber/Id"
+import * as FiberId from "@effect/io/FiberId"
 import * as OpCodes from "@effect/io/internal/opCodes/cause"
 
 import * as MRef from "@effect/data/MutableRef"

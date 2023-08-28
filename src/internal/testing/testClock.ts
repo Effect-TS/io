@@ -12,8 +12,8 @@ import type * as Clock from "@effect/io/Clock"
 import type { Deferred } from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
 import type * as Fiber from "@effect/io/Fiber"
-import type * as FiberId from "@effect/io/Fiber/Id"
-import * as FiberStatus from "@effect/io/Fiber/Status"
+import type * as FiberId from "@effect/io/FiberId"
+import * as FiberStatus from "@effect/io/FiberStatus"
 import * as clock from "@effect/io/internal/clock"
 import * as core from "@effect/io/internal/core"
 import * as defaultServices from "@effect/io/internal/defaultServices"
@@ -30,7 +30,7 @@ import * as SuspendedWarningData from "@effect/io/internal/testing/testClock/sus
 import * as WarningData from "@effect/io/internal/testing/testClock/warningData"
 import type * as Layer from "@effect/io/Layer"
 import type * as Ref from "@effect/io/Ref"
-import type * as Synchronized from "@effect/io/Ref/Synchronized"
+import type * as Synchronized from "@effect/io/SynchronizedRef"
 
 /**
  * A `TestClock` makes it easy to deterministically and efficiently test effects
@@ -113,8 +113,8 @@ export class TestClockImpl implements TestClock {
     readonly clockState: Ref.Ref<Data.Data>,
     readonly live: Live.Live,
     readonly annotations: Annotations.Annotations,
-    readonly warningState: Synchronized.Synchronized<WarningData.WarningData>,
-    readonly suspendedWarningState: Synchronized.Synchronized<SuspendedWarningData.SuspendedWarningData>
+    readonly warningState: Synchronized.SynchronizedRef<WarningData.WarningData>,
+    readonly suspendedWarningState: Synchronized.SynchronizedRef<SuspendedWarningData.SuspendedWarningData>
   ) {}
 
   /**

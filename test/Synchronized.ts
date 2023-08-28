@@ -3,7 +3,7 @@ import * as Deferred from "@effect/io/Deferred"
 import * as Effect from "@effect/io/Effect"
 import * as Exit from "@effect/io/Exit"
 import * as Fiber from "@effect/io/Fiber"
-import * as Synchronized from "@effect/io/Ref/Synchronized"
+import * as Synchronized from "@effect/io/SynchronizedRef"
 import * as it from "@effect/io/test/utils/extend"
 import { assert, describe } from "vitest"
 
@@ -96,7 +96,7 @@ describe.concurrent("SynchronizedRef", () => {
     }))
   it.effect("getAndUpdateSomeEffect - interrupt parent fiber and update", () =>
     Effect.gen(function*($) {
-      const deferred = yield* $(Deferred.make<never, Synchronized.Synchronized<State>>())
+      const deferred = yield* $(Deferred.make<never, Synchronized.SynchronizedRef<State>>())
       const latch = yield* $(Deferred.make<never, void>())
       const makeAndWait = Deferred.complete(deferred, Synchronized.make<State>(Active)).pipe(
         Effect.zipRight(Deferred.await(latch))

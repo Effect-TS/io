@@ -2,7 +2,7 @@ import { pipe } from "@effect/data/Function"
 import { range } from "@effect/data/ReadonlyArray"
 import * as Effect from "@effect/io/Effect"
 import * as Logger from "@effect/io/Logger"
-import * as Level from "@effect/io/Logger/Level"
+import * as Level from "@effect/io/LogLevel"
 
 const program = pipe(
   range(0, 20),

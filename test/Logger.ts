@@ -2,11 +2,11 @@ import { identity } from "@effect/data/Function"
 import * as HashMap from "@effect/data/HashMap"
 import * as List from "@effect/data/List"
 import * as Cause from "@effect/io/Cause"
-import * as FiberId from "@effect/io/Fiber/Id"
+import * as FiberId from "@effect/io/FiberId"
 import * as FiberRefs from "@effect/io/FiberRefs"
 import { logLevelInfo } from "@effect/io/internal/core"
 import * as Logger from "@effect/io/Logger"
-import * as LogSpan from "@effect/io/Logger/Span"
+import * as LogSpan from "@effect/io/LogSpan"
 
 import { vi } from "vitest"
 

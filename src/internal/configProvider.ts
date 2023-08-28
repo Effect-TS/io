@@ -9,9 +9,9 @@ import * as Option from "@effect/data/Option"
 import { pipeArguments } from "@effect/data/Pipeable"
 import * as RA from "@effect/data/ReadonlyArray"
 import type * as Config from "@effect/io/Config"
-import type * as ConfigError from "@effect/io/Config/Error"
-import type * as ConfigProvider from "@effect/io/Config/Provider"
-import type * as PathPatch from "@effect/io/Config/Provider/PathPatch"
+import type * as ConfigError from "@effect/io/ConfigError"
+import type * as ConfigProvider from "@effect/io/ConfigProvider"
+import type * as PathPatch from "@effect/io/ConfigProviderPathPatch"
 import type * as Effect from "@effect/io/Effect"
 import * as _config from "@effect/io/internal/config"
 import * as configError from "@effect/io/internal/configError"
@@ -23,7 +23,7 @@ import * as StringUtils from "@effect/io/internal/string-utils"
 const concat = <A, B>(l: ReadonlyArray<A>, r: ReadonlyArray<B>): ReadonlyArray<A | B> => [...l, ...r]
 
 /** @internal */
-const ConfigProviderSymbolKey = "@effect/io/Config/Provider"
+const ConfigProviderSymbolKey = "@effect/io/ConfigProvider"
 
 /** @internal */
 export const ConfigProviderTypeId: ConfigProvider.ConfigProviderTypeId = Symbol.for(
@@ -36,7 +36,7 @@ export const configProviderTag: Context.Tag<ConfigProvider.ConfigProvider, Confi
 )
 
 /** @internal */
-const FlatConfigProviderSymbolKey = "@effect/io/Config/Provider/Flat"
+const FlatConfigProviderSymbolKey = "@effect/io/ConfigProviderFlat"
 
 /** @internal */
 export const FlatConfigProviderTypeId: ConfigProvider.FlatConfigProviderTypeId = Symbol.for(

@@ -5,10 +5,10 @@ import * as Hash from "@effect/data/Hash"
 import * as HashSet from "@effect/data/HashSet"
 import * as MutableRef from "@effect/data/MutableRef"
 import * as Option from "@effect/data/Option"
-import type * as FiberId from "@effect/io/Fiber/Id"
+import type * as FiberId from "@effect/io/FiberId"
 
 /** @internal */
-const FiberIdSymbolKey = "@effect/io/Fiber/Id"
+const FiberIdSymbolKey = "@effect/io/FiberId"
 
 /** @internal */
 export const FiberIdTypeId: FiberId.FiberIdTypeId = Symbol.for(

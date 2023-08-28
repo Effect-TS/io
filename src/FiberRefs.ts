@@ -6,7 +6,7 @@ import type * as Option from "@effect/data/Option"
 import type { Pipeable } from "@effect/data/Pipeable"
 import type * as Arr from "@effect/data/ReadonlyArray"
 import type * as Effect from "@effect/io/Effect"
-import type * as FiberId from "@effect/io/Fiber/Id"
+import type * as FiberId from "@effect/io/FiberId"
 import type * as FiberRef from "@effect/io/FiberRef"
 import * as internal from "@effect/io/internal/fiberRefs"
 

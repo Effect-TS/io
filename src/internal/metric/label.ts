@@ -2,10 +2,10 @@ import * as Equal from "@effect/data/Equal"
 import { pipe } from "@effect/data/Function"
 import * as Hash from "@effect/data/Hash"
 import { pipeArguments } from "@effect/data/Pipeable"
-import type * as MetricLabel from "@effect/io/Metric/Label"
+import type * as MetricLabel from "@effect/io/MetricLabel"
 
 /** @internal */
-const MetricLabelSymbolKey = "@effect/io/Metric/Label"
+const MetricLabelSymbolKey = "@effect/io/MetricLabel"
 
 /** @internal */
 export const MetricLabelTypeId: MetricLabel.MetricLabelTypeId = Symbol.for(
