@@ -15,7 +15,7 @@ import * as List from "@effect/data/List"
 import * as MutableRef from "@effect/data/MutableRef"
 import * as Option from "@effect/data/Option"
 import { pipeArguments } from "@effect/data/Pipeable"
-import type { Predicate } from "@effect/data/Predicate"
+import type { Predicate, Refinement } from "@effect/data/Predicate"
 import * as ReadonlyArray from "@effect/data/ReadonlyArray"
 import * as Cause from "@effect/io/Cause"
 import type * as Deferred from "@effect/io/Deferred"
@@ -509,6 +509,47 @@ export const unified = <Args extends ReadonlyArray<any>, Ret extends Effect.Effe
 (...args: Args): Effect.Effect.Unify<Ret> => f(...args)
 
 /* @internal */
+export const catchIf = dual<
+  {
+    <E, EA extends E, EB extends EA, R2, E2, A2>(
+      refinement: Refinement<EA, EB>,
+      f: (e: EB) => Effect.Effect<R2, E2, A2>
+    ): <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R2 | R, Exclude<E, EB> | E2, A2 | A>
+    <E, EX extends E, R2, E2, A2>(
+      predicate: Predicate<EX>,
+      f: (e: EX) => Effect.Effect<R2, E2, A2>
+    ): <R, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R2 | R, E | E2, A2 | A>
+  },
+  {
+    <R, E, A, EA extends E, EB extends EA, R2, E2, A2>(
+      self: Effect.Effect<R, E, A>,
+      refinement: Refinement<EA, EB>,
+      f: (e: EB) => Effect.Effect<R2, E2, A2>
+    ): Effect.Effect<R2 | R, Exclude<E, EB> | E2, A2 | A>
+    <R, E, A, EX extends E, R2, E2, A2>(
+      self: Effect.Effect<R, E, A>,
+      predicate: Predicate<EX>,
+      f: (e: EX) => Effect.Effect<R2, E2, A2>
+    ): Effect.Effect<R2 | R, E | E2, A2 | A>
+  }
+>(3, <R, E, A, EX extends E, R2, E2, A2>(
+  self: Effect.Effect<R, E, A>,
+  predicate: Predicate<EX>,
+  f: (e: EX) => Effect.Effect<R2, E2, A2>
+) =>
+  catchAllCause(self, (cause): Effect.Effect<R2 | R, E | E2, A2 | A> => {
+    const either = internalCause.failureOrCause(cause)
+    switch (either._tag) {
+      case "Left": {
+        return predicate(either.left as EX) ? f(either.left as EX) : failCause(cause)
+      }
+      case "Right": {
+        return failCause(either.right)
+      }
+    }
+  }))
+
+/* @internal */
 export const catchSome = dual<
   <E, R2, E2, A2>(
     pf: (e: E) => Option.Option<Effect.Effect<R2, E2, A2>>
@@ -517,20 +558,20 @@ export const catchSome = dual<
     self: Effect.Effect<R, E, A>,
     pf: (e: E) => Option.Option<Effect.Effect<R2, E2, A2>>
   ) => Effect.Effect<R2 | R, E | E2, A2 | A>
->(2, (self, pf) =>
-  matchCauseEffect(self, {
-    onFailure: unified((cause) => {
-      const either = internalCause.failureOrCause(cause)
-      switch (either._tag) {
-        case "Left": {
-          return pipe(pf(either.left), Option.getOrElse(() => failCause(cause)))
-        }
-        case "Right": {
-          return failCause(either.right)
-        }
+>(2, <R, A, E, R2, E2, A2>(
+  self: Effect.Effect<R, E, A>,
+  pf: (e: E) => Option.Option<Effect.Effect<R2, E2, A2>>
+) =>
+  catchAllCause(self, (cause): Effect.Effect<R2 | R, E | E2, A2 | A> => {
+    const either = internalCause.failureOrCause(cause)
+    switch (either._tag) {
+      case "Left": {
+        return pipe(pf(either.left), Option.getOrElse(() => failCause(cause)))
       }
-    }),
-    onSuccess: succeed
+      case "Right": {
+        return failCause(either.right)
+      }
+    }
   }))
 
 /* @internal */

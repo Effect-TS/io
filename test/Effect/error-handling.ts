@@ -9,6 +9,7 @@ import * as Fiber from "@effect/io/Fiber"
 import * as FiberId from "@effect/io/Fiber/Id"
 import { causesArb } from "@effect/io/test/utils/cause"
 import * as it from "@effect/io/test/utils/extend"
+import { assertType, satisfies } from "@effect/io/test/utils/types"
 import * as fc from "fast-check"
 import { assert, describe } from "vitest"
 
@@ -256,6 +257,22 @@ describe.concurrent("Effect", () => {
         Effect.exit
       )
       assert.deepStrictEqual(Exit.unannotate(result), Exit.fail({ _tag: "ErrorB" as const }))
+    }))
+  it.effect("catchIf - does not recover from one of several tagged errors", () =>
+    Effect.gen(function*($) {
+      interface ErrorA {
+        readonly _tag: "ErrorA"
+      }
+      interface ErrorB {
+        readonly _tag: "ErrorB"
+      }
+      const effect: Effect.Effect<never, ErrorA | ErrorB, never> = Effect.fail({ _tag: "ErrorB" })
+      const result = yield* $(
+        Effect.catchIf(effect, (e): e is ErrorA => e._tag === "ErrorA", Effect.succeed),
+        Effect.exit
+      )
+      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail({ _tag: "ErrorB" as const }))
+      satisfies<true>(assertType<Exit.Exit<ErrorB, ErrorA>>()(result))
     }))
   it.effect("catchTags - recovers from one of several tagged errors", () =>
     Effect.gen(function*($) {
