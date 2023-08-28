@@ -2,10 +2,8 @@ import * as Either from "@effect/data/Either"
 import * as Option from "@effect/data/Option"
 import * as Effect from "@effect/io/Effect"
 import * as it from "@effect/io/test/utils/extend"
-import { assertType } from "@effect/io/test/utils/types"
+import { assertType, satisfies } from "@effect/io/test/utils/types"
 import { describe } from "vitest"
-
-const satisfies = <T>(type: T) => type
 
 describe.concurrent("Effect", () => {
   describe("all", () => {
