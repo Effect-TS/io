@@ -13,7 +13,6 @@ import * as ReadonlyArray from "@effect/data/ReadonlyArray"
 import type * as Cause from "@effect/io/Cause"
 import * as Clock from "@effect/io/Clock"
 import type * as Effect from "@effect/io/Effect"
-import type { Exit } from "@effect/io/Exit"
 import type * as Fiber from "@effect/io/Fiber"
 import * as FiberId from "@effect/io/FiberId"
 import type * as FiberRef from "@effect/io/FiberRef"
@@ -2056,40 +2055,14 @@ export const useSpan: {
   } | undefined = args.length === 1 ? undefined : args[0]
   const evaluate: (span: Tracer.Span) => Effect.Effect<R, E, A> = args[args.length - 1]
 
-  return core.uninterruptibleMask((restore) =>
-    core.flatMap(
-      makeSpan(name, options),
-      (span) => {
-        const completeSpan = <E, A>(exitOrBlocked: Exit<E, A>) =>
-          core.flatMap(
-            core.flatMap(
-              currentTimeNanosTracing,
-              (endTime) => core.sync(() => span.end(endTime, exitOrBlocked))
-            ),
-            () => exitOrBlocked
-          )
-
-        return core.flatMap(restore(core.step(evaluate(span))), (exitOrBlocked) => {
-          const loop = <R, E, A>(eff: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
-            core.flatMap(restore(core.step(eff)), (exitOrBlocked) =>
-              exitOrBlocked._tag === "Blocked" ?
-                core.blocked(
-                  exitOrBlocked.i0,
-                  loop(exitOrBlocked.i1)
-                ) :
-                completeSpan(exitOrBlocked))
-
-          if (exitOrBlocked._tag === "Blocked") {
-            return core.blocked(
-              exitOrBlocked.i0,
-              loop(exitOrBlocked.i1)
-            )
-          } else {
-            return completeSpan(exitOrBlocked)
-          }
-        })
-      }
-    )
+  return core.acquireUseRelease(
+    makeSpan(name, options),
+    evaluate,
+    (span, exit) =>
+      core.flatMap(
+        currentTimeNanosTracing,
+        (endTime) => core.sync(() => span.end(endTime, exit))
+      )
   )
 }
 
